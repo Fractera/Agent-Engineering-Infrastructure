@@ -211,12 +211,13 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
         }, 2000);
       }
     } else if (isRunning) {
-      if (countdownRef.current) clearTimeout(countdownRef.current);
-      setConfirmingPlatform(null);
+      if (confirmingPlatform === platformId) {
+        if (countdownRef.current) clearTimeout(countdownRef.current);
+        countdownRef.current = null;
+        setConfirmingPlatform(null);
+      }
       onPlatformClick(platformId);
     } else {
-      if (countdownRef.current) clearTimeout(countdownRef.current);
-      setConfirmingPlatform(null);
       onPlatformClick(platformId);
     }
   }
