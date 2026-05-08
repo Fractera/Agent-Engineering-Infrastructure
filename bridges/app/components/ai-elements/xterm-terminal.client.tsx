@@ -5,7 +5,7 @@ import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { toast } from 'sonner';
 
-const IDLE_MS = 30_000;
+const IDLE_MS = 180_000;
 
 const PLATFORM_LABELS: Record<string, string> = {
   'claude-code': 'Claude Code',
