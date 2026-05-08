@@ -42,7 +42,7 @@ export const AUTH_FLOW_DESCRIPTORS: AuthFlowDescriptor[] = [
     platformId: 'gemini-cli',
     platformLabel: 'Gemini CLI',
     flow: 'terminal-paste',
-    detectUrl: /https:\/\/accounts\.google\.com\/o\/oauth2\/v2\/auth.*?&state=[A-Za-z0-9][A-Za-z0-9_\-]*[A-Za-z0-9]/,
+    detectUrl: /https:\/\/accounts\.google\.com\/o\/oauth2\/v2\/auth[A-Za-z0-9%_.~+\-=&?:/]+\.apps\.googleusercontent\.com/,
     modalTitle: 'Gemini CLI — Authorization',
     modalDescription: 'Open the link in your browser and sign in to your Google account',
   },
