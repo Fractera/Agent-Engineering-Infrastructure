@@ -317,7 +317,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   }, [dataMenuOpen]);
 
   const termH   = height - CAROUSEL_H - FOOTER_H;
-  const total   = PLATFORMS.length + COMING_SOON.length;
+  const total   = 1 + PLATFORMS.length + COMING_SOON.length; // +1 Fractera PRO
   const safeIdx = Math.min(carouselIdx, Math.max(total - 1, 0));
   const canPrev = safeIdx > 0;
   const canNext = safeIdx < total - 1;
@@ -422,6 +422,26 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
 
         <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
           <div className="flex" style={{ gap: GAP, transform: `translateX(-${safeIdx * (CARD_W + GAP)}px)`, transition: "transform 0.25s ease" }}>
+
+            {/* ── Fractera PRO ── */}
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    style={{ width: CARD_W, flexShrink: 0 }}
+                    className="flex items-center justify-center gap-1.5 rounded-md border border-green-500/40 bg-green-500/5 h-9 text-[11px] text-green-500 font-semibold select-none"
+                  >
+                    <span className="size-1.5 rounded-full bg-green-500 shrink-0" />
+                    <span>Fractera PRO</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-[11px]" style={{ zIndex: 99999 }}>
+                  Fractera PRO — coming soon
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
             {PLATFORMS.map((p) => {
               const isRunning      = terminalSessions.has(p.id);
               const isCurrent      = terminalPlatform === p.id && isRunning;
