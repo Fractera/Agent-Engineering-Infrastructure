@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.src.js",
-    "build": "javascript-obfuscator server.src.js --output server.js --compact true --control-flow-flattening true --control-flow-flattening-threshold 0.5 --string-array true --string-array-encoding rc4 --string-array-threshold 0.75 --string-array-rotate true --string-array-shuffle true --dead-code-injection true --dead-code-injection-threshold 0.2 --self-defending true --identifier-names-generator mangled --rename-globals false --transform-object-keys true",
+    "dev": "node --watch server.js",
     "postinstall:mac": "chmod +x node_modules/node-pty/prebuilds/darwin-x64/spawn-helper 2>/dev/null; chmod +x node_modules/node-pty/prebuilds/darwin-arm64/spawn-helper 2>/dev/null; true"
   },
   "dependencies": {

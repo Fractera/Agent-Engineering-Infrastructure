@@ -1,1 +1,958 @@
-const P=d;(function(a,b){const O=d,e=a();while(!![]){try{const f=parseInt(O(0x4d1,'G7R('))/0x1+-parseInt(O(0x4c1,'G7R('))/0x2+parseInt(O(0x20c,'p6jM'))/0x3+parseInt(O(0x1aa,'YBU2'))/0x4*(-parseInt(O(0x33a,'sDK]'))/0x5)+parseInt(O(0x4fa,'hLFA'))/0x6*(parseInt(O(0x23d,'sf!U'))/0x7)+parseInt(O(0x383,'AuY&'))/0x8*(-parseInt(O(0x2eb,'W!8#'))/0x9)+parseInt(O(0x42a,'9cCk'))/0xa;if(f===b)break;else e['push'](e['shift']());}catch(g){e['push'](e['shift']());}}}(c,0x2aa62));import{WebSocketServer}from'ws';import{spawn,execSync}from'child_process';import{readFileSync}from'fs';import N from'node-pty';function d(a,b){a=a-0x13f;const e=c();let f=e[a];if(d['lKGFbK']===undefined){var g=function(l){const m='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let n='',o='',p=n+g,q=(''+function(){return 0x0;})['indexOf']('\x0a')!==-0x1;for(let r=0x0,s,t,u=0x0;t=l['charAt'](u++);~t&&(s=r%0x4?s*0x40+t:t,r++%0x4)?n+=q||p['charCodeAt'](u+0xa)-0xa!==0x0?String['fromCharCode'](0xff&s>>(-0x2*r&0x6)):r:0x0){t=m['indexOf'](t);}for(let v=0x0,w=n['length'];v<w;v++){o+='%'+('00'+n['charCodeAt'](v)['toString'](0x10))['slice'](-0x2);}return decodeURIComponent(o);};const k=function(l,m){let n=[],o=0x0,p,q='';l=g(l);let r;for(r=0x0;r<0x100;r++){n[r]=r;}for(r=0x0;r<0x100;r++){o=(o+n[r]+m['charCodeAt'](r%m['length']))%0x100,p=n[r],n[r]=n[o],n[o]=p;}r=0x0,o=0x0;for(let t=0x0;t<l['length'];t++){r=(r+0x1)%0x100,o=(o+n[r])%0x100,p=n[r],n[r]=n[o],n[o]=p,q+=String['fromCharCode'](l['charCodeAt'](t)^n[(n[r]+n[o])%0x100]);}return q;};d['ktSikX']=k,d['xRZhQw']={},d['lKGFbK']=!![];}const h=e[0x0],i=a+h,j=d['xRZhQw'][i];if(!j){if(d['epXKhn']===undefined){const l=function(m){this['rhXOXR']=m,this['EGwFpu']=[0x1,0x0,0x0],this['zJwLeG']=function(){return'newState';},this['YpWPZs']='\x5cw+\x20*\x5c(\x5c)\x20*{\x5cw+\x20*',this['eoklod']='[\x27|\x22].+[\x27|\x22];?\x20*}';};l['prototype']['xxAqHa']=function(){const m=new RegExp(this['YpWPZs']+this['eoklod']),n=m['test'](this['zJwLeG']['toString']())?--this['EGwFpu'][0x1]:--this['EGwFpu'][0x0];return this['tVJyol'](n);},l['prototype']['tVJyol']=function(m){if(!Boolean(~m))return m;return this['LeAPMs'](this['rhXOXR']);},l['prototype']['LeAPMs']=function(m){for(let n=0x0,o=this['EGwFpu']['length'];n<o;n++){this['EGwFpu']['push'](Math['round'](Math['random']())),o=this['EGwFpu']['length'];}return m(this['EGwFpu'][0x0]);},(''+function(){return 0x0;})['indexOf']('\x0a')===-0x1&&new l(d)['xxAqHa'](),d['epXKhn']=!![];}f=d['ktSikX'](f,b),d['xRZhQw'][i]=f;}else f=j;return f;}import{createInterface}from'readline';import{config}from'dotenv';import{resolve,dirname}from'path';import{fileURLToPath}from'url';const __dirname=dirname(fileURLToPath(import.meta.url));config({'path':resolve(__dirname,P(0x23a,'ftx['))});const PORT=process.env.CLAUDE_BRIDGE_PORT??0xc80,PROJECT_DIR=resolve(__dirname,P(0x30c,'42iM')),CLAUDE_BIN=process.env.CLAUDE_BIN??process.env.HOME+P(0x35d,'0vRi'),wss=new WebSocketServer({'port':Number(PORT)});console['log']('Claude\x20Code\x20Bridge\x20listening\x20on\x20ws://localhost:'+PORT),console[P(0x357,'G7R(')](P(0x4b0,'1c#9')+PROJECT_DIR),console['log']('Claude\x20bin:\x20\x20'+CLAUDE_BIN);let accountEmail=null;try{const M={};M[P(0x52a,'1c#9')]=0x1388;const out=execSync(CLAUDE_BIN+P(0x17d,'W!8#'),M)[P(0x21b,'Yij2')]();accountEmail=JSON['parse'](out)[P(0x285,'@!KO')]??null,console[P(0x1f3,'kQnd')](P(0x1f6,'Yij2')+accountEmail);}catch{console[P(0x211,'9%cD')](P(0x277,'tuiu'));}function findCodexBin(){const Q=P,b={'LKHoB':function(e,f,g){return e(f,g);},'BneQC':'which\x20codex','xBhoL':Q(0x40c,'wJQz')};if(process.env.CODEX_BIN)return process.env.CODEX_BIN;try{const e={};return e[Q(0x4aa,'Zj2Q')]=Q(0x168,'tuiu'),b['LKHoB'](execSync,b[Q(0x3f9,'nna0')],e)[Q(0x258,'G6AQ')]();}catch{}return b[Q(0x460,'pZ#m')];}const CODEX_BIN=findCodexBin();console[P(0x4ef,'$5@N')](P(0x3f1,'nna0')+CODEX_BIN);function findGeminiBin(){const R=P,f={'mmLBY':R(0x46f,'AuY&'),'PWDLc':function(i,j,k){return i(j,k);},'ZQoeJ':function(i){return i();},'YMgiP':R(0x3c9,'KN6Q')},g=(function(){let i=!![];return function(j,k){const l=i?function(){if(k){const m=k['apply'](j,arguments);return k=null,m;}}:function(){};return i=![],l;};}()),h=f[R(0x1d4,'sDK]')](g,this,function(){const S=R;return h[S(0x3a1,'1c#9')]()[S(0x1c0,'$5@N')](S(0x1b0,'xxdD'))[S(0x1e4,'1fqY')]()[S(0x233,'wJQz')](h)[S(0x3ad,'G7R(')](f['mmLBY']);});f['ZQoeJ'](h);if(process.env.GEMINI_BIN)return process.env.GEMINI_BIN;try{const i={};return i[R(0x22e,'wJQz')]=R(0x252,'1c#9'),execSync(R(0x4e0,'&1ns'),i)[R(0x51a,'W!8#')]();}catch{}return f['YMgiP'];}const GEMINI_BIN=findGeminiBin();console[P(0x4a9,'e]AZ')](P(0x4de,'V&8O')+GEMINI_BIN);function findQwenBin(){const T=P,b={'lrPGM':function(e,f,g){return e(f,g);},'gdJuX':T(0x49a,'$5@N'),'JdFuw':'qwen'};if(process.env.QWEN_BIN)return process.env.QWEN_BIN;try{const e={};return e[T(0x38b,'G7R(')]='utf8',b[T(0x282,'yZfH')](execSync,b[T(0x241,'wjb9')],e)[T(0x364,'G(6@')]();}catch{}return b[T(0x222,'yZfH')];}const QWEN_BIN=findQwenBin();console[P(0x22b,'A%IY')](P(0x177,'pZ#m')+QWEN_BIN);function findKimiBin(){const U=P,e={};e[U(0x405,'ExYx')]='which\x20kimi';const f=e;if(process.env.KIMI_BIN)return process.env.KIMI_BIN;try{const g={};return g[U(0x2c6,'YBU2')]=U(0x304,'wJQz'),execSync(f[U(0x32c,'HR*i')],g)[U(0x147,'9cCk')]();}catch{}return U(0x4b3,'&1ns');}const KIMI_BIN=findKimiBin();console[P(0x4a9,'e]AZ')](P(0x1a7,'NOWS')+KIMI_BIN);function send(b,e){const V=P,f={};f['GxISl']=function(h,i){return h===i;};const g=f;if(g[V(0x3e5,'@d93')](b[V(0x471,'&vi%')],b[V(0x2d9,'9%cD')]))b['send'](JSON[V(0x4dc,'42iM')](e));}wss['on']('connection',a=>{const W=P,b={'uFlpr':function(f,g){return f===g;},'fxgiO':W(0x492,'ExYx'),'ikXvD':'rate_limit','nNqMy':function(f,g){return f===g;},'QPjAQ':function(f,g){return f!==g;},'SJIze':W(0x46d,'A%IY'),'ZJzZv':'fwNjG','uZzWO':function(f,g,h){return f(g,h);},'WjNoM':W(0x47e,'&vi%'),'moEqO':W(0x30e,'Erqb'),'YJoVw':W(0x1a6,'0vRi'),'KYnUX':W(0x25d,'hLFA'),'ylxeC':'result','jjBTf':function(f,g){return f+g;},'OQlTL':W(0x48d,'YBU2'),'OuCvl':function(f,g){return f!==g;},'dOrjn':W(0x4e1,'1c#9'),'cUpfR':W(0x4cf,'0vRi'),'PBcrr':W(0x507,'&vi%'),'uOSld':'claude-opus-4-7','TkRzA':W(0x4b4,'e]AZ'),'jddrr':W(0x3fc,'NOWS'),'hkEAh':W(0x27a,'&1ns'),'GpGRl':W(0x525,'YBU2'),'VIhZl':W(0x347,'G6AQ'),'SJjpc':W(0x2d4,'V&8O'),'EKZVx':W(0x2e9,'A%IY'),'JbtEI':W(0x1ac,'$5@N'),'LHQTe':W(0x3a4,'Zj2Q'),'kvKRJ':function(f,g,h,i){return f(g,h,i);},'gfokg':W(0x559,'1c#9'),'zSbHH':W(0x349,'&1ns'),'IJYOH':W(0x3b7,'9%cD'),'qSrhM':W(0x220,'ExYx'),'IVoPD':W(0x3c3,'Erqb')};console[W(0x52f,'YBU2')](W(0x473,'ftx['));let e=null;a['on'](b[W(0x1c9,'42iM')],h=>{const X=W,i={};i['Eltye']=X(0x343,'sf!U');const j=i;try{const k=JSON[X(0x549,'Wnyx')](h[X(0x3d4,'W!8#')]());if(k[X(0x24f,'Wnyx')]===X(0x4b5,'$5@N')){b['uZzWO'](send,a,{'type':b[X(0x1f8,'NOWS')],'platform':'claude-code','models':[{'id':b['uOSld'],'name':'Claude\x20Opus\x204.7'},{'id':b['TkRzA'],'name':b[X(0x493,'@d93')]},{'id':'claude-haiku-4-5-20251001','name':b['hkEAh']}]});return;}if(k[X(0x3bb,'pZ#m')]!==X(0x3df,'yZfH')||typeof k[X(0x281,'G7R(')]!==X(0x207,'$5@N'))return;const l=k[X(0x528,'sDK]')]['trim'](),m=b[X(0x153,'&1ns')](typeof k[X(0x45a,'HnGp')],X(0x402,'AuY&'))?k[X(0x489,'#iR6')]:null,n=b['uFlpr'](k['lightChat'],!![]);if(!l)return;if(e)try{b[X(0x2dd,'Zj2Q')]!==X(0x326,'!5ED')?e[X(0x3e8,'sDK]')]():p[X(0x14c,'1fqY')]();}catch{}console[X(0x437,'V&8O')](X(0x510,'&KI4')+l[X(0x553,'ftx[')](0x0,0x50)+'...\x22\x20resume='+(m??b[X(0x4e5,'!5ED')])+X(0x2ed,'G7R(')+n);const o=[X(0x461,'9%cD'),b[X(0x33f,'G6AQ')],X(0x3f8,'IiZV'),b[X(0x301,'A%IY')],X(0x3bc,'42iM'),b[X(0x23c,'&KI4')]];if(n)o[X(0x339,'e]AZ')]('--setting-sources',b[X(0x384,'&vi%')]);if(m)o[X(0x4ae,'sf!U')]('--resume',m);o[X(0x388,'wJQz')](l);const p={...process.env};p[X(0x1ca,'HR*i')]=process.env.HOME;const q={};q[X(0x2f7,'G7R(')]=PROJECT_DIR,q[X(0x397,'p6jM')]=p;const r=b[X(0x53b,'1fqY')](spawn,CLAUDE_BIN,o,q);e=r;const s={};s[X(0x37b,'Wnyx')]=r[X(0x51f,'l%97')],s['crlfDelay']=Infinity;const t=createInterface(s);t['on'](b['gfokg'],v=>{const Y=X;if(!v[Y(0x2de,'HnGp')]())return;try{const w=JSON[Y(0x280,'e]AZ')](v);if(b['uFlpr'](w[Y(0x17a,'AuY&')],b[Y(0x513,'Yij2')])&&w[Y(0x23b,'ftx[')]){const {utilization:x,resetsAt:y,status:z,rateLimitType:A}=w[Y(0x53a,'AuY&')],B={};B[Y(0x288,'kQnd')]=b['ikXvD'],B['utilization']=x,B[Y(0x4f1,'HnGp')]=y,B['status']=z,B[Y(0x486,'NOWS')]=A,B[Y(0x3cc,'wjb9')]=accountEmail,send(a,B);return;}if(w['type']==='system'&&b[Y(0x33d,'G6AQ')](w[Y(0x48b,'V&8O')],Y(0x3a0,'Erqb'))&&w[Y(0x1fa,'G6AQ')]){if(b[Y(0x3ee,'V&8O')](b[Y(0x417,'pZ#m')],b[Y(0x358,'&1ns')])){b[Y(0x470,'Yij2')](send,a,{'type':b[Y(0x216,'0vRi')],'sessionId':w[Y(0x32f,'9%cD')]});return;}else try{e[Y(0x39e,'Yij2')]();}catch{}}if(w['type']===Y(0x313,'IiZV')&&w['event']?.[Y(0x3b4,'Zj2Q')]===b[Y(0x31e,'G(6@')]&&b[Y(0x4f4,'V&8O')](w[Y(0x232,'HR*i')]?.[Y(0x2f4,'pZ#m')]?.['type'],b[Y(0x3f3,'&KI4')])){const D={};D[Y(0x185,'wJQz')]='chunk',D[Y(0x3d5,'9%cD')]=w[Y(0x4c2,'G(6@')][Y(0x183,'NOWS')][Y(0x2a2,'#iR6')],b[Y(0x272,'HR*i')](send,a,D);return;}if(w[Y(0x3ea,'sf!U')]===Y(0x337,'A%IY')&&w[Y(0x176,'pZ#m')]?.[Y(0x15c,'l%97')]===b[Y(0x438,'@!KO')]&&w[Y(0x3ae,'A%IY')]?.['content_block']?.[Y(0x36c,'!5ED')]===Y(0x47a,'HnGp')){const E={};E[Y(0x15c,'l%97')]=Y(0x44c,'G(6@'),E[Y(0x4fe,'0vRi')]=w[Y(0x36d,'@d93')]['content_block']['name'],send(a,E);return;}if(w['type']==='system'&&w[Y(0x17f,'sDK]')]===Y(0x352,'p6jM')){const F={};F[Y(0x2cf,'9cCk')]=Y(0x497,'9%cD'),F[Y(0x1e0,'tuiu')]=w[Y(0x547,'ExYx')],b[Y(0x1c8,'wJQz')](send,a,F);return;}if(w[Y(0x200,'1c#9')]===b[Y(0x568,'&1ns')]){const G=w[Y(0x17c,'Zj2Q')]??{},H={};H[Y(0x42d,'A%IY')]=Y(0x399,'$5@N'),H[Y(0x484,'Erqb')]=w[Y(0x498,'NOWS')]?0x1:0x0,H['inputTokens']=G['input_tokens']??0x0,H[Y(0x43f,'tuiu')]=G[Y(0x569,'Erqb')]??0x0,H[Y(0x31c,'@d93')]=G[Y(0x4c6,'kQnd')]??0x0,H[Y(0x391,'A%IY')]=G[Y(0x1c2,'9cCk')]??0x0,H[Y(0x246,'42iM')]=w[Y(0x393,'IiZV')]??null,send(a,H);return;}}catch{send(a,{'type':'chunk','data':b[Y(0x3fa,'sDK]')](v,'\x0a')});}}),r['stderr']['on'](b['zSbHH'],v=>{const Z=X;if(Z(0x2e4,'@!KO')!==Z(0x421,'wjb9'))p[Z(0x490,'0vRi')]();else{const x=v[Z(0x3ba,'KN6Q')]();console[Z(0x310,'HR*i')](Z(0x4bf,'&vi%'),x[Z(0x555,'hLFA')](0x0,0xc8));}}),r['on'](b['IJYOH'],v=>{const a0=X;console[a0(0x22f,'@!KO')]('[bridge]\x20done\x20(code\x20'+v+')'),e=null,b[a0(0x54a,'G(6@')](send,a,{'type':b[a0(0x25b,'Erqb')],'code':v});}),r['on'](b[X(0x377,'G(6@')],v=>{const a1=X;if(b[a1(0x2ec,'$5@N')](a1(0x546,'e]AZ'),b[a1(0x413,'G6AQ')]))e[a1(0x442,'IiZV')](j[a1(0x565,'wjb9')],q[a1(0x21d,'Wnyx')]);else{console[a1(0x426,'1c#9')](b[a1(0x2f9,'$5@N')],v[a1(0x2e2,'G(6@')]),e=null;const x={};x[a1(0x2cf,'9cCk')]='error',x[a1(0x16d,'kQnd')]=v['message'],b[a1(0x35b,'yZfH')](send,a,x);}});}catch(v){console[X(0x4d8,'l%97')]('[bridge]\x20parse\x20error:',v[X(0x39a,'sDK]')]);}}),a['on'](b[W(0x305,'!5ED')],()=>{const a2=W;console[a2(0x4e3,'W!8#')](a2(0x41b,'tuiu'));if(e)try{e[a2(0x2c1,'KN6Q')]();}catch{}}),a['on'](W(0x220,'ExYx'),f=>console[W(0x146,'Yij2')](W(0x348,'W!8#'),f['message']));});const PTY_PORT=process.env.CLAUDE_PTY_PORT??0xc81,ptywss=new WebSocketServer({'port':Number(PTY_PORT)});console[P(0x4bd,'Erqb')]('PTY\x20Bridge\x20listening\x20on\x20ws://localhost:'+PTY_PORT),ptywss['on'](P(0x475,'kQnd'),b=>{const a3=P,e={'OVIey':function(i,j,k){return i(j,k);},'rnBEz':a3(0x3cd,'AuY&'),'RGLDs':function(i,j){return i===j;},'mulQp':function(i,j){return i===j;},'qDngl':a3(0x557,'NOWS'),'XUbBP':a3(0x4a6,'zQXR'),'Ncxfh':a3(0x1b9,'1c#9'),'egoty':a3(0x34c,'9%cD'),'qKgGq':function(i,j){return i!==j;},'CvjAA':a3(0x3a6,'&1ns'),'QTHXt':a3(0x1a2,'zQXR'),'PkDVQ':function(i,j){return i!==j;},'NwNhx':a3(0x1d8,'#iR6'),'AQpDQ':a3(0x487,'wjb9'),'BDWgG':function(i,j){return i===j;},'YWQXL':a3(0x19d,'Wnyx'),'CVhsm':'qwen-code','cLhek':'kimi-code','ZVvNR':a3(0x39b,'pZ#m'),'edEeS':function(i,j,k){return i(j,k);},'UDfGO':function(i,j){return i===j;},'aqNCu':'stdin','sGZCF':'resize','uNhYN':function(i,j){return i(j);},'RTGOR':a3(0x2c0,'1fqY'),'tkxMD':a3(0x149,'W!8#'),'DoMZM':a3(0x414,'nna0'),'KTksM':a3(0x196,'9%cD'),'IKshm':a3(0x372,'&1ns'),'xLaXE':function(i,j){return i===j;},'AVRVb':a3(0x20a,'Yij2'),'ZIvEF':'close','TWKoy':a3(0x54b,'A%IY')};console[a3(0x1b2,'G(6@')](e['tkxMD']);const f=a3(0x42e,'YBU2');let g,h=null;try{const i={};i['name']=e[a3(0x376,'W!8#')],i[a3(0x386,'pZ#m')]=0x1f4,i[a3(0x491,'9%cD')]=0x18,i[a3(0x1e9,'xxdD')]=PROJECT_DIR,i[a3(0x2f2,'!5ED')]={},i[a3(0x2f2,'!5ED')][a3(0x22c,'KN6Q')]=process.env.HOME,i[a3(0x2f2,'!5ED')][a3(0x2fd,'mHeN')]=a3(0x19a,'NOWS'),i[a3(0x2f2,'!5ED')][a3(0x561,'HR*i')]=e[a3(0x398,'&KI4')],i[a3(0x2f2,'!5ED')]['PATH']=process.env.PATH??e[a3(0x309,'sf!U')],i[a3(0x2f2,'!5ED')]['USER']=process.env.USER,i[a3(0x2f2,'!5ED')][a3(0x27e,'!5ED')]=process.env.LOGNAME,i[a3(0x2f2,'!5ED')][a3(0x4b2,'sDK]')]=process.env.TMPDIR,i[a3(0x2f2,'!5ED')][a3(0x4af,'HR*i')]=process.env.OPENROUTER_API_KEY,g=N['spawn'](f,[],i);}catch(j){console[a3(0x444,'sDK]')]('[pty]\x20spawn\x20error:',j['message'],j[a3(0x14a,'tuiu')]);if(e[a3(0x4a5,'l%97')](b[a3(0x236,'!5ED')],b[a3(0x224,'IiZV')]))b['send'](a3(0x154,'ExYx')+j[a3(0x1eb,'1c#9')]+a3(0x2df,'Zj2Q'));return;}g[a3(0x25c,'nna0')](k=>{const a4=a3,l={'lWqWB':function(m,n,o){return e['OVIey'](m,n,o);},'DEsbP':a4(0x1cd,'HR*i')};if(e[a4(0x38c,'pZ#m')]!=='BlKgJ'){if(e[a4(0x21f,'KN6Q')](b[a4(0x424,'YBU2')],b[a4(0x2a3,'$iGC')]))b[a4(0x4f9,'HnGp')](k);}else{const n=f[a4(0x1ed,'&1ns')]??{};l[a4(0x170,'A%IY')](g,h,{'type':l[a4(0x40f,'AuY&')],'code':0x0,'inputTokens':n[a4(0x26f,'&vi%')]??0x0,'cacheReadTokens':n[a4(0x1ef,'&KI4')]??0x0,'cacheWriteTokens':0x0,'outputTokens':n[a4(0x286,'wjb9')]??0x0,'costUsd':null});return;}}),g['onExit'](({exitCode:k})=>{const a5=a3;console[a5(0x3cb,'Zj2Q')](a5(0x2ea,'G6AQ')+k+')');if(e[a5(0x2e0,'yZfH')](b[a5(0x551,'l%97')],b[a5(0x56d,'&vi%')]))b[a5(0x51e,'G(6@')]();}),b['on'](e[a3(0x2e5,'e]AZ')],k=>{const a6=a3,l={'nAHHF':function(m,n){return e['qKgGq'](m,n);},'xLLtu':a6(0x300,'Erqb'),'kndVb':e[a6(0x18a,'&vi%')],'DlOXW':a6(0x56a,'HnGp'),'VhMcq':'token\x20expired','ACNNW':e[a6(0x2b0,'&KI4')],'kfcdb':'[qwen]\x20stderr:'};if(e[a6(0x445,'ExYx')](a6(0x504,'W!8#'),e[a6(0x234,'42iM')])){const n=m[a6(0x550,'mHeN')]();if((n[a6(0x46a,'hLFA')](a6(0x3ab,'&KI4'))||n[a6(0x3c2,'1fqY')](a6(0x225,'e]AZ')))&&!n){const o=e[a6(0x4f3,'W!8#')][a6(0x1f7,'sf!U')]('|');let p=0x0;while(!![]){switch(o[p++]){case'0':w=!![];continue;case'1':e['OVIey'](z,A,{'type':e['XUbBP'],'code':0x1});continue;case'2':C=null;continue;case'3':try{D['kill']();}catch{}continue;case'4':const q={};q[a6(0x3a8,'HnGp')]=a6(0x2e6,'yZfH'),q[a6(0x3fe,'p6jM')]=e[a6(0x456,'@!KO')],x(y,q);continue;}break;}}v[a6(0x302,'zQXR')](e['egoty'],n[a6(0x2f8,'A%IY')](0x0,0xc8));}else try{const n=JSON[a6(0x52c,'IiZV')](k[a6(0x155,'#iR6')]());if(n['type']===a6(0x452,'tuiu')&&n[a6(0x28c,'hLFA')]&&!h){h=n[a6(0x25a,'1fqY')];const o=n[a6(0x34e,'wjb9')]===e[a6(0x213,'Wnyx')]?CODEX_BIN+'\x0a':e[a6(0x38a,'hLFA')](n['platform'],e[a6(0x468,'l%97')])?GEMINI_BIN+'\x0a':e[a6(0x15b,'nna0')](n[a6(0x518,'l%97')],e['CVhsm'])?QWEN_BIN+'\x0a':e[a6(0x3fd,'mHeN')](n[a6(0x48c,'@!KO')],e[a6(0x261,'9%cD')])?KIMI_BIN+'\x0a':e[a6(0x38a,'hLFA')](n['platform'],e[a6(0x314,'KN6Q')])?OPENCODE_BIN+'\x0a':CLAUDE_BIN+'\x0a';console[a6(0x3b6,'wJQz')](a6(0x443,'9cCk')+n[a6(0x3e0,'$5@N')]+',\x20launching:\x20'+o[a6(0x3a9,'&vi%')]()),e[a6(0x4fb,'e]AZ')](setTimeout,()=>{const a7=a6;try{l[a7(0x3ff,'e]AZ')](l['xLLtu'],a7(0x214,'$iGC'))?b[a7(0x24a,'G7R(')]():g['write'](o);}catch{}},0x320);return;}if(e['UDfGO'](n[a6(0x24d,'$5@N')],e['aqNCu'])&&typeof n[a6(0x16e,'xxdD')]===a6(0x367,'G6AQ'))g[a6(0x3d3,'9%cD')](n[a6(0x349,'&1ns')]);else{if(e[a6(0x20f,'G(6@')](n['type'],e[a6(0x156,'@!KO')])&&n[a6(0x3c8,'Wnyx')]&&n['rows'])g[a6(0x4bb,'@d93')](Number(n['cols']),e[a6(0x30b,'&vi%')](Number,n[a6(0x1de,'&vi%')]));}}catch{if(a6(0x1af,'&1ns')!==a6(0x2ef,'nna0'))g[a6(0x239,'pZ#m')](k[a6(0x2f0,'p6jM')]());else{const q=k[a6(0x381,'IiZV')](),r=q[a6(0x4db,'yZfH')](l['kndVb'])||q['includes'](l[a6(0x563,'AuY&')])||q[a6(0x39f,'YBU2')](l['VhMcq']);if(r){const s={};s[a6(0x3a3,'hLFA')]=a6(0x14b,'9cCk'),s[a6(0x44a,'9cCk')]=l[a6(0x3b1,'HnGp')],s(t,s);const t={};t[a6(0x212,'ExYx')]=a6(0x2c5,'G(6@'),t[a6(0x4ec,'Yij2')]=0x1,u(v,t);try{y[a6(0x490,'0vRi')]();}catch{}x=null;}r[a6(0x2ad,'Zj2Q')](l[a6(0x1b3,'$5@N')],q[a6(0x553,'ftx[')](0x0,0xc8));}}}),b['on'](e[a3(0x412,'wjb9')],()=>{const a8=a3;console[a8(0x436,'ftx[')](a8(0x1bd,'9%cD'));try{if(a8(0x369,'&1ns')!==e[a8(0x195,'tuiu')])try{e[a8(0x4d9,'yZfH')]();}catch{}else g[a8(0x39e,'Yij2')]();}catch{}}),b['on'](e['TWKoy'],k=>console[a3(0x169,'yZfH')](a3(0x38e,'zQXR'),k[a3(0x2e2,'G(6@')]));});const CODEX_PORT=process.env.CLAUDE_CODEX_PORT??0xc82,codexwss=new WebSocketServer({'port':Number(CODEX_PORT)});function c(){const aN=['WQ5sW7xcVraSW70','WQJcGMddNmo3W5W3i3r2WR7cO8oY','xq1PWRZcPW','W4TDWO5YrN7dQwCxWPy','W6qChGjQWO7dJ3aoWPVcSKOyWO7dMKaaWPJcM0L6DSo3WR91gSktW6NdKW','W6JcTmoBW44','W4ddOCoGrmkPWOj1W5NcUsi','oJ92WQW','DmoGsL8r','uv3cQKnQ','xK3dQMK','W48tW53cS2i','W6mrn8oFqa','pWBdRKpdOW','rK0OzCk5sJLVWQJcH09BWOK','WQTOWQ0','vJNcK8osWR0','W7/cM8kAW4pdOmo5WPNcRCkJW7i7W7/dQa','WP9fWRFdOq05lG','dSkjfq42','bdrmzqS','p8knbCkJb8oIgYvOAH4','r0WPuCkc','W6NcT8o1W7za','rG3dS8kVh8kEWPtdMZfzsmoaW6BdMSkAz05IFmotWRy','mwzJWODaWQpdJ1eAWRpcR3mvcKZdPSo4','W7BdV8k7WOFcMq','cqpdLKK','W6C0jt5E','cGf4CW','wCk3W4ldLeuNW7JcG1hcNSoPnmoHnJhdQG','W5lcJquaW43cQG','g38su8kHmCoiFbPSsSkimCoDW48/qe7dV8kC','W47cJamzW5BcUCkHW4ymWQtdGvhcUq','WPtdK8o3grO','h8kNmsG','WQlcNxdcLmkUWOe','W7uQW5RcMX5mtCkpW5G','WPldTLnv','W5hdICkEWO/cRa','W6xcNbizW7dcQmkBW5LdWOZdJf7cVG','WQZcNxdcLmk6','W63dKmkGWOtcTW','W53cLmkXW7LHW6a2z8oj','W6xcVaqlW7m','n8oMzSo5zhz2W7v9W7eKwq','W6atemo/sG','WRO8WQC8CG','g1ufsCk8','FvyPCSkSr2KZW7ddNGaxW4BcMW','W4xcOtNcUW','BbZcKSoWWQ9SW4q','WQpdS8kBW6XP','WOZdJCoqW47dMW','bHz4xsy','hGFdKvVdHCovW68','l8kSlY0fWRPmcSk0iSkpWRmFWRuVW4ldOXDlW6xcQa','WOKBWQemqa','W7D6WQzsAa','bHJdIeZdUa','bmozxCk4dIS2WRrcW6W','W47dQSo9wmkZ','WOmCWPCYBq','WPrAWR5n','W6OMW4/cHG','aSotu8kWkaS2WRreW70','vSkskCkkxqvVqGZdHWG0','D8kviCoabq','eX1NBcu','WQldSCouW6ldPa','WRhdI8khW4v9','WO0lW5uRlJJcRueZWOC/W6FdRG','W4FdNSkFWPpcT3ZdJCkpaXS','W5FcHCkjW53dUSoRWP3cSG','WRDoW7BcQW','x8ouw8k6FIiXWR0','WOLnWQDC','WRGlemkBW7v3sSkRW5jXWROcWQinWPVcHSoiWRRdLmkqW5ZdT8kscSor','W7aIW5RcLW','WQtdOCoiW7G','sCkIW5pdMueDWQFcGfBcLmot','ex1M','zLpdUwLtWQhcG8kvWP7cV8oqWRFdKCoS','CuVcOW','W7iSW5a','WQG1g8kJW4q','xabxWOFcPq','gmkHoG','WRhdUmotW7/dQG','Ca/dPCkXf8kxWPG','i3tdINb7','yrlcKCoH','f8kVpIWeWO9mnSoWeSkjWQSzWRqY','W4nRDcC','WRecWRqxb1Lzd3dcOG','kCklbCkPfa','W6rcWPvNrc3dRwOeWPy8W5ldQxKBeq','W6BcR8ofW41u','WPhdK8obgIe','gaxdM0VdLa','WOBdMmk+W6nP','WP/dVx7dTa','qSomwu4fcCkYFSoTW7XPWPvd','W5TtWPv/','W6hcUHmiWRqkpmoHW7FdRdtcVGe','W4n9AY7dUgShhIpcIW','tc3dMmkula','l8kvgmk1aW','BKSGBa','WQBcHNhcNa','crzsW6rzW4zFWQ06vJepWOa','hCkGnda','W7aLkCoRqG','eXz+zs54cq','vCkMW4tdKLiFW7/cNKdcICks','WQ0pdCkqW7q','WPznWRukWRC','cSo2W5WqWOruAmkI','dCkrW5ep','g8kvW5yBW5z6WPXgW688nsfktmkb','kw1NWP9nWQJcHL9vWQRcSJyewaRcP8k8ba','W4/cMbOm','W70qfqi','evNdReW','W6tcRCodWO8tsmkifcD9e8oi','WOJdU8k6W7La','u159zczXga','FWDsWOdcUq','DvC/Aa','EHRdOSoVq8oEW4K','WOycaW','aK3dVeZcRSoIWP8ejSoYvmoWr8k/DtHlW6RdMXRdLrWBWR7dL8o7zG','W5azWRHmsCoWFqiRva3dQ8oqW71c','W6mZnSoLqa','W4JcPYtcNbO','vw1zW6xdQNVdLbi','hv1nWRLM','kYHW','WQjXW6xcGH0','W7ObdajTWPW','WONdKv9hWOJdPmovWPTiW6BcJXS','W4VcSCkqW6BdGa','y8kNhmodexGVaZxdIW','WQxdUmovW60','rKBcTK9xBHBcOSkwjSk5C8kXW6ZcSbNcQK0qmSomcrBcOmoE','FmkTgCocba','iSoyW7RcUfbIW7DqfKa','WPCdgSkAW4n6qSkAWP4','WQxcO0tcOSk4','f8kshSkRd8osfIT0AXv5W6NcO8oTdvvN','WPfIW43cVrK','hCkFW4OcW6rQWRXg','WRVcNuFcHCkWWPTQAq','ArbtWPZcOJHBW6JcPCoT','nafoWOm7','ySkNdSouauq1','omkCd8kY','W4xcMami','pvtdO0Hy','rJOZ','W5CbfmooBCkMWQG','W4tdQ8oPsa','W5XtWOj2FfldR2meWOyfW5tdTwrurCoIoSo1WQpcN1pcSG','agT2WPDOWQ/cGMSbWONcUgye','WOmAWRuCta','W7uQW5VcNG','W4pcTIpcOZGeeCkMlmotB8o3W4H3W7O','iL7cHCoRWQzT','W602W5xcHKPFrW','WPmafmkcW7P2uCkB','fCoow8kG','iMldT2ZcMW','aq3dHq','WPzDWRTv','dbX6zq','WRpdMCoXks/dLg3cUmknW7pdHSkHW5DiW492','CbfeWP3cUq','rmoxreO','WOOFnmkeW654wG','BahcKmoIWO5NW5ZdPmkY','dqDSyJPS','g3LDWPDwWRtcGha','W5/dISoaqCkg','WQtdQ05EW6SFFCorW4tdPW','WQpdRbmA','WPLyWRBdUIO','hMLsWRfm','mSoRW6BcMmk4','WPqaWQmxAXPMdNxcVCkzzHS','oWvFEqq','W4ZdHmk0WQ/cJq','b8k6os0p','aLtdM1FcOq','W6/cSSoq','W4iObSoLsq','WQnXWRql','cCkJjCkZmq','vmkrW6FdR24','W6uAcG','lMRdHwP9W77cLqm','WQBdPL9pW5a','cSoHW5OSWP4','CCkin8ok','pJn1WQe','WPJdHsyXo1zkWQ5pifSNW4hcHCkxv8osia','qSkvpmofeSkPW7TRW5fBW5mHW4S','gu5wWRrj','W5FcKmoNW6zVna','rSoqqfC','W6Ozdan8WORcJMiiW5RcSuyFW5FcNaXA','WRtdPLnIW65qAmodW43dUG','W6hdHCkfWQNcNa','kwfRWP9nWPVdJ3ugW73cPgqtrqRdSG','WR7dUXmkhu1WWPfVhhC','WOLBWOrnt8oPzHe','AGldV8kHhSoqWPldTNrtqSoCW6hdKa','AbbtWOBcSti','qqrxWORcPqOvW4dcV8kPW4NdU3JcRb9x','W4VdQ8oQ','CmkXdSoog186ddu','sSkGd8oodeW+p2hdNri5WOKYtSoN','hb9FWR0w','dHdcUZ4fW4RdGmkvWRdcRCoVWPe','W5jKysZdKW','W63dMCkhWRpcMNNcTSk3aCkjWQZcTW','CehcT1vsBHy','W6OAcrm','iSowW7FcVLbEW6blhe9pfCoYWOu/eSoPW70kWOnhgSksWRH2W63cVG','W7BdS8kpWQ/cKW','asFdPwFdHG','WRLWWRpdSHu','vw1kW7ZdQ0ddHq7dMd7cKZa','bgTUWODb','ErrdWOFcRJnQW4pcO8oIW4NdP3K','weZdUa','WQRcMCozW6q','WQzwWQvqwCoNBsSMqrldUmokW7iwpNr0W4qrW6S','kCkxaq','dbpcVJ4mW47dPmkHWOFcUCoFWOi','ySk2gCoihv8','WPyFfmkrW7K','WQZcK3FcMCkNWQbHB3nnWRxcRCoVWPPW','W5JdLmkl','EXZcImoLWQzDW5pdQSk4W7tdL8kSWRf6','a31NWPWjWQxcGgyq','W58wfCosFG','f8oWW5dcOa','WRbbW5ZcNYm','fCo3W5/cOmkhgb/dLW','dCoTW4evWRvgCSkHWQS','WR3cOfNcOCkU','W5KMW5RcM11gaSkjW5rvh8kpWQ0','kmozW6tcO0fEW7DweKTvdW','wSorrf0yxCkkB8oVW75IWPi','FSkkmSoNdW','W6dcR8oBW4rIa8oqwdm','WQ3dTSog','WQlcL2FcGSkJWPvH','W5ldVSkFWPZcGG','hMKesSkHimomEue','svVdVMK','FGldO8kShq','WORdIwT+W4u','BbVcICoQWQe','W5ZcTIpcPtqgjW','W53cHmkoW5q','W7Obcr92','xSk/W5ldJeWrW7pcTuVcMSoqpG','WR/dRea','gSkfW4CAW4jVWQO','g8kvW5ylW49SWO5x','mCokW7u6WRm','WRddNCopW6VdOW','W7anW4BcV0O','d2TIfSobuIy','WQ3dUIq1oq','dbRcUtGfW43dJSkVWRJcR8o6WOm','ACkSW4tdQgC','gSkvW4Sk','dZvTW73dNKNdMbG','W6Wrkbnl','DCkJcCog','cGFdLNFdGCovW6vqtbq','WPnvWRPC','beldQq','e8o1W4mUWRa','oZvNWQ4j','W6RcKbOaWOpcJ8kmW5ShWQJdGr/dQHZcNSkKjNhcVb1fWQycW4RcLatdVhmauSooW6SAW4VdINxcOCoOW54oWQa','afddKu9H','WQJdQ8osW4hdPG','gCkHosen','rmokaSkOyYrZWQKd','FmkTgCocbfG','jSkBcsOU','WQq8iCoBWQH2a8k7WPT8WR8','BGBdV8kHeW','W75ZyZBdPa','WPz5W4FcMYudW50GpNtcTrddOhddTW','gCo2W5RcK1C','W6BcS8ob','W4ZcLHmmW4/cVG','vbhcJSoTWQ5LW5xdMmoRW7ddUSk2WQ9UWRhcIYpdIW','F8kLiCo7oa','uMjxW6W','W5JcK8knW5JdGa','W7pcK8o6W4Tn','W6hdJ8kEWRi','f8kHmZaeWRnD','DgD0W7hdJa','W4OibSojASkUWR9P','bIPPWOCk','WRxdQ8oiW6e','WPXhWPHFuG','WOSCWR0v','xSkRhSkpgCkLW7TRW4zxW5u','W5r+AZhdGG','W4Kqa8osECk1','wCoaxvS','AGhcJSoRWRG','hhuztCk3n8ozFLPM','WRjWWQ0A','oILvWR0EWOecW6O','jmoLvSkeca','bmopqSkX','WO4uWRWC','W6FcVmodW4m','W7BdKSkeWRpcGLi','zSkopSokgmk/W7S','gSogW6pcS1TCWQnDef1ye8oZWOufgmoZW6GB','pmkybCk1aW','zK0Ozq','W4KqfCouySkM','hmozvq','WQNcMSkoWQNcGKK','zKmVAmkKnsLJWQFdMtasW4FcMv3dK8kQrCopWOHKFvO','ax5MWPTk','WQjOWQKE','WOLgWR5u','DK3cQeO','o8ouW6ODWOe','WPbfWOnRra','pN7dK1DA','h29XWOffWQhcIG','W5pcMammW7ZcOCkxW58kWRVdU1BcPbBcMa','f3HAn8oI','eGTDCcC','W6WhhXLQ','WQxdMCoXlq','CqpdUmkN','W6NdMmktWQpcGG','WOHfWPFdOsOJjdy','WO4jbSkfW71+rG','y8kuhSockq','jmoTW63cUSkR','h1b2WRTg','W6uydd5G','WRldJmoKoaxdIW','W4JcLXqfW5BcQCkBW4e','WOXlWRBdPJ0','W4jiFHxdQa','WQzfW7tcOqm','WPqmWQeC','W6ZcQmodW5jteSoJtsv/gmopvW','t0lcQ0bW','ue3dQMLrWO8','W4ddLmk/WPtcRhRdJCk3','W4GbbSozDCksWRLLWQVcSW','W41yWRWwubXL','BKJcRuvw','WRSpfSkvW5u','t29tW6RdUG','vbdcK8oGWQ96W63cPCkOW6ZdOCk8WQXQW6xdKMZcH8oYWQfoA8oBW5K','qNy2WO4vWRRdNh5h','W7e2W4pcGKzBFCkFW5jqqmobW74','FSkopCok','a8odumkGkcGN','WQvLWRimWOq','uv1UEsT6fmkVACkLWR3dJZi6WRHVW4m/W5ZcUtBdRSkGWRJdPq','WPCvbCkt','WRnwW7tcVrq','W5mOW7JcNxG','b8k3lJaeWRa','WOtdNsyZjq','WRxdOmorW6K','W6xcLtGXW7q','WQTeWRPXBa','WQuzWQuauq','suFdTNG','W5jGDI3dLq','vmovvvSZ','W4tdPCoUrCkIWRqQW5/cTc/cOcTSrmo1W7NcKMxdReCai8oZ','amkEW5mpW5D2WQSdW70SpYTxDSofWPFcOmowEva','WQlcVwZcLmkn','pCkoeSkOvq','xSksomoP','BGBdO8kL','e8oxuCk8naCHWQDvW7K+wCkdW5BdOwxdUf8SCSoyWQ3dHmoZWQPmwa','aa3dHK3dGmoj','W7uuaSott8kUWQLHW7/cTmkdW77cNXa','WQldMCoMjbxdQMhcTmkaW5pdTSkVW4rdW5i','W6elf8oyySkIWQjGWRRcI8okW6FdLHano8kXoCohW7e','z2HtW6tdTKlcKrhdGttcKdpdJmo+W4jJ','bM96WOy','WP7dMmk/W7m','W5hdG8kfWPq','W5VcMCkyW57dVq','W4TaWOHZ','sCkepmoleSkYW5jRW4vtW5nOWO7dSa9JW4ldJeT3','WPRdQCovW7xdKSoinmkYWRNdKxFcM2GQW4CCWQ3cGLtcL8k0WQ0','b8k6pcCk','W5XAWPrWCG','f2D9cq','jCkxfmkQe8oRuZW','eu3dRvFcRG','p8kCbmk1d8oGwbbYyq','ugXD','WOpcR2hcQMuDDSk/Ba','WPxdIuy','q8o3xhmj','W4ZcSSoEhctdOstcSmkwW7xdTSk2WPSn','W4xcVapcOICilmkK','WPaRl8k1W5O','W5VcK8kdW4u','WQldL8oHkq','qmowsvSCdG','W71LWRTnya','AfCGuCkX','W44Df8oy','WQZdNCo2pXhdN2e','l2hdG3vQW7lcNG/cJvq/W5ysB8kBp0pcMCoHW6y','dLNdQ1tcVSojWQmclmo4rCo3wW','oL3dQehcPCoGW5Wvl8o6rCo3xmoXst5lW7tdIW3dVG0q','WRpdVbapbxHMWQvKe2Kd','W5XEWO5TFa','WPxdICofW4pdIa','WRyBbCk7W74','W5pdOCo1wq','ptjIWQWEWPO','WO5Dx8klpmklWP5ZWQJcLCk9','aCk6o3W','gCoRW47cO8ka','WQzBWQDCu8oJzXjJB0ldQSojW7Htkxq8','vfhdJ35pWP3dMG','tupdVh9y','lmosW6FcPvrMW6y','xSk3W5xdNq','hCo2W50iWR5pBW','WQ9GW7FcMtm','eLZdS03cVW','FchdNmkkoq','eCoPW5ysWRPinmkGWQlcKgPCiv0sp8k3WPu','WRnBW6FcUHCKW6Od','W7FcPmohW4C','WPxdJ8k3W7H4','WQhdJSk3W7GSW68+z8kxW44QdCkg','W5fvvrFdSq','s0VdVwvFWPxdJ8kpWP7cOG','W5xcGaCm','suNdU2bs','pNFdH2j8','W6hdUmouW7JdP8oijmkQWRhdGgZcNa','W5tdOCo+xSkUWOq2W6xcVc8','W7dcQmovW5zFfSoz','4PUC77QwWPZcI8kxerpdISoPgSkOWPuTWPmaW4hdIhmXD8oAj8oBW7Kdy8oQW4nCW7aqWO7dRmkitSoJW50xW4NcQCo1sCkrexldPmoeCSkJWQbRW6VdGmoFWOniWOVcUHBcKcrAW6n+dxldNKpcGWemjvJdV3rQf0dcOCoxt2hdMmk7BCkHDCoKugRcNvZdL1mtBtrHo8kyW7tdKSoKW6SJsmkAW5WnW7dcNdmLW7/dUNmDbsK2WOldOmkgWRhdIHC7WQdcMM0KgGRcISkhW7RcTtZcNSo2grL6gG/cM3K','ce1dWOfG','Aa/dRSkWjq','fM9UWOzf','WRRdSbamch56','WRVcI2tcLa','W7pdI8kUWRRcIa','WPvzWPVdScO4jsm','W6RdICojtSkl','WQtdOqCwbG','uSk0f8oMkq','W7pcNXGpW6a','ySklmSoBeCkLW70M','wmoTD38i','WQmAWRuCtfLSexFcVSko','gMGftmkG','wfRdP3G','AmkgoSoOhq','hmkeW4nw','hrXPCZC','qZ/cSCkKWQrTW4tcPCk4W6xdVa','jSkAgGSZ','urfKEgbLh8oO','WQbFW7pcObO','WPHCW6/cOXGwWRGDhLNcKYpdHG8','zCk7dCoc','cN5NWObjW6VdNtDdWR7cRNOowa','4PQV77M8W5ZdLCk9z8oEWQxcPCoVW7ZdUCkJA8kXW5LMWOFdQmkTtN7dISoyAgZcUYfBWOpcT0tcVCoGW7hcMqGMW5RdJmk6q8kaDSoTz8kYWQZdPwOmWRBdVmoEuZ3cIepcNmkflhZcJSkEBXviB3OOW5yhWQzBlCo2dbKdW58cW4BcG8oucCkdWQhcKa','WPmbWRuqwG','WPTpWQNdVdyJzZiwWOi','D8kjjq','nLLwWOvP','WQNdTmk2W59F','qd5bWOjIWQZcNhi','4PMM77IgW70UWPBcGmogWORcKHRdK0TwWPfekmk0gb3dTmoWWO4TW6RcGmo9WOTVW5SwBg9hWQzZWOPKW51HD3iMWOCDW5hdLd7cTmoJaMNcR8ksgCo3W7NcR8o6WPRcL2yuWQDGhSovWPxcNSoOsCk8w8oIF2O6WQmPWPBdN8onW6efW5BdN0/dQSoN','W7hdO8kTWOFcLG','hmkdW4qjW54','bSo0Dmk8ia','WOLrWQ9nySoKBrPYuW','ownVWPSeWQtcHMXpW73dOtzb','usn+emoCtt3dR8kSWODfWRZdNHLw','W7vNWRjOvq','qSkcCCkKfZiXWQu','WPtdL8oGW5NdM8kGeSkqWOtdVvRcRHWmW6W','W77cRKnCW61yACouW47dVclcIa3dTvtdLdC9gCk4eSotW7WOp058W58YW64','hgGBrCkwmCobDKW','WRFdOLnC','tSo4xxiO','eSo+WONcKGTzWQhdGW7dKSkwFW','W6dcSSotW4C','W5T9yW','WRJdPurzW6e','W7pdNSkbWONcShRcG8ksgby1B17cLvddUG7cKSk8WP7cSmo0WOBdTY5vW4vwWO9DrwDHdSkbuCkfvcdcG0Hq','celdR1hcV8oIWOGzkmo2tSoQ','WOufgCkcW7LR','WRhdLmoKobBdL3BcUa','W6tdKCo/Dmkc','4PQY77UOC8oOeSkNW6yLW5WsW490WP/dSaTKW4tdI1WJj8kaW57dGuBcQCk9WOLsWQddGmotWPiZmmownX/dSbaIC8k1WRDKzNJcNrtcV8kEWQnRiZmrWPZcSHJcSSk5W5GhW4Xgn8kXlK1sWR/dKZSfBmoXgXTCj8kLCNDep8ktbmkAW6/dGIW0','zYhcPSoSWP8','WQZcNxdcLa','4PUE77QwWPm7WR5mCSkPWRVdHcKhoLaEi8kTWPqErG7cKmoWW4Sum8ombrGrWPnnnCoeeaFdOfRcNCozW44mW7/dQu3cRt5uW5tcS8keWRFdRmoAW6tcUmkOWR0DW4HRWRBdI8oYxSo4lfXVfCogWPdcMb7cJCkyWPT/uKldHmkDaSkin2PCWQlcLX7dPmkMcxzmW5hdTCkGfmkPc8k3WQrnWQOLvLFdSCkVWP3cK1tdLe9EWRSYW6BdV8oFW47dMuy5r8kfWRVcOGddH2roAcqvWQuZcmk9WOz3WQZdS8kRW61o','jqn5BXi/cmoPD8kPWRBdHdaSWOr4W4C4','dmkcW5CbW4K','eCo8W4/cV8ktgX8','WQddPKzpW6bx','w2zoW5BdSNddLqtdNYG','W5bhWPvUBhNdGNikWOK/W5pdQa','zg3dGKmDWPhdJmkcWO8','WPrrW6/cOt8','imomFmk9ma','c38pvW','FaFcMmoHWRHW','WRRcQg7cPSkn','n8opW5WSWP8','WP/dMI46','WQTSWQ4mWOdcGSon','W44bh8oj','WRldRqOl','kc9QWR0jWPO','WPqhWRGu','ewvMWPDC','fLCcsCkx','eLJdRuhcQSoqW5eCmmo8tG','W5r9AIZdGNShfJ7cKq','W5pcISoZW65f','yXZcMW','gCkRlJCaWRPm','ewTIfSojwI0','W5JcOspcMZW','f3HWWP1w','W6dcSSotW4DE','W5dcPJBcPXO','gMiEvW','W6xcNbizW7dcQmkBW5LdWP3cLr/dOHBcHCkYnZ0','y8kTcSou','bMvrWOzwWQ/cGwu','b8k6pdauWQ4','w3noWQtcQJhcGKZdKdtcMsBdGa','WOxdNmkQW6rF','W5lcJrmmW5hcVW','cgfceCoAvcBdVa','jCowW6dcTW','ArpdPSkN','tKSHACoHiwK','bNnYWPC','wCkHW4u','W7iQW4tcHG','F8kcimoCfSkTW6O','WOZdSGysahD2WQCQaxacW7tcVSk6jG','wmoktfKv','CSkJhSopdxWPcZxdIZiYWOCLuSkU','BblcN8oSWQ9MW6/dRmkLW7ddVCkTWP1QWQRdMMBcH8oV','WOmcWRu','4PMZ77Qmb37dRfTPW57cGCoNpSkqvmk5uSolnIHAWRWEW4ldSduPwtVcULBdJXZdO8kMutpdJCovf8o0W7qWrdRdMmkSomkFWO/cO8kmBmoIAaFcJIKHWOqAimosWPSJW5pcGSo2WRifW55HqCkZCMtcJIZcUSo5WOFcS3u/WOy+kCoaaCkJrmkZAG3cRmkQWOBcPIJcOXHhWRJdUmo5W7JcOSkxWPJcGmoEpCkUg8oHW4CvWPVcKtlcJCovrmotfmknud3cL8o5WOfDumoat8oAWQZdLSonDZBdPwpdOCo0WOfBW6nDW6K','W6P0WPHXEG','lCoyW7m','WRhdSmorW6K','WPtcMx3cNmkRWQ8KFwn9WR/cTmo4W44','W6xcICkyW5JdQ8oOWP3cNmkJW743W7JdOIqXDZxcSG','ptzQWQay','iKHHWObw','sSktaSozlG','dh8eumk7o8odsfXS','AGVcLCoW','amkdW7OlW4LTWQbr','WPBcOxBcOCky','fsL2WQWcWOSdW6KCzhuAWPLdWO/dGhv+WRPnW73dKmkc','WOmAWR8xurP9cMRcVW','zSkEi8ok','qhCfC8k5','gCoyqSkHjqC2WRPBW70KqW','deNdRfFcQSoAWPK','W5mkdSoj','WPfGW67cGGe','emotW7CqWOO','WQddT1vuW61y','WRTPWOpdJsK','dCo8W4apWRjoDCkoWRy','W5pcJSkzW4ldRSoOWP0','d28esW','wfpcLXhcMSkoW5HAsGpcK8oj','WRftWOrXFa','WOmAWRuC','W5PNAbpdLW','W7JcLXeTW6S','eHXQ','WRxdGCo1kq','WR17WRtdKqK','dfRdHxlcOG','fCoLxSk9pW','WQPEWPLwCa','eM98aa','WPLsWQ3dOq','FSkinmoggq','WQZcNNVcGSkN','W4RcHmk5W4xdVCoMWPBcPG','sSkPfmokaxz7bIJdNquYWOiUwCk+W40GDG','WPfpWRFdPJKTlW','BspdPSksmq','tY3dMSkgbq','WQtdISo3iWi','eCoSW4CmWQ5vt8kOWRNcGsKB','nSo9W7RcUCkf','W6xdKSk6WPtcPG','a8kPmSki','W5KzcbDRWORcG2icW4ddV0ifW5RdQvqyW50','WQ7dSmohW5bjc8omtq','j39MamogygJdQ8oZWO5hWR7dH0icma','WOCsWRqyxq','CSkQcmojaW','W6BcPCoEW5y','WQ9yW6e','vsxdM8kh','gSkeW5ChW5v4','WQRcNhFcNSkMWPTQAq','WO8deG','sxDCWRe','dcFdU17dHW','WRldOWyrhq','WQZcNxRcGSk2WObXBwn2WQG','mmoUW70uWQm','pCoAW5q5WO8','W7BdKSkwWQlcL3xcTSk5hSkj','zK0/Dmkugt8','uJCDumk9oG','WOFdI8k7W6jP','mWRdQWGDjHlcJ8ogASo7F8k6W7tdQLxcPKeFma','B0xcSenSzrRcKSoFmCkkC8k6W6tcQW','rrhcImobWOm','F34XW71uW5KbW4qRtrOS','W4ZdRCoHqq','s2WgEmko','ewTLbmkfustdUSoSWOafWQldNXLpC0TXWRLmyXhcKwW','WOCrWPSmBa','W5ylaa','uvmNASkg','W6O6W4FcLW','WPZdS0jtW4bqAmodWOhdIYpcJrdcV0lcNZiKr8k8eSopW7GVkX16W558W6OAWRFcQrCXWOldJXNdRCoUF0mRWPa','hCo2W4aiWO5sFW','WRtdUqWmda','b8k6W6ecW6O','veZdVNLj','vKVdOMa','W5lcHmkn','WPpdHSkAW4pdOmoIWOJcTq','WQFdULDy','W73cRqKF','WOHtWRtdSa','W7SXW4xcNue','WQzBWQDCu8oJzXjJB0ldUSorW7vtnxiMW4GmWR/cHSkNAwpcVmov','z8ktnCkx','WQVdMSk9W7jPW7ukkCojWOD5tSojcr7dOCoXtstcMq','W4JcIIGmW5hcV8krW4a','heboWOf0','W5ddTmk+WQtcJW','W5FdMSkVWQpcIa','c2GEtG','WRX9WP8NWQS','dgjWeCoouJRdTG','W6JdLCoHECkl','AKWiyCk1cW','x2XuW73dUNhdHt7dKtFcKIddK8kBWPe1pCoOWPy','WQRcGgBcNSkW','C0xcQum','WPCdgSkAW4nQv8kxWObM','ht9LCYq','FGBdUCkXeW','cmoGW4ZcQq','xCoqxvS','su3dOwbIWONdKmkd','Dum+C8kK','gg9Lba','W5VdJSkyWPdcQ2FdVmkKbrq0zKG','cwmrBSk5','s8k1cSoLlG','uIfNWP7cUG','W4tcRmkRW4ldIW','emkmeti0','fX1UEJP7cCoZ','EmkSdCoshhqVdsRdIWGU','WRbdW6FcVau4W48hhLu','WPxdL8kK','WQldJXKOjG','c8kCgSkVcmoMfN01nvaFWQ3cOCoXaq','W5X7Ac4','WQ4dWOantq','WPhdO8kDW7Tw','l8kSlY0fWRPmcSk0jCkjWRuqWR5HW4ldQqaFW6BcQCowxmkkWPZdMCobrCkIuCo4W4XcWOvsW78WEa','bf7dRuVcUq','q8oyqfS','BSovteSugmonqSoJW75NWO4qW5ldLmo/','WRRcGxxcLSkN','W5lcQSosW4Wv','mLCZqmkE','W4JdUmkWWOJcR2VcHW','W5NcVrJcKW8','W7KuhWv9','wupdUM0','emoRW6ZcI8k/','W4JcLWCCW5FcMCkrW5KgWQhdLW','W4RcKSkAW5q','WOybfmkFW7a','WO8aWQujqq1wf2RcUSkzFa0','WOaeamkyW7C','nCooW6tcSW','tXLvWR3cUa','shTtW5NdMG','WPpdMmkXW75PW6KiymodWP5/wCo5eX/dR8o3vZi','tg9BW73dUxddGWW','vSk5W4y','W6yMW4lcUvO','xCkUW5pdPwS','WQldR8oPW67dGW','qmoCxK0rgSki','sgzcW70','W6qqhGv5WOJdHG','W5pcNHObW5K','sCkanSochSkKW6ywWPvwW451WO7dSejYW5/dH1XT','W7FdG8kfWQ/cGee','e8o/A8kecW','jSosymkyq8o+W5W7W6b2W6n1','h8o4W5/cPmkxkWJdJCo0x8ksWPuYW5ypW4C','cKxdS0G','rfhcOvXc','EmkVW5NdMem','xwmcrCkJ','Av3cTem','WPSIomkAW50','x1FdPv1T','smoxwW','W4xcTIJcOG','lNZdMMO','w2zxW6ddSxBcNfpcNw7dKcxdLmkLWPeP','oSk7mCkUfW','lSo1W5yDWQHeo8k0WRFcKgCjifa+i8kTWPq','WQ3dKCoRkq','vsxcL8oxWPS','yCkJd8oudq','xSkyhmo2','W67cLSoMiXtdNxZdUSkjW6JdVCkHW41EW75HWPyQpfH9W513nSkj','fSk8nCkwfq','lNBdLgPR','evH4WPLZ','BCkbW7ddV3a','xIFcTmoCWR4','chX4ca','DHXoWOO','jCoOW4qzWRv8o8k0WQlcHtagBHunjmk2WO5b','p8knfSk0eSo8yszVBq','WOtdLSkbW6j+W6q5BG','b8k6osetWQ8','W6OudH59WRddKxqgW5dcGeOfWORdNvuZW4hdG0aYCCoQ','rSoCFNiL','amk3lse','W5/cSJ3cSW','WOBdQCoJW5BdMq','dCoBW7xcU1qHWRaxsG4mtmoFW4TihCo1W6GAW54','xmkQaSoefa','x2XuW73dUNhdHq','jhuhrSk8n8ocC1bvd8kjlSoaW496aWddOSojk8kR','pwH6f8oU','DGpdUSkU','W64HW5tcT2O','W5zCWPfRBq','W6FdN8kcWQJcHq','W5jQBty','fCoyuCk7nteSWRi','W5pcHmkoW5tdO8o8','yXdcRmohWQi','qb7cT8o8WPi','hMvL','W4TDWRjQA2tdS2e','W5rGActdO30FhIG','hG7dI0VdIq','ECk+bSo/dG','W4TlWPf7','W5TxWOrUAMJdUg1kWOy/W5JdQ2Devmowy8o5WQdcM0K','DKC/C8kObtvzWQ/dMq','fvxdR0e','eLJdU0VcVSoj','WRnUW5JcH0DFv8kFWPbDsSoDW6apva','W6JcUCo5W5HO','W7ZdP8oIsCkIWPmfWPRcSstcKsCIhmoJW6lcQxtcOW','WQZdVmosW7/dRSkpmG','W4xcQIdcSW','msniwa','W70SW5NcNfzmvSkcW5jv','W6SabIDi','eLJdVLdcUa','dhtdOvD1','hCkcW4Wd','fGNcRa','eCoSW5dcNCkc','BeWVBmk0dJ51','W5P3DZhdHN8w','iCkwe8kJcSo8','WOafm8k9W4u','W4GJpYb6','h8oXW4NcOSkz','W5NdNSkFWPpcV3tdHG','pw3dLwX7W77cLW3dLKK','W64AW6/cObiNW60kdXdcHJddHKhdMJNdPrRdReNdJCkUWRqwW7VcRW','jgOdwSkpDmoiB1X8sSkjyCkg','W7tcRCo0W7NdVSk9e8k5','WPZdTMrlW68','hu7dP2TvWOJdOmkoWOVcR8ki','E8oUxxaF','rMeJvmkK','gq3dSvZdNSotW69s','W5pdSCo/q8oPWO05W5pcUs7cMW','W6hdMCkb','e8kRkrSmWRjnmSo4nq','WPtdNmk+W6jT','W63dJ8oOwSkH','ueFdVx9CWPVdHG','xLxdQG','WRbBW6/cRrq','WRddLLDBW5e','W5VcHCkC','WQtcM3JcNq','nCoyW4FcOKDOW61E','W6ddVSk+WQ0','k8oDw8k5oavIWQzaW7K9xSomW53dJh7dUv1J','EGFcMSk8','W4RdSSoxE8kU','WOz8W5ZcMaK','WQn7WQ8qWPm','f8kiamkJcmosfJ96DWm8W6hcPCoWg181wG','WRRcHNldIq','W43dVCkUWONcPG','WPCEhmkB','WQrNWQSAWQG','EWpdUmkM','bW11WQeb','omkab8kJ','zmkmfCo+jG','umk3WPXsW7uoESk3WQi','W6/dNSkBWQO','W4tdQ8oJwCkIWOuSW6xcTYFcKcfPA8oKW6JcOwxdOG','grVdKK0','WRldPXeqgW','oKvpWRC','hx1IdmoBssNdTCo1','p8knbCkJb8oIAsPTyb4T','rZZdOmkmja','W5PkWOHQ','nCofW73cUW','WO/dTSo2W4/dOG','AqfeWOdcVIm','WP3dLSk2W7nGW74','W6JcTtukW7K','W7CTW57cHG','ErrdWOFcRGbhW57cUmoSW7JdPMhcPGmE','iCkwe8kJcG','W5P9qtpdQa','kN5tWOr9','DXbtWPZcQJbq','ChBdHejj','C2pdJuDo','u15GEsT6aa','hSoxx8kX','cSoGW4mz','W7FdNCkgWQRcRW','W603W5pcNuzB','yfa+B8kZ','AJD1WOBcVG','CNldI0jVWRpdTSkYWQ/cICoQWOtdS8kFpJ4AW6u','EWRcJmoH','WOldVHeQaW','kZr0WQyE','d8o1W5xcR8kx','drz+zszWaSoFBCkU','W5/dLmkyWQlcI17cN8o4gSkEWQ3cQCozqSkaWOuk','W5tdOCo+xSkUWOq2W7pcSq','fCkxjWGL','luRdJ1fV','eLJdU0hcUCop','WPayeCkFW7i','WRxdL8owoaldKwRcSG','WRbdW7tcQXaMW4ClhfJcMcu','WRTAWOBdJW4','W7KahH4','WRFdPmkpWPqwlmoVtJ1xkG','tK7dP29y','kgVdIhf8W7NcJW','evqgBSkR','WRJdQKPuWQ5upG','lfaDu8kX','kLWotmkX','bNHRWP8','WPraWRju','fsr0WQaiWO8jW5bzstqyWOTuW5ZdGcDPWQDnWQG','EfBcTKLb','W4lcTIpcPtWolmkCnSoe','eSo2W5q','exuzrG','WPRdU8otW6xdQ8kpmSkdW7ddG2RdJY07W5ODWRhdNq','sCoywv8','E3CZW7bAW5W1W6itxqaP','W77cRKPsW6DAya','jrrOEYzXbCoDjmk5WQ3dJJS7WPu2','CeVcOenF','WPazWRanuHz7dG','WOddJmkHW74','W5bICg/cKJzhuJZcLSkOBq','W5ldJmkIWO/cTG','hHBdG1ZdMCoj','wfBdT13dNCoVW4vs','g3SdqG','gWTKyG','WQRdG8kCW5n2','uu3dQq','D8oZv2qg','tSowsvS','W4KbfmoozCkUWQnnWRS','cCodW4BcM8k9','ofa+zSkv','W5iAWRTwxSoHzfLKwWZcTSoEW7bxlMjJ','W4uKW5lcN1Pbs8k2WP1lrmoDW74laf1tW59DhCkI','CXTdWOpcVJnqW4q','EbJdPmkTba','WOKafSkYW4O','W6RcTsecW6a','W7FdKSkeWRxcH0NcRa','W4nGBs8','4PUU77MjjSkocCkfbCoJebK7bCkmeCkDW5aHC8kTuCoMW4VdM8ouW4xdOdFdHbiEW5pdQv3dRdf0cSomW5nlDdldRM/cIgfLCJZdN8ksqCoXW68+pxLfWPOoWPJcO2FdICocW78ramoOW57dGd3dOColf2ldTtXLoCkDWPVcUvPPW6XXdxhdS8oOBq','W43cH8kdW5ldQG','dg4fsSk8mW','d3P1cSoDsq','BmoFrKW2','W43dT8oIqW','tcRcKSotWOC','W7ddJSkhWQm','FWnfWOhcVW','W6tcUSosW4np','WQddT1vyW6jsiComW5ldPJ8','WQJdQmopW63dGW','WQ1jWR3dTby','aSomxKXFeCkcACoJW7SJWPLzWOJdGmoLWPebECkSl8oxW5ddMSkbk8kuCa','WOxdKaafdG','fmo0FSkIba','cmkUmmk2dq','WOxdTSoSW5BdGG','W4zbDIRdQG','sSkZcSocbNz7bI7dGan9W4qJu8k5W5XL','FSk3cCoxhv8efI7dHqmZWP8','e8oNW5pcU0u','WPveWRtdOcW','WQtcVMdcVSka','oCkBjqi1','WOWAWRy','wgjoW6G','CvS8zq','omkwjmkYfmoMwcG','Au0R','WPxdJerEWPFdUCkTW4i2WOVdPLe','xCkklmoZdq','o8odW6ejWOW','WPpdLSk+W6u','fhmBtW','WR/cH2FcMq','gSkvW5yDW5jWWQf8W7uR','FKDTW67dMa','weZdRwnzWPxdJCkb','WOldL8kqW5n2','WRVdUGq','WP15WQKgWRZdHCoFW5NdNbddLrLyWPyk','ax5JWOzrWRu','WOtdLSk9W7PtW74JAmoFWPO','WQXcW7lcVGq/W4WbavJcMci','EsblWOVcNq','omkwa8kNcSoqvsbOCs8SWRlcPa','W4hdGCkLWQNcPq','nGNdI0xdHCoNWQfrtWNcO8kQWPb4kmkVzhi','ArLjWOZcRG','caZdLa','rcFcL8o3WOC','WRBdU05j','W67cUmoeW5fhaCoz','WP/dICk3W7GHW644BCoi','WRncW7xcPG','wxfiW6BdRq','W5xcGSkgW50','gCoyuCk4jdWNWQy','W47dQSoKwq','zSkiamoBbCkJW6eS','W7mSW5pcL19C','shPkW6W','pNFdG3C','cSkFW4el','gCkjha','bbhdVu3dNSoiW65h','hCkjW5ul','zCkWfmok','W5FdRCo9sa','wJ3cVCorWP5kW7xdI8kFW4NdI8kyWPzBWOe','WRr8WOndtG','tKFdR35EWPq','WQzbW6pcOau','W67cSW4EW60','rmoEq1ecga','kmkZW6SGW6W','WOqKuZBdPK4AbG','zbldM8khbG','p33dLMa','W5tdOCo+xSkUWOq2','WQpcNxm','hr9IzsO','krXJEJG','WRrgWQVdMZ4','AqxdHCk2bmkzWPpdOq','WOtdGmkIW7m','u8k0W4uzWQLdDmk0WRC','F0vcW5RdSG','WOldTejtWQn9FSopW4xdRJtdHftcTe7dJcOOwSkHgCogWReUiH1IW4nMWRjgW6hdQvS8WOhdHbFdSSoYkG','kmozW7FcUKbLW6zk','gSkacdmu','usnIdSobtwxdR8oZWPrzWRO','fwbYcCoDws3dQa','W4RdOCo+xSkMWOW9','W4zFAtddRq','WRddTCoOpJO','W7pcKItcHa0','WRxdKtqhgG','WP9fWQJdPG','EG/dU8kRgmkz','xmkfo8oyia','j2VdGq','WOuyWRaqwa','W7BcRHaqW6i','ESkxp8oAfq','WRVcL2ZcHq','DSkXnCo/lW','De87zmks','hGFdKvVdHCovW69Qsqm','cqfKyIO','WRxdTSoYW7JdVCkboCk5','gHj5DW','oCojW6DrW64plW','WQFdVbmA','g2rYWODqWPlcGgKqWRpcSG','lhtdKIGSWRNdJW','amoxqmkNna','bSkBksa5','uW9JWQhcNG','W5pdVCo9sa','hrT4Ecq','d8oTW5JcPCkC','WQpdR0zjW6vqFSol','nmooW4SVWPK','WO9FWQBdOse6lW'];c=function(){return aN;};return c();}console[P(0x382,'nna0')]('Codex\x20Bridge\x20listening\x20on\x20ws://localhost:'+CODEX_PORT),codexwss['on'](P(0x1ff,'wjb9'),a=>{const a9=P,b={'cIYPZ':'Unauthorized','anBGI':function(f,g){return f===g;},'EZRuW':a9(0x172,'KN6Q'),'kLtOB':a9(0x506,'YBU2'),'qMmrJ':a9(0x197,'A%IY'),'CFxSm':a9(0x1f1,'$5@N'),'PDhuV':function(f,g,h){return f(g,h);},'zGHJW':a9(0x355,'9%cD'),'kDTFm':function(f,g){return f===g;},'RfofC':a9(0x3c0,'tuiu'),'REczg':a9(0x2b3,'42iM'),'NrZTJ':function(f,g,h){return f(g,h);},'QGNVZ':a9(0x328,'nna0'),'rVceA':function(f,g,h){return f(g,h);},'jQPSz':'turn.completed','dBLvU':function(f,g,h){return f(g,h);},'vqyZx':a9(0x4b5,'$5@N'),'JIztF':function(f,g,h){return f(g,h);},'Fuwhn':a9(0x192,'HnGp'),'ZEBPs':a9(0x2c7,'Yij2'),'erjPA':a9(0x1da,'sDK]'),'EMYaZ':a9(0x3d9,'Zj2Q'),'riAHH':'GPT-5.4','MTJNt':'GPT-5.3\x20Codex','UwpMb':function(f,g){return f!==g;},'CUrYE':a9(0x296,'!5ED'),'MUxFT':'--sandbox','nGFSN':'workspace-write','gkOKm':function(f,g,h,i){return f(g,h,i);},'YnfDH':a9(0x267,'1fqY'),'bukQP':a9(0x44e,'IiZV'),'OxYAx':function(f,g,h){return f(g,h);},'vPEMA':function(f,g){return f===g;},'mBrTO':'YSbPZ','rRMPl':a9(0x253,'pZ#m'),'cRzkW':a9(0x556,'&KI4'),'vyfMk':a9(0x2e7,'mHeN')};console[a9(0x22b,'A%IY')](b[a9(0x2ae,'NOWS')]);let e=null;a['on'](b[a9(0x269,'G6AQ')],j=>{const aa=a9,k={'IagtC':'item.completed','UFyoc':function(l,m,n){return b['rVceA'](l,m,n);},'MMDcL':aa(0x2c4,'!5ED'),'yxMEp':b[aa(0x477,'wJQz')],'YYgaa':function(l,m,n){const ab=aa;return b[ab(0x543,'&vi%')](l,m,n);},'XcccI':b[aa(0x3f6,'tuiu')],'EVYaO':function(l,m){return l===m;},'kdNzN':'error','pBUiu':aa(0x482,'NOWS'),'asOfo':b['cIYPZ'],'NMQkc':function(l,m,n){const ac=aa;return b[ac(0x26d,'tuiu')](l,m,n);},'HHGLq':function(l,m,n){const ad=aa;return b[ad(0x374,'YBU2')](l,m,n);},'RRRUl':'[codex]\x20parse\x20error:','ztBXJ':'[codex]\x20spawn\x20error:'};try{const l=JSON[aa(0x14e,'$iGC')](j[aa(0x524,'sf!U')]());if(l[aa(0x32b,'&KI4')]===b['vqyZx']){try{const u=process.env.HOME+aa(0x55c,'9%cD'),v=JSON[aa(0x266,'nna0')](b['JIztF'](readFileSync,u,b[aa(0x439,'@d93')])),w=v[aa(0x407,'wJQz')][aa(0x1ce,'sf!U')](y=>y[aa(0x2e8,'Zj2Q')]===aa(0x1ea,'V&8O'))[aa(0x3f2,'zQXR')](y=>({'id':y[aa(0x56e,'KN6Q')],'name':y[aa(0x161,'HR*i')],'description':y['description']})),x={};x[aa(0x2d8,'#iR6')]=b['ZEBPs'],x[aa(0x1b7,'ExYx')]=aa(0x1d0,'NOWS'),x[aa(0x570,'p6jM')]=w,send(a,x);}catch{const y={};y['id']=aa(0x350,'G(6@'),y[aa(0x324,'YBU2')]=aa(0x410,'YBU2');const z={};z[aa(0x32b,'&KI4')]=b[aa(0x2ac,'IiZV')],z[aa(0x174,'A%IY')]=b['erjPA'],z['models']=[{'id':b[aa(0x536,'42iM')],'name':b['riAHH']},y,{'id':aa(0x1e1,'hLFA'),'name':b[aa(0x321,'G7R(')]}],send(a,z);}return;}if(b[aa(0x164,'@!KO')](l[aa(0x212,'ExYx')],aa(0x19c,'wjb9'))||typeof l[aa(0x528,'sDK]')]!==b[aa(0x1b8,'Erqb')])return;const m=l[aa(0x1e5,'kQnd')]['trim']();if(!m)return;if(e)try{e[aa(0x387,'G6AQ')]();}catch{}console[aa(0x1d5,'&KI4')](aa(0x330,'!5ED')+m[aa(0x33b,'G7R(')](0x0,0x50)+aa(0x2aa,'YBU2'));const n=['exec',aa(0x238,'G6AQ'),b[aa(0x37d,'tuiu')],b[aa(0x4a8,'xxdD')]];if(l['model'])n[aa(0x339,'e]AZ')]('--model',l[aa(0x474,'&vi%')]);n[aa(0x39c,'A%IY')](m);const o={...process.env},p={};p[aa(0x1f0,'wjb9')]=PROJECT_DIR,p[aa(0x4cd,'G7R(')]=o,p[aa(0x189,'HR*i')]=[aa(0x3b0,'&1ns'),aa(0x3aa,'Erqb'),aa(0x264,'&1ns')];const q=b['gkOKm'](spawn,CODEX_BIN,n,p);e=q;const r={};r[aa(0x420,'Erqb')]=q[aa(0x4d2,'&vi%')],r[aa(0x1ad,'G6AQ')]=Infinity;const s=createInterface(r);s['on']('line',A=>{const ae=aa;if(!A[ae(0x306,'@!KO')]())return;try{const B=JSON['parse'](A);if(B[ae(0x185,'wJQz')]===k[ae(0x50b,'G(6@')]&&B[ae(0x450,'wJQz')]?.[ae(0x47f,'IiZV')]){k[ae(0x1f2,'9cCk')](send,a,{'type':k[ae(0x27d,'G6AQ')],'data':B[ae(0x342,'0vRi')][ae(0x45d,'e]AZ')]});return;}if(B[ae(0x185,'wJQz')]===k[ae(0x3b3,'KN6Q')]){const C=B[ae(0x1a4,'HnGp')]??{};k[ae(0x3eb,'&1ns')](send,a,{'type':k['XcccI'],'code':0x0,'inputTokens':C[ae(0x202,'YBU2')]??0x0,'cacheReadTokens':C[ae(0x28b,'pZ#m')]??0x0,'cacheWriteTokens':0x0,'outputTokens':C[ae(0x404,'AuY&')]??0x0,'costUsd':null});return;}if(k['EVYaO'](B[ae(0x1e8,'NOWS')],ae(0x2f1,'Erqb'))){const D=B[ae(0x250,'V&8O')]?.[ae(0x320,'@d93')]??ae(0x18e,'wjb9'),E={};E[ae(0x3bb,'pZ#m')]=ae(0x428,'W!8#'),E[ae(0x1ae,'$5@N')]='\x0a[Error:\x20'+D+']\x0a',k[ae(0x340,'G6AQ')](send,a,E);const F={};F[ae(0x36c,'!5ED')]=ae(0x157,'Yij2'),F['code']=0x1,k['UFyoc'](send,a,F);return;}if(B[ae(0x42f,'0vRi')]===k['kdNzN']){if(B['message']?.[ae(0x39f,'YBU2')](k[ae(0x329,'@d93')])||B['message']?.[ae(0x35f,'@d93')](k[ae(0x51b,'0vRi')])){k[ae(0x2bd,'1c#9')](send,a,{'type':k[ae(0x188,'Erqb')],'data':'⚠️\x20Codex\x20not\x20authenticated.\x0a\x0aTo\x20connect\x20Codex,\x20run\x20one\x20of\x20these\x20commands\x20in\x20your\x20terminal:\x0a\x0a\x20\x20codex\x20login\x0a\x0aOr\x20for\x20server\x20/\x20device\x20auth:\x0a\x0a\x20\x20codex\x20login\x20--device-auth\x0a\x0aAfter\x20login,\x20try\x20your\x20message\x20again.\x0a'});const G={};G[ae(0x30a,'IiZV')]=k['XcccI'],G[ae(0x4ad,'1c#9')]=0x1,send(a,G);try{q['kill']();}catch{}e=null;}return;}}catch{const H={};H[ae(0x2d2,'$iGC')]=ae(0x229,'&vi%'),H[ae(0x53e,'ExYx')]=A+'\x0a',k[ae(0x41d,'9cCk')](send,a,H);}});let t=![];q[aa(0x334,'$iGC')]['on'](b[aa(0x210,'AuY&')],A=>{const af=aa,B=A[af(0x2fc,'kQnd')]();if((B[af(0x42c,'Yij2')](af(0x152,'AuY&'))||B[af(0x2e1,'nna0')](b[af(0x297,'YBU2')]))&&!t){if(b['anBGI'](b[af(0x4a7,'IiZV')],b[af(0x385,'42iM')])){const C=b[af(0x37c,'wJQz')][af(0x171,'$iGC')]('|');let D=0x0;while(!![]){switch(C[D++]){case'0':const E={};E[af(0x2b9,'tuiu')]=b[af(0x3c4,'G(6@')],E[af(0x3fe,'p6jM')]=b[af(0x3bd,'hLFA')],send(a,E);continue;case'1':try{q[af(0x274,'G(6@')]();}catch{}continue;case'2':b['PDhuV'](send,a,{'type':b[af(0x47d,'sf!U')],'code':0x1});continue;case'3':e=null;continue;case'4':t=!![];continue;}break;}}else{r[af(0x3cb,'Zj2Q')](af(0x478,'IiZV')+j+')'),G=null;const G={};G[af(0x288,'kQnd')]=k[af(0x554,'@!KO')],G[af(0x52d,'nna0')]=n,l(m,G);}}}),q['on'](b[aa(0x2db,'e]AZ')],A=>{const ag=aa;if(b[ag(0x4b1,'NOWS')](b[ag(0x54e,'ftx[')],b[ag(0x18b,'AuY&')])){console[ag(0x3b6,'wJQz')](ag(0x2d6,'Erqb')+A+')'),e=null;const B={};B['type']=ag(0x315,'9cCk'),B[ag(0x3a5,'HnGp')]=A,b[ag(0x457,'zQXR')](send,a,B);}else e[ag(0x328,'nna0')](k['RRRUl'],f[ag(0x293,'e]AZ')]);}),q['on'](aa(0x567,'G(6@'),A=>{const ah=aa;console['error'](k[ah(0x259,'zQXR')],A[ah(0x15d,'ExYx')]),e=null;const B={};B[ah(0x523,'zQXR')]=k[ah(0x2d5,'sDK]')],B['message']=A[ah(0x1bf,'yZfH')],send(a,B);});}catch(A){aa(0x1a0,'pZ#m')===aa(0x4da,'A%IY')?(i['error'](b[aa(0x373,'HR*i')],j[aa(0x4c4,'ftx[')]),k=null,b[aa(0x49e,'yZfH')](l,m,{'type':b[aa(0x44d,'KN6Q')],'message':n[aa(0x454,'9%cD')]})):console[aa(0x344,'ftx[')](aa(0x148,'1c#9'),A['message']);}}),a['on'](b[a9(0x2a0,'G7R(')],()=>{const ai=a9;if(b[ai(0x481,'Zj2Q')](b[ai(0x511,'1c#9')],ai(0x1fd,'wJQz'))){console[ai(0x28d,'xxdD')](b[ai(0x4dd,'wJQz')]);if(e)try{e[ai(0x51c,'wjb9')]();}catch{}}else{const g={};g['type']=b[ai(0x3c5,'ExYx')],g[ai(0x354,'G6AQ')]=ai(0x1bc,'42iM'),i(j,g);const h={};h['type']='exit',h[ai(0x3ed,'G7R(')]=0x1,b['OxYAx'](k,l,h);try{o[ai(0x535,'ftx[')]();}catch{}n=null;}}),a['on'](a9(0x2ad,'Zj2Q'),f=>console[a9(0x169,'yZfH')]('[codex]\x20ws\x20error:',f['message']));});const GEMINI_PORT=process.env.CLAUDE_GEMINI_PORT??0xc83,geminiwss=new WebSocketServer({'port':Number(GEMINI_PORT)});console['log'](P(0x1b4,'mHeN')+GEMINI_PORT),geminiwss['on'](P(0x522,'G6AQ'),a=>{const aj=P,b={'ZwwBF':'chunk','JvKnA':aj(0x1f5,'wJQz'),'GpBZV':function(f,g){return f===g;},'DWGpk':function(f,g,h){return f(g,h);},'KTwJx':aj(0x476,'@!KO'),'ugycx':aj(0x205,'A%IY'),'OmKxX':function(f,g,h){return f(g,h);},'WxYUD':aj(0x49f,'wjb9'),'fwNoh':function(f,g,h){return f(g,h);},'fHOsh':aj(0x50d,'kQnd'),'ZUAQF':aj(0x409,'$5@N'),'RUKsh':aj(0x1ab,'W!8#'),'NvQty':function(f,g,h){return f(g,h);},'NbhwW':aj(0x180,'yZfH'),'tkulo':'exit','pNMik':aj(0x1c3,'G7R('),'dpBTV':aj(0x3f4,'Yij2'),'hRZhU':function(f,g){return f===g;},'EUIsx':aj(0x215,'YBU2'),'GPMct':aj(0x362,'AuY&'),'gTotZ':function(f,g){return f+g;},'HdNxS':aj(0x365,'sf!U'),'aEYvk':function(f,g,h){return f(g,h);},'cUkdV':aj(0x45f,'sDK]'),'LyneY':function(f,g){return f===g;},'rgmhz':aj(0x1c1,'hLFA'),'CCNYF':function(f,g,h){return f(g,h);},'jlcDV':aj(0x3a2,'V&8O'),'uzuRC':'gemini-2.5-pro','SzeTG':'--prompt','qmwdS':'--output-format','hnHEZ':aj(0x3c1,'1fqY'),'HsCic':function(f,g,h,i){return f(g,h,i);},'OSFFh':aj(0x400,'9%cD'),'bnveI':'ignore','pbcEY':aj(0x1f4,'W!8#'),'TlNOA':aj(0x247,'HR*i'),'YkLdi':function(f,g,h){return f(g,h);},'NNJxO':function(f,g){return f===g;},'gxrYK':aj(0x430,'@!KO')};console[aj(0x38d,'HR*i')](b[aj(0x28f,'xxdD')]);let e=null;a['on'](aj(0x2d7,'W!8#'),g=>{const ak=aj,h={'SmXef':function(i,j,k){return i(j,k);},'fNiTv':ak(0x54f,'G7R('),'yttJO':b[ak(0x392,'@d93')],'mOxeO':ak(0x425,'&vi%'),'yRXiG':ak(0x3e4,'wJQz')};try{const i=JSON[ak(0x2a9,'&vi%')](g[ak(0x3d4,'W!8#')]());if(b[ak(0x3ec,'ftx[')](i['type'],b[ak(0x294,'AuY&')])){const p={};p['id']=ak(0x2a4,'hLFA'),p[ak(0x25f,'ftx[')]='Gemini\x202.5\x20Flash';const q={};q['id']='gemini-2.0-flash',q['name']=ak(0x273,'IiZV'),b['CCNYF'](send,a,{'type':b[ak(0x361,'@!KO')],'platform':ak(0x3e9,'Erqb'),'models':[{'id':b[ak(0x538,'Zj2Q')],'name':'Gemini\x202.5\x20Pro'},p,q]});return;}if(i[ak(0x2d2,'$iGC')]!==ak(0x4ed,'e]AZ')||typeof i['data']!=='string')return;const j=i[ak(0x480,'AuY&')]['trim']();if(!j)return;if(e)try{e[ak(0x44f,'nna0')]();}catch{}console['log']('[gemini]\x20prompt:\x20\x22'+j['slice'](0x0,0x50)+ak(0x448,'#iR6'));const k=[b[ak(0x4f8,'xxdD')],j,b[ak(0x3d1,'nna0')],ak(0x36f,'$5@N'),ak(0x530,'!5ED'),b[ak(0x27f,'#iR6')]];if(i[ak(0x31d,'IiZV')])k[ak(0x34f,'pZ#m')]('--model',i['model']);const l=b[ak(0x4a1,'!5ED')](spawn,GEMINI_BIN,k,{'cwd':PROJECT_DIR,'env':{...process.env,'HOME':process.env.HOME,'GOOGLE_GENAI_USE_GCA':b[ak(0x4f2,'42iM')]},'stdio':[b[ak(0x307,'zQXR')],b[ak(0x2c2,'V&8O')],ak(0x3d7,'HR*i')]});e=l;const m={};m[ak(0x249,'G7R(')]=l[ak(0x2d3,'$iGC')],m[ak(0x4e2,'sDK]')]=Infinity;const n=createInterface(m);n['on']('line',r=>{const al=ak,s={};s['cxDsj']='session',s[al(0x500,'42iM')]=b[al(0x411,'l%97')],s['VpmHQ']=b['JvKnA'];const t=s;if(!r[al(0x147,'9cCk')]())return;try{const v=JSON[al(0x55e,'A%IY')](r);if(b[al(0x2bb,'W!8#')](v[al(0x284,'Yij2')],al(0x494,'&1ns'))&&v[al(0x2d1,'nna0')]){const w={};w[al(0x24f,'Wnyx')]=al(0x41a,'p6jM'),w[al(0x35a,'l%97')]=v[al(0x17e,'Erqb')],send(a,w);return;}if(b[al(0x338,'Wnyx')](v['type'],al(0x16f,'42iM'))&&v[al(0x4cb,'NOWS')]){b[al(0x375,'IiZV')](send,a,{'type':b['ZwwBF'],'data':v[al(0x447,'pZ#m')]});return;}if(v['type']===b[al(0x503,'Zj2Q')]&&v[al(0x527,'wjb9')]){if('yhmjd'===b[al(0x446,'p6jM')]){const y={};y[al(0x30a,'IiZV')]=t[al(0x4a3,'$iGC')],y[al(0x209,'42iM')]=h[al(0x345,'#iR6')],m(s,y);return;}else{const y={};y[al(0x1e6,'KN6Q')]=al(0x41f,'YBU2'),y[al(0x431,'V&8O')]=v[al(0x512,'hLFA')],b[al(0x2c9,'&KI4')](send,a,y);return;}}if(v['type']===b['WxYUD']){const z=v[al(0x2dc,'$iGC')]??{},A={};A[al(0x288,'kQnd')]=al(0x432,'W!8#'),A['code']=0x0,A[al(0x4b8,'HR*i')]=z[al(0x4ca,'hLFA')]??0x0,A[al(0x4d4,'wJQz')]=z[al(0x4cc,'@d93')]??0x0,A[al(0x401,'xxdD')]=0x0,A[al(0x221,'42iM')]=z[al(0x268,'mHeN')]??0x0,A[al(0x237,'nna0')]=null,b[al(0x351,'mHeN')](send,a,A);return;}if(b[al(0x186,'mHeN')](v['type'],al(0x32d,'sf!U'))){if(b['fHOsh']===al(0x29d,'nna0')){const B=v[al(0x1d6,'tuiu')]?.['includes'](b['ZUAQF'])||v[al(0x21d,'Wnyx')]?.[al(0x14d,'IiZV')](b[al(0x479,'A%IY')]);if(B){b[al(0x275,'wjb9')](send,a,{'type':'chunk','data':b[al(0x3ca,'1c#9')]});const C={};C[al(0x325,'42iM')]=b['tkulo'],C[al(0x4c5,'e]AZ')]=0x1,send(a,C);try{l['kill']();}catch{}e=null;}return;}else{const E=k[al(0x47b,'wJQz')](),F=E['includes'](al(0x51d,'1c#9'))||E[al(0x548,'AuY&')]('login')||E['includes']('unauthorized');if(F){const G={};G[al(0x3ea,'sf!U')]=t['mlpRk'],G[al(0x472,'W!8#')]='⚠️\x20Kimi\x20not\x20authenticated.\x0a\x0aRun\x20in\x20your\x20terminal:\x0a\x0a\x20\x20kimi\x20login\x0a\x0aAfter\x20login,\x20try\x20again.\x0a',s(t,G);const H={};H['type']='exit',H[al(0x4ad,'1c#9')]=0x1,u(v,H);try{y[al(0x29a,'$iGC')]();}catch{}x=null;}r[al(0x18f,'G6AQ')](t[al(0x564,'0vRi')],E[al(0x396,'@d93')](0x0,0xc8));}}}catch{const E=r[al(0x316,'kQnd')]();if(E&&!E[al(0x2b4,'IiZV')](b[al(0x514,'sDK]')])&&!E[al(0x270,'A%IY')](b['dpBTV'])){if(b[al(0x1ba,'&KI4')](b[al(0x201,'nna0')],b['GPMct'])){const G={};G['id']=al(0x464,'KN6Q'),G['name']=al(0x3d6,'42iM'),MoeFrg[al(0x257,'!5ED')](e,m,{'type':MoeFrg[al(0x333,'Zj2Q')],'platform':'codex','models':[G,{'id':MoeFrg[al(0x469,'#iR6')],'name':MoeFrg[al(0x56b,'wJQz')]},{'id':MoeFrg['yRXiG'],'name':al(0x451,'sf!U')}]});}else send(a,{'type':'chunk','data':b['gTotZ'](E,'\x0a')});}}});let o=![];l[ak(0x1e3,'AuY&')]['on'](ak(0x528,'sDK]'),r=>{const am=ak,s=r[am(0x336,'ExYx')]();if((s['includes'](am(0x50c,'A%IY'))||s[am(0x26e,'9%cD')](am(0x2a6,'42iM')))&&!o){const t=am(0x151,'#iR6')['split']('|');let u=0x0;while(!![]){switch(t[u++]){case'0':const v={};v['type']=b[am(0x17b,'G7R(')],v['code']=0x1,send(a,v);continue;case'1':const w={};w[am(0x199,'&vi%')]=b[am(0x26a,'&vi%')],w['data']=b[am(0x517,'hLFA')],send(a,w);continue;case'2':o=!![];continue;case'3':e=null;continue;case'4':try{l[am(0x2c1,'KN6Q')]();}catch{}continue;}break;}}console[am(0x39d,'hLFA')](am(0x1ec,'HR*i'),s[am(0x366,'Yij2')](0x0,0xc8));}),l['on'](b['TlNOA'],r=>{const an=ak;console[an(0x4d5,'mHeN')](an(0x295,'1c#9')+r+')'),e=null;const s={};s[an(0x29e,'ftx[')]=an(0x190,'G7R('),s['code']=r,b[an(0x231,'p6jM')](send,a,s);}),l['on'](ak(0x49c,'Wnyx'),r=>{const ao=ak;console[ao(0x18f,'G6AQ')]('[gemini]\x20spawn\x20error:',r['message']),e=null;const s={};s[ao(0x263,'yZfH')]=ao(0x328,'nna0'),s[ao(0x3e3,'A%IY')]=r['message'],b['aEYvk'](send,a,s);});}catch(r){console[ak(0x4b6,'!5ED')](ak(0x35e,'V&8O'),r[ak(0x43c,'KN6Q')]);}}),a['on'](aj(0x55b,'zQXR'),()=>{const ap=aj;console[ap(0x4ef,'$5@N')](ap(0x3fb,'KN6Q'));if(e)try{b[ap(0x23f,'nna0')](ap(0x18d,'&1ns'),ap(0x1a3,'!5ED'))?e['kill']():(i[ap(0x242,'l%97')](ap(0x378,'&vi%')+j+')'),k=null,b[ap(0x40d,'mHeN')](l,m,{'type':b['tkulo'],'code':n}));}catch{}}),a['on'](aj(0x442,'IiZV'),f=>console[aj(0x462,'@d93')](aj(0x45b,'NOWS'),f['message']));});const QWEN_PORT=process.env.CLAUDE_QWEN_PORT??0xc84,qwenwss=new WebSocketServer({'port':Number(QWEN_PORT)});console['log'](P(0x3be,'$5@N')+QWEN_PORT),qwenwss['on'](P(0x1d3,'G(6@'),a=>{const aq=P,b={'xeuKi':function(f,g){return f===g;},'oWOKB':aq(0x560,'tuiu'),'PzNia':aq(0x31b,'V&8O'),'OJywN':function(f,g,h){return f(g,h);},'NACKs':aq(0x363,'!5ED'),'GCGXq':function(f,g){return f===g;},'bVDXz':'assistant','sntas':function(f,g,h){return f(g,h);},'lxPfh':function(f,g,h){return f(g,h);},'vzPmP':aq(0x529,'!5ED'),'qFNvU':function(f,g,h){return f(g,h);},'mnjzj':aq(0x22a,'sDK]'),'EvRoK':'chunk','DPaRw':function(f,g){return f+g;},'JWxSB':'401','ZzNEz':'token\x20expired','bDWxs':aq(0x19b,'&KI4'),'hplub':function(f,g,h){return f(g,h);},'UZNRF':aq(0x2e3,'IiZV'),'KJifV':function(f,g){return f!==g;},'VWpNo':'[qwen]\x20spawn\x20error:','xNMlA':aq(0x250,'V&8O'),'RUTnO':aq(0x4d7,'NOWS'),'RYYtz':aq(0x441,'wjb9'),'yDGOu':aq(0x56c,'IiZV'),'GiyNZ':'Qwen2.5\x20Coder\x2032B','tJKTl':function(f,g){return f!==g;},'lRmil':aq(0x467,'0vRi'),'HTGqq':aq(0x2a7,'ExYx'),'EZwgM':aq(0x37f,'hLFA'),'TqkjG':'close','IzCNU':aq(0x303,'IiZV'),'eyWyE':aq(0x160,'$iGC'),'wqlrQ':aq(0x39a,'sDK]')};console[aq(0x4a9,'e]AZ')](b['eyWyE']);let e=null;a['on'](b['wqlrQ'],h=>{const as=aq,i={'QiVtx':function(j,k,l){const ar=d;return b[ar(0x3ce,'1c#9')](j,k,l);},'EWiCR':b[as(0x2ee,'&1ns')],'nJLsP':b[as(0x499,'Erqb')]};try{const j=JSON[as(0x3da,'YBU2')](h[as(0x2b5,'pZ#m')]());if(j['type']===as(0x4fd,'p6jM')){const r={};r['type']=as(0x570,'p6jM'),r[as(0x18c,'1c#9')]=b[as(0x508,'tuiu')],r[as(0x319,'pZ#m')]=[{'id':'qwen3-plus','name':b[as(0x4c0,'sf!U')]},{'id':b[as(0x191,'&vi%')],'name':as(0x27c,'sDK]')},{'id':'qwen2.5-coder-32b-instruct','name':b['GiyNZ']}],send(a,r);return;}if(b['tJKTl'](j[as(0x4e7,'G7R(')],as(0x532,'NOWS'))||typeof j[as(0x459,'HnGp')]!==as(0x22d,'HnGp'))return;const k=j['data'][as(0x534,'0vRi')]();if(!k)return;if(e)try{e[as(0x14c,'1fqY')]();}catch{}console[as(0x150,'hLFA')](as(0x227,'1fqY')+k['slice'](0x0,0x50)+as(0x4ce,'!5ED'));const l=[b['lRmil'],as(0x1d2,'$iGC'),as(0x48a,'&KI4')];if(j[as(0x34d,'ftx[')])l[as(0x39c,'A%IY')](as(0x552,'wjb9'),j[as(0x505,'tuiu')]);l[as(0x20b,'G6AQ')](k);const m={...process.env};m['HOME']=process.env.HOME;const n={};n['cwd']=PROJECT_DIR,n[as(0x19e,'1c#9')]=m;const o=spawn(QWEN_BIN,l,n);e=o;const p={};p[as(0x420,'Erqb')]=o[as(0x368,'1fqY')],p[as(0x2cc,'G(6@')]=Infinity;const q=createInterface(p);q['on'](b[as(0x26b,'@d93')],s=>{const at=as;if(!s[at(0x341,'NOWS')]())return;try{const t=JSON['parse'](s);if(b[at(0x28e,'V&8O')](t[at(0x55d,'@!KO')],b[at(0x46b,'NOWS')])&&t[at(0x4f0,'HnGp')]===b[at(0x1c5,'YBU2')]&&t[at(0x3d2,'p6jM')]){b[at(0x3af,'AuY&')](send,a,{'type':b[at(0x322,'G7R(')],'sessionId':t[at(0x389,'HnGp')]});return;}if(b[at(0x208,'Wnyx')](t['type'],b['bVDXz'])&&Array['isArray'](t[at(0x291,'&1ns')]?.['content'])){for(const v of t[at(0x483,'l%97')]['content']){if(v[at(0x2b9,'tuiu')]===at(0x566,'G7R(')&&v['text']){const w={};w[at(0x54c,'wjb9')]='chunk',w['data']=v[at(0x1cc,'l%97')],b['sntas'](send,a,w);}}return;}if(b[at(0x419,'9%cD')](t['type'],b['bVDXz'])&&t[at(0x1d7,'1fqY')]?.['content']?.['some']?.(x=>x[at(0x440,'G(6@')]===at(0x458,'42iM'))){const x=t[at(0x542,'@!KO')][at(0x33c,'Zj2Q')][at(0x308,'KN6Q')](y=>y['type']===at(0x265,'G7R('));if(x?.[at(0x2ba,'#iR6')])b[at(0x53c,'9%cD')](send,a,{'type':at(0x390,'pZ#m'),'name':x[at(0x43e,'&KI4')]});return;}if(t['type']===b['vzPmP']){const y=t['usage']??{};b['qFNvU'](send,a,{'type':b['mnjzj'],'code':t['is_error']?0x1:0x0,'inputTokens':y[at(0x4c3,'!5ED')]??0x0,'cacheReadTokens':y[at(0x485,'9cCk')]??0x0,'cacheWriteTokens':y['cache_creation_input_tokens']??0x0,'outputTokens':y[at(0x15f,'$iGC')]??0x0,'costUsd':null});return;}}catch{send(a,{'type':b[at(0x394,'!5ED')],'data':b['DPaRw'](s,'\x0a')});}}),o[as(0x166,'sf!U')]['on'](b[as(0x4c9,'Wnyx')],s=>{const au=as,t=s['toString'](),u=t['includes'](b[au(0x3e1,'42iM')])||t['includes']('invalid\x20access\x20token')||t[au(0x3bf,'kQnd')](b[au(0x356,'pZ#m')]);if(u){if(au(0x3b8,'9%cD')!==au(0x2f5,'Erqb')){const v={};v[au(0x24f,'Wnyx')]=b[au(0x4a0,'9%cD')],v[au(0x533,'zQXR')]=b[au(0x3c7,'HR*i')],send(a,v);const w={};w[au(0x3bb,'pZ#m')]='exit',w[au(0x52d,'nna0')]=0x1,b['sntas'](send,a,w);try{o[au(0x488,'V&8O')]();}catch{}e=null;}else{const y={};y[au(0x1e6,'KN6Q')]=au(0x38f,'NOWS'),y[au(0x46e,'e]AZ')]=h['status'],bhIlIj[au(0x223,'mHeN')](n,p,y);return;}}console[au(0x53d,'e]AZ')](au(0x435,'G7R('),t['slice'](0x0,0xc8));}),o['on'](b['TqkjG'],s=>{const aw=as,t={'RZIYk':function(u,v,w){return u(v,w);},'kUehs':function(u,v,w){const av=d;return b[av(0x43d,'Zj2Q')](u,v,w);},'GJIEG':b['UZNRF']};if(b['KJifV'](aw(0x2b8,'&1ns'),aw(0x48e,'$iGC'))){console[aw(0x24b,'Yij2')]('[qwen]\x20done\x20(code\x20'+s+')'),e=null;const u={};u[aw(0x526,'YBU2')]=b[aw(0x427,'9%cD')],u[aw(0x3ed,'G7R(')]=s,send(a,u);}else{const w=h.env.HOME+aw(0x2ab,'ExYx'),x=i[aw(0x16c,'G7R(')](FMgJFl['RZIYk'](j,w,aw(0x2ff,'&KI4'))),y=x['models'][aw(0x1b6,'@!KO')](z=>z[aw(0x179,'G7R(')]==='list')['map'](z=>({'id':z['slug'],'name':z[aw(0x4ee,'xxdD')],'description':z['description']}));FMgJFl['kUehs'](k,l,{'type':FMgJFl[aw(0x35c,'G6AQ')],'platform':aw(0x193,'9%cD'),'models':y});}}),o['on'](b[as(0x29f,'@!KO')],s=>{const ax=as;console[ax(0x1d9,'NOWS')](i['EWiCR'],s['message']),e=null;const t={};t['type']=i[ax(0x255,'NOWS')],t[ax(0x184,'HR*i')]=s['message'],send(a,t);});}catch(s){console['error'](b[as(0x3dc,'@d93')],s[as(0x2f6,'G7R(')]);}}),a['on'](b[aq(0x243,'nna0')],()=>{const ay=aq;console[ay(0x4e3,'W!8#')](ay(0x52b,'kQnd'));if(e)try{e[ay(0x30d,'!5ED')]();}catch{}}),a['on'](aq(0x567,'G(6@'),f=>console[aq(0x4d8,'l%97')](aq(0x4bc,'@d93'),f[aq(0x1cb,'zQXR')]));});const KIMI_PORT=process.env.CLAUDE_KIMI_PORT??0xc85,kimiwss=new WebSocketServer({'port':Number(KIMI_PORT)});console[P(0x346,'42iM')](P(0x502,'AuY&')+KIMI_PORT),kimiwss['on']('connection',a=>{const az=P,b={'CCgET':function(f,g){return f===g;},'NoWCm':'system','QiAgZ':az(0x422,'0vRi'),'CFJNL':az(0x3b5,'Erqb'),'kICeU':az(0x4e6,'G6AQ'),'HloNf':function(f,g,h){return f(g,h);},'txiPE':az(0x287,'@!KO'),'zGAsD':function(f,g,h){return f(g,h);},'ILBcZ':'HQEhZ','aZOmZ':function(f,g){return f+g;},'YOTYH':az(0x219,'1c#9'),'lEGOj':az(0x48d,'YBU2'),'TPdOG':az(0x3c6,'#iR6'),'mqTRy':az(0x198,'A%IY'),'XtQvY':function(f,g){return f!==g;},'pIpPG':'JpeSZ','WfioN':function(f,g,h){return f(g,h);},'ArUSq':az(0x50f,'AuY&'),'rUtdX':az(0x408,'V&8O'),'qusHy':'moonshot-v1','EJXSj':'Moonshot\x20v1','CYnWM':az(0x52e,'l%97'),'MYfPp':az(0x1a8,'1fqY'),'HHSLq':az(0x433,'xxdD'),'aufqO':az(0x226,'sDK]'),'kYUPy':az(0x53f,'KN6Q'),'jLPpj':az(0x310,'HR*i'),'cvHbL':'[kimi]\x20parse\x20error:','aYzLD':az(0x21c,'&vi%'),'Yuezq':'[kimi]\x20client\x20connected','gsHXG':az(0x21a,'wJQz')};console[az(0x43a,'tuiu')](b[az(0x29b,'ftx[')]);let e=null;a['on']('message',h=>{const aA=az,i={'JUSvL':aA(0x2fe,'YBU2'),'WWQCP':function(j,k,l){return j(k,l);}};try{const j=JSON[aA(0x43b,'W!8#')](h[aA(0x541,'Wnyx')]());if(j[aA(0x325,'42iM')]===aA(0x4fd,'p6jM')){const r={};r['id']=aA(0x33e,'$5@N'),r[aA(0x2ba,'#iR6')]=aA(0x1e7,'nna0'),b[aA(0x3f7,'9%cD')](send,a,{'type':b[aA(0x429,'pZ#m')],'platform':b[aA(0x3db,'tuiu')],'models':[r,{'id':b['qusHy'],'name':b['EJXSj']}]});return;}if(b[aA(0x544,'yZfH')](j[aA(0x24f,'Wnyx')],aA(0x335,'@!KO'))||b[aA(0x1f9,'1c#9')](typeof j['data'],b[aA(0x36b,'&KI4')]))return;const k=j['data']['trim']();if(!k)return;if(e)try{e[aA(0x23e,'Erqb')]();}catch{}console['log'](aA(0x142,'hLFA')+k['slice'](0x0,0x50)+aA(0x24e,'$5@N'));const l=['--print',b['MYfPp'],b['HHSLq'],'--yolo'];if(j['model'])l[aA(0x463,'nna0')](aA(0x323,'9%cD'),j['model']);l[aA(0x45e,'$iGC')](b[aA(0x1db,'#iR6')],k);const m={...process.env};m[aA(0x311,'NOWS')]=process.env.HOME;const n={};n['cwd']=PROJECT_DIR,n[aA(0x46c,'sf!U')]=m;const o=spawn(KIMI_BIN,l,n);e=o;const p={};p[aA(0x41c,'wjb9')]=o[aA(0x318,'@d93')],p['crlfDelay']=Infinity;const q=createInterface(p);q['on'](b[aA(0x2ce,'1c#9')],s=>{const aB=aA;if(!s[aB(0x2b1,'1fqY')]())return;try{const t=JSON[aB(0x52c,'IiZV')](s);if(b[aB(0x235,'42iM')](t['type'],b[aB(0x317,'W!8#')])&&t[aB(0x3e2,'Wnyx')]===b['QiAgZ']&&t[aB(0x47c,'@d93')]){const v={};v['type']=b['CFJNL'],v['sessionId']=t['session_id'],send(a,v);return;}if(t[aB(0x263,'yZfH')]===b['kICeU']&&Array[aB(0x495,'@!KO')](t[aB(0x203,'$iGC')]?.[aB(0x516,'tuiu')])){for(const w of t['message'][aB(0x516,'tuiu')]){b['CCgET'](w[aB(0x380,'nna0')],aB(0x165,'Erqb'))&&w[aB(0x3cf,'wJQz')]&&b[aB(0x519,'sf!U')](send,a,{'type':b[aB(0x4ac,'42iM')],'data':w[aB(0x423,'V&8O')]});}return;}if(t[aB(0x42f,'0vRi')]===aB(0x4be,'&vi%')){const x=t['message']?.[aB(0x2be,'hLFA')]?.['find']?.(y=>y[aB(0x200,'1c#9')]==='tool_use');if(x?.[aB(0x144,'pZ#m')])b[aB(0x3b9,'Wnyx')](send,a,{'type':aB(0x3e6,'9cCk'),'name':x[aB(0x45c,'AuY&')]});return;}if(t[aB(0x288,'kQnd')]==='result'){const y=t['usage']??{},z={};z[aB(0x523,'zQXR')]='exit',z[aB(0x359,'&1ns')]=t[aB(0x3a7,'p6jM')]?0x1:0x0,z[aB(0x3d8,'NOWS')]=y['input_tokens']??0x0,z[aB(0x4d4,'wJQz')]=y[aB(0x2b7,'e]AZ')]??0x0,z[aB(0x299,'yZfH')]=y['cache_creation_input_tokens']??0x0,z['outputTokens']=y[aB(0x54d,'sDK]')]??0x0,z['costUsd']=null,b[aB(0x181,'NOWS')](send,a,z);return;}}catch{aB(0x3ef,'l%97')!==b[aB(0x31a,'AuY&')]?send(a,{'type':b[aB(0x28a,'hLFA')],'data':b[aB(0x276,'pZ#m')](s,'\x0a')}):m[aB(0x2fb,'wJQz')]();}}),o[aA(0x2b6,'tuiu')]['on']('data',s=>{const aC=aA,t=s[aC(0x4b9,'0vRi')](),u=t['includes'](aC(0x194,'&KI4'))||t['includes'](b['YOTYH'])||t['includes']('unauthorized');if(u){const v={};v[aC(0x562,'W!8#')]=aC(0x3de,'9%cD'),v[aC(0x1ae,'$5@N')]='⚠️\x20Kimi\x20not\x20authenticated.\x0a\x0aRun\x20in\x20your\x20terminal:\x0a\x0a\x20\x20kimi\x20login\x0a\x0aAfter\x20login,\x20try\x20again.\x0a',b[aC(0x26c,'Yij2')](send,a,v);const w={};w[aC(0x3b4,'Zj2Q')]=b[aC(0x4c8,'p6jM')],w[aC(0x1b1,'sDK]')]=0x1,send(a,w);try{if(b[aC(0x163,'W!8#')]===b['TPdOG'])o[aC(0x274,'G(6@')]();else{const y={};y[aC(0x175,'sDK]')]=aC(0x4f5,'1fqY'),y[aC(0x331,'Erqb')]=v[aC(0x42b,'mHeN')],n(p,y);return;}}catch{}e=null;}console[aC(0x278,'$iGC')](b[aC(0x537,'0vRi')],t[aC(0x32e,'yZfH')](0x0,0xc8));}),o['on']('close',s=>{const aD=aA;if(b[aD(0x31f,'NOWS')](b[aD(0x21e,'KN6Q')],'JpeSZ')){const u=v[aD(0x27b,'wJQz')]??{},v={};v[aD(0x520,'&1ns')]=aD(0x145,'mHeN'),v[aD(0x1bb,'wJQz')]=k[aD(0x1fc,'HnGp')]?0x1:0x0,v[aD(0x283,'AuY&')]=u[aD(0x1b5,'$iGC')]??0x0,v[aD(0x140,'ExYx')]=u['cache_read_input_tokens']??0x0,v[aD(0x1ee,'&vi%')]=u[aD(0x56f,'YBU2')]??0x0,v['outputTokens']=u[aD(0x379,'&vi%')]??0x0,v[aD(0x3f5,'Wnyx')]=l[aD(0x4d6,'&KI4')]??null,i(j,v);return;}else{console[aD(0x2ca,'NOWS')](aD(0x395,'p6jM')+s+')'),e=null;const u={};u[aD(0x15c,'l%97')]=aD(0x515,'!5ED'),u[aD(0x20e,'wjb9')]=s,b[aD(0x1c4,'A%IY')](send,a,u);}}),o['on'](b['jLPpj'],s=>{const aE=aA;console[aE(0x360,'KN6Q')](i[aE(0x1a9,'9cCk')],s[aE(0x2f6,'G7R(')]),e=null;const t={};t[aE(0x54c,'wjb9')]=aE(0x310,'HR*i'),t[aE(0x43c,'KN6Q')]=s[aE(0x320,'@d93')],i[aE(0x2af,'xxdD')](send,a,t);});}catch(s){if(aA(0x36e,'sDK]')!==aA(0x228,'wjb9')){const u={};u[aA(0x562,'W!8#')]=aA(0x260,'@!KO'),u[aA(0x279,'&1ns')]=u[aA(0x217,'1fqY')],f(g,u);return;}else console['error'](b[aA(0x290,'W!8#')],s[aA(0x320,'@d93')]);}}),a['on'](b[az(0x3d0,'&vi%')],()=>{const aF=az;console['log'](b[aF(0x332,'tuiu')]);if(e)try{e[aF(0x23e,'Erqb')]();}catch{}}),a['on'](az(0x344,'ftx['),f=>console[az(0x360,'KN6Q')](az(0x4b7,'NOWS'),f[az(0x1d7,'1fqY')]));});const OPENCODE_PORT=process.env.CLAUDE_OPENCODE_PORT??0xc86,opencodewss=new WebSocketServer({'port':Number(OPENCODE_PORT)});console[P(0x37e,'wjb9')](P(0x245,'$5@N')+OPENCODE_PORT);function findOpenCodeBin(){const aG=P,a={'cUmPx':function(b,e,f){return b(e,f);},'fGQUV':aG(0x230,'hLFA')};if(process.env.OPENCODE_BIN)return process.env.OPENCODE_BIN;try{return a['cUmPx'](execSync,aG(0x4ba,'KN6Q'),{'encoding':a[aG(0x178,'G(6@')]})[aG(0x1cf,'wjb9')]();}catch{}return'opencode';}const OPENCODE_BIN=findOpenCodeBin();console[P(0x48f,'p6jM')](P(0x13f,'l%97')+OPENCODE_BIN),opencodewss['on'](P(0x2da,'V&8O'),a=>{const aH=P,b={'euvNi':function(f,g){return f===g;},'iMujE':aH(0x204,'l%97'),'uexrS':function(f,g,h){return f(g,h);},'RPGmp':'session','VUfUU':aH(0x312,'1fqY'),'QcyaN':aH(0x4ea,'&KI4'),'vBFhq':aH(0x218,'Wnyx'),'YJLCF':aH(0x2a8,'&KI4'),'MTqBT':aH(0x159,'&1ns'),'vAqAv':aH(0x240,'1fqY'),'XVlnP':aH(0x3e7,'e]AZ'),'BHcOM':aH(0x40b,'AuY&'),'HIDRU':aH(0x509,'@!KO'),'MkOoK':'string','UluRs':'⚠️\x20OpenRouter\x20API\x20key\x20not\x20configured.\x0a\x0aAdd\x20to\x20.env.local:\x0a\x20\x20OPENROUTER_API_KEY=your_key_here\x0a\x0aGet\x20a\x20free\x20key\x20at:\x20openrouter.ai/keys\x0a','dORDQ':aH(0x40e,'pZ#m'),'BWZSy':aH(0x203,'$iGC'),'IHTzs':aH(0x36a,'Erqb'),'DSTwM':aH(0x24c,'Yij2'),'RdLkO':function(f,g){return f(g);},'zoGJP':aH(0x2b2,'@d93'),'mZtIb':aH(0x370,'W!8#')};console[aH(0x37e,'wjb9')](aH(0x251,'0vRi'));let e=null;a['on'](b[aH(0x15a,'9cCk')],k=>{const aI=aH,l={};l[aI(0x20d,'0vRi')]=function(n,o){return n!==o;},l[aI(0x206,'42iM')]=b[aI(0x4e9,'$5@N')],l[aI(0x2c8,'&KI4')]=aI(0x1fb,'&KI4'),l[aI(0x29c,'xxdD')]=aI(0x25e,'wJQz');const m=l;try{const n=JSON['parse'](k[aI(0x1df,'NOWS')]());if(n[aI(0x185,'wJQz')]===aI(0x2f3,'tuiu')){const w=!!process.env.OPENROUTER_API_KEY,x={};x['id']=aI(0x403,'G6AQ'),x['name']=aI(0x1dd,'AuY&'),b[aI(0x4ab,'$5@N')](send,a,{'type':b[aI(0x418,'W!8#')],'platform':'open-code','keyConfigured':w,'models':w?[x,{'id':b['vAqAv'],'name':aI(0x2bc,'kQnd')},{'id':b['XVlnP'],'name':'Mistral\x207B\x20(free)'},{'id':aI(0x2d0,'9cCk'),'name':b[aI(0x4c7,'mHeN')]},{'id':aI(0x173,'42iM'),'name':b['HIDRU']}]:[]});return;}if(n[aI(0x49b,'HR*i')]!==aI(0x4a2,'tuiu')||typeof n['data']!==b[aI(0x55f,'V&8O')])return;const o=n[aI(0x459,'HnGp')][aI(0x415,'#iR6')]();if(!o)return;if(!process.env.OPENROUTER_API_KEY){const y={};y[aI(0x3dd,'Erqb')]=aI(0x197,'A%IY'),y['data']=b[aI(0x289,'@d93')],send(a,y);const z={};z[aI(0x30f,'p6jM')]=b[aI(0x2a5,'IiZV')],z['code']=0x1,send(a,z);return;}if(e)try{e[aI(0x406,'tuiu')]();}catch{}console[aI(0x4d5,'mHeN')]('[opencode]\x20prompt:\x20\x22'+o[aI(0x2cd,'p6jM')](0x0,0x50)+'...\x22');const p=n[aI(0x540,'!5ED')]??aI(0x15e,'Zj2Q'),q=['run',b[aI(0x256,'mHeN')],b['BWZSy'],'--format',b[aI(0x3ac,'0vRi')],aI(0x34b,'$5@N'),aI(0x455,'xxdD')+p,b[aI(0x19f,'NOWS')],o],r={...process.env};r[aI(0x32a,'G7R(')]=process.env.OPENROUTER_API_KEY;const s={};s[aI(0x434,'NOWS')]=PROJECT_DIR,s[aI(0x271,'pZ#m')]=r;const t=spawn(OPENCODE_BIN,q,s);e=t;const u={};u[aI(0x2c3,'9cCk')]=t[aI(0x327,'V&8O')],u[aI(0x496,'&KI4')]=Infinity;const v=b[aI(0x3f0,'p6jM')](createInterface,u);v['on'](b[aI(0x4f6,'HR*i')],A=>{const aJ=aI;if(!A['trim']())return;try{const B=JSON['parse'](A);if(b['euvNi'](B[aJ(0x526,'YBU2')],'system')&&B[aJ(0x55a,'YBU2')]===b[aJ(0x1d1,'G6AQ')]&&B[aJ(0x14f,'IiZV')]){b[aJ(0x182,'KN6Q')](send,a,{'type':b[aJ(0x37a,'kQnd')],'sessionId':B[aJ(0x389,'HnGp')]});return;}if(B[aJ(0x244,'V&8O')]===b['VUfUU']&&Array[aJ(0x16b,'G7R(')](B[aJ(0x4e4,'wJQz')]?.[aJ(0x416,'&KI4')])){for(const C of B[aJ(0x4eb,'#iR6')]['content']){if(C[aJ(0x49b,'HR*i')]===aJ(0x1c6,'G6AQ')&&C[aJ(0x292,'hLFA')])send(a,{'type':b[aJ(0x371,'Wnyx')],'data':C[aJ(0x143,'NOWS')]});}return;}if(B['type']==='result'){const D=B[aJ(0x4d3,'@!KO')]??{};b[aJ(0x1e2,'pZ#m')](send,a,{'type':b[aJ(0x1a5,'YBU2')],'code':B[aJ(0x187,'Wnyx')]?0x1:0x0,'inputTokens':D[aJ(0x4df,'kQnd')]??0x0,'cacheReadTokens':0x0,'cacheWriteTokens':0x0,'outputTokens':D[aJ(0x558,'V&8O')]??0x0,'costUsd':null});return;}}catch{const E={};E[aJ(0x42f,'0vRi')]=aJ(0x4e8,'KN6Q'),E[aJ(0x4fc,'&vi%')]=A+'\x0a',send(a,E);}}),t[aI(0x1c7,'&KI4')]['on']('data',A=>console[aI(0x49c,'Wnyx')](aI(0x16a,'0vRi'),A[aI(0x2cb,'9cCk')]()[aI(0x50a,'KN6Q')](0x0,0xc8))),t['on'](aI(0x162,'9cCk'),A=>{const aK=aI,B={'UBrxA':function(C,D,E){return C(D,E);},'JANVN':aK(0x1dc,'G6AQ')};if(m['LgSHA'](aK(0x41e,'p6jM'),m[aK(0x248,'HnGp')])){console[aK(0x4a4,'sDK]')](aK(0x2bf,'G6AQ')+A+')'),e=null;const C={};C['type']=m[aK(0x49d,'NOWS')],C[aK(0x158,'ExYx')]=A,send(a,C);}else{const E=g[aK(0x501,'sf!U')]??{};qmeMjr['UBrxA'](r,s,{'type':qmeMjr[aK(0x453,'l%97')],'code':u[aK(0x254,'AuY&')]?0x1:0x0,'inputTokens':E['input_tokens']??0x0,'cacheReadTokens':E[aK(0x531,'nna0')]??0x0,'cacheWriteTokens':E[aK(0x466,'$iGC')]??0x0,'outputTokens':E[aK(0x449,'&1ns')]??0x0,'costUsd':null});return;}}),t['on'](aI(0x40a,'mHeN'),A=>{const aL=aI;e=null;const B={};B['type']=m['Byxdc'],B[aL(0x539,'NOWS')]=A[aL(0x21d,'Wnyx')],send(a,B);});}catch(A){console[aI(0x1be,'HnGp')](aI(0x1fe,'sf!U'),A[aI(0x39a,'sDK]')]);}}),a['on'](aH(0x262,'KN6Q'),()=>{const aM=aH;if('iqnaL'===b[aM(0x545,'NOWS')]){if(e)try{e[aM(0x51c,'wjb9')]();}catch{}}else try{e['kill']();}catch{}}),a['on'](aH(0x521,'&KI4'),f=>console['error'](aH(0x141,'l%97'),f['message']));});
+import { WebSocketServer } from 'ws'
+import { spawn, execSync } from 'child_process'
+import { readFileSync } from 'fs'
+import pty from 'node-pty'
+import { createInterface } from 'readline'
+import { config } from 'dotenv'
+import { resolve, dirname } from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+config({ path: resolve(__dirname, '../../app/.env.local') })
+
+const PORT = process.env.CLAUDE_BRIDGE_PORT ?? 3200
+const PROJECT_DIR = resolve(__dirname, '../../app')
+const CLAUDE_BIN = process.env.CLAUDE_BIN ?? `${process.env.HOME}/.local/bin/claude`
+
+const wss = new WebSocketServer({ port: Number(PORT) })
+
+console.log(`Claude Code Bridge listening on ws://localhost:${PORT}`)
+console.log(`Project dir: ${PROJECT_DIR}`)
+console.log(`Claude bin:  ${CLAUDE_BIN}`)
+
+// Fetch account email once at startup
+let accountEmail = null
+try {
+  const out = execSync(`${CLAUDE_BIN} auth status`, { timeout: 5000 }).toString()
+  accountEmail = JSON.parse(out).email ?? null
+  console.log(`[bridge] account: ${accountEmail}`)
+} catch {
+  console.log('[bridge] could not fetch account email')
+}
+
+// Resolve Codex binary
+function findCodexBin() {
+  if (process.env.CODEX_BIN) return process.env.CODEX_BIN
+  try { return execSync('which codex', { encoding: 'utf8' }).trim() } catch {}
+  return 'codex'
+}
+const CODEX_BIN = findCodexBin()
+console.log(`Codex bin:   ${CODEX_BIN}`)
+
+// Resolve Gemini binary
+function findGeminiBin() {
+  if (process.env.GEMINI_BIN) return process.env.GEMINI_BIN
+  try { return execSync('which gemini', { encoding: 'utf8' }).trim() } catch {}
+  return 'gemini'
+}
+const GEMINI_BIN = findGeminiBin()
+console.log(`Gemini bin:  ${GEMINI_BIN}`)
+
+// Resolve Qwen binary
+function findQwenBin() {
+  if (process.env.QWEN_BIN) return process.env.QWEN_BIN
+  try { return execSync('which qwen', { encoding: 'utf8' }).trim() } catch {}
+  return 'qwen'
+}
+const QWEN_BIN = findQwenBin()
+console.log(`Qwen bin:    ${QWEN_BIN}`)
+
+// Resolve Kimi binary
+function findKimiBin() {
+  if (process.env.KIMI_BIN) return process.env.KIMI_BIN
+  try { return execSync('which kimi', { encoding: 'utf8' }).trim() } catch {}
+  return 'kimi'
+}
+const KIMI_BIN = findKimiBin()
+console.log(`Kimi bin:    ${KIMI_BIN}`)
+
+function send(ws, payload) {
+  if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(payload))
+}
+
+wss.on('connection', (ws) => {
+  console.log('[bridge] client connected')
+  let activeProcess = null
+
+  ws.on('message', (raw) => {
+    try {
+      const msg = JSON.parse(raw.toString())
+
+      // Return available Claude models
+      if (msg.type === 'get_models') {
+        send(ws, { type: 'models', platform: 'claude-code', models: [
+          { id: 'claude-opus-4-7',           name: 'Claude Opus 4.7' },
+          { id: 'claude-sonnet-4-6',         name: 'Claude Sonnet 4.6' },
+          { id: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5' },
+        ]})
+        return
+      }
+
+      if (msg.type !== 'stdin' || typeof msg.data !== 'string') return
+      const prompt = msg.data.trim()
+      const resumeSessionId = typeof msg.resumeSessionId === 'string' ? msg.resumeSessionId : null
+      const lightChat = msg.lightChat === true
+      if (!prompt) return
+
+      if (activeProcess) { try { activeProcess.kill() } catch {} }
+
+      console.log(`[bridge] prompt: "${prompt.slice(0, 80)}..." resume=${resumeSessionId ?? 'none'} lightChat=${lightChat}`)
+
+      const args = [
+        '--print',
+        '--output-format', 'stream-json',
+        '--include-partial-messages',
+        '--verbose',
+        '--dangerously-skip-permissions',
+      ]
+      if (lightChat) args.push('--setting-sources', 'user')
+      if (resumeSessionId) args.push('--resume', resumeSessionId)
+      args.push(prompt)
+
+      const proc = spawn(CLAUDE_BIN, args, {
+        cwd: PROJECT_DIR,
+        env: { ...process.env, HOME: process.env.HOME },
+      })
+
+      activeProcess = proc
+
+      const rl = createInterface({ input: proc.stdout, crlfDelay: Infinity })
+
+      rl.on('line', (line) => {
+        if (!line.trim()) return
+        try {
+          const event = JSON.parse(line)
+
+          // Rate limit info — forward utilization and reset time to browser
+          if (event.type === 'rate_limit_event' && event.rate_limit_info) {
+            const { utilization, resetsAt, status, rateLimitType } = event.rate_limit_info
+            send(ws, { type: 'rate_limit', utilization, resetsAt, status, rateLimitType, email: accountEmail })
+            return
+          }
+
+          // Session ID from init event — send to browser for --resume support
+          if (event.type === 'system' && event.subtype === 'init' && event.session_id) {
+            send(ws, { type: 'session', sessionId: event.session_id })
+            return
+          }
+
+          // Text chunk arriving — stream immediately to browser
+          if (
+            event.type === 'stream_event' &&
+            event.event?.type === 'content_block_delta' &&
+            event.event?.delta?.type === 'text_delta'
+          ) {
+            send(ws, { type: 'chunk', data: event.event.delta.text })
+            return
+          }
+
+          // Tool use started — notify browser
+          if (
+            event.type === 'stream_event' &&
+            event.event?.type === 'content_block_start' &&
+            event.event?.content_block?.type === 'tool_use'
+          ) {
+            send(ws, { type: 'tool_start', name: event.event.content_block.name })
+            return
+          }
+
+          // Status update (requesting, processing)
+          if (event.type === 'system' && event.subtype === 'status') {
+            send(ws, { type: 'status', status: event.status })
+            return
+          }
+
+          // Final result — include usage stats
+          if (event.type === 'result') {
+            const u = event.usage ?? {}
+            send(ws, {
+              type: 'exit',
+              code: event.is_error ? 1 : 0,
+              inputTokens: u.input_tokens ?? 0,
+              cacheReadTokens: u.cache_read_input_tokens ?? 0,
+              cacheWriteTokens: u.cache_creation_input_tokens ?? 0,
+              outputTokens: u.output_tokens ?? 0,
+              costUsd: event.total_cost_usd ?? null,
+            })
+            return
+          }
+
+        } catch {
+          // not JSON — forward as raw text
+          send(ws, { type: 'chunk', data: line + '\n' })
+        }
+      })
+
+      proc.stderr.on('data', (chunk) => {
+        const text = chunk.toString()
+        console.error('[bridge] stderr:', text.slice(0, 200))
+      })
+
+      proc.on('close', (code) => {
+        console.log(`[bridge] done (code ${code})`)
+        activeProcess = null
+        send(ws, { type: 'exit', code })
+      })
+
+      proc.on('error', (err) => {
+        console.error('[bridge] spawn error:', err.message)
+        activeProcess = null
+        send(ws, { type: 'error', message: err.message })
+      })
+
+    } catch (e) {
+      console.error('[bridge] parse error:', e.message)
+    }
+  })
+
+  ws.on('close', () => {
+    console.log('[bridge] disconnected')
+    if (activeProcess) { try { activeProcess.kill() } catch {} }
+  })
+
+  ws.on('error', (err) => console.error('[bridge] ws error:', err.message))
+})
+
+// PTY server — real interactive terminal on :3201
+const PTY_PORT = process.env.CLAUDE_PTY_PORT ?? 3201
+const ptywss = new WebSocketServer({ port: Number(PTY_PORT) })
+console.log(`PTY Bridge listening on ws://localhost:${PTY_PORT}`)
+
+ptywss.on('connection', (ws) => {
+  console.log('[pty] client connected')
+  const shell = '/bin/zsh'
+  let proc
+  let platformCli = null // will be set on 'init' message
+
+  try {
+    proc = pty.spawn(shell, [], {
+      name: 'xterm-256color',
+      cols: 500,
+      rows: 24,
+      cwd: PROJECT_DIR,
+      env: {
+        HOME: process.env.HOME,
+        TERM: 'xterm-256color',
+        SHELL: '/bin/zsh',
+        PATH: process.env.PATH ?? '/usr/local/bin:/usr/bin:/bin',
+        USER: process.env.USER,
+        LOGNAME: process.env.LOGNAME,
+        TMPDIR: process.env.TMPDIR,
+        OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
+      },
+    })
+  } catch (err) {
+    console.error('[pty] spawn error:', err.message, err.stack)
+    if (ws.readyState === ws.OPEN) ws.send(`\r\n[PTY error: ${err.message}]\r\n`)
+    return
+  }
+
+  proc.onData((data) => {
+    if (ws.readyState === ws.OPEN) ws.send(data)
+  })
+
+  proc.onExit(({ exitCode }) => {
+    console.log(`[pty] exited (${exitCode})`)
+    if (ws.readyState === ws.OPEN) ws.close()
+  })
+
+  ws.on('message', (raw) => {
+    try {
+      const msg = JSON.parse(raw.toString())
+
+      // Platform init — auto-launch the right CLI
+      if (msg.type === 'init' && msg.platform && !platformCli) {
+        platformCli = msg.platform
+        const cliCmd = msg.platform === 'codex'      ? `${CODEX_BIN}\n`
+                     : msg.platform === 'gemini-cli'  ? `${GEMINI_BIN}\n`
+                     : msg.platform === 'qwen-code'   ? `${QWEN_BIN}\n`
+                     : msg.platform === 'kimi-code'   ? `${KIMI_BIN}\n`
+                     : msg.platform === 'open-code'   ? `${OPENCODE_BIN}\n`
+                     : `${CLAUDE_BIN}\n`
+        console.log(`[pty] platform: ${msg.platform}, launching: ${cliCmd.trim()}`)
+        setTimeout(() => { try { proc.write(cliCmd) } catch {} }, 800)
+        return
+      }
+
+      if (msg.type === 'stdin' && typeof msg.data === 'string') proc.write(msg.data)
+      else if (msg.type === 'resize' && msg.cols && msg.rows) proc.resize(Number(msg.cols), Number(msg.rows))
+    } catch {
+      proc.write(raw.toString())
+    }
+  })
+
+  ws.on('close', () => {
+    console.log('[pty] disconnected')
+    try { proc.kill() } catch {}
+  })
+
+  ws.on('error', (err) => console.error('[pty] ws error:', err.message))
+})
+
+// Codex bridge on :3202
+const CODEX_PORT = process.env.CLAUDE_CODEX_PORT ?? 3202
+const codexwss = new WebSocketServer({ port: Number(CODEX_PORT) })
+console.log(`Codex Bridge listening on ws://localhost:${CODEX_PORT}`)
+
+codexwss.on('connection', (ws) => {
+  console.log('[codex] client connected')
+  let activeProcess = null
+
+  ws.on('message', (raw) => {
+    try {
+      const msg = JSON.parse(raw.toString())
+
+      // Return available Codex models from local cache
+      if (msg.type === 'get_models') {
+        try {
+          const cacheFile = `${process.env.HOME}/.codex/models_cache.json`
+          const cache = JSON.parse(readFileSync(cacheFile, 'utf8'))
+          const models = cache.models
+            .filter(m => m.visibility === 'list')
+            .map(m => ({ id: m.slug, name: m.display_name, description: m.description }))
+          send(ws, { type: 'models', platform: 'codex', models })
+        } catch {
+          send(ws, { type: 'models', platform: 'codex', models: [
+            { id: 'gpt-5.4',       name: 'GPT-5.4' },
+            { id: 'gpt-5.4-mini',  name: 'GPT-5.4 Mini' },
+            { id: 'gpt-5.3-codex', name: 'GPT-5.3 Codex' },
+          ]})
+        }
+        return
+      }
+
+      if (msg.type !== 'stdin' || typeof msg.data !== 'string') return
+      const prompt = msg.data.trim()
+      if (!prompt) return
+
+      if (activeProcess) { try { activeProcess.kill() } catch {} }
+
+      console.log(`[codex] prompt: "${prompt.slice(0, 80)}..."`)
+
+      const args = ['exec', '--json', '--sandbox', 'workspace-write']
+      if (msg.model) args.push('--model', msg.model)
+      args.push(prompt)
+
+      const proc = spawn(CODEX_BIN, args, {
+        cwd: PROJECT_DIR,
+        env: { ...process.env },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      })
+
+      activeProcess = proc
+
+      const rl = createInterface({ input: proc.stdout, crlfDelay: Infinity })
+
+      rl.on('line', (line) => {
+        if (!line.trim()) return
+        try {
+          const event = JSON.parse(line)
+          // Item completed — main response event with full text
+          if (event.type === 'item.completed' && event.item?.text) {
+            send(ws, { type: 'chunk', data: event.item.text })
+            return
+          }
+
+          // Turn completed — send usage and exit
+          if (event.type === 'turn.completed') {
+            const u = event.usage ?? {}
+            send(ws, {
+              type: 'exit',
+              code: 0,
+              inputTokens: u.input_tokens ?? 0,
+              cacheReadTokens: u.cached_input_tokens ?? 0,
+              cacheWriteTokens: 0,
+              outputTokens: u.output_tokens ?? 0,
+              costUsd: null,
+            })
+            return
+          }
+
+          // Turn failed
+          if (event.type === 'turn.failed') {
+            const errMsg = event.error?.message ?? 'Codex error'
+            send(ws, { type: 'chunk', data: `\n[Error: ${errMsg}]\n` })
+            send(ws, { type: 'exit', code: 1 })
+            return
+          }
+
+          // Auth error — show instructions immediately and kill process
+          if (event.type === 'error') {
+            if (event.message?.includes('401') || event.message?.includes('Unauthorized')) {
+              send(ws, { type: 'chunk', data: '⚠️ Codex not authenticated.\n\nTo connect Codex, run one of these commands in your terminal:\n\n  codex login\n\nOr for server / device auth:\n\n  codex login --device-auth\n\nAfter login, try your message again.\n' })
+              send(ws, { type: 'exit', code: 1 })
+              try { proc.kill() } catch {}
+              activeProcess = null
+            }
+            return
+          }
+
+        } catch {
+          send(ws, { type: 'chunk', data: line + '\n' })
+        }
+      })
+
+      let authErrorSent = false
+      proc.stderr.on('data', (chunk) => {
+        const text = chunk.toString()
+        if ((text.includes('401') || text.includes('Unauthorized')) && !authErrorSent) {
+          authErrorSent = true
+          send(ws, { type: 'chunk', data: '⚠️ Codex not authenticated.\n\nRun in your terminal:\n\n  codex login\n\nOr for device/server auth:\n\n  codex login --device-auth\n\nAfter login, try again.\n' })
+          send(ws, { type: 'exit', code: 1 })
+          try { proc.kill() } catch {}
+          activeProcess = null
+        }
+      })
+
+      proc.on('close', (code) => {
+        console.log(`[codex] done (code ${code})`)
+        activeProcess = null
+        send(ws, { type: 'exit', code })
+      })
+
+      proc.on('error', (err) => {
+        console.error('[codex] spawn error:', err.message)
+        activeProcess = null
+        send(ws, { type: 'error', message: err.message })
+      })
+
+    } catch (e) {
+      console.error('[codex] parse error:', e.message)
+    }
+  })
+
+  ws.on('close', () => {
+    console.log('[codex] disconnected')
+    if (activeProcess) { try { activeProcess.kill() } catch {} }
+  })
+
+  ws.on('error', (err) => console.error('[codex] ws error:', err.message))
+})
+
+// Gemini CLI bridge on :3203
+const GEMINI_PORT = process.env.CLAUDE_GEMINI_PORT ?? 3203
+const geminiwss = new WebSocketServer({ port: Number(GEMINI_PORT) })
+console.log(`Gemini Bridge listening on ws://localhost:${GEMINI_PORT}`)
+
+geminiwss.on('connection', (ws) => {
+  console.log('[gemini] client connected')
+  let activeProcess = null
+
+  ws.on('message', (raw) => {
+    try {
+      const msg = JSON.parse(raw.toString())
+
+      // Return available Gemini models (hardcoded — no local cache)
+      if (msg.type === 'get_models') {
+        send(ws, { type: 'models', platform: 'gemini-cli', models: [
+          { id: 'gemini-2.5-pro',   name: 'Gemini 2.5 Pro'   },
+          { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash'  },
+          { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash'  },
+        ]})
+        return
+      }
+
+      if (msg.type !== 'stdin' || typeof msg.data !== 'string') return
+      const prompt = msg.data.trim()
+      if (!prompt) return
+
+      if (activeProcess) { try { activeProcess.kill() } catch {} }
+
+      console.log(`[gemini] prompt: "${prompt.slice(0, 80)}..."`)
+
+      const args = [
+        '--prompt', prompt,
+        '--output-format', 'stream-json',
+        '--yolo',
+        '--skip-trust',
+      ]
+      if (msg.model) args.push('--model', msg.model)
+
+      const proc = spawn(GEMINI_BIN, args, {
+        cwd: PROJECT_DIR,
+        env: {
+          ...process.env,
+          HOME: process.env.HOME,
+          GOOGLE_GENAI_USE_GCA: 'true',  // Use Google account subscription, no API key
+        },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      })
+
+      activeProcess = proc
+
+      const rl = createInterface({ input: proc.stdout, crlfDelay: Infinity })
+
+      rl.on('line', (line) => {
+        if (!line.trim()) return
+        try {
+          const event = JSON.parse(line)
+
+          // Session init — capture session_id
+          if (event.type === 'init' && event.session_id) {
+            send(ws, { type: 'session', sessionId: event.session_id })
+            return
+          }
+
+          // Text content chunk
+          if (event.type === 'content' && event.value) {
+            send(ws, { type: 'chunk', data: event.value })
+            return
+          }
+
+          // Tool use started
+          if (event.type === 'tool_call' && event.name) {
+            send(ws, { type: 'tool_start', name: event.name })
+            return
+          }
+
+          // Turn complete — send usage and exit
+          if (event.type === 'turn_complete') {
+            const u = event.stats ?? {}
+            send(ws, {
+              type: 'exit',
+              code: 0,
+              inputTokens: u.input_tokens ?? 0,
+              cacheReadTokens: u.cached_tokens ?? 0,
+              cacheWriteTokens: 0,
+              outputTokens: u.output_tokens ?? 0,
+              costUsd: null,
+            })
+            return
+          }
+
+          // Error event
+          if (event.type === 'error') {
+            const isAuth = event.message?.includes('Auth') || event.message?.includes('UNAUTHENTICATED')
+            if (isAuth) {
+              send(ws, { type: 'chunk', data: '⚠️ Gemini not authenticated.\n\nRun in your terminal:\n\n  gemini auth\n\nOr set GOOGLE_GENAI_USE_GCA=true in your environment.\n\nAfter login, try again.\n' })
+              send(ws, { type: 'exit', code: 1 })
+              try { proc.kill() } catch {}
+              activeProcess = null
+            }
+            return
+          }
+
+        } catch {
+          // Non-JSON line — forward as text if not empty noise
+          const clean = line.trim()
+          if (clean && !clean.startsWith('YOLO mode') && !clean.startsWith('Approval mode')) {
+            send(ws, { type: 'chunk', data: clean + '\n' })
+          }
+        }
+      })
+
+      let authErrorSent = false
+      proc.stderr.on('data', (chunk) => {
+        const text = chunk.toString()
+        if ((text.includes('UNAUTHENTICATED') || text.includes('Please set an Auth')) && !authErrorSent) {
+          authErrorSent = true
+          send(ws, { type: 'chunk', data: '⚠️ Gemini not authenticated.\n\nRun in your terminal:\n\n  gemini auth\n\nAfter login, try again.\n' })
+          send(ws, { type: 'exit', code: 1 })
+          try { proc.kill() } catch {}
+          activeProcess = null
+        }
+        console.error('[gemini] stderr:', text.slice(0, 200))
+      })
+
+      proc.on('close', (code) => {
+        console.log(`[gemini] done (code ${code})`)
+        activeProcess = null
+        send(ws, { type: 'exit', code })
+      })
+
+      proc.on('error', (err) => {
+        console.error('[gemini] spawn error:', err.message)
+        activeProcess = null
+        send(ws, { type: 'error', message: err.message })
+      })
+
+    } catch (e) {
+      console.error('[gemini] parse error:', e.message)
+    }
+  })
+
+  ws.on('close', () => {
+    console.log('[gemini] disconnected')
+    if (activeProcess) { try { activeProcess.kill() } catch {} }
+  })
+
+  ws.on('error', (err) => console.error('[gemini] ws error:', err.message))
+})
+
+// Qwen Code bridge on :3204
+// Event format is identical to Claude Code (same stream-json spec)
+const QWEN_PORT = process.env.CLAUDE_QWEN_PORT ?? 3204
+const qwenwss = new WebSocketServer({ port: Number(QWEN_PORT) })
+console.log(`Qwen Bridge  listening on ws://localhost:${QWEN_PORT}`)
+
+qwenwss.on('connection', (ws) => {
+  console.log('[qwen] client connected')
+  let activeProcess = null
+
+  ws.on('message', (raw) => {
+    try {
+      const msg = JSON.parse(raw.toString())
+
+      // Return available Qwen models
+      if (msg.type === 'get_models') {
+        send(ws, { type: 'models', platform: 'qwen-code', models: [
+          { id: 'qwen3-plus',   name: 'Qwen3 Plus'   },
+          { id: 'qwen3',        name: 'Qwen3'         },
+          { id: 'qwen2.5-coder-32b-instruct', name: 'Qwen2.5 Coder 32B' },
+        ]})
+        return
+      }
+
+      if (msg.type !== 'stdin' || typeof msg.data !== 'string') return
+      const prompt = msg.data.trim()
+      if (!prompt) return
+
+      if (activeProcess) { try { activeProcess.kill() } catch {} }
+
+      console.log(`[qwen] prompt: "${prompt.slice(0, 80)}..."`)
+
+      // Qwen CLI uses positional prompt — identical flags to Claude Code
+      const args = [
+        '--output-format', 'stream-json',
+        '--yolo',
+      ]
+      if (msg.model) args.push('--model', msg.model)
+      args.push(prompt)
+
+      const proc = spawn(QWEN_BIN, args, {
+        cwd: PROJECT_DIR,
+        env: { ...process.env, HOME: process.env.HOME },
+      })
+
+      activeProcess = proc
+
+      const rl = createInterface({ input: proc.stdout, crlfDelay: Infinity })
+
+      rl.on('line', (line) => {
+        if (!line.trim()) return
+        try {
+          const event = JSON.parse(line)
+
+          // Session init
+          if (event.type === 'system' && event.subtype === 'init' && event.session_id) {
+            send(ws, { type: 'session', sessionId: event.session_id })
+            return
+          }
+
+          // Text chunk — assistant message with content blocks
+          if (event.type === 'assistant' && Array.isArray(event.message?.content)) {
+            for (const block of event.message.content) {
+              if (block.type === 'text' && block.text) {
+                send(ws, { type: 'chunk', data: block.text })
+              }
+            }
+            return
+          }
+
+          // Tool use started
+          if (
+            event.type === 'assistant' &&
+            event.message?.content?.some?.((b) => b.type === 'tool_use')
+          ) {
+            const toolBlock = event.message.content.find((b) => b.type === 'tool_use')
+            if (toolBlock?.name) send(ws, { type: 'tool_start', name: toolBlock.name })
+            return
+          }
+
+          // Final result with usage — identical to Claude Code
+          if (event.type === 'result') {
+            const u = event.usage ?? {}
+            send(ws, {
+              type: 'exit',
+              code: event.is_error ? 1 : 0,
+              inputTokens: u.input_tokens ?? 0,
+              cacheReadTokens: u.cache_read_input_tokens ?? 0,
+              cacheWriteTokens: u.cache_creation_input_tokens ?? 0,
+              outputTokens: u.output_tokens ?? 0,
+              costUsd: null,
+            })
+            return
+          }
+
+        } catch {
+          send(ws, { type: 'chunk', data: line + '\n' })
+        }
+      })
+
+      proc.stderr.on('data', (chunk) => {
+        const text = chunk.toString()
+        const isAuth = text.includes('401') || text.includes('invalid access token') || text.includes('token expired')
+        if (isAuth) {
+          send(ws, { type: 'chunk', data: '⚠️ Qwen not authenticated.\n\nRun in your terminal:\n\n  qwen auth\n\nAfter login, try again.\n' })
+          send(ws, { type: 'exit', code: 1 })
+          try { proc.kill() } catch {}
+          activeProcess = null
+        }
+        console.error('[qwen] stderr:', text.slice(0, 200))
+      })
+
+      proc.on('close', (code) => {
+        console.log(`[qwen] done (code ${code})`)
+        activeProcess = null
+        send(ws, { type: 'exit', code })
+      })
+
+      proc.on('error', (err) => {
+        console.error('[qwen] spawn error:', err.message)
+        activeProcess = null
+        send(ws, { type: 'error', message: err.message })
+      })
+
+    } catch (e) {
+      console.error('[qwen] parse error:', e.message)
+    }
+  })
+
+  ws.on('close', () => {
+    console.log('[qwen] disconnected')
+    if (activeProcess) { try { activeProcess.kill() } catch {} }
+  })
+
+  ws.on('error', (err) => console.error('[qwen] ws error:', err.message))
+})
+
+// Kimi Code bridge on :3205
+// Event format is identical to Claude Code (same stream-json spec)
+const KIMI_PORT = process.env.CLAUDE_KIMI_PORT ?? 3205
+const kimiwss = new WebSocketServer({ port: Number(KIMI_PORT) })
+console.log(`Kimi Bridge  listening on ws://localhost:${KIMI_PORT}`)
+
+kimiwss.on('connection', (ws) => {
+  console.log('[kimi] client connected')
+  let activeProcess = null
+
+  ws.on('message', (raw) => {
+    try {
+      const msg = JSON.parse(raw.toString())
+
+      if (msg.type === 'get_models') {
+        send(ws, { type: 'models', platform: 'kimi-code', models: [
+          { id: 'kimi-k2',      name: 'Kimi K2'      },
+          { id: 'moonshot-v1',  name: 'Moonshot v1'  },
+        ]})
+        return
+      }
+
+      if (msg.type !== 'stdin' || typeof msg.data !== 'string') return
+      const prompt = msg.data.trim()
+      if (!prompt) return
+
+      if (activeProcess) { try { activeProcess.kill() } catch {} }
+
+      console.log(`[kimi] prompt: "${prompt.slice(0, 80)}..."`)
+
+      // Kimi uses --print + --prompt flags (identical pattern to Claude Code)
+      const args = [
+        '--print',
+        '--output-format', 'stream-json',
+        '--yolo',
+      ]
+      if (msg.model) args.push('--model', msg.model)
+      args.push('--prompt', prompt)
+
+      const proc = spawn(KIMI_BIN, args, {
+        cwd: PROJECT_DIR,
+        env: { ...process.env, HOME: process.env.HOME },
+      })
+
+      activeProcess = proc
+
+      const rl = createInterface({ input: proc.stdout, crlfDelay: Infinity })
+
+      rl.on('line', (line) => {
+        if (!line.trim()) return
+        try {
+          const event = JSON.parse(line)
+
+          // Session init
+          if (event.type === 'system' && event.subtype === 'init' && event.session_id) {
+            send(ws, { type: 'session', sessionId: event.session_id })
+            return
+          }
+
+          // Text chunk
+          if (event.type === 'assistant' && Array.isArray(event.message?.content)) {
+            for (const block of event.message.content) {
+              if (block.type === 'text' && block.text) {
+                send(ws, { type: 'chunk', data: block.text })
+              }
+            }
+            return
+          }
+
+          // Tool use
+          if (event.type === 'assistant') {
+            const toolBlock = event.message?.content?.find?.((b) => b.type === 'tool_use')
+            if (toolBlock?.name) send(ws, { type: 'tool_start', name: toolBlock.name })
+            return
+          }
+
+          // Final result
+          if (event.type === 'result') {
+            const u = event.usage ?? {}
+            send(ws, {
+              type: 'exit',
+              code: event.is_error ? 1 : 0,
+              inputTokens: u.input_tokens ?? 0,
+              cacheReadTokens: u.cache_read_input_tokens ?? 0,
+              cacheWriteTokens: u.cache_creation_input_tokens ?? 0,
+              outputTokens: u.output_tokens ?? 0,
+              costUsd: null,
+            })
+            return
+          }
+
+        } catch {
+          send(ws, { type: 'chunk', data: line + '\n' })
+        }
+      })
+
+      proc.stderr.on('data', (chunk) => {
+        const text = chunk.toString()
+        const isAuth = text.includes('LLM not set') || text.includes('login') || text.includes('unauthorized')
+        if (isAuth) {
+          send(ws, { type: 'chunk', data: '⚠️ Kimi not authenticated.\n\nRun in your terminal:\n\n  kimi login\n\nAfter login, try again.\n' })
+          send(ws, { type: 'exit', code: 1 })
+          try { proc.kill() } catch {}
+          activeProcess = null
+        }
+        console.error('[kimi] stderr:', text.slice(0, 200))
+      })
+
+      proc.on('close', (code) => {
+        console.log(`[kimi] done (code ${code})`)
+        activeProcess = null
+        send(ws, { type: 'exit', code })
+      })
+
+      proc.on('error', (err) => {
+        console.error('[kimi] spawn error:', err.message)
+        activeProcess = null
+        send(ws, { type: 'error', message: err.message })
+      })
+
+    } catch (e) {
+      console.error('[kimi] parse error:', e.message)
+    }
+  })
+
+  ws.on('close', () => {
+    console.log('[kimi] disconnected')
+    if (activeProcess) { try { activeProcess.kill() } catch {} }
+  })
+
+  ws.on('error', (err) => console.error('[kimi] ws error:', err.message))
+})
+
+// Open Code bridge on :3206 (OpenRouter via opencode CLI)
+const OPENCODE_PORT = process.env.CLAUDE_OPENCODE_PORT ?? 3206
+const opencodewss = new WebSocketServer({ port: Number(OPENCODE_PORT) })
+console.log(`OpenCode Bridge listening on ws://localhost:${OPENCODE_PORT}`)
+
+function findOpenCodeBin() {
+  if (process.env.OPENCODE_BIN) return process.env.OPENCODE_BIN
+  try { return execSync('which opencode', { encoding: 'utf8' }).trim() } catch {}
+  return 'opencode'
+}
+const OPENCODE_BIN = findOpenCodeBin()
+console.log(`OpenCode bin: ${OPENCODE_BIN}`)
+
+opencodewss.on('connection', (ws) => {
+  console.log('[opencode] client connected')
+  let activeProcess = null
+
+  ws.on('message', (raw) => {
+    try {
+      const msg = JSON.parse(raw.toString())
+
+      if (msg.type === 'get_models') {
+        const keyConfigured = !!(process.env.OPENROUTER_API_KEY)
+        send(ws, { type: 'models', platform: 'open-code', keyConfigured, models: keyConfigured ? [
+          { id: 'deepseek/deepseek-r1',          name: 'DeepSeek R1 (free)'     },
+          { id: 'meta-llama/llama-3.3-70b',       name: 'Llama 3.3 70B (free)'   },
+          { id: 'mistralai/mistral-7b-instruct',  name: 'Mistral 7B (free)'      },
+          { id: 'deepseek/deepseek-chat',         name: 'DeepSeek Chat'          },
+          { id: 'openai/gpt-4o-mini',             name: 'GPT-4o Mini'            },
+        ] : [] })
+        return
+      }
+
+      if (msg.type !== 'stdin' || typeof msg.data !== 'string') return
+      const prompt = msg.data.trim()
+      if (!prompt) return
+
+      if (!process.env.OPENROUTER_API_KEY) {
+        send(ws, { type: 'chunk', data: '⚠️ OpenRouter API key not configured.\n\nAdd to .env.local:\n  OPENROUTER_API_KEY=your_key_here\n\nGet a free key at: openrouter.ai/keys\n' })
+        send(ws, { type: 'exit', code: 1 })
+        return
+      }
+
+      if (activeProcess) { try { activeProcess.kill() } catch {} }
+
+      console.log(`[opencode] prompt: "${prompt.slice(0, 80)}..."`)
+
+      const model = msg.model ?? 'deepseek/deepseek-r1'
+      const args = ['run', '--command', 'message', '--format', 'json', '--model', `openrouter/${model}`, '--prompt', prompt]
+
+      const proc = spawn(OPENCODE_BIN, args, {
+        cwd: PROJECT_DIR,
+        env: { ...process.env, OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY },
+      })
+
+      activeProcess = proc
+
+      const rl = createInterface({ input: proc.stdout, crlfDelay: Infinity })
+
+      rl.on('line', (line) => {
+        if (!line.trim()) return
+        try {
+          const event = JSON.parse(line)
+          if (event.type === 'system' && event.subtype === 'init' && event.session_id) {
+            send(ws, { type: 'session', sessionId: event.session_id })
+            return
+          }
+          if (event.type === 'assistant' && Array.isArray(event.message?.content)) {
+            for (const block of event.message.content) {
+              if (block.type === 'text' && block.text) send(ws, { type: 'chunk', data: block.text })
+            }
+            return
+          }
+          if (event.type === 'result') {
+            const u = event.usage ?? {}
+            send(ws, { type: 'exit', code: event.is_error ? 1 : 0, inputTokens: u.input_tokens ?? 0, cacheReadTokens: 0, cacheWriteTokens: 0, outputTokens: u.output_tokens ?? 0, costUsd: null })
+            return
+          }
+        } catch {
+          send(ws, { type: 'chunk', data: line + '\n' })
+        }
+      })
+
+      proc.stderr.on('data', (chunk) => console.error('[opencode] stderr:', chunk.toString().slice(0, 200)))
+
+      proc.on('close', (code) => {
+        console.log(`[opencode] done (code ${code})`)
+        activeProcess = null
+        send(ws, { type: 'exit', code })
+      })
+
+      proc.on('error', (err) => {
+        activeProcess = null
+        send(ws, { type: 'error', message: err.message })
+      })
+
+    } catch (e) {
+      console.error('[opencode] parse error:', e.message)
+    }
+  })
+
+  ws.on('close', () => {
+    if (activeProcess) { try { activeProcess.kill() } catch {} }
+  })
+
+  ws.on('error', (err) => console.error('[opencode] ws error:', err.message))
+})

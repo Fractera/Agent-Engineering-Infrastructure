@@ -26,10 +26,6 @@ app/storage/*
 app/dist/
 app/tsconfig.tsbuildinfo
 
-# Bridge and media service sources — not for public repo
-bridges/platforms/server.src.js
-services/media/server.src.js
-
 # Media service — data and uploads stay on server
 services/media/data/*.db
 services/media/data/*.db-shm
