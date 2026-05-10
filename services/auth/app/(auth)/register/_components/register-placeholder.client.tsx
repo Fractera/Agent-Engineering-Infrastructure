@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -10,26 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { register } from "@/lib/auth/register";
 
-function FirstUserWarning() {
-  return (
-    <div className="w-full max-w-sm mb-4 rounded-xl border border-orange-500 bg-orange-500/10 px-5 py-4 flex flex-col gap-2">
-      <p className="text-sm font-bold text-orange-400 uppercase tracking-wide">⚠ Warning — First Account</p>
-      <p className="text-sm text-orange-200 leading-relaxed">
-        You are the <strong>first person</strong> to register on this server.
-        Your account will automatically receive <strong>Administrator</strong> privileges,
-        giving you full control over the project, users, and the ability to appoint other administrators.
-      </p>
-      <p className="text-sm text-orange-200 leading-relaxed">
-        <strong>Please save your email and password in a secure location.</strong>{" "}
-        If you lose access to this account and have no other admin, recovering access will require a full server reset.
-      </p>
-      <p className="text-sm font-semibold text-orange-300">
-        Make sure you are on the <em>Register</em> tab, using your real email and a strong password.
-      </p>
-    </div>
-  );
-}
-
 function RegisterForm() {
   const router = useRouter();
   const [email, setEmail]               = useState("");
@@ -38,14 +18,6 @@ function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError]               = useState<string | null>(null);
   const [loading, setLoading]           = useState(false);
-  const [isFirstUser, setIsFirstUser]   = useState<boolean | null>(null);
-
-  useEffect(() => {
-    fetch("/api/user-count")
-      .then(r => r.json())
-      .then(d => setIsFirstUser(d.count === 0))
-      .catch(() => setIsFirstUser(false));
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +45,6 @@ function RegisterForm() {
 
   return (
     <div className="w-full max-w-sm flex flex-col gap-4">
-      {isFirstUser && <FirstUserWarning />}
       <div className="flex flex-col gap-6 p-8 bg-background rounded-xl border shadow-sm">
         <div className="flex flex-col gap-1">
           <h1 className="text-xl font-semibold">Create account</h1>

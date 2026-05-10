@@ -28,7 +28,7 @@ export function AuthLoginModal({ open, onOpenChange, authUrl, onSuccess }: Props
           <DialogTitle className="text-sm">Sign in to Fractera</DialogTitle>
         </DialogHeader>
         <iframe
-          src={`${authUrl}/login`}
+          src={`${authUrl}/register`}
           className="w-full border-0"
           style={{ height: 440 }}
           title="Sign in"
