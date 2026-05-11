@@ -5,28 +5,33 @@ const AUTH_REGISTER  = process.env.NEXT_PUBLIC_AUTH_URL
   ? `${process.env.NEXT_PUBLIC_AUTH_URL}/register`
   : "http://auth.partner.fractera.local:3001/register";
 
+function publicCallbackUrl(req: NextRequest): string {
+  const host  = req.headers.get("x-forwarded-host") || req.headers.get("host") || "";
+  const proto = req.headers.get("x-forwarded-proto") || "https";
+  const pathname = new URL(req.url).pathname;
+  return host ? `${proto}://${host}${pathname}` : req.url;
+}
+
 export async function proxy(req: NextRequest) {
   const cookie = req.headers.get("cookie") ?? "";
 
-  let ok = false;
+  let isAdmin = false;
   try {
     const res = await fetch(`${AUTH_SERVICE}/api/session`, {
       headers: { cookie },
       signal: AbortSignal.timeout(3000),
     });
-    ok = res.ok;
+    if (res.ok) {
+      const data = await res.json() as { roles?: string[] };
+      isAdmin = (data.roles ?? []).includes("admin");
+    }
   } catch {
-    ok = false;
+    isAdmin = false;
   }
 
-  if (!ok) {
+  if (!isAdmin) {
     const registerUrl = new URL(AUTH_REGISTER);
-    // Reconstruct the public URL from forwarded headers (Nginx sets these)
-    const host  = req.headers.get("x-forwarded-host") || req.headers.get("host") || "";
-    const proto = req.headers.get("x-forwarded-proto") || "https";
-    const pathname = new URL(req.url).pathname;
-    const callbackUrl = host ? `${proto}://${host}${pathname}` : req.url;
-    registerUrl.searchParams.set("callbackUrl", callbackUrl);
+    registerUrl.searchParams.set("callbackUrl", publicCallbackUrl(req));
     return NextResponse.redirect(registerUrl);
   }
 
