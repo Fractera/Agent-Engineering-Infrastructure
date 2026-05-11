@@ -41,7 +41,7 @@ function LoginForm() {
     if (callbackUrl !== "/") {
       const session = await getSession();
       const roles: string[] = (session?.user as { roles?: string[] })?.roles ?? [];
-      if (!roles.includes("architect")) {
+      if (!roles.includes("admin")) {
         setLoading(false);
         toast.error(
           "You don't have access to the Admin Panel. To use the AI coding workspace, ask your administrator to grant you the Administrator role."

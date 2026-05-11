@@ -9,18 +9,18 @@ function buildProviders(): NextAuthConfig["providers"] {
   if (process.env.ARCHITECT_TOKEN) {
     providers.push(
       Credentials({
-        id: "architect",
+        id: "admin",
         credentials: {
-          token: { label: "Architect Token", type: "password" },
+          token: { label: "Admin Token", type: "password" },
         },
         async authorize(credentials) {
           const token = credentials?.token as string | undefined;
           if (!token || token !== process.env.ARCHITECT_TOKEN) return null;
           return {
-            id: "virtual-architect",
-            email: "architect@local",
-            name: "Architect",
-            roles: ["architect"] as string[],
+            id: "virtual-admin",
+            email: "admin@local",
+            name: "Administrator",
+            roles: ["admin"] as string[],
           };
         },
       })

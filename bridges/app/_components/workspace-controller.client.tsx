@@ -89,7 +89,7 @@ export function WorkspaceController() {
   }
 
   const roles = session?.roles ?? [];
-  const isVirtualArchitect = session?.userId === "virtual-architect";
+  const isVirtualArchitect = session?.userId === "virtual-admin";
   const isAuthenticated = session !== null;
 
   return (

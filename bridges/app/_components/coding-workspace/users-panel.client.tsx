@@ -19,7 +19,7 @@ type User = {
 
 type Props = { onClose: () => void };
 
-const ALL_ROLES = ["architect", "user", "guest"];
+const ALL_ROLES = ["admin", "user", "guest"];
 const PER_PAGE = 100;
 
 export function UsersPanel({ onClose }: Props) {

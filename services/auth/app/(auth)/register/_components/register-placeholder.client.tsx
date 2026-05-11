@@ -108,7 +108,7 @@ function RegisterForm() {
 
       router.refresh();
 
-      const isAdmin = result.roles.includes("architect");
+      const isAdmin = result.roles.includes("admin");
 
       if (isAdmin) {
         // First user: show mandatory confirmation modal before redirecting
