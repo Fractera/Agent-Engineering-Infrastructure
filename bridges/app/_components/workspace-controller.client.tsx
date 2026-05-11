@@ -27,7 +27,7 @@ export function WorkspaceController() {
   const [windowWidth, setWindowWidth]   = useState(0);
   const [terminalPlatform, setTerminalPlatform] = useState<Platform>("claude-code");
   const [terminalSessions, setTerminalSessions] = useState<Set<Platform>>(new Set());
-  const [siteOpen, setSiteOpen]                 = useState(false);
+  const [siteOpen, setSiteOpen]                 = useState(true);
   const isMobile = windowWidth > 0 && windowWidth < 768;
 
   const fetchSession = useCallback(async () => {
@@ -111,7 +111,7 @@ export function WorkspaceController() {
             onClick={() => setSiteOpen((v) => !v)}
           >
             <Globe className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{siteOpen ? "Close site" : "View site"}</span>
+            <span className="hidden sm:inline">Preview</span>
           </Button>
           {session ? (
             <Popover>
@@ -171,6 +171,7 @@ export function WorkspaceController() {
           windowWidth={windowWidth}
           isMobile={isMobile}
           isAuthenticated={isAuthenticated && !loading}
+          onPreviewClose={() => setSiteOpen(false)}
         />
       )}
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket } from "lucide-react";
+import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, HelpCircle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
 import { Shimmer } from "@/components/ai-elements/shimmer.client";
@@ -83,9 +83,10 @@ type Props = {
   windowWidth: number;
   isMobile?: boolean;
   isAuthenticated?: boolean;
+  onPreviewClose?: () => void;
 };
 
-export function CodingWindowShell({ height, terminalPlatform, terminalSessions, onPlatformClick, onTerminalClose, windowWidth, isMobile = false, isAuthenticated = true }: Props) {
+export function CodingWindowShell({ height, terminalPlatform, terminalSessions, onPlatformClick, onTerminalClose, windowWidth, isMobile = false, isAuthenticated = true, onPreviewClose }: Props) {
   const [terminalStatuses] = useState<Record<Platform, TerminalStatus>>({
     "claude-code": "unavailable", "codex": "unavailable", "gemini-cli": "unavailable",
     "qwen-code": "unavailable", "kimi-code": "unavailable",
@@ -104,6 +105,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const [deployLog, setDeployLog]                   = useState<string[]>([]);
   const [showDeployLog, setShowDeployLog]           = useState(false);
   const [showInfo, setShowInfo]                     = useState(false);
+  const [showHelp, setShowHelp]                     = useState(false);
   const [readmeContent, setReadmeContent]           = useState<string | null>(null);
   const [showEnvEditor, setShowEnvEditor]           = useState(false);
   const [showMediaLibrary, setShowMediaLibrary]     = useState(false);
@@ -190,6 +192,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   }, []);
 
   function handleCardClick(platformId: Platform) {
+    onPreviewClose?.();
     setShowEnvEditor(false);
     setShowMediaLibrary(false);
     setShowDbBrowser(false);
@@ -317,7 +320,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   }, [dataMenuOpen]);
 
   const termH   = height - CAROUSEL_H - FOOTER_H;
-  const total   = 1 + PLATFORMS.length + COMING_SOON.length; // +1 Fractera PRO
+  const total   = 1 + PLATFORMS.length; // +1 Fractera PRO
   const safeIdx = Math.min(carouselIdx, Math.max(total - 1, 0));
   const canPrev = safeIdx > 0;
   const canNext = safeIdx < total - 1;
@@ -378,17 +381,16 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <ImagePlus size={11} />Upload media
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDbBrowser((v) => !v); setShowEnvEditor(false); setShowMediaLibrary(false); setShowInfo(false); setShowUsers(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDbBrowser((v) => !v); setShowEnvEditor(false); setShowMediaLibrary(false); setShowInfo(false); setShowUsers(false); setShowHelp(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Database size={11} />Database
               </button>
-              <div className="h-px bg-border mx-2" />
-              <button type="button" onClick={() => { setDataMenuOpen(false); handleDeploy(); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                {deploying ? <Loader2 size={11} className="animate-spin" /> : <Rocket size={11} />}Deploy app
+              <button type="button" disabled
+                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-muted-foreground/40 cursor-not-allowed">
+                <Brain size={11} />LightRAG
               </button>
               <div className="h-px bg-border mx-2" />
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Settings size={11} />Configure
               </button>
@@ -402,13 +404,10 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                 <Upload size={11} />Import data
               </button>
               <div className="h-px bg-border mx-2" />
-              <div className="px-3 py-2 flex flex-col gap-1">
-                <span className="text-[10px] font-medium text-muted-foreground">Help</span>
-                <p className="text-[10px] text-muted-foreground leading-relaxed"><strong className="text-foreground">Upload media</strong> — upload images and files to storage.</p>
-                <p className="text-[10px] text-muted-foreground leading-relaxed"><strong className="text-foreground">Configure</strong> — edit environment variables.</p>
-                <p className="text-[10px] text-muted-foreground leading-relaxed"><strong className="text-foreground">Export</strong> — downloads a zip with your database and storage files.</p>
-                <p className="text-[10px] text-muted-foreground leading-relaxed"><strong className="text-foreground">Import</strong> — merges a backup into existing data. No data is overwritten.</p>
-              </div>
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowHelp((v) => !v); setShowInfo(false); setShowEnvEditor(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                <HelpCircle size={11} />Help
+              </button>
             </div>
           )}
           <input ref={fileInputRef} type="file" accept=".zip" className="hidden" onChange={handleImport} />
@@ -568,6 +567,14 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
             <div className="flex-1 flex items-center justify-center text-muted-foreground text-xs gap-2">
               <Loader2 size={14} className="animate-spin" />Loading README…
             </div>
+          ) : readmeContent.trimStart().startsWith("<") ? (
+            <iframe
+              srcDoc={readmeContent}
+              className="flex-1 border-0 w-full"
+              style={{ minHeight: 0 }}
+              sandbox="allow-same-origin allow-scripts"
+              title="README"
+            />
           ) : (
           <div className="flex-1 overflow-y-auto p-5">
             <div className="prose prose-sm prose-invert max-w-none text-[13px] leading-relaxed
@@ -592,6 +599,35 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
             </div>
           </div>
           )}
+        </div>
+      )}
+
+      {/* ── Help panel ── */}
+      {showHelp && (
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 10 }}
+          className="bg-background flex flex-col">
+          <div className="flex items-center px-4 py-2.5 border-b border-border shrink-0">
+            <span className="text-xs font-semibold text-foreground flex-1">Help</span>
+            <button type="button" onClick={() => setShowHelp(false)}
+              className="flex items-center justify-center size-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
+            {[
+              { title: "Upload media", desc: "Upload images, videos, and files to local S3 storage. Images can be cropped before saving." },
+              { title: "Configure", desc: "Edit environment variables for the application. Changes take effect after the next deploy." },
+              { title: "Database", desc: "Browse and edit database tables directly. Supports editing cells, deleting rows, and managing users." },
+              { title: "LightRAG", desc: "Company Brain — a shared knowledge graph for all agents. Coming in v1.1." },
+              { title: "Export", desc: "Downloads a zip archive containing your database and all storage files." },
+              { title: "Import", desc: "Merges a backup zip into existing data. Existing records are not overwritten." },
+            ].map(({ title, desc }) => (
+              <div key={title} className="flex flex-col gap-1">
+                <span className="text-[12px] font-semibold text-foreground">{title}</span>
+                <span className="text-[12px] text-muted-foreground leading-relaxed">{desc}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -671,6 +707,12 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           onClick={() => xtermRefs.current[terminalPlatform]?.sendStdin("\r")}
         >
           <CornerDownLeft size={10} />Enter
+        </button>
+
+        {/* Deploy button */}
+        <button type="button" onClick={handleDeploy} disabled={deploying}
+          className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 disabled:pointer-events-none">
+          {deploying ? <Loader2 size={10} className="animate-spin" /> : <Rocket size={10} />}Deploy
         </button>
 
         {/* Info button */}
