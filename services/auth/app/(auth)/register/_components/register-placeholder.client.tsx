@@ -25,52 +25,58 @@ function AdministratorConfirmModal({ email, password, onConfirmed }: ModalProps)
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onMouseDown={(e) => e.stopPropagation()}
     >
-      <div className="w-full max-w-md bg-background rounded-xl border shadow-xl flex flex-col gap-5 p-7">
-        <div className="flex flex-col gap-1">
+      <div className="w-full max-w-md bg-background rounded-xl border shadow-xl flex flex-col" style={{ maxHeight: 600 }}>
+        {/* Fixed header */}
+        <div className="px-7 pt-7 pb-4 border-b border-border shrink-0">
           <h2 className="text-lg font-semibold">Administrator Account Created</h2>
           <p className="text-sm text-muted-foreground">Please read carefully before continuing.</p>
         </div>
 
-        <p className="text-sm leading-relaxed">
-          You are the <strong>first</strong> user on this server and have been granted
-          the <strong>Administrator</strong> role. This gives you full control over
-          the platform, users, and the AI coding workspace.
-        </p>
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto px-7 py-5 flex flex-col gap-4">
+          <p className="text-sm leading-relaxed">
+            You are the <strong>first</strong> user on this server and have been granted
+            the <strong>Administrator</strong> role. This gives you full control over
+            the platform, users, and the AI coding workspace.
+          </p>
 
-        <div className="rounded-lg border bg-muted/40 px-4 py-3 flex flex-col gap-1.5 font-mono text-xs">
-          <div className="flex gap-2">
-            <span className="text-muted-foreground w-16 shrink-0">Email</span>
-            <span className="text-foreground break-all select-all">{email}</span>
+          <div className="rounded-lg border bg-muted/40 px-4 py-3 flex flex-col gap-1.5 font-mono text-xs">
+            <div className="flex gap-2">
+              <span className="text-muted-foreground w-16 shrink-0">Email</span>
+              <span className="text-foreground break-all select-all">{email}</span>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-muted-foreground w-16 shrink-0">Password</span>
+              <span className="text-foreground select-all">{password}</span>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <span className="text-muted-foreground w-16 shrink-0">Password</span>
-            <span className="text-foreground select-all">{password}</span>
+
+          <div className="rounded-lg border border-orange-500/30 bg-orange-500/5 px-4 py-3 text-sm leading-relaxed text-red-400">
+            <strong>Important:</strong> Only the first registered user receives Administrator
+            privileges. All subsequent users will receive the <strong>User</strong> role.
+            If you lose access to this account, you <strong>cannot</strong> regain the
+            Administrator role by re-registering — and you will lose the ability to access
+            the AI coding workspace and grant admin rights to others.{" "}
+            <strong>Save your email and password in a secure location before continuing.</strong>
           </div>
         </div>
 
-        <div className="rounded-lg border border-orange-500/30 bg-orange-500/5 px-4 py-3 text-sm leading-relaxed text-red-400">
-          <strong>Important:</strong> Only the first registered user receives Administrator
-          privileges. All subsequent users will receive the <strong>User</strong> role.
-          If you lose access to this account, you <strong>cannot</strong> regain the
-          Administrator role by re-registering — and you will lose the ability to access
-          the AI coding workspace and grant admin rights to others.{" "}
-          <strong>Save your email and password in a secure location before continuing.</strong>
+        {/* Fixed footer */}
+        <div className="px-7 pb-7 pt-4 border-t border-border shrink-0 flex flex-col gap-4">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <Checkbox
+              checked={checked}
+              onCheckedChange={(v) => setChecked(v === true)}
+              className="mt-0.5 shrink-0"
+            />
+            <span className="text-sm leading-snug">
+              I understand. I have saved my email and password in a secure location.
+            </span>
+          </label>
+          <Button className="w-full" disabled={!checked} onClick={onConfirmed}>
+            Continue
+          </Button>
         </div>
-
-        <label className="flex items-start gap-3 cursor-pointer">
-          <Checkbox
-            checked={checked}
-            onCheckedChange={(v) => setChecked(v === true)}
-            className="mt-0.5 shrink-0"
-          />
-          <span className="text-sm leading-snug">
-            I understand. I have saved my email and password in a secure location.
-          </span>
-        </label>
-
-        <Button className="w-full" disabled={!checked} onClick={onConfirmed}>
-          Continue
-        </Button>
       </div>
     </div>
   );
