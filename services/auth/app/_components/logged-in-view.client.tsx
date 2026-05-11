@@ -4,9 +4,17 @@ import { useEffect } from "react";
 import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 
-export function LoggedInView({ email }: { email: string }) {
+type Props = {
+  email: string;
+  appUrl: string;
+  adminUrl: string;
+  roles: string[];
+};
+
+export function LoggedInView({ email, appUrl, adminUrl, roles }: Props) {
+  const isAdmin = roles.includes("architect");
+
   useEffect(() => {
-    // Если загружены как iframe — уведомляем родительский shell
     if (window.parent !== window) {
       window.parent.postMessage({ type: "AUTH_SUCCESS" }, "*");
     }
@@ -22,6 +30,26 @@ export function LoggedInView({ email }: { email: string }) {
         <Button variant="outline" onClick={() => signOut({ callbackUrl: "/login" })}>
           Sign out
         </Button>
+        {(appUrl || (isAdmin && adminUrl)) && (
+          <div className="flex flex-col gap-2 pt-1 border-t border-border">
+            {appUrl && (
+              <a
+                href={appUrl}
+                className="text-sm text-center text-primary hover:underline"
+              >
+                Go to App
+              </a>
+            )}
+            {isAdmin && adminUrl && (
+              <a
+                href={adminUrl}
+                className="text-sm text-center text-primary hover:underline"
+              >
+                Go to Admin Panel
+              </a>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

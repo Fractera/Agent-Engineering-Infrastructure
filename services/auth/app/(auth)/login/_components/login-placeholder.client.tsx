@@ -1,8 +1,9 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,15 +25,33 @@ function LoginForm() {
     setError(null);
     setLoading(true);
     const result = await signIn("credentials", { email, password, redirect: false });
-    setLoading(false);
-    if (result?.error) { setError("Invalid email or password"); return; }
+    if (result?.error) {
+      setLoading(false);
+      setError("Invalid email or password");
+      return;
+    }
 
-    // Notify parent shell if loaded as iframe
     if (typeof window !== "undefined" && window.parent !== window) {
       window.parent.postMessage({ type: "AUTH_SUCCESS" }, "*");
     }
 
     router.refresh();
+
+    // Check role before redirecting to callbackUrl
+    if (callbackUrl !== "/") {
+      const session = await getSession();
+      const roles: string[] = (session?.user as { roles?: string[] })?.roles ?? [];
+      if (!roles.includes("architect")) {
+        setLoading(false);
+        toast.error(
+          "You don't have access to the Admin Panel. To use the AI coding workspace, ask your administrator to grant you the Administrator role."
+        );
+        router.push("/");
+        return;
+      }
+    }
+
+    setLoading(false);
     router.push(callbackUrl);
   };
 

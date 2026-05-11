@@ -5,7 +5,7 @@ import { getDb } from "@/lib/db";
 import { nanoid } from "nanoid";
 
 type RegisterResult =
-  | { success: true }
+  | { success: true; roles: string[] }
   | { success: false; error: string };
 
 export async function register(email: string, password: string): Promise<RegisterResult> {
@@ -30,5 +30,5 @@ export async function register(email: string, password: string): Promise<Registe
     "INSERT INTO users (id, email, nickname, password, roles, provider) VALUES (?, ?, ?, ?, ?, ?)"
   ).run(nanoid(), normalizedEmail, nickname, hashedPassword, JSON.stringify(roles), "credentials");
 
-  return { success: true };
+  return { success: true, roles };
 }
