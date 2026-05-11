@@ -3,8 +3,8 @@
 import { Suspense, useState } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
+import { AccessDeniedModal } from "@/app/(auth)/register/_components/register-placeholder.client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,7 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError]               = useState<string | null>(null);
   const [loading, setLoading]           = useState(false);
+  const [showAccessDenied, setShowAccessDenied] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,10 +44,7 @@ function LoginForm() {
       const roles: string[] = (session?.user as { roles?: string[] })?.roles ?? [];
       if (!roles.includes("admin")) {
         setLoading(false);
-        toast.error(
-          "You don't have access to the Admin Panel. To use the AI coding workspace, ask your administrator to grant you the Administrator role."
-        );
-        router.push("/");
+        setShowAccessDenied(true);
         return;
       }
     }
@@ -56,6 +54,10 @@ function LoginForm() {
   };
 
   return (
+    <>
+      {showAccessDenied && (
+        <AccessDeniedModal onClose={() => { setShowAccessDenied(false); router.push("/"); }} />
+      )}
     <div className="w-full max-w-sm flex flex-col gap-6 p-8 bg-background rounded-xl border shadow-sm">
       <div className="flex flex-col gap-1">
         <h1 className="text-xl font-semibold">Sign in</h1>
@@ -87,6 +89,7 @@ function LoginForm() {
       </div>
       <Button variant="outline" className="w-full" onClick={() => router.push("/register")}>Register</Button>
     </div>
+    </>
   );
 }
 

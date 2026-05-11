@@ -3,13 +3,33 @@
 import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { register } from "@/lib/auth/register";
+
+export function AccessDeniedModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="w-full max-w-sm bg-background rounded-xl border shadow-xl flex flex-col gap-5 p-7">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-lg font-semibold">Access Denied</h2>
+          <p className="text-sm text-muted-foreground">You don't have permission to access the Admin Panel.</p>
+        </div>
+        <p className="text-sm leading-relaxed text-foreground">
+          The AI coding workspace is only available to users with the{" "}
+          <strong>Administrator</strong> role. Contact your administrator and ask them
+          to grant you the Administrator role.
+        </p>
+        <Button className="w-full" onClick={onClose}>
+          OK
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 type ModalProps = {
   email: string;
@@ -93,7 +113,8 @@ function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError]               = useState<string | null>(null);
   const [loading, setLoading]           = useState(false);
-  const [showModal, setShowModal]       = useState(false);
+  const [showModal, setShowModal]             = useState(false);
+  const [showAccessDenied, setShowAccessDenied] = useState(false);
   const [pendingRedirect, setPendingRedirect] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -121,11 +142,7 @@ function RegisterForm() {
         setPendingRedirect(callbackUrl || "/");
         setShowModal(true);
       } else if (callbackUrl) {
-        // Regular user tried to access a protected area (e.g. admin)
-        toast.error(
-          "You don't have access to the Admin Panel. To use the AI coding workspace, ask your administrator to grant you the Administrator role."
-        );
-        router.push("/");
+        setShowAccessDenied(true);
       } else {
         router.push("/");
       }
@@ -153,6 +170,9 @@ function RegisterForm() {
           password={password}
           onConfirmed={handleModalConfirmed}
         />
+      )}
+      {showAccessDenied && (
+        <AccessDeniedModal onClose={() => { setShowAccessDenied(false); router.push("/"); }} />
       )}
       <div className="w-full max-w-sm flex flex-col gap-4">
         <div className="flex flex-col gap-6 p-8 bg-background rounded-xl border shadow-sm">
