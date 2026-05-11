@@ -147,7 +147,7 @@ function RegisterForm() {
         router.push("/");
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Unexpected error during registration");
+      setError(err instanceof Error ? err.message : "Unexpected error during registration");
     } finally {
       setLoading(false);
     }
