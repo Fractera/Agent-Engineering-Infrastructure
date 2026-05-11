@@ -51,7 +51,7 @@ export default function ShellPage() {
         >
           <span className="inline-flex items-center gap-2 text-[11px] font-mono tracking-[0.18em] text-primary/80 uppercase border border-primary/20 rounded-full px-4 py-1.5 bg-primary/5 backdrop-blur-sm">
             <Sparkles size={10} />
-            AI-Powered Development
+            Production-Coding AI Server
           </span>
         </motion.div>
 

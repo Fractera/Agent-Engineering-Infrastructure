@@ -9,8 +9,8 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: process.env.NEXT_PUBLIC_APP_TITLE ?? "Fractera Light",
-  description: process.env.NEXT_PUBLIC_APP_DESCRIPTION ?? "AI-powered development workspace",
+  title: process.env.NEXT_PUBLIC_APP_TITLE ?? "Fractera — Production-Coding AI Server",
+  description: process.env.NEXT_PUBLIC_APP_DESCRIPTION ?? "Production-Coding AI Server — multiple frontier AI models running entirely on your own server. No cloud lock-in.",
 };
 
 const defaultTheme = process.env.NEXT_PUBLIC_DEFAULT_THEME ?? "light";
