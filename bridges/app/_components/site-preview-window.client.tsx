@@ -48,10 +48,11 @@ export function SitePreviewWindow({ open, onClose, siteUrl }: Props) {
             <button
               type="button"
               onClick={handleReload}
-              className="shrink-0 flex items-center justify-center size-5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              className="shrink-0 flex items-center gap-1 px-2 h-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-[11px] font-medium"
               title="Reload preview"
             >
               <RefreshCw size={11} />
+              Reload &amp; Update
             </button>
             <button
               type="button"

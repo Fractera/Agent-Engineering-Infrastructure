@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Zap, LayoutDashboard, Sparkles } from "lucide-react";
 
@@ -15,6 +16,9 @@ const AI_TOOLS = [
 ];
 
 export default function ShellPage() {
+  const [appUrl, setAppUrl] = useState("");
+  useEffect(() => { setAppUrl(window.location.origin); }, []);
+
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background">
 
@@ -63,11 +67,16 @@ export default function ShellPage() {
           className="flex flex-col items-center gap-3"
         >
           <h1 className="text-7xl sm:text-8xl font-bold tracking-tight select-none leading-none bg-gradient-to-b from-foreground via-foreground/90 to-foreground/50 bg-clip-text text-transparent">
-            Fractera
+            Your Company App
           </h1>
-          <p className="text-base text-muted-foreground max-w-sm leading-relaxed">
-            Multiple frontier AI models. No cloud lock-in.
-            Running entirely on <span className="text-foreground font-medium">your server</span>.
+          <p className="text-base text-muted-foreground max-w-md leading-relaxed">
+            Your app is already live in production
+            {appUrl && (
+              <> at <span className="text-foreground font-mono font-medium">{appUrl}</span></>
+            )}
+            {" "}— a domain you can replace with your own at any time.{" "}
+            Open the <span className="text-foreground font-medium">Admin Panel</span> to
+            customize this page and turn it into your own product.
           </p>
         </motion.div>
 
