@@ -404,7 +404,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
               <div className="h-px bg-border mx-2" />
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                <Settings size={11} />Configure
+                <Settings size={11} />Env Variables
               </button>
               <div className="h-px bg-border mx-2" />
               <button type="button" onClick={handleExport}

@@ -61,7 +61,12 @@ export function EnvEditorPanel({ onClose }: Props) {
       .then((r) => r.json())
       .then((data) => {
         const vars = (data.vars ?? {}) as Record<string, string>;
-        setEntries(Object.entries(vars).map(([key, value]) => ({ key, value, isNew: false })));
+        const loaded: EnvEntry[] = Object.entries(vars).map(([key, value]) => ({ key, value, isNew: false }));
+        const existingKeys = new Set(loaded.map((e) => e.key));
+        const gitDefaults = ["GIT_REPO_URL", "GIT_TOKEN"]
+          .filter((k) => !existingKeys.has(k))
+          .map((k) => ({ key: k, value: "", isNew: false }));
+        setEntries([...loaded, ...gitDefaults]);
       })
       .catch(() => setError("Failed to load environment variables."))
       .finally(() => setLoading(false));
