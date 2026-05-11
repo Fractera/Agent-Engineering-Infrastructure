@@ -198,6 +198,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     setShowDbBrowser(false);
     setShowUsers(false);
     setShowInfo(false);
+    setShowHelp(false);
     const isRunning = terminalSessions.has(platformId);
     if (isRunning && terminalPlatform === platformId) {
       if (confirmingPlatform === platformId) {
