@@ -21,7 +21,12 @@ export async function proxy(req: NextRequest) {
 
   if (!ok) {
     const registerUrl = new URL(AUTH_REGISTER);
-    registerUrl.searchParams.set("callbackUrl", req.url);
+    // Reconstruct the public URL from forwarded headers (Nginx sets these)
+    const host  = req.headers.get("x-forwarded-host") || req.headers.get("host") || "";
+    const proto = req.headers.get("x-forwarded-proto") || "https";
+    const pathname = new URL(req.url).pathname;
+    const callbackUrl = host ? `${proto}://${host}${pathname}` : req.url;
+    registerUrl.searchParams.set("callbackUrl", callbackUrl);
     return NextResponse.redirect(registerUrl);
   }
 
