@@ -48,7 +48,7 @@ function AdministratorConfirmModal({ email, password, onConfirmed }: ModalProps)
           </div>
         </div>
 
-        <div className="rounded-lg border border-orange-500/30 bg-orange-500/5 px-4 py-3 text-sm leading-relaxed text-orange-200">
+        <div className="rounded-lg border border-orange-500/30 bg-orange-500/5 px-4 py-3 text-sm leading-relaxed text-red-400">
           <strong>Important:</strong> Only the first registered user receives Administrator
           privileges. All subsequent users will receive the <strong>User</strong> role.
           If you lose access to this account, you <strong>cannot</strong> regain the

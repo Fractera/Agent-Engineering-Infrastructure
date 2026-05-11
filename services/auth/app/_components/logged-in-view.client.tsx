@@ -31,7 +31,7 @@ export function LoggedInView({ email, appUrl, adminUrl, roles }: Props) {
           Sign out
         </Button>
         {(appUrl || (isAdmin && adminUrl)) && (
-          <div className="flex flex-col gap-2 pt-1 border-t border-border">
+          <div className="flex flex-row gap-4 pt-1 border-t border-border justify-center">
             {appUrl && (
               <a
                 href={appUrl}
