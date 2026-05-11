@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, HelpCircle } from "lucide-react";
+import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
 import { Shimmer } from "@/components/ai-elements/shimmer.client";
@@ -106,6 +106,9 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const [showDeployLog, setShowDeployLog]           = useState(false);
   const [showInfo, setShowInfo]                     = useState(false);
   const [showHelp, setShowHelp]                     = useState(false);
+  const [showGitConnect, setShowGitConnect]         = useState(false);
+  const [gitConnected, setGitConnected]             = useState(false);
+  const [gitRepo, setGitRepo]                       = useState<string | null>(null);
   const [readmeContent, setReadmeContent]           = useState<string | null>(null);
   const [showEnvEditor, setShowEnvEditor]           = useState(false);
   const [showMediaLibrary, setShowMediaLibrary]     = useState(false);
@@ -199,6 +202,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     setShowUsers(false);
     setShowInfo(false);
     setShowHelp(false);
+    setShowGitConnect(false);
     const isRunning = terminalSessions.has(platformId);
     if (isRunning && terminalPlatform === platformId) {
       if (confirmingPlatform === platformId) {
@@ -232,6 +236,13 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
       .then((data) => {
         if (data.available) { setUpdateAvailable(true); setUpdateCount(data.count); }
       })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/config/git-status")
+      .then((r) => r.json())
+      .then((data) => { setGitConnected(!!data.connected); setGitRepo(data.repo ?? null); })
       .catch(() => {});
   }, []);
 
@@ -632,6 +643,76 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
         </div>
       )}
 
+      {/* ── GitHub Connect panel ── */}
+      {showGitConnect && (
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 10 }}
+          className="bg-background flex flex-col">
+          <div className="flex items-center px-4 py-2.5 border-b border-border shrink-0">
+            <GitBranch size={12} className="text-muted-foreground mr-2 shrink-0" />
+            <span className="text-xs font-semibold text-foreground flex-1">Connect GitHub Repository</span>
+            <button type="button" onClick={() => setShowGitConnect(false)}
+              className="flex items-center justify-center size-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-6 max-w-2xl">
+            <p className="text-[12px] text-muted-foreground leading-relaxed">
+              Connect your GitHub repository to enable Git Pull and Git Push directly from the admin panel.
+              The repository will be synced with the <span className="font-mono text-foreground">app</span> layer of your Fractera instance.
+            </p>
+
+            {/* Step 1 */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <span className="size-5 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
+                <span className="text-[12px] font-semibold text-foreground">Copy your repository URL</span>
+              </div>
+              <div className="pl-7 flex flex-col gap-1 text-[12px] text-muted-foreground leading-relaxed">
+                <p>Go to your repository on GitHub, click the green <span className="font-semibold text-foreground">Code</span> button, select the <span className="font-semibold text-foreground">HTTPS</span> tab, and copy the URL.</p>
+                <div className="mt-1 px-3 py-2 rounded bg-muted font-mono text-[11px] text-foreground">
+                  https://github.com/your-name/your-repo.git
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <span className="size-5 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">2</span>
+                <span className="text-[12px] font-semibold text-foreground">Create a Personal Access Token <span className="font-normal text-muted-foreground">(private repos only)</span></span>
+              </div>
+              <div className="pl-7 flex flex-col gap-1 text-[12px] text-muted-foreground leading-relaxed">
+                <p>GitHub → <span className="text-foreground">Settings</span> → <span className="text-foreground">Developer Settings</span> → <span className="text-foreground">Personal Access Tokens</span> → <span className="text-foreground">Tokens (classic)</span></p>
+                <p>Click <span className="font-semibold text-foreground">Generate new token</span>, select the <span className="font-mono text-foreground">repo</span> scope, and copy the token.</p>
+                <p className="text-muted-foreground/60 text-[11px]">Public repositories do not require a token.</p>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <span className="size-5 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">3</span>
+                <span className="text-[12px] font-semibold text-foreground">Add the variables in Configure</span>
+              </div>
+              <div className="pl-7 flex flex-col gap-2 text-[12px] text-muted-foreground leading-relaxed">
+                <p>Open <span className="font-semibold text-foreground">Settings → Configure</span> and add the following environment variables:</p>
+                <div className="px-3 py-2.5 rounded bg-muted font-mono text-[11px] text-foreground flex flex-col gap-1">
+                  <span><span className="text-primary">GIT_REPO_URL</span>=https://github.com/your-name/your-repo.git</span>
+                  <span className="text-muted-foreground/60"># optional — only for private repos:</span>
+                  <span><span className="text-primary">GIT_TOKEN</span>=ghp_xxxxxxxxxxxxxxxxxxxx</span>
+                </div>
+                <p>Click <span className="font-semibold text-foreground">Save &amp; Apply</span>, then press <span className="font-semibold text-foreground">Deploy</span> in the footer.</p>
+              </div>
+            </div>
+
+            {/* Result */}
+            <div className="px-3 py-2.5 rounded border border-green-500/20 bg-green-500/5 text-[11px] text-green-600 dark:text-green-400 leading-relaxed">
+              After deploy — the GitHub button will disappear and <span className="font-semibold">Git Pull</span> / <span className="font-semibold">Git Push</span> will become available in the footer.
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Placeholder ── */}
       <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H }} className="bg-zinc-950 flex flex-col items-center justify-center gap-4 select-none">
         {!isAuthenticated ? (
@@ -678,11 +759,17 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
       {/* ── Footer ── */}
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: FOOTER_H }} className="border-t border-border bg-background flex items-center gap-2 px-3">
 
-        {/* Left: version + update badge */}
+        {/* Left: repo name (when connected) or version */}
         <span className="flex-1 flex items-center gap-2 min-w-0">
-          <span className="text-[10px] text-muted-foreground/50 select-none tracking-wide shrink-0">
-            {APP_VERSION}
-          </span>
+          {gitConnected && gitRepo ? (
+            <span className="text-[10px] text-muted-foreground/70 font-mono select-none shrink-0 flex items-center gap-1">
+              <GitBranch size={9} className="shrink-0" />{gitRepo}
+            </span>
+          ) : (
+            <span className="text-[10px] text-muted-foreground/50 select-none tracking-wide shrink-0">
+              {APP_VERSION}
+            </span>
+          )}
           {updateAvailable && (
             <TooltipProvider delayDuration={0}>
               <Tooltip>
@@ -715,6 +802,42 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 disabled:pointer-events-none">
           {deploying ? <Loader2 size={10} className="animate-spin" /> : <Rocket size={10} />}Deploy
         </button>
+
+        {/* GitHub Connect (only when not connected) */}
+        {!gitConnected && (
+          <button type="button" onClick={() => setShowGitConnect((v) => !v)}
+            className={`inline-flex items-center gap-1 h-5 px-2 rounded border text-[10px] transition-colors ${showGitConnect ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
+            <GitBranch size={10} />GitHub
+          </button>
+        )}
+
+        {/* Git Pull + Push (fake, only when connected) */}
+        {gitConnected && (
+          <>
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button type="button" disabled
+                    className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground/40 cursor-not-allowed">
+                    <ArrowDownToLine size={10} />Pull
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-[11px]" style={{ zIndex: 99999 }}>Coming soon</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button type="button" disabled
+                    className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground/40 cursor-not-allowed">
+                    <ArrowUpFromLine size={10} />Push
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-[11px]" style={{ zIndex: 99999 }}>Coming soon</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </>
+        )}
 
         {/* Info button */}
         <button type="button" onClick={handleInfo}
