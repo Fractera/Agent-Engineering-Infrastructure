@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { toast } from "sonner";
 import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
@@ -109,6 +110,8 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const [showGitConnect, setShowGitConnect]         = useState(false);
   const [gitConnected, setGitConnected]             = useState(false);
   const [gitRepo, setGitRepo]                       = useState<string | null>(null);
+  const [gitPulling, setGitPulling]                 = useState(false);
+  const [gitPushing, setGitPushing]                 = useState(false);
   const [readmeContent, setReadmeContent]           = useState<string | null>(null);
   const [showEnvEditor, setShowEnvEditor]           = useState(false);
   const [showMediaLibrary, setShowMediaLibrary]     = useState(false);
@@ -290,6 +293,56 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     } catch {
       setDeployLog(["Deploy failed — check server logs."]);
       setDeploying(false);
+    }
+  }
+
+  async function handleGitPull() {
+    setGitPulling(true);
+    try {
+      const res = await fetch("/api/config/git-pull", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Git Pull — success", {
+          description: data.output || "Already up to date.",
+          duration: 8000,
+          closeButton: true,
+        });
+      } else {
+        toast.error("Git Pull — error", {
+          description: data.error || "Unknown error. Check server logs.",
+          duration: Infinity,
+          closeButton: true,
+        });
+      }
+    } catch (e: any) {
+      toast.error("Git Pull — error", { description: e.message, duration: Infinity, closeButton: true });
+    } finally {
+      setGitPulling(false);
+    }
+  }
+
+  async function handleGitPush() {
+    setGitPushing(true);
+    try {
+      const res = await fetch("/api/config/git-push", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Git Push — success", {
+          description: data.output || "Pushed to remote.",
+          duration: 8000,
+          closeButton: true,
+        });
+      } else {
+        toast.error("Git Push — error", {
+          description: data.error || "Unknown error. Check server logs.",
+          duration: Infinity,
+          closeButton: true,
+        });
+      }
+    } catch (e: any) {
+      toast.error("Git Push — error", { description: e.message, duration: Infinity, closeButton: true });
+    } finally {
+      setGitPushing(false);
     }
   }
 
@@ -811,31 +864,17 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           </button>
         )}
 
-        {/* Git Pull + Push (fake, only when connected) */}
+        {/* Git Pull + Push (real, only when connected) */}
         {gitConnected && (
           <>
-            <TooltipProvider delayDuration={0}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button type="button" disabled
-                    className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground/40 cursor-not-allowed">
-                    <ArrowDownToLine size={10} />Pull
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[11px]" style={{ zIndex: 99999 }}>Coming soon</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider delayDuration={0}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button type="button" disabled
-                    className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground/40 cursor-not-allowed">
-                    <ArrowUpFromLine size={10} />Push
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[11px]" style={{ zIndex: 99999 }}>Coming soon</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <button type="button" onClick={handleGitPull} disabled={gitPulling || gitPushing}
+              className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+              {gitPulling ? <Loader2 size={10} className="animate-spin" /> : <ArrowDownToLine size={10} />}Pull
+            </button>
+            <button type="button" onClick={handleGitPush} disabled={gitPulling || gitPushing}
+              className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+              {gitPushing ? <Loader2 size={10} className="animate-spin" /> : <ArrowUpFromLine size={10} />}Push
+            </button>
           </>
         )}
 
