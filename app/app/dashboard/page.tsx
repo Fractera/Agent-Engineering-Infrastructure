@@ -6,7 +6,6 @@ import { toast } from "sonner"
 import { FileUploadField } from "@/services/upload/file-upload-field.client"
 import type { UploadedFile } from "@/services/upload/upload.service"
 
-const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL ?? "http://localhost:3001"
 
 type Product = {
   id: string
@@ -35,7 +34,7 @@ export default function DashboardPage() {
   }, [])
 
   useEffect(() => {
-    fetch(`${AUTH_URL}/api/session`, { credentials: "include" })
+    fetch("/api/me")
       .then(res => {
         if (!res.ok) { window.location.href = "/" }
         else { setReady(true); loadProducts() }
