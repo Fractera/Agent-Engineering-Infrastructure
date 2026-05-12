@@ -78,13 +78,15 @@ export async function POST(req: NextRequest) {
     );
     lines.push((stdout + stderr).trim());
 
-    // Restore stashed changes on top of pulled code
+    // Restore stashed changes; on conflict — keep remote version
     if (stashed) {
-      const popRes = await execAsync(
-        `git -C ${PROJECT_DIR} stash pop`,
-        opts
-      ).catch(e => ({ stdout: e.stdout ?? "", stderr: e.stderr ?? "" }));
-      lines.push((popRes.stdout + popRes.stderr).trim() || "Local changes restored.");
+      const popRes = await execAsync(`git -C ${PROJECT_DIR} stash pop`, opts)
+        .catch(async () => {
+          await execAsync(`git -C ${PROJECT_DIR} reset --hard HEAD`, opts).catch(() => null);
+          await execAsync(`git -C ${PROJECT_DIR} stash drop`, opts).catch(() => null);
+          return { stdout: "Merge conflict — remote version kept.", stderr: "" };
+        });
+      lines.push((popRes.stdout + popRes.stderr).trim());
     }
 
     return NextResponse.json({ success: true, output: maskToken(lines.filter(Boolean).join("\n")) });

@@ -289,12 +289,27 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           const s = await fetch(`/api/deploy/status?jobId=${jobId}`).then((r) => r.json());
           if (s.log?.length) setDeployLog(s.log);
           const done = s.status === "COMPLETED" || s.status === "FAILED" || s.status === "HEALTH_FAILED";
-          if (done) { clearInterval(poll); setDeploying(false); }
+          if (done) {
+            clearInterval(poll);
+            setDeploying(false);
+            if (s.status === "FAILED" || s.status === "HEALTH_FAILED") {
+              toast.error("Deploy failed", {
+                description: "Use AI agents in the terminal to fix the error and run deploy again.",
+                duration: Infinity,
+                closeButton: true,
+              });
+            }
+          }
         } catch { /* keep polling */ }
       }, 3000);
     } catch {
       setDeployLog(["Deploy failed — check server logs."]);
       setDeploying(false);
+      toast.error("Deploy failed", {
+        description: "Use AI agents in the terminal to fix the error and run deploy again.",
+        duration: Infinity,
+        closeButton: true,
+      });
     }
   }
 
@@ -925,33 +940,37 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
 
       {/* ── Deploy log panel ── */}
       {showDeployLog && deployLog.length > 0 && (
-        <div ref={deployLogRef} style={{ position: "absolute", bottom: FOOTER_H, left: 0, right: 0, zIndex: 9998 }}
-          className="bg-zinc-950 border-t border-border p-3 flex flex-col gap-1 max-h-48 overflow-y-auto">
-          <div className="flex items-center justify-between mb-1">
+        <div style={{ position: "absolute", bottom: FOOTER_H, left: 0, right: 0, zIndex: 9998 }}
+          className="bg-zinc-950 border-t border-border flex flex-col max-h-48">
+          <div className="flex items-center justify-between px-3 pt-2 pb-1 shrink-0">
             <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
               {deploying && <Loader2 size={10} className="animate-spin" />}Deploy log
             </span>
             <button type="button" onClick={() => setShowDeployLog(false)}
-              className="text-[10px] text-muted-foreground hover:text-foreground transition-colors">close</button>
+              className="text-[10px] px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">close</button>
           </div>
-          {deployLog.map((line, i) => (
-            <span key={i} className="text-[11px] font-mono text-zinc-300 leading-relaxed">{line}</span>
-          ))}
+          <div ref={deployLogRef} className="overflow-y-auto flex flex-col gap-1 px-3 pb-3">
+            {deployLog.map((line, i) => (
+              <span key={i} className="text-[11px] font-mono text-zinc-300 leading-relaxed">{line}</span>
+            ))}
+          </div>
         </div>
       )}
 
       {/* ── Update log panel ── */}
       {showUpdateLog && updateLog.length > 0 && (
-        <div ref={updateLogRef} style={{ position: "absolute", bottom: FOOTER_H, left: 0, right: 0, zIndex: 9998 }}
-          className="bg-zinc-950 border-t border-border p-3 flex flex-col gap-1 max-h-48 overflow-y-auto">
-          <div className="flex items-center justify-between mb-1">
+        <div style={{ position: "absolute", bottom: FOOTER_H, left: 0, right: 0, zIndex: 9998 }}
+          className="bg-zinc-950 border-t border-border flex flex-col max-h-48">
+          <div className="flex items-center justify-between px-3 pt-2 pb-1 shrink-0">
             <span className="text-[11px] font-medium text-muted-foreground">Update log</span>
             <button type="button" onClick={() => setShowUpdateLog(false)}
-              className="text-[10px] text-muted-foreground hover:text-foreground transition-colors">close</button>
+              className="text-[10px] px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">close</button>
           </div>
-          {updateLog.map((line, i) => (
-            <span key={i} className="text-[11px] font-mono text-zinc-300 leading-relaxed">{line}</span>
-          ))}
+          <div ref={updateLogRef} className="overflow-y-auto flex flex-col gap-1 px-3 pb-3">
+            {updateLog.map((line, i) => (
+              <span key={i} className="text-[11px] font-mono text-zinc-300 leading-relaxed">{line}</span>
+            ))}
+          </div>
         </div>
       )}
 
