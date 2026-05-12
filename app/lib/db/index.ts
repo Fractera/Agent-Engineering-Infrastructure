@@ -19,6 +19,11 @@ function makeLocalDb() {
   mkdirSync(DATA_DIR, { recursive: true })
   const sqlite = new Database(join(DATA_DIR, "products.db"))
   sqlite.exec(SCHEMA)
+  const cols = new Set(
+    (sqlite.prepare('PRAGMA table_info(products)').all() as Array<{ name: string }>).map(c => c.name)
+  )
+  if (!cols.has('media_id'))  sqlite.exec(`ALTER TABLE products ADD COLUMN media_id  TEXT`)
+  if (!cols.has('media_url')) sqlite.exec(`ALTER TABLE products ADD COLUMN media_url TEXT`)
   return {
     prepare(sql: string) {
       const stmt = sqlite.prepare(sql)

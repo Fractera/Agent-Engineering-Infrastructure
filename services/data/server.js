@@ -76,6 +76,10 @@ appDb.exec(`
   )
 `)
 
+const productsCols = new Set(appDb.prepare('PRAGMA table_info(products)').all().map(c => c.name))
+if (!productsCols.has('media_id'))  appDb.exec(`ALTER TABLE products ADD COLUMN media_id  TEXT`)
+if (!productsCols.has('media_url')) appDb.exec(`ALTER TABLE products ADD COLUMN media_url TEXT`)
+
 // ── Auth middleware ───────────────────────────────────────────────────────────
 
 async function requireAuth(req, res, next) {
