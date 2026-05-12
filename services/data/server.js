@@ -18,7 +18,7 @@ const AUTH_URL    = process.env.AUTH_SERVICE_URL ?? 'http://localhost:3001'
 const STORAGE_DIR = resolve(__dirname, 'storage')
 const ICONS_DIR   = resolve(__dirname, 'icons')
 const MEDIA_DB    = resolve(__dirname, 'data/media.db')
-const APP_DB      = resolve(__dirname, 'data/app.db')
+const APP_DB      = process.env.APP_DB_PATH ?? resolve(__dirname, '../../app/data/products.db')
 
 mkdirSync(STORAGE_DIR,                   { recursive: true })
 mkdirSync(ICONS_DIR,                     { recursive: true })
@@ -65,9 +65,25 @@ const appDb = new Database(APP_DB)
 appDb.pragma('journal_mode = WAL')
 appDb.pragma('foreign_keys = ON')
 
+appDb.exec(`
+  CREATE TABLE IF NOT EXISTS products (
+    id         TEXT PRIMARY KEY NOT NULL,
+    name       TEXT NOT NULL,
+    price      REAL NOT NULL DEFAULT 0,
+    media_id   TEXT,
+    media_url  TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )
+`)
+
 // ── Auth middleware ───────────────────────────────────────────────────────────
 
 async function requireAuth(req, res, next) {
+  const dataSecret = process.env.DATA_SECRET
+  if (dataSecret && req.headers['x-data-secret'] === dataSecret) {
+    req.session = { user: { email: 'local-dev' } }
+    return next()
+  }
   const cookie = req.headers.cookie ?? ''
   try {
     const r = await fetch(`${AUTH_URL}/api/session`, { headers: { cookie } })
@@ -410,7 +426,7 @@ app.delete('/db/tables/:table', (req, res) => {
 // ── POST /db/migrate — execute arbitrary SQL ──────────────────────────────────
 
 app.post('/db/migrate', (req, res) => {
-  const { sql } = req.body
+  const { sql, params = [] } = req.body
   if (!sql || typeof sql !== 'string' || !sql.trim())
     return res.status(400).json({ error: 'sql field is required' })
 
@@ -422,7 +438,12 @@ app.post('/db/migrate', (req, res) => {
       appDb.exec(sql)
       return res.json({ ok: true })
     }
-    const result = appDb.prepare(sql).run()
+    const stmt = appDb.prepare(sql)
+    if (upper.startsWith('SELECT')) {
+      const rows = params.length ? stmt.all(...params) : stmt.all()
+      return res.json({ ok: true, rows })
+    }
+    const result = params.length ? stmt.run(...params) : stmt.run()
     res.json({ ok: true, changes: result.changes, lastInsertRowid: result.lastInsertRowid })
   } catch (e) {
     res.status(500).json({ error: String(e) })
