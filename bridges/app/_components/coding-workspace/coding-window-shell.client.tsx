@@ -298,6 +298,14 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     }
   }
 
+  function gitToastDesc(text: string) {
+    return (
+      <div style={{ maxHeight: 260, overflowY: "auto", whiteSpace: "pre-wrap", fontSize: 11, lineHeight: 1.5, fontFamily: "monospace" }}>
+        {text}
+      </div>
+    );
+  }
+
   async function handleGitPull() {
     setGitPulling(true);
     try {
@@ -305,19 +313,19 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
       const data = await res.json();
       if (data.success) {
         toast.success("Git Pull — success", {
-          description: data.output || "Already up to date.",
+          description: gitToastDesc(data.output || "Already up to date."),
           duration: 8000,
           closeButton: true,
         });
       } else {
         toast.error("Git Pull — error", {
-          description: data.error || "Unknown error. Check server logs.",
+          description: gitToastDesc(data.error || "Unknown error. Check server logs."),
           duration: Infinity,
           closeButton: true,
         });
       }
     } catch (e: any) {
-      toast.error("Git Pull — error", { description: e.message, duration: Infinity, closeButton: true });
+      toast.error("Git Pull — error", { description: gitToastDesc(e.message), duration: Infinity, closeButton: true });
     } finally {
       setGitPulling(false);
     }
@@ -330,19 +338,19 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
       const data = await res.json();
       if (data.success) {
         toast.success("Git Push — success", {
-          description: data.output || "Pushed to remote.",
+          description: gitToastDesc(data.output || "Pushed to remote."),
           duration: 8000,
           closeButton: true,
         });
       } else {
         toast.error("Git Push — error", {
-          description: data.error || "Unknown error. Check server logs.",
+          description: gitToastDesc(data.error || "Unknown error. Check server logs."),
           duration: Infinity,
           closeButton: true,
         });
       }
     } catch (e: any) {
-      toast.error("Git Push — error", { description: e.message, duration: Infinity, closeButton: true });
+      toast.error("Git Push — error", { description: gitToastDesc(e.message), duration: Infinity, closeButton: true });
     } finally {
       setGitPushing(false);
     }
