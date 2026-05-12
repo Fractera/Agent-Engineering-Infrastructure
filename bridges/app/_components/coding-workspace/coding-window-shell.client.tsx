@@ -961,10 +961,6 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
             <span className="text-[11px] font-mono text-muted-foreground/60 tabular-nums">
               {Math.floor(deploySeconds / 60)}:{String(deploySeconds % 60).padStart(2, "0")}
             </span>
-            <button type="button" onClick={handleDeploy} disabled={deploying}
-              className="text-[10px] px-2 py-0.5 rounded border border-border transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-muted-foreground hover:text-foreground hover:bg-muted">
-              <Rocket size={9} className="inline mr-0.5" />Deploy
-            </button>
             <button type="button" onClick={() => setShowDeployLog(false)}
               className="text-[10px] px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">close</button>
           </div>
