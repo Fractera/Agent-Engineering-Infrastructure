@@ -130,7 +130,7 @@ export function EnvEditorPanel({ onClose }: Props) {
           href="/api/config/env-export"
           download=".env.local"
           title="Download .env.local for local development"
-          className="flex items-center gap-1 mr-2 px-2 h-6 rounded text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          className="flex items-center gap-1.5 mr-2 px-2.5 h-6 rounded-md border border-blue-500/40 bg-blue-500/10 text-[11px] font-medium text-blue-400 hover:bg-blue-500/20 hover:border-blue-500/60 transition-colors"
         >
           <Download size={11} />
           <span className="font-mono">.env.local</span>
