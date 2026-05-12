@@ -118,9 +118,11 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const [showDbBrowser, setShowDbBrowser]           = useState(false);
   const [showUsers, setShowUsers]                   = useState(false);
   const [activeAuth, setActiveAuth]                 = useState<{ descriptor: AuthFlowDescriptor; url: string; code?: string } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const rawBufRef    = useRef<string>("");
-  const xtermRefs    = useRef<Partial<Record<Platform, XtermTerminalHandle | null>>>({});
+  const fileInputRef    = useRef<HTMLInputElement>(null);
+  const rawBufRef       = useRef<string>("");
+  const xtermRefs       = useRef<Partial<Record<Platform, XtermTerminalHandle | null>>>({});
+  const deployLogRef    = useRef<HTMLDivElement>(null);
+  const updateLogRef    = useRef<HTMLDivElement>(null);
 
   const GITHUB_URL  = process.env.NEXT_PUBLIC_GITHUB_URL  ?? "";
   const PRO_URL     = process.env.NEXT_PUBLIC_PRO_URL     ?? "";
@@ -373,6 +375,8 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   }
 
   useEffect(() => () => { if (countdownRef.current) clearTimeout(countdownRef.current); }, []);
+  useEffect(() => { if (deployLogRef.current) deployLogRef.current.scrollTop = deployLogRef.current.scrollHeight; }, [deployLog]);
+  useEffect(() => { if (updateLogRef.current) updateLogRef.current.scrollTop = updateLogRef.current.scrollHeight; }, [updateLog]);
   useEffect(() => {
     if (!dataMenuOpen) return;
     const close = (e: MouseEvent) => {
@@ -913,7 +917,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
 
       {/* ── Deploy log panel ── */}
       {showDeployLog && deployLog.length > 0 && (
-        <div style={{ position: "absolute", bottom: FOOTER_H, left: 0, right: 0, zIndex: 9998 }}
+        <div ref={deployLogRef} style={{ position: "absolute", bottom: FOOTER_H, left: 0, right: 0, zIndex: 9998 }}
           className="bg-zinc-950 border-t border-border p-3 flex flex-col gap-1 max-h-48 overflow-y-auto">
           <div className="flex items-center justify-between mb-1">
             <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
@@ -930,7 +934,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
 
       {/* ── Update log panel ── */}
       {showUpdateLog && updateLog.length > 0 && (
-        <div style={{ position: "absolute", bottom: FOOTER_H, left: 0, right: 0, zIndex: 9998 }}
+        <div ref={updateLogRef} style={{ position: "absolute", bottom: FOOTER_H, left: 0, right: 0, zIndex: 9998 }}
           className="bg-zinc-950 border-t border-border p-3 flex flex-col gap-1 max-h-48 overflow-y-auto">
           <div className="flex items-center justify-between mb-1">
             <span className="text-[11px] font-medium text-muted-foreground">Update log</span>
