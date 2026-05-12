@@ -6,6 +6,10 @@ import { toast } from "sonner"
 import { FileUploadField } from "@/services/upload/file-upload-field.client"
 import type { UploadedFile } from "@/services/upload/upload.service"
 
+const ENV_HINT = process.env.NODE_ENV === "development"
+  ? " — Check REMOTE_DATA_URL and DATA_API_KEY in .env.local"
+  : ""
+
 
 type Product = {
   id: string
@@ -67,7 +71,7 @@ export default function DashboardPage() {
       resetForm()
       await loadProducts()
     } catch (e) {
-      toast.error(String(e))
+      toast.error(String(e) + ENV_HINT)
     } finally {
       setSaving(false)
     }
@@ -81,7 +85,7 @@ export default function DashboardPage() {
       setProducts(prev => prev.filter(p => p.id !== id))
       toast.success("Product deleted")
     } catch (e) {
-      toast.error(String(e))
+      toast.error(String(e) + ENV_HINT)
     } finally {
       setDeleting(null)
     }

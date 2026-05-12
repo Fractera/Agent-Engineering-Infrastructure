@@ -38,6 +38,10 @@ function makeLocalDb() {
   }
 }
 
+async function initRemoteSchema() {
+  await remoteDb.exec(SCHEMA.trim())
+}
+
 export const db = (process.env.REMOTE_DATA_URL && process.env.DATA_API_KEY)
-  ? remoteDb
+  ? (initRemoteSchema().catch(console.error), remoteDb)
   : makeLocalDb()
