@@ -105,6 +105,8 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const [deploying, setDeploying]                   = useState(false);
   const [deployLog, setDeployLog]                   = useState<string[]>([]);
   const [showDeployLog, setShowDeployLog]           = useState(false);
+  const [deploySeconds, setDeploySeconds]           = useState(0);
+  const deployTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [showInfo, setShowInfo]                     = useState(false);
   const [showHelp, setShowHelp]                     = useState(false);
   const [showGitConnect, setShowGitConnect]         = useState(false);
@@ -266,10 +268,17 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     setUpdating(false);
   }
 
+  function stopDeployTimer() {
+    if (deployTimerRef.current) { clearInterval(deployTimerRef.current); deployTimerRef.current = null; }
+  }
+
   async function handleDeploy() {
     setDeploying(true);
     setShowDeployLog(true);
     setDeployLog(["Starting deploy…"]);
+    setDeploySeconds(0);
+    stopDeployTimer();
+    deployTimerRef.current = setInterval(() => setDeploySeconds((s) => s + 1), 1000);
     try {
       const res = await fetch("/api/deploy", {
         method: "POST",
@@ -280,6 +289,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
       if (data.error) {
         setDeployLog([`Error: ${data.error}${data.jobId ? ` (job: ${data.jobId})` : ""}`]);
         setDeploying(false);
+        stopDeployTimer();
         return;
       }
       const jobId = data.jobId;
@@ -292,6 +302,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           if (done) {
             clearInterval(poll);
             setDeploying(false);
+            stopDeployTimer();
             if (s.status === "FAILED" || s.status === "HEALTH_FAILED") {
               toast.error("Deploy failed", {
                 description: "Use AI agents in the terminal to fix the error and run deploy again.",
@@ -305,6 +316,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     } catch {
       setDeployLog(["Deploy failed — check server logs."]);
       setDeploying(false);
+      stopDeployTimer();
       toast.error("Deploy failed", {
         description: "Use AI agents in the terminal to fix the error and run deploy again.",
         duration: Infinity,
@@ -942,10 +954,17 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
       {showDeployLog && deployLog.length > 0 && (
         <div style={{ position: "absolute", bottom: FOOTER_H, left: 0, right: 0, zIndex: 9998 }}
           className="bg-zinc-950 border-t border-border flex flex-col max-h-48">
-          <div className="flex items-center justify-between px-3 pt-2 pb-1 shrink-0">
-            <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
+          <div className="flex items-center gap-2 px-3 pt-2 pb-1 shrink-0">
+            <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1 mr-auto">
               {deploying && <Loader2 size={10} className="animate-spin" />}Deploy log
             </span>
+            <span className="text-[11px] font-mono text-muted-foreground/60 tabular-nums">
+              {Math.floor(deploySeconds / 60)}:{String(deploySeconds % 60).padStart(2, "0")}
+            </span>
+            <button type="button" onClick={handleDeploy} disabled={deploying}
+              className="text-[10px] px-2 py-0.5 rounded border border-border transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-muted-foreground hover:text-foreground hover:bg-muted">
+              <Rocket size={9} className="inline mr-0.5" />Deploy
+            </button>
             <button type="button" onClick={() => setShowDeployLog(false)}
               className="text-[10px] px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">close</button>
           </div>
