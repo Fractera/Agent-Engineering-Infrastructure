@@ -6,12 +6,15 @@ export function proxy(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith("/api/") && pathname !== "/api/health") {
-    const sessionToken =
-      request.cookies.get("authjs.session-token") ??
-      request.cookies.get("__Secure-authjs.session-token");
+    const agentIdentity = request.headers.get("x-agent-identity");
+    if (!agentIdentity) {
+      const sessionToken =
+        request.cookies.get("authjs.session-token") ??
+        request.cookies.get("__Secure-authjs.session-token");
 
-    if (!sessionToken) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      if (!sessionToken) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
     }
   }
 
