@@ -22,8 +22,9 @@ function makeLocalDb() {
   const cols = new Set(
     (sqlite.prepare('PRAGMA table_info(products)').all() as Array<{ name: string }>).map(c => c.name)
   )
-  if (!cols.has('media_id'))  sqlite.exec(`ALTER TABLE products ADD COLUMN media_id  TEXT`)
-  if (!cols.has('media_url')) sqlite.exec(`ALTER TABLE products ADD COLUMN media_url TEXT`)
+  if (!cols.has('media_id'))   sqlite.exec(`ALTER TABLE products ADD COLUMN media_id   TEXT`)
+  if (!cols.has('media_url'))  sqlite.exec(`ALTER TABLE products ADD COLUMN media_url  TEXT`)
+  if (!cols.has('created_by')) sqlite.exec(`ALTER TABLE products ADD COLUMN created_by TEXT NOT NULL DEFAULT 'system'`)
   return {
     prepare(sql: string) {
       const stmt = sqlite.prepare(sql)

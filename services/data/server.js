@@ -77,15 +77,17 @@ appDb.exec(`
 `)
 
 const productsCols = new Set(appDb.prepare('PRAGMA table_info(products)').all().map(c => c.name))
-if (!productsCols.has('media_id'))  appDb.exec(`ALTER TABLE products ADD COLUMN media_id  TEXT`)
-if (!productsCols.has('media_url')) appDb.exec(`ALTER TABLE products ADD COLUMN media_url TEXT`)
+if (!productsCols.has('media_id'))    appDb.exec(`ALTER TABLE products ADD COLUMN media_id   TEXT`)
+if (!productsCols.has('media_url'))   appDb.exec(`ALTER TABLE products ADD COLUMN media_url  TEXT`)
+if (!productsCols.has('created_by'))  appDb.exec(`ALTER TABLE products ADD COLUMN created_by TEXT NOT NULL DEFAULT 'system'`)
 
 // ── Auth middleware ───────────────────────────────────────────────────────────
 
 async function requireAuth(req, res, next) {
   const dataSecret = process.env.DATA_SECRET
   if (dataSecret && req.headers['x-data-secret'] === dataSecret) {
-    req.session = { user: { email: 'local-dev' } }
+    const agentId = req.headers['x-agent-identity'] ?? 'agent'
+    req.session = { userId: `${agentId}@agent`, email: `${agentId}@agent`, roles: ['agent'] }
     return next()
   }
   const cookie = req.headers.cookie ?? ''

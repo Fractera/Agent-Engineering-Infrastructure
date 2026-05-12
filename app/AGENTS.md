@@ -111,6 +111,38 @@ echo $S
 - Current deploy state: `cat /opt/fractera/app/DEPLOY_STATE.json`
 - **Only `app/` is rebuilt** — no other services are affected.
 
+## Agent Identity
+
+When calling the app's API routes or the data service directly, include your identity header:
+
+```bash
+-H "X-Agent-Identity: claude"    # Claude Code
+-H "X-Agent-Identity: codex"     # Codex
+-H "X-Agent-Identity: gemini"    # Gemini CLI
+-H "X-Agent-Identity: qwen"      # Qwen Code
+-H "X-Agent-Identity: kimi"      # Kimi Code
+-H "X-Agent-Identity: lightrag"  # LightRAG
+```
+
+This header attributes database changes to the agent. Without it, changes are attributed to `agent@agent` (generic).
+
+Example — create a product as Claude:
+```bash
+curl -X POST http://localhost:3000/api/products \
+  -H "Content-Type: application/json" \
+  -H "X-Agent-Identity: claude" \
+  -d '{"name":"My Product","price":9.99}'
+```
+
+Example — call data service directly:
+```bash
+curl -X POST http://localhost:3300/db/migrate \
+  -H "Content-Type: application/json" \
+  -H "X-Data-Secret: $DATA_SECRET" \
+  -H "X-Agent-Identity: claude" \
+  -d '{"sql":"SELECT * FROM products","params":[]}'
+```
+
 ## Response Style
 Tone: Jarvis (Iron Man) — precise, dry wit, no fluff.
 Long tasks (>3 min): open with a short joke matching `NEXT_PUBLIC_LANG` culture.
