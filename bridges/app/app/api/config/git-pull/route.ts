@@ -24,6 +24,10 @@ function authUrl(repo: string, token: string): string {
   return token ? repo.replace("https://", `https://x-access-token:${token}@`) : repo;
 }
 
+function maskToken(s: string): string {
+  return s.replace(/x-access-token:[^@]+@/g, "");
+}
+
 export async function POST(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -40,12 +44,17 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    const url = authUrl(repoUrl, token);
+    const url  = authUrl(repoUrl, token);
     const opts = { timeout: 30000 };
+    const lines: string[] = [];
 
     // Init local repo if this is first time
     if (!fs.existsSync(`${PROJECT_DIR}/.git`)) {
-      await execAsync(`git -C ${PROJECT_DIR} init && git -C ${PROJECT_DIR} checkout -b main`, opts);
+      const { stdout, stderr } = await execAsync(
+        `git -C ${PROJECT_DIR} init && git -C ${PROJECT_DIR} symbolic-ref HEAD refs/heads/main`,
+        opts
+      );
+      lines.push((stdout + stderr).trim());
     }
 
     // Ensure remote points to user's repo
@@ -54,16 +63,35 @@ export async function POST(req: NextRequest) {
       opts
     ).catch(() => null);
 
+    // Stash local changes so pull doesn't abort
+    const stashRes = await execAsync(
+      `git -C ${PROJECT_DIR} stash --include-untracked`,
+      opts
+    ).catch(e => ({ stdout: e.stdout ?? "", stderr: e.stderr ?? "" }));
+    const stashed = !(stashRes.stdout + stashRes.stderr).includes("No local changes");
+    if (stashed) lines.push("Stashed local changes.");
+
+    // Pull
     const { stdout, stderr } = await execAsync(
       `git -C ${PROJECT_DIR} pull origin main`,
       opts
     );
+    lines.push((stdout + stderr).trim());
 
-    return NextResponse.json({ success: true, output: (stdout + stderr).trim() });
+    // Restore stashed changes on top of pulled code
+    if (stashed) {
+      const popRes = await execAsync(
+        `git -C ${PROJECT_DIR} stash pop`,
+        opts
+      ).catch(e => ({ stdout: e.stdout ?? "", stderr: e.stderr ?? "" }));
+      lines.push((popRes.stdout + popRes.stderr).trim() || "Local changes restored.");
+    }
+
+    return NextResponse.json({ success: true, output: maskToken(lines.filter(Boolean).join("\n")) });
   } catch (e: any) {
     return NextResponse.json({
       success: false,
-      error: ((e.stdout ?? "") + (e.stderr ?? e.message)).replace(/x-access-token:[^@]+@/g, ""),
+      error: maskToken((e.stdout ?? "") + (e.stderr ?? e.message)),
     }, { status: 500 });
   }
 }
