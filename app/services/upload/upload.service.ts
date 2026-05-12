@@ -1,4 +1,3 @@
-const MEDIA_URL = process.env.NEXT_PUBLIC_MEDIA_URL || "http://localhost:3300"
 
 export type UploadedFile = {
   id: string
@@ -41,7 +40,7 @@ export async function uploadFile(
   if (title)       fd.append("title", title)
   if (description) fd.append("description", description)
 
-  const res = await fetch(`${MEDIA_URL}/media/upload`, {
+  const res = await fetch("/api/media/upload", {
     method: "POST",
     body: fd,
     credentials: "include",

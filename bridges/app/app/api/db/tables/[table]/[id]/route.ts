@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import Database from "better-sqlite3";
 import { requireAuth } from "@/lib/require-auth";
 
-const AUTH_DB = process.env.AUTH_DB_PATH ?? "/opt/fractera/services/auth/data/auth.db";
+const APP_DB = process.env.APP_DB_PATH ?? "/opt/fractera/app/data/app.db";
 
-const ALLOWED_TABLES = new Set(["users", "sessions", "accounts", "verification_tokens"]);
+async function tableExists(db: InstanceType<typeof Database>, table: string): Promise<boolean> {
+  const row = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name = ?").get(table);
+  return !!row;
+}
 
 export async function PATCH(
   req: NextRequest,
@@ -14,15 +17,12 @@ export async function PATCH(
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { table, id } = await params;
-  if (!ALLOWED_TABLES.has(table)) {
-    return NextResponse.json({ error: "Table not found" }, { status: 404 });
-  }
-
   const body = await req.json() as { column: string; value: unknown };
   const { column, value } = body;
 
   try {
-    const db = new Database(AUTH_DB);
+    const db = new Database(APP_DB);
+    if (!await tableExists(db, table)) { db.close(); return NextResponse.json({ error: "Table not found" }, { status: 404 }); }
     const info = db.prepare(`PRAGMA table_info("${table}")`).all() as { name: string }[];
     const validCols = new Set(info.map((c) => c.name));
     if (!validCols.has(column)) {
@@ -45,12 +45,10 @@ export async function DELETE(
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { table, id } = await params;
-  if (!ALLOWED_TABLES.has(table)) {
-    return NextResponse.json({ error: "Table not found" }, { status: 404 });
-  }
 
   try {
-    const db = new Database(AUTH_DB);
+    const db = new Database(APP_DB);
+    if (!await tableExists(db, table)) { db.close(); return NextResponse.json({ error: "Table not found" }, { status: 404 }); }
     db.prepare(`DELETE FROM "${table}" WHERE id = ?`).run(id);
     db.close();
     return NextResponse.json({ ok: true });

@@ -1,6 +1,6 @@
 import Database from "better-sqlite3"
 import { mkdirSync } from "fs"
-import { join } from "path"
+import { join, dirname } from "path"
 import { remoteDb } from "./remote-client"
 
 const SCHEMA = `
@@ -15,9 +15,9 @@ const SCHEMA = `
 `
 
 function makeLocalDb() {
-  const DATA_DIR = join(process.cwd(), "data")
-  mkdirSync(DATA_DIR, { recursive: true })
-  const sqlite = new Database(join(DATA_DIR, "products.db"))
+  const dbPath = process.env.APP_DB_PATH ?? join(process.cwd(), "data", "app.db")
+  mkdirSync(dirname(dbPath), { recursive: true })
+  const sqlite = new Database(dbPath)
   sqlite.exec(SCHEMA)
   const cols = new Set(
     (sqlite.prepare('PRAGMA table_info(products)').all() as Array<{ name: string }>).map(c => c.name)

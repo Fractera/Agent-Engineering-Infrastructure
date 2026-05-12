@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Database from "better-sqlite3";
 import { requireAuth } from "@/lib/require-auth";
 
-const AUTH_DB = process.env.AUTH_DB_PATH ?? "/opt/fractera/services/auth/data/auth.db";
+const AUTH_DB = process.env.APP_DB_PATH ?? "/opt/fractera/app/data/app.db";
 
 export async function GET(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");
