@@ -246,7 +246,7 @@ export function DomainPanel({ onClose }: { onClose: () => void }) {
             </button>
             <button
               onClick={handleApply}
-              disabled={!isValid || !isDirty || applying || status === "pending"}
+              disabled={!isValid || !isDirty || applying}
               className="h-8 px-4 rounded-md bg-primary text-primary-foreground text-[11px] font-medium disabled:opacity-40 hover:opacity-90 transition-opacity"
             >
               {applying ? <span className="flex items-center gap-1.5"><Loader2 size={11} className="animate-spin" />Applying…</span> : "Apply"}
