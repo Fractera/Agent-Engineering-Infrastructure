@@ -25,13 +25,17 @@ function readServerToken(): string | null {
 }
 
 export async function POST(req: NextRequest) {
+  // Auth mode A: Bearer SERVER_TOKEN (paid subscribers)
   const bearer = req.headers.get("authorization")?.replace("Bearer ", "").trim();
-  if (!bearer) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  // Auth mode B: x-fractera-secret = INSTALL_SCRIPT_SECRET (self-hosted / Fractera Lite)
+  const secret = req.headers.get("x-fractera-secret");
 
-  const serverToken = readServerToken();
-  if (!serverToken || bearer !== serverToken) {
+  const validBearer = bearer ? bearer === readServerToken() : false;
+  const validSecret = secret && process.env.FRACTERA_INSTALL_SECRET
+    ? secret === process.env.FRACTERA_INSTALL_SECRET
+    : false;
+
+  if (!validBearer && !validSecret) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
