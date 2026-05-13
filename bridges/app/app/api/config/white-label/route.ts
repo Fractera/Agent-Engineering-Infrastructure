@@ -14,10 +14,24 @@ function removeFooter(path: string) {
   writeFileSync(path, filtered.join("\n"));
 }
 
+function readServerToken(): string | null {
+  try {
+    const content = readFileSync("/etc/fractera/secrets.env", "utf8");
+    const match = content.match(/^SERVER_TOKEN=(.+)$/m);
+    return match?.[1]?.trim() ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(req: NextRequest) {
-  const secret = req.headers.get("x-fractera-secret");
-  const expected = process.env.FRACTERA_INSTALL_SECRET;
-  if (!expected || secret !== expected) {
+  const bearer = req.headers.get("authorization")?.replace("Bearer ", "").trim();
+  if (!bearer) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const serverToken = readServerToken();
+  if (!serverToken || bearer !== serverToken) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
