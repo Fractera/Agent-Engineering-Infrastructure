@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
       ? parseEnv(fs.readFileSync(APP_ENV, "utf-8"))
       : {};
 
-    const repoUrl = vars["GIT_REPO_URL"] ?? "";
+    const repoUrl = vars["USER_GITHUB_REPO_URL"] ?? "";
     if (!repoUrl) {
       return NextResponse.json({ connected: false, repo: null });
     }

@@ -789,9 +789,9 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
               <div className="pl-7 flex flex-col gap-2 text-[12px] text-muted-foreground leading-relaxed">
                 <p>Open <span className="font-semibold text-foreground">Settings → Configure</span> and add the following environment variables:</p>
                 <div className="px-3 py-2.5 rounded bg-muted font-mono text-[11px] text-foreground flex flex-col gap-1">
-                  <span><span className="text-primary">GIT_REPO_URL</span>=https://github.com/your-name/your-repo.git</span>
+                  <span><span className="text-primary">USER_GITHUB_REPO_URL</span>=https://github.com/your-name/your-repo.git</span>
                   <span className="text-muted-foreground/60"># optional — only for private repos:</span>
-                  <span><span className="text-primary">GIT_TOKEN</span>=ghp_xxxxxxxxxxxxxxxxxxxx</span>
+                  <span><span className="text-primary">USER_GITHUB_ACCESS_TOKEN</span>=ghp_xxxxxxxxxxxxxxxxxxxx</span>
                 </div>
                 <p>Click <span className="font-semibold text-foreground">Save &amp; Apply</span>, then press <span className="font-semibold text-foreground">Deploy</span> in the footer.</p>
               </div>

@@ -63,7 +63,7 @@ export function EnvEditorPanel({ onClose }: Props) {
         const vars = (data.vars ?? {}) as Record<string, string>;
         const loaded: EnvEntry[] = Object.entries(vars).map(([key, value]) => ({ key, value, isNew: false }));
         const existingKeys = new Set(loaded.map((e) => e.key));
-        const gitDefaults = ["GIT_REPO_URL", "GIT_TOKEN"]
+        const gitDefaults = ["USER_GITHUB_REPO_URL", "USER_GITHUB_ACCESS_TOKEN"]
           .filter((k) => !existingKeys.has(k))
           .map((k) => ({ key: k, value: "", isNew: false }));
         setEntries([...loaded, ...gitDefaults]);

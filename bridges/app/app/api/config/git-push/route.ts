@@ -34,13 +34,13 @@ export async function POST(req: NextRequest) {
 
   try {
     const vars = fs.existsSync(APP_ENV) ? parseEnv(fs.readFileSync(APP_ENV, "utf-8")) : {};
-    const repoUrl = vars["GIT_REPO_URL"] ?? "";
-    const token   = vars["GIT_TOKEN"] ?? "";
+    const repoUrl = vars["USER_GITHUB_REPO_URL"] ?? "";
+    const token   = vars["USER_GITHUB_ACCESS_TOKEN"] ?? "";
 
     if (!repoUrl) {
       return NextResponse.json({
         success: false,
-        error: "GIT_REPO_URL not set. Add it in Settings → Env Variables.",
+        error: "USER_GITHUB_REPO_URL not set. Add it in Settings → Env Variables.",
       }, { status: 400 });
     }
 
