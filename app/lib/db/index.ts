@@ -11,7 +11,14 @@ const SCHEMA = `
     media_id   TEXT,
     media_url  TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
-  )
+  );
+  CREATE TABLE IF NOT EXISTS site_settings (
+    id            INTEGER PRIMARY KEY DEFAULT 1,
+    custom_domain TEXT,
+    domain_status TEXT NOT NULL DEFAULT 'idle',
+    domain_error  TEXT,
+    updated_at    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+  );
 `
 
 function makeLocalDb() {
