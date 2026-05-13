@@ -171,7 +171,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   async function handleExport() {
     setDataMenuOpen(false);
     const res = await fetch("/api/data/export");
-    if (!res.ok) return;
+    if (!res.ok) { toast.error("Export failed"); return; }
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -188,9 +188,11 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     setDataMenuOpen(false);
     const form = new FormData();
     form.append("file", file);
-    await fetch("/api/data/import", { method: "POST", body: form });
+    const result = await fetch("/api/data/import", { method: "POST", body: form }).then((r) => r.json()).catch(() => ({ error: "Network error" }));
     setImporting(false);
     e.target.value = "";
+    if (result.ok) toast.success(`Imported: ${result.stats.dbRows} DB rows, ${result.stats.mediaFiles} media files`);
+    else toast.error("Import failed: " + (result.error ?? "unknown error"));
   }
 
   useEffect(() => {
