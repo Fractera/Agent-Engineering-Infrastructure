@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'AGENT_IDENTITY=qwen python3 /opt/fractera/app/.agent-hooks/brain-ingest.py'"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'AGENT_IDENTITY=codex python3 /opt/fractera/app/.agent-hooks/brain-ingest.py'",
+            "statusMessage": "Syncing to Company Brain"
+          }
+        ]
+      }
+    ]
+  }
+}

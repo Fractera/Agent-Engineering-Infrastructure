@@ -1,0 +1,5 @@
+[[hooks]]
+event = "PostToolUse"
+matcher = "WriteFile|StrReplaceFile"
+command = "bash -c 'AGENT_IDENTITY=kimi python3 /opt/fractera/app/.agent-hooks/brain-ingest.py'"
+timeout = 15

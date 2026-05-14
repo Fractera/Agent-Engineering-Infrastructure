@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "AfterTool": [
+      {
+        "matcher": "write_file|replace|edit_file|overwrite_file",
+        "hooks": [
+          {
+            "name": "brain-ingest",
+            "type": "command",
+            "command": "bash -c 'AGENT_IDENTITY=gemini python3 /opt/fractera/app/.agent-hooks/brain-ingest.py'",
+            "timeout": 15000
+          }
+        ]
+      }
+    ]
+  }
+}
