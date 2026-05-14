@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
+import { execSync } from "child_process";
 import { requireAuth } from "@/lib/require-auth";
 
 const RAG_ENV = process.env.RAG_ENV_PATH ?? "/opt/fractera/services/rag/.env";
@@ -55,6 +56,9 @@ export async function POST(req: NextRequest) {
 
     fs.mkdirSync(require("path").dirname(RAG_ENV), { recursive: true });
     fs.writeFileSync(RAG_ENV, serializeEnv(existing), "utf-8");
+
+    try { execSync("pm2 restart fractera-rag", { timeout: 5000 }); } catch {}
+
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
