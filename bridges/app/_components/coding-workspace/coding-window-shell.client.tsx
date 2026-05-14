@@ -15,6 +15,7 @@ import { AUTH_FLOW_DESCRIPTORS, type AuthFlowDescriptor } from "./auth-flow-desc
 import { AuthFlowModal } from "./auth-flow-modal.client";
 import { UsersPanel } from "./users-panel.client";
 import { DomainPanel } from "./domain-panel.client";
+import { LightRagPanel } from "./lightrag-panel.client";
 
 const CAROUSEL_H = 52;
 const FOOTER_H   = 36;
@@ -121,6 +122,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const [showDbBrowser, setShowDbBrowser]           = useState(false);
   const [showUsers, setShowUsers]                   = useState(false);
   const [showDomainPanel, setShowDomainPanel]       = useState(false);
+  const [showLightRag, setShowLightRag]             = useState(false);
   const [activeAuth, setActiveAuth]                 = useState<{ descriptor: AuthFlowDescriptor; url: string; code?: string } | null>(null);
   const fileInputRef    = useRef<HTMLInputElement>(null);
   const rawBufRef       = useRef<string>("");
@@ -493,8 +495,8 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Database size={11} />Database
               </button>
-              <button type="button" disabled
-                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-muted-foreground/40 cursor-not-allowed">
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowLightRag((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Brain size={11} />LightRAG
               </button>
               <div className="h-px bg-border mx-2" />
@@ -666,6 +668,13 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
 
       {/* ── Domain panel ── */}
       {showDomainPanel && <DomainPanel onClose={() => setShowDomainPanel(false)} />}
+
+      {/* ── LightRAG panel ── */}
+      {showLightRag && (
+        <div style={{ position: "absolute", top: CAROUSEL_H, right: 0, bottom: FOOTER_H, width: 480, zIndex: 10 }}>
+          <LightRagPanel onClose={() => setShowLightRag(false)} />
+        </div>
+      )}
 
       {/* ── Info panel (README) ── */}
       {showInfo && (
