@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Instructions for Kimi Code working inside this project. Read this file first, every session. Re-read before every new task.
+Instructions for Claude Code working inside this project. Read this file first, every session. Re-read before every new task.
 
 ---
 
@@ -180,7 +180,7 @@ curl -s http://localhost:3002/api/rag/status
 ```bash
 curl -X POST http://localhost:3002/api/rag/ingest \
   -H "Content-Type: application/json" \
-  -H "X-Agent-Identity: kimi" \
+  -H "X-Agent-Identity: claude" \
   -d '{"text": "<full text of the file you just wrote>", "description": "docs/ADR-007-storage-choice.md"}'
 ```
 
@@ -188,7 +188,7 @@ curl -X POST http://localhost:3002/api/rag/ingest \
 
 ```bash
 curl -X POST http://localhost:3002/api/rag/ingest \
-  -H "X-Agent-Identity: kimi" \
+  -H "X-Agent-Identity: claude" \
   -d '{}'
 ```
 
@@ -260,7 +260,7 @@ echo $S
 Include this header on every API call so DB changes are attributed correctly:
 
 ```
--H "X-Agent-Identity: kimi"
+-H "X-Agent-Identity: claude"
 ```
 
 Without it, changes are attributed to a generic agent — auditability is lost.
