@@ -80,7 +80,7 @@ If a request requires touching forbidden zones, refuse and explain the boundary.
 8. **Ask the user for deploy permission** (§5)
 9. **On user's "yes" → deploy** (§11) and verify the live URL
 10. **Feed Company Brain** (§8) — push reports/docs back to Brain
-11. **Archive the step** — `old-steps/N.old-step.md` + line in `old-steps-map.md`
+11. **Archive the step** — rename `NEXT_STEP.md` → `old-steps/N--{slug}.md` where `slug` is a 6–12 word kebab-case description derived from the task title. Add a line to `old-steps-map.md` linking to the new file.
 
 Never skip steps. Without step 2, you repeat solved problems. Without 7, you ship bugs. Without 8, you never get user confirmation. Without 10, Brain stays static.
 
@@ -115,9 +115,9 @@ The repository is your memory across sessions. Six locations:
 
 | Path | Purpose |
 |---|---|
-| `NEXT_STEP.md` | Current task — what, why, constraints, subtasks |
-| `old-steps/N.old-step.md` | Snapshot of every completed task |
-| `old-steps-map.md` | One-line index of all completed steps |
+| `NEXT_STEP.md` | Current task — stable pointer, single filename. Inside, the first line is the full descriptive title |
+| `old-steps/N--{slug}.md` | Snapshot of every completed task. `slug` = 6–12 word kebab-case derived from task title. Example: `7--add-paint-calculator-with-walls-history-cost.md` |
+| `old-steps-map.md` | One-line index of all completed steps with link to each archive file |
 | `docs/` | Long-lived architectural docs (ADRs, glossary, domain notes) |
 | `reports/errors/*.md` | Bugs and dead-ends — how they were fixed |
 | `reports/patterns/*.md` | Reusable working patterns |
@@ -296,12 +296,16 @@ When opening a new task, `NEXT_STEP.md` must use this structure:
 - [ ] Proof 2: ...
 ```
 
-When complete: archive as `old-steps/N.old-step.md`, add line to `old-steps-map.md` in the format:
+When complete:
+1. Derive `slug` from the task title — 6–12 words, kebab-case, lowercase. Example: title *"Add paint calculator with walls, history and cost"* → slug `add-paint-calculator-with-walls-history-cost`
+2. Rename and move `NEXT_STEP.md` → `old-steps/N--{slug}.md`
+3. Add a line to `old-steps-map.md` in this format:
 
 ```
-N. YYYY-MM-DD — Short title — one-sentence outcome
+N. YYYY-MM-DD — Short title — one-sentence outcome — [→](old-steps/N--{slug}.md)
 ```
 
-Then ingest the archived file (§8).
+4. Ingest the archived file into Brain (§8).
+5. Reset `NEXT_STEP.md` to an empty stub ready for the next task.
 
 <!-- END PERMANENT -->
