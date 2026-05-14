@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { CircleUserRound, Globe } from "lucide-react";
+import { Brain, CircleUserRound, Globe } from "lucide-react";
 import { CodingWindowShell } from "./coding-workspace/coding-window-shell.client";
 import { AuthLoginModal } from "./auth-login-modal.client";
 import { SitePreviewWindow } from "./site-preview-window.client";
@@ -115,7 +115,8 @@ export function WorkspaceController() {
             className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
             onClick={() => { setBrainOpen((v) => !v); setSiteOpen(false); }}
           >
-            <span>Company Brain</span>
+            <Brain className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Company Brain</span>
           </Button>
           <Button
             variant="outline"
