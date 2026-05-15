@@ -5,7 +5,8 @@ import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { toast } from 'sonner';
 
-const IDLE_MS = 180_000;
+const IDLE_MS = 300_000;
+const TOAST_VISIBLE_MS = 30_000;
 
 const PLATFORM_LABELS: Record<string, string> = {
   'claude-code': 'Claude Code',
@@ -60,7 +61,7 @@ export const XtermTerminal = forwardRef<XtermTerminalHandle, Props>(
             {
               id: toastId,
               description: 'To save server resources, close terminals you are not using.',
-              duration: IDLE_MS,
+              duration: TOAST_VISIBLE_MS,
               onDismiss: () => { scheduleIdleToast(); },
             }
           );
