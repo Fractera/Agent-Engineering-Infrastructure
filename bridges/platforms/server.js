@@ -6,6 +6,7 @@ import { createInterface } from 'readline'
 import { config } from 'dotenv'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { PlatformMcpServer } from './mcp-server.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, '../../app/.env.local') })
@@ -65,6 +66,57 @@ function findKimiBin() {
 }
 const KIMI_BIN = findKimiBin()
 console.log(`Kimi bin:    ${KIMI_BIN}`)
+
+// Shared PTY registry — MCP servers write here to reach active terminals
+const activePtys = new Map() // platform id => (text: string) => boolean
+
+// MCP auth secret (optional — set MCP_SECRET in env)
+const MCP_SECRET = process.env.MCP_SECRET ?? null
+
+// ── MCP helpers ──────────────────────────────────────────────────────────────
+
+function extractMcpText(event) {
+  if (event.type === 'stream_event' && event.event?.delta?.type === 'text_delta') return event.event.delta.text
+  if (event.type === 'content' && event.value) return event.value
+  if (event.type === 'assistant' && Array.isArray(event.message?.content))
+    return event.message.content.filter(b => b.type === 'text').map(b => b.text).join('')
+  if (event.type === 'item.completed' && event.item?.text) return event.item.text
+  return ''
+}
+
+function isMcpDone(event) {
+  return event.type === 'result' || event.type === 'turn_complete' || event.type === 'turn.completed'
+}
+
+function isMcpError(event) {
+  return (event.type === 'result' && event.is_error) || event.type === 'turn.failed'
+}
+
+function makeRunPrompt(bin, buildArgs, extraEnv = {}) {
+  return (prompt, task) => new Promise((resolve, reject) => {
+    const proc = spawn(bin, buildArgs(prompt), {
+      cwd: PROJECT_DIR,
+      env: { ...process.env, HOME: process.env.HOME, ...extraEnv },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
+    task.proc = proc
+    const rl = createInterface({ input: proc.stdout, crlfDelay: Infinity })
+    rl.on('line', line => {
+      if (!line.trim()) return
+      try {
+        const ev = JSON.parse(line)
+        const chunk = extractMcpText(ev)
+        if (chunk) task.text += chunk
+        if (isMcpDone(ev)) { task.status = isMcpError(ev) ? 'error' : 'done'; task.proc = null; resolve() }
+      } catch {}
+    })
+    proc.on('close', code => {
+      if (task.status === 'running') { task.status = code === 0 ? 'done' : 'error'; task.proc = null }
+      resolve()
+    })
+    proc.on('error', err => { task.status = 'error'; task.error = err.message; task.proc = null; reject(err) })
+  })
+}
 
 function send(ws, payload) {
   if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(payload))
@@ -271,6 +323,8 @@ ptywss.on('connection', (ws) => {
                      : `${CLAUDE_BIN}\n`
         console.log(`[pty] platform: ${msg.platform}, launching: ${cliCmd.trim()}`)
         setTimeout(() => { try { proc.write(cliCmd) } catch {} }, 800)
+        // Register PTY for MCP terminal access
+        activePtys.set(platformCli, (text) => { try { proc.write(text); return true } catch { return false } })
         return
       }
 
@@ -283,6 +337,7 @@ ptywss.on('connection', (ws) => {
 
   ws.on('close', () => {
     console.log('[pty] disconnected')
+    if (platformCli) activePtys.delete(platformCli)
     try { proc.kill() } catch {}
   })
 
@@ -956,3 +1011,62 @@ opencodewss.on('connection', (ws) => {
 
   ws.on('error', (err) => console.error('[opencode] ws error:', err.message))
 })
+
+// ── MCP servers (one per AI platform, ports 3210-3214) ──────────────────────
+
+const ptyCaller = (pid) => (text) => { const fn = activePtys.get(pid); return fn ? fn(text) : false }
+
+const mcpConfigs = [
+  {
+    platform: 'claude-code', port: Number(process.env.CLAUDE_MCP_PORT ?? 3210),
+    runPrompt: makeRunPrompt(CLAUDE_BIN, (p) => [
+      '--print', '--output-format', 'stream-json', '--include-partial-messages',
+      '--verbose', '--dangerously-skip-permissions', p,
+    ]),
+  },
+  {
+    platform: 'codex', port: Number(process.env.CODEX_MCP_PORT ?? 3211),
+    runPrompt: (prompt, task) => new Promise((resolve) => {
+      const proc = spawn(CODEX_BIN, ['exec', '--json', '--sandbox', 'workspace-write', prompt], {
+        cwd: PROJECT_DIR, env: { ...process.env }, stdio: ['ignore', 'pipe', 'pipe'],
+      })
+      task.proc = proc
+      const rl = createInterface({ input: proc.stdout, crlfDelay: Infinity })
+      rl.on('line', line => {
+        if (!line.trim()) return
+        try {
+          const ev = JSON.parse(line)
+          if (ev.type === 'item.completed' && ev.item?.text) task.text += ev.item.text
+          if (ev.type === 'turn.completed') { task.status = 'done'; task.proc = null; resolve() }
+          if (ev.type === 'turn.failed') { task.status = 'error'; task.error = ev.error?.message; task.proc = null; resolve() }
+        } catch {}
+      })
+      proc.on('close', () => { if (task.status === 'running') { task.status = 'done'; task.proc = null } resolve() })
+      proc.on('error', err => { task.status = 'error'; task.error = err.message; task.proc = null; resolve() })
+    }),
+  },
+  {
+    platform: 'gemini-cli', port: Number(process.env.GEMINI_MCP_PORT ?? 3212),
+    runPrompt: makeRunPrompt(GEMINI_BIN, (p) => [
+      '--prompt', p, '--output-format', 'stream-json', '--yolo', '--skip-trust',
+    ], { HOME: process.env.HOME, GOOGLE_GENAI_USE_GCA: 'true' }),
+  },
+  {
+    platform: 'qwen-code', port: Number(process.env.QWEN_MCP_PORT ?? 3213),
+    runPrompt: makeRunPrompt(QWEN_BIN, (p) => ['--output-format', 'stream-json', '--yolo', p]),
+  },
+  {
+    platform: 'kimi-code', port: Number(process.env.KIMI_MCP_PORT ?? 3214),
+    runPrompt: makeRunPrompt(KIMI_BIN, (p) => [
+      '--print', '--output-format', 'stream-json', '--yolo', '--prompt', p,
+    ]),
+  },
+]
+
+for (const cfg of mcpConfigs) {
+  new PlatformMcpServer({
+    ...cfg,
+    secret: MCP_SECRET,
+    writeToPty: ptyCaller(cfg.platform),
+  }).start()
+}

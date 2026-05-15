@@ -35,6 +35,12 @@ services/media/storage/*
 services/media/icons/*
 !services/media/icons/.gitkeep
 
+# Hermes reference docs (read-only clone of NousResearch/hermes-agent — never commit)
+docs/HERMES/
+
+# Build artifacts (bridges)
+bridges/app/tsconfig.tsbuildinfo
+
 # OS
 .DS_Store
 Thumbs.db

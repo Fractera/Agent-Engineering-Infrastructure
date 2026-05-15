@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Brain, CircleUserRound, Globe } from "lucide-react";
+import { Brain, CircleUserRound, Globe, Bot } from "lucide-react";
 import { CodingWindowShell } from "./coding-workspace/coding-window-shell.client";
 import { AuthLoginModal } from "./auth-login-modal.client";
 import { SitePreviewWindow } from "./site-preview-window.client";
 import { CompanyBrainWindow } from "./company-brain-window.client";
+import { HermesWindow } from "./hermes-window.client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import type { Platform } from "./coding-workspace/platforms";
@@ -16,11 +17,15 @@ type SessionData = {
   roles: string[];
 };
 
-const AUTH_URL   = process.env.NEXT_PUBLIC_AUTH_URL ?? "http://auth.partner.fractera.local:3001";
-const APP_URL    = process.env.NEXT_PUBLIC_APP_URL  || "http://localhost:3000";
-const BRAIN_URL  = APP_URL.includes("localhost")
+const AUTH_URL    = process.env.NEXT_PUBLIC_AUTH_URL ?? "http://auth.partner.fractera.local:3001";
+const APP_URL     = process.env.NEXT_PUBLIC_APP_URL  || "http://localhost:3000";
+const BRAIN_URL   = APP_URL.includes("localhost")
   ? "http://localhost:9621/webui/"
   : APP_URL.replace("://", "://lightrag.") + "/webui/";
+const HERMES_URL  = process.env.NEXT_PUBLIC_HERMES_URL
+  ?? (APP_URL.includes("localhost")
+    ? "http://localhost:9119"
+    : APP_URL.replace("://", "://hermes."));
 const HEADER_H = 48;
 
 export function WorkspaceController() {
@@ -33,6 +38,7 @@ export function WorkspaceController() {
   const [terminalSessions, setTerminalSessions] = useState<Set<Platform>>(new Set());
   const [siteOpen, setSiteOpen]                 = useState(true);
   const [brainOpen, setBrainOpen]               = useState(false);
+  const [hermesOpen, setHermesOpen]             = useState(false);
   const isMobile = windowWidth > 0 && windowWidth < 768;
 
   const fetchSession = useCallback(async () => {
@@ -113,7 +119,16 @@ export function WorkspaceController() {
             variant="outline"
             size="default"
             className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
-            onClick={() => { setBrainOpen((v) => !v); setSiteOpen(false); }}
+            onClick={() => { setHermesOpen((v) => !v); setBrainOpen(false); setSiteOpen(false); }}
+          >
+            <Bot className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Hermes</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="default"
+            className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
+            onClick={() => { setBrainOpen((v) => !v); setHermesOpen(false); setSiteOpen(false); }}
           >
             <Brain className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Company Brain</span>
@@ -191,6 +206,9 @@ export function WorkspaceController() {
 
       {/* ── Site preview window ── */}
       <SitePreviewWindow open={siteOpen} onClose={() => setSiteOpen(false)} siteUrl={APP_URL} />
+
+      {/* ── Hermes Agent window ── */}
+      <HermesWindow open={hermesOpen} onClose={() => setHermesOpen(false)} hermesUrl={HERMES_URL} />
 
       {/* ── Company Brain window ── */}
       <CompanyBrainWindow open={brainOpen} onClose={() => setBrainOpen(false)} brainUrl={BRAIN_URL} />

@@ -1,0 +1,5 @@
+name: fractera-platforms
+version: "1.0.0"
+description: "High-level delegation tools for Fractera AI coding platforms"
+author: "Fractera"
+kind: standalone

@@ -1,0 +1,5 @@
+name: lightrag-memory
+version: "1.0.0"
+description: "Fractera Company Brain (LightRAG) memory provider for Hermes"
+author: "Fractera"
+kind: exclusive

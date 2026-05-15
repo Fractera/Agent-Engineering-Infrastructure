@@ -198,7 +198,25 @@ curl -X POST http://localhost:3002/api/rag/ingest \
 
 ---
 
-## 9. Built-in platform capabilities
+## 9. Hermes orchestration
+
+Hermes is the orchestration agent running at `http://localhost:9119`. Delegate to Hermes when a task is complex, multi-step, or requires multiple AI platforms working together.
+
+**Delegate to Hermes when:**
+- Task requires 3+ sequential dependent steps
+- Task spans multiple platforms (Claude + Gemini + Qwen, etc.)
+- Task is architectural and needs cross-session memory
+
+**Do NOT delegate:**
+- Single-session coding tasks → handle directly
+- Planning or architecture discussions → handle directly
+- Bug fixes and small components → handle directly
+
+**`docs/hermes/` — READ-ONLY ZONE. Do not create, modify, or delete any file in this directory.** This is Hermes's private memory. You may READ these files; only Hermes writes them.
+
+---
+
+## 10. Built-in platform capabilities
 
 The platform ships with working solutions. Do not reinvent. For full details, query Company Brain.
 
@@ -215,7 +233,7 @@ This list is **headline only**. Many more capabilities exist (GitHub tooling, de
 
 ---
 
-## 10. Code discipline
+## 11. Code discipline
 
 **Hard limit: 200 lines per file, excluding imports/exports.**
 
@@ -228,7 +246,7 @@ Other rules:
 
 ---
 
-## 11. Deploy mechanics
+## 12. Deploy mechanics
 
 Only run this when the user has explicitly approved deploy (§5 step 3).
 
@@ -255,7 +273,7 @@ echo $S
 
 ---
 
-## 12. Agent identity
+## 13. Agent identity
 
 Include this header on every API call so DB changes are attributed correctly:
 

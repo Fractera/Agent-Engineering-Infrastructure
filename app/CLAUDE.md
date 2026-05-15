@@ -75,10 +75,10 @@ If a request requires touching forbidden zones, refuse and explain the boundary.
 3. **Ask clarifying questions** (§2) until the user says go
 4. **Write `NEXT_STEP.md`** — name, known constraints, subtasks, out-of-scope
 5. **Query Company Brain** (§7) if in production mode
-6. **Write code** with code discipline (§10)
+6. **Write code** with code discipline (§11)
 7. **Produce 2 independent proofs** (§5) — non-negotiable
 8. **Ask the user for deploy permission** (§5)
-9. **On user's "yes" → deploy** (§11) and verify the live URL
+9. **On user's "yes" → deploy** (§12) and verify the live URL
 10. **Feed Company Brain** (§8) — push reports/docs back to Brain
 11. **Archive the step** — rename `NEXT_STEP.md` → `old-steps/N--{slug}.md` where `slug` is a 6–12 word kebab-case description derived from the task title. Add a line to `old-steps-map.md` linking to the new file.
 
@@ -198,7 +198,38 @@ curl -X POST http://localhost:3002/api/rag/ingest \
 
 ---
 
-## 9. Built-in platform capabilities
+## 9. Hermes orchestration
+
+Hermes is the orchestration agent that coordinates multi-step work across platforms. It runs at `http://localhost:9119` (dashboard accessible via Fractera Admin → Hermes button).
+
+**When to delegate to Hermes instead of working directly:**
+- Task spans multiple AI platforms (e.g. Claude designs + Gemini implements + Qwen reviews)
+- Task requires parallel sub-tasks that can run independently
+- Task is a long-running pipeline (>3 sequential steps with dependencies)
+- You need to track feedback and iterate over multiple sessions
+
+**When NOT to delegate:**
+- Task fits in one focused coding session
+- Task is architecture/planning work — handle directly
+- Task is a simple bug fix or component — handle directly
+
+**How to delegate (if Hermes is running):**
+```bash
+# Check Hermes status
+curl -s http://localhost:9119/health
+
+# Hermes tools available via MCP (ports 3210-3214 per platform):
+# delegate_to_platform(platform, prompt)  — specific platform
+# delegate_to_best(prompt, criteria)      — auto-select platform
+```
+
+**`docs/hermes/` — READ-ONLY ZONE. Never write, edit, or delete files here.**
+
+This directory contains Hermes's closed memory: architectural decisions, project model, feedback history. Only Hermes writes here. Agents can READ these files via Company Brain queries.
+
+---
+
+## 10. Built-in platform capabilities
 
 The platform ships with working solutions. Do not reinvent. For full details, query Company Brain.
 
@@ -215,7 +246,7 @@ This list is **headline only**. Many more capabilities exist (GitHub tooling, de
 
 ---
 
-## 10. Code discipline
+## 11. Code discipline
 
 **Hard limit: 200 lines per file, excluding imports/exports.**
 
@@ -228,7 +259,7 @@ Other rules:
 
 ---
 
-## 11. Deploy mechanics
+## 12. Deploy mechanics
 
 Only run this when the user has explicitly approved deploy (§5 step 3).
 
@@ -255,7 +286,7 @@ echo $S
 
 ---
 
-## 12. Agent identity
+## 13. Agent identity
 
 Include this header on every API call so DB changes are attributed correctly:
 

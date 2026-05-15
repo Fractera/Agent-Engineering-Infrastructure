@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe } from "lucide-react";
+import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
 import { Shimmer } from "@/components/ai-elements/shimmer.client";
@@ -13,6 +13,7 @@ import { MediaLibraryPanel } from "./media-library-panel.client";
 import { DbBrowserPanel } from "./db-browser-panel.client";
 import { AUTH_FLOW_DESCRIPTORS, type AuthFlowDescriptor } from "./auth-flow-descriptors";
 import { AuthFlowModal } from "./auth-flow-modal.client";
+import { PasteTextModal } from "./paste-text-modal.client";
 import { UsersPanel } from "./users-panel.client";
 import { DomainPanel } from "./domain-panel.client";
 import { LightRagPanel } from "./lightrag-panel.client";
@@ -124,6 +125,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const [showDomainPanel, setShowDomainPanel]       = useState(false);
   const [showLightRag, setShowLightRag]             = useState(false);
   const [activeAuth, setActiveAuth]                 = useState<{ descriptor: AuthFlowDescriptor; url: string; code?: string } | null>(null);
+  const [pasteModalOpen, setPasteModalOpen]         = useState(false);
   const fileInputRef    = useRef<HTMLInputElement>(null);
   const rawBufRef       = useRef<string>("");
   const xtermRefs       = useRef<Partial<Record<Platform, XtermTerminalHandle | null>>>({});
@@ -409,6 +411,11 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     setTimeout(() => { xtermRefs.current[terminalPlatform]?.focus(); }, 80);
   }
 
+  function handleSendPasteText(text: string) {
+    xtermRefs.current[terminalPlatform]?.sendStdin(text);
+    setTimeout(() => { xtermRefs.current[terminalPlatform]?.focus(); }, 80);
+  }
+
   function handleCloseAuthModal() {
     activeAuthRef.current = null;
     setActiveAuth(null);
@@ -428,6 +435,14 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
   }, [dataMenuOpen]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === "V") { e.preventDefault(); setPasteModalOpen(true); }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
 
   const termH   = height - CAROUSEL_H - FOOTER_H;
   const total   = 1 + PLATFORMS.length; // +1 Fractera PRO
@@ -452,6 +467,13 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           onSendCode={handleSendAuthCode}
         />
       )}
+
+      {/* ── Paste Text Modal ── */}
+      <PasteTextModal
+        open={pasteModalOpen}
+        onClose={() => setPasteModalOpen(false)}
+        onSend={handleSendPasteText}
+      />
 
       {/* ── Carousel ── */}
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: CAROUSEL_H }} className="border-b border-border bg-background flex items-center gap-2 px-2">
@@ -648,6 +670,24 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           style={{ width: 20, height: 20 }}>
           <ChevronRight className="h-3 w-3" />
         </button>
+
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => isAuthenticated && setPasteModalOpen(true)}
+                className={`shrink-0 flex items-center justify-center gap-1.5 rounded-md border border-border h-9 text-[11px] text-muted-foreground select-none px-2 transition-colors${isAuthenticated ? " hover:text-foreground hover:bg-muted" : " opacity-40 cursor-not-allowed"}`}
+              >
+                <ClipboardPaste size={12} />
+                {!isMobile && <span className="font-medium">Paste</span>}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-[11px]" style={{ zIndex: 99999 }}>
+              Paste text to active terminal (Ctrl+Shift+V)
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       {/* ── Users panel ── */}
