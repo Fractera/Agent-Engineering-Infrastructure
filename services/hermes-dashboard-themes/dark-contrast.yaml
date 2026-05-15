@@ -1,0 +1,37 @@
+name: dark-contrast
+label: Fractera Dark
+description: shadcn/ui neutral dark — matches the Fractera admin panel palette
+
+palette:
+  background: "#252525"
+  midground: "#fafafa"
+
+colors:
+  foreground: "#fafafa"
+  muted: "#454545"
+  muted_foreground: "#b5b5b5"
+  card: "#353535"
+  card_foreground: "#fafafa"
+  popover: "#353535"
+  popover_foreground: "#fafafa"
+  border: "#ffffff1a"
+  input: "#ffffff26"
+  primary: "#ebebeb"
+  primary_foreground: "#353535"
+  secondary: "#454545"
+  secondary_foreground: "#fafafa"
+  accent: "#454545"
+  accent_foreground: "#fafafa"
+  destructive: "#dc2626"
+  destructive_foreground: "#fafafa"
+  ring: "#8e8e8e"
+
+typography:
+  font_family: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
+  mono_family: "ui-monospace, 'SF Mono', 'JetBrains Mono', Consolas, monospace"
+  font_size: "14px"
+  line_height: "1.55"
+
+layout:
+  border_radius: "0.625rem"
+  spacing: "comfortable"
