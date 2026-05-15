@@ -198,7 +198,25 @@ curl -X POST http://localhost:3002/api/rag/ingest \
 
 ---
 
-## 9. Hermes orchestration
+## 9. SSL & domain architecture
+
+**This server runs behind Cloudflare proxy.** Edge SSL is handled by Cloudflare Total TLS, origin SSL by a Cloudflare Origin Certificate stored at `/etc/ssl/cloudflare/origin.{crt,key}`.
+
+**DO NOT** on this server:
+- Install certbot or any Let's Encrypt client
+- Run `certbot --nginx` for any reason
+- Modify `/etc/ssl/cloudflare/` files
+- Change Cloudflare DNS records to grey cloud
+
+If a domain or SSL issue surfaces, the fix is in Cloudflare Dashboard (`SSL/TLS → Edge Certificates`), not on the server. Full architecture: `docs/ssl-architecture.md`.
+
+**Hermes special config:**
+- PM2 runs Hermes with `--interpreter $HERMES_PY` (it's a Python script, not Node)
+- nginx hermes block rewrites `Host: 127.0.0.1:9119` (Hermes has DNS rebinding protection)
+
+---
+
+## 10. Hermes orchestration
 
 Hermes is the orchestration agent that coordinates multi-step work across platforms. It runs at `http://localhost:9119` (dashboard accessible via Fractera Admin → Hermes button).
 
@@ -229,7 +247,7 @@ This directory contains Hermes's closed memory: architectural decisions, project
 
 ---
 
-## 10. Built-in platform capabilities
+## 11. Built-in platform capabilities
 
 The platform ships with working solutions. Do not reinvent. For full details, query Company Brain.
 
@@ -246,7 +264,7 @@ This list is **headline only**. Many more capabilities exist (GitHub tooling, de
 
 ---
 
-## 11. Code discipline
+## 12. Code discipline
 
 **Hard limit: 200 lines per file, excluding imports/exports.**
 
@@ -259,7 +277,7 @@ Other rules:
 
 ---
 
-## 12. Deploy mechanics
+## 13. Deploy mechanics
 
 Only run this when the user has explicitly approved deploy (§5 step 3).
 
@@ -286,7 +304,7 @@ echo $S
 
 ---
 
-## 13. Agent identity
+## 14. Agent identity
 
 Include this header on every API call so DB changes are attributed correctly:
 

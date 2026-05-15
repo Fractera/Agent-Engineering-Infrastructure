@@ -198,7 +198,17 @@ curl -X POST http://localhost:3002/api/rag/ingest \
 
 ---
 
-## 9. Hermes orchestration
+## 9. SSL & domain architecture
+
+This server runs behind Cloudflare proxy. Edge SSL is Cloudflare Total TLS; origin SSL is a Cloudflare Origin Certificate at `/etc/ssl/cloudflare/origin.{crt,key}`.
+
+**DO NOT** install certbot or run `certbot --nginx` here — all SSL is managed by Cloudflare. SSL issues are fixed in Cloudflare Dashboard, not on the server. See `docs/ssl-architecture.md`.
+
+Hermes runs at `127.0.0.1:9119` with DNS rebinding protection — nginx rewrites `Host: 127.0.0.1:9119` for the upstream connection.
+
+---
+
+## 10. Hermes orchestration
 
 Hermes is the orchestration agent running at `http://localhost:9119`. Delegate to Hermes when a task is complex, multi-step, or requires multiple AI platforms working together.
 
@@ -216,7 +226,7 @@ Hermes is the orchestration agent running at `http://localhost:9119`. Delegate t
 
 ---
 
-## 10. Built-in platform capabilities
+## 11. Built-in platform capabilities
 
 The platform ships with working solutions. Do not reinvent. For full details, query Company Brain.
 
@@ -233,7 +243,7 @@ This list is **headline only**. Many more capabilities exist (GitHub tooling, de
 
 ---
 
-## 11. Code discipline
+## 12. Code discipline
 
 **Hard limit: 200 lines per file, excluding imports/exports.**
 
@@ -246,7 +256,7 @@ Other rules:
 
 ---
 
-## 12. Deploy mechanics
+## 13. Deploy mechanics
 
 Only run this when the user has explicitly approved deploy (§5 step 3).
 
@@ -273,7 +283,7 @@ echo $S
 
 ---
 
-## 13. Agent identity
+## 14. Agent identity
 
 Include this header on every API call so DB changes are attributed correctly:
 

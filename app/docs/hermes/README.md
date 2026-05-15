@@ -63,6 +63,36 @@ Config lives at `/root/.hermes/config.yaml` on the server:
 - MCP servers: five platform bridges (ports 3210–3214)
 - Plugin: `fractera-platforms` (delegate_to_platform, delegate_to_best tools)
 
+## Web access — nginx Host header rewrite
+
+Hermes FastAPI has DNS rebinding protection — it rejects requests whose
+`Host` header doesn't match the bound interface (`127.0.0.1`). Without a fix,
+requests through nginx return `400 Invalid Host header`.
+
+nginx hermes block rewrites the Host header for the upstream connection:
+
+```nginx
+proxy_set_header Host 127.0.0.1:9119;
+proxy_set_header X-Forwarded-Host $host;
+```
+
+This is the canonical fix — Hermes stays bound to loopback (more secure
+than `--insecure`), and the public hostname is preserved in `X-Forwarded-Host`
+for any application code that needs it.
+
+## PM2 startup — Python interpreter
+
+Hermes binary is a Python script. PM2 defaults to Node.js interpreter, which
+crashes on the `# -*- coding: utf-8 -*-` shebang. Always start Hermes with
+`--interpreter` pointing to the venv Python:
+
+```bash
+HERMES_PY=/usr/local/lib/hermes-agent/venv/bin/python
+HERMES_BIN=/usr/local/lib/hermes-agent/venv/bin/hermes
+pm2 start $HERMES_BIN --name fractera-hermes --interpreter $HERMES_PY \
+  -- dashboard --host 127.0.0.1 --port 9119 --no-open
+```
+
 ## ⛔ DO NOT MODIFY
 
 Files in `docs/hermes/` are Hermes's private memory. Do not create, edit, or delete
