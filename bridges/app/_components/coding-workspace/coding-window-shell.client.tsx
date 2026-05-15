@@ -594,7 +594,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
               disabled={!isAuthenticated}
               className={`flex items-center justify-center gap-1.5 rounded-md border h-9 text-[11px] transition-all px-2 ${
                 !isAuthenticated   ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-40"
-                : baseChatActive   ? "border-primary bg-primary/10 text-primary font-medium"
+                : baseChatActive   ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300 font-medium"
                 : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
               }`}
             >
@@ -624,7 +624,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                     : bridgeOffline ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-40"
                     : notInstalled  ? "border-dashed border-border text-muted-foreground/40 cursor-not-allowed opacity-60"
                     : isConfirming  ? "border-orange-400 bg-orange-400/10 text-orange-400 font-medium"
-                    : isCurrent     ? "border-primary bg-primary/10 text-primary font-medium"
+                    : isCurrent     ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300 font-medium"
                     : isRunning     ? "border-green-500/50 bg-green-500/5 text-green-600 dark:text-green-400"
                     : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
@@ -974,7 +974,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
         {/* GitHub Connect (only when not connected) */}
         {!gitConnected && (
           <button type="button" onClick={() => setShowGitConnect((v) => !v)}
-            className={`inline-flex items-center gap-1 h-5 px-2 rounded border text-[10px] transition-colors ${showGitConnect ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
+            className={`inline-flex items-center gap-1 h-5 px-2 rounded border text-[10px] transition-colors ${showGitConnect ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
             <GitBranch size={10} />GitHub
           </button>
         )}
@@ -995,7 +995,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
 
         {/* Info button */}
         <button type="button" onClick={handleInfo}
-          className={`inline-flex items-center gap-1 h-5 px-2 rounded border text-[10px] transition-colors ${showInfo ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
+          className={`inline-flex items-center gap-1 h-5 px-2 rounded border text-[10px] transition-colors ${showInfo ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
           <Info size={10} />Info
         </button>
 
