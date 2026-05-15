@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste } from "lucide-react";
+import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, Mic } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
 import { Shimmer } from "@/components/ai-elements/shimmer.client";
@@ -445,7 +445,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   }, []);
 
   const termH   = height - CAROUSEL_H - FOOTER_H;
-  const total   = 1 + PLATFORMS.length; // +1 Fractera PRO
+  const total   = PLATFORMS.length;
   const safeIdx = Math.min(carouselIdx, Math.max(total - 1, 0));
   const canPrev = safeIdx > 0;
   const canNext = safeIdx < total - 1;
@@ -549,6 +549,25 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           <input ref={fileInputRef} type="file" accept=".zip" className="hidden" onChange={handleImport} />
         </div>
 
+        {/* Paste button — right of Settings */}
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => isAuthenticated && setPasteModalOpen(true)}
+                className={`shrink-0 flex items-center justify-center gap-1.5 rounded-md border border-border h-9 text-[11px] text-muted-foreground select-none px-2 transition-colors${isAuthenticated ? " hover:text-foreground hover:bg-muted" : " opacity-40 cursor-not-allowed"}`}
+              >
+                <ClipboardPaste size={12} />
+                {!isMobile && <span className="font-medium">Paste</span>}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-[11px]" style={{ zIndex: 99999 }}>
+              Paste text to active terminal (Ctrl+Shift+V)
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
         <button type="button" aria-label="Previous" onClick={() => setCarouselIdx(safeIdx - 1)} disabled={!canPrev}
           className="shrink-0 flex items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shadow-sm disabled:opacity-30 disabled:pointer-events-none"
           style={{ width: 20, height: 20 }}>
@@ -557,25 +576,6 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
 
         <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
           <div className="flex" style={{ gap: GAP, transform: `translateX(-${safeIdx * (CARD_W + GAP)}px)`, transition: "transform 0.25s ease" }}>
-
-            {/* ── Fractera PRO ── */}
-            <TooltipProvider delayDuration={0}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    style={{ width: CARD_W, flexShrink: 0 }}
-                    className="flex items-center justify-center gap-1.5 rounded-md border border-green-500/40 bg-green-500/5 h-9 text-[11px] text-green-500 font-semibold select-none"
-                  >
-                    <span className="size-1.5 rounded-full bg-green-500 shrink-0" />
-                    <span>Fractera PRO</span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-[11px]" style={{ zIndex: 99999 }}>
-                  Fractera PRO — coming soon
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
 
             {PLATFORMS.map((p) => {
               const isRunning      = terminalSessions.has(p.id);
@@ -670,24 +670,6 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           style={{ width: 20, height: 20 }}>
           <ChevronRight className="h-3 w-3" />
         </button>
-
-        <TooltipProvider delayDuration={0}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={() => isAuthenticated && setPasteModalOpen(true)}
-                className={`shrink-0 flex items-center justify-center gap-1.5 rounded-md border border-border h-9 text-[11px] text-muted-foreground select-none px-2 transition-colors${isAuthenticated ? " hover:text-foreground hover:bg-muted" : " opacity-40 cursor-not-allowed"}`}
-              >
-                <ClipboardPaste size={12} />
-                {!isMobile && <span className="font-medium">Paste</span>}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-[11px]" style={{ zIndex: 99999 }}>
-              Paste text to active terminal (Ctrl+Shift+V)
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
       </div>
 
       {/* ── Users panel ── */}
@@ -996,6 +978,18 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
           <Store size={10} />Skills
         </a>
+
+        {/* Audio Records — coming soon */}
+        <button
+          type="button"
+          onClick={() => {
+            xtermRefs.current[terminalPlatform]?.sendStdin("coming soon\n");
+            setTimeout(() => { xtermRefs.current[terminalPlatform]?.focus(); }, 80);
+          }}
+          className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+        >
+          <Mic size={10} />Audio Records
+        </button>
 
         {/* GitHub */}
         {GITHUB_URL ? (
