@@ -7,12 +7,16 @@ import { Zap, LayoutDashboard, Sparkles } from "lucide-react";
 const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL ?? "http://localhost:3002";
 
 const AI_TOOLS = [
-  { name: "Claude Code",   color: "bg-orange-500/10 text-orange-400 border-orange-500/25" },
-  { name: "Codex",         color: "bg-green-500/10  text-green-400  border-green-500/25"  },
-  { name: "Gemini",        color: "bg-blue-500/10   text-blue-400   border-blue-500/25"   },
-  { name: "Qwen Code",     color: "bg-violet-500/10 text-violet-400 border-violet-500/25" },
-  { name: "Kimi Code",     color: "bg-cyan-500/10   text-cyan-400   border-cyan-500/25"   },
-  { name: "Company Brain", color: "bg-amber-500/10  text-amber-400  border-amber-500/25"  },
+  { name: "Claude Code",    color: "bg-orange-500/10 text-orange-400 border-orange-500/25" },
+  { name: "Codex",          color: "bg-green-500/10  text-green-400  border-green-500/25"  },
+  { name: "Gemini",         color: "bg-blue-500/10   text-blue-400   border-blue-500/25"   },
+  { name: "Qwen Code",      color: "bg-violet-500/10 text-violet-400 border-violet-500/25" },
+  { name: "Kimi Code",      color: "bg-cyan-500/10   text-cyan-400   border-cyan-500/25"   },
+  { name: "LightRag",       color: "bg-amber-500/10  text-amber-400  border-amber-500/25"  },
+  { name: "Hermes",         color: "bg-pink-500/10   text-pink-400   border-pink-500/25"   },
+  { name: "Auth",           color: "bg-rose-500/10   text-rose-400   border-rose-500/25"   },
+  { name: "Database",       color: "bg-indigo-500/10 text-indigo-400 border-indigo-500/25" },
+  { name: "Object Storage", color: "bg-teal-500/10   text-teal-400   border-teal-500/25"   },
 ];
 
 export default function ShellPage() {
