@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Brain, CircleUserRound, Globe, Bot } from "lucide-react";
+import { Brain, CircleUserRound, Globe } from "lucide-react";
 import { CodingWindowShell } from "./coding-workspace/coding-window-shell.client";
 import { AuthLoginModal } from "./auth-login-modal.client";
 import { SitePreviewWindow } from "./site-preview-window.client";
@@ -26,6 +26,10 @@ const HERMES_URL  = process.env.NEXT_PUBLIC_HERMES_URL
   ?? (APP_URL.includes("localhost")
     ? "http://localhost:9119"
     : APP_URL.replace("://", "://hermes."));
+const HERMES_CHAT_URL = process.env.NEXT_PUBLIC_HERMES_CHAT_URL
+  ?? (APP_URL.includes("localhost")
+    ? "http://localhost:9120"
+    : APP_URL.replace("://", "://hermes.") + "/chat/");
 const HEADER_H = 48;
 
 export function WorkspaceController() {
@@ -119,15 +123,6 @@ export function WorkspaceController() {
             variant="outline"
             size="default"
             className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
-            onClick={() => { setHermesOpen((v) => !v); setBrainOpen(false); setSiteOpen(false); }}
-          >
-            <Bot className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Hermes</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="default"
-            className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
             onClick={() => { setBrainOpen((v) => !v); setHermesOpen(false); setSiteOpen(false); }}
           >
             <Brain className="h-3.5 w-3.5" />
@@ -201,6 +196,8 @@ export function WorkspaceController() {
           isMobile={isMobile}
           isAuthenticated={isAuthenticated && !loading}
           onPreviewClose={() => setSiteOpen(false)}
+          onHermesOpen={() => { setHermesOpen(true); setBrainOpen(false); setSiteOpen(false); }}
+          hermesChatUrl={HERMES_CHAT_URL}
         />
       )}
 
