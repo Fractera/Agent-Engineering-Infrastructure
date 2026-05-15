@@ -1,0 +1,39 @@
+name: fractera-black
+label: Fractera Black
+description: Deep navy background with high-contrast white text
+
+palette:
+  background: "#0a1428"
+  midground: "#ffffff"
+  foreground:
+    hex: "#ffffff"
+    alpha: 0
+  warmGlow: "rgba(0, 0, 0, 0)"
+  noiseOpacity: 0
+
+colorOverrides:
+  card: "#10203c"
+  cardForeground: "#ffffff"
+  popover: "#10203c"
+  popoverForeground: "#ffffff"
+  primary: "#ffffff"
+  primaryForeground: "#0a1428"
+  secondary: "#1a2a4a"
+  secondaryForeground: "#ffffff"
+  muted: "#1a2a4a"
+  mutedForeground: "#d0d8e6"
+  accent: "#1a2a4a"
+  accentForeground: "#ffffff"
+  destructive: "#ef4444"
+  destructiveForeground: "#ffffff"
+  border: "#ffffff20"
+  input: "#ffffff15"
+  ring: "#94a3b8"
+
+typography:
+  fontSans: "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+  fontMono: "ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace"
+
+layout:
+  radius: "0"
+  density: "compact"
