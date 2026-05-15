@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { ClipboardPaste, ChevronDown } from "lucide-react";
+import { ClipboardPaste, ChevronDown, Mic } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
@@ -123,12 +123,25 @@ export function PasteTextModal({ open, onClose, onSend }: Props) {
           </label>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
-          <Button size="sm" onClick={handleSend} disabled={!text.trim()}>
-            <ClipboardPaste size={13} />
-            Send to terminal
+        <DialogFooter className="sm:justify-between sm:items-center">
+          {/* Audio Records — placeholder for future voice-to-text input */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => { onSend("coming soon\n"); onClose(); }}
+            className="sm:mr-auto"
+          >
+            <Mic size={13} />
+            Audio Records
           </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
+            <Button size="sm" onClick={handleSend} disabled={!text.trim()}>
+              <ClipboardPaste size={13} />
+              Send to terminal
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
