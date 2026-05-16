@@ -524,11 +524,11 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
               </button>
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowLightRag((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                <Brain size={11} />LightRAG
+                <Brain size={11} />LightRAG settings
               </button>
               <button type="button" onClick={() => { setDataMenuOpen(false); onHermesOpen?.(); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                <Bot size={11} />Hermes
+                <Bot size={11} />Hermes settings
               </button>
               <div className="h-px bg-border mx-2" />
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
