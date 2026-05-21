@@ -6,7 +6,9 @@ import { CodingWindowShell } from "./coding-workspace/coding-window-shell.client
 import { AuthLoginModal } from "./auth-login-modal.client";
 import { SitePreviewWindow } from "./site-preview-window.client";
 import { CompanyBrainWindow } from "./company-brain-window.client";
+import { CompanyBrainSetupModal } from "./company-brain-setup-modal.client";
 import { HermesWindow } from "./hermes-window.client";
+import { WelcomeSetupModal } from "./welcome-setup-modal.client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import type { Platform } from "./coding-workspace/platforms";
@@ -46,6 +48,33 @@ export function WorkspaceController() {
   const [terminalSessions, setTerminalSessions] = useState<Set<Platform>>(new Set());
   const [siteOpen, setSiteOpen]                 = useState(false);
   const [brainOpen, setBrainOpen]               = useState(false);
+  const [brainSetupOpen, setBrainSetupOpen]     = useState(false);
+  const [welcomeOpen, setWelcomeOpen]           = useState(false);
+
+  // Gate the Company Brain window behind an OpenAI API key check.
+  // Without a key LightRAG starts (so the iframe renders) but indexing /
+  // queries will fail — we'd rather show an upfront onboarding modal that
+  // explains the value of the memory and asks for the key.
+  const handleCompanyBrainClick = useCallback(async () => {
+    // Closing it (or it's already open) — just toggle, no gating needed.
+    if (brainOpen) { setBrainOpen(false); return; }
+    try {
+      const res = await fetch("/api/config/rag", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.configured) {
+          setBrainOpen(true);
+          setHermesOpen(false);
+          setSiteOpen(false);
+          return;
+        }
+      }
+    } catch {
+      // Network error — fall through to showing the setup modal anyway;
+      // worst case the user sees the explanation again.
+    }
+    setBrainSetupOpen(true);
+  }, [brainOpen]);
   const [hermesOpen, setHermesOpen]             = useState(false);
   // Hermes window URL — defaults to root, swapped to /env (the auth/providers
   // panel) on the first admin-panel visit so the user lands directly on the
@@ -53,9 +82,15 @@ export function WorkspaceController() {
   const [hermesUrl, setHermesUrl]               = useState<string>(HERMES_URL);
   const isMobile = windowWidth > 0 && windowWidth < 768;
 
-  // First admin-panel visit after registration → open the Hermes setup window
-  // (on /env) instead of the site preview. Every later visit opens the
-  // preview as before.
+  // First admin-panel visit after registration → show a welcome modal
+  // that explains the two surfaces (Основной чат / Основной агент) and
+  // nudges the user to connect a Codex subscription. Dismissing the modal
+  // (either via "Открыть настройки" or "Позже") flips the localStorage
+  // flag so subsequent visits go straight to the site preview.
+  //
+  // We intentionally do NOT probe Hermes for "are subscriptions connected"
+  // — Hermes /api/providers vs /api/models structures shifted across
+  // versions and we don't want this onboarding tied to that contract.
   useEffect(() => {
     let firstVisit = false;
     try {
@@ -65,8 +100,7 @@ export function WorkspaceController() {
       // localStorage unavailable — fall back to the regular preview.
     }
     if (firstVisit) {
-      setHermesUrl(HERMES_URL_ONBOARDING);
-      setHermesOpen(true);
+      setWelcomeOpen(true);
     } else {
       setSiteOpen(true);
     }
@@ -150,7 +184,7 @@ export function WorkspaceController() {
             variant="outline"
             size="default"
             className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
-            onClick={() => { setBrainOpen((v) => !v); setHermesOpen(false); setSiteOpen(false); }}
+            onClick={handleCompanyBrainClick}
           >
             <Brain className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Company Brain</span>
@@ -236,6 +270,38 @@ export function WorkspaceController() {
 
       {/* ── Company Brain window ── */}
       <CompanyBrainWindow open={brainOpen} onClose={() => setBrainOpen(false)} brainUrl={BRAIN_URL} />
+
+      {/* Gating modal — shown when Company Brain is clicked while RAG has no API key. */}
+      <CompanyBrainSetupModal
+        open={brainSetupOpen}
+        onClose={() => setBrainSetupOpen(false)}
+        onActivated={() => {
+          setBrainSetupOpen(false);
+          // pm2 reload of fractera-rag takes a few seconds before the
+          // service is ready to serve the iframe; show it anyway, the
+          // iframe will retry on its own.
+          setBrainOpen(true);
+          setHermesOpen(false);
+          setSiteOpen(false);
+        }}
+      />
+
+      {/* First-visit welcome — gates the auto-open of Hermes /env onboarding. */}
+      <WelcomeSetupModal
+        open={welcomeOpen}
+        onContinue={() => {
+          setWelcomeOpen(false);
+          setHermesUrl(HERMES_URL_ONBOARDING);
+          setHermesOpen(true);
+          setBrainOpen(false);
+          setSiteOpen(false);
+        }}
+        onClose={() => {
+          // "Позже" — leave the workspace in its default state; the user
+          // can open the agent later via Data → «Основной агент».
+          setWelcomeOpen(false);
+        }}
+      />
 
       {/* ── Auth modal ── */}
       <AuthLoginModal
