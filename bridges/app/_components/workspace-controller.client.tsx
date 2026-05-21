@@ -26,6 +26,10 @@ const HERMES_URL  = process.env.NEXT_PUBLIC_HERMES_URL
   ?? (APP_URL.includes("localhost")
     ? "http://localhost:9119"
     : APP_URL.replace("://", "://hermes."));
+// First-visit lands on /env — the provider/auth panel — so the user
+// immediately sees where to sign in to Codex / Claude Code subscriptions.
+// Subsequent opens via the Hermes button go to the root as before.
+const HERMES_URL_ONBOARDING = HERMES_URL.replace(/\/+$/, "") + "/env";
 const HERMES_CHAT_URL = process.env.NEXT_PUBLIC_HERMES_CHAT_URL
   ?? (APP_URL.includes("localhost")
     ? "http://localhost:9120"
@@ -43,10 +47,15 @@ export function WorkspaceController() {
   const [siteOpen, setSiteOpen]                 = useState(false);
   const [brainOpen, setBrainOpen]               = useState(false);
   const [hermesOpen, setHermesOpen]             = useState(false);
+  // Hermes window URL — defaults to root, swapped to /env (the auth/providers
+  // panel) on the first admin-panel visit so the user lands directly on the
+  // sign-in screen for Codex / Claude Code subscriptions.
+  const [hermesUrl, setHermesUrl]               = useState<string>(HERMES_URL);
   const isMobile = windowWidth > 0 && windowWidth < 768;
 
   // First admin-panel visit after registration → open the Hermes setup window
-  // instead of the site preview. Every later visit opens the preview as before.
+  // (on /env) instead of the site preview. Every later visit opens the
+  // preview as before.
   useEffect(() => {
     let firstVisit = false;
     try {
@@ -55,8 +64,12 @@ export function WorkspaceController() {
     } catch {
       // localStorage unavailable — fall back to the regular preview.
     }
-    if (firstVisit) setHermesOpen(true);
-    else setSiteOpen(true);
+    if (firstVisit) {
+      setHermesUrl(HERMES_URL_ONBOARDING);
+      setHermesOpen(true);
+    } else {
+      setSiteOpen(true);
+    }
   }, []);
 
   const fetchSession = useCallback(async () => {
@@ -210,7 +223,7 @@ export function WorkspaceController() {
           isMobile={isMobile}
           isAuthenticated={isAuthenticated && !loading}
           onPreviewClose={() => setSiteOpen(false)}
-          onHermesOpen={() => { setHermesOpen(true); setBrainOpen(false); setSiteOpen(false); }}
+          onHermesOpen={() => { setHermesUrl(HERMES_URL); setHermesOpen(true); setBrainOpen(false); setSiteOpen(false); }}
           hermesChatUrl={HERMES_CHAT_URL}
         />
       )}
@@ -219,7 +232,7 @@ export function WorkspaceController() {
       <SitePreviewWindow open={siteOpen} onClose={() => setSiteOpen(false)} siteUrl={APP_URL} />
 
       {/* ── Hermes Agent window ── */}
-      <HermesWindow open={hermesOpen} onClose={() => setHermesOpen(false)} hermesUrl={HERMES_URL} />
+      <HermesWindow open={hermesOpen} onClose={() => setHermesOpen(false)} hermesUrl={hermesUrl} />
 
       {/* ── Company Brain window ── */}
       <CompanyBrainWindow open={brainOpen} onClose={() => setBrainOpen(false)} brainUrl={BRAIN_URL} />
