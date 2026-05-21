@@ -40,10 +40,24 @@ export function WorkspaceController() {
   const [windowWidth, setWindowWidth]   = useState(0);
   const [terminalPlatform, setTerminalPlatform] = useState<Platform>("claude-code");
   const [terminalSessions, setTerminalSessions] = useState<Set<Platform>>(new Set());
-  const [siteOpen, setSiteOpen]                 = useState(true);
+  const [siteOpen, setSiteOpen]                 = useState(false);
   const [brainOpen, setBrainOpen]               = useState(false);
   const [hermesOpen, setHermesOpen]             = useState(false);
   const isMobile = windowWidth > 0 && windowWidth < 768;
+
+  // First admin-panel visit after registration → open the Hermes setup window
+  // instead of the site preview. Every later visit opens the preview as before.
+  useEffect(() => {
+    let firstVisit = false;
+    try {
+      firstVisit = !localStorage.getItem("fractera_admin_onboarded");
+      if (firstVisit) localStorage.setItem("fractera_admin_onboarded", "1");
+    } catch {
+      // localStorage unavailable — fall back to the regular preview.
+    }
+    if (firstVisit) setHermesOpen(true);
+    else setSiteOpen(true);
+  }, []);
 
   const fetchSession = useCallback(async () => {
     try {
