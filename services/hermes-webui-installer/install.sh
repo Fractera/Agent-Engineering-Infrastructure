@@ -10,7 +10,8 @@ HERMES_WEBUI_HOST="${HERMES_WEBUI_HOST:-127.0.0.1}"
 HERMES_WEBUI_AGENT_DIR="${HERMES_WEBUI_AGENT_DIR:-/usr/local/lib/hermes-agent}"
 HERMES_HOME="${HERMES_HOME:-/root/.hermes}"
 PINNED="$(cat "${INSTALLER_DIR}/pinned-version.txt")"
-REPO="https://github.com/nesquena/hermes-webui.git"
+# Vendored fork — pulls from Fractera's copy, not upstream. See step 58.
+REPO="https://github.com/Fractera/hermes-webui.git"
 
 echo "[hermes-webui-installer] target = $INSTALL_DIR  pinned = $PINNED"
 
