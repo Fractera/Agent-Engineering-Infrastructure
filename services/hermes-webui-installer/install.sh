@@ -52,6 +52,31 @@ else
     echo "[hermes-webui-installer] .env exists — preserving"
 fi
 
+# --- 4b. Seed WebUI settings (language + brand) ---
+# load_settings() in hermes-webui merges a partial settings.json with its
+# built-in defaults, so writing just these two keys is safe. language is
+# only seeded when absent (preserve a customer's later choice); bot_name is
+# always enforced to keep the Fractera brand.
+echo "[hermes-webui-installer] seeding WebUI settings (language=en, bot_name=Fractera)"
+python3 - <<'PYSETTINGS'
+import json, pathlib
+d = pathlib.Path('/root/.hermes/webui')
+d.mkdir(parents=True, exist_ok=True)
+f = d / 'settings.json'
+data = {}
+if f.exists():
+    try:
+        data = json.loads(f.read_text())
+        if not isinstance(data, dict):
+            data = {}
+    except Exception:
+        data = {}
+data.setdefault('language', 'en')   # seed only if absent
+data['bot_name'] = 'Fractera'        # always enforce brand
+f.write_text(json.dumps(data, indent=2))
+print('  settings.json seeded:', json.dumps({k: data[k] for k in ('language', 'bot_name')}))
+PYSETTINGS
+
 # --- 5. PM2 wrapper ---
 WRAPPER="$INSTALL_DIR/pm2-start.sh"
 cat > "$WRAPPER" <<'WRAPPER_EOF'
