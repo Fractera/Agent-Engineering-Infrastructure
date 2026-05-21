@@ -134,6 +134,68 @@ def patch_js_fallbacks(target: pathlib.Path) -> int:
     return total
 
 
+PROVIDER_FILTER_MARKER = "// fractera:provider-filter v1"
+PROVIDER_FILTER_SNIPPET = """
+// fractera:provider-filter v1
+// Hide providers without configured credentials from the WebUI. Auth lives
+// in the original Hermes agent panel (hermes.<sub>.fractera.ai/env); WebUI
+// should only surface providers the user has actually signed into. Done by
+// wrapping fetch() so any GET /api/providers response is filtered to
+// has_key === true entries before the UI sees it. Idempotent — guarded by
+// the marker above; the rebrander skips a re-write when the marker exists.
+(function () {
+  if (typeof window === 'undefined' || !window.fetch) return;
+  var _origFetch = window.fetch.bind(window);
+  window.fetch = function (input, init) {
+    var url = (typeof input === 'string') ? input : (input && input.url) || '';
+    if (typeof url !== 'string' || url.indexOf('/api/providers') === -1) {
+      return _origFetch(input, init);
+    }
+    // Only filter the bare list endpoint, not /api/provider/quota etc.
+    var u;
+    try { u = new URL(url, window.location.origin); } catch (_) { return _origFetch(input, init); }
+    if (u.pathname !== '/api/providers') return _origFetch(input, init);
+    return _origFetch(input, init).then(function (res) {
+      if (!res.ok) return res;
+      return res.clone().json().then(function (data) {
+        try {
+          var list = Array.isArray(data) ? data : (data && Array.isArray(data.providers) ? data.providers : null);
+          if (!list) return res;
+          var filtered = list.filter(function (p) { return p && p.has_key === true; });
+          var body = Array.isArray(data) ? filtered : Object.assign({}, data, { providers: filtered });
+          return new Response(JSON.stringify(body), { status: res.status, statusText: res.statusText, headers: res.headers });
+        } catch (_) { return res; }
+      }).catch(function () { return res; });
+    });
+  };
+})();
+"""
+
+
+def patch_provider_filter(target: pathlib.Path) -> int:
+    """Prepend a fetch() wrapper to boot.js that hides non-authed providers.
+
+    Auth happens in the original Hermes agent (`hermes.<sub>.fractera.ai/env`,
+    OAuth for Codex / Claude Code). WebUI just consumes the credential pool
+    via /api/providers — we filter that list client-side so the user never
+    sees a provider they haven't signed into. Defensive: avoids editing
+    panels.js whose line layout shifts between versions.
+    """
+    f = target / "static" / "boot.js"
+    if not f.exists():
+        print(f"  [skip] {f} not found", file=sys.stderr)
+        return 0
+    text = f.read_text()
+    if PROVIDER_FILTER_MARKER in text:
+        print("  provider-filter: already applied, skipping")
+        return 0
+    # Prepend — boot.js runs before any other module; the wrapper installs
+    # before the UI's first fetch.
+    f.write_text(PROVIDER_FILTER_SNIPPET.lstrip() + "\n" + text)
+    print("  provider-filter: installed in boot.js")
+    return 1
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Fractera rebrand for hermes-webui")
     parser.add_argument(
@@ -151,6 +213,7 @@ def main() -> int:
     patch_index_html(target)
     patch_manifest(target)
     patch_js_fallbacks(target)
+    patch_provider_filter(target)
     print("done.")
     return 0
 

@@ -53,12 +53,17 @@ else
     echo "[hermes-webui-installer] .env exists — preserving"
 fi
 
-# --- 4b. Seed WebUI settings (language + brand) ---
+# --- 4b. Seed WebUI settings (language + brand + skip onboarding) ---
 # load_settings() in hermes-webui merges a partial settings.json with its
-# built-in defaults, so writing just these two keys is safe. language is
-# only seeded when absent (preserve a customer's later choice); bot_name is
-# always enforced to keep the Fractera brand.
-echo "[hermes-webui-installer] seeding WebUI settings (language=en, bot_name=Fractera)"
+# built-in defaults, so writing just these keys is safe.
+# - language: seeded only if absent (preserve customer's later choice).
+# - bot_name: always enforced to keep the Fractera brand.
+# - onboarding_completed: skip webui's own provider-setup wizard. We funnel
+#   the user into the original Hermes agent at /env for subscription OAuth
+#   (Codex / Claude Code), and webui just reads the resulting credential
+#   pool from auth.json. Two onboarding flows for one credential store
+#   would just confuse partners.
+echo "[hermes-webui-installer] seeding WebUI settings (language=en, bot_name=Fractera, skip onboarding)"
 python3 - <<'PYSETTINGS'
 import json, pathlib
 d = pathlib.Path('/root/.hermes/webui')
@@ -72,10 +77,11 @@ if f.exists():
             data = {}
     except Exception:
         data = {}
-data.setdefault('language', 'en')   # seed only if absent
-data['bot_name'] = 'Fractera'        # always enforce brand
+data.setdefault('language', 'en')         # seed only if absent
+data['bot_name'] = 'Fractera'              # always enforce brand
+data['onboarding_completed'] = True        # always skip webui's setup wizard
 f.write_text(json.dumps(data, indent=2))
-print('  settings.json seeded:', json.dumps({k: data[k] for k in ('language', 'bot_name')}))
+print('  settings.json seeded:', json.dumps({k: data[k] for k in ('language', 'bot_name', 'onboarding_completed')}))
 PYSETTINGS
 
 # --- 5. PM2 wrapper ---
