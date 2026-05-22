@@ -21,6 +21,23 @@ const SCHEMA = `
   );
 `
 
+// ALTER TABLE ADD COLUMN must tolerate the "duplicate column" error: during
+// `next build`, Next.js spawns multiple workers that all evaluate this
+// module concurrently. Each worker reads PRAGMA table_info and decides to
+// add the column, then a slower worker races against a faster one's
+// successful ALTER and gets a SQLITE_ERROR. The exists-check is correct
+// for steady-state but not race-safe — wrap each ALTER so duplicate-column
+// is treated as success (the column already exists, that's what we wanted).
+function safeAddColumn(sqlite: Database.Database, sql: string) {
+  try {
+    sqlite.exec(sql)
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    if (/duplicate column/i.test(msg)) return
+    throw e
+  }
+}
+
 function makeLocalDb() {
   const dbPath = process.env.APP_DB_PATH ?? join(process.cwd(), "data", "app.db")
   mkdirSync(dirname(dbPath), { recursive: true })
@@ -29,9 +46,9 @@ function makeLocalDb() {
   const cols = new Set(
     (sqlite.prepare('PRAGMA table_info(products)').all() as Array<{ name: string }>).map(c => c.name)
   )
-  if (!cols.has('media_id'))   sqlite.exec(`ALTER TABLE products ADD COLUMN media_id   TEXT`)
-  if (!cols.has('media_url'))  sqlite.exec(`ALTER TABLE products ADD COLUMN media_url  TEXT`)
-  if (!cols.has('created_by')) sqlite.exec(`ALTER TABLE products ADD COLUMN created_by TEXT NOT NULL DEFAULT 'system'`)
+  if (!cols.has('media_id'))   safeAddColumn(sqlite, `ALTER TABLE products ADD COLUMN media_id   TEXT`)
+  if (!cols.has('media_url'))  safeAddColumn(sqlite, `ALTER TABLE products ADD COLUMN media_url  TEXT`)
+  if (!cols.has('created_by')) safeAddColumn(sqlite, `ALTER TABLE products ADD COLUMN created_by TEXT NOT NULL DEFAULT 'system'`)
   return {
     prepare(sql: string) {
       const stmt = sqlite.prepare(sql)
