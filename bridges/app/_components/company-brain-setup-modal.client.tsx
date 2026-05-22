@@ -53,10 +53,11 @@ export function CompanyBrainSetupModal({ open, onClose, onActivated }: Props) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-lg border border-border bg-background shadow-2xl"
+        className="w-full max-w-lg rounded-lg border border-border bg-background shadow-2xl flex flex-col overflow-hidden"
+        style={{ maxHeight: 600 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+        <div className="shrink-0 flex items-center justify-between px-5 py-3 border-b border-border">
           <div className="flex items-center gap-2">
             <Brain size={16} className="text-violet-400" />
             <span className="text-sm font-semibold text-foreground">Company Brain — setup</span>
@@ -70,7 +71,7 @@ export function CompanyBrainSetupModal({ open, onClose, onActivated }: Props) {
           </button>
         </div>
 
-        <div className="px-5 py-4 flex flex-col gap-4 text-sm text-foreground">
+        <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4 text-sm text-foreground">
           {/* Headline value proposition */}
           <p className="leading-relaxed">
             <strong>Company Brain</strong> is the long-term memory of your project. It remembers

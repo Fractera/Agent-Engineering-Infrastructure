@@ -528,7 +528,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
               </button>
               <button type="button" onClick={() => { setDataMenuOpen(false); onHermesOpen?.(); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                <Bot size={11} />Основной агент
+                <Bot size={11} />Main Agent
               </button>
               <div className="h-px bg-border mx-2" />
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
@@ -599,7 +599,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
               }`}
             >
               <MessageSquare size={11} className="shrink-0" />
-              <span>Основной чат</span>
+              <span>Main Chat</span>
             </button>
 
             {PLATFORMS.map((p) => {

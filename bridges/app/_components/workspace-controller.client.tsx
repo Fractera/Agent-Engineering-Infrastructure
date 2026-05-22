@@ -83,9 +83,9 @@ export function WorkspaceController() {
   const isMobile = windowWidth > 0 && windowWidth < 768;
 
   // First admin-panel visit after registration → show a welcome modal
-  // that explains the two surfaces (Основной чат / Основной агент) and
-  // nudges the user to connect a Codex subscription. Dismissing the modal
-  // (either via "Открыть настройки" or "Позже") flips the localStorage
+  // that explains the two surfaces (Main Chat / Main Agent) and nudges
+  // the user to connect a Codex subscription. Dismissing the modal
+  // (either via "Open agent settings" or "Later") flips the localStorage
   // flag so subsequent visits go straight to the site preview.
   //
   // We intentionally do NOT probe Hermes for "are subscriptions connected"
@@ -297,8 +297,8 @@ export function WorkspaceController() {
           setSiteOpen(false);
         }}
         onClose={() => {
-          // "Позже" — leave the workspace in its default state; the user
-          // can open the agent later via Data → «Основной агент».
+          // "Later" — leave the workspace in its default state; the user
+          // can open the agent later via Data → «Main Agent».
           setWelcomeOpen(false);
         }}
       />

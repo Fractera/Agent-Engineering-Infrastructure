@@ -43,7 +43,7 @@ export function HermesWindow({ open, onClose, hermesUrl }: Props) {
           <div className="drag-handle shrink-0 flex items-center gap-2 px-3 border-b border-border bg-background cursor-grab active:cursor-grabbing select-none" style={{ height: 36 }}>
             <GripHorizontal size={14} className="text-muted-foreground shrink-0" />
             <Bot size={13} className="text-emerald-400 shrink-0" />
-            <span className="text-xs text-muted-foreground flex-1 truncate">Основной агент</span>
+            <span className="text-xs text-muted-foreground flex-1 truncate">Main Agent</span>
             <a
               href={hermesUrl}
               target="_blank"
@@ -78,7 +78,7 @@ export function HermesWindow({ open, onClose, hermesUrl }: Props) {
             src={hermesUrl}
             className="flex-1 border-0 w-full"
             style={{ minHeight: 0 }}
-            title="Основной агент"
+            title="Main Agent"
             allow="clipboard-read; clipboard-write"
           />
         </div>

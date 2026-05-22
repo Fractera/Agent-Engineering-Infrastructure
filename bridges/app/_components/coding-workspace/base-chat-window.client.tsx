@@ -18,7 +18,7 @@ export function BaseChatWindow({ chatUrl }: Props) {
     <div className="flex flex-col w-full h-full bg-background">
       <div className="shrink-0 flex items-center gap-2 px-3 border-b border-border bg-background" style={{ height: 32 }}>
         <MessageSquare size={12} className="text-primary shrink-0" />
-        <span className="text-[11px] text-muted-foreground flex-1 truncate">Основной чат</span>
+        <span className="text-[11px] text-muted-foreground flex-1 truncate">Main Chat</span>
         <a
           href={chatUrl}
           target="_blank"
