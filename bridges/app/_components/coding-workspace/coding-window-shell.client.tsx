@@ -931,7 +931,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
       </div>
 
       {/* ── Base Chat panel (iframe to hermes-webui) ── */}
-      {isAuthenticated && baseChatActive && hermesChatUrl && (
+      {!isLight && isAuthenticated && baseChatActive && hermesChatUrl && (
         <div
           style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, height: termH, zIndex: 5 }}
         >
