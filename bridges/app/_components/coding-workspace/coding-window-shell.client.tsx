@@ -21,6 +21,8 @@ import { BaseChatWindow } from "./base-chat-window.client";
 
 const CAROUSEL_H = 52;
 const FOOTER_H   = 36;
+const APP_URL    = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const isLight    = process.env.NEXT_PUBLIC_PRODUCT === "light";
 const CARD_W     = 112;
 const GAP        = 8;
 
@@ -482,20 +484,22 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
 
       {/* ── Carousel ── */}
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: CAROUSEL_H }} className="border-b border-border bg-background flex items-center gap-2 px-2">
-        <TooltipProvider delayDuration={0}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className={`shrink-0 flex items-center justify-center gap-1.5 rounded-md border border-border h-9 text-[11px] text-muted-foreground select-none px-2 cursor-help${!isAuthenticated ? " opacity-40 pointer-events-none" : ""}`}>
-                {bridgeStatus === "online"  && <><Wifi size={12} className="text-green-500" />{!isMobile && <span className="text-green-500 font-medium">Bridge</span>}</>}
-                {bridgeStatus === "offline" && <><WifiOff size={12} className="text-destructive" />{!isMobile && <span className="text-destructive">Offline</span>}</>}
-                {bridgeStatus === "unknown" && <><Loader2 size={12} className="animate-spin" />{!isMobile && <span>Bridge…</span>}</>}
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-[220px] whitespace-pre-line text-[11px] leading-relaxed" style={{ zIndex: 99999 }}>
-              {BRIDGE_TOOLTIP}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        {!isLight && (
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className={`shrink-0 flex items-center justify-center gap-1.5 rounded-md border border-border h-9 text-[11px] text-muted-foreground select-none px-2 cursor-help${!isAuthenticated ? " opacity-40 pointer-events-none" : ""}`}>
+                  {bridgeStatus === "online"  && <><Wifi size={12} className="text-green-500" />{!isMobile && <span className="text-green-500 font-medium">Bridge</span>}</>}
+                  {bridgeStatus === "offline" && <><WifiOff size={12} className="text-destructive" />{!isMobile && <span className="text-destructive">Offline</span>}</>}
+                  {bridgeStatus === "unknown" && <><Loader2 size={12} className="animate-spin" />{!isMobile && <span>Bridge…</span>}</>}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-[220px] whitespace-pre-line text-[11px] leading-relaxed" style={{ zIndex: 99999 }}>
+                {BRIDGE_TOOLTIP}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
 
         {/* Settings button */}
         <div className="relative shrink-0">
@@ -522,14 +526,18 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Database size={11} />Database
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowLightRag((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                <Brain size={11} />LightRAG settings
-              </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); onHermesOpen?.(); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                <Bot size={11} />Main Agent
-              </button>
+              {!isLight && (
+                <button type="button" onClick={() => { setDataMenuOpen(false); setShowLightRag((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                  <Brain size={11} />LightRAG settings
+                </button>
+              )}
+              {!isLight && (
+                <button type="button" onClick={() => { setDataMenuOpen(false); onHermesOpen?.(); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                  <Bot size={11} />Main Agent
+                </button>
+              )}
               <div className="h-px bg-border mx-2" />
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
@@ -558,31 +566,36 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           <input ref={fileInputRef} type="file" accept=".zip" className="hidden" onChange={handleImport} />
         </div>
 
-        {/* Paste button — right of Settings */}
-        <TooltipProvider delayDuration={0}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={() => isAuthenticated && setPasteModalOpen(true)}
-                className={`shrink-0 flex items-center justify-center gap-1.5 rounded-md border border-border h-9 text-[11px] text-muted-foreground select-none px-2 transition-colors${isAuthenticated ? " hover:text-foreground hover:bg-muted" : " opacity-40 cursor-not-allowed"}`}
-              >
-                <ClipboardPaste size={12} />
-                {!isMobile && <span className="font-medium">Paste</span>}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-[11px]" style={{ zIndex: 99999 }}>
-              Paste text to active terminal (Ctrl+Shift+V)
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        {/* Paste button — right of Settings (Lite only) */}
+        {!isLight && (
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => isAuthenticated && setPasteModalOpen(true)}
+                  className={`shrink-0 flex items-center justify-center gap-1.5 rounded-md border border-border h-9 text-[11px] text-muted-foreground select-none px-2 transition-colors${isAuthenticated ? " hover:text-foreground hover:bg-muted" : " opacity-40 cursor-not-allowed"}`}
+                >
+                  <ClipboardPaste size={12} />
+                  {!isMobile && <span className="font-medium">Paste</span>}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-[11px]" style={{ zIndex: 99999 }}>
+                Paste text to active terminal (Ctrl+Shift+V)
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
 
-        <button type="button" aria-label="Previous" onClick={() => setCarouselIdx(safeIdx - 1)} disabled={!canPrev}
-          className="shrink-0 flex items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shadow-sm disabled:opacity-30 disabled:pointer-events-none"
-          style={{ width: 20, height: 20 }}>
-          <ChevronLeft className="h-3 w-3" />
-        </button>
+        {!isLight && (
+          <button type="button" aria-label="Previous" onClick={() => setCarouselIdx(safeIdx - 1)} disabled={!canPrev}
+            className="shrink-0 flex items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shadow-sm disabled:opacity-30 disabled:pointer-events-none"
+            style={{ width: 20, height: 20 }}>
+            <ChevronLeft className="h-3 w-3" />
+          </button>
+        )}
 
+        {!isLight && (<>
         <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
           <div className="flex" style={{ gap: GAP, transform: `translateX(-${safeIdx * (CARD_W + GAP)}px)`, transition: "transform 0.25s ease" }}>
 
@@ -695,7 +708,35 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           style={{ width: 20, height: 20 }}>
           <ChevronRight className="h-3 w-3" />
         </button>
+        </>)}
       </div>
+
+      {/* ── Light: permanent App Preview canvas ── */}
+      {isLight && (
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 1, display: "flex", flexDirection: "column" }} className="bg-background">
+          <div className="shrink-0 flex items-center gap-2 px-3 border-b border-border bg-background" style={{ height: 36 }}>
+            <span className="text-xs text-muted-foreground flex-1 truncate">App Preview</span>
+            <button
+              type="button"
+              onClick={() => {
+                const iframe = document.getElementById("light-preview-iframe") as HTMLIFrameElement | null;
+                if (iframe) { const src = iframe.src; iframe.src = ""; iframe.src = src; }
+              }}
+              className="shrink-0 flex items-center gap-1 px-2 h-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-[11px] font-medium"
+            >
+              <RefreshCw size={11} />
+              Reload
+            </button>
+          </div>
+          <iframe
+            id="light-preview-iframe"
+            src={APP_URL}
+            title="App Preview"
+            className="flex-1 border-0 w-full"
+            style={{ minHeight: 0 }}
+          />
+        </div>
+      )}
 
       {/* ── Users panel ── */}
       {showUsers && (

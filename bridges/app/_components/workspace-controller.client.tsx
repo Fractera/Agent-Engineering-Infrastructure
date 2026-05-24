@@ -21,6 +21,7 @@ type SessionData = {
 
 const AUTH_URL    = process.env.NEXT_PUBLIC_AUTH_URL ?? "http://auth.partner.fractera.local:3001";
 const APP_URL     = process.env.NEXT_PUBLIC_APP_URL  || "http://localhost:3000";
+const isLight     = process.env.NEXT_PUBLIC_PRODUCT === "light";
 const BRAIN_URL   = APP_URL.includes("localhost")
   ? "http://localhost:9621/webui/"
   : APP_URL.replace("://", "://lightrag.") + "/webui/";
@@ -92,6 +93,7 @@ export function WorkspaceController() {
   // — Hermes /api/providers vs /api/models structures shifted across
   // versions and we don't want this onboarding tied to that contract.
   useEffect(() => {
+    if (isLight) return; // Light: preview is always visible inside the shell
     let firstVisit = false;
     try {
       firstVisit = !localStorage.getItem("fractera_admin_onboarded");
@@ -180,24 +182,28 @@ export function WorkspaceController() {
         </span>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="default"
-            className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
-            onClick={handleCompanyBrainClick}
-          >
-            <Brain className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Company Brain</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="default"
-            className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
-            onClick={() => { setSiteOpen((v) => !v); setBrainOpen(false); }}
-          >
-            <Globe className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Preview</span>
-          </Button>
+          {!isLight && (
+            <Button
+              variant="outline"
+              size="default"
+              className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
+              onClick={handleCompanyBrainClick}
+            >
+              <Brain className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Company Brain</span>
+            </Button>
+          )}
+          {!isLight && (
+            <Button
+              variant="outline"
+              size="default"
+              className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
+              onClick={() => { setSiteOpen((v) => !v); setBrainOpen(false); }}
+            >
+              <Globe className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Preview</span>
+            </Button>
+          )}
           {session ? (
             <Popover>
               <PopoverTrigger asChild>
@@ -262,46 +268,43 @@ export function WorkspaceController() {
         />
       )}
 
-      {/* ── Site preview window ── */}
-      <SitePreviewWindow open={siteOpen} onClose={() => setSiteOpen(false)} siteUrl={APP_URL} />
+      {/* ── Site preview window (Lite only — Light uses permanent canvas inside shell) ── */}
+      {!isLight && <SitePreviewWindow open={siteOpen} onClose={() => setSiteOpen(false)} siteUrl={APP_URL} />}
 
-      {/* ── Hermes Agent window ── */}
-      <HermesWindow open={hermesOpen} onClose={() => setHermesOpen(false)} hermesUrl={hermesUrl} />
+      {/* ── Hermes Agent window (Lite only) ── */}
+      {!isLight && <HermesWindow open={hermesOpen} onClose={() => setHermesOpen(false)} hermesUrl={hermesUrl} />}
 
-      {/* ── Company Brain window ── */}
-      <CompanyBrainWindow open={brainOpen} onClose={() => setBrainOpen(false)} brainUrl={BRAIN_URL} />
+      {/* ── Company Brain window (Lite only) ── */}
+      {!isLight && <CompanyBrainWindow open={brainOpen} onClose={() => setBrainOpen(false)} brainUrl={BRAIN_URL} />}
 
-      {/* Gating modal — shown when Company Brain is clicked while RAG has no API key. */}
-      <CompanyBrainSetupModal
-        open={brainSetupOpen}
-        onClose={() => setBrainSetupOpen(false)}
-        onActivated={() => {
-          setBrainSetupOpen(false);
-          // pm2 reload of fractera-rag takes a few seconds before the
-          // service is ready to serve the iframe; show it anyway, the
-          // iframe will retry on its own.
-          setBrainOpen(true);
-          setHermesOpen(false);
-          setSiteOpen(false);
-        }}
-      />
+      {/* Gating modal (Lite only) */}
+      {!isLight && (
+        <CompanyBrainSetupModal
+          open={brainSetupOpen}
+          onClose={() => setBrainSetupOpen(false)}
+          onActivated={() => {
+            setBrainSetupOpen(false);
+            setBrainOpen(true);
+            setHermesOpen(false);
+            setSiteOpen(false);
+          }}
+        />
+      )}
 
-      {/* First-visit welcome — gates the auto-open of Hermes /env onboarding. */}
-      <WelcomeSetupModal
-        open={welcomeOpen}
-        onContinue={() => {
-          setWelcomeOpen(false);
-          setHermesUrl(HERMES_URL_ONBOARDING);
-          setHermesOpen(true);
-          setBrainOpen(false);
-          setSiteOpen(false);
-        }}
-        onClose={() => {
-          // "Later" — leave the workspace in its default state; the user
-          // can open the agent later via Data → «Main Agent».
-          setWelcomeOpen(false);
-        }}
-      />
+      {/* First-visit welcome (Lite only) */}
+      {!isLight && (
+        <WelcomeSetupModal
+          open={welcomeOpen}
+          onContinue={() => {
+            setWelcomeOpen(false);
+            setHermesUrl(HERMES_URL_ONBOARDING);
+            setHermesOpen(true);
+            setBrainOpen(false);
+            setSiteOpen(false);
+          }}
+          onClose={() => { setWelcomeOpen(false); }}
+        />
+      )}
 
       {/* ── Auth modal ── */}
       <AuthLoginModal
