@@ -27,7 +27,7 @@ function readServerToken(): string | null {
 export async function POST(req: NextRequest) {
   // Auth mode A: Bearer SERVER_TOKEN (paid subscribers)
   const bearer = req.headers.get("authorization")?.replace("Bearer ", "").trim();
-  // Auth mode B: x-fractera-secret = INSTALL_SCRIPT_SECRET (self-hosted / Fractera Lite)
+  // Auth mode B: x-fractera-secret = INSTALL_SCRIPT_SECRET (self-hosted / Fractera Light)
   const secret = req.headers.get("x-fractera-secret");
 
   const validBearer = bearer ? bearer === readServerToken() : false;

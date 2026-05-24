@@ -566,7 +566,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           <input ref={fileInputRef} type="file" accept=".zip" className="hidden" onChange={handleImport} />
         </div>
 
-        {/* Paste button — right of Settings (Lite only) */}
+        {/* Paste button — right of Settings (hidden in Light) */}
         {!isLight && (
           <TooltipProvider delayDuration={0}>
             <Tooltip>

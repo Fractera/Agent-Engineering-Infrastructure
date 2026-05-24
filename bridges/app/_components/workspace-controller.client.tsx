@@ -178,7 +178,7 @@ export function WorkspaceController() {
         style={{ height: HEADER_H }}
       >
         <span className="text-sm font-semibold tracking-wide text-foreground select-none">
-          Fractera Admin
+          Fractera Light Admin
         </span>
 
         <div className="flex items-center gap-2">
@@ -268,16 +268,16 @@ export function WorkspaceController() {
         />
       )}
 
-      {/* ── Site preview window (Lite only — Light uses permanent canvas inside shell) ── */}
+      {/* ── Site preview window (hidden in Light — Light uses permanent canvas inside shell) ── */}
       {!isLight && <SitePreviewWindow open={siteOpen} onClose={() => setSiteOpen(false)} siteUrl={APP_URL} />}
 
-      {/* ── Hermes Agent window (Lite only) ── */}
+      {/* ── Hermes Agent window (hidden in Light) ── */}
       {!isLight && <HermesWindow open={hermesOpen} onClose={() => setHermesOpen(false)} hermesUrl={hermesUrl} />}
 
-      {/* ── Company Brain window (Lite only) ── */}
+      {/* ── Company Brain window (hidden in Light) ── */}
       {!isLight && <CompanyBrainWindow open={brainOpen} onClose={() => setBrainOpen(false)} brainUrl={BRAIN_URL} />}
 
-      {/* Gating modal (Lite only) */}
+      {/* Gating modal (hidden in Light) */}
       {!isLight && (
         <CompanyBrainSetupModal
           open={brainSetupOpen}
@@ -291,7 +291,7 @@ export function WorkspaceController() {
         />
       )}
 
-      {/* First-visit welcome (Lite only) */}
+      {/* First-visit welcome (hidden in Light) */}
       {!isLight && (
         <WelcomeSetupModal
           open={welcomeOpen}
