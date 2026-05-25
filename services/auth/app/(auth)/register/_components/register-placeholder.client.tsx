@@ -155,7 +155,11 @@ function RegisterForm() {
 
   const handleModalConfirmed = () => {
     setShowModal(false);
-    router.push(pendingRedirect);
+    if (pendingRedirect.startsWith("http")) {
+      window.location.href = pendingRedirect;
+    } else {
+      router.push(pendingRedirect);
+    }
   };
 
   const loginHref = callbackUrl

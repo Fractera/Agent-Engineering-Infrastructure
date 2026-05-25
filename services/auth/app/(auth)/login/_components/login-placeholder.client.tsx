@@ -50,7 +50,11 @@ function LoginForm() {
     }
 
     setLoading(false);
-    router.push(callbackUrl);
+    if (callbackUrl.startsWith("http")) {
+      window.location.href = callbackUrl;
+    } else {
+      router.push(callbackUrl);
+    }
   };
 
   return (
