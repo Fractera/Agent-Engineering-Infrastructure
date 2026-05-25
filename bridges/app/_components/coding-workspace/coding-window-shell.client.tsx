@@ -939,8 +939,8 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
         </div>
       )}
 
-      {/* ── Terminal panels (xterm) ── Light has no bridges/AI workspace */}
-      {!isLight && [...terminalSessions].map((platform) => {
+      {/* ── Terminal panels (xterm) ── */}
+      {[...terminalSessions].map((platform) => {
         const isCurrent = platform === terminalPlatform;
         return (
           <div
