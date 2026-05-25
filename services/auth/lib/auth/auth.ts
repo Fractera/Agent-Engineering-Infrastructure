@@ -4,7 +4,7 @@ import { authConfig } from "./auth.config";
 const nextAuth = NextAuth({
   ...authConfig,
   session: { strategy: "jwt" },
-  ...(process.env.BASE_PATH ? { basePath: `${process.env.BASE_PATH}/api/auth` } : {}),
+  basePath: process.env.BASE_PATH ? `${process.env.BASE_PATH}/api/auth` : "/api/auth",
 });
 
 export const { handlers, auth, signIn, signOut } = nextAuth;
