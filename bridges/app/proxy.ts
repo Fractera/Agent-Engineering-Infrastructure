@@ -11,6 +11,7 @@ function publicCallbackUrl(req: NextRequest): string {
   const host  = req.headers.get("x-forwarded-host") || req.headers.get("host") || "";
   const proto = req.headers.get("x-forwarded-proto") || "https";
   const pathname = new URL(req.url).pathname;
+  // With basePath=/admin, req.url already includes /admin in pathname.
   return host ? `${proto}://${host}${pathname}` : req.url;
 }
 
