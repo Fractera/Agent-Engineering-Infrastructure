@@ -15,7 +15,7 @@ const config: NextConfig = {
     NEXT_PUBLIC_MEDIA_URL:  process.env.NEXT_PUBLIC_MEDIA_URL  ?? "",
   },
   ...(process.env.BASE_PATH
-    ? { basePath: process.env.BASE_PATH, trailingSlash: true }
+    ? { assetPrefix: "/_admin_next" }
     : { output: "standalone" }),
 };
 
