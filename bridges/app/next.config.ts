@@ -14,6 +14,7 @@ const config: NextConfig = {
     NEXT_PUBLIC_APP_URL:    process.env.NEXT_PUBLIC_APP_URL    ?? "",
     NEXT_PUBLIC_MEDIA_URL:  process.env.NEXT_PUBLIC_MEDIA_URL  ?? "",
   },
+  ...(process.env.BASE_PATH ? { basePath: process.env.BASE_PATH } : {}),
 };
 
 export default config;
