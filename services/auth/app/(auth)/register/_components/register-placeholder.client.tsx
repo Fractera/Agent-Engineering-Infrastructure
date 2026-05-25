@@ -144,7 +144,7 @@ function RegisterForm() {
       } else if (callbackUrl) {
         setShowAccessDenied(true);
       } else {
-        router.push("/");
+        window.location.href = "/";
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unexpected error during registration");
@@ -155,16 +155,13 @@ function RegisterForm() {
 
   const handleModalConfirmed = () => {
     setShowModal(false);
-    if (pendingRedirect.startsWith("http")) {
-      window.location.href = pendingRedirect;
-    } else {
-      router.push(pendingRedirect);
-    }
+    // Always full-page navigation — auth service has no shell routes.
+    window.location.href = pendingRedirect;
   };
 
   const loginHref = callbackUrl
-    ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
-    : "/login";
+    ? `/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
+    : "/auth/login";
 
   return (
     <>
@@ -176,7 +173,7 @@ function RegisterForm() {
         />
       )}
       {showAccessDenied && (
-        <AccessDeniedModal onClose={() => { setShowAccessDenied(false); router.push("/"); }} />
+        <AccessDeniedModal onClose={() => { setShowAccessDenied(false); window.location.href = "/"; }} />
       )}
       <div className="w-full max-w-sm flex flex-col gap-4">
         <div className="flex flex-col gap-6 p-8 bg-background rounded-xl border shadow-sm">
@@ -207,7 +204,7 @@ function RegisterForm() {
               {loading ? <><Loader2 className="size-4 animate-spin" /> Creating account…</> : "Create account"}
             </Button>
           </form>
-          <Button variant="outline" className="w-full" onClick={() => router.replace(loginHref)} disabled={loading}>Sign in instead</Button>
+          <Button variant="outline" className="w-full" onClick={() => { window.location.href = loginHref }} disabled={loading}>Sign in instead</Button>
         </div>
       </div>
     </>

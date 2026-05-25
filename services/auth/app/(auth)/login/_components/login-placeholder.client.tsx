@@ -68,17 +68,15 @@ function LoginForm() {
     }
 
     setLoading(false);
-    if (callbackUrl.startsWith("http")) {
-      window.location.href = callbackUrl;
-    } else {
-      router.push(callbackUrl);
-    }
+    // Always use full-page navigation — relative paths like "/" or
+    // "/admin/" refer to the shell domain, not the auth service.
+    window.location.href = callbackUrl;
   };
 
   return (
     <>
       {showAccessDenied && (
-        <AccessDeniedModal onClose={() => { setShowAccessDenied(false); router.push("/"); }} />
+        <AccessDeniedModal onClose={() => { setShowAccessDenied(false); window.location.href = "/"; }} />
       )}
     <div className="w-full max-w-sm flex flex-col gap-6 p-8 bg-background rounded-xl border shadow-sm">
       <div className="flex flex-col gap-1">
@@ -109,7 +107,7 @@ function LoginForm() {
         <span className="text-xs text-muted-foreground">or</span>
         <div className="flex-1 h-px bg-border" />
       </div>
-      <Button variant="outline" className="w-full" onClick={() => router.push("/register")}>Register</Button>
+      <Button variant="outline" className="w-full" onClick={() => { window.location.href = "/auth/register" }}>Register</Button>
     </div>
     </>
   );
