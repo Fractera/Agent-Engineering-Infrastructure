@@ -4,8 +4,26 @@ import { Suspense, useState } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-import { AccessDeniedModal } from "@/app/(auth)/register/_components/register-placeholder.client";
 import { Button } from "@/components/ui/button";
+
+function AccessDeniedModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="w-full max-w-sm bg-background rounded-xl border shadow-xl flex flex-col gap-5 p-7">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-lg font-semibold">Access Denied</h2>
+          <p className="text-sm text-muted-foreground">You don't have permission to access the Admin Panel.</p>
+        </div>
+        <p className="text-sm leading-relaxed text-foreground">
+          The AI coding workspace is only available to users with the{" "}
+          <strong>Administrator</strong> role. Contact your administrator and ask them
+          to grant you the Administrator role.
+        </p>
+        <Button className="w-full" onClick={onClose}>OK</Button>
+      </div>
+    </div>
+  );
+}
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
