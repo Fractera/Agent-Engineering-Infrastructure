@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const AUTH_SERVICE   = process.env.AUTH_SERVICE_URL ?? "http://localhost:3001";
+const AUTH_SERVICE_RAW = process.env.AUTH_SERVICE_URL ?? "http://localhost:3001";
+const AUTH_SERVICE = process.env.BASE_PATH
+  ? `${AUTH_SERVICE_RAW}/auth`
+  : AUTH_SERVICE_RAW;
 const AUTH_REGISTER  = process.env.NEXT_PUBLIC_AUTH_URL
   ? `${process.env.NEXT_PUBLIC_AUTH_URL}/register`
   : "http://auth.partner.fractera.local:3001/register";
