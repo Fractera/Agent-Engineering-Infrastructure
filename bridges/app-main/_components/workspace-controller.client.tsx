@@ -1,17 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Brain, CircleUserRound, Globe } from "lucide-react";
-import { CodingWindowShell } from "./coding-workspace/coding-window-shell.client";
+import { CircleUserRound } from "lucide-react";
+import { LightDashboard } from "./light-dashboard.client";
 import { AuthLoginModal } from "./auth-login-modal.client";
-import { SitePreviewWindow } from "./site-preview-window.client";
-import { CompanyBrainWindow } from "./company-brain-window.client";
-import { CompanyBrainSetupModal } from "./company-brain-setup-modal.client";
-import { HermesWindow } from "./hermes-window.client";
-import { WelcomeSetupModal } from "./welcome-setup-modal.client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import type { Platform } from "./coding-workspace/platforms";
 
 type SessionData = {
   userId: string;
@@ -21,70 +15,14 @@ type SessionData = {
 
 const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL ?? "http://localhost:3001";
 const APP_URL  = process.env.NEXT_PUBLIC_APP_URL  || "http://localhost:3000";
-
-// Path-based URLs for AI services. Falls back to localhost-only ports in dev
-// (no path-based proxy locally), to /lightrag/, /hermes/, /chat/ in prod.
-const BRAIN_URL = process.env.NEXT_PUBLIC_BRAIN_URL
-  ?? (APP_URL.includes("localhost") ? "http://localhost:9621/webui/" : APP_URL + "/lightrag/webui/");
-const HERMES_URL = process.env.NEXT_PUBLIC_HERMES_URL
-  ?? (APP_URL.includes("localhost") ? "http://localhost:9119" : APP_URL + "/hermes");
-const HERMES_URL_ONBOARDING = HERMES_URL.replace(/\/+$/, "") + "/env";
-const HERMES_CHAT_URL = process.env.NEXT_PUBLIC_HERMES_CHAT_URL
-  ?? (APP_URL.includes("localhost") ? "http://localhost:9120" : APP_URL + "/chat/");
-
 const HEADER_H = 48;
 
 export function WorkspaceController() {
-  const [session, setSession]                   = useState<SessionData | null>(null);
-  const [loading, setLoading]                   = useState(true);
-  const [authModalOpen, setAuthModalOpen]       = useState(false);
-  const [shellHeight, setShellHeight]           = useState(0);
-  const [windowWidth, setWindowWidth]           = useState(0);
-  const [terminalPlatform, setTerminalPlatform] = useState<Platform>("claude-code");
-  const [terminalSessions, setTerminalSessions] = useState<Set<Platform>>(new Set());
-  const [siteOpen, setSiteOpen]                 = useState(false);
-  const [brainOpen, setBrainOpen]               = useState(false);
-  const [brainSetupOpen, setBrainSetupOpen]     = useState(false);
-  const [welcomeOpen, setWelcomeOpen]           = useState(false);
-  const [hermesOpen, setHermesOpen]             = useState(false);
-  const [hermesUrl, setHermesUrl]               = useState<string>(HERMES_URL);
-  const isMobile = windowWidth > 0 && windowWidth < 768;
-
-  // Gate Company Brain behind OpenAI API key check (same UX as original).
-  const handleCompanyBrainClick = useCallback(async () => {
-    if (brainOpen) { setBrainOpen(false); return; }
-    try {
-      const res = await fetch("/api/config/rag", { credentials: "include" });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.configured) {
-          setBrainOpen(true);
-          setHermesOpen(false);
-          setSiteOpen(false);
-          return;
-        }
-      }
-    } catch {
-      // ignore — fall through to setup modal
-    }
-    setBrainSetupOpen(true);
-  }, [brainOpen]);
-
-  // First admin-panel visit → welcome modal. Subsequent visits open the site preview.
-  useEffect(() => {
-    let firstVisit = false;
-    try {
-      firstVisit = !localStorage.getItem("fractera_admin_onboarded");
-      if (firstVisit) localStorage.setItem("fractera_admin_onboarded", "1");
-    } catch {
-      // localStorage unavailable
-    }
-    if (firstVisit) {
-      setWelcomeOpen(true);
-    } else {
-      setSiteOpen(true);
-    }
-  }, []);
+  const [session, setSession]             = useState<SessionData | null>(null);
+  const [loading, setLoading]             = useState(true);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [shellHeight, setShellHeight]     = useState(0);
+  const [windowWidth, setWindowWidth]     = useState(0);
 
   const fetchSession = useCallback(async () => {
     try {
@@ -109,26 +47,6 @@ export function WorkspaceController() {
     window.addEventListener("resize", updateSize);
     return () => window.removeEventListener("resize", updateSize);
   }, []);
-
-  function handlePlatformClick(platformId: Platform) {
-    if (terminalSessions.has(platformId)) {
-      setTerminalPlatform(platformId);
-    } else {
-      setTerminalSessions((prev) => new Set(prev).add(platformId));
-      setTerminalPlatform(platformId);
-    }
-  }
-
-  function handleTerminalClose(platformId: Platform) {
-    setTerminalSessions((prev) => {
-      const next = new Set(prev);
-      next.delete(platformId);
-      if (platformId === terminalPlatform && next.size > 0) {
-        setTerminalPlatform([...next][0]);
-      }
-      return next;
-    });
-  }
 
   function handleSignOut() {
     window.location.href = `${AUTH_URL}/api/auth/signout`;
@@ -156,36 +74,14 @@ export function WorkspaceController() {
         style={{ height: HEADER_H }}
       >
         <span className="text-sm font-semibold tracking-wide text-foreground select-none">
-          Fractera Admin
+          Fractera Light Admin
         </span>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="default"
-            className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
-            onClick={handleCompanyBrainClick}
-          >
-            <Brain className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Company Brain</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="default"
-            className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
-            onClick={() => { setSiteOpen((v) => !v); setBrainOpen(false); }}
-          >
-            <Globe className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Preview</span>
-          </Button>
           {session ? (
             <Popover>
               <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="default"
-                  className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
-                >
+                <Button variant="outline" size="default" className="text-xs shadow-sm dark:border-white/20 dark:shadow-none">
                   <CircleUserRound className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">Account</span>
                 </Button>
@@ -225,50 +121,17 @@ export function WorkspaceController() {
         </div>
       </header>
 
-      {/* ── Workspace shell (carousel + terminals + chat) ── */}
+      {/* ── Light dashboard (preview canvas + settings toolbar) ── */}
       {shellHeight > 0 && (
-        <CodingWindowShell
+        <LightDashboard
           height={shellHeight}
-          terminalPlatform={terminalPlatform}
-          terminalSessions={terminalSessions}
-          onPlatformClick={handlePlatformClick}
-          onTerminalClose={handleTerminalClose}
           windowWidth={windowWidth}
-          isMobile={isMobile}
+          siteUrl={APP_URL}
           isAuthenticated={isAuthenticated && !loading}
-          onPreviewClose={() => setSiteOpen(false)}
-          onHermesOpen={() => { setHermesUrl(HERMES_URL); setHermesOpen(true); setBrainOpen(false); setSiteOpen(false); }}
-          hermesChatUrl={HERMES_CHAT_URL}
         />
       )}
 
-      <SitePreviewWindow open={siteOpen} onClose={() => setSiteOpen(false)} siteUrl={APP_URL} />
-      <HermesWindow open={hermesOpen} onClose={() => setHermesOpen(false)} hermesUrl={hermesUrl} />
-      <CompanyBrainWindow open={brainOpen} onClose={() => setBrainOpen(false)} brainUrl={BRAIN_URL} />
-
-      <CompanyBrainSetupModal
-        open={brainSetupOpen}
-        onClose={() => setBrainSetupOpen(false)}
-        onActivated={() => {
-          setBrainSetupOpen(false);
-          setBrainOpen(true);
-          setHermesOpen(false);
-          setSiteOpen(false);
-        }}
-      />
-
-      <WelcomeSetupModal
-        open={welcomeOpen}
-        onContinue={() => {
-          setWelcomeOpen(false);
-          setHermesUrl(HERMES_URL_ONBOARDING);
-          setHermesOpen(true);
-          setBrainOpen(false);
-          setSiteOpen(false);
-        }}
-        onClose={() => { setWelcomeOpen(false); }}
-      />
-
+      {/* ── Auth modal ── */}
       <AuthLoginModal
         open={authModalOpen}
         onOpenChange={setAuthModalOpen}
