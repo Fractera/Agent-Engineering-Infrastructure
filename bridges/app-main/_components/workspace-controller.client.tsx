@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { CircleUserRound } from "lucide-react";
-import { LightDashboard } from "./light-dashboard.client";
+import { CircleUserRound, Globe } from "lucide-react";
+import { CodingWindowShell } from "./coding-workspace/coding-window-shell.client";
 import { AuthLoginModal } from "./auth-login-modal.client";
+import { SitePreviewWindow } from "./site-preview-window.client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import type { Platform } from "./coding-workspace/platforms";
 
 type SessionData = {
   userId: string;
@@ -18,11 +20,21 @@ const APP_URL  = process.env.NEXT_PUBLIC_APP_URL  || "http://localhost:3000";
 const HEADER_H = 48;
 
 export function WorkspaceController() {
-  const [session, setSession]             = useState<SessionData | null>(null);
-  const [loading, setLoading]             = useState(true);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [shellHeight, setShellHeight]     = useState(0);
-  const [windowWidth, setWindowWidth]     = useState(0);
+  const [session, setSession]                   = useState<SessionData | null>(null);
+  const [loading, setLoading]                   = useState(true);
+  const [authModalOpen, setAuthModalOpen]       = useState(false);
+  const [shellHeight, setShellHeight]           = useState(0);
+  const [windowWidth, setWindowWidth]           = useState(0);
+  const [terminalPlatform, setTerminalPlatform] = useState<Platform>("claude-code");
+  const [terminalSessions, setTerminalSessions] = useState<Set<Platform>>(new Set());
+  const [siteOpen, setSiteOpen]                 = useState(false);
+  const isMobile = windowWidth > 0 && windowWidth < 768;
+
+  // Open the site preview on first admin entry — same UX as the original
+  // bridges/app: user lands on the preview window inside the workspace.
+  useEffect(() => {
+    setSiteOpen(true);
+  }, []);
 
   const fetchSession = useCallback(async () => {
     try {
@@ -47,6 +59,26 @@ export function WorkspaceController() {
     window.addEventListener("resize", updateSize);
     return () => window.removeEventListener("resize", updateSize);
   }, []);
+
+  function handlePlatformClick(platformId: Platform) {
+    if (terminalSessions.has(platformId)) {
+      setTerminalPlatform(platformId);
+    } else {
+      setTerminalSessions((prev) => new Set(prev).add(platformId));
+      setTerminalPlatform(platformId);
+    }
+  }
+
+  function handleTerminalClose(platformId: Platform) {
+    setTerminalSessions((prev) => {
+      const next = new Set(prev);
+      next.delete(platformId);
+      if (platformId === terminalPlatform && next.size > 0) {
+        setTerminalPlatform([...next][0]);
+      }
+      return next;
+    });
+  }
 
   function handleSignOut() {
     window.location.href = `${AUTH_URL}/api/auth/signout`;
@@ -74,14 +106,27 @@ export function WorkspaceController() {
         style={{ height: HEADER_H }}
       >
         <span className="text-sm font-semibold tracking-wide text-foreground select-none">
-          Fractera Light Admin
+          Fractera Admin
         </span>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="default"
+            className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
+            onClick={() => setSiteOpen((v) => !v)}
+          >
+            <Globe className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Preview</span>
+          </Button>
           {session ? (
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="default" className="text-xs shadow-sm dark:border-white/20 dark:shadow-none">
+                <Button
+                  variant="outline"
+                  size="default"
+                  className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
+                >
                   <CircleUserRound className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">Account</span>
                 </Button>
@@ -121,15 +166,23 @@ export function WorkspaceController() {
         </div>
       </header>
 
-      {/* ── Light dashboard (preview canvas + settings toolbar) ── */}
+      {/* ── Workspace shell (carousel + terminals + chat) ── */}
       {shellHeight > 0 && (
-        <LightDashboard
+        <CodingWindowShell
           height={shellHeight}
+          terminalPlatform={terminalPlatform}
+          terminalSessions={terminalSessions}
+          onPlatformClick={handlePlatformClick}
+          onTerminalClose={handleTerminalClose}
           windowWidth={windowWidth}
-          siteUrl={APP_URL}
+          isMobile={isMobile}
           isAuthenticated={isAuthenticated && !loading}
+          onPreviewClose={() => setSiteOpen(false)}
         />
       )}
+
+      {/* ── Site preview window ── */}
+      <SitePreviewWindow open={siteOpen} onClose={() => setSiteOpen(false)} siteUrl={APP_URL} />
 
       {/* ── Auth modal ── */}
       <AuthLoginModal
