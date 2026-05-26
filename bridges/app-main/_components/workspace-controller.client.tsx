@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { CircleUserRound, Globe } from "lucide-react";
+import { Brain, CircleUserRound, Globe } from "lucide-react";
 import { CodingWindowShell } from "./coding-workspace/coding-window-shell.client";
 import { AuthLoginModal } from "./auth-login-modal.client";
 import { SitePreviewWindow } from "./site-preview-window.client";
+import { CompanyBrainWindow } from "./company-brain-window.client";
+import { CompanyBrainSetupModal } from "./company-brain-setup-modal.client";
+import { HermesWindow } from "./hermes-window.client";
+import { WelcomeSetupModal } from "./welcome-setup-modal.client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import type { Platform } from "./coding-workspace/platforms";
@@ -17,6 +21,17 @@ type SessionData = {
 
 const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL ?? "http://localhost:3001";
 const APP_URL  = process.env.NEXT_PUBLIC_APP_URL  || "http://localhost:3000";
+
+// Path-based URLs for AI services. Falls back to localhost-only ports in dev
+// (no path-based proxy locally), to /lightrag/, /hermes/, /chat/ in prod.
+const BRAIN_URL = process.env.NEXT_PUBLIC_BRAIN_URL
+  ?? (APP_URL.includes("localhost") ? "http://localhost:9621/webui/" : APP_URL + "/lightrag/webui/");
+const HERMES_URL = process.env.NEXT_PUBLIC_HERMES_URL
+  ?? (APP_URL.includes("localhost") ? "http://localhost:9119" : APP_URL + "/hermes");
+const HERMES_URL_ONBOARDING = HERMES_URL.replace(/\/+$/, "") + "/env";
+const HERMES_CHAT_URL = process.env.NEXT_PUBLIC_HERMES_CHAT_URL
+  ?? (APP_URL.includes("localhost") ? "http://localhost:9120" : APP_URL + "/chat/");
+
 const HEADER_H = 48;
 
 export function WorkspaceController() {
@@ -28,12 +43,47 @@ export function WorkspaceController() {
   const [terminalPlatform, setTerminalPlatform] = useState<Platform>("claude-code");
   const [terminalSessions, setTerminalSessions] = useState<Set<Platform>>(new Set());
   const [siteOpen, setSiteOpen]                 = useState(false);
+  const [brainOpen, setBrainOpen]               = useState(false);
+  const [brainSetupOpen, setBrainSetupOpen]     = useState(false);
+  const [welcomeOpen, setWelcomeOpen]           = useState(false);
+  const [hermesOpen, setHermesOpen]             = useState(false);
+  const [hermesUrl, setHermesUrl]               = useState<string>(HERMES_URL);
   const isMobile = windowWidth > 0 && windowWidth < 768;
 
-  // Open the site preview on first admin entry — same UX as the original
-  // bridges/app: user lands on the preview window inside the workspace.
+  // Gate Company Brain behind OpenAI API key check (same UX as original).
+  const handleCompanyBrainClick = useCallback(async () => {
+    if (brainOpen) { setBrainOpen(false); return; }
+    try {
+      const res = await fetch("/api/config/rag", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.configured) {
+          setBrainOpen(true);
+          setHermesOpen(false);
+          setSiteOpen(false);
+          return;
+        }
+      }
+    } catch {
+      // ignore — fall through to setup modal
+    }
+    setBrainSetupOpen(true);
+  }, [brainOpen]);
+
+  // First admin-panel visit → welcome modal. Subsequent visits open the site preview.
   useEffect(() => {
-    setSiteOpen(true);
+    let firstVisit = false;
+    try {
+      firstVisit = !localStorage.getItem("fractera_admin_onboarded");
+      if (firstVisit) localStorage.setItem("fractera_admin_onboarded", "1");
+    } catch {
+      // localStorage unavailable
+    }
+    if (firstVisit) {
+      setWelcomeOpen(true);
+    } else {
+      setSiteOpen(true);
+    }
   }, []);
 
   const fetchSession = useCallback(async () => {
@@ -114,7 +164,16 @@ export function WorkspaceController() {
             variant="outline"
             size="default"
             className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
-            onClick={() => setSiteOpen((v) => !v)}
+            onClick={handleCompanyBrainClick}
+          >
+            <Brain className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Company Brain</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="default"
+            className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
+            onClick={() => { setSiteOpen((v) => !v); setBrainOpen(false); }}
           >
             <Globe className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Preview</span>
@@ -178,13 +237,38 @@ export function WorkspaceController() {
           isMobile={isMobile}
           isAuthenticated={isAuthenticated && !loading}
           onPreviewClose={() => setSiteOpen(false)}
+          onHermesOpen={() => { setHermesUrl(HERMES_URL); setHermesOpen(true); setBrainOpen(false); setSiteOpen(false); }}
+          hermesChatUrl={HERMES_CHAT_URL}
         />
       )}
 
-      {/* ── Site preview window ── */}
       <SitePreviewWindow open={siteOpen} onClose={() => setSiteOpen(false)} siteUrl={APP_URL} />
+      <HermesWindow open={hermesOpen} onClose={() => setHermesOpen(false)} hermesUrl={hermesUrl} />
+      <CompanyBrainWindow open={brainOpen} onClose={() => setBrainOpen(false)} brainUrl={BRAIN_URL} />
 
-      {/* ── Auth modal ── */}
+      <CompanyBrainSetupModal
+        open={brainSetupOpen}
+        onClose={() => setBrainSetupOpen(false)}
+        onActivated={() => {
+          setBrainSetupOpen(false);
+          setBrainOpen(true);
+          setHermesOpen(false);
+          setSiteOpen(false);
+        }}
+      />
+
+      <WelcomeSetupModal
+        open={welcomeOpen}
+        onContinue={() => {
+          setWelcomeOpen(false);
+          setHermesUrl(HERMES_URL_ONBOARDING);
+          setHermesOpen(true);
+          setBrainOpen(false);
+          setSiteOpen(false);
+        }}
+        onClose={() => { setWelcomeOpen(false); }}
+      />
+
       <AuthLoginModal
         open={authModalOpen}
         onOpenChange={setAuthModalOpen}
