@@ -11,6 +11,7 @@ import { HermesWindow } from "./hermes-window.client";
 import { WelcomeSetupModal } from "./welcome-setup-modal.client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { useRuntimeUrls } from "@/lib/runtime-urls";
 import type { Platform } from "./coding-workspace/platforms";
 
 type SessionData = {
@@ -19,27 +20,10 @@ type SessionData = {
   roles: string[];
 };
 
-const AUTH_URL    = process.env.NEXT_PUBLIC_AUTH_URL ?? "http://auth.partner.fractera.local:3001";
-const APP_URL     = process.env.NEXT_PUBLIC_APP_URL  || "http://localhost:3000";
-const isLight     = process.env.NEXT_PUBLIC_PRODUCT === "light";
-const BRAIN_URL   = APP_URL.includes("localhost")
-  ? "http://localhost:9621/webui/"
-  : APP_URL.replace("://", "://lightrag.") + "/webui/";
-const HERMES_URL  = process.env.NEXT_PUBLIC_HERMES_URL
-  ?? (APP_URL.includes("localhost")
-    ? "http://localhost:9119"
-    : APP_URL.replace("://", "://hermes."));
-// First-visit lands on /env — the provider/auth panel — so the user
-// immediately sees where to sign in to Codex / Claude Code subscriptions.
-// Subsequent opens via the Hermes button go to the root as before.
-const HERMES_URL_ONBOARDING = HERMES_URL.replace(/\/+$/, "") + "/env";
-const HERMES_CHAT_URL = process.env.NEXT_PUBLIC_HERMES_CHAT_URL
-  ?? (APP_URL.includes("localhost")
-    ? "http://localhost:9120"
-    : APP_URL.replace("://", "://hermes.") + "/chat/");
 const HEADER_H = 48;
 
 export function WorkspaceController() {
+  const urls = useRuntimeUrls();
   const [session, setSession]           = useState<SessionData | null>(null);
   const [loading, setLoading]           = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -80,7 +64,7 @@ export function WorkspaceController() {
   // Hermes window URL — defaults to root, swapped to /env (the auth/providers
   // panel) on the first admin-panel visit so the user lands directly on the
   // sign-in screen for Codex / Claude Code subscriptions.
-  const [hermesUrl, setHermesUrl]               = useState<string>(HERMES_URL);
+  const [hermesUrl, setHermesUrl]               = useState<string>(urls.hermesUrl);
   const isMobile = windowWidth > 0 && windowWidth < 768;
 
   // First admin-panel visit after registration → show a welcome modal
@@ -93,7 +77,7 @@ export function WorkspaceController() {
   // — Hermes /api/providers vs /api/models structures shifted across
   // versions and we don't want this onboarding tied to that contract.
   useEffect(() => {
-    if (isLight) return; // Light: preview is always visible inside the shell
+    if (false) return; // reserved for product variants
     let firstVisit = false;
     try {
       firstVisit = !localStorage.getItem("fractera_admin_onboarded");
@@ -110,7 +94,7 @@ export function WorkspaceController() {
 
   const fetchSession = useCallback(async () => {
     try {
-      const res = await fetch(`${AUTH_URL}/api/session`, { credentials: "include" });
+      const res = await fetch(`${urls.authUrl}/api/session`, { credentials: "include" });
       const data = res.ok ? await res.json() : null;
       setSession(data);
     } catch {
@@ -153,11 +137,11 @@ export function WorkspaceController() {
   }
 
   function handleSignOut() {
-    window.location.href = `${AUTH_URL}/api/auth/signout`;
+    window.location.href = `${urls.authUrl}/api/auth/signout`;
   }
 
   function handleRegister() {
-    window.location.href = `${AUTH_URL}/register`;
+    window.location.href = `${urls.authUrl}/register`;
   }
 
   function handleAuthSuccess() {
@@ -182,7 +166,7 @@ export function WorkspaceController() {
         </span>
 
         <div className="flex items-center gap-2">
-          {!isLight && (
+          {(
             <Button
               variant="outline"
               size="default"
@@ -193,7 +177,7 @@ export function WorkspaceController() {
               <span className="hidden sm:inline">Company Brain</span>
             </Button>
           )}
-          {!isLight && (
+          {(
             <Button
               variant="outline"
               size="default"
@@ -263,22 +247,22 @@ export function WorkspaceController() {
           isMobile={isMobile}
           isAuthenticated={isAuthenticated && !loading}
           onPreviewClose={() => setSiteOpen(false)}
-          onHermesOpen={() => { setHermesUrl(HERMES_URL); setHermesOpen(true); setBrainOpen(false); setSiteOpen(false); }}
-          hermesChatUrl={HERMES_CHAT_URL}
+          onHermesOpen={() => { setHermesUrl(urls.hermesUrl); setHermesOpen(true); setBrainOpen(false); setSiteOpen(false); }}
+          hermesChatUrl={urls.hermesChatUrl}
         />
       )}
 
       {/* ── Site preview window (hidden in Light — Light uses permanent canvas inside shell) ── */}
-      {!isLight && <SitePreviewWindow open={siteOpen} onClose={() => setSiteOpen(false)} siteUrl={APP_URL} />}
+      {<SitePreviewWindow open={siteOpen} onClose={() => setSiteOpen(false)} siteUrl={urls.appUrl} />}
 
       {/* ── Hermes Agent window (hidden in Light) ── */}
-      {!isLight && <HermesWindow open={hermesOpen} onClose={() => setHermesOpen(false)} hermesUrl={hermesUrl} />}
+      {<HermesWindow open={hermesOpen} onClose={() => setHermesOpen(false)} hermesUrl={hermesUrl} />}
 
       {/* ── Company Brain window (hidden in Light) ── */}
-      {!isLight && <CompanyBrainWindow open={brainOpen} onClose={() => setBrainOpen(false)} brainUrl={BRAIN_URL} />}
+      {<CompanyBrainWindow open={brainOpen} onClose={() => setBrainOpen(false)} brainUrl={urls.brainUrl} />}
 
       {/* Gating modal (hidden in Light) */}
-      {!isLight && (
+      {(
         <CompanyBrainSetupModal
           open={brainSetupOpen}
           onClose={() => setBrainSetupOpen(false)}
@@ -292,12 +276,12 @@ export function WorkspaceController() {
       )}
 
       {/* First-visit welcome (hidden in Light) */}
-      {!isLight && (
+      {(
         <WelcomeSetupModal
           open={welcomeOpen}
           onContinue={() => {
             setWelcomeOpen(false);
-            setHermesUrl(HERMES_URL_ONBOARDING);
+            setHermesUrl(urls.hermesUrl.replace(/\/+$/, "") + "/env");
             setHermesOpen(true);
             setBrainOpen(false);
             setSiteOpen(false);
@@ -310,7 +294,7 @@ export function WorkspaceController() {
       <AuthLoginModal
         open={authModalOpen}
         onOpenChange={setAuthModalOpen}
-        authUrl={AUTH_URL}
+        authUrl={urls.authUrl}
         onSuccess={handleAuthSuccess}
       />
     </div>

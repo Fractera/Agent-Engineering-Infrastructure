@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Auth service serves /api/session at root (no Next.js basePath).
-// Path-based deploys route customer-facing /auth/* via nginx rewrite.
 const AUTH_SERVICE = process.env.AUTH_SERVICE_URL ?? "http://localhost:3001";
-const AUTH_REGISTER  = process.env.NEXT_PUBLIC_AUTH_URL
-  ? `${process.env.NEXT_PUBLIC_AUTH_URL}/register`
-  : "http://auth.partner.fractera.local:3001/register";
 
 function publicCallbackUrl(req: NextRequest): string {
   const host  = req.headers.get("x-forwarded-host") || req.headers.get("host") || "";
@@ -33,7 +28,10 @@ export async function proxy(req: NextRequest) {
   }
 
   if (!isAdmin) {
-    const registerUrl = new URL(AUTH_REGISTER);
+    const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || "localhost:3002";
+    const proto = req.headers.get("x-forwarded-proto") || "http";
+    const hostname = host.split(":")[0];
+    const registerUrl = new URL(`${proto}://${hostname}:3001/register`);
     registerUrl.searchParams.set("callbackUrl", publicCallbackUrl(req));
     return NextResponse.redirect(registerUrl);
   }

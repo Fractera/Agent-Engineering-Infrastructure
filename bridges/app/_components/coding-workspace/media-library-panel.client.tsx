@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Loader2, Trash2, Copy, ImagePlus, X, Check, Search, Pencil, MoreHorizontal, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-const MEDIA_URL = process.env.NEXT_PUBLIC_MEDIA_URL || "http://localhost:3300";
+import { getRuntimeUrls } from "@/lib/runtime-urls";
 
 type MediaItem = {
   id: string;
@@ -178,6 +177,7 @@ function PreviewPopup({ item, onClose }: { item: MediaItem; onClose: () => void 
 // ── Main panel ────────────────────────────────────────────────────────────────
 
 export function MediaLibraryPanel({ onClose }: Props) {
+  const MEDIA_URL = useMemo(() => getRuntimeUrls().mediaUrl, []);
   const [items, setItems]           = useState<MediaItem[]>([]);
   const [loading, setLoading]       = useState(true);
   const [uploading, setUploading]   = useState(false);

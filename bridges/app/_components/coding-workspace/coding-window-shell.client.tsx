@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
+import { getRuntimeUrls } from "@/lib/runtime-urls";
 import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, Bot, MessageSquare } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
@@ -21,8 +22,7 @@ import { BaseChatWindow } from "./base-chat-window.client";
 
 const CAROUSEL_H = 52;
 const FOOTER_H   = 36;
-const APP_URL    = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-const isLight    = process.env.NEXT_PUBLIC_PRODUCT === "light";
+// APP_URL and isLight removed — resolved at runtime via useRuntimeUrls()
 const CARD_W     = 112;
 const GAP        = 8;
 
@@ -37,8 +37,7 @@ function stripAnsi(s: string): string {
 const BRIDGE_TOOLTIP = "Bridge — all platform servers status\n\nOne process runs all platforms:\nClaude Code :3200 · PTY :3201\nCodex :3202 · Gemini :3203\nQwen :3204 · Kimi :3205\n\n🟢 Online — all platforms available\n🔴 Offline — bridge server not running\n\nTo start: cd bridges/platforms && node server.js";
 
 
-const PTY_URL      = process.env.NEXT_PUBLIC_PTY_URL      ?? "ws://localhost:3201";
-const BRIDGE_URL   = process.env.NEXT_PUBLIC_BRIDGE_URL   ?? "ws://localhost:3200";
+// PTY_URL and BRIDGE_URL removed — resolved at runtime via getRuntimeUrls()
 
 function TerminalDot({ status }: { status: TerminalStatus }) {
   if (status === "unavailable") return <span className="size-1.5 rounded-full bg-muted-foreground/40 shrink-0" />;
@@ -96,6 +95,7 @@ type Props = {
 };
 
 export function CodingWindowShell({ height, terminalPlatform, terminalSessions, onPlatformClick, onTerminalClose, windowWidth, isMobile = false, isAuthenticated = true, onPreviewClose, onHermesOpen, hermesChatUrl }: Props) {
+  const urls = useMemo(() => getRuntimeUrls(), []);
   const [terminalStatuses] = useState<Record<Platform, TerminalStatus>>({
     "claude-code": "unavailable", "codex": "unavailable", "gemini-cli": "unavailable",
     "qwen-code": "unavailable", "kimi-code": "unavailable",
@@ -208,7 +208,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   }
 
   useEffect(() => {
-    const ws = new WebSocket(BRIDGE_URL);
+    const ws = new WebSocket(urls.claudeUrl);
     const timer = setTimeout(() => { ws.close(); setBridgeStatus("offline"); }, 3000);
     ws.onopen  = () => { clearTimeout(timer); ws.close(); setBridgeStatus("online"); };
     ws.onerror = () => { clearTimeout(timer); setBridgeStatus("offline"); };
@@ -484,7 +484,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
 
       {/* ── Carousel ── */}
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: CAROUSEL_H }} className="border-b border-border bg-background flex items-center gap-2 px-2">
-        {!isLight && (
+        {(
           <TooltipProvider delayDuration={0}>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -526,13 +526,13 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Database size={11} />Database
               </button>
-              {!isLight && (
+              {(
                 <button type="button" onClick={() => { setDataMenuOpen(false); setShowLightRag((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                   <Brain size={11} />LightRAG settings
                 </button>
               )}
-              {!isLight && (
+              {(
                 <button type="button" onClick={() => { setDataMenuOpen(false); onHermesOpen?.(); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                   <Bot size={11} />Main Agent
@@ -567,7 +567,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
         </div>
 
         {/* Paste button — right of Settings (hidden in Light) */}
-        {!isLight && (
+        {(
           <TooltipProvider delayDuration={0}>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -587,7 +587,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           </TooltipProvider>
         )}
 
-        {!isLight && (
+        {(
           <button type="button" aria-label="Previous" onClick={() => setCarouselIdx(safeIdx - 1)} disabled={!canPrev}
             className="shrink-0 flex items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shadow-sm disabled:opacity-30 disabled:pointer-events-none"
             style={{ width: 20, height: 20 }}>
@@ -595,7 +595,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           </button>
         )}
 
-        {!isLight && (<>
+        {(<>
         <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
           <div className="flex" style={{ gap: GAP, transform: `translateX(-${safeIdx * (CARD_W + GAP)}px)`, transition: "transform 0.25s ease" }}>
 
@@ -711,32 +711,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
         </>)}
       </div>
 
-      {/* ── Light: permanent App Preview canvas ── */}
-      {isLight && (
-        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 1, display: "flex", flexDirection: "column" }} className="bg-background">
-          <div className="shrink-0 flex items-center gap-2 px-3 border-b border-border bg-background" style={{ height: 36 }}>
-            <span className="text-xs text-muted-foreground flex-1 truncate">App Preview</span>
-            <button
-              type="button"
-              onClick={() => {
-                const iframe = document.getElementById("light-preview-iframe") as HTMLIFrameElement | null;
-                if (iframe) { const src = iframe.src; iframe.src = ""; iframe.src = src; }
-              }}
-              className="shrink-0 flex items-center gap-1 px-2 h-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-[11px] font-medium"
-            >
-              <RefreshCw size={11} />
-              Reload
-            </button>
-          </div>
-          <iframe
-            id="light-preview-iframe"
-            src={APP_URL}
-            title="App Preview"
-            className="flex-1 border-0 w-full"
-            style={{ minHeight: 0 }}
-          />
-        </div>
-      )}
+      {/* Light preview canvas removed — Light product retired */}
 
       {/* ── Users panel ── */}
       {showUsers && (
@@ -931,7 +906,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
       </div>
 
       {/* ── Base Chat panel (iframe to hermes-webui) ── */}
-      {!isLight && isAuthenticated && baseChatActive && hermesChatUrl && (
+      {isAuthenticated && baseChatActive && hermesChatUrl && (
         <div
           style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, height: termH, zIndex: 5 }}
         >
@@ -957,7 +932,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           >
             <XtermTerminal
               ref={(h) => { xtermRefs.current[platform] = h; }}
-              wsUrl={PTY_URL}
+              wsUrl={urls.ptyUrl}
               platform={platform}
               onData={handleTerminalData}
             />

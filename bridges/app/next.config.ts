@@ -7,13 +7,6 @@ const config: NextConfig = {
   turbopack: {
     root: __dirname,
   },
-  env: {
-    NEXT_PUBLIC_BRIDGE_URL: process.env.NEXT_PUBLIC_BRIDGE_URL ?? "",
-    NEXT_PUBLIC_PTY_URL:    process.env.NEXT_PUBLIC_PTY_URL    ?? "",
-    NEXT_PUBLIC_AUTH_URL:   process.env.NEXT_PUBLIC_AUTH_URL   ?? "",
-    NEXT_PUBLIC_APP_URL:    process.env.NEXT_PUBLIC_APP_URL    ?? "",
-    NEXT_PUBLIC_MEDIA_URL:  process.env.NEXT_PUBLIC_MEDIA_URL  ?? "",
-  },
   ...(process.env.BASE_PATH
     ? { basePath: "/admin", trailingSlash: true }
     : { output: "standalone" }),
