@@ -28,7 +28,7 @@ const HERMES_URL  = process.env.NEXT_PUBLIC_HERMES_URL
   || (APP_URL.includes("localhost") ? "http://localhost:9119" : APP_URL + "/hermes");
 const HERMES_URL_ONBOARDING = HERMES_URL.replace(/\/+$/, "") + "/env";
 const HERMES_CHAT_URL = process.env.NEXT_PUBLIC_HERMES_CHAT_URL
-  || (APP_URL.includes("localhost") ? "http://localhost:9120" : HERMES_URL + "/chat");
+  || (APP_URL.includes("localhost") ? "http://localhost:9120" : APP_URL + "/hermes/chat");
 const HEADER_H = 48;
 
 export function WorkspaceController() {
