@@ -22,21 +22,13 @@ type SessionData = {
 const AUTH_URL    = process.env.NEXT_PUBLIC_AUTH_URL ?? "http://auth.partner.fractera.local:3001";
 const APP_URL     = process.env.NEXT_PUBLIC_APP_URL  || "http://localhost:3000";
 const isLight     = process.env.NEXT_PUBLIC_PRODUCT === "light";
-const BRAIN_URL   = APP_URL.includes("localhost")
-  ? "http://localhost:9621/webui/"
-  : APP_URL.replace("://", "://lightrag.") + "/webui/";
+const BRAIN_URL   = process.env.NEXT_PUBLIC_BRAIN_URL
+  || (APP_URL.includes("localhost") ? "http://localhost:9621" : APP_URL + "/lightrag");
 const HERMES_URL  = process.env.NEXT_PUBLIC_HERMES_URL
-  ?? (APP_URL.includes("localhost")
-    ? "http://localhost:9119"
-    : APP_URL.replace("://", "://hermes."));
-// First-visit lands on /env — the provider/auth panel — so the user
-// immediately sees where to sign in to Codex / Claude Code subscriptions.
-// Subsequent opens via the Hermes button go to the root as before.
+  || (APP_URL.includes("localhost") ? "http://localhost:9119" : APP_URL + "/hermes");
 const HERMES_URL_ONBOARDING = HERMES_URL.replace(/\/+$/, "") + "/env";
 const HERMES_CHAT_URL = process.env.NEXT_PUBLIC_HERMES_CHAT_URL
-  ?? (APP_URL.includes("localhost")
-    ? "http://localhost:9120"
-    : APP_URL.replace("://", "://hermes.") + "/chat/");
+  || (APP_URL.includes("localhost") ? "http://localhost:9120" : APP_URL + "/hermes/chat");
 const HEADER_H = 48;
 
 export function WorkspaceController() {
