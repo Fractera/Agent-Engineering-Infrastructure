@@ -144,6 +144,7 @@ function ImageCropper({ src, onDone, onCancel }: {
 // ── Preview popup ─────────────────────────────────────────────────────────────
 
 function PreviewPopup({ item, onClose }: { item: MediaItem; onClose: () => void }) {
+  const MEDIA_URL = useMemo(() => getRuntimeUrls().mediaUrl, []);
   const isImage = item.mime_type.startsWith("image/");
   const isVideo = item.mime_type.startsWith("video/");
   return (
