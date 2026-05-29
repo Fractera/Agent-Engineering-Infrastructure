@@ -5,16 +5,25 @@ import { toast } from "sonner";
 import { X, Brain, Loader2, Send, CheckCircle, AlertCircle, BookOpen, ChevronDown, RefreshCw } from "lucide-react";
 
 // Fallback used only when /api/config/openai-models can't reach OpenAI
-// (no key set yet, or upstream blocked). Picks a recent-enough generation so
-// new deployments don't ship with a deprecated default.
-const FALLBACK_MODELS = ["gpt-5", "gpt-5-mini", "gpt-4.1", "gpt-4.1-mini", "gpt-4o", "gpt-4o-mini"];
+// (no key set yet, or upstream blocked). Source of truth for the canonical
+// ids: developers.openai.com/api/docs/models/all (verified 2026-05).
+// Order = preferred default first.
+const FALLBACK_MODELS = [
+  "gpt-5.4-mini",   // recommended default for embeddings+queries — cheap, current
+  "gpt-5-mini",     // older but widely available
+  "gpt-5.5",        // flagship, expensive
+  "gpt-5.4",
+  "gpt-5",
+  "gpt-4.1-mini",   // last-gen fallback
+  "gpt-4o-mini",    // legacy fallback
+];
 
 type ModelOption = { id: string; family?: string; recommended?: boolean };
 
 export function LightRagPanel({ onClose }: { onClose: () => void }) {
   const [available, setAvailable]     = useState<boolean | null>(null);
   const [configured, setConfigured]   = useState(false);
-  const [model, setModel]             = useState("gpt-5-mini");
+  const [model, setModel]             = useState("gpt-5.4-mini");
   const [apiKey, setApiKey]           = useState("");
   const [saving, setSaving]           = useState(false);
   const [query, setQuery]             = useState("");

@@ -12,11 +12,16 @@ let cache: CacheEntry | null = null;
 const TTL_MS = 5 * 60 * 1000;
 
 // Top chat-completion model families we want to surface, ordered newest first.
-// A model id is "recommended" if its prefix matches any of these AND the id
-// doesn't carry a deprecation marker. Everything not matching falls through
-// into a flat "other" bucket and is filtered out client-side.
+// Canonical ids verified against developers.openai.com/api/docs/models/all
+// on 2026-05. Higher weight = higher in the dropdown. Prefix match is
+// strict (startsWith), so gpt-5.5 ranks above gpt-5.4 above gpt-5 etc.
 const CHAT_FAMILY_RANK: { prefix: string; weight: number }[] = [
-  { prefix: "gpt-5",   weight: 100 },
+  { prefix: "gpt-5.5", weight: 155 },
+  { prefix: "gpt-5.4", weight: 150 },
+  { prefix: "gpt-5.3", weight: 145 },
+  { prefix: "gpt-5.2", weight: 140 },
+  { prefix: "gpt-5.1", weight: 135 },
+  { prefix: "gpt-5",   weight: 130 },   // catches gpt-5, gpt-5-mini, gpt-5-codex etc not caught above
   { prefix: "gpt-4.1", weight: 90  },
   { prefix: "gpt-4o",  weight: 80  },
   { prefix: "o3",      weight: 70  },
