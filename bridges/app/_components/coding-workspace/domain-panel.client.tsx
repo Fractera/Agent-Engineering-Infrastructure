@@ -299,6 +299,20 @@ export function DomainPanel({ onClose }: { onClose: () => void }) {
                       Names on one cert, or as a single wildcard cert (<span className="font-mono">*.{normalized || "yourdomain.com"}</span>) plus the apex.
                       Fractera writes them to <span className="font-mono">/etc/fractera/certs/&lt;domain&gt;/</span> and reloads nginx.
                     </p>
+                    <div className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
+                      <p className="font-medium mb-1">Russia / restricted regions</p>
+                      <p>
+                        Accepts standard PEM from any CA &mdash; Let&rsquo;s Encrypt, ТЦИ (Russian Trusted CA),
+                        Yandex Certificate Manager, Selectel, Sectigo, etc. Including the <strong>RSA variant</strong> of the
+                        free МинЦифры certificate issued via Госуслуги &mdash; download the PEM, paste it below.
+                      </p>
+                      <p className="mt-1.5">
+                        <strong>Not supported:</strong> the ГОСТ variant of МинЦифры (keys live in a КриптоПро CSP
+                        container, not PEM, and require a КриптоПро-patched build of nginx). If you need ГОСТ TLS
+                        you&rsquo;re likely a regulated entity (КИИ, банк, госорган) and need a separate КриптоПро NGate
+                        or Континент TLS gateway in front of Fractera &mdash; outside this product&rsquo;s scope.
+                      </p>
+                    </div>
                     <div className="space-y-1">
                       <label className="text-[10px] font-medium text-foreground">Full chain (fullchain.pem)</label>
                       <textarea

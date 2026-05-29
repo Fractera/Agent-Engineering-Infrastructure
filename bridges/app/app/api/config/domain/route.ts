@@ -106,6 +106,18 @@ server {
     server_name ${host};
     ssl_certificate     ${certPath};
     ssl_certificate_key ${keyPath};
+
+    # OCSP stapling — server fetches the OCSP response itself and attaches
+    # it to the TLS handshake. Without this, browsers ask Let's Encrypt's
+    # OCSP responder directly (hosted on Cloudflare). In Russia / restricted
+    # networks Cloudflare OCSP is intermittently unreachable, which makes
+    # browsers show "certificate invalid" even when the cert is fine.
+    # Stapling fixes that without touching the cert itself.
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    resolver 1.1.1.1 8.8.8.8 valid=300s;
+    resolver_timeout 5s;
+
     location / {
         proxy_pass http://127.0.0.1:${port};
         proxy_http_version 1.1;
