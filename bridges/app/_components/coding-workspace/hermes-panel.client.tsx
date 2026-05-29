@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { X, Bot, Loader2, CheckCircle, AlertCircle, RefreshCw } from "lucide-react";
+import { X, Bot, Loader2, CheckCircle, AlertCircle, RefreshCw, ChevronDown } from "lucide-react";
 
 type Props = {
   onClose: () => void;
@@ -14,23 +14,46 @@ type HermesStatus = {
   keyMasked: string | null;
   telegramConfigured: boolean;
   telegramMasked: string | null;
+  model: string | null;
 };
+
+type ModelOption = { id: string; family?: string; recommended?: boolean };
+
+// Same fallback list as Memory panel, but with gpt-5.5 first since that's
+// what's recommended for Codex/agent workflows (per OpenAI docs).
+const FALLBACK_MODELS = [
+  "gpt-5.5",
+  "gpt-5.4",
+  "gpt-5.3-codex",
+  "gpt-5.1-codex",
+  "gpt-5-codex",
+  "gpt-5",
+];
 
 export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
   const [status, setStatus]     = useState<HermesStatus | null>(null);
   const [apiKey, setApiKey]     = useState("");
   const [tgToken, setTgToken]   = useState("");
+  const [model, setModel]       = useState<string>("gpt-5.5");
   const [saving, setSaving]     = useState(false);
   const [loading, setLoading]   = useState(true);
   const [savedAt, setSavedAt]   = useState<number | null>(null);
+  const [modelOpen, setModelOpen] = useState(false);
+  const [modelOptions, setModelOptions] = useState<ModelOption[]>(FALLBACK_MODELS.map((id) => ({ id })));
+  const [modelsLive, setModelsLive] = useState(false);
   const keyRef = useRef<HTMLInputElement>(null);
+  const modelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/api/config/hermes")
       .then((r) => r.json())
-      .then((data: HermesStatus) => setStatus(data))
+      .then((data: HermesStatus) => {
+        setStatus(data);
+        if (data.model) setModel(data.model);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
+    loadModels();
   }, []);
 
   useEffect(() => {
@@ -40,16 +63,42 @@ export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
     }
   }, [autoFocusKey, loading]);
 
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (modelRef.current && !modelRef.current.contains(e.target as Node)) setModelOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  async function loadModels() {
+    try {
+      const res = await fetch("/api/config/openai-models");
+      const data = await res.json();
+      if (Array.isArray(data.models) && data.models.length > 0) {
+        setModelOptions(data.models);
+        setModelsLive(true);
+      }
+    } catch { /* keep fallback */ }
+  }
+
   async function handleSave() {
-    if (!apiKey.trim() && !tgToken.trim()) return;
+    const sentKey = apiKey.trim();
+    const sentTg  = tgToken.trim();
+    const sentModel = model && model !== status?.model ? model : "";
+    if (!sentKey && !sentTg && !sentModel) {
+      toast.error("Nothing to save");
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch("/api/config/hermes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          apiKey: apiKey.trim() || undefined,
-          telegramBotToken: tgToken.trim() || undefined,
+          apiKey: sentKey || undefined,
+          telegramBotToken: sentTg || undefined,
+          model: sentModel || undefined,
         }),
       });
       const data = await res.json();
@@ -60,12 +109,14 @@ export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
       setSavedAt(Date.now());
       setApiKey("");
       setTgToken("");
-      // Refresh status without trusting the in-flight admin restart.
       try {
         const fresh = await fetch("/api/config/hermes").then((r) => r.json());
         setStatus(fresh);
+        if (fresh.model) setModel(fresh.model);
       } catch { /* admin reloading */ }
-      if (data.alsoUpdated === "rag") {
+      if (data.modelWriteError) {
+        toast.warning(`Model not written: ${data.modelWriteError}`);
+      } else if (data.alsoUpdated === "rag") {
         toast.success("Saved — key also applied to Memory (it had no key)");
       } else {
         toast.success("Saved — Hermes Agent restarting");
@@ -96,7 +147,44 @@ export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
           </div>
         ) : (
           <>
-            {/* OpenAI key */}
+            {/* Model selector — writes config.yaml `model:` line. The primary
+                provider in Hermes is openai-codex (subscription) which picks up
+                this same field. */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] font-medium text-foreground">Default model</p>
+                <span className="text-[9px] text-muted-foreground">
+                  {modelsLive ? `${modelOptions.length} live · newest first` : "fallback list"}
+                </span>
+              </div>
+              <div ref={modelRef} className="relative">
+                <button type="button" onClick={() => setModelOpen((v) => !v)}
+                  className="w-full flex items-center justify-between px-2.5 py-1.5 text-[11px] border border-border rounded-md bg-background hover:bg-muted transition-colors">
+                  <span className="font-mono">{model}</span>
+                  <ChevronDown size={11} className="text-muted-foreground" />
+                </button>
+                {modelOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 overflow-hidden max-h-72 overflow-y-auto">
+                    {modelOptions.map((m) => (
+                      <button key={m.id} type="button"
+                        onClick={() => { setModel(m.id); setModelOpen(false); }}
+                        className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] text-left hover:bg-muted transition-colors ${m.id === model ? "text-primary" : "text-foreground"}`}>
+                        <span className="font-mono flex-1">{m.id}</span>
+                        {m.recommended && <span className="text-[9px] text-amber-500" title="Top of its family">★</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                Written to <code className="px-1 rounded bg-muted">/root/.hermes/config.yaml</code> as <code className="px-1 rounded bg-muted">model:</code>.
+                The default Hermes provider <code className="px-1 rounded bg-muted">openai-codex</code> uses your
+                Codex subscription with this model id — for general agent work,
+                <code className="px-1 rounded bg-muted">gpt-5.5</code> is the model OpenAI recommends.
+              </p>
+            </div>
+
+            {/* OpenAI API key */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <p className="text-[11px] font-medium text-foreground flex-1">OpenAI API key</p>
@@ -120,8 +208,8 @@ export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
                 className="w-full h-8 px-2.5 text-[11px] rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring font-mono"
               />
               <p className="text-[10px] text-muted-foreground leading-relaxed">
-                Used as a fallback when no AI subscription is connected, and for memory recall.
-                If Memory has no key, this one is applied there too automatically.
+                Used as a fallback when no Codex subscription is connected, and for memory recall.
+                If <strong>Memory</strong> has no key, this one is applied there too automatically.
               </p>
             </div>
 
@@ -146,7 +234,7 @@ export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
                 className="w-full h-8 px-2.5 text-[11px] rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring font-mono"
               />
               <p className="text-[10px] text-muted-foreground leading-relaxed">
-                Talk to Hermes from your phone. Get a token from <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer" className="underline">@BotFather</a> in Telegram:
+                Talk to Brain from your phone. Get a token from <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer" className="underline">@BotFather</a>:
                 send <code className="px-1 py-0.5 rounded bg-muted">/newbot</code>, pick a name — BotFather replies with a token like <code className="px-1 py-0.5 rounded bg-muted">1234567:ABC…</code>.
               </p>
             </div>
@@ -157,8 +245,8 @@ export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
                   <CheckCircle size={12} /> Saved
                 </p>
                 <p className="text-[10px] text-muted-foreground leading-relaxed">
-                  Changes will take effect within 10 seconds while Hermes Agent restarts. If the embed
-                  next to this panel still looks unchanged, reload the page.
+                  Changes take effect within 10 seconds while Hermes Agent restarts. If the embed
+                  beside this panel still looks unchanged, reload the page.
                 </p>
                 <button
                   onClick={() => window.location.reload()}
@@ -175,7 +263,7 @@ export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
       <div className="shrink-0 border-t border-border px-4 py-3 flex items-center justify-end">
         <button
           onClick={handleSave}
-          disabled={(!apiKey.trim() && !tgToken.trim()) || saving}
+          disabled={saving || (!apiKey.trim() && !tgToken.trim() && (!model || model === status?.model))}
           className="h-8 px-4 rounded-md bg-primary text-primary-foreground text-[11px] font-medium disabled:opacity-40 hover:opacity-90 transition-opacity"
         >
           {saving ? <span className="flex items-center gap-1.5"><Loader2 size={11} className="animate-spin" />Saving…</span> : "Save"}

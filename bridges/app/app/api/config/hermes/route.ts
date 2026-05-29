@@ -1,14 +1,59 @@
 import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
 import { requireAuth } from "@/lib/require-auth";
 import { readEnvFile, writeEnvFile, pm2RestartDetached } from "@/lib/env-file";
 
-const HERMES_ENV = process.env.HERMES_ENV_PATH ?? "/root/.hermes/.env";
-const RAG_ENV    = process.env.RAG_ENV_PATH    ?? "/opt/fractera/services/rag/.env";
+const HERMES_ENV    = process.env.HERMES_ENV_PATH ?? "/root/.hermes/.env";
+const HERMES_CONFIG = process.env.HERMES_CONFIG_PATH ?? "/root/.hermes/config.yaml";
+const RAG_ENV       = process.env.RAG_ENV_PATH    ?? "/opt/fractera/services/rag/.env";
 
 const HERMES_KEY = "OPENAI_API_KEY";
 const TELEGRAM_KEY = "TELEGRAM_BOT_TOKEN";
 const RAG_LLM_KEY = "LLM_BINDING_API_KEY";
 const RAG_EMB_KEY = "EMBEDDING_BINDING_API_KEY";
+
+// Read the top-level `model:` line from Hermes' config.yaml. Hermes' config
+// is a small YAML file written by bootstrap; we don't need a full parser,
+// just to peek/replace this one field.
+function readHermesModel(): string | null {
+  try {
+    if (!fs.existsSync(HERMES_CONFIG)) return null;
+    const txt = fs.readFileSync(HERMES_CONFIG, "utf-8");
+    // Match a top-level (no leading spaces / 2-spaces — bootstrap writes it
+    // either at column 0 under provider, or indented under it).
+    const m = txt.match(/^\s*model:\s*(\S+)\s*$/m);
+    return m ? m[1] : null;
+  } catch { return null; }
+}
+
+// Replace the FIRST `model:` line in Hermes' config.yaml with the requested
+// value, preserving whatever indentation was already there. If no `model:`
+// line exists at all we don't try to invent one — that means the user is on
+// a config layout we don't recognise and should edit it manually.
+function writeHermesModel(model: string): { ok: boolean; reason?: string } {
+  try {
+    if (!fs.existsSync(HERMES_CONFIG)) return { ok: false, reason: "config.yaml not found" };
+    const txt = fs.readFileSync(HERMES_CONFIG, "utf-8");
+    if (!/^\s*model:\s*\S+/m.test(txt)) {
+      return { ok: false, reason: "no model: line in config.yaml" };
+    }
+    // Replace only the first occurrence so we don't accidentally touch
+    // `fallback_model:` further down (it has a different key name anyway,
+    // but defensive).
+    let replaced = false;
+    const out = txt.split("\n").map((line) => {
+      if (replaced) return line;
+      const m = line.match(/^(\s*)model:\s*\S+\s*$/);
+      if (!m) return line;
+      replaced = true;
+      return `${m[1]}model: ${model}`;
+    }).join("\n");
+    fs.writeFileSync(HERMES_CONFIG, out, "utf-8");
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, reason: String(e) };
+  }
+}
 
 export async function GET(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");
@@ -17,11 +62,13 @@ export async function GET(req: NextRequest) {
   const vars = readEnvFile(HERMES_ENV);
   const key = vars[HERMES_KEY] ?? "";
   const tg  = vars[TELEGRAM_KEY] ?? "";
+  const model = readHermesModel();
   return NextResponse.json({
     configured: !!key,
     keyMasked: key ? `${key.slice(0, 7)}…${key.slice(-4)}` : null,
     telegramConfigured: !!tg,
     telegramMasked: tg ? `${tg.slice(0, 6)}…${tg.slice(-4)}` : null,
+    model,
   });
 }
 
@@ -29,7 +76,7 @@ export async function POST(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  let body: { apiKey?: string; telegramBotToken?: string };
+  let body: { apiKey?: string; telegramBotToken?: string; model?: string };
   try {
     body = await req.json();
   } catch {
@@ -39,6 +86,7 @@ export async function POST(req: NextRequest) {
   const hermesVars = readEnvFile(HERMES_ENV);
   const apiKeyRaw = (body.apiKey ?? "").trim();
   const tgRaw     = (body.telegramBotToken ?? "").trim();
+  const modelRaw  = (body.model ?? "").trim();
 
   // Only validate fields the user actually sent. Empty string = leave existing
   // value untouched. The UI sends "" when the user didn't change a field.
@@ -49,25 +97,35 @@ export async function POST(req: NextRequest) {
     hermesVars[HERMES_KEY] = apiKeyRaw;
   }
   if (tgRaw) {
-    // Telegram bot tokens are <bot_id>:<35-char-secret>, e.g. 1234567:ABC…
     if (!/^\d+:[A-Za-z0-9_-]{20,}$/.test(tgRaw)) {
       return NextResponse.json({ error: "Invalid Telegram bot token format" }, { status: 400 });
     }
     hermesVars[TELEGRAM_KEY] = tgRaw;
   }
+  if (modelRaw) {
+    if (!/^[a-z0-9][a-z0-9.\-_]+$/i.test(modelRaw)) {
+      return NextResponse.json({ error: "Invalid model id" }, { status: 400 });
+    }
+  }
 
-  if (!apiKeyRaw && !tgRaw) {
+  if (!apiKeyRaw && !tgRaw && !modelRaw) {
     return NextResponse.json({ error: "Nothing to save" }, { status: 400 });
   }
 
-  try {
-    writeEnvFile(HERMES_ENV, hermesVars);
-  } catch (e) {
-    return NextResponse.json({ error: `Write failed: ${e}` }, { status: 500 });
+  if (apiKeyRaw || tgRaw) {
+    try {
+      writeEnvFile(HERMES_ENV, hermesVars);
+    } catch (e) {
+      return NextResponse.json({ error: `Write failed: ${e}` }, { status: 500 });
+    }
+  }
+
+  let modelWrite: { ok: boolean; reason?: string } | null = null;
+  if (modelRaw) {
+    modelWrite = writeHermesModel(modelRaw);
   }
 
   // Autofill: if RAG has no OpenAI key yet AND we just saved one, propagate.
-  // Never overwrite an existing RAG key — that's the user's choice.
   let alsoUpdated: "rag" | null = null;
   if (apiKeyRaw) {
     const ragVars = readEnvFile(RAG_ENV);
@@ -84,7 +142,11 @@ export async function POST(req: NextRequest) {
 
   pm2RestartDetached("fractera-hermes", 500);
 
-  return NextResponse.json({ ok: true, alsoUpdated });
+  return NextResponse.json({
+    ok: true,
+    alsoUpdated,
+    modelWriteError: modelWrite && !modelWrite.ok ? modelWrite.reason : null,
+  });
 }
 
 export async function DELETE(req: NextRequest) {
