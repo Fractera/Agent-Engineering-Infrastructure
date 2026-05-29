@@ -16,7 +16,6 @@ type RuntimeUrls = {
   kimiUrl: string;
   hermesUrl: string;
   brainUrl: string;
-  hermesChatUrl: string;
 };
 
 const DEFAULTS: RuntimeUrls = {
@@ -33,7 +32,6 @@ const DEFAULTS: RuntimeUrls = {
   kimiUrl: "ws://localhost:3205/",
   hermesUrl: "http://localhost:9119",
   brainUrl: "http://localhost:9621",
-  hermesChatUrl: "http://localhost:9120",
 };
 
 function compute(): RuntimeUrls {
@@ -54,12 +52,16 @@ function compute(): RuntimeUrls {
     kimiUrl: `${ws}//${hostname}:3205/`,
     hermesUrl: `${protocol}//${hostname}:9119`,
     brainUrl: `${protocol}//${hostname}:9621`,
-    hermesChatUrl: `${protocol}//${hostname}:9120`,
   };
 }
 
 export function useRuntimeUrls(): RuntimeUrls {
-  const [urls, setUrls] = useState<RuntimeUrls>(DEFAULTS);
+  // Lazy init so the FIRST render already uses window.location, not the
+  // localhost fallback. fetch() calls in the same render cycle would
+  // otherwise hit localhost on the user's machine and fail (carousel grey,
+  // Hermes empty). This is a client-only component so window is always
+  // defined here at runtime, even though TS doesn't know it.
+  const [urls, setUrls] = useState<RuntimeUrls>(() => compute());
   useEffect(() => { setUrls(compute()); }, []);
   return urls;
 }

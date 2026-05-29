@@ -1,4 +1,13 @@
-# SSL Architecture — Cloudflare-based (2026-05-15+)
+# SSL Architecture — LEGACY (Cloudflare era, 2026-05-15 → 2026-05-28)
+
+> **STATUS: SUPERSEDED.** Kept for historical reference only. As of the IP-first
+> migration (commits `7bc0182` and onwards) Fractera no longer uses Cloudflare,
+> Cloudflare DNS, or Cloudflare Origin Certificates. New deploys are HTTP on the
+> public IP until the user attaches their own domain, at which point the admin
+> app provisions Let's Encrypt directly on the server.
+>
+> Do not build new logic from this document. Refer to it only when investigating
+> servers deployed before 2026-05-28.
 
 ## Overview
 

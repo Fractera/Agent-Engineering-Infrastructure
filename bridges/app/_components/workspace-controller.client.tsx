@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Brain, CircleUserRound, Globe } from "lucide-react";
+import type { ComponentType } from "react";
+import { Brain, BrainCircuit, CircleUserRound, Globe } from "lucide-react";
 import { CodingWindowShell } from "./coding-workspace/coding-window-shell.client";
 import { AuthLoginModal } from "./auth-login-modal.client";
 import { SitePreviewWindow } from "./site-preview-window.client";
-import { CompanyBrainWindow } from "./company-brain-window.client";
 import { CompanyBrainSetupModal } from "./company-brain-setup-modal.client";
-import { HermesWindow } from "./hermes-window.client";
 import { WelcomeSetupModal } from "./welcome-setup-modal.client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -19,6 +18,8 @@ type SessionData = {
   email: string;
   roles: string[];
 };
+
+type ActiveEmbed = "brain" | "memory" | null;
 
 const HEADER_H = 48;
 
@@ -32,52 +33,43 @@ export function WorkspaceController() {
   const [terminalPlatform, setTerminalPlatform] = useState<Platform>("claude-code");
   const [terminalSessions, setTerminalSessions] = useState<Set<Platform>>(new Set());
   const [siteOpen, setSiteOpen]                 = useState(false);
-  const [brainOpen, setBrainOpen]               = useState(false);
-  const [brainSetupOpen, setBrainSetupOpen]     = useState(false);
+  const [activeEmbed, setActiveEmbed]           = useState<ActiveEmbed>("brain");
+  const [memorySetupOpen, setMemorySetupOpen]   = useState(false);
   const [welcomeOpen, setWelcomeOpen]           = useState(false);
 
-  // Gate the Company Brain window behind an OpenAI API key check.
-  // Without a key LightRAG starts (so the iframe renders) but indexing /
-  // queries will fail — we'd rather show an upfront onboarding modal that
-  // explains the value of the memory and asks for the key.
-  const handleCompanyBrainClick = useCallback(async () => {
-    // Closing it (or it's already open) — just toggle, no gating needed.
-    if (brainOpen) { setBrainOpen(false); return; }
+  // Company Brain → Hermes Agent dashboard (port 9119). No external API key
+  // required — Hermes runs on the user's AI subscriptions (Claude/Codex/etc).
+  const handleBrainClick = useCallback(() => {
+    setActiveEmbed((curr) => (curr === "brain" ? null : "brain"));
+    setSiteOpen(false);
+  }, []);
+
+  // Company Memory → LightRAG knowledge base (port 9621). Requires an OpenAI
+  // API key for indexing/queries — gate the first activation behind a setup
+  // modal that explains the cost and asks for the key.
+  const handleMemoryClick = useCallback(async () => {
+    if (activeEmbed === "memory") { setActiveEmbed(null); return; }
     try {
       const res = await fetch("/api/config/rag", { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
         if (data.configured) {
-          setBrainOpen(true);
-          setHermesOpen(false);
+          setActiveEmbed("memory");
           setSiteOpen(false);
           return;
         }
       }
     } catch {
-      // Network error — fall through to showing the setup modal anyway;
-      // worst case the user sees the explanation again.
+      // Network error — fall through to showing the setup modal anyway.
     }
-    setBrainSetupOpen(true);
-  }, [brainOpen]);
-  const [hermesOpen, setHermesOpen]             = useState(false);
-  // Hermes window URL — defaults to root, swapped to /env (the auth/providers
-  // panel) on the first admin-panel visit so the user lands directly on the
-  // sign-in screen for Codex / Claude Code subscriptions.
-  const [hermesUrl, setHermesUrl]               = useState<string>(urls.hermesUrl);
+    setMemorySetupOpen(true);
+  }, [activeEmbed]);
+
   const isMobile = windowWidth > 0 && windowWidth < 768;
 
-  // First admin-panel visit after registration → show a welcome modal
-  // that explains the two surfaces (Main Chat / Main Agent) and nudges
-  // the user to connect a Codex subscription. Dismissing the modal
-  // (either via "Open agent settings" or "Later") flips the localStorage
-  // flag so subsequent visits go straight to the site preview.
-  //
-  // We intentionally do NOT probe Hermes for "are subscriptions connected"
-  // — Hermes /api/providers vs /api/models structures shifted across
-  // versions and we don't want this onboarding tied to that contract.
+  // First admin-panel visit after registration → welcome modal. Subsequent
+  // visits go straight to the site preview.
   useEffect(() => {
-    if (false) return; // reserved for product variants
     let firstVisit = false;
     try {
       firstVisit = !localStorage.getItem("fractera_admin_onboarded");
@@ -102,7 +94,7 @@ export function WorkspaceController() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [urls.authUrl]);
 
   useEffect(() => { fetchSession(); }, [fetchSession]);
 
@@ -123,6 +115,8 @@ export function WorkspaceController() {
       setTerminalSessions((prev) => new Set(prev).add(platformId));
       setTerminalPlatform(platformId);
     }
+    // Picking a terminal hides the embed canvas so the xterm gets the space.
+    setActiveEmbed(null);
   }
 
   function handleTerminalClose(platformId: Platform) {
@@ -154,6 +148,12 @@ export function WorkspaceController() {
   const isVirtualArchitect = session?.userId === "virtual-admin";
   const isAuthenticated = session !== null;
 
+  type EmbedSpec = { url: string; title: string; Icon: ComponentType<{ size?: number; className?: string }> };
+  const embedSpec: EmbedSpec | null =
+    activeEmbed === "brain"  ? { url: urls.hermesUrl, title: "Company Brain",  Icon: Brain } :
+    activeEmbed === "memory" ? { url: urls.brainUrl,  title: "Company Memory", Icon: BrainCircuit } :
+    null;
+
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-background">
       {/* ── Header ── */}
@@ -166,28 +166,33 @@ export function WorkspaceController() {
         </span>
 
         <div className="flex items-center gap-2">
-          {(
-            <Button
-              variant="outline"
-              size="default"
-              className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
-              onClick={handleCompanyBrainClick}
-            >
-              <Brain className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Company Brain</span>
-            </Button>
-          )}
-          {(
-            <Button
-              variant="outline"
-              size="default"
-              className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
-              onClick={() => { setSiteOpen((v) => !v); setBrainOpen(false); }}
-            >
-              <Globe className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Preview</span>
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            size="default"
+            className={`text-xs shadow-sm dark:border-white/20 dark:shadow-none ${activeEmbed === "brain" ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300" : ""}`}
+            onClick={handleBrainClick}
+          >
+            <Brain className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Company Brain</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="default"
+            className={`text-xs shadow-sm dark:border-white/20 dark:shadow-none ${activeEmbed === "memory" ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300" : ""}`}
+            onClick={handleMemoryClick}
+          >
+            <BrainCircuit className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Company Memory</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="default"
+            className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
+            onClick={() => { setSiteOpen((v) => !v); }}
+          >
+            <Globe className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Preview</span>
+          </Button>
           {session ? (
             <Popover>
               <PopoverTrigger asChild>
@@ -247,48 +252,34 @@ export function WorkspaceController() {
           isMobile={isMobile}
           isAuthenticated={isAuthenticated && !loading}
           onPreviewClose={() => setSiteOpen(false)}
-          onHermesOpen={() => { setHermesUrl(urls.hermesUrl); setHermesOpen(true); setBrainOpen(false); setSiteOpen(false); }}
-          hermesChatUrl={urls.hermesChatUrl}
+          embed={embedSpec}
         />
       )}
 
-      {/* ── Site preview window (hidden in Light — Light uses permanent canvas inside shell) ── */}
-      {<SitePreviewWindow open={siteOpen} onClose={() => setSiteOpen(false)} siteUrl={urls.appUrl} />}
+      {/* ── Site preview window ── */}
+      <SitePreviewWindow open={siteOpen} onClose={() => setSiteOpen(false)} siteUrl={urls.appUrl} />
 
-      {/* ── Hermes Agent window (hidden in Light) ── */}
-      {<HermesWindow open={hermesOpen} onClose={() => setHermesOpen(false)} hermesUrl={hermesUrl} />}
+      {/* Company Memory (LightRAG) setup gating */}
+      <CompanyBrainSetupModal
+        open={memorySetupOpen}
+        onClose={() => setMemorySetupOpen(false)}
+        onActivated={() => {
+          setMemorySetupOpen(false);
+          setActiveEmbed("memory");
+          setSiteOpen(false);
+        }}
+      />
 
-      {/* ── Company Brain window (hidden in Light) ── */}
-      {<CompanyBrainWindow open={brainOpen} onClose={() => setBrainOpen(false)} brainUrl={urls.brainUrl} />}
-
-      {/* Gating modal (hidden in Light) */}
-      {(
-        <CompanyBrainSetupModal
-          open={brainSetupOpen}
-          onClose={() => setBrainSetupOpen(false)}
-          onActivated={() => {
-            setBrainSetupOpen(false);
-            setBrainOpen(true);
-            setHermesOpen(false);
-            setSiteOpen(false);
-          }}
-        />
-      )}
-
-      {/* First-visit welcome (hidden in Light) */}
-      {(
-        <WelcomeSetupModal
-          open={welcomeOpen}
-          onContinue={() => {
-            setWelcomeOpen(false);
-            setHermesUrl(urls.hermesUrl.replace(/\/+$/, "") + "/env");
-            setHermesOpen(true);
-            setBrainOpen(false);
-            setSiteOpen(false);
-          }}
-          onClose={() => { setWelcomeOpen(false); }}
-        />
-      )}
+      {/* First-visit welcome */}
+      <WelcomeSetupModal
+        open={welcomeOpen}
+        onContinue={() => {
+          setWelcomeOpen(false);
+          setActiveEmbed("brain");
+          setSiteOpen(false);
+        }}
+        onClose={() => { setWelcomeOpen(false); }}
+      />
 
       {/* ── Auth modal ── */}
       <AuthLoginModal

@@ -200,19 +200,15 @@ curl -X POST http://localhost:3002/api/rag/ingest \
 
 ## 9. SSL & domain architecture
 
-**This server runs behind Cloudflare proxy.** Edge SSL is handled by Cloudflare Total TLS, origin SSL by a Cloudflare Origin Certificate stored at `/etc/ssl/cloudflare/origin.{crt,key}`.
+**This server is IP-first.** No Cloudflare, no DNS through Fractera, no auto-issued SSL. Plain HTTP on the public IP until the user attaches their own domain.
 
-**DO NOT** on this server:
-- Install certbot or any Let's Encrypt client
-- Run `certbot --nginx` for any reason
-- Modify `/etc/ssl/cloudflare/` files
-- Change Cloudflare DNS records to grey cloud
+When the user attaches a domain through Admin → Personal Domain, the admin app provisions a Let's Encrypt certificate directly on this server and reloads nginx. That is the only HTTPS path.
 
-If a domain or SSL issue surfaces, the fix is in Cloudflare Dashboard (`SSL/TLS → Edge Certificates`), not on the server. Full architecture: `docs/ssl-architecture.md`.
+**Treat any reference to `cloudflare`, `CF_*`, `/etc/ssl/cloudflare/`, `Universal SSL`, `Origin Cert`, or DNS quotas as legacy** — remove on sight if you touch the surrounding code.
 
 **Hermes special config:**
 - PM2 runs Hermes with `--interpreter $HERMES_PY` (it's a Python script, not Node)
-- nginx hermes block rewrites `Host: 127.0.0.1:9119` (Hermes has DNS rebinding protection)
+- In IP-mode Hermes binds `0.0.0.0` with `--insecure` (no nginx auth gate in front)
 
 ---
 

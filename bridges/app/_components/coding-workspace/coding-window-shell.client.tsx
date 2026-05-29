@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
-import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, Bot, MessageSquare, Shield } from "lucide-react";
+import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, Shield } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
 import { Shimmer } from "@/components/ai-elements/shimmer.client";
@@ -19,7 +19,8 @@ import { PasteTextModal } from "./paste-text-modal.client";
 import { UsersPanel } from "./users-panel.client";
 import { DomainPanel } from "./domain-panel.client";
 import { LightRagPanel } from "./lightrag-panel.client";
-import { BaseChatWindow } from "./base-chat-window.client";
+import { EmbedCanvas } from "./embed-canvas.client";
+import type { ComponentType } from "react";
 
 const CAROUSEL_H = 52;
 const FOOTER_H   = 36;
@@ -91,11 +92,10 @@ type Props = {
   isMobile?: boolean;
   isAuthenticated?: boolean;
   onPreviewClose?: () => void;
-  onHermesOpen?: () => void;
-  hermesChatUrl?: string;
+  embed?: { url: string; title: string; Icon: ComponentType<{ size?: number; className?: string }> } | null;
 };
 
-export function CodingWindowShell({ height, terminalPlatform, terminalSessions, onPlatformClick, onTerminalClose, windowWidth, isMobile = false, isAuthenticated = true, onPreviewClose, onHermesOpen, hermesChatUrl }: Props) {
+export function CodingWindowShell({ height, terminalPlatform, terminalSessions, onPlatformClick, onTerminalClose, windowWidth, isMobile = false, isAuthenticated = true, onPreviewClose, embed }: Props) {
   const urls = useMemo(() => getRuntimeUrls(), []);
   const [terminalStatuses] = useState<Record<Platform, TerminalStatus>>({
     "claude-code": "unavailable", "codex": "unavailable", "gemini-cli": "unavailable",
@@ -133,7 +133,6 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const [showLightRag, setShowLightRag]             = useState(false);
   const [activeAuth, setActiveAuth]                 = useState<{ descriptor: AuthFlowDescriptor; url: string; code?: string } | null>(null);
   const [pasteModalOpen, setPasteModalOpen]         = useState(false);
-  const [baseChatActive, setBaseChatActive]         = useState(true);
   const fileInputRef    = useRef<HTMLInputElement>(null);
   const rawBufRef       = useRef<string>("");
   const xtermRefs       = useRef<Partial<Record<Platform, XtermTerminalHandle | null>>>({});
@@ -226,7 +225,6 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     setShowInfo(false);
     setShowHelp(false);
     setShowGitConnect(false);
-    setBaseChatActive(false);
     const isRunning = terminalSessions.has(platformId);
     if (isRunning && terminalPlatform === platformId) {
       if (confirmingPlatform === platformId) {
@@ -534,12 +532,6 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                   <Brain size={11} />LightRAG settings
                 </button>
               )}
-              {(
-                <button type="button" onClick={() => { setDataMenuOpen(false); onHermesOpen?.(); }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                  <Bot size={11} />Main Agent
-                </button>
-              )}
               <div className="h-px bg-border mx-2" />
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowSecurityPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
@@ -604,22 +596,6 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
         {(<>
         <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
           <div className="flex" style={{ gap: GAP, transform: `translateX(-${safeIdx * (CARD_W + GAP)}px)`, transition: "transform 0.25s ease" }}>
-
-            {/* Base Chat card — leftmost, default-open Hermes Web UI iframe */}
-            <button
-              type="button"
-              style={{ width: CARD_W, flexShrink: 0 }}
-              onClick={() => isAuthenticated && setBaseChatActive(true)}
-              disabled={!isAuthenticated}
-              className={`flex items-center justify-center gap-1.5 rounded-md border h-9 text-[11px] transition-all px-2 ${
-                !isAuthenticated   ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-40"
-                : baseChatActive   ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300 font-medium"
-                : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}
-            >
-              <MessageSquare size={11} className="shrink-0" />
-              <span>Main Chat</span>
-            </button>
 
             {PLATFORMS.map((p) => {
               const isRunning      = terminalSessions.has(p.id);
@@ -913,12 +889,12 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
         )}
       </div>
 
-      {/* ── Base Chat panel (iframe to hermes-webui) ── */}
-      {isAuthenticated && baseChatActive && hermesChatUrl && (
+      {/* ── Embed canvas (Company Brain / Company Memory) ── */}
+      {isAuthenticated && embed && (
         <div
           style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, height: termH, zIndex: 5 }}
         >
-          <BaseChatWindow chatUrl={hermesChatUrl} />
+          <EmbedCanvas url={embed.url} title={embed.title} Icon={embed.Icon} />
         </div>
       )}
 

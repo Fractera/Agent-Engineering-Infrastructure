@@ -1,13 +1,16 @@
 "use client";
 
 import { useRef } from "react";
-import { RefreshCw, ExternalLink, MessageSquare } from "lucide-react";
+import type { ComponentType } from "react";
+import { RefreshCw, ExternalLink } from "lucide-react";
 
 type Props = {
-  chatUrl: string;
+  url: string;
+  title: string;
+  Icon: ComponentType<{ size?: number; className?: string }>;
 };
 
-export function BaseChatWindow({ chatUrl }: Props) {
+export function EmbedCanvas({ url, title, Icon }: Props) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   function handleReload() {
@@ -17,10 +20,10 @@ export function BaseChatWindow({ chatUrl }: Props) {
   return (
     <div className="flex flex-col w-full h-full bg-background">
       <div className="shrink-0 flex items-center gap-2 px-3 border-b border-border bg-background" style={{ height: 32 }}>
-        <MessageSquare size={12} className="text-primary shrink-0" />
-        <span className="text-[11px] text-muted-foreground flex-1 truncate">Main Chat</span>
+        <Icon size={12} className="text-primary shrink-0" />
+        <span className="text-[11px] text-muted-foreground flex-1 truncate">{title}</span>
         <a
-          href={chatUrl}
+          href={url}
           target="_blank"
           rel="noopener noreferrer"
           className="shrink-0 flex items-center gap-1 px-2 h-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-[10px] font-medium"
@@ -41,10 +44,10 @@ export function BaseChatWindow({ chatUrl }: Props) {
       </div>
       <iframe
         ref={iframeRef}
-        src={chatUrl}
+        src={url}
         className="flex-1 border-0 w-full"
         style={{ minHeight: 0 }}
-        title="Base Chat"
+        title={title}
         allow="clipboard-read; clipboard-write"
       />
     </div>
