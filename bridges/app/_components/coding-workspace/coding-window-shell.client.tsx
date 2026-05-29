@@ -3,13 +3,12 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
-import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, Shield } from "lucide-react";
+import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
 import { PLATFORMS, COMING_SOON, EMBED_CARDS, type Platform, type TerminalStatus, type EmbedCard, type EmbedCardId } from "./platforms";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { EnvEditorPanel } from "./env-editor-panel.client";
-import { SecurityPanel } from "./security-panel.client";
 import { MediaLibraryPanel } from "./media-library-panel.client";
 import { DbBrowserPanel } from "./db-browser-panel.client";
 import { AUTH_FLOW_DESCRIPTORS, type AuthFlowDescriptor } from "./auth-flow-descriptors";
@@ -144,22 +143,13 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const [showDbBrowser, setShowDbBrowser]           = useState(false);
   const [showUsers, setShowUsers]                   = useState(false);
   const [showDomainPanel, setShowDomainPanel]       = useState(false);
-  const [showSecurityPanel, setShowSecurityPanel]   = useState(false);
   const [showLightRag, setShowLightRag]             = useState(false);
   const [showHermesPanel, setShowHermesPanel]       = useState(false);
   const [autoFocusKey, setAutoFocusKey]             = useState(false);
-  const [securityOpen, setSecurityOpen]             = useState<boolean | null>(null);
-
-  // Poll security state once on mount so the Security tab can show the right colour
-  // (red for Open/Demo, green for Secure). Cheap fetch — JSON only.
-  useEffect(() => {
-    let alive = true;
-    fetch("/api/config/security")
-      .then((r) => r.json())
-      .then((d) => { if (alive) setSecurityOpen(d.open === true); })
-      .catch(() => {});
-    return () => { alive = false; };
-  }, []);
+  // Security tab is hidden from the UI until cert provisioning for all 6
+  // subdomains ships (work in progress). The env var FRACTERA_IP_NODOMAIN_MODE
+  // is still readable / settable from the terminal — this just removes the
+  // half-baked UI that could lock the user out.
 
   // Honour parent requests to open a specific settings panel (used by Brain/Memory
   // carousel cards when the underlying service has no API key yet — opens the
@@ -180,7 +170,6 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     setShowInfo(false);
     setShowHelp(false);
     setShowDomainPanel(false);
-    setShowSecurityPanel(false);
     setAutoFocusKey(true);
     // reset autofocus after first render so re-clicks don't re-focus
     const t = setTimeout(() => setAutoFocusKey(false), 1000);
@@ -569,47 +558,40 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           {dataMenuOpen && (
             <div id="data-dropdown" style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 99999 }}
               className="bg-background border border-border rounded-md shadow-lg overflow-hidden min-w-[208px]">
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowUsers((v) => !v); setShowMediaLibrary(false); setShowEnvEditor(false); setShowDbBrowser(false); setShowInfo(false); setShowDomainPanel(false); setShowSecurityPanel(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowUsers((v) => !v); setShowMediaLibrary(false); setShowEnvEditor(false); setShowDbBrowser(false); setShowInfo(false); setShowDomainPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Users size={11} />Users
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowMediaLibrary((v) => !v); setShowEnvEditor(false); setShowDbBrowser(false); setShowInfo(false); setShowUsers(false); setShowDomainPanel(false); setShowSecurityPanel(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowMediaLibrary((v) => !v); setShowEnvEditor(false); setShowDbBrowser(false); setShowInfo(false); setShowUsers(false); setShowDomainPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <ImagePlus size={11} />Upload media
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDbBrowser((v) => !v); setShowEnvEditor(false); setShowMediaLibrary(false); setShowInfo(false); setShowUsers(false); setShowHelp(false); setShowDomainPanel(false); setShowSecurityPanel(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDbBrowser((v) => !v); setShowEnvEditor(false); setShowMediaLibrary(false); setShowInfo(false); setShowUsers(false); setShowHelp(false); setShowDomainPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Database size={11} />Database
               </button>
               {(
-                <button type="button" onClick={() => { setDataMenuOpen(false); setShowHermesPanel((v) => !v); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowSecurityPanel(false); }}
+                <button type="button" onClick={() => { setDataMenuOpen(false); setShowHermesPanel((v) => !v); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                   <Bot size={11} />Hermes Agent settings
                 </button>
               )}
               {(
-                <button type="button" onClick={() => { setDataMenuOpen(false); setShowLightRag((v) => !v); setShowHermesPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowSecurityPanel(false); }}
+                <button type="button" onClick={() => { setDataMenuOpen(false); setShowLightRag((v) => !v); setShowHermesPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                   <BrainCircuit size={11} />Company Memory settings
                 </button>
               )}
               <div className="h-px bg-border mx-2" />
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowSecurityPanel(false); setShowHermesPanel(false); setShowLightRag(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowHermesPanel(false); setShowLightRag(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Settings size={11} />Env Variables
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDomainPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowSecurityPanel(false); setShowHermesPanel(false); setShowLightRag(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDomainPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowHermesPanel(false); setShowLightRag(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] transition-colors hover:bg-muted">
                 <Globe size={11} className={!domainAttached ? "text-orange-500" : "text-foreground"} />
                 <span className={!domainAttached ? "text-orange-500 font-medium" : "text-foreground"}>Personal Domain</span>
                 {!domainAttached && <span className="ml-auto text-[10px] text-orange-500/80">required</span>}
-              </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowSecurityPanel((v) => !v); setShowDomainPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowHermesPanel(false); setShowLightRag(false); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] transition-colors hover:bg-muted">
-                <Shield size={11} className={securityOpen === false ? "text-green-500" : securityOpen === true ? "text-destructive" : "text-foreground"} />
-                <span className={securityOpen === false ? "text-green-500 font-medium" : securityOpen === true ? "text-destructive font-medium" : "text-foreground"}>Security</span>
-                {securityOpen === true && <span className="ml-auto text-[10px] text-destructive/80">open</span>}
-                {securityOpen === false && <span className="ml-auto text-[10px] text-green-500/80">secure</span>}
               </button>
               <div className="h-px bg-border mx-2" />
               <button type="button" onClick={handleExport}
@@ -804,12 +786,6 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
       {showDomainPanel && (
         <div style={{ position: "absolute", top: CAROUSEL_H, right: 0, bottom: FOOTER_H, width: "min(480px, 90vw)", zIndex: 20 }}>
           <DomainPanel onClose={() => setShowDomainPanel(false)} />
-        </div>
-      )}
-
-      {showSecurityPanel && (
-        <div style={{ position: "absolute", top: CAROUSEL_H, right: 0, bottom: FOOTER_H, width: "min(480px, 90vw)", zIndex: 20 }}>
-          <SecurityPanel onClose={() => setShowSecurityPanel(false)} />
         </div>
       )}
 
