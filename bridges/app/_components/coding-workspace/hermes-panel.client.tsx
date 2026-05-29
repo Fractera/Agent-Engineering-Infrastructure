@@ -266,6 +266,15 @@ export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
                 <span className="text-[10px] text-muted-foreground">not set</span>
               )}
             >
+              <div className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
+                <p>
+                  Brain has no built-in web chat — communication happens only through external
+                  channels (Telegram, Discord, Slack, WhatsApp, Signal, SMS, CLI, …). Use the
+                  field below to wire up a Telegram bot, or open <strong>Brain → Keys</strong>
+                  panel in the left menu of the Hermes window to find the full list of supported
+                  messengers and gateway options.
+                </p>
+              </div>
               <p className="text-[11px] leading-relaxed text-muted-foreground">
                 Talk to Brain from your phone. In Telegram: message <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer" className="underline">@BotFather</a>,
                 send <code className="px-1 py-0.5 rounded bg-muted">/newbot</code>, choose a name —
