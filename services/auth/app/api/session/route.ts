@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/auth";
+import { shouldBypassAuth } from "@/lib/auth-bypass";
 
 const ALLOWED = (process.env.ALLOWED_ORIGINS ?? "")
   .split(",")
@@ -14,6 +15,12 @@ function corsHeaders(origin: string | null): HeadersInit {
     "Vary": "Origin",
   };
 }
+
+const DEMO_SESSION = {
+  userId: "demo@local",
+  email: "demo@local",
+  roles: ["admin"],
+};
 
 export async function OPTIONS(req: NextRequest) {
   const origin = req.headers.get("origin");
@@ -31,6 +38,11 @@ export async function OPTIONS(req: NextRequest) {
 // avoiding the React-context dependency of the standalone auth() call.
 export const GET = auth(function GET(req) {
   const origin = req.headers.get("origin");
+
+  if (shouldBypassAuth()) {
+    return NextResponse.json(DEMO_SESSION, { headers: corsHeaders(origin) });
+  }
+
   const session = req.auth;
 
   if (!session?.user) {

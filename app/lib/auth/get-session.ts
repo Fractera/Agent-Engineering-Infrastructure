@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server"
+import { shouldBypassAuth } from "@/lib/auth/auth-bypass"
 
 export type AppSession = {
   userId: string
@@ -12,8 +13,8 @@ export async function getSession(req?: NextRequest): Promise<AppSession | null> 
     return { userId: `${agentId}@agent`, email: `${agentId}@agent`, roles: ['agent'] }
   }
 
-  if (process.env.NODE_ENV === 'development') {
-    return { userId: 'dev@local', email: 'dev@local', roles: ['admin'] }
+  if (shouldBypassAuth()) {
+    return { userId: 'demo@local', email: 'demo@local', roles: ['admin'] }
   }
 
   const authUrl = process.env.AUTH_SERVICE_URL ?? process.env.NEXT_PUBLIC_AUTH_URL ?? 'http://localhost:3001'

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { shouldBypassAuth } from "@/lib/auth-bypass";
 
 const AUTH_SERVICE = process.env.AUTH_SERVICE_URL ?? "http://localhost:3001";
 
@@ -11,6 +12,10 @@ function publicCallbackUrl(req: NextRequest): string {
 }
 
 export async function proxy(req: NextRequest) {
+  if (shouldBypassAuth()) {
+    return NextResponse.next();
+  }
+
   const cookie = req.headers.get("cookie") ?? "";
 
   let isAdmin = false;

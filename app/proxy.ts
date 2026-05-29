@@ -1,12 +1,13 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { shouldBypassAuth } from "@/lib/auth/auth-bypass";
 
 // Shell keeps only /api/config — protect it with session cookie check
 export function proxy(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith("/api/") && pathname !== "/api/health") {
-    if (process.env.NODE_ENV !== "development") {
+    if (!shouldBypassAuth()) {
       const agentIdentity = request.headers.get("x-agent-identity");
       if (!agentIdentity) {
         const sessionToken =

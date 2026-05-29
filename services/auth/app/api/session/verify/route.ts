@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth/auth";
+import { shouldBypassAuth } from "@/lib/auth-bypass";
 
 // Lightweight session-validity endpoint, designed for nginx `auth_request`.
 //
@@ -24,6 +25,9 @@ import { auth } from "@/lib/auth/auth";
 //     ...
 //   }
 export const GET = auth(function GET(req) {
+  if (shouldBypassAuth()) {
+    return new NextResponse(null, { status: 204 });
+  }
   if (!req.auth?.user) {
     return new NextResponse(null, { status: 401 });
   }
