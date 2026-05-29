@@ -147,6 +147,26 @@ export function SecurityPanel({ onClose }: { onClose: () => void }) {
               </div>
             </div>
 
+            {/* What "Secure mode" actually does — important to set expectations,
+                this is NOT the SSL certificate step. */}
+            <div className="rounded-md border border-blue-500/30 bg-blue-500/5 p-3 space-y-1.5 text-[11px] leading-relaxed text-blue-700 dark:text-blue-300">
+              <p className="font-medium">What Secure mode does</p>
+              <p className="text-muted-foreground">
+                Toggles a single env var (<code className="px-1 rounded bg-muted text-foreground">FRACTERA_IP_NODOMAIN_MODE</code>)
+                that gates every admin / API route behind a valid sign-in session. Nothing about HTTPS
+                certificates — those were installed by the Domain panel when you attached
+                <code className="px-1 rounded bg-muted text-foreground"> aifa.dev </code>
+                via Let&apos;s Encrypt.
+              </p>
+              <p className="text-muted-foreground mt-1.5">
+                <strong>Note (work in progress):</strong> certificates for the 5 sub-domains
+                (auth.*, admin.*, data.*, hermes.*, lightrag.*) are NOT yet auto-provisioned when you
+                attach the apex. Switching Secure mode now without those certs will break the admin
+                iframe with mixed-content errors. Recommend leaving Secure OFF until the sub-domain
+                cert flow ships.
+              </p>
+            </div>
+
             {/* Switch-to-Secure preflight (only when currently Open) */}
             {state.open && (
               <div className="space-y-3">
