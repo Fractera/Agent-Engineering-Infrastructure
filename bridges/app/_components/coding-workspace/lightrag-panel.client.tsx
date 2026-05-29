@@ -4,12 +4,17 @@ import React, { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { X, Brain, Loader2, Send, CheckCircle, AlertCircle, BookOpen, ChevronDown, RefreshCw } from "lucide-react";
 
-const MODELS = ["gpt-4o-mini", "gpt-4o", "gpt-4.1", "gpt-4.1-mini"];
+// Fallback used only when /api/config/openai-models can't reach OpenAI
+// (no key set yet, or upstream blocked). Picks a recent-enough generation so
+// new deployments don't ship with a deprecated default.
+const FALLBACK_MODELS = ["gpt-5", "gpt-5-mini", "gpt-4.1", "gpt-4.1-mini", "gpt-4o", "gpt-4o-mini"];
+
+type ModelOption = { id: string; family?: string; recommended?: boolean };
 
 export function LightRagPanel({ onClose }: { onClose: () => void }) {
   const [available, setAvailable]     = useState<boolean | null>(null);
   const [configured, setConfigured]   = useState(false);
-  const [model, setModel]             = useState("gpt-4o-mini");
+  const [model, setModel]             = useState("gpt-5-mini");
   const [apiKey, setApiKey]           = useState("");
   const [saving, setSaving]           = useState(false);
   const [query, setQuery]             = useState("");
@@ -18,12 +23,26 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
   const [ingesting, setIngesting]     = useState(false);
   const [modelOpen, setModelOpen]     = useState(false);
   const [savedAt, setSavedAt]         = useState<number | null>(null);
+  const [modelOptions, setModelOptions] = useState<ModelOption[]>(FALLBACK_MODELS.map((id) => ({ id })));
+  const [modelsLive, setModelsLive]   = useState(false);
   const modelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     checkStatus();
     loadConfig();
+    loadModels();
   }, []);
+
+  async function loadModels() {
+    try {
+      const res = await fetch("/api/config/openai-models");
+      const data = await res.json();
+      if (Array.isArray(data.models) && data.models.length > 0) {
+        setModelOptions(data.models);
+        setModelsLive(true);
+      }
+    } catch { /* keep fallback */ }
+  }
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -164,22 +183,30 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
               {configured && <span className="flex items-center gap-1 text-[10px] text-green-500"><CheckCircle size={10} />Configured</span>}
             </div>
 
-            {/* Model selector */}
+            {/* Model selector — live list from OpenAI /v1/models when a key
+                is set, otherwise the FALLBACK_MODELS guess. "★" = first model
+                in its family per OpenAI (e.g. gpt-5 over gpt-5-mini). */}
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] text-muted-foreground">Model</span>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-muted-foreground">Model</span>
+                <span className="text-[9px] text-muted-foreground">
+                  {modelsLive ? `${modelOptions.length} live · sorted newest first` : "fallback list (set a key to load live)"}
+                </span>
+              </div>
               <div ref={modelRef} className="relative">
                 <button type="button" onClick={() => setModelOpen((v) => !v)}
                   className="w-full flex items-center justify-between px-2.5 py-1.5 text-[11px] border border-border rounded-md bg-background hover:bg-muted transition-colors">
-                  <span>{model}</span>
+                  <span className="font-mono">{model}</span>
                   <ChevronDown size={11} className="text-muted-foreground" />
                 </button>
                 {modelOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 overflow-hidden">
-                    {MODELS.map((m) => (
-                      <button key={m} type="button"
-                        onClick={() => { setModel(m); setModelOpen(false); }}
-                        className={`w-full px-2.5 py-1.5 text-[11px] text-left hover:bg-muted transition-colors ${m === model ? "text-primary" : "text-foreground"}`}>
-                        {m}
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 overflow-hidden max-h-72 overflow-y-auto">
+                    {modelOptions.map((m) => (
+                      <button key={m.id} type="button"
+                        onClick={() => { setModel(m.id); setModelOpen(false); }}
+                        className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-[11px] text-left hover:bg-muted transition-colors ${m.id === model ? "text-primary" : "text-foreground"}`}>
+                        <span className="font-mono flex-1">{m.id}</span>
+                        {m.recommended && <span className="text-[9px] text-amber-500" title="Top of its family">★</span>}
                       </button>
                     ))}
                   </div>
