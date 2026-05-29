@@ -3,11 +3,10 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
-import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, Shield } from "lucide-react";
+import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, Shield } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
-import { Shimmer } from "@/components/ai-elements/shimmer.client";
-import { PLATFORMS, COMING_SOON, type Platform, type TerminalStatus } from "./platforms";
+import { PLATFORMS, COMING_SOON, EMBED_CARDS, type Platform, type TerminalStatus, type EmbedCard, type EmbedCardId } from "./platforms";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { EnvEditorPanel } from "./env-editor-panel.client";
 import { SecurityPanel } from "./security-panel.client";
@@ -19,8 +18,17 @@ import { PasteTextModal } from "./paste-text-modal.client";
 import { UsersPanel } from "./users-panel.client";
 import { DomainPanel } from "./domain-panel.client";
 import { LightRagPanel } from "./lightrag-panel.client";
+import { HermesPanel } from "./hermes-panel.client";
 import { EmbedCanvas } from "./embed-canvas.client";
+import { IdleCanvas } from "./idle-canvas.client";
 import type { ComponentType } from "react";
+
+const EMBED_ICON_MAP: Record<EmbedCard["iconKey"], ComponentType<{ size?: number; className?: string }>> = {
+  Brain,
+  BrainCircuit,
+};
+
+export type SettingsPanelId = "hermes" | "lightrag";
 
 const CAROUSEL_H = 52;
 const FOOTER_H   = 36;
@@ -91,11 +99,18 @@ type Props = {
   windowWidth: number;
   isMobile?: boolean;
   isAuthenticated?: boolean;
+  isPreviewOpen?: boolean;
   onPreviewClose?: () => void;
   embed?: { url: string; title: string; Icon: ComponentType<{ size?: number; className?: string }> } | null;
+  activeEmbedId?: EmbedCardId | null;
+  onEmbedCardClick?: (card: EmbedCard) => void;
+  domainAttached?: boolean;
+  // Parent (workspace-controller) can request a specific settings panel to open
+  // — used when clicking an unconfigured embed card to kick off onboarding.
+  requestedSettingsPanel?: { id: SettingsPanelId; nonce: number } | null;
 };
 
-export function CodingWindowShell({ height, terminalPlatform, terminalSessions, onPlatformClick, onTerminalClose, windowWidth, isMobile = false, isAuthenticated = true, onPreviewClose, embed }: Props) {
+export function CodingWindowShell({ height, terminalPlatform, terminalSessions, onPlatformClick, onTerminalClose, windowWidth, isMobile = false, isAuthenticated = true, isPreviewOpen = false, onPreviewClose, embed, activeEmbedId = null, onEmbedCardClick, domainAttached = false, requestedSettingsPanel = null }: Props) {
   const urls = useMemo(() => getRuntimeUrls(), []);
   const [terminalStatuses] = useState<Record<Platform, TerminalStatus>>({
     "claude-code": "unavailable", "codex": "unavailable", "gemini-cli": "unavailable",
@@ -131,6 +146,46 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const [showDomainPanel, setShowDomainPanel]       = useState(false);
   const [showSecurityPanel, setShowSecurityPanel]   = useState(false);
   const [showLightRag, setShowLightRag]             = useState(false);
+  const [showHermesPanel, setShowHermesPanel]       = useState(false);
+  const [autoFocusKey, setAutoFocusKey]             = useState(false);
+  const [securityOpen, setSecurityOpen]             = useState<boolean | null>(null);
+
+  // Poll security state once on mount so the Security tab can show the right colour
+  // (red for Open/Demo, green for Secure). Cheap fetch — JSON only.
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/config/security")
+      .then((r) => r.json())
+      .then((d) => { if (alive) setSecurityOpen(d.open === true); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
+  // Honour parent requests to open a specific settings panel (used by Brain/Memory
+  // carousel cards when the underlying service has no API key yet — opens the
+  // matching panel + focuses the OpenAI key field).
+  useEffect(() => {
+    if (!requestedSettingsPanel) return;
+    if (requestedSettingsPanel.id === "hermes") {
+      setShowHermesPanel(true);
+      setShowLightRag(false);
+    } else {
+      setShowLightRag(true);
+      setShowHermesPanel(false);
+    }
+    setShowEnvEditor(false);
+    setShowDbBrowser(false);
+    setShowUsers(false);
+    setShowMediaLibrary(false);
+    setShowInfo(false);
+    setShowHelp(false);
+    setShowDomainPanel(false);
+    setShowSecurityPanel(false);
+    setAutoFocusKey(true);
+    // reset autofocus after first render so re-clicks don't re-focus
+    const t = setTimeout(() => setAutoFocusKey(false), 1000);
+    return () => clearTimeout(t);
+  }, [requestedSettingsPanel]);
   const [activeAuth, setActiveAuth]                 = useState<{ descriptor: AuthFlowDescriptor; url: string; code?: string } | null>(null);
   const [pasteModalOpen, setPasteModalOpen]         = useState(false);
   const fileInputRef    = useRef<HTMLInputElement>(null);
@@ -527,23 +582,34 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                 <Database size={11} />Database
               </button>
               {(
-                <button type="button" onClick={() => { setDataMenuOpen(false); setShowLightRag((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowSecurityPanel(false); }}
+                <button type="button" onClick={() => { setDataMenuOpen(false); setShowHermesPanel((v) => !v); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowSecurityPanel(false); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                  <Brain size={11} />LightRAG settings
+                  <Bot size={11} />Hermes Agent settings
+                </button>
+              )}
+              {(
+                <button type="button" onClick={() => { setDataMenuOpen(false); setShowLightRag((v) => !v); setShowHermesPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowSecurityPanel(false); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                  <BrainCircuit size={11} />Company Memory settings
                 </button>
               )}
               <div className="h-px bg-border mx-2" />
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowSecurityPanel(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowSecurityPanel(false); setShowHermesPanel(false); setShowLightRag(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Settings size={11} />Env Variables
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDomainPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowSecurityPanel(false); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                <Globe size={11} />Personal Domain
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDomainPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowSecurityPanel(false); setShowHermesPanel(false); setShowLightRag(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] transition-colors hover:bg-muted">
+                <Globe size={11} className={!domainAttached ? "text-orange-500" : "text-foreground"} />
+                <span className={!domainAttached ? "text-orange-500 font-medium" : "text-foreground"}>Personal Domain</span>
+                {!domainAttached && <span className="ml-auto text-[10px] text-orange-500/80">required</span>}
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowSecurityPanel((v) => !v); setShowDomainPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                <Shield size={11} />Security
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowSecurityPanel((v) => !v); setShowDomainPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowHermesPanel(false); setShowLightRag(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] transition-colors hover:bg-muted">
+                <Shield size={11} className={securityOpen === false ? "text-green-500" : securityOpen === true ? "text-destructive" : "text-foreground"} />
+                <span className={securityOpen === false ? "text-green-500 font-medium" : securityOpen === true ? "text-destructive font-medium" : "text-foreground"}>Security</span>
+                {securityOpen === true && <span className="ml-auto text-[10px] text-destructive/80">open</span>}
+                {securityOpen === false && <span className="ml-auto text-[10px] text-green-500/80">secure</span>}
               </button>
               <div className="h-px bg-border mx-2" />
               <button type="button" onClick={handleExport}
@@ -596,6 +662,29 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
         {(<>
         <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
           <div className="flex" style={{ gap: GAP, transform: `translateX(-${safeIdx * (CARD_W + GAP)}px)`, transition: "transform 0.25s ease" }}>
+
+            {EMBED_CARDS.map((card) => {
+              const Icon = EMBED_ICON_MAP[card.iconKey];
+              const isActive = activeEmbedId === card.id;
+              const notAuthed = !isAuthenticated;
+              return (
+                <button
+                  key={card.id}
+                  type="button"
+                  onClick={() => { if (!notAuthed) onEmbedCardClick?.(card); }}
+                  disabled={notAuthed}
+                  style={{ width: CARD_W, flexShrink: 0 }}
+                  className={`flex items-center justify-center gap-1.5 rounded-md border h-9 text-[11px] transition-all px-2 ${
+                    notAuthed  ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-40"
+                    : isActive ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300 font-medium"
+                    : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Icon size={11} className="shrink-0" />
+                  <span>{card.label}</span>
+                </button>
+              );
+            })}
 
             {PLATFORMS.map((p) => {
               const isRunning      = terminalSessions.has(p.id);
@@ -716,11 +805,16 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
 
       {showSecurityPanel && <SecurityPanel onClose={() => setShowSecurityPanel(false)} />}
 
-      {/* ── LightRAG panel ── */}
+      {/* ── LightRAG (Company Memory) settings panel ── */}
       {showLightRag && (
         <div style={{ position: "absolute", top: CAROUSEL_H, right: 0, bottom: FOOTER_H, width: 480, zIndex: 10 }}>
           <LightRagPanel onClose={() => setShowLightRag(false)} />
         </div>
+      )}
+
+      {/* ── Hermes Agent settings panel ── */}
+      {showHermesPanel && (
+        <HermesPanel onClose={() => setShowHermesPanel(false)} autoFocusKey={autoFocusKey} />
       )}
 
       {/* ── Info panel (README) ── */}
@@ -872,21 +966,9 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
         </div>
       )}
 
-      {/* ── Placeholder ── */}
-      <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H }} className="bg-zinc-950 flex flex-col items-center justify-center gap-4 select-none">
-        {!isAuthenticated ? (
-          <span className="text-muted-foreground text-sm font-mono">Fractera welcome.</span>
-        ) : (
-          <>
-            <span style={{ fontSize: windowWidth < 600 ? "3rem" : "4.5rem", fontFamily: "'Geist', 'Inter', system-ui, sans-serif", lineHeight: 1, letterSpacing: "0.25em" }}>
-              <Shimmer className="uppercase font-light" duration={5} spread={4}>Fractera</Shimmer>
-            </span>
-            <div className="flex flex-col items-center gap-2" style={{ paddingLeft: 64, paddingRight: 64 }}>
-              <Shimmer className="text-sm font-mono text-center" duration={3} spread={3}>Select a terminal platform to begin</Shimmer>
-              <Shimmer className="text-xs font-mono opacity-40 text-center" duration={4} spread={2}>Claude Code · Codex · Gemini CLI · Qwen Code · Kimi Code</Shimmer>
-            </div>
-          </>
-        )}
+      {/* ── Idle canvas (always behind embed/terminals; topmost when nothing else active) ── */}
+      <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H }}>
+        <IdleCanvas />
       </div>
 
       {/* ── Embed canvas (Company Brain / Company Memory) ── */}

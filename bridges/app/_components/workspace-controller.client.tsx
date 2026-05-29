@@ -2,24 +2,21 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { ComponentType } from "react";
-import { Brain, BrainCircuit, CircleUserRound, Globe } from "lucide-react";
-import { CodingWindowShell } from "./coding-workspace/coding-window-shell.client";
+import { Brain, BrainCircuit, CircleUserRound, Globe, AlertTriangle } from "lucide-react";
+import { CodingWindowShell, type SettingsPanelId } from "./coding-workspace/coding-window-shell.client";
 import { AuthLoginModal } from "./auth-login-modal.client";
 import { SitePreviewWindow } from "./site-preview-window.client";
-import { CompanyBrainSetupModal } from "./company-brain-setup-modal.client";
-import { WelcomeSetupModal } from "./welcome-setup-modal.client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { useRuntimeUrls } from "@/lib/runtime-urls";
 import type { Platform } from "./coding-workspace/platforms";
+import type { EmbedCard, EmbedCardId } from "./coding-workspace/platforms";
 
 type SessionData = {
   userId: string;
   email: string;
   roles: string[];
 };
-
-type ActiveEmbed = "brain" | "memory" | null;
 
 const HEADER_H = 48;
 
@@ -33,56 +30,43 @@ export function WorkspaceController() {
   const [terminalPlatform, setTerminalPlatform] = useState<Platform>("claude-code");
   const [terminalSessions, setTerminalSessions] = useState<Set<Platform>>(new Set());
   const [siteOpen, setSiteOpen]                 = useState(false);
-  const [activeEmbed, setActiveEmbed]           = useState<ActiveEmbed>("brain");
-  const [memorySetupOpen, setMemorySetupOpen]   = useState(false);
-  const [welcomeOpen, setWelcomeOpen]           = useState(false);
+  const [activeEmbed, setActiveEmbed]           = useState<EmbedCardId | null>(null);
+  const [domainAttached, setDomainAttached]     = useState<boolean | null>(null);
+  // Bump nonce each time we re-request a panel so children re-trigger their effect
+  // even if the requested id stayed the same.
+  const [panelRequest, setPanelRequest]         = useState<{ id: SettingsPanelId; nonce: number } | null>(null);
 
-  // Company Brain → Hermes Agent dashboard (port 9119). No external API key
-  // required — Hermes runs on the user's AI subscriptions (Claude/Codex/etc).
-  const handleBrainClick = useCallback(() => {
-    setActiveEmbed((curr) => (curr === "brain" ? null : "brain"));
-    setSiteOpen(false);
+  // Domain status — read once on mount, drives the header warning + Domain tab colour.
+  useEffect(() => {
+    fetch("/api/config/domain")
+      .then((r) => r.json())
+      .then((data) => {
+        setDomainAttached(!!data.custom_domain && data.domain_status === "active");
+      })
+      .catch(() => setDomainAttached(false));
   }, []);
 
-  // Company Memory → LightRAG knowledge base (port 9621). Requires an OpenAI
-  // API key for indexing/queries — gate the first activation behind a setup
-  // modal that explains the cost and asks for the key.
-  const handleMemoryClick = useCallback(async () => {
-    if (activeEmbed === "memory") { setActiveEmbed(null); return; }
+  // Clicking a Brain/Memory card in the carousel:
+  //   - if the underlying service is configured → activate its embed canvas
+  //   - if not configured → open the matching settings panel + focus the key field
+  const handleEmbedCardClick = useCallback(async (card: EmbedCard) => {
+    // Toggle off if already active
+    if (activeEmbed === card.id) { setActiveEmbed(null); return; }
     try {
-      const res = await fetch("/api/config/rag", { credentials: "include" });
+      const res = await fetch(card.configCheckEndpoint, { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
-        if (data.configured) {
-          setActiveEmbed("memory");
+        if (data.configured === true) {
+          setActiveEmbed(card.id);
           setSiteOpen(false);
           return;
         }
       }
-    } catch {
-      // Network error — fall through to showing the setup modal anyway.
-    }
-    setMemorySetupOpen(true);
+    } catch { /* fall through to onboarding panel */ }
+    setPanelRequest({ id: card.settingsPanelId, nonce: Date.now() });
   }, [activeEmbed]);
 
   const isMobile = windowWidth > 0 && windowWidth < 768;
-
-  // First admin-panel visit after registration → welcome modal. Subsequent
-  // visits go straight to the site preview.
-  useEffect(() => {
-    let firstVisit = false;
-    try {
-      firstVisit = !localStorage.getItem("fractera_admin_onboarded");
-      if (firstVisit) localStorage.setItem("fractera_admin_onboarded", "1");
-    } catch {
-      // localStorage unavailable — fall back to the regular preview.
-    }
-    if (firstVisit) {
-      setWelcomeOpen(true);
-    } else {
-      setSiteOpen(true);
-    }
-  }, []);
 
   const fetchSession = useCallback(async () => {
     try {
@@ -115,7 +99,6 @@ export function WorkspaceController() {
       setTerminalSessions((prev) => new Set(prev).add(platformId));
       setTerminalPlatform(platformId);
     }
-    // Picking a terminal hides the embed canvas so the xterm gets the space.
     setActiveEmbed(null);
   }
 
@@ -154,6 +137,8 @@ export function WorkspaceController() {
     activeEmbed === "memory" ? { url: urls.brainUrl,  title: "Company Memory", Icon: BrainCircuit } :
     null;
 
+  const noDomain = domainAttached === false;
+
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-background">
       {/* ── Header ── */}
@@ -161,29 +146,19 @@ export function WorkspaceController() {
         className="shrink-0 flex items-center justify-between px-4 border-b border-border bg-background"
         style={{ height: HEADER_H }}
       >
-        <span className="text-sm font-semibold tracking-wide text-foreground select-none">
-          Fractera Light Admin
-        </span>
+        <div className="flex items-center gap-2">
+          {noDomain && (
+            <span className="flex items-center gap-1.5 text-orange-500">
+              <AlertTriangle size={14} />
+              <span className="text-[11px] font-medium hidden sm:inline">requires domain</span>
+            </span>
+          )}
+          <span className={`text-sm font-semibold tracking-wide select-none ${noDomain ? "text-orange-500" : "text-foreground"}`}>
+            Fractera Admin
+          </span>
+        </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="default"
-            className={`text-xs shadow-sm dark:border-white/20 dark:shadow-none ${activeEmbed === "brain" ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300" : ""}`}
-            onClick={handleBrainClick}
-          >
-            <Brain className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Company Brain</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="default"
-            className={`text-xs shadow-sm dark:border-white/20 dark:shadow-none ${activeEmbed === "memory" ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300" : ""}`}
-            onClick={handleMemoryClick}
-          >
-            <BrainCircuit className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Company Memory</span>
-          </Button>
           <Button
             variant="outline"
             size="default"
@@ -251,35 +226,18 @@ export function WorkspaceController() {
           windowWidth={windowWidth}
           isMobile={isMobile}
           isAuthenticated={isAuthenticated && !loading}
+          isPreviewOpen={siteOpen}
           onPreviewClose={() => setSiteOpen(false)}
           embed={embedSpec}
+          activeEmbedId={activeEmbed}
+          onEmbedCardClick={handleEmbedCardClick}
+          domainAttached={!!domainAttached}
+          requestedSettingsPanel={panelRequest}
         />
       )}
 
       {/* ── Site preview window ── */}
       <SitePreviewWindow open={siteOpen} onClose={() => setSiteOpen(false)} siteUrl={urls.appUrl} />
-
-      {/* Company Memory (LightRAG) setup gating */}
-      <CompanyBrainSetupModal
-        open={memorySetupOpen}
-        onClose={() => setMemorySetupOpen(false)}
-        onActivated={() => {
-          setMemorySetupOpen(false);
-          setActiveEmbed("memory");
-          setSiteOpen(false);
-        }}
-      />
-
-      {/* First-visit welcome */}
-      <WelcomeSetupModal
-        open={welcomeOpen}
-        onContinue={() => {
-          setWelcomeOpen(false);
-          setActiveEmbed("brain");
-          setSiteOpen(false);
-        }}
-        onClose={() => { setWelcomeOpen(false); }}
-      />
 
       {/* ── Auth modal ── */}
       <AuthLoginModal

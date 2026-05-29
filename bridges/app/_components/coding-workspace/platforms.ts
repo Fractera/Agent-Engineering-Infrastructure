@@ -16,3 +16,25 @@ export const PLATFORMS: { id: Platform; label: string; active: boolean; docsUrl:
 ];
 
 export const COMING_SOON: { id: string; label: string; version: string; tooltip: string }[] = [];
+
+// Embed cards rendered first in the carousel (left of AI platforms).
+// They occupy a slot in the same horizontal scroller as the platforms,
+// but instead of starting a terminal session they activate an iframe
+// canvas (Hermes / LightRAG). Selecting one with no config triggers
+// the onboarding flow (opens the matching Settings panel).
+export type EmbedCardId = 'brain' | 'memory';
+
+export type EmbedCard = {
+  id: EmbedCardId;
+  label: string;
+  iconKey: 'Brain' | 'BrainCircuit';
+  // Endpoint that returns { configured: boolean, ... } — we only need the flag.
+  configCheckEndpoint: string;
+  // Footer panel ID to surface when the user clicks the card and config is missing.
+  settingsPanelId: 'hermes' | 'lightrag';
+};
+
+export const EMBED_CARDS: EmbedCard[] = [
+  { id: 'brain',  label: 'Company Brain',  iconKey: 'Brain',        configCheckEndpoint: '/api/config/hermes', settingsPanelId: 'hermes'   },
+  { id: 'memory', label: 'Company Memory', iconKey: 'BrainCircuit', configCheckEndpoint: '/api/config/rag',    settingsPanelId: 'lightrag' },
+];

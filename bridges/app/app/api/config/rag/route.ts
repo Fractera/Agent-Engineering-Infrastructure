@@ -3,8 +3,10 @@ import fs from "fs";
 import path from "path";
 import { exec } from "child_process";
 import { requireAuth } from "@/lib/require-auth";
+import { readEnvFile, writeEnvFile, pm2RestartDetached } from "@/lib/env-file";
 
-const RAG_ENV = process.env.RAG_ENV_PATH ?? "/opt/fractera/services/rag/.env";
+const RAG_ENV    = process.env.RAG_ENV_PATH    ?? "/opt/fractera/services/rag/.env";
+const HERMES_ENV = process.env.HERMES_ENV_PATH ?? "/root/.hermes/.env";
 
 // LightRAG (Company Brain) needs an OpenAI API key for both LLM and
 // embeddings. The same key is written to LLM_BINDING_API_KEY and
@@ -81,7 +83,24 @@ export async function POST(req: NextRequest) {
       });
     });
 
-    return NextResponse.json({ ok: true });
+    // Autofill: if Hermes has no OpenAI key yet, propagate the same one.
+    // Never overwrite an existing Hermes key — that's the user's choice
+    // (two services may want different keys). Best-effort: Hermes failure
+    // doesn't fail the RAG save.
+    let alsoUpdated: "hermes" | null = null;
+    const hermesVars = readEnvFile(HERMES_ENV);
+    if (!hermesVars.OPENAI_API_KEY) {
+      hermesVars.OPENAI_API_KEY = trimmed;
+      try {
+        writeEnvFile(HERMES_ENV, hermesVars);
+        pm2RestartDetached("fractera-hermes", 500);
+        alsoUpdated = "hermes";
+      } catch {
+        // ignore — RAG save above already succeeded
+      }
+    }
+
+    return NextResponse.json({ ok: true, alsoUpdated });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }

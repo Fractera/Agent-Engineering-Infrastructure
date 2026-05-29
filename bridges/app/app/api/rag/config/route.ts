@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import { execSync } from "child_process";
 import { requireAuth } from "@/lib/require-auth";
+import { readEnvFile, writeEnvFile, pm2RestartDetached } from "@/lib/env-file";
 
 const RAG_ENV = process.env.RAG_ENV_PATH ?? "/opt/fractera/services/rag/.env";
+const HERMES_ENV = process.env.HERMES_ENV_PATH ?? "/root/.hermes/.env";
 const ALLOWED_KEYS = new Set(["LLM_BINDING_API_KEY", "EMBEDDING_BINDING_API_KEY", "LLM_MODEL"]);
 
 function parseEnv(content: string): Record<string, string> {
@@ -59,7 +61,22 @@ export async function POST(req: NextRequest) {
 
     try { execSync("pm2 restart fractera-rag", { timeout: 5000 }); } catch {}
 
-    return NextResponse.json({ ok: true });
+    // Autofill into Hermes env if it has no OpenAI key yet. Never overwrite
+    // an existing Hermes key — that's the user's deliberate choice.
+    let alsoUpdated: "hermes" | null = null;
+    if (vars.LLM_BINDING_API_KEY) {
+      const hermesVars = readEnvFile(HERMES_ENV);
+      if (!hermesVars.OPENAI_API_KEY) {
+        hermesVars.OPENAI_API_KEY = vars.LLM_BINDING_API_KEY;
+        try {
+          writeEnvFile(HERMES_ENV, hermesVars);
+          pm2RestartDetached("fractera-hermes", 500);
+          alsoUpdated = "hermes";
+        } catch { /* best-effort */ }
+      }
+    }
+
+    return NextResponse.json({ ok: true, alsoUpdated });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }

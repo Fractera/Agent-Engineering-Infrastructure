@@ -86,7 +86,6 @@ export function DomainPanel({ onClose }: { onClose: () => void }) {
   }
 
   const status = config?.domain_status ?? "idle";
-  const fracteraHost = config?.fractera_host || null;
 
   return (
     <div style={{ position: "absolute", top: 52, left: 0, right: 0, bottom: 36, zIndex: 20 }}
@@ -176,35 +175,32 @@ export function DomainPanel({ onClose }: { onClose: () => void }) {
                 <div className="space-y-2">
                   <p className="text-[11px] font-medium text-foreground">DNS setup instructions</p>
                   <p className="text-[10px] text-muted-foreground">
-                    Add <strong>one</strong> of the following records at your DNS provider, then click Apply.
+                    Add <strong>all four</strong> A-records below at your DNS provider, then click Apply.
+                    Each one points the same IP — they route different services (auth, admin, data) through your domain.
                   </p>
 
-                  <div className="rounded-md border border-border bg-muted/30 p-3 space-y-3 text-[10px] font-mono">
-                    {/* Option A */}
-                    <div>
-                      <p className="text-[10px] font-sans text-muted-foreground mb-2">Option A — root domain</p>
-                      <div className="grid gap-x-3 text-foreground" style={{ gridTemplateColumns: "3rem 2rem 1fr" }}>
-                        <span className="text-muted-foreground">Type</span>
-                        <span className="text-muted-foreground">Name</span>
-                        <span className="text-muted-foreground">Value</span>
+                  <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2 text-[10px] font-mono">
+                    <div className="grid gap-x-3 text-muted-foreground pb-1 border-b border-border" style={{ gridTemplateColumns: "3rem 4rem 1fr" }}>
+                      <span>Type</span>
+                      <span>Name</span>
+                      <span>Value</span>
+                    </div>
+                    {["@", "auth", "admin", "data"].map((name) => (
+                      <div key={name} className="grid gap-x-3 text-foreground" style={{ gridTemplateColumns: "3rem 4rem 1fr" }}>
                         <span>A</span>
-                        <span>@</span>
+                        <span>{name}</span>
                         <span className="break-all">{config?.server_ip ?? "…"}</span>
                       </div>
-                    </div>
+                    ))}
+                  </div>
 
-                    {/* Option B */}
-                    <div className="border-t border-border pt-3">
-                      <p className="text-[10px] font-sans text-muted-foreground mb-2">Option B — www redirect</p>
-                      <div className="grid gap-x-3 text-foreground" style={{ gridTemplateColumns: "3rem 2rem 1fr" }}>
-                        <span className="text-muted-foreground">Type</span>
-                        <span className="text-muted-foreground">Name</span>
-                        <span className="text-muted-foreground">Value</span>
-                        <span>CNAME</span>
-                        <span>www</span>
-                        <span className="break-all">{normalized || input || "myapp.com"}</span>
-                      </div>
-                    </div>
+                  {/* Cloudflare warning */}
+                  <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-2.5 text-[10px] text-amber-700 dark:text-amber-300 leading-relaxed">
+                    <strong>We recommend NOT using Cloudflare DNS</strong> for these records.
+                    Cloudflare proxies your traffic through their network — that adds a third-party
+                    dependency, occasional connectivity issues, and an extra layer between your users
+                    and your server. Use your registrar's own DNS panel directly (Namecheap, Porkbun,
+                    GoDaddy, etc.) wherever possible.
                   </div>
 
                   {/* Registrar note */}
@@ -220,12 +216,8 @@ export function DomainPanel({ onClose }: { onClose: () => void }) {
 
                   {/* Propagation note */}
                   <p className="text-[10px] text-muted-foreground">
-                    DNS propagation may take up to 24h.
-                    {fracteraHost && (
-                      <> Admin, Auth, and Data services remain on{" "}
-                        <span className="font-mono">{fracteraHost}</span>.
-                      </>
-                    )}
+                    DNS propagation may take up to 24h. After all four records resolve to your server,
+                    you can also enable Secure mode in the Security panel.
                   </p>
                 </div>
               </div>
