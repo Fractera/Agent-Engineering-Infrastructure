@@ -35,6 +35,6 @@ export type EmbedCard = {
 };
 
 export const EMBED_CARDS: EmbedCard[] = [
-  { id: 'brain',  label: 'Company Brain',  iconKey: 'Brain',        configCheckEndpoint: '/api/config/hermes', settingsPanelId: 'hermes'   },
-  { id: 'memory', label: 'Company Memory', iconKey: 'BrainCircuit', configCheckEndpoint: '/api/config/rag',    settingsPanelId: 'lightrag' },
+  { id: 'brain',  label: 'Brain',  iconKey: 'Brain',        configCheckEndpoint: '/api/config/hermes', settingsPanelId: 'hermes'   },
+  { id: 'memory', label: 'Memory', iconKey: 'BrainCircuit', configCheckEndpoint: '/api/config/rag',    settingsPanelId: 'lightrag' },
 ];

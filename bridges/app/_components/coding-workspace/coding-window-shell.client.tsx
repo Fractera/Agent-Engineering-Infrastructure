@@ -801,20 +801,48 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
       {showDbBrowser && <DbBrowserPanel onClose={() => setShowDbBrowser(false)} />}
 
       {/* ── Domain panel ── */}
-      {showDomainPanel && <DomainPanel onClose={() => setShowDomainPanel(false)} />}
+      {showDomainPanel && (
+        <div style={{ position: "absolute", top: CAROUSEL_H, right: 0, bottom: FOOTER_H, width: "min(480px, 90vw)", zIndex: 20 }}>
+          <DomainPanel onClose={() => setShowDomainPanel(false)} />
+        </div>
+      )}
 
-      {showSecurityPanel && <SecurityPanel onClose={() => setShowSecurityPanel(false)} />}
+      {showSecurityPanel && (
+        <div style={{ position: "absolute", top: CAROUSEL_H, right: 0, bottom: FOOTER_H, width: "min(480px, 90vw)", zIndex: 20 }}>
+          <SecurityPanel onClose={() => setShowSecurityPanel(false)} />
+        </div>
+      )}
 
-      {/* ── LightRAG (Company Memory) settings panel ── */}
+      {/* ── Settings drawers — slide in from the right, never full-screen so the
+            embed iframe behind stays visible. Mobile: cap at 90% viewport width. ── */}
       {showLightRag && (
-        <div style={{ position: "absolute", top: CAROUSEL_H, right: 0, bottom: FOOTER_H, width: 480, zIndex: 10 }}>
+        <div
+          style={{
+            position: "absolute",
+            top: CAROUSEL_H,
+            right: 0,
+            bottom: FOOTER_H,
+            width: "min(480px, 90vw)",
+            zIndex: 20,
+          }}
+        >
           <LightRagPanel onClose={() => setShowLightRag(false)} />
         </div>
       )}
 
-      {/* ── Hermes Agent settings panel ── */}
       {showHermesPanel && (
-        <HermesPanel onClose={() => setShowHermesPanel(false)} autoFocusKey={autoFocusKey} />
+        <div
+          style={{
+            position: "absolute",
+            top: CAROUSEL_H,
+            right: 0,
+            bottom: FOOTER_H,
+            width: "min(480px, 90vw)",
+            zIndex: 20,
+          }}
+        >
+          <HermesPanel onClose={() => setShowHermesPanel(false)} autoFocusKey={autoFocusKey} />
+        </div>
       )}
 
       {/* ── Info panel (README) ── */}

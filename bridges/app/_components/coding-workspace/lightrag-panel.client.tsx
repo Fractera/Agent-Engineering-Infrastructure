@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { X, Brain, Loader2, Send, CheckCircle, AlertCircle, BookOpen, ChevronDown } from "lucide-react";
+import { X, Brain, Loader2, Send, CheckCircle, AlertCircle, BookOpen, ChevronDown, RefreshCw } from "lucide-react";
 
 const MODELS = ["gpt-4o-mini", "gpt-4o", "gpt-4.1", "gpt-4.1-mini"];
 
@@ -17,6 +17,7 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
   const [answer, setAnswer]           = useState<string | null>(null);
   const [ingesting, setIngesting]     = useState(false);
   const [modelOpen, setModelOpen]     = useState(false);
+  const [savedAt, setSavedAt]         = useState<number | null>(null);
   const modelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -64,7 +65,12 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
       if (data.ok) {
         setConfigured(true);
         setApiKey("");
-        toast.success("LightRAG configured — restart fractera-rag to apply");
+        setSavedAt(Date.now());
+        if (data.alsoUpdated === "hermes") {
+          toast.success("Saved — key also applied to Brain (it had no key)");
+        } else {
+          toast.success("Saved — LightRAG restarting");
+        }
       } else {
         toast.error(data.error ?? "Save failed");
       }
@@ -121,7 +127,7 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="absolute inset-0 bg-background flex flex-col" style={{ zIndex: 10 }}>
+    <div className="w-full h-full bg-background border-l border-border shadow-xl flex flex-col">
       {/* Header */}
       <div className="flex items-center px-4 py-2.5 border-b border-border shrink-0">
         <Brain size={13} className="mr-2 text-muted-foreground" />
@@ -209,6 +215,23 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
                 {ingesting ? <Loader2 size={11} className="animate-spin" /> : <BookOpen size={11} />}
                 {ingesting ? "Loading docs…" : "Load project docs"}
               </button>
+            )}
+
+            {/* Post-save banner */}
+            {savedAt && (
+              <div className="rounded-md border border-emerald-500/40 bg-emerald-500/5 p-2.5 space-y-1.5">
+                <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                  <CheckCircle size={12} /> Saved
+                </p>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                  Changes will take effect within 10 seconds while LightRAG restarts. If the embed
+                  next to this panel still looks unchanged, reload the page.
+                </p>
+                <button onClick={() => window.location.reload()}
+                  className="flex items-center gap-1.5 h-7 px-2.5 rounded-md border border-emerald-500/50 text-[10px] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-colors">
+                  <RefreshCw size={10} /> Reload page
+                </button>
+              </div>
             )}
           </div>
         )}

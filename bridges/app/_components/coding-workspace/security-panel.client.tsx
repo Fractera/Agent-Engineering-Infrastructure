@@ -109,10 +109,7 @@ export function SecurityPanel({ onClose }: { onClose: () => void }) {
   const switchToSecureEnabled = hasDomain && dnsAllOk;
 
   return (
-    <div
-      style={{ position: "absolute", top: 52, left: 0, right: 0, bottom: 36, zIndex: 20 }}
-      className="flex flex-col bg-background border-t border-border"
-    >
+    <div className="flex flex-col w-full h-full bg-background border-l border-border shadow-xl">
       <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2 text-[12px] font-medium text-foreground">
           <Shield size={13} />

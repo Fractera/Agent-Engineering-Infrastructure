@@ -88,8 +88,7 @@ export function DomainPanel({ onClose }: { onClose: () => void }) {
   const status = config?.domain_status ?? "idle";
 
   return (
-    <div style={{ position: "absolute", top: 52, left: 0, right: 0, bottom: 36, zIndex: 20 }}
-      className="flex flex-col bg-background border-t border-border">
+    <div className="flex flex-col w-full h-full bg-background border-l border-border shadow-xl">
 
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border">

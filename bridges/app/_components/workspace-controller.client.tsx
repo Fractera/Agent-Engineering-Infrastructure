@@ -46,24 +46,27 @@ export function WorkspaceController() {
       .catch(() => setDomainAttached(false));
   }, []);
 
-  // Clicking a Brain/Memory card in the carousel:
-  //   - if the underlying service is configured → activate its embed canvas
-  //   - if not configured → open the matching settings panel + focus the key field
+  // Clicking a Brain/Memory card in the carousel always opens the iframe
+  // (the embedded service runs regardless of whether a key is configured).
+  // If no key is configured we ALSO surface the matching settings drawer
+  // alongside the iframe so the user can paste a key without losing context.
   const handleEmbedCardClick = useCallback(async (card: EmbedCard) => {
     // Toggle off if already active
     if (activeEmbed === card.id) { setActiveEmbed(null); return; }
+    setActiveEmbed(card.id);
+    setSiteOpen(false);
     try {
       const res = await fetch(card.configCheckEndpoint, { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
-        if (data.configured === true) {
-          setActiveEmbed(card.id);
-          setSiteOpen(false);
-          return;
+        if (data.configured !== true) {
+          setPanelRequest({ id: card.settingsPanelId, nonce: Date.now() });
         }
       }
-    } catch { /* fall through to onboarding panel */ }
-    setPanelRequest({ id: card.settingsPanelId, nonce: Date.now() });
+    } catch {
+      // If the config check itself failed, still show the embed; settings
+      // can be opened manually from the Data menu.
+    }
   }, [activeEmbed]);
 
   const isMobile = windowWidth > 0 && windowWidth < 768;
