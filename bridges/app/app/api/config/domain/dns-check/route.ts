@@ -5,10 +5,13 @@ import { requireAuth } from "@/lib/require-auth";
 import { readEnvFile } from "@/lib/env-file";
 
 // Strict mode requires that ALL of these hostnames resolve to the
-// server's public IP. NextAuth callbacks, the admin proxy and media
-// uploads all rely on these subdomains; missing any one of them locks
-// the user out after the switch.
-const SUBDOMAIN_PREFIXES = ["", "auth", "admin", "data"] as const;
+// server's public IP. After the Secure switch, nginx terminates TLS
+// for all six and reverse-proxies to local ports:
+//   apex (3000), auth.* (3001), admin.* (3002), data.* (3300),
+//   hermes.* (9119), lightrag.* (9621).
+// Missing any one of them locks the user out of part of the workspace
+// (mixed-content blocks the iframe / sign-in callback fails).
+const SUBDOMAIN_PREFIXES = ["", "auth", "admin", "data", "hermes", "lightrag"] as const;
 
 const SECRETS_FILE = process.env.SECRETS_PATH ?? "/etc/fractera/secrets.env";
 

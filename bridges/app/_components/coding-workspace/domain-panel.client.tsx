@@ -174,21 +174,29 @@ export function DomainPanel({ onClose }: { onClose: () => void }) {
                 <div className="space-y-2">
                   <p className="text-[11px] font-medium text-foreground">DNS setup instructions</p>
                   <p className="text-[10px] text-muted-foreground">
-                    Add <strong>all four</strong> A-records below at your DNS provider, then click Apply.
-                    Each one points the same IP — they route different services (auth, admin, data) through your domain.
+                    Add <strong>all six</strong> A-records below at your DNS provider, then click Apply.
+                    Each one points to the same IP — your domain routes the six services (site, auth, admin,
+                    data, Brain, Memory) through separate subdomains so each gets its own SSL certificate.
                   </p>
 
                   <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2 text-[10px] font-mono">
-                    <div className="grid gap-x-3 text-muted-foreground pb-1 border-b border-border" style={{ gridTemplateColumns: "3rem 4rem 1fr" }}>
+                    <div className="grid gap-x-3 text-muted-foreground pb-1 border-b border-border" style={{ gridTemplateColumns: "3rem 5rem 1fr" }}>
                       <span>Type</span>
                       <span>Name</span>
                       <span>Value</span>
                     </div>
-                    {["@", "auth", "admin", "data"].map((name) => (
-                      <div key={name} className="grid gap-x-3 text-foreground" style={{ gridTemplateColumns: "3rem 4rem 1fr" }}>
+                    {[
+                      { name: "@",        note: "site" },
+                      { name: "auth",     note: "sign-in" },
+                      { name: "admin",    note: "this panel" },
+                      { name: "data",     note: "media + db" },
+                      { name: "hermes",   note: "Brain" },
+                      { name: "lightrag", note: "Memory" },
+                    ].map(({ name, note }) => (
+                      <div key={name} className="grid gap-x-3 text-foreground" style={{ gridTemplateColumns: "3rem 5rem 1fr" }}>
                         <span>A</span>
                         <span>{name}</span>
-                        <span className="break-all">{config?.server_ip ?? "…"}</span>
+                        <span className="break-all">{config?.server_ip ?? "…"} <span className="text-muted-foreground font-sans">— {note}</span></span>
                       </div>
                     ))}
                   </div>
