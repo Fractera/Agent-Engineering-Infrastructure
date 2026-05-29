@@ -1,28 +1,66 @@
 import { NextRequest, NextResponse } from "next/server";
 import { execSync, exec } from "child_process";
-import { writeFileSync } from "fs";
+import { writeFileSync, mkdirSync } from "fs";
 import Database from "better-sqlite3";
 import { requireAuth } from "@/lib/require-auth";
 
 const APP_DB = process.env.APP_DB_PATH ?? "/opt/fractera/app/data/app.db";
 
+// The set of hostnames Fractera serves over HTTPS once a custom domain is
+// attached. Apex + www → public site, the other five → internal services
+// proxied behind their own subdomain so each gets a valid TLS certificate
+// (and the admin iframe doesn't hit mixed-content errors).
+const SUBDOMAINS = ["", "www", "auth", "admin", "data", "hermes", "lightrag"] as const;
+const PROXY_PORTS: Record<string, number> = {
+  "":         3000,
+  "www":      3000,
+  "auth":     3001,
+  "admin":    3002,
+  "data":     3300,
+  "hermes":   9119,
+  "lightrag": 9621,
+};
+
+// Where uploaded (non Let's Encrypt) certificates land. The same pair lives
+// in /etc/letsencrypt/live/<domain>/{fullchain.pem,privkey.pem} when issued
+// by certbot, so the nginx template just points at one canonical location
+// depending on `cert_source`.
+const CUSTOM_CERT_DIR = "/etc/fractera/certs";
+
 function getDb() {
   const db = new Database(APP_DB);
   db.exec(`CREATE TABLE IF NOT EXISTS site_settings (
-    id            INTEGER PRIMARY KEY DEFAULT 1,
-    custom_domain TEXT,
-    domain_status TEXT NOT NULL DEFAULT 'idle',
-    domain_error  TEXT,
-    updated_at    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+    id              INTEGER PRIMARY KEY DEFAULT 1,
+    custom_domain   TEXT,
+    domain_status   TEXT NOT NULL DEFAULT 'idle',
+    domain_error    TEXT,
+    cert_source     TEXT NOT NULL DEFAULT 'auto',
+    cert_expires_at TEXT,
+    updated_at      TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
   )`);
+  // Best-effort ALTER for tables that pre-date these columns. Ignore if they
+  // already exist (sqlite throws on duplicate column).
+  try { db.exec("ALTER TABLE site_settings ADD COLUMN cert_source TEXT NOT NULL DEFAULT 'auto'"); } catch {}
+  try { db.exec("ALTER TABLE site_settings ADD COLUMN cert_expires_at TEXT"); } catch {}
   return db;
 }
 
-function upsert(db: Database.Database, domain: string, status: string, error: string | null) {
+type SiteSettingsRow = {
+  custom_domain?: string | null;
+  domain_status?: string;
+  domain_error?: string | null;
+  cert_source?: string;
+  cert_expires_at?: string | null;
+};
+
+function upsert(db: Database.Database, domain: string, status: string, error: string | null, opts?: { certSource?: "auto" | "upload"; certExpiresAt?: string | null }) {
+  const prev = db.prepare("SELECT cert_source, cert_expires_at FROM site_settings WHERE id = 1").get() as { cert_source?: string; cert_expires_at?: string | null } | undefined;
+  const certSource     = opts?.certSource     ?? prev?.cert_source     ?? "auto";
+  const certExpiresAt  = opts?.certExpiresAt  ?? prev?.cert_expires_at ?? null;
   db.prepare(
-    `INSERT OR REPLACE INTO site_settings (id, custom_domain, domain_status, domain_error, updated_at)
-     VALUES (1, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ','now'))`
-  ).run(domain, status, error);
+    `INSERT OR REPLACE INTO site_settings (id, custom_domain, domain_status, domain_error, cert_source, cert_expires_at, updated_at)
+     VALUES (1, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ','now'))`
+  ).run(domain, status, error, certSource, certExpiresAt);
 }
 
 function getServerIp(): string {
@@ -30,9 +68,59 @@ function getServerIp(): string {
   catch { return ""; }
 }
 
-function getFracteraHost(): string {
-  try { return new URL(process.env.NEXTAUTH_URL ?? "http://localhost").hostname; }
-  catch { return ""; }
+function readCertExpiry(certPath: string): string | null {
+  try {
+    const out = execSync(`openssl x509 -enddate -noout -in ${certPath}`, { timeout: 3000 }).toString().trim();
+    // notAfter=May 29 12:34:56 2026 GMT
+    const m = out.match(/notAfter=(.+)/);
+    if (!m) return null;
+    return new Date(m[1]).toISOString();
+  } catch { return null; }
+}
+
+function hostFor(prefix: string, domain: string): string {
+  return prefix ? `${prefix}.${domain}` : domain;
+}
+
+function buildNginxConfig(domain: string, certSource: "auto" | "upload"): string {
+  // Certificate file paths depend on who issued: Let's Encrypt → standard
+  // certbot layout; upload → user-supplied PEM/KEY at a fixed location.
+  const certPath = certSource === "upload"
+    ? `${CUSTOM_CERT_DIR}/${domain}/fullchain.pem`
+    : `/etc/letsencrypt/live/${domain}/fullchain.pem`;
+  const keyPath = certSource === "upload"
+    ? `${CUSTOM_CERT_DIR}/${domain}/privkey.pem`
+    : `/etc/letsencrypt/live/${domain}/privkey.pem`;
+
+  const blocks = SUBDOMAINS.map((prefix) => {
+    const host = hostFor(prefix, domain);
+    const port = PROXY_PORTS[prefix];
+    return `# fractera ${host} — managed by fractera
+server {
+    listen 80;
+    server_name ${host};
+    location / { return 301 https://$host$request_uri; }
+}
+server {
+    listen 443 ssl http2;
+    server_name ${host};
+    ssl_certificate     ${certPath};
+    ssl_certificate_key ${keyPath};
+    location / {
+        proxy_pass http://127.0.0.1:${port};
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 86400;
+    }
+}`;
+  });
+
+  return blocks.join("\n\n") + "\n";
 }
 
 export async function GET(req: NextRequest) {
@@ -40,20 +128,24 @@ export async function GET(req: NextRequest) {
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const db = getDb();
-  const row = db.prepare("SELECT * FROM site_settings WHERE id = 1").get() as Record<string, unknown> | undefined;
+  const row = db.prepare("SELECT * FROM site_settings WHERE id = 1").get() as SiteSettingsRow | undefined;
   db.close();
 
   return NextResponse.json({
-    custom_domain: row?.custom_domain ?? null,
-    domain_status: row?.domain_status ?? "idle",
-    domain_error:  row?.domain_error ?? null,
-    server_ip:     getServerIp(),
-    fractera_host: getFracteraHost(),
+    custom_domain:   row?.custom_domain ?? null,
+    domain_status:   row?.domain_status ?? "idle",
+    domain_error:    row?.domain_error ?? null,
+    cert_source:     row?.cert_source ?? "auto",
+    cert_expires_at: row?.cert_expires_at ?? null,
+    server_ip:       getServerIp(),
+    hostnames:       SUBDOMAINS.map((p) => p || "@"),
   });
 }
 
 const DOMAIN_RE = /^[a-zA-Z0-9][a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,}$/;
 
+// POST — auto mode: certbot issues a single multi-SAN cert for all 7 hostnames.
+// Body: { domain: string }
 export async function POST(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -63,59 +155,110 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid domain" }, { status: 400 });
   }
 
-  // DNS check
-  const serverIp = getServerIp();
-  try {
-    const resolved = execSync(`dig +short ${domain} A`, { timeout: 8000 }).toString().trim();
-    if (serverIp && !resolved.includes(serverIp)) {
-      return NextResponse.json({ error: "DNS not propagated yet. Point an A-record to " + serverIp }, { status: 400 });
-    }
-  } catch {
-    return NextResponse.json({ error: "DNS lookup failed" }, { status: 400 });
-  }
-
   const db = getDb();
-  upsert(db, domain, "pending", null);
+  upsert(db, domain, "pending", null, { certSource: "auto" });
   db.close();
 
-  // Async: write Nginx config + certbot
-  const nginxBlock = `# fractera custom domain — managed by fractera
-server {
-    listen 80;
-    server_name ${domain} www.${domain};
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_read_timeout 86400;
-        proxy_set_header Accept-Encoding "";
-        sub_filter_once on;
-        sub_filter '</body>' '<script>!function(){var _t=[80,111,119,101,114,101,100,32,98,121,32,70,114,97,99,116,101,114,97],_u=[104,116,116,112,115,58,47,47,103,105,116,104,117,98,46,99,111,109,47,70,114,97,99,116,101,114,97,47,97,105,45,119,111,114,107,115,112,97,99,101],t=_t.map(function(c){return String.fromCharCode(c)}).join(""),u=_u.map(function(c){return String.fromCharCode(c)}).join(""),s=document.createElement("style");s.textContent="body{padding-bottom:16px!important}";document.head.appendChild(s);var f=document.createElement("div");f.style.cssText="position:fixed;bottom:0;left:0;right:0;height:16px;z-index:2147483647;display:flex;align-items:center;justify-content:center;";var a=document.createElement("a");a.href=u;a.target="_blank";a.rel="noopener noreferrer";a.textContent=t;a.style.cssText="font-size:10px;text-decoration:none;";f.appendChild(a);document.body.appendChild(f);function g(){var d=document.documentElement.classList.contains("dark");a.style.color=d?"rgba(255,255,255,0.75)":"rgba(0,0,0,0.75)";}g();new MutationObserver(g).observe(document.documentElement,{attributes:true,attributeFilter:["class"]});}();</script></body>';
-    }
-}
-`;
-
-  exec("true", () => {
+  // Detached so the HTTP request doesn't time out (certbot can take 60-90s).
+  setTimeout(() => {
     const db2 = getDb();
     try {
-      writeFileSync("/etc/nginx/sites-enabled/fractera-custom", nginxBlock);
-      execSync("nginx -t && nginx -s reload", { timeout: 10000 });
+      // 1. HTTP-only stub config so certbot --nginx can find the server_name
+      //    blocks and complete the HTTP-01 challenge.
+      const httpStub = SUBDOMAINS.map((p) => {
+        const host = hostFor(p, domain);
+        const port = PROXY_PORTS[p];
+        return `server {
+    listen 80;
+    server_name ${host};
+    location /.well-known/acme-challenge/ { root /var/www/html; }
+    location / { proxy_pass http://127.0.0.1:${port}; proxy_set_header Host $host; proxy_set_header X-Forwarded-Proto $scheme; }
+}`;
+      }).join("\n");
+      writeFileSync("/etc/nginx/sites-enabled/fractera-custom", httpStub);
+      execSync("mkdir -p /var/www/html && nginx -t && nginx -s reload", { timeout: 10000 });
+
+      // 2. Issue / renew one multi-SAN cert. The same `-d <host>` flag set
+      //    keeps the same lineage (no new dir each run) so subsequent
+      //    renewals via the system certbot cron just work.
+      const dFlags = SUBDOMAINS.map((p) => `-d ${hostFor(p, domain)}`).join(" ");
       execSync(
-        `certbot --nginx -d ${domain} -d www.${domain} --non-interactive --agree-tos -m admin@fractera.ai`,
-        { timeout: 120000 }
+        `certbot certonly --nginx ${dFlags} --non-interactive --agree-tos --keep-until-expiring -m admin@fractera.ai`,
+        { timeout: 180000 }
       );
-      upsert(db2, domain, "active", null);
+
+      // 3. Write final HTTPS config and reload.
+      writeFileSync("/etc/nginx/sites-enabled/fractera-custom", buildNginxConfig(domain, "auto"));
+      execSync("nginx -t && nginx -s reload", { timeout: 10000 });
+
+      const expires = readCertExpiry(`/etc/letsencrypt/live/${domain}/fullchain.pem`);
+      upsert(db2, domain, "active", null, { certSource: "auto", certExpiresAt: expires });
     } catch (e) {
-      upsert(db2, domain, "error", String(e));
+      upsert(db2, domain, "error", String(e), { certSource: "auto" });
     } finally {
       db2.close();
     }
-  });
+  }, 200);
+
+  return NextResponse.json({ ok: true, status: "pending" });
+}
+
+// PUT — upload custom cert. Used for regions (RU, sanctioned networks, etc.)
+// where Let's Encrypt is unreachable, or when the user already holds an EV/OV
+// cert from another CA. Stores PEM + KEY in /etc/fractera/certs/<domain>/
+// and switches nginx to that source.
+//
+// Body: { domain: string, fullchainPem: string, privateKeyPem: string }
+export async function PUT(req: NextRequest) {
+  const ok = await requireAuth(req.headers.get("cookie") ?? "");
+  if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = await req.json().catch(() => ({})) as {
+    domain?: string;
+    fullchainPem?: string;
+    privateKeyPem?: string;
+  };
+  const { domain, fullchainPem, privateKeyPem } = body;
+  if (!domain || !DOMAIN_RE.test(domain)) {
+    return NextResponse.json({ error: "Invalid domain" }, { status: 400 });
+  }
+  if (!fullchainPem || !privateKeyPem) {
+    return NextResponse.json({ error: "Both fullchainPem and privateKeyPem are required" }, { status: 400 });
+  }
+  if (!/-----BEGIN CERTIFICATE-----/.test(fullchainPem)) {
+    return NextResponse.json({ error: "fullchainPem does not look like a PEM certificate" }, { status: 400 });
+  }
+  if (!/-----BEGIN (RSA |EC )?PRIVATE KEY-----/.test(privateKeyPem)) {
+    return NextResponse.json({ error: "privateKeyPem does not look like a PEM private key" }, { status: 400 });
+  }
+
+  const db = getDb();
+  upsert(db, domain, "pending", null, { certSource: "upload" });
+  db.close();
+
+  setTimeout(() => {
+    const db2 = getDb();
+    try {
+      const dir = `${CUSTOM_CERT_DIR}/${domain}`;
+      mkdirSync(dir, { recursive: true, mode: 0o700 });
+      writeFileSync(`${dir}/fullchain.pem`, fullchainPem, { mode: 0o600 });
+      writeFileSync(`${dir}/privkey.pem`,   privateKeyPem, { mode: 0o600 });
+
+      // Validate by asking openssl to parse the chain — fail early if garbage.
+      execSync(`openssl x509 -in ${dir}/fullchain.pem -noout -subject`, { timeout: 3000 });
+      execSync(`openssl rsa -in ${dir}/privkey.pem -check -noout`,      { timeout: 3000 });
+
+      writeFileSync("/etc/nginx/sites-enabled/fractera-custom", buildNginxConfig(domain, "upload"));
+      execSync("nginx -t && nginx -s reload", { timeout: 10000 });
+
+      const expires = readCertExpiry(`${dir}/fullchain.pem`);
+      upsert(db2, domain, "active", null, { certSource: "upload", certExpiresAt: expires });
+    } catch (e) {
+      upsert(db2, domain, "error", String(e), { certSource: "upload" });
+    } finally {
+      db2.close();
+    }
+  }, 200);
 
   return NextResponse.json({ ok: true, status: "pending" });
 }

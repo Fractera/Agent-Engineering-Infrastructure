@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { X, Globe, CheckCircle, AlertCircle, Loader2, ExternalLink, ArrowLeft } from "lucide-react";
+import { X, Globe, CheckCircle, AlertCircle, Loader2, ExternalLink, ArrowLeft, ChevronDown, ChevronRight, Shield, Upload } from "lucide-react";
 
 interface DomainConfig {
   custom_domain: string | null;
@@ -10,6 +10,8 @@ interface DomainConfig {
   domain_error: string | null;
   server_ip: string;
   fractera_host: string;
+  cert_source?: "auto" | "upload";
+  cert_expires_at?: string | null;
 }
 
 function normalizeDomain(raw: string): string {
@@ -28,6 +30,11 @@ export function DomainPanel({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState<"input" | "dns">("input");
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
+  const [sslInfoOpen, setSslInfoOpen]   = useState(false);
+  const [uploadOpen, setUploadOpen]     = useState(false);
+  const [fullchainPem, setFullchainPem] = useState("");
+  const [privateKeyPem, setPrivateKeyPem] = useState("");
+  const [uploading, setUploading]       = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const normalized = normalizeDomain(input);
@@ -81,7 +88,24 @@ export function DomainPanel({ onClose }: { onClose: () => void }) {
     }).then((r) => r.json()).catch(() => ({ error: "Network error" }));
     setApplying(false);
     if (res.error) { toast.error(res.error); return; }
-    setConfig((prev) => prev ? { ...prev, custom_domain: normalized, domain_status: "pending", domain_error: null } : prev);
+    setConfig((prev) => prev ? { ...prev, custom_domain: normalized, domain_status: "pending", domain_error: null, cert_source: "auto" } : prev);
+    startPolling();
+  }
+
+  async function handleUpload() {
+    if (!isValid) { toast.error("Enter the domain name first"); return; }
+    if (!fullchainPem.trim() || !privateKeyPem.trim()) { toast.error("Both certificate and private key are required"); return; }
+    setUploading(true);
+    const res = await fetch("/api/config/domain", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ domain: normalized, fullchainPem: fullchainPem.trim(), privateKeyPem: privateKeyPem.trim() }),
+    }).then((r) => r.json()).catch(() => ({ error: "Network error" }));
+    setUploading(false);
+    if (res.error) { toast.error(res.error); return; }
+    setConfig((prev) => prev ? { ...prev, custom_domain: normalized, domain_status: "pending", domain_error: null, cert_source: "upload" } : prev);
+    setFullchainPem(""); setPrivateKeyPem("");
+    setUploadOpen(false);
     startPolling();
   }
 
@@ -174,9 +198,9 @@ export function DomainPanel({ onClose }: { onClose: () => void }) {
                 <div className="space-y-2">
                   <p className="text-[11px] font-medium text-foreground">DNS setup instructions</p>
                   <p className="text-[10px] text-muted-foreground">
-                    Add <strong>all six</strong> A-records below at your DNS provider, then click Apply.
-                    Each one points to the same IP — your domain routes the six services (site, auth, admin,
-                    data, Brain, Memory) through separate subdomains so each gets its own SSL certificate.
+                    Add <strong>all seven</strong> A-records below at your DNS provider, then click Apply.
+                    Each points to the same IP — your domain routes the services (apex + www → site,
+                    plus auth, admin, data, Brain, Memory subdomains) so each gets its own SSL certificate.
                   </p>
 
                   <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2 text-[10px] font-mono">
@@ -186,7 +210,8 @@ export function DomainPanel({ onClose }: { onClose: () => void }) {
                       <span>Value</span>
                     </div>
                     {[
-                      { name: "@",        note: "site" },
+                      { name: "@",        note: "site (apex)" },
+                      { name: "www",      note: "site (www alias)" },
                       { name: "auth",     note: "sign-in" },
                       { name: "admin",    note: "this panel" },
                       { name: "data",     note: "media + db" },
@@ -223,10 +248,85 @@ export function DomainPanel({ onClose }: { onClose: () => void }) {
 
                   {/* Propagation note */}
                   <p className="text-[10px] text-muted-foreground">
-                    DNS propagation may take up to 24h. After all four records resolve to your server,
-                    you can also enable Secure mode in the Security panel.
+                    DNS propagation may take up to 24h. Once all seven records resolve to your server,
+                    click <strong>Apply</strong> and Fractera will request a free SSL certificate from
+                    Let&rsquo;s Encrypt for all seven hostnames in one go.
                   </p>
                 </div>
+
+                {/* Accordion 1 — what about SSL certificates? */}
+                <button
+                  type="button"
+                  onClick={() => setSslInfoOpen((v) => !v)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-foreground rounded-md border border-border hover:bg-muted transition-colors"
+                >
+                  {sslInfoOpen ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+                  <Shield size={11} />
+                  <span className="flex-1 text-left">About SSL certificates</span>
+                </button>
+                {sslInfoOpen && (
+                  <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 space-y-2 text-[10px] leading-relaxed text-amber-700 dark:text-amber-300">
+                    <p>
+                      <strong>Don&rsquo;t buy an SSL certificate from your domain registrar.</strong> Registrars
+                      typically up-sell SSL at $30&ndash;$80/year &mdash; you don&rsquo;t need it. Fractera
+                      issues a free Let&rsquo;s Encrypt certificate for you the moment you click Apply,
+                      and renews it automatically every ~60 days through the system certbot cron.
+                    </p>
+                    <p>
+                      For restricted regions (e.g. Russia, Iran) where Let&rsquo;s Encrypt&rsquo;s
+                      ACME server isn&rsquo;t reachable, or for compliance scenarios that require an
+                      EV/OV cert from a specific CA, use the &ldquo;Upload your own certificate&rdquo;
+                      panel below to install your own certificate instead.
+                    </p>
+                  </div>
+                )}
+
+                {/* Accordion 2 — upload custom certificate */}
+                <button
+                  type="button"
+                  onClick={() => setUploadOpen((v) => !v)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-foreground rounded-md border border-border hover:bg-muted transition-colors"
+                >
+                  {uploadOpen ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+                  <Upload size={11} />
+                  <span className="flex-1 text-left">Upload your own certificate</span>
+                </button>
+                {uploadOpen && (
+                  <div className="rounded-md border border-border bg-muted/30 p-3 space-y-3">
+                    <p className="text-[10px] text-muted-foreground leading-relaxed">
+                      Paste the full certificate chain (PEM) and the matching private key. The chain
+                      must cover all seven hostnames listed above &mdash; either as Subject Alternative
+                      Names on one cert, or as a single wildcard cert (<span className="font-mono">*.{normalized || "yourdomain.com"}</span>) plus the apex.
+                      Fractera writes them to <span className="font-mono">/etc/fractera/certs/&lt;domain&gt;/</span> and reloads nginx.
+                    </p>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-medium text-foreground">Full chain (fullchain.pem)</label>
+                      <textarea
+                        value={fullchainPem}
+                        onChange={(e) => setFullchainPem(e.target.value)}
+                        placeholder="-----BEGIN CERTIFICATE-----&#10;…&#10;-----END CERTIFICATE-----"
+                        className="w-full h-24 px-2 py-1.5 text-[10px] font-mono rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-medium text-foreground">Private key (privkey.pem)</label>
+                      <textarea
+                        value={privateKeyPem}
+                        onChange={(e) => setPrivateKeyPem(e.target.value)}
+                        placeholder="-----BEGIN PRIVATE KEY-----&#10;…&#10;-----END PRIVATE KEY-----"
+                        className="w-full h-24 px-2 py-1.5 text-[10px] font-mono rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleUpload}
+                      disabled={!isValid || !fullchainPem.trim() || !privateKeyPem.trim() || uploading}
+                      className="h-8 px-4 rounded-md bg-primary text-primary-foreground text-[11px] font-medium disabled:opacity-40 hover:opacity-90 transition-opacity"
+                    >
+                      {uploading ? <span className="flex items-center gap-1.5"><Loader2 size={11} className="animate-spin" />Uploading…</span> : "Install uploaded certificate"}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </>
