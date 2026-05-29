@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { X, Bot, Loader2, CheckCircle, AlertCircle, RefreshCw, ChevronDown } from "lucide-react";
+import { X, Bot, Loader2, CheckCircle, AlertCircle, RefreshCw, ChevronDown, ChevronRight, Sparkles, KeyRound, Send } from "lucide-react";
 
 type Props = {
   onClose: () => void;
@@ -19,8 +19,6 @@ type HermesStatus = {
 
 type ModelOption = { id: string; family?: string; recommended?: boolean };
 
-// Same fallback list as Memory panel, but with gpt-5.5 first since that's
-// what's recommended for Codex/agent workflows (per OpenAI docs).
 const FALLBACK_MODELS = [
   "gpt-5.5",
   "gpt-5.4",
@@ -29,6 +27,8 @@ const FALLBACK_MODELS = [
   "gpt-5-codex",
   "gpt-5",
 ];
+
+type AccordionId = "subscription" | "key" | "telegram";
 
 export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
   const [status, setStatus]     = useState<HermesStatus | null>(null);
@@ -41,6 +41,9 @@ export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
   const [modelOpen, setModelOpen] = useState(false);
   const [modelOptions, setModelOptions] = useState<ModelOption[]>(FALLBACK_MODELS.map((id) => ({ id })));
   const [modelsLive, setModelsLive] = useState(false);
+  // Default-open the API-key accordion when the parent asked us to surface
+  // the key field (clicked Brain in carousel with no key configured).
+  const [openAccordion, setOpenAccordion] = useState<AccordionId | null>(autoFocusKey ? "key" : "subscription");
   const keyRef = useRef<HTMLInputElement>(null);
   const modelRef = useRef<HTMLDivElement>(null);
 
@@ -57,11 +60,11 @@ export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
   }, []);
 
   useEffect(() => {
-    if (autoFocusKey && !loading) {
+    if (autoFocusKey && !loading && openAccordion === "key") {
       const t = setTimeout(() => keyRef.current?.focus(), 100);
       return () => clearTimeout(t);
     }
-  }, [autoFocusKey, loading]);
+  }, [autoFocusKey, loading, openAccordion]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -128,6 +131,30 @@ export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
     }
   }
 
+  function toggleAccordion(id: AccordionId) {
+    setOpenAccordion((prev) => (prev === id ? null : id));
+  }
+
+  type AccordionProps = { id: AccordionId; icon: React.ReactNode; label: string; status?: React.ReactNode; children: React.ReactNode };
+  function Accordion({ id, icon, label, status, children }: AccordionProps) {
+    const open = openAccordion === id;
+    return (
+      <div className="rounded-md border border-border overflow-hidden">
+        <button
+          type="button"
+          onClick={() => toggleAccordion(id)}
+          className="w-full flex items-center gap-2 px-3 py-2.5 text-[11px] font-medium text-foreground hover:bg-muted transition-colors"
+        >
+          {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+          {icon}
+          <span className="flex-1 text-left">{label}</span>
+          {status}
+        </button>
+        {open && <div className="px-3 py-3 border-t border-border bg-muted/30 space-y-3">{children}</div>}
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col w-full h-full bg-background border-l border-border shadow-xl">
       <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border">
@@ -140,16 +167,15 @@ export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {loading || !status ? (
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
             <Loader2 size={12} className="animate-spin" /> Loading...
           </div>
         ) : (
           <>
-            {/* Model selector — writes config.yaml `model:` line. The primary
-                provider in Hermes is openai-codex (subscription) which picks up
-                this same field. */}
+            {/* Model selector — stays outside accordions because it's the primary
+                control and applies regardless of which auth method is active. */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <p className="text-[11px] font-medium text-foreground">Default model</p>
@@ -178,27 +204,44 @@ export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
               </div>
               <p className="text-[10px] text-muted-foreground leading-relaxed">
                 Written to <code className="px-1 rounded bg-muted">/root/.hermes/config.yaml</code> as <code className="px-1 rounded bg-muted">model:</code>.
-                The default Hermes provider <code className="px-1 rounded bg-muted">openai-codex</code> uses your
-                Codex subscription with this model id — for general agent work,
-                <code className="px-1 rounded bg-muted">gpt-5.5</code> is the model OpenAI recommends.
               </p>
             </div>
 
-            {/* OpenAI API key */}
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <p className="text-[11px] font-medium text-foreground flex-1">OpenAI API key</p>
-                {status.configured ? (
-                  <span className="flex items-center gap-1 text-[10px] text-green-500">
-                    <CheckCircle size={10} />
-                    <span className="font-mono">{status.keyMasked}</span>
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1 text-[10px] text-yellow-500">
-                    <AlertCircle size={10} /> not set
-                  </span>
-                )}
-              </div>
+            {/* Accordion 1 — Subscription (info-only) */}
+            <Accordion id="subscription" icon={<Sparkles size={11} className="text-amber-500" />} label="Subscription via OpenAI Codex (recommended)">
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                Whenever possible use a <strong>subscription</strong> for Hermes rather than a raw
+                API key — costs are far more predictable. We recommend <strong>OpenAI Codex</strong>;
+                Anthropic Claude Code is supported as a fallback but can charge for some operations
+                that Codex covers under the flat-rate subscription.
+              </p>
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                To sign in with your Codex subscription: open the Hermes window (Brain in the carousel),
+                go to the <strong>Keys</strong> tab in its left menu, and pick <strong>OpenAI Codex →
+                Sign in with browser</strong>. Follow the prompts — Hermes will store the OAuth
+                credentials in <code className="px-1 rounded bg-muted">/root/.hermes</code> and use them
+                automatically.
+              </p>
+            </Accordion>
+
+            {/* Accordion 2 — OpenAI API key (existing) */}
+            <Accordion
+              id="key"
+              icon={<KeyRound size={11} className={status.configured ? "text-green-500" : "text-yellow-500"} />}
+              label="OpenAI API key (fallback)"
+              status={status.configured ? (
+                <span className="flex items-center gap-1 text-[10px] text-green-500">
+                  <CheckCircle size={10} />
+                  <span className="font-mono">{status.keyMasked}</span>
+                </span>
+              ) : (
+                <span className="text-[10px] text-muted-foreground">not set</span>
+              )}
+            >
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                Used when no subscription is connected, and for memory recall. If <strong>Memory</strong>
+                has no key, this one is applied there too automatically.
+              </p>
               <input
                 ref={keyRef}
                 type="password"
@@ -207,25 +250,27 @@ export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
                 placeholder={status.configured ? "Paste new key to replace" : "sk-…"}
                 className="w-full h-8 px-2.5 text-[11px] rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring font-mono"
               />
-              <p className="text-[10px] text-muted-foreground leading-relaxed">
-                Used as a fallback when no Codex subscription is connected, and for memory recall.
-                If <strong>Memory</strong> has no key, this one is applied there too automatically.
-              </p>
-            </div>
+            </Accordion>
 
-            {/* Telegram bot token */}
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <p className="text-[11px] font-medium text-foreground flex-1">Telegram bot token</p>
-                {status.telegramConfigured ? (
-                  <span className="flex items-center gap-1 text-[10px] text-green-500">
-                    <CheckCircle size={10} />
-                    <span className="font-mono">{status.telegramMasked}</span>
-                  </span>
-                ) : (
-                  <span className="text-[10px] text-muted-foreground">optional</span>
-                )}
-              </div>
+            {/* Accordion 3 — Telegram */}
+            <Accordion
+              id="telegram"
+              icon={<Send size={11} className={status.telegramConfigured ? "text-green-500" : "text-muted-foreground"} />}
+              label="Telegram bot token (optional)"
+              status={status.telegramConfigured ? (
+                <span className="flex items-center gap-1 text-[10px] text-green-500">
+                  <CheckCircle size={10} />
+                  <span className="font-mono">{status.telegramMasked}</span>
+                </span>
+              ) : (
+                <span className="text-[10px] text-muted-foreground">not set</span>
+              )}
+            >
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                Talk to Brain from your phone. In Telegram: message <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer" className="underline">@BotFather</a>,
+                send <code className="px-1 py-0.5 rounded bg-muted">/newbot</code>, choose a name —
+                BotFather replies with a token like <code className="px-1 py-0.5 rounded bg-muted">1234567:ABC…</code>.
+              </p>
               <input
                 type="password"
                 value={tgToken}
@@ -233,11 +278,19 @@ export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
                 placeholder={status.telegramConfigured ? "Paste new token to replace" : "1234567:ABC…"}
                 className="w-full h-8 px-2.5 text-[11px] rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring font-mono"
               />
-              <p className="text-[10px] text-muted-foreground leading-relaxed">
-                Talk to Brain from your phone. Get a token from <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer" className="underline">@BotFather</a>:
-                send <code className="px-1 py-0.5 rounded bg-muted">/newbot</code>, pick a name — BotFather replies with a token like <code className="px-1 py-0.5 rounded bg-muted">1234567:ABC…</code>.
-              </p>
-            </div>
+              <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2.5 text-[10px] leading-relaxed text-amber-700 dark:text-amber-300">
+                <p className="flex items-start gap-1.5">
+                  <AlertCircle size={11} className="shrink-0 mt-0.5" />
+                  <span>
+                    Saving writes <code className="px-1 rounded bg-muted">TELEGRAM_BOT_TOKEN</code> to
+                    <code className="px-1 rounded bg-muted"> /root/.hermes/.env</code>. Whether the Hermes
+                    Telegram gateway picks it up automatically depends on its config — after saving, send
+                    a test message to your bot. If you get no reply within a minute, open Brain → Keys
+                    panel and enable the Telegram gateway there.
+                  </span>
+                </p>
+              </div>
+            </Accordion>
 
             {savedAt && (
               <div className="rounded-md border border-emerald-500/40 bg-emerald-500/5 p-2.5 space-y-1.5">
