@@ -31,20 +31,30 @@ export function WorkspaceController() {
   const [terminalSessions, setTerminalSessions] = useState<Set<Platform>>(new Set());
   const [siteOpen, setSiteOpen]                 = useState(false);
   const [activeEmbed, setActiveEmbed]           = useState<EmbedCardId | null>(null);
-  const [domainAttached, setDomainAttached]     = useState<boolean | null>(null);
+  // Secure mode — true once the Personal Domain wizard has switched the
+  // project to strict/HTTPS mode (FRACTERA_IP_NODOMAIN_MODE=false). While the
+  // project is still served over plain HTTP on its IP this is false and we
+  // surface a browser-style "Not secure" warning. null = not loaded yet
+  // (don't flash anything). Drives the header badge + Domain tab styling.
+  const [secure, setSecure]                     = useState<boolean | null>(null);
   // Bump nonce each time we re-request a panel so children re-trigger their effect
   // even if the requested id stayed the same.
   const [panelRequest, setPanelRequest]         = useState<{ id: SettingsPanelId; nonce: number } | null>(null);
 
-  // Domain status — read once on mount, drives the header warning + Domain tab colour.
-  useEffect(() => {
-    fetch("/api/config/domain")
+  // Read secure mode on mount + poll every 60s so the indicator clears on its
+  // own a few seconds after the user activates Secure mode in the wizard.
+  // /api/config/security is cheap (reads one env file, no DNS/cert work).
+  const refreshSecure = useCallback(() => {
+    fetch("/api/config/security")
       .then((r) => r.json())
-      .then((data) => {
-        setDomainAttached(!!data.custom_domain && data.domain_status === "active");
-      })
-      .catch(() => setDomainAttached(false));
+      .then((data) => setSecure(data.open === false))
+      .catch(() => setSecure(false));
   }, []);
+  useEffect(() => {
+    refreshSecure();
+    const id = setInterval(refreshSecure, 60_000);
+    return () => clearInterval(id);
+  }, [refreshSecure]);
 
   // Clicking a Brain/Memory card in the carousel always opens the iframe
   // (the embedded service runs regardless of whether a key is configured).
@@ -140,7 +150,7 @@ export function WorkspaceController() {
     activeEmbed === "memory" ? { url: urls.brainUrl,  title: "Company Memory", Icon: BrainCircuit } :
     null;
 
-  const noDomain = domainAttached === false;
+  const insecure = secure === false;
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-background">
@@ -150,13 +160,16 @@ export function WorkspaceController() {
         style={{ height: HEADER_H }}
       >
         <div className="flex items-center gap-2">
-          {noDomain && (
-            <span className="flex items-center gap-1.5 text-orange-500">
-              <AlertTriangle size={14} />
-              <span className="text-[11px] font-medium hidden sm:inline">requires domain</span>
+          {insecure && (
+            <span
+              title="This project is served over plain HTTP on its IP address. Open Settings → Personal Domain to attach a domain and switch to HTTPS / Secure mode."
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded text-amber-600 dark:text-amber-400 border border-amber-500/40 bg-amber-500/10"
+            >
+              <AlertTriangle size={13} />
+              <span className="text-[11px] font-medium hidden sm:inline">Not secure</span>
             </span>
           )}
-          <span className={`text-sm font-semibold tracking-wide select-none ${noDomain ? "text-orange-500" : "text-foreground"}`}>
+          <span className={`text-sm font-semibold tracking-wide select-none ${insecure ? "text-amber-600 dark:text-amber-400" : "text-foreground"}`}>
             Fractera Admin
           </span>
         </div>
@@ -234,7 +247,7 @@ export function WorkspaceController() {
           embed={embedSpec}
           activeEmbedId={activeEmbed}
           onEmbedCardClick={handleEmbedCardClick}
-          domainAttached={!!domainAttached}
+          secure={secure === true}
           requestedSettingsPanel={panelRequest}
         />
       )}

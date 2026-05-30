@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
-import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste } from "lucide-react";
+import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
 import { PLATFORMS, COMING_SOON, EMBED_CARDS, type Platform, type TerminalStatus, type EmbedCard, type EmbedCardId } from "./platforms";
@@ -103,13 +103,13 @@ type Props = {
   embed?: { url: string; title: string; Icon: ComponentType<{ size?: number; className?: string }> } | null;
   activeEmbedId?: EmbedCardId | null;
   onEmbedCardClick?: (card: EmbedCard) => void;
-  domainAttached?: boolean;
+  secure?: boolean;
   // Parent (workspace-controller) can request a specific settings panel to open
   // — used when clicking an unconfigured embed card to kick off onboarding.
   requestedSettingsPanel?: { id: SettingsPanelId; nonce: number } | null;
 };
 
-export function CodingWindowShell({ height, terminalPlatform, terminalSessions, onPlatformClick, onTerminalClose, windowWidth, isMobile = false, isAuthenticated = true, isPreviewOpen = false, onPreviewClose, embed, activeEmbedId = null, onEmbedCardClick, domainAttached = false, requestedSettingsPanel = null }: Props) {
+export function CodingWindowShell({ height, terminalPlatform, terminalSessions, onPlatformClick, onTerminalClose, windowWidth, isMobile = false, isAuthenticated = true, isPreviewOpen = false, onPreviewClose, embed, activeEmbedId = null, onEmbedCardClick, secure = false, requestedSettingsPanel = null }: Props) {
   const urls = useMemo(() => getRuntimeUrls(), []);
   const [terminalStatuses] = useState<Record<Platform, TerminalStatus>>({
     "claude-code": "unavailable", "codex": "unavailable", "gemini-cli": "unavailable",
@@ -589,9 +589,11 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
               </button>
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowDomainPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowHermesPanel(false); setShowLightRag(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] transition-colors hover:bg-muted">
-                <Globe size={11} className={!domainAttached ? "text-orange-500" : "text-foreground"} />
-                <span className={!domainAttached ? "text-orange-500 font-medium" : "text-foreground"}>Personal Domain</span>
-                {!domainAttached && <span className="ml-auto text-[10px] text-orange-500/80">required</span>}
+                {secure
+                  ? <Globe size={11} className="text-foreground" />
+                  : <AlertTriangle size={11} className="text-orange-500" />}
+                <span className={!secure ? "text-orange-500 font-medium" : "text-foreground"}>Personal Domain</span>
+                {!secure && <span className="ml-auto text-[10px] text-orange-500/80">not secure</span>}
               </button>
               <div className="h-px bg-border mx-2" />
               <button type="button" onClick={handleExport}
