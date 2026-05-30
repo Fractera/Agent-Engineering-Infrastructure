@@ -54,7 +54,10 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
   // Step 4 activation
   const [activating, setActivating] = useState(false);
 
-  const refresh = useCallback(async () => {
+  // Step 1 DNS re-check button state.
+  const [checkingDns, setCheckingDns] = useState(false);
+
+  const refresh = useCallback(async (): Promise<WizardState | null> => {
     try {
       const res = await fetch("/api/config/domain/wizard-state");
       const data: WizardState = await res.json();
@@ -62,8 +65,10 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
       if (data.step2?.certSource) setUseAuto(data.step2.certSource !== "upload");
       // Auto-open whichever step is currently active.
       setOpenStep((curr) => curr ?? data.currentStep);
+      return data;
     } catch {
       toast.error("Failed to load domain status");
+      return null;
     } finally {
       setLoading(false);
     }
@@ -76,8 +81,25 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
   }
 
   async function runDnsCheck() {
-    await refresh();
-    if (state?.step1?.complete) toast.success("All seven A-records resolve to this server");
+    setCheckingDns(true);
+    try {
+      // refresh() returns the freshly-fetched state — we must read from its
+      // return value, not the `state` closure (which is stale until re-render).
+      const data = await refresh();
+      if (!data) return;
+      if (data.step1.complete) {
+        toast.success("All seven A-records resolve to this server");
+      } else {
+        const missing = data.step1.missingHosts;
+        toast.warning(
+          missing.length
+            ? `Still not resolving: ${missing.join(", ")}. DNS can take a few minutes to propagate.`
+            : "DNS not fully propagated yet — give it a few minutes and re-check.",
+        );
+      }
+    } finally {
+      setCheckingDns(false);
+    }
   }
 
   async function issueAutoCert() {
@@ -254,8 +276,11 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
               Missing or wrong: {state.step1.missingHosts.map((h) => <code key={h} className="px-1 mx-0.5 rounded bg-muted">{h}</code>)}
             </div>
           )}
-          <button onClick={runDnsCheck} className="h-8 px-4 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:opacity-90 transition-opacity">
-            {state.step1.complete ? "Re-check DNS" : "I added the records — check DNS"}
+          <button onClick={runDnsCheck} disabled={checkingDns}
+            className="h-8 px-4 rounded-md bg-primary text-primary-foreground text-[11px] font-medium disabled:opacity-40 hover:opacity-90 transition-opacity">
+            {checkingDns
+              ? <span className="flex items-center gap-1.5"><Loader2 size={11} className="animate-spin" />Checking DNS…</span>
+              : state.step1.complete ? "Re-check DNS" : "I added the records — check DNS"}
           </button>
         </Step>
 
