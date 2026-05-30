@@ -465,7 +465,7 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
           {healthRun && (
             <div className="rounded-md border border-border bg-background p-2 space-y-1 text-[10px] font-mono">
               {healthRun.results.map((r) => {
-                const ok = r.dnsOk && r.certValid && r.httpsStatus !== null && r.httpsStatus >= 200 && r.httpsStatus < 400;
+                const ok = r.dnsOk && r.certValid && r.httpsStatus !== null && r.httpsStatus >= 200 && r.httpsStatus < 500;
                 return (
                   <div key={r.host} className="flex items-center gap-2">
                     {ok ? <CheckCircle size={11} className="text-green-500" /> : <XCircle size={11} className="text-destructive" />}

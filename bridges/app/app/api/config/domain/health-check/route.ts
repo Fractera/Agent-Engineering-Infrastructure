@@ -13,22 +13,31 @@ type HostResult = {
   error: string | null;
 };
 
-// One HTTPS HEAD against the host. Uses strict cert validation (default
+// One HTTPS GET against the host. Uses strict cert validation (default
 // rejectUnauthorized: true). 5-second timeout per host so the whole sweep
 // finishes in ~5s even if one host hangs.
+//
+// GET (not HEAD): several services we proxy (Hermes :9119, LightRAG :9621)
+// reject HEAD with 405 even though they serve a page on GET. What we actually
+// need to verify is "TLS handshake succeeds with a trusted cert and the
+// service responds" — GET reflects that for every service type. We tear the
+// response down as soon as headers arrive (res.destroy) so we never download
+// the body.
 function probe(host: string): Promise<{ status: number | null; certValid: boolean; error: string | null }> {
   return new Promise((resolve) => {
     const req = https.request({
       host,
       port: 443,
-      method: "HEAD",
+      method: "GET",
       path: "/",
       timeout: 5000,
       // Default: rejectUnauthorized: true — any cert issue (expired, wrong
       // SAN, untrusted CA) makes the request fail with a TLS error, which we
       // catch and treat as certValid=false.
     }, (res) => {
-      resolve({ status: res.statusCode ?? null, certValid: true, error: null });
+      const status = res.statusCode ?? null;
+      res.destroy(); // headers are enough — don't pull the body
+      resolve({ status, certValid: true, error: null });
     });
 
     req.on("timeout", () => {
@@ -103,12 +112,16 @@ export async function POST(req: NextRequest) {
     };
   }));
 
-  // "All OK" requires every host to resolve AND respond 200/301/302 AND have
-  // a valid cert. Redirects to https from http are fine; what matters is the
-  // TLS handshake succeeded with a trusted cert.
+  // "All OK" requires every host to resolve, complete a TLS handshake with a
+  // trusted cert, and return SOME HTTP response below 500. The actual status
+  // code (200 / 307 / 404 / 405 …) is informational: a backend like the data
+  // service legitimately 404s at "/", and that does not mean Secure mode will
+  // break it — the cert is what matters. Only a missing response (null =
+  // timeout / TLS failure) or a 5xx (service genuinely down) counts as a
+  // failure here.
   const allOk = results.every((r) =>
     r.dnsOk && r.certValid &&
-    r.httpsStatus !== null && r.httpsStatus >= 200 && r.httpsStatus < 400
+    r.httpsStatus !== null && r.httpsStatus >= 200 && r.httpsStatus < 500
   );
 
   return NextResponse.json({
