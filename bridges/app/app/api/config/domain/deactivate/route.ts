@@ -51,6 +51,7 @@ function forceDemoEnvs(): void {
     vars.FRACTERA_IP_NODOMAIN_MODE = "true";
     if ("COOKIE_SECURE" in vars) vars.COOKIE_SECURE = "false";
     if ("COOKIE_DOMAIN" in vars) vars.COOKIE_DOMAIN = "";
+    delete vars.AUTH_SERVICE_URL;
     writeEnvFile(f, vars);
   }
 }

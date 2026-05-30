@@ -7,6 +7,37 @@ import { requireAuth } from "@/lib/require-auth";
 import { readEnvFile, writeEnvFile } from "@/lib/env-file";
 import { writeNginxForDomain } from "../route";
 
+const SECRETS_FILE = "/etc/fractera/secrets.env";
+const STARTER_URL = process.env.FRACTERA_STARTER_URL ?? "https://fractera-easy-starter.vercel.app";
+
+function readServerToken(): string | null {
+  try {
+    const content = fs.readFileSync(SECRETS_FILE, "utf8");
+    const match = content.match(/^SERVER_TOKEN=(.+)$/m);
+    return match?.[1]?.trim() ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function notifyStarterDomainActivated(domain: string): Promise<void> {
+  const token = readServerToken();
+  if (!token) return;
+  try {
+    await fetch(`${STARTER_URL}/api/server/domain-activated`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ domain }),
+      signal: AbortSignal.timeout(8000),
+    });
+  } catch {
+    // best-effort
+  }
+}
+
 const AUTH_ENV  = "/opt/fractera/services/auth/.env.local";
 const ADMIN_ENV = "/opt/fractera/bridges/app/.env.local";
 const APP_ENV   = "/opt/fractera/app/.env.local";
@@ -63,6 +94,7 @@ function writeStrictEnvs(domain: string): void {
   // app/.env.local
   const app = readEnvFile(APP_ENV);
   app.FRACTERA_IP_NODOMAIN_MODE = "false";
+  app.AUTH_SERVICE_URL = `https://auth.${domain}`;
   writeEnvFile(APP_ENV, app);
 
   // services/data/.env
@@ -178,6 +210,10 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     console.error("[activate] nginx rewrite failed (continuing):", e);
   }
+
+  // Notify Easy Starter: update subdomain in DB + send activation email.
+  // Fire-and-forget before PM2 reload so the outgoing request completes.
+  notifyStarterDomainActivated(domain).catch(() => {});
 
   // PM2 reload + 30s rollback-watcher. Both are detached so this HTTP
   // request returns immediately and the client gets a chance to redirect
