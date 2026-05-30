@@ -6,15 +6,18 @@ import type { NextConfig } from "next";
 // `output: standalone` is incompatible with `next start` ("next start does not
 // work with output: standalone") and produced a server that never read
 // .env.local → 401 / redirect-to-register loops. The standalone server.js also
-// doesn't bundle .next/static, so the SPA assets 404. basePath stays
-// conditional for the domain (BASE_PATH) case only.
+// doesn't bundle .next/static, so the SPA assets 404.
+//
+// No basePath either: the architecture is subdomain-per-service (admin.<domain>),
+// not path-based (/admin) — the BASE_PATH branch was a leftover from the removed
+// Light path-based model. Secure mode is handled entirely by nginx + runtime URL
+// derivation, so this config is identical in IP and domain mode (one build).
 const config: NextConfig = {
   reactStrictMode: true,
   serverExternalPackages: ["better-sqlite3"],
   turbopack: {
     root: __dirname,
   },
-  ...(process.env.BASE_PATH ? { basePath: "/admin", trailingSlash: true } : {}),
 };
 
 export default config;
