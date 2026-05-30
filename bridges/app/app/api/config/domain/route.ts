@@ -194,8 +194,14 @@ export async function POST(req: NextRequest) {
       //    keeps the same lineage (no new dir each run) so subsequent
       //    renewals via the system certbot cron just work.
       const dFlags = SUBDOMAINS.map((p) => `-d ${hostFor(p, domain)}`).join(" ");
+      // --cert-name pins the lineage to the apex domain; --expand lets certbot
+      // replace an existing certificate that covers only a subset of these
+      // hostnames (e.g. an earlier apex+www cert) WITHOUT the interactive
+      // "expand & replace?" prompt — which otherwise aborts under
+      // --non-interactive. --keep-until-expiring still short-circuits when the
+      // cert already covers everything and isn't near expiry (idempotent).
       execSync(
-        `certbot certonly --nginx ${dFlags} --non-interactive --agree-tos --keep-until-expiring -m admin@fractera.ai`,
+        `certbot certonly --nginx ${dFlags} --cert-name ${domain} --expand --non-interactive --agree-tos --keep-until-expiring -m admin@fractera.ai`,
         { timeout: 180000 }
       );
 

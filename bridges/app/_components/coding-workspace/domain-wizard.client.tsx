@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import {
   CheckCircle, XCircle, Loader2, ChevronDown, ChevronRight, AlertTriangle,
-  Globe, Shield, Upload, Sparkles, Rocket, ExternalLink, RefreshCw,
+  Globe, Shield, Upload, Sparkles, Rocket, ExternalLink, RefreshCw, HelpCircle, ShieldCheck,
 } from "lucide-react";
 
 type WizardState = {
@@ -19,6 +19,9 @@ type WizardState = {
     certExists: boolean;
     certSans: string[];
     certExpiresAt: string | null;
+    status?: string;
+    error?: string | null;
+    hosts?: { host: string; covered: boolean }[];
   };
   step3: { ready: boolean };
   step4: { complete: boolean };
@@ -42,6 +45,12 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
   // Step 2 local choice — checkbox starts ON (auto Let's Encrypt).
   const [useAuto, setUseAuto]   = useState(true);
   const [issuing, setIssuing]   = useState(false);
+  // Seconds left on the issue cooldown. While > 0 the button is locked and
+  // shows a countdown so the user can't fire certbot several times by mistake.
+  const [issueCountdown, setIssueCountdown] = useState(0);
+  const issueTimers = useRef<{ tick?: ReturnType<typeof setInterval>; poll?: ReturnType<typeof setInterval> }>({});
+  // "Why no password?" trust explainer toggle.
+  const [showTrust, setShowTrust] = useState(false);
   const [pem, setPem]           = useState("");
   const [key, setKey]           = useState("");
   const [uploading, setUploading] = useState(false);
@@ -102,7 +111,17 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
     }
   }
 
+  function stopIssueTimers() {
+    if (issueTimers.current.tick) clearInterval(issueTimers.current.tick);
+    if (issueTimers.current.poll) clearInterval(issueTimers.current.poll);
+    issueTimers.current = {};
+  }
+  // Clean up timers if the panel unmounts mid-issue.
+  useEffect(() => () => stopIssueTimers(), []);
+
   async function issueAutoCert() {
+    // Lock immediately so a double-click can't fire certbot twice.
+    if (issuing || issueCountdown > 0) return;
     setIssuing(true);
     try {
       const res = await fetch("/api/config/domain", {
@@ -111,18 +130,39 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
         body: JSON.stringify({ domain }),
       });
       const data = await res.json();
-      if (data.error) { toast.error(data.error); return; }
-      toast.success("Certificate issuance started — give it 60–120 seconds");
-      // Poll wizard-state every 5s for up to 3 min until step 2 flips green.
+      if (data.error) { toast.error(data.error); setIssuing(false); return; }
+      toast.success("Certificate issuance started — this takes 60–120 seconds");
+
+      // Lock the button with a visible countdown while certbot runs server-side.
+      const TOTAL = 120;
+      setIssueCountdown(TOTAL);
       const start = Date.now();
-      const poll = setInterval(async () => {
-        await refresh();
-        if (state?.step2?.complete || Date.now() - start > 180_000) clearInterval(poll);
+      stopIssueTimers();
+      issueTimers.current.tick = setInterval(() => {
+        const left = Math.max(0, TOTAL - Math.floor((Date.now() - start) / 1000));
+        setIssueCountdown(left);
+        if (left <= 0 && issueTimers.current.tick) { clearInterval(issueTimers.current.tick); issueTimers.current.tick = undefined; }
+      }, 1_000);
+
+      // Poll wizard-state until the cert lands (complete) or certbot errors.
+      // Read from refresh()'s return value, not the stale `state` closure.
+      issueTimers.current.poll = setInterval(async () => {
+        const fresh = await refresh();
+        const timedOut = Date.now() - start > 180_000;
+        if (fresh?.step2?.complete) {
+          stopIssueTimers(); setIssueCountdown(0); setIssuing(false);
+          toast.success("Certificate issued — covers all 7 hostnames");
+        } else if (fresh?.step2?.status === "error") {
+          stopIssueTimers(); setIssueCountdown(0); setIssuing(false);
+          toast.error("Certificate issuance failed — see details in Step 2");
+        } else if (timedOut) {
+          stopIssueTimers(); setIssueCountdown(0); setIssuing(false);
+          toast.warning("Still working… use “Refresh status” to check the result.");
+        }
       }, 5_000);
     } catch {
       toast.error("Issuance failed");
-    } finally {
-      setIssuing(false);
+      stopIssueTimers(); setIssueCountdown(0); setIssuing(false);
     }
   }
 
@@ -286,6 +326,39 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
 
         {/* STEP 2 — Certificate (auto / upload) */}
         <Step n={2} title="SSL certificate" enabled={state.step1.complete} complete={state.step2.complete} icon={<Shield size={12} />}>
+          {/* Trust explainer — answers the natural "why aren't you asking for
+              my server password?" doubt. Issuance runs locally on the user's
+              own server; we never connect in. */}
+          <div className="rounded-md border border-border bg-muted/30">
+            <button type="button" onClick={() => setShowTrust((v) => !v)}
+              className="w-full flex items-center gap-1.5 px-2.5 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+              <HelpCircle size={12} className="text-primary shrink-0" />
+              <span className="flex-1 text-left font-medium">Why don&rsquo;t we ask for your server password?</span>
+              {showTrust ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+            </button>
+            {showTrust && (
+              <div className="px-3 pb-3 pt-1 text-[10px] leading-relaxed text-muted-foreground space-y-2 border-t border-border">
+                <p>
+                  Issuing an SSL certificate traditionally requires logging into the server over SSH.
+                  <strong className="text-foreground"> Fractera never does that.</strong> The admin panel
+                  you&rsquo;re using right now runs as an application <strong className="text-foreground">on your own
+                  server</strong> and issues the certificate locally (via <code className="px-1 rounded bg-muted">certbot</code>).
+                  Nothing connects in from the outside, and we never receive or store your server password
+                  — we keep it as <code className="px-1 rounded bg-muted">*****</code>.
+                </p>
+                <p className="flex items-start gap-1.5 text-foreground">
+                  <ShieldCheck size={12} className="text-green-500 shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Proof you can verify yourself:</strong> change your server&rsquo;s root password
+                    right now. Certificate issuance will still work exactly the same — because Fractera runs
+                    as your own application on your own machine and has no technical ability to reach into
+                    your server or your data.
+                  </span>
+                </p>
+              </div>
+            )}
+          </div>
+
           <label className="flex items-start gap-2 text-[11px] cursor-pointer select-none">
             <input
               type="checkbox"
@@ -313,11 +386,40 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
                 {state.step2.certExpiresAt && <> · expires <strong>{new Date(state.step2.certExpiresAt).toLocaleDateString()}</strong></>}
               </p>
             )}
-            <button onClick={issueAutoCert} disabled={!useAuto || issuing}
+
+            {/* Per-host coverage — like the Step 1 DNS list. Makes a partial
+                cert (e.g. a host the user temporarily removed at the registrar)
+                diagnosable per hostname instead of all-or-nothing. */}
+            {state.step2.hosts && state.step2.hosts.length > 0 && (
+              <div className="rounded-md border border-border bg-background p-2 space-y-1 text-[10px] font-mono">
+                {state.step2.hosts.map((h) => (
+                  <div key={h.host} className="flex items-center gap-2">
+                    {h.covered
+                      ? <CheckCircle size={11} className="text-green-500 shrink-0" />
+                      : <XCircle size={11} className="text-destructive shrink-0" />}
+                    <span className="break-all text-foreground flex-1">{h.host}</span>
+                    <span className={h.covered ? "text-green-500" : "text-destructive"}>{h.covered ? "in cert" : "missing"}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button onClick={issueAutoCert} disabled={!useAuto || issuing || issueCountdown > 0}
               className="h-8 px-4 rounded-md bg-primary text-primary-foreground text-[11px] font-medium disabled:opacity-40 hover:opacity-90 transition-opacity">
-              {issuing ? <span className="flex items-center gap-1.5"><Loader2 size={11} className="animate-spin" />Issuing…</span> : state.step2.complete ? "Re-issue certificate" : "Issue certificate"}
+              {issuing || issueCountdown > 0
+                ? <span className="flex items-center gap-1.5"><Loader2 size={11} className="animate-spin" />Issuing… {issueCountdown > 0 ? `${issueCountdown}s` : ""}</span>
+                : state.step2.complete ? "Re-issue certificate" : "Issue certificate"}
             </button>
-            <button onClick={refresh} className="ml-2 text-[10px] text-muted-foreground hover:text-foreground underline">Refresh status</button>
+            <button onClick={refresh} disabled={issuing || issueCountdown > 0} className="ml-2 text-[10px] text-muted-foreground hover:text-foreground underline disabled:opacity-40">Refresh status</button>
+
+            {/* Last failed issuance — surfaced so the user isn't left guessing. */}
+            {state.step2.status === "error" && state.step2.error && (
+              <div className="rounded-md border border-destructive/40 bg-destructive/5 p-2 text-[10px] leading-relaxed text-destructive">
+                <p className="font-medium flex items-center gap-1.5"><XCircle size={11} /> Last issuance failed</p>
+                <p className="mt-1 font-mono break-all whitespace-pre-wrap max-h-32 overflow-y-auto">{state.step2.error}</p>
+                <p className="mt-1 text-muted-foreground">Usually one of the 7 hosts isn&rsquo;t resolving yet (check the list above / Step 1), then press &ldquo;Issue certificate&rdquo; again.</p>
+              </div>
+            )}
           </div>
 
           {/* Sub-2B — Upload your own */}
