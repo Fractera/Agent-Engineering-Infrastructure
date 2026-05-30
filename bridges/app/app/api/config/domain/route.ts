@@ -27,6 +27,26 @@ const PROXY_PORTS: Record<string, number> = {
 // depending on `cert_source`.
 const CUSTOM_CERT_DIR = "/etc/fractera/certs";
 
+// Bridge WebSocket servers (bridges/platforms/server.js) listen on these loopback
+// ports. In domain/Secure mode the browser can't reach them directly (mixed
+// content on HTTPS), so nginx proxies them as wss under the cert-covered admin
+// host: wss://admin.<domain>/ws/<name>/ → 127.0.0.1:<port>/. The PTY bridge
+// (/ws/pty/bridge/ → :3201/bridge/) drives every terminal; the rest mirror the
+// IP-mode ports so the online-check and any per-platform bridge keep working.
+const BRIDGE_WS_PORTS: Record<string, number> = {
+  pty: 3201, claude: 3200, codex: 3202, gemini: 3203, qwen: 3204, kimi: 3205,
+};
+const ADMIN_WS_LOCATIONS = Object.entries(BRIDGE_WS_PORTS).map(([name, p]) =>
+`    location /ws/${name}/ {
+        proxy_pass http://127.0.0.1:${p}/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_read_timeout 86400;
+    }
+`).join("");
+
 function getDb() {
   const db = new Database(APP_DB);
   db.exec(`CREATE TABLE IF NOT EXISTS site_settings (
@@ -118,7 +138,7 @@ server {
     resolver 1.1.1.1 8.8.8.8 valid=300s;
     resolver_timeout 5s;
 
-    location / {
+${prefix === "admin" ? ADMIN_WS_LOCATIONS : ""}    location / {
         proxy_pass http://127.0.0.1:${port};
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -133,6 +153,18 @@ server {
   });
 
   return blocks.join("\n\n") + "\n";
+}
+
+// (Re)write the HTTPS+WSS nginx config for an already-issued domain and reload.
+// Exported so the activate flow can guarantee the live nginx has the current
+// block set (incl. the bridge wss locations) without re-running certbot.
+export function writeNginxForDomain(domain: string): void {
+  const db = getDb();
+  const row = db.prepare("SELECT cert_source FROM site_settings WHERE id = 1").get() as { cert_source?: "auto" | "upload" } | undefined;
+  db.close();
+  const certSource = row?.cert_source === "upload" ? "upload" : "auto";
+  writeFileSync("/etc/nginx/sites-enabled/fractera-custom", buildNginxConfig(domain, certSource));
+  execSync("nginx -t && nginx -s reload", { timeout: 10000 });
 }
 
 export async function GET(req: NextRequest) {

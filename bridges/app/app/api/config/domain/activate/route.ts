@@ -5,6 +5,7 @@ import { spawn } from "child_process";
 import https from "https";
 import { requireAuth } from "@/lib/require-auth";
 import { readEnvFile, writeEnvFile } from "@/lib/env-file";
+import { writeNginxForDomain } from "../route";
 
 const AUTH_ENV  = "/opt/fractera/services/auth/.env.local";
 const ADMIN_ENV = "/opt/fractera/bridges/app/.env.local";
@@ -167,6 +168,15 @@ export async function POST(req: NextRequest) {
     // Best-effort revert if half-written.
     try { restoreFromBackup(backupDir); } catch {}
     return NextResponse.json({ error: `Write failed: ${e}` }, { status: 500 });
+  }
+
+  // Guarantee the live nginx has the current HTTPS + bridge-wss block set
+  // (the cert step may have written an older config). Best-effort: a stale but
+  // present config still serves, and the rollback watcher covers a hard break.
+  try {
+    writeNginxForDomain(domain);
+  } catch (e) {
+    console.error("[activate] nginx rewrite failed (continuing):", e);
   }
 
   // PM2 reload + 30s rollback-watcher. Both are detached so this HTTP

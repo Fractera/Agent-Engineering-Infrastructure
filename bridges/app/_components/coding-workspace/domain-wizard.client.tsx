@@ -62,6 +62,8 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
 
   // Step 4 activation
   const [activating, setActivating] = useState(false);
+  // Step 5 — switch back to IP / demo mode (reversibility).
+  const [deactivating, setDeactivating] = useState(false);
 
   // Step 1 DNS re-check button state.
   const [checkingDns, setCheckingDns] = useState(false);
@@ -226,6 +228,24 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
       toast.error("Activation failed");
     } finally {
       setActivating(false);
+    }
+  }
+
+  async function deactivate() {
+    if (!confirm(`Switch back to IP / demo mode?\n\n${domain} stays configured, but the project will be served over plain HTTP on its IP again and the admin demo session returns. You can re-activate Secure mode anytime.`)) return;
+    setDeactivating(true);
+    try {
+      const res = await fetch("/api/config/domain/deactivate", { method: "POST" });
+      const data = await res.json();
+      if (data.error) { toast.error(data.error); return; }
+      toast.success("Switching back — redirecting to IP mode in a few seconds…");
+      setTimeout(() => {
+        window.location.href = state?.serverIp ? `http://${state.serverIp}:3002` : "/";
+      }, 6000);
+    } catch {
+      toast.error("Switch back failed");
+    } finally {
+      setDeactivating(false);
     }
   }
 
@@ -519,6 +539,19 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
               title="Manual cert renewal ships in a future update"
               className="h-8 px-3 rounded-md border border-border text-[11px] text-muted-foreground opacity-40 cursor-not-allowed">
               Re-issue certificate <span className="ml-1 text-[9px] uppercase tracking-wider">coming soon</span>
+            </button>
+          </div>
+
+          <div className="mt-3 pt-3 border-t border-border">
+            <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">
+              Need to roll back? You can return to plain-HTTP IP / demo mode at any time —
+              your domain and certificate stay configured for re-activation.
+            </p>
+            <button onClick={deactivate} disabled={deactivating}
+              className="h-8 px-3 rounded-md border border-amber-500/40 text-amber-600 dark:text-amber-400 text-[11px] font-medium hover:bg-amber-500/10 disabled:opacity-40 transition-colors flex items-center gap-1.5">
+              {deactivating
+                ? <><Loader2 size={11} className="animate-spin" />Switching back…</>
+                : <><AlertTriangle size={11} />Switch back to IP / demo mode</>}
             </button>
           </div>
         </Step>
