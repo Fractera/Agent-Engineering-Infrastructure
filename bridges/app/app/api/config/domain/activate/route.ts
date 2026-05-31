@@ -225,8 +225,12 @@ export async function POST(req: NextRequest) {
   }
 
   // Notify Easy Starter: update subdomain in DB + send activation email.
-  // Fire-and-forget before PM2 reload so the outgoing request completes.
-  notifyStarterDomainActivated(domain).catch(() => {});
+  // AWAIT it (not fire-and-forget): pm2ReloadAllDetached below restarts
+  // fractera-admin ~0.8s later, which kills this in-flight cross-internet POST
+  // before it reaches L1 (TLS + Vercel cold start rarely complete in 0.8s) →
+  // no subdomain update, no activation email. The function has its own 8s
+  // timeout and swallows its own errors, so awaiting can't throw or hang.
+  await notifyStarterDomainActivated(domain);
 
   // PM2 reload + 30s rollback-watcher. Both are detached so this HTTP
   // request returns immediately and the client gets a chance to redirect
