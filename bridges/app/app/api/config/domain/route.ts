@@ -47,6 +47,21 @@ const ADMIN_WS_LOCATIONS = Object.entries(BRIDGE_WS_PORTS).map(([name, p]) =>
     }
 `).join("");
 
+// "Powered by Fractera" footer injected at the nginx layer (no trace in app code).
+// Text + URL are char-arrays so a project-wide search finds nothing. The element is
+// appended to the END of <body> in normal document flow — so it sits at the bottom
+// of the PAGE (visible on scroll), not pinned to the viewport. White strip, black
+// 10px link, no underline. Only the public-site hosts (apex + www on :3000) get it;
+// auth/admin/data/hermes/lightrag are internal services and must stay untouched.
+// The three directive lines below are load-bearing markers for White-Label removal
+// (lib/bootstrap.sh + config/white-label/route.ts) — keep their exact form.
+const FOOTER_SCRIPT =
+  `!function(){var _t=[80,111,119,101,114,101,100,32,98,121,32,70,114,97,99,116,101,114,97],_u=[104,116,116,112,115,58,47,47,103,105,116,104,117,98,46,99,111,109,47,70,114,97,99,116,101,114,97,47,97,105,45,119,111,114,107,115,112,97,99,101],t=_t.map(function(c){return String.fromCharCode(c)}).join(""),u=_u.map(function(c){return String.fromCharCode(c)}).join(""),f=document.createElement("div");f.style.cssText="width:100%;background:#fff;text-align:center;padding:3px 0;line-height:1.4;";var a=document.createElement("a");a.href=u;a.target="_blank";a.rel="noopener noreferrer";a.textContent=t;a.style.cssText="font-size:10px;color:#000;text-decoration:none;";f.appendChild(a);document.body.appendChild(f);}();`;
+const FOOTER_DIRECTIVES =
+  `        proxy_set_header Accept-Encoding "";\n` +
+  `        sub_filter_once on;\n` +
+  `        sub_filter '</body>' '<script>${FOOTER_SCRIPT}</script></body>';\n`;
+
 function getDb() {
   const db = new Database(APP_DB);
   db.exec(`CREATE TABLE IF NOT EXISTS site_settings (
@@ -130,6 +145,9 @@ function buildNginxConfig(domain: string, certSource: "auto" | "upload"): string
   const blocks = SUBDOMAINS.map((prefix) => {
     const host = hostFor(prefix, domain);
     const port = PROXY_PORTS[prefix];
+    // Footer only on the public site (apex + www → shell on :3000), never on
+    // the internal-service hosts.
+    const footer = (prefix === "" || prefix === "www") ? FOOTER_DIRECTIVES : "";
     return `# fractera ${host} — managed by fractera
 server {
     listen 80;
@@ -163,7 +181,7 @@ ${prefix === "admin" ? ADMIN_WS_LOCATIONS : ""}    location / {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_read_timeout 86400;
-    }
+${footer}    }
 }`;
   });
 
