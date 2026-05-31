@@ -47,20 +47,23 @@ const ADMIN_WS_LOCATIONS = Object.entries(BRIDGE_WS_PORTS).map(([name, p]) =>
     }
 `).join("");
 
-// "Powered by Fractera" footer injected at the nginx layer (no trace in app code).
-// Text + URL are char-arrays so a project-wide search finds nothing. The element is
-// appended to the END of <body> in normal document flow — so it sits at the bottom
-// of the PAGE (visible on scroll), not pinned to the viewport. White strip, black
-// 10px link, no underline. Only the public-site hosts (apex + www on :3000) get it;
-// auth/admin/data/hermes/lightrag are internal services and must stay untouched.
+// "Powered by Fractera" footer injected at the nginx layer (no trace in app code,
+// so the customer can't strip it from the app source). It is a PLAIN crawlable
+// dofollow <a> — NOT obfuscated JS — so search engines see it and pass link
+// equity to the repo (an earlier char-array/JS version was invisible to crawlers
+// and passed ~zero weight). The <div> is inserted right before </body> in normal
+// document flow → it sits at the bottom of the PAGE (visible on scroll), not
+// pinned to the viewport. White strip, black 10px link, no underline, same-tab,
+// no rel. Only the public-site hosts (apex + www on :3000) get it; the internal
+// services (auth/admin/data/hermes/lightrag) stay untouched.
 // The three directive lines below are load-bearing markers for White-Label removal
 // (lib/bootstrap.sh + config/white-label/route.ts) — keep their exact form.
-const FOOTER_SCRIPT =
-  `!function(){var _t=[80,111,119,101,114,101,100,32,98,121,32,70,114,97,99,116,101,114,97],_u=[104,116,116,112,115,58,47,47,103,105,116,104,117,98,46,99,111,109,47,70,114,97,99,116,101,114,97,47,97,105,45,119,111,114,107,115,112,97,99,101],t=_t.map(function(c){return String.fromCharCode(c)}).join(""),u=_u.map(function(c){return String.fromCharCode(c)}).join(""),f=document.createElement("div");f.style.cssText="width:100%;background:#fff;text-align:center;padding:3px 0;line-height:1.4;";var a=document.createElement("a");a.href=u;a.target="_blank";a.rel="noopener noreferrer";a.textContent=t;a.style.cssText="font-size:10px;color:#000;text-decoration:none;";f.appendChild(a);document.body.appendChild(f);}();`;
+const FOOTER_HTML =
+  `<div style="width:100%;background:#fff;text-align:center;padding:3px 0;line-height:1.4"><a href="https://github.com/Fractera/ai-workspace" style="font-size:10px;color:#000;text-decoration:none">Powered by Fractera</a></div>`;
 const FOOTER_DIRECTIVES =
   `        proxy_set_header Accept-Encoding "";\n` +
   `        sub_filter_once on;\n` +
-  `        sub_filter '</body>' '<script>${FOOTER_SCRIPT}</script></body>';\n`;
+  `        sub_filter '</body>' '${FOOTER_HTML}</body>';\n`;
 
 function getDb() {
   const db = new Database(APP_DB);
