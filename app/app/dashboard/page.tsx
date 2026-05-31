@@ -5,6 +5,7 @@ import { Trash2, Plus, X, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { FileUploadField } from "@/services/upload/file-upload-field.client"
 import type { UploadedFile } from "@/services/upload/upload.service"
+import { registerRedirectUrl } from "@/lib/runtime-urls"
 
 const ENV_HINT = process.env.NODE_ENV === "development"
   ? " — Check REMOTE_DATA_URL and DATA_API_KEY in .env.local"
@@ -38,12 +39,19 @@ export default function DashboardPage() {
   }, [])
 
   useEffect(() => {
+    // Unauthorized (only reachable in Secure mode — insecure bypasses /api/me):
+    // send the visitor to the auth register form and return them here after
+    // sign-up/in. requireRole="user" so any authenticated user reaches the
+    // dashboard (the auth form otherwise admin-gates every callbackUrl).
+    const toAuth = () => {
+      window.location.href = registerRedirectUrl(window.location.href, "user")
+    }
     fetch("/api/me")
       .then(res => {
-        if (!res.ok) { window.location.href = "/" }
+        if (!res.ok) { toAuth() }
         else { setReady(true); loadProducts() }
       })
-      .catch(() => { window.location.href = "/" })
+      .catch(toAuth)
   }, [loadProducts])
 
   function resetForm() {

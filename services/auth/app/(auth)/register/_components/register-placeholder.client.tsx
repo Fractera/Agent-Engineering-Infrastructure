@@ -106,6 +106,9 @@ function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "";
+  // Default "admin" preserves the legacy contract (every callbackUrl was the
+  // Admin Panel). "user" lets user-level destinations (Shell Dashboard) in.
+  const requireRole = searchParams.get("requireRole") || "admin";
 
   const [email, setEmail]               = useState("");
   const [password, setPassword]         = useState("");
@@ -141,8 +144,12 @@ function RegisterForm() {
         // First user: show mandatory confirmation modal before redirecting
         setPendingRedirect(callbackUrl || "/");
         setShowModal(true);
-      } else if (callbackUrl) {
+      } else if (callbackUrl && requireRole === "admin") {
+        // Non-admin tried to reach an admin-only destination.
         setShowAccessDenied(true);
+      } else if (callbackUrl) {
+        // User-level destination (e.g. Shell Dashboard) — allow the return.
+        window.location.href = callbackUrl;
       } else {
         window.location.href = "/";
       }
@@ -160,7 +167,7 @@ function RegisterForm() {
   };
 
   const loginHref = callbackUrl
-    ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
+    ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}${requireRole !== "admin" ? `&requireRole=${requireRole}` : ""}`
     : "/login";
 
   return (

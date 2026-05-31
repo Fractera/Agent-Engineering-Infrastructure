@@ -31,6 +31,10 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
+  // Default "admin" preserves the legacy contract (every callbackUrl was the
+  // Admin Panel, e.g. bridges/app/proxy.ts). "user" lets user-level
+  // destinations (Shell Dashboard) through without an Access Denied.
+  const requireRole = searchParams.get("requireRole") || "admin";
 
   const [email, setEmail]               = useState("");
   const [password, setPassword]         = useState("");
@@ -56,8 +60,9 @@ function LoginForm() {
 
     router.refresh();
 
-    // Check role before redirecting to callbackUrl
-    if (callbackUrl !== "/") {
+    // Admin destinations: verify the role before redirecting. User-level
+    // destinations only need a valid session (which we now have).
+    if (callbackUrl !== "/" && requireRole === "admin") {
       const session = await getSession();
       const roles: string[] = (session?.user as { roles?: string[] })?.roles ?? [];
       if (!roles.includes("admin")) {
@@ -72,6 +77,11 @@ function LoginForm() {
     // "/admin/" refer to the shell domain, not the auth service.
     window.location.href = callbackUrl;
   };
+
+  // Preserve the return target when switching to the register form.
+  const registerHref = callbackUrl !== "/"
+    ? `/register?callbackUrl=${encodeURIComponent(callbackUrl)}${requireRole !== "admin" ? `&requireRole=${requireRole}` : ""}`
+    : "/register";
 
   return (
     <>
@@ -107,7 +117,7 @@ function LoginForm() {
         <span className="text-xs text-muted-foreground">or</span>
         <div className="flex-1 h-px bg-border" />
       </div>
-      <Button variant="outline" className="w-full" onClick={() => { window.location.href = "/register" }}>Register</Button>
+      <Button variant="outline" className="w-full" onClick={() => { window.location.href = registerHref }}>Register</Button>
     </div>
     </>
   );

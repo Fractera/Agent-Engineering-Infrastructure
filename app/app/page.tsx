@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Zap, LayoutDashboard, Sparkles } from "lucide-react";
-
-const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL ?? "http://localhost:3002";
+import { adminBase } from "@/lib/runtime-urls";
 
 const AI_TOOLS = [
   { name: "Claude Code",    color: "bg-orange-500/10 text-orange-400 border-orange-500/25" },
@@ -21,7 +20,11 @@ const AI_TOOLS = [
 
 export default function ShellPage() {
   const [appUrl, setAppUrl] = useState("");
-  useEffect(() => { setAppUrl(window.location.origin); }, []);
+  const [adminUrl, setAdminUrl] = useState("");
+  useEffect(() => {
+    setAppUrl(window.location.origin);
+    setAdminUrl(adminBase());
+  }, []);
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background">
@@ -112,7 +115,7 @@ export default function ShellPage() {
           className="flex items-center gap-3"
         >
           <a
-            href={ADMIN_URL}
+            href={adminUrl || "#"}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/25"
