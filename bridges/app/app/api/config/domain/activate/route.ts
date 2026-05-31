@@ -9,7 +9,9 @@ import { writeNginxForDomain, readStoredCertExpiry } from "../route";
 import { lockdownFirewall } from "@/lib/firewall";
 
 const SECRETS_FILE = "/etc/fractera/secrets.env";
-const STARTER_URL = process.env.FRACTERA_STARTER_URL ?? "https://fractera-easy-starter.vercel.app";
+// Stable custom host (not *.vercel.app): lets L1 migrate off Vercel by
+// re-pointing DNS without re-deploying every customer server. → ARCHITECTURE §2.1.
+const STARTER_URL = process.env.FRACTERA_STARTER_URL ?? "https://www.fractera.ai";
 
 function readServerToken(): string | null {
   try {

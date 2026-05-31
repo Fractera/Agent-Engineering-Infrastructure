@@ -39,7 +39,9 @@ SERVER_TOKEN="$(grep -E '^SERVER_TOKEN=' "$SECRETS" 2>/dev/null | head -1 | cut 
 
 # 4. STARTER_URL — same default as the activate route.
 STARTER_URL="$(grep -E '^FRACTERA_STARTER_URL=' "$ADMIN_ENV" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '"')"
-[ -n "$STARTER_URL" ] || STARTER_URL="https://fractera-easy-starter.vercel.app"
+# Default to the STABLE custom host (not *.vercel.app) so L1 can migrate off
+# Vercel by re-pointing DNS, without editing this on every customer server.
+[ -n "$STARTER_URL" ] || STARTER_URL="https://www.fractera.ai"
 
 # 5. Cert file — prefer Let's Encrypt live, fall back to an uploaded cert.
 cert=""
