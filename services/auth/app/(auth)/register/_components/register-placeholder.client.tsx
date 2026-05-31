@@ -160,8 +160,8 @@ function RegisterForm() {
   };
 
   const loginHref = callbackUrl
-    ? `/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
-    : "/auth/login";
+    ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
+    : "/login";
 
   return (
     <>

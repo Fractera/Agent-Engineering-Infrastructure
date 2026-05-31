@@ -107,7 +107,7 @@ function LoginForm() {
         <span className="text-xs text-muted-foreground">or</span>
         <div className="flex-1 h-px bg-border" />
       </div>
-      <Button variant="outline" className="w-full" onClick={() => { window.location.href = "/auth/register" }}>Register</Button>
+      <Button variant="outline" className="w-full" onClick={() => { window.location.href = "/register" }}>Register</Button>
     </div>
     </>
   );
