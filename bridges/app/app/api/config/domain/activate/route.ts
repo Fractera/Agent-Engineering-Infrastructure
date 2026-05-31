@@ -6,6 +6,7 @@ import https from "https";
 import { requireAuth } from "@/lib/require-auth";
 import { readEnvFile, writeEnvFile } from "@/lib/env-file";
 import { writeNginxForDomain, readStoredCertExpiry } from "../route";
+import { lockdownFirewall } from "@/lib/firewall";
 
 const SECRETS_FILE = "/etc/fractera/secrets.env";
 const STARTER_URL = process.env.FRACTERA_STARTER_URL ?? "https://fractera-easy-starter.vercel.app";
@@ -210,6 +211,17 @@ export async function POST(req: NextRequest) {
     writeNginxForDomain(domain);
   } catch (e) {
     console.error("[activate] nginx rewrite failed (continuing):", e);
+  }
+
+  // Lock the host firewall down to 22/80/443 now that nginx serves HTTPS for
+  // the domain. This stops raw http://<IP>:<port> from bypassing nginx (and its
+  // auth_request gate on data/Hermes/LightRAG). Best-effort: a firewall failure
+  // must not abort activation, and ufw allows 22 before enabling so SSH is safe.
+  try {
+    const fw = lockdownFirewall();
+    if (!fw.ok) console.error("[activate] firewall lockdown skipped:", fw.detail);
+  } catch (e) {
+    console.error("[activate] firewall lockdown failed (continuing):", e);
   }
 
   // Notify Easy Starter: update subdomain in DB + send activation email.

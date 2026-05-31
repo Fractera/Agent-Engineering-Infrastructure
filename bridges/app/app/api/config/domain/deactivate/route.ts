@@ -4,6 +4,7 @@ import path from "path";
 import { spawn } from "child_process";
 import { requireAuth } from "@/lib/require-auth";
 import { readEnvFile, writeEnvFile } from "@/lib/env-file";
+import { openFirewall } from "@/lib/firewall";
 
 // Reverse of /activate — switch the project back to IP / demo mode.
 // Prefer restoring the exact pre-activation env snapshot the activate flow
@@ -67,6 +68,16 @@ export async function POST(req: NextRequest) {
     }
   } catch (e) {
     return NextResponse.json({ error: `Env restore failed: ${e}` }, { status: 500 });
+  }
+
+  // Re-open the firewall: IP mode needs every service port reachable on the
+  // public IP again. Best-effort — failing to drop ufw must not block the
+  // switch back (the user can also `ufw disable` over SSH).
+  try {
+    const fw = openFirewall();
+    if (!fw.ok) console.error("[deactivate] firewall reopen skipped:", fw.detail);
+  } catch (e) {
+    console.error("[deactivate] firewall reopen failed (continuing):", e);
   }
 
   // Drop the HTTPS nginx config so services are served on their IP ports again.
