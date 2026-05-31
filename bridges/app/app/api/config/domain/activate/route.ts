@@ -5,7 +5,7 @@ import { spawn } from "child_process";
 import https from "https";
 import { requireAuth } from "@/lib/require-auth";
 import { readEnvFile, writeEnvFile } from "@/lib/env-file";
-import { writeNginxForDomain } from "../route";
+import { writeNginxForDomain, readStoredCertExpiry } from "../route";
 
 const SECRETS_FILE = "/etc/fractera/secrets.env";
 const STARTER_URL = process.env.FRACTERA_STARTER_URL ?? "https://fractera-easy-starter.vercel.app";
@@ -23,6 +23,7 @@ function readServerToken(): string | null {
 async function notifyStarterDomainActivated(domain: string): Promise<void> {
   const token = readServerToken();
   if (!token) return;
+  const certExpiresAt = readStoredCertExpiry();
   try {
     await fetch(`${STARTER_URL}/api/server/domain-activated`, {
       method: "POST",
@@ -30,7 +31,7 @@ async function notifyStarterDomainActivated(domain: string): Promise<void> {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ domain }),
+      body: JSON.stringify({ domain, certExpiresAt }),
       signal: AbortSignal.timeout(8000),
     });
   } catch {

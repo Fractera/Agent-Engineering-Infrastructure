@@ -88,6 +88,21 @@ function getServerIp(): string {
   catch { return ""; }
 }
 
+// Read the TLS cert expiry already computed + stored in site_settings (the SSL
+// step writes it via readCertExpiry). Exported so the activate flow can relay
+// it to Easy Starter, which surfaces a countdown on the dashboard. Returns an
+// ISO string or null.
+export function readStoredCertExpiry(): string | null {
+  try {
+    const db = getDb();
+    const row = db.prepare("SELECT cert_expires_at FROM site_settings WHERE id = 1").get() as { cert_expires_at?: string | null } | undefined;
+    db.close();
+    return row?.cert_expires_at ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function readCertExpiry(certPath: string): string | null {
   try {
     const out = execSync(`openssl x509 -enddate -noout -in ${certPath}`, { timeout: 3000 }).toString().trim();
