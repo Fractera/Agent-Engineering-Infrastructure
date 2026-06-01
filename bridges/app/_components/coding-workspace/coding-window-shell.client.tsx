@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
-import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle } from "lucide-react";
+import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
 import { PLATFORMS, COMING_SOON, EMBED_CARDS, type Platform, type TerminalStatus, type EmbedCard, type EmbedCardId } from "./platforms";
@@ -185,7 +185,14 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
 
   const GITHUB_URL  = process.env.NEXT_PUBLIC_GITHUB_URL  ?? "";
   const PRO_URL     = process.env.NEXT_PUBLIC_PRO_URL     ?? "";
-  const SKILLS_URL  = process.env.NEXT_PUBLIC_SKILLS_URL  ?? "";
+  // Server identity for marketplace links (Skills / Product Loop). Non-secret
+  // ServerToken.id baked at bootstrap (NEXT_PUBLIC_SERVER_ID). `||` so an empty
+  // baked "" falls through to no-id links. Auth still uses the separate secret token.
+  const SERVER_ID   = process.env.NEXT_PUBLIC_SERVER_ID || "";
+  const MARKET_BASE = "https://fractera.ai";
+  const idQuery     = SERVER_ID ? `?id=${encodeURIComponent(SERVER_ID)}` : "";
+  const SKILLS_HREF       = `${MARKET_BASE}/skills${idQuery}`;
+  const PRODUCT_LOOP_HREF = `${MARKET_BASE}/product-loop${idQuery}`;
   const APP_VERSION = process.env.NEXT_PUBLIC_GIT_COMMIT ?? "dev";
   const countdownRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
   const urlDetectTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1096,9 +1103,15 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
         )}
 
         {/* Skills */}
-        <a href={SKILLS_URL || "https://fractera.ai"} target="_blank" rel="noopener noreferrer"
+        <a href={SKILLS_HREF} target="_blank" rel="noopener noreferrer"
           className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
           <Store size={10} />Skills
+        </a>
+
+        {/* Product Loop — distinct from Skills: the digitized end-to-end business journey */}
+        <a href={PRODUCT_LOOP_HREF} target="_blank" rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+          <Repeat size={10} />Product Loop
         </a>
 
         {/* GitHub */}
