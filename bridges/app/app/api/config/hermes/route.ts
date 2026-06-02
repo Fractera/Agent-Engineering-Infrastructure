@@ -14,6 +14,10 @@ const RAG_ENV       = process.env.RAG_ENV_PATH    ?? "/opt/fractera/services/rag
 // (https://t.me/<bot>?start=<secret>); the plugin auto-approves whoever sends
 // that /start as the owner, so no manual pairing-code approval is needed.
 const OWNER_PAIRING = process.env.HERMES_OWNER_PAIRING_PATH ?? "/root/.hermes/fractera-owner-pairing.json";
+// Hermes stores subscription OAuth/device credentials (Codex/Claude/…) here,
+// in a per-provider pool. Used to decide whether to auto-switch the agent to
+// the API-key provider — we never hijack a connected subscription.
+const HERMES_AUTH = process.env.HERMES_AUTH_PATH ?? "/root/.hermes/auth.json";
 
 const HERMES_KEY = "OPENAI_API_KEY";
 const TELEGRAM_KEY = "TELEGRAM_BOT_TOKEN";
@@ -105,6 +109,47 @@ function writeHermesModel(model: string): { ok: boolean; reason?: string } {
     return { ok: true };
   } catch (e) {
     return { ok: false, reason: String(e) };
+  }
+}
+
+// Replace the FIRST top-level `provider:` line in config.yaml (the agent's
+// active provider), preserving indentation. `fallback_provider:` is never
+// matched (the regex anchors `provider:` to the start of the trimmed line).
+function writeHermesProvider(provider: string): { ok: boolean; reason?: string } {
+  try {
+    if (!fs.existsSync(HERMES_CONFIG)) return { ok: false, reason: "config.yaml not found" };
+    const txt = fs.readFileSync(HERMES_CONFIG, "utf-8");
+    if (!/^\s*provider:\s*\S+/m.test(txt)) {
+      return { ok: false, reason: "no provider: line in config.yaml" };
+    }
+    let replaced = false;
+    const out = txt.split("\n").map((line) => {
+      if (replaced) return line;
+      const m = line.match(/^(\s*)provider:\s*\S+\s*$/);
+      if (!m) return line;
+      replaced = true;
+      return `${m[1]}provider: ${provider}`;
+    }).join("\n");
+    fs.writeFileSync(HERMES_CONFIG, out, "utf-8");
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, reason: String(e) };
+  }
+}
+
+// True when the user has connected a subscription (Codex/Claude/…) via the
+// Hermes /env panel — Hermes records those credentials in auth.json under a
+// per-provider pool. Best-effort: any read/parse failure → false, so a fresh
+// server (no auth.json) takes the API-key path.
+function subscriptionConnected(): boolean {
+  try {
+    const a = JSON.parse(fs.readFileSync(HERMES_AUTH, "utf-8"));
+    const pools = [a?.providers, a?.credential_pool].filter(
+      (p) => p && typeof p === "object",
+    );
+    return pools.some((p) => Object.keys(p as object).length > 0);
+  } catch {
+    return false;
   }
 }
 
@@ -201,6 +246,22 @@ export async function POST(req: NextRequest) {
     modelWrite = writeHermesModel(modelRaw);
   }
 
+  // Point A — "paste key → bot replies". When an OpenAI API key is saved and no
+  // subscription is connected, switch the chat agent from the subscription
+  // default (`openai-codex`) to the direct OpenAI API provider (`openai-api`)
+  // with a cheap default model. Without this the agent stays on `openai-codex`,
+  // has no credentials, and answers "Provider authentication failed" until the
+  // user manually runs /model in chat. We respect an explicit model choice and
+  // never override a connected subscription.
+  let providerSwitched: string | null = null;
+  if (apiKeyRaw && !subscriptionConnected()) {
+    const pw = writeHermesProvider("openai-api");
+    if (pw.ok) {
+      providerSwitched = "openai-api";
+      if (!modelRaw) writeHermesModel("gpt-5-mini");
+    }
+  }
+
   // Autofill: if RAG has no OpenAI key yet AND we just saved one, propagate.
   let alsoUpdated: "rag" | null = null;
   if (apiKeyRaw) {
@@ -225,14 +286,17 @@ export async function POST(req: NextRequest) {
   // unreliable in the App Router (the timer didn't fire, gateway never
   // restarted). A detached+unref'd child outlives the request regardless.
   // --update-env refreshes pm2's cached environment. No-op on servers that
-  // predate the fractera-hermes-gateway process.
-  if (tgRaw) {
+  // predate the fractera-hermes-gateway process. Restart on a new token (to
+  // reconnect to Telegram) OR a new key (so the gateway reloads OPENAI_API_KEY
+  // and the switched `openai-api` provider — otherwise the running gateway
+  // keeps the old empty-credential state and the bot stays silent).
+  if (tgRaw || apiKeyRaw) {
     try {
       spawn("sh", ["-c", "pm2 restart fractera-hermes-gateway --update-env"], {
         detached: true,
         stdio: "ignore",
       }).unref();
-    } catch { /* best-effort — token is saved regardless */ }
+    } catch { /* best-effort — credentials are saved regardless */ }
   }
 
   return NextResponse.json({
@@ -240,6 +304,7 @@ export async function POST(req: NextRequest) {
     alsoUpdated,
     modelWriteError: modelWrite && !modelWrite.ok ? modelWrite.reason : null,
     telegram,
+    providerSwitched,
   });
 }
 

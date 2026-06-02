@@ -123,6 +123,8 @@ export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
       } catch { /* admin reloading */ }
       if (data.modelWriteError) {
         toast.warning(`Model not written: ${data.modelWriteError}`);
+      } else if (data.providerSwitched) {
+        toast.success("Saved — your bot will now reply using your OpenAI key");
       } else if (data.alsoUpdated === "rag") {
         toast.success("Saved — key also applied to Memory (it had no key)");
       } else {
