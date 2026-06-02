@@ -11,6 +11,7 @@ Platform MCP ports (ports 3210-3214 served by bridges/platforms/server.js):
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
@@ -19,6 +20,115 @@ from urllib.request import urlopen, Request
 from urllib.error import URLError
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Owner trust-on-first-use (TOFU) pairing
+# ---------------------------------------------------------------------------
+# Fractera's Hermes settings panel writes a one-time owner secret here when the
+# user saves a Telegram bot token (see bridges/app .../api/config/hermes). It
+# also surfaces a deep link  https://t.me/<bot>?start=<secret>  so the user can
+# message their own bot in one tap. When that /start arrives, this hook
+# auto-approves the sender as the owner — eliminating the manual
+# "ask the bot owner to run `hermes pairing approve …`" pairing-code dance that
+# blocked every first-time user. Everyone AFTER the owner still goes through the
+# normal pairing flow, so the bot stays secure-by-default (terminal access).
+OWNER_PAIRING_FILE = os.environ.get(
+    "FRACTERA_OWNER_PAIRING_FILE", "/root/.hermes/fractera-owner-pairing.json"
+)
+
+
+def _read_owner_file() -> dict:
+    try:
+        with open(OWNER_PAIRING_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _write_owner_file(data: dict) -> None:
+    try:
+        tmp = f"{OWNER_PAIRING_FILE}.tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        os.replace(tmp, OWNER_PAIRING_FILE)
+    except OSError as exc:
+        logger.warning("[fractera-platforms] could not persist owner-pairing file: %s", exc)
+
+
+def _owner_pairing_hook(event=None, gateway=None, **kwargs):
+    """pre_gateway_dispatch: auto-approve the owner on `/start <secret>`.
+
+    Synchronous by contract — invoke_hook() never awaits callbacks — so the
+    confirmation reply is scheduled on the running gateway event loop via
+    create_task() and we return {"action": "skip"} (no pairing code, no agent
+    turn). Any non-match returns None so the normal auth/pairing chain runs.
+    """
+    try:
+        if event is None or gateway is None:
+            return None
+        source = getattr(event, "source", None)
+        if source is None or getattr(source, "chat_type", None) != "dm":
+            return None
+        platform = getattr(source, "platform", None)
+        platform_name = platform.value if platform is not None else ""
+        if platform_name != "telegram":
+            return None
+
+        text = (getattr(event, "text", "") or "").strip()
+        if not text.startswith("/start"):
+            return None
+        parts = text.split(maxsplit=1)
+        payload = parts[1].strip() if len(parts) > 1 else ""
+        if not payload:
+            return None
+
+        owner = _read_owner_file()
+        secret = owner.get("secret")
+        if not secret or owner.get("claimed"):
+            return None  # no pending claim → fall through to normal pairing
+        if payload != secret:
+            return None  # wrong secret → normal pairing
+
+        user_id = getattr(source, "user_id", None)
+        if not user_id:
+            return None
+
+        # Approve the sender as an authorized user. _approve_user must run under
+        # the store lock (see gateway/pairing.py).
+        store = getattr(gateway, "pairing_store", None)
+        if store is None:
+            return None
+        with store._lock:
+            store._approve_user(platform_name, user_id, getattr(source, "user_name", "") or "")
+
+        owner["claimed"] = True
+        owner["owner_user_id"] = str(user_id)
+        owner["claimed_at"] = time.time()
+        _write_owner_file(owner)
+        logger.info("[fractera-platforms] owner claimed via /start: user_id=%s", user_id)
+
+        # Confirmation reply — scheduled on the gateway loop (we can't await here).
+        adapter = gateway.adapters.get(platform) if hasattr(gateway, "adapters") else None
+        if adapter is not None:
+            msg = (
+                "✅ You're connected — I now recognize you as the owner. "
+                "Send me anything to get started.\n\n"
+                "✅ Готово — теперь я узнаю вас как владельца. "
+                "Напишите мне что угодно, чтобы начать."
+            )
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(adapter.send(source.chat_id, msg))
+            except RuntimeError:
+                # No running loop (shouldn't happen inside the gateway) — skip
+                # the confirmation; the user is approved regardless.
+                pass
+
+        return {"action": "skip", "reason": "fractera-owner-claimed"}
+    except Exception as exc:  # never break the gateway pipeline
+        logger.warning("[fractera-platforms] owner-pairing hook error: %s", exc)
+        return None
 
 PLATFORM_PORTS = {
     "claude-code": int(os.environ.get("CLAUDE_MCP_PORT", 3210)),
@@ -155,3 +265,6 @@ def register(ctx) -> None:
         ),
         emoji="🎯",
     )
+    # Owner trust-on-first-use: auto-approve the owner on `/start <secret>`
+    # before the pairing-code flow can fire. See _owner_pairing_hook above.
+    ctx.register_hook("pre_gateway_dispatch", _owner_pairing_hook)

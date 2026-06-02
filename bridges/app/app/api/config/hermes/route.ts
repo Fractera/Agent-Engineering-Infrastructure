@@ -1,16 +1,68 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
+import crypto from "crypto";
 import { requireAuth } from "@/lib/require-auth";
 import { readEnvFile, writeEnvFile, pm2RestartDetached } from "@/lib/env-file";
 
 const HERMES_ENV    = process.env.HERMES_ENV_PATH ?? "/root/.hermes/.env";
 const HERMES_CONFIG = process.env.HERMES_CONFIG_PATH ?? "/root/.hermes/config.yaml";
 const RAG_ENV       = process.env.RAG_ENV_PATH    ?? "/opt/fractera/services/rag/.env";
+// Owner trust-on-first-use file — shared contract with the fractera-platforms
+// Hermes plugin (gateway hook reads {secret, claimed}). When the user saves a
+// Telegram token we mint a one-time secret here and hand back a deep link
+// (https://t.me/<bot>?start=<secret>); the plugin auto-approves whoever sends
+// that /start as the owner, so no manual pairing-code approval is needed.
+const OWNER_PAIRING = process.env.HERMES_OWNER_PAIRING_PATH ?? "/root/.hermes/fractera-owner-pairing.json";
 
 const HERMES_KEY = "OPENAI_API_KEY";
 const TELEGRAM_KEY = "TELEGRAM_BOT_TOKEN";
 const RAG_LLM_KEY = "LLM_BINDING_API_KEY";
 const RAG_EMB_KEY = "EMBEDDING_BINDING_API_KEY";
+
+type OwnerPairing = {
+  secret?: string;
+  claimed?: boolean;
+  botUsername?: string | null;
+  owner_user_id?: string;
+};
+
+function readOwnerPairing(): OwnerPairing {
+  try {
+    return JSON.parse(fs.readFileSync(OWNER_PAIRING, "utf-8")) as OwnerPairing;
+  } catch {
+    return {};
+  }
+}
+
+function writeOwnerPairing(data: OwnerPairing): void {
+  fs.writeFileSync(OWNER_PAIRING, JSON.stringify(data, null, 2), "utf-8");
+}
+
+// Build the t.me link shown in the panel. While the owner is unclaimed the link
+// carries the one-time secret (clicking + Start claims ownership). Once claimed
+// it degrades to a plain chat link so the user can always re-find their bot.
+function buildDeepLink(owner: OwnerPairing): string | null {
+  if (!owner.botUsername) return null;
+  if (owner.secret && !owner.claimed) {
+    return `https://t.me/${owner.botUsername}?start=${owner.secret}`;
+  }
+  return `https://t.me/${owner.botUsername}`;
+}
+
+// Resolve the bot's @username from its token via Telegram getMe. Stateless call
+// (no conflict with the gateway's long-poll). Returns null on any failure — the
+// panel still works, it just won't render the one-tap "Message your bot" link.
+async function fetchBotUsername(token: string): Promise<string | null> {
+  try {
+    const r = await fetch(`https://api.telegram.org/bot${token}/getMe`, {
+      signal: AbortSignal.timeout(8000),
+    });
+    const d = await r.json();
+    return d?.ok && d?.result?.username ? String(d.result.username) : null;
+  } catch {
+    return null;
+  }
+}
 
 // Read the top-level `model:` line from Hermes' config.yaml. Hermes' config
 // is a small YAML file written by bootstrap; we don't need a full parser,
@@ -63,12 +115,17 @@ export async function GET(req: NextRequest) {
   const key = vars[HERMES_KEY] ?? "";
   const tg  = vars[TELEGRAM_KEY] ?? "";
   const model = readHermesModel();
+  const owner = readOwnerPairing();
   return NextResponse.json({
     configured: !!key,
     keyMasked: key ? `${key.slice(0, 7)}…${key.slice(-4)}` : null,
     telegramConfigured: !!tg,
     telegramMasked: tg ? `${tg.slice(0, 6)}…${tg.slice(-4)}` : null,
     model,
+    // Owner-pairing surface for the "Message your bot" one-tap flow.
+    botUsername: owner.botUsername ?? null,
+    ownerClaimed: !!owner.claimed,
+    telegramDeepLink: tg ? buildDeepLink(owner) : null,
   });
 }
 
@@ -120,6 +177,24 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // A fresh Telegram token resets owner-pairing: mint a new one-time secret and
+  // resolve the bot @username so the panel can offer a one-tap "Message your
+  // bot" deep link. The fractera-platforms gateway hook auto-approves whoever
+  // sends `/start <secret>` as the owner — no manual pairing-code approval.
+  let telegram: { botUsername: string | null; deepLink: string | null } | null = null;
+  if (tgRaw) {
+    const botUsername = await fetchBotUsername(tgRaw);
+    const owner: OwnerPairing = {
+      secret: crypto.randomBytes(18).toString("base64url"),
+      claimed: false,
+      botUsername,
+    };
+    try {
+      writeOwnerPairing(owner);
+    } catch { /* best-effort — panel still works without the deep link */ }
+    telegram = { botUsername, deepLink: buildDeepLink(owner) };
+  }
+
   let modelWrite: { ok: boolean; reason?: string } | null = null;
   if (modelRaw) {
     modelWrite = writeHermesModel(modelRaw);
@@ -141,11 +216,18 @@ export async function POST(req: NextRequest) {
   }
 
   pm2RestartDetached("fractera-hermes", 500);
+  // The gateway is the process that actually connects to Telegram; restart it
+  // so a newly-saved token is picked up. No-op on servers that predate the
+  // fractera-hermes-gateway process (best-effort detached restart).
+  if (tgRaw) {
+    pm2RestartDetached("fractera-hermes-gateway", 800);
+  }
 
   return NextResponse.json({
     ok: true,
     alsoUpdated,
     modelWriteError: modelWrite && !modelWrite.ok ? modelWrite.reason : null,
+    telegram,
   });
 }
 

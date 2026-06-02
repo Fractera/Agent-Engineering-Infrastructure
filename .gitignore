@@ -37,6 +37,7 @@ services/media/icons/*
 
 # Hermes reference docs (read-only clone of NousResearch/hermes-agent — never commit)
 docs/HERMES/
+docs/HERMES-WEBUI/
 
 # Build artifacts (bridges)
 bridges/app/tsconfig.tsbuildinfo

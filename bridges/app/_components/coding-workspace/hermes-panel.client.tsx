@@ -15,6 +15,10 @@ type HermesStatus = {
   telegramConfigured: boolean;
   telegramMasked: string | null;
   model: string | null;
+  // Owner-pairing: one-tap "Message your bot" deep link + ownership state.
+  botUsername: string | null;
+  ownerClaimed: boolean;
+  telegramDeepLink: string | null;
 };
 
 type ModelOption = { id: string; family?: string; recommended?: boolean };
@@ -43,7 +47,7 @@ export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
   const [modelsLive, setModelsLive] = useState(false);
   // Default-open the API-key accordion when the parent asked us to surface
   // the key field (clicked Brain in carousel with no key configured).
-  const [openAccordion, setOpenAccordion] = useState<AccordionId | null>(autoFocusKey ? "key" : "subscription");
+  const [openAccordion, setOpenAccordion] = useState<AccordionId | null>(autoFocusKey ? "key" : "telegram");
   const keyRef = useRef<HTMLInputElement>(null);
   const modelRef = useRef<HTMLDivElement>(null);
 
@@ -207,7 +211,83 @@ export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
               </p>
             </div>
 
-            {/* Accordion 1 — Subscription (info-only) */}
+            {/* Accordion — Telegram (primary path: talk to your bot) */}
+            <Accordion
+              id="telegram"
+              icon={<Send size={11} className={status.telegramConfigured ? "text-green-500" : "text-muted-foreground"} />}
+              label="Telegram bot token"
+              status={status.telegramConfigured ? (
+                <span className="flex items-center gap-1 text-[10px] text-green-500">
+                  <CheckCircle size={10} />
+                  <span className="font-mono">{status.telegramMasked}</span>
+                </span>
+              ) : (
+                <span className="text-[10px] text-muted-foreground">not set</span>
+              )}
+            >
+              <div className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
+                <p>
+                  Brain has no built-in web chat — communication happens only through external
+                  channels (Telegram, Discord, Slack, WhatsApp, Signal, SMS, CLI, …). Use the
+                  field below to wire up a Telegram bot, or open <strong>Brain → Keys</strong>
+                  panel in the left menu of the Hermes window to find the full list of supported
+                  messengers and gateway options.
+                </p>
+              </div>
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                Talk to Brain from your phone. In Telegram: message <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer" className="underline">@BotFather</a>,
+                send <code className="px-1 py-0.5 rounded bg-muted">/newbot</code>, choose a name —
+                BotFather replies with a token like <code className="px-1 py-0.5 rounded bg-muted">1234567:ABC…</code>.
+              </p>
+              <input
+                type="password"
+                value={tgToken}
+                onChange={(e) => setTgToken(e.target.value)}
+                placeholder={status.telegramConfigured ? "Paste new token to replace" : "1234567:ABC…"}
+                className="w-full h-8 px-2.5 text-[11px] rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring font-mono"
+              />
+              {/* One-tap "Message your bot": opens the chat with your bot in
+                  Telegram. Before ownership is claimed the link carries a
+                  one-time secret — tapping Start auto-approves you as the owner,
+                  so you never see a pairing code. After that it's just a handy
+                  shortcut back to your bot. */}
+              {status.telegramConfigured && status.telegramDeepLink && (
+                <a
+                  href={status.telegramDeepLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-1.5 h-9 px-3 rounded-md bg-[#229ED9] text-white text-[11px] font-medium hover:opacity-90 transition-opacity"
+                >
+                  <Send size={12} />
+                  {status.botUsername ? `Message @${status.botUsername}` : "Message your bot"}
+                </a>
+              )}
+              {status.telegramConfigured && (
+                status.ownerClaimed ? (
+                  <p className="flex items-center gap-1.5 text-[10px] text-green-600 dark:text-green-400">
+                    <CheckCircle size={11} className="shrink-0" />
+                    You are connected as the bot owner.
+                  </p>
+                ) : (
+                  <p className="text-[10px] leading-relaxed text-muted-foreground">
+                    Tap the button above and press <strong>Start</strong> in Telegram — that one tap
+                    registers you as the owner. No codes, no approvals. If the bot still asks for a
+                    pairing code, reload this panel and use the button (the old chat may be cached).
+                  </p>
+                )
+              )}
+              <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2.5 text-[10px] leading-relaxed text-amber-700 dark:text-amber-300">
+                <p className="flex items-start gap-1.5">
+                  <AlertCircle size={11} className="shrink-0 mt-0.5" />
+                  <span>
+                    The bot can only reply once a model provider is connected (Subscription or OpenAI
+                    key below). Until then it will recognize you but stay silent.
+                  </span>
+                </p>
+              </div>
+            </Accordion>
+
+            {/* Accordion — Subscription (info-only) */}
             <Accordion id="subscription" icon={<Sparkles size={11} className="text-amber-500" />} label="Subscription via OpenAI Codex (recommended)">
               <p className="text-[11px] leading-relaxed text-muted-foreground">
                 Whenever possible use a <strong>subscription</strong> for Hermes rather than a raw
@@ -250,55 +330,6 @@ export function HermesPanel({ onClose, autoFocusKey = false }: Props) {
                 placeholder={status.configured ? "Paste new key to replace" : "sk-…"}
                 className="w-full h-8 px-2.5 text-[11px] rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring font-mono"
               />
-            </Accordion>
-
-            {/* Accordion 3 — Telegram */}
-            <Accordion
-              id="telegram"
-              icon={<Send size={11} className={status.telegramConfigured ? "text-green-500" : "text-muted-foreground"} />}
-              label="Telegram bot token (optional)"
-              status={status.telegramConfigured ? (
-                <span className="flex items-center gap-1 text-[10px] text-green-500">
-                  <CheckCircle size={10} />
-                  <span className="font-mono">{status.telegramMasked}</span>
-                </span>
-              ) : (
-                <span className="text-[10px] text-muted-foreground">not set</span>
-              )}
-            >
-              <div className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
-                <p>
-                  Brain has no built-in web chat — communication happens only through external
-                  channels (Telegram, Discord, Slack, WhatsApp, Signal, SMS, CLI, …). Use the
-                  field below to wire up a Telegram bot, or open <strong>Brain → Keys</strong>
-                  panel in the left menu of the Hermes window to find the full list of supported
-                  messengers and gateway options.
-                </p>
-              </div>
-              <p className="text-[11px] leading-relaxed text-muted-foreground">
-                Talk to Brain from your phone. In Telegram: message <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer" className="underline">@BotFather</a>,
-                send <code className="px-1 py-0.5 rounded bg-muted">/newbot</code>, choose a name —
-                BotFather replies with a token like <code className="px-1 py-0.5 rounded bg-muted">1234567:ABC…</code>.
-              </p>
-              <input
-                type="password"
-                value={tgToken}
-                onChange={(e) => setTgToken(e.target.value)}
-                placeholder={status.telegramConfigured ? "Paste new token to replace" : "1234567:ABC…"}
-                className="w-full h-8 px-2.5 text-[11px] rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring font-mono"
-              />
-              <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2.5 text-[10px] leading-relaxed text-amber-700 dark:text-amber-300">
-                <p className="flex items-start gap-1.5">
-                  <AlertCircle size={11} className="shrink-0 mt-0.5" />
-                  <span>
-                    Saving writes <code className="px-1 rounded bg-muted">TELEGRAM_BOT_TOKEN</code> to
-                    <code className="px-1 rounded bg-muted"> /root/.hermes/.env</code>. Whether the Hermes
-                    Telegram gateway picks it up automatically depends on its config — after saving, send
-                    a test message to your bot. If you get no reply within a minute, open Brain → Keys
-                    panel and enable the Telegram gateway there.
-                  </span>
-                </p>
-              </div>
             </Accordion>
 
             {savedAt && (
