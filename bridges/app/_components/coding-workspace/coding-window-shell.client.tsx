@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
-import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat } from "lucide-react";
+import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Terminal as TerminalIcon } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
 import { PLATFORMS, COMING_SOON, EMBED_CARDS, type Platform, type TerminalStatus, type EmbedCard, type EmbedCardId } from "./platforms";
@@ -117,6 +117,16 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   });
   const [bridgeStatus, setBridgeStatus]     = useState<"unknown" | "online" | "offline">("unknown");
   const [carouselIdx, setCarouselIdx]       = useState(0);
+  // Selective install (S5): which components this server actually installed.
+  // null = unknown/loading or fetch failed → show everything (back-compat with
+  // servers deployed before selective install, and never hide on a transient error).
+  const [installed, setInstalled]           = useState<string[] | null>(null);
+  // System terminal (S6): a plain project-level shell, always available as the
+  // last carousel card. Started once, then kept mounted; `active` toggles its
+  // visibility over the agent terminals / idle canvas.
+  const [sysTermStarted, setSysTermStarted] = useState(false);
+  const [sysTermActive, setSysTermActive]   = useState(false);
+  const sysTermRef = useRef<XtermTerminalHandle | null>(null);
   const [confirmingPlatform, setConfirmingPlatform] = useState<Platform | null>(null);
   const [dataMenuOpen, setDataMenuOpen]             = useState(false);
   const [importing, setImporting]                   = useState(false);
@@ -269,6 +279,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
 
   function handleCardClick(platformId: Platform) {
     onPreviewClose?.();
+    setSysTermActive(false);
     setShowEnvEditor(false);
     setShowMediaLibrary(false);
     setShowDbBrowser(false);
@@ -316,6 +327,15 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     fetch("/api/config/git-status")
       .then((r) => r.json())
       .then((data) => { setGitConnected(!!data.connected); setGitRepo(data.repo ?? null); })
+      .catch(() => {});
+  }, []);
+
+  // Load the installed-component manifest (S5). On any failure we leave
+  // `installed` null → everything shows (safe default; never hide on error).
+  useEffect(() => {
+    fetch("/api/config/components")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data && Array.isArray(data.components)) setInstalled(data.components); })
       .catch(() => {});
   }, []);
 
@@ -502,8 +522,14 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
+  // Selective install (S5): only show the components this server installed.
+  // The system terminal (S6) is NOT in this filter — it is always present.
+  const isInstalled = (id: string) => installed === null || installed.includes(id);
+  const visiblePlatforms  = PLATFORMS.filter((p) => isInstalled(p.id));
+  const visibleEmbedCards = EMBED_CARDS.filter((c) => isInstalled(c.id));
+
   const termH   = height - CAROUSEL_H - FOOTER_H;
-  const total   = PLATFORMS.length;
+  const total   = visiblePlatforms.length + 1; // +1 for the always-present Terminal card
   const safeIdx = Math.min(carouselIdx, Math.max(total - 1, 0));
   const canPrev = safeIdx > 0;
   const canNext = safeIdx < total - 1;
@@ -577,13 +603,13 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Database size={11} />Database
               </button>
-              {(
+              {isInstalled("brain") && (
                 <button type="button" onClick={() => { setDataMenuOpen(false); setShowHermesPanel((v) => !v); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                   <Bot size={11} />Hermes Agent settings
                 </button>
               )}
-              {(
+              {isInstalled("memory") && (
                 <button type="button" onClick={() => { setDataMenuOpen(false); setShowLightRag((v) => !v); setShowHermesPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                   <BrainCircuit size={11} />Company Memory settings
@@ -654,7 +680,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
         <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
           <div className="flex" style={{ gap: GAP, transform: `translateX(-${safeIdx * (CARD_W + GAP)}px)`, transition: "transform 0.25s ease" }}>
 
-            {EMBED_CARDS.map((card) => {
+            {visibleEmbedCards.map((card) => {
               const Icon = EMBED_ICON_MAP[card.iconKey];
               const isActive = activeEmbedId === card.id;
               const notAuthed = !isAuthenticated;
@@ -662,7 +688,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                 <button
                   key={card.id}
                   type="button"
-                  onClick={() => { if (!notAuthed) onEmbedCardClick?.(card); }}
+                  onClick={() => { if (!notAuthed) { setSysTermActive(false); onEmbedCardClick?.(card); } }}
                   disabled={notAuthed}
                   style={{ width: CARD_W, flexShrink: 0 }}
                   className={`flex items-center justify-center gap-1.5 rounded-md border h-9 text-[11px] transition-all px-2 ${
@@ -677,7 +703,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
               );
             })}
 
-            {PLATFORMS.map((p) => {
+            {visiblePlatforms.map((p) => {
               const isRunning      = terminalSessions.has(p.id);
               const isCurrent      = terminalPlatform === p.id && isRunning;
               const isConfirming   = confirmingPlatform === p.id;
@@ -742,6 +768,49 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                 </React.Fragment>
               );
             })}
+
+            {/* System terminal — ALWAYS the last card, never filtered by the
+                installed-component set. A plain project-level shell for installing
+                tools, linking Telegram↔Hermes, etc. Unlike the AI platforms it
+                can never be disabled. */}
+            {(() => {
+              const notAuthed = !isAuthenticated;
+              const btn = (
+                <button
+                  type="button"
+                  style={{ width: CARD_W, flexShrink: 0 }}
+                  disabled={notAuthed}
+                  onClick={() => {
+                    if (notAuthed) return;
+                    onPreviewClose?.();
+                    setShowEnvEditor(false); setShowMediaLibrary(false); setShowDbBrowser(false);
+                    setShowUsers(false); setShowInfo(false); setShowHelp(false);
+                    setShowGitConnect(false); setShowDomainPanel(false);
+                    setShowHermesPanel(false); setShowLightRag(false);
+                    setSysTermStarted(true);
+                    setSysTermActive(true);
+                  }}
+                  className={`flex items-center justify-center gap-1.5 rounded-md border h-9 text-[11px] transition-all px-2 ${
+                    notAuthed     ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-40"
+                    : sysTermActive ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300 font-medium"
+                    : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <TerminalIcon size={11} className="shrink-0" />
+                  <span>Terminal</span>
+                </button>
+              );
+              return notAuthed ? (
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>{btn}</TooltipTrigger>
+                    <TooltipContent side="bottom" className="bg-zinc-800 text-white text-[11px] leading-relaxed" style={{ zIndex: 99999, maxWidth: 260 }}>
+                      <div className="px-1 py-0.5">Sign in to access the terminal</div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : btn;
+            })()}
 
             {/* Coming soon cards */}
             {COMING_SOON.map((item) => (
@@ -1018,6 +1087,31 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           </div>
         );
       })}
+
+      {/* ── System terminal panel (S6) — plain project-level shell, no CLI.
+            Mounted once started, then kept alive; visibility toggles so the
+            session persists when switching to an agent/embed and back. Higher
+            zIndex so it sits above the agent terminals when active. ── */}
+      {sysTermStarted && (
+        <div
+          style={{
+            position: "absolute",
+            top: CAROUSEL_H,
+            left: 0,
+            right: 0,
+            height: termH,
+            display: sysTermActive ? "block" : "none",
+            zIndex: 8,
+          }}
+          className="bg-zinc-950"
+        >
+          <XtermTerminal
+            ref={(h) => { sysTermRef.current = h; }}
+            wsUrl={urls.ptyUrl}
+            platform="system"
+          />
+        </div>
+      )}
 
       {/* ── Footer ── */}
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: FOOTER_H }} className="border-t border-border bg-background flex items-center gap-2 px-3">

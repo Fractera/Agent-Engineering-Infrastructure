@@ -312,6 +312,19 @@ ptywss.on('connection', (ws) => {
     try {
       const msg = JSON.parse(raw.toString())
 
+      // System terminal — a plain project-level shell, NO CLI launched. Used to
+      // install tools, link Telegram↔Hermes, etc. zsh already spawned in app/;
+      // cd up to the repo root (/opt/fractera) where the services live. Must be
+      // matched BEFORE the generic platform block below (whose else-branch would
+      // otherwise launch Claude for any unknown platform value).
+      if (msg.type === 'init' && msg.platform === 'system' && !platformCli) {
+        platformCli = 'system'
+        const root = resolve(PROJECT_DIR, '..') // /opt/fractera
+        setTimeout(() => { try { proc.write(`cd ${root}\n`) } catch {} }, 300)
+        activePtys.set('system', (text) => { try { proc.write(text); return true } catch { return false } })
+        return
+      }
+
       // Platform init — auto-launch the right CLI
       if (msg.type === 'init' && msg.platform && !platformCli) {
         platformCli = msg.platform
