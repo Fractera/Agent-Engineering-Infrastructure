@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import crypto from "crypto";
+import { spawn } from "child_process";
 import { requireAuth } from "@/lib/require-auth";
 import { readEnvFile, writeEnvFile, pm2RestartDetached } from "@/lib/env-file";
 
@@ -217,10 +218,21 @@ export async function POST(req: NextRequest) {
 
   pm2RestartDetached("fractera-hermes", 500);
   // The gateway is the process that actually connects to Telegram; restart it
-  // so a newly-saved token is picked up. No-op on servers that predate the
-  // fractera-hermes-gateway process (best-effort detached restart).
+  // so a newly-saved token is picked up and it reconnects to Telegram.
+  // Spawned synchronously + detached (NOT via setTimeout): the admin process
+  // serving this request is a DIFFERENT process, so there is no self-kill risk
+  // and nothing to defer — and a deferred setTimeout after the response proved
+  // unreliable in the App Router (the timer didn't fire, gateway never
+  // restarted). A detached+unref'd child outlives the request regardless.
+  // --update-env refreshes pm2's cached environment. No-op on servers that
+  // predate the fractera-hermes-gateway process.
   if (tgRaw) {
-    pm2RestartDetached("fractera-hermes-gateway", 800);
+    try {
+      spawn("sh", ["-c", "pm2 restart fractera-hermes-gateway --update-env"], {
+        detached: true,
+        stdio: "ignore",
+      }).unref();
+    } catch { /* best-effort — token is saved regardless */ }
   }
 
   return NextResponse.json({
