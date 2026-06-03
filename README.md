@@ -4,7 +4,7 @@
 
 <h1 align="center">Fractera AI Workspace</h1>
 
-<p align="center"><strong>Your own private AI coding workspace — on your own server, in 10 minutes.</strong></p>
+<p align="center"><strong>Deploy a full AI coding workspace to your own VPS in 10 minutes. Zero DevOps.</strong></p>
 
 <p align="center">
   <a href="https://github.com/Fractera/ai-workspace/stargazers">
@@ -17,7 +17,9 @@
   &nbsp;
   <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="MIT"/>
   &nbsp;
-  <img src="https://img.shields.io/badge/Self--Hosted-success?style=for-the-badge" alt="Self-Hosted"/>
+  <a href="https://smithery.ai/servers/admin-add5/fractera">
+    <img src="https://smithery.ai/badge/admin-add5/fractera" alt="Smithery"/>
+  </a>
 </p>
 
 <p align="center">
@@ -28,32 +30,38 @@
   <img src="https://img.shields.io/badge/Kimi_Code-Moonshot-00C6FF?style=flat-square" alt="Kimi Code"/>
   <img src="https://img.shields.io/badge/Hermes-Orchestrator-6e40c9?style=flat-square" alt="Hermes"/>
   <img src="https://img.shields.io/badge/LightRAG-Memory-22c55e?style=flat-square" alt="LightRAG"/>
+  <img src="https://img.shields.io/badge/Telegram-Gateway-229ED9?style=flat-square" alt="Telegram"/>
   <img src="https://img.shields.io/badge/SQLite-Database-003B57?style=flat-square" alt="SQLite"/>
   <img src="https://img.shields.io/badge/Media_Storage-S3--compatible-f59e0b?style=flat-square" alt="Media Storage"/>
   <img src="https://img.shields.io/badge/Auth-NextAuth_v5-ef4444?style=flat-square" alt="Auth"/>
-  <img src="https://img.shields.io/badge/Telegram-Gateway-229ED9?style=flat-square" alt="Telegram"/>
+  <img src="https://img.shields.io/badge/MCP-Connector-000000?style=flat-square" alt="MCP"/>
 </p>
 
 ---
 
-## ✨ What is Fractera?
+## The DevOps problem is solved. Finally.
 
-Fractera is an open-source self-hosted platform that turns a bare Ubuntu VPS into a complete AI coding workspace — 5 AI engines, an autonomous orchestrator, private graph memory, auth, database, and file storage — all configured automatically, no DevOps required.
+You know how to write code. You do not want to think about how to wire Nginx, issue SSL certificates, connect auth to a database, configure PM2, set up reverse proxies, and remember which port does what. Nobody wants to spend a week on that before writing a single line of business logic.
 
-You bring a server. We configure everything.
+Fractera makes all of that **completely automatic**. You give it a bare Ubuntu server. It configures everything — Nginx, HTTPS, authentication, database, media storage, five AI coding platforms, an autonomous orchestrator, and private graph memory. You get a fully operational private workspace at `http://your-ip:3002` in about 10 minutes. Then you code.
+
+This is not a Docker image you still have to manage. This is not a tutorial you follow step by step. This is a system that deploys itself and gets out of your way.
+
+> "Finally someone made it so I don't have to think about deployment, ports, DevOps commands, and all that nonsense."
 
 ---
 
-## 🚀 Quick Start — two ways
+## Quick start — two ways
 
-### 1. Via website (no terminal needed)
+### 1. Website (zero terminal)
 
-Go to **[fractera.ai](https://www.fractera.ai)** and deploy your workspace in one click.
-Enter your VPS credentials — the platform handles the rest (Nginx, HTTPS, auth, services). Done in ~10 minutes.
+→ **[fractera.ai](https://www.fractera.ai)**
 
-### 2. Via MCP connector (from your AI chat)
+Enter your VPS credentials. Watch it deploy. Done in ~10 minutes.
 
-Add the Fractera MCP connector to Claude, Cursor, or any MCP-compatible client:
+### 2. MCP connector (from your AI chat)
+
+Add to Claude, Cursor, or any MCP-compatible client:
 
 ```json
 {
@@ -65,11 +73,24 @@ Add the Fractera MCP connector to Claude, Cursor, or any MCP-compatible client:
 }
 ```
 
-Then tell your AI agent: *"Deploy Fractera on my server"* — provide your VPS IP and credentials.
-The agent registers you, runs the full deploy, and reports back when your workspace is live at `http://<your-ip>:3002`.
+Tell your agent: *"Deploy Fractera on my server at IP `x.x.x.x`"* — provide credentials when asked.
+The agent runs the full deployment and reports back when your workspace is live.
 
-> **MCP connector:** `https://www.fractera.ai/api/mcp` · Open, no auth required  
-> **Listed on:** [Smithery](https://smithery.ai/servers/admin-add5/fractera) · [mcp.so](https://mcp.so) · [Glama](https://glama.ai/mcp/servers) · [Official MCP Registry](https://registry.modelcontextprotocol.io) (`io.github.Fractera/deploy`)
+**MCP connector:** `https://www.fractera.ai/api/mcp` · Open, no auth  
+**Listed on:** [Smithery](https://smithery.ai/servers/admin-add5/fractera) · [mcp.so](https://mcp.so) · [Glama](https://glama.ai/mcp/servers) · [Official MCP Registry](https://registry.modelcontextprotocol.io) (`io.github.Fractera/deploy`)
+
+---
+
+## Production coding + local development — same workflow
+
+Fractera is not just for remote browser coding. It works equally well as a production target for your existing local setup:
+
+1. Connect your Fractera project to a GitHub repository.
+2. Develop locally in your IDE with hot reload — your usual flow, zero changes.
+3. Push to GitHub when ready.
+4. Pull in Fractera workspace and hit Deploy.
+
+Your changes go live in production in minutes. Your own server becomes a self-hosted Vercel: GitHub is the bridge between your local environment and production. Local environment uses the database and file storage that live on your server — no cloud subscriptions.
 
 ---
 
@@ -77,15 +98,37 @@ The agent registers you, runs the full deploy, and reports back when your worksp
 
 | Component | Description |
 |---|---|
-| **5 AI coding engines** | Claude Code, Codex, Gemini CLI, Qwen Code, Kimi Code — parallel terminals, switch without losing context |
-| **Hermes orchestrator** | Autonomous AI agent that works in the background and connects to Telegram |
-| **LightRAG memory** | Private graph memory shared across all agents and sessions |
-| **Auth** | Email/password, guest mode, role-based access (Architect / User / Guest) |
-| **SQLite database** | Built-in database browser — no external DB required |
+| **5 AI coding engines** | Claude Code · Codex · Gemini CLI · Qwen Code · Kimi Code — parallel terminals |
+| **Hermes orchestrator** | Autonomous agent: delegates tasks to platforms, works in the background, connects to Telegram |
+| **LightRAG memory** | Private graph memory shared across all agents and sessions — no token waste on context |
+| **Auth** | Email/password · guest mode · role-based access (Architect / User / Guest) |
+| **SQLite database** | Built-in browser — no external DB, no cloud account |
 | **Media storage** | S3-compatible local object storage — images, videos, documents |
-| **Telegram gateway** | Chat with Hermes from your phone, get notifications, issue commands |
-| **Custom domain** | Attach your own domain with HTTPS in one click (optional) |
-| **Auto-updates** | Pull latest version from GitHub without SSH |
+| **Telegram gateway** | Chat with Hermes from your phone, receive notifications, issue commands |
+| **Custom domain** | Attach your domain with HTTPS in one click from Admin → Personal Domain |
+| **GitHub integration** | Pull / push from the admin panel — no SSH required |
+| **Auto-updates** | Pull the latest version from upstream without SSH |
+
+---
+
+## Architecture
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                    Fractera Workspace                     │
+│                                                          │
+│  fractera-app              :3000  Shell (Next.js)         │
+│  fractera-auth             :3001  Auth (NextAuth v5)      │
+│  fractera-admin            :3002  Admin UI (bridges/app)  │
+│  fractera-bridge           :3200–3206  AI platform PTYs  │
+│  fractera-data             :3300  Media + SQLite          │
+│  fractera-rag              :9621  LightRAG memory         │
+│  fractera-hermes           :9119  Hermes dashboard        │
+│  fractera-hermes-gateway   —      Telegram/messaging      │
+└──────────────────────────────────────────────────────────┘
+```
+
+**Tech stack:** Next.js 16.2 · React 19 · Tailwind v4 · shadcn/ui · SQLite · NextAuth v5 · Node.js · PM2
 
 ---
 
@@ -93,7 +136,7 @@ The agent registers you, runs the full deploy, and reports back when your worksp
 
 **Private team workspace** — editors collaborate on content planning in a secure authenticated environment, nothing exposed publicly.
 
-**Lead dispatch Kanban** — inbound emails from a website form auto-create Kanban cards, routed to field engineers by proximity to minimize travel.
+**Lead dispatch Kanban** — inbound emails from a website form auto-create Kanban cards, routed to field engineers by proximity to minimize travel costs.
 
 **Adaptive AI tutor** — child completes coding challenges on a public page; parent sees results in a private dashboard and adjusts lessons via Telegram.
 
@@ -101,30 +144,9 @@ The agent registers you, runs the full deploy, and reports back when your worksp
 
 ---
 
-## Architecture
+## ⭐ Star this repo
 
-```
-┌─────────────────────────────────────────────────────┐
-│                  Fractera Workspace                  │
-│                                                     │
-│  fractera-app    :3000  Shell (Next.js)              │
-│  fractera-auth   :3001  Auth (NextAuth v5)           │
-│  fractera-admin  :3002  Admin (bridges/app)          │
-│  fractera-bridge :3200–3206  AI platform bridges     │
-│  fractera-data   :3300  Media + SQLite               │
-│  fractera-rag    :9621  LightRAG memory              │
-│  fractera-hermes :9119  Hermes orchestrator          │
-│  fractera-hermes-gateway  Telegram/messaging         │
-└─────────────────────────────────────────────────────┘
-```
-
-**Tech stack:** Next.js 16.2 · React 19 · Tailwind v4 · shadcn/ui · SQLite · NextAuth v5 · Node.js · PM2
-
----
-
-## ⭐ Support the project
-
-If Fractera is useful to you — a star makes a real difference. It helps others find the project and motivates continued development.
+If Fractera saves you from writing another Nginx config — a star makes a real difference. It helps other developers find the project.
 
 <p align="center">
   <a href="https://github.com/Fractera/ai-workspace/stargazers">
@@ -132,38 +154,142 @@ If Fractera is useful to you — a star makes a real difference. It helps others
   </a>
 </p>
 
-**Free skills from the marketplace** — send proof to `admin@fractera.ai`:
-
-| Action | Reward |
-|---|---|
-| ⭐ Star this repo | +1 skill |
-| 🍴 Fork this repo | +1 skill |
-| ✍️ Write on Medium | +2 skills |
-| 📝 Write on dev.to or any dev blog | +2 skills |
-| 🐦 Post on X with a link | +1 skill |
-| ⭐ Leave a review on fractera.ai | +1 skill |
-
 ---
 
 ## FAQ
 
-**Do I need to know DevOps?**  
-No. The installer configures Nginx, HTTPS, auth, database, and all services automatically.
+### The same AI platforms — yet Fractera ships faster with fewer tokens. Why?
 
-**What server do I need?**  
-Any Ubuntu 22.04/24.04 VPS with at least 2 GB RAM. A €4–5/month VPS works fine.
+Regular vibe coding puts all the heavy lifting on the AI: design the architecture, write boilerplate, locate the right component, recall what was decided last session. Every token spent on that overhead is a token not spent on your actual feature.
 
-**Is it free?**  
-Yes. Fractera never charges for the deployment. It runs on your own hardware. You pay only for the VPS (directly to the provider).
+Fractera eliminates that overhead at every layer:
 
-**Can I use my own domain?**  
-Yes. Attach a custom domain with HTTPS in one click from Admin → Personal Domain.
+- **Production-ready starters** — Auth, database, file storage, and routing ship fully pre-configured. The AI skips months of scaffolding and goes straight to your feature from day one.
+- **Component highlighting** — Click any element on your live site to jump directly to its source. No tokens wasted asking "where is the navbar?".
+- **LightRAG** — A persistent vector store that remembers your entire codebase and every architectural decision. Every AI message arrives with full context.
+- **AI-optimized skills & instructions** — Pre-built prompts designed for the right approach on the first try.
+- **Cross-platform orchestration** — All five coding platforms share context. Switching from Claude Code to Gemini CLI does not mean losing the thread.
 
-**Can I connect external services?**  
-No restrictions. Connect any external database, API, or service via environment variables from Admin → Settings.
+Tasks that take 10–20 back-and-forth messages in a vanilla AI chat typically resolve in 2–3 focused exchanges inside Fractera.
 
-**What AI models does it use?**  
-Claude Code (Anthropic subscription), Codex (OpenAI subscription), Gemini CLI (Google), Qwen Code (Alibaba), Kimi Code (Moonshot). Models run under your own subscriptions — no middleman fees.
+---
+
+### How does Fractera keep your project stable?
+
+The "free services" formula looks great on day one: Clerk for auth, Supabase for database, a dozen cloud APIs. Then each service quietly updates its pricing. Miss one billing cycle and your project goes dark — no warning, no grace period. Partners who switched to Fractera often share this story: a live project lost because one service expired. By the time they figured it out, the reputation damage was done.
+
+Fractera keeps everything on your server:
+
+- **One server, one bill** — cost does not scale with your users.
+- **Pause your business** — your data does not disappear. Back it up and restore when ready.
+- **Code lives on GitHub** — recovery is always possible, even if dependencies have aged.
+- **Built-in AI** can help rebuild the project even when some packages are outdated.
+
+---
+
+### What server specs do I need?
+
+For full AI-coding workloads: **6 cores / 8 GB RAM** recommended minimum. Storage depends on your project — 75 GB is a solid baseline.
+
+Once active AI development wraps up, downgrade to **2 cores / 4 GB RAM** — typically €1–2 per month.
+
+---
+
+### Can I combine local development with Fractera?
+
+Yes — for developers with an existing local setup, this is often the most natural workflow:
+
+1. After setting up your Fractera project, connect it to a GitHub repository and push the initial codebase.
+2. Pull the code to your local machine. Develop the way you always have — your IDE, hot reload.
+3. When ready to ship, push your changes to GitHub.
+4. Return to your Fractera workspace, pull from GitHub, and hit Deploy.
+
+Your changes go live in production in minutes. Your own server becomes a self-hosted Vercel: GitHub is the bridge between your local environment and production. Your local environment uses the database and file storage that live on your server — no cloud subscriptions required.
+
+---
+
+### Can I bring my existing project into Fractera?
+
+Yes. Connect your existing GitHub repository to your Fractera workspace and start coding with AI immediately. Depending on your project's complexity, some initial migration steps may be needed — Fractera's built-in AI assistants can guide you through.
+
+---
+
+### Can I deploy a finished project to Vercel instead?
+
+Yes — once a project is complete and no longer needs active AI-assisted development, you can export it to Vercel. Keep in mind: the AI coding workspace, terminal access, LightRAG memory, and all five development platforms only run on your own server. Vercel and cloud storage pricing can also escalate quickly under real-world traffic. Migrating back is straightforward — your code is already on GitHub.
+
+---
+
+### Can I deploy a project without AI?
+
+Yes — you can deploy a plain server with no AI at all. A common choice among experienced developers who want to offload cloud resource management and avoid DevOps overhead. The server can be synced with your local IDE (VS Code, etc.) or simply used to host existing projects on infrastructure you control.
+
+- Optional authentication — turn it on whenever you need it.
+- Local database and object storage — included, no cloud subscriptions.
+- Freedom from cloud lock-in — meet regulatory requirements and avoid surprise bills.
+
+During deployment, switch to custom mode and select which services you want.
+
+---
+
+### Do I need a Claude Code subscription to deploy via the MCP connector?
+
+Not necessarily. If the Fractera connector is your only custom MCP, you can use it on the free tier — no subscription required. If you already use another custom MCP, either remove it before adding the Fractera connector, or upgrade to a paid Claude plan (Claude Pro, ~€20/month) to keep multiple connectors at once. Note: this is Anthropic's own plan — it is unrelated to Fractera, which is always free.
+
+---
+
+### Step by step — what does the full path from buying a server to shipping a product look like?
+
+1. Buy a VPS (Contabo recommended). Receive your IP, login, and password.
+2. Enter credentials on the website or via the MCP connector. Watch real-time deployment events. Two emails arrive: start and completion.
+3. Open the admin panel link from your completion email. Sign up with a real email and password — the first user becomes the Architect (admin).
+4. Have your own domain? Open Settings → Personal Domain, copy the A-record, set it at your DNS provider.
+5. Authorize coding platforms (Claude Code, Codex, Gemini CLI, Qwen Code, Kimi Code). One-time browser-based OAuth — same as local CLI.
+6. Open Hermes. Add a Telegram bot token to chat from your phone, or use the built-in chat directly.
+7. Tell Hermes what to build: *"Let Claude do X and Codex do Y"* — both run in parallel through orchestration.
+8. Upload documents, requirements, and business context to Company Brain (LightRAG) — or ask Hermes to automate ingestion.
+9. Your site is live from minute one. After every development cycle, it updates automatically — no manual deploy step.
+
+---
+
+### Regional FAQ
+
+<details>
+<summary><strong>🇷🇺 Russia — compliance and sovereignty</strong></summary>
+
+**Does Fractera comply with Russian data residency requirements (152-ФЗ)?**
+
+Yes — the public side of your project remains fully under Russian jurisdiction. Database, file storage, and authentication run on your server; deploy it at a Russian provider (e.g. Timeweb Cloud) and your users' personal data never leaves Russia. Note: Fractera provides the infrastructure that enables compliance — the final responsibility depends on your chosen hosting and how you design data processing in your application.
+
+**AI agents are Western. Does that conflict with import substitution?**
+
+No. AI-assisted development is the private side: you write code with any assistant and can work from anywhere. The AI is not part of the production data processing pipeline for your users, so it does not conflict with 152-ФЗ. If full sovereignty matters — use Qwen Code and Kimi Code (Chinese models, not subject to Western restrictions).
+
+**How does Fractera help save tokens?**
+
+The main source of savings is LightRAG project memory: it stores the context of your codebase and decisions, so AI agents do not need to re-read the project from scratch every time. The more memory knows, the fewer tokens go to "remember what's where." On top of that, Hermes orchestration and local MCPs reduce 10–20 message tasks to 2–3 exchanges.
+
+</details>
+
+---
+
+### Roadmap & vision
+
+When you start a business for the first time, almost everything is unfamiliar: registering the company, standing up a website, finding traffic, balancing unit economics, and scaling. An AI agent helps at every step. Along the way it proposes solutions — some right, some wrong; some save money, some waste it. Until now this zero-to-product experience lived only in your head. Now it can be digitized.
+
+The AI that solved every task alongside you, listened to your conversations, prepared your presentations — can assemble not a step-by-step manual but a living knowledge base. Not yes/no, but the complex conditional logic of decisions that modern AI can analyze and carry over to a different region, with different inputs and a different outcome.
+
+This is what we call **the product loop** — and it is the product we are building next.
+
+---
+
+### Do you have a partner program?
+
+Yes. You recommend Fractera deployment, your readers buy a VPS from any host with an affiliate program, the host pays you directly. Fractera provides the infrastructure (mirror page, embed widget, MCP connector, partner cabinet), the host pays the commission.
+
+Direct affiliate programs (RuVDS, Timeweb, Hostinger, Hetzner) approve in a day and pay up to 30–40% of the customer's first payment. Network programs (Contabo via CJ.com) pay a fixed amount per new customer.
+
+→ [Partners page](https://www.fractera.ai/partners) · Questions: [admin@fractera.ai](mailto:admin@fractera.ai)
 
 ---
 
@@ -176,4 +302,4 @@ Claude Code (Anthropic subscription), Codex (OpenAI subscription), Gemini CLI (G
 
 ---
 
-<p align="center">Built for developers who value independence.</p>
+<p align="center">Built for developers who are done thinking about deployment.</p>
