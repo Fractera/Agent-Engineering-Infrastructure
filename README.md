@@ -1,10 +1,10 @@
-<p align="center">
-  <img src="https://www.fractera.ai/section-step-by-step-images/Step1.png" alt="Fractera AI Workspace" width="100%"/>
-</p>
-
 <h1 align="center">Fractera AI Workspace</h1>
 
 <p align="center"><strong>Deploy a full AI coding workspace to your own VPS in 10 minutes. Zero DevOps.</strong></p>
+
+<p align="center">
+  <img src="https://www.fractera.ai/section-step-by-step-images/Step1.png" alt="Fractera AI Workspace" width="100%"/>
+</p>
 
 <p align="center">
   <a href="https://github.com/Fractera/ai-workspace/stargazers">
