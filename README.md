@@ -158,6 +158,28 @@ If Fractera saves you from writing another Nginx config — a star makes a real 
 
 ## FAQ
 
+### Why does Hermes reduce development costs rather than increase them?
+
+There is a widespread belief that an orchestration layer like Hermes is wasteful — that it is better to talk directly to a coding model and skip the middleman. We disagree completely.
+
+The real cost driver in AI-assisted development is not the number of requests — it is **context window inflation**. Every message in a direct coding session appends to the running context. After two or three hours on a typical project, the context is carrying the full transcript of the session. Most providers charge for both input and output tokens, and because every new message pays for everything before it, costs grow faster than linearly. Real-world data: a Claude Code session on a mid-size project in hour three costs **five to ten times** what it cost in the first fifteen minutes. When you forget to manage the context window yourself — and everyone forgets eventually — that cost compounds.
+
+**Hermes is the external observer that prevents this from happening.** It runs on inexpensive models (gpt-5-mini, qwen-turbo, and similar) that cost twenty to fifty times less than frontier coding models. These models do not need sophisticated reasoning — they read a spec, extract what matters, route a task, and immediately clear the context before the next call.
+
+What Hermes does specifically:
+
+- **Eliminates session amnesia** — without persistent memory, every new session spends the first 10–30% of its tokens re-explaining the project from scratch. LightRAG stores architecture, patterns, anti-patterns, and decisions so the coding prompt is laser-focused from word one.
+- **Generates precise task specs** — instead of a vague "build a dashboard", Hermes reads LightRAG and generates: "In `app/dashboard/page.tsx`, add a component using the `Card` pattern from `components/ui/card.tsx`, following the auth pattern from `lib/auth.ts`." This eliminates several back-and-forth exchanges per task.
+- **Clears context immediately** — after each task completes, Hermes clears the coding model's context. The next task starts clean, not carrying the entire previous conversation.
+- **Routes intelligently between models** — simple tasks (documentation, refactoring, renaming) go to cheap or free models. Complex architectural decisions go to frontier models. You pay frontier prices only for frontier work.
+- **Tracks patterns and anti-patterns** — Hermes knows what has worked in your project and which approaches caused problems. The coding model does not re-discover the same dead ends.
+
+This is only the surface. The deeper value is in what Hermes *prevents*: redundant searches for components that already exist, re-solving problems that were solved last week, sending the same context to five models in parallel when one focused call would do. Every one of those is a token cost that never appears on your invoice because it never happened.
+
+We believe the future of efficient AI-assisted development is not about squeezing more out of a single model — it is about a system that knows your project well enough to ask the right model the right question at the right moment, and stop before it becomes expensive. That system is Hermes.
+
+---
+
 ### The same AI platforms — yet Fractera ships faster with fewer tokens. Why?
 
 Regular vibe coding puts all the heavy lifting on the AI: design the architecture, write boilerplate, locate the right component, recall what was decided last session. Every token spent on that overhead is a token not spent on your actual feature.
