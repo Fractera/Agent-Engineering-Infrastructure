@@ -315,6 +315,18 @@ Direct affiliate programs (RuVDS, Timeweb, Hostinger, Hetzner) approve in a day 
 
 ---
 
+### Regional partnerships — we are looking for co-founders, not resellers
+
+Fractera is infrastructure — and infrastructure is only as good as the support around it. We are actively looking for official regional partners to build localized versions of the platform together: adapted for local regulations, delivered in the native language, and backed by people who understand the regional market from the inside.
+
+This is not a reseller arrangement. A regional Fractera deployment can mean your own branded product, your own customer base, and your own revenue stream — built on an open-source foundation that is already production-ready. The technical work is done. What a regional partner brings is market knowledge, local trust, and the ability to serve customers in a way that a remote team cannot.
+
+If you are in a market where cloud data residency matters, where documentation needs to be in a language other than English, or where developers simply need someone local to talk to — that is exactly the gap we want to fill together.
+
+→ [Regional Partners](https://www.fractera.ai/regional-partners) · [admin@fractera.ai](mailto:admin@fractera.ai)
+
+---
+
 ## Links
 
 - **Website & deploy:** [fractera.ai](https://www.fractera.ai)
