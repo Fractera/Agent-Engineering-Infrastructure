@@ -105,7 +105,7 @@ Your changes go live in production in minutes. Your own server becomes a self-ho
 | **SQLite database** | Built-in browser — no external DB, no cloud account |
 | **Media storage** | S3-compatible local object storage — images, videos, documents |
 | **Telegram gateway** | Chat with Hermes from your phone, receive notifications, issue commands |
-| **Custom domain** | Attach your domain with HTTPS in one click from Admin → Personal Domain |
+| **Custom domain + SSL** | Attach your domain with HTTPS in one click — auto-generates a Let's Encrypt certificate, or upload your own SSL certificate |
 | **GitHub integration** | Pull / push from the admin panel — no SSH required |
 | **Auto-updates** | Pull the latest version from upstream without SSH |
 
