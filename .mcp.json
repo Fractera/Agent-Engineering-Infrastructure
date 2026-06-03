@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "fractera": {
+      "url": "https://www.fractera.ai/api/mcp"
+    }
+  }
+}
