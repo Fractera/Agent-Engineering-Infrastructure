@@ -6,7 +6,7 @@ import { getRuntimeUrls } from "@/lib/runtime-urls";
 import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Terminal as TerminalIcon } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
-import { PLATFORMS, COMING_SOON, EMBED_CARDS, type Platform, type TerminalStatus, type EmbedCard, type EmbedCardId } from "./platforms";
+import { PLATFORMS, COMING_SOON, EMBED_CARDS, type Platform, type TerminalStatus, type EmbedCard, type EmbedCardId, type EmbedTarget } from "./platforms";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { EnvEditorPanel } from "./env-editor-panel.client";
 import { MediaLibraryPanel } from "./media-library-panel.client";
@@ -101,15 +101,18 @@ type Props = {
   isPreviewOpen?: boolean;
   onPreviewClose?: () => void;
   embed?: { url: string; title: string; Icon: ComponentType<{ size?: number; className?: string }> } | null;
-  activeEmbedId?: EmbedCardId | null;
+  activeEmbedId?: EmbedTarget | null;
   onEmbedCardClick?: (card: EmbedCard) => void;
+  // Open the native Hermes agent dashboard (:9119) in the embed canvas — wired
+  // to the "Hermes Agent" item in the Settings menu.
+  onOpenHermesDashboard?: () => void;
   secure?: boolean;
   // Parent (workspace-controller) can request a specific settings panel to open
   // — used when clicking an unconfigured embed card to kick off onboarding.
   requestedSettingsPanel?: { id: SettingsPanelId; nonce: number } | null;
 };
 
-export function CodingWindowShell({ height, terminalPlatform, terminalSessions, onPlatformClick, onTerminalClose, windowWidth, isMobile = false, isAuthenticated = true, isPreviewOpen = false, onPreviewClose, embed, activeEmbedId = null, onEmbedCardClick, secure = false, requestedSettingsPanel = null }: Props) {
+export function CodingWindowShell({ height, terminalPlatform, terminalSessions, onPlatformClick, onTerminalClose, windowWidth, isMobile = false, isAuthenticated = true, isPreviewOpen = false, onPreviewClose, embed, activeEmbedId = null, onEmbedCardClick, onOpenHermesDashboard, secure = false, requestedSettingsPanel = null }: Props) {
   const urls = useMemo(() => getRuntimeUrls(), []);
   const [terminalStatuses] = useState<Record<Platform, TerminalStatus>>({
     "claude-code": "unavailable", "codex": "unavailable", "gemini-cli": "unavailable",
@@ -603,6 +606,14 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Database size={11} />Database
               </button>
+              {/* Hermes Agent — opens the native :9119 dashboard in the embed
+                  canvas (providers / keys / OAuth). Brain card = the friendly chat. */}
+              {isInstalled("brain") && (
+                <button type="button" onClick={() => { setDataMenuOpen(false); onOpenHermesDashboard?.(); setSysTermActive(false); setShowHermesPanel(false); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                  <Bot size={11} />Hermes Agent
+                </button>
+              )}
               {isInstalled("brain") && (
                 <button type="button" onClick={() => { setDataMenuOpen(false); setShowHermesPanel((v) => !v); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">

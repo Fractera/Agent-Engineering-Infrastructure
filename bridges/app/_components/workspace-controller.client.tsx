@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { ComponentType } from "react";
-import { Brain, BrainCircuit, CircleUserRound, Globe, AlertTriangle } from "lucide-react";
+import { Brain, BrainCircuit, Bot, CircleUserRound, Globe, AlertTriangle } from "lucide-react";
 import { CodingWindowShell, type SettingsPanelId } from "./coding-workspace/coding-window-shell.client";
 import { AuthLoginModal } from "./auth-login-modal.client";
 import { SitePreviewWindow } from "./site-preview-window.client";
@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { useRuntimeUrls } from "@/lib/runtime-urls";
 import type { Platform } from "./coding-workspace/platforms";
-import type { EmbedCard, EmbedCardId } from "./coding-workspace/platforms";
+import type { EmbedCard, EmbedCardId, EmbedTarget } from "./coding-workspace/platforms";
 
 type SessionData = {
   userId: string;
@@ -30,7 +30,7 @@ export function WorkspaceController() {
   const [terminalPlatform, setTerminalPlatform] = useState<Platform>("claude-code");
   const [terminalSessions, setTerminalSessions] = useState<Set<Platform>>(new Set());
   const [siteOpen, setSiteOpen]                 = useState(false);
-  const [activeEmbed, setActiveEmbed]           = useState<EmbedCardId | null>(null);
+  const [activeEmbed, setActiveEmbed]           = useState<EmbedTarget | null>(null);
   // Auto-open the Brain chat (the built-in Hermes Web UI) as the default surface
   // on first load, once we know the user is signed in and Brain is installed.
   // Runs once (guarded by the ref) and only sets the embed if the user hasn't
@@ -83,6 +83,14 @@ export function WorkspaceController() {
       // can be opened manually from the Data menu.
     }
   }, [activeEmbed]);
+
+  // "Hermes Agent" (Settings menu) opens the native Hermes agent dashboard
+  // (:9119) in the main embed canvas — the technical panel where providers /
+  // keys / OAuth are configured. Brain card stays the friendly chat (:9120).
+  const handleOpenHermesDashboard = useCallback(() => {
+    setActiveEmbed("hermes-dashboard");
+    setSiteOpen(false);
+  }, []);
 
   const isMobile = windowWidth > 0 && windowWidth < 768;
 
@@ -172,6 +180,7 @@ export function WorkspaceController() {
   const embedSpec: EmbedSpec | null =
     activeEmbed === "brain"  ? { url: urls.hermesChatUrl, title: "Brain Chat",  Icon: Brain } :
     activeEmbed === "memory" ? { url: urls.brainUrl,  title: "Company Memory", Icon: BrainCircuit } :
+    activeEmbed === "hermes-dashboard" ? { url: urls.hermesUrl, title: "Hermes Agent", Icon: Bot } :
     null;
 
   const insecure = secure === false;
@@ -271,6 +280,7 @@ export function WorkspaceController() {
           embed={embedSpec}
           activeEmbedId={activeEmbed}
           onEmbedCardClick={handleEmbedCardClick}
+          onOpenHermesDashboard={handleOpenHermesDashboard}
           secure={secure === true}
           requestedSettingsPanel={panelRequest}
         />

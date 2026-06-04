@@ -24,6 +24,11 @@ export const COMING_SOON: { id: string; label: string; version: string; tooltip:
 // the onboarding flow (opens the matching Settings panel).
 export type EmbedCardId = 'brain' | 'memory';
 
+// What the embed canvas can show. Carousel cards use EmbedCardId; the Hermes
+// agent dashboard (:9119) is opened from the Settings menu ("Hermes Agent"),
+// not from a carousel card, so it gets its own target id.
+export type EmbedTarget = EmbedCardId | 'hermes-dashboard';
+
 export type EmbedCard = {
   id: EmbedCardId;
   label: string;
