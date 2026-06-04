@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
-import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Terminal as TerminalIcon } from "lucide-react";
+import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, Terminal as TerminalIcon } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
 import { PLATFORMS, COMING_SOON, EMBED_CARDS, type Platform, type TerminalStatus, type EmbedCard, type EmbedCardId, type EmbedTarget } from "./platforms";
@@ -158,7 +158,6 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const [showDomainPanel, setShowDomainPanel]       = useState(false);
   const [showLightRag, setShowLightRag]             = useState(false);
   const [showHermesPanel, setShowHermesPanel]       = useState(false);
-  const [autoFocusKey, setAutoFocusKey]             = useState(false);
   // Security tab is hidden from the UI until cert provisioning for all 6
   // subdomains ships (work in progress). The env var FRACTERA_IP_NODOMAIN_MODE
   // is still readable / settable from the terminal — this just removes the
@@ -183,10 +182,6 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     setShowInfo(false);
     setShowHelp(false);
     setShowDomainPanel(false);
-    setAutoFocusKey(true);
-    // reset autofocus after first render so re-clicks don't re-focus
-    const t = setTimeout(() => setAutoFocusKey(false), 1000);
-    return () => clearTimeout(t);
   }, [requestedSettingsPanel]);
   const [activeAuth, setActiveAuth]                 = useState<{ descriptor: AuthFlowDescriptor; url: string; code?: string } | null>(null);
   const [pasteModalOpen, setPasteModalOpen]         = useState(false);
@@ -617,7 +612,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
               {isInstalled("brain") && (
                 <button type="button" onClick={() => { setDataMenuOpen(false); setShowHermesPanel((v) => !v); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                  <Bot size={11} />Hermes Agent settings
+                  <Send size={11} />Telegram settings
                 </button>
               )}
               {isInstalled("memory") && (
@@ -906,7 +901,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
             zIndex: 20,
           }}
         >
-          <HermesPanel onClose={() => setShowHermesPanel(false)} autoFocusKey={autoFocusKey} />
+          <HermesPanel onClose={() => setShowHermesPanel(false)} />
         </div>
       )}
 
