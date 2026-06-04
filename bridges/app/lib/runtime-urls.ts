@@ -15,6 +15,7 @@ type RuntimeUrls = {
   qwenUrl: string;
   kimiUrl: string;
   hermesUrl: string;
+  hermesChatUrl: string;
   brainUrl: string;
 };
 
@@ -31,6 +32,7 @@ const DEFAULTS: RuntimeUrls = {
   qwenUrl: "ws://localhost:3204/",
   kimiUrl: "ws://localhost:3205/",
   hermesUrl: "http://localhost:9119",
+  hermesChatUrl: "http://localhost:9120",
   brainUrl: "http://localhost:9621",
 };
 
@@ -59,6 +61,7 @@ function compute(): RuntimeUrls {
       qwenUrl: `${ws}//${hostname}:3204/`,
       kimiUrl: `${ws}//${hostname}:3205/`,
       hermesUrl: `${protocol}//${hostname}:9119`,
+      hermesChatUrl: `${protocol}//${hostname}:9120`,
       brainUrl: `${protocol}//${hostname}:9621`,
     };
   }
@@ -83,6 +86,7 @@ function compute(): RuntimeUrls {
     qwenUrl: `${ws}//${admin}/ws/qwen/`,
     kimiUrl: `${ws}//${admin}/ws/kimi/`,
     hermesUrl: `${protocol}//hermes.${apex}`,
+    hermesChatUrl: `${protocol}//hermes.${apex}/chat/`,
     brainUrl: `${protocol}//lightrag.${apex}`,
   };
 }

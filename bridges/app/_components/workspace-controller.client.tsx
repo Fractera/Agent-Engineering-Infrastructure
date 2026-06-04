@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { ComponentType } from "react";
 import { Brain, BrainCircuit, CircleUserRound, Globe, AlertTriangle } from "lucide-react";
 import { CodingWindowShell, type SettingsPanelId } from "./coding-workspace/coding-window-shell.client";
@@ -31,6 +31,11 @@ export function WorkspaceController() {
   const [terminalSessions, setTerminalSessions] = useState<Set<Platform>>(new Set());
   const [siteOpen, setSiteOpen]                 = useState(false);
   const [activeEmbed, setActiveEmbed]           = useState<EmbedCardId | null>(null);
+  // Auto-open the Brain chat (the built-in Hermes Web UI) as the default surface
+  // on first load, once we know the user is signed in and Brain is installed.
+  // Runs once (guarded by the ref) and only sets the embed if the user hasn't
+  // already opened something themselves.
+  const autoOpenedRef = useRef(false);
   // Secure mode — true once the Personal Domain wizard has switched the
   // project to strict/HTTPS mode (FRACTERA_IP_NODOMAIN_MODE=false). While the
   // project is still served over plain HTTP on its IP this is false and we
@@ -95,6 +100,25 @@ export function WorkspaceController() {
 
   useEffect(() => { fetchSession(); }, [fetchSession]);
 
+  // Open the Brain chat by default on first load (in both modes). We wait until
+  // the session is resolved (so we don't flash it to logged-out visitors) and
+  // only auto-open when Brain is actually installed. installed manifest: null /
+  // fetch failure = unknown → still default to the chat (back-compat with servers
+  // deployed before selective install). Never override a card the user clicked.
+  useEffect(() => {
+    if (autoOpenedRef.current) return;
+    if (loading || !session) return;
+    autoOpenedRef.current = true;
+    fetch("/api/config/components")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const comps = data && Array.isArray(data.components) ? data.components : null;
+        const brainInstalled = comps === null || comps.includes("brain");
+        if (brainInstalled) setActiveEmbed((prev) => prev ?? "brain");
+      })
+      .catch(() => {});
+  }, [loading, session]);
+
   useEffect(() => {
     function updateSize() {
       setShellHeight(window.innerHeight - HEADER_H);
@@ -146,7 +170,7 @@ export function WorkspaceController() {
 
   type EmbedSpec = { url: string; title: string; Icon: ComponentType<{ size?: number; className?: string }> };
   const embedSpec: EmbedSpec | null =
-    activeEmbed === "brain"  ? { url: urls.hermesUrl, title: "Company Brain",  Icon: Brain } :
+    activeEmbed === "brain"  ? { url: urls.hermesChatUrl, title: "Brain Chat",  Icon: Brain } :
     activeEmbed === "memory" ? { url: urls.brainUrl,  title: "Company Memory", Icon: BrainCircuit } :
     null;
 
