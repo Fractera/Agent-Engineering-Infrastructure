@@ -99,12 +99,13 @@ Your changes go live in production in minutes. Your own server becomes a self-ho
 | Component | Description |
 |---|---|
 | **5 AI coding engines** | Claude Code · Codex · Gemini CLI · Qwen Code · Kimi Code — parallel terminals |
-| **Hermes orchestrator** | Autonomous agent: delegates tasks to platforms, works in the background, connects to Telegram |
+| **Hermes orchestrator** | Autonomous agent: delegates tasks to platforms, works in the background |
+| **Built-in web chat** | Friendly chat to Brain (Hermes) — the **primary** way you use the system. Opens automatically in the admin panel; just add a model to start |
 | **LightRAG memory** | Private graph memory shared across all agents and sessions — no token waste on context |
 | **Auth** | Email/password · guest mode · role-based access (Architect / User / Guest) |
 | **SQLite database** | Built-in browser — no external DB, no cloud account |
 | **Media storage** | S3-compatible local object storage — images, videos, documents |
-| **Telegram gateway** | Chat with Hermes from your phone, receive notifications, issue commands |
+| **Telegram gateway** *(optional)* | Also chat with Hermes from your phone — a secondary channel; needs a bot token |
 | **Custom domain + SSL** | Attach your domain with HTTPS in one click — auto-generates a Let's Encrypt certificate, or upload your own SSL certificate |
 | **GitHub integration** | Pull / push from the admin panel — no SSH required |
 | **Auto-updates** | Pull the latest version from upstream without SSH |
@@ -267,7 +268,7 @@ Not necessarily. If the Fractera connector is your only custom MCP, you can use 
 3. Open the admin panel link from your completion email. Sign up with a real email and password — the first user becomes the Architect (admin).
 4. Have your own domain? Open Settings → Personal Domain, copy the A-record, set it at your DNS provider.
 5. Authorize coding platforms (Claude Code, Codex, Gemini CLI, Qwen Code, Kimi Code). One-time browser-based OAuth — same as local CLI.
-6. Open Hermes. Add a Telegram bot token to chat from your phone, or use the built-in chat directly.
+6. Talk to Brain in the built-in web chat — it opens automatically and is the main way you use the system; just add a model to start. Optionally add a Telegram bot token to also chat from your phone.
 7. Tell Hermes what to build: *"Let Claude do X and Codex do Y"* — both run in parallel through orchestration.
 8. Upload documents, requirements, and business context to Company Brain (LightRAG) — or ask Hermes to automate ingestion.
 9. Your site is live from minute one. After every development cycle, it updates automatically — no manual deploy step.
