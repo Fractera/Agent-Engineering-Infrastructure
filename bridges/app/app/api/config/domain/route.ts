@@ -151,6 +151,46 @@ function buildNginxConfig(domain: string, certSource: "auto" | "upload"): string
     // Footer only on the public site (apex + www → shell on :3000), never on
     // the internal-service hosts.
     const footer = (prefix === "" || prefix === "www") ? FOOTER_DIRECTIVES : "";
+    // Auth gating for the internal-service hosts. hermes (agent dashboard :9119 +
+    // chat /chat/→:9120) and lightrag (:9621) must NOT be reachable anonymously —
+    // each proxied location requires a valid Fractera session (nginx auth_request
+    // → services/auth /api/session/verify). The session cookie is shared across
+    // *.${domain} (COOKIE_DOMAIN=.${domain}), so the admin iframes pass; a cold
+    // visitor is sent to the login flow and bounced back after signing in (admin
+    // role required). → reports/errors/hermes-lightrag-auth-gating-regression.md
+    const gated = prefix === "hermes" || prefix === "lightrag";
+    const authVerify = gated ? `    location = /auth-verify {
+        internal;
+        proxy_pass http://127.0.0.1:3001/api/session/verify;
+        proxy_pass_request_body off;
+        proxy_set_header Content-Length "";
+        proxy_set_header Host $host;
+        proxy_set_header Cookie $http_cookie;
+    }
+    location @login_redirect {
+        return 302 https://auth.${domain}/login?callbackUrl=$scheme://$host$request_uri&requireRole=admin;
+    }
+` : "";
+    // Injected INTO a proxied location to require a valid session before proxying.
+    const gate = gated ? `        auth_request /auth-verify;
+        error_page 401 = @login_redirect;
+` : "";
+    // hermes also serves the built-in chat (webui :9120) under /chat/ — same gate,
+    // SSE-friendly (proxy_buffering off), trailing slash strips the prefix so the
+    // webui sees "/".
+    const chatBlock = prefix === "hermes" ? `    location /chat/ {
+${gate}        proxy_pass http://127.0.0.1:9120/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 86400;
+        proxy_buffering off;
+    }
+` : "";
     return `# fractera ${host} — managed by fractera
 server {
     listen 80;
@@ -174,8 +214,8 @@ server {
     resolver 1.1.1.1 8.8.8.8 valid=300s;
     resolver_timeout 5s;
 
-${prefix === "admin" ? ADMIN_WS_LOCATIONS : ""}    location / {
-        proxy_pass http://127.0.0.1:${port};
+${authVerify}${chatBlock}${prefix === "admin" ? ADMIN_WS_LOCATIONS : ""}    location / {
+${gate}        proxy_pass http://127.0.0.1:${port};
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
