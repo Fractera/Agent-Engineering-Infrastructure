@@ -14,7 +14,8 @@ HERMES_WEBUI_HOST="${HERMES_WEBUI_HOST:-0.0.0.0}"
 HERMES_WEBUI_AGENT_DIR="${HERMES_WEBUI_AGENT_DIR:-/usr/local/lib/hermes-agent}"
 HERMES_HOME="${HERMES_HOME:-/root/.hermes}"
 PINNED="$(cat "${INSTALLER_DIR}/pinned-version.txt")"
-REPO="https://github.com/nesquena/hermes-webui.git"
+# Vendored fork — pulls from Fractera's copy, not upstream. See step 58.
+REPO="https://github.com/Fractera/hermes-webui.git"
 
 echo "[hermes-webui-installer] target = $INSTALL_DIR  pinned = $PINNED"
 
@@ -55,6 +56,37 @@ ENV
 else
     echo "[hermes-webui-installer] .env exists — preserving"
 fi
+
+# --- 4b. Seed WebUI settings (language + brand + skip onboarding) ---
+# load_settings() in hermes-webui merges a partial settings.json with its
+# built-in defaults, so writing just these keys is safe.
+# - language: seeded only if absent (preserve customer's later choice).
+# - bot_name: always enforced to keep the Fractera brand.
+# - onboarding_completed: skip webui's own provider-setup wizard. We funnel
+#   the user into the original Hermes agent at /env for subscription OAuth
+#   (Codex / Claude Code), and webui just reads the resulting credential
+#   pool from auth.json. Two onboarding flows for one credential store
+#   would just confuse partners.
+echo "[hermes-webui-installer] seeding WebUI settings (language=en, bot_name=Fractera, skip onboarding)"
+python3 - <<'PYSETTINGS'
+import json, pathlib
+d = pathlib.Path('/root/.hermes/webui')
+d.mkdir(parents=True, exist_ok=True)
+f = d / 'settings.json'
+data = {}
+if f.exists():
+    try:
+        data = json.loads(f.read_text())
+        if not isinstance(data, dict):
+            data = {}
+    except Exception:
+        data = {}
+data.setdefault('language', 'en')         # seed only if absent
+data['bot_name'] = 'Fractera'              # always enforce brand
+data['onboarding_completed'] = True        # always skip webui's setup wizard
+f.write_text(json.dumps(data, indent=2))
+print('  settings.json seeded:', json.dumps({k: data[k] for k in ('language', 'bot_name', 'onboarding_completed')}))
+PYSETTINGS
 
 # --- 5. PM2 wrapper ---
 WRAPPER="$INSTALL_DIR/pm2-start.sh"
