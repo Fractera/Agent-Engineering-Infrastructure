@@ -130,10 +130,16 @@ export function HermesPanel({ onClose }: Props) {
                   href={status.telegramDeepLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-1.5 h-9 px-3 rounded-md bg-[#229ED9] text-white text-[11px] font-medium hover:opacity-90 transition-opacity"
+                  className={`flex items-center justify-center gap-1.5 h-10 px-3 rounded-md bg-[#229ED9] text-white text-[12px] font-semibold hover:opacity-90 transition-opacity ${
+                    status.ownerClaimed
+                      ? ""
+                      : "animate-pulse ring-2 ring-[#229ED9]/60 shadow-lg shadow-[#229ED9]/50"
+                  }`}
                 >
-                  <Send size={12} />
-                  {status.botUsername ? `Message @${status.botUsername}` : "Message your bot"}
+                  <Send size={13} />
+                  {status.ownerClaimed
+                    ? (status.botUsername ? `Message @${status.botUsername}` : "Message your bot")
+                    : "Tap to activate your bot"}
                 </a>
               )}
               {status.telegramConfigured && (
