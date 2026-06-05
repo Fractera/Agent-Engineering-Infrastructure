@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { ComponentType } from "react";
-import { RefreshCw, ExternalLink } from "lucide-react";
+import { RefreshCw, ExternalLink, Loader2 } from "lucide-react";
 
 type Props = {
   url: string;
@@ -12,9 +12,15 @@ type Props = {
 
 export function EmbedCanvas({ url, title, Icon }: Props) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  // The webui can take a few seconds to boot; show a centered overlay until the
+  // iframe fires onLoad so the user never stares at a blank white window.
+  const [loading, setLoading] = useState(true);
 
   function handleReload() {
-    if (iframeRef.current) iframeRef.current.src = iframeRef.current.src;
+    if (iframeRef.current) {
+      setLoading(true);
+      iframeRef.current.src = iframeRef.current.src;
+    }
   }
 
   return (
@@ -42,14 +48,22 @@ export function EmbedCanvas({ url, title, Icon }: Props) {
           Reload
         </button>
       </div>
-      <iframe
-        ref={iframeRef}
-        src={url}
-        className="flex-1 border-0 w-full"
-        style={{ minHeight: 0 }}
-        title={title}
-        allow="clipboard-read; clipboard-write"
-      />
+      <div className="relative flex-1" style={{ minHeight: 0 }}>
+        {loading && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background">
+            <Loader2 size={28} className="animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">We&rsquo;re launching your chat, please wait…</p>
+          </div>
+        )}
+        <iframe
+          ref={iframeRef}
+          src={url}
+          onLoad={() => setLoading(false)}
+          className="border-0 w-full h-full"
+          title={title}
+          allow="clipboard-read; clipboard-write"
+        />
+      </div>
     </div>
   );
 }

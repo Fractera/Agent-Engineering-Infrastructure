@@ -228,7 +228,11 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
       });
       const data = await res.json();
       if (data.error) { toast.error(data.error); return; }
-      toast.success("Switching — redirecting to your domain in 3 seconds…");
+      // Also fire the subdomain email over the working IP-based path (the
+      // activate route's own server→L1 notify can fail on a stale token). Fire-
+      // and-forget — never block the redirect; the user just gets the email too.
+      fetch("/api/config/domain/send-email", { method: "POST" }).catch(() => {});
+      toast.success("Switching — redirecting to your domain in 3 seconds… Check your email for your new addresses.");
       // Give PM2 a beat to actually start serving on the new config before
       // we throw the browser at it.
       setTimeout(() => { window.location.href = data.redirectTo; }, 3000);
