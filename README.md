@@ -210,6 +210,18 @@ Fractera keeps everything on your server:
 
 ---
 
+### Do I pay per token for the AI, or use my own subscription?
+
+You use your own subscriptions — that is the whole point. The five coding platforms (Claude Code, Codex, Gemini CLI, Qwen Code, Kimi Code) run on the subscriptions you already have: you sign in once with your normal account, like a local CLI. No API keys to manage, no per-token billing surprises. This is where the heavy AI work happens, and it costs you nothing beyond the subscription you already pay the AI vendor.
+
+The only per-token piece is small and auxiliary: **Brain (Hermes)** and **Memory (LightRAG)** use one inexpensive OpenAI API key — the cheap gpt-5-mini runs at roughly a cent per hour and is plenty to get going, or a Codex subscription if your usage is heavy.
+
+- **Coding platforms** (Claude Code, Codex, Gemini, Qwen, Kimi) — your existing subscriptions, no per-token billing.
+- **Brain + Memory** — one small OpenAI key (gpt-5-mini, ~1¢/hour), or a Codex subscription if heavy.
+- So a **Claude Code user pays through their subscription, not per token**.
+
+---
+
 ### What server specs do I need?
 
 For full AI-coding workloads: **6 cores / 8 GB RAM** recommended minimum. Storage depends on your project — 75 GB is a solid baseline.
