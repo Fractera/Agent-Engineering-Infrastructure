@@ -99,7 +99,7 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
       const data = await refresh();
       if (!data) return;
       if (data.step1.complete) {
-        toast.success("All seven A-records resolve to this server");
+        toast.success("All eight A-records resolve to this server");
       } else {
         const missing = data.step1.missingHosts;
         toast.warning(
@@ -200,7 +200,7 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
       const data = await res.json();
       if (data.error) { toast.error(data.error); return; }
       setHealthRun({ at: Date.now(), allOk: data.allOk, results: data.results });
-      if (data.allOk) toast.success("All seven hostnames respond over HTTPS with valid certs");
+      if (data.allOk) toast.success("All eight hostnames respond over HTTPS with valid certs");
       else toast.warning("Some hostnames still failing — see details below");
     } catch {
       toast.error("Health check failed");
@@ -309,7 +309,7 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
         {/* STEP 1 — DNS A-records */}
         <Step n={1} title="DNS A-records" enabled={true} complete={state.step1.complete} icon={<Globe size={12} />}>
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Add <strong>all seven</strong> A-records below at your DNS provider (your registrar's
+            Add <strong>all eight</strong> A-records below at your DNS provider (your registrar's
             own panel, not Cloudflare). Each one points to the same IP: <span className="font-mono text-foreground">{state.serverIp ?? "…"}</span>.
           </p>
           <div className="rounded-md border border-border bg-background p-3 space-y-1 text-[10px] font-mono">
@@ -324,6 +324,7 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
               { name: "data",     note: "media + db" },
               { name: "hermes",   note: "Brain" },
               { name: "lightrag", note: "Memory" },
+              { name: "chat",     note: "Remote Command Post (chat)" },
             ].map(({ name, note }) => (
               <div key={name} className="grid gap-x-3 text-foreground" style={{ gridTemplateColumns: "3rem 5rem 1fr" }}>
                 <span>A</span><span>{name}</span>

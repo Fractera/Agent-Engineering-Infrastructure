@@ -10,7 +10,12 @@ const APP_DB = process.env.APP_DB_PATH ?? "/opt/fractera/app/data/app.db";
 // attached. Apex + www → public site, the other five → internal services
 // proxied behind their own subdomain so each gets a valid TLS certificate
 // (and the admin iframe doesn't hit mixed-content errors).
-const SUBDOMAINS = ["", "www", "auth", "admin", "data", "hermes", "lightrag"] as const;
+// "chat" is the dedicated subdomain for the built-in Hermes Web Chat (:9120) —
+// the friendly "Remote Command Post" the user manages the whole project from.
+// It gets its own A-record, its own cert SAN (certbot --expand picks it up from
+// this list), and an auth_request-gated nginx block. The legacy hermes/<domain>
+// /chat/ path stays working too (back-compat).
+const SUBDOMAINS = ["", "www", "auth", "admin", "data", "hermes", "lightrag", "chat"] as const;
 const PROXY_PORTS: Record<string, number> = {
   "":         3000,
   "www":      3000,
@@ -19,6 +24,7 @@ const PROXY_PORTS: Record<string, number> = {
   "data":     3300,
   "hermes":   9119,
   "lightrag": 9621,
+  "chat":     9120,
 };
 
 // Where uploaded (non Let's Encrypt) certificates land. The same pair lives
@@ -158,7 +164,10 @@ function buildNginxConfig(domain: string, certSource: "auto" | "upload"): string
     // *.${domain} (COOKIE_DOMAIN=.${domain}), so the admin iframes pass; a cold
     // visitor is sent to the login flow and bounced back after signing in (admin
     // role required). → reports/errors/hermes-lightrag-auth-gating-regression.md
-    const gated = prefix === "hermes" || prefix === "lightrag";
+    const gated = prefix === "hermes" || prefix === "lightrag" || prefix === "chat";
+    // The chat subdomain proxies the webui (:9120) which streams over SSE — turn
+    // off proxy buffering so tokens render live (mirrors the hermes /chat/ block).
+    const bufferOff = prefix === "chat" ? "        proxy_buffering off;\n" : "";
     const authVerify = gated ? `    location = /auth-verify {
         internal;
         proxy_pass http://127.0.0.1:3001/api/session/verify;
@@ -224,7 +233,7 @@ ${gate}        proxy_pass http://127.0.0.1:${port};
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_read_timeout 86400;
-${footer}    }
+${bufferOff}${footer}    }
 }`;
   });
 
@@ -264,7 +273,7 @@ export async function GET(req: NextRequest) {
 
 const DOMAIN_RE = /^[a-zA-Z0-9][a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,}$/;
 
-// POST — auto mode: certbot issues a single multi-SAN cert for all 7 hostnames.
+// POST — auto mode: certbot issues a single multi-SAN cert for all 8 hostnames.
 // Body: { domain: string }
 export async function POST(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");

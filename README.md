@@ -100,7 +100,7 @@ Your changes go live in production in minutes. Your own server becomes a self-ho
 |---|---|
 | **5 AI coding engines** | Claude Code · Codex · Gemini CLI · Qwen Code · Kimi Code — parallel terminals |
 | **Hermes orchestrator** | Autonomous agent: delegates tasks to platforms, works in the background |
-| **Built-in web chat** | Friendly chat to Brain (Hermes) — the **primary** way you use the system. Opens automatically in the admin panel; just add a model to start |
+| **Built-in web chat** | Friendly chat to Brain (Hermes) — the **primary** way you use the system (your "Remote Command Post"). Opens automatically in the admin panel; on a custom domain it also gets its own auth-protected `chat.<domain>` subdomain. Just add a model to start |
 | **LightRAG memory** | Private graph memory shared across all agents and sessions — no token waste on context |
 | **Auth** | Email/password · guest mode · role-based access (Architect / User / Guest) |
 | **SQLite database** | Built-in browser — no external DB, no cloud account |

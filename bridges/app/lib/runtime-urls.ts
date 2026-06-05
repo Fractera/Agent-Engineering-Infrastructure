@@ -38,7 +38,7 @@ const DEFAULTS: RuntimeUrls = {
 
 // Service subdomain prefixes — used to recover the apex from any service host
 // (e.g. admin.aifa.dev → aifa.dev) in domain/Secure mode.
-const KNOWN_PREFIXES = ["www", "auth", "admin", "data", "hermes", "lightrag"];
+const KNOWN_PREFIXES = ["www", "auth", "admin", "data", "hermes", "lightrag", "chat"];
 
 function compute(): RuntimeUrls {
   if (typeof window === "undefined") return DEFAULTS;
@@ -86,7 +86,7 @@ function compute(): RuntimeUrls {
     qwenUrl: `${ws}//${admin}/ws/qwen/`,
     kimiUrl: `${ws}//${admin}/ws/kimi/`,
     hermesUrl: `${protocol}//hermes.${apex}`,
-    hermesChatUrl: `${protocol}//hermes.${apex}/chat/`,
+    hermesChatUrl: `${protocol}//chat.${apex}`,
     brainUrl: `${protocol}//lightrag.${apex}`,
   };
 }
