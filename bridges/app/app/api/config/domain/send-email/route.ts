@@ -49,11 +49,12 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({ ip, domain }),
       signal: AbortSignal.timeout(12000),
     });
+    const data = await res.json().catch(() => ({} as { error?: string; detail?: string; recipient?: string }));
     if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      return NextResponse.json({ error: `Mail service returned HTTP ${res.status}. ${body}`.trim() }, { status: 502 });
+      const msg = data?.error ? `${data.error}${data.detail ? `: ${data.detail}` : ""}` : `Mail service returned HTTP ${res.status}`;
+      return NextResponse.json({ error: msg }, { status: 502 });
     }
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, recipient: data?.recipient ?? null });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Network error reaching the mail service." }, { status: 502 });
   }

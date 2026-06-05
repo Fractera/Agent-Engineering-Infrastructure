@@ -70,6 +70,7 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
   // per-server token. Surfaces success/error explicitly (no silent failure).
   const [emailSending, setEmailSending] = useState(false);
   const [emailSent, setEmailSent]       = useState(false);
+  const [emailRecipient, setEmailRecipient] = useState<string | null>(null);
   const [emailError, setEmailError]     = useState<string | null>(null);
 
   // Step 1 DNS re-check button state.
@@ -266,6 +267,7 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
         setEmailError(data.error || `Failed (HTTP ${res.status})`);
         return;
       }
+      setEmailRecipient(data.recipient ?? null);
       setEmailSent(true);
     } catch (e) {
       setEmailError(e instanceof Error ? e.message : "Network error");
@@ -576,8 +578,9 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
             </p>
             {emailSent ? (
               <div className="rounded-md border border-emerald-500/40 bg-emerald-500/5 p-2.5 text-[10px] leading-relaxed text-emerald-700 dark:text-emerald-300">
-                Email sent successfully. Please check your Spam folder — if you find it there, move it to your
-                inbox and mark “Not spam” so future notices arrive reliably.
+                Email sent successfully{emailRecipient ? <> to <strong>{emailRecipient}</strong></> : ""}. Please
+                check your Spam folder — if you find it there, move it to your inbox and mark “Not spam” so future
+                notices arrive reliably.
               </div>
             ) : (
               <>
