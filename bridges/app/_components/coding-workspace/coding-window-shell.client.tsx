@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
-import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, Terminal as TerminalIcon } from "lucide-react";
+import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Terminal as TerminalIcon } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
 import { PLATFORMS, COMING_SOON, EMBED_CARDS, type Platform, type TerminalStatus, type EmbedCard, type EmbedCardId, type EmbedTarget } from "./platforms";
@@ -18,6 +18,7 @@ import { UsersPanel } from "./users-panel.client";
 import { DomainPanel } from "./domain-panel.client";
 import { LightRagPanel } from "./lightrag-panel.client";
 import { HermesPanel } from "./hermes-panel.client";
+import { OpenAiPanel } from "./openai-panel.client";
 import { EmbedCanvas } from "./embed-canvas.client";
 import { IdleCanvas } from "./idle-canvas.client";
 import type { ComponentType } from "react";
@@ -158,6 +159,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const [showDomainPanel, setShowDomainPanel]       = useState(false);
   const [showLightRag, setShowLightRag]             = useState(false);
   const [showHermesPanel, setShowHermesPanel]       = useState(false);
+  const [showOpenAiPanel, setShowOpenAiPanel]       = useState(false);
   // Security tab is hidden from the UI until cert provisioning for all 6
   // subdomains ships (work in progress). The env var FRACTERA_IP_NODOMAIN_MODE
   // is still readable / settable from the terminal — this just removes the
@@ -610,7 +612,13 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                 </button>
               )}
               {isInstalled("brain") && (
-                <button type="button" onClick={() => { setDataMenuOpen(false); setShowHermesPanel((v) => !v); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
+                <button type="button" onClick={() => { setDataMenuOpen(false); setShowOpenAiPanel((v) => !v); setShowHermesPanel(false); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                  <KeyRound size={11} />OpenAI settings
+                </button>
+              )}
+              {isInstalled("brain") && (
+                <button type="button" onClick={() => { setDataMenuOpen(false); setShowHermesPanel((v) => !v); setShowOpenAiPanel(false); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                   <Send size={11} />Telegram settings
                 </button>
@@ -902,6 +910,21 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           }}
         >
           <HermesPanel onClose={() => setShowHermesPanel(false)} />
+        </div>
+      )}
+
+      {showOpenAiPanel && (
+        <div
+          style={{
+            position: "absolute",
+            top: CAROUSEL_H,
+            right: 0,
+            bottom: FOOTER_H,
+            width: "min(480px, 90vw)",
+            zIndex: 20,
+          }}
+        >
+          <OpenAiPanel onClose={() => setShowOpenAiPanel(false)} />
         </div>
       )}
 

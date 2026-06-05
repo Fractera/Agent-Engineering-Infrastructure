@@ -299,6 +299,20 @@ export async function POST(req: NextRequest) {
     } catch { /* best-effort — credentials are saved regardless */ }
   }
 
+  // The built-in web chat (fractera-hermes-webui, :9120) is a SEPARATE process
+  // from the agent — it reads the same /root/.hermes config + credential pool
+  // but only at startup. Restart it on a new key so the chat picks up the
+  // freshly-saved provider/key; otherwise it keeps answering "provider
+  // authentication failed" until a manual restart. No-op on servers without it.
+  if (apiKeyRaw) {
+    try {
+      spawn("sh", ["-c", "pm2 restart fractera-hermes-webui --update-env"], {
+        detached: true,
+        stdio: "ignore",
+      }).unref();
+    } catch { /* best-effort — credentials are saved regardless */ }
+  }
+
   return NextResponse.json({
     ok: true,
     alsoUpdated,
