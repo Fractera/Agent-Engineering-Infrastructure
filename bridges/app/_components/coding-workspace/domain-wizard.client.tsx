@@ -64,6 +64,13 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
   const [activating, setActivating] = useState(false);
   // Step 5 — switch back to IP / demo mode (reversibility).
   const [deactivating, setDeactivating] = useState(false);
+  // Step 5 — manual "email me the subdomain list". A user-initiated trigger
+  // (the auto-email after activation can silently fail). Goes over the shared
+  // server↔L1 secret + the signed-in user's email, so it does NOT depend on the
+  // per-server token. Surfaces success/error explicitly (no silent failure).
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailSent, setEmailSent]       = useState(false);
+  const [emailError, setEmailError]     = useState<string | null>(null);
 
   // Step 1 DNS re-check button state.
   const [checkingDns, setCheckingDns] = useState(false);
@@ -246,6 +253,24 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
       toast.error("Switch back failed");
     } finally {
       setDeactivating(false);
+    }
+  }
+
+  async function sendSubdomainEmail() {
+    setEmailSending(true);
+    setEmailError(null);
+    try {
+      const res = await fetch("/api/config/domain/send-email", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) {
+        setEmailError(data.error || `Failed (HTTP ${res.status})`);
+        return;
+      }
+      setEmailSent(true);
+    } catch (e) {
+      setEmailError(e instanceof Error ? e.message : "Network error");
+    } finally {
+      setEmailSending(false);
     }
   }
 
@@ -541,6 +566,32 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
               className="h-8 px-3 rounded-md border border-border text-[11px] text-muted-foreground opacity-40 cursor-not-allowed">
               Re-issue certificate <span className="ml-1 text-[9px] uppercase tracking-wider">coming soon</span>
             </button>
+          </div>
+
+          <div className="mt-3 pt-3 border-t border-border">
+            <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">
+              Email yourself the full list of your new HTTPS addresses (apex, admin, auth, data, Brain,
+              Memory, and your <strong>chat</strong> Remote Command Post) — a handy reminder for later. Future
+              server and certificate-expiry notices will arrive at your account email too.
+            </p>
+            {emailSent ? (
+              <div className="rounded-md border border-emerald-500/40 bg-emerald-500/5 p-2.5 text-[10px] leading-relaxed text-emerald-700 dark:text-emerald-300">
+                Email sent successfully. Please check your Spam folder — if you find it there, move it to your
+                inbox and mark “Not spam” so future notices arrive reliably.
+              </div>
+            ) : (
+              <>
+                <button onClick={sendSubdomainEmail} disabled={emailSending}
+                  className="h-8 px-3 rounded-md border border-violet-500/40 text-violet-600 dark:text-violet-400 text-[11px] font-medium hover:bg-violet-500/10 disabled:opacity-40 transition-colors flex items-center gap-1.5">
+                  {emailSending
+                    ? <><Loader2 size={11} className="animate-spin" />Sending email…</>
+                    : <><RefreshCw size={11} />Email me my subdomain list</>}
+                </button>
+                {emailError && (
+                  <p className="mt-1.5 text-[10px] text-destructive leading-relaxed">{emailError}</p>
+                )}
+              </>
+            )}
           </div>
 
           <div className="mt-3 pt-3 border-t border-border">
