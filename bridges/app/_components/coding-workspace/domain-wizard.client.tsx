@@ -153,7 +153,7 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
         const timedOut = Date.now() - start > 180_000;
         if (fresh?.step2?.complete) {
           stopIssueTimers(); setIssueCountdown(0); setIssuing(false);
-          toast.success("Certificate issued — covers all 7 hostnames");
+          toast.success("Certificate issued — covers all 8 hostnames");
         } else if (fresh?.step2?.status === "error") {
           stopIssueTimers(); setIssueCountdown(0); setIssuing(false);
           toast.error("Certificate issuance failed — see details in Step 2");
@@ -398,7 +398,7 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
           <div className={`rounded-md border ${useAuto ? "border-border" : "border-border opacity-40 pointer-events-none"} p-3 space-y-2`}>
             <p className="text-[11px] font-medium text-foreground flex items-center gap-1.5"><Sparkles size={11} className="text-amber-500" /> Auto issuance</p>
             <p className="text-[10px] text-muted-foreground leading-relaxed">
-              One certbot call issues a multi-SAN cert covering all 7 hostnames. Renewal runs
+              One certbot call issues a multi-SAN cert covering all 8 hostnames. Renewal runs
               automatically every ~60 days via the system <code className="px-1 rounded bg-muted">certbot.timer</code>.
             </p>
             {state.step2.certExists && state.step2.certSource === "auto" && (
@@ -438,7 +438,7 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
               <div className="rounded-md border border-destructive/40 bg-destructive/5 p-2 text-[10px] leading-relaxed text-destructive">
                 <p className="font-medium flex items-center gap-1.5"><XCircle size={11} /> Last issuance failed</p>
                 <p className="mt-1 font-mono break-all whitespace-pre-wrap max-h-32 overflow-y-auto">{state.step2.error}</p>
-                <p className="mt-1 text-muted-foreground">Usually one of the 7 hosts isn&rsquo;t resolving yet (check the list above / Step 1), then press &ldquo;Issue certificate&rdquo; again.</p>
+                <p className="mt-1 text-muted-foreground">Usually one of the 8 hosts isn&rsquo;t resolving yet (check the list above / Step 1), then press &ldquo;Issue certificate&rdquo; again.</p>
               </div>
             )}
           </div>
@@ -447,7 +447,7 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
           <div className={`rounded-md border ${!useAuto ? "border-border" : "border-border opacity-40 pointer-events-none"} p-3 space-y-2`}>
             <p className="text-[11px] font-medium text-foreground flex items-center gap-1.5"><Upload size={11} /> Upload your own</p>
             <p className="text-[10px] text-muted-foreground leading-relaxed">
-              Paste a PEM chain + private key. Must cover all 7 hostnames (multi-SAN) or include a
+              Paste a PEM chain + private key. Must cover all 8 hostnames (multi-SAN) or include a
               wildcard <span className="font-mono">*.{domain}</span> alongside the apex.
               Accepts certs from any CA — including the RSA variant of the free МинЦифры certificate
               from Госуслуги. <strong>ГОСТ variant not supported</strong> (КриптоПро container, needs
@@ -475,7 +475,7 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
         {/* STEP 3 — End-to-end check */}
         <Step n={3} title="End-to-end HTTPS check" enabled={state.step3.ready} complete={!!healthRun?.allOk} icon={<RefreshCw size={12} />}>
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Final check: for each of the 7 hostnames we resolve DNS and open an HTTPS connection
+            Final check: for each of the 8 hostnames we resolve DNS and open an HTTPS connection
             with strict cert validation. Any failure here means switching to Secure mode will
             break that endpoint.
           </p>

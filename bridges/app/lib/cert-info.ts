@@ -10,7 +10,7 @@ export type CertInfo = {
 };
 
 // Inspect a PEM certificate file with openssl. Returns SAN list + expiry so
-// the wizard can answer "does this cert cover all 7 hostnames we need".
+// the wizard can answer "does this cert cover all 8 hostnames we need".
 // Safe to call on non-existent paths (returns {exists: false}).
 export function readCertInfo(certPath: string): CertInfo {
   if (!fs.existsSync(certPath)) {

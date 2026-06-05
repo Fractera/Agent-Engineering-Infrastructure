@@ -85,10 +85,10 @@ export async function GET(req: NextRequest) {
   const serverIp = readServerIp();
   const expectedHosts = SUBDOMAINS.map((p) => hostFor(p, domain));
 
-  // Step 1 — DNS resolves 7/7
+  // Step 1 — DNS resolves 8/8
   const dnsResult = await dnsCheck(domain, serverIp);
 
-  // Step 2 — cert file exists AND covers all 7 hostnames
+  // Step 2 — cert file exists AND covers all 8 hostnames
   const certPath = certSource === "upload"
     ? `/etc/fractera/certs/${domain}/fullchain.pem`
     : `/etc/letsencrypt/live/${domain}/fullchain.pem`;
