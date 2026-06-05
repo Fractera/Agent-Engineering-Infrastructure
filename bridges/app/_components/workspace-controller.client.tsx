@@ -70,10 +70,22 @@ export function WorkspaceController() {
     if (activeEmbed === card.id) { setActiveEmbed(null); return; }
     setActiveEmbed(card.id);
     setSiteOpen(false);
-    // Brain card is the built-in chat (Hermes Web UI) — it has its own auth /
-    // provider tools, so we never pop our settings drawer for it. Provider keys
-    // live in the native Hermes dashboard ("Hermes Agent" in the Settings menu).
-    if (card.id === "brain") return;
+    // Brain card is the built-in chat (Hermes Web UI). The chat can't answer
+    // without an OpenAI key in the agent's credential pool, so if none is set
+    // yet we surface the OpenAI key drawer alongside the chat — the user sees
+    // exactly where to paste it. Once a key exists we leave the chat alone.
+    if (card.id === "brain") {
+      try {
+        const res = await fetch("/api/config/hermes", { credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.configured !== true) {
+            setPanelRequest({ id: "openai", nonce: Date.now() });
+          }
+        }
+      } catch { /* show the chat regardless */ }
+      return;
+    }
     try {
       const res = await fetch(card.configCheckEndpoint, { credentials: "include" });
       if (res.ok) {

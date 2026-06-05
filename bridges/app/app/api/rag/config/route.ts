@@ -3,6 +3,7 @@ import fs from "fs";
 import { execSync } from "child_process";
 import { requireAuth } from "@/lib/require-auth";
 import { readEnvFile, writeEnvFile, pm2RestartDetached } from "@/lib/env-file";
+import { addOpenAiKeyToPool } from "@/lib/hermes-credentials";
 
 const RAG_ENV = process.env.RAG_ENV_PATH ?? "/opt/fractera/services/rag/.env";
 const HERMES_ENV = process.env.HERMES_ENV_PATH ?? "/root/.hermes/.env";
@@ -70,7 +71,13 @@ export async function POST(req: NextRequest) {
         hermesVars.OPENAI_API_KEY = vars.LLM_BINDING_API_KEY;
         try {
           writeEnvFile(HERMES_ENV, hermesVars);
+          // The agent reads the key from the credential pool, not .env — register
+          // it there too, or Brain stays unauthenticated. → step 89 error doc.
+          addOpenAiKeyToPool(vars.LLM_BINDING_API_KEY);
           pm2RestartDetached("fractera-hermes", 500);
+          // The web chat (:9120) is a separate process that reads the pool at
+          // startup — restart it so the Memory-entered key reaches Brain's chat.
+          pm2RestartDetached("fractera-hermes-webui", 700);
           alsoUpdated = "hermes";
         } catch { /* best-effort */ }
       }

@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { spawn } from "child_process";
 import { requireAuth } from "@/lib/require-auth";
 import { readEnvFile, writeEnvFile, pm2RestartDetached } from "@/lib/env-file";
+import { addOpenAiKeyToPool } from "@/lib/hermes-credentials";
 
 const HERMES_ENV    = process.env.HERMES_ENV_PATH ?? "/root/.hermes/.env";
 const HERMES_CONFIG = process.env.HERMES_CONFIG_PATH ?? "/root/.hermes/config.yaml";
@@ -223,6 +224,14 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Register the OpenAI key in the Hermes credential pool (the reliable path —
+  // see addOpenAiKeyToPool). .env above is kept for backward-compat; the pool
+  // entry is what the agent + web chat actually authenticate with.
+  let poolAdded: boolean | null = null;
+  if (apiKeyRaw) {
+    poolAdded = addOpenAiKeyToPool(apiKeyRaw).ok;
+  }
+
   // A fresh Telegram token resets owner-pairing: mint a new one-time secret and
   // resolve the bot @username so the panel can offer a one-tap "Message your
   // bot" deep link. The fractera-platforms gateway hook auto-approves whoever
@@ -319,6 +328,7 @@ export async function POST(req: NextRequest) {
     modelWriteError: modelWrite && !modelWrite.ok ? modelWrite.reason : null,
     telegram,
     providerSwitched,
+    poolAdded,
   });
 }
 

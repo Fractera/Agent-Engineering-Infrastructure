@@ -28,7 +28,7 @@ const EMBED_ICON_MAP: Record<EmbedCard["iconKey"], ComponentType<{ size?: number
   BrainCircuit,
 };
 
-export type SettingsPanelId = "hermes" | "lightrag";
+export type SettingsPanelId = "hermes" | "lightrag" | "openai";
 
 const CAROUSEL_H = 52;
 const FOOTER_H   = 36;
@@ -170,13 +170,13 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   // matching panel + focuses the OpenAI key field).
   useEffect(() => {
     if (!requestedSettingsPanel) return;
-    if (requestedSettingsPanel.id === "hermes") {
-      setShowHermesPanel(true);
-      setShowLightRag(false);
-    } else {
-      setShowLightRag(true);
-      setShowHermesPanel(false);
-    }
+    const id = requestedSettingsPanel.id;
+    setShowHermesPanel(false);
+    setShowLightRag(false);
+    setShowOpenAiPanel(false);
+    if (id === "hermes") setShowHermesPanel(true);
+    else if (id === "openai") setShowOpenAiPanel(true);
+    else setShowLightRag(true);
     setShowEnvEditor(false);
     setShowDbBrowser(false);
     setShowUsers(false);
