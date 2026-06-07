@@ -21,6 +21,7 @@ type Deployment = {
   duration_ms: number | null;
   commit_hash: string | null;
   branch: string | null;
+  step: string | null;
   author: string | null;
   created_at: string;
 };
@@ -60,6 +61,7 @@ function statusColor(status: string): string {
 const COLS: { key: string; label: string; sortKey: keyof Deployment; num?: boolean }[] = [
   { key: "result",         label: "Result",   sortKey: "result", num: true },
   { key: "created",        label: "Created",  sortKey: "created_at" },
+  { key: "step",           label: "Step",     sortKey: "step" },
   { key: "commit_message", label: "Commit",   sortKey: "commit_message" },
   { key: "status",         label: "Status",   sortKey: "status" },
   { key: "duration",       label: "Duration", sortKey: "duration_ms", num: true },
@@ -262,6 +264,7 @@ export function DeploymentsPanel({ onClose }: Props) {
                     </button>
                   </td>
                   <td className={`${td} tabular-nums text-muted-foreground`}>{fmtCreated(d.created_at)}</td>
+                  <td className={`${td} text-muted-foreground`}>{d.step ?? "—"}</td>
                   <td className={`${td} font-medium max-w-[220px] truncate`} title={d.commit_message ?? ""}>
                     {d.commit_message ?? "—"}
                   </td>

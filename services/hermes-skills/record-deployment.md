@@ -31,13 +31,17 @@ record_deployment(
   commit_message="Add pricing card",
   commit_hash="abc1234",         # if you committed
   branch="main",
+  step="23",                     # the step number this commit belongs to
   status="ready",                # ready | building | error
   duration_ms=84000,             # how long the work/build took
 )
 ```
 
 `result` defaults to 3 stars — leave it unless you have a reason to pre-rate.
-`project` defaults to "default".
+`project` defaults to "default". `step` is the step number the commit implements
+(e.g. "23"); set it when you know which step you are working on — it ties the
+deployment row to the task in the journal. You can also set/correct it later with
+`update_deployment(id=..., step="23")`.
 
 ## After recording
 

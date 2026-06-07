@@ -21,14 +21,24 @@ export async function GET(req: NextRequest) {
     ).get();
     if (!exists) { db.close(); return NextResponse.json({ rows: [] }); }
 
+    // `step` was added after the table shipped — on an already-running server the
+    // column may not exist yet (added lazily on the first MCP write). Only search
+    // it when present, so this readonly read never depends on migration ordering.
+    const hasStep = (db.prepare("PRAGMA table_info(deployment_records)").all() as Array<{ name: string }>)
+      .some((c) => c.name === "step");
+
     let rows;
     if (search) {
       const like = `%${search}%`;
-      rows = db.prepare(
+      const stepClause = hasStep ? " OR step LIKE ?" : "";
+      const stmt = db.prepare(
         `SELECT * FROM deployment_records
-         WHERE commit_message LIKE ? OR platform LIKE ? OR model LIKE ? OR page_url LIKE ?
+         WHERE commit_message LIKE ? OR platform LIKE ? OR model LIKE ? OR page_url LIKE ?${stepClause}
          ORDER BY created_at DESC LIMIT ?`
-      ).all(like, like, like, like, limit);
+      );
+      rows = hasStep
+        ? stmt.all(like, like, like, like, like, limit)
+        : stmt.all(like, like, like, like, limit);
     } else {
       rows = db.prepare(
         `SELECT * FROM deployment_records ORDER BY created_at DESC LIMIT ?`

@@ -38,6 +38,7 @@ const SCHEMA = `
     commit_hash    TEXT,
     branch         TEXT,
     author         TEXT,
+    step           TEXT,
     created_at     TEXT NOT NULL DEFAULT (datetime('now')),
     created_by     TEXT NOT NULL DEFAULT 'system'
   );
@@ -71,6 +72,12 @@ function makeLocalDb() {
   if (!cols.has('media_id'))   safeAddColumn(sqlite, `ALTER TABLE products ADD COLUMN media_id   TEXT`)
   if (!cols.has('media_url'))  safeAddColumn(sqlite, `ALTER TABLE products ADD COLUMN media_url  TEXT`)
   if (!cols.has('created_by')) safeAddColumn(sqlite, `ALTER TABLE products ADD COLUMN created_by TEXT NOT NULL DEFAULT 'system'`)
+  // deployment_records.step (Product Loop) — added after the table shipped, so
+  // existing DBs need the column via ALTER (CREATE TABLE IF NOT EXISTS won't).
+  const depCols = new Set(
+    (sqlite.prepare('PRAGMA table_info(deployment_records)').all() as Array<{ name: string }>).map(c => c.name)
+  )
+  if (depCols.size && !depCols.has('step')) safeAddColumn(sqlite, `ALTER TABLE deployment_records ADD COLUMN step TEXT`)
   return {
     prepare(sql: string) {
       const stmt = sqlite.prepare(sql)

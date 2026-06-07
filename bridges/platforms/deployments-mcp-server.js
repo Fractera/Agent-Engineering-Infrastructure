@@ -48,6 +48,7 @@ function toolsSchema() {
           commit_message: { type: 'string',  description: 'Short description of what changed.' },
           commit_hash:    { type: 'string',  description: 'Git commit hash, if any.' },
           branch:         { type: 'string',  description: 'Git branch, if any.' },
+          step:           { type: 'string',  description: 'Step number this commit belongs to, e.g. "23" or "92-S3".' },
           project:        { type: 'string',  description: 'Project name (default "default").' },
           status:         { type: 'string',  description: 'ready | building | error (default "ready").' },
           duration_ms:    { type: 'number',  description: 'Build/work duration in milliseconds.' },
@@ -67,15 +68,17 @@ function toolsSchema() {
     {
       name: 'update_deployment',
       description:
-        'Update an existing deployment record: change its star rating (result, 1-3) and/or move it ' +
-        'to a different project. Use the `id` from list_deployments. Everything else is written once ' +
-        'at record time and is not editable here. Deleting a record is intentionally NOT available via MCP.',
+        'Update an existing deployment record: change its star rating (result, 1-3), move it ' +
+        'to a different project, and/or set the step number. Use the `id` from list_deployments. ' +
+        'Everything else is written once at record time and is not editable here. Deleting a record ' +
+        'is intentionally NOT available via MCP.',
       inputSchema: {
         type: 'object',
         properties: {
           id:      { type: 'string', description: 'Record id (from list_deployments).' },
           result:  { type: 'number', description: 'New star rating 1-3.' },
           project: { type: 'string', description: 'Move the record to this project name.' },
+          step:    { type: 'string', description: 'Step number this commit belongs to, e.g. "23".' },
         },
         required: ['id'],
       },
@@ -125,6 +128,7 @@ const RECORD_FIELDS = [
   { field: 'duration_ms',    type: 'integer', set_by: 'hermes',      about: 'Build/work duration in milliseconds.' },
   { field: 'commit_hash',    type: 'string',  set_by: 'hermes',      about: 'Git commit hash, if any.' },
   { field: 'branch',         type: 'string',  set_by: 'hermes',      about: 'Git branch, if any.' },
+  { field: 'step',           type: 'string',  set_by: 'hermes',      about: 'Step number this commit belongs to, e.g. "23". Changeable via update_deployment.' },
   { field: 'author',         type: 'string',  set_by: 'hermes',      about: "Display author (default 'Hermes')." },
   { field: 'created_at',     type: 'string',  set_by: 'auto',        about: 'UTC timestamp the record was created.' },
   { field: 'created_by',     type: 'string',  set_by: 'auto',        about: "Always 'hermes@agent' (records come from you)." },
@@ -142,9 +146,26 @@ async function dataMigrate(sql, params = []) {
   return res.json()
 }
 
+// deployment_records.step was added after the table shipped (step 92 / S-A).
+// The app SCHEMA carries it for fresh deploys, but the live data-service app.db
+// on an already-running server needs the column via ALTER. Idempotent: tolerate
+// "duplicate column" (already added) and "no such table" (a record insert below
+// will surface the real error if the table is genuinely missing).
+let stepColumnEnsured = false
+async function ensureStepColumn() {
+  if (stepColumnEnsured) return
+  try {
+    await dataMigrate('ALTER TABLE deployment_records ADD COLUMN step TEXT')
+  } catch (e) {
+    if (!/duplicate column|no such table/i.test(String(e?.message ?? e))) throw e
+  }
+  stepColumnEnsured = true
+}
+
 async function recordDeployment(args) {
   if (!args.platform) throw new Error('platform required')
   if (!args.page_url) throw new Error('page_url required')
+  await ensureStepColumn()
   const row = {
     id:             randomUUID(),
     result:         clampResult(args.result ?? 3),
@@ -158,6 +179,7 @@ async function recordDeployment(args) {
     duration_ms:    args.duration_ms != null ? Math.round(Number(args.duration_ms)) : null,
     commit_hash:    args.commit_hash ?? null,
     branch:         args.branch ?? null,
+    step:           args.step != null ? String(args.step) : null,
     author:         args.author ?? 'Hermes',
     created_by:     'hermes@agent',
   }
@@ -181,10 +203,12 @@ async function listDeployments(args) {
 // in the UI). Other columns are write-once at record time.
 async function updateDeployment(args) {
   if (!args.id) throw new Error('id required')
+  await ensureStepColumn()
   const sets = [], params = []
   if (args.result !== undefined && args.result !== null) { sets.push('result = ?'); params.push(clampResult(args.result)) }
   if (args.project !== undefined && args.project !== null) { sets.push('project = ?'); params.push(String(args.project)) }
-  if (sets.length === 0) throw new Error('nothing to update: provide result and/or project')
+  if (args.step !== undefined && args.step !== null) { sets.push('step = ?'); params.push(String(args.step)) }
+  if (sets.length === 0) throw new Error('nothing to update: provide result, project and/or step')
   params.push(args.id)
   const data = await dataMigrate(`UPDATE ${TABLE} SET ${sets.join(', ')} WHERE id = ?`, params)
   if (!data.changes) throw new Error(`no record with id ${args.id}`)
