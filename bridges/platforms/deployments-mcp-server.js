@@ -2,11 +2,13 @@ import { createServer } from 'http'
 import { randomUUID } from 'crypto'
 
 // ── Deployments MCP server (L2, port 3215) ──────────────────────────────────
-// Singleton MCP server (not platform-bound) that lets Hermes record one row
-// per development deployment into the shared app.db `deployment_records` table
-// — the admin "Deployments" table (Product Loop). Writes go through the data
+// Singleton MCP server (not platform-bound) that lets Hermes drive the Product
+// Loop: record/list/update one row per development deployment in the shared
+// app.db `deployment_records` table (the admin "Deployments" table), and manage
+// the `projects` list deployments are split by. Writes go through the data
 // service (:3300) generic endpoints; reads use /db/migrate so rows come back
-// newest-first (the generic GET has no ORDER BY).
+// newest-first (the generic GET has no ORDER BY). Deletion (records or
+// projects) is intentionally NOT exposed here — human-only in the UI.
 //
 // This is the L2 Hermes-side MCP — entirely separate from the L1 claude.ai
 // deployment MCP (fractera-easy-starter/lib/mcp-tools.ts). Do not conflate.
@@ -84,6 +86,24 @@ function toolsSchema() {
         'Return the full field catalog of a deployment record — every field, its type, whether you ' +
         'set it when recording or it is filled automatically, and what it means. Call this to know ' +
         'exactly what information a deployment row holds before recording or updating.',
+      inputSchema: { type: 'object', properties: {} },
+    },
+    {
+      name: 'create_project',
+      description:
+        'Add one new project to the project list so deployments can be split by codebase. Idempotent: ' +
+        'if a project with this name already exists it is returned, not duplicated. Use the project ' +
+        "name as the `project` argument of record_deployment / update_deployment. Deleting a project " +
+        'is intentionally NOT available via MCP — that is human-only in the admin UI.',
+      inputSchema: {
+        type: 'object',
+        properties: { name: { type: 'string', description: 'Project name (1-60 chars).' } },
+        required: ['name'],
+      },
+    },
+    {
+      name: 'list_projects',
+      description: 'List existing projects (default first, then newest) so you can reuse a name instead of creating a duplicate.',
       inputSchema: { type: 'object', properties: {} },
     },
   ]
@@ -175,6 +195,43 @@ function describeRecord() {
   return { table: TABLE, fields: RECORD_FIELDS }
 }
 
+// Ensure the projects table exists (the app layer also defines it in SCHEMA;
+// this makes the MCP path self-sufficient even before that runs). DDL is
+// allowed on /db/migrate.
+async function ensureProjectsTable() {
+  await dataMigrate(
+    `CREATE TABLE IF NOT EXISTS projects (
+       id TEXT PRIMARY KEY NOT NULL,
+       name TEXT NOT NULL UNIQUE,
+       created_at TEXT NOT NULL DEFAULT (datetime('now'))
+     )`,
+  )
+}
+
+// Add a project. Idempotent: INSERT OR IGNORE on the UNIQUE name, then return
+// the row (existing or new). No delete — that is human-only in the UI.
+async function createProject(args) {
+  const name = String(args.name ?? '').trim()
+  if (!name) throw new Error('name required')
+  if (name.length > 60) throw new Error('name too long (max 60)')
+  await ensureProjectsTable()
+  const before = await dataMigrate('SELECT id FROM projects WHERE name = ?', [name])
+  const existed = (before.rows ?? []).length > 0
+  if (!existed) {
+    await dataMigrate('INSERT OR IGNORE INTO projects (id, name) VALUES (?, ?)', [randomUUID(), name])
+  }
+  const row = await dataMigrate('SELECT id, name, created_at FROM projects WHERE name = ?', [name])
+  return { ok: true, project: (row.rows ?? [])[0] ?? { name }, existed }
+}
+
+async function listProjects() {
+  await ensureProjectsTable()
+  const data = await dataMigrate(
+    "SELECT id, name, created_at FROM projects ORDER BY (name = 'default') DESC, created_at DESC",
+  )
+  return { projects: data.rows ?? [] }
+}
+
 export class DeploymentsMcpServer {
   constructor({ port, secret }) {
     this.port = port
@@ -232,6 +289,8 @@ export class DeploymentsMcpServer {
       case 'list_deployments':  return textResult(await listDeployments(args))
       case 'update_deployment': return textResult(await updateDeployment(args))
       case 'describe_record':   return textResult(describeRecord())
+      case 'create_project':    return textResult(await createProject(args))
+      case 'list_projects':     return textResult(await listProjects())
       default: throw new Error(`Unknown tool: ${name}`)
     }
   }
