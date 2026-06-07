@@ -19,6 +19,11 @@ const SCHEMA = `
     domain_error  TEXT,
     updated_at    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
   );
+  CREATE TABLE IF NOT EXISTS projects (
+    id         TEXT PRIMARY KEY NOT NULL,
+    name       TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
   CREATE TABLE IF NOT EXISTS deployment_records (
     id             TEXT PRIMARY KEY NOT NULL,
     result         INTEGER NOT NULL DEFAULT 3,

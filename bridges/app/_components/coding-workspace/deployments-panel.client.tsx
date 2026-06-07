@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Loader2, X, Star, GitBranch, ExternalLink } from "lucide-react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Loader2, X, Star, GitBranch, ExternalLink, ChevronUp, ChevronDown, FolderGit2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { ProjectsModal } from "./projects-modal.client";
 
 type Deployment = {
   id: string;
@@ -25,17 +26,14 @@ type Deployment = {
 };
 
 type Props = { onClose: () => void };
+type SortDir = "asc" | "desc";
 
-function timeAgo(ts: string): string {
-  const t = Date.parse(ts.includes("T") ? ts : ts.replace(" ", "T") + "Z");
-  if (Number.isNaN(t)) return "—";
-  const s = Math.floor((Date.now() - t) / 1000);
-  if (s < 60) return `${s}s ago`;
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
+// Stored as "YYYY-MM-DD HH:MM:SS" (UTC) → show dd-mm-yy hh:mm:ss.
+function fmtCreated(ts: string): string {
+  const m = ts.match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
+  if (!m) return ts;
+  const [, Y, Mo, D, h, mi, s] = m;
+  return `${D}-${Mo}-${Y.slice(2)} ${h}:${mi}:${s}`;
 }
 
 function fmtDuration(ms: number | null): string {
@@ -57,6 +55,23 @@ function statusColor(status: string): string {
   if (status === "building") return "bg-amber-500";
   return "bg-cyan-500"; // ready — Vercel "geist-cyan"
 }
+
+// Columns in display order. `sortKey` is the Deployment field used for sorting.
+const COLS: { key: string; label: string; sortKey: keyof Deployment; num?: boolean }[] = [
+  { key: "result",         label: "Result",   sortKey: "result", num: true },
+  { key: "created",        label: "Created",  sortKey: "created_at" },
+  { key: "commit_message", label: "Commit",   sortKey: "commit_message" },
+  { key: "status",         label: "Status",   sortKey: "status" },
+  { key: "duration",       label: "Duration", sortKey: "duration_ms", num: true },
+  { key: "env",            label: "Env",      sortKey: "status" },
+  { key: "project",        label: "Project",  sortKey: "project" },
+  { key: "source",         label: "Source",   sortKey: "commit_hash" },
+  { key: "author",         label: "Author",   sortKey: "author" },
+  { key: "tokens",         label: "Tokens",   sortKey: "tokens", num: true },
+  { key: "platform",       label: "Platform", sortKey: "platform" },
+  { key: "model",          label: "Model",    sortKey: "model" },
+  { key: "page",           label: "Page",     sortKey: "page_url" },
+];
 
 function Stars({ value, onPick, size = 13 }: { value: number; onPick?: (n: number) => void; size?: number }) {
   return (
@@ -84,6 +99,11 @@ export function DeploymentsPanel({ onClose }: Props) {
   const [pick, setPick] = useState(3);
   const [saving, setSaving] = useState(false);
 
+  const [projectFilter, setProjectFilter] = useState<string[]>([]);
+  const [projectsOpen, setProjectsOpen] = useState(false);
+  const [sortField, setSortField] = useState<keyof Deployment>("created_at");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
   const fetchRows = useCallback(async (q: string) => {
     setLoading(true);
     try {
@@ -106,6 +126,32 @@ export function DeploymentsPanel({ onClose }: Props) {
     const t = setTimeout(() => fetchRows(search), 300);
     return () => clearTimeout(t);
   }, [search, fetchRows]);
+
+  // Client-side project filter + column sort over the fetched rows.
+  const view = useMemo(() => {
+    let v = projectFilter.length ? rows.filter((r) => projectFilter.includes(r.project)) : rows;
+    v = [...v].sort((a, b) => {
+      const col = COLS.find((c) => c.sortKey === sortField);
+      const va = a[sortField], vb = b[sortField];
+      let r: number;
+      if (col?.num) r = (Number(va) || 0) - (Number(vb) || 0);
+      else r = String(va ?? "").localeCompare(String(vb ?? ""));
+      return sortDir === "asc" ? r : -r;
+    });
+    return v;
+  }, [rows, projectFilter, sortField, sortDir]);
+
+  function applySort(field: keyof Deployment, dir: SortDir) {
+    setSortField(field);
+    setSortDir(dir);
+  }
+
+  function reset() {
+    setSearch("");
+    setProjectFilter([]);
+    setSortField("created_at");
+    setSortDir("desc");
+  }
 
   function openRating(d: Deployment) {
     setRating(d);
@@ -133,8 +179,8 @@ export function DeploymentsPanel({ onClose }: Props) {
     }
   }
 
-  const th = "text-left px-3 py-2 text-muted-foreground font-medium whitespace-nowrap";
   const td = "px-3 py-2 whitespace-nowrap";
+  const filterActive = projectFilter.length > 0 || !!search || sortField !== "created_at" || sortDir !== "desc";
 
   return (
     <div className="flex flex-col h-full bg-background border-l border-border">
@@ -151,14 +197,21 @@ export function DeploymentsPanel({ onClose }: Props) {
         </button>
       </div>
 
-      {/* Search */}
-      <div className="px-3 py-2 border-b border-border shrink-0">
+      {/* Toolbar: search · projects filter · reset */}
+      <div className="px-3 py-2 border-b border-border shrink-0 flex items-center gap-2">
         <Input
-          placeholder="Search by commit, platform, model or page…"
+          placeholder="Search commit, platform, model or page…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="h-7 text-[11px]"
+          className="h-7 text-[11px] flex-1"
         />
+        <Button variant="outline" size="sm" className="h-7 text-[11px] shrink-0 gap-1.5" onClick={() => setProjectsOpen(true)}>
+          <FolderGit2 size={12} />
+          {projectFilter.length ? `Projects · ${projectFilter.length}` : "Projects"}
+        </Button>
+        <Button variant="ghost" size="sm" className="h-7 text-[11px] shrink-0 gap-1.5" onClick={reset} disabled={!filterActive} title="Reset filters, search and sort">
+          <RotateCcw size={12} />Reset
+        </Button>
       </div>
 
       {/* Table */}
@@ -167,37 +220,48 @@ export function DeploymentsPanel({ onClose }: Props) {
           <div className="flex items-center justify-center h-32">
             <Loader2 size={16} className="animate-spin text-muted-foreground" />
           </div>
-        ) : rows.length === 0 ? (
+        ) : view.length === 0 ? (
           <div className="flex items-center justify-center h-32 text-[11px] text-muted-foreground px-6 text-center">
-            No deployments yet. Hermes records a row here after each delegated change is deployed.
+            {rows.length === 0
+              ? "No deployments yet. Hermes records a row here after each delegated change is deployed."
+              : "No deployments match the current filter."}
           </div>
         ) : (
-          <table className="w-full text-[11px] border-collapse min-w-[1000px]">
+          <table className="w-full text-[11px] border-collapse min-w-[1100px]">
             <thead>
               <tr className="border-b border-border bg-muted/30">
-                <th className={th}>Result</th>
-                <th className={th}>Commit</th>
-                <th className={th}>Status</th>
-                <th className={th}>Duration</th>
-                <th className={th}>Env</th>
-                <th className={th}>Project</th>
-                <th className={th}>Source</th>
-                <th className={th}>Created</th>
-                <th className={th}>Author</th>
-                <th className={th}>Tokens</th>
-                <th className={th}>Platform</th>
-                <th className={th}>Model</th>
-                <th className={th}>Page</th>
+                {COLS.map((c) => {
+                  const activeUp = sortField === c.sortKey && sortDir === "asc";
+                  const activeDown = sortField === c.sortKey && sortDir === "desc";
+                  return (
+                    <th key={c.key} className="text-left px-3 py-2 text-muted-foreground font-medium whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1">
+                        {c.label}
+                        <span className="inline-flex flex-col -space-y-1">
+                          <button type="button" onClick={() => applySort(c.sortKey, "asc")}
+                            className={activeUp ? "text-foreground" : "text-muted-foreground/40 hover:text-muted-foreground"}>
+                            <ChevronUp size={11} />
+                          </button>
+                          <button type="button" onClick={() => applySort(c.sortKey, "desc")}
+                            className={activeDown ? "text-foreground" : "text-muted-foreground/40 hover:text-muted-foreground"}>
+                            <ChevronDown size={11} />
+                          </button>
+                        </span>
+                      </span>
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody>
-              {rows.map((d) => (
+              {view.map((d) => (
                 <tr key={d.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
                   <td className={td}>
                     <button type="button" onClick={() => openRating(d)} title="Click to change rating">
                       <Stars value={d.result} />
                     </button>
                   </td>
+                  <td className={`${td} tabular-nums text-muted-foreground`}>{fmtCreated(d.created_at)}</td>
                   <td className={`${td} font-medium max-w-[220px] truncate`} title={d.commit_message ?? ""}>
                     {d.commit_message ?? "—"}
                   </td>
@@ -225,7 +289,6 @@ export function DeploymentsPanel({ onClose }: Props) {
                       {!d.commit_hash && !d.branch ? "—" : null}
                     </span>
                   </td>
-                  <td className={`${td} text-muted-foreground tabular-nums`}>{timeAgo(d.created_at)}</td>
                   <td className={td}>
                     <span className="inline-flex items-center gap-1.5">
                       <span className="w-4 h-4 rounded-full bg-muted flex items-center justify-center text-[9px] uppercase">
@@ -255,8 +318,16 @@ export function DeploymentsPanel({ onClose }: Props) {
 
       {/* Footer count */}
       <div className="flex items-center justify-between px-3 py-2 border-t border-border text-[11px] text-muted-foreground shrink-0">
-        <span>{rows.length} deployments</span>
+        <span>{view.length}{view.length !== rows.length ? ` / ${rows.length}` : ""} deployments</span>
       </div>
+
+      {/* Projects modal (filter + add) */}
+      <ProjectsModal
+        open={projectsOpen}
+        onClose={() => setProjectsOpen(false)}
+        selected={projectFilter}
+        onChange={setProjectFilter}
+      />
 
       {/* Rating modal */}
       <Dialog open={!!rating} onOpenChange={(o) => { if (!o) setRating(null); }}>

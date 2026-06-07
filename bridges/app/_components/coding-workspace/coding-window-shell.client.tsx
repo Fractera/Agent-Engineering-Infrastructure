@@ -147,6 +147,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const deployTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [showInfo, setShowInfo]                     = useState(false);
   const [showHelp, setShowHelp]                     = useState(false);
+  const [helpTipOpen, setHelpTipOpen]               = useState(false);
   const [showGitConnect, setShowGitConnect]         = useState(false);
   const [gitConnected, setGitConnected]             = useState(false);
   const [gitRepo, setGitRepo]                       = useState<string | null>(null);
@@ -633,10 +634,6 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                 </button>
               )}
               <div className="h-px bg-border mx-2" />
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowHermesPanel(false); setShowLightRag(false); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                <Settings size={11} />Env Variables
-              </button>
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowDomainPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowHermesPanel(false); setShowLightRag(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] transition-colors hover:bg-muted">
                 {secure
@@ -654,16 +651,31 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Upload size={11} />Import data
               </button>
+              {/* Bottom section: Env Variables + Deployments grouped together… */}
               <div className="h-px bg-border mx-2" />
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowHelp((v) => !v); setShowInfo(false); setShowEnvEditor(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowDeployments(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowHermesPanel(false); setShowLightRag(false); setShowDeployments(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                <HelpCircle size={11} />Help
+                <Settings size={11} />Env Variables
               </button>
-              <div className="h-px bg-border mx-2" />
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowDeployments((v) => !v); setShowHelp(false); setShowInfo(false); setShowEnvEditor(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowDomainPanel(false); setShowHermesPanel(false); setShowLightRag(false); setShowOpenAiPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Rocket size={11} />Deployments
               </button>
+              {/* …and Help below it as the very last item — opens only a tooltip, no panel. */}
+              <div className="h-px bg-border mx-2" />
+              <TooltipProvider delayDuration={0}>
+                <Tooltip open={helpTipOpen} onOpenChange={setHelpTipOpen}>
+                  <TooltipTrigger asChild>
+                    <button type="button" onClick={() => setHelpTipOpen((o) => !o)}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                      <HelpCircle size={11} />Help
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="max-w-[220px] whitespace-pre-line text-[11px] leading-relaxed" style={{ zIndex: 99999 }}>
+                    Got a question about your project? Just ask in the chat — it knows your full documentation and can walk you through anything.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           )}
           <input ref={fileInputRef} type="file" accept=".zip" className="hidden" onChange={handleImport} />
