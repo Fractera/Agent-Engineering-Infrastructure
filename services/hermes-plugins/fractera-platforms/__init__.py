@@ -204,7 +204,9 @@ _DELEGATE_SCHEMA = {
     "description": (
         "Delegate a coding task to a specific AI platform and wait for the result. "
         "Use this when you want a particular agent (Claude, Codex, Gemini, Qwen, Kimi) "
-        "to work on a task. Returns the platform's full response."
+        "to work on a task. Returns the platform's full response as JSON including "
+        "`tokens` (total tokens the agent spent on this task) — pass that value to "
+        "`record_deployment` after you deploy so the deployment log tracks real cost."
     ),
     "parameters": {
         "type": "object",
@@ -228,7 +230,9 @@ _BEST_SCHEMA = {
     "description": (
         "Automatically select the most suitable AI platform for a task and delegate to it. "
         "Analyses the prompt and optional criteria to pick between "
-        "Claude Code, Codex, Gemini CLI, Qwen Code, and Kimi Code."
+        "Claude Code, Codex, Gemini CLI, Qwen Code, and Kimi Code. "
+        "Returns JSON including `platform` (the one chosen) and `tokens` (total tokens "
+        "spent) — pass both to `record_deployment` after deploying."
     ),
     "parameters": {
         "type": "object",

@@ -19,6 +19,7 @@ import { DomainPanel } from "./domain-panel.client";
 import { LightRagPanel } from "./lightrag-panel.client";
 import { HermesPanel } from "./hermes-panel.client";
 import { OpenAiPanel } from "./openai-panel.client";
+import { DeploymentsPanel } from "./deployments-panel.client";
 import { EmbedCanvas } from "./embed-canvas.client";
 import { IdleCanvas } from "./idle-canvas.client";
 import type { ComponentType } from "react";
@@ -156,6 +157,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const [showMediaLibrary, setShowMediaLibrary]     = useState(false);
   const [showDbBrowser, setShowDbBrowser]           = useState(false);
   const [showUsers, setShowUsers]                   = useState(false);
+  const [showDeployments, setShowDeployments]       = useState(false);
   const [showDomainPanel, setShowDomainPanel]       = useState(false);
   const [showLightRag, setShowLightRag]             = useState(false);
   const [showHermesPanel, setShowHermesPanel]       = useState(false);
@@ -184,6 +186,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     setShowInfo(false);
     setShowHelp(false);
     setShowDomainPanel(false);
+    setShowDeployments(false);
   }, [requestedSettingsPanel]);
   const [activeAuth, setActiveAuth]                 = useState<{ descriptor: AuthFlowDescriptor; url: string; code?: string } | null>(null);
   const [pasteModalOpen, setPasteModalOpen]         = useState(false);
@@ -652,9 +655,14 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                 <Upload size={11} />Import data
               </button>
               <div className="h-px bg-border mx-2" />
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowHelp((v) => !v); setShowInfo(false); setShowEnvEditor(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowHelp((v) => !v); setShowInfo(false); setShowEnvEditor(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowDeployments(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <HelpCircle size={11} />Help
+              </button>
+              <div className="h-px bg-border mx-2" />
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDeployments((v) => !v); setShowHelp(false); setShowInfo(false); setShowEnvEditor(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowDomainPanel(false); setShowHermesPanel(false); setShowLightRag(false); setShowOpenAiPanel(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                <Rocket size={11} />Deployments
               </button>
             </div>
           )}
@@ -862,6 +870,13 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
       {showUsers && (
         <div style={{ position: "absolute", top: CAROUSEL_H, right: 0, bottom: FOOTER_H, width: 480, zIndex: 10 }}>
           <UsersPanel onClose={() => setShowUsers(false)} />
+        </div>
+      )}
+
+      {/* ── Deployments panel (Product Loop) — wide drawer for the Vercel-style table ── */}
+      {showDeployments && (
+        <div style={{ position: "absolute", top: CAROUSEL_H, right: 0, bottom: FOOTER_H, width: "min(1100px, 96vw)", zIndex: 20 }}>
+          <DeploymentsPanel onClose={() => setShowDeployments(false)} />
         </div>
       )}
 

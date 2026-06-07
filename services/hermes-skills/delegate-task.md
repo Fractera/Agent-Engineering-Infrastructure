@@ -60,6 +60,10 @@ Output: Modified file content ready to paste.
 2. If good: apply via terminal tool or file write
 3. If partial: delegate follow-up with corrections
 4. Log verdict in `docs/hermes/feedback-history/` (feedback loop)
+5. **Deploy, then record it.** Once the change is live, call `record_deployment`
+   with the `platform`, `model`, the `tokens` value the delegation returned, and
+   the `page_url` the user can open to review. Then give the user that URL and
+   wait for their feedback. See the **record-deployment** skill.
 
 ## Timeout behavior
 

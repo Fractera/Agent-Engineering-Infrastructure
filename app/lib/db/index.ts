@@ -19,6 +19,23 @@ const SCHEMA = `
     domain_error  TEXT,
     updated_at    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
   );
+  CREATE TABLE IF NOT EXISTS deployment_records (
+    id             TEXT PRIMARY KEY NOT NULL,
+    result         INTEGER NOT NULL DEFAULT 3,
+    project        TEXT NOT NULL DEFAULT 'default',
+    tokens         INTEGER NOT NULL DEFAULT 0,
+    platform       TEXT,
+    model          TEXT,
+    page_url       TEXT,
+    commit_message TEXT,
+    status         TEXT NOT NULL DEFAULT 'ready',
+    duration_ms    INTEGER,
+    commit_hash    TEXT,
+    branch         TEXT,
+    author         TEXT,
+    created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+    created_by     TEXT NOT NULL DEFAULT 'system'
+  );
 `
 
 // ALTER TABLE ADD COLUMN must tolerate the "duplicate column" error: during

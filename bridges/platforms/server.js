@@ -7,6 +7,7 @@ import { config } from 'dotenv'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { PlatformMcpServer } from './mcp-server.js'
+import { DeploymentsMcpServer } from './deployments-mcp-server.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, '../../app/.env.local') })
@@ -92,6 +93,18 @@ function isMcpError(event) {
   return (event.type === 'result' && event.is_error) || event.type === 'turn.failed'
 }
 
+// Sum token usage from a done/turn event. Key names differ per CLI (Claude:
+// cache_read_input_tokens/cache_creation_input_tokens; Gemini/Codex:
+// cached_input_tokens/cached_tokens) — read tolerantly, return 0 if absent.
+function extractMcpTokens(event) {
+  const u = event.usage ?? {}
+  const input  = u.input_tokens ?? 0
+  const output = u.output_tokens ?? 0
+  const cacheR = u.cache_read_input_tokens ?? u.cached_input_tokens ?? u.cached_tokens ?? 0
+  const cacheW = u.cache_creation_input_tokens ?? 0
+  return input + output + cacheR + cacheW
+}
+
 function makeRunPrompt(bin, buildArgs, extraEnv = {}) {
   return (prompt, task) => new Promise((resolve, reject) => {
     const proc = spawn(bin, buildArgs(prompt), {
@@ -107,6 +120,7 @@ function makeRunPrompt(bin, buildArgs, extraEnv = {}) {
         const ev = JSON.parse(line)
         const chunk = extractMcpText(ev)
         if (chunk) task.text += chunk
+        task.tokens += extractMcpTokens(ev)
         if (isMcpDone(ev)) { task.status = isMcpError(ev) ? 'error' : 'done'; task.proc = null; resolve() }
       } catch {}
     })
@@ -1050,7 +1064,7 @@ const mcpConfigs = [
         try {
           const ev = JSON.parse(line)
           if (ev.type === 'item.completed' && ev.item?.text) task.text += ev.item.text
-          if (ev.type === 'turn.completed') { task.status = 'done'; task.proc = null; resolve() }
+          if (ev.type === 'turn.completed') { task.tokens += extractMcpTokens(ev); task.status = 'done'; task.proc = null; resolve() }
           if (ev.type === 'turn.failed') { task.status = 'error'; task.error = ev.error?.message; task.proc = null; resolve() }
         } catch {}
       })
@@ -1083,3 +1097,12 @@ for (const cfg of mcpConfigs) {
     writeToPty: ptyCaller(cfg.platform),
   }).start()
 }
+
+// ── Deployments MCP server (singleton, port 3215) ───────────────────────────
+// Hermes records one row per development deployment into the Product Loop
+// table via this server. Same auth posture as the 5 platform bridges
+// (MCP_SECRET, null = off on localhost). Writes to the data service (:3300).
+new DeploymentsMcpServer({
+  port: Number(process.env.DEPLOYMENTS_MCP_PORT ?? 3215),
+  secret: MCP_SECRET,
+}).start()

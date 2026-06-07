@@ -75,7 +75,7 @@ export class PlatformMcpServer {
       case 'send_prompt': {
         if (!args.prompt) throw new Error('prompt required')
         const task_id = randomUUID()
-        const task = { status: 'running', text: '', error: null, proc: null }
+        const task = { status: 'running', text: '', error: null, proc: null, tokens: 0 }
         this.tasks.set(task_id, task)
         this.runPrompt(args.prompt, task).catch(e => { task.status = 'error'; task.error = e.message })
         return textResult({ task_id })
@@ -85,7 +85,7 @@ export class PlatformMcpServer {
         if (!task) return textResult({ status: 'not_found' })
         if ((args.wait_ms ?? 0) > 0 && task.status === 'running')
           await new Promise(r => setTimeout(r, Math.min(args.wait_ms, 30000)))
-        return textResult({ status: task.status, text: task.text, ...(task.error && { error: task.error }) })
+        return textResult({ status: task.status, text: task.text, tokens: task.tokens, ...(task.error && { error: task.error }) })
       }
       case 'cancel_task': {
         const task = this.tasks.get(args.task_id)
