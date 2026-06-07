@@ -56,14 +56,59 @@ function toolsSchema() {
     },
     {
       name: 'list_deployments',
-      description: 'List the most recent deployment records (newest first) to review past work.',
+      description: 'List the most recent deployment records (newest first) to review past work. Each row includes its `id` — pass that id to update_deployment.',
       inputSchema: {
         type: 'object',
         properties: { limit: { type: 'number', description: 'Max rows (default 20, max 100).' } },
       },
     },
+    {
+      name: 'update_deployment',
+      description:
+        'Update an existing deployment record: change its star rating (result, 1-3) and/or move it ' +
+        'to a different project. Use the `id` from list_deployments. Everything else is written once ' +
+        'at record time and is not editable here. Deleting a record is intentionally NOT available via MCP.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          id:      { type: 'string', description: 'Record id (from list_deployments).' },
+          result:  { type: 'number', description: 'New star rating 1-3.' },
+          project: { type: 'string', description: 'Move the record to this project name.' },
+        },
+        required: ['id'],
+      },
+    },
+    {
+      name: 'describe_record',
+      description:
+        'Return the full field catalog of a deployment record — every field, its type, whether you ' +
+        'set it when recording or it is filled automatically, and what it means. Call this to know ' +
+        'exactly what information a deployment row holds before recording or updating.',
+      inputSchema: { type: 'object', properties: {} },
+    },
   ]
 }
+
+// Full field catalog of one deployment record — surfaced to Hermes via
+// describe_record so it always knows every field that exists, not only the
+// inputs of record_deployment.
+const RECORD_FIELDS = [
+  { field: 'id',             type: 'string',  set_by: 'auto',        about: 'Unique record id (returned by record_deployment; use it in update_deployment).' },
+  { field: 'result',         type: 'integer', set_by: 'hermes/user', about: 'Quality rating 1-3 (default 3). The user edits it in the UI; you may set/change it via update_deployment.' },
+  { field: 'project',        type: 'string',  set_by: 'hermes',      about: "Project the record belongs to (default 'default'). Changeable via update_deployment." },
+  { field: 'tokens',         type: 'integer', set_by: 'hermes',      about: 'Total tokens the agent spent (from delegate_to_platform). Default 0.' },
+  { field: 'platform',       type: 'string',  set_by: 'hermes',      about: 'Coding agent that did the work (required at record time).' },
+  { field: 'model',          type: 'string',  set_by: 'hermes',      about: 'Model used, e.g. gpt-5-mini.' },
+  { field: 'page_url',       type: 'string',  set_by: 'hermes',      about: 'URL to review the change (required at record time).' },
+  { field: 'commit_message', type: 'string',  set_by: 'hermes',      about: 'Short description of what changed.' },
+  { field: 'status',         type: 'string',  set_by: 'hermes',      about: "ready | building | error (default 'ready')." },
+  { field: 'duration_ms',    type: 'integer', set_by: 'hermes',      about: 'Build/work duration in milliseconds.' },
+  { field: 'commit_hash',    type: 'string',  set_by: 'hermes',      about: 'Git commit hash, if any.' },
+  { field: 'branch',         type: 'string',  set_by: 'hermes',      about: 'Git branch, if any.' },
+  { field: 'author',         type: 'string',  set_by: 'hermes',      about: "Display author (default 'Hermes')." },
+  { field: 'created_at',     type: 'string',  set_by: 'auto',        about: 'UTC timestamp the record was created.' },
+  { field: 'created_by',     type: 'string',  set_by: 'auto',        about: "Always 'hermes@agent' (records come from you)." },
+]
 
 function textResult(data) {
   return { content: [{ type: 'text', text: JSON.stringify(data) }] }
@@ -109,6 +154,25 @@ async function listDeployments(args) {
     `SELECT * FROM ${TABLE} ORDER BY created_at DESC LIMIT ?`, [limit],
   )
   return { rows: data.rows ?? [] }
+}
+
+// Change an existing record's star rating and/or its project. Only these two
+// fields are editable via MCP; deletion is deliberately not exposed (human-only
+// in the UI). Other columns are write-once at record time.
+async function updateDeployment(args) {
+  if (!args.id) throw new Error('id required')
+  const sets = [], params = []
+  if (args.result !== undefined && args.result !== null) { sets.push('result = ?'); params.push(clampResult(args.result)) }
+  if (args.project !== undefined && args.project !== null) { sets.push('project = ?'); params.push(String(args.project)) }
+  if (sets.length === 0) throw new Error('nothing to update: provide result and/or project')
+  params.push(args.id)
+  const data = await dataMigrate(`UPDATE ${TABLE} SET ${sets.join(', ')} WHERE id = ?`, params)
+  if (!data.changes) throw new Error(`no record with id ${args.id}`)
+  return { ok: true, id: args.id, changes: data.changes }
+}
+
+function describeRecord() {
+  return { table: TABLE, fields: RECORD_FIELDS }
 }
 
 export class DeploymentsMcpServer {
@@ -166,6 +230,8 @@ export class DeploymentsMcpServer {
     switch (name) {
       case 'record_deployment': return textResult(await recordDeployment(args))
       case 'list_deployments':  return textResult(await listDeployments(args))
+      case 'update_deployment': return textResult(await updateDeployment(args))
+      case 'describe_record':   return textResult(describeRecord())
       default: throw new Error(`Unknown tool: ${name}`)
     }
   }
