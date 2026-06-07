@@ -60,6 +60,48 @@ function probe(host: string): Promise<{ status: number | null; certValid: boolea
   });
 }
 
+type ProbeResult = { status: number | null; certValid: boolean; error: string | null };
+
+// A failure is "transient" (worth retrying) when it looks like a service still
+// warming up behind a working nginx — NOT a permanent misconfiguration.
+//   • 5xx: nginx is up but the upstream refused/erred (e.g. Hermes still
+//     installing TUI deps on first boot → connect() refused → 502). It will
+//     clear once the process binds its port.
+//   • status null + a network errno (connection refused/reset/timeout): nginx
+//     or the upstream not answering yet.
+// We do NOT retry cert failures (certValid=false) — a wrong/missing cert will
+// not appear within seconds and means the user must fix the cert step.
+function isTransient(p: ProbeResult): boolean {
+  if (!p.certValid) return false; // TLS problem — permanent within this window
+  if (p.status !== null && p.status >= 500) return true;
+  if (p.status === null) {
+    const code = (p.error ?? "").toUpperCase();
+    return (
+      code === "ECONNREFUSED" || code === "ECONNRESET" ||
+      code === "ETIMEDOUT"   || code === "EPIPE"      ||
+      code === "TIMEOUT"
+    );
+  }
+  return false;
+}
+
+// Probe a host, retrying transient failures with a fixed delay. Services
+// restarted by the deploy / secure transition (Hermes on :9119 in particular)
+// can take tens of seconds to bind their port; the final check must not flunk
+// the whole switch over a warmup window. Healthy hosts return on attempt 1, so
+// the parallel sweep is only as slow as the slowest still-warming host. Budget
+// is kept under ~30s (below nginx's 60s proxy_read_timeout). A genuinely-down
+// service still ends up failing after the attempts are exhausted — real outages
+// are not masked.
+async function probeWithRetry(host: string, attempts = 6, delayMs = 4000): Promise<ProbeResult> {
+  let last = await probe(host);
+  for (let i = 1; i < attempts && isTransient(last); i++) {
+    await new Promise((r) => setTimeout(r, delayMs));
+    last = await probe(host);
+  }
+  return last;
+}
+
 export async function POST(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -101,7 +143,7 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    const p = await probe(host);
+    const p = await probeWithRetry(host);
     return {
       host,
       dnsOk: true,
