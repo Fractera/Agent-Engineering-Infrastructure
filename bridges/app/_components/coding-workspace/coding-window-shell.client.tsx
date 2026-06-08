@@ -102,9 +102,15 @@ type Props = {
   isAuthenticated?: boolean;
   isPreviewOpen?: boolean;
   onPreviewClose?: () => void;
-  embed?: { url: string; title: string; Icon: ComponentType<{ size?: number; className?: string }> } | null;
+  // Every mounted embed session (Brain / Memory / Hermes dashboard). The shell
+  // renders one EmbedCanvas per entry and toggles visibility via `activeEmbedId`
+  // so switching cards never unmounts an iframe and loses the chat. (step 96)
+  embeds?: { id: EmbedTarget; url: string; title: string; Icon: ComponentType<{ size?: number; className?: string }> }[];
   activeEmbedId?: EmbedTarget | null;
   onEmbedCardClick?: (card: EmbedCard) => void;
+  // Explicit animated "End session" on an embed card — the only path that tears
+  // down a chat iframe (switching cards never does). (step 96)
+  onEmbedClose?: (id: EmbedTarget) => void;
   // Open the native Hermes agent dashboard (:9119) in the embed canvas — wired
   // to the "Hermes Agent" item in the Settings menu.
   onOpenHermesDashboard?: () => void;
@@ -114,7 +120,7 @@ type Props = {
   requestedSettingsPanel?: { id: SettingsPanelId; nonce: number } | null;
 };
 
-export function CodingWindowShell({ height, terminalPlatform, terminalSessions, onPlatformClick, onTerminalClose, windowWidth, isMobile = false, isAuthenticated = true, isPreviewOpen = false, onPreviewClose, embed, activeEmbedId = null, onEmbedCardClick, onOpenHermesDashboard, secure = false, requestedSettingsPanel = null }: Props) {
+export function CodingWindowShell({ height, terminalPlatform, terminalSessions, onPlatformClick, onTerminalClose, windowWidth, isMobile = false, isAuthenticated = true, isPreviewOpen = false, onPreviewClose, embeds = [], activeEmbedId = null, onEmbedCardClick, onEmbedClose, onOpenHermesDashboard, secure = false, requestedSettingsPanel = null }: Props) {
   const urls = useMemo(() => getRuntimeUrls(), []);
   const [terminalStatuses] = useState<Record<Platform, TerminalStatus>>({
     "claude-code": "unavailable", "codex": "unavailable", "gemini-cli": "unavailable",
@@ -133,6 +139,11 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const [sysTermActive, setSysTermActive]   = useState(false);
   const sysTermRef = useRef<XtermTerminalHandle | null>(null);
   const [confirmingPlatform, setConfirmingPlatform] = useState<Platform | null>(null);
+  // Embed "End session" confirm state — mirror of confirmingPlatform for the
+  // Brain/Memory carousel cards (step 96). Second click on the active embed card
+  // arms a 2s animated countdown that calls onEmbedClose.
+  const [confirmingEmbed, setConfirmingEmbed]       = useState<EmbedTarget | null>(null);
+  const embedCountdownRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [dataMenuOpen, setDataMenuOpen]             = useState(false);
   const [importing, setImporting]                   = useState(false);
   const [updateAvailable, setUpdateAvailable]       = useState(false);
@@ -284,6 +295,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   function handleCardClick(platformId: Platform) {
     onPreviewClose?.();
     setSysTermActive(false);
+    cancelEmbedConfirm();
     setShowEnvEditor(false);
     setShowMediaLibrary(false);
     setShowDbBrowser(false);
@@ -315,6 +327,40 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
       onPlatformClick(platformId);
     } else {
       onPlatformClick(platformId);
+    }
+  }
+
+  // Cancel any pending embed "End session" countdown (called when the user
+  // navigates to another surface instead of confirming the close).
+  function cancelEmbedConfirm() {
+    if (embedCountdownRef.current) clearTimeout(embedCountdownRef.current);
+    embedCountdownRef.current = null;
+    setConfirmingEmbed(null);
+  }
+
+  // Carousel Brain/Memory card click. Mirrors handleCardClick for CLI agents:
+  // a click on a card that isn't the visible surface just switches to it (the
+  // iframe is already mounted, so the chat is preserved); a second click on the
+  // already-active card arms a 2s animated "End session" countdown that closes
+  // the iframe via onEmbedClose. Switching never tears the session down. (step 96)
+  function handleEmbedClick(card: EmbedCard) {
+    const isActive = activeEmbedId === card.id && !sysTermActive;
+    if (isActive) {
+      if (confirmingEmbed === card.id) {
+        cancelEmbedConfirm();
+      } else {
+        if (embedCountdownRef.current) clearTimeout(embedCountdownRef.current);
+        setConfirmingEmbed(card.id);
+        embedCountdownRef.current = setTimeout(() => {
+          onEmbedClose?.(card.id);
+          setConfirmingEmbed(null);
+          embedCountdownRef.current = null;
+        }, 2000);
+      }
+    } else {
+      cancelEmbedConfirm();
+      setSysTermActive(false);
+      onEmbedCardClick?.(card);
     }
   }
 
@@ -508,7 +554,10 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     rawBufRef.current = "";
   }
 
-  useEffect(() => () => { if (countdownRef.current) clearTimeout(countdownRef.current); }, []);
+  useEffect(() => () => {
+    if (countdownRef.current) clearTimeout(countdownRef.current);
+    if (embedCountdownRef.current) clearTimeout(embedCountdownRef.current);
+  }, []);
   useEffect(() => { if (deployLogRef.current) deployLogRef.current.scrollTop = deployLogRef.current.scrollHeight; }, [deployLog]);
   useEffect(() => { if (updateLogRef.current) updateLogRef.current.scrollTop = updateLogRef.current.scrollHeight; }, [updateLog]);
   useEffect(() => {
@@ -720,23 +769,35 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
 
             {visibleEmbedCards.map((card) => {
               const Icon = EMBED_ICON_MAP[card.iconKey];
-              const isActive = activeEmbedId === card.id;
+              const isActive = activeEmbedId === card.id && !sysTermActive;
+              const isConfirming = confirmingEmbed === card.id;
               const notAuthed = !isAuthenticated;
               return (
                 <button
                   key={card.id}
                   type="button"
-                  onClick={() => { if (!notAuthed) { setSysTermActive(false); onEmbedCardClick?.(card); } }}
+                  onClick={() => { if (!notAuthed) handleEmbedClick(card); }}
                   disabled={notAuthed}
-                  style={{ width: CARD_W, flexShrink: 0 }}
+                  style={{ width: CARD_W, flexShrink: 0, position: "relative" }}
                   className={`flex items-center justify-center gap-1.5 rounded-md border h-9 text-[11px] transition-all px-2 ${
-                    notAuthed  ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-40"
-                    : isActive ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300 font-medium"
+                    notAuthed     ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-40"
+                    : isConfirming ? "border-orange-400 bg-orange-400/10 text-orange-400 font-medium"
+                    : isActive    ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300 font-medium"
                     : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
                 >
-                  <Icon size={11} className="shrink-0" />
-                  <span>{card.label}</span>
+                  {isConfirming ? (
+                    <>
+                      <span className="size-1.5 rounded-full bg-orange-400 animate-pulse shrink-0" />
+                      <span>End session</span>
+                      <span key={confirmingEmbed} style={{ position: "absolute", bottom: 4, left: 4, right: 4, height: 2, borderRadius: 1, transformOrigin: "left", animation: "countdown-shrink 2s linear forwards, countdown-color 2s linear forwards" }} />
+                    </>
+                  ) : (
+                    <>
+                      <Icon size={11} className="shrink-0" />
+                      <span>{card.label}</span>
+                    </>
+                  )}
                 </button>
               );
             })}
@@ -825,6 +886,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                     setShowUsers(false); setShowInfo(false); setShowHelp(false);
                     setShowGitConnect(false); setShowDomainPanel(false);
                     setShowHermesPanel(false); setShowLightRag(false);
+                    cancelEmbedConfirm();
                     setSysTermStarted(true);
                     setSysTermActive(true);
                   }}
@@ -1113,14 +1175,22 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
         <IdleCanvas />
       </div>
 
-      {/* ── Embed canvas (Company Brain / Company Memory) ── */}
-      {isAuthenticated && embed && (
-        <div
-          style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, height: termH, zIndex: 5 }}
-        >
-          <EmbedCanvas url={embed.url} title={embed.title} Icon={embed.Icon} />
-        </div>
-      )}
+      {/* ── Embed canvases (Company Brain / Company Memory / Hermes dashboard) ──
+            One iframe per opened session, kept mounted once created; visibility
+            toggles via `display` so switching cards (or to a terminal) never
+            tears the iframe down and loses the chat. Only the animated
+            "End session" on a card removes one (handleEmbedClose). (step 96) */}
+      {isAuthenticated && embeds.map((spec) => {
+        const isActive = activeEmbedId === spec.id && !sysTermActive;
+        return (
+          <div
+            key={`embed-${spec.id}`}
+            style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, height: termH, zIndex: 5, display: isActive ? "block" : "none" }}
+          >
+            <EmbedCanvas url={spec.url} title={spec.title} Icon={spec.Icon} />
+          </div>
+        );
+      })}
 
       {/* ── Terminal panels (xterm) ── */}
       {[...terminalSessions].map((platform) => {

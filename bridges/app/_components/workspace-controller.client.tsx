@@ -31,6 +31,12 @@ export function WorkspaceController() {
   const [terminalSessions, setTerminalSessions] = useState<Set<Platform>>(new Set());
   const [siteOpen, setSiteOpen]                 = useState(false);
   const [activeEmbed, setActiveEmbed]           = useState<EmbedTarget | null>(null);
+  // Embed sessions (Brain / Memory / Hermes dashboard) — mirror of
+  // `terminalSessions` for the CLI agents. Every opened embed iframe stays
+  // mounted here so switching cards only toggles visibility (display) instead
+  // of unmounting the iframe and losing the chat. An iframe is torn down only
+  // by the explicit animated "End session" → handleEmbedClose. (step 96)
+  const [embedSessions, setEmbedSessions]       = useState<Set<EmbedTarget>>(new Set());
   // Auto-open the Brain chat (the built-in Hermes Web UI) as the default surface
   // on first load, once we know the user is signed in and Brain is installed.
   // Runs once (guarded by the ref) and only sets the embed if the user hasn't
@@ -61,15 +67,34 @@ export function WorkspaceController() {
     return () => clearInterval(id);
   }, [refreshSecure]);
 
+  // Mount an embed session once (if new) and make it the active surface.
+  // Used by carousel cards, the auto-open default, and the Hermes dashboard
+  // menu item — so every path goes through the same mount-once bookkeeping.
+  const openEmbed = useCallback((id: EmbedTarget) => {
+    setEmbedSessions((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
+    setActiveEmbed(id);
+    setSiteOpen(false);
+  }, []);
+
+  // Tear down one embed session — the ONLY way to kill a chat iframe. Wired to
+  // the animated "End session" countdown in the carousel (mirrors the CLI
+  // terminal close). Switching cards never calls this. (step 96)
+  const handleEmbedClose = useCallback((id: EmbedTarget) => {
+    setEmbedSessions((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    // If we closed the visible one, fall back to nothing (idle canvas).
+    setActiveEmbed((cur) => (cur === id ? null : cur));
+  }, []);
+
   // Clicking a Brain/Memory card in the carousel always opens the iframe
   // (the embedded service runs regardless of whether a key is configured).
   // If no key is configured we ALSO surface the matching settings drawer
   // alongside the iframe so the user can paste a key without losing context.
   const handleEmbedCardClick = useCallback(async (card: EmbedCard) => {
-    // Toggle off if already active
-    if (activeEmbed === card.id) { setActiveEmbed(null); return; }
-    setActiveEmbed(card.id);
-    setSiteOpen(false);
+    openEmbed(card.id);
     // Brain card is the built-in chat (Hermes Web UI). The chat can't answer
     // without an OpenAI key in the agent's credential pool, so if none is set
     // yet we surface the OpenAI key drawer alongside the chat — the user sees
@@ -98,15 +123,14 @@ export function WorkspaceController() {
       // If the config check itself failed, still show the embed; settings
       // can be opened manually from the Data menu.
     }
-  }, [activeEmbed]);
+  }, [openEmbed]);
 
   // "Hermes Agent" (Settings menu) opens the native Hermes agent dashboard
   // (:9119) in the main embed canvas — the technical panel where providers /
   // keys / OAuth are configured. Brain card stays the friendly chat (:9120).
   const handleOpenHermesDashboard = useCallback(() => {
-    setActiveEmbed("hermes-dashboard");
-    setSiteOpen(false);
-  }, []);
+    openEmbed("hermes-dashboard");
+  }, [openEmbed]);
 
   const isMobile = windowWidth > 0 && windowWidth < 768;
 
@@ -138,7 +162,10 @@ export function WorkspaceController() {
       .then((data) => {
         const comps = data && Array.isArray(data.components) ? data.components : null;
         const brainInstalled = comps === null || comps.includes("brain");
-        if (brainInstalled) setActiveEmbed((prev) => prev ?? "brain");
+        if (brainInstalled) {
+          setEmbedSessions((s) => (s.has("brain") ? s : new Set(s).add("brain")));
+          setActiveEmbed((prev) => prev ?? "brain");
+        }
       })
       .catch(() => {});
   }, [loading, session]);
@@ -192,12 +219,14 @@ export function WorkspaceController() {
   const isVirtualArchitect = session?.userId === "virtual-admin";
   const isAuthenticated = session !== null;
 
-  type EmbedSpec = { url: string; title: string; Icon: ComponentType<{ size?: number; className?: string }> };
-  const embedSpec: EmbedSpec | null =
-    activeEmbed === "brain"  ? { url: urls.hermesChatUrl, title: "Brain Chat",  Icon: Brain } :
-    activeEmbed === "memory" ? { url: urls.brainUrl,  title: "Company Memory", Icon: BrainCircuit } :
-    activeEmbed === "hermes-dashboard" ? { url: urls.hermesUrl, title: "Hermes Agent", Icon: Bot } :
-    null;
+  type EmbedSpec = { id: EmbedTarget; url: string; title: string; Icon: ComponentType<{ size?: number; className?: string }> };
+  const embedSpecFor = (id: EmbedTarget): EmbedSpec =>
+    id === "brain"  ? { id, url: urls.hermesChatUrl, title: "Brain Chat",  Icon: Brain } :
+    id === "memory" ? { id, url: urls.brainUrl,  title: "Company Memory", Icon: BrainCircuit } :
+                      { id, url: urls.hermesUrl, title: "Hermes Agent", Icon: Bot };
+  // One spec per mounted session — the shell renders them all and toggles
+  // visibility, so an inactive chat stays alive in the background. (step 96)
+  const embedSpecs: EmbedSpec[] = [...embedSessions].map(embedSpecFor);
 
   const insecure = secure === false;
 
@@ -293,9 +322,10 @@ export function WorkspaceController() {
           isAuthenticated={isAuthenticated && !loading}
           isPreviewOpen={siteOpen}
           onPreviewClose={() => setSiteOpen(false)}
-          embed={embedSpec}
+          embeds={embedSpecs}
           activeEmbedId={activeEmbed}
           onEmbedCardClick={handleEmbedCardClick}
+          onEmbedClose={handleEmbedClose}
           onOpenHermesDashboard={handleOpenHermesDashboard}
           secure={secure === true}
           requestedSettingsPanel={panelRequest}
