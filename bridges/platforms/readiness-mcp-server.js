@@ -2,6 +2,7 @@ import { createServer } from 'http'
 import { existsSync, readdirSync } from 'fs'
 import { join } from 'path'
 import { execFile } from 'child_process'
+import { handleMcpHandshake } from './mcp-handshake.js'
 
 // ── Readiness MCP server (L2, port 3216) ────────────────────────────────────
 // Singleton MCP server (not platform-bound) that gives Hermes ONE snapshot of
@@ -171,6 +172,7 @@ export class ReadinessMcpServer {
     const ok   = r => res.end(JSON.stringify({ jsonrpc: '2.0', id, result: r }))
     const fail = (c, m) => res.end(JSON.stringify({ jsonrpc: '2.0', id, error: { code: c, message: m } }))
 
+    if (handleMcpHandshake(rpc, res, 'fractera-readiness-bridge')) return
     if (method === 'tools/list') return ok({ tools: toolsSchema() })
     if (method === 'tools/call') return this._call(params?.name, params?.arguments ?? {}).then(ok).catch(e => fail(-32603, e.message))
     fail(-32601, `Method not found: ${method}`)

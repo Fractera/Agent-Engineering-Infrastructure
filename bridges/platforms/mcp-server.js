@@ -1,5 +1,6 @@
 import { createServer } from 'http'
 import { randomUUID } from 'crypto'
+import { handleMcpHandshake } from './mcp-handshake.js'
 
 function toolsSchema(platform) {
   return [
@@ -65,6 +66,7 @@ export class PlatformMcpServer {
     const ok   = r  => res.end(JSON.stringify({ jsonrpc: '2.0', id, result: r }))
     const fail = (c, m) => res.end(JSON.stringify({ jsonrpc: '2.0', id, error: { code: c, message: m } }))
 
+    if (handleMcpHandshake(rpc, res, `fractera-${this.platform}-bridge`)) return
     if (method === 'tools/list') return ok({ tools: toolsSchema(this.platform) })
     if (method === 'tools/call') return this._call(params?.name, params?.arguments ?? {}).then(ok).catch(e => fail(-32603, e.message))
     fail(-32601, `Method not found: ${method}`)

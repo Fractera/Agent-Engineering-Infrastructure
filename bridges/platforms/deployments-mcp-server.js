@@ -1,5 +1,6 @@
 import { createServer } from 'http'
 import { randomUUID } from 'crypto'
+import { handleMcpHandshake } from './mcp-handshake.js'
 
 // ── Deployments MCP server (L2, port 3215) ──────────────────────────────────
 // Singleton MCP server (not platform-bound) that lets Hermes drive the Product
@@ -302,6 +303,7 @@ export class DeploymentsMcpServer {
     const ok   = r => res.end(JSON.stringify({ jsonrpc: '2.0', id, result: r }))
     const fail = (c, m) => res.end(JSON.stringify({ jsonrpc: '2.0', id, error: { code: c, message: m } }))
 
+    if (handleMcpHandshake(rpc, res, 'fractera-deployments-bridge')) return
     if (method === 'tools/list') return ok({ tools: toolsSchema() })
     if (method === 'tools/call') return this._call(params?.name, params?.arguments ?? {}).then(ok).catch(e => fail(-32603, e.message))
     fail(-32601, `Method not found: ${method}`)
