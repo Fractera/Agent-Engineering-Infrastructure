@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { execSync, exec } from "child_process";
-import { writeFileSync, mkdirSync } from "fs";
+import { writeFileSync, mkdirSync, existsSync, rmSync } from "fs";
 import Database from "better-sqlite3";
 import { requireAuth } from "@/lib/require-auth";
 
@@ -336,6 +336,51 @@ export async function POST(req: NextRequest) {
   }, 200);
 
   return NextResponse.json({ ok: true, status: "pending" });
+}
+
+// DELETE — reset the saved domain so the user can re-enter it (fix a typo).
+// Only allowed BEFORE Secure mode is live: a typo'd domain otherwise traps the
+// user in the wizard with no way back. Clears the site_settings record and drops
+// any staged (not-yet-activated) HTTPS nginx block for the wrong domain. Refuses
+// while Secure mode is active — there the user must "Switch back to IP" first.
+// Issued certbot certs are left on disk (harmless, unused once the record is
+// cleared). → next-step ШАГ 99.
+export async function DELETE(req: NextRequest) {
+  const ok = await requireAuth(req.headers.get("cookie") ?? "");
+  if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const db = getDb();
+  const row = db.prepare("SELECT custom_domain, domain_status FROM site_settings WHERE id = 1").get() as
+    { custom_domain?: string | null; domain_status?: string } | undefined;
+
+  // Guard: never clear the record out from under a live Secure deployment.
+  if (row?.domain_status === "active") {
+    db.close();
+    return NextResponse.json(
+      { error: "Secure mode is active. Switch back to IP / demo mode first, then change the domain." },
+      { status: 409 },
+    );
+  }
+
+  // Reset to the pristine "no domain yet" state. INSERT OR REPLACE keeps row id=1.
+  db.prepare(
+    `INSERT OR REPLACE INTO site_settings (id, custom_domain, domain_status, domain_error, cert_source, cert_expires_at, updated_at)
+     VALUES (1, NULL, 'idle', NULL, 'auto', NULL, strftime('%Y-%m-%dT%H:%M:%SZ','now'))`
+  ).run();
+  db.close();
+
+  // Best-effort: remove the staged HTTPS config for the wrong domain so its
+  // server blocks don't linger in nginx. We are guaranteed to be in IP mode
+  // here (status != active), so dropping it + reload can't break the live site.
+  try {
+    const staged = "/etc/nginx/sites-enabled/fractera-custom";
+    if (existsSync(staged)) {
+      rmSync(staged, { force: true });
+      execSync("nginx -t && nginx -s reload", { timeout: 10000 });
+    }
+  } catch { /* never fail the reset on an nginx hiccup */ }
+
+  return NextResponse.json({ ok: true });
 }
 
 // PUT — upload custom cert. Used for regions (RU, sanctioned networks, etc.)

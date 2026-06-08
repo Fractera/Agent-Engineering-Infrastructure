@@ -80,9 +80,17 @@ export function DomainPanel({ onClose }: { onClose: () => void }) {
     );
   }
 
-  // Domain already entered → wizard takes over.
+  // Domain already entered → wizard takes over. "Change domain" inside the
+  // wizard clears the saved record and drops us back to this entry form,
+  // pre-filling the old value so a typo is quick to fix. (step 99)
   if (config?.custom_domain) {
-    return <DomainWizard domain={config.custom_domain} onClose={onClose} />;
+    return (
+      <DomainWizard
+        domain={config.custom_domain}
+        onClose={onClose}
+        onChangeDomain={(prev) => { setInput(prev); setConfig({ custom_domain: null, domain_status: "idle" }); }}
+      />
+    );
   }
 
   // Initial state — ask for the domain name.

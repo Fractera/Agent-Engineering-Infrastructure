@@ -37,7 +37,7 @@ type HealthResult = {
   error: string | null;
 };
 
-export function DomainWizard({ domain, onClose }: { domain: string; onClose: () => void }) {
+export function DomainWizard({ domain, onClose, onChangeDomain }: { domain: string; onClose: () => void; onChangeDomain?: (prev: string) => void }) {
   const [state, setState] = useState<WizardState | null>(null);
   const [loading, setLoading] = useState(true);
   const [openStep, setOpenStep] = useState<1 | 2 | 3 | 4 | 5 | null>(null);
@@ -75,6 +75,8 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
 
   // Step 1 DNS re-check button state.
   const [checkingDns, setCheckingDns] = useState(false);
+  // Step 1 "Change domain" — reset a typo'd domain before activation (step 99).
+  const [changingDomain, setChangingDomain] = useState(false);
 
   const refresh = useCallback(async (): Promise<WizardState | null> => {
     try {
@@ -118,6 +120,24 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
       }
     } finally {
       setCheckingDns(false);
+    }
+  }
+
+  // Reset the saved domain so the user can re-enter it (typo fix). Only offered
+  // before Secure mode is live; the backend also refuses while active. On
+  // success we hand control back to the entry form (onChangeDomain). (step 99)
+  async function changeDomain() {
+    if (!confirm(`Change the domain from ${domain}?\n\nNothing is live yet — this just clears the saved domain so you can type the correct one. You'll re-add the DNS records for the new domain.`)) return;
+    setChangingDomain(true);
+    try {
+      const res = await fetch("/api/config/domain", { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) { toast.error(data.error || "Could not reset the domain"); return; }
+      onChangeDomain?.(domain);
+    } catch {
+      toast.error("Could not reset the domain");
+    } finally {
+      setChangingDomain(false);
     }
   }
 
@@ -365,15 +385,35 @@ export function DomainWizard({ domain, onClose }: { domain: string; onClose: () 
           </div>
           {state.step1.missingHosts.length > 0 && !state.step1.complete && (
             <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-2 text-[10px] text-amber-700 dark:text-amber-300">
-              Missing or wrong: {state.step1.missingHosts.map((h) => <code key={h} className="px-1 mx-0.5 rounded bg-muted">{h}</code>)}
+              {/* Wrap the host chips onto as many lines as needed — adjacent
+                  inline chips have no break opportunity and used to run off the
+                  right edge. flex-wrap lets the card grow taller instead. (step 99) */}
+              <span className="block mb-1.5 font-medium">Missing or wrong:</span>
+              <div className="flex flex-wrap gap-1">
+                {state.step1.missingHosts.map((h) => (
+                  <code key={h} className="px-1 rounded bg-muted break-all">{h}</code>
+                ))}
+              </div>
             </div>
           )}
-          <button onClick={runDnsCheck} disabled={checkingDns}
-            className="h-8 px-4 rounded-md bg-primary text-primary-foreground text-[11px] font-medium disabled:opacity-40 hover:opacity-90 transition-opacity">
-            {checkingDns
-              ? <span className="flex items-center gap-1.5"><Loader2 size={11} className="animate-spin" />Checking DNS…</span>
-              : state.step1.complete ? "Re-check DNS" : "I added the records — check DNS"}
-          </button>
+          {/* "I added the records" advances the flow; "Change domain" resets a
+              typo'd domain (hidden once Secure mode is live). (step 99) */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button onClick={runDnsCheck} disabled={checkingDns}
+              className="h-8 px-4 rounded-md bg-primary text-primary-foreground text-[11px] font-medium disabled:opacity-40 hover:opacity-90 transition-opacity">
+              {checkingDns
+                ? <span className="flex items-center gap-1.5"><Loader2 size={11} className="animate-spin" />Checking DNS…</span>
+                : state.step1.complete ? "Re-check DNS" : "I added the records — check DNS"}
+            </button>
+            {!state.step4.complete && (
+              <button onClick={changeDomain} disabled={changingDomain || checkingDns}
+                className="h-8 px-4 rounded-md border border-border text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 transition-colors">
+                {changingDomain
+                  ? <span className="flex items-center gap-1.5"><Loader2 size={11} className="animate-spin" />Resetting…</span>
+                  : "Change domain"}
+              </button>
+            )}
+          </div>
         </Step>
 
         {/* STEP 2 — Certificate (auto / upload) */}
