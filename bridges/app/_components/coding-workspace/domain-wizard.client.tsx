@@ -252,10 +252,15 @@ export function DomainWizard({ domain, onClose, onChangeDomain }: { domain: stri
       // activate route's own server→L1 notify can fail on a stale token). Fire-
       // and-forget — never block the redirect; the user just gets the email too.
       fetch("/api/config/domain/send-email", { method: "POST" }).catch(() => {});
-      toast.success("Switching — redirecting to your domain in 3 seconds… Check your email for your new addresses.");
-      // Give PM2 a beat to actually start serving on the new config before
-      // we throw the browser at it.
-      setTimeout(() => { window.location.href = data.redirectTo; }, 3000);
+      toast.success("Switching to Secure mode — preparing your project on your domain. This can take a few seconds; we'll redirect you automatically. Check your email for your new addresses.");
+      // Wait for the server to finish switching before we throw the browser at
+      // the new domain. activate() runs `pm2 reload all` ~0.8s after responding,
+      // and reloading all 7 processes (incl. fractera-admin behind admin.<domain>)
+      // takes several seconds. Redirecting too early lands on a 502 (upstream
+      // mid-restart) OR on the OLD insecure interface (admin not yet re-read with
+      // FRACTERA_IP_NODOMAIN_MODE=false). 3s was too tight; 10s clears both. The
+      // server's 30s rollback watcher still covers a genuine break. (step 93)
+      setTimeout(() => { window.location.href = data.redirectTo; }, 10000);
     } catch {
       toast.error("Activation failed");
     } finally {
