@@ -73,13 +73,24 @@ export function OpenAiPanel({ onClose }: Props) {
         }));
       }
       const results = await Promise.all(ops);
-      const bad = results.find((r) => !r.ok);
-      if (bad) { toast.error("Some keys failed to save — check and retry"); return; }
-
+      // A 400 is the only hard error here — a bad key format / nothing to save.
+      // Surface it so the user fixes the key.
+      const invalid = results.find((r) => r.status === 400);
+      if (invalid) {
+        const data = await invalid.json().catch(() => null);
+        toast.error(data?.error ?? "Invalid key — check and retry");
+        return;
+      }
+      // Any other non-2xx is almost always the fresh-server restart race: the key
+      // IS written (the routes persist it best-effort), the Brain/Memory service is
+      // just still (re)starting when the second concurrent call hits it. Do NOT
+      // scare the user with "failed" — the keys are saved; the chat only needs a
+      // reload once the restart settles. Show the Saved panel (with its reload
+      // button) either way.
       setSavedAt(Date.now());
       setBrainKey(""); setMemoryKey("");
       await refresh();
-      toast.success("Saved — your chat is connecting to OpenAI");
+      toast.success("Keys saved — reload the project to start the chat");
     } catch {
       toast.error("Save failed");
     } finally {
@@ -172,17 +183,17 @@ export function OpenAiPanel({ onClose }: Props) {
             {savedAt && (
               <div className="rounded-md border border-emerald-500/40 bg-emerald-500/5 p-2.5 space-y-1.5">
                 <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                  <CheckCircle size={12} /> Saved
+                  <CheckCircle size={12} /> Keys saved
                 </p>
                 <p className="text-[10px] text-muted-foreground leading-relaxed">
-                  The chat restarts within about 10 seconds to pick up the key. Reload the page, then
-                  open the Brain chat and say hello.
+                  Brain and Memory restart for about 10 seconds to pick up the key. To start the chat,
+                  please reload the project, then open the Brain chat and say hello.
                 </p>
                 <button
                   onClick={() => window.location.reload()}
                   className="flex items-center gap-1.5 h-7 px-2.5 rounded-md border border-emerald-500/50 text-[10px] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
                 >
-                  <RefreshCw size={10} /> Reload page
+                  <RefreshCw size={10} /> Reload project
                 </button>
               </div>
             )}
