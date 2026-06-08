@@ -5,7 +5,7 @@ export type Platform =
   | 'qwen-code'
   | 'kimi-code';
 
-export type TerminalStatus = 'unavailable' | 'connecting' | 'connected' | 'disconnected';
+export type TerminalStatus = 'unavailable' | 'connecting' | 'connected' | 'disconnected' | 'unauthorized';
 
 export const PLATFORMS: { id: Platform; label: string; active: boolean; docsUrl: string; agentPrompt: string }[] = [
   { id: 'claude-code', label: 'Claude Code', active: true,  docsUrl: 'https://code.claude.com/docs/en/quickstart', agentPrompt: '' },

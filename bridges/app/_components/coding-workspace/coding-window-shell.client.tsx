@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
 import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound } from "lucide-react";
@@ -46,9 +46,11 @@ const BRIDGE_TOOLTIP = "Bridge — all platform servers status\n\nOne process ru
 // PTY_URL and BRIDGE_URL removed — resolved at runtime via getRuntimeUrls()
 
 function TerminalDot({ status }: { status: TerminalStatus }) {
-  if (status === "unavailable") return <span className="size-1.5 rounded-full bg-muted-foreground/40 shrink-0" />;
-  if (status === "connecting")  return <span className="size-1.5 rounded-full bg-orange-400 animate-pulse shrink-0" />;
-  if (status === "connected")   return <span className="size-1.5 rounded-full bg-green-500 shrink-0" />;
+  if (status === "unavailable")  return <span className="size-1.5 rounded-full bg-muted-foreground/40 shrink-0" />;
+  if (status === "connecting")   return <span className="size-1.5 rounded-full bg-orange-400 animate-pulse shrink-0" />;
+  if (status === "connected")    return <span className="size-1.5 rounded-full bg-green-500 shrink-0" />;
+  // unauthorized — session running but the platform/key isn't signed in (step 98).
+  if (status === "unauthorized") return <span className="size-1.5 rounded-full bg-red-500 shrink-0" />;
   return null;
 }
 
@@ -127,6 +129,13 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   // null = unknown/loading or fetch failed → show everything (back-compat with
   // servers deployed before selective install, and never hide on a transient error).
   const [installed, setInstalled]           = useState<string[] | null>(null);
+  // Auth state for the red indicator (step 98). `agentReadiness` mirrors the
+  // readiness probe (logged_in/installed per code platform); `embedConfigured`
+  // mirrors whether Brain/Memory have an API key. Unknown (key missing in map)
+  // = never red — we only flag red on a definitive not-authed signal so a probe
+  // failure never raises a false alarm.
+  const [agentReadiness, setAgentReadiness] = useState<Record<string, { installed: boolean; logged_in: boolean }>>({});
+  const [embedConfigured, setEmbedConfigured] = useState<Partial<Record<EmbedCardId, boolean>>>({});
   // System terminal (S6): a plain project-level shell, always available as the
   // last carousel card. Started once, then kept mounted; `active` toggles its
   // visibility over the agent terminals / idle canvas.
@@ -384,6 +393,48 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
       .catch(() => {});
   }, []);
 
+  // Auth state for the red indicator (step 98). One readiness snapshot covers
+  // all 5 code platforms (logged_in/installed via the readiness probe); the two
+  // config checks tell whether Brain/Memory have a key. Cheap, no tokens. We
+  // only ever ADD definitive signals to the maps — a failed probe leaves the
+  // entry unknown, which the buttons treat as "not red" (no false alarm).
+  const refreshAuthState = useCallback(() => {
+    if (!isAuthenticated) return;
+    fetch("/api/agents/readiness")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data || !Array.isArray(data.agents)) return;
+        const map: Record<string, { installed: boolean; logged_in: boolean }> = {};
+        for (const a of data.agents) {
+          if (a && typeof a.platform === "string") {
+            map[a.platform] = { installed: !!a.installed, logged_in: !!a.logged_in };
+          }
+        }
+        setAgentReadiness(map);
+      })
+      .catch(() => {});
+    // installed===null = unknown manifest → still probe (back-compat).
+    const has = (id: string) => installed === null || installed.includes(id);
+    if (has("brain")) {
+      fetch("/api/config/hermes")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => { if (d) setEmbedConfigured((c) => ({ ...c, brain: d.configured === true })); })
+        .catch(() => {});
+    }
+    if (has("memory")) {
+      fetch("/api/config/rag")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => { if (d) setEmbedConfigured((c) => ({ ...c, memory: d.configured === true })); })
+        .catch(() => {});
+    }
+  }, [isAuthenticated, installed]);
+
+  useEffect(() => {
+    refreshAuthState();
+    const id = setInterval(refreshAuthState, 15_000);
+    return () => clearInterval(id);
+  }, [refreshAuthState]);
+
   async function handleUpdate() {
     setUpdating(true);
     setShowUpdateLog(true);
@@ -547,6 +598,9 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     activeAuthRef.current = null;
     setActiveAuth(null);
     rawBufRef.current = "";
+    // The user likely just finished signing a platform in — re-probe so a red
+    // indicator flips to green promptly instead of waiting for the next poll.
+    refreshAuthState();
   }
 
   useEffect(() => () => {
@@ -771,6 +825,9 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
               const isActive     = activeEmbedId === card.id && !sysTermActive;
               const isConfirming = confirmingEmbed === card.id;
               const notAuthed    = !isAuthenticated;
+              // Red (step 98): the chat is open but no API key is configured yet,
+              // so it can't actually answer. Unknown (undefined) → not red.
+              const isUnauth     = hasSession && embedConfigured[card.id] === false;
               return (
                 <button
                   key={card.id}
@@ -781,6 +838,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                   className={`flex items-center justify-center gap-1.5 rounded-md border h-9 text-[11px] transition-all px-2 ${
                     notAuthed       ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-40"
                     : isConfirming  ? "border-orange-400 bg-orange-400/10 text-orange-400 font-medium"
+                    : isUnauth      ? "border-red-500/50 bg-red-500/5 text-red-600 dark:text-red-400 font-medium"
                     : isActive      ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300 font-medium"
                     : hasSession    ? "border-green-500/50 bg-green-500/5 text-green-600 dark:text-green-400"
                     : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -794,7 +852,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                     </>
                   ) : (
                     <>
-                      <TerminalDot status={hasSession ? "connected" : "unavailable"} />
+                      <TerminalDot status={hasSession ? (isUnauth ? "unauthorized" : "connected") : "unavailable"} />
                       <span>{card.label}</span>
                     </>
                   )}
@@ -809,6 +867,11 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
               const notInstalled   = !p.active && p.agentPrompt !== '';
               const bridgeOffline  = bridgeStatus === "offline" && !isRunning;
               const notAuthed      = !isAuthenticated;
+              // Red (step 98): session running but the agent is NOT signed into
+              // its subscription. Gated on installed===true so a probe miss
+              // (bad bin path → false logged_in) never shows a false red.
+              const rd             = agentReadiness[p.id];
+              const isUnauth       = isRunning && rd?.installed === true && rd?.logged_in === false;
 
               const btn = (
                 <button
@@ -824,6 +887,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                     : bridgeOffline ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-40"
                     : notInstalled  ? "border-dashed border-border text-muted-foreground/40 cursor-not-allowed opacity-60"
                     : isConfirming  ? "border-orange-400 bg-orange-400/10 text-orange-400 font-medium"
+                    : isUnauth      ? "border-red-500/50 bg-red-500/5 text-red-600 dark:text-red-400 font-medium"
                     : isCurrent     ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300 font-medium"
                     : isRunning     ? "border-green-500/50 bg-green-500/5 text-green-600 dark:text-green-400"
                     : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -838,7 +902,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                   ) : notInstalled ? (
                     <><Download size={10} className="shrink-0 opacity-50" /><span>{p.label}</span></>
                   ) : (
-                    <><TerminalDot status={isRunning ? "connected" : terminalStatuses[p.id]} /><span>{p.label}</span></>
+                    <><TerminalDot status={isRunning ? (isUnauth ? "unauthorized" : "connected") : terminalStatuses[p.id]} /><span>{p.label}</span></>
                   )}
                 </button>
               );
