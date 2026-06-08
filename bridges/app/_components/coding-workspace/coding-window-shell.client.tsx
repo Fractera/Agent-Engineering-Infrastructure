@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
-import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, Brain, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Terminal as TerminalIcon } from "lucide-react";
+import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
 import { PLATFORMS, COMING_SOON, EMBED_CARDS, type Platform, type TerminalStatus, type EmbedCard, type EmbedCardId, type EmbedTarget } from "./platforms";
@@ -23,11 +23,6 @@ import { DeploymentsPanel } from "./deployments-panel.client";
 import { EmbedCanvas } from "./embed-canvas.client";
 import { IdleCanvas } from "./idle-canvas.client";
 import type { ComponentType } from "react";
-
-const EMBED_ICON_MAP: Record<EmbedCard["iconKey"], ComponentType<{ size?: number; className?: string }>> = {
-  Brain,
-  BrainCircuit,
-};
 
 export type SettingsPanelId = "hermes" | "lightrag" | "openai";
 
@@ -768,10 +763,14 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           <div className="flex" style={{ gap: GAP, transform: `translateX(-${safeIdx * (CARD_W + GAP)}px)`, transition: "transform 0.25s ease" }}>
 
             {visibleEmbedCards.map((card) => {
-              const Icon = EMBED_ICON_MAP[card.iconKey];
-              const isActive = activeEmbedId === card.id && !sysTermActive;
+              // Unified carousel-button standard (step 96): same states/colors as
+              // the CLI agent cards. A mounted session (in `embeds`) is alive in
+              // the background → green; the visible one → yellow; no session →
+              // grey; closing → orange + countdown slider. Dot indicator, no icon.
+              const hasSession   = embeds.some((e) => e.id === card.id);
+              const isActive     = activeEmbedId === card.id && !sysTermActive;
               const isConfirming = confirmingEmbed === card.id;
-              const notAuthed = !isAuthenticated;
+              const notAuthed    = !isAuthenticated;
               return (
                 <button
                   key={card.id}
@@ -780,9 +779,10 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                   disabled={notAuthed}
                   style={{ width: CARD_W, flexShrink: 0, position: "relative" }}
                   className={`flex items-center justify-center gap-1.5 rounded-md border h-9 text-[11px] transition-all px-2 ${
-                    notAuthed     ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-40"
-                    : isConfirming ? "border-orange-400 bg-orange-400/10 text-orange-400 font-medium"
-                    : isActive    ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300 font-medium"
+                    notAuthed       ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-40"
+                    : isConfirming  ? "border-orange-400 bg-orange-400/10 text-orange-400 font-medium"
+                    : isActive      ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300 font-medium"
+                    : hasSession    ? "border-green-500/50 bg-green-500/5 text-green-600 dark:text-green-400"
                     : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
                 >
@@ -794,7 +794,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                     </>
                   ) : (
                     <>
-                      <Icon size={11} className="shrink-0" />
+                      <TerminalDot status={hasSession ? "connected" : "unavailable"} />
                       <span>{card.label}</span>
                     </>
                   )}
@@ -891,12 +891,16 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                     setSysTermActive(true);
                   }}
                   className={`flex items-center justify-center gap-1.5 rounded-md border h-9 text-[11px] transition-all px-2 ${
-                    notAuthed     ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-40"
-                    : sysTermActive ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300 font-medium"
+                    notAuthed        ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-40"
+                    : sysTermActive  ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300 font-medium"
+                    : sysTermStarted ? "border-green-500/50 bg-green-500/5 text-green-600 dark:text-green-400"
                     : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
                 >
-                  <TerminalIcon size={11} className="shrink-0" />
+                  {/* Same dot indicator as agents/Brain/Memory. The system
+                      terminal can never be turned off (step 85), so it has no
+                      "End session" close — only grey(idle)/green(alive)/yellow(active). */}
+                  <TerminalDot status={sysTermStarted ? "connected" : "unavailable"} />
                   <span>Terminal</span>
                 </button>
               );
