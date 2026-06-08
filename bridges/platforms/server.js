@@ -8,6 +8,7 @@ import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { PlatformMcpServer } from './mcp-server.js'
 import { DeploymentsMcpServer } from './deployments-mcp-server.js'
+import { ReadinessMcpServer } from './readiness-mcp-server.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, '../../app/.env.local') })
@@ -1105,4 +1106,25 @@ for (const cfg of mcpConfigs) {
 new DeploymentsMcpServer({
   port: Number(process.env.DEPLOYMENTS_MCP_PORT ?? 3215),
   secret: MCP_SECRET,
+}).start()
+
+// ── Readiness MCP server (singleton, port 3216) ─────────────────────────────
+// One call → readiness snapshot of all 5 coding agents (installed / logged_in /
+// busy / last-worked), so Hermes delegates with open eyes. Login is probed from
+// each CLI's cached credentials (no token cost, no waking the agent); busy reuses
+// the per-platform get_status (loopback); last-worked comes from the Product Loop
+// table. Facts only — the choose-which-agent logic lives in a Hermes skill. §3.10.
+new ReadinessMcpServer({
+  port: Number(process.env.READINESS_MCP_PORT ?? 3216),
+  secret: MCP_SECRET,
+  home: process.env.HOME,
+  dataUrl: process.env.REMOTE_DATA_URL ?? 'http://localhost:3300',
+  dataSecret: process.env.DATA_SECRET ?? '',
+  agents: [
+    { platform: 'claude-code', bin: CLAUDE_BIN, mcpPort: Number(process.env.CLAUDE_MCP_PORT ?? 3210), login: { kind: 'claude-cmd' } },
+    { platform: 'codex',       bin: CODEX_BIN,  mcpPort: Number(process.env.CODEX_MCP_PORT  ?? 3211), login: { kind: 'file', paths: ['.codex/auth.json'] } },
+    { platform: 'gemini-cli',  bin: GEMINI_BIN, mcpPort: Number(process.env.GEMINI_MCP_PORT ?? 3212), login: { kind: 'file', paths: ['.gemini/oauth_creds.json'] } },
+    { platform: 'qwen-code',   bin: QWEN_BIN,   mcpPort: Number(process.env.QWEN_MCP_PORT   ?? 3213), login: { kind: 'file', paths: ['.qwen/oauth_creds.json'] } },
+    { platform: 'kimi-code',   bin: KIMI_BIN,   mcpPort: Number(process.env.KIMI_MCP_PORT   ?? 3214), login: { kind: 'dir', path: '.kimi/credentials' } },
+  ],
 }).start()
