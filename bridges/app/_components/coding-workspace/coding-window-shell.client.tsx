@@ -494,8 +494,12 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   }
 
   function handleSendPasteText(text: string) {
-    xtermRefs.current[terminalPlatform]?.sendStdin(text);
-    setTimeout(() => { xtermRefs.current[terminalPlatform]?.focus(); }, 80);
+    // The system terminal (S6) is tracked separately from terminalPlatform —
+    // when it's the active card, paste must target its ref, not a CLI terminal
+    // (otherwise paste silently goes nowhere). → step 95.
+    const target = sysTermActive ? sysTermRef.current : xtermRefs.current[terminalPlatform];
+    target?.sendStdin(text);
+    setTimeout(() => { target?.focus(); }, 80);
   }
 
   function handleCloseAuthModal() {
