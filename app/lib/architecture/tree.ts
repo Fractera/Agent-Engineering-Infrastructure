@@ -1,4 +1,6 @@
 import type { ArchNode } from "./types"
+import { platform, skillsGroup, skill, mcp } from "./builders"
+import { DOCS_NODE } from "./docs-node"
 
 // Seed catalogue of the L2 (Fractera-on-VPS) architecture. This is the single
 // source the Architecture page renders — left tree + right detail panel both
@@ -55,11 +57,11 @@ export const ARCHITECTURE_TREE: ArchNode = {
         "each as an MCP server (ports 3210–3214) that Hermes can call. The " +
         "last carousel card — the system terminal — also lives here.",
       children: [
-        platform("claude", "Claude Code", "orange"),
-        platform("codex", "Codex", "green"),
-        platform("gemini", "Gemini CLI", "blue"),
-        platform("qwen", "Qwen Code", "violet"),
-        platform("kimi", "Kimi Code", "cyan"),
+        platform("claude", "Claude Code", "CLAUDE.md"),
+        platform("codex", "Codex", "AGENTS.md"),
+        platform("gemini", "Gemini CLI", "GEMINI.md"),
+        platform("qwen", "Qwen Code", "QWEN.md"),
+        platform("kimi", "Kimi Code", "AGENTS.md"),
         {
           id: "system-terminal",
           label: "System terminal",
@@ -167,55 +169,6 @@ export const ARCHITECTURE_TREE: ArchNode = {
         },
       ],
     },
+    DOCS_NODE,
   ],
-}
-
-// ── small builders to keep the catalogue terse and consistent ──
-
-function platform(id: string, label: string, _color: string): ArchNode {
-  return {
-    id,
-    label,
-    kind: "platform",
-    description:
-      `${label}: a subscription AI coding platform driven through the bridge. ` +
-      "Its instructions are its skills and its MCP servers. Expand to inspect " +
-      "or add a skill.",
-    children: [
-      skillsGroup(`${id}-skills`, []),
-      {
-        id: `${id}-mcp`,
-        label: "MCP",
-        kind: "group",
-        description: `MCP servers available to ${label}.`,
-      },
-    ],
-  }
-}
-
-function skillsGroup(id: string, skills: ArchNode[]): ArchNode {
-  return {
-    id,
-    label: "Skills",
-    kind: "group",
-    addable: true,
-    addLabel: "Add skill",
-    description:
-      "The skills this agent loads. Use the + below to add one (the add-skill " +
-      "mechanism is wired up in a later step).",
-    children: skills,
-  }
-}
-
-function skill(id: string, label: string): ArchNode {
-  return {
-    id,
-    label,
-    kind: "skill",
-    description: `Skill "${label}". The skill text will render here.`,
-  }
-}
-
-function mcp(id: string, label: string): ArchNode {
-  return { id, label, kind: "mcp", description: `MCP server: ${label}.` }
 }

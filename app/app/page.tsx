@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Zap, LayoutDashboard, Sparkles, Network } from "lucide-react";
+import { Zap, LayoutDashboard, Sparkles, Network, Route, Bug } from "lucide-react";
 import { adminBase } from "@/lib/runtime-urls";
 
 const AI_TOOLS = [
@@ -112,7 +112,7 @@ export default function ShellPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.75, duration: 0.45 }}
-          className="flex items-center gap-3"
+          className="flex flex-wrap items-center justify-center gap-3"
         >
           <a
             href={adminUrl || "#"}
@@ -136,6 +136,20 @@ export default function ShellPage() {
           >
             <Network size={14} />
             Architecture
+          </a>
+          <a
+            href="/routes"
+            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl border border-border text-sm font-medium text-foreground hover:bg-muted active:scale-95 transition-all"
+          >
+            <Route size={14} />
+            Routes
+          </a>
+          <a
+            href="/debug"
+            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl border border-border text-sm font-medium text-foreground hover:bg-muted active:scale-95 transition-all"
+          >
+            <Bug size={14} />
+            Debug
           </a>
         </motion.div>
 
