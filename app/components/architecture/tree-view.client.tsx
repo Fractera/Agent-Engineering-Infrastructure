@@ -13,6 +13,8 @@ const KIND_DOT: Record<ArchKind, string> = {
   skill:    "bg-violet-400",
   mcp:      "bg-cyan-400",
   config:   "bg-amber-400",
+  page:     "bg-emerald-400",
+  api:      "bg-sky-400",
   note:     "bg-muted-foreground/40",
 }
 
