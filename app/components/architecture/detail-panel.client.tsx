@@ -1,5 +1,6 @@
 "use client"
 
+import { ArrowUpRight } from "lucide-react"
 import type { ArchNode } from "@/lib/architecture/types"
 
 const KIND_LABEL: Record<string, string> = {
@@ -10,12 +11,14 @@ const KIND_LABEL: Record<string, string> = {
   skill: "Skill",
   mcp: "MCP server",
   config: "Config",
+  page: "Page",
+  api: "API endpoint",
   note: "Note",
 }
 
-// Right ~50% panel. v1 is intentionally a placeholder surface — it shows the
-// selected node's text and is the canvas we flesh out (skill source, live
-// status, edit affordances) in later sub-steps.
+// Right ~50% panel. Shows the selected node's text plus optional metadata
+// (roles / rendering / method) and an Open link — the accompanying "file" for
+// each node that lets a human (or an agent reading this) grasp it at a glance.
 export function DetailPanel({ node }: { node: ArchNode | null }) {
   if (!node) {
     return (
@@ -26,6 +29,8 @@ export function DetailPanel({ node }: { node: ArchNode | null }) {
       </div>
     )
   }
+
+  const meta = node.meta
 
   return (
     <div className="flex h-full flex-col gap-4 p-6">
@@ -44,12 +49,38 @@ export function DetailPanel({ node }: { node: ArchNode | null }) {
         <p className="text-sm leading-relaxed text-muted-foreground">{node.description}</p>
       )}
 
+      {meta && (
+        <div className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border">
+          {meta.roles && <MetaRow k="Roles" v={meta.roles} />}
+          {meta.rendering && <MetaRow k="Rendering" v={meta.rendering} />}
+          {meta.method && <MetaRow k="Method" v={meta.method} />}
+        </div>
+      )}
+
+      {node.href && (
+        <a
+          href={node.href}
+          className="inline-flex w-fit items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+        >
+          Open page <ArrowUpRight size={12} />
+        </a>
+      )}
+
       <div className="mt-auto rounded-lg border border-dashed border-border p-4">
         <p className="text-[11px] text-muted-foreground/60">
-          This panel is a placeholder canvas. Future steps render the live detail
-          here — skill source, status, and editing.
+          This panel is the accompanying file for the selected node. Read top to
+          bottom and you know what it is, how it connects, and why it earns its place.
         </p>
       </div>
+    </div>
+  )
+}
+
+function MetaRow({ k, v }: { k: string; v: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 bg-background px-3 py-2 text-xs">
+      <span className="text-muted-foreground">{k}</span>
+      <span className="font-mono text-foreground">{v}</span>
     </div>
   )
 }

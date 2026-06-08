@@ -26,6 +26,13 @@ export type ArchNode = {
   description?: string
   /** When set, the detail panel offers an "Open" link (used by the route tree). */
   href?: string
+  /** Optional metadata rendered as a small grid in the detail panel. Used by the
+   *  route tree to surface roles / rendering / method per page. */
+  meta?: {
+    roles?: string
+    rendering?: "static" | "dynamic"
+    method?: string
+  }
   /** When true, the children list renders a trailing "+" add affordance. */
   addable?: boolean
   /** Label for the add affordance (defaults to "Add"). */

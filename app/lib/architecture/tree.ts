@@ -146,6 +146,25 @@ export const ARCHITECTURE_TREE: ArchNode = {
             mcp("mcp-kimi", "kimi-bridge :3214"),
           ],
         },
+        {
+          id: "hermes-webui",
+          label: "Chat Web UI — fractera-hermes-webui",
+          kind: "service",
+          port: ":9120",
+          description:
+            "The chat window inside your workspace where you talk to Hermes in " +
+            "plain language. Benefit: you brief the brain like a teammate and it " +
+            "drives the five coding platforms for you — no commands to memorise.",
+        },
+        {
+          id: "hermes-telegram",
+          label: "Telegram — fractera-hermes-gateway",
+          kind: "service",
+          description:
+            "A gateway process that lets you reach the same brain from Telegram " +
+            "on your phone. Benefit: you can start, check on, or steer work away " +
+            "from the keyboard; the workspace keeps building while you are out.",
+        },
       ],
     },
   ],

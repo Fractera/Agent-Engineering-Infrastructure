@@ -1,0 +1,63 @@
+import type { ArchNode } from "./types"
+
+// The route map of this app. Because you work in production you can't see the
+// file tree — this is the "Road" that shows your project's pages and endpoints,
+// each with its accompanying file: who can reach it, how it renders, the method.
+// Curated for v1 (honestly hand-kept); a later step can derive it from the route
+// manifest so it never drifts. Rendering/roles reflect the live Shell config.
+
+export const ROUTES_TREE: ArchNode = {
+  id: "routes",
+  label: "Your app — routes",
+  kind: "layer",
+  description:
+    "Every page and endpoint your app serves. Open a node to see who can reach " +
+    "it, whether it is pre-rendered (static) or computed per request (dynamic), " +
+    "and the HTTP method.",
+  children: [
+    {
+      id: "pages",
+      label: "Pages",
+      kind: "group",
+      description: "Pages a visitor can open in the browser.",
+      children: [
+        page("r-home", "/", "/", "Public landing — the starter template you turn into your product.", "Public"),
+        page("r-dashboard", "/dashboard", "/dashboard", "Product catalogue demo (DB + media). Self-gates to a signed-in user in secure mode.", "User (secure) / open (IP)", "dynamic"),
+        page("r-architecture", "/architecture", "/architecture", "Visual map of the workspace — this tree's sibling.", "Public"),
+        page("r-debug", "/debug", "/debug", "Runtime diagnostics scratch surface.", "Public"),
+        page("r-routes", "/routes", "/routes", "This page — the route map of your project.", "Public"),
+      ],
+    },
+    {
+      id: "api",
+      label: "API",
+      kind: "group",
+      description:
+        "Server endpoints. In secure mode the proxy requires a session for " +
+        "everything except /api/health; in IP mode auth is bypassed.",
+      children: [
+        api("a-health", "/api/health", "Liveness probe — always open.", "GET", "Public"),
+        api("a-me", "/api/me", "Current session / identity used by client pages.", "GET", "Session"),
+        api("a-products", "/api/products", "List and create catalogue products.", "GET · POST", "Session"),
+        api("a-product-id", "/api/products/[id]", "Delete a single product.", "DELETE", "Session"),
+        api("a-upload", "/api/media/upload", "Upload an image to the media service.", "POST", "Session"),
+        api("a-media-file", "/api/media/[id]/file", "Serve a stored media file.", "GET", "Session"),
+        api("a-config-env", "/api/config/env", "Read non-secret runtime config.", "GET", "Session"),
+        api("a-config-or", "/api/config/openrouter", "OpenRouter config for the app.", "GET", "Session"),
+      ],
+    },
+  ],
+}
+
+function page(
+  id: string, label: string, href: string, description: string,
+  roles: string, rendering: "static" | "dynamic" = "static",
+): ArchNode {
+  return { id, label, kind: "page", href, description, meta: { roles, rendering, method: "GET" } }
+}
+
+function api(
+  id: string, label: string, description: string, method: string, roles: string,
+): ArchNode {
+  return { id, label, kind: "api", description, meta: { roles, rendering: "dynamic", method } }
+}
