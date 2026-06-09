@@ -72,17 +72,13 @@ export default function ArchitecturePage() {
           ← back
         </a>
 
-        <div className="mt-4">
-          <JumpBar entries={entries} activeId={selected?.id ?? null} onJump={handleJump} onReset={handleReset} />
-        </div>
-
-        <h1 className="mt-5 text-xl font-semibold text-foreground">AI Core</h1>
+        <h1 className="mt-3 text-xl font-semibold text-foreground">AI Core</h1>
         <p className="mt-0.5 max-w-2xl text-xs leading-relaxed text-muted-foreground">
           An interactive view of your AI core — every running entity (agents, bridges,
           memory, MCP, tools). Inspect the current state, change it, and create new
           entities — a skill, an MCP server, a task. New entities join the development
           and usage cycle automatically: from chat or Telegram, ask the agent to pick up
-          the change and run the loop. Open a node, or jump straight to it above.
+          the change and run the loop. Open a node, or jump straight to it from the bar below.
         </p>
 
         {/* Wide by design: horizontal scroll on narrow screens (like a table). */}
@@ -103,6 +99,11 @@ export default function ArchitecturePage() {
               <DetailPanel node={selected} />
             </div>
           </div>
+        </div>
+
+        {/* Jump-to lives at the bottom — it grows in height as the project grows. */}
+        <div className="mt-6">
+          <JumpBar entries={entries} activeId={selected?.id ?? null} onJump={handleJump} onReset={handleReset} />
         </div>
       </div>
     </main>
