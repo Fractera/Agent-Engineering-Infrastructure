@@ -266,6 +266,8 @@ This list is **headline only**. Many more capabilities exist (GitHub tooling, de
 
 A file exceeding 200 lines must be decomposed immediately — split by responsibility, not by line count. Non-negotiable. If you encounter an oversized file in the area you're editing, decompose it before continuing the requested change.
 
+**Exception — pure data files.** The limit targets logic and cognitive load. Pure data/seed files with no control flow (e.g. a static catalogue, fixtures, a route/config map) are exempt — keep one coherent dataset whole rather than scattering it just to satisfy a line count. The moment such a file grows logic (branches, computation), the limit applies again.
+
 Other rules:
 - Edit existing files before creating new ones
 - No comments unless the *why* is non-obvious
