@@ -42,6 +42,15 @@ const SCHEMA = `
     created_at     TEXT NOT NULL DEFAULT (datetime('now')),
     created_by     TEXT NOT NULL DEFAULT 'system'
   );
+  CREATE TABLE IF NOT EXISTS requested_routes (
+    id         TEXT PRIMARY KEY NOT NULL,
+    slug       TEXT NOT NULL,
+    title      TEXT NOT NULL,
+    todo       TEXT NOT NULL DEFAULT '[]',
+    status     TEXT NOT NULL DEFAULT 'requested',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    created_by TEXT NOT NULL DEFAULT 'system'
+  );
 `
 
 // ALTER TABLE ADD COLUMN must tolerate the "duplicate column" error: during
