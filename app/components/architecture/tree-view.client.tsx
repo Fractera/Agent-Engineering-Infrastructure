@@ -52,6 +52,7 @@ export function TreeNode({
   return (
     <div>
       <button
+        id={`arch-node-${node.id}`}
         onClick={handleClick}
         style={{ paddingLeft: depth * 16 + 8 }}
         className={`group flex w-full items-center gap-1.5 rounded-md py-1.5 pr-2 text-left text-xs transition-colors ${
@@ -73,7 +74,7 @@ export function TreeNode({
       </button>
 
       {isOpen && (
-        <div>
+        <div style={{ animation: "archReveal .18s ease-out" }}>
           {node.children?.map(child => (
             <TreeNode
               key={child.id}
