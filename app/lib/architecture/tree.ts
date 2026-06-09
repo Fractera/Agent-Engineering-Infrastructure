@@ -28,8 +28,8 @@ export const ARCHITECTURE_TREE: ArchNode = {
       description:
         "The reverse proxy every visible request passes through in secure mode: " +
         "it terminates TLS, routes the apex and the admin./auth./data./chat. " +
-        "subdomains, runs the auth_request gate, and injects the 'Powered by " +
-        "Fractera' footer. In IP mode it is absent — you reach services by port.",
+        "subdomains, and runs the auth_request gate. In IP mode it is absent — " +
+        "you reach services by port directly.",
       children: [
         {
           id: "auth",
@@ -83,7 +83,7 @@ export const ARCHITECTURE_TREE: ArchNode = {
                     { id: "tbl-projects", label: "projects", kind: "config",
                       description: "Named projects that deployments are grouped under (default-first)." },
                     { id: "tbl-settings", label: "site_settings", kind: "config",
-                      description: "Workspace settings — domain, certificate countdown, white-label flag." },
+                      description: "Workspace settings — domain and certificate state." },
                   ],
                 },
                 {

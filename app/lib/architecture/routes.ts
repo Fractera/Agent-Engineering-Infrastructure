@@ -8,7 +8,7 @@ import type { ArchNode } from "./types"
 
 export const ROUTES_TREE: ArchNode = {
   id: "routes",
-  label: "Your app — routes",
+  label: "Architecture — your app's structure",
   kind: "layer",
   description:
     "Every page and endpoint your app serves. Open a node to see who can reach " +
@@ -23,9 +23,9 @@ export const ROUTES_TREE: ArchNode = {
       children: [
         page("r-home", "/", "/", "Public landing — the starter template you turn into your product.", "Public"),
         page("r-dashboard", "/dashboard", "/dashboard", "Product catalogue demo (DB + media). Self-gates to a signed-in user in secure mode.", "User (secure) / open (IP)", "dynamic"),
-        page("r-architecture", "/architecture", "/architecture", "Visual map of the workspace — this tree's sibling.", "Public"),
+        page("r-ai-core", "/ai-core", "/ai-core", "Live state of your AI core — agents, bridges, memory, MCP, tools.", "Public"),
+        page("r-architecture", "/architecture", "/architecture", "This page — the map of your app's pages and endpoints.", "Public"),
         page("r-debug", "/debug", "/debug", "Runtime diagnostics scratch surface.", "Public"),
-        page("r-routes", "/routes", "/routes", "This page — the route map of your project.", "Public"),
       ],
     },
     {
