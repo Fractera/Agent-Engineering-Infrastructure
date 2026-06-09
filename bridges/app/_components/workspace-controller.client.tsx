@@ -148,15 +148,19 @@ export function WorkspaceController() {
 
   useEffect(() => { fetchSession(); }, [fetchSession]);
 
-  // Open the Brain chat by default on first load (in both modes). We wait until
-  // the session is resolved (so we don't flash it to logged-out visitors) and
-  // only auto-open when Brain is actually installed. installed manifest: null /
-  // fetch failure = unknown → still default to the chat (back-compat with servers
-  // deployed before selective install). Never override a card the user clicked.
+  // Open the Brain chat by default on first load — SECURE MODE ONLY. We wait
+  // until the session AND the mode are resolved (so we neither flash it to
+  // logged-out visitors nor open it before we know the mode), then only auto-open
+  // when Brain is installed. In insecure (IP) mode the built-in Hermes Web UI is
+  // hidden (step 100) — chat is reachable via Telegram instead. installed
+  // manifest: null / fetch failure = unknown → still default to the chat
+  // (back-compat). Never override a card the user clicked.
   useEffect(() => {
     if (autoOpenedRef.current) return;
     if (loading || !session) return;
+    if (secure === null) return; // wait until the mode is known
     autoOpenedRef.current = true;
+    if (secure !== true) return; // insecure: no built-in chat (step 100)
     fetch("/api/config/components")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
@@ -168,7 +172,7 @@ export function WorkspaceController() {
         }
       })
       .catch(() => {});
-  }, [loading, session]);
+  }, [loading, session, secure]);
 
   useEffect(() => {
     function updateSize() {
@@ -328,6 +332,7 @@ export function WorkspaceController() {
           onEmbedClose={handleEmbedClose}
           onOpenHermesDashboard={handleOpenHermesDashboard}
           secure={secure === true}
+          insecure={secure === false}
           requestedSettingsPanel={panelRequest}
         />
       )}

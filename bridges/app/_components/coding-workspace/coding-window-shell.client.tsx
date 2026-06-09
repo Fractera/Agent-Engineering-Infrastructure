@@ -112,12 +112,15 @@ type Props = {
   // to the "Hermes Agent" item in the Settings menu.
   onOpenHermesDashboard?: () => void;
   secure?: boolean;
+  // True only when the project is explicitly in insecure (IP) mode. Hides the
+  // built-in Hermes Web UI (Brain) carousel card — step 100 (chat via Telegram).
+  insecure?: boolean;
   // Parent (workspace-controller) can request a specific settings panel to open
   // — used when clicking an unconfigured embed card to kick off onboarding.
   requestedSettingsPanel?: { id: SettingsPanelId; nonce: number } | null;
 };
 
-export function CodingWindowShell({ height, terminalPlatform, terminalSessions, onPlatformClick, onTerminalClose, windowWidth, isMobile = false, isAuthenticated = true, isPreviewOpen = false, onPreviewClose, embeds = [], activeEmbedId = null, onEmbedCardClick, onEmbedClose, onOpenHermesDashboard, secure = false, requestedSettingsPanel = null }: Props) {
+export function CodingWindowShell({ height, terminalPlatform, terminalSessions, onPlatformClick, onTerminalClose, windowWidth, isMobile = false, isAuthenticated = true, isPreviewOpen = false, onPreviewClose, embeds = [], activeEmbedId = null, onEmbedCardClick, onEmbedClose, onOpenHermesDashboard, secure = false, insecure = false, requestedSettingsPanel = null }: Props) {
   const urls = useMemo(() => getRuntimeUrls(), []);
   const [terminalStatuses] = useState<Record<Platform, TerminalStatus>>({
     "claude-code": "unavailable", "codex": "unavailable", "gemini-cli": "unavailable",
@@ -632,7 +635,8 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   // The system terminal (S6) is NOT in this filter — it is always present.
   const isInstalled = (id: string) => installed === null || installed.includes(id);
   const visiblePlatforms  = PLATFORMS.filter((p) => isInstalled(p.id));
-  const visibleEmbedCards = EMBED_CARDS.filter((c) => isInstalled(c.id));
+  // Insecure (IP) mode hides the Brain card (built-in Hermes Web UI) — step 100.
+  const visibleEmbedCards = EMBED_CARDS.filter((c) => isInstalled(c.id) && !(insecure && c.id === "brain"));
 
   const termH   = height - CAROUSEL_H - FOOTER_H;
   const total   = visiblePlatforms.length + 1; // +1 for the always-present Terminal card
