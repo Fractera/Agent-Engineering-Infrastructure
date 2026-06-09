@@ -57,6 +57,11 @@ export type RouteMeta = {
   path: string                 // "/dashboard", "/products/[id]"
   filePath: string             // from app root: "app/app/dashboard/page.tsx"
   status: RouteStatus          // "requested" covers a declared-not-built route (§3.11)
+  /** Free-form tasks describing what this route should become — the build intent.
+   *  Populated while status is "requested"/"wip"; emptied once "live". Drives the
+   *  §3.11 loop: the owner declares it from the architect, an agent reads it,
+   *  opens a step, plans and builds the page, then clears the list. */
+  todo: string[]
 
   // — Access control —
   visibility: "public" | "private"

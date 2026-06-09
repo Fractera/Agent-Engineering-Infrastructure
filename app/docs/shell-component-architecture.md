@@ -60,7 +60,10 @@ Files/folders prefixed `_` are Next.js private — excluded from routing.
 7. **`_meta.ts` is the standard route descriptor.** `const meta: RouteMeta = { … }`
    (`@/lib/architecture/route-meta`). `RouteMeta` is ONE maximal superset that
    describes any route — present or long-term, including a route only *declared*
-   and not built yet (`status: "requested"`, §3.11). **Every key is always present;
+   and not built yet (`status: "requested"`, §3.11). A declared route carries its
+   build intent in `todo: string[]` (free-form tasks): the owner declares a page
+   from the architect, an agent reads `todo`, opens a step, plans and builds it,
+   then clears the list. **Every key is always present;
    do not delete fields** — express "not applicable" with `undefined` / `[]` /
    `null`. The scanner fills/cross-checks the mechanical fields (path, client/server,
    methods, boundaries…) and flags any mismatch with the authored values as `drift`.

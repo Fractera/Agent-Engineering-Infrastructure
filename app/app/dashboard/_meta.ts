@@ -11,6 +11,7 @@ const meta: RouteMeta = {
   path: "/dashboard",
   filePath: "app/app/dashboard/page.tsx",
   status: "live",
+  todo: [], // built — no pending build tasks
 
   // — Access control —
   visibility: "private",
