@@ -1,84 +1,127 @@
-// The typed contract for a route's information sector (step 101.A).
-// Two halves, kept apart on purpose:
-//   - RouteMeta  — authored intent, co-located per route as `_meta.ts`
-//     (`export default { … } satisfies RouteMeta`). What the code cannot tell
-//     you: purpose, who may reach it, what the query params mean.
-//   - RouteFacts — derived by scanning the code on disk. Never hand-written, so
-//     it cannot drift from reality: path, rendering, client/server, methods…
-// The detail panel renders RouteInfo = RouteFacts + RouteMeta + drift[], where
-// drift surfaces any mismatch between the two — the panel doubles as a linter.
+// THE route descriptor standard (step 101.A).
+//
+// ONE maximal superset that must describe ANY route in the project — every page
+// and endpoint that exists today or may exist long-term (including a route that
+// is only *declared* and not built yet, per ARCHITECTURE §3.11). It is a fixed
+// standard: every key is always present. For a route a field does not apply, set
+// it to `undefined` / `[]` / `null` — never delete the key. The scanner later
+// fills/cross-checks the mechanical fields and reports any drift.
+//
+// Typing lives here (one place); each route's `_meta.ts` imports `RouteMeta`,
+// annotates with it, and fills the standard.
 
 export type Role = "guest" | "user" | "admin"
 export type Rendering = "static" | "dynamic" | "isr"
+export type Runtime = "nodejs" | "edge"
+export type EnforcedBy = "proxy" | "component" | "both"
+export type RouteStatus = "live" | "requested" | "wip" | "deprecated"
+export type CacheMode = "use-cache" | "force-cache" | "no-store" | "default"
 
-// Visibility carries roles only when private — the type makes "roles required
-// iff private" impossible to violate.
-export type Visibility =
-  | { visibility: "public" }
-  | { visibility: "private"; roles: Role[] }
-
-// Rendering carries a revalidate window only for ISR — same trick.
-export type RenderMode =
-  | { rendering: "static" | "dynamic" }
-  | { rendering: "isr"; revalidate: number }
-
-export type QueryParam = { name: string; description: string }
+export type Param = {
+  name: string
+  description: string
+  required: boolean
+}
 
 export type SeoMeta = {
-  /** Should search engines index it (robots index/noindex). */
+  /** Gate: whether the meta-generation mechanism is inserted for this route. */
+  supportsSeo: boolean
+  /** robots index/noindex. */
   indexable: boolean
-  /** Listed in the sitemap. */
   inSitemap: boolean
-  /** Explicit canonical, when it differs from the route path. */
-  canonical?: string
+  /** Explicit canonical when it differs from the path; null = self/none. */
+  canonical: string | null
+  title: string | undefined
+  /** Meta description (may differ from the human `description` below). */
+  metaDescription: string | undefined
+  openGraph: boolean
+  ogImage: string | null
+  /** Names of JSON-LD structured-data schemas emitted; [] when none. */
+  jsonLd: string[]
+  /** Explicit robots directive override; undefined = default. */
+  robots: string | undefined
 }
 
-// Authored, co-located as `_meta.ts`. Everything here is intent the scanner
-// cannot infer from code.
-export type RouteMeta = Visibility & RenderMode & {
-  /** One compact sentence: what this route is for. */
-  description: string
-  seo: SeoMeta
-  /** Query params the route reads, with meaning. Reading any forces dynamic. */
-  queryParams?: QueryParam[]
-  /** Override the derived entry component. Default is `_components/index.tsx`. */
-  entryComponent?: string
+export type I18nMeta = {
+  localized: boolean
+  /** Locale codes served; [] when not localized. */
+  locales: string[]
+  defaultLocale: string | undefined
 }
 
-// Derived by the scanner from the code on disk. The source of truth for facts.
-export type RouteFacts = {
-  /** URL path, dynamic segments kept as written, e.g. /products/[id]. */
-  path: string
-  /** File backing the route, from the app root, e.g. app/dashboard/page.tsx. */
-  filePath: string
+// The standard. Every key is mandatory (present); "not applicable" is expressed
+// by value (undefined / [] / null), never by omission.
+export type RouteMeta = {
+  // — Identity & lifecycle —
   kind: "page" | "api"
-  /** The route contains a [param] segment. */
-  segmentDynamic: boolean
-  /** Names of dynamic segments, e.g. ["id"]. */
-  segmentParams: string[]
-  /** page.tsx / route.ts carries "use client" (a violation for a page). */
-  isClientComponent: boolean
-  /** Exports metadata / generateMetadata (the App-Router SEO mechanism). */
-  hasMetadataExport: boolean
-  /** A loading.tsx Suspense boundary sits beside the route. */
+  path: string                 // "/dashboard", "/products/[id]"
+  filePath: string             // from app root: "app/app/dashboard/page.tsx"
+  status: RouteStatus          // "requested" covers a declared-not-built route (§3.11)
+
+  // — Access control —
+  visibility: "public" | "private"
+  roles: Role[]                        // [] when public
+  unauthorizedRedirect: string | undefined
+  enforcedBy: EnforcedBy | undefined
+
+  // — Routing shape —
+  isDynamicRoute: boolean
+  segmentParams: string[]              // ["id"]; [] when static
+  pathParams: Param[]                  // segment params with meaning; []
+  dynamicParams: boolean | undefined   // Next: allow params outside generateStaticParams
+  prerenderedParams: string[] | undefined  // generateStaticParams output
+  routeGroup: string | undefined       // (group)
+  parallelSlot: string | undefined     // @slot
+  parentLayout: string | undefined
+
+  // — Rendering & caching —
+  rendering: Rendering
+  revalidate: number | undefined       // seconds; only isr
+  runtime: Runtime
+  maxDuration: number | undefined
+  preferredRegion: string | undefined
+  cache: CacheMode | undefined         // Next 16.2 caching model
+  fetchCache: string | undefined
+  revalidateTags: string[]             // []
+
+  // — SEO —
+  seo: SeoMeta
+
+  // — i18n —
+  i18n: I18nMeta
+
+  // — Inputs —
+  queryParams: Param[]                 // [] when none
+
+  // — Composition (the _components convention) —
+  entryComponent: string               // default "_components/index.tsx"
+  pageIsClient: boolean                // "use client" in page.tsx = violation
+  entryIsClient: boolean               // "use client" in the entry component
+  localComponents: string[]            // names under _components/; []
+  sharedComponents: string[]           // shared components consumed; []
+
+  // — Segment boundaries —
   hasLoading: boolean
-  /** An error.tsx boundary sits beside the route. */
   hasError: boolean
-  /** A _components/ folder sits beside the route. */
-  hasComponentsDir: boolean
-  /** The resolved entry component, or null when _components/index is absent. */
-  entryComponent: string | null
-  /** The entry component carries "use client". */
-  entryIsClient: boolean
-  /** Rendering inferred from `export const dynamic`/`revalidate`. */
-  detectedRendering?: Rendering
-  /** HTTP methods exported by a route.ts (api only). */
-  methods?: string[]
+  hasNotFound: boolean
+  hasLayout: boolean
+
+  // — API —
+  methods: string[]                    // ["GET","POST"]; [] for pages
+
+  // — Knowledge —
+  description: string
+  dataDependencies: string[]           // services / DB it reads; []
+  relatedRoutes: string[]              // []
+  notes: string | undefined
+
+  // — Audit —
+  owner: string | undefined
+  createdBy: string | undefined
+  createdAt: string | undefined        // ISO; undefined when unknown
+  updatedAt: string | undefined
 }
 
-// What the detail panel renders: facts + (optional) authored meta + any drift
-// between them (mismatches and rule violations).
-export type RouteInfo = RouteFacts & {
-  meta?: RouteMeta
-  drift: string[]
-}
+// What the detail panel renders: the standard plus any drift the scanner found
+// between the authored values and the code on disk (mismatches, rule violations).
+export type RouteInfo = RouteMeta & { drift: string[] }

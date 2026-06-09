@@ -57,21 +57,28 @@ Files/folders prefixed `_` are Next.js private — excluded from routing.
 6. **`app/components/ui/` is exempt.** These are vendored shadcn/ui primitives —
    keep their upstream names (no suffix) so they stay upgradable.
 
-7. **`_meta.ts` is the typed contract.** `export default { … } satisfies RouteMeta`
-   (`@/lib/architecture/route-meta`). It holds only intent the code can't express —
-   purpose, visibility + roles, rendering, SEO, query-param meaning. Facts (path,
-   rendering, client/server, methods) are derived by the scanner and must NOT be
-   duplicated here, or they drift.
+7. **`_meta.ts` is the standard route descriptor.** `const meta: RouteMeta = { … }`
+   (`@/lib/architecture/route-meta`). `RouteMeta` is ONE maximal superset that
+   describes any route — present or long-term, including a route only *declared*
+   and not built yet (`status: "requested"`, §3.11). **Every key is always present;
+   do not delete fields** — express "not applicable" with `undefined` / `[]` /
+   `null`. The scanner fills/cross-checks the mechanical fields (path, client/server,
+   methods, boundaries…) and flags any mismatch with the authored values as `drift`.
 
 ## The contract
 
 The single source of types is `app/lib/architecture/route-meta.ts`:
 
-- `RouteMeta` — authored (`_meta.ts`). Discriminated unions encode the rules:
-  `roles` is required iff `visibility: "private"`; `revalidate` is required iff
-  `rendering: "isr"`. The compiler refuses an invalid shape.
-- `RouteFacts` — derived by the scanner from the code on disk.
-- `RouteInfo = RouteFacts & { meta?; drift[] }` — what the panel renders.
+- `RouteMeta` — the maximal standard descriptor (~45 fields, grouped: identity &
+  lifecycle, access, routing shape, rendering & caching, SEO, i18n, inputs,
+  composition, boundaries, API, knowledge, audit). Every key is mandatory; N/A is
+  a value (`undefined`/`[]`/`null`), never an omission. The annotation
+  `const meta: RouteMeta = { … }` forces a route to fill the whole standard.
+- `RouteInfo = RouteMeta & { drift: string[] }` — what the panel renders: the
+  standard plus the scanner's drift between authored values and the code.
+
+The standard is append-only: extend it with new fields, never trim existing ones —
+old descriptors must keep validating.
 
 ## Example — `/dashboard` (reference refactor)
 
@@ -87,16 +94,22 @@ import { DashboardApp } from "./dashboard-app.client"
 export default function DashboardEntry() { return <DashboardApp /> }
 ```
 
-`_meta.ts`
+`_meta.ts` (every key of the standard present — abridged here; see the full file
+for all ~45 fields)
 ```ts
 import type { RouteMeta } from "@/lib/architecture/route-meta"
-export default {
+const meta: RouteMeta = {
+  kind: "page", path: "/dashboard", filePath: "app/app/dashboard/page.tsx",
+  status: "live",
+  visibility: "private", roles: ["user", "admin"],
+  unauthorizedRedirect: "/register?requireRole=user", enforcedBy: "component",
+  rendering: "dynamic", runtime: "nodejs",
+  seo: { supportsSeo: false, indexable: false, inSitemap: false, /* …rest */ },
+  entryComponent: "_components/index.tsx", pageIsClient: false, entryIsClient: false,
   description: "Product catalogue demo — DB + media upload.",
-  visibility: "private",
-  roles: ["user", "admin"],
-  rendering: "dynamic",
-  seo: { indexable: false, inSitemap: false },
-} satisfies RouteMeta
+  // …all remaining keys present, undefined / [] / null when not applicable
+}
+export default meta
 ```
 
 Interactive state lives in `dashboard-app.client.tsx`; the form and table are
