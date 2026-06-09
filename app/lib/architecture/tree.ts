@@ -1,5 +1,6 @@
 import type { ArchNode } from "./types"
-import { platform, skillsGroup, skill, mcp } from "./builders"
+import { platform } from "./builders"
+import { HERMES_NODE } from "./hermes-node"
 import { DOCS_NODE } from "./docs-node"
 
 // Seed catalogue of the L2 (Fractera-on-VPS) architecture. This is the single
@@ -80,6 +81,26 @@ export const ARCHITECTURE_TREE: ArchNode = {
       description:
         "Token-authenticated SQLite data API plus media: uploads, thumbnails, " +
         "image cropping and PWA icon generation. The app talks to it over HTTP.",
+      children: [
+        {
+          id: "data-db",
+          label: "Database — SQLite",
+          kind: "group",
+          description:
+            "The app's SQLite store (app.db + media.db). New tables are declared " +
+            "once in the SCHEMA and appear in every environment automatically.",
+          children: [
+            { id: "tbl-products", label: "products", kind: "config",
+              description: "Catalogue demo rows behind the Dashboard page." },
+            { id: "tbl-deployments", label: "deployment_records", kind: "config",
+              description: "Product Loop journal — every build with agent, model, tokens, step and star rating (16 fields)." },
+            { id: "tbl-projects", label: "projects", kind: "config",
+              description: "Named projects that deployments are grouped under (default-first)." },
+            { id: "tbl-settings", label: "site_settings", kind: "config",
+              description: "Workspace settings — domain, certificate countdown, white-label flag." },
+          ],
+        },
+      ],
     },
     {
       id: "rag",
@@ -91,83 +112,17 @@ export const ARCHITECTURE_TREE: ArchNode = {
         "here and injects it as <brain_context>. Needs an embedding/LLM key to " +
         "actually index and answer — without it, memory is wired but silent.",
     },
+    HERMES_NODE,
     {
-      id: "hermes",
-      label: "fractera-hermes — Brain (Hermes)",
+      id: "nginx",
+      label: "Nginx — reverse proxy",
       kind: "service",
-      port: ":9119",
+      port: ":80/:443",
       description:
-        "The orchestration agent. It coordinates multi-step work across the five " +
-        "platforms, reads its memory and its identity at every wake-up, and can " +
-        "be reached from Telegram via the gateway process.",
-      children: [
-        {
-          id: "hermes-config",
-          label: "config.yaml — wiring",
-          kind: "config",
-          description:
-            "Says what Hermes can reach: model/provider, memory provider, " +
-            "plugins, and the five platform MCP servers. Wiring, not rules — it " +
-            "lists where he can reach, not who he is.",
-        },
-        {
-          id: "hermes-soul",
-          label: "SOUL.md — identity",
-          kind: "config",
-          description:
-            "Optional personality file read on every turn. When present it " +
-            "replaces the default identity — this is where 'you are the brain of " +
-            "Fractera, you orchestrate development' belongs.",
-        },
-        skillsGroup("hermes-skills", [
-          skill("delegate-task", "delegate-task"),
-          skill("record-deployment", "record-deployment"),
-          skill("choose-agent", "choose-agent"),
-        ]),
-        {
-          id: "hermes-memory",
-          label: "Memory — lightrag-memory",
-          kind: "group",
-          description:
-            "Plugin that prefetches from fractera-rag and ingests each turn. " +
-            "Wired in config; depends on the Memory service having a working key.",
-        },
-        {
-          id: "hermes-mcp",
-          label: "MCP servers — 5 bridges",
-          kind: "group",
-          description:
-            "The five platform bridges exposed to Hermes as callable tools " +
-            "(ports 3210–3214). These show up at start-up, which is why Hermes " +
-            "sees his tools but not always his memory or role.",
-          children: [
-            mcp("mcp-claude", "claude-bridge :3210"),
-            mcp("mcp-codex", "codex-bridge :3211"),
-            mcp("mcp-gemini", "gemini-bridge :3212"),
-            mcp("mcp-qwen", "qwen-bridge :3213"),
-            mcp("mcp-kimi", "kimi-bridge :3214"),
-          ],
-        },
-        {
-          id: "hermes-webui",
-          label: "Chat Web UI — fractera-hermes-webui",
-          kind: "service",
-          port: ":9120",
-          description:
-            "The chat window inside your workspace where you talk to Hermes in " +
-            "plain language. Benefit: you brief the brain like a teammate and it " +
-            "drives the five coding platforms for you — no commands to memorise.",
-        },
-        {
-          id: "hermes-telegram",
-          label: "Telegram — fractera-hermes-gateway",
-          kind: "service",
-          description:
-            "A gateway process that lets you reach the same brain from Telegram " +
-            "on your phone. Benefit: you can start, check on, or steer work away " +
-            "from the keyboard; the workspace keeps building while you are out.",
-        },
-      ],
+        "Not a PM2 process but the front door in secure mode: routes the apex to " +
+        "the app and the admin./auth./data./chat. subdomains to their services, " +
+        "gates protected areas via auth_request, and injects the 'Powered by " +
+        "Fractera' footer. In IP mode you reach services by port directly.",
     },
     DOCS_NODE,
   ],
