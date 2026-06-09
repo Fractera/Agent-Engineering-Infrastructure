@@ -273,6 +273,14 @@ Other rules:
 - No comments unless the *why* is non-obvious
 - No emojis unless the user requests them
 
+**Shell component architecture — mandatory.** Every route and component follows
+`docs/shell-component-architecture.md`: `page.tsx` is a thin Server Component, the
+entry is `_components/index.tsx`, route-local components live in `_components/`,
+reusable ones in `components/` (vendored `components/ui/` exempt), leaf files carry
+a `.client`/`.server` suffix that must match their `"use client"` directive, and
+each route declares a typed `_meta.ts` (`satisfies RouteMeta`). The `/architecture`
+page mirrors the code and flags any drift from these rules. Read that doc first.
+
 ---
 
 ## 13. Deploy mechanics
