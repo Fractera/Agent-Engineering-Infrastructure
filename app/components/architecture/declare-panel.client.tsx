@@ -50,35 +50,35 @@ export function DeclarePanel({
   return (
     <div className="flex h-full flex-col gap-4 p-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-foreground">Add a page</h2>
-        <button onClick={onClose} className="text-muted-foreground transition-colors hover:text-foreground">
+        <h2 className="text-base font-bold text-foreground">Add a page</h2>
+        <button onClick={onClose} className="text-foreground/60 transition-colors hover:text-foreground">
           <X size={14} />
         </button>
       </div>
-      <p className="text-xs leading-relaxed text-muted-foreground">
+      <p className="text-xs leading-relaxed text-foreground/80">
         Name the route, then describe it as tasks. It is saved as a requested page —
         a to-do flag an agent picks up to plan and build it.
       </p>
 
       <div className="flex flex-col gap-1">
-        <label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">Route name</label>
+        <label className="text-[11px] font-semibold uppercase tracking-wider text-foreground">Route name</label>
         <input
           type="text"
           placeholder="e.g. Orders"
           value={title}
           onChange={e => setTitle(e.target.value)}
-          className="h-8 rounded-md border border-border bg-background px-3 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+          className="h-8 rounded-md border border-border bg-background px-3 text-xs text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
         />
-        {error && <span className="text-[11px] text-red-400">{error}</span>}
+        {error && <span className="text-[11px] font-medium text-red-600">{error}</span>}
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">To-do</label>
+        <label className="text-[11px] font-semibold uppercase tracking-wider text-foreground">To-do</label>
         {items.map((it, i) => (
           <div key={i} className="flex items-center gap-2 text-xs text-foreground">
-            <span className="text-muted-foreground/60">•</span>
-            <span className="flex-1">{it}</span>
-            <button onClick={() => setItems(prev => prev.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-red-500">
+            <span className="text-foreground/60">•</span>
+            <span className="flex-1 font-medium">{it}</span>
+            <button onClick={() => setItems(prev => prev.filter((_, j) => j !== i))} className="text-foreground/50 hover:text-red-600">
               <X size={11} />
             </button>
           </div>
@@ -90,9 +90,9 @@ export function DeclarePanel({
             value={draft}
             onChange={e => setDraft(e.target.value)}
             onKeyDown={e => e.key === "Enter" && addItem()}
-            className="h-8 flex-1 rounded-md border border-border bg-background px-3 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            className="h-8 flex-1 rounded-md border border-border bg-background px-3 text-xs text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
           />
-          <button onClick={addItem} className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border text-foreground hover:bg-muted">
+          <button onClick={addItem} className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-foreground/40 text-foreground hover:bg-foreground hover:text-background">
             <Plus size={12} />
           </button>
         </div>
@@ -101,7 +101,7 @@ export function DeclarePanel({
       <button
         onClick={declare}
         disabled={saving || !title.trim()}
-        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md bg-foreground px-4 text-xs font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40"
+        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md bg-foreground px-4 text-xs font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-40"
       >
         {saving && <Loader2 size={11} className="animate-spin" />}
         Declare page

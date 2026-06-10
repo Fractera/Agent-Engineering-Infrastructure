@@ -21,10 +21,10 @@ function NodeIcon({ node, isOpen }: { node: ArchNode; isOpen: boolean }) {
   const hasChildren = !!node.children?.length || !!node.addable
   if (hasChildren) {
     const F = isOpen ? FolderOpen : Folder
-    return <F size={14} className="shrink-0 text-amber-400/90" />
+    return <F size={14} className="shrink-0 text-amber-500" />
   }
   const Leaf = LEAF_ICON[node.kind] ?? File
-  return <Leaf size={13} className="shrink-0 text-muted-foreground/70" />
+  return <Leaf size={13} className="shrink-0 text-foreground/60" />
 }
 
 type Props = {
@@ -56,21 +56,21 @@ export function TreeNode({
         onClick={handleClick}
         style={{ paddingLeft: depth * 16 + 8 }}
         className={`group flex w-full items-center gap-1.5 rounded-md py-1.5 pr-2 text-left text-xs transition-colors ${
-          isSelected ? "bg-primary/10 text-foreground" : "text-muted-foreground hover:bg-muted/50"
+          isSelected ? "bg-primary/15 text-foreground" : "text-foreground hover:bg-muted/60"
         }`}
       >
-        <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center text-muted-foreground/60">
+        <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center text-foreground/60">
           {hasChildren && (
             <ChevronRight size={12} className={`transition-transform ${isOpen ? "rotate-90" : ""}`} />
           )}
         </span>
         <NodeIcon node={node} isOpen={isOpen} />
-        <span className={`ml-0.5 truncate font-medium ${node.pending ? "text-amber-400/90" : "text-foreground/90"}`}>{node.label}</span>
+        <span className={`ml-0.5 truncate font-semibold ${node.pending ? "text-amber-600" : "text-foreground"}`}>{node.label}</span>
         {node.pending && (
-          <span className="ml-1 shrink-0 rounded-full border border-amber-500/30 px-1.5 font-mono text-[9px] text-amber-400/80">req</span>
+          <span className="ml-1 shrink-0 rounded-full border border-amber-500/50 px-1.5 font-mono text-[9px] font-semibold text-amber-600">req</span>
         )}
         {node.port && (
-          <span className="ml-auto shrink-0 font-mono text-[10px] text-muted-foreground/70">
+          <span className="ml-auto shrink-0 font-mono text-[10px] text-foreground/60">
             {node.port}
           </span>
         )}
@@ -94,10 +94,10 @@ export function TreeNode({
             <button
               onClick={() => onAdd(node)}
               style={{ paddingLeft: (depth + 1) * 16 + 8 }}
-              className="flex w-full items-center gap-1.5 rounded-md py-1.5 pr-2 text-left text-xs text-muted-foreground/70 transition-colors hover:bg-muted/40 hover:text-foreground"
+              className="flex w-full items-center gap-1.5 rounded-md py-1.5 pr-2 text-left text-xs text-foreground/70 transition-colors hover:bg-muted/40 hover:text-foreground"
             >
               <span className="h-3.5 w-3.5 shrink-0" />
-              <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border border-dashed border-muted-foreground/50">
+              <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border border-dashed border-foreground/40">
                 <Plus size={9} />
               </span>
               <span className="ml-0.5">{node.addLabel ?? "Add"}</span>

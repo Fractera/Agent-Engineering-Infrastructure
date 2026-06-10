@@ -38,12 +38,12 @@ export function RouteDangerZone({ path }: { path: string }) {
   }
 
   return (
-    <div className="mt-8 rounded-lg border border-red-500/30 bg-red-500/5 p-4">
-      <div className="flex items-center gap-1.5 text-red-400">
+    <div className="mt-8 rounded-lg border border-red-500/50 bg-red-500/5 p-4">
+      <div className="flex items-center gap-1.5 text-red-600">
         <AlertTriangle size={13} />
-        <span className="text-xs font-semibold uppercase tracking-wider">Danger zone</span>
+        <span className="text-xs font-bold uppercase tracking-wider">Danger zone</span>
       </div>
-      <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+      <p className="mt-2 text-[11px] leading-relaxed text-foreground/80">
         Deletion is not a button that wipes files — it is a request an agent plans. To fully remove
         this page and refactor what depends on it, describe why you are removing it and the end
         result you expect, then order the deletion.
@@ -53,31 +53,31 @@ export function RouteDangerZone({ path }: { path: string }) {
         onChange={e => setReason(e.target.value)}
         placeholder="Why are you removing this page / feature?"
         rows={2}
-        className="mt-3 w-full rounded-md border border-border bg-background px-3 py-2 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        className="mt-3 w-full rounded-md border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
       />
       <textarea
         value={outcome}
         onChange={e => setOutcome(e.target.value)}
         placeholder="What should the result be after removal / refactor?"
         rows={2}
-        className="mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        className="mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
       />
       <button
         onClick={order}
         disabled={saving || !reason.trim()}
-        className="mt-3 inline-flex h-8 items-center gap-1.5 rounded-md bg-red-600 px-4 text-xs font-medium text-white transition-colors hover:bg-red-500 disabled:opacity-40"
+        className="mt-3 inline-flex h-8 items-center gap-1.5 rounded-md bg-red-600 px-4 text-xs font-semibold text-white transition-colors hover:bg-red-500 disabled:opacity-40"
       >
         {saving && <Loader2 size={11} className="animate-spin" />}
         Order deletion
       </button>
 
       {list.length > 0 && (
-        <div className="mt-3 border-t border-red-500/20 pt-3">
-          <p className="text-[10px] uppercase tracking-wider text-red-400/70">Pending deletion requests</p>
+        <div className="mt-3 border-t border-red-500/30 pt-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-red-600">Pending deletion requests</p>
           <ul className="mt-1.5 flex flex-col gap-1">
             {list.map(d => (
-              <li key={d.id} className="flex gap-1.5 text-[11px] text-muted-foreground">
-                <span className="text-red-400/60">•</span><span>{d.body}</span>
+              <li key={d.id} className="flex gap-1.5 text-[11px] text-foreground">
+                <span className="text-red-600/70">•</span><span>{d.body}</span>
               </li>
             ))}
           </ul>

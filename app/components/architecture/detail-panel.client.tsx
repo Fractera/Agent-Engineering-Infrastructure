@@ -23,7 +23,7 @@ export function DetailPanel({ node }: { node: ArchNode | null }) {
   if (!node) {
     return (
       <div className="flex h-full items-center justify-center p-10 text-center">
-        <p className="max-w-xs text-xs text-muted-foreground">
+        <p className="max-w-xs text-xs text-foreground/70">
           Select a node on the left to see what it is and how it connects.
         </p>
       </div>
@@ -35,18 +35,18 @@ export function DetailPanel({ node }: { node: ArchNode | null }) {
   return (
     <div className="flex h-full flex-col gap-4 p-6">
       <div className="flex items-center gap-2">
-        <span className="rounded-full border border-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        <span className="rounded-full border border-foreground/30 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-foreground">
           {KIND_LABEL[node.kind] ?? node.kind}
         </span>
         {node.port && (
-          <span className="font-mono text-[10px] text-muted-foreground/70">{node.port}</span>
+          <span className="font-mono text-[10px] text-foreground/60">{node.port}</span>
         )}
       </div>
 
-      <h2 className="text-lg font-semibold text-foreground">{node.label}</h2>
+      <h2 className="text-lg font-bold text-foreground">{node.label}</h2>
 
       {node.description && (
-        <p className="text-sm leading-relaxed text-muted-foreground">{node.description}</p>
+        <p className="text-sm leading-relaxed text-foreground/80">{node.description}</p>
       )}
 
       {meta && (
@@ -67,7 +67,7 @@ export function DetailPanel({ node }: { node: ArchNode | null }) {
       )}
 
       <div className="mt-auto rounded-lg border border-dashed border-border p-4">
-        <p className="text-[11px] text-muted-foreground/60">
+        <p className="text-[11px] text-foreground/70">
           This panel is the accompanying file for the selected node. Read top to
           bottom and you know what it is, how it connects, and why it earns its place.
         </p>
@@ -79,8 +79,8 @@ export function DetailPanel({ node }: { node: ArchNode | null }) {
 function MetaRow({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex items-center justify-between gap-4 bg-background px-3 py-2 text-xs">
-      <span className="text-muted-foreground">{k}</span>
-      <span className="font-mono text-foreground">{v}</span>
+      <span className="text-foreground/70">{k}</span>
+      <span className="font-mono font-medium text-foreground">{v}</span>
     </div>
   )
 }

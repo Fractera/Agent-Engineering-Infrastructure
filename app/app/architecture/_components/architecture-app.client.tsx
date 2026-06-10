@@ -56,13 +56,13 @@ export function ArchitectureApp() {
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-6xl px-6 py-8">
-        <a href="/" className="font-mono text-xs text-muted-foreground transition-colors hover:text-foreground">
+        <a href="/" className="font-mono text-xs text-foreground/70 transition-colors hover:text-foreground">
           ← back
         </a>
-        <h1 className="mt-1 text-xl font-semibold text-foreground">Architecture</h1>
-        <p className="mt-0.5 max-w-2xl text-xs leading-relaxed text-muted-foreground">
+        <h1 className="mt-1 text-xl font-bold text-foreground">Architecture</h1>
+        <p className="mt-0.5 max-w-2xl text-xs leading-relaxed text-foreground/80">
           An interactive map of your app&apos;s structure — every page and endpoint backed by
-          its typed descriptor (<span className="font-mono">_meta.ts</span>). Open a route to read
+          its typed descriptor (<span className="font-mono font-medium text-foreground">_meta.ts</span>). Open a route to read
           its full model, or add a new page as a to-do an agent picks up and builds.
         </p>
 
@@ -72,12 +72,12 @@ export function ArchitectureApp() {
             {/* LEFT — tree, with Add page in its top-right corner */}
             <div className="flex w-1/2 flex-col border-r border-border bg-muted/10">
               <div className="flex items-center justify-between border-b border-border px-3 py-2">
-                <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground">
                   Pages &amp; API
                 </span>
                 <button
                   onClick={() => setDeclaring(v => !v)}
-                  className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border px-2.5 text-xs text-foreground transition-colors hover:bg-muted"
+                  className="inline-flex h-7 items-center gap-1.5 rounded-md border border-foreground/40 px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
                 >
                   {declaring ? <X size={11} /> : <Plus size={11} />}
                   {declaring ? "Close" : "Add page"}
