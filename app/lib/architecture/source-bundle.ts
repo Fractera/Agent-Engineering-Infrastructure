@@ -70,10 +70,11 @@ export async function collectSource(routePath: string): Promise<SourceFile[]> {
     out.push({ rel: relative(root, abs), content, language: LANG[extname(abs)] ?? "plaintext" })
   }
 
-  // The route entry: page.tsx for pages, route.ts for API endpoints. The
-  // descriptor (_meta.ts) is intentionally excluded — it is not page code.
-  await add(join(dir, "page.tsx"))
-  await add(join(dir, "route.ts"))
+  // All routing files that exist (page, layout, loading, error, not-found,
+  // template, default, route). The descriptor (_meta.ts) is excluded — not code.
+  for (const name of await routingFiles(routePath)) {
+    await add(join(dir, name))
+  }
 
   // Everything under _components/ (one level; nested kept simple for v1).
   try {
