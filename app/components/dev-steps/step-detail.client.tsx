@@ -4,17 +4,21 @@ import { useEffect, useState } from "react"
 import { ChevronRight, Loader2 } from "lucide-react"
 import { importanceText, ImportanceToggle, importanceDot } from "./importance-toggle.client"
 import { StepSource } from "./step-source.client"
-import type { Importance, Step } from "@/lib/dev-steps/step-file"
+import { StepTodo } from "./step-todo.client"
+import { StepDanger } from "./step-danger.client"
+import type { Importance, Step, StepTask } from "@/lib/dev-steps/step-file"
 
 // Right-panel detail for one development step. NEW steps are editable in place
 // (importance, description, raw Source — each saves the file directly); COMPLETED
 // steps are read-only history with a completion date. To-do + Danger zone are
 // added in S8.
 export function StepDetail({
-  step, onPatch, onRefresh,
+  step, onPatch, onSaveTasks, onRemove, onRefresh,
 }: {
   step: Step
   onPatch: (patch: Partial<Pick<Step, "importance" | "description" | "name">>) => Promise<void>
+  onSaveTasks: (tasks: StepTask[]) => Promise<void>
+  onRemove: () => Promise<void>
   onRefresh: () => void
 }) {
   const isNew = step.status === "new"
@@ -92,6 +96,10 @@ export function StepDetail({
             </div>
           )}
         </div>
+
+        {/* To-do checklist (editable for new) + Danger zone (new only). */}
+        <StepTodo tasks={step.tasks} editable={isNew} onSave={onSaveTasks} />
+        {isNew && <StepDanger onRemove={onRemove} />}
       </div>
     </div>
   )

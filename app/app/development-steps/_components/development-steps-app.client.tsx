@@ -42,8 +42,8 @@ export function DevelopmentStepsApp() {
     setSelected(s)
   }
 
-  // Patch the open NEW step (importance/description/…) — writes the file directly.
-  async function patchStep(patch: Partial<Pick<Step, "importance" | "description" | "name">>) {
+  // Patch the open NEW step (importance/description/tasks) — writes the file directly.
+  async function patchStep(patch: Record<string, unknown>) {
     if (!selected) return
     const res = await fetch(`/api/development-steps/${selected.id}`, {
       method: "PATCH",
@@ -56,6 +56,15 @@ export function DevelopmentStepsApp() {
       setSelected(step)
       setNews(prev => prev.map(s => (s.id === step.id ? step : s)).sort((a, b) => a.number - b.number))
     }
+  }
+
+  // Delete the open NEW step (danger zone) — removes its file + clears selection.
+  async function removeStep() {
+    if (!selected) return
+    const res = await fetch(`/api/development-steps/${selected.id}`, { method: "DELETE" })
+    if (!res.ok) return
+    setNews(prev => prev.filter(s => s.id !== selected.id))
+    setSelected(null)
   }
 
   return (
@@ -124,7 +133,13 @@ export function DevelopmentStepsApp() {
               {adding ? (
                 <AddStepForm onClose={() => setAdding(false)} onCreated={onCreated} />
               ) : selected ? (
-                <StepDetail step={selected} onPatch={patchStep} onRefresh={refresh} />
+                <StepDetail
+                  step={selected}
+                  onPatch={patchStep}
+                  onSaveTasks={(tasks) => patchStep({ tasks })}
+                  onRemove={removeStep}
+                  onRefresh={refresh}
+                />
               ) : (
                 <div className="flex h-full items-center justify-center p-10 text-center">
                   <p className="max-w-xs text-xs text-foreground/60">Select a step on the left to read it.</p>
