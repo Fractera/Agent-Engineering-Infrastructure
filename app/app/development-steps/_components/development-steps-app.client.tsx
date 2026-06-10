@@ -5,7 +5,8 @@ import { Plus, X } from "lucide-react"
 import type { Step } from "@/lib/dev-steps/step-file"
 import { SegToggle } from "@/components/ui/seg-toggle.client"
 import { AddStepForm } from "@/components/dev-steps/add-step-form.client"
-import { importanceDot, importanceText } from "@/components/dev-steps/importance-toggle.client"
+import { importanceDot, importanceText, ImportanceToggle } from "@/components/dev-steps/importance-toggle.client"
+import type { Importance } from "@/lib/dev-steps/step-file"
 
 type Mode = "new" | "completed"
 
@@ -39,6 +40,22 @@ export function DevelopmentStepsApp() {
     setMode("new")
     setAdding(false)
     setSelected(s)
+  }
+
+  // Patch the open NEW step (importance/description/…) — writes the file directly.
+  async function patchStep(patch: Partial<Pick<Step, "importance" | "description" | "name">>) {
+    if (!selected) return
+    const res = await fetch(`/api/development-steps/${selected.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    })
+    if (!res.ok) return
+    const { step } = await res.json()
+    if (step) {
+      setSelected(step)
+      setNews(prev => prev.map(s => (s.id === step.id ? step : s)).sort((a, b) => a.number - b.number))
+    }
   }
 
   return (
@@ -108,10 +125,17 @@ export function DevelopmentStepsApp() {
                 <AddStepForm onClose={() => setAdding(false)} onCreated={onCreated} />
               ) : selected ? (
                 <div className="flex h-full flex-col p-5">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className={`h-2.5 w-2.5 rounded-full ${importanceDot[selected.importance]}`} />
                     <span className="font-mono text-xs text-foreground/60">Step {String(selected.number).padStart(2, "0")}</span>
-                    <span className={`font-mono text-[10px] font-semibold uppercase tracking-wider ${importanceText[selected.importance]}`}>{selected.importance}</span>
+                    {selected.status === "new" ? (
+                      <ImportanceToggle
+                        value={selected.importance}
+                        onChange={(v: Importance) => patchStep({ importance: v })}
+                      />
+                    ) : (
+                      <span className={`font-mono text-[10px] font-semibold uppercase tracking-wider ${importanceText[selected.importance]}`}>{selected.importance}</span>
+                    )}
                     {selected.status === "completed" && selected.completedAt && (
                       <span className="rounded-full border border-green-500/50 px-2 py-0.5 font-mono text-[10px] font-semibold text-green-600">
                         completed {selected.completedAt}
