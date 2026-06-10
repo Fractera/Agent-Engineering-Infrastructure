@@ -35,6 +35,19 @@ function findByKey(node: ArchNode, key: string): ArchNode | null {
   return null
 }
 
+// Find a node by key (href or path) and return the chain of its ANCESTOR ids,
+// so we can open every folder leading to it and scroll it into view (step 108).
+function findWithAncestors(
+  node: ArchNode, key: string, trail: string[] = [],
+): { node: ArchNode; ancestors: string[] } | null {
+  if (node.href === key || (node.href ?? node.id) === key) return { node, ancestors: trail }
+  for (const c of node.children ?? []) {
+    const f = findWithAncestors(c, key, [...trail, node.id])
+    if (f) return f
+  }
+  return null
+}
+
 // Left section = the route tree (Add page lives in its top-right corner).
 // Right section = the selected route's real RouteMeta descriptor (Open page in
 // its top-right corner), the minimal read-only view of a declared page, the
@@ -103,6 +116,7 @@ export function ArchitectureApp() {
     return () => document.removeEventListener("visibilitychange", h)
   }, [])
 
+
   const [routingMap, setRoutingMap] = useState<Record<string, string[]>>({})
   const baseTree = useMemo(
     () => buildMergedTree(requested, new Set(taskPaths), projects, builtExtra),
@@ -135,6 +149,29 @@ export function ArchitectureApp() {
     () => (selectedKey ? findByKey(tree, selectedKey) : null),
     [tree, selectedKey],
   )
+
+  // Auto-reveal on update (step 108): when a node changes (even inside a closed
+  // folder), open every folder on its path and scroll it to the center of the
+  // viewport — the observer is taken straight to what the agent just did.
+  useEffect(() => {
+    if (blink.size === 0) return
+    const toExpand: string[] = []
+    let scrollId: string | null = null
+    for (const key of blink) {
+      const found = findWithAncestors(tree, key)
+      if (!found) continue
+      toExpand.push(...found.ancestors)
+      if (!scrollId) scrollId = found.node.id
+    }
+    if (toExpand.length) setExpanded(prev => new Set([...prev, ...toExpand]))
+    if (scrollId) {
+      const id = scrollId
+      // After the folders expand and the row mounts, scroll it to center.
+      setTimeout(() => {
+        document.getElementById(`arch-node-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })
+      }, 140)
+    }
+  }, [blink, tree])
 
   function toggle(id: string) {
     setExpanded(prev => {
