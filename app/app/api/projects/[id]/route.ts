@@ -10,6 +10,10 @@ export async function DELETE(
   const { id } = await params
   const row = await db.prepare("SELECT slug FROM projects WHERE id = ?").get(id) as { slug: string | null } | null
   await db.prepare("DELETE FROM projects WHERE id = ?").run(id)
-  if (row?.slug) await removeRouteReadme(`/project/${row.slug}`)
+  if (row?.slug) {
+    const path = `/project/${row.slug}`
+    await db.prepare("DELETE FROM route_tasks WHERE path = ?").run(path)
+    await removeRouteReadme(path)
+  }
   return NextResponse.json({ ok: true })
 }
