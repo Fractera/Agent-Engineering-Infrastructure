@@ -22,7 +22,17 @@ export function RouteSource({ path, onChanged }: { path: string; onChanged?: () 
     setLoading(true)
     fetch(projectApi(`/source?path=${encodeURIComponent(path)}`))
       .then(r => (r.ok ? r.json() : { files: [] }))
-      .then(d => { setFiles(d.files ?? []); setDrafts({}); setActive(0) })
+      .then(d => {
+        let fs: SourceFile[] = d.files ?? []
+        // A declared (not-built) route has no files on disk yet — offer a blank
+        // virtual file so the user can paste an example; saving becomes a
+        // code-change request the agent uses when building.
+        if (fs.length === 0) {
+          const name = path.startsWith("/api") ? "route.ts" : "page.tsx"
+          fs = [{ rel: name, content: "", language: "typescript" }]
+        }
+        setFiles(fs); setDrafts({}); setActive(0)
+      })
       .catch(() => setFiles([]))
       .finally(() => setLoading(false))
   }, [path])

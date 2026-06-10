@@ -109,13 +109,23 @@ export function ArchitectureApp() {
     }))
   }, [tree])
 
-  // The Projects folder itself opens the ProjectsPanel; real project pages
-  // (with a descriptor) open their RouteDetailPanel like any named route.
+  // The Projects folder itself opens the ProjectsPanel.
   const isProject = selected?.id === "projects"
   const reqItem = selected?.id.startsWith("req-")
     ? requested.find(r => requestedNodeId(r.id) === selected.id) ?? null
     : null
-  const meta = selected && !reqItem && !isProject ? routeMetaFor(selected.href ?? selected.label) : null
+  // Any declared node with a path (a requested page/endpoint OR a declared
+  // project node) shows the requested panel (todo + danger + source).
+  const declaredView = selected?.declared && selected.href && !isProject
+    ? {
+        title: selected.label,
+        path: selected.href,
+        kind: (selected.kind === "api" ? "api" : "page") as "page" | "api",
+        dynamic: reqItem?.dynamic ?? false,
+        query: reqItem?.query ?? [],
+      }
+    : null
+  const meta = selected && !declaredView && !isProject ? routeMetaFor(selected.href ?? selected.label) : null
 
   return (
     <main className="min-h-screen bg-background">
@@ -172,8 +182,8 @@ export function ArchitectureApp() {
                   ? <EndpointPanel base={endpointBase} onClose={() => setEndpointBase(null)} onCreated={onCreated} />
                   : isProject
                     ? <ProjectsPanel listed={pickerProjects} onChanged={refresh} />
-                    : reqItem
-                      ? <RequestedDetailPanel item={reqItem} onChanged={refresh} />
+                    : declaredView
+                      ? <RequestedDetailPanel {...declaredView} onChanged={refresh} />
                       : meta
                         ? <RouteDetailPanel meta={meta} onChanged={refresh} />
                         : <DetailPanel node={selected} />}
