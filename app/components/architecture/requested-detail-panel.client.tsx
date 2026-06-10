@@ -62,12 +62,8 @@ export function RequestedDetailPanel({
           </div>
         )}
 
-        {/* Editable to-do + danger zone, keyed by path. */}
-        <RouteTodo path={path} onChanged={handleChanged} reloadSignal={bump} />
-        <RouteDangerZone path={path} onChanged={handleChanged} />
-
-        {/* Source accordion — paste an example for the agent to build from. */}
-        <div className="mt-6 overflow-hidden rounded-lg border border-border">
+        {/* Source accordion above the to-do — paste an example for the agent. */}
+        <div className="mt-4 overflow-hidden rounded-lg border border-border">
           <button
             onClick={() => setSrcOpen(v => !v)}
             className="flex w-full items-center justify-between px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-foreground transition-colors hover:bg-muted/60"
@@ -81,6 +77,10 @@ export function RequestedDetailPanel({
             </div>
           )}
         </div>
+
+        {/* Editable to-do + danger zone, keyed by path. */}
+        <RouteTodo path={path} onChanged={handleChanged} reloadSignal={bump} />
+        <RouteDangerZone path={path} onChanged={handleChanged} />
       </div>
     </div>
   )
