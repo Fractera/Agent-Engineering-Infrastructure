@@ -97,6 +97,16 @@ export async function POST(req: NextRequest) {
     "INSERT INTO requested_routes (id, slug, kind, base, dynamic, query, title, todo, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'requested', ?)"
   ).run(id, slug, routeKind, basePath, isDynamic, JSON.stringify(query), String(title).trim(), JSON.stringify(items), createdBy)
 
+  // Seed the initial to-do items as route_tasks under the declared route's path,
+  // so the same editable to-do list / danger zone work for it like any page.
+  const seg = isDynamic ? `[${slug}]` : slug
+  const href = joinPath(basePath, seg)
+  for (const item of items) {
+    await db.prepare(
+      "INSERT INTO route_tasks (id, path, kind, body, created_by) VALUES (?, ?, 'todo', ?, ?)"
+    ).run(crypto.randomUUID(), href, item, createdBy)
+  }
+
   const row = await db.prepare("SELECT * FROM requested_routes WHERE id = ?").get(id)
   return NextResponse.json(
     { requested: row ? { ...row, kind: row.kind === "api" ? "api" : "page", todo: parseTodo(row.todo), dynamic: !!row.dynamic, query: parseQuery(row.query) } : null },

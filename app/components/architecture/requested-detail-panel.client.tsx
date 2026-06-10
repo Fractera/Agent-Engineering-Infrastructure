@@ -1,11 +1,19 @@
 "use client"
 
+import { useState } from "react"
 import { reqHref, type Requested } from "@/lib/architecture/requested-tree"
+import { RouteTodo } from "./route-todo.client"
+import { RouteDangerZone } from "./route-danger-zone.client"
 
-// Right-section view for a declared-but-not-built page. Minimal by design: the
-// page title top-left, a non-editable to-do list below. No "Open page" — the
-// route does not exist yet; an agent builds it from these tasks (§3.11).
-export function RequestedDetailPanel({ item }: { item: Requested }) {
+// Right-section view for a declared-but-not-built page / project / endpoint. It
+// is a folder with a (placeholder) page; like any page it carries an editable
+// to-do list and a danger zone, so its tasks can be seen and fixed. Tasks live
+// in route_tasks keyed by this declared route's path (seeded at creation).
+export function RequestedDetailPanel({ item, onChanged }: { item: Requested; onChanged?: () => void }) {
+  const path = reqHref(item)
+  const [bump, setBump] = useState(0)
+  function handleChanged() { setBump(b => b + 1); onChanged?.() }
+
   return (
     <div className="flex h-full flex-col">
       <div className="border-b border-border p-5">
@@ -18,20 +26,18 @@ export function RequestedDetailPanel({ item }: { item: Requested }) {
             {item.kind === "api" ? "endpoint" : item.dynamic ? "dynamic" : "static"}
           </span>
         </div>
-        <p className="font-mono text-[10px] text-foreground/60">{reqHref(item)}</p>
+        <p className="font-mono text-[10px] text-foreground/60">{path}</p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-5">
         <p className="text-xs leading-relaxed text-foreground/80">
-          A declared page — not built yet. An agent picks up the tasks below, plans
+          A declared route — not built yet. An agent picks up the tasks below, plans
           and builds it; once live it becomes a real route in this map.
         </p>
 
         {item.query.length > 0 && (
           <div className="mt-4">
-            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-foreground">
-              Query params
-            </p>
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-foreground">Query params</p>
             <ul className="flex flex-col gap-1">
               {item.query.map((q, i) => (
                 <li key={i} className="font-mono text-xs text-foreground">
@@ -44,23 +50,9 @@ export function RequestedDetailPanel({ item }: { item: Requested }) {
           </div>
         )}
 
-        <div className="mt-4">
-          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-foreground">
-            To-do (read-only)
-          </p>
-          {item.todo.length === 0 ? (
-            <p className="text-xs text-foreground/60">No tasks listed.</p>
-          ) : (
-            <ul className="flex flex-col gap-1">
-              {item.todo.map((t, i) => (
-                <li key={i} className="flex gap-1.5 text-xs text-foreground">
-                  <span className="text-amber-600/70">•</span>
-                  <span>{t}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        {/* Editable to-do + danger zone — same as a built page, keyed by path. */}
+        <RouteTodo path={path} onChanged={handleChanged} reloadSignal={bump} />
+        <RouteDangerZone path={path} onChanged={handleChanged} />
       </div>
     </div>
   )

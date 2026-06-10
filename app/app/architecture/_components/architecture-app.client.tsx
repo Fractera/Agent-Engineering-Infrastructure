@@ -173,7 +173,7 @@ export function ArchitectureApp() {
                   : isProject
                     ? <ProjectsPanel projects={projects} onChanged={refresh} />
                     : reqItem
-                      ? <RequestedDetailPanel item={reqItem} />
+                      ? <RequestedDetailPanel item={reqItem} onChanged={refresh} />
                       : meta
                         ? <RouteDetailPanel meta={meta} onChanged={refresh} />
                         : <DetailPanel node={selected} />}
