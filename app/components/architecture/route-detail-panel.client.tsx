@@ -18,7 +18,7 @@ function statusClass(s: string): string {
   return "border-border text-foreground/70"
 }
 
-export function RouteDetailPanel({ meta }: { meta: RouteMeta }) {
+export function RouteDetailPanel({ meta, onChanged }: { meta: RouteMeta; onChanged?: () => void }) {
   const sections = buildMetaSections(meta)
   const [open, setOpen] = useState<Set<string>>(new Set())
 
@@ -86,8 +86,8 @@ export function RouteDetailPanel({ meta }: { meta: RouteMeta }) {
         </div>
 
         {/* Native to-do + danger zone — settings that keep being updated */}
-        <RouteTodo path={meta.path} />
-        <RouteDangerZone path={meta.path} />
+        <RouteTodo path={meta.path} onChanged={onChanged} />
+        <RouteDangerZone path={meta.path} onChanged={onChanged} />
       </div>
     </div>
   )

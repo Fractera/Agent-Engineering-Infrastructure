@@ -19,18 +19,29 @@ import { DeclarePanel } from "@/components/architecture/declare-panel.client"
 // declaration form, or the legacy panel for descriptor-less nodes.
 export function ArchitectureApp() {
   const [requested, setRequested] = useState<Requested[]>([])
+  const [taskPaths, setTaskPaths] = useState<string[]>([])
   const [selected, setSelected] = useState<ArchNode | null>(null)
   const [expanded, setExpanded] = useState<Set<string>>(new Set(["routes", "pages", "api"]))
   const [declaring, setDeclaring] = useState(false)
 
-  useEffect(() => {
+  // Requested pages drive the tree's declared nodes; the task summary marks
+  // existing pages that carry pending work so the tree can badge them.
+  function refresh() {
     fetch("/api/architecture/requested")
       .then(r => (r.ok ? r.json() : null))
       .then(d => { if (d) setRequested(d.requested ?? []) })
       .catch(() => {})
-  }, [])
+    fetch("/api/architecture/tasks?summary=1")
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d) setTaskPaths(d.paths ?? []) })
+      .catch(() => {})
+  }
+  useEffect(() => { refresh() }, [])
 
-  const tree = useMemo(() => buildMergedTree(requested), [requested])
+  const tree = useMemo(
+    () => buildMergedTree(requested, new Set(taskPaths)),
+    [requested, taskPaths],
+  )
   useEffect(() => { setSelected(prev => prev ?? tree) }, [tree])
 
   function toggle(id: string) {
@@ -103,7 +114,7 @@ export function ArchitectureApp() {
                 : reqItem
                   ? <RequestedDetailPanel item={reqItem} />
                   : meta
-                    ? <RouteDetailPanel meta={meta} />
+                    ? <RouteDetailPanel meta={meta} onChanged={refresh} />
                     : <DetailPanel node={selected} />}
             </div>
           </div>

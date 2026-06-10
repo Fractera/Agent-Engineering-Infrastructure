@@ -10,6 +10,14 @@ import { getSession } from "@/lib/auth/get-session"
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url)
+  // Summary mode: distinct route paths that have any open task — drives the
+  // (req) badge in the tree for existing pages that carry pending work.
+  if (url.searchParams.get("summary")) {
+    const rows = await db.prepare(
+      "SELECT DISTINCT path FROM route_tasks WHERE status = 'open'"
+    ).all()
+    return NextResponse.json({ paths: rows.map(r => r.path) })
+  }
   const path = url.searchParams.get("path")
   const kind = url.searchParams.get("kind")
   if (!path) return NextResponse.json({ error: "path is required" }, { status: 400 })

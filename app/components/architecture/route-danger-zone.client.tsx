@@ -10,7 +10,7 @@ type DelReq = { id: string; body: string; outcome: string | null }
 // what depends on it). The user states why and the expected end result, then
 // orders the deletion; the row is a flag the pipeline picks up (app.db, kind
 // 'delete'). Same shape as a to-do, just a different intent.
-export function RouteDangerZone({ path }: { path: string }) {
+export function RouteDangerZone({ path, onChanged }: { path: string; onChanged?: () => void }) {
   const [reason, setReason] = useState("")
   const [outcome, setOutcome] = useState("")
   const [saving, setSaving] = useState(false)
@@ -31,7 +31,7 @@ export function RouteDangerZone({ path }: { path: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ path, kind: "delete", body: reason.trim(), outcome: outcome.trim() || null }),
       })
-      if (res.ok) { setReason(""); setOutcome(""); await load() }
+      if (res.ok) { setReason(""); setOutcome(""); await load(); onChanged?.() }
     } finally {
       setSaving(false)
     }
