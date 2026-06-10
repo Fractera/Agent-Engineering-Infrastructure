@@ -5,8 +5,8 @@ import { Plus, X } from "lucide-react"
 import type { Step } from "@/lib/dev-steps/step-file"
 import { SegToggle } from "@/components/ui/seg-toggle.client"
 import { AddStepForm } from "@/components/dev-steps/add-step-form.client"
-import { importanceDot, importanceText, ImportanceToggle } from "@/components/dev-steps/importance-toggle.client"
-import type { Importance } from "@/lib/dev-steps/step-file"
+import { StepDetail } from "@/components/dev-steps/step-detail.client"
+import { importanceDot } from "@/components/dev-steps/importance-toggle.client"
 
 type Mode = "new" | "completed"
 
@@ -124,29 +124,7 @@ export function DevelopmentStepsApp() {
               {adding ? (
                 <AddStepForm onClose={() => setAdding(false)} onCreated={onCreated} />
               ) : selected ? (
-                <div className="flex h-full flex-col p-5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={`h-2.5 w-2.5 rounded-full ${importanceDot[selected.importance]}`} />
-                    <span className="font-mono text-xs text-foreground/60">Step {String(selected.number).padStart(2, "0")}</span>
-                    {selected.status === "new" ? (
-                      <ImportanceToggle
-                        value={selected.importance}
-                        onChange={(v: Importance) => patchStep({ importance: v })}
-                      />
-                    ) : (
-                      <span className={`font-mono text-[10px] font-semibold uppercase tracking-wider ${importanceText[selected.importance]}`}>{selected.importance}</span>
-                    )}
-                    {selected.status === "completed" && selected.completedAt && (
-                      <span className="rounded-full border border-green-500/50 px-2 py-0.5 font-mono text-[10px] font-semibold text-green-600">
-                        completed {selected.completedAt}
-                      </span>
-                    )}
-                  </div>
-                  <h2 className="mt-1 text-sm font-bold text-foreground">{selected.name}</h2>
-                  <p className="mt-3 whitespace-pre-wrap text-xs leading-relaxed text-foreground/80">
-                    {selected.description || "No description yet."}
-                  </p>
-                </div>
+                <StepDetail step={selected} onPatch={patchStep} onRefresh={refresh} />
               ) : (
                 <div className="flex h-full items-center justify-center p-10 text-center">
                   <p className="max-w-xs text-xs text-foreground/60">Select a step on the left to read it.</p>
