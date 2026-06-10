@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Zap, LayoutDashboard, Sparkles, Cpu, FolderTree, Bug, BookText } from "lucide-react";
+import { Zap, LayoutDashboard, Sparkles, Cpu, FolderTree, Bug, BookText, ListChecks } from "lucide-react";
 import { adminBase } from "@/lib/runtime-urls";
 
 const AI_TOOLS = [
@@ -157,6 +157,13 @@ export function ShellHome() {
           >
             <BookText size={14} />
             Glossary
+          </a>
+          <a
+            href="/development-steps"
+            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl border border-border text-sm font-medium text-foreground hover:bg-muted active:scale-95 transition-all"
+          >
+            <ListChecks size={14} />
+            Development steps
           </a>
         </motion.div>
 
