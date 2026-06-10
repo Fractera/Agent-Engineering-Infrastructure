@@ -37,7 +37,11 @@ export type ArchNode = {
   addable?: boolean
   /** Label for the add affordance (defaults to "Add"). */
   addLabel?: string
-  /** A declared-but-not-built route (status "requested") merged into the tree. */
+  /** Shows the orange "req" badge: a declared route OR an existing route with
+   *  open tasks. */
   pending?: boolean
+  /** A declared-but-not-built route (orange label). Existing routes with tasks
+   *  keep a black label and only get the badge. */
+  declared?: boolean
   children?: ArchNode[]
 }

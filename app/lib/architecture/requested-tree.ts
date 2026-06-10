@@ -33,6 +33,7 @@ export function buildMergedTree(
     kind: "page",
     href: `/${r.slug}`,
     pending: true,
+    declared: true,
   }))
   const base: ArchNode = {
     ...ROUTES_TREE,
