@@ -26,22 +26,29 @@ export const DOCS_NODE: ArchNode = {
     },
     {
       id: "doc-steps",
-      label: "Steps",
+      label: "DEVELOPMENT-STEPS",
       kind: "group",
-      description: "The work journal: what was done and why, step by step.",
+      href: "/development-steps",
+      description:
+        "The work log — every step of how the app is built, kept as real markdown " +
+        "files an agent reads and writes. Edited via the /development-steps page; " +
+        "files live in DEVELOPMENT-STEPS/ at the project root.",
       children: [
         {
-          id: "doc-old-steps",
-          label: "old steps",
+          id: "doc-new-steps",
+          label: "NEW-STEPS",
           kind: "group",
           description:
-            "Snapshots of completed steps (one file each) plus the index map.",
+            "Open steps — one file per active task (number, name, importance, " +
+            "description, to-do). Shown under New steps; editable.",
         },
         {
-          id: "doc-next-step",
-          label: "next step",
-          kind: "config",
-          description: "The current task — known constraints, subtasks and scope.",
+          id: "doc-completed-steps",
+          label: "COMPLETED-STEPS",
+          kind: "group",
+          description:
+            "Finished steps — moved here with a completion date. Read-only history " +
+            "shown under Completed steps.",
         },
       ],
     },
