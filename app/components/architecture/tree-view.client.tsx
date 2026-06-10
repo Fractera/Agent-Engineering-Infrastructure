@@ -54,11 +54,11 @@ export function TreeNode({
 
   return (
     <div>
-      <style>{`@keyframes archBlink{0%,100%{background-color:transparent}30%{background-color:rgb(245 158 11 / 0.35)}}`}</style>
+      <style>{`@keyframes archBlink{0%,100%{background-color:transparent}50%{background-color:rgb(245 158 11 / 0.35)}}`}</style>
       <button
         id={`arch-node-${node.id}`}
         onClick={handleClick}
-        style={{ paddingLeft: depth * 16 + 8, animation: isBlinking ? "archBlink 1s ease-out" : undefined }}
+        style={{ paddingLeft: depth * 16 + 8, animation: isBlinking ? "archBlink 1s ease-in-out 3" : undefined }}
         className={`group flex w-full items-center gap-1.5 rounded-md py-1.5 pr-2 text-left text-xs transition-colors ${
           isSelected ? "bg-primary/15 text-foreground" : "text-foreground hover:bg-muted/60"
         }`}

@@ -27,6 +27,23 @@ function nodeKeys(reqs: Requested[], projs: Project[]): Set<string> {
   ])
 }
 
+// Walk the tree collecting the ancestor folder ids of every node whose id OR href
+// is in `keys` (same match as TreeNode.isBlinking), plus the first matched node id
+// to scroll to — drives auto-reveal of what a background agent just created/changed.
+function revealTargets(
+  node: ArchNode,
+  keys: Set<string>,
+  trail: string[] = [],
+  acc: { ancestors: Set<string>; scrollId: string | null } = { ancestors: new Set(), scrollId: null },
+): { ancestors: Set<string>; scrollId: string | null } {
+  if (keys.has(node.id) || (!!node.href && keys.has(node.href))) {
+    trail.forEach(id => acc.ancestors.add(id))
+    if (!acc.scrollId) acc.scrollId = node.id
+  }
+  node.children?.forEach(c => revealTargets(c, keys, [...trail, node.id], acc))
+  return acc
+}
+
 // Left section = the route tree (Add page lives in its top-right corner).
 // Right section = the selected route's real RouteMeta descriptor (Open page in
 // its top-right corner), the minimal read-only view of a declared page, the
@@ -74,7 +91,7 @@ export function ArchitectureApp() {
           for (const k of keys) if (!prevKeys.current.has(k)) changed.add(k)
           if (changed.size) {
             setBlink(changed)
-            setTimeout(() => setBlink(new Set()), 1200)
+            setTimeout(() => setBlink(new Set()), 3000)
           }
         }
         prevSig.current = sig
@@ -117,6 +134,20 @@ export function ArchitectureApp() {
 
   const tree = useMemo(() => enrichWithRouting(baseTree, routingMap), [baseTree, routingMap])
   useEffect(() => { setSelected(prev => prev ?? tree) }, [tree])
+
+  // Auto-reveal: when the poll flags new/changed nodes (blink), open their parent
+  // folders and scroll the first into view — the observer sees what a background
+  // agent just did, even off-screen or in a collapsed folder. Selection untouched.
+  useEffect(() => {
+    if (!blink.size) return
+    const { ancestors, scrollId } = revealTargets(tree, blink)
+    if (ancestors.size) setExpanded(prev => new Set([...prev, ...ancestors]))
+    if (!scrollId) return
+    const t = setTimeout(() => {
+      document.getElementById(`arch-node-${scrollId}`)?.scrollIntoView({ block: "center", behavior: "smooth" })
+    }, 120)
+    return () => clearTimeout(t)
+  }, [blink, tree])
 
   function toggle(id: string) {
     setExpanded(prev => {
