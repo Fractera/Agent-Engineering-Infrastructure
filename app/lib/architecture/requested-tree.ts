@@ -50,15 +50,24 @@ export function enrichWithRouting(
   node: ArchNode,
   routingMap: Record<string, string[]>,
 ): ArchNode {
-  const files = node.kind === "page" && node.href && !node.declared
-    ? routingMap[node.href]
-    : undefined
-  const routingChildren: ArchNode[] = (files ?? []).map(name => ({
+  const isRealPage = node.kind === "page" && node.href && !node.declared
+  const files = isRealPage ? routingMap[node.href!] : undefined
+  let routingChildren: ArchNode[] = (files ?? []).map(name => ({
     id: `${node.id}-rf-${name}`,
     label: name,
     kind: "config",
     description: `Routing file ${name} for ${node.href}.`,
   }))
+  // A declared (not-built) page/project is a FOLDER with a placeholder page.tsx —
+  // it looks like a built page, but the file is created when the agent builds it.
+  if (node.declared && node.kind === "page") {
+    routingChildren = [{
+      id: `${node.id}-rf-page`,
+      label: "page.tsx",
+      kind: "config",
+      description: `page.tsx — created when the agent builds ${node.href ?? "this page"}.`,
+    }]
+  }
   // A page node can hold BOTH its routing files (page/layout/…) and nested
   // sub-pages declared under it — show routing files first, then the children.
   const existing = node.children?.map(c => enrichWithRouting(c, routingMap)) ?? []
@@ -95,9 +104,19 @@ export function buildMergedTree(
   const rootReq = byBase.get("/") ?? []
   // The default project IS the root tree itself; the Projects folder lists only
   // the additional named projects.
+  // A project is a folder with a page (like the seed my-telegram-reminder). A
+  // DB-declared project is not built yet → a pending page node (orange + req)
+  // that the agent turns into a real /project/<slug> folder with a page.tsx.
   const projectNodes: ArchNode[] = projects
     .filter(p => (p.slug ?? p.name) !== DEFAULT_PROJECT && p.name !== DEFAULT_PROJECT)
-    .map(p => ({ id: `project-${p.slug ?? p.id}`, label: p.name, kind: "note" as const }))
+    .map(p => ({
+      id: `project-${p.slug ?? p.id}`,
+      label: p.name,
+      kind: "page" as const,
+      href: `/project/${p.slug ?? p.id}`,
+      pending: true,
+      declared: true,
+    }))
   const base: ArchNode = {
     ...ROUTES_TREE,
     children: ROUTES_TREE.children?.map(group => {
