@@ -41,7 +41,7 @@ type Item = { id?: string; body: string }
 // stored, and saving writes the page's tasks to app.db (route_tasks, kind
 // 'todo') — the same store an agent reads. On save the parent refreshes so the
 // (req) badge appears on this page's node in the tree.
-export function RouteTodo({ path, onChanged }: { path: string; onChanged?: () => void }) {
+export function RouteTodo({ path, onChanged, reloadSignal = 0 }: { path: string; onChanged?: () => void; reloadSignal?: number }) {
   const [items, setItems] = useState<Item[]>([])
   const [serverIds, setServerIds] = useState<string[]>([])
   const [draft, setDraft] = useState("")
@@ -55,7 +55,9 @@ export function RouteTodo({ path, onChanged }: { path: string; onChanged?: () =>
       setServerIds(tasks.map(t => t.id))
     }
   }
-  useEffect(() => { load() }, [path])
+  // Reload on path change and whenever a sibling (Source / Danger zone) records a
+  // change, so the list updates without a page refresh.
+  useEffect(() => { load() }, [path, reloadSignal])
 
   function addDraft() {
     const body = draft.trim()

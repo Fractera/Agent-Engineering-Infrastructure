@@ -22,6 +22,13 @@ function statusClass(s: string): string {
 export function RouteDetailPanel({ meta, onChanged }: { meta: RouteMeta; onChanged?: () => void }) {
   const sections = buildMetaSections(meta)
   const [open, setOpen] = useState<Set<string>>(new Set())
+  // Bumped on any change (Source/Danger zone) so the to-do list reloads in place
+  // — and the tree badge refreshes via onChanged — without a page reload.
+  const [bump, setBump] = useState(0)
+  function handleChanged() {
+    setBump(b => b + 1)
+    onChanged?.()
+  }
 
   function toggle(t: string) {
     setOpen(prev => {
@@ -96,15 +103,15 @@ export function RouteDetailPanel({ meta, onChanged }: { meta: RouteMeta; onChang
             </button>
             {open.has("Source") && (
               <div className="border-t border-border p-3">
-                <RouteSource path={meta.path} onChanged={onChanged} />
+                <RouteSource path={meta.path} onChanged={handleChanged} />
               </div>
             )}
           </div>
         </div>
 
         {/* Native to-do + danger zone — settings that keep being updated */}
-        <RouteTodo path={meta.path} onChanged={onChanged} />
-        <RouteDangerZone path={meta.path} onChanged={onChanged} />
+        <RouteTodo path={meta.path} onChanged={handleChanged} reloadSignal={bump} />
+        <RouteDangerZone path={meta.path} onChanged={handleChanged} />
       </div>
     </div>
   )
