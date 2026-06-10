@@ -24,6 +24,13 @@ export function CodeEditor({
       theme="vs-dark"
       language={language}
       value={value}
+      // No error squiggles — this is a screen translation, the code never runs
+      // here, so TS/JS diagnostics add nothing but noise.
+      beforeMount={(monaco) => {
+        const opts = { noSemanticValidation: true, noSyntaxValidation: true }
+        monaco.languages.typescript?.typescriptDefaults.setDiagnosticsOptions(opts)
+        monaco.languages.typescript?.javascriptDefaults.setDiagnosticsOptions(opts)
+      }}
       onChange={v => onChange?.(v ?? "")}
       options={{
         readOnly,
