@@ -1,14 +1,16 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Plus, X } from "lucide-react"
 import type { Step } from "@/lib/dev-steps/step-file"
 import { SegToggle } from "@/components/ui/seg-toggle.client"
 import { AddStepForm } from "@/components/dev-steps/add-step-form.client"
 import { StepDetail } from "@/components/dev-steps/step-detail.client"
 import { importanceDot } from "@/components/dev-steps/importance-toggle.client"
+import { PollBar } from "@/components/architecture/poll-bar.client"
 
 type Mode = "new" | "completed"
+type Sig = Record<string, string>
 
 // Development steps — a filesystem-backed view of the project's work log, mirroring
 // /architecture. Left = the list of steps (number + name); right = the opened step
@@ -22,16 +24,59 @@ export function DevelopmentStepsApp() {
   const [mode, setMode] = useState<Mode>("new")
   const [selected, setSelected] = useState<Step | null>(null)
   const [adding, setAdding] = useState(false)
+  const [blink, setBlink] = useState<Set<string>>(new Set())
+  const [hidden, setHidden] = useState(false)
+
+  // Live polling: one signature snapshot per tick. Diff against the previous
+  // snapshot to blink ONLY the steps that changed (new step, importance/tasks
+  // edit, or a move to completed); first load just seeds the baseline (no blink).
+  const prevSig = useRef<Sig>({})
+  const seeded = useRef(false)
 
   function refresh() {
     fetch("/api/development-steps/signature")
       .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (d) { setNews(d.new ?? []); setCompleted(d.completed ?? []) } })
+      .then(d => {
+        if (!d) return
+        setNews(d.new ?? [])
+        setCompleted(d.completed ?? [])
+        const sig: Sig = d.signature ?? {}
+        if (seeded.current) {
+          const changed = new Set<string>()
+          for (const id of Object.keys(sig)) {
+            if (prevSig.current[id] !== sig[id]) changed.add(id)
+          }
+          if (changed.size) {
+            setBlink(changed)
+            setTimeout(() => setBlink(new Set()), 3000)
+          }
+        }
+        prevSig.current = sig
+        seeded.current = true
+      })
       .catch(() => {})
   }
   useEffect(() => { refresh() }, [])
 
+  // Pause polling when the tab is backgrounded.
+  useEffect(() => {
+    const h = () => setHidden(document.hidden)
+    document.addEventListener("visibilitychange", h)
+    return () => document.removeEventListener("visibilitychange", h)
+  }, [])
+
   const steps = useMemo(() => (mode === "completed" ? completed : news), [mode, completed, news])
+
+  // Auto-reveal: scroll a blinking step (in the current list) into view.
+  useEffect(() => {
+    if (!blink.size) return
+    const hit = steps.find(s => blink.has(s.id))
+    if (!hit) return
+    const t = setTimeout(() => {
+      document.getElementById(`dev-step-${hit.id}`)?.scrollIntoView({ block: "center", behavior: "smooth" })
+    }, 120)
+    return () => clearTimeout(t)
+  }, [blink, steps])
   // Clear the open step when switching mode (a new-mode step is not in completed).
   useEffect(() => { setSelected(null); setAdding(false) }, [mode])
 
@@ -82,6 +127,11 @@ export function DevelopmentStepsApp() {
           of what is being built, kept out of the main flow.
         </p>
 
+        {/* Live heartbeat: fills over 4s, then polls; changed steps appear in real time. */}
+        <div className="mt-4">
+          <PollBar onPoll={refresh} paused={hidden} />
+        </div>
+
         {/* Mode switch — New steps (editable) vs Completed steps (read-only). */}
         <div className="mt-4 flex items-center justify-between gap-3">
           <span className="font-mono text-[10px] text-foreground/50">{steps.length} {mode === "completed" ? "completed" : "active"}</span>
@@ -110,13 +160,16 @@ export function DevelopmentStepsApp() {
                 )}
               </div>
               <div className="flex-1 overflow-y-auto py-2">
+                <style>{`@keyframes devBlink{0%,100%{background-color:transparent}50%{background-color:rgb(245 158 11 / 0.35)}}`}</style>
                 {steps.length === 0 ? (
                   <p className="px-4 py-3 text-xs text-foreground/50">No steps yet.</p>
                 ) : (
                   steps.map(s => (
                     <button
                       key={s.id}
+                      id={`dev-step-${s.id}`}
                       onClick={() => setSelected(s)}
+                      style={{ animation: blink.has(s.id) ? "devBlink 1s ease-in-out 3" : undefined }}
                       className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors ${
                         selected?.id === s.id ? "bg-primary/15 text-foreground" : "text-foreground hover:bg-muted/60"
                       }`}
