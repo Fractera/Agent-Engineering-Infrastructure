@@ -47,10 +47,10 @@ export async function collectSource(routePath: string): Promise<SourceFile[]> {
     out.push({ rel: relative(root, abs), content, language: LANG[extname(abs)] ?? "plaintext" })
   }
 
-  // The route entry: page.tsx for pages, route.ts for API endpoints.
+  // The route entry: page.tsx for pages, route.ts for API endpoints. The
+  // descriptor (_meta.ts) is intentionally excluded — it is not page code.
   await add(join(dir, "page.tsx"))
   await add(join(dir, "route.ts"))
-  await add(join(dir, "_meta.ts"))
 
   // Everything under _components/ (one level; nested kept simple for v1).
   try {

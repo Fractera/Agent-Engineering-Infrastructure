@@ -55,7 +55,7 @@ const meta: RouteMeta = {
   hasNotFound: false,
   hasLayout: false,
 
-  methods: ["GET", "POST"],
+  methods: ["GET", "POST", "DELETE"],
 
   description:
     "Per-route tasks on existing pages: ongoing to-dos and danger-zone deletion " +

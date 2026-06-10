@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Loader2, FileCode } from "lucide-react"
 import { projectApi } from "@/lib/architecture/project-api"
+import { lineDiff, CODE_DIFF_PREFIX } from "@/lib/architecture/line-diff"
 import { CodeEditor } from "./code-editor.client"
 
 type SourceFile = { rel: string; content: string; language: string }
@@ -40,14 +41,17 @@ export function RouteSource({ path, onChanged }: { path: string; onChanged?: () 
   async function save() {
     setSaving(file.rel)
     try {
+      // Store a readable diff (what changed) so the request makes sense days
+      // later; the agent applies the diff to the file on disk.
+      const diff = lineDiff(file.content, current)
       const res = await fetch(projectApi("/architecture/tasks"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           path,
           kind: "todo",
-          body: `Code update for ${file.rel}:\n\n${current}`,
-          outcome: `Apply the proposed code to ${file.rel}`,
+          body: `${CODE_DIFF_PREFIX}${file.rel}\n${diff}`,
+          outcome: `Apply this code change to ${file.rel}`,
         }),
       })
       if (res.ok) {

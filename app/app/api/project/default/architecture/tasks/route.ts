@@ -46,3 +46,13 @@ export async function POST(req: NextRequest) {
   const task = await db.prepare("SELECT * FROM route_tasks WHERE id = ?").get(id)
   return NextResponse.json({ task }, { status: 201 })
 }
+
+// Discard ALL open tasks for a route (the danger-zone "Discard all changes"):
+// clears the to-do list and so drops the (req) badge. A single task is removed
+// via /architecture/tasks/[id].
+export async function DELETE(req: NextRequest) {
+  const path = new URL(req.url).searchParams.get("path")
+  if (!path) return NextResponse.json({ error: "path is required" }, { status: 400 })
+  await db.prepare("DELETE FROM route_tasks WHERE path = ? AND status = 'open'").run(path)
+  return NextResponse.json({ ok: true })
+}

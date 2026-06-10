@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Loader2, AlertTriangle } from "lucide-react"
+import { Loader2, AlertTriangle, Trash2 } from "lucide-react"
 import { projectApi } from "@/lib/architecture/project-api"
 
 type DelReq = { id: string; body: string; outcome: string | null }
@@ -15,6 +15,7 @@ export function RouteDangerZone({ path, onChanged }: { path: string; onChanged?:
   const [reason, setReason] = useState("")
   const [outcome, setOutcome] = useState("")
   const [saving, setSaving] = useState(false)
+  const [discarding, setDiscarding] = useState(false)
   const [list, setList] = useState<DelReq[]>([])
 
   async function load() {
@@ -35,6 +36,20 @@ export function RouteDangerZone({ path, onChanged }: { path: string; onChanged?:
       if (res.ok) { setReason(""); setOutcome(""); await load(); onChanged?.() }
     } finally {
       setSaving(false)
+    }
+  }
+
+  // Discard ALL pending changes for this route — clears every open task (code
+  // updates, to-dos, deletion requests) and drops the (req) badge.
+  async function discardAll() {
+    setDiscarding(true)
+    try {
+      const res = await fetch(projectApi(`/architecture/tasks?path=${encodeURIComponent(path)}`), {
+        method: "DELETE",
+      })
+      if (res.ok) { await load(); onChanged?.() }
+    } finally {
+      setDiscarding(false)
     }
   }
 
@@ -71,6 +86,22 @@ export function RouteDangerZone({ path, onChanged }: { path: string; onChanged?:
         {saving && <Loader2 size={11} className="animate-spin" />}
         Order deletion
       </button>
+
+      <div className="mt-4 border-t border-red-500/30 pt-3">
+        <p className="text-[11px] leading-relaxed text-foreground/80">
+          Discard every pending change on this page — clears the whole to-do list (code
+          updates, tasks, deletion requests) and removes the orange badge. The page itself
+          is untouched.
+        </p>
+        <button
+          onClick={discardAll}
+          disabled={discarding}
+          className="mt-2 inline-flex h-8 items-center gap-1.5 rounded-md border border-red-500/60 px-4 text-xs font-semibold text-red-600 transition-colors hover:bg-red-600 hover:text-white disabled:opacity-40"
+        >
+          {discarding ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
+          Discard all changes
+        </button>
+      </div>
 
       {list.length > 0 && (
         <div className="mt-3 border-t border-red-500/30 pt-3">

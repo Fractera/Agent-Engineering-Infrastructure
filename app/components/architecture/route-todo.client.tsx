@@ -3,6 +3,36 @@
 import { useEffect, useState } from "react"
 import { Plus, X, Loader2 } from "lucide-react"
 import { projectApi } from "@/lib/architecture/project-api"
+import { CODE_DIFF_PREFIX } from "@/lib/architecture/line-diff"
+
+// A code-change task body is "<prefix><rel>\n<diff>"; render it as a colored diff
+// so the request is legible later. Plain tasks render as text.
+function TaskBody({ body }: { body: string }) {
+  if (!body.startsWith(CODE_DIFF_PREFIX)) {
+    return <span className="flex-1 font-medium">{body}</span>
+  }
+  const nl = body.indexOf("\n")
+  const head = body.slice(CODE_DIFF_PREFIX.length, nl < 0 ? undefined : nl)
+  const diff = nl < 0 ? "" : body.slice(nl + 1)
+  return (
+    <div className="flex-1 min-w-0">
+      <p className="font-mono text-[11px] font-semibold text-foreground">Code change · {head}</p>
+      <pre className="mt-1 max-h-48 overflow-auto rounded border border-border bg-muted/30 p-2 font-mono text-[10px] leading-snug">
+        {diff.split("\n").map((l, i) => (
+          <div
+            key={i}
+            className={
+              l.startsWith("+") ? "text-green-600" :
+              l.startsWith("-") ? "text-red-600" : "text-foreground/60"
+            }
+          >
+            {l || " "}
+          </div>
+        ))}
+      </pre>
+    </div>
+  )
+}
 
 type Item = { id?: string; body: string }
 
@@ -70,11 +100,11 @@ export function RouteTodo({ path, onChanged }: { path: string; onChanged?: () =>
       </p>
       <div className="flex flex-col gap-1.5">
         {items.map((t, i) => (
-          <div key={t.id ?? `new-${i}`} className="flex items-center gap-2 text-xs text-foreground">
-            <span className="text-foreground/60">•</span>
-            <span className="flex-1 font-medium">{t.body}</span>
-            {!t.id && <span className="font-mono text-[9px] font-semibold text-amber-600">unsaved</span>}
-            <button onClick={() => removeAt(i)} className="text-foreground/50 hover:text-red-600">
+          <div key={t.id ?? `new-${i}`} className="flex items-start gap-2 text-xs text-foreground">
+            <span className="mt-0.5 text-foreground/60">•</span>
+            <TaskBody body={t.body} />
+            {!t.id && <span className="mt-0.5 font-mono text-[9px] font-semibold text-amber-600">unsaved</span>}
+            <button onClick={() => removeAt(i)} className="mt-0.5 text-foreground/50 hover:text-red-600">
               <X size={11} />
             </button>
           </div>
