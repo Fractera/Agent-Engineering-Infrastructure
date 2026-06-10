@@ -5,6 +5,8 @@ import aiCoreMeta from "@/app/ai-core/_meta"
 import architectureMeta from "@/app/architecture/_meta"
 import debugMeta from "@/app/debug/_meta"
 import requestedApiMeta from "@/app/api/architecture/requested/_meta"
+import tasksApiMeta from "@/app/api/architecture/tasks/_meta"
+import taskIdApiMeta from "@/app/api/architecture/tasks/[id]/_meta"
 
 // Hand-maintained manifest of the typed route descriptors (`_meta.ts`), keyed by
 // path. Variant A: typed .ts imported here (a later codegen can glob these). The
@@ -16,6 +18,8 @@ export const ROUTE_MANIFEST: Record<string, RouteMeta> = {
   "/architecture": architectureMeta,
   "/debug": debugMeta,
   "/api/architecture/requested": requestedApiMeta,
+  "/api/architecture/tasks": tasksApiMeta,
+  "/api/architecture/tasks/[id]": taskIdApiMeta,
 }
 
 export function routeMetaFor(key: string | undefined | null): RouteMeta | null {
