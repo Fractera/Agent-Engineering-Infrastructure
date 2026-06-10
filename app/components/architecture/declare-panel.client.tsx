@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Plus, X, Loader2 } from "lucide-react"
+import { projectApi } from "@/lib/architecture/project-api"
 import type { Requested } from "@/lib/architecture/requested-tree"
 
 // The right-side panel opened by "Add page". The first field is the route name
@@ -33,7 +34,7 @@ export function DeclarePanel({
     setSaving(true)
     setError("")
     try {
-      const res = await fetch("/api/architecture/requested", {
+      const res = await fetch(projectApi("/architecture/requested"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: title.trim(), todo: items }),

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Loader2, AlertTriangle } from "lucide-react"
+import { projectApi } from "@/lib/architecture/project-api"
 
 type DelReq = { id: string; body: string; outcome: string | null }
 
@@ -17,7 +18,7 @@ export function RouteDangerZone({ path, onChanged }: { path: string; onChanged?:
   const [list, setList] = useState<DelReq[]>([])
 
   async function load() {
-    const res = await fetch(`/api/architecture/tasks?path=${encodeURIComponent(path)}&kind=delete`)
+    const res = await fetch(projectApi(`/architecture/tasks?path=${encodeURIComponent(path)}&kind=delete`))
     if (res.ok) setList((await res.json()).tasks ?? [])
   }
   useEffect(() => { load() }, [path])
@@ -26,7 +27,7 @@ export function RouteDangerZone({ path, onChanged }: { path: string; onChanged?:
     if (!reason.trim()) return
     setSaving(true)
     try {
-      const res = await fetch("/api/architecture/tasks", {
+      const res = await fetch(projectApi("/architecture/tasks"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ path, kind: "delete", body: reason.trim(), outcome: outcome.trim() || null }),

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { Plus, X } from "lucide-react"
 import type { ArchNode } from "@/lib/architecture/types"
 import { routeMetaFor } from "@/lib/architecture/route-manifest"
+import { projectApi } from "@/lib/architecture/project-api"
 import {
   buildMergedTree, requestedNodeId, type Requested,
 } from "@/lib/architecture/requested-tree"
@@ -30,11 +31,11 @@ export function ArchitectureApp() {
   // Requested pages drive the tree's declared nodes; the task summary marks
   // existing pages that carry pending work; projects fill the Projects folder.
   function refresh() {
-    fetch("/api/architecture/requested")
+    fetch(projectApi("/architecture/requested"))
       .then(r => (r.ok ? r.json() : null))
       .then(d => { if (d) setRequested(d.requested ?? []) })
       .catch(() => {})
-    fetch("/api/architecture/tasks?summary=1")
+    fetch(projectApi("/architecture/tasks?summary=1"))
       .then(r => (r.ok ? r.json() : null))
       .then(d => { if (d) setTaskPaths(d.paths ?? []) })
       .catch(() => {})

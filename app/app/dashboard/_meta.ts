@@ -89,7 +89,7 @@ const meta: RouteMeta = {
     "Product catalogue demo — create, list and delete products with image " +
     "upload. Exercises the SQLite database and the media service.",
   dataDependencies: ["app.db (products)", "media service :3300"],
-  relatedRoutes: ["/api/products", "/api/products/[id]", "/api/media/upload"],
+  relatedRoutes: ["/api/project/default/products", "/api/project/default/products/[id]", "/api/media/upload"],
   notes: undefined,
 
   // — Audit —

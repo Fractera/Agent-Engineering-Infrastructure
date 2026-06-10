@@ -3,8 +3,8 @@ import type { RouteMeta } from "@/lib/architecture/route-meta"
 // STANDARD ROUTE DESCRIPTOR — do not delete any field.
 const meta: RouteMeta = {
   kind: "api",
-  path: "/api/architecture/tasks/[id]",
-  filePath: "app/app/api/architecture/tasks/[id]/route.ts",
+  path: "/api/project/default/architecture/tasks/[id]",
+  filePath: "app/app/api/project/[project]/architecture/tasks/[id]/route.ts",
   status: "live",
   todo: [],
 
@@ -56,7 +56,7 @@ const meta: RouteMeta = {
 
   description: "Remove a single route task (drop a to-do item or cancel a deletion request).",
   dataDependencies: ["app.db (route_tasks)"],
-  relatedRoutes: ["/api/architecture/tasks"],
+  relatedRoutes: ["/api/project/default/architecture/tasks"],
   notes: undefined,
 
   owner: undefined,

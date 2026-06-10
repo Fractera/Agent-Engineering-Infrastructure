@@ -3,8 +3,8 @@ import type { RouteMeta } from "@/lib/architecture/route-meta"
 // STANDARD ROUTE DESCRIPTOR — do not delete any field.
 const meta: RouteMeta = {
   kind: "api",
-  path: "/api/architecture/tasks",
-  filePath: "app/app/api/architecture/tasks/route.ts",
+  path: "/api/project/default/architecture/tasks",
+  filePath: "app/app/api/project/[project]/architecture/tasks/route.ts",
   status: "live",
   todo: [],
 
@@ -61,7 +61,7 @@ const meta: RouteMeta = {
     "Per-route tasks on existing pages: ongoing to-dos and danger-zone deletion " +
     "requests — flags an agent picks up. Same write path for the UI and agents.",
   dataDependencies: ["app.db (route_tasks)"],
-  relatedRoutes: ["/architecture", "/api/architecture/requested"],
+  relatedRoutes: ["/architecture", "/api/project/default/architecture/requested"],
   notes: "Deletion is a planned request, not a destructive function.",
 
   owner: undefined,

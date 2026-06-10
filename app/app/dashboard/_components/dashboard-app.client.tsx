@@ -5,6 +5,7 @@ import { Plus, X } from "lucide-react"
 import { toast } from "sonner"
 import type { UploadedFile } from "@/services/upload/upload.service"
 import { registerRedirectUrl } from "@/lib/runtime-urls"
+import { projectApi } from "@/lib/architecture/project-api"
 import type { Product } from "./types"
 import { ProductForm } from "./product-form.client"
 import { ProductTable } from "./product-table.client"
@@ -23,7 +24,7 @@ export function DashboardApp() {
   const [deleting, setDeleting]         = useState<string | null>(null)
 
   const loadProducts = useCallback(async () => {
-    const res = await fetch("/api/products")
+    const res = await fetch(projectApi("/products"))
     if (res.ok) {
       const data = await res.json()
       setProducts(data.products)
@@ -56,7 +57,7 @@ export function DashboardApp() {
     if (!form.name.trim() || !form.price) return
     setSaving(true)
     try {
-      const res = await fetch("/api/products", {
+      const res = await fetch(projectApi("/products"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -80,7 +81,7 @@ export function DashboardApp() {
   async function handleDelete(id: string) {
     setDeleting(id)
     try {
-      const res = await fetch(`/api/products/${id}`, { method: "DELETE" })
+      const res = await fetch(projectApi(`/products/${id}`), { method: "DELETE" })
       if (!res.ok) throw new Error("Failed to delete")
       setProducts(prev => prev.filter(p => p.id !== id))
       toast.success("Product deleted")

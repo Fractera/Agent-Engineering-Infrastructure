@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Plus, X, Loader2 } from "lucide-react"
+import { projectApi } from "@/lib/architecture/project-api"
 
 type Item = { id?: string; body: string }
 
@@ -17,7 +18,7 @@ export function RouteTodo({ path, onChanged }: { path: string; onChanged?: () =>
   const [saving, setSaving] = useState(false)
 
   async function load() {
-    const res = await fetch(`/api/architecture/tasks?path=${encodeURIComponent(path)}&kind=todo`)
+    const res = await fetch(projectApi(`/architecture/tasks?path=${encodeURIComponent(path)}&kind=todo`))
     if (res.ok) {
       const tasks: { id: string; body: string }[] = (await res.json()).tasks ?? []
       setItems(tasks.map(t => ({ id: t.id, body: t.body })))
@@ -45,14 +46,14 @@ export function RouteTodo({ path, onChanged }: { path: string; onChanged?: () =>
     setSaving(true)
     try {
       for (const it of added) {
-        await fetch("/api/architecture/tasks", {
+        await fetch(projectApi("/architecture/tasks"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ path, kind: "todo", body: it.body }),
         })
       }
       for (const id of removed) {
-        await fetch(`/api/architecture/tasks/${id}`, { method: "DELETE" })
+        await fetch(projectApi(`/architecture/tasks/${id}`), { method: "DELETE" })
       }
       await load()
       onChanged?.()

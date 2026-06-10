@@ -6,8 +6,8 @@ import type { RouteMeta } from "@/lib/architecture/route-meta"
 const meta: RouteMeta = {
   // — Identity & lifecycle —
   kind: "api",
-  path: "/api/architecture/requested",
-  filePath: "app/app/api/architecture/requested/route.ts",
+  path: "/api/project/default/architecture/requested",
+  filePath: "app/app/api/project/[project]/architecture/requested/route.ts",
   status: "live",
   todo: [],
 

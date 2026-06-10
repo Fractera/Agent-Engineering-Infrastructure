@@ -4,9 +4,9 @@ import dashboardMeta from "@/app/dashboard/_meta"
 import aiCoreMeta from "@/app/ai-core/_meta"
 import architectureMeta from "@/app/architecture/_meta"
 import debugMeta from "@/app/debug/_meta"
-import requestedApiMeta from "@/app/api/architecture/requested/_meta"
-import tasksApiMeta from "@/app/api/architecture/tasks/_meta"
-import taskIdApiMeta from "@/app/api/architecture/tasks/[id]/_meta"
+import requestedApiMeta from "@/app/api/project/[project]/architecture/requested/_meta"
+import tasksApiMeta from "@/app/api/project/[project]/architecture/tasks/_meta"
+import taskIdApiMeta from "@/app/api/project/[project]/architecture/tasks/[id]/_meta"
 import projectsApiMeta from "@/app/api/projects/_meta"
 
 // Hand-maintained manifest of the typed route descriptors (`_meta.ts`), keyed by
@@ -18,9 +18,9 @@ export const ROUTE_MANIFEST: Record<string, RouteMeta> = {
   "/ai-core": aiCoreMeta,
   "/architecture": architectureMeta,
   "/debug": debugMeta,
-  "/api/architecture/requested": requestedApiMeta,
-  "/api/architecture/tasks": tasksApiMeta,
-  "/api/architecture/tasks/[id]": taskIdApiMeta,
+  "/api/project/default/architecture/requested": requestedApiMeta,
+  "/api/project/default/architecture/tasks": tasksApiMeta,
+  "/api/project/default/architecture/tasks/[id]": taskIdApiMeta,
   "/api/projects": projectsApiMeta,
 }
 
