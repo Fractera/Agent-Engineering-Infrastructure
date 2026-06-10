@@ -76,6 +76,7 @@ const meta: RouteMeta = {
     "@/components/architecture/endpoint-panel.client",
     "@/components/architecture/project-picker.client",
     "@/components/architecture/source-example.client",
+    "@/components/architecture/poll-bar.client",
   ],
 
   // — Segment boundaries —

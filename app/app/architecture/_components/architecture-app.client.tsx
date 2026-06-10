@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Plus, X } from "lucide-react"
 import type { ArchNode } from "@/lib/architecture/types"
 import { routeMetaFor } from "@/lib/architecture/route-manifest"
@@ -17,6 +17,15 @@ import { ProjectsPanel } from "@/components/architecture/projects-panel.client"
 import { DeclarePanel } from "@/components/architecture/declare-panel.client"
 import { EndpointPanel } from "@/components/architecture/endpoint-panel.client"
 import { ProjectPicker, type PickerProject } from "@/components/architecture/project-picker.client"
+import { PollBar } from "@/components/architecture/poll-bar.client"
+
+type Sig = Record<string, { count: number; last: string }>
+function nodeKeys(reqs: Requested[], projs: Project[]): Set<string> {
+  return new Set<string>([
+    ...reqs.map(r => requestedNodeId(r.id)),
+    ...projs.map(p => `project-${p.slug ?? p.id}`),
+  ])
+}
 
 // Left section = the route tree (Add page lives in its top-right corner).
 // Right section = the selected route's real RouteMeta descriptor (Open page in
@@ -31,24 +40,55 @@ export function ArchitectureApp() {
   const [declaring, setDeclaring] = useState(false)
   const [picking, setPicking] = useState(false)          // endpoint: choose project modal
   const [endpointBase, setEndpointBase] = useState<string | null>(null)
+  const [blink, setBlink] = useState<Set<string>>(new Set())
+  const [hidden, setHidden] = useState(false)
 
-  // Requested pages drive the tree's declared nodes; the task summary marks
-  // existing pages that carry pending work; projects fill the Projects folder.
+  // Live polling (step 106): one signature snapshot per tick. Diff against the
+  // previous snapshot to blink ONLY the changed nodes; first load just seeds the
+  // baseline (no blink).
+  const prevSig = useRef<Sig>({})
+  const prevKeys = useRef<Set<string>>(new Set())
+  const seeded = useRef(false)
+
   function refresh() {
-    fetch(projectApi("/architecture/requested"))
+    fetch(projectApi("/architecture/signature"))
       .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (d) setRequested(d.requested ?? []) })
-      .catch(() => {})
-    fetch(projectApi("/architecture/tasks?summary=1"))
-      .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (d) setTaskPaths(d.paths ?? []) })
-      .catch(() => {})
-    fetch("/api/projects")
-      .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (d) setProjects(d.projects ?? []) })
+      .then((d) => {
+        if (!d) return
+        const sig: Sig = d.tasksByPath ?? {}
+        const reqs: Requested[] = d.requested ?? []
+        const projs: Project[] = d.projects ?? []
+        setRequested(reqs)
+        setProjects(projs)
+        setTaskPaths(Object.keys(sig))
+
+        const keys = nodeKeys(reqs, projs)
+        if (seeded.current) {
+          const changed = new Set<string>()
+          for (const [path, s] of Object.entries(sig)) {
+            const p = prevSig.current[path]
+            if (!p || p.count !== s.count || p.last !== s.last) changed.add(path)
+          }
+          for (const k of keys) if (!prevKeys.current.has(k)) changed.add(k)
+          if (changed.size) {
+            setBlink(changed)
+            setTimeout(() => setBlink(new Set()), 1200)
+          }
+        }
+        prevSig.current = sig
+        prevKeys.current = keys
+        seeded.current = true
+      })
       .catch(() => {})
   }
   useEffect(() => { refresh() }, [])
+
+  // Pause polling when the tab is backgrounded.
+  useEffect(() => {
+    const h = () => setHidden(document.hidden)
+    document.addEventListener("visibilitychange", h)
+    return () => document.removeEventListener("visibilitychange", h)
+  }, [])
 
   const [routingMap, setRoutingMap] = useState<Record<string, string[]>>({})
   const baseTree = useMemo(
@@ -141,8 +181,13 @@ export function ArchitectureApp() {
           its full model, or add a new page as a to-do an agent picks up and builds.
         </p>
 
+        {/* Live heartbeat: fills over 4s, then polls; new entities appear in real time. */}
+        <div className="mt-4">
+          <PollBar onPoll={refresh} paused={hidden} />
+        </div>
+
         {/* Wide by design: horizontal scroll on narrow screens (like a table). */}
-        <div className="mt-6 overflow-x-auto">
+        <div className="mt-3 overflow-x-auto">
           <div className="flex h-[72vh] min-w-[720px] overflow-hidden rounded-xl border border-border">
             {/* LEFT — tree, with Add page in its top-right corner */}
             <div className="flex w-1/2 flex-col border-r border-border bg-muted/10">
@@ -168,6 +213,7 @@ export function ArchitectureApp() {
                   depth={0}
                   selectedId={selected?.id ?? null}
                   expanded={expanded}
+                  blink={blink}
                   onSelect={(n) => { setSelected(n); setDeclaring(false) }}
                   onToggle={toggle}
                   onAdd={() => setDeclaring(true)}

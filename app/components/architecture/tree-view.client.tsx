@@ -32,17 +32,20 @@ type Props = {
   depth: number
   selectedId: string | null
   expanded: Set<string>
+  /** Node ids OR hrefs that changed in the last poll — they flash once. */
+  blink?: Set<string>
   onSelect: (node: ArchNode) => void
   onToggle: (id: string) => void
   onAdd: (parent: ArchNode) => void
 }
 
 export function TreeNode({
-  node, depth, selectedId, expanded, onSelect, onToggle, onAdd,
+  node, depth, selectedId, expanded, blink, onSelect, onToggle, onAdd,
 }: Props) {
   const hasChildren = !!node.children?.length || !!node.addable
   const isOpen = expanded.has(node.id)
   const isSelected = selectedId === node.id
+  const isBlinking = !!blink && (blink.has(node.id) || (!!node.href && blink.has(node.href)))
 
   function handleClick() {
     onSelect(node)
@@ -51,10 +54,11 @@ export function TreeNode({
 
   return (
     <div>
+      <style>{`@keyframes archBlink{0%,100%{background-color:transparent}30%{background-color:rgb(245 158 11 / 0.35)}}`}</style>
       <button
         id={`arch-node-${node.id}`}
         onClick={handleClick}
-        style={{ paddingLeft: depth * 16 + 8 }}
+        style={{ paddingLeft: depth * 16 + 8, animation: isBlinking ? "archBlink 1s ease-out" : undefined }}
         className={`group flex w-full items-center gap-1.5 rounded-md py-1.5 pr-2 text-left text-xs transition-colors ${
           isSelected ? "bg-primary/15 text-foreground" : "text-foreground hover:bg-muted/60"
         }`}
@@ -85,6 +89,7 @@ export function TreeNode({
               depth={depth + 1}
               selectedId={selectedId}
               expanded={expanded}
+              blink={blink}
               onSelect={onSelect}
               onToggle={onToggle}
               onAdd={onAdd}
