@@ -20,6 +20,38 @@ export function requestedNodeId(id: string) {
   return `req-${id}`
 }
 
+// Real (built) page nodes whose routing files we can list — href set and not a
+// declared/pending stub. Used to fetch routing files and to enrich the tree.
+export function realPageHrefs(node: ArchNode, acc: string[] = []): string[] {
+  if (node.kind === "page" && node.href && !node.declared) acc.push(node.href)
+  node.children?.forEach(c => realPageHrefs(c, acc))
+  return acc
+}
+
+// Turn each real page node into a folder of its routing files. routingMap maps a
+// route href to the routing filenames that exist on disk (page.tsx, layout.tsx…).
+// Components and _meta are intentionally absent — only routing files show.
+export function enrichWithRouting(
+  node: ArchNode,
+  routingMap: Record<string, string[]>,
+): ArchNode {
+  const files = node.kind === "page" && node.href && !node.declared
+    ? routingMap[node.href]
+    : undefined
+  const routingChildren: ArchNode[] = (files ?? []).map(name => ({
+    id: `${node.id}-rf-${name}`,
+    label: name,
+    kind: "config",
+    description: `Routing file ${name} for ${node.href}.`,
+  }))
+  return {
+    ...node,
+    children: node.children
+      ? node.children.map(c => enrichWithRouting(c, routingMap))
+      : (routingChildren.length ? routingChildren : undefined),
+  }
+}
+
 // Clone the curated ROUTES_TREE, append the declared pages into the Pages group,
 // and mark every node "pending" (orange + req badge) when it has pending work:
 // a declared-but-not-built page, OR an existing route whose path carries open

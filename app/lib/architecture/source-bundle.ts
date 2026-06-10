@@ -32,6 +32,29 @@ export function routeDir(routePath: string): string {
   return dir
 }
 
+// Next.js App Router special files — the only files that are "routing" for a
+// segment. Everything else (components, _meta, helpers) is NOT routing and must
+// not appear as a routing child in the tree.
+const ROUTING_BASENAMES = [
+  "page", "layout", "loading", "error", "not-found", "template", "default", "route",
+]
+const ROUTING_EXTS = [".tsx", ".ts", ".jsx", ".js"]
+
+// List the routing files that actually exist in a route's directory.
+export async function routingFiles(routePath: string): Promise<string[]> {
+  const dir = routeDir(routePath)
+  let names: string[]
+  try { names = await readdir(dir) } catch { return [] }
+  const set = new Set(names)
+  const out: string[] = []
+  for (const base of ROUTING_BASENAMES) {
+    for (const ext of ROUTING_EXTS) {
+      if (set.has(base + ext)) out.push(base + ext)
+    }
+  }
+  return out
+}
+
 async function readIfExists(file: string): Promise<string | null> {
   try { return await readFile(file, "utf8") } catch { return null }
 }

@@ -70,6 +70,7 @@ export const ROUTES_TREE: ArchNode = {
         api("a-arch-tasks", "/api/project/default/architecture/tasks", "Per-route to-dos and deletion requests.", "GET · POST", "Session"),
         api("a-arch-task-id", "/api/project/default/architecture/tasks/[id]", "Remove a single route task.", "DELETE", "Session"),
         api("a-src", "/api/project/default/source", "Read-only source bundle for the code viewer (§3.13).", "GET", "Session"),
+        api("a-routing", "/api/project/default/routing", "Read-only routing files of a route (folder view).", "GET", "Session"),
         api("a-projects", "/api/projects", "List and create projects (§3.12, ≥3-word names).", "GET · POST", "Session"),
       ],
     },

@@ -6,7 +6,7 @@ import type { ArchNode } from "@/lib/architecture/types"
 import { routeMetaFor } from "@/lib/architecture/route-manifest"
 import { projectApi } from "@/lib/architecture/project-api"
 import {
-  buildMergedTree, requestedNodeId, type Requested,
+  buildMergedTree, enrichWithRouting, realPageHrefs, requestedNodeId, type Requested,
 } from "@/lib/architecture/requested-tree"
 import type { Project } from "@/lib/architecture/projects"
 import { TreeNode } from "@/components/architecture/tree-view.client"
@@ -46,10 +46,30 @@ export function ArchitectureApp() {
   }
   useEffect(() => { refresh() }, [])
 
-  const tree = useMemo(
+  const [routingMap, setRoutingMap] = useState<Record<string, string[]>>({})
+  const baseTree = useMemo(
     () => buildMergedTree(requested, new Set(taskPaths), projects),
     [requested, taskPaths, projects],
   )
+
+  // For each real page node, fetch its routing files so the node renders as a
+  // folder that opens to page.tsx / layout.tsx / … only.
+  useEffect(() => {
+    const hrefs = realPageHrefs(baseTree)
+    let cancelled = false
+    Promise.all(hrefs.map(async (href) => {
+      try {
+        const r = await fetch(projectApi(`/routing?path=${encodeURIComponent(href)}`))
+        const files = r.ok ? ((await r.json()).files ?? []) : []
+        return [href, files] as const
+      } catch { return [href, []] as const }
+    })).then(pairs => {
+      if (!cancelled) setRoutingMap(Object.fromEntries(pairs))
+    })
+    return () => { cancelled = true }
+  }, [baseTree])
+
+  const tree = useMemo(() => enrichWithRouting(baseTree, routingMap), [baseTree, routingMap])
   useEffect(() => { setSelected(prev => prev ?? tree) }, [tree])
 
   function toggle(id: string) {
