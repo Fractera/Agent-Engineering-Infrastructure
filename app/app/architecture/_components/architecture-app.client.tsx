@@ -171,7 +171,7 @@ export function ArchitectureApp() {
                 : endpointBase !== null
                   ? <EndpointPanel base={endpointBase} onClose={() => setEndpointBase(null)} onCreated={onCreated} />
                   : isProject
-                    ? <ProjectsPanel projects={projects} onChanged={refresh} />
+                    ? <ProjectsPanel listed={pickerProjects} onChanged={refresh} />
                     : reqItem
                       ? <RequestedDetailPanel item={reqItem} onChanged={refresh} />
                       : meta

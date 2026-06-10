@@ -2,22 +2,21 @@
 
 import { useState } from "react"
 import { Plus, Loader2, FolderTree, Lock } from "lucide-react"
-import { DEFAULT_PROJECT, wordCount, type Project } from "@/lib/architecture/projects"
+import { wordCount } from "@/lib/architecture/projects"
 
-// Right-section panel for the permanent "Projects" folder (and project nodes).
-// No danger zone — the Projects container cannot be deleted. Lists projects and
-// adds new ones; names need at least three words (§3.12).
+// Right-section panel for the permanent "Projects" folder. No danger zone — the
+// container cannot be deleted. Lists ALL projects from the tree (seed + declared)
+// and adds new ones; names need at least three words (§3.12).
 export function ProjectsPanel({
-  projects, onChanged,
+  listed, onChanged,
 }: {
-  projects: Project[]
+  listed: { label: string; slug: string }[]
   onChanged?: () => void
 }) {
   const [name, setName] = useState("")
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
 
-  const named = projects.filter(p => (p.slug ?? p.name) !== DEFAULT_PROJECT && p.name !== DEFAULT_PROJECT)
   const ok = wordCount(name) >= 3
 
   async function add() {
@@ -62,15 +61,15 @@ export function ProjectsPanel({
 
       <div className="flex-1 overflow-y-auto p-5">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground">Projects</p>
-        {named.length === 0 ? (
+        {listed.length === 0 ? (
           <p className="mt-2 text-xs text-foreground/60">No projects yet — add one below.</p>
         ) : (
           <ul className="mt-2 flex flex-col gap-1.5">
-            {named.map(p => (
-              <li key={p.id} className="flex items-center gap-2 text-xs text-foreground">
-                <span className="text-foreground/60">•</span>
-                <span className="font-semibold">{p.name}</span>
-                {p.slug && <span className="font-mono text-[10px] text-foreground/60">/{p.slug}</span>}
+            {listed.map(p => (
+              <li key={p.slug} className="flex items-center gap-2 text-xs text-foreground">
+                <FolderTree size={11} className="text-amber-500" />
+                <span className="font-semibold">{p.label}</span>
+                <span className="font-mono text-[10px] text-foreground/60">/project/{p.slug}</span>
               </li>
             ))}
           </ul>
