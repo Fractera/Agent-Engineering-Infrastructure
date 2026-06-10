@@ -168,6 +168,25 @@ export function ArchitectureApp() {
     : null
   const meta = selected && !declaredView && !isProject ? routeMetaFor(selected.href ?? selected.label) : null
 
+  // "Remove declaration": delete the declared row by id. For a requested
+  // route/endpoint use its requested_routes id; for a declared project node use
+  // the projects db id (resolved by slug). Then refresh + clear selection.
+  async function removeDeclared() {
+    if (!selected) return
+    let url: string | null = null
+    if (reqItem) url = projectApi(`/architecture/requested/${reqItem.id}`)
+    else if (selected.id.startsWith("project-")) {
+      const slug = selected.href?.startsWith("/project/")
+        ? selected.href.slice("/project/".length)
+        : selected.id.replace(/^project-/, "")
+      const proj = projects.find(p => (p.slug ?? "") === slug)
+      if (proj) url = `/api/projects/${proj.id}`
+    }
+    if (!url) return
+    const res = await fetch(url, { method: "DELETE" })
+    if (res.ok) { setSelected(null); refresh() }
+  }
+
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-6xl px-6 py-8">
@@ -230,7 +249,7 @@ export function ArchitectureApp() {
                   : isProject
                     ? <ProjectsPanel listed={pickerProjects} onChanged={refresh} />
                     : declaredView
-                      ? <RequestedDetailPanel {...declaredView} onChanged={refresh} />
+                      ? <RequestedDetailPanel {...declaredView} onChanged={refresh} onRemove={removeDeclared} />
                       : meta
                         ? <RouteDetailPanel meta={meta} onChanged={refresh} />
                         : <DetailPanel node={selected} />}

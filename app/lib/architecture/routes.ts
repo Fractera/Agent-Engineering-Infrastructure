@@ -48,6 +48,7 @@ export const ROUTES_TREE: ArchNode = {
         page("r-ai-core", "/ai-core", "/ai-core", "Live state of your AI core — agents, bridges, memory, MCP, tools.", "Public"),
         page("r-architecture", "/architecture", "/architecture", "This page — the map of your app's pages and endpoints.", "Public"),
         page("r-debug", "/debug", "/debug", "Runtime diagnostics scratch surface.", "Public"),
+        page("r-glossary", "/glossary", "/glossary", "Glossary editor — your term map (key→meaning) every agent reads.", "Public"),
       ],
     },
     {
@@ -73,6 +74,10 @@ export const ROUTES_TREE: ArchNode = {
         api("a-routing", "/api/project/default/routing", "Read-only routing files of a route (folder view).", "GET", "Session"),
         api("a-sig", "/api/project/default/architecture/signature", "Live-poll snapshot (per-path task signature) for the tree (§3.11).", "GET", "Session"),
         api("a-projects", "/api/projects", "List and create projects (§3.12, ≥3-word names).", "GET · POST", "Session"),
+        api("a-glossary", "/api/glossary", "Workspace glossary — list/add terms (§3.11).", "GET · POST", "Session"),
+        api("a-glossary-id", "/api/glossary/[id]", "Remove a glossary entry.", "DELETE", "Session"),
+        api("a-req-id", "/api/project/default/architecture/requested/[id]", "Remove a declared route (Remove declaration).", "DELETE", "Session"),
+        api("a-proj-id", "/api/projects/[id]", "Remove a declared project (Remove declaration).", "DELETE", "Session"),
       ],
     },
   ],

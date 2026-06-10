@@ -1,23 +1,18 @@
 import type { RouteMeta } from "@/lib/architecture/route-meta"
 
 // STANDARD ROUTE DESCRIPTOR — do not delete any field.
-// See @/lib/architecture/route-meta. Fill what applies; leave the rest as
-// undefined / [] / null. Never remove a key.
 const meta: RouteMeta = {
-  // — Identity & lifecycle —
   kind: "page",
-  path: "/",
-  filePath: "app/app/page.tsx",
+  path: "/glossary",
+  filePath: "app/app/glossary/page.tsx",
   status: "live",
   todo: [],
 
-  // — Access control —
   visibility: "public",
   roles: [],
   unauthorizedRedirect: undefined,
   enforcedBy: undefined,
 
-  // — Routing shape —
   isDynamicRoute: false,
   segmentParams: [],
   pathParams: [],
@@ -27,7 +22,6 @@ const meta: RouteMeta = {
   parallelSlot: undefined,
   parentLayout: "app/app/layout.tsx",
 
-  // — Rendering & caching —
   rendering: "static",
   revalidate: undefined,
   runtime: "nodejs",
@@ -37,51 +31,36 @@ const meta: RouteMeta = {
   fetchCache: undefined,
   revalidateTags: [],
 
-  // — SEO —
   seo: {
-    supportsSeo: true,
-    indexable: true,
-    inSitemap: true,
-    canonical: null,
-    title: undefined,
-    metaDescription: undefined,
-    openGraph: false,
-    ogImage: null,
-    jsonLd: [],
-    robots: undefined,
+    supportsSeo: false, indexable: false, inSitemap: false, canonical: null,
+    title: undefined, metaDescription: undefined, openGraph: false, ogImage: null,
+    jsonLd: [], robots: undefined,
   },
 
-  // — i18n —
   i18n: { localized: false, locales: [], defaultLocale: undefined },
 
-  // — Inputs —
   queryParams: [],
 
-  // — Composition —
   entryComponent: "_components/index.tsx",
   pageIsClient: false,
   entryIsClient: false,
-  localComponents: ["shell-home.client"],
+  localComponents: ["glossary-app.client"],
   sharedComponents: [],
 
-  // — Segment boundaries —
   hasLoading: false,
   hasError: false,
-  hasNotFound: true,
+  hasNotFound: false,
   hasLayout: true,
 
-  // — API —
   methods: [],
 
-  // — Knowledge —
   description:
-    "Public landing — the starter template the owner turns into their product. " +
-    "Animated hero with the stack pills and quick links into the workspace.",
-  dataDependencies: [],
-  relatedRoutes: ["/dashboard", "/ai-core", "/architecture", "/debug", "/glossary"],
-  notes: undefined,
+    "Glossary editor — approve abbreviations / preferred phrasings (key→meaning) so " +
+    "every agent reads them the same way (e.g. aws → ai-workspace). Public (temporary).",
+  dataDependencies: ["app.db (glossary)", "/api/glossary"],
+  relatedRoutes: ["/api/glossary", "/api/glossary/[id]"],
+  notes: "Temporarily public. Global workspace glossary; an agent ingests it into Company Brain.",
 
-  // — Audit —
   owner: undefined,
   createdBy: undefined,
   createdAt: undefined,

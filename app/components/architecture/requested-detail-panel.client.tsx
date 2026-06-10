@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronRight } from "lucide-react"
+import { ChevronRight, Trash2, Loader2 } from "lucide-react"
 import type { QueryParam } from "@/lib/architecture/requested-tree"
 import { RouteTodo } from "./route-todo.client"
 import { RouteDangerZone } from "./route-danger-zone.client"
@@ -13,7 +13,7 @@ import { RouteSource } from "./route-source.client"
 // example into → a code-change request the agent uses when building). Tasks live
 // in route_tasks keyed by this route's path.
 export function RequestedDetailPanel({
-  title, path, kind, dynamic = false, query = [], onChanged,
+  title, path, kind, dynamic = false, query = [], onChanged, onRemove,
 }: {
   title: string
   path: string
@@ -21,10 +21,17 @@ export function RequestedDetailPanel({
   dynamic?: boolean
   query?: QueryParam[]
   onChanged?: () => void
+  /** Permanently delete this declared entity (the draft itself). */
+  onRemove?: () => Promise<void> | void
 }) {
   const [bump, setBump] = useState(0)
   const [srcOpen, setSrcOpen] = useState(false)
+  const [removing, setRemoving] = useState(false)
   function handleChanged() { setBump(b => b + 1); onChanged?.() }
+  async function remove() {
+    setRemoving(true)
+    try { await onRemove?.() } finally { setRemoving(false) }
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -81,6 +88,25 @@ export function RequestedDetailPanel({
         {/* Editable to-do + danger zone, keyed by path. */}
         <RouteTodo path={path} onChanged={handleChanged} reloadSignal={bump} />
         <RouteDangerZone path={path} onChanged={handleChanged} />
+
+        {/* Remove the declaration itself (a draft) — real deletion, not a flag. */}
+        {onRemove && (
+          <div className="mt-4 rounded-lg border border-red-500/40 p-3">
+            <p className="text-[11px] leading-relaxed text-foreground/80">
+              Remove this declaration entirely — it is a draft that was never built, so this just
+              discards it (and its tasks). Different from &quot;Order deletion&quot; above, which is a
+              request to remove a real, built route.
+            </p>
+            <button
+              onClick={remove}
+              disabled={removing}
+              className="mt-2 inline-flex h-8 items-center gap-1.5 rounded-md border border-red-500/60 px-4 text-xs font-semibold text-red-600 transition-colors hover:bg-red-600 hover:text-white disabled:opacity-40"
+            >
+              {removing ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
+              Remove declaration
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
