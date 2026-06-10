@@ -82,7 +82,8 @@ export function enrichWithRouting(
 export function buildMergedTree(
   requested: Requested[],
   taskPaths: Set<string> = new Set(),
-  projects: Project[] = [],
+  projects: (Project & { built?: boolean })[] = [],
+  builtExtra: { href: string; kind: "page" | "api" }[] = [],
 ): ArchNode {
   // Declared PAGES nest by their base (any depth). Declared ENDPOINTS (kind api)
   // are listed flat in the API group (there are no folders for endpoints).
@@ -101,21 +102,36 @@ export function buildMergedTree(
     const b = r.base && r.base !== "/" ? r.base : "/"
     byBase.set(b, [...(byBase.get(b) ?? []), node])
   }
+  // Built routes found on disk but not in the curated seed (a freshly-built
+  // declared route) → live nodes, so the requested→live transition keeps the
+  // node in the tree. Path-based id so selection/expansion survive the flip.
+  for (const e of builtExtra) {
+    const node: ArchNode = { id: `live:${e.href}`, label: e.href.split("/").pop() || e.href, kind: e.kind, href: e.href }
+    if (e.kind === "api") { apiNodes.push(node); continue }
+    const segs = e.href.split("/")
+    const b = "/" + segs.slice(1, -1).join("/")
+    byBase.set(b === "/" ? "/" : b, [...(byBase.get(b === "/" ? "/" : b) ?? []), node])
+  }
   const rootReq = byBase.get("/") ?? []
-  // The default project IS the root tree itself; the Projects folder lists only
-  // the additional named projects.
+  // Seed already shows its built projects; avoid duplicating them.
+  const seedProjectSlugs = new Set(
+    (ROUTES_TREE.children?.find(c => c.id === "projects")?.children ?? [])
+      .map(n => n.href?.startsWith("/project/") ? n.href.slice("/project/".length) : "")
+      .filter(Boolean),
+  )
   // A project is a folder with a page (like the seed my-telegram-reminder). A
-  // DB-declared project is not built yet → a pending page node (orange + req)
-  // that the agent turns into a real /project/<slug> folder with a page.tsx.
+  // declared project (README only, not built) is a pending node (orange + req);
+  // a built one is a plain live node.
   const projectNodes: ArchNode[] = projects
     .filter(p => (p.slug ?? p.name) !== DEFAULT_PROJECT && p.name !== DEFAULT_PROJECT)
+    .filter(p => !seedProjectSlugs.has(p.slug ?? ""))
     .map(p => ({
       id: `project-${p.slug ?? p.id}`,
       label: p.name,
       kind: "page" as const,
       href: `/project/${p.slug ?? p.id}`,
-      pending: true,
-      declared: true,
+      pending: !p.built,
+      declared: !p.built,
     }))
   const base: ArchNode = {
     ...ROUTES_TREE,

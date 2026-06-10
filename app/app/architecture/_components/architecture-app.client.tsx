@@ -20,11 +20,19 @@ import { ProjectPicker, type PickerProject } from "@/components/architecture/pro
 import { PollBar } from "@/components/architecture/poll-bar.client"
 
 type Sig = Record<string, { count: number; last: string }>
-function nodeKeys(reqs: Requested[], projs: Project[]): Set<string> {
-  return new Set<string>([
-    ...reqs.map(r => requestedNodeId(r.id)),
-    ...projs.map(p => `project-${p.slug ?? p.id}`),
-  ])
+type BuiltExtra = { href: string; kind: "page" | "api" }
+type FsProject = Project & { built?: boolean }
+
+// Resolve the selected node from the current tree by its stable key (href for
+// routes, id for groups). Path-based so selection survives a refresh and the
+// requested → live transition — the open view never closes (step 108).
+function findByKey(node: ArchNode, key: string): ArchNode | null {
+  if ((node.href ?? node.id) === key) return node
+  for (const c of node.children ?? []) {
+    const f = findByKey(c, key)
+    if (f) return f
+  }
+  return null
 }
 
 // Left section = the route tree (Add page lives in its top-right corner).
@@ -34,8 +42,9 @@ function nodeKeys(reqs: Requested[], projs: Project[]): Set<string> {
 export function ArchitectureApp() {
   const [requested, setRequested] = useState<Requested[]>([])
   const [taskPaths, setTaskPaths] = useState<string[]>([])
-  const [projects, setProjects] = useState<Project[]>([])
-  const [selected, setSelected] = useState<ArchNode | null>(null)
+  const [projects, setProjects] = useState<FsProject[]>([])
+  const [builtExtra, setBuiltExtra] = useState<BuiltExtra[]>([])
+  const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [expanded, setExpanded] = useState<Set<string>>(new Set(["routes", "projects", "pages", "api"]))
   const [declaring, setDeclaring] = useState(false)
   const [picking, setPicking] = useState(false)          // endpoint: choose project modal
@@ -51,18 +60,22 @@ export function ArchitectureApp() {
   const seeded = useRef(false)
 
   function refresh() {
-    fetch(projectApi("/architecture/signature"))
+    fetch(projectApi("/architecture/tree"))
       .then(r => (r.ok ? r.json() : null))
       .then((d) => {
         if (!d) return
         const sig: Sig = d.tasksByPath ?? {}
         const reqs: Requested[] = d.requested ?? []
-        const projs: Project[] = d.projects ?? []
+        const projs: FsProject[] = d.projects ?? []
+        const extra: BuiltExtra[] = d.builtExtra ?? []
         setRequested(reqs)
         setProjects(projs)
+        setBuiltExtra(extra)
         setTaskPaths(Object.keys(sig))
 
-        const keys = nodeKeys(reqs, projs)
+        // Blink the nodes whose filesystem signature changed (the agent's work)
+        // plus brand-new nodes. Path-keyed so it tracks the real files.
+        const keys = new Set<string>([...Object.keys(sig), ...extra.map(e => e.href)])
         if (seeded.current) {
           const changed = new Set<string>()
           for (const [path, s] of Object.entries(sig)) {
@@ -92,8 +105,8 @@ export function ArchitectureApp() {
 
   const [routingMap, setRoutingMap] = useState<Record<string, string[]>>({})
   const baseTree = useMemo(
-    () => buildMergedTree(requested, new Set(taskPaths), projects),
-    [requested, taskPaths, projects],
+    () => buildMergedTree(requested, new Set(taskPaths), projects, builtExtra),
+    [requested, taskPaths, projects, builtExtra],
   )
 
   // For each real page node, fetch its routing files so the node renders as a
@@ -114,7 +127,14 @@ export function ArchitectureApp() {
   }, [baseTree])
 
   const tree = useMemo(() => enrichWithRouting(baseTree, routingMap), [baseTree, routingMap])
-  useEffect(() => { setSelected(prev => prev ?? tree) }, [tree])
+
+  // Sticky selection: the selected node is re-resolved from the live tree by its
+  // stable key every render, so a poll (or requested→live flip) never closes the
+  // open view. Null key = nothing selected (graceful after removal).
+  const selected = useMemo(
+    () => (selectedKey ? findByKey(tree, selectedKey) : null),
+    [tree, selectedKey],
+  )
 
   function toggle(id: string) {
     setExpanded(prev => {
@@ -125,12 +145,12 @@ export function ArchitectureApp() {
   }
 
   function onCreated(r: Requested) {
-    setRequested(prev => [r, ...prev])
     const group = r.kind === "api" ? "api" : "pages"
-    setExpanded(prev => new Set([...prev, group, `req-${r.id}`]))
-    setSelected({ id: requestedNodeId(r.id), label: r.title, kind: r.kind, href: reqHref(r), pending: true, declared: true })
+    setExpanded(prev => new Set([...prev, group]))
+    setSelectedKey(reqHref(r))   // select the new entity by path; refresh pulls it from FS
     setDeclaring(false)
     setEndpointBase(null)
+    refresh()
   }
 
   // The base path a new page is added under = the active page node's href; a
@@ -168,23 +188,16 @@ export function ArchitectureApp() {
     : null
   const meta = selected && !declaredView && !isProject ? routeMetaFor(selected.href ?? selected.label) : null
 
-  // "Remove declaration": delete the declared row by id. For a requested
-  // route/endpoint use its requested_routes id; for a declared project node use
-  // the projects db id (resolved by slug). Then refresh + clear selection.
+  // "Remove declaration": delete by PATH (filesystem). Removes the entity's
+  // README (and DB mirror) for a declared page/endpoint, or the project.
   async function removeDeclared() {
-    if (!selected) return
-    let url: string | null = null
-    if (reqItem) url = projectApi(`/architecture/requested/${reqItem.id}`)
-    else if (selected.id.startsWith("project-")) {
-      const slug = selected.href?.startsWith("/project/")
-        ? selected.href.slice("/project/".length)
-        : selected.id.replace(/^project-/, "")
-      const proj = projects.find(p => (p.slug ?? "") === slug)
-      if (proj) url = `/api/projects/${proj.id}`
-    }
-    if (!url) return
+    const path = selected?.href
+    if (!path) return
+    const url = path.startsWith("/project/")
+      ? `/api/projects?slug=${encodeURIComponent(path.slice("/project/".length))}`
+      : projectApi(`/architecture/requested?path=${encodeURIComponent(path)}`)
     const res = await fetch(url, { method: "DELETE" })
-    if (res.ok) { setSelected(null); refresh() }
+    if (res.ok) { setSelectedKey(null); refresh() }
   }
 
   return (
@@ -233,7 +246,7 @@ export function ArchitectureApp() {
                   selectedId={selected?.id ?? null}
                   expanded={expanded}
                   blink={blink}
-                  onSelect={(n) => { setSelected(n); setDeclaring(false) }}
+                  onSelect={(n) => { setSelectedKey(n.href ?? n.id); setDeclaring(false) }}
                   onToggle={toggle}
                   onAdd={() => setDeclaring(true)}
                 />
@@ -262,7 +275,7 @@ export function ArchitectureApp() {
         <ProjectPicker
           projects={pickerProjects}
           onClose={() => setPicking(false)}
-          onPick={(b) => { setPicking(false); setSelected(null); setEndpointBase(b) }}
+          onPick={(b) => { setPicking(false); setSelectedKey(null); setEndpointBase(b) }}
         />
       )}
     </main>

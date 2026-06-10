@@ -14,6 +14,7 @@ import glossaryApiMeta from "@/app/api/glossary/_meta"
 import sourceApiMeta from "@/app/api/project/default/source/_meta"
 import routingApiMeta from "@/app/api/project/default/routing/_meta"
 import signatureApiMeta from "@/app/api/project/default/architecture/signature/_meta"
+import treeApiMeta from "@/app/api/project/default/architecture/tree/_meta"
 import requestedIdApiMeta from "@/app/api/project/default/architecture/requested/[id]/_meta"
 import projectIdApiMeta from "@/app/api/projects/[id]/_meta"
 
@@ -36,6 +37,7 @@ export const ROUTE_MANIFEST: Record<string, RouteMeta> = {
   "/api/project/default/source": sourceApiMeta,
   "/api/project/default/routing": routingApiMeta,
   "/api/project/default/architecture/signature": signatureApiMeta,
+  "/api/project/default/architecture/tree": treeApiMeta,
   "/api/project/default/architecture/requested/[id]": requestedIdApiMeta,
   "/api/projects/[id]": projectIdApiMeta,
 }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getSession } from "@/lib/auth/get-session"
 import { DEFAULT_PROJECT, wordCount, slugify } from "@/lib/architecture/projects"
-import { syncRouteReadme } from "@/lib/declared-readme"
+import { syncRouteReadme, removeRouteReadme } from "@/lib/declared-readme"
 
 // Project layer (ARCHITECTURE §3.12). Independent lines of work under one
 // workspace/agent — organizational metadata, no extra infra or token cost.
@@ -52,4 +52,15 @@ export async function POST(req: NextRequest) {
   await syncRouteReadme(`/project/${slug}`)
   const project = await db.prepare("SELECT id, name, slug, description, created_at FROM projects WHERE id = ?").get(id)
   return NextResponse.json({ project }, { status: 201 })
+}
+
+// Remove a declared project by slug (filesystem-first, step 108).
+export async function DELETE(req: NextRequest) {
+  const slug = new URL(req.url).searchParams.get("slug")
+  if (!slug) return NextResponse.json({ error: "slug is required" }, { status: 400 })
+  const path = `/project/${slug}`
+  await db.prepare("DELETE FROM route_tasks WHERE path = ?").run(path)
+  await db.prepare("DELETE FROM projects WHERE slug = ?").run(slug)
+  await removeRouteReadme(path)
+  return NextResponse.json({ ok: true })
 }

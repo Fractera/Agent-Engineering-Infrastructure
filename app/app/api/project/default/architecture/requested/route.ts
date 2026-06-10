@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getSession } from "@/lib/auth/get-session"
-import { syncRouteReadme } from "@/lib/declared-readme"
+import { syncRouteReadme, removeRouteReadme } from "@/lib/declared-readme"
 
 // Requested routes = declared-but-not-built pages (ARCHITECTURE §3.11). Each is a
 // title + a free-form todo list — a flag an agent (or the owner) drops here, that
@@ -125,4 +125,21 @@ export async function POST(req: NextRequest) {
     { requested: row ? { ...row, kind: row.kind === "api" ? "api" : "page", todo: parseTodo(row.todo), dynamic: !!row.dynamic, query: parseQuery(row.query) } : null },
     { status: 201 },
   )
+}
+
+// Remove a declared route by PATH (filesystem-first, step 108): delete its
+// README + tasks, and the DB mirror row if present.
+export async function DELETE(req: NextRequest) {
+  const path = new URL(req.url).searchParams.get("path")
+  if (!path) return NextResponse.json({ error: "path is required" }, { status: 400 })
+  await db.prepare("DELETE FROM route_tasks WHERE path = ?").run(path)
+  const rows = await db.prepare("SELECT id, base, slug, dynamic FROM requested_routes").all()
+  const match = rows.find(r => {
+    const base = r.base && r.base !== "/" ? String(r.base) : ""
+    const seg = r.dynamic ? `[${String(r.slug)}]` : String(r.slug)
+    return `${base}/${seg}` === path
+  })
+  if (match) await db.prepare("DELETE FROM requested_routes WHERE id = ?").run(match.id)
+  await removeRouteReadme(path)
+  return NextResponse.json({ ok: true })
 }

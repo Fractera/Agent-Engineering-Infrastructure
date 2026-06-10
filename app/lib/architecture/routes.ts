@@ -73,6 +73,7 @@ export const ROUTES_TREE: ArchNode = {
         api("a-src", "/api/project/default/source", "Read-only source bundle for the code viewer (§3.13).", "GET", "Session"),
         api("a-routing", "/api/project/default/routing", "Read-only routing files of a route (folder view).", "GET", "Session"),
         api("a-sig", "/api/project/default/architecture/signature", "Live-poll snapshot (per-path task signature) for the tree (§3.11).", "GET", "Session"),
+        api("a-tree", "/api/project/default/architecture/tree", "Filesystem scan — source of truth for the live tree (§3.11, step 108).", "GET", "Session"),
         api("a-projects", "/api/projects", "List and create projects (§3.12, ≥3-word names).", "GET · POST", "Session"),
         api("a-glossary", "/api/glossary", "Workspace glossary file (GLOSSARY.md) — list/add/remove terms (§3.11).", "GET · POST · DELETE", "Session"),
         api("a-req-id", "/api/project/default/architecture/requested/[id]", "Remove a declared route (Remove declaration).", "DELETE", "Session"),
