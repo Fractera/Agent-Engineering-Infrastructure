@@ -55,7 +55,7 @@ const meta: RouteMeta = {
   methods: ["DELETE"],
 
   description: "Remove a declared route (page/endpoint) + its tasks — 'Remove declaration' (step 107).",
-  dataDependencies: ["app.db (requested_routes, route_tasks)"],
+  dataDependencies: ["filesystem: route README.md"],
   relatedRoutes: ["/architecture"],
   notes: "Real deletion of a draft, not a request-flag.",
 

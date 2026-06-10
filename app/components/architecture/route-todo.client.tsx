@@ -38,9 +38,9 @@ type Item = { id?: string; body: string }
 
 // Native to-do list at the bottom of a live route's panel. Edits are staged
 // locally; a "Save changes" button appears once the list differs from what is
-// stored, and saving writes the page's tasks to app.db (route_tasks, kind
-// 'todo') — the same store an agent reads. On save the parent refreshes so the
-// (req) badge appears on this page's node in the tree.
+// stored, and saving writes the page's tasks into the route's README.md on disk
+// — the same file an agent reads. On save the parent refreshes so the (req)
+// badge appears on this page's node in the tree.
 export function RouteTodo({ path, onChanged, reloadSignal = 0 }: { path: string; onChanged?: () => void; reloadSignal?: number }) {
   const [items, setItems] = useState<Item[]>([])
   const [serverIds, setServerIds] = useState<string[]>([])

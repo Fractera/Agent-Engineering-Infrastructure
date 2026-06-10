@@ -35,6 +35,7 @@ export function ArchitectureApp() {
   const [requested, setRequested] = useState<Requested[]>([])
   const [taskPaths, setTaskPaths] = useState<string[]>([])
   const [projects, setProjects] = useState<Project[]>([])
+  const [builtExtra, setBuiltExtra] = useState<{ href: string; kind: "page" | "api" }[]>([])
   const [selected, setSelected] = useState<ArchNode | null>(null)
   const [expanded, setExpanded] = useState<Set<string>>(new Set(["routes", "projects", "pages", "api"]))
   const [declaring, setDeclaring] = useState(false)
@@ -60,6 +61,7 @@ export function ArchitectureApp() {
         const projs: Project[] = d.projects ?? []
         setRequested(reqs)
         setProjects(projs)
+        setBuiltExtra(d.builtExtra ?? [])
         setTaskPaths(Object.keys(sig))
 
         const keys = nodeKeys(reqs, projs)
@@ -92,8 +94,8 @@ export function ArchitectureApp() {
 
   const [routingMap, setRoutingMap] = useState<Record<string, string[]>>({})
   const baseTree = useMemo(
-    () => buildMergedTree(requested, new Set(taskPaths), projects),
-    [requested, taskPaths, projects],
+    () => buildMergedTree(requested, new Set(taskPaths), projects, builtExtra),
+    [requested, taskPaths, projects, builtExtra],
   )
 
   // For each real page node, fetch its routing files so the node renders as a

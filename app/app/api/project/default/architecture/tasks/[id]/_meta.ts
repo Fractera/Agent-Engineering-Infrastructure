@@ -55,7 +55,7 @@ const meta: RouteMeta = {
   methods: ["DELETE"],
 
   description: "Remove a single route task (drop a to-do item or cancel a deletion request).",
-  dataDependencies: ["app.db (route_tasks)"],
+  dataDependencies: ["filesystem: route README.md (To-do section)"],
   relatedRoutes: ["/api/project/default/architecture/tasks"],
   notes: undefined,
 

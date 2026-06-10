@@ -60,7 +60,7 @@ const meta: RouteMeta = {
   description:
     "Per-route tasks on existing pages: ongoing to-dos and danger-zone deletion " +
     "requests — flags an agent picks up. Same write path for the UI and agents.",
-  dataDependencies: ["app.db (route_tasks)"],
+  dataDependencies: ["filesystem: route README.md (To-do section)"],
   relatedRoutes: ["/architecture", "/api/project/default/architecture/requested"],
   notes: "Deletion is a planned request, not a destructive function.",
 

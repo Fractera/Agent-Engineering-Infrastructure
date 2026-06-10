@@ -55,7 +55,7 @@ const meta: RouteMeta = {
   methods: ["DELETE"],
 
   description: "Remove a declared project — 'Remove declaration' (step 107).",
-  dataDependencies: ["app.db (projects)"],
+  dataDependencies: ["filesystem: app/app/project/<slug>/README.md"],
   relatedRoutes: ["/api/projects", "/architecture"],
   notes: undefined,
 

@@ -57,7 +57,7 @@ const meta: RouteMeta = {
   description:
     "Live-poll snapshot for the architecture tree (step 106): per-path open-task " +
     "signature (count + last created_at) + declared routes + projects in one call.",
-  dataDependencies: ["app.db (route_tasks, requested_routes, projects)"],
+  dataDependencies: ["filesystem: app/app/** (README.md per declared entity, via fs-scan)"],
   relatedRoutes: ["/architecture"],
   notes: "Powers real-time updates + selective blink; read-only.",
 

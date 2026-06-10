@@ -2,10 +2,10 @@ import type { ArchNode } from "./types"
 import { ROUTES_TREE } from "./routes"
 import { DEFAULT_PROJECT, type Project } from "./projects"
 
-// A declared-but-not-built page, persisted in app.db (requested_routes) and
+// A declared-but-not-built page, materialized as a real README.md on disk and
 // merged into the route tree as a "pending" node under Pages. Survives reload
-// because it is fetched from the DB — that is what makes a declared page show up
-// in the real architecture map, not just an in-memory list.
+// because it is read back from the filesystem scan (fs-scan) — that is what makes
+// a declared page show up in the real architecture map, not just an in-memory list.
 export type QueryParam = { key: string; value: string }
 
 export type Requested = {
@@ -83,6 +83,7 @@ export function buildMergedTree(
   requested: Requested[],
   taskPaths: Set<string> = new Set(),
   projects: Project[] = [],
+  builtExtra: { href: string; kind: "page" | "api" }[] = [],
 ): ArchNode {
   // Declared PAGES nest by their base (any depth). Declared ENDPOINTS (kind api)
   // are listed flat in the API group (there are no folders for endpoints).
@@ -100,6 +101,16 @@ export function buildMergedTree(
     if (r.kind === "api") { apiNodes.push(node); continue }
     const b = r.base && r.base !== "/" ? r.base : "/"
     byBase.set(b, [...(byBase.get(b) ?? []), node])
+  }
+  // A declared page that the agent has BUILT (page.tsx now exists, README gone)
+  // is no longer "requested" and not in the curated seed — keep it visible as a
+  // live page node nested by its base, so the requested→live transition stays.
+  for (const b of builtExtra) {
+    if (b.kind !== "page") continue
+    const segs = b.href.split("/")
+    const base = segs.slice(0, -1).join("/") || "/"
+    const node: ArchNode = { id: `built-${b.href}`, label: segs[segs.length - 1] || b.href, kind: "page", href: b.href }
+    byBase.set(base, [...(byBase.get(base) ?? []), node])
   }
   const rootReq = byBase.get("/") ?? []
   // The default project IS the root tree itself; the Projects folder lists only

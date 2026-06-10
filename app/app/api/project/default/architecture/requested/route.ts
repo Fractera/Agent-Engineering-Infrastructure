@@ -1,76 +1,50 @@
 import { NextRequest, NextResponse } from "next/server"
-import { db } from "@/lib/db"
+import { stat } from "fs/promises"
+import { join } from "path"
 import { getSession } from "@/lib/auth/get-session"
-import { syncRouteReadme } from "@/lib/declared-readme"
+import { scanTree } from "@/lib/architecture/fs-scan"
+import { writeRouteMeta, encodePath, type Task } from "@/lib/architecture/readme-file"
+import { routeDir } from "@/lib/architecture/source-bundle"
+import { CODE_DIFF_PREFIX } from "@/lib/architecture/line-diff"
 
-// Requested routes = declared-but-not-built pages (ARCHITECTURE §3.11). Each is a
-// title + a free-form todo list — a flag an agent (or the owner) drops here, that
-// an agent later reads, plans and builds. This endpoint only declares/lists them;
-// turning a todo into a real page is a separate step.
+// Declared routes = declared-but-not-built pages/endpoints (ARCHITECTURE §3.11).
+// Source of truth is a real README.md on disk under app/app/<path>/ (no DB), so
+// an agent reads the work directly. This endpoint declares (POST) and lists (GET,
+// from the filesystem scan). Turning a declaration into a real page is a separate
+// agent step.
 
 function slugify(s: string) {
   return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60)
 }
-
-// Reserved real route hrefs the Shell already serves — a declared page may not
-// collide with them (nor with another declared page). Uniqueness is by the FULL
-// path (base + slug), so /dashboard/settings and /settings can coexist. On
-// collision we append a numeric suffix (-2, -3, …).
 const RESERVED = ["/", "/dashboard", "/ai-core", "/architecture", "/debug", "/api"]
-
 function joinPath(base: string, slug: string): string {
   return base === "/" ? `/${slug}` : `${base}/${slug}`
 }
-
-// Normalize a base path: leading slash, no trailing slash, default root.
 function normalizeBase(b: unknown): string {
   let s = typeof b === "string" ? b.trim() : "/"
   if (!s || s === "/") return "/"
   if (!s.startsWith("/")) s = "/" + s
   return s.replace(/\/+$/, "")
 }
-
-async function uniqueLeaf(base: string, seedSlug: string): Promise<string> {
+async function dirTaken(href: string): Promise<boolean> {
+  if (RESERVED.includes(href)) return true
+  try { await stat(join(routeDir(href), "README.md")); return true } catch {}
+  try { await stat(join(routeDir(href), "page.tsx")); return true } catch {}
+  return false
+}
+async function uniqueLeaf(base: string, seedSlug: string, dynamic: boolean): Promise<string> {
+  const seg = (s: string) => (dynamic ? `[${s}]` : s)
   const seed = seedSlug || "page"
-  const rows = await db.prepare("SELECT slug, base FROM requested_routes").all()
-  const taken = new Set<string>([
-    ...RESERVED,
-    ...rows.map(r => joinPath(String(r.base ?? "/"), String(r.slug))),
-  ])
-  if (!taken.has(joinPath(base, seed))) return seed
+  if (!(await dirTaken(joinPath(base, seg(seed))))) return seed
   let n = 2
-  while (taken.has(joinPath(base, `${seed}-${n}`))) n++
+  while (await dirTaken(joinPath(base, seg(`${seed}-${n}`)))) n++
   return `${seed}-${n}`
 }
 
-function parseTodo(v: unknown): string[] {
-  if (typeof v !== "string") return []
-  try { const a = JSON.parse(v); return Array.isArray(a) ? a.map(String) : [] }
-  catch { return [] }
-}
-
 type QP = { key: string; value: string }
-function parseQuery(v: unknown): QP[] {
-  if (typeof v !== "string") return []
-  try {
-    const a = JSON.parse(v)
-    return Array.isArray(a)
-      ? a.map((q): QP => ({ key: String(q?.key ?? ""), value: String(q?.value ?? "") })).filter(q => q.key)
-      : []
-  } catch { return [] }
-}
 
 export async function GET() {
-  const rows = await db.prepare(
-    "SELECT * FROM requested_routes ORDER BY created_at DESC"
-  ).all()
-  const requested = rows.map(r => ({
-    ...r,
-    kind: r.kind === "api" ? "api" : "page",
-    todo: parseTodo(r.todo),
-    dynamic: !!r.dynamic,
-    query: parseQuery(r.query),
-  }))
+  const { requested } = await scanTree()
   return NextResponse.json({ requested })
 }
 
@@ -79,50 +53,42 @@ export async function POST(req: NextRequest) {
   if (!title?.trim()) {
     return NextResponse.json({ error: "title is required" }, { status: 400 })
   }
-  const routeKind = kind === "api" ? "api" : "page"
+  const routeKind: "page" | "api" = kind === "api" ? "api" : "page"
   const items: string[] = Array.isArray(todo)
     ? todo.map(String).map((s: string) => s.trim()).filter(Boolean)
     : []
-  // Query params are a free-text spec for the agent — store as-is (key required).
   const query: QP[] = Array.isArray(queryParams)
     ? queryParams.map((q: QP) => ({ key: String(q?.key ?? "").trim(), value: String(q?.value ?? "").trim() })).filter((q: QP) => q.key)
     : []
-  const isDynamic = dynamic ? 1 : 0
+  const isDynamic = !!dynamic
 
   const session = await getSession(req)
   const createdBy = session?.email ?? req.headers.get("x-agent-identity") ?? "unknown"
-  const id = crypto.randomUUID()
   const basePath = normalizeBase(base)
-  const slug = await uniqueLeaf(basePath, slugify(title))
-  await db.prepare(
-    "INSERT INTO requested_routes (id, slug, kind, base, dynamic, query, title, todo, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'requested', ?)"
-  ).run(id, slug, routeKind, basePath, isDynamic, JSON.stringify(query), String(title).trim(), JSON.stringify(items), createdBy)
-
-  // Seed the initial to-do items as route_tasks under the declared route's path,
-  // so the same editable to-do list / danger zone work for it like any page.
+  const slug = await uniqueLeaf(basePath, slugify(title), isDynamic)
   const seg = isDynamic ? `[${slug}]` : slug
   const href = joinPath(basePath, seg)
-  for (const item of items) {
-    await db.prepare(
-      "INSERT INTO route_tasks (id, path, kind, body, created_by) VALUES (?, ?, 'todo', ?, ?)"
-    ).run(crypto.randomUUID(), href, item, createdBy)
-  }
-  // An example pasted in the Source editor → a code-change request the agent can
-  // build from. Stored in the same "Code update — <file>" + unified-diff format.
+
+  // Seed the declaration's to-do list from the initial items + an optional pasted
+  // code example (stored as a "Code update — <file>" diff task, same format the
+  // Source editor uses) — all materialized into the README.md, the agent's record.
+  const tasks: Task[] = items.map(body => ({ id: crypto.randomUUID(), kind: "todo", body, outcome: null }))
   if (typeof example === "string" && example.trim()) {
     const fname = routeKind === "api" ? "route.ts" : "page.tsx"
     const diff = example.split("\n").map(l => "+" + l).join("\n")
-    await db.prepare(
-      "INSERT INTO route_tasks (id, path, kind, body, created_by) VALUES (?, ?, 'todo', ?, ?)"
-    ).run(crypto.randomUUID(), href, `Code update — ${fname}\n${diff}`, createdBy)
+    tasks.push({ id: crypto.randomUUID(), kind: "todo", body: `${CODE_DIFF_PREFIX}${fname}\n${diff}`, outcome: null })
   }
 
-  // Write the declared entity's README.md on disk — the agent's work record.
-  await syncRouteReadme(href)
+  await writeRouteMeta({ path: href, title: String(title).trim(), kind: routeKind, base: basePath, dynamic: isDynamic, query, tasks })
 
-  const row = await db.prepare("SELECT * FROM requested_routes WHERE id = ?").get(id)
   return NextResponse.json(
-    { requested: row ? { ...row, kind: row.kind === "api" ? "api" : "page", todo: parseTodo(row.todo), dynamic: !!row.dynamic, query: parseQuery(row.query) } : null },
+    {
+      requested: {
+        id: encodePath(href),
+        slug, kind: routeKind, base: basePath, dynamic: isDynamic, query,
+        title: String(title).trim(), todo: items, status: "requested", created_at: new Date().toISOString(), created_by: createdBy,
+      },
+    },
     { status: 201 },
   )
 }

@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server"
-import { db } from "@/lib/db"
-import { removeRouteReadme } from "@/lib/declared-readme"
+import { decodePath, removeRouteReadme } from "@/lib/architecture/readme-file"
 
-// Remove a declared project — "Remove declaration" in the UI (step 107).
+// Remove a declared project — "Remove declaration" in the UI (step 107). The id
+// is the project's encoded path (fs:…); we delete its folder's README.md (and the
+// now-empty folder). Falls back to a bare slug for resilience.
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params
-  const row = await db.prepare("SELECT slug FROM projects WHERE id = ?").get(id) as { slug: string | null } | null
-  await db.prepare("DELETE FROM projects WHERE id = ?").run(id)
-  if (row?.slug) await removeRouteReadme(`/project/${row.slug}`)
+  const path = id.startsWith("fs:")
+    ? decodePath(id)
+    : `/project/${id.replace(/^project-/, "")}`
+  await removeRouteReadme(path)
   return NextResponse.json({ ok: true })
 }

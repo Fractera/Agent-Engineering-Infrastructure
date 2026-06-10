@@ -57,7 +57,7 @@ const meta: RouteMeta = {
   description:
     "Project layer (§3.12): list and create projects — independent lines of work " +
     "under one workspace. Names require at least three words. 'default' is reserved.",
-  dataDependencies: ["app.db (projects)"],
+  dataDependencies: ["filesystem: app/app/project/<slug>/README.md"],
   relatedRoutes: ["/architecture"],
   notes: "Organizational metadata — no extra infra or token cost per project.",
 

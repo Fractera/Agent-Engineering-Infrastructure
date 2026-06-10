@@ -77,7 +77,7 @@ const meta: RouteMeta = {
   description:
     "Declare and list requested routes — declared-but-not-built pages (§3.11): " +
     "a title plus a free-form todo list an agent picks up to plan and build.",
-  dataDependencies: ["app.db (requested_routes)"],
+  dataDependencies: ["filesystem: README.md per declared route"],
   relatedRoutes: ["/architecture"],
   notes: "Activation (todo -> real page) is a separate step.",
 

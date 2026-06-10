@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
-import { db } from "@/lib/db"
-import { syncRouteReadme } from "@/lib/declared-readme"
+import { parseTaskClientId, removeTask } from "@/lib/architecture/readme-file"
 
-// Remove a route task (a to-do item the user took off the list). Deletion
-// requests (kind 'delete') are also rows here; removing one cancels the request.
+// Remove a single route task (a to-do item taken off the list). The id encodes
+// both the route path and the task id, so we rewrite that route's README.md
+// without the task. Deletion requests (kind 'delete') are tasks too — removing
+// one cancels the request.
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params
-  const row = await db.prepare("SELECT path FROM route_tasks WHERE id = ?").get(id) as { path: string } | null
-  await db.prepare("DELETE FROM route_tasks WHERE id = ?").run(id)
-  if (row?.path) await syncRouteReadme(row.path)
+  const { path, taskId } = parseTaskClientId(id)
+  if (path && taskId) await removeTask(path, taskId)
   return NextResponse.json({ ok: true })
 }

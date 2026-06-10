@@ -19,13 +19,6 @@ const SCHEMA = `
     domain_error  TEXT,
     updated_at    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
   );
-  CREATE TABLE IF NOT EXISTS projects (
-    id          TEXT PRIMARY KEY NOT NULL,
-    name        TEXT NOT NULL UNIQUE,
-    slug        TEXT,
-    description TEXT,
-    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
-  );
   CREATE TABLE IF NOT EXISTS deployment_records (
     id             TEXT PRIMARY KEY NOT NULL,
     result         INTEGER NOT NULL DEFAULT 3,
@@ -44,29 +37,15 @@ const SCHEMA = `
     created_at     TEXT NOT NULL DEFAULT (datetime('now')),
     created_by     TEXT NOT NULL DEFAULT 'system'
   );
-  CREATE TABLE IF NOT EXISTS requested_routes (
-    id         TEXT PRIMARY KEY NOT NULL,
-    slug       TEXT NOT NULL,
-    kind       TEXT NOT NULL DEFAULT 'page',
-    base       TEXT NOT NULL DEFAULT '/',
-    dynamic    INTEGER NOT NULL DEFAULT 0,
-    query      TEXT NOT NULL DEFAULT '[]',
-    title      TEXT NOT NULL,
-    todo       TEXT NOT NULL DEFAULT '[]',
-    status     TEXT NOT NULL DEFAULT 'requested',
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    created_by TEXT NOT NULL DEFAULT 'system'
-  );
-  CREATE TABLE IF NOT EXISTS route_tasks (
-    id         TEXT PRIMARY KEY NOT NULL,
-    path       TEXT NOT NULL,
-    kind       TEXT NOT NULL DEFAULT 'todo',
-    body       TEXT NOT NULL,
-    outcome    TEXT,
-    status     TEXT NOT NULL DEFAULT 'open',
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    created_by TEXT NOT NULL DEFAULT 'system'
-  );
+`
+
+// The architecture three streams (projects / pages / endpoints) and their tasks
+// moved fully to the filesystem (README.md per entity, step 108) — these tables
+// are abandoned. Drop them so no stale architecture state survives in the DB.
+const DROP_LEGACY = `
+  DROP TABLE IF EXISTS projects;
+  DROP TABLE IF EXISTS requested_routes;
+  DROP TABLE IF EXISTS route_tasks;
 `
 
 // ALTER TABLE ADD COLUMN must tolerate the "duplicate column" error: during
@@ -91,6 +70,7 @@ function makeLocalDb() {
   mkdirSync(dirname(dbPath), { recursive: true })
   const sqlite = new Database(dbPath)
   sqlite.exec(SCHEMA)
+  sqlite.exec(DROP_LEGACY)
   const cols = new Set(
     (sqlite.prepare('PRAGMA table_info(products)').all() as Array<{ name: string }>).map(c => c.name)
   )
@@ -103,20 +83,6 @@ function makeLocalDb() {
     (sqlite.prepare('PRAGMA table_info(deployment_records)').all() as Array<{ name: string }>).map(c => c.name)
   )
   if (depCols.size && !depCols.has('step')) safeAddColumn(sqlite, `ALTER TABLE deployment_records ADD COLUMN step TEXT`)
-  // projects.slug (project layer, step 104) — added after the table shipped.
-  const projCols = new Set(
-    (sqlite.prepare('PRAGMA table_info(projects)').all() as Array<{ name: string }>).map(c => c.name)
-  )
-  if (projCols.size && !projCols.has('slug')) safeAddColumn(sqlite, `ALTER TABLE projects ADD COLUMN slug TEXT`)
-  if (projCols.size && !projCols.has('description')) safeAddColumn(sqlite, `ALTER TABLE projects ADD COLUMN description TEXT`)
-  // requested_routes.base (project layer — add page at any depth, step 105).
-  const reqCols = new Set(
-    (sqlite.prepare('PRAGMA table_info(requested_routes)').all() as Array<{ name: string }>).map(c => c.name)
-  )
-  if (reqCols.size && !reqCols.has('kind')) safeAddColumn(sqlite, `ALTER TABLE requested_routes ADD COLUMN kind TEXT NOT NULL DEFAULT 'page'`)
-  if (reqCols.size && !reqCols.has('base')) safeAddColumn(sqlite, `ALTER TABLE requested_routes ADD COLUMN base TEXT NOT NULL DEFAULT '/'`)
-  if (reqCols.size && !reqCols.has('dynamic')) safeAddColumn(sqlite, `ALTER TABLE requested_routes ADD COLUMN dynamic INTEGER NOT NULL DEFAULT 0`)
-  if (reqCols.size && !reqCols.has('query')) safeAddColumn(sqlite, `ALTER TABLE requested_routes ADD COLUMN query TEXT NOT NULL DEFAULT '[]'`)
   return {
     prepare(sql: string) {
       const stmt = sqlite.prepare(sql)
@@ -132,6 +98,7 @@ function makeLocalDb() {
 
 async function initRemoteSchema() {
   await remoteDb.exec(SCHEMA.trim())
+  await remoteDb.exec(DROP_LEGACY.trim())
 }
 
 export const db = (process.env.REMOTE_DATA_URL && process.env.DATA_API_KEY)

@@ -11,7 +11,7 @@ import { RouteSource } from "./route-source.client"
 // or a project (folder + page). Like any route it carries an editable to-do, a
 // danger zone, and a Source view (a blank virtual file the user can paste an
 // example into → a code-change request the agent uses when building). Tasks live
-// in route_tasks keyed by this route's path.
+// inside this route's README.md on disk (no DB), keyed by its path.
 export function RequestedDetailPanel({
   title, path, kind, dynamic = false, query = [], onChanged, onRemove,
 }: {

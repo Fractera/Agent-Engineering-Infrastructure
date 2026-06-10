@@ -1,35 +1,28 @@
 import { NextRequest, NextResponse } from "next/server"
-import { db } from "@/lib/db"
-import { getSession } from "@/lib/auth/get-session"
-import { syncRouteReadme } from "@/lib/declared-readme"
+import { scanTree } from "@/lib/architecture/fs-scan"
+import { readRouteMeta, addTask, clearTasks, taskClientId } from "@/lib/architecture/readme-file"
 
-// Per-route tasks on EXISTING pages — the manual settings that keep accruing
-// after a page ships (development doesn't end at publish). Two kinds, both flags
-// an agent picks up: 'todo' (ongoing work on the page) and 'delete' (a deletion
-// + refactor request from the danger zone). Same write path for the human UI and
-// for an orchestrating agent (X-Agent-Identity). Every change also rewrites the
-// route's README.md on disk so an agent reads the tasks (syncRouteReadme).
+// Per-route tasks live inside the route's README.md (no DB) — the manual settings
+// that keep accruing after a page ships. Two kinds, both flags an agent picks up:
+// 'todo' and 'delete' (a deletion+refactor request from the danger zone). The id
+// returned to the client encodes the path so a single task can be deleted via
+// /architecture/tasks/[id]. Same write path for the human UI and an agent.
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url)
-  // Summary mode: distinct route paths that have any open task — drives the
-  // (req) badge in the tree for existing pages that carry pending work.
+  // Summary mode: route paths that carry any open task — drives the (req) badge.
   if (url.searchParams.get("summary")) {
-    const rows = await db.prepare(
-      "SELECT DISTINCT path FROM route_tasks WHERE status = 'open'"
-    ).all()
-    return NextResponse.json({ paths: rows.map(r => r.path) })
+    const { tasksByPath } = await scanTree()
+    const paths = Object.entries(tasksByPath).filter(([, s]) => s.count > 0).map(([p]) => p)
+    return NextResponse.json({ paths })
   }
   const path = url.searchParams.get("path")
   const kind = url.searchParams.get("kind")
   if (!path) return NextResponse.json({ error: "path is required" }, { status: 400 })
-  const tasks = kind
-    ? await db.prepare(
-        "SELECT * FROM route_tasks WHERE path = ? AND kind = ? AND status = 'open' ORDER BY created_at DESC"
-      ).all(path, kind)
-    : await db.prepare(
-        "SELECT * FROM route_tasks WHERE path = ? AND status = 'open' ORDER BY created_at DESC"
-      ).all(path)
+  const meta = await readRouteMeta(path)
+  const tasks = (meta?.tasks ?? [])
+    .filter(t => !kind || t.kind === kind)
+    .map(t => ({ id: taskClientId(path, t.id), path, kind: t.kind, body: t.body, outcome: t.outcome ?? null }))
   return NextResponse.json({ tasks })
 }
 
@@ -38,25 +31,18 @@ export async function POST(req: NextRequest) {
   if (!path || !body?.trim()) {
     return NextResponse.json({ error: "path and body are required" }, { status: 400 })
   }
-  const k = kind === "delete" ? "delete" : "todo"
-  const session = await getSession(req)
-  const createdBy = session?.email ?? req.headers.get("x-agent-identity") ?? "unknown"
-  const id = crypto.randomUUID()
-  await db.prepare(
-    "INSERT INTO route_tasks (id, path, kind, body, outcome, created_by) VALUES (?, ?, ?, ?, ?, ?)"
-  ).run(id, String(path), k, String(body).trim(), outcome ? String(outcome).trim() : null, createdBy)
-  const task = await db.prepare("SELECT * FROM route_tasks WHERE id = ?").get(id)
-  await syncRouteReadme(String(path))
-  return NextResponse.json({ task }, { status: 201 })
+  const t = await addTask(String(path), { kind, body: String(body), outcome })
+  return NextResponse.json(
+    { task: { id: taskClientId(String(path), t.id), path, kind: t.kind, body: t.body, outcome: t.outcome ?? null } },
+    { status: 201 },
+  )
 }
 
-// Discard ALL open tasks for a route (the danger-zone "Discard all changes"):
-// clears the to-do list and so drops the (req) badge. A single task is removed
-// via /architecture/tasks/[id].
+// Discard ALL open tasks for a route (danger-zone "Discard all changes") → drops
+// the (req) badge. A single task is removed via /architecture/tasks/[id].
 export async function DELETE(req: NextRequest) {
   const path = new URL(req.url).searchParams.get("path")
   if (!path) return NextResponse.json({ error: "path is required" }, { status: 400 })
-  await db.prepare("DELETE FROM route_tasks WHERE path = ? AND status = 'open'").run(path)
-  await syncRouteReadme(String(path))
+  await clearTasks(path)
   return NextResponse.json({ ok: true })
 }

@@ -94,7 +94,7 @@ const meta: RouteMeta = {
     "rendering and method. 'Add page' declares a new route as a to-do (§3.11).",
   dataDependencies: [
     "lib/architecture/routes (curated seed)",
-    "app.db (requested_routes via /api/project/default/architecture/requested)",
+    "filesystem: app/app/** (README.md per declared route, via fs-scan)",
   ],
   relatedRoutes: ["/api/project/default/architecture/requested", "/ai-core", "/dashboard", "/debug"],
   notes: undefined,
