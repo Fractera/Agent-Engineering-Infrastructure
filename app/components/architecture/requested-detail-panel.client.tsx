@@ -12,7 +12,12 @@ export function RequestedDetailPanel({ item }: { item: Requested }) {
         <span className="rounded-full border border-amber-500/50 px-2 py-0.5 font-mono text-[10px] font-semibold text-amber-600">
           {item.status}
         </span>
-        <p className="mt-1.5 text-sm font-semibold text-foreground">{item.title}</p>
+        <div className="mt-1.5 flex items-center gap-2">
+          <p className="text-sm font-semibold text-foreground">{item.title}</p>
+          <span className="rounded border border-border px-1.5 font-mono text-[9px] font-semibold text-foreground/70">
+            {item.dynamic ? "dynamic" : "static"}
+          </span>
+        </div>
         <p className="font-mono text-[10px] text-foreground/60">{reqHref(item)}</p>
       </div>
 
@@ -21,6 +26,23 @@ export function RequestedDetailPanel({ item }: { item: Requested }) {
           A declared page — not built yet. An agent picks up the tasks below, plans
           and builds it; once live it becomes a real route in this map.
         </p>
+
+        {item.query.length > 0 && (
+          <div className="mt-4">
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-foreground">
+              Query params
+            </p>
+            <ul className="flex flex-col gap-1">
+              {item.query.map((q, i) => (
+                <li key={i} className="font-mono text-xs text-foreground">
+                  <span className="font-semibold">{q.key}</span>
+                  <span className="text-foreground/50"> = </span>
+                  <span>{q.value || "—"}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="mt-4">
           <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-foreground">

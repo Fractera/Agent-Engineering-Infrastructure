@@ -47,6 +47,8 @@ const SCHEMA = `
     id         TEXT PRIMARY KEY NOT NULL,
     slug       TEXT NOT NULL,
     base       TEXT NOT NULL DEFAULT '/',
+    dynamic    INTEGER NOT NULL DEFAULT 0,
+    query      TEXT NOT NULL DEFAULT '[]',
     title      TEXT NOT NULL,
     todo       TEXT NOT NULL DEFAULT '[]',
     status     TEXT NOT NULL DEFAULT 'requested',
@@ -109,6 +111,8 @@ function makeLocalDb() {
     (sqlite.prepare('PRAGMA table_info(requested_routes)').all() as Array<{ name: string }>).map(c => c.name)
   )
   if (reqCols.size && !reqCols.has('base')) safeAddColumn(sqlite, `ALTER TABLE requested_routes ADD COLUMN base TEXT NOT NULL DEFAULT '/'`)
+  if (reqCols.size && !reqCols.has('dynamic')) safeAddColumn(sqlite, `ALTER TABLE requested_routes ADD COLUMN dynamic INTEGER NOT NULL DEFAULT 0`)
+  if (reqCols.size && !reqCols.has('query')) safeAddColumn(sqlite, `ALTER TABLE requested_routes ADD COLUMN query TEXT NOT NULL DEFAULT '[]'`)
   return {
     prepare(sql: string) {
       const stmt = sqlite.prepare(sql)

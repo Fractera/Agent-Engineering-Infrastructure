@@ -48,22 +48,43 @@ function parseTodo(v: unknown): string[] {
   catch { return [] }
 }
 
+type QP = { key: string; value: string }
+function parseQuery(v: unknown): QP[] {
+  if (typeof v !== "string") return []
+  try {
+    const a = JSON.parse(v)
+    return Array.isArray(a)
+      ? a.map((q): QP => ({ key: String(q?.key ?? ""), value: String(q?.value ?? "") })).filter(q => q.key)
+      : []
+  } catch { return [] }
+}
+
 export async function GET() {
   const rows = await db.prepare(
     "SELECT * FROM requested_routes ORDER BY created_at DESC"
   ).all()
-  const requested = rows.map(r => ({ ...r, todo: parseTodo(r.todo) }))
+  const requested = rows.map(r => ({
+    ...r,
+    todo: parseTodo(r.todo),
+    dynamic: !!r.dynamic,
+    query: parseQuery(r.query),
+  }))
   return NextResponse.json({ requested })
 }
 
 export async function POST(req: NextRequest) {
-  const { title, todo, base } = await req.json()
+  const { title, todo, base, dynamic, queryParams } = await req.json()
   if (!title?.trim()) {
     return NextResponse.json({ error: "title is required" }, { status: 400 })
   }
   const items: string[] = Array.isArray(todo)
     ? todo.map(String).map((s: string) => s.trim()).filter(Boolean)
     : []
+  // Query params are a free-text spec for the agent — store as-is (key required).
+  const query: QP[] = Array.isArray(queryParams)
+    ? queryParams.map((q: QP) => ({ key: String(q?.key ?? "").trim(), value: String(q?.value ?? "").trim() })).filter((q: QP) => q.key)
+    : []
+  const isDynamic = dynamic ? 1 : 0
 
   const session = await getSession(req)
   const createdBy = session?.email ?? req.headers.get("x-agent-identity") ?? "unknown"
@@ -71,12 +92,12 @@ export async function POST(req: NextRequest) {
   const basePath = normalizeBase(base)
   const slug = await uniqueLeaf(basePath, slugify(title))
   await db.prepare(
-    "INSERT INTO requested_routes (id, slug, base, title, todo, status, created_by) VALUES (?, ?, ?, ?, ?, 'requested', ?)"
-  ).run(id, slug, basePath, String(title).trim(), JSON.stringify(items), createdBy)
+    "INSERT INTO requested_routes (id, slug, base, dynamic, query, title, todo, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, 'requested', ?)"
+  ).run(id, slug, basePath, isDynamic, JSON.stringify(query), String(title).trim(), JSON.stringify(items), createdBy)
 
   const row = await db.prepare("SELECT * FROM requested_routes WHERE id = ?").get(id)
   return NextResponse.json(
-    { requested: row ? { ...row, todo: parseTodo(row.todo) } : null },
+    { requested: row ? { ...row, todo: parseTodo(row.todo), dynamic: !!row.dynamic, query: parseQuery(row.query) } : null },
     { status: 201 },
   )
 }

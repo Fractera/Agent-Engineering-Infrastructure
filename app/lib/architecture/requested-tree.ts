@@ -6,10 +6,14 @@ import { DEFAULT_PROJECT, type Project } from "./projects"
 // merged into the route tree as a "pending" node under Pages. Survives reload
 // because it is fetched from the DB — that is what makes a declared page show up
 // in the real architecture map, not just an in-memory list.
+export type QueryParam = { key: string; value: string }
+
 export type Requested = {
   id: string
   slug: string
   base: string
+  dynamic: boolean
+  query: QueryParam[]
   title: string
   todo: string[]
   status: string
@@ -21,11 +25,13 @@ export function requestedNodeId(id: string) {
   return `req-${id}`
 }
 
-// Full href of a declared page = base + slug. A page can be declared at any
-// depth, so the base is where the user pressed "Add page" (the active node).
-export function reqHref(r: { base?: string; slug: string }): string {
+// Full href of a declared page = base + segment. A page can be declared at any
+// depth (base is where the user pressed "Add page"). A dynamic route renders the
+// slug as a [param] segment, mirroring Next.js dynamic folders.
+export function reqHref(r: { base?: string; slug: string; dynamic?: boolean }): string {
   const base = r.base && r.base !== "/" ? r.base : ""
-  return `${base}/${r.slug}`
+  const seg = r.dynamic ? `[${r.slug}]` : r.slug
+  return `${base}/${seg}`
 }
 
 // Real (built) page nodes whose routing files we can list — href set and not a
