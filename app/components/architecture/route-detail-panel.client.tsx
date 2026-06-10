@@ -64,9 +64,10 @@ export function RouteDetailPanel({ meta, onChanged }: { meta: RouteMeta; onChang
       <div className="flex-1 overflow-y-auto p-5">
         <p className="text-sm leading-relaxed text-foreground">{meta.description}</p>
 
-        {/* RouteMeta as a compact accordion */}
+        {/* RouteMeta as a compact accordion. API endpoints show only Source +
+            to-do + danger zone — their descriptor fields are not surfaced here. */}
         <div className="mt-5 flex flex-col gap-1.5">
-          {sections.map(s => {
+          {meta.kind !== "api" && sections.map(s => {
             const isOpen = open.has(s.title)
             return (
               <div key={s.title} className="overflow-hidden rounded-lg border border-border">
