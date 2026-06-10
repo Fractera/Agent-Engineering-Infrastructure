@@ -71,16 +71,16 @@ If a request requires touching forbidden zones, refuse and explain the boundary.
 ## 4. Workflow — strict order
 
 1. **Detect mode** (§1) and announce it
-2. **Read history**: `NEXT_STEP.md`, `old-steps-map.md`, related entries in `old-steps/` and `reports/`
+2. **Read history**: the completed steps in `DEVELOPMENT-STEPS/COMPLETED-STEPS/`, the open ones in `DEVELOPMENT-STEPS/NEW-STEPS/`, and related `reports/`. The **/development-steps** page is the visual view of these files.
 3. **Ask clarifying questions** (§2) until the user says go
-4. **Write `NEXT_STEP.md`** — name, known constraints, subtasks, out-of-scope
+4. **Open a step** — create `DEVELOPMENT-STEPS/NEW-STEPS/<NN>-<slug>.md` (or via the /development-steps page): name, importance (optional/mandatory/critical), description, known constraints, subtasks, out-of-scope
 5. **Query Company Brain** (§7) if in production mode
 6. **Write code** with code discipline (§11)
 7. **Produce 2 independent proofs** (§5) — non-negotiable
 8. **Ask the user for deploy permission** (§5)
 9. **On user's "yes" → deploy** (§12) and verify the live URL
 10. **Feed Company Brain** (§8) — push reports/docs back to Brain
-11. **Archive the step** — rename `NEXT_STEP.md` → `old-steps/N--{slug}.md` where `slug` is a 6–12 word kebab-case description derived from the task title. Add a line to `old-steps-map.md` linking to the new file.
+11. **Complete the step** — move its file `DEVELOPMENT-STEPS/NEW-STEPS/<NN>-<slug>.md` → `DEVELOPMENT-STEPS/COMPLETED-STEPS/` and set its completion date (the `completedAt` field + `status: completed` in the step's machine block). It then appears under **Completed steps** (read-only history). See `docs/development-steps.md` for the file format.
 
 Never skip steps. Without step 2, you repeat solved problems. Without 7, you ship bugs. Without 8, you never get user confirmation. Without 10, Brain stays static.
 
@@ -104,24 +104,24 @@ Until ALL five are true, status is **in progress**. Don't say "готово", "d
 
 If a proof fails:
 - Apologize concisely
-- Create a sub-task in `NEXT_STEP.md`
+- Add a sub-task to the current step in `DEVELOPMENT-STEPS/NEW-STEPS/`
 - Continue without rationalizing the failure
 
 ---
 
 ## 6. Journal system — long-term memory
 
-The repository is your memory across sessions. Six locations:
+The repository is your memory across sessions. Locations:
 
 | Path | Purpose |
 |---|---|
-| `NEXT_STEP.md` | Current task — stable pointer, single filename. Inside, the first line is the full descriptive title |
-| `old-steps/N--{slug}.md` | Snapshot of every completed task. `slug` = 6–12 word kebab-case derived from task title. Example: `7--add-paint-calculator-with-walls-history-cost.md` |
-| `old-steps-map.md` | One-line index of all completed steps with link to each archive file |
+| `DEVELOPMENT-STEPS/NEW-STEPS/<NN>-<slug>.md` | Open steps — one file per active task (number, name, importance, description, to-do). Shown under **New steps** on the /development-steps page. |
+| `DEVELOPMENT-STEPS/COMPLETED-STEPS/<NN>-<slug>.md` | Finished steps — moved here with a completion date. Read-only history under **Completed steps**. |
+| `docs/development-steps.md` | The standard for the step files (format + how to complete one). |
 | `docs/` | Long-lived architectural docs (ADRs, glossary, domain notes) |
 | `reports/errors/*.md` | Bugs and dead-ends — how they were fixed |
 | `reports/patterns/*.md` | Reusable working patterns |
-| `glossary.md` | Project-specific terms (helpful for voice input) |
+| `GLOSSARY.md` | Project-specific terms (edited via the /glossary page) |
 
 **Before recommending a solution** — search `reports/` for prior precedent.
 **After a non-obvious bug** — write to `reports/errors/`.
@@ -167,12 +167,12 @@ curl -s http://localhost:3002/api/rag/status
 - New domain concept documented in `docs/{concept}.md`
 - Reusable pattern in `reports/patterns/*.md`
 - Non-obvious bug fix in `reports/errors/*.md`
-- Glossary term added to `glossary.md`
-- Completed step archived to `old-steps/N.old-step.md`
+- Glossary term added to `GLOSSARY.md`
+- Step completed (moved to `DEVELOPMENT-STEPS/COMPLETED-STEPS/`)
 
 **When NOT to push:**
 - Small code edits (Brain re-indexes via the full scan periodically)
-- WIP drafts of `NEXT_STEP.md`
+- WIP drafts of a step still in `DEVELOPMENT-STEPS/NEW-STEPS/`
 - Commits that don't change architecture or learnings
 
 **How to push — targeted (preferred):**
@@ -324,43 +324,36 @@ Without it, changes are attributed to a generic agent — auditability is lost.
 
 <!-- PERMANENT — do not delete -->
 
-## Template — NEXT_STEP.md structure
+## Template — development step file
 
-When opening a new task, `NEXT_STEP.md` must use this structure:
+Every step is one markdown file `DEVELOPMENT-STEPS/NEW-STEPS/<NN>-<slug>.md` (`NN` =
+the next global number, `slug` = a few kebab-case words from the name). It is a real
+file — the /development-steps page reads and writes it. Full format and field
+reference: `docs/development-steps.md`.
 
 ```markdown
-# Current task: [name]
+# <NN> — <name>
 
-**Started:** YYYY-MM-DD
-**Mode:** prod | dev
-**Status:** Open
+> Development step · importance: optional | mandatory | critical
 
-## Known constraints (from history)
-- [step N] ...
-- [report X] ...
+<description — the task, constraints, out-of-scope. Write it yourself or let the
+chat / MCP draft it.>
 
-## Subtasks
-- [ ] ...
-- [ ] ...
+## To-do
+- <sub-task an agent picks up>
+- <sub-task>
 
-## Out of scope
-- ...
-
-## Proofs required for "done"
-- [ ] Proof 1: ...
-- [ ] Proof 2: ...
+<!-- fractera:step
+{"number":<N>,"name":"<name>","importance":"mandatory","status":"new","completedAt":null,"description":"<...>","tasks":[{"id":"<uuid>","body":"<sub-task>"}]}
+-->
 ```
 
-When complete:
-1. Derive `slug` from the task title — 6–12 words, kebab-case, lowercase. Example: title *"Add paint calculator with walls, history and cost"* → slug `add-paint-calculator-with-walls-history-cost`
-2. Rename and move `NEXT_STEP.md` → `old-steps/N--{slug}.md`
-3. Add a line to `old-steps-map.md` in this format:
+The hidden `fractera:step` block is the source of truth for the structured fields;
+the markdown above it is what an agent reads. Keep them in sync (the page does this
+automatically when you edit through it).
 
-```
-N. YYYY-MM-DD — Short title — one-sentence outcome — [→](old-steps/N--{slug}.md)
-```
-
-4. Ingest the archived file into Brain (§8).
-5. Reset `NEXT_STEP.md` to an empty stub ready for the next task.
+**To complete a step:** move the file to `DEVELOPMENT-STEPS/COMPLETED-STEPS/`, set
+`"status":"completed"` and `"completedAt":"YYYY-MM-DD"` in the block. It then shows
+under **Completed steps** (read-only). Ingest the finished step into Brain (§8).
 
 <!-- END PERMANENT -->
