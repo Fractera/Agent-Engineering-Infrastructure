@@ -52,6 +52,8 @@ export function RouteDetailPanel({ meta, onChanged }: { meta: RouteMeta; onChang
         {meta.kind === "page" && (
           <a
             href={meta.path}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex shrink-0 items-center gap-1 rounded-md border border-foreground/40 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
           >
             Open page <ArrowUpRight size={12} />
