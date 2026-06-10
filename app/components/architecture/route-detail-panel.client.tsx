@@ -6,6 +6,7 @@ import type { RouteMeta } from "@/lib/architecture/route-meta"
 import { buildMetaSections } from "@/lib/architecture/route-meta-rows"
 import { RouteTodo } from "./route-todo.client"
 import { RouteDangerZone } from "./route-danger-zone.client"
+import { RouteSource } from "./route-source.client"
 
 // Right ~50% panel for the /architecture route tree. Header (status + path +
 // "Open page" top-right), the real RouteMeta descriptor as a collapsible
@@ -83,6 +84,22 @@ export function RouteDetailPanel({ meta, onChanged }: { meta: RouteMeta; onChang
               </div>
             )
           })}
+
+          {/* Last accordion item — the route's real source (screen translation). */}
+          <div className="overflow-hidden rounded-lg border border-border">
+            <button
+              onClick={() => toggle("Source")}
+              className="flex w-full items-center justify-between px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-foreground transition-colors hover:bg-muted/60"
+            >
+              <span>Source</span>
+              <ChevronRight size={12} className={`text-foreground/70 transition-transform ${open.has("Source") ? "rotate-90" : ""}`} />
+            </button>
+            {open.has("Source") && (
+              <div className="border-t border-border p-3">
+                <RouteSource path={meta.path} onChanged={onChanged} />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Native to-do + danger zone — settings that keep being updated */}

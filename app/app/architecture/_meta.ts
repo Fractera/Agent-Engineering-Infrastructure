@@ -68,6 +68,8 @@ const meta: RouteMeta = {
     "@/components/architecture/route-detail-panel.client",
     "@/components/architecture/route-todo.client",
     "@/components/architecture/route-danger-zone.client",
+    "@/components/architecture/route-source.client",
+    "@/components/architecture/code-editor.client",
     "@/components/architecture/requested-detail-panel.client",
     "@/components/architecture/projects-panel.client",
     "@/components/architecture/declare-panel.client",
