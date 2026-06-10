@@ -66,12 +66,6 @@ export function DetailPanel({ node }: { node: ArchNode | null }) {
         </a>
       )}
 
-      <div className="mt-auto rounded-lg border border-dashed border-border p-4">
-        <p className="text-[11px] text-foreground/70">
-          This panel is the accompanying file for the selected node. Read top to
-          bottom and you know what it is, how it connects, and why it earns its place.
-        </p>
-      </div>
     </div>
   )
 }
