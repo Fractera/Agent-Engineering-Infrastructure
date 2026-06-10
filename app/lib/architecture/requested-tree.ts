@@ -9,6 +9,7 @@ import { DEFAULT_PROJECT, type Project } from "./projects"
 export type Requested = {
   id: string
   slug: string
+  base: string
   title: string
   todo: string[]
   status: string
@@ -18,6 +19,13 @@ export type Requested = {
 
 export function requestedNodeId(id: string) {
   return `req-${id}`
+}
+
+// Full href of a declared page = base + slug. A page can be declared at any
+// depth, so the base is where the user pressed "Add page" (the active node).
+export function reqHref(r: { base?: string; slug: string }): string {
+  const base = r.base && r.base !== "/" ? r.base : ""
+  return `${base}/${r.slug}`
 }
 
 // Real (built) page nodes whose routing files we can list — href set and not a
@@ -44,12 +52,11 @@ export function enrichWithRouting(
     kind: "config",
     description: `Routing file ${name} for ${node.href}.`,
   }))
-  return {
-    ...node,
-    children: node.children
-      ? node.children.map(c => enrichWithRouting(c, routingMap))
-      : (routingChildren.length ? routingChildren : undefined),
-  }
+  // A page node can hold BOTH its routing files (page/layout/…) and nested
+  // sub-pages declared under it — show routing files first, then the children.
+  const existing = node.children?.map(c => enrichWithRouting(c, routingMap)) ?? []
+  const merged = [...routingChildren, ...existing]
+  return { ...node, children: merged.length ? merged : undefined }
 }
 
 // Clone the curated ROUTES_TREE, append the declared pages into the Pages group,
@@ -61,14 +68,23 @@ export function buildMergedTree(
   taskPaths: Set<string> = new Set(),
   projects: Project[] = [],
 ): ArchNode {
-  const reqNodes: ArchNode[] = requested.map(r => ({
-    id: requestedNodeId(r.id),
-    label: r.title,
-    kind: "page",
-    href: `/${r.slug}`,
-    pending: true,
-    declared: true,
-  }))
+  // Group declared pages by their base (where they were added). Root-level ones
+  // (base "/") go into the Pages group; deeper ones attach under the node whose
+  // href === base, enabling a tree of any depth.
+  const byBase = new Map<string, ArchNode[]>()
+  for (const r of requested) {
+    const node: ArchNode = {
+      id: requestedNodeId(r.id),
+      label: r.title,
+      kind: "page",
+      href: reqHref(r),
+      pending: true,
+      declared: true,
+    }
+    const b = r.base && r.base !== "/" ? r.base : "/"
+    byBase.set(b, [...(byBase.get(b) ?? []), node])
+  }
+  const rootReq = byBase.get("/") ?? []
   // The default project IS the root tree itself; the Projects folder lists only
   // the additional named projects.
   const projectNodes: ArchNode[] = projects
@@ -77,20 +93,20 @@ export function buildMergedTree(
   const base: ArchNode = {
     ...ROUTES_TREE,
     children: ROUTES_TREE.children?.map(group => {
-      if (group.id === "pages") return { ...group, children: [...(group.children ?? []), ...reqNodes] }
-      // Keep the seed's real (built) projects, append the declared ones from DB.
+      if (group.id === "pages") return { ...group, children: [...(group.children ?? []), ...rootReq] }
       if (group.id === "projects") return { ...group, children: [...(group.children ?? []), ...projectNodes] }
       return group
     }),
   }
-  // Key matches the detail-panel manifest lookup: href ?? label.
-  function mark(node: ArchNode): ArchNode {
-    const hasTask = taskPaths.has(node.href ?? node.label)
-    return {
-      ...node,
-      pending: node.pending || hasTask,
-      children: node.children?.map(mark),
+  // One recursive pass: mark pending (own or task-carrying) and attach declared
+  // pages whose base equals this node's href (nested declarations included).
+  function build(node: ArchNode): ArchNode {
+    const kids = node.children?.map(build) ?? []
+    if (node.href && node.href !== "/" && byBase.has(node.href)) {
+      kids.push(...byBase.get(node.href)!.map(build))
     }
+    const hasTask = taskPaths.has(node.href ?? node.label)
+    return { ...node, pending: node.pending || hasTask, children: kids.length ? kids : node.children }
   }
-  return mark(base)
+  return build(base)
 }

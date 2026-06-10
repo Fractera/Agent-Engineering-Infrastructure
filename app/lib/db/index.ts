@@ -46,6 +46,7 @@ const SCHEMA = `
   CREATE TABLE IF NOT EXISTS requested_routes (
     id         TEXT PRIMARY KEY NOT NULL,
     slug       TEXT NOT NULL,
+    base       TEXT NOT NULL DEFAULT '/',
     title      TEXT NOT NULL,
     todo       TEXT NOT NULL DEFAULT '[]',
     status     TEXT NOT NULL DEFAULT 'requested',
@@ -103,6 +104,11 @@ function makeLocalDb() {
     (sqlite.prepare('PRAGMA table_info(projects)').all() as Array<{ name: string }>).map(c => c.name)
   )
   if (projCols.size && !projCols.has('slug')) safeAddColumn(sqlite, `ALTER TABLE projects ADD COLUMN slug TEXT`)
+  // requested_routes.base (project layer — add page at any depth, step 105).
+  const reqCols = new Set(
+    (sqlite.prepare('PRAGMA table_info(requested_routes)').all() as Array<{ name: string }>).map(c => c.name)
+  )
+  if (reqCols.size && !reqCols.has('base')) safeAddColumn(sqlite, `ALTER TABLE requested_routes ADD COLUMN base TEXT NOT NULL DEFAULT '/'`)
   return {
     prepare(sql: string) {
       const stmt = sqlite.prepare(sql)

@@ -1,6 +1,6 @@
 "use client"
 
-import type { Requested } from "@/lib/architecture/requested-tree"
+import { reqHref, type Requested } from "@/lib/architecture/requested-tree"
 
 // Right-section view for a declared-but-not-built page. Minimal by design: the
 // page title top-left, a non-editable to-do list below. No "Open page" — the
@@ -13,7 +13,7 @@ export function RequestedDetailPanel({ item }: { item: Requested }) {
           {item.status}
         </span>
         <p className="mt-1.5 text-sm font-semibold text-foreground">{item.title}</p>
-        <p className="font-mono text-[10px] text-foreground/60">/{item.slug}</p>
+        <p className="font-mono text-[10px] text-foreground/60">{reqHref(item)}</p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-5">

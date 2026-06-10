@@ -6,7 +6,7 @@ import type { ArchNode } from "@/lib/architecture/types"
 import { routeMetaFor } from "@/lib/architecture/route-manifest"
 import { projectApi } from "@/lib/architecture/project-api"
 import {
-  buildMergedTree, enrichWithRouting, realPageHrefs, requestedNodeId, type Requested,
+  buildMergedTree, enrichWithRouting, realPageHrefs, requestedNodeId, reqHref, type Requested,
 } from "@/lib/architecture/requested-tree"
 import type { Project } from "@/lib/architecture/projects"
 import { TreeNode } from "@/components/architecture/tree-view.client"
@@ -82,10 +82,14 @@ export function ArchitectureApp() {
 
   function onCreated(r: Requested) {
     setRequested(prev => [r, ...prev])
-    setExpanded(prev => new Set([...prev, "pages"]))
-    setSelected({ id: requestedNodeId(r.id), label: r.title, kind: "page", href: `/${r.slug}`, pending: true })
+    setExpanded(prev => new Set([...prev, "pages", `req-${r.id}`]))
+    setSelected({ id: requestedNodeId(r.id), label: r.title, kind: "page", href: reqHref(r), pending: true, declared: true })
     setDeclaring(false)
   }
+
+  // The base path a new page is added under = the active page node's href; a
+  // group / root / non-page selection falls back to the project root "/".
+  const addBase = selected?.kind === "page" && selected.href ? selected.href : "/"
 
   // The Projects folder itself opens the ProjectsPanel; real project pages
   // (with a descriptor) open their RouteDetailPanel like any named route.
@@ -119,10 +123,11 @@ export function ArchitectureApp() {
                 </span>
                 <button
                   onClick={() => setDeclaring(v => !v)}
-                  className="inline-flex h-7 items-center gap-1.5 rounded-md border border-foreground/40 px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
+                  title={declaring ? undefined : `Add page to: ${addBase}`}
+                  className="inline-flex h-7 max-w-[60%] items-center gap-1.5 rounded-md border border-foreground/40 px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
                 >
-                  {declaring ? <X size={11} /> : <Plus size={11} />}
-                  {declaring ? "Close" : "Add page"}
+                  {declaring ? <X size={11} className="shrink-0" /> : <Plus size={11} className="shrink-0" />}
+                  <span className="truncate">{declaring ? "Close" : `Add page to: ${addBase}`}</span>
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto py-2">
@@ -141,7 +146,7 @@ export function ArchitectureApp() {
             {/* RIGHT — declaration, real descriptor, requested view, or legacy */}
             <div className="w-1/2">
               {declaring
-                ? <DeclarePanel onClose={() => setDeclaring(false)} onCreated={onCreated} />
+                ? <DeclarePanel base={addBase} onClose={() => setDeclaring(false)} onCreated={onCreated} />
                 : isProject
                   ? <ProjectsPanel projects={projects} onChanged={refresh} />
                   : reqItem

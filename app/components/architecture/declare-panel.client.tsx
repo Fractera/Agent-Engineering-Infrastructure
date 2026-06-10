@@ -10,9 +10,11 @@ import type { Requested } from "@/lib/architecture/requested-tree"
 // describe the page as a to-do list; on declare it is saved as a requested route
 // and added to the tree immediately. Activation (build) is a separate step.
 export function DeclarePanel({
+  base = "/",
   onClose,
   onCreated,
 }: {
+  base?: string
   onClose: () => void
   onCreated: (r: Requested) => void
 }) {
@@ -37,7 +39,7 @@ export function DeclarePanel({
       const res = await fetch(projectApi("/architecture/requested"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: title.trim(), todo: items }),
+        body: JSON.stringify({ title: title.trim(), todo: items, base }),
       })
       if (!res.ok) { setError("Could not save — try again"); return }
       const { requested } = await res.json()
@@ -59,6 +61,9 @@ export function DeclarePanel({
       <p className="text-xs leading-relaxed text-foreground/80">
         Name the route, then describe it as tasks. It is saved as a requested page —
         a to-do flag an agent picks up to plan and build it.
+      </p>
+      <p className="rounded-md border border-border bg-muted/30 px-3 py-1.5 font-mono text-[11px] text-foreground">
+        Adding under: <span className="font-semibold">{base}</span>
       </p>
 
       <div className="flex flex-col gap-1">

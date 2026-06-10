@@ -11,18 +11,34 @@ function slugify(s: string) {
   return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60)
 }
 
-// Reserved real route paths the Shell already serves — a declared page may not
-// collide with them (nor with another declared page). On collision we append a
-// numeric suffix (-2, -3, …) so the name is always valid and unique.
-const RESERVED = ["", "dashboard", "ai-core", "architecture", "debug", "api"]
+// Reserved real route hrefs the Shell already serves — a declared page may not
+// collide with them (nor with another declared page). Uniqueness is by the FULL
+// path (base + slug), so /dashboard/settings and /settings can coexist. On
+// collision we append a numeric suffix (-2, -3, …).
+const RESERVED = ["/", "/dashboard", "/ai-core", "/architecture", "/debug", "/api"]
 
-async function uniqueSlug(base: string): Promise<string> {
-  const seed = base || "page"
-  const rows = await db.prepare("SELECT slug FROM requested_routes").all()
-  const taken = new Set<string>([...RESERVED, ...rows.map(r => String(r.slug))])
-  if (!taken.has(seed)) return seed
+function joinPath(base: string, slug: string): string {
+  return base === "/" ? `/${slug}` : `${base}/${slug}`
+}
+
+// Normalize a base path: leading slash, no trailing slash, default root.
+function normalizeBase(b: unknown): string {
+  let s = typeof b === "string" ? b.trim() : "/"
+  if (!s || s === "/") return "/"
+  if (!s.startsWith("/")) s = "/" + s
+  return s.replace(/\/+$/, "")
+}
+
+async function uniqueLeaf(base: string, seedSlug: string): Promise<string> {
+  const seed = seedSlug || "page"
+  const rows = await db.prepare("SELECT slug, base FROM requested_routes").all()
+  const taken = new Set<string>([
+    ...RESERVED,
+    ...rows.map(r => joinPath(String(r.base ?? "/"), String(r.slug))),
+  ])
+  if (!taken.has(joinPath(base, seed))) return seed
   let n = 2
-  while (taken.has(`${seed}-${n}`)) n++
+  while (taken.has(joinPath(base, `${seed}-${n}`))) n++
   return `${seed}-${n}`
 }
 
@@ -41,7 +57,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { title, todo } = await req.json()
+  const { title, todo, base } = await req.json()
   if (!title?.trim()) {
     return NextResponse.json({ error: "title is required" }, { status: 400 })
   }
@@ -50,12 +66,13 @@ export async function POST(req: NextRequest) {
     : []
 
   const session = await getSession(req)
-  const createdBy = session?.email ?? "unknown"
+  const createdBy = session?.email ?? req.headers.get("x-agent-identity") ?? "unknown"
   const id = crypto.randomUUID()
-  const slug = await uniqueSlug(slugify(title))
+  const basePath = normalizeBase(base)
+  const slug = await uniqueLeaf(basePath, slugify(title))
   await db.prepare(
-    "INSERT INTO requested_routes (id, slug, title, todo, status, created_by) VALUES (?, ?, ?, ?, 'requested', ?)"
-  ).run(id, slug, String(title).trim(), JSON.stringify(items), createdBy)
+    "INSERT INTO requested_routes (id, slug, base, title, todo, status, created_by) VALUES (?, ?, ?, ?, ?, 'requested', ?)"
+  ).run(id, slug, basePath, String(title).trim(), JSON.stringify(items), createdBy)
 
   const row = await db.prepare("SELECT * FROM requested_routes WHERE id = ?").get(id)
   return NextResponse.json(
