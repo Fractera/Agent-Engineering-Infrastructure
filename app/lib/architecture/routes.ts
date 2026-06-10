@@ -59,24 +59,22 @@ export const ROUTES_TREE: ArchNode = {
         "Server endpoints. In secure mode the proxy requires a session for " +
         "everything except /api/health; in IP mode auth is bypassed.",
       children: [
-        api("a-health", "/api/health", "Liveness probe — always open.", "GET", "Public"),
-        api("a-me", "/api/me", "Current session / identity used by client pages.", "GET", "Session"),
-        api("a-products", "/api/project/default/products", "List and create catalogue products (project-scoped, §3.12).", "GET · POST", "Session"),
-        api("a-product-id", "/api/project/default/products/[id]", "Delete a single product.", "DELETE", "Session"),
-        api("a-upload", "/api/media/upload", "Upload an image to the media service.", "POST", "Session"),
-        api("a-media-file", "/api/media/[id]/file", "Serve a stored media file.", "GET", "Session"),
-        api("a-config-env", "/api/config/env", "Read non-secret runtime config.", "GET", "Session"),
-        api("a-config-or", "/api/config/openrouter", "OpenRouter config for the app.", "GET", "Session"),
-        api("a-arch-requested", "/api/project/default/architecture/requested", "Declare and list requested pages (§3.11).", "GET · POST", "Session"),
-        api("a-arch-tasks", "/api/project/default/architecture/tasks", "Per-route to-dos and deletion requests.", "GET · POST", "Session"),
-        api("a-arch-task-id", "/api/project/default/architecture/tasks/[id]", "Remove a single route task.", "DELETE", "Session"),
-        api("a-src", "/api/project/default/source", "Read-only source bundle for the code viewer (§3.13).", "GET", "Session"),
-        api("a-routing", "/api/project/default/routing", "Read-only routing files of a route (folder view).", "GET", "Session"),
-        api("a-sig", "/api/project/default/architecture/signature", "Live-poll snapshot (per-path task signature) for the tree (§3.11).", "GET", "Session"),
-        api("a-projects", "/api/projects", "List and create projects (§3.12, ≥3-word names).", "GET · POST", "Session"),
-        api("a-glossary", "/api/glossary", "Workspace glossary file (GLOSSARY.md) — list/add/remove terms (§3.11).", "GET · POST · DELETE", "Session"),
-        api("a-req-id", "/api/project/default/architecture/requested/[id]", "Remove a declared route (Remove declaration).", "DELETE", "Session"),
-        api("a-proj-id", "/api/projects/[id]", "Remove a declared project (Remove declaration).", "DELETE", "Session"),
+        api("a-health", "Health probe", "/api/health", "Liveness probe — always open.", "GET", "Public"),
+        api("a-me", "Current session", "/api/me", "Current session / identity used by client pages.", "GET", "Session"),
+        api("a-products", "Products list / create", "/api/project/default/products", "List and create catalogue products (project-scoped, §3.12).", "GET · POST", "Session"),
+        api("a-product-id", "Delete product", "/api/project/default/products/[id]", "Delete a single product.", "DELETE", "Session"),
+        api("a-upload", "Media upload", "/api/media/upload", "Upload an image to the media service.", "POST", "Session"),
+        api("a-media-file", "Media file", "/api/media/[id]/file", "Serve a stored media file.", "GET", "Session"),
+        api("a-arch-requested", "Declare route", "/api/project/default/architecture/requested", "Declare and list requested pages (§3.11).", "GET · POST", "Session"),
+        api("a-arch-tasks", "Route tasks", "/api/project/default/architecture/tasks", "Per-route to-dos and deletion requests.", "GET · POST", "Session"),
+        api("a-arch-task-id", "Delete task", "/api/project/default/architecture/tasks/[id]", "Remove a single route task.", "DELETE", "Session"),
+        api("a-src", "Route source", "/api/project/default/source", "Read-only source bundle for the code viewer (§3.13).", "GET", "Session"),
+        api("a-routing", "Routing files", "/api/project/default/routing", "Read-only routing files of a route (folder view).", "GET", "Session"),
+        api("a-sig", "Tree signature", "/api/project/default/architecture/signature", "Live-poll snapshot (per-path task signature) for the tree (§3.11).", "GET", "Session"),
+        api("a-projects", "Projects list / create", "/api/projects", "List and create projects (§3.12, ≥3-word names).", "GET · POST", "Session"),
+        api("a-glossary", "Glossary file", "/api/glossary", "Workspace glossary file (GLOSSARY.md) — list/add/remove terms (§3.11).", "GET · POST · DELETE", "Session"),
+        api("a-req-id", "Remove declaration", "/api/project/default/architecture/requested/[id]", "Remove a declared route (Remove declaration).", "DELETE", "Session"),
+        api("a-proj-id", "Remove project", "/api/projects/[id]", "Remove a declared project (Remove declaration).", "DELETE", "Session"),
       ],
     },
   ],
@@ -90,7 +88,7 @@ function page(
 }
 
 function api(
-  id: string, label: string, description: string, method: string, roles: string,
+  id: string, name: string, label: string, description: string, method: string, roles: string,
 ): ArchNode {
-  return { id, label, kind: "api", description, meta: { roles, rendering: "dynamic", method } }
+  return { id, label, name, kind: "api", description, meta: { roles, rendering: "dynamic", method } }
 }

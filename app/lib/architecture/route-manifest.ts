@@ -16,6 +16,12 @@ import routingApiMeta from "@/app/api/project/default/routing/_meta"
 import signatureApiMeta from "@/app/api/project/default/architecture/signature/_meta"
 import requestedIdApiMeta from "@/app/api/project/default/architecture/requested/[id]/_meta"
 import projectIdApiMeta from "@/app/api/projects/[id]/_meta"
+import healthApiMeta from "@/app/api/health/_meta"
+import meApiMeta from "@/app/api/me/_meta"
+import productsApiMeta from "@/app/api/project/default/products/_meta"
+import productIdApiMeta from "@/app/api/project/default/products/[id]/_meta"
+import mediaUploadApiMeta from "@/app/api/media/upload/_meta"
+import mediaFileApiMeta from "@/app/api/media/[id]/file/_meta"
 
 // Hand-maintained manifest of the typed route descriptors (`_meta.ts`), keyed by
 // path. Variant A: typed .ts imported here (a later codegen can glob these). The
@@ -38,6 +44,12 @@ export const ROUTE_MANIFEST: Record<string, RouteMeta> = {
   "/api/project/default/architecture/signature": signatureApiMeta,
   "/api/project/default/architecture/requested/[id]": requestedIdApiMeta,
   "/api/projects/[id]": projectIdApiMeta,
+  "/api/health": healthApiMeta,
+  "/api/me": meApiMeta,
+  "/api/project/default/products": productsApiMeta,
+  "/api/project/default/products/[id]": productIdApiMeta,
+  "/api/media/upload": mediaUploadApiMeta,
+  "/api/media/[id]/file": mediaFileApiMeta,
 }
 
 export function routeMetaFor(key: string | undefined | null): RouteMeta | null {

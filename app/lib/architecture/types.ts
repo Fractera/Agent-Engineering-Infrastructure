@@ -19,6 +19,9 @@ export type ArchKind =
 export type ArchNode = {
   id: string
   label: string
+  /** Human-readable name shown in the detail panel header (the tree label may be
+   *  a path; this is the friendly name, e.g. "Health probe"). */
+  name?: string
   kind: ArchKind
   /** Port or port range, shown as a chip next to services. */
   port?: string

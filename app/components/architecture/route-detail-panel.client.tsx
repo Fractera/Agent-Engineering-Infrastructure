@@ -19,7 +19,7 @@ function statusClass(s: string): string {
   return "border-border text-foreground/70"
 }
 
-export function RouteDetailPanel({ meta, onChanged }: { meta: RouteMeta; onChanged?: () => void }) {
+export function RouteDetailPanel({ meta, name, onChanged }: { meta: RouteMeta; name?: string; onChanged?: () => void }) {
   const sections = buildMetaSections(meta)
   const [open, setOpen] = useState<Set<string>>(new Set())
   // Bumped on any change (Source/Danger zone) so the to-do list reloads in place
@@ -46,7 +46,8 @@ export function RouteDetailPanel({ meta, onChanged }: { meta: RouteMeta; onChang
             <span className="rounded-full border border-foreground/30 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-foreground">{meta.kind}</span>
             <span className={`rounded-full border px-2 py-0.5 font-mono text-[10px] font-semibold ${statusClass(meta.status)}`}>{meta.status}</span>
           </div>
-          <p className="mt-1.5 truncate font-mono text-sm font-semibold text-foreground">{meta.path}</p>
+          {name && <p className="mt-1.5 truncate text-sm font-semibold text-foreground">{name}</p>}
+          <p className={`${name ? "mt-0.5" : "mt-1.5"} truncate font-mono text-xs font-semibold text-foreground/90`}>{meta.path}</p>
           <p className="truncate font-mono text-[10px] text-foreground/60">{meta.filePath}</p>
         </div>
         {meta.kind === "page" && (

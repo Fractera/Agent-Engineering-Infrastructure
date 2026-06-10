@@ -284,7 +284,7 @@ export function ArchitectureApp() {
                     : declaredView
                       ? <RequestedDetailPanel {...declaredView} onChanged={refresh} onRemove={removeDeclared} />
                       : meta
-                        ? <RouteDetailPanel meta={meta} onChanged={refresh} />
+                        ? <RouteDetailPanel meta={meta} name={selected?.name} onChanged={refresh} />
                         : <DetailPanel node={selected} />}
             </div>
           </div>
