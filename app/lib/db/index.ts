@@ -20,10 +20,11 @@ const SCHEMA = `
     updated_at    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
   );
   CREATE TABLE IF NOT EXISTS projects (
-    id         TEXT PRIMARY KEY NOT NULL,
-    name       TEXT NOT NULL UNIQUE,
-    slug       TEXT,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    id          TEXT PRIMARY KEY NOT NULL,
+    name        TEXT NOT NULL UNIQUE,
+    slug        TEXT,
+    description TEXT,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
   );
   CREATE TABLE IF NOT EXISTS deployment_records (
     id             TEXT PRIMARY KEY NOT NULL,
@@ -107,6 +108,7 @@ function makeLocalDb() {
     (sqlite.prepare('PRAGMA table_info(projects)').all() as Array<{ name: string }>).map(c => c.name)
   )
   if (projCols.size && !projCols.has('slug')) safeAddColumn(sqlite, `ALTER TABLE projects ADD COLUMN slug TEXT`)
+  if (projCols.size && !projCols.has('description')) safeAddColumn(sqlite, `ALTER TABLE projects ADD COLUMN description TEXT`)
   // requested_routes.base (project layer — add page at any depth, step 105).
   const reqCols = new Set(
     (sqlite.prepare('PRAGMA table_info(requested_routes)').all() as Array<{ name: string }>).map(c => c.name)

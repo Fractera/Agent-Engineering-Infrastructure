@@ -101,13 +101,14 @@ export function ArchitectureApp() {
   // in the tree (both seed/built and DB-declared). slug from href or node id.
   const pickerProjects: PickerProject[] = useMemo(() => {
     const group = tree.children?.find(c => c.id === "projects")
-    return (group?.children ?? []).map(n => ({
-      label: n.label,
-      slug: n.href?.startsWith("/project/")
+    return (group?.children ?? []).map(n => {
+      const slug = n.href?.startsWith("/project/")
         ? n.href.slice("/project/".length)
-        : n.id.replace(/^project-/, ""),
-    }))
-  }, [tree])
+        : n.id.replace(/^project-/, "")
+      const db = projects.find(p => (p.slug ?? "") === slug)
+      return { label: n.label, slug, description: db?.description ?? null }
+    })
+  }, [tree, projects])
 
   // The Projects folder itself opens the ProjectsPanel.
   const isProject = selected?.id === "projects"

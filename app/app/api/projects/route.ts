@@ -20,13 +20,13 @@ async function uniqueSlug(base: string): Promise<string> {
 
 export async function GET() {
   const projects = await db.prepare(
-    "SELECT id, name, slug, created_at FROM projects ORDER BY created_at DESC"
+    "SELECT id, name, slug, description, created_at FROM projects ORDER BY created_at DESC"
   ).all()
   return NextResponse.json({ projects })
 }
 
 export async function POST(req: NextRequest) {
-  const { name } = await req.json()
+  const { name, description } = await req.json()
   const trimmed = String(name ?? "").trim()
   // Naming standard: at least three words (the "default" project is reserved).
   if (wordCount(trimmed) < 3) {
@@ -34,18 +34,20 @@ export async function POST(req: NextRequest) {
       { error: "A project name needs at least three words." }, { status: 400 },
     )
   }
+  // Optional description — disambiguates which project a task belongs to.
+  const desc = typeof description === "string" && description.trim() ? description.trim() : null
   const session = await getSession(req)
   const createdBy = session?.email ?? req.headers.get("x-agent-identity") ?? "unknown"
   const slug = await uniqueSlug(slugify(trimmed))
   const id = crypto.randomUUID()
   try {
     await db.prepare(
-      "INSERT INTO projects (id, name, slug) VALUES (?, ?, ?)"
-    ).run(id, trimmed, slug)
+      "INSERT INTO projects (id, name, slug, description) VALUES (?, ?, ?, ?)"
+    ).run(id, trimmed, slug, desc)
   } catch {
     return NextResponse.json({ error: "A project with this name already exists." }, { status: 409 })
   }
   void createdBy
-  const project = await db.prepare("SELECT id, name, slug, created_at FROM projects WHERE id = ?").get(id)
+  const project = await db.prepare("SELECT id, name, slug, description, created_at FROM projects WHERE id = ?").get(id)
   return NextResponse.json({ project }, { status: 201 })
 }

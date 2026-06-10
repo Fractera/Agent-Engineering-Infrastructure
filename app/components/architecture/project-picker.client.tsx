@@ -2,7 +2,7 @@
 
 import { X, FolderTree } from "lucide-react"
 
-export type PickerProject = { label: string; slug: string }
+export type PickerProject = { label: string; slug: string; description?: string | null }
 
 // Modal that asks which project a new endpoint belongs to: the default project
 // (→ /api) or one of the projects that exist in the tree — both seed (built) and
