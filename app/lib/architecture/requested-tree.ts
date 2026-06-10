@@ -1,5 +1,6 @@
 import type { ArchNode } from "./types"
 import { ROUTES_TREE } from "./routes"
+import { DEFAULT_PROJECT, type Project } from "./projects"
 
 // A declared-but-not-built page, persisted in app.db (requested_routes) and
 // merged into the route tree as a "pending" node under Pages. Survives reload
@@ -26,6 +27,7 @@ export function requestedNodeId(id: string) {
 export function buildMergedTree(
   requested: Requested[],
   taskPaths: Set<string> = new Set(),
+  projects: Project[] = [],
 ): ArchNode {
   const reqNodes: ArchNode[] = requested.map(r => ({
     id: requestedNodeId(r.id),
@@ -35,13 +37,20 @@ export function buildMergedTree(
     pending: true,
     declared: true,
   }))
+  // The default project is always present (synthetic); named projects follow.
+  const projectNodes: ArchNode[] = [
+    { id: "project-default", label: DEFAULT_PROJECT, kind: "note" },
+    ...projects
+      .filter(p => (p.slug ?? p.name) !== DEFAULT_PROJECT && p.name !== DEFAULT_PROJECT)
+      .map(p => ({ id: `project-${p.slug ?? p.id}`, label: p.name, kind: "note" as const })),
+  ]
   const base: ArchNode = {
     ...ROUTES_TREE,
-    children: ROUTES_TREE.children?.map(group =>
-      group.id === "pages"
-        ? { ...group, children: [...(group.children ?? []), ...reqNodes] }
-        : group,
-    ),
+    children: ROUTES_TREE.children?.map(group => {
+      if (group.id === "pages") return { ...group, children: [...(group.children ?? []), ...reqNodes] }
+      if (group.id === "projects") return { ...group, children: projectNodes }
+      return group
+    }),
   }
   // Key matches the detail-panel manifest lookup: href ?? label.
   function mark(node: ArchNode): ArchNode {

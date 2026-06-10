@@ -16,6 +16,17 @@ export const ROUTES_TREE: ArchNode = {
     "and the HTTP method.",
   children: [
     {
+      id: "projects",
+      label: "Projects",
+      kind: "group",
+      description:
+        "Independent lines of work this workspace runs — a site, a procurement " +
+        "tracker, a language course, a sales automation. The default project holds " +
+        "everything today; grow new ones for any purpose. This folder is permanent " +
+        "(it cannot be deleted). Project names use at least three words.",
+      children: [],
+    },
+    {
       id: "pages",
       label: "Pages",
       kind: "group",
@@ -47,6 +58,7 @@ export const ROUTES_TREE: ArchNode = {
         api("a-arch-requested", "/api/architecture/requested", "Declare and list requested pages (§3.11).", "GET · POST", "Session"),
         api("a-arch-tasks", "/api/architecture/tasks", "Per-route to-dos and deletion requests.", "GET · POST", "Session"),
         api("a-arch-task-id", "/api/architecture/tasks/[id]", "Remove a single route task.", "DELETE", "Session"),
+        api("a-projects", "/api/projects", "List and create projects (§3.12, ≥3-word names).", "GET · POST", "Session"),
       ],
     },
   ],

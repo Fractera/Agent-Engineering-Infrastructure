@@ -7,10 +7,12 @@ import { routeMetaFor } from "@/lib/architecture/route-manifest"
 import {
   buildMergedTree, requestedNodeId, type Requested,
 } from "@/lib/architecture/requested-tree"
+import type { Project } from "@/lib/architecture/projects"
 import { TreeNode } from "@/components/architecture/tree-view.client"
 import { DetailPanel } from "@/components/architecture/detail-panel.client"
 import { RouteDetailPanel } from "@/components/architecture/route-detail-panel.client"
 import { RequestedDetailPanel } from "@/components/architecture/requested-detail-panel.client"
+import { ProjectsPanel } from "@/components/architecture/projects-panel.client"
 import { DeclarePanel } from "@/components/architecture/declare-panel.client"
 
 // Left section = the route tree (Add page lives in its top-right corner).
@@ -20,12 +22,13 @@ import { DeclarePanel } from "@/components/architecture/declare-panel.client"
 export function ArchitectureApp() {
   const [requested, setRequested] = useState<Requested[]>([])
   const [taskPaths, setTaskPaths] = useState<string[]>([])
+  const [projects, setProjects] = useState<Project[]>([])
   const [selected, setSelected] = useState<ArchNode | null>(null)
-  const [expanded, setExpanded] = useState<Set<string>>(new Set(["routes", "pages", "api"]))
+  const [expanded, setExpanded] = useState<Set<string>>(new Set(["routes", "projects", "pages", "api"]))
   const [declaring, setDeclaring] = useState(false)
 
   // Requested pages drive the tree's declared nodes; the task summary marks
-  // existing pages that carry pending work so the tree can badge them.
+  // existing pages that carry pending work; projects fill the Projects folder.
   function refresh() {
     fetch("/api/architecture/requested")
       .then(r => (r.ok ? r.json() : null))
@@ -35,12 +38,16 @@ export function ArchitectureApp() {
       .then(r => (r.ok ? r.json() : null))
       .then(d => { if (d) setTaskPaths(d.paths ?? []) })
       .catch(() => {})
+    fetch("/api/projects")
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d) setProjects(d.projects ?? []) })
+      .catch(() => {})
   }
   useEffect(() => { refresh() }, [])
 
   const tree = useMemo(
-    () => buildMergedTree(requested, new Set(taskPaths)),
-    [requested, taskPaths],
+    () => buildMergedTree(requested, new Set(taskPaths), projects),
+    [requested, taskPaths, projects],
   )
   useEffect(() => { setSelected(prev => prev ?? tree) }, [tree])
 
@@ -59,10 +66,11 @@ export function ArchitectureApp() {
     setDeclaring(false)
   }
 
+  const isProject = !!selected && (selected.id === "projects" || selected.id.startsWith("project-"))
   const reqItem = selected?.id.startsWith("req-")
     ? requested.find(r => requestedNodeId(r.id) === selected.id) ?? null
     : null
-  const meta = selected && !reqItem ? routeMetaFor(selected.href ?? selected.label) : null
+  const meta = selected && !reqItem && !isProject ? routeMetaFor(selected.href ?? selected.label) : null
 
   return (
     <main className="min-h-screen bg-background">
@@ -111,11 +119,13 @@ export function ArchitectureApp() {
             <div className="w-1/2">
               {declaring
                 ? <DeclarePanel onClose={() => setDeclaring(false)} onCreated={onCreated} />
-                : reqItem
-                  ? <RequestedDetailPanel item={reqItem} />
-                  : meta
-                    ? <RouteDetailPanel meta={meta} onChanged={refresh} />
-                    : <DetailPanel node={selected} />}
+                : isProject
+                  ? <ProjectsPanel projects={projects} onChanged={refresh} />
+                  : reqItem
+                    ? <RequestedDetailPanel item={reqItem} />
+                    : meta
+                      ? <RouteDetailPanel meta={meta} onChanged={refresh} />
+                      : <DetailPanel node={selected} />}
             </div>
           </div>
         </div>

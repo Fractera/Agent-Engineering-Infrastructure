@@ -22,6 +22,7 @@ const SCHEMA = `
   CREATE TABLE IF NOT EXISTS projects (
     id         TEXT PRIMARY KEY NOT NULL,
     name       TEXT NOT NULL UNIQUE,
+    slug       TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
   CREATE TABLE IF NOT EXISTS deployment_records (
@@ -97,6 +98,11 @@ function makeLocalDb() {
     (sqlite.prepare('PRAGMA table_info(deployment_records)').all() as Array<{ name: string }>).map(c => c.name)
   )
   if (depCols.size && !depCols.has('step')) safeAddColumn(sqlite, `ALTER TABLE deployment_records ADD COLUMN step TEXT`)
+  // projects.slug (project layer, step 104) — added after the table shipped.
+  const projCols = new Set(
+    (sqlite.prepare('PRAGMA table_info(projects)').all() as Array<{ name: string }>).map(c => c.name)
+  )
+  if (projCols.size && !projCols.has('slug')) safeAddColumn(sqlite, `ALTER TABLE projects ADD COLUMN slug TEXT`)
   return {
     prepare(sql: string) {
       const stmt = sqlite.prepare(sql)
