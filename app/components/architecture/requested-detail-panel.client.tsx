@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronRight, Trash2, Loader2 } from "lucide-react"
+import { ChevronRight, Trash2, Loader2, AlertTriangle } from "lucide-react"
 import type { QueryParam } from "@/lib/architecture/requested-tree"
 import { RouteTodo } from "./route-todo.client"
 import { RouteDangerZone } from "./route-danger-zone.client"
@@ -27,8 +27,10 @@ export function RequestedDetailPanel({
   const [bump, setBump] = useState(0)
   const [srcOpen, setSrcOpen] = useState(false)
   const [removing, setRemoving] = useState(false)
+  const [confirmHard, setConfirmHard] = useState(false)
   function handleChanged() { setBump(b => b + 1); onChanged?.() }
   async function remove() {
+    setConfirmHard(false)
     setRemoving(true)
     try { await onRemove?.() } finally { setRemoving(false) }
   }
@@ -98,7 +100,7 @@ export function RequestedDetailPanel({
               request to remove a real, built route.
             </p>
             <button
-              onClick={remove}
+              onClick={() => setConfirmHard(true)}
               disabled={removing}
               className="mt-2 inline-flex h-8 items-center gap-1.5 rounded-md border border-red-500/60 px-4 text-xs font-semibold text-red-600 transition-colors hover:bg-red-600 hover:text-white disabled:opacity-40"
             >
@@ -108,6 +110,53 @@ export function RequestedDetailPanel({
           </div>
         )}
       </div>
+
+      {/* Hard-delete confirmation. Removing a declaration wipes the file + folder
+          immediately, with no AI cleanup of now-unused related components — make
+          the user acknowledge that, and point them at the soft (AI) path. */}
+      {confirmHard && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setConfirmHard(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-xl border border-border bg-background p-5 shadow-xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-1.5 text-red-600">
+              <AlertTriangle size={15} />
+              <h3 className="text-sm font-bold">Hard delete — are you sure?</h3>
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-foreground/80">
+              This permanently removes the file and its folder from disk
+              <span className="font-semibold text-foreground"> immediately, without AI</span>. It does
+              not clean up other components that may become unused after it is gone.
+            </p>
+            <div className="mt-3 rounded-md border border-border bg-muted/30 p-3">
+              <p className="text-[11px] font-semibold text-foreground">Recommended: soft delete</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-foreground/70">
+                Use <span className="font-semibold">Order deletion</span> in the Danger zone instead — it
+                sends a request to the AI, which removes this route and also refactors / removes the
+                related components that are no longer used anywhere in the app.
+              </p>
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                onClick={() => setConfirmHard(false)}
+                className="inline-flex h-8 items-center rounded-md border border-border px-4 text-xs font-semibold text-foreground transition-colors hover:bg-muted"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={remove}
+                className="inline-flex h-8 items-center gap-1.5 rounded-md bg-red-600 px-4 text-xs font-semibold text-white transition-colors hover:bg-red-500"
+              >
+                <Trash2 size={11} /> I understand — hard-delete anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
