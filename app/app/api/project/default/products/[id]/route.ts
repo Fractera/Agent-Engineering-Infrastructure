@@ -3,7 +3,7 @@ import { db } from "@/lib/db"
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: Promise<{ project: string; id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
   await db.prepare("DELETE FROM products WHERE id = ?").run(id)

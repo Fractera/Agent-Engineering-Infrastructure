@@ -7,7 +7,7 @@ const meta: RouteMeta = {
   // — Identity & lifecycle —
   kind: "api",
   path: "/api/project/default/architecture/requested",
-  filePath: "app/app/api/project/[project]/architecture/requested/route.ts",
+  filePath: "app/app/api/project/default/architecture/requested/route.ts",
   status: "live",
   todo: [],
 

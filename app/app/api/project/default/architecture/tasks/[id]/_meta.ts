@@ -4,7 +4,7 @@ import type { RouteMeta } from "@/lib/architecture/route-meta"
 const meta: RouteMeta = {
   kind: "api",
   path: "/api/project/default/architecture/tasks/[id]",
-  filePath: "app/app/api/project/[project]/architecture/tasks/[id]/route.ts",
+  filePath: "app/app/api/project/default/architecture/tasks/[id]/route.ts",
   status: "live",
   todo: [],
 

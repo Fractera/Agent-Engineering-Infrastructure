@@ -46,7 +46,8 @@ export function buildMergedTree(
     ...ROUTES_TREE,
     children: ROUTES_TREE.children?.map(group => {
       if (group.id === "pages") return { ...group, children: [...(group.children ?? []), ...reqNodes] }
-      if (group.id === "projects") return { ...group, children: projectNodes }
+      // Keep the seed's real (built) projects, append the declared ones from DB.
+      if (group.id === "projects") return { ...group, children: [...(group.children ?? []), ...projectNodes] }
       return group
     }),
   }

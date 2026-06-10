@@ -67,7 +67,9 @@ export function ArchitectureApp() {
     setDeclaring(false)
   }
 
-  const isProject = !!selected && (selected.id === "projects" || selected.id.startsWith("project-"))
+  // The Projects folder itself opens the ProjectsPanel; real project pages
+  // (with a descriptor) open their RouteDetailPanel like any named route.
+  const isProject = selected?.id === "projects"
   const reqItem = selected?.id.startsWith("req-")
     ? requested.find(r => requestedNodeId(r.id) === selected.id) ?? null
     : null

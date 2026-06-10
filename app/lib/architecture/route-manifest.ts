@@ -4,10 +4,11 @@ import dashboardMeta from "@/app/dashboard/_meta"
 import aiCoreMeta from "@/app/ai-core/_meta"
 import architectureMeta from "@/app/architecture/_meta"
 import debugMeta from "@/app/debug/_meta"
-import requestedApiMeta from "@/app/api/project/[project]/architecture/requested/_meta"
-import tasksApiMeta from "@/app/api/project/[project]/architecture/tasks/_meta"
-import taskIdApiMeta from "@/app/api/project/[project]/architecture/tasks/[id]/_meta"
+import requestedApiMeta from "@/app/api/project/default/architecture/requested/_meta"
+import tasksApiMeta from "@/app/api/project/default/architecture/tasks/_meta"
+import taskIdApiMeta from "@/app/api/project/default/architecture/tasks/[id]/_meta"
 import projectsApiMeta from "@/app/api/projects/_meta"
+import telegramReminderMeta from "@/app/project/my-telegram-reminder/_meta"
 
 // Hand-maintained manifest of the typed route descriptors (`_meta.ts`), keyed by
 // path. Variant A: typed .ts imported here (a later codegen can glob these). The
@@ -22,6 +23,7 @@ export const ROUTE_MANIFEST: Record<string, RouteMeta> = {
   "/api/project/default/architecture/tasks": tasksApiMeta,
   "/api/project/default/architecture/tasks/[id]": taskIdApiMeta,
   "/api/projects": projectsApiMeta,
+  "/project/my-telegram-reminder": telegramReminderMeta,
 }
 
 export function routeMetaFor(key: string | undefined | null): RouteMeta | null {

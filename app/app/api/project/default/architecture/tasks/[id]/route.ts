@@ -5,7 +5,7 @@ import { db } from "@/lib/db"
 // requests (kind 'delete') are also rows here; removing one cancels the request.
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: Promise<{ project: string; id: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params
   await db.prepare("DELETE FROM route_tasks WHERE id = ?").run(id)

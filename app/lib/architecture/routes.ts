@@ -24,7 +24,18 @@ export const ROUTES_TREE: ArchNode = {
         "tracker, a language course, a sales automation. The default project holds " +
         "everything today; grow new ones for any purpose. This folder is permanent " +
         "(it cannot be deleted). Project names use at least three words.",
-      children: [],
+      children: [
+        {
+          id: "project-my-telegram-reminder",
+          label: "my telegram reminder",
+          kind: "page",
+          href: "/project/my-telegram-reminder",
+          description:
+            "A project that ingests your Telegram messages into a vector store so " +
+            "you can later ask what you had planned. Its pages are real named " +
+            "routes — dynamic routes are forbidden inside a project (§3.12).",
+        },
+      ],
     },
     {
       id: "pages",
