@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getSession } from "@/lib/auth/get-session"
+import { syncRouteReadme } from "@/lib/declared-readme"
 
 // Per-route tasks on EXISTING pages — the manual settings that keep accruing
 // after a page ships (development doesn't end at publish). Two kinds, both flags
 // an agent picks up: 'todo' (ongoing work on the page) and 'delete' (a deletion
 // + refactor request from the danger zone). Same write path for the human UI and
-// for an orchestrating agent (X-Agent-Identity). No real file is touched here.
+// for an orchestrating agent (X-Agent-Identity). Every change also rewrites the
+// route's README.md on disk so an agent reads the tasks (syncRouteReadme).
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url)
@@ -44,6 +46,7 @@ export async function POST(req: NextRequest) {
     "INSERT INTO route_tasks (id, path, kind, body, outcome, created_by) VALUES (?, ?, ?, ?, ?, ?)"
   ).run(id, String(path), k, String(body).trim(), outcome ? String(outcome).trim() : null, createdBy)
   const task = await db.prepare("SELECT * FROM route_tasks WHERE id = ?").get(id)
+  await syncRouteReadme(String(path))
   return NextResponse.json({ task }, { status: 201 })
 }
 
@@ -54,5 +57,6 @@ export async function DELETE(req: NextRequest) {
   const path = new URL(req.url).searchParams.get("path")
   if (!path) return NextResponse.json({ error: "path is required" }, { status: 400 })
   await db.prepare("DELETE FROM route_tasks WHERE path = ? AND status = 'open'").run(path)
+  await syncRouteReadme(String(path))
   return NextResponse.json({ ok: true })
 }

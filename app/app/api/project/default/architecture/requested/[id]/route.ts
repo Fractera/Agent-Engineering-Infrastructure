@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import { removeRouteReadme } from "@/lib/declared-readme"
 
 // Remove a declared route (page/endpoint/project) — "Remove declaration" in the
 // UI (step 107). Deletes the requested_routes row by id AND its route_tasks by
@@ -18,6 +19,7 @@ export async function DELETE(
     const seg = row.dynamic ? `[${row.slug}]` : row.slug
     const path = `${base}/${seg}`
     await db.prepare("DELETE FROM route_tasks WHERE path = ?").run(path)
+    await removeRouteReadme(path)
   }
   await db.prepare("DELETE FROM requested_routes WHERE id = ?").run(id)
   return NextResponse.json({ ok: true })

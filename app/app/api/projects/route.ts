@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getSession } from "@/lib/auth/get-session"
 import { DEFAULT_PROJECT, wordCount, slugify } from "@/lib/architecture/projects"
+import { syncRouteReadme } from "@/lib/declared-readme"
 
 // Project layer (ARCHITECTURE §3.12). Independent lines of work under one
 // workspace/agent — organizational metadata, no extra infra or token cost.
@@ -48,6 +49,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "A project with this name already exists." }, { status: 409 })
   }
   void createdBy
+  await syncRouteReadme(`/project/${slug}`)
   const project = await db.prepare("SELECT id, name, slug, description, created_at FROM projects WHERE id = ?").get(id)
   return NextResponse.json({ project }, { status: 201 })
 }

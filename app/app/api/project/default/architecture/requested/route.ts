@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getSession } from "@/lib/auth/get-session"
+import { syncRouteReadme } from "@/lib/declared-readme"
 
 // Requested routes = declared-but-not-built pages (ARCHITECTURE §3.11). Each is a
 // title + a free-form todo list — a flag an agent (or the owner) drops here, that
@@ -115,6 +116,9 @@ export async function POST(req: NextRequest) {
       "INSERT INTO route_tasks (id, path, kind, body, created_by) VALUES (?, ?, 'todo', ?, ?)"
     ).run(crypto.randomUUID(), href, `Code update — ${fname}\n${diff}`, createdBy)
   }
+
+  // Write the declared entity's README.md on disk — the agent's work record.
+  await syncRouteReadme(href)
 
   const row = await db.prepare("SELECT * FROM requested_routes WHERE id = ?").get(id)
   return NextResponse.json(
