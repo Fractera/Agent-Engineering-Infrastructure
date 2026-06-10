@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { X, Loader2 } from "lucide-react"
-import { SegToggle } from "@/components/ui/seg-toggle.client"
+import { ImportanceToggle } from "./importance-toggle.client"
 import type { Importance, Step } from "@/lib/dev-steps/step-file"
 
 // Right-side form opened by "Add step". Declares a new development step — a name
@@ -60,15 +60,7 @@ export function AddStepForm({
 
       <div className="flex items-center justify-between">
         <label className="text-[11px] font-semibold uppercase tracking-wider text-foreground">Importance</label>
-        <SegToggle<Importance>
-          options={[
-            { value: "optional", label: "Optional" },
-            { value: "mandatory", label: "Mandatory" },
-            { value: "critical", label: "Critical" },
-          ]}
-          value={importance}
-          onChange={setImportance}
-        />
+        <ImportanceToggle value={importance} onChange={setImportance} />
       </div>
 
       <button

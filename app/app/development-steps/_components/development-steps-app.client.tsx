@@ -5,6 +5,7 @@ import { Plus, X } from "lucide-react"
 import type { Step } from "@/lib/dev-steps/step-file"
 import { SegToggle } from "@/components/ui/seg-toggle.client"
 import { AddStepForm } from "@/components/dev-steps/add-step-form.client"
+import { importanceDot, importanceText } from "@/components/dev-steps/importance-toggle.client"
 
 type Mode = "new" | "completed"
 
@@ -13,12 +14,6 @@ type Mode = "new" | "completed"
 // (number, name, full description, Source, To-do, Danger zone). Two modes via the
 // header switch: NEW STEPS (editable) and COMPLETED STEPS (read-only, with a date).
 // Built incrementally — S2 reads steps from the filesystem and renders the list.
-
-const IMPORTANCE_DOT: Record<string, string> = {
-  optional: "bg-foreground/30",
-  mandatory: "bg-amber-500",
-  critical: "bg-red-500",
-}
 
 export function DevelopmentStepsApp() {
   const [news, setNews] = useState<Step[]>([])
@@ -100,7 +95,7 @@ export function DevelopmentStepsApp() {
                         selected?.id === s.id ? "bg-primary/15 text-foreground" : "text-foreground hover:bg-muted/60"
                       }`}
                     >
-                      <span className={`h-2 w-2 shrink-0 rounded-full ${IMPORTANCE_DOT[s.importance] ?? "bg-foreground/30"}`} />
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${importanceDot[s.importance]}`} />
                       <span className="shrink-0 font-mono text-foreground/60">{String(s.number).padStart(2, "0")}</span>
                       <span className="truncate font-semibold">{s.name}</span>
                     </button>
@@ -114,9 +109,9 @@ export function DevelopmentStepsApp() {
               ) : selected ? (
                 <div className="flex h-full flex-col p-5">
                   <div className="flex items-center gap-2">
-                    <span className={`h-2.5 w-2.5 rounded-full ${IMPORTANCE_DOT[selected.importance] ?? "bg-foreground/30"}`} />
+                    <span className={`h-2.5 w-2.5 rounded-full ${importanceDot[selected.importance]}`} />
                     <span className="font-mono text-xs text-foreground/60">Step {String(selected.number).padStart(2, "0")}</span>
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-foreground/50">{selected.importance}</span>
+                    <span className={`font-mono text-[10px] font-semibold uppercase tracking-wider ${importanceText[selected.importance]}`}>{selected.importance}</span>
                     {selected.status === "completed" && selected.completedAt && (
                       <span className="rounded-full border border-green-500/50 px-2 py-0.5 font-mono text-[10px] font-semibold text-green-600">
                         completed {selected.completedAt}
