@@ -5,27 +5,19 @@ import { Plus, X, Loader2 } from "lucide-react"
 import { projectApi } from "@/lib/architecture/project-api"
 import { slugify } from "@/lib/architecture/projects"
 import { SourceExample } from "./source-example.client"
+import { SegToggle } from "@/components/ui/seg-toggle.client"
 import type { Requested, QueryParam } from "@/lib/architecture/requested-tree"
 
-// Two-state segmented toggle. We declare intent here (a spec for the agent), so
-// these are plain choices, not real config.
-function SegToggle({ off, on, value, onChange }: {
+// Two-state segmented toggle wrapper over the shared SegToggle (off=false/on=true).
+function BoolToggle({ off, on, value, onChange }: {
   off: string; on: string; value: boolean; onChange: (v: boolean) => void
 }) {
   return (
-    <div className="inline-flex overflow-hidden rounded-md border border-border text-[11px] font-semibold">
-      {[[false, off], [true, on]].map(([v, label]) => (
-        <button
-          key={String(v)}
-          onClick={() => onChange(v as boolean)}
-          className={`px-2.5 py-1 transition-colors ${
-            value === v ? "bg-foreground text-background" : "text-foreground/70 hover:bg-muted"
-          }`}
-        >
-          {label as string}
-        </button>
-      ))}
-    </div>
+    <SegToggle<boolean>
+      options={[{ value: false, label: off }, { value: true, label: on }]}
+      value={value}
+      onChange={onChange}
+    />
   )
 }
 
@@ -103,7 +95,7 @@ export function DeclarePanel({
 
       <div className="flex items-center justify-between">
         <label className="text-[11px] font-semibold uppercase tracking-wider text-foreground">Route type</label>
-        <SegToggle off="Static" on="Dynamic" value={dynamic} onChange={setDynamic} />
+        <BoolToggle off="Static" on="Dynamic" value={dynamic} onChange={setDynamic} />
       </div>
 
       <div className="flex flex-col gap-1">
@@ -125,7 +117,7 @@ export function DeclarePanel({
 
       <div className="flex items-center justify-between">
         <label className="text-[11px] font-semibold uppercase tracking-wider text-foreground">Query params</label>
-        <SegToggle off="None" on="Use query" value={useQuery} onChange={setUseQuery} />
+        <BoolToggle off="None" on="Use query" value={useQuery} onChange={setUseQuery} />
       </div>
       {useQuery && (
         <div className="flex flex-col gap-1.5">

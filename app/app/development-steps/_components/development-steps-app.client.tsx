@@ -1,7 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import type { Step } from "@/lib/dev-steps/step-file"
+import { SegToggle } from "@/components/ui/seg-toggle.client"
+
+type Mode = "new" | "completed"
 
 // Development steps — a filesystem-backed view of the project's work log, mirroring
 // /architecture. Left = the list of steps (number + name); right = the opened step
@@ -16,16 +19,22 @@ const IMPORTANCE_DOT: Record<string, string> = {
 }
 
 export function DevelopmentStepsApp() {
-  const [steps, setSteps] = useState<Step[]>([])
+  const [news, setNews] = useState<Step[]>([])
+  const [completed, setCompleted] = useState<Step[]>([])
+  const [mode, setMode] = useState<Mode>("new")
   const [selected, setSelected] = useState<Step | null>(null)
 
   function refresh() {
     fetch("/api/development-steps/signature")
       .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (d) setSteps(d.new ?? []) })
+      .then(d => { if (d) { setNews(d.new ?? []); setCompleted(d.completed ?? []) } })
       .catch(() => {})
   }
   useEffect(() => { refresh() }, [])
+
+  const steps = useMemo(() => (mode === "completed" ? completed : news), [mode, completed, news])
+  // Clear the open step when switching mode (a new-mode step is not in completed).
+  useEffect(() => { setSelected(null) }, [mode])
 
   return (
     <main className="min-h-screen bg-background">
@@ -42,11 +51,23 @@ export function DevelopmentStepsApp() {
           of what is being built, kept out of the main flow.
         </p>
 
-        <div className="mt-5 overflow-x-auto">
+        {/* Mode switch — New steps (editable) vs Completed steps (read-only). */}
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <span className="font-mono text-[10px] text-foreground/50">{steps.length} {mode === "completed" ? "completed" : "active"}</span>
+          <SegToggle<Mode>
+            options={[{ value: "new", label: "New steps" }, { value: "completed", label: "Completed steps" }]}
+            value={mode}
+            onChange={setMode}
+          />
+        </div>
+
+        <div className="mt-3 overflow-x-auto">
           <div className="flex h-[72vh] min-w-[720px] overflow-hidden rounded-xl border border-border">
             <div className="flex w-1/2 flex-col border-r border-border bg-muted/10">
               <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground/70">New steps</span>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground/70">
+                  {mode === "completed" ? "Completed steps" : "New steps"}
+                </span>
                 <span className="font-mono text-[10px] text-foreground/50">{steps.length}</span>
               </div>
               <div className="flex-1 overflow-y-auto py-2">
@@ -75,6 +96,12 @@ export function DevelopmentStepsApp() {
                   <div className="flex items-center gap-2">
                     <span className={`h-2.5 w-2.5 rounded-full ${IMPORTANCE_DOT[selected.importance] ?? "bg-foreground/30"}`} />
                     <span className="font-mono text-xs text-foreground/60">Step {String(selected.number).padStart(2, "0")}</span>
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-foreground/50">{selected.importance}</span>
+                    {selected.status === "completed" && selected.completedAt && (
+                      <span className="rounded-full border border-green-500/50 px-2 py-0.5 font-mono text-[10px] font-semibold text-green-600">
+                        completed {selected.completedAt}
+                      </span>
+                    )}
                   </div>
                   <h2 className="mt-1 text-sm font-bold text-foreground">{selected.name}</h2>
                   <p className="mt-3 whitespace-pre-wrap text-xs leading-relaxed text-foreground/80">
