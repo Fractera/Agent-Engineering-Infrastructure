@@ -37,13 +37,11 @@ export function buildMergedTree(
     pending: true,
     declared: true,
   }))
-  // The default project is always present (synthetic); named projects follow.
-  const projectNodes: ArchNode[] = [
-    { id: "project-default", label: DEFAULT_PROJECT, kind: "note" },
-    ...projects
-      .filter(p => (p.slug ?? p.name) !== DEFAULT_PROJECT && p.name !== DEFAULT_PROJECT)
-      .map(p => ({ id: `project-${p.slug ?? p.id}`, label: p.name, kind: "note" as const })),
-  ]
+  // The default project IS the root tree itself; the Projects folder lists only
+  // the additional named projects.
+  const projectNodes: ArchNode[] = projects
+    .filter(p => (p.slug ?? p.name) !== DEFAULT_PROJECT && p.name !== DEFAULT_PROJECT)
+    .map(p => ({ id: `project-${p.slug ?? p.id}`, label: p.name, kind: "note" as const }))
   const base: ArchNode = {
     ...ROUTES_TREE,
     children: ROUTES_TREE.children?.map(group => {

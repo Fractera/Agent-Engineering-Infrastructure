@@ -55,26 +55,26 @@ export function ProjectsPanel({
         <p className="mt-1.5 text-xs leading-relaxed text-foreground/80">
           Independent lines of work this one workspace runs — a site, a procurement tracker, a
           language course, a sales automation. Keeping them separate stops them mixing, at no extra
-          token or infrastructure cost. This folder cannot be deleted.
+          token or infrastructure cost. Everything outside this folder is the default project; this
+          folder lists only the additional projects and cannot be deleted.
         </p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-5">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground">Projects</p>
-        <ul className="mt-2 flex flex-col gap-1.5">
-          <li className="flex items-center gap-2 text-xs text-foreground">
-            <span className="text-foreground/60">•</span>
-            <span className="font-semibold">{DEFAULT_PROJECT}</span>
-            <span className="font-mono text-[10px] text-foreground/60">— holds everything today</span>
-          </li>
-          {named.map(p => (
-            <li key={p.id} className="flex items-center gap-2 text-xs text-foreground">
-              <span className="text-foreground/60">•</span>
-              <span className="font-semibold">{p.name}</span>
-              {p.slug && <span className="font-mono text-[10px] text-foreground/60">/{p.slug}</span>}
-            </li>
-          ))}
-        </ul>
+        {named.length === 0 ? (
+          <p className="mt-2 text-xs text-foreground/60">No projects yet — add one below.</p>
+        ) : (
+          <ul className="mt-2 flex flex-col gap-1.5">
+            {named.map(p => (
+              <li key={p.id} className="flex items-center gap-2 text-xs text-foreground">
+                <span className="text-foreground/60">•</span>
+                <span className="font-semibold">{p.name}</span>
+                {p.slug && <span className="font-mono text-[10px] text-foreground/60">/{p.slug}</span>}
+              </li>
+            ))}
+          </ul>
+        )}
 
         <div className="mt-6">
           <label className="text-[11px] font-semibold uppercase tracking-wider text-foreground">New project</label>
