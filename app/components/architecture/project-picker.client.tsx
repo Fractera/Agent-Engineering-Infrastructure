@@ -1,39 +1,39 @@
 "use client"
 
 import { X, FolderTree } from "lucide-react"
-import { DEFAULT_PROJECT, type Project } from "@/lib/architecture/projects"
+
+export type PickerProject = { label: string; slug: string }
 
 // Modal that asks which project a new endpoint belongs to: the default project
-// (→ /api) or one of the named projects (→ /api/project/<slug>). Returns the
-// API base path for that choice.
+// (→ /api) or one of the projects that exist in the tree — both seed (built) and
+// DB-declared. Returns the API base path for that choice. Capped at 600px tall;
+// the card list scrolls when it overflows.
 export function ProjectPicker({
   projects,
   onPick,
   onClose,
 }: {
-  projects: Project[]
+  projects: PickerProject[]
   onPick: (base: string) => void
   onClose: () => void
 }) {
-  const named = projects.filter(p => (p.slug ?? p.name) !== DEFAULT_PROJECT && p.name !== DEFAULT_PROJECT)
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div
-        className="w-full max-w-md rounded-xl border border-border bg-background p-5 shadow-xl"
+        className="flex max-h-[600px] w-full max-w-md flex-col rounded-xl border border-border bg-background shadow-xl"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between border-b border-border p-5">
           <h2 className="text-base font-bold text-foreground">Endpoint — choose a project</h2>
           <button onClick={onClose} className="text-foreground/60 transition-colors hover:text-foreground">
             <X size={14} />
           </button>
         </div>
-        <p className="mt-1.5 text-xs leading-relaxed text-foreground/80">
+        <p className="px-5 pt-3 text-xs leading-relaxed text-foreground/80">
           Which project does this endpoint belong to? The path is created accordingly.
         </p>
 
-        <div className="mt-4 flex flex-col gap-2">
+        <div className="flex flex-col gap-2 overflow-y-auto p-5">
           <button
             onClick={() => onPick("/api")}
             className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5 text-left transition-colors hover:bg-muted"
@@ -41,16 +41,17 @@ export function ProjectPicker({
             <span className="text-sm font-semibold text-foreground">Default project</span>
             <span className="font-mono text-[11px] text-foreground/60">/api/…</span>
           </button>
-          {named.map(p => (
+          {projects.map(p => (
             <button
-              key={p.id}
-              onClick={() => onPick(`/api/project/${p.slug ?? p.id}`)}
-              className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5 text-left transition-colors hover:bg-muted"
+              key={p.slug}
+              onClick={() => onPick(`/api/project/${p.slug}`)}
+              className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2.5 text-left transition-colors hover:bg-muted"
             >
-              <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                <FolderTree size={12} className="text-amber-500" />{p.name}
+              <span className="flex min-w-0 items-center gap-1.5 text-sm font-semibold text-foreground">
+                <FolderTree size={12} className="shrink-0 text-amber-500" />
+                <span className="truncate">{p.label}</span>
               </span>
-              <span className="font-mono text-[11px] text-foreground/60">/api/project/{p.slug ?? p.id}/…</span>
+              <span className="shrink-0 font-mono text-[11px] text-foreground/60">/api/project/{p.slug}/…</span>
             </button>
           ))}
         </div>

@@ -16,7 +16,7 @@ import { RequestedDetailPanel } from "@/components/architecture/requested-detail
 import { ProjectsPanel } from "@/components/architecture/projects-panel.client"
 import { DeclarePanel } from "@/components/architecture/declare-panel.client"
 import { EndpointPanel } from "@/components/architecture/endpoint-panel.client"
-import { ProjectPicker } from "@/components/architecture/project-picker.client"
+import { ProjectPicker, type PickerProject } from "@/components/architecture/project-picker.client"
 
 // Left section = the route tree (Add page lives in its top-right corner).
 // Right section = the selected route's real RouteMeta descriptor (Open page in
@@ -97,6 +97,18 @@ export function ArchitectureApp() {
   // group / root / non-page selection falls back to the project root "/".
   const addBase = selected?.kind === "page" && selected.href ? selected.href : "/"
 
+  // All projects shown in the endpoint picker = the Projects folder's children
+  // in the tree (both seed/built and DB-declared). slug from href or node id.
+  const pickerProjects: PickerProject[] = useMemo(() => {
+    const group = tree.children?.find(c => c.id === "projects")
+    return (group?.children ?? []).map(n => ({
+      label: n.label,
+      slug: n.href?.startsWith("/project/")
+        ? n.href.slice("/project/".length)
+        : n.id.replace(/^project-/, ""),
+    }))
+  }, [tree])
+
   // The Projects folder itself opens the ProjectsPanel; real project pages
   // (with a descriptor) open their RouteDetailPanel like any named route.
   const isProject = selected?.id === "projects"
@@ -172,7 +184,7 @@ export function ArchitectureApp() {
 
       {picking && (
         <ProjectPicker
-          projects={projects}
+          projects={pickerProjects}
           onClose={() => setPicking(false)}
           onPick={(b) => { setPicking(false); setSelected(null); setEndpointBase(b) }}
         />
