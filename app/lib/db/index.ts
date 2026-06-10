@@ -57,13 +57,6 @@ const SCHEMA = `
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     created_by TEXT NOT NULL DEFAULT 'system'
   );
-  CREATE TABLE IF NOT EXISTS glossary (
-    id         TEXT PRIMARY KEY NOT NULL,
-    term       TEXT NOT NULL,
-    meaning    TEXT NOT NULL DEFAULT '',
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    created_by TEXT NOT NULL DEFAULT 'system'
-  );
   CREATE TABLE IF NOT EXISTS route_tasks (
     id         TEXT PRIMARY KEY NOT NULL,
     path       TEXT NOT NULL,

@@ -57,9 +57,9 @@ const meta: RouteMeta = {
   description:
     "Glossary editor — approve abbreviations / preferred phrasings (key→meaning) so " +
     "every agent reads them the same way (e.g. aws → ai-workspace). Public (temporary).",
-  dataDependencies: ["app.db (glossary)", "/api/glossary"],
-  relatedRoutes: ["/api/glossary", "/api/glossary/[id]"],
-  notes: "Temporarily public. Global workspace glossary; an agent ingests it into Company Brain.",
+  dataDependencies: ["filesystem: GLOSSARY.md (project root)", "/api/glossary"],
+  relatedRoutes: ["/api/glossary"],
+  notes: "Temporarily public. Edits write the real GLOSSARY.md file agents read.",
 
   owner: undefined,
   createdBy: undefined,

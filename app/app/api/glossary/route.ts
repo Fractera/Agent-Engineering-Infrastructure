@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
-import { db } from "@/lib/db"
-import { getSession } from "@/lib/auth/get-session"
+import { readGlossary, writeGlossary } from "@/lib/glossary-file"
 
-// Workspace glossary (step 107) — the term map every agent reads so abbreviations
-// and voice-dictated phrasings are understood the same way (e.g. aws → ai-workspace).
-// Global (one per workspace). The editable source; an agent can export/ingest it
-// into glossary.md / Company Brain (ARCHITECTURE §3.11 Documentation corpus).
+// Workspace glossary (step 107) — backed by a REAL file GLOSSARY.md at the
+// project root, so any agent reads it directly as context. GET lists, POST adds
+// a row, DELETE ?index=N removes a row; every change rewrites the file.
 
 export async function GET() {
-  const entries = await db.prepare(
-    "SELECT id, term, meaning, created_at FROM glossary ORDER BY term COLLATE NOCASE ASC"
-  ).all()
+  const entries = await readGlossary()
   return NextResponse.json({ entries })
 }
 
@@ -19,12 +15,19 @@ export async function POST(req: NextRequest) {
   if (!term?.trim()) {
     return NextResponse.json({ error: "term is required" }, { status: 400 })
   }
-  const session = await getSession(req)
-  const createdBy = session?.email ?? req.headers.get("x-agent-identity") ?? "unknown"
-  const id = crypto.randomUUID()
-  await db.prepare(
-    "INSERT INTO glossary (id, term, meaning, created_by) VALUES (?, ?, ?, ?)"
-  ).run(id, String(term).trim(), meaning ? String(meaning).trim() : "", createdBy)
-  const entry = await db.prepare("SELECT id, term, meaning, created_at FROM glossary WHERE id = ?").get(id)
-  return NextResponse.json({ entry }, { status: 201 })
+  const entries = await readGlossary()
+  entries.push({ term: String(term).trim(), meaning: String(meaning ?? "").trim() })
+  await writeGlossary(entries)
+  return NextResponse.json({ entries }, { status: 201 })
+}
+
+export async function DELETE(req: NextRequest) {
+  const idx = Number(new URL(req.url).searchParams.get("index"))
+  if (!Number.isInteger(idx)) {
+    return NextResponse.json({ error: "index is required" }, { status: 400 })
+  }
+  const entries = await readGlossary()
+  if (idx >= 0 && idx < entries.length) entries.splice(idx, 1)
+  await writeGlossary(entries)
+  return NextResponse.json({ entries })
 }

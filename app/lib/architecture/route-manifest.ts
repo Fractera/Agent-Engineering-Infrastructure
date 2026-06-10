@@ -11,7 +11,6 @@ import projectsApiMeta from "@/app/api/projects/_meta"
 import telegramReminderMeta from "@/app/project/my-telegram-reminder/_meta"
 import glossaryPageMeta from "@/app/glossary/_meta"
 import glossaryApiMeta from "@/app/api/glossary/_meta"
-import glossaryIdApiMeta from "@/app/api/glossary/[id]/_meta"
 import sourceApiMeta from "@/app/api/project/default/source/_meta"
 import routingApiMeta from "@/app/api/project/default/routing/_meta"
 import signatureApiMeta from "@/app/api/project/default/architecture/signature/_meta"
@@ -29,7 +28,6 @@ export const ROUTE_MANIFEST: Record<string, RouteMeta> = {
   "/debug": debugMeta,
   "/glossary": glossaryPageMeta,
   "/api/glossary": glossaryApiMeta,
-  "/api/glossary/[id]": glossaryIdApiMeta,
   "/api/project/default/architecture/requested": requestedApiMeta,
   "/api/project/default/architecture/tasks": tasksApiMeta,
   "/api/project/default/architecture/tasks/[id]": taskIdApiMeta,

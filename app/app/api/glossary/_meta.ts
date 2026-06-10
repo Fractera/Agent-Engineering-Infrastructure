@@ -52,14 +52,14 @@ const meta: RouteMeta = {
   hasNotFound: false,
   hasLayout: false,
 
-  methods: ["GET", "POST"],
+  methods: ["GET", "POST", "DELETE"],
 
   description:
-    "Workspace glossary (term map) — list and add terms so every agent reads " +
-    "abbreviations the same way (e.g. aws → ai-workspace). Global, §3.11.",
-  dataDependencies: ["app.db (glossary)"],
+    "Workspace glossary — reads/writes the real file GLOSSARY.md at the project " +
+    "root so every agent reads it as context (e.g. aws → ai-workspace). §3.11.",
+  dataDependencies: ["filesystem: GLOSSARY.md (project root)"],
   relatedRoutes: ["/glossary"],
-  notes: "Editable source; an agent exports/ingests it into glossary.md / Company Brain.",
+  notes: "File is the source of truth (no DB). DELETE ?index=N removes a row.",
 
   owner: undefined,
   createdBy: undefined,

@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react"
 import { Plus, Trash2, Loader2, ArrowRight } from "lucide-react"
 import { toast } from "sonner"
 
-type Entry = { id: string; term: string; meaning: string; created_at: string }
+type Entry = { term: string; meaning: string }
 
 // The workspace glossary editor (step 107). Approve abbreviations / preferred
 // phrasings so every agent reads them the same way and avoids mistakes —
@@ -16,7 +16,7 @@ export function GlossaryApp() {
   const [term, setTerm] = useState("")
   const [meaning, setMeaning] = useState("")
   const [saving, setSaving] = useState(false)
-  const [deleting, setDeleting] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<number | null>(null)
 
   const load = useCallback(async () => {
     const res = await fetch("/api/glossary")
@@ -34,7 +34,9 @@ export function GlossaryApp() {
         body: JSON.stringify({ term: term.trim(), meaning: meaning.trim() }),
       })
       if (!res.ok) throw new Error("Failed to save")
-      setTerm(""); setMeaning(""); await load()
+      const data = await res.json()
+      setEntries(data.entries ?? [])
+      setTerm(""); setMeaning("")
     } catch (e) {
       toast.error(String(e))
     } finally {
@@ -42,12 +44,13 @@ export function GlossaryApp() {
     }
   }
 
-  async function remove(id: string) {
-    setDeleting(id)
+  async function remove(index: number) {
+    setDeleting(index)
     try {
-      const res = await fetch(`/api/glossary/${id}`, { method: "DELETE" })
+      const res = await fetch(`/api/glossary?index=${index}`, { method: "DELETE" })
       if (!res.ok) throw new Error("Failed to delete")
-      setEntries(prev => prev.filter(e => e.id !== id))
+      const data = await res.json()
+      setEntries(data.entries ?? [])
     } catch (e) {
       toast.error(String(e))
     } finally {
@@ -76,10 +79,10 @@ export function GlossaryApp() {
           <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/70">Where it lives</p>
           <p className="mt-1 font-mono text-xs font-semibold text-foreground">GLOSSARY.md</p>
           <p className="mt-1 text-[11px] leading-relaxed text-foreground/70">
-            Project root — the same level as the agent context files
+            A real file at the project root — the same level as the agent context files
             (<span className="font-mono">CLAUDE.md</span>, <span className="font-mono">AGENTS.md</span>,
             <span className="font-mono"> GEMINI.md</span>, <span className="font-mono">QWEN.md</span>) and the base
-            Next.js files. You edit it here; it is published to that file so every agent reads it as project context.
+            Next.js files. Editing here writes this file directly, so every agent reads it as project context.
           </p>
         </div>
 
@@ -117,18 +120,18 @@ export function GlossaryApp() {
           <div className="mt-4 overflow-hidden rounded-xl border border-border">
             {entries.map((e, i) => (
               <div
-                key={e.id}
+                key={i}
                 className={`flex items-center gap-3 px-4 py-2.5 text-xs ${i < entries.length - 1 ? "border-b border-border" : ""}`}
               >
                 <span className="w-1/3 shrink-0 break-all font-mono font-semibold text-foreground">{e.term}</span>
                 <ArrowRight size={12} className="shrink-0 text-foreground/40" />
                 <span className="flex-1 break-all text-foreground/90">{e.meaning || "—"}</span>
                 <button
-                  onClick={() => remove(e.id)}
-                  disabled={deleting === e.id}
+                  onClick={() => remove(i)}
+                  disabled={deleting === i}
                   className="shrink-0 text-foreground/50 transition-colors hover:text-red-600 disabled:opacity-40"
                 >
-                  {deleting === e.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                  {deleting === i ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
                 </button>
               </div>
             ))}
