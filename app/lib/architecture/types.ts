@@ -37,5 +37,7 @@ export type ArchNode = {
   addable?: boolean
   /** Label for the add affordance (defaults to "Add"). */
   addLabel?: string
+  /** A declared-but-not-built route (status "requested") merged into the tree. */
+  pending?: boolean
   children?: ArchNode[]
 }

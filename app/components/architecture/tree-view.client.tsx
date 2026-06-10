@@ -65,7 +65,10 @@ export function TreeNode({
           )}
         </span>
         <NodeIcon node={node} isOpen={isOpen} />
-        <span className="ml-0.5 truncate font-medium text-foreground/90">{node.label}</span>
+        <span className={`ml-0.5 truncate font-medium ${node.pending ? "text-amber-400/90" : "text-foreground/90"}`}>{node.label}</span>
+        {node.pending && (
+          <span className="ml-1 shrink-0 rounded-full border border-amber-500/30 px-1.5 font-mono text-[9px] text-amber-400/80">req</span>
+        )}
         {node.port && (
           <span className="ml-auto shrink-0 font-mono text-[10px] text-muted-foreground/70">
             {node.port}

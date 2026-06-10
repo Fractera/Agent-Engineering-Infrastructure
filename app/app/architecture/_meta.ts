@@ -65,6 +65,7 @@ const meta: RouteMeta = {
   sharedComponents: [
     "@/components/architecture/tree-view.client",
     "@/components/architecture/detail-panel.client",
+    "@/components/architecture/route-detail-panel.client",
     "@/components/architecture/declare-panel.client",
   ],
 
