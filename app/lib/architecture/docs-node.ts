@@ -16,11 +16,13 @@ export const DOCS_NODE: ArchNode = {
   children: [
     {
       id: "doc-glossary",
-      label: "glossary.md",
+      label: "GLOSSARY.md",
       kind: "config",
+      href: "/glossary",
       description:
-        "Project terms — disambiguates voice-dictated names and domain words so " +
-        "every agent reads them the same way.",
+        "Project terms — approved abbreviations / preferred phrasings so every agent " +
+        "reads them the same way (e.g. aws -> ai-workspace). A real file at the project " +
+        "root, edited via the /glossary page; agents read it directly as context.",
     },
     {
       id: "doc-steps",
