@@ -65,6 +65,7 @@ export async function GET() {
   ).all()
   const requested = rows.map(r => ({
     ...r,
+    kind: r.kind === "api" ? "api" : "page",
     todo: parseTodo(r.todo),
     dynamic: !!r.dynamic,
     query: parseQuery(r.query),
@@ -73,10 +74,11 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { title, todo, base, dynamic, queryParams } = await req.json()
+  const { title, todo, base, dynamic, queryParams, kind } = await req.json()
   if (!title?.trim()) {
     return NextResponse.json({ error: "title is required" }, { status: 400 })
   }
+  const routeKind = kind === "api" ? "api" : "page"
   const items: string[] = Array.isArray(todo)
     ? todo.map(String).map((s: string) => s.trim()).filter(Boolean)
     : []
@@ -92,12 +94,12 @@ export async function POST(req: NextRequest) {
   const basePath = normalizeBase(base)
   const slug = await uniqueLeaf(basePath, slugify(title))
   await db.prepare(
-    "INSERT INTO requested_routes (id, slug, base, dynamic, query, title, todo, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, 'requested', ?)"
-  ).run(id, slug, basePath, isDynamic, JSON.stringify(query), String(title).trim(), JSON.stringify(items), createdBy)
+    "INSERT INTO requested_routes (id, slug, kind, base, dynamic, query, title, todo, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'requested', ?)"
+  ).run(id, slug, routeKind, basePath, isDynamic, JSON.stringify(query), String(title).trim(), JSON.stringify(items), createdBy)
 
   const row = await db.prepare("SELECT * FROM requested_routes WHERE id = ?").get(id)
   return NextResponse.json(
-    { requested: row ? { ...row, todo: parseTodo(row.todo), dynamic: !!row.dynamic, query: parseQuery(row.query) } : null },
+    { requested: row ? { ...row, kind: row.kind === "api" ? "api" : "page", todo: parseTodo(row.todo), dynamic: !!row.dynamic, query: parseQuery(row.query) } : null },
     { status: 201 },
   )
 }

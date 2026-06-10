@@ -11,6 +11,7 @@ export type QueryParam = { key: string; value: string }
 export type Requested = {
   id: string
   slug: string
+  kind: "page" | "api"
   base: string
   dynamic: boolean
   query: QueryParam[]
@@ -74,19 +75,20 @@ export function buildMergedTree(
   taskPaths: Set<string> = new Set(),
   projects: Project[] = [],
 ): ArchNode {
-  // Group declared pages by their base (where they were added). Root-level ones
-  // (base "/") go into the Pages group; deeper ones attach under the node whose
-  // href === base, enabling a tree of any depth.
+  // Declared PAGES nest by their base (any depth). Declared ENDPOINTS (kind api)
+  // are listed flat in the API group (there are no folders for endpoints).
   const byBase = new Map<string, ArchNode[]>()
+  const apiNodes: ArchNode[] = []
   for (const r of requested) {
     const node: ArchNode = {
       id: requestedNodeId(r.id),
       label: r.title,
-      kind: "page",
+      kind: r.kind === "api" ? "api" : "page",
       href: reqHref(r),
       pending: true,
       declared: true,
     }
+    if (r.kind === "api") { apiNodes.push(node); continue }
     const b = r.base && r.base !== "/" ? r.base : "/"
     byBase.set(b, [...(byBase.get(b) ?? []), node])
   }
@@ -100,6 +102,7 @@ export function buildMergedTree(
     ...ROUTES_TREE,
     children: ROUTES_TREE.children?.map(group => {
       if (group.id === "pages") return { ...group, children: [...(group.children ?? []), ...rootReq] }
+      if (group.id === "api") return { ...group, children: [...(group.children ?? []), ...apiNodes] }
       if (group.id === "projects") return { ...group, children: [...(group.children ?? []), ...projectNodes] }
       return group
     }),

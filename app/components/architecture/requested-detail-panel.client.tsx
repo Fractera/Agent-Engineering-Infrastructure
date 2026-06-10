@@ -15,7 +15,7 @@ export function RequestedDetailPanel({ item }: { item: Requested }) {
         <div className="mt-1.5 flex items-center gap-2">
           <p className="text-sm font-semibold text-foreground">{item.title}</p>
           <span className="rounded border border-border px-1.5 font-mono text-[9px] font-semibold text-foreground/70">
-            {item.dynamic ? "dynamic" : "static"}
+            {item.kind === "api" ? "endpoint" : item.dynamic ? "dynamic" : "static"}
           </span>
         </div>
         <p className="font-mono text-[10px] text-foreground/60">{reqHref(item)}</p>

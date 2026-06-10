@@ -15,6 +15,8 @@ import { RouteDetailPanel } from "@/components/architecture/route-detail-panel.c
 import { RequestedDetailPanel } from "@/components/architecture/requested-detail-panel.client"
 import { ProjectsPanel } from "@/components/architecture/projects-panel.client"
 import { DeclarePanel } from "@/components/architecture/declare-panel.client"
+import { EndpointPanel } from "@/components/architecture/endpoint-panel.client"
+import { ProjectPicker } from "@/components/architecture/project-picker.client"
 
 // Left section = the route tree (Add page lives in its top-right corner).
 // Right section = the selected route's real RouteMeta descriptor (Open page in
@@ -27,6 +29,8 @@ export function ArchitectureApp() {
   const [selected, setSelected] = useState<ArchNode | null>(null)
   const [expanded, setExpanded] = useState<Set<string>>(new Set(["routes", "projects", "pages", "api"]))
   const [declaring, setDeclaring] = useState(false)
+  const [picking, setPicking] = useState(false)          // endpoint: choose project modal
+  const [endpointBase, setEndpointBase] = useState<string | null>(null)
 
   // Requested pages drive the tree's declared nodes; the task summary marks
   // existing pages that carry pending work; projects fill the Projects folder.
@@ -82,9 +86,11 @@ export function ArchitectureApp() {
 
   function onCreated(r: Requested) {
     setRequested(prev => [r, ...prev])
-    setExpanded(prev => new Set([...prev, "pages", `req-${r.id}`]))
-    setSelected({ id: requestedNodeId(r.id), label: r.title, kind: "page", href: reqHref(r), pending: true, declared: true })
+    const group = r.kind === "api" ? "api" : "pages"
+    setExpanded(prev => new Set([...prev, group, `req-${r.id}`]))
+    setSelected({ id: requestedNodeId(r.id), label: r.title, kind: r.kind, href: reqHref(r), pending: true, declared: true })
     setDeclaring(false)
+    setEndpointBase(null)
   }
 
   // The base path a new page is added under = the active page node's href; a
@@ -117,17 +123,20 @@ export function ArchitectureApp() {
           <div className="flex h-[72vh] min-w-[720px] overflow-hidden rounded-xl border border-border">
             {/* LEFT — tree, with Add page in its top-right corner */}
             <div className="flex w-1/2 flex-col border-r border-border bg-muted/10">
-              <div className="flex items-center justify-between border-b border-border px-3 py-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground">
-                  Pages &amp; API
-                </span>
+              <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
                 <button
-                  onClick={() => setDeclaring(v => !v)}
+                  onClick={() => { setEndpointBase(null); setPicking(false); setDeclaring(v => !v) }}
                   title={declaring ? undefined : `Add page to: ${addBase}`}
-                  className="inline-flex h-7 max-w-[60%] items-center gap-1.5 rounded-md border border-foreground/40 px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
+                  className="inline-flex h-7 min-w-0 flex-1 items-center gap-1.5 rounded-md border border-foreground/40 px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
                 >
                   {declaring ? <X size={11} className="shrink-0" /> : <Plus size={11} className="shrink-0" />}
                   <span className="truncate">{declaring ? "Close" : `Add page to: ${addBase}`}</span>
+                </button>
+                <button
+                  onClick={() => { setDeclaring(false); setEndpointBase(null); setPicking(true) }}
+                  className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md border border-foreground/40 px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
+                >
+                  <Plus size={11} /> Add endpoint
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto py-2">
@@ -147,17 +156,27 @@ export function ArchitectureApp() {
             <div className="w-1/2">
               {declaring
                 ? <DeclarePanel base={addBase} onClose={() => setDeclaring(false)} onCreated={onCreated} />
-                : isProject
-                  ? <ProjectsPanel projects={projects} onChanged={refresh} />
-                  : reqItem
-                    ? <RequestedDetailPanel item={reqItem} />
-                    : meta
-                      ? <RouteDetailPanel meta={meta} onChanged={refresh} />
-                      : <DetailPanel node={selected} />}
+                : endpointBase !== null
+                  ? <EndpointPanel base={endpointBase} onClose={() => setEndpointBase(null)} onCreated={onCreated} />
+                  : isProject
+                    ? <ProjectsPanel projects={projects} onChanged={refresh} />
+                    : reqItem
+                      ? <RequestedDetailPanel item={reqItem} />
+                      : meta
+                        ? <RouteDetailPanel meta={meta} onChanged={refresh} />
+                        : <DetailPanel node={selected} />}
             </div>
           </div>
         </div>
       </div>
+
+      {picking && (
+        <ProjectPicker
+          projects={projects}
+          onClose={() => setPicking(false)}
+          onPick={(b) => { setPicking(false); setSelected(null); setEndpointBase(b) }}
+        />
+      )}
     </main>
   )
 }
