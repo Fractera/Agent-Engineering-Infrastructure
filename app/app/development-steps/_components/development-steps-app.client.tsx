@@ -1,8 +1,10 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { Plus, X } from "lucide-react"
 import type { Step } from "@/lib/dev-steps/step-file"
 import { SegToggle } from "@/components/ui/seg-toggle.client"
+import { AddStepForm } from "@/components/dev-steps/add-step-form.client"
 
 type Mode = "new" | "completed"
 
@@ -23,6 +25,7 @@ export function DevelopmentStepsApp() {
   const [completed, setCompleted] = useState<Step[]>([])
   const [mode, setMode] = useState<Mode>("new")
   const [selected, setSelected] = useState<Step | null>(null)
+  const [adding, setAdding] = useState(false)
 
   function refresh() {
     fetch("/api/development-steps/signature")
@@ -34,7 +37,14 @@ export function DevelopmentStepsApp() {
 
   const steps = useMemo(() => (mode === "completed" ? completed : news), [mode, completed, news])
   // Clear the open step when switching mode (a new-mode step is not in completed).
-  useEffect(() => { setSelected(null) }, [mode])
+  useEffect(() => { setSelected(null); setAdding(false) }, [mode])
+
+  function onCreated(s: Step) {
+    setNews(prev => [...prev.filter(p => p.id !== s.id), s].sort((a, b) => a.number - b.number))
+    setMode("new")
+    setAdding(false)
+    setSelected(s)
+  }
 
   return (
     <main className="min-h-screen bg-background">
@@ -68,7 +78,15 @@ export function DevelopmentStepsApp() {
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground/70">
                   {mode === "completed" ? "Completed steps" : "New steps"}
                 </span>
-                <span className="font-mono text-[10px] text-foreground/50">{steps.length}</span>
+                {mode === "new" && (
+                  <button
+                    onClick={() => { setSelected(null); setAdding(v => !v) }}
+                    className="inline-flex h-7 items-center gap-1.5 rounded-md border border-foreground/40 px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
+                  >
+                    {adding ? <X size={11} /> : <Plus size={11} />}
+                    {adding ? "Close" : "Add step"}
+                  </button>
+                )}
               </div>
               <div className="flex-1 overflow-y-auto py-2">
                 {steps.length === 0 ? (
@@ -91,7 +109,9 @@ export function DevelopmentStepsApp() {
               </div>
             </div>
             <div className="w-1/2">
-              {selected ? (
+              {adding ? (
+                <AddStepForm onClose={() => setAdding(false)} onCreated={onCreated} />
+              ) : selected ? (
                 <div className="flex h-full flex-col p-5">
                   <div className="flex items-center gap-2">
                     <span className={`h-2.5 w-2.5 rounded-full ${IMPORTANCE_DOT[selected.importance] ?? "bg-foreground/30"}`} />
