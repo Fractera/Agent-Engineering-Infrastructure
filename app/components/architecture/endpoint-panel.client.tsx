@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Plus, X, Loader2 } from "lucide-react"
 import { projectApi } from "@/lib/architecture/project-api"
+import { SourceExample } from "./source-example.client"
 import type { Requested } from "@/lib/architecture/requested-tree"
 
 // Right-side panel to declare an API endpoint (kind "api") under a chosen base
@@ -21,6 +22,7 @@ export function EndpointPanel({
   const [title, setTitle] = useState("")
   const [items, setItems] = useState<string[]>([])
   const [draft, setDraft] = useState("")
+  const [example, setExample] = useState("")
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
 
@@ -37,12 +39,12 @@ export function EndpointPanel({
       const res = await fetch(projectApi("/architecture/requested"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: title.trim(), todo: items, base, kind: "api" }),
+        body: JSON.stringify({ title: title.trim(), todo: items, base, kind: "api", example }),
       })
       if (!res.ok) { setError("Could not save — try again"); return }
       const { requested } = await res.json()
       if (requested) onCreated(requested)
-      setTitle(""); setItems([]); setDraft("")
+      setTitle(""); setItems([]); setDraft(""); setExample("")
     } finally {
       setSaving(false)
     }
@@ -97,6 +99,8 @@ export function EndpointPanel({
           </button>
         </div>
       </div>
+
+      <SourceExample value={example} onChange={setExample} />
 
       <button
         onClick={declare}

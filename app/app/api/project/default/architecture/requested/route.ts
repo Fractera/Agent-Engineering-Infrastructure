@@ -74,7 +74,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { title, todo, base, dynamic, queryParams, kind } = await req.json()
+  const { title, todo, base, dynamic, queryParams, kind, example } = await req.json()
   if (!title?.trim()) {
     return NextResponse.json({ error: "title is required" }, { status: 400 })
   }
@@ -105,6 +105,15 @@ export async function POST(req: NextRequest) {
     await db.prepare(
       "INSERT INTO route_tasks (id, path, kind, body, created_by) VALUES (?, ?, 'todo', ?, ?)"
     ).run(crypto.randomUUID(), href, item, createdBy)
+  }
+  // An example pasted in the Source editor → a code-change request the agent can
+  // build from. Stored in the same "Code update — <file>" + unified-diff format.
+  if (typeof example === "string" && example.trim()) {
+    const fname = routeKind === "api" ? "route.ts" : "page.tsx"
+    const diff = example.split("\n").map(l => "+" + l).join("\n")
+    await db.prepare(
+      "INSERT INTO route_tasks (id, path, kind, body, created_by) VALUES (?, ?, 'todo', ?, ?)"
+    ).run(crypto.randomUUID(), href, `Code update — ${fname}\n${diff}`, createdBy)
   }
 
   const row = await db.prepare("SELECT * FROM requested_routes WHERE id = ?").get(id)

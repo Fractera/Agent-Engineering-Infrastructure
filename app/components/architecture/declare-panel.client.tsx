@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Plus, X, Loader2 } from "lucide-react"
 import { projectApi } from "@/lib/architecture/project-api"
+import { SourceExample } from "./source-example.client"
 import type { Requested, QueryParam } from "@/lib/architecture/requested-tree"
 
 // Two-state segmented toggle. We declare intent here (a spec for the agent), so
@@ -47,6 +48,7 @@ export function DeclarePanel({
   const [qValue, setQValue] = useState("")
   const [items, setItems] = useState<string[]>([])
   const [draft, setDraft] = useState("")
+  const [example, setExample] = useState("")
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
 
@@ -68,12 +70,12 @@ export function DeclarePanel({
       const res = await fetch(projectApi("/architecture/requested"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: title.trim(), todo: items, base, dynamic, queryParams: useQuery ? query : [] }),
+        body: JSON.stringify({ title: title.trim(), todo: items, base, dynamic, queryParams: useQuery ? query : [], example }),
       })
       if (!res.ok) { setError("Could not save — try again"); return }
       const { requested } = await res.json()
       if (requested) onCreated(requested)
-      setTitle(""); setItems([]); setDraft(""); setQuery([]); setDynamic(false); setUseQuery(false)
+      setTitle(""); setItems([]); setDraft(""); setQuery([]); setDynamic(false); setUseQuery(false); setExample("")
     } finally {
       setSaving(false)
     }
@@ -171,6 +173,8 @@ export function DeclarePanel({
           </button>
         </div>
       </div>
+
+      <SourceExample value={example} onChange={setExample} />
 
       <button
         onClick={declare}
