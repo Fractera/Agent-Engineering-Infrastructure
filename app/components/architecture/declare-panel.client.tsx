@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Plus, X, Loader2 } from "lucide-react"
 import { projectApi } from "@/lib/architecture/project-api"
+import { slugify } from "@/lib/architecture/projects"
 import { SourceExample } from "./source-example.client"
 import type { Requested, QueryParam } from "@/lib/architecture/requested-tree"
 
@@ -51,6 +52,13 @@ export function DeclarePanel({
   const [example, setExample] = useState("")
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
+
+  // Live preview of the real path this declaration becomes — always starts with
+  // "/". The slug is derived the same way the server does (collisions get a
+  // numeric suffix there, so this is the base case).
+  const slug = slugify(title) || (dynamic ? "param" : "page")
+  const seg = dynamic ? `[${slug}]` : slug
+  const previewPath = base === "/" ? `/${seg}` : `${base}/${seg}`
 
   function addItem() {
     const v = draft.trim()
@@ -109,6 +117,9 @@ export function DeclarePanel({
           onChange={e => setTitle(e.target.value)}
           className="h-8 rounded-md border border-border bg-background px-3 text-xs text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
         />
+        <p className="font-mono text-[11px] text-foreground/70">
+          Path: <span className="font-semibold text-foreground">{previewPath}</span>
+        </p>
         {error && <span className="text-[11px] font-medium text-red-600">{error}</span>}
       </div>
 

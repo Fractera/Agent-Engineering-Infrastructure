@@ -82,7 +82,7 @@ export function enrichWithRouting(
 export function buildMergedTree(
   requested: Requested[],
   taskPaths: Set<string> = new Set(),
-  projects: Project[] = [],
+  projects: (Project & { built?: boolean })[] = [],
   builtExtra: { href: string; kind: "page" | "api" }[] = [],
 ): ArchNode {
   // Declared PAGES nest by their base (any depth). Declared ENDPOINTS (kind api)
@@ -92,7 +92,9 @@ export function buildMergedTree(
   for (const r of requested) {
     const node: ArchNode = {
       id: requestedNodeId(r.id),
-      label: r.title,
+      // Show the REAL path (like the seed nodes do), not the free-text title —
+      // the title is shown in the detail panel.
+      label: reqHref(r),
       kind: r.kind === "api" ? "api" : "page",
       href: reqHref(r),
       pending: true,
@@ -118,15 +120,21 @@ export function buildMergedTree(
   // A project is a folder with a page (like the seed my-telegram-reminder). A
   // DB-declared project is not built yet → a pending page node (orange + req)
   // that the agent turns into a real /project/<slug> folder with a page.tsx.
+  // Built projects (a real folder + page.tsx) already appear in the curated seed —
+  // do not duplicate them, and never mark a built project as a removable draft.
+  // Only a DECLARED project (README, no page yet) is pending/declared (req).
+  const seedProjectHrefs = new Set<string>()
+  ROUTES_TREE.children?.find(g => g.id === "projects")?.children?.forEach(c => c.href && seedProjectHrefs.add(c.href))
   const projectNodes: ArchNode[] = projects
     .filter(p => (p.slug ?? p.name) !== DEFAULT_PROJECT && p.name !== DEFAULT_PROJECT)
+    .filter(p => !seedProjectHrefs.has(`/project/${p.slug ?? p.id}`))
     .map(p => ({
       id: `project-${p.slug ?? p.id}`,
       label: p.name,
       kind: "page" as const,
       href: `/project/${p.slug ?? p.id}`,
-      pending: true,
-      declared: true,
+      pending: !p.built,
+      declared: !p.built,
     }))
   const base: ArchNode = {
     ...ROUTES_TREE,

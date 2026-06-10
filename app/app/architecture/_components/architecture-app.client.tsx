@@ -130,7 +130,7 @@ export function ArchitectureApp() {
     setRequested(prev => [r, ...prev])
     const group = r.kind === "api" ? "api" : "pages"
     setExpanded(prev => new Set([...prev, group, `req-${r.id}`]))
-    setSelected({ id: requestedNodeId(r.id), label: r.title, kind: r.kind, href: reqHref(r), pending: true, declared: true })
+    setSelected({ id: requestedNodeId(r.id), label: reqHref(r), kind: r.kind, href: reqHref(r), pending: true, declared: true })
     setDeclaring(false)
     setEndpointBase(null)
   }
@@ -161,7 +161,7 @@ export function ArchitectureApp() {
   // project node) shows the requested panel (todo + danger + source).
   const declaredView = selected?.declared && selected.href && !isProject
     ? {
-        title: selected.label,
+        title: reqItem?.title ?? selected.label,
         path: selected.href,
         kind: (selected.kind === "api" ? "api" : "page") as "page" | "api",
         dynamic: reqItem?.dynamic ?? false,
