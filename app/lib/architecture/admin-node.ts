@@ -88,6 +88,31 @@ export const ADMIN_LAYER: ArchNode = {
         },
       ],
     },
+    {
+      id: "memory",
+      label: "Memory — Company Brain",
+      kind: "group",
+      port: ":9621",
+      description:
+        "Shared long-term memory for the WHOLE workspace — not just Hermes. fractera-rag " +
+        "(LightRAG :9621) holds the knowledge graph; every agent queries it the same way — " +
+        "Hermes and the five coding platforms (Claude Code, Codex, Gemini, Qwen, Kimi) — and " +
+        "writes back to it. That is why it sits here, beside the Bridges and Tools, not under " +
+        "any single agent. The lightrag-memory plugin prefetches relevant pieces and injects " +
+        "them as <brain_context>. Needs an embedding/LLM key or it stays wired but silent. Fed " +
+        "by the Documentation corpus.",
+      children: [
+        {
+          id: "memory-store",
+          label: "Company Brain store (LightRAG)",
+          kind: "config",
+          description:
+            "The knowledge-graph store fractera-rag keeps on disk — entities, relations and " +
+            "embeddings built from the Documentation corpus. Any agent recalls from it " +
+            "semantically; ingest a document once and every agent can use it.",
+        },
+      ],
+    },
     HERMES_NODE,
     {
       id: "domain",

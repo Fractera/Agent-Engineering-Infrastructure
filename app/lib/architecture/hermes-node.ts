@@ -44,16 +44,6 @@ export const HERMES_NODE: ArchNode = {
           skill("choose-agent", "choose-agent"),
         ]),
         {
-          id: "hermes-memory",
-          label: "Memory — Company Brain (LightRAG :9621)",
-          kind: "group",
-          description:
-            "Hermes's long-term memory. fractera-rag (:9621) holds the knowledge " +
-            "graph; the lightrag-memory plugin prefetches relevant pieces and injects " +
-            "them as <brain_context>. Needs an embedding/LLM key or it stays wired but " +
-            "silent. Fed by the Documentation corpus.",
-        },
-        {
           id: "hermes-mcp",
           label: "MCP servers — 7 bridges",
           kind: "group",
