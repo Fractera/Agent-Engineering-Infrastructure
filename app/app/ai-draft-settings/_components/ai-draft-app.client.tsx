@@ -145,7 +145,7 @@ export function AiDraftApp() {
                   kind={selected.kind}
                   name={selected.name}
                   label={selected.label}
-                  onCreate={mode => createDraft(selected.agentId, selected.kind, selected.name, mode, selected.name)}
+                  onCreate={async mode => { await createDraft(selected.agentId, selected.kind, selected.name, mode, selected.name) }}
                 />
               ) : (
                 <div className="flex h-full items-center justify-center p-10 text-center">
