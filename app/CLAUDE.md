@@ -126,6 +126,7 @@ The repository is your memory across sessions. Locations:
 | `reports/patterns/*.md` | Reusable working patterns |
 | `GLOSSARY.md` | Project-specific terms (edited via the /glossary page) |
 | `AI-DRAFT-SETTINGS/<AGENT>/…` | Draft wishes (supplement/replace) for the six agents' real instruction/skill/MCP files. A mirror — an agent applies a draft to the real file; the page never edits originals. Edited via the **/ai-draft-settings** page; format in `docs/ai-draft-settings.md`. |
+| `CRUD-DOCS/…` | Knowledge base documents — real folders/files (.txt/.md/.doc/.docx) of any depth. NOT staging: real on disk. **Gitignored** — never synced to GitHub. Managed via the **/documents** page; activating one ingests it into Company Memory (LightRAG). Format in `docs/crud-docs.md`. |
 
 **Before recommending a solution** — search `reports/` for prior precedent.
 **After a non-obvious bug** — write to `reports/errors/`.

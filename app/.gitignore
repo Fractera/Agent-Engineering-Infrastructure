@@ -24,6 +24,9 @@ storage/*
 data/*
 !data/.gitkeep
 
+# knowledge base documents — real user files, never synced to GitHub
+CRUD-DOCS/
+
 # build
 dist/
 tsconfig.tsbuildinfo

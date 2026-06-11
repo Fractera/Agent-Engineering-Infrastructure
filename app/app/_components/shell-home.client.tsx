@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Zap, LayoutDashboard, Sparkles, Cpu, FolderTree, Bug, BookText, ListChecks, Blocks, Layers } from "lucide-react";
+import { Zap, LayoutDashboard, Sparkles, Cpu, FolderTree, Bug, BookText, ListChecks, Blocks, Layers, Library } from "lucide-react";
 import { adminBase } from "@/lib/runtime-urls";
 
 const AI_TOOLS = [
@@ -171,6 +171,13 @@ export function ShellHome() {
           >
             <Blocks size={14} />
             Patterns
+          </a>
+          <a
+            href="/documents"
+            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl border border-border text-sm font-medium text-foreground hover:bg-muted active:scale-95 transition-all"
+          >
+            <Library size={14} />
+            Documents
           </a>
           <a
             href="/ai-draft-settings"

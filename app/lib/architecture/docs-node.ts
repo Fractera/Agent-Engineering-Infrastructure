@@ -140,14 +140,16 @@ export const DOCS_NODE: ArchNode = {
         "canonical ground truth for every agent.",
     },
     {
-      id: "doc-external",
-      label: "Documents",
+      id: "doc-crud-docs",
+      label: "CRUD-DOCS",
       kind: "group",
-      addable: true,
-      addLabel: "Add document",
+      href: "/documents",
       description:
-        "External documentation to ingest into the vector store — e.g. a " +
-        "platform's full docs (Codex, Gemini) so agents can answer from them.",
+        "Your own knowledge-base documents — a real folder/file tree of any depth under " +
+        "CRUD-DOCS/ (company notes, technical processes, anything an agent should know). " +
+        "Managed via the /documents page: create folders, upload .txt/.md/.doc/.docx, preview, " +
+        "delete — real files on disk, no staging. Activating one ingests it into Company Memory " +
+        "(LightRAG). These documents stay on the server and are NOT synced to GitHub.",
     },
   ],
 }
