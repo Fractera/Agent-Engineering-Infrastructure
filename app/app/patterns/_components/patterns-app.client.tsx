@@ -35,6 +35,9 @@ export function PatternsApp() {
   const [mode, setMode] = useState<Mode>("patterns")
   const [selected, setSelected] = useState<Pattern | null>(null)
   const [adding, setAdding] = useState(false)
+  // The target category for a new pattern is decided in the LEFT tree (active
+  // category), not in the form — mirroring the architecture "Add to: …" flow.
+  const [activeCat, setActiveCat] = useState("")
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [blink, setBlink] = useState<Set<string>>(new Set())
   const [hidden, setHidden] = useState(false)
@@ -90,6 +93,19 @@ export function PatternsApp() {
 
   useEffect(() => { setSelected(null); setAdding(false) }, [mode])
 
+  // Selecting a pattern targets its category; selecting a category folder targets it
+  // (and clears the open entry). Either way a tree click closes the add form.
+  function selectPattern(p: Pattern) {
+    setSelected(p)
+    if (p.kind === "pattern") setActiveCat(p.category)
+    setAdding(false)
+  }
+  function selectCategory(slug: string) {
+    setActiveCat(slug)
+    setSelected(null)
+    setAdding(false)
+  }
+
   // A freshly declared pattern is inserted optimistically (the next poll reconciles
   // from the server, which is the source of truth) — it renders amber + (req).
   function onCreated(p: Pattern) {
@@ -121,6 +137,9 @@ export function PatternsApp() {
     return `${categories.length} categories · ${n} pattern${n === 1 ? "" : "s"}`
   }, [mode, anti, categories])
 
+  const targetSlug = activeCat || categories[0]?.slug || "ui-elements"
+  const targetLabel = categories.find(c => c.slug === targetSlug)?.label ?? targetSlug
+
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-6xl px-6 py-8">
@@ -148,10 +167,11 @@ export function PatternsApp() {
                 </span>
                 <button
                   onClick={() => { setSelected(null); setAdding(v => !v) }}
-                  className="inline-flex h-7 items-center gap-1.5 rounded-md border border-foreground/40 px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
+                  title={adding ? undefined : (mode === "anti" ? "Add anti-pattern" : `Add to: ${targetLabel}`)}
+                  className="inline-flex h-7 min-w-0 items-center gap-1.5 rounded-md border border-foreground/40 px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
                 >
-                  {adding ? <X size={11} /> : <Plus size={11} />}
-                  {adding ? "Close" : (mode === "anti" ? "Add anti-pattern" : "Add pattern")}
+                  {adding ? <X size={11} className="shrink-0" /> : <Plus size={11} className="shrink-0" />}
+                  <span className="truncate">{adding ? "Close" : (mode === "anti" ? "Add anti-pattern" : `Add to: ${targetLabel}`)}</span>
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto">
@@ -160,9 +180,11 @@ export function PatternsApp() {
                   categories={categories}
                   anti={anti}
                   selectedId={selected?.id ?? null}
+                  activeCat={targetSlug}
                   expanded={expanded}
                   blink={blink}
-                  onSelect={setSelected}
+                  onSelect={selectPattern}
+                  onSelectCategory={selectCategory}
                   onToggle={toggle}
                 />
               </div>
@@ -171,7 +193,8 @@ export function PatternsApp() {
               {adding ? (
                 <AddPatternForm
                   kind={mode}
-                  categories={categories.map(c => ({ slug: c.slug, label: c.label }))}
+                  categoryLabel={targetLabel}
+                  categorySlug={targetSlug}
                   onClose={() => setAdding(false)}
                   onCreated={onCreated}
                 />

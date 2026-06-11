@@ -16,9 +16,11 @@ type Props = {
   categories: Category[]
   anti: Pattern[]
   selectedId: string | null
+  activeCat: string
   expanded: Set<string>
   blink: Set<string>
   onSelect: (p: Pattern) => void
+  onSelectCategory: (slug: string) => void
   onToggle: (id: string) => void
 }
 
@@ -50,7 +52,7 @@ function Leaf({ p, selectedId, blink, onSelect, depth, Icon }: {
   )
 }
 
-export function PatternTree({ mode, categories, anti, selectedId, expanded, blink, onSelect, onToggle }: Props) {
+export function PatternTree({ mode, categories, anti, selectedId, activeCat, expanded, blink, onSelect, onSelectCategory, onToggle }: Props) {
   if (mode === "anti") {
     return (
       <div className="py-2">
@@ -69,13 +71,16 @@ export function PatternTree({ mode, categories, anti, selectedId, expanded, blin
         const id = `cat:${cat.slug}`
         const isOpen = expanded.has(id)
         const catBlink = !isOpen && cat.patterns.some(p => blink.has(p.id))
+        const isActive = activeCat === cat.slug && !selectedId
         return (
           <div key={id}>
             <button
               id={`patterns-node-${id}`}
-              onClick={() => onToggle(id)}
+              onClick={() => { onSelectCategory(cat.slug); onToggle(id) }}
               style={{ animation: catBlink ? "ptnBlink 1s ease-in-out 3" : undefined }}
-              className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-xs text-foreground transition-colors hover:bg-muted/60"
+              className={`flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-xs text-foreground transition-colors ${
+                isActive ? "bg-primary/15" : "hover:bg-muted/60"
+              }`}
             >
               <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center text-foreground/60">
                 <ChevronRight size={12} className={`transition-transform ${isOpen ? "rotate-90" : ""}`} />

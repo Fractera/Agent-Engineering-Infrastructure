@@ -3,25 +3,23 @@
 import { useState } from "react"
 import { X, Loader2 } from "lucide-react"
 import type { Pattern } from "@/lib/patterns/pattern-format"
-import { SegToggle } from "@/components/ui/seg-toggle.client"
 
-type Category = { slug: string; label: string }
-
-// Right-side panel opened by "Add pattern" / "Add anti-pattern", mirroring the
-// architecture DeclarePanel: you don't describe how it should look — you name it
-// (and, for a pattern, pick a category). It becomes a markdown file under PATTERNS/
-// with status "declared", which renders amber + (req) until an agent fills it in.
+// Right-side panel opened by "Add to: <category>" / "Add anti-pattern", mirroring
+// the architecture DeclarePanel: the TARGET is decided in the LEFT tree (which
+// category is active), shown here read-only as "Adding to: …" — you choose nothing
+// on the right. You don't describe how it looks; you name it, and an agent fills it
+// in. It becomes a markdown file under PATTERNS/ with status "declared" (amber + req).
 export function AddPatternForm({
-  kind, categories, onClose, onCreated,
+  kind, categoryLabel, categorySlug, onClose, onCreated,
 }: {
   kind: "patterns" | "anti"
-  categories: Category[]
+  categoryLabel: string
+  categorySlug: string
   onClose: () => void
   onCreated: (p: Pattern) => void
 }) {
   const isAnti = kind === "anti"
   const [name, setName] = useState("")
-  const [category, setCategory] = useState(categories[0]?.slug ?? "ui-elements")
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
 
@@ -32,7 +30,7 @@ export function AddPatternForm({
       const res = await fetch("/api/patterns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind: isAnti ? "anti" : "pattern", name: name.trim(), category: isAnti ? "" : category }),
+        body: JSON.stringify({ kind: isAnti ? "anti" : "pattern", name: name.trim(), category: isAnti ? "" : categorySlug }),
       })
       if (!res.ok) { setError("Could not save — try again"); return }
       const { pattern } = await res.json()
@@ -51,21 +49,16 @@ export function AddPatternForm({
           <X size={14} />
         </button>
       </div>
+
+      {!isAnti && (
+        <p className="rounded-md border border-border bg-muted/30 px-3 py-1.5 font-mono text-[11px] text-foreground">
+          Adding to: <span className="font-semibold">{categoryLabel}</span>
+        </p>
+      )}
       <p className="rounded-md border border-border bg-muted/30 px-3 py-1.5 text-[11px] leading-relaxed text-foreground/70">
         You don&apos;t describe how it looks — just name it. An agent generates it later. It appears now as a
         requested entry (amber, with a (req) badge).
       </p>
-
-      {!isAnti && (
-        <div className="flex items-center justify-between gap-2">
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-foreground">Category</label>
-          <SegToggle<string>
-            options={categories.map(c => ({ value: c.slug, label: c.label }))}
-            value={category}
-            onChange={setCategory}
-          />
-        </div>
-      )}
 
       <div className="flex flex-col gap-1">
         <label className="text-[11px] font-semibold uppercase tracking-wider text-foreground">
