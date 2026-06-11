@@ -5,6 +5,7 @@ import type { Pattern } from "@/lib/patterns/pattern-format"
 import { SegToggle } from "@/components/ui/seg-toggle.client"
 import { PollBar } from "@/components/architecture/poll-bar.client"
 import { PatternTree } from "@/components/patterns/pattern-tree.client"
+import { PatternDetail } from "@/components/patterns/pattern-detail.client"
 
 type Mode = "patterns" | "anti"
 type Category = { slug: string; label: string; patterns: Pattern[] }
@@ -100,10 +101,6 @@ export function PatternsApp() {
     return `${categories.length} categories · ${n} pattern${n === 1 ? "" : "s"}`
   }, [mode, anti, categories])
 
-  const selLabel = selected
-    ? (selected.kind === "anti" ? "Anti-pattern" : `Pattern · ${categories.find(c => c.slug === selected.category)?.label ?? selected.category}`)
-    : ""
-
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-6xl px-6 py-8">
@@ -145,14 +142,10 @@ export function PatternsApp() {
             </div>
             <div className="w-1/2 overflow-y-auto">
               {selected ? (
-                <div className="p-5">
-                  <div className="font-mono text-[10px] uppercase tracking-wider text-foreground/50">{selLabel}</div>
-                  <h2 className="mt-1 text-lg font-semibold text-foreground">{selected.name}</h2>
-                  <p className="mt-2 text-sm leading-relaxed text-foreground/80">
-                    {selected.description || "No description yet."}
-                  </p>
-                  <p className="mt-4 text-[11px] text-foreground/40">Source code example, Steps and Danger zone land next.</p>
-                </div>
+                <PatternDetail
+                  pattern={selected}
+                  categoryLabel={categories.find(c => c.slug === selected.category)?.label ?? selected.category}
+                />
               ) : (
                 <div className="flex h-full items-center justify-center p-10 text-center">
                   <p className="max-w-xs text-xs text-foreground/60">
