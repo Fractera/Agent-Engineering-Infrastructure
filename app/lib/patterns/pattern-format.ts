@@ -6,7 +6,10 @@
 
 export type PatternKind = "pattern" | "anti"
 export type PatternStatus = "declared" | "stable"
-export type PatternTask = { id: string; body: string }
+// A task is either a to-do (Steps) or a deletion request (Danger zone), mirroring
+// the architecture tasks (kind 'todo' | 'delete'). A delete request carries the
+// reason (body) + the expected end result (outcome) the agent should achieve.
+export type PatternTask = { id: string; body: string; kind?: "todo" | "delete"; outcome?: string | null }
 
 export type Pattern = {
   id: string            // base64url of rel path within PATTERNS/
@@ -73,10 +76,17 @@ export function render(p: Pattern): string {
   lines.push(p.description || "_No description yet._", "")
   lines.push("## Source code example", "")
   lines.push("```", p.code || "// no example yet", "```", "")
+  const todos = p.tasks.filter(t => t.kind !== "delete")
+  const dels = p.tasks.filter(t => t.kind === "delete")
   lines.push("## Steps")
-  if (p.tasks.length === 0) lines.push("_No tasks._")
-  else for (const t of p.tasks) lines.push(`- ${t.body}`)
+  if (todos.length === 0) lines.push("_No tasks._")
+  else for (const t of todos) lines.push(`- ${t.body}`)
   lines.push("")
+  if (dels.length) {
+    lines.push("## Deletion requests")
+    for (const t of dels) lines.push(`- ${t.body}${t.outcome ? ` → ${t.outcome}` : ""}`)
+    lines.push("")
+  }
   const machine = {
     kind: p.kind, category: p.category, number: p.number, name: p.name,
     status: p.status, description: p.description, code: p.code, tasks: p.tasks,

@@ -56,13 +56,14 @@ export function PatternDetail({
     setSavingCode(true)
     try { await onPatch({ code }) } finally { setSavingCode(false) }
   }
-  // Adding a task marks the pattern as needing work (pending) — it gets a (req)
-  // badge until an agent does it. Add/remove save immediately.
+  // Steps are to-do tasks (kind 'todo'); deletion requests (kind 'delete') live in
+  // the Danger zone. Adding a task marks the pattern pending → (req) badge.
+  const todos = pattern.tasks.filter(t => t.kind !== "delete")
   async function addTask() {
     const body = draft.trim()
     if (!body) return
     setDraft("")
-    await onPatch({ tasks: [...pattern.tasks, { id: genId(), body }] })
+    await onPatch({ tasks: [...pattern.tasks, { id: genId(), body, kind: "todo" }] })
   }
   async function removeTask(id: string) {
     await onPatch({ tasks: pattern.tasks.filter(t => t.id !== id) })
@@ -124,7 +125,7 @@ export function PatternDetail({
 
           <AccordionItem title="Steps" open={open.has("steps")} onToggle={() => toggle("steps")}>
             <div className="flex flex-col gap-1.5">
-              {pattern.tasks.map(t => (
+              {todos.map(t => (
                 <div key={t.id} className="flex items-center gap-2 text-xs text-foreground">
                   <span className="shrink-0 text-foreground/60">•</span>
                   <span className="flex-1">{t.body}</span>
@@ -153,7 +154,8 @@ export function PatternDetail({
           <AccordionItem title="Danger zone" open={open.has("danger")} onToggle={() => toggle("danger")} tone="danger">
             <PatternDanger
               pattern={pattern}
-              onOrderRemoval={() => onPatch({ tasks: [...pattern.tasks, { id: genId(), body: "Retire this pattern and update its usages." }] })}
+              onOrderDeletion={(reason, outcome) => onPatch({ tasks: [...pattern.tasks, { id: genId(), body: reason, outcome: outcome || null, kind: "delete" }] })}
+              onDiscardAll={() => onPatch({ tasks: [] })}
               onRemove={onRemove}
             />
           </AccordionItem>
