@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Zap, LayoutDashboard, Sparkles, Cpu, FolderTree, Bug, BookText, ListChecks, Blocks } from "lucide-react";
+import { Zap, LayoutDashboard, Sparkles, Cpu, FolderTree, Bug, BookText, ListChecks, Blocks, Layers } from "lucide-react";
 import { adminBase } from "@/lib/runtime-urls";
 
 const AI_TOOLS = [
@@ -114,6 +114,13 @@ export function ShellHome() {
           transition={{ delay: 0.75, duration: 0.45 }}
           className="flex flex-wrap items-center justify-center gap-3"
         >
+          <a
+            href="/ai-draft-settings"
+            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl border border-amber-500/40 text-sm font-medium text-foreground hover:bg-muted active:scale-95 transition-all"
+          >
+            <Layers size={14} />
+            AI Draft Settings
+          </a>
           <a
             href={adminUrl || "#"}
             target="_blank"
