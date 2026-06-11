@@ -10,9 +10,10 @@ import type { Draft, DraftMode } from "@/lib/ai-draft/draft-format"
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const body = await req.json()
-  const patch: Partial<Pick<Draft, "name" | "mode" | "tasks">> = {}
+  const patch: Partial<Pick<Draft, "name" | "mode" | "source" | "tasks">> = {}
   if (typeof body.name === "string" && body.name.trim()) patch.name = body.name.trim()
   if (body.mode === "supplement" || body.mode === "replace") patch.mode = body.mode as DraftMode
+  if (typeof body.source === "string") patch.source = body.source
   if (Array.isArray(body.tasks)) patch.tasks = body.tasks
 
   const draft = await updateDraft(id, patch)

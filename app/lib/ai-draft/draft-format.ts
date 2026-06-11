@@ -21,7 +21,8 @@ export type Draft = {
   target: string | null  // the real original this overlays; null = brand-new record
   name: string           // short title
   declared: boolean      // target === null → orange label (a new record, no original)
-  pending: boolean       // declared || tasks.length > 0 → orange (req) badge
+  pending: boolean       // declared || tasks.length > 0 || source → orange (req) badge
+  source: string         // proposed full file content (seeded from the original, edited by the architect)
   tasks: DraftTask[]
   mtime: string
 }
@@ -81,8 +82,14 @@ export function render(d: Draft): string {
     for (const t of dels) lines.push(`- ${t.body}${t.outcome ? ` → ${t.outcome}` : ""}`)
     lines.push("")
   }
+  if (d.source.trim()) {
+    // The proposed full content of the real file — what the agent should make the
+    // original become. The mode (supplement / replace) says how to apply it.
+    lines.push("## Proposed source", "", "```", d.source, "```", "")
+  }
   const machine = {
-    agent: d.agent, kind: d.kind, mode: d.mode, target: d.target, name: d.name, tasks: d.tasks,
+    agent: d.agent, kind: d.kind, mode: d.mode, target: d.target, name: d.name,
+    source: d.source, tasks: d.tasks,
   }
   return `${lines.join("\n")}\n${META_OPEN}\n${JSON.stringify(machine)}\n${META_CLOSE}\n`
 }
@@ -95,7 +102,7 @@ export function parse(rel: string, text: string, mtime: string): Draft {
   const fallbackKind: DraftKind = inSkills ? "skill" : inMcp ? "mcp" : "instruction"
   const base: Draft = {
     id: encodeId(norm), rel: norm, agent: "", kind: fallbackKind, mode: "supplement",
-    target: null, name: norm, declared: false, pending: false, tasks: [], mtime,
+    target: null, name: norm, declared: false, pending: false, source: "", tasks: [], mtime,
   }
   const start = text.indexOf(META_OPEN)
   if (start >= 0) {
@@ -106,13 +113,15 @@ export function parse(rel: string, text: string, mtime: string): Draft {
       const mode: DraftMode = j.mode === "replace" ? "replace" : "supplement"
       const target: string | null = j.target == null ? null : String(j.target)
       const tasks: DraftTask[] = Array.isArray(j.tasks) ? j.tasks : []
+      const source = String(j.source ?? "")
       return {
         ...base,
         agent: String(j.agent ?? ""),
         kind, mode, target,
         name: String(j.name ?? base.name),
         declared: target === null,
-        pending: target === null || tasks.length > 0,
+        pending: target === null || tasks.length > 0 || source.trim().length > 0,
+        source,
         tasks,
       }
     } catch { /* fall through to title-only parse */ }

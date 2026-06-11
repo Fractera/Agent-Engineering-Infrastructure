@@ -48,7 +48,7 @@ function seedInstruction(agent: AgentDef, docName: string): Draft {
   const rel = `${agent.folder}/${docName}`
   return {
     id: encodeId(rel), rel, agent: agent.id, kind: "instruction", mode: "supplement",
-    target: docName, name: docName, declared: false, pending: false, tasks: [], mtime: "",
+    target: docName, name: docName, declared: false, pending: false, source: "", tasks: [], mtime: "",
   }
 }
 
@@ -119,7 +119,7 @@ export async function createDraft(
   const rel = `${relDir}/${pad(number)}-${slug}.md`
   const d: Draft = {
     id: encodeId(rel), rel, agent: agent.id, kind, mode, target: target || null,
-    name: name.trim(), declared: !target, pending: true, tasks: [], mtime: "",
+    name: name.trim(), declared: !target, pending: !target, source: "", tasks: [], mtime: "",
   }
   await mkdir(absFromRel(relDir), { recursive: true })
   await writeFile(absFromRel(rel), render(d), "utf8")
@@ -128,13 +128,13 @@ export async function createDraft(
 
 export async function updateDraft(
   id: string,
-  patch: Partial<Pick<Draft, "name" | "mode" | "tasks">>,
+  patch: Partial<Pick<Draft, "name" | "mode" | "source" | "tasks">>,
 ): Promise<Draft | null> {
   const cur = await readDraft(id)
   if (!cur) return null
   const next: Draft = { ...cur, ...patch }
   next.declared = next.target === null
-  next.pending = next.declared || next.tasks.length > 0
+  next.pending = next.declared || next.tasks.length > 0 || next.source.trim().length > 0
   await writeFile(absFromRel(cur.rel), render(next), "utf8")
   return next
 }

@@ -5,6 +5,7 @@ import { Plus, X } from "lucide-react"
 import type { Draft, DraftMode } from "@/lib/ai-draft/draft-format"
 import { SegToggle } from "@/components/ui/seg-toggle.client"
 import { AccordionItem } from "@/components/patterns/accordion-item.client"
+import { DraftSource } from "./draft-source.client"
 import { DraftDanger } from "./draft-danger.client"
 
 // crypto.randomUUID() is only defined in secure contexts; this server is reached over
@@ -29,7 +30,7 @@ export function DraftDetail({
 }) {
   const kindLabel = draft.kind === "instruction" ? "Instruction" : draft.kind === "mcp" ? "MCP connector" : "Skill"
   const overlay = draft.target ? `over ${draft.target}` : "new record"
-  const [open, setOpen] = useState<Set<string>>(new Set(["wishes"]))
+  const [open, setOpen] = useState<Set<string>>(new Set(["source"]))
   const [wish, setWish] = useState("")
 
   function toggle(t: string) {
@@ -74,6 +75,10 @@ export function DraftDetail({
 
       <div className="flex-1 overflow-y-auto p-5">
         <div className="flex flex-col gap-1.5">
+          <AccordionItem title="Source" open={open.has("source")} onToggle={() => toggle("source")}>
+            <DraftSource draft={draft} onSave={source => onPatch({ source })} />
+          </AccordionItem>
+
           <AccordionItem title="Wishes (to-do)" open={open.has("wishes")} onToggle={() => toggle("wishes")}>
             <div className="flex flex-col gap-1.5">
               {wishes.map(t => (
