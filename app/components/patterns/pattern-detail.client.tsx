@@ -21,9 +21,14 @@ export function PatternDetail({
   const language = pattern.kind === "anti" ? "shell" : "tsx"
   const [open, setOpen] = useState<Set<string>>(new Set())
   const [desc, setDesc] = useState(pattern.description)
+  const [code, setCode] = useState(pattern.code)
   const [saving, setSaving] = useState(false)
-  // Reset the local draft when a different pattern is opened.
-  useEffect(() => { setDesc(pattern.description) }, [pattern.id, pattern.description])
+  const [savingCode, setSavingCode] = useState(false)
+  // Reset the local drafts when a different pattern is opened (or saved).
+  useEffect(() => {
+    setDesc(pattern.description)
+    setCode(pattern.code)
+  }, [pattern.id, pattern.description, pattern.code])
 
   function toggle(t: string) {
     setOpen(prev => {
@@ -35,6 +40,10 @@ export function PatternDetail({
   async function saveDesc() {
     setSaving(true)
     try { await onPatch({ description: desc }) } finally { setSaving(false) }
+  }
+  async function saveCode() {
+    setSavingCode(true)
+    try { await onPatch({ code }) } finally { setSavingCode(false) }
   }
 
   return (
@@ -71,13 +80,24 @@ export function PatternDetail({
 
         <div className="mt-5 flex flex-col gap-1.5">
           <AccordionItem title="Source code example" open={open.has("source")} onToggle={() => toggle("source")}>
-            {pattern.code.trim() ? (
-              <div className="overflow-hidden rounded-lg border border-border">
-                <CodeEditor value={pattern.code} language={language} readOnly />
-              </div>
-            ) : (
-              <p className="text-xs text-foreground/50">No example yet — an agent fills this in.</p>
-            )}
+            <div className="overflow-hidden rounded-lg border border-border">
+              <CodeEditor value={code} language={language} onChange={setCode} />
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              {code !== pattern.code && (
+                <button
+                  onClick={saveCode}
+                  disabled={savingCode}
+                  className="inline-flex h-8 items-center gap-1.5 rounded-md bg-foreground px-4 text-xs font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-40"
+                >
+                  {savingCode && <Loader2 size={11} className="animate-spin" />}
+                  Save example
+                </button>
+              )}
+              {!pattern.code.trim() && code === pattern.code && (
+                <span className="text-[11px] text-foreground/40">Empty — an agent (or you) fills in this reusable example.</span>
+              )}
+            </div>
           </AccordionItem>
 
           <AccordionItem title="Steps" open={open.has("steps")} onToggle={() => toggle("steps")}>
