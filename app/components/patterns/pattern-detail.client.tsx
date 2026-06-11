@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Loader2 } from "lucide-react"
+import { Loader2, Plus, X } from "lucide-react"
 import type { Pattern } from "@/lib/patterns/pattern-format"
 import { CodeEditor } from "@/components/architecture/code-editor.client"
 import { AccordionItem } from "./accordion-item.client"
@@ -22,6 +22,7 @@ export function PatternDetail({
   const [open, setOpen] = useState<Set<string>>(new Set())
   const [desc, setDesc] = useState(pattern.description)
   const [code, setCode] = useState(pattern.code)
+  const [draft, setDraft] = useState("")
   const [saving, setSaving] = useState(false)
   const [savingCode, setSavingCode] = useState(false)
   // Reset the local drafts when a different pattern is opened (or saved).
@@ -44,6 +45,17 @@ export function PatternDetail({
   async function saveCode() {
     setSavingCode(true)
     try { await onPatch({ code }) } finally { setSavingCode(false) }
+  }
+  // Adding a task marks the pattern as needing work (pending) — it gets a (req)
+  // badge until an agent does it. Add/remove save immediately.
+  async function addTask() {
+    const body = draft.trim()
+    if (!body) return
+    setDraft("")
+    await onPatch({ tasks: [...pattern.tasks, { id: crypto.randomUUID(), body }] })
+  }
+  async function removeTask(id: string) {
+    await onPatch({ tasks: pattern.tasks.filter(t => t.id !== id) })
   }
 
   return (
@@ -101,18 +113,31 @@ export function PatternDetail({
           </AccordionItem>
 
           <AccordionItem title="Steps" open={open.has("steps")} onToggle={() => toggle("steps")}>
-            {pattern.tasks.length === 0 ? (
-              <p className="text-xs text-foreground/50">No steps.</p>
-            ) : (
-              <ul className="space-y-1.5">
-                {pattern.tasks.map(t => (
-                  <li key={t.id} className="flex gap-2 text-xs text-foreground/80">
-                    <span className="shrink-0 text-foreground/40">–</span>
-                    <span>{t.body}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <div className="flex flex-col gap-1.5">
+              {pattern.tasks.map(t => (
+                <div key={t.id} className="flex items-center gap-2 text-xs text-foreground">
+                  <span className="shrink-0 text-foreground/60">•</span>
+                  <span className="flex-1">{t.body}</span>
+                  <button onClick={() => removeTask(t.id)} className="shrink-0 text-foreground/50 transition-colors hover:text-red-600">
+                    <X size={11} />
+                  </button>
+                </div>
+              ))}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Add a task for an agent…"
+                  value={draft}
+                  onChange={e => setDraft(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && addTask()}
+                  className="h-8 flex-1 rounded-md border border-border bg-background px-3 text-xs text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+                <button onClick={addTask} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-foreground/40 text-foreground transition-colors hover:bg-foreground hover:text-background">
+                  <Plus size={12} />
+                </button>
+              </div>
+              <p className="text-[11px] text-foreground/40">A task marks this pattern as needing work — it shows a (req) badge until an agent does it.</p>
+            </div>
           </AccordionItem>
 
           <AccordionItem title="Danger zone" open={open.has("danger")} onToggle={() => toggle("danger")} tone="danger">
