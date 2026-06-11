@@ -19,6 +19,11 @@ export async function ingestDocument(rel: string): Promise<IngestResult> {
   if (!text.trim()) {
     return { ok: false, message: "The document is empty — nothing to activate." }
   }
+  if (!LIGHTRAG_KEY) {
+    // No key in this app's env (older deploy before the key was plumbed). Without it
+    // LightRAG returns 403; say so clearly instead of a confusing rejection.
+    return { ok: false, message: "Company Memory is not wired to this app yet (no LightRAG key). Redeploy from the latest build, or set LIGHTRAG_API_KEY in the app environment." }
+  }
   try {
     const res = await fetch(`${LIGHTRAG_URL}/documents/text`, {
       method: "POST",
