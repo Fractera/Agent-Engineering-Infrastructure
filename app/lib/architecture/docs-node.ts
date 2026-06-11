@@ -2,17 +2,17 @@ import type { ArchNode } from "./types"
 import { AGENTS } from "@/lib/ai-draft/agents"
 
 // The Documentation corpus — the shared knowledge every agent references and the
-// material that feeds Company Brain (Memory / LightRAG). Kept in its own module
+// material that feeds Company Memory (LightRAG). Kept in its own module
 // so the main tree stays small. One place to read, edit and register the
 // project's living memory.
 
 export const DOCS_NODE: ArchNode = {
   id: "docs",
-  label: "Documentation — Company Brain corpus",
+  label: "Documentation — Company Memory corpus",
   kind: "group",
   description:
     "The shared knowledge every agent references. Ingest these into Company " +
-    "Brain (Memory / LightRAG) and any agent can recall them semantically. One " +
+    "Memory (LightRAG) and any agent can recall them semantically. One " +
     "place to read, edit and register the project's living memory.",
   children: [
     {

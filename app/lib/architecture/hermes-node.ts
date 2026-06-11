@@ -6,7 +6,7 @@ import { skillsGroup, skill, mcp } from "./builders"
 // internals — identity, memory and the seven MCP bridges — nest under it.
 export const HERMES_NODE: ArchNode = {
   id: "hermes",
-  label: "Hermes",
+  label: "Hermes — Company Brain",
   kind: "group",
   description:
     "The brain plus the two ways a human reaches it. The agent orchestrates " +

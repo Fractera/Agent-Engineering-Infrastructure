@@ -90,7 +90,7 @@ export const ADMIN_LAYER: ArchNode = {
     },
     {
       id: "memory",
-      label: "Memory — Company Brain",
+      label: "LightRAG — Company Memory",
       kind: "group",
       port: ":9621",
       description:
@@ -104,7 +104,7 @@ export const ADMIN_LAYER: ArchNode = {
       children: [
         {
           id: "memory-store",
-          label: "Company Brain store (LightRAG)",
+          label: "Company Memory store (LightRAG)",
           kind: "config",
           description:
             "The knowledge-graph store fractera-rag keeps on disk — entities, relations and " +
