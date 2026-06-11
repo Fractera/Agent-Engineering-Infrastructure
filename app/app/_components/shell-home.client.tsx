@@ -115,13 +115,6 @@ export function ShellHome() {
           className="flex flex-wrap items-center justify-center gap-3"
         >
           <a
-            href="/ai-draft-settings"
-            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl border border-amber-500/40 text-sm font-medium text-foreground hover:bg-muted active:scale-95 transition-all"
-          >
-            <Layers size={14} />
-            AI Draft Settings
-          </a>
-          <a
             href={adminUrl || "#"}
             target="_blank"
             rel="noopener noreferrer"
@@ -178,6 +171,13 @@ export function ShellHome() {
           >
             <Blocks size={14} />
             Patterns
+          </a>
+          <a
+            href="/ai-draft-settings"
+            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl border border-amber-500/40 text-sm font-medium text-foreground hover:bg-muted active:scale-95 transition-all"
+          >
+            <Layers size={14} />
+            AI Draft Settings
           </a>
         </motion.div>
 

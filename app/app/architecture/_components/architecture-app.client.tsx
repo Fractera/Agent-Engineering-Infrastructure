@@ -228,9 +228,13 @@ export function ArchitectureApp() {
         </a>
         <h1 className="mt-1 text-xl font-bold text-foreground">Architecture</h1>
         <p className="mt-0.5 max-w-2xl text-xs leading-relaxed text-foreground/80">
-          An interactive map of your app&apos;s structure — every page and endpoint backed by
-          its typed descriptor (<span className="font-mono font-medium text-foreground">_meta.ts</span>). Open a route to read
-          its full model, or add a new page as a to-do an agent picks up and builds.
+          An interactive map of your app&apos;s real structure — every page and endpoint backed by
+          its typed descriptor (<span className="font-mono font-medium text-foreground">_meta.ts</span>).
+          But between you and those real files sits a staging layer of <span className="font-mono font-medium text-foreground">README</span> files:
+          you — or an AI agent — declare a page or endpoint and write your intent there in free form
+          (notes, code examples, a to-do list), without touching the real code. That README is a
+          preliminary step — a coding agent reads it, opens a development step into the build queue
+          and builds it, then the README is gone, replaced by the real, working route or endpoint.
         </p>
 
         {/* Live heartbeat: fills over 4s, then polls; new entities appear in real time. */}
