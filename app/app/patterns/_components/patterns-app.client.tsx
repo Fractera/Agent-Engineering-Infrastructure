@@ -1,11 +1,13 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
+import { Plus, X } from "lucide-react"
 import type { Pattern } from "@/lib/patterns/pattern-format"
 import { SegToggle } from "@/components/ui/seg-toggle.client"
 import { PollBar } from "@/components/architecture/poll-bar.client"
 import { PatternTree } from "@/components/patterns/pattern-tree.client"
 import { PatternDetail } from "@/components/patterns/pattern-detail.client"
+import { AddPatternForm } from "@/components/patterns/add-pattern-form.client"
 
 type Mode = "patterns" | "anti"
 type Category = { slug: string; label: string; patterns: Pattern[] }
@@ -32,6 +34,7 @@ export function PatternsApp() {
   const [anti, setAnti] = useState<Pattern[]>([])
   const [mode, setMode] = useState<Mode>("patterns")
   const [selected, setSelected] = useState<Pattern | null>(null)
+  const [adding, setAdding] = useState(false)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [blink, setBlink] = useState<Set<string>>(new Set())
   const [hidden, setHidden] = useState(false)
@@ -85,7 +88,24 @@ export function PatternsApp() {
     return () => clearTimeout(t)
   }, [blink, mode, categories, anti])
 
-  useEffect(() => { setSelected(null) }, [mode])
+  useEffect(() => { setSelected(null); setAdding(false) }, [mode])
+
+  // A freshly declared pattern is inserted optimistically (the next poll reconciles
+  // from the server, which is the source of truth) — it renders amber + (req).
+  function onCreated(p: Pattern) {
+    if (p.kind === "anti") {
+      setAnti(prev => [...prev.filter(x => x.id !== p.id), p].sort((a, b) => a.number - b.number))
+    } else {
+      setCategories(prev => prev.map(c =>
+        c.slug === p.category
+          ? { ...c, patterns: [...c.patterns.filter(x => x.id !== p.id), p].sort((a, b) => a.number - b.number) }
+          : c,
+      ))
+      setExpanded(prev => new Set([...prev, `cat:${p.category}`]))
+    }
+    setSelected(p)
+    setAdding(false)
+  }
 
   function toggle(id: string) {
     setExpanded(prev => {
@@ -126,6 +146,13 @@ export function PatternsApp() {
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground/70">
                   {mode === "anti" ? "Anti-patterns" : "Patterns"}
                 </span>
+                <button
+                  onClick={() => { setSelected(null); setAdding(v => !v) }}
+                  className="inline-flex h-7 items-center gap-1.5 rounded-md border border-foreground/40 px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
+                >
+                  {adding ? <X size={11} /> : <Plus size={11} />}
+                  {adding ? "Close" : (mode === "anti" ? "Add anti-pattern" : "Add pattern")}
+                </button>
               </div>
               <div className="flex-1 overflow-y-auto">
                 <PatternTree
@@ -141,7 +168,14 @@ export function PatternsApp() {
               </div>
             </div>
             <div className="w-1/2 overflow-y-auto">
-              {selected ? (
+              {adding ? (
+                <AddPatternForm
+                  kind={mode}
+                  categories={categories.map(c => ({ slug: c.slug, label: c.label }))}
+                  onClose={() => setAdding(false)}
+                  onCreated={onCreated}
+                />
+              ) : selected ? (
                 <PatternDetail
                   pattern={selected}
                   categoryLabel={categories.find(c => c.slug === selected.category)?.label ?? selected.category}
