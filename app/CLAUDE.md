@@ -75,10 +75,10 @@ If a request requires touching forbidden zones, refuse and explain the boundary.
 3. **Ask clarifying questions** (§2) until the user says go
 4. **Open a step** — create `DEVELOPMENT-STEPS/NEW-STEPS/<NN>-<slug>.md` (or via the /development-steps page): name, importance (optional/mandatory/critical), description, known constraints, subtasks, out-of-scope
 5. **Query Company Brain** (§7) if in production mode
-6. **Write code** with code discipline (§11)
+6. **Write code** with code discipline (§11). **Reuse first:** check `PATTERNS/PATTERNS/` (UI Elements, Sections, Brandbook) — reuse or extend an existing pattern instead of re-deriving it. The **/patterns** page is the visual view; format in `docs/patterns.md`.
 7. **Produce 2 independent proofs** (§5) — non-negotiable
 8. **Ask the user for deploy permission** (§5)
-9. **On user's "yes" → deploy** (§12) and verify the live URL
+9. **On user's "yes" → deploy** (§12) and verify the live URL. **Before deploying, read `PATTERNS/ANTI-PATTERNS/`** — the flat list of deployment pitfalls — so you do not repeat them.
 10. **Feed Company Brain** (§8) — push reports/docs back to Brain
 11. **Complete the step** — move its file `DEVELOPMENT-STEPS/NEW-STEPS/<NN>-<slug>.md` → `DEVELOPMENT-STEPS/COMPLETED-STEPS/` and set its completion date (the `completedAt` field + `status: completed` in the step's machine block). It then appears under **Completed steps** (read-only history). See `docs/development-steps.md` for the file format.
 
@@ -118,6 +118,9 @@ The repository is your memory across sessions. Locations:
 | `DEVELOPMENT-STEPS/NEW-STEPS/<NN>-<slug>.md` | Open steps — one file per active task (number, name, importance, description, to-do). Shown under **New steps** on the /development-steps page. |
 | `DEVELOPMENT-STEPS/COMPLETED-STEPS/<NN>-<slug>.md` | Finished steps — moved here with a completion date. Read-only history under **Completed steps**. |
 | `docs/development-steps.md` | The standard for the step files (format + how to complete one). |
+| `PATTERNS/PATTERNS/<category>/<NN>-<slug>.md` | Reusable code patterns (UI Elements, Sections, Brandbook). Reuse one before re-deriving it. Shown under **Patterns** on the /patterns page. |
+| `PATTERNS/ANTI-PATTERNS/<NN>-<slug>.md` | Deployment pitfalls — **read this flat list before every deploy**. Shown under **Anti-patterns** on /patterns. |
+| `docs/patterns.md` | The standard for the pattern files (format, declared→stable, how to read a `kind:delete` request). |
 | `docs/` | Long-lived architectural docs (ADRs, glossary, domain notes) |
 | `reports/errors/*.md` | Bugs and dead-ends — how they were fixed |
 | `reports/patterns/*.md` | Reusable working patterns |
