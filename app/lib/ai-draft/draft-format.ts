@@ -30,6 +30,18 @@ export const ROOT = "AI-DRAFT-SETTINGS"
 export const SKILLS_DIR = "SKILLS"
 export const MCP_DIR = "MCP"
 
+// Shape of the tree the GET endpoint returns (defined here, in the pure module, so
+// client components can import the types without pulling in the fs layer).
+export type GroupKind = "skill" | "mcp"
+export type RefEntry = { name: string; label: string; draft: Draft | null }  // a real original (+ optional overlay draft)
+export type AgentNode = {
+  id: string; label: string; folder: string
+  instructions: Draft[]
+  skills: { refs: RefEntry[]; extras: Draft[] }
+  mcp: { refs: RefEntry[]; extras: Draft[] }
+}
+export type DraftTree = { agents: AgentNode[] }
+
 const META_OPEN = "<!-- fractera:draft"
 const META_CLOSE = "-->"
 

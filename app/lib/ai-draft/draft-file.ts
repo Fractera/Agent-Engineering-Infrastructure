@@ -3,6 +3,7 @@ import { resolve } from "path"
 import {
   ROOT, SKILLS_DIR, MCP_DIR,
   type Draft, type DraftKind, type DraftMode,
+  type RefEntry, type AgentNode, type DraftTree,
   encodeId, decodeId, slugify, pad, render, parse,
 } from "./draft-format"
 import { AGENTS, type AgentDef } from "./agents"
@@ -65,15 +66,6 @@ export async function ensureSkeleton(): Promise<void> {
     }
   }
 }
-
-export type RefEntry = { name: string; label: string; draft: Draft | null }
-export type AgentNode = {
-  id: string; label: string; folder: string
-  instructions: Draft[]
-  skills: { refs: RefEntry[]; extras: Draft[] }
-  mcp: { refs: RefEntry[]; extras: Draft[] }
-}
-export type DraftTree = { agents: AgentNode[] }
 
 function group(drafts: Draft[], refs: { name: string; label: string }[]): { refs: RefEntry[]; extras: Draft[] } {
   const byTarget = new Map<string, Draft>()
