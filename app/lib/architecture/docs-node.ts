@@ -54,15 +54,31 @@ export const DOCS_NODE: ArchNode = {
     },
     {
       id: "doc-patterns",
-      label: "Patterns",
+      label: "PATTERNS",
       kind: "group",
-      description: "Reusable approaches that worked — consult before solving anew.",
-    },
-    {
-      id: "doc-antipatterns",
-      label: "Anti-patterns",
-      kind: "group",
-      description: "Dead-ends that cost time — read to avoid repeating them.",
+      href: "/patterns",
+      description:
+        "The reuse library — reusable code patterns and deployment anti-patterns, kept " +
+        "as real markdown files an agent reads and writes. Edited via the /patterns page; " +
+        "files live in PATTERNS/ at the project root.",
+      children: [
+        {
+          id: "doc-patterns-patterns",
+          label: "PATTERNS",
+          kind: "group",
+          description:
+            "Reusable code patterns in a one-level tree by category (UI Elements, " +
+            "Sections, Brandbook). Reuse or extend one before re-deriving it.",
+        },
+        {
+          id: "doc-patterns-anti",
+          label: "ANTI-PATTERNS",
+          kind: "group",
+          description:
+            "Deployment pitfalls — a flat list an agent reads before every deploy " +
+            "to avoid repeating them.",
+        },
+      ],
     },
     {
       id: "doc-about",
