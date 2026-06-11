@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 import { Loader2, Download, Trash2, Sparkles, AlertTriangle } from "lucide-react"
 import type { DocNode } from "@/lib/crud-docs/format"
 
@@ -13,12 +14,11 @@ export function DocPreview({ node, onDelete }: { node: DocNode; onDelete: (rel: 
   const [preview, setPreview] = useState<Preview | null>(null)
   const [loading, setLoading] = useState(true)
   const [activating, setActivating] = useState(false)
-  const [activateMsg, setActivateMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [confirm, setConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
-    setLoading(true); setActivateMsg(null)
+    setLoading(true)
     fetch(`/api/documents/preview?path=${encodeURIComponent(node.rel)}`)
       .then(r => (r.ok ? r.json() : { kind: "missing" }))
       .then(setPreview)
@@ -26,17 +26,35 @@ export function DocPreview({ node, onDelete }: { node: DocNode; onDelete: (rel: 
       .finally(() => setLoading(false))
   }, [node.rel])
 
+  // Honest toasts: the document is SENT for indexing, not yet indexed. Green when
+  // LightRAG has an OpenAI key (it will actually index — track it in the LightRAG
+  // panel); orange when there is no key (accepted but indexing will not finish);
+  // red on a hard failure.
   async function activate() {
-    setActivating(true); setActivateMsg(null)
+    setActivating(true)
     try {
       const res = await fetch("/api/documents/ingest", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ path: node.rel }),
       })
       const d = await res.json()
-      setActivateMsg({ ok: !!d.ok, text: d.message ?? (d.ok ? "Activated." : "Could not activate.") })
+      if (!d.ok) {
+        toast.error(d.message ?? "Could not activate.")
+      } else if (d.embeddingConfigured === false) {
+        toast.warning(
+          "Sent to Company Memory for indexing — but LightRAG has no OpenAI key yet, so indexing will not finish. " +
+          "Add an OpenAI Memory key in Admin, then activate again.",
+        )
+      } else if (d.embeddingConfigured === true) {
+        toast.success(
+          "OpenAI API key is connected to LightRAG — the document was sent for indexing. " +
+          "Track completion in the LightRAG panel.",
+        )
+      } else {
+        toast.success("Sent to Company Memory for indexing. Track completion in the LightRAG panel.")
+      }
     } catch {
-      setActivateMsg({ ok: false, text: "Could not reach the server." })
+      toast.error("Could not reach the server.")
     } finally {
       setActivating(false)
     }
@@ -77,9 +95,6 @@ export function DocPreview({ node, onDelete }: { node: DocNode; onDelete: (rel: 
             {deleting ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />} Delete
           </button>
         </div>
-        {activateMsg && (
-          <p className={`mt-2 text-[11px] leading-relaxed ${activateMsg.ok ? "text-emerald-600" : "text-amber-600"}`}>{activateMsg.text}</p>
-        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-5">

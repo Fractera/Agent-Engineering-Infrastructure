@@ -1,4 +1,5 @@
 import { readTextForIngest } from "./fs"
+import { ragEmbeddingConfigured } from "./rag-status"
 
 // Send a document into Company Memory (LightRAG). Same contract the hermes lightrag-
 // memory plugin uses: POST {LIGHTRAG_URL}/documents/text with an X-API-Key header and a
@@ -9,7 +10,10 @@ import { readTextForIngest } from "./fs"
 const LIGHTRAG_URL = (process.env.LIGHTRAG_URL ?? "http://localhost:9621").replace(/\/+$/, "")
 const LIGHTRAG_KEY = process.env.LIGHTRAG_API_KEY ?? ""
 
-export type IngestResult = { ok: boolean; message: string }
+// embeddingConfigured: did the LightRAG service have an embedding key when we submitted?
+// true = it will actually index; false = accepted but indexing will fail (no OpenAI key);
+// null = could not determine. Drives the toast colour on the page.
+export type IngestResult = { ok: boolean; message: string; embeddingConfigured?: boolean | null }
 
 export async function ingestDocument(rel: string): Promise<IngestResult> {
   const text = await readTextForIngest(rel)
@@ -38,7 +42,13 @@ export async function ingestDocument(rel: string): Promise<IngestResult> {
     if (!res.ok) {
       return { ok: false, message: `Company Memory rejected the document (HTTP ${res.status}). Make sure LightRAG has an embedding key set, then try again.` }
     }
-    return { ok: true, message: "Sent to Company Memory — LightRAG is indexing it. It becomes searchable once indexing finishes." }
+    // Submit succeeded (accepted into the queue). Honest wording: it was SENT for
+    // indexing, not yet indexed — completion is tracked in the LightRAG panel.
+    return {
+      ok: true,
+      message: "Sent to Company Memory for indexing.",
+      embeddingConfigured: await ragEmbeddingConfigured(),
+    }
   } catch {
     return { ok: false, message: "Company Memory (LightRAG) is not reachable from the workspace. Enable it in Admin → Company Memory, then activate again." }
   }
