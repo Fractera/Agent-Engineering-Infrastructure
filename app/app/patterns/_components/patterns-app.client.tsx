@@ -123,6 +123,29 @@ export function PatternsApp() {
     setAdding(false)
   }
 
+  // Edit the open pattern in place (description for now; Source/Steps later) —
+  // writes the file directly. The returned pattern carries the recomputed
+  // declared/pending, so the tree colour updates immediately.
+  async function patchPattern(patch: Record<string, unknown>) {
+    if (!selected) return
+    const res = await fetch(`/api/patterns/${selected.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    })
+    if (!res.ok) return
+    const { pattern } = await res.json()
+    if (!pattern) return
+    setSelected(pattern)
+    if (pattern.kind === "anti") {
+      setAnti(prev => prev.map(p => (p.id === pattern.id ? pattern : p)))
+    } else {
+      setCategories(prev => prev.map(c =>
+        c.slug === pattern.category ? { ...c, patterns: c.patterns.map(p => (p.id === pattern.id ? pattern : p)) } : c,
+      ))
+    }
+  }
+
   function toggle(id: string) {
     setExpanded(prev => {
       const next = new Set(prev)
@@ -202,6 +225,7 @@ export function PatternsApp() {
                 <PatternDetail
                   pattern={selected}
                   categoryLabel={categories.find(c => c.slug === selected.category)?.label ?? selected.category}
+                  onPatch={patchPattern}
                 />
               ) : (
                 <div className="flex h-full items-center justify-center p-10 text-center">

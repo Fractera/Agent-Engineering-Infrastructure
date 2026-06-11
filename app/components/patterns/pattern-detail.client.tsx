@@ -1,24 +1,40 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { Loader2 } from "lucide-react"
 import type { Pattern } from "@/lib/patterns/pattern-format"
 import { CodeEditor } from "@/components/architecture/code-editor.client"
 import { AccordionItem } from "./accordion-item.client"
 
-// Right-hand read view of a pattern / anti-pattern, mirroring the architecture
-// RouteDetailPanel: a header + description, then the standard sections as ONE
-// accordion — Source code example (Monaco), Steps, Danger zone. Read-only for now;
-// inline editing and the real delete land in later sub-steps (P5–P8).
-export function PatternDetail({ pattern, categoryLabel }: { pattern: Pattern; categoryLabel: string }) {
+// Right-hand detail view of a pattern / anti-pattern, mirroring the architecture
+// RouteDetailPanel: header + editable description, then the standard sections as ONE
+// accordion — Source code example (Monaco), Steps, Danger zone. Description saves
+// directly (PATCH). Source/Steps editing and the real delete land in P6–P8.
+export function PatternDetail({
+  pattern, categoryLabel, onPatch,
+}: {
+  pattern: Pattern
+  categoryLabel: string
+  onPatch: (patch: Record<string, unknown>) => Promise<void>
+}) {
   const kindLabel = pattern.kind === "anti" ? "Anti-pattern" : `Pattern · ${categoryLabel}`
   const language = pattern.kind === "anti" ? "shell" : "tsx"
   const [open, setOpen] = useState<Set<string>>(new Set())
+  const [desc, setDesc] = useState(pattern.description)
+  const [saving, setSaving] = useState(false)
+  // Reset the local draft when a different pattern is opened.
+  useEffect(() => { setDesc(pattern.description) }, [pattern.id, pattern.description])
+
   function toggle(t: string) {
     setOpen(prev => {
       const next = new Set(prev)
       next.has(t) ? next.delete(t) : next.add(t)
       return next
     })
+  }
+  async function saveDesc() {
+    setSaving(true)
+    try { await onPatch({ description: desc }) } finally { setSaving(false) }
   }
 
   return (
@@ -35,9 +51,23 @@ export function PatternDetail({ pattern, categoryLabel }: { pattern: Pattern; ca
 
       <div className="flex-1 overflow-y-auto p-5">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground">Description</p>
-        <p className="mt-1.5 whitespace-pre-wrap text-xs leading-relaxed text-foreground/80">
-          {pattern.description || "No description yet."}
-        </p>
+        <textarea
+          value={desc}
+          onChange={e => setDesc(e.target.value)}
+          rows={5}
+          placeholder="What is this pattern for? The name says it — add intent here, or let an agent draft it."
+          className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 text-xs leading-relaxed text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
+        />
+        {desc !== pattern.description && (
+          <button
+            onClick={saveDesc}
+            disabled={saving}
+            className="mt-2 inline-flex h-8 items-center gap-1.5 rounded-md bg-foreground px-4 text-xs font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-40"
+          >
+            {saving && <Loader2 size={11} className="animate-spin" />}
+            Save description
+          </button>
+        )}
 
         <div className="mt-5 flex flex-col gap-1.5">
           <AccordionItem title="Source code example" open={open.has("source")} onToggle={() => toggle("source")}>
