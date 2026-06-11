@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Zap, LayoutDashboard, Sparkles, Cpu, FolderTree, Bug, BookText, ListChecks } from "lucide-react";
+import { Zap, LayoutDashboard, Sparkles, Cpu, FolderTree, Bug, BookText, ListChecks, Blocks } from "lucide-react";
 import { adminBase } from "@/lib/runtime-urls";
 
 const AI_TOOLS = [
@@ -164,6 +164,13 @@ export function ShellHome() {
           >
             <ListChecks size={14} />
             Development steps
+          </a>
+          <a
+            href="/patterns"
+            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl border border-border text-sm font-medium text-foreground hover:bg-muted active:scale-95 transition-all"
+          >
+            <Blocks size={14} />
+            Patterns
           </a>
         </motion.div>
 
