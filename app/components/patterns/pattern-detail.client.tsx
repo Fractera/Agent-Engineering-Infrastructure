@@ -7,6 +7,14 @@ import { CodeEditor } from "@/components/architecture/code-editor.client"
 import { AccordionItem } from "./accordion-item.client"
 import { PatternDanger } from "./pattern-danger.client"
 
+// crypto.randomUUID() is only defined in secure contexts; this server is reached
+// over plain HTTP in IP-mode (http://<ip>:3000), where it is undefined and throws.
+// Fall back to a random id there so adding a task / ordering removal never crashes.
+function genId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID()
+  return `t-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+}
+
 // Right-hand detail view of a pattern / anti-pattern, mirroring the architecture
 // RouteDetailPanel: header + editable description, then the standard sections as ONE
 // accordion — Source code example (Monaco), Steps, Danger zone. Description saves
@@ -54,7 +62,7 @@ export function PatternDetail({
     const body = draft.trim()
     if (!body) return
     setDraft("")
-    await onPatch({ tasks: [...pattern.tasks, { id: crypto.randomUUID(), body }] })
+    await onPatch({ tasks: [...pattern.tasks, { id: genId(), body }] })
   }
   async function removeTask(id: string) {
     await onPatch({ tasks: pattern.tasks.filter(t => t.id !== id) })
@@ -145,7 +153,7 @@ export function PatternDetail({
           <AccordionItem title="Danger zone" open={open.has("danger")} onToggle={() => toggle("danger")} tone="danger">
             <PatternDanger
               pattern={pattern}
-              onOrderRemoval={() => onPatch({ tasks: [...pattern.tasks, { id: crypto.randomUUID(), body: "Retire this pattern and update its usages." }] })}
+              onOrderRemoval={() => onPatch({ tasks: [...pattern.tasks, { id: genId(), body: "Retire this pattern and update its usages." }] })}
               onRemove={onRemove}
             />
           </AccordionItem>
