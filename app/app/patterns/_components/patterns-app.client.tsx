@@ -146,6 +146,23 @@ export function PatternsApp() {
     }
   }
 
+  // Hard-delete the open pattern (danger zone) — removes its file and clears the
+  // selection. Soft removal goes through patchPattern (a task) instead.
+  async function removePattern() {
+    if (!selected) return
+    const res = await fetch(`/api/patterns/${selected.id}`, { method: "DELETE" })
+    if (!res.ok) return
+    const removed = selected
+    setSelected(null)
+    if (removed.kind === "anti") {
+      setAnti(prev => prev.filter(p => p.id !== removed.id))
+    } else {
+      setCategories(prev => prev.map(c =>
+        c.slug === removed.category ? { ...c, patterns: c.patterns.filter(p => p.id !== removed.id) } : c,
+      ))
+    }
+  }
+
   function toggle(id: string) {
     setExpanded(prev => {
       const next = new Set(prev)
@@ -226,6 +243,7 @@ export function PatternsApp() {
                   pattern={selected}
                   categoryLabel={categories.find(c => c.slug === selected.category)?.label ?? selected.category}
                   onPatch={patchPattern}
+                  onRemove={removePattern}
                 />
               ) : (
                 <div className="flex h-full items-center justify-center p-10 text-center">

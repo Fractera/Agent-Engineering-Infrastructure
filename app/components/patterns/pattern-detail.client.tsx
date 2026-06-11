@@ -5,17 +5,19 @@ import { Loader2, Plus, X } from "lucide-react"
 import type { Pattern } from "@/lib/patterns/pattern-format"
 import { CodeEditor } from "@/components/architecture/code-editor.client"
 import { AccordionItem } from "./accordion-item.client"
+import { PatternDanger } from "./pattern-danger.client"
 
 // Right-hand detail view of a pattern / anti-pattern, mirroring the architecture
 // RouteDetailPanel: header + editable description, then the standard sections as ONE
 // accordion — Source code example (Monaco), Steps, Danger zone. Description saves
 // directly (PATCH). Source/Steps editing and the real delete land in P6–P8.
 export function PatternDetail({
-  pattern, categoryLabel, onPatch,
+  pattern, categoryLabel, onPatch, onRemove,
 }: {
   pattern: Pattern
   categoryLabel: string
   onPatch: (patch: Record<string, unknown>) => Promise<void>
+  onRemove: () => Promise<void>
 }) {
   const kindLabel = pattern.kind === "anti" ? "Anti-pattern" : `Pattern · ${categoryLabel}`
   const language = pattern.kind === "anti" ? "shell" : "tsx"
@@ -141,10 +143,11 @@ export function PatternDetail({
           </AccordionItem>
 
           <AccordionItem title="Danger zone" open={open.has("danger")} onToggle={() => toggle("danger")} tone="danger">
-            <p className="text-xs text-foreground/60">
-              Hard-delete this {pattern.kind === "anti" ? "anti-pattern" : "pattern"} (with confirmation), or order a
-              soft AI removal. Wired in a later sub-step.
-            </p>
+            <PatternDanger
+              pattern={pattern}
+              onOrderRemoval={() => onPatch({ tasks: [...pattern.tasks, { id: crypto.randomUUID(), body: "Retire this pattern and update its usages." }] })}
+              onRemove={onRemove}
+            />
           </AccordionItem>
         </div>
       </div>
