@@ -24,8 +24,10 @@ storage/*
 data/*
 !data/.gitkeep
 
-# knowledge base documents — real user files, never synced to GitHub
-CRUD-DOCS/
+# knowledge base documents — real user files, never synced to GitHub.
+# Leading slash anchors this to the app root so it does NOT match the source dirs
+# lib/crud-docs/ or components/crud-docs/ under case-insensitive git (Windows).
+/CRUD-DOCS/
 
 # build
 dist/
