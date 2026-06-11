@@ -80,7 +80,7 @@ function group(drafts: Draft[], refs: { name: string; label: string }[]): { refs
 
 export async function listTree(): Promise<DraftTree> {
   await ensureSkeleton()
-  const agents = await Promise.all(AGENTS.map(async agent => {
+  const agents = await Promise.all(AGENTS.map(async (agent): Promise<AgentNode> => {
     const instructions = (await Promise.all(agent.docs.map(d => readDraftFile(`${agent.folder}/${d.name}`))))
       .filter((d): d is Draft => !!d)
     const skillDrafts = await listDirDrafts(`${agent.folder}/${SKILLS_DIR}`)

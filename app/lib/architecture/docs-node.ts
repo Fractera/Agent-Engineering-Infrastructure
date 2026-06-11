@@ -81,6 +81,45 @@ export const DOCS_NODE: ArchNode = {
       ],
     },
     {
+      id: "doc-ai-draft",
+      label: "AI-DRAFT-SETTINGS",
+      kind: "group",
+      href: "/ai-draft-settings",
+      description:
+        "The draft layer — free-form wishes for the six agents' real instruction / skill / " +
+        "MCP files, kept as real markdown an agent reads and applies later. The originals are " +
+        "never edited here; this is a mirror. Edited via the /ai-draft-settings page; files live " +
+        "in AI-DRAFT-SETTINGS/ at the project root (one folder per agent: HERMES, CLAUDE-CODE, " +
+        "CODEX, GEMINI-CLI, QWEN-CODE, KIMI-CODE).",
+      children: [
+        {
+          id: "doc-ai-draft-instr",
+          label: "Instruction docs",
+          kind: "group",
+          description:
+            "Per-agent instruction draft(s) — CLAUDE.md / AGENTS.md / GEMINI.md / QWEN.md / " +
+            "KIMI.md for the coding platforms, SOUL.md + HERMES.md for Hermes. Supplement or " +
+            "replace the real document.",
+        },
+        {
+          id: "doc-ai-draft-skills",
+          label: "SKILLS",
+          kind: "group",
+          description:
+            "Draft skills per agent. Real skills show as read-only reference; a draft is laid " +
+            "over one (supplement / replace) or added as a new requested skill (amber + req).",
+        },
+        {
+          id: "doc-ai-draft-mcp",
+          label: "MCP",
+          kind: "group",
+          description:
+            "Draft MCP connectors per agent. Real bridges show as read-only reference; a draft " +
+            "supplements / replaces one or requests a new connector.",
+        },
+      ],
+    },
+    {
       id: "doc-about",
       label: "About Fractera",
       kind: "config",
