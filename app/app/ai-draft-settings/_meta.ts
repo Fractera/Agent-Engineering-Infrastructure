@@ -8,10 +8,10 @@ const meta: RouteMeta = {
   status: "live",
   todo: [],
 
-  visibility: "public",
-  roles: [],
-  unauthorizedRedirect: undefined,
-  enforcedBy: undefined,
+  visibility: "private",
+  roles: ["admin"],
+  unauthorizedRedirect: "/register?requireRole=admin",
+  enforcedBy: "both",
 
   isDynamicRoute: false,
   segmentParams: [],
@@ -22,12 +22,12 @@ const meta: RouteMeta = {
   parallelSlot: undefined,
   parentLayout: "app/app/layout.tsx",
 
-  rendering: "static",
+  rendering: "dynamic",
   revalidate: undefined,
   runtime: "nodejs",
   maxDuration: undefined,
   preferredRegion: undefined,
-  cache: undefined,
+  cache: "no-store",
   fetchCache: undefined,
   revalidateTags: [],
 

@@ -8,10 +8,10 @@ const meta: RouteMeta = {
   status: "live",
   todo: [],
 
-  visibility: "public",
-  roles: [],
-  unauthorizedRedirect: undefined,
-  enforcedBy: undefined,
+  visibility: "private",
+  roles: ["admin"],
+  unauthorizedRedirect: "/register?requireRole=admin",
+  enforcedBy: "both",
 
   isDynamicRoute: false,
   segmentParams: [],
@@ -22,12 +22,12 @@ const meta: RouteMeta = {
   parallelSlot: undefined,
   parentLayout: "app/app/layout.tsx",
 
-  rendering: "static",
+  rendering: "dynamic",
   revalidate: undefined,
   runtime: "nodejs",
   maxDuration: undefined,
   preferredRegion: undefined,
-  cache: undefined,
+  cache: "no-store",
   fetchCache: undefined,
   revalidateTags: [],
 
@@ -56,10 +56,10 @@ const meta: RouteMeta = {
 
   description:
     "Glossary editor — approve abbreviations / preferred phrasings (key→meaning) so " +
-    "every agent reads them the same way (e.g. aws → ai-workspace). Public (temporary).",
+    "every agent reads them the same way (e.g. aws → ai-workspace). Admin-only service page.",
   dataDependencies: ["filesystem: GLOSSARY.md (project root)", "/api/glossary"],
   relatedRoutes: ["/api/glossary"],
-  notes: "Temporarily public. Edits write the real GLOSSARY.md file agents read.",
+  notes: "Admin-only. Edits write the real GLOSSARY.md file agents read.",
 
   owner: undefined,
   createdBy: undefined,

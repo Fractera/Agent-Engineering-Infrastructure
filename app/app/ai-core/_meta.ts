@@ -12,10 +12,10 @@ const meta: RouteMeta = {
   todo: [],
 
   // — Access control —
-  visibility: "public",
-  roles: [],
-  unauthorizedRedirect: undefined,
-  enforcedBy: undefined,
+  visibility: "private",
+  roles: ["admin"],
+  unauthorizedRedirect: "/register?requireRole=admin",
+  enforcedBy: "both",
 
   // — Routing shape —
   isDynamicRoute: false,
@@ -28,12 +28,12 @@ const meta: RouteMeta = {
   parentLayout: "app/app/layout.tsx",
 
   // — Rendering & caching —
-  rendering: "static",
+  rendering: "dynamic",
   revalidate: undefined,
   runtime: "nodejs",
   maxDuration: undefined,
   preferredRegion: undefined,
-  cache: undefined,
+  cache: "no-store",
   fetchCache: undefined,
   revalidateTags: [],
 

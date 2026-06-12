@@ -1,9 +1,29 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { shouldBypassAuth } from "@/lib/auth/auth-bypass";
+import { getSession } from "@/lib/auth/get-session";
 
-// Shell keeps only /api/config — protect it with session cookie check
-export function proxy(request: NextRequest): NextResponse {
+// API namespaces behind the admin-only service pages (AI Core, Architecture,
+// Development steps, Patterns, Glossary, Documents, AI Draft Settings, Debug).
+// Calls to these require the admin role. Deliberately EXCLUDED (shared / needed by
+// the public app or non-admin users): /api/health, /api/me, /api/media/*, and the
+// Dashboard's /api/project/default/products. Agents (x-agent-identity) and IP mode
+// (shouldBypassAuth) are always allowed — agents must keep writing these files.
+const ADMIN_API_PREFIXES = [
+  "/api/glossary",
+  "/api/patterns",
+  "/api/development-steps",
+  "/api/ai-draft-settings",
+  "/api/documents",
+  "/api/projects",
+  "/api/project/default/architecture",
+  "/api/project/default/source",
+  "/api/project/default/routing",
+];
+
+// Shell keeps only /api/* — protect it with a session cookie check, and require the
+// admin role for the service-page API namespaces above.
+export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith("/api/") && pathname !== "/api/health") {
@@ -16,6 +36,14 @@ export function proxy(request: NextRequest): NextResponse {
 
         if (!sessionToken) {
           return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        // Admin-gate the service-page API namespaces (role, not just a cookie).
+        if (ADMIN_API_PREFIXES.some((p) => pathname.startsWith(p))) {
+          const session = await getSession(request);
+          if (!session?.roles?.includes("admin")) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+          }
         }
       }
     }

@@ -1,7 +1,8 @@
 import { ArchitectureApp } from "./architecture-app.client"
+import { requireAdmin } from "@/lib/auth/require-admin"
 
-// Route entry component for /architecture. Server by default; renders the route
-// map explorer plus the "Add page" declaration panel.
-export default function ArchitectureEntry() {
+// Route entry component for /architecture. Server by default; admin-only service page.
+export default async function ArchitectureEntry() {
+  await requireAdmin()
   return <ArchitectureApp />
 }

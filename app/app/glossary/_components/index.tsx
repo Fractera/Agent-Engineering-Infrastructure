@@ -1,7 +1,8 @@
 import { GlossaryApp } from "./glossary-app.client"
+import { requireAdmin } from "@/lib/auth/require-admin"
 
-// Route entry component for /glossary. Server by default; renders the client
-// island that edits the workspace glossary.
-export default function GlossaryEntry() {
+// Route entry component for /glossary. Server by default; admin-only service page.
+export default async function GlossaryEntry() {
+  await requireAdmin()
   return <GlossaryApp />
 }
