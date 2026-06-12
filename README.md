@@ -89,6 +89,23 @@ The agent runs the full deployment and reports back when your workspace is live.
 
 ---
 
+## What you land in — your workspace after deploy
+
+<p align="center">
+  <img src="https://www.fractera.ai/Fractera-ai-workspace-screenshot.png" alt="Fractera AI Workspace — the admin panel you get right after deployment" width="100%"/>
+</p>
+
+The moment the deploy finishes, this is your workspace — a full cockpit, not a blank server:
+
+- **It starts ready.** You land in the **Hermes chat Web UI**. Set your own key to activate Hermes; the same key activates **Memory**. Open the **Brain** and **Memory** tabs and press **Activate** in Memory to embed the starter docs — instantly available as a help desk and to every coding agent.
+- **Pick your coding models.** The top row lists the **five coding platforms** (Claude Code · Codex · Gemini CLI · Qwen · Kimi). Open one or several and activate your subscription — it looks almost like the standard CLI. The far-right card is the **Terminal**, for watching the build or adding another platform.
+- **Everything in one panel.** **Settings** (left) opens full control of your app and tools. The footer connects **GitHub**, triggers a **deploy** by hand, and holds buttons that switch on later (skills marketplace). Top-right, **Preview** shows the page you are building and routes a request from a selected element straight to the Hermes chat or Telegram.
+- **It explains and improves itself.** The project is fully **open-source**, so Hermes — or any model — can read this very codebase and explain or extend any feature, including the admin panel itself. Tip: experiment on a secondary account and keep your main one on proven solutions. Found a bug or want a feature? **PRs welcome** — help us strengthen the architecture.
+
+> See the full architecture and this screenshot in detail on the **[AI Workspace Architect](https://www.fractera.ai/ai-workspace-architect)** page.
+
+---
+
 ## Production coding + local development — same workflow
 
 Fractera is not just for remote browser coding. It works equally well as a production target for your existing local setup:
