@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Zap, LayoutDashboard, Sparkles, Cpu, FolderTree, Bug, BookText, ListChecks, Blocks, Layers, Library } from "lucide-react";
+import { Zap, LayoutDashboard, Sparkles } from "lucide-react";
 import { adminBase } from "@/lib/runtime-urls";
 
 const AI_TOOLS = [
@@ -129,62 +129,6 @@ export function ShellHome() {
           >
             <LayoutDashboard size={14} />
             Dashboard
-          </a>
-          <a
-            href="/ai-core"
-            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl border border-border text-sm font-medium text-foreground hover:bg-muted active:scale-95 transition-all"
-          >
-            <Cpu size={14} />
-            AI Core
-          </a>
-          <a
-            href="/architecture"
-            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl border border-border text-sm font-medium text-foreground hover:bg-muted active:scale-95 transition-all"
-          >
-            <FolderTree size={14} />
-            Architecture
-          </a>
-          <a
-            href="/debug"
-            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl border border-border text-sm font-medium text-foreground hover:bg-muted active:scale-95 transition-all"
-          >
-            <Bug size={14} />
-            Debug
-          </a>
-          <a
-            href="/glossary"
-            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl border border-border text-sm font-medium text-foreground hover:bg-muted active:scale-95 transition-all"
-          >
-            <BookText size={14} />
-            Glossary
-          </a>
-          <a
-            href="/development-steps"
-            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl border border-border text-sm font-medium text-foreground hover:bg-muted active:scale-95 transition-all"
-          >
-            <ListChecks size={14} />
-            Development steps
-          </a>
-          <a
-            href="/patterns"
-            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl border border-border text-sm font-medium text-foreground hover:bg-muted active:scale-95 transition-all"
-          >
-            <Blocks size={14} />
-            Patterns
-          </a>
-          <a
-            href="/documents"
-            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl border border-border text-sm font-medium text-foreground hover:bg-muted active:scale-95 transition-all"
-          >
-            <Library size={14} />
-            Documents
-          </a>
-          <a
-            href="/ai-draft-settings"
-            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl border border-amber-500/40 text-sm font-medium text-foreground hover:bg-muted active:scale-95 transition-all"
-          >
-            <Layers size={14} />
-            AI Draft Settings
           </a>
         </motion.div>
 
