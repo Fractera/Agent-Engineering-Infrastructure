@@ -12,7 +12,7 @@ agent should know. When you **activate** a document it is ingested into your vec
 
 ## Layout
 ```
-CRUD-DOCS/                      # project root, gitignored
+CRUD-DOCS/                      # project root
   <folder>/                     # any depth
     <sub-folder>/
       handbook.md
@@ -20,8 +20,9 @@ CRUD-DOCS/                      # project root, gitignored
   company-overview.docx
 ```
 - The skeleton is just the empty `CRUD-DOCS/` directory, created on first GET (`ensureRoot`).
-- **`CRUD-DOCS/` is gitignored** (`app/.gitignore`) — these are user documents, they stay on the
-  server and are **never synced to GitHub**. A fresh deploy starts with an empty knowledge base.
+- **`CRUD-DOCS/` is tracked by git** like any other folder — documents you add sync with the repo
+  (push/pull). (The earlier "user docs stay server-local / gitignored" rule from step 112 is parked;
+  we may revisit keeping them local later.)
 
 ## Two-column UI (same shape as /architecture)
 - **Left** — the real folder/file tree of any depth. Selecting a folder targets it; selecting a file

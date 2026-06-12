@@ -149,7 +149,7 @@ export const DOCS_NODE: ArchNode = {
         "CRUD-DOCS/ (company notes, technical processes, anything an agent should know). " +
         "Managed via the /documents page: create folders, upload .txt/.md/.doc/.docx, preview, " +
         "delete — real files on disk, no staging. Activating one ingests it into Company Memory " +
-        "(LightRAG). These documents stay on the server and are NOT synced to GitHub.",
+        "(LightRAG). These documents are tracked by git and sync like any other file.",
     },
   ],
 }

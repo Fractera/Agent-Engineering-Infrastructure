@@ -24,16 +24,9 @@ storage/*
 data/*
 !data/.gitkeep
 
-# knowledge base documents — real user files, never synced to GitHub.
-# Leading slash anchors this to the app root so it does NOT match the source dirs
-# lib/crud-docs/ or components/crud-docs/ under case-insensitive git (Windows).
-# Ignore the directory CONTENTS (same pattern as storage/ and data/ above) but ship
-# the read-only seed knowledge docs, so a fresh clone / agent starts with a base corpus.
-/CRUD-DOCS/*
-!/CRUD-DOCS/ai-workspace-architecture.md
-!/CRUD-DOCS/fractera-project-overview.md
-!/CRUD-DOCS/workspace-standards
-!/CRUD-DOCS/workspace-standards/*
+# knowledge base documents (CRUD-DOCS/) are tracked like any other file and sync with
+# git. The earlier "user docs stay server-local / gitignored" rule (step 112) is parked —
+# we may revisit keeping them local later.
 
 # build
 dist/
