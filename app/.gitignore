@@ -27,7 +27,13 @@ data/*
 # knowledge base documents — real user files, never synced to GitHub.
 # Leading slash anchors this to the app root so it does NOT match the source dirs
 # lib/crud-docs/ or components/crud-docs/ under case-insensitive git (Windows).
-/CRUD-DOCS/
+# Ignore the directory CONTENTS (same pattern as storage/ and data/ above) but ship
+# the read-only seed knowledge docs, so a fresh clone / agent starts with a base corpus.
+/CRUD-DOCS/*
+!/CRUD-DOCS/ai-workspace-architecture.md
+!/CRUD-DOCS/fractera-project-overview.md
+!/CRUD-DOCS/workspace-standards
+!/CRUD-DOCS/workspace-standards/*
 
 # build
 dist/
