@@ -41,14 +41,21 @@ export const ROUTES_TREE: ArchNode = {
       id: "pages",
       label: "Pages",
       kind: "group",
-      description: "Pages a visitor can open in the browser.",
+      description:
+        "Pages a visitor can open in the browser. The service pages (tagged " +
+        "\"service\") are the admin-only introspection tools — reached from the " +
+        "Service pages menu in the admin App Preview, not the public home.",
       children: [
         page("r-home", "/", "/", "Public landing — the starter template you turn into your product.", "Public"),
         page("r-dashboard", "/dashboard", "/dashboard", "Product catalogue demo (DB + media). Self-gates to a signed-in user in secure mode.", "User (secure) / open (IP)", "dynamic"),
-        page("r-ai-core", "/ai-core", "/ai-core", "Live state of your AI core — agents, bridges, memory, MCP, tools.", "Public"),
-        page("r-architecture", "/architecture", "/architecture", "This page — the map of your app's pages and endpoints.", "Public"),
-        page("r-debug", "/debug", "/debug", "Runtime diagnostics scratch surface.", "Public"),
-        page("r-glossary", "/glossary", "/glossary", "Glossary editor — your term map (key→meaning) every agent reads.", "Public"),
+        page("r-ai-core", "/ai-core", "/ai-core", "Live state of your AI core — agents, bridges, memory, MCP, tools. A live mirror of the real files on disk.", "Admin (secure) / open (IP)", "dynamic", true),
+        page("r-architecture", "/architecture", "/architecture", "This page — the map of your app's pages and endpoints.", "Admin (secure) / open (IP)", "dynamic", true),
+        page("r-debug", "/debug", "/debug", "Runtime diagnostics scratch surface.", "Admin (secure) / open (IP)", "dynamic", true),
+        page("r-glossary", "/glossary", "/glossary", "Glossary editor — your term map (key→meaning) every agent reads.", "Admin (secure) / open (IP)", "dynamic", true),
+        page("r-dev-steps", "/development-steps", "/development-steps", "Development steps — the project work log as real files (NEW / COMPLETED).", "Admin (secure) / open (IP)", "dynamic", true),
+        page("r-patterns", "/patterns", "/patterns", "Patterns & anti-patterns — the reuse library the AI consults while building.", "Admin (secure) / open (IP)", "dynamic", true),
+        page("r-ai-draft", "/ai-draft-settings", "/ai-draft-settings", "AI Draft Settings — the draft layer for the six agents' instruction / skill / MCP files.", "Admin (secure) / open (IP)", "dynamic", true),
+        page("r-documents", "/documents", "/documents", "Documents — the knowledge-base file manager (CRUD-DOCS), activated into Company Memory.", "Admin (secure) / open (IP)", "dynamic", true),
       ],
     },
     {
@@ -82,9 +89,11 @@ export const ROUTES_TREE: ArchNode = {
 
 function page(
   id: string, label: string, href: string, description: string,
-  roles: string, rendering: "static" | "dynamic" = "static",
+  roles: string, rendering: "static" | "dynamic" = "static", service = false,
 ): ArchNode {
-  return { id, label, kind: "page", href, description, meta: { roles, rendering, method: "GET" } }
+  const node: ArchNode = { id, label, kind: "page", href, description, meta: { roles, rendering, method: "GET" } }
+  if (service) node.badge = "service"
+  return node
 }
 
 function api(

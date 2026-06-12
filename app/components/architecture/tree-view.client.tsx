@@ -73,6 +73,9 @@ export function TreeNode({
         {node.pending && (
           <span className="ml-1 shrink-0 rounded-full border border-amber-500/50 px-1.5 font-mono text-[9px] font-semibold text-amber-600">req</span>
         )}
+        {node.badge && (
+          <span className="ml-1 shrink-0 rounded-full border border-sky-500/50 px-1.5 font-mono text-[9px] font-semibold text-sky-600">{node.badge}</span>
+        )}
         {node.port && (
           <span className="ml-auto shrink-0 font-mono text-[10px] text-foreground/60">
             {node.port}

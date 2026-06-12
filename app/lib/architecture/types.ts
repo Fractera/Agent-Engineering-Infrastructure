@@ -46,5 +46,8 @@ export type ArchNode = {
   /** A declared-but-not-built route (orange label). Existing routes with tasks
    *  keep a black label and only get the badge. */
   declared?: boolean
+  /** A short category chip shown next to the label, e.g. "service" for the
+   *  admin-only introspection pages. Purely informational. */
+  badge?: string
   children?: ArchNode[]
 }
