@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import type { ArchNode } from "@/lib/architecture/types"
-import { ARCHITECTURE_TREE } from "@/lib/architecture/tree"
 import { flattenTree, type FlatEntry } from "@/lib/architecture/flatten"
 import { TreeNode } from "@/components/architecture/tree-view.client"
 import { DetailPanel } from "@/components/architecture/detail-panel.client"
@@ -11,19 +10,22 @@ import { JumpBar } from "@/components/architecture/jump-bar.client"
 
 // A file-explorer tree (left ~50%) plus a detail panel (right ~50%), with a
 // quick-jump bar that animates the tree open to any entity on one click. One
-// artefact, equally legible to the human (eyes) and the AI (few tokens).
-export function AiCoreApp() {
-  const [selected, setSelected] = useState<ArchNode | null>(ARCHITECTURE_TREE)
+// artefact, equally legible to the human (eyes) and the AI (few tokens). The tree
+// is built on the server (static L2 seed + a live filesystem mirror of the
+// Documentation corpus) and passed in, so it reflects what is really on disk.
+export function AiCoreApp({ tree }: { tree: ArchNode }) {
+  const [selected, setSelected] = useState<ArchNode | null>(tree)
   const [expanded, setExpanded] = useState<Set<string>>(new Set(["l2", "nginx", "auth"]))
   const [scrollTarget, setScrollTarget] = useState<{ id: string; n: number } | null>(null)
 
-  // Jump targets: every node except the root and the per-platform boilerplate.
+  // Jump targets: every structural node except the root, the per-platform
+  // boilerplate, and the leaf documents (kind "note") — those would flood the bar.
   const entries = useMemo(() => {
     const PLATFORMS = ["claude", "codex", "gemini", "qwen", "kimi"]
-    return flattenTree(ARCHITECTURE_TREE).filter(
-      e => e.node.id !== ARCHITECTURE_TREE.id && !e.ancestors.some(a => PLATFORMS.includes(a)),
+    return flattenTree(tree).filter(
+      e => e.node.id !== tree.id && e.node.kind !== "note" && !e.ancestors.some(a => PLATFORMS.includes(a)),
     )
-  }, [])
+  }, [tree])
 
   useEffect(() => {
     if (!scrollTarget) return
@@ -52,7 +54,7 @@ export function AiCoreApp() {
 
   function handleReset() {
     setExpanded(new Set(["l2", "nginx", "auth"]))
-    setSelected(ARCHITECTURE_TREE)
+    setSelected(tree)
     setScrollTarget(t => ({ id: "l2", n: (t?.n ?? 0) + 1 }))
   }
 
@@ -82,7 +84,7 @@ export function AiCoreApp() {
           <div className="flex min-w-[720px] overflow-hidden rounded-xl border border-border">
             <div className="w-1/2 border-r border-border bg-muted/10 py-2">
               <TreeNode
-                node={ARCHITECTURE_TREE}
+                node={tree}
                 depth={0}
                 selectedId={selected?.id ?? null}
                 expanded={expanded}
