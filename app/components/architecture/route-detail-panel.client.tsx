@@ -19,7 +19,7 @@ function statusClass(s: string): string {
   return "border-border text-foreground/70"
 }
 
-export function RouteDetailPanel({ meta, name, onChanged }: { meta: RouteMeta; name?: string; onChanged?: () => void }) {
+export function RouteDetailPanel({ meta, name, onChanged, locked = false }: { meta: RouteMeta; name?: string; onChanged?: () => void; locked?: boolean }) {
   const sections = buildMetaSections(meta)
   const [open, setOpen] = useState<Set<string>>(new Set())
   // Bumped on any change (Source/Danger zone) so the to-do list reloads in place
@@ -65,6 +65,20 @@ export function RouteDetailPanel({ meta, name, onChanged }: { meta: RouteMeta; n
       <div className="flex-1 overflow-y-auto p-5">
         <p className="text-sm leading-relaxed text-foreground">{meta.description}</p>
 
+        {/* Service pages are workspace control surfaces — locked. The right panel
+            shows ONLY the name + description; no settings, Source, to-do or danger
+            zone, so they can never be changed or deleted from here. */}
+        {locked ? (
+          <div className="mt-5 rounded-lg border border-sky-500/40 bg-sky-500/5 p-4">
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-sky-600">Service page · locked</p>
+            <p className="mt-1.5 text-xs leading-relaxed text-foreground/80">
+              This is a built-in service page of the workspace. It is read-only here — it has no
+              editable settings, to-do or danger zone, and it cannot be changed or removed from this
+              view.
+            </p>
+          </div>
+        ) : (
+        <>
         {/* RouteMeta as a compact accordion. API endpoints show only Source +
             to-do + danger zone — their descriptor fields are not surfaced here. */}
         <div className="mt-5 flex flex-col gap-1.5">
@@ -116,6 +130,8 @@ export function RouteDetailPanel({ meta, name, onChanged }: { meta: RouteMeta; n
         {/* Native to-do + danger zone — settings that keep being updated */}
         <RouteTodo path={meta.path} onChanged={handleChanged} reloadSignal={bump} />
         <RouteDangerZone path={meta.path} onChanged={handleChanged} />
+        </>
+        )}
       </div>
     </div>
   )

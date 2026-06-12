@@ -288,7 +288,7 @@ export function ArchitectureApp() {
                     : declaredView
                       ? <RequestedDetailPanel {...declaredView} onChanged={refresh} onRemove={removeDeclared} />
                       : meta
-                        ? <RouteDetailPanel meta={meta} name={selected?.name} onChanged={refresh} />
+                        ? <RouteDetailPanel meta={meta} name={selected?.name} onChanged={refresh} locked={selected?.badge === "service"} />
                         : <DetailPanel node={selected} />}
             </div>
           </div>
