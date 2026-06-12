@@ -3,7 +3,7 @@
 <p align="center"><strong>Deploy a full AI coding workspace to your own VPS in 10 minutes. Zero DevOps.</strong></p>
 
 <p align="center">
-  <img src="https://www.fractera.ai/section-step-by-step-images/Step1.png" alt="Fractera AI Workspace" width="100%"/>
+  <img src="https://www.fractera.ai/Fractera-Web-Architect.jpg" alt="Fractera AI Workspace" width="100%"/>
 </p>
 
 <p align="center">
@@ -59,6 +59,10 @@ This is not a Docker image you still have to manage. This is not a tutorial you 
 
 Enter your VPS credentials. Watch it deploy. Done in ~10 minutes.
 
+<p align="center">
+  <img src="https://www.fractera.ai/section-step-by-step-images/Step1.png" alt="Deploy via the Fractera website" width="100%"/>
+</p>
+
 ### 2. MCP connector (from your AI chat)
 
 Add to Claude, Cursor, or any MCP-compatible client:
@@ -75,6 +79,10 @@ Add to Claude, Cursor, or any MCP-compatible client:
 
 Tell your agent: *"Deploy Fractera on my server at IP `x.x.x.x`"* — provide credentials when asked.
 The agent runs the full deployment and reports back when your workspace is live.
+
+<p align="center">
+  <img src="https://www.fractera.ai/mcp-step-by-step/mcp-step2.png" alt="Deploy via the MCP connector from your AI chat" width="100%"/>
+</p>
 
 **MCP connector:** `https://www.fractera.ai/api/mcp` · Open, no auth  
 **Listed on:** [Smithery](https://smithery.ai/servers/admin-add5/fractera) · [mcp.so](https://mcp.so) · [Glama](https://glama.ai/mcp/servers) · [Official MCP Registry](https://registry.modelcontextprotocol.io) (`io.github.Fractera/deploy`)
