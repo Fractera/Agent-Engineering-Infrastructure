@@ -22,6 +22,10 @@ export function PlatformSettingsPanel({ onClose }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // When parallel routing is on, an orange "Parallel routes · setup" affordance appears in the
+  // header. It opens the slot-selection UI (the animated route picker ported from the reference
+  // app — full copy lands in the next step; a placeholder describes it for now).
+  const [showRoutesSetup, setShowRoutesSetup] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -61,11 +65,22 @@ export function PlatformSettingsPanel({ onClose }: Props) {
 
   return (
     <div style={{ position: "absolute", top: 52, left: 0, right: 0, bottom: 36, zIndex: 20 }} className="bg-background flex flex-col">
-      <div className="flex items-center px-4 py-2.5 border-b border-border shrink-0">
-        <span className="text-xs font-semibold text-foreground flex-1">
+      <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border shrink-0">
+        <span className="text-xs font-semibold text-foreground">
           Platform
           <span className="ml-2 text-[10px] font-normal text-muted-foreground font-mono">routing · languages · theme</span>
         </span>
+        {parallelRouting && (
+          <button
+            type="button"
+            onClick={() => setShowRoutesSetup(true)}
+            title="Configure which parallel routes are active"
+            className="text-[10px] font-semibold uppercase tracking-wide text-orange-500 hover:text-orange-600 transition-colors"
+          >
+            Parallel routes · setup
+          </button>
+        )}
+        <span className="flex-1" />
         <button
           type="button"
           onClick={onClose}
@@ -74,6 +89,30 @@ export function PlatformSettingsPanel({ onClose }: Props) {
           <X size={13} />
         </button>
       </div>
+
+      {showRoutesSetup && (
+        <div className="absolute inset-0 bg-background flex flex-col z-30">
+          <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowRoutesSetup(false)}
+              className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              ← Back
+            </button>
+            <span className="text-xs font-semibold text-orange-500">Parallel routes · setup</span>
+          </div>
+          <div className="flex-1 overflow-auto px-6 py-6">
+            <p className="text-[11px] text-foreground/80 leading-relaxed max-w-md">
+              The animated parallel-routes selector — choose which named slots (Header, Left, Right,
+              Center / Center&nbsp;Header / Center&nbsp;Footer, Footer, …) are active, with a live layout
+              preview that resizes as you toggle — is ported from the reference app in the next step.
+              It will read and write the per-slot active flags through this Platform config (the
+              reference stored them as a per-slot <code className="font-mono">isDefaultPageNull</code> flag).
+            </p>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex-1 flex items-center justify-center text-muted-foreground text-xs gap-2">
