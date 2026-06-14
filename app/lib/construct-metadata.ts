@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { AppConfig, ContentType } from "@/config/app-config.defaults";
-import { iconUrl } from "@/config/app-config.defaults";
+import { iconUrl, resolveBrandName } from "@/config/app-config.defaults";
 import { getAppConfig } from "@/config/app-config";
 
 // Build a Next Metadata object from the live site config (Admin -> Site Settings).
@@ -61,7 +61,7 @@ function resolveOgType(cfg: AppConfig): "website" | "article" {
 export function constructMetadata(args: ConstructArgs = {}): Metadata {
   const cfg = getAppConfig();
   const {
-    title = cfg.name,
+    title = resolveBrandName(cfg) ?? "Your Company App",
     description = cfg.description,
     image = cfg.images.ogImage,
     pathname,

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Zap, LayoutDashboard, Sparkles } from "lucide-react";
 import { adminBase } from "@/lib/runtime-urls";
-import { iconUrl, DEFAULT_APP_CONFIG, type AppConfig } from "@/config/app-config.defaults";
+import { iconUrl, resolveBrandName, DEFAULT_APP_CONFIG, type AppConfig } from "@/config/app-config.defaults";
 import { HomeConfigList } from "./home-config-list.client";
 
 const AI_TOOLS = [
@@ -32,12 +32,14 @@ export function ShellHome({ config }: { config: AppConfig }) {
   const iconSrc = config.logo ?? iconUrl(config, "icon_192");
 
   // Wordmark: the owner's custom brand name, or the "Your Company App" placeholder when they
-  // have not set one yet (the shipped default "Fractera" counts as unset — same rule as the
-  // configured-settings list, which only shows a Name row when it differs from the default).
-  const brandName =
-    config.short_name && config.short_name !== DEFAULT_APP_CONFIG.short_name
-      ? config.short_name
-      : "Your Company App";
+  // have not set one yet (the shipped default counts as unset).
+  const brandName = resolveBrandName(config) ?? "Your Company App";
+
+  // Description: the owner's custom copy if they changed it, else the default onboarding text.
+  const customDesc =
+    config.description && config.description !== DEFAULT_APP_CONFIG.description
+      ? config.description
+      : null;
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background">
@@ -107,13 +109,19 @@ export function ShellHome({ config }: { config: AppConfig }) {
             {brandName}
           </h1>
           <p className="text-base text-muted-foreground max-w-md leading-relaxed">
-            Your app is already live in production
-            {appUrl && (
-              <> at <span className="text-foreground font-mono font-medium">{appUrl}</span></>
+            {customDesc ? (
+              customDesc
+            ) : (
+              <>
+                Your app is already live in production
+                {appUrl && (
+                  <> at <span className="text-foreground font-mono font-medium">{appUrl}</span></>
+                )}
+                {" "}— a domain you can replace with your own at any time.{" "}
+                Open the <span className="text-foreground font-medium">Admin Panel</span> to
+                customize this page and turn it into your own product.
+              </>
             )}
-            {" "}— a domain you can replace with your own at any time.{" "}
-            Open the <span className="text-foreground font-medium">Admin Panel</span> to
-            customize this page and turn it into your own product.
           </p>
         </motion.div>
 

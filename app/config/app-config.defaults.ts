@@ -214,6 +214,15 @@ export function getLogoPath(cfg: AppConfig): string | null {
   return cfg.logo ?? null;
 }
 
+// The owner's custom brand name, or null when they have not set one (the shipped defaults
+// count as "unset"). Callers show the "Your Company App" placeholder on null. Prefers the
+// short wordmark; falls back to the longer App name if only that was changed.
+export function resolveBrandName(cfg: AppConfig): string | null {
+  if (cfg.short_name && cfg.short_name !== DEFAULT_APP_CONFIG.short_name) return cfg.short_name;
+  if (cfg.name && cfg.name !== DEFAULT_APP_CONFIG.name) return cfg.name;
+  return null;
+}
+
 // Resolve a generated icon URL by logical name (e.g. "icon_192") to its serving URL, or null.
 export function iconUrl(cfg: AppConfig, name: string): string | null {
   const rel = cfg.iconSet?.files?.[name];
