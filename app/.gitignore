@@ -32,6 +32,11 @@ data/*
 # defaults live in code (config/app-config.defaults.ts), so the dir ships but not the file.
 APP-CONFIG/app-config.json
 
+# platform config (Admin -> Platform: parallel routing / languages / theme) — live file is
+# per-server user data; seed defaults live in code (config/platform-config.defaults.ts), so
+# the dir ships but not the file.
+PLATFORM-CONFIG/platform-config.json
+
 # build
 dist/
 tsconfig.tsbuildinfo
