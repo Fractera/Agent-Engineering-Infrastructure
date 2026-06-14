@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url'
 import { PlatformMcpServer } from './mcp-server.js'
 import { DeploymentsMcpServer } from './deployments-mcp-server.js'
 import { ReadinessMcpServer } from './readiness-mcp-server.js'
+import { ParallelRoutingMcpServer } from './parallel-routing-mcp-server.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, '../../app/.env.local') })
@@ -1127,4 +1128,14 @@ new ReadinessMcpServer({
     { platform: 'qwen-code',   bin: QWEN_BIN,   mcpPort: Number(process.env.QWEN_MCP_PORT   ?? 3213), login: { kind: 'file', paths: ['.qwen/oauth_creds.json'] } },
     { platform: 'kimi-code',   bin: KIMI_BIN,   mcpPort: Number(process.env.KIMI_MCP_PORT   ?? 3214), login: { kind: 'dir', path: '.kimi/credentials' } },
   ],
+}).start()
+
+// ── Parallel Routing MCP server (singleton, port 3217) ──────────────────────
+// Hermes reads/controls the Shell's parallel-routing layout (parallelRouting flag
+// + active slots) via this server — the SAME on-disk platform-config the visual
+// Platform selector writes. No external DB. → ARCHITECTURE-PARALLEL-ROUTING.md.
+new ParallelRoutingMcpServer({
+  port: Number(process.env.PARALLEL_ROUTING_MCP_PORT ?? 3217),
+  secret: MCP_SECRET,
+  configPath: process.env.PLATFORM_CONFIG_PATH ?? '/opt/fractera/app/PLATFORM-CONFIG/platform-config.json',
 }).start()
