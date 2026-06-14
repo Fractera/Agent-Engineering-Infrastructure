@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Zap, LayoutDashboard, Sparkles } from "lucide-react";
 import { adminBase } from "@/lib/runtime-urls";
+import { iconUrl, type AppConfig } from "@/config/app-config.defaults";
+import { HomeConfigList } from "./home-config-list.client";
 
 const AI_TOOLS = [
   { name: "Claude Code",    color: "bg-orange-500/10 text-orange-400 border-orange-500/25" },
@@ -18,13 +20,16 @@ const AI_TOOLS = [
   { name: "Object Storage", color: "bg-teal-500/10   text-teal-400   border-teal-500/25"   },
 ];
 
-export function ShellHome() {
+export function ShellHome({ config }: { config: AppConfig }) {
   const [appUrl, setAppUrl] = useState("");
   const [adminUrl, setAdminUrl] = useState("");
   useEffect(() => {
     setAppUrl(window.location.origin);
     setAdminUrl(adminBase());
   }, []);
+
+  // The brand mark, only when the owner has uploaded one (logo wins, else the generated icon).
+  const iconSrc = config.logo ?? iconUrl(config, "icon_192");
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background">
@@ -52,7 +57,7 @@ export function ShellHome() {
         initial={{ opacity: 0, y: 28 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 flex flex-col items-center gap-9 text-center px-6 max-w-2xl w-full"
+        className="relative z-10 flex flex-col items-center gap-9 text-center px-6 pt-16 max-w-2xl w-full"
       >
         {/* Badge */}
         <motion.div
@@ -66,6 +71,23 @@ export function ShellHome() {
           </span>
         </motion.div>
 
+        {/* Brand icon — only when the owner uploaded a logo / generated an icon set */}
+        {iconSrc && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ delay: 0.14, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            className="-mb-3"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={iconSrc}
+              alt={`${config.short_name} icon`}
+              className="size-20 rounded-2xl object-contain ring-1 ring-foreground/10 shadow-xl shadow-primary/10 bg-background/40 backdrop-blur-sm p-1.5"
+            />
+          </motion.div>
+        )}
+
         {/* Wordmark + tagline */}
         <motion.div
           initial={{ opacity: 0, y: 14 }}
@@ -73,8 +95,8 @@ export function ShellHome() {
           transition={{ delay: 0.18, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
           className="flex flex-col items-center gap-3"
         >
-          <h1 className="text-7xl sm:text-8xl font-bold tracking-tight select-none leading-none bg-gradient-to-b from-foreground via-foreground/90 to-foreground/50 bg-clip-text text-transparent">
-            Your Company App
+          <h1 className="text-6xl sm:text-7xl font-bold tracking-tight select-none leading-[1.05] break-words bg-gradient-to-b from-foreground via-foreground/90 to-foreground/50 bg-clip-text text-transparent">
+            {config.short_name}
           </h1>
           <p className="text-base text-muted-foreground max-w-md leading-relaxed">
             Your app is already live in production
@@ -86,6 +108,9 @@ export function ShellHome() {
             customize this page and turn it into your own product.
           </p>
         </motion.div>
+
+        {/* Configured Site Settings — a live summary of what the owner has branded */}
+        <HomeConfigList config={config} />
 
         {/* AI tool pills */}
         <motion.div
