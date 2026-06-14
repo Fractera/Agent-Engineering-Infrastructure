@@ -137,6 +137,20 @@ Your changes go live in production in minutes. Your own server becomes a self-ho
 
 ---
 
+## How it works — the autonomous development loop
+
+<p align="center">
+  <a href="https://www.fractera.ai/ai-development-loop">
+    <img src="https://www.fractera.ai/Fractera-Development-Loop.jpg" alt="The Fractera Development Loop — how AI agents build, test and ship code" width="540"/>
+  </a>
+</p>
+
+One natural-language request becomes **tested, deployed, recorded software** — with no human writing code. **Hermes** orchestrates, a coding agent does the work, and **LightRAG** memory grounds every step, so each pass starts smarter than the last.
+
+> See the whole cycle explained step by step on the **[Fractera Development Loop](https://www.fractera.ai/ai-development-loop)** page.
+
+---
+
 ## Architecture
 
 ```
