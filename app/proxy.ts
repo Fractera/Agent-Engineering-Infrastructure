@@ -26,6 +26,12 @@ const ADMIN_API_PREFIXES = [
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
 
+  // Generated favicon / PWA icon assets are public brand files referenced by the
+  // manifest and <head> (fetched by the browser before login) — never gate them.
+  if (pathname.startsWith("/api/media/icons/")) {
+    return NextResponse.next();
+  }
+
   if (pathname.startsWith("/api/") && pathname !== "/api/health") {
     if (!shouldBypassAuth()) {
       const agentIdentity = request.headers.get("x-agent-identity");

@@ -28,6 +28,10 @@ data/*
 # git. The earlier "user docs stay server-local / gitignored" rule (step 112) is parked —
 # we may revisit keeping them local later.
 
+# site config (Admin -> Site Settings) — live file is per-server user data; the seed
+# defaults live in code (config/app-config.defaults.ts), so the dir ships but not the file.
+APP-CONFIG/app-config.json
+
 # build
 dist/
 tsconfig.tsbuildinfo
