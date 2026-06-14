@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Zap, LayoutDashboard, Sparkles } from "lucide-react";
 import { adminBase } from "@/lib/runtime-urls";
-import { iconUrl, type AppConfig } from "@/config/app-config.defaults";
+import { iconUrl, DEFAULT_APP_CONFIG, type AppConfig } from "@/config/app-config.defaults";
 import { HomeConfigList } from "./home-config-list.client";
 
 const AI_TOOLS = [
@@ -30,6 +30,14 @@ export function ShellHome({ config }: { config: AppConfig }) {
 
   // The brand mark, only when the owner has uploaded one (logo wins, else the generated icon).
   const iconSrc = config.logo ?? iconUrl(config, "icon_192");
+
+  // Wordmark: the owner's custom brand name, or the "Your Company App" placeholder when they
+  // have not set one yet (the shipped default "Fractera" counts as unset — same rule as the
+  // configured-settings list, which only shows a Name row when it differs from the default).
+  const brandName =
+    config.short_name && config.short_name !== DEFAULT_APP_CONFIG.short_name
+      ? config.short_name
+      : "Your Company App";
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background">
@@ -96,7 +104,7 @@ export function ShellHome({ config }: { config: AppConfig }) {
           className="flex flex-col items-center gap-3"
         >
           <h1 className="text-6xl sm:text-7xl font-bold tracking-tight select-none leading-[1.05] break-words bg-gradient-to-b from-foreground via-foreground/90 to-foreground/50 bg-clip-text text-transparent">
-            {config.short_name}
+            {brandName}
           </h1>
           <p className="text-base text-muted-foreground max-w-md leading-relaxed">
             Your app is already live in production
