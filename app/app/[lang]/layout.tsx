@@ -50,31 +50,34 @@ export default function LangLayout({
   faq,
   footerModal,
 }: SlotLayoutProps) {
-  const { parallelRouting } = getPlatformConfig();
+  const { parallelRouting, slots } = getPlatformConfig();
 
   // Flat mode (default) — identical to today: render the page tree only.
   if (!parallelRouting) {
     return <>{children}</>;
   }
 
-  // Parallel-routing mode — arrange the named slots (minimal frame for 116.1).
+  // Parallel-routing mode — arrange only the ACTIVE named slots (the parallel-routes selector
+  // in Admin -> Platform writes these flags). Slots are empty until 116.3 fills them, so this is
+  // an intentional white frame for now; the active-flag plumbing is real and selector-driven.
+  // breadcrumb / notification / faq / footerModal are auxiliary (not in the selector) — always placed.
   return (
     <div className="flex min-h-screen flex-col">
-      {promoScreen}
+      {slots.promoScreen && promoScreen}
       {notification}
-      {header}
+      {slots.header && header}
       {breadcrumb}
       <div className="flex flex-1">
-        {left}
+        {slots.left && left}
         <div className="flex flex-1 flex-col">
-          {centerHeader}
-          {center}
-          {centerFooter}
+          {slots.centerHeader && centerHeader}
+          {slots.center && center}
+          {slots.centerFooter && centerFooter}
         </div>
-        {right}
+        {slots.right && right}
       </div>
       {faq}
-      {footer}
+      {slots.footer && footer}
       {footerModal}
     </div>
   );

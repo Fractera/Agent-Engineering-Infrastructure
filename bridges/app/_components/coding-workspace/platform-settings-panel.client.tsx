@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Loader2, X, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ParallelRoutesSelector } from "./parallel-routes/parallel-routes-selector.client";
 
 // Platform — structural settings for the deployed Shell app (routing / languages / theme).
 // Distinct from Site Settings (branding/SEO/PWA). Reads and writes the Shell's
@@ -90,29 +91,7 @@ export function PlatformSettingsPanel({ onClose }: Props) {
         </button>
       </div>
 
-      {showRoutesSetup && (
-        <div className="absolute inset-0 bg-background flex flex-col z-30">
-          <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border shrink-0">
-            <button
-              type="button"
-              onClick={() => setShowRoutesSetup(false)}
-              className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-            >
-              ← Back
-            </button>
-            <span className="text-xs font-semibold text-orange-500">Parallel routes · setup</span>
-          </div>
-          <div className="flex-1 overflow-auto px-6 py-6">
-            <p className="text-[11px] text-foreground/80 leading-relaxed max-w-md">
-              The animated parallel-routes selector — choose which named slots (Header, Left, Right,
-              Center / Center&nbsp;Header / Center&nbsp;Footer, Footer, …) are active, with a live layout
-              preview that resizes as you toggle — is ported from the reference app in the next step.
-              It will read and write the per-slot active flags through this Platform config (the
-              reference stored them as a per-slot <code className="font-mono">isDefaultPageNull</code> flag).
-            </p>
-          </div>
-        </div>
-      )}
+      {showRoutesSetup && <ParallelRoutesSelector onBack={() => setShowRoutesSetup(false)} />}
 
       {loading ? (
         <div className="flex-1 flex items-center justify-center text-muted-foreground text-xs gap-2">

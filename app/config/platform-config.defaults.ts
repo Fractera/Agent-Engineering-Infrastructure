@@ -16,9 +16,26 @@
 
 export type ThemeChoice = "light" | "dark" | "system";
 
+// The named layout slots the parallel-routes selector manages (ported from the reference's
+// HeaderLayoutDashboardDialog). `header`/`footer` are always on (locked in the UI). When parallel
+// routing is on, app/[lang]/layout.tsx places only the slots whose flag is true.
+export type LayoutSlotName =
+  | "header"
+  | "promoScreen"
+  | "left"
+  | "right"
+  | "centerHeader"
+  | "center"
+  | "centerFooter"
+  | "footer";
+
+export type LayoutSlots = Record<LayoutSlotName, boolean>;
+
 export interface PlatformConfig {
   // Routing
   parallelRouting: boolean;
+  // Which named layout slots are active (only consulted when parallelRouting is on).
+  slots: LayoutSlots;
 
   // Languages (mirror of build-time env; the env is authoritative)
   languages: string[];
@@ -33,6 +50,16 @@ export interface PlatformConfig {
 
 export const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
   parallelRouting: false,
+  slots: {
+    header: true,
+    promoScreen: true,
+    left: true,
+    right: true,
+    centerHeader: true,
+    center: true,
+    centerFooter: true,
+    footer: true,
+  },
   languages: ["en"],
   defaultLanguage: "en",
   theme: {
