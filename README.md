@@ -39,6 +39,14 @@
 
 ---
 
+<p align="center">
+  <a href="https://github.com/Fractera/ai-workspace/stargazers">
+    <img src="assets/git-star.gif" height="100" alt="Star this repo on GitHub"/>
+  </a>
+</p>
+
+---
+
 ## The DevOps problem is solved. Finally.
 
 You know how to write code. You do not want to think about how to wire Nginx, issue SSL certificates, connect auth to a database, configure PM2, set up reverse proxies, and remember which port does what. Nobody wants to spend a week on that before writing a single line of business logic.
@@ -190,7 +198,7 @@ If Fractera saves you from writing another Nginx config — a star makes a real 
 
 <p align="center">
   <a href="https://github.com/Fractera/ai-workspace/stargazers">
-    <img src="https://img.shields.io/badge/⭐_Star_this_repo_—_it_helps_a_lot-black?style=for-the-badge&logo=github&logoColor=white" alt="Star on GitHub"/>
+    <img src="assets/git-star.gif" height="100" alt="Star this repo on GitHub"/>
   </a>
 </p>
 
@@ -387,5 +395,11 @@ If you are in a market where cloud data residency matters, where documentation n
 - **Contact:** [admin@fractera.ai](mailto:admin@fractera.ai)
 
 ---
+
+<p align="center">
+  <a href="https://github.com/Fractera/ai-workspace/stargazers">
+    <img src="assets/git-star.gif" height="100" alt="Star this repo on GitHub"/>
+  </a>
+</p>
 
 <p align="center">Built for developers who are done thinking about deployment.</p>
