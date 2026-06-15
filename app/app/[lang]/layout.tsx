@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { SUPPORTED_LANGUAGES } from "@/config/translations/translations.config";
 import { getPlatformConfig } from "@/config/platform-config";
-import { ParallelShell } from "./_components/parallel-shell.client";
 
 // The [lang] layout is the parallel-routing frame.
 //
@@ -58,25 +57,28 @@ export default function LangLayout({
     return <>{children}</>;
   }
 
-  // Parallel-routing mode — the real frame: fixed header/footer, sliding side panels and a
-  // scrollable center, placing ONLY the slots the owner marked active in Admin -> Platform.
-  // The frame (containers/providers) is ported from the 22slots reference; slot content is
-  // placeholder until the slot pages are built out.
+  // Parallel-routing mode — arrange only the ACTIVE named slots (the parallel-routes selector
+  // in Admin -> Platform writes these flags). Slots are empty until 116.3 fills them, so this is
+  // an intentional white frame for now; the active-flag plumbing is real and selector-driven.
+  // breadcrumb / notification / faq / footerModal are auxiliary (not in the selector) — always placed.
   return (
-    <ParallelShell
-      slots={slots}
-      header={header}
-      footer={footer}
-      left={left}
-      right={right}
-      center={center}
-      centerHeader={centerHeader}
-      centerFooter={centerFooter}
-      breadcrumb={breadcrumb}
-      promoScreen={promoScreen}
-      notification={notification}
-      faq={faq}
-      footerModal={footerModal}
-    />
+    <div className="flex min-h-screen flex-col">
+      {slots.promoScreen && promoScreen}
+      {notification}
+      {slots.header && header}
+      {breadcrumb}
+      <div className="flex flex-1">
+        {slots.left && left}
+        <div className="flex flex-1 flex-col">
+          {slots.centerHeader && centerHeader}
+          {slots.center && center}
+          {slots.centerFooter && centerFooter}
+        </div>
+        {slots.right && right}
+      </div>
+      {faq}
+      {slots.footer && footer}
+      {footerModal}
+    </div>
   );
 }
