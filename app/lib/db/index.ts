@@ -49,6 +49,8 @@ const SCHEMA = `
     text_direction TEXT NOT NULL DEFAULT 'ltr',
     allowed_roles  TEXT NOT NULL DEFAULT '[]',
     order_index    INTEGER NOT NULL DEFAULT 0,
+    route_id       TEXT,
+    path           TEXT,
     created_at     TEXT NOT NULL DEFAULT (datetime('now'))
   );
   CREATE TABLE IF NOT EXISTS menu_category_translations (
