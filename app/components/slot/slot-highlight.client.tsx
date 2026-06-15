@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, type ReactNode } from 'react';
-import { useCodeGenerator } from '@/providers/code-generator-provider.client';
+import { useHighlightFineTune } from '@/providers/highlight-fine-tune-provider.client';
 import { useIsArchitect } from '@/lib/hooks/use-is-architect';
 import { useSlotActions } from '@/components/slot/slot-actions-context.client';
 import { useSlotRoutes } from '@/components/slot/slot-routes-context.client';
@@ -15,7 +15,7 @@ interface SlotHighlightProps {
 export function SlotHighlight({ slotName, children }: SlotHighlightProps) {
   const isArchitect = useIsArchitect();
   const { actionsNode, chatNode, setIsHovered: setContextHovered } = useSlotActions();
-  const { codeGeneratorOpen, hasFineTunePlugin } = useCodeGenerator();
+  const { fineTuneActive, hasFineTunePlugin } = useHighlightFineTune();
   const { activeId, setActive } = useFractalHover();
   const { defaultPageUrl, activePagePath, isDefaultPageNull } = useSlotRoutes();
   const activePath = activePagePath ?? defaultPageUrl;
@@ -36,7 +36,7 @@ export function SlotHighlight({ slotName, children }: SlotHighlightProps) {
   }, []);
 
   const NO_HIGHLIGHT_SLOTS = ['header', 'footer'];
-  const showHandle = codeGeneratorOpen && isArchitect && hasFineTunePlugin && !isDefaultPageNull && !NO_HIGHLIGHT_SLOTS.includes(slotName);
+  const showHandle = fineTuneActive && isArchitect && hasFineTunePlugin && !isDefaultPageNull && !NO_HIGHLIGHT_SLOTS.includes(slotName);
 
   const slotId = `slot:${slotName}`;
   const isActive = activeId === slotId;

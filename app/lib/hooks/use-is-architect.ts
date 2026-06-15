@@ -1,12 +1,18 @@
 'use client';
 
-// ADAPTED from the 22slots reference (lib/hooks/use-is-architect.ts).
-//
-// In the reference this derives the architect role from the next-auth session. In Fractera
-// the Shell runs INSIDE the admin workspace — i.e. we are always inside the code generator /
-// architect mode — so this returns true. This is the approved "code-generator state = true"
-// adaptation: architect-gated tooling (slot handles, page menus, action bars) is always
-// available, without pulling in next-auth.
+import { useState, useEffect } from 'react';
+import { detectAdminPreview } from '@/lib/preview/admin-preview';
+
+// In Fractera the code generator IS the Admin layer. The architect / developer-debug tools
+// (footer page editor, slot highlight + fine-tune handles) are active ONLY when the Shell is
+// viewed inside the Admin preview — NOT for a regular end-user page view. So "is architect" =
+// "are we in the Admin preview context" (detectAdminPreview). Replaces the reference's
+// next-auth session role. Resolves client-side after mount (SSR renders the non-architect view,
+// the tools reveal on hydration when in the preview).
 export function useIsArchitect(): boolean {
-  return true;
+  const [isArchitect, setIsArchitect] = useState(false);
+  useEffect(() => {
+    setIsArchitect(detectAdminPreview());
+  }, []);
+  return isArchitect;
 }

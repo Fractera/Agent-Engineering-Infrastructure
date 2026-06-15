@@ -6,7 +6,6 @@ import { FolderTree } from 'lucide-react';
 // next-auth in the Shell — admin === architect (we are inside the code generator), via our
 // useIsArchitect() hook (returns true).
 import { useIsArchitect } from '@/lib/hooks/use-is-architect';
-import { useCodeGenerator } from '@/providers/code-generator-provider.client';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { FooterNavMenuClient } from './footer-nav-menu-client.client';
@@ -38,7 +37,6 @@ type FooterPanelProps = {
 export function FooterPanel({ lang, categories, routes, bgColor, bgClass, pageContents, logoPath, companyName = 'Fractera', showDarkModeToggle, showWidthToggle, showFooterPages, translations }: FooterPanelProps) {
   const t = useFooterTranslation(translations ?? FOOTER_TRANSLATIONS_EN);
   const isArchitect = useIsArchitect();
-  const { codeGeneratorOpen } = useCodeGenerator();
   const [menuOpen, setMenuOpen] = useState(false);
   const [drawerRouteId, setDrawerRouteId] = useState<string | null>(null);
 
@@ -47,7 +45,7 @@ export function FooterPanel({ lang, categories, routes, bgColor, bgClass, pageCo
     <>
     <div className={`flex items-center h-full px-4 gap-2 border-t border-border min-w-0 ${bgColor === 'bg-primary' ? 'text-primary-foreground' : 'text-foreground'} ${bgColor && bgColor !== 'bg-background' ? bgColor : 'bg-background'} ${bgClass ?? ''}`}>
       <div className="flex items-center gap-1.5 flex-shrink-0">
-        {showFooterPages && isArchitect && codeGeneratorOpen && (
+        {showFooterPages && isArchitect && (
           <Tooltip>
             <TooltipTrigger asChild>
               <button

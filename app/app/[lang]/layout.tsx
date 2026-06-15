@@ -5,7 +5,7 @@ import { ScreenWidthProvider } from "@/providers/screen-width-provider.client";
 import { WidthToggleProvider } from "@/providers/width-toggle-provider.client";
 import { HeaderHeightProvider } from "@/providers/header-height-provider.client";
 import { PanelStateProvider } from "@/providers/panel-state-provider.client";
-import { CodeGeneratorProvider } from "@/providers/code-generator-provider.client";
+import { HighlightFineTuneProvider } from "@/providers/highlight-fine-tune-provider.client";
 import { FooterContainer } from "@/components/containers/footer-container.client";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { HEADER_HEIGHT_PX } from "@/config/ui/layout.config";
@@ -53,7 +53,7 @@ export default function LangLayout(props: SlotLayoutProps) {
 
   // Parallel-routing mode — faithful provider/container frame, FOOTER-ONLY for now.
   return (
-    <CodeGeneratorProvider>
+    <HighlightFineTuneProvider>
       <TooltipProvider>
       <ScreenWidthProvider>
         <WidthToggleProvider>
@@ -79,6 +79,6 @@ export default function LangLayout(props: SlotLayoutProps) {
         </WidthToggleProvider>
       </ScreenWidthProvider>
       </TooltipProvider>
-    </CodeGeneratorProvider>
+    </HighlightFineTuneProvider>
   );
 }

@@ -14,6 +14,20 @@ type Props = {
 // Service pages — the admin-only introspection pages of the workspace Shell.
 // They were removed from the Shell home; this menu is their access point. Each
 // path is opened inside the preview iframe (targeting the previewed Shell app).
+// The Shell reads this marker to know it is being shown inside the Admin preview (the
+// developer/architect context) and so activates its debug tools (footer page editor, slot
+// highlight + fine-tune handles). A normal end-user page view has no marker → tools stay off.
+const ADMIN_PREVIEW_PARAM = "fractera_admin_preview";
+function previewUrl(base: string, path?: string): string {
+  try {
+    const u = path ? new URL(path, base) : new URL(base);
+    u.searchParams.set(ADMIN_PREVIEW_PARAM, "1");
+    return u.href;
+  } catch {
+    return base;
+  }
+}
+
 const SERVICE_PAGES: { label: string; path: string }[] = [
   { label: "AI Core", path: "/ai-core" },
   { label: "Architecture", path: "/architecture" },
@@ -48,8 +62,7 @@ export function SitePreviewWindow({ open, onClose, siteUrl }: Props) {
   // Open a service page inside the preview iframe, resolved against the Shell origin.
   function openPage(path: string) {
     if (iframeRef.current) {
-      try { iframeRef.current.src = new URL(path, siteUrl).href; }
-      catch { iframeRef.current.src = siteUrl; }
+      iframeRef.current.src = previewUrl(siteUrl, path);
     }
     setMenuOpen(false);
   }
@@ -123,7 +136,7 @@ export function SitePreviewWindow({ open, onClose, siteUrl }: Props) {
           {/* Iframe */}
           <iframe
             ref={iframeRef}
-            src={siteUrl}
+            src={previewUrl(siteUrl)}
             className="flex-1 border-0 w-full"
             style={{ minHeight: 0 }}
             title="App Preview"

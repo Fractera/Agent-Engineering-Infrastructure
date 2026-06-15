@@ -1,7 +1,6 @@
 'use client';
 
 import { useSelectedLayoutSegment } from 'next/navigation';
-import { useCodeGenerator } from '@/providers/code-generator-provider.client';
 import { ROUTES_CONFIG } from '@/config/ui/initial-app-config';
 import type { SlotName } from '@/config/ui/initial-app-config';
 
@@ -18,7 +17,6 @@ type VisibleSlotLayoutProps = {
  */
 export function VisibleSlotLayout({ slot, children }: VisibleSlotLayoutProps) {
   const segment = useSelectedLayoutSegment(slot);
-  const { codeGeneratorOpen } = useCodeGenerator();
 
   const config = ROUTES_CONFIG[slot];
 
@@ -35,7 +33,7 @@ export function VisibleSlotLayout({ slot, children }: VisibleSlotLayoutProps) {
   const defaultSegment = config.defaultPageUrl.replace(/^\//, '');
   const isDefaultPage = segment === null || segment === defaultSegment;
   const useDefaultPage = !config.isDefaultPageNull;
-  const collapsed = isDefaultPage && !useDefaultPage && !codeGeneratorOpen;
+  const collapsed = isDefaultPage && !useDefaultPage;
 
   return (
     <div

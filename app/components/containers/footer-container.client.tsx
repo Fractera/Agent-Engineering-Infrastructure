@@ -2,7 +2,6 @@
 
 import { ReactNode, useState, useEffect, useRef, useCallback } from 'react';
 import { getZIndexStyle } from '@/config/ui/z-index.config';
-import { useCodeGenerator } from '@/providers/code-generator-provider.client';
 
 const TRIGGER_ZONE = 0.85;
 const HIDE_DELAY_MS = 2500;
@@ -15,7 +14,6 @@ type Props = {
 };
 
 export function FooterContainer({ children, alwaysVisible: initialAlwaysVisible }: Props) {
-  const { codeGeneratorOpen } = useCodeGenerator();
   const [alwaysVisible, setAlwaysVisible] = useState(initialAlwaysVisible);
   const [visible, setVisible] = useState(true);
   const [jsReady, setJsReady] = useState(false);
@@ -58,7 +56,7 @@ export function FooterContainer({ children, alwaysVisible: initialAlwaysVisible 
     return () => window.removeEventListener('footer-display-mode', handler);
   }, []);
 
-  const isFooterVisible = visible || codeGeneratorOpen || alwaysVisible;
+  const isFooterVisible = visible || alwaysVisible;
 
   useEffect(() => {
     document.documentElement.style.setProperty(
