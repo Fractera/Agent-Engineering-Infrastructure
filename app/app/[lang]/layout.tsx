@@ -7,6 +7,7 @@ import { HeaderHeightProvider } from "@/providers/header-height-provider.client"
 import { PanelStateProvider } from "@/providers/panel-state-provider.client";
 import { CodeGeneratorProvider } from "@/providers/code-generator-provider.client";
 import { FooterContainer } from "@/components/containers/footer-container.client";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { HEADER_HEIGHT_PX } from "@/config/ui/layout.config";
 
 // The [lang] layout is the parallel-routing frame (ported from the 22slots reference).
@@ -53,6 +54,7 @@ export default function LangLayout(props: SlotLayoutProps) {
   // Parallel-routing mode — faithful provider/container frame, FOOTER-ONLY for now.
   return (
     <CodeGeneratorProvider>
+      <TooltipProvider>
       <ScreenWidthProvider>
         <WidthToggleProvider>
           <HeaderHeightProvider initialHeight={HEADER_HEIGHT_PX}>
@@ -76,6 +78,7 @@ export default function LangLayout(props: SlotLayoutProps) {
           </HeaderHeightProvider>
         </WidthToggleProvider>
       </ScreenWidthProvider>
+      </TooltipProvider>
     </CodeGeneratorProvider>
   );
 }
