@@ -1,7 +1,7 @@
 <h1 align="center">Fractera AI Workspace</h1>
 
 <p align="center">
-  <ins><strong>LEARN HOW TO SAVE 90–94% OF TOKENS WHEN BUILDING LARGE APPLICATIONS</strong></ins>
+  <ins><strong>LEARN HOW TO SAVE</strong></ins>&nbsp;&nbsp;<img src="https://img.shields.io/badge/90--94%25-2ea44f?style=for-the-badge" alt="90–94%" height="36"/>&nbsp;&nbsp;<ins><strong>OF TOKENS WHEN BUILDING LARGE APPLICATIONS</strong></ins>
 </p>
 
 <p align="center">
