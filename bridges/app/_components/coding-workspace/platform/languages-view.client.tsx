@@ -7,28 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ALL_LANGUAGE_METADATA } from "@/config/translations/language-metadata";
 
-// Multilingual sub-view. The language SET is the BUILD-TIME source of truth (env
-// NEXT_PUBLIC_SUPPORTED_LANGUAGES / NEXT_PUBLIC_DEFAULT_LOCALE — it feeds generateStaticParams and
-// bakes SINGLE_LANG_MODE), so this writes via the key-scoped /api/config/languages route, NOT the
-// runtime platform-config. Changing the set therefore needs a rebuild — the footer language
-// switcher only appears once >1 language is built (and its Platform flag is on). `en` stays locked
-// on as the guaranteed fallback (resolve-lang / DEFAULT_LANGUAGE fall back to it).
+// Languages view — the language SET only (available + default). This is the BUILD-TIME source of
+// truth (env NEXT_PUBLIC_SUPPORTED_LANGUAGES / NEXT_PUBLIC_DEFAULT_LOCALE — it feeds
+// generateStaticParams and bakes SINGLE_LANG_MODE), written via the key-scoped /api/config/languages
+// route. Changing the set needs a rebuild. Whether the footer switcher is SHOWN is a separate runtime
+// flag (footerPlugins.languageSwitcher) toggled in the Footer settings submenu, not here. `en` stays
+// locked on as the guaranteed fallback (resolve-lang / DEFAULT_LANGUAGE fall back to it).
 
 const CATALOG = Object.values(ALL_LANGUAGE_METADATA);
 const LOCKED = "en";
 
-type Props = {
-  onBack: () => void;
-  // The "show language switcher in footer" flag (footerPlugins.languageSwitcher) is a RUNTIME
-  // flag owned by the panel's platform-config; toggling it applies instantly (no rebuild). The
-  // language SET below is build-time (env) and needs a rebuild. Both live on one screen because
-  // they are both "multilingual".
-  switcherActive: boolean;
-  onToggleSwitcher: () => void;
-  switcherSaving: boolean;
-};
-
-export function MultilingualView({ onBack, switcherActive, onToggleSwitcher, switcherSaving }: Props) {
+export function LanguagesView({ onBack }: { onBack: () => void }) {
   const [selected, setSelected] = useState<Set<string>>(new Set([LOCKED]));
   const [serverSelected, setServerSelected] = useState<Set<string>>(new Set([LOCKED]));
   const [defaultLang, setDefaultLang] = useState(LOCKED);
@@ -110,7 +99,7 @@ export function MultilingualView({ onBack, switcherActive, onToggleSwitcher, swi
         <button type="button" onClick={onBack} className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">
           ← Back
         </button>
-        <span className="text-xs font-semibold text-foreground">Multilingual</span>
+        <span className="text-xs font-semibold text-foreground">Languages</span>
         <span className="text-[10px] text-muted-foreground">{selected.size} selected</span>
       </div>
 
@@ -122,29 +111,8 @@ export function MultilingualView({ onBack, switcherActive, onToggleSwitcher, swi
         <div className="flex-1 min-h-0 flex flex-col px-4 py-3 gap-3">
           <p className="text-[10px] text-muted-foreground leading-relaxed">
             Languages the app is built with. The set is build-time — saving needs an app rebuild to apply.
-            The footer language switcher appears once more than one language is built (and the toggle below is on).
+            The footer language switcher appears once more than one language is built (and its toggle in Footer settings is on).
           </p>
-
-          <button
-            type="button"
-            onClick={onToggleSwitcher}
-            disabled={switcherSaving}
-            className="flex items-start gap-3 text-left rounded-md border border-border px-3 py-2.5 hover:bg-muted/40 transition-colors disabled:opacity-60"
-          >
-            <span
-              aria-hidden
-              className={`mt-0.5 inline-flex h-4 w-7 shrink-0 items-center rounded-full transition-colors ${switcherActive ? "bg-foreground" : "bg-muted-foreground/40"}`}
-            >
-              <span className={`inline-block h-3 w-3 transform rounded-full bg-background transition-transform ${switcherActive ? "translate-x-3.5" : "translate-x-0.5"}`} />
-            </span>
-            <span className="flex flex-col gap-0.5">
-              <span className="text-[11px] font-medium text-foreground flex items-center gap-1.5">
-                Show language switcher in footer
-                {switcherSaving && <Loader2 size={10} className="animate-spin text-muted-foreground" />}
-              </span>
-              <span className="text-[9px] text-muted-foreground leading-relaxed">Runtime flag — applies on the next app load (no rebuild).</span>
-            </span>
-          </button>
 
           <div className="flex flex-col gap-1">
             <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Default language</span>
@@ -193,7 +161,7 @@ export function MultilingualView({ onBack, switcherActive, onToggleSwitcher, swi
 
       <div className="px-4 py-2.5 border-t border-border flex items-center gap-3 shrink-0">
         <Button onClick={save} disabled={saving || loading || !dirty}>
-          {saving ? <><Loader2 size={11} className="animate-spin" />Saving…</> : <><Save size={11} />Save settings</>}
+          {saving ? <><Loader2 size={11} className="animate-spin" />Saving…</> : <><Save size={11} />Save languages</>}
         </Button>
         <span className="text-[10px] text-muted-foreground">Build-time · rebuild required</span>
       </div>

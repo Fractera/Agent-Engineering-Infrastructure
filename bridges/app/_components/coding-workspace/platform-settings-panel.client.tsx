@@ -1,31 +1,43 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, X, ChevronDown, ChevronRight } from "lucide-react";
+import { Loader2, X, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+} from "@/components/ui/dropdown-menu";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { ParallelRoutesSelector } from "./parallel-routes/parallel-routes-selector.client";
-import { FooterFeatureView } from "./platform/footer-feature-view.client";
-import { MultilingualView } from "./platform/multilingual-view.client";
+import { LanguagesView } from "./platform/languages-view.client";
 
-// Platform — structural settings for the deployed Shell app. The header carries a dropdown bar-menu:
-//   • Use parallel routing (master runtime flag)
-//   • Settings for: Footer pages / Screen width / Theme / Multilingual
-//   • Parallel routes · setup (slot selector, when parallel routing is on)
-// Every runtime flag lives in platform-config.json (footerPlugins + parallelRouting) and applies on
-// the app's next load — no rebuild. The language SET (inside Multilingual) is build-time env and is
-// the one thing that needs a rebuild. Reads/writes via /api/config/platform (cross-process, same as
-// Site Settings / Env). The marketplace the reference used is replaced by these Platform flags;
-// every footer feature defaults ON ("all components allowed").
+// Platform — structural settings for the deployed Shell. Header carries one dropdown ("Settings"):
+//   • Use parallel routing — master runtime flag (instant)
+//   • Footer settings  → submenu: 4 switches (Footer pages / Screen width / Theme / Multilingual)
+//     + an "Apply settings" button (batch-persist the runtime footerPlugins flags, no rebuild)
+//   • Languages → the build-time language SET (env, rebuild) — its own view
+//   • Parallel routes · setup → slot selector view (when parallel routing is on)
+// Everything but the language SET is a runtime flag in platform-config.json (applies on next load).
+// The reference marketplace is replaced by these flags; every footer feature defaults ON.
 
 type Cfg = Record<string, unknown>;
-type View = null | "footerPages" | "width" | "theme" | "multilingual" | "slots";
+type View = null | "languages" | "slots";
 type Props = { onClose: () => void };
 
-const FOOTER_FEATURES: Record<string, { title: string; description: string }> = {
-  footerPages: { title: "Footer pages", description: "The footer navigation menu, the pages manager and the page content drawer." },
-  widthToggle: { title: "Screen width", description: "The center-width toggle button in the footer toolbar." },
-  themeToggle: { title: "Theme", description: "The day/night theme switcher button in the footer toolbar." },
+const FOOTER_KEYS = ["footerPages", "widthToggle", "themeToggle", "languageSwitcher"] as const;
+const FOOTER_LABELS: Record<(typeof FOOTER_KEYS)[number], string> = {
+  footerPages: "Footer pages",
+  widthToggle: "Screen width",
+  themeToggle: "Theme",
+  languageSwitcher: "Multilingual",
 };
 
 export function PlatformSettingsPanel({ onClose }: Props) {
@@ -35,6 +47,7 @@ export function PlatformSettingsPanel({ onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [view, setView] = useState<View>(null);
+  const [staged, setStaged] = useState<Record<string, boolean>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -55,10 +68,19 @@ export function PlatformSettingsPanel({ onClose }: Props) {
 
   const parallelRouting = config.parallelRouting === true;
   const footerPlugins = (config.footerPlugins ?? {}) as Record<string, boolean>;
-  const flag = (key: string) => footerPlugins[key] !== false; // missing = default on
+  const flag = (key: string) => footerPlugins[key] !== false; // missing = on
+
+  // Seed the staged footer switches from the live config (after load / save). `config` identity is
+  // stable between renders — it only changes when setConfig runs — so this does not loop.
+  useEffect(() => {
+    const fp = (config.footerPlugins ?? {}) as Record<string, boolean>;
+    setStaged(Object.fromEntries(FOOTER_KEYS.map((k) => [k, fp[k] !== false])));
+  }, [config]);
+
+  const footerDirty = FOOTER_KEYS.some((k) => staged[k] !== flag(k));
 
   // Persist the WHOLE config (the platform route overwrites the file with exactly what we send;
-  // the Shell deep-merges over code defaults on read). Optimistic: we already set state.
+  // the Shell deep-merges over code defaults on read). Optimistic.
   async function saveConfig(next: Cfg) {
     setConfig(next);
     setSaving(true);
@@ -80,57 +102,70 @@ export function PlatformSettingsPanel({ onClose }: Props) {
   }
 
   const toggleParallel = () => saveConfig({ ...config, parallelRouting: !parallelRouting });
-  const toggleFlag = (key: string) =>
-    saveConfig({ ...config, footerPlugins: { ...footerPlugins, [key]: !flag(key) } });
-
-  const goBack = () => { setView(null); load(); };
-
+  const applyFooter = () => {
+    saveConfig({ ...config, footerPlugins: { ...footerPlugins, ...staged } });
+    setMenuOpen(false);
+  };
   const openView = (v: View) => { setMenuOpen(false); setView(v); };
-
-  const menuItem = "flex items-center gap-2 w-full text-left px-2 py-1.5 rounded text-[12px] text-foreground hover:bg-muted transition-colors";
+  const goBack = () => { setView(null); load(); };
 
   return (
     <div style={{ position: "absolute", top: 52, left: 0, right: 0, bottom: 36, zIndex: 20 }} className="bg-background flex flex-col">
       <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border shrink-0">
         <span className="text-xs font-semibold text-foreground">
-          Platform
-          <span className="ml-2 text-[10px] font-normal text-muted-foreground font-mono">routing · languages · theme</span>
+          Platform <span className="font-normal text-muted-foreground">routing</span>
         </span>
+        <span className="text-muted-foreground text-[11px]">·</span>
 
-        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className="flex items-center gap-1 text-[11px] font-semibold text-orange-500 hover:text-orange-600 transition-colors"
-            >
+        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+          <DropdownMenuTrigger asChild>
+            <button type="button" className="flex items-center gap-1 text-[11px] font-semibold text-orange-500 hover:text-orange-600 transition-colors">
               Settings <ChevronDown size={12} />
             </button>
-          </PopoverTrigger>
-          <PopoverContent align="start" className="w-60 p-1.5">
-            <button type="button" onClick={() => { toggleParallel(); }} className={menuItem}>
-              <span
-                aria-hidden
-                className={`inline-flex h-3.5 w-6 shrink-0 items-center rounded-full transition-colors ${parallelRouting ? "bg-foreground" : "bg-muted-foreground/40"}`}
-              >
-                <span className={`inline-block h-2.5 w-2.5 transform rounded-full bg-background transition-transform ${parallelRouting ? "translate-x-3" : "translate-x-0.5"}`} />
-              </span>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-60">
+            {/* master mode flag — instant */}
+            <div className="flex items-center gap-2 px-2 py-1.5 text-[12px]">
               <span className="flex-1">Use parallel routing</span>
-            </button>
+              <Switch checked={parallelRouting} onCheckedChange={toggleParallel} disabled={saving} />
+            </div>
 
-            <div className="px-2 pt-2 pb-1 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Settings for</div>
-            <button type="button" onClick={() => openView("footerPages")} className={menuItem}><span className="flex-1">Footer pages</span><ChevronRight size={12} className="text-muted-foreground" /></button>
-            <button type="button" onClick={() => openView("width")} className={menuItem}><span className="flex-1">Screen width</span><ChevronRight size={12} className="text-muted-foreground" /></button>
-            <button type="button" onClick={() => openView("theme")} className={menuItem}><span className="flex-1">Theme</span><ChevronRight size={12} className="text-muted-foreground" /></button>
-            <button type="button" onClick={() => openView("multilingual")} className={menuItem}><span className="flex-1">Multilingual</span><ChevronRight size={12} className="text-muted-foreground" /></button>
+            <DropdownMenuSeparator />
+
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="text-[12px]">Footer settings</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="w-56 p-2">
+                <DropdownMenuLabel className="px-1 pt-0 pb-1 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Footer features</DropdownMenuLabel>
+                {FOOTER_KEYS.map((key) => (
+                  <div key={key} className="flex items-center gap-2 px-1 py-1.5 text-[12px]">
+                    <span className="flex-1">{FOOTER_LABELS[key]}</span>
+                    <Switch
+                      checked={staged[key] ?? true}
+                      onCheckedChange={(v) => setStaged((s) => ({ ...s, [key]: v }))}
+                      disabled={saving}
+                    />
+                  </div>
+                ))}
+                <div className="pt-1.5 mt-1 border-t border-border">
+                  <Button size="sm" className="w-full" disabled={saving || !footerDirty} onClick={applyFooter}>
+                    {saving ? <Loader2 size={12} className="animate-spin" /> : "Apply settings"}
+                  </Button>
+                </div>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+
+            <DropdownMenuItem onSelect={() => openView("languages")} className="text-[12px]">Languages</DropdownMenuItem>
 
             {parallelRouting && (
               <>
-                <div className="my-1 border-t border-border" />
-                <button type="button" onClick={() => openView("slots")} className={`${menuItem} text-orange-500`}><span className="flex-1">Parallel routes · setup</span><ChevronRight size={12} /></button>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => openView("slots")} className="text-[12px] text-orange-500 focus:text-orange-600">
+                  Parallel routes · setup
+                </DropdownMenuItem>
               </>
             )}
-          </PopoverContent>
-        </Popover>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <span className="flex-1" />
         {saving && <Loader2 size={12} className="animate-spin text-muted-foreground" />}
@@ -144,28 +179,7 @@ export function PlatformSettingsPanel({ onClose }: Props) {
       </div>
 
       {view === "slots" && <ParallelRoutesSelector onBack={goBack} />}
-      {view === "multilingual" && (
-        <MultilingualView
-          onBack={goBack}
-          switcherActive={flag("languageSwitcher")}
-          onToggleSwitcher={() => toggleFlag("languageSwitcher")}
-          switcherSaving={saving}
-        />
-      )}
-      {(view === "footerPages" || view === "width" || view === "theme") && (() => {
-        const key = view === "footerPages" ? "footerPages" : view === "width" ? "widthToggle" : "themeToggle";
-        const meta = FOOTER_FEATURES[key];
-        return (
-          <FooterFeatureView
-            title={meta.title}
-            description={meta.description}
-            active={flag(key)}
-            onToggle={() => toggleFlag(key)}
-            saving={saving}
-            onBack={goBack}
-          />
-        );
-      })()}
+      {view === "languages" && <LanguagesView onBack={goBack} />}
 
       {loading ? (
         <div className="flex-1 flex items-center justify-center text-muted-foreground text-xs gap-2">
@@ -178,8 +192,8 @@ export function PlatformSettingsPanel({ onClose }: Props) {
       ) : (
         <div className="flex-1 overflow-auto px-4 py-3">
           <p className="text-[11px] text-muted-foreground mb-3 max-w-md">
-            Structural settings for how your app is laid out and routed. Open <span className="font-semibold text-foreground">Settings</span> above
-            to toggle parallel routing or configure footer features and languages. Every footer feature is on by default.
+            Open <span className="font-semibold text-foreground">Settings</span> above to toggle parallel routing,
+            configure footer features, or choose languages. Every footer feature is on by default.
           </p>
           <div className="max-w-md rounded-md border border-border px-3 py-2.5 text-[11px] text-foreground">
             Parallel routing is <span className={`font-semibold ${parallelRouting ? "text-green-600" : "text-muted-foreground"}`}>{parallelRouting ? "ON" : "OFF"}</span>.
