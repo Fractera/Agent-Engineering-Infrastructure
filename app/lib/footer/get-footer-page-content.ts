@@ -1,7 +1,11 @@
+"use server"
+
 import { db } from "@/lib/db";
 
 // Same shape as the 22slots reference (src/features/footer/get-footer-page-content.ts),
-// sourced from OUR footer_page_contents table instead of Supabase.
+// sourced from OUR footer_page_contents table instead of Supabase. "use server" (as in the
+// reference) so client components importing it get an RPC reference — the db (fs) is never
+// bundled into the client.
 
 export type FooterPageContent = {
   id: string;
