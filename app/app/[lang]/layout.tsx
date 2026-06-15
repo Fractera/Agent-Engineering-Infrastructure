@@ -69,7 +69,7 @@ export default function LangLayout(props: SlotLayoutProps) {
                       {slots.center && props.center}
                       {slots.centerFooter && props.centerFooter}
                     </MainScrollArea> */}
-                {slots.footer && <FooterContainer>{footer}</FooterContainer>}
+                {slots.footer && <FooterContainer alwaysVisible>{footer}</FooterContainer>}
                 {/* {props.footerModal} */}
               </div>
             </PanelStateProvider>
