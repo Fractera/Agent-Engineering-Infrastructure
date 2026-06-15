@@ -35,9 +35,12 @@ const ADMIN_API_PREFIXES = [
 ];
 
 async function handleApi(request: NextRequest, pathname: string): Promise<NextResponse> {
-  // Generated favicon / PWA icon assets are public brand files referenced by the manifest
-  // and <head> (fetched by the browser before login) — never gate them.
-  if (pathname.startsWith("/api/media/icons/")) {
+  // Public media READS — generated favicon/PWA icons AND brand/page images (logo, OG, page
+  // pictures) are referenced by the manifest, <head> and the public site and fetched before
+  // login. Open for READ, closed for WRITE: GET passes publicly; any write (upload / POST /
+  // PUT / DELETE) falls through to the auth gate below. Previously only /api/media/icons/ was
+  // public, so the logo (/api/media/<id>/file) 401'd for anonymous visitors → broken logo.
+  if (pathname.startsWith("/api/media/") && request.method === "GET") {
     return NextResponse.next();
   }
 
