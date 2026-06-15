@@ -1,14 +1,14 @@
 <h1 align="center">Fractera AI Workspace</h1>
 
-<p align="center">
-  <ins><strong>LEARN HOW TO SAVE</strong></ins>&nbsp;&nbsp;<img src="https://img.shields.io/badge/90--94%25-2ea44f?style=for-the-badge" alt="90–94%" height="36"/>&nbsp;&nbsp;<ins><strong>OF TOKENS WHEN BUILDING LARGE APPLICATIONS</strong></ins>
-</p>
+<p align="center"><strong>Deploy a 50,000-line pre-built Next.js framework and a full AI coding stack to your own VPS in 10 minutes. Zero-Agent, MCP-First. Zero DevOps.</strong></p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/MCP--First-a%20fundamentally%20new%20way%20to%20generate%20apps%2C%20MCP%20over%20code%20agents-FF8C00?style=for-the-badge" alt="A fundamentally new MCP-First approach to generating applications — focused on MCP more than on code agents"/>
 </p>
 
-<p align="center"><strong>Deploy a 50,000-line pre-built Next.js framework and a full AI coding stack to your own VPS in 10 minutes. Zero-Agent, MCP-First. Zero DevOps.</strong></p>
+<p align="center">
+  <ins><strong>ENGINEERED TO SAVE</strong></ins>&nbsp;&nbsp;<img src="https://img.shields.io/badge/90--94%25-2ea44f?style=for-the-badge" alt="90–94%" height="36"/>&nbsp;&nbsp;<ins><strong>OF TOKENS ON LARGE-SCALE APPLICATION LAYOUTS</strong></ins>
+</p>
 
 <p align="center">
   <img src="https://www.fractera.ai/Fractera-Web-Architect.jpg" alt="Fractera AI Workspace" width="100%"/>
