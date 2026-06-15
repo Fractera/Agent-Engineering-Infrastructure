@@ -284,7 +284,7 @@ If Fractera saves you from writing another Nginx config — a star makes a real 
 
 ## FAQ
 
-### Why does Hermes reduce development costs rather than increase them?
+### Why does Hermes drive cost effective ai development rather than increase overhead?
 
 There is a widespread belief that an orchestration layer like Hermes is wasteful — that it is better to talk directly to a coding model and skip the middleman. We disagree completely.
 
@@ -306,7 +306,7 @@ We believe the future of efficient AI-assisted development is not about squeezin
 
 ---
 
-### The same AI platforms — yet Fractera ships faster with fewer tokens. Why?
+### The same AI platforms — yet Fractera ensures a zero token overhead ai framework. Why?
 
 Regular vibe coding puts all the heavy lifting on the AI: design the architecture, write boilerplate, locate the right component, recall what was decided last session. Every token spent on that overhead is a token not spent on your actual feature.
 
