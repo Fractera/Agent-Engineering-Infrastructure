@@ -85,7 +85,11 @@ Parallel routing is the structural rail: inside a single URL the AI composes man
 
 ---
 
-## Zero-Agent, MCP-First — near-zero token cost
+## Zero-Agent, MCP-First
+
+<p align="center">
+  <img src="https://img.shields.io/badge/NEAR--ZERO%20TOKEN%20COST-2ea44f?style=for-the-badge" alt="near-zero token cost" height="36"/>
+</p>
 
 Standard "vibe coding" calls a heavy coding agent for every change and pays for the full generation loop each time. Fractera treats the architecture like a **Rubik's Cube**: a deterministic set of pre-built facets the AI *combines* instead of *generating*.
 
@@ -179,6 +183,7 @@ Your changes go live in production in minutes. Your own server becomes a self-ho
 
 | Component | Description |
 |---|---|
+| **Next.js 16+ boilerplate** | A pre-built 50,000-line framework — **13 parallel-routing slots**, production SEO, multi-language i18n, the Fractera design system, and **100+ features** — ready the moment you deploy |
 | **5 AI coding engines** | Claude Code · Codex · Gemini CLI · Qwen Code · Kimi Code — parallel terminals |
 | **Hermes orchestrator** | Autonomous agent: delegates tasks to platforms, works in the background |
 | **Built-in web chat** | Friendly chat to Brain (Hermes) — the **primary** way you use the system (your "Remote Command Post"). Opens automatically in the admin panel; on a custom domain it also gets its own auth-protected `chat.<domain>` subdomain. Just add a model to start |
