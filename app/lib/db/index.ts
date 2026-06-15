@@ -37,6 +37,37 @@ const SCHEMA = `
     created_at     TEXT NOT NULL DEFAULT (datetime('now')),
     created_by     TEXT NOT NULL DEFAULT 'system'
   );
+  -- Parallel-routing slot data (step 116.3 footer-first port). Menu categories +
+  -- their per-language labels drive the footer navigation; footer_page_contents
+  -- holds the per-route page bodies opened from the footer. Replaces the reference
+  -- app's Supabase tables (menu_categories / menu_category_translations /
+  -- footer_page_contents) with the same shape on our storage.
+  CREATE TABLE IF NOT EXISTS menu_categories (
+    id             TEXT PRIMARY KEY NOT NULL,
+    slot_name      TEXT NOT NULL,
+    image_url      TEXT,
+    text_direction TEXT NOT NULL DEFAULT 'ltr',
+    allowed_roles  TEXT NOT NULL DEFAULT '[]',
+    order_index    INTEGER NOT NULL DEFAULT 0,
+    created_at     TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE TABLE IF NOT EXISTS menu_category_translations (
+    id          TEXT PRIMARY KEY NOT NULL,
+    category_id TEXT NOT NULL,
+    lang        TEXT NOT NULL,
+    label       TEXT NOT NULL DEFAULT ''
+  );
+  CREATE TABLE IF NOT EXISTS footer_page_contents (
+    id            TEXT PRIMARY KEY NOT NULL,
+    route_id      TEXT NOT NULL,
+    lang          TEXT NOT NULL,
+    title         TEXT NOT NULL DEFAULT '',
+    description   TEXT NOT NULL DEFAULT '',
+    content       TEXT NOT NULL DEFAULT '',
+    use_redirect  INTEGER NOT NULL DEFAULT 0,
+    redirect_path TEXT,
+    created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+  );
 `
 
 // The architecture three streams (projects / pages / endpoints) and their tasks

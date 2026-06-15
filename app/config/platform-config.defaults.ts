@@ -46,6 +46,16 @@ export interface PlatformConfig {
     default: ThemeChoice;
     allowUserToggle: boolean;
   };
+
+  // Footer plugin toggles. The reference app gated these footer features through the
+  // plugin marketplace; we have no marketplace, so they live here (Admin -> Platform).
+  // get-active-plugins-for-slot maps them to the reference plugin ids the footer reads.
+  footerPlugins: {
+    themeToggle: boolean;      // dark/light switch
+    languageSwitcher: boolean; // language picker
+    widthToggle: boolean;      // center width toggle
+    footerPages: boolean;      // footer navigation pages
+  };
 }
 
 export const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
@@ -65,5 +75,11 @@ export const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
   theme: {
     default: "light",
     allowUserToggle: true,
+  },
+  footerPlugins: {
+    themeToggle: true,
+    languageSwitcher: true,
+    widthToggle: true,
+    footerPages: true,
   },
 };
