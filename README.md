@@ -1,6 +1,6 @@
 <h1 align="center">Fractera AI Workspace</h1>
 
-<p align="center"><strong>Deploy a full AI coding workspace to your own VPS in 10 minutes. Zero DevOps.</strong></p>
+<p align="center"><strong>Deploy a 50,000-line pre-built Next.js framework and a full AI coding stack to your own VPS in 10 minutes. Zero-Agent, MCP-First. Zero DevOps.</strong></p>
 
 <p align="center">
   <img src="https://www.fractera.ai/Fractera-Web-Architect.jpg" alt="Fractera AI Workspace" width="100%"/>
@@ -56,6 +56,46 @@ Fractera makes all of that **completely automatic**. You give it a bare Ubuntu s
 This is not a Docker image you still have to manage. This is not a tutorial you follow step by step. This is a system that deploys itself and gets out of your way.
 
 > "Finally someone made it so I don't have to think about deployment, ports, DevOps commands, and all that nonsense."
+
+---
+
+## The Next.js Aircraft Carrier — 50,000 lines, pre-built
+
+Most "starters" are a hello-world skeleton. Fractera ships a **production-grade 50,000-line Next.js framework** the moment you deploy — parallel routing, multi-language i18n, production SEO, database, auth, media — already written and verified. Your AI never re-invents or re-reads the infrastructure; it processes a few lines of business logic, not the whole framework. The 50,000 lines are not a bill — they are a **shield for your token budget**.
+
+<p align="center">
+  <a href="https://www.fractera.ai/next-aircraft-carrier">
+    <img src="https://www.fractera.ai/nextjs-parallel-routes.png" alt="Next.js parallel-routing layout — Header, Promo Screen, Left, Right, Center Header, Center, Center Footer and Footer slots with an active-slots checklist" width="100%"/>
+  </a>
+</p>
+
+### Parallel routing — one URL, many slots
+
+Parallel routing is the structural rail: inside a single URL the AI composes many dynamic **slots** — fixed panels, side drawers, centre modals — that change without a page reload and without losing state. If one slot errors, the rest keep working. One starter scales to thousands of pages.
+
+> Full story on the **[Next.js Aircraft Carrier](https://www.fractera.ai/next-aircraft-carrier)** page.
+
+---
+
+## Zero-Agent, MCP-First — near-zero token cost
+
+Standard "vibe coding" calls a heavy coding agent for every change and pays for the full generation loop each time. Fractera treats the architecture like a **Rubik's Cube**: a deterministic set of pre-built facets the AI *combines* instead of *generating*.
+
+### Deployment, not generation
+
+Hermes selects the right combination of existing sections through short MCP commands — it does not rewrite the file system. Code generation kicks in only when an architect adds a genuinely new section, and the result is frozen into a reusable widget. The outcome: tens of thousands of pages with token spend driven toward near-zero.
+
+> Full breakdown on the **[Token Economics](https://www.fractera.ai/token-economics)** page.
+
+---
+
+## Fractera Design System
+
+A new font, a video background, a reused section — applied as a rule that updates one page, several, or all of them at once, with no code generation.
+
+### Detailed write-up coming soon
+
+This section will be expanded with the full design-system documentation and screenshots. *(Placeholder — more detail to follow.)*
 
 ---
 
