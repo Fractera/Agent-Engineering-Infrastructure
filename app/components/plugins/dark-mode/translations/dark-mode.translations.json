@@ -1,0 +1,58 @@
+{
+  "dark_mode_001": {
+    "key": "dark_mode.title",
+    "translations": {
+      "en": "Dark Mode Toggle",
+      "ru": "Переключатель тёмного режима",
+      "es": "Alternar modo oscuro"
+    }
+  },
+  "dark_mode_002": {
+    "key": "dark_mode.description",
+    "translations": {
+      "en": "Cycles through system / light / dark theme modes",
+      "ru": "Циклирует между системой / светлым / тёмным режимом темы",
+      "es": "Alterna entre modo de sistema / luz / oscuro"
+    }
+  },
+  "dark_mode_003": {
+    "key": "dark_mode.summary",
+    "translations": {
+      "en": "Dark Mode Toggle adds a theme switcher to the footer toolbar.\n\nCycles three modes: System → Light → Dark. Stores preference in localStorage (fractera-theme), applies dark class to html. Syncs with OS preference in System mode. Already built into FooterToolbar — activation makes it visible.\n\nCompatible with `footer` slot. Zero dependencies.",
+      "ru": "Переключатель тёмного режима добавляет переключатель темы на панель инструментов нижнего колонтитула.\n\nЦиклирует три режима: Система → Светлый → Тёмный. Сохраняет предпочтение в localStorage (fractera-theme), применяет класс dark к html. Синхронизируется с предпочтением ОС в режиме Система.\n\nСовместимо со слотом `footer`. Нулевые зависимости.",
+      "es": "Alternar modo oscuro agrega un conmutador de tema a la barra de herramientas del pie de página.\n\nAlterna entre tres modos: Sistema → Luz → Oscuro. Almacena la preferencia en localStorage (fractera-theme), aplica la clase dark a html. Se sincroniza con la preferencia del SO en modo Sistema.\n\nCompatible con slot `footer`. Cero dependencias."
+    }
+  },
+  "dark_mode_004": {
+    "key": "dark_mode.caption_preview_1",
+    "translations": {
+      "en": "Theme switcher in footer toolbar",
+      "ru": "Переключатель темы в панели инструментов нижнего колонтитула",
+      "es": "Conmutador de tema en la barra de herramientas del pie de página"
+    }
+  },
+  "dark_mode_005": {
+    "key": "dark_mode.tooltip.system",
+    "translations": {
+      "en": "Theme: system",
+      "ru": "Тема: системная",
+      "es": "Tema: sistema"
+    }
+  },
+  "dark_mode_006": {
+    "key": "dark_mode.tooltip.light",
+    "translations": {
+      "en": "Theme: light",
+      "ru": "Тема: светлая",
+      "es": "Tema: claro"
+    }
+  },
+  "dark_mode_007": {
+    "key": "dark_mode.tooltip.dark",
+    "translations": {
+      "en": "Theme: dark",
+      "ru": "Тема: тёмная",
+      "es": "Tema: oscuro"
+    }
+  }
+}
