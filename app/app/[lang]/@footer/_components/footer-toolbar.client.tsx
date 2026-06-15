@@ -158,7 +158,7 @@ function LanguageSwitcher({ t }: { t: (key: FooterTranslationKey) => string }) {
   );
 }
 
-export function FooterToolbar({ showDarkModeToggle, showWidthToggle, translations, lang }: { showDarkModeToggle?: boolean; showWidthToggle?: boolean; translations?: FooterTranslations; lang?: string }) {
+export function FooterToolbar({ showDarkModeToggle, showWidthToggle, showLanguageSwitcher, translations, lang }: { showDarkModeToggle?: boolean; showWidthToggle?: boolean; showLanguageSwitcher?: boolean; translations?: FooterTranslations; lang?: string }) {
   const t = useFooterTranslation(translations ?? FOOTER_TRANSLATIONS_EN);
   const { centerMaxWidth, toggleWidth } = useWidthToggle();
 
@@ -180,8 +180,10 @@ export function FooterToolbar({ showDarkModeToggle, showWidthToggle, translation
         </Tooltip>
       )}
 
-      {/* language switcher */}
-      {!SINGLE_LANG_MODE && <LanguageSwitcher t={t} />}
+      {/* language switcher — ADAPTED: gated by the Platform `languageSwitcher` flag too (not
+          just SINGLE_LANG_MODE), so it joins the other 3 footer features under Admin -> Platform.
+          Shows only when more than one language is configured AND the flag is on. */}
+      {!SINGLE_LANG_MODE && showLanguageSwitcher && <LanguageSwitcher t={t} />}
 
       {/* dark-mode-toggle plugin */}
       {showDarkModeToggle && <DarkModePlugin lang={lang} />}

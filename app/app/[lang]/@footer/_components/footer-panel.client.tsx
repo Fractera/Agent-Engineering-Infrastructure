@@ -31,10 +31,11 @@ type FooterPanelProps = {
   showDarkModeToggle?: boolean;
   showWidthToggle?: boolean;
   showFooterPages?: boolean;
+  showLanguageSwitcher?: boolean;
   translations?: FooterTranslations;
 };
 
-export function FooterPanel({ lang, categories, routes, bgColor, bgClass, pageContents, logoPath, companyName = 'Fractera', showDarkModeToggle, showWidthToggle, showFooterPages, translations }: FooterPanelProps) {
+export function FooterPanel({ lang, categories, routes, bgColor, bgClass, pageContents, logoPath, companyName = 'Fractera', showDarkModeToggle, showWidthToggle, showFooterPages, showLanguageSwitcher, translations }: FooterPanelProps) {
   const t = useFooterTranslation(translations ?? FOOTER_TRANSLATIONS_EN);
   const isArchitect = useIsArchitect();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -103,7 +104,7 @@ export function FooterPanel({ lang, categories, routes, bgColor, bgClass, pageCo
             <FooterNavMenuMobile categories={categories} routes={routes} lang={lang} routeIdsWithContent={null} pageContents={pageContents} />
           </div>
         )}
-        <FooterToolbar showDarkModeToggle={showDarkModeToggle} showWidthToggle={showWidthToggle} translations={translations ?? FOOTER_TRANSLATIONS_EN} lang={lang} />
+        <FooterToolbar showDarkModeToggle={showDarkModeToggle} showWidthToggle={showWidthToggle} showLanguageSwitcher={showLanguageSwitcher} translations={translations ?? FOOTER_TRANSLATIONS_EN} lang={lang} />
       </div>
     </div>
 

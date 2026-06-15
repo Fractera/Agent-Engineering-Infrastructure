@@ -45,6 +45,7 @@ export default async function FooterDefault({
       showDarkModeToggle={activePlugins.includes('dark-mode-toggle')}
       showWidthToggle={activePlugins.includes('width-toggle')}
       showFooterPages={activePlugins.includes('footer-pages')}
+      showLanguageSwitcher={activePlugins.includes('language-switcher')}
       translations={translations}
     />
   );

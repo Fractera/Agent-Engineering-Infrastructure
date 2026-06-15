@@ -1,57 +1,72 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Loader2, X, Save } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Loader2, X, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ParallelRoutesSelector } from "./parallel-routes/parallel-routes-selector.client";
+import { FooterFeatureView } from "./platform/footer-feature-view.client";
+import { MultilingualView } from "./platform/multilingual-view.client";
 
-// Platform — structural settings for the deployed Shell app (routing / languages / theme).
-// Distinct from Site Settings (branding/SEO/PWA). Reads and writes the Shell's
-// platform-config.json via the server route /api/config/platform (same cross-process pattern
-// as Site Settings / Env). The parallel-routing flag applies at runtime — the Shell reads it
-// per request, so a save shows up on the app's next page load, no rebuild.
-//
-// 116.1 ships a single switch: "Use parallel routing". OFF (default) renders the flat page
-// tree (today's behaviour); ON makes the [lang] layout arrange the named parallel-route slots.
+// Platform — structural settings for the deployed Shell app. The header carries a dropdown bar-menu:
+//   • Use parallel routing (master runtime flag)
+//   • Settings for: Footer pages / Screen width / Theme / Multilingual
+//   • Parallel routes · setup (slot selector, when parallel routing is on)
+// Every runtime flag lives in platform-config.json (footerPlugins + parallelRouting) and applies on
+// the app's next load — no rebuild. The language SET (inside Multilingual) is build-time env and is
+// the one thing that needs a rebuild. Reads/writes via /api/config/platform (cross-process, same as
+// Site Settings / Env). The marketplace the reference used is replaced by these Platform flags;
+// every footer feature defaults ON ("all components allowed").
 
 type Cfg = Record<string, unknown>;
+type View = null | "footerPages" | "width" | "theme" | "multilingual" | "slots";
 type Props = { onClose: () => void };
+
+const FOOTER_FEATURES: Record<string, { title: string; description: string }> = {
+  footerPages: { title: "Footer pages", description: "The footer navigation menu, the pages manager and the page content drawer." },
+  widthToggle: { title: "Screen width", description: "The center-width toggle button in the footer toolbar." },
+  themeToggle: { title: "Theme", description: "The day/night theme switcher button in the footer toolbar." },
+};
 
 export function PlatformSettingsPanel({ onClose }: Props) {
   const [config, setConfig] = useState<Cfg>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // When parallel routing is on, an orange "Parallel routes · setup" affordance appears in the
-  // header. It opens the slot-selection UI (the animated route picker ported from the reference
-  // app — full copy lands in the next step; a placeholder describes it for now).
-  const [showRoutesSetup, setShowRoutesSetup] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [view, setView] = useState<View>(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/config/platform", { credentials: "include" });
-        if (!res.ok) throw new Error(`${res.status}`);
-        const data = await res.json();
-        setConfig((data.config ?? {}) as Cfg);
-      } catch (e) {
-        setError(`Could not load platform settings: ${String(e)}`);
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/config/platform", { credentials: "include" });
+      if (!res.ok) throw new Error(`${res.status}`);
+      const data = await res.json();
+      setConfig((data.config ?? {}) as Cfg);
+      setError(null);
+    } catch (e) {
+      setError(`Could not load platform settings: ${String(e)}`);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const parallelRouting = config.parallelRouting === true;
+  useEffect(() => { load(); }, [load]);
 
-  async function save() {
+  const parallelRouting = config.parallelRouting === true;
+  const footerPlugins = (config.footerPlugins ?? {}) as Record<string, boolean>;
+  const flag = (key: string) => footerPlugins[key] !== false; // missing = default on
+
+  // Persist the WHOLE config (the platform route overwrites the file with exactly what we send;
+  // the Shell deep-merges over code defaults on read). Optimistic: we already set state.
+  async function saveConfig(next: Cfg) {
+    setConfig(next);
     setSaving(true);
     try {
       const res = await fetch("/api/config/platform", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ config }),
+        body: JSON.stringify({ config: next }),
         credentials: "include",
       });
       const data = await res.json();
@@ -64,6 +79,16 @@ export function PlatformSettingsPanel({ onClose }: Props) {
     }
   }
 
+  const toggleParallel = () => saveConfig({ ...config, parallelRouting: !parallelRouting });
+  const toggleFlag = (key: string) =>
+    saveConfig({ ...config, footerPlugins: { ...footerPlugins, [key]: !flag(key) } });
+
+  const goBack = () => { setView(null); load(); };
+
+  const openView = (v: View) => { setMenuOpen(false); setView(v); };
+
+  const menuItem = "flex items-center gap-2 w-full text-left px-2 py-1.5 rounded text-[12px] text-foreground hover:bg-muted transition-colors";
+
   return (
     <div style={{ position: "absolute", top: 52, left: 0, right: 0, bottom: 36, zIndex: 20 }} className="bg-background flex flex-col">
       <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border shrink-0">
@@ -71,17 +96,44 @@ export function PlatformSettingsPanel({ onClose }: Props) {
           Platform
           <span className="ml-2 text-[10px] font-normal text-muted-foreground font-mono">routing · languages · theme</span>
         </span>
-        {parallelRouting && (
-          <button
-            type="button"
-            onClick={() => setShowRoutesSetup(true)}
-            title="Configure which parallel routes are active"
-            className="text-[10px] font-semibold uppercase tracking-wide text-orange-500 hover:text-orange-600 transition-colors"
-          >
-            Parallel routes · setup
-          </button>
-        )}
+
+        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className="flex items-center gap-1 text-[11px] font-semibold text-orange-500 hover:text-orange-600 transition-colors"
+            >
+              Settings <ChevronDown size={12} />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-60 p-1.5">
+            <button type="button" onClick={() => { toggleParallel(); }} className={menuItem}>
+              <span
+                aria-hidden
+                className={`inline-flex h-3.5 w-6 shrink-0 items-center rounded-full transition-colors ${parallelRouting ? "bg-foreground" : "bg-muted-foreground/40"}`}
+              >
+                <span className={`inline-block h-2.5 w-2.5 transform rounded-full bg-background transition-transform ${parallelRouting ? "translate-x-3" : "translate-x-0.5"}`} />
+              </span>
+              <span className="flex-1">Use parallel routing</span>
+            </button>
+
+            <div className="px-2 pt-2 pb-1 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Settings for</div>
+            <button type="button" onClick={() => openView("footerPages")} className={menuItem}><span className="flex-1">Footer pages</span><ChevronRight size={12} className="text-muted-foreground" /></button>
+            <button type="button" onClick={() => openView("width")} className={menuItem}><span className="flex-1">Screen width</span><ChevronRight size={12} className="text-muted-foreground" /></button>
+            <button type="button" onClick={() => openView("theme")} className={menuItem}><span className="flex-1">Theme</span><ChevronRight size={12} className="text-muted-foreground" /></button>
+            <button type="button" onClick={() => openView("multilingual")} className={menuItem}><span className="flex-1">Multilingual</span><ChevronRight size={12} className="text-muted-foreground" /></button>
+
+            {parallelRouting && (
+              <>
+                <div className="my-1 border-t border-border" />
+                <button type="button" onClick={() => openView("slots")} className={`${menuItem} text-orange-500`}><span className="flex-1">Parallel routes · setup</span><ChevronRight size={12} /></button>
+              </>
+            )}
+          </PopoverContent>
+        </Popover>
+
         <span className="flex-1" />
+        {saving && <Loader2 size={12} className="animate-spin text-muted-foreground" />}
         <button
           type="button"
           onClick={onClose}
@@ -91,7 +143,29 @@ export function PlatformSettingsPanel({ onClose }: Props) {
         </button>
       </div>
 
-      {showRoutesSetup && <ParallelRoutesSelector onBack={() => setShowRoutesSetup(false)} />}
+      {view === "slots" && <ParallelRoutesSelector onBack={goBack} />}
+      {view === "multilingual" && (
+        <MultilingualView
+          onBack={goBack}
+          switcherActive={flag("languageSwitcher")}
+          onToggleSwitcher={() => toggleFlag("languageSwitcher")}
+          switcherSaving={saving}
+        />
+      )}
+      {(view === "footerPages" || view === "width" || view === "theme") && (() => {
+        const key = view === "footerPages" ? "footerPages" : view === "width" ? "widthToggle" : "themeToggle";
+        const meta = FOOTER_FEATURES[key];
+        return (
+          <FooterFeatureView
+            title={meta.title}
+            description={meta.description}
+            active={flag(key)}
+            onToggle={() => toggleFlag(key)}
+            saving={saving}
+            onBack={goBack}
+          />
+        );
+      })()}
 
       {loading ? (
         <div className="flex-1 flex items-center justify-center text-muted-foreground text-xs gap-2">
@@ -103,45 +177,18 @@ export function PlatformSettingsPanel({ onClose }: Props) {
         </div>
       ) : (
         <div className="flex-1 overflow-auto px-4 py-3">
-          <p className="text-[10px] text-muted-foreground mb-3">
-            Structural settings for how your app is laid out and routed. Changes apply at runtime — reload the app to see them.
+          <p className="text-[11px] text-muted-foreground mb-3 max-w-md">
+            Structural settings for how your app is laid out and routed. Open <span className="font-semibold text-foreground">Settings</span> above
+            to toggle parallel routing or configure footer features and languages. Every footer feature is on by default.
           </p>
-          <div className="flex flex-col gap-5 max-w-md">
-            <div className="flex flex-col gap-2.5">
-              <div className="flex flex-col gap-0.5 border-b border-border pb-1">
-                <span className="text-[11px] font-semibold text-foreground">Routing</span>
-                <span className="text-[9px] text-muted-foreground">How the app shell is composed.</span>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setConfig((prev) => ({ ...prev, parallelRouting: !parallelRouting }))}
-                className="flex items-start gap-3 text-left rounded-md border border-border px-3 py-2.5 hover:bg-muted/40 transition-colors"
-              >
-                <span
-                  aria-hidden
-                  className={`mt-0.5 inline-flex h-4 w-7 shrink-0 items-center rounded-full transition-colors ${parallelRouting ? "bg-foreground" : "bg-muted-foreground/40"}`}
-                >
-                  <span className={`inline-block h-3 w-3 transform rounded-full bg-background transition-transform ${parallelRouting ? "translate-x-3.5" : "translate-x-0.5"}`} />
-                </span>
-                <span className="flex flex-col gap-0.5">
-                  <span className="text-[11px] font-medium text-foreground">Use parallel routing</span>
-                  <span className="text-[9px] text-muted-foreground leading-relaxed">
-                    Off: the app renders the flat page tree (default). On: the layout arranges the named parallel-route slots instead of the page children.
-                  </span>
-                </span>
-              </button>
-            </div>
+          <div className="max-w-md rounded-md border border-border px-3 py-2.5 text-[11px] text-foreground">
+            Parallel routing is <span className={`font-semibold ${parallelRouting ? "text-green-600" : "text-muted-foreground"}`}>{parallelRouting ? "ON" : "OFF"}</span>.
+            {parallelRouting
+              ? " The layout arranges the named parallel-route slots."
+              : " The app renders the flat page tree (today's behaviour)."}
           </div>
         </div>
       )}
-
-      <div className="px-4 py-2.5 border-t border-border flex items-center gap-3 shrink-0">
-        <Button onClick={save} disabled={saving || loading}>
-          {saving ? <><Loader2 size={11} className="animate-spin" />Saving…</> : <><Save size={11} />Save settings</>}
-        </Button>
-        <span className="text-[10px] text-muted-foreground">Stored on the server · no rebuild required</span>
-      </div>
     </div>
   );
 }
