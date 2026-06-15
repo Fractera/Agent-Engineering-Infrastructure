@@ -314,7 +314,13 @@ export const ROUTES_CONFIG: RoutesConfig = {
     isPagesNull: false,
 
     isLoadingPageProhibited: true,
-    bgClass: 'bg-gradient-to-t from-white to-slate-50 border-t border-slate-200 shadow-[0_-1px_3px_0_rgba(0,0,0,0.04)]',
+    // ADAPTED: the reference fed bgClass from Supabase brand_book (theme-aware, per project).
+    // Our seed previously hardcoded a white gradient (from-white/to-slate-50/border-slate-200),
+    // which did NOT react to the theme — in dark mode the footer stayed light while text-foreground
+    // turned light, so the labels vanished. Use theme-aware tokens: bg-muted is slightly off the
+    // main bg-background in BOTH themes (a touch darker in light, a touch lighter in dark), and
+    // border-border tracks the theme. This is the footer "main background, lightly tinted" behaviour.
+    bgClass: 'bg-muted border-t border-border shadow-[0_-1px_3px_0_rgba(0,0,0,0.04)]',
     routes: [
       { path: '/footer', title: 'Default footer page', description: 'Default footer page', routeGenerationType: 'static', isPublic: true, },
       ],
