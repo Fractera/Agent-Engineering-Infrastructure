@@ -33,10 +33,14 @@ export function CodeGeneratorProvider({ children }: { children: React.ReactNode 
   const noop = useCallback(() => {}, []);
   const consumePendingPrompt = useCallback((): string | null => null, []);
 
+  // Per directive: code-generator state is TRUE — the Shell runs inside the admin workspace,
+  // i.e. we are inside the code generator. Architect tooling gated on codeGeneratorOpen (e.g.
+  // the footer page editor) is therefore visible. (The width reservation a real code-gen panel
+  // would add is handled as 0 when the center/right containers are wired, since no panel renders.)
   return (
     <CodeGeneratorContext.Provider
       value={{
-        codeGeneratorOpen: false,
+        codeGeneratorOpen: true,
         toggleCodeGenerator: noop,
         closeCodeGenerator: noop,
         navLoading: false,

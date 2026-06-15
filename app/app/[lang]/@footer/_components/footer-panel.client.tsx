@@ -2,7 +2,10 @@
 
 import { useState } from 'react';
 import { FolderTree } from 'lucide-react';
-import { useSession } from 'next-auth/react';
+// ADAPTED: the reference derives the architect role from a next-auth session. We don't use
+// next-auth in the Shell — admin === architect (we are inside the code generator), via our
+// useIsArchitect() hook (returns true).
+import { useIsArchitect } from '@/lib/hooks/use-is-architect';
 import { useCodeGenerator } from '@/providers/code-generator-provider.client';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -34,9 +37,7 @@ type FooterPanelProps = {
 
 export function FooterPanel({ lang, categories, routes, bgColor, bgClass, pageContents, logoPath, companyName = 'Fractera', showDarkModeToggle, showWidthToggle, showFooterPages, translations }: FooterPanelProps) {
   const t = useFooterTranslation(translations ?? FOOTER_TRANSLATIONS_EN);
-  const { data: session } = useSession();
-  const userRoles = ((session?.user as { roles?: string[] })?.roles ?? []);
-  const isArchitect = userRoles.includes('architect');
+  const isArchitect = useIsArchitect();
   const { codeGeneratorOpen } = useCodeGenerator();
   const [menuOpen, setMenuOpen] = useState(false);
   const [drawerRouteId, setDrawerRouteId] = useState<string | null>(null);
