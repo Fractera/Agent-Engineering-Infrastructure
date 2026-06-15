@@ -10,6 +10,7 @@ import { PlatformMcpServer } from './mcp-server.js'
 import { DeploymentsMcpServer } from './deployments-mcp-server.js'
 import { ReadinessMcpServer } from './readiness-mcp-server.js'
 import { ParallelRoutingMcpServer } from './parallel-routing-mcp-server.js'
+import { AppSettingsMcpServer } from './app-settings-mcp-server.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, '../../app/.env.local') })
@@ -1138,4 +1139,14 @@ new ParallelRoutingMcpServer({
   port: Number(process.env.PARALLEL_ROUTING_MCP_PORT ?? 3217),
   secret: MCP_SECRET,
   configPath: process.env.PLATFORM_CONFIG_PATH ?? '/opt/fractera/app/PLATFORM-CONFIG/platform-config.json',
+}).start()
+
+// ── App Settings MCP server (singleton, port 3218) ──────────────────────────
+// Hermes enumerates/sets the deployed app's TEXT settings (App Settings — branding
+// / SEO / PWA) and flags which the owner has not filled. Images are panel-only.
+// Reads/writes the SAME on-disk app-config the App Settings panel uses. → step 115.
+new AppSettingsMcpServer({
+  port: Number(process.env.APP_SETTINGS_MCP_PORT ?? 3218),
+  secret: MCP_SECRET,
+  configPath: process.env.APP_CONFIG_PATH ?? '/opt/fractera/app/APP-CONFIG/app-config.json',
 }).start()
