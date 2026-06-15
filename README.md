@@ -1,6 +1,6 @@
 <h1 align="center">Fractera AI Workspace</h1>
 
-<p align="center"><strong>Deploy a 50,000-line pre-built Next.js framework and a full AI coding stack to your own VPS in 10 minutes. Zero-Agent, MCP-First. Zero DevOps.</strong></p>
+<p align="center"><strong>Deploy a production-ready, 50,000-line Next.js enterprise boilerplate and a self-hosted AI infrastructure to your own VPS in 10 minutes. A fundamentally new MCP-First paradigm built to eliminate context window inflation and drive token overhead to absolute zero.</strong></p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/MCP--First-a%20fundamentally%20new%20way%20to%20generate%20apps%2C%20MCP%20over%20code%20agents-FF8C00?style=for-the-badge" alt="A fundamentally new MCP-First approach to generating applications — focused on MCP more than on code agents"/>
