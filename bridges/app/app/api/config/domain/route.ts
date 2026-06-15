@@ -57,15 +57,17 @@ const ADMIN_WS_LOCATIONS = Object.entries(BRIDGE_WS_PORTS).map(([name, p]) =>
 // so the customer can't strip it from the app source). It is a PLAIN crawlable
 // dofollow <a> — NOT obfuscated JS — so search engines see it and pass link
 // equity to the repo (an earlier char-array/JS version was invisible to crawlers
-// and passed ~zero weight). The <div> is inserted right before </body> in normal
-// document flow → it sits at the bottom of the PAGE (visible on scroll), not
-// pinned to the viewport. White strip, black 10px link, no underline, same-tab,
-// no rel. Only the public-site hosts (apex + www on :3000) get it; the internal
+// and passed ~zero weight). The <div> is inserted right before </body> and is
+// FIXED to the very bottom of the viewport (position:fixed; bottom:2px; high
+// z-index) so it sits ON TOP of the parallel-routing @footer slot (which is fixed
+// at bottom:0). No background, black 8px link, no underline, same-tab, no rel —
+// black is intentional and stays put even on a dark footer. Only the public-site
+// hosts (apex + www on :3000) get it; the internal
 // services (auth/admin/data/hermes/lightrag) stay untouched.
 // The three directive lines below are load-bearing markers for White-Label removal
 // (lib/bootstrap.sh + config/white-label/route.ts) — keep their exact form.
 const FOOTER_HTML =
-  `<div style="width:100%;background:#fff;text-align:center;padding:3px 0;line-height:1.4"><a href="https://github.com/Fractera/ai-workspace" style="font-size:10px;color:#000;text-decoration:none">Powered by Fractera</a></div>`;
+  `<div style="position:fixed;bottom:2px;left:0;right:0;text-align:center;z-index:200;line-height:1"><a href="https://github.com/Fractera/ai-workspace" style="font-size:8px;color:#000;text-decoration:none">Powered by Fractera</a></div>`;
 const FOOTER_DIRECTIVES =
   `        proxy_set_header Accept-Encoding "";\n` +
   `        sub_filter_once on;\n` +
