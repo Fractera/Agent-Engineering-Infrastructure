@@ -47,6 +47,14 @@ export interface PlatformConfig {
     allowUserToggle: boolean;
   };
 
+  // Footer-toolbar defaults the footer-slot MCP controls (footer_slot_owner_set_center_width).
+  // Default center-column width the width-toggle starts from on load: "narrow" | "wide".
+  centerWidth: "narrow" | "wide";
+
+  // Bumped by an "apply now" MCP write so open tabs reload and pick up the new default
+  // (a tiny client poller watches /api/platform/signature). 0 = never applied-now yet.
+  reloadNonce: number;
+
   // Footer plugin toggles. The reference app gated these footer features through the
   // plugin marketplace; we have no marketplace, so they live here (Admin -> Platform).
   // get-active-plugins-for-slot maps them to the reference plugin ids the footer reads.
@@ -76,6 +84,8 @@ export const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
     default: "light",
     allowUserToggle: true,
   },
+  centerWidth: "narrow",
+  reloadNonce: 0,
   footerPlugins: {
     themeToggle: true,
     languageSwitcher: true,

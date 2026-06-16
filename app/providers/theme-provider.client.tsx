@@ -26,16 +26,25 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+// ADAPTED: accepts a server-driven `defaultMode` (from platform-config, set by the footer-slot MCP
+// or Admin -> Platform). Precedence on load: localStorage (the user's own toggle) > defaultMode
+// (server) > env NEXT_PUBLIC_DEFAULT_THEME > 'light'.
+export function ThemeProvider({
+  children,
+  defaultMode,
+}: {
+  children: React.ReactNode;
+  defaultMode?: ThemeMode;
+}) {
   const [mode, setMode] = useState<ThemeMode>('light');
 
   useEffect(() => {
     const envDefault = (process.env.NEXT_PUBLIC_DEFAULT_THEME as ThemeMode | undefined) ?? 'light';
     const saved = localStorage.getItem(THEME_KEY) as ThemeMode | null;
-    const active = saved ?? envDefault;
+    const active = saved ?? defaultMode ?? envDefault;
     setMode(active);
     applyTheme(active);
-  }, []);
+  }, [defaultMode]);
 
   useEffect(() => {
     if (mode !== 'system') return;

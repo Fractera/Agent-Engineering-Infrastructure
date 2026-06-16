@@ -3,7 +3,9 @@
 import { createContext, useCallback, useContext, useState } from 'react';
 import { LAYOUT_CONFIG } from '@/config/ui/layout.config';
 
-// Ported verbatim from the 22slots reference (providers/width-toggle-provider.client.tsx).
+// Ported from the 22slots reference (providers/width-toggle-provider.client.tsx).
+// ADAPTED: accepts a server-driven `defaultWidth` so the footer-slot MCP (and Admin -> Platform)
+// can set the center width the toggle starts from on load. Omitted = narrow (reference behaviour).
 
 type WidthToggleContextValue = {
   centerMaxWidth: number;
@@ -12,9 +14,17 @@ type WidthToggleContextValue = {
 
 const WidthToggleContext = createContext<WidthToggleContextValue | null>(null);
 
-export function WidthToggleProvider({ children }: { children: React.ReactNode }) {
+export function WidthToggleProvider({
+  children,
+  defaultWidth = "narrow",
+}: {
+  children: React.ReactNode;
+  defaultWidth?: "narrow" | "wide";
+}) {
   const [centerMaxWidth, setCenterMaxWidth] = useState<number>(
-    LAYOUT_CONFIG.CENTER_MAX_W_NARROW
+    defaultWidth === "wide"
+      ? LAYOUT_CONFIG.CENTER_MAX_W_WIDE
+      : LAYOUT_CONFIG.CENTER_MAX_W_NARROW
   );
 
   const toggleWidth = useCallback(() => {

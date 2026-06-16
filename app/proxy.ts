@@ -44,6 +44,13 @@ async function handleApi(request: NextRequest, pathname: string): Promise<NextRe
     return NextResponse.next();
   }
 
+  // Public config signature — the tiny client poller (ConfigReloadWatcher) reads this on every
+  // page (incl. the public site, before login) to reload tabs after an "apply now" platform
+  // change. Read-only, no secrets. Open like /api/health.
+  if (pathname === "/api/platform/signature" && request.method === "GET") {
+    return NextResponse.next();
+  }
+
   if (pathname !== "/api/health") {
     if (!shouldBypassAuth()) {
       const agentIdentity = request.headers.get("x-agent-identity");

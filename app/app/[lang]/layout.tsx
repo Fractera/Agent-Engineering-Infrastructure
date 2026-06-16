@@ -18,6 +18,7 @@ import { buildOrganizationSchema, buildWebSiteSchema, buildLocalBusinessSchema }
 import { SUPPORTED_LANGUAGES } from "@/config/translations/translations.config";
 import { resolveLang } from "@/lib/routing/resolve-lang";
 import { getPlatformConfig } from "@/config/platform-config";
+import { ConfigReloadWatcher } from "@/components/platform/config-reload-watcher.client";
 
 // The [lang] layout is the REAL frame — matching the 22slots reference, which keeps the root
 // layout flat and puts <html>/<body>, fonts, theme, metadata, JSON-LD, analytics and the layout
@@ -51,9 +52,10 @@ export function generateViewport(): Viewport {
   };
 }
 
-const defaultTheme = process.env.NEXT_PUBLIC_DEFAULT_THEME ?? "light";
-
-const themeScript = `
+// Anti-FOUC script: set the `dark` class before paint. Precedence matches ThemeProvider:
+// localStorage (user toggle) > server config default (passed in) > 'light'.
+function buildThemeScript(defaultTheme: string): string {
+  return `
 (function() {
   var saved = localStorage.getItem('fractera-theme');
   var theme = saved || '${defaultTheme}';
@@ -68,6 +70,7 @@ const themeScript = `
   }
 })();
 `;
+}
 
 type SlotLayoutProps = {
   children: ReactNode;
@@ -101,7 +104,12 @@ export default async function LangLayout(props: SlotLayoutProps) {
   }
   const gaId = cfg.analytics.enabled ? cfg.analytics.googleAnalyticsId : undefined;
 
-  const { parallelRouting, slots } = getPlatformConfig();
+  const platform = getPlatformConfig();
+  const { parallelRouting, slots } = platform;
+  const themeDefault = platform.theme?.default ?? "light";
+  const centerWidth = platform.centerWidth ?? "narrow";
+  const reloadNonce = platform.reloadNonce ?? 0;
+  const themeScript = buildThemeScript(themeDefault);
 
   // Mode content: OFF → the flat page tree; ON → the footer-first slot frame.
   const content = !parallelRouting ? (
@@ -145,11 +153,11 @@ export default async function LangLayout(props: SlotLayoutProps) {
         )}
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}>
-        <ThemeProvider>
+        <ThemeProvider defaultMode={themeDefault}>
           <TooltipProvider>
             <HighlightFineTuneProvider>
               <ScreenWidthProvider>
-                <WidthToggleProvider>
+                <WidthToggleProvider defaultWidth={centerWidth}>
                   <HeaderHeightProvider initialHeight={HEADER_HEIGHT_PX}>
                     <PanelStateProvider>
                       {content}
@@ -161,6 +169,7 @@ export default async function LangLayout(props: SlotLayoutProps) {
           </TooltipProvider>
           <Toaster position="bottom-right" richColors closeButton />
         </ThemeProvider>
+        <ConfigReloadWatcher nonce={reloadNonce} />
       </body>
     </html>
   );
