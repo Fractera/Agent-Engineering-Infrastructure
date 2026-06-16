@@ -98,4 +98,25 @@ it only carries the decision as guidance; the agent that builds the real tool wr
 5. The real files (`CLAUDE.md`, `~/.hermes/SOUL.md`, the skills dir, `config.yaml` MCP, the manifest, …) are
    the targets — **only the agent writes them**, never this page.
 
+## Capability declarations — REQUIRED for the consultant to serve anything
+
+Beyond per-agent instruction/skill/MCP drafts, this page is also where the architect curates
+the **consultant capability declarations** — the map of what THIS project can do, split by
+access tier. They are a hard requirement, not optional:
+
+- **Two documents** under `AGENT-CAPABILITIES/`: `public.md` (public-tier capabilities) and
+  `authenticated.md` (signed-in **user** capabilities + **owner/admin** capabilities, marked
+  per tier). Each entry: `capability · tier · what happens · tool/action · sign-in`.
+- These are **part of the consultant agent's identity** — their content is loaded into the
+  public agent's SOUL by default on every turn (see `interactive-consultant-architecture.md`
+  §8a, MCP-REGISTRY §8.8).
+- **INVARIANT: without these documents the agent must not serve data or invent capabilities.**
+  An undeclared request → "the site doesn't offer that"; a user/owner request → offer sign-in.
+- **They grow with the project:** every time a new MCP tool or skill is added, its capability
+  is appended here with its tier (public / user / owner) — and mirrored on the public
+  documentation page so users can discover it. Dozens of public, hundreds of user, thousands of
+  owner capabilities are all expected; the structure must scale (tiered tables/sections).
+- The architect edits them here (free-form, like any draft); an agent applies them to the real
+  `AGENT-CAPABILITIES/*.md` files, which regenerates the consultant SOUL.
+
 Static page — no live polling; it loads on open and refetches after each edit.

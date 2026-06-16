@@ -258,6 +258,37 @@ Other rules:
 
 ---
 
+## 12a. Critical architecture rules — STATIC-FIRST (violation = breaks the platform)
+
+Non-negotiable architecture guardrails — the reason the platform is fast and the framework
+is worth shipping. Breaking any collapses the product's value.
+
+- **Every page is generated STATICALLY (SSG), including language pages** (`app/[lang]` via
+  `generateStaticParams`). No JS to see content, no DB call per request. **NEVER convert a
+  page from static to dynamic** — no `dynamic = 'force-dynamic'`, no removing
+  `generateStaticParams`, no per-request rendering. Only genuinely-impossible-to-static pages
+  (e.g. Dashboard) are excepted, and even those stay **ISR**, never full dynamic.
+- **The set of languages is BUILD-TIME** (env `NEXT_PUBLIC_SUPPORTED_LANGUAGES` →
+  `generateStaticParams`). Pick several from the ~82 in `config/translations/language-metadata.ts`;
+  **applying the choice requires a rebuild** (statically generates `/es/...`). By design — do
+  NOT make language selection runtime/dynamic to skip the rebuild.
+- **`router.refresh()` is forbidden** — resets React state across all parallel-route slots.
+- **No `auth()`/`cookies()`/`headers()` in layouts/pages** — breaks static generation / ISR.
+  Read identity in client components via `/api/me`.
+- **Container queries** (`@sm:`, `@lg:`) inside the slot shell — never `sm:`/`md:`.
+- **File naming:** every JSX file ends in `.client.tsx` or `.server.tsx`.
+
+### Examples — for OUR flow (not generic boilerplate)
+- DB is local SQLite, NOT Supabase: `import { db } from "@/lib/db"`; new tables in `SCHEMA`
+  (`app/lib/db/index.ts`). No Supabase / MinIO / S3.
+- Parallel routing = 12 slots (`@header`,`@footer`,`@left`,`@right`,`@center`,`@centerHeader`,
+  `@centerFooter`,`@breadcrumb`,`@promoScreen`,`@notification`,`@faq`,`@footerModal`);
+  `@codeGenerator` is admin-side, outside the count. Don't touch `@center`/`@centerHeader`/
+  `@centerFooter` without explicit confirmation.
+- Shipping a change = the deploy loop (`POST /api/deploy`, §13), not a widget upload.
+
+---
+
 ## 13. Deploy mechanics
 
 Only run this when the user has explicitly approved deploy (§5 step 3).

@@ -288,6 +288,42 @@ page mirrors the code and flags any drift from these rules. Read that doc first.
 
 ---
 
+## 12a. Critical architecture rules — STATIC-FIRST (violation = breaks the platform)
+
+These are the non-negotiable architecture guardrails — the whole reason the platform is fast
+and the ~160k-line framework is worth shipping. Breaking any of them collapses the value of
+the product.
+
+- **Every page is generated STATICALLY (SSG), including language pages** (`app/[lang]` via
+  `generateStaticParams`). No JS required to see content, no DB call per request. **NEVER
+  convert a page from static to dynamic** — no `export const dynamic = 'force-dynamic'`, no
+  removing `generateStaticParams`, no per-request rendering. The ONLY exception is a page that
+  genuinely cannot be static (e.g. Dashboard), and even those stay **ISR** wherever possible,
+  never full dynamic.
+- **The set of languages is BUILD-TIME** (env `NEXT_PUBLIC_SUPPORTED_LANGUAGES` →
+  `generateStaticParams`). The architect picks several from the ~82 in
+  `config/translations/language-metadata.ts`; **applying that choice requires a rebuild** (it
+  statically generates `/es/...` etc). This is correct and by design — do NOT make language
+  selection "runtime/dynamic" to avoid the rebuild. A user then switches only between the
+  already-generated languages.
+- **`router.refresh()` is forbidden** — it resets React state across all parallel-route slots.
+- **No `auth()`, `cookies()`, or `headers()` in layouts/pages** — they opt the route out of
+  static generation and break ISR. Read identity in client components via `/api/me`.
+- **Container queries** (`@sm:`, `@lg:`) inside the slot/Fractal shell — never viewport
+  breakpoints (`sm:`, `md:`), which break inside resizable panels.
+- **File naming:** every JSX file ends in `.client.tsx` or `.server.tsx` (see §12).
+
+### Examples — for OUR flow (not generic boilerplate)
+- **Database** is local SQLite, not Supabase: `import { db } from "@/lib/db"`; new tables go in
+  `SCHEMA` (`app/lib/db/index.ts`). No Supabase / MinIO / S3 in this project.
+- **Parallel routing = 12 slots** (`@header`, `@footer`, `@left`, `@right`, `@center`,
+  `@centerHeader`, `@centerFooter`, `@breadcrumb`, `@promoScreen`, `@notification`, `@faq`,
+  `@footerModal`); `@codeGenerator` is admin-side, outside this count. Do NOT touch
+  `@center`/`@centerHeader`/`@centerFooter` without explicit confirmation.
+- **Shipping a change** is the deploy loop (`POST /api/deploy`, §13) — not a widget upload.
+
+---
+
 ## 13. Deploy mechanics
 
 Only run this when the user has explicitly approved deploy (§5 step 3).
