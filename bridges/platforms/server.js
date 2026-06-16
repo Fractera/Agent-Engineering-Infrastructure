@@ -12,6 +12,7 @@ import { ReadinessMcpServer } from './readiness-mcp-server.js'
 import { ParallelRoutingMcpServer } from './parallel-routing-mcp-server.js'
 import { AppSettingsMcpServer } from './app-settings-mcp-server.js'
 import { PublicConsultantMcpServer } from './public-consultant-mcp-server.js'
+import { ClientActionsMcpServer } from './client-actions-mcp-server.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, '../../app/.env.local') })
@@ -1162,4 +1163,14 @@ new PublicConsultantMcpServer({
   secret: MCP_SECRET,
   dataUrl: process.env.REMOTE_DATA_URL ?? 'http://localhost:3300',
   dataSecret: process.env.DATA_SECRET ?? '',
+}).start()
+
+// ── Client Actions MCP server (singleton, port 3220) ────────────────────────
+// public-tier tools the consultant PROPOSES but the BROWSER executes (navigate/
+// locale/theme/width). Handler returns the deferred {__client_action__} envelope;
+// /api/consultant forwards it to the widget as a clickable action. §8.3, manifest
+// execution:"client". Belongs in the public-process toolset (NOT owner :3210–3218).
+new ClientActionsMcpServer({
+  port: Number(process.env.CLIENT_ACTIONS_MCP_PORT ?? 3220),
+  secret: MCP_SECRET,
 }).start()
