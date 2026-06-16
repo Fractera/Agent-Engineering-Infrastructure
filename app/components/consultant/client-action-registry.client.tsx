@@ -17,7 +17,7 @@ import { isClientActionName, validateActionArgs, type ClientAction } from '@/lib
 
 export type ActionResult = { ok: true; detail: string } | { ok: false; error: string }
 
-export function useClientActionRunner(): (action: ClientAction) => ActionResult {
+export function useClientActionRunner(opts?: { parallelRouting?: boolean }): (action: ClientAction) => ActionResult {
   const router = useRouter()
   const pathname = usePathname()
   const { setTheme } = useTheme()
@@ -58,6 +58,11 @@ export function useClientActionRunner(): (action: ClientAction) => ActionResult 
           return { ok: true, detail: `theme set to ${args.mode}` }
         }
         case 'public_view_set_width': {
+          // Width only has a consumer (MainScrollArea) in the slot layout; in flat mode it is
+          // a no-op, so refuse rather than silently doing nothing (decision "width = B").
+          if (!opts?.parallelRouting) {
+            return { ok: false, error: 'Width adjustment is available when parallel routing is enabled.' }
+          }
           setWidth(String(args.width) as 'narrow' | 'wide')
           return { ok: true, detail: `center width set to ${args.width}` }
         }

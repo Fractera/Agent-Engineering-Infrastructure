@@ -25,6 +25,7 @@ export function ConsultantWidget() {
   const [available, setAvailable] = useState(false)
   const [tier, setTier] = useState<Tier>('public')
   const [keyConfigured, setKeyConfigured] = useState(false)
+  const [parallelRouting, setParallelRouting] = useState(false)
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export function ConsultantWidget() {
         if (!alive || !d) return
         setAvailable(!!d.available)
         setKeyConfigured(!!d.keyConfigured)
+        setParallelRouting(!!d.parallelRouting)
         if (d.tier === 'public' || d.tier === 'user' || d.tier === 'owner') setTier(d.tier)
       })
       .catch(() => {})
@@ -82,7 +84,7 @@ export function ConsultantWidget() {
           </div>
 
           <div className="flex-1 overflow-hidden">
-            <ConsultantChat t={t} keyConfigured={keyConfigured} />
+            <ConsultantChat t={t} keyConfigured={keyConfigured} parallelRouting={parallelRouting} />
           </div>
 
           {/* Neutral persistent sign-in affordance for non-owner tiers (no false "admin").

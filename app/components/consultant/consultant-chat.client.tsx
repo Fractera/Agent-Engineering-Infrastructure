@@ -32,8 +32,8 @@ function signIn() {
   if (typeof window !== 'undefined') window.location.href = registerRedirectUrl(window.location.href, 'user')
 }
 
-export function ConsultantChat({ t, keyConfigured }: { t: ConsultantStrings; keyConfigured: boolean }) {
-  const runAction = useClientActionRunner()
+export function ConsultantChat({ t, keyConfigured, parallelRouting }: { t: ConsultantStrings; keyConfigured: boolean; parallelRouting: boolean }) {
+  const runAction = useClientActionRunner({ parallelRouting })
   const [messages, setMessages] = useState<Msg[]>([])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { resolveTier } from '@/lib/consultant/tier'
 import { runConsultantTurn } from '@/lib/consultant/hermes-ws'
 import { publicKeyConfigured } from '@/lib/consultant/public-key'
+import { getPlatformConfig } from '@/config/platform-config'
 import type { ClientAction } from '@/lib/consultant/client-actions'
 
 // Node runtime: the WS transport (undici WebSocket) + loopback fetch need Node, not edge.
@@ -43,7 +44,11 @@ export async function GET(req: NextRequest) {
   } catch {
     available = false
   }
-  return NextResponse.json({ available, tier, keyConfigured: publicKeyConfigured() })
+  // parallelRouting tells the browser whether width changes apply (the width action only has
+  // a consumer — MainScrollArea — in the slot layout; in flat mode it is a no-op, so the
+  // runner refuses it). See next-step decision "width = B".
+  const parallelRouting = !!getPlatformConfig().parallelRouting
+  return NextResponse.json({ available, tier, keyConfigured: publicKeyConfigured(), parallelRouting })
 }
 
 // POST — one consultant turn.
