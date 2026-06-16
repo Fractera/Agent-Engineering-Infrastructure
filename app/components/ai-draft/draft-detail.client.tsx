@@ -3,7 +3,10 @@
 import { useState } from "react"
 import { Plus, X } from "lucide-react"
 import type { Draft, DraftMode } from "@/lib/ai-draft/draft-format"
+import { TIERS, tierChannel, toolNamePreview } from "@/lib/ai-draft/draft-format"
 import { SegToggle } from "@/components/ui/seg-toggle.client"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { BehaviourToggle } from "./behaviour-toggle.client"
 import { AccordionItem } from "@/components/patterns/accordion-item.client"
 import { DraftSource } from "./draft-source.client"
 import { DraftDanger } from "./draft-danger.client"
@@ -71,6 +74,26 @@ export function DraftDetail({
             onChange={m => onPatch({ mode: m })}
           />
         </div>
+
+        {/* MCP access fields (§8.3) — who may call it + whether it mutates state. These
+            drive the future manifest row and the tool name (§8.1); mcp-only. */}
+        {draft.kind === "mcp" && (
+          <div className="mt-3 flex flex-col gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground/60">Tier</span>
+              <Select value={draft.tier} onValueChange={v => onPatch({ tier: v })}>
+                <SelectTrigger size="sm" className="text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {TIERS.map(t => <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <BehaviourToggle tier={draft.tier} value={draft.mutating} onChange={m => onPatch({ mutating: m })} />
+            </div>
+            <p className="font-mono text-[10px] text-foreground/50">
+              {toolNamePreview(draft.tier, draft.name)} · channel: {tierChannel(draft.tier)}
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-5">

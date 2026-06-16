@@ -2,7 +2,7 @@ import { readdir, readFile, writeFile, mkdir, rm, stat } from "fs/promises"
 import { resolve } from "path"
 import {
   ROOT, SKILLS_DIR, MCP_DIR,
-  type Draft, type DraftKind, type DraftMode,
+  type Draft, type DraftKind, type DraftMode, type DraftTier,
   type RefEntry, type AgentNode, type DraftTree,
   encodeId, decodeId, slugify, pad, render, parse,
 } from "./draft-format"
@@ -48,7 +48,8 @@ function seedInstruction(agent: AgentDef, docName: string): Draft {
   const rel = `${agent.folder}/${docName}`
   return {
     id: encodeId(rel), rel, agent: agent.id, kind: "instruction", mode: "supplement",
-    target: docName, name: docName, declared: false, pending: false, source: "", tasks: [], mtime: "",
+    target: docName, tier: "owner", mutating: true, name: docName, declared: false,
+    pending: false, source: "", tasks: [], mtime: "",
   }
 }
 
@@ -109,6 +110,7 @@ async function nextNumber(relDir: string): Promise<number> {
 export async function createDraft(
   agentId: string, kind: Exclude<DraftKind, "instruction">, name: string,
   mode: DraftMode, target: string | null,
+  tier: DraftTier = "owner", mutating = true,
 ): Promise<Draft | null> {
   const agent = AGENTS.find(a => a.id === agentId)
   if (!agent || !name.trim()) return null
@@ -119,7 +121,8 @@ export async function createDraft(
   const rel = `${relDir}/${pad(number)}-${slug}.md`
   const d: Draft = {
     id: encodeId(rel), rel, agent: agent.id, kind, mode, target: target || null,
-    name: name.trim(), declared: !target, pending: !target, source: "", tasks: [], mtime: "",
+    tier, mutating, name: name.trim(), declared: !target, pending: !target,
+    source: "", tasks: [], mtime: "",
   }
   await mkdir(absFromRel(relDir), { recursive: true })
   await writeFile(absFromRel(rel), render(d), "utf8")
@@ -128,7 +131,7 @@ export async function createDraft(
 
 export async function updateDraft(
   id: string,
-  patch: Partial<Pick<Draft, "name" | "mode" | "source" | "tasks">>,
+  patch: Partial<Pick<Draft, "name" | "mode" | "tier" | "mutating" | "source" | "tasks">>,
 ): Promise<Draft | null> {
   const cur = await readDraft(id)
   if (!cur) return null

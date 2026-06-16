@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Plus, X } from "lucide-react"
-import type { AgentNode, Draft, DraftMode, GroupKind } from "@/lib/ai-draft/draft-format"
+import type { AgentNode, Draft, DraftMode, DraftTier, GroupKind } from "@/lib/ai-draft/draft-format"
 import { DraftTree } from "@/components/ai-draft/draft-tree.client"
 import { DraftDetail } from "@/components/ai-draft/draft-detail.client"
 import { ReferenceDetail } from "@/components/ai-draft/reference-detail.client"
@@ -80,10 +80,10 @@ export function AiDraftApp() {
     setSelected(null)
     await refresh()
   }
-  async function createDraft(agentId: string, kind: GroupKind, name: string, mode: DraftMode, target: string | null): Promise<boolean> {
+  async function createDraft(agentId: string, kind: GroupKind, name: string, mode: DraftMode, target: string | null, tier?: DraftTier, mutating?: boolean): Promise<boolean> {
     const res = await fetch("/api/ai-draft-settings", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ agent: agentId, kind, name, mode, target }),
+      body: JSON.stringify({ agent: agentId, kind, name, mode, target, tier, mutating }),
     })
     if (!res.ok) return false
     const { draft } = await res.json()
@@ -135,7 +135,7 @@ export function AiDraftApp() {
                   agentLabel={agentLabel(adding.agentId)}
                   kind={adding.kind}
                   onClose={() => setAdding(null)}
-                  onCreate={(name, mode) => createDraft(adding.agentId, adding.kind, name, mode, null)}
+                  onCreate={(name, mode, tier, mutating) => createDraft(adding.agentId, adding.kind, name, mode, null, tier, mutating)}
                 />
               ) : selected?.type === "draft" ? (
                 <DraftDetail draft={selected.draft} onPatch={patchDraft} onRemove={removeDraft} />

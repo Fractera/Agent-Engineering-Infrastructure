@@ -59,8 +59,21 @@ file — this draft is a mirror, the original is never edited here.
 - `kind` — `instruction` | `skill` | `mcp`.
 - `mode` — `supplement` | `replace` (how the agent applies the wish — the switch at the top).
 - `target` — the real original this draft refers to, or `null` for a brand-new record.
+- `tier` — **MCP only**: access tier `public` | `user` | `owner` — *who may call the tool* (MCP-REGISTRY §8.3).
+  Defaults to `owner` (strictest — unknown is locked to the owner). This is the **source of truth** for the
+  future manifest row and for the leading word of the tool name (§8.1): `public`/`user`/`owner` is the first
+  significant word (third for slot tools). Skills/instructions ignore it.
+- `mutating` — **MCP only**: `true` = the tool writes state → the agent embeds the §8.2 *confirm-before-mutation*
+  protocol in its description and sets `"mutating":true` in the manifest; `false` = read-only. Defaults to `true`.
 - `name` — short title.
 - `tasks` — the wishes (`kind:"todo"`) and deletion requests (`kind:"delete"` with `outcome`).
+
+### MCP access — the tier is the decision that makes a draft useful
+For an MCP draft the page captures the three things the future `bridges/platforms/mcp-access-manifest.json` row
+needs — `tier`, `mutating`, and `first_party` (always `true` for our drafts) — plus a derived **channel**
+(`public`/`user` → `public-consultant`; `owner` → `owner-hermes`, §8.3 п.1 / §8.4). The form previews the §8.1
+tool-name skeleton (`<tier>_<area>_<action>_<object>`, snake_case). The page never edits the manifest itself —
+it only carries the decision as guidance; the agent that builds the real tool writes the manifest and config.
 
 ### Colour rules (same as `/architecture`)
 - `target === null` → **declared** → **amber name + `(req)`** (a new record, no original).
@@ -79,7 +92,10 @@ file — this draft is a mirror, the original is never edited here.
 1. Read the draft (`AI-DRAFT-SETTINGS/<AGENT>/…`), its `mode` and `tasks`.
 2. For `supplement`, merge the wishes into the real file; for `replace`, rewrite it.
 3. For a `kind:"delete"` task, retire the real original and refactor its uses.
-4. The real files (`CLAUDE.md`, `~/.hermes/SOUL.md`, the skills dir, `config.yaml` MCP, …) are
+4. For an **MCP** draft: name the tool per §8.1 using its `tier` as the leading word, add its row to
+   `bridges/platforms/mcp-access-manifest.json` (`tier` / `mutating` / `first_party:true`), and register it in
+   the channel toolset implied by the tier (§8.3 п.1). A `mutating` tool also carries the §8.2 confirm protocol.
+5. The real files (`CLAUDE.md`, `~/.hermes/SOUL.md`, the skills dir, `config.yaml` MCP, the manifest, …) are
    the targets — **only the agent writes them**, never this page.
 
 Static page — no live polling; it loads on open and refetches after each edit.

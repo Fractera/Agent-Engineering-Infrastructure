@@ -2,25 +2,39 @@
 
 import { useState } from "react"
 import { X, Loader2 } from "lucide-react"
-import type { DraftMode, GroupKind } from "@/lib/ai-draft/draft-format"
+import type { DraftMode, DraftTier, GroupKind } from "@/lib/ai-draft/draft-format"
+import { TIERS, tierChannel, toolNamePreview } from "@/lib/ai-draft/draft-format"
 import { SegToggle } from "@/components/ui/seg-toggle.client"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { BehaviourToggle } from "./behaviour-toggle.client"
+
+// One-line plain-English meaning of each access tier (MCP-REGISTRY §8.3), shown under
+// the selector so the architect picks deliberately.
+const TIER_HINT: Record<DraftTier, string> = {
+  public: "Anyone — an anonymous site visitor. Only their own session/view; no private data, no shared config, no destructive action.",
+  user: "An authenticated end-user — only their own records (row-level scoping by identity).",
+  owner: "The workspace owner/operator — config, global defaults, deploy, delegation, destructive actions.",
+}
 
 // Right-side panel opened by "Add to: <agent> / <SKILLS|MCP>". The TARGET group is
 // decided in the LEFT tree (the active group), shown here read-only. You name a NEW
 // record and pick supplement / replace; it becomes a draft with no original behind it
-// (target null) → orange + (req). To draft over an EXISTING real record instead, select
-// that record in the tree and start a draft from there.
+// (target null) → orange + (req). For an MCP connector you also pick the access tier
+// (§8.3) and whether it mutates state — these become the future manifest row + tool name.
 export function AddDraftForm({
   agentLabel, kind, onClose, onCreate,
 }: {
   agentLabel: string
   kind: GroupKind
   onClose: () => void
-  onCreate: (name: string, mode: DraftMode) => Promise<boolean>
+  onCreate: (name: string, mode: DraftMode, tier: DraftTier, mutating: boolean) => Promise<boolean>
 }) {
   const noun = kind === "mcp" ? "MCP connector" : "skill"
+  const isMcp = kind === "mcp"
   const [name, setName] = useState("")
   const [mode, setMode] = useState<DraftMode>("supplement")
+  const [tier, setTier] = useState<DraftTier>("owner")
+  const [mutating, setMutating] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
 
@@ -28,7 +42,7 @@ export function AddDraftForm({
     if (!name.trim()) { setError("A name is required"); return }
     setSaving(true); setError("")
     try {
-      const ok = await onCreate(name.trim(), mode)
+      const ok = await onCreate(name.trim(), mode, tier, mutating)
       if (!ok) { setError("Could not save — try again"); return }
       setName("")
     } finally {
@@ -65,6 +79,30 @@ export function AddDraftForm({
         />
         {error && <span className="text-[11px] font-medium text-red-600">{error}</span>}
       </div>
+
+      {isMcp && (
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-foreground">Access tier — who may call it</label>
+          <Select value={tier} onValueChange={v => setTier(v as DraftTier)}>
+            <SelectTrigger size="sm" className="w-full text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {TIERS.map(t => <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <p className="text-[11px] leading-relaxed text-foreground/50">{TIER_HINT[tier]}</p>
+          <p className="font-mono text-[11px] text-foreground/70">
+            Tool name (§8.1): <span className="font-semibold text-foreground">{toolNamePreview(tier, name)}</span>
+            <span className="text-foreground/50"> · channel: {tierChannel(tier)}</span>
+          </p>
+        </div>
+      )}
+
+      {isMcp && (
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground/60">Behaviour</span>
+          <BehaviourToggle tier={tier} value={mutating} onChange={setMutating} />
+        </div>
+      )}
 
       <div className="flex items-center gap-2">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground/60">Apply as</span>

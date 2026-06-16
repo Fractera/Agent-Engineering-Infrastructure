@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { updateDraft, deleteDraft } from "@/lib/ai-draft/draft-file"
-import type { Draft, DraftMode } from "@/lib/ai-draft/draft-format"
+import type { Draft, DraftMode, DraftTier } from "@/lib/ai-draft/draft-format"
 
 // Mutate one draft by id (id = encoded file path). PATCH updates it in place —
 // name / mode (supplement|replace) / tasks (wishes + deletion requests) — writing the
@@ -10,9 +10,11 @@ import type { Draft, DraftMode } from "@/lib/ai-draft/draft-format"
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const body = await req.json()
-  const patch: Partial<Pick<Draft, "name" | "mode" | "source" | "tasks">> = {}
+  const patch: Partial<Pick<Draft, "name" | "mode" | "tier" | "mutating" | "source" | "tasks">> = {}
   if (typeof body.name === "string" && body.name.trim()) patch.name = body.name.trim()
   if (body.mode === "supplement" || body.mode === "replace") patch.mode = body.mode as DraftMode
+  if (body.tier === "public" || body.tier === "user" || body.tier === "owner") patch.tier = body.tier as DraftTier
+  if (typeof body.mutating === "boolean") patch.mutating = body.mutating
   if (typeof body.source === "string") patch.source = body.source
   if (Array.isArray(body.tasks)) patch.tasks = body.tasks
 
