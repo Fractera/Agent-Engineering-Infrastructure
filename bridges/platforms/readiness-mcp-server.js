@@ -15,7 +15,7 @@ import { handleMcpHandshake } from './mcp-handshake.js'
 // All probes are cheap and DO NOT wake the agent or spend tokens:
 //   logged_in — `claude auth status` for Claude, cached-credential presence for
 //               the rest (the "accurate outside request").
-//   busy      — reuses each platform bridge's `get_status` over loopback.
+//   busy      — reuses each platform bridge's `owner_coding_platform_get_status` over loopback.
 //   last_*    — newest deployment_records row for that platform (data service).
 // v1 = reliable facts only; context-window % is deferred (CLIs don't expose it).
 //
@@ -29,7 +29,7 @@ function textResult(data) {
 function toolsSchema() {
   return [
     {
-      name: 'check_agents_readiness',
+      name: 'owner_coding_agents_check_readiness',
       description:
         'Snapshot the readiness of ALL 5 coding agents (claude-code, codex, gemini-cli, qwen-code, ' +
         'kimi-code) in ONE call, so you know who to delegate to BEFORE you hand out work. For each ' +
@@ -37,7 +37,7 @@ function toolsSchema() {
         'agent cannot run, the task would go into the void), busy (a task is running right now), and ' +
         'last_worked_at / last_worked_page / last_worked_step (its most recent deployment — a "warm" ' +
         'agent that just worked the same page keeps cache and is cheaper to continue). Probes are cheap ' +
-        'and do NOT wake the agents or spend tokens. Call this before delegate_to_platform.',
+        'and do NOT wake the agents or spend tokens. Call this before owner_delegate_task_to_platform.',
       inputSchema: { type: 'object', properties: {} },
     },
   ]
@@ -66,7 +66,7 @@ function probeLogin(agent, home) {
   return Promise.resolve(credLoggedIn(home, agent.login))
 }
 
-// busy — reuse the platform bridge's own get_status over loopback JSON-RPC.
+// busy — reuse the platform bridge's own owner_coding_platform_get_status over loopback JSON-RPC.
 // Returns null if the probe itself failed (unknown), not false.
 async function probeBusy(port, secret) {
   try {
@@ -75,7 +75,7 @@ async function probeBusy(port, secret) {
     const res = await fetch(`http://127.0.0.1:${port}`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'get_status', arguments: {} } }),
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'owner_coding_platform_get_status', arguments: {} } }),
       signal: AbortSignal.timeout(3000),
     })
     if (!res.ok) return null
@@ -179,7 +179,7 @@ export class ReadinessMcpServer {
   }
 
   async _call(name) {
-    if (name !== 'check_agents_readiness') throw new Error(`Unknown tool: ${name}`)
+    if (name !== 'owner_coding_agents_check_readiness') throw new Error(`Unknown tool: ${name}`)
     const agents = await Promise.all(this.agents.map(a => snapshotAgent(a, this.ctx)))
     return textResult({ agents, checked_at: new Date().toISOString() })
   }

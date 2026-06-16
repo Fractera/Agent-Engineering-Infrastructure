@@ -33,18 +33,18 @@ function clampResult(v) {
 function toolsSchema() {
   return [
     {
-      name: 'record_deployment',
+      name: 'owner_product_loop_record_deployment',
       description:
         'Record one development deployment in the Product Loop table after you deploy. ' +
         'Call this once the delegated agent finished and the change is live, then give ' +
         'the user the page_url to review. The user rates it 1-3 stars later in the admin UI ' +
-        '(default 3). Pass the `tokens` value returned by delegate_to_platform.',
+        '(default 3). Pass the `tokens` value returned by owner_delegate_task_to_platform.',
       inputSchema: {
         type: 'object',
         properties: {
           platform:       { type: 'string',  description: 'Agent that did the work, e.g. "claude-code", "codex".' },
           model:          { type: 'string',  description: 'Model used, e.g. "gpt-5-mini", "claude-opus-4.7".' },
-          tokens:         { type: 'number',  description: 'Total tokens the agent spent (from delegate_to_platform).' },
+          tokens:         { type: 'number',  description: 'Total tokens the agent spent (from owner_delegate_task_to_platform).' },
           page_url:       { type: 'string',  description: 'URL of the page where the changes can be reviewed.' },
           commit_message: { type: 'string',  description: 'Short description of what changed.' },
           commit_hash:    { type: 'string',  description: 'Git commit hash, if any.' },
@@ -59,24 +59,24 @@ function toolsSchema() {
       },
     },
     {
-      name: 'list_deployments',
-      description: 'List the most recent deployment records (newest first) to review past work. Each row includes its `id` — pass that id to update_deployment.',
+      name: 'owner_product_loop_list_deployments',
+      description: 'List the most recent deployment records (newest first) to review past work. Each row includes its `id` — pass that id to owner_product_loop_update_deployment.',
       inputSchema: {
         type: 'object',
         properties: { limit: { type: 'number', description: 'Max rows (default 20, max 100).' } },
       },
     },
     {
-      name: 'update_deployment',
+      name: 'owner_product_loop_update_deployment',
       description:
         'Update an existing deployment record: change its star rating (result, 1-3), move it ' +
-        'to a different project, and/or set the step number. Use the `id` from list_deployments. ' +
+        'to a different project, and/or set the step number. Use the `id` from owner_product_loop_list_deployments. ' +
         'Everything else is written once at record time and is not editable here. Deleting a record ' +
         'is intentionally NOT available via MCP.',
       inputSchema: {
         type: 'object',
         properties: {
-          id:      { type: 'string', description: 'Record id (from list_deployments).' },
+          id:      { type: 'string', description: 'Record id (from owner_product_loop_list_deployments).' },
           result:  { type: 'number', description: 'New star rating 1-3.' },
           project: { type: 'string', description: 'Move the record to this project name.' },
           step:    { type: 'string', description: 'Step number this commit belongs to, e.g. "23".' },
@@ -85,7 +85,7 @@ function toolsSchema() {
       },
     },
     {
-      name: 'describe_record',
+      name: 'owner_product_loop_describe_record_fields',
       description:
         'Return the full field catalog of a deployment record — every field, its type, whether you ' +
         'set it when recording or it is filled automatically, and what it means. Call this to know ' +
@@ -93,11 +93,11 @@ function toolsSchema() {
       inputSchema: { type: 'object', properties: {} },
     },
     {
-      name: 'create_project',
+      name: 'owner_product_loop_create_project',
       description:
         'Add one new project to the project list so deployments can be split by codebase. Idempotent: ' +
         'if a project with this name already exists it is returned, not duplicated. Use the project ' +
-        "name as the `project` argument of record_deployment / update_deployment. Deleting a project " +
+        "name as the `project` argument of owner_product_loop_record_deployment / owner_product_loop_update_deployment. Deleting a project " +
         'is intentionally NOT available via MCP — that is human-only in the admin UI.',
       inputSchema: {
         type: 'object',
@@ -106,7 +106,7 @@ function toolsSchema() {
       },
     },
     {
-      name: 'list_projects',
+      name: 'owner_product_loop_list_projects',
       description: 'List existing projects (default first, then newest) so you can reuse a name instead of creating a duplicate.',
       inputSchema: { type: 'object', properties: {} },
     },
@@ -114,13 +114,13 @@ function toolsSchema() {
 }
 
 // Full field catalog of one deployment record — surfaced to Hermes via
-// describe_record so it always knows every field that exists, not only the
-// inputs of record_deployment.
+// owner_product_loop_describe_record_fields so it always knows every field that exists, not only the
+// inputs of owner_product_loop_record_deployment.
 const RECORD_FIELDS = [
-  { field: 'id',             type: 'string',  set_by: 'auto',        about: 'Unique record id (returned by record_deployment; use it in update_deployment).' },
-  { field: 'result',         type: 'integer', set_by: 'hermes/user', about: 'Quality rating 1-3 (default 3). The user edits it in the UI; you may set/change it via update_deployment.' },
-  { field: 'project',        type: 'string',  set_by: 'hermes',      about: "Project the record belongs to (default 'default'). Changeable via update_deployment." },
-  { field: 'tokens',         type: 'integer', set_by: 'hermes',      about: 'Total tokens the agent spent (from delegate_to_platform). Default 0.' },
+  { field: 'id',             type: 'string',  set_by: 'auto',        about: 'Unique record id (returned by owner_product_loop_record_deployment; use it in owner_product_loop_update_deployment).' },
+  { field: 'result',         type: 'integer', set_by: 'hermes/user', about: 'Quality rating 1-3 (default 3). The user edits it in the UI; you may set/change it via owner_product_loop_update_deployment.' },
+  { field: 'project',        type: 'string',  set_by: 'hermes',      about: "Project the record belongs to (default 'default'). Changeable via owner_product_loop_update_deployment." },
+  { field: 'tokens',         type: 'integer', set_by: 'hermes',      about: 'Total tokens the agent spent (from owner_delegate_task_to_platform). Default 0.' },
   { field: 'platform',       type: 'string',  set_by: 'hermes',      about: 'Coding agent that did the work (required at record time).' },
   { field: 'model',          type: 'string',  set_by: 'hermes',      about: 'Model used, e.g. gpt-5-mini.' },
   { field: 'page_url',       type: 'string',  set_by: 'hermes',      about: 'URL to review the change (required at record time).' },
@@ -129,7 +129,7 @@ const RECORD_FIELDS = [
   { field: 'duration_ms',    type: 'integer', set_by: 'hermes',      about: 'Build/work duration in milliseconds.' },
   { field: 'commit_hash',    type: 'string',  set_by: 'hermes',      about: 'Git commit hash, if any.' },
   { field: 'branch',         type: 'string',  set_by: 'hermes',      about: 'Git branch, if any.' },
-  { field: 'step',           type: 'string',  set_by: 'hermes',      about: 'Step number this commit belongs to, e.g. "23". Changeable via update_deployment.' },
+  { field: 'step',           type: 'string',  set_by: 'hermes',      about: 'Step number this commit belongs to, e.g. "23". Changeable via owner_product_loop_update_deployment.' },
   { field: 'author',         type: 'string',  set_by: 'hermes',      about: "Display author (default 'Hermes')." },
   { field: 'created_at',     type: 'string',  set_by: 'auto',        about: 'UTC timestamp the record was created.' },
   { field: 'created_by',     type: 'string',  set_by: 'auto',        about: "Always 'hermes@agent' (records come from you)." },
@@ -311,12 +311,12 @@ export class DeploymentsMcpServer {
 
   async _call(name, args) {
     switch (name) {
-      case 'record_deployment': return textResult(await recordDeployment(args))
-      case 'list_deployments':  return textResult(await listDeployments(args))
-      case 'update_deployment': return textResult(await updateDeployment(args))
-      case 'describe_record':   return textResult(describeRecord())
-      case 'create_project':    return textResult(await createProject(args))
-      case 'list_projects':     return textResult(await listProjects())
+      case 'owner_product_loop_record_deployment': return textResult(await recordDeployment(args))
+      case 'owner_product_loop_list_deployments':  return textResult(await listDeployments(args))
+      case 'owner_product_loop_update_deployment': return textResult(await updateDeployment(args))
+      case 'owner_product_loop_describe_record_fields':   return textResult(describeRecord())
+      case 'owner_product_loop_create_project':    return textResult(await createProject(args))
+      case 'owner_product_loop_list_projects':     return textResult(await listProjects())
       default: throw new Error(`Unknown tool: ${name}`)
     }
   }

@@ -42,7 +42,7 @@ function isSet(entry, cur) {
 function toolsSchema() {
   return [
     {
-      name: 'list_app_settings_text_fields',
+      name: 'owner_app_settings_list_text_fields',
       description:
         "Enumerate ALL of the app's text settings (App Settings — branding/SEO/PWA), grouped by " +
         'section. For each field: path, label, role (what it does and why it matters), kind, the ' +
@@ -52,7 +52,7 @@ function toolsSchema() {
       inputSchema: { type: 'object', properties: {} },
     },
     {
-      name: 'get_unfilled_app_text_settings',
+      name: 'owner_app_settings_list_unfilled_fields',
       description:
         'List only the TEXT settings the owner has NOT filled yet (still empty or the shipped ' +
         'default), each with its role and why it matters — so you can prompt the owner to complete ' +
@@ -60,10 +60,10 @@ function toolsSchema() {
       inputSchema: { type: 'object', properties: {} },
     },
     {
-      name: 'set_app_settings_text_value',
+      name: 'owner_app_settings_set_text_value',
       description:
         'Set ONE app text setting by its path (e.g. name, description, url, seo.titleTemplate). ' +
-        'Use list_app_settings_text_fields to discover valid paths. choice fields must be one of ' +
+        'Use owner_app_settings_list_text_fields to discover valid paths. choice fields must be one of ' +
         'their options; flag fields take true/false; number fields take a number. IMAGE fields are ' +
         'rejected — tell the owner to upload images via the control panel. Persists to the app ' +
         "config; applies on the app's next load.",
@@ -128,7 +128,7 @@ export class AppSettingsMcpServer {
   _call(name, args) {
     const cfg = this._load()
 
-    if (name === 'list_app_settings_text_fields') {
+    if (name === 'owner_app_settings_list_text_fields') {
       const sections = {}
       for (const e of APP_SETTINGS_CATALOG) {
         const cur = getAt(cfg, e.path)
@@ -145,19 +145,19 @@ export class AppSettingsMcpServer {
       })
     }
 
-    if (name === 'get_unfilled_app_text_settings') {
+    if (name === 'owner_app_settings_list_unfilled_fields') {
       const unfilled = APP_SETTINGS_CATALOG
         .filter((e) => e.kind === 'text' && !isSet(e, getAt(cfg, e.path)))
         .map((e) => ({ path: e.path, label: e.label, section: e.section, role: e.role }))
       return textResult({ count: unfilled.length, unfilled, image_fields_note: IMAGE_UPLOAD_NOTE })
     }
 
-    if (name === 'set_app_settings_text_value') {
+    if (name === 'owner_app_settings_set_text_value') {
       const { path, value } = args
       if (typeof path !== 'string' || !path) throw new Error("'path' is required")
       if (IMAGE_PATHS.has(path)) throw new Error(`'${path}' is an image. ${IMAGE_UPLOAD_NOTE}`)
       const e = BY_PATH.get(path)
-      if (!e) throw new Error(`Unknown setting '${path}'. Call list_app_settings_text_fields for valid paths.`)
+      if (!e) throw new Error(`Unknown setting '${path}'. Call owner_app_settings_list_text_fields for valid paths.`)
       let v = value
       if (e.kind === 'number') { v = Number(value); if (Number.isNaN(v)) throw new Error(`'${path}' expects a number`) }
       else if (e.kind === 'flag') { v = value === true || value === 'true' }

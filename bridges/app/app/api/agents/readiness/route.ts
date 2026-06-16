@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
         jsonrpc: "2.0",
         id: 1,
         method: "tools/call",
-        params: { name: "check_agents_readiness", arguments: {} },
+        params: { name: "owner_coding_agents_check_readiness", arguments: {} },
       }),
       signal: AbortSignal.timeout(8000),
     });

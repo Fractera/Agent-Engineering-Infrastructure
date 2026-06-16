@@ -1,8 +1,8 @@
 """Fractera AI Platforms plugin for Hermes.
 
 Provides high-level delegation tools for AI coding platforms:
-  delegate_to_platform  — send prompt to specific platform, wait for result
-  delegate_to_best      — auto-select best platform and delegate
+  owner_delegate_task_to_platform  — send prompt to specific platform, wait for result
+  owner_delegate_task_to_best_platform      — auto-select best platform and delegate
 
 Platform MCP ports (ports 3210-3214 served by bridges/platforms/server.js):
   claude-code: 3210  |  codex: 3211  |  gemini-cli: 3212
@@ -182,7 +182,7 @@ def _delegate(platform: str, prompt: str) -> str:
     if not port:
         return json.dumps({"error": f"Unknown platform '{platform}'. Valid: {list(PLATFORM_PORTS)}"})
 
-    start = _mcp(port, "send_prompt", {"prompt": prompt})
+    start = _mcp(port, "owner_coding_platform_send_prompt", {"prompt": prompt})
     task_id = start.get("task_id")
     if not task_id:
         return json.dumps({"error": f"Could not start task on {platform}", "detail": start})
@@ -191,22 +191,22 @@ def _delegate(platform: str, prompt: str) -> str:
 
     for _ in range(_MAX_POLLS):
         time.sleep(_POLL_S)
-        resp = _mcp(port, "get_response", {"task_id": task_id})
+        resp = _mcp(port, "owner_coding_platform_get_response", {"task_id": task_id})
         if resp.get("status") in ("done", "error", "cancelled"):
             return json.dumps({"platform": platform, **resp})
 
-    _mcp(port, "cancel_task", {"task_id": task_id})
+    _mcp(port, "owner_coding_platform_cancel_task", {"task_id": task_id})
     return json.dumps({"platform": platform, "status": "timeout", "task_id": task_id})
 
 
 _DELEGATE_SCHEMA = {
-    "name": "delegate_to_platform",
+    "name": "owner_delegate_task_to_platform",
     "description": (
         "Delegate a coding task to a specific AI platform and wait for the result. "
         "Use this when you want a particular agent (Claude, Codex, Gemini, Qwen, Kimi) "
         "to work on a task. Returns the platform's full response as JSON including "
         "`tokens` (total tokens the agent spent on this task) — pass that value to "
-        "`record_deployment` after you deploy so the deployment log tracks real cost."
+        "`owner_product_loop_record_deployment` after you deploy so the deployment log tracks real cost."
     ),
     "parameters": {
         "type": "object",
@@ -226,13 +226,13 @@ _DELEGATE_SCHEMA = {
 }
 
 _BEST_SCHEMA = {
-    "name": "delegate_to_best",
+    "name": "owner_delegate_task_to_best_platform",
     "description": (
         "Automatically select the most suitable AI platform for a task and delegate to it. "
         "Analyses the prompt and optional criteria to pick between "
         "Claude Code, Codex, Gemini CLI, Qwen Code, and Kimi Code. "
         "Returns JSON including `platform` (the one chosen) and `tokens` (total tokens "
-        "spent) — pass both to `record_deployment` after deploying."
+        "spent) — pass both to `owner_product_loop_record_deployment` after deploying."
     ),
     "parameters": {
         "type": "object",
@@ -253,14 +253,14 @@ _BEST_SCHEMA = {
 
 def register(ctx) -> None:
     ctx.register_tool(
-        name="delegate_to_platform",
+        name="owner_delegate_task_to_platform",
         toolset="fractera-platforms",
         schema=_DELEGATE_SCHEMA,
         handler=lambda args, **kw: _delegate(args["platform"], args["prompt"]),
         emoji="🤝",
     )
     ctx.register_tool(
-        name="delegate_to_best",
+        name="owner_delegate_task_to_best_platform",
         toolset="fractera-platforms",
         schema=_BEST_SCHEMA,
         handler=lambda args, **kw: _delegate(

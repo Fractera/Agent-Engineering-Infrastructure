@@ -238,8 +238,8 @@ Hermes is the orchestration agent that coordinates multi-step work across platfo
 curl -s http://localhost:9119/health
 
 # Hermes tools available via MCP (ports 3210-3214 per platform):
-# delegate_to_platform(platform, prompt)  — specific platform
-# delegate_to_best(prompt, criteria)      — auto-select platform
+# owner_delegate_task_to_platform(platform, prompt)  — specific platform
+# owner_delegate_task_to_best_platform(prompt, criteria)  — auto-select platform
 ```
 
 **`docs/hermes/` — READ-ONLY ZONE. Never write, edit, or delete files here.**

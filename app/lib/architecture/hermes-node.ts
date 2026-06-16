@@ -62,9 +62,10 @@ export const HERMES_NODE: ArchNode = {
               label: "deployments-bridge :3215",
               kind: "mcp",
               description:
-                "Product Loop journal + projects in app.db. Tools: record_deployment, " +
-                "list_deployments, update_deployment, describe_record, create_project, " +
-                "list_projects. No delete by design — history is never lost via MCP.",
+                "Product Loop journal + projects in app.db. Tools: owner_product_loop_record_deployment, " +
+                "owner_product_loop_list_deployments, owner_product_loop_update_deployment, " +
+                "owner_product_loop_describe_record_fields, owner_product_loop_create_project, " +
+                "owner_product_loop_list_projects. No delete by design — history is never lost via MCP.",
             },
             {
               id: "mcp-readiness",
@@ -72,7 +73,7 @@ export const HERMES_NODE: ArchNode = {
               kind: "mcp",
               description:
                 "One snapshot of all five coding agents before delegating: installed, " +
-                "logged_in, busy, last_worked. Tool: check_agents_readiness. Read-only " +
+                "logged_in, busy, last_worked. Tool: owner_coding_agents_check_readiness. Read-only " +
                 "— facts only; the choose-agent skill decides.",
             },
           ],

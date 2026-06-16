@@ -4,11 +4,11 @@ import { handleMcpHandshake } from './mcp-handshake.js'
 
 function toolsSchema(platform) {
   return [
-    { name: 'send_prompt',           description: `Send a prompt to ${platform}`,       inputSchema: { type: 'object', properties: { prompt: { type: 'string' } }, required: ['prompt'] } },
-    { name: 'get_response',          description: 'Poll task result',                    inputSchema: { type: 'object', properties: { task_id: { type: 'string' }, wait_ms: { type: 'number' } }, required: ['task_id'] } },
-    { name: 'cancel_task',           description: 'Cancel a running task',               inputSchema: { type: 'object', properties: { task_id: { type: 'string' } }, required: ['task_id'] } },
-    { name: 'get_status',            description: `${platform} busy status`,             inputSchema: { type: 'object', properties: {} } },
-    { name: 'send_text_to_terminal', description: 'Write text to active PTY stdin',      inputSchema: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'] } },
+    { name: 'owner_coding_platform_send_prompt',           description: `Send a prompt to ${platform}`,       inputSchema: { type: 'object', properties: { prompt: { type: 'string' } }, required: ['prompt'] } },
+    { name: 'owner_coding_platform_get_response',          description: 'Poll task result',                    inputSchema: { type: 'object', properties: { task_id: { type: 'string' }, wait_ms: { type: 'number' } }, required: ['task_id'] } },
+    { name: 'owner_coding_platform_cancel_task',           description: 'Cancel a running task',               inputSchema: { type: 'object', properties: { task_id: { type: 'string' } }, required: ['task_id'] } },
+    { name: 'owner_coding_platform_get_status',            description: `${platform} busy status`,             inputSchema: { type: 'object', properties: {} } },
+    { name: 'owner_coding_platform_send_terminal_text', description: 'Write text to active PTY stdin',      inputSchema: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'] } },
   ]
 }
 
@@ -74,7 +74,7 @@ export class PlatformMcpServer {
 
   async _call(name, args) {
     switch (name) {
-      case 'send_prompt': {
+      case 'owner_coding_platform_send_prompt': {
         if (!args.prompt) throw new Error('prompt required')
         const task_id = randomUUID()
         const task = { status: 'running', text: '', error: null, proc: null, tokens: 0 }
@@ -82,24 +82,24 @@ export class PlatformMcpServer {
         this.runPrompt(args.prompt, task).catch(e => { task.status = 'error'; task.error = e.message })
         return textResult({ task_id })
       }
-      case 'get_response': {
+      case 'owner_coding_platform_get_response': {
         const task = this.tasks.get(args.task_id)
         if (!task) return textResult({ status: 'not_found' })
         if ((args.wait_ms ?? 0) > 0 && task.status === 'running')
           await new Promise(r => setTimeout(r, Math.min(args.wait_ms, 30000)))
         return textResult({ status: task.status, text: task.text, tokens: task.tokens, ...(task.error && { error: task.error }) })
       }
-      case 'cancel_task': {
+      case 'owner_coding_platform_cancel_task': {
         const task = this.tasks.get(args.task_id)
         if (task?.proc) try { task.proc.kill() } catch {}
         if (task) { task.status = 'cancelled'; task.proc = null }
         return textResult({ ok: !!task })
       }
-      case 'get_status': {
+      case 'owner_coding_platform_get_status': {
         const entry = [...this.tasks.entries()].find(([, t]) => t.status === 'running')
         return textResult({ busy: !!entry, current_task: entry?.[0] ?? null })
       }
-      case 'send_text_to_terminal': {
+      case 'owner_coding_platform_send_terminal_text': {
         if (!args.text) throw new Error('text required')
         return textResult({ ok: this.writeToPty(args.text) })
       }

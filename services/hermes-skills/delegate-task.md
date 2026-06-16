@@ -29,12 +29,12 @@ Default: **claude-code** when no preference is clear.
 ## How to delegate
 
 ```
-delegate_to_platform(platform="claude-code", prompt="<task>")
+owner_delegate_task_to_platform(platform="claude-code", prompt="<task>")
 ```
 
 Or auto-select:
 ```
-delegate_to_best(prompt="<task>", criteria="prefer free tier")
+owner_delegate_task_to_best_platform(prompt="<task>", criteria="prefer free tier")
 ```
 
 ## Prompt framing
@@ -60,7 +60,7 @@ Output: Modified file content ready to paste.
 2. If good: apply via terminal tool or file write
 3. If partial: delegate follow-up with corrections
 4. Log verdict in `docs/hermes/feedback-history/` (feedback loop)
-5. **Deploy, then record it.** Once the change is live, call `record_deployment`
+5. **Deploy, then record it.** Once the change is live, call `owner_product_loop_record_deployment`
    with the `platform`, `model`, the `tokens` value the delegation returned, and
    the `page_url` the user can open to review. Then give the user that URL and
    wait for their feedback. See the **record-deployment** skill.

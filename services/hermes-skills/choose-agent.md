@@ -1,13 +1,13 @@
 # choose-agent
 
 Skill for picking WHICH coding agent to delegate a task to. The readiness MCP
-(`check_agents_readiness`) gives you the facts; this skill is the judgement. Keep
+(`owner_coding_agents_check_readiness`) gives you the facts; this skill is the judgement. Keep
 the two separate: facts live in the MCP, the choice lives here, so the policy can
 change without touching the MCP.
 
 ## Always check before delegating
 
-Before every new delegation, call **`check_agents_readiness`** once. It returns a
+Before every new delegation, call **`owner_coding_agents_check_readiness`** once. It returns a
 snapshot of all 5 coding agents in one shot:
 
 ```
