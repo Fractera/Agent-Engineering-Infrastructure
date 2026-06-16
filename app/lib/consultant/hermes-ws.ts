@@ -129,24 +129,43 @@ export function runConsultantTurn(opts: {
       }
     }
 
-    // `payload` here is the event's params.payload — the tool result is payload.result.
+    // `payload` here is the event's params.payload. The tool result Hermes reports is wrapped
+    // and varies in shape (pinned from the live wire 2026-06-16): for an MCP tool it arrives as
+    //   payload.result = { result: "<json envelope string>" }
+    // but can also be a plain string, a direct object, or an MCP content array. findEnvelope
+    // walks these shapes (bounded depth) and returns our {__client_action__|__auth_required__}.
+    function findEnvelope(node: unknown, depth = 0): Record<string, unknown> | null {
+      if (depth > 5 || node == null) return null
+      if (typeof node === 'string') {
+        const o = safeParse(node)
+        return o && (o.__client_action__ === true || o.__auth_required__ === true) ? o : null
+      }
+      if (Array.isArray(node)) {
+        for (const it of node) { const e = findEnvelope(it, depth + 1); if (e) return e }
+        return null
+      }
+      if (typeof node === 'object') {
+        const o = node as Record<string, unknown>
+        if (o.__client_action__ === true || o.__auth_required__ === true) return o
+        // Common wrappers: { result }, MCP { content: [{ text }] }, { text }.
+        for (const k of ['result', 'content', 'text', 'output']) {
+          if (k in o) { const e = findEnvelope(o[k], depth + 1); if (e) return e }
+        }
+      }
+      return null
+    }
+
     function collectAction(payload: Record<string, unknown>) {
-      const result = payload.result
-      // Auth-request signal (R6) — distinct envelope, surfaced as authRequired{kind}.
-      const obj = typeof result === 'string' ? safeParse(result) : (result as Record<string, unknown> | null)
-      if (obj && obj.__auth_required__ === true) {
-        authRequired = { kind: obj.kind === 'personal' ? 'personal' : 'role' }
+      const env = findEnvelope(payload.result)
+      if (!env) return
+      if (env.__auth_required__ === true) {
+        authRequired = { kind: env.kind === 'personal' ? 'personal' : 'role' }
         return
       }
-      const env =
-        typeof result === 'string'
-          ? parseClientActionEnvelope(result)
-          : result && (result as { __client_action__?: unknown }).__client_action__ === true
-            ? { __client_action__: true as const, tool: String((result as { tool?: unknown }).tool ?? ''), args: ((result as { args?: Record<string, unknown> }).args ?? {}) }
-            : null
-      if (!env || !isClientActionName(env.tool)) return
-      const v = validateActionArgs(env.tool, env.args ?? {})
-      if (v.ok) actions.push({ id: `a${++actionSeq}`, tool: env.tool, args: v.args, label: defaultActionLabel(env.tool, v.args) })
+      const tool = String(env.tool ?? '')
+      if (!isClientActionName(tool)) return
+      const v = validateActionArgs(tool, (env.args as Record<string, unknown>) ?? {})
+      if (v.ok) actions.push({ id: `a${++actionSeq}`, tool, args: v.args, label: defaultActionLabel(tool, v.args) })
     }
   })
 }

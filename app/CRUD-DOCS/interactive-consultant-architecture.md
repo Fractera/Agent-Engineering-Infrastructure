@@ -227,43 +227,57 @@ public process (option "a"), not per-request downgrade (option "b").
 
 ---
 
-## 6. The Hermes chat WebSocket contract (pinned from source, NOT guessed)
+## 6. The Hermes chat WebSocket contract (pinned from source AND verified live)
 
-Pinned by reading the Hermes/Nous core on the server (`/usr/local/lib/hermes-agent`):
-`tui_gateway/server.py`, `tui_gateway/ws.py`, `hermes_cli/web_server.py`,
-`hermes_cli/dashboard_auth/ws_tickets.py`. The live `:9119` could not be connected to for a
-black-box capture because its `_SESSION_TOKEN` is random and not in env; the source is the
-authoritative equivalent.
+Pinned by reading the Hermes/Nous core (`tui_gateway/server.py`, `tui_gateway/ws.py`,
+`hermes_cli/web_server.py`, `hermes_cli/dashboard_auth/ws_tickets.py`; the full source also
+lives at `ai-workspace/docs/HERMES/hermes-agent-main`) **and confirmed against a LIVE probe of
+the running public Hermes** (`scripts/ws-probe.sh`). The live check is mandatory, not optional:
+the source told us the event TYPES, but the exact nesting below was only visible on the wire,
+and reading the source alone produced two real bugs (empty replies, dropped actions). **Always
+run a `tools/call` probe against the live agent before trusting the shape.**
 
 - Endpoint: **`@app.websocket("/api/ws")`** → `tui_gateway.ws.handle_ws`. Wire protocol is
   **newline-delimited JSON-RPC** (identical to the Ink stdio transport).
 - Auth (browsers cannot set Authorization on a WS upgrade) — three credential shapes:
-  - `?ticket=<single-use>` — SPA-minted, 30s TTL, consumed against the dashboard-auth ticket
-    store (`POST /api/auth/ws-ticket`).
+  - `?ticket=<single-use>` — SPA-minted, 30s TTL (`POST /api/auth/ws-ticket`).
   - `?internal=<per-process>` — multi-use, process-lifetime, for server-spawned loopback links.
   - `?token=<_SESSION_TOKEN>` — legacy, loopback-only. `_SESSION_TOKEN =
     os.environ["HERMES_DASHBOARD_SESSION_TOKEN"] or secrets.token_urlsafe(32)`. We give the
     public process a KNOWN token via `HERMES_DASHBOARD_SESSION_TOKEN=$HERMES_MCP_SECRET`, so
     `/api/consultant` connects with `?token=`.
-- On connect the server emits `{ "jsonrpc":"2.0", "method":"event", "params":{ "type":
-  "gateway.ready" } }`.
 - Create a session: JSON-RPC `@method("session.create")` → `result.session_id`.
 - Submit a user turn: JSON-RPC `@method("prompt.submit")` with `params:{ session_id, text }`.
-- Streamed events arrive as `{ jsonrpc, method:"event", params:{ type, ... } }`:
-  - `message.start`
-  - `message.delta { text }` — incremental assistant text (accumulate).
-  - `message.complete { text }`
-  - `reasoning.delta`
-  - `tool.start { tool_id, name, args }`
-  - `tool.complete { tool_id, name, args, result }` — `result` is already `json.loads`'d. For
-    our client-action tools this is the `{ __client_action__, tool, args }` envelope; for the
-    auth signal it is `{ __auth_required__, kind }`.
-- `runConsultantTurn` flow: open WS → on `gateway.ready` → if `sessionId` send `prompt.submit`,
-  else `session.create` then `prompt.submit` on the `result.session_id` → accumulate
-  `message.delta` text → on each `tool.complete` run `collectAction` (envelope → validate →
-  ClientAction, or `__auth_required__` → `authRequired{kind}`) → on `message.complete` arm a
-  1.5s quiet timer that resolves the turn. Timeouts: connect 8s, hard cap 45s. Key errors
-  (matching "api key/quota/401/unauthorized/credential/init failed") set `keyError`.
+
+### Event shape — data is nested under `params.payload` (NOT `params`)
+Every streamed event is `{ jsonrpc, method:"event", params:{ type, session_id, payload:{…} } }`.
+Read fields from **`params.payload`**, never `params` directly:
+- `gateway.ready` — emitted on connect (start the turn here).
+- `message.delta` → **`payload.text`** — incremental assistant text (accumulate).
+- `message.complete` → **`payload.text`** — authoritative final text (use as fallback).
+- `reasoning.delta` / `thinking.delta` → `payload.text` — model reasoning; we IGNORE it.
+- `tool.start` → `payload:{ tool_id, name, args }`.
+- `tool.complete` → `payload:{ tool_id, name, args, duration_s, result }`.
+
+### Tool result is DOUBLE-WRAPPED for an MCP tool
+The reported tool name is PREFIXED (`mcp_<server>_<tool>`, e.g.
+`mcp_client_actions_bridge_public_view_set_theme`). And the result is wrapped:
+```
+payload.result = { "result": "{\"__client_action__\":true,\"tool\":\"public_view_set_theme\",\"args\":{\"mode\":\"light\"}}" }
+```
+i.e. `payload.result.result` is a JSON **string** (our MCP tool returns
+`{content:[{type:text,text:"<json>"}]}`; Hermes extracts the text and nests it). To recover our
+client-action / auth envelope you MUST unwrap: `payload.result` may be a plain string, a
+`{ result:"<json>" }` wrapper, a direct object, or an MCP `content[].text` array. The adapter
+`lib/consultant/hermes-ws.ts:findEnvelope` does a bounded recursive unwrap. Reading
+`payload.result` as a string or a flat object (the source-only guess) returns nothing → the
+chat shows text but no action button. **This is the general MCP contract — see MCP-REGISTRY §8.7.**
+
+- `runConsultantTurn` flow: open WS → on `gateway.ready` → `session.create` → `prompt.submit` on
+  `result.session_id` → accumulate `message.delta` `payload.text` → on each `tool.complete` run
+  `collectAction` (→ `findEnvelope` → validate → ClientAction, or `__auth_required__` →
+  `authRequired{kind}`) → on `message.complete` arm a 1.5s quiet timer that resolves the turn.
+  Timeouts: connect 8s, hard cap 45s. Key errors set `keyError`.
 
 ---
 
