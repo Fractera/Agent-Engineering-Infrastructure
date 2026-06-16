@@ -42,6 +42,7 @@
     "public_view_navigate_page": { "tier": "public", "first_party": true, "mutating": true, "execution": "client" },
     "public_view_set_locale": { "tier": "public", "first_party": true, "mutating": true, "execution": "client" },
     "public_view_set_theme": { "tier": "public", "first_party": true, "mutating": true, "execution": "client" },
-    "public_view_set_width": { "tier": "public", "first_party": true, "mutating": true, "execution": "client" }
+    "public_view_set_width": { "tier": "public", "first_party": true, "mutating": true, "execution": "client" },
+    "public_request_authentication": { "tier": "public", "first_party": true, "mutating": false, "execution": "client" }
   }
 }

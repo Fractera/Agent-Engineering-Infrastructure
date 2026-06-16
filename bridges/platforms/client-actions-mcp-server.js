@@ -27,6 +27,11 @@ const CLIENT_ACTIONS = new Set([
   'public_view_set_width',
 ])
 
+// Auth-request signal: NOT executed in the browser like a view action — surfaced by
+// /api/consultant as authRequired{kind}, which the widget renders as the right escalation
+// message + sign-in. The agent PREDETERMINES the kind (R6). Distinct envelope marker.
+const AUTH_TOOL = 'public_request_authentication'
+
 function textResult(data) {
   return { content: [{ type: 'text', text: JSON.stringify(data) }] }
 }
@@ -77,6 +82,23 @@ function toolsSchema() {
         type: 'object',
         properties: { width: { type: 'string', enum: ['narrow', 'wide'], description: 'Center width.' } },
         required: ['width'],
+      },
+    },
+    {
+      name: AUTH_TOOL,
+      description:
+        'Call this when the visitor asks for something you have no tool for because it needs authentication. ' +
+        'Choose kind="personal" when they ask about THEIR OWN data (purchases, profile, subscription, orders) — ' +
+        'that needs them signed in to their account so their identity scopes the data. Choose kind="role" when ' +
+        'they ask for a capability/action not registered for their current role (it may exist for a signed-in ' +
+        'user or the administrator). The site shows the right message + a sign-in button; you do not need to ' +
+        'repeat it. Do NOT call this for things you can already do.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          kind: { type: 'string', enum: ['personal', 'role'], description: 'personal = their own data; role = capability not in their role.' },
+        },
+        required: ['kind'],
       },
     },
   ]
@@ -132,6 +154,10 @@ export class ClientActionsMcpServer {
     if (method === 'tools/list') return ok({ tools: toolsSchema() })
     if (method === 'tools/call') {
       const name = params?.name
+      if (name === AUTH_TOOL) {
+        const kind = params?.arguments?.kind === 'personal' ? 'personal' : 'role'
+        return ok(textResult({ __auth_required__: true, kind }))
+      }
       if (!CLIENT_ACTIONS.has(name)) return fail(-32601, `Unknown tool: ${name}`)
       // Deferred execution: the work happens in the browser. Return the envelope
       // /api/consultant forwards to the widget as a clickable action.

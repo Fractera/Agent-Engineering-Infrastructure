@@ -1,10 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { Send, Loader2 } from 'lucide-react'
+import { Send, Loader2, LogIn } from 'lucide-react'
 import { toast } from 'sonner'
+import { registerRedirectUrl } from '@/lib/runtime-urls'
 import { useClientActionRunner } from './client-action-registry.client'
+import { ConsultantKeyBlock } from './consultant-key-block.client'
 import type { ClientAction } from '@/lib/consultant/client-actions'
+import type { ConsultantStrings } from '@/lib/consultant/i18n'
 
 // Chat surface inside the consultant modal. Sends a turn to /api/consultant and renders
 // the assistant text plus any proposed client-actions as buttons; a click runs the
@@ -20,16 +23,22 @@ type Msg = {
   role: 'user' | 'assistant'
   text: string
   actions?: ClientAction[]
-  authRequired?: { reason: string; link: string }
+  authRequired?: { kind: 'personal' | 'role' }
   keyError?: boolean
 }
 
-export function ConsultantChat() {
+function signIn() {
+  if (typeof window !== 'undefined') window.location.href = registerRedirectUrl(window.location.href, 'user')
+}
+
+export function ConsultantChat({ t, keyConfigured }: { t: ConsultantStrings; keyConfigured: boolean }) {
   const runAction = useClientActionRunner()
   const [messages, setMessages] = useState<Msg[]>([])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
+  // E3/R8: show the key block when no key is configured, or after a turn reports a key error.
+  const [needKey, setNeedKey] = useState<null | 'missing' | 'error'>(keyConfigured ? null : 'missing')
 
   async function send() {
     const text = input.trim()
@@ -46,6 +55,7 @@ export function ConsultantChat() {
       if (!res.ok) throw new Error(String(res.status))
       const turn = await res.json()
       if (turn.sessionId) setSessionId(turn.sessionId)
+      if (turn.keyError) setNeedKey('error')
       setMessages((m) => [
         ...m,
         {
@@ -53,15 +63,12 @@ export function ConsultantChat() {
           role: 'assistant',
           text: turn.text ?? '',
           actions: Array.isArray(turn.actions) ? turn.actions : [],
-          authRequired: turn.authRequired,
+          authRequired: turn.authRequired && (turn.authRequired.kind === 'personal' || turn.authRequired.kind === 'role') ? turn.authRequired : undefined,
           keyError: turn.keyError,
         },
       ])
     } catch {
-      setMessages((m) => [
-        ...m,
-        { id: genId(), role: 'assistant', text: 'Sorry — the consultant is unavailable right now.' },
-      ])
+      setMessages((m) => [...m, { id: genId(), role: 'assistant', text: t.unavailable }])
     } finally {
       setSending(false)
     }
@@ -77,9 +84,7 @@ export function ConsultantChat() {
     <div className="flex h-full flex-col">
       <div className="flex-1 space-y-3 overflow-y-auto p-3">
         {messages.length === 0 && (
-          <p className="px-1 py-6 text-center text-xs text-foreground/50">
-            Ask a question or request something — e.g. “what languages does this site support?”
-          </p>
+          <p className="px-1 py-6 text-center text-xs text-foreground/50">{t.empty}</p>
         )}
         {messages.map((m) => (
           <div key={m.id} className={m.role === 'user' ? 'text-right' : 'text-left'}>
@@ -91,9 +96,16 @@ export function ConsultantChat() {
               {m.text}
             </div>
             {m.authRequired && (
-              <div className="mt-1 text-left text-[11px] text-amber-600">
-                {m.authRequired.reason}{' '}
-                <a href={m.authRequired.link} className="font-semibold underline">sign in</a>
+              <div className="mt-1 rounded-md border border-amber-500/40 bg-amber-500/5 px-2.5 py-1.5 text-left">
+                <p className="text-[11px] leading-relaxed text-foreground/70">
+                  {m.authRequired.kind === 'personal' ? t.authPersonal : t.authRole}
+                </p>
+                <button
+                  onClick={signIn}
+                  className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-foreground underline-offset-2 hover:underline"
+                >
+                  <LogIn size={11} /> {t.signIn}
+                </button>
               </div>
             )}
             {!!m.actions?.length && (
@@ -111,6 +123,7 @@ export function ConsultantChat() {
             )}
           </div>
         ))}
+        {needKey && <ConsultantKeyBlock t={t} reason={needKey} onSaved={() => setNeedKey(null)} />}
       </div>
 
       <div className="flex items-center gap-2 border-t border-border p-2">
@@ -119,7 +132,8 @@ export function ConsultantChat() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && send()}
-          placeholder="Ask or request…"
+          placeholder={t.inputPlaceholder}
+          aria-label={t.send}
           className="h-8 flex-1 rounded-md border border-border bg-background px-3 text-xs text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
         />
         <button
