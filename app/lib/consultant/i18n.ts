@@ -16,6 +16,8 @@ export type ConsultantStrings = {
   close: string
   empty: string
   checkingKey: string
+  thinking: string
+  stop: string
   inputPlaceholder: string
   send: string
   unavailable: string
@@ -49,6 +51,8 @@ const STRINGS: Record<ConsultantLang, ConsultantStrings> = {
     close: 'Close',
     empty: 'Ask a question or request something — e.g. “what languages does this site support?”',
     checkingKey: 'Checking access…',
+    thinking: 'Thinking…',
+    stop: 'Stop',
     inputPlaceholder: 'Ask or request…',
     send: 'Send',
     unavailable: 'Sorry — the consultant is unavailable right now. Please try again.',
@@ -77,6 +81,8 @@ const STRINGS: Record<ConsultantLang, ConsultantStrings> = {
     close: 'Cerrar',
     empty: 'Haz una pregunta o pide algo — p. ej. «¿qué idiomas admite este sitio?»',
     checkingKey: 'Comprobando acceso…',
+    thinking: 'Pensando…',
+    stop: 'Detener',
     inputPlaceholder: 'Pregunta o pide…',
     send: 'Enviar',
     unavailable: 'Lo sentimos — el consultor no está disponible ahora. Inténtalo de nuevo.',
@@ -105,6 +111,8 @@ const STRINGS: Record<ConsultantLang, ConsultantStrings> = {
     close: 'Fermer',
     empty: 'Posez une question ou demandez quelque chose — p. ex. « quelles langues ce site prend-il en charge ? »',
     checkingKey: 'Vérification de l’accès…',
+    thinking: 'Réflexion…',
+    stop: 'Arrêter',
     inputPlaceholder: 'Demandez…',
     send: 'Envoyer',
     unavailable: 'Désolé — le consultant est indisponible pour le moment. Réessayez.',
@@ -133,6 +141,8 @@ const STRINGS: Record<ConsultantLang, ConsultantStrings> = {
     close: 'Schließen',
     empty: 'Stellen Sie eine Frage oder bitten Sie um etwas — z. B. „Welche Sprachen unterstützt diese Website?“',
     checkingKey: 'Zugang wird geprüft…',
+    thinking: 'Denkt nach…',
+    stop: 'Stopp',
     inputPlaceholder: 'Fragen oder anfordern…',
     send: 'Senden',
     unavailable: 'Entschuldigung — der Berater ist derzeit nicht verfügbar. Bitte erneut versuchen.',
@@ -161,6 +171,8 @@ const STRINGS: Record<ConsultantLang, ConsultantStrings> = {
     close: 'Chiudi',
     empty: 'Fai una domanda o richiedi qualcosa — es. «quali lingue supporta questo sito?»',
     checkingKey: 'Verifica dell’accesso…',
+    thinking: 'Sto pensando…',
+    stop: 'Ferma',
     inputPlaceholder: 'Chiedi o richiedi…',
     send: 'Invia',
     unavailable: 'Spiacenti — il consulente non è disponibile al momento. Riprova.',
@@ -189,6 +201,8 @@ const STRINGS: Record<ConsultantLang, ConsultantStrings> = {
     close: 'Закрыть',
     empty: 'Задайте вопрос или попросите что-нибудь — например, «на каких языках работает этот сайт?»',
     checkingKey: 'Проверяем доступ…',
+    thinking: 'Думаю…',
+    stop: 'Остановить',
     inputPlaceholder: 'Спросите или попросите…',
     send: 'Отправить',
     unavailable: 'Извините — консультант сейчас недоступен. Попробуйте ещё раз.',

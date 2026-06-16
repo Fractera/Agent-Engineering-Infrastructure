@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Send, Loader2, LogIn } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Send, Loader2, LogIn, Square } from 'lucide-react'
 import { toast } from 'sonner'
 import { registerRedirectUrl } from '@/lib/runtime-urls'
+import { Shimmer } from '@/components/ai-elements/shimmer.client'
 import { useClientActionRunner } from './client-action-registry.client'
 import { ConsultantKeyBlock } from './consultant-key-block.client'
 import type { ClientAction } from '@/lib/consultant/client-actions'
@@ -57,17 +58,28 @@ export function ConsultantChat({ t, keyConfigured }: { t: ConsultantStrings; key
     return () => { alive = false }
   }, [])
 
+  const abortRef = useRef<AbortController | null>(null)
+
+  // Stop the in-flight turn (the send button becomes a square while sending; pressing it
+  // again aborts). No assistant bubble is added on a user-initiated abort.
+  function stop() {
+    abortRef.current?.abort()
+  }
+
   async function send() {
     const text = input.trim()
     if (!text || sending) return
     setInput('')
     setMessages((m) => [...m, { id: genId(), role: 'user', text }])
     setSending(true)
+    const controller = new AbortController()
+    abortRef.current = controller
     try {
       const res = await fetch('/api/consultant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, sessionId }),
+        signal: controller.signal,
       })
       if (!res.ok) throw new Error(String(res.status))
       const turn = await res.json()
@@ -84,9 +96,13 @@ export function ConsultantChat({ t, keyConfigured }: { t: ConsultantStrings; key
           keyError: turn.keyError,
         },
       ])
-    } catch {
-      setMessages((m) => [...m, { id: genId(), role: 'assistant', text: t.unavailable }])
+    } catch (e) {
+      // User-initiated abort is silent; any other failure shows the unavailable notice.
+      if (!(e instanceof DOMException && e.name === 'AbortError')) {
+        setMessages((m) => [...m, { id: genId(), role: 'assistant', text: t.unavailable }])
+      }
     } finally {
+      abortRef.current = null
       setSending(false)
     }
   }
@@ -151,6 +167,12 @@ export function ConsultantChat({ t, keyConfigured }: { t: ConsultantStrings; key
             )}
           </div>
         ))}
+        {/* ai-elements Shimmer as the in-flight indicator in the chat feed. */}
+        {sending && (
+          <div className="text-left">
+            <Shimmer className="text-xs">{t.thinking}</Shimmer>
+          </div>
+        )}
         {needKey && <ConsultantKeyBlock t={t} reason={needKey} onSaved={() => setNeedKey(null)} />}
       </div>
 
@@ -164,12 +186,15 @@ export function ConsultantChat({ t, keyConfigured }: { t: ConsultantStrings; key
           aria-label={t.send}
           className="h-8 flex-1 rounded-md border border-border bg-background px-3 text-xs text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
         />
+        {/* While sending the button is a STOP square (press again to abort); otherwise Send. */}
         <button
-          onClick={send}
-          disabled={sending || !input.trim()}
+          onClick={sending ? stop : send}
+          disabled={!sending && !input.trim()}
+          aria-label={sending ? t.stop : t.send}
+          title={sending ? t.stop : t.send}
           className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-foreground text-background transition-opacity hover:opacity-90 disabled:opacity-40"
         >
-          {sending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+          {sending ? <Square size={12} className="fill-current" /> : <Send size={14} />}
         </button>
       </div>
     </div>
