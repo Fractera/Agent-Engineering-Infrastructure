@@ -333,6 +333,39 @@ source:
 
 ---
 
+## 8a. Capability declaration — the agent's map of what THIS project can do
+
+The model (gpt-5-mini) calls tools non-deterministically: left to "remember" the right tool it
+sometimes acts and sometimes goes silent (observed: a "show my orders" request that returned an
+empty turn). The fix is not a better prompt alone — it is a **curated capability declaration
+that is part of the agent's identity and loaded into context by default on every turn** (NOT an
+on-demand discovery tool, which would suffer the same variability). See MCP-REGISTRY §8.8 for
+the cross-MCP standard.
+
+- **Two files per project** under `ai-workspace/app/AGENT-CAPABILITIES/`:
+  - `public.md` — the **public** tier: theme / language / width / navigation / list pages (the
+    client actions), each row `capability · tier · what happens · tool/action · sign-in`.
+  - `authenticated.md` — what unlocks after sign-in, split by tier: **user** (the signed-in
+    user's OWN data — orders / invoices / history / profile, row-scoped by identity; declared
+    even before the `user_*` tools exist, so the consultant can offer sign-in) and **owner/admin**
+    (config / global defaults / creation — via owner-Hermes; the public consultant never runs
+    these, it only recognises them to offer sign-in).
+- **Integration:** the content of both files is concatenated INTO the public process's SOUL
+  (`bootstrap.sh:rebuild_public_soul`), so the agent sees the map every message. The architect
+  edits the declarations (via the AI Draft Settings page); editing them regenerates the SOUL.
+- **Invariant:** **without these documents the agent must NOT serve data or invent capabilities.**
+  For anything not declared it says plainly "the site doesn't offer that"; for a user/owner
+  request it calls `public_request_authentication` (kind personal/role) → sign-in. This is the
+  same `__auth_required__` path as §7.
+- **The triple it ties together:** capability (what we can do) × tier §3/§8.3 (who may) ×
+  client-action §8 / `user_*` tool (how we do it).
+- **Public mirror:** every capability is also published, by tier, on the public documentation
+  page (`fractera-easy-starter` `/documentation`), kept in sync as tools are added (a temporary
+  dev rule). The internal declaration (the agent's identity) and the public doc (for the user)
+  are updated together.
+
+---
+
 ## 9. End-to-end trace of the canonical case
 
 Visitor (anonymous) asks: "what languages does this site support, and can you switch to
