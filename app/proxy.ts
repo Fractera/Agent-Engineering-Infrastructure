@@ -51,6 +51,14 @@ async function handleApi(request: NextRequest, pathname: string): Promise<NextRe
     return NextResponse.next();
   }
 
+  // Public consultant — the floating AI chat widget is meant for ANONYMOUS visitors
+  // (MCP-REGISTRY §8.3, public tier), so the gate-by-cookie above must NOT block it.
+  // The endpoint resolves the tier server-side and routes to the sandboxed public Hermes
+  // (ceiling = user); the key endpoint is set-if-empty for anon / owner-replace. Open here.
+  if (pathname === "/api/consultant" || pathname.startsWith("/api/consultant/")) {
+    return NextResponse.next();
+  }
+
   if (pathname !== "/api/health") {
     if (!shouldBypassAuth()) {
       const agentIdentity = request.headers.get("x-agent-identity");
