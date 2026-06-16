@@ -1,0 +1,42 @@
+{
+  "_doc": "Authoritative, machine-readable access manifest for ALL first-party Fractera L2-MCP tools. The future enforcement hook (Hermes plugin, reads this) is the security boundary; tool NAMES are only labels. Per tool: tier (public<=user<=owner, MCP-REGISTRY 8.3), first_party (true for everything here), mutating (true => the agent must run the confirm-before-mutation protocol, MCP-REGISTRY 8.2). L1 deploy-MCP is intentionally NOT listed (frozen public contract, 8.1). Keep in sync with MCP-REGISTRY 8.5 when adding/renaming a tool.",
+  "version": 1,
+  "updated": "2026-06-16",
+  "servers": {
+    "claude-bridge": { "port": 3210, "first_party": true, "max_tier": "owner" },
+    "codex-bridge": { "port": 3211, "first_party": true, "max_tier": "owner" },
+    "gemini-bridge": { "port": 3212, "first_party": true, "max_tier": "owner" },
+    "qwen-bridge": { "port": 3213, "first_party": true, "max_tier": "owner" },
+    "kimi-bridge": { "port": 3214, "first_party": true, "max_tier": "owner" },
+    "deployments-bridge": { "port": 3215, "first_party": true, "max_tier": "owner" },
+    "readiness-bridge": { "port": 3216, "first_party": true, "max_tier": "owner" },
+    "parallel-routing-bridge": { "port": 3217, "first_party": true, "max_tier": "owner" },
+    "app-settings-bridge": { "port": 3218, "first_party": true, "max_tier": "owner" },
+    "public-consultant-bridge": { "port": 3219, "first_party": true, "max_tier": "public" }
+  },
+  "tools": {
+    "owner_coding_platform_send_prompt": { "tier": "owner", "first_party": true, "mutating": true },
+    "owner_coding_platform_get_response": { "tier": "owner", "first_party": true, "mutating": false },
+    "owner_coding_platform_cancel_task": { "tier": "owner", "first_party": true, "mutating": true },
+    "owner_coding_platform_get_status": { "tier": "owner", "first_party": true, "mutating": false },
+    "owner_coding_platform_send_terminal_text": { "tier": "owner", "first_party": true, "mutating": true },
+    "owner_product_loop_record_deployment": { "tier": "owner", "first_party": true, "mutating": true },
+    "owner_product_loop_list_deployments": { "tier": "owner", "first_party": true, "mutating": false },
+    "owner_product_loop_update_deployment": { "tier": "owner", "first_party": true, "mutating": true },
+    "owner_product_loop_describe_record_fields": { "tier": "owner", "first_party": true, "mutating": false },
+    "owner_product_loop_create_project": { "tier": "owner", "first_party": true, "mutating": true },
+    "owner_product_loop_list_projects": { "tier": "owner", "first_party": true, "mutating": false },
+    "owner_coding_agents_check_readiness": { "tier": "owner", "first_party": true, "mutating": false },
+    "owner_delegate_task_to_platform": { "tier": "owner", "first_party": true, "mutating": true },
+    "owner_delegate_task_to_best_platform": { "tier": "owner", "first_party": true, "mutating": true },
+    "owner_parallel_routing_get_state": { "tier": "owner", "first_party": true, "mutating": false },
+    "owner_parallel_routing_toggle_slot": { "tier": "owner", "first_party": true, "mutating": true },
+    "footer_slot_owner_get_toolbar_state": { "tier": "owner", "first_party": true, "mutating": false },
+    "footer_slot_owner_set_theme_mode": { "tier": "owner", "first_party": true, "mutating": true },
+    "footer_slot_owner_set_center_width": { "tier": "owner", "first_party": true, "mutating": true },
+    "owner_app_settings_list_text_fields": { "tier": "owner", "first_party": true, "mutating": false },
+    "owner_app_settings_list_unfilled_fields": { "tier": "owner", "first_party": true, "mutating": false },
+    "owner_app_settings_set_text_value": { "tier": "owner", "first_party": true, "mutating": true },
+    "public_footer_list_pages": { "tier": "public", "first_party": true, "mutating": false }
+  }
+}

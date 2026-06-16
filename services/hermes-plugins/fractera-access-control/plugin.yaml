@@ -1,0 +1,5 @@
+name: fractera-access-control
+version: "1.0.0"
+description: "Runtime access-tier enforcement for Fractera L2-MCP tools (reads mcp-access-manifest.json)"
+author: "Fractera"
+kind: standalone
