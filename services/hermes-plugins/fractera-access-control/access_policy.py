@@ -28,8 +28,30 @@ def load_manifest(path: str | None = None) -> dict:
         return {}
 
 
+def canonical_tool_name(manifest: dict, tool_name: str) -> str:
+    """Map the name the agent calls back to a manifest key.
+
+    Hermes exposes MCP tools to the model PREFIXED as ``mcp_<server>_<tool>`` (e.g.
+    ``mcp_client_actions_bridge_public_view_set_theme``), but the manifest is keyed by the
+    bare tool name (``public_view_set_theme``). So an exact lookup misses every MCP tool and
+    the strict default (owner-only) would wrongly block them for a sub-owner process. Resolve
+    by exact match first, else the manifest key that the called name ends with (``_<key>``),
+    longest key wins to avoid a short key shadowing a longer one. Non-MCP core tools (clarify,
+    execute_code, …) and genuine unknowns match nothing → stay owner-only by default.
+    """
+    tools = manifest.get("tools") or {}
+    if tool_name in tools:
+        return tool_name
+    best = ""
+    for key in tools:
+        if tool_name == key or tool_name.endswith("_" + key):
+            if len(key) > len(best):
+                best = key
+    return best or tool_name
+
+
 def _tool_entry(manifest: dict, tool_name: str) -> dict | None:
-    return (manifest.get("tools") or {}).get(tool_name)
+    return (manifest.get("tools") or {}).get(canonical_tool_name(manifest, tool_name))
 
 
 def required_tier(manifest: dict, tool_name: str) -> str:
