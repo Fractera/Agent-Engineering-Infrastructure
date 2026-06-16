@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Send, Loader2, LogIn } from 'lucide-react'
 import { toast } from 'sonner'
 import { registerRedirectUrl } from '@/lib/runtime-urls'
@@ -38,7 +38,24 @@ export function ConsultantChat({ t, keyConfigured }: { t: ConsultantStrings; key
   const [sending, setSending] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
   // E3/R8: show the key block when no key is configured, or after a turn reports a key error.
-  const [needKey, setNeedKey] = useState<null | 'missing' | 'error'>(keyConfigured ? null : 'missing')
+  const [needKey, setNeedKey] = useState<null | 'missing' | 'error'>(null)
+  // The key is saved on the SERVER (public Hermes pool), not per browser session — so on
+  // every open we re-check the server with a small loader instead of trusting a stale prop
+  // or asking again. Seeded from keyConfigured for an instant first paint, then confirmed.
+  const [checkingKey, setCheckingKey] = useState(!keyConfigured)
+
+  useEffect(() => {
+    let alive = true
+    fetch('/api/consultant/key')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!alive) return
+        if (d && typeof d.configured === 'boolean') setNeedKey(d.configured ? null : 'missing')
+      })
+      .catch(() => {})
+      .finally(() => { if (alive) setCheckingKey(false) })
+    return () => { alive = false }
+  }, [])
 
   async function send() {
     const text = input.trim()
@@ -80,10 +97,21 @@ export function ConsultantChat({ t, keyConfigured }: { t: ConsultantStrings; key
     else toast.error(r.error)
   }
 
+  // While we confirm the key with the server, show a small loader instead of the key form,
+  // so a saved key never re-prompts on reopen.
+  if (checkingKey) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-2 text-foreground/50">
+        <Loader2 size={18} className="animate-spin" />
+        <span className="text-xs">{t.checkingKey}</span>
+      </div>
+    )
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex-1 space-y-3 overflow-y-auto p-3">
-        {messages.length === 0 && (
+        {messages.length === 0 && !needKey && (
           <p className="px-1 py-6 text-center text-xs text-foreground/50">{t.empty}</p>
         )}
         {messages.map((m) => (

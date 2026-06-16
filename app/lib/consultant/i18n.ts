@@ -15,6 +15,7 @@ export type ConsultantStrings = {
   tierOwner: string
   close: string
   empty: string
+  checkingKey: string
   inputPlaceholder: string
   send: string
   unavailable: string
@@ -47,6 +48,7 @@ const STRINGS: Record<ConsultantLang, ConsultantStrings> = {
     tierOwner: 'Owner',
     close: 'Close',
     empty: 'Ask a question or request something — e.g. “what languages does this site support?”',
+    checkingKey: 'Checking access…',
     inputPlaceholder: 'Ask or request…',
     send: 'Send',
     unavailable: 'Sorry — the consultant is unavailable right now. Please try again.',
@@ -74,6 +76,7 @@ const STRINGS: Record<ConsultantLang, ConsultantStrings> = {
     tierOwner: 'Propietario',
     close: 'Cerrar',
     empty: 'Haz una pregunta o pide algo — p. ej. «¿qué idiomas admite este sitio?»',
+    checkingKey: 'Comprobando acceso…',
     inputPlaceholder: 'Pregunta o pide…',
     send: 'Enviar',
     unavailable: 'Lo sentimos — el consultor no está disponible ahora. Inténtalo de nuevo.',
@@ -101,6 +104,7 @@ const STRINGS: Record<ConsultantLang, ConsultantStrings> = {
     tierOwner: 'Propriétaire',
     close: 'Fermer',
     empty: 'Posez une question ou demandez quelque chose — p. ex. « quelles langues ce site prend-il en charge ? »',
+    checkingKey: 'Vérification de l’accès…',
     inputPlaceholder: 'Demandez…',
     send: 'Envoyer',
     unavailable: 'Désolé — le consultant est indisponible pour le moment. Réessayez.',
@@ -128,6 +132,7 @@ const STRINGS: Record<ConsultantLang, ConsultantStrings> = {
     tierOwner: 'Inhaber',
     close: 'Schließen',
     empty: 'Stellen Sie eine Frage oder bitten Sie um etwas — z. B. „Welche Sprachen unterstützt diese Website?“',
+    checkingKey: 'Zugang wird geprüft…',
     inputPlaceholder: 'Fragen oder anfordern…',
     send: 'Senden',
     unavailable: 'Entschuldigung — der Berater ist derzeit nicht verfügbar. Bitte erneut versuchen.',
@@ -155,6 +160,7 @@ const STRINGS: Record<ConsultantLang, ConsultantStrings> = {
     tierOwner: 'Proprietario',
     close: 'Chiudi',
     empty: 'Fai una domanda o richiedi qualcosa — es. «quali lingue supporta questo sito?»',
+    checkingKey: 'Verifica dell’accesso…',
     inputPlaceholder: 'Chiedi o richiedi…',
     send: 'Invia',
     unavailable: 'Spiacenti — il consulente non è disponibile al momento. Riprova.',
@@ -182,6 +188,7 @@ const STRINGS: Record<ConsultantLang, ConsultantStrings> = {
     tierOwner: 'Владелец',
     close: 'Закрыть',
     empty: 'Задайте вопрос или попросите что-нибудь — например, «на каких языках работает этот сайт?»',
+    checkingKey: 'Проверяем доступ…',
     inputPlaceholder: 'Спросите или попросите…',
     send: 'Отправить',
     unavailable: 'Извините — консультант сейчас недоступен. Попробуйте ещё раз.',
