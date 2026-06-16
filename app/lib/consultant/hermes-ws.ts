@@ -105,11 +105,18 @@ export function runConsultantTurn(opts: {
     function handle(msg: Rpc) {
       if (msg.method === 'event' && msg.params) {
         const type = msg.params.type as string
+        // Event payloads are nested under params.payload (pinned from the live wire,
+        // 2026-06-16): { method:"event", params:{ type, session_id, payload:{...} } }.
+        const payload = (msg.params.payload ?? {}) as Record<string, unknown>
         if (type === 'gateway.ready') return startTurn()
-        if (type === 'message.delta' && typeof msg.params.text === 'string') { text += msg.params.text; return }
-        if (type === 'message.complete') { armQuiet(); return }
-        if (type === 'error') { if (looksLikeKeyError(msg.params)) keyError = true; return }
-        if (type === 'tool.complete') { collectAction(msg.params); return }
+        if (type === 'message.delta' && typeof payload.text === 'string') { text += payload.text; return }
+        if (type === 'message.complete') {
+          // Authoritative final text — use it if deltas were missed.
+          if (typeof payload.text === 'string' && payload.text.trim().length > text.trim().length) text = payload.text
+          armQuiet(); return
+        }
+        if (type === 'error') { if (looksLikeKeyError(payload)) keyError = true; return }
+        if (type === 'tool.complete') { collectAction(payload); return }
         return
       }
       if (typeof msg.id !== 'undefined') {
@@ -122,8 +129,9 @@ export function runConsultantTurn(opts: {
       }
     }
 
-    function collectAction(params: Record<string, unknown>) {
-      const result = params.result
+    // `payload` here is the event's params.payload — the tool result is payload.result.
+    function collectAction(payload: Record<string, unknown>) {
+      const result = payload.result
       // Auth-request signal (R6) — distinct envelope, surfaced as authRequired{kind}.
       const obj = typeof result === 'string' ? safeParse(result) : (result as Record<string, unknown> | null)
       if (obj && obj.__auth_required__ === true) {
