@@ -25,6 +25,9 @@ export function LanguagesView({ onBack }: { onBack: () => void }) {
   const [filter, setFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  // "saving" → writing the env; "rebuilding" → the deploy build that statically generates the
+  // new [lang] pages (languages are build-time → applying them = a rebuild, not dynamic).
+  const [phase, setPhase] = useState<"idle" | "saving" | "rebuilding">("idle");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -71,8 +74,23 @@ export function LanguagesView({ onBack }: { onBack: () => void }) {
     });
   };
 
+  // Poll the deploy WAL until the rebuild reaches a terminal state (or we give up waiting).
+  const pollDeploy = async (jobId: string): Promise<void> => {
+    for (let i = 0; i < 90; i++) {
+      await new Promise((r) => setTimeout(r, 5000));
+      try {
+        const r = await fetch(`/api/deploy/status?jobId=${jobId}`, { credentials: "include" });
+        const d = await r.json();
+        if (d.status === "COMPLETED") { toast.success("Languages applied — the site was rebuilt"); return; }
+        if (d.status === "FAILED" || d.status === "HEALTH_FAILED") { toast.error(`Rebuild ${d.status}`); return; }
+      } catch { /* keep polling */ }
+    }
+    toast.message("Rebuild is taking longer than expected — check the deploy status");
+  };
+
   const save = async () => {
     setSaving(true);
+    setPhase("saving");
     try {
       const languages = [...selected];
       const res = await fetch("/api/config/languages", {
@@ -85,11 +103,26 @@ export function LanguagesView({ onBack }: { onBack: () => void }) {
       if (!res.ok || !data.ok) throw new Error(data.error ?? "Save failed");
       setServerSelected(new Set(selected));
       setServerDefault(defaultLang);
-      toast.success("Saved — rebuild the app to apply the new language set");
+
+      // Languages are build-time → apply by rebuilding (statically generates the new [lang]
+      // pages). Trigger the existing deploy loop and follow it to completion.
+      setPhase("rebuilding");
+      toast.message("Saved — rebuilding to apply the languages (2–4 min)…");
+      const dep = await fetch("/api/deploy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description: `languages: ${languages.join(",")} (default ${defaultLang})` }),
+        credentials: "include",
+      });
+      if (dep.status === 409) { toast.error("A build is already in progress — try again shortly"); return; }
+      const depData = await dep.json();
+      if (!dep.ok || !depData.jobId) throw new Error(depData.error ?? "Could not start the rebuild");
+      await pollDeploy(depData.jobId);
     } catch (e) {
       toast.error(String(e));
     } finally {
       setSaving(false);
+      setPhase("idle");
     }
   };
 
@@ -110,8 +143,9 @@ export function LanguagesView({ onBack }: { onBack: () => void }) {
       ) : (
         <div className="flex-1 min-h-0 flex flex-col px-4 py-3 gap-3">
           <p className="text-[10px] text-muted-foreground leading-relaxed">
-            Languages the app is built with. The set is build-time — saving needs an app rebuild to apply.
-            The footer language switcher appears once more than one language is built (and its toggle in Footer settings is on).
+            Languages the app is built with. The set is build-time — <strong>saving applies it by rebuilding the
+            app (2–4 min)</strong>, which statically generates the new language pages. The footer language switcher
+            appears once more than one language is built (and its toggle in Footer settings is on).
           </p>
 
           <div className="flex flex-col gap-1">
@@ -161,9 +195,17 @@ export function LanguagesView({ onBack }: { onBack: () => void }) {
 
       <div className="px-4 py-2.5 border-t border-border flex items-center gap-3 shrink-0">
         <Button onClick={save} disabled={saving || loading || !dirty}>
-          {saving ? <><Loader2 size={11} className="animate-spin" />Saving…</> : <><Save size={11} />Save languages</>}
+          {phase === "rebuilding" ? (
+            <><Loader2 size={11} className="animate-spin" />Rebuilding…</>
+          ) : phase === "saving" ? (
+            <><Loader2 size={11} className="animate-spin" />Saving…</>
+          ) : (
+            <><Save size={11} />Save &amp; rebuild</>
+          )}
         </Button>
-        <span className="text-[10px] text-muted-foreground">Build-time · rebuild required</span>
+        <span className="text-[10px] text-muted-foreground">
+          {phase === "rebuilding" ? "Rebuilding the app — this takes 2–4 minutes" : "Build-time · saving triggers a rebuild"}
+        </span>
       </div>
     </div>
   );
