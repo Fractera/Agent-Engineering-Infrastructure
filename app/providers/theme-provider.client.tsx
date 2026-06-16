@@ -22,6 +22,9 @@ function applyTheme(mode: ThemeMode) {
 type ThemeContextValue = {
   mode: ThemeMode;
   cycleTheme: () => void;
+  // Set a SPECIFIC mode (not just cycle) — used by the public consultant's client-action
+  // `public_view_set_theme`. Persists to localStorage like cycleTheme, so it sticks.
+  setTheme: (mode: ThemeMode) => void;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -63,8 +66,14 @@ export function ThemeProvider({
     });
   }, []);
 
+  const setTheme = useCallback((next: ThemeMode) => {
+    setMode(next);
+    localStorage.setItem(THEME_KEY, next);
+    applyTheme(next);
+  }, []);
+
   return (
-    <ThemeContext.Provider value={{ mode, cycleTheme }}>
+    <ThemeContext.Provider value={{ mode, cycleTheme, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );

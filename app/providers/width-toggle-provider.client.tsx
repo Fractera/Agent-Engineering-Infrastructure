@@ -10,6 +10,9 @@ import { LAYOUT_CONFIG } from '@/config/ui/layout.config';
 type WidthToggleContextValue = {
   centerMaxWidth: number;
   toggleWidth: () => void;
+  // Set a SPECIFIC width (not just toggle) — used by the public consultant's client-action
+  // `public_view_set_width`.
+  setWidth: (w: "narrow" | "wide") => void;
 };
 
 const WidthToggleContext = createContext<WidthToggleContextValue | null>(null);
@@ -35,8 +38,14 @@ export function WidthToggleProvider({
     );
   }, []);
 
+  const setWidth = useCallback((w: "narrow" | "wide") => {
+    setCenterMaxWidth(
+      w === "wide" ? LAYOUT_CONFIG.CENTER_MAX_W_WIDE : LAYOUT_CONFIG.CENTER_MAX_W_NARROW
+    );
+  }, []);
+
   return (
-    <WidthToggleContext.Provider value={{ centerMaxWidth, toggleWidth }}>
+    <WidthToggleContext.Provider value={{ centerMaxWidth, toggleWidth, setWidth }}>
       {children}
     </WidthToggleContext.Provider>
   );

@@ -19,6 +19,7 @@ import { SUPPORTED_LANGUAGES } from "@/config/translations/translations.config";
 import { resolveLang } from "@/lib/routing/resolve-lang";
 import { getPlatformConfig } from "@/config/platform-config";
 import { ConfigReloadWatcher } from "@/components/platform/config-reload-watcher.client";
+import { ConsultantWidget } from "@/components/consultant/consultant-widget.client";
 
 // The [lang] layout is the REAL frame — matching the 22slots reference, which keeps the root
 // layout flat and puts <html>/<body>, fonts, theme, metadata, JSON-LD, analytics and the layout
@@ -161,6 +162,11 @@ export default async function LangLayout(props: SlotLayoutProps) {
                   <HeaderHeightProvider initialHeight={HEADER_HEIGHT_PX}>
                     <PanelStateProvider>
                       {content}
+                      {/* Public consultant — floating button + modal chat, global on every
+                          page (independent of parallel routing). Runs client-actions via the
+                          runner (needs Theme/Width providers above). Self-hides if the public
+                          Hermes is unreachable. → next-step "Интерактивный консультант". */}
+                      <ConsultantWidget />
                     </PanelStateProvider>
                   </HeaderHeightProvider>
                 </WidthToggleProvider>
