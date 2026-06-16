@@ -11,8 +11,6 @@ import { DeploymentsMcpServer } from './deployments-mcp-server.js'
 import { ReadinessMcpServer } from './readiness-mcp-server.js'
 import { ParallelRoutingMcpServer } from './parallel-routing-mcp-server.js'
 import { AppSettingsMcpServer } from './app-settings-mcp-server.js'
-import { PublicConsultantMcpServer } from './public-consultant-mcp-server.js'
-import { ClientActionsMcpServer } from './client-actions-mcp-server.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, '../../app/.env.local') })
@@ -1151,26 +1149,4 @@ new AppSettingsMcpServer({
   port: Number(process.env.APP_SETTINGS_MCP_PORT ?? 3218),
   secret: MCP_SECRET,
   configPath: process.env.APP_CONFIG_PATH ?? '/opt/fractera/app/APP-CONFIG/app-config.json',
-}).start()
-
-// ── Public Consultant MCP server (singleton, port 3219) ─────────────────────
-// FIRST public-tier MCP: tools safe for an anonymous site visitor, to be wired to
-// the future `public-consultant` chat (left-slot drawer). v1 tool:
-// public_footer_list_pages — read-only list of the public footer pages (via the
-// data service :3300). Per-visitor theme/width are CLIENT-side, not here. §8.3.
-new PublicConsultantMcpServer({
-  port: Number(process.env.PUBLIC_CONSULTANT_MCP_PORT ?? 3219),
-  secret: MCP_SECRET,
-  dataUrl: process.env.REMOTE_DATA_URL ?? 'http://localhost:3300',
-  dataSecret: process.env.DATA_SECRET ?? '',
-}).start()
-
-// ── Client Actions MCP server (singleton, port 3220) ────────────────────────
-// public-tier tools the consultant PROPOSES but the BROWSER executes (navigate/
-// locale/theme/width). Handler returns the deferred {__client_action__} envelope;
-// /api/consultant forwards it to the widget as a clickable action. §8.3, manifest
-// execution:"client". Belongs in the public-process toolset (NOT owner :3210–3218).
-new ClientActionsMcpServer({
-  port: Number(process.env.CLIENT_ACTIONS_MCP_PORT ?? 3220),
-  secret: MCP_SECRET,
 }).start()
