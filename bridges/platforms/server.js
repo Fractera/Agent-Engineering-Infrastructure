@@ -11,6 +11,7 @@ import { DeploymentsMcpServer } from './deployments-mcp-server.js'
 import { ReadinessMcpServer } from './readiness-mcp-server.js'
 import { ParallelRoutingMcpServer } from './parallel-routing-mcp-server.js'
 import { AppSettingsMcpServer } from './app-settings-mcp-server.js'
+import { PublicConsultantMcpServer } from './public-consultant-mcp-server.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, '../../app/.env.local') })
@@ -1149,4 +1150,16 @@ new AppSettingsMcpServer({
   port: Number(process.env.APP_SETTINGS_MCP_PORT ?? 3218),
   secret: MCP_SECRET,
   configPath: process.env.APP_CONFIG_PATH ?? '/opt/fractera/app/APP-CONFIG/app-config.json',
+}).start()
+
+// ── Public Consultant MCP server (singleton, port 3219) ─────────────────────
+// FIRST public-tier MCP: tools safe for an anonymous site visitor, to be wired to
+// the future `public-consultant` chat (left-slot drawer). v1 tool:
+// public_footer_list_pages — read-only list of the public footer pages (via the
+// data service :3300). Per-visitor theme/width are CLIENT-side, not here. §8.3.
+new PublicConsultantMcpServer({
+  port: Number(process.env.PUBLIC_CONSULTANT_MCP_PORT ?? 3219),
+  secret: MCP_SECRET,
+  dataUrl: process.env.REMOTE_DATA_URL ?? 'http://localhost:3300',
+  dataSecret: process.env.DATA_SECRET ?? '',
 }).start()
