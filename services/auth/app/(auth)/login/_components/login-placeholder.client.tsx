@@ -50,6 +50,11 @@ function LoginForm() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [magicLoading, setMagicLoading]   = useState(false);
   const [magicSent, setMagicSent]         = useState(false);
+  // Magic-link has its OWN email field (separate from the password login below).
+  // magicPrompt flips the button label to "Input your email" if it's clicked
+  // while the field is empty.
+  const [magicEmail, setMagicEmail]       = useState("");
+  const [magicPrompt, setMagicPrompt]     = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/methods")
@@ -79,10 +84,11 @@ function LoginForm() {
   }, [requireRole]);
 
   const handleMagicLink = async () => {
-    if (!email) { setError("Enter your email first"); return; }
-    setError(null);
+    // Clicked with no email → prompt for it (button label flips to "Input your email").
+    if (!magicEmail.trim()) { setMagicPrompt(true); return; }
+    setMagicPrompt(false);
     setMagicLoading(true);
-    await signIn("resend", { email, callbackUrl, redirect: false });
+    await signIn("resend", { email: magicEmail.trim(), callbackUrl, redirect: false });
     setMagicLoading(false);
     setMagicSent(true);
   };
@@ -185,18 +191,31 @@ function LoginForm() {
         <>
           {magicSent ? (
             <p className="text-xs text-emerald-600 bg-emerald-500/10 rounded px-3 py-2 leading-relaxed">
-              Check your email — we sent a sign-in link to <strong>{email}</strong>. Don&apos;t see it? Check your spam folder.
+              Check your email — we sent a sign-in link to <strong>{magicEmail}</strong>. Don&apos;t see it? Check your spam folder.
             </p>
           ) : (
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              disabled={magicLoading || !email}
-              onClick={handleMagicLink}
-            >
-              {magicLoading ? <><Loader2 className="size-4 animate-spin" /> Sending…</> : "Send magic link"}
-            </Button>
+            <div className="flex flex-col gap-2">
+              {/* Magic-link's own email field — separate from the password login. */}
+              <Input
+                type="email"
+                value={magicEmail}
+                onChange={(e) => { setMagicEmail(e.target.value); if (magicPrompt) setMagicPrompt(false); }}
+                placeholder="you@example.com"
+                autoComplete="email"
+                disabled={magicLoading}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                disabled={magicLoading}
+                onClick={handleMagicLink}
+              >
+                {magicLoading
+                  ? <><Loader2 className="size-4 animate-spin" /> Sending…</>
+                  : magicPrompt ? "Input your email" : "Send magic link"}
+              </Button>
+            </div>
           )}
           {orDivider}
         </>
