@@ -67,40 +67,13 @@ export function GuardedView() {
 }
 ```
 
-Reference implementation of the hook (the logic, adapted to our `/api/me` + NextAuth guest endpoint):
-
-```tsx
-// app/lib/hooks/use-route-access.ts
-'use client'
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import type { RouteMeta } from '@/lib/architecture/route-meta'
-
-export function useRouteAccess(meta: Pick<RouteMeta, 'roles' | 'requiresGuestRegistration' | 'unauthorizedRedirect'>) {
-  const router = useRouter()
-  const [me, setMe] = useState<{ roles?: string[] } | null | undefined>(undefined)
-
-  useEffect(() => {
-    fetch('/api/me').then(r => (r.ok ? r.json() : null)).then(setMe).catch(() => setMe(null))
-  }, [])
-
-  useEffect(() => {
-    if (me === undefined) return // still loading
-    const roles = meta.roles ?? []
-    const signedIn = !!me
-
-    // Public + guest: an anonymous visitor must become a guest so their work persists.
-    if (meta.requiresGuestRegistration && !signedIn) {
-      window.location.href = `/api/auth/guest?redirectUrl=${encodeURIComponent(window.location.pathname)}`
-      return
-    }
-    if (roles.length === 0) return // public
-    if (!signedIn) { router.push(meta.unauthorizedRedirect ?? '/register?requireRole=user'); return }
-    const ok = roles.some(r => me?.roles?.includes(r))
-    if (!ok) router.push(meta.unauthorizedRedirect ?? '/register?requireRole=user')
-  }, [me, meta, router])
-}
-```
+**The hook already ships in this app** at `app/lib/hooks/use-route-access.ts` — you do **not** write it,
+just `import { useRouteAccess }` and mount it (as above). For reference, it: fetches `/api/me`; if
+`requiresGuestRegistration` and there is no session, hard-navigates to `/api/auth/guest?redirectUrl=…`
+(creating the guest); if `roles[]` is set and the visitor lacks them, sends them to `unauthorizedRedirect`
+(or the register form via `registerRedirectUrl`); otherwise it does nothing. The `requiresGuestRegistration`
+flag on `RouteMeta` and the guest→full **promotion** in the auth service also already ship — so activating
+guest auth on a page is exactly the two steps in §1 and §2, nothing more to build.
 
 `/api/auth/guest` is a **hard navigation** (not `fetch`) — it sets the session cookie and redirects back
 to `redirectUrl`. After it returns, the visitor has a real `guest` session.
