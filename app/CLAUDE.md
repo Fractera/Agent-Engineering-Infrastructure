@@ -111,6 +111,11 @@ If a proof fails:
 
 ## 6. Journal system — long-term memory
 
+> **Master methodology — read to orient before decomposing a task:**
+> [`CRUD-DOCS/workspace-standards/development-methodology.md`](CRUD-DOCS/workspace-standards/development-methodology.md)
+> — how a task becomes deployed software: triggers, step vs sub-step, decomposition, pattern reuse,
+> deploy cadence, disk↔memory, token budget. It sits above the per-surface standards.
+
 The repository is your memory across sessions. Locations:
 
 | Path | Purpose |
@@ -312,6 +317,8 @@ the product.
 - **Container queries** (`@sm:`, `@lg:`) inside the slot/Fractal shell — never viewport
   breakpoints (`sm:`, `md:`), which break inside resizable panels.
 - **File naming:** every JSX file ends in `.client.tsx` or `.server.tsx` (see §12).
+- **Routes: keep paths maximally flat.** Prefer `/[lang]/orders/[id]` over `/[lang]/account/orders/detail/[id]`. Every extra nesting level complicates `generateStaticParams` and adds redirect risk. The shortest URL that unambiguously names the resource is correct.
+- **Zero DB reads at request time.** Static pages must not query the database during rendering. Push data to build time (server components + `generateStaticParams`) or to explicit user-action calls (`/api/*`). A DB call added to a layout or page render is a §12a violation unless explicitly approved.
 
 ### Examples — for OUR flow (not generic boilerplate)
 - **Database** is local SQLite, not Supabase: `import { db } from "@/lib/db"`; new tables go in
@@ -321,6 +328,20 @@ the product.
   `@footerModal`); `@codeGenerator` is admin-side, outside this count. Do NOT touch
   `@center`/`@centerHeader`/`@centerFooter` without explicit confirmation.
 - **Shipping a change** is the deploy loop (`POST /api/deploy`, §13) — not a widget upload.
+
+---
+
+## 12b. Access control for every new page — ask before writing
+
+When you create a new page or route, decide its **access shape BEFORE writing code**, and **ask the user** when it is not already specified:
+
+1. **"Is this page public or private?"**
+2. If **private** → **"Which roles may access it?"** — from the project role model (`guest` / `user` / `architect` plus any business roles). Set `roles: [...]` in the route's `_meta.ts`.
+3. If **public** → consider whether an unauthenticated visitor can produce data worth keeping (cart, chat messages, draft). If yes, that is **guest authentication**: set `requiresGuestRegistration: true` so the visitor gets a real guest identity and their work persists and later attaches to their real account.
+
+Never guess the access shape — a wrong default either exposes a private page or silently loses a visitor's work.
+
+**Implementation:** read `HOW-USE-AUTH.md` (app root) and copy the matching recipe (`_meta.ts` flags, `useRouteAccess` hook, guest sign-in trigger). Conceptual background: `CRUD-DOCS/auth-architecture.md` (§3.3 guest, §13).
 
 ---
 

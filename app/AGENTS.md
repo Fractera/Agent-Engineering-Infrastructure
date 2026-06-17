@@ -70,6 +70,8 @@ If a request requires touching forbidden zones, refuse and explain the boundary.
 
 ## 4. Workflow — strict order
 
+> **⛔ SEQUENTIAL ONLY.** One task open at a time — complete it fully (§5) before opening the next. Never split work into parallel agents or parallel sub-tasks. On a single production server, parallel execution compounds errors and makes root cause untraceable. No exceptions.
+
 1. **Detect mode** (§1) and announce it
 2. **Read history**: `NEXT_STEP.md`, `old-steps-map.md`, related entries in `old-steps/` and `reports/`
 3. **Ask clarifying questions** (§2) until the user says go
@@ -110,6 +112,11 @@ If a proof fails:
 ---
 
 ## 6. Journal system — long-term memory
+
+> **Master methodology — read to orient before decomposing a task:**
+> [`CRUD-DOCS/workspace-standards/development-methodology.md`](CRUD-DOCS/workspace-standards/development-methodology.md)
+> — how a task becomes deployed software: triggers, step vs sub-step, decomposition, pattern reuse,
+> deploy cadence, disk↔memory, token budget. It sits above the per-surface standards.
 
 The repository is your memory across sessions. Six locations:
 
@@ -223,6 +230,7 @@ Hermes is the orchestration agent running at `http://localhost:9119`. Delegate t
 - Single-session coding tasks → handle directly
 - Planning or architecture discussions → handle directly
 - Bug fixes and small components → handle directly
+- Task appears parallelizable — **always sequential; never spawn parallel sub-tasks**
 
 **`docs/hermes/` — READ-ONLY ZONE. Do not create, modify, or delete any file in this directory.** This is Hermes's private memory. You may READ these files; only Hermes writes them.
 

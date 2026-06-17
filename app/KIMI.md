@@ -111,6 +111,11 @@ If a proof fails:
 
 ## 6. Journal system — long-term memory
 
+> **Master methodology — read to orient before decomposing a task:**
+> [`CRUD-DOCS/workspace-standards/development-methodology.md`](CRUD-DOCS/workspace-standards/development-methodology.md)
+> — how a task becomes deployed software: triggers, step vs sub-step, decomposition, pattern reuse,
+> deploy cadence, disk↔memory, token budget. It sits above the per-surface standards.
+
 The repository is your memory across sessions. Six locations:
 
 | Path | Purpose |

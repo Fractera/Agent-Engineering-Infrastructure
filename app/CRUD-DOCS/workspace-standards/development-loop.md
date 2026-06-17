@@ -1,5 +1,11 @@
 # The Fractera Development Loop — standard
 
+> **Above this loop sits the master methodology** —
+> [`development-methodology.md`](./development-methodology.md): how an agent runs development across
+> the loop (what triggers development, step vs sub-step, decomposition, pattern reuse, deploy cadence,
+> disk↔vector memory, token control). This loop doc describes the *nature* of the cycle; the
+> methodology describes the agent's *discipline* inside it.
+
 > The diagram for this document is **`./Fractera-Development-Loop.jpg`** (in this folder). It shows the whole
 > cycle on one canvas; this text narrates it. This is a fundamental orientation doc — read it to understand the
 > *nature* of the application: how one request becomes tested, deployed, recorded software, and who does what.
