@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 function AccessDeniedModal({ onClose }: { onClose: () => void }) {
@@ -16,8 +17,8 @@ function AccessDeniedModal({ onClose }: { onClose: () => void }) {
         </div>
         <p className="text-sm leading-relaxed text-foreground">
           The AI coding workspace is only available to users with the{" "}
-          <strong>Administrator</strong> role. Contact your administrator and ask them
-          to grant you the Administrator role.
+          <strong>architect</strong> role. Contact your administrator and ask them
+          to grant you the architect role.
         </p>
         <Button className="w-full" onClick={onClose}>OK</Button>
       </div>
@@ -56,6 +57,26 @@ function LoginForm() {
       .then((d) => setMethods({ google: !!d.google, magicLink: !!d.magicLink }))
       .catch(() => {});
   }, []);
+
+  // Welcome toast. If the visitor is ALREADY signed in when they land on /login
+  // — which is exactly what happens when their role was too low for the target
+  // (e.g. a `user` bounced from the Admin Panel) — the bare form looks like a
+  // failed login. Confirm the sign-in and show their role so it's clear auth
+  // worked; if a higher role is required for this destination, say which.
+  useEffect(() => {
+    getSession()
+      .then((s) => {
+        if (!s?.user) return;
+        const who = s.user.name || s.user.email || "there";
+        const roles = (s.user as { roles?: string[] }).roles ?? [];
+        const roleLabel = roles[0] ?? "user";
+        toast.success(`Hi, ${who}! You're signed in. Your role: ${roleLabel}.`);
+        if (requireRole && !roles.includes(requireRole)) {
+          toast.info(`This page needs the '${requireRole}' role — open a section available to your role.`);
+        }
+      })
+      .catch(() => {});
+  }, [requireRole]);
 
   const handleMagicLink = async () => {
     if (!email) { setError("Enter your email above first"); return; }
