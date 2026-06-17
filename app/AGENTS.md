@@ -289,6 +289,30 @@ is worth shipping. Breaking any collapses the product's value.
 
 ---
 
+## 12b. Access control for every new page (ASK FIRST) — temporary skill
+
+When you create a new page or route, decide its **access shape BEFORE writing it**, and **ASK the user**
+when it is not already specified:
+
+1. **"Is this page public or private?"**
+2. If **private** → **"Which roles may access it?"** — from the project role model (`guest` / `user` /
+   `architect` plus the business roles). Set `roles: [...]` in the route's `_meta.ts`.
+3. If **public** → also consider whether a visitor can produce data worth keeping (a cart, chat messages,
+   a draft). If the user says something like *"available to everyone, but an unauthenticated visitor
+   should be turned into a guest here"*, that is **guest authentication**: set
+   `requiresGuestRegistration: true` and wire it so the visitor's work persists and later attaches to
+   their real account.
+
+Never guess the access shape — a wrong default either exposes a private page or loses a visitor's work.
+
+**Where the implementation lives:** the app-root file **`HOW-USE-AUTH.md`** has the exact sections to put
+in a route (the `_meta.ts` flags, the `useRouteAccess` client hook, the guest sign-in trigger). Read it
+and copy the matching recipe. Conceptual background: `CRUD-DOCS/auth-architecture.md` (§3.3 guest, §13).
+
+*(Temporary skill — kept here while guest authentication is being finalised.)*
+
+---
+
 ## 13. Deploy mechanics
 
 Only run this when the user has explicitly approved deploy (§5 step 3).

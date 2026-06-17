@@ -60,9 +60,15 @@ A virtual sign-in: if `credentials.token === process.env.ARCHITECT_TOKEN`, retur
 `roles: ["architect"]`. Used for break-glass / headless administration. Provider id is `architect`
 (also surfaced by `/api/auth/architect` and `signIn("architect", { token })`).
 
-### 3.3 Guest
-`GET /api/auth/guest?redirectUrl=…` creates an anonymous user `guest_<uuid>@fractera.guest` with
-`roles: ["guest"]`, `provider: "guest"`, then signs them in via the credentials provider.
+### 3.3 Guest (progressive sign-up — NOT "anonymous browsing")
+A guest is **not** an anonymous viewer. It is a **real, persistent identity created on demand** when an
+unauthenticated visitor starts doing something that must be saved (adding to a cart, writing chat
+messages) *before* they sign up. `GET /api/auth/guest?redirectUrl=…` creates a real `users` row
+(`guest_<uuid>@fractera.guest`, `roles: ["guest"]`, `provider: "guest"`), then establishes a **real
+NextAuth session** via the credentials provider. The resulting `user.id` is permanent — every record
+written during the guest session is tied to it — and when the guest later completes full registration,
+the **same row is updated** (email + password + `roles: ["user"]`), so all their accumulated data stays
+attached with no migration. Full mechanism: **§13**.
 
 ### 3.4 Google OAuth — `allowDangerousEmailAccountLinking: true`
 Reads `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`. The workspace is single-tenant, so linking a Google
@@ -293,3 +299,49 @@ flow** (no "reset password" email). This is acceptable for an early-stage app, a
 adding an OAuth/magic-link provider early is recommended — those flows are passwordless and self-recovering.
 Under the hood the two providers (Google + magic-link) are already wired; activating either is just a
 matter of saving its credentials.
+
+---
+
+## 13. Guest authentication (progressive sign-up)
+
+**The problem it solves.** Most pages need no identity. But sometimes a visitor starts producing data
+*before* signing up — items in a cart, messages to a chat / online consultant. The usual fallback is the
+browser's localStorage, which is fragile and does not survive a real sign-up cleanly. Guest auth gives
+that visitor a **real database identity immediately**, so their work is persisted server-side and is
+**automatically carried over** when they later create a real account.
+
+**The model (do not regress to "anonymous"):**
+1. **Mark the trigger pages.** A route declares `requiresGuestRegistration: true` in its `_meta.ts`
+   (`RouteMeta`). These are the pages where an unauthenticated visitor must become a guest — typically the
+   cart, the chat/consultant, a checkout step.
+2. **Trigger on visit.** When an unauthenticated visitor lands on such a page, the app calls the guest
+   sign-in **under the hood** (`/api/auth/guest`). A `users` row is created (`guest_<uuid>@fractera.guest`,
+   `roles:["guest"]`, `provider:"guest"`) and a real session is established. No form, no credentials —
+   only an optional one-time consent.
+3. **Accumulate against the identity.** Every record the visitor produces (cart lines, chat messages,
+   draft orders) is written with `user.id` as the owning identity (the same `X-Agent-Identity` /
+   `created_by` data-scoping the rest of the app uses).
+4. **Promote on full sign-up — UPDATE, not INSERT.** When the guest decides to register, `register()`
+   must detect the active guest session and **UPDATE the same `users` row** (set `email`, `password`,
+   `roles:["user"]`, `provider:"credentials"`) instead of inserting a new user. Because `user.id` is
+   unchanged, **all guest-era records remain attached** — the email and extended profile are simply
+   added on top. This "same row, promoted in place" is the whole point; no data migration runs.
+
+**Guest vs the access tiers.** `guest` is a real role/session, distinct from a true anonymous request
+(no session at all). A page that is *public* serves everyone with no session; a page that
+`requiresGuestRegistration` upgrades an anonymous visitor to a `guest` so their work can be saved.
+
+**Reference pattern** (studied from the sample app `22slots`): a `RouteEntry`/`RouteMeta` carries
+`requiresGuestRegistration` (and optional `allowedRoles` / `unauthorizedRedirect`); a client hook
+`useRouteAccess` and a server `checkRouteAccess` read it — when `requiresGuestRegistration && !user` they
+route the visitor through guest sign-in. **Caveat:** the sample's `register.ts` actually *inserts* a new
+user; that is the wrong half — the correct promotion **updates** the guest row (as the sample's own
+`AGENT.md` describes). Implement the UPDATE path.
+
+**Static-first note.** Per §12a of the product instructions, the access check must run **client-side**
+(read identity via `/api/me`) — never `auth()`/`cookies()` in a layout/page — so trigger pages stay
+statically generated. The guest sign-in itself is a hard navigation to `/api/auth/guest`.
+
+**Implementation guide with code:** the product app root ships **`HOW-USE-AUTH.md`** — the concrete
+snippets (the `_meta.ts` flag, the `useRouteAccess` hook, the guest call, the register promotion) an
+agent copies when wiring a page for public / private / guest-triggered access.
