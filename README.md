@@ -164,7 +164,6 @@ The agent runs the full deployment and reports back when your workspace is live.
 </p>
 
 **MCP connector:** `https://www.fractera.ai/api/mcp` · Open, no auth  
-**Listed on:** [Smithery](https://smithery.ai/servers/admin-add5/fractera) · [mcp.so](https://mcp.so) · [Glama](https://glama.ai/mcp/servers) · [Official MCP Registry](https://registry.modelcontextprotocol.io) (`io.github.Fractera/deploy`)
 
 ---
 
