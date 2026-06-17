@@ -12,6 +12,12 @@ export const PATCH = auth(async function PATCH(req, context) {
   const id = params?.id;
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
+  // Role-protection rules (enforced here):
+  //   1. A user can NEVER remove the architect role from themselves — we block
+  //      editing your own account entirely, which covers it.
+  //   2. Only ANOTHER architect can remove architect from another architect —
+  //      the 403 above already requires the caller to be architect, and the
+  //      self-block below guarantees it's a different account.
   const currentUserId = (session.user as { id?: string }).id;
   if (id === currentUserId) return NextResponse.json({ error: "Cannot modify your own account" }, { status: 400 });
 

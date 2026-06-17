@@ -4,25 +4,24 @@ import { useState, useEffect } from "react";
 import { Loader2, Pencil, Trash2, X, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ALL_ROLES } from "@/lib/roles";
 
 type Row = Record<string, unknown>;
 type Props = { onClose: () => void };
 
 const SIDEBAR_W = 250;
 
-const ALL_ROLES = ["architect", "user", "guest"];
-
 const SELECT_COLUMNS: Record<string, Record<string, string[]>> = {
   users: {
     is_active: ["1", "0"],
-    provider:  ["credentials", "google", "github", "guest"],
+    provider:  ["credentials", "google", "email", "guest"],
     locale:    ["en", "ru", "es", "fr", "de", "zh"],
   },
 };
 
 const MULTI_COLUMNS: Record<string, Record<string, string[]>> = {
   users: {
-    roles: ALL_ROLES,
+    roles: [...ALL_ROLES],
   },
 };
 

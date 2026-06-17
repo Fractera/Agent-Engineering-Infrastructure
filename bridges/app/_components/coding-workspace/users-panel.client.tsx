@@ -5,7 +5,9 @@ import { Loader2, X, Pencil, Trash2, Ban, CheckCircle, MoreVertical, ChevronLeft
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { ALL_ROLES } from "@/lib/roles";
 
 type User = {
   id: string;
@@ -19,7 +21,6 @@ type User = {
 
 type Props = { onClose: () => void };
 
-const ALL_ROLES = ["architect", "user", "guest"];
 const PER_PAGE = 100;
 
 export function UsersPanel({ onClose }: Props) {
@@ -189,8 +190,10 @@ export function UsersPanel({ onClose }: Props) {
                     <td className="px-3 py-2 font-medium truncate max-w-[120px]">{u.nickname ?? "—"}</td>
                     <td className="px-3 py-2 text-muted-foreground truncate max-w-[180px]">{u.email}</td>
                     <td className="px-3 py-2">
-                      <span className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono text-[10px]">
-                        {parsedRoles[0] ?? "user"}
+                      <span className="flex flex-wrap gap-1">
+                        {(parsedRoles.length ? parsedRoles : ["user"]).map((r) => (
+                          <span key={r} className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono text-[10px]">{r}</span>
+                        ))}
                       </span>
                     </td>
                     <td className="px-3 py-2">
@@ -271,22 +274,37 @@ export function UsersPanel({ onClose }: Props) {
               <label className="text-[11px] text-muted-foreground">Email</label>
               <Input value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="h-8 text-[11px]" type="email" />
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-[11px] text-muted-foreground">Role</label>
-              <select
-                value={editRoles[0] ?? "user"}
-                onChange={(e) => setEditRoles([e.target.value])}
-                className="h-8 rounded-md border border-border bg-background px-2 text-[11px] text-foreground outline-none focus:ring-1 focus:ring-ring"
-              >
-                {ALL_ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
-              </select>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] text-muted-foreground">Roles</label>
+              <div className="max-h-44 overflow-y-auto rounded-md border border-border bg-background p-2 flex flex-col gap-1.5">
+                {ALL_ROLES.map((r) => {
+                  const checked = editRoles.includes(r);
+                  return (
+                    <label key={r} className="flex items-center gap-2 cursor-pointer select-none px-1 py-0.5 rounded hover:bg-muted">
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(v) =>
+                          setEditRoles((prev) =>
+                            v === true ? [...new Set([...prev, r])] : prev.filter((x) => x !== r)
+                          )
+                        }
+                      />
+                      <span className="text-[11px] font-mono text-foreground">{r}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                Select one or more roles. You can&apos;t edit your own account — and only another architect
+                can remove the <span className="font-mono">architect</span> role from someone.
+              </p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={() => setEditUser(null)}>
               Cancel
             </Button>
-            <Button size="sm" className="h-7 text-[11px]" onClick={saveEdit} disabled={editSaving}>
+            <Button size="sm" className="h-7 text-[11px]" onClick={saveEdit} disabled={editSaving || editRoles.length === 0}>
               {editSaving ? <Loader2 size={11} className="animate-spin mr-1" /> : null}
               Save
             </Button>
