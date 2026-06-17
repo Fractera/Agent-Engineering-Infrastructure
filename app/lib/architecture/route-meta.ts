@@ -68,6 +68,14 @@ export type RouteMeta = {
   roles: Role[]                        // [] when public
   unauthorizedRedirect: string | undefined
   enforcedBy: EnforcedBy | undefined
+  /** Guest-trigger (see HOW-USE-AUTH.md and CRUD-DOCS/auth-architecture §13): when
+   *  true, an unauthenticated visit to this route creates a real GUEST identity so
+   *  the visitor's work (cart, chat, drafts) persists and later attaches to their
+   *  real account on sign-up. OPTIONAL and DORMANT by default — undefined/false =
+   *  off. The behaviour activates only when a route sets this AND mounts
+   *  `useRouteAccess(meta)` in a client component. (Optional so existing _meta.ts
+   *  stay valid without edits.) */
+  requiresGuestRegistration?: boolean
 
   // — Routing shape —
   isDynamicRoute: boolean
