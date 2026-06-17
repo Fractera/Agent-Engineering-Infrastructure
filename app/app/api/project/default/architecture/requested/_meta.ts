@@ -13,7 +13,7 @@ const meta: RouteMeta = {
 
   // — Access control —
   visibility: "private",
-  roles: ["user", "admin"],
+  roles: ["user", "architect"],
   unauthorizedRedirect: undefined, // API returns 401 via proxy, no redirect
   enforcedBy: "proxy",
 

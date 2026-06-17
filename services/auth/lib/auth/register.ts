@@ -24,7 +24,7 @@ export async function register(email: string, password: string): Promise<Registe
   const nickname = normalizedEmail.split("@")[0];
 
   const isFirst = !db.prepare("SELECT id FROM users LIMIT 1").get();
-  const roles = isFirst ? ["admin"] : ["user"];
+  const roles = isFirst ? ["architect"] : ["user"];
 
   db.prepare(
     "INSERT INTO users (id, email, nickname, password, roles, provider) VALUES (?, ?, ?, ?, ?, ?)"

@@ -46,7 +46,7 @@ export async function proxy(req: NextRequest) {
     });
     if (res.ok) {
       const data = await res.json() as { roles?: string[] };
-      isAdmin = (data.roles ?? []).includes("admin");
+      isAdmin = (data.roles ?? []).includes("architect");
     }
   } catch {
     isAdmin = false;

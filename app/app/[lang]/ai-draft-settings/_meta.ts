@@ -9,8 +9,8 @@ const meta: RouteMeta = {
   todo: [],
 
   visibility: "private",
-  roles: ["admin"],
-  unauthorizedRedirect: "/register?requireRole=admin",
+  roles: ["architect"],
+  unauthorizedRedirect: "/register?requireRole=architect",
   enforcedBy: "both",
 
   isDynamicRoute: false,

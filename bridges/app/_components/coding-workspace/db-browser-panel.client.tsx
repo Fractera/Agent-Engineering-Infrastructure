@@ -10,7 +10,7 @@ type Props = { onClose: () => void };
 
 const SIDEBAR_W = 250;
 
-const ALL_ROLES = ["admin", "user", "guest"];
+const ALL_ROLES = ["architect", "user", "guest"];
 
 const SELECT_COLUMNS: Record<string, Record<string, string[]>> = {
   users: {

@@ -41,9 +41,9 @@ export function adminBase(): string {
 }
 
 // Build the auth redirect for an unauthorized click on a protected destination.
-// `requireRole` lets the auth form know whether the target needs admin (Start
+// `requireRole` lets the auth form know whether the target needs architect (Start
 // Coding → admin panel) or just any authenticated user (Dashboard).
-export function registerRedirectUrl(callbackUrl: string, requireRole: "user" | "admin"): string {
+export function registerRedirectUrl(callbackUrl: string, requireRole: "user" | "architect"): string {
   const url = new URL(`${authBase()}/register`);
   url.searchParams.set("callbackUrl", callbackUrl);
   url.searchParams.set("requireRole", requireRole);

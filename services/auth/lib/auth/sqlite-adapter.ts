@@ -57,7 +57,7 @@ export function SqliteAdapter(db: Database.Database): Adapter {
       // lib/auth/register.ts. Every later sign-up, via ANY provider, is a
       // normal user.
       const isFirst = !db.prepare("SELECT id FROM users LIMIT 1").get();
-      const roles = isFirst ? ["admin"] : ["user"];
+      const roles = isFirst ? ["architect"] : ["user"];
       // Default provider "email": the magic-link path never calls linkAccount,
       // so it keeps this value; OAuth flows overwrite it in linkAccount with the
       // real provider id (e.g. "google").

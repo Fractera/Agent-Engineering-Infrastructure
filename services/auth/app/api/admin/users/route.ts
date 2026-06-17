@@ -8,7 +8,7 @@ export const GET = auth(function GET(req) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const roles: string[] = (session.user as { roles?: string[] }).roles ?? [];
-  if (!roles.includes("admin")) {
+  if (!roles.includes("architect")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

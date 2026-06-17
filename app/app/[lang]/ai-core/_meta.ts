@@ -13,8 +13,8 @@ const meta: RouteMeta = {
 
   // — Access control —
   visibility: "private",
-  roles: ["admin"],
-  unauthorizedRedirect: "/register?requireRole=admin",
+  roles: ["architect"],
+  unauthorizedRedirect: "/register?requireRole=architect",
   enforcedBy: "both",
 
   // — Routing shape —

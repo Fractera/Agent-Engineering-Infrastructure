@@ -14,5 +14,5 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Token required" }, { status: 400 });
   }
 
-  return signIn("admin", { token, redirectTo });
+  return signIn("architect", { token, redirectTo });
 }

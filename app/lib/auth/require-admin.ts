@@ -30,11 +30,11 @@ export async function requireAdmin(): Promise<void> {
     })
     if (res.ok) {
       const session = (await res.json()) as { roles?: string[] } | null
-      if (Array.isArray(session?.roles) && session.roles.includes("admin")) return
+      if (Array.isArray(session?.roles) && session.roles.includes("architect")) return
     }
   } catch {
     // fall through to redirect
   }
 
-  redirect("/register?requireRole=admin")
+  redirect("/register?requireRole=architect")
 }

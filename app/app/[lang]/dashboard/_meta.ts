@@ -15,7 +15,7 @@ const meta: RouteMeta = {
 
   // — Access control —
   visibility: "private",
-  roles: ["user", "admin"],
+  roles: ["user", "architect"],
   unauthorizedRedirect: "/register?requireRole=user",
   enforcedBy: "component",
 

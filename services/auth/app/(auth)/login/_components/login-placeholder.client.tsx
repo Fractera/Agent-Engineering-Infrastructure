@@ -31,10 +31,10 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
-  // Default "admin" preserves the legacy contract (every callbackUrl was the
+  // Default "architect" preserves the legacy contract (every callbackUrl was the
   // Admin Panel, e.g. bridges/app/proxy.ts). "user" lets user-level
   // destinations (Shell Dashboard) through without an Access Denied.
-  const requireRole = searchParams.get("requireRole") || "admin";
+  const requireRole = searchParams.get("requireRole") || "architect";
 
   const [email, setEmail]               = useState("");
   const [password, setPassword]         = useState("");
@@ -85,10 +85,10 @@ function LoginForm() {
 
     // Admin destinations: verify the role before redirecting. User-level
     // destinations only need a valid session (which we now have).
-    if (callbackUrl !== "/" && requireRole === "admin") {
+    if (callbackUrl !== "/" && requireRole === "architect") {
       const session = await getSession();
       const roles: string[] = (session?.user as { roles?: string[] })?.roles ?? [];
-      if (!roles.includes("admin")) {
+      if (!roles.includes("architect")) {
         setLoading(false);
         setShowAccessDenied(true);
         return;
@@ -103,7 +103,7 @@ function LoginForm() {
 
   // Preserve the return target when switching to the register form.
   const registerHref = callbackUrl !== "/"
-    ? `/register?callbackUrl=${encodeURIComponent(callbackUrl)}${requireRole !== "admin" ? `&requireRole=${requireRole}` : ""}`
+    ? `/register?callbackUrl=${encodeURIComponent(callbackUrl)}${requireRole !== "architect" ? `&requireRole=${requireRole}` : ""}`
     : "/register";
 
   return (

@@ -12,7 +12,7 @@ function buildProviders(): NextAuthConfig["providers"] {
   if (process.env.ARCHITECT_TOKEN) {
     providers.push(
       Credentials({
-        id: "admin",
+        id: "architect",
         credentials: {
           token: { label: "Admin Token", type: "password" },
         },
@@ -23,7 +23,7 @@ function buildProviders(): NextAuthConfig["providers"] {
             id: "virtual-admin",
             email: "admin@local",
             name: "Administrator",
-            roles: ["admin"] as string[],
+            roles: ["architect"] as string[],
           };
         },
       })

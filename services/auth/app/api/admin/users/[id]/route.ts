@@ -6,7 +6,7 @@ export const PATCH = auth(async function PATCH(req, context) {
   const session = req.auth;
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const roles: string[] = (session.user as { roles?: string[] }).roles ?? [];
-  if (!roles.includes("admin")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!roles.includes("architect")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const params = await (context?.params as Promise<{ id: string }>);
   const id = params?.id;
@@ -51,7 +51,7 @@ export const DELETE = auth(async function DELETE(req, context) {
   const session = req.auth;
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const roles: string[] = (session.user as { roles?: string[] }).roles ?? [];
-  if (!roles.includes("admin")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!roles.includes("architect")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const params = await (context?.params as Promise<{ id: string }>);
   const id = params?.id;

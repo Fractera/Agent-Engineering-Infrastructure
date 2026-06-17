@@ -9,7 +9,7 @@ const meta: RouteMeta = {
   todo: [],
 
   visibility: "private",
-  roles: ["user", "admin"],
+  roles: ["user", "architect"],
   unauthorizedRedirect: undefined,
   enforcedBy: "proxy",
 

@@ -180,7 +180,7 @@ function buildNginxConfig(domain: string, certSource: "auto" | "upload"): string
         proxy_set_header Cookie $http_cookie;
     }
     location @login_redirect {
-        return 302 https://auth.${domain}/login?callbackUrl=$scheme://$host$request_uri&requireRole=admin;
+        return 302 https://auth.${domain}/login?callbackUrl=$scheme://$host$request_uri&requireRole=architect;
     }
 ` : "";
     // Injected INTO a proxied location to require a valid session before proxying.

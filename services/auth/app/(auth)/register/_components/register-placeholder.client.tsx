@@ -106,9 +106,9 @@ function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "";
-  // Default "admin" preserves the legacy contract (every callbackUrl was the
+  // Default "architect" preserves the legacy contract (every callbackUrl was the
   // Admin Panel). "user" lets user-level destinations (Shell Dashboard) in.
-  const requireRole = searchParams.get("requireRole") || "admin";
+  const requireRole = searchParams.get("requireRole") || "architect";
 
   const [email, setEmail]               = useState("");
   const [password, setPassword]         = useState("");
@@ -138,13 +138,13 @@ function RegisterForm() {
 
       router.refresh();
 
-      const isAdmin = result.roles.includes("admin");
+      const isAdmin = result.roles.includes("architect");
 
       if (isAdmin) {
         // First user: show mandatory confirmation modal before redirecting
         setPendingRedirect(callbackUrl || "/");
         setShowModal(true);
-      } else if (callbackUrl && requireRole === "admin") {
+      } else if (callbackUrl && requireRole === "architect") {
         // Non-admin tried to reach an admin-only destination.
         setShowAccessDenied(true);
       } else if (callbackUrl) {
@@ -167,7 +167,7 @@ function RegisterForm() {
   };
 
   const loginHref = callbackUrl
-    ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}${requireRole !== "admin" ? `&requireRole=${requireRole}` : ""}`
+    ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}${requireRole !== "architect" ? `&requireRole=${requireRole}` : ""}`
     : "/login";
 
   return (

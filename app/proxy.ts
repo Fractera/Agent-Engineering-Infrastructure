@@ -66,7 +66,7 @@ async function handleApi(request: NextRequest, pathname: string): Promise<NextRe
         // Admin-gate the service-page API namespaces (role, not just a cookie).
         if (ADMIN_API_PREFIXES.some((p) => pathname.startsWith(p))) {
           const session = await getSession(request);
-          if (!session?.roles?.includes("admin")) {
+          if (!session?.roles?.includes("architect")) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
           }
         }

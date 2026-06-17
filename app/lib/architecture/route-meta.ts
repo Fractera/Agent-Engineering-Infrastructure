@@ -10,7 +10,7 @@
 // Typing lives here (one place); each route's `_meta.ts` imports `RouteMeta`,
 // annotates with it, and fills the standard.
 
-export type Role = "guest" | "user" | "admin"
+export type Role = "guest" | "user" | "architect"
 export type Rendering = "static" | "dynamic" | "isr"
 export type Runtime = "nodejs" | "edge"
 export type EnforcedBy = "proxy" | "component" | "both"

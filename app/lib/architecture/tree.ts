@@ -74,7 +74,7 @@ export const ARCHITECTURE_TREE: ArchNode = {
                           label: "/ai-core — AI Core",
                           kind: "page",
                           href: "/ai-core",
-                          meta: { roles: "admin", rendering: "dynamic" },
+                          meta: { roles: "architect", rendering: "dynamic" },
                           description:
                             "The living map of the workspace's AI body — agents, bridges, memory, MCP, " +
                             "tools — as an explorable tree (this very page). It draws the current state by " +
@@ -87,7 +87,7 @@ export const ARCHITECTURE_TREE: ArchNode = {
                           label: "/architecture — Architecture",
                           kind: "page",
                           href: "/architecture",
-                          meta: { roles: "admin", rendering: "dynamic" },
+                          meta: { roles: "architect", rendering: "dynamic" },
                           description:
                             "Interactive map of every route (page + endpoint) with its roles, rendering " +
                             "and methods, mirrored from the code on disk. Benefit: the structure stays " +
@@ -100,7 +100,7 @@ export const ARCHITECTURE_TREE: ArchNode = {
                           label: "/development-steps — Development steps",
                           kind: "page",
                           href: "/development-steps",
-                          meta: { roles: "admin", rendering: "dynamic" },
+                          meta: { roles: "architect", rendering: "dynamic" },
                           description:
                             "The project work log as real files (DEVELOPMENT-STEPS/): NEW steps are " +
                             "editable, COMPLETED are read-only history with a date. Benefit: every agent " +
@@ -113,7 +113,7 @@ export const ARCHITECTURE_TREE: ArchNode = {
                           label: "/patterns — Patterns & Anti-patterns",
                           kind: "page",
                           href: "/patterns",
-                          meta: { roles: "admin", rendering: "dynamic" },
+                          meta: { roles: "architect", rendering: "dynamic" },
                           description:
                             "The reuse library: code Patterns (by category) the AI reuses while building, " +
                             "and Anti-patterns it reads before every deploy. Benefit: less re-derivation, " +
@@ -125,7 +125,7 @@ export const ARCHITECTURE_TREE: ArchNode = {
                           label: "/glossary — Glossary",
                           kind: "page",
                           href: "/glossary",
-                          meta: { roles: "admin", rendering: "dynamic" },
+                          meta: { roles: "architect", rendering: "dynamic" },
                           description:
                             "The shared term map (GLOSSARY.md): approved abbreviations and preferred " +
                             "phrasings so every agent reads them the same way (e.g. aws → ai-workspace). " +
@@ -137,7 +137,7 @@ export const ARCHITECTURE_TREE: ArchNode = {
                           label: "/documents — Documents",
                           kind: "page",
                           href: "/documents",
-                          meta: { roles: "admin", rendering: "dynamic" },
+                          meta: { roles: "architect", rendering: "dynamic" },
                           description:
                             "The knowledge-base file manager (CRUD-DOCS/): create folders, upload " +
                             ".txt/.md/.doc/.docx, preview, delete — real files on disk. Activating one " +
@@ -150,7 +150,7 @@ export const ARCHITECTURE_TREE: ArchNode = {
                           label: "/ai-draft-settings — AI Draft Settings",
                           kind: "page",
                           href: "/ai-draft-settings",
-                          meta: { roles: "admin", rendering: "dynamic" },
+                          meta: { roles: "architect", rendering: "dynamic" },
                           description:
                             "The draft layer for the six agents' real instruction / skill / MCP files: " +
                             "write free-form wishes (supplement / replace); an agent applies them to the " +
@@ -163,7 +163,7 @@ export const ARCHITECTURE_TREE: ArchNode = {
                           label: "/debug — Debug",
                           kind: "page",
                           href: "/debug",
-                          meta: { roles: "admin", rendering: "dynamic" },
+                          meta: { roles: "architect", rendering: "dynamic" },
                           description:
                             "Runtime diagnostics: current mode (IP/secure), resolved service URLs, live " +
                             "/api/health and /api/me probes. Benefit: quickly see whether the workspace is " +

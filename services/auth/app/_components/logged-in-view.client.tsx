@@ -12,7 +12,7 @@ type Props = {
 };
 
 export function LoggedInView({ email, appUrl, adminUrl, roles }: Props) {
-  const isAdmin = roles.includes("admin");
+  const isAdmin = roles.includes("architect");
 
   useEffect(() => {
     if (window.parent !== window) {

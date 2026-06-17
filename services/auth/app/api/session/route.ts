@@ -19,7 +19,7 @@ function corsHeaders(origin: string | null): HeadersInit {
 const DEMO_SESSION = {
   userId: "demo@local",
   email: "demo@local",
-  roles: ["admin"],
+  roles: ["architect"],
 };
 
 export async function OPTIONS(req: NextRequest) {

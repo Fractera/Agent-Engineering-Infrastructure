@@ -14,7 +14,7 @@ export async function getSession(req?: NextRequest): Promise<AppSession | null> 
   }
 
   if (shouldBypassAuth()) {
-    return { userId: 'demo@local', email: 'demo@local', roles: ['admin'] }
+    return { userId: 'demo@local', email: 'demo@local', roles: ['architect'] }
   }
 
   const authUrl = process.env.AUTH_SERVICE_URL ?? process.env.NEXT_PUBLIC_AUTH_URL ?? 'http://localhost:3001'
