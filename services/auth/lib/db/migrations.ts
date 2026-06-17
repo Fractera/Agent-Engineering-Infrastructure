@@ -38,6 +38,10 @@ export function runMigrations() {
       access_token TEXT,
       refresh_token TEXT,
       expires_at INTEGER,
+      token_type TEXT,
+      scope TEXT,
+      id_token TEXT,
+      session_state TEXT,
       UNIQUE(provider, provider_account_id)
     );
 
@@ -48,4 +52,14 @@ export function runMigrations() {
       UNIQUE(identifier, token)
     );
   `);
+
+  // Existing databases (created before OAuth/magic-link support) miss the
+  // adapter columns on `accounts`. Add them idempotently so the NextAuth
+  // SqliteAdapter (linkAccount) can persist the full OAuth account record.
+  const accountCols = (db.prepare("PRAGMA table_info(accounts)").all() as { name: string }[]).map((c) => c.name);
+  for (const col of ["token_type", "scope", "id_token", "session_state"]) {
+    if (!accountCols.includes(col)) {
+      db.exec(`ALTER TABLE accounts ADD COLUMN ${col} TEXT`);
+    }
+  }
 }

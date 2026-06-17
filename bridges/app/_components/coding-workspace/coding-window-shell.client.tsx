@@ -18,6 +18,7 @@ import { UsersPanel } from "./users-panel.client";
 import { DomainPanel } from "./domain-panel.client";
 import { LightRagPanel } from "./lightrag-panel.client";
 import { HermesPanel } from "./hermes-panel.client";
+import { LoginMethodsPanel } from "./login-methods-panel.client";
 import { OpenAiPanel } from "./openai-panel.client";
 import { DeploymentsPanel } from "./deployments-panel.client";
 import { SiteSettingsPanel } from "./site-settings-panel.client";
@@ -185,6 +186,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const [showLightRag, setShowLightRag]             = useState(false);
   const [showHermesPanel, setShowHermesPanel]       = useState(false);
   const [showOpenAiPanel, setShowOpenAiPanel]       = useState(false);
+  const [showAuthMethods, setShowAuthMethods]       = useState(false);
   // Security tab is hidden from the UI until cert provisioning for all 6
   // subdomains ships (work in progress). The env var FRACTERA_IP_NODOMAIN_MODE
   // is still readable / settable from the terminal — this just removes the
@@ -213,6 +215,18 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     setShowSiteSettings(false);
     setShowPlatform(false);
   }, [requestedSettingsPanel]);
+  // Login methods is a sibling slide-out drawer (same slot/zIndex as the others).
+  // Rather than add setShowAuthMethods(false) to every other menu handler, close
+  // it whenever any other panel opens — keeps the drawers mutually exclusive.
+  useEffect(() => {
+    if (showInfo || showDbBrowser || showUsers || showMediaLibrary || showHelp || showDomainPanel ||
+        showHermesPanel || showLightRag || showOpenAiPanel || showEnvEditor || showDeployments ||
+        showSiteSettings || showPlatform) {
+      setShowAuthMethods(false);
+    }
+  }, [showInfo, showDbBrowser, showUsers, showMediaLibrary, showHelp, showDomainPanel,
+      showHermesPanel, showLightRag, showOpenAiPanel, showEnvEditor, showDeployments,
+      showSiteSettings, showPlatform]);
   const [activeAuth, setActiveAuth]                 = useState<{ descriptor: AuthFlowDescriptor; url: string; code?: string } | null>(null);
   const [pasteModalOpen, setPasteModalOpen]         = useState(false);
   const fileInputRef    = useRef<HTMLInputElement>(null);
@@ -754,6 +768,15 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                 <span className={!secure ? "text-orange-500 font-medium" : "text-foreground"}>Personal Domain</span>
                 {!secure && <span className="ml-auto text-[10px] text-orange-500/80">not secure</span>}
               </button>
+              {/* Login methods (Google / magic-link) — secure mode only: these
+                  sign-in methods need a domain + HTTPS, so the entry is hidden
+                  entirely in IP/insecure mode. */}
+              {secure && (
+                <button type="button" onClick={() => { setDataMenuOpen(false); setShowAuthMethods((v) => !v); setShowDomainPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowHermesPanel(false); setShowLightRag(false); setShowOpenAiPanel(false); setShowDeployments(false); setShowSiteSettings(false); setShowPlatform(false); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                  <KeyRound size={11} />Login methods
+                </button>
+              )}
               <div className="h-px bg-border mx-2" />
               <button type="button" onClick={handleExport}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
@@ -1087,6 +1110,21 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           }}
         >
           <HermesPanel onClose={() => setShowHermesPanel(false)} />
+        </div>
+      )}
+
+      {showAuthMethods && (
+        <div
+          style={{
+            position: "absolute",
+            top: CAROUSEL_H,
+            right: 0,
+            bottom: FOOTER_H,
+            width: "min(480px, 90vw)",
+            zIndex: 20,
+          }}
+        >
+          <LoginMethodsPanel onClose={() => setShowAuthMethods(false)} />
         </div>
       )}
 

@@ -13,6 +13,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "next-auth": "^5.0.0-beta.30",
+    "resend": "^4.5.1",
     "bcrypt-ts": "^8.0.1",
     "better-sqlite3": "^11.0.0",
     "nanoid": "^5.1.9",
