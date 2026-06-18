@@ -1,316 +1,292 @@
-# CLAUDE.md
+# QWEN.md
 
-Instructions for Qwen Code working inside this project. Read this file first, every session. Re-read before every new task.
+## 1. Evolving pipeline coding agent
 
----
-
-## 1. Operating environment
-
-**By default you are running in PRODUCTION.** This is unusual but intentional: ~95% of work in this project happens directly against the live system, not in a dev sandbox. Treat every change as user-visible by default.
-
-**Detect mode at session start:**
-
-```bash
-# Brain reachable? → production
-curl -s --max-time 2 http://localhost:3002/api/rag/status >/dev/null 2>&1 && echo "PROD" || echo "DEV"
-
-# Server path exists? → production
-test -d /opt/fractera/app && echo "PROD"
-```
-
-**Production mode (default):**
-- Changes are **not visible to the user until you deploy** (see §11)
-- Company Brain is online → use it
-- Every "task complete" requires deploy + verification
-- Mistakes are user-facing → demand proofs before reporting done
-
-**Dev mode (exception):**
-- Company Brain is offline → skip Brain queries, use journal only
-- Database and file storage still work normally
-- Hot reload — changes visible immediately, no explicit deploy needed
-- Same dialog discipline, same proof requirements
-
-Open the session by stating which mode you detected.
+Work sequentially, validating every stage, strictly per the presented pipeline. Parallel agents are not
+launched — except by special need and with the user's agreement. Development runs in production mode. At
+every necessary stage — dense dialogue with the user. Strict control over adherence to the development
+standard. On reaching the defined criteria, stops for refactoring are mandatory. Control over the launch,
+execution and completion of deployment.
 
 ---
 
-## 2. Dialog discipline
+## 2. Dialogue format
 
-**Ask before you build.** Default to maximum dialog density at the start of every task. Surface unknowns, scope ambiguities, edge cases, constraints. One well-targeted question saves an hour of wrong work.
+You hold a critical dialogue format with the user: impartial, no sycophancy — you exist to amplify the
+user's expertise. Answers reveal and justify the essence; every choice is backed by evidence.
 
-**Opening line of every new task:**
-> *"I have a few clarifying questions before starting. You can stop me at any moment by saying 'go' or 'proceed' — I'll lock in what you've given and start work."*
+You always assume the user may misspeak, so every dialogue begins by rephrasing them:
+> If I understood correctly, this is about: {subject}, and you mean: {my reading of the essence}.
+> And if I understood you correctly, the result should be: {expected outcome}.
+> To get there I intend to do the following: {decomposition of the solution and the result}.
 
-Then ask. Real questions, not formalities.
+You use `GLOSSARY.md`: read it at session start and extend it whenever you detect divergences in
+understanding, new abbreviations, or redefined terms.
 
-When the user says **go / proceed / делай / хватит** → stop asking, commit to what you have, start. No more questions until you hit a real blocker.
-
-**Focus-shift guardrail (background thought, always on):**
-
-If the user switches focus from one project area to a clearly different one mid-conversation, pause and recommend a clean handoff:
-
-> *"I notice we're shifting from {area A} to {area B}. Before continuing I'd suggest: (1) let me write current learnings to a doc and ingest into Brain, (2) start a fresh chat for the new topic. This avoids auto-compaction which silently degrades precision — a documented handoff preserves much more. If you meant to stay on {area A}, ignore me."*
-
-Recommendation only — never enforce. If the user wants to continue in the same chat, do so. The goal is to surface the option early enough that auto-compaction doesn't happen quietly. Treat context bloat as one of the highest hidden costs in a long session.
-
----
-
-## 3. Workspace boundaries
-
-You work inside this folder only (`/opt/fractera/app/`).
-
-**Forbidden — never read, write, or analyze:**
-- `/opt/fractera/bridges/` — Fractera platform bridges (system code)
-- `/opt/fractera/services/` — Fractera services: auth, data, rag (system code)
-- Anything outside `/opt/fractera/app/`
-
-If a request requires touching forbidden zones, refuse and explain the boundary.
+At task start you ask whether the user wants a brainstorm, and run the survey until the questions run out
+or the user stops you. You keep the main thread of the task: at each new stage you refocus on the original
+goal. On stage changes you explicitly announce the move to a new pipeline phase. You create, visualize and
+record the task checklist; deepening sub-tasks during decomposition is allowed.
 
 ---
 
-## 4. Workflow — strict order
+## 3. Environment & scope
 
-1. **Detect mode** (§1) and announce it
-2. **Read history**: `NEXT_STEP.md`, `old-steps-map.md`, related entries in `old-steps/` and `reports/`
-3. **Ask clarifying questions** (§2) until the user says go
-4. **Write `NEXT_STEP.md`** — name, known constraints, subtasks, out-of-scope
-5. **Query Company Brain** (§7) if in production mode
-6. **Write code** with code discipline (§10)
-7. **Produce 2 independent proofs** (§5) — non-negotiable
-8. **Ask the user for deploy permission** (§5)
-9. **On user's "yes" → deploy** (§11) and verify the live URL
-10. **Feed Company Brain** (§8) — push reports/docs back to Brain
-11. **Archive the step** — rename `NEXT_STEP.md` → `old-steps/N--{slug}.md` where `slug` is a 6–12 word kebab-case description derived from the task title. Add a line to `old-steps-map.md` linking to the new file.
+Your project is the App Shell (`fractera-app :3000`): the open layer where you write and edit code. Around
+it is the Fractera environment (the layer above): you call it by ports/API but never edit its system code
+without a special requirement from the architect. Everything sits behind nginx (`:80/:443`, absent in IP
+mode) and the auth gate (`fractera-auth :3001`).
 
-Never skip steps. Without step 2, you repeat solved problems. Without 7, you ship bugs. Without 8, you never get user confirmation. Without 10, Brain stays static.
+Environment map (number = nesting depth):
 
----
+1. **App** — `fractera-app :3000` ← your project, editable
+   - 1.1 Service pages (role architect, dynamic): `/ai-core` · `/architecture` · `/development-steps` ·
+     `/patterns` · `/glossary` · `/documents` · `/ai-draft-settings` · `/debug`
+2. **Data** — `fractera-data :3300` (token-auth)
+   - 2.1 SQLite — `app.db` + `media.db` (`products`, `deployment_records`, `projects`, `site_settings`)
+   - 2.2 Object Storage / Media — uploads, thumbnails, crop, PWA-icon generation
+3. **Admin** — `fractera-admin :3002` (cockpit)
+   - 3.1 Bridges — 5 platforms over WebSocket, each = an MCP server `:3210–3214`; + system terminal
+   - 3.2 Tools — Deploy (`POST /api/deploy`) · GitHub · Upload Image · Skills · Product Loop
+   - 3.3 LightRAG — Company Memory `:9621` (shared memory; `/api/rag/{status,query,ingest}`)
+   - 3.4 Hermes — Brain
+     - 3.4.1 Hermes Agent `:9119` (`config.yaml`, `SOUL.md`, skills, 7 MCP bridges `:3210–3216`:
+       deployments `:3215`, readiness `:3216`)
+     - 3.4.2 Chat Web UI `:9120`
+     - 3.4.3 Telegram gateway
+   - 3.5 Domain settings — domain connection + certificate
 
-## 5. Definition of "done"
+**Environment calls.** Reach a service by its port/endpoint: memory — `/api/rag/*`, deploy — `/api/deploy`,
+media — `:3300`, orchestration — Hermes `:9119`. Every API call carries `-H "X-Agent-Identity: <you>"` —
+without it DB changes are attributed to a generic agent and auditability is lost.
 
-A task is **not done when code is written**. A task is done only when ALL of these are true:
-
-1. **Two independent proofs** the change works. "Independent" means each proof tests a different axis — not two versions of the same check. Examples of valid pairs:
-   - Page renders the new component **AND** DB row appears with the new data
-   - API returns 200 with correct payload **AND** UI updates on click
-   - File is created on disk **AND** referenced correctly in DB
-2. **Both proofs reported to the user** in plain text (what you checked, what the result was)
-3. **User explicitly confirms deploy** — never assume, always ask:
-   > *"Proofs found: [A], [B]. Ready to deploy? (yes / no / hold)"*
-4. **Deploy succeeds** — `status: COMPLETED` from `/api/deploy/status`
-5. **Live URL verified** — you opened it (curl) and confirmed the change is visible
-
-Until ALL five are true, status is **in progress**. Don't say "готово", "done", "completed" prematurely.
-
-If a proof fails:
-- Apologize concisely
-- Create a sub-task in `NEXT_STEP.md`
-- Continue without rationalizing the failure
+**Boundary.** App `:3000` is your domain of authority. The layer above you read and call, but never change
+without the rights-escalation protocol (the architect's double confirmation).
 
 ---
 
-## 6. Journal system — long-term memory
+## 4. Code output format
 
-> **Master methodology — read to orient before decomposing a task:**
-> [`CRUD-DOCS/workspace-standards/development-methodology.md`](CRUD-DOCS/workspace-standards/development-methodology.md)
-> — how a task becomes deployed software: triggers, step vs sub-step, decomposition, pattern reuse,
-> deploy cadence, disk↔memory, token budget. It sits above the per-surface standards.
+**Data & storage.** The project works with a local DB (SQLite) and local object storage (media; built-in
+image crop and PWA-icon generation). DB access goes through one layer `import { db } from "@/lib/db"`; new
+tables are declared once in `SCHEMA` (`lib/db/index.ts`) and appear in every environment automatically. Any
+logic uses the minimum of DB queries; on static pages — zero queries at render time (data comes from
+build-time or from a user action via `/api/*`).
 
-The repository is your memory across sessions. Six locations:
+**Authorization.** The project is covered by authorization: every page must check the user's role for
+access. So access is built into development from the start — the access shape is decided before the code.
+Details in the next block, "Authorization".
 
-| Path | Purpose |
-|---|---|
-| `NEXT_STEP.md` | Current task — stable pointer, single filename. Inside, the first line is the full descriptive title |
-| `old-steps/N--{slug}.md` | Snapshot of every completed task. `slug` = 6–12 word kebab-case derived from task title. Example: `7--add-paint-calculator-with-walls-history-cost.md` |
-| `old-steps-map.md` | One-line index of all completed steps with link to each archive file |
-| `docs/` | Long-lived architectural docs (ADRs, glossary, domain notes) |
-| `reports/errors/*.md` | Bugs and dead-ends — how they were fixed |
-| `reports/patterns/*.md` | Reusable working patterns |
-| `glossary.md` | Project-specific terms (helpful for voice input) |
+**Static-first (SSG/ISR).** All routing is server-generated; client components in routes are forbidden. The
+overwhelming majority of content is SSG/ISR. Client routing for dynamic pages — only in extreme cases and
+only by agreement with the user. Remember the Next traps that silently break static/ISR: `auth()`,
+`cookies()`, `headers()` in a layout/page.
 
-**Before recommending a solution** — search `reports/` for prior precedent.
-**After a non-obvious bug** — write to `reports/errors/`.
-**After a clean reusable pattern** — write to `reports/patterns/`.
-**After an architectural decision** — write to `docs/ADR-NNN-{slug}.md`.
+**File naming (mandatory).** Every JSX file ends in `.client.tsx` or `.server.tsx`.
+Format: `[domain]-[entity]-[detail]-[role].suffix`
+- `breadcrumb-trail.server.tsx` ✅
+- `header-action-bar.client.tsx` ✅
+- `breadcrumb-nav.tsx` ❌ (no domain, no role suffix)
 
-Every artifact you write here must be ingested into Brain (§8).
+**Size limit.** Max 200 lines of code in one component (excluding imports/exports). Does not apply to data
+and CSS — there size is not line-limited.
 
----
+**Next.js 16+.** `middleware.ts` is forbidden — use `proxy.ts` as its analog (the `proxy()` function +
+`export const config`).
 
-## 7. Company Brain — read at session start
-
-A knowledge graph of this entire project. **Check availability first thing:**
-
-```bash
-curl -s http://localhost:3002/api/rag/status
-```
-
-**If available:**
-- Query with the user's task:
-  ```bash
-  curl -X POST http://localhost:3002/api/rag/query \
-    -H "Content-Type: application/json" \
-    -d '{"query": "<task description>", "mode": "hybrid"}'
-  ```
-- Use the response as **primary context** — Brain knows the codebase semantically
-- For architecture or optimization questions — also recommend the user open the Company Brain panel directly
-
-**If unavailable:**
-- Tell the user: *"Company Brain is offline — using local files only. Enable it via Admin → Settings → Company Brain for richer context."*
-- Fall back to local files + journal
-
-**Division of labor:** Brain = "where" and "how it works." Journal = "what was done and why."
+> Full route-skeleton standard — `shell-component-architecture.md` (thin `page.tsx`,
+> `_components/index.tsx`, `.client`/`.server` suffixes, typed `_meta.ts`).
 
 ---
 
-## 8. Feed Company Brain — close the loop
+## 5. Authorization
 
-**Brain does not auto-learn.** No file watcher, no background indexer. Brain knows only what you explicitly push. Every important learning you don't push is **lost** — to you next session, to other agents, to the user.
+NextAuth v5, two providers (credentials + guest); coverage via the `fractera-auth :3001` gate.
+Authorization is a closed layer outside `app/`: you don't go there or explore anything there — you work
+only with what is listed here.
 
-**When to push (mandatory):**
-- Architectural decision recorded in `docs/ADR-NNN.md`
-- New domain concept documented in `docs/{concept}.md`
-- Reusable pattern in `reports/patterns/*.md`
-- Non-obvious bug fix in `reports/errors/*.md`
-- Glossary term added to `glossary.md`
-- Completed step archived to `old-steps/N.old-step.md`
+Hooks & functions:
+- `getSession(req?)` (`lib/auth/get-session.ts`) — server-side identity read → `{ userId, email, roles }`.
+  Honors the `X-Agent-Identity` header (role `agent`); dev-bypass → `architect`; otherwise proxies
+  `:3001/api/session`.
+- `/api/me` — client-side identity read (`fetch('/api/me')`).
+- `useRouteAccess(meta)` (`lib/hooks/use-route-access.ts`) — client guard: per `_meta.ts` it applies
+  public / public+guest / private; reads `/api/me`, never `auth()` in a page.
+- `/api/auth/guest?redirectUrl=…` — guest sign-in (hard navigation, sets the session cookie).
+- `registerRedirectUrl(href, role)` (`lib/runtime-urls`) — builds the register redirect.
+- `register()` — promotes a guest to a full account (platform-side, `:3001`); `user.id` is preserved.
+- `POST /api/project/default/<resource>` — write a visitor's data; the row is stamped with their `user.id`.
 
-**When NOT to push:**
-- Small code edits (Brain re-indexes via the full scan periodically)
-- WIP drafts of `NEXT_STEP.md`
-- Commits that don't change architecture or learnings
+Roles: `guest / user / architect` — enforced tiers; + business roles (full list — `ALL_ROLES`, 15:
+`vip_user`, `subscriber_lite/standard/max`, `buyer`, `manager`, …). **Guest ≠ unauthenticated**: on a page
+with `requiresGuestRegistration: true` the guest is issued a permanent `user.id`, their work persists and
+attaches to the account on registration.
 
-**How to push — targeted (preferred):**
-
-```bash
-curl -X POST http://localhost:3002/api/rag/ingest \
-  -H "Content-Type: application/json" \
-  -H "X-Agent-Identity: qwen" \
-  -d '{"text": "<full text of the file you just wrote>", "description": "docs/ADR-007-storage-choice.md"}'
-```
-
-**How to push — full scan (heavy, use sparingly):**
-
-```bash
-curl -X POST http://localhost:3002/api/rag/ingest \
-  -H "X-Agent-Identity: qwen" \
-  -d '{}'
-```
-
-**Cost awareness:** each ingest spends OpenAI tokens (~$0.0003 per typical document for entity extraction + embeddings). Cheap but not free. Don't ingest trivial changes.
-
-**Identity in your mental model:** *You are not just a coder — you are Company Brain's hands. Knowledge you produce but don't push is knowledge lost.*
+> Recipe — `HOW-USE-AUTH.md`; concept — `CRUD-DOCS/auth-architecture.md`.
 
 ---
 
-## 9. Built-in platform capabilities
+## 6. Development pipeline
 
-The platform ships with working solutions. Do not reinvent. For full details, query Company Brain.
+The core of the document — a strictly sequential, recursive pipeline you must **never deviate from**,
+expressed as XML for unambiguous branching. Read the whole block before acting.
 
-| Category | What's already done |
-|---|---|
-| **Auth + roles** | NextAuth v5, login/register/guest, role-based access — pattern in `(auth)/` |
-| **Database** | SQLite with auto-migrations, query helpers in `lib/db/` |
-| **Files + media** | Upload, thumbnails, image cropping — Media Service on port 3300 |
-| **PWA icons** | Full icon set from one square image — `POST :3300/media/generate-icons` |
-| **Protected routes** | Working role-checked example in `dashboard/` |
-| **Auto-update** | App syncs from upstream repo — controlled by `UPSTREAM_REPO_URL` env |
+```xml
+<pipeline name="development" rules="never-deviate; sequential; recursive">
 
-This list is **headline only**. Many more capabilities exist (GitHub tooling, deploy, identity tracking, etc.). When unsure if something is built-in — **ask Brain first** before building it.
+  <law id="realtime-pages">/architecture, /development-steps, /ai-draft-settings, /patterns poll the
+    filesystem and highlight (pulse/blink) changed nodes; the architect sees you complete/create sub-steps
+    in real time. Every on-disk action = a visible event.</law>
+  <law id="multi-cycle">A task may not fit in one cycle — normal. If sub-steps don't resolve it, create one
+    or more new steps (with descriptions) for the next session instead of forcing it. One request usually
+    spawns 2-3 new steps and/or a dozen sub-steps.</law>
 
----
+  <stage id="6.0" name="Session entry">
+    <action>Detect and announce mode: curl /api/rag/status OR test -d /opt/fractera/app -> PROD (changes
+      visible only after deploy) else DEV (hot-reload, Brain offline); discipline identical in both.</action>
+    <action>Read GLOSSARY.md (terms) and COMPLETED-STEPS/ (history — don't re-solve solved problems).</action>
+    <action>Check memory: GET /api/rag/status; offline -> work from files on disk.</action>
+    <gate>mode announced; GLOSSARY.md + COMPLETED-STEPS/ read; rag status known</gate>
+  </stage>
 
-## 10. Code discipline
+  <stage id="6.1" name="Triage">
+    <triage>
+      <trigger n="1" type="next-step" source="NEW-STEPS/" goto="6.3"/>
+      <trigger n="2" type="direct-task" goto="6.3"/>
+      <trigger n="3" type="architecture-state" goto="flow-B"/>
+      <trigger n="4" type="agent-drafts" goto="flow-A"/>
+    </triage>
+    <flow id="flow-A" page="/ai-draft-settings" folder="AI-DRAFT-SETTINGS/{AGENT}/ (SKILLS/, MCP/)">
+      <action>convert each draft into a new step (spec)</action>
+      <action>delete the draft record (Discard / Remove draft)</action>
+      <constraint>do not touch the original instruction/skill/MCP files; build nothing here</constraint>
+    </flow>
+    <flow id="flow-B" page="/architecture">
+      <action>take ONE record: todo on a live route | declared page (README.md, no built file) | danger/deletion</action>
+      <action>delete it on the tab; create a step for it</action>
+      <repeat until="tree empty"/>
+    </flow>
+    <brainstorm ref="section-2" mode="adaptive">survey until "go/proceed"; next-step -> minimal,
+      direct task -> dense</brainstorm>
+    <gate>exactly one trigger chosen; goal restated to the architect and confirmed "go"</gate>
+  </stage>
 
-**Hard limit: 200 lines per file, excluding imports/exports.**
+  <stage id="6.2" name="Enrich task context">
+    <action optional="true">targeted memory query: POST /api/rag/query (mode hybrid) to prefetch -> then
+      verify in the real source on disk (memory accelerates, it is not the truth)</action>
+    <action>quick shallow pass over /patterns (PATTERNS/): memorize pattern names for reuse</action>
+    <gate>every memory-derived claim used was re-checked against the source on disk</gate>
+  </stage>
 
-A file exceeding 200 lines must be decomposed immediately — split by responsibility, not by line count. Non-negotiable. If you encounter an oversized file in the area you're editing, decompose it before continuing the requested change.
+  <stage id="6.3" name="Open a step">
+    <action>create NEW-STEPS/{NN}-slug.md with the fractera:step block and importance
+      (optional|mandatory|critical); exact format in development-steps.md. Describe inputs, planned result,
+      intermediate results (decomposition), planned routing-tree changes.</action>
+    <action>create the intermediate sub-steps obvious now (growing more in later cycles is normal)</action>
+    <action>if needed, change the /architecture tree: a route = _meta.ts (RouteMeta) + README.md (living
+      to-do); declare a page/endpoint = create README.md (declared node); tasks via
+      /api/project/default/architecture/tasks</action>
+    <constraint>creating a page -> FIRST decide the access shape (public|private|public+guest) per
+      HOW-USE-AUTH.md (see section-5), before code, not by guessing — this access shape becomes the
+      scaffold-route --access argument</constraint>
+    <branch on="oversized-task">deliverable of THIS step = the step-chain + declared pages, not code</branch>
+    <gate>fractera:step block parses and importance set; every declared page has an access shape</gate>
+  </stage>
 
-Other rules:
-- Edit existing files before creating new ones
-- No comments unless the *why* is non-obvious
-- No emojis unless the user requests them
+  <stage id="6.4" name="Development cycle" repeat="as needed">
+    <action>pull the patterns needed (/patterns); none fits -> create one and agree with the architect.
+      Write code per section-4 (static-first, .client/.server naming, &lt;=200 lines).</action>
+    <action>materialize the route skeleton with the scaffold-route skill (.claude/skills/scaffold-route —
+      page/entry/leaf/_meta by construction, the --access shape baked in); then write only the domain code,
+      never hand-type the skeleton</action>
+    <action>take the matching route's task from /architecture into development (get existing steps/elements
+      for the node); do the next sub-step:</action>
+    <substep id="6.4.2.1" name="finish">close the task in /architecture; clear README.md
+      (declared -> live once the real route file exists)</substep>
+    <substep id="6.4.2.2" name="decompose">add new sub-steps to NEW-STEPS/ and new to-dos to /architecture</substep>
+    <action>mark each iteration in the task checklist</action>
+    <action>while waiting on a deploy/feedback, don't idle: extract new patterns from the fresh code; on a
+      long step do not cross the 50% context boundary</action>
+    <note name="composition">composition = assembling the page from parallel-routing slots + reusable
+      patterns per shell-component-architecture.md (happens here, in the per-page cycle)</note>
+    <gate>per iteration: README task cleared, checklist item ticked, code obeys section-4</gate>
+  </stage>
 
----
+  <stage id="6.5" name="Verification (pre-deploy)">
+    <action>run and check the change's behavior locally / on the current server, before the deploy</action>
+    <gate>the new behavior was reproduced at least once</gate>
+  </stage>
 
-## 11. Deploy mechanics
+  <stage id="6.6" name="Two proofs">
+    <action>present the architect two independent proofs from different planes (e.g. page renders the
+      result AND a row appears in the DB); the fifth proof is the live URL after deploy (6.8)</action>
+    <gate>two genuinely independent proofs, both reported in plain text</gate>
+  </stage>
 
-Only run this when the user has explicitly approved deploy (§5 step 3).
-
-```bash
+  <stage id="6.7" name="Deploy preparation" requires="architect-approval">
+    <action>load and re-read the anti-patterns (PATTERNS/ANTI-PATTERNS/) before launching</action>
+    <branch on="discrepancy-found">cancel the deploy; fix</branch>
+    <action>launch the deploy (reading DEPLOY_SECRET from bridges/app/.env.local is a sanctioned exception
+      to the section-3 boundary — platform action, secret read-only); build 2-4 min, only app/ rebuilt:</action>
+    <command lang="bash"><![CDATA[
 DEPLOY_SECRET=$(grep "^DEPLOY_SECRET=" /opt/fractera/bridges/app/.env.local | cut -d'=' -f2)
 RESULT=$(curl -s -X POST http://localhost:3002/api/deploy \
-  -H "Content-Type: application/json" \
-  -H "X-Deploy-Secret: $DEPLOY_SECRET" \
-  -d "{\"description\":\"brief description of what changed\"}")
+  -H "Content-Type: application/json" -H "X-Deploy-Secret: $DEPLOY_SECRET" \
+  -d "{\"description\":\"what changed\"}")
 JOB_ID=$(echo $RESULT | grep -o '"jobId":"[^"]*"' | cut -d'"' -f4)
-
 while true; do
   S=$(curl -s "http://localhost:3002/api/deploy/status?jobId=$JOB_ID")
-  echo $S | grep -o '"status":"[^"]*"'
-  echo $S | grep -qE '"status":"(COMPLETED|FAILED|HEALTH_FAILED)"' && break
-  sleep 10
-done
-echo $S
+  echo $S | grep -qE '"status":"(COMPLETED|FAILED|HEALTH_FAILED)"' && break; sleep 10
+done; echo $S
+    ]]></command>
+    <gate>anti-patterns re-read; none matches this change; the architect approved</gate>
+  </stage>
+
+  <stage id="6.8" name="Deploy result">
+    <branch on="FAILED|HEALTH_FAILED">
+      <action>record a Deployments row (status=error, commit); study log[]; add an anti-pattern to
+        PATTERNS/ANTI-PATTERNS/; fix; retry</action>
+    </branch>
+    <branch on="COMPLETED">
+      <action>save useful patterns: create the category, write PATTERNS/PATTERNS/{category}/</action>
+      <action>record a Deployments row yourself: owner_product_loop_record_deployment (Deployments MCP
+        :3215) — platform={you}, model={your-model-id}, tokens (honest; none -> 0), commit_hash, step,
+        page_url, status=ready; result=3 default (the user sets the stars)</action>
+      <constraint>mark "in production" ONLY after a recheck: the live URL returns HTTP 200 (fifth proof)</constraint>
+    </branch>
+    <gate>terminal status handled per the branch taken</gate>
+  </stage>
+
+  <stage id="6.9" name="Close the step">
+    <action>move {NN}-slug.md from NEW-STEPS/ to DEVELOPMENT-STEPS/COMPLETED-STEPS/ (status:completed,
+      completedAt); write a maximally complete report (no abridgement): what was done, what you hit,
+      patterns used/created, deploy errors, model, tokens</action>
+    <gate>file in COMPLETED-STEPS/ with status/completedAt set and a complete report</gate>
+  </stage>
+
+  <stage id="6.10" name="Ingest to memory">
+    <action>POST /api/rag/ingest (header X-Agent-Identity) the completed step file (from COMPLETED-STEPS/)
+      AND everything created during the step: new patterns/anti-patterns, ADRs/docs, GLOSSARY.md terms</action>
+    <gate>ingest returned OK for the step file and every artifact created</gate>
+  </stage>
+
+  <stage id="6.11" name="Report to the architect">
+    <action>report completion; strongly recommend: (1) rate the result in Deployments — set stars (1-3);
+      (2) reset the context before the next step</action>
+    <gate>architect informed; stars + context-reset recommended</gate>
+  </stage>
+
+  <done name="Process validation">
+    <rule>DONE only when EVERY stage gate (6.0-6.11) is green AND, measured against the architect's
+      original request from 6.1:</rule>
+    <requires ref="6.6">two independent proofs hold</requires>
+    <requires ref="6.8">deploy COMPLETED and the live URL returns HTTP 200</requires>
+    <requires ref="6.9">the step sits in COMPLETED-STEPS/</requires>
+    <requires ref="6.10">the step is ingested</requires>
+    <on-red>any gate red -> the process is IN PROGRESS: never say "done"; loop back to the failing stage and
+      re-run from there</on-red>
+    <note>per-stage gates verify "built right"; this final gate validates "built the right thing"</note>
+  </done>
+
+</pipeline>
 ```
-
-- Build takes 2–4 min. Only `app/` is rebuilt.
-- On `FAILED` → `log[]` contains errors. Fix and retry. Do not declare "done".
-- On `COMPLETED` → fetch the live URL via curl and verify the change is visible. **This is the fifth proof required by §5.**
-
----
-
-## 12. Agent identity
-
-Include this header on every API call so DB changes are attributed correctly:
-
-```
--H "X-Agent-Identity: qwen"
-```
-
-Without it, changes are attributed to a generic agent — auditability is lost.
-
----
-
-<!-- PERMANENT — do not delete -->
-
-## Template — NEXT_STEP.md structure
-
-When opening a new task, `NEXT_STEP.md` must use this structure:
-
-```markdown
-# Current task: [name]
-
-**Started:** YYYY-MM-DD
-**Mode:** prod | dev
-**Status:** Open
-
-## Known constraints (from history)
-- [step N] ...
-- [report X] ...
-
-## Subtasks
-- [ ] ...
-- [ ] ...
-
-## Out of scope
-- ...
-
-## Proofs required for "done"
-- [ ] Proof 1: ...
-- [ ] Proof 2: ...
-```
-
-When complete:
-1. Derive `slug` from the task title — 6–12 words, kebab-case, lowercase. Example: title *"Add paint calculator with walls, history and cost"* → slug `add-paint-calculator-with-walls-history-cost`
-2. Rename and move `NEXT_STEP.md` → `old-steps/N--{slug}.md`
-3. Add a line to `old-steps-map.md` in this format:
-
-```
-N. YYYY-MM-DD — Short title — one-sentence outcome — [→](old-steps/N--{slug}.md)
-```
-
-4. Ingest the archived file into Brain (§8).
-5. Reset `NEXT_STEP.md` to an empty stub ready for the next task.
-
-<!-- END PERMANENT -->
