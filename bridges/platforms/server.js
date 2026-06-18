@@ -11,6 +11,7 @@ import { DeploymentsMcpServer } from './deployments-mcp-server.js'
 import { ReadinessMcpServer } from './readiness-mcp-server.js'
 import { ParallelRoutingMcpServer } from './parallel-routing-mcp-server.js'
 import { AppSettingsMcpServer } from './app-settings-mcp-server.js'
+import { AiDraftMcpServer } from './ai-draft-mcp-server.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, '../../app/.env.local') })
@@ -1149,4 +1150,15 @@ new AppSettingsMcpServer({
   port: Number(process.env.APP_SETTINGS_MCP_PORT ?? 3218),
   secret: MCP_SECRET,
   configPath: process.env.APP_CONFIG_PATH ?? '/opt/fractera/app/APP-CONFIG/app-config.json',
+}).start()
+
+// ── AI Draft MCP server (singleton, port 3221) ───────────────────────────────
+// Any of the 6 coding agents calls owner_draft_create_record to propose a new
+// skill or MCP connector. The server generates a structured source skeleton +
+// tasks from the description and publishes the draft to AI-DRAFT-SETTINGS/ via
+// the app API (:3000). §8.2 dry_run flow: preview first, then create. → step 123.
+new AiDraftMcpServer({
+  port: Number(process.env.AI_DRAFT_MCP_PORT ?? 3221),
+  secret: MCP_SECRET,
+  appUrl: process.env.APP_URL ?? 'http://127.0.0.1:3000',
 }).start()

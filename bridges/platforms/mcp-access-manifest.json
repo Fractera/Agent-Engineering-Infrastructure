@@ -1,7 +1,7 @@
 {
   "_doc": "Authoritative, machine-readable access manifest for ALL first-party Fractera L2-MCP tools. The enforcement hook (Hermes plugin fractera-access-control, reads this) is the security boundary; tool NAMES are only labels. Per tool: tier (public<=user<=owner, MCP-REGISTRY 8.3), first_party (true for everything here), mutating (true => the agent must run the confirm-before-mutation protocol, MCP-REGISTRY 8.2), execution ('server' = runs on the server | 'client' = a per-visitor view action the BROWSER executes; the server tool just returns a deferred {__client_action__} envelope that /api/consultant forwards to the widget). L1 deploy-MCP is intentionally NOT listed (frozen public contract, 8.1). Keep in sync with MCP-REGISTRY 8.5 when adding/renaming a tool.",
   "version": 2,
-  "updated": "2026-06-16",
+  "updated": "2026-06-18",
   "servers": {
     "claude-bridge": { "port": 3210, "first_party": true, "max_tier": "owner" },
     "codex-bridge": { "port": 3211, "first_party": true, "max_tier": "owner" },
@@ -13,7 +13,8 @@
     "parallel-routing-bridge": { "port": 3217, "first_party": true, "max_tier": "owner" },
     "app-settings-bridge": { "port": 3218, "first_party": true, "max_tier": "owner" },
     "public-consultant-bridge": { "port": 3219, "first_party": true, "max_tier": "public" },
-    "client-actions-bridge": { "port": 3220, "first_party": true, "max_tier": "public" }
+    "client-actions-bridge": { "port": 3220, "first_party": true, "max_tier": "public" },
+    "ai-draft-bridge": { "port": 3221, "first_party": true, "max_tier": "owner" }
   },
   "tools": {
     "owner_coding_platform_send_prompt": { "tier": "owner", "first_party": true, "mutating": true, "execution": "server" },
@@ -43,6 +44,7 @@
     "public_view_set_locale": { "tier": "public", "first_party": true, "mutating": true, "execution": "client" },
     "public_view_set_theme": { "tier": "public", "first_party": true, "mutating": true, "execution": "client" },
     "public_view_set_width": { "tier": "public", "first_party": true, "mutating": true, "execution": "client" },
-    "public_request_authentication": { "tier": "public", "first_party": true, "mutating": false, "execution": "client" }
+    "public_request_authentication": { "tier": "public", "first_party": true, "mutating": false, "execution": "client" },
+    "owner_draft_create_record": { "tier": "owner", "first_party": true, "mutating": true, "execution": "server" }
   }
 }
