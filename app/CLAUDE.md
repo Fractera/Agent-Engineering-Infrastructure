@@ -187,7 +187,8 @@ expressed as XML for unambiguous branching. Read the whole block before acting.
       to-do); declare a page/endpoint = create README.md (declared node); tasks via
       /api/project/default/architecture/tasks</action>
     <constraint>creating a page -> FIRST decide the access shape (public|private|public+guest) per
-      HOW-USE-AUTH.md (see section-5), before code, not by guessing</constraint>
+      HOW-USE-AUTH.md (see section-5), before code, not by guessing — this access shape becomes the
+      scaffold-route --access argument</constraint>
     <branch on="oversized-task">deliverable of THIS step = the step-chain + declared pages, not code</branch>
     <gate>fractera:step block parses and importance set; every declared page has an access shape</gate>
   </stage>
@@ -195,6 +196,9 @@ expressed as XML for unambiguous branching. Read the whole block before acting.
   <stage id="6.4" name="Development cycle" repeat="as needed">
     <action>pull the patterns needed (/patterns); none fits -> create one and agree with the architect.
       Write code per section-4 (static-first, .client/.server naming, &lt;=200 lines).</action>
+    <action>materialize the route skeleton with the scaffold-route skill (.claude/skills/scaffold-route —
+      page/entry/leaf/_meta by construction, the --access shape baked in); then write only the domain code,
+      never hand-type the skeleton</action>
     <action>take the matching route's task from /architecture into development (get existing steps/elements
       for the node); do the next sub-step:</action>
     <substep id="6.4.2.1" name="finish">close the task in /architecture; clear README.md
