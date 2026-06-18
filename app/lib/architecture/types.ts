@@ -49,5 +49,12 @@ export type ArchNode = {
   /** A short category chip shown next to the label, e.g. "service" for the
    *  admin-only introspection pages. Purely informational. */
   badge?: string
+  /** On a skill leaf: which real file on disk this node mirrors. The detail panel
+   *  uses it to lazily fetch the full content (GET /api/ai-core/skill). */
+  skillRef?: { agent: string; name: string }
+  /** On an add-able group (Skills / MCP): where the "+" should start a draft —
+   *  the draft-agent id and the object kind. Drives the redirect to
+   *  /ai-draft-settings?agent=&object= (we create a draft, never a real artefact here). */
+  addTo?: { agent: string; object: "skills" | "mcp" }
   children?: ArchNode[]
 }

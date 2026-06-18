@@ -27,13 +27,14 @@ type DraftSel = { type: "draft"; draft: Draft }
 type Selection = RefSel | DraftSel | null
 type Group = { agentId: string; kind: GroupKind }
 
-export function AiDraftApp() {
+export function AiDraftApp({ initialAgent, initialKind }: { initialAgent?: string; initialKind?: GroupKind } = {}) {
   const [agents, setAgents] = useState<AgentNode[]>([])
   const [selected, setSelected] = useState<Selection>(null)
   const [adding, setAdding] = useState<Group | null>(null)
   const [activeGroup, setActiveGroup] = useState<Group | null>(null)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [seeded, setSeeded] = useState(false)
+  const [preselected, setPreselected] = useState(false)
 
   async function refresh() {
     const res = await fetch("/api/ai-draft-settings")
@@ -42,6 +43,16 @@ export function AiDraftApp() {
     const list: AgentNode[] = data.agents ?? []
     setAgents(list)
     if (!seeded) { setExpanded(new Set(list.map(a => `agent:${a.id}`))); setSeeded(true) }
+    // Deep-link from /ai-core "+": preselect the agent's SKILLS / MCP group and open the
+    // add-draft form, once, if the agent exists. Creating a real artefact is never done
+    // here — this only starts a draft (a wish).
+    if (!preselected && initialAgent && initialKind && list.some(a => a.id === initialAgent)) {
+      const grp: Group = { agentId: initialAgent, kind: initialKind }
+      setActiveGroup(grp)
+      setAdding(grp)
+      setExpanded(prev => new Set([...prev, ...list.map(a => `agent:${a.id}`), `grp:${initialAgent}:${initialKind}`]))
+      setPreselected(true)
+    }
   }
   useEffect(() => { refresh() }, [])
 

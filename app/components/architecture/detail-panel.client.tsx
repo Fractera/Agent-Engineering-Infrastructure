@@ -2,6 +2,7 @@
 
 import { ArrowUpRight } from "lucide-react"
 import type { ArchNode } from "@/lib/architecture/types"
+import { SkillContentViewer } from "./skill-content-viewer.client"
 
 const KIND_LABEL: Record<string, string> = {
   layer: "Layer",
@@ -55,6 +56,10 @@ export function DetailPanel({ node }: { node: ArchNode | null }) {
           {meta.rendering && <MetaRow k="Rendering" v={meta.rendering} />}
           {meta.method && <MetaRow k="Method" v={meta.method} />}
         </div>
+      )}
+
+      {node.skillRef && (
+        <SkillContentViewer key={node.id} agent={node.skillRef.agent} name={node.skillRef.name} />
       )}
 
       {node.href && (

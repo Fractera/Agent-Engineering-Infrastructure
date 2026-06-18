@@ -52,8 +52,9 @@ export function skillsGroup(id: string, skills: ArchNode[]): ArchNode {
     addable: true,
     addLabel: "Add skill",
     description:
-      "The skills this agent loads. Use the + below to add one (the add-skill " +
-      "mechanism is wired up in a later step).",
+      "The skills this agent loads — a live mirror of the real skill files on disk. " +
+      "Use + to start a draft for a new one on AI Draft Settings (a wish; an agent " +
+      "turns it into the real skill later).",
     children: skills,
   }
 }

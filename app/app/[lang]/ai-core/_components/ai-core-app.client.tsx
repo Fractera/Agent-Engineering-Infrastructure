@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import type { ArchNode } from "@/lib/architecture/types"
 import { flattenTree, type FlatEntry } from "@/lib/architecture/flatten"
@@ -14,6 +15,7 @@ import { JumpBar } from "@/components/architecture/jump-bar.client"
 // is built on the server (static L2 seed + a live filesystem mirror of the
 // Documentation corpus) and passed in, so it reflects what is really on disk.
 export function AiCoreApp({ tree }: { tree: ArchNode }) {
+  const router = useRouter()
   const [selected, setSelected] = useState<ArchNode | null>(tree)
   const [expanded, setExpanded] = useState<Set<string>>(new Set(["l2", "nginx", "auth"]))
   const [scrollTarget, setScrollTarget] = useState<{ id: string; n: number } | null>(null)
@@ -58,7 +60,14 @@ export function AiCoreApp({ tree }: { tree: ArchNode }) {
     setScrollTarget(t => ({ id: "l2", n: (t?.n ?? 0) + 1 }))
   }
 
+  // "+" does not build anything here — it starts a real DRAFT for this agent on the
+  // AI Draft Settings page (a wish; an agent materializes it later). The draft layer is
+  // the single entry point for adding a skill / MCP, so we deep-link straight to it.
   function handleAdd(parent: ArchNode) {
+    if (parent.addTo) {
+      router.push(`/ai-draft-settings?agent=${parent.addTo.agent}&object=${parent.addTo.object}`)
+      return
+    }
     toast.info(`Add to "${parent.label}" — coming in a later step`)
   }
 
