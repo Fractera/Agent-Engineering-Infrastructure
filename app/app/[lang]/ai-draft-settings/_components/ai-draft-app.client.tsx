@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Plus, X } from "lucide-react"
+import { Plus, X, ChevronDown, ChevronUp } from "lucide-react"
 import type { AgentNode, Draft, DraftMode, DraftTier, GroupKind } from "@/lib/ai-draft/draft-format"
 import { DraftTree } from "@/components/ai-draft/draft-tree.client"
 import { DraftDetail } from "@/components/ai-draft/draft-detail.client"
@@ -15,12 +15,48 @@ import { AddDraftForm } from "@/components/ai-draft/add-draft-form.client"
 // under AI-DRAFT-SETTINGS/; an agent reads them later and applies the change to the real
 // instruction / skill / MCP file. The originals are never touched from here.
 
-const DESCRIPTION =
-  "A staging layer between you and the files that drive your agents. Here the architect " +
-  "writes wishes in free form — new instructions, skills or connectors, or changes to the " +
-  "existing ones — without editing the real files. You describe what you want (to supplement " +
-  "or to replace), then ask the AI to turn these notes into the real documents and place them " +
-  "where they belong. You work only on this mirror; an agent applies it to the originals."
+const HOW_IT_WORKS = [
+  {
+    num: "01",
+    title: "By hand",
+    badge: "available",
+    body:
+      "Pick an agent, choose a group (SKILLS or MCP), write a name and description. " +
+      "The draft is saved as a structured markdown file with a machine block — ready for " +
+      "any agent to read and apply. No real files are touched until you decide to materialise it.",
+  },
+  {
+    num: "02",
+    title: "Via AI agent",
+    badge: "available",
+    body:
+      "Any of the six agents (Claude Code, Codex, Gemini CLI, Qwen Code, Kimi Code, Hermes) " +
+      "can call the owner_draft_create_record MCP tool while working on your project. " +
+      "The tool generates a structured source skeleton and actionable tasks from the " +
+      "agent's description — and publishes the draft here automatically. " +
+      "The architect reviews and approves. This is the path where agents propose their own genes.",
+  },
+  {
+    num: "03",
+    title: "Materialiser",
+    badge: "coming soon",
+    body:
+      "Once a draft is approved, an agent reads the wish and applies it to the real file — " +
+      "creating or updating the actual skill, instruction or MCP connector in the correct " +
+      "directory. The draft transitions from wish to live artefact; you see the result " +
+      "immediately in /ai-core and /architecture.",
+  },
+  {
+    num: "04",
+    title: "Proactive proposals",
+    badge: "coming soon",
+    body:
+      "Agents working on your project will detect recurring patterns and automation " +
+      "opportunities — and propose drafts here without being asked. You review the proposals, " +
+      "approve what fits, discard what does not. Over time this turns the draft board into " +
+      "a living map of your system's evolving intelligence.",
+  },
+]
 
 type RefSel = { type: "ref"; agentId: string; kind: GroupKind; name: string; label: string }
 type DraftSel = { type: "draft"; draft: Draft }
@@ -35,6 +71,7 @@ export function AiDraftApp({ initialAgent, initialKind }: { initialAgent?: strin
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [seeded, setSeeded] = useState(false)
   const [preselected, setPreselected] = useState(false)
+  const [howOpen, setHowOpen] = useState(false)
 
   async function refresh() {
     const res = await fetch("/api/ai-draft-settings")
@@ -111,7 +148,47 @@ export function AiDraftApp({ initialAgent, initialKind }: { initialAgent?: strin
       <div className="mx-auto max-w-6xl px-6 py-8">
         <a href="/" className="font-mono text-xs text-foreground/70 transition-colors hover:text-foreground">← back</a>
         <h1 className="mt-1 text-xl font-bold text-foreground">AI draft settings</h1>
-        <p className="mt-0.5 max-w-2xl text-xs leading-relaxed text-foreground/80">{DESCRIPTION}</p>
+        <p className="mt-0.5 max-w-2xl text-xs leading-relaxed text-foreground/80">
+          The place where your agents evolve. Propose new skills, connectors and instructions — for all six coding
+          agents — in one structured staging layer, before anything reaches the real files.
+          Your AI can propose drafts here on its own; you review and approve.
+        </p>
+        <button
+          onClick={() => setHowOpen(v => !v)}
+          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-foreground/60 underline-offset-2 hover:text-foreground hover:underline transition-colors"
+        >
+          {howOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+          {howOpen ? "Collapse" : "Learn how it works"}
+        </button>
+
+        {howOpen && (
+          <div className="mt-3 max-w-2xl rounded-xl border border-border bg-muted/20 p-5">
+            <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-foreground/50">
+              Four ways to work with this page
+            </p>
+            <div className="space-y-4">
+              {HOW_IT_WORKS.map(item => (
+                <div key={item.num} className="flex gap-3">
+                  <span className="mt-0.5 shrink-0 font-mono text-[10px] text-foreground/30">{item.num}</span>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-foreground">{item.title}</span>
+                      <span className={
+                        "rounded px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide " +
+                        (item.badge === "available"
+                          ? "bg-emerald-500/15 text-emerald-500"
+                          : "bg-foreground/10 text-foreground/40")
+                      }>
+                        {item.badge}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-[11px] leading-relaxed text-foreground/60">{item.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="mt-4 overflow-x-auto">
           <div className="flex h-[72vh] min-w-[720px] overflow-hidden rounded-xl border border-border">
