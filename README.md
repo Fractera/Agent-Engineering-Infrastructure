@@ -1,6 +1,6 @@
 <h1 align="center">Fractera AI Workspace</h1>
 
-<p align="center"><strong>Fractera provides a production-ready web application architecture that configures itself, serving as the ultimate self-hosted alternative to Vercel. Automatically deploy a 50,000-line Next.js enterprise boilerplate to your own VPS in 10 minutes — leveraging a fundamentally new MCP-First paradigm designed to eliminate context window inflation at scale.</strong></p>
+<p align="center"><strong>Fractera provides a production-ready web application architecture that configures itself, serving as the ultimate self-hosted alternative to Vercel. Automatically deploy a 50,000-line Next.js enterprise boilerplate (or any REPO) to your own VPS in 10 minutes — leveraging a fundamentally new MCP-First paradigm designed to eliminate context window inflation at scale.</strong></p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/MCP--First-a%20fundamentally%20new%20way%20to%20generate%20apps%2C%20MCP%20over%20code%20agents-FF8C00?style=for-the-badge" alt="A fundamentally new MCP-First approach to generating applications — focused on MCP more than on code agents"/>
