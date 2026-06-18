@@ -12,6 +12,13 @@ export function getDb(): Database.Database {
   if (!_db) {
     fs.mkdirSync(path.dirname(path.resolve(DB_PATH)), { recursive: true });
     _db = new Database(DB_PATH);
+    // Wait up to 5s for a held lock instead of throwing SQLITE_BUSY instantly
+    // (better-sqlite3 default busy_timeout = 0). At `next build` the auth config
+    // module (`auth.ts`: NextAuth({ adapter: SqliteAdapter(getDb()) })) is evaluated
+    // eagerly by MULTIPLE build workers, each calling getDb() → runMigrations() →
+    // concurrent writes on auth.db. WAL allows one writer at a time; without a busy
+    // timeout the second worker fails the whole build. → reports/errors/sqlite-busy-build-concurrent-migration.md
+    _db.pragma("busy_timeout = 5000");
     _db.pragma("journal_mode = WAL");
     _db.pragma("foreign_keys = ON");
     const { runMigrations } = require("./migrations");
