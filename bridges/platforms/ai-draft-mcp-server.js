@@ -74,6 +74,34 @@ function toolsSchema() {
         },
       },
     },
+    {
+      name: 'owner_draft_send_to_steps',
+      description:
+        'Promote AI-draft wishes into a real development step (flow-A), then remove the ' +
+        'drafts so each wish lives in exactly one place — the new step on /development-steps. ' +
+        'Two modes: bundle_all=true folds EVERY pending draft on the page into ONE detailed ' +
+        'step (a free-form brief handed to an agent) and deletes them all; otherwise pass a ' +
+        'single draft_id to promote just that one.\n\n' +
+        'CONFIRM FIRST (§8.2): call with dry_run=true to preview which drafts would be sent, ' +
+        'show the architect, get explicit confirmation, THEN call without dry_run.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          bundle_all: {
+            type: 'boolean',
+            description: 'true → fold every pending draft into one step and delete them all.',
+          },
+          draft_id: {
+            type: 'string',
+            description: 'Promote just this one draft (ignored when bundle_all=true).',
+          },
+          dry_run: {
+            type: 'boolean',
+            description: 'true → preview without creating/deleting anything (§8.2 confirm step).',
+          },
+        },
+      },
+    },
   ]
 }
 
@@ -276,8 +304,63 @@ export class AiDraftMcpServer {
   }
 
   async _call(name, args) {
-    if (name !== 'owner_draft_create_record') throw new Error(`Unknown tool: ${name}`)
-    return this._createRecord(args)
+    if (name === 'owner_draft_create_record') return this._createRecord(args)
+    if (name === 'owner_draft_send_to_steps') return this._sendToSteps(args)
+    throw new Error(`Unknown tool: ${name}`)
+  }
+
+  async _sendToSteps(args) {
+    const { bundle_all = false, draft_id, dry_run = false } = args
+    if (!bundle_all && !draft_id) throw new Error('Pass bundle_all=true or a draft_id')
+
+    if (dry_run) {
+      // Preview: read the page tree, count what would be sent.
+      const treeRes = await fetch(`${this.appUrl}/api/ai-draft-settings`, {
+        headers: { 'X-Agent-Identity': 'hermes' }, signal: AbortSignal.timeout(10000),
+      }).catch(() => null)
+      let pendingCount = null
+      if (treeRes?.ok) {
+        const tree = await treeRes.json().catch(() => ({}))
+        if (tree?.agents) {
+          pendingCount = 0
+          for (const a of tree.agents) {
+            for (const d of a.instructions || []) if (d.pending) pendingCount++
+            for (const r of a.skills?.refs || []) if (r.draft?.pending) pendingCount++
+            for (const d of a.skills?.extras || []) if (d.pending) pendingCount++
+            for (const r of a.mcp?.refs || []) if (r.draft?.pending) pendingCount++
+            for (const d of a.mcp?.extras || []) if (d.pending) pendingCount++
+          }
+        }
+      }
+      return textResult({
+        preview: true,
+        mode: bundle_all ? 'bundle_all' : 'single',
+        draft_id: bundle_all ? undefined : draft_id,
+        pendingDrafts: pendingCount,
+        confirm_prompt: bundle_all
+          ? `Соберу ВСЕ ожидающие черновики (${pendingCount ?? '?'}) в один шаг и удалю их. Повторите вызов без dry_run для подтверждения.`
+          : `Отправлю черновик ${draft_id} в шаги и удалю его. Повторите вызов без dry_run для подтверждения.`,
+      })
+    }
+
+    const payload = bundle_all ? { bundleAll: true } : { draftId: draft_id }
+    const res = await fetch(`${this.appUrl}/api/development-steps`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Agent-Identity': 'hermes' },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(10000),
+    })
+    if (!res.ok) {
+      const txt = await res.text().catch(() => '')
+      throw new Error(`Send to steps failed (${res.status}): ${txt.slice(0, 200)}`)
+    }
+    const data = await res.json()
+    return textResult({
+      created: true,
+      step: data.step?.name,
+      drafted: data.drafted ?? (data.draftDeleted ? 1 : undefined),
+      link: 'Go to /development-steps to see the new step.',
+    })
   }
 
   async _createRecord(args) {

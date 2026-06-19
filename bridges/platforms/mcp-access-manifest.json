@@ -45,6 +45,7 @@
     "public_view_set_theme": { "tier": "public", "first_party": true, "mutating": true, "execution": "client" },
     "public_view_set_width": { "tier": "public", "first_party": true, "mutating": true, "execution": "client" },
     "public_request_authentication": { "tier": "public", "first_party": true, "mutating": false, "execution": "client" },
-    "owner_draft_create_record": { "tier": "owner", "first_party": true, "mutating": true, "execution": "server" }
+    "owner_draft_create_record": { "tier": "owner", "first_party": true, "mutating": true, "execution": "server" },
+    "owner_draft_send_to_steps": { "tier": "owner", "first_party": true, "mutating": true, "execution": "server" }
   }
 }
