@@ -1,4 +1,4 @@
-# create-draft
+# propose-new-agent-skill-or-mcp
 
 Use this skill when you notice an automation opportunity, a repeating pattern, or
 want to propose a new skill / MCP connector for any of the 6 agents (including
