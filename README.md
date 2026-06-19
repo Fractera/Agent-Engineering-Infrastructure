@@ -66,6 +66,85 @@ You get a fully operational private workspace and a live production-ready web ap
 > "Finally someone made it so I don't have to think about deployment, ports, DevOps commands, and all that cloud infrastructure nonsense."
 ---
 
+## Any Framework, Any Repo — One Click to Your VPS
+
+Fractera is not locked to Next.js. Bring **any framework — or any public repo** — and Fractera wraps it in the same self-configuring substrate: a built-in local database, local file and media storage, role-based authentication, and the full on-server AI agent stack (five coding agents + the Hermes orchestrator). One click, on your own server.
+
+**Today the Next.js starter deploys end-to-end.** The rest arrive on a rolling schedule — each new starter is announced in [News](https://www.fractera.ai/en/news) as it lands.
+
+<div align="center">
+
+<table>
+<tr>
+<td align="center" width="96"><img src="https://www.fractera.ai/favicon-32x32.png" width="26" height="26" alt="Fractera Pro"/><br/><sub><b>Fractera Pro</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/next-js-dark.svg" width="26" height="26" alt="Next.js"/><br/><sub><b>Next.js</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/react.svg" width="26" height="26" alt="React"/><br/><sub><b>React</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/vue.svg" width="26" height="26" alt="Vue"/><br/><sub><b>Vue</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/angular.svg" width="26" height="26" alt="Angular"/><br/><sub><b>Angular</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/svelte.svg" width="26" height="26" alt="SvelteKit"/><br/><sub><b>SvelteKit</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/nuxt.svg" width="26" height="26" alt="Nuxt"/><br/><sub><b>Nuxt</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/astro-dark.svg" width="26" height="26" alt="Astro"/><br/><sub><b>Astro</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/remix.svg" width="26" height="26" alt="Remix"/><br/><sub><b>Remix</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/gatsby.svg" width="26" height="26" alt="Gatsby"/><br/><sub><b>Gatsby</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/solidstart.svg" width="26" height="26" alt="SolidStart"/><br/><sub><b>SolidStart</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/qwik.svg" width="26" height="26" alt="Qwik"/><br/><sub><b>Qwik</b></sub></td>
+</tr>
+</table>
+
+<details>
+<summary><b>＋ Show all frameworks</b> — 22 more stacks</summary>
+
+<br/>
+
+<table>
+<tr>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/react-router.svg" width="26" height="26" alt="React Router"/><br/><sub><b>React Router</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/tanstack-dark.svg" width="26" height="26" alt="TanStack Start"/><br/><sub><b>TanStack Start</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/hugo.svg" width="26" height="26" alt="Hugo"/><br/><sub><b>Hugo</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/jekyll.svg" width="26" height="26" alt="Jekyll"/><br/><sub><b>Jekyll</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/eleventy.svg" width="26" height="26" alt="Eleventy"/><br/><sub><b>Eleventy</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/vite.svg" width="26" height="26" alt="Vite"/><br/><sub><b>Vite</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/ember.svg" width="26" height="26" alt="Ember"/><br/><sub><b>Ember</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/redwoodsdk.svg" width="26" height="26" alt="Redwood"/><br/><sub><b>Redwood</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/express-dark.svg" width="26" height="26" alt="Express"/><br/><sub><b>Express</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/nest-js.svg" width="26" height="26" alt="NestJS"/><br/><sub><b>NestJS</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/fastify.svg" width="26" height="26" alt="Fastify"/><br/><sub><b>Fastify</b></sub></td>
+<td align="center" width="96"><sub><b>Hono</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/django-dark.svg" width="26" height="26" alt="Django"/><br/><sub><b>Django</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/flask.svg" width="26" height="26" alt="Flask"/><br/><sub><b>Flask</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/fastapi.svg" width="26" height="26" alt="FastAPI"/><br/><sub><b>FastAPI</b></sub></td>
+<td align="center" width="96"><sub><b>Reflex</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/laravel-dark.svg" width="26" height="26" alt="Laravel"/><br/><sub><b>Laravel</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/symfony-dark.svg" width="26" height="26" alt="Symfony"/><br/><sub><b>Symfony</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/rails-dark.svg" width="26" height="26" alt="Rails"/><br/><sub><b>Rails</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/phoenix.svg" width="26" height="26" alt="Phoenix"/><br/><sub><b>Phoenix</b></sub></td>
+</tr>
+<tr>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/spring.svg" width="26" height="26" alt="Spring"/><br/><sub><b>Spring</b></sub></td>
+<td align="center" width="96"><img src="https://www.fractera.ai/framework-icons/dotnet.svg" width="26" height="26" alt=".NET"/><br/><sub><b>.NET</b></sub></td>
+<td align="center" width="96"></td>
+<td align="center" width="96"></td>
+</tr>
+</table>
+
+</details>
+
+</div>
+
+---
+
 ## The Next.js Aircraft Carrier — 50,000 Lines of Pre-Built Code
 
 Most traditional options are just empty hello-world skeletons. Fractera delivers a **production-ready Next.js starter kit and an enterprise-grade boilerplate** the moment your server drops live. Roughly 50,000 lines of highly optimized code patterns — including a advanced parallel routing matrix, multi-language i18n routing, production SEO tags, local SQLite configurations, and NextAuth v5 session modules — ship fully written, compiled, and verified. 
