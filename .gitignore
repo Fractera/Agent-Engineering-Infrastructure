@@ -49,3 +49,7 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# App slot — TRANSIENT: cloned on demand at dev/deploy, never committed (pivot 2026-06-16)
+/app/*
+!/app/.gitkeep
