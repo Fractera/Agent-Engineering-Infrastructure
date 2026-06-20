@@ -68,7 +68,7 @@ const ADMIN_WS_LOCATIONS = Object.entries(BRIDGE_WS_PORTS).map(([name, p]) =>
 // The three directive lines below are load-bearing markers for White-Label removal
 // (lib/bootstrap.sh + config/white-label/route.ts) — keep their exact form.
 const FOOTER_HTML =
-  `<div style="position:fixed;bottom:2px;left:0;right:0;text-align:center;z-index:200;line-height:1"><a href="https://github.com/Fractera/ai-workspace" style="font-size:8px;color:#888;text-decoration:none">Powered by Fractera</a></div>`;
+  `<div style="position:fixed;bottom:2px;left:0;right:0;text-align:center;z-index:200;line-height:1"><a href="https://github.com/Fractera/Agent-Engineering-Infrastructure" style="font-size:8px;color:#888;text-decoration:none">Powered by Fractera</a></div>`;
 const FOOTER_DIRECTIVES =
   `        proxy_set_header Accept-Encoding "";\n` +
   `        sub_filter_once on;\n` +

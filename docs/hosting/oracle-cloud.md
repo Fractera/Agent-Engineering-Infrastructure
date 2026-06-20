@@ -73,7 +73,7 @@ source ~/.bashrc
 # When prompted "How do you want to hatch your bot?" → select "Do this later"
 
 # Fractera (same pattern)
-curl -fsSL https://raw.githubusercontent.com/Fractera/ai-workspace/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Fractera/Agent-Engineering-Infrastructure/main/install.sh | bash
 ```
 
 ---

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 
-const FALLBACK_RAW_URL = "https://raw.githubusercontent.com/Fractera/ai-workspace/main/README.md";
+const FALLBACK_RAW_URL = "https://raw.githubusercontent.com/Fractera/Agent-Engineering-Infrastructure/main/README.md";
 
 function getRawReadmeUrl(repoUrl: string): string {
   const clean = repoUrl.replace(/\.git$/, "");
@@ -17,7 +17,7 @@ export async function GET() {
     return NextResponse.json({ content, source: "local" });
   }
 
-  // 2. Determine raw URL — env override or fallback to Fractera/ai-workspace
+  // 2. Determine raw URL — env override or fallback to Fractera/Agent-Engineering-Infrastructure
   const repoUrl = process.env.UPSTREAM_REPO_URL;
   const rawUrl  = repoUrl ? getRawReadmeUrl(repoUrl) : FALLBACK_RAW_URL;
 

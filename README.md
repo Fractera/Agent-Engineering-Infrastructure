@@ -15,11 +15,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Fractera/ai-workspace/stargazers">
-    <img src="https://img.shields.io/github/stars/Fractera/ai-workspace?style=for-the-badge&logo=github&color=black&labelColor=1a1a2e" alt="Stars"/>
+  <a href="https://github.com/Fractera/Agent-Engineering-Infrastructure/stargazers">
+    <img src="https://img.shields.io/github/stars/Fractera/Agent-Engineering-Infrastructure?style=for-the-badge&logo=github&color=black&labelColor=1a1a2e" alt="Stars"/>
   </a>
   &nbsp;
-  <a href="https://github.com/Fractera/ai-workspace/fork">
+  <a href="https://github.com/Fractera/Agent-Engineering-Infrastructure/fork">
     <img src="https://img.shields.io/badge/Fork-1a1a2e?style=for-the-badge&logo=github" alt="Fork"/>
   </a>
   &nbsp;
@@ -47,7 +47,7 @@
 ---
 
 <p align="center">
-  <a href="https://github.com/Fractera/ai-workspace/stargazers">
+  <a href="https://github.com/Fractera/Agent-Engineering-Infrastructure/stargazers">
     <img src="assets/git-star.gif" height="100" alt="Star this repo on GitHub"/>
   </a>
 </p>
@@ -362,7 +362,7 @@ Because each loop iteration updates your private knowledge graph instead of infl
 If Fractera saves you from writing another Nginx config — a star makes a real difference. It helps other developers find the project.
 
 <p align="center">
-  <a href="https://github.com/Fractera/ai-workspace/stargazers">
+  <a href="https://github.com/Fractera/Agent-Engineering-Infrastructure/stargazers">
     <img src="assets/git-star.gif" height="100" alt="Star this repo on GitHub"/>
   </a>
 </p>
@@ -553,7 +553,7 @@ If you operate in a jurisdiction with strict corporate compliance requirements, 
 ---
 
 <p align="center">
-  <a href="https://github.com/Fractera/ai-workspace/stargazers">
+  <a href="https://github.com/Fractera/Agent-Engineering-Infrastructure/stargazers">
     <img src="assets/git-star.gif" height="100" alt="Star this repo on GitHub"/>
   </a>
 </p>

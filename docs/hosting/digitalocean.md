@@ -41,7 +41,7 @@ curl -fsSL https://openclaw.ai/install.sh | bash
 openclaw --version
 
 # For Fractera instead:
-curl -fsSL https://raw.githubusercontent.com/Fractera/ai-workspace/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Fractera/Agent-Engineering-Infrastructure/main/install.sh | bash
 ```
 
 ---

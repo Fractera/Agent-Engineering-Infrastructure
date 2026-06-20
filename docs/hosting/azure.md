@@ -198,7 +198,7 @@ bash /tmp/install.sh
 rm -f /tmp/install.sh
 
 # Fractera (same pattern — replace with Fractera install.sh when ready)
-curl -fsSL https://raw.githubusercontent.com/Fractera/ai-workspace/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Fractera/Agent-Engineering-Infrastructure/main/install.sh | bash
 ```
 
 ### Verify

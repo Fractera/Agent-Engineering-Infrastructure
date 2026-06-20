@@ -83,7 +83,7 @@ sudo sysctl -p
 curl -fsSL https://openclaw.ai/install.sh | bash
 
 # Fractera
-curl -fsSL https://raw.githubusercontent.com/Fractera/ai-workspace/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Fractera/Agent-Engineering-Infrastructure/main/install.sh | bash
 ```
 
 ---
