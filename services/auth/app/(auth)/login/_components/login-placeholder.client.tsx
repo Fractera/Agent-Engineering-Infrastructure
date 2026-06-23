@@ -6,21 +6,20 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { getAuthStrings, detectBrowserLang, fill, DEFAULT_AUTH_LANG, type AuthStrings } from "@/lib/i18n/auth-strings";
 
-function AccessDeniedModal({ onClose }: { onClose: () => void }) {
+function AccessDeniedModal({ onClose, s }: { onClose: () => void; s: AuthStrings }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="w-full max-w-sm bg-background rounded-xl border shadow-xl flex flex-col gap-5 p-7">
         <div className="flex flex-col gap-1">
-          <h2 className="text-lg font-semibold">Access Denied</h2>
-          <p className="text-sm text-muted-foreground">You don't have permission to access the Admin Panel.</p>
+          <h2 className="text-lg font-semibold">{s.accessDeniedTitle}</h2>
+          <p className="text-sm text-muted-foreground">{s.accessDeniedNoPermission}</p>
         </div>
         <p className="text-sm leading-relaxed text-foreground">
-          The AI coding workspace is only available to users with the{" "}
-          <strong>architect</strong> role. Contact your administrator and ask them
-          to grant you the architect role.
+          {s.accessDeniedBody}
         </p>
-        <Button className="w-full" onClick={onClose}>OK</Button>
+        <Button className="w-full" onClick={onClose}>{s.ok}</Button>
       </div>
     </div>
   );
@@ -56,6 +55,11 @@ function LoginForm() {
   const [magicEmail, setMagicEmail]       = useState("");
   const [magicPrompt, setMagicPrompt]     = useState(false);
 
+  // Browser-language strings (static dictionary, picked client-side once on mount).
+  const [lang, setLang] = useState(DEFAULT_AUTH_LANG);
+  useEffect(() => { setLang(detectBrowserLang()); }, []);
+  const s = getAuthStrings(lang);
+
   useEffect(() => {
     fetch("/api/auth/methods")
       .then((r) => r.json())
@@ -69,15 +73,16 @@ function LoginForm() {
   // failed login. Confirm the sign-in and show their role so it's clear auth
   // worked; if a higher role is required for this destination, say which.
   useEffect(() => {
+    const t = getAuthStrings(detectBrowserLang());
     getSession()
-      .then((s) => {
-        if (!s?.user) return;
-        const who = s.user.name || s.user.email || "there";
-        const roles = (s.user as { roles?: string[] }).roles ?? [];
+      .then((sess) => {
+        if (!sess?.user) return;
+        const who = sess.user.name || sess.user.email || "there";
+        const roles = (sess.user as { roles?: string[] }).roles ?? [];
         const roleLabel = roles[0] ?? "user";
-        toast.success(`Hi, ${who}! You're signed in. Your role: ${roleLabel}.`);
+        toast.success(fill(t.welcomeToast, { who, role: roleLabel }));
         if (requireRole && !roles.includes(requireRole)) {
-          toast.info(`This page needs the '${requireRole}' role — open a section available to your role.`);
+          toast.info(fill(t.roleNeededToast, { role: requireRole }));
         }
       })
       .catch(() => {});
@@ -100,7 +105,7 @@ function LoginForm() {
     const result = await signIn("credentials", { email, password, redirect: false });
     if (result?.error) {
       setLoading(false);
-      setError("Invalid email or password");
+      setError(s.invalidCredentials);
       return;
     }
 
@@ -141,7 +146,7 @@ function LoginForm() {
   const orDivider = (
     <div className="flex items-center gap-2">
       <div className="flex-1 h-px bg-border" />
-      <span className="text-xs text-muted-foreground">or</span>
+      <span className="text-xs text-muted-foreground">{s.or}</span>
       <div className="flex-1 h-px bg-border" />
     </div>
   );
@@ -149,13 +154,13 @@ function LoginForm() {
   return (
     <>
       {showAccessDenied && (
-        <AccessDeniedModal onClose={() => { setShowAccessDenied(false); window.location.href = "/"; }} />
+        <AccessDeniedModal s={s} onClose={() => { setShowAccessDenied(false); window.location.href = "/"; }} />
       )}
     <div className="w-full max-w-sm flex flex-col gap-6 p-8 bg-background rounded-xl border shadow-sm">
       <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold">Sign in</h1>
+        <h1 className="text-xl font-semibold">{s.signInTitle}</h1>
         <p className="text-sm text-muted-foreground">
-          {hasProvider ? "Choose how you'd like to sign in" : "Enter your credentials to continue"}
+          {hasProvider ? s.subtitleProvider : s.subtitleCreds}
         </p>
       </div>
 
@@ -170,7 +175,7 @@ function LoginForm() {
             onClick={() => { setGoogleLoading(true); signIn("google", { callbackUrl }); }}
           >
             {googleLoading ? (
-              <><Loader2 className="size-4 animate-spin" /> Connecting…</>
+              <><Loader2 className="size-4 animate-spin" /> {s.connecting}</>
             ) : (
               <>
                 <svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true">
@@ -179,7 +184,7 @@ function LoginForm() {
                   <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#FBBC05"/>
                   <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z" fill="#EA4335"/>
                 </svg>
-                Continue with Google
+                {s.continueWithGoogle}
               </>
             )}
           </Button>
@@ -191,7 +196,7 @@ function LoginForm() {
         <>
           {magicSent ? (
             <p className="text-xs text-emerald-600 bg-emerald-500/10 rounded px-3 py-2 leading-relaxed">
-              Check your email — we sent a sign-in link to <strong>{magicEmail}</strong>. Don&apos;t see it? Check your spam folder.
+              {fill(s.magicSentBody, { email: magicEmail })}
             </p>
           ) : (
             <div className="flex flex-col gap-2">
@@ -212,8 +217,8 @@ function LoginForm() {
                 onClick={handleMagicLink}
               >
                 {magicLoading
-                  ? <><Loader2 className="size-4 animate-spin" /> Sending…</>
-                  : magicPrompt ? "Input your email" : "Send magic link"}
+                  ? <><Loader2 className="size-4 animate-spin" /> {s.sending}</>
+                  : magicPrompt ? s.inputYourEmail : s.sendMagicLink}
               </Button>
             </div>
           )}
@@ -225,11 +230,11 @@ function LoginForm() {
           at the bottom). Verified path: signIn("credentials", …). */}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{s.email}</Label>
           <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" disabled={loading} autoFocus={!hasProvider} required />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">{s.password}</Label>
           <div className="relative">
             <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete="current-password" disabled={loading} required className="pr-10" />
             <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" tabIndex={-1}>
@@ -239,7 +244,7 @@ function LoginForm() {
         </div>
         {error && <p className="text-xs text-destructive bg-destructive/10 rounded px-2 py-1.5">{error}</p>}
         <Button type="submit" disabled={loading} className="w-full">
-          {loading ? <><Loader2 className="size-4 animate-spin" /> Signing in…</> : "Sign in"}
+          {loading ? <><Loader2 className="size-4 animate-spin" /> {s.signingIn}</> : s.signIn}
         </Button>
       </form>
 
@@ -249,7 +254,7 @@ function LoginForm() {
       {!hasProvider && (
         <>
           {orDivider}
-          <Button variant="outline" className="w-full" onClick={() => { window.location.href = registerHref }}>Register</Button>
+          <Button variant="outline" className="w-full" onClick={() => { window.location.href = registerHref }}>{s.register}</Button>
         </>
       )}
     </div>

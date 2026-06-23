@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Eye, EyeOff } from "lucide-react";
@@ -9,22 +9,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { register } from "@/lib/auth/register";
+import { getAuthStrings, detectBrowserLang, DEFAULT_AUTH_LANG, type AuthStrings } from "@/lib/i18n/auth-strings";
 
-export function AccessDeniedModal({ onClose }: { onClose: () => void }) {
+export function AccessDeniedModal({ onClose, s }: { onClose: () => void; s: AuthStrings }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="w-full max-w-sm bg-background rounded-xl border shadow-xl flex flex-col gap-5 p-7">
         <div className="flex flex-col gap-1">
-          <h2 className="text-lg font-semibold">Access Denied</h2>
-          <p className="text-sm text-muted-foreground">You don't have permission to access the Admin Panel.</p>
+          <h2 className="text-lg font-semibold">{s.accessDeniedTitle}</h2>
+          <p className="text-sm text-muted-foreground">{s.accessDeniedNoPermission}</p>
         </div>
         <p className="text-sm leading-relaxed text-foreground">
-          The AI coding workspace is only available to users with the{" "}
-          <strong>Administrator</strong> role. Contact your administrator and ask them
-          to grant you the Administrator role.
+          {s.accessDeniedBody}
         </p>
         <Button className="w-full" onClick={onClose}>
-          OK
+          {s.ok}
         </Button>
       </div>
     </div>
@@ -35,9 +34,10 @@ type ModalProps = {
   email: string;
   password: string;
   onConfirmed: () => void;
+  s: AuthStrings;
 };
 
-function AdministratorConfirmModal({ email, password, onConfirmed }: ModalProps) {
+function AdministratorConfirmModal({ email, password, onConfirmed, s }: ModalProps) {
   const [checked, setChecked] = useState(false);
 
   return (
@@ -48,36 +48,29 @@ function AdministratorConfirmModal({ email, password, onConfirmed }: ModalProps)
       <div className="w-full max-w-md bg-background rounded-xl border shadow-xl flex flex-col" style={{ maxHeight: 600 }}>
         {/* Fixed header */}
         <div className="px-7 pt-7 pb-4 border-b border-border shrink-0">
-          <h2 className="text-lg font-semibold">Administrator Account Created</h2>
-          <p className="text-sm text-muted-foreground">Please read carefully before continuing.</p>
+          <h2 className="text-lg font-semibold">{s.adminCreatedTitle}</h2>
+          <p className="text-sm text-muted-foreground">{s.adminReadCarefully}</p>
         </div>
 
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto px-7 py-5 flex flex-col gap-4">
           <p className="text-sm leading-relaxed">
-            You are the <strong>first</strong> user on this server and have been granted
-            the <strong>Administrator</strong> role. This gives you full control over
-            the platform, users, and the AI coding workspace.
+            {s.adminFirstUserBody}
           </p>
 
           <div className="rounded-lg border bg-muted/40 px-4 py-3 flex flex-col gap-1.5 font-mono text-xs">
             <div className="flex gap-2">
-              <span className="text-muted-foreground w-16 shrink-0">Email</span>
+              <span className="text-muted-foreground w-16 shrink-0">{s.email}</span>
               <span className="text-foreground break-all select-all">{email}</span>
             </div>
             <div className="flex gap-2">
-              <span className="text-muted-foreground w-16 shrink-0">Password</span>
+              <span className="text-muted-foreground w-16 shrink-0">{s.password}</span>
               <span className="text-foreground select-all">{password}</span>
             </div>
           </div>
 
           <div className="rounded-lg border border-orange-500/30 bg-orange-500/5 px-4 py-3 text-sm leading-relaxed text-red-400">
-            <strong>Important:</strong> Only the first registered user receives Administrator
-            privileges. All subsequent users will receive the <strong>User</strong> role.
-            If you lose access to this account, you <strong>cannot</strong> regain the
-            Administrator role by re-registering — and you will lose the ability to access
-            the AI coding workspace and grant admin rights to others.{" "}
-            <strong>Save your email and password in a secure location before continuing.</strong>
+            <strong>{s.importantLabel}</strong> {s.adminImportantBody}
           </div>
         </div>
 
@@ -90,11 +83,11 @@ function AdministratorConfirmModal({ email, password, onConfirmed }: ModalProps)
               className="mt-0.5 shrink-0"
             />
             <span className="text-sm leading-snug">
-              I understand. I have saved my email and password in a secure location.
+              {s.adminUnderstand}
             </span>
           </label>
           <Button className="w-full" disabled={!checked} onClick={onConfirmed}>
-            Continue
+            {s.continueWord}
           </Button>
         </div>
       </div>
@@ -120,17 +113,22 @@ function RegisterForm() {
   const [showAccessDenied, setShowAccessDenied] = useState(false);
   const [pendingRedirect, setPendingRedirect] = useState("");
 
+  // Browser-language strings (static dictionary, picked client-side once on mount).
+  const [lang, setLang] = useState(DEFAULT_AUTH_LANG);
+  useEffect(() => { setLang(detectBrowserLang()); }, []);
+  const s = getAuthStrings(lang);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (password !== confirm) { setError("Passwords do not match"); return; }
+    if (password !== confirm) { setError(s.passwordsNoMatch); return; }
     setLoading(true);
     try {
       const result = await register(email, password);
       if (!result.success) { setError(result.error); return; }
 
       const res = await signIn("credentials", { email, password, redirect: false });
-      if (res?.error) { setError("Sign in failed after registration"); return; }
+      if (res?.error) { setError(s.signInFailedAfterReg); return; }
 
       if (typeof window !== "undefined" && window.parent !== window) {
         window.parent.postMessage({ type: "AUTH_SUCCESS" }, "*");
@@ -154,7 +152,7 @@ function RegisterForm() {
         window.location.href = "/";
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error during registration");
+      setError(err instanceof Error ? err.message : s.unexpectedError);
     } finally {
       setLoading(false);
     }
@@ -177,24 +175,25 @@ function RegisterForm() {
           email={email}
           password={password}
           onConfirmed={handleModalConfirmed}
+          s={s}
         />
       )}
       {showAccessDenied && (
-        <AccessDeniedModal onClose={() => { setShowAccessDenied(false); window.location.href = "/"; }} />
+        <AccessDeniedModal s={s} onClose={() => { setShowAccessDenied(false); window.location.href = "/"; }} />
       )}
       <div className="w-full max-w-sm flex flex-col gap-4">
         <div className="flex flex-col gap-6 p-8 bg-background rounded-xl border shadow-sm">
           <div className="flex flex-col gap-1">
-            <h1 className="text-xl font-semibold">Create account</h1>
-            <p className="text-sm text-muted-foreground">Register to get started</p>
+            <h1 className="text-xl font-semibold">{s.createAccountTitle}</h1>
+            <p className="text-sm text-muted-foreground">{s.registerSubtitle}</p>
           </div>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="reg-email">Email</Label>
+              <Label htmlFor="reg-email">{s.email}</Label>
               <Input id="reg-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" disabled={loading} autoFocus required />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="reg-password">Password</Label>
+              <Label htmlFor="reg-password">{s.password}</Label>
               <div className="relative">
                 <Input id="reg-password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete="new-password" disabled={loading} required className="pr-10" />
                 <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" tabIndex={-1}>
@@ -203,15 +202,15 @@ function RegisterForm() {
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="reg-confirm">Confirm password</Label>
+              <Label htmlFor="reg-confirm">{s.confirmPassword}</Label>
               <Input id="reg-confirm" type={showPassword ? "text" : "password"} value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••" autoComplete="new-password" disabled={loading} required />
             </div>
             {error && <p className="text-xs text-destructive bg-destructive/10 rounded px-2 py-1.5">{error}</p>}
             <Button type="submit" disabled={loading} className="w-full">
-              {loading ? <><Loader2 className="size-4 animate-spin" /> Creating account…</> : "Create account"}
+              {loading ? <><Loader2 className="size-4 animate-spin" /> {s.creatingAccount}</> : s.createAccount}
             </Button>
           </form>
-          <Button variant="outline" className="w-full" onClick={() => { window.location.href = loginHref }} disabled={loading}>Sign in instead</Button>
+          <Button variant="outline" className="w-full" onClick={() => { window.location.href = loginHref }} disabled={loading}>{s.signInInstead}</Button>
         </div>
       </div>
     </>
