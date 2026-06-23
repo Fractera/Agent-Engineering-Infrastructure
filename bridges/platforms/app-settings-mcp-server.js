@@ -1,8 +1,44 @@
 import { createServer } from 'http'
-import { readFileSync, writeFileSync, mkdirSync } from 'fs'
+import { readFileSync, writeFileSync, mkdirSync, renameSync, existsSync } from 'fs'
 import { dirname } from 'path'
 import { handleMcpHandshake } from './mcp-handshake.js'
 import { APP_SETTINGS_CATALOG, APP_SETTINGS_IMAGE_FIELDS, IMAGE_UPLOAD_NOTE } from './app-settings-catalog.js'
+
+// Default slot env path (the Shell's .env.local) — same file the /api/config/languages
+// route upserts. Languages are BUILD-TIME (NEXT_PUBLIC_SUPPORTED_LANGUAGES feeds
+// generateStaticParams), so setting them needs a rebuild to take effect.
+const DEFAULT_ENV_PATH = process.env.APP_ENV_PATH ?? '/opt/fractera/app/.env.local'
+const SUPPORTED_KEY = 'NEXT_PUBLIC_SUPPORTED_LANGUAGES'
+const DEFAULT_LOCALE_KEY = 'NEXT_PUBLIC_DEFAULT_LOCALE'
+const LOCKED_LANG = 'en' // always kept — the guaranteed fallback locale
+
+// Read a single KEY=value from a .env content (ignores comments/blanks).
+function readEnvValue(content, key) {
+  for (const line of content.split('\n')) {
+    const t = line.trim()
+    if (!t || t.startsWith('#')) continue
+    const eq = t.indexOf('=')
+    if (eq < 0) continue
+    if (t.slice(0, eq).trim() === key) return t.slice(eq + 1).trim()
+  }
+  return null
+}
+// Replace the line for `key` if present, else append — preserves all other lines/comments.
+function upsertEnvLine(content, key, value) {
+  const lines = content.length ? content.split('\n') : []
+  let found = false
+  const next = lines.map((line) => {
+    const t = line.trim()
+    if (!t || t.startsWith('#')) return line
+    const eq = t.indexOf('=')
+    if (eq < 0) return line
+    if (t.slice(0, eq).trim() === key) { found = true; return `${key}=${value}` }
+    return line
+  })
+  if (!found) next.push(`${key}=${value}`)
+  while (next.length && next[next.length - 1] === '') next.pop()
+  return next.join('\n') + '\n'
+}
 
 // ── App Settings MCP server (L2, port 3218) ─────────────────────────────────
 // Lets Hermes manage the deployed app's TEXT settings (App Settings — branding /
@@ -76,6 +112,30 @@ function toolsSchema() {
         required: ['path', 'value'],
       },
     },
+    {
+      name: 'owner_app_settings_list_languages',
+      description:
+        'Read the app language SET: the configured languages (codes) and the default language. ' +
+        'Languages are BUILD-TIME (they feed static page generation), stored in the Shell env, not the ' +
+        'runtime config file. Read-only.',
+      inputSchema: { type: 'object', properties: {} },
+    },
+    {
+      name: 'owner_app_settings_set_languages',
+      description:
+        'Set the app language SET (e.g. the owner says "add French"). Writes the languages + default ' +
+        'locale to the Shell env. IMPORTANT: languages are BUILD-TIME — this does NOT apply instantly; ' +
+        'the app must be REBUILT for the new languages to appear (tell the owner it takes a few minutes ' +
+        "to rebuild). 'en' is always kept as the guaranteed fallback. Use ISO codes (e.g. en, es, fr, de).",
+      inputSchema: {
+        type: 'object',
+        properties: {
+          languages: { type: 'array', items: { type: 'string' }, description: 'Language codes to support, e.g. ["en","es","fr"]. "en" is forced in if missing.' },
+          defaultLanguage: { type: 'string', description: 'Optional default locale; must be one of languages. Defaults to "en".' },
+        },
+        required: ['languages'],
+      },
+    },
   ]
 }
 
@@ -83,14 +143,22 @@ const BY_PATH = new Map(APP_SETTINGS_CATALOG.map((e) => [e.path, e]))
 const IMAGE_PATHS = new Set(APP_SETTINGS_IMAGE_FIELDS.map((f) => f.path))
 
 export class AppSettingsMcpServer {
-  constructor({ port, secret, configPath }) {
+  constructor({ port, secret, configPath, envPath }) {
     this.port = port
     this.secret = secret
     this.configPath = configPath
+    this.envPath = envPath ?? DEFAULT_ENV_PATH
   }
 
   _load() { try { return JSON.parse(readFileSync(this.configPath, 'utf8')) } catch { return {} } }
-  _save(raw) { mkdirSync(dirname(this.configPath), { recursive: true }); writeFileSync(this.configPath, JSON.stringify(raw, null, 2), 'utf8') }
+  // Atomic write: serialise to a temp file then rename over the target, so a crash
+  // mid-write never leaves a half-written (corrupt) config the Shell would fail to parse.
+  _save(raw) {
+    mkdirSync(dirname(this.configPath), { recursive: true })
+    const tmp = `${this.configPath}.tmp`
+    writeFileSync(tmp, JSON.stringify(raw, null, 2), 'utf8')
+    renameSync(tmp, this.configPath)
+  }
 
   start() {
     const server = createServer((req, res) => {
@@ -167,6 +235,46 @@ export class AppSettingsMcpServer {
       setAt(raw, path, v)
       this._save(raw)
       return textResult({ ok: true, path, value: v, is_set: isSet(e, v) })
+    }
+
+    if (name === 'owner_app_settings_list_languages') {
+      const content = existsSync(this.envPath) ? readFileSync(this.envPath, 'utf8') : ''
+      const raw = readEnvValue(content, SUPPORTED_KEY) ?? LOCKED_LANG
+      const languages = raw.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
+      const defaultLanguage = (readEnvValue(content, DEFAULT_LOCALE_KEY) ?? LOCKED_LANG).trim().toLowerCase()
+      return textResult({
+        languages: languages.length ? languages : [LOCKED_LANG],
+        defaultLanguage,
+        note: 'Languages are build-time. Changing them needs a rebuild to take effect.',
+      })
+    }
+
+    if (name === 'owner_app_settings_set_languages') {
+      const input = Array.isArray(args.languages) ? args.languages : []
+      // Normalise: lowercase ISO-ish codes, dedupe, always include the locked fallback.
+      const codes = [...new Set(
+        input.map((c) => String(c).trim().toLowerCase()).filter((c) => /^[a-z]{2,3}$/.test(c))
+      )]
+      if (!codes.includes(LOCKED_LANG)) codes.unshift(LOCKED_LANG)
+      if (codes.length === 0) throw new Error('No valid language codes given (use ISO codes like en, es, fr).')
+      let def = String(args.defaultLanguage ?? LOCKED_LANG).trim().toLowerCase()
+      if (!codes.includes(def)) def = LOCKED_LANG
+
+      const content = existsSync(this.envPath) ? readFileSync(this.envPath, 'utf8') : ''
+      let next = upsertEnvLine(content, SUPPORTED_KEY, codes.join(','))
+      next = upsertEnvLine(next, DEFAULT_LOCALE_KEY, def)
+      const tmp = `${this.envPath}.tmp`
+      mkdirSync(dirname(this.envPath), { recursive: true })
+      writeFileSync(tmp, next, 'utf8')
+      renameSync(tmp, this.envPath)
+
+      return textResult({
+        ok: true,
+        languages: codes,
+        defaultLanguage: def,
+        rebuild_required: true,
+        note: 'Saved to the Shell env. Languages are BUILD-TIME — they appear only after the app is REBUILT (a few minutes). Trigger a rebuild from Admin → deploy, or tell the owner it will apply after the next rebuild.',
+      })
     }
 
     throw new Error(`Unknown tool: ${name}`)

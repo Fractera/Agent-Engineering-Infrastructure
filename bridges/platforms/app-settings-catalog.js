@@ -17,7 +17,8 @@ export const APP_SETTINGS_CATALOG = [
   { path: 'url', label: 'Site URL', kind: 'text', section: 'Brand & identity', def: 'https://fractera.ai', role: 'The real canonical URL of the deployed app. Drives metadataBase, OG url and JSON-LD. Set this to the owner’s actual domain.' },
   { path: 'mailSupport', label: 'Support email', kind: 'text', section: 'Brand & identity', def: 'admin@fractera.ai', role: 'Public support email — shown in the Organization / contactPoint structured data.' },
   { path: 'chatBrand', label: 'Chat brand', kind: 'text', section: 'Brand & identity', def: 'Hermes', role: 'Name of the built-in chat assistant as shown to end users.' },
-  { path: 'lang', label: 'Language', kind: 'text', section: 'Brand & identity', def: 'en', role: 'Default content language (the <html lang> attribute).' },
+  // NOTE: the free-text `lang` field was removed (step 133) — the language SET is managed
+  // via the dedicated language tools (owner_app_settings_*_languages), not as a text field.
 
   // ── App icons & PWA (text/choice) ─────────────────────────────────────────
   { path: 'pwa.themeColor', label: 'PWA theme color', kind: 'text', section: 'App icons & PWA', def: '#ffffff', role: 'PWA manifest theme color (hex).' },
