@@ -720,7 +720,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           </button>
           {dataMenuOpen && (
             <div id="data-dropdown" style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 99999 }}
-              className="bg-background border border-border rounded-md shadow-lg overflow-hidden min-w-[208px]">
+              className="bg-background border border-border rounded-md shadow-lg overflow-y-auto max-h-[500px] min-w-[208px]">
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowUsers((v) => !v); setShowMediaLibrary(false); setShowEnvEditor(false); setShowDbBrowser(false); setShowInfo(false); setShowDomainPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Users size={11} />Users

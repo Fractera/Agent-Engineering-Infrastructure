@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SECTIONS, getAt, setAt } from "./site-settings/fields";
 import { FieldRow } from "./site-settings/field-row.client";
+import { LanguagesView } from "./platform/languages-view.client";
 
 // Site Settings — branding / SEO / PWA / images for the deployed Shell app. Reads and writes
 // the Shell's app-config.json (server route /api/config/site, same cross-process pattern as the
@@ -21,6 +22,9 @@ export function SiteSettingsPanel({ onClose }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Languages selector now lives here (moved from the Platform tab). It opens as an
+  // overlay sub-view; the build-time language SET + default are managed inside it.
+  const [view, setView] = useState<null | "languages">(null);
 
   useEffect(() => {
     (async () => {
@@ -108,6 +112,17 @@ export function SiteSettingsPanel({ onClose }: Props) {
                 ))}
               </div>
             ))}
+
+            {/* Languages — moved here from the Platform tab. Opens the language SET selector. */}
+            <div className="flex flex-col gap-2.5">
+              <div className="flex flex-col gap-0.5 border-b border-border pb-1">
+                <span className="text-[11px] font-semibold text-foreground">Languages</span>
+                <span className="text-[9px] text-muted-foreground">The languages the app is built with (build-time set + default).</span>
+              </div>
+              <Button variant="outline" size="sm" className="w-fit" onClick={() => setView("languages")}>
+                Manage languages →
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -118,6 +133,8 @@ export function SiteSettingsPanel({ onClose }: Props) {
         </Button>
         <span className="text-[10px] text-muted-foreground">Stored on the server · no rebuild required</span>
       </div>
+
+      {view === "languages" && <LanguagesView onBack={() => setView(null)} />}
     </div>
   );
 }

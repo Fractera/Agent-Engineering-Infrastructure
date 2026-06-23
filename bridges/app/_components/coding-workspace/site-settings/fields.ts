@@ -57,7 +57,6 @@ export const SECTIONS: Section[] = [
       { path: "url", label: "Site URL", type: "text", placeholder: "https://example.com" },
       { path: "mailSupport", label: "Support email", type: "text", placeholder: "admin@example.com" },
       { path: "chatBrand", label: "Chat brand", type: "text", placeholder: "Hermes" },
-      { path: "lang", label: "Language", type: "text", placeholder: "en" },
     ],
   },
   {
