@@ -8,8 +8,11 @@ const AUTH_ENV = process.env.AUTH_ENV_PATH ?? "/opt/fractera/services/auth/.env.
 
 const AUTH_KEYS = new Set(["AUTH_SECRET", "NEXTAUTH_URL", "COOKIE_DOMAIN", "COOKIE_SECURE", "DATABASE_URL", "ALLOWED_ORIGINS", "AUTH_TRUST_HOST"]);
 
-// Ключи, значения которых нельзя менять через UI (только чтение)
-const LOCKED_KEYS = new Set(["DATABASE_URL", "COOKIE_DOMAIN", "AUTH_TRUST_HOST", "NEXTAUTH_URL", "NEXT_PUBLIC_ADMIN_URL", "NEXT_PUBLIC_AUTH_URL", "ALLOWED_ORIGINS"]);
+// Ключи, значения которых нельзя менять через UI (только чтение).
+// Языковые ключи залочены здесь намеренно: их безопасный путь правки — панель
+// настроек Languages (чеклист с валидацией), а сырой env-редактор показывает их
+// read-only, чтобы нельзя было вписать невалидный код в обход валидации.
+const LOCKED_KEYS = new Set(["DATABASE_URL", "COOKIE_DOMAIN", "AUTH_TRUST_HOST", "NEXTAUTH_URL", "NEXT_PUBLIC_ADMIN_URL", "NEXT_PUBLIC_AUTH_URL", "ALLOWED_ORIGINS", "NEXT_PUBLIC_SUPPORTED_LANGUAGES", "NEXT_PUBLIC_DEFAULT_LOCALE"]);
 
 function parseEnv(content: string): Record<string, string> {
   const result: Record<string, string> = {};

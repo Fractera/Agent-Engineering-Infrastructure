@@ -20,6 +20,8 @@ const LOCKED_KEYS = new Set([
   "NEXT_PUBLIC_ADMIN_URL",
   "NEXT_PUBLIC_AUTH_URL",
   "ALLOWED_ORIGINS",
+  "NEXT_PUBLIC_SUPPORTED_LANGUAGES",
+  "NEXT_PUBLIC_DEFAULT_LOCALE",
 ]);
 
 const LOCK_REASONS: Record<string, string> = {
@@ -30,6 +32,8 @@ const LOCK_REASONS: Record<string, string> = {
   NEXT_PUBLIC_ADMIN_URL:"URL of the admin panel (bridges). Used by the browser for redirects — changing it breaks navigation.",
   NEXT_PUBLIC_AUTH_URL: "URL of the auth service. All login/logout requests go here — changing it breaks authentication.",
   ALLOWED_ORIGINS:      "Comma-separated list of domains allowed CORS access to the auth service. Wrong value may block cross-domain requests.",
+  NEXT_PUBLIC_SUPPORTED_LANGUAGES: "The set of built languages. Edit it in the Languages settings panel — a validated checklist — not here, so an invalid code can't break the build.",
+  NEXT_PUBLIC_DEFAULT_LOCALE:      "The default language. Set it in the Languages settings panel (it must be one of the built languages), not here.",
 };
 
 // Editable keys with informational tooltip

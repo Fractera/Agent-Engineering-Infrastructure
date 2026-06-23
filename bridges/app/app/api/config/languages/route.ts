@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { requireAuth } from "@/lib/require-auth";
+import { ALL_LANGUAGE_METADATA } from "@/config/translations/language-metadata";
+
+// The catalog of valid language codes. The UI picks from a checklist of these, so
+// a real save is always valid — but we validate server-side too, so a direct API
+// call cannot write an unknown code into NEXT_PUBLIC_SUPPORTED_LANGUAGES (which
+// would feed generateStaticParams a bogus [lang] and break the build).
+const VALID_CODES = new Set(Object.keys(ALL_LANGUAGE_METADATA));
 
 // Key-scoped writer for the Shell's LANGUAGE set. The language SET is build-time env (it feeds
 // generateStaticParams for [lang] and bakes into SINGLE_LANG_MODE) — the source of truth is the
@@ -94,6 +101,15 @@ export async function POST(req: NextRequest) {
       : [];
     if (languages.length === 0) {
       return NextResponse.json({ error: "At least one language is required" }, { status: 400 });
+    }
+    // Reject any code that is not in the catalog (defence against a direct API
+    // call — the UI checklist can only submit valid codes).
+    const invalid = languages.filter((l) => !VALID_CODES.has(l));
+    if (invalid.length > 0) {
+      return NextResponse.json(
+        { error: `Unknown language code(s): ${invalid.join(", ")}. Use ISO 639-1 codes from the catalog.` },
+        { status: 400 }
+      );
     }
     let defaultLanguage =
       typeof body.defaultLanguage === "string" ? body.defaultLanguage.trim().toLowerCase() : "";
