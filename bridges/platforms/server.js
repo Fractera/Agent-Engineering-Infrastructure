@@ -309,6 +309,11 @@ ptywss.on('connection', (ws) => {
         LOGNAME: process.env.LOGNAME,
         TMPDIR: process.env.TMPDIR,
         OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
+        // Per-agent MCP clients (.mcp.json / config.toml in the slot) authenticate
+        // to the L2 owner bridges with `Bearer ${HERMES_MCP_SECRET}`. The interactive
+        // terminal passes a curated env allowlist, so the secret must be named here or
+        // the agent can't resolve it. (Direct prompt-mode spawns inherit full env.)
+        HERMES_MCP_SECRET: process.env.HERMES_MCP_SECRET,
       },
     })
   } catch (err) {
