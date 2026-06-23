@@ -35,6 +35,8 @@ type HealthResult = {
   httpsStatus: number | null;
   certValid: boolean;
   error: string | null;
+  // Optional add-on host (Brain/Memory/chat): reported but does NOT block activation.
+  optional?: boolean;
 };
 
 export function DomainWizard({ domain, onClose, onChangeDomain }: { domain: string; onClose: () => void; onChangeDomain?: (prev: string) => void }) {
@@ -228,8 +230,16 @@ export function DomainWizard({ domain, onClose, onChangeDomain }: { domain: stri
       const data = await res.json();
       if (data.error) { toast.error(data.error); return; }
       setHealthRun({ at: Date.now(), allOk: data.allOk, results: data.results });
-      if (data.allOk) toast.success("All eight hostnames respond over HTTPS with valid certs");
-      else toast.warning("Some hostnames still failing — see details below");
+      const optionalDown: string[] = data.optionalDown ?? [];
+      if (data.allOk) {
+        if (optionalDown.length) {
+          toast.success(`Required hostnames OK — you can activate. Optional add-on not responding yet: ${optionalDown.join(", ")} (won't block; fix later).`);
+        } else {
+          toast.success("All hostnames respond over HTTPS with valid certs");
+        }
+      } else {
+        toast.warning("A required hostname is still failing — see details below");
+      }
     } catch {
       toast.error("Health check failed");
     } finally {
@@ -563,13 +573,23 @@ export function DomainWizard({ domain, onClose, onChangeDomain }: { domain: stri
             <div className="rounded-md border border-border bg-background p-2 space-y-1 text-[10px] font-mono">
               {healthRun.results.map((r) => {
                 const ok = r.dnsOk && r.certValid && r.httpsStatus !== null && r.httpsStatus >= 200 && r.httpsStatus < 500;
+                // An optional add-on that is down is a non-blocking WARNING (amber),
+                // not a failure (red): it never blocks activation.
+                const optionalDown = !ok && r.optional;
                 return (
                   <div key={r.host} className="flex items-center gap-2">
-                    {ok ? <CheckCircle size={11} className="text-green-500" /> : <XCircle size={11} className="text-destructive" />}
+                    {ok
+                      ? <CheckCircle size={11} className="text-green-500" />
+                      : optionalDown
+                        ? <AlertTriangle size={11} className="text-amber-500" />
+                        : <XCircle size={11} className="text-destructive" />}
                     <span className="break-all text-foreground flex-1">{r.host}</span>
-                    {!r.dnsOk && <span className="text-destructive">DNS</span>}
-                    {r.dnsOk && !r.certValid && <span className="text-destructive">cert: {r.error}</span>}
-                    {r.dnsOk && r.certValid && r.httpsStatus !== null && <span className="text-green-500">HTTP {r.httpsStatus}</span>}
+                    {r.optional && <span className="text-muted-foreground">optional</span>}
+                    {!r.dnsOk && <span className={optionalDown ? "text-amber-500" : "text-destructive"}>DNS</span>}
+                    {r.dnsOk && !r.certValid && <span className={optionalDown ? "text-amber-500" : "text-destructive"}>cert: {r.error}</span>}
+                    {r.dnsOk && r.certValid && r.httpsStatus !== null && (
+                      <span className={ok ? "text-green-500" : "text-amber-500"}>HTTP {r.httpsStatus}</span>
+                    )}
                   </div>
                 );
               })}

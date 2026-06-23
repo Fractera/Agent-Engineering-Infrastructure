@@ -11,7 +11,18 @@ type HostResult = {
   httpsStatus: number | null;
   certValid: boolean;
   error: string | null;
+  optional: boolean;
 };
+
+// Core hosts that MUST be healthy before Secure mode can activate. The optional
+// services (Brain/Hermes :9119, Memory/LightRAG :9621, the Hermes chat web UI) are
+// add-ons: a deployment may not install them, and a temporarily-down add-on must NEVER
+// trap the user on the wizard. The TLS certificate is issued by ACME against domain
+// ownership, not app health — so a down add-on does not affect the cert, only that one
+// subdomain stays 502 until the add-on is fixed (everything else works). Therefore the
+// activation gate (allOk) is computed over REQUIRED hosts only; optional hosts are still
+// probed and reported (as non-blocking) so the UI can warn without blocking.
+const REQUIRED_PREFIXES = new Set<string>(["", "www", "auth", "admin", "data"]);
 
 // One HTTPS GET against the host. Uses strict cert validation (default
 // rejectUnauthorized: true). 5-second timeout per host so the whole sweep
@@ -118,9 +129,9 @@ export async function POST(req: NextRequest) {
   }
 
   const serverIp = readServerIp();
-  const hosts = SUBDOMAINS.map((p) => hostFor(p, domain));
+  const hosts = SUBDOMAINS.map((p) => ({ host: hostFor(p, domain), optional: !REQUIRED_PREFIXES.has(p) }));
 
-  const results: HostResult[] = await Promise.all(hosts.map(async (host) => {
+  const results: HostResult[] = await Promise.all(hosts.map(async ({ host, optional }) => {
     // DNS first — if it doesn't resolve to our IP, no point trying HTTPS.
     let resolved: string[] = [];
     let dnsOk = false;
@@ -140,6 +151,7 @@ export async function POST(req: NextRequest) {
         httpsStatus: null,
         certValid: false,
         error: dnsError ?? `DNS does not point to ${serverIp ?? "this server"}`,
+        optional,
       };
     }
 
@@ -151,25 +163,31 @@ export async function POST(req: NextRequest) {
       httpsStatus: p.status,
       certValid: p.certValid,
       error: p.error,
+      optional,
     };
   }));
 
-  // "All OK" requires every host to resolve, complete a TLS handshake with a
-  // trusted cert, and return SOME HTTP response below 500. The actual status
-  // code (200 / 307 / 404 / 405 …) is informational: a backend like the data
-  // service legitimately 404s at "/", and that does not mean Secure mode will
-  // break it — the cert is what matters. Only a missing response (null =
-  // timeout / TLS failure) or a 5xx (service genuinely down) counts as a
-  // failure here.
-  const allOk = results.every((r) =>
+  // "All OK" requires every REQUIRED host to resolve, complete a TLS handshake with
+  // a trusted cert, and return SOME HTTP response below 500. The actual status code
+  // (200 / 307 / 404 / 405 …) is informational: a backend like the data service
+  // legitimately 404s at "/", and that does not mean Secure mode will break it — the
+  // cert is what matters. Only a missing response (null = timeout / TLS failure) or a
+  // 5xx (service genuinely down) counts as a failure here. Optional add-ons
+  // (Brain/Memory/chat) are EXCLUDED from the gate — a down add-on reports as
+  // non-blocking and never traps the user (its cert is still issued; that subdomain
+  // simply stays 502 until the add-on is fixed).
+  const hostOk = (r: HostResult) =>
     r.dnsOk && r.certValid &&
-    r.httpsStatus !== null && r.httpsStatus >= 200 && r.httpsStatus < 500
-  );
+    r.httpsStatus !== null && r.httpsStatus >= 200 && r.httpsStatus < 500;
+  const allOk = results.filter((r) => !r.optional).every(hostOk);
+  // Optional add-ons that are not healthy — surfaced so the UI can warn (not block).
+  const optionalDown = results.filter((r) => r.optional && !hostOk(r)).map((r) => r.host);
 
   return NextResponse.json({
     domain,
     serverIp,
     allOk,
+    optionalDown,
     results,
   });
 }
