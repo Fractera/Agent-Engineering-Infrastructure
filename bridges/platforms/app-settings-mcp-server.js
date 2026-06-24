@@ -178,17 +178,26 @@ export class AppSettingsMcpServer {
   // Languages are BUILD-TIME → a change applies only after the app is REBUILT. Fire the existing
   // deploy pipeline (POST :3002/api/deploy → `npm run build --prefix app` + `pm2 reload fractera-app`),
   // so the voice/MCP path self-heals the switcher instead of leaving a stale (or single-language) set.
-  // Best-effort: if DEPLOY_SECRET is not in this (bridge) process env, the trigger is skipped and the
-  // tool still returns the honest "rebuild required" note. → step 138.
+  // The deploy endpoint serialises builds (409 = in_progress); a one-shot trigger would DROP the
+  // rebuild for the trailing change, so the final language set never bakes and the switcher loses it.
+  // Retry on 409 in the background (~5 min) until a build is ACCEPTED for the final env — last write
+  // wins. Best-effort: if DEPLOY_SECRET is absent the trigger is skipped and the tool returns the
+  // honest "rebuild required" note. → step 138.
   _triggerRebuild() {
     const sec = process.env.DEPLOY_SECRET
     if (!sec) return false
     const url = process.env.DEPLOY_TRIGGER_URL ?? 'http://127.0.0.1:3002/api/deploy'
     const headers = { 'Content-Type': 'application/json', 'x-deploy-secret': sec }
-    try {
-      fetch(url, { method: 'POST', headers, body: JSON.stringify({ description: 'Language set changed → rebuild' }) }).catch(() => {})
-      return true
-    } catch { return false }
+    ;(async () => {
+      for (let i = 0; i < 60; i++) {
+        try {
+          const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ description: 'Language set changed → rebuild' }) })
+          if (res.status !== 409) return // accepted (or non-retryable) — done
+        } catch { /* network blip — keep retrying */ }
+        await new Promise(r => setTimeout(r, 5000))
+      }
+    })()
+    return true
   }
 
   start() {

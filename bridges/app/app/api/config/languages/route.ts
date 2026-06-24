@@ -70,23 +70,42 @@ function parseList(value: string | null): string[] {
 // SINGLE_LANG_MODE), so a change only takes effect after the app is REBUILT. Fire the existing
 // deploy pipeline (POST :3002/api/deploy → `npm run build --prefix app` + `pm2 reload fractera-app`)
 // so adding/removing a language actually applies — otherwise the switcher reflects a stale set, or
-// the build collapses to single-language and the button hides. Best-effort: a failure here must NOT
-// fail the save (the env is already written; the owner can rebuild manually). → step 138.
-async function triggerRebuild(): Promise<boolean> {
-  try {
-    const url = process.env.DEPLOY_TRIGGER_URL ?? "http://127.0.0.1:3002/api/deploy";
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-    const secret = process.env.DEPLOY_SECRET;
-    if (secret) headers["x-deploy-secret"] = secret;
-    const res = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ description: "Language set changed → rebuild" }),
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
+// the build collapses to single-language and the button hides. → step 138.
+//
+// CRITICAL (step 138 follow-up): the deploy endpoint serialises builds — a POST while a build is
+// already running returns 409 (in_progress). A bare one-shot trigger therefore DROPS the rebuild
+// for the trailing language change (the env is en,es,de on disk, but the only build that ran saw an
+// earlier set → German never bakes → the switcher loses it). Since the language set is build-time and
+// "last write must win", retry on 409 until a build is ACCEPTED for the final env. Runs in the
+// background (fire-and-forget) — admin is a long-lived `next start` process, so the loop survives past
+// the HTTP response; it must never block or fail the save (env is already written). → step 138.
+async function postDeploy(): Promise<number> {
+  const url = process.env.DEPLOY_TRIGGER_URL ?? "http://127.0.0.1:3002/api/deploy";
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const secret = process.env.DEPLOY_SECRET;
+  if (secret) headers["x-deploy-secret"] = secret;
+  const res = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ description: "Language set changed → rebuild" }),
+  });
+  return res.status;
+}
+
+function ensureRebuild(): void {
+  // Up to ~5 min of retries (60 × 5s): outlasts an in-flight deploy/build so the final
+  // language set is guaranteed to get its own build. 200/202 = accepted; 409 = busy, retry.
+  void (async () => {
+    for (let i = 0; i < 60; i++) {
+      try {
+        const status = await postDeploy();
+        if (status !== 409) return; // accepted (or a non-retryable error) — done
+      } catch {
+        /* network blip — keep retrying */
+      }
+      await new Promise((r) => setTimeout(r, 5000));
+    }
+  })();
 }
 
 export async function GET(req: NextRequest) {
@@ -159,9 +178,10 @@ export async function POST(req: NextRequest) {
       /* best-effort mirror; env is the source of truth */
     }
 
-    // Build-time languages → kick a rebuild so the change applies (best-effort).
-    const rebuildTriggered = await triggerRebuild();
-    return NextResponse.json({ ok: true, languages, defaultLanguage, rebuildRequired: true, rebuildTriggered });
+    // Build-time languages → schedule a rebuild that retries past any in-flight build, so the
+    // final set is guaranteed to bake (last write wins). Background; never blocks the save.
+    ensureRebuild();
+    return NextResponse.json({ ok: true, languages, defaultLanguage, rebuildRequired: true, rebuildScheduled: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }
