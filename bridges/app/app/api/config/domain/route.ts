@@ -203,6 +203,13 @@ ${gate}        proxy_pass http://127.0.0.1:9120/;
         proxy_buffering off;
     }
 ` : "";
+    // The June-2026 Hermes hardening makes the agent dashboard (:9119) bind
+    // 127.0.0.1 only AND validate the Host header against its bound host. So nginx
+    // must present Host: 127.0.0.1:9119 to it — the public $host is rejected with a
+    // 400 "Invalid Host header". Only the hermes :9119 dashboard needs this; the
+    // chat (:9120 /chat/) and auth-verify (:3001) keep $host and work as before.
+    // → reports/errors/hermes-refuses-0.0.0.0-bind-and-host-check.md (step 136)
+    const hostHeader = prefix === "hermes" ? "127.0.0.1:9119" : "$host";
     return `# fractera ${host} — managed by fractera
 server {
     listen 80;
@@ -231,7 +238,7 @@ ${gate}        proxy_pass http://127.0.0.1:${port};
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
+        proxy_set_header Host ${hostHeader};
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
