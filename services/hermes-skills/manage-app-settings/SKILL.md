@@ -1,3 +1,17 @@
+---
+name: manage-app-settings
+description: >
+  Read or change the deployed app's settings — brand name, description, URL, support
+  email, SEO/OpenGraph, PWA, analytics, structured data — and the app's language set.
+  Use when the owner says things like "rename my app", "change my description to 'Рога и
+  копыта'", "set the site URL", "turn on the Organization schema", or "add French".
+  Writes go through the validated app-settings-bridge MCP setter (:3218) — never raw JSON.
+version: 1.0.0
+metadata:
+  hermes:
+    tags: [app-settings, branding, rename, description, seo, opengraph, pwa, languages, mcp, owner]
+---
+
 # manage-app-settings
 
 Skill for changing what the deployed app says about itself — its App Settings

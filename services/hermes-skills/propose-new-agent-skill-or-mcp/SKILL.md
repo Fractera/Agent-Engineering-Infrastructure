@@ -1,3 +1,17 @@
+---
+name: propose-new-agent-skill-or-mcp
+description: >
+  Propose a new agent skill or MCP connector for any of the 6 agents by creating a draft
+  record on /ai-draft-settings. Use when you spot an automation opportunity, a repeating
+  pattern worth capturing, or the architect says "document this as a skill / add this to
+  the agents". You do NOT build the real file — the draft is the proposal the architect
+  approves and materializes. Calls owner_draft_create_record (dry_run first, §8.2 confirm).
+version: 1.0.0
+metadata:
+  hermes:
+    tags: [ai-draft-settings, propose, skill, mcp, draft, automation, capability]
+---
+
 # propose-new-agent-skill-or-mcp
 
 Use this skill when you notice an automation opportunity, a repeating pattern, or
@@ -52,6 +66,16 @@ Tell the architect:
 
 Do NOT build the real skill file yourself — the draft is the proposal; the
 architect approves and materializes it in a separate development step.
+
+## When the draft IS materialized — canonical form (do not flatten)
+
+When the approved draft becomes the **real** record, it MUST take the one canonical form per agent or it
+silently fails to load. A **skill** is a directory `<name>/SKILL.md` with YAML frontmatter (`name:` +
+trigger-rich `description:`) — **never a bare flat `<name>.md`**. This matters most for YOU: Hermes
+discovers skills ONLY as `<name>/SKILL.md` (a flat file is invisible → you pick the wrong skill). MCP =
+bridge + registration in every agent's client + MCP-REGISTRY; instruction = merge into the root file
+(SOUL.md/HERMES.md for you). Same canon serves all six agents — full table in the workspace standard
+`ai-draft-settings.md` → "Materialization format contract".
 
 ## Parameters for `owner_draft_create_record`
 

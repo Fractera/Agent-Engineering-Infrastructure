@@ -1,3 +1,18 @@
+---
+name: scaffold-route
+description: >
+  Turn a declared route into the standard shell-component skeleton (page.tsx +
+  _components/index.tsx + a leaf + a full RouteMeta _meta.ts) with the access shape baked
+  in, instead of hand-typing the convention. Use when a declared /architecture node must
+  become a live page/endpoint, or any new route starts. Hermes orchestrates; a coding
+  agent runs the project-local emitter — pick it with choose-agent + delegate-task.
+version: 1.0.0
+metadata:
+  hermes:
+    tags: [scaffold, route, shell-component, skeleton, page, endpoint, architecture]
+    related_skills: [choose-agent, delegate-task]
+---
+
 # scaffold-route
 
 Turn a declared route into the standard shell-component skeleton (page.tsx +

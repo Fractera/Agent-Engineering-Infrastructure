@@ -1,3 +1,17 @@
+---
+name: activate-project
+description: >
+  Activate a guest project deployed into the app slot (:3000) — make it a first-class
+  Fractera project: add the standard workspace pages and migrate its cloud dependencies
+  (DB / storage / auth / vector store) onto this server's substrate. Use right after a
+  fresh deploy whose framework is not fractera-pro. Never activate without the owner's go.
+version: 1.0.0
+metadata:
+  hermes:
+    tags: [activation, app-slot, guest-repo, migration, workspace-pages, onboarding]
+    related_skills: [choose-agent, delegate-task, record-deployment]
+---
+
 # activate-project
 
 Skill for **activating a guest project** that was deployed into the app slot

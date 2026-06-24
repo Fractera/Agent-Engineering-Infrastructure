@@ -1,3 +1,17 @@
+---
+name: delegate-task
+description: >
+  Delegate a coding task to one of the 5 AI coding platforms and handle the result.
+  Use when a task needs real code written (a single feature or bug), or you want a
+  second model's take. Frames the prompt, calls owner_delegate_task_to_platform /
+  _best_platform, reviews the output, and records the deployment afterwards.
+version: 1.0.0
+metadata:
+  hermes:
+    tags: [orchestration, delegation, coding, platforms, delegate, send-task]
+    related_skills: [choose-agent, record-deployment]
+---
+
 # delegate-task
 
 Orchestration skill for delegating coding tasks to AI platforms.

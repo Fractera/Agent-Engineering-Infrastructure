@@ -1,3 +1,17 @@
+---
+name: choose-agent
+description: >
+  Pick WHICH of the 5 coding agents (claude-code/codex/gemini-cli/qwen-code/kimi-code)
+  to delegate a task to. Use before every delegation: call the readiness MCP for the
+  facts (installed/logged_in/busy/warmth), then apply the judgement here. Use when you
+  are about to hand coding work to an agent and must choose the right one.
+version: 1.0.0
+metadata:
+  hermes:
+    tags: [orchestration, delegation, agent-selection, readiness, choose, routing]
+    related_skills: [delegate-task, record-deployment]
+---
+
 # choose-agent
 
 Skill for picking WHICH coding agent to delegate a task to. The readiness MCP

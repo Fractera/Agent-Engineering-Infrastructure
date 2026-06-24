@@ -1,3 +1,16 @@
+---
+name: confirm-before-mutation
+description: >
+  Global interaction rule for EVERY state-changing MCP tool call: before any write /
+  mutation (set, toggle, create, update, apply), restate the intent back to the owner,
+  list the concrete actions, and wait for explicit confirmation. Use whenever you are
+  about to call a tool that changes state. Read-only tools need no confirmation.
+version: 1.0.0
+metadata:
+  hermes:
+    tags: [safety, confirmation, mutation, write-guard, standard, confirm-before-write]
+---
+
 # confirm-before-mutation
 
 Global interaction rule for EVERY state-changing MCP tool you call. It applies to

@@ -1,3 +1,17 @@
+---
+name: record-deployment
+description: >
+  Log each development deployment into the Product Loop "Deployments" table the owner
+  sees in admin — which agent did the work, which model, token cost, commit, and the
+  page URL to review. Use once per deployment, right after a delegated change goes live
+  and before you hand the owner the URL. Calls owner_product_loop_record_deployment.
+version: 1.0.0
+metadata:
+  hermes:
+    tags: [product-loop, deployment, record, tracking, tokens, deployments-table]
+    related_skills: [delegate-task]
+---
+
 # record-deployment
 
 Skill for logging each development deployment into the Product Loop table — the
