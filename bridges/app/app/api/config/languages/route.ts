@@ -72,40 +72,22 @@ function parseList(value: string | null): string[] {
 // so adding/removing a language actually applies — otherwise the switcher reflects a stale set, or
 // the build collapses to single-language and the button hides. → step 138.
 //
-// CRITICAL (step 138 follow-up): the deploy endpoint serialises builds — a POST while a build is
-// already running returns 409 (in_progress). A bare one-shot trigger therefore DROPS the rebuild
-// for the trailing language change (the env is en,es,de on disk, but the only build that ran saw an
-// earlier set → German never bakes → the switcher loses it). Since the language set is build-time and
-// "last write must win", retry on 409 until a build is ACCEPTED for the final env. Runs in the
-// background (fire-and-forget) — admin is a long-lived `next start` process, so the loop survives past
-// the HTTP response; it must never block or fail the save (env is already written). → step 138.
-async function postDeploy(): Promise<number> {
+// CRITICAL (step 138): the deploy endpoint serialises builds. A change made WHILE a build is in
+// flight must still get built — otherwise the trailing language change is lost and the switcher
+// collapses. A single POST is now enough: the deploy route COALESCES — if a build is running it
+// records this request and reruns for the latest state on finish, so the final env always bakes
+// (no caller retry, no dependence on this process staying alive). Fire-and-forget; never blocks
+// the save (env is already written). → step 138 (deploy/route.ts runBuild + DIRTY_FILE).
+function ensureRebuild(): void {
   const url = process.env.DEPLOY_TRIGGER_URL ?? "http://127.0.0.1:3002/api/deploy";
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   const secret = process.env.DEPLOY_SECRET;
   if (secret) headers["x-deploy-secret"] = secret;
-  const res = await fetch(url, {
+  void fetch(url, {
     method: "POST",
     headers,
     body: JSON.stringify({ description: "Language set changed → rebuild" }),
-  });
-  return res.status;
-}
-
-function ensureRebuild(): void {
-  // Up to ~5 min of retries (60 × 5s): outlasts an in-flight deploy/build so the final
-  // language set is guaranteed to get its own build. 200/202 = accepted; 409 = busy, retry.
-  void (async () => {
-    for (let i = 0; i < 60; i++) {
-      try {
-        const status = await postDeploy();
-        if (status !== 409) return; // accepted (or a non-retryable error) — done
-      } catch {
-        /* network blip — keep retrying */
-      }
-      await new Promise((r) => setTimeout(r, 5000));
-    }
-  })();
+  }).catch(() => { /* coalescing in the deploy route guarantees the rebuild regardless */ });
 }
 
 export async function GET(req: NextRequest) {
