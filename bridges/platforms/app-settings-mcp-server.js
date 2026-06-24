@@ -102,7 +102,8 @@ function toolsSchema() {
         'Use owner_app_settings_list_text_fields to discover valid paths. choice fields must be one of ' +
         'their options; flag fields take true/false; number fields take a number. IMAGE fields are ' +
         'rejected — tell the owner to upload images via the control panel. Persists to the app ' +
-        "config; applies on the app's next load.",
+        'config and triggers on-demand revalidation of the public pages, so the change shows on the ' +
+        "app's NEXT page load while the pages stay static (ISR).",
       inputSchema: {
         type: 'object',
         properties: {
@@ -158,6 +159,20 @@ export class AppSettingsMcpServer {
     const tmp = `${this.configPath}.tmp`
     writeFileSync(tmp, JSON.stringify(raw, null, 2), 'utf8')
     renameSync(tmp, this.configPath)
+  }
+
+  // Best-effort: tell the Shell (:3000, a different process) to purge its ISR cache so
+  // a text change shows on the next page load instead of waiting out revalidate=600.
+  // Fire-and-forget — revalidation must NEVER fail or delay the write. The Shell pages
+  // stay static; this only purges their cache. x-agent-identity passes the proxy.ts API
+  // gate; REVALIDATE_SECRET (when set) authenticates. Languages are NOT revalidated here
+  // (they are build-time and need a rebuild). → step 134 part C.
+  _revalidate() {
+    const url = process.env.SHELL_REVALIDATE_URL ?? 'http://127.0.0.1:3000/api/revalidate'
+    const headers = { 'Content-Type': 'application/json', 'x-agent-identity': 'app-settings-mcp' }
+    const sec = process.env.REVALIDATE_SECRET
+    if (sec) headers.Authorization = `Bearer ${sec}`
+    try { fetch(url, { method: 'POST', headers, body: '{}' }).catch(() => {}) } catch { /* ignore */ }
   }
 
   start() {
@@ -234,6 +249,7 @@ export class AppSettingsMcpServer {
       const raw = this._load()
       setAt(raw, path, v)
       this._save(raw)
+      this._revalidate() // purge the Shell's ISR cache → change shows on next load
       return textResult({ ok: true, path, value: v, is_set: isSet(e, v) })
     }
 
