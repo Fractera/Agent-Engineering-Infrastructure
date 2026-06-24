@@ -175,6 +175,22 @@ export class AppSettingsMcpServer {
     try { fetch(url, { method: 'POST', headers, body: '{}' }).catch(() => {}) } catch { /* ignore */ }
   }
 
+  // Languages are BUILD-TIME → a change applies only after the app is REBUILT. Fire the existing
+  // deploy pipeline (POST :3002/api/deploy → `npm run build --prefix app` + `pm2 reload fractera-app`),
+  // so the voice/MCP path self-heals the switcher instead of leaving a stale (or single-language) set.
+  // Best-effort: if DEPLOY_SECRET is not in this (bridge) process env, the trigger is skipped and the
+  // tool still returns the honest "rebuild required" note. → step 138.
+  _triggerRebuild() {
+    const sec = process.env.DEPLOY_SECRET
+    if (!sec) return false
+    const url = process.env.DEPLOY_TRIGGER_URL ?? 'http://127.0.0.1:3002/api/deploy'
+    const headers = { 'Content-Type': 'application/json', 'x-deploy-secret': sec }
+    try {
+      fetch(url, { method: 'POST', headers, body: JSON.stringify({ description: 'Language set changed → rebuild' }) }).catch(() => {})
+      return true
+    } catch { return false }
+  }
+
   start() {
     const server = createServer((req, res) => {
       res.setHeader('Content-Type', 'application/json')
@@ -284,12 +300,16 @@ export class AppSettingsMcpServer {
       writeFileSync(tmp, next, 'utf8')
       renameSync(tmp, this.envPath)
 
+      const rebuildTriggered = this._triggerRebuild()
       return textResult({
         ok: true,
         languages: codes,
         defaultLanguage: def,
         rebuild_required: true,
-        note: 'Saved to the Shell env. Languages are BUILD-TIME — they appear only after the app is REBUILT (a few minutes). Trigger a rebuild from Admin → deploy, or tell the owner it will apply after the next rebuild.',
+        rebuild_triggered: rebuildTriggered,
+        note: rebuildTriggered
+          ? 'Saved to the Shell env. Languages are BUILD-TIME — a rebuild has been STARTED (a few minutes); the new language set and the switcher button apply once it finishes.'
+          : 'Saved to the Shell env. Languages are BUILD-TIME — they appear only after the app is REBUILT (a few minutes). Trigger a rebuild from Admin → deploy, or tell the owner it will apply after the next rebuild.',
       })
     }
 

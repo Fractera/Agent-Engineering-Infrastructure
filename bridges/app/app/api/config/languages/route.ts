@@ -66,6 +66,29 @@ function parseList(value: string | null): string[] {
     .filter(Boolean);
 }
 
+// Languages are BUILD-TIME (NEXT_PUBLIC_SUPPORTED_LANGUAGES feeds generateStaticParams and
+// SINGLE_LANG_MODE), so a change only takes effect after the app is REBUILT. Fire the existing
+// deploy pipeline (POST :3002/api/deploy → `npm run build --prefix app` + `pm2 reload fractera-app`)
+// so adding/removing a language actually applies — otherwise the switcher reflects a stale set, or
+// the build collapses to single-language and the button hides. Best-effort: a failure here must NOT
+// fail the save (the env is already written; the owner can rebuild manually). → step 138.
+async function triggerRebuild(): Promise<boolean> {
+  try {
+    const url = process.env.DEPLOY_TRIGGER_URL ?? "http://127.0.0.1:3002/api/deploy";
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    const secret = process.env.DEPLOY_SECRET;
+    if (secret) headers["x-deploy-secret"] = secret;
+    const res = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ description: "Language set changed → rebuild" }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 export async function GET(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -136,7 +159,9 @@ export async function POST(req: NextRequest) {
       /* best-effort mirror; env is the source of truth */
     }
 
-    return NextResponse.json({ ok: true, languages, defaultLanguage, rebuildRequired: true });
+    // Build-time languages → kick a rebuild so the change applies (best-effort).
+    const rebuildTriggered = await triggerRebuild();
+    return NextResponse.json({ ok: true, languages, defaultLanguage, rebuildRequired: true, rebuildTriggered });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }
