@@ -23,7 +23,9 @@
     <img src="https://img.shields.io/badge/Fork-1a1a2e?style=for-the-badge&logo=github" alt="Fork"/>
   </a>
   &nbsp;
-  <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="MIT"/>
+  <a href="https://github.com/Fractera/Agent-Engineering-Infrastructure/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/License-PolyForm_Small_Business-FF8C00?style=for-the-badge" alt="PolyForm Small Business — source-available (Open Code)"/>
+  </a>
   &nbsp;
   <a href="https://smithery.ai/servers/admin-add5/fractera">
     <img src="https://smithery.ai/badge/admin-add5/fractera" alt="Smithery"/>
@@ -266,7 +268,7 @@ The millisecond our 10-minute automated installer completes its routine, your vi
 *   **The Sovereign Command Post (Hermes Chat UI):** You interface directly with a browser-native workspace terminal governed by the **Hermes Orchestrator**. Activating Hermes boots your dedicated **LightRAG Graph Memory** layer. By automatically profiling your repository's technical constraints, framework rules, and design system states directly into the graph network, Fractera grounds every subsequent model prompt—permanently eliminating session context drift and conversational amnesia.
 *   **The Unified Multi-Agent Control Room:** The top cockpit matrix maps low-latency browser PTY (Pseudo-Teletype) nodes for all **five AI coding platforms** (*Claude Code*, *OpenAI Codex*, *Gemini CLI*, *Qwen Code*, and *Kimi Code*). These execution blocks run concurrently using your existing developer accounts and vendor subscriptions. They execute complex file changes, massive structural refactoring, and command-line diagnostics locally without routing your logic through third-party telemetry proxies or volatile pay-per-token middleware.
 *   **The Dynamic Assembly Deck (Live Preview & Visual Debugger):** A split-screen environment integrates your live production frontend. Operating through an absolute **mcp first ai development** loop, you can click any component on your live staging view to capture its exact layout token or DOM identifier. This coordinate is instantly piped back into Hermes, translating raw human feedback into a clean, **deterministic agent engineering** instruction while bypassing heavy, unconstrained code rewrites.
-*   **Self-Extending Open-Source Architecture:** Because the entirety of Fractera is 100% open-source under the MIT license, your orchestrated agent layers can recursively inspect, parse, and safely modify Fractera's own infrastructure code—including this administrative panel itself. It is a completely autonomous, self-improving engineering loop built for product developers who demand absolute ownership of their technical assets. *Pull requests are always welcome.*
+*   **Self-Extending Open-Code Architecture:** Because the entirety of Fractera is source-available (**Open Code**) under the PolyForm Small Business license — free for individuals and small businesses, with a separate commercial license for larger companies — your orchestrated agent layers can recursively inspect, parse, and safely modify Fractera's own infrastructure code—including this administrative panel itself. It is a completely autonomous, self-improving engineering loop built for product developers who demand absolute ownership of their technical assets. *Pull requests are always welcome.*
 
 > Explore the deep subsystem schematics on the **[AI Workspace Architecture](https://www.fractera.ai/ai-workspace-architect)** page.
 
@@ -442,7 +444,7 @@ Yes. For developers who want to keep working inside their native IDE (VS Code, C
 3. Push your verified changes back to your GitHub repository origin.
 4. Open your Fractera admin panel, click pull, and hit Deploy.
 
-Your updates compile and propagate live to your production URL in minutes. Your private server effectively becomes an open-source alternative to Vercel, while your local machine hooks straight into the persistent SQLite database and media buckets hosted on your VPS.
+Your updates compile and propagate live to your production URL in minutes. Your private server effectively becomes an Open Code alternative to Vercel, while your local machine hooks straight into the persistent SQLite database and media buckets hosted on your VPS.
 
 ---
 
@@ -470,7 +472,7 @@ Yes. You can disable the agent layers during deployment and provision a plain se
 
 No. If the Fractera connector is your only active custom Model Context Protocol tool, you can interface with our API on Anthropic's free tier. 
 
-If you use multiple custom tools simultaneously, you will need a standard Claude Pro or Team account (~$20/month) to run multiple MCP servers concurrently within their chat interface. This billing is handled strictly by Anthropic; Fractera's core software is always free and open-source.
+If you use multiple custom tools simultaneously, you will need a standard Claude Pro or Team account (~$20/month) to run multiple MCP servers concurrently within their chat interface. This billing is handled strictly by Anthropic; Fractera's core software is always free and source-available (Open Code).
 
 ---
 
@@ -535,11 +537,22 @@ You plug your affiliate tracking tokens directly into your partner cabinet, and 
 
 Fractera is an infrastructure substrate, and deep architecture is only as dependable as the regional support network surrounding it. We are actively auditing official regional partners to co-launch localized nodes of the platform: tailored to native data residency regulations, delivered in local languages, and managed by engineers who understand their territory's unique market constraints.
 
-This is a co-venture model, not a standard franchise. A regional partnership grants you full ownership of your branded product layout, user directory, and localized revenue streams, built on top of our production-ready, open-source repository core. We handle the system engineering substrate; you secure market trust, localized documentation, and enterprise client relations.
+This is a co-venture model, not a standard franchise. A regional partnership grants you full ownership of your branded product layout, user directory, and localized revenue streams, built on top of our production-ready, Open Code repository core. We handle the system engineering substrate; you secure market trust, localized documentation, and enterprise client relations.
 
 If you operate in a jurisdiction with strict corporate compliance requirements, or where developers demand dedicated local technical assistance, let's build the localized future of agent engineering together.
 
 → [Regional Partners](https://www.fractera.ai/regional-partners) · [admin@fractera.ai](mailto:admin@fractera.ai)
+
+---
+
+## License — Open Code (source-available)
+
+Fractera's core (this repository) is **Open Code**: the full source is public — read it, fork it, modify it, self-host it — under the **[PolyForm Small Business License 1.0.0](LICENSE)**.
+
+- **Free** for individuals and small businesses (fewer than 100 people **and** under 1,000,000 USD annual revenue).
+- **Larger companies** need a separate commercial license — contact [admin@fractera.ai](mailto:admin@fractera.ai).
+
+Open Code is **source-available, not OSI "open source"**: everything stays open to read and build on, with a single boundary — large corporations license commercial use. The starters (e.g. `fractera-next-starter`) remain MIT.
 
 ---
 
