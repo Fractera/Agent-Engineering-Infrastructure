@@ -5,8 +5,8 @@ import Database from 'better-sqlite3'
 import { v4 as uuidv4 } from 'uuid'
 import sharp from 'sharp'
 import pngToIco from 'png-to-ico'
-import { createReadStream, existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs'
-import { resolve, dirname, extname } from 'path'
+import { createReadStream, existsSync, mkdirSync, unlinkSync, writeFileSync, readdirSync, readFileSync, statSync } from 'fs'
+import { resolve, dirname, extname, join, relative } from 'path'
 import { fileURLToPath } from 'url'
 import { config } from 'dotenv'
 import { shouldBypassAuth } from './auth-bypass.js'
@@ -126,6 +126,55 @@ app.get('/health', (_req, res) => res.json({ ok: true }))
 // ── Apply auth to everything below ───────────────────────────────────────────
 
 app.use(requireAuth)
+
+// ── Frozen archetypes — read-only store served to the thaw-frozen-archetype skill ─
+// The closed store of frozen "project-in-a-box" archetypes (content-collection, …).
+// GET /archetypes        → the catalog (manifest summary per archetype) for matching.
+// GET /archetypes/:id    → the full tree { manifest, files } so the emitter can unpack
+//                          it to a temp dir and thaw it. Read-only; no mutation here.
+const ARCHETYPES_DIR = resolve(__dirname, 'frozen-archetypes')
+
+function readArchetypeTree(dir) {
+  const files = {}
+  const walk = d => {
+    for (const name of readdirSync(d)) {
+      const full = join(d, name)
+      if (statSync(full).isDirectory()) walk(full)
+      else files[relative(dir, full).split('\\').join('/')] = readFileSync(full, 'utf8')
+    }
+  }
+  walk(dir)
+  return files
+}
+
+function readManifest(id) {
+  try { return JSON.parse(readFileSync(join(ARCHETYPES_DIR, id, 'manifest.json'), 'utf8')) }
+  catch { return null }
+}
+
+app.get('/archetypes', (_req, res) => {
+  if (!existsSync(ARCHETYPES_DIR)) return res.json({ archetypes: [] })
+  const archetypes = readdirSync(ARCHETYPES_DIR)
+    .filter(n => existsSync(join(ARCHETYPES_DIR, n, 'manifest.json')))
+    .map(readManifest)
+    .filter(Boolean)
+    .map(m => ({
+      id: m.id, displayName: m.displayName, version: m.version,
+      capability: m.capability, fits: m.fits, doesNotServe: m.doesNotServe,
+      refusalHint: m.refusalHint, params: m.params,
+    }))
+  res.json({ archetypes })
+})
+
+app.get('/archetypes/:id', (req, res) => {
+  const id = String(req.params.id).replace(/[^a-z0-9-]/gi, '') // sanitize — no path traversal
+  const dir = join(ARCHETYPES_DIR, id)
+  if (!id || !existsSync(join(dir, 'manifest.json')))
+    return res.status(404).json({ error: 'archetype not found' })
+  const manifest = readManifest(id)
+  const files = readArchetypeTree(dir) // manifest.json + engine/** + tab/** (utf8)
+  res.json({ id, manifest, files })
+})
 
 // ── GET /media ────────────────────────────────────────────────────────────────
 
