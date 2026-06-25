@@ -20,6 +20,35 @@ function writeWAL(data: object) {
   try { writeFileSync(WAL_FILE, JSON.stringify(data, null, 2)); } catch {}
 }
 
+// Build a SLOT-SCOPED environment for the spawned `next build`.
+//
+// WHY (root cause, step 143): this Admin route runs inside its OWN Next process, which at
+// `next start` already ran @next/env. @next/env (a) sets the cross-process sentinel
+// `__NEXT_PROCESSED_ENV` in process.env, and (b) injects this Admin's env vars. If we spawn the
+// slot build with `{ ...process.env }`, the child inherits BOTH problems:
+//   1. the sentinel makes the child's @next/env SKIP loading the slot's app/.env.local entirely;
+//   2. any inherited key shadows the slot's value (@next/env never overrides an already-set var).
+// Either way the slot bakes stale/missing build-time vars — e.g. NEXT_PUBLIC_SUPPORTED_LANGUAGES
+// falls back to ["en"], SINGLE_LANG_MODE becomes true, and the language switcher disappears on the
+// default route. This is GENERAL: it would silently break ANY build-time env the slot owns
+// (languages, Stripe keys + product ids, custom app vars), not just languages.
+//
+// FIX: hand the child a clean env where the slot's own app/.env.local wins for every key it
+// declares — drop the sentinel (so @next/env loads the file fresh) and drop every key the slot
+// declares (so no inherited copy shadows it). All other inherited vars (PATH, HOME, …) are kept.
+function slotBuildEnv(): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = { ...process.env, FORCE_COLOR: "0" };
+  delete env.__NEXT_PROCESSED_ENV;
+  try {
+    const slotEnvFile = resolve(APP_DIR, ".env.local");
+    for (const line of readFileSync(slotEnvFile, "utf8").split("\n")) {
+      const m = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=/.exec(line);
+      if (m) delete env[m[1]];
+    }
+  } catch { /* no slot .env.local yet — child @next/env will use defaults */ }
+  return env;
+}
+
 async function isAuthorized(req: NextRequest): Promise<boolean> {
   const secret = process.env.DEPLOY_SECRET;
   if (secret && req.headers.get("x-deploy-secret") === secret) return true;
@@ -37,11 +66,11 @@ function runBuild(description: string): string {
   writeWAL({ status: "STARTED", jobId, startedAt: new Date().toISOString(), description });
 
   const logFd = openSync(logFile, "w");
-  // next build reads app/.env.local at build start, so it always bakes the CURRENT language
-  // set — a rerun triggered after a change picks up the new value.
+  // Spawn the slot build with a SLOT-SCOPED env so the slot's own app/.env.local fully governs
+  // every build-time variable it declares (languages, Stripe keys, any custom app var). → step 143.
   const proc = spawn("npm", ["run", "build", "--prefix", APP_DIR], {
     stdio: ["ignore", logFd, logFd],
-    env: { ...process.env, FORCE_COLOR: "0" },
+    env: slotBuildEnv(),
   });
 
   proc.on("exit", (code) => {
