@@ -1,0 +1,41 @@
+{
+  "store": "frozen-templates",
+  "version": "1.0.0",
+  "engineVersion": "v1",
+  "about": "The basis of the Frozen Template Constructor: a small set of VETTED frozen bricks the composer assembles by file copy + token substitution (ZERO code generation). A request is matched against a primitive's envelope (100%-fit on every axis or it is not that primitive). Authoritative strategy: CRUD-DOCS/workspace-standards/frozen-template-constructor.md.",
+  "axes": {
+    "source": { "slot": "A (list provider)", "values": ["files", "db-at-build", "runtime"], "about": "Where the children list comes from. files/db-at-build => static output; runtime => dynamic." },
+    "depth": { "slot": "base", "values": [1, 2, 3, 4], "about": "Structural nesting (hub levels). Recursive parameter of one skeleton." },
+    "rendering": { "slot": "base", "values": ["static", "dynamic-descriptor"], "about": "static = SSG/ISR pages; dynamic-descriptor = rules/context spec, not pages (when static is impossible)." },
+    "roles": { "slot": "B (uniform aspect)", "values": ["public", "guest", "<role-list>"], "about": "Access, embedded identically into every layout level. ALL_ROLES (enforced tiers + business RBAC)." },
+    "i18n": { "slot": "B (uniform aspect)", "values": ["mono", "multi"], "about": "Localization, uniform at every level." }
+  },
+  "primitives": [
+    {
+      "id": "files-depth1",
+      "displayName": "Flat file-backed list (news / blog / docs feed)",
+      "status": "ready",
+      "base": { "source": "files", "depth": 1, "rendering": "static" },
+      "aspects": ["i18n", "roles"],
+      "defaults": { "roles": "public", "i18n": "multi" },
+      "matching": "BASE axes (source, depth, rendering) SELECT this primitive — all must equal the request. ASPECT axes (i18n, roles) are toggles this primitive SUPPORTS — a request may set them (e.g. roles=user turns the gate ON); an aspect not listed here => refuse 'aspect X unsupported'. A base axis mismatch => refuse naming that axis.",
+      "params": ["tab", "format", "languages", "labels", "samples", "roles", "engineVersion"],
+      "fits": ["news", "blog", "documentation feed", "announcements", "changelog", "articles", "stories", "guides list"],
+      "doesNotServe": ["cart/checkout/payments", "graded course with tests/progress", "user dashboard / app screen", "forms that persist visitor input", "per-user/per-request personalized feed"],
+      "path": "primitives/files-depth1"
+    }
+  ],
+  "providers": [
+    { "id": "files", "slot": "A", "status": "ready", "about": "Build-time filesystem scan (parser-fs). Static output.", "path": "providers/files" },
+    { "id": "db-at-build", "slot": "A", "status": "declared", "about": "Build-time DB query → static output. Roadmap brick; contract only.", "path": "providers/db-at-build" }
+  ],
+  "aspects": [
+    { "id": "i18n", "slot": "B", "status": "ready", "about": "Per-[lang] routing + per-tab UI chrome (EN fallback per key). The always-on content aspect.", "path": "aspects/i18n" },
+    { "id": "roles", "slot": "B", "status": "declared", "about": "Role gate injected uniformly into the tab layout. Reference primitive has it OFF; turning ON injects the guard, no other change. Roadmap aspect.", "path": "aspects/roles" }
+  ],
+  "roadmap": [
+    "(files × depth-2)  — docs-by-category, when proven by live development",
+    "(db-at-build × depth-1) — catalogue, build-time DB → static",
+    "dynamic-descriptor — when a structure genuinely cannot be static"
+  ]
+}

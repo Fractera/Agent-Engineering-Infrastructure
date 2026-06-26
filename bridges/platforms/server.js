@@ -13,6 +13,7 @@ import { ParallelRoutingMcpServer } from './parallel-routing-mcp-server.js'
 import { AppSettingsMcpServer } from './app-settings-mcp-server.js'
 import { AiDraftMcpServer } from './ai-draft-mcp-server.js'
 import { ArchetypesMcpServer } from './archetypes-mcp-server.js'
+import { TemplateConstructorMcpServer } from './template-constructor-mcp-server.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, '../../app/.env.local') })
@@ -1177,6 +1178,20 @@ new AiDraftMcpServer({
 // §8.2 dry_run confirm). → step 146.
 new ArchetypesMcpServer({
   port: Number(process.env.ARCHETYPES_MCP_PORT ?? 3223),
+  secret: MCP_SECRET,
+  dataUrl: process.env.DATA_SERVICE_URL ?? 'http://127.0.0.1:3300',
+  dataSecret: process.env.DATA_SECRET ?? '',
+  appDir: process.env.SLOT_APP_DIR ?? '/opt/fractera/app',
+}).start()
+
+// ── Frozen Template Constructor MCP server (singleton, port 3224) ────────────
+// Any of the 6 agents composes a whole structure (news/blog/docs/…) from the
+// constructor's basis of vetted frozen bricks (file copy + token substitution, no
+// code generation). owner_template_list_primitives (read-only basis / matching) +
+// owner_template_compose_structure (mutating, §8.2 dry_run; refuses by axis when no
+// primitive fits). Store served by the data service (:3300, frozen-templates). Step 147.
+new TemplateConstructorMcpServer({
+  port: Number(process.env.TEMPLATE_CONSTRUCTOR_MCP_PORT ?? 3224),
   secret: MCP_SECRET,
   dataUrl: process.env.DATA_SERVICE_URL ?? 'http://127.0.0.1:3300',
   dataSecret: process.env.DATA_SECRET ?? '',

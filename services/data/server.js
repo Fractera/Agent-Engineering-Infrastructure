@@ -176,6 +176,28 @@ app.get('/archetypes/:id', (req, res) => {
   res.json({ id, manifest, files })
 })
 
+// ── Frozen Template Constructor — read-only store (step 147) ───────────────────
+// The basis of the constructor: registry + primitives + providers + aspects + the
+// vetted engine. GET /frozen-templates/registry → the catalog (for matching).
+// GET /frozen-templates/tree → the whole tree { files } so the composer can unpack
+// it to a temp dir and compose. Read-only; no mutation here. Strategy doc:
+// CRUD-DOCS/workspace-standards/frozen-template-constructor.md.
+const FROZEN_TEMPLATES_DIR = resolve(__dirname, 'frozen-templates')
+
+app.get('/frozen-templates/registry', (_req, res) => {
+  if (!existsSync(join(FROZEN_TEMPLATES_DIR, 'registry.json')))
+    return res.status(404).json({ error: 'frozen-templates store not found' })
+  try { res.json(JSON.parse(readFileSync(join(FROZEN_TEMPLATES_DIR, 'registry.json'), 'utf8'))) }
+  catch { res.status(500).json({ error: 'registry parse error' }) }
+})
+
+app.get('/frozen-templates/tree', (_req, res) => {
+  if (!existsSync(FROZEN_TEMPLATES_DIR))
+    return res.status(404).json({ error: 'frozen-templates store not found' })
+  const files = readArchetypeTree(FROZEN_TEMPLATES_DIR) // registry.json + engine/** + primitives/** + providers/** + aspects/**
+  res.json({ store: 'frozen-templates', files })
+})
+
 // ── GET /media ────────────────────────────────────────────────────────────────
 
 app.get('/media', (_req, res) => {
