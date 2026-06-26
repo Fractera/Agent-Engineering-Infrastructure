@@ -3,8 +3,8 @@ import type { ReactNode } from 'react'
 // CONSTRUCTOR PRIMITIVE files-depth1 — SEAM: uniform aspects (Slot B). Every enabled
 // aspect is composed HERE, applied identically at every level of the structure
 // (the Two-Slot Law: an aspect is the same rule at any depth, independent of the data
-// source). The composer injects each enabled aspect's wrapper into {{ASPECT_OPEN}} /
-// {{ASPECT_CLOSE}} and its import into {{ASPECT_IMPORTS}}.
+// source). The composer injects each enabled aspect's wrapper around children and its
+// import at the top of this file.
 //
 // Reference primitive: i18n is ON (carried by the [lang] route segment + the tab's
 // localized chrome) and roles is OFF (no guard). Turning roles ON injects the role
