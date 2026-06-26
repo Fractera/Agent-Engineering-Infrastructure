@@ -49,9 +49,14 @@ questions were developer questions. Translate, default, and act.
     names ("English, Russian"), never codes, never "BCP-47".
 - **Never ask** "what data source / how deep / static or dynamic / how many sample posts
   / which engine version / which roles by name" — choose the default and move on.
+- **Never run `npm`/`tsc`/`gen:lists` yourself** (you have no slot terminal — that path
+  is for the coding agents). The composer already wrote everything.
+- **Never ask the owner to paste a deploy secret.** To make the change visible, call
+  `owner_deploy_rebuild_slot` (the deploy tool); if it is unavailable, just say "press the
+  Deploy button in the footer".
 - The §8.2 confirm before writing files is still required, but phrase it plainly:
   *"I'll create a News section in English and Russian with two sample posts you can
-  replace. Go ahead?"* — not a list of axes.
+  replace, then rebuild so it shows up. Go ahead?"* — not a list of axes.
 
 (This plain-language rule is Hermes-only: the coding agents — Claude Code, Codex, Gemini,
 Qwen, Kimi — keep the technical phrasing below, because a developer drives them.)
@@ -80,17 +85,22 @@ Qwen, Kimi — keep the technical phrasing below, because a developer drives the
    - **Another primitive fits →** compose that one.
    - **None fits →** HONEST REFUSAL naming the failing axis (step 4).
 3. **Compose (confirm first).** Restate exactly what will be created, get explicit
-   confirmation, then run the composer (MCP tool or local emitter). Then
-   `npm run gen:lists` + `npx tsc --noEmit`, and tell the owner to replace the
-   placeholder copy/image.
-3a. **🔁 Rebuild so the change is VISIBLE — mandatory, never skip (esp. any task that
-   wrote files).** The slot runs in production mode: files you wrote are NOT visible
-   until the slot is rebuilt. So you MUST finish by EITHER triggering the slot rebuild
-   yourself (the platform "Deploy" action — `POST :3002/api/deploy` with the deploy
-   secret, the same sanctioned step the pipeline uses) OR, if you cannot, explicitly
-   reminding the owner: **"press the Deploy button in the footer to rebuild and see the
-   change."** A composed structure that is never rebuilt looks like "nothing happened" —
-   the owner saw exactly this. This rebuild step is part of the task, not optional.
+   confirmation, then call the composer MCP tool (`owner_template_compose_structure`).
+   **The composer already wrote everything — including `_list.generated.ts` and the
+   package.json scripts. Do NOT run `npm run gen:lists` / `npx tsc` yourself** (and
+   never in `/root/workspace` — the slot is elsewhere; that path is for a coding agent
+   that owns the slot terminal, not for you). Just tell the owner they can replace the
+   placeholder copy/image later.
+3a. **🔁 Rebuild so the change is VISIBLE — mandatory, never skip (any task that wrote
+   files).** The slot runs in production mode: files you wrote are NOT visible until the
+   slot is rebuilt. Finish by **calling the deploy MCP tool `owner_deploy_rebuild_slot`**
+   (dry_run first to say "I'll rebuild, ~2-4 min, ok?", then for real) — it runs the same
+   "Deploy" the footer button does and waits for the result. If that tool is not available
+   to you, **remind the owner: "press the Deploy button in the footer to rebuild and see
+   the change."** Either way the rebuild is part of the task, not optional — a composed
+   structure that is never rebuilt looks like "nothing happened" (the owner saw exactly this).
+   **Never ask the owner to paste a deploy secret into the chat** — deploy is the tool's job
+   or the owner's button, never a secret handed over in conversation.
 4. **Honest refusal + next step.** Say which axis failed in plain words (e.g. "a live
    dashboard is per-user and dynamic — that is the *rendering*/*source* axis, which no
    frozen brick serves"). Then offer ONE of:

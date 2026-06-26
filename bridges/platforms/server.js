@@ -14,6 +14,7 @@ import { AppSettingsMcpServer } from './app-settings-mcp-server.js'
 import { AiDraftMcpServer } from './ai-draft-mcp-server.js'
 import { ArchetypesMcpServer } from './archetypes-mcp-server.js'
 import { TemplateConstructorMcpServer } from './template-constructor-mcp-server.js'
+import { DeployMcpServer } from './deploy-mcp-server.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, '../../app/.env.local') })
@@ -1196,4 +1197,18 @@ new TemplateConstructorMcpServer({
   dataUrl: process.env.DATA_SERVICE_URL ?? 'http://127.0.0.1:3300',
   dataSecret: process.env.DATA_SECRET ?? '',
   appDir: process.env.SLOT_APP_DIR ?? '/opt/fractera/app',
+}).start()
+
+// ── Slot Rebuild / Deploy MCP server (singleton, port 3225) ──────────────────
+// Lets any of the 6 agents make file changes visible by rebuilding the slot — the
+// same "Deploy" the footer button runs (POST :3002/api/deploy → next build + pm2
+// reload + health check). Closes the "I wrote files but they're invisible" gap so
+// an agent can finish a task itself instead of asking the owner to press Deploy.
+// owner_deploy_rebuild_slot (mutating, §8.2 dry_run). Rebuilds the EXISTING slot —
+// NOT provisioning/wiping (that is the frozen L1 install flow). Step 147 (variant B).
+new DeployMcpServer({
+  port: Number(process.env.DEPLOY_MCP_PORT ?? 3225),
+  secret: MCP_SECRET,
+  adminUrl: process.env.ADMIN_URL ?? 'http://127.0.0.1:3002',
+  deploySecretFile: process.env.DEPLOY_SECRET_FILE ?? '/opt/fractera/bridges/app/.env.local',
 }).start()
