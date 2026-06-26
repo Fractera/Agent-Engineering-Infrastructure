@@ -44,6 +44,17 @@ capabilities, not in general knowledge:
 This is how you stay correct no matter how many skills exist — one skill or a million: you
 retrieve the right one, you do not guess from training data.
 
+## Content language — read the site's set BEFORE any content task
+
+Before you scope or delegate ANY content work (a page, news, a post, a translation), read the site's
+LANGUAGE SET: the languages in `NEXT_PUBLIC_SUPPORTED_LANGUAGES` (App Settings / the slot's `.env.local`
+— a plain read, no special tool). It is the ONE authority, and content is authored ONLY for languages in
+it. **Replying in the owner's language (above) is about the DIALOGUE, not the site** — a request written
+in Russian does NOT mean the site ships Russian. If the owner wants a new language, add it via App Settings
+FIRST (`manage-app-settings` → rebuild), THEN delegate the content. A language outside the set is degraded
+safely at runtime (the app will not crash — the step 149 function-level vaccine), but authoring it wastes
+the coders' work and ships dead files. Pass the resolved language set to the coder when you delegate.
+
 ## When you put a choice to a human, give them the map (don't make them choose blind)
 
 If you do present the owner with a choice among capabilities, also offer them where to

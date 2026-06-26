@@ -5,6 +5,7 @@ import { buildAlternates } from '@/lib/seo/alternates'
 import { AUTHOR, AUTHOR_SAME_AS } from '@/lib/author'
 import { BRAND, brandLogoUrl } from '@/lib/brand'
 import { StandardContentPage, type Breadcrumb } from '@/components/content-page/standard-content-page'
+import { formatLocalizedDate } from '@/lib/i18n/format-date'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // createContentPost — the POST factory (sibling of createContentPage). One
@@ -88,15 +89,6 @@ function abs(path: string): string {
 function snippetImage(post: ContentPost): string | undefined {
   const path = post.ogImage ?? post.heroImage
   return path ? abs(path) : undefined
-}
-
-function formatDate(iso: string, lang: string): string {
-  return new Date(`${iso}T00:00:00Z`).toLocaleDateString(lang, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    timeZone: 'UTC',
-  })
 }
 
 export function createContentPost(config: ContentPostConfig) {
@@ -194,7 +186,7 @@ export function createContentPost(config: ContentPostConfig) {
             <span aria-hidden>·</span>
           </>
         )}
-        <time dateTime={post.date}>{formatDate(post.date, lang)}</time>
+        <time dateTime={post.date}>{formatLocalizedDate(post.date, lang, { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}</time>
         <span aria-hidden>·</span>
         <span>{post.readingMinutes} {minLabel(lang)}</span>
       </div>

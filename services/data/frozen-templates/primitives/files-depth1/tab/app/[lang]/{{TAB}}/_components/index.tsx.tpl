@@ -4,6 +4,7 @@ import { BRAND } from '@/lib/brand'
 import { get{{TAB_PASCAL}}Ui } from '../_data'
 import { {{TAB_CAMEL}}List } from '../_lib/post'
 import { getChildren } from '../_lib/list-provider'
+import { formatLocalizedDate } from '@/lib/i18n/format-date'
 
 // Index for /{{TAB}}: lists the documents. The list comes from ../_lib/list-provider
 // (getChildren) — change that file to change where the documents come from.
@@ -16,15 +17,6 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
     description: ui.metaDescription,
     alternates: buildAlternates(lang, '/{{TAB}}'),
   }
-}
-
-function formatDate(iso: string, lang: string): string {
-  return new Date(`${iso}T00:00:00Z`).toLocaleDateString(lang, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  })
 }
 
 export default async function {{TAB_PASCAL}}Index({ params }: { params: Promise<{ lang: string }> }) {
@@ -61,7 +53,7 @@ export default async function {{TAB_PASCAL}}Index({ params }: { params: Promise<
                   className="group flex flex-col gap-1.5 py-5 transition-colors hover:bg-white/[0.02]"
                 >
                   <div className="flex items-center gap-3 text-xs text-white/40">
-                    <time dateTime={item.date}>{formatDate(item.date, lang)}</time>
+                    <time dateTime={item.date}>{formatLocalizedDate(item.date, lang, { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' })}</time>
                     <span aria-hidden>·</span>
                     <span>{item.readingMinutes} {ui.minRead}</span>
                   </div>
