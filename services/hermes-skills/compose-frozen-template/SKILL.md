@@ -35,31 +35,26 @@ depend on Hermes, memory, or any other agent.
 You (Hermes) speak to the site owner, who is **NOT a developer**. The technical axes
 below (source, depth, rendering, roles, format, envelope, engine version, sample count,
 parser-fs, tsc, language codes) are **internal** — they all have safe defaults. **Never
-put them to the owner.** The owner reported they could not even choose — that means the
-questions were developer questions. Translate, default, and act.
+put them to the owner.** Translate, default, and act.
 
 - **Default everything you can, silently.** "Add a news section" needs nothing more:
-  compose with source=files, depth=1, static, format=news, samples=2, roles=off
-  (everyone can see it), languages = whatever the app is already set to.
-- **Ask only what an ordinary person can answer, and only if truly necessary** — in one
-  short, everyday sentence, never a technical questionnaire:
-  - "What should this section be called?" — only if they did not say.
-  - "Should everyone see it, or only signed-in members?" — only if it matters (default: everyone).
-  - "Which languages?" — only if the app's languages are not already set; say language
-    names ("English, Russian"), never codes, never "BCP-47".
-- **Never ask** "what data source / how deep / static or dynamic / how many sample posts
-  / which engine version / which roles by name" — choose the default and move on.
-- **Never run `npm`/`tsc`/`gen:lists` yourself** (you have no slot terminal — that path
-  is for the coding agents). The composer already wrote everything.
-- **Never ask the owner to paste a deploy secret.** To make the change visible, call
-  `owner_deploy_rebuild_slot` (the deploy tool); if it is unavailable, just say "press the
-  Deploy button in the footer".
-- The §8.2 confirm before writing files is still required, but phrase it plainly:
-  *"I'll create a News section in English and Russian with two sample posts you can
-  replace, then rebuild so it shows up. Go ahead?"* — not a list of axes.
+  source=files, depth=1, static, format=news, samples=2, roles=off (everyone sees it),
+  languages = whatever the app is already set to.
+- **Ask only what an ordinary person can answer, and only if truly necessary** — one
+  short everyday sentence, never a technical questionnaire ("What should it be called?",
+  "Everyone, or only signed-in members?", language names not codes).
+- **Never ask** data source / depth / static-or-dynamic / sample count / engine version /
+  roles by name — pick the default and move on.
+- **Never run `npm`/`tsc`/`gen:lists` yourself** (no slot terminal — that's the coding agents).
+- **Never ask the owner to paste a deploy secret.** Make it visible via `owner_deploy_rebuild_slot`;
+  if unavailable, say "press the Deploy button in the footer".
+- **Report the live link from `view_urls`/`site_url`** (mode-aware https domain) — never an
+  internal/plain-HTTP host, never your own curl to "verify".
+- §8.2 confirm before writing, phrased plainly: *"I'll create a News section in English and
+  Spanish with two sample posts, then rebuild so it shows up. Go ahead?"*
 
-(This plain-language rule is Hermes-only: the coding agents — Claude Code, Codex, Gemini,
-Qwen, Kimi — keep the technical phrasing below, because a developer drives them.)
+(Hermes-only: the coding agents — Claude Code, Codex, Gemini, Qwen, Kimi — keep the technical
+phrasing below, because a developer drives them.)
 
 ## The mental model (read this before acting)
 
@@ -97,10 +92,18 @@ Qwen, Kimi — keep the technical phrasing below, because a developer drives the
    (dry_run first to say "I'll rebuild, ~2-4 min, ok?", then for real) — it runs the same
    "Deploy" the footer button does and waits for the result. If that tool is not available
    to you, **remind the owner: "press the Deploy button in the footer to rebuild and see
-   the change."** Either way the rebuild is part of the task, not optional — a composed
-   structure that is never rebuilt looks like "nothing happened" (the owner saw exactly this).
+   the change."** Either way the rebuild is part of the task, not optional.
    **Never ask the owner to paste a deploy secret into the chat** — deploy is the tool's job
    or the owner's button, never a secret handed over in conversation.
+3b. **Report the result with the CORRECT public URL — never an internal/plain-HTTP host.**
+   `COMPLETED` from `owner_deploy_rebuild_slot` already means the slot passed a health check —
+   **do NOT run your own `curl` to "verify"**, and NEVER curl an internal name like
+   `http://fractera-app:3000` or `http://127.0.0.1:3000` (both are unprotected/internal; on a
+   secure deployment that is the wrong thing entirely). The compose result gives you
+   **`view_urls`** and the deploy result gives you **`site_url`** — both are mode-aware
+   (secure → `https://<domain>/<lang>/<tab>`, IP → `http://<ip>:3000/...`). Report THOSE to the
+   owner ("Done — your news section is live at https://<domain>/en/news and /es/news"). If you
+   ever do want to self-check a page, use the mode-aware `site_url`, never an internal host.
 4. **Honest refusal + next step.** Say which axis failed in plain words (e.g. "a live
    dashboard is per-user and dynamic — that is the *rendering*/*source* axis, which no
    frozen brick serves"). Then offer ONE of:

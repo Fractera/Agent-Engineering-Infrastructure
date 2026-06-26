@@ -1,6 +1,7 @@
 import { createServer } from 'http'
 import { readFileSync } from 'fs'
 import { handleMcpHandshake } from './mcp-handshake.js'
+import { publicSiteUrl } from './site-url.js'
 
 // ── Slot Rebuild / Deploy MCP server (L2, port 3225) ────────────────────────
 // Lets any of the 6 agents make file changes VISIBLE by rebuilding the app slot —
@@ -141,13 +142,16 @@ export class DeployMcpServer {
     }
 
     const done = status === 'COMPLETED'
+    // mode-aware PUBLIC site base (secure → https://<domain>, IP → http://<ip>:3000) so the agent
+    // reports the CORRECT public link, never an internal/plain-HTTP host.
+    const site_url = (() => { try { return publicSiteUrl(this.deploySecretFile.replace(/bridges\/app\/\.env\.local$/, 'app/.env.local')) } catch { return '' } })()
     return textResult({
       rebuilt: done,
-      status, jobId, queued,
+      status, jobId, queued, site_url,
       description,
       log_tail: log.slice(-15),
       message: done
-        ? 'Slot rebuilt and healthy — your changes are now live. Open the page to see them.'
+        ? `Slot rebuilt and healthy (the build ran a health check — COMPLETED means live). Your changes are live at ${site_url || 'your site'}. Report the public URL; do NOT curl an internal/plain-HTTP host to "verify".`
         : status === 'in_progress'
           ? 'Build still running past the wait window; check the Deploy panel for the final status.'
           : `Build ended ${status}. See log_tail; fix the cause before retrying (do not retry blindly).`,

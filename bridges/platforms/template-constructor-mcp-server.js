@@ -5,6 +5,7 @@ import { join, dirname, resolve as pathResolve } from 'path'
 import { tmpdir } from 'os'
 import { fileURLToPath } from 'url'
 import { handleMcpHandshake } from './mcp-handshake.js'
+import { publicTabUrls } from './site-url.js'
 
 // ── Frozen Template Constructor MCP server (L2, port 3224) ──────────────────
 // Any of the 6 agents adds a whole STRUCTURE (news / blog / documentation / …) by
@@ -70,6 +71,7 @@ export class TemplateConstructorMcpServer {
     this.dataSecret = dataSecret ?? process.env.DATA_SECRET ?? ''
     this.appDir = appDir ?? pathResolve(__dirname, '../../app')
     this.emitter = join(this.appDir, '.agents/skills/compose-frozen-template/compose-frozen-template.mjs')
+    this.appEnvFile = join(this.appDir, '.env.local')
   }
 
   start() {
@@ -162,7 +164,11 @@ export class TemplateConstructorMcpServer {
       const refusal = (() => { try { const last = out.trim().split('\n').filter(Boolean).pop(); const j = JSON.parse(last); return j.refused ? j : null } catch { return null } })()
       if (refusal) return textResult({ refused: true, axis: refusal.axis, detail: refusal.detail, advice: 'No frozen primitive fits this axis. Offer to harvest a new brick (only if proven + repeating) or use classic development.' })
       if (code !== 0) throw new Error(`composer exited ${code}: ${out.slice(-400)}`)
-      return textResult({ composed: true, tab, source, depth, rendering, roles, format, languages, labels, samples, emitter_output: out.trim().split('\n').slice(-12), next: 'Run `npm run gen:lists` then `npx tsc --noEmit`; replace the placeholder copy + image.' })
+      // mode-aware PUBLIC view URLs (secure → https://<domain>/<lang>/<tab>, IP → http://<ip>:3000/...).
+      // The composer already wrote _list.generated + package.json scripts; the slot still needs a REBUILD
+      // (owner_deploy_rebuild_slot) before these are live.
+      const view_urls = (() => { try { return publicTabUrls(tab, languages, this.appEnvFile) } catch { return [] } })()
+      return textResult({ composed: true, tab, source, depth, rendering, roles, format, languages, labels, samples, view_urls, emitter_output: out.trim().split('\n').slice(-12), next: 'Now REBUILD the slot with owner_deploy_rebuild_slot so the change is live; then the view_urls above will work. Do NOT run npm/gen:lists/tsc yourself; do NOT curl an internal/plain-HTTP host.' })
     } finally {
       await rm(storeDir, { recursive: true, force: true }).catch(() => {})
     }
