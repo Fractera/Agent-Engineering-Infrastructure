@@ -30,28 +30,38 @@ no code generation**, so any model produces the same result in seconds. Full str
 This skill is **self-sufficient**: plain file operations plus one HTTP GET. It does NOT
 depend on Hermes, memory, or any other agent.
 
-## 🗣️ Hermes: talk to the OWNER in plain language only (mandatory)
+## 🗣️ Hermes — LIGHT, AUTONOMOUS, with live progress (mandatory)
 
-You (Hermes) speak to the site owner, who is **NOT a developer**. The technical axes
-below (source, depth, rendering, roles, format, envelope, engine version, sample count,
-parser-fs, tsc, language codes) are **internal** — they all have safe defaults. **Never
-put them to the owner.** Translate, default, and act.
+You (Hermes) serve the site owner, who is **NOT a developer** and wants a **fast, near-
+autonomous tool**. A reversible, additive request ("add a news section", "add a blog")
+must feel like **ONE step**, not a questionnaire and not a chain of approvals.
 
-- **Default everything you can, silently.** "Add a news section" needs nothing more:
-  source=files, depth=1, static, format=news, samples=2, roles=off (everyone sees it),
-  languages = whatever the app is already set to.
-- **Ask only what an ordinary person can answer, and only if truly necessary** — one
-  short everyday sentence, never a technical questionnaire ("What should it be called?",
-  "Everyone, or only signed-in members?", language names not codes).
-- **Never ask** data source / depth / static-or-dynamic / sample count / engine version /
-  roles by name — pick the default and move on.
+- **NO brainstorm, NO technical questionnaire.** Brainstorming belongs to the coding
+  agents (Claude Code), NOT to you. Default every technical axis **silently**:
+  source=files, depth=1, static, format, samples=2, roles=off, languages = the app's
+  current set. Never name source / depth / rendering / roles / format / engine / samples /
+  parser-fs / tsc / language-codes to the owner.
+- **ONE light confirmation, then act autonomously — no dry-run round-trips, no second
+  rebuild confirmation.** State what you'll do in a single plain sentence and go on a
+  single "yes":
+  > "I'll add a News section (English + Spanish, two sample posts) and publish it — go ahead?"
+  One "yes" = **compose AND publish**, end to end. Do NOT call the tools in `dry_run` to
+  "preview", and do NOT ask again before rebuilding. (Heavy step-by-step confirmation is
+  ONLY for **destructive/irreversible** actions — deleting a section, wiping, provisioning.)
+- **Ask only if something an ordinary person must decide is genuinely missing** — the
+  section's name, or "everyone, or only signed-in members?" — one short everyday sentence.
+- **🔴 Stream progress — NEVER go silent.** Post a short line at EACH phase so the owner
+  always sees forward motion (this is what makes it feel alive, not hung):
+  > "Creating the section…"  →  "Done — files created. Rebuilding the site (~2 min)…"  →
+  > "Live: https://&lt;domain&gt;/en/news and /es/news."
+  Never end a turn without saying what you just did and what is next.
+- **Publish it yourself.** After composing, call `owner_deploy_rebuild_slot` **directly**
+  (it IS the Deploy button) — no separate confirmation, no deploy secret in chat. If the
+  tool is unavailable, say "press the Deploy button in the footer".
 - **Never run `npm`/`tsc`/`gen:lists` yourself** (no slot terminal — that's the coding agents).
-- **Never ask the owner to paste a deploy secret.** Make it visible via `owner_deploy_rebuild_slot`;
-  if unavailable, say "press the Deploy button in the footer".
-- **Report the live link from `view_urls`/`site_url`** (mode-aware https domain) — never an
-  internal/plain-HTTP host, never your own curl to "verify".
-- §8.2 confirm before writing, phrased plainly: *"I'll create a News section in English and
-  Spanish with two sample posts, then rebuild so it shows up. Go ahead?"*
+- **Report the live link from `view_urls`/`site_url`** (mode-aware https) — never an
+  internal/plain-HTTP host, never your own curl to "verify" (`COMPLETED` already passed a
+  health check).
 
 (Hermes-only: the coding agents — Claude Code, Codex, Gemini, Qwen, Kimi — keep the technical
 phrasing below, because a developer drives them.)
@@ -79,20 +89,20 @@ phrasing below, because a developer drives them.)
    - **Fits →** compose it (step 3).
    - **Another primitive fits →** compose that one.
    - **None fits →** HONEST REFUSAL naming the failing axis (step 4).
-3. **Compose (confirm first).** Restate exactly what will be created, get explicit
-   confirmation, then call the composer MCP tool (`owner_template_compose_structure`).
-   **The composer already wrote everything — including `_list.generated.ts` and the
-   package.json scripts. Do NOT run `npm run gen:lists` / `npx tsc` yourself** (and
-   never in `/root/workspace` — the slot is elsewhere; that path is for a coding agent
-   that owns the slot terminal, not for you). Just tell the owner they can replace the
-   placeholder copy/image later.
+3. **Compose.** After the single light confirmation (Hermes) — or directly for a coding
+   agent — call `owner_template_compose_structure` for real (no `dry_run` round-trip for a
+   reversible create). **The composer already wrote everything — including
+   `_list.generated.ts` and the package.json scripts. Do NOT run `npm run gen:lists` /
+   `npx tsc` yourself** (and never in `/root/workspace` — the slot is elsewhere; that path
+   is for a coding agent that owns the slot terminal, not for you). The owner can replace
+   the placeholder copy/image later.
 3a. **🔁 Rebuild so the change is VISIBLE — mandatory, never skip (any task that wrote
    files).** The slot runs in production mode: files you wrote are NOT visible until the
-   slot is rebuilt. Finish by **calling the deploy MCP tool `owner_deploy_rebuild_slot`**
-   (dry_run first to say "I'll rebuild, ~2-4 min, ok?", then for real) — it runs the same
-   "Deploy" the footer button does and waits for the result. If that tool is not available
-   to you, **remind the owner: "press the Deploy button in the footer to rebuild and see
-   the change."** Either way the rebuild is part of the task, not optional.
+   slot is rebuilt. Finish by **calling the deploy MCP tool `owner_deploy_rebuild_slot`
+   directly** — same "Deploy" the footer button does; it waits for the result. This is
+   part of the single "yes", **not a second confirmation** (a reversible create does not
+   re-prompt). Emit a progress line before it ("Rebuilding the site, ~2 min…"). If the tool
+   is unavailable, **remind the owner: "press the Deploy button in the footer."**
    **Never ask the owner to paste a deploy secret into the chat** — deploy is the tool's job
    or the owner's button, never a secret handed over in conversation.
 3b. **Report the result with the CORRECT public URL — never an internal/plain-HTTP host.**
@@ -130,8 +140,9 @@ phrasing below, because a developer drives them.)
 ## How to compose
 
 - **MCP (every agent):** `owner_template_compose_structure` with
-  `{ tab, format, languages, labels, samples, source?, depth?, roles? }`. Always
-  `dry_run: true` first to preview + confirm, then call for real.
+  `{ tab, format, languages, labels, samples, source?, depth?, roles? }`. Call it for
+  real — `dry_run: true` is available only when you genuinely need a preview (an ambiguous
+  or destructive case), never as a routine extra round-trip for a reversible create.
 - **Standalone (lone agent, no MCP):**
   ```bash
   curl -s -H "X-Agent-Identity: <you>" http://localhost:3300/frozen-templates/registry > /tmp/reg.json
@@ -143,12 +154,14 @@ phrasing below, because a developer drives them.)
   npm run gen:lists && npx tsc --noEmit
   ```
 
-## Confirm before mutating (mandatory)
+## Confirm — proportional to risk (not a gauntlet)
 
-Composing writes files. Restate first and wait for explicit confirmation:
-> If I understood correctly: compose a **<format>** structure at **/<tab>**
-> (source **<source>**, depth **<depth>**, **<langs>**, roles **<roles>**), with
-> **<N>** placeholder documents. Shall I proceed?
+Composing a structure is **reversible and additive** → **ONE** light confirmation, then
+act end to end (compose + publish) with progress. Do not re-confirm per tool, do not
+dry-run as a routine preview. For Hermes that one line is plain language (see the Hermes
+section); for a coding agent it can be the technical restate. **Full step-by-step
+confirmation is reserved for DESTRUCTIVE / irreversible actions** — deleting a section,
+wiping, provisioning a server.
 
 ## Source of truth (do not duplicate)
 

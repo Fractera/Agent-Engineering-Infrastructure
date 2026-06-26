@@ -2,10 +2,8 @@ import type { Metadata } from 'next'
 import { BRAND } from '@/lib/brand'
 import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from '@/lib/languages'
 
-// FROZEN ENGINE (decoupled from FES). Per-page canonical + hreflang. Origin comes
-// from BRAND.siteUrl (env-driven, not hardcoded); the language set comes from
-// lib/content/languages (NEXT_PUBLIC_LANGUAGES). The home page of the DEFAULT
-// language lives at the bare root; every other URL is /<lang><subPath>.
+// Per-page canonical + hreflang. Origin from BRAND.siteUrl, languages from
+// lib/languages. The default language's home is the bare root; others are /<lang><subPath>.
 function urlFor(lang: string, subPath: string): string {
   const base = BRAND.siteUrl
   if (subPath === '') return lang === DEFAULT_LANGUAGE ? `${base}/` : `${base}/${lang}`

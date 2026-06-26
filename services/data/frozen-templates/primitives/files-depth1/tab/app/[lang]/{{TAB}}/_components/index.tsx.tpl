@@ -5,12 +5,8 @@ import { get{{TAB_PASCAL}}Ui } from '../_data'
 import { {{TAB_CAMEL}}List } from '../_lib/post'
 import { getChildren } from '../_lib/list-provider'
 
-// CONSTRUCTOR PRIMITIVE files-depth1 — index for the /{{TAB}} router (where a
-// visitor picks a document). Standard router shape: page.tsx is thin and re-exports
-// this. SEAM (Slot A): the child list comes through ../_lib/list-provider
-// (getChildren) — the swappable list-provider. For source=files it is parser-fs
-// (_list.generated); swapping to db-at-build swaps only that file. {{TAB_CAMEL}}List
-// aggregates + localizes.
+// Index for /{{TAB}}: lists the documents. The list comes from ../_lib/list-provider
+// (getChildren) — change that file to change where the documents come from.
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params
@@ -34,7 +30,7 @@ function formatDate(iso: string, lang: string): string {
 export default async function {{TAB_PASCAL}}Index({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params
   const ui = get{{TAB_PASCAL}}Ui(lang)
-  const items = {{TAB_CAMEL}}List(getChildren(), lang) // SEAM: children via the list-provider
+  const items = {{TAB_CAMEL}}List(getChildren(), lang) // children via the list-provider
 
   const breadcrumb = {
     '@context': 'https://schema.org',

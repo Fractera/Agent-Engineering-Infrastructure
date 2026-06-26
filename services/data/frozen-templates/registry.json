@@ -19,7 +19,7 @@
       "aspects": ["i18n", "roles"],
       "defaults": { "roles": "public", "i18n": "multi" },
       "matching": "BASE axes (source, depth, rendering) SELECT this primitive — all must equal the request. ASPECT axes (i18n, roles) are toggles this primitive SUPPORTS — a request may set them (e.g. roles=user turns the gate ON); an aspect not listed here => refuse 'aspect X unsupported'. A base axis mismatch => refuse naming that axis.",
-      "params": ["tab", "format", "languages", "labels", "samples", "roles", "engineVersion"],
+      "params": ["tab", "format", "languages", "labels", "samples", "roles", "unauthorizedRedirect", "engineVersion"],
       "fits": ["news", "blog", "documentation feed", "announcements", "changelog", "articles", "stories", "guides list"],
       "doesNotServe": ["cart/checkout/payments", "graded course with tests/progress", "user dashboard / app screen", "forms that persist visitor input", "per-user/per-request personalized feed"],
       "path": "primitives/files-depth1"
@@ -31,7 +31,7 @@
   ],
   "aspects": [
     { "id": "i18n", "slot": "B", "status": "ready", "about": "Per-[lang] routing + per-tab UI chrome (EN fallback per key). The always-on content aspect.", "path": "aspects/i18n" },
-    { "id": "roles", "slot": "B", "status": "declared", "about": "Role gate injected uniformly into the tab layout. Reference primitive has it OFF; turning ON injects the guard, no other change. Roadmap aspect.", "path": "aspects/roles" }
+    { "id": "roles", "slot": "B", "status": "ready", "about": "Access gate injected uniformly into the tab layout. Three shapes (HOW-USE-AUTH.md): public (off) | public+guest (roles=guest) | private (roles=<ALL_ROLES csv> or all). DEFAULT off. Turning ON injects the SHARED client guard (@/lib/auth-guard/route-guard.client, static-first preserved) wrapping children + a fallback redirect (unauthorizedRedirect) for visitors lacking the role; no other change. Server-hide variant (role-guard.server.tsx, dynamic) is the documented architect-only exception, not injected.", "path": "aspects/roles" }
   ],
   "roadmap": [
     "(files × depth-2)  — docs-by-category, when proven by live development",

@@ -1,16 +1,7 @@
-// FROZEN ENGINE (decoupled from FES). Canonical content-block catalog — the single
-// source of truth for every block kind a content page can use. Authoring a page =
-// writing data with these blocks; rendering = the registry in ./registry.tsx maps
-// each `kind` to a renderer. Adding a new section type = add a member here + a
-// renderer in the registry, nothing else.
-//
-// Inline markup inside text fields supports **bold** and [label](url) (see
-// ./inline.tsx). This file intentionally has NO imports so the catalog stays a leaf
-// of the import graph.
-//
-// NOTE (decoupling): FES-only `frameworks` (framework grid) and `inquiry` (company
-// brain CTA) kinds were removed — re-add a kind here + a renderer in ./registry.tsx
-// to extend the catalog for your project.
+// The content-block catalog — every block kind a content page can use. Authoring a
+// page = writing data with these blocks; ./registry.tsx maps each `kind` to a
+// renderer. To add a section type: add a member here + a renderer in the registry.
+// Inline markup in text fields: **bold** and [label](url) (see ./inline.tsx).
 
 // ── Leaf blocks ──────────────────────────────────────────────────────────────
 export type LeafBlock =

@@ -1,12 +1,5 @@
-// FROZEN ARCHETYPE TEMPLATE — content-collection. Co-located collection helpers.
-// Each post lives in its own static route folder (app/[lang]/{{TAB}}/<slug>/ with
-// page.tsx + _components + _data) — the post IS the single source of truth. These
-// helpers turn a post's _data (meta + en + <lang> overrides) into the normalized
-// ContentPost the factory renders, and into the compact list item the index lists.
-// No central registry; the index reads the auto-generated _list.generated.ts
-// (parser-fs scans the co-located post folders). Delete the {{TAB}} folder and
-// nothing is left behind — these helpers are co-located in _lib.
-
+// Helpers that turn a document's _data (meta + en + per-language overrides) into the
+// ContentPost the page renders and the compact item the index lists.
 import { resolveEntry } from '@/lib/content/resolve'
 import type { {{TAB_PASCAL}}Base, {{TAB_PASCAL}}Meta, {{TAB_PASCAL}}Override } from './types'
 import type { ContentPost } from '@/lib/content/create-content-post'

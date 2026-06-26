@@ -1,0 +1,106 @@
+// Access-denied toast strings. {group} and {role} are filled at call time.
+// Covers the project's languages with a per-language entry; getAccessDeniedStrings
+// falls back to English for any code without its own entry — so calling the toast
+// needs ZERO setup in any language. Edit/extend a language by adding its key.
+export type AccessDeniedStrings = {
+  title: string
+  line1: string  // uses {group}
+  line2: string  // uses {role}
+  close: string
+}
+
+const EN: AccessDeniedStrings = {
+  title: 'Access restricted',
+  line1: 'You are trying to open the “{group}” section.',
+  line2: 'It is not available for your role ({role}). Please sign in and ask your manager to change your role.',
+  close: 'Close',
+}
+
+const STRINGS: Record<string, AccessDeniedStrings> = {
+  en: EN,
+  es: { title: 'Acceso restringido', line1: 'Estás intentando abrir la sección «{group}».', line2: 'No está disponible para tu rol ({role}). Inicia sesión y pide a tu responsable que cambie tu rol.', close: 'Cerrar' },
+  fr: { title: 'Accès restreint', line1: 'Vous essayez d’ouvrir la section « {group} ».', line2: 'Elle n’est pas disponible pour votre rôle ({role}). Connectez-vous et demandez à votre responsable de modifier votre rôle.', close: 'Fermer' },
+  de: { title: 'Zugriff eingeschränkt', line1: 'Sie versuchen, den Bereich „{group}“ zu öffnen.', line2: 'Er ist für Ihre Rolle ({role}) nicht verfügbar. Bitte melden Sie sich an und bitten Sie Ihren Manager um eine Rollenänderung.', close: 'Schließen' },
+  it: { title: 'Accesso limitato', line1: 'Stai provando ad aprire la sezione «{group}».', line2: 'Non è disponibile per il tuo ruolo ({role}). Accedi e chiedi al tuo responsabile di modificare il tuo ruolo.', close: 'Chiudi' },
+  pt: { title: 'Acesso restrito', line1: 'Está a tentar abrir a secção «{group}».', line2: 'Não está disponível para a sua função ({role}). Inicie sessão e peça ao seu gestor para alterar a sua função.', close: 'Fechar' },
+  nl: { title: 'Toegang beperkt', line1: 'Je probeert het onderdeel “{group}” te openen.', line2: 'Het is niet beschikbaar voor jouw rol ({role}). Log in en vraag je manager om je rol te wijzigen.', close: 'Sluiten' },
+  sv: { title: 'Åtkomst begränsad', line1: 'Du försöker öppna avsnittet ”{group}”.', line2: 'Det är inte tillgängligt för din roll ({role}). Logga in och be din chef att ändra din roll.', close: 'Stäng' },
+  no: { title: 'Tilgang begrenset', line1: 'Du prøver å åpne delen «{group}».', line2: 'Den er ikke tilgjengelig for rollen din ({role}). Logg inn og be lederen din om å endre rollen.', close: 'Lukk' },
+  da: { title: 'Adgang begrænset', line1: 'Du prøver at åbne afsnittet “{group}”.', line2: 'Det er ikke tilgængeligt for din rolle ({role}). Log ind, og bed din leder om at ændre din rolle.', close: 'Luk' },
+  fi: { title: 'Käyttö rajoitettu', line1: 'Yrität avata osiota ”{group}”.', line2: 'Se ei ole käytettävissä roolillesi ({role}). Kirjaudu sisään ja pyydä esihenkilöäsi muuttamaan roolisi.', close: 'Sulje' },
+  pl: { title: 'Dostęp ograniczony', line1: 'Próbujesz otworzyć sekcję „{group}”.', line2: 'Nie jest dostępna dla Twojej roli ({role}). Zaloguj się i poproś menedżera o zmianę roli.', close: 'Zamknij' },
+  cs: { title: 'Přístup omezen', line1: 'Pokoušíte se otevřít sekci „{group}“.', line2: 'Není dostupná pro vaši roli ({role}). Přihlaste se a požádejte svého manažera o změnu role.', close: 'Zavřít' },
+  sk: { title: 'Prístup obmedzený', line1: 'Pokúšate sa otvoriť sekciu „{group}“.', line2: 'Nie je dostupná pre vašu rolu ({role}). Prihláste sa a požiadajte manažéra o zmenu roly.', close: 'Zavrieť' },
+  ro: { title: 'Acces restricționat', line1: 'Încerci să deschizi secțiunea „{group}”.', line2: 'Nu este disponibilă pentru rolul tău ({role}). Autentifică-te și roagă-ți managerul să îți schimbe rolul.', close: 'Închide' },
+  el: { title: 'Περιορισμένη πρόσβαση', line1: 'Προσπαθείτε να ανοίξετε την ενότητα «{group}».', line2: 'Δεν είναι διαθέσιμη για τον ρόλο σας ({role}). Συνδεθείτε και ζητήστε από τον διαχειριστή σας να αλλάξει τον ρόλο σας.', close: 'Κλείσιμο' },
+  tr: { title: 'Erişim kısıtlı', line1: '“{group}” bölümünü açmaya çalışıyorsunuz.', line2: 'Rolünüz ({role}) için kullanılamıyor. Lütfen giriş yapın ve yöneticinizden rolünüzü değiştirmesini isteyin.', close: 'Kapat' },
+  ru: { title: 'Доступ ограничен', line1: 'Вы пытаетесь открыть раздел «{group}».', line2: 'Он недоступен для вашей роли ({role}). Пожалуйста, авторизуйтесь и запросите изменение роли у своего менеджера.', close: 'Закрыть' },
+  uk: { title: 'Доступ обмежено', line1: 'Ви намагаєтеся відкрити розділ «{group}».', line2: 'Він недоступний для вашої ролі ({role}). Будь ласка, увійдіть і попросіть свого менеджера змінити вашу роль.', close: 'Закрити' },
+  bg: { title: 'Достъпът е ограничен', line1: 'Опитвате се да отворите раздела „{group}“.', line2: 'Не е наличен за вашата роля ({role}). Моля, влезте и помолете вашия мениджър да промени ролята ви.', close: 'Затвори' },
+  sr: { title: 'Приступ ограничен', line1: 'Покушавате да отворите одељак „{group}“.', line2: 'Није доступан за вашу улогу ({role}). Пријавите се и замолите менаџера да вам промени улогу.', close: 'Затвори' },
+  ar: { title: 'الوصول مقيّد', line1: 'تحاول فتح قسم «{group}».', line2: 'غير متاح لدورك ({role}). يرجى تسجيل الدخول وطلب تغيير دورك من مديرك.', close: 'إغلاق' },
+  he: { title: 'הגישה מוגבלת', line1: 'אתה מנסה לפתוח את המדור «{group}».', line2: 'הוא אינו זמין עבור התפקיד שלך ({role}). אנא היכנס ובקש מהמנהל שלך לשנות את התפקיד.', close: 'סגור' },
+  fa: { title: 'دسترسی محدود است', line1: 'شما در حال تلاش برای باز کردن بخش «{group}» هستید.', line2: 'برای نقش شما ({role}) در دسترس نیست. لطفاً وارد شوید و از مدیر خود بخواهید نقش شما را تغییر دهد.', close: 'بستن' },
+  hi: { title: 'पहुँच प्रतिबंधित', line1: 'आप «{group}» अनुभाग खोलने का प्रयास कर रहे हैं।', line2: 'यह आपकी भूमिका ({role}) के लिए उपलब्ध नहीं है। कृपया साइन इन करें और अपने प्रबंधक से अपनी भूमिका बदलने का अनुरोध करें।', close: 'बंद करें' },
+  bn: { title: 'প্রবেশ সীমিত', line1: 'আপনি «{group}» বিভাগটি খোলার চেষ্টা করছেন।', line2: 'এটি আপনার ভূমিকার ({role}) জন্য উপলব্ধ নয়। অনুগ্রহ করে সাইন ইন করুন এবং আপনার ম্যানেজারকে আপনার ভূমিকা পরিবর্তন করতে বলুন।', close: 'বন্ধ করুন' },
+  ur: { title: 'رسائی محدود ہے', line1: 'آپ «{group}» سیکشن کھولنے کی کوشش کر رہے ہیں۔', line2: 'یہ آپ کے کردار ({role}) کے لیے دستیاب نہیں ہے۔ براہ کرم سائن ان کریں اور اپنے مینیجر سے اپنا کردار تبدیل کرنے کی درخواست کریں۔', close: 'بند کریں' },
+  zh: { title: '访问受限', line1: '您正在尝试打开“{group}”板块。', line2: '该板块对您的角色（{role}）不可用。请登录并请您的管理者更改您的角色。', close: '关闭' },
+  ja: { title: 'アクセスが制限されています', line1: '「{group}」セクションを開こうとしています。', line2: 'あなたの役割（{role}）では利用できません。サインインして、管理者に役割の変更を依頼してください。', close: '閉じる' },
+  ko: { title: '접근이 제한됨', line1: '“{group}” 섹션을 열려고 합니다.', line2: '귀하의 역할({role})로는 사용할 수 없습니다. 로그인한 후 관리자에게 역할 변경을 요청하세요.', close: '닫기' },
+  vi: { title: 'Quyền truy cập bị hạn chế', line1: 'Bạn đang cố mở mục “{group}”.', line2: 'Mục này không khả dụng với vai trò của bạn ({role}). Vui lòng đăng nhập và yêu cầu quản lý thay đổi vai trò của bạn.', close: 'Đóng' },
+  th: { title: 'การเข้าถึงถูกจำกัด', line1: 'คุณกำลังพยายามเปิดส่วน “{group}”', line2: 'ไม่พร้อมใช้งานสำหรับบทบาทของคุณ ({role}) โปรดเข้าสู่ระบบและขอให้ผู้จัดการเปลี่ยนบทบาทของคุณ', close: 'ปิด' },
+  id: { title: 'Akses dibatasi', line1: 'Anda mencoba membuka bagian “{group}”.', line2: 'Bagian ini tidak tersedia untuk peran Anda ({role}). Silakan masuk dan minta manajer Anda mengubah peran Anda.', close: 'Tutup' },
+  ms: { title: 'Akses terhad', line1: 'Anda cuba membuka bahagian “{group}”.', line2: 'Ia tidak tersedia untuk peranan anda ({role}). Sila log masuk dan minta pengurus anda menukar peranan anda.', close: 'Tutup' },
+  tl: { title: 'Pinaghihigpitan ang akses', line1: 'Sinusubukan mong buksan ang seksyong “{group}”.', line2: 'Hindi ito available para sa iyong tungkulin ({role}). Mag-sign in at hilingin sa iyong manager na baguhin ang iyong tungkulin.', close: 'Isara' },
+  is: { title: 'Aðgangur takmarkaður', line1: 'Þú ert að reyna að opna hlutann „{group}“.', line2: 'Hann er ekki tiltækur fyrir hlutverk þitt ({role}). Vinsamlegast skráðu þig inn og biddu stjórnandann þinn um að breyta hlutverki þínu.', close: 'Loka' },
+  hu: { title: 'Hozzáférés korlátozva', line1: 'A(z) „{group}” szakaszt próbálja megnyitni.', line2: 'Ez nem érhető el az Ön szerepköréhez ({role}). Kérjük, jelentkezzen be, és kérje meg a vezetőjét a szerepkör módosítására.', close: 'Bezárás' },
+  hr: { title: 'Pristup ograničen', line1: 'Pokušavate otvoriti odjeljak „{group}”.', line2: 'Nije dostupan za vašu ulogu ({role}). Prijavite se i zamolite svog voditelja da promijeni vašu ulogu.', close: 'Zatvori' },
+  sl: { title: 'Dostop omejen', line1: 'Poskušate odpreti razdelek »{group}«.', line2: 'Ni na voljo za vašo vlogo ({role}). Prijavite se in prosite svojega vodjo, da spremeni vašo vlogo.', close: 'Zapri' },
+  et: { title: 'Juurdepääs piiratud', line1: 'Üritate avada jaotist „{group}”.', line2: 'See pole teie rolli ({role}) jaoks saadaval. Palun logige sisse ja paluge oma juhil roll muuta.', close: 'Sulge' },
+  lv: { title: 'Piekļuve ierobežota', line1: 'Jūs mēģināt atvērt sadaļu “{group}”.', line2: 'Tā nav pieejama jūsu lomai ({role}). Lūdzu, piesakieties un palūdziet savam vadītājam mainīt jūsu lomu.', close: 'Aizvērt' },
+  lt: { title: 'Prieiga apribota', line1: 'Bandote atidaryti skiltį „{group}“.', line2: 'Ji nepasiekiama jūsų vaidmeniui ({role}). Prisijunkite ir paprašykite vadovo pakeisti jūsų vaidmenį.', close: 'Uždaryti' },
+  mt: { title: 'Aċċess ristrett', line1: 'Qed tipprova tiftaħ it-taqsima “{group}”.', line2: 'Mhix disponibbli għar-rwol tiegħek ({role}). Jekk jogħġbok idħol u itlob lill-maniġer tiegħek biex jibdel ir-rwol tiegħek.', close: 'Agħlaq' },
+  ca: { title: 'Accés restringit', line1: 'Esteu intentant obrir la secció «{group}».', line2: 'No està disponible per al vostre rol ({role}). Inicieu la sessió i demaneu al vostre responsable que canviï el vostre rol.', close: 'Tanca' },
+  gl: { title: 'Acceso restrinxido', line1: 'Estás tentando abrir a sección «{group}».', line2: 'Non está dispoñible para o teu rol ({role}). Inicia sesión e pídelle ao teu responsable que cambie o teu rol.', close: 'Pechar' },
+  cy: { title: 'Mynediad wedi’i gyfyngu', line1: 'Rydych yn ceisio agor yr adran “{group}”.', line2: 'Nid yw ar gael ar gyfer eich rôl ({role}). Mewngofnodwch a gofynnwch i’ch rheolwr newid eich rôl.', close: 'Cau' },
+  ga: { title: 'Rochtain srianta', line1: 'Tá tú ag iarraidh an rannán “{group}” a oscailt.', line2: 'Níl sé ar fáil do do ról ({role}). Logáil isteach agus iarr ar do bhainisteoir do ról a athrú.', close: 'Dún' },
+  eu: { title: 'Sarbidea mugatua', line1: '“{group}” atala irekitzen saiatzen ari zara.', line2: 'Ez dago zure rolarentzat ({role}) eskuragarri. Hasi saioa eta eskatu zure arduradunari zure rola aldatzeko.', close: 'Itxi' },
+  be: { title: 'Доступ абмежаваны', line1: 'Вы спрабуеце адкрыць раздзел «{group}».', line2: 'Ён недаступны для вашай ролі ({role}). Калі ласка, увайдзіце і папрасіце свайго менеджара змяніць вашу ролю.', close: 'Закрыць' },
+  bs: { title: 'Pristup ograničen', line1: 'Pokušavate otvoriti odjeljak „{group}”.', line2: 'Nije dostupan za vašu ulogu ({role}). Prijavite se i zamolite svog menadžera da promijeni vašu ulogu.', close: 'Zatvori' },
+  mk: { title: 'Пристапот е ограничен', line1: 'Се обидувате да го отворите делот „{group}“.', line2: 'Не е достапен за вашата улога ({role}). Најавете се и побарајте од вашиот менаџер да ја промени вашата улога.', close: 'Затвори' },
+  sq: { title: 'Qasja e kufizuar', line1: 'Po përpiqeni të hapni seksionin “{group}”.', line2: 'Nuk është i disponueshëm për rolin tuaj ({role}). Ju lutemi identifikohuni dhe kërkojini menaxherit tuaj të ndryshojë rolin tuaj.', close: 'Mbyll' },
+  kk: { title: 'Қол жеткізу шектелген', line1: 'Сіз «{group}» бөлімін ашуға тырысып жатырсыз.', line2: 'Ол сіздің рөліңіз ({role}) үшін қолжетімді емес. Жүйеге кіріп, менеджеріңізден рөліңізді өзгертуді сұраңыз.', close: 'Жабу' },
+  uz: { title: 'Kirish cheklangan', line1: 'Siz “{group}” bo‘limini ochmoqchisiz.', line2: 'U sizning rolingiz ({role}) uchun mavjud emas. Iltimos, tizimga kiring va menejeringizdan rolingizni o‘zgartirishni so‘rang.', close: 'Yopish' },
+  ky: { title: 'Кирүү чектелген', line1: 'Сиз «{group}» бөлүмүн ачууга аракет кылып жатасыз.', line2: 'Ал сиздин ролуңуз ({role}) үчүн жеткиликтүү эмес. Системага кириңиз жана менеджериңизден ролуңузду өзгөртүүнү сураныз.', close: 'Жабуу' },
+  tg: { title: 'Дастрасӣ маҳдуд аст', line1: 'Шумо кӯшиш карда истодаед, ки бахши «{group}»-ро кушоед.', line2: 'Он барои нақши шумо ({role}) дастрас нест. Лутфан ворид шавед ва аз менеҷери худ хоҳиш кунед, ки нақши шуморо тағйир диҳад.', close: 'Пӯшидан' },
+  tk: { title: 'Giriş çäklendirilen', line1: 'Siz “{group}” bölümini açmaga synanyşýarsyňyz.', line2: 'Ol siziň roluňyz ({role}) üçin elýeterli däl. Ulgama giriň we menejeriňizden roluňyzy üýtgetmegi haýyş ediň.', close: 'Ýap' },
+  az: { title: 'Giriş məhduddur', line1: 'Siz “{group}” bölməsini açmağa çalışırsınız.', line2: 'Bu sizin rolunuz ({role}) üçün əlçatan deyil. Zəhmət olmasa daxil olun və menecerinizdən rolunuzu dəyişməyi xahiş edin.', close: 'Bağla' },
+  hy: { title: 'Մուտքը սահմանափակ է', line1: 'Դուք փորձում եք բացել «{group}» բաժինը։', line2: 'Այն հասանելի չէ ձեր դերի ({role}) համար։ Խնդրում ենք մուտք գործել և ձեր ղեկավարից խնդրել փոխել ձեր դերը։', close: 'Փակել' },
+  ka: { title: 'წვდომა შეზღუდულია', line1: 'თქვენ ცდილობთ გახსნათ განყოფილება „{group}“.', line2: 'ის მიუწვდომელია თქვენი როლისთვის ({role}). გთხოვთ, შეხვიდეთ სისტემაში და სთხოვეთ თქვენს მენეჯერს შეცვალოს თქვენი როლი.', close: 'დახურვა' },
+  mn: { title: 'Хандалт хязгаарлагдсан', line1: 'Та «{group}» хэсгийг нээхийг оролдож байна.', line2: 'Энэ нь таны үүрэгт ({role}) боломжгүй байна. Нэвтэрч орон менежерээсээ үүргээ өөрчлөхийг хүсэлт гаргана уу.', close: 'Хаах' },
+  ku: { title: 'Gihîştin sînorkirî ye', line1: 'Hûn hewl didin beşa “{group}” vekin.', line2: 'Ew ji bo rola we ({role}) ne berdest e. Ji kerema xwe têkevin û ji rêveberê xwe bixwazin ku rola we biguherîne.', close: 'Bigire' },
+  af: { title: 'Toegang beperk', line1: 'Jy probeer om die afdeling “{group}” oop te maak.', line2: 'Dit is nie beskikbaar vir jou rol ({role}) nie. Meld asseblief aan en vra jou bestuurder om jou rol te verander.', close: 'Maak toe' },
+  sw: { title: 'Ufikiaji umezuiwa', line1: 'Unajaribu kufungua sehemu ya “{group}”.', line2: 'Haipatikani kwa jukumu lako ({role}). Tafadhali ingia na umwombe meneja wako abadilishe jukumu lako.', close: 'Funga' },
+  ha: { title: 'An iyakance shiga', line1: 'Kana ƙoƙarin buɗe sashin “{group}”.', line2: 'Ba ya samuwa ga matsayinka ({role}). Da fatan za a shiga ka nemi manajanka ya canza matsayinka.', close: 'Rufe' },
+  yo: { title: 'Ìwọlé ní ìhámọ́', line1: 'O ń gbìyànjú láti ṣí apá “{group}”.', line2: 'Kò sí fún ipa rẹ ({role}). Jọ̀wọ́ wọlé kí o sì béèrè lọ́wọ́ olùdarí rẹ láti yí ipa rẹ padà.', close: 'Tì' },
+  ig: { title: 'Enweghị ohere', line1: 'Ị na-agbalị imeghe akụkụ “{group}”.', line2: 'Ọ dịghị maka ọrụ gị ({role}). Biko banye wee rịọ onye njikwa gị ka ọ gbanwee ọrụ gị.', close: 'Mechie' },
+  am: { title: 'መዳረሻ ተገድቧል', line1: '“{group}” ክፍልን ለመክፈት እየሞከሩ ነው።', line2: 'ለእርስዎ ሚና ({role}) አይገኝም። እባክዎ ይግቡ እና አስተዳዳሪዎን ሚናዎን እንዲቀይር ይጠይቁ።', close: 'ዝጋ' },
+  zu: { title: 'Ukufinyelela kunqunyelwe', line1: 'Uzama ukuvula isigaba esithi “{group}”.', line2: 'Asitholakali endimeni yakho ({role}). Sicela ungene futhi ucele umphathi wakho ukuthi ashintshe indima yakho.', close: 'Vala' },
+  xh: { title: 'Ufikelelo lukhawulelwe', line1: 'Uzama ukuvula icandelo elithi “{group}”.', line2: 'Ayifumaneki kwindima yakho ({role}). Nceda ungene kwaye ucele umphathi wakho atshintshe indima yakho.', close: 'Vala' },
+  rw: { title: 'Kwinjira birabujijwe', line1: 'Urimo ugerageza gufungura igice “{group}”.', line2: 'Ntikiboneka ku ruhare rwawe ({role}). Nyamuneka injira hanyuma usabe umuyobozi wawe guhindura uruhare rwawe.', close: 'Funga' },
+  so: { title: 'Gelitaanka waa xaddidan yahay', line1: 'Waxaad isku dayaysaa inaad furto qaybta “{group}”.', line2: 'Lagama heli karo doorkaaga ({role}). Fadlan gal oo weydiiso maamulahaaga inuu beddelo doorkaaga.', close: 'Xir' },
+  te: { title: 'యాక్సెస్ పరిమితం చేయబడింది', line1: 'మీరు “{group}” విభాగాన్ని తెరవడానికి ప్రయత్నిస్తున్నారు.', line2: 'ఇది మీ పాత్రకు ({role}) అందుబాటులో లేదు. దయచేసి సైన్ ఇన్ చేసి, మీ పాత్రను మార్చమని మీ మేనేజర్‌ను అడగండి.', close: 'మూసివేయి' },
+  mr: { title: 'प्रवेश प्रतिबंधित', line1: 'तुम्ही “{group}” विभाग उघडण्याचा प्रयत्न करत आहात.', line2: 'तो तुमच्या भूमिकेसाठी ({role}) उपलब्ध नाही. कृपया साइन इन करा आणि तुमच्या व्यवस्थापकाला तुमची भूमिका बदलण्यास सांगा.', close: 'बंद करा' },
+  kn: { title: 'ಪ್ರವೇಶ ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ', line1: 'ನೀವು “{group}” ವಿಭಾಗವನ್ನು ತೆರೆಯಲು ಪ್ರಯತ್ನಿಸುತ್ತಿದ್ದೀರಿ.', line2: 'ಇದು ನಿಮ್ಮ ಪಾತ್ರಕ್ಕೆ ({role}) ಲಭ್ಯವಿಲ್ಲ. ದಯವಿಟ್ಟು ಸೈನ್ ಇನ್ ಮಾಡಿ ಮತ್ತು ನಿಮ್ಮ ಪಾತ್ರವನ್ನು ಬದಲಾಯಿಸಲು ನಿಮ್ಮ ಮ್ಯಾನೇಜರ್‌ಗೆ ಕೇಳಿ.', close: 'ಮುಚ್ಚಿ' },
+  gu: { title: 'ઍક્સેસ પ્રતિબંધિત', line1: 'તમે “{group}” વિભાગ ખોલવાનો પ્રયાસ કરી રહ્યા છો.', line2: 'તે તમારી ભૂમિકા ({role}) માટે ઉપલબ્ધ નથી. કૃપા કરીને સાઇન ઇન કરો અને તમારા મેનેજરને તમારી ભૂમિકા બદલવા માટે કહો.', close: 'બંધ કરો' },
+  ml: { title: 'ആക്സസ് നിയന്ത്രിച്ചിരിക്കുന്നു', line1: 'നിങ്ങൾ “{group}” വിഭാഗം തുറക്കാൻ ശ്രമിക്കുകയാണ്.', line2: 'ഇത് നിങ്ങളുടെ റോളിന് ({role}) ലഭ്യമല്ല. ദയവായി സൈൻ ഇൻ ചെയ്ത് നിങ്ങളുടെ റോൾ മാറ്റാൻ മാനേജരോട് അഭ്യർത്ഥിക്കുക.', close: 'അടയ്ക്കുക' },
+  ta: { title: 'அணுகல் கட்டுப்படுத்தப்பட்டுள்ளது', line1: 'நீங்கள் “{group}” பகுதியைத் திறக்க முயற்சிக்கிறீர்கள்.', line2: 'இது உங்கள் பங்குக்கு ({role}) கிடைக்கவில்லை. தயவுசெய்து உள்நுழைந்து உங்கள் பங்கை மாற்ற உங்கள் மேலாளரிடம் கேளுங்கள்.', close: 'மூடு' },
+  ne: { title: 'पहुँच प्रतिबन्धित', line1: 'तपाईं “{group}” खण्ड खोल्ने प्रयास गर्दै हुनुहुन्छ।', line2: 'यो तपाईंको भूमिका ({role}) का लागि उपलब्ध छैन। कृपया साइन इन गर्नुहोस् र आफ्नो प्रबन्धकलाई तपाईंको भूमिका परिवर्तन गर्न अनुरोध गर्नुहोस्।', close: 'बन्द गर्नुहोस्' },
+  my: { title: 'ဝင်ရောက်ခွင့် ကန့်သတ်ထားသည်', line1: 'သင်သည် “{group}” ကဏ္ဍကို ဖွင့်ရန် ကြိုးစားနေသည်။', line2: '၎င်းသည် သင့်အခန်းကဏ္ဍ ({role}) အတွက် မရရှိနိုင်ပါ။ ကျေးဇူးပြု၍ ဝင်ရောက်ပြီး သင့်မန်နေဂျာအား သင့်အခန်းကဏ္ဍ ပြောင်းလဲပေးရန် တောင်းဆိုပါ။', close: 'ပိတ်ရန်' },
+  km: { title: 'ការចូលប្រើត្រូវបានដាក់កម្រិត', line1: 'អ្នកកំពុងព្យាយាមបើកផ្នែក “{group}”។', line2: 'វាមិនមានសម្រាប់តួនាទីរបស់អ្នក ({role}) ទេ។ សូមចូល ហើយស្នើសុំអ្នកគ្រប់គ្រងរបស់អ្នកឱ្យផ្លាស់ប្ដូរតួនាទីរបស់អ្នក។', close: 'បិទ' },
+  lo: { title: 'ການເຂົ້າເຖິງຖືກຈຳກັດ', line1: 'ທ່ານກຳລັງພະຍາຍາມເປີດພາກສ່ວນ “{group}”.', line2: 'ມັນບໍ່ສາມາດໃຊ້ໄດ້ສຳລັບບົດບາດຂອງທ່ານ ({role}). ກະລຸນາເຂົ້າສູ່ລະບົບ ແລະ ຂໍໃຫ້ຜູ້ຈັດການຂອງທ່ານ ປ່ຽນບົດບາດຂອງທ່ານ.', close: 'ປິດ' },
+}
+
+export function getAccessDeniedStrings(lang: string): AccessDeniedStrings {
+  return STRINGS[lang] ?? EN
+}

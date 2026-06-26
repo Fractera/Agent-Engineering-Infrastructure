@@ -1,10 +1,6 @@
-// FROZEN ENGINE (decoupled from FES). Single source of truth for the author/founder
-// identity, reused by the founder block (post-body) and the per-article JSON-LD
-// author (Person). GENERIC placeholder identity — replace with the site's real
-// author. `sameAs` is the SEO "glue" that consolidates the author's real profiles
-// into ONE entity; keep it EMPTY until you add the real profiles (do not ship
-// someone else's profile links). The author photo points at a shipped placeholder.
-
+// Author/founder identity, used by the founder block and the article JSON-LD author.
+// Placeholder — replace with the real author. Keep `sameAs` EMPTY until you add the
+// author's own profile URLs (never ship someone else's). Photo is a placeholder.
 export const AUTHOR = {
   name: 'Site Author',
   role: 'Editor',

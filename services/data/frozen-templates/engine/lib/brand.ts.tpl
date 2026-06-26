@@ -1,14 +1,6 @@
-// Central brand identity, sourced from environment variables so the whole
-// content-page stack is white-label / portable: FES today, FNS (and any future
-// starter) tomorrow. ONE module reads env; everything else imports these
-// constants instead of hardcoding "Fractera" / the domain. This is the pattern
-// being perfected here before porting to FNS.
-//
-// NEXT_PUBLIC_* so the values are inlined into both server and client bundles at
-// build time (note: bake-in — changing the brand requires a rebuild, which is
-// fine for a static marketing shell). Defaults preserve current FES behavior
-// when the env vars are unset, so nothing breaks if they are not configured.
-
+// Brand identity from environment variables (white-label). NEXT_PUBLIC_* values are
+// baked into the bundle at build time, so changing the brand needs a rebuild.
+// Unset vars fall back to the defaults below.
 export const BRAND = {
   /** Product/marketing name, e.g. in titles and breadcrumbs. */
   name: process.env.NEXT_PUBLIC_BRAND_NAME?.trim() || 'Fractera',

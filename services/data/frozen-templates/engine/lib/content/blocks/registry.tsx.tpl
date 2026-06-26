@@ -4,16 +4,9 @@ import type { PostBodyUi } from '@/lib/content/post-body-ui'
 import { inline, headingId } from './inline'
 import { AUTHOR, AUTHOR_SOCIAL_LINKS } from '@/lib/author'
 
-// ─────────────────────────────────────────────────────────────────────────────
-// FROZEN ENGINE (decoupled from FES). Block registry — the catalog renderer. One
-// entry per block `kind`; PostBody is a thin dispatcher over this map. Container
-// blocks recurse through `ctx.renderBlocks`, so any block nests inside any layout.
-// Add a section type = add a `kind` in ./types + one entry here.
-// NOTE (decoupling): the FES-only `frameworks` (InlineFrameworkGrid) and `inquiry`
-// (CompanyBrainInquiryCta) blocks were removed — they belong to the Fractera
-// marketing portal, not a portable content engine. Re-add a kind here + in
-// ./types to extend.
-// ─────────────────────────────────────────────────────────────────────────────
+// Block registry — one renderer per block `kind`; PostBody dispatches over this map.
+// Container blocks recurse through `ctx.renderBlocks`, so any block nests in any
+// layout. To add a section type: add a `kind` in ./types + one entry here.
 
 export type BlockRenderCtx = {
   lang: string

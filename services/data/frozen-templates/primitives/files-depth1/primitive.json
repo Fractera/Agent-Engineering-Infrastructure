@@ -12,7 +12,7 @@
   },
   "seams": {
     "list-provider": "Slot A. The child list is supplied by providers/<source>/list-provider.ts.tpl, copied into the tab's _lib/list-provider.ts. files => parser-fs _list.generated. Swapping --source swaps ONLY this file; the contract is `getChildren()`.",
-    "aspect-in-layout": "Slot B. The tab carries a layout.tsx whose {{ASPECT_GUARDS}} slot composes enabled aspects uniformly at every level. i18n is on (the [lang] segment + chrome). roles is off here; turning it on injects aspects/roles/role-guard into this same slot — no change to depth or provider.",
+    "aspect-in-layout": "Slot B. The tab carries a layout.tsx whose aspect slots compose enabled aspects uniformly at every level. i18n is on (the [lang] segment + chrome). roles is off by default; turning it on injects the SHARED client guard (@/lib/auth-guard/route-guard.client, static-first preserved) wrapping children + a fallback redirect — no change to depth or provider. Server-hide variant (role-guard.server, dynamic) is the documented architect-only exception, not injected.",
     "depth": "depth-1 is the base case of the recursive depth parameter. A depth-N primitive nests hub levels; each level reuses the same provider + aspect seams.",
     "versioned-engine": "The renderer is installed into lib/content-<engineVersion>/ + components/content-page-<engineVersion>/; the tab pins that version. brand/author are shared identity, never versioned."
   },
@@ -22,6 +22,8 @@
     "languages": "BCP-47 codes; en is the base. One UI-chrome file per language.",
     "labels": "Section name per language (en required). The model translates the single word — not code generation.",
     "samples": "How many placeholder documents to compose (default 2).",
+    "roles": "Access shape (Slot B). off=public (default) | guest=public+guest (anon→guest) | <ALL_ROLES csv>=private (one/several roles) | all=any assigned role. Validated against ALL_ROLES (lib/roles.ts).",
+    "unauthorizedRedirect": "Fallback page for a visitor lacking the role: site root '/' (default) or any existing page (e.g. '/en/blog'). Only used when roles is on.",
     "engineVersion": "Which engine namespace to pin (default v1)."
   },
   "tokens": ["{{TAB}}", "{{TAB_PASCAL}}", "{{TAB_CAMEL}}", "{{FORMAT}}", "{{LABEL}}", "{{LANG}}", "{{LANG_IMPORTS}}", "{{LANG_MAP}}", "{{ASPECT_GUARDS}}", "{{ASPECT_IMPORTS}}", "{{ITEM_SLUG}}", "{{ITEM_INDEX}}", "{{ITEM_DATE}}", "{{ITEM_OVERRIDE_IMPORTS}}", "{{ITEM_OVERRIDES}}"]

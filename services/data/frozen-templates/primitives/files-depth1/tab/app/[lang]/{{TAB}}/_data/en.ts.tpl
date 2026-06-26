@@ -1,9 +1,7 @@
 import type { {{TAB_PASCAL}}Ui } from '../_lib/types'
 
-// FROZEN ARCHETYPE TEMPLATE — content-collection. English UI chrome (the required
-// base). One file per language; each extra <lang>.ts is a PARTIAL override that
-// deep-merges over this base (getX Ui), so a new language needs only its
-// translated label. {{LABEL}} is the per-language display name set at thaw time.
+// English UI strings (the base). Each extra <lang>.ts is a partial override that
+// deep-merges over this, so a new language needs only its translated keys.
 export const en: {{TAB_PASCAL}}Ui = {
   metaTitle: '{{LABEL}}',
   metaDescription:
@@ -11,7 +9,7 @@ export const en: {{TAB_PASCAL}}Ui = {
   eyebrow: '{{LABEL}}',
   indexTitle: '{{LABEL}}',
   indexIntro:
-    'Every current update, in chronological order. This is placeholder copy from the frozen content-collection archetype — replace it with your own.',
+    'Every current update, in chronological order. This is placeholder copy — replace it with your own.',
   breadcrumb: '{{LABEL}}',
   minRead: 'min read',
   tocHeading: 'In this article',

@@ -4,22 +4,14 @@ import { AUTHOR } from '@/lib/author'
 import { getPageUi } from '@/lib/content/page-ui'
 import { PostBody, headingId } from './post-body'
 
-// ─────────────────────────────────────────────────────────────────────────────
-// FROZEN ENGINE (decoupled from FES). StandardContentPage — the ONE reusable
-// template for every content page/post. It renders the full page standard so a
-// route only supplies data:
-//
+// StandardContentPage — the one reusable template for every content page/post; a
+// route only supplies data. Renders, in order:
 //   1. Breadcrumbs (visible)             5. body blocks (H2/H3/quote/list/…)
 //   2. Max-size H1 + subtitle + byline   6. `sections` slot (injected by the route)
 //   3. Hero image / custom hero          7. FAQ (last content section)
 //   4. Table of contents (from H2s)      8. Back link (ABSOLUTE LAST, below FAQ)
-//
-// NOTE (decoupling): the FES-only baked sponsorship section (+ ContentProvider /
-// i18n getContent) was removed. Any project-specific section is injected through
-// the open `sections` slot by the route entry; the FAQ stays the last content
-// section, the back link the absolute last item. Fully server-rendered — no JS
-// needed to read it.
-// ─────────────────────────────────────────────────────────────────────────────
+// Project-specific sections go through the open `sections` slot. Fully server-
+// rendered — readable with JS off.
 
 export type Breadcrumb = { label: string; href?: string }
 

@@ -4,9 +4,7 @@ import { get{{TAB_PASCAL}}Ui } from '../../_data'
 import { BRAND } from '@/lib/brand'
 import { data } from '../_data'
 
-// FROZEN ARCHETYPE TEMPLATE — content-collection placeholder post entry
-// (format: '{{FORMAT}}'). Renders the co-located _data through the universal post
-// factory + the shared StandardContentPage block.
+// Renders this document's _data through the shared post factory (format '{{FORMAT}}').
 const post = createContentPost({
   format: '{{FORMAT}}',
   subPath: `/{{TAB}}/${data.meta.slug}`,

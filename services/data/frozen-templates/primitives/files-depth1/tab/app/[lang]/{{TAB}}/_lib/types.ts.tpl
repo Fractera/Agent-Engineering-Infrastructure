@@ -1,9 +1,5 @@
-// FROZEN ARCHETYPE TEMPLATE — content-collection. Thawed by thaw-frozen-archetype.
-// Tokens ({{TAB}}, {{TAB_PASCAL}}, {{TAB_CAMEL}}) are substituted at thaw time.
-// Per-document file structure: every article lives in its own co-located route
-// folder `app/[lang]/{{TAB}}/<slug>/_data/` — meta.ts (non-translatable) + en.ts
-// (required base body) + one <lang>.ts partial override per extra language.
-
+// Types for a document's _data: meta.ts (non-translatable) + en.ts (base body) +
+// one <lang>.ts partial override per extra language.
 import type { LocalizedBody, LocalizedBodyOverride } from '@/lib/content/types'
 
 export type {{TAB_PASCAL}}Meta = {
