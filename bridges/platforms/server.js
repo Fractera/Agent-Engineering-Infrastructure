@@ -14,6 +14,7 @@ import { AppSettingsMcpServer } from './app-settings-mcp-server.js'
 import { AiDraftMcpServer } from './ai-draft-mcp-server.js'
 import { TemplateConstructorMcpServer } from './template-constructor-mcp-server.js'
 import { DeployMcpServer } from './deploy-mcp-server.js'
+import { ContentCrudMcpServer } from './content-crud-mcp-server.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, '../../app/.env.local') })
@@ -1196,4 +1197,19 @@ new DeployMcpServer({
   secret: MCP_SECRET,
   adminUrl: process.env.ADMIN_URL ?? 'http://127.0.0.1:3002',
   deploySecretFile: process.env.DEPLOY_SECRET_FILE ?? '/opt/fractera/bridges/app/.env.local',
+}).start()
+
+// ── Content CRUD MCP server (singleton, port 3226) ───────────────────────────
+// Scenario #1 of 8. Any of the 6 agents creates/edits/deletes a content GROUP (tab)
+// or PAGE (post) in the slot — deterministic file CRUD, NO code generation: the agent
+// passes DATA, the slot emitter (manage-content-collections.mjs) writes the files.
+// owner_content_manage_collection (mutating, §8.2 dry_run; anti-destructive + integrity
+// gates). create group delegates to the Frozen Template Constructor (store via :3300).
+// Every success is fixed in the Deployment table (deployment_records). Step 154.
+new ContentCrudMcpServer({
+  port: Number(process.env.CONTENT_CRUD_MCP_PORT ?? 3226),
+  secret: MCP_SECRET,
+  dataUrl: process.env.DATA_SERVICE_URL ?? 'http://127.0.0.1:3300',
+  dataSecret: process.env.DATA_SECRET ?? '',
+  appDir: process.env.SLOT_APP_DIR ?? '/opt/fractera/app',
 }).start()
