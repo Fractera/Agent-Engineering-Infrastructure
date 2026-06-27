@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { buildAlternates } from '@/lib/seo/alternates'
-import { BRAND } from '@/lib/brand'
+import { BRAND, brandLogoUrl } from '@/lib/brand'
 import { get{{TAB_PASCAL}}Ui } from '../_data'
 import { {{TAB_CAMEL}}List } from '../_lib/post'
 import { getChildren } from '../_lib/list-provider'
@@ -12,10 +12,27 @@ import { formatLocalizedDate } from '@/lib/i18n/format-date'
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params
   const ui = get{{TAB_PASCAL}}Ui(lang)
+  // Per-page OG/Twitter so a shared /{{TAB}} link shows THIS section's card, not the
+  // site default (the layout's constructMetadata fallback). Same site origin (BRAND.siteUrl)
+  // as canonical/hreflang above, so every URL on the page agrees (no www/non-www split).
+  const url = `${BRAND.siteUrl}/${lang}/{{TAB}}`
   return {
     title: ui.metaTitle,
     description: ui.metaDescription,
     alternates: buildAlternates(lang, '/{{TAB}}'),
+    openGraph: {
+      title: ui.metaTitle,
+      description: ui.metaDescription,
+      url,
+      type: 'website',
+      images: [{ url: brandLogoUrl, alt: ui.metaTitle }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: ui.metaTitle,
+      description: ui.metaDescription,
+      images: [brandLogoUrl],
+    },
   }
 }
 
