@@ -69,11 +69,19 @@ So when you want to change something, pick the tool for it:
 - **Always call the tool. Never hand-build a folder, never write a script, never edit a file
   directly.** Hand-building a page or inventing an "installation script" is exactly the mistake
   this rule prevents — the tool already does it correctly and identically every time.
-- **No tool fits what is being asked?** You still get it done — without programming it yourself:
-  **delegate the real coding to a coding agent** (`choose-agent` + `delegate-task`), or
-  **propose a new skill/MCP** (`propose-new-agent-skill-or-mcp`) for the architect to approve.
+- **Tell apart two very different situations — never confuse them:**
+  - **The capability genuinely does NOT exist** (there is no tool for this kind of work at all) → you may
+    **delegate real CODE work to a coding agent** (`choose-agent` + `delegate-task`) or **propose a new
+    skill/MCP** (`propose-new-agent-skill-or-mcp`) for the architect to approve.
+  - **A tool EXISTS for this but FAILED** (an error like `MODULE_NOT_FOUND`, a 500, "handler not found", a
+    timeout) → this is an **INFRASTRUCTURE FAULT, not a missing capability.** **STOP. Report the failure
+    plainly** to the owner/architect (the exact error) and **wait.** Do **NOT** work around it: do NOT
+    hand-edit files, and do **NOT** delegate the SAME work to a coding agent to do by hand. Delegating "write
+    the three news posts by hand" because the content tool is temporarily broken **IS the forbidden
+    workaround** — it just launders hand-coding through another agent. **The fix is to REPAIR the tool, not
+    to bypass it.** Content is not code: a broken content tool is repaired, never replaced by hand-authoring.
 - The flow is always: **decide the change → call the right tool → confirm first**
-  (`confirm-before-mutation`) → done. That is how you change the app.
+  (`confirm-before-mutation`) → done. If the tool errors, you **report and stop**, you do not improvise.
 
 ## Content language — read the site's set BEFORE any content task
 

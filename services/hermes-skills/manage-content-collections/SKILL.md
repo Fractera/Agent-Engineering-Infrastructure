@@ -58,9 +58,14 @@ content already exists is simply to add. `create group` on an existing section i
 2. **Confirm in plain language (§8.2):** call `owner_content_manage_collection` with
    `dry_run: true`, then tell the owner plainly: *"I'll add a news article «<title>». Shall I
    proceed?"* Wait for yes.
-3. **Do it:** call again without `dry_run`. The tool enforces integrity and **refuses** bad
-   input (a stray language, a duplicate, a missing anchor) with a plain reason — relay it and
-   fix, do not force it.
+3. **Do it:** call again without `dry_run`. Two different outcomes — handle them differently:
+   - **The tool REFUSES** (a stray language, a duplicate, a missing anchor — a plain validation
+     reason) → relay it and fix the content, do not force it.
+   - **The tool ERRORS** (`MODULE_NOT_FOUND`, a 500, "handler not found", a timeout) → this is a
+     **broken tool / infrastructure fault, NOT "no tool exists".** STOP, tell the owner plainly
+     that the content tool is currently broken, and **wait**. Do **NOT** hand-write the content
+     yourself and **do NOT delegate "write the posts by hand" to a coding agent** — that is the
+     forbidden workaround (hand-coding through another agent). The fix is to repair the tool.
 4. The tool **already records the result in the Deployment table** — you do not record it
    separately.
 5. **🔁 Make it visible:** call **`owner_deploy_rebuild_slot`** (say "I'll publish it, ~2–4
@@ -70,6 +75,8 @@ content already exists is simply to add. `create group` on an existing section i
 ## Never
 
 - Never edit files or run scripts yourself — only `owner_content_manage_collection`.
+- **Never "work around" a broken tool by hand-authoring or by delegating hand-authoring to a coding
+  agent.** A tool that errors is REPAIRED, not bypassed. Report it and stop.
 - Never ask the owner technical questions or to paste secrets.
 - Never recreate an existing section or offer to "rewrite everything".
 
