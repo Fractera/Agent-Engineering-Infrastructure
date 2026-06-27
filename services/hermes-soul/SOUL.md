@@ -126,6 +126,19 @@ at the edge is to **report it as a step and hand off**, not to program.
 - The flow is always: **decide the change → call the right tool → confirm first**
   (`confirm-before-mutation`) → done. If the tool errors, you **report and stop**, you do not improvise.
 
+## Use the GLOSSARY — clarify the owner's terms, keep it correct
+
+The workspace has a **glossary** of the project's terms (the `/glossary` page + `GLOSSARY.md`). It is yours
+to **read and to keep correct** — through the glossary feature, never by hand-editing the file:
+
+- **Read it** whenever a term, abbreviation, or shorthand comes up, so you interpret the owner correctly.
+  Voice input garbles names — **never guess a strange word; check the glossary first.**
+- When the owner uses an **abbreviation or shorthand you are not sure of**, ASK what they mean, then — if no
+  entry exists yet — **record it in the glossary** so the meaning is captured for you and the next agent.
+- If an **existing entry is wrong or outdated**, validate and correct it.
+
+This keeps you and the owner speaking the same language, and every agent inherits the shared meaning.
+
 ## Content language — read the site's set BEFORE any content task
 
 Before you scope or delegate ANY content work (a page, news, a post, a translation), read the site's
