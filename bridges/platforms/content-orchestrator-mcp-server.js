@@ -57,6 +57,24 @@ function toolsSchema() {
       },
     },
     {
+      name: 'owner_perceive_workspace',
+      description:
+        'SEE what actually exists in the workspace BEFORE you act. Returns the LIVE tree of the running site — ' +
+        'every content section and the real pages inside it (news, blog, documentation, …), plus declared (not-' +
+        'yet-built) nodes and open tasks. This is the SAME filesystem scan that powers the /architecture page, so ' +
+        'it shows the truth on disk — NOT the deployment journal. Read-only; nothing is changed.\n\n' +
+        'ALWAYS call this first when the owner asks "what do I have / list my pages / what news exists / change ' +
+        'this existing page / delete X". Do NOT answer those from the deployment record (that is a history log of ' +
+        'deploys, not a catalog of content) or from memory (it goes stale). Pass scope to narrow to one section ' +
+        '(e.g. scope="news"); omit it for the whole map.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          scope: { type: 'string', description: 'Optional section slug to narrow to (e.g. "news"). Omit for the full workspace map.' },
+        },
+      },
+    },
+    {
       name: 'owner_report_blocker_step',
       description:
         'Record a BLOCKER as an open development step and hand off to a human. Use this when a task is ' +
@@ -87,6 +105,7 @@ export class ContentOrchestratorMcpServer {
     this.dataUrl = dataUrl ?? 'http://127.0.0.1:3300'
     this.dataSecret = dataSecret ?? process.env.DATA_SECRET ?? ''
     this.adminUrl = adminUrl ?? 'http://127.0.0.1:3002'
+    this.appUrl = process.env.SLOT_APP_URL ?? 'http://127.0.0.1:3000'
     this.appDir = appDir ?? pathResolve(__dirname, '../../app')
     this.deploySecretFile = deploySecretFile ?? '/opt/fractera/bridges/app/.env.local'
     this.orchestrator = join(this.appDir, '.agents/skills/orchestrate-content-by-steps/orchestrate-content-by-steps.mjs')
@@ -123,8 +142,63 @@ export class ContentOrchestratorMcpServer {
 
   async _call(name, args) {
     if (name === 'owner_content_orchestrate') return this._orchestrate(args)
+    if (name === 'owner_perceive_workspace') return this._perceive(args)
     if (name === 'owner_report_blocker_step') return this._reportBlocker(args)
     throw new Error(`Unknown tool: ${name}`)
+  }
+
+  // Read-only situational awareness for Hermes: reuse the SAME live filesystem
+  // scan that powers /architecture (GET …/architecture/signature → scanTree()).
+  // Static-first means every content post is its own route folder with a page.tsx,
+  // so the scan already enumerates them as builtExtra — that is why the page shows
+  // posts the deployment journal does not. We just regroup into a compact map.
+  async _perceive(args) {
+    const scope = typeof args.scope === 'string' && args.scope.trim() ? args.scope.trim() : null
+    let sig
+    try {
+      const r = await fetch(`${this.appUrl}/api/project/default/architecture/signature`,
+        { headers: { 'X-Agent-Identity': 'hermes' }, signal: AbortSignal.timeout(15000) })
+      if (!r.ok) throw new Error(`signature scan returned ${r.status}`)
+      sig = await r.json()
+    } catch (e) {
+      throw new Error(`could not read the live workspace (is the site running on :3000?): ${e.message}`)
+    }
+    const collections = {}
+    const pages = []
+    for (const { href } of (sig.builtExtra ?? [])) {
+      const segs = String(href).split('/').filter(Boolean)
+      if (segs.length >= 2) {
+        const tab = segs[0], slug = segs.slice(1).join('/')
+        ;(collections[tab] ??= []).push({ slug, href, title: this._postTitle(tab, slug) })
+      } else if (segs.length === 1) {
+        pages.push({ slug: segs[0], href, title: this._postTitle(null, segs[0]) })
+      }
+    }
+    const declared = (sig.requested ?? []).map(d => ({ slug: d.slug, kind: d.kind, title: d.title, status: d.status }))
+    const tasks = Object.entries(sig.tasksByPath ?? {})
+      .filter(([, v]) => v && v.count > 0)
+      .map(([path, v]) => ({ path, openTasks: v.count }))
+    const map = scope
+      ? { scope, posts: collections[scope] ?? [], tasks: tasks.filter(t => t.path.startsWith(`/${scope}`)) }
+      : { collections, pages, declared, tasks }
+    return textResult({
+      source: 'live-filesystem-scan (same as /architecture, not the deployment journal)',
+      ...map,
+      note: scope
+        ? `Section "${scope}" has ${(collections[scope] ?? []).length} page(s). This is what is REALLY on the site now.`
+        : `${Object.keys(collections).length} section(s), ${Object.values(collections).reduce((n, a) => n + a.length, 0)} page(s) total. To act on existing content, work from THIS list.`,
+    })
+  }
+
+  // Best-effort title: posts are co-located static folders app/[lang]/<tab>/<slug>/_data/en.ts.
+  // Cheap regex read; on any miss return null and the caller falls back to the slug.
+  _postTitle(tab, slug) {
+    try {
+      const rel = tab ? join('app', '[lang]', tab, slug, '_data', 'en.ts') : join('app', '[lang]', slug, '_data', 'en.ts')
+      const src = readFileSync(join(this.appDir, rel), 'utf8')
+      const m = /\btitle\s*:\s*(['"`])([\s\S]*?)\1/.exec(src)
+      return m ? m[2].trim() : null
+    } catch { return null }
   }
 
   async _reportBlocker(args) {

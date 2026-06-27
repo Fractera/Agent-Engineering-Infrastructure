@@ -30,6 +30,7 @@
     "owner_product_loop_list_projects": { "tier": "owner", "first_party": true, "mutating": false, "execution": "server" },
     "owner_content_manage_collection": { "tier": "owner", "first_party": true, "mutating": true, "execution": "server" },
     "owner_content_orchestrate": { "tier": "owner", "first_party": true, "mutating": true, "execution": "server" },
+    "owner_perceive_workspace": { "tier": "owner", "first_party": true, "mutating": false, "execution": "server" },
     "owner_report_blocker_step": { "tier": "owner", "first_party": true, "mutating": true, "execution": "server" },
     "owner_coding_agents_check_readiness": { "tier": "owner", "first_party": true, "mutating": false, "execution": "server" },
     "owner_delegate_task_to_platform": { "tier": "owner", "first_party": true, "mutating": true, "execution": "server" },
