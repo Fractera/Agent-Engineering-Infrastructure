@@ -29,12 +29,17 @@ function toolsSchema() {
       name: 'owner_content_manage_collection',
       description:
         'Create, edit or delete a content GROUP (a tab — news/blog/documentation) or a PAGE (a post in a ' +
-        'tab) in the slot — deterministic file CRUD, NO code generation. You pass DATA (the content object), ' +
-        'the tool writes the files and regenerates the post list.\n\n' +
+        'tab) in the slot — deterministic file CRUD, NO code generation, NO content generation.\n\n' +
+        'PHASE 1 ONLY (structure, not authoring). A PAGE here is a CLONE of the frozen stub: its block ' +
+        'STRUCTURE is TAKEN from a sample post, never built by you. For create/edit page you pass only LIGHT ' +
+        'metadata (slug + optional title/date/tags) — NOT a body. Passing blocks is REFUSED. To author real ' +
+        'body text into the frozen slots is Phase 2 (a later step), not this tool.\n\n' +
+        '👉 For several test/placeholder posts at once, do NOT call create-page repeatedly — use the Frozen ' +
+        'Template Constructor with samples=N (owner_template_compose_structure): the stub posts ARE the test ' +
+        'news, generated in one shot with correct structure.\n\n' +
         'ANTI-DESTRUCTIVE: if a group already exists you ADD a page or EDIT it — never recreate. edit/delete ' +
         'require the target to exist. INTEGRITY enforced: folder===slug, languages only within the app\'s ' +
-        'declared set (en + the configured ones — never a stray language), no foreign-script artifacts, the ' +
-        'founder block only last, a required root anchor.\n\n' +
+        'declared set (never a stray language), no foreign-script artifacts.\n\n' +
         'CONFIRM FIRST (§8.2): call dry_run=true to preview the exact files + show the owner, get explicit ' +
         'confirmation, THEN call without dry_run. On success the result is fixed in the Deployment table and ' +
         'the slot still needs a REBUILD (owner_deploy_rebuild_slot) to go live.',
@@ -47,7 +52,7 @@ function toolsSchema() {
           backing: { type: 'string', enum: ['fs'], description: 'Storage backing. Only fs is implemented (db is the next of the 8 scenarios).' },
           tab: { type: 'string', description: 'Tab slug, kebab-case (news, blog, documentation).' },
           slug: { type: 'string', description: 'Page slug, kebab-case (required for target=page). The folder is named exactly this (folder===slug).' },
-          data: { type: 'object', description: 'Page content for create/edit page: { date?, tags?, en:{title,subtitle,description,blocks,faq,…}, <lang>:{…partial override} }. en is required; en must weave the root anchor [Agentic Engineering Infrastructure](/<lang>); a founder block may only be last.' },
+          data: { type: 'object', description: 'LIGHT metadata only for create/edit page: { title?, date?, tags? }. The page is a CLONE of the frozen stub — its block structure + placeholder text come from the stub. Do NOT pass blocks/body (refused; that is Phase 2). create-page clones the stub under the new slug; edit-page changes only title/date/tags.' },
           ui: { type: 'object', description: 'Tab UI chrome for edit group: { en:{…full}, <lang>:{…partial} }.' },
           labels: { type: 'object', description: 'Section name per language for create group (en required).' },
           format: { type: 'string', enum: ['news', 'blog', 'document'], description: 'Preset for create group (default news).' },

@@ -32,15 +32,19 @@ backing, parser-fs, language codes). Speak in human terms ("a news article title
 "the blog section"). Defaults are fine for everything technical.
 
 - A **group** = a section/tab (news, blog, documentation). A **page** = one article/post.
-- The 6 things you can do (pick by what the owner asked):
+- The things you can do (pick by what the owner asked):
   | owner says | call |
   |---|---|
-  | "make a news/blog/docs section" | `operation:create, target:group` (or use **compose-frozen-template**) |
-  | "add an article / post / page" | `operation:create, target:page` |
-  | "change / fix / translate this article" | `operation:edit, target:page` |
+  | "make a news/blog/docs section" | **compose-frozen-template** (`owner_template_compose_structure`) |
+  | **"add 3 test / sample / placeholder news"** | **compose-frozen-template with samples=3** — the stub posts ARE the test news, one shot. Do NOT add them one by one. |
+  | "add one more article" (a single extra post) | `operation:create, target:page` (clones the frozen stub under a new slug) |
+  | "rename / retitle an article" | `operation:edit, target:page` (title/date/tags only) |
   | "rename / retitle the section" | `operation:edit, target:group` |
   | "delete this article" | `operation:delete, target:page` |
   | "remove the whole section" | `operation:delete, target:group` |
+- **🧊 You do NOT write article text.** A page is a CLONE of the frozen stub — it comes with
+  placeholder text and correct structure. You give only a title/slug. Writing real article
+  bodies into the structure is a LATER capability (not yet) — never hand-build the body.
 
 ## 🛑 Anti-destructive (never violate)
 
@@ -50,11 +54,10 @@ content already exists is simply to add. `create group` on an existing section i
 
 ## How to do it
 
-1. **Compose the content for the owner** from their request: a title, a short summary, a
-   few paragraphs. Author it in the **app's own languages** (read the configured set — never
-   invent a language the site does not ship; if they want a new language, do
-   **manage-app-settings** → add language → rebuild first). Weave the exact anchor
-   **[Agentic Engineering Infrastructure]** linking to the site root; keep any founder note last.
+1. **Pick the right call (above).** For test/placeholder posts → **compose with samples=N**
+   (the stub posts are ready-made test news). For one extra post → create-page gives a title
+   (and slug); the tool **clones the frozen stub** — you do NOT write the article text or
+   structure. A new language must be added via **manage-app-settings** (rebuild) before it is used.
 2. **Confirm in plain language (§8.2):** call `owner_content_manage_collection` with
    `dry_run: true`, then tell the owner plainly: *"I'll add a news article «<title>». Shall I
    proceed?"* Wait for yes.
