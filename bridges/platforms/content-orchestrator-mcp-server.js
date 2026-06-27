@@ -1,0 +1,218 @@
+import { createServer } from 'http'
+import { spawn } from 'child_process'
+import { mkdtemp, mkdir, writeFile, rm } from 'fs/promises'
+import { readFileSync } from 'fs'
+import { join, dirname, resolve as pathResolve } from 'path'
+import { tmpdir } from 'os'
+import { fileURLToPath } from 'url'
+import { handleMcpHandshake } from './mcp-handshake.js'
+import { publicSiteUrl } from './site-url.js'
+
+// ── Content Orchestrator MCP server (L2, port 3227) ─────────────────────────
+// The FROZEN PROCESS for content operations. The agent passes only an INTENT
+// ("a page about Apple"); this orchestrator DECOMPOSES it by the slot's STATE
+// (does the section exist?) into dependent sub-steps and runs EACH through the
+// full development-step lifecycle, with the Deployment record as a GATE:
+//   open-step → execute → deploy → verify → RECORD (gate) → close-step
+// A step CANNOT close without a confirmed deployment_records row (the Vercel
+// invariant). A weak model cannot reorder or skip — the process is frozen.
+// The decompose+cycle logic lives in the slot emitter orchestrate-content-by-steps.mjs
+// (self-sufficient for a lone CLI agent); this bridge spawns it with the deploy/data
+// secrets in env. Reuses compose (section) + create-page (clone) from steps 147/154.
+// owner_content_orchestrate — mutating; §8.2 confirm via dry_run. L2 only.
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const textResult = data => ({ content: [{ type: 'text', text: JSON.stringify(data) }] })
+
+function toolsSchema() {
+  return [
+    {
+      name: 'owner_content_orchestrate',
+      description:
+        'Do a content request the RIGHT way end-to-end: you pass only an INTENT (what the owner wants), and ' +
+        'this orchestrator DECOMPOSES it by the site\'s state and runs each piece through the full step ' +
+        'lifecycle — open a development step, do it, deploy, RECORD the deployment, then close the step. The ' +
+        'deployment record is a GATE: a step never closes without it (like Vercel never skips a deploy record).\n\n' +
+        'You do NOT chain the tools yourself and you do NOT generate content/code. Just give: action ' +
+        '("add-page" for one page about a topic, or "create-section" for a new section / several test posts), a ' +
+        'topic, optional tab (default news). If the section does not exist yet, the orchestrator first creates it ' +
+        '(a sub-step), then adds the page (a second sub-step) — each deployed and recorded.\n\n' +
+        'CONFIRM FIRST (§8.2): call dry_run=true to show the decomposition (the sub-steps it will run) and get ' +
+        'the owner\'s ok, THEN call without dry_run. It returns the chronology: steps opened/closed, deployment ' +
+        'record ids, and the public URLs.',
+      inputSchema: {
+        type: 'object',
+        required: ['action'],
+        properties: {
+          action: { type: 'string', enum: ['add-page', 'create-section'], description: 'add-page = one page about a topic (creates the section first if missing). create-section = a new section / N test posts.' },
+          topic: { type: 'string', description: 'What the page is about (required for add-page), e.g. "apple". Becomes the page slug.' },
+          tab: { type: 'string', description: 'Section slug (default news). news/blog/documentation.' },
+          format: { type: 'string', enum: ['news', 'blog', 'document'], description: 'Section preset when creating it (default news).' },
+          samples: { type: 'integer', description: 'For create-section: how many test/placeholder posts (default 2). These stubs ARE the test posts.' },
+          languages: { type: 'array', items: { type: 'string' }, description: 'Section languages (default = the slot\'s configured set).' },
+          platform: { type: 'string', description: 'The agent doing the work (for the Deployment record). Default hermes.' },
+          model: { type: 'string', description: 'Model id (for the Deployment record).' },
+          dry_run: { type: 'boolean', description: 'true → show the decomposition plan without writing (§8.2). false/omit → run it.' },
+        },
+      },
+    },
+    {
+      name: 'owner_report_blocker_step',
+      description:
+        'Record a BLOCKER as an open development step and hand off to a human. Use this when a task is ' +
+        'BEYOND your tools — either no tool fits the work, OR a tool errored in a way that needs code analysis ' +
+        '(MODULE_NOT_FOUND, a 500, a build/tsc failure). You (Hermes) do NOT program and do NOT work around it: ' +
+        'you STOP, record the blocker here in detail, and tell the owner to activate a coding agent (Claude ' +
+        'Code / Codex / Gemini / Qwen / Kimi) to finish it. The step is left OPEN as the handoff record; the ' +
+        'coding agent reads it and completes the work. Never hand-author or delegate hand-coding instead of this.',
+      inputSchema: {
+        type: 'object',
+        required: ['task'],
+        properties: {
+          task: { type: 'string', description: 'The task the owner asked you for, in plain words.' },
+          title: { type: 'string', description: 'Short step title (default "Content task needs a coding agent").' },
+          mcp_tool: { type: 'string', description: 'If a tool errored: the MCP tool name you were using.' },
+          sub_task: { type: 'string', description: 'If a tool errored: the sub-task you were doing.' },
+          error: { type: 'string', description: 'If a tool errored: the exact error text.' },
+        },
+      },
+    },
+  ]
+}
+
+export class ContentOrchestratorMcpServer {
+  constructor({ port, secret, dataUrl, dataSecret, adminUrl, appDir, deploySecretFile }) {
+    this.port = port
+    this.secret = secret
+    this.dataUrl = dataUrl ?? 'http://127.0.0.1:3300'
+    this.dataSecret = dataSecret ?? process.env.DATA_SECRET ?? ''
+    this.adminUrl = adminUrl ?? 'http://127.0.0.1:3002'
+    this.appDir = appDir ?? pathResolve(__dirname, '../../app')
+    this.deploySecretFile = deploySecretFile ?? '/opt/fractera/bridges/app/.env.local'
+    this.orchestrator = join(this.appDir, '.agents/skills/orchestrate-content-by-steps/orchestrate-content-by-steps.mjs')
+    this.appEnvFile = join(this.appDir, '.env.local')
+  }
+
+  start() {
+    const server = createServer((req, res) => {
+      res.setHeader('Content-Type', 'application/json')
+      res.setHeader('Access-Control-Allow-Origin', '*')
+      if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return }
+      if (this.secret) {
+        const auth = req.headers['authorization'] ?? ''
+        if (!auth.startsWith('Bearer ') || auth.slice(7) !== this.secret) { res.writeHead(401); res.end(JSON.stringify({ error: 'Unauthorized' })); return }
+      }
+      if (req.method === 'GET' && req.url === '/health') { res.end(JSON.stringify({ ok: true, server: 'content-orchestrator' })); return }
+      if (req.method !== 'POST') { res.writeHead(405); res.end(JSON.stringify({ error: 'Method not allowed' })); return }
+      let body = ''
+      req.on('data', c => { body += c })
+      req.on('end', () => { try { this._handle(JSON.parse(body), res) } catch { res.writeHead(400); res.end(JSON.stringify({ error: 'Invalid JSON' })) } })
+    })
+    server.listen(this.port, '127.0.0.1', () => console.log(`[mcp:content-orchestrator] http://127.0.0.1:${this.port}`))
+  }
+
+  _handle(rpc, res) {
+    const { id, method, params } = rpc
+    const ok = r => res.end(JSON.stringify({ jsonrpc: '2.0', id, result: r }))
+    const fail = (c, m) => res.end(JSON.stringify({ jsonrpc: '2.0', id, error: { code: c, message: m } }))
+    if (handleMcpHandshake(rpc, res, 'fractera-content-orchestrator-bridge')) return
+    if (method === 'tools/list') return ok({ tools: toolsSchema() })
+    if (method === 'tools/call') return this._call(params?.name, params?.arguments ?? {}).then(ok).catch(e => fail(-32603, e.message))
+    fail(-32601, `Method not found: ${method}`)
+  }
+
+  async _call(name, args) {
+    if (name === 'owner_content_orchestrate') return this._orchestrate(args)
+    if (name === 'owner_report_blocker_step') return this._reportBlocker(args)
+    throw new Error(`Unknown tool: ${name}`)
+  }
+
+  async _reportBlocker(args) {
+    if (!args.task || !String(args.task).trim()) throw new Error('task is required (what the owner asked for)')
+    const cli = [this.orchestrator, '--out', this.appDir, '--action', 'report-blocker', '--task', String(args.task)]
+    if (args.title) cli.push('--blocker-title', String(args.title))
+    if (args.mcp_tool) cli.push('--mcp-tool', String(args.mcp_tool))
+    if (args.sub_task) cli.push('--sub-task', String(args.sub_task))
+    if (args.error) cli.push('--error', String(args.error))
+    const { code, out } = await this._spawn(process.execPath, cli, { ...process.env })
+    const last = (() => { try { return JSON.parse(out.trim().split('\n').filter(Boolean).pop()) } catch { return null } })()
+    if (code !== 0) throw new Error(`blocker report exited ${code}: ${out.slice(-300)}`)
+    return textResult({ ...(last ?? { ok: true }), advice: 'Tell the owner plainly: this needs a coding agent. Ask them to activate one (Claude Code / Codex / Gemini / Qwen / Kimi); it will read the step you just recorded and finish the work.' })
+  }
+
+  _readDeploySecret() {
+    try {
+      for (const line of readFileSync(this.deploySecretFile, 'utf8').split('\n')) {
+        const m = /^\s*(?:export\s+)?DEPLOY_SECRET\s*=\s*(.+)\s*$/.exec(line)
+        if (m) return m[1].trim().replace(/^["']|["']$/g, '')
+      }
+    } catch { /* missing */ }
+    return ''
+  }
+
+  async _materializeStore(work) {
+    const r = await fetch(`${this.dataUrl}/frozen-templates/tree`, { headers: { 'X-Agent-Identity': 'hermes', ...(this.dataSecret ? { 'X-Data-Secret': this.dataSecret } : {}) }, signal: AbortSignal.timeout(15000) })
+    if (!r.ok) throw new Error(`store tree fetch failed (${r.status})`)
+    const { files } = await r.json()
+    if (!files || !files['registry.json']) throw new Error('store returned no template files')
+    const storeDir = join(work, 'store')
+    for (const [rel, content] of Object.entries(files)) { const dest = join(storeDir, rel); await mkdir(dirname(dest), { recursive: true }); await writeFile(dest, content, 'utf8') }
+    return storeDir
+  }
+
+  async _orchestrate(args) {
+    const action = String(args.action ?? '')
+    if (!['add-page', 'create-section'].includes(action)) throw new Error('action must be add-page|create-section')
+    const tab = (typeof args.tab === 'string' && args.tab) || 'news'
+    if (!/^[a-z][a-z0-9-]*$/.test(tab)) throw new Error('tab must be kebab-case')
+    const topic = typeof args.topic === 'string' ? args.topic : ''
+    if (action === 'add-page' && !topic.trim()) throw new Error('topic is required for add-page')
+
+    const publicBase = (() => { try { return publicSiteUrl(this.appEnvFile) } catch { return '' } })()
+    const work = await mkdtemp(join(tmpdir(), 'content-orch-'))
+    try {
+      const cli = [this.orchestrator, '--out', this.appDir, '--action', action, '--tab', tab,
+        '--admin-url', this.adminUrl, '--data-url', this.dataUrl]
+      if (topic) cli.push('--topic', topic)
+      if (publicBase) cli.push('--public-url', publicBase)
+      if (['news', 'blog', 'document'].includes(args.format)) cli.push('--format', args.format)
+      if (Number.isFinite(args.samples)) cli.push('--samples', String(Math.max(1, Math.min(10, Math.trunc(args.samples)))))
+      if (Array.isArray(args.languages) && args.languages.length) cli.push('--languages', args.languages.map(String).join(','))
+      if (args.platform) cli.push('--platform', String(args.platform))
+      if (args.model) cli.push('--model', String(args.model))
+      if (args.dry_run) cli.push('--dry-run')
+
+      // create-section (or auto-create) needs the frozen store materialized for compose
+      if (action === 'create-section' || action === 'add-page') {
+        try { const storeDir = await this._materializeStore(work); cli.push('--store', storeDir) } catch (e) { if (action === 'create-section') throw e /* add-page may not need it if section exists; emitter validates */ }
+      }
+
+      const env = { ...process.env, DEPLOY_SECRET: this._readDeploySecret(), DATA_SECRET: this.dataSecret }
+      const { code, out } = await this._spawn(process.execPath, cli, env)
+      const last = (() => { try { return JSON.parse(out.trim().split('\n').filter(Boolean).pop()) } catch { return null } })()
+
+      if (args.dry_run) {
+        return textResult({ preview: true, action, tab, topic, decomposition: last?.plan ?? last, sectionExists: last?.sectionExists,
+          confirm_prompt: `Правильно ли я понимаю: ${action} «${tab}${topic ? '/' + topic : ''}»? Будут выполнены под-шаги: ${(last?.plan ?? []).map(s => s.name).join('; ')}. Каждый: открыть шаг → собрать → развернуть → ЗАПИСАТЬ развёртывание (обязательно) → закрыть. Повторите без dry_run для подтверждения.` })
+      }
+      if (last && last.ok === false) {
+        return textResult({ ok: false, action, tab, topic, failedStage: last.failedStage, detail: last.detail, stepKeptOpen: last.stepKeptOpen, chronology: last.chronology,
+          note: 'A sub-step failed; per the Vercel invariant the step was NOT closed (no deployment record → stays open). Report the failing stage; do not hand-fix — repair the tool.' })
+      }
+      if (code !== 0) throw new Error(`orchestrator exited ${code}: ${out.slice(-400)}`)
+      return textResult({ ...(last ?? { ok: true }), note: 'Done end-to-end: each sub-step opened a development step, deployed, recorded a deployment, and closed. See chronology + steps.' })
+    } finally {
+      await rm(work, { recursive: true, force: true }).catch(() => {})
+    }
+  }
+
+  _spawn(cmd, cli, env) {
+    return new Promise((res, rej) => {
+      const p = spawn(cmd, cli, { cwd: this.appDir, env })
+      let out = '', err = ''
+      p.stdout.on('data', d => { out += d }); p.stderr.on('data', d => { err += d })
+      p.on('error', rej)
+      p.on('close', code => res({ code, out: out + (err ? `\n[stderr] ${err}` : '') }))
+    })
+  }
+}

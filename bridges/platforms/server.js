@@ -15,6 +15,7 @@ import { AiDraftMcpServer } from './ai-draft-mcp-server.js'
 import { TemplateConstructorMcpServer } from './template-constructor-mcp-server.js'
 import { DeployMcpServer } from './deploy-mcp-server.js'
 import { ContentCrudMcpServer } from './content-crud-mcp-server.js'
+import { ContentOrchestratorMcpServer } from './content-orchestrator-mcp-server.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, '../../app/.env.local') })
@@ -1212,4 +1213,21 @@ new ContentCrudMcpServer({
   dataUrl: process.env.DATA_SERVICE_URL ?? 'http://127.0.0.1:3300',
   dataSecret: process.env.DATA_SECRET ?? '',
   appDir: process.env.SLOT_APP_DIR ?? '/opt/fractera/app',
+}).start()
+
+// ── Content Orchestrator MCP server (singleton, port 3227) ───────────────────
+// The frozen PROCESS for content ops: the agent passes an intent, this decomposes
+// it by slot state into dependent development steps and runs each through
+// open→execute→deploy→RECORD(gate)→close. The deployment record is a GATE — a step
+// never closes without a deployment_records row (the Vercel invariant). Spawns the
+// slot orchestrator .mjs (self-sufficient for a lone CLI) with deploy/data secrets in
+// env; reuses compose (section) + create-page (clone) from steps 147/154. Step 156.
+new ContentOrchestratorMcpServer({
+  port: Number(process.env.CONTENT_ORCHESTRATOR_MCP_PORT ?? 3227),
+  secret: MCP_SECRET,
+  dataUrl: process.env.DATA_SERVICE_URL ?? 'http://127.0.0.1:3300',
+  dataSecret: process.env.DATA_SECRET ?? '',
+  adminUrl: process.env.ADMIN_URL ?? 'http://127.0.0.1:3002',
+  appDir: process.env.SLOT_APP_DIR ?? '/opt/fractera/app',
+  deploySecretFile: process.env.DEPLOY_SECRET_FILE ?? '/opt/fractera/bridges/app/.env.local',
 }).start()
