@@ -12,7 +12,6 @@ import { ReadinessMcpServer } from './readiness-mcp-server.js'
 import { ParallelRoutingMcpServer } from './parallel-routing-mcp-server.js'
 import { AppSettingsMcpServer } from './app-settings-mcp-server.js'
 import { AiDraftMcpServer } from './ai-draft-mcp-server.js'
-import { ArchetypesMcpServer } from './archetypes-mcp-server.js'
 import { TemplateConstructorMcpServer } from './template-constructor-mcp-server.js'
 import { DeployMcpServer } from './deploy-mcp-server.js'
 
@@ -1169,20 +1168,6 @@ new AiDraftMcpServer({
   port: Number(process.env.AI_DRAFT_MCP_PORT ?? 3221),
   secret: MCP_SECRET,
   appUrl: process.env.APP_URL ?? 'http://127.0.0.1:3000',
-}).start()
-
-// ── Frozen Archetypes MCP server (singleton, port 3223) ──────────────────────
-// Any of the 6 coding agents adds a whole page group (news/blog/docs) by thawing
-// a frozen archetype from the closed store (data :3300) into the slot — pure file
-// copy + token substitution, no code generation. owner_archetype_list_frozen
-// (read-only catalog / matching) + owner_archetype_thaw_content_group (mutating,
-// §8.2 dry_run confirm). → step 146.
-new ArchetypesMcpServer({
-  port: Number(process.env.ARCHETYPES_MCP_PORT ?? 3223),
-  secret: MCP_SECRET,
-  dataUrl: process.env.DATA_SERVICE_URL ?? 'http://127.0.0.1:3300',
-  dataSecret: process.env.DATA_SECRET ?? '',
-  appDir: process.env.SLOT_APP_DIR ?? '/opt/fractera/app',
 }).start()
 
 // ── Frozen Template Constructor MCP server (singleton, port 3224) ────────────
