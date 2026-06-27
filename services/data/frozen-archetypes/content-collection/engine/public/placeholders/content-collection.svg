@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Placeholder image">
-  <rect width="1200" height="630" fill="#0a0a0a"/>
-  <rect x="1" y="1" width="1198" height="628" fill="none" stroke="#8b5cf6" stroke-opacity="0.35" stroke-width="2"/>
-  <g fill="#8b5cf6" fill-opacity="0.9" font-family="ui-sans-serif, system-ui, sans-serif" text-anchor="middle">
-    <text x="600" y="300" font-size="56" font-weight="700">Placeholder</text>
-    <text x="600" y="360" font-size="26" fill="#ffffff" fill-opacity="0.5">Frozen content-collection archetype — replace this image</text>
-  </g>
-</svg>
