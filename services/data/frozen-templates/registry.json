@@ -19,7 +19,7 @@
       "aspects": ["i18n", "roles"],
       "defaults": { "roles": "public", "i18n": "multi" },
       "matching": "BASE axes (source, depth, rendering) SELECT this primitive — all must equal the request. ASPECT axes (i18n, roles) are toggles this primitive SUPPORTS — a request may set them (e.g. roles=user turns the gate ON); an aspect not listed here => refuse 'aspect X unsupported'. A base axis mismatch => refuse naming that axis.",
-      "params": ["tab", "format", "languages", "labels", "samples", "roles", "unauthorizedRedirect", "engineVersion"],
+      "params": ["tab", "format", "languages", "labels", "samples", "roles", "unauthorizedRedirect", "engineVersion", "menus", "childrenAsDropdown"],
       "fits": ["news", "blog", "documentation feed", "announcements", "changelog", "articles", "stories", "guides list"],
       "doesNotServe": ["cart/checkout/payments", "graded course with tests/progress", "user dashboard / app screen", "forms that persist visitor input", "per-user/per-request personalized feed"],
       "path": "primitives/files-depth1"

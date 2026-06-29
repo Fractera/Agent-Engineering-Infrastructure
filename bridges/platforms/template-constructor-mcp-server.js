@@ -56,7 +56,43 @@ function toolsSchema() {
           source: { type: 'string', enum: ['files', 'db-at-build', 'runtime'], description: 'Base axis — list provider. Default files. db-at-build/runtime are roadmap → refusal.' },
           depth: { type: 'integer', description: 'Base axis — structural depth (default 1). depth>1 is roadmap → refusal.' },
           roles: { type: 'string', description: 'Aspect — "off" (default, public) or a comma role list (e.g. "user,architect") to inject the role gate uniformly.' },
+          menus: { type: 'object', description: 'Menu placement (registration metadata, emitted into _data/group.ts for the site menu system). Slots top|footer|left|right, each { enabled:boolean, order:number }. Default every slot disabled, order 10 (explicit opt-in). NOT a Slot A/B property.' },
+          children_as_dropdown: { type: 'boolean', description: 'Group manifest flag (default false). true → the menu expands the group child pages as a dropdown; false → the button navigates to the group index route.' },
           dry_run: { type: 'boolean', description: 'true → preview without writing (§8.2). false/omit → compose.' },
+        },
+      },
+    },
+    {
+      name: 'owner_template_list_groups',
+      description:
+        'List EVERY composed content group in the slot and its manifest (slug, languages, roles, menu ' +
+        'placement, childrenAsDropdown) — read-only. Use this to see all page groups before editing a ' +
+        "group's path, access roles, language set, or menu placement. A group composed before the manifest " +
+        'existed is returned with a derived envelope (hasManifest=false).',
+      inputSchema: { type: 'object', properties: {} },
+    },
+    {
+      name: 'owner_template_update_group',
+      description:
+        'Edit an EXISTING content group — its path (slug), access roles, language set, and menu placement — ' +
+        'by deterministic file edits, NO code generation. It rewrites the group manifest (_data/group.ts the ' +
+        'site menu reads) and keeps the REAL artifacts in sync: the layout access gate for roles, the UI ' +
+        'chrome for languages, the folder name for the path. Pass only the fields you want to change.\n\n' +
+        'CONFIRM FIRST (§8.2): call dry_run=true to preview the plan + show the owner, get explicit ' +
+        'confirmation, THEN call without dry_run. After it writes, the slot still needs a REBUILD ' +
+        '(owner_deploy_rebuild_slot) to go live.',
+      inputSchema: {
+        type: 'object',
+        required: ['tab'],
+        properties: {
+          tab: { type: 'string', description: 'Current group slug (kebab-case) to edit.' },
+          slug: { type: 'string', description: 'New slug → renames the group folder (its URL path) + updates the manifest and parser-fs.' },
+          roles: { type: 'string', description: 'Access shape — rewrites the layout gate. "off" (public) | "guest" (public+guest) | comma role list (e.g. "user,manager") | "all".' },
+          languages: { type: 'array', items: { type: 'string' }, description: 'Final language set (BCP-47, en is base). Adds/removes the UI chrome files; must be within the app\'s declared set (add a new app language first).' },
+          menus: { type: 'object', description: 'Menu placement to set: { top, footer, left, right }, each { enabled:boolean, order:number }. Only the slots you pass change.' },
+          children_as_dropdown: { type: 'boolean', description: 'true → the menu expands the group child pages as a dropdown; false → the button navigates to the group index.' },
+          unauthorized_redirect: { type: 'string', description: 'Fallback page for a visitor lacking the role (default "/"). Only used when roles is on.' },
+          dry_run: { type: 'boolean', description: 'true → preview without writing (§8.2). false/omit → apply.' },
         },
       },
     },
@@ -71,6 +107,7 @@ export class TemplateConstructorMcpServer {
     this.dataSecret = dataSecret ?? process.env.DATA_SECRET ?? ''
     this.appDir = appDir ?? pathResolve(__dirname, '../../app')
     this.emitter = join(this.appDir, '.agents/skills/compose-frozen-template/compose-frozen-template.mjs')
+    this.manager = join(this.appDir, '.agents/skills/compose-frozen-template/manage-group.mjs')
     this.appEnvFile = join(this.appDir, '.env.local')
   }
 
@@ -105,7 +142,40 @@ export class TemplateConstructorMcpServer {
   async _call(name, args) {
     if (name === 'owner_template_list_primitives') return this._list()
     if (name === 'owner_template_compose_structure') return this._compose(args)
+    if (name === 'owner_template_list_groups') return this._listGroups()
+    if (name === 'owner_template_update_group') return this._updateGroup(args)
     throw new Error(`Unknown tool: ${name}`)
+  }
+
+  // ── read all composed groups + their manifests (step 158) ──────────────────
+  async _listGroups() {
+    const { code, out } = await this._spawn('node', [this.manager, '--out', this.appDir, '--op', 'list'])
+    const j = (() => { try { return JSON.parse(out.trim().split('\n').filter(Boolean).pop()) } catch { return null } })()
+    if (code !== 0 || !j) throw new Error(`manage-group list failed (${code}): ${out.slice(-300)}`)
+    return textResult(j)
+  }
+
+  // ── edit an existing group: path / roles / languages / menus / dropdown (step 158) ──
+  async _updateGroup(args) {
+    const tab = String(args.tab ?? '').trim()
+    if (!/^[a-z][a-z0-9-]*$/.test(tab)) throw new Error('tab must be kebab-case')
+    const cli = [this.manager, '--out', this.appDir, '--op', 'update', '--tab', tab]
+    if (typeof args.slug === 'string' && args.slug.trim()) cli.push('--slug', args.slug.trim())
+    if (typeof args.roles === 'string' && args.roles.trim()) cli.push('--roles', args.roles.trim())
+    if (Array.isArray(args.languages) && args.languages.length) cli.push('--languages', args.languages.map(String).join(','))
+    if (args.menus && typeof args.menus === 'object' && !Array.isArray(args.menus)) cli.push('--menus', JSON.stringify(args.menus))
+    if (args.children_as_dropdown !== undefined) cli.push('--children-dropdown', args.children_as_dropdown === true ? 'true' : 'false')
+    if (typeof args.unauthorized_redirect === 'string' && args.unauthorized_redirect) cli.push('--unauthorized-redirect', args.unauthorized_redirect)
+    if (args.dry_run) cli.push('--dry-run')
+    const { code, out } = await this._spawn('node', cli)
+    const j = (() => { try { return JSON.parse(out.trim().split('\n').filter(Boolean).pop()) } catch { return null } })()
+    if (code === 2 && j && j.ok === false) return textResult({ ok: false, error: j.error, advice: 'Fix the input and retry. Never inject a language outside the app set; rename targets must not already exist.' })
+    if (code !== 0 || !j) throw new Error(`manage-group update failed (${code}): ${out.slice(-300)}`)
+    if (!args.dry_run && j.ok) {
+      const view_urls = (() => { try { return publicTabUrls(j.manifest?.slug ?? tab, j.manifest?.languages ?? ['en'], this.appEnvFile) } catch { return [] } })()
+      return textResult({ ...j, view_urls })
+    }
+    return textResult(j)
   }
 
   _dataHeaders() {
@@ -133,12 +203,15 @@ export class TemplateConstructorMcpServer {
     const depth = Number.isFinite(args.depth) ? Math.trunc(args.depth) : 1
     const rendering = source === 'runtime' ? 'dynamic-descriptor' : 'static'
     const roles = (typeof args.roles === 'string' && args.roles.trim() && args.roles !== 'off') ? args.roles.trim() : 'off'
+    // step 158: menu placement (registration metadata) + child-dropdown flag — optional overrides.
+    const menus = (args.menus && typeof args.menus === 'object' && !Array.isArray(args.menus)) ? args.menus : undefined
+    const childrenAsDropdown = args.children_as_dropdown === true
 
     if (args.dry_run) {
       return textResult({
         preview: true,
         match: { source, depth, rendering, i18n: 'multi', roles },
-        willCreate: { router: `app/[lang]/${tab}/ (+ engine if absent)`, documents: samples, format, languages, labels },
+        willCreate: { router: `app/[lang]/${tab}/ (+ engine if absent)`, documents: samples, format, languages, labels, menus: menus ?? 'all disabled (order 10)', childrenAsDropdown },
         note: 'If source/depth/rendering have no primitive, the real call will REFUSE naming the failing axis (offer harvest or classic dev).',
         confirm_prompt:
           `Соберу ${format}-структуру /${tab} (источник=${source}, глубина=${depth}, ${rendering}; роли=${roles}) на [${languages.join(', ')}], ` +
@@ -160,6 +233,8 @@ export class TemplateConstructorMcpServer {
       }
       const cli = [this.emitter, '--store', storeDir, '--out', this.appDir, '--source', source, '--depth', String(depth), '--rendering', rendering, '--tab', tab, '--format', format, '--languages', languages.join(','), '--samples', String(samples), '--roles', roles]
       for (const l of languages) if (labels[l]) cli.push(`--label-${l}`, String(labels[l]))
+      if (menus) cli.push('--menus', JSON.stringify(menus))
+      if (childrenAsDropdown) cli.push('--children-dropdown', 'true')
       const { code, out } = await this._spawn('node', cli)
       const refusal = (() => { try { const last = out.trim().split('\n').filter(Boolean).pop(); const j = JSON.parse(last); return j.refused ? j : null } catch { return null } })()
       if (refusal) return textResult({ refused: true, axis: refusal.axis, detail: refusal.detail, advice: 'No frozen primitive fits this axis. Offer to harvest a new brick (only if proven + repeating) or use classic development.' })
@@ -168,7 +243,7 @@ export class TemplateConstructorMcpServer {
       // The composer already wrote _list.generated + package.json scripts; the slot still needs a REBUILD
       // (owner_deploy_rebuild_slot) before these are live.
       const view_urls = (() => { try { return publicTabUrls(tab, languages, this.appEnvFile) } catch { return [] } })()
-      return textResult({ composed: true, tab, source, depth, rendering, roles, format, languages, labels, samples, view_urls, emitter_output: out.trim().split('\n').slice(-12), next: 'Now REBUILD the slot with owner_deploy_rebuild_slot so the change is live; then the view_urls above will work. Do NOT run npm/gen:lists/tsc yourself; do NOT curl an internal/plain-HTTP host.' })
+      return textResult({ composed: true, tab, source, depth, rendering, roles, format, languages, labels, samples, menus: menus ?? 'all disabled (order 10)', childrenAsDropdown, view_urls, emitter_output: out.trim().split('\n').slice(-12), next: 'Now REBUILD the slot with owner_deploy_rebuild_slot so the change is live; then the view_urls above will work. Do NOT run npm/gen:lists/tsc yourself; do NOT curl an internal/plain-HTTP host.' })
     } finally {
       await rm(storeDir, { recursive: true, force: true }).catch(() => {})
     }

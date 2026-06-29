@@ -24,7 +24,9 @@
     "samples": "How many placeholder documents to compose (default 2).",
     "roles": "Access shape (Slot B). off=public (default) | guest=public+guest (anon→guest) | <ALL_ROLES csv>=private (one/several roles) | all=any assigned role. Validated against ALL_ROLES (lib/roles.ts).",
     "unauthorizedRedirect": "Fallback page for a visitor lacking the role: site root '/' (default) or any existing page (e.g. '/en/blog'). Only used when roles is on.",
-    "engineVersion": "Which engine namespace to pin (default v1)."
+    "engineVersion": "Which engine namespace to pin (default v1).",
+    "menus": "Group REGISTRATION metadata (NOT a Slot A/B property — it surfaces the group in the site shell, decoupled from how the structure is composed). Four slots top|footer|left|right, each { enabled:boolean, order:number }. Emitted into _data/group.ts (GroupManifest) for the menu system to read. Default: every slot disabled, order 10 (explicit opt-in). The composer accepts overrides as a JSON object.",
+    "childrenAsDropdown": "Group manifest flag (default false). true → the menu expands the group's child pages as a dropdown list; false → the button navigates to the group index route. The menu decides how to render it."
   },
-  "tokens": ["{{TAB}}", "{{TAB_PASCAL}}", "{{TAB_CAMEL}}", "{{FORMAT}}", "{{LABEL}}", "{{LANG}}", "{{LANG_IMPORTS}}", "{{LANG_MAP}}", "{{ASPECT_GUARDS}}", "{{ASPECT_IMPORTS}}", "{{ITEM_SLUG}}", "{{ITEM_INDEX}}", "{{ITEM_DATE}}", "{{ITEM_OVERRIDE_IMPORTS}}", "{{ITEM_OVERRIDES}}"]
+  "tokens": ["{{TAB}}", "{{TAB_PASCAL}}", "{{TAB_CAMEL}}", "{{FORMAT}}", "{{LABEL}}", "{{LANG}}", "{{LANG_IMPORTS}}", "{{LANG_MAP}}", "{{ASPECT_GUARDS}}", "{{ASPECT_IMPORTS}}", "{{ITEM_SLUG}}", "{{ITEM_INDEX}}", "{{ITEM_DATE}}", "{{ITEM_OVERRIDE_IMPORTS}}", "{{ITEM_OVERRIDES}}", "{{GROUP_LANGUAGES}}", "{{GROUP_ROLES}}", "{{CHILDREN_AS_DROPDOWN}}", "{{MENU_TOP_ENABLED}}", "{{MENU_TOP_ORDER}}", "{{MENU_FOOTER_ENABLED}}", "{{MENU_FOOTER_ORDER}}", "{{MENU_LEFT_ENABLED}}", "{{MENU_LEFT_ORDER}}", "{{MENU_RIGHT_ENABLED}}", "{{MENU_RIGHT_ORDER}}"]
 }
