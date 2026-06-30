@@ -75,7 +75,7 @@ export function ParallelRoutesSelector({ onBack }: { onBack: () => void }) {
 
   // Presentational stub — persisting the layout is a Fractera Pro capability.
   const save = () => {
-    toast.error("Чтобы использовать эту опцию, запустите проект используя Fractera Pro стартер");
+    toast.error("To use this option, launch the project with the Fractera Pro starter");
   };
 
   return (

@@ -30,19 +30,19 @@ export function PlatformSettingsPanel({ onClose }: Props) {
           onClick={() => setView("slots")}
           className="text-[11px] font-semibold text-orange-500 hover:text-orange-600 transition-colors"
         >
-          Параллельная маршрутизация · сетап
+          Parallel routing · setup
         </button>
         <button
           type="button"
           className="text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
         >
-          Тонкая настройка
+          Fine tuning
         </button>
         <button
           type="button"
           className="text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
         >
-          Найти в проекте
+          Find in project
         </button>
 
         <span className="flex-1" />
@@ -59,8 +59,8 @@ export function PlatformSettingsPanel({ onClose }: Props) {
 
       <div className="flex-1 overflow-auto px-4 py-3">
         <p className="text-[11px] text-muted-foreground max-w-md">
-          Откройте <span className="font-semibold text-foreground">Параллельная маршрутизация · сетап</span> выше,
-          чтобы настроить расположение слотов макета. Сохранение изменений доступно в стартере Fractera Pro.
+          Open <span className="font-semibold text-foreground">Parallel routing · setup</span> above to
+          arrange the layout slots. Saving changes is a Fractera Pro starter capability.
         </p>
       </div>
     </div>
