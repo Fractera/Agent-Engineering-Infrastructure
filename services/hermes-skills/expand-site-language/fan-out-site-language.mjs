@@ -47,6 +47,23 @@ function pascal(s) { return String(s).split(/[^a-z0-9]+/i).filter(Boolean).map(w
 const errs = []
 function fail(msg) { errs.push(msg) }
 function out(obj) { process.stdout.write(JSON.stringify(obj) + "\n") } // SINGLE LINE (bridge parses last line)
+
+// Broken-character detection (owner request). The SOURCE we seed from may already carry a Unicode
+// REPLACEMENT char (U+FFFD) or mojibake from a past lossy step (e.g. the live "Documentacion" with an
+// accented o shown as a box). Seeding would propagate it silently, so we SURFACE it (non-blocking —
+// the existing site already has it; refusing the whole fan-out would block legit work). Codepoint-based.
+const brokenWarnings = []
+function hasBrokenChar(str) {
+  for (let i = 0; i < str.length; i++) {
+    const c = str.charCodeAt(i)
+    if (c === 0xFFFD || c === 0xFFFC) return true
+    if (c <= 0x08 || c === 0x0B || c === 0x0C || (c >= 0x0E && c <= 0x1F)) return true
+    if (c >= 0x7F && c <= 0x9F) return true
+    if ((c === 0xC3 || c === 0xC2) && i + 1 < str.length) { const n = str.charCodeAt(i + 1); if (n >= 0x80 && n <= 0xBF) return true }
+  }
+  return false
+}
+function warnIfBroken(relLabel, text) { if (hasBrokenChar(text)) brokenWarnings.push(relLabel) }
 function done(plan, payload) {
   if (errs.length) { out({ ok: false, refused: true, errors: errs }); process.exit(2) }
   if (plan) { out({ ok: true, dryRun: true, ...payload, write: plan.write }); process.exit(0) }
@@ -124,6 +141,7 @@ async function seedPostOverride(outRoot, tab, slug, L, def, plan) {
   if (await exists(join(absData, `${L}.ts`))) return false // idempotent
   const { file, lang, isBase } = await pickSource(absData, def)
   let src = await readFile(join(absData, file), "utf8")
+  warnIfBroken(join(relData, file), src) // surface pre-existing corruption in the source we seed from
   // Base (en.ts) declares `<Tab>Base`; an override declares `<Tab>Override`. Convert the type+const.
   if (isBase) {
     src = src.replace(/import type \{\s*(\w+)Base\s*\}/, "import type { $1Override }")
@@ -145,6 +163,7 @@ async function seedGroupUi(outRoot, tab, L, def, plan) {
   if (await exists(join(absData, `${L}.ts`))) return false
   const { file, lang, isBase } = await pickSource(absData, def)
   let src = await readFile(join(absData, file), "utf8")
+  warnIfBroken(join(relData, file), src) // e.g. a group label "Documentacion" with a broken accented char
   if (isBase) {
     src = src.replace(/export const en:\s*(\w+)Ui\b/, `export const ${L}: Partial<$1Ui>`)
   } else {
@@ -280,11 +299,14 @@ async function main() {
   // Write the open translation step only when something was actually seeded this run
   // (an idempotent rerun that seeds nothing must not spawn a duplicate empty step).
   const stepFile = (plan || seededPages.length > 0) ? await writeTranslationStep(outRoot, L, seededPages, plan) : null
+  const brokenSources = [...new Set(brokenWarnings)]
   done(plan, {
     lang: L, default: def, groups: groupsTouched, pages: seededPages.length,
     pagesNeedingTranslation: seededPages, translationStep: stepFile,
+    ...(brokenSources.length ? { brokenSourceWarnings: brokenSources,
+      brokenSourceNote: `These default-language source files contain a broken/replacement character (U+FFFD or mojibake) that was COPIED into the seed — fix them in the default language, then re-translate: ${brokenSources.join(", ")}` } : {}),
     note: plan ? "dry-run — nothing written" :
-      `Seeded '${L}' with '${def}' content (noindex until translated). REBUILD (Deploy) to publish the new routes; then run translate-pending-pages. Record a Deployments row.`,
+      `Seeded '${L}' with '${def}' content (noindex until translated). REBUILD (Deploy) to publish the new routes; then run translate-pending-pages. Record a Deployments row.${brokenSources.length ? " ⚠️ Some source files have broken characters — see brokenSourceWarnings." : ""}`,
   })
 }
 

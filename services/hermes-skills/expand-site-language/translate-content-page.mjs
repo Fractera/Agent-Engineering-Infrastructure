@@ -55,6 +55,30 @@ async function writeOut(outRoot, relDest, content) {
   await mkdir(dirname(dest), { recursive: true }); await writeFile(dest, content, "utf8")
 }
 
+// Broken-character validation (owner request). A lossy encoding step can leave a Unicode
+// REPLACEMENT character (U+FFFD) or mojibake where an accented letter belonged — e.g. the live
+// Spanish "Documentacion" (accented o) rendered as a box. Unlike a silently dropped letter these
+// ARE detectable, so the translation pipeline refuses them rather than ship corruption. Detects:
+// U+FFFD / U+FFFC, C0/C1 control chars (except tab/newline/CR), and UTF-8-read-as-Latin1 mojibake
+// (a C3/C2 lead byte followed by a continuation byte). Codepoint-based — no literal bad chars here.
+function hasBrokenChar(str) {
+  for (let i = 0; i < str.length; i++) {
+    const c = str.charCodeAt(i)
+    if (c === 0xFFFD || c === 0xFFFC) return true
+    if (c <= 0x08 || c === 0x0B || c === 0x0C || (c >= 0x0E && c <= 0x1F)) return true
+    if (c >= 0x7F && c <= 0x9F) return true
+    if ((c === 0xC3 || c === 0xC2) && i + 1 < str.length) {
+      const n = str.charCodeAt(i + 1); if (n >= 0x80 && n <= 0xBF) return true
+    }
+  }
+  return false
+}
+function scanBroken(label, text, sink) {
+  if (typeof text === "string") { if (hasBrokenChar(text)) sink(`broken/replacement character in ${label} (U+FFFD or mojibake — a lossy-encoding artifact; fix the source text): ${JSON.stringify(text.slice(0, 60))}`) }
+  else if (Array.isArray(text)) text.forEach((v, i) => scanBroken(`${label}[${i}]`, v, sink))
+  else if (text && typeof text === "object") for (const [k, v] of Object.entries(text)) scanBroken(`${label}.${k}`, v, sink)
+}
+
 const blockKindsOf = src => [...src.matchAll(/kind:\s*'(\w+)'/g)].map(m => m[1])
 const faqCountOf = src => (src.match(/\bq:\s*'/g) || []).length
 const overrideTypeOf = src => { const m = src.match(/export const \w+:\s*(\w+Override)\b/); return m ? m[1] : null }
@@ -109,6 +133,10 @@ async function opWrite(outRoot, L, a) {
   if (expectedFaq && faq.length !== expectedFaq) fail(`faq must keep ${expectedFaq} pairs, got ${faq.length}`)
   const rootOk = JSON.stringify(blocks).includes(`(/${L})`)
   if (!rootOk) fail(`the root anchor link (/${L}) must be preserved in the translated body`)
+  // BROKEN-CHARACTER GATE: refuse a translation carrying U+FFFD / mojibake / control chars.
+  scanBroken("fields", data.fields, fail)
+  scanBroken("blocks", blocks, fail)
+  scanBroken("faq", faq, fail)
   if (errs.length) return finish({})
 
   // Build the override object (NO needsTranslation → page becomes indexable after the next Deploy).
