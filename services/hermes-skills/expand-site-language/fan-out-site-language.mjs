@@ -210,7 +210,8 @@ async function patchPostMapper(outRoot, tab, plan) {
 
 // ── dev-step (Part B): one open translation step per language ──────────────────
 async function writeTranslationStep(outRoot, L, pages, plan) {
-  const dir = join("app", "DEVELOPMENT-STEPS", "NEW-STEPS")
+  // DEVELOPMENT-STEPS lives at the SLOT ROOT (sibling of app/), not under app/.
+  const dir = join("DEVELOPMENT-STEPS", "NEW-STEPS")
   const absDir = join(outRoot, dir)
   await mkdir(absDir, { recursive: true }).catch(() => {})
   // next free 2-digit-ish number

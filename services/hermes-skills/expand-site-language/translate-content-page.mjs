@@ -131,7 +131,7 @@ async function opWrite(outRoot, L, a) {
 }
 
 async function tickStep(outRoot, L, href) {
-  const dir = join(outRoot, "app", "DEVELOPMENT-STEPS", "NEW-STEPS")
+  const dir = join(outRoot, "DEVELOPMENT-STEPS", "NEW-STEPS")
   if (!(await isDir(dir))) return
   for (const f of await readdir(dir)) {
     if (!new RegExp(`-translate-${L}\\.md$`).test(f)) continue
