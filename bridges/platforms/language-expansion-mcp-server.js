@@ -77,6 +77,19 @@ function toolsSchema() {
         },
       },
     },
+    {
+      name: 'owner_content_scan_broken_characters',
+      description:
+        'Scan the WHOLE site for broken / replacement characters across ALL languages (read-only audit). ' +
+        'A lossy step (voice dictation, copy-paste, a bad transform) can leave a control byte (e.g. 0x13) ' +
+        'or U+FFFD where an accented letter belonged — it ships silently (the file still parses) and the ' +
+        'live page shows a box instead of, say, "ó" in "Documentación". This finds every occurrence with ' +
+        'file, line, codepoint and language so you can fix each ONE BY HAND with the correct letter for ' +
+        'its word — never blind-replace (the same byte may stand for á/é/í/ñ elsewhere). The content tools ' +
+        'already refuse broken chars on write; this catches what already sits in the tree. Run it when ' +
+        'working with multilingual content and before closing a content step.',
+      inputSchema: { type: 'object', properties: {} },
+    },
   ]
 }
 
@@ -123,7 +136,19 @@ export class LanguageExpansionMcpServer {
   async _call(name, args) {
     if (name === 'owner_content_add_site_language') return this._addLanguage(args)
     if (name === 'owner_content_translate_pending') return this._translate(args)
+    if (name === 'owner_content_scan_broken_characters') return this._scanBroken(args)
     throw new Error(`Unknown tool: ${name}`)
+  }
+
+  // Read-only corpus audit: spawn the project-root scanner against the slot and return findings.
+  async _scanBroken() {
+    const script = join(this.appDir, 'scripts', 'scan-broken-characters.mjs')
+    const { json, out } = await this._spawnJson('node', [script, '--root', this.appDir, '--json'])
+    if (!json) throw new Error(`scanner produced no JSON: ${out.slice(-400)}`)
+    return textResult({ ...json,
+      advice: json.findingsCount
+        ? 'Fix EACH finding by hand with the correct letter for its word (a control byte / U+FFFD may stand for different accented letters elsewhere — never blind-replace), then REBUILD.'
+        : 'Corpus is clean — no broken characters in any language.' })
   }
 
   async _addLanguage(args) {

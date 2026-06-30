@@ -191,6 +191,17 @@ strings into the frozen structure, later, possibly with another model — it doe
 Deploy). NEVER reach for compose / manage-collection / update-group to add a language — they cannot add a
 per-page locale and will break the site.
 
+**Encoding integrity (any language).** A lossy step — voice dictation, copy-paste, a bad transform — can
+leave a broken/replacement character (a control byte like 0x13, U+FFFD, or mojibake) where an accented
+letter belonged. The file still parses, so it ships SILENTLY and the live page shows a BOX instead of the
+letter (the real "Documentación" becomes "Documentaci□n"). Audit the whole corpus with
+**`owner_content_scan_broken_characters`** (or the slot's `npm run check:encoding` /
+`scripts/scan-broken-characters.mjs`) — it reports every occurrence by file/line/codepoint/language. Run it
+when working with multilingual content and before closing a content step. Fix each finding by hand with the
+CORRECT letter for its word (never blind-replace — the same byte may stand for á/é/í/ñ elsewhere), then
+rebuild. The content tools already refuse broken chars on write (prevention); this scanner catches what
+already sits in the tree (detection).
+
 ## When you put a choice to a human, give them the map (don't make them choose blind)
 
 If you do present the owner with a choice among capabilities, also offer them where to
