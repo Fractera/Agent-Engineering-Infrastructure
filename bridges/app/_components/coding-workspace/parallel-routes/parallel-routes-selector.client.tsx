@@ -6,11 +6,10 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SlotLayoutPreview, type SlotName } from "./slot-layout-preview.client";
 
-// Parallel-routes selector — ported from the reference HeaderLayoutDashboardDialog. Lets the owner
-// choose which named layout slots are active, with the animated preview. Storage is OUR on-disk
-// platform-config.json (no Supabase): loads/saves the whole config via /api/config/platform,
-// updating only the `slots` map. header/footer are locked on; toggling `center` cascades to
-// centerHeader/centerFooter.
+// Parallel-routes selector — animated slot-layout layer. In the open core this is
+// presentational: the layout preview and toggles work locally, but persisting the
+// arrangement is a Fractera Pro capability, so "Save changes" raises a red toast
+// pointing the user to the Fractera Pro starter (no write to platform-config.json).
 
 const SLOT_LABELS: Record<SlotName, string> = {
   header: "Header",
@@ -29,12 +28,9 @@ const LIST_ORDER: SlotName[] = ["header", "promoScreen", "left", "right", "cente
 type Cfg = Record<string, unknown>;
 
 export function ParallelRoutesSelector({ onBack }: { onBack: () => void }) {
-  const [config, setConfig] = useState<Cfg>({});
   const [active, setActive] = useState<Set<SlotName>>(new Set(LIST_ORDER));
-  const [serverActive, setServerActive] = useState<Set<SlotName>>(new Set(LIST_ORDER));
   const [hovered, setHovered] = useState<SlotName | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -42,12 +38,9 @@ export function ParallelRoutesSelector({ onBack }: { onBack: () => void }) {
       const res = await fetch("/api/config/platform", { credentials: "include" });
       const data = await res.json();
       const cfg = (data.config ?? {}) as Cfg;
-      setConfig(cfg);
       const slots = (cfg.slots ?? {}) as Record<string, boolean>;
       // A slot is active unless explicitly false (missing key = default on).
-      const set = new Set<SlotName>(LIST_ORDER.filter((s) => slots[s] !== false));
-      setActive(new Set(set));
-      setServerActive(new Set(set));
+      setActive(new Set(LIST_ORDER.filter((s) => slots[s] !== false)));
     } catch {
       /* keep defaults */
     } finally {
@@ -58,8 +51,6 @@ export function ParallelRoutesSelector({ onBack }: { onBack: () => void }) {
   useEffect(() => {
     load();
   }, [load]);
-
-  const isDirty = LIST_ORDER.some((s) => active.has(s) !== serverActive.has(s));
 
   const toggle = (slot: SlotName) => {
     if (LOCKED.includes(slot)) return;
@@ -82,28 +73,9 @@ export function ParallelRoutesSelector({ onBack }: { onBack: () => void }) {
     });
   };
 
-  const save = async () => {
-    setSaving(true);
-    try {
-      const slots: Record<string, boolean> = {};
-      for (const s of LIST_ORDER) slots[s] = active.has(s);
-      const nextConfig = { ...config, slots };
-      const res = await fetch("/api/config/platform", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ config: nextConfig }),
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error ?? "Save failed");
-      setConfig(nextConfig);
-      setServerActive(new Set(active));
-      toast.success("Saved — reload the app to see the layout");
-    } catch (e) {
-      toast.error(String(e));
-    } finally {
-      setSaving(false);
-    }
+  // Presentational stub — persisting the layout is a Fractera Pro capability.
+  const save = () => {
+    toast.error("Чтобы использовать эту опцию, запустите проект используя Fractera Pro стартер");
   };
 
   return (
@@ -140,7 +112,7 @@ export function ParallelRoutesSelector({ onBack }: { onBack: () => void }) {
                     <input
                       type="checkbox"
                       checked={active.has(slot)}
-                      disabled={locked || disabledByCenter || saving}
+                      disabled={locked || disabledByCenter}
                       onChange={() => toggle(slot)}
                       className="accent-primary"
                     />
@@ -153,8 +125,8 @@ export function ParallelRoutesSelector({ onBack }: { onBack: () => void }) {
               })}
             </div>
             <div className="pt-3 mt-auto shrink-0">
-              <Button className="w-full" disabled={!isDirty || saving || loading} onClick={save}>
-                {saving ? <Loader2 size={14} className="animate-spin mr-2" /> : null}Save changes
+              <Button className="w-full" disabled={loading} onClick={save}>
+                Save changes
               </Button>
             </div>
           </div>
