@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SECTIONS, getAt, setAt } from "./site-settings/fields";
 import { FieldRow } from "./site-settings/field-row.client";
 import { LanguagesView } from "./platform/languages-view.client";
+import { AuthShellView } from "./platform/auth-shell-view.client";
 
 // Site Settings — branding / SEO / PWA / images for the deployed Shell app. Reads and writes
 // the Shell's app-config.json (server route /api/config/site, same cross-process pattern as the
@@ -24,7 +25,7 @@ export function SiteSettingsPanel({ onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   // Languages selector now lives here (moved from the Platform tab). It opens as an
   // overlay sub-view; the build-time language SET + default are managed inside it.
-  const [view, setView] = useState<null | "languages">(null);
+  const [view, setView] = useState<null | "languages" | "auth-shell">(null);
 
   useEffect(() => {
     (async () => {
@@ -123,6 +124,17 @@ export function SiteSettingsPanel({ onClose }: Props) {
                 Manage languages →
               </Button>
             </div>
+
+            {/* App authorization — public app-shell auth toggle (build-time, step 161). */}
+            <div className="flex flex-col gap-2.5">
+              <div className="flex flex-col gap-0.5 border-b border-border pb-1">
+                <span className="text-[11px] font-semibold text-foreground">App authorization</span>
+                <span className="text-[9px] text-muted-foreground">Public login for visitors — off by default; enable for apps that need accounts (build-time).</span>
+              </div>
+              <Button variant="outline" size="sm" className="w-fit" onClick={() => setView("auth-shell")}>
+                Manage app-shell auth →
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -135,6 +147,7 @@ export function SiteSettingsPanel({ onClose }: Props) {
       </div>
 
       {view === "languages" && <LanguagesView onBack={() => setView(null)} />}
+      {view === "auth-shell" && <AuthShellView onBack={() => setView(null)} />}
     </div>
   );
 }

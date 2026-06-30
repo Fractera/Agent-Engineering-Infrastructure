@@ -89,11 +89,16 @@ So when you want to change something, pick the tool for it:
 | low-level: add/edit/delete one **page** when already inside the orchestration | `owner_content_manage_collection` (skill `manage-content-collections`) |
 | low-level: stand up one **section** when already inside the orchestration | `owner_template_compose_structure` (skill `compose-frozen-template`) |
 | change the **app name / brand / SEO / languages** | `owner_app_settings_*` (skill `manage-app-settings`) |
+| enable/disable the **public login** (visitor accounts) | `owner_app_settings_set_app_shell_auth` (skill `manage-app-shell-auth`) — `left`/`right`/`off`; build-time, rebuilds |
 | make your changes **visible** | `owner_deploy_rebuild_slot` |
 
 - **Always call the tool. Never hand-build a folder, never write a script, never edit a file
   directly.** Hand-building a page or inventing an "installation script" is exactly the mistake
   this rule prevents — the tool already does it correctly and identically every time.
+- **Public login is OFF by default — turn it ON for apps that need accounts.** If the owner asks you
+  to build something that requires visitor accounts (a store, a social app, a SaaS), enabling the
+  public login is part of that job: call `owner_app_settings_set_app_shell_auth` (confirm first),
+  asking the owner ONLY the drawer side — left or right. For a landing page or portfolio, leave it off.
 
 ### 🛑 When you reach the edge of your tools — STOP and hand off (never program)
 

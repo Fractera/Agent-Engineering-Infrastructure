@@ -12,7 +12,9 @@ const AUTH_KEYS = new Set(["AUTH_SECRET", "NEXTAUTH_URL", "COOKIE_DOMAIN", "COOK
 // Языковые ключи залочены здесь намеренно: их безопасный путь правки — панель
 // настроек Languages (чеклист с валидацией), а сырой env-редактор показывает их
 // read-only, чтобы нельзя было вписать невалидный код в обход валидации.
-const LOCKED_KEYS = new Set(["DATABASE_URL", "COOKIE_DOMAIN", "AUTH_TRUST_HOST", "NEXTAUTH_URL", "NEXT_PUBLIC_ADMIN_URL", "NEXT_PUBLIC_AUTH_URL", "ALLOWED_ORIGINS", "NEXT_PUBLIC_SUPPORTED_LANGUAGES", "NEXT_PUBLIC_DEFAULT_LOCALE"]);
+// NEXT_PUBLIC_APP_SHELL_AUTH (публичная авторизация, step 161) залочен по той же причине:
+// его пишет только валидированный путь /api/config/auth-shell (значения left|right|off).
+const LOCKED_KEYS = new Set(["DATABASE_URL", "COOKIE_DOMAIN", "AUTH_TRUST_HOST", "NEXTAUTH_URL", "NEXT_PUBLIC_ADMIN_URL", "NEXT_PUBLIC_AUTH_URL", "ALLOWED_ORIGINS", "NEXT_PUBLIC_SUPPORTED_LANGUAGES", "NEXT_PUBLIC_DEFAULT_LOCALE", "NEXT_PUBLIC_APP_SHELL_AUTH"]);
 
 function parseEnv(content: string): Record<string, string> {
   const result: Record<string, string> = {};

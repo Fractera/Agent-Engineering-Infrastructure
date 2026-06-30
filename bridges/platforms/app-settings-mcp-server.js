@@ -12,6 +12,11 @@ const SUPPORTED_KEY = 'NEXT_PUBLIC_SUPPORTED_LANGUAGES'
 const DEFAULT_LOCALE_KEY = 'NEXT_PUBLIC_DEFAULT_LOCALE'
 const LOCKED_LANG = 'en' // always kept — the guaranteed fallback locale
 
+// Public app-shell auth toggle (step 161). BUILD-TIME like the language set: null/absent = off,
+// 'left'|'right' = on (account-drawer side). Same .env.local, same rebuild.
+const AUTH_SHELL_KEY = 'NEXT_PUBLIC_APP_SHELL_AUTH'
+const VALID_SIDES = new Set(['left', 'right'])
+
 // Read a single KEY=value from a .env content (ignores comments/blanks).
 function readEnvValue(content, key) {
   for (const line of content.split('\n')) {
@@ -38,6 +43,19 @@ function upsertEnvLine(content, key, value) {
   if (!found) next.push(`${key}=${value}`)
   while (next.length && next[next.length - 1] === '') next.pop()
   return next.join('\n') + '\n'
+}
+// Drop the line for `key` entirely (the "off" state) — preserves all other lines/comments.
+function removeEnvLine(content, key) {
+  const lines = content.length ? content.split('\n') : []
+  const next = lines.filter((line) => {
+    const t = line.trim()
+    if (!t || t.startsWith('#')) return true
+    const eq = t.indexOf('=')
+    if (eq < 0) return true
+    return t.slice(0, eq).trim() !== key
+  })
+  while (next.length && next[next.length - 1] === '') next.pop()
+  return next.length ? next.join('\n') + '\n' : ''
 }
 
 // ── App Settings MCP server (L2, port 3218) ─────────────────────────────────
@@ -135,6 +153,29 @@ function toolsSchema() {
           defaultLanguage: { type: 'string', description: 'Optional default locale; must be one of languages. Defaults to "en".' },
         },
         required: ['languages'],
+      },
+    },
+    {
+      name: 'owner_app_settings_get_app_shell_auth',
+      description:
+        'Read whether the PUBLIC app-shell auth control is enabled and which side its account drawer ' +
+        'opens from. Returns value "left" | "right" | "off". Build-time (Shell env), read-only.',
+      inputSchema: { type: 'object', properties: {} },
+    },
+    {
+      name: 'owner_app_settings_set_app_shell_auth',
+      description:
+        'Enable or disable the PUBLIC app-shell auth control (the Sign in / account button + account ' +
+        'drawer). "left"/"right" turns it ON and sets the drawer side; "off" removes it. The admin login ' +
+        'always exists separately — this governs only the public shell. CONFIRM with the owner first ' +
+        '(state: enabling public auth, the drawer side, and that a rebuild will run). BUILD-TIME: this does ' +
+        'NOT apply instantly — the app is REBUILT (a few minutes) before the control appears.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          value: { type: 'string', enum: ['left', 'right', 'off'], description: 'left|right = enable (drawer side); off = disable.' },
+        },
+        required: ['value'],
       },
     },
   ]
@@ -310,6 +351,41 @@ export class AppSettingsMcpServer {
         note: rebuildTriggered
           ? 'Saved to the Shell env. Languages are BUILD-TIME — a rebuild has been STARTED (a few minutes); the new language set and the switcher button apply once it finishes.'
           : 'Saved to the Shell env. Languages are BUILD-TIME — they appear only after the app is REBUILT (a few minutes). Trigger a rebuild from Admin → deploy, or tell the owner it will apply after the next rebuild.',
+      })
+    }
+
+    if (name === 'owner_app_settings_get_app_shell_auth') {
+      const content = existsSync(this.envPath) ? readFileSync(this.envPath, 'utf8') : ''
+      const raw = (readEnvValue(content, AUTH_SHELL_KEY) ?? '').trim().toLowerCase()
+      const value = VALID_SIDES.has(raw) ? raw : 'off'
+      return textResult({
+        value,
+        enabled: value !== 'off',
+        note: 'Public app-shell auth is build-time. Changing it needs a rebuild to take effect.',
+      })
+    }
+
+    if (name === 'owner_app_settings_set_app_shell_auth') {
+      const value = String(args.value ?? '').trim().toLowerCase()
+      if (value !== 'off' && !VALID_SIDES.has(value)) throw new Error('value must be "left", "right", or "off".')
+
+      const content = existsSync(this.envPath) ? readFileSync(this.envPath, 'utf8') : ''
+      const next = value === 'off' ? removeEnvLine(content, AUTH_SHELL_KEY) : upsertEnvLine(content, AUTH_SHELL_KEY, value)
+      const tmp = `${this.envPath}.tmp`
+      mkdirSync(dirname(this.envPath), { recursive: true })
+      writeFileSync(tmp, next, 'utf8')
+      renameSync(tmp, this.envPath)
+
+      const rebuildTriggered = this._triggerRebuild()
+      return textResult({
+        ok: true,
+        value,
+        enabled: value !== 'off',
+        rebuild_required: true,
+        rebuild_triggered: rebuildTriggered,
+        note: rebuildTriggered
+          ? 'Saved to the Shell env. Public auth is BUILD-TIME — a rebuild has been STARTED (a few minutes); the account control applies once it finishes.'
+          : 'Saved to the Shell env. Public auth is BUILD-TIME — it applies only after the app is REBUILT (a few minutes). Trigger a rebuild from Admin → deploy.',
       })
     }
 
