@@ -142,6 +142,13 @@ Composing writes files. Restate first and wait for explicit confirmation:
 > (source **<source>**, depth **<depth>**, **<langs>**, roles **<roles>**), with
 > **<N>** placeholder documents. Shall I proceed?
 
+## 🌐 Adding a LANGUAGE → NOT this tool
+
+To **add a new language to an existing site**, do NOT re-compose — composing **overwrites** existing
+content. Use the **expand-site-language** skill / `owner_content_add_site_language`: it adds a per-page
+locale across every group and post (seeded with the default language, noindex until translated) without
+touching the existing content. Composing is for a NEW structure, never for adding a language to an old one.
+
 ## Source of truth (do not duplicate)
 
 The basis (registry + primitives + providers + aspects + the vetted engine) lives in

@@ -47,10 +47,12 @@ export function resolveEntry<
   overridesByLang: Record<string, TOverride> | undefined,
   lang: string,
   fields: TFields,
-): Pick<TBase, TFields[number]> & LocalizedBody {
+): Pick<TBase, TFields[number]> & LocalizedBody & { needsTranslation: boolean } {
   const override = overridesByLang?.[lang]
   return {
     ...resolveFields(base, override, fields),
     ...resolveLocalizedBody(base, override),
+    // Surfaced so the page can set robots:noindex on an untranslated seed (Doorway guard).
+    needsTranslation: override?.needsTranslation ?? false,
   }
 }

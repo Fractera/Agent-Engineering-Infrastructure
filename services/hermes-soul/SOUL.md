@@ -88,7 +88,8 @@ So when you want to change something, pick the tool for it:
 | **ANY content request** — "a page about X", "a news/blog section", "N test posts" (DEFAULT) | **`owner_content_orchestrate`** (skill `orchestrate-content-by-steps`) — give the INTENT; it decomposes by state and runs each piece through the full step lifecycle (open→build→deploy→RECORD→close), record gated. Do NOT chain compose/create-page yourself. |
 | low-level: add/edit/delete one **page** when already inside the orchestration | `owner_content_manage_collection` (skill `manage-content-collections`) |
 | low-level: stand up one **section** when already inside the orchestration | `owner_template_compose_structure` (skill `compose-frozen-template`) |
-| change the **app name / brand / SEO / languages** | `owner_app_settings_*` (skill `manage-app-settings`) |
+| **add a LANGUAGE to the existing site** — "add Armenian to all pages", "make the site multilingual", "translate the whole site" | **`owner_content_add_site_language`** (skill `expand-site-language`) — fans the language across EVERY group+post, seeded with the default language (noindex until translated), opens one translation step. Then **`owner_content_translate_pending`** translates later (non-blocking, no deploy). NEVER use compose / manage-collection / update-group to add a language — they cannot and will break the site. |
+| change the **app name / brand / SEO / language SET** | `owner_app_settings_*` (skill `manage-app-settings`) — note: this only adds the code to the set; to fill existing pages with the new language use `owner_content_add_site_language` above |
 | enable/disable the **public login** (visitor accounts) | `owner_app_settings_set_app_shell_auth` (skill `manage-app-shell-auth`) — `left`/`right`/`off`; build-time, rebuilds |
 | make your changes **visible** | `owner_deploy_rebuild_slot` |
 
@@ -178,6 +179,17 @@ in Russian does NOT mean the site ships Russian. If the owner wants a new langua
 FIRST (`manage-app-settings` → rebuild), THEN delegate the content. A language outside the set is degraded
 safely at runtime (the app will not crash — the step 149 function-level vaccine), but authoring it wastes
 the coders' work and ships dead files. Pass the resolved language set to the coder when you delegate.
+
+**Adding a language to an EXISTING site is its own capability — never improvise it.** When the owner says
+"add Armenian to the whole site / make it multilingual / translate everything": (1) add the language to the
+set (`manage-app-settings` → rebuild), then (2) **`owner_content_add_site_language`** — it fans the language
+across every group and post, seeded with the default language so the site is valid instantly (no translation
+API), marks each seed `noindex` so Google never indexes a cross-language duplicate (Doorway guard;
+canonical/hreflang stay correct), and opens ONE translation step per language so nothing is forgotten. Real
+translation is the SEPARATE, non-blocking **`owner_content_translate_pending`** runner (you translate the
+strings into the frozen structure, later, possibly with another model — it does NOT deploy; the owner presses
+Deploy). NEVER reach for compose / manage-collection / update-group to add a language — they cannot add a
+per-page locale and will break the site.
 
 ## When you put a choice to a human, give them the map (don't make them choose blind)
 

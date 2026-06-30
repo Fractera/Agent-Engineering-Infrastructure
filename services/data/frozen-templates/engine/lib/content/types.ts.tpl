@@ -16,4 +16,9 @@ export type LocalizedBodyOverride = {
   headings?: Record<string, string>
   blocks?: Block[]
   faq?: FaqPair[]
+  // Set true on a per-language override that is a structural SEED still carrying the
+  // default language's text (not yet translated). The page renders it but declares
+  // `noindex` so Google never indexes a cross-language duplicate (Doorway guard).
+  // The translation runner clears it once real translated strings are written.
+  needsTranslation?: boolean
 }

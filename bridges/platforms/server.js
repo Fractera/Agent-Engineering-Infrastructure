@@ -16,6 +16,7 @@ import { TemplateConstructorMcpServer } from './template-constructor-mcp-server.
 import { DeployMcpServer } from './deploy-mcp-server.js'
 import { ContentCrudMcpServer } from './content-crud-mcp-server.js'
 import { ContentOrchestratorMcpServer } from './content-orchestrator-mcp-server.js'
+import { LanguageExpansionMcpServer } from './language-expansion-mcp-server.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, '../../app/.env.local') })
@@ -1230,4 +1231,18 @@ new ContentOrchestratorMcpServer({
   adminUrl: process.env.ADMIN_URL ?? 'http://127.0.0.1:3002',
   appDir: process.env.SLOT_APP_DIR ?? '/opt/fractera/app',
   deploySecretFile: process.env.DEPLOY_SECRET_FILE ?? '/opt/fractera/bridges/app/.env.local',
+}).start()
+
+// ── Language Expansion MCP server (singleton, port 3228) ─────────────────────
+// THE one sanctioned way to extend an existing site to a NEW language: fan the language
+// out across all groups+posts seeded with the default language (noindex until translated —
+// Doorway guard) + open one translation step per language; plus the non-blocking translation
+// runner (the agent translates strings into the frozen structure, no deploy). Spawns the slot
+// emitters (self-sufficient for a lone CLI). Step 163.
+new LanguageExpansionMcpServer({
+  port: Number(process.env.LANGUAGE_EXPANSION_MCP_PORT ?? 3228),
+  secret: MCP_SECRET,
+  dataUrl: process.env.DATA_SERVICE_URL ?? 'http://127.0.0.1:3300',
+  dataSecret: process.env.DATA_SECRET ?? '',
+  appDir: process.env.SLOT_APP_DIR ?? '/opt/fractera/app',
 }).start()

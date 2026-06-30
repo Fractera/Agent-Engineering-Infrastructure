@@ -31,6 +31,10 @@ export type ContentPageContent = {
   keywords: string
   blocks: Block[]
   faq?: FaqPair[]
+  /** True while this language is an untranslated seed (default-language text under a
+   *  foreign hreflang) → the page declares robots:noindex (Doorway guard). resolveEntry
+   *  surfaces it; absent/false on a normal page. */
+  needsTranslation?: boolean
 }
 
 /** Page-specific, localized chrome (breadcrumb trail + back link). */
@@ -88,6 +92,9 @@ export function createContentPage<C extends ContentPageContent>(config: ContentP
       description: c.description,
       keywords: c.keywords,
       alternates: buildAlternates(lang, meta.subPath),
+      // Doorway guard: an untranslated seed (default-language text under a foreign hreflang)
+      // must not be indexed; canonical/hreflang above stay correct so it indexes once translated.
+      robots: { index: !c.needsTranslation, follow: true },
       openGraph: {
         type: 'article',
         url: `${SITE}/${lang}${meta.subPath}`,

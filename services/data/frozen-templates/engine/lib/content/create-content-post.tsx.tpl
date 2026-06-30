@@ -57,6 +57,10 @@ export type ContentPost = {
   hero?: ReactNode
   /** Content language for inLanguage; defaults to 'en'. */
   inLanguage?: string
+  /** True while this language is a structural seed still showing the default
+   *  language's text (not yet translated) → the page declares robots:noindex so
+   *  Google never indexes a cross-language duplicate. Cleared by the translation runner. */
+  needsTranslation?: boolean
 }
 
 export type ContentPostConfig = {
@@ -105,7 +109,10 @@ export function createContentPost(config: ContentPostConfig) {
       description: post.description,
       ...(post.keywords ? { keywords: post.keywords } : {}),
       alternates: buildAlternates(lang, subPath),
-      robots: { index: true, follow: true },
+      // Doorway guard: an untranslated seed (default-language text under a foreign
+      // hreflang) must NOT be indexed. canonical/hreflang above stay correct so the
+      // page is a valid alternate the moment its translation lands and this flips to index.
+      robots: { index: !post.needsTranslation, follow: true },
       openGraph: {
         title: seoTitle,
         description: post.description,

@@ -35,6 +35,7 @@ export function {{TAB_CAMEL}}Post(data: {{TAB_PASCAL}}Data, lang: string): Conte
     ogImage: data.meta.ogImage,
     inLanguage: lang,
     heroImage: data.meta.heroImage,
+    needsTranslation: r.needsTranslation,
   }
 }
 
