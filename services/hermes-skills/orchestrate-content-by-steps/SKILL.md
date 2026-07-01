@@ -28,12 +28,29 @@ content tools one by one, and do NOT write the article text.**
 The owner is **NOT a developer**. Never expose internals (slug, deploy, step files, records).
 Speak human: "I'll add a page about Apple", "I'll set up a news section".
 
+## First: is this frozen-assembly, or real development?
+
+You only do **frozen-assembly** here — standing up NEW pages/sections from frozen templates (a quick
+prototype). If the owner wants to **change an existing page** or put **real content** into a page, that is
+**real development** (coding agents), not you: say plainly *"I'm assembling from frozen templates — real
+content or editing an existing page is a separate request for the coding agents"*, then open a handoff with
+`owner_report_blocker_step`. If it's unclear which one, ask: *"a quick prototype from templates, or turning
+it into a real project / changing something existing?"* (full rule in your SOUL, "Two scenarios").
+
 ## What you give the tool
 
 - **"a page about X"** → `action: 'add-page', topic: 'X'` (e.g. topic `apple`).
 - **"a news/blog/docs section"** or **"N test/sample news"** → `action: 'create-section'`
   (+ `samples: N` for test posts; the stub posts ARE the test news).
 - optional `tab` (default news).
+- **A page exists in ALL the site's languages at once — you give ONE topic, in English.** For a
+  bilingual request ("in English and Spanish"), you STILL give ONE `topic` (the English concept);
+  the single page comes up in every language. NEVER give one topic per language and NEVER hand the
+  tool a translated title (a Spanish title makes a second, duplicate page). Translating an existing
+  page is a separate action, not another add-page.
+- **Several sections at once** ("news + a blog + docs, each in its own menus, docs for members only") → give
+  the orchestrator the WHOLE set in ONE go (a `plan`); it builds them one after another, each placed in its
+  menus with the right access, and asks you to approve the plan first. You do NOT do them across many turns.
 
 That's it. **If the section does not exist yet, the tool creates it first, then adds the page —
 automatically.** You do NOT do that in two manual calls.
@@ -50,6 +67,14 @@ automatically.** You do NOT do that in two manual calls.
    relay that plainly. If a tool ERRORED (broke), the fix is to repair it — never hand-write the
    content yourself and never delegate hand-writing to another agent.
 
+## Tell the owner it will take a while (before you run)
+
+A big request runs many steps, each published — it takes time and this chat stays quiet meanwhile. After they
+approve, say plainly: *"I'm going into development now; it finishes by publishing the project and may take a
+while — activity here will be hidden. You can watch it live at https://<your-site>/architecture and
+https://<your-site>/development-steps."* Use the real site address. Those pages update in real time as each
+piece is built and published.
+
 ## 🧊 You never write the article text
 
 A page comes with placeholder text and correct structure (a clone of a frozen sample). You give
@@ -60,6 +85,8 @@ a topic/title; the tool does the rest. Writing real article prose is a later cap
 - Never call compose / create-page one-by-one yourself — call `owner_content_orchestrate` and let
   it decompose.
 - Never skip the deployment record (the tool enforces it — a step can't close without it).
+- Never create one page per language for the same thing — one add-page (English topic) covers all
+  languages; a translation is a separate step, not a second page.
 - Never write code/files yourself, never ask the owner for secrets.
 
 This capability ships to every agent — it does not depend on you (Hermes) existing.

@@ -42,9 +42,21 @@ function toolsSchema() {
         'record ids, and the public URLs.',
       inputSchema: {
         type: 'object',
-        required: ['action'],
         properties: {
-          action: { type: 'string', enum: ['add-page', 'create-section'], description: 'add-page = one page about a topic (creates the section first if missing). create-section = a new section / N test posts.' },
+          action: { type: 'string', enum: ['add-page', 'create-section'], description: 'SINGLE intent: add-page = one page about a topic (creates the section first if missing). create-section = a new section / N test posts. For a COMPOUND multi-group request, use plan[] instead.' },
+          plan: {
+            type: 'array',
+            description: 'COMPOUND frozen request in ONE intent (step 167): an array of group specs. Decomposed FLAT into fine sub-steps (create-section → set-group menus/roles → add-page), each run through open→execute→deploy→RECORD→close, in order. Use this for a multi-group request instead of many calls. Omit for a single action.',
+            items: { type: 'object', properties: {
+              tab: { type: 'string', description: 'Section slug (kebab): news/blog/documentation/…' },
+              format: { type: 'string', enum: ['news', 'blog', 'document'], description: 'Section preset (default news).' },
+              samples: { type: 'integer', description: 'Stub posts for the section (default 2).' },
+              menus: { type: 'object', description: 'Menu placement — { top|footer|left|right: { enabled, order } } (step 158).' },
+              roles: { description: 'Access tier: "public" (everyone), a role or csv like "user", "guest", "all", or "off" (step 158/161).' },
+              languages: { type: 'array', items: { type: 'string' }, description: 'Section languages (default = the slot set).' },
+              pages: { type: 'array', items: { type: 'string' }, description: 'Extra named stub pages (kebab topics). An EXISTING page = modify = refused (coding scenario).' },
+            } },
+          },
           topic: { type: 'string', description: 'What the page is about (required for add-page), e.g. "apple". Becomes the page slug.' },
           tab: { type: 'string', description: 'Section slug (default news). news/blog/documentation.' },
           format: { type: 'string', enum: ['news', 'blog', 'document'], description: 'Section preset when creating it (default news).' },
@@ -52,6 +64,7 @@ function toolsSchema() {
           languages: { type: 'array', items: { type: 'string' }, description: 'Section languages (default = the slot\'s configured set).' },
           platform: { type: 'string', description: 'The agent doing the work (for the Deployment record). Default hermes.' },
           model: { type: 'string', description: 'Model id (for the Deployment record).' },
+          app_shell_auth: { type: 'string', enum: ['left', 'right'], description: 'Drawer side for the visitor login (default left). If any group in the plan is role-gated, the pipeline auto-enables app-shell login so gated content is reachable — this only picks the side.' },
           dry_run: { type: 'boolean', description: 'true → show the decomposition plan without writing (§8.2). false/omit → run it.' },
         },
       },
@@ -235,42 +248,59 @@ export class ContentOrchestratorMcpServer {
   }
 
   async _orchestrate(args) {
+    const isPlan = Array.isArray(args.plan) && args.plan.length > 0
     const action = String(args.action ?? '')
-    if (!['add-page', 'create-section'].includes(action)) throw new Error('action must be add-page|create-section')
-    const tab = (typeof args.tab === 'string' && args.tab) || 'news'
-    if (!/^[a-z][a-z0-9-]*$/.test(tab)) throw new Error('tab must be kebab-case')
+    if (!isPlan && !['add-page', 'create-section'].includes(action)) throw new Error('action must be add-page|create-section, or pass plan[] for a compound request')
+    const tab = isPlan ? '' : ((typeof args.tab === 'string' && args.tab) || 'news')
+    if (tab && !/^[a-z][a-z0-9-]*$/.test(tab)) throw new Error('tab must be kebab-case')
     const topic = typeof args.topic === 'string' ? args.topic : ''
-    if (action === 'add-page' && !topic.trim()) throw new Error('topic is required for add-page')
+    if (!isPlan && action === 'add-page' && !topic.trim()) throw new Error('topic is required for add-page')
 
     const publicBase = (() => { try { return publicSiteUrl(this.appEnvFile) } catch { return '' } })()
     const work = await mkdtemp(join(tmpdir(), 'content-orch-'))
     try {
-      const cli = [this.orchestrator, '--out', this.appDir, '--action', action, '--tab', tab,
-        '--admin-url', this.adminUrl, '--data-url', this.dataUrl]
-      if (topic) cli.push('--topic', topic)
+      const cli = [this.orchestrator, '--out', this.appDir, '--admin-url', this.adminUrl, '--data-url', this.dataUrl]
+      if (isPlan) {
+        cli.push('--plan', JSON.stringify(args.plan))
+      } else {
+        cli.push('--action', action, '--tab', tab)
+        if (topic) cli.push('--topic', topic)
+        if (['news', 'blog', 'document'].includes(args.format)) cli.push('--format', args.format)
+        if (Number.isFinite(args.samples)) cli.push('--samples', String(Math.max(1, Math.min(10, Math.trunc(args.samples)))))
+        if (Array.isArray(args.languages) && args.languages.length) cli.push('--languages', args.languages.map(String).join(','))
+      }
       if (publicBase) cli.push('--public-url', publicBase)
-      if (['news', 'blog', 'document'].includes(args.format)) cli.push('--format', args.format)
-      if (Number.isFinite(args.samples)) cli.push('--samples', String(Math.max(1, Math.min(10, Math.trunc(args.samples)))))
-      if (Array.isArray(args.languages) && args.languages.length) cli.push('--languages', args.languages.map(String).join(','))
       if (args.platform) cli.push('--platform', String(args.platform))
       if (args.model) cli.push('--model', String(args.model))
+      if (['left', 'right'].includes(args.app_shell_auth)) cli.push('--auth-side', args.app_shell_auth)
       if (args.dry_run) cli.push('--dry-run')
 
-      // create-section (or auto-create) needs the frozen store materialized for compose
-      if (action === 'create-section' || action === 'add-page') {
-        try { const storeDir = await this._materializeStore(work); cli.push('--store', storeDir) } catch (e) { if (action === 'create-section') throw e /* add-page may not need it if section exists; emitter validates */ }
+      // The frozen store (compose needs it). A plan almost always creates sections; a single create-section
+      // always needs it; add-page needs it only if the section is missing (the emitter validates).
+      if (isPlan || action === 'create-section' || action === 'add-page') {
+        try { const storeDir = await this._materializeStore(work); cli.push('--store', storeDir) } catch (e) { if (isPlan || action === 'create-section') throw e }
       }
 
       const env = { ...process.env, DEPLOY_SECRET: this._readDeploySecret(), DATA_SECRET: this.dataSecret }
       const { code, out } = await this._spawn(process.execPath, cli, env)
       const last = (() => { try { return JSON.parse(out.trim().split('\n').filter(Boolean).pop()) } catch { return null } })()
 
+      // Operation gate (step 167): the emitter refused a modify-existing / real-content request → route out.
+      if (last && last.ok === false && last.gate === 'operation') {
+        return textResult({ ok: false, gate: 'operation', scenario: 'REAL-DEVELOPMENT', refused: last.refused, message: last.message,
+          advice: 'This is real development (modify existing / real content), NOT frozen assembly. Say so plainly; if the owner wants it done, hand off with owner_report_blocker_step to a coding agent — you never do it yourself.' })
+      }
+
       if (args.dry_run) {
-        return textResult({ preview: true, action, tab, topic, decomposition: last?.plan ?? last, sectionExists: last?.sectionExists,
-          confirm_prompt: `Правильно ли я понимаю: ${action} «${tab}${topic ? '/' + topic : ''}»? Будут выполнены под-шаги: ${(last?.plan ?? []).map(s => s.name).join('; ')}. Каждый: открыть шаг → собрать → развернуть → ЗАПИСАТЬ развёртывание (обязательно) → закрыть. Повторите без dry_run для подтверждения.` })
+        const steps = Array.isArray(last?.plan) ? last.plan : []
+        return textResult({ preview: true, mode: isPlan ? 'plan' : 'single', action: isPlan ? undefined : action, tab: isPlan ? undefined : tab, topic: isPlan ? undefined : topic,
+          decomposition: steps.length ? steps : (last?.plan ?? last), sectionExists: last?.sectionExists,
+          confirm_prompt: isPlan
+            ? `Правильно ли я понимаю: собрать ${args.plan.length} групп(ы) из замороженных шаблонов одним плоским конвейером? Под-шагов: ${steps.length} — ${steps.map(s => s.name).join('; ')}. Каждый: открыть шаг → собрать → развернуть → ЗАПИСАТЬ развёртывание (обязательно) → закрыть, строго по порядку. Повторите без dry_run для запуска.`
+            : `Правильно ли я понимаю: ${action} «${tab}${topic ? '/' + topic : ''}»? Под-шаги: ${steps.map(s => s.name).join('; ')}. Каждый: открыть шаг → собрать → развернуть → ЗАПИСАТЬ развёртывание (обязательно) → закрыть. Повторите без dry_run для подтверждения.` })
       }
       if (last && last.ok === false) {
-        return textResult({ ok: false, action, tab, topic, failedStage: last.failedStage, detail: last.detail, stepKeptOpen: last.stepKeptOpen, chronology: last.chronology,
+        return textResult({ ok: false, mode: isPlan ? 'plan' : 'single', action, tab, topic, failedStage: last.failedStage, detail: last.detail, stepKeptOpen: last.stepKeptOpen, chronology: last.chronology,
           note: 'A sub-step failed; per the Vercel invariant the step was NOT closed (no deployment record → stays open). Report the failing stage; do not hand-fix — repair the tool.' })
       }
       if (code !== 0) throw new Error(`orchestrator exited ${code}: ${out.slice(-400)}`)

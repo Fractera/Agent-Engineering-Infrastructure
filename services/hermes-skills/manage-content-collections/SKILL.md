@@ -65,6 +65,12 @@ depend on Hermes, on memory, or on any other agent.
 
 - **`folder === slug`** (the post URL is its folder name; a `slug` field that disagrees =
   broken links — exactly the `apple` vs `apple-test` 404 bug). The clone names the folder by `slug`.
+- **🔒 ONE post spans all languages — slug = English identifier.** The `slug` is a stable,
+  language-agnostic identifier chosen ONCE from the base (English) title; the SAME `slug` serves
+  every language (`/en/<slug>`, `/es/<slug>`). A translation lives in a `<lang>.ts` cell of the
+  SAME post — NEVER a second post. Do NOT slugify a translated title and do NOT `create page` once
+  per language (a Spanish title would clone a second `hemos-…` post). Translating is a separate path
+  (`owner_content_translate_pending`), not `create page`.
 - **No body authoring here.** A `blocks`/body payload is **refused** — the structure comes from
   the frozen stub, so block structure, the founder block, and the root anchor are inherited
   correct by construction (no need for you to supply or order them). Body text = step 155.
