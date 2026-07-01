@@ -27,4 +27,14 @@ export type GroupManifest = {
   // button just navigates to the group index route. The menu decides how to render it.
   childrenAsDropdown: boolean
   menus: GroupMenus
+  // owner declared an ADMIN PANEL for this group (a dynamic, admin-role page managing the
+  // group's content — e.g. a store's assortment). Declaration only: building it is a
+  // separate capability that reads this flag.
+  admin: boolean
+  // owner declared USER DASHBOARDS for this group (a dynamic dashboard/[userId]/ layer of
+  // per-user interfaces). Declaration only, same as admin.
+  dashboard: boolean
+  // companion tools this group TYPE requires to function (e.g. a store: ['cart','order',
+  // 'payment-page']). Set automatically from the frozen template's descriptor — never asked.
+  tools: string[]
 }

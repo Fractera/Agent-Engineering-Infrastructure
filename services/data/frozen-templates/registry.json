@@ -10,16 +10,33 @@
     "roles": { "slot": "B (uniform aspect)", "values": ["public", "guest", "<role-list>"], "about": "Access, embedded identically into every layout level. ALL_ROLES (enforced tiers + business RBAC)." },
     "i18n": { "slot": "B (uniform aspect)", "values": ["mono", "multi"], "about": "Localization, uniform at every level." }
   },
+  "confirm": {
+    "about": "Shared order-sheet texts (step 167). The confirmation layer renders human lines from RESOLVED values using these labels; the model relays them VERBATIM and never invents its own wording. Per-primitive: category (logical plane: structure | design) + tools (companion entities the group type requires — set automatically, never asked). admin/dashboard are MANDATORY per-group questions: absent from the plan => the tool returns needs_input with these exact texts.",
+    "labels": {
+      "en": { "visibility": "Visible to", "public": "EVERYONE (no login)", "publicGuest": "everyone (guests get an account on first action)", "rolesOnly": "ONLY signed-in with role(s)", "menus": "Appears in", "menuNames": { "top": "top menu", "footer": "footer", "left": "left drawer", "right": "right drawer" }, "nowhere": "NOWHERE (no menu enabled!)", "languages": "Languages", "pages": "Pages", "stubs": "test stub posts", "admin": "Admin panel", "dashboard": "User dashboards", "tools": "Auto-included tools", "yes": "yes", "no": "no" },
+      "ru": { "visibility": "Кому видно", "public": "ВСЕМ (без входа)", "publicGuest": "всем (гость получает аккаунт при первом действии)", "rolesOnly": "ТОЛЬКО вошедшим с ролью", "menus": "Появляется в", "menuNames": { "top": "верхнее меню", "footer": "футер", "left": "левый ящик", "right": "правый ящик" }, "nowhere": "НИГДЕ (ни одно меню не включено!)", "languages": "Языки", "pages": "Страницы", "stubs": "тестовых заглушек", "admin": "Админ-панель", "dashboard": "Пользовательские дашборды", "tools": "Автоматически подключается", "yes": "да", "no": "нет" }
+    },
+    "questions": {
+      "admin": { "en": "Do you plan an ADMIN PANEL for this group of pages (a private, admin-role page for managing its content)? Answer yes/no.", "ru": "Предполагаете ли вы АДМИНИСТРАТИВНУЮ ПАНЕЛЬ для этой группы страниц (закрытая страница с ролью администратора для управления её содержимым)? Ответьте да/нет." },
+      "dashboard": { "en": "Do you plan USER DASHBOARDS for this group of pages (a personal dynamic dashboard/[userId] page per user)? Answer yes/no.", "ru": "Предполагаете ли вы ПОЛЬЗОВАТЕЛЬСКИЕ ДАШБОРДЫ для этой группы страниц (персональная динамическая страница dashboard/[userId] для каждого пользователя)? Ответьте да/нет." }
+    },
+    "explain": {
+      "admin": { "en": "An admin panel is a private, role-gated page where the owner/manager maintains this group's content (for a store — its assortment). Building it is a separate later capability; right now the answer is only RECORDED in the group manifest.", "ru": "Админ-панель — закрытая страница (роль администратора), где владелец/менеджер управляет содержимым этой группы (у магазина — ассортиментом). Само создание — отдельная будущая разработка; сейчас ответ только ЗАПИСЫВАЕТСЯ в манифест группы." },
+      "dashboard": { "en": "User dashboards are a dynamic dashboard/[userId]/ layer — a personal page per user for this group. Building it is a separate later capability; the answer is only RECORDED now.", "ru": "Пользовательские дашборды — динамический слой dashboard/[userId]/: персональная страница каждого пользователя для этой группы. Само создание — отдельная будущая разработка; сейчас ответ только ЗАПИСЫВАЕТСЯ." }
+    }
+  },
   "primitives": [
     {
       "id": "files-depth1",
       "displayName": "Flat file-backed list (news / blog / docs feed)",
       "status": "ready",
+      "category": "structure",
+      "tools": [],
       "base": { "source": "files", "depth": 1, "rendering": "static" },
       "aspects": ["i18n", "roles"],
       "defaults": { "roles": "public", "i18n": "multi" },
       "matching": "BASE axes (source, depth, rendering) SELECT this primitive — all must equal the request. ASPECT axes (i18n, roles) are toggles this primitive SUPPORTS — a request may set them (e.g. roles=user turns the gate ON); an aspect not listed here => refuse 'aspect X unsupported'. A base axis mismatch => refuse naming that axis.",
-      "params": ["tab", "format", "languages", "labels", "samples", "roles", "unauthorizedRedirect", "engineVersion", "menus", "childrenAsDropdown"],
+      "params": ["tab", "format", "languages", "labels", "samples", "roles", "unauthorizedRedirect", "engineVersion", "menus", "childrenAsDropdown", "admin", "dashboard"],
       "fits": ["news", "blog", "documentation feed", "announcements", "changelog", "articles", "stories", "guides list"],
       "doesNotServe": ["cart/checkout/payments", "graded course with tests/progress", "user dashboard / app screen", "forms that persist visitor input", "per-user/per-request personalized feed"],
       "path": "primitives/files-depth1"

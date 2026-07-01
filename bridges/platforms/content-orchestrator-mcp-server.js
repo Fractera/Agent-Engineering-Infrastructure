@@ -52,11 +52,15 @@ function toolsSchema() {
               format: { type: 'string', enum: ['news', 'blog', 'document'], description: 'Section preset (default news).' },
               samples: { type: 'integer', description: 'Stub posts for the section (default 2).' },
               menus: { type: 'object', description: 'Menu placement — { top|footer|left|right: { enabled, order } } (step 158).' },
-              roles: { description: 'Access tier: "public" (everyone), a role or csv like "user", "guest", "all", or "off" (step 158/161).' },
+              roles: { description: 'Access tier: "public"/"all"/"everyone" all mean VISIBLE TO EVERYONE (no gate); a role or csv like "user" gates to signed-in holders; "guest" = public+guest (step 158/161).' },
               languages: { type: 'array', items: { type: 'string' }, description: 'Section languages (default = the slot set).' },
-              pages: { type: 'array', items: { type: 'string' }, description: 'Extra named stub pages (kebab topics). An EXISTING page = modify = refused (coding scenario).' },
+              pages: { type: 'array', items: { type: 'string' }, description: 'Extra named stub pages (kebab topics, ENGLISH identifiers). An EXISTING page = modify = refused (coding scenario).' },
+              admin: { type: 'boolean', description: 'MANDATORY owner decision: does this group get an ADMIN PANEL? Absent → the tool returns needs_input with the exact question to relay; ask the owner, then set it.' },
+              dashboard: { type: 'boolean', description: 'MANDATORY owner decision: does this group get USER DASHBOARDS (dashboard/[userId])? Absent → needs_input, same as admin.' },
             } },
           },
+          owner_lang: { type: 'string', enum: ['en', 'ru'], description: 'Language of the owner dialogue — the order-sheet/question texts come back in it (default en).' },
+          approve: { type: 'string', description: 'The order-sheet token (os-…) from the PREVIOUS dry_run, after the owner explicitly confirmed the shown lines. A plan run WITHOUT a matching token is refused — dry_run first, show, confirm, then pass it.' },
           topic: { type: 'string', description: 'What the page is about (required for add-page), e.g. "apple". Becomes the page slug.' },
           tab: { type: 'string', description: 'Section slug (default news). news/blog/documentation.' },
           format: { type: 'string', enum: ['news', 'blog', 'document'], description: 'Section preset when creating it (default news).' },
@@ -273,6 +277,8 @@ export class ContentOrchestratorMcpServer {
       if (args.platform) cli.push('--platform', String(args.platform))
       if (args.model) cli.push('--model', String(args.model))
       if (['left', 'right'].includes(args.app_shell_auth)) cli.push('--auth-side', args.app_shell_auth)
+      if (['en', 'ru'].includes(args.owner_lang)) cli.push('--owner-lang', args.owner_lang)
+      if (typeof args.approve === 'string' && args.approve) cli.push('--approve', args.approve)
       if (args.dry_run) cli.push('--dry-run')
 
       // The frozen store (compose needs it). A plan almost always creates sections; a single create-section
@@ -290,9 +296,25 @@ export class ContentOrchestratorMcpServer {
         return textResult({ ok: false, gate: 'operation', scenario: 'REAL-DEVELOPMENT', refused: last.refused, message: last.message,
           advice: 'This is real development (modify existing / real content), NOT frozen assembly. Say so plainly; if the owner wants it done, hand off with owner_report_blocker_step to a coding agent — you never do it yourself.' })
       }
+      // Mandatory-questions gate (step 167): admin/dashboard answers are missing → relay the EXACT
+      // question texts to the owner (use `explain` if they ask what it is), fill the plan, dry_run again.
+      if (last && last.needs_input) {
+        return textResult({ ...last, advice: 'Ask the owner each `question` VERBATIM (one per group/field); if they ask what it means, answer with `explain` VERBATIM. Then set the boolean admin/dashboard fields on those plan groups and call dry_run again. Do NOT guess the answers.' })
+      }
+      // Approve gate (step 167): a real plan run without the confirmed order-sheet token is refused.
+      if (last && last.ok === false && last.gate === 'approve') {
+        return textResult({ ...last, advice: 'Run dry_run first, show the returned order_sheet lines to the owner VERBATIM, get an explicit yes, then call again passing that dry_run\'s approve token. Never invent or reuse a token.' })
+      }
 
       if (args.dry_run) {
         const steps = Array.isArray(last?.plan) ? last.plan : []
+        // Compound plan with an order sheet (step 167): the sheet IS the confirmation surface —
+        // relay its lines verbatim; the confirm_instruction carries the exact protocol + token.
+        if (isPlan && last?.order_sheet) {
+          return textResult({ preview: true, mode: 'plan', groups: args.plan.length, order_sheet: last.order_sheet,
+            plan: steps, note: last?.note,
+            advice: 'Show the owner every order_sheet line VERBATIM (plus implied lines). On edits — adjust plan[] and dry_run again. On an explicit yes — call again with approve set to the order_sheet id, and relay announce_text verbatim as you start.' })
+        }
         return textResult({ preview: true, mode: isPlan ? 'plan' : 'single', action: isPlan ? undefined : action, tab: isPlan ? undefined : tab, topic: isPlan ? undefined : topic,
           decomposition: steps.length ? steps : (last?.plan ?? last), sectionExists: last?.sectionExists,
           confirm_prompt: isPlan

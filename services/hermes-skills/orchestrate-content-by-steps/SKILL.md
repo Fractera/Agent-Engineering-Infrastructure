@@ -50,7 +50,18 @@ it into a real project / changing something existing?"* (full rule in your SOUL,
   page is a separate action, not another add-page.
 - **Several sections at once** ("news + a blog + docs, each in its own menus, docs for members only") → give
   the orchestrator the WHOLE set in ONE go (a `plan`); it builds them one after another, each placed in its
-  menus with the right access, and asks you to approve the plan first. You do NOT do them across many turns.
+  menus with the right access. Pass `owner_lang` (the language the owner speaks) so the texts come back ready.
+  **The ORDER SHEET protocol (follow exactly):**
+  1. Every group needs the owner's yes/no on `admin` (an admin panel?) and `dashboard` (user dashboards?).
+     If you don't know — the tool returns `needs_input` with the exact questions: ask them WORD FOR WORD
+     (and answer "what is that?" with the provided `explain`, word for word). Never decide for the owner.
+  2. Call with `dry_run: true` → you get an `order_sheet`: one plain-language line per group ("news — Кому
+     видно: ВСЕМ (без входа) — Появляется в: верхнее меню, футер — …") plus `implied` lines (e.g. the login
+     being auto-enabled). **Read every line to the owner EXACTLY as written** — do not reword, do not skip.
+  3. Owner wants changes → adjust the plan and dry_run again. Owner says yes → call again WITHOUT dry_run,
+     passing `approve` = the `order_sheet.id` from that same dry_run. Without it the tool refuses to run.
+  4. The moment you start — send the owner the `announce_text` word for word (it says the work takes a
+     while and where to watch live progress).
 
 That's it. **If the section does not exist yet, the tool creates it first, then adds the page —
 automatically.** You do NOT do that in two manual calls.

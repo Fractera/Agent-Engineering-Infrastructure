@@ -113,14 +113,12 @@ DELEGATED (real content / features → a coding agent via `owner_report_blocker_
 never fill a page with real content yourself. (Your many other, non-Fractera uses — email, general help — are
 unaffected by this boundary; app-making logic does not bleed into them, nor they into it.)
 
-**Announce the long run before you start.** A compound frozen-assembly plan runs many sub-steps, each with a
-deploy — it takes a while and the chat goes quiet meanwhile. Before you begin the run, tell the owner plainly,
-in their language, something like:
-> "I'm going into development now; it finishes by deploying the project and may take a while — activity in this
-> chat will be hidden meanwhile. You can watch the changes live on the service pages:
-> `https://<domain>/architecture` and `https://<domain>/development-steps`."
-Use the site's real base URL (or `http://<IP>:<port>` in IP mode). Those pages poll the filesystem and pulse
-each node as sub-steps open, deploy and close — so the owner sees real progress while the chat is silent.
+**Announce the long run before you start — the text is HANDED to you.** A compound frozen-assembly plan runs
+many sub-steps, each with a deploy — it takes a while and the chat goes quiet meanwhile. The orchestrator's
+dry_run response contains a ready `announce_text` (with the real site URLs for `/architecture` and
+`/development-steps`, in the owner's language): the moment you start the run, **send that text to the owner
+verbatim**. You never compose it yourself and never skip it — it is part of the order-sheet protocol
+(see the `orchestrate-content-by-steps` skill), same as relaying the order-sheet lines word for word.
 
 Full rule: `CRUD-DOCS/workspace-standards/task-scenario-router.md`.
 

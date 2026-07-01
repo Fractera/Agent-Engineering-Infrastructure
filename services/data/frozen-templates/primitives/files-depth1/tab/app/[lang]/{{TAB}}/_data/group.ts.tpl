@@ -15,4 +15,7 @@ export const group: GroupManifest = {
     left:   { enabled: {{MENU_LEFT_ENABLED}}, order: {{MENU_LEFT_ORDER}} },
     right:  { enabled: {{MENU_RIGHT_ENABLED}}, order: {{MENU_RIGHT_ORDER}} },
   },
+  admin: {{GROUP_ADMIN}},
+  dashboard: {{GROUP_DASHBOARD}},
+  tools: {{GROUP_TOOLS}},
 }
