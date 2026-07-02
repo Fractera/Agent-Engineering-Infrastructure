@@ -235,7 +235,7 @@ export function WorkspaceController() {
   const insecure = secure === false;
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-background">
+    <div className="flex flex-col h-[100dvh] w-screen overflow-hidden bg-background">
       {/* ── Header ── */}
       <header
         className="shrink-0 flex items-center justify-between px-4 border-b border-border bg-background"

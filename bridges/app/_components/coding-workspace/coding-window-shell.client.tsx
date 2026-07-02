@@ -30,7 +30,10 @@ import type { ComponentType } from "react";
 export type SettingsPanelId = "hermes" | "lightrag" | "openai";
 
 const CAROUSEL_H = 52;
-const FOOTER_H   = 36;
+// Footer is locked to EXACTLY this height (see the footer bar below): it never
+// grows. On mobile only Deploy + Git show, so the row can't overflow onto a
+// second line and push the header off-screen. (mobile refactor)
+const FOOTER_H   = 40;
 // APP_URL and isLight removed — resolved at runtime via useRuntimeUrls()
 const CARD_W     = 112;
 const GAP        = 8;
@@ -1374,12 +1377,12 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
       )}
 
       {/* ── Footer ── */}
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: FOOTER_H }} className="border-t border-border bg-background flex items-center gap-2 px-3">
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: FOOTER_H, minHeight: FOOTER_H, maxHeight: FOOTER_H }} className="border-t border-border bg-background flex flex-nowrap items-center gap-2 px-3 overflow-x-auto overflow-y-hidden whitespace-nowrap">
 
         {/* Left: repo name (when connected) or version */}
-        <span className="flex-1 flex items-center gap-2 min-w-0">
+        <span className="flex-1 flex items-center gap-2 min-w-0 overflow-hidden">
           {gitConnected && gitRepo ? (
-            <span className="text-[10px] text-muted-foreground/70 font-mono select-none shrink-0 flex items-center gap-1">
+            <span className="text-[10px] text-muted-foreground/70 font-mono select-none shrink min-w-0 truncate flex items-center gap-1">
               <GitBranch size={9} className="shrink-0" />{gitRepo}
             </span>
           ) : (
@@ -1405,77 +1408,77 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           )}
         </span>
 
-        {/* Enter button — mobile only */}
+        {/* Enter button — mobile only (terminal input helper, not an action button) */}
         <button
           type="button"
-          className="md:hidden inline-flex items-center gap-1 h-5 px-2 rounded border border-primary bg-primary/10 text-primary text-[10px] transition-colors active:bg-primary/20"
+          className="md:hidden shrink-0 inline-flex items-center gap-1 h-5 px-2 rounded border border-primary bg-primary/10 text-primary text-[10px] transition-colors active:bg-primary/20"
           onClick={() => xtermRefs.current[terminalPlatform]?.sendStdin("\r")}
         >
           <CornerDownLeft size={10} />Enter
         </button>
 
-        {/* Deploy button */}
+        {/* Deploy button — always visible (mobile keeps only Deploy + Git) */}
         <button type="button" onClick={handleDeploy} disabled={deploying}
-          className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 disabled:pointer-events-none">
+          className="shrink-0 inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 disabled:pointer-events-none">
           {deploying ? <Loader2 size={10} className="animate-spin" /> : <Rocket size={10} />}Deploy
         </button>
 
-        {/* GitHub Connect (only when not connected) */}
+        {/* GitHub Connect (only when not connected) — gateway to Push, kept on mobile */}
         {!gitConnected && (
           <button type="button" onClick={() => setShowGitConnect((v) => !v)}
-            className={`inline-flex items-center gap-1 h-5 px-2 rounded border text-[10px] transition-colors ${showGitConnect ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
+            className={`shrink-0 inline-flex items-center gap-1 h-5 px-2 rounded border text-[10px] transition-colors ${showGitConnect ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
             <GitBranch size={10} />GitHub
           </button>
         )}
 
-        {/* Git Pull + Push (real, only when connected) */}
+        {/* Git Pull + Push (real, only when connected). Mobile keeps only Push; Pull is desktop-only. */}
         {gitConnected && (
           <>
             <button type="button" onClick={handleGitPull} disabled={gitPulling || gitPushing}
-              className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+              className="hidden md:inline-flex shrink-0 items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
               {gitPulling ? <Loader2 size={10} className="animate-spin" /> : <ArrowDownToLine size={10} />}Pull
             </button>
             <button type="button" onClick={handleGitPush} disabled={gitPulling || gitPushing}
-              className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+              className="shrink-0 inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
               {gitPushing ? <Loader2 size={10} className="animate-spin" /> : <ArrowUpFromLine size={10} />}Push
             </button>
           </>
         )}
 
-        {/* Info button */}
+        {/* Info button — desktop only (mobile keeps only Deploy + Git) */}
         <button type="button" onClick={handleInfo}
-          className={`inline-flex items-center gap-1 h-5 px-2 rounded border text-[10px] transition-colors ${showInfo ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
+          className={`hidden md:inline-flex shrink-0 items-center gap-1 h-5 px-2 rounded border text-[10px] transition-colors ${showInfo ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
           <Info size={10} />Info
         </button>
 
-        {/* Go to Pro */}
+        {/* Go to Pro — desktop only */}
         {PRO_URL && (
           <a href={PRO_URL} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+            className="hidden md:inline-flex shrink-0 items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
             <Zap size={10} />Pro
           </a>
         )}
 
-        {/* Skills */}
+        {/* Skills — desktop only */}
         <a href={SKILLS_HREF} target="_blank" rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+          className="hidden md:inline-flex shrink-0 items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
           <Store size={10} />Skills
         </a>
 
-        {/* Product Loop — distinct from Skills: the digitized end-to-end business journey */}
+        {/* Product Loop — desktop only (the digitized end-to-end business journey) */}
         <a href={PRODUCT_LOOP_HREF} target="_blank" rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+          className="hidden md:inline-flex shrink-0 items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
           <Repeat size={10} />Product Loop
         </a>
 
-        {/* GitHub */}
+        {/* GitHub — desktop only */}
         {GITHUB_URL ? (
           <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer"
-            className="size-[22px] rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+            className="hidden md:flex shrink-0 size-[22px] rounded-full border border-border items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
             <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
           </a>
         ) : (
-          <button type="button" disabled className="size-[22px] rounded-full border border-border flex items-center justify-center text-muted-foreground/30 cursor-default">
+          <button type="button" disabled className="hidden md:flex shrink-0 size-[22px] rounded-full border border-border items-center justify-center text-muted-foreground/30 cursor-default">
             <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
           </button>
         )}
