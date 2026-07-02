@@ -27,6 +27,13 @@ export function WorkspaceController() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [shellHeight, setShellHeight]   = useState(0);
   const [windowWidth, setWindowWidth]   = useState(0);
+  // Visual-viewport metrics (iOS keyboard fix): the mobile keyboard is an OVERLAY —
+  // CSS dvh ignores it while window.innerHeight shrinks, so a dvh-sized root and a
+  // JS-sized shell drift apart (giant gap under the footer). The app root is instead
+  // sized to the VISIBLE height and translated by the viewport's pan offset, so the
+  // header and footer always stay on screen while the keyboard is open.
+  const [appHeight, setAppHeight]       = useState(0);
+  const [viewportTop, setViewportTop]   = useState(0);
   const [terminalPlatform, setTerminalPlatform] = useState<Platform>("claude-code");
   const [terminalSessions, setTerminalSessions] = useState<Set<Platform>>(new Set());
   const [siteOpen, setSiteOpen]                 = useState(false);
@@ -175,13 +182,32 @@ export function WorkspaceController() {
   }, [loading, session, secure]);
 
   useEffect(() => {
+    // Size everything from the VISUAL viewport — the one honest "what is actually
+    // visible above the keyboard" measure on mobile (innerHeight is the fallback
+    // where visualViewport is unavailable).
+    const vv = window.visualViewport;
     function updateSize() {
-      setShellHeight(window.innerHeight - HEADER_H);
+      const h = Math.round(vv?.height ?? window.innerHeight);
+      setAppHeight(h);
+      setViewportTop(Math.round(vv?.offsetTop ?? 0));
+      setShellHeight(h - HEADER_H);
       setWindowWidth(window.innerWidth);
+      // iOS force-pans the page to reveal a focused input and often leaves that pan
+      // stuck after the keyboard closes (only a manual swipe re-clamps it). Re-clamp
+      // the document scroll ourselves on every viewport change instead.
+      if (window.scrollY !== 0) window.scrollTo(0, 0);
+      const se = document.scrollingElement;
+      if (se && se.scrollTop !== 0) se.scrollTop = 0;
     }
     updateSize();
     window.addEventListener("resize", updateSize);
-    return () => window.removeEventListener("resize", updateSize);
+    vv?.addEventListener("resize", updateSize);
+    vv?.addEventListener("scroll", updateSize);
+    return () => {
+      window.removeEventListener("resize", updateSize);
+      vv?.removeEventListener("resize", updateSize);
+      vv?.removeEventListener("scroll", updateSize);
+    };
   }, []);
 
   function handlePlatformClick(platformId: Platform) {
@@ -235,7 +261,17 @@ export function WorkspaceController() {
   const insecure = secure === false;
 
   return (
-    <div className="flex flex-col h-[100dvh] w-screen overflow-hidden bg-background">
+    // Fixed root sized to the visual viewport: h-[100dvh] is only the pre-measure
+    // fallback (inline height overrides it once measured). `fixed` takes the app out
+    // of the document flow so the body has NOTHING to scroll; translateY follows the
+    // keyboard pan offset so the app stays glued to the visible area.
+    <div
+      className="fixed inset-x-0 top-0 h-[100dvh] flex flex-col overflow-hidden bg-background"
+      style={{
+        height: appHeight > 0 ? appHeight : undefined,
+        transform: viewportTop > 0 ? `translateY(${viewportTop}px)` : undefined,
+      }}
+    >
       {/* ── Header ── */}
       <header
         className="shrink-0 flex items-center justify-between px-4 border-b border-border bg-background"
