@@ -7,12 +7,17 @@ import { ServiceNav } from "./_components/service-nav.client"
 // opens in its own full browser tab (Service button in the admin header), so the
 // shared chrome is a sticky nav across the 8 pages. Access is enforced by proxy.ts
 // (architect-only in Secure mode, open in IP mode) — no per-page guard needed.
+//
+// The admin root <body> is h-screen overflow-hidden (the main workspace owns its own
+// scroll), so this zone must be its own scroll container: the wrapper below restores
+// vertical scrolling for the service pages while the sticky nav stays pinned to the
+// top of the container (= top of the viewport).
 
 export default function ServiceLayout({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <div className="h-screen overflow-y-auto">
       <ServiceNav />
       {children}
-    </>
+    </div>
   )
 }
