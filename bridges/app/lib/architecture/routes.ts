@@ -26,6 +26,34 @@ export const ROUTES_TREE: ArchNode = {
         "(it cannot be deleted). Project names use at least three words.",
       children: [
         {
+          id: "projects-layer",
+          label: "/projects — Projects layer",
+          kind: "group",
+          description:
+            "Private application levels (§3.12, step 175): technical tools, " +
+            "business solutions and logic for the architect or a project " +
+            "administrator only (roles architect + manager; others are " +
+            "redirected). Monolingual — the site's default language, outside the " +
+            "[lang] router. A project is a NAMED folder " +
+            "/projects/<category>/<project-slug>; the folder name is the " +
+            "project's slug (source of truth) — dynamic segments are forbidden. " +
+            "Four permanent categories, present even when empty.",
+          children: [
+            page("r-projects-automation", "/projects/automation", "/projects/automation",
+              "Automation category hub — repeatable business automations, each a finished-cycle tool: an n8n for one single task.",
+              "Architect · Manager", "dynamic"),
+            page("r-projects-fractera-pages", "/projects/fractera-pages", "/projects/fractera-pages",
+              "Fractera-pages category hub — projects that manage the pages of this workspace.",
+              "Architect · Manager", "dynamic"),
+            page("r-projects-personal", "/projects/personal", "/projects/personal",
+              "Personal-effectiveness category hub — private productivity tools for the owner.",
+              "Architect · Manager", "dynamic"),
+            page("r-projects-other", "/projects/other", "/projects/other",
+              "Catch-all category hub — projects outside the three fixed categories.",
+              "Architect · Manager", "dynamic"),
+          ],
+        },
+        {
           id: "project-my-telegram-reminder",
           label: "my telegram reminder",
           kind: "page",
