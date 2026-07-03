@@ -94,12 +94,14 @@ function toolsSchema() {
     {
       name: 'owner_report_blocker_step',
       description:
-        'Record a BLOCKER as an open development step and hand off to a human. Use this when a task is ' +
-        'BEYOND your tools — either no tool fits the work, OR a tool errored in a way that needs code analysis ' +
-        '(MODULE_NOT_FOUND, a 500, a build/tsc failure). You (Hermes) do NOT program and do NOT work around it: ' +
-        'you STOP, record the blocker here in detail, and tell the owner to activate a coding agent (Claude ' +
-        'Code / Codex / Gemini / Qwen / Kimi) to finish it. The step is left OPEN as the handoff record; the ' +
-        'coding agent reads it and completes the work. Never hand-author or delegate hand-coding instead of this.',
+        'Record a task as an OPEN development step (a numbered handoff record) — the FALLBACK when the work ' +
+        'cannot be delegated right now. Use it in two cases: (1) real code/content work but NO coding agent ' +
+        'is signed into a subscription — offer this as option 2 (save it, return later) after giving the calm ' +
+        'readiness status, NEVER as "the platform is broken"; (2) one of your OWN tools errored in a way that ' +
+        'needs code analysis (MODULE_NOT_FOUND, a 500, a build/tsc failure) — a developer repairs that. You ' +
+        '(Hermes) never program. For real code work when an agent IS available, DELEGATE instead (confirm the ' +
+        'payload, check readiness, delegate-task) — this tool is the record-and-wait fallback, not a substitute ' +
+        'for delegation. The step is left OPEN so a coding agent can pick it up cold later.',
       inputSchema: {
         type: 'object',
         required: ['task'],
@@ -294,7 +296,7 @@ export class ContentOrchestratorMcpServer {
       // Operation gate (step 167): the emitter refused a modify-existing / real-content request → route out.
       if (last && last.ok === false && last.gate === 'operation') {
         return textResult({ ok: false, gate: 'operation', scenario: 'REAL-DEVELOPMENT', refused: last.refused, message: last.message,
-          advice: 'This is real development (modify existing / real content), NOT frozen assembly. Say so plainly; if the owner wants it done, hand off with owner_report_blocker_step to a coding agent — you never do it yourself.' })
+          advice: 'This is real development (modify existing / real content), NOT frozen assembly. Say so plainly. You never do it yourself — DELEGATE to a coding agent: confirm the payload, check readiness (choose-agent), delegate (delegate-task). If no agent is signed into a subscription, that is NOT a platform failure — give the calm status (present X / with subscription Y) and offer two options: activate the agents and retry, or save it as a step with owner_report_blocker_step.' })
       }
       // Mandatory-questions gate (step 167): admin/dashboard answers are missing → relay the EXACT
       // question texts to the owner (use `explain` if they ask what it is), fill the plan, dry_run again.

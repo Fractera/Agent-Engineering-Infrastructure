@@ -40,7 +40,18 @@ Handle directly when:
 
 Default: **claude-code** when no preference is clear.
 
+## Confirm before you dispatch (mandatory)
+
+Delegating starts real work on a real agent — a state change. Obey `confirm-before-mutation`:
+FIRST check readiness (`choose-agent`), THEN restate to the owner exactly what you will hand
+off (the task, the target agent, the input it receives) and wait for an explicit go. Never
+dispatch silently. If no agent is signed into a subscription, do NOT dispatch — give the calm
+structured status and the two options (activate & retry / save as a development step); see
+`choose-agent` "When nothing can run".
+
 ## How to delegate
+
+Only after the owner confirmed (above) and an agent is available:
 
 ```
 owner_delegate_task_to_platform(platform="claude-code", prompt="<task>")
