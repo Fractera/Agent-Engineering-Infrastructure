@@ -13,19 +13,11 @@ import { routeDir } from "./source-bundle"
 export type Query = { key: string; value: string }
 export type Task = { id: string; kind: "todo" | "delete"; body: string; outcome?: string | null }
 
-// Placement & access vocabulary — the SAME words the frozen-pipeline confirm layer
-// uses (frozen-templates registry.json confirm.labels): menus top/footer/left/right,
-// visibility public / publicGuest / rolesOnly, admin, dashboard. One vocabulary,
-// two entry points (Hermes order-sheet and this panel).
-export type MenuSlot = "top" | "footer" | "left" | "right"
-export type Visibility = "public" | "publicGuest" | "rolesOnly"
-// A project's external automation: env keys are RECORDED in the declaration; the
-// executor materializes them into app/.env.local via the env setter + rebuild
-// (build-time env contract, step 143).
-export type Integration = { name: string; envKeys: string[] }
-
-export const MENU_SLOTS: MenuSlot[] = ["top", "footer", "left", "right"]
-export const VISIBILITIES: Visibility[] = ["public", "publicGuest", "rolesOnly"]
+// Vocabulary lives in declaration-vocab.ts (client-safe, no fs) — re-exported here
+// for the server-side consumers of this module.
+import { MENU_SLOTS, VISIBILITIES, type MenuSlot, type Visibility, type Integration } from "./declaration-vocab"
+export { MENU_SLOTS, VISIBILITIES }
+export type { MenuSlot, Visibility, Integration }
 
 export type RouteMeta = {
   path: string

@@ -7,7 +7,7 @@ import { slugify } from "@/lib/architecture/projects"
 import { SourceExample } from "./source-example.client"
 import { SegToggle } from "@/components/ui/seg-toggle.client"
 import { ALL_ROLES } from "@/lib/roles"
-import { MENU_SLOTS, type MenuSlot, type Visibility, type Integration } from "@/lib/architecture/readme-file"
+import { MENU_SLOTS, type MenuSlot, type Visibility, type Integration } from "@/lib/architecture/declaration-vocab"
 import type { Requested, QueryParam } from "@/lib/architecture/requested-tree"
 
 // Menu slots + visibility use the frozen-pipeline confirm vocabulary

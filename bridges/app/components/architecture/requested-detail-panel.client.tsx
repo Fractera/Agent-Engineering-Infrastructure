@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { ChevronRight, Trash2, Loader2, AlertTriangle } from "lucide-react"
 import type { QueryParam } from "@/lib/architecture/requested-tree"
-import type { MenuSlot, Visibility, Integration } from "@/lib/architecture/readme-file"
+import type { MenuSlot, Visibility, Integration } from "@/lib/architecture/declaration-vocab"
 import { RouteTodo } from "./route-todo.client"
 import { RouteDangerZone } from "./route-danger-zone.client"
 import { RouteSource } from "./route-source.client"

@@ -1,7 +1,7 @@
 import type { ArchNode } from "./types"
 import { ROUTES_TREE } from "./routes"
 import { DEFAULT_PROJECT, type Project } from "./projects"
-import type { MenuSlot, Visibility, Integration } from "./readme-file"
+import type { MenuSlot, Visibility, Integration } from "./declaration-vocab"
 
 // A declared-but-not-built page, materialized as a real README.md on disk and
 // merged into the route tree as a "pending" node under Pages. Survives reload
