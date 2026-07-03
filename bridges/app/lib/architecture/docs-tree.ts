@@ -20,7 +20,7 @@ function pad(n: number): string { return String(n).padStart(2, "0") }
 
 function glossaryNode(entries: { term: string; meaning: string }[]): ArchNode {
   return {
-    id: "doc-glossary", label: "GLOSSARY.md", kind: "config", href: "/glossary",
+    id: "doc-glossary", label: "GLOSSARY.md", kind: "config", href: "/service/glossary",
     description:
       "Project terms — approved abbreviations / preferred phrasings so every agent reads " +
       "them the same way (e.g. aws -> ai-workspace). Real file GLOSSARY.md at the project root.",
@@ -36,14 +36,14 @@ function stepLeaf(s: Step): ArchNode {
     ? `completed${s.completedAt ? " " + s.completedAt : ""}`
     : "new"
   return {
-    id: `doc-step-${s.id}`, label: `${pad(s.number)} — ${s.name}`, kind: "note", href: "/development-steps",
+    id: `doc-step-${s.id}`, label: `${pad(s.number)} — ${s.name}`, kind: "note", href: "/service/development-steps",
     description: `${s.importance} · ${state}.${s.description ? " " + s.description : ""}`,
   }
 }
 
 function stepsNode(steps: { new: Step[]; completed: Step[] }): ArchNode {
   return {
-    id: "doc-steps", label: "DEVELOPMENT-STEPS", kind: "group", href: "/development-steps",
+    id: "doc-steps", label: "DEVELOPMENT-STEPS", kind: "group", href: "/service/development-steps",
     description:
       "The work log — every step of how the app is built, kept as real markdown files an agent " +
       "reads and writes. Files live in DEVELOPMENT-STEPS/ at the project root.",
@@ -59,7 +59,7 @@ function stepsNode(steps: { new: Step[]; completed: Step[] }): ArchNode {
 function patternLeaf(p: { id: string; name: string; kind: string; declared: boolean; pending: boolean; description: string }): ArchNode {
   const tag = p.declared ? "declared" : p.pending ? "stable · open task" : "stable"
   return {
-    id: `doc-pattern-${p.id}`, label: p.name, kind: "note", href: "/patterns",
+    id: `doc-pattern-${p.id}`, label: p.name, kind: "note", href: "/service/patterns",
     description: `${p.kind === "anti" ? "Anti-pattern" : "Pattern"} · ${tag}.${p.description ? " " + p.description : ""}`,
     declared: p.declared, pending: p.pending,
   }
@@ -67,7 +67,7 @@ function patternLeaf(p: { id: string; name: string; kind: string; declared: bool
 
 function patternsNode(tree: Awaited<ReturnType<typeof listPatternTree>>): ArchNode {
   return {
-    id: "doc-patterns", label: "PATTERNS", kind: "group", href: "/patterns",
+    id: "doc-patterns", label: "PATTERNS", kind: "group", href: "/service/patterns",
     description:
       "The reuse library — reusable code patterns and deployment anti-patterns, kept as real " +
       "markdown files. Files live in PATTERNS/ at the project root.",
@@ -86,7 +86,7 @@ function patternsNode(tree: Awaited<ReturnType<typeof listPatternTree>>): ArchNo
 
 function draftLeaf(prefix: string, d: Draft): ArchNode {
   return {
-    id: `${prefix}-${d.id}`, label: d.name, kind: "note", href: "/ai-draft-settings",
+    id: `${prefix}-${d.id}`, label: d.name, kind: "note", href: "/service/ai-draft-settings",
     description: `${d.kind} draft (${d.mode}${d.target ? " → " + d.target : ", new record"}).`,
     declared: d.declared, pending: d.pending,
   }
@@ -95,14 +95,14 @@ function draftLeaf(prefix: string, d: Draft): ArchNode {
 function refLeaf(prefix: string, r: RefEntry, i: number): ArchNode {
   if (r.draft) return draftLeaf(prefix, r.draft)
   return {
-    id: `${prefix}-ref-${i}`, label: r.label, kind: "note", href: "/ai-draft-settings",
+    id: `${prefix}-ref-${i}`, label: r.label, kind: "note", href: "/service/ai-draft-settings",
     description: "Real original — read-only reference (no draft over it yet).",
   }
 }
 
 function aiDraftNode(tree: Awaited<ReturnType<typeof listDraftTree>>): ArchNode {
   return {
-    id: "doc-ai-draft", label: "AI-DRAFT-SETTINGS", kind: "group", href: "/ai-draft-settings",
+    id: "doc-ai-draft", label: "AI-DRAFT-SETTINGS", kind: "group", href: "/service/ai-draft-settings",
     description:
       "The draft layer — free-form wishes for the six agents' real instruction / skill / MCP files. " +
       "A mirror; an agent applies a draft to the original later. One folder per agent.",
@@ -146,7 +146,7 @@ function docNodeToArch(n: DocNode): ArchNode {
 async function crudDocsNode(): Promise<ArchNode> {
   const tree = await scanTree()
   return {
-    id: "doc-crud-docs", label: "CRUD-DOCS", kind: "group", href: "/documents",
+    id: "doc-crud-docs", label: "CRUD-DOCS", kind: "group", href: "/service/documents",
     description:
       "Your knowledge-base documents — a real folder/file tree of any depth under CRUD-DOCS/. " +
       "Managed via the /documents page; activating one ingests it into Company Memory (LightRAG).",

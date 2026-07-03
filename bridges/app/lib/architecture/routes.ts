@@ -42,34 +42,12 @@ export const ROUTES_TREE: ArchNode = {
       label: "Pages",
       kind: "group",
       description:
-        "Pages a visitor can open in the browser. The service pages (tagged " +
-        "\"service\") are the admin-only introspection tools — reached from the " +
-        "Service pages menu in the admin App Preview, not the public home.",
+        "Pages a visitor can open in the browser. The admin-only introspection " +
+        "tools are NOT part of your app — they live in the admin cockpit at " +
+        "/service/* (:3002) and appear on the AI Core workspace map, not here.",
       children: [
         page("r-home", "/", "/", "Public landing — the starter template you turn into your product.", "Public"),
         page("r-dashboard", "/dashboard", "/dashboard", "Product catalogue demo (DB + media). Self-gates to a signed-in user in secure mode.", "User (secure) / open (IP)", "dynamic"),
-        // Service pages grouped under (service) — mirroring the real route group on
-        // disk (app/(service)/…), so the tree reflects the folder structure (as on GitHub),
-        // not a flat list. Records for each page are derived from its _meta.ts (route-manifest).
-        {
-          id: "service-pages",
-          label: "(service)",
-          kind: "group",
-          description:
-            "Admin-only introspection tools — the Shell's own control surfaces. On disk they " +
-            "live in the (service) route group (app/(service)/…); route groups are transparent " +
-            "to the URL, so e.g. /architecture is reached at /architecture, not /(service)/architecture.",
-          children: [
-            page("r-ai-core", "/ai-core", "/ai-core", "Live state of your AI core — agents, bridges, memory, MCP, tools. A live mirror of the real files on disk.", "Admin (secure) / open (IP)", "dynamic", true),
-            page("r-architecture", "/architecture", "/architecture", "This page — the map of your app's pages and endpoints.", "Admin (secure) / open (IP)", "dynamic", true),
-            page("r-debug", "/debug", "/debug", "Runtime diagnostics scratch surface.", "Admin (secure) / open (IP)", "dynamic", true),
-            page("r-glossary", "/glossary", "/glossary", "Glossary editor — your term map (key→meaning) every agent reads.", "Admin (secure) / open (IP)", "dynamic", true),
-            page("r-dev-steps", "/development-steps", "/development-steps", "Development steps — the project work log as real files (NEW / COMPLETED).", "Admin (secure) / open (IP)", "dynamic", true),
-            page("r-patterns", "/patterns", "/patterns", "Patterns & anti-patterns — the reuse library the AI consults while building.", "Admin (secure) / open (IP)", "dynamic", true),
-            page("r-ai-draft", "/ai-draft-settings", "/ai-draft-settings", "AI Draft Settings — the draft layer for the six agents' instruction / skill / MCP files.", "Admin (secure) / open (IP)", "dynamic", true),
-            page("r-documents", "/documents", "/documents", "Documents — the knowledge-base file manager (CRUD-DOCS), activated into Company Memory.", "Admin (secure) / open (IP)", "dynamic", true),
-          ],
-        },
       ],
     },
     {

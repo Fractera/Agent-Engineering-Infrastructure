@@ -89,6 +89,121 @@ export const ADMIN_LAYER: ArchNode = {
       ],
     },
     {
+      id: "service-pages",
+      label: "Service Pages",
+      kind: "group",
+      description:
+        "The admin's own control surfaces — architect-only introspection pages at " +
+        "/service/* on this cockpit (:3002), NOT part of the public app. They read " +
+        "and edit the slot's filesystem through the admin, so they stay alive even " +
+        "while the slot itself is rebuilding. Reached from the Service button in " +
+        "the admin header — it opens them in a new browser tab. Each is a window " +
+        "into the filesystem core that drives the development loop.",
+      children: [
+        {
+          id: "sp-ai-core",
+          label: "/service/ai-core — AI Core",
+          kind: "page",
+          href: "/service/ai-core",
+          meta: { roles: "architect", rendering: "dynamic" },
+          description:
+            "The living map of the workspace's AI body — agents, bridges, memory, MCP, " +
+            "tools — as an explorable tree (this very page). It draws the current state by " +
+            "request flow so you read it at a glance, in few tokens. Development tie: new " +
+            "entities declared here join the build/usage loop — ask Hermes from chat or " +
+            "Telegram to pick them up.",
+        },
+        {
+          id: "sp-architecture",
+          label: "/service/architecture — Architecture",
+          kind: "page",
+          href: "/service/architecture",
+          meta: { roles: "architect", rendering: "dynamic" },
+          description:
+            "Interactive map of every route (page + endpoint) of the slot app with its " +
+            "roles, rendering and methods, mirrored from the code on disk. Benefit: the " +
+            "structure stays legible and drift between code and intent is flagged. " +
+            "Development tie: 'Add page' declares a route as a to-do (§3.11) — an agent " +
+            "reads it, builds the page, then clears the task.",
+        },
+        {
+          id: "sp-development-steps",
+          label: "/service/development-steps — Development steps",
+          kind: "page",
+          href: "/service/development-steps",
+          meta: { roles: "architect", rendering: "dynamic" },
+          description:
+            "The project work log as real files (DEVELOPMENT-STEPS/): NEW steps are " +
+            "editable, COMPLETED are read-only history with a date. Benefit: every agent " +
+            "starts a session knowing what was done and what's next. Development tie: this " +
+            "IS the step-by-step workflow surfaced in the UI — open a step, an agent builds " +
+            "it, then it moves to completed.",
+        },
+        {
+          id: "sp-patterns",
+          label: "/service/patterns — Patterns & Anti-patterns",
+          kind: "page",
+          href: "/service/patterns",
+          meta: { roles: "architect", rendering: "dynamic" },
+          description:
+            "The reuse library: code Patterns (by category) the AI reuses while building, " +
+            "and Anti-patterns it reads before every deploy. Benefit: less re-derivation, " +
+            "fewer repeated mistakes, lower token spend. Development tie: declaring a pattern " +
+            "requests it; an agent fills it in, and later steps reuse it instead of rebuilding.",
+        },
+        {
+          id: "sp-glossary",
+          label: "/service/glossary — Glossary",
+          kind: "page",
+          href: "/service/glossary",
+          meta: { roles: "architect", rendering: "dynamic" },
+          description:
+            "The shared term map (GLOSSARY.md): approved abbreviations and preferred " +
+            "phrasings so every agent reads them the same way (e.g. aws → ai-workspace). " +
+            "Benefit: consistent language across agents and sessions. Development tie: read " +
+            "as project context on every wake-up — it keeps multi-agent work coherent.",
+        },
+        {
+          id: "sp-documents",
+          label: "/service/documents — Documents",
+          kind: "page",
+          href: "/service/documents",
+          meta: { roles: "architect", rendering: "dynamic" },
+          description:
+            "The knowledge-base file manager (CRUD-DOCS/): create folders, upload " +
+            ".txt/.md/.doc/.docx, preview, delete — real files on disk. Activating one " +
+            "ingests it into Company Memory (LightRAG). Benefit: your company/process " +
+            "knowledge becomes semantically recallable by every agent. Development tie: it " +
+            "feeds the memory that grounds every step, cutting back-and-forth.",
+        },
+        {
+          id: "sp-ai-draft-settings",
+          label: "/service/ai-draft-settings — AI Draft Settings",
+          kind: "page",
+          href: "/service/ai-draft-settings",
+          meta: { roles: "architect", rendering: "dynamic" },
+          description:
+            "The draft layer for the six agents' real instruction / skill / MCP files: " +
+            "write free-form wishes (supplement / replace); an agent applies them to the " +
+            "originals later. Benefit: tune agent behaviour without risking the live files. " +
+            "Development tie: a safe staging area between the architect and the files that " +
+            "drive each agent.",
+        },
+        {
+          id: "sp-debug",
+          label: "/service/debug — Debug",
+          kind: "page",
+          href: "/service/debug",
+          meta: { roles: "architect", rendering: "dynamic" },
+          description:
+            "Runtime diagnostics: current mode (IP/secure), resolved service URLs, live " +
+            "/api/health and /api/me probes. Benefit: quickly see whether the workspace is " +
+            "wired correctly. Development tie: a disposable scratch surface for verifying a " +
+            "deploy — removable before a public launch.",
+        },
+      ],
+    },
+    {
       id: "memory",
       label: "LightRAG — Company Memory",
       kind: "group",

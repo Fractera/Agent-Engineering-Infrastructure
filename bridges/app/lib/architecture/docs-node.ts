@@ -19,7 +19,7 @@ export const DOCS_NODE: ArchNode = {
       id: "doc-glossary",
       label: "GLOSSARY.md",
       kind: "config",
-      href: "/glossary",
+      href: "/service/glossary",
       description:
         "Project terms — approved abbreviations / preferred phrasings so every agent " +
         "reads them the same way (e.g. aws -> ai-workspace). A real file at the project " +
@@ -29,7 +29,7 @@ export const DOCS_NODE: ArchNode = {
       id: "doc-steps",
       label: "DEVELOPMENT-STEPS",
       kind: "group",
-      href: "/development-steps",
+      href: "/service/development-steps",
       description:
         "The work log — every step of how the app is built, kept as real markdown " +
         "files an agent reads and writes. Edited via the /development-steps page; " +
@@ -57,7 +57,7 @@ export const DOCS_NODE: ArchNode = {
       id: "doc-patterns",
       label: "PATTERNS",
       kind: "group",
-      href: "/patterns",
+      href: "/service/patterns",
       description:
         "The reuse library — reusable code patterns and deployment anti-patterns, kept " +
         "as real markdown files an agent reads and writes. Edited via the /patterns page; " +
@@ -85,7 +85,7 @@ export const DOCS_NODE: ArchNode = {
       id: "doc-ai-draft",
       label: "AI-DRAFT-SETTINGS",
       kind: "group",
-      href: "/ai-draft-settings",
+      href: "/service/ai-draft-settings",
       description:
         "The draft layer — free-form wishes for the six agents' real instruction / skill / " +
         "MCP files, kept as real markdown an agent reads and applies later. The originals are " +
@@ -143,7 +143,7 @@ export const DOCS_NODE: ArchNode = {
       id: "doc-crud-docs",
       label: "CRUD-DOCS",
       kind: "group",
-      href: "/documents",
+      href: "/service/documents",
       description:
         "Your own knowledge-base documents — a real folder/file tree of any depth under " +
         "CRUD-DOCS/ (company notes, technical processes, anything an agent should know). " +
