@@ -6,7 +6,6 @@ import { Brain, BrainCircuit, Bot, CircleUserRound, Globe, AlertTriangle, Wrench
 import { CodingWindowShell, type SettingsPanelId } from "./coding-workspace/coding-window-shell.client";
 import { AuthLoginModal } from "./auth-login-modal.client";
 import { SitePreviewWindow } from "./site-preview-window.client";
-import { ServiceWindow } from "./service-window.client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { useRuntimeUrls } from "@/lib/runtime-urls";
@@ -38,7 +37,6 @@ export function WorkspaceController() {
   const [terminalPlatform, setTerminalPlatform] = useState<Platform>("claude-code");
   const [terminalSessions, setTerminalSessions] = useState<Set<Platform>>(new Set());
   const [siteOpen, setSiteOpen]                 = useState(false);
-  const [serviceOpen, setServiceOpen]           = useState(false);
   const [activeEmbed, setActiveEmbed]           = useState<EmbedTarget | null>(null);
   // Embed sessions (Brain / Memory / Hermes dashboard) — mirror of
   // `terminalSessions` for the CLI agents. Every opened embed iframe stays
@@ -308,8 +306,8 @@ export function WorkspaceController() {
             variant="outline"
             size="default"
             className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
-            onClick={() => { setServiceOpen((v) => !v); }}
-            title="Architect service pages"
+            onClick={() => { window.open("/service/architecture", "_blank", "noopener"); }}
+            title="Architect service pages (opens in a new tab)"
           >
             <Wrench className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Service</span>
@@ -387,9 +385,6 @@ export function WorkspaceController() {
 
       {/* ── Site preview window ── */}
       <SitePreviewWindow open={siteOpen} onClose={() => setSiteOpen(false)} siteUrl={urls.appUrl} />
-
-      {/* ── Service window (native /service/* pages, same-origin) ── */}
-      <ServiceWindow open={serviceOpen} onClose={() => setServiceOpen(false)} />
 
       {/* ── Auth modal ── */}
       <AuthLoginModal

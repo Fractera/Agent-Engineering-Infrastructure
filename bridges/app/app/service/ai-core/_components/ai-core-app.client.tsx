@@ -83,9 +83,6 @@ export function AiCoreApp({ tree }: { tree: ArchNode }) {
     <main className="min-h-screen bg-background">
       <style>{`@keyframes archReveal{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}`}</style>
       <div className="mx-auto max-w-6xl px-6 py-8">
-        <a href="/" className="font-mono text-xs text-muted-foreground transition-colors hover:text-foreground">
-          ← back
-        </a>
 
         <h1 className="mt-3 text-xl font-semibold text-foreground">AI Core</h1>
         <p className="mt-0.5 max-w-2xl text-xs leading-relaxed text-muted-foreground">

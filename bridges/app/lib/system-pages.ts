@@ -16,9 +16,9 @@ export type SystemPage = {
 }
 
 export const SYSTEM_PAGES: SystemPage[] = [
-  { path: "/ai-core",      label: "AI Core",      blurb: "Live state of your AI entities" },
-  { path: "/architecture", label: "Architecture", blurb: "Map of your app's pages" },
-  { path: "/debug",        label: "Debug",        blurb: "Runtime diagnostics" },
+  { path: "/service/ai-core",      label: "AI Core",      blurb: "Live state of your AI entities" },
+  { path: "/service/architecture", label: "Architecture", blurb: "Map of your app's pages" },
+  { path: "/service/debug",        label: "Debug",        blurb: "Runtime diagnostics" },
 ]
 
 // Paths a future locale-redirect proxy must pass through verbatim.

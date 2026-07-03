@@ -179,7 +179,6 @@ export function AiDraftApp(
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-6xl px-6 py-8">
-        <a href="/" className="font-mono text-xs text-foreground/70 transition-colors hover:text-foreground">← back</a>
         <h1 className="mt-1 text-xl font-bold text-foreground">AI draft settings</h1>
         <p className="mt-0.5 max-w-2xl text-xs leading-relaxed text-foreground/80">
           The place where your agents evolve. Propose new skills, connectors and instructions — for all six coding

@@ -277,9 +277,6 @@ export function ArchitectureApp() {
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-6xl px-6 py-8">
-        <a href="/" className="font-mono text-xs text-foreground/70 transition-colors hover:text-foreground">
-          ← back
-        </a>
         <h1 className="mt-1 text-xl font-bold text-foreground">Architecture</h1>
         <p className="mt-0.5 max-w-2xl text-xs leading-relaxed text-foreground/80">
           An interactive map of your app&apos;s real structure — every page and endpoint backed by
