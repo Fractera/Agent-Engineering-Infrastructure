@@ -4,7 +4,10 @@ import { stat } from "fs/promises"
 import { join } from "path"
 import { getSession } from "@/lib/auth/get-session"
 import { scanTree } from "@/lib/architecture/fs-scan"
-import { writeRouteMeta, encodePath, type Task } from "@/lib/architecture/readme-file"
+import {
+  writeRouteMeta, encodePath, MENU_SLOTS, VISIBILITIES,
+  type Task, type MenuSlot, type Visibility, type Integration,
+} from "@/lib/architecture/readme-file"
 import { routeDir } from "@/lib/architecture/source-bundle"
 import { CODE_DIFF_PREFIX } from "@/lib/architecture/line-diff"
 
@@ -52,7 +55,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   if (!(await serviceApiGate(req))) return NextResponse.json({ error: "unauthorized" }, { status: 401 })
-  const { title, todo, base, dynamic, queryParams, kind, example } = await req.json()
+  const body = await req.json()
+  const { title, todo, base, dynamic, queryParams, kind, example } = body
   if (!title?.trim()) {
     return NextResponse.json({ error: "title is required" }, { status: 400 })
   }
@@ -64,6 +68,28 @@ export async function POST(req: NextRequest) {
     ? queryParams.map((q: QP) => ({ key: String(q?.key ?? "").trim(), value: String(q?.value ?? "").trim() })).filter((q: QP) => q.key)
     : []
   const isDynamic = !!dynamic
+
+  // Placement & access + project runtime — every field OPTIONAL: absent in the
+  // request (e.g. the endpoint panel) means absent in the README, not a default.
+  const menus: MenuSlot[] | undefined = Array.isArray(body.menus)
+    ? body.menus.filter((s: unknown): s is MenuSlot => MENU_SLOTS.includes(s as MenuSlot))
+    : undefined
+  const visibility: Visibility | undefined = VISIBILITIES.includes(body.visibility) ? body.visibility : undefined
+  const roles: string[] | undefined =
+    visibility === "rolesOnly" && Array.isArray(body.roles)
+      ? body.roles.map(String).map((s: string) => s.trim()).filter(Boolean)
+      : undefined
+  const admin: boolean | undefined = typeof body.admin === "boolean" ? body.admin : undefined
+  const dashboard: boolean | undefined = typeof body.dashboard === "boolean" ? body.dashboard : undefined
+  const cron: boolean | undefined = typeof body.cron === "boolean" ? body.cron : undefined
+  const integrations: Integration[] | undefined = Array.isArray(body.integrations)
+    ? body.integrations
+        .map((it: { name?: unknown; envKeys?: unknown }) => ({
+          name: String(it?.name ?? "").trim(),
+          envKeys: Array.isArray(it?.envKeys) ? it.envKeys.map(String).map((s: string) => s.trim().toUpperCase().replace(/[^A-Z0-9_]/g, "_")).filter(Boolean) : [],
+        }))
+        .filter((it: Integration) => it.name)
+    : undefined
 
   const session = await getSession(req)
   const createdBy = session?.email ?? req.headers.get("x-agent-identity") ?? "unknown"
@@ -82,7 +108,10 @@ export async function POST(req: NextRequest) {
     tasks.push({ id: crypto.randomUUID(), kind: "todo", body: `${CODE_DIFF_PREFIX}${fname}\n${diff}`, outcome: null })
   }
 
-  await writeRouteMeta({ path: href, title: String(title).trim(), kind: routeKind, base: basePath, dynamic: isDynamic, query, tasks })
+  await writeRouteMeta({
+    path: href, title: String(title).trim(), kind: routeKind, base: basePath, dynamic: isDynamic, query, tasks,
+    menus, visibility, roles, admin, dashboard, cron, integrations,
+  })
 
   return NextResponse.json(
     {
@@ -90,6 +119,7 @@ export async function POST(req: NextRequest) {
         id: encodePath(href),
         slug, kind: routeKind, base: basePath, dynamic: isDynamic, query,
         title: String(title).trim(), todo: items, status: "requested", created_at: new Date().toISOString(), created_by: createdBy,
+        menus, visibility, roles, admin, dashboard, cron, integrations,
       },
     },
     { status: 201 },

@@ -3,9 +3,18 @@
 import { useState } from "react"
 import { ChevronRight, Trash2, Loader2, AlertTriangle } from "lucide-react"
 import type { QueryParam } from "@/lib/architecture/requested-tree"
+import type { MenuSlot, Visibility, Integration } from "@/lib/architecture/readme-file"
 import { RouteTodo } from "./route-todo.client"
 import { RouteDangerZone } from "./route-danger-zone.client"
 import { RouteSource } from "./route-source.client"
+
+// Same confirm vocabulary as the declare panel / registry.json labels.
+const MENU_TITLE: Record<MenuSlot, string> = { top: "top menu", footer: "footer", left: "left drawer", right: "right drawer" }
+function visibilityText(v: Visibility | undefined, roles: string[]): string {
+  if (v === "publicGuest") return "everyone (guests get an account on first action)"
+  if (v === "rolesOnly") return `only signed-in with role(s): ${roles.join(", ") || "—"}`
+  return "everyone (no login)"
+}
 
 // Right-section panel for a declared-but-not-built route — a page, an endpoint,
 // or a project (folder + page). Like any route it carries an editable to-do, a
@@ -14,6 +23,7 @@ import { RouteSource } from "./route-source.client"
 // inside this route's README.md on disk (no DB), keyed by its path.
 export function RequestedDetailPanel({
   title, path, kind, dynamic = false, query = [], onChanged, onRemove,
+  menus, visibility, roles = [], admin, dashboard, cron, integrations = [],
 }: {
   title: string
   path: string
@@ -23,7 +33,17 @@ export function RequestedDetailPanel({
   onChanged?: () => void
   /** Permanently delete this declared entity (the draft itself). */
   onRemove?: () => Promise<void> | void
+  // Placement & access + project runtime (optional — old declarations have none).
+  menus?: MenuSlot[]
+  visibility?: Visibility
+  roles?: string[]
+  admin?: boolean
+  dashboard?: boolean
+  cron?: boolean
+  integrations?: Integration[]
 }) {
+  const hasAccess = menus !== undefined || visibility !== undefined || admin !== undefined || dashboard !== undefined
+  const hasRuntime = cron !== undefined || integrations.length > 0
   const [bump, setBump] = useState(0)
   const [srcOpen, setSrcOpen] = useState(false)
   const [removing, setRemoving] = useState(false)
@@ -55,6 +75,39 @@ export function RequestedDetailPanel({
           A declared route — not built yet. An agent picks up the tasks below, plans
           and builds it; once live it becomes a real route in this map.
         </p>
+
+        {hasAccess && (
+          <div className="mt-4">
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-foreground">Placement &amp; access</p>
+            <ul className="flex flex-col gap-1 text-xs text-foreground">
+              <li>
+                <span className="text-foreground/60">Appears in: </span>
+                {(menus ?? []).length ? (menus ?? []).map(s => MENU_TITLE[s]).join(", ") : "nowhere (no menu enabled)"}
+              </li>
+              <li><span className="text-foreground/60">Visible to: </span>{visibilityText(visibility, roles)}</li>
+              <li><span className="text-foreground/60">Admin panel: </span>{admin ? "yes" : "no"}</li>
+              <li><span className="text-foreground/60">User dashboards: </span>{dashboard ? "yes" : "no"}</li>
+            </ul>
+          </div>
+        )}
+
+        {hasRuntime && (
+          <div className="mt-4">
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-foreground">Project runtime</p>
+            <ul className="flex flex-col gap-1 text-xs text-foreground">
+              <li><span className="text-foreground/60">Cron processes: </span>{cron ? "yes" : "no"}</li>
+              {integrations.map((it, i) => (
+                <li key={i}>
+                  <span className="text-foreground/60">Integration: </span>
+                  <span className="font-medium">{it.name}</span>
+                  {it.envKeys.length > 0 && (
+                    <span className="font-mono text-[10px] text-foreground/60"> — {it.envKeys.join(", ")}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {query.length > 0 && (
           <div className="mt-4">

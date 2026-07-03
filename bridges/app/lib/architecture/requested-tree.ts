@@ -1,6 +1,7 @@
 import type { ArchNode } from "./types"
 import { ROUTES_TREE } from "./routes"
 import { DEFAULT_PROJECT, type Project } from "./projects"
+import type { MenuSlot, Visibility, Integration } from "./readme-file"
 
 // A declared-but-not-built page, materialized as a real README.md on disk and
 // merged into the route tree as a "pending" node under Pages. Survives reload
@@ -20,6 +21,15 @@ export type Requested = {
   status: string
   created_at: string
   created_by?: string
+  // Placement & access + project runtime — same optional fields as RouteMeta
+  // (round-tripped through the README machine block by fs-scan).
+  menus?: MenuSlot[]
+  visibility?: Visibility
+  roles?: string[]
+  admin?: boolean
+  dashboard?: boolean
+  cron?: boolean
+  integrations?: Integration[]
 }
 
 export function requestedNodeId(id: string) {

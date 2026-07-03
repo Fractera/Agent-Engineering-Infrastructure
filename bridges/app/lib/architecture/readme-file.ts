@@ -12,6 +12,21 @@ import { routeDir } from "./source-bundle"
 
 export type Query = { key: string; value: string }
 export type Task = { id: string; kind: "todo" | "delete"; body: string; outcome?: string | null }
+
+// Placement & access vocabulary — the SAME words the frozen-pipeline confirm layer
+// uses (frozen-templates registry.json confirm.labels): menus top/footer/left/right,
+// visibility public / publicGuest / rolesOnly, admin, dashboard. One vocabulary,
+// two entry points (Hermes order-sheet and this panel).
+export type MenuSlot = "top" | "footer" | "left" | "right"
+export type Visibility = "public" | "publicGuest" | "rolesOnly"
+// A project's external automation: env keys are RECORDED in the declaration; the
+// executor materializes them into app/.env.local via the env setter + rebuild
+// (build-time env contract, step 143).
+export type Integration = { name: string; envKeys: string[] }
+
+export const MENU_SLOTS: MenuSlot[] = ["top", "footer", "left", "right"]
+export const VISIBILITIES: Visibility[] = ["public", "publicGuest", "rolesOnly"]
+
 export type RouteMeta = {
   path: string
   title: string
@@ -21,6 +36,16 @@ export type RouteMeta = {
   query: Query[]
   description?: string | null
   tasks: Task[]
+  // Placement & access (both groups). All optional: absent in old READMEs and in
+  // endpoint declarations — undefined means "not declared", never a default.
+  menus?: MenuSlot[]
+  visibility?: Visibility
+  roles?: string[]
+  admin?: boolean
+  dashboard?: boolean
+  // Project runtime (declarations under /projects/** only).
+  cron?: boolean
+  integrations?: Integration[]
 }
 
 const META_OPEN = "<!-- fractera:meta"
@@ -62,6 +87,14 @@ export function metaFromPath(path: string): RouteMeta {
 }
 
 // ---- render (structured → markdown + machine block) --------------------------
+const MENU_LABEL: Record<MenuSlot, string> = { top: "top menu", footer: "footer", left: "left drawer", right: "right drawer" }
+
+function visibilityLine(m: RouteMeta): string {
+  if (m.visibility === "publicGuest") return "everyone (guests get an account on first action)"
+  if (m.visibility === "rolesOnly") return `ONLY signed-in with role(s): ${(m.roles ?? []).map(r => `\`${r}\``).join(", ") || "—"}`
+  return "EVERYONE (no login)"
+}
+
 function renderBody(m: RouteMeta): string {
   const kind = m.kind === "api" ? "endpoint" : m.path.startsWith("/project/") ? "project" : "page"
   const todos = m.tasks.filter(t => t.kind !== "delete")
@@ -77,6 +110,36 @@ function renderBody(m: RouteMeta): string {
   if (m.query.length) {
     lines.push("## Query params")
     for (const p of m.query) lines.push(`- \`${p.key}\` = ${p.value || "—"}`)
+    lines.push("")
+  }
+  // Placement & access — declared INTENT. Menu placement here does not add menu
+  // entries by itself: the builder agent writes the real rows into the group's
+  // _data/group.ts menu manifests when it builds the page.
+  if (m.menus !== undefined || m.visibility !== undefined || m.admin !== undefined || m.dashboard !== undefined) {
+    lines.push("## Placement & access")
+    const menus = m.menus ?? []
+    lines.push(`- **Appears in:** ${menus.length ? menus.map(s => MENU_LABEL[s]).join(", ") : "NOWHERE (no menu enabled!)"}`)
+    lines.push(`- **Visible to:** ${visibilityLine(m)}`)
+    lines.push(`- **Admin panel:** ${m.admin ? "yes" : "no"}`)
+    lines.push(`- **User dashboards:** ${m.dashboard ? "yes" : "no"}`)
+    if (menus.length) lines.push(`- Menu placement is intent: when building, add the real entries to the group's \`_data/group.ts\` menu manifests.`)
+    lines.push("")
+  }
+  // Project runtime — only for declarations under /projects/**.
+  if (m.cron !== undefined || m.integrations !== undefined) {
+    lines.push("## Project runtime")
+    lines.push(`- **Cron processes:** ${m.cron ? "yes" : "no"}`)
+    const ints = m.integrations ?? []
+    if (ints.length) {
+      lines.push("- **External integrations:**")
+      for (const it of ints) {
+        const keys = it.envKeys.length ? it.envKeys.map(k => `\`${k}\``).join(", ") : "—"
+        lines.push(`  - ${it.name} — env keys: ${keys}`)
+      }
+      lines.push(`- Env keys are recorded here only; when executing, materialize them into \`app/.env.local\` via the env setter + rebuild (build-time env contract).`)
+    } else {
+      lines.push("- **External integrations:** none")
+    }
     lines.push("")
   }
   lines.push("## To-do (for the agent)")
@@ -95,7 +158,13 @@ function renderBody(m: RouteMeta): string {
 }
 
 function render(m: RouteMeta): string {
-  const machine = { title: m.title, kind: m.kind, base: m.base, dynamic: m.dynamic, query: m.query, description: m.description ?? null, tasks: m.tasks }
+  // JSON.stringify drops undefined fields, so old-style declarations stay byte-identical.
+  const machine = {
+    title: m.title, kind: m.kind, base: m.base, dynamic: m.dynamic, query: m.query,
+    description: m.description ?? null, tasks: m.tasks,
+    menus: m.menus, visibility: m.visibility, roles: m.roles, admin: m.admin, dashboard: m.dashboard,
+    cron: m.cron, integrations: m.integrations,
+  }
   return `${renderBody(m)}\n${META_OPEN}\n${JSON.stringify(machine)}\n${META_CLOSE}\n`
 }
 
@@ -118,6 +187,20 @@ export async function readRouteMeta(path: string): Promise<RouteMeta | null> {
         query: Array.isArray(d.query) ? d.query : [],
         description: d.description ?? null,
         tasks: Array.isArray(d.tasks) ? d.tasks : [],
+        menus: Array.isArray(d.menus) ? d.menus.filter((s: unknown): s is MenuSlot => MENU_SLOTS.includes(s as MenuSlot)) : undefined,
+        visibility: VISIBILITIES.includes(d.visibility) ? (d.visibility as Visibility) : undefined,
+        roles: Array.isArray(d.roles) ? d.roles.map(String) : undefined,
+        admin: typeof d.admin === "boolean" ? d.admin : undefined,
+        dashboard: typeof d.dashboard === "boolean" ? d.dashboard : undefined,
+        cron: typeof d.cron === "boolean" ? d.cron : undefined,
+        integrations: Array.isArray(d.integrations)
+          ? d.integrations
+              .map((it: { name?: unknown; envKeys?: unknown }) => ({
+                name: String(it?.name ?? "").trim(),
+                envKeys: Array.isArray(it?.envKeys) ? it.envKeys.map(String).map(s => s.trim()).filter(Boolean) : [],
+              }))
+              .filter((it: Integration) => it.name)
+          : undefined,
       }
     } catch { /* fall through to body parse */ }
   }

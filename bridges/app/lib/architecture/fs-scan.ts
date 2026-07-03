@@ -81,6 +81,13 @@ export async function scanTree(): Promise<ScanResult> {
           todo: meta.tasks.filter(t => t.kind === "todo").map(t => t.body),
           status: "requested",
           created_at: st ? new Date(st.mtimeMs).toISOString() : "",
+          menus: meta.menus,
+          visibility: meta.visibility,
+          roles: meta.roles,
+          admin: meta.admin,
+          dashboard: meta.dashboard,
+          cron: meta.cron,
+          integrations: meta.integrations,
         })
       }
     }

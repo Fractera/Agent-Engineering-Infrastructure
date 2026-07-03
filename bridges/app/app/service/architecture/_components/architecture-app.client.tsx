@@ -213,6 +213,13 @@ export function ArchitectureApp() {
         kind: (selected.kind === "api" ? "api" : "page") as "page" | "api",
         dynamic: reqItem?.dynamic ?? false,
         query: reqItem?.query ?? [],
+        menus: reqItem?.menus,
+        visibility: reqItem?.visibility,
+        roles: reqItem?.roles,
+        admin: reqItem?.admin,
+        dashboard: reqItem?.dashboard,
+        cron: reqItem?.cron,
+        integrations: reqItem?.integrations,
       }
     : null
   const meta = selected && !declaredView && !isProject ? (routeMeta[selected.href ?? selected.label] ?? null) : null
