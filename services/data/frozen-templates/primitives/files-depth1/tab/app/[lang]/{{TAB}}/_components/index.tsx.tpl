@@ -53,31 +53,31 @@ export default async function {{TAB_PASCAL}}Index({ params }: { params: Promise<
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
-      <main className="min-h-screen bg-black text-white">
+      <main className="min-h-screen bg-background text-foreground">
         <div className="mx-auto flex max-w-5xl flex-col gap-10 px-6 py-20 md:py-14">
           <header className="flex flex-col gap-3">
             <p className="text-xs uppercase tracking-widest text-violet-400/70">{ui.eyebrow}</p>
             <h1 className="text-4xl font-bold tracking-tight md:text-3xl">{ui.indexTitle}</h1>
-            <p className="max-w-2xl text-base text-white/50">{ui.indexIntro}</p>
+            <p className="max-w-2xl text-base text-muted-foreground">{ui.indexIntro}</p>
           </header>
 
           {/* Flat vertical list — date + title + summary, no images, no columns. */}
-          <ul className="flex flex-col divide-y divide-white/10 border-y border-white/10">
+          <ul className="flex flex-col divide-y divide-border border-y border-border">
             {items.map(item => (
               <li key={item.slug}>
                 <a
                   href={`/${lang}/{{TAB}}/${item.slug}`}
-                  className="group flex flex-col gap-1.5 py-5 transition-colors hover:bg-white/[0.02]"
+                  className="group flex flex-col gap-1.5 py-5 transition-colors hover:bg-muted/40"
                 >
-                  <div className="flex items-center gap-3 text-xs text-white/40">
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground/70">
                     <time dateTime={item.date}>{formatLocalizedDate(item.date, lang, { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' })}</time>
                     <span aria-hidden>·</span>
                     <span>{item.readingMinutes} {ui.minRead}</span>
                   </div>
-                  <h2 className="text-lg font-semibold leading-snug text-white group-hover:text-violet-300">
+                  <h2 className="text-lg font-semibold leading-snug text-foreground group-hover:text-violet-300">
                     {item.title}
                   </h2>
-                  <p className="text-sm leading-relaxed text-white/50">{item.summary}</p>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{item.summary}</p>
                 </a>
               </li>
             ))}

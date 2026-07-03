@@ -6,7 +6,7 @@ export function headingId(text: string): string {
   return text.toLowerCase().replace(/\*\*/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60)
 }
 
-// Dark-theme inline renderer for content prose: **bold** and [label](url).
+// Inline renderer for content prose: **bold** and [label](url).
 // Outbound third-party links get rel="nofollow" (do not pass link weight); links
 // to our own domain (fractera.ai) stay followed.
 export function inline(text: string, kp: string): ReactNode[] {
@@ -18,7 +18,7 @@ export function inline(text: string, kp: string): ReactNode[] {
   while ((m = re.exec(text)) !== null) {
     if (m.index > last) nodes.push(text.slice(last, m.index))
     if (m[1] !== undefined) {
-      nodes.push(<strong key={`${kp}-b${i}`} className="font-semibold text-white">{m[1]}</strong>)
+      nodes.push(<strong key={`${kp}-b${i}`} className="font-semibold text-foreground">{m[1]}</strong>)
     } else {
       const href = m[3]
       const external = /^https?:/.test(href)

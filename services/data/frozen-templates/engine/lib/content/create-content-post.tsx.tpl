@@ -186,10 +186,10 @@ export function createContentPost(config: ContentPostConfig) {
     ]
 
     const metaLine = (
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/40">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground/70">
         {post.authorName && (
           <>
-            <span className="font-medium text-white/60">{post.authorName}</span>
+            <span className="font-medium text-muted-foreground">{post.authorName}</span>
             <span aria-hidden>·</span>
           </>
         )}

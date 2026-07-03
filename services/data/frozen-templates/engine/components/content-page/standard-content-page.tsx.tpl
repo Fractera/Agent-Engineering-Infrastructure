@@ -67,11 +67,11 @@ export function StandardContentPage({
     .map(b => ({ id: headingId(b.text), text: b.text.replace(/\*\*/g, '') }))
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main className="min-h-screen bg-background text-foreground">
       <article className="mx-auto w-full max-w-5xl px-6 py-16 md:py-12">
 
         {/* 1. Breadcrumb — single row, never wraps, never overflows. */}
-        <nav aria-label="Breadcrumb" className="text-sm text-white/40">
+        <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground/70">
           <ol className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-hidden">
             {breadcrumbs.map((c, i) => {
               const isLast = i === breadcrumbs.length - 1
@@ -81,11 +81,11 @@ export function StandardContentPage({
                   className={`flex items-center gap-1.5 ${isLast ? 'min-w-0' : 'shrink-0'}`}
                 >
                   {c.href && !isLast ? (
-                    <a href={c.href} className="whitespace-nowrap hover:text-white">{c.label}</a>
+                    <a href={c.href} className="whitespace-nowrap hover:text-foreground">{c.label}</a>
                   ) : (
-                    <span aria-current="page" className="block min-w-0 truncate text-white/60">{c.label}</span>
+                    <span aria-current="page" className="block min-w-0 truncate text-muted-foreground">{c.label}</span>
                   )}
-                  {!isLast && <span aria-hidden className="shrink-0 text-white/25">/</span>}
+                  {!isLast && <span aria-hidden className="shrink-0 text-muted-foreground/70">/</span>}
                 </li>
               )
             })}
@@ -93,7 +93,7 @@ export function StandardContentPage({
         </nav>
 
         {/* 2. Header — tags + max-size H1 + subtitle + author/byline */}
-        <header className="mt-6 flex flex-col gap-5 border-b border-white/10 pb-8">
+        <header className="mt-6 flex flex-col gap-5 border-b border-border pb-8">
           {tags && tags.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               {tags.map(t => (
@@ -104,9 +104,8 @@ export function StandardContentPage({
             </div>
           )}
           <h1
-            className="text-3xl font-bold font-serif leading-tight tracking-tight md:text-4xl lg:text-5xl"
+            className="text-3xl font-bold font-serif leading-tight tracking-tight text-foreground md:text-4xl lg:text-5xl"
             style={{
-              color: 'white',
               WebkitTextStroke: '1px rgba(139,92,246,0.8)',
               paintOrder: 'stroke fill',
               textShadow: '0 0 18px rgba(139,92,246,0.55), 0 0 36px rgba(139,92,246,0.28)',
@@ -115,12 +114,12 @@ export function StandardContentPage({
             {title}
           </h1>
           {subtitle && (
-            <p className="text-lg leading-relaxed text-white/55 md:text-base">{subtitle}</p>
+            <p className="text-lg leading-relaxed text-muted-foreground md:text-base">{subtitle}</p>
           )}
           {metaLine ?? (
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/40">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground/70">
               {author.url ? (
-                <a href={author.url} rel="author" className="hover:text-white">{author.name}</a>
+                <a href={author.url} rel="author" className="hover:text-foreground">{author.name}</a>
               ) : (
                 <span>{author.name}</span>
               )}
@@ -138,24 +137,24 @@ export function StandardContentPage({
               src={heroImage}
               alt={heroAlt ?? title}
               loading="eager"
-              className="w-full rounded-2xl border border-white/10"
+              className="w-full rounded-2xl border border-border"
             />
           </figure>
         ))}
 
         {/* 3. Table of contents */}
         {toc.length > 0 && (
-          <nav aria-label="Contents" className="mt-8 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+          <nav aria-label="Contents" className="mt-8 rounded-2xl border border-border bg-muted/40 p-5">
             <p className="text-xs font-semibold uppercase tracking-widest text-violet-400/70">
               {ui.tocHeading} · {toc.length}
             </p>
             <ol className="mt-3 flex flex-col gap-2">
               {toc.map((item, i) => (
                 <li key={item.id} className="flex gap-3 text-[15px] leading-snug">
-                  <span aria-hidden className="select-none font-mono text-sm text-white/30">
+                  <span aria-hidden className="select-none font-mono text-sm text-muted-foreground/70">
                     {String(i + 1).padStart(2, '0')}
                   </span>
-                  <a href={`#${item.id}`} className="text-white/65 transition-colors hover:text-violet-300">
+                  <a href={`#${item.id}`} className="text-muted-foreground transition-colors hover:text-violet-300">
                     {item.text}
                   </a>
                 </li>
@@ -172,13 +171,13 @@ export function StandardContentPage({
 
         {/* FAQ — the last CONTENT section by contract; only the back link sits below it. */}
         {faq && faq.length > 0 && (
-          <section aria-labelledby="faq-heading" className="mt-12 border-t border-white/10 pt-10">
+          <section aria-labelledby="faq-heading" className="mt-12 border-t border-border pt-10">
             <h2 id="faq-heading" className="text-2xl font-bold tracking-tight">{ui.faqHeading}</h2>
             <dl className="mt-6 flex flex-col gap-4">
               {faq.map((f, i) => (
-                <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
-                  <dt className="text-base font-semibold text-white">{f.q}</dt>
-                  <dd className="mt-2 text-[15px] leading-relaxed text-white/60">{f.a}</dd>
+                <div key={i} className="rounded-2xl border border-border bg-muted/40 p-5">
+                  <dt className="text-base font-semibold text-foreground">{f.q}</dt>
+                  <dd className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{f.a}</dd>
                 </div>
               ))}
             </dl>
@@ -186,7 +185,7 @@ export function StandardContentPage({
         )}
 
         {/* Back link — the ABSOLUTE LAST item on every content page (below the FAQ). */}
-        <div className="mt-12 border-t border-white/10 pt-8">
+        <div className="mt-12 border-t border-border pt-8">
           <a href={backHref} className="inline-flex items-center gap-1.5 text-sm font-medium text-violet-400 hover:text-violet-300">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 12H5M12 19l-7-7 7-7" />
