@@ -124,7 +124,6 @@ export class ContentOrchestratorMcpServer {
     this.dataUrl = dataUrl ?? 'http://127.0.0.1:3300'
     this.dataSecret = dataSecret ?? process.env.DATA_SECRET ?? ''
     this.adminUrl = adminUrl ?? 'http://127.0.0.1:3002'
-    this.appUrl = process.env.SLOT_APP_URL ?? 'http://127.0.0.1:3000'
     this.appDir = appDir ?? pathResolve(__dirname, '../../app')
     this.deploySecretFile = deploySecretFile ?? '/opt/fractera/bridges/app/.env.local'
     this.orchestrator = join(this.appDir, '.agents/skills/orchestrate-content-by-steps/orchestrate-content-by-steps.mjs')
@@ -167,20 +166,20 @@ export class ContentOrchestratorMcpServer {
   }
 
   // Read-only situational awareness for Hermes: reuse the SAME live filesystem
-  // scan that powers /architecture (GET …/architecture/signature → scanTree()).
-  // Static-first means every content post is its own route folder with a page.tsx,
-  // so the scan already enumerates them as builtExtra — that is why the page shows
-  // posts the deployment journal does not. We just regroup into a compact map.
+  // scan that powers /service/architecture (GET …/architecture/signature → scanTree()).
+  // That endpoint moved to the admin app (:3002) in step 170, but its fs-scan reads the
+  // SLOT filesystem via slotRoot(), so it still enumerates every content post (each is
+  // its own route folder with a page.tsx → builtExtra). We just regroup into a compact map.
   async _perceive(args) {
     const scope = typeof args.scope === 'string' && args.scope.trim() ? args.scope.trim() : null
     let sig
     try {
-      const r = await fetch(`${this.appUrl}/api/project/default/architecture/signature`,
+      const r = await fetch(`${this.adminUrl}/api/project/default/architecture/signature`,
         { headers: { 'X-Agent-Identity': 'hermes' }, signal: AbortSignal.timeout(15000) })
       if (!r.ok) throw new Error(`signature scan returned ${r.status}`)
       sig = await r.json()
     } catch (e) {
-      throw new Error(`could not read the live workspace (is the site running on :3000?): ${e.message}`)
+      throw new Error(`could not read the live workspace (is the admin service running on :3002?): ${e.message}`)
     }
     const collections = {}
     const pages = []

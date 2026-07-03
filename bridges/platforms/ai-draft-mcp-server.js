@@ -6,8 +6,10 @@ import { handleMcpHandshake } from './mcp-handshake.js'
 // kimi-code, hermes) can call owner_draft_create_record to propose a new
 // skill or MCP connector. The server generates a structured source skeleton
 // and todo tasks from the description, then publishes the draft to
-// AI-DRAFT-SETTINGS/ via the app's own API (:3000). The architect sees the
-// draft on /ai-draft-settings, reviews it and finalises it.
+// AI-DRAFT-SETTINGS/ via the admin service API (:3002; the ai-draft-settings and
+// development-steps routes moved out of the slot into the admin app in step 170,
+// their fs roots resolve to the slot via slotRoot()). The architect sees the
+// draft on /service/ai-draft-settings, reviews it and finalises it.
 //
 // §8.2 confirm flow via dry_run:
 //   call with dry_run=true → preview returned, nothing written to disk.
@@ -250,7 +252,7 @@ export class AiDraftMcpServer {
   constructor({ port, secret, appUrl }) {
     this.port = port
     this.secret = secret
-    this.appUrl = appUrl ?? 'http://127.0.0.1:3000'
+    this.appUrl = appUrl ?? 'http://127.0.0.1:3002'
   }
 
   start() {

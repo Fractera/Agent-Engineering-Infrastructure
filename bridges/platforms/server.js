@@ -1166,11 +1166,12 @@ new AppSettingsMcpServer({
 // Any of the 6 coding agents calls owner_draft_create_record to propose a new
 // skill or MCP connector. The server generates a structured source skeleton +
 // tasks from the description and publishes the draft to AI-DRAFT-SETTINGS/ via
-// the app API (:3000). §8.2 dry_run flow: preview first, then create. → step 123.
+// the admin service API (:3002; ai-draft-settings + development-steps routes moved
+// out of the slot in step 170). §8.2 dry_run flow: preview first, then create. → step 123.
 new AiDraftMcpServer({
   port: Number(process.env.AI_DRAFT_MCP_PORT ?? 3221),
   secret: MCP_SECRET,
-  appUrl: process.env.APP_URL ?? 'http://127.0.0.1:3000',
+  appUrl: process.env.ADMIN_URL ?? 'http://127.0.0.1:3002',
 }).start()
 
 // ── Frozen Template Constructor MCP server (singleton, port 3224) ────────────
