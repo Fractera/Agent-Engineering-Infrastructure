@@ -60,7 +60,7 @@ function toolsSchema() {
             } },
           },
           owner_lang: { type: 'string', enum: ['en', 'ru'], description: 'Language of the owner dialogue — the order-sheet/question texts come back in it (default en).' },
-          approve: { type: 'string', description: 'The order-sheet token (os-…) from the PREVIOUS dry_run, after the owner explicitly confirmed the shown lines. A plan run WITHOUT a matching token is refused — dry_run first, show, confirm, then pass it.' },
+          approve: { type: 'string', description: 'The order-sheet token (os-…) from the PREVIOUS dry_run, after the owner explicitly confirmed the shown lines. A plan run WITHOUT a matching token is refused — dry_run first, show, confirm, then pass it. RESUME (step 172): if a previous run of the SAME plan died mid-queue, calling again with the same plan + same token resumes it — the queue lives on disk in NEW-STEPS, completed sub-steps are skipped.' },
           topic: { type: 'string', description: 'What the page is about (required for add-page), e.g. "apple". Becomes the page slug.' },
           tab: { type: 'string', description: 'Section slug (default news). news/blog/documentation.' },
           format: { type: 'string', enum: ['news', 'blog', 'document'], description: 'Section preset when creating it (default news).' },
@@ -323,8 +323,11 @@ export class ContentOrchestratorMcpServer {
             : `Правильно ли я понимаю: ${action} «${tab}${topic ? '/' + topic : ''}»? Под-шаги: ${steps.map(s => s.name).join('; ')}. Каждый: открыть шаг → собрать → развернуть → ЗАПИСАТЬ развёртывание (обязательно) → закрыть. Повторите без dry_run для подтверждения.` })
       }
       if (last && last.ok === false) {
-        return textResult({ ok: false, mode: isPlan ? 'plan' : 'single', action, tab, topic, failedStage: last.failedStage, detail: last.detail, stepKeptOpen: last.stepKeptOpen, chronology: last.chronology,
-          note: 'A sub-step failed; per the Vercel invariant the step was NOT closed (no deployment record → stays open). Report the failing stage; do not hand-fix — repair the tool.' })
+        // MATERIALIZE-FIRST (step 172): the approved queue is on disk BEFORE execution, so a failure
+        // (or a dead process) loses nothing — relay the resume contract to the model verbatim.
+        return textResult({ ok: false, mode: isPlan ? 'plan' : 'single', action, tab, topic, failedStage: last.failedStage, detail: last.detail, stepKeptOpen: last.stepKeptOpen,
+          order_sheet_id: last.order_sheet_id, queue_persisted: last.queue_persisted, remaining: last.remaining, resume: last.resume, chronology: last.chronology,
+          note: 'A sub-step failed; per the Vercel invariant the step was NOT closed (no deployment record → stays open). The rest of the approved queue is PERSISTED in NEW-STEPS (step 172): to resume — even in a new session — call this tool again with the SAME plan and the SAME approve token; completed sub-steps are skipped automatically. Do not hand-fix content — repair the tool if it is broken.' })
       }
       if (code !== 0) throw new Error(`orchestrator exited ${code}: ${out.slice(-400)}`)
       return textResult({ ...(last ?? { ok: true }), note: 'Done end-to-end: each sub-step opened a development step, deployed, recorded a deployment, and closed. See chronology + steps.' })
