@@ -99,7 +99,18 @@ async function requireAuth(req, res, next) {
   try {
     const r = await fetch(`${AUTH_URL}/api/session`, { headers: { cookie } })
     if (!r.ok) return res.status(401).json({ error: 'Unauthorized' })
-    req.session = await r.json()
+    const session = await r.json()
+    req.session = session
+    // Step 135 mutation gate: on the human (cookie) path a mutating request to the data
+    // store requires the architect ROLE, not merely a valid session — a logged-in
+    // non-architect (guest/user/buyer/…) must not write products/media/records by cookie.
+    // Reads (GET/HEAD) stay broader. The trusted agent path (x-data-secret) above is
+    // unaffected; end-users interact with the slot app (:3000), not this internal store.
+    const mutating = !['GET', 'HEAD', 'OPTIONS'].includes(req.method)
+    const roles = Array.isArray(session?.roles) ? session.roles : []
+    if (mutating && !roles.includes('architect')) {
+      return res.status(403).json({ error: 'Forbidden: architect role required to modify the data store' })
+    }
     next()
   } catch {
     res.status(503).json({ error: 'Auth service unavailable' })
