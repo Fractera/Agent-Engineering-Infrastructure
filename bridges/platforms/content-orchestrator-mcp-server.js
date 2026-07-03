@@ -174,8 +174,12 @@ export class ContentOrchestratorMcpServer {
     const scope = typeof args.scope === 'string' && args.scope.trim() ? args.scope.trim() : null
     let sig
     try {
+      // Step 135: in Secure mode the admin service-auth gate requires the internal
+      // secret alongside x-agent-identity. Send it so this read works in both modes.
+      const _sig_headers = { 'X-Agent-Identity': 'hermes' }
+      if (process.env.HERMES_MCP_SECRET) _sig_headers['x-agent-secret'] = process.env.HERMES_MCP_SECRET
       const r = await fetch(`${this.adminUrl}/api/project/default/architecture/signature`,
-        { headers: { 'X-Agent-Identity': 'hermes' }, signal: AbortSignal.timeout(15000) })
+        { headers: _sig_headers, signal: AbortSignal.timeout(15000) })
       if (!r.ok) throw new Error(`signature scan returned ${r.status}`)
       sig = await r.json()
     } catch (e) {

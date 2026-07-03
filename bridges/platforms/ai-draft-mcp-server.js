@@ -255,6 +255,17 @@ export class AiDraftMcpServer {
     this.appUrl = appUrl ?? 'http://127.0.0.1:3002'
   }
 
+  // Headers for calls to the admin service API (:3002). Step 135: the service-auth
+  // gate trusts x-agent-identity in Secure mode ONLY when accompanied by the internal
+  // secret (HERMES_MCP_SECRET). Sent on every :3002 call so reads and writes work in
+  // both modes (in IP mode the secret is simply ignored by the open gate).
+  _adminHeaders(extra) {
+    const h = { 'X-Agent-Identity': 'hermes', ...(extra || {}) }
+    const s = process.env.HERMES_MCP_SECRET
+    if (s) h['x-agent-secret'] = s
+    return h
+  }
+
   start() {
     const server = createServer((req, res) => {
       res.setHeader('Content-Type', 'application/json')
@@ -318,7 +329,7 @@ export class AiDraftMcpServer {
     if (dry_run) {
       // Preview: read the page tree, count what would be sent.
       const treeRes = await fetch(`${this.appUrl}/api/ai-draft-settings`, {
-        headers: { 'X-Agent-Identity': 'hermes' }, signal: AbortSignal.timeout(10000),
+        headers: this._adminHeaders(), signal: AbortSignal.timeout(10000),
       }).catch(() => null)
       let pendingCount = null
       if (treeRes?.ok) {
@@ -348,7 +359,7 @@ export class AiDraftMcpServer {
     const payload = bundle_all ? { bundleAll: true } : { draftId: draft_id }
     const res = await fetch(`${this.appUrl}/api/development-steps`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Agent-Identity': 'hermes' },
+      headers: this._adminHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(10000),
     })
@@ -404,7 +415,7 @@ export class AiDraftMcpServer {
     // Create the draft record via the app API
     const createRes = await fetch(`${this.appUrl}/api/ai-draft-settings`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Agent-Identity': 'hermes' },
+      headers: this._adminHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ agent, kind, name, mode, tier, mutating }),
       signal: AbortSignal.timeout(10000),
     })
@@ -421,7 +432,7 @@ export class AiDraftMcpServer {
     // Patch with generated source and tasks
     const patchRes = await fetch(`${this.appUrl}/api/ai-draft-settings/${draftId}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'X-Agent-Identity': 'hermes' },
+      headers: this._adminHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ source, tasks }),
       signal: AbortSignal.timeout(10000),
     })
