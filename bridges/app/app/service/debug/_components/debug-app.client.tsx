@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { authBase, adminBase } from "@/lib/runtime-urls"
+import { getRuntimeUrls } from "@/lib/runtime-urls"
 import { SYSTEM_PAGES } from "@/lib/system-pages"
 
 type Probe = { label: string; path: string; status: "pending" | "ok" | "fail"; detail: string }
@@ -20,11 +20,12 @@ export function DebugApp() {
   useEffect(() => {
     const host = window.location.hostname
     const isIp = /^\d{1,3}(?:\.\d{1,3}){3}$/.test(host) || host === "localhost"
+    const { authUrl, adminUrl } = getRuntimeUrls()
     setEnv({
       origin: window.location.origin,
       mode: isIp ? "IP / insecure (auth bypassed)" : "Custom domain / secure (role-checked)",
-      auth: authBase(),
-      admin: adminBase(),
+      auth: authUrl,
+      admin: adminUrl,
     })
 
     INITIAL.forEach(async (p, i) => {
