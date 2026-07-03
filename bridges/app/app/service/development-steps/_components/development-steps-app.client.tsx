@@ -9,8 +9,16 @@ import { StepDetail } from "@/components/dev-steps/step-detail.client"
 import { importanceDot } from "@/components/dev-steps/importance-toggle.client"
 import { PollBar } from "@/components/architecture/poll-bar.client"
 
-type Mode = "new" | "completed"
+type Mode = "new" | "completed" | "all"
 type Sig = Record<string, string>
+
+// Status badge next to each step in the list — tells the three lifecycle states
+// apart at a glance (essential in "All" mode where the lists are merged).
+const statusBadge: Record<string, { label: string; cls: string }> = {
+  "new": { label: "new", cls: "border-sky-500/50 text-sky-600" },
+  "in-progress": { label: "in progress", cls: "border-amber-500/50 text-amber-600" },
+  "completed": { label: "completed", cls: "border-green-500/50 text-green-600" },
+}
 
 // Development steps — a filesystem-backed view of the project's work log, mirroring
 // /architecture. Left = the list of steps (number + name); right = the opened step
@@ -65,7 +73,11 @@ export function DevelopmentStepsApp() {
     return () => document.removeEventListener("visibilitychange", h)
   }, [])
 
-  const steps = useMemo(() => (mode === "completed" ? completed : news), [mode, completed, news])
+  const steps = useMemo(() => {
+    if (mode === "completed") return completed
+    if (mode === "new") return news
+    return [...news, ...completed].sort((a, b) => a.number - b.number)
+  }, [mode, completed, news])
 
   // Auto-reveal: scroll a blinking step (in the current list) into view.
   useEffect(() => {
@@ -131,9 +143,9 @@ export function DevelopmentStepsApp() {
 
         {/* Mode switch — New steps (editable) vs Completed steps (read-only). */}
         <div className="mt-4 flex items-center justify-between gap-3">
-          <span className="font-mono text-[10px] text-foreground/50">{steps.length} {mode === "completed" ? "completed" : "active"}</span>
+          <span className="font-mono text-[10px] text-foreground/50">{steps.length} {mode === "completed" ? "completed" : mode === "new" ? "active" : "steps"}</span>
           <SegToggle<Mode>
-            options={[{ value: "new", label: "New steps" }, { value: "completed", label: "Completed steps" }]}
+            options={[{ value: "new", label: "New steps" }, { value: "completed", label: "Completed steps" }, { value: "all", label: "All steps" }]}
             value={mode}
             onChange={setMode}
           />
@@ -144,9 +156,9 @@ export function DevelopmentStepsApp() {
             <div className="flex w-1/2 flex-col border-r border-border bg-muted/10">
               <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground/70">
-                  {mode === "completed" ? "Completed steps" : "New steps"}
+                  {mode === "completed" ? "Completed steps" : mode === "new" ? "New steps" : "All steps"}
                 </span>
-                {mode === "new" && (
+                {mode !== "completed" && (
                   <button
                     onClick={() => { setSelected(null); setAdding(v => !v) }}
                     className="inline-flex h-7 items-center gap-1.5 rounded-md border border-foreground/40 px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
@@ -174,6 +186,9 @@ export function DevelopmentStepsApp() {
                       <span className={`h-2 w-2 shrink-0 rounded-full ${importanceDot[s.importance]}`} />
                       <span className="shrink-0 font-mono text-foreground/60">{String(s.number).padStart(2, "0")}</span>
                       <span className="truncate font-semibold">{s.name}</span>
+                      <span className={`ml-auto shrink-0 rounded-full border px-1.5 py-px font-mono text-[9px] font-semibold ${(statusBadge[s.status] ?? statusBadge["new"]).cls}`}>
+                        {(statusBadge[s.status] ?? statusBadge["new"]).label}
+                      </span>
                     </button>
                   ))
                 )}

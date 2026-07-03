@@ -12,7 +12,9 @@ import { slotRoot } from "@/lib/slot-root"
 
 export type Importance = "optional" | "mandatory" | "critical"
 export type StepTask = { id: string; body: string }
-export type StepStatus = "new" | "completed"
+// "in-progress" — the orchestrator is actively working the step; the file still
+// lives in NEW-STEPS/ (only the machine block differs), so it lists with the new ones.
+export type StepStatus = "new" | "in-progress" | "completed"
 
 export type Step = {
   id: string            // base64url of rel path within DEVELOPMENT-STEPS/
@@ -91,7 +93,7 @@ function parse(rel: string, text: string, mtime: string): Step {
         number: Number(d.number) || 0,
         name: String(d.name ?? base.name),
         importance: (["optional", "mandatory", "critical"].includes(d.importance) ? d.importance : "optional") as Importance,
-        status: d.status === "completed" ? "completed" : status,
+        status: d.status === "completed" ? "completed" : d.status === "in-progress" && status === "new" ? "in-progress" : status,
         completedAt: d.completedAt ?? null,
         description: String(d.description ?? ""),
         tasks: Array.isArray(d.tasks) ? d.tasks : [],

@@ -8,6 +8,24 @@ import { StepTodo } from "./step-todo.client"
 import { StepDanger } from "./step-danger.client"
 import type { Importance, Step, StepTask } from "@/lib/dev-steps/step-file"
 
+// Completion stamp with seconds. Older writers stored a date-only completedAt —
+// for those the file's mtime IS the close moment (close = the final write+move),
+// so it supplies the time part; a full-ISO completedAt (newer writers) wins.
+const pad2 = (n: number) => String(n).padStart(2, "0")
+function fmtDateTime(d: Date): string {
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`
+}
+export function completedStamp(step: Step): string {
+  const at = step.completedAt ?? ""
+  if (at.includes("T")) {
+    const d = new Date(at)
+    if (!isNaN(d.getTime())) return fmtDateTime(d)
+  }
+  const ms = Number(step.mtime)
+  if (Number.isFinite(ms) && ms > 0) return fmtDateTime(new Date(ms))
+  return at
+}
+
 // Right-panel detail for one development step. NEW steps are editable in place
 // (importance, description, raw Source — each saves the file directly); COMPLETED
 // steps are read-only history with a completion date. To-do + Danger zone are
@@ -46,7 +64,7 @@ export function StepDetail({
           )}
           {step.status === "completed" && step.completedAt && (
             <span className="rounded-full border border-green-500/50 px-2 py-0.5 font-mono text-[10px] font-semibold text-green-600">
-              completed {step.completedAt}
+              completed {completedStamp(step)}
             </span>
           )}
         </div>
