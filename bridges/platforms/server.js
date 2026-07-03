@@ -80,8 +80,16 @@ console.log(`Kimi bin:    ${KIMI_BIN}`)
 // Shared PTY registry — MCP servers write here to reach active terminals
 const activePtys = new Map() // platform id => (text: string) => boolean
 
-// MCP auth secret (optional — set MCP_SECRET in env)
-const MCP_SECRET = process.env.MCP_SECRET ?? null
+// MCP auth secret (step 135 — architect-only mutation gate). Every MCP server below
+// receives this and guards with `if (this.secret) { require Bearer }`. It read ONLY
+// process.env.MCP_SECRET, but bootstrap.sh generates the secret under the name
+// HERMES_MCP_SECRET (exported into this process's PM2 env + sent by Hermes/agents as
+// `Bearer HERMES_MCP_SECRET`) and never sets MCP_SECRET — so the secret was null and
+// the Bearer check stayed DORMANT on all bridges (the "SECRET_PRESENT=no" on :3218).
+// Reading HERMES_MCP_SECRET as the fallback re-activates the already-correct check on
+// every bridge; legit callers (Hermes config.yaml, per-agent .mcp.json) already send
+// this exact secret, so nothing breaks — a local process WITHOUT it is now rejected.
+const MCP_SECRET = process.env.MCP_SECRET ?? process.env.HERMES_MCP_SECRET ?? null
 
 // ── MCP helpers ──────────────────────────────────────────────────────────────
 
