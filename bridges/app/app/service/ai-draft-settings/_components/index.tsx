@@ -1,0 +1,9 @@
+import { AiDraftApp } from "./ai-draft-app.client"
+
+// Route entry for /ai-draft-settings. Server by default; admin-only service page.
+// AI Draft Settings is the intermediate layer where the architect writes free-form
+// wishes (supplement / replace) that an agent later applies to the real instruction
+// / skill / MCP files of the six agents. Filesystem-backed (no DB).
+export default async function AiDraftEntry({ agent, object, target }: { agent?: string; object?: string; target?: string }) {
+  return <AiDraftApp initialAgent={agent} initialObject={object} initialTarget={target} />
+}

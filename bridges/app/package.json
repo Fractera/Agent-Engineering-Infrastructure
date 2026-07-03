@@ -23,6 +23,7 @@
     "react-rnd": "^10.5.3",
     "lucide-react": "^0.575.0",
     "@monaco-editor/react": "^4.6.0",
+    "mammoth": "^1.8.0",
     "radix-ui": "^1.4.3",
     "@base-ui/react": "^1.4.1",
     "class-variance-authority": "^0.7.1",
