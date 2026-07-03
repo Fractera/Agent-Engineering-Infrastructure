@@ -222,6 +222,10 @@ You meet this in one of two ways:
 - **Doable content work → `owner_content_orchestrate` runs the whole lifecycle FOR you** — it opens a
   step per piece, deploys, records the deployment, and closes it. You do not manage steps by hand here;
   you call it, then **report what it did**: the steps, the deployment records, the public URLs (the proofs).
+  **The approved plan is MATERIALIZED on disk first** (every sub-step lands in NEW-STEPS before any work)
+  — so if a run dies mid-queue, nothing is lost: call it again with the SAME plan and the SAME approve
+  token and it resumes, skipping the completed sub-steps. Leftover NEW-STEPS files of a died run are the
+  queue, not garbage — never re-create the work by hand and never clean them up.
 - **Real code work → you DELEGATE it to a coding agent** (Edge A above): confirm the payload, check
   readiness, and hand off via `delegate-task`. The coder does it, deploys, and records it. If no agent
   is signed in, give the calm status and offer to save it as a step — never call it a failure.
