@@ -1,6 +1,12 @@
-// Project layer (ARCHITECTURE §3.12). A project is an independent line of work
-// the same agent/workspace runs — a site, a procurement tracker, a language
-// course, a sales automation. The "default" project holds everything today.
+// Project layer (ARCHITECTURE §3.12, repositioned step 174). Projects are
+// independent application levels that provide technical tools, business
+// solutions and logic for PRIVATE use by the architect or a project
+// administrator. Unlike pages (open to any role), projects are restricted to
+// service needs. Four fixed categories: automation · fractera-pages ·
+// personal · other. Fractera agents do not run an automation once per request —
+// they build a platform for REPEATABLE automations (visual UI, local DB +
+// vector memory, one-click reuse): "an n8n for one single task".
+// The "default" project holds everything today.
 export type Project = {
   id: string
   name: string

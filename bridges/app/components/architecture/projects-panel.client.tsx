@@ -6,7 +6,9 @@ import { wordCount } from "@/lib/architecture/projects"
 
 // Right-section panel for the permanent "Projects" folder. No danger zone — the
 // container cannot be deleted. Lists ALL projects from the tree (seed + declared)
-// and adds new ones; names need at least three words (§3.12).
+// and adds new ones; names need at least three words (§3.12, repositioned step 174:
+// projects = private application levels for the architect/administrator, not
+// public pages).
 export function ProjectsPanel({
   listed, onChanged,
 }: {
@@ -53,10 +55,14 @@ export function ProjectsPanel({
           </span>
         </div>
         <p className="mt-1.5 text-xs leading-relaxed text-foreground/80">
-          Independent lines of work this one workspace runs — a site, a procurement tracker, a
-          language course, a sales automation. Keeping them separate stops them mixing, at no extra
-          token or infrastructure cost. Everything outside this folder is the default project; this
-          folder lists only the additional projects and cannot be deleted.
+          Independent application levels that provide technical tools, business solutions and logic
+          for PRIVATE use by the architect or a project administrator. Unlike pages — which can be
+          open to any role — projects are restricted to service needs. They position as: an
+          automation system · a page-management system · a personal-efficiency system · other
+          projects. Fractera agents do not run an automation once per request: they build a platform
+          for repeatable automations — a visual interface, local DB + vector memory, one-click reuse
+          — &laquo;an n8n for one single task&raquo;. Everything outside this folder is the default
+          project; this folder lists only the additional projects and cannot be deleted.
         </p>
       </div>
 

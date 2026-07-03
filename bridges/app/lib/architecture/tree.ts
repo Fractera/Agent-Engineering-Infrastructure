@@ -60,6 +60,21 @@ export const ARCHITECTURE_TREE: ArchNode = {
                     "safe to edit. The admin introspection pages are NOT here — they " +
                     "live in the Admin layer at /service/*.",
                 },
+                {
+                  id: "app-projects",
+                  label: "fractera-projects — Projects",
+                  kind: "group",
+                  description:
+                    "Independent application levels inside the App Shell that provide " +
+                    "technical tools, business solutions and logic for PRIVATE use by " +
+                    "the architect or a project administrator — unlike pages, which can " +
+                    "be open to any role, projects are restricted to service needs. " +
+                    "Four fixed categories under /projects/: automation, fractera-pages, " +
+                    "personal, other. Fractera agents do not run an automation once per " +
+                    "request — they build a platform for repeatable automations (visual " +
+                    "interface, local DB + vector memory, one-click reuse from the UI): " +
+                    "an n8n for one single task.",
+                },
               ],
             },
             {
