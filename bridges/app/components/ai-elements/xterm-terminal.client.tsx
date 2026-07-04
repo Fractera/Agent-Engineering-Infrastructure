@@ -100,6 +100,27 @@ export const XtermTerminal = forwardRef<XtermTerminalHandle, Props>(
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
+      // Re-fit + tell the PTY the new size. Guarded so a fit never runs after the
+      // effect tore the terminal down.
+      let disposed = false;
+      function refit() {
+        if (disposed) return;
+        try { fitAddon.fit(); } catch { return; }
+        const sock = wsRef.current;
+        if (sock && sock.readyState === WebSocket.OPEN) {
+          sock.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+        }
+      }
+
+      // The first fit() runs before the monospace WEB FONT has loaded, so xterm
+      // measures a smaller fallback cell → it lays out MORE rows than truly fit.
+      // Once the real font swaps in the cell grows and the extra rows overflow the
+      // container (last row tucked under the footer, ~one row of overshoot). The
+      // container size never changes, so the ResizeObserver below won't correct
+      // it — we must re-fit explicitly once fonts are ready (+ one settle tick).
+      if (document.fonts?.ready) document.fonts.ready.then(refit).catch(() => {});
+      const settleTimer = setTimeout(refit, 150);
+
       ws.onopen = () => {
         requestAnimationFrame(() => {
           fitAddon.fit();
@@ -152,6 +173,8 @@ export const XtermTerminal = forwardRef<XtermTerminalHandle, Props>(
       ro.observe(containerRef.current);
 
       return () => {
+        disposed = true;
+        clearTimeout(settleTimer);
         if (timer) clearTimeout(timer);
         toast.dismiss(toastId);
         ro.disconnect();

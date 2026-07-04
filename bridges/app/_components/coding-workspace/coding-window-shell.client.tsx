@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
-import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LayoutGrid } from "lucide-react";
+import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LayoutGrid, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
 import { PLATFORMS, COMING_SOON, EMBED_CARDS, type Platform, type TerminalStatus, type EmbedCard, type EmbedCardId, type EmbedTarget } from "./platforms";
@@ -50,6 +50,23 @@ const BRIDGE_TOOLTIP = "Bridge — all platform servers status\n\nOne process ru
 
 
 // PTY_URL and BRIDGE_URL removed — resolved at runtime via getRuntimeUrls()
+
+// Small [x] on the right edge of a carousel card. Clicking it arms / cancels the
+// "End session" countdown; a plain card click never touches shutdown. It stops
+// propagation so it doesn't also trigger the card's switch/start handler. (step 182.5)
+function CardCloseButton({ onClick }: { onClick: (e: React.MouseEvent) => void }) {
+  return (
+    <span
+      role="button"
+      aria-label="End session"
+      title="End session"
+      onClick={onClick}
+      className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center justify-center size-4 rounded opacity-50 hover:opacity-100 hover:bg-foreground/10 transition-opacity cursor-pointer"
+    >
+      <X size={11} />
+    </span>
+  );
+}
 
 function TerminalDot({ status }: { status: TerminalStatus }) {
   if (status === "unavailable")  return <span className="size-1.5 rounded-full bg-muted-foreground/40 shrink-0" />;
@@ -322,6 +339,16 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     return () => { clearTimeout(timer); try { ws.close(); } catch {} };
   }, []);
 
+  function cancelPlatformConfirm() {
+    if (countdownRef.current) clearTimeout(countdownRef.current);
+    countdownRef.current = null;
+    setConfirmingPlatform(null);
+  }
+
+  // Click on the card BODY — only switches to / starts the terminal. It never
+  // arms the shutdown countdown (that moved to the [x] icon → handleCloseClick).
+  // If a countdown is already armed for this card, a body click cancels it, same
+  // as pressing the [x] again. (step 182.5)
   function handleCardClick(platformId: Platform) {
     onPreviewClose?.();
     setSysTermActive(false);
@@ -333,31 +360,32 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     setShowInfo(false);
     setShowHelp(false);
     setShowGitConnect(false);
-    const isRunning = terminalSessions.has(platformId);
-    if (isRunning && terminalPlatform === platformId) {
-      if (confirmingPlatform === platformId) {
-        if (countdownRef.current) clearTimeout(countdownRef.current);
-        countdownRef.current = null;
-        setConfirmingPlatform(null);
-      } else {
-        if (countdownRef.current) clearTimeout(countdownRef.current);
-        setConfirmingPlatform(platformId);
-        countdownRef.current = setTimeout(() => {
-          onTerminalClose(platformId);
-          setConfirmingPlatform(null);
-          countdownRef.current = null;
-        }, 2000);
-      }
-    } else if (isRunning) {
-      if (confirmingPlatform === platformId) {
-        if (countdownRef.current) clearTimeout(countdownRef.current);
-        countdownRef.current = null;
-        setConfirmingPlatform(null);
-      }
-      onPlatformClick(platformId);
-    } else {
-      onPlatformClick(platformId);
+    if (confirmingPlatform === platformId) {
+      cancelPlatformConfirm();
+      return;
     }
+    cancelPlatformConfirm();
+    const isRunning = terminalSessions.has(platformId);
+    if (isRunning && terminalPlatform === platformId) return; // already the active terminal
+    onPlatformClick(platformId);
+  }
+
+  // Click on the card's [x] icon — arms the 2s "End session" countdown; a second
+  // press on the icon (or the card) cancels it. This is now the ONLY way to start
+  // a shutdown. (step 182.5)
+  function handleCloseClick(platformId: Platform, e: React.MouseEvent) {
+    e.stopPropagation();
+    if (confirmingPlatform === platformId) {
+      cancelPlatformConfirm();
+      return;
+    }
+    cancelPlatformConfirm();
+    setConfirmingPlatform(platformId);
+    countdownRef.current = setTimeout(() => {
+      onTerminalClose(platformId);
+      setConfirmingPlatform(null);
+      countdownRef.current = null;
+    }, 2000);
   }
 
   // Cancel any pending embed "End session" countdown (called when the user
@@ -374,24 +402,33 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   // already-active card arms a 2s animated "End session" countdown that closes
   // the iframe via onEmbedClose. Switching never tears the session down. (step 96)
   function handleEmbedClick(card: EmbedCard) {
-    const isActive = activeEmbedId === card.id && !sysTermActive;
-    if (isActive) {
-      if (confirmingEmbed === card.id) {
-        cancelEmbedConfirm();
-      } else {
-        if (embedCountdownRef.current) clearTimeout(embedCountdownRef.current);
-        setConfirmingEmbed(card.id);
-        embedCountdownRef.current = setTimeout(() => {
-          onEmbedClose?.(card.id);
-          setConfirmingEmbed(null);
-          embedCountdownRef.current = null;
-        }, 2000);
-      }
-    } else {
+    // Body click only switches to the card (iframe stays mounted → chat kept).
+    // Shutdown is armed exclusively by the [x] icon (handleEmbedCloseClick); a
+    // body click while a countdown is armed cancels it. (step 96 / 182.5)
+    if (confirmingEmbed === card.id) {
       cancelEmbedConfirm();
-      setSysTermActive(false);
-      onEmbedCardClick?.(card);
+      return;
     }
+    const isActive = activeEmbedId === card.id && !sysTermActive;
+    if (isActive) return;
+    cancelEmbedConfirm();
+    setSysTermActive(false);
+    onEmbedCardClick?.(card);
+  }
+
+  function handleEmbedCloseClick(card: EmbedCard, e: React.MouseEvent) {
+    e.stopPropagation();
+    if (confirmingEmbed === card.id) {
+      cancelEmbedConfirm();
+      return;
+    }
+    cancelEmbedConfirm();
+    setConfirmingEmbed(card.id);
+    embedCountdownRef.current = setTimeout(() => {
+      onEmbedClose?.(card.id);
+      setConfirmingEmbed(null);
+      embedCountdownRef.current = null;
+    }, 2000);
   }
 
   useEffect(() => {
@@ -900,6 +937,9 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                       <span>{card.label}</span>
                     </>
                   )}
+                  {hasSession && !notAuthed && (
+                    <CardCloseButton onClick={(e) => handleEmbedCloseClick(card, e)} />
+                  )}
                 </button>
               );
             })}
@@ -947,6 +987,9 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                     <><Download size={10} className="shrink-0 opacity-50" /><span>{p.label}</span></>
                   ) : (
                     <><TerminalDot status={isRunning ? (isUnauth ? "unauthorized" : "connected") : terminalStatuses[p.id]} /><span>{p.label}</span></>
+                  )}
+                  {isRunning && !notAuthed && (
+                    <CardCloseButton onClick={(e) => handleCloseClick(p.id, e)} />
                   )}
                 </button>
               );
@@ -1431,55 +1474,14 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           </button>
         )}
 
-        {/* Git Pull + Push (real, only when connected). Mobile keeps only Push; Pull is desktop-only. */}
+        {/* Git Push (real, only when connected). Two-button footer parity with
+            mobile (step 182.5): Pull, Info, Pro, Skills, Product Loop and the
+            GitHub icon were removed so desktop shows only Deploy + Git, exactly
+            like mobile. */}
         {gitConnected && (
-          <>
-            <button type="button" onClick={handleGitPull} disabled={gitPulling || gitPushing}
-              className="hidden md:inline-flex shrink-0 items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-              {gitPulling ? <Loader2 size={10} className="animate-spin" /> : <ArrowDownToLine size={10} />}Pull
-            </button>
-            <button type="button" onClick={handleGitPush} disabled={gitPulling || gitPushing}
-              className="shrink-0 inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-              {gitPushing ? <Loader2 size={10} className="animate-spin" /> : <ArrowUpFromLine size={10} />}Push
-            </button>
-          </>
-        )}
-
-        {/* Info button — desktop only (mobile keeps only Deploy + Git) */}
-        <button type="button" onClick={handleInfo}
-          className={`hidden md:inline-flex shrink-0 items-center gap-1 h-5 px-2 rounded border text-[10px] transition-colors ${showInfo ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
-          <Info size={10} />Info
-        </button>
-
-        {/* Go to Pro — desktop only */}
-        {PRO_URL && (
-          <a href={PRO_URL} target="_blank" rel="noopener noreferrer"
-            className="hidden md:inline-flex shrink-0 items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-            <Zap size={10} />Pro
-          </a>
-        )}
-
-        {/* Skills — desktop only */}
-        <a href={SKILLS_HREF} target="_blank" rel="noopener noreferrer"
-          className="hidden md:inline-flex shrink-0 items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-          <Store size={10} />Skills
-        </a>
-
-        {/* Product Loop — desktop only (the digitized end-to-end business journey) */}
-        <a href={PRODUCT_LOOP_HREF} target="_blank" rel="noopener noreferrer"
-          className="hidden md:inline-flex shrink-0 items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-          <Repeat size={10} />Product Loop
-        </a>
-
-        {/* GitHub — desktop only */}
-        {GITHUB_URL ? (
-          <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer"
-            className="hidden md:flex shrink-0 size-[22px] rounded-full border border-border items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-          </a>
-        ) : (
-          <button type="button" disabled className="hidden md:flex shrink-0 size-[22px] rounded-full border border-border items-center justify-center text-muted-foreground/30 cursor-default">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          <button type="button" onClick={handleGitPush} disabled={gitPulling || gitPushing}
+            className="shrink-0 inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+            {gitPushing ? <Loader2 size={10} className="animate-spin" /> : <ArrowUpFromLine size={10} />}Push
           </button>
         )}
       </div>
