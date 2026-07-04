@@ -196,7 +196,9 @@ wss.on('connection', (ws) => {
 
       const proc = spawn(CLAUDE_BIN, args, {
         cwd: PROJECT_DIR,
-        env: { ...process.env, HOME: process.env.HOME },
+        // IS_SANDBOX=1: claude CLI ≥2.1.x refuses --dangerously-skip-permissions
+        // under root; the bridge runs as root PM2 on a dedicated VPS (step 182).
+        env: { ...process.env, HOME: process.env.HOME, IS_SANDBOX: '1' },
       })
 
       activeProcess = proc
@@ -1070,10 +1072,12 @@ const ptyCaller = (pid) => (text) => { const fn = activePtys.get(pid); return fn
 const mcpConfigs = [
   {
     platform: 'claude-code', port: Number(process.env.CLAUDE_MCP_PORT ?? 3210),
+    // IS_SANDBOX=1: claude CLI ≥2.1.x refuses --dangerously-skip-permissions
+    // under root; the bridge runs as root PM2 on a dedicated VPS (step 182).
     runPrompt: makeRunPrompt(CLAUDE_BIN, (p) => [
       '--print', '--output-format', 'stream-json', '--include-partial-messages',
       '--verbose', '--dangerously-skip-permissions', p,
-    ]),
+    ], { IS_SANDBOX: '1' }),
   },
   {
     platform: 'codex', port: Number(process.env.CODEX_MCP_PORT ?? 3211),
