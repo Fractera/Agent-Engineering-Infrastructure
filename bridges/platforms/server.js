@@ -437,7 +437,10 @@ codexwss.on('connection', (ws) => {
 
       console.log(`[codex] prompt: "${prompt.slice(0, 80)}..."`)
 
-      const args = ['exec', '--json', '--sandbox', 'workspace-write']
+      // danger-full-access: workspace-write keeps .git read-only, so the agent
+      // cannot commit/push. Dedicated VPS under root — same trust level as
+      // claude's --dangerously-skip-permissions (step 182).
+      const args = ['exec', '--json', '--sandbox', 'danger-full-access']
       if (msg.model) args.push('--model', msg.model)
       args.push(prompt)
 
@@ -1082,7 +1085,9 @@ const mcpConfigs = [
   {
     platform: 'codex', port: Number(process.env.CODEX_MCP_PORT ?? 3211),
     runPrompt: (prompt, task) => new Promise((resolve) => {
-      const proc = spawn(CODEX_BIN, ['exec', '--json', '--sandbox', 'workspace-write', prompt], {
+      // danger-full-access: workspace-write keeps .git read-only (agent cannot
+      // commit/push). Dedicated VPS under root (step 182).
+      const proc = spawn(CODEX_BIN, ['exec', '--json', '--sandbox', 'danger-full-access', prompt], {
         cwd: PROJECT_DIR, env: { ...process.env }, stdio: ['ignore', 'pipe', 'pipe'],
       })
       task.proc = proc
