@@ -27,9 +27,16 @@ export function handleMcpHandshake(rpc, res, serverName) {
     return true
   }
 
-  // `notifications/initialized` is a fire-and-forget notification (no id, no
-  // result expected) — acknowledge with an empty 200 so the client proceeds.
-  if (method === 'notifications/initialized' || method === 'initialized') {
+  // A notification (no id, no result expected — `notifications/initialized`,
+  // `notifications/cancelled`, …) must be acknowledged with HTTP 202 Accepted
+  // and an EMPTY body (streamable-HTTP transport rule). A 200 with an empty
+  // JSON body breaks strict clients: Codex (rmcp) fails startup with
+  // "Transport channel closed, when send initialized notification".
+  if (
+    method === 'notifications/initialized' || method === 'initialized' ||
+    (id === undefined && typeof method === 'string' && method.startsWith('notifications/'))
+  ) {
+    res.writeHead(202)
     res.end()
     return true
   }
