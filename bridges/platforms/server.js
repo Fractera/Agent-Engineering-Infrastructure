@@ -18,6 +18,7 @@ import { ContentCrudMcpServer } from './content-crud-mcp-server.js'
 import { ContentOrchestratorMcpServer } from './content-orchestrator-mcp-server.js'
 import { LanguageExpansionMcpServer } from './language-expansion-mcp-server.js'
 import { ProjectsRouterMcpServer } from './projects-router-mcp-server.js'
+import { DocTransferMcpServer } from './doc-transfer-mcp-server.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, '../../app/.env.local') })
@@ -1266,4 +1267,18 @@ new LanguageExpansionMcpServer({
 new ProjectsRouterMcpServer({
   port: Number(process.env.PROJECTS_ROUTER_MCP_PORT ?? 3229),
   secret: MCP_SECRET,
+}).start()
+
+// ── Doc Transfer MCP server (singleton, port 3230) ───────────────────────────
+// Token-lean documentation courier (step 181, P8): coding agents have no internet,
+// so Hermes — with the owner's agreement — transfers external docs (URL → clean
+// markdown → CRUD-DOCS/external/) and submits them to Company Memory (:9621). The
+// document body never passes through the model context: the tool returns metadata
+// only (path, bytes, title, TOC). Mutating → dry_run=true default (§8.2).
+new DocTransferMcpServer({
+  port: Number(process.env.DOC_TRANSFER_MCP_PORT ?? 3230),
+  secret: MCP_SECRET,
+  appDir: process.env.SLOT_APP_DIR ?? '/opt/fractera/app',
+  ragUrl: process.env.LIGHTRAG_URL ?? 'http://localhost:9621',
+  ragKey: process.env.LIGHTRAG_API_KEY ?? '',
 }).start()
