@@ -868,7 +868,9 @@ kimiwss.on('connection', (ws) => {
 
       const proc = spawn(KIMI_BIN, args, {
         cwd: PROJECT_DIR,
-        env: { ...process.env, HOME: process.env.HOME },
+        // IS_SANDBOX=1: Kimi follows the Claude Code pattern and may refuse
+        // --yolo under root the same way (step 182). Harmless if ignored.
+        env: { ...process.env, HOME: process.env.HOME, IS_SANDBOX: '1' },
       })
 
       activeProcess = proc
@@ -1117,9 +1119,11 @@ const mcpConfigs = [
   },
   {
     platform: 'kimi-code', port: Number(process.env.KIMI_MCP_PORT ?? 3214),
+    // IS_SANDBOX=1: Kimi follows the Claude Code pattern and may refuse --yolo
+    // under root the same way (step 182). Harmless if ignored.
     runPrompt: makeRunPrompt(KIMI_BIN, (p) => [
       '--print', '--output-format', 'stream-json', '--yolo', '--prompt', p,
-    ]),
+    ], { IS_SANDBOX: '1' }),
   },
 ]
 
