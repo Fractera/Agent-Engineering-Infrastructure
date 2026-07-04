@@ -1,0 +1,7 @@
+{
+  "name": "fractera-cron-runner",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Substrate cron runner of the Projects layer — zero dependencies, no install step, no build."
+}

@@ -17,7 +17,7 @@
   },
   "seams": {
     "diagram-as-data": "The react-flow diagram is rendered by one fixed client component; its shape lives in _data/flow.ts (plain nodes/edges). Finishing the diagram for the real project = editing that DATA — a coding-agent handoff, never a template change.",
-    "tables-p6": "_lib/project-data.ts returns empty lists; the cron infrastructure (Projects layer P6) replaces the two provider bodies to read the substrate tables. The page and tables are already wired.",
+    "tables-p6": "_lib/project-data.ts reads project_cron_runs from the shared app DB (filtered by this category/project) — rows are written by the substrate cron runner (fractera-cron). Declaring jobs for the project = a cron.json next to the page; the runner picks it up within a tick, no restart.",
     "declaration": "README.md carries the /service/architecture machine block (fractera:meta) with visibility/roles + cron/integrations, so the composed project round-trips through the declare panel."
   },
   "params": {

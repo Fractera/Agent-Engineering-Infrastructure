@@ -21,7 +21,30 @@
 
 - Shape the real process diagram in `_data/flow.ts` (data, not JSX).
 - Describe the real project in `_data/description.ts`.
-- Wire the queue/results tables in `_lib/project-data.ts` when the cron infrastructure exists.
+- Declare scheduled processes in `cron.json` in THIS folder — the substrate runner
+  (`fractera-cron`) picks it up within a tick (no restart) and fills the queue/results
+  tables on the page. Format (full reference:
+  `CRUD-DOCS/workspace-standards/project-cron.md`):
+
+  ```json
+  {
+    "jobs": [
+      {
+        "id": "publish-daily",
+        "title": "Publish daily article",
+        "schedule": "0 9 * * *",
+        "action": { "type": "http", "url": "http://127.0.0.1:3000/api/...", "method": "POST" },
+        "enabled": true
+      }
+    ]
+  }
+  ```
+
+  `schedule` = 5-field cron, server local time. Actions: `{type:"http", url, method?, body?}`
+  or `{type:"script", file}` (a Node script inside this folder; cwd = this folder; the slot's
+  `.env.local` keys are in `process.env`). A run may report
+  `{"resultTitle": "...", "artifactUrl": "..."}` (HTTP response JSON / the script's last
+  stdout line) — it becomes a row in the results table.
 
 <!-- fractera:meta
 {"title": {{PROJECT_TITLE}}, "kind": "page", "base": "/projects/{{CATEGORY}}", "dynamic": false, "query": [], "description": {{PROJECT_PURPOSE}}, "tasks": [], "visibility": "rolesOnly", "roles": ["architect", "manager"], "cron": {{PROJECT_CRON}}, "integrations": {{PROJECT_INTEGRATIONS}}}
