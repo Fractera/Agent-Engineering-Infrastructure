@@ -223,8 +223,27 @@ def _delegate(platform: str, prompt: str) -> str:
         if resp.get("status") in ("done", "error", "cancelled"):
             return json.dumps({"platform": platform, **resp})
 
-    _mcp(port, "owner_coding_platform_cancel_task", {"task_id": task_id})
-    return json.dumps({"platform": platform, "status": "timeout", "task_id": task_id})
+    # Real coding tasks routinely outlive this polling window. Do NOT cancel —
+    # the bridge keeps running the task and stores its output; hand the task_id
+    # back so the caller can fetch the result later (step 182).
+    return json.dumps({
+        "platform": platform,
+        "status": "still_running",
+        "task_id": task_id,
+        "hint": (
+            "The task is still working on the bridge — it was NOT cancelled. "
+            f"Check again later with owner_check_delegated_task(platform='{platform}', "
+            f"task_id='{task_id}')."
+        ),
+    })
+
+
+def _check_task(platform: str, task_id: str) -> str:
+    port = PLATFORM_PORTS.get(platform)
+    if not port:
+        return json.dumps({"error": f"Unknown platform '{platform}'. Valid: {list(PLATFORM_PORTS)}"})
+    resp = _mcp(port, "owner_coding_platform_get_response", {"task_id": task_id})
+    return json.dumps({"platform": platform, "task_id": task_id, **resp})
 
 
 _DELEGATE_SCHEMA = {
@@ -234,7 +253,9 @@ _DELEGATE_SCHEMA = {
         "Use this when you want a particular agent (Claude, Codex, Gemini, Qwen, Kimi) "
         "to work on a task. Returns the platform's full response as JSON including "
         "`tokens` (total tokens the agent spent on this task) — pass that value to "
-        "`owner_product_loop_record_deployment` after you deploy so the deployment log tracks real cost."
+        "`owner_product_loop_record_deployment` after you deploy so the deployment log tracks real cost. "
+        "If the task outlives the 5-minute wait you get status='still_running' with a task_id — "
+        "the work continues; check later with owner_check_delegated_task."
     ),
     "parameters": {
         "type": "object",
@@ -253,6 +274,33 @@ _DELEGATE_SCHEMA = {
     },
 }
 
+_CHECK_SCHEMA = {
+    "name": "owner_check_delegated_task",
+    "description": (
+        "Check the current status/result of a previously delegated coding task by its "
+        "task_id. Use this after owner_delegate_task_to_platform / "
+        "owner_delegate_task_to_best_platform returned status='still_running' — the task "
+        "keeps working on the bridge and this tool fetches its latest output. "
+        "Returns status (running | done | error | cancelled | not_found), the text "
+        "produced so far, and `tokens` spent."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "platform": {
+                "type": "string",
+                "enum": list(PLATFORM_PORTS.keys()),
+                "description": "Platform the task was delegated to.",
+            },
+            "task_id": {
+                "type": "string",
+                "description": "task_id returned by the delegation tool.",
+            },
+        },
+        "required": ["platform", "task_id"],
+    },
+}
+
 _BEST_SCHEMA = {
     "name": "owner_delegate_task_to_best_platform",
     "description": (
@@ -260,7 +308,9 @@ _BEST_SCHEMA = {
         "Analyses the prompt and optional criteria to pick between "
         "Claude Code, Codex, Gemini CLI, Qwen Code, and Kimi Code. "
         "Returns JSON including `platform` (the one chosen) and `tokens` (total tokens "
-        "spent) — pass both to `owner_product_loop_record_deployment` after deploying."
+        "spent) — pass both to `owner_product_loop_record_deployment` after deploying. "
+        "If the task outlives the 5-minute wait you get status='still_running' with a task_id — "
+        "the work continues; check later with owner_check_delegated_task."
     ),
     "parameters": {
         "type": "object",
@@ -296,6 +346,13 @@ def register(ctx) -> None:
             args["prompt"],
         ),
         emoji="🎯",
+    )
+    ctx.register_tool(
+        name="owner_check_delegated_task",
+        toolset="fractera-platforms",
+        schema=_CHECK_SCHEMA,
+        handler=lambda args, **kw: _check_task(args["platform"], args["task_id"]),
+        emoji="⏳",
     )
     # Owner trust-on-first-use: auto-approve the owner on `/start <secret>`
     # before the pairing-code flow can fire. See _owner_pairing_hook above.
