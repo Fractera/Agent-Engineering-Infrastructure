@@ -1,0 +1,34 @@
+{
+  "id": "project-page",
+  "displayName": "Project page (Projects layer starter interface)",
+  "engineVersion": "v1",
+  "category": "project",
+  "manifest": "Fractera agents do not deliver an automation in final form straight from a request — they build a platform for developing repeatable automations: standardized reuse, a visual interface, input/output data in the local DB and vector memory, fast switching from the user UI. Fractera lets Hermes and a coding agent build a finished-cycle tool — an n8n for one single task: the user does not recreate the task, they open it in the UI, run it and track the result.",
+  "about": "Starter interface of ONE project of the Projects layer: a description block (why / what is automated / how it works), an interactive react-flow process diagram driven by declarative data, a cron-queue table and a results table (both empty until the cron infrastructure fills them). Mounted OUTSIDE [lang] into the monolingual, architect+manager-gated projects zone — access and language are INHERITED from the zone layout (app/(projects)/layout.tsx), so this primitive carries NO role/i18n seams. Composed by file copy + token substitution — no code generation.",
+  "mount": "app/(projects)/projects/{{CATEGORY}}/{{PROJECT}}",
+  "envelope": {
+    "zone": "app/(projects)/projects — the category folder must already exist in the slot",
+    "rendering": "dynamic (the zone role gate reads cookies — the sanctioned cockpit exception to static-first)",
+    "roles": "architect+manager, inherited from the zone layout — not injectable, not overridable",
+    "i18n": "mono (the site's default language, inherited from the zone layout)"
+  },
+  "dependencies": {
+    "@xyflow/react": "^12"
+  },
+  "seams": {
+    "diagram-as-data": "The react-flow diagram is rendered by one fixed client component; its shape lives in _data/flow.ts (plain nodes/edges). Finishing the diagram for the real project = editing that DATA — a coding-agent handoff, never a template change.",
+    "tables-p6": "_lib/project-data.ts returns empty lists; the cron infrastructure (Projects layer P6) replaces the two provider bodies to read the substrate tables. The page and tables are already wired.",
+    "declaration": "README.md carries the /service/architecture machine block (fractera:meta) with visibility/roles + cron/integrations, so the composed project round-trips through the declare panel."
+  },
+  "params": {
+    "category": "Existing projects category slug (automation | fractera-pages | personal | other). Fixed English identifiers.",
+    "project": "Project slug, kebab-case English identifier — the folder name IS the registry (never localized, never renamed casually).",
+    "title": "Human project name shown on the page.",
+    "purpose": "Why the project exists (description block). Optional — placeholder text if omitted.",
+    "automation": "What is automated. Optional — placeholder text if omitted.",
+    "how": "How the automation works. Optional — placeholder text if omitted.",
+    "cron": "true/false — the project will run cron processes. Recorded in the README declaration only; execution is the P6 cron infrastructure.",
+    "integrations": "JSON array [{ name, envKeys[] }] — external integrations with their env keys. Recorded in the README declaration; keys are materialized into app/.env.local via the env setter + rebuild when executing."
+  },
+  "tokens": ["{{PROJECT}}", "{{PROJECT_PASCAL}}", "{{CATEGORY}}", "{{PROJECT_TITLE}}", "{{PROJECT_TITLE_MD}}", "{{PROJECT_PURPOSE}}", "{{PROJECT_AUTOMATION}}", "{{PROJECT_HOW}}", "{{PROJECT_CRON}}", "{{PROJECT_INTEGRATIONS}}"]
+}

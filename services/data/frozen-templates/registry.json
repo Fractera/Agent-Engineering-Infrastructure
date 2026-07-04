@@ -20,6 +20,10 @@
       "admin": { "en": "Do you plan an ADMIN PANEL for this group of pages (a private, admin-role page for managing its content)? Answer yes/no.", "ru": "Предполагаете ли вы АДМИНИСТРАТИВНУЮ ПАНЕЛЬ для этой группы страниц (закрытая страница с ролью администратора для управления её содержимым)? Ответьте да/нет." },
       "dashboard": { "en": "Do you plan USER DASHBOARDS for this group of pages (a personal dynamic dashboard/[userId] page per user)? Answer yes/no.", "ru": "Предполагаете ли вы ПОЛЬЗОВАТЕЛЬСКИЕ ДАШБОРДЫ для этой группы страниц (персональная динамическая страница dashboard/[userId] для каждого пользователя)? Ответьте да/нет." }
     },
+    "boundary": {
+      "en": "Content boundary: pages come up as FROZEN PLACEHOLDER STUBS — the names you gave become URL identifiers only; titles and body text are placeholders. Real naming and real content are NOT done in this flow — they are a separate request after assembly.",
+      "ru": "Граница по содержимому: страницы поднимаются как ЗАМОРОЖЕННЫЕ ЗАГЛУШКИ — названные вами имена становятся только URL-идентификаторами; заголовки и текст будут плейсхолдерными. Реальное именование и реальное наполнение в этом потоке НЕ делаются — это отдельный запрос после сборки."
+    },
     "explain": {
       "admin": { "en": "An admin panel is a private, role-gated page where the owner/manager maintains this group's content (for a store — its assortment). Building it is a separate later capability; right now the answer is only RECORDED in the group manifest.", "ru": "Админ-панель — закрытая страница (роль администратора), где владелец/менеджер управляет содержимым этой группы (у магазина — ассортиментом). Само создание — отдельная будущая разработка; сейчас ответ только ЗАПИСЫВАЕТСЯ в манифест группы." },
       "dashboard": { "en": "User dashboards are a dynamic dashboard/[userId]/ layer — a personal page per user for this group. Building it is a separate later capability; the answer is only RECORDED now.", "ru": "Пользовательские дашборды — динамический слой dashboard/[userId]/: персональная страница каждого пользователя для этой группы. Само создание — отдельная будущая разработка; сейчас ответ только ЗАПИСЫВАЕТСЯ." }
@@ -40,6 +44,20 @@
       "fits": ["news", "blog", "documentation feed", "announcements", "changelog", "articles", "stories", "guides list"],
       "doesNotServe": ["cart/checkout/payments", "graded course with tests/progress", "user dashboard / app screen", "forms that persist visitor input", "per-user/per-request personalized feed"],
       "path": "primitives/files-depth1"
+    },
+    {
+      "id": "project-page",
+      "displayName": "Project page (Projects layer starter interface)",
+      "status": "ready",
+      "category": "project",
+      "tools": [],
+      "mount": "app/(projects)/projects/{{CATEGORY}}/{{PROJECT}}",
+      "dependencies": { "@xyflow/react": "^12" },
+      "matching": "Selected by CATEGORY of request: a PRIVATE application level (an automation / internal tool for the owner's own use), NOT a public page group. It composes into the monolingual, architect+manager-gated Projects zone OUTSIDE [lang]; access and language are INHERITED from the zone layout, so roles/i18n aspects do not apply and cannot be set. The projects category folder must already exist.",
+      "params": ["category", "project", "title", "purpose", "automation", "how", "cron", "integrations"],
+      "fits": ["scheduled publishing automation", "data pipeline for the owner", "workspace page-maintenance project", "personal productivity tool", "any finished-cycle 'n8n for one single task'"],
+      "doesNotServe": ["public content pages (use files-depth1)", "visitor-facing features", "multilingual routes", "anything outside the /projects zone"],
+      "path": "primitives/project-page"
     }
   ],
   "providers": [

@@ -25,6 +25,14 @@
 //     --tab news --format news --languages en,ru --label-en News --label-ru Новости \
 //     --samples 2 --roles off [--unauthorized-redirect /] [--engine-version v1] [--force]
 //     [--menus '{"top":{"enabled":true,"order":10}}'] [--children-dropdown true]
+//
+// PROJECT flow (step 178) — a mount-based primitive composes a PRIVATE Projects-layer
+// page (outside [lang]; access/language inherited from the zone layout, so no
+// roles/i18n/menus/engine/parser-fs apply). Selected explicitly by --primitive:
+//   node compose-frozen-template.mjs --store <dir> --out <slot-root> \
+//     --primitive project-page --category automation --project publish-scheduler \
+//     --title "Publish Scheduler" [--purpose "…"] [--automation "…"] [--how "…"] \
+//     [--cron true] [--integrations '[{"name":"exa.ai","envKeys":["EXA_API_KEY"]}]'] [--force]
 //   --roles: off (public) | guest (public+guest) | <csv of ALL_ROLES> (private) | all
 //   --unauthorized-redirect: fallback page for a visitor lacking the role (default '/')
 //   --menus: group REGISTRATION metadata (step 158) — JSON {top,footer,left,right}, each
@@ -272,12 +280,89 @@ async function appendSitemap(outRoot, tab) {
   console.log(`sitemap: add '/${tab}' to app/sitemap.ts (MANUAL — structure varies)`)
 }
 
+// ── PROJECT flow (step 178): compose a mount-based primitive into the Projects zone ──
+// Deterministic like the tab flow: file copy + token substitution, nothing else. The
+// zone layout already carries the architect+manager gate and the monolingual <html lang>,
+// so this flow installs NO engine, NO provider/aspect seams, NO parser-fs/sitemap/menus.
+async function composeProject(storeRoot, prim, outRoot, a) {
+  const category = a.category
+  if (!category || category === true || !/^[a-z][a-z0-9-]*$/.test(category)) throw new Error("--category is required, kebab-case")
+  const project = a.project
+  if (!project || project === true || !/^[a-z][a-z0-9-]*$/.test(project)) throw new Error("--project is required, kebab-case (the folder name IS the project slug)")
+
+  // dependencies: VERIFY against the slot's package.json, never install (determinism, no
+  // network). A missing dependency is an honest refusal — the slot must ship it first.
+  const deps = prim.dependencies || {}
+  let pj = {}
+  try { pj = JSON.parse(await readFile(join(outRoot, "package.json"), "utf8")) } catch { /* verified below */ }
+  const have = { ...(pj.dependencies || {}), ...(pj.devDependencies || {}) }
+  const missing = Object.keys(deps).filter(d => !have[d])
+  if (missing.length) return refuse("dependencies", `slot package.json lacks required dependency(ies): ${missing.join(", ")} (declared by primitive ${prim.id}). Add them to the slot and rebuild before composing.`)
+
+  // the category folder IS the registry — it must already exist in the slot
+  const catDir = join(outRoot, "app", "(projects)", "projects", category)
+  if (!(await exists(catDir))) return refuse("category", `projects category '${category}' does not exist in the slot (app/(projects)/projects/${category}); valid categories are the existing folders`)
+  const destRel = join("app", "(projects)", "projects", category, project)
+  if (await exists(join(outRoot, destRel)) && !a.force) throw new Error(`refusing to overwrite ${destRel} (use --force)`)
+
+  const title = (typeof a.title === "string" && a.title.trim()) || project.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join(" ")
+  const purpose = (typeof a.purpose === "string" && a.purpose.trim()) || "Placeholder — describe why this project exists (edit _data/description.ts)."
+  const automation = (typeof a.automation === "string" && a.automation.trim()) || "Placeholder — describe what this project automates (edit _data/description.ts)."
+  const how = (typeof a.how === "string" && a.how.trim()) || "Placeholder — describe how the automation works (edit _data/description.ts)."
+  for (const [k, v] of Object.entries({ title, purpose, automation, how })) if (hasBrokenChar(v)) return refuse("encoding", `the ${k} text ${JSON.stringify(v)} contains a broken/replacement character (a lossy-encoding artifact). Fix the text and retry.`)
+  const cron = a.cron === "true" || a.cron === true
+  let integrations = []
+  if (typeof a.integrations === "string") {
+    let parsed; try { parsed = JSON.parse(a.integrations) } catch { throw new Error("--integrations must be valid JSON (array of {name, envKeys[]})") }
+    if (!Array.isArray(parsed)) throw new Error("--integrations must be a JSON ARRAY of {name, envKeys[]}")
+    integrations = parsed
+      .map(it => ({ name: String(it?.name ?? "").trim(), envKeys: Array.isArray(it?.envKeys) ? it.envKeys.map(String).map(s => s.trim()).filter(Boolean) : [] }))
+      .filter(it => it.name)
+  }
+
+  // *_TITLE/_PURPOSE/… substitute as JSON strings — valid in both TS files and the
+  // README machine block; *_MD is the raw text for markdown headings.
+  const tok = {
+    "{{CATEGORY}}": category,
+    "{{PROJECT}}": project,
+    "{{PROJECT_PASCAL}}": pascal(project),
+    "{{PROJECT_TITLE}}": JSON.stringify(title),
+    "{{PROJECT_TITLE_MD}}": title,
+    "{{PROJECT_PURPOSE}}": JSON.stringify(purpose),
+    "{{PROJECT_AUTOMATION}}": JSON.stringify(automation),
+    "{{PROJECT_HOW}}": JSON.stringify(how),
+    "{{PROJECT_CRON}}": String(cron),
+    "{{PROJECT_INTEGRATIONS}}": JSON.stringify(integrations),
+  }
+  console.log(`compose '${prim.id}' -> /${destRel.replace(/\\/g, "/")}  (mount-based; zone gate + mono language inherited) cron=${cron} integrations=${integrations.length}`)
+  const tabSrc = join(storeRoot, prim.path, "tab")
+  let emitted = 0
+  for (const rel of await walk(tabSrc)) {
+    const r = rel.replace(/\\/g, "/")
+    const destPath = r.replace(/\.tpl$/, "").split("{{CATEGORY}}").join(category).split("{{PROJECT}}").join(project)
+    await writeOut(outRoot, destPath, applyTokens(await readFile(join(tabSrc, rel), "utf8"), tok))
+    emitted++
+  }
+  // single-line JSON as the LAST stdout line — the bridge parses it (step 158 contract)
+  console.log(JSON.stringify({ composed: true, primitive: prim.id, category, project, title, path: `/projects/${category}/${project}`, files: emitted, cron, integrations, next: "REBUILD the slot (Deploy); the project appears in the account drawer Projects accordion automatically (folder = registry). Finishing (real diagram/description/tables) is a coding-agent task on _data/flow.ts, _data/description.ts, _lib/project-data.ts." }))
+}
+
 async function main() {
   const a = parseArgs(process.argv.slice(2))
   const storeRoot = resolve(a.store || ""), outRoot = resolve(a.out || "")
   if (!a.store || !(await exists(join(storeRoot, "registry.json")))) throw new Error("--store must point at the frozen-templates dir (with registry.json)")
   if (!a.out) throw new Error("--out is required")
   const registry = JSON.parse(await readFile(join(storeRoot, "registry.json"), "utf8"))
+
+  // PROJECT flow (step 178): a mount-based primitive is selected EXPLICITLY by id,
+  // not by base axes (it lives outside the [lang] tab world).
+  if (a.primitive) {
+    const prim = registry.primitives.find(p => p.id === a.primitive)
+    if (!prim) return refuse("primitive", `unknown primitive '${a.primitive}' (registry: ${registry.primitives.map(p => p.id).join(", ")})`)
+    if (!prim.mount) return refuse("primitive", `primitive '${a.primitive}' is not mount-based; use the base-axes flow (omit --primitive)`)
+    if (prim.status !== "ready") return refuse("primitive", `primitive '${a.primitive}' is not ready (status=${prim.status})`)
+    return composeProject(storeRoot, prim, outRoot, a)
+  }
 
   // request envelope
   const source = a.source || "files", depth = parseInt(a.depth ?? "1", 10), rendering = a.rendering || "static"
@@ -331,9 +416,17 @@ async function main() {
   }
   const childrenAsDropdown = a["children-dropdown"] === "true" || a["children-dropdown"] === true
   const groupRoles = rolesOn ? (requireGuest ? "public+guest" : roleList.join("+")) : "public"
+  // step 167: owner-declared admin/dashboard intents (recorded in the manifest only — building
+  // them is a later capability) + companion tools from the PRIMITIVE's descriptor (never asked).
+  const groupAdmin = a.admin === "true" || a.admin === true
+  const groupDashboard = a.dashboard === "true" || a.dashboard === true
+  const groupTools = Array.isArray(prim.tools) ? prim.tools : []
   Object.assign(tok, {
     "{{GROUP_LANGUAGES}}": JSON.stringify(languages),
     "{{GROUP_ROLES}}": JSON.stringify(groupRoles),
+    "{{GROUP_ADMIN}}": String(groupAdmin),
+    "{{GROUP_DASHBOARD}}": String(groupDashboard),
+    "{{GROUP_TOOLS}}": JSON.stringify(groupTools),
     "{{CHILDREN_AS_DROPDOWN}}": String(childrenAsDropdown),
     "{{MENU_TOP_ENABLED}}": String(menus.top.enabled), "{{MENU_TOP_ORDER}}": String(menus.top.order),
     "{{MENU_FOOTER_ENABLED}}": String(menus.footer.enabled), "{{MENU_FOOTER_ORDER}}": String(menus.footer.order),

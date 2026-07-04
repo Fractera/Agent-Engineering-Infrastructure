@@ -5,14 +5,17 @@ import { join, dirname, resolve as pathResolve } from 'path'
 import { tmpdir } from 'os'
 import { fileURLToPath } from 'url'
 import { handleMcpHandshake } from './mcp-handshake.js'
-import { publicTabUrls } from './site-url.js'
+import { publicSiteUrl, publicTabUrls } from './site-url.js'
 
 // ── Frozen Template Constructor MCP server (L2, port 3224) ──────────────────
 // Any of the 6 agents adds a whole STRUCTURE (news / blog / documentation / …) by
 // COMPOSING it from the Frozen Template Constructor — vetted frozen bricks assembled
-// by file copy + token substitution, ZERO code generation. Two tools:
-//   owner_template_list_primitives    — read-only basis (registry) for matching.
-//   owner_template_compose_structure  — mutating; §8.2 confirm via dry_run.
+// by file copy + token substitution, ZERO code generation. Tools:
+//   owner_template_list_primitives      — read-only basis (registry) for matching.
+//   owner_template_compose_structure    — mutating; §8.2 confirm via dry_run.
+//   owner_template_compose_project_page — mutating (step 178); a Projects-layer
+//     starter page from the mount-based project-page primitive, outside [lang].
+//   owner_template_list_groups / owner_template_update_group — group manifests.
 // The store tree is fetched from the data service (:3300, frozen-templates) and
 // composed into the slot with the project-local compose-frozen-template.mjs emitter.
 // Strategy: CRUD-DOCS/workspace-standards/frozen-template-constructor.md. L2 only.
@@ -58,6 +61,40 @@ function toolsSchema() {
           roles: { type: 'string', description: 'Aspect — "off" (default, public) or a comma role list (e.g. "user,architect") to inject the role gate uniformly.' },
           menus: { type: 'object', description: 'Menu placement (registration metadata, emitted into _data/group.ts for the site menu system). Slots top|footer|left|right, each { enabled:boolean, order:number }. Default every slot disabled, order 10 (explicit opt-in). NOT a Slot A/B property.' },
           children_as_dropdown: { type: 'boolean', description: 'Group manifest flag (default false). true → the menu expands the group child pages as a dropdown; false → the button navigates to the group index route.' },
+          dry_run: { type: 'boolean', description: 'true → preview without writing (§8.2). false/omit → compose.' },
+        },
+      },
+    },
+    {
+      name: 'owner_template_compose_project_page',
+      description:
+        'Compose the starter interface of a PROJECT (the Projects layer: a private application level for ' +
+        'the architect / project administrator — an automation or internal tool, "an n8n for one single ' +
+        'task") from the frozen project-page primitive — file copy + token substitution, NO code ' +
+        'generation. The page carries a description block, an interactive react-flow process diagram ' +
+        '(driven by declarative data), a cron-queue table and a results table (empty until the cron ' +
+        'infrastructure fills them). It mounts OUTSIDE [lang] into app/(projects)/projects/<category>/' +
+        '<project>/; access (architect+manager) and language (site default, monolingual) are INHERITED ' +
+        'from the zone layout. The folder name IS the registry: after a rebuild the project appears in ' +
+        'the account drawer Projects accordion automatically. Use this for PRIVATE owner tools — a PUBLIC ' +
+        'page group is owner_template_compose_structure instead.\n\n' +
+        'CONFIRM FIRST (§8.2): call dry_run=true to preview + show the owner, get explicit confirmation, ' +
+        'THEN call without dry_run. cron/integrations are RECORDED in the project README declaration only ' +
+        '(env keys are materialized later via the env setter + rebuild). Finishing the diagram/tables for ' +
+        'the real project is a coding-agent handoff on _data/flow.ts, _data/description.ts, ' +
+        '_lib/project-data.ts — never a template change.',
+      inputSchema: {
+        type: 'object',
+        required: ['category', 'project'],
+        properties: {
+          category: { type: 'string', enum: ['automation', 'fractera-pages', 'personal', 'other'], description: 'Existing projects category (fixed English identifiers).' },
+          project: { type: 'string', description: 'Project slug, kebab-case English identifier — becomes the folder name (the registry) and the URL /projects/<category>/<project>. Never localized.' },
+          title: { type: 'string', description: 'Human project name shown on the page (default: the slug, title-cased).' },
+          purpose: { type: 'string', description: 'Why the project exists (description block). Placeholder if omitted.' },
+          automation: { type: 'string', description: 'What is automated. Placeholder if omitted.' },
+          how: { type: 'string', description: 'How the automation works. Placeholder if omitted.' },
+          cron: { type: 'boolean', description: 'The project will run cron processes (recorded in the README declaration; execution is the cron infrastructure, a later capability).' },
+          integrations: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, envKeys: { type: 'array', items: { type: 'string' } } } }, description: 'External integrations with their env keys, e.g. [{"name":"exa.ai","envKeys":["EXA_API_KEY"]}]. Recorded in the README declaration.' },
           dry_run: { type: 'boolean', description: 'true → preview without writing (§8.2). false/omit → compose.' },
         },
       },
@@ -142,6 +179,7 @@ export class TemplateConstructorMcpServer {
   async _call(name, args) {
     if (name === 'owner_template_list_primitives') return this._list()
     if (name === 'owner_template_compose_structure') return this._compose(args)
+    if (name === 'owner_template_compose_project_page') return this._composeProject(args)
     if (name === 'owner_template_list_groups') return this._listGroups()
     if (name === 'owner_template_update_group') return this._updateGroup(args)
     throw new Error(`Unknown tool: ${name}`)
@@ -176,6 +214,67 @@ export class TemplateConstructorMcpServer {
       return textResult({ ...j, view_urls })
     }
     return textResult(j)
+  }
+
+  // ── compose a Projects-layer project page from the mount-based primitive (step 178) ──
+  async _composeProject(args) {
+    const CATEGORIES = ['automation', 'fractera-pages', 'personal', 'other']
+    const category = String(args.category ?? '').trim()
+    if (!CATEGORIES.includes(category)) throw new Error(`category must be one of: ${CATEGORIES.join(', ')}`)
+    const project = String(args.project ?? '').trim()
+    if (!/^[a-z][a-z0-9-]*$/.test(project)) throw new Error('project must be kebab-case (English identifier — it becomes the folder name)')
+    const title = (typeof args.title === 'string' && args.title.trim()) || project.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ')
+    const cron = args.cron === true
+    const integrations = Array.isArray(args.integrations)
+      ? args.integrations
+          .map(it => ({ name: String(it?.name ?? '').trim(), envKeys: Array.isArray(it?.envKeys) ? it.envKeys.map(String).map(s => s.trim()).filter(Boolean) : [] }))
+          .filter(it => it.name)
+      : []
+
+    if (args.dry_run) {
+      return textResult({
+        preview: true,
+        willCreate: {
+          folder: `app/(projects)/projects/${category}/${project}/ (11 files: page + description + react-flow diagram + cron-queue and results tables + _meta + README declaration)`,
+          access: 'architect+manager, inherited from the zone layout',
+          language: 'monolingual (site default), outside [lang]',
+          title, cron, integrations,
+        },
+        note: 'The real call refuses honestly if the category folder or a required npm dependency (@xyflow/react) is missing from the slot.',
+        confirm_prompt:
+          `Правильно ли я вас понимаю: собрать стартовую страницу проекта «${title}» — /projects/${category}/${project} ` +
+          `(описание + react-flow диаграмма процессов + таблицы cron-очереди и результатов; доступ architect+manager; ` +
+          `cron=${cron ? 'да' : 'нет'}, интеграций: ${integrations.length})? Диаграмма и таблицы — стартовые заглушки; ` +
+          `доводка под реальный проект — отдельная задача кодинг-агента. Повторите вызов без dry_run для подтверждения.`,
+      })
+    }
+
+    const r = await fetch(`${this.dataUrl}/frozen-templates/tree`, { headers: this._dataHeaders(), signal: AbortSignal.timeout(15000) })
+    if (!r.ok) throw new Error(`store tree fetch failed (${r.status})`)
+    const { files } = await r.json()
+    if (!files || !files['registry.json']) throw new Error('store returned no template files')
+
+    const storeDir = await mkdtemp(join(tmpdir(), 'frozen-templates-'))
+    try {
+      for (const [rel, content] of Object.entries(files)) {
+        const dest = join(storeDir, rel)
+        await mkdir(dirname(dest), { recursive: true })
+        await writeFile(dest, content, 'utf8')
+      }
+      const cli = [this.emitter, '--store', storeDir, '--out', this.appDir, '--primitive', 'project-page', '--category', category, '--project', project, '--title', title]
+      for (const k of ['purpose', 'automation', 'how']) if (typeof args[k] === 'string' && args[k].trim()) cli.push(`--${k}`, args[k].trim())
+      if (cron) cli.push('--cron', 'true')
+      if (integrations.length) cli.push('--integrations', JSON.stringify(integrations))
+      const { code, out } = await this._spawn('node', cli)
+      const last = (() => { try { return JSON.parse(out.trim().split('\n').filter(Boolean).pop()) } catch { return null } })()
+      if (last && last.refused) return textResult({ refused: true, axis: last.axis, detail: last.detail, advice: 'Fix the input and retry: the category must be an existing folder; a missing npm dependency must be added to the slot package.json (+ rebuild) first.' })
+      if (code !== 0 || !last || !last.composed) throw new Error(`composer exited ${code}: ${out.slice(-400)}`)
+      // mode-aware view URL (no [lang] prefix — the projects zone is monolingual)
+      const view_url = (() => { try { return `${publicSiteUrl(this.appEnvFile)}/projects/${category}/${project}` } catch { return '' } })()
+      return textResult({ ...last, view_url, next: 'Now REBUILD the slot with owner_deploy_rebuild_slot so the page is live; the project button appears in the account drawer Projects accordion (architect/manager). Finishing the diagram/description/tables for the real project is a coding-agent handoff (_data/flow.ts, _data/description.ts, _lib/project-data.ts).' })
+    } finally {
+      await rm(storeDir, { recursive: true, force: true }).catch(() => {})
+    }
   }
 
   _dataHeaders() {

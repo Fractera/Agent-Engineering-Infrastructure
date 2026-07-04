@@ -12,11 +12,16 @@ description: >
   + placeholder documents through two seams (list provider + uniform aspects). If
   nothing fits, REFUSE HONESTLY naming the failing axis and offer to harvest a new
   brick or use classic development — never force a bad fit, never generate code.
+  Also composes a PROJECT PAGE (the Projects layer starter interface: description +
+  react-flow process diagram + cron-queue and results tables) from the mount-based
+  'project-page' primitive via owner_template_compose_project_page — use when the
+  owner wants a private automation / internal tool ("automate publishing on a
+  schedule", "a tool for my own use"), NOT a public page group.
   Self-sufficient: no Hermes, no other agent required.
-version: 1.0.0
+version: 1.1.0
 metadata:
   hermes:
-    tags: [constructor, frozen, template, compose, primitive, envelope, news, blog, documentation, catalogue, structure, page-group]
+    tags: [constructor, frozen, template, compose, primitive, envelope, news, blog, documentation, catalogue, structure, page-group, project, automation, react-flow]
     related_skills: [create-multilingual-content-entry, propose-new-agent-skill-or-mcp, scaffold-declared-route-into-component-skeleton]
 ---
 
@@ -141,6 +146,38 @@ Composing writes files. Restate first and wait for explicit confirmation:
 > If I understood correctly: compose a **<format>** structure at **/<tab>**
 > (source **<source>**, depth **<depth>**, **<langs>**, roles **<roles>**), with
 > **<N>** placeholder documents. Shall I proceed?
+
+## 🧩 Project page (Projects layer, step 178)
+
+> Fractera agents do not deliver an automation in final form straight from a request — they build a
+> platform for developing repeatable automations. A project is a finished-cycle tool — **an n8n for
+> one single task**: the owner opens it in the UI, runs it and tracks the result.
+
+A **project** is a PRIVATE application level (architect+manager only), not a public page group.
+When the owner asks for an automation / internal tool for their own use, compose the starter
+interface from the mount-based `project-page` primitive:
+
+- **MCP (every agent):** `owner_template_compose_project_page` with
+  `{ category, project, title?, purpose?, automation?, how?, cron?, integrations? }`.
+  `dry_run: true` first to preview + confirm, then for real; then rebuild.
+- **Standalone:** `node compose-frozen-template.mjs --store <dir> --out . --primitive project-page
+  --category automation --project <slug> --title "…" [--cron true] [--integrations '[…]']`.
+
+What it differs in (vs a tab structure): mounts OUTSIDE `[lang]` into
+`app/(projects)/projects/<category>/<project>/`; access (architect+manager) and language (site
+default, monolingual) are INHERITED from the zone layout — no roles/i18n/menus/engine/parser-fs
+apply. `category` must be an existing category folder (automation | fractera-pages | personal |
+other); `project` is a kebab-case English slug — the folder name IS the registry, so the project
+appears in the account drawer Projects accordion automatically after a rebuild. The primitive
+declares its npm dependency (`@xyflow/react`); the composer VERIFIES it in the slot's package.json
+and refuses honestly if missing — it never installs packages. `cron` / `integrations` are RECORDED
+in the project README declaration (machine block) only; env keys are materialized later via the env
+setter + rebuild, execution is the cron infrastructure (a later capability).
+
+The composed page is a STARTER: placeholder description, a generic 4-node process diagram, two
+empty tables. **Finishing it for the real project is a coding-agent handoff** — edit
+`_data/description.ts` and `_data/flow.ts` (the diagram is DATA, never JSX) and wire
+`_lib/project-data.ts` when the substrate tables exist.
 
 ## 🌐 Adding a LANGUAGE → NOT this tool
 
