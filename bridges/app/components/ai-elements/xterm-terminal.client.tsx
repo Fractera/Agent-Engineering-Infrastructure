@@ -3,19 +3,6 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
-import { toast } from 'sonner';
-
-const IDLE_MS = 300_000;
-const TOAST_VISIBLE_MS = 30_000;
-
-const PLATFORM_LABELS: Record<string, string> = {
-  'claude-code': 'Claude Code',
-  'codex':       'Codex',
-  'gemini-cli':  'Gemini CLI',
-  'qwen-code':   'Qwen Code',
-  'kimi-code':   'Kimi Code',
-  'system':      'Terminal',
-};
 
 type Props = {
   wsUrl: string;
@@ -49,31 +36,6 @@ export const XtermTerminal = forwardRef<XtermTerminalHandle, Props>(
 
     useEffect(() => {
       if (!containerRef.current) return;
-
-      const label   = PLATFORM_LABELS[platform] ?? platform;
-      const toastId = `idle-${platform}`;
-      let timer: ReturnType<typeof setTimeout> | null = null;
-
-      function scheduleIdleToast() {
-        if (timer) clearTimeout(timer);
-        timer = setTimeout(() => {
-          toast.warning(
-            `${label}: terminal is idle`,
-            {
-              id: toastId,
-              description: 'To save server resources, close terminals you are not using.',
-              duration: TOAST_VISIBLE_MS,
-              onDismiss: () => { scheduleIdleToast(); },
-            }
-          );
-          timer = null;
-        }, IDLE_MS);
-      }
-
-      function resetIdle() {
-        toast.dismiss(toastId);
-        scheduleIdleToast();
-      }
 
       termRef.current = null;
       const term = new Terminal({
@@ -126,14 +88,12 @@ export const XtermTerminal = forwardRef<XtermTerminalHandle, Props>(
           fitAddon.fit();
           ws.send(JSON.stringify({ type: 'init', platform }));
           ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
-          scheduleIdleToast();
         });
       };
 
       const decoder = new TextDecoder('utf-8', { fatal: false });
 
       ws.onmessage = (e) => {
-        resetIdle();
         if (typeof e.data === 'string') {
           term.write(e.data);
           onDataRef.current?.(e.data);
@@ -158,7 +118,6 @@ export const XtermTerminal = forwardRef<XtermTerminalHandle, Props>(
       };
 
       term.onData((data) => {
-        resetIdle();
         if (ws.readyState === ws.OPEN) {
           ws.send(JSON.stringify({ type: 'stdin', data }));
         }
@@ -175,8 +134,6 @@ export const XtermTerminal = forwardRef<XtermTerminalHandle, Props>(
       return () => {
         disposed = true;
         clearTimeout(settleTimer);
-        if (timer) clearTimeout(timer);
-        toast.dismiss(toastId);
         ro.disconnect();
         wsRef.current = null;
         try { ws.close(); } catch {}
