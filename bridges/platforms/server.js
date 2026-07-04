@@ -17,6 +17,7 @@ import { DeployMcpServer } from './deploy-mcp-server.js'
 import { ContentCrudMcpServer } from './content-crud-mcp-server.js'
 import { ContentOrchestratorMcpServer } from './content-orchestrator-mcp-server.js'
 import { LanguageExpansionMcpServer } from './language-expansion-mcp-server.js'
+import { ProjectsRouterMcpServer } from './projects-router-mcp-server.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, '../../app/.env.local') })
@@ -1254,4 +1255,15 @@ new LanguageExpansionMcpServer({
   dataUrl: process.env.DATA_SERVICE_URL ?? 'http://127.0.0.1:3300',
   dataSecret: process.env.DATA_SECRET ?? '',
   appDir: process.env.SLOT_APP_DIR ?? '/opt/fractera/app',
+}).start()
+
+// ── Projects Router MCP server (singleton, port 3229) ────────────────────────
+// The top-level fork of the Projects layer (step 180): segment an owner's wish into
+// PAGES (public surface → task-scenario-router) vs PROJECTS (private /projects level),
+// plus the cron/integrations survey. Both tools advisory/read-only — the verdict and
+// answers travel through the existing channels (P3 declaration, :3224 compose, env
+// setter of step 143). Route fixation requires the owner's explicit confirmed_choice.
+new ProjectsRouterMcpServer({
+  port: Number(process.env.PROJECTS_ROUTER_MCP_PORT ?? 3229),
+  secret: MCP_SECRET,
 }).start()

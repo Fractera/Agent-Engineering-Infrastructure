@@ -14,7 +14,8 @@
     "app-settings-bridge": { "port": 3218, "first_party": true, "max_tier": "owner" },
     "public-consultant-bridge": { "port": 3219, "first_party": true, "max_tier": "public" },
     "client-actions-bridge": { "port": 3220, "first_party": true, "max_tier": "public" },
-    "ai-draft-bridge": { "port": 3221, "first_party": true, "max_tier": "owner" }
+    "ai-draft-bridge": { "port": 3221, "first_party": true, "max_tier": "owner" },
+    "projects-router-bridge": { "port": 3229, "first_party": true, "max_tier": "owner" }
   },
   "tools": {
     "owner_coding_platform_send_prompt": { "tier": "owner", "first_party": true, "mutating": true, "execution": "server" },
@@ -50,6 +51,8 @@
     "public_view_set_width": { "tier": "public", "first_party": true, "mutating": true, "execution": "client" },
     "public_request_authentication": { "tier": "public", "first_party": true, "mutating": false, "execution": "client" },
     "owner_draft_create_record": { "tier": "owner", "first_party": true, "mutating": true, "execution": "server" },
-    "owner_draft_send_to_steps": { "tier": "owner", "first_party": true, "mutating": true, "execution": "server" }
+    "owner_draft_send_to_steps": { "tier": "owner", "first_party": true, "mutating": true, "execution": "server" },
+    "owner_projects_route_request": { "tier": "owner", "first_party": true, "mutating": false, "execution": "server" },
+    "owner_projects_survey_automation_needs": { "tier": "owner", "first_party": true, "mutating": false, "execution": "server" }
   }
 }
