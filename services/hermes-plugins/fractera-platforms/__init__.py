@@ -138,9 +138,36 @@ PLATFORM_PORTS = {
     "kimi-code":   int(os.environ.get("KIMI_MCP_PORT",   3214)),
 }
 
-_SECRET = os.environ.get("MCP_SECRET", "")
+_HERMES_ENV_FILE = os.environ.get("HERMES_ENV_FILE", "/root/.hermes/.env")
+_SECRET_CACHE = ""
 _POLL_S = 5
 _MAX_POLLS = 60  # 5 minutes
+
+
+def _mcp_secret() -> str:
+    """Bearer secret for the platform bridges (step 135 gate), resolved lazily.
+
+    The host process may not carry MCP_SECRET — the webui PM2 process sources only
+    its own /opt/hermes-webui/.env — so after os.environ, fall back to parsing
+    /root/.hermes/.env directly (stdlib only). The plugin must work in ANY host
+    process (step 182 / agent self-sufficiency).
+    """
+    global _SECRET_CACHE
+    if _SECRET_CACHE:
+        return _SECRET_CACHE
+    secret = os.environ.get("MCP_SECRET", "")
+    if not secret:
+        try:
+            with open(_HERMES_ENV_FILE, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line.startswith("MCP_SECRET="):
+                        secret = line.split("=", 1)[1].strip().strip('"').strip("'")
+                        break
+        except OSError:
+            pass
+    _SECRET_CACHE = secret  # empty stays uncached → retried on the next call
+    return secret
 
 
 def _mcp(port: int, tool: str, args: dict) -> dict:
@@ -149,8 +176,9 @@ def _mcp(port: int, tool: str, args: dict) -> dict:
         "params": {"name": tool, "arguments": args},
     }).encode()
     hdrs = {"Content-Type": "application/json"}
-    if _SECRET:
-        hdrs["Authorization"] = f"Bearer {_SECRET}"
+    secret = _mcp_secret()
+    if secret:
+        hdrs["Authorization"] = f"Bearer {secret}"
     req = Request(f"http://127.0.0.1:{port}", data=body, headers=hdrs, method="POST")
     try:
         with urlopen(req, timeout=30) as resp:

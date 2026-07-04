@@ -13,6 +13,9 @@ HERMES_WEBUI_PORT="${HERMES_WEBUI_PORT:-9120}"
 HERMES_WEBUI_HOST="${HERMES_WEBUI_HOST:-0.0.0.0}"
 HERMES_WEBUI_AGENT_DIR="${HERMES_WEBUI_AGENT_DIR:-/usr/local/lib/hermes-agent}"
 HERMES_HOME="${HERMES_HOME:-/root/.hermes}"
+# Default workspace the webui chat operates in. Without it the webui falls back to
+# /root/workspace (empty) and Hermes cannot see the coders' DEVELOPMENT-STEPS (step 182).
+HERMES_WEBUI_DEFAULT_WORKSPACE="${HERMES_WEBUI_DEFAULT_WORKSPACE:-/opt/fractera/app}"
 PINNED="$(cat "${INSTALLER_DIR}/pinned-version.txt")"
 # Vendored fork — pulls from Fractera's copy, not upstream. See step 58.
 REPO="https://github.com/Fractera/hermes-webui.git"
@@ -41,8 +44,16 @@ install -m 644 -t "$INSTALL_DIR/static/" \
 echo "[hermes-webui-installer] applying Fractera rebrand"
 python3 "${INSTALLER_DIR}/rebrand.py" --target "$INSTALL_DIR"
 
-# --- 4. .env (preserve existing) ---
+# --- 4. .env (create, or top up missing keys — idempotent) ---
 ENV_FILE="$INSTALL_DIR/.env"
+# MCP_SECRET: the delegation plugin (fractera-platforms) reads it from the process
+# environment to send the Bearer required by the platform bridges :3210-3214 (step 135
+# gate). The webui is a separate PM2 process whose wrapper sources ONLY this .env —
+# without the key here, delegation from the web chat fails with 401 (step 182).
+MCP_SECRET_VALUE="$(grep -m1 -E '^MCP_SECRET=' "${HERMES_HOME}/.env" 2>/dev/null | cut -d= -f2- || true)"
+if [ -z "$MCP_SECRET_VALUE" ]; then
+    echo "[hermes-webui-installer] WARNING: MCP_SECRET not found in ${HERMES_HOME}/.env — webui delegation will rely on the plugin's own .env fallback"
+fi
 if [ ! -f "$ENV_FILE" ]; then
     echo "[hermes-webui-installer] writing default .env"
     cat > "$ENV_FILE" <<ENV
@@ -52,9 +63,21 @@ HERMES_WEBUI_AGENT_DIR=${HERMES_WEBUI_AGENT_DIR}
 HERMES_WEBUI_PYTHON=${HERMES_WEBUI_AGENT_DIR}/venv/bin/python
 HERMES_HOME=${HERMES_HOME}
 HERMES_CONFIG_PATH=${HERMES_HOME}/config.yaml
+HERMES_WEBUI_DEFAULT_WORKSPACE=${HERMES_WEBUI_DEFAULT_WORKSPACE}
 ENV
+    if [ -n "$MCP_SECRET_VALUE" ]; then
+        echo "MCP_SECRET=${MCP_SECRET_VALUE}" >> "$ENV_FILE"
+    fi
 else
-    echo "[hermes-webui-installer] .env exists — preserving"
+    echo "[hermes-webui-installer] .env exists — preserving, topping up missing keys"
+    if ! grep -qE '^HERMES_WEBUI_DEFAULT_WORKSPACE=' "$ENV_FILE"; then
+        echo "HERMES_WEBUI_DEFAULT_WORKSPACE=${HERMES_WEBUI_DEFAULT_WORKSPACE}" >> "$ENV_FILE"
+        echo "[hermes-webui-installer]   + HERMES_WEBUI_DEFAULT_WORKSPACE"
+    fi
+    if [ -n "$MCP_SECRET_VALUE" ] && ! grep -qE '^MCP_SECRET=' "$ENV_FILE"; then
+        echo "MCP_SECRET=${MCP_SECRET_VALUE}" >> "$ENV_FILE"
+        echo "[hermes-webui-installer]   + MCP_SECRET"
+    fi
 fi
 
 # --- 4b. Seed WebUI settings (language + brand + skip onboarding) ---
