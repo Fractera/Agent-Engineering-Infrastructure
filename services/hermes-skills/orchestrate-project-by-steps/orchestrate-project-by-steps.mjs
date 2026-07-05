@@ -19,7 +19,10 @@
 //                        plus announce_text + confirm_instruction (the model relays these VERBATIM)
 //     5. MATERIALIZE   — the whole queue on disk BEFORE any work: one rich NEW-STEPS/<NN>-<slug>.md
 //                        SPEC file per node + one NEW-STEPS/<NN>-coder-handoff-<slug>.md per coder-built
-//                        node (§4.3) + the project-root README.md GENERATED from the graph (§4.1, D2).
+//                        node (§4.3) + the project-root README.md GENERATED from the graph (§4.1, D2)
+//                        + the EXECUTION SCHEMA (D6, contract R6): the diagram _data/flow.ts (derived,
+//                        always rewritten) and the durable workflow _workflow/definition.ts (generated
+//                        only when absent/starter; kept files are validated for isomorphism).
 //     6. RESUME        — stable token; a cold re-run skips finished sub-steps (composite key <kind>:<seq>)
 //
 // A real (materializing) run REQUIRES --approve <order_sheet.id> — the token issued by --dry-run for the
@@ -230,6 +233,7 @@ function renderNodeStep(number, node, ctx, status = "new", completedAt = null) {
     `# ${pad(number)} — ${node.title}`, "",
     `> Project sub-step · node \`${node.id}\` · kind: ${node.kind} · importance: mandatory · order sheet \`${ctx.sheet}\` (${ctx.seq}/${ctx.total})` + (status === "completed" && completedAt ? ` · completed ${completedAt}` : "") + (status === "in-progress" ? " · in progress" : ""), "",
     `**Before anything else, read \`${ctx.readmeRel}\`** — the project overview (why / how it works / efficiency / reuse / result). Then read this whole spec before writing any code.`, "",
+    r6Line(node, ctx), "",
     "## Task", node.task || "_No task._", "",
     "## Tools", ...toolLines, "",
     "## Environment keys", ...keyLines, "",
@@ -295,6 +299,7 @@ function renderCoderHandoff(number, node, ctx, status = "new", completedAt = nul
     `2. Open step ${pad(ctx.specStep)} (\`${ctx.specRel}\`) — the exhaustive spec for node \`${node.id}\` (task, inputs/outputs, to-do).`,
     "3. Obey your own workspace instructions (`CLAUDE.md` / `AGENTS.md`): the static-first canon, `.client`/`.server` naming, ≤200-line components, and the full development pipeline (open → build → verify → deploy → record → close).", "",
     `**Deliver:** ${node.title}${node.description ? " — " + node.description : ""}`, "",
+    r6Line(node, ctx), "",
     "## Node at a glance",
     `- **Kind:** ${node.kind}`,
     `- **Tools / integrations:** ${toolLine}`,
@@ -350,6 +355,7 @@ function renderProjectReadme(graph, ordered, ctx) {
     "## Why", p.purpose, "",
     "## How it works",
     "The project is decomposed into nodes; each node is a sub-step a coding agent builds later. Nodes run in the topological order below (a node runs after everything it depends on):", "",
+    `**Execution schema (contract R6):** the process diagram (\`${projectFlowRel(graph.category, graph.slug)}\`) and the durable workflow (\`${projectWorkflowRel(graph.category, graph.slug)}\`) are GENERATED from this graph and are the project's ONLY execution schema — what is not on the diagram does not exist in the project. A coder implements only step bodies (under the \`// node:<id>\` markers); a new action = extend the graph and re-run the engine, never a shadow step outside the schema.`, "",
     "| # | node | kind | task | tools | keys | depends on |",
     "|---|---|---|---|---|---|---|",
     ...rows, "",
@@ -373,6 +379,200 @@ async function writeProjectReadme(outRoot, graph, ordered, ctx) {
   await mkdir(dirname(abs), { recursive: true })
   await writeFile(abs, renderProjectReadme(graph, ordered, ctx), "utf8")
   return { rel: ctx.readmeRel, abs }
+}
+
+// ── 8. EXECUTION SCHEMA (D6, contract R6) — diagram + workflow GENERATED from the graph ──────
+// The owner's MAIN INVARIANT (184-hermes-projects-mode-contract §R6): the WDK schema is the ONLY
+// schema of execution — what is not on the diagram does not exist in the project ("a wrong schema
+// = a broken project"). So the engine derives BOTH sides from the SAME approved graph:
+//   • _data/flow.ts        — the diagram as data (react-flow nodes/edges + the R8 info payload).
+//     DERIVED like the README: always rewritten deterministically (marker `// fractera:flow`).
+//   • _workflow/definition.ts — the durable WDK workflow: one "use step" per NON-trigger node in
+//     topological order, each under a `// node:<id>` marker; runProject chains them through an
+//     artifacts accumulator. Written ONLY when absent or still the composed starter placeholder
+//     (`fractera:starter-workflow`) — NEVER over a coder's implemented steps. When kept, the file
+//     is VALIDATED for isomorphism (every non-trigger node has its marker; no extra markers) and
+//     the mismatch is reported as a warning — the coder reconciles, the engine never deletes code.
+// Trigger nodes are not steps — they ARE the run route / cron queue that fires the workflow.
+const flat = s => String(s ?? "").replace(/\s*\n+\s*/g, " ").trim()
+const projectFlowRel = (category, slug) => `app/(projects)/projects/${category}/${slug}/_data/flow.ts`
+const projectWorkflowRel = (category, slug) => `app/api/projects/${category}/${slug}/_workflow/definition.ts`
+const STARTER_WORKFLOW_MARKER = "fractera:starter-workflow"
+
+// The shared R6 sentence every spec / handoff / README carries — the coder must know the schema is
+// generated and where their ONLY writable surface is (the body of their node's step).
+function r6Line(node, ctx) {
+  const own = node.kind === "trigger"
+    ? "this node is a TRIGGER — it IS the run route / cron queue that fires the workflow, it has no workflow step"
+    : `implement ONLY the body of this node's step (under the \`// node:${node.id}\` marker in the workflow)`
+  return `**Execution schema (contract R6):** the process diagram (\`${projectFlowRel(ctx.category, ctx.slug)}\`) and the durable workflow (\`${projectWorkflowRel(ctx.category, ctx.slug)}\`) are GENERATED from the decomposition graph and are the project's ONLY execution schema — what is not on the diagram does not exist in the project; ${own}; a new action = extend the GRAPH and re-run the engine, never a shadow step outside the schema.`
+}
+
+// Layered DAG layout for the diagram: depth = longest dependency chain (topo order guarantees deps
+// are placed first), x = depth * 260, y = index-within-layer * 100 — same grid the frozen template uses.
+function layoutPositions(ordered) {
+  const depth = new Map(), layerCount = new Map(), pos = new Map()
+  for (const n of ordered) {
+    const d = n.dependsOn.length ? Math.max(...n.dependsOn.map(dep => depth.get(dep) ?? 0)) + 1 : 0
+    depth.set(n.id, d)
+    const i = layerCount.get(d) ?? 0
+    layerCount.set(d, i + 1)
+    pos.set(n.id, { x: d * 260, y: i * 100 })
+  }
+  return pos
+}
+// The diagram-as-data file — self-contained (same types the frozen flow.ts.tpl ships, so the
+// process-flow client renders it unchanged) with FLOW_NODES/FLOW_EDGES derived from the graph.
+// The R8 info payload (summary/processes/kind/task/tools/envKeys/io) comes straight from the node.
+function renderProjectFlow(ordered, ctx) {
+  const pos = layoutPositions(ordered)
+  const triggers = new Set(ordered.filter(n => n.kind === "trigger").map(n => n.id))
+  const nodes = ordered.map(n => ({
+    id: n.id, type: "process", position: pos.get(n.id),
+    data: { label: n.title, info: { summary: n.description, processes: n.todo, kind: n.kind, task: n.task, tools: n.tools, envKeys: n.envKeys, io: { in: n.io.in, out: n.io.out } } },
+  }))
+  const edges = []
+  for (const n of ordered) for (const dep of n.dependsOn) edges.push({ id: `e-${dep}-${n.id}`, source: dep, target: n.id, ...(triggers.has(dep) ? { animated: true } : {}) })
+  return [
+    `import type { Edge, Node } from "@xyflow/react";`, "",
+    `// fractera:flow ${ctx.sheet} — GENERATED by orchestrate-project-by-steps from the`,
+    "// decomposition graph (step 184, contract R6). This diagram is the project's",
+    "// EXECUTION SCHEMA: what is not on it does not exist in the project. The file is",
+    "// DERIVED — a re-run rewrites it deterministically, so NEVER hand-edit it: to",
+    "// change the diagram, extend the graph and re-run the engine. Each node's `info`",
+    "// is the payload of the on-canvas info panel (R8).",
+    "export type FlowNodeInfo = {",
+    "  summary: string;",
+    "  processes: string[];",
+    `  kind: "trigger" | "action" | "transform";`,
+    "  task?: string;",
+    "  tools: string[];",
+    "  envKeys: string[];",
+    "  io?: { in: unknown; out: unknown };",
+    "};", "",
+    "export type FlowNodeData = {",
+    "  label: string;",
+    "  info: FlowNodeInfo;",
+    "};", "",
+    `export type FlowNode = Node<FlowNodeData, "process">;`, "",
+    `export const FLOW_NODES: FlowNode[] = ${JSON.stringify(nodes, null, 2)};`, "",
+    `export const FLOW_EDGES: Edge[] = ${JSON.stringify(edges, null, 2)};`, "",
+  ].join("\n")
+}
+async function writeProjectFlow(outRoot, ordered, ctx) {
+  const rel = projectFlowRel(ctx.category, ctx.slug)
+  const abs = join(outRoot, rel)
+  await mkdir(dirname(abs), { recursive: true })
+  await writeFile(abs, renderProjectFlow(ordered, ctx), "utf8")
+  return { rel, abs }
+}
+
+// One valid TS identifier per step function, camelCase from the node id; reserved names and
+// collisions get a numeric suffix so the generated file always compiles.
+const RESERVED_STEP_NAMES = new Set(["runProject", "openRun", "closeRun"])
+function stepFnName(id, used) {
+  let base = String(id).split(/[^a-z0-9]+/i).filter(Boolean).map((w, i) => i ? w[0].toUpperCase() + w.slice(1) : w).join("") || "node"
+  if (/^[0-9]/.test(base)) base = "n" + base
+  let name = base, i = 2
+  while (RESERVED_STEP_NAMES.has(name) || used.has(name)) { name = base + i; i++ }
+  used.add(name)
+  return name
+}
+// The durable-workflow skeleton — the EXECUTABLE mirror of the diagram. Journal open/close steps
+// are kept verbatim from the frozen template's contract (same project_cron_runs journal the page
+// tables read); the diagram-mirror steps are TODO bodies the coder fills per their handoff step.
+function renderWorkflowDefinition(ordered, ctx) {
+  const workNodes = ordered.filter(n => n.kind !== "trigger")
+  const triggerNodes = ordered.filter(n => n.kind === "trigger")
+  const used = new Set()
+  const names = new Map(workNodes.map(n => [n.id, stepFnName(n.id, used)]))
+  const calls = workNodes.map(n => `    artifacts[${JSON.stringify(n.id)}] = await ${names.get(n.id)}(artifacts);`)
+  const stepFns = workNodes.map(n => [
+    `// node:${n.id} — ${flat(n.title)} [${n.kind}]`,
+    `async function ${names.get(n.id)}(artifacts: Record<string, unknown>): Promise<unknown> {`,
+    `  "use step";`, "",
+    `  // TODO (diagram node "${n.id}"): ${flat(n.task)}`,
+    `  // In: ${JSON.stringify(n.io.in)} → Out: ${JSON.stringify(n.io.out)}`,
+    ...n.todo.map(t => `  // - [ ] ${flat(t)}`),
+    "  void artifacts;",
+    "  return null;",
+    "}",
+  ].join("\n"))
+  return [
+    `import { journalRunStart, journalRunFinish } from "./journal";`, "",
+    `// fractera:workflow ${ctx.sheet} — GENERATED by orchestrate-project-by-steps from the`,
+    "// decomposition graph (step 184, contract R6). This workflow is the EXECUTABLE",
+    "// mirror of the diagram in the project page's _data/flow.ts — the two are",
+    "// ISOMORPHIC: one \"use step\" function per non-trigger diagram node, in",
+    "// topological order, each under its `// node:<id>` marker. Implement ONLY the",
+    "// step BODIES (keep the markers and signatures); a new action = extend the GRAPH",
+    "// and re-run the engine — a shadow step outside the diagram is forbidden (what",
+    "// is not on the diagram does not exist in the project). Journal open/close are",
+    "// engine plumbing — keep them as steps (checkpointed ids never double-insert).",
+    ...(triggerNodes.length ? [
+      "//",
+      "// Trigger node(s) of the diagram — not steps; the run route (../run/route.ts)",
+      "// and the project's cron queue fire this workflow:",
+      ...triggerNodes.map(n => `//   • "${n.id}" — ${flat(n.title)}`),
+    ] : []), "",
+    "export async function runProject(input?: string) {",
+    `  "use workflow";`, "",
+    "  const journalId = await openRun(input);",
+    "  const artifacts: Record<string, unknown> = { input };",
+    "  try {",
+    ...calls,
+    "    // TODO: pass the final artifact's resultTitle/resultUrl once the last step is implemented.",
+    "    await closeRun(journalId, { ok: true });",
+    `    return { journalId, status: "completed" };`,
+    "  } catch (e) {",
+    "    await closeRun(journalId, {",
+    "      ok: false,",
+    "      error: e instanceof Error ? e.message : String(e),",
+    "    });",
+    "    throw e;",
+    "  }",
+    "}", "",
+    "// Journal steps — write the run into project_cron_runs, the same table the",
+    "// queue/results tables of the project page read. Keep them as steps: the id is",
+    "// checkpointed, so a replay never double-inserts.", "",
+    "async function openRun(input?: string) {",
+    `  "use step";`, "",
+    "  const id = crypto.randomUUID();",
+    "  journalRunStart(id, input);",
+    "  return id;",
+    "}", "",
+    "async function closeRun(",
+    "  id: string,",
+    "  result: { ok: boolean; resultTitle?: string; resultUrl?: string; error?: string },",
+    ") {",
+    `  "use step";`, "",
+    "  journalRunFinish(id, result);",
+    "}", "",
+    "// ── Diagram-mirror steps (one per non-trigger node, topological order) ──", "",
+    stepFns.join("\n\n"), "",
+  ].join("\n")
+}
+// Kept-file isomorphism check (R6): every non-trigger node must have its `// node:<id>` marker in
+// the coder's file; a marker with no graph node is `extra`. A mismatch is a WARNING, not a blocker
+// — the engine never rewrites a coder's implemented workflow.
+function validateWorkflowIso(src, ordered) {
+  const wanted = ordered.filter(n => n.kind !== "trigger").map(n => n.id)
+  const found = [...new Set([...src.matchAll(/\/\/\s*node:([a-z0-9-]+)/g)].map(m => m[1]))]
+  const missing = wanted.filter(id => !found.includes(id))
+  const extra = found.filter(id => !wanted.includes(id))
+  return { ok: !missing.length && !extra.length, missing, extra }
+}
+async function emitWorkflowDefinition(outRoot, ordered, ctx) {
+  const rel = projectWorkflowRel(ctx.category, ctx.slug)
+  const abs = join(outRoot, rel)
+  let existing = null
+  try { existing = await readFile(abs, "utf8") } catch { /* absent — generate */ }
+  if (existing !== null && !existing.includes(STARTER_WORKFLOW_MARKER)) {
+    return { rel, action: "kept", iso: validateWorkflowIso(existing, ordered) }
+  }
+  await mkdir(dirname(abs), { recursive: true })
+  await writeFile(abs, renderWorkflowDefinition(ordered, ctx), "utf8")
+  return { rel, action: "generated" }
 }
 
 // Order-sheet human protocol (§8): the model relays these VERBATIM — it never words the confirmation
@@ -458,8 +658,9 @@ async function main() {
     console.log(JSON.stringify({ ok: true, dryRun: true, mode: "project-plan", category: graph.category, slug: graph.slug,
       nodes: graph.nodes.length, ...(graph.duplicates ? { deduped: graph.duplicates } : {}), ...(spec.warnings ? { warnings: spec.warnings } : {}),
       order_sheet: sheet, plan: ordered, out_exists: slotSeen, readme_path: readmeRel,
+      flow_path: projectFlowRel(graph.category, graph.slug), workflow_path: projectWorkflowRel(graph.category, graph.slug),
       ...(prior.size ? { resume_available: prior.size, resume_note: "step files for this order sheet already exist — a real run RESUMES (existing sub-steps kept, only missing ones written)" } : {}),
-      note: `MATERIALIZE (real run): the project-root README (${readmeRel}) generated from the graph + one NEW-STEPS spec file per node + one coder-handoff step per coder-built node (materialize-first) before any development.` }))
+      note: `MATERIALIZE (real run): the project-root README (${readmeRel}) generated from the graph + the execution schema (R6: diagram ${projectFlowRel(graph.category, graph.slug)} always rewritten; workflow ${projectWorkflowRel(graph.category, graph.slug)} only when absent/starter) + one NEW-STEPS spec file per node + one coder-handoff step per coder-built node (materialize-first) before any development.` }))
     return
   }
 
@@ -479,6 +680,11 @@ async function main() {
   // at that spec's number (§4.3). The README is derived, so a cold resume rewrites it deterministically;
   // the step files are keyed by composite <kind>:<seq> so a re-run skips whatever is already on disk.
   const readmeFile = await writeProjectReadme(outRoot, graph, orderedNodes, { sheet: sheetId, category: graph.category, slug: graph.slug, readmeRel })
+  // EXECUTION SCHEMA (D6, R6): both sides derived from the SAME approved graph. The diagram file is
+  // derived like the README (always rewritten); the workflow skeleton never overwrites a coder's code.
+  const emitCtx = { sheet: sheetId, category: graph.category, slug: graph.slug }
+  const flowFile = await writeProjectFlow(outRoot, orderedNodes, emitCtx)
+  const workflow = await emitWorkflowDefinition(outRoot, orderedNodes, emitCtx)
   const materialized = [], skipped = []
   let n = await nextStepNumber(outRoot)
   for (let i = 0; i < ordered.length; i++) {
@@ -510,8 +716,11 @@ async function main() {
   const handCount = materialized.filter(m => m.kind === "coder-handoff").length
   console.log(JSON.stringify({ ok: true, mode: "project-plan", ...(prior.size ? { resumed: true } : {}), category: graph.category, slug: graph.slug,
     order_sheet_id: sheetId, nodes: graph.nodes.length, readme_path: readmeRel, readme: readmeFile.rel,
-    materialized, ...(skipped.length ? { skipped } : {}), ...(spec.warnings ? { warnings: spec.warnings } : {}),
-    note: `Wrote the project-root README (${readmeFile.rel}) from the graph + materialized ${specCount} node spec file(s) + ${handCount} coder-handoff step(s) in ${STEP_ROOT}/${NEW_DIR}${skipped.length ? `, skipped ${skipped.length} already on disk` : ""}. Each step file's first instruction is to read that README. A coder develops & closes each node later (D3).` }))
+    flow: flowFile.rel,
+    workflow: { rel: workflow.rel, action: workflow.action, ...(workflow.iso ? { iso: workflow.iso } : {}) },
+    ...(workflow.iso && !workflow.iso.ok ? { warnings: [...(spec.warnings ?? []), `workflow ${workflow.rel} is NOT isomorphic to the diagram (missing markers: ${workflow.iso.missing.join(", ") || "none"}; extra markers: ${workflow.iso.extra.join(", ") || "none"}) — a coder must reconcile it with the graph (R6)`] } : (spec.warnings ? { warnings: spec.warnings } : {})),
+    materialized, ...(skipped.length ? { skipped } : {}),
+    note: `Wrote the project-root README (${readmeFile.rel}) from the graph + the execution schema (R6): diagram ${flowFile.rel} (derived, always rewritten) + workflow ${workflow.rel} (${workflow.action}) + materialized ${specCount} node spec file(s) + ${handCount} coder-handoff step(s) in ${STEP_ROOT}/${NEW_DIR}${skipped.length ? `, skipped ${skipped.length} already on disk` : ""}. Each step file's first instruction is to read that README. A coder develops & closes each node later (D3).` }))
 }
 
 main().catch(e => { console.error("orchestrate-project-by-steps:", e.message); process.exit(1) })

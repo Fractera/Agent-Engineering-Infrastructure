@@ -19,7 +19,7 @@ description: >
   when the owner wants a private automation / internal tool ("automate publishing on
   a schedule", "a tool for my own use"), NOT a public page group.
   Self-sufficient: no Hermes, no other agent required.
-version: 1.2.1
+version: 1.3.0
 metadata:
   hermes:
     tags: [constructor, frozen, template, compose, primitive, envelope, news, blog, documentation, catalogue, structure, page-group, project, automation, react-flow, workflow, durable]
@@ -219,6 +219,18 @@ decomposition README **without `--force`** (that is the expected materialize-fir
 overwrite collision), keeps the `fractera:project` body verbatim, and appends its `fractera:meta`
 block only if absent. Both machine blocks survive — the graph (engine) and the route metadata
 (composer). A folder that already has a built `page.tsx` still needs `--force` (a real re-compose).
+
+**Execution-schema reconciliation (step 184, D6 — contract R6).** The decomposition engine also
+GENERATES the project's execution schema from the approved graph: the diagram-as-data
+`_data/flow.ts` (marker `// fractera:flow <sheetId>`) and the durable workflow
+`_workflow/definition.ts` (marker `// fractera:workflow <sheetId>`; a coder implements its step
+bodies later). The composer must never overwrite either with the static starter stub — that would
+break the R6 invariant (the diagram and the workflow are the project's ONLY execution schema,
+derived from the graph). So the emit loop SKIPS `_data/flow.ts` when the existing file carries
+`fractera:flow`, and `_workflow/definition.ts` when the existing file carries `fractera:workflow`.
+The untouched starter placeholder carries `fractera:starter-workflow` (a different string), so a
+FRESH compose still emits both stubs normally — and the engine may later replace the placeholder
+(it regenerates a definition.ts only when the file is absent or still carries the starter marker).
 
 ## 🌐 Adding a LANGUAGE → NOT this tool
 

@@ -132,6 +132,18 @@ const META_RE = /<!--\s*fractera:meta[\s\S]*?-->/
 const extractMetaBlock = text => { const m = text.match(META_RE); return m ? m[0] : null }
 const isProjectRootReadme = destPath => destPath.replace(/\\/g, "/").endsWith("/README.md")
 
+// ── execution-schema reconciliation (step 184, D6 — contract R6) ──────────────
+// When the project was born from a decomposition, orchestrate-project-by-steps GENERATES the
+// execution schema from the approved graph BEFORE this composer runs: the diagram-as-data
+// (_data/flow.ts, marker `// fractera:flow`) and the durable workflow (_workflow/definition.ts,
+// marker `// fractera:workflow`; the coder later implements its step bodies). Overwriting either
+// with the static starter stub would break the R6 invariant (diagram ↔ workflow isomorphic, both
+// derived from the graph) — so the composer SKIPS them when the engine's marker is present. The
+// untouched starter placeholder carries `fractera:starter-workflow` (a DIFFERENT string), so a
+// fresh compose still emits both stubs normally.
+const isProjectFlowData = destPath => destPath.replace(/\\/g, "/").endsWith("/_data/flow.ts")
+const isProjectWorkflowDef = destPath => destPath.replace(/\\/g, "/").endsWith("/_workflow/definition.ts")
+
 // Broken/replacement characters from a lossy encoding step (U+FFFD/U+FFFC, C0/C1 control chars
 // except tab/LF/CR — e.g. a 0x13 byte left where an accented letter belonged, rendering a box —
 // and UTF-8-read-as-Latin1 mojibake). Refused so a corrupted label never gets baked into the site.
@@ -393,6 +405,18 @@ async function composeProject(storeRoot, prim, outRoot, a) {
     const r = rel.replace(/\\/g, "/")
     const destPath = r.replace(/\.tpl$/, "").split("{{CATEGORY}}").join(category).split("{{PROJECT}}").join(project)
     const rendered = applyTokens(await readFile(join(tabSrc, rel), "utf8"), tok)
+    // Execution-schema reconciliation (D6, R6): never clobber the engine-generated diagram/workflow.
+    if (isProjectFlowData(destPath) || isProjectWorkflowDef(destPath)) {
+      const abs = join(outRoot, destPath)
+      if (await exists(abs)) {
+        const existing = await readFile(abs, "utf8")
+        const marker = isProjectFlowData(destPath) ? "fractera:flow" : "fractera:workflow"
+        if (existing.includes(marker)) {
+          console.log(`emit(skip) ${destPath} — engine-generated execution schema (${marker}, R6) kept`)
+          emitted++; continue
+        }
+      }
+    }
     // README reconciliation (D4.2): keep a decomposition-born README (fractera:project) and only
     // contribute this composer's fractera:meta block if it is missing — never clobber the graph.
     if (isProjectRootReadme(destPath)) {

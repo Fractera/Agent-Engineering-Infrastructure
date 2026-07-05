@@ -11,7 +11,7 @@ description: >
   plus one coder-handoff step per node — BEFORE any development. It does NOT deploy, does NOT
   execute a node, does NOT write code: a coding agent builds each node LATER from its step
   file. The gate is SPEC COMPLETENESS, not a deployment record.
-version: 0.6.0
+version: 0.7.0
 metadata:
   hermes:
     tags: [project, automation, orchestrate, decompose, steps, node, dag, materialize, coder-handoff, workflow, cron, tool]
@@ -78,8 +78,23 @@ the owner wants "a news page / a blog / documentation", that is content — stop
   and the finish protocol (deploy → record → close both steps). This mirrors the SOUL delegation edge and
   the `delegate-task` / `prepare-automation-knowledge` skills: real code is always DELEGATED, never written
   by the orchestrator, and delegation is a numbered step, not an ad-hoc chat prompt.
+- **The EXECUTION SCHEMA is generated from the graph (D6, contract R6).** On an approved run the engine
+  also emits both sides of the R6 invariant, derived from the SAME graph:
+  - `app/(projects)/projects/<cat>/<slug>/_data/flow.ts` — the canvas diagram as data (react-flow
+    nodes/edges, layered by DAG depth) with the full R8 info payload per node (summary / processes /
+    kind / task / tools / envKeys / io). DERIVED like the README: **always rewritten** deterministically
+    (marker `// fractera:flow <sheetId>`) — never hand-edit it; extend the graph and re-run.
+  - `app/api/projects/<cat>/<slug>/_workflow/definition.ts` — the durable WDK workflow skeleton: one
+    `"use step"` function per NON-trigger node in topological order, each under a `// node:<id>` marker;
+    `runProject` chains them through an `artifacts` accumulator; trigger nodes are not steps (they ARE
+    the run route / cron queue). Written ONLY when the file is absent or still the composed starter
+    placeholder (`fractera:starter-workflow`) — **never over a coder's implemented steps**. A kept file
+    is VALIDATED for isomorphism with the diagram (`workflow.iso` in the output: every non-trigger node
+    has its marker, no extra markers) — a mismatch is a warning the coder must reconcile, not a blocker.
+  A coder implements ONLY the step bodies; a new action = extend the GRAPH and re-run the engine — a
+  shadow step outside the diagram is forbidden (what is not on the diagram does not exist).
 - **No content/code generation here.** The engine plans, validates, documents, materializes (the queue +
-  the project `README.md`). A coding agent develops each node later (D3).
+  the project `README.md` + the execution schema). A coding agent develops each node later (D3).
 
 ## Operating contract of the projects mode (owner, 2026-07-05 — R1–R11)
 
@@ -102,10 +117,12 @@ agent), on top of the engine mechanics:
 - **R7 — MVP over 10 nodes.** When the validated graph exceeds 10 nodes the engine adds `mvp_recommendation`
   to the order sheet — relay it to the owner VERBATIM before confirmation. It is a recommendation (soft
   gate): MVP of ≤10 nodes, each node's extensions as separate future tasks; the owner decides.
-- **R6 — the schema is the ONLY truth of execution (declared now, mechanics in D6).** The project's WDK
-  workflow schema (the canvas diagram) is simultaneously the presentation AND the single definition of the
-  automation: an action that is not on the schema DOES NOT EXIST in the project. Never build "shadow" steps
-  in code outside the diagram; a wrong schema = a broken project. (`node.io` is the seam this fills.)
+- **R6 — the schema is the ONLY truth of execution (mechanics live in the engine since D6).** The project's
+  WDK workflow schema (the canvas diagram) is simultaneously the presentation AND the single definition of
+  the automation: an action that is not on the schema DOES NOT EXIST in the project. Never build "shadow"
+  steps in code outside the diagram; a wrong schema = a broken project. Mechanically: the engine generates
+  BOTH the diagram (`_data/flow.ts`) and the workflow skeleton (`_workflow/definition.ts`) from the approved
+  graph and validates a kept workflow for isomorphism (see "The EXECUTION SCHEMA is generated from the graph").
 - **R11 — scope.** Projects mode covers ONLY projects/automations. Site content pages are NEVER planned or
   built here — that is the content pipeline (`orchestrate-content-by-steps`), a different frozen process.
 - **R10 — the coder→orchestrator feedback channel.** A coding agent that finds the orchestrator's
@@ -185,5 +202,6 @@ Gemini / Kimi) + byte-identical copies in `.claude/skills`, `.qwen/skills` and H
 <!-- D1.1–D1.3 built the engine; D2 the project README; D3 the exhaustive coder-handoff + SOUL delegation
 edge; D4 wired the README into every frozen template + all 6 agent instructions; D5 added the owner
 contract (R1/R2/R5b/R6/R7/R11), the MVP gate in the engine, the MCP tool on :3229 and the ×6 copies;
-D5.5 the coder→orchestrator agent-feedback channel (R10: step convention + 6 coder instructions + SOUL edge).
-D6 fills `io` with the real WDK schema (R6 mechanics, R8 node panel, R9 result contract). -->
+D5.5 the coder→orchestrator agent-feedback channel (R10: step convention + 6 coder instructions + SOUL edge);
+D6 the generated execution schema (R6 mechanics: flow.ts always derived + definition.ts skeleton with
+// node:<id> markers + isomorphism validation; R8 node info payload; R9 page contract in the template). -->
