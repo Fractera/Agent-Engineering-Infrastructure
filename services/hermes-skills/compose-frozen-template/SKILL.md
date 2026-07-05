@@ -19,7 +19,7 @@ description: >
   when the owner wants a private automation / internal tool ("automate publishing on
   a schedule", "a tool for my own use"), NOT a public page group.
   Self-sufficient: no Hermes, no other agent required.
-version: 1.2.0
+version: 1.2.1
 metadata:
   hermes:
     tags: [constructor, frozen, template, compose, primitive, envelope, news, blog, documentation, catalogue, structure, page-group, project, automation, react-flow, workflow, durable]
@@ -177,8 +177,11 @@ materialized later via the env setter + rebuild.
 
 The composed page is a STARTER: placeholder description, a generic 4-node process diagram (movable
 nodes + per-node info panel), two empty tables — plus the **durable workflow** (step 183.D):
-`_workflow/definition.ts` (a Workflow DevKit `"use workflow"` function whose steps
-`work -> store -> publish` mirror the diagram nodes), `_workflow/journal.ts` (journals each run into
+`app/api/projects/<category>/<project>/_workflow/definition.ts` (a Workflow DevKit `"use workflow"`
+function whose steps `work -> store -> publish` mirror the diagram nodes; the workflow lives next to
+its run route under `app/api/` and NOT in the page folder — WDK derives the workflow name from the
+file path and forbids the parentheses of route groups like `(projects)`), `_workflow/journal.ts`
+(journals each run into
 `project_cron_runs` through the slot's db layer — the page tables show workflow runs with zero page
 changes) and the trigger route `app/api/projects/<category>/<project>/run` (`POST`, gated by the
 `/api/*` auth gate — callers send `X-Agent-Identity`). **Scheduling:** `fractera-cron` stays the
@@ -188,7 +191,8 @@ used. Local World state persists under `WORKFLOW_LOCAL_DATA_DIR` (`/opt/fractera
 on a VPS, outside the swappable slot).
 
 **Finishing it for the real project is a coding-agent handoff** — edit `_data/description.ts`,
-`_data/flow.ts` (the diagram is DATA, never JSX) and the step bodies in `_workflow/definition.ts`
+`_data/flow.ts` (the diagram is DATA, never JSX) and the step bodies in
+`app/api/projects/<category>/<project>/_workflow/definition.ts`
 (keep the diagram and the workflow isomorphic: what the diagram shows is what the workflow does).
 
 ## 🌐 Adding a LANGUAGE → NOT this tool

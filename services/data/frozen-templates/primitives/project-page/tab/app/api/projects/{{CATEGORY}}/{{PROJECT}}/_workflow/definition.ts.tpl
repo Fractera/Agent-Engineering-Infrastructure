@@ -1,10 +1,14 @@
 import { PROJECT_TITLE, journalRunStart, journalRunFinish } from "./journal";
 
 // The project's durable workflow (Workflow DevKit). This file is the EXECUTABLE
-// mirror of the process diagram in _data/flow.ts: the steps below correspond to
-// the diagram nodes (work -> store -> publish; the trigger node is the run route
-// / cron). Finishing the workflow for the real project = editing THESE steps —
-// the same coding-agent handoff as the diagram data, never a template change.
+// mirror of the process diagram in the project page's _data/flow.ts
+// (app/(projects)/projects/{{CATEGORY}}/{{PROJECT}}/): the steps below correspond
+// to the diagram nodes (work -> store -> publish; the trigger node is the run
+// route / cron). Finishing the workflow for the real project = editing THESE
+// steps — the same coding-agent handoff as the diagram data, never a template
+// change. It lives HERE (under app/api/, next to its run route) and not in the
+// page folder: WDK derives the workflow name from the file path and forbids
+// parentheses, so a route group like (projects) would make the name invalid.
 //
 // "use workflow" makes the function durable: its state is checkpointed by the
 // active World (world-local on a Fractera VPS), so a run survives a process

@@ -1,6 +1,6 @@
 import { start } from "workflow/api";
 import { NextResponse } from "next/server";
-import { runProject } from "@/app/(projects)/projects/{{CATEGORY}}/{{PROJECT}}/_workflow/definition";
+import { runProject } from "../_workflow/definition";
 
 // Trigger of the project's durable workflow. Starts the run asynchronously and
 // returns its runId immediately — the workflow keeps running in the World after

@@ -20,7 +20,8 @@
 ## Finishing (coding-agent handoff)
 
 - Shape the real process diagram in `_data/flow.ts` (data, not JSX).
-- Implement the real workflow steps in `_workflow/definition.ts` (see Workflow below).
+- Implement the real workflow steps in
+  `app/api/projects/{{CATEGORY}}/{{PROJECT}}/_workflow/definition.ts` (see Workflow below).
 - Describe the real project in `_data/description.ts`.
 - Declare scheduled processes in `cron.json` in THIS folder — the substrate runner
   (`fractera-cron`) picks it up within a tick (no restart) and fills the queue/results
@@ -49,11 +50,14 @@
 
 ## Workflow (durable execution)
 
-`_workflow/definition.ts` is the project's durable workflow (Workflow DevKit) — the
-EXECUTABLE mirror of the diagram: steps `work` -> `store` -> `publish` correspond to the
-flow nodes (the `trigger` node is the run route / cron). A run survives a process restart
-and resumes mid-flight; it journals itself into `project_cron_runs` (`created_by='wdk'`),
-so runs appear in the queue/results tables of this page automatically.
+`app/api/projects/{{CATEGORY}}/{{PROJECT}}/_workflow/definition.ts` is the project's
+durable workflow (Workflow DevKit) — the EXECUTABLE mirror of the diagram: steps `work`
+-> `store` -> `publish` correspond to the flow nodes (the `trigger` node is the run
+route / cron). It lives next to its run route under `app/api/` (NOT in this page folder:
+WDK derives the workflow name from the file path and forbids the parentheses of route
+groups like `(projects)`). A run survives a process restart and resumes mid-flight; it
+journals itself into `project_cron_runs` (`created_by='wdk'`), so runs appear in the
+queue/results tables of this page automatically.
 
 - **Trigger route:** `POST /api/projects/{{CATEGORY}}/{{PROJECT}}/run` (body
   `{"input": "..."}` optional; needs `X-Agent-Identity` — the auth gate covers `/api/*`).
