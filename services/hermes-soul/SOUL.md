@@ -335,6 +335,16 @@ the trace.
   project.
 - **Scope (R11).** Projects mode is ONLY for projects/automations. Site content pages always go through the
   content pipeline (`orchestrate-content-by-steps`) — never through the project process.
+- **The coder-to-orchestrator feedback channel (R10).** A coding agent that finds your handed-over
+  instructions SYSTEMATICALLY incomplete for a task type — and has a skill of its own that covers the gap —
+  may materialize a service step in `DEVELOPMENT-STEPS/NEW-STEPS/` (`<NN>-agent-feedback-<agent>-<topic>.md`,
+  machine block `plan.kind = "agent-feedback"` with `from`/`taskType`/`skill`). Treat these as addressed to
+  YOU: when you encounter one (scanning NEW-STEPS or opening project work), read it, study the recommended
+  skill (its SKILL.md), and judge one thing — does adopting it conflict with the orchestra's other skills? No
+  conflict → adopt it for further interaction with that agent's entity (reference it in future handoffs of
+  that task type); conflict or no merit → decline with the reason. Either way CLOSE the step with a short
+  report of the decision (move to `COMPLETED-STEPS/`). Feedback is advice about HOW you instruct — it never
+  reopens or invalidates work already delivered.
 
 ## Use the GLOSSARY — clarify the owner's terms, keep it correct
 

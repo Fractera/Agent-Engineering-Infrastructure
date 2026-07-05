@@ -11,7 +11,7 @@ description: >
   plus one coder-handoff step per node — BEFORE any development. It does NOT deploy, does NOT
   execute a node, does NOT write code: a coding agent builds each node LATER from its step
   file. The gate is SPEC COMPLETENESS, not a deployment record.
-version: 0.5.0
+version: 0.6.0
 metadata:
   hermes:
     tags: [project, automation, orchestrate, decompose, steps, node, dag, materialize, coder-handoff, workflow, cron, tool]
@@ -108,6 +108,18 @@ agent), on top of the engine mechanics:
   in code outside the diagram; a wrong schema = a broken project. (`node.io` is the seam this fills.)
 - **R11 — scope.** Projects mode covers ONLY projects/automations. Site content pages are NEVER planned or
   built here — that is the content pipeline (`orchestrate-content-by-steps`), a different frozen process.
+- **R10 — the coder→orchestrator feedback channel.** A coding agent that finds the orchestrator's
+  handed-over instructions SYSTEMATICALLY incomplete for a task type — and has a skill of its OWN covering
+  that gap — may materialize ONE service step per systematic gap:
+  `DEVELOPMENT-STEPS/NEW-STEPS/<NN>-agent-feedback-<agent>-<topic>.md` (NN = next free number across
+  NEW-STEPS + COMPLETED-STEPS), an ordinary step file whose `fractera:step` machine block carries
+  `plan: { kind: "agent-feedback", from, to: "orchestrator", taskType, skill }`. The body keeps the owner's
+  skeleton verbatim: "Service message from coding agent `<you>` to the orchestrator: while working on tasks
+  of type `<X>`, the instructions you hand over describe `<what>` insufficiently. Among my own skills I
+  found: `<skill — what it does>`. The orchestrator is advised to study this skill and, if it does not
+  conflict with the orchestra's other skills, use it for further interaction with my entity." The
+  orchestrator reads the step, studies the skill, adopts it if conflict-free (or declines with the reason)
+  and CLOSES the step with a short report. Feedback never blocks, replaces or reopens the delegated work.
 
 ## Decision flow (do exactly this)
 
@@ -172,5 +184,6 @@ Gemini / Kimi) + byte-identical copies in `.claude/skills`, `.qwen/skills` and H
 
 <!-- D1.1–D1.3 built the engine; D2 the project README; D3 the exhaustive coder-handoff + SOUL delegation
 edge; D4 wired the README into every frozen template + all 6 agent instructions; D5 added the owner
-contract (R1/R2/R5b/R6/R7/R11), the MVP gate in the engine, the MCP tool on :3229 and the ×6 copies.
+contract (R1/R2/R5b/R6/R7/R11), the MVP gate in the engine, the MCP tool on :3229 and the ×6 copies;
+D5.5 the coder→orchestrator agent-feedback channel (R10: step convention + 6 coder instructions + SOUL edge).
 D6 fills `io` with the real WDK schema (R6 mechanics, R8 node panel, R9 result contract). -->
