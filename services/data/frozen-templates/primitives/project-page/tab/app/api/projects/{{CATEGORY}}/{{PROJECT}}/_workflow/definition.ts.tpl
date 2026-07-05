@@ -1,5 +1,10 @@
 import { PROJECT_TITLE, journalRunStart, journalRunFinish } from "./journal";
 
+// fractera:starter-workflow — the composed placeholder. When the project is
+// born from a decomposition, orchestrate-project-by-steps replaces this file
+// with a skeleton GENERATED from the graph (this marker is how the engine knows
+// the file is still the untouched starter and may be regenerated safely).
+//
 // The project's durable workflow (Workflow DevKit). This file is the EXECUTABLE
 // mirror of the process diagram in the project page's _data/flow.ts
 // (app/(projects)/projects/{{CATEGORY}}/{{PROJECT}}/): the steps below correspond

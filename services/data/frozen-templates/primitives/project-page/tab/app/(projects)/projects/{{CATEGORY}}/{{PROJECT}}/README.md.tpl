@@ -9,19 +9,33 @@
 
 - **Path:** `/projects/{{CATEGORY}}/{{PROJECT}}`
 - **Kind:** project (Projects layer, category `{{CATEGORY}}`)
-- **Composed from:** the frozen `project-page` primitive (starter interface: description +
-  react-flow process diagram + cron-queue table + results table)
+- **Composed from:** the frozen `project-page` primitive (the result contract R9: description +
+  react-flow process diagram + run panel + processes/results tables + scheduled-runs queue)
 
 ## Placement & access
 
 - **Appears in:** the account drawer Projects accordion (automatic — the folder is the registry)
 - **Visible to:** ONLY signed-in with role(s): `architect`, `manager` (inherited from the zone layout)
 
+## The execution schema (contract R6)
+
+The diagram in `_data/flow.ts` and the workflow in
+`app/api/projects/{{CATEGORY}}/{{PROJECT}}/_workflow/definition.ts` are ISOMORPHIC — the
+diagram is the project's ONLY execution schema: **what is not on the diagram does not exist
+in the project.** When the project is born from a decomposition
+(`orchestrate-project-by-steps`), BOTH files are generated from the graph — the flow data on
+every approved run (derived, deterministic), the workflow skeleton once (each `use step`
+carries a `// node:<id>` marker). Implement ONLY the step bodies; never add a step, action
+or shadow code outside the schema — a new action = extend the decomposition graph and re-run
+the engine. The engine validates the markers on every run and reports any drift.
+
 ## Finishing (coding-agent handoff)
 
-- Shape the real process diagram in `_data/flow.ts` (data, not JSX).
-- Implement the real workflow steps in
-  `app/api/projects/{{CATEGORY}}/{{PROJECT}}/_workflow/definition.ts` (see Workflow below).
+- Shape the real process diagram in `_data/flow.ts` (data, not JSX). Decomposed project →
+  the graph is the source; re-run the engine instead of hand-editing.
+- Implement the real workflow step BODIES in
+  `app/api/projects/{{CATEGORY}}/{{PROJECT}}/_workflow/definition.ts` (see Workflow below);
+  keep the `// node:<id>` markers — they are the R6 isomorphism check.
 - Describe the real project in `_data/description.ts`.
 - Declare scheduled processes in `cron.json` in THIS folder — the substrate runner
   (`fractera-cron`) picks it up within a tick (no restart) and fills the queue/results

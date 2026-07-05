@@ -13,3 +13,10 @@ export type ProjectResult = {
   artifactUrl: string; // link to the produced artifact (e.g. a published page)
   producedAt: string; // ISO date-time
 };
+
+export type CronJob = {
+  id: string;
+  title: string;
+  schedule: string; // 5-field cron expression, server local time
+  enabled: boolean;
+};
