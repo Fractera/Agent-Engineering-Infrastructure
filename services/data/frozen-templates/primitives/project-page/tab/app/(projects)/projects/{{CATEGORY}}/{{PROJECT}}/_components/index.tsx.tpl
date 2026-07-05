@@ -8,9 +8,11 @@ import {
 import { getAppConfig } from "@/config/app-config";
 import { DEFAULT_LANGUAGE } from "@/config/translations/translations.config";
 import { PROJECT_DESCRIPTION } from "../_data/description";
+import { DEFAULT_HOOKS } from "../_data/hooks";
 import { projectTabStrings } from "../_data/tab-i18n";
-import { getCronJobs, getProcessQueue, getResults } from "../_lib/project-data";
+import { getCronJobs, getHooks, getProcessQueue, getResults } from "../_lib/project-data";
 import { CronJobsTable } from "./cron-jobs-table.server";
+import { HooksPanel } from "./hooks-panel.client";
 import { MissingKeysModal } from "./missing-keys-modal.client";
 import { ProcessFlow } from "./process-flow.client";
 import { ProjectFooter } from "./project-footer.client";
@@ -23,11 +25,15 @@ import { RunPanel } from "./run-panel.client";
 // runs dashboard with results, and the scheduled cron queue. Reshape the
 // diagram in _data/flow.ts; the tables fill from _lib/project-data.ts.
 export default async function {{PROJECT_PASCAL}}ProjectEntry() {
-  const [runs, results, cronJobs] = await Promise.all([
+  const [runs, results, cronJobs, hooks] = await Promise.all([
     getProcessQueue(),
     getResults(),
     getCronJobs(),
+    getHooks(),
   ]);
+  // The Hooks layer (187.4) shows only for automations that use spoken triggers —
+  // either the project seeded default phrases or hooks are already registered.
+  const showHooks = DEFAULT_HOOKS.length > 0 || hooks.length > 0;
   const d = PROJECT_DESCRIPTION;
   // Monolingual zone (§3.12): all reusable tab strings render in the slot's default
   // language, English fallback for unlisted languages (187.5). The canvas + settings
@@ -74,6 +80,12 @@ export default async function {{PROJECT_PASCAL}}ProjectEntry() {
         <h2 className="text-xl font-medium">{t.run}</h2>
         <RunPanel />
       </section>
+      {showHooks && (
+        <section className="space-y-3">
+          <h2 className="text-xl font-medium">{t.hooks}</h2>
+          <HooksPanel initialHooks={hooks} />
+        </section>
+      )}
       <section className="space-y-3">
         <h2 className="text-xl font-medium">{t.processes}</h2>
         <ProcessQueueTable runs={runs} />
