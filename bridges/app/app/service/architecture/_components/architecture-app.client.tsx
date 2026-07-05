@@ -44,6 +44,17 @@ function revealTargets(
   return acc
 }
 
+// Depth-first lookup of a node by id — used by the ?project= deep-link (step 186.6)
+// to focus a specific project node arriving from a project footer / email link.
+function findNodeById(node: ArchNode, id: string): ArchNode | null {
+  if (node.id === id) return node
+  for (const c of node.children ?? []) {
+    const found = findNodeById(c, id)
+    if (found) return found
+  }
+  return null
+}
+
 // Left section = the route tree (Add page lives in its top-right corner).
 // Right section = the selected route's real RouteMeta descriptor (Open page in
 // its top-right corner), the minimal read-only view of a declared page, the
@@ -164,6 +175,29 @@ export function ArchitectureApp() {
     }, 120)
     return () => clearTimeout(t)
   }, [blink, tree])
+
+  // Deep-link focus (step 186.5): /service/architecture?project=<cat>/<slug> opens
+  // with that project node selected, its ancestors expanded and scrolled into view.
+  // The link arrives from a project footer ("continue development", 186.2) and from
+  // the welcome / domain emails (186.7). Projects load asynchronously, so this runs
+  // on each tree update until the target node exists, then once (deepLinkDone).
+  const deepLinkDone = useRef(false)
+  useEffect(() => {
+    if (deepLinkDone.current) return
+    const raw = new URLSearchParams(window.location.search).get("project")
+    if (!raw) { deepLinkDone.current = true; return }
+    const slug = raw.split("/").filter(Boolean).pop() ?? raw
+    const targetId = `project-${slug}`
+    const found = findNodeById(tree, targetId)
+    if (!found) return // tree not yet carrying this project — retry on next update
+    deepLinkDone.current = true
+    setSelected(found)
+    const { ancestors } = revealTargets(tree, new Set([targetId]))
+    setExpanded(prev => new Set([...prev, "projects", ...ancestors]))
+    setTimeout(() => {
+      document.getElementById(`arch-node-${targetId}`)?.scrollIntoView({ block: "center", behavior: "smooth" })
+    }, 150)
+  }, [tree])
 
   function toggle(id: string) {
     setExpanded(prev => {
