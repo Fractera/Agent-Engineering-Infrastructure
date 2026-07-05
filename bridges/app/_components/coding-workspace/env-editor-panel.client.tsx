@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 type EnvEntry = { key: string; value: string; isNew: boolean };
-type Props = { onClose: () => void };
+// focusKey (step 186.6): a deep-link (?panel=env&key=…) can ask the panel to focus a
+// specific variable. If that key is absent, seed an editable row for it so the owner
+// lands directly on the field to fill (e.g. a project footer's "environment variables"
+// link for a still-missing automation key).
+type Props = { onClose: () => void; focusKey?: string };
 
 const WEAK_SECRET_MAX_LEN = 10;
 const THEME_OPTIONS = ["light", "dark", "system"];
@@ -53,7 +57,7 @@ function isThemeKey(key: string) {
   return key === "NEXT_PUBLIC_DEFAULT_THEME";
 }
 
-export function EnvEditorPanel({ onClose }: Props) {
+export function EnvEditorPanel({ onClose, focusKey }: Props) {
   const [entries, setEntries] = useState<EnvEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving]   = useState(false);
@@ -70,11 +74,16 @@ export function EnvEditorPanel({ onClose }: Props) {
         const gitDefaults = ["USER_GITHUB_REPO_URL", "USER_GITHUB_ACCESS_TOKEN"]
           .filter((k) => !existingKeys.has(k))
           .map((k) => ({ key: k, value: "", isNew: false }));
-        setEntries([...loaded, ...gitDefaults]);
+        // A deep-linked focusKey that isn't set yet → seed an editable row for it.
+        const focusSeed: EnvEntry[] =
+          focusKey && focusKey.trim() && !existingKeys.has(focusKey.trim())
+            ? [{ key: focusKey.trim(), value: "", isNew: true }]
+            : [];
+        setEntries([...loaded, ...gitDefaults, ...focusSeed]);
       })
       .catch(() => setError("Failed to load environment variables."))
       .finally(() => setLoading(false));
-  }, []);
+  }, [focusKey]);
 
   function updateValue(idx: number, val: string) {
     setEntries((prev) => prev.map((e, i) => i === idx ? { ...e, value: val } : e));

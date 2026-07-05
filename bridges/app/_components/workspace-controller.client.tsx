@@ -57,7 +57,7 @@ export function WorkspaceController() {
   const [secure, setSecure]                     = useState<boolean | null>(null);
   // Bump nonce each time we re-request a panel so children re-trigger their effect
   // even if the requested id stayed the same.
-  const [panelRequest, setPanelRequest]         = useState<{ id: SettingsPanelId; nonce: number } | null>(null);
+  const [panelRequest, setPanelRequest]         = useState<{ id: SettingsPanelId; nonce: number; key?: string } | null>(null);
 
   // Read secure mode on mount + poll every 60s so the indicator clears on its
   // own a few seconds after the user activates Secure mode in the wizard.
@@ -73,6 +73,17 @@ export function WorkspaceController() {
     const id = setInterval(refreshSecure, 60_000);
     return () => clearInterval(id);
   }, [refreshSecure]);
+
+  // Deep-link into a settings panel from an external link (step 186.6): a project
+  // footer's "environment variables" link (or a future email link) opens the admin
+  // root at /?panel=env[&key=…] to jump straight to the env editor, optionally
+  // focusing a specific variable. Read once on mount.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("panel") === "env") {
+      setPanelRequest({ id: "env", nonce: Date.now(), key: params.get("key") ?? undefined });
+    }
+  }, []);
 
   // Mount an embed session once (if new) and make it the active surface.
   // Used by carousel cards, the auto-open default, and the Hermes dashboard

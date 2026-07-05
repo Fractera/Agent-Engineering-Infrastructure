@@ -27,7 +27,7 @@ import { EmbedCanvas } from "./embed-canvas.client";
 import { IdleCanvas } from "./idle-canvas.client";
 import type { ComponentType } from "react";
 
-export type SettingsPanelId = "hermes" | "lightrag" | "openai";
+export type SettingsPanelId = "hermes" | "lightrag" | "openai" | "env";
 
 const CAROUSEL_H = 52;
 // Footer is locked to EXACTLY this height (see the footer bar below): it never
@@ -140,7 +140,7 @@ type Props = {
   insecure?: boolean;
   // Parent (workspace-controller) can request a specific settings panel to open
   // — used when clicking an unconfigured embed card to kick off onboarding.
-  requestedSettingsPanel?: { id: SettingsPanelId; nonce: number } | null;
+  requestedSettingsPanel?: { id: SettingsPanelId; nonce: number; key?: string } | null;
 };
 
 export function CodingWindowShell({ height, terminalPlatform, terminalSessions, onPlatformClick, onTerminalClose, windowWidth, isMobile = false, isAuthenticated = true, isPreviewOpen = false, onPreviewClose, embeds = [], activeEmbedId = null, onEmbedCardClick, onEmbedClose, onOpenHermesDashboard, secure = false, insecure = false, requestedSettingsPanel = null }: Props) {
@@ -196,6 +196,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const [gitPushing, setGitPushing]                 = useState(false);
   const [readmeContent, setReadmeContent]           = useState<string | null>(null);
   const [showEnvEditor, setShowEnvEditor]           = useState(false);
+  const [envFocusKey, setEnvFocusKey]               = useState<string | undefined>(undefined);
   const [showMediaLibrary, setShowMediaLibrary]     = useState(false);
   const [showDbBrowser, setShowDbBrowser]           = useState(false);
   const [showUsers, setShowUsers]                   = useState(false);
@@ -221,10 +222,11 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     setShowHermesPanel(false);
     setShowLightRag(false);
     setShowOpenAiPanel(false);
+    setShowEnvEditor(false);
     if (id === "hermes") setShowHermesPanel(true);
     else if (id === "openai") setShowOpenAiPanel(true);
+    else if (id === "env") { setEnvFocusKey(requestedSettingsPanel.key); setShowEnvEditor(true); }
     else setShowLightRag(true);
-    setShowEnvEditor(false);
     setShowDbBrowser(false);
     setShowUsers(false);
     setShowMediaLibrary(false);
@@ -1120,7 +1122,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
       {showPlatform && <PlatformSettingsPanel onClose={() => setShowPlatform(false)} />}
 
       {/* ── Env editor panel ── */}
-      {showEnvEditor && <EnvEditorPanel onClose={() => setShowEnvEditor(false)} />}
+      {showEnvEditor && <EnvEditorPanel onClose={() => setShowEnvEditor(false)} focusKey={envFocusKey} />}
 
       {/* ── Media library panel ── */}
       {showMediaLibrary && <MediaLibraryPanel onClose={() => setShowMediaLibrary(false)} />}
