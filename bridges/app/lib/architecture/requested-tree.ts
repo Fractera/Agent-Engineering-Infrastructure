@@ -30,6 +30,7 @@ export type Requested = {
   dashboard?: boolean
   cron?: boolean
   integrations?: Integration[]
+  hooks?: boolean
 }
 
 export function requestedNodeId(id: string) {

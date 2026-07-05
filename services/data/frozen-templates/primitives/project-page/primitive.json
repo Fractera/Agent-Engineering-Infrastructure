@@ -32,7 +32,8 @@
     "automation": "What is automated. Optional — placeholder text if omitted.",
     "how": "How the automation works. Optional — placeholder text if omitted.",
     "cron": "true/false — the project will run cron processes. Recorded in the README declaration only; execution is the P6 cron infrastructure.",
+    "hooks": "true/false — the project answers to spoken trigger phrases (hooks, step 187). Recorded in the README declaration; the composed project carries the Hooks layer (panel + table) and its phrases register through the global /api/project-hooks table.",
     "integrations": "JSON array [{ name, envKeys[] }] — external integrations with their env keys. Recorded in the README declaration; keys are materialized into app/.env.local via the env setter + rebuild when executing."
   },
-  "tokens": ["{{PROJECT}}", "{{PROJECT_PASCAL}}", "{{CATEGORY}}", "{{PROJECT_TITLE}}", "{{PROJECT_TITLE_MD}}", "{{PROJECT_PURPOSE}}", "{{PROJECT_AUTOMATION}}", "{{PROJECT_HOW}}", "{{PROJECT_CRON}}", "{{PROJECT_INTEGRATIONS}}"]
+  "tokens": ["{{PROJECT}}", "{{PROJECT_PASCAL}}", "{{CATEGORY}}", "{{PROJECT_TITLE}}", "{{PROJECT_TITLE_MD}}", "{{PROJECT_PURPOSE}}", "{{PROJECT_AUTOMATION}}", "{{PROJECT_HOW}}", "{{PROJECT_CRON}}", "{{PROJECT_HOOKS}}", "{{PROJECT_HOOK_PHRASES}}", "{{PROJECT_INTEGRATIONS}}"]
 }
