@@ -118,6 +118,20 @@ function refuse(axis, detail) {
   process.exit(2)
 }
 
+// ── project-root README reconciliation (step 184, D4.2) ───────────────────────
+// A project-root README carries TWO machine blocks with DIFFERENT authors and DIFFERENT
+// purposes, and BOTH must survive:
+//   • fractera:project — the whole decomposition graph, written by orchestrate-project-by-steps
+//     (the engine) alongside the why/how/efficiency/reuse/result overview every sub-step reads.
+//   • fractera:meta    — route metadata (visibility/roles/cron/integrations), written by THIS
+//     composer, that the page/registry needs.
+// The engine runs FIRST (decomposition materializes the README before any coding). So when the
+// composer later assembles the page it must NOT overwrite that README with its static stub — it
+// must only CONTRIBUTE its fractera:meta block if the decomposition README lacks one.
+const META_RE = /<!--\s*fractera:meta[\s\S]*?-->/
+const extractMetaBlock = text => { const m = text.match(META_RE); return m ? m[0] : null }
+const isProjectRootReadme = destPath => destPath.replace(/\\/g, "/").endsWith("/README.md")
+
 // Broken/replacement characters from a lossy encoding step (U+FFFD/U+FFFC, C0/C1 control chars
 // except tab/LF/CR — e.g. a 0x13 byte left where an accented letter belonged, rendering a box —
 // and UTF-8-read-as-Latin1 mojibake). Refused so a corrupted label never gets baked into the site.
@@ -157,9 +171,34 @@ async function installEngine(storeRoot, outRoot, ver) {
   console.log(`engine (${ver}): ${copied} copied, ${kept} kept`)
 }
 
+// ── content-collection root README (step 184, D4.2) — the standard overview artifact ─────────
+// Owner req #2 (step 184): a root README is a STANDARD artifact of EVERY frozen template, content
+// included. For a content collection it is an OVERVIEW ONLY — what the collection is and how to
+// extend it. It carries NO fractera:meta declaration: content declares through _data/group.ts
+// (GroupManifest, step 158), which stays the single source of truth; the project-page README carries
+// fractera:meta only because a mount-based project has no group manifest. Lean working doc, no lore
+// (memory emitted-artifacts-lean-no-narrative).
+function renderContentReadme({ tab, format, label, languages, samples }) {
+  return [
+    `# ${label}`, "",
+    `> Collection overview · \`${format}\` at \`/${tab}\` · ${languages.length} language(s) (${languages.join(", ")}) · ${samples} sample document(s)`, "",
+    "Composed from the Frozen Template Constructor (file copy + token substitution, zero code generation).", "",
+    "## What this is",
+    `A \`${format}\` collection mounted at \`/${tab}\`. The router index page lists the documents; each document is its own route folder.`, "",
+    "## How it works",
+    "- Documents are auto-discovered by `lib/parser-fs.mjs` at build (predev/prebuild) into `_list.generated.ts` — never hand-edit that file.",
+    "- One document = one folder with a full base-language file plus partial per-language override cells (`<lang>.ts`) in the SAME folder — ONE post spans every language (step 166).",
+    "- Menu placement + access shape live in `_data/group.ts` (GroupManifest, step 158) — the declaration that round-trips through /service/architecture.", "",
+    "## Add a document",
+    "Use the create-multilingual-content-entry skill (or owner_content_orchestrate) — a new folder with all language cells at once. Never add a post once per language, never hand-edit `_list.generated.ts`.", "",
+    "## Add a language",
+    "Use the expand-site-language skill (owner_content_add_site_language) — it fans the language across every document and updates the menus. Never re-compose and never hand-edit locales to add a language.", "",
+  ].join("\n") + "\n"
+}
+
 // ── compose the tab through the seams ────────────────────────────────────────
 async function composeTab(storeRoot, primDir, outRoot, tok, opts) {
-  const { tab, languages, labels, samples, ver, source, rolesOn, requireGuest, roleList, unauthorizedRedirect, force } = opts
+  const { tab, format, languages, labels, samples, ver, source, rolesOn, requireGuest, roleList, unauthorizedRedirect, force } = opts
   const vz = s => versionizeContent(s, ver)
   const tabSrc = join(primDir, "tab", "app", "[lang]", "{{TAB}}")
   const tabDest = join("app", "[lang]", tab)
@@ -239,6 +278,9 @@ ${slugs.map((s, i) => `import { data as p${i} } from './${s}/_data'`).join("\n")
 export const POSTS: ${tok["{{TAB_PASCAL}}"]}Data[] = [${slugs.map((_, i) => `p${i}`).join(", ")}]
 `
   await writeOut(outRoot, join(tabDest, "_list.generated.ts"), listBody)
+
+  // 7) root README (step 184, D4.2): the standard collection-overview artifact every frozen template carries.
+  await writeOut(outRoot, join(tabDest, "README.md"), renderContentReadme({ tab, format, label: labels.en, languages, samples }))
   return { tabDest }
 }
 
@@ -303,7 +345,17 @@ async function composeProject(storeRoot, prim, outRoot, a) {
   const catDir = join(outRoot, "app", "(projects)", "projects", category)
   if (!(await exists(catDir))) return refuse("category", `projects category '${category}' does not exist in the slot (app/(projects)/projects/${category}); valid categories are the existing folders`)
   const destRel = join("app", "(projects)", "projects", category, project)
-  if (await exists(join(outRoot, destRel)) && !a.force) throw new Error(`refusing to overwrite ${destRel} (use --force)`)
+  const destAbs = join(outRoot, destRel)
+  if (await exists(destAbs) && !a.force) {
+    // A folder that holds ONLY the decomposition-born README (fractera:project, and no built
+    // page.tsx yet) is the EXPECTED materialize-first handoff (step 184) — the engine wrote the
+    // README, we now compose the page INTO it. That is not an overwrite collision, so don't refuse.
+    const readmeAbs = join(destAbs, "README.md")
+    const decompositionOnly = (await exists(readmeAbs)) && !(await exists(join(destAbs, "page.tsx"))) &&
+      (await readFile(readmeAbs, "utf8")).includes("fractera:project")
+    if (!decompositionOnly) throw new Error(`refusing to overwrite ${destRel} (use --force)`)
+    console.log("compose into decomposition-only folder (README from orchestrate-project-by-steps present; composing the page around it)")
+  }
 
   const title = (typeof a.title === "string" && a.title.trim()) || project.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join(" ")
   const purpose = (typeof a.purpose === "string" && a.purpose.trim()) || "Placeholder — describe why this project exists (edit _data/description.ts)."
@@ -340,7 +392,24 @@ async function composeProject(storeRoot, prim, outRoot, a) {
   for (const rel of await walk(tabSrc)) {
     const r = rel.replace(/\\/g, "/")
     const destPath = r.replace(/\.tpl$/, "").split("{{CATEGORY}}").join(category).split("{{PROJECT}}").join(project)
-    await writeOut(outRoot, destPath, applyTokens(await readFile(join(tabSrc, rel), "utf8"), tok))
+    const rendered = applyTokens(await readFile(join(tabSrc, rel), "utf8"), tok)
+    // README reconciliation (D4.2): keep a decomposition-born README (fractera:project) and only
+    // contribute this composer's fractera:meta block if it is missing — never clobber the graph.
+    if (isProjectRootReadme(destPath)) {
+      const abs = join(outRoot, destPath)
+      if (await exists(abs)) {
+        const existing = await readFile(abs, "utf8")
+        if (existing.includes("fractera:project")) {
+          if (existing.includes("fractera:meta")) { console.log("emit(skip) README.md — decomposition README already carries fractera:meta"); emitted++; continue }
+          const meta = extractMetaBlock(rendered)
+          if (!meta) throw new Error("project-page README.md.tpl no longer carries a fractera:meta block — cannot reconcile")
+          await writeOut(outRoot, destPath, existing.replace(/\s*$/, "") + "\n\n" + meta + "\n")
+          console.log("emit(merge) README.md — kept fractera:project, appended fractera:meta")
+          emitted++; continue
+        }
+      }
+    }
+    await writeOut(outRoot, destPath, rendered)
     emitted++
   }
   // single-line JSON as the LAST stdout line — the bridge parses it (step 158 contract)
@@ -437,7 +506,7 @@ async function main() {
   console.log(`compose '${prim.id}' (engine ${ver}) -> /${tab}  base{source=${source},depth=${depth},${rendering}} aspects{i18n=on, roles=${rolesOn ? (requireGuest ? "guest" : roleList.join("+")) : "off"}${rolesOn ? ", fallback=" + unauthorizedRedirect : ""}} format=${format} langs=${languages.join(",")} samples=${samples}`)
   await installEngine(storeRoot, outRoot, ver)
   const primDir = join(storeRoot, prim.path)
-  const { tabDest } = await composeTab(storeRoot, primDir, outRoot, tok, { tab, languages, labels, samples, ver, source, rolesOn, requireGuest, roleList, unauthorizedRedirect, force: !!a.force })
+  const { tabDest } = await composeTab(storeRoot, primDir, outRoot, tok, { tab, format, languages, labels, samples, ver, source, rolesOn, requireGuest, roleList, unauthorizedRedirect, force: !!a.force })
   await registerCollection(outRoot, tab, pascal(tab))
   await patchPackageJson(outRoot)
   await appendSitemap(outRoot, tab)

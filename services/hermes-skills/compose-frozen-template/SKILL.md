@@ -179,6 +179,28 @@ empty tables. **Finishing it for the real project is a coding-agent handoff** �
 `_data/description.ts` and `_data/flow.ts` (the diagram is DATA, never JSX) and wire
 `_lib/project-data.ts` when the substrate tables exist.
 
+## 📄 Root README — a STANDARD artifact of every structure (step 184, D4.2)
+
+Every composed structure carries a **root `README.md`** overview:
+
+- **Content collection** (tab flow): the composer writes `app/[lang]/<tab>/README.md` — a lean
+  overview (what the collection is, how parser-fs auto-discovery works, how to add a document / a
+  language). It carries **no machine block**: content declares through `_data/group.ts`
+  (GroupManifest, step 158), which stays the single declaration source of truth.
+- **Project page** (mount flow): the root README lives at
+  `app/(projects)/projects/<cat>/<slug>/README.md` and carries the `fractera:meta` route
+  declaration (visibility/roles/cron/integrations) — a project has no group manifest, so its
+  README is the declaration.
+
+**Reconciliation with `orchestrate-project-by-steps`.** When a project is first DECOMPOSED, that
+engine writes the SAME README from the node graph, carrying a `fractera:project` machine block (the
+whole graph + why/how/efficiency/reuse/result overview every sub-step reads). The composer, running
+LATER to assemble the page, MUST NOT clobber it: it composes into a folder that holds only the
+decomposition README **without `--force`** (that is the expected materialize-first handoff, not an
+overwrite collision), keeps the `fractera:project` body verbatim, and appends its `fractera:meta`
+block only if absent. Both machine blocks survive — the graph (engine) and the route metadata
+(composer). A folder that already has a built `page.tsx` still needs `--force` (a real re-compose).
+
 ## 🌐 Adding a LANGUAGE → NOT this tool
 
 To **add a new language to an existing site**, do NOT re-compose — composing **overwrites** existing
