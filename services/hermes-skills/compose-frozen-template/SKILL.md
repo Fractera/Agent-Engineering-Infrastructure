@@ -13,15 +13,16 @@ description: >
   nothing fits, REFUSE HONESTLY naming the failing axis and offer to harvest a new
   brick or use classic development — never force a bad fit, never generate code.
   Also composes a PROJECT PAGE (the Projects layer starter interface: description +
-  react-flow process diagram + cron-queue and results tables) from the mount-based
-  'project-page' primitive via owner_template_compose_project_page — use when the
-  owner wants a private automation / internal tool ("automate publishing on a
-  schedule", "a tool for my own use"), NOT a public page group.
+  react-flow process diagram + cron-queue and results tables + a durable Workflow
+  DevKit workflow mirroring the diagram, with its run-trigger API route) from the
+  mount-based 'project-page' primitive via owner_template_compose_project_page — use
+  when the owner wants a private automation / internal tool ("automate publishing on
+  a schedule", "a tool for my own use"), NOT a public page group.
   Self-sufficient: no Hermes, no other agent required.
-version: 1.1.0
+version: 1.2.1
 metadata:
   hermes:
-    tags: [constructor, frozen, template, compose, primitive, envelope, news, blog, documentation, catalogue, structure, page-group, project, automation, react-flow]
+    tags: [constructor, frozen, template, compose, primitive, envelope, news, blog, documentation, catalogue, structure, page-group, project, automation, react-flow, workflow, durable]
     related_skills: [create-multilingual-content-entry, propose-new-agent-skill-or-mcp, scaffold-declared-route-into-component-skeleton]
 ---
 
@@ -169,15 +170,33 @@ default, monolingual) are INHERITED from the zone layout — no roles/i18n/menus
 apply. `category` must be an existing category folder (automation | fractera-pages | personal |
 other); `project` is a kebab-case English slug — the folder name IS the registry, so the project
 appears in the account drawer Projects accordion automatically after a rebuild. The primitive
-declares its npm dependency (`@xyflow/react`); the composer VERIFIES it in the slot's package.json
-and refuses honestly if missing — it never installs packages. `cron` / `integrations` are RECORDED
-in the project README declaration (machine block) only; env keys are materialized later via the env
-setter + rebuild, execution is the cron infrastructure (a later capability).
+declares its npm dependencies (`@xyflow/react`, `workflow`); the composer VERIFIES them in the
+slot's package.json and refuses honestly if missing — it never installs packages. `cron` /
+`integrations` are RECORDED in the project README declaration (machine block) only; env keys are
+materialized later via the env setter + rebuild.
 
-The composed page is a STARTER: placeholder description, a generic 4-node process diagram, two
-empty tables. **Finishing it for the real project is a coding-agent handoff** — edit
-`_data/description.ts` and `_data/flow.ts` (the diagram is DATA, never JSX) and wire
-`_lib/project-data.ts` when the substrate tables exist.
+The composed page is a STARTER: placeholder description, a generic 4-node process diagram (movable
+nodes + per-node info panel), two empty tables — plus the **durable workflow** (step 183.D):
+`app/api/projects/<category>/<project>/_workflow/definition.ts` (a Workflow DevKit `"use workflow"`
+function whose steps `work -> store -> publish` mirror the diagram nodes; the workflow lives next to
+its run route under `app/api/` and NOT in the page folder — WDK derives the workflow name from the
+file path and forbids the parentheses of route groups like `(projects)`), `_workflow/journal.ts`
+(journals each run into
+`project_cron_runs` through the slot's db layer — the page tables show workflow runs with zero page
+changes) and the trigger route `app/api/projects/<category>/<project>/run` (`POST`, gated by the
+`/api/*` auth gate — callers send `X-Agent-Identity`). **Scheduling:** `fractera-cron` stays the
+ONLY scheduler — to run the workflow on a schedule, declare a `cron.json` http job pointing at the
+trigger route (the runner already sends the agent-identity header); WDK's own scheduling is not
+used. Local World state persists under `WORKFLOW_LOCAL_DATA_DIR` (`/opt/fractera/.workflow-data`
+on a VPS, outside the swappable slot — survives a slot rebuild). BOTH vars must sit in the slot's
+`.env.local`: `WORKFLOW_TARGET_WORLD=local` AND `WORKFLOW_LOCAL_DATA_DIR=...` — with the target world
+unset, `withWorkflow` (next.config) force-sets the data dir to `.next/workflow-data`, which a rebuild
+wipes (in-flight durable runs would be lost).
+
+**Finishing it for the real project is a coding-agent handoff** — edit `_data/description.ts`,
+`_data/flow.ts` (the diagram is DATA, never JSX) and the step bodies in
+`app/api/projects/<category>/<project>/_workflow/definition.ts`
+(keep the diagram and the workflow isomorphic: what the diagram shows is what the workflow does).
 
 ## 📄 Root README — a STANDARD artifact of every structure (step 184, D4.2)
 
