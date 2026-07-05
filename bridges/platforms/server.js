@@ -1274,12 +1274,14 @@ new LanguageExpansionMcpServer({
 // ── Projects Router MCP server (singleton, port 3229) ────────────────────────
 // The top-level fork of the Projects layer (step 180): segment an owner's wish into
 // PAGES (public surface → task-scenario-router) vs PROJECTS (private /projects level),
-// plus the cron/integrations survey. Both tools advisory/read-only — the verdict and
-// answers travel through the existing channels (P3 declaration, :3224 compose, env
-// setter of step 143). Route fixation requires the owner's explicit confirmed_choice.
+// plus the cron/integrations survey (both advisory/read-only), plus — step 184 D5 —
+// owner_projects_orchestrate_decomposition: the frozen project process (spawns the
+// slot's self-sufficient orchestrate-project-by-steps engine; materialize-first
+// decomposition gated on spec completeness, order-sheet dry_run → approve protocol).
 new ProjectsRouterMcpServer({
   port: Number(process.env.PROJECTS_ROUTER_MCP_PORT ?? 3229),
   secret: MCP_SECRET,
+  appDir: process.env.SLOT_APP_DIR ?? '/opt/fractera/app',
 }).start()
 
 // ── Doc Transfer MCP server (singleton, port 3230) ───────────────────────────

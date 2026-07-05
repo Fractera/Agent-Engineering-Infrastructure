@@ -1,4 +1,6 @@
 import { createServer } from 'http'
+import { spawn } from 'child_process'
+import { join } from 'path'
 import { handleMcpHandshake } from './mcp-handshake.js'
 
 // ── Projects Router MCP server (L2, port 3229) ──────────────────────────────
@@ -17,13 +19,22 @@ import { handleMcpHandshake } from './mcp-handshake.js'
 // build a finished-cycle tool — an "n8n for one single task": the owner does not
 // recreate the task, they open it in the UI, run it and track the result.
 //
-// Both tools are ADVISORY — zero mutations, nothing is written anywhere. The verdict
-// and the survey answers travel through the EXISTING channels: the P3 declaration
-// (cron + integrations fields), the P5 compose call, and the build-time env setter of
-// step 143. Route fixation is structural, not behavioral: an ambiguous request gets
-// needs_input + the verbatim question, and the final verdict is only issued to a call
-// that carries the owner's explicit confirmed_choice. SINGLE-LINE JSON (step 158).
-// Bearer gate (step 135) as on every bridge. L2 only.
+// The two router/survey tools are ADVISORY — zero mutations, nothing is written
+// anywhere. The verdict and the survey answers travel through the EXISTING channels:
+// the P3 declaration (cron + integrations fields), the P5 compose call, and the
+// build-time env setter of step 143. Route fixation is structural, not behavioral: an
+// ambiguous request gets needs_input + the verbatim question, and the final verdict is
+// only issued to a call that carries the owner's explicit confirmed_choice.
+//
+// The THIRD tool (step 184 D5) — owner_projects_orchestrate_decomposition — is the
+// MCP face of the frozen project process: it spawns the slot's self-sufficient engine
+// `.agents/skills/orchestrate-project-by-steps/orchestrate-project-by-steps.mjs`
+// (materialize-first decomposition: validates the DAG, GATES on spec completeness,
+// then writes the project-root README + one spec step + one coder-handoff step per
+// node BEFORE any development). It MUTATES the slot on a real run, so it follows the
+// order-sheet protocol: dry_run first, the owner confirms the sheet verbatim, then the
+// same call with the approve token. SINGLE-LINE JSON (step 158). Bearer gate
+// (step 135) as on every bridge. L2 only.
 
 const textResult = data => ({ content: [{ type: 'text', text: JSON.stringify(data) }] })
 
@@ -163,13 +174,58 @@ function toolsSchema() {
         },
       },
     },
+    {
+      name: 'owner_projects_orchestrate_decomposition',
+      description:
+        'The FROZEN PROJECT PROCESS (step 184) — deep, materialize-first decomposition of a private ' +
+        'project/automation into a validated queue of development sub-steps. Call it AFTER ' +
+        'owner_projects_route_request fixed the route as private-project (and normally after the ' +
+        'cron/integrations survey). You PROPOSE a graph of nodes ({ id?, title, kind, description, task, ' +
+        'tools[], envKeys[], io{in,out}, todo[], dependsOn[] }) plus the project block ' +
+        '({ purpose, efficiency, reuse, result }); the engine NORMALIZES it, VALIDATES the DAG, GATES on ' +
+        'SPEC COMPLETENESS (needs_spec lists exactly what to fill — nothing is materialized while ' +
+        'incomplete), and on a real run MATERIALIZES everything to disk BEFORE any development: the ' +
+        'project-root README.md (why / how it works / efficiency / reuse / result + the fractera:project ' +
+        'machine block, at the frozen project-page mount) + one rich spec step per node + one ' +
+        'coder-handoff step per coder-built node in DEVELOPMENT-STEPS/NEW-STEPS/. It does NOT deploy and ' +
+        'does NOT write code — a coding agent builds each node later from its step (you hand it ONLY the ' +
+        'step number, and you WATCH for completion before opening dependent nodes).\n\n' +
+        'Protocol (order sheet, mutating tool — never skip):\n' +
+        '  1) call with dry_run:true — it returns order_sheet (one RESOLVED line per node + the readme ' +
+        'plan + announce_text + confirm_instruction); show the owner every line VERBATIM;\n' +
+        '  2) if the sheet carries mvp_recommendation (a graph over 10 nodes) — relay it VERBATIM first ' +
+        '(soft gate: MVP of <=10 nodes, extensions as future tasks; the owner decides);\n' +
+        '  3) on the owner\'s explicit yes — call again with approve = order_sheet.id (a changed or ' +
+        'unconfirmed plan is refused) and relay announce_text verbatim;\n' +
+        '  4) resume (even in a new session): the SAME plan + the SAME approve token — files already on ' +
+        'disk are skipped, only missing sub-steps are (re)written. Scope: ONLY projects/automations — ' +
+        'site content pages go through owner_content_orchestrate (:3227), never here.',
+      inputSchema: {
+        type: 'object',
+        required: ['plan'],
+        properties: {
+          plan: {
+            type: 'object',
+            description: 'The proposed graph: { category?, slug?, project{purpose,efficiency,reuse,result}, nodes[] } (a bare nodes array is also accepted by the engine, but pass the full object so the readme plan is complete).',
+          },
+          category: { type: 'string', description: 'Project category (e.g. automation | personal); overrides plan.category.' },
+          slug: { type: 'string', description: 'Project slug (kebab-case, English — rule 166); overrides plan.slug.' },
+          owner_lang: { type: 'string', enum: ['en', 'ru'], description: 'Language of the verbatim owner-facing texts (announce / confirm / MVP). Default en.' },
+          dry_run: { type: 'boolean', description: 'true = plan only, NOTHING written; returns the order sheet to confirm. Always call this first.' },
+          approve: { type: 'string', description: 'The order_sheet.id from THAT dry-run — required for a real (materializing) run.' },
+        },
+      },
+    },
   ]
 }
 
 export class ProjectsRouterMcpServer {
-  constructor({ port, secret }) {
+  constructor({ port, secret, appDir }) {
     this.port = port
     this.secret = secret
+    this.appDir = appDir ?? '/opt/fractera/app'
+    // The slot's self-sufficient engine (a lone agent runs the same file directly — the MCP adds nothing).
+    this.engine = join(this.appDir, '.agents/skills/orchestrate-project-by-steps/orchestrate-project-by-steps.mjs')
   }
 
   start() {
@@ -201,6 +257,8 @@ export class ProjectsRouterMcpServer {
         const name = params?.name, args = params?.arguments ?? {}
         if (name === 'owner_projects_route_request') return ok(this._route(args))
         if (name === 'owner_projects_survey_automation_needs') return ok(this._survey(args))
+        if (name === 'owner_projects_orchestrate_decomposition')
+          return this._decompose(args).then(ok, e => fail(-32603, String(e?.message ?? e)))
         return fail(-32603, `Unknown tool: ${name}`)
       } catch (e) { return fail(-32603, String(e?.message ?? e)) }
     }
@@ -282,5 +340,47 @@ export class ProjectsRouterMcpServer {
         env: 'Materialize each envKey via the persist-env-var-with-rebuild channel (step 143: setter → app/.env.local → rebuild). Never hardcode keys.',
         compose: 'Then compose the project page via owner_template_compose_project_page (:3224) and hand real features to a coding agent.',
       } })
+  }
+
+  // MCP face of the frozen project process (step 184 D5): spawn the slot engine, relay its gates
+  // with the exact next action. The engine is the single implementation — this adds no logic.
+  async _decompose(args) {
+    const plan = args.plan
+    if (plan == null || (typeof plan !== 'object')) throw new Error('plan is required (the proposed node graph object)')
+    const cli = [this.engine, '--out', this.appDir, '--plan', JSON.stringify(plan)]
+    if (args.category) cli.push('--category', String(args.category))
+    if (args.slug) cli.push('--slug', String(args.slug))
+    if (['en', 'ru'].includes(args.owner_lang)) cli.push('--owner-lang', args.owner_lang)
+    if (typeof args.approve === 'string' && args.approve) cli.push('--approve', args.approve)
+    if (args.dry_run) cli.push('--dry-run')
+
+    const { code, out } = await this._spawn(process.execPath, cli)
+    const last = (() => { try { return JSON.parse(out.trim().split('\n').filter(Boolean).pop()) } catch { return null } })()
+    if (!last) throw new Error(`engine produced no JSON (exit ${code}): ${out.slice(-400)}`)
+
+    // Spec gate — the graph is incomplete; nothing was materialized.
+    if (last.ok === false && last.needs_spec)
+      return textResult({ ...last, advice: 'The graph is incomplete — fill every `missing` item (task / description / >=1 todo / io / well-formed envKeys per node; purpose/efficiency/reuse/result in the project block) and call dry_run again. Do NOT invent placeholder specs to pass the gate.' })
+    // DAG gate — structural.
+    if (last.ok === false && last.gate === 'dag')
+      return textResult({ ...last, advice: 'The graph topology is invalid — fix dependsOn / cycles and call dry_run again.' })
+    // Approve gate — the mutating run was not confirmed.
+    if (last.ok === false && last.gate === 'approve')
+      return textResult({ ...last, advice: 'Run dry_run first, show the returned order_sheet lines to the owner VERBATIM (mvp_recommendation first if present), get an explicit yes, then call again passing that dry_run\'s order_sheet.id as approve. Never invent or reuse a token.' })
+
+    if (args.dry_run)
+      return textResult({ ...last, advice: 'Show the owner every order_sheet line VERBATIM (one per node + the readme plan). If mvp_recommendation is present, relay it VERBATIM FIRST (the owner decides). On an explicit yes — call again with approve = order_sheet.id and relay announce_text verbatim. On edits — change the plan and dry_run again (the id changes).' })
+    if (code !== 0 || last.ok === false) throw new Error(`engine exited ${code}: ${out.slice(-400)}`)
+    return textResult({ ...last, advice: 'The queue is materialized (project README + spec steps + coder-handoff steps). Development is DELEGATED: hand a coding agent ONLY the handoff-step number, then WATCH for completion (step in COMPLETED-STEPS/ + a deployment record) before opening dependent nodes (order = the DAG). To resume after a death: the SAME plan + the SAME approve token.' })
+  }
+
+  _spawn(cmd, cli) {
+    return new Promise((res, rej) => {
+      const p = spawn(cmd, cli, { cwd: this.appDir })
+      let out = '', err = ''
+      p.stdout.on('data', d => { out += d }); p.stderr.on('data', d => { err += d })
+      p.on('error', rej)
+      p.on('close', code => res({ code, out: out + (err ? `\n[stderr] ${err}` : '') }))
+    })
   }
 }

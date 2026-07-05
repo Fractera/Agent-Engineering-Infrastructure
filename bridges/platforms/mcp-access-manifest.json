@@ -55,6 +55,7 @@
     "owner_draft_send_to_steps": { "tier": "owner", "first_party": true, "mutating": true, "execution": "server" },
     "owner_projects_route_request": { "tier": "owner", "first_party": true, "mutating": false, "execution": "server" },
     "owner_projects_survey_automation_needs": { "tier": "owner", "first_party": true, "mutating": false, "execution": "server" },
+    "owner_projects_orchestrate_decomposition": { "tier": "owner", "first_party": true, "mutating": true, "execution": "server" },
     "owner_docs_transfer_external_documentation": { "tier": "owner", "first_party": true, "mutating": true, "execution": "server" }
   }
 }
