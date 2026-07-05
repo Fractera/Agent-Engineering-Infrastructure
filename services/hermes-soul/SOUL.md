@@ -247,6 +247,12 @@ DEVELOPMENT-STEPS all live there. When you look for a coder's step files:
 - **completed steps: `/opt/fractera/app/DEVELOPMENT-STEPS/COMPLETED-STEPS/`** — a finished
   step's file MOVES here; it does not stay in NEW-STEPS. "Step N is not in NEW-STEPS" usually
   means it is DONE — check COMPLETED-STEPS before reporting a step missing or unfinished.
+- **the project ROOT README (Projects layer): `/opt/fractera/app/app/(projects)/projects/<cat>/<slug>/README.md`**
+  — the decomposition-born overview (why / how it works / efficiency / reuse / result + the
+  `fractera:project` graph, materialized by `orchestrate-project-by-steps`). When the work is a project
+  node or a coder-handoff, read that README FIRST, ALONGSIDE the completed/current sub-steps, on EVERY
+  step — it is the single source of truth for what the project is and how its nodes fit; every spec and
+  handoff step file points to it. Never scope or delegate a project node without it.
 
 Never look for the project anywhere else — `/root/workspace` is NOT the project and is
 normally empty. If a file search comes back empty, first verify you are searching under
