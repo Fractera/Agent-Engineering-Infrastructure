@@ -81,7 +81,11 @@ queue/results tables of this page automatically.
   The runner's own journal row records the trigger firing (no result title); the
   workflow's row carries the real result.
 - **Persistence:** the Local World stores run state under `WORKFLOW_LOCAL_DATA_DIR`
-  (on a Fractera VPS: `/opt/fractera/.workflow-data`, outside the swappable slot).
+  (on a Fractera VPS: `/opt/fractera/.workflow-data`, outside the swappable slot — survives
+  a slot rebuild). BOTH vars must sit in the slot's `.env.local`:
+  `WORKFLOW_TARGET_WORLD=local` AND `WORKFLOW_LOCAL_DATA_DIR=...` — with the target world
+  unset, `withWorkflow` (next.config) force-sets the data dir to `.next/workflow-data`,
+  which a rebuild wipes.
 
 <!-- fractera:meta
 {"title": {{PROJECT_TITLE}}, "kind": "page", "base": "/projects/{{CATEGORY}}", "dynamic": false, "query": [], "description": {{PROJECT_PURPOSE}}, "tasks": [], "visibility": "rolesOnly", "roles": ["architect", "manager"], "cron": {{PROJECT_CRON}}, "integrations": {{PROJECT_INTEGRATIONS}}}

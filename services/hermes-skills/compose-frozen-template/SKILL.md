@@ -188,7 +188,10 @@ changes) and the trigger route `app/api/projects/<category>/<project>/run` (`POS
 ONLY scheduler — to run the workflow on a schedule, declare a `cron.json` http job pointing at the
 trigger route (the runner already sends the agent-identity header); WDK's own scheduling is not
 used. Local World state persists under `WORKFLOW_LOCAL_DATA_DIR` (`/opt/fractera/.workflow-data`
-on a VPS, outside the swappable slot).
+on a VPS, outside the swappable slot — survives a slot rebuild). BOTH vars must sit in the slot's
+`.env.local`: `WORKFLOW_TARGET_WORLD=local` AND `WORKFLOW_LOCAL_DATA_DIR=...` — with the target world
+unset, `withWorkflow` (next.config) force-sets the data dir to `.next/workflow-data`, which a rebuild
+wipes (in-flight durable runs would be lost).
 
 **Finishing it for the real project is a coding-agent handoff** — edit `_data/description.ts`,
 `_data/flow.ts` (the diagram is DATA, never JSX) and the step bodies in
