@@ -6,7 +6,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getAppConfig } from "@/config/app-config";
+import { DEFAULT_LANGUAGE } from "@/config/translations/translations.config";
 import { PROJECT_DESCRIPTION } from "../_data/description";
+import { projectTabStrings } from "../_data/tab-i18n";
 import { getCronJobs, getProcessQueue, getResults } from "../_lib/project-data";
 import { CronJobsTable } from "./cron-jobs-table.server";
 import { MissingKeysModal } from "./missing-keys-modal.client";
@@ -27,11 +29,15 @@ export default async function {{PROJECT_PASCAL}}ProjectEntry() {
     getCronJobs(),
   ]);
   const d = PROJECT_DESCRIPTION;
+  // Monolingual zone (§3.12): all reusable tab strings render in the slot's default
+  // language, English fallback for unlisted languages (187.5). The canvas + settings
+  // stay English by design.
+  const t = projectTabStrings(DEFAULT_LANGUAGE);
   return (
     <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
       {/* Native missing-keys modal (186.3): prompts for any declared integration
           key absent from the runtime env; renders nothing when none are required. */}
-      <MissingKeysModal />
+      <MissingKeysModal lang={DEFAULT_LANGUAGE} />
       <div>
         <Link
           href="/projects/{{CATEGORY}}"
@@ -43,7 +49,7 @@ export default async function {{PROJECT_PASCAL}}ProjectEntry() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>About this project</CardTitle>
+          <CardTitle>{t.about}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm leading-relaxed">
           <p>
@@ -61,28 +67,28 @@ export default async function {{PROJECT_PASCAL}}ProjectEntry() {
         </CardContent>
       </Card>
       <section className="space-y-3">
-        <h2 className="text-xl font-medium">Process diagram</h2>
+        <h2 className="text-xl font-medium">{t.diagram}</h2>
         <ProcessFlow />
       </section>
       <section className="space-y-3">
-        <h2 className="text-xl font-medium">Run the automation</h2>
+        <h2 className="text-xl font-medium">{t.run}</h2>
         <RunPanel />
       </section>
       <section className="space-y-3">
-        <h2 className="text-xl font-medium">Current processes</h2>
+        <h2 className="text-xl font-medium">{t.processes}</h2>
         <ProcessQueueTable runs={runs} />
       </section>
       <section className="space-y-3">
-        <h2 className="text-xl font-medium">Results</h2>
+        <h2 className="text-xl font-medium">{t.results}</h2>
         <ResultsTable results={results} />
       </section>
       <section className="space-y-3">
-        <h2 className="text-xl font-medium">Scheduled runs</h2>
+        <h2 className="text-xl font-medium">{t.scheduled}</h2>
         <CronJobsTable jobs={cronJobs} />
       </section>
       {/* Per-project footer (186.2): brand + deep-links to continue development
           (/service/architecture focused on this project) and to the env editor. */}
-      <ProjectFooter shortName={getAppConfig().short_name} />
+      <ProjectFooter shortName={getAppConfig().short_name} lang={DEFAULT_LANGUAGE} />
     </main>
   );
 }

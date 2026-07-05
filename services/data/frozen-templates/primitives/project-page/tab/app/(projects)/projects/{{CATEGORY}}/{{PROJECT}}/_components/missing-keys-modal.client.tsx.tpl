@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PROJECT_INTEGRATIONS, REQUIRED_ENV_KEYS } from "../_data/required-keys";
+import { projectTabStrings } from "../_data/tab-i18n";
 
 // Native "missing keys" modal (step 186.3) — a REUSABLE culture, not a one-off: any
 // automation that declares integration env keys gets this. On mount it asks the slot
@@ -32,7 +33,8 @@ const KEY_TO_SERVICE: Record<string, string> = Object.fromEntries(
   ),
 );
 
-export function MissingKeysModal() {
+export function MissingKeysModal({ lang }: { lang: string }) {
+  const t = projectTabStrings(lang);
   const active = REQUIRED_ENV_KEYS.length > 0;
   const [missing, setMissing] = useState<string[]>([]);
   const [values, setValues] = useState<Record<string, string>>({});
@@ -103,11 +105,8 @@ export function MissingKeysModal() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>This automation needs a few keys</DialogTitle>
-          <DialogDescription>
-            The following values are missing. Enter them to make the automation work.
-            You can close this and add them later — but nothing runs until they are set.
-          </DialogDescription>
+          <DialogTitle>{t.keysTitle}</DialogTitle>
+          <DialogDescription>{t.keysDescription}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
           {missing.map((key) => (
@@ -131,10 +130,10 @@ export function MissingKeysModal() {
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)} disabled={saving}>
-            Later
+            {t.keysLater}
           </Button>
           <Button onClick={save} disabled={saving}>
-            {saving ? "Saving…" : "Save keys"}
+            {saving ? t.keysSaving : t.keysSave}
           </Button>
         </DialogFooter>
       </DialogContent>
