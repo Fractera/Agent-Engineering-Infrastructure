@@ -20,6 +20,7 @@
 ## Finishing (coding-agent handoff)
 
 - Shape the real process diagram in `_data/flow.ts` (data, not JSX).
+- Implement the real workflow steps in `_workflow/definition.ts` (see Workflow below).
 - Describe the real project in `_data/description.ts`.
 - Declare scheduled processes in `cron.json` in THIS folder — the substrate runner
   (`fractera-cron`) picks it up within a tick (no restart) and fills the queue/results
@@ -45,6 +46,38 @@
   `.env.local` keys are in `process.env`). A run may report
   `{"resultTitle": "...", "artifactUrl": "..."}` (HTTP response JSON / the script's last
   stdout line) — it becomes a row in the results table.
+
+## Workflow (durable execution)
+
+`_workflow/definition.ts` is the project's durable workflow (Workflow DevKit) — the
+EXECUTABLE mirror of the diagram: steps `work` -> `store` -> `publish` correspond to the
+flow nodes (the `trigger` node is the run route / cron). A run survives a process restart
+and resumes mid-flight; it journals itself into `project_cron_runs` (`created_by='wdk'`),
+so runs appear in the queue/results tables of this page automatically.
+
+- **Trigger route:** `POST /api/projects/{{CATEGORY}}/{{PROJECT}}/run` (body
+  `{"input": "..."}` optional; needs `X-Agent-Identity` — the auth gate covers `/api/*`).
+- **Scheduling:** `fractera-cron` stays the ONLY scheduler. To run the workflow on a
+  schedule, declare an http job in `cron.json` pointing at the trigger route:
+
+  ```json
+  {
+    "jobs": [
+      {
+        "id": "run-workflow-daily",
+        "title": "Run the project workflow",
+        "schedule": "0 9 * * *",
+        "action": { "type": "http", "url": "http://127.0.0.1:3000/api/projects/{{CATEGORY}}/{{PROJECT}}/run", "method": "POST" },
+        "enabled": true
+      }
+    ]
+  }
+  ```
+
+  The runner's own journal row records the trigger firing (no result title); the
+  workflow's row carries the real result.
+- **Persistence:** the Local World stores run state under `WORKFLOW_LOCAL_DATA_DIR`
+  (on a Fractera VPS: `/opt/fractera/.workflow-data`, outside the swappable slot).
 
 <!-- fractera:meta
 {"title": {{PROJECT_TITLE}}, "kind": "page", "base": "/projects/{{CATEGORY}}", "dynamic": false, "query": [], "description": {{PROJECT_PURPOSE}}, "tasks": [], "visibility": "rolesOnly", "roles": ["architect", "manager"], "cron": {{PROJECT_CRON}}, "integrations": {{PROJECT_INTEGRATIONS}}}
