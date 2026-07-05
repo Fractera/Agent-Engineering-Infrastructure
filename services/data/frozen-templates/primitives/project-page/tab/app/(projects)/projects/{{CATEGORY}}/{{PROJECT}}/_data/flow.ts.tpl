@@ -1,12 +1,22 @@
 import type { Edge, Node } from "@xyflow/react";
 
-// The process diagram as DATA. To shape the diagram for the real project,
-// edit these nodes/edges — never the client component that renders them.
-// Every node carries `info` — the payload of the on-canvas info panel:
-// everything the node does must be readable there.
+// The process diagram as DATA — and, under the projects-mode contract (R6), the
+// EXECUTION SCHEMA of the project: what is not on this diagram does not exist
+// in the project. To shape the diagram for the real project, edit these
+// nodes/edges — never the client component that renders them. When the project
+// is born from a decomposition (orchestrate-project-by-steps), this file is
+// GENERATED from the graph — extend the GRAPH and re-run the engine instead of
+// hand-editing. Every node carries `info` — the payload of the on-canvas info
+// panel: everything the node does must be readable there (kind, task, tools,
+// env keys, inputs/outputs, processes).
 export type FlowNodeInfo = {
   summary: string;
   processes: string[];
+  kind: "trigger" | "action" | "transform";
+  task?: string;
+  tools: string[];
+  envKeys: string[];
+  io?: { in: unknown; out: unknown };
 };
 
 export type FlowNodeData = {
@@ -30,6 +40,10 @@ export const FLOW_NODES: FlowNode[] = [
           "Receives the run request",
           "Starts the pipeline with the run input",
         ],
+        kind: "trigger",
+        tools: [],
+        envKeys: [],
+        io: { in: "run input (optional)", out: "started run" },
       },
     },
   },
@@ -47,6 +61,10 @@ export const FLOW_NODES: FlowNode[] = [
           "Executes the automation steps",
           "Hands the produced artifact downstream",
         ],
+        kind: "action",
+        tools: [],
+        envKeys: [],
+        io: { in: "run input", out: "produced artifact" },
       },
     },
   },
@@ -63,6 +81,10 @@ export const FLOW_NODES: FlowNode[] = [
           "Writes the run record to the app DB",
           "Sends the result to vector memory when configured",
         ],
+        kind: "action",
+        tools: [],
+        envKeys: [],
+        io: { in: "produced artifact", out: "stored run record" },
       },
     },
   },
@@ -79,6 +101,10 @@ export const FLOW_NODES: FlowNode[] = [
           "Delivers the artifact to its destination",
           "Records the artifact link for the results table",
         ],
+        kind: "action",
+        tools: [],
+        envKeys: [],
+        io: { in: "produced artifact", out: "artifact link" },
       },
     },
   },

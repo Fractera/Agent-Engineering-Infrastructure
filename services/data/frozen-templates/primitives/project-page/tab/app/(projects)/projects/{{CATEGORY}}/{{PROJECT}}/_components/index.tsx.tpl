@@ -6,16 +6,23 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { PROJECT_DESCRIPTION } from "../_data/description";
-import { getProcessQueue, getResults } from "../_lib/project-data";
+import { getCronJobs, getProcessQueue, getResults } from "../_lib/project-data";
+import { CronJobsTable } from "./cron-jobs-table.server";
 import { ProcessFlow } from "./process-flow.client";
 import { ProcessQueueTable } from "./process-queue-table.server";
 import { ResultsTable } from "./results-table.server";
+import { RunPanel } from "./run-panel.client";
 
-// Starter interface of the project: description + process diagram + the two
-// runtime tables. Reshape the diagram in _data/flow.ts; the tables fill from
-// _lib/project-data.ts once the cron infrastructure writes runs/results.
+// The project's standalone page — the result contract (R9): presentation text,
+// the process canvas (the execution schema, R6), the admin launch panel, the
+// runs dashboard with results, and the scheduled cron queue. Reshape the
+// diagram in _data/flow.ts; the tables fill from _lib/project-data.ts.
 export default async function {{PROJECT_PASCAL}}ProjectEntry() {
-  const [runs, results] = await Promise.all([getProcessQueue(), getResults()]);
+  const [runs, results, cronJobs] = await Promise.all([
+    getProcessQueue(),
+    getResults(),
+    getCronJobs(),
+  ]);
   const d = PROJECT_DESCRIPTION;
   return (
     <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
@@ -52,12 +59,20 @@ export default async function {{PROJECT_PASCAL}}ProjectEntry() {
         <ProcessFlow />
       </section>
       <section className="space-y-3">
+        <h2 className="text-xl font-medium">Run the automation</h2>
+        <RunPanel />
+      </section>
+      <section className="space-y-3">
         <h2 className="text-xl font-medium">Current processes</h2>
         <ProcessQueueTable runs={runs} />
       </section>
       <section className="space-y-3">
         <h2 className="text-xl font-medium">Results</h2>
         <ResultsTable results={results} />
+      </section>
+      <section className="space-y-3">
+        <h2 className="text-xl font-medium">Scheduled runs</h2>
+        <CronJobsTable jobs={cronJobs} />
       </section>
     </main>
   );

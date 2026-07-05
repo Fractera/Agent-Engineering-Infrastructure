@@ -8,8 +8,8 @@ description: >
 version: 1.0.0
 metadata:
   hermes:
-    tags: [orchestration, delegation, coding, platforms, delegate, send-task]
-    related_skills: [choose-agent, record-deployment]
+    tags: [orchestration, delegation, coding, platforms, delegate, send-task, project, coder-handoff, step-number]
+    related_skills: [choose-agent, record-deployment, orchestrate-project-by-steps, prepare-automation-knowledge]
 ---
 
 # delegate-task
@@ -62,7 +62,19 @@ Or auto-select:
 owner_delegate_task_to_best_platform(prompt="<task>", criteria="prefer free tier")
 ```
 
-## Prompt framing
+## Delegating a PROJECT node — hand only the step number (do not re-frame)
+
+When the task is a **project (automation) node** produced by `orchestrate-project-by-steps`, the delegation
+is already written to disk: that engine materialized a **coder-handoff step** per node, and it is EXHAUSTIVE
+(read the project `README.md` → open the spec step → deliverable / tools / env keys / acceptance / finish
+protocol). In that case you do **NOT** author a fresh prompt from the four parts below — the handoff step IS
+the prompt. Hand the coding agent **ONLY the step number**; it opens the numbered step and finds everything
+there (and in the spec step it points to). Reserve the free-form framing below for a **one-off** coding task
+that has no materialized step. The confirm/readiness discipline is identical either way: check `choose-agent`,
+confirm with the owner, then delegate. If no agent is signed in, the handoff step already sits on disk
+(materialize-first) — nothing is lost; give the calm status and the two options, do not alarm the owner.
+
+## Prompt framing (one-off tasks without a materialized step)
 
 Always include in the delegated prompt:
 1. **Context**: What the project does (1-2 sentences)
