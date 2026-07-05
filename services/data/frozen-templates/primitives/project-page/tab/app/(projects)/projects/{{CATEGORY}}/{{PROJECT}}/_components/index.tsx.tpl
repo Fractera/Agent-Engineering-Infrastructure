@@ -5,11 +5,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getAppConfig } from "@/config/app-config";
 import { PROJECT_DESCRIPTION } from "../_data/description";
 import { getCronJobs, getProcessQueue, getResults } from "../_lib/project-data";
 import { CronJobsTable } from "./cron-jobs-table.server";
 import { MissingKeysModal } from "./missing-keys-modal.client";
 import { ProcessFlow } from "./process-flow.client";
+import { ProjectFooter } from "./project-footer.client";
 import { ProcessQueueTable } from "./process-queue-table.server";
 import { ResultsTable } from "./results-table.server";
 import { RunPanel } from "./run-panel.client";
@@ -78,6 +80,9 @@ export default async function {{PROJECT_PASCAL}}ProjectEntry() {
         <h2 className="text-xl font-medium">Scheduled runs</h2>
         <CronJobsTable jobs={cronJobs} />
       </section>
+      {/* Per-project footer (186.2): brand + deep-links to continue development
+          (/service/architecture focused on this project) and to the env editor. */}
+      <ProjectFooter shortName={getAppConfig().short_name} />
     </main>
   );
 }
