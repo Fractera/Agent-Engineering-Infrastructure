@@ -8,6 +8,7 @@ import {
 import { PROJECT_DESCRIPTION } from "../_data/description";
 import { getCronJobs, getProcessQueue, getResults } from "../_lib/project-data";
 import { CronJobsTable } from "./cron-jobs-table.server";
+import { MissingKeysModal } from "./missing-keys-modal.client";
 import { ProcessFlow } from "./process-flow.client";
 import { ProcessQueueTable } from "./process-queue-table.server";
 import { ResultsTable } from "./results-table.server";
@@ -26,6 +27,9 @@ export default async function {{PROJECT_PASCAL}}ProjectEntry() {
   const d = PROJECT_DESCRIPTION;
   return (
     <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
+      {/* Native missing-keys modal (186.3): prompts for any declared integration
+          key absent from the runtime env; renders nothing when none are required. */}
+      <MissingKeysModal />
       <div>
         <Link
           href="/projects/{{CATEGORY}}"
