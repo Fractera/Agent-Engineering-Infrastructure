@@ -11,7 +11,7 @@ description: >
   plus one coder-handoff step per node — BEFORE any development. It does NOT deploy, does NOT
   execute a node, does NOT write code: a coding agent builds each node LATER from its step
   file. The gate is SPEC COMPLETENESS, not a deployment record.
-version: 0.7.0
+version: 0.8.0
 metadata:
   hermes:
     tags: [project, automation, orchestrate, decompose, steps, node, dag, materialize, coder-handoff, workflow, cron, tool]
@@ -23,6 +23,15 @@ metadata:
 The **frozen process** for **projects** (automations / internal tools). You give a **proposed
 node graph**; the engine decomposes it into a materialized queue of development sub-steps and
 gates each on **spec completeness** — before any code is written.
+
+> **READ FIRST — the automation-ontology glossary**
+> (`CRUD-DOCS/workspace-standards/automation-ontology.md`, step 188-R): every automation is
+> composed of EXACTLY twelve entities — Automation · Trigger · Hook · Condition · **Action** ·
+> Router · Step | Integration · Channel · State | Run · Record. The graph you propose is a typed
+> instance of that ontology and the engine VALIDATES it (schema v2, engine ≥0.8). An automation
+> described outside the ontology is a defect. Note the terminology: **Action is the first-class
+> entity** (a named outcome = a branch of steps, bound to its hook phrases); a work NODE is a
+> `step` (the old node kind `"action"` is accepted only as a legacy alias of `step`).
 
 This skill is **self-sufficient**: one `.mjs` (or, from D5, one MCP tool), no Hermes required —
 a lone agent (even a project with only Codex) runs the whole process on its own.
@@ -46,15 +55,35 @@ the owner wants "a news page / a blog / documentation", that is content — stop
 
 ## The mental model
 
-- **You pass a GRAPH, not a plan of steps.** Each node is:
-  `{ id, title, kind, description, task, tools[], envKeys[], io{in,out}, todo[], dependsOn[] }`.
-  - `kind` ∈ `trigger` | `action` | `transform` (WDK-compatible).
+- **You pass a GRAPH, not a plan of steps** (schema v2 — the ontology as data):
+  `{ category?, slug?, project{purpose,efficiency,reuse,result},
+     actions?: [{ id, title, description, color?, hooks:[{phrase,lang}], condition?, channel }],
+     state?: [{ id, storage, purpose }], nodes[] }`, each node
+  `{ id, title, kind, actions: string[]|"all", condition?, errorPolicy?, state?: string[],
+     description, task, tools[], envKeys[], io{in,out}, todo[], dependsOn[] }`.
+  - **`actions[]` (registry)** — the automation's named outcomes: id/title/description, a `color`
+    (auto-assigned from a palette when omitted), its `hooks` (spoken phrases), an optional declared
+    `condition` guard, and the delivery `channel`. Configuring an automation = configuring Actions.
+  - **`node.actions`** — WHICH action branches flow through the node: an explicit id list for
+    branch nodes, `"all"` for trunk nodes (trigger/router default to `"all"`). Every action needs
+    ≥1 node naming it explicitly — trunk coverage alone is not a branch.
+  - `kind` ∈ `trigger` | `router` | `step` | `transform` (`action` = legacy alias of `step`).
+    A `router` (the classifier turning an event into an action id) is REQUIRED whenever any
+    action declares hooks.
+  - `condition` — a DECLARED guard ("run only if …"): the schema documents it, the diagram and
+    the records table show it, and the coder implements it in the step body (R6). Declarative
+    only — no executable DSL.
+  - `errorPolicy` ∈ `retry-next-tick` | `soft-degrade` | `fail-run` (optional per node).
+  - `state[]` (registry) + `node.state` — declared persistent data between runs (cursors, vector
+    memory) so no model reinvents storage.
   - `task` is the EXHAUSTIVE sub-step spec, not a one-liner.
   - `envKeys` are UPPER_SNAKE and get materialized later via the `persist-env-var-with-rebuild`
     skill (step 143) — never hardcode a secret.
   - `io` is a WDK-neutral seam — abstract now, filled with the real Vercel Workflow schema in D6.
   - `dependsOn` are the DAG edges (each id must resolve to another node; no cycles).
   - a node is coder-built by default; set `needsCoder: false` to skip its handoff step.
+  - Back-compat: a v1 graph (no `actions[]`/`state[]`) normalizes to `actions:"all"` on every
+    node and validates as before.
 - **The engine NORMALIZES + VALIDATES + GATES — you do not hand-fix the graph.**
   1. NORMALIZE — slug ids (English, forever — rule 166), UPPER_SNAKE keys, kind defaults, dedup.
   2. VALIDATE DAG — dependsOn resolve, no cycles, a root exists (topological order).
@@ -78,12 +107,17 @@ the owner wants "a news page / a blog / documentation", that is content — stop
   and the finish protocol (deploy → record → close both steps). This mirrors the SOUL delegation edge and
   the `delegate-task` / `prepare-automation-knowledge` skills: real code is always DELEGATED, never written
   by the orchestrator, and delegation is a numbered step, not an ad-hoc chat prompt.
-- **The EXECUTION SCHEMA is generated from the graph (D6, contract R6).** On an approved run the engine
-  also emits both sides of the R6 invariant, derived from the SAME graph:
+- **The EXECUTION SCHEMA is generated from the graph (D6, contract R6; ontology 188-R).** On an
+  approved run the engine emits every derived side of the R6 invariant from the SAME graph:
   - `app/(projects)/projects/<cat>/<slug>/_data/flow.ts` — the canvas diagram as data (react-flow
     nodes/edges, layered by DAG depth) with the full R8 info payload per node (summary / processes /
-    kind / task / tools / envKeys / io). DERIVED like the README: **always rewritten** deterministically
-    (marker `// fractera:flow <sheetId>`) — never hand-edit it; extend the graph and re-run.
+    kind / **actions** / **condition** / task / tools / envKeys / io). DERIVED like the README:
+    **always rewritten** deterministically (marker `// fractera:flow <sheetId>`) — never hand-edit
+    it; extend the graph and re-run.
+  - `app/(projects)/projects/<cat>/<slug>/_data/actions.ts` — the **Actions registry as data**
+    (marker `// fractera:actions <sheetId>`, always rewritten): id/title/description/color/hooks/
+    condition/channel per action. The hooks panel derives its suggestions from it, the records
+    table and the diagram read titles/colors from it — no surface hardcodes an action.
   - `app/api/projects/<cat>/<slug>/_workflow/definition.ts` — the durable WDK workflow skeleton: one
     `"use step"` function per NON-trigger node in topological order, each under a `// node:<id>` marker;
     `runProject` chains them through an `artifacts` accumulator; trigger nodes are not steps (they ARE
@@ -204,4 +238,8 @@ edge; D4 wired the README into every frozen template + all 6 agent instructions;
 contract (R1/R2/R5b/R6/R7/R11), the MVP gate in the engine, the MCP tool on :3229 and the ×6 copies;
 D5.5 the coder→orchestrator agent-feedback channel (R10: step convention + 6 coder instructions + SOUL edge);
 D6 the generated execution schema (R6 mechanics: flow.ts always derived + definition.ts skeleton with
-// node:<id> markers + isomorphism validation; R8 node info payload; R9 page contract in the template). -->
+// node:<id> markers + isomorphism validation; R8 node info payload; R9 page contract in the template).
+188-R (v0.8.0) the automation ontology: schema v2 (actions[]/state[] registries, node.actions/condition/
+errorPolicy, kinds trigger|router|step|transform with action→step alias), the ontology gates (dedicated
+node per action, router when hooks, unknown ids refused), the actions.ts registry emission, README
+Actions/State sections, order-sheet action lines, and the automation-ontology.md glossary as the canon. -->

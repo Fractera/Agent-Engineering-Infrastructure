@@ -30,9 +30,19 @@
 // never deploys or executes a node — it PLANS / VALIDATES / DOCUMENTS / MATERIALIZES; a coder builds each
 // node later in its own session (D3). D1.3 added the coder-handoff step + the human approve/announce protocol.
 //
-// Node contract (WDK-neutral seam — D6 fills `io` with the real Vercel Workflow schema, step 183):
-//   node: { id, title, kind, description, task, tools[], envKeys[], io{in,out}, todo[], dependsOn[] }
-//   kind ∈ "trigger" | "action" | "transform"  (WDK-compatible)
+// Graph contract v2 (schema v2 / engine 0.8 — the AUTOMATION ONTOLOGY, step 188-R; canon:
+// CRUD-DOCS/workspace-standards/automation-ontology.md — the 12-entity glossary every model reads):
+//   graph: { category?, slug?, project{purpose,efficiency,reuse,result},
+//            actions?: [{ id, title, description, color?, hooks:[{phrase,lang}], condition?, channel }],
+//            state?:   [{ id, storage, purpose }],
+//            nodes[] }
+//   node: { id, title, kind, actions: string[]|"all", condition?, errorPolicy?, state?: string[],
+//           description, task, tools[], envKeys[], io{in,out}, todo[], dependsOn[] }
+//   kind ∈ "trigger" | "router" | "step" | "transform"  ("action" is accepted as a legacy alias
+//   of "step" — the word Action now names the first-class automation entity, never a node kind)
+//   errorPolicy ∈ "retry-next-tick" | "soft-degrade" | "fail-run" (optional; conventions apply)
+// Back-compat: a v1 graph (no actions[]/state[]) normalizes to actions:"all" on every node and
+// validates exactly as before.
 //
 // Usage:
 //   node orchestrate-project-by-steps.mjs --out <slot-root> \
@@ -48,7 +58,12 @@ import { mkdir, writeFile, readFile, readdir, rename, stat } from "node:fs/promi
 import { resolve, join, dirname } from "node:path"
 import { createHash } from "node:crypto"
 
-const KINDS = ["trigger", "action", "transform"]
+const KINDS = ["trigger", "router", "step", "transform"]
+const KIND_ALIASES = { action: "step" } // v1 graphs said "action" for a work node; Action is an entity now
+const ERROR_POLICIES = ["retry-next-tick", "soft-degrade", "fail-run"]
+// Action colors — stable tokens the UI maps to theme-aware classes; auto-assigned by declaration
+// order when the graph omits `color`.
+const ACTION_COLORS = ["blue", "amber", "green", "violet", "rose", "cyan", "orange", "teal"]
 const README_SECTIONS = ["purpose", "efficiency", "reuse", "result"] // §4.1 minus the graph-derived "how it works"
 const STEP_ROOT = "DEVELOPMENT-STEPS", NEW_DIR = "NEW-STEPS", DONE_DIR = "COMPLETED-STEPS"
 const pad = n => String(n).padStart(2, "0")
@@ -88,6 +103,50 @@ function normalizeGraph(raw, cliCategory, cliSlug) {
   const nodesIn = arr(g.nodes)
   if (!nodesIn.length) throw new Error("--plan produced no nodes (need a non-empty node graph)")
 
+  // ACTIONS registry (ontology entity 5) — first-class named outcomes. Colors are auto-assigned
+  // from the palette by declaration order when omitted, so every action is always renderable.
+  const actionsSeen = new Set()
+  const actions = []
+  for (const a0 of arr(g.actions)) {
+    const a = a0 && typeof a0 === "object" ? a0 : {}
+    const id = slugify(a.id) || slugify(a.title)
+    if (!id || actionsSeen.has(id)) continue
+    actionsSeen.add(id)
+    actions.push({
+      id,
+      title: str(a.title) || humanize(id),
+      description: str(a.description),
+      color: str(a.color).toLowerCase() || ACTION_COLORS[actions.length % ACTION_COLORS.length],
+      hooks: arr(a.hooks).map(h => {
+        const hh = h && typeof h === "object" ? h : { phrase: h }
+        return { phrase: str(hh.phrase), lang: str(hh.lang) || "en" }
+      }).filter(h => h.phrase),
+      condition: str(a.condition) || null,
+      channel: str(a.channel),
+    })
+  }
+  const actionIds = new Set(actions.map(a => a.id))
+  // STATE registry (ontology entity 10) — declared persistent data between runs.
+  const stateSeen = new Set()
+  const state = []
+  for (const s0 of arr(g.state)) {
+    const s = s0 && typeof s0 === "object" ? s0 : {}
+    const id = slugify(s.id)
+    if (!id || stateSeen.has(id)) continue
+    stateSeen.add(id)
+    state.push({ id, storage: str(s.storage), purpose: str(s.purpose) })
+  }
+
+  // Node `actions`: "all" (trunk — every action flows through) or an explicit id list. Trigger and
+  // router nodes default to "all"; when the graph declares NO actions (v1 back-compat) every node
+  // defaults to "all" and the action gates pass trivially.
+  const normNodeActions = (v, kind) => {
+    if (typeof v === "string" && v.trim().toLowerCase() === "all") return "all"
+    const list = [...new Set(arr(v).map(slugify).filter(Boolean))]
+    if (list.length) return list
+    return (kind === "trigger" || kind === "router" || !actions.length) ? "all" : []
+  }
+
   const seen = new Set(), duplicates = []
   const nodes = []
   for (const n0 of nodesIn) {
@@ -98,10 +157,16 @@ function normalizeGraph(raw, cliCategory, cliSlug) {
     if (seen.has(id)) { duplicates.push(id); continue }        // dedup: keep first
     seen.add(id)
     const io = n.io && typeof n.io === "object" ? n.io : {}
+    const rawKind = str(n.kind).toLowerCase()
+    const kind = KINDS.includes(rawKind) ? rawKind : (KIND_ALIASES[rawKind] ?? "step")
     nodes.push({
       id,
       title: title || id,
-      kind: KINDS.includes(str(n.kind).toLowerCase()) ? str(n.kind).toLowerCase() : "action",
+      kind,
+      actions: normNodeActions(n.actions, kind),
+      condition: str(n.condition) || null,
+      errorPolicy: str(n.errorPolicy).toLowerCase() || null,
+      state: [...new Set(arr(n.state).map(slugify).filter(Boolean))],
       description: str(n.description),
       task: str(n.task),
       tools: arr(n.tools).map(str).filter(Boolean),
@@ -124,6 +189,8 @@ function normalizeGraph(raw, cliCategory, cliSlug) {
     category: slugify(cliCategory ?? g.category) || "automation",
     slug: slugify(cliSlug ?? g.slug) || slugify(project.purpose) || "project",
     project,
+    actions,
+    state,
     nodes,
     ...(duplicates.length ? { duplicates } : {}),
   }
@@ -169,6 +236,9 @@ function validateDag(nodes) {
 // many nodes legitimately need no secret; a false hard-fail would be worse than a hint.)
 function validateSpec(graph) {
   const missing = [], warnings = []
+  const ontologyHint = " (automation ontology: CRUD-DOCS/workspace-standards/automation-ontology.md)"
+  const actionIds = new Set(graph.actions.map(a => a.id))
+  const stateIds = new Set(graph.state.map(s => s.id))
   for (const n of graph.nodes) {
     const where = `node "${n.id}"`
     if (!n.task) missing.push(`${where}: empty task (needs the exhaustive sub-step spec)`)
@@ -178,6 +248,31 @@ function validateSpec(graph) {
     if (n.io.in == null && n.io.out == null) missing.push(`${where}: io not declared (needs io.in and/or io.out)`)
     for (const k of n.envKeys) if (!/^[A-Z][A-Z0-9_]*$/.test(k)) missing.push(`${where}: env key "${k}" is not UPPER_SNAKE`)
     if (n.tools.length && !n.envKeys.length) warnings.push(`${where}: has tools (${n.tools.join(", ")}) but declares no envKeys — confirm none need a secret`)
+    // Ontology gates (schema v2): a work node must say WHICH actions flow through it, and only
+    // declared ids; referenced state must exist; errorPolicy must be a known value.
+    if (n.actions !== "all") {
+      if (!n.actions.length) missing.push(`${where}: declare which actions flow through it — actions: [ids] or "all"${ontologyHint}`)
+      for (const aId of n.actions) if (!actionIds.has(aId)) missing.push(`${where}: actions references unknown action "${aId}"`)
+    }
+    for (const sId of n.state) if (!stateIds.has(sId)) missing.push(`${where}: state references unknown state "${sId}" (declare it in the graph's state[] registry)`)
+    if (n.errorPolicy && !ERROR_POLICIES.includes(n.errorPolicy)) missing.push(`${where}: errorPolicy must be one of ${ERROR_POLICIES.join("|")}`)
+  }
+  // Action-level gates (the canon's teeth): every declared action has ≥1 DEDICATED node (an explicit
+  // membership, trunk "all" nodes don't count — an action with only trunk coverage has no branch);
+  // a router exists whenever any action declares hooks; hookless actions are flagged (unreachable
+  // by voice); a named condition must be non-empty text (normalizer already trims).
+  for (const a of graph.actions) {
+    if (!a.description) missing.push(`action "${a.id}": empty description (what outcome it produces)${ontologyHint}`)
+    if (!a.channel) warnings.push(`action "${a.id}": no channel declared — where is its output delivered?`)
+    const dedicated = graph.nodes.filter(n => Array.isArray(n.actions) && n.actions.includes(a.id))
+    if (!dedicated.length) missing.push(`action "${a.id}": no dedicated node — every action needs ≥1 node whose actions[] names it explicitly (trunk "all" nodes are shared, not a branch)${ontologyHint}`)
+    if (!a.hooks.length) warnings.push(`action "${a.id}": no hooks — unreachable by voice; confirm another trigger drives it`)
+  }
+  if (graph.actions.some(a => a.hooks.length) && !graph.nodes.some(n => n.kind === "router")) {
+    missing.push(`graph: actions declare hooks but no router node exists (kind: "router" — the classifier that turns an event into an action id)${ontologyHint}`)
+  }
+  for (const s of graph.state) {
+    if (!graph.nodes.some(n => n.state.includes(s.id))) warnings.push(`state "${s.id}" is declared but no node references it`)
   }
   for (const s of README_SECTIONS) if (!graph.project[s]) missing.push(`project readme: missing "${s}" section`)
   return { ok: missing.length === 0, missing, ...(warnings.length ? { warnings } : {}) }
@@ -189,21 +284,33 @@ function validateSpec(graph) {
 function orderSheetId(graph) {
   const canon = {
     category: graph.category, slug: graph.slug, project: graph.project,
-    nodes: graph.nodes.map(n => ({ id: n.id, title: n.title, kind: n.kind, description: n.description, task: n.task, tools: n.tools, envKeys: n.envKeys, io: n.io, todo: n.todo, dependsOn: n.dependsOn })),
+    actions: graph.actions, state: graph.state,
+    nodes: graph.nodes.map(n => ({ id: n.id, title: n.title, kind: n.kind, actions: n.actions, condition: n.condition, errorPolicy: n.errorPolicy, state: n.state, description: n.description, task: n.task, tools: n.tools, envKeys: n.envKeys, io: n.io, todo: n.todo, dependsOn: n.dependsOn })),
   }
   return "os-" + createHash("sha256").update(JSON.stringify(canon)).digest("hex").slice(0, 16)
 }
+const nodeActionsLabel = n => (n.actions === "all" ? "all" : n.actions.join(", "))
 // One resolved human line per node — rendered HERE from normalized values, never worded by the model.
 function renderNodeLine(seq, n) {
   const parts = [
     `${seq}. ${n.title} [${n.kind}]`,
     n.task ? `task: ${n.task.length > 80 ? n.task.slice(0, 77) + "…" : n.task}` : "task: (empty)",
   ]
+  parts.push(`actions: ${nodeActionsLabel(n)}`)
+  if (n.condition) parts.push(`condition: ${n.condition}`)
   if (n.tools.length) parts.push(`tools: ${n.tools.join(", ")}`)
   if (n.envKeys.length) parts.push(`keys: ${n.envKeys.join(", ")}`)
   parts.push(`io: ${JSON.stringify(n.io.in)}→${JSON.stringify(n.io.out)}`)
   if (n.dependsOn.length) parts.push(`depends: ${n.dependsOn.join(", ")}`)
   return parts.join(" · ")
+}
+// One resolved human line per ACTION — the order sheet shows the automation's outcomes first.
+function renderActionLine(a) {
+  const parts = [`• ${a.title} [${a.id}] (${a.color})`, a.description]
+  if (a.hooks.length) parts.push(`hooks: ${a.hooks.map(h => `"${h.phrase}"`).join(", ")}`)
+  if (a.condition) parts.push(`condition: ${a.condition}`)
+  if (a.channel) parts.push(`channel: ${a.channel}`)
+  return parts.filter(Boolean).join(" · ")
 }
 
 // ── 5. MATERIALIZE (D1.2) — development-step file lifecycle for project nodes ──
@@ -231,9 +338,14 @@ function renderNodeStep(number, node, ctx, status = "new", completedAt = null) {
   const todoLines = node.todo.length ? node.todo.map(t => `- [ ] ${t}`) : ["- [ ] _No acceptance criteria — spec is incomplete._"]
   const body = [
     `# ${pad(number)} — ${node.title}`, "",
-    `> Project sub-step · node \`${node.id}\` · kind: ${node.kind} · importance: mandatory · order sheet \`${ctx.sheet}\` (${ctx.seq}/${ctx.total})` + (status === "completed" && completedAt ? ` · completed ${completedAt}` : "") + (status === "in-progress" ? " · in progress" : ""), "",
-    `**Before anything else, read \`${ctx.readmeRel}\`** — the project overview (why / how it works / efficiency / reuse / result). Then read this whole spec before writing any code.`, "",
+    `> Project sub-step · node \`${node.id}\` · kind: ${node.kind} · actions: ${nodeActionsLabel(node)} · importance: mandatory · order sheet \`${ctx.sheet}\` (${ctx.seq}/${ctx.total})` + (status === "completed" && completedAt ? ` · completed ${completedAt}` : "") + (status === "in-progress" ? " · in progress" : ""), "",
+    `**Before anything else, read \`${ctx.readmeRel}\`** — the project overview (why / how it works / efficiency / reuse / result). Then read this whole spec before writing any code. The automation-ontology glossary (\`CRUD-DOCS/workspace-standards/automation-ontology.md\`) defines every entity this spec uses.`, "",
     r6Line(node, ctx), "",
+    `## Actions this node serves`,
+    node.actions === "all"
+      ? "_Trunk node — every action of the automation flows through it._"
+      : node.actions.map(a => `- \`${a}\``).join("\n"),
+    ...(node.condition ? ["", "## Condition (declared guard)", `> ${node.condition}`, "", "_Implement this guard in the step body — the schema declares it, the code enforces it (R6)._"] : []), "",
     "## Task", node.task || "_No task._", "",
     "## Tools", ...toolLines, "",
     "## Environment keys", ...keyLines, "",
@@ -245,7 +357,7 @@ function renderNodeStep(number, node, ctx, status = "new", completedAt = null) {
     number, name: node.title, importance: "mandatory", status, completedAt,
     description: node.description,
     tasks: node.todo.map(t => ({ body: t })),
-    plan: { sheet: ctx.sheet, seq: ctx.seq, total: ctx.total, kind: "project-node", category: ctx.category, slug: ctx.slug, readmeRel: ctx.readmeRel, node: { id: node.id, title: node.title, kind: node.kind, task: node.task, description: node.description, tools: node.tools, envKeys: node.envKeys, io: node.io, dependsOn: node.dependsOn, todo: node.todo } },
+    plan: { sheet: ctx.sheet, seq: ctx.seq, total: ctx.total, kind: "project-node", category: ctx.category, slug: ctx.slug, readmeRel: ctx.readmeRel, node: { id: node.id, title: node.title, kind: node.kind, actions: node.actions, condition: node.condition, errorPolicy: node.errorPolicy, state: node.state, task: node.task, description: node.description, tools: node.tools, envKeys: node.envKeys, io: node.io, dependsOn: node.dependsOn, todo: node.todo } },
   }
   return `${body}\n<!-- fractera:step\n${JSON.stringify(machine)}\n-->\n`
 }
@@ -302,6 +414,9 @@ function renderCoderHandoff(number, node, ctx, status = "new", completedAt = nul
     r6Line(node, ctx), "",
     "## Node at a glance",
     `- **Kind:** ${node.kind}`,
+    `- **Actions served:** ${nodeActionsLabel(node)} (the ontology's Action entity — see \`CRUD-DOCS/workspace-standards/automation-ontology.md\`)`,
+    ...(node.condition ? [`- **Condition (declared guard):** ${node.condition} — implement it in the step body`] : []),
+    ...(node.errorPolicy ? [`- **Error policy:** ${node.errorPolicy}`] : []),
     `- **Tools / integrations:** ${toolLine}`,
     `- **Environment keys:** ${keyLine}`,
     `- **Depends on:** ${depLine}`,
@@ -320,7 +435,7 @@ function renderCoderHandoff(number, node, ctx, status = "new", completedAt = nul
     description: `Delegate node ${node.id} to a coding agent (read readme + spec step ${pad(ctx.specStep)}).`,
     tasks: node.todo.map(t => ({ body: t })),
     plan: { sheet: ctx.sheet, seq: ctx.seq, total: ctx.total, kind: "coder-handoff", category: ctx.category, slug: ctx.slug, readmeRel: ctx.readmeRel, nodeId: node.id, specStep: ctx.specStep, specSeq: ctx.specSeq,
-      node: { id: node.id, title: node.title, kind: node.kind, tools: node.tools, envKeys: node.envKeys, io: node.io, dependsOn: node.dependsOn, todo: node.todo } },
+      node: { id: node.id, title: node.title, kind: node.kind, actions: node.actions, condition: node.condition, errorPolicy: node.errorPolicy, tools: node.tools, envKeys: node.envKeys, io: node.io, dependsOn: node.dependsOn, todo: node.todo } },
   }
   return `${body}\n<!-- fractera:step\n${JSON.stringify(machine)}\n-->\n`
 }
@@ -343,22 +458,44 @@ function renderProjectReadme(graph, ordered, ctx) {
   const p = graph.project
   const title = p.title || humanize(graph.slug) || "Project"
   const rows = ordered.map((n, i) => {
+    const acts = n.actions === "all" ? "all" : n.actions.map(a => `\`${a}\``).join(", ")
     const tools = n.tools.length ? clip(n.tools.join(", "), 40) : "—"
     const keys = n.envKeys.length ? n.envKeys.map(k => `\`${k}\``).join(", ") : "—"
     const deps = n.dependsOn.length ? n.dependsOn.map(d => `\`${d}\``).join(", ") : "—"
-    return `| ${i + 1} | \`${n.id}\` | ${n.kind} | ${clip(n.task, 70)} | ${tools} | ${keys} | ${deps} |`
+    return `| ${i + 1} | \`${n.id}\` | ${n.kind} | ${acts} | ${clip(n.task, 70)} | ${tools} | ${keys} | ${deps} |`
   })
+  // The Actions section (ontology entity 5) — outcomes first: what the automation DOES, each with
+  // its hooks, condition, channel and the chain of dedicated steps (its branch).
+  const actionRows = graph.actions.map(a => {
+    const hooks = a.hooks.length ? a.hooks.map(h => `"${mdCell(h.phrase)}"`).join(", ") : "—"
+    const chain = ordered.filter(n => Array.isArray(n.actions) && n.actions.includes(a.id)).map(n => `\`${n.id}\``).join(" → ") || "—"
+    return `| \`${a.id}\` | ${mdCell(a.title)} | ${a.color} | ${hooks} | ${a.condition ? mdCell(a.condition) : "—"} | ${a.channel ? mdCell(a.channel) : "—"} | ${chain} |`
+  })
+  const stateRows = graph.state.map(s => `| \`${s.id}\` | ${mdCell(s.storage)} | ${mdCell(s.purpose)} |`)
   const body = [
     `# ${title}`, "",
-    `> Project overview · category \`${graph.category}\` · slug \`${graph.slug}\` · ${ordered.length} node(s) · order sheet \`${ctx.sheet}\``, "",
-    "**Read this first at the start of EVERY sub-step** — it is generated from the decomposition graph and is the single source of truth for what this project is and how its nodes fit together.", "",
+    `> Project overview · category \`${graph.category}\` · slug \`${graph.slug}\` · ${graph.actions.length} action(s) · ${ordered.length} node(s) · order sheet \`${ctx.sheet}\``, "",
+    "**Read this first at the start of EVERY sub-step** — it is generated from the decomposition graph and is the single source of truth for what this project is and how its nodes fit together. Entity definitions: `CRUD-DOCS/workspace-standards/automation-ontology.md` (the automation-ontology glossary).", "",
     "## Why", p.purpose, "",
+    ...(graph.actions.length ? [
+      "## Actions (what this automation does)",
+      "An Action is a named outcome — a branch of steps triggered by its hook phrases (or another trigger). Configuring the automation = configuring these actions:", "",
+      "| action | title | color | hooks | condition | channel | step chain |",
+      "|---|---|---|---|---|---|---|",
+      ...actionRows, "",
+    ] : []),
     "## How it works",
-    "The project is decomposed into nodes; each node is a sub-step a coding agent builds later. Nodes run in the topological order below (a node runs after everything it depends on):", "",
-    `**Execution schema (contract R6):** the process diagram (\`${projectFlowRel(graph.category, graph.slug)}\`) and the durable workflow (\`${projectWorkflowRel(graph.category, graph.slug)}\`) are GENERATED from this graph and are the project's ONLY execution schema — what is not on the diagram does not exist in the project. A coder implements only step bodies (under the \`// node:<id>\` markers); a new action = extend the graph and re-run the engine, never a shadow step outside the schema.`, "",
-    "| # | node | kind | task | tools | keys | depends on |",
-    "|---|---|---|---|---|---|---|",
+    "The project is decomposed into nodes; each node is a sub-step a coding agent builds later. Nodes run in the topological order below (a node runs after everything it depends on); the `actions` column says which action branches flow through each node (`all` = trunk):", "",
+    `**Execution schema (contract R6):** the process diagram (\`${projectFlowRel(graph.category, graph.slug)}\`), the actions registry (\`${projectActionsRel(graph.category, graph.slug)}\`) and the durable workflow (\`${projectWorkflowRel(graph.category, graph.slug)}\`) are GENERATED from this graph and are the project's ONLY execution schema — what is not on the diagram does not exist in the project. A coder implements only step bodies (under the \`// node:<id>\` markers); a new Action = extend the graph and re-run the engine, never a shadow step outside the schema.`, "",
+    "| # | node | kind | actions | task | tools | keys | depends on |",
+    "|---|---|---|---|---|---|---|---|",
     ...rows, "",
+    ...(graph.state.length ? [
+      "## State (persistent between runs)",
+      "| state | storage | purpose |",
+      "|---|---|---|",
+      ...stateRows, "",
+    ] : []),
     "## Efficiency", p.efficiency, "",
     "## Reuse", p.reuse, "",
     "## Result", p.result, "",
@@ -366,7 +503,9 @@ function renderProjectReadme(graph, ordered, ctx) {
   const machine = {
     kind: "project", sheet: ctx.sheet, category: graph.category, slug: graph.slug, title,
     project: p,
-    nodes: ordered.map(n => ({ id: n.id, title: n.title, kind: n.kind, description: n.description, task: n.task, tools: n.tools, envKeys: n.envKeys, io: n.io, dependsOn: n.dependsOn, todo: n.todo })),
+    actions: graph.actions,
+    state: graph.state,
+    nodes: ordered.map(n => ({ id: n.id, title: n.title, kind: n.kind, actions: n.actions, condition: n.condition, errorPolicy: n.errorPolicy, state: n.state, description: n.description, task: n.task, tools: n.tools, envKeys: n.envKeys, io: n.io, dependsOn: n.dependsOn, todo: n.todo })),
     order: ordered.map(n => n.id),
   }
   return `${body}\n<!-- fractera:project\n${JSON.stringify(machine)}\n-->\n`
@@ -396,6 +535,7 @@ async function writeProjectReadme(outRoot, graph, ordered, ctx) {
 // Trigger nodes are not steps — they ARE the run route / cron queue that fires the workflow.
 const flat = s => String(s ?? "").replace(/\s*\n+\s*/g, " ").trim()
 const projectFlowRel = (category, slug) => `app/(projects)/projects/${category}/${slug}/_data/flow.ts`
+const projectActionsRel = (category, slug) => `app/(projects)/projects/${category}/${slug}/_data/actions.ts`
 const projectWorkflowRel = (category, slug) => `app/api/projects/${category}/${slug}/_workflow/definition.ts`
 const STARTER_WORKFLOW_MARKER = "fractera:starter-workflow"
 
@@ -429,22 +569,26 @@ function renderProjectFlow(ordered, ctx) {
   const triggers = new Set(ordered.filter(n => n.kind === "trigger").map(n => n.id))
   const nodes = ordered.map(n => ({
     id: n.id, type: "process", position: pos.get(n.id),
-    data: { label: n.title, info: { summary: n.description, processes: n.todo, kind: n.kind, task: n.task, tools: n.tools, envKeys: n.envKeys, io: { in: n.io.in, out: n.io.out } } },
+    data: { label: n.title, info: { summary: n.description, processes: n.todo, kind: n.kind, actions: n.actions === "all" ? "all" : n.actions, condition: n.condition, task: n.task, tools: n.tools, envKeys: n.envKeys, io: { in: n.io.in, out: n.io.out } } },
   }))
   const edges = []
   for (const n of ordered) for (const dep of n.dependsOn) edges.push({ id: `e-${dep}-${n.id}`, source: dep, target: n.id, ...(triggers.has(dep) ? { animated: true } : {}) })
   return [
     `import type { Edge, Node } from "@xyflow/react";`, "",
     `// fractera:flow ${ctx.sheet} — GENERATED by orchestrate-project-by-steps from the`,
-    "// decomposition graph (step 184, contract R6). This diagram is the project's",
-    "// EXECUTION SCHEMA: what is not on it does not exist in the project. The file is",
-    "// DERIVED — a re-run rewrites it deterministically, so NEVER hand-edit it: to",
-    "// change the diagram, extend the graph and re-run the engine. Each node's `info`",
-    "// is the payload of the on-canvas info panel (R8).",
+    "// decomposition graph (step 184, contract R6; ontology step 188-R). This diagram is",
+    "// the project's EXECUTION SCHEMA: what is not on it does not exist in the project.",
+    "// The file is DERIVED — a re-run rewrites it deterministically, so NEVER hand-edit",
+    "// it: to change the diagram, extend the graph and re-run the engine. Each node's",
+    "// `info` is the payload of the on-canvas info panel (R8); `info.actions` names the",
+    "// Action branches flowing through the node (\"all\" = trunk) and drives the node's",
+    "// color via the actions registry (_data/actions.ts).",
     "export type FlowNodeInfo = {",
     "  summary: string;",
     "  processes: string[];",
-    `  kind: "trigger" | "action" | "transform";`,
+    `  kind: "trigger" | "router" | "step" | "transform" | "action";`,
+    `  actions?: string[] | "all";`,
+    "  condition?: string | null;",
     "  task?: string;",
     "  tools: string[];",
     "  envKeys: string[];",
@@ -464,6 +608,50 @@ async function writeProjectFlow(outRoot, ordered, ctx) {
   const abs = join(outRoot, rel)
   await mkdir(dirname(abs), { recursive: true })
   await writeFile(abs, renderProjectFlow(ordered, ctx), "utf8")
+  return { rel, abs }
+}
+
+// The ACTIONS REGISTRY as data (ontology entity 5) — the single client-side source for action
+// titles/colors/hooks/conditions/channels. DERIVED like flow.ts (always rewritten). The hooks
+// panel derives its suggestions from PROJECT_ACTIONS[].hooks; the records table and the diagram
+// read titles/colors from here — no surface hardcodes an action ever again.
+function renderProjectActions(graph, ctx) {
+  const entries = graph.actions.map(a => ({
+    id: a.id, title: a.title, description: a.description, color: a.color,
+    hooks: a.hooks, condition: a.condition, channel: a.channel,
+  }))
+  return [
+    `// fractera:actions ${ctx.sheet} — GENERATED by orchestrate-project-by-steps from the`,
+    "// decomposition graph (automation ontology, step 188-R). An Action is a named outcome",
+    "// of this automation — a branch of steps triggered by its hook phrases. This registry",
+    "// is DERIVED (a re-run rewrites it): to add or change an action, extend the graph and",
+    "// re-run the engine. Canon: CRUD-DOCS/workspace-standards/automation-ontology.md.",
+    "export type ProjectActionHook = { phrase: string; lang: string };",
+    "export type ProjectAction = {",
+    "  id: string;",
+    "  title: string;",
+    "  description: string;",
+    "  color: string; // palette token — the UI maps it to theme-aware classes",
+    "  hooks: ProjectActionHook[];",
+    "  condition: string | null; // declared guard — implemented in the workflow step (R6)",
+    "  channel: string; // where this action's output is delivered",
+    "};", "",
+    `export const PROJECT_ACTIONS: ProjectAction[] = ${JSON.stringify(entries, null, 2)};`, "",
+    "// Lookup helper — unknown ids resolve to a neutral placeholder (never undefined).",
+    "export function projectAction(id: string): ProjectAction {",
+    "  return (",
+    "    PROJECT_ACTIONS.find((a) => a.id === id) ?? {",
+    `      id, title: id, description: "", color: "neutral", hooks: [], condition: null, channel: "",`,
+    "    }",
+    "  );",
+    "}",
+  ].join("\n")
+}
+async function writeProjectActions(outRoot, graph, ctx) {
+  const rel = projectActionsRel(ctx.category, ctx.slug)
+  const abs = join(outRoot, rel)
+  await mkdir(dirname(abs), { recursive: true })
+  await writeFile(abs, renderProjectActions(graph, ctx), "utf8")
   return { rel, abs }
 }
 
@@ -488,10 +676,11 @@ function renderWorkflowDefinition(ordered, ctx) {
   const names = new Map(workNodes.map(n => [n.id, stepFnName(n.id, used)]))
   const calls = workNodes.map(n => `    artifacts[${JSON.stringify(n.id)}] = await ${names.get(n.id)}(artifacts);`)
   const stepFns = workNodes.map(n => [
-    `// node:${n.id} — ${flat(n.title)} [${n.kind}]`,
+    `// node:${n.id} — ${flat(n.title)} [${n.kind}] · actions: ${nodeActionsLabel(n)}`,
     `async function ${names.get(n.id)}(artifacts: Record<string, unknown>): Promise<unknown> {`,
     `  "use step";`, "",
     `  // TODO (diagram node "${n.id}"): ${flat(n.task)}`,
+    ...(n.condition ? [`  // Condition (declared guard — implement it here): ${flat(n.condition)}`] : []),
     `  // In: ${JSON.stringify(n.io.in)} → Out: ${JSON.stringify(n.io.out)}`,
     ...n.todo.map(t => `  // - [ ] ${flat(t)}`),
     "  void artifacts;",
@@ -642,6 +831,8 @@ async function main() {
     slug: graph.slug,
     readme_plan: { ...graph.project },
     readme_path: readmeRel,
+    ...(graph.actions.length ? { actions: graph.actions.map(a => ({ id: a.id, text: renderActionLine(a) })) } : {}),
+    ...(graph.state.length ? { state: graph.state.map(s => ({ id: s.id, text: `• state ${s.id} · ${s.storage} · ${s.purpose}` })) } : {}),
     nodes: dag.order.map((id, i) => ({ n: i + 1, id, text: renderNodeLine(i + 1, byId.get(id)) })),
     ...(dag.order.length > 10 ? { mvp_recommendation: mvpRecommendation(ownerLang, dag.order.length) } : {}),
     announce_text: announceText(ownerLang),
@@ -656,11 +847,11 @@ async function main() {
   const slotSeen = await exists(outRoot)
   if (a["dry-run"]) {
     console.log(JSON.stringify({ ok: true, dryRun: true, mode: "project-plan", category: graph.category, slug: graph.slug,
-      nodes: graph.nodes.length, ...(graph.duplicates ? { deduped: graph.duplicates } : {}), ...(spec.warnings ? { warnings: spec.warnings } : {}),
+      actions: graph.actions.length, nodes: graph.nodes.length, ...(graph.duplicates ? { deduped: graph.duplicates } : {}), ...(spec.warnings ? { warnings: spec.warnings } : {}),
       order_sheet: sheet, plan: ordered, out_exists: slotSeen, readme_path: readmeRel,
-      flow_path: projectFlowRel(graph.category, graph.slug), workflow_path: projectWorkflowRel(graph.category, graph.slug),
+      flow_path: projectFlowRel(graph.category, graph.slug), actions_path: projectActionsRel(graph.category, graph.slug), workflow_path: projectWorkflowRel(graph.category, graph.slug),
       ...(prior.size ? { resume_available: prior.size, resume_note: "step files for this order sheet already exist — a real run RESUMES (existing sub-steps kept, only missing ones written)" } : {}),
-      note: `MATERIALIZE (real run): the project-root README (${readmeRel}) generated from the graph + the execution schema (R6: diagram ${projectFlowRel(graph.category, graph.slug)} always rewritten; workflow ${projectWorkflowRel(graph.category, graph.slug)} only when absent/starter) + one NEW-STEPS spec file per node + one coder-handoff step per coder-built node (materialize-first) before any development.` }))
+      note: `MATERIALIZE (real run): the project-root README (${readmeRel}) generated from the graph + the execution schema (R6: diagram ${projectFlowRel(graph.category, graph.slug)} + actions registry ${projectActionsRel(graph.category, graph.slug)} always rewritten; workflow ${projectWorkflowRel(graph.category, graph.slug)} only when absent/starter) + one NEW-STEPS spec file per node + one coder-handoff step per coder-built node (materialize-first) before any development.` }))
     return
   }
 
@@ -684,6 +875,7 @@ async function main() {
   // derived like the README (always rewritten); the workflow skeleton never overwrites a coder's code.
   const emitCtx = { sheet: sheetId, category: graph.category, slug: graph.slug }
   const flowFile = await writeProjectFlow(outRoot, orderedNodes, emitCtx)
+  const actionsFile = graph.actions.length ? await writeProjectActions(outRoot, graph, emitCtx) : null
   const workflow = await emitWorkflowDefinition(outRoot, orderedNodes, emitCtx)
   const materialized = [], skipped = []
   let n = await nextStepNumber(outRoot)
@@ -715,12 +907,12 @@ async function main() {
   const specCount = materialized.filter(m => m.kind === "project-node").length
   const handCount = materialized.filter(m => m.kind === "coder-handoff").length
   console.log(JSON.stringify({ ok: true, mode: "project-plan", ...(prior.size ? { resumed: true } : {}), category: graph.category, slug: graph.slug,
-    order_sheet_id: sheetId, nodes: graph.nodes.length, readme_path: readmeRel, readme: readmeFile.rel,
-    flow: flowFile.rel,
+    order_sheet_id: sheetId, actions: graph.actions.length, nodes: graph.nodes.length, readme_path: readmeRel, readme: readmeFile.rel,
+    flow: flowFile.rel, ...(actionsFile ? { actions_registry: actionsFile.rel } : {}),
     workflow: { rel: workflow.rel, action: workflow.action, ...(workflow.iso ? { iso: workflow.iso } : {}) },
     ...(workflow.iso && !workflow.iso.ok ? { warnings: [...(spec.warnings ?? []), `workflow ${workflow.rel} is NOT isomorphic to the diagram (missing markers: ${workflow.iso.missing.join(", ") || "none"}; extra markers: ${workflow.iso.extra.join(", ") || "none"}) — a coder must reconcile it with the graph (R6)`] } : (spec.warnings ? { warnings: spec.warnings } : {})),
     materialized, ...(skipped.length ? { skipped } : {}),
-    note: `Wrote the project-root README (${readmeFile.rel}) from the graph + the execution schema (R6): diagram ${flowFile.rel} (derived, always rewritten) + workflow ${workflow.rel} (${workflow.action}) + materialized ${specCount} node spec file(s) + ${handCount} coder-handoff step(s) in ${STEP_ROOT}/${NEW_DIR}${skipped.length ? `, skipped ${skipped.length} already on disk` : ""}. Each step file's first instruction is to read that README. A coder develops & closes each node later (D3).` }))
+    note: `Wrote the project-root README (${readmeFile.rel}) from the graph + the execution schema (R6): diagram ${flowFile.rel}${actionsFile ? ` + actions registry ${actionsFile.rel}` : ""} (derived, always rewritten) + workflow ${workflow.rel} (${workflow.action}) + materialized ${specCount} node spec file(s) + ${handCount} coder-handoff step(s) in ${STEP_ROOT}/${NEW_DIR}${skipped.length ? `, skipped ${skipped.length} already on disk` : ""}. Each step file's first instruction is to read that README. A coder develops & closes each node later (D3).` }))
 }
 
 main().catch(e => { console.error("orchestrate-project-by-steps:", e.message); process.exit(1) })
