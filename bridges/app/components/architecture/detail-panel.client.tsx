@@ -2,8 +2,17 @@
 
 import { ArrowUpRight } from "lucide-react"
 import type { ArchNode } from "@/lib/architecture/types"
+import { useRuntimeUrls } from "@/lib/runtime-urls"
 import { SkillContentViewer } from "./skill-content-viewer.client"
 import { CodeEditor } from "./code-editor.client"
+
+// A page node's href is an app-relative path (e.g. /project/telegram-notes). This
+// panel renders on the ADMIN host (:3002 / admin.<apex>), so a bare relative link
+// resolves against Admin — the wrong subdomain. Prefix absolute-path links with the
+// APP base (appUrl: IP→:3000, domain→apex) so "Open page" lands on the real app.
+function toAppHref(href: string, appUrl: string): string {
+  return href.startsWith("/") ? `${appUrl}${href}` : href
+}
 
 // Monaco language from a filename — so a clicked file node renders its real source
 // in the same terminal-style (vs-dark) viewer the route "Source" accordion uses.
@@ -33,6 +42,7 @@ const KIND_LABEL: Record<string, string> = {
 // (roles / rendering / method) and an Open link — the accompanying "file" for
 // each node that lets a human (or an agent reading this) grasp it at a glance.
 export function DetailPanel({ node }: { node: ArchNode | null }) {
+  const { appUrl } = useRuntimeUrls()
   if (!node) {
     return (
       <div className="flex h-full items-center justify-center p-10 text-center">
@@ -94,7 +104,9 @@ export function DetailPanel({ node }: { node: ArchNode | null }) {
 
       {node.href && (
         <a
-          href={node.href}
+          href={toAppHref(node.href, appUrl)}
+          target="_blank"
+          rel="noopener noreferrer"
           className="inline-flex w-fit items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
         >
           Open page <ArrowUpRight size={12} />

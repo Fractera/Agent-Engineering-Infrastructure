@@ -4,6 +4,7 @@ import { useState } from "react"
 import { ArrowUpRight, ChevronRight } from "lucide-react"
 import type { RouteMeta } from "@/lib/architecture/route-meta"
 import { buildMetaSections } from "@/lib/architecture/route-meta-rows"
+import { useRuntimeUrls } from "@/lib/runtime-urls"
 import { RouteTodo } from "./route-todo.client"
 import { RouteDangerZone } from "./route-danger-zone.client"
 import { RouteSource } from "./route-source.client"
@@ -21,6 +22,10 @@ function statusClass(s: string): string {
 
 export function RouteDetailPanel({ meta, name, onChanged, locked = false }: { meta: RouteMeta; name?: string; onChanged?: () => void; locked?: boolean }) {
   const sections = buildMetaSections(meta)
+  const { appUrl } = useRuntimeUrls()
+  // meta.path is an app-relative path; this panel renders on the Admin host, so a
+  // bare relative link goes to the wrong subdomain. Prefix with the app base.
+  const openHref = meta.path.startsWith("/") ? `${appUrl}${meta.path}` : meta.path
   const [open, setOpen] = useState<Set<string>>(new Set())
   // Bumped on any change (Source/Danger zone) so the to-do list reloads in place
   // — and the tree badge refreshes via onChanged — without a page reload.
@@ -52,7 +57,7 @@ export function RouteDetailPanel({ meta, name, onChanged, locked = false }: { me
         </div>
         {meta.kind === "page" && (
           <a
-            href={meta.path}
+            href={openHref}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex shrink-0 items-center gap-1 rounded-md border border-foreground/40 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
