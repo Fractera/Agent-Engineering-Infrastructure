@@ -77,6 +77,7 @@ export function DeclarePanel({
   const [dashboard, setDashboard] = useState(false)
   // Project runtime (projects only).
   const [cron, setCron] = useState(false)
+  const [hooks, setHooks] = useState(false)
   const [useIntegrations, setUseIntegrations] = useState(false)
   const [integrations, setIntegrations] = useState<Integration[]>([])
   const [intName, setIntName] = useState("")
@@ -123,7 +124,7 @@ export function DeclarePanel({
         body: JSON.stringify({
           title: title.trim(), todo: items, base, dynamic, queryParams: useQuery ? query : [], example,
           menus, visibility, roles: visibility === "rolesOnly" ? roles : [], admin, dashboard,
-          ...(isProjectDecl ? { cron, integrations: useIntegrations ? integrations : [] } : {}),
+          ...(isProjectDecl ? { cron, hooks, integrations: useIntegrations ? integrations : [] } : {}),
         }),
       })
       if (!res.ok) { setError("Could not save — try again"); return }
@@ -131,7 +132,7 @@ export function DeclarePanel({
       if (requested) onCreated(requested)
       setTitle(""); setItems([]); setDraft(""); setQuery([]); setDynamic(false); setUseQuery(false); setExample("")
       setMenus([]); setVisibility(isProjectDecl ? "rolesOnly" : "public"); setRoles(isProjectDecl ? ["architect", "manager"] : [])
-      setAdmin(false); setDashboard(false); setCron(false); setUseIntegrations(false); setIntegrations([]); setIntName(""); setIntKeys("")
+      setAdmin(false); setDashboard(false); setCron(false); setHooks(false); setUseIntegrations(false); setIntegrations([]); setIntName(""); setIntKeys("")
     } finally {
       setSaving(false)
     }
@@ -254,6 +255,10 @@ export function DeclarePanel({
           <div className="flex items-center justify-between">
             <label className="text-[11px] font-semibold uppercase tracking-wider text-foreground">Cron processes</label>
             <BoolToggle off="No" on="Yes" value={cron} onChange={setCron} />
+          </div>
+          <div className="flex items-center justify-between">
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-foreground">Automation hooks</label>
+            <BoolToggle off="No" on="Yes" value={hooks} onChange={setHooks} />
           </div>
           <div className="flex items-center justify-between">
             <label className="text-[11px] font-semibold uppercase tracking-wider text-foreground">External integrations</label>

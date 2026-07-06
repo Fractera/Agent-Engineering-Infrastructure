@@ -6,9 +6,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getAppConfig } from "@/config/app-config";
+import { DEFAULT_LANGUAGE } from "@/config/translations/translations.config";
 import { PROJECT_DESCRIPTION } from "../_data/description";
-import { getCronJobs, getProcessQueue, getResults } from "../_lib/project-data";
+import { DEFAULT_HOOKS } from "../_data/hooks";
+import { projectTabStrings } from "../_data/tab-i18n";
+import { getCronJobs, getHooks, getProcessQueue, getResults } from "../_lib/project-data";
 import { CronJobsTable } from "./cron-jobs-table.server";
+import { HooksPanel } from "./hooks-panel.client";
 import { MissingKeysModal } from "./missing-keys-modal.client";
 import { ProcessFlow } from "./process-flow.client";
 import { ProjectFooter } from "./project-footer.client";
@@ -21,17 +25,25 @@ import { RunPanel } from "./run-panel.client";
 // runs dashboard with results, and the scheduled cron queue. Reshape the
 // diagram in _data/flow.ts; the tables fill from _lib/project-data.ts.
 export default async function {{PROJECT_PASCAL}}ProjectEntry() {
-  const [runs, results, cronJobs] = await Promise.all([
+  const [runs, results, cronJobs, hooks] = await Promise.all([
     getProcessQueue(),
     getResults(),
     getCronJobs(),
+    getHooks(),
   ]);
+  // The Hooks layer (187.4) shows only for automations that use spoken triggers —
+  // either the project seeded default phrases or hooks are already registered.
+  const showHooks = DEFAULT_HOOKS.length > 0 || hooks.length > 0;
   const d = PROJECT_DESCRIPTION;
+  // Monolingual zone (§3.12): all reusable tab strings render in the slot's default
+  // language, English fallback for unlisted languages (187.5). The canvas + settings
+  // stay English by design.
+  const t = projectTabStrings(DEFAULT_LANGUAGE);
   return (
     <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
       {/* Native missing-keys modal (186.3): prompts for any declared integration
           key absent from the runtime env; renders nothing when none are required. */}
-      <MissingKeysModal />
+      <MissingKeysModal lang={DEFAULT_LANGUAGE} />
       <div>
         <Link
           href="/projects/{{CATEGORY}}"
@@ -43,7 +55,7 @@ export default async function {{PROJECT_PASCAL}}ProjectEntry() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>About this project</CardTitle>
+          <CardTitle>{t.about}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm leading-relaxed">
           <p>
@@ -61,28 +73,34 @@ export default async function {{PROJECT_PASCAL}}ProjectEntry() {
         </CardContent>
       </Card>
       <section className="space-y-3">
-        <h2 className="text-xl font-medium">Process diagram</h2>
+        <h2 className="text-xl font-medium">{t.diagram}</h2>
         <ProcessFlow />
       </section>
       <section className="space-y-3">
-        <h2 className="text-xl font-medium">Run the automation</h2>
+        <h2 className="text-xl font-medium">{t.run}</h2>
         <RunPanel />
       </section>
+      {showHooks && (
+        <section className="space-y-3">
+          <h2 className="text-xl font-medium">{t.hooks}</h2>
+          <HooksPanel initialHooks={hooks} />
+        </section>
+      )}
       <section className="space-y-3">
-        <h2 className="text-xl font-medium">Current processes</h2>
+        <h2 className="text-xl font-medium">{t.processes}</h2>
         <ProcessQueueTable runs={runs} />
       </section>
       <section className="space-y-3">
-        <h2 className="text-xl font-medium">Results</h2>
+        <h2 className="text-xl font-medium">{t.results}</h2>
         <ResultsTable results={results} />
       </section>
       <section className="space-y-3">
-        <h2 className="text-xl font-medium">Scheduled runs</h2>
+        <h2 className="text-xl font-medium">{t.scheduled}</h2>
         <CronJobsTable jobs={cronJobs} />
       </section>
       {/* Per-project footer (186.2): brand + deep-links to continue development
           (/service/architecture focused on this project) and to the env editor. */}
-      <ProjectFooter shortName={getAppConfig().short_name} />
+      <ProjectFooter shortName={getAppConfig().short_name} lang={DEFAULT_LANGUAGE} />
     </main>
   );
 }

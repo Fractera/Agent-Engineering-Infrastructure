@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
   const admin: boolean | undefined = typeof body.admin === "boolean" ? body.admin : undefined
   const dashboard: boolean | undefined = typeof body.dashboard === "boolean" ? body.dashboard : undefined
   const cron: boolean | undefined = typeof body.cron === "boolean" ? body.cron : undefined
+  const hooks: boolean | undefined = typeof body.hooks === "boolean" ? body.hooks : undefined
   const integrations: Integration[] | undefined = Array.isArray(body.integrations)
     ? body.integrations
         .map((it: { name?: unknown; envKeys?: unknown }) => ({
@@ -110,7 +111,7 @@ export async function POST(req: NextRequest) {
 
   await writeRouteMeta({
     path: href, title: String(title).trim(), kind: routeKind, base: basePath, dynamic: isDynamic, query, tasks,
-    menus, visibility, roles, admin, dashboard, cron, integrations,
+    menus, visibility, roles, admin, dashboard, cron, integrations, hooks,
   })
 
   return NextResponse.json(
@@ -119,7 +120,7 @@ export async function POST(req: NextRequest) {
         id: encodePath(href),
         slug, kind: routeKind, base: basePath, dynamic: isDynamic, query,
         title: String(title).trim(), todo: items, status: "requested", created_at: new Date().toISOString(), created_by: createdBy,
-        menus, visibility, roles, admin, dashboard, cron, integrations,
+        menus, visibility, roles, admin, dashboard, cron, integrations, hooks,
       },
     },
     { status: 201 },

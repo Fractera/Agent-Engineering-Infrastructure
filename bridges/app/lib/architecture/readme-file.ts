@@ -38,6 +38,8 @@ export type RouteMeta = {
   // Project runtime (declarations under /projects/** only).
   cron?: boolean
   integrations?: Integration[]
+  // Automation hooks (step 187) — does this project answer to spoken trigger phrases?
+  hooks?: boolean
 }
 
 const META_OPEN = "<!-- fractera:meta"
@@ -118,9 +120,10 @@ function renderBody(m: RouteMeta): string {
     lines.push("")
   }
   // Project runtime — only for declarations under /projects/**.
-  if (m.cron !== undefined || m.integrations !== undefined) {
+  if (m.cron !== undefined || m.integrations !== undefined || m.hooks !== undefined) {
     lines.push("## Project runtime")
     lines.push(`- **Cron processes:** ${m.cron ? "yes" : "no"}`)
+    lines.push(`- **Automation hooks (spoken triggers):** ${m.hooks ? "yes" : "no"}`)
     const ints = m.integrations ?? []
     if (ints.length) {
       lines.push("- **External integrations:**")
@@ -155,7 +158,7 @@ function render(m: RouteMeta): string {
     title: m.title, kind: m.kind, base: m.base, dynamic: m.dynamic, query: m.query,
     description: m.description ?? null, tasks: m.tasks,
     menus: m.menus, visibility: m.visibility, roles: m.roles, admin: m.admin, dashboard: m.dashboard,
-    cron: m.cron, integrations: m.integrations,
+    cron: m.cron, integrations: m.integrations, hooks: m.hooks,
   }
   return `${renderBody(m)}\n${META_OPEN}\n${JSON.stringify(machine)}\n${META_CLOSE}\n`
 }
@@ -185,6 +188,7 @@ export async function readRouteMeta(path: string): Promise<RouteMeta | null> {
         admin: typeof d.admin === "boolean" ? d.admin : undefined,
         dashboard: typeof d.dashboard === "boolean" ? d.dashboard : undefined,
         cron: typeof d.cron === "boolean" ? d.cron : undefined,
+        hooks: typeof d.hooks === "boolean" ? d.hooks : undefined,
         integrations: Array.isArray(d.integrations)
           ? d.integrations
               .map((it: { name?: unknown; envKeys?: unknown }) => ({

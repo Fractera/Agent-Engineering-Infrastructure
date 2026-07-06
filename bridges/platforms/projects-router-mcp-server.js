@@ -195,6 +195,7 @@ function toolsSchema() {
         type: 'object',
         properties: {
           cron: { type: 'string', enum: ['yes', 'no', 'unknown'], description: 'Will the project run scheduled (cron) processes?' },
+          hooks: { type: 'string', enum: ['yes', 'no', 'unknown'], description: 'Will the project answer to spoken trigger phrases (hooks, step 187) said in Telegram/chat?' },
           cron_intents: {
             type: 'array',
             description: 'What should run and when (free-form is fine, e.g. "publish digest every morning at 9").',
@@ -387,15 +388,16 @@ export class ProjectsRouterMcpServer {
   }
 
   _survey(args) {
-    const hasAnswers = args.cron != null || Array.isArray(args.cron_intents) || Array.isArray(args.integrations) || args.owner_does_not_know
+    const hasAnswers = args.cron != null || args.hooks != null || Array.isArray(args.cron_intents) || Array.isArray(args.integrations) || args.owner_does_not_know
     if (!hasAnswers)
       return textResult({ phase: 'questions',
         questions: [
           { key: 'cron', ru: 'Проект будет поддерживать cron-процессы (задачи по расписанию)?', en: 'Will the project run cron processes (scheduled jobs)?' },
+          { key: 'hooks', ru: 'Проектом будут управлять произнесённые фразы-триггеры (хуки) в Telegram/чате?', en: 'Will the project be driven by spoken trigger phrases (hooks) in Telegram/chat?' },
           { key: 'integrations', ru: 'Какие внешние интеграции нужны проекту (сервисы/API)?', en: 'Which external integrations (services/APIs) does the project need?' },
         ],
-        how_to_ask: 'Ask both questions in the dialogue language. Present integrations as a todo-list: one entry per automation/service, each with the API env keys it needs. "I don\'t know" is a valid answer — re-call with owner_does_not_know:true.',
-        next: 'Re-call with the answers: { cron, cron_intents, integrations } or { owner_does_not_know:true }.' })
+        how_to_ask: 'Ask the questions in the dialogue language. Present integrations as a todo-list: one entry per automation/service, each with the API env keys it needs. "I don\'t know" is a valid answer — re-call with owner_does_not_know:true.',
+        next: 'Re-call with the answers: { cron, hooks, cron_intents, integrations } or { owner_does_not_know:true }.' })
 
     if (args.owner_does_not_know)
       return textResult({ ok: true, defer_to_planning: true,
@@ -414,12 +416,16 @@ export class ProjectsRouterMcpServer {
       })
       .filter(it => it.name)
 
+    const hooksEnabled = args.hooks === 'yes'
+
     return textResult({ ok: true,
       cron: { enabled: cronEnabled || intents.length > 0, intents },
+      hooks: { enabled: hooksEnabled },
       integrations, defer_to_planning: false,
       apply: {
-        declaration: 'Record cron + integrations in the P3 declaration (declare panel / README machine-block) — the declaration is the durable store, this tool wrote nothing.',
+        declaration: 'Record cron + hooks + integrations in the P3 declaration (declare panel / README machine-block) — the declaration is the durable store, this tool wrote nothing.',
         cron_runtime: 'At compose/development time the intents become the project\'s cron.json (substrate runner fractera-cron re-reads it every tick, step 179).',
+        hooks_runtime: 'If hooks are enabled, compose with --hooks true; the project page carries the Hooks layer and its phrases register through the GLOBAL /api/project-hooks table (step 187, phrases are app-wide unique).',
         env: 'Materialize each envKey via the persist-env-var-with-rebuild channel (step 143: setter → app/.env.local → rebuild). Never hardcode keys.',
         compose: 'Then compose the project page via owner_template_compose_project_page (:3224) and hand real features to a coding agent.',
       } })

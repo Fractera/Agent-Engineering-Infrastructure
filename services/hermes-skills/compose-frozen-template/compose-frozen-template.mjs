@@ -32,7 +32,8 @@
 //   node compose-frozen-template.mjs --store <dir> --out <slot-root> \
 //     --primitive project-page --category automation --project publish-scheduler \
 //     --title "Publish Scheduler" [--purpose "…"] [--automation "…"] [--how "…"] \
-//     [--cron true] [--integrations '[{"name":"exa.ai","envKeys":["EXA_API_KEY"]}]'] [--force]
+//     [--cron true] [--hooks true] [--hook-phrases '[{"phrase":"…","action":"save","lang":"en","description":"…"}]'] \
+//     [--integrations '[{"name":"exa.ai","envKeys":["EXA_API_KEY"]}]'] [--force]
 //   --roles: off (public) | guest (public+guest) | <csv of ALL_ROLES> (private) | all
 //   --unauthorized-redirect: fallback page for a visitor lacking the role (default '/')
 //   --menus: group REGISTRATION metadata (step 158) — JSON {top,footer,left,right}, each
@@ -375,6 +376,18 @@ async function composeProject(storeRoot, prim, outRoot, a) {
   const how = (typeof a.how === "string" && a.how.trim()) || "Placeholder — describe how the automation works (edit _data/description.ts)."
   for (const [k, v] of Object.entries({ title, purpose, automation, how })) if (hasBrokenChar(v)) return refuse("encoding", `the ${k} text ${JSON.stringify(v)} contains a broken/replacement character (a lossy-encoding artifact). Fix the text and retry.`)
   const cron = a.cron === "true" || a.cron === true
+  const hooks = a.hooks === "true" || a.hooks === true
+  // Default hook phrases seeded into _data/hooks.ts (step 187): a JSON array of
+  // { phrase, action, lang, description }. Optional — empty when the project declares
+  // no default phrases (the runtime add/remove panel still works from an empty seed).
+  let hookPhrases = []
+  if (typeof a["hook-phrases"] === "string") {
+    let parsed; try { parsed = JSON.parse(a["hook-phrases"]) } catch { throw new Error("--hook-phrases must be valid JSON (array of {phrase, action, lang, description})") }
+    if (!Array.isArray(parsed)) throw new Error("--hook-phrases must be a JSON ARRAY")
+    hookPhrases = parsed
+      .map(h => ({ phrase: String(h?.phrase ?? "").trim(), action: String(h?.action ?? "custom").trim(), lang: String(h?.lang ?? "en").trim(), description: String(h?.description ?? "").trim() }))
+      .filter(h => h.phrase)
+  }
   let integrations = []
   if (typeof a.integrations === "string") {
     let parsed; try { parsed = JSON.parse(a.integrations) } catch { throw new Error("--integrations must be valid JSON (array of {name, envKeys[]})") }
@@ -396,9 +409,11 @@ async function composeProject(storeRoot, prim, outRoot, a) {
     "{{PROJECT_AUTOMATION}}": JSON.stringify(automation),
     "{{PROJECT_HOW}}": JSON.stringify(how),
     "{{PROJECT_CRON}}": String(cron),
+    "{{PROJECT_HOOKS}}": String(hooks),
+    "{{PROJECT_HOOK_PHRASES}}": JSON.stringify(hookPhrases),
     "{{PROJECT_INTEGRATIONS}}": JSON.stringify(integrations),
   }
-  console.log(`compose '${prim.id}' -> /${destRel.replace(/\\/g, "/")}  (mount-based; zone gate + mono language inherited) cron=${cron} integrations=${integrations.length}`)
+  console.log(`compose '${prim.id}' -> /${destRel.replace(/\\/g, "/")}  (mount-based; zone gate + mono language inherited) cron=${cron} hooks=${hooks} integrations=${integrations.length}`)
   const tabSrc = join(storeRoot, prim.path, "tab")
   let emitted = 0
   for (const rel of await walk(tabSrc)) {
@@ -437,7 +452,7 @@ async function composeProject(storeRoot, prim, outRoot, a) {
     emitted++
   }
   // single-line JSON as the LAST stdout line — the bridge parses it (step 158 contract)
-  console.log(JSON.stringify({ composed: true, primitive: prim.id, category, project, title, path: `/projects/${category}/${project}`, files: emitted, cron, integrations, next: "REBUILD the slot (Deploy); the project appears in the account drawer Projects accordion automatically (folder = registry). Finishing (real diagram/description/tables) is a coding-agent task on _data/flow.ts, _data/description.ts, _lib/project-data.ts." }))
+  console.log(JSON.stringify({ composed: true, primitive: prim.id, category, project, title, path: `/projects/${category}/${project}`, files: emitted, cron, hooks, hookPhrases: hookPhrases.length, integrations, next: "REBUILD the slot (Deploy); the project appears in the account drawer Projects accordion automatically (folder = registry). Finishing (real diagram/description/tables) is a coding-agent task on _data/flow.ts, _data/description.ts, _lib/project-data.ts." }))
 }
 
 async function main() {

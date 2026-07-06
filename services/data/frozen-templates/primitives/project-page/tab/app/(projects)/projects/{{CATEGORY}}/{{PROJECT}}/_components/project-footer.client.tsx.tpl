@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/tooltip";
 import { adminBase } from "@/lib/runtime-urls";
 import { REQUIRED_ENV_KEYS } from "../_data/required-keys";
+import { projectTabStrings } from "../_data/tab-i18n";
 
 // Per-project footer (step 186.2): brand on the left, two deep-link icon actions on
 // the right. The admin base is derived from window.location (adminBase) so both IP and
@@ -18,11 +19,12 @@ import { REQUIRED_ENV_KEYS } from "../_data/required-keys";
 // first declared key so the admin env editor lands on the field to fill (186.6).
 const FOCUS_KEY = REQUIRED_ENV_KEYS[0];
 
-export function ProjectFooter({ shortName }: { shortName: string }) {
+export function ProjectFooter({ shortName, lang }: { shortName: string; lang: string }) {
   const [admin, setAdmin] = useState("");
   useEffect(() => {
     setAdmin(adminBase());
   }, []);
+  const t = projectTabStrings(lang);
 
   const continueHref = admin
     ? `${admin}/service/architecture?project={{CATEGORY}}/{{PROJECT}}`
@@ -41,24 +43,24 @@ export function ProjectFooter({ shortName }: { shortName: string }) {
               <a
                 href={continueHref}
                 className="flex size-8 items-center justify-center rounded-md hover:bg-muted hover:text-foreground transition-colors"
-                aria-label="Continue development"
+                aria-label={t.continueDev}
               >
                 <SquarePen className="size-4" />
               </a>
             </TooltipTrigger>
-            <TooltipContent>Continue development</TooltipContent>
+            <TooltipContent>{t.continueDev}</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <a
                 href={envHref}
                 className="flex size-8 items-center justify-center rounded-md hover:bg-muted hover:text-foreground transition-colors"
-                aria-label="Environment variables"
+                aria-label={t.envVars}
               >
                 <KeyRound className="size-4" />
               </a>
             </TooltipTrigger>
-            <TooltipContent>Environment variables</TooltipContent>
+            <TooltipContent>{t.envVars}</TooltipContent>
           </Tooltip>
         </div>
       </TooltipProvider>
