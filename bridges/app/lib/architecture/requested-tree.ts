@@ -143,7 +143,7 @@ export function buildMergedTree(
   const rootReq = byBase.get("/") ?? []
   // The default project IS the root tree itself; the Projects folder lists only
   // the additional named projects.
-  // A project is a folder with a page (like the seed my-telegram-reminder). A
+  // A project is a folder with a page. A
   // DB-declared project is not built yet → a pending page node (orange + req)
   // that the agent turns into a real /project/<slug> folder with a page.tsx.
   // Built projects (a real folder + page.tsx) already appear in the curated seed —

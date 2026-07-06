@@ -53,16 +53,6 @@ export const ROUTES_TREE: ArchNode = {
               "Architect · Manager", "dynamic"),
           ],
         },
-        {
-          id: "project-my-telegram-reminder",
-          label: "my telegram reminder",
-          kind: "page",
-          href: "/project/my-telegram-reminder",
-          description:
-            "A project that ingests your Telegram messages into a vector store so " +
-            "you can later ask what you had planned. Its pages are real named " +
-            "routes — dynamic routes are forbidden inside a project (§3.12).",
-        },
       ],
     },
     {

@@ -99,14 +99,11 @@ export async function scanTree(): Promise<ScanResult> {
       res.builtExtra.push({ href: path, kind: "page" })
     }
 
-    // Projects = direct children of app/app/project/.
-    if (rel.startsWith("project/")) {
-      const sub = rel.slice("project/".length)
-      if (!sub.includes("/")) {
-        const meta = hasReadme ? await readRouteMeta(path) : null
-        res.projects.push({ id: encodePath(path), name: sub, slug: sub, description: meta?.description ?? null, built })
-      }
-    }
+    // Projects live under app/(projects)/projects/<category>/<slug> (step 178
+    // restructure). Their standalone pages surface through the builtExtra path
+    // above (nested under their category hub by base), so we no longer scan the
+    // legacy flat app/project/<slug> location — that only ever surfaced stale
+    // leftovers (e.g. a removed my-telegram-reminder) and never the real projects.
 
     for (const name of entries) {
       if (SKIP.has(name) || name.startsWith(".")) continue

@@ -55,6 +55,18 @@ function findNodeById(node: ArchNode, id: string): ArchNode | null {
   return null
 }
 
+// Depth-first lookup by href — a project (step 178) is a real page at
+// /projects/<category>/<slug>, surfaced as a built-page node whose id is not the
+// legacy project-<slug>; the deep-link matches it by its real href.
+function findNodeByHref(node: ArchNode, href: string): ArchNode | null {
+  if (node.href === href) return node
+  for (const c of node.children ?? []) {
+    const found = findNodeByHref(c, href)
+    if (found) return found
+  }
+  return null
+}
+
 // Left section = the route tree (Add page lives in its top-right corner).
 // Right section = the selected route's real RouteMeta descriptor (Open page in
 // its top-right corner), the minimal read-only view of a declared page, the
@@ -186,16 +198,19 @@ export function ArchitectureApp() {
     if (deepLinkDone.current) return
     const raw = new URLSearchParams(window.location.search).get("project")
     if (!raw) { deepLinkDone.current = true; return }
-    const slug = raw.split("/").filter(Boolean).pop() ?? raw
-    const targetId = `project-${slug}`
-    const found = findNodeById(tree, targetId)
+    // A project is a real page at /projects/<category>/<slug> (step 178). Focus it by
+    // its real href first; fall back to the legacy flat project-<slug> id so both the
+    // new and old project locations resolve.
+    const rel = raw.split("/").filter(Boolean).join("/")
+    const slug = rel.split("/").pop() ?? rel
+    const found = findNodeByHref(tree, `/projects/${rel}`) ?? findNodeById(tree, `project-${slug}`)
     if (!found) return // tree not yet carrying this project — retry on next update
     deepLinkDone.current = true
     setSelected(found)
-    const { ancestors } = revealTargets(tree, new Set([targetId]))
-    setExpanded(prev => new Set([...prev, "projects", ...ancestors]))
+    const { ancestors } = revealTargets(tree, new Set([found.id]))
+    setExpanded(prev => new Set([...prev, "projects", "projects-layer", ...ancestors]))
     setTimeout(() => {
-      document.getElementById(`arch-node-${targetId}`)?.scrollIntoView({ block: "center", behavior: "smooth" })
+      document.getElementById(`arch-node-${found.id}`)?.scrollIntoView({ block: "center", behavior: "smooth" })
     }, 150)
   }, [tree])
 
