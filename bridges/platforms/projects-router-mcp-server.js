@@ -4,20 +4,25 @@ import { join } from 'path'
 import { handleMcpHandshake } from './mcp-handshake.js'
 
 // ── Projects Router MCP server (L2, port 3229) ──────────────────────────────
-// The TOP-LEVEL fork of the Projects layer (step 180, master plan 174). BEFORE any
-// pipeline runs, an owner's wish is segmented: PAGES (public product surface, any
-// role) vs PROJECTS (private application levels for the architect/manager). This
-// router sits ONE LEVEL ABOVE the task-scenario-router (step 167): the pages branch
-// continues into that router (FROZEN-ASSEMBLY ↔ REAL-DEVELOPMENT); the projects
-// branch continues into the survey below, then the declaration (P3) / project-page
-// compose (:3224, P5) / coding-agent handoff.
+// The TOP-LEVEL fork of the Projects layer (step 180, master plan 174; THREE branches
+// since step 190). BEFORE any pipeline runs, an owner's wish is segmented along two axes:
+//   • PAGES (public product surface, any role) → continues into the task-scenario-router
+//     (step 167: FROZEN-ASSEMBLY ↔ REAL-DEVELOPMENT);
+//   • DURABLE AUTOMATION (private-project) — own use AND it repeats on a schedule →
+//     the survey below, then declaration (P3) / project-page compose (:3224, P5) /
+//     coding-agent handoff; runs with ZERO Hermes runtime load;
+//   • ONE-OFF/DIRECT (step 190) — own use but a one-time/rare action → Hermes performs
+//     it itself with its own skills; NOTHING is built, no nodes for repetition.
+// The decisive test between the last two is REGULARITY: does it repeat on a schedule?
 //
-// Layer manifest (must travel with every tool of this layer): Fractera agents do not
-// run an automation once on request — they build a platform for developing REPEATABLE
-// automations: standardized reuse, a visual interface, input and result data in the
-// local DB and vector memory, quick switching from the UI. Hermes plus a coding agent
-// build a finished-cycle tool — an "n8n for one single task": the owner does not
-// recreate the task, they open it in the UI, run it and track the result.
+// Layer manifest (durable branch only — must travel with the durable tools of this
+// layer): Fractera agents do not run a REPEATABLE automation once on request — they
+// build a platform for developing repeatable automations: standardized reuse, a visual
+// interface, input and result data in the local DB and vector memory, quick switching
+// from the UI. Hermes plus a coding agent build a finished-cycle tool — an "n8n for one
+// single task": the owner does not recreate the task, they open it in the UI, run it and
+// track the result. This manifest does NOT apply to the one-off branch — a one-off wish
+// is never turned into a built project.
 //
 // The two router/survey tools are ADVISORY — zero mutations, nothing is written
 // anywhere. The verdict and the survey answers travel through the EXISTING channels:
@@ -45,6 +50,17 @@ const VERBATIM_QUESTION_EN =
   'Do you want this service to be public for external users, or is it intended for your own use ' +
   '(an automation / a personal service)?'
 
+// The SECOND axis (step 190): once a wish is "for your own use", the decisive fork is
+// REGULARITY. Does the action repeat on a schedule (→ a durable automation is built:
+// nodes + cron, ZERO Hermes runtime load) or is it one-off (→ Hermes just does it, and
+// NOTHING is built to repeat)? This is the owner's single decisive criterion.
+const VERBATIM_REGULARITY_QUESTION_RU =
+  'Это действие будет повторяться регулярно (например, по расписанию — каждый день/час), или это разовая ' +
+  'задача, которую достаточно выполнить один раз?'
+const VERBATIM_REGULARITY_QUESTION_EN =
+  'Will this action repeat regularly (for example on a schedule — every day/hour), or is it a one-off task ' +
+  'that just needs to be done once?'
+
 // Keyword banks are deterministic on purpose: the tool never guesses semantics the
 // model should own — it scores explicit signals and asks when they do not decide.
 const PROJECT_SIGNALS = [
@@ -57,6 +73,25 @@ const PAGES_SIGNALS = [
   'публичн', 'посетител', 'для клиент', 'пользовател сайта', 'блог', 'новост', 'лендинг', 'витрин',
   'добав страниц', 'новая страниц', 'новую страниц', 'раздел сайта', 'индексац',
   'public', 'visitor', 'landing', 'blog', 'news section', 'storefront', 'add a page', 'new page', 'audience', 'seo',
+]
+// Axis 2 (step 190) — REGULARITY. These decide durable-automation vs one-off ONLY after
+// the wish is already "for the owner's own use". Modest banks on purpose: when they do
+// not clearly decide, the tool ASKS the regularity question (the safe default the owner
+// prefers). A schedule/recurrence word → durable; a one-time/"just do it now" word →
+// one-off (Hermes performs it directly, никаких узлов на повторение).
+const REGULAR_SIGNALS = [
+  'каждый день', 'каждый час', 'каждую', 'ежедневн', 'ежечасн', 'еженедельн', 'регулярн', 'по расписан',
+  'расписани', 'крон', 'cron', 'постоянно', 'всё время', 'все время', 'следи', 'мониторь', 'монитор',
+  'периодическ', 'раз в',
+  'every day', 'every hour', 'daily', 'hourly', 'weekly', 'regularly', 'schedul', 'cron', 'recurring',
+  'periodic', 'keep watching', 'monitor', 'each time', 'whenever',
+]
+const ONEOFF_SIGNALS = [
+  'один раз', 'разово', 'разок', 'прямо сейчас', 'просто сдела', 'подключ', 'авториз', 'получить доступ',
+  'получи доступ', 'настрой один раз', 'войти в', 'зайти в', 'проверь', 'найди в интернете', 'поищи',
+  'поиск в интернет', 'исследуй', 'исследовани', 'credential',
+  'once', 'one-off', 'one time', 'just do', 'just set up', 'connect', 'authoriz', 'log in', 'sign in',
+  'get access', 'get credential', 'right now', 'look up', 'search the', 'research',
 ]
 const CATEGORY_SIGNALS = {
   automation: ['автоматиз', 'расписан', 'cron', 'крон', 'api', 'интеграц', 'бот', 'монитор', 'парс', 'публикова',
@@ -95,19 +130,28 @@ function toolsSchema() {
     {
       name: 'owner_projects_route_request',
       description:
-        'The TOP-LEVEL fork for any "I want a service / tool / automation" wish: segment it into PAGES ' +
-        '(public product surface — any role can see it) vs PROJECTS (a private application level for the ' +
-        'architect/manager under /projects/<category>/<slug>). Call this BEFORE the task-scenario-router ' +
-        '(FROZEN vs REAL-DEV) — that router handles the pages branch AFTER this fork.\n\n' +
-        'Layer manifest: Fractera agents do not run an automation once on request — they build a platform ' +
-        'for developing REPEATABLE automations (standardized reuse, a visual interface, input/result data ' +
-        'in the local DB and vector memory, quick switching from the UI). Hermes plus a coding agent build ' +
-        'a finished-cycle tool — an "n8n for one single task": the owner does not recreate the task, they ' +
-        'open it in the UI, run it and track the result.\n\n' +
+        'The TOP-LEVEL fork for any "I want a service / tool / automation / do X for me" wish. It segments ' +
+        'into THREE branches, along two axes:\n' +
+        '  • PAGES — public product surface (any role can see it) → the content pipeline;\n' +
+        '  • DURABLE AUTOMATION (private-project) — the owner\'s own use AND it REPEATS regularly (on a ' +
+        'schedule) → the frozen project process (nodes + cron), which runs with ZERO Hermes runtime load;\n' +
+        '  • ONE-OFF/DIRECT — the owner\'s own use but a ONE-TIME/rare action → Hermes just does it itself ' +
+        'with its own skills; NOTHING is built, no nodes for repetition (e.g. connect a browser, sign into ' +
+        'Google, fetch credentials, verify auth; a web search; a research task).\n' +
+        'Call this BEFORE the task-scenario-router (FROZEN vs REAL-DEV) — that router handles the pages ' +
+        'branch AFTER this fork.\n\n' +
+        'The decisive test between DURABLE and ONE-OFF is REGULARITY: will it repeat on a schedule? Yes → a ' +
+        'durable automation is built; no → Hermes performs it once and builds nothing.\n\n' +
+        'Layer manifest (durable branch): Fractera agents do not run a REPEATABLE automation once on ' +
+        'request — they build a platform for developing repeatable automations (standardized reuse, a ' +
+        'visual interface, input/result data in the local DB and vector memory, quick switching from the ' +
+        'UI): an "n8n for one single task". This manifest does NOT apply to the one-off branch — a one-off ' +
+        'wish must never be turned into a built project.\n\n' +
         'Protocol (the route is NOT fixed without the owner\'s explicit answer):\n' +
         '  1) call with { request } — the raw wish, verbatim, any language;\n' +
         '  2) if it returns needs_input — ask the owner the returned question VERBATIM (translate only if ' +
-        'the dialogue language differs, preserving the meaning exactly) and wait for an explicit answer;\n' +
+        'the dialogue language differs, preserving the meaning exactly) and wait for an explicit answer. The ' +
+        'tool may ask two axes in turn: first public-vs-own, then (for own use) regular-vs-one-off;\n' +
         '  3) if it returns proposed_route — still confirm with the owner (confirm_prompt) before fixing;\n' +
         '  4) re-call with { request, confirmed_choice } — only that call returns the fixed route and the ' +
         'next pipeline actions. Never skip the confirmation; never guess.\n' +
@@ -118,8 +162,12 @@ function toolsSchema() {
         properties: {
           request: { type: 'string', description: 'The owner\'s wish, verbatim, in any language.' },
           confirmed_choice: {
-            type: 'string', enum: ['public-pages', 'private-project'],
-            description: 'The owner\'s EXPLICIT confirmed answer: public-pages = a public service for external users; private-project = for the owner\'s own use (automation / personal service). Only a call with this field fixes the route.',
+            type: 'string', enum: ['public-pages', 'private-project', 'one-off-direct'],
+            description: 'The owner\'s EXPLICIT confirmed answer. public-pages = a public service for external users. private-project = for the owner\'s own use AND it repeats regularly on a schedule (a durable automation is built). one-off-direct = for the owner\'s own use but a one-time/rare action (Hermes does it itself now; nothing is built, no repetition nodes). Only a call with this field fixes the route.',
+          },
+          for_own_use: {
+            type: 'boolean',
+            description: 'Set true when axis 1 is already resolved to the owner\'s OWN use (e.g. the owner answered the public-vs-own question "for my own use") but the durable-vs-one-off fork is not yet decided. The tool then skips axis 1 and evaluates/asks the REGULARITY question directly. Do not set it together with confirmed_choice.',
           },
           category_hint: {
             type: 'string', enum: ['automation', 'fractera-pages', 'personal', 'other'],
@@ -273,34 +321,69 @@ export class ProjectsRouterMcpServer {
       : classifyCategory(request)
 
     // The fixed verdict — only for a call carrying the owner's explicit confirmed answer.
-    if (args.confirmed_choice === 'public-pages' || args.confirmed_choice === 'private-project') {
+    if (args.confirmed_choice === 'public-pages' || args.confirmed_choice === 'private-project' || args.confirmed_choice === 'one-off-direct') {
       if (args.confirmed_choice === 'public-pages')
         return textResult({ ok: true, route: 'pages', route_fixed: true,
           next: 'Continue into the task-scenario-router (CRUD-DOCS/workspace-standards/task-scenario-router.md): step 0 app-making, then FROZEN-ASSEMBLY (owner_content_orchestrate :3227, flat plan) vs REAL-DEVELOPMENT (delegate to a coding agent). This router\'s job is done.' })
+      if (args.confirmed_choice === 'one-off-direct')
+        return textResult({ ok: true, route: 'one-off', route_fixed: true,
+          next: 'This is a ONE-OFF/direct action, NOT a durable automation. Perform it yourself, right now, with your own skills (e.g. web search, research, browser automation) or an already-built scenario. Do NOT decompose it, do NOT build a project, do NOT create any nodes for repetition — the owner needs it done once (e.g. connect a browser, sign into Google, fetch credentials, verify auth; a web search; a research task). If a capability is genuinely missing and code is required, either delegate it as a ONE-TIME task to a coding agent or record a numbered blocker step — never materialize a repeatable project. Access: architect+manager only.' })
       return textResult({ ok: true, route: 'projects', route_fixed: true, category,
         path: `/projects/${category}/<project-slug>`,
+        note: 'DURABLE automation (repeats on a schedule). Built once, then runs with ZERO Hermes runtime load — all logic lives in the cron nodes/tools, Hermes is not in the runtime loop.',
         next: '1) run owner_projects_survey_automation_needs (cron + integrations); 2) declare the project (P3 declaration carries cron/integrations) or compose it directly via owner_template_compose_project_page (:3224, frozen project-page: react-flow diagram + cron/results tables); 3) real features → hand off to a coding agent; env keys materialize via the persist-env-var-with-rebuild channel (step 143). Access: architect+manager only, single default language, named folders only.' })
     }
 
-    // No confirmed answer yet: score the signals and either propose or ask.
+    // No confirmed answer yet: score BOTH axes and either propose or ask the decisive question.
+    // Axis 1 — public (pages) vs own use (private). Axis 2 (own use only) — regular (durable
+    // automation) vs one-off (Hermes does it directly). The decisive test between durable and
+    // one-off is REGULARITY. When an axis does not clearly decide, the tool ASKS its question.
     const proj = score(request, PROJECT_SIGNALS, { maskPublic: true })
     const pages = score(request, PAGES_SIGNALS)
-    const confident = (proj.n >= 2 && pages.n === 0) || (pages.n >= 2 && proj.n === 0)
-    if (!confident)
-      return textResult({ needs_input: true,
-        question: VERBATIM_QUESTION_RU, question_en: VERBATIM_QUESTION_EN,
-        how_to_ask: 'Ask the owner this question VERBATIM (translate only if the dialogue language differs, preserving the meaning exactly) and wait for an explicit answer. Then re-call with confirmed_choice.',
-        signals: { projects: proj.hits, pages: pages.hits } })
+    const pagesConfident = pages.n >= 2 && proj.n === 0
+    const privateConfident = proj.n >= 2 && pages.n === 0
 
-    const proposed = proj.n > pages.n ? 'projects' : 'pages'
-    return textResult({ proposed_route: proposed,
-      ...(proposed === 'projects' ? { category } : {}),
-      confidence: 'high', signals: { projects: proj.hits, pages: pages.hits },
+    // `for_own_use` = the owner already answered axis 1 as "own use"; skip it and go to axis 2.
+    // Otherwise resolve axis 1 first (propose pages, or ask the public-vs-own question).
+    if (!args.for_own_use) {
+      if (!pagesConfident && !privateConfident)
+        return textResult({ needs_input: true, axis: 'public-vs-own',
+          question: VERBATIM_QUESTION_RU, question_en: VERBATIM_QUESTION_EN,
+          how_to_ask: 'Ask the owner this question VERBATIM (translate only if the dialogue language differs, preserving the meaning exactly) and wait for an explicit answer. If the answer is PUBLIC → re-call with confirmed_choice: public-pages. If the answer is OWN USE → re-call with { request, for_own_use: true } so the tool asks the decisive REGULARITY question next (do NOT fix the route yet).',
+          signals: { projects: proj.hits, pages: pages.hits } })
+
+      if (pagesConfident)
+        return textResult({ proposed_route: 'pages',
+          confidence: 'high', signals: { projects: proj.hits, pages: pages.hits },
+          confirmation_required: true,
+          confirm_prompt: 'Правильно ли я вас понимаю: это публичный сервис/страницы для внешних пользователей сайта, не приватная автоматизация для вас лично? Подтвердите — и я зафиксирую маршрут.',
+          next: 'After the owner\'s explicit confirmation re-call with confirmed_choice: public-pages. The route is NOT fixed until then.' })
+    }
+
+    // Axis 1 resolved to "own use" (by signals or for_own_use) → split durable vs one-off by REGULARITY (axis 2).
+    const regular = score(request, REGULAR_SIGNALS, { maskPublic: true })
+    const oneoff = score(request, ONEOFF_SIGNALS, { maskPublic: true })
+    const regularConfident = regular.n >= 1 && oneoff.n === 0
+    const oneoffConfident = oneoff.n >= 1 && regular.n === 0
+
+    // Axis 2 unresolved → ask the decisive regularity question.
+    if (!regularConfident && !oneoffConfident)
+      return textResult({ needs_input: true, axis: 'regular-vs-one-off',
+        question: VERBATIM_REGULARITY_QUESTION_RU, question_en: VERBATIM_REGULARITY_QUESTION_EN,
+        how_to_ask: 'The wish is for the owner\'s own use; the decisive fork now is REGULARITY. Ask this question VERBATIM and wait. Then re-call with confirmed_choice: private-project (repeats on a schedule → a durable automation is built) or one-off-direct (one-time → you just do it, nothing is built to repeat).',
+        signals: { regular: regular.hits, one_off: oneoff.hits } })
+
+    const proposedOwn = regularConfident ? 'private-project' : 'one-off-direct'
+    return textResult({ proposed_route: proposedOwn === 'private-project' ? 'projects' : 'one-off',
+      ...(proposedOwn === 'private-project' ? { category } : {}),
+      confidence: 'high', signals: { regular: regular.hits, one_off: oneoff.hits },
       confirmation_required: true,
-      confirm_prompt: proposed === 'projects'
-        ? `Правильно ли я вас понимаю: это сервис для вашего собственного использования (приватный проект, категория «${category}»), не публичная страница для внешних пользователей? Подтвердите — и я зафиксирую маршрут.`
-        : 'Правильно ли я вас понимаю: это публичный сервис/страницы для внешних пользователей сайта, не приватная автоматизация для вас лично? Подтвердите — и я зафиксирую маршрут.',
-      next: 'After the owner\'s explicit confirmation re-call with confirmed_choice. The route is NOT fixed until then.' })
+      confirm_prompt: proposedOwn === 'private-project'
+        ? `Правильно ли я вас понимаю: это действие будет повторяться регулярно, и вам нужна постоянная автоматизация (категория «${category}»), которая работает по расписанию сама? Подтвердите — и я зафиксирую маршрут.`
+        : 'Правильно ли я вас понимаю: это разовая задача — её достаточно выполнить один раз, и строить постоянную автоматизацию с узлами на повторение не нужно, я просто выполню её? Подтвердите — и я зафиксирую маршрут.',
+      next: proposedOwn === 'private-project'
+        ? 'After the owner\'s explicit confirmation re-call with confirmed_choice: private-project. The route is NOT fixed until then.'
+        : 'After the owner\'s explicit confirmation re-call with confirmed_choice: one-off-direct. The route is NOT fixed until then.' })
   }
 
   _survey(args) {

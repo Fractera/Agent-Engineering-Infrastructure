@@ -267,14 +267,17 @@ over a platform defect, is forbidden.
 
 ## Planning automations (the Projects layer) — external tools, delegation, doc-transfer
 
-> **Projects layer manifest.** Fractera agents do not run an automation once on request — they
-> build a platform for developing **repeatable** automations: standardized reuse, a visual
-> interface, input and result data in the local DB and vector memory, quick switching from the UI.
-> You plus a coding agent build a finished-cycle tool — an **"n8n for one single task"**: the
-> owner does not recreate the task, they open it in the UI, run it and track the result.
+> **Projects layer manifest (DURABLE automations only).** Fractera agents do not run a **repeatable**
+> automation once on request — they build a platform for developing repeatable automations: standardized
+> reuse, a visual interface, input and result data in the local DB and vector memory, quick switching
+> from the UI. You plus a coding agent build a finished-cycle tool — an **"n8n for one single task"**: the
+> owner does not recreate the task, they open it in the UI, run it and track the result. **This manifest
+> applies ONLY when the wish repeats on a schedule** (see R12). A one-off wish is never turned into a built
+> project — you just do it yourself and build nothing.
 
-When a wish is a private automation (the `route-project-or-pages-request` fork said PROJECT),
-you are the **planner**, not the builder. Three things you always know at planning time:
+When a wish is a DURABLE private automation (the `route-project-or-pages-request` fork said PROJECT — own
+use, repeats on a schedule; NOT a one-off, which you simply do yourself), you are the **planner**, not the
+builder. Three things you always know at planning time:
 
 - **The world has ready tools — name them in the plan.** An automation almost never starts from
   zero: web search services (e.g. **exa.ai**), platform APIs (e.g. the **YouTube API**, Telegram,
@@ -345,6 +348,26 @@ the trace.
   that task type); conflict or no merit → decline with the reason. Either way CLOSE the step with a short
   report of the decision (move to `COMPLETED-STEPS/`). Feedback is advice about HOW you instruct — it never
   reopens or invalidates work already delivered.
+- **Durable vs one-off — REGULARITY decides (R12).** A wish for the owner's OWN use forks again, and the
+  single decisive criterion is: **will it repeat regularly, on a schedule?** This is the top-level router
+  (`route-project-or-pages-request` / `owner_projects_route_request`, step 190), and it has THREE branches:
+  - **PAGES** — public product surface → the content pipeline.
+  - **DURABLE AUTOMATION** (own use, repeats on a schedule) → the frozen project process
+    (`orchestrate-project-by-steps`): nodes + cron. **Once built it runs with ZERO load on you** — all
+    logic lives in the cron nodes and their tools/models, you are NOT in the runtime loop. This is exactly
+    why it is token-cheap: no heavy instructions/skills/MCP in the loop, just the process. Reinforces R6 —
+    the schema is the only truth of execution.
+  - **ONE-OFF / DIRECT** (own use, one-time/rare) → **you do it yourself, now, with your own skills** (web
+    search, research, browser automation, an already-built scenario). **You build NOTHING — no project, no
+    nodes for repetition.** The owner gets Gmail access once, looks a thing up once, researches once; that
+    is not a scheduled process. Turning a one-off into a built project is a defect. If a capability is
+    genuinely missing and code is required, delegate it as a ONE-TIME task or record a numbered blocker
+    step — never materialize a repeatable project for a one-off.
+
+  Most "do X for me" wishes (the large majority) are one-off and need NONE of the Hermes→steps→coding-agent
+  chain. Consult your own skill inventory first: a skill that already performs the wish is a signal it is
+  one-off/direct — just run it. When the axis is implicit, **ASK the owner the regularity question verbatim
+  and wait** — the route is never fixed without their explicit answer.
 
 ## Use the GLOSSARY — clarify the owner's terms, keep it correct
 
