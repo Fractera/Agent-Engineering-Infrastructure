@@ -50,6 +50,7 @@ const env = k => process.env[k] ?? fileEnv[k]
 const DATA_URL    = env('DATA_URL') ?? 'http://127.0.0.1:3300'
 const DATA_SECRET = env('DATA_SECRET') ?? ''
 const SLOT_DIR    = env('SLOT_DIR') ?? '/opt/fractera/app'
+const APP_URL     = env('APP_URL') ?? 'http://127.0.0.1:3000' // Shell — subscribers' /run lives here (step 195)
 const TICK_MS     = Number(env('TICK_MS') ?? 15000)
 const DEFAULT_TIMEOUT_MS = 10 * 60 * 1000
 const MAX_TIMEOUT_MS     = 60 * 60 * 1000
@@ -90,6 +91,35 @@ const DDL = `
     error       TEXT,
     created_by  TEXT NOT NULL DEFAULT 'fractera-cron'
   );
+  -- Inter-automation orchestration (ontology entity 13 + §D pub/sub, step 195). Kept textually
+  -- identical to SCHEMA in the slot's lib/db/index.ts. The dispatcher (below) drains
+  -- automation_events; subjects + subject_events carry cross-automation state + history.
+  CREATE TABLE IF NOT EXISTS subjects (
+    id               TEXT PRIMARY KEY NOT NULL,
+    kind             TEXT NOT NULL,
+    status           TEXT NOT NULL DEFAULT '',
+    owner_automation TEXT NOT NULL DEFAULT '',
+    attributes       TEXT NOT NULL DEFAULT '{}',
+    created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at       TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE TABLE IF NOT EXISTS subject_events (
+    id           TEXT PRIMARY KEY NOT NULL,
+    subject_id   TEXT NOT NULL,
+    event        TEXT NOT NULL,
+    from_automation TEXT NOT NULL DEFAULT '',
+    payload      TEXT NOT NULL DEFAULT '{}',
+    created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE TABLE IF NOT EXISTS automation_events (
+    id            TEXT PRIMARY KEY NOT NULL,
+    event         TEXT NOT NULL,
+    subject_id    TEXT NOT NULL DEFAULT '',
+    from_automation TEXT NOT NULL DEFAULT '',
+    payload       TEXT NOT NULL DEFAULT '{}',
+    published_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    dispatched    INTEGER NOT NULL DEFAULT 0
+  );
 `
 
 // ── Data service client ─────────────────────────────────────────────────────────────────────
@@ -107,6 +137,12 @@ async function dataMigrate(sql, params = []) {
   const body = await r.json().catch(() => ({}))
   if (!r.ok || body.error) throw new Error(body.error ?? `data service HTTP ${r.status}`)
   return body
+}
+
+// SELECT rows through the same endpoint (data service returns rows for a SELECT).
+async function dataQuery(sql, params = []) {
+  const body = await dataMigrate(sql, params)
+  return Array.isArray(body.rows) ? body.rows : []
 }
 
 // ── Cron matcher — standard 5-field expressions (minute hour dom month dow) ────────────────
@@ -231,6 +267,64 @@ async function syncJobsTable(jobs) {
   console.log(`[cron] declarations synced: ${jobs.length} job(s)`)
 }
 
+// ── Inter-automation pub/sub dispatch (ontology §D, step 195) ─────────────────────────────────
+// Mirror of scanDeclarations: read each project's co-located events.json { subscribes: [...] } and
+// map an event NAME → the automations whose /run must fire when that event is published. Read fresh
+// every tick (no restart to add a subscriber).
+function scanSubscriptions() {
+  const byEvent = new Map() // eventName -> [{ category, project, runUrl }]
+  for (const root of DECLARATION_ROOTS) {
+    if (!existsSync(root)) continue
+    for (const category of listDirs(root)) {
+      for (const project of listDirs(join(root, category))) {
+        const file = join(root, category, project, 'events.json')
+        if (!existsSync(file)) continue
+        let decl
+        try { decl = JSON.parse(readFileSync(file, 'utf8')) }
+        catch (e) { console.error(`[cron] invalid JSON in ${file}: ${e.message}`); continue }
+        const subs = Array.isArray(decl?.subscribes) ? decl.subscribes : []
+        for (const ev of subs) {
+          if (typeof ev !== 'string' || !ev.trim()) continue
+          const runUrl = `${APP_URL}/api/projects/${category}/${project}/run`
+          if (!byEvent.has(ev)) byEvent.set(ev, [])
+          byEvent.get(ev).push({ category, project, runUrl })
+        }
+      }
+    }
+  }
+  return byEvent
+}
+
+// Drain the automation_events queue: for every undispatched event, POST each subscriber's /run with
+// { subjectId, event } (the payload carries only the id — the subscriber reads the subject's CURRENT
+// state), then mark the row dispatched. Pub/sub: a publisher never names a target; 0..N subscribers
+// may answer. An event with no subscriber is still marked dispatched (delivered to nobody, not stuck).
+async function dispatchEvents() {
+  const pending = await dataQuery(
+    `SELECT id, event, subject_id, from_automation FROM automation_events WHERE dispatched = 0 ORDER BY published_at LIMIT 50`,
+  )
+  if (!pending.length) return
+  const subs = scanSubscriptions()
+  for (const row of pending) {
+    const targets = subs.get(row.event) ?? []
+    for (const t of targets) {
+      try {
+        const r = await fetch(t.runUrl, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-agent-identity': 'fractera-cron' },
+          body: JSON.stringify({ input: { subjectId: row.subject_id, event: row.event, from: row.from_automation } }),
+          signal: AbortSignal.timeout(30000),
+        })
+        console.log(`[cron] event '${row.event}' -> ${t.category}/${t.project} /run: HTTP ${r.status}`)
+      } catch (e) {
+        console.error(`[cron] event '${row.event}' -> ${t.category}/${t.project} dispatch failed: ${e.message ?? e}`)
+      }
+    }
+    if (!targets.length) console.log(`[cron] event '${row.event}' published — no subscribers`)
+    await dataMigrate(`UPDATE automation_events SET dispatched = 1 WHERE id = ?`, [row.id])
+  }
+}
+
 // ── Actions ─────────────────────────────────────────────────────────────────────────────────
 
 function extractResult(candidate) {
@@ -353,6 +447,8 @@ async function tick() {
       lastFiredMinute.set(job.key, minuteKey)
       fire(job) // deliberately not awaited — one slow job must not delay the others
     }
+    // Inter-automation pub/sub (step 195): drain the event queue and fire subscribers' /run.
+    await dispatchEvents()
   } catch (e) {
     // Data service may be down (restart window) — log and retry on the next tick.
     console.error(`[cron] tick error: ${e.message}`)
