@@ -6,6 +6,8 @@
 // actions[] registry (marker `// fractera:actions <sheetId>`, deterministic rewrite). To add or
 // change an action, extend the GRAPH and re-run the engine — never hand-edit a generated file.
 export type ProjectActionHook = { phrase: string; lang: string };
+// Inter-automation (§D, step 195): an action may PUBLISH a named event + move a subject's status.
+export type ProjectActionEmit = { event: string; subjectTransition?: string };
 export type ProjectAction = {
   id: string;
   title: string;
@@ -14,6 +16,7 @@ export type ProjectAction = {
   hooks: ProjectActionHook[];
   condition: string | null; // declared guard — implemented in the workflow step (R6)
   channel: string; // where this action's output is delivered
+  emits?: ProjectActionEmit; // publishes an event when it runs (inter-automation handoff)
 };
 
 export const PROJECT_ACTIONS: ProjectAction[] = [];

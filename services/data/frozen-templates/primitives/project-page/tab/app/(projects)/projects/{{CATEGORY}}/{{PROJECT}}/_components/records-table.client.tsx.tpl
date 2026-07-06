@@ -20,7 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { defaultVisibleColumnIds, type ProjectColumn } from "../_data/columns";
+import type { ProjectColumn } from "../_data/columns";
 import { ontologyAttr } from "../_data/ontology-attrs";
 import type { RecordRow } from "../_lib/types";
 import { RecordCell } from "./record-cell.client";
@@ -30,23 +30,33 @@ import { RecordCell } from "./record-cell.client";
 // registry in record-cell.client.tsx. The user toggles column VISIBILITY via the picker
 // (personal, localStorage); the automation declares which columns EXIST. First page is
 // server-rendered (works with JS off); the client adds search / load-more / detail / delete.
-const API = "/api/projects/{{CATEGORY}}/{{PROJECT}}/records";
-const STORAGE = "records-cols:{{CATEGORY}}/{{PROJECT}}";
+// The SAME component serves the records table, the Subjects table and the activity log (step 195) —
+// just pass different columns + apiBase + storageKey.
+const DEFAULT_API = "/api/projects/{{CATEGORY}}/{{PROJECT}}/records";
+const DEFAULT_STORAGE = "records-cols:{{CATEGORY}}/{{PROJECT}}";
 const PAGE = 20;
 
 export function RecordsTable({
   columns,
   initialRows,
+  apiBase = DEFAULT_API,
+  storageKey = DEFAULT_STORAGE,
 }: {
   columns: ProjectColumn[];
   initialRows: RecordRow[];
+  apiBase?: string;
+  storageKey?: string;
 }) {
+  const API = apiBase;
+  const STORAGE = storageKey;
   const [rows, setRows] = useState<RecordRow[]>(initialRows);
   const [search, setSearch] = useState("");
   const [offset, setOffset] = useState(initialRows.length);
   const [hasMore, setHasMore] = useState(initialRows.length >= PAGE);
   const [loading, setLoading] = useState(false);
-  const [visibleIds, setVisibleIds] = useState<string[]>(() => defaultVisibleColumnIds());
+  const [visibleIds, setVisibleIds] = useState<string[]>(() =>
+    columns.filter((c) => c.defaultVisible).map((c) => c.id),
+  );
   const [expanded, setExpanded] = useState<string | null>(null);
   const [detail, setDetail] = useState({ open: false, text: "", loading: false });
   const [confirmDel, setConfirmDel] = useState<RecordRow | null>(null);
@@ -79,7 +89,9 @@ export function RecordsTable({
   const load = useCallback(async (q: string, from: number, replace: boolean) => {
     setLoading(true);
     try {
-      const res = await fetch(`${API}?search=${encodeURIComponent(q)}&offset=${from}`);
+      // apiBase may already carry a query (e.g. ?view=activity) — join with & in that case.
+      const sep = API.includes("?") ? "&" : "?";
+      const res = await fetch(`${API}${sep}search=${encodeURIComponent(q)}&offset=${from}`);
       const data = res.ok ? await res.json() : { rows: [], hasMore: false };
       setRows((prev) => (replace ? data.rows : [...prev, ...data.rows]));
       setOffset(from + (data.rows?.length ?? 0));

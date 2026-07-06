@@ -81,6 +81,10 @@ function ProcessNode({ data, selected }: NodeProps<FlowNode>) {
   const actionIds = Array.isArray(info.actions) ? info.actions : [];
   const shown = actionIds.slice(0, 2);
   const extra = actionIds.length - shown.length;
+  // Inter-automation (§D): the events this node publishes, from its actions' emits.
+  const emittedEvents = actionIds
+    .map((id) => projectAction(id).emits?.event)
+    .filter((e): e is string => Boolean(e));
   return (
     <div
       className={
@@ -123,6 +127,26 @@ function ProcessNode({ data, selected }: NodeProps<FlowNode>) {
             variant="outline"
           />
         )}
+        {/* Inter-automation (§D): this node PUBLISHES an event (one of its actions emits). */}
+        {emittedEvents.length > 0 && (
+          <FacetBadge
+            label={ontologyAttr("emits").label}
+            tooltip={`Publishes: ${emittedEvents.join(", ")}. ${ontologyAttr("emits").tooltip}`}
+            variant="outline"
+            style={{ borderColor: "#8b5cf6", color: "#8b5cf6" }}
+          />
+        )}
+        {/* Inter-automation (§D): an event trigger — this node SUBSCRIBES to published events. */}
+        {Array.isArray(info.subscribes) &&
+          info.subscribes.map((ev) => (
+            <FacetBadge
+              key={ev}
+              label={ev}
+              tooltip={ontologyAttr("event").tooltip}
+              variant="outline"
+              style={{ borderColor: "#06b6d4", color: "#06b6d4" }}
+            />
+          ))}
       </div>
       <div className="flex items-start gap-2 px-3 py-2">
         <span className="line-clamp-2">{data.label}</span>
@@ -177,6 +201,10 @@ export function ProcessFlow() {
   }, [activeId, nodes]);
 
   const info = active?.data.info;
+  // Inter-automation (§D): the emits of the selected node's actions, for the info panel.
+  const panelEmits = (Array.isArray(info?.actions) ? info.actions : [])
+    .map((id) => projectAction(id).emits)
+    .filter((e): e is NonNullable<typeof e> => Boolean(e));
 
   return (
     <TooltipProvider>
@@ -237,6 +265,28 @@ export function ProcessFlow() {
             <div className="space-y-1">
               <h4 className="font-medium">Condition</h4>
               <p className="text-muted-foreground">{info.condition}</p>
+            </div>
+          )}
+          {/* Inter-automation (§D): what this node subscribes to / publishes. */}
+          {Array.isArray(info.subscribes) && info.subscribes.length > 0 && (
+            <div className="space-y-1">
+              <h4 className="font-medium">Subscribes to</h4>
+              <p className="text-muted-foreground">
+                {info.subscribes.join(", ")} — wakes this automation when another publishes it.
+              </p>
+            </div>
+          )}
+          {panelEmits.length > 0 && (
+            <div className="space-y-1">
+              <h4 className="font-medium">Publishes</h4>
+              <ul className="list-disc space-y-1 pl-4 text-muted-foreground">
+                {panelEmits.map((e) => (
+                  <li key={e.event}>
+                    {e.event}
+                    {e.subjectTransition ? ` → subject: ${e.subjectTransition}` : ""}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
           {info.task && (

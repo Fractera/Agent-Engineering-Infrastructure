@@ -11,7 +11,10 @@ import { PROJECT_DESCRIPTION } from "../_data/description";
 import { DEFAULT_HOOKS } from "../_data/hooks";
 import { projectTabStrings } from "../_data/tab-i18n";
 import { getCronJobs, getHooks, getProcessQueue, getRecords } from "../_lib/project-data";
+import { getSubjects, getActivity } from "../_lib/subject-data";
 import { PROJECT_COLUMNS } from "../_data/columns";
+import { SUBJECT_KIND } from "../_data/subject";
+import { SUBJECT_COLUMNS, ACTIVITY_COLUMNS } from "../_data/subject-view";
 import { CronJobsTable } from "./cron-jobs-table.server";
 import { HooksPanel } from "./hooks-panel.client";
 import { MissingKeysModal } from "./missing-keys-modal.client";
@@ -32,6 +35,12 @@ export default async function {{PROJECT_PASCAL}}ProjectEntry() {
     getCronJobs(),
     getHooks(),
   ]);
+  // Inter-automation (§D, step 195): the Subjects table + activity log show ONLY for automations that
+  // declare a cross-automation subject (SUBJECT_KIND set). Otherwise they are skipped entirely.
+  const hasSubject = SUBJECT_KIND !== "";
+  const [subjects, activity] = hasSubject
+    ? await Promise.all([getSubjects(), getActivity()])
+    : [[], []];
   // The Hooks layer (187.4) shows only for automations that use spoken triggers —
   // either the project seeded default phrases or hooks are already registered.
   const showHooks = DEFAULT_HOOKS.length > 0 || hooks.length > 0;
@@ -95,6 +104,30 @@ export default async function {{PROJECT_PASCAL}}ProjectEntry() {
         <h2 className="text-xl font-medium">{t.results}</h2>
         <RecordsTable columns={PROJECT_COLUMNS} initialRows={records} />
       </section>
+      {/* Inter-automation (§D, step 195): the shared subjects this automation drives + the
+          cross-automation activity that touched them. Shown only when a subject is declared. */}
+      {hasSubject && (
+        <>
+          <section className="space-y-3">
+            <h2 className="text-xl font-medium">Subjects</h2>
+            <RecordsTable
+              columns={SUBJECT_COLUMNS}
+              initialRows={subjects}
+              apiBase="/api/projects/{{CATEGORY}}/{{PROJECT}}/subjects"
+              storageKey="subjects-cols:{{CATEGORY}}/{{PROJECT}}"
+            />
+          </section>
+          <section className="space-y-3">
+            <h2 className="text-xl font-medium">Inter-automation activity</h2>
+            <RecordsTable
+              columns={ACTIVITY_COLUMNS}
+              initialRows={activity}
+              apiBase="/api/projects/{{CATEGORY}}/{{PROJECT}}/subjects?view=activity"
+              storageKey="activity-cols:{{CATEGORY}}/{{PROJECT}}"
+            />
+          </section>
+        </>
+      )}
       <section className="space-y-3">
         <h2 className="text-xl font-medium">{t.scheduled}</h2>
         <CronJobsTable jobs={cronJobs} />

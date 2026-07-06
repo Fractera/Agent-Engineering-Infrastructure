@@ -15,9 +15,10 @@ import type { Edge, Node } from "@xyflow/react";
 export type FlowNodeInfo = {
   summary: string;
   processes: string[];
-  kind: "trigger" | "router" | "step" | "transform" | "action";
+  kind: "trigger" | "router" | "step" | "transform" | "action" | "event";
   actions?: string[] | "all";
   condition?: string | null;
+  subscribes?: string[]; // inter-automation event trigger — the events it subscribes to (§D, step 195)
   task?: string;
   tools: string[];
   envKeys: string[];

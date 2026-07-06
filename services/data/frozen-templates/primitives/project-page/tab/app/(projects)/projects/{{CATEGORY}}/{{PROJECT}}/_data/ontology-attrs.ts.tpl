@@ -18,7 +18,10 @@ export type OntologyAttrId =
   | "condition"
   | "channel"
   | "state"
-  | "integration";
+  | "integration"
+  | "event"
+  | "emits"
+  | "subject";
 
 export type OntologyAttr = { label: string; tooltip: string };
 
@@ -62,6 +65,18 @@ export const ONTOLOGY_ATTRS: Record<OntologyAttrId, OntologyAttr> = {
   integration: {
     label: "Integration",
     tooltip: "An external service and its keys — declared, never hardcoded.",
+  },
+  event: {
+    label: "Event",
+    tooltip: "An inter-automation subscriber — this node wakes when another automation publishes the event it subscribes to.",
+  },
+  emits: {
+    label: "Emits",
+    tooltip: "This action PUBLISHES a named event when it runs — any automation subscribed to that name wakes up (pub/sub handoff).",
+  },
+  subject: {
+    label: "Subject",
+    tooltip: "A long-lived object several automations act on (blogger/lead/customer) — one shared identity with a status and a history.",
   },
 };
 
