@@ -58,8 +58,11 @@ import { mkdir, writeFile, readFile, readdir, rename, stat } from "node:fs/promi
 import { resolve, join, dirname } from "node:path"
 import { createHash } from "node:crypto"
 
-const KINDS = ["trigger", "router", "step", "transform"]
+const KINDS = ["trigger", "router", "step", "transform", "event"]
 const KIND_ALIASES = { action: "step" } // v1 graphs said "action" for a work node; Action is an entity now
+// Entry kinds are NOT workflow steps — they ARE the run route / cron / event subscription that fires the
+// workflow. `event` (step 195, §D) is an inter-automation subscriber trigger; it behaves like `trigger`.
+const ENTRY_KINDS = new Set(["trigger", "event"])
 const ERROR_POLICIES = ["retry-next-tick", "soft-degrade", "fail-run"]
 // The CLOSED set of records-table column renderers (ontology entity 12 Record). A new column is
 // DATA in the graph's record.fields[]; a genuinely new visual = a new type here + the primitive's
@@ -68,6 +71,9 @@ const COLUMN_TYPES = ["badge", "text", "longtext", "date", "link", "actions"]
 // Identifier guard for SQL-facing names (record.table, field.source) — returns "" if not a plain
 // identifier, so a bad name is caught by the gate and never reaches generated SQL.
 const identOf = s => { const v = String(s ?? "").trim(); return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(v) ? v : "" }
+// Event-name normalizer (inter-automation pub/sub, §D): lowercase snake token — the contract between an
+// Action's `emits.event` and an event trigger's `subscribes`. Stable so publisher and subscriber match.
+const evName = s => String(s ?? "").toLowerCase().trim().replace(/[^a-z0-9_]+/g, "_").replace(/^_+|_+$/g, "")
 // Action colors — stable tokens the UI maps to theme-aware classes; auto-assigned by declaration
 // order when the graph omits `color`.
 const ACTION_COLORS = ["blue", "amber", "green", "violet", "rose", "cyan", "orange", "teal"]
@@ -130,6 +136,13 @@ function normalizeGraph(raw, cliCategory, cliSlug) {
       }).filter(h => h.phrase),
       condition: str(a.condition) || null,
       channel: str(a.channel),
+      // Inter-automation (§D, step 195): an Action may PUBLISH a named event + move a Subject's status.
+      ...(a.emits && typeof a.emits === "object" && evName(a.emits.event) ? {
+        emits: {
+          event: evName(a.emits.event),
+          ...(slugify(a.emits.subjectTransition) ? { subjectTransition: slugify(a.emits.subjectTransition) } : {}),
+        },
+      } : {}),
     })
   }
   const actionIds = new Set(actions.map(a => a.id))
@@ -151,7 +164,7 @@ function normalizeGraph(raw, cliCategory, cliSlug) {
     if (typeof v === "string" && v.trim().toLowerCase() === "all") return "all"
     const list = [...new Set(arr(v).map(slugify).filter(Boolean))]
     if (list.length) return list
-    return (kind === "trigger" || kind === "router" || !actions.length) ? "all" : []
+    return (ENTRY_KINDS.has(kind) || kind === "router" || !actions.length) ? "all" : []
   }
 
   const seen = new Set(), duplicates = []
@@ -181,6 +194,8 @@ function normalizeGraph(raw, cliCategory, cliSlug) {
       io: { in: io.in ?? null, out: io.out ?? null },
       todo: arr(n.todo).map(str).filter(Boolean),
       dependsOn: [...new Set(arr(n.dependsOn).map(slugify).filter(Boolean))],
+      // Inter-automation (§D, step 195): an event trigger subscribes to named events.
+      subscribes: [...new Set(arr(n.subscribes).map(evName).filter(Boolean))],
       needsCoder: n.needsCoder === false ? false : true, // every node is coder-built unless opted out
     })
   }
@@ -213,6 +228,18 @@ function normalizeGraph(raw, cliCategory, cliSlug) {
       }
     }).filter(f => f.id),
   } : null
+  // Subject block (ontology entity 13, §D, step 195) — OPTIONAL. The cross-automation object's state
+  // machine: a kind + a closed set of statuses + allowed transitions. The gate refuses a transition
+  // that names a status outside the set (an open machine). Generated into _data/subject.ts.
+  const rawSubject = (g.subject && typeof g.subject === "object") ? g.subject : null
+  const subject = rawSubject ? {
+    kind: slugify(rawSubject.kind),
+    statuses: [...new Set(arr(rawSubject.statuses).map(slugify).filter(Boolean))],
+    transitions: arr(rawSubject.transitions).map(t => {
+      const o = (t && typeof t === "object") ? t : {}
+      return { from: slugify(o.from), to: slugify(o.to) }
+    }).filter(t => t.from && t.to),
+  } : null
   return {
     category: slugify(cliCategory ?? g.category) || "automation",
     slug: slugify(cliSlug ?? g.slug) || slugify(project.purpose) || "project",
@@ -221,6 +248,7 @@ function normalizeGraph(raw, cliCategory, cliSlug) {
     state,
     nodes,
     ...(record && (record.table || record.fields.length) ? { record } : {}),
+    ...(subject && (subject.kind || subject.statuses.length) ? { subject } : {}),
     ...(duplicates.length ? { duplicates } : {}),
   }
 }
@@ -319,6 +347,32 @@ function validateSpec(graph) {
     }
     if (rec.fields.length && !rec.fields.some(f => f.defaultVisible)) missing.push(`record: at least one field must be defaultVisible${ontologyHint}`)
   }
+  // Inter-automation gates (ontology §D, step 195): keep the pub/sub contract + Subject state machine honest.
+  const subjectStatuses = new Set(graph.subject ? graph.subject.statuses : [])
+  // Gate 9: an event trigger must subscribe to ≥1 event (a subscriber with nothing to hear is dead).
+  for (const n of graph.nodes) {
+    if (n.kind === "event" && !n.subscribes.length) missing.push(`node "${n.id}": kind "event" must declare subscribes: [eventName] — a subscriber with no event name never fires${ontologyHint}`)
+  }
+  // Gate 10: an Action's emit names a non-empty event; a subjectTransition must target a declared status.
+  for (const a of graph.actions) {
+    if (a.emits) {
+      if (!a.emits.event) missing.push(`action "${a.id}": emits.event must be a non-empty event name${ontologyHint}`)
+      if (a.emits.subjectTransition) {
+        if (!graph.subject) missing.push(`action "${a.id}": emits.subjectTransition needs a subject block (declare the Subject + its statuses)${ontologyHint}`)
+        else if (!subjectStatuses.has(a.emits.subjectTransition)) missing.push(`action "${a.id}": emits.subjectTransition "${a.emits.subjectTransition}" is not a declared subject status (${[...subjectStatuses].join(", ") || "none"})${ontologyHint}`)
+      }
+    }
+  }
+  // Gate 11: the Subject state machine must be closed — every transition endpoint is a declared status.
+  if (graph.subject) {
+    const s = graph.subject
+    if (!s.kind) missing.push(`subject: kind must be non-empty (blogger|lead|customer|…)${ontologyHint}`)
+    if (!s.statuses.length) missing.push(`subject: statuses[] must have at least one status${ontologyHint}`)
+    for (const t of s.transitions) {
+      if (!subjectStatuses.has(t.from)) missing.push(`subject transition from "${t.from}" is not a declared status${ontologyHint}`)
+      if (!subjectStatuses.has(t.to)) missing.push(`subject transition to "${t.to}" is not a declared status${ontologyHint}`)
+    }
+  }
   return { ok: missing.length === 0, missing, ...(warnings.length ? { warnings } : {}) }
 }
 
@@ -330,7 +384,8 @@ function orderSheetId(graph) {
     category: graph.category, slug: graph.slug, project: graph.project,
     actions: graph.actions, state: graph.state,
     ...(graph.record ? { record: graph.record } : {}),
-    nodes: graph.nodes.map(n => ({ id: n.id, title: n.title, kind: n.kind, actions: n.actions, condition: n.condition, errorPolicy: n.errorPolicy, state: n.state, description: n.description, task: n.task, tools: n.tools, envKeys: n.envKeys, io: n.io, todo: n.todo, dependsOn: n.dependsOn })),
+    ...(graph.subject ? { subject: graph.subject } : {}),
+    nodes: graph.nodes.map(n => ({ id: n.id, title: n.title, kind: n.kind, actions: n.actions, condition: n.condition, errorPolicy: n.errorPolicy, state: n.state, subscribes: n.subscribes, description: n.description, task: n.task, tools: n.tools, envKeys: n.envKeys, io: n.io, todo: n.todo, dependsOn: n.dependsOn })),
   }
   return "os-" + createHash("sha256").update(JSON.stringify(canon)).digest("hex").slice(0, 16)
 }
@@ -582,14 +637,17 @@ const flat = s => String(s ?? "").replace(/\s*\n+\s*/g, " ").trim()
 const projectFlowRel = (category, slug) => `app/(projects)/projects/${category}/${slug}/_data/flow.ts`
 const projectActionsRel = (category, slug) => `app/(projects)/projects/${category}/${slug}/_data/actions.ts`
 const projectColumnsRel = (category, slug) => `app/(projects)/projects/${category}/${slug}/_data/columns.ts`
+const projectEventsRel = (category, slug) => `app/(projects)/projects/${category}/${slug}/_data/events.ts`
+const projectSubjectRel = (category, slug) => `app/(projects)/projects/${category}/${slug}/_data/subject.ts`
+const projectEventsJsonRel = (category, slug) => `app/(projects)/projects/${category}/${slug}/events.json`
 const projectWorkflowRel = (category, slug) => `app/api/projects/${category}/${slug}/_workflow/definition.ts`
 const STARTER_WORKFLOW_MARKER = "fractera:starter-workflow"
 
 // The shared R6 sentence every spec / handoff / README carries — the coder must know the schema is
 // generated and where their ONLY writable surface is (the body of their node's step).
 function r6Line(node, ctx) {
-  const own = node.kind === "trigger"
-    ? "this node is a TRIGGER — it IS the run route / cron queue that fires the workflow, it has no workflow step"
+  const own = ENTRY_KINDS.has(node.kind)
+    ? "this node is a TRIGGER — it IS the run route / cron queue / event subscription that fires the workflow, it has no workflow step"
     : `implement ONLY the body of this node's step (under the \`// node:${node.id}\` marker in the workflow)`
   return `**Execution schema (contract R6):** the process diagram (\`${projectFlowRel(ctx.category, ctx.slug)}\`) and the durable workflow (\`${projectWorkflowRel(ctx.category, ctx.slug)}\`) are GENERATED from the decomposition graph and are the project's ONLY execution schema — what is not on the diagram does not exist in the project; ${own}; a new action = extend the GRAPH and re-run the engine, never a shadow step outside the schema.`
 }
@@ -612,10 +670,10 @@ function layoutPositions(ordered) {
 // The R8 info payload (summary/processes/kind/task/tools/envKeys/io) comes straight from the node.
 function renderProjectFlow(ordered, ctx) {
   const pos = layoutPositions(ordered)
-  const triggers = new Set(ordered.filter(n => n.kind === "trigger").map(n => n.id))
+  const triggers = new Set(ordered.filter(n => ENTRY_KINDS.has(n.kind)).map(n => n.id))
   const nodes = ordered.map(n => ({
     id: n.id, type: "process", position: pos.get(n.id),
-    data: { label: n.title, info: { summary: n.description, processes: n.todo, kind: n.kind, actions: n.actions === "all" ? "all" : n.actions, condition: n.condition, task: n.task, tools: n.tools, envKeys: n.envKeys, io: { in: n.io.in, out: n.io.out } } },
+    data: { label: n.title, info: { summary: n.description, processes: n.todo, kind: n.kind, actions: n.actions === "all" ? "all" : n.actions, condition: n.condition, ...(n.subscribes && n.subscribes.length ? { subscribes: n.subscribes } : {}), task: n.task, tools: n.tools, envKeys: n.envKeys, io: { in: n.io.in, out: n.io.out } } },
   }))
   const edges = []
   for (const n of ordered) for (const dep of n.dependsOn) edges.push({ id: `e-${dep}-${n.id}`, source: dep, target: n.id, ...(triggers.has(dep) ? { animated: true } : {}) })
@@ -632,9 +690,10 @@ function renderProjectFlow(ordered, ctx) {
     "export type FlowNodeInfo = {",
     "  summary: string;",
     "  processes: string[];",
-    `  kind: "trigger" | "router" | "step" | "transform" | "action";`,
+    `  kind: "trigger" | "router" | "step" | "transform" | "action" | "event";`,
     `  actions?: string[] | "all";`,
     "  condition?: string | null;",
+    "  subscribes?: string[];",
     "  task?: string;",
     "  tools: string[];",
     "  envKeys: string[];",
@@ -759,6 +818,68 @@ async function writeProjectColumns(outRoot, graph, ctx) {
   return { rel, abs }
 }
 
+// The EVENTS registry as data (inter-automation pub/sub, §D, step 195): what this automation PUBLISHES
+// (from its actions' emits) and SUBSCRIBES to (from its event triggers). DERIVED (a re-run rewrites it).
+// The substrate dispatcher reads events.json (subscriptions); this .ts is the typed mirror for the UI.
+function renderProjectEvents(graph, ctx) {
+  const publishes = graph.actions.filter(a => a.emits).map(a => ({
+    event: a.emits.event, byAction: a.id,
+    ...(a.emits.subjectTransition ? { subjectTransition: a.emits.subjectTransition } : {}),
+  }))
+  const subscribes = [...new Set(graph.nodes.filter(n => n.kind === "event").flatMap(n => n.subscribes))]
+  return [
+    `// fractera:events ${ctx.sheet} — GENERATED by orchestrate-project-by-steps from the graph's`,
+    "// actions[].emits + event-trigger subscribes[] (automation ontology §D, step 195). Inter-automation",
+    "// pub/sub: PUBLISHES fire the substrate automation_events queue; SUBSCRIBES wake this automation via",
+    "// events.json → its /run route. A re-run rewrites this file — change the GRAPH, never edit here.",
+    "// Canon: CRUD-DOCS/workspace-standards/automation-ontology.md.",
+    "export type PublishedEvent = { event: string; byAction: string; subjectTransition?: string };",
+    `export const PUBLISHES: PublishedEvent[] = ${JSON.stringify(publishes, null, 2)};`,
+    `export const SUBSCRIBES: string[] = ${JSON.stringify(subscribes)};`,
+  ].join("\n")
+}
+async function writeProjectEvents(outRoot, graph, ctx) {
+  const rel = projectEventsRel(ctx.category, ctx.slug)
+  const abs = join(outRoot, rel)
+  await mkdir(dirname(abs), { recursive: true })
+  await writeFile(abs, renderProjectEvents(graph, ctx), "utf8")
+  // Co-located events.json — the substrate dispatcher's subscription declaration (mirrors cron.json).
+  const subscribes = [...new Set(graph.nodes.filter(n => n.kind === "event").flatMap(n => n.subscribes))]
+  const jsonRel = projectEventsJsonRel(ctx.category, ctx.slug)
+  const jsonAbs = join(outRoot, jsonRel)
+  await writeFile(jsonAbs, JSON.stringify({ subscribes }, null, 2) + "\n", "utf8")
+  return { rel, abs, jsonRel }
+}
+
+// The SUBJECT registry as data (ontology entity 13, §D): the cross-automation object's state machine.
+// DERIVED (a re-run rewrites it). The shared subjects/subject_events tables are substrate; this file is
+// the typed status machine the UI + emit-helper read.
+function renderProjectSubject(graph, ctx) {
+  const s = graph.subject
+  return [
+    `// fractera:subject ${ctx.sheet} — GENERATED by orchestrate-project-by-steps from the graph's`,
+    "// subject block (automation ontology entity 13, step 195). A Subject is a long-lived object several",
+    "// automations act on (blogger/lead/customer) — one shared `subjects` table + an append-only",
+    "// `subject_events` log keyed by subject id. A re-run rewrites this — change the GRAPH, never edit here.",
+    "// Canon: CRUD-DOCS/workspace-standards/automation-ontology.md.",
+    "export type SubjectTransition = { from: string; to: string };",
+    `export const SUBJECT_KIND = ${JSON.stringify(s.kind)};`,
+    `export const SUBJECT_STATUSES: string[] = ${JSON.stringify(s.statuses)};`,
+    `export const SUBJECT_TRANSITIONS: SubjectTransition[] = ${JSON.stringify(s.transitions, null, 2)};`,
+    "// A transition is allowed iff it is declared (a closed state machine).",
+    "export function canTransition(from: string, to: string): boolean {",
+    "  return SUBJECT_TRANSITIONS.some((t) => t.from === from && t.to === to);",
+    "}",
+  ].join("\n")
+}
+async function writeProjectSubject(outRoot, graph, ctx) {
+  const rel = projectSubjectRel(ctx.category, ctx.slug)
+  const abs = join(outRoot, rel)
+  await mkdir(dirname(abs), { recursive: true })
+  await writeFile(abs, renderProjectSubject(graph, ctx), "utf8")
+  return { rel, abs }
+}
+
 // One valid TS identifier per step function, camelCase from the node id; reserved names and
 // collisions get a numeric suffix so the generated file always compiles.
 const RESERVED_STEP_NAMES = new Set(["runProject", "openRun", "closeRun"])
@@ -774,8 +895,8 @@ function stepFnName(id, used) {
 // are kept verbatim from the frozen template's contract (same project_cron_runs journal the page
 // tables read); the diagram-mirror steps are TODO bodies the coder fills per their handoff step.
 function renderWorkflowDefinition(ordered, ctx) {
-  const workNodes = ordered.filter(n => n.kind !== "trigger")
-  const triggerNodes = ordered.filter(n => n.kind === "trigger")
+  const workNodes = ordered.filter(n => !ENTRY_KINDS.has(n.kind))
+  const triggerNodes = ordered.filter(n => ENTRY_KINDS.has(n.kind))
   const used = new Set()
   const names = new Map(workNodes.map(n => [n.id, stepFnName(n.id, used)]))
   const calls = workNodes.map(n => `    artifacts[${JSON.stringify(n.id)}] = await ${names.get(n.id)}(artifacts);`)
@@ -849,7 +970,7 @@ function renderWorkflowDefinition(ordered, ctx) {
 // the coder's file; a marker with no graph node is `extra`. A mismatch is a WARNING, not a blocker
 // — the engine never rewrites a coder's implemented workflow.
 function validateWorkflowIso(src, ordered) {
-  const wanted = ordered.filter(n => n.kind !== "trigger").map(n => n.id)
+  const wanted = ordered.filter(n => !ENTRY_KINDS.has(n.kind)).map(n => n.id)
   const found = [...new Set([...src.matchAll(/\/\/\s*node:([a-z0-9-]+)/g)].map(m => m[1]))]
   const missing = wanted.filter(id => !found.includes(id))
   const extra = found.filter(id => !wanted.includes(id))
@@ -981,6 +1102,8 @@ async function main() {
   const flowFile = await writeProjectFlow(outRoot, orderedNodes, emitCtx)
   const actionsFile = graph.actions.length ? await writeProjectActions(outRoot, graph, emitCtx) : null
   const columnsFile = graph.record ? await writeProjectColumns(outRoot, graph, emitCtx) : null
+  const eventsFile = (graph.actions.some(a => a.emits) || graph.nodes.some(n => n.kind === "event")) ? await writeProjectEvents(outRoot, graph, emitCtx) : null
+  const subjectFile = graph.subject ? await writeProjectSubject(outRoot, graph, emitCtx) : null
   const workflow = await emitWorkflowDefinition(outRoot, orderedNodes, emitCtx)
   const materialized = [], skipped = []
   let n = await nextStepNumber(outRoot)
@@ -1015,6 +1138,8 @@ async function main() {
     order_sheet_id: sheetId, actions: graph.actions.length, nodes: graph.nodes.length, readme_path: readmeRel, readme: readmeFile.rel,
     flow: flowFile.rel, ...(actionsFile ? { actions_registry: actionsFile.rel } : {}),
     ...(columnsFile ? { columns_registry: columnsFile.rel } : {}),
+    ...(eventsFile ? { events_registry: eventsFile.rel, events_json: eventsFile.jsonRel } : {}),
+    ...(subjectFile ? { subject_registry: subjectFile.rel } : {}),
     workflow: { rel: workflow.rel, action: workflow.action, ...(workflow.iso ? { iso: workflow.iso } : {}) },
     ...(workflow.iso && !workflow.iso.ok ? { warnings: [...(spec.warnings ?? []), `workflow ${workflow.rel} is NOT isomorphic to the diagram (missing markers: ${workflow.iso.missing.join(", ") || "none"}; extra markers: ${workflow.iso.extra.join(", ") || "none"}) — a coder must reconcile it with the graph (R6)`] } : (spec.warnings ? { warnings: spec.warnings } : {})),
     materialized, ...(skipped.length ? { skipped } : {}),
