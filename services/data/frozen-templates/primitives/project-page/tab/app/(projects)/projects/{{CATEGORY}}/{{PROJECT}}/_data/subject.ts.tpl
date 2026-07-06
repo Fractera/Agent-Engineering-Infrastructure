@@ -6,7 +6,7 @@
 
 export type SubjectTransition = { from: string; to: string };
 
-export const SUBJECT_KIND = "";
+export const SUBJECT_KIND: string = "";
 export const SUBJECT_STATUSES: string[] = [];
 export const SUBJECT_TRANSITIONS: SubjectTransition[] = [];
 

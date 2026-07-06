@@ -312,7 +312,9 @@ async function dispatchEvents() {
         const r = await fetch(t.runUrl, {
           method: 'POST',
           headers: { 'content-type': 'application/json', 'x-agent-identity': 'fractera-cron' },
-          body: JSON.stringify({ input: { subjectId: row.subject_id, event: row.event, from: row.from_automation } }),
+          // input is forwarded by the run route only as a STRING → send the handoff as a JSON string;
+          // the subscriber's event step JSON.parses it to read { subjectId, event, from }.
+          body: JSON.stringify({ input: JSON.stringify({ subjectId: row.subject_id, event: row.event, from: row.from_automation }) }),
           signal: AbortSignal.timeout(30000),
         })
         console.log(`[cron] event '${row.event}' -> ${t.category}/${t.project} /run: HTTP ${r.status}`)

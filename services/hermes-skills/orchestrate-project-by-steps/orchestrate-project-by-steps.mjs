@@ -867,7 +867,7 @@ function renderProjectSubject(graph, ctx) {
     "// `subject_events` log keyed by subject id. A re-run rewrites this — change the GRAPH, never edit here.",
     "// Canon: CRUD-DOCS/workspace-standards/automation-ontology.md.",
     "export type SubjectTransition = { from: string; to: string };",
-    `export const SUBJECT_KIND = ${JSON.stringify(s.kind)};`,
+    `export const SUBJECT_KIND: string = ${JSON.stringify(s.kind)};`,
     `export const SUBJECT_STATUSES: string[] = ${JSON.stringify(s.statuses)};`,
     `export const SUBJECT_TRANSITIONS: SubjectTransition[] = ${JSON.stringify(s.transitions, null, 2)};`,
     "// A transition is allowed iff it is declared (a closed state machine).",
