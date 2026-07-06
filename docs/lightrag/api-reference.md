@@ -48,7 +48,15 @@ Recommended: `mix` when reranker is enabled, `hybrid` otherwise.
 | POST | `/documents/file` | Upload single file (multipart) |
 | POST | `/documents/batch` | Upload multiple files |
 | POST | `/documents/scan` | Scan input directory for new files |
-| DELETE | `/documents` | Clear all documents and indexes |
+| DELETE | `/documents` | Clear ALL documents and indexes |
+| DELETE | `/documents/delete_document` | **Delete ONE document by its doc id** (per-record deletion — used by the Record delete contract, ontology entity 12) |
+| DELETE | `/documents/delete_entity` | Delete a single extracted entity |
+| DELETE | `/documents/delete_relation` | Delete a single extracted relation |
+
+> Verified against the live server OpenAPI (`:9621/openapi.json`, 2026-07-06): the deployed
+> LightRAG exposes per-document deletion (`delete_document`), not only clear-all. An automation's
+> Record deletion (188-R) stores the memory doc id at ingest and calls `delete_document` on
+> delete; a failed/unknown id still removes the DB row (best-effort, owner never blocked).
 
 ### POST /documents/text
 
