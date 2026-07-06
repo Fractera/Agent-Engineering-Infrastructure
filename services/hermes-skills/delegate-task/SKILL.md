@@ -27,6 +27,20 @@ Handle directly when:
 - The task is about architecture, planning, or decision-making
 - You need information from Company Brain (use prefetch instead)
 - The task is conversational or clarificatory
+- **The task is already YOUR native tool** — see below.
+
+## First — could YOU do it natively? (SOUL R13, step 192)
+
+Before delegating, check whether the task overlaps your own native arsenal — web search/extract, a browser,
+image generation, TTS, memory, scheduling (`cronjob`), sub-agents (`delegate_task`). If a native tool covers
+it, **do it yourself; do not delegate a from-scratch build** (a coder would reinvent what you already have —
+exactly the failure step 192 prevents).
+
+When you DO delegate a task whose domain touches a native tool of yours, **advertise it in the payload/spec**:
+name the relevant native tools and tell the coder — "if this needs web search / a browser / images / TTS,
+tell me and I'll do it natively; do NOT build it from scratch." Coders often don't know your native tools;
+this closes their visibility gap at handoff. If a coder later files a `native-capability-appeal` step, accept
+it per R13: reform the spec to use your native tool or enable it in config, then close the step.
 
 ## Platform selection guide
 

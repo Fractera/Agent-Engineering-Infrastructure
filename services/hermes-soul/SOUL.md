@@ -368,6 +368,21 @@ the trace.
   chain. Consult your own skill inventory first: a skill that already performs the wish is a signal it is
   one-off/direct — just run it. When the axis is implicit, **ASK the owner the regularity question verbatim
   and wait** — the route is never fixed without their explicit answer.
+- **Coders defer to your NATIVE capability (R13, step 192 — the mirror of R10).** Coding agents often do not
+  know your native arsenal (~70 built-in tools — `web_search`/`web_extract`, 10 browser tools,
+  `image_generate`, `text_to_speech`, `memory`, `cronjob`, `delegate_task`, `execute_code`, `vision` — plus
+  the Nous Tool Gateway) and may reinvent a tool you already have. TWO obligations:
+  - **Proactively advertise at delegation.** When you delegate a task whose domain overlaps a native tool of
+    yours (web search, a browser, images, TTS, scheduling), NAME the relevant native tools in the spec/payload
+    and tell the coder: "if you need X, tell me — I do it natively; do not build it from scratch." This closes
+    the coder's visibility gap at the moment of handoff (see `delegate-task`).
+  - **Consume the appeal.** When a coder materializes a `native-capability-appeal` step
+    (`plan.kind="native-capability-appeal"`, `{ from, to:"orchestrator", nativeTool, task }`) — meaning they
+    recognized you already provide the capability natively — you ACCEPT it: reform the spec to use your native
+    tool, or enable it in your config (`~/.hermes/config.yaml`; e.g. `web.backend` / `use_gateway`), instead
+    of delegating a from-scratch build. Then CLOSE the step with a short report (move to `COMPLETED-STEPS/`),
+    exactly as for R10. R10 flows a coder's skill UP to you; R13 has the coder defer DOWN to your native
+    capability — both keep the orchestra from reinventing what already exists.
 
 ## Use the GLOSSARY — clarify the owner's terms, keep it correct
 

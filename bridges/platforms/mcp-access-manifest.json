@@ -16,8 +16,7 @@
     "client-actions-bridge": { "port": 3220, "first_party": true, "max_tier": "public" },
     "ai-draft-bridge": { "port": 3221, "first_party": true, "max_tier": "owner" },
     "projects-router-bridge": { "port": 3229, "first_party": true, "max_tier": "owner" },
-    "doc-transfer-bridge": { "port": 3230, "first_party": true, "max_tier": "owner" },
-    "web-search-bridge": { "port": 3231, "first_party": true, "max_tier": "owner" }
+    "doc-transfer-bridge": { "port": 3230, "first_party": true, "max_tier": "owner" }
   },
   "tools": {
     "owner_coding_platform_send_prompt": { "tier": "owner", "first_party": true, "mutating": true, "execution": "server" },
@@ -57,7 +56,6 @@
     "owner_projects_route_request": { "tier": "owner", "first_party": true, "mutating": false, "execution": "server" },
     "owner_projects_survey_automation_needs": { "tier": "owner", "first_party": true, "mutating": false, "execution": "server" },
     "owner_projects_orchestrate_decomposition": { "tier": "owner", "first_party": true, "mutating": true, "execution": "server" },
-    "owner_docs_transfer_external_documentation": { "tier": "owner", "first_party": true, "mutating": true, "execution": "server" },
-    "owner_web_search": { "tier": "owner", "first_party": true, "mutating": false, "execution": "server" }
+    "owner_docs_transfer_external_documentation": { "tier": "owner", "first_party": true, "mutating": true, "execution": "server" }
   }
 }

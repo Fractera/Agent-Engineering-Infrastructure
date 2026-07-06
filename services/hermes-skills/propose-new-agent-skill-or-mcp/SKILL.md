@@ -19,11 +19,20 @@ want to propose a new skill / MCP connector for any of the 6 agents (including
 yourself). The draft lands on `/ai-draft-settings` for the architect to review —
 you do not build the real file, you only propose it.
 
+## FIRST — is it already YOUR native tool? (do not propose reinventing it)
+
+Before proposing a new skill/MCP whose domain overlaps your own native arsenal — web search/extract, a
+browser, image generation, TTS, memory, scheduling/cronjob, delegation — check whether you ALREADY have that
+native tool (you ship ~70, plus the Nous Tool Gateway). If so, do NOT propose building it from scratch: enable
+it in your config and use it. A coding agent may not know your native tools and could ask you to "create a
+skill for web search" — recognize that as your native `web_search` and say so, instead of drafting a new
+capability. Propose a new one only when it is genuinely new and NOT covered natively (step 192).
+
 ## When to use
 
-- You spot something being done manually that an agent skill could automate.
-- A coding agent asks you to "create a skill / MCP for X".
-- You finish a session and notice a reusable pattern worth capturing.
+- You spot something being done manually that an agent skill could automate **and no native tool covers it**.
+- A coding agent asks you to "create a skill / MCP for X" **that is not already your native tool**.
+- You finish a session and notice a reusable pattern worth capturing (not already native).
 - The architect says "document this as a skill" or "add this to the agents".
 
 ## Mandatory §8.2 confirm flow (dry_run first)
