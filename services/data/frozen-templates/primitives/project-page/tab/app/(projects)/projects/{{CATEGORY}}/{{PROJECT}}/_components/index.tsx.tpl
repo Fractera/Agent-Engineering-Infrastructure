@@ -10,14 +10,15 @@ import { DEFAULT_LANGUAGE } from "@/config/translations/translations.config";
 import { PROJECT_DESCRIPTION } from "../_data/description";
 import { DEFAULT_HOOKS } from "../_data/hooks";
 import { projectTabStrings } from "../_data/tab-i18n";
-import { getCronJobs, getHooks, getProcessQueue, getResults } from "../_lib/project-data";
+import { getCronJobs, getHooks, getProcessQueue, getRecords } from "../_lib/project-data";
+import { PROJECT_COLUMNS } from "../_data/columns";
 import { CronJobsTable } from "./cron-jobs-table.server";
 import { HooksPanel } from "./hooks-panel.client";
 import { MissingKeysModal } from "./missing-keys-modal.client";
 import { ProcessFlow } from "./process-flow.client";
 import { ProjectFooter } from "./project-footer.client";
 import { ProcessQueueTable } from "./process-queue-table.server";
-import { ResultsTable } from "./results-table.server";
+import { RecordsTable } from "./records-table.client";
 import { RunPanel } from "./run-panel.client";
 
 // The project's standalone page — the result contract (R9): presentation text,
@@ -25,9 +26,9 @@ import { RunPanel } from "./run-panel.client";
 // runs dashboard with results, and the scheduled cron queue. Reshape the
 // diagram in _data/flow.ts; the tables fill from _lib/project-data.ts.
 export default async function {{PROJECT_PASCAL}}ProjectEntry() {
-  const [runs, results, cronJobs, hooks] = await Promise.all([
+  const [runs, records, cronJobs, hooks] = await Promise.all([
     getProcessQueue(),
-    getResults(),
+    getRecords(),
     getCronJobs(),
     getHooks(),
   ]);
@@ -92,7 +93,7 @@ export default async function {{PROJECT_PASCAL}}ProjectEntry() {
       </section>
       <section className="space-y-3">
         <h2 className="text-xl font-medium">{t.results}</h2>
-        <ResultsTable results={results} />
+        <RecordsTable columns={PROJECT_COLUMNS} initialRows={records} />
       </section>
       <section className="space-y-3">
         <h2 className="text-xl font-medium">{t.scheduled}</h2>

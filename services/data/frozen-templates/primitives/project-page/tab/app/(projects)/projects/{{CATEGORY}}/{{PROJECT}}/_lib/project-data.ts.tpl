@@ -1,7 +1,20 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { db } from "@/lib/db";
-import type { CronJob, Hook, ProcessRun, ProjectResult } from "./types";
+import { PROJECT_COLUMNS, RECORD_TABLE } from "../_data/columns";
+import type { CronJob, Hook, ProcessRun, ProjectResult, RecordRow } from "./types";
+
+// SQLite identifier guard — RECORD_TABLE / column sources are engine-generated and validated
+// by the ontology gate, but re-checked here so a hand-edited config can never inject SQL.
+const IDENT = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+
+// The columns' distinct source fields, always including id — the projection getRecords selects.
+function recordSources(): string[] {
+  const sources = Array.from(
+    new Set(PROJECT_COLUMNS.map((c) => c.source).filter((s) => IDENT.test(s))),
+  );
+  return ["id", ...sources.filter((s) => s !== "id")];
+}
 
 const CATEGORY = "{{CATEGORY}}";
 const PROJECT = "{{PROJECT}}";
@@ -108,5 +121,45 @@ export async function getCronJobs(): Promise<CronJob[]> {
     }));
   } catch {
     return []; // no cron.json yet — the project declares no scheduled runs
+  }
+}
+
+// Rows of the UNIVERSAL records table (ontology entity 12 Record). The columns are
+// config-driven (_data/columns.ts); this provider projects each column's `source` from the
+// declared RECORD_TABLE into a values map keyed by column id. RECORD_TABLE === "" (the starter
+// default) falls back to the generic completed-runs results. Server-rendered first page
+// (works with JS off); the /records API serves search + pagination + detail + delete.
+export async function getRecords(): Promise<RecordRow[]> {
+  if (!RECORD_TABLE) {
+    const results = await getResults();
+    return results.map((r) => ({
+      id: r.id,
+      values: {
+        title: r.title,
+        artifactUrl: r.artifactUrl,
+        producedAt: r.producedAt,
+      },
+    }));
+  }
+  if (!IDENT.test(RECORD_TABLE)) {
+    return []; // config guard — never query a non-identifier table name
+  }
+  try {
+    const cols = recordSources();
+    const rows = await db
+      .prepare(
+        `SELECT ${cols.join(", ")} FROM ${RECORD_TABLE} ORDER BY id DESC LIMIT ${LIMIT}`,
+      )
+      .all();
+    return rows.map((row) => {
+      const rec = row as Record<string, unknown>;
+      const values: Record<string, unknown> = {};
+      for (const c of PROJECT_COLUMNS) {
+        values[c.id] = rec[c.source];
+      }
+      return { id: String(rec.id), values };
+    });
+  } catch {
+    return []; // table not created yet (no run has written a record) — empty
   }
 }

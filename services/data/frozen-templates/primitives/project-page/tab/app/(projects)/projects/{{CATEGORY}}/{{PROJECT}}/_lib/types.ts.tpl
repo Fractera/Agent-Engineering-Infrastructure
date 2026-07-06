@@ -14,6 +14,15 @@ export type ProjectResult = {
   producedAt: string; // ISO date-time
 };
 
+// One row of the universal records table (ontology entity 12 Record). Columns are
+// config-driven (_data/columns.ts, generated from the graph); a row carries an id plus
+// a values map keyed by column id — the RecordsTable renders values[col.id] through the
+// typed renderer for col.type. No automation hand-codes a bespoke table.
+export type RecordRow = {
+  id: string;
+  values: Record<string, unknown>;
+};
+
 export type CronJob = {
   id: string;
   title: string;

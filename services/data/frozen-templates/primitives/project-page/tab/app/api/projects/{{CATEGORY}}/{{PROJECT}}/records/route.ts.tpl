@@ -1,0 +1,58 @@
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import {
+  PROJECT_COLUMNS,
+  RECORD_TABLE,
+} from "@/app/(projects)/projects/{{CATEGORY}}/{{PROJECT}}/_data/columns";
+
+// Generic list endpoint of the universal records table (ontology entity 12 Record). Projects
+// the config-declared columns from RECORD_TABLE with server-side search (over text/longtext
+// columns) and offset pagination. RECORD_TABLE / column sources are engine-generated and
+// validated by the ontology gate; re-checked here so nothing but an identifier reaches SQL.
+export const runtime = "nodejs";
+
+const IDENT = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+const PAGE = 20;
+
+export async function GET(req: NextRequest) {
+  if (!RECORD_TABLE || !IDENT.test(RECORD_TABLE)) {
+    return NextResponse.json({ rows: [], hasMore: false });
+  }
+  const { searchParams } = new URL(req.url);
+  const search = (searchParams.get("search") ?? "").trim();
+  const offset = Math.max(0, Number.parseInt(searchParams.get("offset") ?? "0", 10) || 0);
+
+  const sources = Array.from(
+    new Set(PROJECT_COLUMNS.map((c) => c.source).filter((s) => IDENT.test(s))),
+  );
+  const cols = ["id", ...sources.filter((s) => s !== "id")];
+  const textCols = PROJECT_COLUMNS.filter(
+    (c) => (c.type === "text" || c.type === "longtext") && IDENT.test(c.source),
+  ).map((c) => c.source);
+
+  const where =
+    search && textCols.length
+      ? `WHERE (${textCols.map((s) => `${s} LIKE ?`).join(" OR ")})`
+      : "";
+  const args = search && textCols.length ? textCols.map(() => `%${search}%`) : [];
+
+  try {
+    const rows = await db
+      .prepare(
+        `SELECT ${cols.join(", ")} FROM ${RECORD_TABLE} ${where} ORDER BY id DESC LIMIT ${PAGE + 1} OFFSET ${offset}`,
+      )
+      .all(...args);
+    const hasMore = rows.length > PAGE;
+    const page = rows.slice(0, PAGE).map((row) => {
+      const rec = row as Record<string, unknown>;
+      const values: Record<string, unknown> = {};
+      for (const c of PROJECT_COLUMNS) {
+        values[c.id] = rec[c.source];
+      }
+      return { id: String(rec.id), values };
+    });
+    return NextResponse.json({ rows: page, hasMore });
+  } catch {
+    return NextResponse.json({ rows: [], hasMore: false });
+  }
+}

@@ -61,6 +61,13 @@ import { createHash } from "node:crypto"
 const KINDS = ["trigger", "router", "step", "transform"]
 const KIND_ALIASES = { action: "step" } // v1 graphs said "action" for a work node; Action is an entity now
 const ERROR_POLICIES = ["retry-next-tick", "soft-degrade", "fail-run"]
+// The CLOSED set of records-table column renderers (ontology entity 12 Record). A new column is
+// DATA in the graph's record.fields[]; a genuinely new visual = a new type here + the primitive's
+// record-cell renderer + a canon gate. Kept in lockstep with record-cell.client.tsx.
+const COLUMN_TYPES = ["badge", "text", "longtext", "date", "link", "actions"]
+// Identifier guard for SQL-facing names (record.table, field.source) — returns "" if not a plain
+// identifier, so a bad name is caught by the gate and never reaches generated SQL.
+const identOf = s => { const v = String(s ?? "").trim(); return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(v) ? v : "" }
 // Action colors — stable tokens the UI maps to theme-aware classes; auto-assigned by declaration
 // order when the graph omits `color`.
 const ACTION_COLORS = ["blue", "amber", "green", "violet", "rose", "cyan", "orange", "teal"]
@@ -185,6 +192,27 @@ function normalizeGraph(raw, cliCategory, cliSlug) {
     reuse: str(proj.reuse),
     result: str(proj.result),
   }
+  // Records-table columns (ontology entity 12 Record) — an OPTIONAL block. When present the engine
+  // generates _data/columns.ts from it (like actions.ts). Kept to the closed, renderable shape;
+  // SQL-facing names are identifier-guarded so the gate can refuse a bad one.
+  const rawRecord = (g.record && typeof g.record === "object") ? g.record : null
+  const record = rawRecord ? {
+    table: identOf(rawRecord.table),
+    fields: arr(rawRecord.fields).map(f => {
+      const o = (f && typeof f === "object") ? f : {}
+      return {
+        id: slugify(o.id) || slugify(o.header) || "",
+        header: str(o.header) || str(o.id),
+        // Keep the declared type verbatim (empty → text): an INVALID type is preserved so the
+        // validation gate catches it, rather than being silently coerced to a renderable default.
+        type: str(o.type).toLowerCase() || "text",
+        source: identOf(o.source),
+        defaultVisible: o.defaultVisible !== false,
+        ...(slugify(o.attr) ? { attr: slugify(o.attr) } : {}),
+        ...(o.options && typeof o.options === "object" ? { options: o.options } : {}),
+      }
+    }).filter(f => f.id),
+  } : null
   return {
     category: slugify(cliCategory ?? g.category) || "automation",
     slug: slugify(cliSlug ?? g.slug) || slugify(project.purpose) || "project",
@@ -192,6 +220,7 @@ function normalizeGraph(raw, cliCategory, cliSlug) {
     actions,
     state,
     nodes,
+    ...(record && (record.table || record.fields.length) ? { record } : {}),
     ...(duplicates.length ? { duplicates } : {}),
   }
 }
@@ -275,6 +304,21 @@ function validateSpec(graph) {
     if (!graph.nodes.some(n => n.state.includes(s.id))) warnings.push(`state "${s.id}" is declared but no node references it`)
   }
   for (const s of README_SECTIONS) if (!graph.project[s]) missing.push(`project readme: missing "${s}" section`)
+  // Records columns gate (ontology entity 12): when a record block is present it must declare a
+  // valid table, ≥1 field, each field a closed type + an id-safe source, and ≥1 defaultVisible.
+  // A broken column config would generate an unrenderable table — refuse it (the canon has teeth).
+  if (graph.record) {
+    const rec = graph.record
+    if (!rec.table) missing.push(`record: table must be a valid identifier (the DB table the rows come from)${ontologyHint}`)
+    if (!rec.fields.length) missing.push(`record: declares a records table but no fields[] (columns)${ontologyHint}`)
+    for (const f of rec.fields) {
+      const w = `record field "${f.id || "?"}"`
+      if (!f.header) missing.push(`${w}: missing header`)
+      if (!COLUMN_TYPES.includes(f.type)) missing.push(`${w}: type must be one of ${COLUMN_TYPES.join("|")}${ontologyHint}`)
+      if (!f.source) missing.push(`${w}: source must be a valid column identifier of "${rec.table}"`)
+    }
+    if (rec.fields.length && !rec.fields.some(f => f.defaultVisible)) missing.push(`record: at least one field must be defaultVisible${ontologyHint}`)
+  }
   return { ok: missing.length === 0, missing, ...(warnings.length ? { warnings } : {}) }
 }
 
@@ -285,6 +329,7 @@ function orderSheetId(graph) {
   const canon = {
     category: graph.category, slug: graph.slug, project: graph.project,
     actions: graph.actions, state: graph.state,
+    ...(graph.record ? { record: graph.record } : {}),
     nodes: graph.nodes.map(n => ({ id: n.id, title: n.title, kind: n.kind, actions: n.actions, condition: n.condition, errorPolicy: n.errorPolicy, state: n.state, description: n.description, task: n.task, tools: n.tools, envKeys: n.envKeys, io: n.io, todo: n.todo, dependsOn: n.dependsOn })),
   }
   return "os-" + createHash("sha256").update(JSON.stringify(canon)).digest("hex").slice(0, 16)
@@ -536,6 +581,7 @@ async function writeProjectReadme(outRoot, graph, ordered, ctx) {
 const flat = s => String(s ?? "").replace(/\s*\n+\s*/g, " ").trim()
 const projectFlowRel = (category, slug) => `app/(projects)/projects/${category}/${slug}/_data/flow.ts`
 const projectActionsRel = (category, slug) => `app/(projects)/projects/${category}/${slug}/_data/actions.ts`
+const projectColumnsRel = (category, slug) => `app/(projects)/projects/${category}/${slug}/_data/columns.ts`
 const projectWorkflowRel = (category, slug) => `app/api/projects/${category}/${slug}/_workflow/definition.ts`
 const STARTER_WORKFLOW_MARKER = "fractera:starter-workflow"
 
@@ -652,6 +698,64 @@ async function writeProjectActions(outRoot, graph, ctx) {
   const abs = join(outRoot, rel)
   await mkdir(dirname(abs), { recursive: true })
   await writeFile(abs, renderProjectActions(graph, ctx), "utf8")
+  return { rel, abs }
+}
+
+// The COLUMNS REGISTRY as data (ontology entity 12 Record) — the config that drives the ONE
+// universal RecordsTable. DERIVED like actions.ts (always rewritten from graph.record.fields[]).
+// RECORD_TABLE is the DB source; each column is {id,header,type,source,defaultVisible,attr?,options?}
+// with type in the CLOSED renderer set. No automation hand-codes a bespoke table ever again.
+function renderProjectColumns(graph, ctx) {
+  const rec = graph.record || {}
+  const table = rec.table || ""
+  const entries = (rec.fields || []).map(f => ({
+    id: f.id, header: f.header, type: f.type, source: f.source,
+    defaultVisible: f.defaultVisible !== false,
+    ...(f.attr ? { attr: f.attr } : {}),
+    ...(f.options ? { options: f.options } : {}),
+  }))
+  return [
+    `// fractera:columns ${ctx.sheet} — GENERATED by orchestrate-project-by-steps from the graph's`,
+    "// record.fields[] (automation ontology entity 12 Record, step 188-R). The universal RecordsTable",
+    "// renders whatever this declares through a CLOSED set of typed renderers; a re-run rewrites this",
+    "// file — to add or change a column, extend the GRAPH and re-run, never edit a component.",
+    "// Canon: CRUD-DOCS/workspace-standards/automation-ontology.md.",
+    "",
+    `export type ColumnType = "badge" | "text" | "longtext" | "date" | "link" | "actions";`,
+    "export type ColumnOptions = {",
+    "  colorFrom?: string;",
+    "  emphasizeIfFuture?: boolean;",
+    "  expand?: boolean;",
+    `  action?: "detail" | "delete";`,
+    "};",
+    "export type ProjectColumn = {",
+    "  id: string;",
+    "  header: string;",
+    "  type: ColumnType;",
+    "  source: string;",
+    "  defaultVisible: boolean;",
+    "  attr?: string;",
+    "  options?: ColumnOptions;",
+    "};",
+    "",
+    "// The DB table rows come from. Empty string = the generic completed-runs results.",
+    `export const RECORD_TABLE = ${JSON.stringify(table)};`,
+    "",
+    `export const PROJECT_COLUMNS: ProjectColumn[] = ${JSON.stringify(entries, null, 2)};`,
+    "",
+    "export function defaultVisibleColumnIds(): string[] {",
+    "  return PROJECT_COLUMNS.filter((c) => c.defaultVisible).map((c) => c.id);",
+    "}",
+    "export function projectColumn(id: string): ProjectColumn | undefined {",
+    "  return PROJECT_COLUMNS.find((c) => c.id === id);",
+    "}",
+  ].join("\n")
+}
+async function writeProjectColumns(outRoot, graph, ctx) {
+  const rel = projectColumnsRel(ctx.category, ctx.slug)
+  const abs = join(outRoot, rel)
+  await mkdir(dirname(abs), { recursive: true })
+  await writeFile(abs, renderProjectColumns(graph, ctx), "utf8")
   return { rel, abs }
 }
 
@@ -876,6 +980,7 @@ async function main() {
   const emitCtx = { sheet: sheetId, category: graph.category, slug: graph.slug }
   const flowFile = await writeProjectFlow(outRoot, orderedNodes, emitCtx)
   const actionsFile = graph.actions.length ? await writeProjectActions(outRoot, graph, emitCtx) : null
+  const columnsFile = graph.record ? await writeProjectColumns(outRoot, graph, emitCtx) : null
   const workflow = await emitWorkflowDefinition(outRoot, orderedNodes, emitCtx)
   const materialized = [], skipped = []
   let n = await nextStepNumber(outRoot)
@@ -909,6 +1014,7 @@ async function main() {
   console.log(JSON.stringify({ ok: true, mode: "project-plan", ...(prior.size ? { resumed: true } : {}), category: graph.category, slug: graph.slug,
     order_sheet_id: sheetId, actions: graph.actions.length, nodes: graph.nodes.length, readme_path: readmeRel, readme: readmeFile.rel,
     flow: flowFile.rel, ...(actionsFile ? { actions_registry: actionsFile.rel } : {}),
+    ...(columnsFile ? { columns_registry: columnsFile.rel } : {}),
     workflow: { rel: workflow.rel, action: workflow.action, ...(workflow.iso ? { iso: workflow.iso } : {}) },
     ...(workflow.iso && !workflow.iso.ok ? { warnings: [...(spec.warnings ?? []), `workflow ${workflow.rel} is NOT isomorphic to the diagram (missing markers: ${workflow.iso.missing.join(", ") || "none"}; extra markers: ${workflow.iso.extra.join(", ") || "none"}) — a coder must reconcile it with the graph (R6)`] } : (spec.warnings ? { warnings: spec.warnings } : {})),
     materialized, ...(skipped.length ? { skipped } : {}),

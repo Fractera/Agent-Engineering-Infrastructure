@@ -50,7 +50,8 @@ const meta: RouteMeta = {
     "index",
     "process-flow.client",
     "process-queue-table.server",
-    "results-table.server",
+    "records-table.client",
+    "record-cell.client",
   ],
   sharedComponents: [],
 

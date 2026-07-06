@@ -11,10 +11,17 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { Info, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { type CSSProperties, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { FLOW_EDGES, FLOW_NODES, type FlowNode } from "../_data/flow";
 import { projectAction } from "../_data/actions";
+import { ontologyAttr } from "../_data/ontology-attrs";
 
 // Action color → the left-accent hex the node border uses (matches the ontology palette,
 // step 188-R). A single-action node carries that action's color; a trunk ("all") or
@@ -35,19 +42,92 @@ function nodeAccent(actions: FlowNode["data"]["info"]["actions"]): string | unde
 // truth of the diagram. Clicking a node opens the info panel with EVERYTHING the
 // node is (kind, actions, condition, task, processes, tools, env keys, io,
 // connections) — R8. Each node is tinted by its Action color (ontology, 188-R).
+// One typed-facet badge on a node card — labelled by its ontology entity, its meaning on hover
+// (shared ONTOLOGY_ATTRS vocabulary). Truncates + never wraps so the facet strip stays one line.
+function FacetBadge({
+  label,
+  tooltip,
+  variant,
+  style,
+}: {
+  label: string;
+  tooltip: string;
+  variant?: "secondary" | "outline";
+  style?: CSSProperties;
+}) {
+  return (
+    <Tooltip delayDuration={200}>
+      <TooltipTrigger asChild>
+        <Badge
+          variant={variant}
+          style={style}
+          className="max-w-24 shrink-0 truncate px-1.5 py-0 text-[10px] font-normal"
+        >
+          {label}
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-56 text-xs">{tooltip}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+// A node card in two vertical zones (188-R "ontology as UI"): the TOP strip shows the node's
+// typed facets (kind + up to two actions + a condition marker) in ONE line — each a badge
+// labelled by its ontology entity with a hover tooltip; the BOTTOM zone is the description.
+// Clicking the node opens the full info panel (R8). Everything here is DATA from _data/flow.ts.
 function ProcessNode({ data, selected }: NodeProps<FlowNode>) {
-  const accent = nodeAccent(data.info.actions);
+  const info = data.info;
+  const accent = nodeAccent(info.actions);
+  const actionIds = Array.isArray(info.actions) ? info.actions : [];
+  const shown = actionIds.slice(0, 2);
+  const extra = actionIds.length - shown.length;
   return (
     <div
       className={
-        "flex max-w-56 items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm shadow-sm " +
+        "w-56 overflow-hidden rounded-md border bg-background text-sm shadow-sm " +
         (selected ? "border-primary" : "border-border")
       }
       style={accent ? { borderLeft: `3px solid ${accent}` } : undefined}
     >
       <Handle type="target" position={Position.Left} />
-      <span>{data.label}</span>
-      <Info className="size-3.5 shrink-0 text-muted-foreground" />
+      <div className="flex items-center gap-1 border-b bg-muted/40 px-2 py-1">
+        <FacetBadge
+          label={ontologyAttr(info.kind).label}
+          tooltip={ontologyAttr(info.kind).tooltip}
+          variant="secondary"
+        />
+        {info.actions === "all" ? (
+          <FacetBadge label="all" tooltip={ontologyAttr("action").tooltip} variant="outline" />
+        ) : (
+          shown.map((id) => {
+            const a = projectAction(id);
+            const c = ACTION_ACCENT[a.color];
+            return (
+              <FacetBadge
+                key={id}
+                label={a.title}
+                tooltip={ontologyAttr("action").tooltip}
+                variant="outline"
+                style={c ? { borderColor: c, color: c } : undefined}
+              />
+            );
+          })
+        )}
+        {extra > 0 && (
+          <span className="shrink-0 text-[10px] text-muted-foreground">+{extra}</span>
+        )}
+        {info.condition && (
+          <FacetBadge
+            label={ontologyAttr("condition").label}
+            tooltip={info.condition}
+            variant="outline"
+          />
+        )}
+      </div>
+      <div className="flex items-start gap-2 px-3 py-2">
+        <span className="line-clamp-2">{data.label}</span>
+        <Info className="ml-auto mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+      </div>
       <Handle type="source" position={Position.Right} />
     </div>
   );
@@ -99,6 +179,7 @@ export function ProcessFlow() {
   const info = active?.data.info;
 
   return (
+    <TooltipProvider>
     <div className="relative h-[420px] overflow-hidden rounded-lg border">
       <ReactFlow
         nodes={nodes}
@@ -193,5 +274,6 @@ export function ProcessFlow() {
         </aside>
       )}
     </div>
+    </TooltipProvider>
   );
 }
