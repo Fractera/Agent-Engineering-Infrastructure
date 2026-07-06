@@ -12,21 +12,38 @@ import {
 import "@xyflow/react/dist/style.css";
 import { Info, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { FLOW_EDGES, FLOW_NODES, type FlowNode } from "../_data/flow";
+import { projectAction } from "../_data/actions";
+
+// Action color → the left-accent hex the node border uses (matches the ontology palette,
+// step 188-R). A single-action node carries that action's color; a trunk ("all") or
+// multi-action node stays neutral (its actions are shown as badges in the info panel).
+const ACTION_ACCENT: Record<string, string> = {
+  blue: "#3b82f6", amber: "#f59e0b", green: "#22c55e", violet: "#8b5cf6",
+  rose: "#f43f5e", cyan: "#06b6d4", orange: "#f97316", teal: "#14b8a6",
+};
+function nodeAccent(actions: FlowNode["data"]["info"]["actions"]): string | undefined {
+  if (!Array.isArray(actions) || actions.length !== 1) return undefined;
+  return ACTION_ACCENT[projectAction(actions[0]).color];
+}
 
 // Interactive process diagram (react-flow). Its shape is DATA in _data/flow.ts —
 // the project's EXECUTION SCHEMA (contract R6): reshape the diagram there, never
 // in this component. Nodes are movable and edges follow them, but the canvas
 // cannot create or delete anything: the data file stays the single source of
 // truth of the diagram. Clicking a node opens the info panel with EVERYTHING the
-// node is (kind, task, processes, tools, env keys, io, connections) — R8.
+// node is (kind, actions, condition, task, processes, tools, env keys, io,
+// connections) — R8. Each node is tinted by its Action color (ontology, 188-R).
 function ProcessNode({ data, selected }: NodeProps<FlowNode>) {
+  const accent = nodeAccent(data.info.actions);
   return (
     <div
       className={
         "flex max-w-56 items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm shadow-sm " +
         (selected ? "border-primary" : "border-border")
       }
+      style={accent ? { borderLeft: `3px solid ${accent}` } : undefined}
     >
       <Handle type="target" position={Position.Left} />
       <span>{data.label}</span>
@@ -116,6 +133,31 @@ export function ProcessFlow() {
             </button>
           </div>
           <p className="text-muted-foreground">{info.summary}</p>
+          {/* Which Action branches flow through this node (ontology, 188-R). */}
+          {info.actions && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-xs font-medium text-muted-foreground">Actions:</span>
+              {info.actions === "all" ? (
+                <Badge variant="outline">all</Badge>
+              ) : (
+                info.actions.map((id) => {
+                  const a = projectAction(id);
+                  const accent = ACTION_ACCENT[a.color];
+                  return (
+                    <Badge key={id} variant="outline" style={accent ? { borderColor: accent, color: accent } : undefined}>
+                      {a.title}
+                    </Badge>
+                  );
+                })
+              )}
+            </div>
+          )}
+          {info.condition && (
+            <div className="space-y-1">
+              <h4 className="font-medium">Condition</h4>
+              <p className="text-muted-foreground">{info.condition}</p>
+            </div>
+          )}
           {info.task && (
             <div className="space-y-1">
               <h4 className="font-medium">Task</h4>

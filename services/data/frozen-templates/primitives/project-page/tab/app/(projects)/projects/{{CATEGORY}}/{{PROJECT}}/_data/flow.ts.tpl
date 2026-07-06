@@ -7,12 +7,17 @@ import type { Edge, Node } from "@xyflow/react";
 // is born from a decomposition (orchestrate-project-by-steps), this file is
 // GENERATED from the graph — extend the GRAPH and re-run the engine instead of
 // hand-editing. Every node carries `info` — the payload of the on-canvas info
-// panel: everything the node does must be readable there (kind, task, tools,
-// env keys, inputs/outputs, processes).
+// panel: everything the node does must be readable there (kind, actions,
+// condition, task, tools, env keys, inputs/outputs, processes). `info.actions`
+// names the Action branches flowing through the node ("all" = trunk) and drives
+// the node's color — the automation ontology (step 188-R; canon:
+// CRUD-DOCS/workspace-standards/automation-ontology.md).
 export type FlowNodeInfo = {
   summary: string;
   processes: string[];
-  kind: "trigger" | "action" | "transform";
+  kind: "trigger" | "router" | "step" | "transform" | "action";
+  actions?: string[] | "all";
+  condition?: string | null;
   task?: string;
   tools: string[];
   envKeys: string[];
