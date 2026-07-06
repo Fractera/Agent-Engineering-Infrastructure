@@ -19,6 +19,7 @@ import { ContentOrchestratorMcpServer } from './content-orchestrator-mcp-server.
 import { LanguageExpansionMcpServer } from './language-expansion-mcp-server.js'
 import { ProjectsRouterMcpServer } from './projects-router-mcp-server.js'
 import { DocTransferMcpServer } from './doc-transfer-mcp-server.js'
+import { WebSearchMcpServer } from './web-search-mcp-server.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, '../../app/.env.local') })
@@ -1296,4 +1297,17 @@ new DocTransferMcpServer({
   appDir: process.env.SLOT_APP_DIR ?? '/opt/fractera/app',
   ragUrl: process.env.LIGHTRAG_URL ?? 'http://localhost:9621',
   ragKey: process.env.LIGHTRAG_API_KEY ?? '',
+}).start()
+
+// ── Web Search MCP server (singleton, port 3231) ─────────────────────────────
+// Hermes-native ONE-OFF ability (step 190 E2.1): the request router sends one-off
+// "search the web / look this up" wishes here — Hermes performs the search itself
+// (exa.ai) and answers, building nothing. Read-only; returns compact cited results.
+// EXA_API_KEY is a normal integration env (persist-env-var-with-rebuild), absent →
+// the tool returns a calm needs_key status.
+new WebSearchMcpServer({
+  port: Number(process.env.WEB_SEARCH_MCP_PORT ?? 3231),
+  secret: MCP_SECRET,
+  exaKey: process.env.EXA_API_KEY ?? '',
+  appEnvPath: resolve(process.env.SLOT_APP_DIR ?? '/opt/fractera/app', '.env.local'),
 }).start()
