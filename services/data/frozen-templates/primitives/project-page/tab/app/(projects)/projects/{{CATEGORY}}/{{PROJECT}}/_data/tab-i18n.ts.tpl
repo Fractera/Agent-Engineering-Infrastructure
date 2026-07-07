@@ -21,6 +21,9 @@ export type ProjectTabStrings = {
   // footer tooltips (186.2)
   continueDev: string;
   envVars: string;
+  // top continuation banner (195) — optional: EN/RU authored, other langs fall back to EN by key
+  continueLead?: string;
+  continueLinkWord?: string;
   // missing-keys modal (186.3)
   keysTitle: string;
   keysDescription: string;
@@ -42,6 +45,8 @@ const EN: ProjectTabStrings = {
   scheduled: "Scheduled runs",
   continueDev: "Continue development",
   envVars: "Environment variables",
+  continueLead: "To continue editing and configuring this automation, follow this",
+  continueLinkWord: "link",
   keysTitle: "This automation needs a few keys",
   keysDescription:
     "The following values are missing. Enter them to make the automation work. You can close this and add them later — but nothing runs until they are set.",
@@ -67,6 +72,8 @@ export const STRINGS: Record<string, ProjectTabStrings> = {
     scheduled: "Запуски по расписанию",
     continueDev: "Продолжить разработку",
     envVars: "Переменные окружения",
+    continueLead: "Чтобы продолжить редактировать и настраивать эту автоматизацию, перейдите по этой",
+    continueLinkWord: "ссылке",
     keysTitle: "Этой автоматизации нужно несколько ключей",
     keysDescription:
       "Не хватает следующих значений. Введите их, чтобы автоматизация заработала. Можно закрыть и добавить позже — но пока ключи не заданы, ничего не выполняется.",

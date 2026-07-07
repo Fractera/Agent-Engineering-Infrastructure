@@ -15,6 +15,7 @@ import { getSubjects, getActivity } from "../_lib/subject-data";
 import { PROJECT_COLUMNS } from "../_data/columns";
 import { SUBJECT_KIND } from "../_data/subject";
 import { SUBJECT_COLUMNS, ACTIVITY_COLUMNS } from "../_data/subject-view";
+import { ContinueBanner } from "./continue-banner.client";
 import { CronJobsTable } from "./cron-jobs-table.server";
 import { HooksPanel } from "./hooks-panel.client";
 import { MissingKeysModal } from "./missing-keys-modal.client";
@@ -82,6 +83,9 @@ export default async function {{PROJECT_PASCAL}}ProjectEntry() {
           </p>
         </CardContent>
       </Card>
+      {/* Prominent continuation link (195) — the same destination as the footer icon, surfaced
+          right under the description so it is actually found: continue in the architecture cockpit. */}
+      <ContinueBanner lang={DEFAULT_LANGUAGE} />
       <section className="space-y-3">
         <h2 className="text-xl font-medium">{t.diagram}</h2>
         <ProcessFlow />

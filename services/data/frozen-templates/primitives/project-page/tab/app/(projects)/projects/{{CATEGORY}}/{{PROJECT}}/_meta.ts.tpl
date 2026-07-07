@@ -52,6 +52,7 @@ const meta: RouteMeta = {
     "process-queue-table.server",
     "records-table.client",
     "record-cell.client",
+    "continue-banner.client",
   ],
   sharedComponents: [],
 
