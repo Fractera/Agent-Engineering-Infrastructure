@@ -2,95 +2,61 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { X, KeyRound, Loader2, CheckCircle, AlertCircle, RefreshCw, BrainCircuit, Brain } from "lucide-react";
+import { X, KeyRound, Loader2, CheckCircle, RefreshCw } from "lucide-react";
 
 type Props = {
   onClose: () => void;
 };
 
 type BrainStatus = { configured: boolean; keyMasked: string | null; model: string | null };
-type MemoryStatus = { configured: boolean; model: string | null };
 
-// OpenAI settings — one place for the OpenAI API key(s) that power Brain (Hermes)
-// and Memory (LightRAG). Two independent stores (Brain → Hermes credential pool,
-// Memory → LightRAG .env) mean a user can use ONE key for both, or TWO keys to
-// track spend separately. Entering the first key auto-mirrors into the other
-// field (until edited), so the common "one key" case is one paste + Save.
+// OpenAI settings — ONE key, one field (step 199 unified-key contract). A single
+// OpenAI API key powers everything that needs it: Brain (Hermes chat), Memory
+// (LightRAG), AND the slot automations. Saving it via /api/config/hermes writes
+// the same value to the Hermes credential pool, the LightRAG env, and the slot's
+// own .env.local — so a project's automation actually sees the key (before this,
+// the UI went green while the slot had no key: the false-green bug). No more
+// separate Brain/Memory keys, no auto-mirror — one paste, one Save, everywhere.
 // → reports/errors/hermes-key-pool-and-model-default.md (step 89)
 export function OpenAiPanel({ onClose }: Props) {
-  const [brain, setBrain]   = useState<BrainStatus | null>(null);
-  const [memory, setMemory] = useState<MemoryStatus | null>(null);
-  const [brainKey, setBrainKey]   = useState("");
-  const [memoryKey, setMemoryKey] = useState("");
-  const [saving, setSaving]   = useState(false);
+  const [brain, setBrain] = useState<BrainStatus | null>(null);
+  const [key, setKey] = useState("");
+  const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [savedAt, setSavedAt] = useState<number | null>(null);
 
   async function refresh() {
     try {
-      const [b, m] = await Promise.all([
-        fetch("/api/config/hermes").then((r) => r.json()).catch(() => null),
-        fetch("/api/rag/config").then((r) => r.json()).catch(() => null),
-      ]);
+      const b = await fetch("/api/config/hermes").then((r) => r.json()).catch(() => null);
       if (b) setBrain({ configured: !!b.configured, keyMasked: b.keyMasked ?? null, model: b.model ?? null });
-      if (m) setMemory({ configured: !!m.configured, model: m.model ?? null });
     } catch { /* keep prior state */ }
   }
 
   useEffect(() => { refresh().finally(() => setLoading(false)); }, []);
 
-  // Auto-mirror: typing the first key fills the still-empty / unconfigured other
-  // field, so one key covers both. Editing the mirrored field later diverges them.
-  function onBrainChange(v: string) {
-    setBrainKey(v);
-    if (v && !memoryKey && memory && !memory.configured) setMemoryKey(v);
-  }
-  function onMemoryChange(v: string) {
-    setMemoryKey(v);
-    if (v && !brainKey && brain && !brain.configured) setBrainKey(v);
-  }
-
   async function handleSave() {
-    const bKey = brainKey.trim();
-    const mKey = memoryKey.trim();
-    if (!bKey && !mKey) { toast.error("Paste at least one OpenAI key first"); return; }
-    if (bKey && !bKey.startsWith("sk-")) { toast.error("Brain key looks invalid (expected sk-…)"); return; }
-    if (mKey && !mKey.startsWith("sk-")) { toast.error("Memory key looks invalid (expected sk-…)"); return; }
+    const k = key.trim();
+    if (!k) { toast.error("Paste your OpenAI key first"); return; }
+    if (!k.startsWith("sk-")) { toast.error("Key looks invalid (expected sk-…)"); return; }
 
     setSaving(true);
     try {
-      const ops: Promise<Response>[] = [];
-      if (bKey) {
-        ops.push(fetch("/api/config/hermes", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ apiKey: bKey }),
-        }));
-      }
-      if (mKey) {
-        ops.push(fetch("/api/rag/config", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ vars: { LLM_BINDING_API_KEY: mKey } }),
-        }));
-      }
-      const results = await Promise.all(ops);
-      // A 400 is the only hard error here — a bad key format / nothing to save.
-      // Surface it so the user fixes the key.
-      const invalid = results.find((r) => r.status === 400);
-      if (invalid) {
-        const data = await invalid.json().catch(() => null);
+      const res = await fetch("/api/config/hermes", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: k }),
+      });
+      // A 400 is the only hard error — a bad key format. Anything else is almost
+      // always the fresh-server restart race: the key IS written (best-effort),
+      // the services are just restarting. Show Saved either way.
+      if (res.status === 400) {
+        const data = await res.json().catch(() => null);
         toast.error(data?.error ?? "Invalid key — check and retry");
         return;
       }
-      // Any other non-2xx is almost always the fresh-server restart race: the key
-      // IS written (the routes persist it best-effort), the Brain/Memory service is
-      // just still (re)starting when the second concurrent call hits it. Do NOT
-      // scare the user with "failed" — the keys are saved; the chat only needs a
-      // reload once the restart settles. Show the Saved panel (with its reload
-      // button) either way.
       setSavedAt(Date.now());
-      setBrainKey(""); setMemoryKey("");
+      setKey("");
       await refresh();
-      toast.success("Keys saved — reload the project to start the chat");
+      toast.success("Key saved — it powers Brain, Memory, and your automations");
     } catch {
       toast.error("Save failed");
     } finally {
@@ -129,65 +95,41 @@ export function OpenAiPanel({ onClose }: Props) {
           <>
             <div className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
               <p>
-                Paste an OpenAI API key to power your Brain chat and Memory. We start on the cheap
-                <strong> gpt-5-mini</strong> (about a cent per hour) — top up a balance from $5 at{" "}
+                Paste ONE OpenAI API key. It powers <strong>everything that needs it</strong> — your
+                Brain chat, Memory, and your project automations — from a single field. We start on the
+                cheap <strong>gpt-5-mini</strong> (about a cent per hour); top up a balance from $5 at{" "}
                 <a href="https://platform.openai.com/login" target="_blank" rel="noopener noreferrer" className="underline">platform.openai.com</a>.
-                One key works for both. Prefer a subscription for Brain instead? Connect it in{" "}
-                <strong>Hermes Agent</strong> (the Settings menu).
+                Prefer a subscription for Brain instead? Connect it in <strong>Hermes Agent</strong> (the Settings menu).
               </p>
             </div>
 
-            {/* Brain key */}
+            {/* The one key */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <p className="text-[11px] font-medium text-foreground flex items-center gap-1.5"><Brain size={12} /> Brain key (Hermes chat)</p>
+                <p className="text-[11px] font-medium text-foreground flex items-center gap-1.5"><KeyRound size={12} /> OpenAI API key</p>
                 {brain && statusChip(brain.configured, brain.keyMasked)}
               </div>
               <input
                 type="password"
-                value={brainKey}
-                onChange={(e) => onBrainChange(e.target.value)}
+                value={key}
+                onChange={(e) => setKey(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSave()}
                 placeholder={brain?.configured ? "Paste new key to replace" : "sk-…"}
                 className="w-full h-8 px-2.5 text-[11px] rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring font-mono"
               />
-            </div>
-
-            {/* Memory key */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-[11px] font-medium text-foreground flex items-center gap-1.5"><BrainCircuit size={12} /> Memory key (LightRAG)</p>
-                {memory && statusChip(memory.configured)}
-              </div>
-              <input
-                type="password"
-                value={memoryKey}
-                onChange={(e) => onMemoryChange(e.target.value)}
-                placeholder={memory?.configured ? "Paste new key to replace" : "sk-…"}
-                className="w-full h-8 px-2.5 text-[11px] rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring font-mono"
-              />
-            </div>
-
-            <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2.5 text-[10px] leading-relaxed text-amber-700 dark:text-amber-300">
-              <p className="flex items-start gap-1.5">
-                <AlertCircle size={11} className="shrink-0 mt-0.5" />
-                <span>
-                  <strong>Want to track spend separately?</strong> Brain and Memory keep their keys in
-                  two independent places. Create <strong>two different keys</strong> in OpenAI and paste
-                  one into each field — then watch each line item in the Usage dashboard at
-                  platform.openai.com. One key for both is perfectly fine too. Keys are stored only on
-                  your own server.
-                </span>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                One key for Brain, Memory, and automations. Stored only on your own server.
               </p>
             </div>
 
             {savedAt && (
               <div className="rounded-md border border-emerald-500/40 bg-emerald-500/5 p-2.5 space-y-1.5">
                 <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                  <CheckCircle size={12} /> Keys saved
+                  <CheckCircle size={12} /> Key saved
                 </p>
                 <p className="text-[10px] text-muted-foreground leading-relaxed">
-                  Brain and Memory restart for about 10 seconds to pick up the key. To start the chat,
-                  please reload the project, then open the Brain chat and say hello.
+                  Brain, Memory, and the project restart for about 10 seconds to pick up the key. To
+                  start the chat, please reload the project, then open the Brain chat and say hello.
                 </p>
                 <button
                   onClick={() => window.location.reload()}
@@ -204,7 +146,7 @@ export function OpenAiPanel({ onClose }: Props) {
       <div className="shrink-0 border-t border-border px-4 py-3 flex items-center justify-end">
         <button
           onClick={handleSave}
-          disabled={saving || (!brainKey.trim() && !memoryKey.trim())}
+          disabled={saving || !key.trim()}
           className="h-8 px-4 rounded-md bg-primary text-primary-foreground text-[11px] font-medium disabled:opacity-40 hover:opacity-90 transition-opacity"
         >
           {saving ? <span className="flex items-center gap-1.5"><Loader2 size={11} className="animate-spin" />Saving…</span> : "Save"}

@@ -24,6 +24,11 @@ const HERMES_KEY = "OPENAI_API_KEY";
 const TELEGRAM_KEY = "TELEGRAM_BOT_TOKEN";
 const RAG_LLM_KEY = "LLM_BINDING_API_KEY";
 const RAG_EMB_KEY = "EMBEDDING_BINDING_API_KEY";
+// The guest slot's own env — automations read process.env.OPENAI_API_KEY /
+// TELEGRAM_BOT_TOKEN from HERE at runtime (step 199 unified-key contract). The
+// substrate save propagates the ONE key down to this file too, closing the
+// false-green gap where the UI showed configured but the slot had no key.
+const SLOT_ENV = process.env.SLOT_ENV_PATH ?? "/opt/fractera/app/.env.local";
 
 type OwnerPairing = {
   secret?: string;
@@ -271,19 +276,38 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Autofill: if RAG has no OpenAI key yet AND we just saved one, propagate.
+  // Unified key contract (step 199): ONE OpenAI key is AUTHORITATIVE for EVERY
+  // consumer — Hermes (written above), Memory/LightRAG, and the slot automations.
+  // Memory is no longer an independently-editable key: always overwrite RAG with
+  // the saved value (a single paste in one field drives all three).
   let alsoUpdated: "rag" | null = null;
   if (apiKeyRaw) {
     const ragVars = readEnvFile(RAG_ENV);
-    if (!ragVars[RAG_LLM_KEY] && !ragVars[RAG_EMB_KEY]) {
-      ragVars[RAG_LLM_KEY] = apiKeyRaw;
-      ragVars[RAG_EMB_KEY] = apiKeyRaw;
-      try {
-        writeEnvFile(RAG_ENV, ragVars);
-        pm2RestartDetached("fractera-rag", 500);
-        alsoUpdated = "rag";
-      } catch { /* best-effort */ }
-    }
+    ragVars[RAG_LLM_KEY] = apiKeyRaw;
+    ragVars[RAG_EMB_KEY] = apiKeyRaw;
+    try {
+      writeEnvFile(RAG_ENV, ragVars);
+      pm2RestartDetached("fractera-rag", 500);
+      alsoUpdated = "rag";
+    } catch { /* best-effort */ }
+  }
+
+  // Propagate to the SLOT — the missing bridge that made the UI green while the
+  // automation had no key. The slot workflow reads process.env.OPENAI_API_KEY /
+  // TELEGRAM_BOT_TOKEN at runtime; nothing wrote them there before. These are
+  // runtime, server-only keys (NOT NEXT_PUBLIC_) → a fractera-app restart
+  // re-loads app/.env.local, no rebuild. Guarded on the slot file existing so a
+  // box without the slot degrades gracefully (self-sufficiency).
+  let slotUpdated = false;
+  if ((apiKeyRaw || tgRaw) && fs.existsSync(SLOT_ENV)) {
+    try {
+      const slotVars = readEnvFile(SLOT_ENV);
+      if (apiKeyRaw) slotVars[HERMES_KEY] = apiKeyRaw;
+      if (tgRaw) slotVars[TELEGRAM_KEY] = tgRaw;
+      writeEnvFile(SLOT_ENV, slotVars);
+      pm2RestartDetached("fractera-app", 500);
+      slotUpdated = true;
+    } catch { /* best-effort — the substrate save already succeeded */ }
   }
 
   pm2RestartDetached("fractera-hermes", 500);
@@ -325,6 +349,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     ok: true,
     alsoUpdated,
+    slotUpdated,
     modelWriteError: modelWrite && !modelWrite.ok ? modelWrite.reason : null,
     telegram,
     providerSwitched,

@@ -24,7 +24,6 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
   const [available, setAvailable]     = useState<boolean | null>(null);
   const [configured, setConfigured]   = useState(false);
   const [model, setModel]             = useState("gpt-5.4-mini");
-  const [apiKey, setApiKey]           = useState("");
   const [saving, setSaving]           = useState(false);
   const [query, setQuery]             = useState("");
   const [querying, setQuerying]       = useState(false);
@@ -80,25 +79,21 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
     } catch {}
   }
 
-  async function handleSave() {
-    if (!apiKey.trim()) return;
+  // The OpenAI key is UNIFIED (step 199) — set once in OpenAI settings, it powers
+  // Brain, Memory, and automations. This panel no longer takes a separate memory
+  // key; it only picks the Memory model (a merge-only write that preserves the key).
+  async function handleSaveModel() {
     setSaving(true);
     try {
       const res = await fetch("/api/rag/config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ vars: { LLM_BINDING_API_KEY: apiKey.trim(), LLM_MODEL: model } }),
+        body: JSON.stringify({ vars: { LLM_MODEL: model } }),
       });
       const data = await res.json();
       if (data.ok) {
-        setConfigured(true);
-        setApiKey("");
         setSavedAt(Date.now());
-        if (data.alsoUpdated === "hermes") {
-          toast.success("Saved — key also applied to Brain (it had no key)");
-        } else {
-          toast.success("Saved — LightRAG restarting");
-        }
+        toast.success("Memory model saved — LightRAG restarting");
       } else {
         toast.error(data.error ?? "Save failed");
       }
@@ -223,26 +218,19 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
               </div>
             </div>
 
-            {/* API key input */}
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] text-muted-foreground">
-                {configured ? "Update API Key" : "API Key (sk-...)"}
-              </span>
-              <div className="flex gap-2">
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSave()}
-                  placeholder={configured ? "Enter new key to update" : "sk-..."}
-                  className="flex-1 px-2.5 py-1.5 text-[11px] border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-                <button type="button" onClick={handleSave} disabled={saving || !apiKey.trim()}
-                  className="px-3 py-1.5 text-[11px] bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-medium">
-                  {saving ? <Loader2 size={11} className="animate-spin" /> : "Save"}
-                </button>
+            {/* Unified key (step 199): no separate memory key here. Set the ONE
+                OpenAI key in OpenAI settings — it powers Brain, Memory, and
+                automations. This panel only picks the Memory model. */}
+            {!configured && (
+              <div className="flex items-start gap-2 p-2.5 rounded-md bg-amber-500/5 border border-amber-500/30 text-[10px] text-amber-700 dark:text-amber-300 leading-relaxed">
+                <AlertCircle size={11} className="shrink-0 mt-0.5" />
+                <span>No OpenAI key yet. Set it in <strong>OpenAI settings</strong> — one key powers Brain, Memory, and automations.</span>
               </div>
-            </div>
+            )}
+            <button type="button" onClick={handleSaveModel} disabled={saving}
+              className="self-start px-3 py-1.5 text-[11px] bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-medium">
+              {saving ? <Loader2 size={11} className="animate-spin" /> : "Save model"}
+            </button>
 
             {/* Ingest docs button */}
             {configured && (
