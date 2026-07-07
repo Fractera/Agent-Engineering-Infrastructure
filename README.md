@@ -1,6 +1,6 @@
 <h1 align="center">Fractera: Agent Engineering Infrastructure</h1>
 
-<p align="center"><strong>Stop vibe coding. Start engineering. Fractera delivers a production-grade multi-agent development environment that configures itself on your own hardware. Automatically deploy a 50,000-line Next.js enterprise boilerplate (or any Git repo) to your private VPS in 10 minutes — leveraging a fundamentally new, deterministic MCP-First architecture built to eliminate context window inflation at scale.</strong></p>
+<p align="center"><strong>Deploys your OS, databases, and SSL on your VPS in just 10 minutes. Orchestrates a team of AI agents for coding, marketing, and sales. The built-in optimizer saves up to 90% on token costs, letting you build and manage your online business directly through chat. Fully open-source.</strong></p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Agent--Engineering-a%20deterministic%20industrial%20approach%20to%20autonomous%20systems-FF8C00?style=for-the-badge" alt="Agent Engineering Infrastructure — focus on deterministic architectures over fragile code-writing loops"/>

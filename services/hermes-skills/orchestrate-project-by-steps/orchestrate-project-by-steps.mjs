@@ -68,6 +68,12 @@ const ERROR_POLICIES = ["retry-next-tick", "soft-degrade", "fail-run"]
 // DATA in the graph's record.fields[]; a genuinely new visual = a new type here + the primitive's
 // record-cell renderer + a canon gate. Kept in lockstep with record-cell.client.tsx.
 const COLUMN_TYPES = ["badge", "text", "longtext", "date", "link", "actions"]
+// The CLOSED set of I/O port types (ontology entity 14 Port / §E interface). inputs and outputs share
+// this vocabulary; a genuinely new boundary format = a new type here + a canon gate. `external-api`
+// covers a third-party integration in either direction (inbound webhook or outbound publish).
+const PORT_TYPES = ["channel", "page", "store", "schedule", "event", "manual", "external-api"]
+const PORT_FORMATS = ["text", "record", "page-content", "media", "event"]
+const PORT_SURFACES = ["personal", "site", "external"]
 // Identifier guard for SQL-facing names (record.table, field.source) — returns "" if not a plain
 // identifier, so a bad name is caught by the gate and never reaches generated SQL.
 const identOf = s => { const v = String(s ?? "").trim(); return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(v) ? v : "" }
@@ -240,6 +246,26 @@ function normalizeGraph(raw, cliCategory, cliSlug) {
       return { from: slugify(o.from), to: slugify(o.to) }
     }).filter(t => t.from && t.to),
   } : null
+  // Interface — the automation's typed I/O boundary (ontology entity 14 Port, §E). OPTIONAL block
+  // { inputs:[Port], outputs:[Port] }; a Port is a typed endpoint. Invalid types are kept verbatim so
+  // the gate catches them (like record.field.type). inputs/outputs share the closed PORT_TYPES vocab.
+  const normPort = p0 => {
+    const p = (p0 && typeof p0 === "object") ? p0 : { type: p0 }
+    return {
+      type: String(p.type ?? "").toLowerCase().trim(),
+      endpoint: str(p.destination) || str(p.source) || str(p.endpoint),
+      surface: String(p.surface ?? "").toLowerCase().trim(),
+      cardinality: String(p.cardinality ?? "").toLowerCase().trim() === "many" ? "many" : "one",
+      external: p.external === true,
+      autonomous: p.autonomous === true,
+      format: String(p.format ?? "").toLowerCase().trim(),
+    }
+  }
+  const rawInterface = (g.interface && typeof g.interface === "object") ? g.interface : null
+  const iface = rawInterface ? {
+    inputs: arr(rawInterface.inputs).map(normPort).filter(p => p.type),
+    outputs: arr(rawInterface.outputs).map(normPort).filter(p => p.type),
+  } : null
   return {
     category: slugify(cliCategory ?? g.category) || "automation",
     slug: slugify(cliSlug ?? g.slug) || slugify(project.purpose) || "project",
@@ -249,6 +275,7 @@ function normalizeGraph(raw, cliCategory, cliSlug) {
     nodes,
     ...(record && (record.table || record.fields.length) ? { record } : {}),
     ...(subject && (subject.kind || subject.statuses.length) ? { subject } : {}),
+    ...(iface && (iface.inputs.length || iface.outputs.length) ? { interface: iface } : {}),
     ...(duplicates.length ? { duplicates } : {}),
   }
 }
@@ -373,6 +400,37 @@ function validateSpec(graph) {
       if (!subjectStatuses.has(t.to)) missing.push(`subject transition to "${t.to}" is not a declared status${ontologyHint}`)
     }
   }
+  // Interface gates (§E, entity 14 Port). Gate 12 (HARD): the boundary MUST be declared + typed from the
+  // closed vocabulary — the forcing function against a copied boundary (the 189 Telegram→Telegram seed).
+  if (!graph.interface) {
+    missing.push(`graph: no interface block — declare interface { inputs:[Port], outputs:[Port] } (the automation's typed boundary; entity 14 §E)${ontologyHint}`)
+  } else {
+    const iface = graph.interface
+    if (!iface.inputs.length) missing.push(`interface: declare ≥1 input port (how it is triggered / what flows in)${ontologyHint}`)
+    if (!iface.outputs.length) missing.push(`interface: declare ≥1 output port (where results land — channel/page/store/external-api/event)${ontologyHint}`)
+    for (const side of ["inputs", "outputs"]) for (const p of iface[side]) {
+      if (!PORT_TYPES.includes(p.type)) missing.push(`interface ${side}: port type "${p.type}" is not one of ${PORT_TYPES.join("|")}${ontologyHint}`)
+      if (p.format && !PORT_FORMATS.includes(p.format)) warnings.push(`interface ${side}: format "${p.format}" is not one of ${PORT_FORMATS.join("|")}`)
+      if (p.surface && !PORT_SURFACES.includes(p.surface)) warnings.push(`interface ${side}: surface "${p.surface}" is not one of ${PORT_SURFACES.join("|")}`)
+    }
+    // Gate 13 (soft, realizability): a declared OUTPUT should have a producing node — a warning (detection
+    // is heuristic, never a false block) so a declared page/channel with no producing node surfaces (would
+    // have flagged 189 declaring a learner page with only a chat-reply node).
+    const nt = graph.nodes.map(n => `${n.task} ${n.description} ${n.tools.join(" ")} ${JSON.stringify(n.io.out)}`.toLowerCase())
+    const any = re => nt.some(t => re.test(t))
+    const produces = {
+      channel: () => any(/send|reply|deliver|message|email|notif/),
+      page: () => any(/page|gateway|publish|render|compose|blog|post|dashboard|quiz|board/),
+      store: () => graph.nodes.some(n => n.state.length) || Boolean(graph.record) || any(/persist|insert|record|schema|\bdb\b|table/),
+      "external-api": () => any(/\bapi\b|webhook|http|publish|medium|cross-post/),
+      event: () => graph.actions.some(a => a.emits) || graph.nodes.some(n => n.kind === "event"),
+      media: () => any(/image|file|export|pdf|zip|media/),
+    }
+    for (const p of iface.outputs) {
+      const chk = produces[p.type]
+      if (chk && !chk()) warnings.push(`interface output "${p.type}"${p.endpoint ? ` (${p.endpoint})` : ""}: no node appears to produce it — add a node that delivers/writes this output, else the automation declares an output it never realizes (§E realizability)`)
+    }
+  }
   return { ok: missing.length === 0, missing, ...(warnings.length ? { warnings } : {}) }
 }
 
@@ -385,6 +443,7 @@ function orderSheetId(graph) {
     actions: graph.actions, state: graph.state,
     ...(graph.record ? { record: graph.record } : {}),
     ...(graph.subject ? { subject: graph.subject } : {}),
+    ...(graph.interface ? { interface: graph.interface } : {}),
     nodes: graph.nodes.map(n => ({ id: n.id, title: n.title, kind: n.kind, actions: n.actions, condition: n.condition, errorPolicy: n.errorPolicy, state: n.state, subscribes: n.subscribes, description: n.description, task: n.task, tools: n.tools, envKeys: n.envKeys, io: n.io, todo: n.todo, dependsOn: n.dependsOn })),
   }
   return "os-" + createHash("sha256").update(JSON.stringify(canon)).digest("hex").slice(0, 16)
@@ -572,6 +631,10 @@ function renderProjectReadme(graph, ordered, ctx) {
     return `| \`${a.id}\` | ${mdCell(a.title)} | ${a.color} | ${hooks} | ${a.condition ? mdCell(a.condition) : "—"} | ${a.channel ? mdCell(a.channel) : "—"} | ${chain} |`
   })
   const stateRows = graph.state.map(s => `| \`${s.id}\` | ${mdCell(s.storage)} | ${mdCell(s.purpose)} |`)
+  // The Boundary section (ontology entity 14 Port, §E) — the typed I/O contract: what triggers / flows in,
+  // and where results land (a page/external-api output = this automation reaches beyond a chat reply).
+  const portRow = (dir, p) => `| ${dir} | \`${p.type}\` | ${p.endpoint ? mdCell(p.endpoint) : "—"} | ${p.surface || "—"} | ${p.cardinality} | ${[p.external ? "external" : "", p.autonomous ? "autonomous" : ""].filter(Boolean).join(", ") || "—"} |`
+  const ifaceRows = graph.interface ? [...graph.interface.inputs.map(p => portRow("in", p)), ...graph.interface.outputs.map(p => portRow("out", p))] : []
   const body = [
     `# ${title}`, "",
     `> Project overview · category \`${graph.category}\` · slug \`${graph.slug}\` · ${graph.actions.length} action(s) · ${ordered.length} node(s) · order sheet \`${ctx.sheet}\``, "",
@@ -596,6 +659,13 @@ function renderProjectReadme(graph, ordered, ctx) {
       "|---|---|---|",
       ...stateRows, "",
     ] : []),
+    ...(ifaceRows.length ? [
+      "## Boundary (inputs → outputs)",
+      "The automation's typed I/O contract (entity 14 §E) — what flows in, and where results land. A `page`/`external-api` output means this automation reaches beyond a chat reply (a generated site page, a Medium publish); the interaction plane of a `page` output is realized through the automation⇄page gateway:", "",
+      "| dir | type | endpoint | surface | card | flags |",
+      "|---|---|---|---|---|---|",
+      ...ifaceRows, "",
+    ] : []),
     "## Efficiency", p.efficiency, "",
     "## Reuse", p.reuse, "",
     "## Result", p.result, "",
@@ -605,6 +675,7 @@ function renderProjectReadme(graph, ordered, ctx) {
     project: p,
     actions: graph.actions,
     state: graph.state,
+    ...(graph.interface ? { interface: graph.interface } : {}),
     nodes: ordered.map(n => ({ id: n.id, title: n.title, kind: n.kind, actions: n.actions, condition: n.condition, errorPolicy: n.errorPolicy, state: n.state, description: n.description, task: n.task, tools: n.tools, envKeys: n.envKeys, io: n.io, dependsOn: n.dependsOn, todo: n.todo })),
     order: ordered.map(n => n.id),
   }
@@ -639,6 +710,7 @@ const projectActionsRel = (category, slug) => `app/(projects)/projects/${categor
 const projectColumnsRel = (category, slug) => `app/(projects)/projects/${category}/${slug}/_data/columns.ts`
 const projectEventsRel = (category, slug) => `app/(projects)/projects/${category}/${slug}/_data/events.ts`
 const projectSubjectRel = (category, slug) => `app/(projects)/projects/${category}/${slug}/_data/subject.ts`
+const projectInterfaceRel = (category, slug) => `app/(projects)/projects/${category}/${slug}/_data/interface.ts`
 const projectEventsJsonRel = (category, slug) => `app/(projects)/projects/${category}/${slug}/events.json`
 const projectWorkflowRel = (category, slug) => `app/api/projects/${category}/${slug}/_workflow/definition.ts`
 const STARTER_WORKFLOW_MARKER = "fractera:starter-workflow"
@@ -819,6 +891,39 @@ async function writeProjectColumns(outRoot, graph, ctx) {
   const abs = join(outRoot, rel)
   await mkdir(dirname(abs), { recursive: true })
   await writeFile(abs, renderProjectColumns(graph, ctx), "utf8")
+  return { rel, abs }
+}
+
+// The INTERFACE registry as data (ontology entity 14 Port / §E) — the automation's typed I/O boundary.
+// DERIVED like actions.ts/columns.ts (a re-run rewrites it from graph.interface). The project page header
+// renders "Inputs → Outputs" from PROJECT_INTERFACE; no surface hardcodes the boundary ever again.
+function renderProjectInterface(graph, ctx) {
+  const iface = graph.interface || { inputs: [], outputs: [] }
+  return [
+    `// fractera:interface ${ctx.sheet} — GENERATED by orchestrate-project-by-steps from the graph's`,
+    "// interface{inputs,outputs} (automation ontology entity 14 Port, §E). The project page header renders",
+    "// Inputs → Outputs from this; a re-run rewrites it — to change the boundary, extend the GRAPH and re-run.",
+    "// Canon: CRUD-DOCS/workspace-standards/automation-ontology.md.",
+    `export type PortType = "channel" | "page" | "store" | "schedule" | "event" | "manual" | "external-api";`,
+    "export type ProjectPort = {",
+    "  type: PortType;",
+    "  endpoint: string; // the concrete source (input) or destination (output)",
+    "  surface: string; // personal | site | external",
+    `  cardinality: "one" | "many";`,
+    "  external: boolean; // crosses the server boundary (needs a third-party credential)",
+    "  autonomous: boolean; // an output that outlives the run (a standing page/surface)",
+    "  format: string; // text | record | page-content | media | event",
+    "};",
+    "export type ProjectInterface = { inputs: ProjectPort[]; outputs: ProjectPort[] };",
+    "",
+    `export const PROJECT_INTERFACE: ProjectInterface = ${JSON.stringify(iface, null, 2)};`,
+  ].join("\n")
+}
+async function writeProjectInterface(outRoot, graph, ctx) {
+  const rel = projectInterfaceRel(ctx.category, ctx.slug)
+  const abs = join(outRoot, rel)
+  await mkdir(dirname(abs), { recursive: true })
+  await writeFile(abs, renderProjectInterface(graph, ctx), "utf8")
   return { rel, abs }
 }
 
@@ -1106,6 +1211,7 @@ async function main() {
   const flowFile = await writeProjectFlow(outRoot, orderedNodes, emitCtx)
   const actionsFile = graph.actions.length ? await writeProjectActions(outRoot, graph, emitCtx) : null
   const columnsFile = graph.record ? await writeProjectColumns(outRoot, graph, emitCtx) : null
+  const interfaceFile = graph.interface ? await writeProjectInterface(outRoot, graph, emitCtx) : null
   const eventsFile = (graph.actions.some(a => a.emits) || graph.nodes.some(n => n.kind === "event")) ? await writeProjectEvents(outRoot, graph, emitCtx) : null
   const subjectFile = graph.subject ? await writeProjectSubject(outRoot, graph, emitCtx) : null
   const workflow = await emitWorkflowDefinition(outRoot, orderedNodes, emitCtx)
@@ -1142,6 +1248,7 @@ async function main() {
     order_sheet_id: sheetId, actions: graph.actions.length, nodes: graph.nodes.length, readme_path: readmeRel, readme: readmeFile.rel,
     flow: flowFile.rel, ...(actionsFile ? { actions_registry: actionsFile.rel } : {}),
     ...(columnsFile ? { columns_registry: columnsFile.rel } : {}),
+    ...(interfaceFile ? { interface_registry: interfaceFile.rel } : {}),
     ...(eventsFile ? { events_registry: eventsFile.rel, events_json: eventsFile.jsonRel } : {}),
     ...(subjectFile ? { subject_registry: subjectFile.rel } : {}),
     workflow: { rel: workflow.rel, action: workflow.action, ...(workflow.iso ? { iso: workflow.iso } : {}) },

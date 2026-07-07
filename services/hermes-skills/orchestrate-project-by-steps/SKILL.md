@@ -57,6 +57,7 @@ the owner wants "a news page / a blog / documentation", that is content — stop
 
 - **You pass a GRAPH, not a plan of steps** (schema v2 — the ontology as data):
   `{ category?, slug?, project{purpose,efficiency,reuse,result},
+     interface{ inputs:[Port], outputs:[Port] },
      actions?: [{ id, title, description, color?, hooks:[{phrase,lang}], condition?, channel }],
      state?: [{ id, storage, purpose }], nodes[] }`, each node
   `{ id, title, kind, actions: string[]|"all", condition?, errorPolicy?, state?: string[],
@@ -76,6 +77,17 @@ the owner wants "a news page / a blog / documentation", that is content — stop
   - `errorPolicy` ∈ `retry-next-tick` | `soft-degrade` | `fail-run` (optional per node).
   - `state[]` (registry) + `node.state` — declared persistent data between runs (cursors, vector
     memory) so no model reinvents storage.
+  - **`interface { inputs:[Port], outputs:[Port] }` (§E, entity 14) — REQUIRED.** The automation's typed
+    I/O boundary: what triggers it / flows IN, and where results land OUT. A `Port` is
+    `{ type, source|destination, surface?, cardinality?, external?, autonomous?, format? }`; `type` ∈ the
+    CLOSED set `channel | page | store | schedule | event | manual | external-api` (inputs & outputs share
+    it). **Outputs are a LIST** — declare EVERY destination (a news automation may output a `page` AND an
+    `external-api` publish at once). Mark `autonomous: true` for an output that outlives the run (a generated
+    course/quiz page). **MATCH the request to ports BEFORE decomposing** (the use-case catalog in
+    `automation-ontology.md` §E): timer→publish = `schedule` in + `page` out; voice→reminder = `channel`
+    in/out; a `page` output is realized through the automation⇄page gateway (`automation-page-gateway.md`),
+    never by writing page files in a step. This is what stops a model silently copying a prior shape
+    (the real 189 seed degenerated to Telegram→Telegram for lack of a declared boundary).
   - `task` is the EXHAUSTIVE sub-step spec, not a one-liner.
   - `envKeys` are UPPER_SNAKE and get materialized later via the `persist-env-var-with-rebuild`
     skill (step 143) — never hardcode a secret.
@@ -83,13 +95,15 @@ the owner wants "a news page / a blog / documentation", that is content — stop
   - `dependsOn` are the DAG edges (each id must resolve to another node; no cycles).
   - a node is coder-built by default; set `needsCoder: false` to skip its handoff step.
   - Back-compat: a v1 graph (no `actions[]`/`state[]`) normalizes to `actions:"all"` on every
-    node and validates as before.
+    node; it STILL must declare an `interface` (gate 12 applies to every graph).
 - **The engine NORMALIZES + VALIDATES + GATES — you do not hand-fix the graph.**
   1. NORMALIZE — slug ids (English, forever — rule 166), UPPER_SNAKE keys, kind defaults, dedup.
   2. VALIDATE DAG — dependsOn resolve, no cycles, a root exists (topological order).
   3. VALIDATE SPEC — **the gate**: every node needs a non-empty `task`, `description`, and ≥1 `todo`,
-     `io` declared, well-formed keys; and the project readme plan carries `purpose` / `efficiency` /
-     `reuse` / `result`. Incomplete → `needs_spec` lists exactly what to fill; **nothing is materialized.**
+     `io` declared, well-formed keys; the project readme plan carries `purpose` / `efficiency` /
+     `reuse` / `result`; and the graph declares a valid **`interface`** (≥1 typed input & output from the
+     closed port vocabulary — gate 12; a declared output with no producing node is warned — gate 13).
+     Incomplete → `needs_spec` lists exactly what to fill; **nothing is materialized.**
 - **🔒 The gate is SPEC COMPLETENESS, not a deployment record.** Unlike content, this engine deploys
   nothing and executes no node. "Done" for a node = a coder closed it, not "a deploy row".
 - **MATERIALIZE-FIRST (step 172).** On approval the engine writes the WHOLE queue BEFORE any development:
