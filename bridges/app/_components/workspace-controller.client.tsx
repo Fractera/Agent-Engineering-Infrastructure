@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { ComponentType } from "react";
-import { Brain, BrainCircuit, Bot, CircleUserRound, Globe, AlertTriangle, Wrench } from "lucide-react";
+import { Brain, BrainCircuit, Bot, CircleUserRound, Globe, FolderKanban, AlertTriangle, Wrench } from "lucide-react";
 import { CodingWindowShell, type SettingsPanelId } from "./coding-workspace/coding-window-shell.client";
 import { AuthLoginModal } from "./auth-login-modal.client";
 import { SitePreviewWindow } from "./site-preview-window.client";
@@ -37,6 +37,9 @@ export function WorkspaceController() {
   const [terminalPlatform, setTerminalPlatform] = useState<Platform>("claude-code");
   const [terminalSessions, setTerminalSessions] = useState<Set<Platform>>(new Set());
   const [siteOpen, setSiteOpen]                 = useState(false);
+  // Which app URL the preview window shows: the App button opens the app root, the Projects
+  // button opens the projects landing (step 205 — header buttons App / Projects).
+  const [previewTarget, setPreviewTarget]       = useState<string>("");
   const [activeEmbed, setActiveEmbed]           = useState<EmbedTarget | null>(null);
   // Embed sessions (Brain / Memory / Hermes dashboard) — mirror of
   // `terminalSessions` for the CLI agents. Every opened embed iframe stays
@@ -310,10 +313,21 @@ export function WorkspaceController() {
             variant="outline"
             size="default"
             className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
-            onClick={() => { setSiteOpen((v) => !v); }}
+            onClick={() => { setPreviewTarget(urls.appUrl); setSiteOpen(true); }}
+            title="Open the app"
           >
             <Globe className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Preview</span>
+            <span className="hidden sm:inline">App</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="default"
+            className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
+            onClick={() => { setPreviewTarget(`${urls.appUrl}/projects/personal`); setSiteOpen(true); }}
+            title="Open your projects"
+          >
+            <FolderKanban className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Projects</span>
           </Button>
           <Button
             variant="outline"
@@ -397,7 +411,7 @@ export function WorkspaceController() {
       )}
 
       {/* ── Site preview window ── */}
-      <SitePreviewWindow open={siteOpen} onClose={() => setSiteOpen(false)} siteUrl={urls.appUrl} />
+      <SitePreviewWindow open={siteOpen} onClose={() => setSiteOpen(false)} siteUrl={previewTarget || urls.appUrl} />
 
       {/* ── Auth modal ── */}
       <AuthLoginModal
