@@ -3,12 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Rnd } from "react-rnd";
-import { GripHorizontal, RefreshCw, X } from "lucide-react";
+import { GripHorizontal, RefreshCw, ExternalLink, X } from "lucide-react";
 
 type Props = {
   open: boolean;
   onClose: () => void;
   siteUrl: string;
+  // Title-bar label (App / Design / Projects — step 205). Defaults to "App Preview".
+  label?: string;
+  // Placeholder mode: no URL yet (e.g. the Design layer) — show a centered stub instead of an iframe.
+  placeholder?: boolean;
 };
 
 // The Shell reads this marker to know it is being shown inside the Admin preview (the
@@ -27,7 +31,7 @@ function previewUrl(base: string, path?: string): string {
   }
 }
 
-export function SitePreviewWindow({ open, onClose, siteUrl }: Props) {
+export function SitePreviewWindow({ open, onClose, siteUrl, label = "App Preview", placeholder = false }: Props) {
   const [mounted, setMounted] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -46,6 +50,12 @@ export function SitePreviewWindow({ open, onClose, siteUrl }: Props) {
     }
   }
 
+  // Open the current target in a real browser tab, then close this preview window (step 205).
+  function handleOpenInNewTab() {
+    if (siteUrl) window.open(previewUrl(siteUrl), "_blank", "noopener");
+    onClose();
+  }
+
   return createPortal(
     <div style={{ display: open ? undefined : "none", position: "fixed", inset: 0, zIndex: 9999, pointerEvents: "none" }}>
       <Rnd
@@ -60,16 +70,28 @@ export function SitePreviewWindow({ open, onClose, siteUrl }: Props) {
           {/* Title bar */}
           <div className="drag-handle shrink-0 flex items-center gap-2 px-3 border-b border-border bg-background cursor-grab active:cursor-grabbing select-none" style={{ height: 36 }}>
             <GripHorizontal size={14} className="text-muted-foreground shrink-0" />
-            <span className="text-xs text-muted-foreground flex-1 truncate">App Preview</span>
+            <span className="text-xs text-muted-foreground flex-1 truncate">{label}</span>
 
+            {!placeholder && (
+              <button
+                type="button"
+                onClick={handleReload}
+                className="shrink-0 flex items-center gap-1 px-2 h-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-[11px] font-medium"
+                title="Reload preview"
+              >
+                <RefreshCw size={11} />
+                Reload &amp; Update
+              </button>
+            )}
             <button
               type="button"
-              onClick={handleReload}
-              className="shrink-0 flex items-center gap-1 px-2 h-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-[11px] font-medium"
-              title="Reload preview"
+              onClick={handleOpenInNewTab}
+              disabled={!siteUrl}
+              className="shrink-0 flex items-center gap-1 px-2 h-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-[11px] font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Open in a new tab (closes this window)"
             >
-              <RefreshCw size={11} />
-              Reload &amp; Update
+              <ExternalLink size={11} />
+              Open in new tab
             </button>
             <button
               type="button"
@@ -79,14 +101,23 @@ export function SitePreviewWindow({ open, onClose, siteUrl }: Props) {
               <X size={12} />
             </button>
           </div>
-          {/* Iframe */}
-          <iframe
-            ref={iframeRef}
-            src={previewUrl(siteUrl)}
-            className="flex-1 border-0 w-full"
-            style={{ minHeight: 0 }}
-            title="App Preview"
-          />
+          {/* Body: iframe for a real URL, or a centered stub for the placeholder (Design) layer. */}
+          {placeholder ? (
+            <div className="flex-1 flex flex-col items-center justify-center gap-2 text-center px-6">
+              <span className="text-sm font-medium text-foreground">{label}</span>
+              <span className="text-xs text-muted-foreground max-w-xs">
+                This layer is coming soon — the app design system will be built here.
+              </span>
+            </div>
+          ) : (
+            <iframe
+              ref={iframeRef}
+              src={previewUrl(siteUrl)}
+              className="flex-1 border-0 w-full"
+              style={{ minHeight: 0 }}
+              title={label}
+            />
+          )}
         </div>
       </Rnd>
     </div>,
