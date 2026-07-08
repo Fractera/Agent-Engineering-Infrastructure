@@ -75,9 +75,7 @@ export async function POST(req: NextRequest) {
           // it there too, or Brain stays unauthenticated. → step 89 error doc.
           addOpenAiKeyToPool(vars.LLM_BINDING_API_KEY);
           pm2RestartDetached("fractera-hermes", 500);
-          // The web chat (:9120) is a separate process that reads the pool at
-          // startup — restart it so the Memory-entered key reaches Brain's chat.
-          pm2RestartDetached("fractera-hermes-webui", 700);
+          // (step 205) The web chat (:9120) is removed — only the agent restarts.
           alsoUpdated = "hermes";
         } catch { /* best-effort */ }
       }

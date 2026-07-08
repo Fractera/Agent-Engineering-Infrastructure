@@ -261,8 +261,10 @@ export function WorkspaceController() {
   const isAuthenticated = session !== null;
 
   type EmbedSpec = { id: EmbedTarget; url: string; title: string; Icon: ComponentType<{ size?: number; className?: string }> };
+  // Step 205: the Brain card now opens the Hermes Agent (:9119) directly — the separate built-in
+  // Web UI chat (fractera-hermes-webui, :9120) is removed. Brain = the agent, one surface.
   const embedSpecFor = (id: EmbedTarget): EmbedSpec =>
-    id === "brain"  ? { id, url: urls.hermesChatUrl, title: "Brain Chat",  Icon: Brain } :
+    id === "brain"  ? { id, url: urls.hermesUrl, title: "Hermes Agent",  Icon: Brain } :
     id === "memory" ? { id, url: urls.brainUrl,  title: "Company Memory", Icon: BrainCircuit } :
                       { id, url: urls.hermesUrl, title: "Hermes Agent", Icon: Bot };
   // One spec per mounted session — the shell renders them all and toggles

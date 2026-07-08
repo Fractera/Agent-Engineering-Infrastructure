@@ -15,7 +15,6 @@ type RuntimeUrls = {
   qwenUrl: string;
   kimiUrl: string;
   hermesUrl: string;
-  hermesChatUrl: string;
   brainUrl: string;
 };
 
@@ -32,13 +31,12 @@ const DEFAULTS: RuntimeUrls = {
   qwenUrl: "ws://localhost:3204/",
   kimiUrl: "ws://localhost:3205/",
   hermesUrl: "http://localhost:9119",
-  hermesChatUrl: "http://localhost:9120",
   brainUrl: "http://localhost:9621",
 };
 
 // Service subdomain prefixes — used to recover the apex from any service host
 // (e.g. admin.aifa.dev → aifa.dev) in domain/Secure mode.
-const KNOWN_PREFIXES = ["www", "auth", "admin", "data", "hermes", "lightrag", "chat"];
+const KNOWN_PREFIXES = ["www", "auth", "admin", "data", "hermes", "lightrag"];
 
 function compute(): RuntimeUrls {
   if (typeof window === "undefined") return DEFAULTS;
@@ -61,7 +59,6 @@ function compute(): RuntimeUrls {
       qwenUrl: `${ws}//${hostname}:3204/`,
       kimiUrl: `${ws}//${hostname}:3205/`,
       hermesUrl: `${protocol}//${hostname}:9119`,
-      hermesChatUrl: `${protocol}//${hostname}:9120`,
       brainUrl: `${protocol}//${hostname}:9621`,
     };
   }
@@ -86,7 +83,6 @@ function compute(): RuntimeUrls {
     qwenUrl: `${ws}//${admin}/ws/qwen/`,
     kimiUrl: `${ws}//${admin}/ws/kimi/`,
     hermesUrl: `${protocol}//hermes.${apex}`,
-    hermesChatUrl: `${protocol}//chat.${apex}`,
     brainUrl: `${protocol}//lightrag.${apex}`,
   };
 }

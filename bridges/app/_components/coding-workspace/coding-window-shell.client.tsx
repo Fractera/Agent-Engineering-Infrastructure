@@ -775,14 +775,8 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Database size={11} />Database
               </button>
-              {/* Hermes Agent — opens the native :9119 dashboard in the embed
-                  canvas (providers / keys / OAuth). Brain card = the friendly chat. */}
-              {isInstalled("brain") && (
-                <button type="button" onClick={() => { setDataMenuOpen(false); onOpenHermesDashboard?.(); setSysTermActive(false); setShowHermesPanel(false); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                  <Bot size={11} />Hermes Agent
-                </button>
-              )}
+              {/* (step 205) The "Hermes Agent" menu item was removed — the Brain carousel button
+                  now opens the agent (:9119) directly, so there is no duplicate entry here. */}
               {isInstalled("brain") && (
                 <button type="button" onClick={() => { setDataMenuOpen(false); setShowOpenAiPanel((v) => !v); setShowHermesPanel(false); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">

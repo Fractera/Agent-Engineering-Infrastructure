@@ -2,15 +2,16 @@ import type { ArchNode } from "./types"
 import { skillsGroup, skill, mcp } from "./builders"
 
 // Hermes (Brain) subtree. Hermes is a folder holding the agent itself plus the
-// two front doors a human reaches it through (Web UI, Telegram). The agent's
-// internals — identity, memory and the seven MCP bridges — nest under it.
+// ways a human reaches it (the Agent dashboard + Telegram; the built-in Web UI
+// chat was removed in step 205). The agent's internals — identity, memory and
+// the seven MCP bridges — nest under it.
 export const HERMES_NODE: ArchNode = {
   id: "hermes",
   label: "Hermes — Company Brain",
   kind: "group",
   description:
-    "The brain plus the two ways a human reaches it. The agent orchestrates " +
-    "development across the platforms; the Web UI and Telegram are its front doors.",
+    "The brain plus the ways a human reaches it. The agent orchestrates " +
+    "development across the platforms; the Agent dashboard and Telegram are its front doors.",
   children: [
     {
       id: "hermes-agent",
@@ -102,16 +103,6 @@ export const HERMES_NODE: ArchNode = {
           ],
         },
       ],
-    },
-    {
-      id: "hermes-webui",
-      label: "Chat Web UI — fractera-hermes-webui",
-      kind: "service",
-      port: ":9120",
-      description:
-        "The chat window inside your workspace where you talk to Hermes in plain " +
-        "language. Benefit: you brief the brain like a teammate and it drives the " +
-        "five coding platforms for you — no commands to memorise.",
     },
     {
       id: "hermes-telegram",
