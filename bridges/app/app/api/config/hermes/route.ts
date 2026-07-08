@@ -29,11 +29,9 @@ const RAG_EMB_KEY = "EMBEDDING_BINDING_API_KEY";
 // substrate save propagates the ONE key down to this file too, closing the
 // false-green gap where the UI showed configured but the slot had no key.
 const SLOT_ENV = process.env.SLOT_ENV_PATH ?? "/opt/fractera/app/.env.local";
-// The @fractera_auto automations listener's env (step 200/201). The AUTOMATIONS bot is a
-// SEPARATE Telegram bot from the Hermes chat bot — a single bot polled by two consumers eats
-// each other's messages (the outage). So the automations-bot token goes HERE (the listener) and
-// to the slot's TELEGRAM_BOT_TOKEN (so automations reply via @fractera_auto), NEVER the Hermes bot.
-const AUTOMATIONS_ENV = process.env.AUTOMATIONS_ENV_PATH ?? "/opt/fractera/services/automations-listener/.env";
+// (step 205) The automations-bot token is NO LONGER set here: each automation owns its OWN Telegram
+// bot, configured in that automation's connect modal (which writes <PROJECT>_BOT_TOKEN to the slot +
+// an entry to the fractera-automations listener registry). This route is Hermes-only.
 
 type OwnerPairing = {
   secret?: string;
@@ -171,7 +169,6 @@ export async function GET(req: NextRequest) {
   const vars = readEnvFile(HERMES_ENV);
   const key = vars[HERMES_KEY] ?? "";
   const tg  = vars[TELEGRAM_KEY] ?? "";
-  const auto = (readEnvFile(AUTOMATIONS_ENV)["AUTOMATIONS_BOT_TOKEN"] ?? "");
   const model = readHermesModel();
   const owner = readOwnerPairing();
   return NextResponse.json({
@@ -179,9 +176,6 @@ export async function GET(req: NextRequest) {
     keyMasked: key ? `${key.slice(0, 7)}…${key.slice(-4)}` : null,
     telegramConfigured: !!tg,
     telegramMasked: tg ? `${tg.slice(0, 6)}…${tg.slice(-4)}` : null,
-    // Automations bot (@fractera_auto, step 200/201) — separate from the Hermes chat bot.
-    automationsConfigured: !!auto,
-    automationsMasked: auto ? `${auto.slice(0, 6)}…${auto.slice(-4)}` : null,
     model,
     // Owner-pairing surface for the "Message your bot" one-tap flow.
     botUsername: owner.botUsername ?? null,
@@ -194,7 +188,7 @@ export async function POST(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  let body: { apiKey?: string; telegramBotToken?: string; automationsBotToken?: string; model?: string };
+  let body: { apiKey?: string; telegramBotToken?: string; model?: string };
   try {
     body = await req.json();
   } catch {
@@ -204,12 +198,7 @@ export async function POST(req: NextRequest) {
   const hermesVars = readEnvFile(HERMES_ENV);
   const apiKeyRaw = (body.apiKey ?? "").trim();
   const tgRaw     = (body.telegramBotToken ?? "").trim();
-  const autoRaw   = (body.automationsBotToken ?? "").trim();
   const modelRaw  = (body.model ?? "").trim();
-
-  if (autoRaw && !/^\d+:[A-Za-z0-9_-]{20,}$/.test(autoRaw)) {
-    return NextResponse.json({ error: "Invalid automations bot token format" }, { status: 400 });
-  }
 
   // Only validate fields the user actually sent. Empty string = leave existing
   // value untouched. The UI sends "" when the user didn't change a field.
@@ -231,7 +220,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  if (!apiKeyRaw && !tgRaw && !autoRaw && !modelRaw) {
+  if (!apiKeyRaw && !tgRaw && !modelRaw) {
     return NextResponse.json({ error: "Nothing to save" }, { status: 400 });
   }
 
@@ -309,8 +298,8 @@ export async function POST(req: NextRequest) {
   // Propagate the OpenAI key to the SLOT — the missing bridge that made the UI green while the
   // automation had no key (step 199). Runtime, server-only key (NOT NEXT_PUBLIC_) → a fractera-app
   // restart re-loads app/.env.local, no rebuild. Guarded on the slot file existing (self-sufficiency).
-  // NOTE (step 200/201): the Hermes chat-bot token is NO LONGER propagated to the slot — automations
-  // reply via the SEPARATE @fractera_auto bot (set below), never the Hermes bot (else the two collide).
+  // NOTE (step 205): only the OpenAI key is propagated to the slot. Telegram bot tokens are NOT set
+  // here — each automation owns its bot, configured in that automation's own connect modal.
   let slotUpdated = false;
   if (apiKeyRaw && fs.existsSync(SLOT_ENV)) {
     try {
@@ -322,26 +311,9 @@ export async function POST(req: NextRequest) {
     } catch { /* best-effort — the substrate save already succeeded */ }
   }
 
-  // Automations bot (@fractera_auto, step 200/201). The token goes to BOTH the listener's env
-  // (AUTOMATIONS_BOT_TOKEN — what fractera-automations polls) AND the slot's TELEGRAM_BOT_TOKEN
-  // (what a telegram automation replies with) — same bot on both sides, distinct from the Hermes
-  // chat bot. Restart the listener (to poll the new bot) + fractera-app (to reply with it).
-  let automationsUpdated = false;
-  if (autoRaw) {
-    try {
-      const listenerVars = readEnvFile(AUTOMATIONS_ENV);
-      listenerVars["AUTOMATIONS_BOT_TOKEN"] = autoRaw;
-      writeEnvFile(AUTOMATIONS_ENV, listenerVars);
-      if (fs.existsSync(SLOT_ENV)) {
-        const slotVars = readEnvFile(SLOT_ENV);
-        slotVars[TELEGRAM_KEY] = autoRaw;
-        writeEnvFile(SLOT_ENV, slotVars);
-        pm2RestartDetached("fractera-app", 700);
-      }
-      pm2RestartDetached("fractera-automations", 500);
-      automationsUpdated = true;
-    } catch { /* best-effort — a box without the listener/slot degrades gracefully */ }
-  }
+  // (step 205) Automations-bot tokens are NOT set here anymore — each automation configures its OWN
+  // bot in its connect modal (<PROJECT>_BOT_TOKEN + the fractera-automations registry). This route is
+  // Hermes-only: the Hermes chat-bot token + the one global OpenAI key.
 
   pm2RestartDetached("fractera-hermes", 500);
   // The gateway is the process that actually connects to Telegram; restart it
@@ -383,7 +355,6 @@ export async function POST(req: NextRequest) {
     ok: true,
     alsoUpdated,
     slotUpdated,
-    automationsUpdated,
     modelWriteError: modelWrite && !modelWrite.ok ? modelWrite.reason : null,
     telegram,
     providerSwitched,

@@ -1,25 +1,27 @@
-// Fractera automations listener (fractera-automations) — the @fractera_auto receiver.
+// Fractera automations listener (fractera-automations) — the MULTI-BOT receiver (step 205).
 //
-// Substrate-level runtime input for the Projects layer (step 200/201, agent-channel-routing.md).
-// One file, no build step, ZERO npm dependencies (Node 18+ builtins only): like fractera-cron it
-// lives in the SUBSTRATE, survives a slot swap, and idles when nothing is configured.
+// Substrate-level runtime input for the Projects layer (agent-channel-routing.md). One file, no build
+// step, ZERO npm dependencies (Node 18+ builtins only): like fractera-cron it lives in the SUBSTRATE,
+// survives a slot swap, and idles when nothing is configured.
 //
-// WHY IT EXISTS: a single Telegram bot polled by the Hermes gateway eats every message (getUpdates
-// hands each update to exactly ONE consumer), so no automation was ever reached. This service polls
-// a SEPARATE "automations" bot (@fractera_auto), so the Hermes chat bot and the automations runtime
-// never contend for the same updates. Routing is DETERMINISTIC: a message is matched against the
-// GLOBAL project_hooks registry (a unique normalized phrase → exactly one { project, action }) — a
-// table lookup, NOT an LLM guess. On a match it POSTs the owning automation's /run route with the
-// message as input; the automation itself does the work and replies via the same bot.
+// WHY IT EXISTS: one Telegram bot polled by two consumers eats every message (getUpdates hands each
+// update to exactly ONE consumer). Step 205 makes routing deterministic by CHANNEL: each automation
+// has its OWN bot, so the bot identity ALREADY selects the automation — there is NO hook matching and
+// NO project_hooks lookup here. For each bot in the registry we hold an independent getUpdates
+// long-poll and FORWARD every message to that automation's /run. The automation itself classifies the
+// action and replies via the same bot.
 //
-// Self-sufficiency: no Hermes dependency. When AUTOMATIONS_BOT_TOKEN is absent the service is inert
-// (logs once, idles) — a project without the automations bot configured simply receives nothing.
+// Self-sufficiency: no Hermes dependency. When the registry is empty (no automation has connected a
+// bot) the service is inert — it just reconciles an empty set and idles.
 //
-// Config: services/automations-listener/.env (written by bootstrap; parsed here, no dotenv).
-//   AUTOMATIONS_BOT_TOKEN  the @fractera_auto bot token (DISTINCT from the Hermes chat bot token)
-//   DATA_URL / DATA_SECRET the data service (:3300) — hooks are read through it (no native modules)
-//   APP_URL                the Shell (:3000) — the automations' /run routes live here
-//   POLL_TIMEOUT_S         getUpdates long-poll timeout (seconds)
+// Config:
+//   registry.json (this dir) — [{ "category": "...", "project": "...", "token": "<bot token>" }]
+//                              (written by the connect modal's config route, step 205.7)
+//   services/automations-listener/.env (optional overrides, parsed here, no dotenv):
+//     APP_URL          the Shell (:3000) — the automations' /run routes live here
+//     POLL_TIMEOUT_S   getUpdates long-poll timeout (seconds)
+//     REGISTRY_TTL_MS  how often the registry file is re-read (a newly connected bot starts polling
+//                      without a service restart)
 
 import { readFileSync, existsSync } from 'fs'
 import { resolve, dirname } from 'path'
@@ -27,8 +29,7 @@ import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-// ── Config (services/automations-listener/.env — written by bootstrap; parsed here, no dotenv) ──
-
+// ── Config (services/automations-listener/.env — optional overrides; parsed here, no dotenv) ──
 function parseEnvFile(path) {
   const out = {}
   if (!existsSync(path)) return out
@@ -42,137 +43,105 @@ function parseEnvFile(path) {
 const fileEnv = parseEnvFile(resolve(__dirname, '.env'))
 const env = k => process.env[k] ?? fileEnv[k]
 
-const BOT_TOKEN     = (env('AUTOMATIONS_BOT_TOKEN') ?? '').trim()
-const DATA_URL      = env('DATA_URL') ?? 'http://127.0.0.1:3300'
-const DATA_SECRET   = env('DATA_SECRET') ?? ''
-const APP_URL       = env('APP_URL') ?? 'http://127.0.0.1:3000'
+const APP_URL        = env('APP_URL') ?? 'http://127.0.0.1:3000'
 const POLL_TIMEOUT_S = Number(env('POLL_TIMEOUT_S') ?? 25)
-const HOOKS_TTL_MS  = Number(env('HOOKS_TTL_MS') ?? 15000)
-const API           = `https://api.telegram.org/bot${BOT_TOKEN}`
+const REGISTRY_PATH  = resolve(__dirname, 'registry.json')
+const REGISTRY_TTL_MS = Number(env('REGISTRY_TTL_MS') ?? 15000)
 
-// ── Phrase normalization — MUST byte-match the slot's lib/hooks/normalize.ts (step 187), or a
-// stored hook will never be found. Lowercase, strip non-letter/digit (Unicode-aware), collapse ws.
-function normalizePhrase(phrase) {
-  return (phrase ?? '')
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-// ── Data service client (same trusted path fractera-cron uses; returns rows for a SELECT) ───────
-async function dataQuery(sql, params = []) {
-  const r = await fetch(`${DATA_URL}/db/migrate`, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-data-secret': DATA_SECRET,
-      'x-agent-identity': 'fractera-automations',
-    },
-    body: JSON.stringify(params.length ? { sql, params } : { sql }),
-  })
-  const body = await r.json().catch(() => ({}))
-  if (!r.ok || body.error) throw new Error(body.error ?? `data service HTTP ${r.status}`)
-  return Array.isArray(body.rows) ? body.rows : []
-}
-
-// ── Hook registry (cached; refreshed on a short TTL so a newly-added hook is picked up fast) ─────
-let hooksCache = { at: 0, rows: [] }
-async function loadHooks() {
-  if (Date.now() - hooksCache.at < HOOKS_TTL_MS) return hooksCache.rows
-  const rows = await dataQuery(
-    `SELECT category, project, action, normalized_phrase FROM project_hooks`,
-  )
-  // Longest phrase first: if two hooks are prefixes of each other, the more specific wins.
-  rows.sort((a, b) => (b.normalized_phrase?.length ?? 0) - (a.normalized_phrase?.length ?? 0))
-  hooksCache = { at: Date.now(), rows }
-  return rows
-}
-
-// ── Deterministic match: the message is "<hook phrase> <payload>". A hook matches when the
-// normalized message EQUALS the normalized hook, or STARTS WITH it followed by a space. No LLM.
-function matchHook(text, hooks) {
-  const norm = normalizePhrase(text)
-  if (!norm) return null
-  for (const h of hooks) {
-    const hp = (h.normalized_phrase ?? '').trim()
-    if (!hp) continue
-    if (norm === hp || norm.startsWith(hp + ' ')) {
-      return { category: h.category, project: h.project, action: h.action, phrase: hp }
-    }
+// ── Registry: [{ category, project, token }] — the single source of truth for which bot serves which
+// automation. Written by the connect modal (205.7); read here on a short interval so a newly connected
+// bot begins polling without a restart. Malformed/missing → empty (inert).
+function loadRegistry() {
+  try {
+    if (!existsSync(REGISTRY_PATH)) return []
+    const raw = JSON.parse(readFileSync(REGISTRY_PATH, 'utf8'))
+    if (!Array.isArray(raw)) return []
+    return raw.filter(e => e && typeof e.token === 'string' && e.token && e.category && e.project)
+  } catch (e) {
+    console.error(`[auto] registry parse error: ${e.message ?? e}`)
+    return []
   }
-  return null
 }
 
-// ── Dispatch: POST the owning automation's /run with the message as input (a STRING — the run
-// route forwards input as a string; the automation's reception step reads it). Same shape the
-// cron pub/sub dispatcher already uses. The automation itself replies via the bot; we do not.
-async function dispatch(match, message) {
-  const url = `${APP_URL}/api/projects/${match.category}/${match.project}/run`
+// ── Dispatch: FORWARD the message to the owning automation's /run with the message as input (a JSON
+// string envelope; the automation's reception step reads it). No matching — the bot already selected
+// the automation. The automation replies via its own bot; we do not.
+async function dispatch(entry, message) {
+  const url = `${APP_URL}/api/projects/${entry.category}/${entry.project}/run`
   try {
     const r = await fetch(url, {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-agent-identity': 'fractera-automations' },
       body: JSON.stringify({ input: JSON.stringify({
         source: 'telegram', chatId: message.chat?.id, messageId: message.message_id,
-        text: message.text, date: message.date, action: match.action,
+        text: message.text, date: message.date,
       }) }),
       signal: AbortSignal.timeout(30000),
     })
-    console.log(`[auto] '${match.phrase}' -> ${match.category}/${match.project} (${match.action}) /run: HTTP ${r.status}`)
+    console.log(`[auto] ${entry.category}/${entry.project} <- msg ${message.message_id}: /run HTTP ${r.status}`)
   } catch (e) {
-    console.error(`[auto] dispatch to ${match.category}/${match.project} failed: ${e.message ?? e}`)
+    console.error(`[auto] dispatch to ${entry.category}/${entry.project} failed: ${e.message ?? e}`)
   }
 }
 
-// ── Telegram long-poll (getUpdates). In-memory offset: once an update is acked (offset=last+1)
-// Telegram drops it server-side, so a restart never reprocesses an acked update. ───────────────
-let offset = 0
-
-async function pollOnce() {
-  const r = await fetch(`${API}/getUpdates?timeout=${POLL_TIMEOUT_S}&offset=${offset}&allowed_updates=["message"]`, {
-    signal: AbortSignal.timeout((POLL_TIMEOUT_S + 10) * 1000),
-  })
-  const body = await r.json().catch(() => ({}))
-  if (!body?.ok) {
-    // 409 = another consumer is polling this same bot (must not happen — the automations bot is
-    // dedicated). Surface it loudly; it is exactly the two-consumer collision this service prevents.
-    throw new Error(body?.description ?? `getUpdates HTTP ${r.status}`)
-  }
-  const updates = Array.isArray(body.result) ? body.result : []
-  if (!updates.length) return
-  const hooks = await loadHooks()
-  for (const u of updates) {
-    offset = Math.max(offset, u.update_id + 1)
-    const msg = u.message
-    const text = typeof msg?.text === 'string' ? msg.text : ''
-    if (!text) continue
-    const match = matchHook(text, hooks)
-    if (match) await dispatch(match, msg)
-    else console.log(`[auto] no registered hook in message — ignored`)
-  }
-}
-
-async function loop() {
-  for (;;) {
+// ── One long-poll loop per bot token. In-memory offset per bot: once an update is acked (offset=last+1)
+// Telegram drops it, so a restart never reprocesses an acked update. `getEntry` returns the current
+// {category,project} (reconcile may update it); `isStopped` ends the loop when the bot leaves the registry.
+async function runPoller(token, getEntry, isStopped) {
+  const API = `https://api.telegram.org/bot${token}`
+  const tag = `${token.slice(0, 8)}…`
+  let offset = 0
+  console.log(`[auto] poller up for ${getEntry().category}/${getEntry().project} (bot ${tag})`)
+  while (!isStopped()) {
     try {
-      await pollOnce()
+      const r = await fetch(`${API}/getUpdates?timeout=${POLL_TIMEOUT_S}&offset=${offset}&allowed_updates=["message"]`, {
+        signal: AbortSignal.timeout((POLL_TIMEOUT_S + 10) * 1000),
+      })
+      const body = await r.json().catch(() => ({}))
+      if (!body?.ok) {
+        // 409 = a second consumer polls this same bot (must not happen — each bot is dedicated to one
+        // automation). Surface it loudly; it is exactly the two-consumer collision this design prevents.
+        throw new Error(body?.description ?? `getUpdates HTTP ${r.status}`)
+      }
+      const updates = Array.isArray(body.result) ? body.result : []
+      for (const u of updates) {
+        offset = Math.max(offset, u.update_id + 1)
+        const msg = u.message
+        const text = typeof msg?.text === 'string' ? msg.text : ''
+        if (!text) continue
+        await dispatch(getEntry(), msg)
+      }
     } catch (e) {
-      console.error(`[auto] poll error: ${e.message ?? e}`)
+      console.error(`[auto] poll error (bot ${tag}): ${e.message ?? e}`)
       await new Promise(res => setTimeout(res, 5000)) // back off on error, then retry
     }
+  }
+  console.log(`[auto] poller stopped (bot ${tag})`)
+}
+
+// ── Reconcile the running pollers with the registry: start a poller for each new bot, stop one whose
+// token left the registry, and refresh the {category,project} of an existing one. Runs on an interval.
+const pollers = new Map() // token -> { stopped, entry }
+
+function reconcile() {
+  const wanted = new Map(loadRegistry().map(e => [e.token, e]))
+  for (const [token, p] of pollers) {
+    if (!wanted.has(token)) { p.stopped = true; pollers.delete(token) }
+    else p.entry = wanted.get(token)
+  }
+  for (const [token, entry] of wanted) {
+    if (pollers.has(token)) continue
+    const p = { stopped: false, entry }
+    pollers.set(token, p)
+    runPoller(token, () => p.entry, () => p.stopped)
   }
 }
 
 process.on('uncaughtException', e => console.error(`[auto] uncaught: ${e.stack ?? e}`))
 process.on('unhandledRejection', e => console.error(`[auto] unhandled rejection: ${e}`))
 
-if (!BOT_TOKEN) {
-  // Inert-until-configured: no automations bot → nothing to receive. Idle so PM2 keeps the process
-  // green without crashing (mirrors the graph's "inert when keys are absent").
-  console.log('[auto] fractera-automations idle — AUTOMATIONS_BOT_TOKEN not set (inert until configured)')
-  setInterval(() => {}, 1 << 30)
-} else {
-  console.log(`[auto] fractera-automations up — app=${APP_URL} data=${DATA_URL} poll=${POLL_TIMEOUT_S}s`)
-  loop()
-}
+console.log(`[auto] fractera-automations (multi-bot) up — app=${APP_URL} poll=${POLL_TIMEOUT_S}s registry=${REGISTRY_PATH}`)
+reconcile()
+setInterval(reconcile, REGISTRY_TTL_MS)
+// Keep the process alive even with zero pollers (inert-until-configured).
+setInterval(() => {}, 1 << 30)
