@@ -74,7 +74,11 @@ async function dispatch(entry, message) {
       headers: { 'content-type': 'application/json', 'x-agent-identity': 'fractera-automations' },
       body: JSON.stringify({ input: JSON.stringify({
         source: 'telegram', chatId: message.chat?.id, messageId: message.message_id,
-        text: message.text, date: message.date,
+        text: message.text ?? message.caption ?? '', date: message.date,
+        // Photo (step 205 §E, receipt digitization): forward the largest PhotoSize's file_id so the
+        // automation can fetch + digitize it. Telegram sends the array smallest→largest.
+        photoFileId: Array.isArray(message.photo) && message.photo.length
+          ? message.photo[message.photo.length - 1].file_id : undefined,
       }) }),
       signal: AbortSignal.timeout(30000),
     })
@@ -132,8 +136,9 @@ async function runPoller(token, getEntry, isStopped) {
           continue
         }
         const msg = u.message
-        const text = typeof msg?.text === 'string' ? msg.text : ''
-        if (!text) continue
+        const hasText = typeof msg?.text === 'string' && msg.text
+        const hasPhoto = Array.isArray(msg?.photo) && msg.photo.length
+        if (!hasText && !hasPhoto) continue
         await dispatch(getEntry(), msg)
       }
     } catch (e) {
