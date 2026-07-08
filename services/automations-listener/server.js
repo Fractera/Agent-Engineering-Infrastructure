@@ -84,6 +84,26 @@ async function dispatch(entry, message) {
   }
 }
 
+// ── Callback dispatch (step 205 §D): an inline-button tap. Forward it as a callback envelope so the
+// automation can resolve the pending message + forced action and act on it (it also acks the tap).
+async function dispatchCallback(entry, cb) {
+  const url = `${APP_URL}/api/projects/${entry.category}/${entry.project}/run`
+  try {
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-agent-identity': 'fractera-automations' },
+      body: JSON.stringify({ input: JSON.stringify({
+        source: 'telegram', kind: 'callback', data: cb.data,
+        chatId: cb.message?.chat?.id, callbackQueryId: cb.id, messageId: cb.message?.message_id,
+      }) }),
+      signal: AbortSignal.timeout(30000),
+    })
+    console.log(`[auto] ${entry.category}/${entry.project} <- callback '${cb.data}': /run HTTP ${r.status}`)
+  } catch (e) {
+    console.error(`[auto] callback dispatch to ${entry.category}/${entry.project} failed: ${e.message ?? e}`)
+  }
+}
+
 // ── One long-poll loop per bot token. In-memory offset per bot: once an update is acked (offset=last+1)
 // Telegram drops it, so a restart never reprocesses an acked update. `getEntry` returns the current
 // {category,project} (reconcile may update it); `isStopped` ends the loop when the bot leaves the registry.
@@ -94,7 +114,7 @@ async function runPoller(token, getEntry, isStopped) {
   console.log(`[auto] poller up for ${getEntry().category}/${getEntry().project} (bot ${tag})`)
   while (!isStopped()) {
     try {
-      const r = await fetch(`${API}/getUpdates?timeout=${POLL_TIMEOUT_S}&offset=${offset}&allowed_updates=["message"]`, {
+      const r = await fetch(`${API}/getUpdates?timeout=${POLL_TIMEOUT_S}&offset=${offset}&allowed_updates=["message","callback_query"]`, {
         signal: AbortSignal.timeout((POLL_TIMEOUT_S + 10) * 1000),
       })
       const body = await r.json().catch(() => ({}))
@@ -106,6 +126,11 @@ async function runPoller(token, getEntry, isStopped) {
       const updates = Array.isArray(body.result) ? body.result : []
       for (const u of updates) {
         offset = Math.max(offset, u.update_id + 1)
+        const cb = u.callback_query
+        if (cb && typeof cb.data === 'string') {
+          await dispatchCallback(getEntry(), cb)
+          continue
+        }
         const msg = u.message
         const text = typeof msg?.text === 'string' ? msg.text : ''
         if (!text) continue
