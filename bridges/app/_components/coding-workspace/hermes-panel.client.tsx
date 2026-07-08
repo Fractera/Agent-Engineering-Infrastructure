@@ -11,6 +11,9 @@ type Props = {
 type HermesStatus = {
   telegramConfigured: boolean;
   telegramMasked: string | null;
+  // Automations bot (@fractera_auto) — a SEPARATE bot from the Hermes chat bot (step 200/201).
+  automationsConfigured: boolean;
+  automationsMasked: string | null;
   // Owner-pairing: one-tap "Message your bot" deep link + ownership state.
   botUsername: string | null;
   ownerClaimed: boolean;
@@ -24,6 +27,7 @@ type HermesStatus = {
 export function HermesPanel({ onClose }: Props) {
   const [status, setStatus]   = useState<HermesStatus | null>(null);
   const [tgToken, setTgToken] = useState("");
+  const [autoToken, setAutoToken] = useState("");
   const [saving, setSaving]   = useState(false);
   const [loading, setLoading] = useState(true);
   const [savedAt, setSavedAt] = useState<number | null>(null);
@@ -38,7 +42,8 @@ export function HermesPanel({ onClose }: Props) {
 
   async function handleSave() {
     const sentTg = tgToken.trim();
-    if (!sentTg) {
+    const sentAuto = autoToken.trim();
+    if (!sentTg && !sentAuto) {
       toast.error("Paste a bot token first");
       return;
     }
@@ -47,7 +52,10 @@ export function HermesPanel({ onClose }: Props) {
       const res = await fetch("/api/config/hermes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ telegramBotToken: sentTg }),
+        body: JSON.stringify({
+          ...(sentTg ? { telegramBotToken: sentTg } : {}),
+          ...(sentAuto ? { automationsBotToken: sentAuto } : {}),
+        }),
       });
       const data = await res.json();
       if (!res.ok || data.error) {
@@ -56,11 +64,12 @@ export function HermesPanel({ onClose }: Props) {
       }
       setSavedAt(Date.now());
       setTgToken("");
+      setAutoToken("");
       try {
         const fresh = await fetch("/api/config/hermes").then((r) => r.json());
         setStatus(fresh);
       } catch { /* admin reloading */ }
-      toast.success("Saved — your Telegram bot is connecting");
+      toast.success("Saved — your Telegram bot(s) are connecting");
     } catch {
       toast.error("Save failed");
     } finally {
@@ -89,15 +98,17 @@ export function HermesPanel({ onClose }: Props) {
           <>
             <div className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
               <p>
-                Telegram is an <strong>optional</strong> way to talk to your Brain from your phone —
-                in addition to the built-in chat (the Brain card). Wire up a bot below, then message
-                it from anywhere. Skip this entirely if you only use the web chat.
+                Two <strong>separate</strong> Telegram bots, each with its own token — never share one
+                token between them (Telegram delivers each message to only one bot, so they would eat
+                each other&apos;s messages). <strong>Brain bot</strong> = chat with your Brain (Hermes).
+                <strong> Automations bot</strong> (@fractera_auto) = run your automations by saying a
+                hook phrase. Both are optional; wire up whichever you need.
               </p>
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-[11px] font-medium text-foreground">Telegram bot token</p>
+                <p className="text-[11px] font-medium text-foreground">Brain bot token (chat with Hermes)</p>
                 {status.telegramConfigured ? (
                   <span className="flex items-center gap-1 text-[10px] text-green-500">
                     <CheckCircle size={10} />
@@ -167,6 +178,35 @@ export function HermesPanel({ onClose }: Props) {
                   </span>
                 </p>
               </div>
+
+              {/* Automations bot (@fractera_auto) — a SEPARATE bot that runs your automations by
+                  hook phrase, handled by the fractera-automations listener (not the Brain). */}
+              <div className="pt-2 mt-1 border-t border-border space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] font-medium text-foreground">Automations bot token (@fractera_auto)</p>
+                  {status.automationsConfigured ? (
+                    <span className="flex items-center gap-1 text-[10px] text-green-500">
+                      <CheckCircle size={10} />
+                      <span className="font-mono">{status.automationsMasked}</span>
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground">not set</span>
+                  )}
+                </div>
+                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  Create a <strong>second</strong> bot with <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer" className="underline">@BotFather</a> (a
+                  different bot from the Brain bot). Its token drives your automations: say a hook phrase to
+                  it and the matching automation runs and replies. Keep it separate — one bot cannot serve
+                  both the Brain and your automations.
+                </p>
+                <input
+                  type="password"
+                  value={autoToken}
+                  onChange={(e) => setAutoToken(e.target.value)}
+                  placeholder={status.automationsConfigured ? "Paste new token to replace" : "1234567:ABC…"}
+                  className="w-full h-8 px-2.5 text-[11px] rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring font-mono"
+                />
+              </div>
             </div>
 
             {savedAt && (
@@ -193,7 +233,7 @@ export function HermesPanel({ onClose }: Props) {
       <div className="shrink-0 border-t border-border px-4 py-3 flex items-center justify-end">
         <button
           onClick={handleSave}
-          disabled={saving || !tgToken.trim()}
+          disabled={saving || (!tgToken.trim() && !autoToken.trim())}
           className="h-8 px-4 rounded-md bg-primary text-primary-foreground text-[11px] font-medium disabled:opacity-40 hover:opacity-90 transition-opacity"
         >
           {saving ? <span className="flex items-center gap-1.5"><Loader2 size={11} className="animate-spin" />Saving…</span> : "Save"}

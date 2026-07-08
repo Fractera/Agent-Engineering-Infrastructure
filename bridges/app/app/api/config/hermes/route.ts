@@ -29,6 +29,11 @@ const RAG_EMB_KEY = "EMBEDDING_BINDING_API_KEY";
 // substrate save propagates the ONE key down to this file too, closing the
 // false-green gap where the UI showed configured but the slot had no key.
 const SLOT_ENV = process.env.SLOT_ENV_PATH ?? "/opt/fractera/app/.env.local";
+// The @fractera_auto automations listener's env (step 200/201). The AUTOMATIONS bot is a
+// SEPARATE Telegram bot from the Hermes chat bot — a single bot polled by two consumers eats
+// each other's messages (the outage). So the automations-bot token goes HERE (the listener) and
+// to the slot's TELEGRAM_BOT_TOKEN (so automations reply via @fractera_auto), NEVER the Hermes bot.
+const AUTOMATIONS_ENV = process.env.AUTOMATIONS_ENV_PATH ?? "/opt/fractera/services/automations-listener/.env";
 
 type OwnerPairing = {
   secret?: string;
@@ -166,6 +171,7 @@ export async function GET(req: NextRequest) {
   const vars = readEnvFile(HERMES_ENV);
   const key = vars[HERMES_KEY] ?? "";
   const tg  = vars[TELEGRAM_KEY] ?? "";
+  const auto = (readEnvFile(AUTOMATIONS_ENV)["AUTOMATIONS_BOT_TOKEN"] ?? "");
   const model = readHermesModel();
   const owner = readOwnerPairing();
   return NextResponse.json({
@@ -173,6 +179,9 @@ export async function GET(req: NextRequest) {
     keyMasked: key ? `${key.slice(0, 7)}…${key.slice(-4)}` : null,
     telegramConfigured: !!tg,
     telegramMasked: tg ? `${tg.slice(0, 6)}…${tg.slice(-4)}` : null,
+    // Automations bot (@fractera_auto, step 200/201) — separate from the Hermes chat bot.
+    automationsConfigured: !!auto,
+    automationsMasked: auto ? `${auto.slice(0, 6)}…${auto.slice(-4)}` : null,
     model,
     // Owner-pairing surface for the "Message your bot" one-tap flow.
     botUsername: owner.botUsername ?? null,
@@ -185,7 +194,7 @@ export async function POST(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  let body: { apiKey?: string; telegramBotToken?: string; model?: string };
+  let body: { apiKey?: string; telegramBotToken?: string; automationsBotToken?: string; model?: string };
   try {
     body = await req.json();
   } catch {
@@ -195,7 +204,12 @@ export async function POST(req: NextRequest) {
   const hermesVars = readEnvFile(HERMES_ENV);
   const apiKeyRaw = (body.apiKey ?? "").trim();
   const tgRaw     = (body.telegramBotToken ?? "").trim();
+  const autoRaw   = (body.automationsBotToken ?? "").trim();
   const modelRaw  = (body.model ?? "").trim();
+
+  if (autoRaw && !/^\d+:[A-Za-z0-9_-]{20,}$/.test(autoRaw)) {
+    return NextResponse.json({ error: "Invalid automations bot token format" }, { status: 400 });
+  }
 
   // Only validate fields the user actually sent. Empty string = leave existing
   // value untouched. The UI sends "" when the user didn't change a field.
@@ -217,7 +231,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  if (!apiKeyRaw && !tgRaw && !modelRaw) {
+  if (!apiKeyRaw && !tgRaw && !autoRaw && !modelRaw) {
     return NextResponse.json({ error: "Nothing to save" }, { status: 400 });
   }
 
@@ -292,22 +306,41 @@ export async function POST(req: NextRequest) {
     } catch { /* best-effort */ }
   }
 
-  // Propagate to the SLOT — the missing bridge that made the UI green while the
-  // automation had no key. The slot workflow reads process.env.OPENAI_API_KEY /
-  // TELEGRAM_BOT_TOKEN at runtime; nothing wrote them there before. These are
-  // runtime, server-only keys (NOT NEXT_PUBLIC_) → a fractera-app restart
-  // re-loads app/.env.local, no rebuild. Guarded on the slot file existing so a
-  // box without the slot degrades gracefully (self-sufficiency).
+  // Propagate the OpenAI key to the SLOT — the missing bridge that made the UI green while the
+  // automation had no key (step 199). Runtime, server-only key (NOT NEXT_PUBLIC_) → a fractera-app
+  // restart re-loads app/.env.local, no rebuild. Guarded on the slot file existing (self-sufficiency).
+  // NOTE (step 200/201): the Hermes chat-bot token is NO LONGER propagated to the slot — automations
+  // reply via the SEPARATE @fractera_auto bot (set below), never the Hermes bot (else the two collide).
   let slotUpdated = false;
-  if ((apiKeyRaw || tgRaw) && fs.existsSync(SLOT_ENV)) {
+  if (apiKeyRaw && fs.existsSync(SLOT_ENV)) {
     try {
       const slotVars = readEnvFile(SLOT_ENV);
-      if (apiKeyRaw) slotVars[HERMES_KEY] = apiKeyRaw;
-      if (tgRaw) slotVars[TELEGRAM_KEY] = tgRaw;
+      slotVars[HERMES_KEY] = apiKeyRaw;
       writeEnvFile(SLOT_ENV, slotVars);
       pm2RestartDetached("fractera-app", 500);
       slotUpdated = true;
     } catch { /* best-effort — the substrate save already succeeded */ }
+  }
+
+  // Automations bot (@fractera_auto, step 200/201). The token goes to BOTH the listener's env
+  // (AUTOMATIONS_BOT_TOKEN — what fractera-automations polls) AND the slot's TELEGRAM_BOT_TOKEN
+  // (what a telegram automation replies with) — same bot on both sides, distinct from the Hermes
+  // chat bot. Restart the listener (to poll the new bot) + fractera-app (to reply with it).
+  let automationsUpdated = false;
+  if (autoRaw) {
+    try {
+      const listenerVars = readEnvFile(AUTOMATIONS_ENV);
+      listenerVars["AUTOMATIONS_BOT_TOKEN"] = autoRaw;
+      writeEnvFile(AUTOMATIONS_ENV, listenerVars);
+      if (fs.existsSync(SLOT_ENV)) {
+        const slotVars = readEnvFile(SLOT_ENV);
+        slotVars[TELEGRAM_KEY] = autoRaw;
+        writeEnvFile(SLOT_ENV, slotVars);
+        pm2RestartDetached("fractera-app", 700);
+      }
+      pm2RestartDetached("fractera-automations", 500);
+      automationsUpdated = true;
+    } catch { /* best-effort — a box without the listener/slot degrades gracefully */ }
   }
 
   pm2RestartDetached("fractera-hermes", 500);
@@ -350,6 +383,7 @@ export async function POST(req: NextRequest) {
     ok: true,
     alsoUpdated,
     slotUpdated,
+    automationsUpdated,
     modelWriteError: modelWrite && !modelWrite.ok ? modelWrite.reason : null,
     telegram,
     providerSwitched,
