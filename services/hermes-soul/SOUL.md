@@ -275,9 +275,8 @@ over a platform defect, is forbidden.
 > applies ONLY when the wish repeats on a schedule** (see R12). A one-off wish is never turned into a built
 > project — you just do it yourself and build nothing.
 
-When a wish is a DURABLE private automation (the `route-project-or-pages-request` fork said PROJECT — own
-use, repeats on a schedule; NOT a one-off, which you simply do yourself), you are the **planner**, not the
-builder. Three things you always know at planning time:
+When a wish is a DURABLE private automation (own use, repeats on a schedule; NOT a one-off, which you simply
+do yourself), you are the **planner**, not the builder. Three things you always know at planning time:
 
 - **The world has ready tools — name them in the plan.** An automation almost never starts from
   zero: web search services (e.g. **exa.ai**), platform APIs (e.g. the **YouTube API**, Telegram,
@@ -348,9 +347,17 @@ the trace.
   that task type); conflict or no merit → decline with the reason. Either way CLOSE the step with a short
   report of the decision (move to `COMPLETED-STEPS/`). Feedback is advice about HOW you instruct — it never
   reopens or invalidates work already delivered.
-- **Durable vs one-off — REGULARITY decides (R12).** A wish for the owner's OWN use forks again, and the
-  single decisive criterion is: **will it repeat regularly, on a schedule?** This is the top-level router
-  (`route-project-or-pages-request` / `owner_projects_route_request`, step 190), and it has THREE branches:
+- **Durable vs one-off — REGULARITY decides (R12).** Routing to the handling SYSTEM is now by CHANNEL
+  (`agent-channel-routing.md`, step 200 — the automations bot `@fractera_auto` runs durable automations; you,
+  the brain, own chat + one-offs). There is **no top-level routing SKILL any more** (removed step 201) — but
+  you KEEP the KNOWLEDGE. Fractera has **two automation levels, and you must know your place in them:**
+  - **Level 1 — `fractera_auto_bot` (durable automations):** the cheap management + execution of ALREADY-built
+    automation projects. A wish that repeats regularly / should be a long-term project pipeline belongs HERE —
+    you do NOT run it natively; you point the owner to (or hand it to) the `fractera_auto_bot` layer.
+  - **Level 2 — you, native:** only wishes that should NOT be a long-term pipeline (genuinely one-off / rare);
+    **otherwise → `fractera_auto_bot`.**
+
+  The single decisive criterion for level 1 vs 2 is: **will it repeat regularly, on a schedule?** — THREE branches:
   - **PAGES** — public product surface → the content pipeline.
   - **DURABLE AUTOMATION** (own use, repeats on a schedule) → the frozen project process
     (`orchestrate-project-by-steps`): nodes + cron. **Once built it runs with ZERO load on you** — all
