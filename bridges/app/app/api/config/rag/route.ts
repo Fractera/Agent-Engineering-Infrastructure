@@ -11,7 +11,11 @@ const HERMES_ENV = process.env.HERMES_ENV_PATH ?? "/root/.hermes/.env";
 // LightRAG (Company Brain) needs an OpenAI API key for both LLM and
 // embeddings. The same key is written to LLM_BINDING_API_KEY and
 // EMBEDDING_BINDING_API_KEY — we don't expose them as two separate
-// fields in the UI because partners ship one key.
+// fields in the UI because partners ship one key. It is ALSO written to the
+// plain OPENAI_API_KEY: LightRAG's OpenAI client reads that exact env name
+// directly (os.environ["OPENAI_API_KEY"]); without it every document fails to
+// embed (KeyError) and the vector memory silently stays empty. → step 207.15.
+const RAG_OPENAI_KEY = "OPENAI_API_KEY";
 
 function parseEnv(content: string): Record<string, string> {
   const result: Record<string, string> = {};
@@ -81,6 +85,7 @@ export async function POST(req: NextRequest) {
     if (trimmed) {
       existing.LLM_BINDING_API_KEY = trimmed;
       existing.EMBEDDING_BINDING_API_KEY = trimmed;
+      existing[RAG_OPENAI_KEY] = trimmed; // LightRAG reads os.environ["OPENAI_API_KEY"] (step 207.15)
     }
     if (model) {
       existing.LLM_MODEL = model;
@@ -130,6 +135,7 @@ export async function DELETE(req: NextRequest) {
   const existing = readEnv();
   existing.LLM_BINDING_API_KEY = "";
   existing.EMBEDDING_BINDING_API_KEY = "";
+  existing[RAG_OPENAI_KEY] = ""; // clear the plain name too (step 207.15)
   fs.mkdirSync(path.dirname(RAG_ENV), { recursive: true });
   fs.writeFileSync(RAG_ENV, serializeEnv(existing), "utf-8");
   await new Promise<void>((resolve) => {
