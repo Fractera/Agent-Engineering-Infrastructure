@@ -1,4 +1,5 @@
 import { WebSocketServer } from 'ws'
+import http from 'node:http'
 import { spawn, execSync } from 'child_process'
 import { readFileSync } from 'fs'
 import pty from 'node-pty'
@@ -1297,6 +1298,70 @@ new DocTransferMcpServer({
   ragUrl: process.env.LIGHTRAG_URL ?? 'http://localhost:9621',
   ragKey: process.env.LIGHTRAG_API_KEY ?? '',
 }).start()
+
+// ── Hermes dashboard reverse proxy — Brain in IP mode (step 207.15) ────────────
+// The Hermes agent dashboard (:9119) binds 127.0.0.1 ONLY and validates the Host
+// header (June-2026 vendor hardening — it now REFUSES a public 0.0.0.0 bind even
+// with --insecure: "There is no unauthenticated public-bind option"). In secure
+// mode nginx proxies hermes.<apex> → 127.0.0.1:9119 rewriting `Host: 127.0.0.1:9119`,
+// so Brain works. IP mode has NO nginx, so the browser hitting <IP>:9119 directly
+// gets ERR_CONNECTION_REFUSED — the grey Brain card. This tiny reverse proxy
+// replicates the nginx behaviour on a public port (:9118 → 127.0.0.1:9119, Host
+// rewritten) so Brain works in IP mode 1:1 with secure. In secure mode the firewall
+// lockdown (only 22/80/443 public) closes :9118, so it is harmless there. The
+// dashboard opens a live WebSocket, so both plain HTTP and `upgrade` are proxied.
+// Zero deps (built-in node:http). runtime-urls.ts points the IP-mode hermesUrl here.
+const HERMES_PROXY_PORT   = Number(process.env.HERMES_UI_PROXY_PORT ?? 9118)
+const HERMES_TARGET_HOST  = '127.0.0.1'
+const HERMES_TARGET_PORT  = 9119
+const HERMES_TARGET_HDR   = `${HERMES_TARGET_HOST}:${HERMES_TARGET_PORT}`
+
+function hermesProxyOpts(req) {
+  return {
+    host: HERMES_TARGET_HOST,
+    port: HERMES_TARGET_PORT,
+    method: req.method,
+    path: req.url,
+    // Rewrite Host so the vendor host-check accepts the request (same as nginx).
+    headers: { ...req.headers, host: HERMES_TARGET_HDR },
+  }
+}
+
+const hermesProxy = http.createServer((req, res) => {
+  const upstream = http.request(hermesProxyOpts(req), (upRes) => {
+    res.writeHead(upRes.statusCode ?? 502, upRes.headers)
+    upRes.pipe(res)
+  })
+  upstream.on('error', (e) => {
+    if (!res.headersSent) res.writeHead(502, { 'content-type': 'text/plain' })
+    res.end(`hermes proxy error: ${e.message}`)
+  })
+  req.pipe(upstream)
+})
+
+// WebSocket / upgrade passthrough — forward the raw upgrade to 127.0.0.1:9119.
+hermesProxy.on('upgrade', (req, clientSocket, clientHead) => {
+  const upstream = http.request(hermesProxyOpts(req))
+  upstream.on('upgrade', (upRes, upSocket, upHead) => {
+    const lines = ['HTTP/1.1 101 Switching Protocols']
+    for (const [k, v] of Object.entries(upRes.headers)) lines.push(`${k}: ${v}`)
+    clientSocket.write(lines.join('\r\n') + '\r\n\r\n')
+    if (upHead && upHead.length) clientSocket.write(upHead)
+    if (clientHead && clientHead.length) upSocket.write(clientHead)
+    upSocket.pipe(clientSocket)
+    clientSocket.pipe(upSocket)
+    const kill = () => { try { upSocket.destroy() } catch {} try { clientSocket.destroy() } catch {} }
+    upSocket.on('error', kill); clientSocket.on('error', kill)
+    upSocket.on('close', kill); clientSocket.on('close', kill)
+  })
+  upstream.on('error', () => { try { clientSocket.destroy() } catch {} })
+  upstream.end()
+})
+
+hermesProxy.on('error', (e) => console.error(`[hermes-proxy] ${e.message}`))
+hermesProxy.listen(HERMES_PROXY_PORT, '0.0.0.0', () => {
+  console.log(`[hermes-proxy] :${HERMES_PROXY_PORT} → http://${HERMES_TARGET_HDR} (Brain in IP mode)`)
+})
 
 // (step 190 E2.1 custom web-search MCP bridge REMOVED in step 192 — Hermes provides
 // web_search/web_extract NATIVELY; a coder must not reinvent it. Native web search is
