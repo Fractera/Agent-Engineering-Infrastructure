@@ -24,6 +24,13 @@ const HERMES_KEY = "OPENAI_API_KEY";
 const TELEGRAM_KEY = "TELEGRAM_BOT_TOKEN";
 const RAG_LLM_KEY = "LLM_BINDING_API_KEY";
 const RAG_EMB_KEY = "EMBEDDING_BINDING_API_KEY";
+// LightRAG's OpenAI client (lightrag/llm/openai.py create_openai_async_client)
+// reads the key from os.environ["OPENAI_API_KEY"] DIRECTLY — the binding-specific
+// names above are NOT enough on their own. Without this plain name every document
+// fails to embed (KeyError: 'OPENAI_API_KEY') and Company Memory stays empty while
+// Hermes reports "Entry added". Always write it alongside the binding keys.
+// → step 207.15 finding (8/8 docs Failed until OPENAI_API_KEY was set).
+const RAG_OPENAI_KEY = "OPENAI_API_KEY";
 // The guest slot's own env — automations read process.env.OPENAI_API_KEY /
 // TELEGRAM_BOT_TOKEN from HERE at runtime (step 199 unified-key contract). The
 // substrate save propagates the ONE key down to this file too, closing the
@@ -288,6 +295,8 @@ export async function POST(req: NextRequest) {
     const ragVars = readEnvFile(RAG_ENV);
     ragVars[RAG_LLM_KEY] = apiKeyRaw;
     ragVars[RAG_EMB_KEY] = apiKeyRaw;
+    // Plain OPENAI_API_KEY too — LightRAG's client reads this exact name (step 207.15).
+    ragVars[RAG_OPENAI_KEY] = apiKeyRaw;
     try {
       writeEnvFile(RAG_ENV, ragVars);
       pm2RestartDetached("fractera-rag", 500);
