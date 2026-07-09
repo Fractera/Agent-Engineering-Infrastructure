@@ -58,7 +58,11 @@ function compute(): RuntimeUrls {
       geminiUrl: `${ws}//${hostname}:3203/`,
       qwenUrl: `${ws}//${hostname}:3204/`,
       kimiUrl: `${ws}//${hostname}:3205/`,
-      hermesUrl: `${protocol}//${hostname}:9119`,
+      // Brain (Hermes agent :9119) binds 127.0.0.1 ONLY and refuses a public bind
+      // (June-2026 vendor hardening). With no nginx in IP mode, hitting :9119 direct
+      // is refused (grey card), so we go through the bridge reverse proxy on :9118
+      // (bridges/platforms/server.js) which rewrites Host → 127.0.0.1:9119. (step 207.15)
+      hermesUrl: `${protocol}//${hostname}:9118`,
       brainUrl: `${protocol}//${hostname}:9621`,
     };
   }

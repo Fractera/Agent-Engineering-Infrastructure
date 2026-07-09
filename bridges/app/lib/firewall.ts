@@ -2,8 +2,10 @@ import { execSync } from "child_process";
 
 // Host firewall (ufw) management, tied to the insecure/secure mode switch.
 //
-// INSECURE / IP mode: every service port (3000-3006, 3300, 9119, 9621) must
-// stay reachable on the public IP — that's how zero-DNS onboarding works.
+// INSECURE / IP mode: every service port (3000-3006, 3300, 9118, 9119, 9621) must
+// stay reachable on the public IP — that's how zero-DNS onboarding works. :9118 is
+// the bridge reverse proxy to the Hermes dashboard (:9119 binds 127.0.0.1 only —
+// step 207.15); the browser reaches Brain via :9118, not :9119, in IP mode.
 //
 // SECURE mode (custom domain): the only intended public entrypoint is nginx on
 // 443 (+ 80 for the HTTP->HTTPS redirect and ACME/Let's Encrypt renewals).
