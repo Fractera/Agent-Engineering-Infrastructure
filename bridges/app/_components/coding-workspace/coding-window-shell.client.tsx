@@ -706,8 +706,10 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   // The system terminal (S6) is NOT in this filter — it is always present.
   const isInstalled = (id: string) => installed === null || installed.includes(id);
   const visiblePlatforms  = PLATFORMS.filter((p) => isInstalled(p.id));
-  // Insecure (IP) mode hides the Brain card (built-in Hermes Web UI) — step 100.
-  const visibleEmbedCards = EMBED_CARDS.filter((c) => isInstalled(c.id) && !(insecure && c.id === "brain"));
+  // The Brain card is available in BOTH IP and secure mode, identically (fix 207.10:
+  // the owner needs Brain in the IP flow too — clicking it opens the Hermes agent 1:1
+  // as in secure mode). The old step-100 insecure hide is removed.
+  const visibleEmbedCards = EMBED_CARDS.filter((c) => isInstalled(c.id));
 
   const termH   = height - CAROUSEL_H - FOOTER_H;
   const total   = visiblePlatforms.length + 1; // +1 for the always-present Terminal card
@@ -811,9 +813,9 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                   subdomain from the wizard, NOT to hide the domain wizard itself). */}
               <div className="h-px bg-border mx-2" />
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowDomainPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowHermesPanel(false); setShowLightRag(false); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground transition-colors hover:bg-muted">
-                <Globe size={11} className="text-foreground" />
-                <span className="text-foreground">Personal Domain</span>
+                className={`w-full flex items-center gap-2 px-3 py-2 text-[11px] transition-colors hover:bg-muted ${insecure ? "text-amber-600 dark:text-amber-400" : "text-foreground"}`}>
+                <Globe size={11} className={insecure ? "text-amber-600 dark:text-amber-400" : "text-foreground"} />
+                <span className={insecure ? "text-amber-600 dark:text-amber-400" : "text-foreground"}>Personal Domain</span>
               </button>
               {/* Login methods (Google / magic-link) — secure mode only: these
                   sign-in methods need a domain + HTTPS, so the entry is hidden
