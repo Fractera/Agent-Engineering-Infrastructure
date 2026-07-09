@@ -411,6 +411,15 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
       cancelEmbedConfirm();
       return;
     }
+    // Step 207.10 item 2: Brain and Memory need the one OpenAI key. If we DEFINITIVELY know it's
+    // missing (embedConfigured===false, not merely unknown/loading), starting the session just yields a
+    // dead card — instead open the OpenAI key panel so the owner sets the key first. Unknown stays
+    // clickable (no false block on a transient probe failure).
+    if ((card.id === "brain" || card.id === "memory") && embedConfigured[card.id] === false) {
+      setShowOpenAiPanel(true);
+      toast.info("Add your OpenAI key first — it powers Brain and Memory.");
+      return;
+    }
     const isActive = activeEmbedId === card.id && !sysTermActive;
     if (isActive) return;
     cancelEmbedConfirm();

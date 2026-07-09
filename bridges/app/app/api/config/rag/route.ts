@@ -61,20 +61,35 @@ export async function POST(req: NextRequest) {
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const { apiKey } = await req.json() as { apiKey?: string };
+    // Step 207.10 item 2: the panel may send an OpenAI key AND/OR a Memory (LLM) model. Each field is
+    // optional — an empty value leaves the existing one untouched (the model dropdown can be changed
+    // without re-pasting the key). At least one must be present.
+    const { apiKey, llmModel } = await req.json() as { apiKey?: string; llmModel?: string };
     const trimmed = (apiKey ?? "").trim();
-    if (!trimmed.startsWith("sk-")) {
+    const model = (llmModel ?? "").trim();
+    if (!trimmed && !model) {
+      return NextResponse.json({ error: "Nothing to save" }, { status: 400 });
+    }
+    if (trimmed && !trimmed.startsWith("sk-")) {
       return NextResponse.json({ error: "Invalid key (expected sk-… format)" }, { status: 400 });
+    }
+    if (model && !/^[a-z0-9][a-z0-9.\-_]+$/i.test(model)) {
+      return NextResponse.json({ error: "Invalid model id" }, { status: 400 });
     }
 
     const existing = readEnv();
-    existing.LLM_BINDING_API_KEY = trimmed;
-    existing.EMBEDDING_BINDING_API_KEY = trimmed;
+    if (trimmed) {
+      existing.LLM_BINDING_API_KEY = trimmed;
+      existing.EMBEDDING_BINDING_API_KEY = trimmed;
+    }
+    if (model) {
+      existing.LLM_MODEL = model;
+    }
 
     fs.mkdirSync(path.dirname(RAG_ENV), { recursive: true });
     fs.writeFileSync(RAG_ENV, serializeEnv(existing), "utf-8");
 
-    // Reload the RAG service so it picks up the new key. pm2 reload
+    // Reload the RAG service so it picks up the new key/model. pm2 reload
     // is graceful (no downtime).
     await new Promise<void>((resolve) => {
       exec("pm2 reload fractera-rag", (err) => {
@@ -86,17 +101,19 @@ export async function POST(req: NextRequest) {
     // Autofill: if Hermes has no OpenAI key yet, propagate the same one.
     // Never overwrite an existing Hermes key — that's the user's choice
     // (two services may want different keys). Best-effort: Hermes failure
-    // doesn't fail the RAG save.
+    // doesn't fail the RAG save. Only when a key was actually sent.
     let alsoUpdated: "hermes" | null = null;
-    const hermesVars = readEnvFile(HERMES_ENV);
-    if (!hermesVars.OPENAI_API_KEY) {
-      hermesVars.OPENAI_API_KEY = trimmed;
-      try {
-        writeEnvFile(HERMES_ENV, hermesVars);
-        pm2RestartDetached("fractera-hermes", 500);
-        alsoUpdated = "hermes";
-      } catch {
-        // ignore — RAG save above already succeeded
+    if (trimmed) {
+      const hermesVars = readEnvFile(HERMES_ENV);
+      if (!hermesVars.OPENAI_API_KEY) {
+        hermesVars.OPENAI_API_KEY = trimmed;
+        try {
+          writeEnvFile(HERMES_ENV, hermesVars);
+          pm2RestartDetached("fractera-hermes", 500);
+          alsoUpdated = "hermes";
+        } catch {
+          // ignore — RAG save above already succeeded
+        }
       }
     }
 
