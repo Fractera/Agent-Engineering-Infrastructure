@@ -47,9 +47,13 @@ export function readServerIp(): string | null {
 }
 
 // All hostnames Fractera serves over HTTPS once a custom domain is attached.
-// Single source of truth — wizard-state, health-check, dns-check, certbot
-// SAN list, and nginx server blocks all derive from this.
-export const SUBDOMAINS = ["", "www", "auth", "admin", "data", "hermes", "lightrag", "chat"] as const;
+// Single source of truth for the DNS wizard, wizard-state, health-check and
+// dns-check. MUST match the certbot SAN list + nginx server blocks in
+// app/api/config/domain/route.ts. `chat` was retired in step 205 (the built-in
+// chat web UI was removed) — it is NOT in the provisioner's list, so it must not
+// be here either: advertising a `chat` A-record the server never serves gave
+// chat.<domain> a wrong-host TLS error (step 207.10 item 1).
+export const SUBDOMAINS = ["", "www", "auth", "admin", "data", "hermes", "lightrag"] as const;
 
 export function hostFor(prefix: string, domain: string): string {
   return prefix ? `${prefix}.${domain}` : domain;

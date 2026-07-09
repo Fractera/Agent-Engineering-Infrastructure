@@ -35,7 +35,7 @@ type HealthResult = {
   httpsStatus: number | null;
   certValid: boolean;
   error: string | null;
-  // Optional add-on host (Brain/Memory/chat): reported but does NOT block activation.
+  // Optional add-on host (Brain/Memory): reported but does NOT block activation.
   optional?: boolean;
 };
 
@@ -390,7 +390,6 @@ export function DomainWizard({ domain, onClose, onChangeDomain }: { domain: stri
               { name: "data",     note: "media + db" },
               { name: "hermes",   note: "Brain" },
               { name: "lightrag", note: "Memory" },
-              { name: "chat",     note: "Remote Command Post (chat)" },
             ].map(({ name, note }) => (
               <div key={name} className="grid gap-x-3 text-foreground" style={{ gridTemplateColumns: "3rem 5rem 1fr" }}>
                 <span>A</span><span>{name}</span>
@@ -642,8 +641,8 @@ export function DomainWizard({ domain, onClose, onChangeDomain }: { domain: stri
           <div className="mt-3 pt-3 border-t border-border">
             <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">
               Email yourself the full list of your new HTTPS addresses (apex, admin, auth, data, Brain,
-              Memory, and your <strong>chat</strong> Remote Command Post) — a handy reminder for later. Future
-              server and certificate-expiry notices will arrive at your account email too.
+              and Memory) — a handy reminder for later. Future server and certificate-expiry notices will
+              arrive at your account email too.
             </p>
             {emailSent ? (
               <div className="rounded-md border border-emerald-500/40 bg-emerald-500/5 p-2.5 text-[10px] leading-relaxed text-emerald-700 dark:text-emerald-300">
