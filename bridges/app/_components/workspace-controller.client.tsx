@@ -297,7 +297,7 @@ export function WorkspaceController() {
         <div className="flex items-center gap-2">
           {insecure && (
             <span
-              title="This project is served over plain HTTP on its IP address. Open Settings → Personal Domain to attach a domain and switch to HTTPS / Secure mode."
+              title="This project is served over plain HTTP on its IP address. Attaching a custom domain and switching to HTTPS / Secure mode is handled at deploy time — the in-workspace domain wizard is available once the project is on a domain."
               className="flex items-center gap-1 px-1.5 py-0.5 rounded text-amber-600 dark:text-amber-400 border border-amber-500/40 bg-amber-500/10"
             >
               <AlertTriangle size={13} />

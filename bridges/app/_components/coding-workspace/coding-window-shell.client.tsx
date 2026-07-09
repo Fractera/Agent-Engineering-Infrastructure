@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
-import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LayoutGrid, X } from "lucide-react";
+import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, Repeat, Send, KeyRound, Palette, LayoutGrid, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
 import { PLATFORMS, COMING_SOON, EMBED_CARDS, type Platform, type TerminalStatus, type EmbedCard, type EmbedCardId, type EmbedTarget } from "./platforms";
@@ -804,15 +804,20 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                   <BrainCircuit size={11} />Company Memory settings
                 </button>
               )}
-              <div className="h-px bg-border mx-2" />
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDomainPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowHermesPanel(false); setShowLightRag(false); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] transition-colors hover:bg-muted">
-                {secure
-                  ? <Globe size={11} className="text-foreground" />
-                  : <AlertTriangle size={11} className="text-orange-500" />}
-                <span className={!secure ? "text-orange-500 font-medium" : "text-foreground"}>Personal Domain</span>
-                {!secure && <span className="ml-auto text-[10px] text-orange-500/80">not secure</span>}
-              </button>
+              {/* Personal Domain (attach a custom domain + HTTPS / activate Secure
+                  mode) — SECURE MODE ONLY. In IP / insecure mode the whole
+                  domain-activation wizard is hidden, mirroring the Login-methods
+                  gate below and the Brain carousel card (step 207.10 item 1). */}
+              {secure && (
+                <>
+                  <div className="h-px bg-border mx-2" />
+                  <button type="button" onClick={() => { setDataMenuOpen(false); setShowDomainPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowHermesPanel(false); setShowLightRag(false); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground transition-colors hover:bg-muted">
+                    <Globe size={11} className="text-foreground" />
+                    <span className="text-foreground">Personal Domain</span>
+                  </button>
+                </>
+              )}
               {/* Login methods (Google / magic-link) — secure mode only: these
                   sign-in methods need a domain + HTTPS, so the entry is hidden
                   entirely in IP/insecure mode. */}
@@ -1133,8 +1138,8 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
       {/* ── DB browser panel ── */}
       {showDbBrowser && <DbBrowserPanel onClose={() => setShowDbBrowser(false)} />}
 
-      {/* ── Domain panel ── */}
-      {showDomainPanel && (
+      {/* ── Domain panel ── (secure mode only — never renders in IP/insecure mode) */}
+      {showDomainPanel && secure && (
         <div style={{ position: "absolute", top: CAROUSEL_H, right: 0, bottom: FOOTER_H, width: "min(480px, 90vw)", zIndex: 20 }}>
           <DomainPanel onClose={() => setShowDomainPanel(false)} />
         </div>
