@@ -805,19 +805,16 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                 </button>
               )}
               {/* Personal Domain (attach a custom domain + HTTPS / activate Secure
-                  mode) — SECURE MODE ONLY. In IP / insecure mode the whole
-                  domain-activation wizard is hidden, mirroring the Login-methods
-                  gate below and the Brain carousel card (step 207.10 item 1). */}
-              {secure && (
-                <>
-                  <div className="h-px bg-border mx-2" />
-                  <button type="button" onClick={() => { setDataMenuOpen(false); setShowDomainPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowHermesPanel(false); setShowLightRag(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground transition-colors hover:bg-muted">
-                    <Globe size={11} className="text-foreground" />
-                    <span className="text-foreground">Personal Domain</span>
-                  </button>
-                </>
-              )}
+                  mode) — ALWAYS available. In IP / insecure mode this is exactly how
+                  the owner moves from IP to a real domain, so it MUST show here (fix
+                  207.10 item 1: item 1 only asked to drop the removed `chat`
+                  subdomain from the wizard, NOT to hide the domain wizard itself). */}
+              <div className="h-px bg-border mx-2" />
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDomainPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowHermesPanel(false); setShowLightRag(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground transition-colors hover:bg-muted">
+                <Globe size={11} className="text-foreground" />
+                <span className="text-foreground">Personal Domain</span>
+              </button>
               {/* Login methods (Google / magic-link) — secure mode only: these
                   sign-in methods need a domain + HTTPS, so the entry is hidden
                   entirely in IP/insecure mode. */}
@@ -1138,8 +1135,8 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
       {/* ── DB browser panel ── */}
       {showDbBrowser && <DbBrowserPanel onClose={() => setShowDbBrowser(false)} />}
 
-      {/* ── Domain panel ── (secure mode only — never renders in IP/insecure mode) */}
-      {showDomainPanel && secure && (
+      {/* ── Domain panel ── (available in BOTH IP and secure mode — this is how the owner attaches a domain) */}
+      {showDomainPanel && (
         <div style={{ position: "absolute", top: CAROUSEL_H, right: 0, bottom: FOOTER_H, width: "min(480px, 90vw)", zIndex: 20 }}>
           <DomainPanel onClose={() => setShowDomainPanel(false)} />
         </div>
