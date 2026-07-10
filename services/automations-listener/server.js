@@ -79,6 +79,12 @@ async function dispatch(entry, message) {
         // automation can fetch + digitize it. Telegram sends the array smallest→largest.
         photoFileId: Array.isArray(message.photo) && message.photo.length
           ? message.photo[message.photo.length - 1].file_id : undefined,
+        // Location (step 207.20, geo-mark registry): a shared location / venue carries coordinates —
+        // the ONLY geo source (Bot API strips EXIF/GPS from photos). venue.title = the place name.
+        location: message.location
+          ? { lat: message.location.latitude, lng: message.location.longitude,
+              title: message.venue?.title ?? '' }
+          : undefined,
       }) }),
       signal: AbortSignal.timeout(30000),
     })
@@ -138,7 +144,9 @@ async function runPoller(token, getEntry, isStopped) {
         const msg = u.message
         const hasText = typeof msg?.text === 'string' && msg.text
         const hasPhoto = Array.isArray(msg?.photo) && msg.photo.length
-        if (!hasText && !hasPhoto) continue
+        // A shared location/venue is a first-class message too (step 207.20 geo-marks).
+        const hasLocation = msg?.location && typeof msg.location.latitude === 'number'
+        if (!hasText && !hasPhoto && !hasLocation) continue
         await dispatch(getEntry(), msg)
       }
     } catch (e) {
