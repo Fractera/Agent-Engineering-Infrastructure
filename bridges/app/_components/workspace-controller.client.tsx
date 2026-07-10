@@ -324,8 +324,8 @@ export function WorkspaceController() {
             variant="outline"
             size="default"
             className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
-            onClick={() => { setPreviewTarget(""); setPreviewLabel("Design"); setSiteOpen(true); }}
-            title="Design layer (coming soon)"
+            onClick={() => { setPreviewTarget(urls.designUrl); setPreviewLabel("Design"); setSiteOpen(true); }}
+            title="Open the design layer"
           >
             <Palette className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Design</span>
@@ -334,7 +334,7 @@ export function WorkspaceController() {
             variant="outline"
             size="default"
             className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
-            onClick={() => { setPreviewTarget(`${urls.appUrl}/projects/personal`); setPreviewLabel("Projects"); setSiteOpen(true); }}
+            onClick={() => { setPreviewTarget(`${urls.projectsUrl}/projects/personal`); setPreviewLabel("Projects"); setSiteOpen(true); }}
             title="Open your projects"
           >
             <FolderKanban className="h-3.5 w-3.5" />
@@ -427,7 +427,6 @@ export function WorkspaceController() {
         onClose={() => setSiteOpen(false)}
         siteUrl={previewTarget}
         label={previewLabel}
-        placeholder={previewLabel === "Design"}
       />
 
       {/* ── Auth modal ── */}

@@ -5,6 +5,8 @@ import { useState, useEffect } from "react";
 type RuntimeUrls = {
   authUrl: string;
   appUrl: string;
+  projectsUrl: string;
+  designUrl: string;
   mediaUrl: string;
   adminUrl: string;
   bridgeUrl: string;
@@ -21,6 +23,8 @@ type RuntimeUrls = {
 const DEFAULTS: RuntimeUrls = {
   authUrl: "http://localhost:3001",
   appUrl: "http://localhost:3000",
+  projectsUrl: "http://localhost:3003",
+  designUrl: "http://localhost:3004",
   mediaUrl: "http://localhost:3300",
   adminUrl: "http://localhost:3002",
   bridgeUrl: "ws://localhost:3201/bridge/",
@@ -36,7 +40,7 @@ const DEFAULTS: RuntimeUrls = {
 
 // Service subdomain prefixes — used to recover the apex from any service host
 // (e.g. admin.aifa.dev → aifa.dev) in domain/Secure mode.
-const KNOWN_PREFIXES = ["www", "auth", "admin", "data", "hermes", "lightrag"];
+const KNOWN_PREFIXES = ["www", "auth", "admin", "data", "hermes", "lightrag", "projects", "design"];
 
 function compute(): RuntimeUrls {
   if (typeof window === "undefined") return DEFAULTS;
@@ -49,6 +53,8 @@ function compute(): RuntimeUrls {
     return {
       authUrl: `${protocol}//${hostname}:3001`,
       appUrl: `${protocol}//${hostname}:3000`,
+      projectsUrl: `${protocol}//${hostname}:3003`,
+      designUrl: `${protocol}//${hostname}:3004`,
       mediaUrl: `${protocol}//${hostname}:3300`,
       adminUrl: `${protocol}//${hostname}:3002`,
       bridgeUrl: `${ws}//${hostname}:3201/bridge/`,
@@ -77,6 +83,8 @@ function compute(): RuntimeUrls {
   return {
     authUrl: `${protocol}//auth.${apex}`,
     appUrl: `${protocol}//${apex}`,
+    projectsUrl: `${protocol}//projects.${apex}`,
+    designUrl: `${protocol}//design.${apex}`,
     mediaUrl: `${protocol}//data.${apex}`,
     adminUrl: `${protocol}//${admin}`,
     bridgeUrl: `${ws}//${admin}/ws/pty/bridge/`,
