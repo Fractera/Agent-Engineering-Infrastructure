@@ -41,8 +41,12 @@ const RAG_OPENAI_KEY = "OPENAI_API_KEY"; // LightRAG reads os.environ["OPENAI_AP
 // refreshes the process environment from it. Use THIS for fractera-rag, never pm2RestartDetached.
 export function restartRagWithEnv(delayMs = 500): void {
   const dir = RAG_ENV.slice(0, RAG_ENV.lastIndexOf("/")) || "/opt/fractera/services/rag";
+  // The empty presets are load-bearing for CLEARING: pm2 --update-env MERGES the shell env into
+  // the saved one and never deletes vars absent from the shell — a key removed from .env would
+  // linger in the process env forever. Presetting the three names to "" (then letting .env
+  // override when present) guarantees the process env always mirrors the file.
   try {
-    spawn("sh", ["-c", `sleep ${Math.max(delayMs, 0) / 1000}; cd ${dir} && set -a && . ./.env && set +a && pm2 restart fractera-rag --update-env`], {
+    spawn("sh", ["-c", `sleep ${Math.max(delayMs, 0) / 1000}; cd ${dir} && set -a && OPENAI_API_KEY= && LLM_BINDING_API_KEY= && EMBEDDING_BINDING_API_KEY= && . ./.env && set +a && pm2 restart fractera-rag --update-env`], {
       detached: true,
       stdio: "ignore",
     }).unref();
