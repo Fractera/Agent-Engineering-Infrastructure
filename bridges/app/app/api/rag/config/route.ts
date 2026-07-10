@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { execSync } from "child_process";
 import { requireAuth } from "@/lib/require-auth";
 // Single-source OpenAI key (step 208): the key fans out to every store via propagateOpenAiKey.
-import { propagateOpenAiKey, openaiKeyStatus } from "@/lib/openai-key";
+import { propagateOpenAiKey, openaiKeyStatus, restartRagWithEnv } from "@/lib/openai-key";
 
 const RAG_ENV = process.env.RAG_ENV_PATH ?? "/opt/fractera/services/rag/.env";
 const HERMES_ENV = process.env.HERMES_ENV_PATH ?? "/root/.hermes/.env";
@@ -70,7 +69,9 @@ export async function POST(req: NextRequest) {
       propagateOpenAiKey(key);
       alsoUpdated = "all";
     } else if (wroteLocal) {
-      try { execSync("pm2 restart fractera-rag", { timeout: 5000 }); } catch { /* best-effort */ }
+      // Env-refreshing restart (step 208): rag settings are process-env values; a plain pm2
+      // restart reuses the old cached environment and the change never reaches the server.
+      restartRagWithEnv(500);
     }
 
     return NextResponse.json({ ok: true, alsoUpdated });

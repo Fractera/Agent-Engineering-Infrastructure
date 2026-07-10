@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -23,19 +23,23 @@ import { Label } from "@/components/ui/label";
 import { PROJECT_INTEGRATIONS, REQUIRED_ENV_KEYS } from "../_data/required-keys";
 import { projectTabStrings } from "../_data/tab-i18n";
 
-// Native "missing keys" modal (step 186.3, extended 187.9) — a REUSABLE culture: any
-// automation that declares integration env keys gets this. On mount it checks which
-// declared keys are present and, for any absent one, shows a Dialog with an input.
+// Native "missing keys" modal (step 186.3, extended 187.9, hardened 208) — a REUSABLE culture:
+// any automation that declares integration env keys gets this. On mount it checks which declared
+// keys are present and, for any absent one, shows a Dialog with an input.
 //
-// OPENAI_API_KEY is SPECIAL (187.9): it is the shared Fractera AI (OpenAI) key that lives
-// where Hermes keeps it — it is checked/saved through the slot forwarder
-// (/api/project-config/openai-key → Admin :3002 /api/config/hermes), NOT the slot env
-// setter, and the memory/LightRAG key gets the same value automatically (still editable).
-// Its field carries a "!" tooltip recommending an API key over a subscription. Every OTHER
-// key is written to the slot's app/.env.local via the single-key setter (186.4) + restart.
+// OPENAI_API_KEY is SPECIAL: it is the ONE Fractera AI (OpenAI) key. It is saved through the slot
+// forwarder (/api/project-config/openai-key → Admin :3002 /api/config/hermes), which fans it out to
+// EVERY consumer (Hermes agent credential pool, Memory/LightRAG, and this slot) via the single
+// writer propagateOpenAiKey (step 208 — one record, readable/writable from anywhere). Every OTHER
+// key is written to the slot's app/.env.local via the single-key setter (186.4).
 //
 // The user MAY dismiss (Esc / X) — nothing works and the modal returns on the next open.
 const OPENAI_KEY = "OPENAI_API_KEY";
+
+// This automation's identity — used to register its Telegram bot with the substrate listener
+// (one automation = one bot, step 205), so a saved token actually starts receiving messages.
+const CATEGORY = "{{CATEGORY}}";
+const PROJECT = "{{PROJECT}}";
 
 const KEY_TO_SERVICE: Record<string, string> = Object.fromEntries(
   PROJECT_INTEGRATIONS.flatMap((integration) =>
@@ -56,6 +60,8 @@ export function MissingKeysModal({ lang }: { lang: string }) {
   const [openAiValue, setOpenAiValue] = useState("");
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  // True from the moment the keys are saved until the post-restart reload fires.
+  const [reloading, setReloading] = useState(false);
 
   useEffect(() => {
     if (!active) return;
@@ -78,8 +84,12 @@ export function MissingKeysModal({ lang }: { lang: string }) {
       if (NEEDS_OPENAI) {
         try {
           const res = await fetch("/api/project-config/openai-key", { cache: "no-store" });
-          const data = res.ok ? ((await res.json()) as { configured?: boolean }) : null;
-          openAiAbsent = !data?.configured;
+          const data = res.ok
+            ? ((await res.json()) as { configured?: boolean; inconclusive?: boolean })
+            : null;
+          // Only nag when the key is DEFINITIVELY absent. `inconclusive` (Admin non-OK/unreachable)
+          // must not force the modal (187.9 false-nag bug).
+          openAiAbsent = Boolean(data) && !data!.configured && !data!.inconclusive;
         } catch {
           /* forwarder unreachable — leave openAiAbsent false */
         }
@@ -108,11 +118,22 @@ export function MissingKeysModal({ lang }: { lang: string }) {
     }
     setSaving(true);
     try {
-      for (const [key, value] of entries) {
+      // ORDERING IS LOAD-BEARING (step 208 — fixes the red-toast / black-screen race). Each key write
+      // that touches the slot env restarts fractera-app — the SAME process serving this modal and its
+      // page. Writing several keys, each with its own restart, meant a restart killed the NEXT in-flight
+      // request (the OpenAI save) and blanked the page. So: (1) write every regular slot key with restart
+      // DEFERRED when an OpenAI save follows (the OpenAI forwarder restarts fractera-app once, at the end,
+      // picking up these keys too); (2) if there is no OpenAI key, the LAST regular write carries the
+      // single restart. Result: exactly ONE restart, at the end, after every request has returned.
+      let telegramToken = "";
+      for (let i = 0; i < entries.length; i++) {
+        const [key, value] = entries[i];
+        const isLastRegular = i === entries.length - 1;
+        const restart = openAi ? false : isLastRegular;
         const res = await fetch("/api/project-config/env", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ key, value }),
+          body: JSON.stringify({ key, value, restart }),
         });
         if (!res.ok) {
           const info = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -120,7 +141,26 @@ export function MissingKeysModal({ lang }: { lang: string }) {
           setSaving(false);
           return;
         }
+        if (key === "TELEGRAM_BOT_TOKEN") telegramToken = value;
       }
+
+      // Register this automation's bot with the substrate listener so it starts polling (one bot per
+      // automation, step 205). Without this the token is saved but NOTHING receives messages.
+      // Best-effort — the env token is persisted regardless; the listener reconciles on its next tick.
+      if (telegramToken) {
+        try {
+          await fetch("/api/project-config/register-bot", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ category: CATEGORY, project: PROJECT, token: telegramToken }),
+          });
+        } catch {
+          /* best-effort — registration retries on the next save */
+        }
+      }
+
+      // OpenAI key LAST: the forwarder writes every store (step 208 single writer) and triggers the
+      // single fractera-app restart at the very end, once every request above has already returned.
       if (openAi) {
         const res = await fetch("/api/project-config/openai-key", {
           method: "POST",
@@ -134,12 +174,13 @@ export function MissingKeysModal({ lang }: { lang: string }) {
           return;
         }
       }
-      toast.success(
-        entries.length + (openAi ? 1 : 0) === 1
-          ? "Key saved — the app is applying it (a brief restart)"
-          : "Keys saved — the app is applying them (a brief restart)",
-      );
+      toast.success("Keys saved — applying, the page reloads in a few seconds");
       setOpen(false);
+      // AUTO-RELOAD: saving triggers ONE fractera-app restart (~5-10s). Until the process is back the
+      // page keeps rendering its stale server state ("Not configured") and the automation looks dead
+      // even though the key landed. Poll the key status instead of guessing a delay, then reload.
+      setReloading(true);
+      void waitForKeyThenReload();
     } catch {
       toast.error("Could not save keys (network error)");
     } finally {
@@ -147,7 +188,57 @@ export function MissingKeysModal({ lang }: { lang: string }) {
     }
   }
 
+  // Poll until the restarted app reports the saved keys present (or a hard cap elapses), then reload.
+  // A restart makes fetches fail for a few seconds — those errors are expected, keep polling.
+  async function waitForKeyThenReload() {
+    const deadline = Date.now() + 60_000;
+    while (Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 2_000));
+      try {
+        if (NEEDS_OPENAI) {
+          const res = await fetch("/api/project-config/openai-key", { cache: "no-store" });
+          if (res.ok) {
+            const data = (await res.json()) as { configured?: boolean };
+            if (data.configured) break;
+          }
+        } else {
+          const query = encodeURIComponent(REGULAR_KEYS.join(","));
+          const res = await fetch(`/api/project-config/env?keys=${query}`, { cache: "no-store" });
+          if (res.ok) {
+            const data = (await res.json()) as { present?: Record<string, boolean> };
+            if (data.present && REGULAR_KEYS.every((k) => data.present![k])) break;
+          }
+        }
+      } catch {
+        /* app is restarting — keep polling */
+      }
+    }
+    window.location.reload();
+  }
+
   if (!active) return null;
+
+  // While the app restarts, keep a non-dismissible "applying" dialog up instead of dropping the user
+  // onto a stale page that still says "Not configured" until they reload by hand.
+  if (reloading) {
+    return (
+      <Dialog open>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t.keysTitle}</DialogTitle>
+            <DialogDescription>
+              Applying your keys — the app restarts and this page reloads automatically. This takes a
+              few seconds; no need to do anything.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground" role="status" aria-live="polite">
+            <Loader2 className="size-4 animate-spin" />
+            Restarting…
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

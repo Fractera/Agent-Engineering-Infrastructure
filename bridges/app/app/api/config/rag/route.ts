@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { exec } from "child_process";
 import { requireAuth } from "@/lib/require-auth";
 // Single-source OpenAI key (step 208): entering the key in the Memory panel fans out to ALL
 // stores through propagateOpenAiKey, exactly like the Brain/Projects paths; the "configured"
 // signal comes from the one canonical status.
-import { propagateOpenAiKey, openaiKeyStatus } from "@/lib/openai-key";
+import { propagateOpenAiKey, openaiKeyStatus, restartRagWithEnv, clearOpenAiKey } from "@/lib/openai-key";
 
 const RAG_ENV    = process.env.RAG_ENV_PATH    ?? "/opt/fractera/services/rag/.env";
 const HERMES_ENV = process.env.HERMES_ENV_PATH ?? "/root/.hermes/.env";
@@ -99,8 +98,9 @@ export async function POST(req: NextRequest) {
       propagateOpenAiKey(trimmed);
       alsoUpdated = "all";
     } else if (model) {
-      // Model-only change: restart RAG so it loads the new Memory model.
-      await new Promise<void>((resolve) => { exec("pm2 reload fractera-rag", () => resolve()); });
+      // Model-only change: restart RAG with the env refreshed (LLM_MODEL is process-env too —
+      // a plain pm2 reload keeps the old cached environment, step 208 finding).
+      restartRagWithEnv(500);
     }
 
     return NextResponse.json({ ok: true, alsoUpdated });
@@ -113,14 +113,8 @@ export async function DELETE(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const existing = readEnv();
-  existing.LLM_BINDING_API_KEY = "";
-  existing.EMBEDDING_BINDING_API_KEY = "";
-  existing[RAG_OPENAI_KEY] = ""; // clear the plain name too (step 207.15)
-  fs.mkdirSync(path.dirname(RAG_ENV), { recursive: true });
-  fs.writeFileSync(RAG_ENV, serializeEnv(existing), "utf-8");
-  await new Promise<void>((resolve) => {
-    exec("pm2 reload fractera-rag", () => resolve());
-  });
+  // ONE record → one delete (step 208): removing the key from the Memory surface clears it
+  // everywhere (hermes .env + pool + rag + slot), exactly like the Brain-surface DELETE.
+  clearOpenAiKey();
   return NextResponse.json({ ok: true });
 }

@@ -33,6 +33,22 @@ const RAG_LLM_KEY    = "LLM_BINDING_API_KEY";
 const RAG_EMB_KEY    = "EMBEDDING_BINDING_API_KEY";
 const RAG_OPENAI_KEY = "OPENAI_API_KEY"; // LightRAG reads os.environ["OPENAI_API_KEY"] (step 207.15)
 
+// LightRAG takes its credentials ONLY from the PROCESS environment (os.environ) — it does not
+// re-read .env at runtime, and a plain `pm2 reload/restart` reuses the OLD cached env. So a key
+// written to rag/.env never reached the running server: every embed kept failing with
+// KeyError: 'OPENAI_API_KEY' even though the file was correct (proven live, step 208). The ONLY
+// reliable restart is: source the .env into the shell, then `pm2 restart --update-env` so pm2
+// refreshes the process environment from it. Use THIS for fractera-rag, never pm2RestartDetached.
+export function restartRagWithEnv(delayMs = 500): void {
+  const dir = RAG_ENV.slice(0, RAG_ENV.lastIndexOf("/")) || "/opt/fractera/services/rag";
+  try {
+    spawn("sh", ["-c", `sleep ${Math.max(delayMs, 0) / 1000}; cd ${dir} && set -a && . ./.env && set +a && pm2 restart fractera-rag --update-env`], {
+      detached: true,
+      stdio: "ignore",
+    }).unref();
+  } catch { /* best-effort */ }
+}
+
 // ── config.yaml helpers (moved here from config/hermes/route.ts so every writer shares them) ──
 
 export function readHermesModel(): string | null {
@@ -149,7 +165,7 @@ export function propagateOpenAiKey(key: string, opts?: { model?: string }): Prop
     ragVars[RAG_EMB_KEY] = apiKey;
     ragVars[RAG_OPENAI_KEY] = apiKey;
     writeEnvFile(RAG_ENV, ragVars);
-    pm2RestartDetached("fractera-rag", 500);
+    restartRagWithEnv(500); // NOT pm2RestartDetached — LightRAG needs the env refreshed (see above)
     result.rag = true;
   } catch { /* best-effort */ }
 
@@ -192,7 +208,7 @@ export function clearOpenAiKey(): void {
   try {
     const v = readEnvFile(RAG_ENV);
     delete v[RAG_LLM_KEY]; delete v[RAG_EMB_KEY]; delete v[RAG_OPENAI_KEY];
-    writeEnvFile(RAG_ENV, v); pm2RestartDetached("fractera-rag", 500);
+    writeEnvFile(RAG_ENV, v); restartRagWithEnv(500);
   } catch { /* noop */ }
   try {
     if (fs.existsSync(SLOT_ENV)) { const v = readEnvFile(SLOT_ENV); delete v[HERMES_KEY]; writeEnvFile(SLOT_ENV, v); pm2RestartDetached("fractera-app", 500); }
