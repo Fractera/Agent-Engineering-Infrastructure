@@ -10,11 +10,15 @@ type Props = {
 
 type BrainStatus = { configured: boolean; keyMasked: string | null; model: string | null };
 
-// Curated OpenAI model choices for the Brain (Hermes) and Memory (LightRAG LLM) dropdowns (step 207.10
-// item 2). The loaded current value is merged in so a custom/older model is never dropped from the list.
-const MODEL_CHOICES = ["gpt-5-mini", "gpt-5", "gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-4.1"];
-function withCurrent(current: string): string[] {
-  return current && !MODEL_CHOICES.includes(current) ? [current, ...MODEL_CHOICES] : MODEL_CHOICES;
+// Model choices for the Brain (Hermes) and Memory (LightRAG LLM) dropdowns. LIVE list from
+// /api/config/openai-models — the real /v1/models of the owner's account (step 207.19, owner rule:
+// hardcoded stale model lists are a critical error). The static list below is ONLY the offline
+// fallback (no key yet / OpenAI unreachable); the loaded current value is always merged in so a
+// custom/older model is never dropped.
+const FALLBACK_CHOICES = ["gpt-5-mini", "gpt-5", "gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-4.1"];
+function mergeChoices(live: string[], current: string): string[] {
+  const base = live.length ? live : FALLBACK_CHOICES;
+  return current && !base.includes(current) ? [current, ...base] : base;
 }
 
 // OpenAI settings — ONE key, one field (step 199 unified-key contract). A single
@@ -37,6 +41,17 @@ export function OpenAiPanel({ onClose }: Props) {
   const [memoryModel, setMemoryModel] = useState("");
   const [loadedBrainModel, setLoadedBrainModel] = useState("");
   const [loadedMemoryModel, setLoadedMemoryModel] = useState("");
+  // Live model ids from the owner's OpenAI account (step 207.19) — [] until loaded / on failure.
+  const [liveModels, setLiveModels] = useState<string[]>([]);
+  useEffect(() => {
+    fetch("/api/config/openai-models")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const ids = Array.isArray(d?.models) ? (d.models as Array<{ id?: string }>).map((m) => String(m.id ?? "")).filter(Boolean) : [];
+        if (ids.length) setLiveModels(ids);
+      })
+      .catch(() => {});
+  }, []);
 
   async function refresh() {
     try {
@@ -176,7 +191,7 @@ export function OpenAiPanel({ onClose }: Props) {
                   className="w-full h-8 px-2 text-[11px] rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                 >
                   {brainModel === "" && <option value="">default</option>}
-                  {withCurrent(loadedBrainModel).map((m) => (
+                  {mergeChoices(liveModels, loadedBrainModel).map((m) => (
                     <option key={m} value={m}>{m}</option>
                   ))}
                 </select>
@@ -189,7 +204,7 @@ export function OpenAiPanel({ onClose }: Props) {
                   className="w-full h-8 px-2 text-[11px] rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                 >
                   {memoryModel === "" && <option value="">default</option>}
-                  {withCurrent(loadedMemoryModel).map((m) => (
+                  {mergeChoices(liveModels, loadedMemoryModel).map((m) => (
                     <option key={m} value={m}>{m}</option>
                   ))}
                 </select>
