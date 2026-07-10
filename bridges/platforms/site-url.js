@@ -11,7 +11,7 @@ import { readFileSync } from 'fs'
 // IP/demo mode (true): the slot is served on http://<host>:3000.
 // Falls back to http://localhost:3000 if nothing is determinable.
 
-const KNOWN_PREFIXES = ['www', 'auth', 'admin', 'data', 'hermes', 'lightrag', 'chat']
+const KNOWN_PREFIXES = ['www', 'auth', 'admin', 'projects', 'design', 'data', 'hermes', 'lightrag', 'chat']
 
 function readEnv(file) {
   const env = {}
@@ -40,6 +40,24 @@ export function publicSiteUrl(appEnvFile = '/opt/fractera/app/.env.local') {
   // IP / demo mode: slot is on :3000 of the same host (strip any port from auth host)
   const ipHost = host || 'localhost'
   return `http://${ipHost}:3000`
+}
+
+// Public base of the PROJECTS service (fractera-projects, step 197) — the automations layer
+// runs as its own process: secure → https://projects.<apex>, IP/demo → http://<host>:3003.
+export function publicProjectsUrl(appEnvFile = '/opt/fractera/app/.env.local') {
+  const env = readEnv(appEnvFile)
+  const secure = String(env.FRACTERA_IP_NODOMAIN_MODE).toLowerCase() === 'false'
+  const auth = env.AUTH_SERVICE_URL || ''
+  let host = '', protocol = secure ? 'https:' : 'http:'
+  try { const u = new URL(auth); host = u.hostname; if (u.protocol) protocol = u.protocol } catch { /* */ }
+
+  if (secure && host) {
+    const labels = host.split('.')
+    const apex = KNOWN_PREFIXES.includes(labels[0]) ? labels.slice(1).join('.') : host
+    return `${protocol}//projects.${apex}`.replace(/\/+$/, '')
+  }
+  const ipHost = host || 'localhost'
+  return `http://${ipHost}:3003`
 }
 
 // Build the per-language view URLs for a composed tab, mode-aware.

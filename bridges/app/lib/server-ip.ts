@@ -53,7 +53,10 @@ export function readServerIp(): string | null {
 // chat web UI was removed) — it is NOT in the provisioner's list, so it must not
 // be here either: advertising a `chat` A-record the server never serves gave
 // chat.<domain> a wrong-host TLS error (step 207.10 item 1).
-export const SUBDOMAINS = ["", "www", "auth", "admin", "data", "hermes", "lightrag"] as const;
+// `projects` (:3003) + `design` (:3004) joined in step 197 — the automations and design layers
+// run as their own processes with their own subdomains, mirroring admin (each self-gates via
+// its own proxy.ts, so no nginx auth_request needed).
+export const SUBDOMAINS = ["", "www", "auth", "admin", "projects", "design", "data", "hermes", "lightrag"] as const;
 
 export function hostFor(prefix: string, domain: string): string {
   return prefix ? `${prefix}.${domain}` : domain;

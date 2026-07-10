@@ -5,7 +5,7 @@ import { join, dirname, resolve as pathResolve } from 'path'
 import { tmpdir } from 'os'
 import { fileURLToPath } from 'url'
 import { handleMcpHandshake } from './mcp-handshake.js'
-import { publicSiteUrl, publicTabUrls } from './site-url.js'
+import { publicTabUrls, publicProjectsUrl } from './site-url.js'
 
 // ── Frozen Template Constructor MCP server (L2, port 3224) ──────────────────
 // Any of the 6 agents adds a whole STRUCTURE (news / blog / documentation / …) by
@@ -143,6 +143,9 @@ export class TemplateConstructorMcpServer {
     this.dataUrl = dataUrl ?? 'http://127.0.0.1:3300'
     this.dataSecret = dataSecret ?? process.env.DATA_SECRET ?? ''
     this.appDir = appDir ?? pathResolve(__dirname, '../../app')
+    // Projects layer (step 197): automations live in their OWN process dir (fractera-projects
+    // :3003), not the slot — project-page composition targets it. PROJECTS_DIR overrides.
+    this.projectsDir = process.env.PROJECTS_DIR ?? pathResolve(__dirname, '../../projects-app')
     this.emitter = join(this.appDir, '.agents/skills/compose-frozen-template/compose-frozen-template.mjs')
     this.manager = join(this.appDir, '.agents/skills/compose-frozen-template/manage-group.mjs')
     this.appEnvFile = join(this.appDir, '.env.local')
@@ -240,7 +243,7 @@ export class TemplateConstructorMcpServer {
           language: 'monolingual (site default), outside [lang]',
           title, cron, integrations,
         },
-        note: 'The real call refuses honestly if the category folder or a required npm dependency (@xyflow/react) is missing from the slot.',
+        note: 'The real call refuses honestly if the category folder or a required npm dependency (@xyflow/react) is missing from the projects service dir (projects-app — step 197: projects compose there, not into the slot).',
         confirm_prompt:
           `Правильно ли я вас понимаю: собрать стартовую страницу проекта «${title}» — /projects/${category}/${project} ` +
           `(описание + react-flow диаграмма процессов + таблицы cron-очереди и результатов; доступ architect+manager; ` +
@@ -261,7 +264,8 @@ export class TemplateConstructorMcpServer {
         await mkdir(dirname(dest), { recursive: true })
         await writeFile(dest, content, 'utf8')
       }
-      const cli = [this.emitter, '--store', storeDir, '--out', this.appDir, '--primitive', 'project-page', '--category', category, '--project', project, '--title', title]
+      // step 197: projects compose into the PROJECTS service dir, not the slot.
+      const cli = [this.emitter, '--store', storeDir, '--out', this.projectsDir, '--primitive', 'project-page', '--category', category, '--project', project, '--title', title]
       for (const k of ['purpose', 'automation', 'how']) if (typeof args[k] === 'string' && args[k].trim()) cli.push(`--${k}`, args[k].trim())
       if (cron) cli.push('--cron', 'true')
       if (integrations.length) cli.push('--integrations', JSON.stringify(integrations))
@@ -269,9 +273,9 @@ export class TemplateConstructorMcpServer {
       const last = (() => { try { return JSON.parse(out.trim().split('\n').filter(Boolean).pop()) } catch { return null } })()
       if (last && last.refused) return textResult({ refused: true, axis: last.axis, detail: last.detail, advice: 'Fix the input and retry: the category must be an existing folder; a missing npm dependency must be added to the slot package.json (+ rebuild) first.' })
       if (code !== 0 || !last || !last.composed) throw new Error(`composer exited ${code}: ${out.slice(-400)}`)
-      // mode-aware view URL (no [lang] prefix — the projects zone is monolingual)
-      const view_url = (() => { try { return `${publicSiteUrl(this.appEnvFile)}/projects/${category}/${project}` } catch { return '' } })()
-      return textResult({ ...last, view_url, next: 'Now REBUILD the slot with owner_deploy_rebuild_slot so the page is live; the project button appears in the account drawer Projects accordion (architect/manager). Finishing the diagram/description/tables for the real project is a coding-agent handoff (_data/flow.ts, _data/description.ts, _lib/project-data.ts).' })
+      // mode-aware view URL on the PROJECTS service (:3003 / projects.<apex>; monolingual, no [lang])
+      const view_url = (() => { try { return `${publicProjectsUrl(this.appEnvFile)}/projects/${category}/${project}` } catch { return '' } })()
+      return textResult({ ...last, view_url, next: 'Now REBUILD the projects service (POST :3002/api/deploy with {"target":"projects"}) so the page is live — NOT the app slot; the account drawer Projects entry links into this service. Finishing the diagram/description/tables for the real project is a coding-agent handoff (_data/flow.ts, _data/description.ts, _lib/project-data.ts).' })
     } finally {
       await rm(storeDir, { recursive: true, force: true }).catch(() => {})
     }

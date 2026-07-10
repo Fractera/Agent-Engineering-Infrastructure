@@ -18,6 +18,8 @@ const PROXY_PORTS: Record<string, number> = {
   "www":      3000,
   "auth":     3001,
   "admin":    3002,
+  "projects": 3003,
+  "design":   3004,
   "data":     3300,
   "hermes":   9119,
   "lightrag": 9621,
