@@ -8,8 +8,8 @@ import { getSession } from "@/lib/auth/get-session"
 // The admin whole-file setter (bridges/app .../api/config/env) rewrites the ENTIRE
 // .env.local — unsuitable for the native "missing keys" modal (186.3), which must
 // add ONE runtime key without clobbering the rest. This route does a safe
-// read-modify-write of the slot's OWN app/.env.local, then triggers a DETACHED
-// `pm2 restart fractera-app` (runtime var → restart, ~3-5s; NOT a rebuild — that
+// read-modify-write of the projects-app OWN .env.local, then triggers a DETACHED
+// `pm2 restart fractera-projects` (runtime var → restart, ~3-5s; NOT a rebuild — that
 // is rule 143's build-time path). GET reports present/absent flags (never values)
 // for the modal's on-mount check.
 //
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
   const value = body.value ?? ""
   // Optional restart deferral (default true = restart, so existing single-key callers are
   // unchanged). A caller writing SEVERAL keys in one flow passes restart:false on all but the
-  // final trigger, so fractera-app — the very process serving THIS request and the caller's page —
+  // final trigger, so fractera-projects — the very process serving THIS request and the caller's page —
   // bounces exactly ONCE at the end instead of mid-flow. A mid-flow bounce killed the follow-up
   // request (the OpenAI save) and blanked the page (the missing-keys-modal red-toast race).
   const doRestart = body.restart !== false
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
   const willRestart = doRestart && process.env.NODE_ENV === "production"
   if (willRestart) {
     try {
-      spawn("sh", ["-c", "sleep 1; pm2 restart fractera-app"], {
+      spawn("sh", ["-c", "sleep 1; pm2 restart fractera-projects"], {
         detached: true,
         stdio: "ignore",
       }).unref()

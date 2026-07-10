@@ -18,7 +18,7 @@
 //   registry.json (this dir) — [{ "category": "...", "project": "...", "token": "<bot token>" }]
 //                              (written by the connect modal's config route, step 205.7)
 //   services/automations-listener/.env (optional overrides, parsed here, no dotenv):
-//     APP_URL          the Shell (:3000) — the automations' /run routes live here
+//     APP_URL          fractera-projects (:3003) — the automations' /run routes live here (step 197; was :3000 shell)
 //     POLL_TIMEOUT_S   getUpdates long-poll timeout (seconds)
 //     REGISTRY_TTL_MS  how often the registry file is re-read (a newly connected bot starts polling
 //                      without a service restart)
@@ -43,7 +43,7 @@ function parseEnvFile(path) {
 const fileEnv = parseEnvFile(resolve(__dirname, '.env'))
 const env = k => process.env[k] ?? fileEnv[k]
 
-const APP_URL        = env('APP_URL') ?? 'http://127.0.0.1:3000'
+const APP_URL        = env('APP_URL') ?? 'http://127.0.0.1:3003' // fractera-projects — automations' /run routes moved here (step 197; was :3000 shell)
 const POLL_TIMEOUT_S = Number(env('POLL_TIMEOUT_S') ?? 25)
 const REGISTRY_PATH  = resolve(__dirname, 'registry.json')
 const REGISTRY_TTL_MS = Number(env('REGISTRY_TTL_MS') ?? 15000)

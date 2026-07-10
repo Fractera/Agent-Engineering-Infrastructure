@@ -6,7 +6,7 @@
       "schedule": "*/5 * * * *",
       "action": {
         "type": "http",
-        "url": "http://127.0.0.1:3000/api/projects/personal/telegram-notes/run",
+        "url": "http://127.0.0.1:3003/api/projects/personal/telegram-notes/run",
         "method": "POST",
         "body": {}
       },

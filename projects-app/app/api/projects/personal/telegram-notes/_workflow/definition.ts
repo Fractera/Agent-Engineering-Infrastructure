@@ -232,7 +232,7 @@ async function tgSend(chatId: string, text: string): Promise<void> {
 // Send a stored receipt image back to the chat (step 207.10). The media URL may be absolute or a relative
 // app path (/api/media/…); relative paths are resolved against the app base. We fetch the bytes and upload
 // them as multipart so Telegram never has to reach an internal/relative URL itself. Best-effort → boolean.
-const APP_BASE = (process.env.APP_BASE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+const APP_BASE = (process.env.APP_BASE_URL ?? "http://localhost:3003").replace(/\/+$/, "");
 async function tgSendPhotoByUrl(chatId: string, imageUrl: string, caption: string): Promise<boolean> {
   try {
     const abs = /^https?:\/\//.test(imageUrl)

@@ -49,16 +49,20 @@ const env = k => process.env[k] ?? fileEnv[k]
 
 const DATA_URL    = env('DATA_URL') ?? 'http://127.0.0.1:3300'
 const DATA_SECRET = env('DATA_SECRET') ?? ''
-const SLOT_DIR    = env('SLOT_DIR') ?? '/opt/fractera/app'
-const APP_URL     = env('APP_URL') ?? 'http://127.0.0.1:3000' // Shell — subscribers' /run lives here (step 195)
+// The Projects layer moved OUT of the app slot (:3000) into its own process fractera-projects
+// (:3003) in step 197. cron.json declarations, the integration-key .env.local, and the /run routes
+// now all live under the projects app, so this scans and targets projects-app — NOT the slot.
+// PROJECTS_DIR (bootstrap .env) points at it; SLOT_DIR is honored as a legacy fallback.
+const PROJECTS_DIR = env('PROJECTS_DIR') ?? env('SLOT_DIR') ?? '/opt/fractera/projects-app'
+const APP_URL     = env('APP_URL') ?? 'http://127.0.0.1:3003' // fractera-projects — subscribers' /run lives here (step 197; was :3000 shell pre-197)
 const TICK_MS     = Number(env('TICK_MS') ?? 15000)
 const DEFAULT_TIMEOUT_MS = 10 * 60 * 1000
 const MAX_TIMEOUT_MS     = 60 * 60 * 1000
 
 // The Projects zone lives in a route group; tolerate both spellings of the mount.
 const DECLARATION_ROOTS = [
-  join(SLOT_DIR, 'app', '(projects)', 'projects'),
-  join(SLOT_DIR, 'app', 'projects'),
+  join(PROJECTS_DIR, 'app', '(projects)', 'projects'),
+  join(PROJECTS_DIR, 'app', 'projects'),
 ]
 
 // ── Journal schema (kept textually identical to SCHEMA in the slot's lib/db/index.ts) ──────
@@ -368,8 +372,9 @@ function runScriptAction(job) {
       return done({ ok: false, error: `script path escapes the project folder: ${job.action.file}` })
     }
     if (!existsSync(file)) return done({ ok: false, error: `script not found: ${job.action.file}` })
-    // Slot env (app/.env.local) is passed through so integration keys (step 143) are available.
-    const slotEnv = parseEnvFile(join(SLOT_DIR, '.env.local'))
+    // Projects-app env (projects-app/.env.local) is passed through so integration keys (step 143)
+    // are available to project scripts — it moved with the layer in step 197.
+    const slotEnv = parseEnvFile(join(PROJECTS_DIR, '.env.local'))
     const child = spawn(process.execPath, [file], {
       cwd: job.projectDir,
       env: { ...process.env, ...slotEnv },
@@ -460,6 +465,6 @@ async function tick() {
 process.on('uncaughtException', e => console.error(`[cron] uncaught: ${e.stack ?? e}`))
 process.on('unhandledRejection', e => console.error(`[cron] unhandled rejection: ${e}`))
 
-console.log(`[cron] fractera-cron up — slot=${SLOT_DIR} data=${DATA_URL} tick=${TICK_MS}ms (schedules use server local time)`)
+console.log(`[cron] fractera-cron up — projects=${PROJECTS_DIR} app=${APP_URL} data=${DATA_URL} tick=${TICK_MS}ms (schedules use server local time)`)
 tick()
 setInterval(tick, TICK_MS)
