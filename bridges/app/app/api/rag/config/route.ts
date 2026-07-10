@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
+import path from "path";
 import { execSync } from "child_process";
 import { requireAuth } from "@/lib/require-auth";
-import { readEnvFile, writeEnvFile, pm2RestartDetached } from "@/lib/env-file";
-import { addOpenAiKeyToPool } from "@/lib/hermes-credentials";
+// Single-source OpenAI key (step 208): the key fans out to every store via propagateOpenAiKey.
+import { propagateOpenAiKey, openaiKeyStatus } from "@/lib/openai-key";
 
 const RAG_ENV = process.env.RAG_ENV_PATH ?? "/opt/fractera/services/rag/.env";
 const HERMES_ENV = process.env.HERMES_ENV_PATH ?? "/root/.hermes/.env";
@@ -33,7 +34,8 @@ export async function GET(req: NextRequest) {
   try {
     const vars = fs.existsSync(RAG_ENV) ? parseEnv(fs.readFileSync(RAG_ENV, "utf-8")) : {};
     return NextResponse.json({
-      configured: !!(vars.LLM_BINDING_API_KEY?.trim()),
+      // Unified status (step 208) — the ONE canonical key, so every surface agrees.
+      configured: openaiKeyStatus().configured,
       model: vars.LLM_MODEL ?? "gpt-4o-mini",
     });
   } catch {
@@ -47,38 +49,28 @@ export async function POST(req: NextRequest) {
 
   try {
     const { vars } = await req.json() as { vars: Record<string, string> };
+    const key = (vars.LLM_BINDING_API_KEY ?? "").trim();
+
+    // Non-key rag settings (the Memory model / host) stay rag-local.
     const existing = fs.existsSync(RAG_ENV) ? parseEnv(fs.readFileSync(RAG_ENV, "utf-8")) : {};
-
+    let wroteLocal = false;
     for (const [k, v] of Object.entries(vars)) {
-      if (ALLOWED_KEYS.has(k)) existing[k] = v;
+      if (ALLOWED_KEYS.has(k) && k !== "LLM_BINDING_API_KEY") { existing[k] = v; wroteLocal = true; }
     }
-    if (vars.LLM_BINDING_API_KEY) {
-      existing.EMBEDDING_BINDING_API_KEY = vars.LLM_BINDING_API_KEY;
-      existing.EMBEDDING_BINDING_HOST = existing.LLM_BINDING_HOST ?? "https://api.openai.com/v1";
+    if (wroteLocal) {
+      fs.mkdirSync(path.dirname(RAG_ENV), { recursive: true });
+      fs.writeFileSync(RAG_ENV, serializeEnv(existing), "utf-8");
     }
 
-    fs.mkdirSync(require("path").dirname(RAG_ENV), { recursive: true });
-    fs.writeFileSync(RAG_ENV, serializeEnv(existing), "utf-8");
-
-    try { execSync("pm2 restart fractera-rag", { timeout: 5000 }); } catch {}
-
-    // Autofill into Hermes env if it has no OpenAI key yet. Never overwrite
-    // an existing Hermes key — that's the user's deliberate choice.
-    let alsoUpdated: "hermes" | null = null;
-    if (vars.LLM_BINDING_API_KEY) {
-      const hermesVars = readEnvFile(HERMES_ENV);
-      if (!hermesVars.OPENAI_API_KEY) {
-        hermesVars.OPENAI_API_KEY = vars.LLM_BINDING_API_KEY;
-        try {
-          writeEnvFile(HERMES_ENV, hermesVars);
-          // The agent reads the key from the credential pool, not .env — register
-          // it there too, or Brain stays unauthenticated. → step 89 error doc.
-          addOpenAiKeyToPool(vars.LLM_BINDING_API_KEY);
-          pm2RestartDetached("fractera-hermes", 500);
-          // (step 205) The web chat (:9120) is removed — only the agent restarts.
-          alsoUpdated = "hermes";
-        } catch { /* best-effort */ }
-      }
+    // The OpenAI key → the SINGLE unified writer (step 208). It writes RAG's three key names,
+    // the Hermes credential pool, hermes .env, the slot, and the provider — so a key entered
+    // HERE reaches Brain and the automations too (previously it did not).
+    let alsoUpdated: "all" | null = null;
+    if (key) {
+      propagateOpenAiKey(key);
+      alsoUpdated = "all";
+    } else if (wroteLocal) {
+      try { execSync("pm2 restart fractera-rag", { timeout: 5000 }); } catch { /* best-effort */ }
     }
 
     return NextResponse.json({ ok: true, alsoUpdated });

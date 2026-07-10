@@ -3,7 +3,10 @@ import fs from "fs";
 import path from "path";
 import { exec } from "child_process";
 import { requireAuth } from "@/lib/require-auth";
-import { readEnvFile, writeEnvFile, pm2RestartDetached } from "@/lib/env-file";
+// Single-source OpenAI key (step 208): entering the key in the Memory panel fans out to ALL
+// stores through propagateOpenAiKey, exactly like the Brain/Projects paths; the "configured"
+// signal comes from the one canonical status.
+import { propagateOpenAiKey, openaiKeyStatus } from "@/lib/openai-key";
 
 const RAG_ENV    = process.env.RAG_ENV_PATH    ?? "/opt/fractera/services/rag/.env";
 const HERMES_ENV = process.env.HERMES_ENV_PATH ?? "/root/.hermes/.env";
@@ -47,14 +50,12 @@ export async function GET(req: NextRequest) {
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const vars = readEnv();
-  const llmKey = vars.LLM_BINDING_API_KEY ?? "";
-  const embKey = vars.EMBEDDING_BINDING_API_KEY ?? "";
-  // The UI only needs to know "is a key configured" + a masked preview.
-  // Returning the raw key would let a leaked admin cookie exfiltrate it.
-  const configuredKey = llmKey || embKey;
+  // Unified status (step 208): "configured" reflects the ONE canonical key so Memory agrees with
+  // Brain/Projects no matter where it was entered. Models stay rag-specific.
+  const status = openaiKeyStatus();
   return NextResponse.json({
-    configured: !!configuredKey,
-    keyMasked: configuredKey ? `${configuredKey.slice(0, 7)}…${configuredKey.slice(-4)}` : null,
+    configured: status.configured,
+    keyMasked: status.keyMasked,
     llmModel: vars.LLM_MODEL ?? "",
     embeddingModel: vars.EMBEDDING_MODEL ?? "",
   });
@@ -81,45 +82,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid model id" }, { status: 400 });
     }
 
-    const existing = readEnv();
-    if (trimmed) {
-      existing.LLM_BINDING_API_KEY = trimmed;
-      existing.EMBEDDING_BINDING_API_KEY = trimmed;
-      existing[RAG_OPENAI_KEY] = trimmed; // LightRAG reads os.environ["OPENAI_API_KEY"] (step 207.15)
-    }
+    // Memory model (rag-specific) — write it first so the propagate restart below loads it too.
     if (model) {
+      const existing = readEnv();
       existing.LLM_MODEL = model;
+      fs.mkdirSync(path.dirname(RAG_ENV), { recursive: true });
+      fs.writeFileSync(RAG_ENV, serializeEnv(existing), "utf-8");
     }
 
-    fs.mkdirSync(path.dirname(RAG_ENV), { recursive: true });
-    fs.writeFileSync(RAG_ENV, serializeEnv(existing), "utf-8");
-
-    // Reload the RAG service so it picks up the new key/model. pm2 reload
-    // is graceful (no downtime).
-    await new Promise<void>((resolve) => {
-      exec("pm2 reload fractera-rag", (err) => {
-        if (err) console.error("[rag-config] pm2 reload failed", err);
-        resolve();
-      });
-    });
-
-    // Autofill: if Hermes has no OpenAI key yet, propagate the same one.
-    // Never overwrite an existing Hermes key — that's the user's choice
-    // (two services may want different keys). Best-effort: Hermes failure
-    // doesn't fail the RAG save. Only when a key was actually sent.
-    let alsoUpdated: "hermes" | null = null;
+    // OpenAI key → the SINGLE unified writer (step 208). Entering it in the Memory panel now
+    // fans out to hermes .env + credential pool + RAG + slot + provider — EXACTLY like the
+    // Brain/Projects paths. No more partial "rag-only, hermes-only-if-empty" propagation that
+    // left the agent's pool and the slot automations keyless (the "полное безумие" divergence).
+    let alsoUpdated: "all" | null = null;
     if (trimmed) {
-      const hermesVars = readEnvFile(HERMES_ENV);
-      if (!hermesVars.OPENAI_API_KEY) {
-        hermesVars.OPENAI_API_KEY = trimmed;
-        try {
-          writeEnvFile(HERMES_ENV, hermesVars);
-          pm2RestartDetached("fractera-hermes", 500);
-          alsoUpdated = "hermes";
-        } catch {
-          // ignore — RAG save above already succeeded
-        }
-      }
+      propagateOpenAiKey(trimmed);
+      alsoUpdated = "all";
+    } else if (model) {
+      // Model-only change: restart RAG so it loads the new Memory model.
+      await new Promise<void>((resolve) => { exec("pm2 reload fractera-rag", () => resolve()); });
     }
 
     return NextResponse.json({ ok: true, alsoUpdated });

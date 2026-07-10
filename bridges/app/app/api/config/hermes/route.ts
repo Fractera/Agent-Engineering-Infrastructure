@@ -4,7 +4,9 @@ import crypto from "crypto";
 import { spawn } from "child_process";
 import { requireAuth } from "@/lib/require-auth";
 import { readEnvFile, writeEnvFile, pm2RestartDetached } from "@/lib/env-file";
-import { addOpenAiKeyToPool } from "@/lib/hermes-credentials";
+// Single-source OpenAI key writer/status (step 208): config/hermes, config/rag and rag/config
+// ALL fan the key out through propagateOpenAiKey, so the entry point never changes the result.
+import { propagateOpenAiKey, readHermesModel, writeHermesModel, clearOpenAiKey } from "@/lib/openai-key";
 
 const HERMES_ENV    = process.env.HERMES_ENV_PATH ?? "/root/.hermes/.env";
 const HERMES_CONFIG = process.env.HERMES_CONFIG_PATH ?? "/root/.hermes/config.yaml";
@@ -85,89 +87,10 @@ async function fetchBotUsername(token: string): Promise<string | null> {
   }
 }
 
-// Read the top-level `model:` line from Hermes' config.yaml. Hermes' config
-// is a small YAML file written by bootstrap; we don't need a full parser,
-// just to peek/replace this one field.
-function readHermesModel(): string | null {
-  try {
-    if (!fs.existsSync(HERMES_CONFIG)) return null;
-    const txt = fs.readFileSync(HERMES_CONFIG, "utf-8");
-    // Match a top-level (no leading spaces / 2-spaces — bootstrap writes it
-    // either at column 0 under provider, or indented under it).
-    const m = txt.match(/^\s*model:\s*(\S+)\s*$/m);
-    return m ? m[1] : null;
-  } catch { return null; }
-}
-
-// Replace the FIRST `model:` line in Hermes' config.yaml with the requested
-// value, preserving whatever indentation was already there. If no `model:`
-// line exists at all we don't try to invent one — that means the user is on
-// a config layout we don't recognise and should edit it manually.
-function writeHermesModel(model: string): { ok: boolean; reason?: string } {
-  try {
-    if (!fs.existsSync(HERMES_CONFIG)) return { ok: false, reason: "config.yaml not found" };
-    const txt = fs.readFileSync(HERMES_CONFIG, "utf-8");
-    if (!/^\s*model:\s*\S+/m.test(txt)) {
-      return { ok: false, reason: "no model: line in config.yaml" };
-    }
-    // Replace only the first occurrence so we don't accidentally touch
-    // `fallback_model:` further down (it has a different key name anyway,
-    // but defensive).
-    let replaced = false;
-    const out = txt.split("\n").map((line) => {
-      if (replaced) return line;
-      const m = line.match(/^(\s*)model:\s*\S+\s*$/);
-      if (!m) return line;
-      replaced = true;
-      return `${m[1]}model: ${model}`;
-    }).join("\n");
-    fs.writeFileSync(HERMES_CONFIG, out, "utf-8");
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, reason: String(e) };
-  }
-}
-
-// Replace the FIRST top-level `provider:` line in config.yaml (the agent's
-// active provider), preserving indentation. `fallback_provider:` is never
-// matched (the regex anchors `provider:` to the start of the trimmed line).
-function writeHermesProvider(provider: string): { ok: boolean; reason?: string } {
-  try {
-    if (!fs.existsSync(HERMES_CONFIG)) return { ok: false, reason: "config.yaml not found" };
-    const txt = fs.readFileSync(HERMES_CONFIG, "utf-8");
-    if (!/^\s*provider:\s*\S+/m.test(txt)) {
-      return { ok: false, reason: "no provider: line in config.yaml" };
-    }
-    let replaced = false;
-    const out = txt.split("\n").map((line) => {
-      if (replaced) return line;
-      const m = line.match(/^(\s*)provider:\s*\S+\s*$/);
-      if (!m) return line;
-      replaced = true;
-      return `${m[1]}provider: ${provider}`;
-    }).join("\n");
-    fs.writeFileSync(HERMES_CONFIG, out, "utf-8");
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, reason: String(e) };
-  }
-}
-
-// True when the user has connected a subscription (Codex/Claude/…) via the
-// Hermes /env panel — Hermes records those credentials in auth.json under a
-// per-provider pool. Best-effort: any read/parse failure → false, so a fresh
-// server (no auth.json) takes the API-key path.
-function subscriptionConnected(): boolean {
-  try {
-    const a = JSON.parse(fs.readFileSync(HERMES_AUTH, "utf-8"));
-    const pools = [a?.providers, a?.credential_pool].filter(
-      (p) => p && typeof p === "object",
-    );
-    return pools.some((p) => Object.keys(p as object).length > 0);
-  } catch {
-    return false;
-  }
-}
+// config.yaml helpers (readHermesModel / writeHermesModel / writeHermesProvider) and the
+// key fan-out (pool, RAG, slot, provider) moved to lib/openai-key.ts (step 208) so every
+// write route shares ONE implementation. This route only orchestrates parse/validate + the
+// Telegram-token + owner-pairing concerns that are Hermes-specific.
 
 export async function GET(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");
@@ -202,57 +125,56 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const hermesVars = readEnvFile(HERMES_ENV);
   const apiKeyRaw = (body.apiKey ?? "").trim();
   const tgRaw     = (body.telegramBotToken ?? "").trim();
   const modelRaw  = (body.model ?? "").trim();
 
-  // Only validate fields the user actually sent. Empty string = leave existing
-  // value untouched. The UI sends "" when the user didn't change a field.
-  if (apiKeyRaw) {
-    if (!apiKeyRaw.startsWith("sk-")) {
-      return NextResponse.json({ error: "Invalid OpenAI key (expected sk-… format)" }, { status: 400 });
-    }
-    hermesVars[HERMES_KEY] = apiKeyRaw;
+  // Only validate fields the user actually sent. Empty string = leave existing value untouched.
+  if (apiKeyRaw && !apiKeyRaw.startsWith("sk-")) {
+    return NextResponse.json({ error: "Invalid OpenAI key (expected sk-… format)" }, { status: 400 });
   }
-  if (tgRaw) {
-    if (!/^\d+:[A-Za-z0-9_-]{20,}$/.test(tgRaw)) {
-      return NextResponse.json({ error: "Invalid Telegram bot token format" }, { status: 400 });
-    }
-    hermesVars[TELEGRAM_KEY] = tgRaw;
+  if (tgRaw && !/^\d+:[A-Za-z0-9_-]{20,}$/.test(tgRaw)) {
+    return NextResponse.json({ error: "Invalid Telegram bot token format" }, { status: 400 });
   }
-  if (modelRaw) {
-    if (!/^[a-z0-9][a-z0-9.\-_]+$/i.test(modelRaw)) {
-      return NextResponse.json({ error: "Invalid model id" }, { status: 400 });
-    }
+  if (modelRaw && !/^[a-z0-9][a-z0-9.\-_]+$/i.test(modelRaw)) {
+    return NextResponse.json({ error: "Invalid model id" }, { status: 400 });
   }
-
   if (!apiKeyRaw && !tgRaw && !modelRaw) {
     return NextResponse.json({ error: "Nothing to save" }, { status: 400 });
   }
 
-  if (apiKeyRaw || tgRaw) {
+  // OpenAI key → the SINGLE unified writer (step 208). Identical outcome whether the key is
+  // entered here, in the Memory panel, or in a project's key modal: hermes .env + credential
+  // pool + RAG + slot + provider/model, with the right restarts.
+  let providerSwitched: string | null = null;
+  let poolAdded: boolean | null = null;
+  let alsoUpdated: "rag" | null = null;
+  let slotUpdated = false;
+  if (apiKeyRaw) {
+    const r = propagateOpenAiKey(apiKeyRaw, { model: modelRaw });
+    providerSwitched = r.providerSwitched;
+    poolAdded = r.pool;
+    alsoUpdated = r.rag ? "rag" : null;
+    slotUpdated = r.slot;
+  }
+
+  // Brain model-only change (no key): config.yaml only.
+  let modelWrite: { ok: boolean; reason?: string } | null = null;
+  if (modelRaw && !apiKeyRaw) {
+    modelWrite = writeHermesModel(modelRaw);
+  }
+
+  // Telegram bot token (the Hermes chat bot) → hermes .env; a fresh token resets owner-pairing
+  // (mint a one-time secret + resolve the @username for the one-tap "Message your bot" deep link).
+  let telegram: { botUsername: string | null; deepLink: string | null } | null = null;
+  if (tgRaw) {
+    const hermesVars = readEnvFile(HERMES_ENV);
+    hermesVars[TELEGRAM_KEY] = tgRaw;
     try {
       writeEnvFile(HERMES_ENV, hermesVars);
     } catch (e) {
       return NextResponse.json({ error: `Write failed: ${e}` }, { status: 500 });
     }
-  }
-
-  // Register the OpenAI key in the Hermes credential pool (the reliable path —
-  // see addOpenAiKeyToPool). .env above is kept for backward-compat; the pool
-  // entry is what the agent + web chat actually authenticate with.
-  let poolAdded: boolean | null = null;
-  if (apiKeyRaw) {
-    poolAdded = addOpenAiKeyToPool(apiKeyRaw).ok;
-  }
-
-  // A fresh Telegram token resets owner-pairing: mint a new one-time secret and
-  // resolve the bot @username so the panel can offer a one-tap "Message your
-  // bot" deep link. The fractera-platforms gateway hook auto-approves whoever
-  // sends `/start <secret>` as the owner — no manual pairing-code approval.
-  let telegram: { botUsername: string | null; deepLink: string | null } | null = null;
-  if (tgRaw) {
     const botUsername = await fetchBotUsername(tgRaw);
     const owner: OwnerPairing = {
       secret: crypto.randomBytes(18).toString("base64url"),
@@ -263,81 +185,10 @@ export async function POST(req: NextRequest) {
       writeOwnerPairing(owner);
     } catch { /* best-effort — panel still works without the deep link */ }
     telegram = { botUsername, deepLink: buildDeepLink(owner) };
-  }
 
-  let modelWrite: { ok: boolean; reason?: string } | null = null;
-  if (modelRaw) {
-    modelWrite = writeHermesModel(modelRaw);
-  }
-
-  // Point A — "paste key → bot replies". When an OpenAI API key is saved and no
-  // subscription is connected, switch the chat agent from the subscription
-  // default (`openai-codex`) to the direct OpenAI API provider (`openai-api`)
-  // with a cheap default model. Without this the agent stays on `openai-codex`,
-  // has no credentials, and answers "Provider authentication failed" until the
-  // user manually runs /model in chat. We respect an explicit model choice and
-  // never override a connected subscription.
-  let providerSwitched: string | null = null;
-  if (apiKeyRaw && !subscriptionConnected()) {
-    const pw = writeHermesProvider("openai-api");
-    if (pw.ok) {
-      providerSwitched = "openai-api";
-      if (!modelRaw) writeHermesModel("gpt-5-mini");
-    }
-  }
-
-  // Unified key contract (step 199): ONE OpenAI key is AUTHORITATIVE for EVERY
-  // consumer — Hermes (written above), Memory/LightRAG, and the slot automations.
-  // Memory is no longer an independently-editable key: always overwrite RAG with
-  // the saved value (a single paste in one field drives all three).
-  let alsoUpdated: "rag" | null = null;
-  if (apiKeyRaw) {
-    const ragVars = readEnvFile(RAG_ENV);
-    ragVars[RAG_LLM_KEY] = apiKeyRaw;
-    ragVars[RAG_EMB_KEY] = apiKeyRaw;
-    // Plain OPENAI_API_KEY too — LightRAG's client reads this exact name (step 207.15).
-    ragVars[RAG_OPENAI_KEY] = apiKeyRaw;
-    try {
-      writeEnvFile(RAG_ENV, ragVars);
-      pm2RestartDetached("fractera-rag", 500);
-      alsoUpdated = "rag";
-    } catch { /* best-effort */ }
-  }
-
-  // Propagate the OpenAI key to the SLOT — the missing bridge that made the UI green while the
-  // automation had no key (step 199). Runtime, server-only key (NOT NEXT_PUBLIC_) → a fractera-app
-  // restart re-loads app/.env.local, no rebuild. Guarded on the slot file existing (self-sufficiency).
-  // NOTE (step 205): only the OpenAI key is propagated to the slot. Telegram bot tokens are NOT set
-  // here — each automation owns its bot, configured in that automation's own connect modal.
-  let slotUpdated = false;
-  if (apiKeyRaw && fs.existsSync(SLOT_ENV)) {
-    try {
-      const slotVars = readEnvFile(SLOT_ENV);
-      slotVars[HERMES_KEY] = apiKeyRaw;
-      writeEnvFile(SLOT_ENV, slotVars);
-      pm2RestartDetached("fractera-app", 500);
-      slotUpdated = true;
-    } catch { /* best-effort — the substrate save already succeeded */ }
-  }
-
-  // (step 205) Automations-bot tokens are NOT set here anymore — each automation configures its OWN
-  // bot in its connect modal (<PROJECT>_BOT_TOKEN + the fractera-automations registry). This route is
-  // Hermes-only: the Hermes chat-bot token + the one global OpenAI key.
-
-  pm2RestartDetached("fractera-hermes", 500);
-  // The gateway is the process that actually connects to Telegram; restart it
-  // so a newly-saved token is picked up and it reconnects to Telegram.
-  // Spawned synchronously + detached (NOT via setTimeout): the admin process
-  // serving this request is a DIFFERENT process, so there is no self-kill risk
-  // and nothing to defer — and a deferred setTimeout after the response proved
-  // unreliable in the App Router (the timer didn't fire, gateway never
-  // restarted). A detached+unref'd child outlives the request regardless.
-  // --update-env refreshes pm2's cached environment. No-op on servers that
-  // predate the fractera-hermes-gateway process. Restart on a new token (to
-  // reconnect to Telegram) OR a new key (so the gateway reloads OPENAI_API_KEY
-  // and the switched `openai-api` provider — otherwise the running gateway
-  // keeps the old empty-credential state and the bot stays silent).
-  if (tgRaw || apiKeyRaw) {
+    // Restart Hermes + its Telegram gateway so the new token reconnects. (If an OpenAI key was
+    // ALSO sent, propagateOpenAiKey already restarted these — a second detached restart is harmless.)
+    pm2RestartDetached("fractera-hermes", 500);
     try {
       spawn("sh", ["-c", "pm2 restart fractera-hermes-gateway --update-env"], {
         detached: true,
@@ -345,9 +196,6 @@ export async function POST(req: NextRequest) {
       }).unref();
     } catch { /* best-effort — credentials are saved regardless */ }
   }
-
-  // (step 205) The built-in web chat (fractera-hermes-webui, :9120) is removed — only the Hermes
-  // Agent remains, so there is no separate chat process to restart on a new key.
 
   return NextResponse.json({
     ok: true,
@@ -364,9 +212,8 @@ export async function DELETE(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const vars = readEnvFile(HERMES_ENV);
-  vars[HERMES_KEY] = "";
-  writeEnvFile(HERMES_ENV, vars);
-  pm2RestartDetached("fractera-hermes", 500);
+  // Full symmetric clear across EVERY store (step 208) — not just hermes .env — so a delete
+  // from any surface truly removes the one key everywhere (pool, RAG, slot, hermes .env).
+  clearOpenAiKey();
   return NextResponse.json({ ok: true });
 }
