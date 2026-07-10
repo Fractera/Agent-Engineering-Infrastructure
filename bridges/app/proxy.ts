@@ -5,7 +5,7 @@ const AUTH_SERVICE = process.env.AUTH_SERVICE_URL ?? "http://localhost:3001";
 
 // Service subdomain prefixes — used to recover the apex from a service host
 // (admin.aifa.dev → aifa.dev) when building the auth URL in domain/Secure mode.
-const KNOWN_PREFIXES = ["www", "auth", "admin", "data", "hermes", "lightrag"];
+const KNOWN_PREFIXES = ["www", "auth", "admin", "projects", "design", "data", "hermes", "lightrag"];
 
 // Public base URL of the Auth service as the BROWSER must reach it.
 // - IP / localhost (demo): same host, port 3001 (http://<ip>:3001).

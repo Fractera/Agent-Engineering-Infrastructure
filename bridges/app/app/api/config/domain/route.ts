@@ -3,16 +3,16 @@ import { execSync, exec } from "child_process";
 import { writeFileSync, mkdirSync, existsSync, rmSync } from "fs";
 import Database from "better-sqlite3";
 import { requireAuth } from "@/lib/require-auth";
+import { SUBDOMAINS } from "@/lib/server-ip";
 
 const APP_DB = process.env.APP_DB_PATH ?? "/opt/fractera/app/data/app.db";
 
-// The set of hostnames Fractera serves over HTTPS once a custom domain is
-// attached. Apex + www → public site, the other five → internal services
-// proxied behind their own subdomain so each gets a valid TLS certificate
-// (and the admin iframe doesn't hit mixed-content errors).
-// (step 205) The "chat" subdomain (built-in Hermes Web Chat :9120) was removed — only the Hermes
-// Agent (hermes → :9119) remains as the brain's dashboard; users chat via Telegram.
-const SUBDOMAINS = ["", "www", "auth", "admin", "data", "hermes", "lightrag"] as const;
+// The hostname set served over HTTPS once a custom domain is attached comes from the SHARED
+// SUBDOMAINS in lib/server-ip.ts (imported above) — the single source of truth for the DNS wizard,
+// dns-check, wizard-state, the certbot SAN list and the nginx blocks below. A local copy here
+// previously desynced after step 197 added projects/design: the wizard's checks demanded 9 records
+// while certbot issued a 7-SAN cert → activation deadlocked. Never redeclare the list locally (197.1).
+// (step 205) The "chat" subdomain (built-in Hermes Web Chat :9120) was removed; users chat via Telegram.
 const PROXY_PORTS: Record<string, number> = {
   "":         3000,
   "www":      3000,

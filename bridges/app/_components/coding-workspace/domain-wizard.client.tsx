@@ -111,7 +111,7 @@ export function DomainWizard({ domain, onClose, onChangeDomain }: { domain: stri
       const data = await refresh();
       if (!data) return;
       if (data.step1.complete) {
-        toast.success("All eight A-records resolve to this server");
+        toast.success("All A-records resolve to this server");
       } else {
         const missing = data.step1.missingHosts;
         toast.warning(
@@ -375,18 +375,23 @@ export function DomainWizard({ domain, onClose, onChangeDomain }: { domain: stri
         {/* STEP 1 — DNS A-records */}
         <Step n={1} title="DNS A-records" enabled={true} complete={state.step1.complete} icon={<Globe size={12} />}>
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Add <strong>all eight</strong> A-records below at your DNS provider (your registrar's
+            Add <strong>all nine</strong> A-records below at your DNS provider (your registrar's
             own panel, not Cloudflare). Each one points to the same IP: <span className="font-mono text-foreground">{state.serverIp ?? "…"}</span>.
+            A single wildcard record (<span className="font-mono text-foreground">*</span>) plus the apex also works.
           </p>
           <div className="rounded-md border border-border bg-background p-3 space-y-1 text-[10px] font-mono">
             <div className="grid gap-x-3 text-muted-foreground pb-1 border-b border-border" style={{ gridTemplateColumns: "3rem 5rem 1fr" }}>
               <span>Type</span><span>Name</span><span>Value</span>
             </div>
+            {/* Keep in sync with SUBDOMAINS (lib/server-ip.ts) — the checks + certbot SANs iterate
+                that list; a shorter table here traps the owner at step 1 (197.1 fix: +projects/design). */}
             {[
               { name: "@",        note: "site (apex)" },
               { name: "www",      note: "site (www alias)" },
               { name: "auth",     note: "sign-in" },
               { name: "admin",    note: "this panel" },
+              { name: "projects", note: "automations" },
+              { name: "design",   note: "design system" },
               { name: "data",     note: "media + db" },
               { name: "hermes",   note: "Brain" },
               { name: "lightrag", note: "Memory" },

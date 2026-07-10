@@ -75,7 +75,10 @@ function restoreFromBackup(backupDir: string): void {
 }
 
 function writeStrictEnvs(domain: string): void {
-  const subs = ["www", "auth", "admin", "data", "hermes", "lightrag"];
+  // Keep in sync with the shared SUBDOMAINS (lib/server-ip.ts) minus the apex ("" is the domain
+  // itself, prepended below). projects/design added in 197.1 — without them the two services'
+  // subdomains were missing from ALLOWED_ORIGINS after activation (CORS failures).
+  const subs = ["www", "auth", "admin", "projects", "design", "data", "hermes", "lightrag"];
   const allowedOrigins = [domain, ...subs.map((s) => `${s}.${domain}`)]
     .map((h) => `https://${h}`)
     .join(",");

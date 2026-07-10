@@ -13,7 +13,7 @@
 // Service subdomain prefixes — used to recover the apex from any service host
 // (e.g. admin.aifa.dev → aifa.dev) in domain/Secure mode. Mirrors KNOWN_PREFIXES
 // in lib/runtime-urls.ts.
-const KNOWN_PREFIXES = ["www", "auth", "admin", "data", "hermes", "lightrag"];
+const KNOWN_PREFIXES = ["www", "auth", "admin", "projects", "design", "data", "hermes", "lightrag"];
 
 function isIpHost(hostname: string): boolean {
   return /^\d{1,3}(?:\.\d{1,3}){3}$/.test(hostname) || hostname === "localhost";
