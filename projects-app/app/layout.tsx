@@ -1,18 +1,9 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import "../styles/index.css";
 
-// A.1 placeholder root layout (step 197). The Projects zone is monolingual and owns its OWN
-// <html> (app/(projects)/layout.tsx), so once that zone moves here in 197.4 it renders inside
-// its route group and this root layout only wraps the (empty) root. Kept intentionally thin.
-export const metadata: Metadata = {
-  title: "Fractera | Projects",
-  robots: { index: false, follow: false },
-};
-
+// Bare pass-through root layout — mirrors FNS app/layout.tsx (step 131). Renders NO
+// <html>/<body> and calls NO dynamic functions, so each zone owns its own root layout with its
+// own <html>. Here the only content zone is app/(projects)/layout.tsx (<html lang={DEFAULT}>).
+// styles/index.css is imported once so design tokens apply across the zone.
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en" suppressHydrationWarning>
-      <body>{children}</body>
-    </html>
-  );
+  return children;
 }

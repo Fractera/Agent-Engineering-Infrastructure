@@ -1,17 +1,8 @@
-// A.1 placeholder root page (step 197). Proves the standalone process comes up and binds :3003
-// before the real /projects zone moves here (197.4). The zone lives at /projects (a route group
-// (projects) that owns its own <html>), so this root "/" is just a liveness marker — a browser
-// hitting the bare projects host is nudged to /projects once the zone exists.
-export const dynamic = "force-static";
+import { redirect } from "next/navigation";
 
-export default function ProjectsRootPlaceholder() {
-  return (
-    <main style={{ padding: "3rem", maxWidth: "40rem", margin: "0 auto" }}>
-      <h1 style={{ fontSize: "1.5rem", fontWeight: 600 }}>Fractera — Projects service</h1>
-      <p style={{ marginTop: "1rem", opacity: 0.75 }}>
-        This is the dedicated Projects process (step 197). The automations layer lives at{" "}
-        <code>/projects</code>. Content moves here in phase B.
-      </p>
-    </main>
-  );
+// The projects service serves the /projects zone (route group (projects), which owns its own
+// <html>). The bare host root "/" has no <html> of its own (pass-through root layout), so it
+// simply redirects into the zone. redirect() throws before render, so no markup is produced here.
+export default function ProjectsRoot() {
+  redirect("/projects/personal");
 }
