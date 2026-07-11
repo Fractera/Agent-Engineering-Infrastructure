@@ -85,6 +85,10 @@ do not invent automation logic from habit or memory — follow exactly what it s
 - Do not hand-write files that duplicate what the starter already emits.
 - Do not skip ahead of what this README currently documents — the next node's instructions
   land here before they exist anywhere else.
+
+<!-- fractera:project
+{"kind":"project","category":"{{CATEGORY}}","slug":"{{PROJECT}}","title":"{{PROJECT_TITLE}}","project":{"title":"{{PROJECT_TITLE}}","purpose":"Not yet decomposed — a blank frozen skeleton (v1). No nodes, no interface, no logic exist yet."},"interface":{"inputs":[],"outputs":[]},"nodes":[]}
+-->
 `,
   "_meta.ts": `import type { RouteMeta } from "@/lib/architecture/route-meta"
 

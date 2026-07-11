@@ -119,3 +119,39 @@ Rebuild `projects-app` and reload `fractera-projects` (or call the deploy route 
 | What | A permanent top-level folder (`/projects/<category>`) | A named folder inside a category (`/projects/<category>/<slug>`) |
 | How many | A handful, added rarely, by hand (this file) | Many, created constantly |
 | How to create | Follow this file | **Never hand-write files.** Call the frozen automation starter — see the category's own `README.md` (e.g. `projects/other/README.md`) or `POST /api/projects/create` |
+
+## The project CARD standard (one format, every project, no exceptions)
+
+Every project shows up on its category hub as a **card** — the "button" a visitor clicks to open
+it. That card is not hand-styled per project: `_shared/project-card.ts` reads it from ONE thing —
+a hidden HTML comment in the project's `README.md`:
+
+```
+<!-- fractera:project
+{"kind":"project","category":"<cat>","slug":"<slug>","title":"<Title>",
+ "project":{"title":"<Title>","purpose":"<one sentence — becomes the card's description line>"},
+ "interface":{"inputs":[...],"outputs":[...]},
+ "nodes":[{"tools":["..."]}, ...]}
+-->
+```
+
+No block → the card falls back to a bare, blank-looking title with no description and no badges
+(`project-card.ts`'s `fallback`) — **this is the exact bug this session found**: a project created
+without this block renders an "empty button." There is only ONE correct fix — emit a valid block —
+never style around a missing one.
+
+- `title` / `project.purpose` → the card's title line and description line.
+- `interface.inputs[].type` + `interface.outputs[].type` + `nodes[].tools[]` → the badge row
+  (de-duplicated, capped, "+N" overflow). An empty array here is fine and expected — it just means
+  no badges show; it is NOT the same as a missing block.
+- This is the **same block**, same shape, whether it is:
+  - **hand-authored minimal** (the frozen starter's v1 skeleton writes an honest one — see
+    `_lib/frozen-project-starter.ts`'s `README.md` entry — `purpose: "Not yet decomposed…"`,
+    empty `interface`/`nodes`), or
+  - **engine-generated rich** (`orchestrate-project-by-steps` writes the full graph — actions,
+    state, every node with its real tools/io — once the project is properly decomposed; see
+    `projects/personal/telegram-notes/README.md` for the reference).
+
+  One format, growing richer over the project's life — never a second, competing format. If you
+  ever touch a project's README, keep this block valid; if you add fields the engine emits that
+  `project-card.ts` doesn't yet read, extend the reader, don't invent a parallel block.
