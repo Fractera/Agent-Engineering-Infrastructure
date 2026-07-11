@@ -23,6 +23,10 @@ export type ChannelKey = {
   optional?: boolean;
   /** A credential: rendered as a masked input; its value is never echoed back by the env route. */
   secret?: boolean;
+  /** Which setter persists this key (step 220). Default "env" → project-config/env (the slot's own
+   *  runtime .env.local + restart). "openai-key" → project-config/openai-key, the ONE global OpenAI
+   *  key (step 208 unification) that propagates to every layer — NOT a local env write. */
+  setter?: "env" | "openai-key";
 };
 
 /** Optional OAuth handshake for a channel that needs one (step 220): the project's own

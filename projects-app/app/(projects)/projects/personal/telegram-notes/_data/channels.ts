@@ -38,6 +38,7 @@ export const INPUT_CHANNELS: InputChannel[] = [
         label: "OpenAI API key",
         help: "platform.openai.com → API keys → Create new secret key. One global key powers every automation.",
         secret: true,
+        setter: "openai-key",
       },
     ],
   },

@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -7,23 +9,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { InputChannelsPanel } from "../../../_shared/components/input-channels-panel.client";
 import { INPUT_CHANNELS } from "../_data/channels";
 import { ModelSettings } from "./model-settings.client";
 import { IntervalSettings } from "./interval-settings.client";
 
-// FROZEN STANDARD (step 220) — the automation's Settings, opened from the menu as a 600×600 modal of
-// accordions: AI model, Run interval, and the declaration-driven Input channels. The old fixed
-// settings-accordion (bot chat / connectors hardcoded) is replaced: channels now come from
-// INPUT_CHANNELS (_data/channels.ts). Telegram-specific reception setup (register the bot with the
-// listener + set its command menu) is preserved via onKeySaved when the bot token is saved — the one
-// project-specific hook, kept out of the generic channels panel.
+// FROZEN STANDARD (step 220) — the automation's Settings, opened from the menu as a 600×600 modal.
+// FLAT sections, NOT accordions (owner, step 220: the accordion is dropped — settings live plainly on
+// the Settings surface). The AI model section carries BOTH the ONE global OpenAI key (owner: duplicate
+// it here — it is set with the global propagating setter, step 208) AND the per-automation model
+// dropdown. Input channels come from the INPUT_CHANNELS declaration. Telegram reception setup (register
+// the bot + set its command menu) is preserved via onKeySaved when the bot token is saved.
 async function registerTelegramBot(token: string) {
   try {
     await fetch("/api/project-config/register-bot", {
@@ -35,6 +33,52 @@ async function registerTelegramBot(token: string) {
   try {
     await fetch("/api/projects/personal/telegram-notes/set-menu", { method: "POST" });
   } catch { /* best-effort */ }
+}
+
+function OpenAiKeyField() {
+  const [value, setValue] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function save() {
+    if (!value.trim()) return;
+    setBusy(true);
+    try {
+      const r = await fetch("/api/project-config/openai-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: value.trim() }),
+      });
+      if (!r.ok) {
+        const info = (await r.json().catch(() => null)) as { error?: string } | null;
+        toast.error(info?.error ?? `Save failed (HTTP ${r.status})`);
+        return;
+      }
+      setValue("");
+      toast.success("OpenAI key saved — applying to every automation (a brief restart).");
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="space-y-1">
+      <label className="text-sm font-medium">OpenAI API key</label>
+      <p className="text-xs text-muted-foreground">
+        One global key powers every automation. platform.openai.com → API keys → Create new secret key.
+      </p>
+      <div className="flex gap-2">
+        <Input type="password" autoComplete="off" value={value} onChange={(e) => setValue(e.target.value)} placeholder="sk-…" />
+        <Button onClick={save} disabled={busy || !value.trim()}>Save</Button>
+      </div>
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="space-y-3 rounded-lg border p-4">
+      <h3 className="text-sm font-semibold">{title}</h3>
+      {children}
+    </section>
+  );
 }
 
 export function SettingsModal({
@@ -51,31 +95,23 @@ export function SettingsModal({
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription>Configure this automation&apos;s model, schedule and input channels.</DialogDescription>
         </DialogHeader>
-        <Accordion type="single" collapsible className="w-full">
-          <AccordionItem value="model">
-            <AccordionTrigger>AI model</AccordionTrigger>
-            <AccordionContent>
-              <ModelSettings />
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="interval">
-            <AccordionTrigger>Run interval</AccordionTrigger>
-            <AccordionContent>
-              <IntervalSettings />
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="channels">
-            <AccordionTrigger>Input channels</AccordionTrigger>
-            <AccordionContent>
-              <InputChannelsPanel
-                channels={INPUT_CHANNELS}
-                onKeySaved={(env, value) => {
-                  if (env === "TELEGRAM_BOT_TOKEN") void registerTelegramBot(value);
-                }}
-              />
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+        <div className="space-y-4">
+          <Section title="AI model">
+            <OpenAiKeyField />
+            <ModelSettings />
+          </Section>
+          <Section title="Run interval">
+            <IntervalSettings />
+          </Section>
+          <Section title="Input channels">
+            <InputChannelsPanel
+              channels={INPUT_CHANNELS}
+              onKeySaved={(env, value) => {
+                if (env === "TELEGRAM_BOT_TOKEN") void registerTelegramBot(value);
+              }}
+            />
+          </Section>
+        </div>
       </DialogContent>
     </Dialog>
   );

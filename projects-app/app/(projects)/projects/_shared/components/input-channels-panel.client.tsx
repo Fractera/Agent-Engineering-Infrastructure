@@ -15,12 +15,21 @@ import type { InputChannel } from "../channels";
 // (runtime var + restart, the same path the bot token/OpenAI key always used).
 type OAuthStatus = { configured: boolean; connected: boolean };
 
-async function saveEnv(key: string, value: string): Promise<boolean> {
-  const r = await fetch("/api/project-config/env", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ key, value: value.trim() }),
-  });
+async function saveKey(env: string, value: string, setter?: "env" | "openai-key"): Promise<boolean> {
+  // The ONE global OpenAI key uses its own propagating setter (step 208/220); everything else is a
+  // slot runtime env write. Which one is DECLARED per key in _data/channels.ts, not decided here.
+  const r =
+    setter === "openai-key"
+      ? await fetch("/api/project-config/openai-key", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ apiKey: value.trim() }),
+        })
+      : await fetch("/api/project-config/env", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key: env, value: value.trim() }),
+        });
   if (!r.ok) {
     const info = (await r.json().catch(() => null)) as { error?: string } | null;
     toast.error(info?.error ?? `Save failed (HTTP ${r.status})`);
@@ -30,9 +39,9 @@ async function saveEnv(key: string, value: string): Promise<boolean> {
 }
 
 function ChannelKeyRow({
-  env, label, help, secret, present, onSaved,
+  env, label, help, secret, setter, present, onSaved,
 }: {
-  env: string; label: string; help?: string; secret?: boolean; present: boolean;
+  env: string; label: string; help?: string; secret?: boolean; setter?: "env" | "openai-key"; present: boolean;
   onSaved: (env: string, value: string) => void;
 }) {
   const [value, setValue] = useState("");
@@ -41,7 +50,7 @@ function ChannelKeyRow({
     if (!value.trim()) return;
     setBusy(true);
     try {
-      if (await saveEnv(env, value)) {
+      if (await saveKey(env, value, setter)) {
         onSaved(env, value.trim());
         setValue("");
         toast.success(`${label} saved — applying (a brief restart).`);
@@ -148,6 +157,7 @@ export function InputChannelsPanel({
               label={k.label}
               help={k.help}
               secret={k.secret}
+              setter={k.setter}
               present={Boolean(present[k.env])}
               onSaved={(env, v) => onKeySaved?.(env, v)}
             />
