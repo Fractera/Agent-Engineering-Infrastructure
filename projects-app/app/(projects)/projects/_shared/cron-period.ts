@@ -17,5 +17,6 @@ export const SCHEDULE_PERIOD_SEC: Record<string, number> = {
 // Unknown/custom schedule → fall back to the 1-minute default (the frozen skeleton's
 // own default) rather than guessing.
 export function periodSecFromSchedule(schedule: string | null | undefined): number {
-  return (schedule && SCHEDULE_PERIOD_SEC[schedule]) ?? 60;
+  if (!schedule) return 60;
+  return SCHEDULE_PERIOD_SEC[schedule] ?? 60;
 }

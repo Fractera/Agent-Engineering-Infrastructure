@@ -38,10 +38,11 @@ export function CronProgressBar({ category, slug }: { category: string; slug: st
 
   useEffect(() => {
     if (!periodSec) return;
+    const period = periodSec; // narrowed once — no non-null assertions inside the closure
     function tick() {
       const now = Math.floor(Date.now() / 1000);
-      const rem = periodSec! - (now % periodSec!);
-      setRemaining(rem === 0 ? periodSec! : rem);
+      const rem = period - (now % period);
+      setRemaining(rem === 0 ? period : rem);
     }
     tick();
     const id = setInterval(tick, 1000);
