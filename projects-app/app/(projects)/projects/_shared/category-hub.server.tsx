@@ -4,7 +4,6 @@ import { getAppConfig } from "@/config/app-config";
 import { PROJECT_CATEGORIES, type ProjectCategorySlug } from "./categories";
 import { listProjectSlugs } from "./projects-manifest";
 import { getProjectCard } from "./project-card";
-import { ProjectsZoneFooter } from "@/app/(projects)/_components/projects-zone-footer.client";
 
 // Hub page of one Projects-layer category (step 207.10 item 3 redesign): an admin-style header with
 // bordered/shadowed category nav buttons, then blog-style project cards (title, 2-line description, one
@@ -89,8 +88,6 @@ export async function CategoryHub({ slug }: { slug: ProjectCategorySlug }) {
           </div>
         )}
       </div>
-
-      <ProjectsZoneFooter shortName={cfg.short_name} />
     </main>
   );
 }

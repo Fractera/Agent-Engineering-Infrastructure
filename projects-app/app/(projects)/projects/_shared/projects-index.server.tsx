@@ -4,7 +4,6 @@ import { getAppConfig } from "@/config/app-config";
 import { PROJECT_CATEGORIES } from "./categories";
 import { listProjectSlugs } from "./projects-manifest";
 import { getProjectCard } from "./project-card";
-import { ProjectsZoneFooter } from "@/app/(projects)/_components/projects-zone-footer.client";
 
 // Root index of the Projects layer (/projects, step 211 Ф0): the landing that
 // lists the four permanent categories with their live project counts and names.
@@ -56,8 +55,6 @@ export async function ProjectsIndex() {
           </Link>
         ))}
       </div>
-
-      <ProjectsZoneFooter shortName={cfg.short_name} />
     </main>
   );
 }

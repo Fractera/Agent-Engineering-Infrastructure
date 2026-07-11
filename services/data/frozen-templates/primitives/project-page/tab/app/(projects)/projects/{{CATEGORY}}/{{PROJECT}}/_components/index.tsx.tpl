@@ -5,7 +5,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getAppConfig } from "@/config/app-config";
 import { DEFAULT_LANGUAGE } from "@/config/translations/translations.config";
 import { PROJECT_DESCRIPTION } from "../_data/description";
 import { DEFAULT_HOOKS } from "../_data/hooks";
@@ -21,7 +20,6 @@ import { CronJobsTable } from "./cron-jobs-table.server";
 import { HooksPanel } from "./hooks-panel.client";
 import { MissingKeysModal } from "./missing-keys-modal.client";
 import { ProcessFlow } from "./process-flow.client";
-import { ProjectFooter } from "./project-footer.client";
 import { ProcessQueueTable } from "./process-queue-table.server";
 import { RecordsTable } from "./records-table.client";
 import { RunPanel } from "./run-panel.client";
@@ -161,9 +159,7 @@ export default async function {{PROJECT_PASCAL}}ProjectEntry() {
         <h2 className="text-xl font-medium">{t.scheduled}</h2>
         <CronJobsTable jobs={cronJobs} />
       </section>
-      {/* Per-project footer (186.2): brand + deep-links to continue development
-          (/service/architecture focused on this project) and to the env editor. */}
-      <ProjectFooter shortName={getAppConfig().short_name} lang={DEFAULT_LANGUAGE} />
+      {/* Footer is rendered ONCE by the zone layout (step 213) — pages no longer carry it. */}
     </main>
   );
 }

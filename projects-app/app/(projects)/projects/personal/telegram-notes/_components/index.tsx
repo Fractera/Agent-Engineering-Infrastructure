@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { getAppConfig } from "@/config/app-config";
 import { PROJECT_DESCRIPTION } from "../_data/description";
 import { PROJECT_INTERFACE } from "../_data/interface";
 import { PROJECT_COLUMNS } from "../_data/columns";
@@ -13,7 +12,6 @@ import { CronJobsTable } from "./cron-jobs-table.server";
 import { MissingKeysModal } from "./missing-keys-modal.client";
 import { RecordsFinancesPanel } from "./records-finances-panel.client";
 import { DiagramAccordion } from "./diagram-accordion.client";
-import { ProjectFooter } from "./project-footer.client";
 import { TestsPanel } from "./tests-panel.client";
 import { SettingsAccordion } from "./settings-accordion.client";
 import { StatusIndicator } from "./status-indicator.client";
@@ -129,9 +127,7 @@ export default async function TelegramNotesProjectEntry() {
           <TestsPanel />
         </div>
       </CollapsibleSection>
-
-      {/* Per-project footer (186.2): brand + deep-links + day/night theme toggle. */}
-      <ProjectFooter shortName={getAppConfig().short_name} lang={LANG} />
+      {/* Footer is rendered ONCE by the zone layout (step 213) — pages no longer carry it. */}
     </main>
   );
 }
