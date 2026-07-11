@@ -11,8 +11,15 @@ import { addOpenAiKeyToPool } from "@/lib/hermes-credentials";
 //   1. Hermes .env            OPENAI_API_KEY            (back-compat + the "configured" signal)
 //   2. Hermes credential pool auth.json openai-api       — the AGENT's real auth (:9119)
 //   3. RAG .env               LLM/EMBEDDING_BINDING + OPENAI_API_KEY — Memory/LightRAG (:9621)
-//   4. Slot .env.local        OPENAI_API_KEY            — the project automations (:3000)
+//   4. Slot .env.local        OPENAI_API_KEY            — the guest slot app (:3000)
+//   5. projects-app .env.local OPENAI_API_KEY           — the project AUTOMATIONS (:3003, step 197)
 // (+ Hermes config.yaml provider/model — gates whether the agent uses openai-api.)
+//
+// NOTE (step 212 migration fix): the automations MOVED out of the slot (:3000) into their own
+// process fractera-projects (:3003, /opt/fractera/projects-app) in step 197, but this writer was
+// left targeting only the slot — so a key entered in the modal reached Memory and the slot but
+// NEVER the running automations, whose classifier then went blind. Target #5 restores the
+// pre-migration behavior: the key also lands in projects-app/.env.local + fractera-projects restarts.
 //
 // "ONE record readable/writable from anywhere" therefore means: ONE writer that fans the key
 // out to ALL of the above atomically, and ONE status read. BEFORE this module, three routes
@@ -27,6 +34,9 @@ const HERMES_CONFIG = process.env.HERMES_CONFIG_PATH ?? "/root/.hermes/config.ya
 const HERMES_AUTH   = process.env.HERMES_AUTH_PATH   ?? "/root/.hermes/auth.json";
 const RAG_ENV       = process.env.RAG_ENV_PATH       ?? "/opt/fractera/services/rag/.env";
 const SLOT_ENV      = process.env.SLOT_ENV_PATH      ?? "/opt/fractera/app/.env.local";
+// step 197 moved the project automations into their own process (fractera-projects :3003),
+// reading THIS env — the key must land here or the automations stay blind (step 212).
+const PROJECTS_ENV  = process.env.PROJECTS_ENV_PATH  ?? "/opt/fractera/projects-app/.env.local";
 
 const HERMES_KEY     = "OPENAI_API_KEY";
 const RAG_LLM_KEY    = "LLM_BINDING_API_KEY";
@@ -121,6 +131,7 @@ export function subscriptionConnected(): boolean {
 }
 
 export type PropagateResult = {
+  projects: boolean;
   hermesEnv: boolean;
   pool: boolean | null;
   rag: boolean;
@@ -135,7 +146,7 @@ export type PropagateResult = {
 export function propagateOpenAiKey(key: string, opts?: { model?: string }): PropagateResult {
   const apiKey = key.trim();
   const model = (opts?.model ?? "").trim();
-  const result: PropagateResult = { hermesEnv: false, pool: null, rag: false, slot: false, providerSwitched: null };
+  const result: PropagateResult = { hermesEnv: false, pool: null, rag: false, slot: false, projects: false, providerSwitched: null };
   if (!apiKey) return result;
 
   // 1. Hermes .env (back-compat + the canonical "configured" signal read by openaiKeyStatus).
@@ -173,7 +184,7 @@ export function propagateOpenAiKey(key: string, opts?: { model?: string }): Prop
     result.rag = true;
   } catch { /* best-effort */ }
 
-  // 5. Slot — the project automations read process.env.OPENAI_API_KEY from here.
+  // 5. Slot (:3000) — the guest app's own env. Kept for anything in the slot that reads the key.
   try {
     if (fs.existsSync(SLOT_ENV)) {
       const slotVars = readEnvFile(SLOT_ENV);
@@ -181,6 +192,20 @@ export function propagateOpenAiKey(key: string, opts?: { model?: string }): Prop
       writeEnvFile(SLOT_ENV, slotVars);
       pm2RestartDetached("fractera-app", 500);
       result.slot = true;
+    }
+  } catch { /* best-effort */ }
+
+  // 5b. projects-app (:3003) — where the AUTOMATIONS actually run since step 197. Their workflow
+  //     reads process.env.OPENAI_API_KEY from THIS env; without it the classifier/summary/vision
+  //     model calls all no-op and every message degrades to "unclear". The migration-completing
+  //     target (step 212): write the key here + restart fractera-projects so it reloads the env.
+  try {
+    if (fs.existsSync(PROJECTS_ENV)) {
+      const projVars = readEnvFile(PROJECTS_ENV);
+      projVars[HERMES_KEY] = apiKey;
+      writeEnvFile(PROJECTS_ENV, projVars);
+      pm2RestartDetached("fractera-projects", 500);
+      result.projects = true;
     }
   } catch { /* best-effort */ }
 
@@ -216,6 +241,10 @@ export function clearOpenAiKey(): void {
   } catch { /* noop */ }
   try {
     if (fs.existsSync(SLOT_ENV)) { const v = readEnvFile(SLOT_ENV); delete v[HERMES_KEY]; writeEnvFile(SLOT_ENV, v); pm2RestartDetached("fractera-app", 500); }
+  } catch { /* noop */ }
+  try {
+    // step 212: clear from the automations' env too (fractera-projects :3003), symmetric to propagate.
+    if (fs.existsSync(PROJECTS_ENV)) { const v = readEnvFile(PROJECTS_ENV); delete v[HERMES_KEY]; writeEnvFile(PROJECTS_ENV, v); pm2RestartDetached("fractera-projects", 500); }
   } catch { /* noop */ }
   try {
     const a = JSON.parse(fs.readFileSync(HERMES_AUTH, "utf-8"));
