@@ -140,7 +140,14 @@ export function InputChannelsPanel({
   }, [channels]);
 
   if (!channels.length) {
-    return <p className="text-sm text-muted-foreground">No input channels declared yet.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        No input channels declared yet. Declare what this automation connects to (Telegram, an inbox,
+        Google Calendar…) in <code>_data/channels.ts</code> — each channel has a name, a one-line
+        description, and the keys it needs, with a <code>help</code> line saying where to get each one.
+        See app/(projects)/README.md, &ldquo;The settings &amp; tests declaration standard&rdquo;.
+      </p>
+    );
   }
   return (
     <div className="space-y-5">

@@ -59,7 +59,6 @@ const meta: RouteMeta = {
     "settings-modal.client",
     "calendar-section.client",
     "auto-refresh.client",
-    "model-settings.client",
     "interval-settings.client",
     "records-finances-panel.client",
     "records-table.client",
@@ -70,6 +69,7 @@ const meta: RouteMeta = {
     "missing-keys-modal.client",
   ],
   sharedComponents: [
+    "_shared/components/model-key-settings.client",
     "_shared/components/input-channels-panel.client",
     "_shared/components/tests-modal.client",
   ],

@@ -88,6 +88,14 @@ export function TestsModal({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
+          {!probes.length && (
+            <p className="text-sm text-muted-foreground">
+              No tests declared yet. Declare one probe per entity this automation touches in{" "}
+              <code>_data/tests.ts</code> — grouped by stage (input / intermediate / output), each with
+              its binding (a shared <code>/api/projects/tests/&lt;kind&gt;</code> route or a project route)
+              and its own prepared success / error text. See app/(projects)/README.md.
+            </p>
+          )}
           {stages.map((st) => (
             <div key={st} className="space-y-2">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{STAGE_LABEL[st]}</p>
