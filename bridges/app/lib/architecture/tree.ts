@@ -1,10 +1,11 @@
 import type { ArchNode } from "./types"
 import { ADMIN_LAYER } from "./admin-node"
+import { PROJECTS_LAYER, DESIGN_LAYER } from "./projects-node"
 import { DOCS_NODE } from "./docs-node"
 
 // Seed catalogue of the L2 architecture, drawn the way a request actually flows:
 // everything reachable sits behind nginx and the auth gate, then splits into the
-// app, data and admin layers. Nesting expresses "what a request passes through /
+// app, projects, design, data and admin layers. Nesting expresses "what a request passes through /
 // what is gated by what" — a logical lens, NOT which process runs inside another.
 // Pure data (CLAUDE.md §12 exemption) — kept whole except for the two large
 // subtrees (admin, docs) that live in their own modules.
@@ -27,9 +28,9 @@ export const ARCHITECTURE_TREE: ArchNode = {
       port: ":80/:443",
       description:
         "The reverse proxy every visible request passes through in secure mode: " +
-        "it terminates TLS, routes the apex and the admin./auth./data./chat. " +
-        "subdomains, and runs the auth_request gate. In IP mode it is absent — " +
-        "you reach services by port directly.",
+        "it terminates TLS, routes the apex and the admin./auth./projects./design./" +
+        "data./chat. subdomains, and runs the auth_request gate. In IP mode it is " +
+        "absent — you reach services by port directly.",
       children: [
         {
           id: "auth",
@@ -39,8 +40,9 @@ export const ARCHITECTURE_TREE: ArchNode = {
           description:
             "The gate every protected request crosses (NextAuth: login, register, " +
             "guest, roles). It covers the rest of the workspace — which is why it " +
-            "sits above the app, data and admin layers here. Logical coverage, not " +
-            "a process that runs them. In IP mode the gate is bypassed for onboarding.",
+            "sits above the app, projects, design, data and admin layers here. Logical " +
+            "coverage, not a process that runs them. In IP mode the gate is bypassed " +
+            "for onboarding.",
           children: [
             {
               id: "app-layer",
@@ -60,23 +62,10 @@ export const ARCHITECTURE_TREE: ArchNode = {
                     "safe to edit. The admin introspection pages are NOT here — they " +
                     "live in the Admin layer at /service/*.",
                 },
-                {
-                  id: "app-projects",
-                  label: "fractera-projects — Projects",
-                  kind: "group",
-                  description:
-                    "Independent application levels inside the App Shell that provide " +
-                    "technical tools, business solutions and logic for PRIVATE use by " +
-                    "the architect or a project administrator — unlike pages, which can " +
-                    "be open to any role, projects are restricted to service needs. " +
-                    "Four fixed categories under /projects/: automation, fractera-pages, " +
-                    "personal, other. Fractera agents do not run an automation once per " +
-                    "request — they build a platform for repeatable automations (visual " +
-                    "interface, local DB + vector memory, one-click reuse from the UI): " +
-                    "an n8n for one single task.",
-                },
               ],
             },
+            PROJECTS_LAYER,
+            DESIGN_LAYER,
             {
               id: "data-layer",
               label: "Data layer",

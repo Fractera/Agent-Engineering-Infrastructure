@@ -43,6 +43,10 @@ export type ArchNode = {
   /** Shows the orange "req" badge: a declared route OR an existing route with
    *  open tasks. */
   pending?: boolean
+  /** This node OR any of its descendants carries pending work (step 210) — the
+   *  hover Launch/Delete actions on a project/page root key off this, so the
+   *  rocket works from the root even when the records sit deeper in the subtree. */
+  subtreePending?: boolean
   /** A declared-but-not-built route (orange label). Existing routes with tasks
    *  keep a black label and only get the badge. */
   declared?: boolean

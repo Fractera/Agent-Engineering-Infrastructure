@@ -140,18 +140,6 @@ export const ADMIN_LAYER: ArchNode = {
             "it, then it moves to completed.",
         },
         {
-          id: "sp-patterns",
-          label: "/service/patterns — Patterns & Anti-patterns",
-          kind: "page",
-          href: "/service/patterns",
-          meta: { roles: "architect", rendering: "dynamic" },
-          description:
-            "The reuse library: code Patterns (by category) the AI reuses while building, " +
-            "and Anti-patterns it reads before every deploy. Benefit: less re-derivation, " +
-            "fewer repeated mistakes, lower token spend. Development tie: declaring a pattern " +
-            "requests it; an agent fills it in, and later steps reuse it instead of rebuilding.",
-        },
-        {
           id: "sp-glossary",
           label: "/service/glossary — Glossary",
           kind: "page",

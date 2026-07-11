@@ -1,17 +1,23 @@
 import { slotRoot } from "@/lib/slot-root"
+import { projectsRoot } from "@/lib/projects-root"
 import { readdir, readFile, stat } from "fs/promises"
 import { join, resolve, relative, extname } from "path"
 import type { ArchNode } from "./types"
 
 // Server util: read a route's real source files for the read-only /architecture
 // code viewer. Read-only by contract — callers must never write. Security: every
-// resolved path is checked to stay inside the app/ root; anything escaping it is
+// resolved path is checked to stay inside its app/ root; anything escaping it is
 // refused.
 //
 // KEY: a URL path does NOT map 1:1 to a folder. Next.js route groups "(service)"
 // and the i18n "[lang]" segment are transparent to the URL — so "/blog" lives at
 // app/[lang]/blog and "/dashboard" at app/(service)/dashboard. We therefore RESOLVE
 // the real directory by scanning app/ and reversing the same rule the tree uses.
+//
+// TWO ROOTS (step 210): since step 197 the /projects/** URLs are served by the
+// separate projects-app runtime (:3003), not the slot — so every /projects path
+// resolves inside projectsRoot()/app (where the tree physically lives under the
+// "(projects)" route group) and everything else inside the slot.
 
 export type SourceFile = { rel: string; content: string; language: string }
 
@@ -24,6 +30,18 @@ const LANG: Record<string, string> = {
 function appRoot(): string {
   // slotRoot() is /opt/fractera/app; routes live under app/<segments>.
   return resolve(slotRoot(), "app")
+}
+
+function projectsAppRoot(): string {
+  // projectsRoot() is /opt/fractera/projects-app; routes live under app/<segments>.
+  return resolve(projectsRoot(), "app")
+}
+
+export const isProjectsPath = (p: string) => p === "/projects" || p.startsWith("/projects/")
+
+// Which app root serves this URL path (step 197 split).
+function rootFor(routePath: string): string {
+  return isProjectsPath(routePath) ? projectsAppRoot() : appRoot()
 }
 
 const LANG_SEG = "[lang]"
@@ -50,8 +68,13 @@ function toUrlPath(folderRel: string): string {
 // reverse-mapped through (group)/[lang]) instead.
 export function routeDir(routePath: string): string {
   const clean = routePath.replace(/^\/+|\/+$/g, "")
-  const dir = resolve(appRoot(), clean)
-  if (dir !== appRoot() && !dir.startsWith(appRoot() + "/")) {
+  const root = rootFor(routePath)
+  // In projects-app the whole /projects tree physically sits under the
+  // "(projects)" route group (transparent to the URL).
+  const dir = isProjectsPath(routePath)
+    ? resolve(root, "(projects)", clean)
+    : resolve(root, clean)
+  if (dir !== root && !dir.startsWith(root + "/")) {
     throw new Error("path escapes app root")
   }
   return dir
@@ -71,12 +94,11 @@ const isRoutingFile = (name: string) => {
 let _map: { at: number; m: Map<string, string> } | null = null
 
 async function buildMap(): Promise<Map<string, string>> {
-  const root = appRoot()
   // url -> { dir, strong } — strong = the dir has a page/route file (a real route),
   // not just a layout. On a URL collision (e.g. app/ root layout vs app/[lang]/page
   // both -> "/") the strong one wins, so "/" resolves to the home PAGE dir.
   const m = new Map<string, { dir: string; strong: boolean }>()
-  async function walk(dir: string, rel: string): Promise<void> {
+  async function walk(dir: string, rel: string, accept: (url: string) => boolean): Promise<void> {
     let names: string[]
     try { names = await readdir(dir) } catch { return }
     const set = new Set(names)
@@ -84,17 +106,22 @@ async function buildMap(): Promise<Map<string, string>> {
     if (hasRouting) {
       const strong = ["page", "route"].some(b => ROUTING_EXTS.some(e => set.has(b + e)))
       const url = toUrlPath(rel)
-      const cur = m.get(url)
-      if (!cur || (strong && !cur.strong)) m.set(url, { dir, strong })
+      if (accept(url)) {
+        const cur = m.get(url)
+        if (!cur || (strong && !cur.strong)) m.set(url, { dir, strong })
+      }
     }
     for (const name of names) {
       if (name === "node_modules" || name === ".next" || name.startsWith(".")) continue
       const full = join(dir, name)
       const st = await stat(full).catch(() => null)
-      if (st?.isDirectory()) await walk(full, rel ? `${rel}/${name}` : name)
+      if (st?.isDirectory()) await walk(full, rel ? `${rel}/${name}` : name, accept)
     }
   }
-  await walk(root, "")
+  // Slot owns every URL except /projects/**, which belongs to projects-app —
+  // filtering avoids cross-root collisions (both apps have a "/" layout).
+  await walk(appRoot(), "", url => !isProjectsPath(url))
+  await walk(projectsAppRoot(), "", isProjectsPath)
   return new Map([...m].map(([k, v]) => [k, v.dir]))
 }
 
@@ -102,10 +129,10 @@ async function resolveRouteDir(routePath: string): Promise<string> {
   const now = Date.now()
   if (!_map || now - _map.at > 2000) _map = { at: now, m: await buildMap() }
   const real = _map.m.get(routePath)
-  const root = appRoot()
-  // Fallback to the naive mapping (covers API routes and anything not scanned).
-  const dir = real ?? resolve(root, routePath.replace(/^\/+|\/+$/g, ""))
-  if (dir !== root && !dir.startsWith(root + "/") && dir !== root) {
+  // Fallback to the naive dual-root mapping (covers API routes and anything not scanned).
+  const dir = real ?? routeDir(routePath)
+  const roots = [appRoot(), projectsAppRoot()]
+  if (!roots.some(r => dir === r || dir.startsWith(r + "/"))) {
     throw new Error("path escapes app root")
   }
   return dir
@@ -137,7 +164,7 @@ async function readIfExists(file: string): Promise<string | null> {
 //    ones. "An absolute copy of the tree, no omissions." ───────────────────────
 export async function routeFileTree(routePath: string): Promise<ArchNode[]> {
   const dir = await resolveRouteDir(routePath)
-  const root = appRoot()
+  const root = rootFor(routePath)
 
   async function fileNode(abs: string): Promise<ArchNode | null> {
     const content = await readIfExists(abs)
@@ -187,7 +214,7 @@ export async function routeFileTree(routePath: string): Promise<ArchNode[]> {
 
 export async function collectSource(routePath: string): Promise<SourceFile[]> {
   const dir = await resolveRouteDir(routePath)
-  const root = appRoot()
+  const root = rootFor(routePath)
   const out: SourceFile[] = []
 
   async function add(abs: string) {

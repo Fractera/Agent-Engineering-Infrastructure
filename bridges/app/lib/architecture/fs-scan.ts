@@ -1,4 +1,5 @@
 import { slotRoot } from "@/lib/slot-root"
+import { projectsRoot } from "@/lib/projects-root"
 import { readdir, stat } from "fs/promises"
 import { join, resolve } from "path"
 import type { ArchNode } from "./types"
@@ -12,6 +13,10 @@ import type { Requested } from "./requested-tree"
 // (no DB). Returns the exact shape the /architecture poll already consumes, so
 // the UI does not change — only the storage behind it (mirrors how the glossary
 // page reads GLOSSARY.md instead of a table).
+//
+// TWO ROOTS (step 210): the /projects/** URLs are served by the separate
+// projects-app runtime since step 197 — the scan walks BOTH the slot and
+// projectsRoot()/app, each root contributing only the URLs it owns.
 
 export type Project = { id: string; name: string; slug: string; description: string | null; built: boolean }
 export type ScanResult = {
@@ -51,11 +56,12 @@ function toPath(rel: string): string {
   return out.length ? "/" + out.join("/") : "/"
 }
 
+const isProjectsPath = (p: string) => p === "/projects" || p.startsWith("/projects/")
+
 export async function scanTree(): Promise<ScanResult> {
-  const root = appRoot()
   const res: ScanResult = { requested: [], projects: [], builtExtra: [], tasksByPath: {} }
 
-  async function walk(dir: string, rel: string): Promise<void> {
+  async function walk(dir: string, rel: string, accept: (path: string) => boolean): Promise<void> {
     let entries: string[]
     try { entries = await readdir(dir) } catch { return }
     const set = new Set(entries)
@@ -64,8 +70,9 @@ export async function scanTree(): Promise<ScanResult> {
     const built = hasPage || hasRoute
     const hasReadme = set.has("README.md")
     const path = toPath(rel)
+    const accepted = accept(path)
 
-    if (hasReadme) {
+    if (hasReadme && accepted) {
       const meta = await readRouteMeta(path)
       const st = await stat(join(dir, "README.md")).catch(() => null)
       res.tasksByPath[path] = { count: meta?.tasks.length ?? 0, last: st ? String(Math.round(st.mtimeMs)) : "" }
@@ -95,24 +102,22 @@ export async function scanTree(): Promise<ScanResult> {
     // Freshly built PAGE outside the curated seed → keep it in the tree
     // (declared → live transition). API routes are curated in the seed group, so
     // we do not surface built endpoints as extra to avoid flooding.
-    if (hasPage && !SEED_HREFS.has(path) && !path.startsWith("/project/") && path !== "/project") {
+    if (accepted && hasPage && !SEED_HREFS.has(path) && !path.startsWith("/project/") && path !== "/project") {
       res.builtExtra.push({ href: path, kind: "page" })
     }
-
-    // Projects live under app/(projects)/projects/<category>/<slug> (step 178
-    // restructure). Their standalone pages surface through the builtExtra path
-    // above (nested under their category hub by base), so we no longer scan the
-    // legacy flat app/project/<slug> location — that only ever surfaced stale
-    // leftovers (e.g. a removed my-telegram-reminder) and never the real projects.
 
     for (const name of entries) {
       if (SKIP.has(name) || name.startsWith(".")) continue
       const full = join(dir, name)
       const st = await stat(full).catch(() => null)
-      if (st?.isDirectory()) await walk(full, rel ? `${rel}/${name}` : name)
+      if (st?.isDirectory()) await walk(full, rel ? `${rel}/${name}` : name, accept)
     }
   }
 
-  await walk(root, "")
+  // Slot owns every URL except /projects/**; those live in projects-app since
+  // step 197 (app/(projects)/projects/<category>/<slug> — the route group is
+  // transparent to the URL, so toPath yields the real /projects/... hrefs).
+  await walk(appRoot(), "", path => !isProjectsPath(path))
+  await walk(resolve(projectsRoot(), "app"), "", isProjectsPath)
   return res
 }

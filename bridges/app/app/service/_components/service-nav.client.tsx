@@ -3,15 +3,15 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
-// Shared top nav of the /service zone — the 8 architect service pages, opened in a
+// Shared top nav of the /service zone — the 7 architect service pages, opened in a
 // full browser tab from the Service button in the admin header. Replaces both the
 // former windowed dropdown and the per-page "← back" links (which pointed at the
-// admin root and made no sense in a dedicated tab).
+// admin root and made no sense in a dedicated tab). Patterns retired in step 210 —
+// the concept becomes the future Design layer (:3004).
 const PAGES = [
   { label: "Architecture", path: "/service/architecture" },
   { label: "AI Core", path: "/service/ai-core" },
   { label: "Development steps", path: "/service/development-steps" },
-  { label: "Patterns", path: "/service/patterns" },
   { label: "Glossary", path: "/service/glossary" },
   { label: "Documents", path: "/service/documents" },
   { label: "AI Draft Settings", path: "/service/ai-draft-settings" },

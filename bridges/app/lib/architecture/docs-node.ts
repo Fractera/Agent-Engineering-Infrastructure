@@ -26,6 +26,17 @@ export const DOCS_NODE: ArchNode = {
         "root, edited via the /glossary page; agents read it directly as context.",
     },
     {
+      id: "doc-architecture",
+      label: "ARCHITECTURE.md",
+      kind: "config",
+      description:
+        "The product architecture map — one AI-first document at the project root " +
+        "describing the whole workspace: every layer and process (app :3000, projects " +
+        ":3003, design :3004, data :3300, admin :3002, memory, Hermes) and how they " +
+        "connect. Every agent reads it at session start together with GLOSSARY.md, so " +
+        "it knows the real structure without re-exploring the repository.",
+    },
+    {
       id: "doc-steps",
       label: "DEVELOPMENT-STEPS",
       kind: "group",
@@ -54,32 +65,14 @@ export const DOCS_NODE: ArchNode = {
       ],
     },
     {
-      id: "doc-patterns",
-      label: "PATTERNS",
+      id: "doc-patterns-anti",
+      label: "ANTI-PATTERNS",
       kind: "group",
-      href: "/service/patterns",
       description:
-        "The reuse library — reusable code patterns and deployment anti-patterns, kept " +
-        "as real markdown files an agent reads and writes. Edited via the /patterns page; " +
-        "files live in PATTERNS/ at the project root.",
-      children: [
-        {
-          id: "doc-patterns-patterns",
-          label: "PATTERNS",
-          kind: "group",
-          description:
-            "Reusable code patterns in a one-level tree by category (UI Elements, " +
-            "Sections, Brandbook). Reuse or extend one before re-deriving it.",
-        },
-        {
-          id: "doc-patterns-anti",
-          label: "ANTI-PATTERNS",
-          kind: "group",
-          description:
-            "Deployment pitfalls — a flat list an agent reads before every deploy " +
-            "to avoid repeating them.",
-        },
-      ],
+        "Deployment pitfalls — a flat list of real markdown files at " +
+        "PATTERNS/ANTI-PATTERNS/ that an agent re-reads before every deploy to avoid " +
+        "repeating them. Reusable code patterns are NOT kept here anymore — that " +
+        "concept becomes the Design layer (fractera-design :3004), developed separately.",
     },
     {
       id: "doc-ai-draft",

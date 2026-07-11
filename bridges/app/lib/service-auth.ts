@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server"
 import { shouldBypassAuth } from "@/lib/auth-bypass"
 
-// API-route gate for the migrated service endpoints (/api/glossary, /api/patterns,
+// API-route gate for the migrated service endpoints (/api/glossary,
 // /api/project/default/architecture/*, …). Mirrors the slot's apiAuthGate: the
 // admin proxy.ts EXCLUDES /api/* from its matcher, so these handlers must guard
 // themselves. Three ways in (step 135 mutation gate — tightened in Secure mode):

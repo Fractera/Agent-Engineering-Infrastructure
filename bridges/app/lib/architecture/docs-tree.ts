@@ -31,6 +31,23 @@ function glossaryNode(entries: { term: string; meaning: string }[]): ArchNode {
   }
 }
 
+// The product ARCHITECTURE.md — a real file at the slot root (step 197), listed
+// here beside GLOSSARY.md because agents read both at session start.
+function architectureNode(): ArchNode {
+  return {
+    id: "doc-architecture", label: "ARCHITECTURE.md", kind: "config",
+    description:
+      "The product architecture map — one AI-first document at the project root " +
+      "describing the WHOLE workspace: every layer and process (app :3000, projects " +
+      ":3003, design :3004, data :3300, admin :3002, memory, Hermes), how they " +
+      "connect and where each kind of code lives. Its value: every agent reads it " +
+      "at session start (together with GLOSSARY.md) and knows the real structure " +
+      "without re-exploring the repository — fewer tokens, no drift between code " +
+      "and understanding. Ingest it into Company Memory so it is also recallable " +
+      "semantically.",
+  }
+}
+
 function stepLeaf(s: Step): ArchNode {
   const state = s.status === "completed"
     ? `completed${s.completedAt ? " " + s.completedAt : ""}`
@@ -56,31 +73,28 @@ function stepsNode(steps: { new: Step[]; completed: Step[] }): ArchNode {
   }
 }
 
-function patternLeaf(p: { id: string; name: string; kind: string; declared: boolean; pending: boolean; description: string }): ArchNode {
+function antiPatternLeaf(p: { id: string; name: string; declared: boolean; pending: boolean; description: string }): ArchNode {
   const tag = p.declared ? "declared" : p.pending ? "stable · open task" : "stable"
   return {
-    id: `doc-pattern-${p.id}`, label: p.name, kind: "note", href: "/service/patterns",
-    description: `${p.kind === "anti" ? "Anti-pattern" : "Pattern"} · ${tag}.${p.description ? " " + p.description : ""}`,
+    id: `doc-pattern-${p.id}`, label: p.name, kind: "note",
+    description: `Anti-pattern · ${tag}.${p.description ? " " + p.description : ""}`,
     declared: p.declared, pending: p.pending,
   }
 }
 
-function patternsNode(tree: Awaited<ReturnType<typeof listPatternTree>>): ArchNode {
+// Only ANTI-PATTERNS survive here (step 210): reusable code patterns moved to the
+// future Design layer (fractera-design :3004) and are no longer required reading.
+// Anti-patterns stay — real files at PATTERNS/ANTI-PATTERNS/ every agent re-reads
+// before a deploy. No managing page; agents write the files directly.
+function antiPatternsNode(tree: Awaited<ReturnType<typeof listPatternTree>>): ArchNode {
   return {
-    id: "doc-patterns", label: "PATTERNS", kind: "group", href: "/service/patterns",
+    id: "doc-patterns-anti", label: "ANTI-PATTERNS", kind: "group",
     description:
-      "The reuse library — reusable code patterns and deployment anti-patterns, kept as real " +
-      "markdown files. Files live in PATTERNS/ at the project root.",
-    children: [
-      { id: "doc-patterns-patterns", label: "PATTERNS", kind: "group", description: "Reusable code patterns in a one-level tree by category.",
-        children: tree.categories.map(c => ({
-          id: `doc-pat-cat-${c.slug}`, label: c.label, kind: "group" as const,
-          description: `Category: ${c.label}.`,
-          children: c.patterns.map(patternLeaf),
-        })) },
-      { id: "doc-patterns-anti", label: "ANTI-PATTERNS", kind: "group", description: "Deployment pitfalls — a flat list read before every deploy.",
-        children: tree.anti.map(patternLeaf) },
-    ],
+      "Deployment pitfalls — a flat list of real markdown files at " +
+      "PATTERNS/ANTI-PATTERNS/ that an agent re-reads before every deploy to avoid " +
+      "repeating them. Reusable code patterns are NOT kept here anymore — that " +
+      "concept becomes the Design layer (fractera-design :3004), developed separately.",
+    children: tree.anti.map(antiPatternLeaf),
   }
 }
 
@@ -201,6 +215,6 @@ export async function buildDocsNode(): Promise<ArchNode> {
       "The shared knowledge every agent references and the material that feeds Company Memory " +
       "(LightRAG). A live mirror of the real files on disk — expand a branch to see exactly what " +
       "is there; open a branch's page to read or edit it.",
-    children: [glossaryNode(glossary), stepsNode(steps), patternsNode(patterns), aiDraftNode(drafts), crud, hermes],
+    children: [glossaryNode(glossary), architectureNode(), stepsNode(steps), antiPatternsNode(patterns), aiDraftNode(drafts), crud, hermes],
   }
 }

@@ -17,6 +17,12 @@ import { readRouteMeta, removeRouteReadme, clearTasks, decodePath, type Query } 
 //                                     with open tasks) becomes ONE step; the source records
 //                                     are removed (declared READMEs snapped, tasks cleared).
 //   POST { path }                   → promote ONE architecture record by path, then remove it.
+//   POST { prefix }                 → per-node Launch (step 210): every record at the path OR
+//                                     under it (a project/page root and its subtree) becomes
+//                                     ONE step; the source records are removed.
+//   POST { deletePrefix }           → per-node dismantling order (step 210): one step telling
+//                                     the coder to REMOVE the route/project at that path; the
+//                                     records under it travel into the step and are removed.
 const VALID: Importance[] = ["optional", "mandatory", "critical"]
 
 // ── flow-B: /architecture records → one step (step 126) ──────────────────────
@@ -65,6 +71,15 @@ async function gatherArchRecords(): Promise<ArchRecord[]> {
 }
 
 function archKindLabel(kind: "page" | "api"): string { return kind === "api" ? "endpoint" : "page" }
+
+// Records at a path or anywhere under it (per-node Launch/Delete, step 210).
+// "/" is special-cased to the exact home record — a rocket on the home page must
+// not sweep the whole tree.
+function underPrefix(records: ArchRecord[], rawPrefix: string): ArchRecord[] {
+  const prefix = rawPrefix.replace(/\/+$/, "") || "/"
+  if (prefix === "/") return records.filter(r => r.path === "/")
+  return records.filter(r => r.path === prefix || r.path.startsWith(prefix + "/"))
+}
 
 function archSection(r: ArchRecord, i: number): string {
   const what = r.declared ? `declared ${archKindLabel(r.kind)} — build it` : `live route — apply changes`
@@ -160,6 +175,43 @@ export async function POST(req: NextRequest) {
     const full = await updateStep(step.id, { description: bundleArchitectureBrief(records), tasks })
     for (const r of records) await removeArchRecord(r)
     return NextResponse.json({ step: full ?? step, architected: records.length }, { status: 201 })
+  }
+
+  // Per-node Launch (step 210): the rocket on a project/page ROOT node. Bundle the
+  // record at that path AND every record under it into one step, then remove the
+  // sources — the spec now lives in the step, the page is clean.
+  if (body?.prefix) {
+    const prefix = String(body.prefix)
+    const records = underPrefix(await gatherArchRecords(), prefix)
+    if (records.length === 0) {
+      return NextResponse.json({ error: "No pending records under this path" }, { status: 400 })
+    }
+    const step = await createStep(`Build ${prefix} — ${records.length} record${records.length === 1 ? "" : "s"}`, "mandatory")
+    const tasks: StepTask[] = records.map(archStepTask)
+    const full = await updateStep(step.id, { description: bundleArchitectureBrief(records), tasks })
+    for (const r of records) await removeArchRecord(r)
+    return NextResponse.json({ step: full ?? step, architected: records.length }, { status: 201 })
+  }
+
+  // Per-node dismantling order (step 210): the trash icon on a project/page ROOT
+  // node. One step telling the coder to REMOVE the route/project; whatever records
+  // sat under it travel into the step as context and are removed from the page.
+  if (body?.deletePrefix) {
+    const prefix = String(body.deletePrefix)
+    const records = underPrefix(await gatherArchRecords(), prefix)
+    const step = await createStep(`Dismantle ${prefix}`, "mandatory")
+    const head = [
+      `This step orders the REMOVAL of ${prefix} (flow-B, per-node delete — step 210).`,
+      "Dismantle the route/project at this path: delete its folder(s), its co-located",
+      "_components/_lib/_data, its project-scoped endpoints and any cron/hook registrations",
+      "that belong to it. Update anything that links to it. The staging records below were",
+      "attached for context and have been removed from /architecture.",
+    ].join("\n")
+    const description = records.length ? [head, ...records.map(archSection)].join("\n\n") : head
+    const tasks: StepTask[] = [{ id: "d1", body: `Remove ${prefix} and everything that belongs to it` }]
+    const full = await updateStep(step.id, { description, tasks })
+    for (const r of records) await removeArchRecord(r)
+    return NextResponse.json({ step: full ?? step, dismantled: prefix }, { status: 201 })
   }
 
   // Promote a single architecture record by path, then remove it.

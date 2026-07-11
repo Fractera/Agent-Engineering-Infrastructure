@@ -171,15 +171,19 @@ export function buildMergedTree(
       return group
     }),
   }
-  // One recursive pass: mark pending (own or task-carrying) and attach declared
-  // pages whose base equals this node's href (nested declarations included).
+  // One recursive pass: mark pending (own or task-carrying), attach declared
+  // pages whose base equals this node's href (nested declarations included), and
+  // roll pending up as subtreePending — the hover Launch/Delete on a project/page
+  // ROOT keys off it even when the records sit deeper in the subtree (step 210).
   function build(node: ArchNode): ArchNode {
     const kids = node.children?.map(build) ?? []
     if (node.href && node.href !== "/" && byBase.has(node.href)) {
       kids.push(...byBase.get(node.href)!.map(build))
     }
     const hasTask = taskPaths.has(node.href ?? node.label)
-    return { ...node, pending: node.pending || hasTask, children: kids.length ? kids : node.children }
+    const pending = node.pending || hasTask
+    const subtreePending = pending || kids.some(k => k.subtreePending)
+    return { ...node, pending, subtreePending, children: kids.length ? kids : node.children }
   }
   return build(base)
 }

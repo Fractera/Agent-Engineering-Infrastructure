@@ -41,11 +41,13 @@ type Props = {
   /** Optional — only /ai-core wires it (the instruction-doc edit pencil). Other callers
    *  (e.g. /architecture) omit it; nodes without editTo never show the pencil anyway. */
   onEdit?: (node: ArchNode) => void
-  /** Optional — only /architecture wires these (flow-B materializer, step 126). On a
-   *  pending (req) node, hover reveals Launch (bundle ALL pending records into one
-   *  development step) and Delete (this record, via a confirm modal in the parent).
+  /** Optional — only /architecture wires these (flow-B materializer, step 126;
+   *  per-node since step 210). On a page/endpoint node whose SUBTREE carries
+   *  pending records (a project root, a page root, a single declared route),
+   *  hover reveals Launch (THIS node's records → one development step) and Delete
+   *  (a dismantling order for this node, via a confirm modal in the parent).
    *  Both must be present for the actions to render. */
-  onLaunch?: () => void
+  onLaunch?: (node: ArchNode) => void
   onDeletePending?: (node: ArchNode) => void
 }
 
@@ -103,21 +105,24 @@ export function TreeNode({
             <Pencil size={9} /> edit
           </button>
         )}
-        {/* Hover actions on a pending (req) node — flow-B materializer (step 126).
-            Launch is global (bundle all pending records); Delete is this record and
-            sits rightmost. Siblings of the select button (no nested buttons). */}
-        {node.pending && onLaunch && onDeletePending && (
+        {/* Hover actions — flow-B materializer (step 126), per-node since step 210.
+            They live on any page/endpoint node with an href whose subtree carries
+            records: Launch sends THIS node's records (root + everything under it)
+            into ONE development step; Delete opens a dismantling order for this
+            node. Siblings of the select button (no nested buttons). */}
+        {(node.kind === "page" || node.kind === "api") && node.href &&
+          (node.subtreePending || node.pending) && onLaunch && onDeletePending && (
           <div className="mr-1 hidden shrink-0 items-center gap-0.5 group-hover/row:flex">
             <button
-              onClick={onLaunch}
-              title="Launch — bundle all pending records into one development step"
+              onClick={() => onLaunch(node)}
+              title={`Launch — send the records of ${node.href} into one development step`}
               className="rounded p-1 text-foreground/60 transition-colors hover:bg-violet-500/15 hover:text-violet-600"
             >
               <Rocket size={12} />
             </button>
             <button
               onClick={() => onDeletePending(node)}
-              title="Delete this record (permanent; the real route file is untouched)"
+              title={`Delete — order the removal of ${node.href} as a development step`}
               className="rounded p-1 text-foreground/60 transition-colors hover:bg-red-500/15 hover:text-red-600"
             >
               <Trash2 size={12} />

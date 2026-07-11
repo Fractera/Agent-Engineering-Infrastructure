@@ -20,36 +20,41 @@ export const ROUTES_TREE: ArchNode = {
       label: "Projects",
       kind: "group",
       description:
-        "Independent lines of work this workspace runs — a site, a procurement " +
-        "tracker, a language course, a sales automation. The default project holds " +
-        "everything today; grow new ones for any purpose. This folder is permanent " +
-        "(it cannot be deleted). Project names use at least three words.",
+        "Independent lines of work this workspace runs — a Telegram assistant, a " +
+        "procurement tracker, a language course, a sales automation. Each project " +
+        "is a complete small application: its own pages, endpoints, local data and " +
+        "workflow code, designed once and then run repeatedly. Since step 197 " +
+        "projects are served by their OWN runtime (fractera-projects :3003, " +
+        "projects.<your-domain> in secure mode) — a slot rebuild never interrupts " +
+        "them. This folder is permanent (it cannot be deleted). Project names use " +
+        "at least three words.",
       children: [
         {
           id: "projects-layer",
           label: "/projects — Projects layer",
           kind: "group",
           description:
-            "Private application levels (§3.12, step 175): technical tools, " +
-            "business solutions and logic for the architect or a project " +
-            "administrator only (roles architect + manager; others are " +
-            "redirected). Monolingual — the site's default language, outside the " +
-            "[lang] router. A project is a NAMED folder " +
-            "/projects/<category>/<project-slug>; the folder name is the " +
-            "project's slug (source of truth) — dynamic segments are forbidden. " +
-            "Four permanent categories, present even when empty.",
+            "The root of every project (§3.12): technical tools, business " +
+            "solutions and logic for the architect or a project administrator " +
+            "only (roles architect + manager; others are redirected). Monolingual " +
+            "— the site's default language, outside the [lang] router. A project " +
+            "is a NAMED folder /projects/<category>/<project-slug>; the folder " +
+            "name is the project's slug (source of truth) — dynamic segments are " +
+            "forbidden. Four permanent category folders below, present even when " +
+            "empty; open one to see its projects, and open a project to see every " +
+            "real file it is made of.",
           children: [
-            page("r-projects-automation", "/projects/automation", "/projects/automation",
-              "Automation category hub — repeatable business automations, each a finished-cycle tool: an n8n for one single task.",
+            page("r-projects-automation", "/projects/automation — business automations", "/projects/automation",
+              "Automation category — a folder of repeatable business automations, each a finished-cycle tool designed once and run cheaply forever (a report collector, a channel watcher, a data pipeline): an n8n for one single task. Opens to one folder per automation project.",
               "Architect · Manager", "dynamic"),
-            page("r-projects-fractera-pages", "/projects/fractera-pages", "/projects/fractera-pages",
-              "Fractera-pages category hub — projects that manage the pages of this workspace.",
+            page("r-projects-fractera-pages", "/projects/fractera-pages — workspace page tools", "/projects/fractera-pages",
+              "Fractera-pages category — a folder of projects that manage the pages of this workspace itself: content pipelines, page generators, site maintenance tools. Opens to one folder per project.",
               "Architect · Manager", "dynamic"),
-            page("r-projects-personal", "/projects/personal", "/projects/personal",
-              "Personal-effectiveness category hub — private productivity tools for the owner.",
+            page("r-projects-personal", "/projects/personal — personal effectiveness", "/projects/personal",
+              "Personal-effectiveness category — a folder of private productivity tools for the owner (e.g. a Telegram notes & reminders assistant with its calendar, records and finance tracking). Opens to one folder per project with its full file tree.",
               "Architect · Manager", "dynamic"),
-            page("r-projects-other", "/projects/other", "/projects/other",
-              "Catch-all category hub — projects outside the three fixed categories.",
+            page("r-projects-other", "/projects/other — everything else", "/projects/other",
+              "Catch-all category — a folder for projects outside the three fixed categories. Present even when empty.",
               "Architect · Manager", "dynamic"),
           ],
         },

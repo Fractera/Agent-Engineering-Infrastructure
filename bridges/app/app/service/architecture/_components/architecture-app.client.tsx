@@ -18,6 +18,7 @@ import { DeclarePanel } from "@/components/architecture/declare-panel.client"
 import { EndpointPanel } from "@/components/architecture/endpoint-panel.client"
 import { ProjectPicker, type PickerProject } from "@/components/architecture/project-picker.client"
 import { PollBar } from "@/components/architecture/poll-bar.client"
+import { LaunchToast, type LaunchToastData } from "@/components/architecture/launch-toast.client"
 
 type Sig = Record<string, { count: number; last: string }>
 function nodeKeys(reqs: Requested[], projs: Project[]): Set<string> {
@@ -86,6 +87,7 @@ export function ArchitectureApp() {
   const [hidden, setHidden] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<ArchNode | null>(null)  // flow-B Delete confirm
   const [launching, setLaunching] = useState(false)                          // flow-B Launch in flight
+  const [toast, setToast] = useState<LaunchToastData | null>(null)           // step-210 handoff toast
 
   // Live polling (step 106): one signature snapshot per tick. Diff against the
   // previous snapshot to blink ONLY the changed nodes; first load just seeds the
@@ -292,42 +294,77 @@ export function ArchitectureApp() {
     if (res.ok) { setSelected(null); refresh() }
   }
 
-  // flow-B Launch (step 126): bundle EVERY pending record on /architecture into one
-  // development step, then go to /development-steps to see it. The bundle + source-
-  // record deletion happens server-side (POST /api/development-steps).
-  async function launchBundle() {
-    if (launching) return
+  // A project is any node under the /projects tree; everything else is a page.
+  const whatFor = (href: string): "page" | "project" =>
+    href === "/projects" || href.startsWith("/projects/") ? "project" : "page"
+
+  // flow-B Launch, per-node since step 210: the rocket on a project/page ROOT sends
+  // the records of THAT node (root + subtree) into ONE development step; the source
+  // records are cleared server-side (POST /api/development-steps {prefix}). Instead
+  // of redirecting, show the handoff toast — it closes only after the message for
+  // the coding agent is copied.
+  async function launchNode(node: ArchNode) {
+    if (launching || !node.href) return
     setLaunching(true)
     try {
       const res = await fetch("/api/development-steps", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bundleArchitecture: true }),
+        body: JSON.stringify({ prefix: node.href }),
       })
-      if (res.ok) { window.location.href = "/development-steps"; return }
+      if (res.ok) {
+        const d = await res.json().catch(() => null)
+        const stepNumber = d?.step?.number
+        if (typeof stepNumber === "number") {
+          setToast({ kind: "launch", what: whatFor(node.href), path: node.href, stepNumber })
+        }
+        refresh()
+      }
     } catch {}
     setLaunching(false)
   }
 
-  // flow-B Delete (step 126): confirm, then remove just this pending record. A declared
-  // route (req- node) drops its requested row; a live route with open tasks clears its
-  // tasks. The real route file is never touched. Then refresh + clear selection if it was it.
+  // flow-B Delete (step 126, reshaped in step 210): confirm, then —
+  //   · a DECLARED record (README, never built) is simply removed (old behavior:
+  //     drop the requested row / clear the tasks; the real files are untouched);
+  //   · a BUILT project/page root becomes a DISMANTLING development step
+  //     (POST {deletePrefix}) — the coder removes the real code; the records under
+  //     the node travel into the step. Shows the same handoff toast.
   async function confirmDeletePending() {
     const node = pendingDelete
     if (!node) return
-    let url: string | null = null
-    const req = node.id.startsWith("req-")
-      ? requested.find(r => requestedNodeId(r.id) === node.id) ?? null
-      : null
-    if (req) url = projectApi(`/architecture/requested/${req.id}`)
-    else if (node.href) url = projectApi(`/architecture/tasks?path=${encodeURIComponent(node.href)}`)
-    if (!url) { setPendingDelete(null); return }
-    const res = await fetch(url, { method: "DELETE" })
-    if (res.ok) {
-      if (selected?.id === node.id) setSelected(null)
-      refresh()
-    }
     setPendingDelete(null)
+    if (node.declared) {
+      let url: string | null = null
+      const req = node.id.startsWith("req-")
+        ? requested.find(r => requestedNodeId(r.id) === node.id) ?? null
+        : null
+      if (req) url = projectApi(`/architecture/requested/${req.id}`)
+      else if (node.href) url = projectApi(`/architecture/tasks?path=${encodeURIComponent(node.href)}`)
+      if (!url) return
+      const res = await fetch(url, { method: "DELETE" })
+      if (res.ok) {
+        if (selected?.id === node.id) setSelected(null)
+        refresh()
+      }
+      return
+    }
+    if (!node.href) return
+    try {
+      const res = await fetch("/api/development-steps", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deletePrefix: node.href }),
+      })
+      if (res.ok) {
+        const d = await res.json().catch(() => null)
+        const stepNumber = d?.step?.number
+        if (typeof stepNumber === "number") {
+          setToast({ kind: "dismantle", what: whatFor(node.href), path: node.href, stepNumber })
+        }
+        refresh()
+      }
+    } catch {}
   }
 
   return (
@@ -380,7 +417,7 @@ export function ArchitectureApp() {
                   onSelect={(n) => { setSelected(n); setDeclaring(false) }}
                   onToggle={toggle}
                   onAdd={() => setDeclaring(true)}
-                  onLaunch={launchBundle}
+                  onLaunch={launchNode}
                   onDeletePending={(n) => setPendingDelete(n)}
                 />
               </div>
@@ -415,8 +452,8 @@ export function ArchitectureApp() {
         />
       )}
 
-      {/* flow-B Delete confirm (step 126): removing the staging record only — the real
-          route file, if any, is never touched. */}
+      {/* flow-B Delete confirm (step 126, reshaped in step 210): a declared record is
+          simply removed; a built project/page root becomes a dismantling step. */}
       {pendingDelete && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
@@ -426,14 +463,25 @@ export function ArchitectureApp() {
             className="w-full max-w-sm rounded-xl border border-border bg-background p-5 shadow-xl"
             onClick={e => e.stopPropagation()}
           >
-            <h2 className="text-sm font-bold text-foreground">Delete this record?</h2>
+            <h2 className="text-sm font-bold text-foreground">
+              {pendingDelete.declared ? "Delete this record?" : "Order removal?"}
+            </h2>
             <p className="mt-2 text-xs leading-relaxed text-foreground/80">
-              This permanently removes the staging record
-              <span className="font-mono font-medium text-foreground"> {pendingDelete.label}</span>
-              {pendingDelete.declared
-                ? " (a declared page/endpoint that was never built)."
-                : " (the open to-do / deletion tasks on this route)."}
-              {" "}The real route file, if one exists, is never touched.
+              {pendingDelete.declared ? (
+                <>
+                  This permanently removes the staging record
+                  <span className="font-mono font-medium text-foreground"> {pendingDelete.label}</span>
+                  {" "}(a declared page/endpoint that was never built). The real route
+                  file, if one exists, is never touched.
+                </>
+              ) : (
+                <>
+                  This creates a development step ordering a coding agent to REMOVE
+                  <span className="font-mono font-medium text-foreground"> {pendingDelete.href ?? pendingDelete.label}</span>
+                  {" "}and everything that belongs to it. The open records under it move
+                  into the step; nothing is deleted until the agent runs the step.
+                </>
+              )}
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <button
@@ -446,12 +494,15 @@ export function ArchitectureApp() {
                 onClick={confirmDeletePending}
                 className="inline-flex h-7 items-center rounded-md bg-red-600 px-3 text-xs font-semibold text-white transition-colors hover:bg-red-700"
               >
-                Delete
+                {pendingDelete.declared ? "Delete" : "Create removal step"}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Step-210 handoff toast — not dismissible until the coding-agent message is copied. */}
+      {toast && <LaunchToast data={toast} onDone={() => setToast(null)} />}
     </main>
   )
 }

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Plus, X } from "lucide-react"
 import type { Draft, DraftMode } from "@/lib/ai-draft/draft-format"
 import { SegToggle } from "@/components/ui/seg-toggle.client"
-import { AccordionItem } from "@/components/patterns/accordion-item.client"
+import { AccordionItem } from "@/components/ui/accordion-item.client"
 import { DraftSource } from "./draft-source.client"
 import { DraftDanger } from "./draft-danger.client"
 
