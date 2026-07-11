@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { periodSecFromSchedule } from "../../_shared/cron-period";
+import { periodSecFromSchedule } from "../../../_shared/cron-period";
 
 // FROZEN STANDARD — the top-of-page cron slider (step 218). A 2px, full-bleed, orange bar
 // that shrinks left→right over one cron period, then resets — every automation page carries
