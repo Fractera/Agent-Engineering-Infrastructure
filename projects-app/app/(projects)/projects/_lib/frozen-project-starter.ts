@@ -1,24 +1,30 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // FROZEN AUTOMATION STARTER (step 214) — the "запусти проект автоматизации" processor.
 //
-// ONE function, TWO callers: the owner runs it in a terminal today; a future API route
-// (AI-driven) imports the SAME `createFrozenProject` and calls it — never a second code path.
-// By construction: pure template + token substitution, ZERO code generation. It materializes a
+// ONE function, ONE entry point (POST /api/projects/create), TWO callers: the owner's terminal
+// (curl) today, an AI agent via the same HTTP call later — never a second code path. By
+// construction: pure template + token substitution, ZERO code generation. It materializes a
 // working (if minimal) project into projects-app: real folders + components that RENDER — the
 // standard header + footer come from the Projects-zone layout (step 213), and the body is a
-// centered "Project coming soon". This is VERSION 1: the template GROWS node by node — each
-// development version adds one entry to SKELETON below, and a re-run shows the automation develop.
+// centered "Project coming soon" + a project README (see SKELETON below). This is VERSION 1:
+// the template GROWS node by node — each development version adds one entry to SKELETON, and a
+// re-run shows the automation develop.
 //
-// Terminal (from the projects-app root):
-//   npx tsx "app/(projects)/projects/_lib/frozen-project-starter.ts" --category personal --project youtube --title YouTube
+// Terminal (works today, IP mode — no auth needed):
+//   curl -X POST http://<ip>:3003/api/projects/create -H "Content-Type: application/json" \
+//        -d '{"category":"personal","project":"youtube","title":"YouTube"}'
 //
-// API (later): `import { createFrozenProject } from ".../_lib/frozen-project-starter"` then call it.
+// See app/api/projects/create/route.ts for the route that calls this function directly.
 // ─────────────────────────────────────────────────────────────────────────────
 import { mkdir, writeFile, stat } from "node:fs/promises";
 import { join, dirname } from "node:path";
+// Single source of truth for category slugs (step 215) — this file used to carry its OWN
+// duplicate ["automation","fractera-pages","personal","other"] list, exactly the kind of
+// two-sources-of-truth desync that broke telegram-notes-clone (steps 210-212). Categories
+// are DATA now (PROJECT_CATEGORIES in _shared/categories.ts) — adding one there is enough
+// for this validator to accept it, with zero edits here. See app/(projects)/README.md.
+import { PROJECT_CATEGORIES } from "../_shared/categories";
 
-export const PROJECT_CATEGORIES = ["automation", "fractera-pages", "personal", "other"] as const;
-export type ProjectCategory = (typeof PROJECT_CATEGORIES)[number];
 const SLUG_RE = /^[a-z][a-z0-9-]*$/;
 
 export type FrozenProjectInput = { category: string; project: string; title?: string; force?: boolean };
@@ -54,6 +60,31 @@ export default function AutomationEntry() {
     </main>
   );
 }
+`,
+  "README.md": `# {{PROJECT_TITLE}} — frozen automation project (v1 skeleton)
+
+Read this file first, every time you touch this project — it is the project's own development
+log and grows as the frozen template does. This project was materialized by
+\`createFrozenProject\` (\`app/(projects)/projects/_lib/frozen-project-starter.ts\`) into
+\`app/(projects)/projects/{{CATEGORY}}/{{PROJECT}}/\`. Header and footer come from the
+Projects-zone layout automatically — this folder never renders its own chrome.
+
+## Current state: v1 (blank)
+Only the frozen skeleton exists: a page showing "Project coming soon". No automation logic,
+no workflow, no data — nothing to build on yet.
+
+## What happens next
+The frozen automation template grows node by node, under the owner's direction. Each new
+version of the template adds the next building block (the workflow/diagram layer, the run
+panel, a results table, integrations, …) — and each addition extends THIS file with the
+concrete instructions for turning the current skeleton into the next stage, until it is a
+full, repeatable automation (idea → nodes → live runs). Re-read this file before continuing;
+do not invent automation logic from habit or memory — follow exactly what it says today.
+
+## Do not
+- Do not hand-write files that duplicate what the starter already emits.
+- Do not skip ahead of what this README currently documents — the next node's instructions
+  land here before they exist anywhere else.
 `,
   "_meta.ts": `import type { RouteMeta } from "@/lib/architecture/route-meta"
 
@@ -149,8 +180,9 @@ export async function createFrozenProject(
   const title = String(input.title ?? "").trim() || (project ? humanize(project) : "");
   const projectsRoot = opts?.projectsRoot ?? defaultProjectsRoot();
 
-  if (!PROJECT_CATEGORIES.includes(category as ProjectCategory)) {
-    return { ok: false, error: `category must be one of ${PROJECT_CATEGORIES.join(" | ")}` };
+  const categorySlugs = PROJECT_CATEGORIES.map((c) => c.slug);
+  if (!categorySlugs.includes(category as (typeof categorySlugs)[number])) {
+    return { ok: false, error: `category must be one of ${categorySlugs.join(" | ")}` };
   }
   if (!SLUG_RE.test(project)) {
     return { ok: false, error: "project must be a kebab-case slug (starts with a letter)" };
@@ -189,23 +221,9 @@ export async function createFrozenProject(
   };
 }
 
-// ── CLI entry: run directly from the projects-app root with tsx ──────────────
-// `npx tsx "app/(projects)/projects/_lib/frozen-project-starter.ts" --category <cat> --project <slug> [--title "Name"] [--force]`
-function argOf(name: string, argv: string[]): string | undefined {
-  const i = argv.indexOf(`--${name}`);
-  return i >= 0 && argv[i + 1] && !argv[i + 1].startsWith("--") ? argv[i + 1] : undefined;
-}
-const invokedDirect = process.argv[1] && process.argv[1].replace(/\\/g, "/").endsWith("frozen-project-starter.ts");
-if (invokedDirect) {
-  const argv = process.argv.slice(2);
-  const outRoot = argOf("out", argv); // optional: a projects root override (default = cwd/app/(projects)/projects)
-  createFrozenProject({
-    category: argOf("category", argv) ?? "",
-    project: argOf("project", argv) ?? "",
-    title: argOf("title", argv),
-    force: argv.includes("--force"),
-  }, outRoot ? { projectsRoot: outRoot } : undefined).then((r) => {
-    console.log(JSON.stringify(r, null, 2));
-    process.exit(r.ok ? 0 : 1);
-  });
-}
+// No CLI shim here on purpose: this folder's path contains "(projects)" (a Next.js route
+// group), which breaks plain `node`/`tsx` module resolution when the file is invoked
+// directly (proven live) — a fragile "works on my machine" entry point is worse than none.
+// The ONE real entry point is POST /api/projects/create (see that route's header comment),
+// which every caller uses identically: the owner's terminal (curl) today, an AI agent via
+// HTTP later. Same function, same path, always.
