@@ -13,6 +13,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAutomationStatus } from "../_lib/automation-status";
 import { ActivateConfirmModal } from "./activate-confirm-modal.client";
+import { SettingsModal } from "./settings-modal.client";
+import { TestsModal } from "../../../_shared/components/tests-modal.client";
+import { PROBES } from "../_data/tests";
 
 // FROZEN STANDARD — the automation menu (step 219). A hamburger opens a shadcn DropdownMenu.
 //
@@ -36,6 +39,8 @@ export function AutomationInfoMenu({
   const status = useAutomationStatus();
   const [model, setModel] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [testsOpen, setTestsOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -87,6 +92,26 @@ export function AutomationInfoMenu({
           >
             {enabled ? "Deactivate automation" : "Activate automation"}
           </DropdownMenuItem>
+          {/* Settings (step 220): a 600×600 modal of accordions — AI model, interval, input channels. */}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              setSettingsOpen(true);
+            }}
+          >
+            Settings
+          </DropdownMenuItem>
+          {/* Tests (step 220): a modal of declaration-driven probe cards (_data/tests.ts). */}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              setTestsOpen(true);
+            }}
+          >
+            Tests
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <ActivateConfirmModal
@@ -96,6 +121,8 @@ export function AutomationInfoMenu({
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
       />
+      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <TestsModal probes={PROBES} open={testsOpen} onOpenChange={setTestsOpen} />
     </>
   );
 }

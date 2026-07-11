@@ -53,7 +53,11 @@ function humanize(slug: string): string {
 // YouTube or an inbox. What IS frozen is the SHAPE of that declaration (_shared/channels.ts):
 // a channel has a name, a description, and the connection keys it needs — several keys per
 // channel is normal (a Google Calendar connection needs both a client id and a client secret).
-const VERSION = 2;
+// v3 (step 220) adds the TESTS declaration file (_data/tests.ts, empty by design) and per-field
+// `help` in the channels example, so a project is born with both declaration surfaces the Settings
+// and Tests modals read. (The modals themselves are wired on the reference automation first; emitting
+// their menu into every new project follows once the menu/status system is generified into _shared.)
+const VERSION = 3;
 const SKELETON: Record<string, string> = {
   "page.tsx": `import AutomationEntry from "./_components";
 
@@ -84,12 +88,32 @@ export const PROJECT_DESCRIPTION = {
 //       name: "Google Calendar",
 //       description: "Reads and writes the owner's calendar events.",
 //       keys: [
-//         { env: "GOOGLE_OAUTH_CLIENT_ID", label: "Google OAuth client id" },
-//         { env: "GOOGLE_OAUTH_CLIENT_SECRET", label: "Google OAuth client secret" },
+//         { env: "GOOGLE_OAUTH_CLIENT_ID", label: "Google OAuth client id",
+//           help: "Google Cloud console → Credentials → OAuth client (Web)." },
+//         { env: "GOOGLE_OAUTH_CLIENT_SECRET", label: "Google OAuth client secret",
+//           help: "The same OAuth client — copy its secret.", secret: true },
 //       ],
 //     },
 //   ];
 export const INPUT_CHANNELS: InputChannel[] = [];
+`,
+  "_data/tests.ts": `import type { Probe } from "../../../_shared/tests";
+
+// This automation's TESTS (frozen standard v3, step 220 — see _shared/tests.ts and
+// app/(projects)/README.md "The settings & tests declaration standard"). EMPTY BY DESIGN: a fresh
+// skeleton has nothing to probe yet. Declare one probe per entity the automation touches (input /
+// intermediate / output) once it has them — each carries its OWN prepared success/error text, and
+// the Tests modal renders it. Channel-type probes reuse the shared route /api/projects/tests/<kind>:
+//
+//   export const PROBES: Probe[] = [
+//     {
+//       id: "openai", label: "AI key", hint: "OpenAI key authorizes", stage: "input",
+//       binding: { type: "shared", kind: "openai" },
+//       successText: "The OpenAI key is configured.",
+//       errorText: "OpenAI key missing — set it in Settings.",
+//     },
+//   ];
+export const PROBES: Probe[] = [];
 `,
   "_components/index.tsx": `import { PROJECT_DESCRIPTION } from "../_data/description";
 
@@ -109,7 +133,7 @@ export default function AutomationEntry() {
   );
 }
 `,
-  "README.md": `# {{PROJECT_TITLE}} — frozen automation project (v2 skeleton)
+  "README.md": `# {{PROJECT_TITLE}} — frozen automation project (v3 skeleton)
 
 Read this file first, every time you touch this project — it is the project's own development
 log and grows as the frozen template does. This project was materialized by
@@ -117,10 +141,13 @@ log and grows as the frozen template does. This project was materialized by
 \`app/(projects)/projects/{{CATEGORY}}/{{PROJECT}}/\`. Header and footer come from the
 Projects-zone layout automatically — this folder never renders its own chrome.
 
-## Current state: v2 (identity + channel declaration, no logic)
+## Current state: v3 (identity + channel & test declarations, no logic)
 The page renders this automation's TITLE and DESCRIPTION (\`_data/description.ts\`) — edit those
-strings to describe what it really does. \`_data/channels.ts\` declares its INPUT CHANNELS and is
-EMPTY on purpose: this automation talks to nothing yet.
+strings to describe what it really does. \`_data/channels.ts\` declares its INPUT CHANNELS and
+\`_data/tests.ts\` its TESTS (probes) — both EMPTY on purpose: this automation talks to nothing and
+has nothing to probe yet. The Settings modal (model / interval / input channels) and the Tests modal
+are driven ENTIRELY by these two files — see app/(projects)/README.md, "The settings & tests
+declaration standard", for the shape and rules.
 
 ## Declaring an input channel
 A frozen template cannot know whether you will connect Telegram, YouTube or an inbox — so the

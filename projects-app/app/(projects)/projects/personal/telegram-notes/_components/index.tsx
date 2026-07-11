@@ -11,8 +11,6 @@ import { CronJobsTable } from "./cron-jobs-table.server";
 import { MissingKeysModal } from "./missing-keys-modal.client";
 import { RecordsFinancesPanel } from "./records-finances-panel.client";
 import { DiagramAccordion } from "./diagram-accordion.client";
-import { TestsPanel } from "./tests-panel.client";
-import { SettingsAccordion } from "./settings-accordion.client";
 import { CronProgressBar } from "./cron-progress-bar.client";
 import { ProjectStatusBar } from "./project-status-bar.client";
 
@@ -127,15 +125,9 @@ export default async function TelegramNotesProjectEntry() {
         <UseCasesAccordion />
       </CollapsibleSection>
 
-      {/* Settings — ONE parent accordion carrying the settings accordions AND the Tests block
-          (incl. Custom test), per the owner's layout rule. */}
-      <CollapsibleSection title="Settings">
-        <SettingsAccordion />
-        <div className="space-y-3 pt-2">
-          <h3 className="text-base font-medium">Tests</h3>
-          <TestsPanel />
-        </div>
-      </CollapsibleSection>
+      {/* Settings and Tests are no longer inline on the page (step 220): they open from the
+          automation menu (the hamburger in the status bar) as 600×600 modals — Settings is
+          declaration-driven from _data/channels.ts, Tests from _data/tests.ts. */}
       {/* Footer is rendered ONCE by the zone layout (step 213) — pages no longer carry it. */}
       </main>
     </>
