@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { PROJECT_DESCRIPTION } from "../_data/description";
 import { PROJECT_INTERFACE } from "../_data/interface";
 import { PROJECT_COLUMNS } from "../_data/columns";
@@ -14,7 +13,8 @@ import { RecordsFinancesPanel } from "./records-finances-panel.client";
 import { DiagramAccordion } from "./diagram-accordion.client";
 import { TestsPanel } from "./tests-panel.client";
 import { SettingsAccordion } from "./settings-accordion.client";
-import { StatusIndicator } from "./status-indicator.client";
+import { CronProgressBar } from "./cron-progress-bar.client";
+import { ProjectStatusBar } from "./project-status-bar.client";
 
 // The Projects zone renders in English for now (owner, step 188 — multilingual is a
 // separate later step). The canvas + settings were always English.
@@ -37,7 +37,13 @@ export default async function TelegramNotesProjectEntry() {
   const t = projectTabStrings(LANG);
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
+    <>
+      {/* FROZEN STANDARD, top of every automation page (step 218): the full-bleed cron slider —
+          it lives OUTSIDE <main> so it spans the whole viewport, not the max-w-5xl column. It
+          visualizes the period of SCHEDULED (outgoing) work only; incoming events are always
+          instant via the hook/listener channel (see cron-progress-bar.client.tsx). */}
+      <CronProgressBar category="personal" slug="telegram-notes" />
+      <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
       {/* Live cockpit (step 207.x — item 9): periodic router.refresh() re-runs the (now
           force-dynamic) server components so records / finances / calendar update without a
           manual reload. Renders nothing. */}
@@ -45,19 +51,17 @@ export default async function TelegramNotesProjectEntry() {
       {/* Native missing-keys modal (186.3): prompts for any declared integration
           key absent from the runtime env; renders nothing when none are required. */}
       <MissingKeysModal lang={LANG} category="personal" project="telegram-notes" />
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Link
-            href="/projects/personal"
-            className="text-sm text-muted-foreground hover:underline"
-          >
-            ← personal
-          </Link>
-          <h1 className="mt-2 text-3xl font-semibold">{d.title}</h1>
-        </div>
-        {/* Running / degraded / broken pill on the breadcrumb row (shared store). */}
-        <StatusIndicator />
-      </div>
+      {/* FROZEN STANDARD (step 218): breadcrumb (now with the missing hop back to /projects) on
+          the left, the status pill on the right; expanding it reveals bot / provider / model /
+          activate. Replaces the old one-hop "← personal" link + the inline status pill. */}
+      <ProjectStatusBar
+        category="personal"
+        categoryLabel="Personal"
+        slug="telegram-notes"
+        modelEnvKey="TELEGRAM_NOTES_MODEL"
+        defaultModel="gpt-4o-mini"
+      />
+      <h1 className="text-3xl font-semibold">{d.title}</h1>
 
       {/* I/O boundary (§E, ontology entity 14 Port): the automation's typed Inputs → Outputs,
           shown in the header so the contract is visible at a glance. From _data/interface.ts. */}
@@ -128,6 +132,7 @@ export default async function TelegramNotesProjectEntry() {
         </div>
       </CollapsibleSection>
       {/* Footer is rendered ONCE by the zone layout (step 213) — pages no longer carry it. */}
-    </main>
+      </main>
+    </>
   );
 }

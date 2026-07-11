@@ -8,10 +8,10 @@ import { Input } from "@/components/ui/input";
 import {
   beginApplying,
   refreshAutomationStatus,
-  setAutomationEnabled,
   setBotKeyOk,
   useAutomationStatus,
 } from "../_lib/automation-status";
+import { ActivateConfirmModal } from "./activate-confirm-modal.client";
 
 // Bot-API track settings (step 188 Phase 4): replace the Telegram bot token and turn the
 // automation on/off. The token goes to the slot env setter (runtime var + restart, rule
@@ -26,30 +26,10 @@ export function BotKeySettings() {
   // Honest "applying" state (item 7): the token save restarts the slot (~5s). We show this instead of
   // letting a status check race the restart and flash a red error that only cleared on reload.
   const [applying, setApplying] = useState(false);
-
-  async function toggle() {
-    const next = !(enabled ?? true);
-    setBusy(true);
-    setAutomationEnabled(next); // optimistic — pill + dot react immediately
-    try {
-      const r = await fetch("/api/projects/personal/telegram-notes/settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ enabled: next }),
-      });
-      if (!r.ok) {
-        setAutomationEnabled(!next); // revert on failure
-        toast.error(`Could not update (HTTP ${r.status})`);
-        return;
-      }
-      toast.success(next ? "Automation activated" : "Automation deactivated");
-    } catch {
-      setAutomationEnabled(!next);
-      toast.error("Could not update (network error)");
-    } finally {
-      setBusy(false);
-    }
-  }
+  // Activate/deactivate is a CONFIRMED action (step 218): it used to flip instantly from here
+  // with no confirmation. Both this tab and the top status bar now route through the one shared
+  // ActivateConfirmModal, which owns the POST + the optimistic store update.
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   async function saveToken() {
     const value = token.trim();
@@ -142,12 +122,19 @@ export function BotKeySettings() {
           variant={enabled ? "outline" : "default"}
           size="sm"
           disabled={busy || enabled === null}
-          onClick={toggle}
+          onClick={() => setConfirmOpen(true)}
           aria-pressed={Boolean(enabled)}
         >
           {enabled ? "Deactivate" : "Activate"}
         </Button>
       </div>
+      <ActivateConfirmModal
+        category="personal"
+        slug="telegram-notes"
+        enabled={Boolean(enabled)}
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+      />
 
       {/* Replace token */}
       <div className="space-y-2">
