@@ -61,10 +61,10 @@ export function NodeKeyCheck({ envKeys }: { envKeys: string[] }) {
     }
     setBusy(key);
     try {
-      const res = await fetch("/api/projects/personal/telegram-notes/check-key", {
+      // Frozen shared probe route (step 220): the channel-type check lives once for every project.
+      const res = await fetch(`/api/projects/tests/${target}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ target }),
       });
       const d = (await res.json().catch(() => null)) as { ok?: boolean; detail?: string } | null;
       const ok = Boolean(d?.ok);

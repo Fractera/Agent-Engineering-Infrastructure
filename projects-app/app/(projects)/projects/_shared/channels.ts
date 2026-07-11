@@ -13,10 +13,27 @@
 export type ChannelKey = {
   /** The runtime env key that holds the value, e.g. "TELEGRAM_BOT_TOKEN". */
   env: string;
-  /** What the user must supply, in plain words, e.g. "Bot token from @BotFather". */
+  /** WHAT the user must supply, in plain words, e.g. "Bot token". */
   label: string;
+  /** WHERE / how to get it (step 220): the per-field hint the Settings modal shows so the
+   *  form is self-explaining without a hard-coded instruction in the component, e.g.
+   *  "Message @BotFather → /newbot → copy the token". Declared once, in data. */
+  help?: string;
   /** An empty value is legitimate (a default), not a missing key — e.g. "accept all chats". */
   optional?: boolean;
+  /** A credential: rendered as a masked input; its value is never echoed back by the env route. */
+  secret?: boolean;
+};
+
+/** Optional OAuth handshake for a channel that needs one (step 220): the project's own
+ *  connect / status / disconnect endpoints + the callback path to register in the provider
+ *  console. Declared per-project (the paths live under the project's api folder); when present,
+ *  the Settings input-channels accordion renders the connect/disconnect row for this channel. */
+export type ChannelOAuth = {
+  connectPath: string;
+  statusPath: string;
+  disconnectPath: string;
+  callbackPath: string;
 };
 
 export type InputChannel = {
@@ -26,6 +43,9 @@ export type InputChannel = {
   description: string;
   /** Every key needed to connect it. Several is normal (Google Calendar needs two). */
   keys: ChannelKey[];
+  /** Optional OAuth handshake (step 220) — set for channels connected by authorization, not
+   *  just a pasted key (Google Calendar). Absent for plain key channels. */
+  oauth?: ChannelOAuth;
 };
 
 /** The keys of a channel set that genuinely block the automation when absent. */

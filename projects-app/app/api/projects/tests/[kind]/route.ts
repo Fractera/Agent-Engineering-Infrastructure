@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/get-session";
 
-// Live "check key / API" probe for the automation's integrations (step 188-R). Called from
-// the diagram node panel (a node whose envKeys include the integration) and the bot-key
-// settings tab. Verifies the credential actually WORKS, not just that it is present:
-//   - telegram → getMe (the bot token is valid)
-//   - openai   → a tiny models list (the key authorizes)
-//   - lightrag → the memory service health
-// Returns { ok, detail }. Role-gated like the other project-config routes.
+// FROZEN SHARED TEST ROUTE (step 220) — the ONE place the typed, channel-level probes live, reused by
+// every project. A probe depends on the CHANNEL TYPE, not the project, so it is declared once here and
+// invoked as POST /api/projects/tests/<kind>. This generalizes the old per-project check-key route
+// (which was really project-agnostic). Verifies the credential actually WORKS, not just that it is set:
+//   - telegram        → getMe (the bot token is valid)
+//   - openai          → the key store reports configured (via the Admin forwarder)
+//   - lightrag        → the memory service health
+//   - google-calendar → the OAuth client credentials are present in the env (configured)
+//
+// Contract: POST → { ok: boolean; detail: string }. `detail` is for debugging; the user-facing line
+// comes from the declaring project's _data/tests.ts. Role-gated like the other project-config routes.
+//
+// A named folder "tests" (NOT "_tests"): Next.js does not route "_"-prefixed folders, and the projects
+// manifest skips them — a served route must be a normal segment.
 export const runtime = "nodejs";
 
 const ROLES = ["architect", "manager", "agent"];
@@ -31,7 +38,7 @@ async function checkTelegram(): Promise<{ ok: boolean; detail: string }> {
 }
 
 async function checkOpenai(req: NextRequest): Promise<{ ok: boolean; detail: string }> {
-  // The OpenAI key lives where Hermes keeps it — ask the slot forwarder whether it is configured.
+  // The OpenAI key lives where the platform keeps it — ask the Admin forwarder whether it is configured.
   try {
     const admin = process.env.ADMIN_INTERNAL_URL ?? "http://localhost:3002";
     const r = await fetch(`${admin}/api/config/hermes`, {
@@ -41,10 +48,8 @@ async function checkOpenai(req: NextRequest): Promise<{ ok: boolean; detail: str
     });
     if (!r.ok) return { ok: false, detail: "could not reach the key store (inconclusive)" };
     const d = (await r.json()) as { configured?: boolean };
-    // Name the model the automation runs on (step 207.19 owner request: the test toast must say it).
-    const model = process.env.TELEGRAM_NOTES_MODEL || "gpt-4o-mini (default)";
     return d?.configured
-      ? { ok: true, detail: `OpenAI key is configured · automation model: ${model}` }
+      ? { ok: true, detail: "OpenAI key is configured" }
       : { ok: false, detail: "OpenAI key is not configured" };
   } catch (e) {
     return { ok: false, detail: e instanceof Error ? e.message : "key store unreachable" };
@@ -65,28 +70,38 @@ async function checkLightrag(): Promise<{ ok: boolean; detail: string }> {
   }
 }
 
-export async function POST(req: NextRequest) {
+// Channel-type check for a Google Calendar connection: are the OAuth client credentials present?
+// The deeper "is a token stored / connected" state is project-specific (a project probe), not this
+// frozen channel-type check.
+function checkGoogleCalendar(): { ok: boolean; detail: string } {
+  const id = process.env.GOOGLE_OAUTH_CLIENT_ID ?? "";
+  const secret = process.env.GOOGLE_OAUTH_CLIENT_SECRET ?? "";
+  if (id && secret) return { ok: true, detail: "Google OAuth credentials are configured" };
+  return { ok: false, detail: "Google OAuth client id / secret are not set (optional connector)" };
+}
+
+export async function POST(req: NextRequest, { params }: { params: Promise<{ kind: string }> }) {
   const session = await getSession(req);
   if (!session?.roles?.some((r) => ROLES.includes(r))) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
-  let body: { target?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "invalid JSON body" }, { status: 400 });
-  }
-  const target = (body.target ?? "").toLowerCase();
+  const { kind } = await params;
+  const k = (kind ?? "").toLowerCase();
   const result =
-    target === "telegram"
+    k === "telegram"
       ? await checkTelegram()
-      : target === "openai"
+      : k === "openai"
         ? await checkOpenai(req)
-        : target === "lightrag"
+        : k === "lightrag"
           ? await checkLightrag()
-          : null;
+          : k === "google-calendar"
+            ? checkGoogleCalendar()
+            : null;
   if (!result) {
-    return NextResponse.json({ error: "unknown target (telegram|openai|lightrag)" }, { status: 422 });
+    return NextResponse.json(
+      { error: "unknown kind (telegram|openai|lightrag|google-calendar)" },
+      { status: 422 },
+    );
   }
   return NextResponse.json(result);
 }
