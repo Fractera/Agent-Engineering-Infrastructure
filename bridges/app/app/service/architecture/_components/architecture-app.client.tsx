@@ -107,7 +107,10 @@ export function ArchitectureApp() {
         setRequested(reqs)
         setProjects(projs)
         setBuiltExtra(d.builtExtra ?? [])
-        setTaskPaths(Object.keys(sig))
+        // Pending (req badge) = OPEN tasks only. A project always has a README
+        // (its decomposition doc), so a bare presence in the signature must not
+        // mark it pending — count > 0 does (step 211 Ф0).
+        setTaskPaths(Object.entries(sig).filter(([, s]) => s.count > 0).map(([p]) => p))
 
         const keys = nodeKeys(reqs, projs)
         if (seeded.current) {

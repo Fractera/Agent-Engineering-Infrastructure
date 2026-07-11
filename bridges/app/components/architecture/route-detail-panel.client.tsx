@@ -5,6 +5,7 @@ import { ArrowUpRight, ChevronRight } from "lucide-react"
 import type { RouteMeta } from "@/lib/architecture/route-meta"
 import { buildMetaSections } from "@/lib/architecture/route-meta-rows"
 import { useRuntimeUrls } from "@/lib/runtime-urls"
+import { toAppHref } from "./detail-panel.client"
 import { RouteTodo } from "./route-todo.client"
 import { RouteDangerZone } from "./route-danger-zone.client"
 import { RouteSource } from "./route-source.client"
@@ -22,10 +23,11 @@ function statusClass(s: string): string {
 
 export function RouteDetailPanel({ meta, name, onChanged, locked = false }: { meta: RouteMeta; name?: string; onChanged?: () => void; locked?: boolean }) {
   const sections = buildMetaSections(meta)
-  const { appUrl } = useRuntimeUrls()
+  const { appUrl, projectsUrl } = useRuntimeUrls()
   // meta.path is an app-relative path; this panel renders on the Admin host, so a
-  // bare relative link goes to the wrong subdomain. Prefix with the app base.
-  const openHref = meta.path.startsWith("/") ? `${appUrl}${meta.path}` : meta.path
+  // bare relative link goes to the wrong subdomain. Prefix with the base that
+  // serves it: /projects/** → the Projects runtime, everything else → the slot.
+  const openHref = toAppHref(meta.path, appUrl, projectsUrl)
   const [open, setOpen] = useState<Set<string>>(new Set())
   // Bumped on any change (Source/Danger zone) so the to-do list reloads in place
   // — and the tree badge refreshes via onChanged — without a page reload.

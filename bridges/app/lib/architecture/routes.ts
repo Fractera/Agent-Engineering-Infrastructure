@@ -33,6 +33,7 @@ export const ROUTES_TREE: ArchNode = {
           id: "projects-layer",
           label: "/projects — Projects layer",
           kind: "group",
+          href: "/projects",
           description:
             "The root of every project (§3.12): technical tools, business " +
             "solutions and logic for the architect or a project administrator " +

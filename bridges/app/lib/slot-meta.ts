@@ -1,6 +1,7 @@
 import { readdir, readFile, stat } from "node:fs/promises"
 import { join, relative } from "node:path"
 import { slotPath } from "@/lib/slot-root"
+import { projectsPath } from "@/lib/projects-root"
 
 // Runtime replacement for the slot's build-time routes.generated.ts.
 //
@@ -18,6 +19,12 @@ import { slotPath } from "@/lib/slot-root"
 // computed value fails this transform and is skipped (graceful — the tree just omits it
 // rather than crashing the admin app). The slot may also be empty/absent — every read
 // degrades to an empty result.
+//
+// TWO ROOTS (step 211): since step 197 the /projects/** URLs are served by the separate
+// projects-app runtime (:3003) — its projects carry the SAME _meta.ts descriptors (the
+// frozen project-page template emits one), so the walk covers both roots: the slot owns
+// every URL except /projects/**, projects-app owns /projects/** (physically under the
+// "(projects)" route group, transparent to the URL).
 
 export type SlotRouteMeta = Record<string, unknown> & { path?: string; kind?: string }
 export type SlotRoute = { path: string; kind: "page" | "api"; group: string | null; meta: SlotRouteMeta }
@@ -66,7 +73,11 @@ export function evalMetaSource(src: string): SlotRouteMeta | null {
   }
 }
 
-async function walk(appDir: string, dir: string, out: SlotRoute[]): Promise<void> {
+const isProjectsPath = (p: string) => p === "/projects" || p.startsWith("/projects/")
+
+async function walk(
+  appDir: string, dir: string, out: SlotRoute[], accept: (url: string) => boolean,
+): Promise<void> {
   let entries
   try {
     entries = await readdir(dir, { withFileTypes: true })
@@ -81,7 +92,7 @@ async function walk(appDir: string, dir: string, out: SlotRoute[]): Promise<void
       : [...ROUTE_FILES].some((f) => names.has(f))
         ? "api"
         : null
-    if (kind) {
+    if (kind && accept(urlPath(folderRel))) {
       const meta = evalMetaSource(await readFile(join(dir, "_meta.ts"), "utf8").catch(() => ""))
       if (meta) {
         out.push({ path: urlPath(folderRel), kind, group: routeGroupOf(folderRel), meta })
@@ -90,7 +101,7 @@ async function walk(appDir: string, dir: string, out: SlotRoute[]): Promise<void
   }
   for (const e of entries) {
     if (!e.isDirectory() || SKIP.has(e.name) || e.name.startsWith(".")) continue
-    await walk(appDir, join(dir, e.name), out)
+    await walk(appDir, join(dir, e.name), out, accept)
   }
 }
 
@@ -128,10 +139,12 @@ async function treeSignature(appDir: string): Promise<string> {
 
 export async function readSlotRoutes(): Promise<SlotRoute[]> {
   const appDir = slotPath("app")
-  const sig = await treeSignature(appDir)
+  const projectsDir = projectsPath("app")
+  const sig = `${await treeSignature(appDir)}|${await treeSignature(projectsDir)}`
   if (cache && cache.sig === sig) return cache.routes
   const out: SlotRoute[] = []
-  await walk(appDir, appDir, out)
+  await walk(appDir, appDir, out, (url) => !isProjectsPath(url))
+  await walk(projectsDir, projectsDir, out, isProjectsPath)
   out.sort((a, b) => (a.kind === b.kind ? a.path.localeCompare(b.path) : a.kind === "page" ? -1 : 1))
   cache = { sig, routes: out }
   return out

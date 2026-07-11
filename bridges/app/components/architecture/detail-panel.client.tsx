@@ -6,12 +6,16 @@ import { useRuntimeUrls } from "@/lib/runtime-urls"
 import { SkillContentViewer } from "./skill-content-viewer.client"
 import { CodeEditor } from "./code-editor.client"
 
-// A page node's href is an app-relative path (e.g. /project/telegram-notes). This
-// panel renders on the ADMIN host (:3002 / admin.<apex>), so a bare relative link
+// A page node's href is an app-relative path (e.g. /projects/personal/telegram-notes).
+// This panel renders on the ADMIN host (:3002 / admin.<apex>), so a bare relative link
 // resolves against Admin — the wrong subdomain. Prefix absolute-path links with the
-// APP base (appUrl: IP→:3000, domain→apex) so "Open page" lands on the real app.
-function toAppHref(href: string, appUrl: string): string {
-  return href.startsWith("/") ? `${appUrl}${href}` : href
+// base that actually SERVES the path: /projects/** lives on the Projects runtime
+// (projectsUrl: IP→:3003, domain→projects.<apex>, step 197); everything else on the
+// slot app (appUrl: IP→:3000, domain→apex).
+export function toAppHref(href: string, appUrl: string, projectsUrl: string): string {
+  if (!href.startsWith("/")) return href
+  const base = href === "/projects" || href.startsWith("/projects/") ? projectsUrl : appUrl
+  return `${base}${href}`
 }
 
 // Monaco language from a filename — so a clicked file node renders its real source
@@ -42,7 +46,7 @@ const KIND_LABEL: Record<string, string> = {
 // (roles / rendering / method) and an Open link — the accompanying "file" for
 // each node that lets a human (or an agent reading this) grasp it at a glance.
 export function DetailPanel({ node }: { node: ArchNode | null }) {
-  const { appUrl } = useRuntimeUrls()
+  const { appUrl, projectsUrl } = useRuntimeUrls()
   if (!node) {
     return (
       <div className="flex h-full items-center justify-center p-10 text-center">
@@ -104,7 +108,7 @@ export function DetailPanel({ node }: { node: ArchNode | null }) {
 
       {node.href && (
         <a
-          href={toAppHref(node.href, appUrl)}
+          href={toAppHref(node.href, appUrl, projectsUrl)}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex w-fit items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
