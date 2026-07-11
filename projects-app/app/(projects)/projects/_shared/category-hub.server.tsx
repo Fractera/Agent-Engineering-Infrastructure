@@ -20,7 +20,10 @@ export async function CategoryHub({ slug }: { slug: ProjectCategorySlug }) {
 
   return (
     <main className="mx-auto flex min-h-[70vh] max-w-4xl flex-col px-6 py-10">
-      <p className="text-sm text-muted-foreground">Projects</p>
+      {/* Breadcrumb back to the root index (step 217) — was plain text, no way back to /projects. */}
+      <Link href="/projects" className="text-sm text-muted-foreground hover:underline">
+        ← Projects
+      </Link>
       <h1 className="mt-1 text-3xl font-bold tracking-tight">{category.title}</h1>
       <p className="mt-3 max-w-2xl text-muted-foreground">{category.description}</p>
 
