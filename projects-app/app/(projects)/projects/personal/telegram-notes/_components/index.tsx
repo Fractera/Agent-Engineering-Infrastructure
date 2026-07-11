@@ -13,6 +13,7 @@ import { RecordsFinancesPanel } from "./records-finances-panel.client";
 import { DiagramAccordion } from "./diagram-accordion.client";
 import { CronProgressBar } from "./cron-progress-bar.client";
 import { ProjectStatusBar } from "./project-status-bar.client";
+import { AddModifyAutomationButton } from "../../../_shared/components/add-modify-automation-button.client";
 
 // The Projects zone renders in English for now (owner, step 188 — multilingual is a
 // separate later step). The canvas + settings were always English.
@@ -61,9 +62,10 @@ export default async function TelegramNotesProjectEntry() {
       />
       {/* FROZEN STANDARD (step 219): title + description. The description existed in
           _data/description.ts but was never rendered — the page showed a bare heading. */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <h1 className="text-3xl font-semibold">{d.title}</h1>
         <p className="max-w-3xl text-muted-foreground">{d.purpose}</p>
+        <AddModifyAutomationButton category="personal" slug="telegram-notes" />
       </div>
 
       {/* I/O boundary (§E, ontology entity 14 Port): the automation's typed Inputs → Outputs,

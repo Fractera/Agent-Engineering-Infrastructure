@@ -119,6 +119,7 @@ export const PROBES: Probe[] = [];
 import { INPUT_CHANNELS } from "../_data/channels";
 import { PROBES } from "../_data/tests";
 import { AutomationStatusBar } from "../../../_shared/components/automation-status-bar.client";
+import { AddModifyAutomationButton } from "../../../_shared/components/add-modify-automation-button.client";
 
 // Frozen automation skeleton — VERSION 3. Header/footer come from the Projects-zone layout (step 213).
 // A project is BORN with the automation menu (top right): Settings (AI model + input channels) and
@@ -138,9 +139,10 @@ export default function AutomationEntry() {
         channels={INPUT_CHANNELS}
         probes={PROBES}
       />
-      <div className="space-y-2">
+      <div className="space-y-3">
         <h1 className="text-3xl font-semibold">{d.title}</h1>
         <p className="max-w-3xl text-muted-foreground">{d.description}</p>
+        <AddModifyAutomationButton category="{{CATEGORY}}" slug="{{PROJECT}}" />
       </div>
       <div className="space-y-2 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
         <p className="font-medium text-foreground">This is a frozen automation skeleton.</p>
