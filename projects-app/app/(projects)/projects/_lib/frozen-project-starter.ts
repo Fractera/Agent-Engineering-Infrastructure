@@ -6,7 +6,7 @@
 // construction: pure template + token substitution, ZERO code generation. It materializes a
 // working (if minimal) project into projects-app: real folders + components that RENDER — the
 // standard header + footer come from the Projects-zone layout (step 213), and the body is a
-// centered "Project coming soon" + a project README (see SKELETON below). This is VERSION 1:
+// title + description + an input-channel declaration + a project README (see SKELETON). VERSION 2:
 // the template GROWS node by node — each development version adds one entry to SKELETON, and a
 // re-run shows the automation develop.
 //
@@ -27,41 +27,89 @@ import { PROJECT_CATEGORIES } from "../_shared/categories";
 
 const SLUG_RE = /^[a-z][a-z0-9-]*$/;
 
-export type FrozenProjectInput = { category: string; project: string; title?: string; force?: boolean };
+export type FrozenProjectInput = {
+  category: string;
+  project: string;
+  title?: string;
+  /** One line: what this automation does. Rendered under the title from birth (v2). */
+  description?: string;
+  force?: boolean;
+};
 export type FrozenProjectResult =
-  | { ok: true; version: number; category: string; project: string; title: string; url: string; files: string[]; next: string }
+  | { ok: true; version: number; category: string; project: string; title: string; description: string; url: string; files: string[]; next: string }
   | { ok: false; error: string };
 
 function humanize(slug: string): string {
   return slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 }
 
-// The FROZEN SKELETON — VERSION 1. Map of "path under the project folder" → raw file body.
-// Tokens {{CATEGORY}} {{PROJECT}} {{PROJECT_TITLE}} are substituted at materialize time.
-// To grow the automation: add entries here (a new node = a new component/data file) and bump VERSION.
-const VERSION = 1;
+// The FROZEN SKELETON — VERSION 2. Map of "path under the project folder" → raw file body.
+// Tokens {{CATEGORY}} {{PROJECT}} {{PROJECT_TITLE}} {{PROJECT_DESCRIPTION}} are substituted at
+// materialize time. To grow the automation: add entries here and bump VERSION.
+//
+// v2 (step 219) adds the two things every automation page must have from birth: a TITLE and a
+// DESCRIPTION (v1 rendered a bare heading), and a declaration of its INPUT CHANNELS — empty by
+// design, because a frozen template cannot know whether this automation will talk to Telegram,
+// YouTube or an inbox. What IS frozen is the SHAPE of that declaration (_shared/channels.ts):
+// a channel has a name, a description, and the connection keys it needs — several keys per
+// channel is normal (a Google Calendar connection needs both a client id and a client secret).
+const VERSION = 2;
 const SKELETON: Record<string, string> = {
   "page.tsx": `import AutomationEntry from "./_components";
 
 // Thin server entry of a frozen automation project. Header + footer come from the
-// Projects-zone layout (step 213); the body is AutomationEntry. Frozen skeleton v1.
+// Projects-zone layout (step 213); the body is AutomationEntry.
 export default function Page() {
   return <AutomationEntry />;
 }
 `,
-  "_components/index.tsx": `// Frozen automation skeleton — VERSION 1 (the "coming soon" placeholder). The standard
-// header and footer are provided by the Projects-zone layout (step 213), so this body is
-// deliberately minimal. Each development version adds the next node/component here.
+  "_data/description.ts": `// The automation's identity — title + description (frozen skeleton v2, step 219).
+// Plain data: edit these strings to describe the real automation; the page never changes.
+export const PROJECT_DESCRIPTION = {
+  title: {{PROJECT_TITLE_JSON}},
+  description: {{PROJECT_DESCRIPTION_JSON}},
+} as const;
+`,
+  "_data/channels.ts": `import type { InputChannel } from "../../../_shared/channels";
+
+// This automation's INPUT CHANNELS (frozen standard — see _shared/channels.ts).
+// EMPTY BY DESIGN: a fresh skeleton talks to nothing yet. Declare a channel when the
+// automation actually uses it — never before (a declared-but-unused channel is a lie the
+// missing-keys modal will nag the user about).
+//
+// The shape, with the Google Calendar case that proves a channel may need SEVERAL keys:
+//
+//   export const INPUT_CHANNELS: InputChannel[] = [
+//     {
+//       name: "Google Calendar",
+//       description: "Reads and writes the owner's calendar events.",
+//       keys: [
+//         { env: "GOOGLE_OAUTH_CLIENT_ID", label: "Google OAuth client id" },
+//         { env: "GOOGLE_OAUTH_CLIENT_SECRET", label: "Google OAuth client secret" },
+//       ],
+//     },
+//   ];
+export const INPUT_CHANNELS: InputChannel[] = [];
+`,
+  "_components/index.tsx": `import { PROJECT_DESCRIPTION } from "../_data/description";
+
+// Frozen automation skeleton — VERSION 2. The standard header and footer come from the
+// Projects-zone layout (step 213), so this body carries only what every automation has from
+// birth: its title and description. Each development version adds the next node here.
 export default function AutomationEntry() {
+  const d = PROJECT_DESCRIPTION;
   return (
-    <main className="mx-auto flex min-h-[60vh] max-w-5xl flex-col items-center justify-center gap-2 px-4 text-center">
-      <p className="text-2xl font-semibold">{{PROJECT_TITLE}}</p>
+    <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-semibold">{d.title}</h1>
+        <p className="max-w-3xl text-muted-foreground">{d.description}</p>
+      </div>
       <p className="text-sm text-muted-foreground">Project coming soon</p>
     </main>
   );
 }
 `,
-  "README.md": `# {{PROJECT_TITLE}} — frozen automation project (v1 skeleton)
+  "README.md": `# {{PROJECT_TITLE}} — frozen automation project (v2 skeleton)
 
 Read this file first, every time you touch this project — it is the project's own development
 log and grows as the frozen template does. This project was materialized by
@@ -69,17 +117,40 @@ log and grows as the frozen template does. This project was materialized by
 \`app/(projects)/projects/{{CATEGORY}}/{{PROJECT}}/\`. Header and footer come from the
 Projects-zone layout automatically — this folder never renders its own chrome.
 
-## Current state: v1 (blank)
-Only the frozen skeleton exists: a page showing "Project coming soon". No automation logic,
-no workflow, no data — nothing to build on yet.
+## Current state: v2 (identity + channel declaration, no logic)
+The page renders this automation's TITLE and DESCRIPTION (\`_data/description.ts\`) — edit those
+strings to describe what it really does. \`_data/channels.ts\` declares its INPUT CHANNELS and is
+EMPTY on purpose: this automation talks to nothing yet.
+
+## Declaring an input channel
+A frozen template cannot know whether you will connect Telegram, YouTube or an inbox — so the
+CHANNELS are not frozen, their SHAPE is (\`_shared/channels.ts\`): a channel has a name, a
+one-line description, and the connection keys it needs. Several keys per channel is normal —
+a Google Calendar connection needs both a client id and a client secret:
+
+\`\`\`ts
+export const INPUT_CHANNELS: InputChannel[] = [
+  {
+    name: "Google Calendar",
+    description: "Reads and writes the owner's calendar events.",
+    keys: [
+      { env: "GOOGLE_OAUTH_CLIENT_ID", label: "Google OAuth client id" },
+      { env: "GOOGLE_OAUTH_CLIENT_SECRET", label: "Google OAuth client secret" },
+    ],
+  },
+];
+\`\`\`
+
+Declare a channel only when the automation actually uses it — a declared-but-unused channel is a
+lie the missing-keys modal will nag the user about.
 
 ## What happens next
 The frozen automation template grows node by node, under the owner's direction. Each new
-version of the template adds the next building block (the workflow/diagram layer, the run
-panel, a results table, integrations, …) — and each addition extends THIS file with the
-concrete instructions for turning the current skeleton into the next stage, until it is a
-full, repeatable automation (idea → nodes → live runs). Re-read this file before continuing;
-do not invent automation logic from habit or memory — follow exactly what it says today.
+version adds the next building block (the workflow/diagram layer, the run panel, a results
+table, …) — and each addition extends THIS file with the concrete instructions for turning the
+current skeleton into the next stage, until it is a full, repeatable automation (idea → nodes →
+live runs). Re-read this file before continuing; do not invent automation logic from habit or
+memory — follow exactly what it says today.
 
 ## Do not
 - Do not hand-write files that duplicate what the starter already emits.
@@ -87,7 +158,7 @@ do not invent automation logic from habit or memory — follow exactly what it s
   land here before they exist anywhere else.
 
 <!-- fractera:project
-{"kind":"project","category":"{{CATEGORY}}","slug":"{{PROJECT}}","title":"{{PROJECT_TITLE}}","project":{"title":"{{PROJECT_TITLE}}","purpose":"Not yet decomposed — a blank frozen skeleton (v1). No nodes, no interface, no logic exist yet."},"interface":{"inputs":[],"outputs":[]},"nodes":[]}
+{"kind":"project","category":"{{CATEGORY}}","slug":"{{PROJECT}}","title":{{PROJECT_TITLE_JSON}},"project":{"title":{{PROJECT_TITLE_JSON}},"purpose":{{PROJECT_DESCRIPTION_JSON}}},"interface":{"inputs":[],"outputs":[]},"nodes":[]}
 -->
 `,
   "_meta.ts": `import type { RouteMeta } from "@/lib/architecture/route-meta"
@@ -146,14 +217,13 @@ const meta: RouteMeta = {
 
   methods: [],
 
-  description:
-    "{{PROJECT_TITLE}} — a frozen automation project (skeleton v1: placeholder page; header + footer from the zone layout).",
+  description: {{PROJECT_DESCRIPTION_JSON}},
   dataDependencies: [],
   relatedRoutes: ["/projects/{{CATEGORY}}"],
   notes:
     "Projects-layer route: monolingual (site default language, outside [lang]); a project = a NAMED " +
     "folder /projects/{{CATEGORY}}/{{PROJECT}} — dynamic segments are forbidden (§3.12). Grown node by " +
-    "node from the frozen automation skeleton.",
+    "node from the frozen automation skeleton (v2: title + description + input-channel declaration).",
 
   owner: undefined,
   createdBy: undefined,
@@ -182,6 +252,11 @@ export async function createFrozenProject(
   const category = String(input.category ?? "").trim();
   const project = String(input.project ?? "").trim();
   const title = String(input.title ?? "").trim() || (project ? humanize(project) : "");
+  // No description given → an honest placeholder, not an invented pitch. The owner (or the
+  // agent developing the automation) replaces it in _data/description.ts.
+  const description =
+    String(input.description ?? "").trim() ||
+    "Not described yet — a frozen skeleton. Describe what this automation does in _data/description.ts.";
   const projectsRoot = opts?.projectsRoot ?? defaultProjectsRoot();
 
   const categorySlugs = PROJECT_CATEGORIES.map((c) => c.slug);
@@ -201,6 +276,11 @@ export async function createFrozenProject(
     "{{CATEGORY}}": category,
     "{{PROJECT}}": project,
     "{{PROJECT_TITLE}}": title,
+    // *_JSON variants are JSON.stringify'd so a quote or a backslash in the owner's text
+    // cannot break the emitted TypeScript (the raw variants stay for prose/markdown).
+    "{{PROJECT_TITLE_JSON}}": JSON.stringify(title),
+    "{{PROJECT_DESCRIPTION_JSON}}": JSON.stringify(description),
+    "{{PROJECT_DESCRIPTION}}": description,
   };
   const sub = (s: string) => Object.entries(tokens).reduce((acc, [k, v]) => acc.split(k).join(v), s);
 
@@ -218,7 +298,7 @@ export async function createFrozenProject(
   return {
     ok: true,
     version: VERSION,
-    category, project, title,
+    category, project, title, description,
     url: `/projects/${category}/${project}`,
     files,
     next: "Rebuild projects-app (Deploy): the page renders header + footer + a centered 'Project coming soon'; the folder appears in /service/architecture. Grow the automation by adding the next node to SKELETON and re-running.",

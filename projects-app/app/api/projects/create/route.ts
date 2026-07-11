@@ -38,7 +38,7 @@ function rebuildAndReload(): void {
 export async function POST(req: NextRequest) {
   if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 })
 
-  let body: { category?: string; project?: string; title?: string; force?: boolean }
+  let body: { category?: string; project?: string; title?: string; description?: string; force?: boolean }
   try {
     body = await req.json()
   } catch {
@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
     category: String(body.category ?? ""),
     project: String(body.project ?? ""),
     title: body.title ? String(body.title) : undefined,
+    description: body.description ? String(body.description) : undefined,
     force: !!body.force,
   })
 

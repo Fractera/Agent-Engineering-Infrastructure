@@ -51,9 +51,9 @@ export default async function TelegramNotesProjectEntry() {
       {/* Native missing-keys modal (186.3): prompts for any declared integration
           key absent from the runtime env; renders nothing when none are required. */}
       <MissingKeysModal lang={LANG} category="personal" project="telegram-notes" />
-      {/* FROZEN STANDARD (step 218): breadcrumb (now with the missing hop back to /projects) on
-          the left, the status pill on the right; expanding it reveals bot / provider / model /
-          activate. Replaces the old one-hop "← personal" link + the inline status pill. */}
+      {/* FROZEN STANDARD (steps 218-219): breadcrumb (with the hop back to /projects) on the
+          left; on the right the status pill + a hamburger opening the automation-agnostic menu
+          (AI provider / AI model / Activate-Deactivate — nothing channel-specific). */}
       <ProjectStatusBar
         category="personal"
         categoryLabel="Personal"
@@ -61,7 +61,12 @@ export default async function TelegramNotesProjectEntry() {
         modelEnvKey="TELEGRAM_NOTES_MODEL"
         defaultModel="gpt-4o-mini"
       />
-      <h1 className="text-3xl font-semibold">{d.title}</h1>
+      {/* FROZEN STANDARD (step 219): title + description. The description existed in
+          _data/description.ts but was never rendered — the page showed a bare heading. */}
+      <div className="space-y-2">
+        <h1 className="text-3xl font-semibold">{d.title}</h1>
+        <p className="max-w-3xl text-muted-foreground">{d.purpose}</p>
+      </div>
 
       {/* I/O boundary (§E, ontology entity 14 Port): the automation's typed Inputs → Outputs,
           shown in the header so the contract is visible at a glance. From _data/interface.ts. */}
