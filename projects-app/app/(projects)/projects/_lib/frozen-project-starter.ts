@@ -123,11 +123,43 @@ export const PROBES: Probe[] = [];
   "_data/diagram.ts": `import type { NodeContract } from "../../../_shared/node-contract";
 
 // This automation's MASTER diagram nodes (frozen standard, step 223.C — see app/(projects)/README.md,
-// "The diagram standard" + "The node → functions contract"). EMPTY BY DESIGN: a fresh skeleton has no
-// nodes yet. The diagram is the SINGLE source of truth for how the automation works — a node exists
-// ONLY here, never by hardcode or a side path. Design nodes from the user cases; each node is a typed
-// container of functions living ONLY in _nodes/<nodeId>/ (delete the project → they vanish, zero debt).
-export const DIAGRAM_NODES: NodeContract[] = [];
+// "The diagram standard" + "The node → functions contract"). The diagram is the SINGLE source of truth
+// for how the automation works — a node exists ONLY here, never by hardcode or a side path.
+//
+// DEFAULT: every fresh automation starts with THREE generic nodes — Input → Logic → Output — because
+// before a real task exists there is nothing to design yet; this is the universal starting shape. When
+// the automation is designed from the user cases, the Logic node splits into real, named nodes, each a
+// typed container of functions living ONLY in _nodes/<nodeId>/ (delete the project → they vanish, zero
+// technical debt). The three defaults carry no functions yet.
+export const DIAGRAM_NODES: NodeContract[] = [
+  {
+    id: "input",
+    name: "Input",
+    description: "Where the automation receives its work — a message, a request, or a scheduled tick.",
+    in: {},
+    out: { payload: "unknown" },
+    run: "sequential",
+    functions: [],
+  },
+  {
+    id: "logic",
+    name: "Logic",
+    description: "The middle — the deterministic work that turns the input into the output. Designed from the user cases; this node splits into real nodes when the automation is designed.",
+    in: { payload: "unknown" },
+    out: { result: "unknown" },
+    run: "sequential",
+    functions: [],
+  },
+  {
+    id: "output",
+    name: "Output",
+    description: "Where the automation delivers its result — a reply, a saved record, or a published page.",
+    in: { result: "unknown" },
+    out: {},
+    run: "sequential",
+    functions: [],
+  },
+];
 `,
   "_data/config.ts": `// This automation's CONFIG (frozen standard v4, step 222 — see app/(projects)/README.md,
 // "The automation entities standard"). \`entities\` toggles the accordions shown below the
