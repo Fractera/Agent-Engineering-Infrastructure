@@ -157,6 +157,23 @@ const SCHEMA = `
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(node_cuid, version)
   );
+  -- PROCESSES / Gantt timeline (step 230). One row per FORK (automation_instances). The timeline draws each
+  -- fork as a bar whose length is planned_duration_ms = the sum of its nodes est process times (from each
+  -- node meta.ts estDurationMs), laid out as a priority queue; the actual_start/actual_end come from
+  -- automation_runs and shift the queue when reality differs from the plan. A NEW table, so no ALTER on the
+  -- already-existing automation_instances/automation_nodes (lesson 225 G4). Recomputed on demand + by a
+  -- once-a-minute cron tick; a fork with no schedule row yet is planned on first read.
+  CREATE TABLE IF NOT EXISTS automation_schedule (
+    instance_id         TEXT PRIMARY KEY NOT NULL,
+    automation          TEXT NOT NULL,
+    ord                 INTEGER NOT NULL DEFAULT 0,
+    planned_start       TEXT,
+    planned_duration_ms INTEGER NOT NULL DEFAULT 0,
+    actual_start        TEXT,
+    actual_end          TEXT,
+    status              TEXT NOT NULL DEFAULT 'scheduled',
+    updated_at          TEXT NOT NULL DEFAULT (datetime('now'))
+  );
   -- GLOBAL AUTOMATION CANVAS (step 225) — the workspace-level graph: every PROJECT is a node, and an EDGE
   -- is a programmable integration BETWEEN two automations. Unlike the tree inside one automation (224), the
   -- global graph is ARBITRARY: an edge may join any node of X to any node of Y (not only parents/children).

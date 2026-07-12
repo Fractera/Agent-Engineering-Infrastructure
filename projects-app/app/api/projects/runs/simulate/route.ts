@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { getSession } from "@/lib/auth/get-session";
 import { db } from "@/lib/db";
+import { recomputeSchedule } from "@/lib/schedule";
 
 // TEMPORARY demonstrator (step 223.C.3) — steps a run's current_node through the Master's nodes so the
 // canvas's active-node ORANGE highlight is visible BEFORE real execution exists (real execution is
@@ -76,5 +77,8 @@ export async function POST(req: NextRequest) {
       `UPDATE automation_runs SET status = 'done', current_node = NULL, finished_at = datetime('now') WHERE id = ?`,
     )
     .run(active.id);
+  // A finished run is a FACT that shifts the Gantt timeline (step 230): recompute so the next fork's planned
+  // start moves to reflect that this one ended (earlier or later than planned). Best-effort.
+  try { await recomputeSchedule(automation); } catch { /* the run is already finished; the tick will catch up */ }
   return NextResponse.json({ runId: active.id, current_node: null, status: "done" });
 }
