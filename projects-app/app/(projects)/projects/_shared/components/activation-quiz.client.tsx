@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  AlertTriangle, Link2, ListChecks, Loader2, MessagesSquare, Pause, Send, SkipForward, Sparkles,
+  AlertTriangle, ChevronDown, Link2, ListChecks, Loader2, MessagesSquare, Pause, Send, SkipForward, Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -73,6 +73,25 @@ export function ActivationQuiz({
   // The field voice writes into (step 232): the transcript lands at the CARET, so the owner can dictate into
   // the middle of what he already wrote.
   const answerRef = useRef<HTMLTextAreaElement | null>(null);
+  // "Scroll to newest" (owner): when a fresh question arrives BELOW the fold, the transcript does not visibly
+  // move, so it is easy to miss. A gentle chat-style button appears whenever content sits below the viewport
+  // (a new turn, or the owner scrolled up) and smooth-scrolls to the bottom on click.
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [showScrollDown, setShowScrollDown] = useState(false);
+  const nearBottom = () => {
+    const el = scrollRef.current;
+    return !el || el.scrollHeight - el.scrollTop - el.clientHeight < 48;
+  };
+  const scrollToBottom = () => {
+    const el = scrollRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  };
+  // On new content: if the owner was already at the bottom, keep him pinned; otherwise reveal the button.
+  useEffect(() => {
+    if (nearBottom()) scrollToBottom();
+    else setShowScrollDown(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [turns, draftText, streaming]);
   // The UI language of the modal (owner's rule, six languages) — the shared hook, memoized per page.
   const uiLang = useUiLang();
   const L = quizStrings(uiLang);
@@ -420,36 +439,56 @@ export function ActivationQuiz({
         </DialogHeader>
 
         {/* THE SCROLLING BODY — the banner and the whole transcript live here; on any screen it scrolls,
-            so the footer below is never pushed off. */}
-        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-6 py-3">
-          {/* Owner's note: planning is where the model's strength shows most — a weak model designs a weak
-              automation. The model is chosen in the automation menu (the hamburger, top right of the page). */}
-          <div className="flex gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-300">
-            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-            <p>{L.banner}</p>
+            so the footer below is never pushed off. The relative wrapper anchors the "scroll to newest"
+            button, which stays put while the inner list scrolls under it. */}
+        <div className="relative min-h-0 flex-1">
+          <div
+            ref={scrollRef}
+            onScroll={() => setShowScrollDown(!nearBottom())}
+            className="h-full space-y-3 overflow-y-auto px-6 py-3"
+          >
+            {/* Owner's note: planning is where the model's strength shows most — a weak model designs a weak
+                automation. The model is chosen in the automation menu (the hamburger, top right of the page). */}
+            <div className="flex gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-300">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+              <p>{L.banner}</p>
+            </div>
+
+            {turns.length === 0 && busy && (
+              <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="size-4 animate-spin" />
+                {isEdge ? L.loaderEdge : isCaseEdit ? L.loaderCase : L.loaderInstruction}
+              </p>
+            )}
+            {turns.map((t, i) => (
+              <div
+                key={i}
+                className={`rounded-lg p-3 text-sm ${
+                  t.role === "user" ? "ml-8 bg-primary/10" : "mr-8 bg-muted"
+                }`}
+              >
+                {t.role !== "user" && (
+                  <p className="mb-1 flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                    <Sparkles className="size-3" /> {L.designer}
+                  </p>
+                )}
+                <p className="whitespace-pre-wrap">{t.content}</p>
+              </div>
+            ))}
           </div>
 
-          {turns.length === 0 && busy && (
-            <p className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" />
-              {isEdge ? L.loaderEdge : isCaseEdit ? L.loaderCase : L.loaderInstruction}
-            </p>
-          )}
-          {turns.map((t, i) => (
-            <div
-              key={i}
-              className={`rounded-lg p-3 text-sm ${
-                t.role === "user" ? "ml-8 bg-primary/10" : "mr-8 bg-muted"
-              }`}
+          {/* SCROLL TO NEWEST (owner) — a gentle bouncing chevron, centred at the bottom of the transcript,
+              shown only while there is content below the fold; click smooth-scrolls to the latest message. */}
+          {showScrollDown && (
+            <button
+              type="button"
+              onClick={scrollToBottom}
+              className="absolute bottom-2 left-1/2 flex size-8 -translate-x-1/2 animate-bounce items-center justify-center rounded-full border bg-background/90 text-foreground shadow-md backdrop-blur transition-colors hover:bg-muted"
+              aria-label="Scroll to the newest message"
             >
-              {t.role !== "user" && (
-                <p className="mb-1 flex items-center gap-1 text-xs font-medium text-muted-foreground">
-                  <Sparkles className="size-3" /> {L.designer}
-                </p>
-              )}
-              <p className="whitespace-pre-wrap">{t.content}</p>
-            </div>
-          ))}
+              <ChevronDown className="size-4" />
+            </button>
+          )}
         </div>
 
         {/* AUTO-QUIZ (227.B): the model thinks out loud, streamed. The area stays EDITABLE — pause, rewrite,
