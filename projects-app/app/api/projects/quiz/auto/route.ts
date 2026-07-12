@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { authorize, resolveProject } from "@/lib/nodes";
-import { addTurn, automationInstruction, getQuiz, openAiKey, turnsOf } from "@/lib/quiz";
+import { addTurn, automationInstruction, getQuiz, languageName, openAiKey, turnsOf } from "@/lib/quiz";
 
 // AUTO-QUIZ (step 227.B) — the owner skips the manual Q&A and lets the model brainstorm WITH ITSELF: it
 // asks its own questions and answers them, out loud. STREAMING is mandatory (owner's rule): the text is
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   const messages = [
     {
       role: "system",
-      content: `You are designing an automation ALONE, thinking out loud, in the language: ${quiz.language}.
+      content: `You are designing an automation ALONE, thinking out loud, in the language: ${languageName(quiz.language)}.
 
 The owner's instruction (the seed):
 """
@@ -41,7 +41,7 @@ ${instruction || "(not stated)"}
 You are designing NODE #${quiz.node_count + 1}. Run the brainstorm YOURSELF: ask the questions you would
 have asked the owner and answer them from the instruction, using reasonable defaults where it is silent.
 Be concrete and short (under 200 words). End with a clear statement of what this node does, what it takes
-in, and what it returns. Write ONLY in ${quiz.language}. The owner is reading you live and may edit your
+in, and what it returns. Write ONLY in ${languageName(quiz.language)}. The owner is reading you live and may edit your
 text — so write it as the final brief, not as a chat.`,
     },
     { role: "user", content: transcript ? `What has been said so far:\n${transcript}\n\nContinue the design of this node.` : "Design this node." },

@@ -164,7 +164,25 @@ export function ActivationQuiz({ automation }: { automation: string }) {
     });
     const d = (await r.json()) as { report?: string };
     setOpen(false);
-    toast.info("Design session finished", { description: d.report, duration: 25000 });
+    // THE GUARANTEE (227.C): the session never ends with nothing — the owner is told exactly where the
+    // automation stands and can run the smoke test right from the toast, even if the design is unfinished.
+    toast.info("Design session finished", {
+      description: d.report,
+      duration: 30000,
+      action: {
+        label: "Test it",
+        onClick: () => {
+          void (async () => {
+            const t = await fetch(`/api/projects/test-run`, {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ automation }),
+            });
+            const td = (await t.json()) as { ok?: boolean; verdict?: string; report?: string };
+            (td.ok ? toast.success : toast.info)(td.verdict ?? "Test finished", { description: td.report, duration: 20000 });
+          })();
+        },
+      },
+    });
     router.refresh();
   }, [automation, router]);
 

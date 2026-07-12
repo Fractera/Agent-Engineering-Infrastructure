@@ -28,6 +28,21 @@ export function openAiKey(): string {
   } catch { return ""; }
 }
 
+// The language the Quiz SPEAKS. The model is told the language by NAME, not by code ("Russian (русский)",
+// not "ru") — a bare code is fragile. The creation modal shows this name to the owner up front, so the
+// language is never a surprise (owner's requirement).
+const LANGUAGE_NAMES: Record<string, string> = {
+  en: "English", ru: "Russian (русский)", es: "Spanish (español)", de: "German (Deutsch)",
+  fr: "French (français)", it: "Italian (italiano)", pt: "Portuguese (português)", pl: "Polish (polski)",
+  uk: "Ukrainian (українська)", tr: "Turkish (Türkçe)", ar: "Arabic (العربية)", zh: "Chinese (中文)",
+  ja: "Japanese (日本語)", ko: "Korean (한국어)", hi: "Hindi (हिन्दी)", nl: "Dutch (Nederlands)",
+};
+
+/** The human name of a language code — what the model is told and what the owner is shown. */
+export function languageName(code: string): string {
+  return LANGUAGE_NAMES[code.toLowerCase()] ?? code;
+}
+
 /** The project's DEFAULT language — the first of NEXT_PUBLIC_SUPPORTED_LANGUAGES. English only when unset. */
 export function defaultLanguage(): string {
   const fromEnv = process.env.NEXT_PUBLIC_SUPPORTED_LANGUAGES;
@@ -81,7 +96,7 @@ RULES
 export async function nextQuestion(quiz: QuizRow, instruction: string, turns: Turn[]): Promise<string> {
   const history = turns.map((t) => ({ role: t.role === "user" ? "user" : "assistant", content: t.content }));
   const messages = [
-    { role: "system", content: SYSTEM(quiz.language, instruction, quiz.node_count) },
+    { role: "system", content: SYSTEM(languageName(quiz.language), instruction, quiz.node_count) },
     ...history,
     { role: "user", content: history.length === 0
         ? "Ask me your first question about this node."
@@ -95,8 +110,8 @@ export async function synthesizeNode(quiz: QuizRow, instruction: string, turns: 
   const transcript = turns.map((t) => `${t.role === "user" ? "OWNER" : "YOU"}: ${t.content}`).join("\n");
   const out = await chat([
     { role: "system", content: `You turn a design brainstorm into ONE node of an automation. Reply with STRICT JSON only:
-{"name":"<a short English node name, 2-4 words>","spec":"<the brief for the coding agent, in ${quiz.language}: what this node does, its input, its output, the rules>"}
-The node name is an identifier shown on the diagram — always English. The spec is written in ${quiz.language}.` },
+{"name":"<a short English node name, 2-4 words>","spec":"<the brief for the coding agent, in ${languageName(quiz.language)}: what this node does, its input, its output, the rules>"}
+The node name is an identifier shown on the diagram — always English. The spec is written in ${languageName(quiz.language)}.` },
     { role: "user", content: `The automation's instruction:\n${instruction}\n\nThe brainstorm for node #${quiz.node_count + 1}:\n${transcript || "(no questions were answered — infer the node from the instruction)"}` },
   ]);
   try {

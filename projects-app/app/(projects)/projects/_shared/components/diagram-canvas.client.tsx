@@ -12,7 +12,8 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Hammer, LayoutGrid, Play, Plus, X } from "lucide-react";
+import { FlaskConical, Hammer, LayoutGrid, Play, Plus, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { NodeContract } from "../node-contract";
 import { DiagramPanel, NodeCard } from "./diagram-panel.client";
@@ -98,6 +99,7 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
   const [sources, setSources] = useState<Sources>({});
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
   const [busy, setBusy] = useState(false);
+  const [testing, setTesting] = useState(false);
 
   const refetchIndex = useCallback(async () => {
     if (!automation) return;
@@ -125,7 +127,17 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
     } catch { /* leave as-is */ }
   }, [automation]);
 
-  useEffect(() => { void refetchIndex(); }, [refetchIndex]);
+  // LIVE canvas (step 227.C). The index is polled, not read once: while a coding agent builds the queued
+  // nodes, the owner WATCHES the diagram update — a red draft turns into a built, versioned node the moment
+  // it materializes, and a node the Quiz just designed appears without a reload. Same cheap DB-backed
+  // pattern as the active-run poll; paused when the tab is hidden, so it costs nothing in the background.
+  useEffect(() => {
+    void refetchIndex();
+    const t = setInterval(() => {
+      if (document.visibilityState === "visible") void refetchIndex();
+    }, 3000);
+    return () => clearInterval(t);
+  }, [refetchIndex]);
   useEffect(() => {
     if (!automation) return;
     void refetchActive();
@@ -236,6 +248,31 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
     setActiveId(null);
   }, [builder, saveLayout, refetchIndex]);
 
+  // 227.C — the smoke test. Runs through the BUILT nodes (the canvas shows them go green) and reports, in
+  // plain language, what still has to be built. The owner always leaves a design session with something
+  // they can run, never with a dead page.
+  const testRun = useCallback(async () => {
+    if (!automation || testing) return;
+    setTesting(true);
+    try {
+      const r = await fetch(`/api/projects/test-run`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ automation }),
+      });
+      const d = (await r.json()) as { ok?: boolean; verdict?: string; report?: string; error?: string };
+      if (!r.ok) { toast.error(d.error ?? "The test could not run."); return; }
+      (d.ok ? toast.success : toast.info)(d.verdict ?? "Test finished", {
+        description: d.report,
+        duration: 20000,
+      });
+      await refetchIndex();
+      await refetchActive();
+    } finally {
+      setTesting(false);
+    }
+  }, [automation, testing, refetchIndex, refetchActive]);
+
   const simulate = useCallback(async () => {
     if (!automation || simulating) return;
     setSimulating(true);
@@ -321,10 +358,18 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
             {builder ? "Close Builder" : "Builder"}
           </Button>
           {!builder && automation && (
-            <Button variant="outline" size="sm" onClick={simulate} disabled={simulating}>
-              <Play className="size-3.5" />
-              {simulating ? "Simulating…" : "Simulate run"}
-            </Button>
+            <>
+              {/* THE MINIMAL TEST GUARANTEE (227.C): even an unfinished automation can be tested — the smoke
+                  run goes through what is BUILT and reports honestly what is still missing. */}
+              <Button variant="outline" size="sm" onClick={testRun} disabled={testing}>
+                <FlaskConical className="size-3.5" />
+                {testing ? "Testing…" : "Test automation"}
+              </Button>
+              <Button variant="outline" size="sm" onClick={simulate} disabled={simulating}>
+                <Play className="size-3.5" />
+                {simulating ? "Simulating…" : "Simulate run"}
+              </Button>
+            </>
           )}
         </div>
       </div>

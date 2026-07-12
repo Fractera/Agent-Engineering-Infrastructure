@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -34,6 +34,16 @@ export function CreateAutomationCard({ category }: { category: string }) {
   const [name, setName] = useState("");
   const [instruction, setInstruction] = useState("");
   const [busy, setBusy] = useState(false);
+  const [lang, setLang] = useState<{ code: string; name: string } | null>(null);
+
+  // The Quiz speaks the project's DEFAULT language — show it before the owner commits (owner's rule).
+  useEffect(() => {
+    if (!open) return;
+    void (async () => {
+      const r = await fetch("/api/projects/language", { cache: "no-store" });
+      if (r.ok) setLang((await r.json()) as { code: string; name: string });
+    })();
+  }, [open]);
 
   async function create() {
     if (!instruction.trim()) {
@@ -123,6 +133,14 @@ export function CreateAutomationCard({ category }: { category: string }) {
             <Label>Category</Label>
             <Input value={category} readOnly className="bg-muted/50" />
           </div>
+
+          {/* The Quiz's language, stated EXPLICITLY (owner's requirement) — the design session must never
+              surprise the owner with its language. It is the project's default language; English only when
+              none is set. */}
+          <p className="rounded-md border border-dashed p-2.5 text-xs text-muted-foreground">
+            The Quiz will run in <span className="font-medium text-foreground">{lang?.name ?? "…"}</span>. To
+            change the default language, use the workspace settings.
+          </p>
 
           <Button onClick={create} disabled={busy} className="w-full">
             {busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} Create automation
