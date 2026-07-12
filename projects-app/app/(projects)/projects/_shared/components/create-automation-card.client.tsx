@@ -48,6 +48,39 @@ export function CreateAutomationDialog({
   const [pickedCategory, setPickedCategory] = useState<string>(PROJECT_CATEGORIES[0].slug);
   const [busy, setBusy] = useState(false);
   const [lang, setLang] = useState<{ code: string; name: string } | null>(null);
+  // The categories are read LIVE (not from the compiled constant): a category created here must appear in
+  // the dropdown at once, before the rebuild that serves its hub route has finished.
+  const [categories, setCategories] = useState<{ slug: string; title: string }[]>(PROJECT_CATEGORIES);
+  const [newCategory, setNewCategory] = useState(false);
+  const [categoryName, setCategoryName] = useState("");
+
+  const loadCategories = async () => {
+    const r = await fetch("/api/projects/categories", { cache: "no-store" });
+    if (r.ok) setCategories(((await r.json()) as { categories: { slug: string; title: string }[] }).categories);
+  };
+
+  async function createCategory() {
+    const slug = slugify(categoryName);
+    if (!slug) { toast.error("Give the category a name."); return; }
+    setBusy(true);
+    try {
+      const r = await fetch("/api/projects/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug, title: categoryName.trim() }),
+      });
+      const d = (await r.json()) as { ok?: boolean; error?: string };
+      if (!r.ok || !d.ok) { toast.error(d.error ?? "Could not create the category."); return; }
+      toast.success(`Category "${categoryName.trim()}" created.`, {
+        description: "Its hub page is being built (1-2 min); you can already put an automation in it.",
+        duration: 12000,
+      });
+      setCategories((c) => [...c.filter((x) => x.slug !== slug), { slug, title: categoryName.trim() }]);
+      setPickedCategory(slug);
+      setNewCategory(false);
+      setCategoryName("");
+    } finally { setBusy(false); }
+  }
 
   // The Quiz speaks the project's DEFAULT language — show it before the owner commits (owner's rule).
   useEffect(() => {
@@ -55,8 +88,10 @@ export function CreateAutomationDialog({
     void (async () => {
       const r = await fetch("/api/projects/language", { cache: "no-store" });
       if (r.ok) setLang((await r.json()) as { code: string; name: string });
+      if (!category) await loadCategories();
     })();
-  }, [open]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, category]);
 
   async function create() {
     if (!instruction.trim()) {
@@ -92,7 +127,8 @@ export function CreateAutomationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+      {/* Wide dialog (owner's request): the design decisions here — type, brief, category — need room. */}
+      <DialogContent className="max-h-[88vh] w-[95vw] max-w-3xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>New automation</DialogTitle>
         </DialogHeader>
@@ -141,17 +177,51 @@ export function CreateAutomationDialog({
             {category ? (
               <Input value={category} readOnly className="bg-muted/50" />
             ) : (
-              // From the GLOBAL CANVAS there is no ambient category — the owner picks one (step 225 G4).
-              <Select value={pickedCategory} onValueChange={setPickedCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PROJECT_CATEGORIES.map((c) => (
-                    <SelectItem key={c.slug} value={c.slug}>{c.title}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              // From the ROOT / the GLOBAL CANVAS there is no ambient category — the owner picks one, or
+              // CREATES a new one right here (step 225 G6): a category is code (a slug in the union + an
+              // entry in PROJECT_CATEGORIES + its own hub route), so the "+" materializes all of it.
+              <div className="flex w-full items-center gap-2">
+                <Select value={pickedCategory} onValueChange={setPickedCategory}>
+                  <SelectTrigger className="w-full flex-1">
+                    <SelectValue placeholder="Choose a category" />
+                  </SelectTrigger>
+                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                    {categories.map((c) => (
+                      <SelectItem key={c.slug} value={c.slug}>{c.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setNewCategory((v) => !v)}
+                  title="Create a new category"
+                >
+                  <Plus className="size-4" />
+                </Button>
+              </div>
+            )}
+
+            {newCategory && !category && (
+              <div className="mt-2 space-y-2 rounded-md border border-dashed p-3">
+                <Label htmlFor="c-name" className="text-xs">New category name</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="c-name"
+                    value={categoryName}
+                    onChange={(e) => setCategoryName(e.target.value)}
+                    placeholder="Finance"
+                    className="flex-1"
+                  />
+                  <Button size="sm" onClick={createCategory} disabled={busy || !categoryName.trim()}>
+                    {busy ? <Loader2 className="size-4 animate-spin" /> : "Create"}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  A category is permanent: its slug is a fixed English identifier and is never renamed.
+                </p>
+              </div>
             )}
           </div>
 
