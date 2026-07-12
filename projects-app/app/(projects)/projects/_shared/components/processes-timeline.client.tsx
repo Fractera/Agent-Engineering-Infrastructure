@@ -9,7 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 // click on a bar scrolls up to the Instances panel. The estimate is refined against reality: a run that
 // finishes early/late shifts the plan (the server recomputes; here we just re-fetch every minute and move
 // the now-line every second).
-type SNode = { name: string; startMs: number; durationMs: number };
+type SNode = { name: string; startMs: number; durationMs: number; status: "done" | "running" | "pending" };
 type SRow = {
   instanceId: string; title: string; ord: number;
   plannedStart: number; plannedDurationMs: number;
@@ -50,7 +50,8 @@ export function ProcessesTimeline({ automation }: { automation: string }) {
 
   useEffect(() => {
     void load();
-    const data = setInterval(() => { if (document.visibilityState === "visible") void load(); }, 60000);
+    // Poll every 3s so nodes turn green live as the run advances (the runner is driven server-side).
+    const data = setInterval(() => { if (document.visibilityState === "visible") void load(); }, 3000);
     return () => clearInterval(data);
   }, [load]);
 
@@ -156,7 +157,11 @@ export function ProcessesTimeline({ automation }: { automation: string }) {
                       <span
                         key={j}
                         role="button"
-                        className="absolute top-1 flex items-center overflow-hidden rounded-sm border border-foreground/20 bg-background/70 text-[9px]"
+                        className={"absolute top-1 flex items-center overflow-hidden rounded-sm border text-[9px] " + (
+                          n.status === "done" ? "border-emerald-500 bg-emerald-500/40"
+                          : n.status === "running" ? "border-orange-500 bg-orange-500/40"
+                          : "border-foreground/20 bg-background/70"
+                        )}
                         style={{ left: nLeft, width: nW, height: NODE_H - 6 }}
                         onClick={(e) => { e.stopPropagation(); focusDiagram(n.name, n.startMs, n.startMs + n.durationMs); }}
                         onMouseEnter={(e) => { e.stopPropagation(); setHover({ x: e.clientX, y: e.clientY, text: `${n.name} — activates ${fmt(n.startMs)}` }); }}

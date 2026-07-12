@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/get-session";
 import { db } from "@/lib/db";
+import { advanceRuns } from "@/lib/schedule";
 
 // Active run of an automation (step 223.C.3) — the read side of the unified run model. Returns the most
 // recent RUNNING run for automation="<category>/<slug>" plus its per-node statuses, so the diagram
@@ -20,6 +21,11 @@ export async function GET(req: NextRequest) {
   }
   const automation = (req.nextUrl.searchParams.get("automation") ?? "").trim();
   if (!automation) return NextResponse.json({ run: null, nodes: {} });
+
+  // Drive the derived fork runner (step 230) so the diagram lights up live: this endpoint is polled every
+  // 1.5s by the canvas, so calling advanceRuns here turns nodes green as their time elapses without any
+  // background job. Best-effort — a scheduling hiccup must not blank the highlight.
+  try { await advanceRuns(automation); } catch { /* keep serving the last state */ }
 
   const run = (await db
     .prepare(
