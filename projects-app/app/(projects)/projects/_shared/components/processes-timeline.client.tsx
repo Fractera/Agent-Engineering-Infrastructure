@@ -82,9 +82,12 @@ export function ProcessesTimeline({ automation }: { automation: string }) {
 
   const xOf = useCallback((ms: number) => (bounds ? (ms - bounds.min) * scale : 0), [bounds, scale]);
 
-  const scrollToInstances = useCallback(() => {
-    document.getElementById("instances-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
+  // Clicking a bar focuses the DIAGRAM (the automation's centerpiece, at the top): scroll up to it and title
+  // it with the clicked node — the word "Diagram", the node name, and its planned start/end (step 230, owner).
+  const focusDiagram = useCallback((name: string, startMs: number, endMs: number) => {
+    window.dispatchEvent(new CustomEvent("processes:focus-node", { detail: { automation, name, startMs, endMs } }));
+    document.getElementById("diagram-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [automation]);
 
   if (rows === null) return <p className="text-sm text-muted-foreground">Loading the timeline…</p>;
   if (!rows.length) {
@@ -135,15 +138,15 @@ export function ProcessesTimeline({ automation }: { automation: string }) {
                 <span className="absolute left-2 top-2 w-[150px] truncate text-xs font-medium" title={r.title}>
                   {r.title}
                 </span>
-                {/* the fork bar */}
+                {/* the fork bar — click focuses the diagram on the fork's whole window */}
                 <button
                   type="button"
-                  onClick={scrollToInstances}
+                  onClick={() => focusDiagram(r.title, r.plannedStart, r.plannedStart + r.plannedDurationMs)}
                   onMouseEnter={(e) => setHover({ x: e.clientX, y: e.clientY, text: `${r.title} — activates ${fmt(r.plannedStart)}` })}
                   onMouseLeave={() => setHover(null)}
-                  className={"absolute rounded border " + (STATUS_BAR[r.status] ?? STATUS_BAR.scheduled)}
+                  className={"absolute overflow-hidden rounded border " + (STATUS_BAR[r.status] ?? STATUS_BAR.scheduled)}
                   style={{ left: barLeft, top: 4, width: barW, height: ROW_H - 8 }}
-                  title={`${r.title} — click to open in the Instances panel`}
+                  title={`${r.title} — click to open its diagram`}
                 >
                   {/* nested node bars */}
                   {r.nodes.map((n, j) => {
@@ -152,8 +155,10 @@ export function ProcessesTimeline({ automation }: { automation: string }) {
                     return (
                       <span
                         key={j}
-                        className="absolute top-1 rounded-sm border border-foreground/20 bg-background/70 text-[9px]"
-                        style={{ left: nLeft, width: nW, height: NODE_H - 6, lineHeight: `${NODE_H - 8}px` }}
+                        role="button"
+                        className="absolute top-1 flex items-center overflow-hidden rounded-sm border border-foreground/20 bg-background/70 text-[9px]"
+                        style={{ left: nLeft, width: nW, height: NODE_H - 6 }}
+                        onClick={(e) => { e.stopPropagation(); focusDiagram(n.name, n.startMs, n.startMs + n.durationMs); }}
                         onMouseEnter={(e) => { e.stopPropagation(); setHover({ x: e.clientX, y: e.clientY, text: `${n.name} — activates ${fmt(n.startMs)}` }); }}
                         onMouseLeave={() => setHover(null)}
                         title={`${n.name} — activates ${fmt(n.startMs)}`}
