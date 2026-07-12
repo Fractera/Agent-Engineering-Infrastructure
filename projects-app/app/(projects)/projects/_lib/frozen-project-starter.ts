@@ -246,6 +246,23 @@ create it by hardcode or any side path. Never encode automation behaviour outsid
 asked. Full rules + the machine-validated enforcement (later step): app/(projects)/README.md,
 "The diagram standard (Master & Instance)".
 
+## Behind a node — the node → functions contract
+A node is a TYPED CONTAINER of the application's own functions. It stores name + description + typed
+input/output params + conditions; the right-hand panel shows name/description directly and, in
+pre-closed accordions, the system INSTRUCTION that generated the functions and one card per FUNCTION
+(its typed inputs/return). A node's functions are DETERMINISTIC application code — running the AI inside
+the application is forbidden; the AI is allowed only as an explicit external tool-call step of a node
+(e.g. image/text generation). A node that is executing gets a bold orange frame, driven by the run's
+current_node (DB-backed, not a client flag). Runtime state lives in automation_runs / automation_run_nodes
+(current_node + per-node status) — that is how "which node is working now" is answered, via the
+automation's own API.
+
+🔴 CRITICAL INVARIANT (co-location) — a node's functions live ONLY in _nodes/<nodeId>/ inside THIS
+project. No shared/common directory, ever. Delete the automation → every function vanishes without a
+trace and with zero technical debt. Never lift a node's functions into a shared lib. Full rules +
+example + the machine-validated enforcement (later step): app/(projects)/README.md,
+"The node → functions contract".
+
 ## Declaring an input channel
 A frozen template cannot know whether you will connect Telegram, YouTube or an inbox — so the
 CHANNELS are not frozen, their SHAPE is (\`_shared/channels.ts\`): a channel has a name, a
