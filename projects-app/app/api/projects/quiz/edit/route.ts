@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { createNodeId } from "@/lib/cuid";
 import { authorize } from "@/lib/nodes";
-import { getPhase, getQuizFor, resolveQuizTarget, USECASES_TURN_INDEX } from "@/lib/quiz";
+import { addTurnAt, getPhase, getQuizFor, resolveQuizTarget, USECASES_TURN_INDEX } from "@/lib/quiz";
 
 // The owner EDITS what the model wrote (step 227.B; both subjects since 225 G4). During Auto-Quiz the
 // model's text area is interactive: the owner pauses, rewrites a sentence, and resumes. The edited text
@@ -12,8 +12,12 @@ export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  const body = (await req.json().catch(() => null)) as { automation?: string; edge?: string; content?: string } | null;
-  const t = await resolveQuizTarget({ automation: body?.automation, edge: body?.edge });
+  const body = (await req.json().catch(() => null)) as
+    | { automation?: string; edge?: string; useCase?: string; cases?: boolean; content?: string; asOwner?: boolean }
+    | null;
+  const t = await resolveQuizTarget({
+    automation: body?.automation, edge: body?.edge, useCase: body?.useCase, cases: body?.cases,
+  });
   if (!t.ok) return NextResponse.json({ error: t.error }, { status: 400 });
   const content = String(body?.content ?? "").trim();
   if (!content) return NextResponse.json({ error: "content is required" }, { status: 400 });
@@ -25,6 +29,15 @@ export async function POST(req: NextRequest) {
   // -1, node #N at N — so an edit during the scenarios never overwrites a node's brainstorm.
   const index =
     (await getPhase(quiz, t.target)) === "usecases" ? USECASES_TURN_INDEX : quiz.node_count;
+
+  // THE OWNER ADOPTS THE TEXT (step 231). In the use-case phase, keeping an auto-quiz draft is the owner
+  // SPEAKING — he read it live and made it his description. It is stored as HIS turn, which is also what
+  // satisfies the skip-refusal in /quiz/usecases-apply (the one-line instruction he typed at creation never
+  // does: deriving cases from it alone is the shortcut this phase exists to forbid).
+  if (body?.asOwner) {
+    await addTurnAt(quiz, index, "user", content);
+    return NextResponse.json({ ok: true, asOwner: true });
+  }
 
   const last = (await db
     .prepare(

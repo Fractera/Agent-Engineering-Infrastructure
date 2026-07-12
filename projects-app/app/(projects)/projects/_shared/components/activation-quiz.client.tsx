@@ -350,17 +350,22 @@ export function ActivationQuiz({
 
   const saveEdit = useCallback(async () => {
     if (!draftText.trim()) return;
+    const asOwner = phase === "usecases" && !isEdge && !isCaseEdit; // keeping the draft IS his description
     setBusy(true);
     try {
       await fetch(`/api/projects/quiz/edit`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...subject(), content: draftText }),
+        body: JSON.stringify({ ...subject(), content: draftText, asOwner }),
       });
-      setTurns((t) => [...t, { role: "assistant", content: draftText }]);
+      setTurns((t) => [...t, { role: asOwner ? "user" : "assistant", content: draftText }]);
       setDraftText("");
-      toast.success("Your edit replaced the model's text — what gets built comes from it.");
+      toast.success(
+        asOwner
+          ? "Kept as your description of the scenarios — the cases will be written from it."
+          : "Your edit replaced the model's text — what gets built comes from it.",
+      );
     } finally { setBusy(false); }
-  }, [draftText, subject]);
+  }, [draftText, subject, phase, isEdge, isCaseEdit]);
 
   // Leaving the use-case phase without cases is allowed (the owner may be interrupted), but it is never
   // silent: the automation cannot be built until they exist, and the Quiz reopens on the next visit.

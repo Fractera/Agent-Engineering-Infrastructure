@@ -32,9 +32,12 @@ export async function POST(req: NextRequest) {
 
   const instruction = await automationInstruction(proj.projectDir);
   const turns = await turnsFor(quiz, target);
-  // The greeting is ours, not the owner's — a session where he said nothing has no scenarios in it.
-  const spoke = turns.some((t) => t.role === "user" && t.content.trim().length > 0);
-  if (!spoke && !instruction.trim()) {
+  // THE SKIP-REFUSAL (owner's rule, proven on the server): the OWNER must have described the scenarios. The
+  // greeting is ours, and the one-line instruction he typed when creating the automation is NOT a
+  // description — deriving cases from it alone is exactly the shortcut this step exists to forbid. An
+  // auto-quiz counts only when he KEPT its text ("Keep this text" saves it as a turn he owns).
+  const spoke = turns.some((t) => t.role === "user" && t.content.trim().length >= 20);
+  if (!spoke) {
     return NextResponse.json(
       {
         error:
