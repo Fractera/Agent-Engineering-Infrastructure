@@ -24,7 +24,14 @@ function typeLine(params: Record<string, string>): string {
 function FunctionCard({ fn }: { fn: NodeFunction }) {
   return (
     <div className="space-y-1 rounded-md border p-2">
-      <p className="font-mono text-xs font-medium">{fn.name}</p>
+      <div className="flex items-center gap-2">
+        <p className="font-mono text-xs font-medium">{fn.name}</p>
+        {fn.externalAi && (
+          <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-600 ring-1 ring-amber-500/25 dark:text-amber-400">
+            external AI call
+          </span>
+        )}
+      </div>
       <p className="font-mono text-[11px] text-muted-foreground">
         in {typeLine(fn.paramsIn)} → {fn.returns}
       </p>
@@ -34,6 +41,24 @@ function FunctionCard({ fn }: { fn: NodeFunction }) {
             <li key={i}>{r}</li>
           ))}
         </ul>
+      )}
+      {/* An external-AI function shows the FULL system instruction it passes (never truncated), plus
+          how the AI's result binds back to the typed return (step 223.C). */}
+      {fn.externalAi && (
+        <div className="mt-1 space-y-1 rounded border border-amber-500/30 bg-amber-500/5 p-2">
+          <p className="text-[10px] font-medium uppercase tracking-wide text-amber-600 dark:text-amber-400">
+            System instruction (sent to the external AI)
+          </p>
+          <pre className="whitespace-pre-wrap break-words font-mono text-[11px] text-muted-foreground">
+            {fn.externalAi.systemInstruction}
+          </pre>
+          {fn.externalAi.resultMapping && (
+            <p className="text-[11px] text-muted-foreground">
+              <span className="font-medium">Result → </span>
+              {fn.externalAi.resultMapping}
+            </p>
+          )}
+        </div>
       )}
     </div>
   );
