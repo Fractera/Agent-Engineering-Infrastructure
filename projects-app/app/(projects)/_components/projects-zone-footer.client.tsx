@@ -27,6 +27,8 @@ function projectFromPath(pathname: string): string | null {
   return segs.length >= 3 ? `${segs[1]}/${segs[2]}` : null;
 }
 
+// Layout (owner): the top border spans the FULL screen width (like the header), the content sits in the
+// standard 85vw column, and the bar itself is 40px tall — it used to eat a lot of vertical space.
 export function ProjectsZoneFooter({ shortName }: { shortName: string }) {
   const pathname = usePathname();
   const [admin, setAdmin] = useState("");
@@ -44,7 +46,8 @@ export function ProjectsZoneFooter({ shortName }: { shortName: string }) {
   const envHref = admin ? `${admin}/?panel=env` : undefined;
 
   return (
-    <footer className="mx-auto mt-4 flex max-w-5xl items-center justify-between border-t px-4 pb-8 pt-4 text-sm text-muted-foreground">
+    <footer className="mt-8 w-full border-t text-sm text-muted-foreground">
+      <div className="mx-auto flex h-10 w-[85vw] max-w-full items-center justify-between px-4">
       <span className="font-medium">{shortName}</span>
       <TooltipProvider>
         <div className="flex items-center gap-1">
@@ -87,6 +90,7 @@ export function ProjectsZoneFooter({ shortName }: { shortName: string }) {
           <ThemeToggle labels={THEME_LABELS} />
         </div>
       </TooltipProvider>
+      </div>
     </footer>
   );
 }
