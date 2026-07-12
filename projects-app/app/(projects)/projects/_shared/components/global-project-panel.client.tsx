@@ -38,16 +38,13 @@ export function GlobalProjectPanel({
         )}
       </div>
 
+      {/* This project's Button primitive has no asChild — navigate on click (the same effect, one primitive). */}
       <div className="flex flex-wrap gap-2">
-        <Button asChild size="sm" variant="outline">
-          <a href={href}>
-            <ExternalLink className="size-3.5" /> Open
-          </a>
+        <Button size="sm" variant="outline" onClick={() => { window.location.href = href; }}>
+          <ExternalLink className="size-3.5" /> Open
         </Button>
-        <Button asChild size="sm" variant="outline">
-          <a href={`${href}#diagram`}>
-            <Workflow className="size-3.5" /> Builder
-          </a>
+        <Button size="sm" variant="outline" onClick={() => { window.location.href = `${href}#diagram`; }}>
+          <Workflow className="size-3.5" /> Builder
         </Button>
       </div>
 

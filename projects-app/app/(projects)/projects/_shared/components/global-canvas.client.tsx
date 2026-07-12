@@ -189,6 +189,7 @@ export function GlobalCanvas() {
   }
 
   const edge = activeEdge ? state.edges.find((e) => e.cuid === activeEdge) : undefined;
+  const project = activeProject ? state.projects.find((p) => p.automation === activeProject) : undefined;
 
   return (
     <section className="mt-10">
@@ -205,6 +206,13 @@ export function GlobalCanvas() {
             <span className={`size-2.5 rounded-full ${STATUS_PILL[state.status] ?? "bg-muted"}`} aria-hidden />
             {state.status === "in-development" ? "In development" : state.status === "on" ? "On" : "Off"}
           </span>
+          {/* A new automation is born FROM THE GLOBAL VIEW (step 225 G4) — the same single entry
+              POST /api/projects/create (never a second code path); the only difference from a category
+              grid's "+" card is that the canvas has no ambient category, so the modal asks for one. The
+              moment it exists, its Quiz opens here and the auto-quiz starts streaming. */}
+          <Button variant="outline" size="sm" onClick={() => setCreating(true)}>
+            <Plus className="size-3.5" /> Add automation
+          </Button>
           <Button variant="outline" size="sm" onClick={autoLayout}>
             <LayoutGrid className="size-3.5" /> Auto-layout
           </Button>
@@ -220,7 +228,8 @@ export function GlobalCanvas() {
           edges={rfEdges}
           nodeTypes={NODE_TYPES}
           onConnect={onConnect}
-          onEdgeClick={(_, e) => setActiveEdge(e.id)}
+          onEdgeClick={(_, e) => { setActiveProject(null); setActiveEdge(e.id); }}
+          onNodeClick={(_, n) => { setActiveEdge(null); setActiveProject(n.id); }}
           onNodeDragStop={(_, n) => {
             const next = { ...positions, [n.id]: { x: n.position.x, y: n.position.y } };
             setPositions(next);
@@ -245,13 +254,56 @@ export function GlobalCanvas() {
               </button>
             </div>
             <GlobalEdgePanel
+              key={`${edge.cuid}-${panelKey}`}
               edge={edge}
               onChanged={() => void refetch()}
               onDeleted={() => { setActiveEdge(null); void refetch(); }}
+              onQuiz={() => setQuiz({ kind: "edge", cuid: edge.cuid, name: edge.name })}
+            />
+          </aside>
+        )}
+
+        {/* THE PROJECT PANEL (step 225 G4) — a click on a project node opens it: Open / Builder / Quiz. */}
+        {project && !edge && (
+          <aside className="absolute inset-y-0 right-0 w-96 space-y-3 overflow-y-auto border-l bg-background/95 p-4">
+            <div className="flex items-center justify-between">
+              <p className="flex items-center gap-1.5 text-sm font-medium">
+                <Boxes className="size-4" /> Automation
+              </p>
+              <button type="button" aria-label="Close" onClick={() => setActiveProject(null)} className="text-muted-foreground hover:text-foreground">
+                <X className="size-4" />
+              </button>
+            </div>
+            <GlobalProjectPanel
+              project={project}
+              onQuiz={() => setQuiz({ kind: "project", automation: project.automation, auto: false })}
             />
           </aside>
         )}
       </div>
+
+      {/* PHASE 1 from the canvas: the creation modal (category picked in the dropdown) → the new automation
+          exists → PHASE 2 opens immediately, auto-quiz streaming, without waiting for its page to build. */}
+      <CreateAutomationDialog
+        open={creating}
+        onOpenChange={setCreating}
+        onCreated={(automation) => {
+          setQuiz({ kind: "project", automation, auto: true });
+          void refetch();
+        }}
+      />
+
+      {quiz && (
+        <ActivationQuiz
+          key={quiz.kind === "edge" ? `edge:${quiz.cuid}` : quiz.automation}
+          open
+          automation={quiz.kind === "project" ? quiz.automation : undefined}
+          edge={quiz.kind === "edge" ? quiz.cuid : undefined}
+          edgeName={quiz.kind === "edge" ? quiz.name : undefined}
+          autoStart={quiz.kind === "project" ? quiz.auto : false}
+          onClose={() => { setQuiz(null); setPanelKey((k) => k + 1); void refetch(); }}
+        />
+      )}
     </section>
   );
 }

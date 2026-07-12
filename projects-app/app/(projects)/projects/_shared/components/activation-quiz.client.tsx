@@ -66,16 +66,20 @@ export function ActivationQuiz({
     onClose?.();
   }, [controlled, onClose]);
 
-  const start = useCallback(async () => {
+  // Start the session — or RE-open one the owner had ended (the canvas can reopen a finished Quiz; the
+  // 10-node cap still holds and the server says so).
+  const start = useCallback(async (reopen = false) => {
     setBusy(true);
     try {
       const r = await fetch(`/api/projects/quiz`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(subject()),
+        body: JSON.stringify({ ...subject(), reopen }),
       });
-      const d = (await r.json()) as { question?: string; error?: string };
+      const d = (await r.json()) as { question?: string | null; error?: string; capped?: boolean; turns?: Turn[] };
       if (!r.ok) { toast.error(d.error ?? "Could not start the quiz."); return; }
-      if (d.question) setTurns([{ role: "assistant", content: d.question }]);
+      if (d.capped) { toast.info(d.error ?? "This design session is complete."); return; }
+      if (d.turns?.length) setTurns(d.turns);
+      else if (d.question) setTurns([{ role: "assistant", content: d.question }]);
     } finally { setBusy(false); }
   }, [subject]);
 
@@ -133,8 +137,14 @@ export function ActivationQuiz({
       if (!r.ok) return;
       const d = (await r.json()) as { started: boolean; status?: string; turns?: Turn[]; nodeCount?: number; maxNodes?: number };
       setMaxNodes(d.maxNodes ?? 10);
-      if (!d.started) await start();
-      else { setTurns(d.turns ?? []); setNodeCount(d.nodeCount ?? 0); }
+      if (!d.started) {
+        await start();
+      } else {
+        setTurns(d.turns ?? []);
+        setNodeCount(d.nodeCount ?? 0);
+        // Opened again from the global canvas after the owner had ended it → revive the session.
+        if (controlled && d.status === "done") await start(true);
+      }
       if (autoStart) void autoQuiz();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps

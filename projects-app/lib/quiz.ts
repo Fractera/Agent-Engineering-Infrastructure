@@ -328,6 +328,14 @@ export async function advanceNode(quiz: QuizRow): Promise<{ done: boolean; nodeC
   return { done, nodeCount };
 }
 
+/** Re-open a finished session (step 225 G4): the owner ended the Quiz, then opened it again from the global
+ *  canvas to design MORE nodes. Refused once the 10-node cap is reached — that cap is the context guard. */
+export async function reopenQuiz(quiz: QuizRow): Promise<{ reopened: boolean; capped: boolean }> {
+  if (quiz.node_count >= MAX_NODES) return { reopened: false, capped: true };
+  await db.prepare(`UPDATE automation_quiz SET status = 'active', finished_at = NULL WHERE id = ?`).run(quiz.id);
+  return { reopened: true, capped: false };
+}
+
 export async function finishQuiz(quiz: QuizRow): Promise<void> {
   await db.prepare(`UPDATE automation_quiz SET status = 'done', finished_at = ? WHERE id = ?`)
     .run(new Date().toISOString(), quiz.id);

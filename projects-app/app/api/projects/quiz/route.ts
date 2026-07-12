@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorize } from "@/lib/nodes";
 import {
-  addTurn, getQuizFor, nextQuestionFor, quizSeed, resolveQuizTarget, startQuizFor, turnsOf, QUIZ_MAX_NODES,
+  addTurn, getQuizFor, nextQuestionFor, quizSeed, reopenQuiz, resolveQuizTarget, startQuizFor, turnsOf,
+  QUIZ_MAX_NODES,
 } from "@/lib/quiz";
 
 // The Quiz state (step 227; generalized over its SUBJECT in step 225 G4). GET tells the caller whether to
@@ -36,11 +37,24 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  const body = (await req.json().catch(() => null)) as { automation?: string; edge?: string } | null;
+  const body = (await req.json().catch(() => null)) as { automation?: string; edge?: string; reopen?: boolean } | null;
   const t = await resolveQuizTarget({ automation: body?.automation, edge: body?.edge });
   if (!t.ok) return NextResponse.json({ error: t.error }, { status: 400 });
 
   const quiz = await startQuizFor(t.target);
+
+  // Re-opened from the global canvas after the owner had ended the session (step 225 G4). The 10-node cap
+  // still holds — it is the context-overflow guard, not a UI limit.
+  if (quiz.status === "done" && body?.reopen) {
+    const { reopened, capped } = await reopenQuiz(quiz);
+    if (!reopened) {
+      return NextResponse.json({
+        ok: true, subject: t.target.kind, capped, question: null, nodeCount: quiz.node_count,
+        error: capped ? `This design session already produced its ${QUIZ_MAX_NODES} nodes — build them first, then start a new one.` : undefined,
+      });
+    }
+  }
+
   const turns = await turnsOf(quiz);
   if (turns.length) {
     return NextResponse.json({
