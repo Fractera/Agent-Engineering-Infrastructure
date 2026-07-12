@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Background,
   Controls,
@@ -12,20 +12,37 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Play, X } from "lucide-react";
+import { Hammer, Play, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { NodeContract } from "../node-contract";
 import { DiagramPanel, NodeCard } from "./diagram-panel.client";
+import { BuilderNodePanel } from "./builder-node-panel.client";
 
-// FROZEN STANDARD (step 223.C) — the diagram CANVAS: the Master's nodes as a graph (react-flow). Click a
-// node → its full contract opens in the side panel. The ACTIVE-NODE HIGHLIGHT (step 223.C.3): the canvas
-// polls the automation's active run (/api/projects/runs/active) and frames the node whose run status is
-// "running" with a BOLD ORANGE frame (finished nodes tint green, failed red). The highlight is DB-backed
-// (the run's current_node), so it is deterministic and survives a reload — not a client flag. A
-// "Simulate" button steps a run through the nodes so the highlight is visible before real execution
-// exists (real execution is 223.C.6; it replaces the simulate trigger with the node functions running).
+// FROZEN STANDARD (step 223.C + 224) — the diagram CANVAS. Two modes:
+//
+// VIEW (223.C): the Master's nodes as a graph; click a node → its full contract in the side panel. The
+// ACTIVE-NODE HIGHLIGHT (223.C.3) polls the automation's active run and frames the running node ORANGE.
+//
+// BUILDER (224 L4): the canvas becomes an AUTHORING surface — the diagram stops merely reflecting the code
+// and starts DRIVING it. Every node grows a "+" (add child) button; a new node is born a DRAFT with a RED
+// frame (not built yet, ignored by execution — a project with any draft is "In development"). The side
+// panel becomes the BuilderNodePanel (draft → free-form brief; materialized → system instruction + version
+// history + rollback). Nodes are draggable and the layout is saved on leaving Builder. The canvas renders
+// the LIVE index (GET /api/projects/nodes) unioned with the build-time nodes prop by cuid, so a node
+// created in Builder appears INSTANTLY — no rebuild (the files are written, the build follows at
+// materialize time).
+export type IndexNode = {
+  cuid: string; slug: string; name: string; parent_cuid: string | null; ord: number;
+  x: number | null; y: number | null; draft: number; active_version: number; latest_version: number;
+  status: string;
+};
+type Sources = Record<string, { spec: string; instruction: string }>;
+
 type RunStatus = "idle" | "running" | "ok" | "fail";
-type CanvasNodeData = { label: string; run: NodeContract["run"]; runStatus: RunStatus };
+type CanvasNodeData = {
+  label: string; sub: string; runStatus: RunStatus; draft: boolean; builder: boolean;
+  onAddChild: (cuid: string) => void; cuid: string;
+};
 type CanvasNode = Node<CanvasNodeData, "diagram">;
 
 const RUN_FRAME: Record<RunStatus, string> = {
@@ -36,14 +53,33 @@ const RUN_FRAME: Record<RunStatus, string> = {
 };
 
 function DiagramNode({ data, selected }: NodeProps<CanvasNode>) {
-  const frame = data.runStatus !== "idle" ? RUN_FRAME[data.runStatus] : selected ? "border-primary ring-1 ring-primary" : "border-border";
+  // The lifecycle frame (draft = red) is independent of the run frame; a running node still shows orange.
+  const frame =
+    data.runStatus !== "idle"
+      ? RUN_FRAME[data.runStatus]
+      : data.draft
+        ? "border-2 border-rose-500 border-dashed"
+        : selected
+          ? "border-primary ring-1 ring-primary"
+          : "border-border";
   return (
-    <div className={`w-48 rounded-md border bg-background px-3 py-2 text-sm shadow-sm ${frame}`}>
+    <div className={`relative w-48 rounded-md border bg-background px-3 py-2 text-sm shadow-sm ${frame}`}>
       <Handle type="target" position={Position.Left} />
       <p className="truncate font-medium">{data.label}</p>
       <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-        {data.runStatus === "running" ? "● running" : data.run}
+        {data.runStatus === "running" ? "● running" : data.draft ? "draft — not built" : data.sub}
       </p>
+      {data.builder && (
+        <button
+          type="button"
+          aria-label="Add child node"
+          title="Add child node"
+          onClick={(e) => { e.stopPropagation(); data.onAddChild(data.cuid); }}
+          className="absolute -right-3 top-1/2 z-10 flex size-6 -translate-y-1/2 items-center justify-center rounded-full border bg-background shadow hover:bg-accent"
+        >
+          <Plus className="size-3.5" />
+        </button>
+      )}
       <Handle type="source" position={Position.Right} />
     </div>
   );
@@ -57,7 +93,24 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
   const [runStatus, setRunStatus] = useState<Record<string, RunStatus>>({});
   const [currentNode, setCurrentNode] = useState<string | null>(null);
   const [simulating, setSimulating] = useState(false);
-  const nodeIds = useMemo(() => nodes.map((n) => n.id), [nodes]);
+  const [builder, setBuilder] = useState(false);
+  const [index, setIndex] = useState<IndexNode[]>([]);
+  const [sources, setSources] = useState<Sources>({});
+  const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const [busy, setBusy] = useState(false);
+
+  const refetchIndex = useCallback(async () => {
+    if (!automation) return;
+    try {
+      const r = await fetch(`/api/projects/nodes?automation=${encodeURIComponent(automation)}&withSources=1`, {
+        cache: "no-store",
+      });
+      if (!r.ok) return;
+      const d = (await r.json()) as { nodes: IndexNode[]; sources?: Sources };
+      setIndex(d.nodes ?? []);
+      setSources(d.sources ?? {});
+    } catch { /* keep the last good index */ }
+  }, [automation]);
 
   const refetchActive = useCallback(async () => {
     if (!automation) return;
@@ -69,12 +122,10 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
       const d = (await r.json()) as { run: { current_node: string | null } | null; nodes: Record<string, RunStatus> };
       setRunStatus(d.nodes ?? {});
       setCurrentNode(d.run?.current_node ?? null);
-    } catch {
-      /* leave as-is */
-    }
+    } catch { /* leave as-is */ }
   }, [automation]);
 
-  // Poll the active run so the highlight reflects the DB (also picks up runs driven elsewhere).
+  useEffect(() => { void refetchIndex(); }, [refetchIndex]);
   useEffect(() => {
     if (!automation) return;
     void refetchActive();
@@ -82,11 +133,57 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
     return () => clearInterval(t);
   }, [automation, refetchActive]);
 
+  // The rendered node list: the live index (it has draft/version/layout and appears without a rebuild)
+  // falls back to the build-time prop when the index has not seeded yet.
+  const view = useMemo(() => {
+    if (index.length) {
+      return index.map((n) => ({
+        id: n.slug, cuid: n.cuid, name: n.name, draft: n.draft === 1,
+        sub: n.draft === 1 ? "draft" : `v${n.active_version}`,
+        x: n.x, y: n.y, node: n,
+      }));
+    }
+    return nodes.map((n) => ({
+      id: n.id, cuid: n.cuid ?? n.id, name: n.name, draft: !!n.draft,
+      sub: n.run, x: null as number | null, y: null as number | null, node: undefined as IndexNode | undefined,
+    }));
+  }, [index, nodes]);
+
+  const addChild = useCallback(async (parentCuid: string) => {
+    if (!automation || busy) return;
+    setBusy(true);
+    try {
+      await fetch(`/api/projects/nodes/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ automation, name: "New node", parentCuid }),
+      });
+      await refetchIndex();
+    } finally { setBusy(false); }
+  }, [automation, busy, refetchIndex]);
+
+  const saveLayout = useCallback(async () => {
+    if (!automation) return;
+    const payload = Object.entries(positions).map(([cuid, p]) => ({ cuid, x: p.x, y: p.y }));
+    if (!payload.length) return;
+    await fetch(`/api/projects/nodes/layout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ automation, positions: payload }),
+    });
+  }, [automation, positions]);
+
+  const toggleBuilder = useCallback(async () => {
+    if (builder) { await saveLayout(); await refetchIndex(); } // leaving Builder persists the layout
+    setBuilder((b) => !b);
+    setActiveId(null);
+  }, [builder, saveLayout, refetchIndex]);
+
   const simulate = useCallback(async () => {
     if (!automation || simulating) return;
     setSimulating(true);
     try {
-      // start + advance until the run finishes (bounded by the node count).
+      const nodeIds = view.map((v) => v.id);
       for (let i = 0; i < nodeIds.length + 2; i++) {
         const r = await fetch(`/api/projects/runs/simulate`, {
           method: "POST",
@@ -102,44 +199,56 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
       setSimulating(false);
       void refetchActive();
     }
-  }, [automation, nodeIds, refetchActive, simulating]);
+  }, [automation, view, refetchActive, simulating]);
 
   const rfNodes = useMemo<CanvasNode[]>(
     () =>
-      nodes.map((n, i) => ({
-        id: n.id,
+      view.map((v, i) => ({
+        id: v.id,
         type: "diagram",
-        position: { x: i * 240, y: 0 },
-        data: { label: n.name, run: n.run, runStatus: runStatus[n.id] ?? "idle" },
+        position: positions[v.cuid] ?? { x: v.x ?? i * 240, y: v.y ?? 0 },
+        data: {
+          label: v.name, sub: v.sub, runStatus: runStatus[v.id] ?? "idle", draft: v.draft,
+          builder, onAddChild: addChild, cuid: v.cuid,
+        },
       })),
-    [nodes, runStatus],
+    [view, runStatus, builder, addChild, positions],
   );
   const rfEdges = useMemo<Edge[]>(
-    () => nodes.slice(1).map((n, i) => ({ id: `${nodes[i].id}->${n.id}`, source: nodes[i].id, target: n.id })),
-    [nodes],
+    () => view.slice(1).map((v, i) => ({ id: `${view[i].id}->${v.id}`, source: view[i].id, target: v.id })),
+    [view],
   );
 
-  const active = activeId ? nodes.find((n) => n.id === activeId) : undefined;
+  const activeView = activeId ? view.find((v) => v.id === activeId) : undefined;
+  const activeContract = activeId ? nodes.find((n) => n.id === activeId) : undefined;
 
-  if (!nodes.length) return <DiagramPanel nodes={[]} />;
+  if (!view.length) return <DiagramPanel nodes={[]} />;
 
   return (
     <div className="space-y-2">
-      {automation && (
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-xs text-muted-foreground">
-            {currentNode ? (
-              <span className="text-orange-600 dark:text-orange-400">● running: {currentNode}</span>
-            ) : (
-              "Not running"
-            )}
-          </p>
-          <Button variant="outline" size="sm" onClick={simulate} disabled={simulating}>
-            <Play className="size-3.5" />
-            {simulating ? "Simulating…" : "Simulate run"}
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs text-muted-foreground">
+          {builder ? (
+            <span className="text-primary">Builder — add, edit or delete nodes; drag to arrange</span>
+          ) : currentNode ? (
+            <span className="text-orange-600 dark:text-orange-400">● running: {currentNode}</span>
+          ) : (
+            "Not running"
+          )}
+        </p>
+        <div className="flex gap-2">
+          <Button variant={builder ? "default" : "outline"} size="sm" onClick={toggleBuilder} disabled={busy}>
+            <Hammer className="size-3.5" />
+            {builder ? "Close Builder" : "Builder"}
           </Button>
+          {!builder && automation && (
+            <Button variant="outline" size="sm" onClick={simulate} disabled={simulating}>
+              <Play className="size-3.5" />
+              {simulating ? "Simulating…" : "Simulate run"}
+            </Button>
+          )}
         </div>
-      )}
+      </div>
       <div className="relative h-[80vh] w-full overflow-hidden rounded-lg border">
         <ReactFlow
           nodes={rfNodes}
@@ -147,15 +256,19 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
           nodeTypes={NODE_TYPES}
           onNodeClick={(_, node) => setActiveId(node.id)}
           onPaneClick={() => setActiveId(null)}
+          onNodeDragStop={(_, node) => {
+            const v = view.find((x) => x.id === node.id);
+            if (v) setPositions((p) => ({ ...p, [v.cuid]: { x: node.position.x, y: node.position.y } }));
+          }}
           nodesConnectable={false}
-          nodesDraggable={false}
+          nodesDraggable={builder}
           deleteKeyCode={null}
           fitView
         >
           <Background />
           <Controls showInteractive={false} />
         </ReactFlow>
-        {active && (
+        {activeView && (
           <aside className="absolute inset-y-0 right-0 w-80 space-y-3 overflow-y-auto border-l bg-background/95 p-4">
             <div className="flex items-center justify-end">
               <button
@@ -167,7 +280,21 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
                 <X className="size-4" />
               </button>
             </div>
-            <NodeCard node={active} />
+            {builder && activeView.node ? (
+              <BuilderNodePanel
+                node={activeView.node}
+                spec={sources[activeView.cuid]?.spec ?? ""}
+                instruction={sources[activeView.cuid]?.instruction ?? ""}
+                onChanged={() => void refetchIndex()}
+                onDeleted={() => { setActiveId(null); void refetchIndex(); }}
+              />
+            ) : activeContract ? (
+              <NodeCard node={activeContract} />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {activeView.draft ? "Draft — not built yet. Open Builder to write its brief." : "No contract built yet."}
+              </p>
+            )}
           </aside>
         )}
       </div>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authorize, resolveProject, syncIndexFromFiles, listNodes } from "@/lib/nodes";
+import { authorize, resolveProject, syncIndexFromFiles, listNodes, readNodeFiles } from "@/lib/nodes";
 
 // The live canvas index (step 224 L3) — GET ?automation=<category>/<slug> returns the lightweight node
 // list the Builder canvas renders (cuid, name, draft, position, versions). It seeds the index from the
@@ -14,5 +14,21 @@ export async function GET(req: NextRequest) {
   const proj = resolveProject(automation);
   if (!proj.ok) return NextResponse.json({ error: proj.error }, { status: 400 });
   await syncIndexFromFiles(proj.automation, proj.projectDir);
-  return NextResponse.json({ nodes: await listNodes(proj.automation) });
+  const nodes = await listNodes(proj.automation);
+
+  // The Builder panel also needs each node's editable text — a draft's spec.md, a materialized node's
+  // instruction.ts. Small (the panel edits them); the heavy version snapshots are never included.
+  if (req.nextUrl.searchParams.get("withSources") === "1") {
+    const sources: Record<string, { spec: string; instruction: string }> = {};
+    for (const n of nodes) {
+      const f = await readNodeFiles(proj.projectDir, n.slug);
+      const instruction = (f.instruction.match(/INSTRUCTION\s*=\s*("(?:[^"\\]|\\.)*")/) ?? [])[1];
+      sources[n.cuid] = {
+        spec: f.spec,
+        instruction: instruction ? (JSON.parse(instruction) as string) : "",
+      };
+    }
+    return NextResponse.json({ nodes, sources });
+  }
+  return NextResponse.json({ nodes });
 }
