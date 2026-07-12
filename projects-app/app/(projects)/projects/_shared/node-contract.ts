@@ -34,6 +34,21 @@ export type NodeContract = {
   /** How the function set runs. */
   run: "sequential" | "parallel";
   functions: NodeFunction[];
-  /** The system instruction that generated the functions (from _nodes/<id>/instruction.md). */
+  /** The system instruction that generated the functions (co-located per node, see below). */
   instruction?: string;
 };
+
+/** A node's metadata — everything in the contract except the function set and the instruction. Lives in
+ *  the node's own `_nodes/<id>/meta.ts`. */
+export type NodeMeta = Omit<NodeContract, "functions" | "instruction">;
+
+/** Assemble a node's full contract from its co-located parts (step 223.C.2). Each node folder
+ *  `_nodes/<id>/` holds meta.ts (NodeMeta), functions.ts (NodeFunction[]) and instruction.ts (string);
+ *  the project's `_data/diagram.ts` composes the Master's nodes (and their order) from these. */
+export function assembleNode(
+  meta: NodeMeta,
+  functions: NodeFunction[],
+  instruction?: string,
+): NodeContract {
+  return { ...meta, functions, instruction };
+}
