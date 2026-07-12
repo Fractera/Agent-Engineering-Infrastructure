@@ -2,6 +2,7 @@ import { PROJECT_DESCRIPTION } from "../_data/description";
 import { DIAGRAM_NODES } from "../_data/diagram";
 import { DiagramSection } from "../../../_shared/components/diagram-section.client";
 import { InstancesPanel } from "../../../_shared/components/instances-panel.client";
+import { ValidateButton } from "../../../_shared/components/validate-button.client";
 
 // Reference example (step 223.C). The Diagram is ALWAYS visible — full screen width, 80vh — not an
 // accordion (owner design): the Master's nodes as a graph; click a node to open its full contract (name/
@@ -21,6 +22,7 @@ export default function ExampleEntry() {
           canvas to open its full contract on the right. Each node&apos;s functions live only in{" "}
           <code>_nodes/&lt;id&gt;/</code>. See app/(projects)/README.md.
         </div>
+        <ValidateButton automation="other/example-content-pipeline" />
       </main>
       <DiagramSection nodes={DIAGRAM_NODES} automation="other/example-content-pipeline" />
       <main className="mx-auto max-w-5xl px-4 py-8">

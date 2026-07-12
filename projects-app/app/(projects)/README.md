@@ -387,9 +387,12 @@ Editing an Instance never mutates the Master or the siblings.
   to add a node to the diagram.
 - **Back-doors outside the diagram are prohibited even if the user explicitly asks for one.** An agent
   must refuse to encode automation behaviour anywhere but the diagram.
-- **Enforcement:** a machine validation that catches behaviour defined outside the diagram is the job
-  of the implementation sub-step (223.C). This section **fixes the rule**; the later step **enforces it
-  in code**. Until then the rule stands as a hard instruction on every agent.
+- **Enforcement (implemented, step 223.C.5):** `lib/diagram/validate.ts` +
+  `GET /api/projects/validate?automation=<category>/<slug>` check the invariants of a project on disk —
+  (1) no second behaviour file (a `_workflow/` folder is flagged), (2) co-location: every `_nodes/<id>/`
+  must be referenced by `_data/diagram.ts` (no orphan functions) and may hold only the allowed files
+  (`meta.ts` / `functions.ts` / `instruction.ts`). It returns `{ ok, violations }`; the `ValidateButton`
+  surfaces it. An agent or CI gates on it. This is how the rule is machine-enforced, not just stated.
 
 ### 7. Scope of this sub-step
 
