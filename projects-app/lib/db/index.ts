@@ -142,6 +142,52 @@ const SCHEMA = `
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(node_cuid, version)
   );
+  -- GLOBAL AUTOMATION CANVAS (step 225) — the workspace-level graph: every PROJECT is a node, and an EDGE
+  -- is a programmable integration BETWEEN two automations. Unlike the tree inside one automation (224), the
+  -- global graph is ARBITRARY: an edge may join any node of X to any node of Y (not only parents/children).
+  -- The edge is a first-class entity with the SAME lifecycle as a node (draft -> spec -> dev step -> coder
+  -- -> version), and its code lives in its own folder projects/_edges/<cuid>/ — it belongs to NO project
+  -- (it is between them); deleting a project cascades to its edges, so no orphans remain.
+  --
+  -- THE READINESS GATE (the step's central rule): a custom edge may be created ONLY between nodes whose
+  -- development is FINISHED — i.e. neither endpoint automation is "In development". Creating an edge always
+  -- changes its endpoint nodes, so they must be built first. An attempted edge between unfinished projects
+  -- is drawn as a RED DASHED line, bolds on hover, and on click explains itself in an error toast.
+  CREATE TABLE IF NOT EXISTS automation_edges (
+    cuid            TEXT PRIMARY KEY NOT NULL,
+    from_automation TEXT NOT NULL,
+    to_automation   TEXT NOT NULL,
+    from_node_cuid  TEXT,
+    to_node_cuid    TEXT,
+    name            TEXT NOT NULL DEFAULT '',
+    draft           INTEGER NOT NULL DEFAULT 1,
+    active_version  INTEGER NOT NULL DEFAULT 0,
+    latest_version  INTEGER NOT NULL DEFAULT 0,
+    status          TEXT NOT NULL DEFAULT 'draft',
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE TABLE IF NOT EXISTS automation_edge_versions (
+    id            TEXT PRIMARY KEY NOT NULL,
+    edge_cuid     TEXT NOT NULL,
+    version       INTEGER NOT NULL,
+    meta_json     TEXT NOT NULL DEFAULT '{}',
+    functions_src TEXT NOT NULL DEFAULT '',
+    spec_src      TEXT NOT NULL DEFAULT '',
+    summary       TEXT NOT NULL DEFAULT '',
+    dev_step_ref  TEXT,
+    created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(edge_cuid, version)
+  );
+  -- The global automation itself has a state: in-development (any edge is still a draft) | on | off.
+  -- OFF does NOT stop the projects — they keep running exactly as before, only the global SYNCHRONISATION
+  -- between them (the edges) stops. One row; it also stores the canvas layout of the project nodes.
+  CREATE TABLE IF NOT EXISTS global_automation (
+    id         INTEGER PRIMARY KEY CHECK (id = 1),
+    status     TEXT NOT NULL DEFAULT 'in-development',
+    layout     TEXT NOT NULL DEFAULT '{}',
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
   -- ACTIVATION QUIZ (step 227) — phase 2 of an automation's birth. Phase 1 (the creation modal, step 224)
   -- captured the type + the owner's instruction and left a bare page whose nodes are drafts. On the FIRST
   -- visit the Quiz opens and brainstorms the instruction into real nodes: one quiz step = one NODE + one

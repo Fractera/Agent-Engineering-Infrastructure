@@ -98,3 +98,48 @@ export async function validateProjectDiagram(projectDir: string): Promise<Diagra
 
   return { ok: violations.length === 0, violations };
 }
+
+// GLOBAL EDGES (step 225) — the same co-location contract, one level up. An edge lives in its OWN folder
+// projects/_edges/<cuid>/ and belongs to no project. A DRAFT edge legally has an empty functions.ts + a
+// spec.md; a MATERIALIZED one must have non-empty functions and no spec.md. An edge folder with no row in
+// the index is an ORPHAN (its projects were deleted, or someone hand-created it) — a violation, because the
+// canvas is the single source of truth for the global graph, exactly as the diagram is for an automation.
+const ALLOWED_EDGE_FILES = new Set(["meta.ts", "functions.ts", "spec.md", "index.ts"]);
+
+export async function validateEdges(
+  edgesDir: string,
+  liveEdgeCuids: string[],
+): Promise<DiagramValidation> {
+  const violations: string[] = [];
+  let folders: string[] = [];
+  try {
+    folders = (await readdir(edgesDir, { withFileTypes: true })).filter((e) => e.isDirectory()).map((e) => e.name);
+  } catch {
+    return { ok: true, violations }; // no edges yet — fine
+  }
+  const live = new Set(liveEdgeCuids);
+
+  for (const cuid of folders) {
+    if (!live.has(cuid)) {
+      violations.push(`_edges/${cuid}/ is not in the global canvas index — an orphan link (its projects may have been deleted).`);
+    }
+    const dir = join(edgesDir, cuid);
+    let files: string[] = [];
+    try { files = await readdir(dir); } catch { continue; }
+    for (const f of files) {
+      if (!ALLOWED_EDGE_FILES.has(f)) {
+        violations.push(`_edges/${cuid}/${f} is not an allowed edge file (meta.ts | functions.ts | spec.md).`);
+      }
+    }
+    const fnText = await readFile(join(dir, "functions.ts"), "utf8").catch(() => "");
+    const empty = fnText.trim() === "" || /FUNCTIONS[^=]*=\s*\[\s*\]/.test(fnText);
+    const hasSpec = files.includes("spec.md");
+    if (empty && !hasSpec) {
+      violations.push(`_edges/${cuid}/ has no functions and no spec.md — a draft edge needs its brief.`);
+    }
+    if (!empty && hasSpec) {
+      violations.push(`_edges/${cuid}/ is materialized but still keeps spec.md — spec.md belongs only to a draft.`);
+    }
+  }
+  return { ok: violations.length === 0, violations };
+}
