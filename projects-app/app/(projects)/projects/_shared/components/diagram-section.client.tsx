@@ -19,6 +19,8 @@ function fmt(ms: number): string {
   return new Date(ms).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" });
 }
 
+// Spacing (owner): mt-16 = 64px of breathing room between the "Add or modify automation" button above and
+// the canvas — they used to touch.
 export function DiagramSection({ nodes, automation }: { nodes: NodeContract[]; automation?: string }) {
   const [focus, setFocus] = useState<Focus>(null);
 
@@ -34,7 +36,7 @@ export function DiagramSection({ nodes, automation }: { nodes: NodeContract[]; a
   }, [automation]);
 
   return (
-    <section id="diagram-section" className="w-full scroll-mt-4 border-y bg-muted/5 px-4 py-4">
+    <section id="diagram-section" className="mt-16 w-full scroll-mt-4 border-y bg-muted/5 px-4 py-4">
       <div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
         <h3 className="text-sm font-semibold">Diagram</h3>
         {focus && (
