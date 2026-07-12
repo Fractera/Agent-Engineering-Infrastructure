@@ -283,6 +283,55 @@ the same way the CARD standard is.
 so an entity absent from an existing project's `_data/config.ts` simply reads as *off* until that project
 enables it. Mandatory entities (today **Diagram** and **Dashboard**) render regardless of the config.
 
+## The dashboard tables & columns standard (step 228)
+
+> The **Dashboard** is ONE tab that holds **ANY number of tables**. What each table draws is decided by
+> **CONFIG**, never by the data — every automation's data differs, so the config describes the *format*, not
+> the values. A **column is DATA, not JSX**: the shared universal table renders whatever the config declares
+> through a **closed set of typed cells**. To add or change a column you edit the config; you never write a
+> component. A fresh automation is born with **one demo table**; when the automation is designed
+> (Quiz / decomposition, step 227), the model **adds the tables it needs to analyse its work**, by this same
+> standard.
+
+**Where it lives.** The config type is `_shared/table-config.ts` (`DashboardConfig` → `DashboardTable[]` →
+`TableColumn[]`); the per-project config is `_data/dashboard.ts` (`PROJECT_DASHBOARD`). The universal table
+is `_shared/components/config-records-table.client.tsx`; the closed renderer registry is
+`config-record-cell.client.tsx`; the accordion is `dashboard-accordion.client.tsx`.
+
+**A column's anatomy.** `{ id, header, type, source, defaultVisible, options? }` — `source` is the key it
+reads from a row's `values`; `defaultVisible` decides whether it shows at startup (the user's personal
+show/hide choice is remembered in **localStorage**, per table). Wide tables **scroll horizontally** — columns
+are never squashed.
+
+**The closed column types + when each is justified** (the machine-readable canon is
+`_shared/column-kinds.ts`; keep the two in step):
+
+| Type | Job | Draws | Needs (enough-data test) |
+|---|---|---|---|
+| `badge` | a short categorical state | a colored pill (`options.colorFrom`) | a short enumerable value + a color field |
+| `text` | a short scalar | a truncated line | a short string |
+| `longtext` | a long field | a clamped line, expands on click | a genuinely long string |
+| `number` | a measure to compare/total | right-aligned, formatted, `options.suffix` | a numeric value |
+| `date` | when something happened / is due | localized date; `options.emphasizeIfFuture` | a parseable date/timestamp |
+| `link` | an outward reference | an "Open" link | a URL |
+| `image` | a visual the row owns | a thumbnail | an image URL |
+| `actions` | act on the row | a Details / delete button | the row id (`source: "id"`) |
+
+**The rule of enough data.** A column is justified ONLY when a row can supply what its type *needs* (the
+table above). If the data cannot provide it — no color for a badge, no URL for a link, no number for a
+number — the model must drop the column or gather the data first, not emit an empty column. This is exactly
+what `column-kinds.ts` encodes so a model can check a declaration before writing it.
+
+**Growing a table = data, not code.** Add a column → add an entry to the table's `columns[]`. Add a table →
+add an entry to `PROJECT_DASHBOARD.tables[]`. A genuinely NEW visualization (a new column type) is the only
+thing that touches code: a new `ColumnType` + a renderer in the registry + a row in the table above — never
+new JSX inside a project.
+
+**The model's default tables (step 227 seam).** When an automation is designed, the model is expected to
+populate `_data/dashboard.ts` with the tables the automation needs *to analyse its own work* — by this
+standard, checked against `column-kinds.ts`. The live per-table data store (a DB table + read/write API that
+replaces the config's seed rows) is a **separate later step**; today the tables render the config's seed rows.
+
 ### User cases — numbered, status-badged, mandatory
 
 User cases are the **mandatory** accordion (outside the six config entities), the result of the
