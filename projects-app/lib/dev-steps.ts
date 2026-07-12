@@ -1,4 +1,4 @@
-import { readdir, writeFile, mkdir } from "node:fs/promises";
+import { readdir, readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 
 // DEVELOPMENT STEPS (step 224 L6) — the handoff to the coding agent. We do NOT invent a mechanism: the
@@ -95,4 +95,69 @@ export async function materializeNodeStep(i: NodeStepInput): Promise<{ file: str
   const file = join(dir, `${String(i.number).padStart(2, "0")}-${slug}.md`);
   await writeFile(file, body, "utf8");
   return { file, message };
+}
+
+// ─── L7: the QUEUE an agent drains (full-auto) ───────────────────────────────────────────────────────
+// The manual flow and the automatic flow are the SAME endpoints — in manual mode the owner carries the
+// message to a coder chat; in full-auto the coding agent reads the pending queue itself, builds the node,
+// and calls materialize. No second mechanism: this is a thin read/close layer over the step files.
+
+export type PendingStep = {
+  number: number;
+  name: string;
+  file: string;
+  automation: string;
+  nodeCuid: string;
+  nodeSlug: string;
+  /** The full copy-paste brief (the fenced block of the step file) — what the agent must execute. */
+  message: string;
+};
+
+function parseStepFile(body: string, file: string, number: number): PendingStep | null {
+  const block = body.match(/<!--\s*fractera:step\s*([\s\S]*?)-->/);
+  if (!block) return null;
+  let meta: { name?: string } = {};
+  try { meta = JSON.parse(block[1].trim()) as { name?: string }; } catch { /* keep going */ }
+  const message = (body.match(/```\n([\s\S]*?)```/) ?? [])[1]?.trim() ?? "";
+  const automation = (message.match(/automation "([^"]+)"/) ?? [])[1] ?? "";
+  const nodeCuid = (message.match(/cuid[^:]*:\s*([a-z0-9]+)/i) ?? [])[1] ?? "";
+  const nodeSlug = (message.match(/_nodes\/([a-z0-9-]+)\//) ?? [])[1] ?? "";
+  return { number, name: meta.name ?? "", file, automation, nodeCuid, nodeSlug, message };
+}
+
+/** Every step still waiting in NEW-STEPS/, oldest first — the agent's work queue. */
+export async function pendingSteps(): Promise<PendingStep[]> {
+  const dir = join(STEPS_DIR(), "NEW-STEPS");
+  const files = (await readdir(dir).catch(() => [] as string[])).filter((f) => f.endsWith(".md")).sort();
+  const out: PendingStep[] = [];
+  for (const f of files) {
+    const number = Number((f.match(/^(\d+)-/) ?? [])[1]);
+    if (!Number.isFinite(number)) continue;
+    const body = await readFile(join(dir, f), "utf8").catch(() => "");
+    const parsed = parseStepFile(body, f, number);
+    if (parsed) out.push(parsed);
+  }
+  return out;
+}
+
+/** Close a step: move NEW-STEPS/NN-*.md to COMPLETED-STEPS/ with status=completed + completedAt. Called by
+ *  materialize when the coder passes devStepRef — this is what keeps the queue honest (a built node's step
+ *  never stays pending). Idempotent: a missing file is not an error. */
+export async function completeStep(number: number, report?: string): Promise<string | null> {
+  const newDir = join(STEPS_DIR(), "NEW-STEPS");
+  const doneDir = join(STEPS_DIR(), "COMPLETED-STEPS");
+  const files = (await readdir(newDir).catch(() => [] as string[]))
+    .filter((f) => f.endsWith(".md") && Number((f.match(/^(\d+)-/) ?? [])[1]) === number);
+  if (!files.length) return null;
+  const name = files[0];
+  const src = join(newDir, name);
+  let body = await readFile(src, "utf8").catch(() => "");
+  const completedAt = new Date().toISOString();
+  body = body.replace(/"status"\s*:\s*"new"/, '"status":"completed"').replace(/"completedAt"\s*:\s*null/, `"completedAt":"${completedAt}"`);
+  if (report) body += `\n## Report\n\n${report.trim()}\n`;
+  await mkdir(doneDir, { recursive: true });
+  const dest = join(doneDir, name);
+  await writeFile(dest, body, "utf8");
+  await rm(src, { force: true });
+  return dest;
 }

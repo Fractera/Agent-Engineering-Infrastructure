@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { createNodeId } from "@/lib/cuid";
+import { completeStep } from "@/lib/dev-steps";
 import { db } from "@/lib/db";
 import {
   authorize, resolveProject, nodeByCuid, readNodeFiles, functionsAreEmpty, stripDraftFlag,
@@ -49,7 +50,13 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ cuid: stri
     `UPDATE automation_nodes SET draft = 0, status = 'materialized', latest_version = ?, active_version = ?, updated_at = datetime('now') WHERE cuid = ?`,
   ).run(version, version, cuid);
 
+  // Close the development step that produced this version — the file moves NEW-STEPS/ -> COMPLETED-STEPS/
+  // with status=completed (step 224 L7). This is what keeps the queue honest: a built node never leaves a
+  // pending step behind, so the full-auto agent always sees only real work.
+  let completed: string | null = null;
+  if (devStepRef) completed = await completeStep(Number(devStepRef), summary);
+
   await regenerateDiagram(proj.projectDir, await liveSlugsInOrder(row.automation));
   scheduleRebuild();
-  return NextResponse.json({ ok: true, cuid, version, building: true });
+  return NextResponse.json({ ok: true, cuid, version, building: true, completedStep: completed });
 }

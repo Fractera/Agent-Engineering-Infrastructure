@@ -393,6 +393,33 @@ Editing an Instance never mutates the Master or the siblings.
   must be referenced by `_data/diagram.ts` (no orphan functions) and may hold only the allowed files
   (`meta.ts` / `functions.ts` / `instruction.ts`). It returns `{ ok, violations }`; the `ValidateButton`
   surfaces it. An agent or CI gates on it. This is how the rule is machine-enforced, not just stated.
+### 6.1. The development loop — how a node gets BUILT (step 224, Builder mode)
+
+The diagram does not only reflect the code, it **drives** it. A node is authored in the **Builder** (the
+canvas's authoring mode) and built by a **coding agent**, through ONE path — manual and full-auto differ only
+in *who carries the brief*:
+
+1. **Author** — in Builder, "+" on a node pulls out a **child draft** (red dashed frame): a real folder
+   `_nodes/<slug>/` with `meta.ts` (`draft: true`, a stable `cuid`), an EMPTY `functions.ts` and a `spec.md`
+   holding the owner's free-form brief. It renders instantly (the DB canvas index), no rebuild.
+2. **Hand off** — "Start development" materializes a **development step file** into the product's own queue
+   `DEVELOPMENT-STEPS/NEW-STEPS/` (`NN-slug.md` + the `fractera:step` machine block, shown on
+   `:3002/service/development-steps`) and shows the copy-paste brief. Editing a **live** node's system
+   instruction and pressing the same button = an **optimization** (target version `latest + 1`).
+3. **Build** — the coding agent writes the node's typed `functions.ts` + `instruction.ts` **inside that node's
+   folder only** (co-location), then makes the MANDATORY closing call
+   `POST /api/projects/nodes/<cuid>/materialize {summary, devStepRef}`. That drops the draft flag, records a
+   FULL version snapshot, sets `active_version = latest_version = N`, regenerates `_data/diagram.ts`,
+   rebuilds — and moves the step file to `COMPLETED-STEPS/`.
+4. **Full-auto (step 224 L7)** — the agent skips the human carrier: `GET /api/projects/dev-steps` returns the
+   pending queue with the full brief; it builds, materializes, repeats. Same endpoints, same files.
+5. **Roll back** — `GET .../versions` lists a node's history; `POST .../rollback {version}` restores that
+   version's files and sets `active_version` (the history and `latest_version` stay intact).
+
+**Interlock:** while ANY node is still a draft, the automation is **auto-stopped** — its pill reads
+**"In development" (indigo)** and it cannot be activated. Running **Instances** (forks, §Master/Instance) keep
+working off their own snapshot; the interlock is about the Master.
+
 - **Evolution (step 224, Builder mode) — a node has a lifecycle, and a DRAFT is a legal file stub.** A node
   created in Builder is born a **draft**: its `meta.ts` carries `draft: true`, its `functions.ts` is empty,
   and it holds a `spec.md` (the owner's free-form brief). It is on the canvas (a real folder, referenced by
