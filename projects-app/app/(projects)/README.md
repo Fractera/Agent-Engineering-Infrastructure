@@ -345,22 +345,58 @@ Because the data is in the DB, not in a file, **rows appear with no rebuild**.
 
 ### User cases — numbered, status-badged, mandatory
 
-User cases are the **mandatory** accordion (outside the six config entities), the result of the
-architect dialogue at the earliest stage. Each case carries a **big number** (`01`, `02`, …) so the
-owner can refer to it ("in case 02, change …"), the case title, and a **colored status badge**. The
-lifecycle, English labels: **new → in approval → approved → in development → testing → in use**. A
-fresh skeleton is **seeded with one case** — *"Architect planned the automation" / new* — so the step
-is impossible to skip; it shows the agent the shape to reuse and forces it to segment the request into
-cases. Types live in `_shared/use-cases.ts` (`UseCaseStatus`, `STATUS_META`, `UseCase`); the cases
-themselves in the project's `_data/use-cases.ts`.
+User cases are the **mandatory** accordion (outside the six config entities). Each case carries a **big
+number** (`01`, `02`, …) so the owner can refer to it ("in case 02, change …"), the case title, and a
+**colored status badge**. The lifecycle, English labels: **new → in approval → approved → in development
+→ testing → in use**. Types live in `_shared/use-cases.ts` (`UseCaseStatus`, `STATUS_META`, `UseCase`).
+
+**Storage (step 231).** The DB is the SOURCE (`automation_use_cases`, `lib/use-cases.ts`); the project's
+`_data/use-cases.ts` is the **regenerated artefact** — the same Model-B split the diagram uses. Never
+hand-edit the file: it is rewritten on every add / edit / delete. A fresh skeleton emits it **empty**.
+
+### 🔴 Use cases come FIRST — the gate (step 231)
+
+**An automation is not created from an instruction.** Its first stage is the scenarios:
+
+1. On the **first visit** the Quiz opens in the **use-case phase**. It tells the owner, in the project's
+   language, to describe every scenario that can come up for him — or for the AI — while working with the
+   automation: who triggers it, what comes in, what must come out, and what happens when something goes
+   wrong. **Free speech, no format; voice dictation is recommended.**
+2. The model interviews him, and replies `READY` when the description is **detailed enough**.
+3. **"The cases are ready"** turns the conversation into numbered cases (status `new`) and only THEN does
+   the Quiz move on to designing nodes.
+4. **Skipping is refused, loudly.** `POST /api/projects/quiz/next-node` returns **409** while the session
+   is still in the use-case phase, or while the automation has no cases: *"without a detailed description
+   the automation cannot be created"*. Closing the dialog is allowed — it reopens on the next visit.
+
+### The review gate — where the owner and the AI agree (step 231)
+
+**No development step is ever created until the owner has read the cases back and confirmed them.** The
+Use cases panel shows the state (confirmed / not confirmed) and a **"Read & confirm"** dialog listing every
+case; confirming records a hash of exactly what he agreed to and moves `new` cases to `approved`.
+
+The gate (`assertUseCasesReviewed`, `lib/use-cases.ts`) is enforced in **every** path that materializes a
+step — the Quiz's "finish this node", and the Builder's "Start development" / rocket. **Editing, adding or
+deleting a case changes the set and stales the confirmation**, so a changed scenario always forces a fresh
+agreement before more code is written. Both refusals return `409` with the reason (`no-cases`,
+`not-reviewed`) and the UI opens the review dialog from the toast.
+
+### Editing the cases — pencil, pencil, trash
+
+- **Pencil on the panel header** → the Quiz walks the **whole set** again: each case in turn, plus any new
+  one the owner wants to add.
+- **Pencil on a case** → the same Quiz, scoped to **that** case.
+- **Trash on a case** → delete, always with a confirmation. Nodes that implement it are *not* deleted.
+- Each session ends the way a node does: **ONE development step per changed (or added) case**, written to
+  the existing file queue (`materializeUseCaseStep`, `DEVELOPMENT-STEPS/NEW-STEPS/`). The step does not
+  name files — which nodes the case touches is what the coding agent works out from the diagram.
 
 ### The development cycle (why this shape)
 
-An automation is **not built in one shot**. The user's initial request is broken into **raw user
-cases** — even if the user never wrote it as cases. Cases are filed as *new* (or matched to existing
-structure and given other statuses), and development runs in **many short iterations**, moving each
-case's status forward until they are all **in use**. This is why the entities are declared first as
-empty, tooltip-labelled containers: the shape is agreed before any interface is generated.
+An automation is **not built in one shot**. The owner's request is broken into **raw user cases** — even
+when he never wrote it as cases — and development runs in **many short iterations**, moving each case's
+status forward until they are all **in use**. This is why the entities are declared first as empty,
+tooltip-labelled containers: the shape is agreed before any interface is generated.
 
 Like the standards above, the frozen starter emits `_data/config.ts` + `_data/use-cases.ts` and mounts
 `AutomationAccordions` in the project's `index.tsx`, and mirrors a short copy of this section into the

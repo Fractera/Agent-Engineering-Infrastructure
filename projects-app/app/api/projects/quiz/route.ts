@@ -1,17 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorize } from "@/lib/nodes";
 import {
-  addTurn, getQuizFor, nextQuestionFor, quizSeed, reopenQuiz, resolveQuizTarget, startQuizFor, turnsOf,
-  QUIZ_MAX_NODES,
+  addTurnFor, getPhase, getQuizFor, nextQuestionFor, quizSeed, reopenQuiz, resolveQuizTarget, startQuizFor,
+  turnsFor, useCasesGreeting, QUIZ_MAX_NODES,
 } from "@/lib/quiz";
+import { listCases } from "@/lib/use-cases";
 
-// The Quiz state (step 227; generalized over its SUBJECT in step 225 G4). GET tells the caller whether to
-// open the Quiz (no row yet → first visit) and resumes an interrupted one with its turns; POST starts it
-// and returns the FIRST question — in the project's default language.
+// The Quiz state (step 227; generalized over its SUBJECT in step 225 G4; two PHASES since step 231). GET
+// tells the caller whether to open the Quiz (no row yet → first visit) and resumes an interrupted one with
+// its turns; POST starts it and returns the FIRST message — in the project's default language.
 //
-// SUBJECT: ?automation=<category>/<slug> (design the NODES of a project) OR ?edge=<cuid> (design HOW two
-// automations are linked — brainstormed from the global canvas). One set of routes, one brainstorm, two
-// subjects; the row key is "category/slug" or "edge:<cuid>".
+// SUBJECT: ?automation=<category>/<slug> (design a project) OR ?edge=<cuid> (design HOW two automations are
+// linked). One set of routes, one brainstorm, two subjects; the row key is "category/slug" or "edge:<cuid>".
+//
+// PHASE (step 231, projects only): "usecases" → "nodes". A project's Quiz ALWAYS opens on the user cases:
+// the owner describes the scenarios first, in free speech, and only when they are detailed enough does the
+// Quiz move on to designing nodes. An edge has no such phase (it links automations that already have theirs).
 export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
@@ -23,15 +27,23 @@ export async function GET(req: NextRequest) {
   if (!t.ok) return NextResponse.json({ error: t.error }, { status: 400 });
 
   const quiz = await getQuizFor(t.target);
-  if (!quiz) return NextResponse.json({ started: false, subject: t.target.kind, maxNodes: QUIZ_MAX_NODES });
+  if (!quiz) {
+    return NextResponse.json({
+      started: false, subject: t.target.kind, phase: t.target.kind === "project" ? "usecases" : "nodes",
+      maxNodes: QUIZ_MAX_NODES,
+    });
+  }
+  const phase = await getPhase(quiz, t.target);
   return NextResponse.json({
     started: true,
     subject: t.target.kind,
+    phase,
+    caseCount: t.target.kind === "project" ? (await listCases(t.target.automation)).length : 0,
     status: quiz.status,
     language: quiz.language,
     nodeCount: quiz.node_count,
     maxNodes: QUIZ_MAX_NODES,
-    turns: await turnsOf(quiz),
+    turns: await turnsFor(quiz, t.target),
   });
 }
 
@@ -55,19 +67,31 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const turns = await turnsOf(quiz);
+  const phase = await getPhase(quiz, t.target);
+  const turns = await turnsFor(quiz, t.target);
   if (turns.length) {
     return NextResponse.json({
-      ok: true, subject: t.target.kind, question: turns[turns.length - 1].content, turns, nodeCount: quiz.node_count,
+      ok: true, subject: t.target.kind, phase, question: turns[turns.length - 1].content, turns,
+      nodeCount: quiz.node_count,
+    });
+  }
+
+  // PHASE 1 (step 231): the first thing the owner reads is the use-case briefing — a deterministic text, not
+  // a model call, so it can never fail, drift, or depend on the API key being set yet.
+  if (phase === "usecases") {
+    const greeting = await useCasesGreeting(quiz.language);
+    await addTurnFor(quiz, t.target, "assistant", greeting);
+    return NextResponse.json({
+      ok: true, subject: t.target.kind, phase, question: greeting, nodeCount: 0, language: quiz.language,
     });
   }
 
   try {
     const seed = await quizSeed(t.target);
     const question = await nextQuestionFor(quiz, t.target, seed, []);
-    await addTurn(quiz, "assistant", question);
+    await addTurnFor(quiz, t.target, "assistant", question);
     return NextResponse.json({
-      ok: true, subject: t.target.kind, question, nodeCount: quiz.node_count, language: quiz.language,
+      ok: true, subject: t.target.kind, phase, question, nodeCount: quiz.node_count, language: quiz.language,
     });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 502 });

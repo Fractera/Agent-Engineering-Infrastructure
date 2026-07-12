@@ -82,7 +82,23 @@ export function BuilderNodePanel({
         body: JSON.stringify(node.draft ? { spec: text } : { instruction: text }),
       });
       const r = await fetch(`/api/projects/nodes/${node.cuid}/start-development`, { method: "POST" });
-      if (!r.ok) { toast.error("Could not create the development step."); return; }
+      if (!r.ok) {
+        // THE USER-CASE GATE (step 231): no cases, or the owner has not confirmed the current set. The server
+        // says exactly which — show it, and take him to the Use cases panel to settle it.
+        const err = (await r.json().catch(() => ({}))) as { error?: string; reason?: string };
+        const gated = err.reason === "no-cases" || err.reason === "not-reviewed";
+        toast.error(err.error ?? "Could not create the development step.", {
+          duration: 15000,
+          action: gated
+            ? {
+                label: "Open user cases",
+                // One Use cases panel per page — it listens for this and opens its review dialog.
+                onClick: () => window.dispatchEvent(new CustomEvent("usecases:review", { detail: {} })),
+              }
+            : undefined,
+        });
+        return;
+      }
       const d = (await r.json()) as { number: number; message: string };
       toast.success(`You created a technical brief for the coding agent (step #${d.number})`, {
         description: "Copy this message and paste it into the coding agent's chat.",

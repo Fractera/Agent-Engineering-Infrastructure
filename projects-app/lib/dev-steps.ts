@@ -167,6 +167,75 @@ export async function materializeEdgeStep(i: EdgeStepInput): Promise<{ file: str
   return { file, message };
 }
 
+// ─── USER CASES (step 231): a CHANGED scenario is built by the same pipeline as a node ───────────────
+// A use case is what the automation must DO, in the owner's words. When he edits one (or adds one) after the
+// automation already exists, the code must follow — so the change leaves the Quiz as ONE development step in
+// the same queue. Unlike a node step, it does not name the files to write: which nodes must change is what
+// the coding agent works out from the diagram (the single source of truth) and the case.
+
+export type UseCaseStepInput = {
+  number: number;
+  automation: string;        // "category/slug"
+  caseCuid: string;
+  caseNumber: number;        // the case's number on the page (01, 02, …)
+  title: string;
+  summary: string;
+  previous?: string;         // the case as it read BEFORE the edit ("" for a brand-new case)
+  nodes: { slug: string; name: string; draft: boolean }[];
+};
+
+export function buildUseCaseStepMessage(i: UseCaseStepInput): string {
+  const list = i.nodes.length
+    ? i.nodes.map((n, k) => `  ${k + 1}. ${n.name} (_nodes/${n.slug}/)${n.draft ? " — still a draft" : ""}`).join("\n")
+    : "  (the automation has no nodes yet — design them from this case)";
+  return `Execute development step #${i.number} in the Fractera projects app.
+
+TASK: bring the automation "${i.automation}" in line with a CHANGED user case.
+
+USER CASE ${String(i.caseNumber).padStart(2, "0")} (cuid ${i.caseCuid}) — as the owner states it NOW:
+${i.title}
+${i.summary.trim() || "(no description)"}
+${i.previous?.trim() ? `\nHOW IT READ BEFORE:\n${i.previous.trim()}\n` : ""}
+THE AUTOMATION'S CURRENT NODES:
+${list}
+
+WHAT TO DO
+1. Read app/(projects)/README.md — "User cases", "The diagram standard" and "The node -> functions contract".
+2. Work out WHICH nodes this case touches. The diagram is the source of truth: change existing nodes, or add
+   a node through the Builder API — never write behaviour outside a node's own folder.
+3. Implement the case. Keep every other case working: they are all listed in _data/use-cases.ts.
+4. Close each node you rebuild with its materialize call (POST /api/projects/nodes/<cuid>/materialize with
+   devStepRef "${i.number}"), so the version history records this step.
+5. Verify: GET http://localhost:3003/api/projects/validate?automation=${i.automation} returns ok:true.
+
+DONE = the case is implemented by real node functions, the validator is clean, and no other case regressed.`;
+}
+
+export async function materializeUseCaseStep(i: UseCaseStepInput): Promise<{ file: string; message: string }> {
+  const message = buildUseCaseStepMessage(i);
+  const name = `User case ${String(i.caseNumber).padStart(2, "0")} of ${i.automation}: ${i.title}`;
+  const block = JSON.stringify({
+    number: i.number,
+    name,
+    importance: "mandatory",
+    status: "new",
+    completedAt: null,
+    description: `Bring the automation ${i.automation} in line with user case ${i.caseCuid} ("${i.title}"). Work out which nodes it touches from the diagram, implement it there, and materialize every node you rebuild.`,
+    tasks: [
+      { id: `${i.caseCuid}-map`, body: "Work out which nodes this user case touches (the diagram is the truth)" },
+      { id: `${i.caseCuid}-impl`, body: "Implement the case in those nodes' functions.ts (co-location)" },
+      { id: `${i.caseCuid}-mat`, body: "Materialize every rebuilt node, then run the validator" },
+    ],
+  });
+  const body = `# ${String(i.number).padStart(2, "0")} — ${name}\n\n> Development step · importance: mandatory · generated from a user case (step 231)\n\n## The case (the owner's words)\n\n${i.summary.trim() || "(no description)"}\n\n## The message handed to the coding agent\n\n\`\`\`\n${message}\n\`\`\`\n\n<!-- fractera:step\n${block}\n-->\n`;
+
+  const dir = join(STEPS_DIR(), "NEW-STEPS");
+  await mkdir(dir, { recursive: true });
+  const file = join(dir, `${String(i.number).padStart(2, "0")}-use-case-${i.caseCuid.slice(0, 8)}.md`);
+  await writeFile(file, body, "utf8");
+  return { file, message };
+}
+
 // ─── L7: the QUEUE an agent drains (full-auto) ───────────────────────────────────────────────────────
 // The manual flow and the automatic flow are the SAME endpoints — in manual mode the owner carries the
 // message to a coder chat; in full-auto the coding agent reads the pending queue itself, builds the node,

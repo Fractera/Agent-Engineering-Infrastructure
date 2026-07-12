@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { authorize } from "@/lib/nodes";
-import { addTurn, autoSystemPrompt, getQuizFor, openAiKey, quizSeed, resolveQuizTarget, turnsOf } from "@/lib/quiz";
+import {
+  addTurnFor, autoSystemPrompt, getPhase, getQuizFor, openAiKey, quizSeed, resolveQuizTarget, turnsFor,
+} from "@/lib/quiz";
 
 // AUTO-QUIZ (step 227.B; both subjects since 225 G4) — the owner skips the manual Q&A and lets the model
 // brainstorm WITH ITSELF: it asks its own questions and answers them, out loud. STREAMING is mandatory
@@ -26,12 +28,14 @@ export async function POST(req: NextRequest) {
   if (!key) return new Response("OPENAI_API_KEY is not set", { status: 400 });
 
   const seed = await quizSeed(t.target);
-  const turns = await turnsOf(quiz);
+  const turns = await turnsFor(quiz, t.target);
   const transcript = turns.map((x) => `${x.role === "user" ? "OWNER" : "DESIGNER"}: ${x.content}`).join("\n");
-  const subject = t.target.kind === "edge" ? "this link" : "this node";
+  const phase = await getPhase(quiz, t.target);
+  const subject =
+    t.target.kind === "edge" ? "this link" : phase === "usecases" ? "the user cases" : "this node";
 
   const messages = [
-    { role: "system", content: autoSystemPrompt(quiz, t.target, seed) },
+    { role: "system", content: await autoSystemPrompt(quiz, t.target, seed) },
     {
       role: "user",
       content: transcript
@@ -81,7 +85,7 @@ export async function POST(req: NextRequest) {
         }
         // Persist what the model produced as the assistant turn — the owner may still edit it (the client
         // saves the edited text back), and the node / the link is synthesized from the turns.
-        if (full.trim()) await addTurn(quiz, "assistant", full.trim());
+        if (full.trim()) await addTurnFor(quiz, t.target, "assistant", full.trim());
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       } catch {
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));

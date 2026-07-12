@@ -250,6 +250,39 @@ const SCHEMA = `
     content    TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
+  -- USER CASES (step 231) — the automation's scenarios, and the PRE-STAGE of its birth: the Quiz collects
+  -- them BEFORE any node is designed, and no development step is created until the owner has read them back
+  -- and confirmed that the AI understood him. The DB is the source; _data/use-cases.ts is the regenerated
+  -- file artefact (the same Model-B split the diagram uses). status walks the lifecycle new → in-approval →
+  -- approved → in-development → testing → in-use (_shared/use-cases.ts).
+  CREATE TABLE IF NOT EXISTS automation_use_cases (
+    cuid       TEXT PRIMARY KEY NOT NULL,
+    automation TEXT NOT NULL,                     -- "category/slug"
+    ord        INTEGER NOT NULL DEFAULT 0,        -- the case's number on the page (01, 02, …)
+    title      TEXT NOT NULL DEFAULT '',
+    summary    TEXT NOT NULL DEFAULT '',
+    status     TEXT NOT NULL DEFAULT 'new',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  -- THE REVIEW GATE (step 231). The owner confirms ONCE that he read the cases and the AI understood him;
+  -- we store WHAT he confirmed (a hash of the case set). Any later edit/add/delete changes the hash → the
+  -- confirmation is stale → the next development step asks for it again. This is the "AI and human agree"
+  -- checkpoint of the Development Steps pipeline.
+  CREATE TABLE IF NOT EXISTS automation_use_cases_review (
+    automation    TEXT PRIMARY KEY NOT NULL,
+    reviewed_at   TEXT NOT NULL DEFAULT (datetime('now')),
+    reviewed_hash TEXT NOT NULL DEFAULT ''
+  );
+  -- The Quiz's PHASE (step 231) — 'usecases' (collect the scenarios first) → 'nodes' (design the nodes).
+  -- A SEPARATE table on purpose: automation_quiz already exists on live servers, and a live DB never gains a
+  -- column (CREATE TABLE IF NOT EXISTS does not alter, and the makeLocalDb ALTER path does not run on the
+  -- data service — the "no column named subject" lesson, step 225 G4).
+  CREATE TABLE IF NOT EXISTS automation_quiz_phase (
+    quiz_id    TEXT PRIMARY KEY NOT NULL,
+    phase      TEXT NOT NULL DEFAULT 'usecases',  -- usecases | nodes
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
   -- Automation finance types (step 205, §E): the per-automation income/expense categories the
   -- document-parsing / voice finance action segments a record into. Capped at ≤10 per (project,kind)
   -- in the app layer (not a schema constraint); UNIQUE(project,kind,name) prevents duplicates. Replaces

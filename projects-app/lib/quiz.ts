@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { createNodeId } from "@/lib/cuid";
 import { listNodes, resolveProject } from "@/lib/nodes";
 import { edgeByCuid, readEdgeFiles } from "@/lib/edges";
+import { caseByCuid, listCases } from "@/lib/use-cases";
 
 // ACTIVATION QUIZ (step 227) — phase 2 of an automation's birth. Phase 1 (step 224) captured the type and
 // the owner's INSTRUCTION and left a bare page whose default nodes are drafts. On the first visit this Quiz
@@ -30,15 +31,30 @@ export type Turn = { role: string; content: string; node_index: number };
 //   • project → the nodes of an automation (step 227, unchanged),
 //   • edge    → HOW two automations are linked (which output feeds which input, under what conditions).
 // The row key is the single `automation` column: "category/slug" for a project, "edge:<cuid>" for an edge.
+// STEP 231 — two more subjects, both about USER CASES of an automation that already exists:
+//   • usecases → the owner walks the WHOLE set again (the pencil on the panel's header): the model asks about
+//     each existing case in turn and takes any new ones he adds,
+//   • usecase  → ONE case (the pencil on a case): the same brainstorm, scoped to it.
+// Both end the same way a node does: the change becomes ONE development step per changed/added case.
 export type QuizTarget =
   | { kind: "project"; key: string; automation: string; projectDir: string }
-  | { kind: "edge"; key: string; cuid: string };
+  | { kind: "edge"; key: string; cuid: string }
+  | { kind: "usecases"; key: string; automation: string; projectDir: string }
+  | { kind: "usecase"; key: string; cuid: string; automation: string; projectDir: string };
 
 export const edgeQuizKey = (cuid: string) => `edge:${cuid}`;
+export const useCaseQuizKey = (cuid: string) => `usecase:${cuid}`;
+export const useCasesQuizKey = (automation: string) => `usecases:${automation}`;
 
-/** Resolve the subject of a request ({automation} | {edge}) into a target — used by every quiz route. */
+/** The automation a target belongs to ("" for an edge, which belongs to none). */
+export function targetAutomation(target: QuizTarget): string {
+  return target.kind === "edge" ? "" : target.automation;
+}
+
+/** Resolve the subject of a request ({automation} | {edge} | {useCase} | {automation, cases:true}) into a
+ *  target — used by every quiz route. */
 export async function resolveQuizTarget(
-  input: { automation?: unknown; edge?: unknown },
+  input: { automation?: unknown; edge?: unknown; useCase?: unknown; cases?: unknown },
 ): Promise<{ ok: true; target: QuizTarget } | { ok: false; error: string }> {
   const edge = String(input.edge ?? "").trim();
   if (edge) {
@@ -46,8 +62,27 @@ export async function resolveQuizTarget(
     if (!row) return { ok: false, error: "edge not found" };
     return { ok: true, target: { kind: "edge", key: edgeQuizKey(edge), cuid: edge } };
   }
+
+  const useCase = String(input.useCase ?? "").trim();
+  if (useCase) {
+    const row = await caseByCuid(useCase);
+    if (!row) return { ok: false, error: "user case not found" };
+    const p = resolveProject(row.automation);
+    if (!p.ok) return { ok: false, error: p.error };
+    return {
+      ok: true,
+      target: { kind: "usecase", key: useCaseQuizKey(useCase), cuid: useCase, automation: p.automation, projectDir: p.projectDir },
+    };
+  }
+
   const proj = resolveProject(String(input.automation ?? ""));
   if (!proj.ok) return { ok: false, error: proj.error };
+  if (input.cases) {
+    return {
+      ok: true,
+      target: { kind: "usecases", key: useCasesQuizKey(proj.automation), automation: proj.automation, projectDir: proj.projectDir },
+    };
+  }
   return {
     ok: true,
     target: { kind: "project", key: proj.automation, automation: proj.automation, projectDir: proj.projectDir },
@@ -214,15 +249,209 @@ RULES
 - Never ask about code — ask about the owner's intent and the data crossing the link.
 - Write EVERY message in this language: ${lang}. Never switch to another language.`;
 
-/** The seed a session hangs on: a project's instruction, or an edge's two-sided context. */
-export async function quizSeed(target: QuizTarget): Promise<string> {
-  return target.kind === "project" ? automationInstruction(target.projectDir) : edgeContext(target.cuid);
+// ─── PHASE 1 of a project: THE USER CASES (step 231) ─────────────────────────────────────────────────
+// The owner's rule: an automation is NOT created from an instruction. Its birth starts with the SCENARIOS —
+// everything that can happen to the user (or to the AI) while working with it. Only when they are described
+// in enough detail does the Quiz move on to designing nodes. Skipping is refused, loudly.
+
+export type QuizPhase = "usecases" | "nodes";
+
+/** The FIRST thing the owner ever reads in the Quiz. Deterministic (no model call, no key needed) so the
+ *  greeting can never fail or drift; translated for the languages we ship, and model-translated otherwise. */
+const GREETING_EN =
+  "Before we build this automation, describe its USER CASES — every scenario that can come up for you, or " +
+  "for the AI, while working with it. Speak freely, in your own words: who does what, when, what comes in " +
+  "and what should come out, and what happens when something goes wrong. There is no format to follow. " +
+  "Voice dictation is recommended — it is the fastest way to get everything out.\n\n" +
+  "When your description is detailed enough, I will turn it into numbered user cases, and only then will we " +
+  "design the automation itself. Without this description the automation cannot be created.";
+
+const GREETING_RU =
+  "Прежде чем строить эту автоматизацию, опишите её ПОЛЬЗОВАТЕЛЬСКИЕ КЕЙСЫ — все сценарии, какие могут " +
+  "встретиться у вас или у искусственного интеллекта при работе с ней. Говорите свободно, своими словами: " +
+  "кто что делает и когда, что приходит на вход и что должно получиться на выходе, что происходит, когда " +
+  "что-то идёт не так. Никакого формата соблюдать не нужно. Рекомендуется голосовой набор — так быстрее " +
+  "всего выговорить всё целиком.\n\n" +
+  "Когда описание станет достаточно подробным, я превращу его в пронумерованные пользовательские кейсы, и " +
+  "только после этого мы займёмся самой автоматизацией. Без этого описания создать автоматизацию не получится.";
+
+export async function useCasesGreeting(language: string): Promise<string> {
+  const code = language.toLowerCase();
+  if (code.startsWith("ru")) return GREETING_RU;
+  if (code.startsWith("en")) return GREETING_EN;
+  try {
+    return await chat([
+      { role: "system", content: `Translate the text into ${languageName(code)}. Keep the meaning, the tone and the paragraph break. Reply with the translation only.` },
+      { role: "user", content: GREETING_EN },
+    ]);
+  } catch {
+    return GREETING_EN; // the key may be missing — the owner still gets the instruction, in English
+  }
 }
 
-/** The next question — for either subject (the routes never branch on prompts themselves). */
-export async function nextQuestionFor(quiz: QuizRow, target: QuizTarget, seed: string, turns: Turn[]): Promise<string> {
-  if (target.kind === "project") return nextQuestion(quiz, seed, turns);
+const USECASES_SYSTEM = (lang: string, instruction: string) =>
+  `You are helping an automation's owner describe its USER CASES — the scenarios the automation must handle.
+This happens BEFORE any node of the automation is designed: nothing gets built until the scenarios are clear.
+
+The owner's instruction (all you know so far):
+"""
+${instruction || "(not stated)"}
+"""
+
+WHAT A GOOD SET OF USER CASES CONTAINS
+- who triggers the automation and how (a person, a schedule, an incoming message, another system),
+- what data comes IN and what must come OUT,
+- the normal path, and the variations the owner cares about,
+- what should happen when something goes wrong or the input is unexpected.
+
+RULES
+- Ask ONE short question at a time. Ask only about SCENARIOS — never about code, nodes or implementation.
+- The owner may speak in long, unstructured dictation. Accept it: your job is to fill the gaps, not to
+  reformat what he said.
+- When you have a detailed picture of the scenarios (enough to write them as separate cases), reply with
+  exactly: READY
+- Write EVERY message in this language: ${lang}. Never switch to another language.`;
+
+/** The next question of the use-case interview (phase 1). READY = the description is detailed enough. */
+export async function nextUseCaseQuestion(quiz: QuizRow, instruction: string, turns: Turn[]): Promise<string> {
   const history = turns.map((t) => ({ role: t.role === "user" ? "user" : "assistant", content: t.content }));
+  return chat([
+    { role: "system", content: USECASES_SYSTEM(languageName(quiz.language), instruction) },
+    ...history,
+    { role: "user", content: history.length <= 1
+        ? "Ask your first question about the scenarios."
+        : "Ask your next question, or if the scenarios are described in enough detail, reply with exactly: READY" },
+  ]);
+}
+
+/** Turn the interview into NUMBERED user cases. Each case = one scenario, told from the user's side. */
+export async function synthesizeUseCases(
+  quiz: QuizRow, instruction: string, turns: Turn[],
+): Promise<{ title: string; summary: string }[]> {
+  const transcript = turns.map((t) => `${t.role === "user" ? "OWNER" : "YOU"}: ${t.content}`).join("\n");
+  const out = await chat([
+    { role: "system", content: `You turn a conversation about an automation into its USER CASES. Reply with STRICT JSON only:
+{"cases":[{"title":"<a short case title, max 8 words, in ${languageName(quiz.language)}>","summary":"<the scenario in 1-4 sentences, in ${languageName(quiz.language)}: who does what, the input, the expected result, the edge case>"}]}
+Write 1 to 8 cases. One case = ONE scenario — never merge two, never invent a scenario the owner did not
+imply. If the owner described only one thing, return exactly one case.` },
+    { role: "user", content: `The owner's instruction:\n${instruction || "(not stated)"}\n\nThe conversation:\n${transcript || "(the owner said nothing — derive the cases from the instruction alone)"}` },
+  ]);
+  try {
+    const j = JSON.parse(out.replace(/^```json\s*|\s*```$/g, "")) as { cases?: { title?: string; summary?: string }[] };
+    const cases = (j.cases ?? [])
+      .map((c) => ({ title: (c.title ?? "").trim().slice(0, 200), summary: (c.summary ?? "").trim() }))
+      .filter((c) => c.title);
+    return cases;
+  } catch {
+    return [];
+  }
+}
+
+/** The auto-quiz prompt of the use-case phase — the model drafts the scenarios itself, out loud. */
+const USECASES_AUTO_SYSTEM = (lang: string, instruction: string) =>
+  `You are describing the USER CASES of an automation ALONE, thinking out loud, in the language: ${lang}.
+
+The owner's instruction (the seed):
+"""
+${instruction || "(not stated)"}
+"""
+
+Write the scenarios the automation must handle: who triggers it, what comes in, what must come out, the
+variations, and what happens when something goes wrong. Be concrete and short (under 250 words). The owner is
+reading you live and may edit your text — write it as the final description of the scenarios, not as a chat.
+Write ONLY in ${lang}.`;
+
+// ─── EDITING the cases of a LIVE automation (step 231) ───────────────────────────────────────────────
+// The pencil on the panel's header re-opens the WHOLE set (the model asks about each case in turn and takes
+// new ones); the pencil on a case re-opens THAT case. Both see what the automation already is — its
+// instruction, its cases and its nodes — so the model asks about a change, not about a blank page.
+
+async function caseEditContext(automation: string, projectDir: string, only?: string): Promise<string> {
+  const instruction = await automationInstruction(projectDir);
+  const cases = await listCases(automation);
+  const nodes = await listNodes(automation);
+  const caseList = cases.length
+    ? cases
+        .map((c, i) =>
+          `  ${String(i + 1).padStart(2, "0")}. ${c.title} [${c.status}]${only && c.cuid === only ? "   <-- THE CASE WE ARE EDITING" : ""}\n      ${c.summary || "(no description)"}`,
+        )
+        .join("\n")
+    : "  (none yet)";
+  const nodeList = nodes.length
+    ? nodes.map((n, i) => `  ${i + 1}. ${n.name}${n.draft ? " (still a draft)" : ""}`).join("\n")
+    : "  (no nodes yet)";
+  return [
+    `AUTOMATION: ${automation}`,
+    `THE OWNER'S ORIGINAL INSTRUCTION:\n${instruction || "(not stated)"}`,
+    `ITS USER CASES TODAY:\n${caseList}`,
+    `THE NODES THAT IMPLEMENT THEM TODAY:\n${nodeList}`,
+  ].join("\n\n");
+}
+
+const CASE_EDIT_SYSTEM = (lang: string, ctx: string, single: boolean) =>
+  `You are revisiting the USER CASES of an automation that already exists, together with its owner.
+
+${ctx}
+
+YOUR JOB
+${single
+    ? `- Go through THE ONE case marked above: is it still what the owner wants? What must change?`
+    : `- Go through the existing cases ONE BY ONE, in order: for each, ask whether it is still right and what
+   should change. When they are done, ask whether he wants to ADD a case that is missing.`}
+- The owner may dictate long, unstructured answers. Accept them — your job is to end up with clear cases.
+
+RULES
+- Ask ONE short question at a time. Ask about SCENARIOS, never about code or which node to touch.
+- When you have what you need, reply with exactly: READY
+- Write EVERY message in this language: ${lang}. Never switch to another language.`;
+
+/** The revision of a case (or of the whole set) into its new text. `cuid` names an EXISTING case; a case
+ *  without one is NEW. Cases the owner did not touch must NOT be returned — silence means "unchanged". */
+export async function synthesizeCaseEdit(
+  quiz: QuizRow, seed: string, turns: Turn[], only?: string,
+): Promise<{ cuid?: string; title: string; summary: string }[]> {
+  const transcript = turns.map((t) => `${t.role === "user" ? "OWNER" : "YOU"}: ${t.content}`).join("\n");
+  const out = await chat([
+    { role: "system", content: `You turn a conversation about an automation's USER CASES into the cases that CHANGED. Reply with STRICT JSON only:
+{"cases":[{"cuid":"<the cuid of an existing case, or omit the field for a NEW case>","title":"<short title in ${languageName(quiz.language)}>","summary":"<the scenario in 1-4 sentences, in ${languageName(quiz.language)}>"}]}
+Return ONLY the cases that changed or were added${only ? ` (you are editing the case ${only} — usually exactly that one)` : ""}. If nothing changed, return {"cases":[]}. Never invent a scenario the owner did not state.` },
+    { role: "user", content: `${seed}\n\nThe conversation:\n${transcript || "(the owner said nothing)"}` },
+  ]);
+  try {
+    const j = JSON.parse(out.replace(/^```json\s*|\s*```$/g, "")) as { cases?: { cuid?: string; title?: string; summary?: string }[] };
+    return (j.cases ?? [])
+      .map((c) => ({ cuid: c.cuid?.trim() || undefined, title: (c.title ?? "").trim().slice(0, 200), summary: (c.summary ?? "").trim() }))
+      .filter((c) => c.title);
+  } catch {
+    return [];
+  }
+}
+
+/** The seed a session hangs on: a project's instruction, an edge's two-sided context, or (when the owner is
+ *  revisiting the scenarios of a live automation) what that automation is today. */
+export async function quizSeed(target: QuizTarget): Promise<string> {
+  if (target.kind === "edge") return edgeContext(target.cuid);
+  if (target.kind === "usecases") return caseEditContext(target.automation, target.projectDir);
+  if (target.kind === "usecase") return caseEditContext(target.automation, target.projectDir, target.cuid);
+  return automationInstruction(target.projectDir);
+}
+
+/** The next question — for every subject AND phase (the routes never branch on prompts themselves). */
+export async function nextQuestionFor(quiz: QuizRow, target: QuizTarget, seed: string, turns: Turn[]): Promise<string> {
+  if (target.kind === "project") {
+    const phase = await getPhase(quiz, target);
+    return phase === "usecases" ? nextUseCaseQuestion(quiz, seed, turns) : nextQuestion(quiz, seed, turns);
+  }
+  const history = turns.map((t) => ({ role: t.role === "user" ? "user" : "assistant", content: t.content }));
+  if (target.kind === "usecases" || target.kind === "usecase") {
+    return chat([
+      { role: "system", content: CASE_EDIT_SYSTEM(languageName(quiz.language), seed, target.kind === "usecase") },
+      ...history,
+      { role: "user", content: history.length === 0
+          ? "Start: ask me your first question."
+          : "Ask your next question, or if you have what you need, reply with exactly: READY" },
+    ]);
+  }
   return chat([
     { role: "system", content: EDGE_SYSTEM(languageName(quiz.language), seed) },
     ...history,
@@ -249,9 +478,22 @@ The link name is shown on the global canvas — always English. The spec is writ
   }
 }
 
-/** The system prompt of the STREAMING auto-quiz (227.B) — the model brainstorms with itself, per subject. */
-export function autoSystemPrompt(quiz: QuizRow, target: QuizTarget, seed: string): string {
+/** The system prompt of the STREAMING auto-quiz (227.B) — the model brainstorms with itself, per subject and
+ *  per phase (in the use-case phase it drafts the SCENARIOS, not a node). */
+export async function autoSystemPrompt(quiz: QuizRow, target: QuizTarget, seed: string): Promise<string> {
   const lang = languageName(quiz.language);
+  if (target.kind === "project" && (await getPhase(quiz, target)) === "usecases") {
+    return USECASES_AUTO_SYSTEM(lang, seed);
+  }
+  if (target.kind === "usecases" || target.kind === "usecase") {
+    return `You are revisiting the USER CASES of an existing automation ALONE, thinking out loud, in the language: ${lang}.
+
+${seed}
+
+Say, case by case, what should change and why, and name any scenario that is missing. Be concrete and short
+(under 250 words). The owner is reading you live and may edit your text — write it as the final statement of
+the scenarios, not as a chat. Write ONLY in ${lang}.`;
+  }
   if (target.kind === "edge") {
     return `You are designing a LINK between two automations ALONE, thinking out loud, in the language: ${lang}.
 
@@ -314,6 +556,59 @@ export async function startQuiz(automation: string): Promise<QuizRow> {
   return startQuizFor({ kind: "project", key: proj.automation, automation: proj.automation, projectDir: proj.projectDir });
 }
 
+// ─── phase state (step 231) ──────────────────────────────────────────────────────────────────────────
+// Stored in its own table (automation_quiz_phase), never as a column on automation_quiz: a live database
+// never gains a column (the "no column named subject" lesson, 225 G4). An EDGE has no use-case phase — a
+// link is designed between automations that already have their scenarios.
+
+/** The turn INDEX a phase writes to: the use-case interview lives at -1, node #N at N. Keeping them apart
+ *  means the scenarios conversation never contaminates the node brainstorm (and survives the switch). */
+export const USECASES_TURN_INDEX = -1;
+
+export async function getPhase(quiz: QuizRow, target: QuizTarget): Promise<QuizPhase> {
+  if (target.kind !== "project") return "nodes";
+  const row = (await db.prepare(`SELECT phase FROM automation_quiz_phase WHERE quiz_id = ?`).get(quiz.id)) as
+    | { phase: string }
+    | undefined;
+  if (row?.phase === "nodes" || row?.phase === "usecases") return row.phase;
+  // No row: a quiz that predates this step. It is mid-node-design if it already produced nodes; otherwise it
+  // has not really started, so it begins where every automation now begins — with the user cases.
+  return quiz.node_count > 0 ? "nodes" : "usecases";
+}
+
+export async function setPhase(quiz: QuizRow, phase: QuizPhase): Promise<void> {
+  await db.prepare(`DELETE FROM automation_quiz_phase WHERE quiz_id = ?`).run(quiz.id);
+  await db.prepare(`INSERT INTO automation_quiz_phase (quiz_id, phase, updated_at) VALUES (?, ?, ?)`)
+    .run(quiz.id, phase, new Date().toISOString());
+}
+
+const indexOfPhase = (quiz: QuizRow, phase: QuizPhase) =>
+  phase === "usecases" ? USECASES_TURN_INDEX : quiz.node_count;
+
+/** The turns of the CURRENT phase (use these in the routes — `turnsOf` is the node-phase primitive). */
+export async function turnsFor(quiz: QuizRow, target: QuizTarget): Promise<Turn[]> {
+  return turnsAt(quiz, indexOfPhase(quiz, await getPhase(quiz, target)));
+}
+
+export async function addTurnFor(
+  quiz: QuizRow, target: QuizTarget, role: "assistant" | "user", content: string,
+): Promise<void> {
+  await addTurnAt(quiz, indexOfPhase(quiz, await getPhase(quiz, target)), role, content);
+}
+
+export async function turnsAt(quiz: QuizRow, index: number): Promise<Turn[]> {
+  return (await db.prepare(
+    `SELECT role, content, node_index FROM automation_quiz_turns WHERE quiz_id = ? AND node_index = ? ORDER BY created_at ASC`,
+  ).all(quiz.id, index)) as Turn[];
+}
+
+export async function addTurnAt(
+  quiz: QuizRow, index: number, role: "assistant" | "user", content: string,
+): Promise<void> {
+  await db.prepare(`INSERT INTO automation_quiz_turns (id, quiz_id, node_index, role, content) VALUES (?, ?, ?, ?, ?)`)
+    .run(createNodeId(), quiz.id, index, role, content);
+}
+
 export async function turnsOf(quiz: QuizRow): Promise<Turn[]> {
   return (await db.prepare(
     `SELECT role, content, node_index FROM automation_quiz_turns WHERE quiz_id = ? AND node_index = ? ORDER BY created_at ASC`,
@@ -341,6 +636,14 @@ export async function reopenQuiz(quiz: QuizRow): Promise<{ reopened: boolean; ca
   if (quiz.node_count >= MAX_NODES) return { reopened: false, capped: true };
   await db.prepare(`UPDATE automation_quiz SET status = 'active', finished_at = NULL WHERE id = ?`).run(quiz.id);
   return { reopened: true, capped: false };
+}
+
+/** Drop a session entirely (step 231) — used by the use-case EDIT subjects: each pencil click is a fresh
+ *  conversation about the scenarios as they are NOW, never a resumed old one. */
+export async function deleteQuiz(quiz: QuizRow): Promise<void> {
+  await db.prepare(`DELETE FROM automation_quiz_turns WHERE quiz_id = ?`).run(quiz.id);
+  await db.prepare(`DELETE FROM automation_quiz_phase WHERE quiz_id = ?`).run(quiz.id);
+  await db.prepare(`DELETE FROM automation_quiz WHERE id = ?`).run(quiz.id);
 }
 
 export async function finishQuiz(quiz: QuizRow): Promise<void> {

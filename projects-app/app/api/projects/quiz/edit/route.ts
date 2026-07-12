@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { createNodeId } from "@/lib/cuid";
 import { authorize } from "@/lib/nodes";
-import { getQuizFor, resolveQuizTarget } from "@/lib/quiz";
+import { getPhase, getQuizFor, resolveQuizTarget, USECASES_TURN_INDEX } from "@/lib/quiz";
 
 // The owner EDITS what the model wrote (step 227.B; both subjects since 225 G4). During Auto-Quiz the
 // model's text area is interactive: the owner pauses, rewrites a sentence, and resumes. The edited text
@@ -21,18 +21,23 @@ export async function POST(req: NextRequest) {
   const quiz = await getQuizFor(t.target);
   if (!quiz) return NextResponse.json({ error: "quiz not started" }, { status: 400 });
 
+  // The turn we replace belongs to the CURRENT phase (step 231): the use-case interview is stored at index
+  // -1, node #N at N — so an edit during the scenarios never overwrites a node's brainstorm.
+  const index =
+    (await getPhase(quiz, t.target)) === "usecases" ? USECASES_TURN_INDEX : quiz.node_count;
+
   const last = (await db
     .prepare(
       `SELECT id FROM automation_quiz_turns WHERE quiz_id = ? AND node_index = ? AND role = 'assistant'
        ORDER BY created_at DESC LIMIT 1`,
     )
-    .get(quiz.id, quiz.node_count)) as { id: string } | undefined;
+    .get(quiz.id, index)) as { id: string } | undefined;
 
   if (last) {
     await db.prepare(`UPDATE automation_quiz_turns SET content = ? WHERE id = ?`).run(content, last.id);
   } else {
     await db.prepare(`INSERT INTO automation_quiz_turns (id, quiz_id, node_index, role, content) VALUES (?, ?, ?, 'assistant', ?)`)
-      .run(createNodeId(), quiz.id, quiz.node_count, content);
+      .run(createNodeId(), quiz.id, index, content);
   }
   return NextResponse.json({ ok: true });
 }

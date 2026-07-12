@@ -2,36 +2,49 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Link2, Loader2, MessagesSquare, Pause, Send, SkipForward, Sparkles } from "lucide-react";
+import {
+  AlertTriangle, Link2, ListChecks, Loader2, MessagesSquare, Pause, Send, SkipForward, Sparkles,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 
-// ACTIVATION QUIZ (step 227) — phase 2. Opens on the FIRST visit of a freshly created automation and turns
-// the owner's instruction (phase 1) into real nodes through a brainstorm, in the project's DEFAULT LANGUAGE.
+// ACTIVATION QUIZ (step 227) — phase 2 of an automation's birth. Opens on the FIRST visit of a freshly
+// created automation and turns the owner's instruction (phase 1) into a real automation through a brainstorm,
+// in the project's DEFAULT LANGUAGE.
 //
-//   one quiz step = ONE node (a draft on the canvas) + ONE development sub-step handed to a coding agent.
+// STEP 231 — the Quiz now starts with the USER CASES, and only then designs nodes:
+//   PHASE "usecases" → the owner describes every scenario (free speech, voice encouraged). Nothing can be
+//                      built before this: the server refuses a node, and a development step, without them.
+//   PHASE "nodes"    → one quiz step = ONE node (a draft on the canvas) + ONE development sub-step.
 //
 // The owner may stop the questions at any moment ("Next node") or end the whole quiz ("Finish") — and still
 // leaves with a working state: whatever was designed is on the canvas, its steps are queued, and the closing
 // toast reports exactly where the automation stands. Capped at 10 nodes (context-overflow guard).
 //
-// STEP 225 G4 — the SAME component now serves three roles, without a second Quiz existing anywhere:
-//   1. uncontrolled + automation  → the first-visit Quiz on an automation page (unchanged behaviour),
-//   2. controlled (open/autoStart/onClose) + automation → the Quiz opened FROM THE GLOBAL CANVAS: either on
-//      a brand-new automation (auto-quiz starts streaming immediately) or on an existing one (resumes),
-//   3. controlled + edge → the LINK Quiz: the brainstorm designs how two automations are connected, and its
-//      one artefact is the edge's spec.md + one development step (route /api/projects/quiz/edge-apply).
+// FOUR SUBJECTS, one component (no second Quiz exists anywhere):
+//   1. automation (uncontrolled)  → the first-visit Quiz on an automation page,
+//   2. automation (controlled)    → the same Quiz opened from the GLOBAL CANVAS (225 G4),
+//   3. edge                       → the LINK Quiz: how two automations are connected,
+//   4. useCase / cases (step 231) → revisiting the scenarios of a LIVE automation (the pencils on the Use
+//      cases panel). Its closing move writes the new case text + one development step per changed case.
 type Turn = { role: string; content: string };
+type Phase = "usecases" | "nodes";
 
 export function ActivationQuiz({
-  automation, edge, edgeName, open: openProp, autoStart, onClose,
+  automation, edge, edgeName, useCase, useCaseName, cases,
+  open: openProp, autoStart, onClose,
 }: {
   automation?: string;
   edge?: string;
   edgeName?: string;
-  /** Controlled mode (the global canvas): the parent owns the open state. */
+  /** Revisit ONE user case (its cuid) — the pencil on a case. */
+  useCase?: string;
+  useCaseName?: string;
+  /** Revisit the WHOLE set of user cases — the pencil on the panel's header (needs `automation`). */
+  cases?: boolean;
+  /** Controlled mode (the global canvas, the Use cases panel): the parent owns the open state. */
   open?: boolean;
   /** Start the streaming auto-quiz as soon as the session is created (used right after "Add automation"). */
   autoStart?: boolean;
@@ -40,11 +53,13 @@ export function ActivationQuiz({
   const router = useRouter();
   const controlled = openProp !== undefined;
   const isEdge = Boolean(edge);
+  const isCaseEdit = Boolean(useCase) || Boolean(cases);
   const [openState, setOpenState] = useState(false);
   const open = controlled ? Boolean(openProp) : openState;
   const [turns, setTurns] = useState<Turn[]>([]);
   const [answer, setAnswer] = useState("");
   const [busy, setBusy] = useState(false);
+  const [phase, setPhase] = useState<Phase>(isEdge || isCaseEdit ? "nodes" : "usecases");
   const [nodeCount, setNodeCount] = useState(0);
   const [maxNodes, setMaxNodes] = useState(10);
   const [streaming, setStreaming] = useState(false);
@@ -52,14 +67,21 @@ export function ActivationQuiz({
   const [aborter, setAborter] = useState<AbortController | null>(null);
   const booted = useRef(false);
 
-  // The SUBJECT of every call: {edge} or {automation} — one API, two subjects (step 225 G4).
-  const subject = useCallback(
-    () => (isEdge ? { edge } : { automation }),
-    [isEdge, edge, automation],
-  );
-  const query = isEdge
-    ? `edge=${encodeURIComponent(edge ?? "")}`
-    : `automation=${encodeURIComponent(automation ?? "")}`;
+  // The SUBJECT of every call — one API, four subjects (steps 225 G4 + 231).
+  const subject = useCallback(() => {
+    if (useCase) return { useCase };
+    if (cases) return { automation, cases: true };
+    if (isEdge) return { edge };
+    return { automation };
+  }, [useCase, cases, isEdge, edge, automation]);
+
+  const query = useCase
+    ? `useCase=${encodeURIComponent(useCase)}`
+    : cases
+      ? `automation=${encodeURIComponent(automation ?? "")}&cases=1`
+      : isEdge
+        ? `edge=${encodeURIComponent(edge ?? "")}`
+        : `automation=${encodeURIComponent(automation ?? "")}`;
 
   const close = useCallback(() => {
     if (!controlled) setOpenState(false);
@@ -75,9 +97,10 @@ export function ActivationQuiz({
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...subject(), reopen }),
       });
-      const d = (await r.json()) as { question?: string | null; error?: string; capped?: boolean; turns?: Turn[] };
+      const d = (await r.json()) as { question?: string | null; error?: string; capped?: boolean; turns?: Turn[]; phase?: Phase };
       if (!r.ok) { toast.error(d.error ?? "Could not start the quiz."); return; }
       if (d.capped) { toast.info(d.error ?? "This design session is complete."); return; }
+      if (d.phase) setPhase(d.phase);
       if (d.turns?.length) setTurns(d.turns);
       else if (d.question) setTurns([{ role: "assistant", content: d.question }]);
     } finally { setBusy(false); }
@@ -85,7 +108,7 @@ export function ActivationQuiz({
 
   // AUTO-QUIZ (227.B) — the model brainstorms with itself, STREAMING, so the owner reads it live. Pause at
   // any moment; the streamed text stays in an EDITABLE area, and saving the edit replaces the model's turn
-  // — so the node (or the link) is synthesized from what the owner approved.
+  // — so what gets built (the cases, the node, the link) is made from what the owner approved.
   const autoQuiz = useCallback(async () => {
     if (streaming) return;
     setStreaming(true);
@@ -127,16 +150,17 @@ export function ActivationQuiz({
   }, [subject, streaming]);
 
   // Load the session. Uncontrolled (an automation page): a first visit OPENS the quiz; an interrupted one
-  // resumes. Controlled (the global canvas): the parent already opened us — load, start if new, and stream
-  // the auto-quiz straight away when the caller asked for it (a just-created automation).
+  // resumes. Controlled (the global canvas, a pencil): the parent already opened us — load, start if new, and
+  // stream the auto-quiz straight away when the caller asked for it (a just-created automation).
   useEffect(() => {
     if (!open || booted.current) return;
     booted.current = true;
     void (async () => {
       const r = await fetch(`/api/projects/quiz?${query}`, { cache: "no-store" });
       if (!r.ok) return;
-      const d = (await r.json()) as { started: boolean; status?: string; turns?: Turn[]; nodeCount?: number; maxNodes?: number };
+      const d = (await r.json()) as { started: boolean; status?: string; turns?: Turn[]; nodeCount?: number; maxNodes?: number; phase?: Phase };
       setMaxNodes(d.maxNodes ?? 10);
+      if (d.phase) setPhase(d.phase);
       if (!d.started) {
         await start();
       } else {
@@ -151,7 +175,7 @@ export function ActivationQuiz({
   }, [open, query]);
 
   useEffect(() => {
-    if (controlled || isEdge || !automation) return;
+    if (controlled || isEdge || isCaseEdit || !automation) return;
     void (async () => {
       const r = await fetch(`/api/projects/quiz?${query}`, { cache: "no-store" });
       if (!r.ok) return;
@@ -191,7 +215,7 @@ export function ActivationQuiz({
     toast.info("Design session finished", {
       description: d.report,
       duration: 30000,
-      action: isEdge || !automation
+      action: isEdge || isCaseEdit || !automation
         ? undefined
         : {
             label: "Test it",
@@ -208,7 +232,28 @@ export function ActivationQuiz({
           },
     });
     router.refresh();
-  }, [subject, isEdge, automation, close, router]);
+  }, [subject, isEdge, isCaseEdit, automation, close, router]);
+
+  // PHASE 1 → PHASE 2 (step 231): the scenarios are described → they become numbered user cases, and the Quiz
+  // moves on to the nodes. A refusal here IS the gate: without a real description nothing gets built.
+  const applyUseCases = useCallback(async () => {
+    setBusy(true);
+    try {
+      const r = await fetch(`/api/projects/quiz/usecases-apply`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ automation }),
+      });
+      const d = (await r.json()) as { cases?: { title: string }[]; question?: string | null; error?: string };
+      if (!r.ok) { toast.error(d.error ?? "The user cases are not ready yet.", { duration: 12000 }); return; }
+      setPhase("nodes");
+      setTurns(d.question ? [{ role: "assistant", content: d.question }] : []);
+      toast.success(`${d.cases?.length ?? 0} user case${d.cases?.length === 1 ? "" : "s"} written`, {
+        description: "Read them in the Use cases panel and confirm them — development starts only after that. Now we design the nodes.",
+        duration: 15000,
+      });
+      router.refresh();
+    } finally { setBusy(false); }
+  }, [automation, router]);
 
   // Stop the questions → this brainstorm becomes ONE node + ONE development step, then the next node starts.
   const nextNode = useCallback(async () => {
@@ -220,9 +265,22 @@ export function ActivationQuiz({
       });
       const d = (await r.json()) as {
         node?: { name: string }; step?: { number: number; message: string };
-        nodeCount?: number; done?: boolean; question?: string | null; error?: string;
+        nodeCount?: number; done?: boolean; question?: string | null; error?: string; reason?: string;
       };
-      if (!r.ok) { toast.error(d.error ?? "Could not create the node."); return; }
+      if (!r.ok) {
+        // The user-case gate (231): no cases yet, or the owner has not confirmed the current set.
+        const gated = d.reason === "no-cases" || d.reason === "not-reviewed" || d.reason === "usecases-phase";
+        toast.error(d.error ?? "Could not create the node.", {
+          duration: 15000,
+          action: gated
+            ? {
+                label: "Open user cases",
+                onClick: () => window.dispatchEvent(new CustomEvent("usecases:review", { detail: { automation } })),
+              }
+            : undefined,
+        });
+        return;
+      }
       setNodeCount(d.nodeCount ?? 0);
       toast.success(`Node "${d.node?.name}" designed — development step #${d.step?.number} created`, {
         description: "Copy the brief and paste it into the coding agent's chat, or let the agent drain the queue.",
@@ -258,6 +316,36 @@ export function ActivationQuiz({
     } finally { setBusy(false); }
   }, [edge, close, router]);
 
+  // THE PENCIL's closing move (231): the revisited scenarios become the cases' new text + ONE development
+  // step per case that changed. Which nodes those cases touch is the coding agent's job to work out.
+  const applyCaseEdit = useCallback(async () => {
+    setBusy(true);
+    try {
+      const r = await fetch(`/api/projects/quiz/usecase-apply`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(subject()),
+      });
+      const d = (await r.json()) as {
+        changed?: number; report?: string; error?: string;
+        steps?: { number: number; message: string; title: string }[];
+      };
+      if (!r.ok) { toast.error(d.error ?? "Could not save the user cases."); return; }
+      const first = d.steps?.[0];
+      (d.changed ? toast.success : toast.info)(
+        d.changed ? `${d.changed} user case${d.changed === 1 ? "" : "s"} updated` : "Nothing changed",
+        {
+          description: d.report,
+          duration: 20000,
+          action: first
+            ? { label: "Copy step", onClick: () => void navigator.clipboard.writeText(first.message) }
+            : undefined,
+        },
+      );
+      close();
+      router.refresh();
+    } finally { setBusy(false); }
+  }, [subject, close, router]);
+
   const pause = useCallback(() => { aborter?.abort(); setStreaming(false); }, [aborter]);
 
   const saveEdit = useCallback(async () => {
@@ -270,38 +358,67 @@ export function ActivationQuiz({
       });
       setTurns((t) => [...t, { role: "assistant", content: draftText }]);
       setDraftText("");
-      toast.success(
-        isEdge
-          ? "Your edit replaced the model's text — the link will be built from it."
-          : "Your edit replaced the model's text — the node will be built from it.",
-      );
+      toast.success("Your edit replaced the model's text — what gets built comes from it.");
     } finally { setBusy(false); }
-  }, [draftText, isEdge, subject]);
+  }, [draftText, subject]);
+
+  // Leaving the use-case phase without cases is allowed (the owner may be interrupted), but it is never
+  // silent: the automation cannot be built until they exist, and the Quiz reopens on the next visit.
+  const onOpenChange = (v: boolean) => {
+    if (v) { if (!controlled) setOpenState(true); return; }
+    if (!isEdge && !isCaseEdit && phase === "usecases") {
+      toast.warning("The user cases are still missing", {
+        description: "Without a detailed description the automation cannot be created — this opens again on your next visit.",
+        duration: 12000,
+      });
+    }
+    close();
+  };
+
+  const title = isEdge ? (
+    <>
+      <Link2 className="size-4" /> Designing the link
+      <span className="truncate text-xs font-normal text-muted-foreground">{edgeName ?? ""}</span>
+    </>
+  ) : isCaseEdit ? (
+    <>
+      <ListChecks className="size-4" /> {useCase ? "Revisiting a user case" : "Revisiting the user cases"}
+      <span className="truncate text-xs font-normal text-muted-foreground">{useCaseName ?? automation ?? ""}</span>
+    </>
+  ) : phase === "usecases" ? (
+    <>
+      <ListChecks className="size-4" /> The user cases
+      <span className="text-xs font-normal text-muted-foreground">described first — before anything is built</span>
+    </>
+  ) : (
+    <>
+      <MessagesSquare className="size-4" /> Designing node {nodeCount + 1}
+      <span className="text-xs font-normal text-muted-foreground">of at most {maxNodes}</span>
+    </>
+  );
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (v) { if (!controlled) setOpenState(true); } else close(); }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-hidden sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {isEdge ? (
-              <>
-                <Link2 className="size-4" /> Designing the link
-                <span className="truncate text-xs font-normal text-muted-foreground">{edgeName ?? ""}</span>
-              </>
-            ) : (
-              <>
-                <MessagesSquare className="size-4" /> Designing node {nodeCount + 1}
-                <span className="text-xs font-normal text-muted-foreground">of at most {maxNodes}</span>
-              </>
-            )}
-          </DialogTitle>
+          <DialogTitle className="flex items-center gap-2">{title}</DialogTitle>
         </DialogHeader>
+
+        {/* Owner's note: planning is where the model's strength shows most — a weak model designs a weak
+            automation. The model is chosen in the automation menu (the hamburger, top right of the page). */}
+        <div className="flex gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-300">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+          <p>
+            Planning an automation works far better with the most powerful model available to you. Pick it in
+            the hamburger menu at the top of the page (Settings → model).
+          </p>
+        </div>
 
         <div className="max-h-[45vh] space-y-3 overflow-y-auto pr-1">
           {turns.length === 0 && busy && (
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" />
-              {isEdge ? "Reading both automations…" : "Reading your instruction…"}
+              {isEdge ? "Reading both automations…" : isCaseEdit ? "Reading the automation…" : "Reading your instruction…"}
             </p>
           )}
           {turns.map((t, i) => (
@@ -322,7 +439,7 @@ export function ActivationQuiz({
         </div>
 
         {/* AUTO-QUIZ (227.B): the model thinks out loud, streamed. The area stays EDITABLE — pause, rewrite,
-            save; the node (or the link) is then built from YOUR text. */}
+            save; what gets built is then made from YOUR text. */}
         {(streaming || draftText) && (
           <div className="space-y-2 rounded-lg border border-primary/40 p-2">
             <p className="flex items-center gap-1 text-xs font-medium text-primary">
@@ -356,7 +473,11 @@ export function ActivationQuiz({
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
             rows={3}
-            placeholder="Your answer…"
+            placeholder={
+              phase === "usecases" && !isEdge && !isCaseEdit
+                ? "Describe your scenarios — speak freely; dictation is the fastest way…"
+                : "Your answer…"
+            }
             disabled={busy || streaming}
           />
           <div className="flex flex-wrap gap-2">
@@ -370,19 +491,33 @@ export function ActivationQuiz({
               <Button size="sm" variant="outline" onClick={applyEdge} disabled={busy || streaming}>
                 <SkipForward className="size-3.5" /> Finish the link → development step
               </Button>
+            ) : isCaseEdit ? (
+              <Button size="sm" variant="outline" onClick={applyCaseEdit} disabled={busy || streaming}>
+                <SkipForward className="size-3.5" /> Save the cases → development step
+              </Button>
+            ) : phase === "usecases" ? (
+              <Button size="sm" variant="outline" onClick={applyUseCases} disabled={busy || streaming}>
+                <SkipForward className="size-3.5" /> The cases are ready → design the nodes
+              </Button>
             ) : (
               <Button size="sm" variant="outline" onClick={nextNode} disabled={busy || streaming}>
                 <SkipForward className="size-3.5" /> Finish this node → next
               </Button>
             )}
-            <Button size="sm" variant="ghost" onClick={finish} disabled={busy || streaming}>
-              End the session
-            </Button>
+            {!(phase === "usecases" && !isEdge && !isCaseEdit) && (
+              <Button size="sm" variant="ghost" onClick={finish} disabled={busy || streaming}>
+                End the session
+              </Button>
+            )}
           </div>
           <p className="text-xs text-muted-foreground">
             {isEdge
               ? "Finishing the link writes its brief and queues one development step for the coding agent."
-              : "Each node you finish becomes a draft on the diagram and a development step for the coding agent."}
+              : isCaseEdit
+                ? "Saving writes the new case text and queues one development step per case you changed."
+                : phase === "usecases"
+                  ? "Nothing is built until the scenarios exist: they become your numbered user cases, and the nodes are designed from them."
+                  : "Each node you finish becomes a draft on the diagram and a development step for the coding agent."}
           </p>
         </div>
       </DialogContent>

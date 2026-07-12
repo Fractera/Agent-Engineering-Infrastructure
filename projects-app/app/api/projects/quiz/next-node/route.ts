@@ -9,8 +9,10 @@ import {
 } from "@/lib/nodes";
 import { materializeNodeStep, nextStepNumber } from "@/lib/dev-steps";
 import {
-  addTurn, advanceNode, automationInstruction, getQuiz, nextQuestion, synthesizeNode, turnsOf, QUIZ_MAX_NODES,
+  addTurn, advanceNode, automationInstruction, getPhase, getQuiz, nextQuestion, synthesizeNode, turnsOf,
+  QUIZ_MAX_NODES,
 } from "@/lib/quiz";
+import { assertUseCasesReviewed } from "@/lib/use-cases";
 
 // "Finish this node → go to the next" (step 227) — the heart of the Quiz. It closes the current brainstorm
 // and, in ONE call:
@@ -32,6 +34,24 @@ export async function POST(req: NextRequest) {
   const quiz = await getQuiz(proj.automation);
   if (!quiz) return NextResponse.json({ error: "quiz not started" }, { status: 400 });
   if (quiz.status === "done") return NextResponse.json({ error: "quiz already finished" }, { status: 400 });
+
+  // THE USER-CASE GATE (step 231). A node — and the development step it hands to the coding agent — cannot
+  // exist before the scenarios do, and before the owner has read them back and confirmed the AI understood
+  // him. Both refusals are explicit (409 + the reason), never a silent skip.
+  const target = { kind: "project" as const, key: proj.automation, automation: proj.automation, projectDir: proj.projectDir };
+  if ((await getPhase(quiz, target)) === "usecases") {
+    return NextResponse.json(
+      {
+        error:
+          "Describe the user cases first — without a detailed description the automation cannot be created. " +
+          "Finish the scenarios, then the nodes are designed from them.",
+        reason: "usecases-phase",
+      },
+      { status: 409 },
+    );
+  }
+  const gate = await assertUseCasesReviewed(proj.automation);
+  if (!gate.ok) return NextResponse.json({ error: gate.error, reason: gate.reason }, { status: 409 });
 
   const instruction = await automationInstruction(proj.projectDir);
   const turns = await turnsOf(quiz);

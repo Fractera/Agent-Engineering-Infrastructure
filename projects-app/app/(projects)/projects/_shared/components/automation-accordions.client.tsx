@@ -96,7 +96,8 @@ export function AutomationAccordions({
             </Tooltip>
           </AccordionTrigger>
           <AccordionContent>
-            <UseCasesPanel cases={cases} />
+            {/* The automation scopes the LIVE case store, the pencils and the review gate (step 231). */}
+            <UseCasesPanel cases={cases} automation={automation} />
           </AccordionContent>
         </AccordionItem>
       </Accordion>

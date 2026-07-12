@@ -70,7 +70,12 @@ function humanize(slug: string): string {
 // and renders the series of entity accordions (Diagram + optional Calendar/Map/Dashboard/Processes/
 // Analytics, each an empty container with a hover tooltip) plus the mandatory numbered, status-badged
 // Use cases below the "Add or modify automation" button.
-const VERSION = 4;
+//
+// v5 (step 231) — the USER CASES are no longer seeded with a placeholder case: they are the automation's
+// FIRST stage and they come from the Quiz, which opens on the first visit and refuses to design a single
+// node until the owner has described his scenarios. The file below is regenerated from the case store on
+// every add / edit / delete (lib/use-cases.ts), so a fresh project starts with an empty, generated list.
+const VERSION = 5;
 const SKELETON: Record<string, string> = {
   "page.tsx": `import AutomationEntry from "./_components";
 
@@ -277,18 +282,18 @@ export const PROJECT_DASHBOARD: DashboardConfig = {
 `,
   "_data/use-cases.ts": `import type { UseCase } from "../../../_shared/use-cases";
 
-// This automation's USER CASES (frozen standard v4, step 222 — see _shared/use-cases.ts). The cases
-// agreed with the architect, each with a number (01, 02, …) and a status badge. Seeded with ONE case
-// so the segmentation step is never skipped: break the request into cases and move each from "new" to
-// "in-use" over short iterations (new → in-approval → approved → in-development → testing → in-use).
+// This automation's USER CASES (frozen standard v5, step 231 — see _shared/use-cases.ts).
+//
+// GENERATED, and EMPTY on purpose: the cases are the FIRST stage of this automation, not a placeholder.
+// On the first visit the Quiz asks the owner to describe every scenario (free speech, voice welcome),
+// writes them here as numbered cases, and only then designs the nodes. No development step is created
+// until the owner has read the cases back and confirmed the AI understood him.
+//
+// Do not hand-edit: this file is rewritten from the case store on every add / edit / delete. To change a
+// case, use the pencil in the Use cases panel (the status walks new → in-approval → approved →
+// in-development → testing → in-use).
 export const USE_CASES: UseCase[] = [
-  {
-    id: "planned",
-    title: "Architect planned the automation",
-    status: "new",
-    summary:
-      "The architect has planned this automation. Break the request into user cases here and move each from 'new' to 'in use' over short iterations.",
-  },
+  // no cases yet — the Quiz collects them first
 ];
 `,
   "_components/index.tsx": `import { PROJECT_DESCRIPTION } from "../_data/description";
