@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { db } from "@/lib/db";
-import { resolveProject, listNodes, readNodeDuration } from "@/lib/nodes";
+import { resolveProject, listNodes, readNodeDuration, readNodeFunctionCount } from "@/lib/nodes";
 
 // PROCESSES / Gantt timeline scheduling (step 230). Each FORK (automation_instances) is a bar; its length
 // is the sum of its nodes' estimated process times (node meta.ts estDurationMs), laid out as a priority
@@ -11,26 +11,32 @@ import { resolveProject, listNodes, readNodeDuration } from "@/lib/nodes";
 
 type Instance = { id: string; overrides: Record<string, { disabledFunctions?: string[]; note?: string }>; status: string };
 
-/** Nodes of an automation in run order, each with its est duration (ms). Read once, reused per fork. */
-async function nodeDurations(automation: string): Promise<{ slug: string; name: string; ms: number }[]> {
+/** Nodes of an automation in run order, each with its est duration (ms) and its function count. Read once,
+ *  reused per fork (the function count prorates the duration when an override disables some functions). */
+async function nodeDurations(automation: string): Promise<{ slug: string; name: string; ms: number; fns: number }[]> {
   const proj = resolveProject(automation);
   if (!proj.ok) return [];
   const nodes = await listNodes(proj.automation); // ordered by ord, non-removed
-  const out: { slug: string; name: string; ms: number }[] = [];
+  const out: { slug: string; name: string; ms: number; fns: number }[] = [];
   for (const n of nodes) {
     if (n.draft === 1) continue; // a draft node is not built → not executed → no time on the timeline
-    out.push({ slug: n.slug, name: n.name, ms: await readNodeDuration(proj.projectDir, n.slug) });
+    out.push({
+      slug: n.slug, name: n.name,
+      ms: await readNodeDuration(proj.projectDir, n.slug),
+      fns: await readNodeFunctionCount(proj.projectDir, n.slug),
+    });
   }
   return out;
 }
 
-/** The nodes of ONE fork with its overrides applied: a node whose functions are all disabled contributes 0. */
-function forkNodes(base: { slug: string; name: string; ms: number }[], inst: Instance): { name: string; ms: number }[] {
+/** The nodes of ONE fork with its overrides applied — the deterministic recompute: each DISABLED function
+ *  subtracts its share (ms / functionCount) of the node's time; disabling all functions drops the node to 0.
+ *  A note narrows the work, not the time. This is what makes editing a fork before it runs reshape the bar. */
+function forkNodes(base: { slug: string; name: string; ms: number; fns: number }[], inst: Instance): { name: string; ms: number }[] {
   return base.map((n) => {
-    const ov = inst.overrides?.[n.slug];
-    // A note narrows the work, not the time; only a fully-disabled node drops out of the length (deterministic).
-    const disabled = ov?.disabledFunctions && ov.disabledFunctions.length > 0 && ov.disabledFunctions.includes("*");
-    return { name: n.name, ms: disabled ? 0 : n.ms };
+    const disabled = inst.overrides?.[n.slug]?.disabledFunctions?.length ?? 0;
+    const kept = Math.max(0, n.fns - disabled) / n.fns;
+    return { name: n.name, ms: Math.round(n.ms * kept) };
   });
 }
 

@@ -366,6 +366,41 @@ Like the standards above, the frozen starter emits `_data/config.ts` + `_data/us
 `AutomationAccordions` in the project's `index.tsx`, and mirrors a short copy of this section into the
 project's own `README.md`. Refine the rules here first; the code follows.
 
+## The processes (Gantt) timeline standard (step 230)
+
+> The **Processes** entity is a **Gantt timeline of an automation's FORKS**. It appears ONLY for automations
+> that have forks (Instances, see the diagram standard below); a fork-less automation shows an honest empty
+> state. It answers one question visually: *when does each fork, and each of its nodes, run?*
+
+**One fork = one row.** Rows are sorted nearest-first (priority order). A fork is a bar whose **length is the
+sum of its nodes' estimated process times**; inside the bar the **nodes are nested bars**, laid out
+sequentially. A live **"now" line** marks the current time (moved every second on the client); hovering a
+node or fork shows **when it activates**; the whole space **scrolls horizontally**. **Clicking a bar** scrolls
+up to the **Instances panel** (`#instances-panel`) so you can open or edit that fork.
+
+**Where the length comes from — the node's estimate.** Every node carries `estDurationMs` in its `meta.ts`
+(step 230) — the model's rough guess of the node's process time, written when the node is designed
+(Quiz/Builder). No precision is needed; it may be ms, seconds, minutes or days. It lives in the file (Model
+B), never a column on `automation_nodes` (lesson 225 G4). A node with no estimate uses the default (60s).
+
+**The schedule engine** (`lib/schedule.ts`, table `automation_schedule` — one row per fork). Forks are a
+**priority queue**: each is planned to start when the previous one ends. Then reality refines the plan:
+`automation_runs` gives each fork its **actual** start/end, and a run that finishes early or late **shifts**
+the following forks. Recompute happens (a) on every read of `GET /api/projects/schedule`, (b) when a run
+finishes (`runs/simulate` → recompute), and (c) once a minute from `fractera-cron` (POST
+`/api/projects/schedule/tick`) so the timeline stays honest even when no one is watching.
+
+**Editing a fork before it runs → deterministic recompute.** A fork that has not started can be changed in
+the Instances panel (its per-node overrides — e.g. "about dogs, 2000 words" instead of "cats, 1000"). Because
+each disabled function subtracts its **share** of a node's time (`ms / functionCount`), the fork's length is
+**recomputed deterministically** from the node estimates — no model call — and the timeline rebuilds. (An
+optional "AI re-estimate" button, which would call the model for a fresh estimate, is reserved for later.)
+
+**Reference pattern.** This is classic Gantt/timeline scheduling (project timelines, resource charts) crossed
+with a live **ETA queue** (CI pipelines, render farms): a plan drawn from estimates, continuously shifted by
+actual completion. Common in content marketing, where each content generation is a sequence stretched over
+time.
+
 ## The diagram standard (Master & Instance)
 
 > This section is the specification for the **Diagram** entity — the accordion that defines HOW an

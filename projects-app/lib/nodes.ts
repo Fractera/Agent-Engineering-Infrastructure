@@ -164,6 +164,14 @@ export async function readNodeDuration(projectDir: string, slug: string): Promis
   return Number.isFinite(v) && v > 0 ? v : 60_000;
 }
 
+/** How many functions a node declares (step 230) — used to prorate a fork's duration when some of the
+ *  node's functions are disabled by an override (each disabled function subtracts its share of the time). */
+export async function readNodeFunctionCount(projectDir: string, slug: string): Promise<number> {
+  const t = await readFile(join(projectDir, "_nodes", slug, "functions.ts"), "utf8").catch(() => "");
+  const n = (t.match(/name\s*:/g) ?? []).length;
+  return n > 0 ? n : 1;
+}
+
 /** A node's co-located source files (for a version snapshot / rollback). Missing files read as "". */
 export async function readNodeFiles(projectDir: string, slug: string): Promise<{ meta: string; functions: string; instruction: string; spec: string }> {
   const dir = join(projectDir, "_nodes", slug);
