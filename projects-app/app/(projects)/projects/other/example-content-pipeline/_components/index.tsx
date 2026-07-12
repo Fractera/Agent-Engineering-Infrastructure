@@ -15,7 +15,7 @@ export default function ExampleEntry() {
   const d = PROJECT_DESCRIPTION;
   return (
     <>
-      <main className="mx-auto max-w-5xl space-y-3 px-4 pt-8">
+      <main className="mx-auto w-[85vw] max-w-full space-y-3 px-4 pt-8">
         <div className="space-y-1">
           <h1 className="text-3xl font-semibold">{d.title}</h1>
           <p className="max-w-3xl text-muted-foreground">{d.description}</p>
@@ -28,7 +28,7 @@ export default function ExampleEntry() {
         <ValidateButton automation="other/example-content-pipeline" />
       </main>
       <DiagramSection nodes={DIAGRAM_NODES} automation="other/example-content-pipeline" />
-      <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
+      <main className="mx-auto w-[85vw] max-w-full space-y-8 px-4 py-8">
         {/* Anchor for the Gantt bars' click-to-scroll (step 230). */}
         <div id="instances-panel">
           <InstancesPanel nodes={DIAGRAM_NODES} automation="other/example-content-pipeline" />

@@ -24,7 +24,8 @@ export async function ProjectsIndex() {
 
   return (
     <>
-    <main className="mx-auto flex max-w-4xl flex-col px-6 py-10">
+    {/* One width across all three levels (owner): 85% of the screen, like the canvases. */}
+    <main className="mx-auto flex w-[85vw] max-w-full flex-col px-6 py-10">
       <p className="text-sm text-muted-foreground">Projects</p>
       <h1 className="mt-1 text-3xl font-bold tracking-tight">All categories</h1>
       <p className="mt-3 max-w-2xl text-muted-foreground">
@@ -33,7 +34,8 @@ export async function ProjectsIndex() {
         categories; a project is a named folder inside one of them.
       </p>
 
-      <div className="mt-8 grid flex-1 content-start gap-4 sm:grid-cols-2">
+      {/* Dynamic grid (owner): 2 cards, then 3, then 4 on very wide screens. */}
+      <div className="mt-8 grid flex-1 content-start gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {categories.map((c) => (
           <Link
             key={c.slug}
@@ -67,7 +69,7 @@ export async function ProjectsIndex() {
     {/* THE GLOBAL AUTOMATION CANVAS (step 225) — below the cards, at the root: every project is a node, every
         link a programmable integration between two automations. It sits OUTSIDE the centered max-w-4xl column
         (which was clamping it): the canvas is 85vw × 75vh, so it needs the full page width to expand into. */}
-    <section className="w-full px-6 pb-10">
+    <section className="mx-auto w-[85vw] max-w-full px-6 pb-10">
       <GlobalCanvas />
     </section>
     </>

@@ -20,7 +20,8 @@ export async function CategoryHub({ slug }: { slug: ProjectCategorySlug }) {
   const cfg = getAppConfig();
 
   return (
-    <main className="mx-auto flex min-h-[70vh] max-w-4xl flex-col px-6 py-10">
+    {/* One width across all three levels (owner): 85% of the screen, like the canvases. */}
+    <main className="mx-auto flex min-h-[70vh] w-[85vw] max-w-full flex-col px-6 py-10">
       {/* Breadcrumb back to the root index (step 217) — was plain text, no way back to /projects. */}
       <Link href="/projects" className="text-sm text-muted-foreground hover:underline">
         ← Projects
@@ -58,7 +59,8 @@ export async function CategoryHub({ slug }: { slug: ProjectCategorySlug }) {
           </p>
         )}
         {
-          <div className="grid gap-4 sm:grid-cols-2">
+          {/* Dynamic grid (owner): 2 cards, then 3, then 4 on very wide screens. */}
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {cards.map((card) => {
               const shown = card.badges.slice(0, MAX_BADGES);
               const more = card.badges.length - shown.length;

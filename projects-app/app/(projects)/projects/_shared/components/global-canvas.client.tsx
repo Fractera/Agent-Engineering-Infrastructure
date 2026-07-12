@@ -241,8 +241,9 @@ export function GlobalCanvas() {
         </div>
       </div>
 
-      {/* Canvas size (owner): 85% of the screen width × 75% of its height — the same as the project canvas. */}
-      <div className="relative mx-auto h-[75vh] w-[85vw] max-w-full overflow-hidden rounded-lg border">
+      {/* Canvas size (owner): 75% of the screen height; the width comes from its host section, which is the
+          standard 85vw column — so the canvas fills it exactly like every other block on the page. */}
+      <div className="relative h-[75vh] w-full overflow-hidden rounded-lg border">
         <ReactFlow
           nodes={rfNodes}
           edges={rfEdges}

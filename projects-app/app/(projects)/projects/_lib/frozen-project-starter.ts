@@ -315,7 +315,7 @@ export default function AutomationEntry() {
   const d = PROJECT_DESCRIPTION;
   return (
     <>
-      <main className="mx-auto max-w-5xl space-y-4 px-4 pt-8">
+      <main className="mx-auto w-[85vw] max-w-full space-y-4 px-4 pt-8">
         <AutomationStatusBar
           category="{{CATEGORY}}"
           categoryLabel={{CATEGORY_LABEL_JSON}}
@@ -338,7 +338,7 @@ export default function AutomationEntry() {
       {/* The Diagram is ALWAYS visible — full screen width, 80vh — NOT an accordion (owner design,
           step 223.C). It is the automation's centerpiece; the node panel opens on click. */}
       <DiagramSection nodes={DIAGRAM_NODES} automation="{{CATEGORY}}/{{PROJECT}}" />
-      <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
+      <main className="mx-auto w-[85vw] max-w-full space-y-8 px-4 py-8">
         {/* The OTHER entity accordions (step 222) + the mandatory Use cases. The Diagram is above,
             outside the accordion series. Driven by _data/config.ts + _data/use-cases.ts. */}
         <AutomationAccordions

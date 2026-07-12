@@ -36,7 +36,7 @@ export function DiagramSection({ nodes, automation }: { nodes: NodeContract[]; a
   }, [automation]);
 
   return (
-    <section id="diagram-section" className="mt-16 w-full scroll-mt-4 border-y bg-muted/5 px-4 py-4">
+    <section id="diagram-section" className="mx-auto mt-16 w-[85vw] max-w-full scroll-mt-4 rounded-lg border bg-muted/5 px-4 py-4">
       <div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
         <h3 className="text-sm font-semibold">Diagram</h3>
         {focus && (
