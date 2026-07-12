@@ -34,6 +34,11 @@ export type NodeRunStatus = "idle" | "running" | "ok" | "fail";
 /** A node = the unit that appears on the diagram. Its `functions` are the physical work behind it. */
 export type NodeContract = {
   id: string;
+  /** Stable global identity (CUID, step 224). The join key for the DB canvas index + version history —
+   *  survives a folder rename (unlike `id`/the slug). Weak models mangle the UUID format, so CUID.
+   *  Required at runtime (the DB column is NOT NULL, the create route always supplies one); optional in
+   *  the type during the 224 migration until every existing file node carries it (L2). */
+  cuid?: string;
   name: string;
   description: string;
   /** The node's own typed inputs / outputs. */
@@ -45,19 +50,26 @@ export type NodeContract = {
   functions: NodeFunction[];
   /** The system instruction that generated the functions (co-located per node, see below). */
   instruction?: string;
+  /** Builder DRAFT (step 224): a not-yet-built node — empty `functions`, a free-form `spec` instead of an
+   *  instruction, a red frame, ignored by execution (a project with any draft auto-stops). */
+  draft?: boolean;
+  /** The owner's free-form brief for a draft node (co-located `_nodes/<slug>/spec.md`), from which the
+   *  coder materializes the real functions. Present only while `draft`. */
+  spec?: string;
 };
 
-/** A node's metadata — everything in the contract except the function set and the instruction. Lives in
- *  the node's own `_nodes/<id>/meta.ts`. */
-export type NodeMeta = Omit<NodeContract, "functions" | "instruction">;
+/** A node's metadata — everything in the contract except the function set, the instruction and the spec
+ *  (each co-located in its own file). Lives in the node's own `_nodes/<slug>/meta.ts`. */
+export type NodeMeta = Omit<NodeContract, "functions" | "instruction" | "spec">;
 
-/** Assemble a node's full contract from its co-located parts (step 223.C.2). Each node folder
- *  `_nodes/<id>/` holds meta.ts (NodeMeta), functions.ts (NodeFunction[]) and instruction.ts (string);
- *  the project's `_data/diagram.ts` composes the Master's nodes (and their order) from these. */
+/** Assemble a node's full contract from its co-located parts (step 223.C.2 / 224). Each node folder
+ *  `_nodes/<slug>/` holds meta.ts (NodeMeta), functions.ts (NodeFunction[]), instruction.ts (string) and,
+ *  for a draft, spec.md (string); the project's `_data/diagram.ts` composes the Master's nodes from these. */
 export function assembleNode(
   meta: NodeMeta,
   functions: NodeFunction[],
   instruction?: string,
+  spec?: string,
 ): NodeContract {
-  return { ...meta, functions, instruction };
+  return { ...meta, functions, instruction, spec };
 }

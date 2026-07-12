@@ -393,6 +393,16 @@ Editing an Instance never mutates the Master or the siblings.
   must be referenced by `_data/diagram.ts` (no orphan functions) and may hold only the allowed files
   (`meta.ts` / `functions.ts` / `instruction.ts`). It returns `{ ok, violations }`; the `ValidateButton`
   surfaces it. An agent or CI gates on it. This is how the rule is machine-enforced, not just stated.
+- **Evolution (step 224, Builder mode) — a node has a lifecycle, and a DRAFT is a legal file stub.** A node
+  created in Builder is born a **draft**: its `meta.ts` carries `draft: true`, its `functions.ts` is empty,
+  and it holds a `spec.md` (the owner's free-form brief). It is on the canvas (a real folder, referenced by
+  `_data/diagram.ts`) but **ignored by execution** — a project with any draft node auto-stops (status *In
+  development*) and cannot be activated until every node is materialized. So `spec.md` is now an allowed node
+  file, and the validator enforces the two states: `draft:true` ⇒ empty `functions.ts` + a `spec.md`;
+  materialized (no draft flag) ⇒ non-empty `functions.ts` + no `spec.md`. Node identity is a **CUID**
+  (`meta.ts` `cuid`), stable across a folder rename so per-node version history never breaks. This is the
+  documented softening of "single source of truth": the diagram (files) still owns topology; the DB only adds
+  a live canvas index + version history — it never becomes a second source of behaviour.
 
 ### 7. Scope of this sub-step
 

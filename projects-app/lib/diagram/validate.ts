@@ -8,7 +8,13 @@ import { join } from "node:path";
 //      folder must correspond to a node the diagram actually references (no orphan functions).
 // This is a filesystem check (no dynamic import of the route-group path). It returns the violations so
 // an agent, a UI button, or CI can gate on them.
-const ALLOWED_NODE_FILES = new Set(["meta.ts", "functions.ts", "instruction.ts", "index.ts"]);
+//
+// EVOLUTION (step 224, Builder mode) — a node has a lifecycle. A DRAFT node (meta.ts carries draft:true) is
+// a legal not-yet-built stub: it has an EMPTY functions.ts and a spec.md (the owner's free-form brief). A
+// MATERIALIZED node (no draft flag) is the opposite: a NON-empty functions.ts and NO spec.md. So spec.md is
+// now an allowed node file, and the two states are enforced below. This is the documented softening of
+// "the diagram is the single source of truth" — a draft is on the canvas (files) but ignored by execution.
+const ALLOWED_NODE_FILES = new Set(["meta.ts", "functions.ts", "instruction.ts", "spec.md", "index.ts"]);
 
 export type DiagramValidation = { ok: boolean; violations: string[] };
 
@@ -56,18 +62,37 @@ export async function validateProjectDiagram(projectDir: string): Promise<Diagra
         `_nodes/${id}/ is not referenced by _data/diagram.ts — a node exists only in the diagram (orphan functions).`,
       );
     }
-    // Only the allowed node files may live in a node folder.
+    const folder = join(nodesDir, id);
+    let files: string[] = [];
     try {
-      const files = await readdir(join(nodesDir, id));
-      for (const f of files) {
-        if (!ALLOWED_NODE_FILES.has(f)) {
-          violations.push(
-            `_nodes/${id}/${f} is not an allowed node file (meta.ts | functions.ts | instruction.ts).`,
-          );
-        }
-      }
+      files = await readdir(folder);
     } catch {
-      /* unreadable folder — skip */
+      continue; // unreadable folder — skip
+    }
+    // Only the allowed node files may live in a node folder.
+    for (const f of files) {
+      if (!ALLOWED_NODE_FILES.has(f)) {
+        violations.push(
+          `_nodes/${id}/${f} is not an allowed node file (meta.ts | functions.ts | instruction.ts | spec.md).`,
+        );
+      }
+    }
+    // Draft vs materialized (step 224). Draft = meta.ts draft:true -> empty functions.ts + a spec.md.
+    const metaText = await readFile(join(folder, "meta.ts"), "utf8").catch(() => "");
+    const fnText = await readFile(join(folder, "functions.ts"), "utf8").catch(() => "");
+    const isDraft = /draft\s*:\s*true/.test(metaText);
+    const hasSpec = files.includes("spec.md");
+    const functionsEmpty = fnText.trim() === "" || /FUNCTIONS[^=]*=\s*\[\s*\]/.test(fnText);
+    if (isDraft) {
+      if (!functionsEmpty)
+        violations.push(`_nodes/${id}/ is a draft (meta draft:true) but functions.ts is not empty — a draft has no functions yet.`);
+      if (!hasSpec)
+        violations.push(`_nodes/${id}/ is a draft but has no spec.md — a draft needs its free-form spec.`);
+    } else {
+      if (functionsEmpty)
+        violations.push(`_nodes/${id}/ is materialized but functions.ts is empty — a materialized node must have functions (or mark it draft:true).`);
+      if (hasSpec)
+        violations.push(`_nodes/${id}/ is materialized but still keeps spec.md — spec.md belongs only to a draft.`);
     }
   }
 

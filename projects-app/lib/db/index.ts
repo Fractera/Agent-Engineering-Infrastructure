@@ -102,6 +102,46 @@ const SCHEMA = `
     status         TEXT NOT NULL DEFAULT 'new',
     created_at     TEXT NOT NULL DEFAULT (datetime('now'))
   );
+  -- Diagram Builder mode (step 224). Two axes the file-based diagram never had: a LIVE lightweight canvas
+  -- index (so a Builder-created node renders instantly without a rebuild) and per-node VERSION HISTORY.
+  -- Identity is a CUID (owner: weak models mangle the UUID format) that is stable across a folder rename,
+  -- so version history never breaks. The files on disk are always the ACTIVE version (Model B); this table
+  -- is the projection the canvas reads + the version pointers. active_version can lag latest_version after
+  -- a rollback. draft=1 -> the node is a not-yet-built stub (empty functions.ts + a spec.md), rendered with
+  -- a red frame and IGNORED by execution (a project with any draft auto-stops -> status In development).
+  CREATE TABLE IF NOT EXISTS automation_nodes (
+    cuid            TEXT PRIMARY KEY NOT NULL,
+    automation      TEXT NOT NULL,
+    slug            TEXT NOT NULL,
+    name            TEXT NOT NULL DEFAULT '',
+    parent_cuid     TEXT,
+    ord             INTEGER NOT NULL DEFAULT 0,
+    x               REAL,
+    y               REAL,
+    draft           INTEGER NOT NULL DEFAULT 1,
+    active_version  INTEGER NOT NULL DEFAULT 0,
+    latest_version  INTEGER NOT NULL DEFAULT 0,
+    status          TEXT NOT NULL DEFAULT 'draft',
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  -- Full snapshot of every node version (append-only, COLD storage). The canvas never loads this; it is
+  -- fetched on demand for the version panel, a rollback (restore the files from a snapshot), and a future
+  -- AI mining of automation-architecture evolution patterns. UNIQUE(node_cuid, version).
+  CREATE TABLE IF NOT EXISTS automation_node_versions (
+    id              TEXT PRIMARY KEY NOT NULL,
+    automation      TEXT NOT NULL,
+    node_cuid       TEXT NOT NULL,
+    version         INTEGER NOT NULL,
+    meta_json       TEXT NOT NULL DEFAULT '{}',
+    functions_src   TEXT NOT NULL DEFAULT '',
+    instruction_src TEXT NOT NULL DEFAULT '',
+    spec_src        TEXT NOT NULL DEFAULT '',
+    summary         TEXT NOT NULL DEFAULT '',
+    dev_step_ref    TEXT,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(node_cuid, version)
+  );
   -- Automation finance types (step 205, §E): the per-automation income/expense categories the
   -- document-parsing / voice finance action segments a record into. Capped at ≤10 per (project,kind)
   -- in the app layer (not a schema constraint); UNIQUE(project,kind,name) prevents duplicates. Replaces
