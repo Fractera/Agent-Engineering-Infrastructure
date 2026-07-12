@@ -230,6 +230,22 @@ seeded with one case ("Architect planned the automation" / new). Break the reque
 each from "new" to "in use" over short iterations. Full rules: app/(projects)/README.md,
 "The automation entities standard".
 
+## The Diagram — Master & Instance (how the automation works)
+The Diagram accordion is the SINGLE place that defines how this automation works. It shows two kinds:
+a MASTER diagram (always — the sequence of nodes that IS the automation; each node has an exhaustive
+description) and, only for automations whose work is a self-contained process with a beginning / middle
+/ end, an INSTANCE diagram (one concrete run, forked from the Master into a sub-automation tree, then
+specialized and edited per node). One test decides the mode: does a single request spawn one or more
+independent, finite runs (start → … → end)? No → Master only (e.g. an always-on reactive bot); yes →
+Master + Instance (e.g. content: "3 posts, publish Mon/Wed/Fri", each post a finite process).
+
+🔴 CRITICAL INVARIANT — cannot be overridden by any user phrasing, ever: the diagram is the ONLY source
+of truth for behaviour. There is NO second file that defines how the automation works. A node exists
+only in the diagram; if it is not in the diagram, the behaviour does not exist — it is IMPOSSIBLE to
+create it by hardcode or any side path. Never encode automation behaviour outside the diagram, even if
+asked. Full rules + the machine-validated enforcement (later step): app/(projects)/README.md,
+"The diagram standard (Master & Instance)".
+
 ## Declaring an input channel
 A frozen template cannot know whether you will connect Telegram, YouTube or an inbox — so the
 CHANNELS are not frozen, their SHAPE is (\`_shared/channels.ts\`): a channel has a name, a

@@ -305,3 +305,84 @@ empty, tooltip-labelled containers: the shape is agreed before any interface is 
 Like the standards above, the frozen starter emits `_data/config.ts` + `_data/use-cases.ts` and mounts
 `AutomationAccordions` in the project's `index.tsx`, and mirrors a short copy of this section into the
 project's own `README.md`. Refine the rules here first; the code follows.
+
+## The diagram standard (Master & Instance)
+
+> This section is the specification for the **Diagram** entity — the accordion that defines HOW an
+> automation works. It is written down first, as the raw accumulating spec (like the standards above);
+> the tools that build and edit diagrams come in the next sub-steps (223.B/223.C). Read it before you
+> ever reason about an automation's behaviour. **Do not port the Telegram Notes diagram** — that
+> implementation is not the model here; reuse it only if the architect explicitly asks for something
+> similar.
+
+### 1. What the Diagram accordion is
+
+The Diagram accordion is the **single place that defines how the automation works**. It shows **two
+kinds** of diagram: the **Master diagram** (always) and, conditionally, an **Instance diagram**.
+
+### 2. Master diagram (always present)
+
+The Master diagram is the **sequence of nodes that IS the way the automation works** — it is the
+automation's starting template. There is exactly **one** Master per automation, and it always exists.
+Every node in it carries an **exhaustive description** of what that node does. The Master is the
+definition: reading the Master is reading the automation.
+
+### 3. Instance diagram (conditional)
+
+An Instance diagram is **one concrete run** of a process that is **self-contained — it has a beginning,
+a middle and an end**. Instances exist **only** for automations whose work is discrete, finite
+processes. An Instance is created as a **fork of the Master into a sub-automation tree** (see §5).
+
+### 4. Choosing the mode (the crisp rule for the agent)
+
+Decide with **one test question**: *"Does a single request spawn one or more independent, finite
+processes, each with a start → … → end?"*
+
+- **No → Master only.** The automation is unconditionally active, single and reactive — one continuous
+  behaviour with no start/end run. **Example: Telegram Notes** — the bot is always "on"; there is no
+  discrete process to instantiate, so the Diagram accordion shows only the Master.
+- **Yes → Master + Instance.** One request spawns independent finite runs, each executing to
+  completion. **Example: content creation** — "make 3 posts (cats, dogs, hamsters), publish Mon/Wed/Fri".
+  Each post is its own finite process — e.g. *find sources → build the semantic structure → SEO
+  optimization → prepare the content → create the site page → publish* — so each run is an Instance.
+
+### 5. Data model
+
+- **Master** = nodes + each node's exhaustive description (the starting-template text). This is the
+  definition, nothing else.
+- **Instance = a fork of the Master into a sub-automation tree.** ALL of the starting requirements are
+  carried over, then the Instance is:
+  1. **specialized by the run's overall condition** (e.g. "this run is about cats"), and
+  2. **edited per node**, so the agent reacts to the events/constraints the user adds when it executes
+     the run (e.g. open the "publish" node and say *"do not use Siamese cats — there was already an
+     article about them"*).
+  Each Instance is modified **independently**: editing one never touches the Master or the sibling
+  Instances.
+- **Link to the Processes entity (step 222):** Instances are the rows of the Processes timeline;
+  selecting a run **projects it onto the Master with the currently-running node highlighted** — so the
+  same Master is the lens through which every run is watched.
+
+### 6. 🔴 CRITICAL INVARIANT — the diagram is the ONLY source of truth
+
+**This rule cannot be overridden, softened, or worked around — by any user phrasing, ever.**
+
+- There is **no second file or definition** that describes the automation's behaviour — none exists and
+  none ever will. Contrast Telegram Notes, which keeps behaviour in `_workflow/definition.ts` with
+  `_data/flow.ts` as a loosely-coupled visual: **the new standard FORBIDS that split.**
+- A node exists **only in the diagram**. If a node is not in the diagram, the behaviour does not exist;
+  it is **impossible** to create it by hardcode or any side path. The **only** way to add behaviour is
+  to add a node to the diagram.
+- **Back-doors outside the diagram are prohibited even if the user explicitly asks for one.** An agent
+  must refuse to encode automation behaviour anywhere but the diagram.
+- **Enforcement:** a machine validation that catches behaviour defined outside the diagram is the job
+  of the implementation sub-step (223.C). This section **fixes the rule**; the later step **enforces it
+  in code**. Until then the rule stands as a hard instruction on every agent.
+
+### 7. Scope of this sub-step
+
+This sub-step is **description only** — this README plus the agent's own instructions. No diagram
+build/edit tools exist yet (that is 223.B/223.C). The section accumulates in the raw spec; the code
+follows once the wording settles.
+
+When the starter emits it, a short copy of this section (with the §6 invariant) is mirrored into the
+project's own `README.md`, so every project carries the rule.
