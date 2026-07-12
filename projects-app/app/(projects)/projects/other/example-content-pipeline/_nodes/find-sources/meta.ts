@@ -4,6 +4,7 @@ import type { NodeMeta } from "../../../../_shared/node-contract";
 // project and they vanish with zero technical debt (README §5 co-location invariant).
 export const META: NodeMeta = {
   id: "find-sources",
+  cuid: "cxa1findsources0baselinev1",
   name: "Find sources",
   description: "Collects and de-duplicates source material for the article topic.",
   in: { topic: "string", count: "number" },

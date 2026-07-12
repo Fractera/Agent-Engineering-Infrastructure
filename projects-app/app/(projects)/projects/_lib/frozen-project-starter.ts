@@ -24,6 +24,7 @@ import { join, dirname } from "node:path";
 // are DATA now (PROJECT_CATEGORIES in _shared/categories.ts) — adding one there is enough
 // for this validator to accept it, with zero edits here. See app/(projects)/README.md.
 import { PROJECT_CATEGORIES } from "../_shared/categories";
+import { createNodeId } from "@/lib/cuid";
 
 const SLUG_RE = /^[a-z][a-z0-9-]*$/;
 
@@ -134,6 +135,7 @@ export const PROBES: Probe[] = [];
 export const DIAGRAM_NODES: NodeContract[] = [
   {
     id: "input",
+    cuid: "{{CUID_INPUT}}",
     name: "Input",
     description: "Where the automation receives its work — a message, a request, or a scheduled tick.",
     in: {},
@@ -143,6 +145,7 @@ export const DIAGRAM_NODES: NodeContract[] = [
   },
   {
     id: "logic",
+    cuid: "{{CUID_LOGIC}}",
     name: "Logic",
     description: "The middle — the deterministic work that turns the input into the output. Designed from the user cases; this node splits into real nodes when the automation is designed.",
     in: { payload: "unknown" },
@@ -152,6 +155,7 @@ export const DIAGRAM_NODES: NodeContract[] = [
   },
   {
     id: "output",
+    cuid: "{{CUID_OUTPUT}}",
     name: "Output",
     description: "Where the automation delivers its result — a reply, a saved record, or a published page.",
     in: { result: "unknown" },
@@ -479,6 +483,11 @@ export async function createFrozenProject(
     "{{PROJECT_DESCRIPTION}}": description,
     "{{CATEGORY_LABEL_JSON}}": JSON.stringify(categoryLabel),
     "{{MODEL_ENV_KEY}}": modelEnvKey,
+    // A fresh CUID per default node (step 224) — the stable identity that the DB canvas index + version
+    // history join on. Generated per project creation so two projects never share a node identity.
+    "{{CUID_INPUT}}": createNodeId(),
+    "{{CUID_LOGIC}}": createNodeId(),
+    "{{CUID_OUTPUT}}": createNodeId(),
   };
   const sub = (s: string) => Object.entries(tokens).reduce((acc, [k, v]) => acc.split(k).join(v), s);
 

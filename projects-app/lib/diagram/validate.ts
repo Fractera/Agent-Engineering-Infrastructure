@@ -80,7 +80,7 @@ export async function validateProjectDiagram(projectDir: string): Promise<Diagra
     // Draft vs materialized (step 224). Draft = meta.ts draft:true -> empty functions.ts + a spec.md.
     const metaText = await readFile(join(folder, "meta.ts"), "utf8").catch(() => "");
     const fnText = await readFile(join(folder, "functions.ts"), "utf8").catch(() => "");
-    const isDraft = /draft\s*:\s*true/.test(metaText);
+    const isDraft = /["']?draft["']?\s*:\s*true/.test(metaText); // tolerate a quoted key ("draft": true)
     const hasSpec = files.includes("spec.md");
     const functionsEmpty = fnText.trim() === "" || /FUNCTIONS[^=]*=\s*\[\s*\]/.test(fnText);
     if (isDraft) {
