@@ -37,8 +37,9 @@ export function WorkspaceController() {
   const [terminalPlatform, setTerminalPlatform] = useState<Platform>("claude-code");
   const [terminalSessions, setTerminalSessions] = useState<Set<Platform>>(new Set());
   const [siteOpen, setSiteOpen]                 = useState(false);
-  // Which app URL the preview window shows + its title label. App → app root, Projects → the
-  // projects landing, Design → an empty placeholder layer (step 205 — header App / Design / Projects).
+  // Which app URL the preview window shows + its title label. App → app root, Projects → the projects
+  // ROOT (the categories index /projects, owner's request — not the `personal` category), Design → an
+  // empty placeholder layer (step 205 — header App / Design / Projects).
   const [previewTarget, setPreviewTarget]       = useState<string>("");
   const [previewLabel, setPreviewLabel]         = useState<string>("App");
   const [activeEmbed, setActiveEmbed]           = useState<EmbedTarget | null>(null);
@@ -334,7 +335,7 @@ export function WorkspaceController() {
             variant="outline"
             size="default"
             className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
-            onClick={() => { setPreviewTarget(`${urls.projectsUrl}/projects/personal`); setPreviewLabel("Projects"); setSiteOpen(true); }}
+            onClick={() => { setPreviewTarget(`${urls.projectsUrl}/projects`); setPreviewLabel("Projects"); setSiteOpen(true); }}
             title="Open your projects"
           >
             <FolderKanban className="h-3.5 w-3.5" />
