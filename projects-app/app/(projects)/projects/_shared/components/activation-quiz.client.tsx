@@ -445,7 +445,10 @@ export function ActivationQuiz({
           <div
             ref={scrollRef}
             onScroll={() => setShowScrollDown(!nearBottom())}
-            className="h-full space-y-3 overflow-y-auto px-6 py-3"
+            // absolute inset-0 (not h-full): a percentage height inside a flex item does not constrain, so
+            // the list distended and overlapped the footer. Filling the relative wrapper exactly restores the
+            // scroll containment — the list scrolls inside its box and never covers the input.
+            className="absolute inset-0 space-y-3 overflow-y-auto px-6 py-3"
           >
             {/* Owner's note: planning is where the model's strength shows most — a weak model designs a weak
                 automation. The model is chosen in the automation menu (the hamburger, top right of the page). */}
