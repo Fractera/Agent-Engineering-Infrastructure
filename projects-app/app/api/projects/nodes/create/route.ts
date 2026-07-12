@@ -29,7 +29,24 @@ export async function POST(req: NextRequest) {
   await syncIndexFromFiles(proj.automation, proj.projectDir);
   const slug = await uniqueSlug(name, proj.projectDir);
   const cuid = createNodeId();
-  const ord = await nextOrd(proj.automation);
+
+  // A child is inserted RIGHT AFTER its parent (not appended at the end) so the order in _data/diagram.ts
+  // follows the tree — the owner adds a node UNDER the node they clicked (fixed in L4.1). Without a parent
+  // the node is a root and goes last.
+  let ord: number;
+  if (parentCuid) {
+    const p = (await db.prepare(`SELECT ord FROM automation_nodes WHERE cuid = ?`).get(parentCuid)) as { ord: number } | undefined;
+    if (p) {
+      ord = p.ord + 1;
+      await db.prepare(
+        `UPDATE automation_nodes SET ord = ord + 1 WHERE automation = ? AND ord >= ? AND status != 'removed'`,
+      ).run(proj.automation, ord);
+    } else {
+      ord = await nextOrd(proj.automation);
+    }
+  } else {
+    ord = await nextOrd(proj.automation);
+  }
 
   const nodeDir = join(proj.projectDir, "_nodes", slug);
   await mkdir(nodeDir, { recursive: true });

@@ -12,7 +12,7 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Hammer, Play, Plus, X } from "lucide-react";
+import { Hammer, LayoutGrid, Play, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { NodeContract } from "../node-contract";
 import { DiagramPanel, NodeCard } from "./diagram-panel.client";
@@ -140,14 +140,52 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
       return index.map((n) => ({
         id: n.slug, cuid: n.cuid, name: n.name, draft: n.draft === 1,
         sub: n.draft === 1 ? "draft" : `v${n.active_version}`,
-        x: n.x, y: n.y, node: n,
+        x: n.x, y: n.y, parentCuid: n.parent_cuid, node: n,
       }));
     }
-    return nodes.map((n) => ({
-      id: n.id, cuid: n.cuid ?? n.id, name: n.name, draft: !!n.draft,
-      sub: n.run, x: null as number | null, y: null as number | null, node: undefined as IndexNode | undefined,
+    // Before the index seeds, fall back to the build-time nodes (a linear chain — they have no parent).
+    return nodes.map((n, i) => ({
+      id: n.id, cuid: n.cuid ?? n.id, name: n.name, draft: !!n.draft, sub: n.run,
+      x: null as number | null, y: null as number | null,
+      parentCuid: i > 0 ? (nodes[i - 1].cuid ?? nodes[i - 1].id) : null,
+      node: undefined as IndexNode | undefined,
     }));
   }, [index, nodes]);
+
+  // TREE layout (fixed in 224 L4.1 — the "+" adds a child OF THE CLICKED NODE, not at the end of the
+  // chain). Depth from parent_cuid → x; the index among the siblings at that depth → y. A root (no parent)
+  // chains after the previous root, so the default Input → Logic → Output still reads as a line, while a
+  // child branches OFF its parent. A saved position always wins over the computed one.
+  const layout = useMemo(() => {
+    const byCuid = new Map(view.map((v) => [v.cuid, v]));
+    const isRoot = (v: (typeof view)[number]) => !v.parentCuid || !byCuid.has(v.parentCuid);
+
+    // A node's column: a root takes the next column in the root chain; a child takes its parent's column
+    // + 1. Computed by walking up to the root (cycle-guarded).
+    const rootCol = new Map<string, number>();
+    view.filter(isRoot).forEach((v, i) => rootCol.set(v.cuid, i));
+    const colOf = new Map<string, number>();
+    const column = (cuid: string, guard = 0): number => {
+      if (colOf.has(cuid)) return colOf.get(cuid) as number;
+      const v = byCuid.get(cuid);
+      const c =
+        !v || isRoot(v) || guard > 50
+          ? (rootCol.get(cuid) ?? 0)
+          : column(v.parentCuid as string, guard + 1) + 1;
+      colOf.set(cuid, c);
+      return c;
+    };
+
+    const rowsUsed = new Map<number, number>(); // siblings in the same column stack downwards
+    const pos = new Map<string, { x: number; y: number }>();
+    for (const v of view) {
+      const col = column(v.cuid);
+      const row = rowsUsed.get(col) ?? 0;
+      rowsUsed.set(col, row + 1);
+      pos.set(v.cuid, { x: col * 260, y: row * 130 });
+    }
+    return pos;
+  }, [view]);
 
   const addChild = useCallback(async (parentCuid: string) => {
     if (!automation || busy) return;
@@ -172,6 +210,25 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
       body: JSON.stringify({ automation, positions: payload }),
     });
   }, [automation, positions]);
+
+  // AUTO-LAYOUT (step 224 L5) — arrange the nodes by the tree (depth → column, siblings → rows) and persist
+  // it. Zero dependencies: the same computed `layout` the canvas falls back to, applied and saved. Manual
+  // dragging still wins afterwards (the owner can arrange by hand; closing Builder saves that too).
+  const autoLayout = useCallback(async () => {
+    if (!automation) return;
+    const next: Record<string, { x: number; y: number }> = {};
+    for (const v of view) {
+      const p = layout.get(v.cuid);
+      if (p) next[v.cuid] = p;
+    }
+    setPositions(next);
+    await fetch(`/api/projects/nodes/layout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ automation, positions: Object.entries(next).map(([cuid, p]) => ({ cuid, ...p })) }),
+    });
+    await refetchIndex();
+  }, [automation, view, layout, refetchIndex]);
 
   const toggleBuilder = useCallback(async () => {
     if (builder) { await saveLayout(); await refetchIndex(); } // leaving Builder persists the layout
@@ -206,18 +263,35 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
       view.map((v, i) => ({
         id: v.id,
         type: "diagram",
-        position: positions[v.cuid] ?? { x: v.x ?? i * 240, y: v.y ?? 0 },
+        // saved drag > persisted layout > computed tree layout
+        position: positions[v.cuid] ?? (v.x !== null && v.y !== null
+          ? { x: v.x, y: v.y }
+          : layout.get(v.cuid) ?? { x: i * 260, y: 0 }),
         data: {
           label: v.name, sub: v.sub, runStatus: runStatus[v.id] ?? "idle", draft: v.draft,
           builder, onAddChild: addChild, cuid: v.cuid,
         },
       })),
-    [view, runStatus, builder, addChild, positions],
+    [view, runStatus, builder, addChild, positions, layout],
   );
-  const rfEdges = useMemo<Edge[]>(
-    () => view.slice(1).map((v, i) => ({ id: `${view[i].id}->${v.id}`, source: view[i].id, target: v.id })),
-    [view],
-  );
+  // Edges follow the TREE: a child links to ITS parent (parent_cuid). Roots chain to the previous root, so
+  // the default Input → Logic → Output still reads as a line. This is what makes "+" branch off the clicked
+  // node instead of appending to the end (the fatal bug the owner caught in L4).
+  const rfEdges = useMemo<Edge[]>(() => {
+    const byCuid = new Map(view.map((v) => [v.cuid, v]));
+    const edges: Edge[] = [];
+    let prevRoot: (typeof view)[number] | undefined;
+    for (const v of view) {
+      const parent = v.parentCuid ? byCuid.get(v.parentCuid) : undefined;
+      if (parent) {
+        edges.push({ id: `${parent.id}->${v.id}`, source: parent.id, target: v.id });
+      } else {
+        if (prevRoot) edges.push({ id: `${prevRoot.id}->${v.id}`, source: prevRoot.id, target: v.id });
+        prevRoot = v;
+      }
+    }
+    return edges;
+  }, [view]);
 
   const activeView = activeId ? view.find((v) => v.id === activeId) : undefined;
   const activeContract = activeId ? nodes.find((n) => n.id === activeId) : undefined;
@@ -237,6 +311,11 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
           )}
         </p>
         <div className="flex gap-2">
+          {builder && (
+            <Button variant="outline" size="sm" onClick={autoLayout} disabled={busy}>
+              <LayoutGrid className="size-3.5" /> Auto-layout
+            </Button>
+          )}
           <Button variant={builder ? "default" : "outline"} size="sm" onClick={toggleBuilder} disabled={busy}>
             <Hammer className="size-3.5" />
             {builder ? "Close Builder" : "Builder"}
