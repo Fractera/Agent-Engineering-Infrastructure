@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Background,
   Controls,
@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import type { NodeContract } from "../node-contract";
 import { DiagramPanel, NodeCard } from "./diagram-panel.client";
 import { BuilderNodePanel } from "./builder-node-panel.client";
+import { StartDevelopment } from "./start-development.client";
 
 // FROZEN STANDARD (step 223.C + 224) — the diagram CANVAS. Two modes:
 //
@@ -101,6 +102,11 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
   const [busy, setBusy] = useState(false);
   const [testing, setTesting] = useState(false);
 
+  // The index is polled every 3s. Re-setting it to a fresh array on EVERY poll — even when the data is
+  // identical — churned the node identities, and ReactFlow re-measured the nodes and lost them in the
+  // viewport (the owner's "the diagram appears, then a few seconds later the canvas goes blank"). So we
+  // only setState when the CONTENT actually changed, by comparing a stable signature.
+  const indexSig = useRef<string>("");
   const refetchIndex = useCallback(async () => {
     if (!automation) return;
     try {
@@ -109,7 +115,11 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
       });
       if (!r.ok) return;
       const d = (await r.json()) as { nodes: IndexNode[]; sources?: Sources };
-      setIndex(d.nodes ?? []);
+      const nodes = d.nodes ?? [];
+      const sig = JSON.stringify(nodes.map((n) => [n.cuid, n.slug, n.name, n.draft, n.active_version, n.x, n.y, n.parent_cuid, n.status]));
+      if (sig === indexSig.current) return; // nothing changed — do NOT churn the canvas
+      indexSig.current = sig;
+      setIndex(nodes);
       setSources(d.sources ?? {});
     } catch { /* keep the last good index */ }
   }, [automation]);
@@ -333,6 +343,11 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
   const activeView = activeId ? view.find((v) => v.id === activeId) : undefined;
   const activeContract = activeId ? nodes.find((n) => n.id === activeId) : undefined;
 
+  // Re-fit the viewport only when the NODE SET changes (add / remove / draft→built), not on every run-status
+  // poll — remounting ReactFlow re-runs `fitView` so a changed graph is centred, while a stable graph keeps
+  // the owner's pan/zoom. The dedupe above means this key is stable between identical polls.
+  const fitKey = useMemo(() => view.map((v) => v.id).join("|"), [view]);
+
   if (!view.length) return <DiagramPanel nodes={[]} />;
 
   return (
@@ -359,6 +374,9 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
           </Button>
           {!builder && automation && (
             <>
+              {/* START DEVELOPMENT (step 232) — appears while any node is still a draft: it turns the current
+                  draft nodes into development steps and hands the owner the copy-paste brief for a coding agent. */}
+              <StartDevelopment automation={automation} hasDraft={view.some((v) => v.draft)} />
               {/* THE MINIMAL TEST GUARANTEE (227.C): even an unfinished automation can be tested — the smoke
                   run goes through what is BUILT and reports honestly what is still missing. */}
               <Button variant="outline" size="sm" onClick={testRun} disabled={testing}>
@@ -377,6 +395,7 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
           85vw column), so both canvases and every other block share one width. */}
       <div className="relative h-[75vh] w-full overflow-hidden rounded-lg border">
         <ReactFlow
+          key={fitKey}
           nodes={rfNodes}
           edges={rfEdges}
           nodeTypes={NODE_TYPES}

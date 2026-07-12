@@ -19,6 +19,8 @@ import type { DashboardConfig } from "../table-config";
 import { UseCasesPanel } from "./use-cases-panel.client";
 import { DashboardAccordion } from "./dashboard-accordion.client";
 import { ProcessesTimeline } from "./processes-timeline.client";
+import { useUiLang } from "../use-ui-lang";
+import { useCasesStrings } from "../use-cases-i18n";
 
 // FROZEN STANDARD (step 222) — the series of entity accordions below the "Add or modify automation"
 // button. Driven by the project's _data/config.ts (EntitiesConfig): `diagram` is always shown; the
@@ -42,6 +44,7 @@ export function AutomationAccordions({
   /** The dashboard's tables (step 228). When present, the Dashboard accordion renders them. */
   dashboard?: DashboardConfig;
 }) {
+  const L = useCasesStrings(useUiLang());
   // The Diagram is NOT in the accordion series (owner design, step 223.C): it is rendered separately as
   // a full-width, always-visible section (DiagramSection). Here we render the OTHER entities only.
   const entities = ENTITY_ORDER.filter(
@@ -87,12 +90,9 @@ export function AutomationAccordions({
           <AccordionTrigger className="text-left">
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="font-medium">User cases</span>
+                <span className="font-medium">{L.sectionTitle}</span>
               </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
-                The cases agreed with the architect: what the automation should do, one case at a time.
-                Each carries a number (01, 02, …) and a status that moves from new to in use.
-              </TooltipContent>
+              <TooltipContent className="max-w-xs">{L.sectionTooltip}</TooltipContent>
             </Tooltip>
           </AccordionTrigger>
           <AccordionContent>

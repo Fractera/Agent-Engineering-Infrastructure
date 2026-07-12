@@ -2,6 +2,7 @@
 // One place for every owner-facing string in the panel: the review banner, the buttons, the tooltips, the
 // delete dialog, the review dialog and the toasts. {title} is a template — fill it with `fill()`.
 export type UseCasesStrings = {
+  sectionTitle: string; sectionTooltip: string;
   empty: string;
   reviewedYes: string; reviewedNo: string;
   readConfirm: string; editAll: string; editAllTip: string; editCaseTip: string; deleteTip: string;
@@ -14,7 +15,9 @@ export type UseCasesStrings = {
 
 export const USE_CASES_I18N: Record<string, UseCasesStrings> = {
   en: {
-    empty: "No user cases yet. They are the FIRST stage of this automation: describe your scenarios in the Quiz (it opens on the automation page) — nothing is built until they exist.",
+    sectionTitle: "Use cases",
+    sectionTooltip: "The cases agreed with the architect: what the automation should do, one case at a time. Each carries a number (01, 02, …) and a status that moves from new to in use.",
+    empty: "No use cases yet. They are the FIRST stage of this automation: describe your scenarios in the Quiz (it opens on the automation page) — nothing is built until they exist.",
     reviewedYes: "You confirmed these cases — development can start.",
     reviewedNo: "Not confirmed yet — development steps stay blocked until you read them.",
     readConfirm: "Read & confirm", editAll: "Edit all",
@@ -33,6 +36,8 @@ export const USE_CASES_I18N: Record<string, UseCasesStrings> = {
     confirmedDesc: "You and the AI agree on what this automation must do — development can start.",
   },
   ru: {
+    sectionTitle: "Пользовательские кейсы",
+    sectionTooltip: "Кейсы, согласованные с архитектором: что автоматизация должна делать, по одному кейсу за раз. У каждого есть номер (01, 02, …) и статус, который движется от «new» к «in use».",
     empty: "Пользовательских кейсов пока нет. Это ПЕРВЫЙ этап автоматизации: опишите свои сценарии в Quiz (он открывается на странице автоматизации) — пока их нет, ничего не строится.",
     reviewedYes: "Вы подтвердили эти кейсы — разработку можно начинать.",
     reviewedNo: "Пока не подтверждено — шаги разработки заблокированы, пока вы их не прочитаете.",
@@ -52,6 +57,8 @@ export const USE_CASES_I18N: Record<string, UseCasesStrings> = {
     confirmedDesc: "Вы и ИИ согласны в том, что должна делать автоматизация — разработку можно начинать.",
   },
   es: {
+    sectionTitle: "Casos de uso",
+    sectionTooltip: "Los casos acordados con el arquitecto: lo que la automatización debe hacer, un caso a la vez. Cada uno lleva un número (01, 02, …) y un estado que va de «new» a «in use».",
     empty: "Aún no hay casos de uso. Son la PRIMERA etapa de esta automatización: describe tus escenarios en el Quiz (se abre en la página de la automatización) — nada se construye hasta que existan.",
     reviewedYes: "Confirmaste estos casos — el desarrollo puede empezar.",
     reviewedNo: "Aún sin confirmar — los pasos de desarrollo quedan bloqueados hasta que los leas.",
@@ -71,6 +78,8 @@ export const USE_CASES_I18N: Record<string, UseCasesStrings> = {
     confirmedDesc: "Tú y la IA estáis de acuerdo en lo que debe hacer la automatización — el desarrollo puede empezar.",
   },
   fr: {
+    sectionTitle: "Cas d'usage",
+    sectionTooltip: "Les cas convenus avec l'architecte : ce que l'automatisation doit faire, un cas à la fois. Chacun porte un numéro (01, 02, …) et un statut qui passe de « new » à « in use ».",
     empty: "Aucun cas d'usage pour l'instant. C'est la PREMIÈRE étape de cette automatisation : décrivez vos scénarios dans le Quiz (il s'ouvre sur la page de l'automatisation) — rien n'est construit tant qu'ils n'existent pas.",
     reviewedYes: "Vous avez confirmé ces cas — le développement peut commencer.",
     reviewedNo: "Pas encore confirmé — les étapes de développement restent bloquées jusqu'à ce que vous les lisiez.",
@@ -90,6 +99,8 @@ export const USE_CASES_I18N: Record<string, UseCasesStrings> = {
     confirmedDesc: "Vous et l'IA êtes d'accord sur ce que l'automatisation doit faire — le développement peut commencer.",
   },
   it: {
+    sectionTitle: "Casi d'uso",
+    sectionTooltip: "I casi concordati con l'architetto: cosa deve fare l'automazione, un caso alla volta. Ognuno porta un numero (01, 02, …) e uno stato che va da «new» a «in use».",
     empty: "Ancora nessun caso d'uso. Sono la PRIMA fase di questa automazione: descrivi i tuoi scenari nel Quiz (si apre nella pagina dell'automazione) — finché non esistono, non si costruisce nulla.",
     reviewedYes: "Hai confermato questi casi — lo sviluppo può iniziare.",
     reviewedNo: "Non ancora confermato — i passi di sviluppo restano bloccati finché non li leggi.",
@@ -109,6 +120,8 @@ export const USE_CASES_I18N: Record<string, UseCasesStrings> = {
     confirmedDesc: "Tu e l'IA siete d'accordo su cosa deve fare l'automazione — lo sviluppo può iniziare.",
   },
   de: {
+    sectionTitle: "Anwendungsfälle",
+    sectionTooltip: "Die mit dem Architekten vereinbarten Fälle: was die Automatisierung tun soll, ein Fall nach dem anderen. Jeder trägt eine Nummer (01, 02, …) und einen Status, der von „new“ zu „in use“ wandert.",
     empty: "Noch keine Anwendungsfälle. Sie sind die ERSTE Phase dieser Automatisierung: Beschreibe deine Szenarien im Quiz (es öffnet sich auf der Automatisierungsseite) — solange sie nicht existieren, wird nichts gebaut.",
     reviewedYes: "Du hast diese Fälle bestätigt — die Entwicklung kann beginnen.",
     reviewedNo: "Noch nicht bestätigt — Entwicklungsschritte bleiben blockiert, bis du sie liest.",
