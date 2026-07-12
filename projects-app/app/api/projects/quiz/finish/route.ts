@@ -16,13 +16,15 @@ export async function POST(req: NextRequest) {
   const t = await resolveQuizTarget({ automation: body?.automation, edge: body?.edge });
   if (!t.ok) return NextResponse.json({ error: t.error }, { status: 400 });
 
-  const quiz = await getQuizFor(t.target);
+  // Bind the union to a local const: TypeScript drops the narrowing of t.target across an await.
+  const target = t.target;
+  const quiz = await getQuizFor(target);
   if (quiz) await finishQuiz(quiz);
 
   // An EDGE session: the owner leaves with the link's brief written (or not) — say exactly which.
-  if (t.target.kind === "edge") {
-    const edge = await edgeByCuid(t.target.cuid);
-    const spec = (await readEdgeFiles(t.target.cuid)).spec.trim();
+  if (target.kind === "edge") {
+    const edge = await edgeByCuid(target.cuid);
+    const spec = (await readEdgeFiles(target.cuid)).spec.trim();
     const built = edge ? edge.draft === 0 : false;
     return NextResponse.json({
       ok: true,
@@ -36,9 +38,9 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const nodes = await listNodes(t.target.automation);
+  const nodes = await listNodes(target.automation);
   const drafts = nodes.filter((n) => n.draft === 1).length;
-  const steps = (await pendingSteps()).filter((s) => s.automation === t.target.automation);
+  const steps = (await pendingSteps()).filter((s) => s.automation === target.automation);
 
   return NextResponse.json({
     ok: true,
