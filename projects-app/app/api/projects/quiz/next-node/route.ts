@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
   const instruction = await automationInstruction(proj.projectDir);
   const turns = await turnsOf(quiz);
 
-  let node: { name: string; spec: string };
+  let node: { name: string; spec: string; estDurationMs: number };
   try {
     node = await synthesizeNode(quiz, instruction, turns);
   } catch (e) {
