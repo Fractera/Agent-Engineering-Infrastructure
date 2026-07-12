@@ -33,6 +33,83 @@ import { VoiceInput } from "./voice-input.client";
 type Turn = { role: string; content: string };
 type Phase = "usecases" | "nodes";
 
+// SIX-LANGUAGE UI (owner's rule, CLAUDE.md 4г) — the admin/projects/design/service layers speak the six
+// languages we ship (en, es, fr, it, ru, de); anything else falls back to English. The strings the owner
+// named — the title, the amber banner and the input placeholder — are translated here, next to where they
+// render. Deterministic dictionary, no model call.
+type QuizStrings = {
+  banner: string;
+  phScenarios: string;
+  phAnswer: string;
+  tUseCases: string; tUseCasesSub: string;
+  tNode: string; tNodeOf: string;
+  tLink: string;
+  tCaseOne: string; tCaseAll: string;
+  tUseCasesShort: string;
+};
+const QUIZ_I18N: Record<string, QuizStrings> = {
+  en: {
+    banner: "Planning an automation works far better with the most powerful model available to you. Pick it in the hamburger menu at the top of the page (Settings → model).",
+    phScenarios: "Describe your scenarios — speak freely; hold the microphone and dictate…",
+    phAnswer: "Your answer…",
+    tUseCases: "The user cases", tUseCasesSub: "described first — before anything is built",
+    tNode: "Designing node", tNodeOf: "of at most",
+    tLink: "Designing the link",
+    tCaseOne: "Revisiting a user case", tCaseAll: "Revisiting the user cases",
+    tUseCasesShort: "described first — before anything is built",
+  },
+  ru: {
+    banner: "Планирование автоматизации идёт намного эффективнее на самой мощной доступной вам модели. Выберите её в гамбургер-меню вверху страницы (Настройки → модель).",
+    phScenarios: "Опишите свои сценарии — говорите свободно; удерживайте микрофон и диктуйте…",
+    phAnswer: "Ваш ответ…",
+    tUseCases: "Пользовательские кейсы", tUseCasesSub: "сначала описываем их — до всего остального",
+    tNode: "Проектируем узел", tNodeOf: "максимум из",
+    tLink: "Проектируем связь",
+    tCaseOne: "Пересматриваем кейс", tCaseAll: "Пересматриваем пользовательские кейсы",
+    tUseCasesShort: "сначала описываем их — до всего остального",
+  },
+  es: {
+    banner: "Planificar una automatización funciona mucho mejor con el modelo más potente disponible. Elígelo en el menú de hamburguesa de la parte superior de la página (Ajustes → modelo).",
+    phScenarios: "Describe tus escenarios — habla con libertad; mantén pulsado el micrófono y dicta…",
+    phAnswer: "Tu respuesta…",
+    tUseCases: "Los casos de uso", tUseCasesSub: "descritos primero — antes de construir nada",
+    tNode: "Diseñando el nodo", tNodeOf: "de un máximo de",
+    tLink: "Diseñando el enlace",
+    tCaseOne: "Revisando un caso de uso", tCaseAll: "Revisando los casos de uso",
+    tUseCasesShort: "descritos primero — antes de construir nada",
+  },
+  fr: {
+    banner: "La planification d'une automatisation est bien meilleure avec le modèle le plus puissant à votre disposition. Choisissez-le dans le menu hamburger en haut de la page (Paramètres → modèle).",
+    phScenarios: "Décrivez vos scénarios — parlez librement ; maintenez le micro et dictez…",
+    phAnswer: "Votre réponse…",
+    tUseCases: "Les cas d'usage", tUseCasesSub: "décrits d'abord — avant toute construction",
+    tNode: "Conception du nœud", tNodeOf: "sur un maximum de",
+    tLink: "Conception du lien",
+    tCaseOne: "Révision d'un cas d'usage", tCaseAll: "Révision des cas d'usage",
+    tUseCasesShort: "décrits d'abord — avant toute construction",
+  },
+  it: {
+    banner: "Pianificare un'automazione funziona molto meglio con il modello più potente a tua disposizione. Sceglilo nel menu hamburger in cima alla pagina (Impostazioni → modello).",
+    phScenarios: "Descrivi i tuoi scenari — parla liberamente; tieni premuto il microfono e detta…",
+    phAnswer: "La tua risposta…",
+    tUseCases: "I casi d'uso", tUseCasesSub: "descritti prima — prima di costruire qualsiasi cosa",
+    tNode: "Progettazione del nodo", tNodeOf: "su un massimo di",
+    tLink: "Progettazione del collegamento",
+    tCaseOne: "Revisione di un caso d'uso", tCaseAll: "Revisione dei casi d'uso",
+    tUseCasesShort: "descritti prima — prima di costruire qualsiasi cosa",
+  },
+  de: {
+    banner: "Das Planen einer Automatisierung gelingt weit besser mit dem stärksten dir verfügbaren Modell. Wähle es im Hamburger-Menü oben auf der Seite (Einstellungen → Modell).",
+    phScenarios: "Beschreibe deine Szenarien — sprich frei; halte das Mikrofon gedrückt und diktiere…",
+    phAnswer: "Deine Antwort…",
+    tUseCases: "Die Anwendungsfälle", tUseCasesSub: "zuerst beschrieben — bevor irgendetwas gebaut wird",
+    tNode: "Knoten wird entworfen", tNodeOf: "von höchstens",
+    tLink: "Verbindung wird entworfen",
+    tCaseOne: "Anwendungsfall überarbeiten", tCaseAll: "Anwendungsfälle überarbeiten",
+    tUseCasesShort: "zuerst beschrieben — bevor irgendetwas gebaut wird",
+  },
+};
+
 export function ActivationQuiz({
   automation, edge, edgeName, useCase, useCaseName, cases,
   open: openProp, autoStart, onClose,
@@ -70,6 +147,15 @@ export function ActivationQuiz({
   // The field voice writes into (step 232): the transcript lands at the CARET, so the owner can dictate into
   // the middle of what he already wrote.
   const answerRef = useRef<HTMLTextAreaElement | null>(null);
+  // The UI language of the modal (owner's rule, six languages). English until the default locale is known.
+  const [uiLang, setUiLang] = useState("en");
+  const L = QUIZ_I18N[uiLang.slice(0, 2)] ?? QUIZ_I18N.en;
+  useEffect(() => {
+    void fetch(`/api/projects/language`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.code) setUiLang(String(d.code)); })
+      .catch(() => {});
+  }, []);
 
   // The SUBJECT of every call — one API, four subjects (steps 225 G4 + 231).
   const subject = useCallback(() => {
@@ -386,49 +472,48 @@ export function ActivationQuiz({
 
   const title = isEdge ? (
     <>
-      <Link2 className="size-4" /> Designing the link
+      <Link2 className="size-4" /> {L.tLink}
       <span className="truncate text-xs font-normal text-muted-foreground">{edgeName ?? ""}</span>
     </>
   ) : isCaseEdit ? (
     <>
-      <ListChecks className="size-4" /> {useCase ? "Revisiting a user case" : "Revisiting the user cases"}
+      <ListChecks className="size-4" /> {useCase ? L.tCaseOne : L.tCaseAll}
       <span className="truncate text-xs font-normal text-muted-foreground">{useCaseName ?? automation ?? ""}</span>
     </>
   ) : phase === "usecases" ? (
     <>
-      <ListChecks className="size-4" /> The user cases
-      <span className="text-xs font-normal text-muted-foreground">described first — before anything is built</span>
+      <ListChecks className="size-4" /> {L.tUseCases}
+      <span className="text-xs font-normal text-muted-foreground">{L.tUseCasesSub}</span>
     </>
   ) : (
     <>
-      <MessagesSquare className="size-4" /> Designing node {nodeCount + 1}
-      <span className="text-xs font-normal text-muted-foreground">of at most {maxNodes}</span>
+      <MessagesSquare className="size-4" /> {L.tNode} {nodeCount + 1}
+      <span className="text-xs font-normal text-muted-foreground">{L.tNodeOf} {maxNodes}</span>
     </>
   );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* LAYOUT (owner found the microphone missing): DialogContent is a CSS GRID — with max-h + overflow
-          hidden it does not shrink its rows, it CLIPS them, and the clipped row was the bottom one: the
-          answer field, the mic and the buttons. So the dialog is a FLEX COLUMN: the transcript is the only
-          part that scrolls (flex-1 + min-h-0), everything the owner must reach stays on screen (shrink-0). */}
-      <DialogContent className="flex max-h-[85vh] flex-col overflow-hidden sm:max-w-2xl">
-        <DialogHeader className="shrink-0">
-          <DialogTitle className="flex items-center gap-2">{title}</DialogTitle>
+      {/* LAYOUT (owner: the microphone was cut off). DialogContent is a CSS grid that CLIPS rows under a
+          max-height instead of shrinking them, so the bottom row — the field, the mic and the buttons —
+          was never on screen. It is now THREE explicit regions with the padding moved per-region (p-0):
+          a fixed HEADER, a single SCROLLING BODY (min-h-0 flex-1), and a fixed FOOTER that always holds
+          the input, the microphone with its volume meter, and the actions. */}
+      <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+        <DialogHeader className="shrink-0 border-b px-6 pt-6 pb-3">
+          <DialogTitle className="flex flex-wrap items-center gap-2">{title}</DialogTitle>
         </DialogHeader>
 
-        {/* Owner's note: planning is where the model's strength shows most — a weak model designs a weak
-            automation. The model is chosen in the automation menu (the hamburger, top right of the page). */}
-        <div className="flex shrink-0 gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-300">
-          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-          <p>
-            Planning an automation works far better with the most powerful model available to you. Pick it in
-            the hamburger menu at the top of the page (Settings → model).
-          </p>
-        </div>
+        {/* THE SCROLLING BODY — the banner and the whole transcript live here; on any screen it scrolls,
+            so the footer below is never pushed off. */}
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-6 py-3">
+          {/* Owner's note: planning is where the model's strength shows most — a weak model designs a weak
+              automation. The model is chosen in the automation menu (the hamburger, top right of the page). */}
+          <div className="flex gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-300">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+            <p>{L.banner}</p>
+          </div>
 
-        {/* The ONLY scrolling region: it takes whatever height is left and gives the rest back. */}
-        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
           {turns.length === 0 && busy && (
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" />
@@ -455,7 +540,7 @@ export function ActivationQuiz({
         {/* AUTO-QUIZ (227.B): the model thinks out loud, streamed. The area stays EDITABLE — pause, rewrite,
             save; what gets built is then made from YOUR text. */}
         {(streaming || draftText) && (
-          <div className="max-h-[35vh] shrink-0 space-y-2 overflow-y-auto rounded-lg border border-primary/40 p-2">
+          <div className="mx-6 max-h-[35vh] shrink-0 space-y-2 overflow-y-auto rounded-lg border border-primary/40 p-2">
             <p className="flex items-center gap-1 text-xs font-medium text-primary">
               <Sparkles className="size-3" /> Auto-quiz {streaming ? "— writing… (you can pause and edit)" : "— paused, edit freely"}
             </p>
@@ -482,17 +567,17 @@ export function ActivationQuiz({
           </div>
         )}
 
-        {/* Always on screen — this is where the owner types, speaks and acts. */}
-        <div className="shrink-0 space-y-2 border-t pt-3">
+        {/* THE FOOTER — always on screen (owner's requirement): the input, the microphone with its volume
+            meter, and the actions. It never scrolls away; the body above scrolls instead. */}
+        <div className="shrink-0 space-y-2 border-t px-6 pb-6 pt-3">
           <Textarea
             ref={answerRef}
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
             rows={3}
+            className="max-h-40 overflow-y-auto"
             placeholder={
-              phase === "usecases" && !isEdge && !isCaseEdit
-                ? "Describe your scenarios — speak freely; hold the microphone and dictate…"
-                : "Your answer…"
+              phase === "usecases" && !isEdge && !isCaseEdit ? L.phScenarios : L.phAnswer
             }
             disabled={busy || streaming}
           />
