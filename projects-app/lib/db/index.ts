@@ -88,6 +88,20 @@ const SCHEMA = `
     status   TEXT NOT NULL DEFAULT 'idle',
     payload  TEXT NOT NULL DEFAULT '{}'
   );
+  -- Master → Instance fork (step 223.C.4). An Instance is a fork of the Master into a sub-automation:
+  -- it inherits ALL the Master's nodes, then adds a `specialization` (the run's overall condition, e.g.
+  -- "about cats") and per-node `overrides` (JSON keyed by node_id → { disabledFunctions[], note }, e.g.
+  -- "do not use Siamese cats"). Editing one Instance never touches the Master or the sibling Instances.
+  -- automation = "<category>/<slug>". A run of an Instance sets automation_runs.instance_id to its id.
+  CREATE TABLE IF NOT EXISTS automation_instances (
+    id             TEXT PRIMARY KEY NOT NULL,
+    automation     TEXT NOT NULL,
+    title          TEXT NOT NULL,
+    specialization TEXT NOT NULL DEFAULT '',
+    overrides      TEXT NOT NULL DEFAULT '{}',
+    status         TEXT NOT NULL DEFAULT 'new',
+    created_at     TEXT NOT NULL DEFAULT (datetime('now'))
+  );
   -- Automation finance types (step 205, §E): the per-automation income/expense categories the
   -- document-parsing / voice finance action segments a record into. Capped at ≤10 per (project,kind)
   -- in the app layer (not a schema constraint); UNIQUE(project,kind,name) prevents duplicates. Replaces
