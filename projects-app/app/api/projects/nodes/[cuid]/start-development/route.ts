@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { authorize, resolveProject, nodeByCuid } from "@/lib/nodes";
 import { materializeNodeStep, nextStepNumber } from "@/lib/dev-steps";
 import { assertUseCasesReviewed } from "@/lib/use-cases";
+import { t } from "@/lib/quiz";
 
 // "Start development" (step 224 L6) — the handoff. Materializes a development step FILE into the existing
 // product queue (DEVELOPMENT-STEPS/NEW-STEPS/, read by :3002/service/development-steps — never a new
@@ -27,7 +28,10 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ cuid: stri
   // automation's user cases back and confirmed the AI understood him. Editing a case stales that confirmation,
   // so a changed scenario always forces a fresh agreement before more code is written.
   const gate = await assertUseCasesReviewed(row.automation);
-  if (!gate.ok) return NextResponse.json({ error: gate.error, reason: gate.reason }, { status: 409 });
+  if (!gate.ok) {
+    const error = t(gate.reason === "no-cases" ? "noCases" : "notReviewed");
+    return NextResponse.json({ error, reason: gate.reason }, { status: 409 });
+  }
 
   const nodeDir = join(proj.projectDir, "_nodes", row.slug);
   const optimization = row.draft === 0;

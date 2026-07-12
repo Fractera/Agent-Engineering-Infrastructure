@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorize, resolveProject } from "@/lib/nodes";
 import {
-  addTurnFor, automationInstruction, getPhase, getQuiz, nextQuestionFor, setPhase, synthesizeUseCases,
+  addTurnFor, automationInstruction, getPhase, getQuiz, nextQuestionFor, setPhase, synthesizeUseCases, t,
   turnsFor,
 } from "@/lib/quiz";
 import { addCase, listCases, regenerateUseCasesFile } from "@/lib/use-cases";
@@ -36,16 +36,9 @@ export async function POST(req: NextRequest) {
   // greeting is ours, and the one-line instruction he typed when creating the automation is NOT a
   // description — deriving cases from it alone is exactly the shortcut this step exists to forbid. An
   // auto-quiz counts only when he KEPT its text ("Keep this text" saves it as a turn he owns).
-  const spoke = turns.some((t) => t.role === "user" && t.content.trim().length >= 20);
+  const spoke = turns.some((x) => x.role === "user" && x.content.trim().length >= 20);
   if (!spoke) {
-    return NextResponse.json(
-      {
-        error:
-          "Describe the scenarios first — without a detailed description the automation cannot be created. " +
-          "Tell me who uses it, what comes in, what must come out, and what happens when something goes wrong.",
-      },
-      { status: 409 },
-    );
+    return NextResponse.json({ error: t("describeFirst", quiz.language) }, { status: 409 });
   }
 
   let cases: { title: string; summary: string }[];
@@ -55,14 +48,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: (e as Error).message }, { status: 502 });
   }
   if (!cases.length) {
-    return NextResponse.json(
-      {
-        error:
-          "I could not turn this into a single user case yet — the description is still too thin. Say more " +
-          "about the scenarios: who triggers the automation, what it receives, and what it must produce.",
-      },
-      { status: 409 },
-    );
+    return NextResponse.json({ error: t("tooThin", quiz.language) }, { status: 409 });
   }
 
   for (const c of cases) await addCase(proj.automation, { title: c.title, summary: c.summary, status: "new" });

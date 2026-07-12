@@ -235,17 +235,20 @@ export function UseCasesPanel({ cases, automation }: { cases: UseCase[]; automat
 
       {/* THE REVIEW GATE — the owner reads the cases back and confirms that the AI understood him. */}
       <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>
-        <DialogContent className="max-h-[85vh] overflow-hidden sm:max-w-2xl">
-          <DialogHeader>
+        {/* A flex column, like the Quiz: only the list scrolls, so the confirm button is never clipped off
+            the bottom of the screen when the automation has many cases (DialogContent is a grid — with a
+            max-height it CLIPS rows instead of shrinking them). */}
+        <DialogContent className="flex max-h-[85vh] flex-col overflow-hidden sm:max-w-2xl">
+          <DialogHeader className="shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <CheckCheck className="size-4" /> Read the user cases before development starts
             </DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">
+          <p className="shrink-0 text-sm text-muted-foreground">
             This is where you and the AI agree. Read what it understood; if anything is wrong, close this and
             fix the case with its pencil. Development steps are created only after you confirm.
           </p>
-          <div className="max-h-[50vh] space-y-3 overflow-y-auto pr-1">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
             {rows.map((c, i) => (
               <div key={c.id} className="rounded-lg border p-3">
                 <p className="flex items-center gap-2 text-sm font-medium">
@@ -256,7 +259,7 @@ export function UseCasesPanel({ cases, automation }: { cases: UseCase[]; automat
               </div>
             ))}
           </div>
-          <div className="flex justify-end gap-2 border-t pt-3">
+          <div className="flex shrink-0 justify-end gap-2 border-t pt-3">
             <Button variant="ghost" onClick={() => setReviewOpen(false)} disabled={busy}>Not yet</Button>
             <Button onClick={confirmReview} disabled={busy}>
               {busy ? <Loader2 className="size-4 animate-spin" /> : <CheckCheck className="size-4" />}

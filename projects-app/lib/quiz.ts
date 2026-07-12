@@ -267,37 +267,98 @@ RULES
 
 export type QuizPhase = "usecases" | "nodes";
 
-/** The FIRST thing the owner ever reads in the Quiz. Deterministic (no model call, no key needed) so the
- *  greeting can never fail or drift; translated for the languages we ship, and model-translated otherwise. */
-const GREETING_EN =
-  "Before we build this automation, describe its USER CASES — every scenario that can come up for you, or " +
-  "for the AI, while working with it. Speak freely, in your own words: who does what, when, what comes in " +
-  "and what should come out, and what happens when something goes wrong. There is no format to follow. " +
-  "Voice dictation is recommended — it is the fastest way to get everything out.\n\n" +
-  "When your description is detailed enough, I will turn it into numbered user cases, and only then will we " +
-  "design the automation itself. Without this description the automation cannot be created.";
+// THE PROMPTS THE OWNER READS (step 232.1, owner's rule): the six languages we ship — English, Spanish,
+// French, Italian, Russian, German — CARRY their translations here. Any other language falls back to
+// English. Deterministic on purpose: no model call, no API key, nothing to drift — a greeting that failed
+// to translate would leave the owner staring at a blank first turn.
+const UI_LANGS = ["en", "es", "fr", "it", "ru", "de"] as const;
+type UiLang = (typeof UI_LANGS)[number];
 
-const GREETING_RU =
-  "Прежде чем строить эту автоматизацию, опишите её ПОЛЬЗОВАТЕЛЬСКИЕ КЕЙСЫ — все сценарии, какие могут " +
-  "встретиться у вас или у искусственного интеллекта при работе с ней. Говорите свободно, своими словами: " +
-  "кто что делает и когда, что приходит на вход и что должно получиться на выходе, что происходит, когда " +
-  "что-то идёт не так. Никакого формата соблюдать не нужно. Рекомендуется голосовой набор — так быстрее " +
-  "всего выговорить всё целиком.\n\n" +
-  "Когда описание станет достаточно подробным, я превращу его в пронумерованные пользовательские кейсы, и " +
-  "только после этого мы займёмся самой автоматизацией. Без этого описания создать автоматизацию не получится.";
+type PromptKey = "greeting" | "describeFirst" | "tooThin" | "noCases" | "notReviewed";
 
-export async function useCasesGreeting(language: string): Promise<string> {
-  const code = language.toLowerCase();
-  if (code.startsWith("ru")) return GREETING_RU;
-  if (code.startsWith("en")) return GREETING_EN;
-  try {
-    return await chat([
-      { role: "system", content: `Translate the text into ${languageName(code)}. Keep the meaning, the tone and the paragraph break. Reply with the translation only.` },
-      { role: "user", content: GREETING_EN },
-    ]);
-  } catch {
-    return GREETING_EN; // the key may be missing — the owner still gets the instruction, in English
-  }
+const PROMPTS: Record<UiLang, Record<PromptKey, string>> = {
+  en: {
+    greeting:
+      "Before we build this automation, describe its USER CASES — every scenario that can come up for you, or for the AI, while working with it. Speak freely, in your own words: who does what, when, what comes in and what should come out, and what happens when something goes wrong. There is no format to follow. Voice dictation is recommended — it is the fastest way to get everything out.\n\nWhen your description is detailed enough, I will turn it into numbered user cases, and only then will we design the automation itself. Without this description the automation cannot be created.",
+    describeFirst:
+      "Describe the scenarios first — without a detailed description the automation cannot be created. Tell me who uses it, what comes in, what must come out, and what happens when something goes wrong.",
+    tooThin:
+      "I could not turn this into a single user case yet — the description is still too thin. Say more about the scenarios: who triggers the automation, what it receives, and what it must produce.",
+    noCases:
+      "This automation has no user cases yet. Describe the scenarios first (the Quiz collects them) — without a detailed description the automation cannot be built.",
+    notReviewed:
+      "Read the user cases and confirm them before development starts — this is where you and the AI agree that it understood you. Open the Use cases panel and press \"I read them\".",
+  },
+  ru: {
+    greeting:
+      "Прежде чем строить эту автоматизацию, опишите её ПОЛЬЗОВАТЕЛЬСКИЕ КЕЙСЫ — все сценарии, какие могут встретиться у вас или у искусственного интеллекта при работе с ней. Говорите свободно, своими словами: кто что делает и когда, что приходит на вход и что должно получиться на выходе, что происходит, когда что-то идёт не так. Никакого формата соблюдать не нужно. Рекомендуется голосовой набор — так быстрее всего выговорить всё целиком.\n\nКогда описание станет достаточно подробным, я превращу его в пронумерованные пользовательские кейсы, и только после этого мы займёмся самой автоматизацией. Без этого описания создать автоматизацию не получится.",
+    describeFirst:
+      "Сначала опишите сценарии — без подробного описания автоматизацию создать не получится. Расскажите, кто ею пользуется, что приходит на вход, что должно получиться на выходе и что происходит, когда что-то идёт не так.",
+    tooThin:
+      "Пока из этого не получается ни одного пользовательского кейса — описание слишком общее. Расскажите подробнее: кто запускает автоматизацию, что она получает и что должна выдать.",
+    noCases:
+      "У этой автоматизации ещё нет пользовательских кейсов. Сначала опишите сценарии (их собирает Quiz) — без подробного описания автоматизацию не построить.",
+    notReviewed:
+      "Прочитайте пользовательские кейсы и подтвердите их — здесь вы и ИИ договариваетесь, что он понял вас правильно. Откройте панель «User cases» и нажмите «Я прочитал».",
+  },
+  es: {
+    greeting:
+      "Antes de construir esta automatización, describe sus CASOS DE USO: todos los escenarios que pueden surgirte a ti, o a la IA, al trabajar con ella. Habla con libertad, con tus palabras: quién hace qué y cuándo, qué entra y qué debe salir, y qué ocurre cuando algo va mal. No hay ningún formato que seguir. Se recomienda el dictado por voz: es la forma más rápida de contarlo todo.\n\nCuando la descripción sea lo bastante detallada, la convertiré en casos de uso numerados, y solo entonces diseñaremos la automatización. Sin esta descripción no se puede crear la automatización.",
+    describeFirst:
+      "Describe primero los escenarios: sin una descripción detallada no se puede crear la automatización. Cuéntame quién la usa, qué entra, qué debe salir y qué ocurre cuando algo va mal.",
+    tooThin:
+      "Todavía no puedo convertir esto en un solo caso de uso: la descripción es demasiado escueta. Cuéntame más sobre los escenarios: quién dispara la automatización, qué recibe y qué debe producir.",
+    noCases:
+      "Esta automatización aún no tiene casos de uso. Describe primero los escenarios (el Quiz los recoge): sin una descripción detallada no se puede construir.",
+    notReviewed:
+      "Lee los casos de uso y confírmalos antes de empezar el desarrollo: aquí es donde tú y la IA acordáis que te ha entendido. Abre el panel «User cases» y pulsa «I read them».",
+  },
+  fr: {
+    greeting:
+      "Avant de construire cette automatisation, décrivez ses CAS D'USAGE — tous les scénarios qui peuvent se présenter pour vous, ou pour l'IA, en l'utilisant. Parlez librement, avec vos mots : qui fait quoi et quand, ce qui entre et ce qui doit sortir, et ce qui se passe quand quelque chose tourne mal. Aucun format à respecter. La dictée vocale est recommandée — c'est le moyen le plus rapide de tout exprimer.\n\nQuand votre description sera assez détaillée, je la transformerai en cas d'usage numérotés, et seulement ensuite nous concevrons l'automatisation. Sans cette description, l'automatisation ne peut pas être créée.",
+    describeFirst:
+      "Décrivez d'abord les scénarios — sans description détaillée, l'automatisation ne peut pas être créée. Dites-moi qui l'utilise, ce qui entre, ce qui doit sortir et ce qui se passe en cas d'erreur.",
+    tooThin:
+      "Je n'arrive pas encore à en tirer un seul cas d'usage : la description reste trop vague. Parlez davantage des scénarios : qui déclenche l'automatisation, ce qu'elle reçoit et ce qu'elle doit produire.",
+    noCases:
+      "Cette automatisation n'a encore aucun cas d'usage. Décrivez d'abord les scénarios (le Quiz les recueille) — sans description détaillée, rien ne peut être construit.",
+    notReviewed:
+      "Lisez les cas d'usage et confirmez-les avant que le développement commence — c'est ici que vous et l'IA vous mettez d'accord. Ouvrez le panneau « User cases » et appuyez sur « I read them ».",
+  },
+  it: {
+    greeting:
+      "Prima di costruire questa automazione, descrivi i suoi CASI D'USO — tutti gli scenari che possono capitare a te, o all'IA, lavorando con essa. Parla liberamente, con parole tue: chi fa cosa e quando, cosa entra e cosa deve uscire, e cosa succede quando qualcosa va storto. Non c'è alcun formato da seguire. È consigliata la dettatura vocale: è il modo più rapido per dire tutto.\n\nQuando la descrizione sarà abbastanza dettagliata, la trasformerò in casi d'uso numerati, e solo allora progetteremo l'automazione. Senza questa descrizione l'automazione non può essere creata.",
+    describeFirst:
+      "Descrivi prima gli scenari — senza una descrizione dettagliata l'automazione non può essere creata. Dimmi chi la usa, cosa entra, cosa deve uscire e cosa succede quando qualcosa va storto.",
+    tooThin:
+      "Non riesco ancora a ricavarne un solo caso d'uso: la descrizione è troppo generica. Racconta di più sugli scenari: chi avvia l'automazione, cosa riceve e cosa deve produrre.",
+    noCases:
+      "Questa automazione non ha ancora casi d'uso. Descrivi prima gli scenari (li raccoglie il Quiz) — senza una descrizione dettagliata non si può costruire nulla.",
+    notReviewed:
+      "Leggi i casi d'uso e confermali prima che inizi lo sviluppo: qui tu e l'IA vi accordate sul fatto che ti abbia capito. Apri il pannello «User cases» e premi «I read them».",
+  },
+  de: {
+    greeting:
+      "Bevor wir diese Automatisierung bauen, beschreibe ihre ANWENDUNGSFÄLLE — alle Szenarien, die dir oder der KI im Umgang mit ihr begegnen können. Sprich frei, in deinen eigenen Worten: wer was wann tut, was hereinkommt und was herauskommen soll, und was passiert, wenn etwas schiefgeht. Es gibt kein Format einzuhalten. Spracheingabe wird empfohlen — so bekommst du am schnellsten alles heraus.\n\nWenn deine Beschreibung ausführlich genug ist, mache ich daraus nummerierte Anwendungsfälle, und erst dann entwerfen wir die Automatisierung selbst. Ohne diese Beschreibung kann die Automatisierung nicht erstellt werden.",
+    describeFirst:
+      "Beschreibe zuerst die Szenarien — ohne ausführliche Beschreibung kann die Automatisierung nicht erstellt werden. Sag mir, wer sie nutzt, was hereinkommt, was herauskommen muss und was passiert, wenn etwas schiefgeht.",
+    tooThin:
+      "Daraus lässt sich noch kein einziger Anwendungsfall machen — die Beschreibung ist zu dünn. Erzähl mehr über die Szenarien: wer die Automatisierung auslöst, was sie erhält und was sie liefern muss.",
+    noCases:
+      "Diese Automatisierung hat noch keine Anwendungsfälle. Beschreibe zuerst die Szenarien (das Quiz sammelt sie) — ohne ausführliche Beschreibung lässt sich nichts bauen.",
+    notReviewed:
+      "Lies die Anwendungsfälle und bestätige sie, bevor die Entwicklung beginnt — hier einigt ihr euch, du und die KI, dass sie dich verstanden hat. Öffne das Panel „User cases“ und drücke „I read them“.",
+  },
+};
+
+/** The owner-facing text in HIS language: one of the six we ship, English for anything else. */
+export function t(key: PromptKey, language: string = defaultLanguage()): string {
+  const code = language.toLowerCase().slice(0, 2) as UiLang;
+  return (PROMPTS[code] ?? PROMPTS.en)[key];
+}
+
+export function useCasesGreeting(language: string): string {
+  return t("greeting", language);
 }
 
 const USECASES_SYSTEM = (lang: string, instruction: string) =>

@@ -156,28 +156,16 @@ export async function confirmReview(automation: string): Promise<ReviewState> {
 }
 
 /** THE GATE (step 231) — every path that materializes a development step calls this first. No cases, or a
- *  case set the owner has not confirmed since it last changed → the step is refused with the reason. */
+ *  case set the owner has not confirmed since it last changed → the step is refused.
+ *
+ *  It returns only the REASON, never the sentence: the owner-facing text lives in one place (the six-language
+ *  table in lib/quiz.ts) and the routes attach it in his language. Keeping the text out of here also keeps
+ *  the import one-way (quiz → use-cases), with no cycle. */
 export async function assertUseCasesReviewed(
   automation: string,
-): Promise<{ ok: true } | { ok: false; reason: "no-cases" | "not-reviewed"; error: string }> {
+): Promise<{ ok: true } | { ok: false; reason: "no-cases" | "not-reviewed" }> {
   const st = await reviewState(automation);
-  if (!st.hasCases) {
-    return {
-      ok: false,
-      reason: "no-cases",
-      error:
-        "This automation has no user cases yet. Describe the scenarios first (the Quiz collects them) — " +
-        "without a detailed description the automation cannot be built.",
-    };
-  }
-  if (!st.reviewed) {
-    return {
-      ok: false,
-      reason: "not-reviewed",
-      error:
-        "Read the user cases and confirm them before development starts — this is where you and the AI " +
-        "agree that it understood you. Open the Use cases panel and press \"I read them\".",
-    };
-  }
+  if (!st.hasCases) return { ok: false, reason: "no-cases" };
+  if (!st.reviewed) return { ok: false, reason: "not-reviewed" };
   return { ok: true };
 }

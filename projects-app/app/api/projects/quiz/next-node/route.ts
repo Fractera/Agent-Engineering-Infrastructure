@@ -9,7 +9,7 @@ import {
 } from "@/lib/nodes";
 import { materializeNodeStep, nextStepNumber } from "@/lib/dev-steps";
 import {
-  addTurn, advanceNode, automationInstruction, getPhase, getQuiz, nextQuestion, synthesizeNode, turnsOf,
+  addTurn, advanceNode, automationInstruction, getPhase, getQuiz, nextQuestion, synthesizeNode, t, turnsOf,
   QUIZ_MAX_NODES,
 } from "@/lib/quiz";
 import { assertUseCasesReviewed } from "@/lib/use-cases";
@@ -41,17 +41,15 @@ export async function POST(req: NextRequest) {
   const target = { kind: "project" as const, key: proj.automation, automation: proj.automation, projectDir: proj.projectDir };
   if ((await getPhase(quiz, target)) === "usecases") {
     return NextResponse.json(
-      {
-        error:
-          "Describe the user cases first — without a detailed description the automation cannot be created. " +
-          "Finish the scenarios, then the nodes are designed from them.",
-        reason: "usecases-phase",
-      },
+      { error: t("describeFirst", quiz.language), reason: "usecases-phase" },
       { status: 409 },
     );
   }
   const gate = await assertUseCasesReviewed(proj.automation);
-  if (!gate.ok) return NextResponse.json({ error: gate.error, reason: gate.reason }, { status: 409 });
+  if (!gate.ok) {
+    const error = t(gate.reason === "no-cases" ? "noCases" : "notReviewed", quiz.language);
+    return NextResponse.json({ error, reason: gate.reason }, { status: 409 });
+  }
 
   const instruction = await automationInstruction(proj.projectDir);
   const turns = await turnsOf(quiz);

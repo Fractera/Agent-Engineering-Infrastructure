@@ -408,14 +408,18 @@ export function ActivationQuiz({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-hidden sm:max-w-2xl">
-        <DialogHeader>
+      {/* LAYOUT (owner found the microphone missing): DialogContent is a CSS GRID — with max-h + overflow
+          hidden it does not shrink its rows, it CLIPS them, and the clipped row was the bottom one: the
+          answer field, the mic and the buttons. So the dialog is a FLEX COLUMN: the transcript is the only
+          part that scrolls (flex-1 + min-h-0), everything the owner must reach stays on screen (shrink-0). */}
+      <DialogContent className="flex max-h-[85vh] flex-col overflow-hidden sm:max-w-2xl">
+        <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">{title}</DialogTitle>
         </DialogHeader>
 
         {/* Owner's note: planning is where the model's strength shows most — a weak model designs a weak
             automation. The model is chosen in the automation menu (the hamburger, top right of the page). */}
-        <div className="flex gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-300">
+        <div className="flex shrink-0 gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-300">
           <AlertTriangle className="mt-0.5 size-4 shrink-0" />
           <p>
             Planning an automation works far better with the most powerful model available to you. Pick it in
@@ -423,7 +427,8 @@ export function ActivationQuiz({
           </p>
         </div>
 
-        <div className="max-h-[45vh] space-y-3 overflow-y-auto pr-1">
+        {/* The ONLY scrolling region: it takes whatever height is left and gives the rest back. */}
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
           {turns.length === 0 && busy && (
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" />
@@ -450,7 +455,7 @@ export function ActivationQuiz({
         {/* AUTO-QUIZ (227.B): the model thinks out loud, streamed. The area stays EDITABLE — pause, rewrite,
             save; what gets built is then made from YOUR text. */}
         {(streaming || draftText) && (
-          <div className="space-y-2 rounded-lg border border-primary/40 p-2">
+          <div className="max-h-[35vh] shrink-0 space-y-2 overflow-y-auto rounded-lg border border-primary/40 p-2">
             <p className="flex items-center gap-1 text-xs font-medium text-primary">
               <Sparkles className="size-3" /> Auto-quiz {streaming ? "— writing… (you can pause and edit)" : "— paused, edit freely"}
             </p>
@@ -477,7 +482,8 @@ export function ActivationQuiz({
           </div>
         )}
 
-        <div className="space-y-2 border-t pt-3">
+        {/* Always on screen — this is where the owner types, speaks and acts. */}
+        <div className="shrink-0 space-y-2 border-t pt-3">
           <Textarea
             ref={answerRef}
             value={answer}
