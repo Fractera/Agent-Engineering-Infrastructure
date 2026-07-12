@@ -43,15 +43,25 @@ export function languageName(code: string): string {
   return LANGUAGE_NAMES[code.toLowerCase()] ?? code;
 }
 
-/** The project's DEFAULT language — the first of NEXT_PUBLIC_SUPPORTED_LANGUAGES. English only when unset. */
+/** The project's DEFAULT language — the FIRST of NEXT_PUBLIC_SUPPORTED_LANGUAGES. English only when none
+ *  is set anywhere.
+ *
+ *  WHERE IT LIVES (the step-212 class of bug, avoided here): the owner sets the languages in the workspace
+ *  settings, which write them into the SLOT's .env.local (/opt/fractera/app/.env.local) — projects-app has
+ *  no copy of that key. Reading only our own env would leave the Quiz stuck in English no matter what the
+ *  owner chose. So we read, in order: our env → our .env.local → THE SLOT's .env.local. */
+function readLanguagesFrom(path: string): string {
+  try {
+    const f = readFileSync(path, "utf-8");
+    return (f.match(/^NEXT_PUBLIC_SUPPORTED_LANGUAGES=(.+)$/m) ?? [])[1] ?? "";
+  } catch { return ""; }
+}
+
 export function defaultLanguage(): string {
-  const fromEnv = process.env.NEXT_PUBLIC_SUPPORTED_LANGUAGES;
-  const raw = fromEnv ?? (() => {
-    try {
-      const f = readFileSync(join(process.cwd(), ".env.local"), "utf-8");
-      return (f.match(/^NEXT_PUBLIC_SUPPORTED_LANGUAGES=(.+)$/m) ?? [])[1] ?? "";
-    } catch { return ""; }
-  })();
+  const raw =
+    process.env.NEXT_PUBLIC_SUPPORTED_LANGUAGES ||
+    readLanguagesFrom(join(process.cwd(), ".env.local")) ||
+    readLanguagesFrom("/opt/fractera/app/.env.local");
   const first = raw.split(",").map((s) => s.trim()).filter(Boolean)[0];
   return first || "en";
 }
