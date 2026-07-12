@@ -159,11 +159,16 @@ export function GlobalCanvas() {
     }));
   }, [state]);
 
+  // The section (heading + intro) is ALWAYS rendered — it is the product's statement of what the global
+  // architecture IS; only the graph itself waits for the first poll.
   if (!state) {
     return (
-      <p className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" /> Loading the global architecture…
-      </p>
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold">Global architecture</h2>
+        <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" /> Loading the workspace graph…
+        </p>
+      </section>
     );
   }
 

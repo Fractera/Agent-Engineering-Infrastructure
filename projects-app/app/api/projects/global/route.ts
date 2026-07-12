@@ -46,10 +46,13 @@ export async function GET(req: NextRequest) {
 
   const edges = await listEdges();
   const g = await globalRow();
-  // The global automation is "in development" while any edge is still a draft — mirror of the per-project
-  // interlock (224 L6): you cannot synchronise through a link that is not built.
+  // The global automation's state is DERIVED, never stale:
+  //   • the owner turned it OFF        -> off  (the projects keep running; only the synchronisation stops)
+  //   • any link is still a draft      -> in-development (mirror of the per-project interlock, 224 L6:
+  //                                       you cannot synchronise through a link that is not built)
+  //   • otherwise                      -> on   (every link is built; nothing blocks the synchronisation)
   const draftEdges = edges.filter((e) => e.draft === 1).length;
-  const status = draftEdges > 0 && g.status !== "off" ? "in-development" : g.status;
+  const status = g.status === "off" ? "off" : draftEdges > 0 ? "in-development" : "on";
 
   let layout: Record<string, { x: number; y: number }> = {};
   try { layout = JSON.parse(g.layout) as Record<string, { x: number; y: number }>; } catch { /* empty */ }
