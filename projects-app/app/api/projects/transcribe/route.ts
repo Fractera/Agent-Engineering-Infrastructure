@@ -19,8 +19,10 @@ export async function POST(req: NextRequest) {
 
   const key = openAiKey();
   if (!key) {
+    // The client shows its OWN localized message for this reason (six languages) — the text here is a
+    // non-localized fallback for any other caller.
     return NextResponse.json(
-      { error: "Voice input needs the OpenAI key — add it in the workspace settings." },
+      { error: "Voice input needs the OpenAI key — add it in the workspace settings.", reason: "no-key" },
       { status: 400 },
     );
   }

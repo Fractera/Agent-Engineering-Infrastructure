@@ -37,6 +37,17 @@ export function SitePreviewWindow({ open, onClose, siteUrl, label = "App Preview
 
   useEffect(() => { setMounted(true); }, []);
 
+  // The embedded page (projects app) asks to close this window when the owner chose "open in a new tab"
+  // from the voice fallback toast (step 232): it has opened the exact page full-screen, so the cramped
+  // preview should step aside. A pure UI close-signal — origin is not gated.
+  useEffect(() => {
+    const onMsg = (e: MessageEvent) => {
+      if ((e.data as { type?: string })?.type === "fractera:preview-close") onClose();
+    };
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
+  }, [onClose]);
+
   if (!mounted) return null;
 
   const defaultW = Math.min(1000, window.innerWidth - 40);
@@ -116,6 +127,12 @@ export function SitePreviewWindow({ open, onClose, siteUrl, label = "App Preview
               className="flex-1 border-0 w-full"
               style={{ minHeight: 0 }}
               title={label}
+              // The preview is a CROSS-ORIGIN iframe (admin.<apex> embeds projects.<apex>). Voice input
+              // (step 232) calls getUserMedia inside it — a Permissions-Policy feature the browser BLOCKS in
+              // a cross-origin frame unless the parent delegates it here, no matter the browser permissions.
+              // Without this attribute the mic throws before it can even prompt (the owner's "recording
+              // impossible despite permissions"). Clipboard-write keeps the "copy step" buttons working.
+              allow="microphone; clipboard-write"
             />
           )}
         </div>

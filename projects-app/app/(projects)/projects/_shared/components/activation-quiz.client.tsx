@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { VoiceInput } from "./voice-input.client";
+import { useUiLang } from "../use-ui-lang";
 
 // ACTIVATION QUIZ (step 227) — phase 2 of an automation's birth. Opens on the FIRST visit of a freshly
 // created automation and turns the owner's instruction (phase 1) into a real automation through a brainstorm,
@@ -46,6 +47,13 @@ type QuizStrings = {
   tLink: string;
   tCaseOne: string; tCaseAll: string;
   tUseCasesShort: string;
+  // The footer (owner: everything below the mic was still English) — loaders, auto-quiz, buttons, hints.
+  loaderEdge: string; loaderCase: string; loaderInstruction: string;
+  autoWriting: string; autoPaused: string; btnPause: string; btnContinue: string; btnKeep: string;
+  btnAnswer: string; btnAuto: string;
+  btnFinishLink: string; btnSaveCases: string; btnCasesReady: string; btnFinishNode: string; btnEnd: string;
+  hintLink: string; hintCase: string; hintUsecases: string; hintNodes: string;
+  designer: string;
 };
 const QUIZ_I18N: Record<string, QuizStrings> = {
   en: {
@@ -57,6 +65,17 @@ const QUIZ_I18N: Record<string, QuizStrings> = {
     tLink: "Designing the link",
     tCaseOne: "Revisiting a user case", tCaseAll: "Revisiting the user cases",
     tUseCasesShort: "described first — before anything is built",
+    loaderEdge: "Reading both automations…", loaderCase: "Reading the automation…", loaderInstruction: "Reading your instruction…",
+    autoWriting: "Auto-quiz — writing… (you can pause and edit)", autoPaused: "Auto-quiz — paused, edit freely",
+    btnPause: "Pause", btnContinue: "Continue auto-quiz", btnKeep: "Keep this text",
+    btnAnswer: "Answer", btnAuto: "Auto-quiz",
+    btnFinishLink: "Finish the link → development step", btnSaveCases: "Save the cases → development step",
+    btnCasesReady: "The cases are ready → design the nodes", btnFinishNode: "Finish this node → next", btnEnd: "End the session",
+    hintLink: "Finishing the link writes its brief and queues one development step for the coding agent.",
+    hintCase: "Saving writes the new case text and queues one development step per case you changed.",
+    hintUsecases: "Nothing is built until the scenarios exist: they become your numbered user cases, and the nodes are designed from them.",
+    hintNodes: "Each node you finish becomes a draft on the diagram and a development step for the coding agent.",
+    designer: "Designer",
   },
   ru: {
     banner: "Планирование автоматизации идёт намного эффективнее на самой мощной доступной вам модели. Выберите её в гамбургер-меню вверху страницы (Настройки → модель).",
@@ -67,6 +86,17 @@ const QUIZ_I18N: Record<string, QuizStrings> = {
     tLink: "Проектируем связь",
     tCaseOne: "Пересматриваем кейс", tCaseAll: "Пересматриваем пользовательские кейсы",
     tUseCasesShort: "сначала описываем их — до всего остального",
+    loaderEdge: "Читаю обе автоматизации…", loaderCase: "Читаю автоматизацию…", loaderInstruction: "Читаю вашу инструкцию…",
+    autoWriting: "Авто-квиз — пишу… (можно поставить на паузу и отредактировать)", autoPaused: "Авто-квиз — пауза, редактируйте свободно",
+    btnPause: "Пауза", btnContinue: "Продолжить авто-квиз", btnKeep: "Оставить этот текст",
+    btnAnswer: "Ответить", btnAuto: "Авто-квиз",
+    btnFinishLink: "Завершить связь → шаг разработки", btnSaveCases: "Сохранить кейсы → шаг разработки",
+    btnCasesReady: "Кейсы готовы → проектируем узлы", btnFinishNode: "Завершить узел → дальше", btnEnd: "Завершить сессию",
+    hintLink: "Завершение связи запишет её бриф и поставит один шаг разработки в очередь кодеру.",
+    hintCase: "Сохранение запишет новый текст кейсов и поставит по одному шагу разработки на каждый изменённый кейс.",
+    hintUsecases: "Ничего не строится, пока не описаны сценарии: они становятся пронумерованными кейсами, и из них проектируются узлы.",
+    hintNodes: "Каждый завершённый узел становится черновиком на диаграмме и шагом разработки для кодера.",
+    designer: "Дизайнер",
   },
   es: {
     banner: "Planificar una automatización funciona mucho mejor con el modelo más potente disponible. Elígelo en el menú de hamburguesa de la parte superior de la página (Ajustes → modelo).",
@@ -77,6 +107,17 @@ const QUIZ_I18N: Record<string, QuizStrings> = {
     tLink: "Diseñando el enlace",
     tCaseOne: "Revisando un caso de uso", tCaseAll: "Revisando los casos de uso",
     tUseCasesShort: "descritos primero — antes de construir nada",
+    loaderEdge: "Leyendo ambas automatizaciones…", loaderCase: "Leyendo la automatización…", loaderInstruction: "Leyendo tu instrucción…",
+    autoWriting: "Auto-quiz — escribiendo… (puedes pausar y editar)", autoPaused: "Auto-quiz — en pausa, edita libremente",
+    btnPause: "Pausar", btnContinue: "Continuar auto-quiz", btnKeep: "Conservar este texto",
+    btnAnswer: "Responder", btnAuto: "Auto-quiz",
+    btnFinishLink: "Terminar el enlace → paso de desarrollo", btnSaveCases: "Guardar los casos → paso de desarrollo",
+    btnCasesReady: "Los casos están listos → diseñar los nodos", btnFinishNode: "Terminar este nodo → siguiente", btnEnd: "Terminar la sesión",
+    hintLink: "Al terminar el enlace se escribe su resumen y se pone en cola un paso de desarrollo para el agente de código.",
+    hintCase: "Al guardar se escribe el nuevo texto de los casos y se pone en cola un paso de desarrollo por cada caso que cambiaste.",
+    hintUsecases: "No se construye nada hasta que existen los escenarios: se convierten en tus casos de uso numerados, y los nodos se diseñan a partir de ellos.",
+    hintNodes: "Cada nodo que terminas se convierte en un borrador en el diagrama y en un paso de desarrollo para el agente de código.",
+    designer: "Diseñador",
   },
   fr: {
     banner: "La planification d'une automatisation est bien meilleure avec le modèle le plus puissant à votre disposition. Choisissez-le dans le menu hamburger en haut de la page (Paramètres → modèle).",
@@ -87,6 +128,17 @@ const QUIZ_I18N: Record<string, QuizStrings> = {
     tLink: "Conception du lien",
     tCaseOne: "Révision d'un cas d'usage", tCaseAll: "Révision des cas d'usage",
     tUseCasesShort: "décrits d'abord — avant toute construction",
+    loaderEdge: "Lecture des deux automatisations…", loaderCase: "Lecture de l'automatisation…", loaderInstruction: "Lecture de votre instruction…",
+    autoWriting: "Auto-quiz — écriture… (vous pouvez mettre en pause et modifier)", autoPaused: "Auto-quiz — en pause, modifiez librement",
+    btnPause: "Pause", btnContinue: "Continuer l'auto-quiz", btnKeep: "Garder ce texte",
+    btnAnswer: "Répondre", btnAuto: "Auto-quiz",
+    btnFinishLink: "Terminer le lien → étape de développement", btnSaveCases: "Enregistrer les cas → étape de développement",
+    btnCasesReady: "Les cas sont prêts → concevoir les nœuds", btnFinishNode: "Terminer ce nœud → suivant", btnEnd: "Terminer la session",
+    hintLink: "Terminer le lien écrit son résumé et met en file une étape de développement pour l'agent de code.",
+    hintCase: "Enregistrer écrit le nouveau texte des cas et met en file une étape de développement par cas modifié.",
+    hintUsecases: "Rien n'est construit tant que les scénarios n'existent pas : ils deviennent vos cas d'usage numérotés, et les nœuds en sont conçus.",
+    hintNodes: "Chaque nœud terminé devient un brouillon sur le diagramme et une étape de développement pour l'agent de code.",
+    designer: "Concepteur",
   },
   it: {
     banner: "Pianificare un'automazione funziona molto meglio con il modello più potente a tua disposizione. Sceglilo nel menu hamburger in cima alla pagina (Impostazioni → modello).",
@@ -97,6 +149,17 @@ const QUIZ_I18N: Record<string, QuizStrings> = {
     tLink: "Progettazione del collegamento",
     tCaseOne: "Revisione di un caso d'uso", tCaseAll: "Revisione dei casi d'uso",
     tUseCasesShort: "descritti prima — prima di costruire qualsiasi cosa",
+    loaderEdge: "Lettura di entrambe le automazioni…", loaderCase: "Lettura dell'automazione…", loaderInstruction: "Lettura della tua istruzione…",
+    autoWriting: "Auto-quiz — sto scrivendo… (puoi mettere in pausa e modificare)", autoPaused: "Auto-quiz — in pausa, modifica liberamente",
+    btnPause: "Pausa", btnContinue: "Continua l'auto-quiz", btnKeep: "Mantieni questo testo",
+    btnAnswer: "Rispondi", btnAuto: "Auto-quiz",
+    btnFinishLink: "Concludi il collegamento → passo di sviluppo", btnSaveCases: "Salva i casi → passo di sviluppo",
+    btnCasesReady: "I casi sono pronti → progetta i nodi", btnFinishNode: "Concludi questo nodo → avanti", btnEnd: "Termina la sessione",
+    hintLink: "Concludere il collegamento scrive il suo riassunto e mette in coda un passo di sviluppo per l'agente di codice.",
+    hintCase: "Il salvataggio scrive il nuovo testo dei casi e mette in coda un passo di sviluppo per ogni caso modificato.",
+    hintUsecases: "Non si costruisce nulla finché non esistono gli scenari: diventano i tuoi casi d'uso numerati, e da essi si progettano i nodi.",
+    hintNodes: "Ogni nodo che concludi diventa una bozza sul diagramma e un passo di sviluppo per l'agente di codice.",
+    designer: "Progettista",
   },
   de: {
     banner: "Das Planen einer Automatisierung gelingt weit besser mit dem stärksten dir verfügbaren Modell. Wähle es im Hamburger-Menü oben auf der Seite (Einstellungen → Modell).",
@@ -107,6 +170,17 @@ const QUIZ_I18N: Record<string, QuizStrings> = {
     tLink: "Verbindung wird entworfen",
     tCaseOne: "Anwendungsfall überarbeiten", tCaseAll: "Anwendungsfälle überarbeiten",
     tUseCasesShort: "zuerst beschrieben — bevor irgendetwas gebaut wird",
+    loaderEdge: "Beide Automatisierungen werden gelesen…", loaderCase: "Automatisierung wird gelesen…", loaderInstruction: "Deine Anweisung wird gelesen…",
+    autoWriting: "Auto-Quiz — schreibe… (du kannst pausieren und bearbeiten)", autoPaused: "Auto-Quiz — pausiert, frei bearbeiten",
+    btnPause: "Pause", btnContinue: "Auto-Quiz fortsetzen", btnKeep: "Diesen Text behalten",
+    btnAnswer: "Antworten", btnAuto: "Auto-Quiz",
+    btnFinishLink: "Verbindung abschließen → Entwicklungsschritt", btnSaveCases: "Fälle speichern → Entwicklungsschritt",
+    btnCasesReady: "Die Fälle sind fertig → Knoten entwerfen", btnFinishNode: "Diesen Knoten abschließen → weiter", btnEnd: "Sitzung beenden",
+    hintLink: "Das Abschließen der Verbindung schreibt ihre Kurzbeschreibung und reiht einen Entwicklungsschritt für den Coding-Agenten ein.",
+    hintCase: "Das Speichern schreibt den neuen Fall-Text und reiht je geändertem Fall einen Entwicklungsschritt ein.",
+    hintUsecases: "Nichts wird gebaut, solange die Szenarien nicht existieren: Sie werden zu deinen nummerierten Anwendungsfällen, und daraus werden die Knoten entworfen.",
+    hintNodes: "Jeder abgeschlossene Knoten wird zu einem Entwurf im Diagramm und zu einem Entwicklungsschritt für den Coding-Agenten.",
+    designer: "Designer",
   },
 };
 
@@ -147,15 +221,9 @@ export function ActivationQuiz({
   // The field voice writes into (step 232): the transcript lands at the CARET, so the owner can dictate into
   // the middle of what he already wrote.
   const answerRef = useRef<HTMLTextAreaElement | null>(null);
-  // The UI language of the modal (owner's rule, six languages). English until the default locale is known.
-  const [uiLang, setUiLang] = useState("en");
-  const L = QUIZ_I18N[uiLang.slice(0, 2)] ?? QUIZ_I18N.en;
-  useEffect(() => {
-    void fetch(`/api/projects/language`, { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d?.code) setUiLang(String(d.code)); })
-      .catch(() => {});
-  }, []);
+  // The UI language of the modal (owner's rule, six languages) — the shared hook, memoized per page.
+  const uiLang = useUiLang();
+  const L = QUIZ_I18N[uiLang] ?? QUIZ_I18N.en;
 
   // The SUBJECT of every call — one API, four subjects (steps 225 G4 + 231).
   const subject = useCallback(() => {
@@ -517,7 +585,7 @@ export function ActivationQuiz({
           {turns.length === 0 && busy && (
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" />
-              {isEdge ? "Reading both automations…" : isCaseEdit ? "Reading the automation…" : "Reading your instruction…"}
+              {isEdge ? L.loaderEdge : isCaseEdit ? L.loaderCase : L.loaderInstruction}
             </p>
           )}
           {turns.map((t, i) => (
@@ -529,7 +597,7 @@ export function ActivationQuiz({
             >
               {t.role !== "user" && (
                 <p className="mb-1 flex items-center gap-1 text-xs font-medium text-muted-foreground">
-                  <Sparkles className="size-3" /> Designer
+                  <Sparkles className="size-3" /> {L.designer}
                 </p>
               )}
               <p className="whitespace-pre-wrap">{t.content}</p>
@@ -542,7 +610,7 @@ export function ActivationQuiz({
         {(streaming || draftText) && (
           <div className="mx-6 max-h-[35vh] shrink-0 space-y-2 overflow-y-auto rounded-lg border border-primary/40 p-2">
             <p className="flex items-center gap-1 text-xs font-medium text-primary">
-              <Sparkles className="size-3" /> Auto-quiz {streaming ? "— writing… (you can pause and edit)" : "— paused, edit freely"}
+              <Sparkles className="size-3" /> {streaming ? L.autoWriting : L.autoPaused}
             </p>
             <Textarea
               value={draftText}
@@ -553,15 +621,15 @@ export function ActivationQuiz({
             <div className="flex flex-wrap gap-2">
               {streaming ? (
                 <Button size="sm" variant="outline" onClick={pause}>
-                  <Pause className="size-3.5" /> Pause
+                  <Pause className="size-3.5" /> {L.btnPause}
                 </Button>
               ) : (
                 <Button size="sm" variant="outline" onClick={autoQuiz} disabled={busy}>
-                  <Sparkles className="size-3.5" /> Continue auto-quiz
+                  <Sparkles className="size-3.5" /> {L.btnContinue}
                 </Button>
               )}
               <Button size="sm" onClick={saveEdit} disabled={busy || streaming || !draftText.trim()}>
-                <Send className="size-3.5" /> Keep this text
+                <Send className="size-3.5" /> {L.btnKeep}
               </Button>
             </div>
           </div>
@@ -591,42 +659,36 @@ export function ActivationQuiz({
           />
           <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={send} disabled={busy || streaming || !answer.trim()}>
-              {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />} Answer
+              {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />} {L.btnAnswer}
             </Button>
             <Button size="sm" variant="secondary" onClick={autoQuiz} disabled={busy || streaming}>
-              <Sparkles className="size-3.5" /> Auto-quiz
+              <Sparkles className="size-3.5" /> {L.btnAuto}
             </Button>
             {isEdge ? (
               <Button size="sm" variant="outline" onClick={applyEdge} disabled={busy || streaming}>
-                <SkipForward className="size-3.5" /> Finish the link → development step
+                <SkipForward className="size-3.5" /> {L.btnFinishLink}
               </Button>
             ) : isCaseEdit ? (
               <Button size="sm" variant="outline" onClick={applyCaseEdit} disabled={busy || streaming}>
-                <SkipForward className="size-3.5" /> Save the cases → development step
+                <SkipForward className="size-3.5" /> {L.btnSaveCases}
               </Button>
             ) : phase === "usecases" ? (
               <Button size="sm" variant="outline" onClick={applyUseCases} disabled={busy || streaming}>
-                <SkipForward className="size-3.5" /> The cases are ready → design the nodes
+                <SkipForward className="size-3.5" /> {L.btnCasesReady}
               </Button>
             ) : (
               <Button size="sm" variant="outline" onClick={nextNode} disabled={busy || streaming}>
-                <SkipForward className="size-3.5" /> Finish this node → next
+                <SkipForward className="size-3.5" /> {L.btnFinishNode}
               </Button>
             )}
             {!(phase === "usecases" && !isEdge && !isCaseEdit) && (
               <Button size="sm" variant="ghost" onClick={finish} disabled={busy || streaming}>
-                End the session
+                {L.btnEnd}
               </Button>
             )}
           </div>
           <p className="text-xs text-muted-foreground">
-            {isEdge
-              ? "Finishing the link writes its brief and queues one development step for the coding agent."
-              : isCaseEdit
-                ? "Saving writes the new case text and queues one development step per case you changed."
-                : phase === "usecases"
-                  ? "Nothing is built until the scenarios exist: they become your numbered user cases, and the nodes are designed from them."
-                  : "Each node you finish becomes a draft on the diagram and a development step for the coding agent."}
+            {isEdge ? L.hintLink : isCaseEdit ? L.hintCase : phase === "usecases" ? L.hintUsecases : L.hintNodes}
           </p>
         </div>
       </DialogContent>
