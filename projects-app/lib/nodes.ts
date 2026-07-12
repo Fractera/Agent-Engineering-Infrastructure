@@ -1,0 +1,137 @@
+import { readdir, readFile, writeFile, mkdir, stat } from "node:fs/promises";
+import { join } from "node:path";
+import type { NextRequest } from "next/server";
+import { getSession } from "@/lib/auth/get-session";
+import { db } from "@/lib/db";
+
+// Shared helpers for the Builder node API (step 224 L3). The DB table `automation_nodes` is the LIVE
+// lightweight canvas index; the files under _nodes/<slug>/ are the executable truth (Model B). These
+// helpers keep the two in sync: seed the index from the files, regenerate _data/diagram.ts from the index,
+// and resolve/authorize a project.
+
+const SLUG = /^[a-z][a-z0-9-]*$/;
+const WRITE_ROLES = ["architect", "manager", "agent"];
+const IP_MODE = process.env.FRACTERA_IP_NODOMAIN_MODE === "true";
+
+export type NodeRow = {
+  cuid: string; automation: string; slug: string; name: string; parent_cuid: string | null;
+  ord: number; x: number | null; y: number | null; draft: number; active_version: number;
+  latest_version: number; status: string;
+};
+
+export async function authorize(req: NextRequest): Promise<boolean> {
+  if (IP_MODE) return true; // onboarding surface — open, like the other project routes
+  const session = await getSession(req);
+  return Boolean(session?.roles?.some((r) => WRITE_ROLES.includes(r)));
+}
+
+export function projectsRoot(): string {
+  return join(process.cwd(), "app", "(projects)", "projects");
+}
+
+export function resolveProject(automation: string):
+  | { ok: true; category: string; slug: string; automation: string; projectDir: string }
+  | { ok: false; error: string } {
+  const [category, slug] = (automation ?? "").split("/");
+  if (!SLUG.test(category ?? "") || !SLUG.test(slug ?? "")) {
+    return { ok: false, error: "invalid automation (expected category/slug)" };
+  }
+  return { ok: true, category, slug, automation: `${category}/${slug}`, projectDir: join(projectsRoot(), category, slug) };
+}
+
+async function exists(p: string): Promise<boolean> {
+  try { await stat(p); return true; } catch { return false; }
+}
+
+const ident = (slug: string) => slug.replace(/[^a-z0-9]/gi, "_");
+
+async function parseMeta(projectDir: string, slug: string): Promise<{ cuid: string; name: string; draft: boolean }> {
+  const t = await readFile(join(projectDir, "_nodes", slug, "meta.ts"), "utf8").catch(() => "");
+  const cuid = (t.match(/cuid:\s*["']([^"']+)["']/) ?? [])[1] ?? "";
+  const name = (t.match(/name:\s*["']([^"']+)["']/) ?? [])[1] ?? slug;
+  const draft = /["']?draft["']?\s*:\s*true/.test(t);
+  return { cuid, name, draft };
+}
+
+/** Slugs in the order the diagram references them (fallback for seeding order). */
+async function orderedSlugsFromDiagram(projectDir: string): Promise<string[]> {
+  const t = await readFile(join(projectDir, "_data", "diagram.ts"), "utf8").catch(() => "");
+  return [...new Set([...t.matchAll(/_nodes\/([a-z0-9-]+)\//g)].map((m) => m[1]))];
+}
+
+/** Seed the index from the files: any _nodes/<slug>/ not yet in the index is inserted (materialized unless
+ *  meta says draft). Idempotent — the canvas can call it freely. */
+export async function syncIndexFromFiles(automation: string, projectDir: string): Promise<void> {
+  let folders: string[] = [];
+  try {
+    folders = (await readdir(join(projectDir, "_nodes"), { withFileTypes: true }))
+      .filter((e) => e.isDirectory()).map((e) => e.name);
+  } catch { return; }
+  if (!folders.length) return;
+  const existing = (await db.prepare(`SELECT slug FROM automation_nodes WHERE automation = ?`).all(automation)) as { slug: string }[];
+  const known = new Set(existing.map((r) => r.slug));
+  const order = await orderedSlugsFromDiagram(projectDir);
+  const ordered = [...order.filter((s) => folders.includes(s)), ...folders.filter((s) => !order.includes(s))];
+  for (let i = 0; i < ordered.length; i++) {
+    const slug = ordered[i];
+    if (known.has(slug)) continue;
+    const { cuid, name, draft } = await parseMeta(projectDir, slug);
+    if (!cuid) continue; // predates 224 (no cuid) — skip; nothing to join version history on
+    await db.prepare(
+      `INSERT OR IGNORE INTO automation_nodes
+       (cuid, automation, slug, name, ord, draft, active_version, latest_version, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ).run(cuid, automation, slug, name, i, draft ? 1 : 0, draft ? 0 : 1, draft ? 0 : 1, draft ? "draft" : "materialized");
+  }
+}
+
+export async function listNodes(automation: string): Promise<NodeRow[]> {
+  return (await db.prepare(
+    `SELECT * FROM automation_nodes WHERE automation = ? AND status != 'removed' ORDER BY ord ASC`,
+  ).all(automation)) as NodeRow[];
+}
+
+export async function nextOrd(automation: string): Promise<number> {
+  const r = (await db.prepare(
+    `SELECT COALESCE(MAX(ord), -1) + 1 AS n FROM automation_nodes WHERE automation = ? AND status != 'removed'`,
+  ).get(automation)) as { n: number };
+  return r.n;
+}
+
+export async function uniqueSlug(base: string, projectDir: string): Promise<string> {
+  const root = (base || "node").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "node";
+  let slug = root;
+  let i = 2;
+  while (await exists(join(projectDir, "_nodes", slug))) slug = `${root}-${i++}`;
+  return slug;
+}
+
+/** Regenerate _data/diagram.ts from the ordered slugs. instruction.ts is imported only when present (a
+ *  draft has none). This keeps the file topology (223.C.5 truth) in step with the index. */
+export async function regenerateDiagram(projectDir: string, slugsInOrder: string[]): Promise<void> {
+  const imports = [`import { assembleNode, type NodeContract } from "../../../_shared/node-contract";`];
+  const calls: string[] = [];
+  for (const slug of slugsInOrder) {
+    const id = ident(slug);
+    imports.push(`import { META as m_${id} } from "../_nodes/${slug}/meta";`);
+    imports.push(`import { FUNCTIONS as f_${id} } from "../_nodes/${slug}/functions";`);
+    if (await exists(join(projectDir, "_nodes", slug, "instruction.ts"))) {
+      imports.push(`import { INSTRUCTION as i_${id} } from "../_nodes/${slug}/instruction";`);
+      calls.push(`  assembleNode(m_${id}, f_${id}, i_${id}),`);
+    } else {
+      calls.push(`  assembleNode(m_${id}, f_${id}),`);
+    }
+  }
+  const body =
+    `${imports.join("\n")}\n\n` +
+    `// GENERATED by the Builder (step 224) — the Master diagram nodes, in order, composed from their\n` +
+    `// co-located _nodes/<slug>/ folders. Regenerated on node create/delete/materialize; do not hand-edit.\n` +
+    `export const DIAGRAM_NODES: NodeContract[] = [\n${calls.join("\n") || "  // no nodes yet"}\n];\n`;
+  await mkdir(join(projectDir, "_data"), { recursive: true });
+  await writeFile(join(projectDir, "_data", "diagram.ts"), body, "utf8");
+}
+
+/** The ordered slugs of the live (non-removed) nodes — used to regenerate the diagram. */
+export async function liveSlugsInOrder(automation: string): Promise<string[]> {
+  return (await listNodes(automation)).map((n) => n.slug);
+}
