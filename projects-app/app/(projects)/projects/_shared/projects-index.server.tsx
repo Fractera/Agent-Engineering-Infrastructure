@@ -23,7 +23,8 @@ export async function ProjectsIndex() {
   );
 
   return (
-    <main className="mx-auto flex min-h-[70vh] max-w-4xl flex-col px-6 py-10">
+    <>
+    <main className="mx-auto flex max-w-4xl flex-col px-6 py-10">
       <p className="text-sm text-muted-foreground">Projects</p>
       <h1 className="mt-1 text-3xl font-bold tracking-tight">All categories</h1>
       <p className="mt-3 max-w-2xl text-muted-foreground">
@@ -61,10 +62,14 @@ export async function ProjectsIndex() {
         <CreateAutomationRootCard />
       </div>
 
-      {/* THE GLOBAL AUTOMATION CANVAS (step 225) — below the cards, at the root: every project is a node,
-          every link a programmable integration between two automations. This is the "automated global
-          architecture" — how projects depend on each other's actions. */}
-      <GlobalCanvas />
     </main>
+
+    {/* THE GLOBAL AUTOMATION CANVAS (step 225) — below the cards, at the root: every project is a node, every
+        link a programmable integration between two automations. It sits OUTSIDE the centered max-w-4xl column
+        (which was clamping it): the canvas is 85vw × 75vh, so it needs the full page width to expand into. */}
+    <section className="w-full px-6 pb-10">
+      <GlobalCanvas />
+    </section>
+    </>
   );
 }

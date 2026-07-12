@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { db } from "@/lib/db";
-import { authorize } from "@/lib/nodes";
+import { authorize, resolveProject } from "@/lib/nodes";
 import { PROJECT_CATEGORIES } from "@/app/(projects)/projects/_shared/categories";
 import { listProjectSlugs } from "@/app/(projects)/projects/_shared/projects-manifest";
 import { automationReadiness, listEdges, pruneDeadEdges } from "@/lib/edges";
@@ -17,7 +19,21 @@ export const runtime = "nodejs";
 export type GlobalProject = {
   automation: string; category: string; slug: string;
   ready: boolean; nodes: number; drafts: number; reason?: string;
+  /** The immutable automation TYPE (step 224 §1.5) — the canvas badges it so Stream and Instanced
+   *  automations are told apart at a glance. */
+  type: "stream" | "instanced";
 };
+
+// The type is declared in the project's _data/automation.ts (emitted by the starter since 224 L6). Projects
+// created BEFORE that file existed have none — for them we DERIVE it honestly: an automation that has forks
+// (Instances) is Instanced; otherwise it is Stream. Never guess: read the file first.
+async function automationType(projectDir: string, automation: string): Promise<"stream" | "instanced"> {
+  const src = await readFile(join(projectDir, "_data", "automation.ts"), "utf8").catch(() => "");
+  const m = src.match(/AUTOMATION_TYPE\s*:\s*AutomationType\s*=\s*["'](stream|instanced)["']/);
+  if (m) return m[1] as "stream" | "instanced";
+  const fork = (await db.prepare(`SELECT 1 FROM automation_instances WHERE automation = ? LIMIT 1`).get(automation)) as unknown;
+  return fork ? "instanced" : "stream";
+}
 
 async function globalRow(): Promise<{ status: string; layout: string }> {
   const row = (await db.prepare(`SELECT status, layout FROM global_automation WHERE id = 1`).get()) as
@@ -36,7 +52,9 @@ export async function GET(req: NextRequest) {
     for (const slug of await listProjectSlugs(c.slug)) {
       const automation = `${c.slug}/${slug}`;
       const r = await automationReadiness(automation);
-      projects.push({ automation, category: c.slug, slug, ready: r.ready, nodes: r.nodes, drafts: r.drafts, reason: r.reason });
+      const proj = resolveProject(automation);
+      const type = proj.ok ? await automationType(proj.projectDir, automation) : "stream";
+      projects.push({ automation, category: c.slug, slug, ready: r.ready, nodes: r.nodes, drafts: r.drafts, reason: r.reason, type });
     }
   }
 

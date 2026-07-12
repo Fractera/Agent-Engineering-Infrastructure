@@ -23,15 +23,23 @@ import { ActivationQuiz } from "./activation-quiz.client";
 // first. A project still IN DEVELOPMENT (or inactive) is painted FULL RED; dragging a link from or to it
 // creates nothing: the attempted link is drawn RED DASHED, bolds on hover, and on click explains itself in
 // an error toast.
-type GProject = { automation: string; category: string; slug: string; ready: boolean; nodes: number; drafts: number };
+type GProject = { automation: string; category: string; slug: string; ready: boolean; nodes: number; drafts: number; type?: "stream" | "instanced" };
 type GEdge = {
   cuid: string; from_automation: string; to_automation: string; name: string; draft: number;
   active_version: number; from_node_cuid: string | null; to_node_cuid: string | null;
 };
 type GState = { projects: GProject[]; edges: GEdge[]; status: string; draftEdges: number; layout: Record<string, { x: number; y: number }> };
 
-type PData = { label: string; sub: string; ready: boolean };
+type PData = { label: string; sub: string; ready: boolean; type: "stream" | "instanced" };
 type PNode = Node<PData, "project">;
+
+// The immutable automation TYPE badge (step 224 §1.5) — so the two kinds are told apart at a glance on the
+// canvas: STREAM (turquoise) = no forks, every event runs the same scheme (telegram-notes); INSTANCED
+// (violet) = each run forks Master → Instance with its own parameters (the post-publishing automations).
+const TYPE_BADGE: Record<string, string> = {
+  stream: "border-teal-500 text-teal-600 dark:text-teal-400",
+  instanced: "border-violet-500 text-violet-600 dark:text-violet-400",
+};
 
 function ProjectNode({ data, selected }: NodeProps<PNode>) {
   // FULL RED = in development or inactive — it cannot be an edge endpoint yet.
@@ -43,7 +51,17 @@ function ProjectNode({ data, selected }: NodeProps<PNode>) {
   return (
     <div className={`w-52 rounded-lg border-2 bg-background px-3 py-2 text-sm shadow-sm ${frame}`}>
       <Handle type="target" position={Position.Left} />
-      <p className="truncate font-medium">{data.label}</p>
+      <div className="flex items-center justify-between gap-1">
+        <p className="truncate font-medium">{data.label}</p>
+        <span
+          className={`shrink-0 rounded-full border px-1.5 py-px text-[9px] font-medium uppercase ${TYPE_BADGE[data.type] ?? TYPE_BADGE.stream}`}
+          title={data.type === "instanced"
+            ? "Instanced — each run forks Master → Instance with its own parameters (can be deferred and tracked)"
+            : "Stream — no forks; every incoming event runs the same scheme end to end"}
+        >
+          {data.type === "instanced" ? "Instanced" : "Stream"}
+        </span>
+      </div>
       <p className="text-[10px] uppercase tracking-wide opacity-70">{data.sub}</p>
       <Handle type="source" position={Position.Right} />
     </div>
@@ -159,6 +177,7 @@ export function GlobalCanvas() {
         label: p.slug,
         sub: p.ready ? `${p.nodes} nodes · ready` : `in development · ${p.drafts} to build`,
         ready: p.ready,
+        type: p.type ?? "stream",
       },
     }));
   }, [state, positions]);
