@@ -433,7 +433,11 @@ export function ActivationQuiz({
           was never on screen. It is now THREE explicit regions with the padding moved per-region (p-0):
           a fixed HEADER, a single SCROLLING BODY (min-h-0 flex-1), and a fixed FOOTER that always holds
           the input, the microphone with its volume meter, and the actions. */}
-      <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+      {/* FIXED height (owner: the modal must always be 600px). max-h was only a MAXIMUM, so with the body's
+          absolute inner (no intrinsic height) the box collapsed to header+footer and flex-1 got ~nothing.
+          A definite h-[600px] gives flex-col a real height to distribute; max-h-[92vh] only guards tiny
+          screens. */}
+      <DialogContent className="flex h-[600px] max-h-[92vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
         <DialogHeader className="shrink-0 border-b px-6 pt-6 pb-3">
           <DialogTitle className="flex flex-wrap items-center gap-2">{title}</DialogTitle>
         </DialogHeader>
