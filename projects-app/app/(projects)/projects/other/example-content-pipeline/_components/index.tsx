@@ -1,10 +1,10 @@
 import { PROJECT_DESCRIPTION } from "../_data/description";
 import { DIAGRAM_NODES } from "../_data/diagram";
-import { DiagramPanel } from "../../../_shared/components/diagram-panel.client";
+import { DiagramCanvas } from "../../../_shared/components/diagram-canvas.client";
 
-// Reference example (step 223.C.2). It renders the Diagram panel DIRECTLY (not inside a collapsed
-// accordion) so the node → functions contract is visible at a glance: each node shows its name +
-// description, a pre-closed "Instruction" accordion, and one card per function with its typed I/O.
+// Reference example (step 223.C). It renders the Diagram CANVAS directly: the Master's nodes as a graph;
+// click a node to open its full contract (name/description + Instruction + function cards, incl. the
+// full external-AI system instruction) in the side panel.
 export default function ExampleEntry() {
   const d = PROJECT_DESCRIPTION;
   return (
@@ -14,11 +14,11 @@ export default function ExampleEntry() {
         <p className="max-w-3xl text-muted-foreground">{d.description}</p>
       </div>
       <div className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
-        This is the reference for <strong>the node → functions contract</strong>. The Master diagram
-        below is three co-located nodes; each node&apos;s functions live only in{" "}
+        This is the reference for <strong>the node → functions contract</strong>. Click a node on the
+        canvas to open its full contract on the right. Each node&apos;s functions live only in{" "}
         <code>_nodes/&lt;id&gt;/</code>. See app/(projects)/README.md.
       </div>
-      <DiagramPanel nodes={DIAGRAM_NODES} />
+      <DiagramCanvas nodes={DIAGRAM_NODES} />
     </main>
   );
 }

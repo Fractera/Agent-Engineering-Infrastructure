@@ -327,6 +327,12 @@ automation's starting template. There is exactly **one** Master per automation, 
 Every node in it carries an **exhaustive description** of what that node does. The Master is the
 definition: reading the Master is reading the automation.
 
+**The frozen default — three nodes.** A fresh automation's canvas starts with **three generic nodes:
+Input → Logic → Output**, because before a real task exists there is nothing to design yet — this is the
+universal starting shape every automation shares. When the automation is designed from the user cases,
+the **Logic** node splits into real, named nodes (each with its co-located functions). The three
+defaults carry no functions until then. The frozen starter emits them in `_data/diagram.ts`.
+
 ### 3. Instance diagram (conditional)
 
 An Instance diagram is **one concrete run** of a process that is **self-contained — it has a beginning,

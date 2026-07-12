@@ -64,7 +64,7 @@ function FunctionCard({ fn }: { fn: NodeFunction }) {
   );
 }
 
-function NodeCard({ node }: { node: NodeContract }) {
+export function NodeCard({ node }: { node: NodeContract }) {
   return (
     <div className="space-y-2 rounded-lg border p-3">
       <div>

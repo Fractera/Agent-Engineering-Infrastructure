@@ -17,7 +17,7 @@ import { ENTITY_ORDER, ENTITY_META } from "../entities";
 import type { UseCase } from "../use-cases";
 import type { NodeContract } from "../node-contract";
 import { UseCasesPanel } from "./use-cases-panel.client";
-import { DiagramPanel } from "./diagram-panel.client";
+import { DiagramCanvas } from "./diagram-canvas.client";
 
 // FROZEN STANDARD (step 222) — the series of entity accordions below the "Add or modify automation"
 // button. Driven by the project's _data/config.ts (EntitiesConfig): `diagram` is always shown; the
@@ -58,7 +58,7 @@ export function AutomationAccordions({
               </AccordionTrigger>
               <AccordionContent>
                 {k === "diagram" && diagram ? (
-                  <DiagramPanel nodes={diagram} />
+                  <DiagramCanvas nodes={diagram} />
                 ) : (
                   <p className="text-sm text-muted-foreground">
                     This section appears here once configured. For now it is an empty container — see the
