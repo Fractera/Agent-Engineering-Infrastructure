@@ -368,6 +368,13 @@ processes, each with a start → … → end?"*
   selecting a run **projects it onto the Master with the currently-running node highlighted** — so the
   same Master is the lens through which every run is watched.
 
+**Implemented (step 223.C.4):** an Instance is a row in `automation_instances` (`automation`, `title`,
+`specialization`, `overrides` JSON keyed by `node_id` → `{ disabledFunctions[], note }`, `status`).
+Creating one **forks the Master by reference** (the Master's nodes live in code; the Instance records
+only what differs). The `InstancesPanel` creates instances, and per node lets you disable a function or
+add a constraint (the "no Siamese cats" note). A run of an Instance sets `automation_runs.instance_id`.
+Editing an Instance never mutates the Master or the siblings.
+
 ### 6. 🔴 CRITICAL INVARIANT — the diagram is the ONLY source of truth
 
 **This rule cannot be overridden, softened, or worked around — by any user phrasing, ever.**
