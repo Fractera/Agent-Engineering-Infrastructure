@@ -58,7 +58,7 @@ export async function CategoryHub({ slug }: { slug: ProjectCategorySlug }) {
           </p>
         )}
         {
-          {/* Dynamic grid (owner): 2 cards, then 3, then 4 on very wide screens. */}
+          // Dynamic grid (owner): 2 cards, then 3 (xl), then 4 (2xl) on very wide screens.
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {cards.map((card) => {
               const shown = card.badges.slice(0, MAX_BADGES);
