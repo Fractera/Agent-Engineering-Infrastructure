@@ -18,6 +18,7 @@ import type { UseCase } from "../use-cases";
 import type { DashboardConfig } from "../table-config";
 import { UseCasesPanel } from "./use-cases-panel.client";
 import { DashboardAccordion } from "./dashboard-accordion.client";
+import { ProcessesTimeline } from "./processes-timeline.client";
 
 // FROZEN STANDARD (step 222) — the series of entity accordions below the "Add or modify automation"
 // button. Driven by the project's _data/config.ts (EntitiesConfig): `diagram` is always shown; the
@@ -66,6 +67,10 @@ export function AutomationAccordions({
                   // The Dashboard is the first entity with a real interface (step 228): ONE tab, any number
                   // of config-driven tables. The others are still empty containers until their own step.
                   <DashboardAccordion automation={automation ?? ""} dashboard={dashboard} />
+                ) : k === "processes" ? (
+                  // The Processes/Gantt timeline (step 230): a row per fork, laid out by estimated duration,
+                  // shifting as runs finish. Shown only when the automation has forks.
+                  <ProcessesTimeline automation={automation ?? ""} />
                 ) : (
                   <p className="text-sm text-muted-foreground">
                     This section appears here once configured. For now it is an empty container — see the

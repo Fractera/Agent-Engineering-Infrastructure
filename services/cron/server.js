@@ -436,6 +436,23 @@ async function fire(job) {
 let tablesReady = false
 const lastFiredMinute = new Map()
 
+// Processes/Gantt timeline (step 230) — recompute all fork schedules, at most once per minute. Zero-dep
+// (built-in fetch, Node 18+); if fractera-projects is down it just logs and retries next minute.
+let lastScheduleMinute = null
+async function scheduleTick(minuteKey) {
+  if (lastScheduleMinute === minuteKey) return
+  lastScheduleMinute = minuteKey
+  try {
+    await fetch(`${APP_URL}/api/projects/schedule/tick`, {
+      method: 'POST',
+      headers: { 'X-Agent-Identity': 'fractera-cron' },
+      signal: AbortSignal.timeout(20000),
+    })
+  } catch (e) {
+    console.error(`[cron] schedule tick error: ${e.message}`)
+  }
+}
+
 async function tick() {
   try {
     if (!tablesReady) {
@@ -456,6 +473,10 @@ async function tick() {
     }
     // Inter-automation pub/sub (step 195): drain the event queue and fire subscribers' /run.
     await dispatchEvents()
+    // Processes/Gantt timeline (step 230): once a MINUTE, ask fractera-projects to recompute every fork
+    // schedule, so the timeline shifts as runs finish early/late even with no one watching. Throttled off
+    // the 15s cron tick; best-effort, idempotent (a pure projection of instances + runs + node estimates).
+    await scheduleTick(minuteKey)
   } catch (e) {
     // Data service may be down (restart window) — log and retry on the next tick.
     console.error(`[cron] tick error: ${e.message}`)

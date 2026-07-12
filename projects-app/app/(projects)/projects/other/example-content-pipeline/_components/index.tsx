@@ -4,6 +4,7 @@ import { DiagramSection } from "../../../_shared/components/diagram-section.clie
 import { InstancesPanel } from "../../../_shared/components/instances-panel.client";
 import { ValidateButton } from "../../../_shared/components/validate-button.client";
 import { DashboardAccordion } from "../../../_shared/components/dashboard-accordion.client";
+import { ProcessesTimeline } from "../../../_shared/components/processes-timeline.client";
 import { EXAMPLE_DASHBOARD } from "../_data/dashboard";
 
 // Reference example (step 223.C). The Diagram is ALWAYS visible — full screen width, 80vh — not an
@@ -28,7 +29,15 @@ export default function ExampleEntry() {
       </main>
       <DiagramSection nodes={DIAGRAM_NODES} automation="other/example-content-pipeline" />
       <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
-        <InstancesPanel nodes={DIAGRAM_NODES} automation="other/example-content-pipeline" />
+        {/* Anchor for the Gantt bars' click-to-scroll (step 230). */}
+        <div id="instances-panel">
+          <InstancesPanel nodes={DIAGRAM_NODES} automation="other/example-content-pipeline" />
+        </div>
+        {/* The PROCESSES / Gantt timeline (step 230) — a row per fork; appears once forks exist. */}
+        <section className="space-y-3">
+          <h3 className="text-lg font-semibold">Processes</h3>
+          <ProcessesTimeline automation="other/example-content-pipeline" />
+        </section>
         {/* The DASHBOARD standard (step 228) — one tab, two config-driven tables; the first has 10+ columns
             of every type (several hidden by default) to exercise the picker + horizontal scroll. */}
         <section className="space-y-3">
