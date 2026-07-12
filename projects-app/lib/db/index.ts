@@ -88,11 +88,11 @@ const SCHEMA = `
     status   TEXT NOT NULL DEFAULT 'idle',
     payload  TEXT NOT NULL DEFAULT '{}'
   );
-  -- Master → Instance fork (step 223.C.4). An Instance is a fork of the Master into a sub-automation:
-  -- it inherits ALL the Master's nodes, then adds a `specialization` (the run's overall condition, e.g.
-  -- "about cats") and per-node `overrides` (JSON keyed by node_id → { disabledFunctions[], note }, e.g.
+  -- Master to Instance fork (step 223.C.4). An Instance is a fork of the Master into a sub-automation:
+  -- it inherits ALL the Master nodes, then adds a specialization (the run overall condition, e.g.
+  -- "about cats") and per-node overrides (JSON keyed by node_id: disabledFunctions and note, e.g.
   -- "do not use Siamese cats"). Editing one Instance never touches the Master or the sibling Instances.
-  -- automation = "<category>/<slug>". A run of an Instance sets automation_runs.instance_id to its id.
+  -- automation = "category/slug". A run of an Instance sets automation_runs.instance_id to its id.
   CREATE TABLE IF NOT EXISTS automation_instances (
     id             TEXT PRIMARY KEY NOT NULL,
     automation     TEXT NOT NULL,
