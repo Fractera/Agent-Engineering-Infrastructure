@@ -15,7 +15,9 @@ import {
 import type { EntitiesConfig } from "../entities";
 import { ENTITY_ORDER, ENTITY_META } from "../entities";
 import type { UseCase } from "../use-cases";
+import type { DashboardConfig } from "../table-config";
 import { UseCasesPanel } from "./use-cases-panel.client";
+import { DashboardAccordion } from "./dashboard-accordion.client";
 
 // FROZEN STANDARD (step 222) — the series of entity accordions below the "Add or modify automation"
 // button. Driven by the project's _data/config.ts (EntitiesConfig): `diagram` is always shown; the
@@ -26,12 +28,18 @@ import { UseCasesPanel } from "./use-cases-panel.client";
 export function AutomationAccordions({
   config,
   cases,
+  automation,
+  dashboard,
 }: {
   // Partial by design (step 222, scaling): a project's _data/config.ts may not list a key that was
   // added to the registry later — a missing key reads as "off", so adding a new entity never breaks
   // an existing project. Mandatory entities render regardless of the config.
   config: Partial<EntitiesConfig>;
   cases: UseCase[];
+  /** "category/slug" — scopes the dashboard tables' per-table column-visibility (step 228). */
+  automation?: string;
+  /** The dashboard's tables (step 228). When present, the Dashboard accordion renders them. */
+  dashboard?: DashboardConfig;
 }) {
   // The Diagram is NOT in the accordion series (owner design, step 223.C): it is rendered separately as
   // a full-width, always-visible section (DiagramSection). Here we render the OTHER entities only.
@@ -54,10 +62,16 @@ export function AutomationAccordions({
                 </Tooltip>
               </AccordionTrigger>
               <AccordionContent>
-                <p className="text-sm text-muted-foreground">
-                  This section appears here once configured. For now it is an empty container — see the
-                  project README, &ldquo;The automation entities standard&rdquo;.
-                </p>
+                {k === "dashboard" ? (
+                  // The Dashboard is the first entity with a real interface (step 228): ONE tab, any number
+                  // of config-driven tables. The others are still empty containers until their own step.
+                  <DashboardAccordion automation={automation ?? ""} dashboard={dashboard} />
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    This section appears here once configured. For now it is an empty container — see the
+                    project README, &ldquo;The automation entities standard&rdquo;.
+                  </p>
+                )}
               </AccordionContent>
             </AccordionItem>
           );

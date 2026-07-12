@@ -242,6 +242,34 @@ export const PROJECT_CONFIG = {
   },
 } as const;
 `,
+  "_data/dashboard.ts": `import type { DashboardConfig } from "../../../_shared/table-config";
+
+// This automation's DASHBOARD (frozen standard, step 228 — see app/(projects)/README.md, "The dashboard
+// tables & columns standard"). ONE tab, ANY number of tables; a column is DATA, not JSX — the shared table
+// renders whatever this declares through a closed set of typed cells. Seeded with ONE demo table so the
+// dashboard is not empty at birth; when the automation is designed (Quiz / decomposition, step 227), the
+// model adds the tables it actually needs to analyse its work, by this same standard.
+export const PROJECT_DASHBOARD: DashboardConfig = {
+  tables: [
+    {
+      id: "records",
+      title: "Records",
+      description: "A demo table — replace its columns and rows with what this automation produces.",
+      columns: [
+        { id: "status", header: "Status", type: "badge", source: "status", defaultVisible: true, options: { colorFrom: "color" } },
+        { id: "title", header: "Title", type: "text", source: "title", defaultVisible: true },
+        { id: "note", header: "Note", type: "longtext", source: "note", defaultVisible: true, options: { expand: true } },
+        { id: "when", header: "When", type: "date", source: "when", defaultVisible: true },
+        { id: "details", header: "", type: "actions", source: "id", defaultVisible: true, options: { action: "detail" } },
+      ],
+      rows: [
+        { id: "1", values: { status: "new", color: "blue", title: "First item", note: "A sample row so the table is not empty. Click to expand this note.", when: "2026-07-13T09:00:00Z" } },
+        { id: "2", values: { status: "done", color: "green", title: "Second item", note: "Another sample row.", when: "2026-07-10T18:30:00Z" } },
+      ],
+    },
+  ],
+};
+`,
   "_data/use-cases.ts": `import type { UseCase } from "../../../_shared/use-cases";
 
 // This automation's USER CASES (frozen standard v4, step 222 — see _shared/use-cases.ts). The cases
@@ -269,6 +297,7 @@ import { AutomationAccordions } from "../../../_shared/components/automation-acc
 import { DiagramSection } from "../../../_shared/components/diagram-section.client";
 import { PROJECT_CONFIG } from "../_data/config";
 import { USE_CASES } from "../_data/use-cases";
+import { PROJECT_DASHBOARD } from "../_data/dashboard";
 import { DIAGRAM_NODES } from "../_data/diagram";
 
 // Frozen automation skeleton — VERSION 4. Header/footer come from the Projects-zone layout (step 213).
@@ -307,7 +336,12 @@ export default function AutomationEntry() {
       <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
         {/* The OTHER entity accordions (step 222) + the mandatory Use cases. The Diagram is above,
             outside the accordion series. Driven by _data/config.ts + _data/use-cases.ts. */}
-        <AutomationAccordions config={PROJECT_CONFIG.entities} cases={USE_CASES} />
+        <AutomationAccordions
+          config={PROJECT_CONFIG.entities}
+          cases={USE_CASES}
+          automation="{{CATEGORY}}/{{PROJECT}}"
+          dashboard={PROJECT_DASHBOARD}
+        />
         <div className="space-y-2 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
           <p className="font-medium text-foreground">This is a frozen automation skeleton.</p>
           <p>

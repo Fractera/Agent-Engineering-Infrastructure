@@ -3,6 +3,8 @@ import { DIAGRAM_NODES } from "../_data/diagram";
 import { DiagramSection } from "../../../_shared/components/diagram-section.client";
 import { InstancesPanel } from "../../../_shared/components/instances-panel.client";
 import { ValidateButton } from "../../../_shared/components/validate-button.client";
+import { DashboardAccordion } from "../../../_shared/components/dashboard-accordion.client";
+import { EXAMPLE_DASHBOARD } from "../_data/dashboard";
 
 // Reference example (step 223.C). The Diagram is ALWAYS visible — full screen width, 80vh — not an
 // accordion (owner design): the Master's nodes as a graph; click a node to open its full contract (name/
@@ -25,8 +27,14 @@ export default function ExampleEntry() {
         <ValidateButton automation="other/example-content-pipeline" />
       </main>
       <DiagramSection nodes={DIAGRAM_NODES} automation="other/example-content-pipeline" />
-      <main className="mx-auto max-w-5xl px-4 py-8">
+      <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
         <InstancesPanel nodes={DIAGRAM_NODES} automation="other/example-content-pipeline" />
+        {/* The DASHBOARD standard (step 228) — one tab, two config-driven tables; the first has 10+ columns
+            of every type (several hidden by default) to exercise the picker + horizontal scroll. */}
+        <section className="space-y-3">
+          <h3 className="text-lg font-semibold">Dashboard</h3>
+          <DashboardAccordion automation="other/example-content-pipeline" dashboard={EXAMPLE_DASHBOARD} />
+        </section>
       </main>
     </>
   );
