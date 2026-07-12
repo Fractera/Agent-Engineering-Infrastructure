@@ -293,11 +293,15 @@ export async function startQuizFor(target: QuizTarget): Promise<QuizRow> {
   const existing = await getQuizByKey(target.key);
   if (existing) return existing;
   const id = createNodeId();
+  // The row KEY already carries the subject ("category/slug" for a project, "edge:<cuid>" for a link), so
+  // the insert writes only the columns that exist on EVERY database. The subject/subject_ref columns are in
+  // SCHEMA for fresh servers, but an already-running database is served by the data service — its tables are
+  // created once and a CREATE TABLE IF NOT EXISTS never adds a column to them. Writing a column that an
+  // existing DB does not have is what broke the Quiz (SqliteError: no column named subject). Never insert a
+  // newly-added column into a table that already exists on live servers.
   await db.prepare(
-    `INSERT INTO automation_quiz (id, automation, subject, subject_ref, language) VALUES (?, ?, ?, ?, ?)`,
-  ).run(
-    id, target.key, target.kind, target.kind === "edge" ? target.cuid : null, defaultLanguage(),
-  );
+    `INSERT INTO automation_quiz (id, automation, language) VALUES (?, ?, ?)`,
+  ).run(id, target.key, defaultLanguage());
   return (await getQuizByKey(target.key)) as QuizRow;
 }
 
