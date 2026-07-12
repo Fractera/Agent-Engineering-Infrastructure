@@ -140,7 +140,7 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
           </Button>
         </div>
       )}
-      <div className="relative h-[440px] overflow-hidden rounded-lg border">
+      <div className="relative h-[80vh] w-full overflow-hidden rounded-lg border">
         <ReactFlow
           nodes={rfNodes}
           edges={rfEdges}

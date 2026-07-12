@@ -15,9 +15,7 @@ import {
 import type { EntitiesConfig } from "../entities";
 import { ENTITY_ORDER, ENTITY_META } from "../entities";
 import type { UseCase } from "../use-cases";
-import type { NodeContract } from "../node-contract";
 import { UseCasesPanel } from "./use-cases-panel.client";
-import { DiagramCanvas } from "./diagram-canvas.client";
 
 // FROZEN STANDARD (step 222) — the series of entity accordions below the "Add or modify automation"
 // button. Driven by the project's _data/config.ts (EntitiesConfig): `diagram` is always shown; the
@@ -28,22 +26,18 @@ import { DiagramCanvas } from "./diagram-canvas.client";
 export function AutomationAccordions({
   config,
   cases,
-  diagram,
-  automation,
 }: {
   // Partial by design (step 222, scaling): a project's _data/config.ts may not list a key that was
   // added to the registry later — a missing key reads as "off", so adding a new entity never breaks
   // an existing project. Mandatory entities render regardless of the config.
   config: Partial<EntitiesConfig>;
   cases: UseCase[];
-  // The Master diagram's nodes (step 223.C). When provided, the Diagram entity renders the real node
-  // panel; when absent, the Diagram keeps the generic placeholder (so an automation that has not
-  // adopted the node-contract yet — e.g. telegram-notes with its own diagram — is untouched).
-  diagram?: NodeContract[];
-  // "<category>/<slug>" — lets the canvas poll this automation's active run for the node highlight.
-  automation?: string;
 }) {
-  const entities = ENTITY_ORDER.filter((k) => ENTITY_META[k].mandatory || Boolean(config[k]));
+  // The Diagram is NOT in the accordion series (owner design, step 223.C): it is rendered separately as
+  // a full-width, always-visible section (DiagramSection). Here we render the OTHER entities only.
+  const entities = ENTITY_ORDER.filter(
+    (k) => k !== "diagram" && (ENTITY_META[k].mandatory || Boolean(config[k])),
+  );
   return (
     <TooltipProvider delayDuration={200}>
       <Accordion type="single" collapsible className="rounded-lg border px-4">
@@ -60,14 +54,10 @@ export function AutomationAccordions({
                 </Tooltip>
               </AccordionTrigger>
               <AccordionContent>
-                {k === "diagram" && diagram ? (
-                  <DiagramCanvas nodes={diagram} automation={automation} />
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    This section appears here once configured. For now it is an empty container — see the
-                    project README, &ldquo;The automation entities standard&rdquo;.
-                  </p>
-                )}
+                <p className="text-sm text-muted-foreground">
+                  This section appears here once configured. For now it is an empty container — see the
+                  project README, &ldquo;The automation entities standard&rdquo;.
+                </p>
               </AccordionContent>
             </AccordionItem>
           );

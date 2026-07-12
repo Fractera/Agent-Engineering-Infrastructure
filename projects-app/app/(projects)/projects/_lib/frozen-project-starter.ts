@@ -199,6 +199,7 @@ import { PROBES } from "../_data/tests";
 import { AutomationStatusBar } from "../../../_shared/components/automation-status-bar.client";
 import { AddModifyAutomationButton } from "../../../_shared/components/add-modify-automation-button.client";
 import { AutomationAccordions } from "../../../_shared/components/automation-accordions.client";
+import { DiagramSection } from "../../../_shared/components/diagram-section.client";
 import { PROJECT_CONFIG } from "../_data/config";
 import { USE_CASES } from "../_data/use-cases";
 import { DIAGRAM_NODES } from "../_data/diagram";
@@ -212,46 +213,47 @@ import { DIAGRAM_NODES } from "../_data/diagram";
 export default function AutomationEntry() {
   const d = PROJECT_DESCRIPTION;
   return (
-    <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
-      <AutomationStatusBar
-        category="{{CATEGORY}}"
-        categoryLabel={{CATEGORY_LABEL_JSON}}
-        modelEnvKey="{{MODEL_ENV_KEY}}"
-        defaultModel="gpt-4o-mini"
-        channels={INPUT_CHANNELS}
-        probes={PROBES}
-      />
-      <div className="space-y-3">
-        <h1 className="text-3xl font-semibold">{d.title}</h1>
-        <p className="max-w-3xl text-muted-foreground">{d.description}</p>
-        <AddModifyAutomationButton category="{{CATEGORY}}" slug="{{PROJECT}}" />
-      </div>
-      {/* The entity accordions (step 222): Diagram + enabled optionals + the mandatory Use cases.
-          The Diagram entity renders the real node panel from _data/diagram.ts (step 223.C — empty on a
-          fresh skeleton). Driven by _data/config.ts + _data/use-cases.ts + _data/diagram.ts. */}
-      <AutomationAccordions
-        config={PROJECT_CONFIG.entities}
-        cases={USE_CASES}
-        diagram={DIAGRAM_NODES}
-        automation="{{CATEGORY}}/{{PROJECT}}"
-      />
-      <div className="space-y-2 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-        <p className="font-medium text-foreground">This is a frozen automation skeleton.</p>
-        <p>
-          Open the menu (top right): <strong>Settings</strong> sets the AI model and declares input
-          channels; <strong>Tests</strong> runs the probes you declare. Both are driven by data:
-        </p>
-        <ul className="list-disc space-y-1 pl-5">
-          <li>Declare what this automation connects to in <code>_data/channels.ts</code>.</li>
-          <li>Declare one probe per entity it touches in <code>_data/tests.ts</code>.</li>
-          <li>Describe it in <code>_data/description.ts</code>; its card comes from <code>README.md</code>.</li>
-        </ul>
-        <p>
-          Do not invent logic from memory — follow this project&apos;s <code>README.md</code>, which
-          grows node by node.
-        </p>
-      </div>
-    </main>
+    <>
+      <main className="mx-auto max-w-5xl space-y-4 px-4 pt-8">
+        <AutomationStatusBar
+          category="{{CATEGORY}}"
+          categoryLabel={{CATEGORY_LABEL_JSON}}
+          modelEnvKey="{{MODEL_ENV_KEY}}"
+          defaultModel="gpt-4o-mini"
+          channels={INPUT_CHANNELS}
+          probes={PROBES}
+        />
+        <div className="space-y-3">
+          <h1 className="text-3xl font-semibold">{d.title}</h1>
+          <p className="max-w-3xl text-muted-foreground">{d.description}</p>
+          <AddModifyAutomationButton category="{{CATEGORY}}" slug="{{PROJECT}}" />
+        </div>
+      </main>
+      {/* The Diagram is ALWAYS visible — full screen width, 80vh — NOT an accordion (owner design,
+          step 223.C). It is the automation's centerpiece; the node panel opens on click. */}
+      <DiagramSection nodes={DIAGRAM_NODES} automation="{{CATEGORY}}/{{PROJECT}}" />
+      <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
+        {/* The OTHER entity accordions (step 222) + the mandatory Use cases. The Diagram is above,
+            outside the accordion series. Driven by _data/config.ts + _data/use-cases.ts. */}
+        <AutomationAccordions config={PROJECT_CONFIG.entities} cases={USE_CASES} />
+        <div className="space-y-2 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+          <p className="font-medium text-foreground">This is a frozen automation skeleton.</p>
+          <p>
+            Open the menu (top right): <strong>Settings</strong> sets the AI model and declares input
+            channels; <strong>Tests</strong> runs the probes you declare. Both are driven by data:
+          </p>
+          <ul className="list-disc space-y-1 pl-5">
+            <li>Declare what this automation connects to in <code>_data/channels.ts</code>.</li>
+            <li>Declare one probe per entity it touches in <code>_data/tests.ts</code>.</li>
+            <li>Describe it in <code>_data/description.ts</code>; its card comes from <code>README.md</code>.</li>
+          </ul>
+          <p>
+            Do not invent logic from memory — follow this project&apos;s <code>README.md</code>, which
+            grows node by node.
+          </p>
+        </div>
+      </main>
+    </>
   );
 }
 `,
