@@ -54,7 +54,7 @@ export function ConfigRecordCell({ col, row, ctx }: { col: TableColumn; row: Tab
       return (
         <button
           type="button"
-          onClick={ctx.onToggleExpand}
+          onClick={(e) => { e.stopPropagation(); ctx.onToggleExpand(); }}
           className={"block max-w-md text-left " + (ctx.expanded ? "" : "line-clamp-1")}
           title="Click to expand"
         >
@@ -86,13 +86,13 @@ export function ConfigRecordCell({ col, row, ctx }: { col: TableColumn; row: Tab
     case "actions":
       if (col.options?.action === "delete") {
         return (
-          <Button variant="ghost" size="icon" aria-label="Delete row" className="text-muted-foreground hover:text-destructive" onClick={() => ctx.onDelete(row)}>
+          <Button variant="ghost" size="icon" aria-label="Delete row" className="text-muted-foreground hover:text-destructive" onClick={(e) => { e.stopPropagation(); ctx.onDelete(row); }}>
             <Trash2 className="size-4" />
           </Button>
         );
       }
       return (
-        <Button variant="ghost" size="sm" onClick={() => ctx.onDetail(row)}>Details</Button>
+        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); ctx.onDetail(row); }}>Details</Button>
       );
     case "text":
     default:

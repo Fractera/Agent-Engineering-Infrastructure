@@ -36,6 +36,7 @@ export function ConfigRecordsTable({ automation, table }: { automation: string; 
   const [expanded, setExpanded] = useState<string | null>(null);
   const [detail, setDetail] = useState<{ open: boolean; row: TableRow | null }>({ open: false, row: null });
   const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null); // null = add, an id = edit that live row
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
 
@@ -74,9 +75,24 @@ export function ConfigRecordsTable({ automation, table }: { automation: string; 
     return () => clearTimeout(t);
   }, [search, loadLive]);
 
-  // "Add row" — one field per non-actions column; POST creates a live row (which then replaces the seed).
+  // The add/edit modal — one field per non-actions column. Add POSTs a new row; edit PATCHes a live row.
   const editableCols = useMemo(() => table.columns.filter((c) => c.type !== "actions"), [table.columns]);
-  const addRow = useCallback(async () => {
+
+  const openAdd = useCallback(() => { setEditingId(null); setDraft({}); setAdding(true); }, []);
+  // Editing (step 229 UI): a click on a LIVE row opens it pre-filled; seed/demo rows stay read-only.
+  const openEdit = useCallback((row: TableRow) => {
+    if (!isLive) return;
+    const d: Record<string, string> = {};
+    for (const c of editableCols) {
+      const v = row.values[c.source];
+      d[c.source] = v === null || v === undefined ? "" : String(v);
+    }
+    setDraft(d);
+    setEditingId(row.id);
+    setAdding(true);
+  }, [isLive, editableCols]);
+
+  const submitRow = useCallback(async () => {
     setBusy(true);
     try {
       const values: Record<string, unknown> = {};
@@ -84,17 +100,23 @@ export function ConfigRecordsTable({ automation, table }: { automation: string; 
         const raw = draft[c.source] ?? "";
         values[c.source] = c.type === "number" ? (raw === "" ? "" : Number(raw)) : raw;
       }
-      const r = await fetch(API, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ automation, table: table.id, values }),
-      });
-      if (!r.ok) { toast.error("Could not add the row."); return; }
+      const r = editingId
+        ? await fetch(`${API}/${editingId}`, {
+            method: "PATCH", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ values }),
+          })
+        : await fetch(API, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ automation, table: table.id, values }),
+          });
+      if (!r.ok) { toast.error(editingId ? "Could not save the row." : "Could not add the row."); return; }
       setAdding(false);
+      setEditingId(null);
       setDraft({});
       await loadLive(search);
-      toast.success("Row added.");
+      toast.success(editingId ? "Row saved." : "Row added.");
     } finally { setBusy(false); }
-  }, [automation, table.id, editableCols, draft, loadLive, search]);
+  }, [automation, table.id, editableCols, draft, editingId, loadLive, search]);
 
   const deleteRow = useCallback(async (row: TableRow) => {
     if (!isLive) { toast.info("Demo rows are read-only — add a real row first."); return; }
@@ -128,7 +150,7 @@ export function ConfigRecordsTable({ automation, table }: { automation: string; 
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button variant="outline" size="sm" onClick={() => setAdding(true)}>
+        <Button variant="outline" size="sm" onClick={openAdd}>
           <Plus className="mr-1 size-4" /> Add row
         </Button>
         {!isLive && rows.length > 0 && (
@@ -158,7 +180,12 @@ export function ConfigRecordsTable({ automation, table }: { automation: string; 
               </tr>
             ) : (
               shown.map((r) => (
-                <tr key={r.id} className="border-b align-top last:border-0">
+                <tr
+                  key={r.id}
+                  className={"border-b align-top last:border-0 " + (isLive ? "cursor-pointer hover:bg-muted/40" : "")}
+                  onClick={() => openEdit(r)}
+                  title={isLive ? "Click to edit this row" : undefined}
+                >
                   {cols.map((c) => (
                     <td key={c.id} className="px-3 py-2">
                       <ConfigRecordCell
@@ -199,7 +226,7 @@ export function ConfigRecordsTable({ automation, table }: { automation: string; 
           the demo seed from now on. Fields are typed loosely (all strings; number columns parse on submit). */}
       <Dialog open={adding} onOpenChange={setAdding}>
         <DialogContent className="max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Add a row to “{table.title}”</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editingId ? "Edit row" : "Add a row"} — “{table.title}”</DialogTitle></DialogHeader>
           <div className="space-y-3">
             {editableCols.map((c) => (
               <div key={c.id} className="space-y-1">
@@ -215,8 +242,8 @@ export function ConfigRecordsTable({ automation, table }: { automation: string; 
                 )}
               </div>
             ))}
-            <Button onClick={addRow} disabled={busy} className="w-full">
-              {busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} Add row
+            <Button onClick={submitRow} disabled={busy} className="w-full">
+              {busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} {editingId ? "Save changes" : "Add row"}
             </Button>
           </div>
         </DialogContent>
