@@ -102,6 +102,21 @@ const SCHEMA = `
     status         TEXT NOT NULL DEFAULT 'new',
     created_at     TEXT NOT NULL DEFAULT (datetime('now'))
   );
+  -- DASHBOARD LIVE ROWS (step 229) — the live data store behind the config-driven dashboard tables (228).
+  -- A dashboard table's COLUMNS are config (arbitrary and different per automation); its ROWS are here. The
+  -- columns are arbitrary, and a live server cannot add a column to an existing table (CREATE TABLE IF NOT
+  -- EXISTS never alters; the makeLocalDb ALTER path does not run on the data-service server — lesson 225 G4:
+  -- "no column named subject"). So a row is NOT a column-per-field: every field lives inside values_json,
+  -- keyed by the column's `source`. This is a class-immunity to that bug. A table with no live rows falls
+  -- back to the config's seed rows (owner: live replaces, seed is the demo fallback so a fresh dashboard is
+  -- not empty). Both the automation's own nodes (via the API) and the owner (via the UI) write rows here.
+  CREATE TABLE IF NOT EXISTS dashboard_rows (
+    id          TEXT PRIMARY KEY NOT NULL,
+    automation  TEXT NOT NULL,
+    table_id    TEXT NOT NULL,
+    values_json TEXT NOT NULL DEFAULT '{}',
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+  );
   -- Diagram Builder mode (step 224). Two axes the file-based diagram never had: a LIVE lightweight canvas
   -- index (so a Builder-created node renders instantly without a rebuild) and per-node VERSION HISTORY.
   -- Identity is a CUID (owner: weak models mangle the UUID format) that is stable across a folder rename,
