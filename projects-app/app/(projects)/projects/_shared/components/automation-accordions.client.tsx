@@ -15,7 +15,9 @@ import {
 import type { EntitiesConfig } from "../entities";
 import { ENTITY_ORDER, ENTITY_META } from "../entities";
 import type { UseCase } from "../use-cases";
+import type { NodeContract } from "../node-contract";
 import { UseCasesPanel } from "./use-cases-panel.client";
+import { DiagramPanel } from "./diagram-panel.client";
 
 // FROZEN STANDARD (step 222) — the series of entity accordions below the "Add or modify automation"
 // button. Driven by the project's _data/config.ts (EntitiesConfig): `diagram` is always shown; the
@@ -26,12 +28,17 @@ import { UseCasesPanel } from "./use-cases-panel.client";
 export function AutomationAccordions({
   config,
   cases,
+  diagram,
 }: {
   // Partial by design (step 222, scaling): a project's _data/config.ts may not list a key that was
   // added to the registry later — a missing key reads as "off", so adding a new entity never breaks
   // an existing project. Mandatory entities render regardless of the config.
   config: Partial<EntitiesConfig>;
   cases: UseCase[];
+  // The Master diagram's nodes (step 223.C). When provided, the Diagram entity renders the real node
+  // panel; when absent, the Diagram keeps the generic placeholder (so an automation that has not
+  // adopted the node-contract yet — e.g. telegram-notes with its own diagram — is untouched).
+  diagram?: NodeContract[];
 }) {
   const entities = ENTITY_ORDER.filter((k) => ENTITY_META[k].mandatory || Boolean(config[k]));
   return (
@@ -50,10 +57,14 @@ export function AutomationAccordions({
                 </Tooltip>
               </AccordionTrigger>
               <AccordionContent>
-                <p className="text-sm text-muted-foreground">
-                  This section appears here once configured. For now it is an empty container — see the
-                  project README, &ldquo;The automation entities standard&rdquo;.
-                </p>
+                {k === "diagram" && diagram ? (
+                  <DiagramPanel nodes={diagram} />
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    This section appears here once configured. For now it is an empty container — see the
+                    project README, &ldquo;The automation entities standard&rdquo;.
+                  </p>
+                )}
               </AccordionContent>
             </AccordionItem>
           );
