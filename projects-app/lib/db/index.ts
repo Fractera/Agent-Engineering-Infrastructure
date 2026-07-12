@@ -142,6 +142,29 @@ const SCHEMA = `
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(node_cuid, version)
   );
+  -- ACTIVATION QUIZ (step 227) — phase 2 of an automation's birth. Phase 1 (the creation modal, step 224)
+  -- captured the type + the owner's instruction and left a bare page whose nodes are drafts. On the FIRST
+  -- visit the Quiz opens and brainstorms the instruction into real nodes: one quiz step = one NODE + one
+  -- development sub-step. It runs in the project's DEFAULT LANGUAGE (English only when none is set) and is
+  -- capped at 10 nodes per development step so the context never overflows. The turns are stored so a
+  -- reload resumes exactly where it stopped.
+  CREATE TABLE IF NOT EXISTS automation_quiz (
+    id          TEXT PRIMARY KEY NOT NULL,
+    automation  TEXT NOT NULL UNIQUE,
+    status      TEXT NOT NULL DEFAULT 'active',   -- active | done
+    language    TEXT NOT NULL DEFAULT 'en',
+    node_count  INTEGER NOT NULL DEFAULT 0,       -- nodes produced so far (cap 10)
+    created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    finished_at TEXT
+  );
+  CREATE TABLE IF NOT EXISTS automation_quiz_turns (
+    id         TEXT PRIMARY KEY NOT NULL,
+    quiz_id    TEXT NOT NULL,
+    node_index INTEGER NOT NULL DEFAULT 0,        -- which node this turn belongs to
+    role       TEXT NOT NULL,                     -- assistant | user
+    content    TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
   -- Automation finance types (step 205, §E): the per-automation income/expense categories the
   -- document-parsing / voice finance action segments a record into. Capped at ≤10 per (project,kind)
   -- in the app layer (not a schema constraint); UNIQUE(project,kind,name) prevents duplicates. Replaces

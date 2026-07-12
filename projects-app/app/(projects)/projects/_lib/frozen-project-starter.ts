@@ -263,6 +263,7 @@ import { INPUT_CHANNELS } from "../_data/channels";
 import { PROBES } from "../_data/tests";
 import { AUTOMATION_TYPE } from "../_data/automation";
 import { AutomationStatusBar } from "../../../_shared/components/automation-status-bar.client";
+import { ActivationQuiz } from "../../../_shared/components/activation-quiz.client";
 import { AddModifyAutomationButton } from "../../../_shared/components/add-modify-automation-button.client";
 import { AutomationAccordions } from "../../../_shared/components/automation-accordions.client";
 import { DiagramSection } from "../../../_shared/components/diagram-section.client";
@@ -291,6 +292,9 @@ export default function AutomationEntry() {
           automation="{{CATEGORY}}/{{PROJECT}}"
           type={AUTOMATION_TYPE}
         />
+        {/* PHASE 2 (step 227) — on the FIRST visit the activation Quiz opens and brainstorms the owner's
+            instruction into nodes: one quiz step = one node + one development step for the coding agent. */}
+        <ActivationQuiz automation="{{CATEGORY}}/{{PROJECT}}" />
         <div className="space-y-3">
           <h1 className="text-3xl font-semibold">{d.title}</h1>
           <p className="max-w-3xl text-muted-foreground">{d.description}</p>
