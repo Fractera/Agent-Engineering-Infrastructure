@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { VoiceInput } from "./voice-input.client";
 
 // ACTIVATION QUIZ (step 227) — phase 2 of an automation's birth. Opens on the FIRST visit of a freshly
 // created automation and turns the owner's instruction (phase 1) into a real automation through a brainstorm,
@@ -66,6 +67,9 @@ export function ActivationQuiz({
   const [draftText, setDraftText] = useState("");
   const [aborter, setAborter] = useState<AbortController | null>(null);
   const booted = useRef(false);
+  // The field voice writes into (step 232): the transcript lands at the CARET, so the owner can dictate into
+  // the middle of what he already wrote.
+  const answerRef = useRef<HTMLTextAreaElement | null>(null);
 
   // The SUBJECT of every call — one API, four subjects (steps 225 G4 + 231).
   const subject = useCallback(() => {
@@ -475,14 +479,23 @@ export function ActivationQuiz({
 
         <div className="space-y-2 border-t pt-3">
           <Textarea
+            ref={answerRef}
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
             rows={3}
             placeholder={
               phase === "usecases" && !isEdge && !isCaseEdit
-                ? "Describe your scenarios — speak freely; dictation is the fastest way…"
+                ? "Describe your scenarios — speak freely; hold the microphone and dictate…"
                 : "Your answer…"
             }
+            disabled={busy || streaming}
+          />
+          {/* Voice (step 232) — the shared primitive, mounted on this field. Hold to speak; the transcript
+              lands at the cursor, so a dictated afterthought can go into the middle of a sentence. */}
+          <VoiceInput
+            targetRef={answerRef}
+            value={answer}
+            onChange={setAnswer}
             disabled={busy || streaming}
           />
           <div className="flex flex-wrap gap-2">

@@ -391,6 +391,23 @@ agreement before more code is written. Both refusals return `409` with the reaso
   the existing file queue (`materializeUseCaseStep`, `DEVELOPMENT-STEPS/NEW-STEPS/`). The step does not
   name files — which nodes the case touches is what the coding agent works out from the diagram.
 
+### Voice input — ONE primitive, every input (step 232)
+
+Speech is how the owner describes his scenarios, so voice is a **platform primitive, not a Quiz feature**:
+`_shared/components/voice-input.client.tsx` (`<VoiceInput/>`) plus the single transcription route
+`POST /api/projects/transcribe` (OpenAI, the global key of step 208, the project's language).
+
+**Never write a second microphone.** A new field gains voice by mounting the primitive next to it and
+handing it the field's ref + value + `onChange` — never by re-implementing `MediaRecorder` or calling the
+transcription API again.
+
+How it behaves (owner's design): **hold** the button to record, **release** to transcribe; while recording a
+40px container draws the sound as vertical bars (2px wide, 1px apart, up to 32px, appended left → right,
+tall where the voice is loud) with the elapsed time in a 20px chip in its centre; the transcript is inserted
+**at the caret**, so the owner can put the cursor inside existing text, dictate, and have the words land
+exactly there. `getUserMedia` requires a **secure context** — under plain HTTP (IP mode) the button disables
+itself and says so, and typing (or system dictation) carries on as always.
+
 ### The development cycle (why this shape)
 
 An automation is **not built in one shot**. The owner's request is broken into **raw user cases** — even
