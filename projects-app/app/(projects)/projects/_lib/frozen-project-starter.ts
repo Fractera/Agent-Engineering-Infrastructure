@@ -233,6 +233,7 @@ export default function AutomationEntry() {
         config={PROJECT_CONFIG.entities}
         cases={USE_CASES}
         diagram={DIAGRAM_NODES}
+        automation="{{CATEGORY}}/{{PROJECT}}"
       />
       <div className="space-y-2 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
         <p className="font-medium text-foreground">This is a frozen automation skeleton.</p>

@@ -29,6 +29,7 @@ export function AutomationAccordions({
   config,
   cases,
   diagram,
+  automation,
 }: {
   // Partial by design (step 222, scaling): a project's _data/config.ts may not list a key that was
   // added to the registry later — a missing key reads as "off", so adding a new entity never breaks
@@ -39,6 +40,8 @@ export function AutomationAccordions({
   // panel; when absent, the Diagram keeps the generic placeholder (so an automation that has not
   // adopted the node-contract yet — e.g. telegram-notes with its own diagram — is untouched).
   diagram?: NodeContract[];
+  // "<category>/<slug>" — lets the canvas poll this automation's active run for the node highlight.
+  automation?: string;
 }) {
   const entities = ENTITY_ORDER.filter((k) => ENTITY_META[k].mandatory || Boolean(config[k]));
   return (
@@ -58,7 +61,7 @@ export function AutomationAccordions({
               </AccordionTrigger>
               <AccordionContent>
                 {k === "diagram" && diagram ? (
-                  <DiagramCanvas nodes={diagram} />
+                  <DiagramCanvas nodes={diagram} automation={automation} />
                 ) : (
                   <p className="text-sm text-muted-foreground">
                     This section appears here once configured. For now it is an empty container — see the

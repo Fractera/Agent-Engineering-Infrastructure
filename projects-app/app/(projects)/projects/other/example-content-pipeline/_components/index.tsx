@@ -18,7 +18,7 @@ export default function ExampleEntry() {
         canvas to open its full contract on the right. Each node&apos;s functions live only in{" "}
         <code>_nodes/&lt;id&gt;/</code>. See app/(projects)/README.md.
       </div>
-      <DiagramCanvas nodes={DIAGRAM_NODES} />
+      <DiagramCanvas nodes={DIAGRAM_NODES} automation="other/example-content-pipeline" />
     </main>
   );
 }
