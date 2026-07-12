@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { History, Loader2, Rocket, Save, Trash2, Undo2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { IndexNode } from "./diagram-canvas.client";
 
@@ -70,6 +71,33 @@ export function BuilderNodePanel({
     [node.cuid, onChanged],
   );
 
+  // Save the brief/instruction first (so the step carries the latest text), then materialize the step file
+  // and show the copy-paste message. The owner pastes it into a coder chat; the agent executes step #N.
+  const startDevelopment = useCallback(async () => {
+    setBusy(true);
+    try {
+      await fetch(`/api/projects/nodes/${node.cuid}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(node.draft ? { spec: text } : { instruction: text }),
+      });
+      const r = await fetch(`/api/projects/nodes/${node.cuid}/start-development`, { method: "POST" });
+      if (!r.ok) { toast.error("Could not create the development step."); return; }
+      const d = (await r.json()) as { number: number; message: string };
+      toast.success(`You created a technical brief for the coding agent (step #${d.number})`, {
+        description: "Copy this message and paste it into the coding agent's chat.",
+        duration: 30000,
+        action: {
+          label: "Copy",
+          onClick: () => { void navigator.clipboard.writeText(d.message); toast.success("Copied — paste it into the coder's chat."); },
+        },
+      });
+      onChanged();
+    } finally {
+      setBusy(false);
+    }
+  }, [node.cuid, node.draft, text, onChanged]);
+
   const remove = useCallback(async () => {
     setBusy(true);
     try {
@@ -123,10 +151,11 @@ export function BuilderNodePanel({
         </Button>
       </div>
 
-      {/* "Start development" (the dev-step handoff) lands in L6 — it materializes a step file the coding
-          agent executes, then the node gains its version. */}
-      <Button size="sm" variant="secondary" disabled className="w-full" title="Lands in L6">
-        <Rocket className="size-3.5" /> Start development (next layer)
+      {/* START DEVELOPMENT (step 224 L6) — saves the brief/instruction, materializes a development step file
+          into the product queue (:3002/service/development-steps) and shows the copy-paste message for the
+          coding agent. A draft = first build; a live node whose instruction was edited = an OPTIMIZATION. */}
+      <Button size="sm" variant="secondary" onClick={startDevelopment} disabled={busy} className="w-full">
+        {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Rocket className="size-3.5" />} Start development
       </Button>
 
       {showHistory && (
