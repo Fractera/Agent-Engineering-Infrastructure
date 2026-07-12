@@ -1,5 +1,6 @@
 import { readdir, readFile, writeFile, mkdir, stat } from "node:fs/promises";
 import { join } from "node:path";
+import { spawn } from "node:child_process";
 import type { NextRequest } from "next/server";
 import { getSession } from "@/lib/auth/get-session";
 import { db } from "@/lib/db";
@@ -134,4 +135,38 @@ export async function regenerateDiagram(projectDir: string, slugsInOrder: string
 /** The ordered slugs of the live (non-removed) nodes — used to regenerate the diagram. */
 export async function liveSlugsInOrder(automation: string): Promise<string[]> {
   return (await listNodes(automation)).map((n) => n.slug);
+}
+
+export async function nodeByCuid(cuid: string): Promise<NodeRow | undefined> {
+  return (await db.prepare(`SELECT * FROM automation_nodes WHERE cuid = ?`).get(cuid)) as NodeRow | undefined;
+}
+
+/** A node's co-located source files (for a version snapshot / rollback). Missing files read as "". */
+export async function readNodeFiles(projectDir: string, slug: string): Promise<{ meta: string; functions: string; instruction: string; spec: string }> {
+  const dir = join(projectDir, "_nodes", slug);
+  const read = (f: string) => readFile(join(dir, f), "utf8").catch(() => "");
+  return { meta: await read("meta.ts"), functions: await read("functions.ts"), instruction: await read("instruction.ts"), spec: await read("spec.md") };
+}
+
+/** True when functions.ts has no functions yet (empty array or empty file) — a node cannot materialize
+ *  until it has real functions. */
+export function functionsAreEmpty(src: string): boolean {
+  return src.trim() === "" || /FUNCTIONS[^=]*=\s*\[\s*\]/.test(src);
+}
+
+/** Remove the `draft: true` line from a meta.ts source — the file becomes a materialized node's meta. */
+export function stripDraftFlag(metaText: string): string {
+  return metaText.replace(/\n[^\n]*["']?draft["']?\s*:\s*true\s*,?/, "");
+}
+
+/** Detached rebuild + reload after a change to the built files (materialize / rollback). Serialized with
+ *  flock so two rebuilds never run concurrently (a corrupted .next was the risk); best-effort. */
+export function scheduleRebuild(): void {
+  try {
+    spawn(
+      "sh",
+      ["-c", "cd /opt/fractera/projects-app && ( flock 9; npm run build && pm2 reload fractera-projects ) 9>/tmp/projects-build.lock"],
+      { detached: true, stdio: "ignore" },
+    ).unref();
+  } catch { /* best-effort — the files/DB are already updated */ }
 }
