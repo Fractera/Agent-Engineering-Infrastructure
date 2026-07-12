@@ -6,10 +6,13 @@ import {
   type Connection, type Edge, type Node, type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { CircleDot, LayoutGrid, Loader2, Power, X } from "lucide-react";
+import { Boxes, CircleDot, LayoutGrid, Loader2, Plus, Power, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { GlobalEdgePanel } from "./global-edge-panel.client";
+import { GlobalProjectPanel } from "./global-project-panel.client";
+import { CreateAutomationDialog } from "./create-automation-card.client";
+import { ActivationQuiz } from "./activation-quiz.client";
 
 // THE GLOBAL AUTOMATION CANVAS (step 225) — the workspace-level graph, on /projects BELOW the category
 // cards. Every PROJECT is a node; every EDGE is a programmable integration BETWEEN two automations. This is
@@ -54,11 +57,24 @@ const STATUS_PILL: Record<string, string> = {
   off: "bg-muted-foreground",
 };
 
+// THE QUIZ FROM THE CANVAS (step 225 G4) — the design session is opened right here, on whichever subject
+// the owner picked: a BRAND-NEW automation (created from the canvas, auto-quiz streaming straight away), an
+// EXISTING automation (resumes its session), or a LINK between two of them. One component (ActivationQuiz),
+// three subjects — there is no second Quiz anywhere.
+type QuizSubject =
+  | { kind: "project"; automation: string; auto: boolean }
+  | { kind: "edge"; cuid: string; name: string };
+
 export function GlobalCanvas() {
   const [state, setState] = useState<GState | null>(null);
   const [activeEdge, setActiveEdge] = useState<string | null>(null);
+  const [activeProject, setActiveProject] = useState<string | null>(null);
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
   const [busy, setBusy] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [quiz, setQuiz] = useState<QuizSubject | null>(null);
+  // Bumped when a Quiz closes: the panels re-read the files the session just wrote (the link's spec.md).
+  const [panelKey, setPanelKey] = useState(0);
 
   const refetch = useCallback(async () => {
     const r = await fetch("/api/projects/global", { cache: "no-store" });
@@ -93,7 +109,7 @@ export function GlobalCanvas() {
       if (!r.ok) { toast.error(d.error ?? "Could not create the link."); return; }
       toast.success("Link created — describe how these automations are connected, then start development.", { duration: 12000 });
       await refetch();
-      if (d.edge) setActiveEdge(d.edge.cuid);
+      if (d.edge) { setActiveProject(null); setActiveEdge(d.edge.cuid); }
     } finally { setBusy(false); }
   }, [busy, refetch]);
 

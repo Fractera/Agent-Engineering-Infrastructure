@@ -194,12 +194,19 @@ const SCHEMA = `
   -- development sub-step. It runs in the project's DEFAULT LANGUAGE (English only when none is set) and is
   -- capped at 10 nodes per development step so the context never overflows. The turns are stored so a
   -- reload resumes exactly where it stopped.
+  --
+  -- STEP 225 G4 — the Quiz is generalized over its SUBJECT: it now brainstorms either a PROJECT (nodes) or
+  -- an EDGE of the global canvas (how two automations are linked). The row key stays the single `automation`
+  -- column (no UNIQUE migration): a project's key is "category/slug", an edge's key is "edge:<cuid>". The
+  -- subject/subject_ref columns make that key self-describing (and queryable) without a second table.
   CREATE TABLE IF NOT EXISTS automation_quiz (
     id          TEXT PRIMARY KEY NOT NULL,
-    automation  TEXT NOT NULL UNIQUE,
+    automation  TEXT NOT NULL UNIQUE,             -- "category/slug" | "edge:<cuid>"
+    subject     TEXT NOT NULL DEFAULT 'project',  -- project | edge
+    subject_ref TEXT,                             -- the edge cuid when subject = 'edge'
     status      TEXT NOT NULL DEFAULT 'active',   -- active | done
     language    TEXT NOT NULL DEFAULT 'en',
-    node_count  INTEGER NOT NULL DEFAULT 0,       -- nodes produced so far (cap 10)
+    node_count  INTEGER NOT NULL DEFAULT 0,       -- nodes produced so far (cap 10); an edge quiz stays at 0
     created_at  TEXT NOT NULL DEFAULT (datetime('now')),
     finished_at TEXT
   );
@@ -464,6 +471,13 @@ function makeLocalDb() {
     (sqlite.prepare('PRAGMA table_info(automation_images)').all() as Array<{ name: string }>).map(c => c.name)
   )
   if (aiCols.size && !aiCols.has('kind_hint')) safeAddColumn(sqlite, `ALTER TABLE automation_images ADD COLUMN kind_hint TEXT NOT NULL DEFAULT 'photo'`)
+  // automation_quiz.subject / subject_ref (step 225 G4 — the Quiz also brainstorms an EDGE of the global
+  // canvas, not only a project) — live DBs (a quiz row already saved) get them via ALTER.
+  const aqCols = new Set(
+    (sqlite.prepare('PRAGMA table_info(automation_quiz)').all() as Array<{ name: string }>).map(c => c.name)
+  )
+  if (aqCols.size && !aqCols.has('subject'))     safeAddColumn(sqlite, `ALTER TABLE automation_quiz ADD COLUMN subject     TEXT NOT NULL DEFAULT 'project'`)
+  if (aqCols.size && !aqCols.has('subject_ref')) safeAddColumn(sqlite, `ALTER TABLE automation_quiz ADD COLUMN subject_ref TEXT`)
   return {
     prepare(sql: string) {
       const stmt = sqlite.prepare(sql)

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, Rocket, Save, Trash2 } from "lucide-react";
+import { Loader2, MessagesSquare, Rocket, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,8 +18,8 @@ type GEdge = {
 type IndexNode = { cuid: string; name: string; slug: string; draft: number };
 
 export function GlobalEdgePanel({
-  edge, onChanged, onDeleted,
-}: { edge: GEdge; onChanged: () => void; onDeleted: () => void }) {
+  edge, onChanged, onDeleted, onQuiz,
+}: { edge: GEdge; onChanged: () => void; onDeleted: () => void; onQuiz?: () => void }) {
   const [spec, setSpec] = useState("");
   const [fromNodes, setFromNodes] = useState<IndexNode[]>([]);
   const [toNodes, setToNodes] = useState<IndexNode[]>([]);
@@ -126,6 +126,14 @@ export function GlobalEdgePanel({
         </label>
         <Textarea value={spec} onChange={(e) => setSpec(e.target.value)} rows={6}
           placeholder="Which output feeds which input, under what conditions, how they stay in sync…" />
+        {/* THE LINK QUIZ (step 225 G4) — the owner does not have to write this brief alone: the same
+            activation Quiz that designs an automation's nodes also brainstorms a LINK (it sees both
+            automations and all their nodes). It writes this very spec.md and queues one development step. */}
+        {onQuiz && (
+          <Button size="sm" variant="ghost" onClick={onQuiz} disabled={busy} className="w-full justify-start px-2">
+            <MessagesSquare className="size-3.5" /> Quiz — brainstorm this link instead of writing it
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-2">

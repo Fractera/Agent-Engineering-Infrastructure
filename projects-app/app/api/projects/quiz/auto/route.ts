@@ -1,13 +1,14 @@
 import { NextRequest } from "next/server";
-import { authorize, resolveProject } from "@/lib/nodes";
-import { addTurn, automationInstruction, getQuiz, languageName, openAiKey, turnsOf } from "@/lib/quiz";
+import { authorize } from "@/lib/nodes";
+import { addTurn, autoSystemPrompt, getQuizFor, openAiKey, quizSeed, resolveQuizTarget, turnsOf } from "@/lib/quiz";
 
-// AUTO-QUIZ (step 227.B) — the owner skips the manual Q&A and lets the model brainstorm WITH ITSELF: it
-// asks its own questions and answers them, out loud. STREAMING is mandatory (owner's rule): the text is
-// streamed token by token so the owner READS the reasoning as it forms, can PAUSE at any moment, EDIT what
-// the model wrote (the text area is interactive), and resume — the edited text is what the node is
-// synthesized from, because the client saves it back as the turn.
+// AUTO-QUIZ (step 227.B; both subjects since 225 G4) — the owner skips the manual Q&A and lets the model
+// brainstorm WITH ITSELF: it asks its own questions and answers them, out loud. STREAMING is mandatory
+// (owner's rule): the text is streamed token by token so the owner READS the reasoning as it forms, can
+// PAUSE at any moment, EDIT what the model wrote (the text area is interactive), and resume — the edited
+// text is what the node (or the link) is synthesized from, because the client saves it back as the turn.
 //
+// SUBJECT: {automation} designs the next NODE; {edge} designs the LINK between two automations.
 // SSE: each chunk is a `data: {"delta":"..."}` line; the stream ends with `data: [DONE]`.
 export const runtime = "nodejs";
 
@@ -15,36 +16,28 @@ const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 
 export async function POST(req: NextRequest) {
   if (!(await authorize(req))) return new Response("forbidden", { status: 403 });
-  const body = (await req.json().catch(() => null)) as { automation?: string } | null;
-  const proj = resolveProject(String(body?.automation ?? ""));
-  if (!proj.ok) return new Response(proj.error, { status: 400 });
-  const quiz = await getQuiz(proj.automation);
+  const body = (await req.json().catch(() => null)) as { automation?: string; edge?: string } | null;
+  const t = await resolveQuizTarget({ automation: body?.automation, edge: body?.edge });
+  if (!t.ok) return new Response(t.error, { status: 400 });
+  const quiz = await getQuizFor(t.target);
   if (!quiz) return new Response("quiz not started", { status: 400 });
 
   const key = openAiKey();
   if (!key) return new Response("OPENAI_API_KEY is not set", { status: 400 });
 
-  const instruction = await automationInstruction(proj.projectDir);
+  const seed = await quizSeed(t.target);
   const turns = await turnsOf(quiz);
-  const transcript = turns.map((t) => `${t.role === "user" ? "OWNER" : "DESIGNER"}: ${t.content}`).join("\n");
+  const transcript = turns.map((x) => `${x.role === "user" ? "OWNER" : "DESIGNER"}: ${x.content}`).join("\n");
+  const subject = t.target.kind === "edge" ? "this link" : "this node";
 
   const messages = [
+    { role: "system", content: autoSystemPrompt(quiz, t.target, seed) },
     {
-      role: "system",
-      content: `You are designing an automation ALONE, thinking out loud, in the language: ${languageName(quiz.language)}.
-
-The owner's instruction (the seed):
-"""
-${instruction || "(not stated)"}
-"""
-
-You are designing NODE #${quiz.node_count + 1}. Run the brainstorm YOURSELF: ask the questions you would
-have asked the owner and answer them from the instruction, using reasonable defaults where it is silent.
-Be concrete and short (under 200 words). End with a clear statement of what this node does, what it takes
-in, and what it returns. Write ONLY in ${languageName(quiz.language)}. The owner is reading you live and may edit your
-text — so write it as the final brief, not as a chat.`,
+      role: "user",
+      content: transcript
+        ? `What has been said so far:\n${transcript}\n\nContinue the design of ${subject}.`
+        : `Design ${subject}.`,
     },
-    { role: "user", content: transcript ? `What has been said so far:\n${transcript}\n\nContinue the design of this node.` : "Design this node." },
   ];
 
   const upstream = await fetch(OPENAI_URL, {
@@ -87,7 +80,7 @@ text — so write it as the final brief, not as a chat.`,
           }
         }
         // Persist what the model produced as the assistant turn — the owner may still edit it (the client
-        // saves the edited text back), and the node is synthesized from the turns.
+        // saves the edited text back), and the node / the link is synthesized from the turns.
         if (full.trim()) await addTurn(quiz, "assistant", full.trim());
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       } catch {

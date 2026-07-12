@@ -1,29 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authorize, resolveProject, listNodes } from "@/lib/nodes";
-import { finishQuiz, getQuiz } from "@/lib/quiz";
+import { authorize, listNodes } from "@/lib/nodes";
+import { finishQuiz, getQuizFor, resolveQuizTarget } from "@/lib/quiz";
 import { pendingSteps } from "@/lib/dev-steps";
+import { edgeByCuid, readEdgeFiles } from "@/lib/edges";
 
-// Finish the Quiz (step 227) — the owner stops designing (or the 10-node cap was reached). The GUARANTEE:
-// even when the automation is not fully designed, the owner leaves with something they can TEST and a clear
-// statement of where it stands — how many nodes were designed, how many development steps are waiting, and
-// how to continue. That report is what the closing toast shows.
+// Finish the Quiz (step 227; both subjects since 225 G4) — the owner stops designing (or the 10-node cap was
+// reached). THE GUARANTEE: even when the subject is not fully designed, the owner leaves with something they
+// can TEST and a clear statement of where it stands — how many nodes were designed, how many development
+// steps are waiting, and how to continue. That report is what the closing toast shows.
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  const body = (await req.json().catch(() => null)) as { automation?: string } | null;
-  const proj = resolveProject(String(body?.automation ?? ""));
-  if (!proj.ok) return NextResponse.json({ error: proj.error }, { status: 400 });
+  const body = (await req.json().catch(() => null)) as { automation?: string; edge?: string } | null;
+  const t = await resolveQuizTarget({ automation: body?.automation, edge: body?.edge });
+  if (!t.ok) return NextResponse.json({ error: t.error }, { status: 400 });
 
-  const quiz = await getQuiz(proj.automation);
+  const quiz = await getQuizFor(t.target);
   if (quiz) await finishQuiz(quiz);
 
-  const nodes = await listNodes(proj.automation);
+  // An EDGE session: the owner leaves with the link's brief written (or not) — say exactly which.
+  if (t.target.kind === "edge") {
+    const edge = await edgeByCuid(t.target.cuid);
+    const spec = (await readEdgeFiles(t.target.cuid)).spec.trim();
+    const built = edge ? edge.draft === 0 : false;
+    return NextResponse.json({
+      ok: true,
+      subject: "edge",
+      canTest: built,
+      report: built
+        ? "The link is built — the two automations synchronise through it."
+        : spec
+          ? "The link's brief is written. Press \"Start development\" in the link panel (or let the coding agent drain the queue) to build it."
+          : "The link is still empty — reopen the Quiz (or write the brief by hand in the link panel) before starting its development.",
+    });
+  }
+
+  const nodes = await listNodes(t.target.automation);
   const drafts = nodes.filter((n) => n.draft === 1).length;
-  const steps = (await pendingSteps()).filter((s) => s.automation === proj.automation);
+  const steps = (await pendingSteps()).filter((s) => s.automation === t.target.automation);
 
   return NextResponse.json({
     ok: true,
+    subject: "project",
     designed: nodes.length,
     drafts,
     pendingSteps: steps.length,

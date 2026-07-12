@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { AUTOMATION_TYPES, type AutomationType } from "../automation-type";
+import { PROJECT_CATEGORIES } from "../categories";
 
 // FROZEN STANDARD (step 224 L6, PHASE 1 of an automation's birth) — the big "+" card that closes every
 // category grid (and the projects index). It opens the CREATION MODAL, the manual entry point of an
@@ -21,18 +23,29 @@ import { AUTOMATION_TYPES, type AutomationType } from "../automation-type";
 //   2. NAME — optional (skippable; derived from the instruction when empty).
 //   3. INSTRUCTION — MANDATORY: what this automation must do. It is the seed the activation Quiz (step 227)
 //      turns into nodes.
-//   4. CATEGORY — where it lives (the grid's own category here).
+//   4. CATEGORY — where it lives: FIXED when the modal is opened from a category grid, CHOSEN from a
+//      dropdown when it is opened from the GLOBAL CANVAS (step 225 G4 — the canvas spans every category, so
+//      it must ask which one the new automation belongs to).
 // Result: a bare automation page from the frozen template, born "In development" (its 3 default nodes are
 // drafts) — phase 2 (the Quiz) then walks the owner from the instruction to real nodes.
 const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 40);
 
-export function CreateAutomationCard({ category }: { category: string }) {
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
+/** The creation form itself — ONE dialog, reused by the "+" card and by the global canvas. */
+export function CreateAutomationDialog({
+  open, onOpenChange, category, onCreated,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  /** Fixed category (a category grid). Omit to let the owner pick one (the global canvas). */
+  category?: string;
+  /** The created automation, "category/slug" — the canvas opens its Quiz with it. */
+  onCreated?: (automation: string) => void;
+}) {
   const [type, setType] = useState<AutomationType>("stream");
   const [name, setName] = useState("");
   const [instruction, setInstruction] = useState("");
+  const [pickedCategory, setPickedCategory] = useState<string>(PROJECT_CATEGORIES[0].slug);
   const [busy, setBusy] = useState(false);
   const [lang, setLang] = useState<{ code: string; name: string } | null>(null);
 
@@ -50,15 +63,16 @@ export function CreateAutomationCard({ category }: { category: string }) {
       toast.error("Tell the automation what it must do — the instruction is required.");
       return;
     }
+    const target = category ?? pickedCategory;
     const project = slugify(name) || `automation-${Date.now().toString(36).slice(-5)}`;
     setBusy(true);
     try {
       const r = await fetch("/api/projects/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category, project, title: name.trim() || undefined, type, instruction }),
+        body: JSON.stringify({ category: target, project, title: name.trim() || undefined, type, instruction }),
       });
-      const d = (await r.json()) as { ok?: boolean; url?: string; error?: string };
+      const d = (await r.json()) as { ok?: boolean; url?: string; error?: string; category?: string; project?: string };
       if (!r.ok || !d.ok) {
         toast.error(d.error ?? "Could not create the automation.");
         return;
@@ -67,24 +81,17 @@ export function CreateAutomationCard({ category }: { category: string }) {
         description: "It opens in development: its nodes are drafts until you build them.",
         duration: 12000,
       });
-      setOpen(false);
-      router.refresh();
+      setName("");
+      setInstruction("");
+      onOpenChange(false);
+      onCreated?.(`${d.category ?? target}/${d.project ?? project}`);
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <button
-          type="button"
-          className="flex min-h-40 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed bg-card/50 p-5 text-muted-foreground transition-all hover:border-primary/50 hover:text-foreground"
-        >
-          <Plus className="size-8" />
-          <span className="text-sm font-medium">Add automation</span>
-        </button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>New automation</DialogTitle>
@@ -131,7 +138,21 @@ export function CreateAutomationCard({ category }: { category: string }) {
 
           <div className="space-y-1.5">
             <Label>Category</Label>
-            <Input value={category} readOnly className="bg-muted/50" />
+            {category ? (
+              <Input value={category} readOnly className="bg-muted/50" />
+            ) : (
+              // From the GLOBAL CANVAS there is no ambient category — the owner picks one (step 225 G4).
+              <Select value={pickedCategory} onValueChange={setPickedCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PROJECT_CATEGORIES.map((c) => (
+                    <SelectItem key={c.slug} value={c.slug}>{c.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           {/* The Quiz's language, stated EXPLICITLY (owner's requirement) — the design session must never
@@ -148,5 +169,30 @@ export function CreateAutomationCard({ category }: { category: string }) {
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** The "+" card that closes a category grid — the category is FIXED to that grid's. */
+export function CreateAutomationCard({ category }: { category: string }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex min-h-40 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed bg-card/50 p-5 text-muted-foreground transition-all hover:border-primary/50 hover:text-foreground"
+      >
+        <Plus className="size-8" />
+        <span className="text-sm font-medium">Add automation</span>
+      </button>
+      <CreateAutomationDialog
+        open={open}
+        onOpenChange={setOpen}
+        category={category}
+        onCreated={() => router.refresh()}
+      />
+    </>
   );
 }
