@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, MessagesSquare, Send, SkipForward, Sparkles } from "lucide-react";
+import { Loader2, MessagesSquare, Pause, Send, SkipForward, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -26,6 +26,9 @@ export function ActivationQuiz({ automation }: { automation: string }) {
   const [busy, setBusy] = useState(false);
   const [nodeCount, setNodeCount] = useState(0);
   const [maxNodes, setMaxNodes] = useState(10);
+  const [streaming, setStreaming] = useState(false);
+  const [draftText, setDraftText] = useState("");
+  const [aborter, setAborter] = useState<AbortController | null>(null);
 
   // First visit? (no quiz row yet) → open and ask the first question. An interrupted quiz resumes.
   useEffect(() => {
@@ -95,6 +98,65 @@ export function ActivationQuiz({ automation }: { automation: string }) {
     } finally { setBusy(false); }
   }, [automation, router]);
 
+  // AUTO-QUIZ (227.B) — the model brainstorms with itself, STREAMING, so the owner reads it live. Pause at
+  // any moment; the streamed text stays in an EDITABLE area, and saving the edit replaces the model's turn
+  // — so the node is synthesized from what the owner approved.
+  const autoQuiz = useCallback(async () => {
+    if (busy || streaming) return;
+    setStreaming(true);
+    setDraftText("");
+    const ctrl = new AbortController();
+    setAborter(ctrl);
+    try {
+      const r = await fetch(`/api/projects/quiz/auto`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ automation }),
+        signal: ctrl.signal,
+      });
+      if (!r.ok || !r.body) { toast.error("Auto-quiz could not start."); return; }
+      const reader = r.body.getReader();
+      const dec = new TextDecoder();
+      let buf = "";
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split("\n");
+        buf = lines.pop() ?? "";
+        for (const line of lines) {
+          const s = line.trim();
+          if (!s.startsWith("data:")) continue;
+          const payload = s.slice(5).trim();
+          if (payload === "[DONE]") continue;
+          try {
+            const j = JSON.parse(payload) as { delta?: string };
+            if (j.delta) setDraftText((t) => t + j.delta);
+          } catch { /* partial frame */ }
+        }
+      }
+    } catch { /* paused by the owner — keep what was streamed */ } finally {
+      setStreaming(false);
+      setAborter(null);
+    }
+  }, [automation, busy, streaming]);
+
+  const pause = useCallback(() => { aborter?.abort(); setStreaming(false); }, [aborter]);
+
+  const saveEdit = useCallback(async () => {
+    if (!draftText.trim()) return;
+    setBusy(true);
+    try {
+      await fetch(`/api/projects/quiz/edit`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ automation, content: draftText }),
+      });
+      setTurns((t) => [...t, { role: "assistant", content: draftText }]);
+      setDraftText("");
+      toast.success("Your edit replaced the model's text — the node will be built from it.");
+    } finally { setBusy(false); }
+  }, [automation, draftText]);
+
   const finish = useCallback(async () => {
     const r = await fetch(`/api/projects/quiz/finish`, {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -139,22 +201,55 @@ export function ActivationQuiz({ automation }: { automation: string }) {
           ))}
         </div>
 
+        {/* AUTO-QUIZ (227.B): the model thinks out loud, streamed. The area stays EDITABLE — pause, rewrite,
+            save; the node is then built from YOUR text. */}
+        {(streaming || draftText) && (
+          <div className="space-y-2 rounded-lg border border-primary/40 p-2">
+            <p className="flex items-center gap-1 text-xs font-medium text-primary">
+              <Sparkles className="size-3" /> Auto-quiz {streaming ? "— writing… (you can pause and edit)" : "— paused, edit freely"}
+            </p>
+            <Textarea
+              value={draftText}
+              onChange={(e) => setDraftText(e.target.value)}
+              rows={7}
+              className="text-sm"
+            />
+            <div className="flex flex-wrap gap-2">
+              {streaming ? (
+                <Button size="sm" variant="outline" onClick={pause}>
+                  <Pause className="size-3.5" /> Pause
+                </Button>
+              ) : (
+                <Button size="sm" variant="outline" onClick={autoQuiz} disabled={busy}>
+                  <Sparkles className="size-3.5" /> Continue auto-quiz
+                </Button>
+              )}
+              <Button size="sm" onClick={saveEdit} disabled={busy || streaming || !draftText.trim()}>
+                <Send className="size-3.5" /> Keep this text
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-2 border-t pt-3">
           <Textarea
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
             rows={3}
             placeholder="Your answer…"
-            disabled={busy}
+            disabled={busy || streaming}
           />
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" onClick={send} disabled={busy || !answer.trim()}>
+            <Button size="sm" onClick={send} disabled={busy || streaming || !answer.trim()}>
               {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />} Answer
             </Button>
-            <Button size="sm" variant="outline" onClick={nextNode} disabled={busy}>
+            <Button size="sm" variant="secondary" onClick={autoQuiz} disabled={busy || streaming}>
+              <Sparkles className="size-3.5" /> Auto-quiz
+            </Button>
+            <Button size="sm" variant="outline" onClick={nextNode} disabled={busy || streaming}>
               <SkipForward className="size-3.5" /> Finish this node → next
             </Button>
-            <Button size="sm" variant="ghost" onClick={finish} disabled={busy}>
+            <Button size="sm" variant="ghost" onClick={finish} disabled={busy || streaming}>
               End the session
             </Button>
           </div>
