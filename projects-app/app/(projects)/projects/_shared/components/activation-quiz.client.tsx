@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Textarea } from "@/components/ui/textarea";
 import { VoiceInput } from "./voice-input.client";
 import { useUiLang } from "../use-ui-lang";
+import { fill, quizStrings } from "../quiz-i18n";
 
 // ACTIVATION QUIZ (step 227) — phase 2 of an automation's birth. Opens on the FIRST visit of a freshly
 // created automation and turns the owner's instruction (phase 1) into a real automation through a brainstorm,
@@ -34,155 +35,6 @@ import { useUiLang } from "../use-ui-lang";
 type Turn = { role: string; content: string };
 type Phase = "usecases" | "nodes";
 
-// SIX-LANGUAGE UI (owner's rule, CLAUDE.md 4г) — the admin/projects/design/service layers speak the six
-// languages we ship (en, es, fr, it, ru, de); anything else falls back to English. The strings the owner
-// named — the title, the amber banner and the input placeholder — are translated here, next to where they
-// render. Deterministic dictionary, no model call.
-type QuizStrings = {
-  banner: string;
-  phScenarios: string;
-  phAnswer: string;
-  tUseCases: string; tUseCasesSub: string;
-  tNode: string; tNodeOf: string;
-  tLink: string;
-  tCaseOne: string; tCaseAll: string;
-  tUseCasesShort: string;
-  // The footer (owner: everything below the mic was still English) — loaders, auto-quiz, buttons, hints.
-  loaderEdge: string; loaderCase: string; loaderInstruction: string;
-  autoWriting: string; autoPaused: string; btnPause: string; btnContinue: string; btnKeep: string;
-  btnAnswer: string; btnAuto: string;
-  btnFinishLink: string; btnSaveCases: string; btnCasesReady: string; btnFinishNode: string; btnEnd: string;
-  hintLink: string; hintCase: string; hintUsecases: string; hintNodes: string;
-  designer: string;
-};
-const QUIZ_I18N: Record<string, QuizStrings> = {
-  en: {
-    banner: "Planning an automation works far better with the most powerful model available to you. Pick it in the hamburger menu at the top of the page (Settings → model).",
-    phScenarios: "Describe your scenarios — speak freely; hold the microphone and dictate…",
-    phAnswer: "Your answer…",
-    tUseCases: "The user cases", tUseCasesSub: "described first — before anything is built",
-    tNode: "Designing node", tNodeOf: "of at most",
-    tLink: "Designing the link",
-    tCaseOne: "Revisiting a user case", tCaseAll: "Revisiting the user cases",
-    tUseCasesShort: "described first — before anything is built",
-    loaderEdge: "Reading both automations…", loaderCase: "Reading the automation…", loaderInstruction: "Reading your instruction…",
-    autoWriting: "Auto-quiz — writing… (you can pause and edit)", autoPaused: "Auto-quiz — paused, edit freely",
-    btnPause: "Pause", btnContinue: "Continue auto-quiz", btnKeep: "Keep this text",
-    btnAnswer: "Answer", btnAuto: "Auto-quiz",
-    btnFinishLink: "Finish the link → development step", btnSaveCases: "Save the cases → development step",
-    btnCasesReady: "The cases are ready → design the nodes", btnFinishNode: "Finish this node → next", btnEnd: "End the session",
-    hintLink: "Finishing the link writes its brief and queues one development step for the coding agent.",
-    hintCase: "Saving writes the new case text and queues one development step per case you changed.",
-    hintUsecases: "Nothing is built until the scenarios exist: they become your numbered user cases, and the nodes are designed from them.",
-    hintNodes: "Each node you finish becomes a draft on the diagram and a development step for the coding agent.",
-    designer: "Designer",
-  },
-  ru: {
-    banner: "Планирование автоматизации идёт намного эффективнее на самой мощной доступной вам модели. Выберите её в гамбургер-меню вверху страницы (Настройки → модель).",
-    phScenarios: "Опишите свои сценарии — говорите свободно; удерживайте микрофон и диктуйте…",
-    phAnswer: "Ваш ответ…",
-    tUseCases: "Пользовательские кейсы", tUseCasesSub: "сначала описываем их — до всего остального",
-    tNode: "Проектируем узел", tNodeOf: "максимум из",
-    tLink: "Проектируем связь",
-    tCaseOne: "Пересматриваем кейс", tCaseAll: "Пересматриваем пользовательские кейсы",
-    tUseCasesShort: "сначала описываем их — до всего остального",
-    loaderEdge: "Читаю обе автоматизации…", loaderCase: "Читаю автоматизацию…", loaderInstruction: "Читаю вашу инструкцию…",
-    autoWriting: "Авто-квиз — пишу… (можно поставить на паузу и отредактировать)", autoPaused: "Авто-квиз — пауза, редактируйте свободно",
-    btnPause: "Пауза", btnContinue: "Продолжить авто-квиз", btnKeep: "Оставить этот текст",
-    btnAnswer: "Ответить", btnAuto: "Авто-квиз",
-    btnFinishLink: "Завершить связь → шаг разработки", btnSaveCases: "Сохранить кейсы → шаг разработки",
-    btnCasesReady: "Кейсы готовы → проектируем узлы", btnFinishNode: "Завершить узел → дальше", btnEnd: "Завершить сессию",
-    hintLink: "Завершение связи запишет её бриф и поставит один шаг разработки в очередь кодеру.",
-    hintCase: "Сохранение запишет новый текст кейсов и поставит по одному шагу разработки на каждый изменённый кейс.",
-    hintUsecases: "Ничего не строится, пока не описаны сценарии: они становятся пронумерованными кейсами, и из них проектируются узлы.",
-    hintNodes: "Каждый завершённый узел становится черновиком на диаграмме и шагом разработки для кодера.",
-    designer: "Дизайнер",
-  },
-  es: {
-    banner: "Planificar una automatización funciona mucho mejor con el modelo más potente disponible. Elígelo en el menú de hamburguesa de la parte superior de la página (Ajustes → modelo).",
-    phScenarios: "Describe tus escenarios — habla con libertad; mantén pulsado el micrófono y dicta…",
-    phAnswer: "Tu respuesta…",
-    tUseCases: "Los casos de uso", tUseCasesSub: "descritos primero — antes de construir nada",
-    tNode: "Diseñando el nodo", tNodeOf: "de un máximo de",
-    tLink: "Diseñando el enlace",
-    tCaseOne: "Revisando un caso de uso", tCaseAll: "Revisando los casos de uso",
-    tUseCasesShort: "descritos primero — antes de construir nada",
-    loaderEdge: "Leyendo ambas automatizaciones…", loaderCase: "Leyendo la automatización…", loaderInstruction: "Leyendo tu instrucción…",
-    autoWriting: "Auto-quiz — escribiendo… (puedes pausar y editar)", autoPaused: "Auto-quiz — en pausa, edita libremente",
-    btnPause: "Pausar", btnContinue: "Continuar auto-quiz", btnKeep: "Conservar este texto",
-    btnAnswer: "Responder", btnAuto: "Auto-quiz",
-    btnFinishLink: "Terminar el enlace → paso de desarrollo", btnSaveCases: "Guardar los casos → paso de desarrollo",
-    btnCasesReady: "Los casos están listos → diseñar los nodos", btnFinishNode: "Terminar este nodo → siguiente", btnEnd: "Terminar la sesión",
-    hintLink: "Al terminar el enlace se escribe su resumen y se pone en cola un paso de desarrollo para el agente de código.",
-    hintCase: "Al guardar se escribe el nuevo texto de los casos y se pone en cola un paso de desarrollo por cada caso que cambiaste.",
-    hintUsecases: "No se construye nada hasta que existen los escenarios: se convierten en tus casos de uso numerados, y los nodos se diseñan a partir de ellos.",
-    hintNodes: "Cada nodo que terminas se convierte en un borrador en el diagrama y en un paso de desarrollo para el agente de código.",
-    designer: "Diseñador",
-  },
-  fr: {
-    banner: "La planification d'une automatisation est bien meilleure avec le modèle le plus puissant à votre disposition. Choisissez-le dans le menu hamburger en haut de la page (Paramètres → modèle).",
-    phScenarios: "Décrivez vos scénarios — parlez librement ; maintenez le micro et dictez…",
-    phAnswer: "Votre réponse…",
-    tUseCases: "Les cas d'usage", tUseCasesSub: "décrits d'abord — avant toute construction",
-    tNode: "Conception du nœud", tNodeOf: "sur un maximum de",
-    tLink: "Conception du lien",
-    tCaseOne: "Révision d'un cas d'usage", tCaseAll: "Révision des cas d'usage",
-    tUseCasesShort: "décrits d'abord — avant toute construction",
-    loaderEdge: "Lecture des deux automatisations…", loaderCase: "Lecture de l'automatisation…", loaderInstruction: "Lecture de votre instruction…",
-    autoWriting: "Auto-quiz — écriture… (vous pouvez mettre en pause et modifier)", autoPaused: "Auto-quiz — en pause, modifiez librement",
-    btnPause: "Pause", btnContinue: "Continuer l'auto-quiz", btnKeep: "Garder ce texte",
-    btnAnswer: "Répondre", btnAuto: "Auto-quiz",
-    btnFinishLink: "Terminer le lien → étape de développement", btnSaveCases: "Enregistrer les cas → étape de développement",
-    btnCasesReady: "Les cas sont prêts → concevoir les nœuds", btnFinishNode: "Terminer ce nœud → suivant", btnEnd: "Terminer la session",
-    hintLink: "Terminer le lien écrit son résumé et met en file une étape de développement pour l'agent de code.",
-    hintCase: "Enregistrer écrit le nouveau texte des cas et met en file une étape de développement par cas modifié.",
-    hintUsecases: "Rien n'est construit tant que les scénarios n'existent pas : ils deviennent vos cas d'usage numérotés, et les nœuds en sont conçus.",
-    hintNodes: "Chaque nœud terminé devient un brouillon sur le diagramme et une étape de développement pour l'agent de code.",
-    designer: "Concepteur",
-  },
-  it: {
-    banner: "Pianificare un'automazione funziona molto meglio con il modello più potente a tua disposizione. Sceglilo nel menu hamburger in cima alla pagina (Impostazioni → modello).",
-    phScenarios: "Descrivi i tuoi scenari — parla liberamente; tieni premuto il microfono e detta…",
-    phAnswer: "La tua risposta…",
-    tUseCases: "I casi d'uso", tUseCasesSub: "descritti prima — prima di costruire qualsiasi cosa",
-    tNode: "Progettazione del nodo", tNodeOf: "su un massimo di",
-    tLink: "Progettazione del collegamento",
-    tCaseOne: "Revisione di un caso d'uso", tCaseAll: "Revisione dei casi d'uso",
-    tUseCasesShort: "descritti prima — prima di costruire qualsiasi cosa",
-    loaderEdge: "Lettura di entrambe le automazioni…", loaderCase: "Lettura dell'automazione…", loaderInstruction: "Lettura della tua istruzione…",
-    autoWriting: "Auto-quiz — sto scrivendo… (puoi mettere in pausa e modificare)", autoPaused: "Auto-quiz — in pausa, modifica liberamente",
-    btnPause: "Pausa", btnContinue: "Continua l'auto-quiz", btnKeep: "Mantieni questo testo",
-    btnAnswer: "Rispondi", btnAuto: "Auto-quiz",
-    btnFinishLink: "Concludi il collegamento → passo di sviluppo", btnSaveCases: "Salva i casi → passo di sviluppo",
-    btnCasesReady: "I casi sono pronti → progetta i nodi", btnFinishNode: "Concludi questo nodo → avanti", btnEnd: "Termina la sessione",
-    hintLink: "Concludere il collegamento scrive il suo riassunto e mette in coda un passo di sviluppo per l'agente di codice.",
-    hintCase: "Il salvataggio scrive il nuovo testo dei casi e mette in coda un passo di sviluppo per ogni caso modificato.",
-    hintUsecases: "Non si costruisce nulla finché non esistono gli scenari: diventano i tuoi casi d'uso numerati, e da essi si progettano i nodi.",
-    hintNodes: "Ogni nodo che concludi diventa una bozza sul diagramma e un passo di sviluppo per l'agente di codice.",
-    designer: "Progettista",
-  },
-  de: {
-    banner: "Das Planen einer Automatisierung gelingt weit besser mit dem stärksten dir verfügbaren Modell. Wähle es im Hamburger-Menü oben auf der Seite (Einstellungen → Modell).",
-    phScenarios: "Beschreibe deine Szenarien — sprich frei; halte das Mikrofon gedrückt und diktiere…",
-    phAnswer: "Deine Antwort…",
-    tUseCases: "Die Anwendungsfälle", tUseCasesSub: "zuerst beschrieben — bevor irgendetwas gebaut wird",
-    tNode: "Knoten wird entworfen", tNodeOf: "von höchstens",
-    tLink: "Verbindung wird entworfen",
-    tCaseOne: "Anwendungsfall überarbeiten", tCaseAll: "Anwendungsfälle überarbeiten",
-    tUseCasesShort: "zuerst beschrieben — bevor irgendetwas gebaut wird",
-    loaderEdge: "Beide Automatisierungen werden gelesen…", loaderCase: "Automatisierung wird gelesen…", loaderInstruction: "Deine Anweisung wird gelesen…",
-    autoWriting: "Auto-Quiz — schreibe… (du kannst pausieren und bearbeiten)", autoPaused: "Auto-Quiz — pausiert, frei bearbeiten",
-    btnPause: "Pause", btnContinue: "Auto-Quiz fortsetzen", btnKeep: "Diesen Text behalten",
-    btnAnswer: "Antworten", btnAuto: "Auto-Quiz",
-    btnFinishLink: "Verbindung abschließen → Entwicklungsschritt", btnSaveCases: "Fälle speichern → Entwicklungsschritt",
-    btnCasesReady: "Die Fälle sind fertig → Knoten entwerfen", btnFinishNode: "Diesen Knoten abschließen → weiter", btnEnd: "Sitzung beenden",
-    hintLink: "Das Abschließen der Verbindung schreibt ihre Kurzbeschreibung und reiht einen Entwicklungsschritt für den Coding-Agenten ein.",
-    hintCase: "Das Speichern schreibt den neuen Fall-Text und reiht je geändertem Fall einen Entwicklungsschritt ein.",
-    hintUsecases: "Nichts wird gebaut, solange die Szenarien nicht existieren: Sie werden zu deinen nummerierten Anwendungsfällen, und daraus werden die Knoten entworfen.",
-    hintNodes: "Jeder abgeschlossene Knoten wird zu einem Entwurf im Diagramm und zu einem Entwicklungsschritt für den Coding-Agenten.",
-    designer: "Designer",
-  },
-};
 
 export function ActivationQuiz({
   automation, edge, edgeName, useCase, useCaseName, cases,
@@ -223,7 +75,7 @@ export function ActivationQuiz({
   const answerRef = useRef<HTMLTextAreaElement | null>(null);
   // The UI language of the modal (owner's rule, six languages) — the shared hook, memoized per page.
   const uiLang = useUiLang();
-  const L = QUIZ_I18N[uiLang] ?? QUIZ_I18N.en;
+  const L = quizStrings(uiLang);
 
   // The SUBJECT of every call — one API, four subjects (steps 225 G4 + 231).
   const subject = useCallback(() => {
@@ -256,13 +108,13 @@ export function ActivationQuiz({
         body: JSON.stringify({ ...subject(), reopen }),
       });
       const d = (await r.json()) as { question?: string | null; error?: string; capped?: boolean; turns?: Turn[]; phase?: Phase };
-      if (!r.ok) { toast.error(d.error ?? "Could not start the quiz."); return; }
-      if (d.capped) { toast.info(d.error ?? "This design session is complete."); return; }
+      if (!r.ok) { toast.error(d.error ?? L.errStart); return; }
+      if (d.capped) { toast.info(d.error ?? L.errComplete); return; }
       if (d.phase) setPhase(d.phase);
       if (d.turns?.length) setTurns(d.turns);
       else if (d.question) setTurns([{ role: "assistant", content: d.question }]);
     } finally { setBusy(false); }
-  }, [subject]);
+  }, [subject, L]);
 
   // AUTO-QUIZ (227.B) — the model brainstorms with itself, STREAMING, so the owner reads it live. Pause at
   // any moment; the streamed text stays in an EDITABLE area, and saving the edit replaces the model's turn
@@ -280,7 +132,7 @@ export function ActivationQuiz({
         body: JSON.stringify(subject()),
         signal: ctrl.signal,
       });
-      if (!r.ok || !r.body) { toast.error("Auto-quiz could not start."); return; }
+      if (!r.ok || !r.body) { toast.error(L.errAutoStart); return; }
       const reader = r.body.getReader();
       const dec = new TextDecoder();
       let buf = "";
@@ -305,7 +157,7 @@ export function ActivationQuiz({
       setStreaming(false);
       setAborter(null);
     }
-  }, [subject, streaming]);
+  }, [subject, streaming, L]);
 
   // Load the session. Uncontrolled (an automation page): a first visit OPENS the quiz; an interrupted one
   // resumes. Controlled (the global canvas, a pencil): the parent already opened us — load, start if new, and
@@ -356,10 +208,10 @@ export function ActivationQuiz({
         body: JSON.stringify({ ...subject(), answer: mine }),
       });
       const d = (await r.json()) as { question?: string; error?: string };
-      if (!r.ok) { toast.error(d.error ?? "The model did not answer."); return; }
+      if (!r.ok) { toast.error(d.error ?? L.errNoAnswer); return; }
       if (d.question) setTurns((t) => [...t, { role: "assistant", content: d.question as string }]);
     } finally { setBusy(false); }
-  }, [answer, busy, subject]);
+  }, [answer, busy, subject, L]);
 
   const finish = useCallback(async () => {
     const r = await fetch(`/api/projects/quiz/finish`, {
@@ -370,13 +222,13 @@ export function ActivationQuiz({
     close();
     // THE GUARANTEE (227.C): the session never ends with nothing — the owner is told exactly where the
     // subject stands and (for a project) can run the smoke test right from the toast.
-    toast.info("Design session finished", {
+    toast.info(L.sessionFinished, {
       description: d.report,
       duration: 30000,
       action: isEdge || isCaseEdit || !automation
         ? undefined
         : {
-            label: "Test it",
+            label: L.testIt,
             onClick: () => {
               void (async () => {
                 const t = await fetch(`/api/projects/test-run`, {
@@ -384,13 +236,13 @@ export function ActivationQuiz({
                   body: JSON.stringify({ automation }),
                 });
                 const td = (await t.json()) as { ok?: boolean; verdict?: string; report?: string };
-                (td.ok ? toast.success : toast.info)(td.verdict ?? "Test finished", { description: td.report, duration: 20000 });
+                (td.ok ? toast.success : toast.info)(td.verdict ?? L.testFinished, { description: td.report, duration: 20000 });
               })();
             },
           },
     });
     router.refresh();
-  }, [subject, isEdge, isCaseEdit, automation, close, router]);
+  }, [subject, isEdge, isCaseEdit, automation, close, router, L]);
 
   // PHASE 1 → PHASE 2 (step 231): the scenarios are described → they become numbered user cases, and the Quiz
   // moves on to the nodes. A refusal here IS the gate: without a real description nothing gets built.
@@ -402,16 +254,17 @@ export function ActivationQuiz({
         body: JSON.stringify({ automation }),
       });
       const d = (await r.json()) as { cases?: { title: string }[]; question?: string | null; error?: string };
-      if (!r.ok) { toast.error(d.error ?? "The user cases are not ready yet.", { duration: 12000 }); return; }
+      if (!r.ok) { toast.error(d.error ?? L.errCasesNotReady, { duration: 12000 }); return; }
       setPhase("nodes");
       setTurns(d.question ? [{ role: "assistant", content: d.question }] : []);
-      toast.success(`${d.cases?.length ?? 0} user case${d.cases?.length === 1 ? "" : "s"} written`, {
-        description: "Read them in the Use cases panel and confirm them — development starts only after that. Now we design the nodes.",
+      const n = d.cases?.length ?? 0;
+      toast.success(n === 1 ? L.casesWrittenOne : fill(L.casesWritten, { n }), {
+        description: L.casesWrittenDesc,
         duration: 15000,
       });
       router.refresh();
     } finally { setBusy(false); }
-  }, [automation, router]);
+  }, [automation, router, L]);
 
   // Stop the questions → this brainstorm becomes ONE node + ONE development step, then the next node starts.
   const nextNode = useCallback(async () => {
@@ -428,11 +281,11 @@ export function ActivationQuiz({
       if (!r.ok) {
         // The user-case gate (231): no cases yet, or the owner has not confirmed the current set.
         const gated = d.reason === "no-cases" || d.reason === "not-reviewed" || d.reason === "usecases-phase";
-        toast.error(d.error ?? "Could not create the node.", {
+        toast.error(d.error ?? L.errCreateNode, {
           duration: 15000,
           action: gated
             ? {
-                label: "Open user cases",
+                label: L.openUserCases,
                 onClick: () => window.dispatchEvent(new CustomEvent("usecases:review", { detail: { automation } })),
               }
             : undefined,
@@ -440,16 +293,16 @@ export function ActivationQuiz({
         return;
       }
       setNodeCount(d.nodeCount ?? 0);
-      toast.success(`Node "${d.node?.name}" designed — development step #${d.step?.number} created`, {
-        description: "Copy the brief and paste it into the coding agent's chat, or let the agent drain the queue.",
+      toast.success(fill(L.nodeDesigned, { name: d.node?.name ?? "", step: d.step?.number ?? 0 }), {
+        description: L.handoffDesc,
         duration: 20000,
-        action: d.step ? { label: "Copy", onClick: () => void navigator.clipboard.writeText(d.step!.message) } : undefined,
+        action: d.step ? { label: L.copy, onClick: () => void navigator.clipboard.writeText(d.step!.message) } : undefined,
       });
       setTurns(d.question ? [{ role: "assistant", content: d.question }] : []);
       if (d.done) await finish();
       router.refresh();
     } finally { setBusy(false); }
-  }, [automation, finish, router]);
+  }, [automation, finish, router, L]);
 
   // THE LINK's closing move (225 G4): the brainstorm becomes the edge's spec.md + ONE development step —
   // the same file queue a node uses. A link is one subject, so the session ends here.
@@ -463,16 +316,16 @@ export function ActivationQuiz({
       const d = (await r.json()) as {
         edge?: { name: string }; step?: { number: number; message: string }; error?: string;
       };
-      if (!r.ok) { toast.error(d.error ?? "Could not write the link brief."); return; }
-      toast.success(`Link "${d.edge?.name}" designed — development step #${d.step?.number} created`, {
-        description: "Copy the brief and paste it into the coding agent's chat, or let the agent drain the queue.",
+      if (!r.ok) { toast.error(d.error ?? L.errWriteLink); return; }
+      toast.success(fill(L.linkDesigned, { name: d.edge?.name ?? "", step: d.step?.number ?? 0 }), {
+        description: L.handoffDesc,
         duration: 20000,
-        action: d.step ? { label: "Copy", onClick: () => void navigator.clipboard.writeText(d.step!.message) } : undefined,
+        action: d.step ? { label: L.copy, onClick: () => void navigator.clipboard.writeText(d.step!.message) } : undefined,
       });
       close();
       router.refresh();
     } finally { setBusy(false); }
-  }, [edge, close, router]);
+  }, [edge, close, router, L]);
 
   // THE PENCIL's closing move (231): the revisited scenarios become the cases' new text + ONE development
   // step per case that changed. Which nodes those cases touch is the coding agent's job to work out.
@@ -487,22 +340,23 @@ export function ActivationQuiz({
         changed?: number; report?: string; error?: string;
         steps?: { number: number; message: string; title: string }[];
       };
-      if (!r.ok) { toast.error(d.error ?? "Could not save the user cases."); return; }
+      if (!r.ok) { toast.error(d.error ?? L.errSaveCases); return; }
       const first = d.steps?.[0];
-      (d.changed ? toast.success : toast.info)(
-        d.changed ? `${d.changed} user case${d.changed === 1 ? "" : "s"} updated` : "Nothing changed",
+      const changed = d.changed ?? 0;
+      (changed ? toast.success : toast.info)(
+        changed ? (changed === 1 ? L.casesUpdatedOne : fill(L.casesUpdated, { n: changed })) : L.nothingChanged,
         {
           description: d.report,
           duration: 20000,
           action: first
-            ? { label: "Copy step", onClick: () => void navigator.clipboard.writeText(first.message) }
+            ? { label: L.copyStep, onClick: () => void navigator.clipboard.writeText(first.message) }
             : undefined,
         },
       );
       close();
       router.refresh();
     } finally { setBusy(false); }
-  }, [subject, close, router]);
+  }, [subject, close, router, L]);
 
   const pause = useCallback(() => { aborter?.abort(); setStreaming(false); }, [aborter]);
 
@@ -517,23 +371,16 @@ export function ActivationQuiz({
       });
       setTurns((t) => [...t, { role: asOwner ? "user" : "assistant", content: draftText }]);
       setDraftText("");
-      toast.success(
-        asOwner
-          ? "Kept as your description of the scenarios — the cases will be written from it."
-          : "Your edit replaced the model's text — what gets built comes from it.",
-      );
+      toast.success(asOwner ? L.keptAsDesc : L.editReplaced);
     } finally { setBusy(false); }
-  }, [draftText, subject, phase, isEdge, isCaseEdit]);
+  }, [draftText, subject, phase, isEdge, isCaseEdit, L]);
 
   // Leaving the use-case phase without cases is allowed (the owner may be interrupted), but it is never
   // silent: the automation cannot be built until they exist, and the Quiz reopens on the next visit.
   const onOpenChange = (v: boolean) => {
     if (v) { if (!controlled) setOpenState(true); return; }
     if (!isEdge && !isCaseEdit && phase === "usecases") {
-      toast.warning("The user cases are still missing", {
-        description: "Without a detailed description the automation cannot be created — this opens again on your next visit.",
-        duration: 12000,
-      });
+      toast.warning(L.casesMissing, { description: L.casesMissingDesc, duration: 12000 });
     }
     close();
   };
