@@ -248,7 +248,9 @@ export const PROJECT_CONFIG = {
 // tables & columns standard"). ONE tab, ANY number of tables; a column is DATA, not JSX — the shared table
 // renders whatever this declares through a closed set of typed cells. Seeded with ONE demo table so the
 // dashboard is not empty at birth; when the automation is designed (Quiz / decomposition, step 227), the
-// model adds the tables it actually needs to analyse its work, by this same standard.
+// model adds the tables it actually needs to analyse its work, by this same standard. The rows[] here are
+// DEMO seed (step 229): once a real row is written (the nodes via POST /api/projects/dashboard/rows, or the
+// owner via "Add row"), the LIVE rows replace this seed — data lives in the DB, so live rows need no rebuild.
 export const PROJECT_DASHBOARD: DashboardConfig = {
   tables: [
     {

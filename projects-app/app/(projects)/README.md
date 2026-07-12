@@ -329,8 +329,19 @@ new JSX inside a project.
 
 **The model's default tables (step 227 seam).** When an automation is designed, the model is expected to
 populate `_data/dashboard.ts` with the tables the automation needs *to analyse its own work* — by this
-standard, checked against `column-kinds.ts`. The live per-table data store (a DB table + read/write API that
-replaces the config's seed rows) is a **separate later step**; today the tables render the config's seed rows.
+standard, checked against `column-kinds.ts`.
+
+**Live rows (step 229) — the config declares COLUMNS, the DB holds ROWS.** A table's rows are no longer only
+the config's seed: they live in the DB (`dashboard_rows`, keyed by `automation` + `table_id`, all fields in
+one `values_json` blob — never a column-per-field, since a live server cannot ALTER a table; lesson 225 G4).
+Because the data is in the DB, not in a file, **rows appear with no rebuild**.
+- **Read:** `GET /api/projects/dashboard/rows?automation=<cat/slug>&table=<id>&search=&offset=` →
+  `{rows, hasMore, source}`. `source:"live"` = real rows; `source:"empty"` = the table shows the config's
+  **seed** rows as a demo (a fresh dashboard is never blank). The first live row **replaces** the seed.
+- **Write:** `POST /api/projects/dashboard/rows {automation, table, values}` — the automation's own nodes
+  fill their table this way as they run (role `agent`); the owner does the same with **"Add row"** in the UI.
+  `DELETE /api/projects/dashboard/rows/<id>` removes a live row (seed rows are read-only demo). `values` is a
+  flat map of `column.source → value`; the columns decide what to pull out of it.
 
 ### User cases — numbered, status-badged, mandatory
 
