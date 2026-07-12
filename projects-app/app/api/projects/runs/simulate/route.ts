@@ -31,25 +31,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "automation and nodeIds are required" }, { status: 400 });
   }
 
-  const active = db
+  const active = (await db
     .prepare(
       `SELECT id, current_node FROM automation_runs
        WHERE automation = ? AND status = 'running' ORDER BY started_at DESC LIMIT 1`,
     )
-    .get(automation) as RunRow | undefined;
+    .get(automation)) as RunRow | undefined;
 
   // START — no active run: create one, first node running, the rest idle.
   if (!active) {
     const runId = randomUUID();
-    db.prepare(
-      `INSERT INTO automation_runs (id, automation, current_node, status) VALUES (?, ?, ?, 'running')`,
-    ).run(runId, automation, nodeIds[0]);
-    const insertNode = db.prepare(
-      `INSERT INTO automation_run_nodes (id, run_id, node_id, status) VALUES (?, ?, ?, ?)`,
-    );
-    nodeIds.forEach((nid, i) =>
-      insertNode.run(randomUUID(), runId, nid, i === 0 ? "running" : "idle"),
-    );
+    await db
+      .prepare(
+        `INSERT INTO automation_runs (id, automation, current_node, status) VALUES (?, ?, ?, 'running')`,
+      )
+      .run(runId, automation, nodeIds[0]);
+    for (let i = 0; i < nodeIds.length; i++) {
+      await db
+        .prepare(`INSERT INTO automation_run_nodes (id, run_id, node_id, status) VALUES (?, ?, ?, ?)`)
+        .run(randomUUID(), runId, nodeIds[i], i === 0 ? "running" : "idle");
+    }
     return NextResponse.json({ runId, current_node: nodeIds[0], status: "running" });
   }
 
@@ -57,23 +58,23 @@ export async function POST(req: NextRequest) {
   const cur = active.current_node;
   const idx = cur ? nodeIds.indexOf(cur) : -1;
   if (cur) {
-    db.prepare(`UPDATE automation_run_nodes SET status = 'ok' WHERE run_id = ? AND node_id = ?`).run(
-      active.id,
-      cur,
-    );
+    await db
+      .prepare(`UPDATE automation_run_nodes SET status = 'ok' WHERE run_id = ? AND node_id = ?`)
+      .run(active.id, cur);
   }
   const next = idx >= 0 && idx + 1 < nodeIds.length ? nodeIds[idx + 1] : null;
   if (next) {
-    db.prepare(`UPDATE automation_run_nodes SET status = 'running' WHERE run_id = ? AND node_id = ?`).run(
-      active.id,
-      next,
-    );
-    db.prepare(`UPDATE automation_runs SET current_node = ? WHERE id = ?`).run(next, active.id);
+    await db
+      .prepare(`UPDATE automation_run_nodes SET status = 'running' WHERE run_id = ? AND node_id = ?`)
+      .run(active.id, next);
+    await db.prepare(`UPDATE automation_runs SET current_node = ? WHERE id = ?`).run(next, active.id);
     return NextResponse.json({ runId: active.id, current_node: next, status: "running" });
   }
   // No next node — finish the run.
-  db.prepare(
-    `UPDATE automation_runs SET status = 'done', current_node = NULL, finished_at = datetime('now') WHERE id = ?`,
-  ).run(active.id);
+  await db
+    .prepare(
+      `UPDATE automation_runs SET status = 'done', current_node = NULL, finished_at = datetime('now') WHERE id = ?`,
+    )
+    .run(active.id);
   return NextResponse.json({ runId: active.id, current_node: null, status: "done" });
 }

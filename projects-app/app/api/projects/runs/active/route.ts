@@ -21,19 +21,19 @@ export async function GET(req: NextRequest) {
   const automation = (req.nextUrl.searchParams.get("automation") ?? "").trim();
   if (!automation) return NextResponse.json({ run: null, nodes: {} });
 
-  const run = db
+  const run = (await db
     .prepare(
       `SELECT id, current_node, status, instance_id FROM automation_runs
        WHERE automation = ? AND status = 'running'
        ORDER BY started_at DESC LIMIT 1`,
     )
-    .get(automation) as RunRow | undefined;
+    .get(automation)) as RunRow | undefined;
 
   if (!run) return NextResponse.json({ run: null, nodes: {} });
 
-  const rows = db
+  const rows = (await db
     .prepare(`SELECT node_id, status FROM automation_run_nodes WHERE run_id = ?`)
-    .all(run.id) as NodeRow[];
+    .all(run.id)) as NodeRow[];
   const nodes: Record<string, string> = {};
   for (const r of rows) nodes[r.node_id] = r.status;
 
