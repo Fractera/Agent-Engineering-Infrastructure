@@ -1,0 +1,134 @@
+// SIX-LANGUAGE UI for the Use cases panel (CLAUDE.md 4г) — en, es, fr, it, ru, de; anything else → English.
+// One place for every owner-facing string in the panel: the review banner, the buttons, the tooltips, the
+// delete dialog, the review dialog and the toasts. {title} is a template — fill it with `fill()`.
+export type UseCasesStrings = {
+  empty: string;
+  reviewedYes: string; reviewedNo: string;
+  readConfirm: string; editAll: string; editAllTip: string; editCaseTip: string; deleteTip: string;
+  noDescription: string;
+  deleteTitle: string; deleteBody: string; cancel: string; del: string;   // deleteBody has {title}
+  reviewTitle: string; reviewIntro: string; notYet: string; confirmBtn: string;
+  deleteFail: string; deletedTitle: string; deletedDesc: string;
+  confirmFail: string; confirmedTitle: string; confirmedDesc: string;
+};
+
+export const USE_CASES_I18N: Record<string, UseCasesStrings> = {
+  en: {
+    empty: "No user cases yet. They are the FIRST stage of this automation: describe your scenarios in the Quiz (it opens on the automation page) — nothing is built until they exist.",
+    reviewedYes: "You confirmed these cases — development can start.",
+    reviewedNo: "Not confirmed yet — development steps stay blocked until you read them.",
+    readConfirm: "Read & confirm", editAll: "Edit all",
+    editAllTip: "Go through every case again with the AI (and add new ones)",
+    editCaseTip: "Revisit this case with the AI", deleteTip: "Delete this case",
+    noDescription: "No description yet.",
+    deleteTitle: "Delete this user case?",
+    deleteBody: "“{title}” is removed from this automation's cases. The nodes that already implement it are NOT deleted — remove them in the Builder if they are no longer needed.",
+    cancel: "Cancel", del: "Delete",
+    reviewTitle: "Read the user cases before development starts",
+    reviewIntro: "This is where you and the AI agree. Read what it understood; if anything is wrong, close this and fix the case with its pencil. Development steps are created only after you confirm.",
+    notYet: "Not yet", confirmBtn: "I read them — the AI understood me",
+    deleteFail: "Could not delete the case.", deletedTitle: "User case deleted",
+    deletedDesc: "The set changed — confirm the cases again before the next development step.",
+    confirmFail: "Could not confirm the cases.", confirmedTitle: "User cases confirmed",
+    confirmedDesc: "You and the AI agree on what this automation must do — development can start.",
+  },
+  ru: {
+    empty: "Пользовательских кейсов пока нет. Это ПЕРВЫЙ этап автоматизации: опишите свои сценарии в Quiz (он открывается на странице автоматизации) — пока их нет, ничего не строится.",
+    reviewedYes: "Вы подтвердили эти кейсы — разработку можно начинать.",
+    reviewedNo: "Пока не подтверждено — шаги разработки заблокированы, пока вы их не прочитаете.",
+    readConfirm: "Прочитать и подтвердить", editAll: "Редактировать все",
+    editAllTip: "Пройтись по всем кейсам с ИИ заново (и добавить новые)",
+    editCaseTip: "Пересмотреть этот кейс с ИИ", deleteTip: "Удалить этот кейс",
+    noDescription: "Пока без описания.",
+    deleteTitle: "Удалить этот пользовательский кейс?",
+    deleteBody: "«{title}» будет удалён из кейсов этой автоматизации. Узлы, которые его уже реализуют, НЕ удаляются — удалите их в Builder, если они больше не нужны.",
+    cancel: "Отмена", del: "Удалить",
+    reviewTitle: "Прочитайте пользовательские кейсы перед началом разработки",
+    reviewIntro: "Здесь вы и ИИ договариваетесь. Прочитайте, что он понял; если что-то не так — закройте и поправьте кейс карандашом. Шаги разработки создаются только после подтверждения.",
+    notYet: "Ещё нет", confirmBtn: "Я прочитал — ИИ понял меня правильно",
+    deleteFail: "Не удалось удалить кейс.", deletedTitle: "Кейс удалён",
+    deletedDesc: "Набор изменился — подтвердите кейсы заново перед следующим шагом разработки.",
+    confirmFail: "Не удалось подтвердить кейсы.", confirmedTitle: "Кейсы подтверждены",
+    confirmedDesc: "Вы и ИИ согласны в том, что должна делать автоматизация — разработку можно начинать.",
+  },
+  es: {
+    empty: "Aún no hay casos de uso. Son la PRIMERA etapa de esta automatización: describe tus escenarios en el Quiz (se abre en la página de la automatización) — nada se construye hasta que existan.",
+    reviewedYes: "Confirmaste estos casos — el desarrollo puede empezar.",
+    reviewedNo: "Aún sin confirmar — los pasos de desarrollo quedan bloqueados hasta que los leas.",
+    readConfirm: "Leer y confirmar", editAll: "Editar todos",
+    editAllTip: "Repasar cada caso con la IA (y añadir nuevos)",
+    editCaseTip: "Revisar este caso con la IA", deleteTip: "Eliminar este caso",
+    noDescription: "Aún sin descripción.",
+    deleteTitle: "¿Eliminar este caso de uso?",
+    deleteBody: "«{title}» se elimina de los casos de esta automatización. Los nodos que ya lo implementan NO se eliminan — quítalos en el Builder si ya no son necesarios.",
+    cancel: "Cancelar", del: "Eliminar",
+    reviewTitle: "Lee los casos de uso antes de empezar el desarrollo",
+    reviewIntro: "Aquí es donde tú y la IA os ponéis de acuerdo. Lee lo que entendió; si algo está mal, cierra y corrige el caso con su lápiz. Los pasos de desarrollo se crean solo después de que confirmes.",
+    notYet: "Todavía no", confirmBtn: "Los leí — la IA me entendió",
+    deleteFail: "No se pudo eliminar el caso.", deletedTitle: "Caso de uso eliminado",
+    deletedDesc: "El conjunto cambió — confirma los casos de nuevo antes del siguiente paso de desarrollo.",
+    confirmFail: "No se pudieron confirmar los casos.", confirmedTitle: "Casos de uso confirmados",
+    confirmedDesc: "Tú y la IA estáis de acuerdo en lo que debe hacer la automatización — el desarrollo puede empezar.",
+  },
+  fr: {
+    empty: "Aucun cas d'usage pour l'instant. C'est la PREMIÈRE étape de cette automatisation : décrivez vos scénarios dans le Quiz (il s'ouvre sur la page de l'automatisation) — rien n'est construit tant qu'ils n'existent pas.",
+    reviewedYes: "Vous avez confirmé ces cas — le développement peut commencer.",
+    reviewedNo: "Pas encore confirmé — les étapes de développement restent bloquées jusqu'à ce que vous les lisiez.",
+    readConfirm: "Lire et confirmer", editAll: "Tout modifier",
+    editAllTip: "Reparcourir chaque cas avec l'IA (et en ajouter de nouveaux)",
+    editCaseTip: "Réviser ce cas avec l'IA", deleteTip: "Supprimer ce cas",
+    noDescription: "Pas encore de description.",
+    deleteTitle: "Supprimer ce cas d'usage ?",
+    deleteBody: "« {title} » est retiré des cas de cette automatisation. Les nœuds qui l'implémentent déjà ne sont PAS supprimés — retirez-les dans le Builder s'ils ne sont plus nécessaires.",
+    cancel: "Annuler", del: "Supprimer",
+    reviewTitle: "Lisez les cas d'usage avant le début du développement",
+    reviewIntro: "C'est ici que vous et l'IA vous mettez d'accord. Lisez ce qu'elle a compris ; si quelque chose ne va pas, fermez et corrigez le cas avec son crayon. Les étapes de développement ne sont créées qu'après votre confirmation.",
+    notYet: "Pas encore", confirmBtn: "Je les ai lus — l'IA m'a compris",
+    deleteFail: "Impossible de supprimer le cas.", deletedTitle: "Cas d'usage supprimé",
+    deletedDesc: "L'ensemble a changé — confirmez à nouveau les cas avant la prochaine étape de développement.",
+    confirmFail: "Impossible de confirmer les cas.", confirmedTitle: "Cas d'usage confirmés",
+    confirmedDesc: "Vous et l'IA êtes d'accord sur ce que l'automatisation doit faire — le développement peut commencer.",
+  },
+  it: {
+    empty: "Ancora nessun caso d'uso. Sono la PRIMA fase di questa automazione: descrivi i tuoi scenari nel Quiz (si apre nella pagina dell'automazione) — finché non esistono, non si costruisce nulla.",
+    reviewedYes: "Hai confermato questi casi — lo sviluppo può iniziare.",
+    reviewedNo: "Non ancora confermato — i passi di sviluppo restano bloccati finché non li leggi.",
+    readConfirm: "Leggi e conferma", editAll: "Modifica tutti",
+    editAllTip: "Ripercorrere ogni caso con l'IA (e aggiungerne di nuovi)",
+    editCaseTip: "Rivedere questo caso con l'IA", deleteTip: "Elimina questo caso",
+    noDescription: "Ancora nessuna descrizione.",
+    deleteTitle: "Eliminare questo caso d'uso?",
+    deleteBody: "«{title}» viene rimosso dai casi di questa automazione. I nodi che già lo implementano NON vengono eliminati — rimuovili nel Builder se non servono più.",
+    cancel: "Annulla", del: "Elimina",
+    reviewTitle: "Leggi i casi d'uso prima che inizi lo sviluppo",
+    reviewIntro: "Qui tu e l'IA vi mettete d'accordo. Leggi ciò che ha capito; se qualcosa non va, chiudi e correggi il caso con la sua matita. I passi di sviluppo si creano solo dopo la tua conferma.",
+    notYet: "Non ancora", confirmBtn: "Li ho letti — l'IA mi ha capito",
+    deleteFail: "Impossibile eliminare il caso.", deletedTitle: "Caso d'uso eliminato",
+    deletedDesc: "L'insieme è cambiato — conferma di nuovo i casi prima del prossimo passo di sviluppo.",
+    confirmFail: "Impossibile confermare i casi.", confirmedTitle: "Casi d'uso confermati",
+    confirmedDesc: "Tu e l'IA siete d'accordo su cosa deve fare l'automazione — lo sviluppo può iniziare.",
+  },
+  de: {
+    empty: "Noch keine Anwendungsfälle. Sie sind die ERSTE Phase dieser Automatisierung: Beschreibe deine Szenarien im Quiz (es öffnet sich auf der Automatisierungsseite) — solange sie nicht existieren, wird nichts gebaut.",
+    reviewedYes: "Du hast diese Fälle bestätigt — die Entwicklung kann beginnen.",
+    reviewedNo: "Noch nicht bestätigt — Entwicklungsschritte bleiben blockiert, bis du sie liest.",
+    readConfirm: "Lesen & bestätigen", editAll: "Alle bearbeiten",
+    editAllTip: "Jeden Fall erneut mit der KI durchgehen (und neue hinzufügen)",
+    editCaseTip: "Diesen Fall mit der KI überarbeiten", deleteTip: "Diesen Fall löschen",
+    noDescription: "Noch keine Beschreibung.",
+    deleteTitle: "Diesen Anwendungsfall löschen?",
+    deleteBody: "„{title}“ wird aus den Fällen dieser Automatisierung entfernt. Die Knoten, die ihn bereits umsetzen, werden NICHT gelöscht — entferne sie im Builder, wenn sie nicht mehr gebraucht werden.",
+    cancel: "Abbrechen", del: "Löschen",
+    reviewTitle: "Lies die Anwendungsfälle, bevor die Entwicklung beginnt",
+    reviewIntro: "Hier einigt ihr euch, du und die KI. Lies, was sie verstanden hat; wenn etwas nicht stimmt, schließe und korrigiere den Fall mit seinem Stift. Entwicklungsschritte entstehen erst nach deiner Bestätigung.",
+    notYet: "Noch nicht", confirmBtn: "Ich habe sie gelesen — die KI hat mich verstanden",
+    deleteFail: "Der Fall konnte nicht gelöscht werden.", deletedTitle: "Anwendungsfall gelöscht",
+    deletedDesc: "Der Satz hat sich geändert — bestätige die Fälle vor dem nächsten Entwicklungsschritt erneut.",
+    confirmFail: "Die Fälle konnten nicht bestätigt werden.", confirmedTitle: "Anwendungsfälle bestätigt",
+    confirmedDesc: "Du und die KI seid euch einig, was die Automatisierung tun soll — die Entwicklung kann beginnen.",
+  },
+};
+
+export function useCasesStrings(lang: string): UseCasesStrings {
+  return USE_CASES_I18N[lang.slice(0, 2)] ?? USE_CASES_I18N.en;
+}

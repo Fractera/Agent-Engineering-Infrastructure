@@ -15,6 +15,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import type { UseCase } from "../use-cases";
 import { STATUS_META } from "../use-cases";
 import { ActivationQuiz } from "./activation-quiz.client";
+import { useUiLang } from "../use-ui-lang";
+import { useCasesStrings } from "../use-cases-i18n";
+import { fill } from "../quiz-i18n";
 
 // FROZEN STANDARD — the Use cases panel (step 222; made LIVE and editable in step 231).
 //
@@ -36,6 +39,7 @@ type Review = { reviewed: boolean; hasCases: boolean; reviewedAt: string | null 
 
 export function UseCasesPanel({ cases, automation }: { cases: UseCase[]; automation?: string }) {
   const router = useRouter();
+  const L = useCasesStrings(useUiLang());
   const [rows, setRows] = useState<UseCase[]>(cases);
   const [review, setReview] = useState<Review>({ reviewed: false, hasCases: cases.length > 0, reviewedAt: null });
   const [busy, setBusy] = useState(false);
@@ -79,10 +83,8 @@ export function UseCasesPanel({ cases, automation }: { cases: UseCase[]; automat
         `/api/projects/use-cases?automation=${encodeURIComponent(automation)}&cuid=${encodeURIComponent(confirmDelete.id)}`,
         { method: "DELETE" },
       );
-      if (!r.ok) { toast.error("Could not delete the case."); return; }
-      toast.success("User case deleted", {
-        description: "The set changed — confirm the cases again before the next development step.",
-      });
+      if (!r.ok) { toast.error(L.deleteFail); return; }
+      toast.success(L.deletedTitle, { description: L.deletedDesc });
       setConfirmDelete(null);
       await load();
       router.refresh();
@@ -98,10 +100,8 @@ export function UseCasesPanel({ cases, automation }: { cases: UseCase[]; automat
         body: JSON.stringify({ automation }),
       });
       const d = (await r.json()) as { error?: string };
-      if (!r.ok) { toast.error(d.error ?? "Could not confirm the cases."); return; }
-      toast.success("User cases confirmed", {
-        description: "You and the AI agree on what this automation must do — development can start.",
-      });
+      if (!r.ok) { toast.error(d.error ?? L.confirmFail); return; }
+      toast.success(L.confirmedTitle, { description: L.confirmedDesc });
       setReviewOpen(false);
       await load();
       router.refresh();
@@ -109,12 +109,7 @@ export function UseCasesPanel({ cases, automation }: { cases: UseCase[]; automat
   }, [automation, load, router]);
 
   if (!rows.length) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        No user cases yet. They are the FIRST stage of this automation: describe your scenarios in the Quiz
-        (it opens on the automation page) — nothing is built until they exist.
-      </p>
-    );
+    return <p className="text-sm text-muted-foreground">{L.empty}</p>;
   }
 
   return (
@@ -128,23 +123,16 @@ export function UseCasesPanel({ cases, automation }: { cases: UseCase[]; automat
             }`}
           >
             {review.reviewed ? <ShieldCheck className="size-4" /> : <ShieldAlert className="size-4" />}
-            {review.reviewed
-              ? "You confirmed these cases — development can start."
-              : "Not confirmed yet — development steps stay blocked until you read them."}
+            {review.reviewed ? L.reviewedYes : L.reviewedNo}
           </span>
           <span className="flex items-center gap-1">
             {!review.reviewed && (
               <Button size="sm" variant="secondary" onClick={() => setReviewOpen(true)}>
-                <CheckCheck className="size-3.5" /> Read &amp; confirm
+                <CheckCheck className="size-3.5" /> {L.readConfirm}
               </Button>
             )}
-            <Button
-              size="sm"
-              variant="ghost"
-              title="Go through every case again with the AI (and add new ones)"
-              onClick={() => setEditing({})}
-            >
-              <Pencil className="size-3.5" /> Edit all
+            <Button size="sm" variant="ghost" title={L.editAllTip} onClick={() => setEditing({})}>
+              <Pencil className="size-3.5" /> {L.editAll}
             </Button>
           </span>
         </div>
@@ -155,7 +143,8 @@ export function UseCasesPanel({ cases, automation }: { cases: UseCase[]; automat
           const st = STATUS_META[c.status] ?? STATUS_META["new"];
           return (
             <AccordionItem key={c.id} value={c.id}>
-              <div className="flex items-center gap-2">
+              {/* Owner: the pencil + trash sit in the RIGHT corner (justify-between / outer-edge alignment). */}
+              <div className="flex items-center justify-between gap-2">
                 <AccordionTrigger className="flex-1 text-left">
                   <span className="flex items-center gap-3">
                     <span className="text-2xl font-bold tabular-nums text-muted-foreground">
@@ -170,12 +159,12 @@ export function UseCasesPanel({ cases, automation }: { cases: UseCase[]; automat
                   </span>
                 </AccordionTrigger>
                 {automation && (
-                  <span className="flex shrink-0 items-center gap-0.5">
+                  <span className="ml-auto flex shrink-0 items-center gap-0.5">
                     <Button
                       size="icon"
                       variant="ghost"
                       className="size-8"
-                      title="Revisit this case with the AI"
+                      title={L.editCaseTip}
                       onClick={() => setEditing({ cuid: c.id, title: c.title })}
                     >
                       <Pencil className="size-3.5" />
@@ -184,7 +173,7 @@ export function UseCasesPanel({ cases, automation }: { cases: UseCase[]; automat
                       size="icon"
                       variant="ghost"
                       className="size-8 text-destructive"
-                      title="Delete this case"
+                      title={L.deleteTip}
                       onClick={() => setConfirmDelete(c)}
                     >
                       <Trash2 className="size-3.5" />
@@ -194,7 +183,7 @@ export function UseCasesPanel({ cases, automation }: { cases: UseCase[]; automat
               </div>
               <AccordionContent>
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  {c.summary ?? "No description yet."}
+                  {c.summary || L.noDescription}
                 </p>
               </AccordionContent>
             </AccordionItem>
@@ -218,16 +207,15 @@ export function UseCasesPanel({ cases, automation }: { cases: UseCase[]; automat
       <Dialog open={Boolean(confirmDelete)} onOpenChange={(v) => { if (!v) setConfirmDelete(null); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Delete this user case?</DialogTitle>
+            <DialogTitle>{L.deleteTitle}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            &ldquo;{confirmDelete?.title}&rdquo; is removed from this automation&apos;s cases. The nodes that
-            already implement it are NOT deleted — remove them in the Builder if they are no longer needed.
+            {fill(L.deleteBody, { title: confirmDelete?.title ?? "" })}
           </p>
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setConfirmDelete(null)} disabled={busy}>Cancel</Button>
+            <Button variant="ghost" onClick={() => setConfirmDelete(null)} disabled={busy}>{L.cancel}</Button>
             <Button variant="destructive" onClick={remove} disabled={busy}>
-              {busy ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />} Delete
+              {busy ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />} {L.del}
             </Button>
           </div>
         </DialogContent>
@@ -241,13 +229,10 @@ export function UseCasesPanel({ cases, automation }: { cases: UseCase[]; automat
         <DialogContent className="flex max-h-[85vh] flex-col overflow-hidden sm:max-w-2xl">
           <DialogHeader className="shrink-0">
             <DialogTitle className="flex items-center gap-2">
-              <CheckCheck className="size-4" /> Read the user cases before development starts
+              <CheckCheck className="size-4" /> {L.reviewTitle}
             </DialogTitle>
           </DialogHeader>
-          <p className="shrink-0 text-sm text-muted-foreground">
-            This is where you and the AI agree. Read what it understood; if anything is wrong, close this and
-            fix the case with its pencil. Development steps are created only after you confirm.
-          </p>
+          <p className="shrink-0 text-sm text-muted-foreground">{L.reviewIntro}</p>
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
             {rows.map((c, i) => (
               <div key={c.id} className="rounded-lg border p-3">
@@ -255,15 +240,15 @@ export function UseCasesPanel({ cases, automation }: { cases: UseCase[]; automat
                   <span className="tabular-nums text-muted-foreground">{String(i + 1).padStart(2, "0")}</span>
                   {c.title}
                 </p>
-                <p className="mt-1 text-sm text-muted-foreground">{c.summary ?? "No description yet."}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{c.summary || L.noDescription}</p>
               </div>
             ))}
           </div>
           <div className="flex shrink-0 justify-end gap-2 border-t pt-3">
-            <Button variant="ghost" onClick={() => setReviewOpen(false)} disabled={busy}>Not yet</Button>
+            <Button variant="ghost" onClick={() => setReviewOpen(false)} disabled={busy}>{L.notYet}</Button>
             <Button onClick={confirmReview} disabled={busy}>
               {busy ? <Loader2 className="size-4 animate-spin" /> : <CheckCheck className="size-4" />}
-              I read them — the AI understood me
+              {L.confirmBtn}
             </Button>
           </div>
         </DialogContent>
