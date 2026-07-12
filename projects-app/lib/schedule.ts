@@ -144,35 +144,60 @@ export async function advanceRuns(automation: string): Promise<void> {
     }
   }
 
-  // 2. if nothing is running, start the next fork that has never run (in order). The start is ATOMIC: the
-  //    page polls this (schedule 3s + runs/active 1.5s), so concurrent advanceRuns calls would otherwise
-  //    race and start TWO forks at once. The INSERT fires only WHERE no fork of this automation is already
-  //    running AND this fork has no run — SQLite serializes writers, so exactly one call wins.
+  // 2. CHAIN continuation only: if a fork just finished, start the next one — but NEVER cold-start the first
+  //    fork here. The queue runs only after the owner presses "Run" (runAutomation), so the timeline does not
+  //    start itself on a page poll or the cron tick. "Already active" = at least one fork has a run.
   if (!running) {
+    const anyRun = (await db.prepare(`SELECT 1 FROM automation_runs WHERE automation = ? LIMIT 1`).get(proj.automation)) as unknown;
+    if (!anyRun) return; // idle — waiting for the Run button
     for (const inst of insts) {
       const existing = await runOf(proj.automation, inst.id);
       if (existing) continue; // this fork already ran (running or done)
-      const fnodes = forkNodes(base, inst);
-      const actual = genActualDurations(fnodes); // random 10-20s per node; output = sum of the earlier ones
-      const runId = randomUUID();
-      const res = (await db.prepare(
-        `INSERT INTO automation_runs (id, automation, instance_id, current_node, status, payload)
-         SELECT ?, ?, ?, ?, 'running', ?
-         WHERE NOT EXISTS (SELECT 1 FROM automation_runs WHERE automation = ? AND status = 'running')
-           AND NOT EXISTS (SELECT 1 FROM automation_runs WHERE automation = ? AND instance_id = ?)`,
-      ).run(
-        runId, proj.automation, inst.id, fnodes[0]?.slug ?? null, JSON.stringify({ durations: actual }),
-        proj.automation, proj.automation, inst.id,
-      )) as { changes?: number };
-      if ((res.changes ?? 0) > 0) {
-        for (let i = 0; i < fnodes.length; i++) {
-          await db.prepare(`INSERT INTO automation_run_nodes (id, run_id, node_id, status) VALUES (?, ?, ?, ?)`)
-            .run(randomUUID(), runId, fnodes[i].slug, i === 0 ? "running" : "idle");
-        }
-      }
+      await startFork(proj.automation, inst, base);
       break; // one attempt per tick — the next tick starts the following fork
     }
   }
+}
+
+/** Start ONE fork atomically (step 230 runner). The page polls advanceRuns (schedule 3s + runs/active 1.5s),
+ *  so the INSERT fires only WHERE no fork of this automation is already running AND this fork has no run —
+ *  SQLite serializes writers, so exactly one concurrent call wins and forks run strictly one at a time. */
+async function startFork(automation: string, inst: Instance, base: { slug: string; name: string; ms: number; fns: number }[]): Promise<void> {
+  const fnodes = forkNodes(base, inst);
+  const actual = genActualDurations(fnodes); // random 10-20s per node; output = sum of the earlier ones
+  const runId = randomUUID();
+  const res = (await db.prepare(
+    `INSERT INTO automation_runs (id, automation, instance_id, current_node, status, payload)
+     SELECT ?, ?, ?, ?, 'running', ?
+     WHERE NOT EXISTS (SELECT 1 FROM automation_runs WHERE automation = ? AND status = 'running')
+       AND NOT EXISTS (SELECT 1 FROM automation_runs WHERE automation = ? AND instance_id = ?)`,
+  ).run(
+    runId, automation, inst.id, fnodes[0]?.slug ?? null, JSON.stringify({ durations: actual }),
+    automation, automation, inst.id,
+  )) as { changes?: number };
+  if ((res.changes ?? 0) > 0) {
+    for (let i = 0; i < fnodes.length; i++) {
+      await db.prepare(`INSERT INTO automation_run_nodes (id, run_id, node_id, status) VALUES (?, ?, ?, ?)`)
+        .run(randomUUID(), runId, fnodes[i].slug, i === 0 ? "running" : "idle");
+    }
+  }
+}
+
+/** RUN the automation from the start (the "Run" button, step 230): clear any prior runs, then start the
+ *  first fork. From there advanceRuns chains the rest. This is what gives the owner control over WHEN the
+ *  timeline starts. */
+export async function runAutomation(automation: string): Promise<void> {
+  await resetAutomation(automation);
+  const insts = await instancesOf(automation);
+  const base = await nodeDurations(automation);
+  if (insts.length && base.length) await startFork(automation, insts[0], base);
+}
+
+/** RESET the automation (the "Reset" button): drop all runs so the timeline returns to the plan. */
+export async function resetAutomation(automation: string): Promise<void> {
+  await db.prepare(`DELETE FROM automation_run_nodes WHERE run_id IN (SELECT id FROM automation_runs WHERE automation = ?)`).run(automation);
+  await db.prepare(`DELETE FROM automation_runs WHERE automation = ?`).run(automation);
+  await db.prepare(`DELETE FROM automation_schedule WHERE automation = ?`).run(automation);
 }
 
 /** Per-node run status (slug → ok|running|idle) of a fork's latest run, for the timeline colors. */

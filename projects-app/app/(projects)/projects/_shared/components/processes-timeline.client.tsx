@@ -1,6 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Play, RotateCcw } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 // THE PROCESSES / Gantt TIMELINE (step 230) — the hardest node. Shown ONLY for automations that have forks
 // (Instances, 223.C.4). Every FORK is a ROW (~32px); its bar length is the sum of its nodes' estimated
@@ -83,6 +86,19 @@ export function ProcessesTimeline({ automation }: { automation: string }) {
 
   const xOf = useCallback((ms: number) => (bounds ? (ms - bounds.min) * scale : 0), [bounds, scale]);
 
+  // Run / Reset (step 230) — the owner controls WHEN the timeline starts. "Run" clears prior runs and starts
+  // the first fork (the queue chains on); "Reset" drops all runs back to the plan. The runner never
+  // cold-starts on its own, so a reset timeline waits here until "Run".
+  const control = useCallback(async (action: "run" | "reset") => {
+    const r = await fetch(`/api/projects/schedule/control`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ automation, action }),
+    });
+    if (!r.ok) { toast.error("Could not " + action + " the timeline."); return; }
+    toast.success(action === "run" ? "Timeline started — forks run one by one." : "Timeline reset to the plan.");
+    await load();
+  }, [automation, load]);
+
   // Clicking a bar focuses the DIAGRAM (the automation's centerpiece, at the top): scroll up to it and title
   // it with the clicked node — the word "Diagram", the node name, and its planned start/end (step 230, owner).
   const focusDiagram = useCallback((name: string, startMs: number, endMs: number) => {
@@ -105,10 +121,20 @@ export function ProcessesTimeline({ automation }: { automation: string }) {
 
   return (
     <div className="space-y-2">
-      <p className="text-xs text-muted-foreground">
-        Each row is a fork; its bar is the estimated duration (sum of the nodes). The vertical line is now.
-        Click a bar to jump to the Instances panel. The plan shifts as runs finish.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs text-muted-foreground">
+          Each row is a fork; its bar is its duration (the nodes run in sequence). The vertical line is now.
+          Click a bar to open its diagram. Nodes turn green as they finish; forks run one by one.
+        </p>
+        <div className="flex gap-2">
+          <Button size="sm" onClick={() => void control("run")}>
+            <Play className="size-3.5" /> Run
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => void control("reset")}>
+            <RotateCcw className="size-3.5" /> Reset
+          </Button>
+        </div>
+      </div>
       <div ref={scrollRef} className="relative overflow-x-auto rounded-lg border bg-muted/20">
         <div className="relative" style={{ width, height: rows.length * ROW_H + 28 }}>
           {/* time axis (top) */}
