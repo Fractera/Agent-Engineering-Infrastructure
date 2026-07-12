@@ -144,7 +144,10 @@ export async function advanceRuns(automation: string): Promise<void> {
     }
   }
 
-  // 2. if nothing is running, start the next fork that has never run (in order).
+  // 2. if nothing is running, start the next fork that has never run (in order). The start is ATOMIC: the
+  //    page polls this (schedule 3s + runs/active 1.5s), so concurrent advanceRuns calls would otherwise
+  //    race and start TWO forks at once. The INSERT fires only WHERE no fork of this automation is already
+  //    running AND this fork has no run — SQLite serializes writers, so exactly one call wins.
   if (!running) {
     for (const inst of insts) {
       const existing = await runOf(proj.automation, inst.id);
@@ -152,14 +155,22 @@ export async function advanceRuns(automation: string): Promise<void> {
       const fnodes = forkNodes(base, inst);
       const actual = genActualDurations(fnodes); // random 10-20s per node; output = sum of the earlier ones
       const runId = randomUUID();
-      await db.prepare(
-        `INSERT INTO automation_runs (id, automation, instance_id, current_node, status, payload) VALUES (?, ?, ?, ?, 'running', ?)`,
-      ).run(runId, proj.automation, inst.id, fnodes[0]?.slug ?? null, JSON.stringify({ durations: actual }));
-      for (let i = 0; i < fnodes.length; i++) {
-        await db.prepare(`INSERT INTO automation_run_nodes (id, run_id, node_id, status) VALUES (?, ?, ?, ?)`)
-          .run(randomUUID(), runId, fnodes[i].slug, i === 0 ? "running" : "idle");
+      const res = (await db.prepare(
+        `INSERT INTO automation_runs (id, automation, instance_id, current_node, status, payload)
+         SELECT ?, ?, ?, ?, 'running', ?
+         WHERE NOT EXISTS (SELECT 1 FROM automation_runs WHERE automation = ? AND status = 'running')
+           AND NOT EXISTS (SELECT 1 FROM automation_runs WHERE automation = ? AND instance_id = ?)`,
+      ).run(
+        runId, proj.automation, inst.id, fnodes[0]?.slug ?? null, JSON.stringify({ durations: actual }),
+        proj.automation, proj.automation, inst.id,
+      )) as { changes?: number };
+      if ((res.changes ?? 0) > 0) {
+        for (let i = 0; i < fnodes.length; i++) {
+          await db.prepare(`INSERT INTO automation_run_nodes (id, run_id, node_id, status) VALUES (?, ?, ?, ?)`)
+            .run(randomUUID(), runId, fnodes[i].slug, i === 0 ? "running" : "idle");
+        }
       }
-      break; // only one fork starts at a time
+      break; // one attempt per tick — the next tick starts the following fork
     }
   }
 }
