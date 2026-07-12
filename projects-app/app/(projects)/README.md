@@ -269,7 +269,7 @@ the same way the CARD standard is.
 
 | Entity | Config | Mandatory | Purpose | Grows into |
 |---|---|---|---|---|
-| **Diagram** | always on | yes | The diagram that implements the project's automation. | The real node graph; a node highlights as it runs. |
+| **Diagram** | always on | yes | The diagram that implements the project's automation. **Not an accordion** — it is ALWAYS visible, full screen width × 80vh, as the centerpiece (owner design). | The real node graph; a node highlights as it runs. |
 | **Calendar** | optional | no | Time-based events (reminders, dated items). | A calendar UI; can integrate Google Calendar and other tools. |
 | **Map** | optional | no | Tasks/events tied to a geographic location. | A map UI; can integrate maps and location services. |
 | **Dashboard** | always on | yes | Data-visualization slices. | Sub-dashboards for different views of the data. |
