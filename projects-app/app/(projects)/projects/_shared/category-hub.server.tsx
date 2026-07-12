@@ -4,6 +4,7 @@ import { getAppConfig } from "@/config/app-config";
 import { PROJECT_CATEGORIES, type ProjectCategorySlug } from "./categories";
 import { listProjectSlugs } from "./projects-manifest";
 import { getProjectCard } from "./project-card";
+import { CreateAutomationCard } from "./components/create-automation-card.client";
 
 // Hub page of one Projects-layer category (step 207.10 item 3 redesign): an admin-style header with
 // bordered/shadowed category nav buttons, then blog-style project cards (title, 2-line description, one
@@ -48,14 +49,15 @@ export async function CategoryHub({ slug }: { slug: ProjectCategorySlug }) {
         })}
       </nav>
 
-      {/* Project cards */}
+      {/* Project cards — the big "+" card ALWAYS closes the grid (step 224 L6): it opens the creation modal
+          (type → name → the mandatory instruction), the manual entry point of a new automation. */}
       <div className="mt-8 flex-1">
-        {cards.length === 0 ? (
-          <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-            No projects here yet. A project is created as a named folder
-            /projects/{category.slug}/&lt;project-slug&gt; by the agent pipeline.
+        {cards.length === 0 && (
+          <p className="mb-4 rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+            No automations here yet — add the first one with the card below.
           </p>
-        ) : (
+        )}
+        {
           <div className="grid gap-4 sm:grid-cols-2">
             {cards.map((card) => {
               const shown = card.badges.slice(0, MAX_BADGES);
@@ -88,8 +90,9 @@ export async function CategoryHub({ slug }: { slug: ProjectCategorySlug }) {
                 </Link>
               );
             })}
+            <CreateAutomationCard category={slug} />
           </div>
-        )}
+        }
       </div>
     </main>
   );

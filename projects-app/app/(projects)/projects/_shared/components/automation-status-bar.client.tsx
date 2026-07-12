@@ -3,7 +3,9 @@
 import Link from "next/link";
 import type { InputChannel } from "../channels";
 import type { Probe } from "../tests";
+import type { AutomationType } from "../automation-type";
 import { AutomationMenu } from "./automation-menu.client";
+import { AutomationStatePill } from "./automation-state-pill.client";
 
 // FROZEN STANDARD (step 220) — the bar at the top of a fresh automation page: a breadcrumb back to the
 // categories index on the left, and on the right the generic automation menu (AI provider / model +
@@ -15,6 +17,8 @@ export function AutomationStatusBar({
   defaultModel,
   channels,
   probes,
+  automation,
+  type,
 }: {
   category: string;
   categoryLabel: string;
@@ -22,6 +26,10 @@ export function AutomationStatusBar({
   defaultModel: string;
   channels: InputChannel[];
   probes: Probe[];
+  /** "category/slug" — the state pill reads this automation's live node index (step 224). */
+  automation?: string;
+  /** The immutable automation type — its badge sits LEFT of the state pill (step 224 §1.5). */
+  type?: AutomationType;
 }) {
   return (
     <div className="flex items-center justify-between gap-3 py-1">
@@ -31,6 +39,9 @@ export function AutomationStatusBar({
         <Link href={`/projects/${category}`} className="hover:underline">{categoryLabel}</Link>
       </span>
       <span className="flex items-center gap-2">
+        {/* Type badge + state pill (step 224 §1.5 / L6) — left of the burger. "In development" (indigo)
+            while any node is still a draft: the automation is auto-stopped until every node is built. */}
+        {automation && <AutomationStatePill automation={automation} type={type ?? "stream"} />}
         <AutomationMenu
           modelEnvKey={modelEnvKey}
           defaultModel={defaultModel}

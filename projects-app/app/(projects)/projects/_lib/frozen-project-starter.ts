@@ -34,6 +34,13 @@ export type FrozenProjectInput = {
   title?: string;
   /** One line: what this automation does. Rendered under the title from birth (v2). */
   description?: string;
+  /** The IMMUTABLE automation type (step 224 §1.5): "stream" (no forks, one scheme per event) or
+   *  "instanced" (each run forks Master -> Instance with its own parameters, may be deferred/tracked).
+   *  Chosen in the creation modal, written into _data/automation.ts, shown as the top-bar badge. */
+  type?: "stream" | "instanced";
+  /** PHASE 1 (creation): the owner's MANDATORY free-form instruction — what this automation must do. It is
+   *  the seed the activation Quiz (step 227) turns into nodes; stored as _data/instruction.md. */
+  instruction?: string;
   force?: boolean;
 };
 export type FrozenProjectResult =
@@ -120,6 +127,17 @@ export const INPUT_CHANNELS: InputChannel[] = [];
 //     },
 //   ];
 export const PROBES: Probe[] = [];
+`,
+  "_data/automation.ts": `import type { AutomationType } from "../../../_shared/automation-type";
+
+// This automation's IMMUTABLE TYPE (frozen standard, step 224). Chosen once at creation; the whole logic
+// grows out of it (above all: whether a run forks). To change it you delete the automation and create a
+// new one — there is no "switch type". Shown as the coloured badge in the top bar.
+//   stream    — no forks; every incoming event runs the same scheme end to end.
+//   instanced — each run forks Master -> Instance with its own parameters; may be deferred and tracked.
+export const AUTOMATION_TYPE: AutomationType = "{{AUTOMATION_TYPE}}";
+`,
+  "_data/instruction.md": `{{AUTOMATION_INSTRUCTION}}
 `,
   "_data/diagram.ts": `import { assembleNode, type NodeContract } from "../../../_shared/node-contract";
 import { META as m_input } from "../_nodes/input/meta";
@@ -243,6 +261,7 @@ export const USE_CASES: UseCase[] = [
   "_components/index.tsx": `import { PROJECT_DESCRIPTION } from "../_data/description";
 import { INPUT_CHANNELS } from "../_data/channels";
 import { PROBES } from "../_data/tests";
+import { AUTOMATION_TYPE } from "../_data/automation";
 import { AutomationStatusBar } from "../../../_shared/components/automation-status-bar.client";
 import { AddModifyAutomationButton } from "../../../_shared/components/add-modify-automation-button.client";
 import { AutomationAccordions } from "../../../_shared/components/automation-accordions.client";
@@ -269,6 +288,8 @@ export default function AutomationEntry() {
           defaultModel="gpt-4o-mini"
           channels={INPUT_CHANNELS}
           probes={PROBES}
+          automation="{{CATEGORY}}/{{PROJECT}}"
+          type={AUTOMATION_TYPE}
         />
         <div className="space-y-3">
           <h1 className="text-3xl font-semibold">{d.title}</h1>
@@ -495,6 +516,12 @@ export async function createFrozenProject(
   const description =
     String(input.description ?? "").trim() ||
     "Not described yet — a frozen skeleton. Describe what this automation does in _data/description.ts.";
+  // Phase 1 (step 224 §1.5): the immutable type + the owner's instruction (the seed the activation Quiz,
+  // step 227, turns into nodes). The type defaults to "stream" (the simpler kind) when not given.
+  const type = input.type === "instanced" ? "instanced" : "stream";
+  const instruction =
+    String(input.instruction ?? "").trim() ||
+    "Not stated yet — describe what this automation must do.";
   const projectsRoot = opts?.projectsRoot ?? defaultProjectsRoot();
 
   const categorySlugs = PROJECT_CATEGORIES.map((c) => c.slug);
@@ -531,6 +558,9 @@ export async function createFrozenProject(
     "{{CUID_INPUT}}": createNodeId(),
     "{{CUID_LOGIC}}": createNodeId(),
     "{{CUID_OUTPUT}}": createNodeId(),
+    // Phase 1 of an automation's birth (step 224 §1.5): the immutable type + the owner's instruction.
+    "{{AUTOMATION_TYPE}}": type,
+    "{{AUTOMATION_INSTRUCTION}}": instruction,
   };
   const sub = (s: string) => Object.entries(tokens).reduce((acc, [k, v]) => acc.split(k).join(v), s);
 

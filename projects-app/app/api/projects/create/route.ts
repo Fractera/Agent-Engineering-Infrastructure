@@ -38,7 +38,10 @@ function rebuildAndReload(): void {
 export async function POST(req: NextRequest) {
   if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 })
 
-  let body: { category?: string; project?: string; title?: string; description?: string; force?: boolean }
+  let body: {
+    category?: string; project?: string; title?: string; description?: string; force?: boolean
+    type?: string; instruction?: string
+  }
   try {
     body = await req.json()
   } catch {
@@ -50,6 +53,9 @@ export async function POST(req: NextRequest) {
     project: String(body.project ?? ""),
     title: body.title ? String(body.title) : undefined,
     description: body.description ? String(body.description) : undefined,
+    // Phase 1 (step 224 §1.5): the immutable automation type + the owner's mandatory instruction.
+    type: body.type === "instanced" ? "instanced" : "stream",
+    instruction: body.instruction ? String(body.instruction) : undefined,
     force: !!body.force,
   })
 
