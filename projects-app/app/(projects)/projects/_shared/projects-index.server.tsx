@@ -24,7 +24,6 @@ export async function ProjectsIndex() {
 
   return (
     <>
-    {/* One width across all three levels (owner): 85% of the screen, like the canvases. */}
     <main className="mx-auto flex w-[85vw] max-w-full flex-col px-6 py-10">
       <p className="text-sm text-muted-foreground">Projects</p>
       <h1 className="mt-1 text-3xl font-bold tracking-tight">All categories</h1>
