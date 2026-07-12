@@ -107,8 +107,8 @@ const SCHEMA = `
   -- columns are arbitrary, and a live server cannot add a column to an existing table (CREATE TABLE IF NOT
   -- EXISTS never alters; the makeLocalDb ALTER path does not run on the data-service server — lesson 225 G4:
   -- "no column named subject"). So a row is NOT a column-per-field: every field lives inside values_json,
-  -- keyed by the column's `source`. This is a class-immunity to that bug. A table with no live rows falls
-  -- back to the config's seed rows (owner: live replaces, seed is the demo fallback so a fresh dashboard is
+  -- keyed by the column source. This is a class-immunity to that bug. A table with no live rows falls
+  -- back to the config seed rows (owner: live replaces, seed is the demo fallback so a fresh dashboard is
   -- not empty). Both the automation's own nodes (via the API) and the owner (via the UI) write rows here.
   CREATE TABLE IF NOT EXISTS dashboard_rows (
     id          TEXT PRIMARY KEY NOT NULL,
