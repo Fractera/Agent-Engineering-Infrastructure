@@ -48,6 +48,7 @@ export const ENTITY_META: Record<EntityKey, EntityMeta> = {
   },
   dashboard: {
     label: "Dashboard",
+    mandatory: true,
     tooltip:
       "Data-visualization slices — holds sub-dashboards when the automation needs different views of its data.",
   },
@@ -63,5 +64,11 @@ export const ENTITY_META: Record<EntityKey, EntityMeta> = {
   },
 };
 
-/** The per-project toggle map (in _data/config.ts). `diagram` stays true; a fresh skeleton has the rest off. */
+/** The per-project toggle map (in _data/config.ts). Mandatory entities (`diagram`, `dashboard`) render
+ *  regardless; a fresh skeleton has the optional ones off. Consumers read it as `Partial` (a missing key
+ *  = off), so adding a NEW entity later never breaks existing projects' configs.
+ *
+ *  Scaling — to add a new entity: (1) add its key to `EntityKey`, (2) add a row to `ENTITY_META`
+ *  (label + tooltip, `mandatory` if always-on), (3) place it in `ENTITY_ORDER`. Existing projects need
+ *  no edit — the key is simply absent from their config and reads as off until they enable it. */
 export type EntitiesConfig = Record<EntityKey, boolean>;

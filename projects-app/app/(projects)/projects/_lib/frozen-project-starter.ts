@@ -122,15 +122,15 @@ export const PROBES: Probe[] = [];
 `,
   "_data/config.ts": `// This automation's CONFIG (frozen standard v4, step 222 — see app/(projects)/README.md,
 // "The automation entities standard"). \`entities\` toggles the accordions shown below the
-// "Add or modify automation" button. \`diagram\` is always on (minimal); enable the others when the
-// automation actually needs them — an enabled entity shows an empty container (a tooltip explains it),
-// a disabled one is not rendered. Use cases are mandatory and live outside this config.
+// "Add or modify automation" button. \`diagram\` and \`dashboard\` are always on (mandatory); enable the
+// others when the automation actually needs them — an enabled entity shows an empty container (a tooltip
+// explains it), a disabled one is not rendered. Use cases are mandatory and live outside this config.
 export const PROJECT_CONFIG = {
   entities: {
     diagram: true,
+    dashboard: true,
     calendar: false,
     map: false,
-    dashboard: false,
     processes: false,
     analytics: false,
   },
@@ -223,9 +223,9 @@ input channels) and the Tests modal are driven ENTIRELY by those two files — s
 app/(projects)/README.md, "The settings & tests declaration standard".
 
 Below the "Add or modify automation" button the page shows the ENTITY ACCORDIONS (step 222): a series
-driven by \`_data/config.ts\` (\`entities\`) — \`diagram\` always, plus optional Calendar / Map /
-Dashboard / Processes / Analytics — each an EMPTY container with a hover tooltip until its interface is
-built; and the mandatory USER CASES (\`_data/use-cases.ts\`), numbered (01, 02, …) with a status badge,
+driven by \`_data/config.ts\` (\`entities\`) — \`diagram\` and \`dashboard\` always on, plus optional
+Calendar / Map / Processes / Analytics — each an EMPTY container with a hover tooltip until its
+interface is built; and the mandatory USER CASES (\`_data/use-cases.ts\`), numbered (01, 02, …) with a status badge,
 seeded with one case ("Architect planned the automation" / new). Break the request into cases and move
 each from "new" to "in use" over short iterations. Full rules: app/(projects)/README.md,
 "The automation entities standard".

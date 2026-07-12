@@ -272,10 +272,16 @@ the same way the CARD standard is.
 | **Diagram** | always on | yes | The diagram that implements the project's automation. | The real node graph; a node highlights as it runs. |
 | **Calendar** | optional | no | Time-based events (reminders, dated items). | A calendar UI; can integrate Google Calendar and other tools. |
 | **Map** | optional | no | Tasks/events tied to a geographic location. | A map UI; can integrate maps and location services. |
-| **Dashboard** | optional | no | Data-visualization slices. | Sub-dashboards for different views of the data. |
+| **Dashboard** | always on | yes | Data-visualization slices. | Sub-dashboards for different views of the data. |
 | **Processes** | optional | no | A timeline (Gantt) of automations — start / duration / end. Pick a node to open its concrete diagram with the running node highlighted. | Common in content marketing, where each generation is a sequence stretched over time. |
 | **Analytics** | optional | no | Performance summaries. | User-defined charts on shadcn/charts. |
 | **User cases** | **always (outside the 6)** | **yes** | The cases agreed with the architect — what the automation should do, one case at a time. | The segmentation + approval workflow (see below). |
+
+**Scaling — adding a new entity.** The set is not fixed forever. To add one: (1) add its key to
+`EntityKey`, (2) add a row to `ENTITY_META` (label + tooltip, `mandatory` if always-on), (3) place it in
+`ENTITY_ORDER`. Nothing else changes — the accordion component reads the per-project config as `Partial`,
+so an entity absent from an existing project's `_data/config.ts` simply reads as *off* until that project
+enables it. Mandatory entities (today **Diagram** and **Dashboard**) render regardless of the config.
 
 ### User cases — numbered, status-badged, mandatory
 

@@ -27,10 +27,13 @@ export function AutomationAccordions({
   config,
   cases,
 }: {
-  config: EntitiesConfig;
+  // Partial by design (step 222, scaling): a project's _data/config.ts may not list a key that was
+  // added to the registry later — a missing key reads as "off", so adding a new entity never breaks
+  // an existing project. Mandatory entities render regardless of the config.
+  config: Partial<EntitiesConfig>;
   cases: UseCase[];
 }) {
-  const entities = ENTITY_ORDER.filter((k) => ENTITY_META[k].mandatory || config[k]);
+  const entities = ENTITY_ORDER.filter((k) => ENTITY_META[k].mandatory || Boolean(config[k]));
   return (
     <TooltipProvider delayDuration={200}>
       <Accordion type="single" collapsible className="rounded-lg border px-4">
