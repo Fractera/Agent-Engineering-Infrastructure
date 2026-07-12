@@ -196,7 +196,7 @@ const SCHEMA = `
   -- reload resumes exactly where it stopped.
   --
   -- STEP 225 G4 — the Quiz is generalized over its SUBJECT: it now brainstorms either a PROJECT (nodes) or
-  -- an EDGE of the global canvas (how two automations are linked). The row key stays the single `automation`
+  -- an EDGE of the global canvas (how two automations are linked). The row key stays the single automation
   -- column (no UNIQUE migration): a project's key is "category/slug", an edge's key is "edge:<cuid>". The
   -- subject/subject_ref columns make that key self-describing (and queryable) without a second table.
   CREATE TABLE IF NOT EXISTS automation_quiz (
