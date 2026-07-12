@@ -67,6 +67,27 @@ const SCHEMA = `
     error       TEXT,
     created_by  TEXT NOT NULL DEFAULT 'fractera-cron'
   );
+  -- Diagram RUN state (step 223.C.3). The unified run model that answers "which node is working now"
+  -- and drives the canvas's active-node orange highlight. automation = "<category>/<slug>";
+  -- instance_id is null for a Master run (the simple/reactive scenario) and set for an Instance run
+  -- (the finite-process scenario). current_node is the node running right now (null when finished).
+  CREATE TABLE IF NOT EXISTS automation_runs (
+    id           TEXT PRIMARY KEY NOT NULL,
+    automation   TEXT NOT NULL,
+    instance_id  TEXT,
+    current_node TEXT,
+    status       TEXT NOT NULL DEFAULT 'running',
+    started_at   TEXT NOT NULL DEFAULT (datetime('now')),
+    finished_at  TEXT,
+    payload      TEXT NOT NULL DEFAULT '{}'
+  );
+  CREATE TABLE IF NOT EXISTS automation_run_nodes (
+    id       TEXT PRIMARY KEY NOT NULL,
+    run_id   TEXT NOT NULL,
+    node_id  TEXT NOT NULL,
+    status   TEXT NOT NULL DEFAULT 'idle',
+    payload  TEXT NOT NULL DEFAULT '{}'
+  );
   -- Automation finance types (step 205, §E): the per-automation income/expense categories the
   -- document-parsing / voice finance action segments a record into. Capped at ≤10 per (project,kind)
   -- in the app layer (not a schema constraint); UNIQUE(project,kind,name) prevents duplicates. Replaces
