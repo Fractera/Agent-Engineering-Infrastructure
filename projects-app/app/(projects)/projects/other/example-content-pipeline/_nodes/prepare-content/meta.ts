@@ -10,4 +10,5 @@ export const META: NodeMeta = {
   out: { article: "Article" },
   conditions: ["at least one source was found"],
   run: "sequential",
+  estDurationMs: 300000,
 };

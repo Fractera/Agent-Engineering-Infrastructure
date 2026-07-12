@@ -10,4 +10,5 @@ export const META: NodeMeta = {
   out: { url: "string", publishedAt: "ISODate" },
   conditions: ["publishAt is in the future", "the article passed the previous nodes"],
   run: "sequential",
+  estDurationMs: 60000,
 };

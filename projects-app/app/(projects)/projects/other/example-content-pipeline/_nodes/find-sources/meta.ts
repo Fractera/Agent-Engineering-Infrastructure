@@ -11,4 +11,5 @@ export const META: NodeMeta = {
   out: { sources: "Source[]" },
   conditions: ["topic is non-empty"],
   run: "parallel",
+  estDurationMs: 120000,
 };

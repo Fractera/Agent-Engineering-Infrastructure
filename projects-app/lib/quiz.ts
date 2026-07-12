@@ -150,20 +150,23 @@ export async function nextQuestion(quiz: QuizRow, instruction: string, turns: Tu
   return chat(messages);
 }
 
-/** Synthesize the current node (name + brief) from the brainstorm — this is what becomes the node's spec.md. */
-export async function synthesizeNode(quiz: QuizRow, instruction: string, turns: Turn[]): Promise<{ name: string; spec: string }> {
+/** Synthesize the current node (name + brief + estimated process time) from the brainstorm. The name+spec
+ *  become the node's meta/spec.md; estMinutes → estDurationMs feeds the Processes timeline (step 230) — a
+ *  rough guess, refined later against real execution. */
+export async function synthesizeNode(quiz: QuizRow, instruction: string, turns: Turn[]): Promise<{ name: string; spec: string; estDurationMs: number }> {
   const transcript = turns.map((t) => `${t.role === "user" ? "OWNER" : "YOU"}: ${t.content}`).join("\n");
   const out = await chat([
     { role: "system", content: `You turn a design brainstorm into ONE node of an automation. Reply with STRICT JSON only:
-{"name":"<a short English node name, 2-4 words>","spec":"<the brief for the coding agent, in ${languageName(quiz.language)}: what this node does, its input, its output, the rules>"}
-The node name is an identifier shown on the diagram — always English. The spec is written in ${languageName(quiz.language)}.` },
+{"name":"<a short English node name, 2-4 words>","spec":"<the brief for the coding agent, in ${languageName(quiz.language)}: what this node does, its input, its output, the rules>","estMinutes":<a rough guess of how many minutes this node's process takes to run, a positive number>}
+The node name is an identifier shown on the diagram — always English. The spec is written in ${languageName(quiz.language)}. estMinutes is a hypothetical estimate (no precision needed).` },
     { role: "user", content: `The automation's instruction:\n${instruction}\n\nThe brainstorm for node #${quiz.node_count + 1}:\n${transcript || "(no questions were answered — infer the node from the instruction)"}` },
   ]);
   try {
-    const j = JSON.parse(out.replace(/^```json\s*|\s*```$/g, "")) as { name?: string; spec?: string };
-    return { name: (j.name ?? "New node").slice(0, 60), spec: (j.spec ?? "").trim() || "Not described." };
+    const j = JSON.parse(out.replace(/^```json\s*|\s*```$/g, "")) as { name?: string; spec?: string; estMinutes?: number };
+    const mins = typeof j.estMinutes === "number" && j.estMinutes > 0 ? j.estMinutes : 1;
+    return { name: (j.name ?? "New node").slice(0, 60), spec: (j.spec ?? "").trim() || "Not described.", estDurationMs: Math.round(mins * 60_000) };
   } catch {
-    return { name: `Node ${quiz.node_count + 1}`, spec: out || "Not described." };
+    return { name: `Node ${quiz.node_count + 1}`, spec: out || "Not described.", estDurationMs: 60_000 };
   }
 }
 

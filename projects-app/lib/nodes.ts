@@ -154,6 +154,16 @@ export async function readNodePorts(projectDir: string, slug: string): Promise<{
   return { in: block("in"), out: block("out") };
 }
 
+/** A node's ESTIMATED process time in ms (step 230), parsed from meta.ts. The model writes estDurationMs
+ *  when the node is designed; absent → the default. Read from the file (Model B) — never a column on the
+ *  existing automation_nodes table (lesson 225 G4). */
+export async function readNodeDuration(projectDir: string, slug: string): Promise<number> {
+  const t = await readFile(join(projectDir, "_nodes", slug, "meta.ts"), "utf8").catch(() => "");
+  const m = t.match(/estDurationMs\s*:\s*(\d+)/);
+  const v = m ? Number(m[1]) : NaN;
+  return Number.isFinite(v) && v > 0 ? v : 60_000;
+}
+
 /** A node's co-located source files (for a version snapshot / rollback). Missing files read as "". */
 export async function readNodeFiles(projectDir: string, slug: string): Promise<{ meta: string; functions: string; instruction: string; spec: string }> {
   const dir = join(projectDir, "_nodes", slug);

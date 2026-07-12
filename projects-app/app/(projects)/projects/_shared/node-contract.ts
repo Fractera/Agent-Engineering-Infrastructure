@@ -56,11 +56,26 @@ export type NodeContract = {
   /** The owner's free-form brief for a draft node (co-located `_nodes/<slug>/spec.md`), from which the
    *  coder materializes the real functions. Present only while `draft`. */
   spec?: string;
+  /** ESTIMATED process time of this node in milliseconds (step 230, the Processes/Gantt timeline). The model
+   *  guesses it when the node is designed — no precision needed; it can be ms, seconds, minutes or days. The
+   *  fork timeline sums these across the nodes (sequential) to draw a fork's length; it is refined against
+   *  actual execution (automation_runs). Lives in meta.ts (Model B) — never a column on the existing
+   *  automation_nodes table (lesson 225 G4). Absent → the default estimate. */
+  estDurationMs?: number;
 };
 
 /** A node's metadata — everything in the contract except the function set, the instruction and the spec
  *  (each co-located in its own file). Lives in the node's own `_nodes/<slug>/meta.ts`. */
 export type NodeMeta = Omit<NodeContract, "functions" | "instruction" | "spec">;
+
+/** The default node process-time estimate (step 230) — one minute, used when a node carries no estDurationMs
+ *  (e.g. nodes created before 230). Deliberately coarse: the timeline is an estimate refined against reality. */
+export const DEFAULT_NODE_DURATION_MS = 60_000;
+
+export function nodeDurationMs(meta: Pick<NodeContract, "estDurationMs">): number {
+  const v = meta.estDurationMs;
+  return typeof v === "number" && Number.isFinite(v) && v > 0 ? v : DEFAULT_NODE_DURATION_MS;
+}
 
 /** Assemble a node's full contract from its co-located parts (step 223.C.2 / 224). Each node folder
  *  `_nodes/<slug>/` holds meta.ts (NodeMeta), functions.ts (NodeFunction[]), instruction.ts (string) and,

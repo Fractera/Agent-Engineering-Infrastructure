@@ -173,6 +173,7 @@ export const META: NodeMeta = {
   out: { payload: "unknown" },
   run: "sequential",
   draft: true,
+  estDurationMs: 60000,
 };
 `,
   "_nodes/input/functions.ts": `import type { NodeFunction } from "../../../../_shared/node-contract";
@@ -195,6 +196,7 @@ export const META: NodeMeta = {
   out: { result: "unknown" },
   run: "sequential",
   draft: true,
+  estDurationMs: 60000,
 };
 `,
   "_nodes/logic/functions.ts": `import type { NodeFunction } from "../../../../_shared/node-contract";
@@ -217,6 +219,7 @@ export const META: NodeMeta = {
   out: {},
   run: "sequential",
   draft: true,
+  estDurationMs: 60000,
 };
 `,
   "_nodes/output/functions.ts": `import type { NodeFunction } from "../../../../_shared/node-contract";

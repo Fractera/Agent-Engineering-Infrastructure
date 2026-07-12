@@ -14,6 +14,8 @@ export type DraftNodeInput = {
   name: string;
   /** The owner's free-form brief, from which the coder materializes the real functions. */
   spec: string;
+  /** Estimated process time in ms (step 230, the Processes timeline). Absent → the default estimate. */
+  estDurationMs?: number;
 };
 
 /** The three files of a fresh draft node folder: meta.ts (draft:true), empty functions.ts, spec.md. */
@@ -21,12 +23,13 @@ export function draftNodeStubFiles(input: DraftNodeInput): Record<string, string
   const name = JSON.stringify(input.name);
   const cuid = JSON.stringify(input.cuid);
   const id = JSON.stringify(input.slug);
+  const est = typeof input.estDurationMs === "number" && input.estDurationMs > 0 ? input.estDurationMs : 60000;
   return {
     "meta.ts": `import type { NodeMeta } from "../../../../_shared/node-contract";
 
 // Draft node (step 224) — not yet built. Empty functions + a spec.md brief; a red frame on the canvas;
 // ignored by execution until the coder materializes it. The cuid is the stable identity the DB canvas
-// index + the per-node version history join on.
+// index + the per-node version history join on. estDurationMs (step 230) is the estimated process time.
 export const META: NodeMeta = {
   id: ${id},
   cuid: ${cuid},
@@ -36,6 +39,7 @@ export const META: NodeMeta = {
   out: {},
   run: "sequential",
   draft: true,
+  estDurationMs: ${est},
 };
 `,
     "functions.ts": `import type { NodeFunction } from "../../../../_shared/node-contract";

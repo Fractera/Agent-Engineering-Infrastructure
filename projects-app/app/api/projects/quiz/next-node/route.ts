@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
   const ord = await nextOrd(proj.automation);
   const nodeDir = join(proj.projectDir, "_nodes", slug);
   await mkdir(nodeDir, { recursive: true });
-  for (const [rel, content] of Object.entries(draftNodeStubFiles({ cuid, slug, name: node.name, spec: node.spec }))) {
+  for (const [rel, content] of Object.entries(draftNodeStubFiles({ cuid, slug, name: node.name, spec: node.spec, estDurationMs: node.estDurationMs }))) {
     await writeFile(join(nodeDir, rel), content, "utf8");
   }
   await db.prepare(
