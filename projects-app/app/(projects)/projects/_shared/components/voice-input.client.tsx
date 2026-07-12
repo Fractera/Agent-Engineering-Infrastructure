@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Loader2, Mic, MicOff } from "lucide-react";
+import { AlertTriangle, Loader2, Mic, MicOff } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useUiLang } from "../use-ui-lang";
@@ -244,20 +244,38 @@ export function VoiceInput({
         toast.error(L.micUnavailable, { description: L.micNoDevice });
       } else if (inFrame()) {
         // The likely cause inside the admin preview: a cross-origin frame the browser refuses the mic in.
-        // AMBER (not red) — it is not a real failure, it is a "do it on its own page" nudge, with the fix
-        // one click away: open the exact current page in a new tab, and ask the preview window to close.
-        toast.warning(L.frameTitle, {
-          description: L.frameDesc,
-          duration: 20000,
-          action: {
-            label: L.openTab,
-            onClick: () => {
-              window.open(window.location.href, "_blank", "noopener");
-              try { window.parent?.postMessage({ type: "fractera:preview-close" }, "*"); } catch { /* not framed */ }
-            },
-          },
-          cancel: { label: L.cancel, onClick: () => {} },
-        });
+        // AMBER (not red) — not a real failure, a "do it on its own page" nudge. A CUSTOM toast (owner's
+        // layout): the text on top, the two buttons in one row below — Sonner's built-in action+cancel
+        // stacked them into ugly columns.
+        toast.custom(
+          (id) => (
+            <div className="flex w-full flex-col gap-3 rounded-lg border border-amber-500/50 bg-background p-3 shadow-lg">
+              <div className="flex gap-2">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">{L.frameTitle}</p>
+                  <p className="text-xs text-muted-foreground">{L.frameDesc}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button size="sm" variant="ghost" onClick={() => toast.dismiss(id)}>
+                  {L.cancel}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    window.open(window.location.href, "_blank", "noopener");
+                    try { window.parent?.postMessage({ type: "fractera:preview-close" }, "*"); } catch { /* not framed */ }
+                    toast.dismiss(id);
+                  }}
+                >
+                  {L.openTab}
+                </Button>
+              </div>
+            </div>
+          ),
+          { duration: 20000 },
+        );
       } else {
         // A real denial on a full-page tab — tell the owner to allow the mic for this site.
         toast.error(L.micDenied, { description: L.micDeniedDesc });
