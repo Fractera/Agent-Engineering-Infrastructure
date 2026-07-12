@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Play, RotateCcw } from "lucide-react";
+import { Minus, Play, Plus, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -39,6 +39,7 @@ export function ProcessesTimeline({ automation }: { automation: string }) {
   const [rows, setRows] = useState<SRow[] | null>(null);
   const [now, setNow] = useState(Date.now());
   const [hover, setHover] = useState<{ x: number; y: number; text: string } | null>(null);
+  const [zoom, setZoom] = useState(1); // 1 = auto-fit; "+" doubles the px per second, "−" halves it
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
@@ -78,11 +79,14 @@ export function ProcessesTimeline({ automation }: { automation: string }) {
     return { min: min - span * 0.05, max: max + span * 0.05 };
   }, [rows, now]);
 
+  // The zoom (owner): "+" doubles the space one second takes, "−" halves it. It multiplies the auto-fit
+  // scale, so the timeline still fits by default and the buttons stretch/squeeze it from there.
   const scale = useMemo(() => {
-    if (!bounds) return MIN_SCALE;
-    const targetPx = 1200; // aim to fill ~1200px, then let it scroll
-    return Math.max((bounds.max - bounds.min) === 0 ? MIN_SCALE : targetPx / (bounds.max - bounds.min), MIN_SCALE);
-  }, [bounds]);
+    if (!bounds) return MIN_SCALE * zoom;
+    const targetPx = 1200; // auto-fit ~1200px, then let it scroll
+    const fit = (bounds.max - bounds.min) === 0 ? MIN_SCALE : targetPx / (bounds.max - bounds.min);
+    return Math.max(fit, MIN_SCALE) * zoom;
+  }, [bounds, zoom]);
 
   const xOf = useCallback((ms: number) => (bounds ? (ms - bounds.min) * scale : 0), [bounds, scale]);
 
@@ -126,7 +130,19 @@ export function ProcessesTimeline({ automation }: { automation: string }) {
           Each row is a fork; its bar is its duration (the nodes run in sequence). The vertical line is now.
           Click a bar to open its diagram. Nodes turn green as they finish; forks run one by one.
         </p>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          {/* Zoom (owner): "+" doubles the space one second takes; "−" halves it. */}
+          <div className="flex items-center gap-1">
+            <Button size="icon" variant="outline" className="size-8" aria-label="Zoom out" title="Squeeze the time scale (half the pixels per second)" onClick={() => setZoom((z) => Math.max(z / 2, 1 / 64))}>
+              <Minus className="size-3.5" />
+            </Button>
+            <span className="w-10 text-center text-xs tabular-nums text-muted-foreground" title="Time scale">
+              {zoom >= 1 ? `${zoom}x` : `1/${Math.round(1 / zoom)}x`}
+            </span>
+            <Button size="icon" variant="outline" className="size-8" aria-label="Zoom in" title="Stretch the time scale (double the pixels per second)" onClick={() => setZoom((z) => Math.min(z * 2, 64))}>
+              <Plus className="size-3.5" />
+            </Button>
+          </div>
           <Button size="sm" onClick={() => void control("run")}>
             <Play className="size-3.5" /> Run
           </Button>
