@@ -456,6 +456,14 @@ work genuinely cannot be done without it (e.g. asking an agent to generate an im
 Distinguish clearly: *"the application executes functions"* vs *"a node calls an external AI tool as one
 of its steps"* — the latter is a declared external call, not the app thinking for itself.
 
+**Every external-AI function MUST carry, and the panel MUST display in FULL, the system instruction it
+passes** (`NodeFunction.externalAi.systemInstruction`). This is not the node's build instruction
+(§1 — how the functions were generated); it is the actual runtime system prompt sent to the external AI.
+Showing it in full (never truncated) makes it clear WHAT is invoked and, together with
+`externalAi.resultMapping`, HOW the AI's answer binds back to the function's typed return — so the formed
+request and its result are always traceable. A function without `externalAi` is plain deterministic code
+with no AI. The panel marks external-AI functions with an "external AI call" badge.
+
 ### 5. 🔴 Co-location of a node's functions (critical invariant — continues §6 of the diagram standard)
 
 A node's functions live **only** in `projects/<category>/<slug>/_nodes/<nodeId>/`:

@@ -17,6 +17,15 @@ export type NodeFunction = {
   returns: TypeSpec;
   /** Control rules the agent must honour when implementing / running the function. */
   rules?: string[];
+  /** If this function makes an EXTERNAL AI call (the ONLY allowed use of AI — never inside the app),
+   *  the FULL system instruction passed to that AI at runtime (step 223.C). The panel shows it in FULL
+   *  (never truncated) so it is clear WHAT is invoked and HOW the result maps back to the formed
+   *  request. `resultMapping` states how the AI's answer is bound back to the function's typed return.
+   *  Absent = a plain deterministic function with no AI. */
+  externalAi?: {
+    systemInstruction: string;
+    resultMapping?: string;
+  };
 };
 
 /** Per-node runtime status (used by the run model in a later 223.C slice). */

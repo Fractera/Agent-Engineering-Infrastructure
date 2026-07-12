@@ -13,6 +13,16 @@ export const FUNCTIONS: NodeFunction[] = [
     name: "draftArticle",
     paramsIn: { outline: "Outline", sources: "Source[]" },
     returns: "Article",
-    rules: ["calls an EXTERNAL AI tool explicitly (generation) — not app-internal AI"],
+    rules: ["the ONLY AI in this node — an explicit external call, never app-internal"],
+    externalAi: {
+      systemInstruction:
+        "You are a technical writer. Write a complete article that follows the given OUTLINE section by " +
+        "section, using ONLY facts supported by the provided SOURCES. Cite each claim to its source id. " +
+        "Do not invent sources. Return strict JSON: { title: string, sections: [{ heading: string, " +
+        "html: string, sourceIds: string[] }] }.",
+      resultMapping:
+        "The JSON is parsed into the typed Article (title + sections); sourceIds are validated against " +
+        "the input sources before the node returns.",
+    },
   },
 ];
