@@ -18,8 +18,12 @@ const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 
 export async function POST(req: NextRequest) {
   if (!(await authorize(req))) return new Response("forbidden", { status: 403 });
-  const body = (await req.json().catch(() => null)) as { automation?: string; edge?: string } | null;
-  const t = await resolveQuizTarget({ automation: body?.automation, edge: body?.edge });
+  const body = (await req.json().catch(() => null)) as
+    | { automation?: string; edge?: string; useCase?: string; cases?: boolean }
+    | null;
+  const t = await resolveQuizTarget({
+    automation: body?.automation, edge: body?.edge, useCase: body?.useCase, cases: body?.cases,
+  });
   if (!t.ok) return new Response(t.error, { status: 400 });
   const quiz = await getQuizFor(t.target);
   if (!quiz) return new Response("quiz not started", { status: 400 });

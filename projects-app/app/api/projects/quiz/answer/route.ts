@@ -11,8 +11,12 @@ export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  const body = (await req.json().catch(() => null)) as { automation?: string; edge?: string; answer?: string } | null;
-  const t = await resolveQuizTarget({ automation: body?.automation, edge: body?.edge });
+  const body = (await req.json().catch(() => null)) as
+    | { automation?: string; edge?: string; useCase?: string; cases?: boolean; answer?: string }
+    | null;
+  const t = await resolveQuizTarget({
+    automation: body?.automation, edge: body?.edge, useCase: body?.useCase, cases: body?.cases,
+  });
   if (!t.ok) return NextResponse.json({ error: t.error }, { status: 400 });
   const answer = String(body?.answer ?? "").trim();
   if (!answer) return NextResponse.json({ error: "answer is required" }, { status: 400 });

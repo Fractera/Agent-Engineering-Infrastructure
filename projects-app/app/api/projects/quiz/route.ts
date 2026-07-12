@@ -23,6 +23,8 @@ export async function GET(req: NextRequest) {
   const t = await resolveQuizTarget({
     automation: req.nextUrl.searchParams.get("automation"),
     edge: req.nextUrl.searchParams.get("edge"),
+    useCase: req.nextUrl.searchParams.get("useCase"),
+    cases: req.nextUrl.searchParams.get("cases") === "1",
   });
   if (!t.ok) return NextResponse.json({ error: t.error }, { status: 400 });
 
@@ -49,8 +51,12 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  const body = (await req.json().catch(() => null)) as { automation?: string; edge?: string; reopen?: boolean } | null;
-  const t = await resolveQuizTarget({ automation: body?.automation, edge: body?.edge });
+  const body = (await req.json().catch(() => null)) as
+    | { automation?: string; edge?: string; useCase?: string; cases?: boolean; reopen?: boolean }
+    | null;
+  const t = await resolveQuizTarget({
+    automation: body?.automation, edge: body?.edge, useCase: body?.useCase, cases: body?.cases,
+  });
   if (!t.ok) return NextResponse.json({ error: t.error }, { status: 400 });
 
   const quiz = await startQuizFor(t.target);
