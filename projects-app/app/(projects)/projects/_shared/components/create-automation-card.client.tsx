@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Plus } from "lucide-react";
+import { FolderPlus, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -191,6 +191,33 @@ export function CreateAutomationCard({ category }: { category: string }) {
         open={open}
         onOpenChange={setOpen}
         category={category}
+        onCreated={() => router.refresh()}
+      />
+    </>
+  );
+}
+
+/** The "+" card that closes the ROOT grid, beside the global canvas (step 225 G6). Same dialog, one
+ *  difference the per-category card cannot have: the root spans EVERY category, so the owner CHOOSES where
+ *  the new automation lives (the dropdown). A folder icon — it creates a project, not a node. */
+export function CreateAutomationRootCard() {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="group flex min-h-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed bg-card/50 p-5 text-muted-foreground transition-all hover:border-primary/50 hover:text-foreground"
+      >
+        <FolderPlus className="size-8" />
+        <span className="text-sm font-medium">Create project</span>
+        <span className="text-xs">Choose its category in the dialog</span>
+      </button>
+      <CreateAutomationDialog
+        open={open}
+        onOpenChange={setOpen}
         onCreated={() => router.refresh()}
       />
     </>

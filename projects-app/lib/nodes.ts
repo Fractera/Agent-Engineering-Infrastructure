@@ -141,6 +141,19 @@ export async function nodeByCuid(cuid: string): Promise<NodeRow | undefined> {
   return (await db.prepare(`SELECT * FROM automation_nodes WHERE cuid = ?`).get(cuid)) as NodeRow | undefined;
 }
 
+/** A node's typed PORTS — its declared inputs and outputs, parsed from meta.ts (step 225 G5). An AI wiring
+ *  the workspace must SEE what a node consumes and produces to choose link endpoints sensibly instead of
+ *  guessing; this is what makes a link programmable by an agent, not only by a human reading the code. */
+export async function readNodePorts(projectDir: string, slug: string): Promise<{ in: string[]; out: string[] }> {
+  const t = await readFile(join(projectDir, "_nodes", slug, "meta.ts"), "utf8").catch(() => "");
+  const block = (key: "in" | "out") => {
+    const m = t.match(new RegExp(`\\b${key}\\s*:\\s*\\{([^}]*)\\}`));
+    if (!m) return [];
+    return [...m[1].matchAll(/(\w+)\s*:\s*["']([^"']+)["']/g)].map((x) => `${x[1]}: ${x[2]}`);
+  };
+  return { in: block("in"), out: block("out") };
+}
+
 /** A node's co-located source files (for a version snapshot / rollback). Missing files read as "". */
 export async function readNodeFiles(projectDir: string, slug: string): Promise<{ meta: string; functions: string; instruction: string; spec: string }> {
   const dir = join(projectDir, "_nodes", slug);

@@ -420,6 +420,46 @@ in *who carries the brief*:
 **"In development" (indigo)** and it cannot be activated. Running **Instances** (forks, §Master/Instance) keep
 working off their own snapshot; the interlock is about the Master.
 
+### 6.2. The GLOBAL architecture — how automations are wired to each other (step 225)
+
+An automation is not an island. The workspace itself is a graph: on `/projects`, below the cards, the
+**global canvas** shows **every project as a node** and every **link** as a *programmable integration between
+two automations*. Unlike the tree inside one automation, this graph is **arbitrary** — a link may join **any**
+node of X to **any** node of Y (not only parents/children, not only leaves).
+
+**A link is a first-class entity with the same lifecycle as a node.** Its code lives in its own folder
+`projects/_edges/<cuid>/` (`meta.ts` + `spec.md` + `functions.ts`) and belongs to **no** project — it is
+*between* them; deleting a project prunes its links, so nothing dangles.
+
+**🔴 THE READINESS GATE.** A link can be created ONLY between automations whose development is **finished**
+(no draft nodes on either side) — creating a link always changes its endpoint nodes, so they must be built
+first. A refused attempt answers `409` with a machine-readable reason (`gate: {from, to}` with the count of
+nodes still to build). **An agent must read that refusal, build the missing nodes, and retry** — it is a
+contract, not an error to swallow.
+
+**THE AGENT LOOP for links** (an AI can wire the whole workspace with no human in the middle):
+
+1. `GET /api/projects/global` — the whole graph: every project, its readiness (`ready`, `drafts`), every
+   link, the global status.
+2. `GET /api/projects/nodes?automation=<cat/slug>&withPorts=1` — the **typed ports** of each node (`in`/`out`),
+   so the endpoints are chosen by CONTRACT (which output can feed which input), not by guessing.
+3. `POST /api/projects/edges` `{from, to}` — create the link (or read the gate's refusal and go build nodes).
+4. `PATCH /api/projects/edges/<cuid>` `{fromNodeCuid, toNodeCuid, spec}` — choose the endpoint nodes and write
+   the **brief**: which output feeds which input, under what conditions, how they stay in sync.
+5. `POST /api/projects/edges/<cuid>/start-development` — queue ONE development step (the product's own
+   `DEVELOPMENT-STEPS/NEW-STEPS/`; it shows up in `GET /api/projects/dev-steps` like any node step).
+6. Write the integration in `_edges/<cuid>/functions.ts`, then the MANDATORY close:
+   `POST /api/projects/edges/<cuid>/materialize` `{summary, devStepRef}` → the link gains a version, the step
+   moves to `COMPLETED-STEPS/`.
+7. `GET /api/projects/edges/validate` → `ok: true`.
+
+The **Quiz** does step 4 for you: opened on a link (`POST /api/projects/quiz {edge: "<cuid>"}`) it brainstorms
+the integration — it sees both automations and all their nodes — and `POST /api/projects/quiz/edge-apply`
+writes the link's `spec.md` and queues its development step.
+
+**Global status:** any draft link ⇒ *in development*; the owner may turn the global automation **off** — then
+the projects keep running exactly as before, only the **synchronisation between them** stops.
+
 - **Evolution (step 224, Builder mode) — a node has a lifecycle, and a DRAFT is a legal file stub.** A node
   created in Builder is born a **draft**: its `meta.ts` carries `draft: true`, its `functions.ts` is empty,
   and it holds a `spec.md` (the owner's free-form brief). It is on the canvas (a real folder, referenced by

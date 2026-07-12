@@ -5,6 +5,7 @@ import { PROJECT_CATEGORIES } from "./categories";
 import { listProjectSlugs } from "./projects-manifest";
 import { getProjectCard } from "./project-card";
 import { GlobalCanvas } from "./components/global-canvas.client";
+import { CreateAutomationRootCard } from "./components/create-automation-card.client";
 
 // Root index of the Projects layer (/projects, step 211 Ф0): the landing that
 // lists the four permanent categories with their live project counts and names.
@@ -55,6 +56,9 @@ export async function ProjectsIndex() {
             </div>
           </Link>
         ))}
+        {/* The root's own "create project" card (step 225 G6) — the SAME creation dialog as a category's "+",
+            with the one option a category grid cannot offer: choosing WHICH category the automation lives in. */}
+        <CreateAutomationRootCard />
       </div>
 
       {/* THE GLOBAL AUTOMATION CANVAS (step 225) — below the cards, at the root: every project is a node,

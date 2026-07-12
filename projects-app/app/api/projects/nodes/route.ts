@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authorize, resolveProject, syncIndexFromFiles, listNodes, readNodeFiles } from "@/lib/nodes";
+import { authorize, resolveProject, syncIndexFromFiles, listNodes, readNodeFiles, readNodePorts } from "@/lib/nodes";
 
 // The live canvas index (step 224 L3) — GET ?automation=<category>/<slug> returns the lightweight node
 // list the Builder canvas renders (cuid, name, draft, position, versions). It seeds the index from the
@@ -34,6 +34,14 @@ export async function GET(req: NextRequest) {
 
   // The Builder panel also needs each node's editable text — a draft's spec.md, a materialized node's
   // instruction.ts. Small (the panel edits them); the heavy version snapshots are never included.
+  // ?withPorts=1 (step 225 G5) — the typed inputs/outputs of every node. An AGENT wiring the workspace needs
+  // this to choose a link's endpoints by CONTRACT (which output can feed which input), not by guessing.
+  if (req.nextUrl.searchParams.get("withPorts") === "1") {
+    const ports: Record<string, { in: string[]; out: string[] }> = {};
+    for (const n of nodes) ports[n.cuid] = await readNodePorts(proj.projectDir, n.slug);
+    return NextResponse.json({ nodes, ports });
+  }
+
   if (req.nextUrl.searchParams.get("withSources") === "1") {
     const sources: Record<string, { spec: string; instruction: string }> = {};
     for (const n of nodes) {
