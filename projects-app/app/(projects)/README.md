@@ -257,3 +257,45 @@ before any component or route is built. Once it settles, the frozen shared compo
 new projects are born with these modals and honest empty states) all follow from exactly what is
 written above. When the starter emits it, this section is mirrored into the project's own `README.md`
 the same way the CARD standard is.
+
+## The automation entities (accordions) standard
+
+> Below the "Add or modify automation" button, a project shows a **series of accordions — one per
+> entity**. The entities are **config-driven**: `_data/config.ts` (`entities`) turns each on or off.
+> At this stage an enabled entity renders an **empty container** whose title has a **hover tooltip**
+> explaining what it is; a disabled one is not rendered. Later, the data inside each container will
+> drive real interface generation. The registry in code is `_shared/entities.ts` (labels + tooltips);
+> the per-project toggle is `_data/config.ts`. This table is the source from which the automation grows.
+
+| Entity | Config | Mandatory | Purpose | Grows into |
+|---|---|---|---|---|
+| **Diagram** | always on | yes | The diagram that implements the project's automation. | The real node graph; a node highlights as it runs. |
+| **Calendar** | optional | no | Time-based events (reminders, dated items). | A calendar UI; can integrate Google Calendar and other tools. |
+| **Map** | optional | no | Tasks/events tied to a geographic location. | A map UI; can integrate maps and location services. |
+| **Dashboard** | optional | no | Data-visualization slices. | Sub-dashboards for different views of the data. |
+| **Processes** | optional | no | A timeline (Gantt) of automations — start / duration / end. Pick a node to open its concrete diagram with the running node highlighted. | Common in content marketing, where each generation is a sequence stretched over time. |
+| **Analytics** | optional | no | Performance summaries. | User-defined charts on shadcn/charts. |
+| **User cases** | **always (outside the 6)** | **yes** | The cases agreed with the architect — what the automation should do, one case at a time. | The segmentation + approval workflow (see below). |
+
+### User cases — numbered, status-badged, mandatory
+
+User cases are the **mandatory** accordion (outside the six config entities), the result of the
+architect dialogue at the earliest stage. Each case carries a **big number** (`01`, `02`, …) so the
+owner can refer to it ("in case 02, change …"), the case title, and a **colored status badge**. The
+lifecycle, English labels: **new → in approval → approved → in development → testing → in use**. A
+fresh skeleton is **seeded with one case** — *"Architect planned the automation" / new* — so the step
+is impossible to skip; it shows the agent the shape to reuse and forces it to segment the request into
+cases. Types live in `_shared/use-cases.ts` (`UseCaseStatus`, `STATUS_META`, `UseCase`); the cases
+themselves in the project's `_data/use-cases.ts`.
+
+### The development cycle (why this shape)
+
+An automation is **not built in one shot**. The user's initial request is broken into **raw user
+cases** — even if the user never wrote it as cases. Cases are filed as *new* (or matched to existing
+structure and given other statuses), and development runs in **many short iterations**, moving each
+case's status forward until they are all **in use**. This is why the entities are declared first as
+empty, tooltip-labelled containers: the shape is agreed before any interface is generated.
+
+Like the standards above, the frozen starter emits `_data/config.ts` + `_data/use-cases.ts` and mounts
+`AutomationAccordions` in the project's `index.tsx`, and mirrors a short copy of this section into the
+project's own `README.md`. Refine the rules here first; the code follows.

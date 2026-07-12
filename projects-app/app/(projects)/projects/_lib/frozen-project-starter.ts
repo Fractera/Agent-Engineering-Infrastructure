@@ -57,7 +57,12 @@ function humanize(slug: string): string {
 // `help` in the channels example, so a project is born with both declaration surfaces the Settings
 // and Tests modals read. (The modals themselves are wired on the reference automation first; emitting
 // their menu into every new project follows once the menu/status system is generified into _shared.)
-const VERSION = 3;
+//
+// v4 (step 222) adds the ENTITIES config (_data/config.ts) and the seeded USER CASES (_data/use-cases.ts),
+// and renders the series of entity accordions (Diagram + optional Calendar/Map/Dashboard/Processes/
+// Analytics, each an empty container with a hover tooltip) plus the mandatory numbered, status-badged
+// Use cases below the "Add or modify automation" button.
+const VERSION = 4;
 const SKELETON: Record<string, string> = {
   "page.tsx": `import AutomationEntry from "./_components";
 
@@ -115,13 +120,48 @@ export const INPUT_CHANNELS: InputChannel[] = [];
 //   ];
 export const PROBES: Probe[] = [];
 `,
+  "_data/config.ts": `// This automation's CONFIG (frozen standard v4, step 222 — see app/(projects)/README.md,
+// "The automation entities standard"). \`entities\` toggles the accordions shown below the
+// "Add or modify automation" button. \`diagram\` is always on (minimal); enable the others when the
+// automation actually needs them — an enabled entity shows an empty container (a tooltip explains it),
+// a disabled one is not rendered. Use cases are mandatory and live outside this config.
+export const PROJECT_CONFIG = {
+  entities: {
+    diagram: true,
+    calendar: false,
+    map: false,
+    dashboard: false,
+    processes: false,
+    analytics: false,
+  },
+} as const;
+`,
+  "_data/use-cases.ts": `import type { UseCase } from "../../../_shared/use-cases";
+
+// This automation's USER CASES (frozen standard v4, step 222 — see _shared/use-cases.ts). The cases
+// agreed with the architect, each with a number (01, 02, …) and a status badge. Seeded with ONE case
+// so the segmentation step is never skipped: break the request into cases and move each from "new" to
+// "in-use" over short iterations (new → in-approval → approved → in-development → testing → in-use).
+export const USE_CASES: UseCase[] = [
+  {
+    id: "planned",
+    title: "Architect planned the automation",
+    status: "new",
+    summary:
+      "The architect has planned this automation. Break the request into user cases here and move each from 'new' to 'in use' over short iterations.",
+  },
+];
+`,
   "_components/index.tsx": `import { PROJECT_DESCRIPTION } from "../_data/description";
 import { INPUT_CHANNELS } from "../_data/channels";
 import { PROBES } from "../_data/tests";
 import { AutomationStatusBar } from "../../../_shared/components/automation-status-bar.client";
 import { AddModifyAutomationButton } from "../../../_shared/components/add-modify-automation-button.client";
+import { AutomationAccordions } from "../../../_shared/components/automation-accordions.client";
+import { PROJECT_CONFIG } from "../_data/config";
+import { USE_CASES } from "../_data/use-cases";
 
-// Frozen automation skeleton — VERSION 3. Header/footer come from the Projects-zone layout (step 213).
+// Frozen automation skeleton — VERSION 4. Header/footer come from the Projects-zone layout (step 213).
 // A project is BORN with the automation menu (top right): Settings (AI model + input channels) and
 // Tests — BOTH declaration-driven, so a model developing this automation sees and learns the standard
 // from the first minute, BEFORE adapting anything to a real scenario. Grow it by filling
@@ -144,6 +184,9 @@ export default function AutomationEntry() {
         <p className="max-w-3xl text-muted-foreground">{d.description}</p>
         <AddModifyAutomationButton category="{{CATEGORY}}" slug="{{PROJECT}}" />
       </div>
+      {/* The entity accordions (step 222): Diagram + enabled optionals (empty containers with hover
+          tooltips) + the mandatory numbered Use cases. Driven by _data/config.ts + _data/use-cases.ts. */}
+      <AutomationAccordions config={PROJECT_CONFIG.entities} cases={USE_CASES} />
       <div className="space-y-2 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
         <p className="font-medium text-foreground">This is a frozen automation skeleton.</p>
         <p>
@@ -164,7 +207,7 @@ export default function AutomationEntry() {
   );
 }
 `,
-  "README.md": `# {{PROJECT_TITLE}} — frozen automation project (v3 skeleton)
+  "README.md": `# {{PROJECT_TITLE}} — frozen automation project (v4 skeleton)
 
 Read this file first, every time you touch this project — it is the project's own development
 log and grows as the frozen template does. This project was materialized by
@@ -172,13 +215,20 @@ log and grows as the frozen template does. This project was materialized by
 \`app/(projects)/projects/{{CATEGORY}}/{{PROJECT}}/\`. Header and footer come from the
 Projects-zone layout automatically — this folder never renders its own chrome.
 
-## Current state: v3 (identity + channel & test declarations, no logic)
+## Current state: v4 (identity + declarations + entity accordions, no logic)
 The page renders this automation's TITLE and DESCRIPTION (\`_data/description.ts\`) — edit those
 strings to describe what it really does. \`_data/channels.ts\` declares its INPUT CHANNELS and
-\`_data/tests.ts\` its TESTS (probes) — both EMPTY on purpose: this automation talks to nothing and
-has nothing to probe yet. The Settings modal (model / interval / input channels) and the Tests modal
-are driven ENTIRELY by these two files — see app/(projects)/README.md, "The settings & tests
-declaration standard", for the shape and rules.
+\`_data/tests.ts\` its TESTS (probes) — both EMPTY on purpose. The Settings modal (model / interval /
+input channels) and the Tests modal are driven ENTIRELY by those two files — see
+app/(projects)/README.md, "The settings & tests declaration standard".
+
+Below the "Add or modify automation" button the page shows the ENTITY ACCORDIONS (step 222): a series
+driven by \`_data/config.ts\` (\`entities\`) — \`diagram\` always, plus optional Calendar / Map /
+Dashboard / Processes / Analytics — each an EMPTY container with a hover tooltip until its interface is
+built; and the mandatory USER CASES (\`_data/use-cases.ts\`), numbered (01, 02, …) with a status badge,
+seeded with one case ("Architect planned the automation" / new). Break the request into cases and move
+each from "new" to "in use" over short iterations. Full rules: app/(projects)/README.md,
+"The automation entities standard".
 
 ## Declaring an input channel
 A frozen template cannot know whether you will connect Telegram, YouTube or an inbox — so the
