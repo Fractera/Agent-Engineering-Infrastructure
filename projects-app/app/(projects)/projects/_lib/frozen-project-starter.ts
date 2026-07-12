@@ -120,6 +120,15 @@ export const INPUT_CHANNELS: InputChannel[] = [];
 //   ];
 export const PROBES: Probe[] = [];
 `,
+  "_data/diagram.ts": `import type { NodeContract } from "../../../_shared/node-contract";
+
+// This automation's MASTER diagram nodes (frozen standard, step 223.C — see app/(projects)/README.md,
+// "The diagram standard" + "The node → functions contract"). EMPTY BY DESIGN: a fresh skeleton has no
+// nodes yet. The diagram is the SINGLE source of truth for how the automation works — a node exists
+// ONLY here, never by hardcode or a side path. Design nodes from the user cases; each node is a typed
+// container of functions living ONLY in _nodes/<nodeId>/ (delete the project → they vanish, zero debt).
+export const DIAGRAM_NODES: NodeContract[] = [];
+`,
   "_data/config.ts": `// This automation's CONFIG (frozen standard v4, step 222 — see app/(projects)/README.md,
 // "The automation entities standard"). \`entities\` toggles the accordions shown below the
 // "Add or modify automation" button. \`diagram\` and \`dashboard\` are always on (mandatory); enable the
@@ -160,6 +169,7 @@ import { AddModifyAutomationButton } from "../../../_shared/components/add-modif
 import { AutomationAccordions } from "../../../_shared/components/automation-accordions.client";
 import { PROJECT_CONFIG } from "../_data/config";
 import { USE_CASES } from "../_data/use-cases";
+import { DIAGRAM_NODES } from "../_data/diagram";
 
 // Frozen automation skeleton — VERSION 4. Header/footer come from the Projects-zone layout (step 213).
 // A project is BORN with the automation menu (top right): Settings (AI model + input channels) and
@@ -184,9 +194,14 @@ export default function AutomationEntry() {
         <p className="max-w-3xl text-muted-foreground">{d.description}</p>
         <AddModifyAutomationButton category="{{CATEGORY}}" slug="{{PROJECT}}" />
       </div>
-      {/* The entity accordions (step 222): Diagram + enabled optionals (empty containers with hover
-          tooltips) + the mandatory numbered Use cases. Driven by _data/config.ts + _data/use-cases.ts. */}
-      <AutomationAccordions config={PROJECT_CONFIG.entities} cases={USE_CASES} />
+      {/* The entity accordions (step 222): Diagram + enabled optionals + the mandatory Use cases.
+          The Diagram entity renders the real node panel from _data/diagram.ts (step 223.C — empty on a
+          fresh skeleton). Driven by _data/config.ts + _data/use-cases.ts + _data/diagram.ts. */}
+      <AutomationAccordions
+        config={PROJECT_CONFIG.entities}
+        cases={USE_CASES}
+        diagram={DIAGRAM_NODES}
+      />
       <div className="space-y-2 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
         <p className="font-medium text-foreground">This is a frozen automation skeleton.</p>
         <p>
