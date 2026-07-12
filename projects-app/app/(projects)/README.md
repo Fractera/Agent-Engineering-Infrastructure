@@ -386,3 +386,167 @@ follows once the wording settles.
 
 When the starter emits it, a short copy of this section (with the §6 invariant) is mirrored into the
 project's own `README.md`, so every project carries the rule.
+
+## The node → functions contract
+
+> A node is not an abstract box — it is a **typed container of the application's own functions**. This
+> section is the spec for what lives BEHIND a node: what it stores, how it is designed from use cases,
+> how it lights up while running, and where the runtime state ("which node is working right now") comes
+> from. It is still **description only** — the tools that generate `_nodes/`, the run tables, and the
+> co-location validator are the next sub-step (223.C). It continues the raw accumulating diagram spec.
+>
+> Reference (an ANTI-pattern, do not copy): the current Telegram Notes node panel
+> (`_components/process-flow.client.tsx` — click a node → an aside with summary/actions/condition/task/
+> tools/io) over `_data/flow.ts` (`FlowNodeInfo`). The new node looks fundamentally different: name +
+> description + accordions, and its data works as functions, not as free text.
+
+### 1. Node anatomy (what it stores; how the right-hand panel shows it)
+
+A node stores: **`name`**, **`description`**, **typed input parameters**, **typed output parameters**,
+and **conditions / control rules**. When a node is selected, these appear as separate, highlighted
+sections in the right-hand panel. `name` and `description` show directly; everything else sits in
+**pre-closed accordions** you can open:
+
+- **The "Instruction" accordion (first):** the system instruction the AI agent uses to create the
+  node's functions and types — written in whatever form the agent finds useful for that job.
+- **One accordion (card) per function:** the function's name and the parameters it accepts and returns
+  (typed). This is less for a human and more so the **AI agent** knows exactly what is called and how.
+
+### 2. Designing a node (from use cases)
+
+The need for an intermediate node arises → the node gets its **`name` + `description`** → a **system
+instruction** is generated → from it a set of **typed functions** + **control rules** is formed → the
+node is now **designed** and ready to run **sequentially or in parallel** with the others. When it is
+done, the user can open it to read the step description and, if ever needed, the functions it contains
+(they rarely will).
+
+### 3. The function & node contract (types as SPECIFICATION, not runtime code)
+
+The shape (illustrative TS in the doc — not a file):
+
+```ts
+// A single function of a node — deterministic application work.
+type NodeFunction = {
+  name: string;
+  paramsIn: Record<string, TypeSpec>;   // typed inputs
+  returns: TypeSpec;                     // typed output
+  rules?: string[];                      // control rules the agent must honour
+};
+
+// A node = an ordered/parallel set of functions + the node's own typed I/O and conditions.
+type NodeContract = {
+  id: string;
+  name: string;
+  description: string;
+  in: Record<string, TypeSpec>;
+  out: Record<string, TypeSpec>;
+  conditions?: string[];
+  functions: NodeFunction[];
+  run: "sequential" | "parallel";
+};
+```
+
+This is the specification 223.C will materialize into `_nodes/<id>/` (see §5).
+
+### 4. No AI "inside the application"
+
+A node's functions are **deterministic application code**. Running the AI *inside the application* is
+**forbidden**. The AI is allowed ONLY as an **explicit external tool-call step** within a node, when the
+work genuinely cannot be done without it (e.g. asking an agent to generate an image or a piece of text).
+Distinguish clearly: *"the application executes functions"* vs *"a node calls an external AI tool as one
+of its steps"* — the latter is a declared external call, not the app thinking for itself.
+
+### 5. 🔴 Co-location of a node's functions (critical invariant — continues §6 of the diagram standard)
+
+A node's functions live **only** in `projects/<category>/<slug>/_nodes/<nodeId>/`:
+
+```
+projects/<category>/<slug>/
+  _nodes/
+    find-sources/
+      meta.ts          // name, description, typed in/out, conditions, run mode
+      instruction.md   // the system instruction that generated the functions
+      functions.ts     // the typed function set
+    build-structure/
+      ...
+```
+
+**No shared/common directory. Ever.** Delete the automation → every one of its functions vanishes
+**without a trace and with zero technical debt.** Lifting a node's functions into a shared `lib/`
+is prohibited. The machine validation of this rule is 223.C.
+
+### 6. Active-node highlighting (best practice — designed here)
+
+A node that is executing gets a **bold orange frame**. The mechanism is **DB-backed, not an ephemeral
+client flag**: execution writes the `current_node` of the active run (§7); the diagram reads the
+automation's active run(s) and frames the node whose `automation_run_nodes.status = 'running'`. So the
+highlight is deterministic and survives a page reload. (Contrast: `selected` in
+`process-flow.client.tsx` today is a pure client selection, unrelated to execution state.)
+
+### 7. Runtime state — the unified run model (the core of this step)
+
+The model that answers *"which node is working right now, and how much is done"*:
+
+```
+automation_runs       id · automation · instance_id? · current_node · status · started_at · finished_at · payload
+automation_run_nodes  run_id · node_id · status(idle|running|ok|fail) · payload
+```
+
+- *"3 posts prepared, work is now on the 3rd node of the dog-article automation"* = query the active
+  `automation_runs` (by automation, `status = 'running'`) plus their `current_node` /
+  `automation_run_nodes`.
+- It is read through the automation's own API (step 224, item 3 "state of each running process").
+
+### 8. Reuse across BOTH scenarios (the technical payoff, stated plainly)
+
+ONE node/function contract + ONE run model serve both:
+
+- **Simple (Telegram, Master-only):** the run is transient (`instance_id = null`), the highlight is
+  momentary, there are no Instance rows.
+- **Complex (content, Master + Instance):** each Instance is a durable run whose `current_node` is a row
+  of the **Processes** timeline; selecting it projects onto the Master with the orange frame.
+
+Simple = "a Master run with no Instance"; complex = "Master + Instance runs". Same tables, same
+highlight, same node contract — maximum reuse.
+
+### 9. Example — the expected "function output"
+
+A content node, `publish` (the last step of an article process):
+
+```ts
+// _nodes/publish/meta.ts
+export const NODE: NodeContract = {
+  id: "publish",
+  name: "Publish the article",
+  description: "Creates the site page and publishes the finished article on its scheduled date.",
+  in:  { article: "Article", slug: "string", publishAt: "ISODate" },
+  out: { url: "string", publishedAt: "ISODate" },
+  conditions: ["publishAt is in the future", "the article passed the SEO node"],
+  run: "sequential",
+  functions: [/* see functions.ts */],
+};
+```
+
+```md
+<!-- _nodes/publish/instruction.md (the system instruction that generated the functions) -->
+Build the functions that turn a finished Article into a live, scheduled site page. Do the mechanical
+work in application code; call an external AI tool ONLY if a step truly needs generation. Each function
+must be typed (inputs and return) and side-effect-scoped to this node.
+```
+
+```ts
+// _nodes/publish/functions.ts
+export function createSitePage(article: Article, slug: string): { pageId: string } { /* app code */ }
+export function schedulePublication(pageId: string, publishAt: ISODate): { jobId: string } { /* app code */ }
+export function publishNow(pageId: string): { url: string; publishedAt: ISODate } { /* app code */ }
+```
+
+**Per-instance override.** In an Instance (§ diagram standard), a node may disable or replace a function
+for that run only — e.g. open the `publish` node of the "cats" Instance and add the rule *"do not use
+Siamese cats — there was already an article about them"*, or turn a function off for this run. The
+Master and the sibling Instances are untouched.
+
+### 10. Scope of this sub-step
+
+Description only. The tools, the `_nodes/` generation, the `automation_runs` / `automation_run_nodes`
+tables, and the co-location validator are 223.C. The section accumulates in the raw spec.
