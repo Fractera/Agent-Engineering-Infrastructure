@@ -21,6 +21,9 @@ export const runtime = "nodejs";
 
 const SLUG = /^[a-z][a-z0-9-]*$/;
 
+const slugify = (s: string) =>
+  s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 40);
+
 export async function GET(req: NextRequest) {
   if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   return NextResponse.json({ categories: PROJECT_CATEGORIES });
@@ -28,16 +31,17 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  const body = (await req.json().catch(() => null)) as { slug?: string; title?: string; description?: string } | null;
-  const slug = String(body?.slug ?? "").trim().toLowerCase();
-  const title = String(body?.title ?? "").trim() || slug;
+  const body = (await req.json().catch(() => null)) as { title?: string; description?: string } | null;
+  const title = String(body?.title ?? "").trim();
   const description = String(body?.description ?? "").trim() || `Projects of the ${title} category.`;
 
-  if (!SLUG.test(slug)) {
-    return NextResponse.json({ error: "slug must be kebab-case and start with a letter" }, { status: 400 });
-  }
-  if (PROJECT_CATEGORIES.some((c) => c.slug === slug)) {
-    return NextResponse.json({ error: `category "${slug}" already exists` }, { status: 409 });
+  // The slug is a permanent English identifier (app/(projects)/README.md, step 215) — but the OWNER'S title
+  // is free-form and may not be Latin script at all (e.g. "Медицина"). Slugifying the raw title before
+  // translation used to produce an EMPTY slug for any non-Latin input, which then failed validation with a
+  // misleading "category name required" error even though a name was clearly typed. Fixed: the slug is now
+  // derived AFTER translation, from the guaranteed-English titleI18n.en — never from the raw owner input.
+  if (!title) {
+    return NextResponse.json({ error: "title_required" }, { status: 400 });
   }
   if (countWords(description) > MAX_CATEGORY_DESCRIPTION_WORDS) {
     return NextResponse.json({ error: "description_too_long" }, { status: 400 });
@@ -60,6 +64,16 @@ export async function POST(req: NextRequest) {
   for (const [lang, v] of Object.entries(translations)) {
     titleI18n[lang] = v.title;
     descriptionI18n[lang] = v.description;
+  }
+
+  let slug = slugify(translations.en.title) || `category-${Date.now().toString(36).slice(-5)}`;
+  if (!SLUG.test(slug)) {
+    slug = `category-${Date.now().toString(36).slice(-5)}`;
+  }
+  if (PROJECT_CATEGORIES.some((c) => c.slug === slug)) {
+    let n = 2;
+    while (PROJECT_CATEGORIES.some((c) => c.slug === `${slug}-${n}`)) n++;
+    slug = `${slug}-${n}`;
   }
 
   // 1. the code: widen the union + insert the entry BEFORE "other" (which always stays last).

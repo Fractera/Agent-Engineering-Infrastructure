@@ -18,7 +18,7 @@ export type CreateAutomationStrings = {
   categoryLabel: string; categoryPlaceholder: string;
   newCategoryTooltip: string;
   newCategoryLabel: string; newCategoryPlaceholder: string; newCategoryHint: string;
-  createCategoryBtn: string;
+  createCategoryBtn: string; newCategoryCancelBtn: string;
   // TEN-LANGUAGE CATEGORY DESCRIPTION + KEY GATE (step 234.1)
   descriptionLabel: string; descriptionPlaceholder: string;
   descriptionWordCount: string;    // {n}/{max}
@@ -59,6 +59,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     newCategoryTooltip: "Create a new category",
     newCategoryLabel: "New category name", newCategoryPlaceholder: "Finance",
     newCategoryHint: "A category is permanent: its slug is a fixed English identifier and is never renamed.",
+    newCategoryCancelBtn: "Cancel",
     createCategoryBtn: "Create",
     descriptionLabel: "Description (required, max 200 words)",
     descriptionPlaceholder: "What is this category for? A short, clear description.",
@@ -100,6 +101,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     newCategoryTooltip: "Создать новую категорию",
     newCategoryLabel: "Название новой категории", newCategoryPlaceholder: "Финансы",
     newCategoryHint: "Категория постоянна: её slug — фиксированный английский идентификатор, который никогда не переименовывается.",
+    newCategoryCancelBtn: "Отмена",
     createCategoryBtn: "Создать",
     descriptionLabel: "Описание (обязательно, максимум 200 слов)",
     descriptionPlaceholder: "Для чего эта категория? Короткое, ясное описание.",
@@ -141,6 +143,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     newCategoryTooltip: "Crear una nueva categoría",
     newCategoryLabel: "Nombre de la nueva categoría", newCategoryPlaceholder: "Finanzas",
     newCategoryHint: "Una categoría es permanente: su slug es un identificador fijo en inglés que nunca se renombra.",
+    newCategoryCancelBtn: "Cancelar",
     createCategoryBtn: "Crear",
     descriptionLabel: "Descripción (obligatoria, máximo 200 palabras)",
     descriptionPlaceholder: "¿Para qué es esta categoría? Una descripción breve y clara.",
@@ -182,6 +185,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     newCategoryTooltip: "Créer une nouvelle catégorie",
     newCategoryLabel: "Nom de la nouvelle catégorie", newCategoryPlaceholder: "Finance",
     newCategoryHint: "Une catégorie est permanente : son slug est un identifiant anglais fixe, jamais renommé.",
+    newCategoryCancelBtn: "Annuler",
     createCategoryBtn: "Créer",
     descriptionLabel: "Description (obligatoire, 200 mots maximum)",
     descriptionPlaceholder: "À quoi sert cette catégorie ? Une description brève et claire.",
@@ -223,6 +227,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     newCategoryTooltip: "Crea una nuova categoria",
     newCategoryLabel: "Nome della nuova categoria", newCategoryPlaceholder: "Finanza",
     newCategoryHint: "Una categoria è permanente: il suo slug è un identificatore fisso in inglese, mai rinominato.",
+    newCategoryCancelBtn: "Annulla",
     createCategoryBtn: "Crea",
     descriptionLabel: "Descrizione (obbligatoria, massimo 200 parole)",
     descriptionPlaceholder: "A cosa serve questa categoria? Una descrizione breve e chiara.",
@@ -264,6 +269,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     newCategoryTooltip: "Neue Kategorie erstellen",
     newCategoryLabel: "Name der neuen Kategorie", newCategoryPlaceholder: "Finanzen",
     newCategoryHint: "Eine Kategorie ist dauerhaft: Ihr Slug ist ein fester englischer Bezeichner, der nie umbenannt wird.",
+    newCategoryCancelBtn: "Abbrechen",
     createCategoryBtn: "Erstellen",
     descriptionLabel: "Beschreibung (erforderlich, maximal 200 Wörter)",
     descriptionPlaceholder: "Wofür ist diese Kategorie? Eine kurze, klare Beschreibung.",
@@ -305,6 +311,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     newCategoryTooltip: "Criar uma nova categoria",
     newCategoryLabel: "Nome da nova categoria", newCategoryPlaceholder: "Finanças",
     newCategoryHint: "Uma categoria é permanente: o seu slug é um identificador fixo em inglês, nunca renomeado.",
+    newCategoryCancelBtn: "Cancelar",
     createCategoryBtn: "Criar",
     descriptionLabel: "Descrição (obrigatória, máximo 200 palavras)",
     descriptionPlaceholder: "Para que é esta categoria? Uma descrição breve e clara.",
@@ -346,6 +353,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     newCategoryTooltip: "Utwórz nową kategorię",
     newCategoryLabel: "Nazwa nowej kategorii", newCategoryPlaceholder: "Finanse",
     newCategoryHint: "Kategoria jest trwała: jej slug to stały angielski identyfikator, nigdy nie zmieniany.",
+    newCategoryCancelBtn: "Anuluj",
     createCategoryBtn: "Utwórz",
     descriptionLabel: "Opis (wymagany, maksymalnie 200 słów)",
     descriptionPlaceholder: "Do czego służy ta kategoria? Krótki, jasny opis.",
@@ -387,6 +395,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     newCategoryTooltip: "Yeni kategori oluştur",
     newCategoryLabel: "Yeni kategori adı", newCategoryPlaceholder: "Finans",
     newCategoryHint: "Bir kategori kalıcıdır: slug'ı sabit bir İngilizce tanımlayıcıdır ve asla yeniden adlandırılmaz.",
+    newCategoryCancelBtn: "İptal",
     createCategoryBtn: "Oluştur",
     descriptionLabel: "Açıklama (zorunlu, en fazla 200 kelime)",
     descriptionPlaceholder: "Bu kategori ne için? Kısa, net bir açıklama.",
@@ -428,6 +437,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     newCategoryTooltip: "Nieuwe categorie aanmaken",
     newCategoryLabel: "Naam van de nieuwe categorie", newCategoryPlaceholder: "Financiën",
     newCategoryHint: "Een categorie is permanent: de slug is een vaste Engelse identifier die nooit wordt hernoemd.",
+    newCategoryCancelBtn: "Annuleren",
     createCategoryBtn: "Aanmaken",
     descriptionLabel: "Beschrijving (verplicht, maximaal 200 woorden)",
     descriptionPlaceholder: "Waarvoor is deze categorie? Een korte, duidelijke beschrijving.",

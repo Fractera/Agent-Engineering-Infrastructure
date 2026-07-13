@@ -190,8 +190,10 @@ export function CreateAutomationDialog({
   }, [newCategory]);
 
   async function createCategory() {
-    const slug = slugify(categoryName);
-    if (!slug) { toast.error(L.errCategoryName); return; }
+    // The slug is derived SERVER-SIDE from the English translation of the title (route.ts) — never from the
+    // raw owner input, which may not be Latin script at all (e.g. "Медицина"). Only the actual typed name is
+    // validated here.
+    if (!categoryName.trim()) { toast.error(L.errCategoryName); return; }
     if (!newCategoryDescription.trim()) { toast.error(L.errDescriptionRequired); return; }
     if (countWords(newCategoryDescription) > MAX_CATEGORY_DESCRIPTION_WORDS) {
       toast.error(fill(L.descriptionTooLong, { max: MAX_CATEGORY_DESCRIPTION_WORDS }));
@@ -205,10 +207,10 @@ export function CreateAutomationDialog({
       const r = await fetch("/api/projects/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug, title: categoryName.trim(), description: newCategoryDescription.trim() }),
+        body: JSON.stringify({ title: categoryName.trim(), description: newCategoryDescription.trim() }),
       });
-      const d = (await r.json()) as { ok?: boolean; error?: string };
-      if (!r.ok || !d.ok) {
+      const d = (await r.json()) as { ok?: boolean; slug?: string; error?: string };
+      if (!r.ok || !d.ok || !d.slug) {
         // key_missing / translate_failed both re-open the inline key panel (owner's spec: uniform flow
         // whether the key was absent from the start or turned out to be bad) — never write the key
         // anywhere except through InlineOpenAiKeyPanel's forwarder call below.
@@ -230,8 +232,8 @@ export function CreateAutomationDialog({
         description: L.categoryCreatedDesc,
         duration: 12000,
       });
-      setCategories((c) => [...c.filter((x) => x.slug !== slug), { slug, title: categoryName.trim() }]);
-      setPickedCategory(slug);
+      setCategories((c) => [...c.filter((x) => x.slug !== d.slug), { slug: d.slug!, title: categoryName.trim() }]);
+      setPickedCategory(d.slug);
       setNewCategory(false);
       setCategoryName("");
       setNewCategoryDescription("");
@@ -349,27 +351,32 @@ export function CreateAutomationDialog({
               // From the ROOT / the GLOBAL CANVAS there is no ambient category — the owner picks one, or
               // CREATES a new one right here (step 225 G6): a category is code (a slug in the union + an
               // entry in PROJECT_CATEGORIES + its own hub route), so the "+" materializes all of it.
-              <div className="flex w-full items-center gap-2">
-                <Select value={pickedCategory} onValueChange={setPickedCategory}>
-                  <SelectTrigger className="w-full flex-1">
-                    <SelectValue placeholder={L.categoryPlaceholder} />
-                  </SelectTrigger>
-                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
-                    {categories.map((c) => (
-                      <SelectItem key={c.slug} value={c.slug}>{c.title}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setNewCategory((v) => !v)}
-                  title={L.newCategoryTooltip}
-                >
-                  <Plus className="size-4" />
-                </Button>
-              </div>
+              // HIDDEN while newCategory is open (owner's fix): the dropdown + "+" trigger is a distraction
+              // once the owner has already committed to creating a new category — the panel below is the
+              // only thing that should be visible, with its own Cancel button to back out.
+              !newCategory && (
+                <div className="flex w-full items-center gap-2">
+                  <Select value={pickedCategory} onValueChange={setPickedCategory}>
+                    <SelectTrigger className="w-full flex-1">
+                      <SelectValue placeholder={L.categoryPlaceholder} />
+                    </SelectTrigger>
+                    <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                      {categories.map((c) => (
+                        <SelectItem key={c.slug} value={c.slug}>{c.title}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setNewCategory(true)}
+                    title={L.newCategoryTooltip}
+                  >
+                    <Plus className="size-4" />
+                  </Button>
+                </div>
+              )
             )}
 
             {newCategory && !category && (
@@ -409,16 +416,21 @@ export function CreateAutomationDialog({
                   {fill(L.descriptionWordCount, { n: countWords(newCategoryDescription), max: MAX_CATEGORY_DESCRIPTION_WORDS })}
                 </p>
 
-                <Button
-                  size="sm"
-                  onClick={createCategory}
-                  disabled={
-                    busy || !categoryName.trim() || !newCategoryDescription.trim() ||
-                    countWords(newCategoryDescription) > MAX_CATEGORY_DESCRIPTION_WORDS
-                  }
-                >
-                  {busy ? <Loader2 className="size-4 animate-spin" /> : L.createCategoryBtn}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={createCategory}
+                    disabled={
+                      busy || !categoryName.trim() || !newCategoryDescription.trim() ||
+                      countWords(newCategoryDescription) > MAX_CATEGORY_DESCRIPTION_WORDS
+                    }
+                  >
+                    {busy ? <Loader2 className="size-4 animate-spin" /> : L.createCategoryBtn}
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={() => setNewCategory(false)}>
+                    {L.newCategoryCancelBtn}
+                  </Button>
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {L.newCategoryHint}
                 </p>
