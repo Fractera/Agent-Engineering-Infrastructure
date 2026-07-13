@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, FolderPlus, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { VoiceInput } from "./voice-input.client";
 import { AUTOMATION_TYPES, type AutomationType } from "../automation-type";
 import { PROJECT_CATEGORIES } from "../categories";
 import { useUiLang } from "../use-ui-lang";
@@ -158,6 +159,11 @@ export function CreateAutomationDialog({
   // not a banner at the top of the whole dialog — automations created without touching categories never
   // need this key at all).
   const [needsKey, setNeedsKey] = useState(false);
+  // VoiceInput refs (step 236.4 — the owner flagged its absence here, unlike Quiz/chain-brief/edge-spec):
+  // only the two long free-text fields get a mic, matching the pattern everywhere else in this app — never
+  // the short one-line Name/category-name fields.
+  const instrRef = useRef<HTMLTextAreaElement | null>(null);
+  const categoryDescRef = useRef<HTMLTextAreaElement | null>(null);
 
   const loadCategories = async () => {
     const r = await fetch("/api/projects/categories", { cache: "no-store" });
@@ -315,12 +321,14 @@ export function CreateAutomationDialog({
           <div className="space-y-1.5">
             <Label htmlFor="a-instr">{L.instrLabel}</Label>
             <Textarea
+              ref={instrRef}
               id="a-instr"
               value={instruction}
               onChange={(e) => setInstruction(e.target.value)}
               rows={5}
               placeholder={L.instrPlaceholder}
             />
+            <VoiceInput targetRef={instrRef} value={instruction} onChange={setInstruction} />
             <p className="text-xs text-muted-foreground">
               {L.instrHint}
             </p>
@@ -383,12 +391,14 @@ export function CreateAutomationDialog({
 
                 <Label htmlFor="c-desc" className="text-xs">{L.descriptionLabel}</Label>
                 <Textarea
+                  ref={categoryDescRef}
                   id="c-desc"
                   value={newCategoryDescription}
                   onChange={(e) => setNewCategoryDescription(e.target.value)}
                   rows={3}
                   placeholder={L.descriptionPlaceholder}
                 />
+                <VoiceInput targetRef={categoryDescRef} value={newCategoryDescription} onChange={setNewCategoryDescription} />
                 <p
                   className={`text-xs ${
                     countWords(newCategoryDescription) > MAX_CATEGORY_DESCRIPTION_WORDS
