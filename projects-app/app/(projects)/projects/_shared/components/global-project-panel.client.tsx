@@ -6,8 +6,10 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { VoiceInput } from "./voice-input.client";
+import { UseCasesPanel } from "./use-cases-panel.client";
 import { useUiLang } from "../use-ui-lang";
 import { globalCanvasStrings } from "../global-canvas-i18n";
+import { useCasesStrings } from "../use-cases-i18n";
 import { fill } from "../quiz-i18n";
 
 // THE PROJECT PANEL of the global canvas (step 225 G4). Clicking a project node opens it.
@@ -39,7 +41,9 @@ export type GroupMember = { automation: string; slug: string };
 export function GlobalProjectPanel({
   project, members, onQuiz,
 }: { project: GlobalProjectSummary; members?: GroupMember[]; onQuiz: () => void }) {
-  const L = globalCanvasStrings(useUiLang());
+  const lang = useUiLang();
+  const L = globalCanvasStrings(lang);
+  const UC = useCasesStrings(lang);
   const href = `/projects/${project.category}/${project.slug}`;
   const isGroup = members !== undefined;
 
@@ -182,6 +186,13 @@ export function GlobalProjectPanel({
           </p>
         </>
       )}
+
+      {/* step 236.6 (owner) — same Use cases interface as every automation's own page, right here on the
+          global canvas panel, so opening a node never means "go find the cases somewhere else." */}
+      <div className="space-y-2 border-t pt-3">
+        <p className="text-xs font-medium text-muted-foreground">{UC.sectionTitle}</p>
+        <UseCasesPanel cases={[]} automation={project.automation} />
+      </div>
     </div>
   );
 }
