@@ -6,6 +6,7 @@ import { createNodeId } from "@/lib/cuid";
 import { listNodes, resolveProject } from "@/lib/nodes";
 import { edgeByCuid, readEdgeFiles } from "@/lib/edges";
 import { caseByCuid, listCases } from "@/lib/use-cases";
+import { UI_LANGS } from "@/app/(projects)/projects/_shared/ui-langs";
 
 // ACTIVATION QUIZ (step 227) — phase 2 of an automation's birth. Phase 1 (step 224) captured the type and
 // the owner's INSTRUCTION and left a bare page whose default nodes are drafts. On the first visit this Quiz
@@ -147,17 +148,66 @@ export function defaultLanguage(): string {
   return first || "en";
 }
 
-async function chat(messages: { role: string; content: string }[], model = "gpt-4o-mini"): Promise<string> {
+async function chat(
+  messages: { role: string; content: string }[],
+  model = "gpt-4o-mini",
+  opts?: { json?: boolean },
+): Promise<string> {
   const key = openAiKey();
   if (!key) throw new Error("OPENAI_API_KEY is not set — add it in the workspace settings.");
   const r = await fetch(OPENAI_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-    body: JSON.stringify({ model, messages, temperature: 0.4 }),
+    body: JSON.stringify({
+      model, messages, temperature: 0.4,
+      ...(opts?.json ? { response_format: { type: "json_object" } } : {}),
+    }),
   });
   if (!r.ok) throw new Error(`OpenAI ${r.status}: ${(await r.text()).slice(0, 200)}`);
   const d = (await r.json()) as { choices?: { message?: { content?: string } }[] };
   return d.choices?.[0]?.message?.content?.trim() ?? "";
+}
+
+// CATEGORY TITLE/DESCRIPTION TRANSLATION (step 234.1) — the ONLY runtime LLM-translation call in this
+// codebase: everywhere else UI chrome is a hand-authored static dictionary (rule 4г), because a category's
+// title/description is arbitrary OWNER-TYPED content, unknowable in advance. One JSON-mode call returns all
+// ten languages at once; `null` means "translation failed" for any reason (missing key thrown earlier by
+// `chat()`, non-2xx from OpenAI, malformed/partial JSON) — the caller does not need to know WHY, only THAT,
+// per the owner's call: a single "check your key and balance" message covers every failure mode.
+export async function translateCategoryCopy(
+  title: string,
+  description: string,
+): Promise<Record<string, { title: string; description: string }> | null> {
+  const codes = UI_LANGS.join(", ");
+  try {
+    const raw = await chat(
+      [
+        {
+          role: "system",
+          content:
+            `Translate a short product-category title and description into all of these language codes: ` +
+            `${codes}. Return ONLY a JSON object whose keys are EXACTLY these codes, each value ` +
+            `{"title": "...", "description": "..."}. Preserve the original wording verbatim in whichever ` +
+            `language you detect it to be written in (its own code's slot); translate naturally, concisely, ` +
+            `as UI copy (not literally word-for-word) into the other nine. No extra keys, no commentary.`,
+        },
+        { role: "user", content: JSON.stringify({ title, description }) },
+      ],
+      "gpt-4o-mini",
+      { json: true },
+    );
+    const parsed = JSON.parse(raw) as Record<string, { title?: string; description?: string }>;
+    const out: Record<string, { title: string; description: string }> = {};
+    for (const code of UI_LANGS) {
+      const t = parsed[code]?.title?.trim();
+      const d = parsed[code]?.description?.trim();
+      if (!t || !d) return null; // partial result — treat as a full failure, never write half a translation
+      out[code] = { title: t, description: d };
+    }
+    return out;
+  } catch {
+    return null;
+  }
 }
 
 /** The automation's seed: the owner's instruction from phase 1 (_data/instruction.md). */

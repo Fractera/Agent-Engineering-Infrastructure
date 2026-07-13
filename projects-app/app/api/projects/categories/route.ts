@@ -3,6 +3,8 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { authorize, projectsRoot, scheduleRebuild } from "@/lib/nodes";
 import { PROJECT_CATEGORIES } from "@/app/(projects)/projects/_shared/categories";
+import { countWords, MAX_CATEGORY_DESCRIPTION_WORDS } from "@/app/(projects)/projects/_shared/word-count";
+import { openAiKey, translateCategoryCopy } from "@/lib/quiz";
 
 // CREATE A CATEGORY (step 225 G6) — the owner may need a home that none of the standing categories offers
 // (the creation dialog's "+ new category"). A category is CODE, not data: a slug in the union + an entry in
@@ -11,6 +13,10 @@ import { PROJECT_CATEGORIES } from "@/app/(projects)/projects/_shared/categories
 //
 // INVARIANTS (app/(projects)/README.md, step 215): the slug is a permanent English identifier (never renamed,
 // never localized); "other" ALWAYS stays last — a new category is inserted BEFORE it.
+//
+// TEN-LANGUAGE GATE (step 234.1): description is capped at 200 words; title+description are translated into
+// all ten admin-layer languages (rule 4г) via lib/quiz.ts translateCategoryCopy() BEFORE anything is written
+// to disk — no key, or a failed translate call, means NO category is created (no English-only fallback).
 export const runtime = "nodejs";
 
 const SLUG = /^[a-z][a-z0-9-]*$/;
@@ -33,6 +39,28 @@ export async function POST(req: NextRequest) {
   if (PROJECT_CATEGORIES.some((c) => c.slug === slug)) {
     return NextResponse.json({ error: `category "${slug}" already exists` }, { status: 409 });
   }
+  if (countWords(description) > MAX_CATEGORY_DESCRIPTION_WORDS) {
+    return NextResponse.json({ error: "description_too_long" }, { status: 400 });
+  }
+
+  // TEN-LANGUAGE TRANSLATION GATE (step 234.1) — a category is born equally available in all ten admin-
+  // layer languages (rule 4г), so nothing is written to disk until the translation succeeds. Two stable
+  // error codes drive the client's inline "add/fix your OpenAI key" flow: `key_missing` (no key configured
+  // at all) vs `translate_failed` (a key exists but the call failed — bad key, no balance, or any other
+  // OpenAI error; the owner asked for one generic message covering all of those, not a classification).
+  if (!openAiKey()) {
+    return NextResponse.json({ error: "key_missing" }, { status: 400 });
+  }
+  const translations = await translateCategoryCopy(title, description);
+  if (!translations) {
+    return NextResponse.json({ error: "translate_failed" }, { status: 502 });
+  }
+  const titleI18n: Record<string, string> = {};
+  const descriptionI18n: Record<string, string> = {};
+  for (const [lang, v] of Object.entries(translations)) {
+    titleI18n[lang] = v.title;
+    descriptionI18n[lang] = v.description;
+  }
 
   // 1. the code: widen the union + insert the entry BEFORE "other" (which always stays last).
   const file = join(projectsRoot(), "_shared", "categories.ts");
@@ -43,7 +71,7 @@ export async function POST(req: NextRequest) {
   src = src.replace('  | "other";', `  | "${slug}"\n  | "other";`);
   src = src.replace(
     /(\n  \{\n    slug: "other",)/,
-    `\n  {\n    slug: "${slug}",\n    title: ${JSON.stringify(title)},\n    navLabel: ${JSON.stringify(title)},\n    description: ${JSON.stringify(description)},\n  },$1`,
+    `\n  {\n    slug: "${slug}",\n    title: ${JSON.stringify(title)},\n    navLabel: ${JSON.stringify(title)},\n    description: ${JSON.stringify(description)},\n    titleI18n: ${JSON.stringify(titleI18n)},\n    descriptionI18n: ${JSON.stringify(descriptionI18n)},\n  },$1`,
   );
   await writeFile(file, src, "utf8");
 

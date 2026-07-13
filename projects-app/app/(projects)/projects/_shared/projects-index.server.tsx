@@ -1,19 +1,29 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getAppConfig } from "@/config/app-config";
-import { PROJECT_CATEGORIES } from "./categories";
+import { defaultLanguage } from "@/lib/quiz";
+import { PROJECT_CATEGORIES, categoryTitle, categoryDescription } from "./categories";
 import { listProjectSlugs } from "./projects-manifest";
 import { getProjectCard } from "./project-card";
 import { GlobalCanvas } from "./components/global-canvas.client";
 import { CreateAutomationRootCard } from "./components/create-automation-card.client";
+import { projectsIndexStrings } from "./projects-index-i18n";
+import { fill } from "./quiz-i18n";
 
 // Root index of the Projects layer (/projects, step 211 Ф0): the landing that
 // lists the four permanent categories with their live project counts and names.
 // Before this page the bare /projects URL was a 404 — only the category hubs
 // existed. Same data sources as the hubs: the folder IS the registry
 // (projects-manifest), card titles come from each project's README. No DB read.
+//
+// TEN-LANGUAGE (step 234.2, CLAUDE.md 4г) — this is an ASYNC SERVER COMPONENT, so it reads the language via
+// `defaultLanguage()` (server-side, synchronous, lib/quiz.ts) rather than the client-only `useUiLang()` hook.
+// Category title/description come from categories.ts's own titleI18n/descriptionI18n (hand-authored for the
+// 4 built-ins, LLM-translated for owner-created ones); project-name badges stay untranslated (live data).
 export async function ProjectsIndex() {
   const cfg = getAppConfig();
+  const lang = defaultLanguage();
+  const L = projectsIndexStrings(lang);
   const categories = await Promise.all(
     PROJECT_CATEGORIES.map(async (c) => {
       const slugs = await listProjectSlugs(c.slug);
@@ -25,12 +35,10 @@ export async function ProjectsIndex() {
   return (
     <>
     <main className="mx-auto flex w-[85vw] max-w-full flex-col px-6 py-10">
-      <p className="text-sm text-muted-foreground">Projects</p>
-      <h1 className="mt-1 text-3xl font-bold tracking-tight">All categories</h1>
+      <p className="text-sm text-muted-foreground">{L.breadcrumb}</p>
+      <h1 className="mt-1 text-3xl font-bold tracking-tight">{L.title}</h1>
       <p className="mt-3 max-w-2xl text-muted-foreground">
-        Independent lines of work this workspace runs — each project is a small
-        finished application with its own pages, data and workflow. Four permanent
-        categories; a project is a named folder inside one of them.
+        {L.description}
       </p>
 
       {/* Dynamic grid (owner): 2 cards, then 3, then 4 on very wide screens. */}
@@ -42,13 +50,13 @@ export async function ProjectsIndex() {
             className="group flex flex-col rounded-xl border bg-card p-5 shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
           >
             <div className="flex items-start justify-between gap-2">
-              <h3 className="font-semibold leading-tight">{c.title}</h3>
+              <h3 className="font-semibold leading-tight">{categoryTitle(c, lang)}</h3>
               <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
             </div>
-            <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{c.description}</p>
+            <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{categoryDescription(c, lang)}</p>
             <div className="mt-3 flex flex-wrap items-center gap-1.5">
               <span className="rounded border px-1.5 py-0.5 text-xs text-muted-foreground">
-                {c.cards.length} project{c.cards.length === 1 ? "" : "s"}
+                {c.cards.length === 1 ? L.projectsCountOne : fill(L.projectsCountMany, { n: c.cards.length })}
               </span>
               {c.cards.slice(0, 3).map((card) => (
                 <span key={card.slug} className="rounded border px-1.5 py-0.5 text-xs text-muted-foreground">
