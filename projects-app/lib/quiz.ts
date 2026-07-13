@@ -6,7 +6,10 @@ import { createNodeId } from "@/lib/cuid";
 import { listNodes, resolveProject } from "@/lib/nodes";
 import { edgeByCuid, readEdgeFiles } from "@/lib/edges";
 import { caseByCuid, listCases } from "@/lib/use-cases";
-import { UI_LANGS } from "@/app/(projects)/projects/_shared/ui-langs";
+// Aliased: this file already has its OWN local `UI_LANGS` (six languages, the Quiz-prompt system below,
+// step 232.1) — a different, older, unrelated concept. This import is the TEN admin-layer languages
+// (step 234.1/234.2, CLAUDE.md 4г), used only by translateCategoryCopy() further down.
+import { UI_LANGS as TEN_UI_LANGS } from "@/app/(projects)/projects/_shared/ui-langs";
 
 // ACTIVATION QUIZ (step 227) — phase 2 of an automation's birth. Phase 1 (step 224) captured the type and
 // the owner's INSTRUCTION and left a bare page whose default nodes are drafts. On the first visit this Quiz
@@ -178,7 +181,7 @@ export async function translateCategoryCopy(
   title: string,
   description: string,
 ): Promise<Record<string, { title: string; description: string }> | null> {
-  const codes = UI_LANGS.join(", ");
+  const codes = TEN_UI_LANGS.join(", ");
   try {
     const raw = await chat(
       [
@@ -198,7 +201,7 @@ export async function translateCategoryCopy(
     );
     const parsed = JSON.parse(raw) as Record<string, { title?: string; description?: string }>;
     const out: Record<string, { title: string; description: string }> = {};
-    for (const code of UI_LANGS) {
+    for (const code of TEN_UI_LANGS) {
       const t = parsed[code]?.title?.trim();
       const d = parsed[code]?.description?.trim();
       if (!t || !d) return null; // partial result — treat as a full failure, never write half a translation
