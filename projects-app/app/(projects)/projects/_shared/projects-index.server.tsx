@@ -7,6 +7,7 @@ import { listProjectSlugs } from "./projects-manifest";
 import { getProjectCard } from "./project-card";
 import { GlobalCanvas } from "./components/global-canvas.client";
 import { CreateAutomationRootCard } from "./components/create-automation-card.client";
+import { AddCategoryButton } from "./components/add-category-button.client";
 import { projectsIndexStrings } from "./projects-index-i18n";
 
 // Root index of the Projects layer (/projects, step 211 Ф0): the landing that
@@ -35,7 +36,14 @@ export async function ProjectsIndex() {
     <>
     <main className="mx-auto flex w-[85vw] max-w-full flex-col px-6 py-10">
       <p className="text-sm text-muted-foreground">{L.breadcrumb}</p>
-      <h1 className="mt-1 text-3xl font-bold tracking-tight">{L.title}</h1>
+      {/* "Add category" — opposite the title, right-aligned (owner's placement, 2026-07-14). Category
+          creation used to live inline inside CreateAutomationDialog; moved here into its own standalone
+          button+dialog so the automation-creation modal can no longer race the background rebuild a new
+          category needs before it's live (see AddCategoryButton's own header comment). */}
+      <div className="mt-1 flex items-center justify-between gap-4">
+        <h1 className="text-3xl font-bold tracking-tight">{L.title}</h1>
+        <AddCategoryButton />
+      </div>
       <p className="mt-3 max-w-2xl text-muted-foreground">
         {L.description}
       </p>

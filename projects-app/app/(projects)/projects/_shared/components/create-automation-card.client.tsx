@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, FolderPlus, Loader2, Plus } from "lucide-react";
+import { FolderPlus, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,9 +14,7 @@ import { VoiceInput } from "./voice-input.client";
 import { AUTOMATION_TYPES, type AutomationType } from "../automation-type";
 import { PROJECT_CATEGORIES } from "../categories";
 import { useUiLang } from "../use-ui-lang";
-import { createAutomationStrings, type CreateAutomationStrings } from "../create-automation-i18n";
-import { fill } from "../quiz-i18n";
-import { countWords, MAX_CATEGORY_DESCRIPTION_WORDS } from "../word-count";
+import { createAutomationStrings } from "../create-automation-i18n";
 
 // FROZEN STANDARD (step 224 L6, PHASE 1 of an automation's birth) — the big "+" card that closes every
 // category grid (and the projects index). It opens the CREATION MODAL, the manual entry point of an
@@ -41,84 +39,6 @@ import { countWords, MAX_CATEGORY_DESCRIPTION_WORDS } from "../word-count";
 // drafts) — phase 2 (the Quiz) then walks the owner from the instruction to real nodes.
 const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 40);
-
-/** Poll the OpenAI-key forwarder until it reports `configured:true`, or a cap elapses. Fetch errors are
- *  EXPECTED here: saving the key restarts `fractera-projects` server-side (bridges/app propagateOpenAiKey),
- *  so the process is briefly unreachable — swallow those, keep polling, exactly like missing-keys-modal's
- *  `waitForKeyThenReload` (which this mirrors, minus the page reload — this panel's own local state is all
- *  that depended on the key, so a silent retry is enough). */
-async function pollUntilConfigured(): Promise<boolean> {
-  const deadline = Date.now() + 60_000;
-  while (Date.now() < deadline) {
-    await new Promise((r) => setTimeout(r, 2_000));
-    try {
-      const r = await fetch("/api/project-config/openai-key", { cache: "no-store" });
-      if (r.ok) {
-        const d = (await r.json()) as { configured?: boolean };
-        if (d.configured) return true;
-      }
-    } catch { /* restarting — keep polling */ }
-  }
-  return false;
-}
-
-/** Inline "add/fix the OpenAI key" widget — scoped to the "new category" panel only (owner's confirmed
- *  placement, not the top of the whole dialog: the key is only needed for THIS sub-flow). Reuses the exact
- *  network sequence missing-keys-modal already established (POST the forwarder → poll → proceed), as a small
- *  embedded widget instead of a second stacked Dialog. NEVER writes the key anywhere except this one POST to
- *  /api/project-config/openai-key — that forwarder is the only correct path (step 208: one key, one store). */
-function InlineOpenAiKeyPanel({ L, onSaved }: { L: CreateAutomationStrings; onSaved: () => void }) {
-  const [value, setValue] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  async function save() {
-    const apiKey = value.trim();
-    if (!apiKey) return;
-    setBusy(true);
-    try {
-      const r = await fetch("/api/project-config/openai-key", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey }),
-      });
-      if (!r.ok) {
-        const info = (await r.json().catch(() => null)) as { error?: string } | null;
-        toast.error(info?.error ?? L.errKeyMissing);
-        return;
-      }
-      const ok = await pollUntilConfigured();
-      if (!ok) { toast.error(L.errTranslateFailed); return; }
-      setValue("");
-      onSaved(); // parent clears needsKey and auto-retries createCategory() with what the owner already typed
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="space-y-2 rounded-md border border-amber-500/50 bg-amber-500/5 p-3">
-      <div className="flex gap-2">
-        <AlertCircle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
-        <p className="text-xs text-muted-foreground">{L.keyMissingBanner}</p>
-      </div>
-      <div className="flex items-center gap-2">
-        <Label htmlFor="cat-openai-key" className="sr-only">{L.keyInputLabel}</Label>
-        <Input
-          id="cat-openai-key"
-          type="password"
-          autoComplete="off"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder="sk-…"
-          className="flex-1"
-        />
-        <Button type="button" size="sm" onClick={save} disabled={busy || !value.trim()}>
-          {busy ? <Loader2 className="size-4 animate-spin" /> : L.keySaveBtn}
-        </Button>
-      </div>
-    </div>
-  );
-}
 
 /** The creation form itself — ONE dialog, reused by the "+" card and by the global canvas. */
 export function CreateAutomationDialog({
@@ -150,98 +70,16 @@ export function CreateAutomationDialog({
   // The categories are read LIVE (not from the compiled constant): a category created here must appear in
   // the dropdown at once, before the rebuild that serves its hub route has finished.
   const [categories, setCategories] = useState<{ slug: string; title: string }[]>(PROJECT_CATEGORIES);
-  const [newCategory, setNewCategory] = useState(false);
-  const [categoryName, setCategoryName] = useState("");
-  const [newCategoryDescription, setNewCategoryDescription] = useState("");
-  // TEN-LANGUAGE CATEGORY TRANSLATION GATE (step 234.1) — the category's title+description are translated
-  // into all ten admin-layer languages at creation time (route.ts calls the global OpenAI key). `needsKey`
-  // gates the inline key panel BELOW, scoped to this "new category" sub-flow only (confirmed with owner:
-  // not a banner at the top of the whole dialog — automations created without touching categories never
-  // need this key at all).
-  const [needsKey, setNeedsKey] = useState(false);
   // VoiceInput refs (step 236.4 added it to the two long free-text fields; owner reversed the "short fields
   // stay text-only" convention afterward — every field in this modal gets a mic now, VoiceInput already
   // supports HTMLInputElement, not just HTMLTextAreaElement).
   const nameRef = useRef<HTMLInputElement | null>(null);
   const instrRef = useRef<HTMLTextAreaElement | null>(null);
-  const categoryNameRef = useRef<HTMLInputElement | null>(null);
-  const categoryDescRef = useRef<HTMLTextAreaElement | null>(null);
 
   const loadCategories = async () => {
     const r = await fetch("/api/projects/categories", { cache: "no-store" });
     if (r.ok) setCategories(((await r.json()) as { categories: { slug: string; title: string }[] }).categories);
   };
-
-  // Proactive check (owner's spec): the moment the "new category" panel opens, ask whether the OpenAI key is
-  // already configured — same shape/guard as missing-keys-modal (`!configured && !inconclusive`, so an
-  // unreachable Admin never false-nags). If missing, the inline panel shows immediately, before the owner
-  // even starts typing.
-  useEffect(() => {
-    if (!newCategory) return;
-    let alive = true;
-    void (async () => {
-      try {
-        const r = await fetch("/api/project-config/openai-key", { cache: "no-store" });
-        const d = r.ok ? ((await r.json()) as { configured?: boolean; inconclusive?: boolean }) : null;
-        if (alive) setNeedsKey(Boolean(d) && !d!.configured && !d!.inconclusive);
-      } catch {
-        /* forwarder unreachable — leave needsKey as-is, the create attempt will surface it anyway */
-      }
-    })();
-    return () => { alive = false; };
-  }, [newCategory]);
-
-  async function createCategory() {
-    // The slug is derived SERVER-SIDE from the English translation of the title (route.ts) — never from the
-    // raw owner input, which may not be Latin script at all (e.g. "Медицина"). Only the actual typed name is
-    // validated here.
-    if (!categoryName.trim()) { toast.error(L.errCategoryName); return; }
-    if (!newCategoryDescription.trim()) { toast.error(L.errDescriptionRequired); return; }
-    if (countWords(newCategoryDescription) > MAX_CATEGORY_DESCRIPTION_WORDS) {
-      toast.error(fill(L.descriptionTooLong, { max: MAX_CATEGORY_DESCRIPTION_WORDS }));
-      return;
-    }
-    setBusy(true);
-    // Ten-language translation runs server-side before anything is written (route.ts) — this can take a
-    // few seconds, so a dedicated loading toast (swapped in place, not stacked) tells the owner why.
-    toast.loading(L.creatingCategoryLoading, { id: "cat-create" });
-    try {
-      const r = await fetch("/api/projects/categories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: categoryName.trim(), description: newCategoryDescription.trim() }),
-      });
-      const d = (await r.json()) as { ok?: boolean; slug?: string; error?: string };
-      if (!r.ok || !d.ok || !d.slug) {
-        // key_missing / translate_failed both re-open the inline key panel (owner's spec: uniform flow
-        // whether the key was absent from the start or turned out to be bad) — never write the key
-        // anywhere except through InlineOpenAiKeyPanel's forwarder call below.
-        if (d.error === "key_missing") {
-          setNeedsKey(true);
-          toast.error(L.errKeyMissing, { id: "cat-create" });
-        } else if (d.error === "translate_failed") {
-          setNeedsKey(true);
-          toast.error(L.errTranslateFailed, { id: "cat-create" });
-        } else if (d.error === "description_too_long") {
-          toast.error(fill(L.descriptionTooLong, { max: MAX_CATEGORY_DESCRIPTION_WORDS }), { id: "cat-create" });
-        } else {
-          toast.error(d.error ?? L.errCreateCategory, { id: "cat-create" });
-        }
-        return;
-      }
-      toast.success(fill(L.categoryCreated, { name: categoryName.trim() }), {
-        id: "cat-create",
-        description: L.categoryCreatedDesc,
-        duration: 12000,
-      });
-      setCategories((c) => [...c.filter((x) => x.slug !== d.slug), { slug: d.slug!, title: categoryName.trim() }]);
-      setPickedCategory(d.slug);
-      setNewCategory(false);
-      setCategoryName("");
-      setNewCategoryDescription("");
-      setNeedsKey(false);
-    } finally { setBusy(false); }
-  }
 
   // The Quiz speaks the project's DEFAULT language — show it before the owner commits (owner's rule).
   useEffect(() => {
@@ -351,95 +189,23 @@ export function CreateAutomationDialog({
             {category ? (
               <Input value={category} readOnly className="bg-muted/50" />
             ) : (
-              // From the ROOT / the GLOBAL CANVAS there is no ambient category — the owner picks one, or
-              // CREATES a new one right here (step 225 G6): a category is code (a slug in the union + an
-              // entry in PROJECT_CATEGORIES + its own hub route), so the "+" materializes all of it.
-              // HIDDEN while newCategory is open (owner's fix): the dropdown + "+" trigger is a distraction
-              // once the owner has already committed to creating a new category — the panel below is the
-              // only thing that should be visible, with its own Cancel button to back out.
-              !newCategory && (
-                <div className="flex w-full items-center gap-2">
-                  <Select value={pickedCategory} onValueChange={setPickedCategory}>
-                    <SelectTrigger className="w-full flex-1">
-                      <SelectValue placeholder={L.categoryPlaceholder} />
-                    </SelectTrigger>
-                    <SelectContent className="w-[var(--radix-select-trigger-width)]">
-                      {categories.map((c) => (
-                        <SelectItem key={c.slug} value={c.slug}>{c.title}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setNewCategory(true)}
-                    title={L.newCategoryTooltip}
-                  >
-                    <Plus className="size-4" />
-                  </Button>
-                </div>
-              )
+              // From the ROOT / the GLOBAL CANVAS there is no ambient category — the owner picks one. Category
+              // CREATION moved out of this dialog entirely (owner's fix, 2026-07-14): it lives in its own
+              // AddCategoryButton on the Projects root page, so creating a category and immediately trying to
+              // use it here can no longer race the background rebuild that makes it live — see the hint below.
+              <Select value={pickedCategory} onValueChange={setPickedCategory}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={L.categoryPlaceholder} />
+                </SelectTrigger>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  {categories.map((c) => (
+                    <SelectItem key={c.slug} value={c.slug}>{c.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
-
-            {newCategory && !category && (
-              <div className="mt-2 space-y-2 rounded-md border border-dashed p-3">
-                {/* Key gate scoped to THIS panel only (owner-confirmed placement) — shown proactively on
-                    open (the effect above) and re-shown reactively if createCategory() hits key_missing /
-                    translate_failed. onSaved clears needsKey and auto-retries with whatever is already typed. */}
-                {needsKey && (
-                  <InlineOpenAiKeyPanel L={L} onSaved={() => { setNeedsKey(false); void createCategory(); }} />
-                )}
-
-                <Label htmlFor="c-name" className="text-xs">{L.newCategoryLabel}</Label>
-                <Input
-                  ref={categoryNameRef}
-                  id="c-name"
-                  value={categoryName}
-                  onChange={(e) => setCategoryName(e.target.value)}
-                  placeholder={L.newCategoryPlaceholder}
-                />
-                <VoiceInput targetRef={categoryNameRef} value={categoryName} onChange={setCategoryName} />
-
-                <Label htmlFor="c-desc" className="text-xs">{L.descriptionLabel}</Label>
-                <Textarea
-                  ref={categoryDescRef}
-                  id="c-desc"
-                  value={newCategoryDescription}
-                  onChange={(e) => setNewCategoryDescription(e.target.value)}
-                  rows={3}
-                  placeholder={L.descriptionPlaceholder}
-                />
-                <VoiceInput targetRef={categoryDescRef} value={newCategoryDescription} onChange={setNewCategoryDescription} />
-                <p
-                  className={`text-xs ${
-                    countWords(newCategoryDescription) > MAX_CATEGORY_DESCRIPTION_WORDS
-                      ? "text-destructive"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  {fill(L.descriptionWordCount, { n: countWords(newCategoryDescription), max: MAX_CATEGORY_DESCRIPTION_WORDS })}
-                </p>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    onClick={createCategory}
-                    disabled={
-                      busy || !categoryName.trim() || !newCategoryDescription.trim() ||
-                      countWords(newCategoryDescription) > MAX_CATEGORY_DESCRIPTION_WORDS
-                    }
-                  >
-                    {busy ? <Loader2 className="size-4 animate-spin" /> : L.createCategoryBtn}
-                  </Button>
-                  <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={() => setNewCategory(false)}>
-                    {L.newCategoryCancelBtn}
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {L.newCategoryHint}
-                </p>
-              </div>
+            {!category && (
+              <p className="text-xs text-muted-foreground">{L.categoryHintUseAddButton}</p>
             )}
           </div>
           )}
