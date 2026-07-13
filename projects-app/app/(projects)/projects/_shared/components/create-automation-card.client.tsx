@@ -12,6 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { AUTOMATION_TYPES, type AutomationType } from "../automation-type";
 import { PROJECT_CATEGORIES } from "../categories";
+import { useUiLang } from "../use-ui-lang";
+import { createAutomationStrings } from "../create-automation-i18n";
+import { fill } from "../quiz-i18n";
 
 // FROZEN STANDARD (step 224 L6, PHASE 1 of an automation's birth) — the big "+" card that closes every
 // category grid (and the projects index). It opens the CREATION MODAL, the manual entry point of an
@@ -19,7 +22,9 @@ import { PROJECT_CATEGORIES } from "../categories";
 // function, one entry, many callers — the terminal today, an AI agent tomorrow; never a second code path).
 //
 // The modal asks, in this order (owner's spec):
-//   1. TYPE — Stream or Instanced. IMMUTABLE: to change it you delete the automation and create a new one.
+//   1. TYPE — Stream, Instanced or Chained (step 234). IMMUTABLE: to change it you delete the automation and
+//      create a new one. Chained has no dedicated frozen template yet — it materializes as Instanced for now
+//      (see automation-type.ts + app/api/projects/create/route.ts).
 //   2. NAME — optional (skippable; derived from the instruction when empty).
 //   3. INSTRUCTION — MANDATORY: what this automation must do. It is the seed the activation Quiz (step 227)
 //      turns into nodes.
@@ -42,6 +47,13 @@ export function CreateAutomationDialog({
   /** The created automation, "category/slug" — the canvas opens its Quiz with it. */
   onCreated?: (automation: string) => void;
 }) {
+  const uiLang = useUiLang();
+  const L = createAutomationStrings(uiLang);
+  const TYPE_TEXT: Record<AutomationType, { title: string; description: string }> = {
+    stream: { title: L.typeStreamTitle, description: L.typeStreamDesc },
+    instanced: { title: L.typeInstancedTitle, description: L.typeInstancedDesc },
+    chained: { title: L.typeChainedTitle, description: L.typeChainedDesc },
+  };
   const [type, setType] = useState<AutomationType>("stream");
   const [name, setName] = useState("");
   const [instruction, setInstruction] = useState("");
@@ -61,7 +73,7 @@ export function CreateAutomationDialog({
 
   async function createCategory() {
     const slug = slugify(categoryName);
-    if (!slug) { toast.error("Give the category a name."); return; }
+    if (!slug) { toast.error(L.errCategoryName); return; }
     setBusy(true);
     try {
       const r = await fetch("/api/projects/categories", {
@@ -70,9 +82,9 @@ export function CreateAutomationDialog({
         body: JSON.stringify({ slug, title: categoryName.trim() }),
       });
       const d = (await r.json()) as { ok?: boolean; error?: string };
-      if (!r.ok || !d.ok) { toast.error(d.error ?? "Could not create the category."); return; }
-      toast.success(`Category "${categoryName.trim()}" created.`, {
-        description: "Its hub page is being built (1-2 min); you can already put an automation in it.",
+      if (!r.ok || !d.ok) { toast.error(d.error ?? L.errCreateCategory); return; }
+      toast.success(fill(L.categoryCreated, { name: categoryName.trim() }), {
+        description: L.categoryCreatedDesc,
         duration: 12000,
       });
       setCategories((c) => [...c.filter((x) => x.slug !== slug), { slug, title: categoryName.trim() }]);
@@ -95,7 +107,7 @@ export function CreateAutomationDialog({
 
   async function create() {
     if (!instruction.trim()) {
-      toast.error("Tell the automation what it must do — the instruction is required.");
+      toast.error(L.errInstructionRequired);
       return;
     }
     const target = category ?? pickedCategory;
@@ -109,11 +121,11 @@ export function CreateAutomationDialog({
       });
       const d = (await r.json()) as { ok?: boolean; url?: string; error?: string; category?: string; project?: string };
       if (!r.ok || !d.ok) {
-        toast.error(d.error ?? "Could not create the automation.");
+        toast.error(d.error ?? L.errCreateAutomation);
         return;
       }
-      toast.success("Automation created — building the page (1-2 min).", {
-        description: "It opens in development: its nodes are drafts until you build them.",
+      toast.success(L.automationCreated, {
+        description: L.automationCreatedDesc,
         duration: 12000,
       });
       setName("");
@@ -130,12 +142,12 @@ export function CreateAutomationDialog({
       {/* Wide dialog (owner's request): the design decisions here — type, brief, category — need room. */}
       <DialogContent className="max-h-[88vh] w-[95vw] max-w-3xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>New automation</DialogTitle>
+          <DialogTitle>{L.dialogTitle}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Type — chosen once, cannot be changed later</Label>
+            <Label>{L.typeLabel}</Label>
             <div className="grid gap-2">
               {AUTOMATION_TYPES.map((t) => (
                 <button
@@ -146,34 +158,34 @@ export function CreateAutomationDialog({
                     type === t.type ? `${t.badge} bg-accent/40` : "hover:bg-accent/30"
                   }`}
                 >
-                  <span className="font-medium">{t.title}</span>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{t.description}</p>
+                  <span className="font-medium">{TYPE_TEXT[t.type]?.title ?? t.title}</span>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{TYPE_TEXT[t.type]?.description ?? t.description}</p>
                 </button>
               ))}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="a-name">Name (optional)</Label>
-            <Input id="a-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Supplier price watch" />
+            <Label htmlFor="a-name">{L.nameLabel}</Label>
+            <Input id="a-name" value={name} onChange={(e) => setName(e.target.value)} placeholder={L.namePlaceholder} />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="a-instr">What must this automation do? (required)</Label>
+            <Label htmlFor="a-instr">{L.instrLabel}</Label>
             <Textarea
               id="a-instr"
               value={instruction}
               onChange={(e) => setInstruction(e.target.value)}
               rows={5}
-              placeholder="Every morning fetch the supplier prices, compare them with yesterday's, and send me the changes in Telegram."
+              placeholder={L.instrPlaceholder}
             />
             <p className="text-xs text-muted-foreground">
-              This is the seed: the automation opens in development and walks you from here to its nodes.
+              {L.instrHint}
             </p>
           </div>
 
           <div className="space-y-1.5">
-            <Label>Category</Label>
+            <Label>{L.categoryLabel}</Label>
             {category ? (
               <Input value={category} readOnly className="bg-muted/50" />
             ) : (
@@ -183,7 +195,7 @@ export function CreateAutomationDialog({
               <div className="flex w-full items-center gap-2">
                 <Select value={pickedCategory} onValueChange={setPickedCategory}>
                   <SelectTrigger className="w-full flex-1">
-                    <SelectValue placeholder="Choose a category" />
+                    <SelectValue placeholder={L.categoryPlaceholder} />
                   </SelectTrigger>
                   <SelectContent className="w-[var(--radix-select-trigger-width)]">
                     {categories.map((c) => (
@@ -196,7 +208,7 @@ export function CreateAutomationDialog({
                   size="sm"
                   variant="outline"
                   onClick={() => setNewCategory((v) => !v)}
-                  title="Create a new category"
+                  title={L.newCategoryTooltip}
                 >
                   <Plus className="size-4" />
                 </Button>
@@ -205,21 +217,21 @@ export function CreateAutomationDialog({
 
             {newCategory && !category && (
               <div className="mt-2 space-y-2 rounded-md border border-dashed p-3">
-                <Label htmlFor="c-name" className="text-xs">New category name</Label>
+                <Label htmlFor="c-name" className="text-xs">{L.newCategoryLabel}</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     id="c-name"
                     value={categoryName}
                     onChange={(e) => setCategoryName(e.target.value)}
-                    placeholder="Finance"
+                    placeholder={L.newCategoryPlaceholder}
                     className="flex-1"
                   />
                   <Button size="sm" onClick={createCategory} disabled={busy || !categoryName.trim()}>
-                    {busy ? <Loader2 className="size-4 animate-spin" /> : "Create"}
+                    {busy ? <Loader2 className="size-4 animate-spin" /> : L.createCategoryBtn}
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  A category is permanent: its slug is a fixed English identifier and is never renamed.
+                  {L.newCategoryHint}
                 </p>
               </div>
             )}
@@ -227,14 +239,13 @@ export function CreateAutomationDialog({
 
           {/* The Quiz's language, stated EXPLICITLY (owner's requirement) — the design session must never
               surprise the owner with its language. It is the project's default language; English only when
-              none is set. */}
+              none is set. Prefix/suffix (not one templated string) so the language NAME stays bold in JSX. */}
           <p className="rounded-md border border-dashed p-2.5 text-xs text-muted-foreground">
-            The Quiz will run in <span className="font-medium text-foreground">{lang?.name ?? "…"}</span>. To
-            change the default language, use the workspace settings.
+            {L.langNoticePrefix} <span className="font-medium text-foreground">{lang?.name ?? "…"}</span>{L.langNoticeSuffix}
           </p>
 
           <Button onClick={create} disabled={busy} className="w-full">
-            {busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} Create automation
+            {busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} {L.createBtn}
           </Button>
         </div>
       </DialogContent>
@@ -246,6 +257,8 @@ export function CreateAutomationDialog({
 export function CreateAutomationCard({ category }: { category: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const uiLang = useUiLang();
+  const L = createAutomationStrings(uiLang);
 
   return (
     <>
@@ -255,7 +268,7 @@ export function CreateAutomationCard({ category }: { category: string }) {
         className="flex min-h-40 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed bg-card/50 p-5 text-muted-foreground transition-all hover:border-primary/50 hover:text-foreground"
       >
         <Plus className="size-8" />
-        <span className="text-sm font-medium">Add automation</span>
+        <span className="text-sm font-medium">{L.addAutomationCard}</span>
       </button>
       <CreateAutomationDialog
         open={open}
@@ -273,6 +286,8 @@ export function CreateAutomationCard({ category }: { category: string }) {
 export function CreateAutomationRootCard() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const uiLang = useUiLang();
+  const L = createAutomationStrings(uiLang);
 
   return (
     <>
@@ -282,8 +297,8 @@ export function CreateAutomationRootCard() {
         className="group flex min-h-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed bg-card/50 p-5 text-muted-foreground transition-all hover:border-primary/50 hover:text-foreground"
       >
         <FolderPlus className="size-8" />
-        <span className="text-sm font-medium">Create project</span>
-        <span className="text-xs">Choose its category in the dialog</span>
+        <span className="text-sm font-medium">{L.createProjectCard}</span>
+        <span className="text-xs">{L.createProjectCardHint}</span>
       </button>
       <CreateAutomationDialog
         open={open}

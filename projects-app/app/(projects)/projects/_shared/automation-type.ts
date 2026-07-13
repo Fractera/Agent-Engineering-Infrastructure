@@ -1,15 +1,24 @@
-// AUTOMATION TYPES (frozen standard, step 224 §1.5) — an automation is ONE of two kinds, chosen at
-// creation and IMMUTABLE afterwards: the whole logic (above all: whether a run forks) grows out of it. To
-// change the type you delete the automation and create a new one — there is no "switch type".
+// AUTOMATION TYPES (frozen standard, step 224 §1.5; extended step 234) — an automation is ONE of three
+// kinds, chosen at creation and IMMUTABLE afterwards: the whole logic (above all: whether a run forks) grows
+// out of it. To change the type you delete the automation and create a new one — there is no "switch type".
 //
 //  • STREAM   — like telegram-notes: NO forks. Every incoming event runs the SAME scheme end to end.
 //  • INSTANCED — a run FORKS Master -> Instance (223.C.4): each run carries its own input parameters, may be
 //    DEFERRED in time (a timer or another process starts it), its progress is tracked, and changes can be
 //    made inside the fork (e.g. "write about dogs, 2000 words" instead of "cats, 1000").
+//  • CHAINED — a DIFFERENT axis: this automation is a link in a chain of SEPARATE automations, connected by
+//    an event (step 195's Subject + Trigger `event` + Action `emits` — already live, e.g.
+//    child-course-builder -> child-knowledge-check). It answers "is this automation wired to another one?",
+//    not "does this run fork?" — orthogonal to Stream/Instanced in principle.
+//
+// 🔧 TEMPORARY (step 234, owner's call): the dedicated Chained frozen template does not exist yet — the
+// frozen templates are still being reworked. Until then, picking "chained" in the creation modal MATERIALIZES
+// the automation as "instanced" under the hood (see app/api/projects/create/route.ts) — same skeleton, same
+// badge today. Do not "fix" this coercion as a bug; it is intentional until Chained gets its own template.
 //
 // The type is written into the automation's _meta at creation and shown as a coloured BADGE in the page's
 // top bar, LEFT of the status indicator (owner's design).
-export type AutomationType = "stream" | "instanced";
+export type AutomationType = "stream" | "instanced" | "chained";
 
 export type AutomationTypeSpec = {
   type: AutomationType;
@@ -34,6 +43,13 @@ export const AUTOMATION_TYPES: AutomationTypeSpec[] = [
     description:
       "Each run forks into its own instance with its own parameters — it can be deferred (a timer or another process), its progress is tracked, and it can be adjusted inside the fork.",
     badge: "border-violet-500 text-violet-600 dark:text-violet-400",
+  },
+  {
+    type: "chained",
+    title: "Chained",
+    description:
+      "Triggered by another automation's event, or emits one for the next — a link in a chain, not a standalone run (e.g. outreach finishes → a dialog script starts).",
+    badge: "border-sky-500 text-sky-600 dark:text-sky-400",
   },
 ];
 

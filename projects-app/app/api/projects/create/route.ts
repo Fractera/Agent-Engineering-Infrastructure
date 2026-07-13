@@ -54,7 +54,9 @@ export async function POST(req: NextRequest) {
     title: body.title ? String(body.title) : undefined,
     description: body.description ? String(body.description) : undefined,
     // Phase 1 (step 224 §1.5): the immutable automation type + the owner's mandatory instruction.
-    type: body.type === "instanced" ? "instanced" : "stream",
+    // "chained" (step 234) has no dedicated frozen template yet (owner: temporary, until the frozen
+    // templates are reworked) — it materializes AS "instanced" for now. Do not "fix" this as a bug.
+    type: body.type === "instanced" || body.type === "chained" ? "instanced" : "stream",
     instruction: body.instruction ? String(body.instruction) : undefined,
     force: !!body.force,
   })
