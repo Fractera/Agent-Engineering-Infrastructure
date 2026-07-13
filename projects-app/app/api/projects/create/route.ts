@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { spawn } from "node:child_process"
 import { getSession } from "@/lib/auth/get-session"
 import { createFrozenProject } from "@/app/(projects)/projects/_lib/frozen-project-starter"
+import { scheduleRebuild } from "@/lib/nodes"
 
 // The "запусти проект автоматизации" endpoint (step 214). ONE function — createFrozenProject —
 // serves both the owner's terminal command (a curl to this route) and a future AI-driven call:
@@ -22,17 +22,6 @@ async function authorize(req: NextRequest): Promise<boolean> {
   if (IP_MODE) return true // onboarding surface — open, like the other project-config routes
   const session = await getSession(req)
   return Boolean(session?.roles?.some((r) => WRITE_ROLES.includes(r)))
-}
-
-// Detached rebuild + reload so the freshly materialized route is served. The parent keeps
-// serving until pm2 reload swaps in the new .next — same shape as a normal projects deploy.
-function rebuildAndReload(): void {
-  try {
-    spawn("sh", ["-c", "cd /opt/fractera/projects-app && npm run build && pm2 reload fractera-projects"], {
-      detached: true,
-      stdio: "ignore",
-    }).unref()
-  } catch { /* best-effort — the files are written regardless */ }
 }
 
 export async function POST(req: NextRequest) {
@@ -63,7 +52,11 @@ export async function POST(req: NextRequest) {
 
   if (!result.ok) return NextResponse.json(result, { status: 400 })
 
-  rebuildAndReload()
+  // Same locked rebuild path as POST /api/projects/categories (lib/nodes.ts scheduleRebuild(), flock at
+  // /tmp/projects-build.lock) — unified 2026-07-14 so an automation created right after its category can
+  // no longer race a second, unlocked `npm run build` and corrupt .next (this route used to spawn its own
+  // unlocked build+reload here).
+  scheduleRebuild()
   return NextResponse.json({
     ...result,
     building: true,
