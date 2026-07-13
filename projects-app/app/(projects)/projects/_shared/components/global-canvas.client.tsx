@@ -6,13 +6,12 @@ import {
   type Connection, type Edge, type Node, type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Boxes, CircleDot, Eye, LayoutGrid, Lock, Loader2, Plus, Power, Unlock, X } from "lucide-react";
+import { Boxes, CircleDot, Eye, LayoutGrid, Lock, Loader2, Plus, Power, Unlock } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { GlobalEdgePanel } from "./global-edge-panel.client";
 import { GlobalProjectPanel } from "./global-project-panel.client";
-import { GroupDetailCanvas } from "./group-detail-canvas.client";
 import { CreateAutomationDialog } from "./create-automation-card.client";
 import { ActivationQuiz } from "./activation-quiz.client";
 import { useUiLang } from "../use-ui-lang";
@@ -65,8 +64,9 @@ type PNode = Node<PData, "project">;
 type GroupData = {
   label: string; ready: boolean; unlocked: boolean; memberCount: number;
   onToggleLock: (id: string) => void; onResize: (id: string, w: number, h: number) => void;
-  /** step 237 — the eye icon opens GroupDetailCanvas for this group. */
-  onOpenDetail: (id: string) => void;
+  /** step 238 — the eye icon navigates to this group's own dedicated page (/projects/<category>/<slug>),
+   *  the same URL shape every regular automation already has. */
+  category: string;
 };
 type GroupNode = Node<GroupData, "chainGroup">;
 type AnyNode = PNode | GroupNode;
@@ -147,11 +147,12 @@ function ChainGroupNode({ id, data, selected }: NodeProps<GroupNode>) {
           <span className="text-[10px] text-muted-foreground" title="Automations dragged inside this group">
             {data.memberCount} inside
           </span>
-          {/* step 237 — the eye: opens the full-space canvas with every member automation's own nodes
-              fully expanded, so a new link can be drawn node-to-node instead of automation-to-automation. */}
+          {/* step 238 — the eye: navigates to this group's OWN dedicated page (same URL shape every regular
+              automation already has), instead of swapping the root canvas inline (step 237's original
+              behaviour — reverted per owner's request). */}
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); data.onOpenDetail(id); }}
+            onClick={(e) => { e.stopPropagation(); window.location.href = `/projects/${data.category}/${data.label}`; }}
             className="rounded p-1 text-muted-foreground hover:bg-muted"
             title="Open this group — see every automation's own nodes on one screen and wire them node-to-node"
           >
@@ -203,7 +204,6 @@ function mergeProjects(
   current: AnyNode[],
   onToggleLock: (id: string) => void,
   onResize: (id: string, w: number, h: number) => void,
-  onOpenDetail: (id: string) => void,
 ): { nodes: AnyNode[]; added: boolean } {
   const byId = new Map(current.map((n) => [n.id, n]));
   const occupied: { x: number; y: number; w: number; h: number }[] = [];
@@ -220,7 +220,7 @@ function mergeProjects(
     const existing = byId.get(p.automation);
     if (p.type === "chained") {
       if (existing && existing.type === "chainGroup") {
-        result.push({ ...existing, data: { ...existing.data, label: p.slug, ready: p.ready } });
+        result.push({ ...existing, data: { ...existing.data, label: p.slug, ready: p.ready, category: p.category } });
       } else {
         const entry = d.layout[p.automation];
         const width = entry?.width ?? GROUP_DEFAULT.width;
@@ -230,7 +230,7 @@ function mergeProjects(
         added = true;
         result.push({
           id: p.automation, type: "chainGroup", position: pos, style: { width, height },
-          data: { label: p.slug, ready: p.ready, unlocked: false, memberCount: 0, onToggleLock, onResize, onOpenDetail },
+          data: { label: p.slug, ready: p.ready, unlocked: false, memberCount: 0, onToggleLock, onResize, category: p.category },
         });
       }
       continue;
@@ -315,10 +315,6 @@ function GlobalCanvasInner() {
   // whatever else does or doesn't re-render.
   const [unlocked, setUnlocked] = useState<Set<string>>(new Set());
   const lockTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
-  // step 237 — the group the owner is currently viewing full-space (eye icon); null = the normal global
-  // canvas. Deliberately NOT cleared on unrelated refetches — only the "Close automation" button clears it.
-  const [detailGroup, setDetailGroup] = useState<string | null>(null);
-  const openDetail = useCallback((id: string) => setDetailGroup(id), []);
   // Remembers each node's position at the moment its drag started, so a locked-group rejection can revert
   // to EXACTLY that value via rf.updateNode — see onNodeDragStart/onNodeDragStop below.
   const dragStartPositionRef = useRef<Record<string, { x: number; y: number }>>({});
@@ -378,10 +374,10 @@ function GlobalCanvasInner() {
     const d = (await r.json()) as GState;
     setState(d);
     const current = rf.getNodes() as AnyNode[];
-    const { nodes: merged, added } = mergeProjects(d, current, toggleLock, resizeGroup, openDetail);
+    const { nodes: merged, added } = mergeProjects(d, current, toggleLock, resizeGroup);
     setNodes(merged);
     if (added) persistLayout(merged);
-  }, [rf, toggleLock, resizeGroup, openDetail, persistLayout, setNodes]);
+  }, [rf, toggleLock, resizeGroup, persistLayout, setNodes]);
 
   useEffect(() => {
     void refetch();
@@ -559,83 +555,57 @@ function GlobalCanvasInner() {
     ? nodes.filter((n) => n.parentId === project.automation).map((n) => ({ automation: n.id, slug: n.data.label }))
     : undefined;
 
-  // step 237 — the group currently opened full-space (eye icon). Its own member list is derived the same
-  // way projectMembers is above: from the live node array, never a polled field.
-  const detailProject = detailGroup ? state.projects.find((p) => p.automation === detailGroup) : undefined;
-  const detailMembers = detailGroup
-    ? nodes.filter((n) => n.parentId === detailGroup).map((n) => ({ automation: n.id, slug: n.data.label }))
-    : [];
-
   return (
     <section className="mt-10">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        {detailProject ? (
-          // step 237 — the general canvas' own header is replaced entirely: the group's name on the left,
-          // "Close automation" on the right (the owner's exact spec) — nothing about the OTHER automations
-          // is shown here, this screen belongs to this one group alone.
-          <>
-            <h2 className="text-xl font-semibold">{detailProject.slug}</h2>
-            <Button variant="outline" size="sm" onClick={() => setDetailGroup(null)}>
-              <X className="size-3.5" /> {L.btnCloseAutomation}
-            </Button>
-          </>
-        ) : (
-          <>
-            <div>
-              <h2 className="text-xl font-semibold">{L.title}</h2>
-              <p className="text-sm text-muted-foreground">
-                {L.intro}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm">
-                <span className={`size-2.5 rounded-full ${STATUS_PILL[state.status] ?? "bg-muted"}`} aria-hidden />
-                {state.status === "in-development" ? L.statusInDevelopment : state.status === "on" ? L.statusOn : L.statusOff}
-              </span>
-              {/* A new automation is born FROM THE GLOBAL VIEW (step 225 G4) — the same single entry
-                  POST /api/projects/create (never a second code path); the only difference from a category
-                  grid's "+" card is that the canvas has no ambient category, so the modal asks for one. The
-                  moment it exists, its Quiz opens here and the auto-quiz starts streaming. */}
-              <Button variant="outline" size="sm" onClick={() => setCreating(true)}>
-                <Plus className="size-3.5" /> {L.btnAddAutomation}
-              </Button>
-              <Button variant="outline" size="sm" onClick={autoLayout}>
-                <LayoutGrid className="size-3.5" /> {L.btnAutoLayout}
-              </Button>
-              <Button variant="outline" size="sm" onClick={toggleGlobal}>
-                <Power className="size-3.5" /> {state.status === "off" ? L.btnTurnOn : L.btnTurnOff}
-              </Button>
-            </div>
-          </>
-        )}
+        <div>
+          <h2 className="text-xl font-semibold">{L.title}</h2>
+          <p className="text-sm text-muted-foreground">
+            {L.intro}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm">
+            <span className={`size-2.5 rounded-full ${STATUS_PILL[state.status] ?? "bg-muted"}`} aria-hidden />
+            {state.status === "in-development" ? L.statusInDevelopment : state.status === "on" ? L.statusOn : L.statusOff}
+          </span>
+          {/* A new automation is born FROM THE GLOBAL VIEW (step 225 G4) — the same single entry
+              POST /api/projects/create (never a second code path); the only difference from a category
+              grid's "+" card is that the canvas has no ambient category, so the modal asks for one. The
+              moment it exists, its Quiz opens here and the auto-quiz starts streaming. */}
+          <Button variant="outline" size="sm" onClick={() => setCreating(true)}>
+            <Plus className="size-3.5" /> {L.btnAddAutomation}
+          </Button>
+          <Button variant="outline" size="sm" onClick={autoLayout}>
+            <LayoutGrid className="size-3.5" /> {L.btnAutoLayout}
+          </Button>
+          <Button variant="outline" size="sm" onClick={toggleGlobal}>
+            <Power className="size-3.5" /> {state.status === "off" ? L.btnTurnOn : L.btnTurnOff}
+          </Button>
+        </div>
       </div>
 
-      {detailProject ? (
-        // step 237 — the group's OWN members fully expanded, replacing the general canvas entirely while open.
-        <GroupDetailCanvas members={detailMembers} edges={state.edges} onChanged={() => void refetch()} />
-      ) : (
-        // Canvas size (owner): 75% of the screen height; the width comes from its host section, which is the
-        // standard 85vw column — so the canvas fills it exactly like every other block on the page.
-        <div className="relative h-[75vh] w-full overflow-hidden rounded-lg border">
-          <ReactFlow
-            nodes={nodes}
-            edges={rfEdges}
-            nodeTypes={NODE_TYPES}
-            onNodesChange={onNodesChange}
-            onConnect={onConnect}
-            onEdgeClick={(_, e) => { setActiveEdge(e.id); setPanelOpen("edge"); }}
-            onNodeClick={(_, n) => { setActiveProject(n.id); setPanelOpen("project"); }}
-            onNodeDragStart={onNodeDragStart}
-            onNodeDragStop={onNodeDragStop}
-            nodesConnectable
-            deleteKeyCode={null}
-            fitView
-          >
-            <Background />
-            <Controls showInteractive={false} />
-          </ReactFlow>
-        </div>
-      )}
+      {/* Canvas size (owner): 75% of the screen height; the width comes from its host section, which is the
+          standard 85vw column — so the canvas fills it exactly like every other block on the page. */}
+      <div className="relative h-[75vh] w-full overflow-hidden rounded-lg border">
+        <ReactFlow
+          nodes={nodes}
+          edges={rfEdges}
+          nodeTypes={NODE_TYPES}
+          onNodesChange={onNodesChange}
+          onConnect={onConnect}
+          onEdgeClick={(_, e) => { setActiveEdge(e.id); setPanelOpen("edge"); }}
+          onNodeClick={(_, n) => { setActiveProject(n.id); setPanelOpen("project"); }}
+          onNodeDragStart={onNodeDragStart}
+          onNodeDragStop={onNodeDragStop}
+          nodesConnectable
+          deleteKeyCode={null}
+          fitView
+        >
+          <Background />
+          <Controls showInteractive={false} />
+        </ReactFlow>
+      </div>
 
       {/* ANIMATED SLIDE-IN PANELS (step 236.4) — Radix Sheet (components/ui/sheet.tsx), which already ships
           slide-in-from-right/slide-out-to-right. Rendered UNCONDITIONALLY (only `open` toggles) so Radix's own

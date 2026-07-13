@@ -80,6 +80,20 @@ export async function ProjectsIndex() {
             )}
           </Link>
         ))}
+        {/* THE "GROUP AUTOMATIONS" CARD (step 238) — group (chained-type) automations don't belong to a real
+            category folder, so they don't get a card in the loop above; this one bespoke card links to their
+            own cross-category listing (/projects/groups, groups-hub.server.tsx). Shown unconditionally, same
+            as the 4 real categories above always showing even when empty. */}
+        <Link
+          href="/projects/groups"
+          className="group flex flex-col rounded-xl border bg-card p-5 shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
+        >
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-semibold leading-tight">{L.groupAutomationsTitle}</h3>
+            <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
+          </div>
+          <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{L.groupAutomationsDescription}</p>
+        </Link>
         {/* The root's own "create project" card (step 225 G6) — the SAME creation dialog as a category's "+",
             with the one option a category grid cannot offer: choosing WHICH category the automation lives in. */}
         <CreateAutomationRootCard />

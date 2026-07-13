@@ -308,6 +308,7 @@ import { ActivationQuiz } from "../../../_shared/components/activation-quiz.clie
 import { AddModifyAutomationButton } from "../../../_shared/components/add-modify-automation-button.client";
 import { AutomationAccordions } from "../../../_shared/components/automation-accordions.client";
 import { DiagramSection } from "../../../_shared/components/diagram-section.client";
+import { GroupDetailSection } from "../../../_shared/components/group-detail-section.client";
 import { SkeletonIntro } from "../../../_shared/components/skeleton-intro.client";
 import { PROJECT_CONFIG } from "../_data/config";
 import { USE_CASES } from "../_data/use-cases";
@@ -322,6 +323,11 @@ import { DIAGRAM_NODES } from "../_data/diagram";
 // "The settings & tests declaration standard".
 export default function AutomationEntry() {
   const d = PROJECT_DESCRIPTION;
+  // A CHAINED automation (step 238) is a canvas-only container, not a workflow — it has nothing of its own
+  // to build, so the generic Input/Logic/Output draft diagram below is meaningless for it. Its own page
+  // shows GroupDetailSection instead: the same chain-brief editor + expanded member-automation nodes the
+  // root canvas's eye icon and side panel already use — never a second implementation of either.
+  const isGroup = AUTOMATION_TYPE === "chained";
   return (
     <>
       <main className="mx-auto w-[85vw] max-w-full space-y-4 px-4 pt-8">
@@ -345,8 +351,13 @@ export default function AutomationEntry() {
         </div>
       </main>
       {/* The Diagram is ALWAYS visible — full screen width, 80vh — NOT an accordion (owner design,
-          step 223.C). It is the automation's centerpiece; the node panel opens on click. */}
-      <DiagramSection nodes={DIAGRAM_NODES} automation="{{CATEGORY}}/{{PROJECT}}" />
+          step 223.C). It is the automation's centerpiece; the node panel opens on click. A CHAINED
+          automation shows GroupDetailSection here instead (step 238) — see the isGroup comment above. */}
+      {isGroup ? (
+        <GroupDetailSection automation="{{CATEGORY}}/{{PROJECT}}" />
+      ) : (
+        <DiagramSection nodes={DIAGRAM_NODES} automation="{{CATEGORY}}/{{PROJECT}}" />
+      )}
       <main className="mx-auto w-[85vw] max-w-full space-y-8 px-4 py-8">
         {/* The OTHER entity accordions (step 222) + the mandatory Use cases. The Diagram is above,
             outside the accordion series. Driven by _data/config.ts + _data/use-cases.ts. */}

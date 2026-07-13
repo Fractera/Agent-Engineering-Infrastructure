@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import { db } from "@/lib/db";
 import { authorize, resolveProject } from "@/lib/nodes";
 import { PROJECT_CATEGORIES } from "@/app/(projects)/projects/_shared/categories";
 import { listProjectSlugs } from "@/app/(projects)/projects/_shared/projects-manifest";
+import { readAutomationType } from "@/app/(projects)/projects/_shared/automation-type-reader";
 import { automationReadiness, getGlobalLayout, listEdges, pruneDeadEdges, type Layout } from "@/lib/edges";
 
 // THE GLOBAL CANVAS STATE (step 225) — everything the workspace-level graph needs, in one poll:
@@ -24,17 +23,6 @@ export type GlobalProject = {
   type: "stream" | "instanced" | "chained";
 };
 
-// The type is declared in the project's _data/automation.ts (emitted by the starter since 224 L6). Projects
-// created BEFORE that file existed have none — for them we DERIVE it honestly: an automation that has forks
-// (Instances) is Instanced; otherwise it is Stream. Never guess: read the file first.
-async function automationType(projectDir: string, automation: string): Promise<"stream" | "instanced" | "chained"> {
-  const src = await readFile(join(projectDir, "_data", "automation.ts"), "utf8").catch(() => "");
-  const m = src.match(/AUTOMATION_TYPE\s*:\s*AutomationType\s*=\s*["'](stream|instanced|chained)["']/);
-  if (m) return m[1] as "stream" | "instanced" | "chained";
-  const fork = (await db.prepare(`SELECT 1 FROM automation_instances WHERE automation = ? LIMIT 1`).get(automation)) as unknown;
-  return fork ? "instanced" : "stream";
-}
-
 async function globalRow(): Promise<{ status: string; layout: string }> {
   const row = (await db.prepare(`SELECT status, layout FROM global_automation WHERE id = 1`).get()) as
     | { status: string; layout: string }
@@ -53,7 +41,7 @@ export async function GET(req: NextRequest) {
       const automation = `${c.slug}/${slug}`;
       const r = await automationReadiness(automation);
       const proj = resolveProject(automation);
-      const type = proj.ok ? await automationType(proj.projectDir, automation) : "stream";
+      const type = proj.ok ? await readAutomationType(proj.projectDir, automation) : "stream";
       projects.push({ automation, category: c.slug, slug, ready: r.ready, nodes: r.nodes, drafts: r.drafts, reason: r.reason, type });
     }
   }

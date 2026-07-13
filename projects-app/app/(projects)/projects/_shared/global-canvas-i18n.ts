@@ -64,6 +64,10 @@ export type GlobalCanvasStrings = {
   openGroupDetailTip: string;
   btnCloseAutomation: string;
   errSameAutomationLink: string;
+
+  // ─── GroupDetailSection (step 238) — the heading on a group automation's OWN dedicated page, above the
+  // chain-brief editor + the expanded member-automations canvas ───
+  groupPageHeading: string;
 };
 
 export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
@@ -116,6 +120,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     openGroupDetailTip: "Open this group — see every automation's own nodes on one screen and wire them node-to-node",
     btnCloseAutomation: "Close automation",
     errSameAutomationLink: "Both ends of a link must belong to different automations.",
+    groupPageHeading: "Automations in this group",
   },
   ru: {
     title: "Глобальная архитектура",
@@ -166,6 +171,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     openGroupDetailTip: "Открыть эту группу — увидеть собственные узлы всех автоматизаций на одном экране и соединить их напрямую, узел к узлу",
     btnCloseAutomation: "Закрыть автоматизацию",
     errSameAutomationLink: "Оба конца связи должны принадлежать разным автоматизациям.",
+    groupPageHeading: "Автоматизации в этой группе",
   },
   es: {
     title: "Arquitectura global",
@@ -216,6 +222,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     openGroupDetailTip: "Abrir este grupo — ver los propios nodos de cada automatización en una sola pantalla y conectarlos nodo a nodo",
     btnCloseAutomation: "Cerrar automatización",
     errSameAutomationLink: "Ambos extremos de un enlace deben pertenecer a automatizaciones diferentes.",
+    groupPageHeading: "Automatizaciones de este grupo",
   },
   fr: {
     title: "Architecture globale",
@@ -266,6 +273,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     openGroupDetailTip: "Ouvrir ce groupe — voir les propres nœuds de chaque automatisation sur un seul écran et les relier nœud à nœud",
     btnCloseAutomation: "Fermer l'automatisation",
     errSameAutomationLink: "Les deux extrémités d'un lien doivent appartenir à des automatisations différentes.",
+    groupPageHeading: "Automatisations de ce groupe",
   },
   it: {
     title: "Architettura globale",
@@ -316,6 +324,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     openGroupDetailTip: "Apri questo gruppo — vedi i nodi propri di ogni automazione su un unico schermo e collegali nodo a nodo",
     btnCloseAutomation: "Chiudi automazione",
     errSameAutomationLink: "Entrambe le estremità di un collegamento devono appartenere ad automazioni diverse.",
+    groupPageHeading: "Automazioni in questo gruppo",
   },
   de: {
     title: "Globale Architektur",
@@ -366,6 +375,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     openGroupDetailTip: "Diese Gruppe öffnen — die eigenen Knoten jeder Automatisierung auf einem Bildschirm sehen und sie Knoten-zu-Knoten verbinden",
     btnCloseAutomation: "Automatisierung schließen",
     errSameAutomationLink: "Beide Enden einer Verbindung müssen zu unterschiedlichen Automatisierungen gehören.",
+    groupPageHeading: "Automatisierungen in dieser Gruppe",
   },
   pt: {
     title: "Arquitetura global",
@@ -416,6 +426,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     openGroupDetailTip: "Abrir este grupo — ver os próprios nós de cada automação num único ecrã e ligá-los nó a nó",
     btnCloseAutomation: "Fechar automação",
     errSameAutomationLink: "As duas extremidades de uma ligação devem pertencer a automações diferentes.",
+    groupPageHeading: "Automações neste grupo",
   },
   pl: {
     title: "Globalna architektura",
@@ -466,6 +477,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     openGroupDetailTip: "Otwórz tę grupę — zobacz własne węzły każdej automatyzacji na jednym ekranie i połącz je węzeł do węzła",
     btnCloseAutomation: "Zamknij automatyzację",
     errSameAutomationLink: "Oba końce połączenia muszą należeć do różnych automatyzacji.",
+    groupPageHeading: "Automatyzacje w tej grupie",
   },
   tr: {
     title: "Genel mimari",
@@ -516,6 +528,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     openGroupDetailTip: "Bu grubu aç — her otomasyonun kendi düğümlerini tek ekranda gör ve onları düğümden düğüme bağla",
     btnCloseAutomation: "Otomasyonu kapat",
     errSameAutomationLink: "Bir bağlantının her iki ucu da farklı otomasyonlara ait olmalıdır.",
+    groupPageHeading: "Bu gruptaki otomasyonlar",
   },
   nl: {
     title: "Globale architectuur",
@@ -566,6 +579,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     openGroupDetailTip: "Open deze groep — zie de eigen nodes van elke automatisering op één scherm en verbind ze node-tot-node",
     btnCloseAutomation: "Automatisering sluiten",
     errSameAutomationLink: "Beide uiteinden van een link moeten tot verschillende automatiseringen behoren.",
+    groupPageHeading: "Automatiseringen in deze groep",
   },
 };
 

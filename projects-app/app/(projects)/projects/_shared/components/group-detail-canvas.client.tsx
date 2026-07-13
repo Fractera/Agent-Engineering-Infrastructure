@@ -13,12 +13,18 @@ import { GlobalEdgePanel } from "./global-edge-panel.client";
 import { useUiLang } from "../use-ui-lang";
 import { globalCanvasStrings } from "../global-canvas-i18n";
 
-// THE GROUP DETAIL CANVAS (step 237) — the eye icon on a Chained group opens this: the global canvas
-// disappears and this one takes the full space instead. Every member automation's OWN nodes render fully
-// expanded (the same nodes DiagramCanvas shows on that automation's own page), each set boxed in its own
-// tinted background so automations never visually blend into each other. Because the real nodes are on
-// screen, a new link is drawn NODE-TO-NODE by a plain drag between two handles — the owner never has to
-// answer "which node feeds which" a second time in a picker (GlobalEdgePanel's `nodesLocked`, step 237).
+// THE GROUP DETAIL CANVAS (step 237; made SELF-SUFFICIENT step 238) — every member automation's OWN nodes
+// render fully expanded (the same nodes DiagramCanvas shows on that automation's own page), each set boxed
+// in its own tinted background so automations never visually blend into each other. Because the real nodes
+// are on screen, a new link is drawn NODE-TO-NODE by a plain drag between two handles — the owner never has
+// to answer "which node feeds which" a second time in a picker (GlobalEdgePanel's `nodesLocked`, step 237).
+//
+// SELF-SUFFICIENT (step 238): this canvas used to be prop-driven by the root canvas's live React-Flow node
+// array (step 237's inline eye-icon swap). Now it lives SOLELY on a group automation's own dedicated page
+// (group-detail-section.client.tsx) — there is no GlobalCanvas/ReactFlow instance mounted there to hand it
+// members/edges — so it takes only `{automation}` and polls GET /api/projects/global itself (same 4s
+// pattern GlobalCanvas already uses) to derive its own members (from the response's `layout` map, entries
+// whose `parent === automation`) and edges (the response's `edges` array, unchanged shape).
 //
 // Read-only layout by design (v1, owner did not ask for drag-to-rearrange here): each automation's nodes
 // are placed by the SAME depth/sibling tree layout DiagramCanvas computes for its own Builder canvas, then
@@ -34,6 +40,12 @@ export type GEdge = {
   active_version: number; from_node_cuid: string | null; to_node_cuid: string | null;
 };
 export type GroupDetailMember = { automation: string; slug: string };
+type LayoutEntry = { parent?: string | null };
+type GlobalState = {
+  projects: { automation: string; slug: string }[];
+  edges: GEdge[];
+  layout: Record<string, LayoutEntry>;
+};
 
 type MemberData = { label: string; sub: string; draft: boolean };
 type MemberNode = Node<MemberData, "memberNode">;
@@ -108,23 +120,39 @@ function treeLayout(nodes: IndexNode[]): { pos: Map<string, { x: number; y: numb
   return { pos, cols: maxCol + 1, rows: maxRow + 1 };
 }
 
-export function GroupDetailCanvas({
-  members, edges, onChanged,
-}: { members: GroupDetailMember[]; edges: GEdge[]; onChanged: () => void }) {
+export function GroupDetailCanvas({ automation }: { automation: string }) {
   const L = globalCanvasStrings(useUiLang());
+  const [members, setMembers] = useState<GroupDetailMember[]>([]);
+  const [edges, setEdges] = useState<GEdge[]>([]);
   const [byAutomation, setByAutomation] = useState<Record<string, IndexNode[]>>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [activeEdge, setActiveEdge] = useState<GEdge | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
 
-  // BUG FIX (owner report: eye icon → endless "Loading the workspace graph"): `members` is a brand-new array
-  // literal (`.filter().map()`) computed fresh on EVERY render of the parent GlobalCanvasInner — including
-  // its own 4s background poll, which always produces new node objects even when nothing changed. Depending
-  // the fetch effect on `members` itself therefore re-ran the fetch (and re-showed the loading state) every
-  // few seconds, forever, faster than the fetch could ever visibly settle. The actual MEMBERSHIP only
-  // changes rarely, so a content key (not the array reference) is what the effect should watch.
-  const membersKey = members.map((m) => m.automation).join("|");
+  // Same content-key discipline as the fetch effect below: a poll producing an equivalent member SET must
+  // not re-trigger the per-member node fetch (the exact endless-loading bug fixed in step 237.1) — key on
+  // the joined automation ids, not on array identity.
+  const [membersKey, setMembersKey] = useState("");
+
+  const refetchGlobal = useCallback(async () => {
+    const r = await fetch("/api/projects/global", { cache: "no-store" });
+    if (!r.ok) return;
+    const d = (await r.json()) as GlobalState;
+    setEdges(d.edges ?? []);
+    const bySlug = new Map(d.projects.map((p) => [p.automation, p.slug]));
+    const next = Object.entries(d.layout ?? {})
+      .filter(([, entry]) => entry.parent === automation)
+      .map(([auto]) => ({ automation: auto, slug: bySlug.get(auto) ?? auto }));
+    setMembers(next);
+    setMembersKey(next.map((m) => m.automation).join("|"));
+  }, [automation]);
+
+  useEffect(() => {
+    void refetchGlobal();
+    const t = setInterval(() => { if (document.visibilityState === "visible") void refetchGlobal(); }, 4000);
+    return () => clearInterval(t);
+  }, [refetchGlobal]);
 
   useEffect(() => {
     let cancelled = false;
@@ -141,7 +169,7 @@ export function GroupDetailCanvas({
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally keyed on membersKey (content), not
-    // the `members` array reference, which changes on every unrelated parent poll (see comment above).
+    // the `members` array reference, which changes on every unrelated background poll (step 237.1 fix).
   }, [membersKey]);
 
   const { nodes, memberEdges } = useMemo(() => {
@@ -216,10 +244,10 @@ export function GroupDetailCanvas({
       const d = (await r.json()) as { ok?: boolean; error?: string; edge?: GEdge };
       if (!r.ok) { toast.error(d.error ?? L.errCouldNotCreateLink); return; }
       toast.success(L.linkCreatedToast, { duration: 10000 });
-      onChanged();
+      void refetchGlobal();
       if (d.edge) { setActiveEdge(d.edge); setPanelOpen(true); }
     } finally { setBusy(false); }
-  }, [busy, L, onChanged]);
+  }, [busy, L, refetchGlobal]);
 
   if (loading) {
     return (
@@ -266,8 +294,8 @@ export function GroupDetailCanvas({
               key={activeEdge.cuid}
               edge={activeEdge}
               nodesLocked
-              onChanged={onChanged}
-              onDeleted={() => { setPanelOpen(false); onChanged(); }}
+              onChanged={refetchGlobal}
+              onDeleted={() => { setPanelOpen(false); void refetchGlobal(); }}
             />
           )}
         </SheetContent>
