@@ -25,8 +25,16 @@ type GEdge = {
 type IndexNode = { cuid: string; name: string; slug: string; draft: number };
 
 export function GlobalEdgePanel({
-  edge, onChanged, onDeleted, onQuiz,
-}: { edge: GEdge; onChanged: () => void; onDeleted: () => void; onQuiz?: () => void }) {
+  edge, onChanged, onDeleted, onQuiz, nodesLocked,
+}: {
+  edge: GEdge; onChanged: () => void; onDeleted: () => void; onQuiz?: () => void;
+  /** step 237 — set by GroupDetailCanvas: the edge was born from an actual node-to-node drag on the
+   *  expanded canvas, so the two endpoints are ALREADY the exact nodes the owner meant — asking again via
+   *  an editable picker is exactly the redundant step the owner objected to. Renders the same two lines as
+   *  plain, non-interactive text instead of `<select>`s. Top-level automation-to-automation edges (created
+   *  without ever seeing individual nodes) keep the pickers — there the specific nodes genuinely are unknown. */
+  nodesLocked?: boolean;
+}) {
   const L = globalCanvasStrings(useUiLang());
   const [spec, setSpec] = useState("");
   const [fromNodes, setFromNodes] = useState<IndexNode[]>([]);
@@ -95,23 +103,36 @@ export function GlobalEdgePanel({
 
   const picker = (
     label: string, automation: string, nodes: IndexNode[], value: string, set: (v: string) => void,
-  ) => (
-    <div className="space-y-1">
-      <label className="text-xs font-medium text-muted-foreground">{label} — {automation}</label>
-      <select
-        value={value}
-        onChange={(e) => set(e.target.value)}
-        className="w-full rounded-md border bg-background p-2 text-sm"
-      >
-        <option value="">{L.nodePickerAny}</option>
-        {nodes.map((n) => (
-          <option key={n.cuid} value={n.cuid}>
-            {n.name}{n.draft ? L.nodeDraftSuffix : ""}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
+  ) => {
+    // step 237 — locked: the connection was drawn node-to-node on GroupDetailCanvas, so the endpoint is
+    // already exactly right; show it as plain text instead of asking the owner to pick it again.
+    if (nodesLocked) {
+      const found = nodes.find((n) => n.cuid === value);
+      return (
+        <p className="text-xs">
+          <span className="font-medium text-muted-foreground">{label} — {automation}:</span>{" "}
+          {found ? `${found.name}${found.draft ? L.nodeDraftSuffix : ""}` : L.nodePickerAny}
+        </p>
+      );
+    }
+    return (
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">{label} — {automation}</label>
+        <select
+          value={value}
+          onChange={(e) => set(e.target.value)}
+          className="w-full rounded-md border bg-background p-2 text-sm"
+        >
+          <option value="">{L.nodePickerAny}</option>
+          {nodes.map((n) => (
+            <option key={n.cuid} value={n.cuid}>
+              {n.name}{n.draft ? L.nodeDraftSuffix : ""}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-3">

@@ -58,6 +58,12 @@ export type GlobalCanvasStrings = {
   stepCreatedToast: string;   // {step}
   stepCopyDesc: string;
   copyBtn: string;
+
+  // ─── GroupDetailCanvas (step 237) — the group's own eye icon opens a full-space canvas with every
+  // member automation's real nodes fully expanded, so a cross-automation link connects actual nodes ───
+  openGroupDetailTip: string;
+  btnCloseAutomation: string;
+  errSameAutomationLink: string;
 };
 
 export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
@@ -107,6 +113,9 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     stepCreatedToast: "You created a technical brief for the coding agent (step #{step})",
     stepCopyDesc: "Copy this message and paste it into the coding agent's chat.",
     copyBtn: "Copy",
+    openGroupDetailTip: "Open this group — see every automation's own nodes on one screen and wire them node-to-node",
+    btnCloseAutomation: "Close automation",
+    errSameAutomationLink: "Both ends of a link must belong to different automations.",
   },
   ru: {
     title: "Глобальная архитектура",
@@ -154,6 +163,9 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     stepCreatedToast: "Вы создали техническое задание для агента-кодера (шаг №{step})",
     stepCopyDesc: "Скопируйте это сообщение и вставьте в чат агента-кодера.",
     copyBtn: "Скопировать",
+    openGroupDetailTip: "Открыть эту группу — увидеть собственные узлы всех автоматизаций на одном экране и соединить их напрямую, узел к узлу",
+    btnCloseAutomation: "Закрыть автоматизацию",
+    errSameAutomationLink: "Оба конца связи должны принадлежать разным автоматизациям.",
   },
   es: {
     title: "Arquitectura global",
@@ -201,6 +213,9 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     stepCreatedToast: "Has creado un resumen técnico para el agente de código (paso n.º {step})",
     stepCopyDesc: "Copia este mensaje y pégalo en el chat del agente de código.",
     copyBtn: "Copiar",
+    openGroupDetailTip: "Abrir este grupo — ver los propios nodos de cada automatización en una sola pantalla y conectarlos nodo a nodo",
+    btnCloseAutomation: "Cerrar automatización",
+    errSameAutomationLink: "Ambos extremos de un enlace deben pertenecer a automatizaciones diferentes.",
   },
   fr: {
     title: "Architecture globale",
@@ -248,6 +263,9 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     stepCreatedToast: "Vous avez créé un résumé technique pour l'agent de code (étape n° {step})",
     stepCopyDesc: "Copiez ce message et collez-le dans le chat de l'agent de code.",
     copyBtn: "Copier",
+    openGroupDetailTip: "Ouvrir ce groupe — voir les propres nœuds de chaque automatisation sur un seul écran et les relier nœud à nœud",
+    btnCloseAutomation: "Fermer l'automatisation",
+    errSameAutomationLink: "Les deux extrémités d'un lien doivent appartenir à des automatisations différentes.",
   },
   it: {
     title: "Architettura globale",
@@ -295,6 +313,9 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     stepCreatedToast: "Hai creato un riepilogo tecnico per l'agente di codice (passo n. {step})",
     stepCopyDesc: "Copia questo messaggio e incollalo nella chat dell'agente di codice.",
     copyBtn: "Copia",
+    openGroupDetailTip: "Apri questo gruppo — vedi i nodi propri di ogni automazione su un unico schermo e collegali nodo a nodo",
+    btnCloseAutomation: "Chiudi automazione",
+    errSameAutomationLink: "Entrambe le estremità di un collegamento devono appartenere ad automazioni diverse.",
   },
   de: {
     title: "Globale Architektur",
@@ -342,6 +363,9 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     stepCreatedToast: "Du hast eine Kurzbeschreibung für den Coding-Agenten erstellt (Schritt Nr. {step})",
     stepCopyDesc: "Kopiere diese Nachricht und füge sie in den Chat des Coding-Agenten ein.",
     copyBtn: "Kopieren",
+    openGroupDetailTip: "Diese Gruppe öffnen — die eigenen Knoten jeder Automatisierung auf einem Bildschirm sehen und sie Knoten-zu-Knoten verbinden",
+    btnCloseAutomation: "Automatisierung schließen",
+    errSameAutomationLink: "Beide Enden einer Verbindung müssen zu unterschiedlichen Automatisierungen gehören.",
   },
   pt: {
     title: "Arquitetura global",
@@ -389,6 +413,9 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     stepCreatedToast: "Criou um resumo técnico para o agente de código (passo n.º {step})",
     stepCopyDesc: "Copie esta mensagem e cole-a no chat do agente de código.",
     copyBtn: "Copiar",
+    openGroupDetailTip: "Abrir este grupo — ver os próprios nós de cada automação num único ecrã e ligá-los nó a nó",
+    btnCloseAutomation: "Fechar automação",
+    errSameAutomationLink: "As duas extremidades de uma ligação devem pertencer a automações diferentes.",
   },
   pl: {
     title: "Globalna architektura",
@@ -436,6 +463,9 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     stepCreatedToast: "Utworzyłeś opis techniczny dla agenta kodującego (krok nr {step})",
     stepCopyDesc: "Skopiuj tę wiadomość i wklej ją do czatu agenta kodującego.",
     copyBtn: "Kopiuj",
+    openGroupDetailTip: "Otwórz tę grupę — zobacz własne węzły każdej automatyzacji na jednym ekranie i połącz je węzeł do węzła",
+    btnCloseAutomation: "Zamknij automatyzację",
+    errSameAutomationLink: "Oba końce połączenia muszą należeć do różnych automatyzacji.",
   },
   tr: {
     title: "Genel mimari",
@@ -483,6 +513,9 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     stepCreatedToast: "Kod ajanı için teknik bir özet oluşturdunuz (adım #{step})",
     stepCopyDesc: "Bu mesajı kopyalayıp kod ajanının sohbetine yapıştırın.",
     copyBtn: "Kopyala",
+    openGroupDetailTip: "Bu grubu aç — her otomasyonun kendi düğümlerini tek ekranda gör ve onları düğümden düğüme bağla",
+    btnCloseAutomation: "Otomasyonu kapat",
+    errSameAutomationLink: "Bir bağlantının her iki ucu da farklı otomasyonlara ait olmalıdır.",
   },
   nl: {
     title: "Globale architectuur",
@@ -530,6 +563,9 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     stepCreatedToast: "Je hebt een technisch overzicht voor de coding agent gemaakt (stap #{step})",
     stepCopyDesc: "Kopieer dit bericht en plak het in de chat van de coding agent.",
     copyBtn: "Kopiëren",
+    openGroupDetailTip: "Open deze groep — zie de eigen nodes van elke automatisering op één scherm en verbind ze node-tot-node",
+    btnCloseAutomation: "Automatisering sluiten",
+    errSameAutomationLink: "Beide uiteinden van een link moeten tot verschillende automatiseringen behoren.",
   },
 };
 
