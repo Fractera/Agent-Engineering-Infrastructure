@@ -11,6 +11,8 @@ export type CreateAutomationStrings = {
   typeStreamTitle: string; typeStreamDesc: string;
   typeInstancedTitle: string; typeInstancedDesc: string;
   typeChainedTitle: string; typeChainedDesc: string;
+  /** step 236.3 — shown instead of the category section when type=chained (canvas-only, no category needed). */
+  chainedNoCategoryNote: string;
   nameLabel: string; namePlaceholder: string;
   instrLabel: string; instrPlaceholder: string; instrHint: string;
   categoryLabel: string; categoryPlaceholder: string;
@@ -48,6 +50,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     typeInstancedDesc: "Each run forks into its own instance with its own parameters — it can be deferred (a timer or another process), its progress is tracked, and it can be adjusted inside the fork.",
     typeChainedTitle: "Chained",
     typeChainedDesc: "Triggered by another automation's event, or emits one for the next — a link in a chain, not a standalone run (e.g. outreach finishes → a dialog script starts).",
+    chainedNoCategoryNote: "Chained automations live only on the global canvas — no category needed.",
     nameLabel: "Name (optional)", namePlaceholder: "Supplier price watch",
     instrLabel: "What must this automation do? (required)",
     instrPlaceholder: "Every morning fetch the supplier prices, compare them with yesterday's, and send me the changes in Telegram.",
@@ -88,6 +91,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     typeInstancedDesc: "Каждый запуск форкается в свой экземпляр со своими параметрами — его можно отложить (таймер или другой процесс), прогресс отслеживается, и его можно править внутри форка.",
     typeChainedTitle: "Chained",
     typeChainedDesc: "Запускается событием другой автоматизации или сама эмитит событие для следующей — звено цепочки, а не самостоятельный запуск (например: обзвон закончился → начинается сценарий диалога).",
+    chainedNoCategoryNote: "Chained-автоматизации живут только на глобальном холсте — категория не нужна.",
     nameLabel: "Название (необязательно)", namePlaceholder: "Мониторинг цен поставщика",
     instrLabel: "Что должна делать эта автоматизация? (обязательно)",
     instrPlaceholder: "Каждое утро забирай цены поставщика, сравнивай со вчерашними и присылай мне изменения в Telegram.",
@@ -128,6 +132,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     typeInstancedDesc: "Cada ejecución se bifurca en su propia instancia con sus propios parámetros — puede aplazarse (un temporizador u otro proceso), su progreso se rastrea y puede ajustarse dentro de la bifurcación.",
     typeChainedTitle: "Chained",
     typeChainedDesc: "Se activa por el evento de otra automatización, o emite uno para la siguiente — un eslabón de una cadena, no una ejecución independiente (p. ej.: termina la prospección → empieza un guion de diálogo).",
+    chainedNoCategoryNote: "Las automatizaciones encadenadas viven solo en el lienzo global — no hace falta categoría.",
     nameLabel: "Nombre (opcional)", namePlaceholder: "Vigilancia de precios del proveedor",
     instrLabel: "¿Qué debe hacer esta automatización? (obligatorio)",
     instrPlaceholder: "Cada mañana obtén los precios del proveedor, compáralos con los de ayer y envíame los cambios por Telegram.",
@@ -168,6 +173,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     typeInstancedDesc: "Chaque exécution se scinde en sa propre instance avec ses propres paramètres — elle peut être différée (une minuterie ou un autre processus), sa progression est suivie, et elle peut être ajustée dans la bifurcation.",
     typeChainedTitle: "Chained",
     typeChainedDesc: "Déclenchée par l'événement d'une autre automatisation, ou en émet un pour la suivante — un maillon d'une chaîne, pas une exécution autonome (ex. : la prospection se termine → un script de dialogue démarre).",
+    chainedNoCategoryNote: "Les automatisations chaînées vivent uniquement sur le canevas global — aucune catégorie n'est nécessaire.",
     nameLabel: "Nom (facultatif)", namePlaceholder: "Veille des prix fournisseur",
     instrLabel: "Que doit faire cette automatisation ? (obligatoire)",
     instrPlaceholder: "Chaque matin, récupère les prix du fournisseur, compare-les à ceux d'hier et envoie-moi les changements sur Telegram.",
@@ -208,6 +214,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     typeInstancedDesc: "Ogni esecuzione si dirama in una propria istanza con propri parametri — può essere posticipata (un timer o un altro processo), il suo avanzamento è tracciato e può essere modificata all'interno della diramazione.",
     typeChainedTitle: "Chained",
     typeChainedDesc: "Avviata dall'evento di un'altra automazione, oppure ne emette uno per la successiva — un anello di una catena, non un'esecuzione autonoma (es.: l'outreach finisce → parte uno script di dialogo).",
+    chainedNoCategoryNote: "Le automazioni concatenate vivono solo sulla tela globale — nessuna categoria necessaria.",
     nameLabel: "Nome (facoltativo)", namePlaceholder: "Monitoraggio prezzi fornitore",
     instrLabel: "Cosa deve fare questa automazione? (obbligatorio)",
     instrPlaceholder: "Ogni mattina recupera i prezzi del fornitore, confrontali con quelli di ieri e inviami le variazioni su Telegram.",
@@ -248,6 +255,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     typeInstancedDesc: "Jeder Lauf verzweigt sich in eine eigene Instanz mit eigenen Parametern — er kann aufgeschoben werden (ein Timer oder ein anderer Prozess), sein Fortschritt wird verfolgt, und er kann innerhalb der Verzweigung angepasst werden.",
     typeChainedTitle: "Chained",
     typeChainedDesc: "Wird durch das Ereignis einer anderen Automatisierung ausgelöst oder sendet selbst eines für die nächste — ein Glied einer Kette, kein eigenständiger Lauf (z. B.: die Akquise endet → ein Dialogskript beginnt).",
+    chainedNoCategoryNote: "Verkettete Automatisierungen leben nur auf der globalen Leinwand — keine Kategorie nötig.",
     nameLabel: "Name (optional)", namePlaceholder: "Überwachung der Lieferantenpreise",
     instrLabel: "Was soll diese Automatisierung tun? (erforderlich)",
     instrPlaceholder: "Hol jeden Morgen die Lieferantenpreise, vergleiche sie mit denen von gestern und schick mir die Änderungen per Telegram.",
@@ -288,6 +296,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     typeInstancedDesc: "Cada execução bifurca-se na sua própria instância com os seus próprios parâmetros — pode ser adiada (um temporizador ou outro processo), o seu progresso é acompanhado e pode ser ajustada dentro da bifurcação.",
     typeChainedTitle: "Chained",
     typeChainedDesc: "Acionada pelo evento de outra automação, ou emite um para a seguinte — um elo de uma cadeia, não uma execução independente (ex.: a prospeção termina → começa um script de diálogo).",
+    chainedNoCategoryNote: "Automações encadeadas vivem apenas na tela global — não é preciso categoria.",
     nameLabel: "Nome (opcional)", namePlaceholder: "Monitorização de preços do fornecedor",
     instrLabel: "O que esta automação deve fazer? (obrigatório)",
     instrPlaceholder: "Todas as manhãs vai buscar os preços do fornecedor, compara-os com os de ontem e envia-me as alterações no Telegram.",
@@ -328,6 +337,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     typeInstancedDesc: "Każde uruchomienie rozgałęzia się we własną instancję z własnymi parametrami — można je odłożyć w czasie (timer lub inny proces), jego postęp jest śledzony, a zmiany można wprowadzać wewnątrz rozgałęzienia.",
     typeChainedTitle: "Chained",
     typeChainedDesc: "Uruchamiana zdarzeniem innej automatyzacji albo sama emituje zdarzenie dla kolejnej — ogniwo łańcucha, nie samodzielne uruchomienie (np. kontakt z klientem się kończy → zaczyna się skrypt dialogu).",
+    chainedNoCategoryNote: "Automatyzacje łańcuchowe żyją tylko na globalnym płótnie — kategoria nie jest potrzebna.",
     nameLabel: "Nazwa (opcjonalnie)", namePlaceholder: "Śledzenie cen dostawcy",
     instrLabel: "Co ma robić ta automatyzacja? (wymagane)",
     instrPlaceholder: "Każdego ranka pobieraj ceny dostawcy, porównuj je z wczorajszymi i wysyłaj mi zmiany na Telegramie.",
@@ -368,6 +378,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     typeInstancedDesc: "Her çalıştırma kendi parametreleriyle kendi örneğine dallanır — ertelenebilir (bir zamanlayıcı veya başka bir süreç), ilerlemesi izlenir ve dallanma içinde ayarlanabilir.",
     typeChainedTitle: "Chained",
     typeChainedDesc: "Başka bir otomasyonun olayıyla tetiklenir veya bir sonraki için olay yayınlar — bağımsız bir çalıştırma değil, bir zincirin halkasıdır (örn. görüşme biter → bir diyalog senaryosu başlar).",
+    chainedNoCategoryNote: "Zincirleme otomasyonlar yalnızca genel tuvalde yaşar — kategoriye gerek yok.",
     nameLabel: "Ad (isteğe bağlı)", namePlaceholder: "Tedarikçi fiyat takibi",
     instrLabel: "Bu otomasyon ne yapmalı? (zorunlu)",
     instrPlaceholder: "Her sabah tedarikçi fiyatlarını al, dünkülerle karşılaştır ve değişiklikleri bana Telegram'dan gönder.",
@@ -408,6 +419,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     typeInstancedDesc: "Elke run vertakt naar zijn eigen instance met eigen parameters — kan worden uitgesteld (een timer of een ander proces), de voortgang wordt bijgehouden en kan binnen de vertakking worden aangepast.",
     typeChainedTitle: "Chained",
     typeChainedDesc: "Wordt geactiveerd door het event van een andere automatisering, of zendt er zelf een uit voor de volgende — een schakel in een keten, geen zelfstandige run (bijv.: outreach eindigt → een dialoogscript begint).",
+    chainedNoCategoryNote: "Chained-automatiseringen bestaan alleen op het globale canvas — geen categorie nodig.",
     nameLabel: "Naam (optioneel)", namePlaceholder: "Leveranciersprijzen bewaken",
     instrLabel: "Wat moet deze automatisering doen? (verplicht)",
     instrPlaceholder: "Haal elke ochtend de leveranciersprijzen op, vergelijk ze met die van gisteren en stuur me de wijzigingen via Telegram.",

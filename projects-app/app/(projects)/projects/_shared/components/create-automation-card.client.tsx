@@ -23,15 +23,19 @@ import { countWords, MAX_CATEGORY_DESCRIPTION_WORDS } from "../word-count";
 // function, one entry, many callers — the terminal today, an AI agent tomorrow; never a second code path).
 //
 // The modal asks, in this order (owner's spec):
-//   1. TYPE — Stream, Instanced or Chained (step 234). IMMUTABLE: to change it you delete the automation and
-//      create a new one. Chained has no dedicated frozen template yet — it materializes as Instanced for now
-//      (see automation-type.ts + app/api/projects/create/route.ts).
+//   1. TYPE — Stream, Instanced or Chained (step 234, made real in 234.3). IMMUTABLE: to change it you delete
+//      the automation and create a new one. CHAINED IS CANVAS-ONLY (step 236.3, owner's rule): it renders
+//      exclusively as a group container on the global canvas and never appears in a category hub grid — so
+//      (a) a category grid's OWN "+" card (fixed `category` prop) never offers Chained at all, only the
+//      root/global-canvas "+" does, and (b) picking Chained hides the category section entirely (below) —
+//      the owner never has to think about where its files physically live.
 //   2. NAME — optional (skippable; derived from the instruction when empty).
 //   3. INSTRUCTION — MANDATORY: what this automation must do. It is the seed the activation Quiz (step 227)
 //      turns into nodes.
 //   4. CATEGORY — where it lives: FIXED when the modal is opened from a category grid, CHOSEN from a
 //      dropdown when it is opened from the GLOBAL CANVAS (step 225 G4 — the canvas spans every category, so
-//      it must ask which one the new automation belongs to).
+//      it must ask which one the new automation belongs to). SKIPPED for Chained (see above) — the create()
+//      call sends the silent default "other" regardless of `pickedCategory`.
 // Result: a bare automation page from the frozen template, born "In development" (its 3 default nodes are
 // drafts) — phase 2 (the Quiz) then walks the owner from the instruction to real nodes.
 const slugify = (s: string) =>
@@ -133,6 +137,9 @@ export function CreateAutomationDialog({
     instanced: { title: L.typeInstancedTitle, description: L.typeInstancedDesc },
     chained: { title: L.typeChainedTitle, description: L.typeChainedDesc },
   };
+  // CHAINED IS CANVAS-ONLY (step 236.3) — a category grid's own "+" (fixed `category`) never offers it; only
+  // the root/global-canvas "+" (no fixed category) does.
+  const availableTypes = category ? AUTOMATION_TYPES.filter((t) => t.type !== "chained") : AUTOMATION_TYPES;
   const [type, setType] = useState<AutomationType>("stream");
   const [name, setName] = useState("");
   const [instruction, setInstruction] = useState("");
@@ -242,7 +249,10 @@ export function CreateAutomationDialog({
       toast.error(L.errInstructionRequired);
       return;
     }
-    const target = category ?? pickedCategory;
+    // CHAINED IS CANVAS-ONLY (step 236.3): its files still need a physical home (/projects/other/<slug>/,
+    // same convention as any other automation) but the owner never chooses it — "other" is the silent
+    // default, since a Chained automation is never meant to be found via a category hub anyway.
+    const target = type === "chained" ? "other" : (category ?? pickedCategory);
     const project = slugify(name) || `automation-${Date.now().toString(36).slice(-5)}`;
     setBusy(true);
     try {
@@ -281,7 +291,7 @@ export function CreateAutomationDialog({
           <div className="space-y-2">
             <Label>{L.typeLabel}</Label>
             <div className="grid gap-2">
-              {AUTOMATION_TYPES.map((t) => (
+              {availableTypes.map((t) => (
                 <button
                   key={t.type}
                   type="button"
@@ -316,6 +326,13 @@ export function CreateAutomationDialog({
             </p>
           </div>
 
+          {/* CHAINED IS CANVAS-ONLY (step 236.3) — no category question at all; a short note explains why
+              instead of asking the owner to pick a category that will never be used to find this automation. */}
+          {type === "chained" ? (
+            <p className="rounded-md border border-dashed p-2.5 text-xs text-muted-foreground">
+              {L.chainedNoCategoryNote}
+            </p>
+          ) : (
           <div className="space-y-1.5">
             <Label>{L.categoryLabel}</Label>
             {category ? (
@@ -398,6 +415,7 @@ export function CreateAutomationDialog({
               </div>
             )}
           </div>
+          )}
 
           {/* The Quiz's language, stated EXPLICITLY (owner's requirement) — the design session must never
               surprise the owner with its language. It is the project's default language; English only when

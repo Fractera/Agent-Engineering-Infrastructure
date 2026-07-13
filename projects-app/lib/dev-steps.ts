@@ -108,12 +108,13 @@ export async function materializeNodeStep(i: NodeStepInput): Promise<{ file: str
 }
 
 // ─── "START DEVELOPMENT": Quiz + nodes → ONE step, sub-steps = nodes (step 233) ───────────────────────
-// The owner's top-level handoff. The whole design so far (the use cases, the automation's instruction, and
-// every draft node's spec = the Quiz result) becomes ONE Development Step whose SUB-STEPS (tasks[]) are the
-// nodes going into work. The brief opens with a MANDATORY ordered read: first the single authoritative doc
-// AUTOMATION-PROJECTS.md (how automations are built — a stub for now, authored in later steps), then the
-// Quiz result below, then the nodes below. Assembled DETERMINISTICALLY (no model call). The owner never
-// sees this text — only "run step #NN".
+// The owner's top-level handoff. The whole design so far ALREADY LIVES on disk in the automation's own folder
+// — the instruction (_data/instruction.md), the use cases (_data/use-cases.ts), the diagram (_data/diagram.ts)
+// and the Quiz result per node (_nodes/<slug>/spec.md). So the step does NOT snapshot any of that (a snapshot
+// bloats the step, duplicates the source of truth and goes stale): it passes the automation's ADDRESS and
+// tells the coding agent to EXTRACT everything from that folder. One Development Step whose SUB-STEPS
+// (tasks[]) are the nodes going into work, opening with a MANDATORY ordered read: first AUTOMATION-PROJECTS.md
+// (how automations are built), then the automation's own files, then build. The owner sees only "run step #NN".
 
 // The single authoritative doc every automation handoff must be read against (step 233). It lives at the
 // product/agent root and is registered in every agent's root instructions; here we only REFERENCE it.
@@ -121,60 +122,55 @@ const AUTOMATION_DOC = "AUTOMATION-PROJECTS.md";
 
 export type AutomationStepInput = {
   number: number;
-  automation: string;                                   // "category/slug"
-  instruction: string;                                  // _data/instruction.md (the owner's top-level ask)
-  useCases: { title: string; summary: string; status: string }[];
-  nodes: { cuid: string; slug: string; name: string; spec: string }[];  // the draft nodes = sub-steps
+  automation: string;                              // "category/slug" — the ADDRESS; everything else is on disk
+  nodes: { cuid: string; slug: string; name: string }[];  // the draft nodes going into work = the sub-steps
 };
 
+/** The step's brief — an ADDRESS + how to extract, not a snapshot. Markdown (renders on the Admin page). */
 export function buildAutomationStepMessage(i: AutomationStepInput): string {
-  const cases = i.useCases.length
-    ? i.useCases.map((c, k) => `${String(k + 1).padStart(2, "0")}. ${c.title} [${c.status}]\n    ${c.summary || "(no description)"}`).join("\n")
-    : "(no use cases)";
-  const nodes = i.nodes.length
-    ? i.nodes.map((n, k) => `### ${k + 1}. ${n.name}\n- folder: app/(projects)/projects/${i.automation}/_nodes/${n.slug}/\n- cuid (stable identity — never change it): ${n.cuid}\n\n${n.spec.trim() || "(no spec yet)"}`).join("\n\n")
+  const root = `app/(projects)/projects/${i.automation}/`;
+  const nodeList = i.nodes.length
+    ? i.nodes.map((n, k) => `${k + 1}. **${n.name}** — \`_nodes/${n.slug}/\` (cuid ${n.cuid})`).join("\n")
     : "(no nodes)";
-  return `Execute development step #${i.number} in the Fractera projects app.
+  return `Develop the automation **${i.automation}** — build its ${i.nodes.length} node(s). Everything you need already lives in the automation's own folder; extract it there, do not expect it inline here.
 
-TASK: develop the automation "${i.automation}" — build the ${i.nodes.length} node(s) below.
+## Read first (mandatory, in this order — before any code)
+1. Read **${AUTOMATION_DOC}** at the project root — the single authoritative document on how automations (a.k.a. projects / projects-automation) are created, work and are improved. You cannot build correctly without it.
+2. Read the automation itself at \`${root}\` and EXTRACT its full current state:
+   - \`_data/instruction.md\` — the owner's top-level instruction,
+   - \`_data/use-cases.ts\` — the use cases (the agreed scenarios),
+   - \`_data/diagram.ts\` + \`_nodes/<slug>/\` (\`meta.ts\`, \`functions.ts\`, \`spec.md\`) — the nodes and the **Quiz result per node**.
+3. The **diagram is the single source of truth**. Keep every node's work co-located in its own \`_nodes/<slug>/\` folder; never invent behaviour from memory.
 
-## READ FIRST (mandatory — in this order, BEFORE writing any code)
-1. Read ${AUTOMATION_DOC} at the project root — the single authoritative document on how automations
-   (a.k.a. projects / projects-automation) are created, work and are improved. You cannot build correctly
-   without it.
-2. Study the Quiz result of THIS automation — the instruction and use cases below.
-3. Study the existing nodes below (their specs are what the Quiz designed).
-The diagram is the SINGLE source of truth; keep every node's work co-located in its own _nodes/<slug>/ folder.
+## Nodes to build (one sub-step each)
+${nodeList}
 
-## THIS AUTOMATION
-Owner instruction:
-${i.instruction.trim() || "(not stated)"}
-
-Use cases:
-${cases}
-
-## NODES TO BUILD (one sub-step each)
-${nodes}
-
-DONE = every node's functions.ts is real and typed, each node materialized (POST
-/api/projects/nodes/<cuid>/materialize with devStepRef "${i.number}"), the validator is clean.`;
+## Done when
+Every node's \`functions.ts\` is real and typed, each node is materialized (\`POST /api/projects/nodes/<cuid>/materialize\` with devStepRef "${i.number}"), and the validator is clean.`;
 }
 
-/** Materialize the ONE bundled "start development" step (step 233). Deterministic; tasks[] = nodes. */
+/** Materialize the ONE bundled "start development" step (step 233). Deterministic; tasks[] = nodes. The full
+ *  brief goes into the machine block's `description` so the Admin page renders it and any agent reading the
+ *  block gets it; `automation` (the address) is carried in the block too. */
 export async function materializeAutomationStep(i: AutomationStepInput): Promise<{ file: string; message: string; name: string }> {
   const message = buildAutomationStepMessage(i);
   const name = `Develop ${i.automation} — ${i.nodes.length} node${i.nodes.length === 1 ? "" : "s"}`;
   const slug = `develop-${i.automation.replace(/[^a-z0-9]+/gi, "-").replace(/(^-|-$)/g, "")}`;
+  const tasks = i.nodes.map((n) => ({ id: n.cuid, body: `Build node "${n.name}" (_nodes/${n.slug}/)` }));
   const block = JSON.stringify({
     number: i.number,
     name,
     importance: "mandatory",
     status: "new",
     completedAt: null,
-    description: `Develop the automation ${i.automation}: build its ${i.nodes.length} node(s) from the Quiz result + use cases. READ ${AUTOMATION_DOC} FIRST, then the Quiz result, then the nodes. The diagram is the source of truth.`,
-    tasks: i.nodes.map((n) => ({ id: n.cuid, body: `Build node "${n.name}" (_nodes/${n.slug}/)` })),
+    automation: i.automation,        // the address — read by pendingSteps (233), ignored by the Admin parser
+    description: message,            // the FULL brief IS the description → the Admin page renders it
+    tasks,
   });
-  const body = `# ${String(i.number).padStart(2, "0")} — ${name}\n\n> Development step · importance: mandatory · generated by "Start development" (step 233)\n\n## The brief handed to the coding agent\n\n\`\`\`\n${message}\n\`\`\`\n\n<!-- fractera:step\n${block}\n-->\n`;
+  // Body rendered like the Admin step-file (header + description + To-do + machine block), so the raw file
+  // and the rendered page agree.
+  const todo = tasks.length ? tasks.map((t) => `- ${t.body}`).join("\n") : "_No tasks._";
+  const body = `# ${String(i.number).padStart(2, "0")} — ${name}\n\n> Development step · importance: mandatory · generated by "Start development" (step 233)\n\n${message}\n\n## To-do\n${todo}\n\n<!-- fractera:step\n${block}\n-->\n`;
 
   const dir = join(STEPS_DIR(), "NEW-STEPS");
   await mkdir(dir, { recursive: true });
@@ -249,6 +245,69 @@ export async function materializeEdgeStep(i: EdgeStepInput): Promise<{ file: str
   const dir = join(STEPS_DIR(), "NEW-STEPS");
   await mkdir(dir, { recursive: true });
   const file = join(dir, `${String(i.number).padStart(2, "0")}-build-link-${i.edgeCuid.slice(0, 8)}.md`);
+  await writeFile(file, body, "utf8");
+  return { file, message };
+}
+
+// ─── THE CHAIN BRIEF (step 236.3) — a "chained" group's own handoff, mirrors the edge pattern above ─────
+// A group is a CANVAS-ONLY container (step 236.3): its panel has no Builder (it has no workflow of its own)
+// — the owner writes ONE free-text brief describing how the automations dragged INSIDE it should hand off to
+// each other, and "Start development" materializes exactly this shape of step. Unlike an edge, a chain has
+// no code of its own and no materialize/version call: the coder wires the ALREADY-LIVE step-195 pub/sub
+// mechanism (Subject + Trigger kind "event" + Action emits) directly inside the MEMBER automations' own node
+// code — the group never gets a folder or files.
+export type ChainStepInput = {
+  number: number;
+  groupAutomation: string;   // "category/slug" of the chained group itself
+  groupName: string;
+  members: string[];         // automations currently nested inside (live layout, may be empty)
+  spec: string;
+};
+
+export function buildChainStepMessage(i: ChainStepInput): string {
+  const memberList = i.members.length ? i.members.join(", ") : "(none yet — add automations to the group on the canvas first)";
+  return `Execute development step #${i.number} in the Fractera projects app.
+
+TASK: WIRE A CHAIN of automations together (a "chained" group on the global canvas).
+
+CHAIN
+- group: ${i.groupAutomation} (${i.groupName})
+- members currently inside the group: ${memberList}
+
+WHAT THE OWNER WANTS (verbatim):
+${i.spec.trim() || "(no brief given)"}
+
+WHAT TO DO
+1. Read app/(projects)/README.md — the pub/sub mechanism (step 195) is how automations in a chain hand off to
+   each other: a Trigger of kind "event" subscribes to a Subject transition another automation's Action emits.
+2. For each hand-off the brief describes, wire it INSIDE the two member automations' own node code — a chain
+   group has no code of its own; it only groups automations that already emit/subscribe to each other's events.
+3. Keep CO-LOCATION: every change lives in the member automations' own _nodes/<id>/ folders. Never create a
+   third "chain" folder or project — the group is a canvas-only concept (step 236.3), not a project.
+
+DONE = every hand-off the brief describes is wired via emit/subscribe between the real member automations, and
+each touched member's own validator (GET .../validate) is clean.`;
+}
+
+export async function materializeChainStep(i: ChainStepInput): Promise<{ file: string; message: string }> {
+  const message = buildChainStepMessage(i);
+  const name = `Wire chain "${i.groupName}" (${i.members.length} member${i.members.length === 1 ? "" : "s"})`;
+  const block = JSON.stringify({
+    number: i.number,
+    name,
+    importance: "mandatory",
+    status: "new",
+    completedAt: null,
+    description: `Wire the chain group ${i.groupAutomation}'s member automations (${i.members.join(", ") || "none yet"}) together via the step-195 pub/sub mechanism, from the owner's brief.`,
+    tasks: i.members.length
+      ? i.members.map((m, idx) => ({ id: `${i.groupAutomation.replace("/", "-")}-${idx}`, body: `Wire ${m}'s emit/subscribe per the brief` }))
+      : [{ id: `${i.groupAutomation.replace("/", "-")}-none`, body: `No members yet — add automations to the group on the canvas first` }],
+  });
+  const body = `# ${String(i.number).padStart(2, "0")} — ${name}\n\n> Development step · importance: mandatory · generated by the Global canvas (step 236.3)\n\n## The brief (from the owner, in the group panel)\n\n${i.spec.trim() || "(no brief given)"}\n\n## The message handed to the coding agent\n\n\`\`\`\n${message}\n\`\`\`\n\n<!-- fractera:step\n${block}\n-->\n`;
+
+  const dir = join(STEPS_DIR(), "NEW-STEPS");
+  await mkdir(dir, { recursive: true });
+  const file = join(dir, `${String(i.number).padStart(2, "0")}-wire-chain-${i.groupAutomation.replace("/", "-")}.md`);
   await writeFile(file, body, "utf8");
   return { file, message };
 }
@@ -341,10 +400,12 @@ export type PendingStep = {
 function parseStepFile(body: string, file: string, number: number): PendingStep | null {
   const block = body.match(/<!--\s*fractera:step\s*([\s\S]*?)-->/);
   if (!block) return null;
-  let meta: { name?: string } = {};
-  try { meta = JSON.parse(block[1].trim()) as { name?: string }; } catch { /* keep going */ }
+  let meta: { name?: string; automation?: string } = {};
+  try { meta = JSON.parse(block[1].trim()) as { name?: string; automation?: string }; } catch { /* keep going */ }
   const message = (body.match(/```\n([\s\S]*?)```/) ?? [])[1]?.trim() ?? "";
-  const automation = (message.match(/automation "([^"]+)"/) ?? [])[1] ?? "";
+  // The automation-bundle step (233) carries `automation` in the machine block; older per-node/edge/use-case
+  // steps only carry it inside their fenced brief — read the block first, fall back to the brief regex.
+  const automation = meta.automation ?? (message.match(/automation "([^"]+)"/) ?? [])[1] ?? "";
   const nodeCuid = (message.match(/cuid[^:]*:\s*([a-z0-9]+)/i) ?? [])[1] ?? "";
   const nodeSlug = (message.match(/_nodes\/([a-z0-9-]+)\//) ?? [])[1] ?? "";
   return { number, name: meta.name ?? "", file, automation, nodeCuid, nodeSlug, message };

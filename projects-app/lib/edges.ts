@@ -1,8 +1,39 @@
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { db } from "@/lib/db";
 import { createNodeId } from "@/lib/cuid";
 import { listNodes, projectsRoot, resolveProject, syncIndexFromFiles } from "@/lib/nodes";
+
+// ─── THE CHAIN BRIEF (step 236.3) ────────────────────────────────────────────────────────────────────
+// A "chained" automation's group panel has no Builder (it is a container, not a workflow) — instead the
+// owner writes ONE free-text brief describing how its member automations should be wired together (the
+// step-195 pub/sub mechanism: Subject + Trigger kind "event" + Action emits), the same "Start development"
+// shape an edge already has. Stored flat, same convention as _data/instruction.md.
+function chainSpecPath(automation: string): string | null {
+  const proj = resolveProject(automation);
+  return proj.ok ? join(proj.projectDir, "_data", "chain-spec.md") : null;
+}
+
+export async function readChainSpec(automation: string): Promise<string> {
+  const p = chainSpecPath(automation);
+  if (!p) return "";
+  return (await readFile(p, "utf8").catch(() => "")).trim();
+}
+
+export async function writeChainSpec(automation: string, spec: string): Promise<void> {
+  const p = chainSpecPath(automation);
+  if (!p) return;
+  await mkdir(dirname(p), { recursive: true });
+  await writeFile(p, `${spec.trim()}\n`, "utf8");
+}
+
+/** Every automation currently nested inside `groupAutomation` (live layout, step 234.3/236.1). */
+export async function groupMembers(groupAutomation: string): Promise<string[]> {
+  const layout = await getGlobalLayout();
+  return Object.entries(layout)
+    .filter(([, entry]) => entry.parent === groupAutomation)
+    .map(([automation]) => automation);
+}
 
 // GLOBAL EDGES (step 225) — a programmable integration BETWEEN two automations. An edge is a first-class
 // entity with the same lifecycle as a node (draft -> spec -> development step -> coder -> version), and its
@@ -19,11 +50,10 @@ export function edgesRoot(): string {
   return join(projectsRoot(), "_edges");
 }
 
-// ─── THE READINESS GATE (the step's central rule) ────────────────────────────────────────────────────
-// A custom edge may be created ONLY between nodes whose development is FINISHED — i.e. an endpoint
-// automation must not be "In development". Creating an edge always CHANGES its endpoint nodes (the parent
-// and the child of the link), so they must be built first. "Finished" = the automation has nodes and NONE
-// of them is still a draft.
+// ─── AUTOMATION READINESS (display only, step 224/225) ──────────────────────────────────────────────
+// Still used by app/api/projects/global/route.ts GET to paint a project FULL RED while it is "In
+// development" and to derive the global status pill. It is NO LONGER an edge-creation gate — step 236.3
+// retired that rule entirely (an edge no longer cares whether either endpoint has draft nodes).
 export type Readiness = { ready: boolean; automation: string; nodes: number; drafts: number; reason?: string };
 
 export async function automationReadiness(automation: string): Promise<Readiness> {
@@ -37,24 +67,11 @@ export async function automationReadiness(automation: string): Promise<Readiness
   return { ready: true, automation, nodes: nodes.length, drafts: 0 };
 }
 
-/** Both endpoints must be finished — otherwise the edge is refused (and the canvas explains why). */
-export async function edgeAllowed(from: string, to: string): Promise<{ allowed: boolean; from: Readiness; to: Readiness; message?: string }> {
-  const [f, t] = [await automationReadiness(from), await automationReadiness(to)];
-  if (f.ready && t.ready) return { allowed: true, from: f, to: t };
-  const blocked = [f, t].filter((r) => !r.ready).map((r) => `${r.automation} (${r.drafts} node${r.drafts === 1 ? "" : "s"} still to build)`);
-  return {
-    allowed: false,
-    from: f,
-    to: t,
-    message: `Custom links are created only for nodes whose development is finished. Still in development: ${blocked.join(", ")}.`,
-  };
-}
-
 // ─── THE GLOBAL CANVAS LAYOUT (step 234.3) ────────────────────────────────────────────────────────────
 // The global canvas (global-canvas.client.tsx) persists node positions AND group/subflow membership in one
 // JSON blob (global_automation.layout — no schema change, same free-form TEXT column since step 225). Shared
-// reader so both app/api/projects/global/route.ts (renders the canvas) and app/api/projects/edges/route.ts
-// (the "an edge cannot touch a nested automation" gate below) parse the SAME shape identically.
+// reader so app/api/projects/global/route.ts (renders the canvas), the same-group connection rule below, and
+// groupMembers() (the chain brief) all parse the SAME shape identically.
 export type LayoutEntry = {
   x: number;
   y: number;
@@ -74,11 +91,20 @@ export async function getGlobalLayout(): Promise<Layout> {
   try { return JSON.parse(row.layout) as Layout; } catch { return {}; }
 }
 
-/** Is this automation currently nested inside a group container? (step 234.3 — a nested automation cannot be
- *  a custom-edge endpoint; move it out of its group first.) */
-export async function isNested(automation: string): Promise<boolean> {
+// ─── THE CONNECTION RULE (step 236.3, replaces the old readiness gate + the inverted nesting gate) ──────
+// A custom edge may be created ONLY between two automations that are members of the SAME group — a group's
+// members ARE the chain, and edges are how that chain gets defined. Draft/readiness state no longer matters
+// at all (the old step-225 rule). `code` is a STABLE identifier, not a sentence — the client owns the
+// translated copy (rule 4г), the server never emits English prose here.
+export type SameGroupResult = { ok: boolean; code?: "not_in_group" | "different_groups" };
+
+export async function sameGroup(from: string, to: string): Promise<SameGroupResult> {
   const layout = await getGlobalLayout();
-  return Boolean(layout[automation]?.parent);
+  const fromParent = layout[from]?.parent ?? null;
+  const toParent = layout[to]?.parent ?? null;
+  if (!fromParent || !toParent) return { ok: false, code: "not_in_group" };
+  if (fromParent !== toParent) return { ok: false, code: "different_groups" };
+  return { ok: true };
 }
 
 // ─── the edge's co-located files (the same shape as a node's) ────────────────────────────────────────

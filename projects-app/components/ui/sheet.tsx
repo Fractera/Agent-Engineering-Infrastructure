@@ -49,14 +49,18 @@ function SheetContent({
   children,
   side = "right",
   showCloseButton = true,
+  showOverlay = true,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
+  /** Set false for a non-modal Sheet (pair with `modal={false}` on the Root) whose host page must stay
+   *  interactive and undimmed behind it — e.g. a side panel over a canvas the user keeps working on. */
+  showOverlay?: boolean
 }) {
   return (
     <SheetPortal>
-      <SheetOverlay />
+      {showOverlay && <SheetOverlay />}
       <SheetPrimitive.Content
         data-slot="sheet-content"
         className={cn(

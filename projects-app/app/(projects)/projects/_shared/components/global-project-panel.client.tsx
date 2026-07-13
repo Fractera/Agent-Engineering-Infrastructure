@@ -1,15 +1,25 @@
 "use client";
 
-import { ExternalLink, MessagesSquare, Workflow } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ExternalLink, Loader2, MessagesSquare, Rocket, Workflow } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { VoiceInput } from "./voice-input.client";
+import { useUiLang } from "../use-ui-lang";
+import { globalCanvasStrings } from "../global-canvas-i18n";
+import { fill } from "../quiz-i18n";
 
-// THE PROJECT PANEL of the global canvas (step 225 G4). Clicking a project node opens it: what the
-// automation IS (category, how many nodes, how many are still drafts, whether it is out of development) and
-// the three things the owner can do WITHOUT leaving the canvas:
-//   • Open    — the automation's page,
-//   • Quiz    — the SAME activation Quiz the page opens on a first visit (it resumes an unfinished session),
-//   • Builder — the page's diagram, where nodes are authored and handed to the coding agent.
-// The Quiz opens in place (the canvas owns the modal) — the owner designs from the global view.
+// THE PROJECT PANEL of the global canvas (step 225 G4). Clicking a project node opens it.
+//
+// PLAIN AUTOMATION: what it IS (category, its own workflow's node/draft count, whether it is out of
+// development) and three things the owner can do WITHOUT leaving the canvas — Open / Builder / Quiz.
+//
+// A "CHAINED" GROUP (step 236.3, `members !== undefined`): a group is a CANVAS-ONLY container, not a
+// workflow — it has NO Builder (there is nothing of its own to build) and no Open/Quiz either. Instead the
+// owner writes ONE free-text brief (mic included, same VoiceInput primitive as everywhere else) describing
+// how the automations dragged inside it should hand off to each other, and "Start development" materializes
+// that brief as a numbered step — same shape GlobalEdgePanel already has for a link.
 export type GlobalProjectSummary = {
   automation: string; category: string; slug: string; ready: boolean; nodes: number; drafts: number;
   /** step 236.1 — needed to tell a Chained GROUP apart from a plain automation, so the members section below
@@ -26,7 +36,47 @@ export type GroupMember = { automation: string; slug: string };
 export function GlobalProjectPanel({
   project, members, onQuiz,
 }: { project: GlobalProjectSummary; members?: GroupMember[]; onQuiz: () => void }) {
+  const L = globalCanvasStrings(useUiLang());
   const href = `/projects/${project.category}/${project.slug}`;
+  const isGroup = members !== undefined;
+
+  // ─── the chain brief (group only, step 236.3) ───
+  const [chainSpec, setChainSpec] = useState("");
+  const [busy, setBusy] = useState(false);
+  const briefRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    if (!isGroup) return;
+    void (async () => {
+      const r = await fetch(`/api/projects/chain-spec?automation=${encodeURIComponent(project.automation)}`, { cache: "no-store" });
+      if (r.ok) setChainSpec(((await r.json()) as { spec?: string }).spec ?? "");
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project.automation, isGroup]);
+
+  const startChainDevelopment = useCallback(async () => {
+    setBusy(true);
+    try {
+      await fetch(`/api/projects/chain-spec`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ automation: project.automation, spec: chainSpec }),
+      });
+      const r = await fetch(`/api/projects/chain-spec/start-development`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ automation: project.automation }),
+      });
+      const d = (await r.json()) as { number?: number; message?: string; error?: string };
+      if (!r.ok) { toast.error(d.error ?? L.chainStepFailed); return; }
+      toast.success(fill(L.stepCreatedToast, { step: d.number ?? "" }), {
+        description: L.stepCopyDesc,
+        duration: 30000,
+        action: { label: L.copyBtn, onClick: () => void navigator.clipboard.writeText(d.message ?? "") },
+      });
+    } finally { setBusy(false); }
+  }, [project.automation, chainSpec, L]);
+
   return (
     <div className="space-y-3">
       <div>
@@ -34,16 +84,13 @@ export function GlobalProjectPanel({
         <p className="text-xs uppercase tracking-wide text-muted-foreground">{project.category}</p>
       </div>
 
-      {members !== undefined && (
+      {isGroup && (
         <div className="rounded-md border border-sky-500/40 bg-sky-500/5 p-2.5 text-xs">
           <p className="mb-1.5 font-medium text-sky-700 dark:text-sky-400">
-            Automations inside this group ({members.length})
+            {fill(L.groupMembersHeader, { n: members.length })}
           </p>
           {members.length === 0 ? (
-            <p className="text-muted-foreground">
-              Empty — unlock the group (its own lock button, top-right on the canvas box) and drag an
-              automation onto it.
-            </p>
+            <p className="text-muted-foreground">{L.groupMembersEmpty}</p>
           ) : (
             <ul className="space-y-1">
               {members.map((m) => (
@@ -61,34 +108,52 @@ export function GlobalProjectPanel({
       <div className="rounded-md border p-2.5 text-xs">
         {project.ready ? (
           <p className="text-emerald-600 dark:text-emerald-400">
-            Built · this automation&apos;s own workflow has {project.nodes} node{project.nodes === 1 ? "" : "s"} —
-            development finished, it can be linked.
+            {fill(L.ownWorkflowBuilt, { n: project.nodes })}
           </p>
         ) : (
           <p className="text-rose-600 dark:text-rose-400">
-            In development · this automation&apos;s own workflow has {project.nodes} node{project.nodes === 1 ? "" : "s"},
-            {" "}{project.drafts} still to build — links can only be drawn between finished automations.
+            {fill(L.ownWorkflowDraft, { n: project.nodes, d: project.drafts })}
           </p>
         )}
       </div>
 
-      {/* This project's Button primitive has no asChild — navigate on click (the same effect, one primitive). */}
-      <div className="flex flex-wrap gap-2">
-        <Button size="sm" variant="outline" onClick={() => { window.location.href = href; }}>
-          <ExternalLink className="size-3.5" /> Open
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => { window.location.href = `${href}#diagram`; }}>
-          <Workflow className="size-3.5" /> Builder
-        </Button>
-      </div>
+      {isGroup ? (
+        // GROUP — no Builder (a container has no workflow of its own), no Open/Quiz: a free-text chain
+        // brief + mic + Start development, the same materialize-a-step shape GlobalEdgePanel already has.
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">{L.chainBriefLabel}</label>
+          <Textarea
+            ref={briefRef}
+            value={chainSpec}
+            onChange={(e) => setChainSpec(e.target.value)}
+            rows={6}
+            placeholder={L.chainBriefPlaceholder}
+          />
+          <VoiceInput targetRef={briefRef} value={chainSpec} onChange={setChainSpec} className="mt-1" />
+          <Button size="sm" variant="secondary" onClick={startChainDevelopment} disabled={busy} className="w-full">
+            {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Rocket className="size-3.5" />} {L.btnStartDevelopment}
+          </Button>
+        </div>
+      ) : (
+        <>
+          {/* This project's Button primitive has no asChild — navigate on click (the same effect, one primitive). */}
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={() => { window.location.href = href; }}>
+              <ExternalLink className="size-3.5" /> {L.btnOpen}
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => { window.location.href = `${href}#diagram`; }}>
+              <Workflow className="size-3.5" /> {L.btnBuilder}
+            </Button>
+          </div>
 
-      <Button size="sm" variant="secondary" onClick={onQuiz} className="w-full">
-        <MessagesSquare className="size-3.5" /> Quiz — design its nodes
-      </Button>
-      <p className="text-xs text-muted-foreground">
-        The Quiz brainstorms this automation into nodes: each finished node becomes a draft on its diagram and
-        one development step for the coding agent. An unfinished session resumes where it stopped.
-      </p>
+          <Button size="sm" variant="secondary" onClick={onQuiz} className="w-full">
+            <MessagesSquare className="size-3.5" /> {L.btnQuiz}
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            {L.quizBlurb}
+          </p>
+        </>
+      )}
     </div>
   );
 }

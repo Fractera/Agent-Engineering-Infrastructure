@@ -6,32 +6,32 @@ import {
   type Connection, type Edge, type Node, type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Boxes, CircleDot, LayoutGrid, Lock, Loader2, Plus, Power, Unlock, X } from "lucide-react";
+import { Boxes, CircleDot, LayoutGrid, Lock, Loader2, Plus, Power, Unlock } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { GlobalEdgePanel } from "./global-edge-panel.client";
 import { GlobalProjectPanel } from "./global-project-panel.client";
 import { CreateAutomationDialog } from "./create-automation-card.client";
 import { ActivationQuiz } from "./activation-quiz.client";
+import { useUiLang } from "../use-ui-lang";
+import { globalCanvasStrings } from "../global-canvas-i18n";
 
 // THE GLOBAL AUTOMATION CANVAS (step 225) — the workspace-level graph, on /projects BELOW the category
 // cards. Every PROJECT is a node; every EDGE is a programmable integration BETWEEN two automations. This is
 // the "automated global architecture": how projects depend on each other's actions.
 //
-// THE READINESS GATE (the step's central rule): a custom link may be drawn ONLY between projects whose
-// development is FINISHED — creating an edge always changes its endpoint nodes, so they must be built
-// first. A project still IN DEVELOPMENT (or inactive) is painted FULL RED; dragging a link from or to it
-// creates nothing: the attempted link is drawn RED DASHED, bolds on hover, and on click explains itself in
-// an error toast.
+// GROUP/SUBFLOW CONTAINERS (step 234.3): a "chained" automation renders as a GROUP node other automation
+// nodes can be dragged into (React Flow's own parentId sub-flow pattern — see reactflow.dev/learn/layouting/
+// sub-flows). A group is LOCKED by default; unlocking it (its own lock button) allows exactly one membership
+// change (drag a node in, or out), then it re-locks after 5s, on a second click, or on reload — this lock
+// state is NEVER persisted, pure client-side/ephemeral.
 //
-// GROUP/SUBFLOW CONTAINERS (step 234.3, English-only for now — no i18n on this feature until it is built and
-// tested, owner's explicit call): a "chained" automation renders as a GROUP node other automation nodes can
-// be dragged into (React Flow's own parentId sub-flow pattern — see reactflow.dev/learn/layouting/sub-flows).
-// A group is LOCKED by default; unlocking it (its own lock button) allows exactly one membership change (drag
-// a node in, or out), then it re-locks after 5s, on a second click, or on reload — this lock state is NEVER
-// persisted, pure client-side/ephemeral. An automation nested inside a group cannot be a custom-edge endpoint
-// (THE NESTING GATE, enforced client-side here for instant feedback AND server-side in
-// app/api/projects/edges/route.ts as the authority).
+// THE CONNECTION RULE (step 236.3, replaces the old readiness gate AND the earlier, inverted nesting gate):
+// a link may be drawn ONLY between two automations that are members of the SAME group — a group's members
+// ARE the chain, and edges are how that chain gets defined. Draft/readiness state no longer matters at all.
+// Enforced client-side here for instant feedback AND server-side in app/api/projects/edges/route.ts as the
+// authority (lib/edges.ts sameGroup()).
 //
 // STEP 236.1 — NODE-STATE ARCHITECTURE FIX (owner tested 236, found drag wasn't live and a locked-group
 // rejection left the node visually inside anyway): the original 236 build passed a fully re-derived
@@ -280,9 +280,14 @@ export function GlobalCanvas() {
 }
 
 function GlobalCanvasInner() {
+  const L = globalCanvasStrings(useUiLang());
   const [state, setState] = useState<GState | null>(null);
+  // "Last selected" edge/project — deliberately NOT cleared to null on close (only `panelOpen` governs
+  // visibility/animation, step 236.4) so the Sheet's slide-out animation has real content to animate away
+  // instead of going blank the instant the owner clicks the close button.
   const [activeEdge, setActiveEdge] = useState<string | null>(null);
   const [activeProject, setActiveProject] = useState<string | null>(null);
+  const [panelOpen, setPanelOpen] = useState<"edge" | "project" | null>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState<AnyNode>([]);
   const [busy, setBusy] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -387,17 +392,20 @@ function GlobalCanvasInner() {
     });
   }, [nodes, setNodes]);
 
-  // Drawing a link → THE GATE. THE NESTING GATE (rule 2) is checked first, client-side, instant — no network
-  // round trip needed, `rf.getNode` reads the live node the drag/reparent logic already maintains. Then the
-  // readiness gate: the server is the authority there (it refuses with 409 + the reason); the canvas simply
-  // surfaces that refusal, so neither rule can be bypassed from the client.
+  // Drawing a link → THE CONNECTION RULE (step 236.3): both endpoints must be inside the SAME group. Checked
+  // client-side first, instant — no network round trip needed, `rf.getNode` reads the live node the drag/
+  // reparent logic already maintains. The server (app/api/projects/edges/route.ts, sameGroup()) remains the
+  // authority for races (e.g. two tabs); its 409 carries the SAME stable code this dictionary translates.
   const onConnect = useCallback(async (c: Connection) => {
     if (!c.source || !c.target || busy) return;
-    if (rf.getNode(c.source)?.parentId || rf.getNode(c.target)?.parentId) {
-      toast.error("This link cannot be created", {
-        description: "Automations nested inside a group cannot be linked directly — move it out of the group first.",
-        duration: 15000,
-      });
+    const srcParent = rf.getNode(c.source)?.parentId;
+    const tgtParent = rf.getNode(c.target)?.parentId;
+    if (!srcParent || !tgtParent) {
+      toast.error(L.linkCannotBeCreated, { description: L.errNotInGroup, duration: 15000 });
+      return;
+    }
+    if (srcParent !== tgtParent) {
+      toast.error(L.linkCannotBeCreated, { description: L.errDifferentGroups, duration: 15000 });
       return;
     }
     setBusy(true);
@@ -409,15 +417,18 @@ function GlobalCanvasInner() {
       });
       const d = (await r.json()) as { ok?: boolean; error?: string; blocked?: boolean; edge?: GEdge };
       if (r.status === 409 || d.blocked) {
-        toast.error("This link cannot be created", { description: d.error, duration: 15000 });
+        const desc = d.error === "different_groups" ? L.errDifferentGroups
+          : d.error === "not_in_group" ? L.errNotInGroup
+          : d.error;
+        toast.error(L.linkCannotBeCreated, { description: desc, duration: 15000 });
         return;
       }
-      if (!r.ok) { toast.error(d.error ?? "Could not create the link."); return; }
-      toast.success("Link created — describe how these automations are connected, then start development.", { duration: 12000 });
+      if (!r.ok) { toast.error(d.error ?? L.errCouldNotCreateLink); return; }
+      toast.success(L.linkCreatedToast, { duration: 12000 });
       await refetch();
-      if (d.edge) { setActiveProject(null); setActiveEdge(d.edge.cuid); }
+      if (d.edge) { setActiveEdge(d.edge.cuid); setPanelOpen("edge"); }
     } finally { setBusy(false); }
-  }, [busy, refetch, rf]);
+  }, [busy, refetch, rf, L]);
 
   const onNodeDragStart = useCallback((_: unknown, n: Node) => {
     dragStartPositionRef.current[n.id] = { x: n.position.x, y: n.position.y };
@@ -437,10 +448,7 @@ function GlobalCanvasInner() {
 
     if (hitGroup && hitGroup.id !== currentParentId) {
       if (!unlocked.has(hitGroup.id)) {
-        toast.error("This group is locked", {
-          description: "Unlock it first (the lock button on the group), then drag the automation in.",
-          duration: 15000,
-        });
+        toast.error(L.groupLockedTitle, { description: L.groupLockedDescIn, duration: 15000 });
         // EXPLICIT revert — without this the node stays visually wherever it was dropped (this is exactly
         // the bug the owner reported: nothing reverts on its own without onNodesChange-driven live state).
         rf.updateNode(n.id, { position: dragStartPositionRef.current[n.id] ?? n.position });
@@ -458,10 +466,7 @@ function GlobalCanvasInner() {
     }
     if (!hitGroup && currentParentId) {
       if (!unlocked.has(currentParentId)) {
-        toast.error("This group is locked", {
-          description: "Unlock it first (the lock button on the group), then drag the automation out.",
-          duration: 15000,
-        });
+        toast.error(L.groupLockedTitle, { description: L.groupLockedDescOut, duration: 15000 });
         rf.updateNode(n.id, { position: dragStartPositionRef.current[n.id] ?? n.position });
         return;
       }
@@ -475,7 +480,7 @@ function GlobalCanvasInner() {
     // Same group as before (or still top-level, no new group hit) — onNodesChange already applied the live
     // position; just persist what's now live.
     persistLayout(rf.getNodes() as AnyNode[]);
-  }, [unlocked, rf, persistLayout]);
+  }, [unlocked, rf, persistLayout, L]);
 
   const autoLayout = useCallback(() => {
     let i = 0;
@@ -497,16 +502,11 @@ function GlobalCanvasInner() {
       body: JSON.stringify({ status: next }),
     });
     toast.info(
-      next === "off" ? "Global automation is OFF" : "Global automation is ON",
-      {
-        description: next === "off"
-          ? "The projects keep running exactly as before — only the synchronisation between them stops."
-          : "The projects synchronise through their links again.",
-        duration: 12000,
-      },
+      next === "off" ? L.globalOffTitle : L.globalOnTitle,
+      { description: next === "off" ? L.globalOffDesc : L.globalOnDesc, duration: 12000 },
     );
     await refetch();
-  }, [state, refetch]);
+  }, [state, refetch, L]);
 
   const rfEdges = useMemo<Edge[]>(() => {
     if (!state) return [];
@@ -525,9 +525,9 @@ function GlobalCanvasInner() {
   if (!state) {
     return (
       <section className="mt-10">
-        <h2 className="text-xl font-semibold">Global architecture</h2>
+        <h2 className="text-xl font-semibold">{L.title}</h2>
         <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" /> Loading the workspace graph…
+          <Loader2 className="size-4 animate-spin" /> {L.loadingGraph}
         </p>
       </section>
     );
@@ -535,8 +535,8 @@ function GlobalCanvasInner() {
 
   const edge = activeEdge ? state.edges.find((e) => e.cuid === activeEdge) : undefined;
   const project = activeProject ? state.projects.find((p) => p.automation === activeProject) : undefined;
-  // Members of a selected GROUP (rule 3 fix) — read from the live node array, never from any polled field,
-  // so it can never disagree with what the owner actually sees on the canvas.
+  // Members of a selected GROUP (step 236.1 fix) — read from the live node array, never from any polled
+  // field, so it can never disagree with what the owner actually sees on the canvas.
   const projectMembers = project?.type === "chained"
     ? nodes.filter((n) => n.parentId === project.automation).map((n) => ({ automation: n.id, slug: n.data.label }))
     : undefined;
@@ -545,30 +545,28 @@ function GlobalCanvasInner() {
     <section className="mt-10">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-xl font-semibold">Global architecture</h2>
+          <h2 className="text-xl font-semibold">{L.title}</h2>
           <p className="text-sm text-muted-foreground">
-            Every project is a node; a link is a programmable integration between two automations. Links can
-            only be drawn between projects whose development is finished. A Chained automation renders as a
-            group — unlock it to drag other automations inside; a nested automation cannot be linked directly.
+            {L.intro}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm">
             <span className={`size-2.5 rounded-full ${STATUS_PILL[state.status] ?? "bg-muted"}`} aria-hidden />
-            {state.status === "in-development" ? "In development" : state.status === "on" ? "On" : "Off"}
+            {state.status === "in-development" ? L.statusInDevelopment : state.status === "on" ? L.statusOn : L.statusOff}
           </span>
           {/* A new automation is born FROM THE GLOBAL VIEW (step 225 G4) — the same single entry
               POST /api/projects/create (never a second code path); the only difference from a category
               grid's "+" card is that the canvas has no ambient category, so the modal asks for one. The
               moment it exists, its Quiz opens here and the auto-quiz starts streaming. */}
           <Button variant="outline" size="sm" onClick={() => setCreating(true)}>
-            <Plus className="size-3.5" /> Add automation
+            <Plus className="size-3.5" /> {L.btnAddAutomation}
           </Button>
           <Button variant="outline" size="sm" onClick={autoLayout}>
-            <LayoutGrid className="size-3.5" /> Auto-layout
+            <LayoutGrid className="size-3.5" /> {L.btnAutoLayout}
           </Button>
           <Button variant="outline" size="sm" onClick={toggleGlobal}>
-            <Power className="size-3.5" /> {state.status === "off" ? "Turn on" : "Turn off"}
+            <Power className="size-3.5" /> {state.status === "off" ? L.btnTurnOn : L.btnTurnOff}
           </Button>
         </div>
       </div>
@@ -582,8 +580,8 @@ function GlobalCanvasInner() {
           nodeTypes={NODE_TYPES}
           onNodesChange={onNodesChange}
           onConnect={onConnect}
-          onEdgeClick={(_, e) => { setActiveProject(null); setActiveEdge(e.id); }}
-          onNodeClick={(_, n) => { setActiveEdge(null); setActiveProject(n.id); }}
+          onEdgeClick={(_, e) => { setActiveEdge(e.id); setPanelOpen("edge"); }}
+          onNodeClick={(_, n) => { setActiveProject(n.id); setPanelOpen("project"); }}
           onNodeDragStart={onNodeDragStart}
           onNodeDragStop={onNodeDragStop}
           nodesConnectable
@@ -593,48 +591,54 @@ function GlobalCanvasInner() {
           <Background />
           <Controls showInteractive={false} />
         </ReactFlow>
+      </div>
 
-        {edge && (
-          <aside className="absolute inset-y-0 right-0 w-96 space-y-3 overflow-y-auto border-l bg-background/95 p-4">
-            <div className="flex items-center justify-between">
-              <p className="flex items-center gap-1.5 text-sm font-medium">
-                <CircleDot className="size-4" /> Link
-              </p>
-              <button type="button" aria-label="Close" onClick={() => setActiveEdge(null)} className="text-muted-foreground hover:text-foreground">
-                <X className="size-4" />
-              </button>
-            </div>
+      {/* ANIMATED SLIDE-IN PANELS (step 236.4) — Radix Sheet (components/ui/sheet.tsx), which already ships
+          slide-in-from-right/slide-out-to-right. Rendered UNCONDITIONALLY (only `open` toggles) so Radix's own
+          Presence drives the animation both ways — a parent-side conditional mount would skip the close
+          animation entirely. `modal={false}` + `showOverlay={false}` together keep the canvas undimmed AND
+          interactive behind the panel (today's behaviour, unchanged) — the shared Sheet's default is a dimmed
+          modal overlay (still used as-is by account-drawer.client.tsx), so this pair of props is what opts
+          THIS panel out of that default, additively. */}
+      <Sheet open={panelOpen === "edge"} onOpenChange={(v) => { if (!v) setPanelOpen(null); }} modal={false}>
+        <SheetContent side="right" showOverlay={false} className="w-96 max-w-[90vw] gap-3 overflow-y-auto p-4">
+          <SheetHeader className="p-0">
+            <SheetTitle className="flex items-center gap-1.5 text-sm font-medium">
+              <CircleDot className="size-4" /> {L.sheetLinkTitle}
+            </SheetTitle>
+          </SheetHeader>
+          {edge && (
             <GlobalEdgePanel
               key={`${edge.cuid}-${panelKey}`}
               edge={edge}
               onChanged={() => void refetch()}
-              onDeleted={() => { setActiveEdge(null); void refetch(); }}
+              onDeleted={() => { setPanelOpen(null); void refetch(); }}
               onQuiz={() => setQuiz({ kind: "edge", cuid: edge.cuid, name: edge.name })}
             />
-          </aside>
-        )}
+          )}
+        </SheetContent>
+      </Sheet>
 
-        {/* THE PROJECT PANEL (step 225 G4) — a click on a project node opens it: Open / Builder / Quiz.
-            For a Chained group it ALSO lists its members (step 236.1 — was showing the group's OWN
-            unrelated dev-node count and reading as a membership count; now both are shown, clearly labelled). */}
-        {project && !edge && (
-          <aside className="absolute inset-y-0 right-0 w-96 space-y-3 overflow-y-auto border-l bg-background/95 p-4">
-            <div className="flex items-center justify-between">
-              <p className="flex items-center gap-1.5 text-sm font-medium">
-                <Boxes className="size-4" /> Automation
-              </p>
-              <button type="button" aria-label="Close" onClick={() => setActiveProject(null)} className="text-muted-foreground hover:text-foreground">
-                <X className="size-4" />
-              </button>
-            </div>
+      {/* THE PROJECT PANEL (step 225 G4) — a click on a project node opens it. For a Chained group it shows
+          its members + a chain brief instead of Open/Builder/Quiz (step 236.3 — a group has no workflow of
+          its own to build). */}
+      <Sheet open={panelOpen === "project"} onOpenChange={(v) => { if (!v) setPanelOpen(null); }} modal={false}>
+        <SheetContent side="right" showOverlay={false} className="w-96 max-w-[90vw] gap-3 overflow-y-auto p-4">
+          <SheetHeader className="p-0">
+            <SheetTitle className="flex items-center gap-1.5 text-sm font-medium">
+              <Boxes className="size-4" /> {L.sheetAutomationTitle}
+            </SheetTitle>
+          </SheetHeader>
+          {project && (
             <GlobalProjectPanel
+              key={`${project.automation}-${panelKey}`}
               project={project}
               members={projectMembers}
               onQuiz={() => setQuiz({ kind: "project", automation: project.automation, auto: false })}
             />
-          </aside>
-        )}
-      </div>
+          )}
+        </SheetContent>
+      </Sheet>
 
       {/* PHASE 1 from the canvas: the creation modal (category picked in the dropdown) → the new automation
           exists → PHASE 2 opens immediately, auto-quiz streaming, without waiting for its page to build. */}
