@@ -34,10 +34,12 @@ export type FrozenProjectInput = {
   title?: string;
   /** One line: what this automation does. Rendered under the title from birth (v2). */
   description?: string;
-  /** The IMMUTABLE automation type (step 224 §1.5): "stream" (no forks, one scheme per event) or
-   *  "instanced" (each run forks Master -> Instance with its own parameters, may be deferred/tracked).
-   *  Chosen in the creation modal, written into _data/automation.ts, shown as the top-bar badge. */
-  type?: "stream" | "instanced";
+  /** The IMMUTABLE automation type (step 224 §1.5, extended 234/234.3): "stream" (no forks, one scheme per
+   *  event), "instanced" (each run forks Master -> Instance with its own parameters, may be deferred/
+   *  tracked), or "chained" (a link in a chain of separate automations, renders as a group container on the
+   *  global canvas). Chosen in the creation modal, written into _data/automation.ts, shown as the top-bar
+   *  badge. */
+  type?: "stream" | "instanced" | "chained";
   /** PHASE 1 (creation): the owner's MANDATORY free-form instruction — what this automation must do. It is
    *  the seed the activation Quiz (step 227) turns into nodes; stored as _data/instruction.md. */
   instruction?: string;
@@ -135,11 +137,12 @@ export const PROBES: Probe[] = [];
 `,
   "_data/automation.ts": `import type { AutomationType } from "../../../_shared/automation-type";
 
-// This automation's IMMUTABLE TYPE (frozen standard, step 224). Chosen once at creation; the whole logic
-// grows out of it (above all: whether a run forks). To change it you delete the automation and create a
-// new one — there is no "switch type". Shown as the coloured badge in the top bar.
+// This automation's IMMUTABLE TYPE (frozen standard, step 224, extended 234.3). Chosen once at creation; the
+// whole logic grows out of it (above all: whether a run forks). To change it you delete the automation and
+// create a new one — there is no "switch type". Shown as the coloured badge in the top bar.
 //   stream    — no forks; every incoming event runs the same scheme end to end.
 //   instanced — each run forks Master -> Instance with its own parameters; may be deferred and tracked.
+//   chained   — a link in a chain of separate automations; renders as a group container on the global canvas.
 export const AUTOMATION_TYPE: AutomationType = "{{AUTOMATION_TYPE}}";
 `,
   "_data/instruction.md": `{{AUTOMATION_INSTRUCTION}}
@@ -568,9 +571,10 @@ export async function createFrozenProject(
   const description =
     String(input.description ?? "").trim() ||
     "Not described yet — a frozen skeleton. Describe what this automation does in _data/description.ts.";
-  // Phase 1 (step 224 §1.5): the immutable type + the owner's instruction (the seed the activation Quiz,
-  // step 227, turns into nodes). The type defaults to "stream" (the simpler kind) when not given.
-  const type = input.type === "instanced" ? "instanced" : "stream";
+  // Phase 1 (step 224 §1.5, extended 234.3): the immutable type + the owner's instruction (the seed the
+  // activation Quiz, step 227, turns into nodes). The type defaults to "stream" (the simpler kind) when not
+  // given or unrecognized.
+  const type = input.type === "instanced" ? "instanced" : input.type === "chained" ? "chained" : "stream";
   const instruction =
     String(input.instruction ?? "").trim() ||
     "Not stated yet — describe what this automation must do.";

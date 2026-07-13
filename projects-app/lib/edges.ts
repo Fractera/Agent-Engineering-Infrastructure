@@ -50,6 +50,37 @@ export async function edgeAllowed(from: string, to: string): Promise<{ allowed: 
   };
 }
 
+// ─── THE GLOBAL CANVAS LAYOUT (step 234.3) ────────────────────────────────────────────────────────────
+// The global canvas (global-canvas.client.tsx) persists node positions AND group/subflow membership in one
+// JSON blob (global_automation.layout — no schema change, same free-form TEXT column since step 225). Shared
+// reader so both app/api/projects/global/route.ts (renders the canvas) and app/api/projects/edges/route.ts
+// (the "an edge cannot touch a nested automation" gate below) parse the SAME shape identically.
+export type LayoutEntry = {
+  x: number;
+  y: number;
+  /** The automation this node is nested inside (a "chained" group container); absent/null = top-level. */
+  parent?: string | null;
+  /** Only meaningful for a "chained" automation's own group-container box. */
+  width?: number;
+  height?: number;
+};
+export type Layout = Record<string, LayoutEntry>;
+
+export async function getGlobalLayout(): Promise<Layout> {
+  const row = (await db.prepare(`SELECT layout FROM global_automation WHERE id = 1`).get()) as
+    | { layout: string }
+    | undefined;
+  if (!row?.layout) return {};
+  try { return JSON.parse(row.layout) as Layout; } catch { return {}; }
+}
+
+/** Is this automation currently nested inside a group container? (step 234.3 — a nested automation cannot be
+ *  a custom-edge endpoint; move it out of its group first.) */
+export async function isNested(automation: string): Promise<boolean> {
+  const layout = await getGlobalLayout();
+  return Boolean(layout[automation]?.parent);
+}
+
 // ─── the edge's co-located files (the same shape as a node's) ────────────────────────────────────────
 
 export function edgeStubFiles(e: { cuid: string; name: string; from: string; to: string; spec: string }): Record<string, string> {

@@ -11,10 +11,13 @@
 //    child-course-builder -> child-knowledge-check). It answers "is this automation wired to another one?",
 //    not "does this run fork?" — orthogonal to Stream/Instanced in principle.
 //
-// 🔧 TEMPORARY (step 234, owner's call): the dedicated Chained frozen template does not exist yet — the
-// frozen templates are still being reworked. Until then, picking "chained" in the creation modal MATERIALIZES
-// the automation as "instanced" under the hood (see app/api/projects/create/route.ts) — same skeleton, same
-// badge today. Do not "fix" this coercion as a bug; it is intentional until Chained gets its own template.
+// CHAINED IS REAL (step 234.3): picking "chained" in the creation modal now stores AUTOMATION_TYPE =
+// "chained" for real (the step-234 temporary "materializes as instanced" coercion was removed once the
+// group/subflow canvas behavior below existed to give it somewhere to land — see app/api/projects/create/
+// route.ts). The frozen skeleton is still the same file set as stream/instanced (draft input/logic/output
+// nodes) — only the stored type token and the global canvas rendering differ now: a chained automation
+// renders as a GROUP container node on the global canvas (_shared/components/global-canvas.client.tsx) that
+// other automations can be dragged into (React Flow's parentId/extent:'parent' sub-flow pattern).
 //
 // The type is written into the automation's _meta at creation and shown as a coloured BADGE in the page's
 // top bar, LEFT of the status indicator (owner's design).

@@ -53,10 +53,10 @@ export async function POST(req: NextRequest) {
     project: String(body.project ?? ""),
     title: body.title ? String(body.title) : undefined,
     description: body.description ? String(body.description) : undefined,
-    // Phase 1 (step 224 §1.5): the immutable automation type + the owner's mandatory instruction.
-    // "chained" (step 234) has no dedicated frozen template yet (owner: temporary, until the frozen
-    // templates are reworked) — it materializes AS "instanced" for now. Do not "fix" this as a bug.
-    type: body.type === "instanced" || body.type === "chained" ? "instanced" : "stream",
+    // Phase 1 (step 224 §1.5): the immutable automation type + the owner's mandatory instruction. "chained"
+    // (step 234, made real in 234.3) is stored as-is now — it renders as a group container on the global
+    // canvas (_shared/components/global-canvas.client.tsx), the frozen skeleton is unchanged.
+    type: body.type === "instanced" ? "instanced" : body.type === "chained" ? "chained" : "stream",
     instruction: body.instruction ? String(body.instruction) : undefined,
     force: !!body.force,
   })

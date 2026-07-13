@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { authorize, resolveProject } from "@/lib/nodes";
 import { PROJECT_CATEGORIES } from "@/app/(projects)/projects/_shared/categories";
 import { listProjectSlugs } from "@/app/(projects)/projects/_shared/projects-manifest";
-import { automationReadiness, listEdges, pruneDeadEdges } from "@/lib/edges";
+import { automationReadiness, getGlobalLayout, listEdges, pruneDeadEdges, type Layout } from "@/lib/edges";
 
 // THE GLOBAL CANVAS STATE (step 225) — everything the workspace-level graph needs, in one poll:
 //   • every PROJECT as a node, with its readiness (a project still "In development" or inactive is drawn
@@ -19,18 +19,18 @@ export const runtime = "nodejs";
 export type GlobalProject = {
   automation: string; category: string; slug: string;
   ready: boolean; nodes: number; drafts: number; reason?: string;
-  /** The immutable automation TYPE (step 224 §1.5) — the canvas badges it so Stream and Instanced
-   *  automations are told apart at a glance. */
-  type: "stream" | "instanced";
+  /** The immutable automation TYPE (step 224 §1.5, extended 234.3) — the canvas badges it, and a "chained"
+   *  automation renders as a group container other automations can be dragged into. */
+  type: "stream" | "instanced" | "chained";
 };
 
 // The type is declared in the project's _data/automation.ts (emitted by the starter since 224 L6). Projects
 // created BEFORE that file existed have none — for them we DERIVE it honestly: an automation that has forks
 // (Instances) is Instanced; otherwise it is Stream. Never guess: read the file first.
-async function automationType(projectDir: string, automation: string): Promise<"stream" | "instanced"> {
+async function automationType(projectDir: string, automation: string): Promise<"stream" | "instanced" | "chained"> {
   const src = await readFile(join(projectDir, "_data", "automation.ts"), "utf8").catch(() => "");
-  const m = src.match(/AUTOMATION_TYPE\s*:\s*AutomationType\s*=\s*["'](stream|instanced)["']/);
-  if (m) return m[1] as "stream" | "instanced";
+  const m = src.match(/AUTOMATION_TYPE\s*:\s*AutomationType\s*=\s*["'](stream|instanced|chained)["']/);
+  if (m) return m[1] as "stream" | "instanced" | "chained";
   const fork = (await db.prepare(`SELECT 1 FROM automation_instances WHERE automation = ? LIMIT 1`).get(automation)) as unknown;
   return fork ? "instanced" : "stream";
 }
@@ -72,8 +72,8 @@ export async function GET(req: NextRequest) {
   const draftEdges = edges.filter((e) => e.draft === 1).length;
   const status = g.status === "off" ? "off" : draftEdges > 0 ? "in-development" : "on";
 
-  let layout: Record<string, { x: number; y: number }> = {};
-  try { layout = JSON.parse(g.layout) as Record<string, { x: number; y: number }>; } catch { /* empty */ }
+  // Positions AND group/subflow membership (step 234.3) — one JSON blob, shared reader with edges/route.ts.
+  const layout = await getGlobalLayout();
 
   return NextResponse.json({ projects, edges, status, draftEdges, layout });
 }
@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const body = (await req.json().catch(() => null)) as
-    | { status?: string; layout?: Record<string, { x: number; y: number }> }
+    | { status?: string; layout?: Layout }
     | null;
   await globalRow();
 
@@ -89,6 +89,13 @@ export async function POST(req: NextRequest) {
     await db.prepare(`UPDATE global_automation SET status = ?, updated_at = datetime('now') WHERE id = 1`).run(body.status);
   }
   if (body?.layout) {
+    // Light validation (step 234.3): reject self-parenting; everything else (positions, group size) is
+    // cosmetic canvas state — trusted, same as before this change.
+    for (const [automation, entry] of Object.entries(body.layout)) {
+      if (entry.parent === automation) {
+        return NextResponse.json({ error: `"${automation}" cannot be its own group` }, { status: 400 });
+      }
+    }
     await db.prepare(`UPDATE global_automation SET layout = ?, updated_at = datetime('now') WHERE id = 1`)
       .run(JSON.stringify(body.layout));
   }
