@@ -71,7 +71,9 @@ export async function POST(req: NextRequest) {
   src = src.replace('  | "other";', `  | "${slug}"\n  | "other";`);
   src = src.replace(
     /(\n  \{\n    slug: "other",)/,
-    `\n  {\n    slug: "${slug}",\n    title: ${JSON.stringify(title)},\n    navLabel: ${JSON.stringify(title)},\n    description: ${JSON.stringify(description)},\n    titleI18n: ${JSON.stringify(titleI18n)},\n    descriptionI18n: ${JSON.stringify(descriptionI18n)},\n  },$1`,
+    // navLabelI18n mirrors titleI18n (navLabel === title for an owner-created category — there is no
+    // separate short-label concept from the creation modal, same as the plain `navLabel: title` below).
+    `\n  {\n    slug: "${slug}",\n    title: ${JSON.stringify(title)},\n    navLabel: ${JSON.stringify(title)},\n    description: ${JSON.stringify(description)},\n    titleI18n: ${JSON.stringify(titleI18n)},\n    navLabelI18n: ${JSON.stringify(titleI18n)},\n    descriptionI18n: ${JSON.stringify(descriptionI18n)},\n  },$1`,
   );
   await writeFile(file, src, "utf8");
 
