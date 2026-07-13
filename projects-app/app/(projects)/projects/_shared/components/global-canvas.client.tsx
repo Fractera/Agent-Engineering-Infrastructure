@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Background, Controls, Handle, NodeResizer, Position, ReactFlow, ReactFlowProvider, useReactFlow,
+  Background, Controls, Handle, NodeResizer, Position, ReactFlow, ReactFlowProvider, useNodesState, useReactFlow,
   type Connection, type Edge, type Node, type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -26,12 +26,28 @@ import { ActivationQuiz } from "./activation-quiz.client";
 //
 // GROUP/SUBFLOW CONTAINERS (step 234.3, English-only for now — no i18n on this feature until it is built and
 // tested, owner's explicit call): a "chained" automation renders as a GROUP node other automation nodes can
-// be dragged into (React Flow's own parentId/extent:'parent' sub-flow pattern — see reactflow.dev/learn/
-// layouting/sub-flows). A group is LOCKED by default; unlocking it (its own lock button) allows exactly one
-// membership change (drag a node in, or out), then it re-locks after 5s, on a second click, or on reload —
-// this lock state is NEVER persisted, pure client-side/ephemeral. An automation nested inside a group cannot
-// be a custom-edge endpoint (THE NESTING GATE, enforced client-side here for instant feedback AND
-// server-side in app/api/projects/edges/route.ts as the authority).
+// be dragged into (React Flow's own parentId sub-flow pattern — see reactflow.dev/learn/layouting/sub-flows).
+// A group is LOCKED by default; unlocking it (its own lock button) allows exactly one membership change (drag
+// a node in, or out), then it re-locks after 5s, on a second click, or on reload — this lock state is NEVER
+// persisted, pure client-side/ephemeral. An automation nested inside a group cannot be a custom-edge endpoint
+// (THE NESTING GATE, enforced client-side here for instant feedback AND server-side in
+// app/api/projects/edges/route.ts as the authority).
+//
+// STEP 236.1 — NODE-STATE ARCHITECTURE FIX (owner tested 236, found drag wasn't live and a locked-group
+// rejection left the node visually inside anyway): the original 236 build passed a fully re-derived
+// `useMemo`'d nodes array to a controlled <ReactFlow> with NO onNodesChange handler. React Flow's own docs
+// are explicit that this breaks live dragging — "if this handler doesn't exist... the node appears frozen
+// visually despite internal React Flow tracking the drag" (reactflow.dev/learn/troubleshooting +
+// /learn/concepts/adding-interactivity, verified, not assumed). Fixed by adopting the real useNodesState/
+// onNodesChange pattern: `nodes` is now genuine local state, position/parentId/size are "local-authoritative
+// once created" (a poll only ever refreshes DATA fields — label/ready/type — for automations already on the
+// canvas; it never touches their position/parent/size again), and a locked-group rejection is reverted with
+// an EXPLICIT rf.updateNode(id, {position}) call (the confirmed real ReactFlowInstance API) rather than
+// hoping an unrelated re-render would snap it back — it doesn't, there is nothing to snap back FROM without
+// onNodesChange wired.
+// KNOWN TRADE-OFF: because position/parentId is local-authoritative after creation, a SECOND browser tab's
+// own drag/reparent is not live-reflected in this tab until a full reload. Accepted deliberately — the
+// alternative (server-truth-wins-every-poll) is exactly what caused the drag-fighting bug being fixed here.
 type GProject = { automation: string; category: string; slug: string; ready: boolean; nodes: number; drafts: number; type?: "stream" | "instanced" | "chained" };
 type GEdge = {
   cuid: string; from_automation: string; to_automation: string; name: string; draft: number;
@@ -45,8 +61,12 @@ type GState = { projects: GProject[]; edges: GEdge[]; status: string; draftEdges
 type PData = { label: string; sub: string; ready: boolean; type: "stream" | "instanced" | "chained" };
 type PNode = Node<PData, "project">;
 
-type GroupData = { label: string; ready: boolean; unlocked: boolean; onToggleLock: () => void; onResize: (w: number, h: number) => void };
+type GroupData = {
+  label: string; ready: boolean; unlocked: boolean; memberCount: number;
+  onToggleLock: (id: string) => void; onResize: (id: string, w: number, h: number) => void;
+};
 type GroupNode = Node<GroupData, "chainGroup">;
+type AnyNode = PNode | GroupNode;
 
 // The immutable automation TYPE badge (step 224 §1.5, extended 234) — so the three kinds are told apart at a
 // glance: STREAM (turquoise) = no forks, every event runs the same scheme (telegram-notes); INSTANCED
@@ -97,7 +117,9 @@ function ProjectNode({ data, selected }: NodeProps<PNode>) {
 // into (global-canvas.client.tsx's onNodeDragStop does the reparenting via getIntersectingNodes). Resizable
 // (NodeResizer, always active — resizing is NOT lock-gated, only membership changes are) and, like any other
 // automation, can itself be a top-level edge endpoint (Handles) — only ITS CHILDREN are blocked from edges.
-function ChainGroupNode({ data, selected }: NodeProps<GroupNode>) {
+// `id` comes from NodeProps (React Flow's own node id) so onToggleLock/onResize can be STABLE top-level
+// callbacks (never recreated per node, per merge) instead of a per-node closure baked into `data`.
+function ChainGroupNode({ id, data, selected }: NodeProps<GroupNode>) {
   const frame = !data.ready
     ? "border-red-500 bg-red-500/10"
     : selected
@@ -108,7 +130,7 @@ function ChainGroupNode({ data, selected }: NodeProps<GroupNode>) {
       <NodeResizer
         minWidth={260}
         minHeight={180}
-        onResizeEnd={(_, params) => data.onResize(params.width, params.height)}
+        onResizeEnd={(_, params) => data.onResize(id, params.width, params.height)}
       />
       <Handle type="target" position={Position.Left} />
       <div className="flex items-center justify-between gap-2 rounded-t-md border-b bg-background/80 px-2 py-1.5">
@@ -118,16 +140,21 @@ function ChainGroupNode({ data, selected }: NodeProps<GroupNode>) {
           </span>
           <p className="truncate text-sm font-medium">{data.label}</p>
         </div>
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); data.onToggleLock(); }}
-          className={`shrink-0 rounded p-1 hover:bg-muted ${data.unlocked ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}
-          title={data.unlocked
-            ? "Unlocked — drag an automation in (or out), then it locks again in a few seconds. Click to lock now."
-            : "Locked — click to unlock before dragging an automation in or out"}
-        >
-          {data.unlocked ? <Unlock className="size-3.5" /> : <Lock className="size-3.5" />}
-        </button>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <span className="text-[10px] text-muted-foreground" title="Automations dragged inside this group">
+            {data.memberCount} inside
+          </span>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); data.onToggleLock(id); }}
+            className={`rounded p-1 hover:bg-muted ${data.unlocked ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}
+            title={data.unlocked
+              ? "Unlocked — drag an automation in (or out), then it locks again in a few seconds. Click to lock now."
+              : "Locked — click to unlock before dragging an automation in or out"}
+          >
+            {data.unlocked ? <Unlock className="size-3.5" /> : <Lock className="size-3.5" />}
+          </button>
+        </div>
       </div>
       <Handle type="source" position={Position.Right} />
     </div>
@@ -136,9 +163,96 @@ function ChainGroupNode({ data, selected }: NodeProps<GroupNode>) {
 
 const NODE_TYPES = { project: ProjectNode, chainGroup: ChainGroupNode };
 // Default box size for a fresh group with no saved dimensions yet, and the estimated footprint of a plain
-// project box — both feed the overlap-avoidance placement (rule 3) and the reparent position math.
+// project box — both feed the overlap-avoidance placement and the reparent position math.
 const GROUP_DEFAULT = { width: 420, height: 280 };
 const PROJECT_FOOTPRINT = { width: 220, height: 90 };
+
+/** First free grid cell (280×160, 20px margin) that doesn't intersect any box already in `occupied`. */
+function findFreeSlot(occupied: { x: number; y: number; w: number; h: number }[], w: number, h: number): { x: number; y: number } {
+  const CELL_X = 280, CELL_Y = 160, MARGIN = 20;
+  const overlapsAny = (x: number, y: number) =>
+    occupied.some((o) => x < o.x + o.w + MARGIN && x + w + MARGIN > o.x && y < o.y + o.h + MARGIN && y + h + MARGIN > o.y);
+  for (let row = 0; row < 200; row++) {
+    for (let col = 0; col < 12; col++) {
+      const x = col * CELL_X, y = row * CELL_Y;
+      if (!overlapsAny(x, y)) return { x, y };
+    }
+  }
+  return { x: 0, y: 0 };
+}
+
+/** Merge fresh polled project data into the EXISTING node array without ever touching position/parentId/size
+ *  for an automation already on the canvas (that is local-authoritative once created — see the file-header
+ *  comment on why). A brand-new automation gets its saved layout position, or a freshly computed free slot;
+ *  `added` tells the caller whether anything new needs persisting. */
+function mergeProjects(
+  d: GState,
+  current: AnyNode[],
+  onToggleLock: (id: string) => void,
+  onResize: (id: string, w: number, h: number) => void,
+): { nodes: AnyNode[]; added: boolean } {
+  const byId = new Map(current.map((n) => [n.id, n]));
+  const occupied: { x: number; y: number; w: number; h: number }[] = [];
+  for (const n of current) {
+    if (n.parentId) continue; // nested children don't compete for top-level grid space
+    const w = n.type === "chainGroup" ? Number(n.style?.width) || GROUP_DEFAULT.width : PROJECT_FOOTPRINT.width;
+    const h = n.type === "chainGroup" ? Number(n.style?.height) || GROUP_DEFAULT.height : PROJECT_FOOTPRINT.height;
+    occupied.push({ x: n.position.x, y: n.position.y, w, h });
+  }
+  let added = false;
+  const result: AnyNode[] = [];
+
+  for (const p of d.projects) {
+    const existing = byId.get(p.automation);
+    if (p.type === "chained") {
+      if (existing && existing.type === "chainGroup") {
+        result.push({ ...existing, data: { ...existing.data, label: p.slug, ready: p.ready } });
+      } else {
+        const entry = d.layout[p.automation];
+        const width = entry?.width ?? GROUP_DEFAULT.width;
+        const height = entry?.height ?? GROUP_DEFAULT.height;
+        const pos = entry ? { x: entry.x, y: entry.y } : findFreeSlot(occupied, width, height);
+        occupied.push({ x: pos.x, y: pos.y, w: width, h: height });
+        added = true;
+        result.push({
+          id: p.automation, type: "chainGroup", position: pos, style: { width, height },
+          data: { label: p.slug, ready: p.ready, unlocked: false, memberCount: 0, onToggleLock, onResize },
+        });
+      }
+      continue;
+    }
+    if (existing && existing.type === "project") {
+      result.push({
+        ...existing,
+        data: {
+          ...existing.data, label: p.slug, ready: p.ready, type: p.type ?? "stream",
+          sub: p.ready ? `${p.nodes} nodes · ready` : `in development · ${p.drafts} to build`,
+        },
+      });
+    } else {
+      const entry = d.layout[p.automation];
+      const pos = entry ? { x: entry.x, y: entry.y } : findFreeSlot(occupied, PROJECT_FOOTPRINT.width, PROJECT_FOOTPRINT.height);
+      occupied.push({ x: pos.x, y: pos.y, w: PROJECT_FOOTPRINT.width, h: PROJECT_FOOTPRINT.height });
+      added = true;
+      const node: PNode = {
+        id: p.automation, type: "project", position: pos,
+        data: {
+          label: p.slug, ready: p.ready, type: p.type ?? "stream",
+          sub: p.ready ? `${p.nodes} nodes · ready` : `in development · ${p.drafts} to build`,
+        },
+      };
+      // A saved parent only counts for a BRAND NEW node, and only while that parent is still a live "chained"
+      // automation (a stale reference — the group was deleted — degrades to a plain top-level node).
+      if (entry?.parent && d.projects.some((g) => g.automation === entry.parent && g.type === "chained")) {
+        node.parentId = entry.parent;
+      }
+      result.push(node);
+    }
+  }
+  // React Flow requires parent nodes before their children in the array.
+  result.sort((a, b) => Number(!!a.parentId) - Number(!!b.parentId));
+  return { nodes: result, added };
+}
 
 const STATUS_PILL: Record<string, string> = {
   "in-development": "bg-indigo-500",
@@ -154,9 +268,9 @@ type QuizSubject =
   | { kind: "project"; automation: string; auto: boolean }
   | { kind: "edge"; cuid: string; name: string };
 
-// React Flow needs a ReactFlowProvider ANCESTOR for useReactFlow() (getIntersectingNodes/getNode — used by
-// the drag-into-group logic below) to work — the component that itself renders <ReactFlow> cannot call the
-// hook directly. GlobalCanvas is now a thin provider wrapper; GlobalCanvasInner carries all the logic.
+// React Flow needs a ReactFlowProvider ANCESTOR for useReactFlow() (getIntersectingNodes/getNode/updateNode —
+// used by the drag-into-group logic below) to work — the component that itself renders <ReactFlow> cannot
+// call the hook directly. GlobalCanvas is now a thin provider wrapper; GlobalCanvasInner carries all the logic.
 export function GlobalCanvas() {
   return (
     <ReactFlowProvider>
@@ -169,7 +283,7 @@ function GlobalCanvasInner() {
   const [state, setState] = useState<GState | null>(null);
   const [activeEdge, setActiveEdge] = useState<string | null>(null);
   const [activeProject, setActiveProject] = useState<string | null>(null);
-  const [positions, setPositions] = useState<Record<string, LayoutEntry>>({});
+  const [nodes, setNodes, onNodesChange] = useNodesState<AnyNode>([]);
   const [busy, setBusy] = useState(false);
   const [creating, setCreating] = useState(false);
   const [quiz, setQuiz] = useState<QuizSubject | null>(null);
@@ -177,38 +291,74 @@ function GlobalCanvasInner() {
   const [panelKey, setPanelKey] = useState(0);
   // GROUP LOCK STATE (step 234.3) — deliberately NOT persisted (owner's rule): a Set of currently-unlocked
   // group automations + a pending auto-relock timer per group, so unlock -> drag -> relock (5s, or an early
-  // re-click of the same button, or simply a reload) all just work on plain client state.
+  // re-click of the same button, or simply a reload) all just work on plain client state. Mirrored onto the
+  // node's own `data.unlocked` (via rf.updateNodeData) so the lock icon updates instantly, independent of
+  // whatever else does or doesn't re-render.
   const [unlocked, setUnlocked] = useState<Set<string>>(new Set());
   const lockTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  // Remembers each node's position at the moment its drag started, so a locked-group rejection can revert
+  // to EXACTLY that value via rf.updateNode — see onNodeDragStart/onNodeDragStop below.
+  const dragStartPositionRef = useRef<Record<string, { x: number; y: number }>>({});
   const rf = useReactFlow();
 
   const toggleLock = useCallback((automation: string) => {
+    const isUnlocked = unlocked.has(automation);
+    clearTimeout(lockTimers.current[automation]);
+    delete lockTimers.current[automation];
     setUnlocked((prev) => {
       const next = new Set(prev);
-      clearTimeout(lockTimers.current[automation]);
-      delete lockTimers.current[automation];
-      if (next.has(automation)) {
-        next.delete(automation);
-      } else {
-        next.add(automation);
-        lockTimers.current[automation] = setTimeout(() => {
-          setUnlocked((p) => { const n = new Set(p); n.delete(automation); return n; });
-          delete lockTimers.current[automation];
-        }, 5000);
-      }
+      if (isUnlocked) next.delete(automation); else next.add(automation);
       return next;
+    });
+    rf.updateNodeData(automation, { unlocked: !isUnlocked });
+    if (!isUnlocked) {
+      lockTimers.current[automation] = setTimeout(() => {
+        setUnlocked((p) => { const n = new Set(p); n.delete(automation); return n; });
+        delete lockTimers.current[automation];
+        rf.updateNodeData(automation, { unlocked: false });
+      }, 5000);
+    }
+  }, [unlocked, rf]);
+
+  useEffect(() => () => { Object.values(lockTimers.current).forEach(clearTimeout); }, []);
+
+  const saveLayout = useCallback(async (layout: Record<string, LayoutEntry>) => {
+    await fetch("/api/projects/global", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ layout }),
     });
   }, []);
 
-  useEffect(() => () => { Object.values(lockTimers.current).forEach(clearTimeout); }, []);
+  /** Derive the LayoutEntry map from an explicit node list (never re-read from the instance right after a
+   *  mutation — zustand's own timing is not something to depend on; the caller always hands over the exact
+   *  list it just computed, so persistence can never disagree with what was just applied visually). */
+  const persistLayout = useCallback((list: AnyNode[]) => {
+    const layout: Record<string, LayoutEntry> = {};
+    for (const n of list) {
+      const size = n.type === "chainGroup"
+        ? { width: Number(n.style?.width) || GROUP_DEFAULT.width, height: Number(n.style?.height) || GROUP_DEFAULT.height }
+        : {};
+      layout[n.id] = { x: n.position.x, y: n.position.y, parent: n.parentId ?? null, ...size };
+    }
+    void saveLayout(layout);
+  }, [saveLayout]);
+
+  const resizeGroup = useCallback((id: string, w: number, h: number) => {
+    rf.updateNode(id, { style: { width: w, height: h } });
+    const list = (rf.getNodes() as AnyNode[]).map((x) => (x.id === id ? { ...x, style: { width: w, height: h } } : x));
+    persistLayout(list);
+  }, [rf, persistLayout]);
 
   const refetch = useCallback(async () => {
     const r = await fetch("/api/projects/global", { cache: "no-store" });
     if (!r.ok) return;
     const d = (await r.json()) as GState;
     setState(d);
-    setPositions((p) => (Object.keys(p).length ? p : d.layout ?? {}));
-  }, []);
+    const current = rf.getNodes() as AnyNode[];
+    const { nodes: merged, added } = mergeProjects(d, current, toggleLock, resizeGroup);
+    setNodes(merged);
+    if (added) persistLayout(merged);
+  }, [rf, toggleLock, resizeGroup, persistLayout, setNodes]);
 
   useEffect(() => {
     void refetch();
@@ -216,65 +366,34 @@ function GlobalCanvasInner() {
     return () => clearInterval(t);
   }, [refetch]);
 
-  const saveLayout = useCallback(async (next: Record<string, LayoutEntry>) => {
-    await fetch("/api/projects/global", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ layout: next }),
-    });
-  }, []);
-
-  // OVERLAP-AVOIDANCE PLACEMENT (rule 3) — an automation with no saved position yet gets the first free grid
-  // cell that doesn't intersect any already-positioned node's real (or default) footprint, scanning against
-  // the whole current layout AND every other new arrival placed earlier in the same pass, then the batch is
-  // persisted once. Replaces the old per-render "index % 3" fallback, which never checked real occupied
-  // space and could overlap once nodes had been dragged around.
+  // LIVE GROUP-MEMBERSHIP COUNT — derived from the real node array (nodes.filter(parentId===groupId).length),
+  // not from any polled field (there isn't one). Patches only the group nodes whose count actually changed,
+  // and returns the SAME array reference when nothing changed so this bails out instead of looping.
   useEffect(() => {
-    if (!state) return;
-    const missing = state.projects.filter((p) => !positions[p.automation]);
-    if (!missing.length) return;
-    const CELL_X = 280, CELL_Y = 160, MARGIN = 20;
-    const occupied: { x: number; y: number; w: number; h: number }[] = [];
-    for (const p of state.projects) {
-      const entry = positions[p.automation];
-      if (!entry || entry.parent) continue; // nested children don't compete for top-level grid space
-      const size = p.type === "chained"
-        ? { w: entry.width ?? GROUP_DEFAULT.width, h: entry.height ?? GROUP_DEFAULT.height }
-        : { w: PROJECT_FOOTPRINT.width, h: PROJECT_FOOTPRINT.height };
-      occupied.push({ x: entry.x, y: entry.y, ...size });
+    const counts = new Map<string, number>();
+    for (const n of nodes) {
+      if (n.parentId) counts.set(n.parentId, (counts.get(n.parentId) ?? 0) + 1);
     }
-    const overlapsAny = (x: number, y: number, w: number, h: number) =>
-      occupied.some((o) => x < o.x + o.w + MARGIN && x + w + MARGIN > o.x && y < o.y + o.h + MARGIN && y + h + MARGIN > o.y);
-    const freeSlot = (w: number, h: number) => {
-      for (let row = 0; row < 200; row++) {
-        for (let col = 0; col < 12; col++) {
-          const x = col * CELL_X, y = row * CELL_Y;
-          if (!overlapsAny(x, y, w, h)) return { x, y };
-        }
-      }
-      return { x: 0, y: 0 };
-    };
-    const next = { ...positions };
-    for (const p of missing) {
-      const w = p.type === "chained" ? GROUP_DEFAULT.width : PROJECT_FOOTPRINT.width;
-      const h = p.type === "chained" ? GROUP_DEFAULT.height : PROJECT_FOOTPRINT.height;
-      const slot = freeSlot(w, h);
-      next[p.automation] = { x: slot.x, y: slot.y };
-      occupied.push({ x: slot.x, y: slot.y, w, h });
-    }
-    setPositions(next);
-    void saveLayout(next);
-    // Deliberately state-only: positions/saveLayout are read fresh from this render's closure each time this
-    // fires, but must not themselves retrigger it (that would loop against the setPositions call above).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
+    setNodes((current) => {
+      let changed = false;
+      const next = current.map((n) => {
+        if (n.type !== "chainGroup") return n;
+        const count = counts.get(n.id) ?? 0;
+        if (n.data.memberCount === count) return n;
+        changed = true;
+        return { ...n, data: { ...n.data, memberCount: count } };
+      });
+      return changed ? next : current;
+    });
+  }, [nodes, setNodes]);
 
   // Drawing a link → THE GATE. THE NESTING GATE (rule 2) is checked first, client-side, instant — no network
-  // round trip needed since the layout is already in memory. Then the readiness gate: the server is the
-  // authority there (it refuses with 409 + the reason); the canvas simply surfaces that refusal, so neither
-  // rule can be bypassed from the client.
+  // round trip needed, `rf.getNode` reads the live node the drag/reparent logic already maintains. Then the
+  // readiness gate: the server is the authority there (it refuses with 409 + the reason); the canvas simply
+  // surfaces that refusal, so neither rule can be bypassed from the client.
   const onConnect = useCallback(async (c: Connection) => {
     if (!c.source || !c.target || busy) return;
-    if (positions[c.source]?.parent || positions[c.target]?.parent) {
+    if (rf.getNode(c.source)?.parentId || rf.getNode(c.target)?.parentId) {
       toast.error("This link cannot be created", {
         description: "Automations nested inside a group cannot be linked directly — move it out of the group first.",
         duration: 15000,
@@ -298,73 +417,77 @@ function GlobalCanvasInner() {
       await refetch();
       if (d.edge) { setActiveProject(null); setActiveEdge(d.edge.cuid); }
     } finally { setBusy(false); }
-  }, [busy, refetch, positions]);
+  }, [busy, refetch, rf]);
 
-  // GROUP MEMBERSHIP via drag (rule 1 + 4) — the canvas is fully CONTROLLED (nodes={rfNodes}, no
-  // onNodesChange at all), so REJECTING a drop is simply not writing the change to `positions`: on the next
-  // render rfNodes recomputes from the last-committed position and React Flow snaps the node back on its
-  // own — no manual "revert" code needed. Children are NOT given extent:'parent' (deliberately — that would
-  // physically prevent the drag-OUT gesture the owner's symmetric removal case needs).
+  const onNodeDragStart = useCallback((_: unknown, n: Node) => {
+    dragStartPositionRef.current[n.id] = { x: n.position.x, y: n.position.y };
+  }, []);
+
+  // GROUP MEMBERSHIP via drag (rule 1 + 4). onNodesChange (wired on <ReactFlow> below, straight from
+  // useNodesState) already gives LIVE visual dragging via applyNodeChanges — by the time this fires, `n`
+  // already sits at the true drop position. Children are NOT given extent:'parent' (deliberately — that
+  // would physically prevent the drag-OUT gesture the owner's symmetric removal case needs).
   const onNodeDragStop = useCallback((_: unknown, n: Node) => {
     if (n.type !== "project") {
-      const next = { ...positions, [n.id]: { ...positions[n.id], x: n.position.x, y: n.position.y } };
-      setPositions(next);
-      void saveLayout(next);
+      persistLayout(rf.getNodes() as AnyNode[]);
       return;
     }
-    const currentParent = positions[n.id]?.parent ?? undefined;
+    const currentParentId = n.parentId;
     const hitGroup = rf.getIntersectingNodes({ id: n.id }).find((o) => o.type === "chainGroup");
 
-    if (hitGroup && hitGroup.id !== currentParent) {
+    if (hitGroup && hitGroup.id !== currentParentId) {
       if (!unlocked.has(hitGroup.id)) {
         toast.error("This group is locked", {
           description: "Unlock it first (the lock button on the group), then drag the automation in.",
           duration: 15000,
         });
+        // EXPLICIT revert — without this the node stays visually wherever it was dropped (this is exactly
+        // the bug the owner reported: nothing reverts on its own without onNodesChange-driven live state).
+        rf.updateNode(n.id, { position: dragStartPositionRef.current[n.id] ?? n.position });
         return;
       }
-      const oldParentNode = currentParent ? rf.getNode(currentParent) : undefined;
+      const oldParentNode = currentParentId ? rf.getNode(currentParentId) : undefined;
       const abs = oldParentNode
         ? { x: n.position.x + oldParentNode.position.x, y: n.position.y + oldParentNode.position.y }
         : { x: n.position.x, y: n.position.y };
       const rel = { x: abs.x - hitGroup.position.x, y: abs.y - hitGroup.position.y };
-      const next = { ...positions, [n.id]: { x: rel.x, y: rel.y, parent: hitGroup.id } };
-      setPositions(next); void saveLayout(next);
+      rf.updateNode(n.id, { position: rel, parentId: hitGroup.id });
+      const list = (rf.getNodes() as AnyNode[]).map((x) => (x.id === n.id ? { ...x, position: rel, parentId: hitGroup.id } : x));
+      persistLayout(list);
       return;
     }
-    if (!hitGroup && currentParent) {
-      if (!unlocked.has(currentParent)) {
+    if (!hitGroup && currentParentId) {
+      if (!unlocked.has(currentParentId)) {
         toast.error("This group is locked", {
           description: "Unlock it first (the lock button on the group), then drag the automation out.",
           duration: 15000,
         });
+        rf.updateNode(n.id, { position: dragStartPositionRef.current[n.id] ?? n.position });
         return;
       }
-      const oldParentNode = rf.getNode(currentParent);
+      const oldParentNode = rf.getNode(currentParentId);
       const abs = { x: n.position.x + (oldParentNode?.position.x ?? 0), y: n.position.y + (oldParentNode?.position.y ?? 0) };
-      const next = { ...positions, [n.id]: { x: abs.x, y: abs.y, parent: undefined } };
-      setPositions(next); void saveLayout(next);
+      rf.updateNode(n.id, { position: abs, parentId: undefined });
+      const list = (rf.getNodes() as AnyNode[]).map((x) => (x.id === n.id ? { ...x, position: abs, parentId: undefined } : x));
+      persistLayout(list);
       return;
     }
-    // Same group as before (or still top-level, no new group hit) — n.position is already in the right
-    // coordinate space (relative if parented, absolute if not) since parentage did not change.
-    const next = { ...positions, [n.id]: { ...positions[n.id], x: n.position.x, y: n.position.y } };
-    setPositions(next);
-    void saveLayout(next);
-  }, [positions, unlocked, rf, saveLayout]);
+    // Same group as before (or still top-level, no new group hit) — onNodesChange already applied the live
+    // position; just persist what's now live.
+    persistLayout(rf.getNodes() as AnyNode[]);
+  }, [unlocked, rf, persistLayout]);
 
-  const autoLayout = useCallback(async () => {
-    if (!state) return;
-    // Only repositions TOP-LEVEL nodes onto a fresh grid — a nested child's position stays exactly as saved
-    // (relative to its group), so auto-layout never silently un-nests anything.
-    const next: Record<string, LayoutEntry> = { ...positions };
-    const topLevel = state.projects.filter((p) => !positions[p.automation]?.parent);
-    topLevel.forEach((p, i) => {
-      next[p.automation] = { ...next[p.automation], x: (i % 3) * 280, y: Math.floor(i / 3) * 160 };
+  const autoLayout = useCallback(() => {
+    let i = 0;
+    const next = (rf.getNodes() as AnyNode[]).map((n) => {
+      if (n.parentId) return n; // nested children keep their saved relative position — never silently un-nested
+      const position = { x: (i % 3) * 280, y: Math.floor(i / 3) * 160 };
+      i++;
+      return { ...n, position };
     });
-    setPositions(next);
-    await saveLayout(next);
-  }, [state, positions, saveLayout]);
+    setNodes(next);
+    persistLayout(next);
+  }, [rf, setNodes, persistLayout]);
 
   const toggleGlobal = useCallback(async () => {
     if (!state) return;
@@ -384,57 +507,6 @@ function GlobalCanvasInner() {
     );
     await refetch();
   }, [state, refetch]);
-
-  const rfNodes = useMemo<(PNode | GroupNode)[]>(() => {
-    if (!state) return [];
-    const top: (PNode | GroupNode)[] = [];
-    const children: PNode[] = [];
-    state.projects.forEach((p, i) => {
-      const entry = positions[p.automation];
-      const fallback = { x: (i % 3) * 280, y: Math.floor(i / 3) * 160 }; // transient, until the placement effect above corrects it
-      if (p.type === "chained") {
-        top.push({
-          id: p.automation,
-          type: "chainGroup",
-          position: entry ? { x: entry.x, y: entry.y } : fallback,
-          style: { width: entry?.width ?? GROUP_DEFAULT.width, height: entry?.height ?? GROUP_DEFAULT.height },
-          data: {
-            label: p.slug,
-            ready: p.ready,
-            unlocked: unlocked.has(p.automation),
-            onToggleLock: () => toggleLock(p.automation),
-            onResize: (w: number, h: number) => {
-              const base = positions[p.automation] ?? { x: fallback.x, y: fallback.y };
-              const next = { ...positions, [p.automation]: { ...base, width: w, height: h } };
-              setPositions(next);
-              void saveLayout(next);
-            },
-          },
-        });
-        return;
-      }
-      const node: PNode = {
-        id: p.automation,
-        type: "project",
-        position: entry ? { x: entry.x, y: entry.y } : fallback,
-        data: {
-          label: p.slug,
-          sub: p.ready ? `${p.nodes} nodes · ready` : `in development · ${p.drafts} to build`,
-          ready: p.ready,
-          type: p.type ?? "stream",
-        },
-      };
-      // A parent reference only counts when that automation still exists AND is really a group — a stale
-      // reference (the group was deleted) degrades to a plain top-level node instead of vanishing.
-      if (entry?.parent && state.projects.some((g) => g.automation === entry.parent && g.type === "chained")) {
-        children.push({ ...node, parentId: entry.parent });
-      } else {
-        top.push(node);
-      }
-    });
-    // React Flow requires parent nodes before their children in the array.
-    return [...top, ...children];
-  }, [state, positions, unlocked, toggleLock, saveLayout]);
 
   const rfEdges = useMemo<Edge[]>(() => {
     if (!state) return [];
@@ -463,6 +535,11 @@ function GlobalCanvasInner() {
 
   const edge = activeEdge ? state.edges.find((e) => e.cuid === activeEdge) : undefined;
   const project = activeProject ? state.projects.find((p) => p.automation === activeProject) : undefined;
+  // Members of a selected GROUP (rule 3 fix) — read from the live node array, never from any polled field,
+  // so it can never disagree with what the owner actually sees on the canvas.
+  const projectMembers = project?.type === "chained"
+    ? nodes.filter((n) => n.parentId === project.automation).map((n) => ({ automation: n.id, slug: n.data.label }))
+    : undefined;
 
   return (
     <section className="mt-10">
@@ -500,12 +577,14 @@ function GlobalCanvasInner() {
           standard 85vw column — so the canvas fills it exactly like every other block on the page. */}
       <div className="relative h-[75vh] w-full overflow-hidden rounded-lg border">
         <ReactFlow
-          nodes={rfNodes}
+          nodes={nodes}
           edges={rfEdges}
           nodeTypes={NODE_TYPES}
+          onNodesChange={onNodesChange}
           onConnect={onConnect}
           onEdgeClick={(_, e) => { setActiveProject(null); setActiveEdge(e.id); }}
           onNodeClick={(_, n) => { setActiveEdge(null); setActiveProject(n.id); }}
+          onNodeDragStart={onNodeDragStart}
           onNodeDragStop={onNodeDragStop}
           nodesConnectable
           deleteKeyCode={null}
@@ -535,7 +614,9 @@ function GlobalCanvasInner() {
           </aside>
         )}
 
-        {/* THE PROJECT PANEL (step 225 G4) — a click on a project node opens it: Open / Builder / Quiz. */}
+        {/* THE PROJECT PANEL (step 225 G4) — a click on a project node opens it: Open / Builder / Quiz.
+            For a Chained group it ALSO lists its members (step 236.1 — was showing the group's OWN
+            unrelated dev-node count and reading as a membership count; now both are shown, clearly labelled). */}
         {project && !edge && (
           <aside className="absolute inset-y-0 right-0 w-96 space-y-3 overflow-y-auto border-l bg-background/95 p-4">
             <div className="flex items-center justify-between">
@@ -548,6 +629,7 @@ function GlobalCanvasInner() {
             </div>
             <GlobalProjectPanel
               project={project}
+              members={projectMembers}
               onQuiz={() => setQuiz({ kind: "project", automation: project.automation, auto: false })}
             />
           </aside>
