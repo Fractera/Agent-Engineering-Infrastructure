@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ExternalLink, Loader2, MessagesSquare, Rocket, Workflow } from "lucide-react";
+import { ExternalLink, ListChecks, Loader2, MessagesSquare, Rocket, Workflow } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,10 +16,13 @@ import { fill } from "../quiz-i18n";
 // development) and three things the owner can do WITHOUT leaving the canvas — Open / Builder / Quiz.
 //
 // A "CHAINED" GROUP (step 236.3, `members !== undefined`): a group is a CANVAS-ONLY container, not a
-// workflow — it has NO Builder (there is nothing of its own to build) and no Open/Quiz either. Instead the
-// owner writes ONE free-text brief (mic included, same VoiceInput primitive as everywhere else) describing
-// how the automations dragged inside it should hand off to each other, and "Start development" materializes
-// that brief as a numbered step — same shape GlobalEdgePanel already has for a link.
+// workflow — it has NO Builder (there is nothing of its own to build) and no "Open" link. Instead the owner
+// writes ONE free-text brief (mic included, same VoiceInput primitive as everywhere else) describing how the
+// automations dragged inside it should hand off to each other, and "Start development" materializes that
+// brief as a numbered step — same shape GlobalEdgePanel already has for a link. Its Quiz button DOES reappear
+// (step 236.5) — not to design nodes (a group has none), but because a group is still a real automation
+// underneath and needs the same use-cases gate ("copy the logic", owner) every other automation's own
+// "Start development" already has — the Quiz button is that gate's front door, shown only while unreviewed.
 export type GlobalProjectSummary = {
   automation: string; category: string; slug: string; ready: boolean; nodes: number; drafts: number;
   /** step 236.1 — needed to tell a Chained GROUP apart from a plain automation, so the members section below
@@ -44,12 +47,19 @@ export function GlobalProjectPanel({
   const [chainSpec, setChainSpec] = useState("");
   const [busy, setBusy] = useState(false);
   const briefRef = useRef<HTMLTextAreaElement | null>(null);
+  // THE USE-CASES GATE (step 236.5, owner: "copy the logic" — every OTHER automation's "Start development"
+  // already refuses until the Quiz's use cases are described + confirmed; a chained group is still a real
+  // automation underneath, so it gets the exact same requirement). `null` = not checked yet (no banner while
+  // loading, avoids a flash); `false` = show the "Complete the Quiz" prompt.
+  const [reviewed, setReviewed] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!isGroup) return;
     void (async () => {
       const r = await fetch(`/api/projects/chain-spec?automation=${encodeURIComponent(project.automation)}`, { cache: "no-store" });
       if (r.ok) setChainSpec(((await r.json()) as { spec?: string }).spec ?? "");
+      const u = await fetch(`/api/projects/use-cases?automation=${encodeURIComponent(project.automation)}`, { cache: "no-store" });
+      if (u.ok) setReviewed(((await u.json()) as { review?: { reviewed?: boolean } }).review?.reviewed ?? false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project.automation, isGroup]);
@@ -67,7 +77,12 @@ export function GlobalProjectPanel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ automation: project.automation }),
       });
-      const d = (await r.json()) as { number?: number; message?: string; error?: string };
+      const d = (await r.json()) as { number?: number; message?: string; error?: string; reason?: string };
+      if (r.status === 409 && (d.reason === "no-cases" || d.reason === "not-reviewed")) {
+        setReviewed(false); // re-surface the banner even if the initial fetch was stale
+        toast.error(d.reason === "no-cases" ? L.errGroupNoCases : L.errGroupNotReviewed);
+        return;
+      }
       if (!r.ok) { toast.error(d.error ?? L.chainStepFailed); return; }
       toast.success(fill(L.stepCreatedToast, { step: d.number ?? "" }), {
         description: L.stepCopyDesc,
@@ -118,21 +133,34 @@ export function GlobalProjectPanel({
       </div>
 
       {isGroup ? (
-        // GROUP — no Builder (a container has no workflow of its own), no Open/Quiz: a free-text chain
-        // brief + mic + Start development, the same materialize-a-step shape GlobalEdgePanel already has.
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">{L.chainBriefLabel}</label>
-          <Textarea
-            ref={briefRef}
-            value={chainSpec}
-            onChange={(e) => setChainSpec(e.target.value)}
-            rows={6}
-            placeholder={L.chainBriefPlaceholder}
-          />
-          <VoiceInput targetRef={briefRef} value={chainSpec} onChange={setChainSpec} className="mt-1" />
-          <Button size="sm" variant="secondary" onClick={startChainDevelopment} disabled={busy} className="w-full">
-            {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Rocket className="size-3.5" />} {L.btnStartDevelopment}
-          </Button>
+        // GROUP — no Builder (a container has no workflow of its own): a free-text chain brief + mic +
+        // Start development, the same materialize-a-step shape GlobalEdgePanel already has. Its OWN Quiz
+        // button reappears here (step 236.5) — not to design nodes (a group has none), but because a group
+        // is still a real automation underneath and needs the SAME use-cases gate every other automation's
+        // "Start development" already has (assertUseCasesReviewed) — this banner is that gate's front door.
+        <div className="space-y-3">
+          {reviewed === false && (
+            <div className="space-y-2 rounded-md border border-amber-500/50 bg-amber-500/5 p-2.5">
+              <p className="text-xs text-muted-foreground">{L.groupQuizNeededBanner}</p>
+              <Button size="sm" variant="outline" onClick={onQuiz} className="w-full">
+                <ListChecks className="size-3.5" /> {L.groupQuizBtn}
+              </Button>
+            </div>
+          )}
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">{L.chainBriefLabel}</label>
+            <Textarea
+              ref={briefRef}
+              value={chainSpec}
+              onChange={(e) => setChainSpec(e.target.value)}
+              rows={6}
+              placeholder={L.chainBriefPlaceholder}
+            />
+            <VoiceInput targetRef={briefRef} value={chainSpec} onChange={setChainSpec} className="mt-1" />
+            <Button size="sm" variant="secondary" onClick={startChainDevelopment} disabled={busy} className="w-full">
+              {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Rocket className="size-3.5" />} {L.btnStartDevelopment}
+            </Button>
+          </div>
         </div>
       ) : (
         <>

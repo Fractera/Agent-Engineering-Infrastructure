@@ -8,7 +8,6 @@ import { getProjectCard } from "./project-card";
 import { GlobalCanvas } from "./components/global-canvas.client";
 import { CreateAutomationRootCard } from "./components/create-automation-card.client";
 import { projectsIndexStrings } from "./projects-index-i18n";
-import { fill } from "./quiz-i18n";
 
 // Root index of the Projects layer (/projects, step 211 Ф0): the landing that
 // lists the four permanent categories with their live project counts and names.
@@ -54,16 +53,31 @@ export async function ProjectsIndex() {
               <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
             </div>
             <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{categoryDescription(c, lang)}</p>
-            <div className="mt-3 flex flex-wrap items-center gap-1.5">
-              <span className="rounded border px-1.5 py-0.5 text-xs text-muted-foreground">
-                {c.cards.length === 1 ? L.projectsCountOne : fill(L.projectsCountMany, { n: c.cards.length })}
-              </span>
-              {c.cards.slice(0, 3).map((card) => (
-                <span key={card.slug} className="rounded border px-1.5 py-0.5 text-xs text-muted-foreground">
-                  {card.title}
-                </span>
-              ))}
-            </div>
+            {/* step 236.5 (owner) — max ONE line: left = project-name badges (first shown in full, the LAST
+                shown one fills remaining space and truncates with an ellipsis if too long), right = a
+                fixed "+N" badge for however many didn't fit. Replaces the old flex-wrap row (could grow to
+                several lines) and the old "{n} projects" count badge (now folded into the overflow count). */}
+            {c.cards.length > 0 && (
+              <div className="mt-3 flex items-center gap-1.5">
+                <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                  {c.cards.slice(0, 2).map((card, i, shown) => (
+                    <span
+                      key={card.slug}
+                      className={`rounded border px-1.5 py-0.5 text-xs text-muted-foreground ${
+                        i === shown.length - 1 ? "min-w-0 flex-1 truncate" : "shrink-0"
+                      }`}
+                    >
+                      {card.title}
+                    </span>
+                  ))}
+                </div>
+                {c.cards.length > 2 && (
+                  <span className="shrink-0 rounded border px-1.5 py-0.5 text-xs text-muted-foreground">
+                    +{c.cards.length - 2}
+                  </span>
+                )}
+              </div>
+            )}
           </Link>
         ))}
         {/* The root's own "create project" card (step 225 G6) — the SAME creation dialog as a category's "+",
