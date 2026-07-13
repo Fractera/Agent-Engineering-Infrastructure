@@ -161,7 +161,7 @@ DONE = every node's functions.ts is real and typed, each node materialized (POST
 }
 
 /** Materialize the ONE bundled "start development" step (step 233). Deterministic; tasks[] = nodes. */
-export async function materializeAutomationStep(i: AutomationStepInput): Promise<{ file: string; message: string }> {
+export async function materializeAutomationStep(i: AutomationStepInput): Promise<{ file: string; message: string; name: string }> {
   const message = buildAutomationStepMessage(i);
   const name = `Develop ${i.automation} — ${i.nodes.length} node${i.nodes.length === 1 ? "" : "s"}`;
   const slug = `develop-${i.automation.replace(/[^a-z0-9]+/gi, "-").replace(/(^-|-$)/g, "")}`;
@@ -180,7 +180,7 @@ export async function materializeAutomationStep(i: AutomationStepInput): Promise
   await mkdir(dir, { recursive: true });
   const file = join(dir, `${String(i.number).padStart(2, "0")}-${slug}.md`);
   await writeFile(file, body, "utf8");
-  return { file, message };
+  return { file, message, name };
 }
 
 // ─── EDGES (step 225): a link between two automations is built by the same pipeline as a node ─────────
