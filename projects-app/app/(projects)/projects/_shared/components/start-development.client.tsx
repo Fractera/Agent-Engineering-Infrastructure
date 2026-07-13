@@ -1,99 +1,116 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { CheckCheck, Copy, Loader2, ListChecks, Rocket } from "lucide-react";
+import { CheckCheck, Copy, ExternalLink, Loader2, ListChecks, Rocket } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useUiLang } from "../use-ui-lang";
+import { adminBase } from "@/lib/runtime-urls";
 
-// "Start development" (step 232, owner's request) — the top-level entry point on the automation page. When
-// the diagram still has at least one UNBUILT (draft) node, a button appears; clicking it opens a modal (six
-// languages) that turns the draft nodes into development steps, each with the exact request to paste into an
-// AI coding agent (Claude Code, Codex, …).
-//
-// THE REVIEW GATE LIVES HERE (owner's fix): development cannot start until the owner has read the use cases
-// and confirmed the AI understood him. Instead of bouncing him to a hidden panel, the SAME modal shows the
-// cases with a Confirm button when they are not yet confirmed — read, confirm, and the modal becomes the
-// list of steps. One flow, one place.
-type Step = { number: number; name: string; nodeSlug: string; message: string };
+// "Start development" (step 233) — the owner's single top-level handoff on the automation page. When the
+// diagram still has an UNBUILT (draft) node, a button appears; it opens a modal (six languages) that:
+//   1. enforces the REVIEW GATE inline — read the use cases + confirm (the confirm button lives right here,
+//      not in a hidden accordion),
+//   2. then creates ONE Development Step (sub-steps = nodes) via the existing API,
+//   3. and shows the owner a SHORT instruction — "Run development step #NN" — NOT the raw brief. The coding
+//      agent picks the step up from the Development Steps page.
 type Case = { cuid: string; title: string; summary: string; status: string };
-type Mode = "loading" | "review" | "steps" | "no-cases";
+type Mode = "loading" | "review" | "done" | "no-cases" | "no-nodes";
 
 type SD = {
   button: string; title: string;
-  intro: string; agents: string; building: string; step: string; copy: string; copied: string;
+  building: string;
   reviewHeading: string; reviewIntro: string; confirm: string; confirming: string;
-  noCasesTitle: string; noCasesBody: string;
-  failed: string; none: string; noDescription: string;
+  doneHeading: string; runInstruction: string; runHint: string; copy: string; copied: string; openSteps: string;
+  noCasesTitle: string; noCasesBody: string; noNodesTitle: string; noNodesBody: string;
+  failed: string; noDescription: string;
 };
 const I18N: Record<string, SD> = {
   en: {
     button: "Start development", title: "Start development",
-    intro: "Copy each request below and paste it into your AI coding agent, asking it to start development of that step.",
-    agents: "Any coding agent works — Claude Code, Codex, Gemini, Qwen, Kimi.",
-    building: "Preparing the development steps…", step: "Step", copy: "Copy the request", copied: "Copied — paste it into the coding agent's chat.",
+    building: "Creating the development step…",
     reviewHeading: "Read your use cases and confirm before development starts",
     reviewIntro: "This is where you and the AI agree. Read what it understood; if anything is wrong, close this and fix the case with its pencil. Development starts only after you confirm.",
     confirm: "I read them — the AI understood me", confirming: "Confirming…",
+    doneHeading: "Development step created",
+    runInstruction: "Run development step #{n}",
+    runHint: "Paste this line to your AI coding agent (Claude Code / Codex / …). It picks the step up from the Development Steps page — with everything it needs inside.",
+    copy: "Copy", copied: "Copied — paste it to your coding agent.", openSteps: "Open Development Steps",
     noCasesTitle: "Describe the use cases first", noCasesBody: "This automation has no use cases yet. Open the Quiz on this page and describe your scenarios — development cannot start without them.",
-    failed: "Could not prepare the development steps.", none: "There are no unbuilt nodes — nothing to develop right now.", noDescription: "No description yet.",
+    noNodesTitle: "No nodes to develop", noNodesBody: "Every node is already built — there is nothing waiting for development right now.",
+    failed: "Could not create the development step.", noDescription: "No description yet.",
   },
   ru: {
     button: "Запустить разработку", title: "Запустить разработку",
-    intro: "Скопируйте каждый запрос ниже и вставьте его вашему ИИ-агенту-кодеру с просьбой приступить к разработке этого шага.",
-    agents: "Подойдёт любой агент-кодер — Claude Code, Codex, Gemini, Qwen, Kimi.",
-    building: "Готовлю шаги разработки…", step: "Шаг", copy: "Скопировать запрос", copied: "Скопировано — вставьте в чат агента-кодера.",
+    building: "Создаю шаг разработки…",
     reviewHeading: "Прочитайте кейсы и подтвердите — до начала разработки",
-    reviewIntro: "Здесь вы и ИИ договариваетесь. Прочитайте, что он понял; если что-то не так — закройте и поправьте кейс карандашом в панели. Разработка начнётся только после подтверждения.",
+    reviewIntro: "Здесь вы и ИИ договариваетесь. Прочитайте, что он понял; если что-то не так — закройте и поправьте кейс карандашом. Разработка начнётся только после подтверждения.",
     confirm: "Я прочитал — ИИ понял меня правильно", confirming: "Подтверждаю…",
+    doneHeading: "Шаг разработки создан",
+    runInstruction: "Запусти в работу шаг №{n}",
+    runHint: "Вставьте эту строку вашему ИИ-агенту-кодеру (Claude Code / Codex / …). Он возьмёт шаг со страницы Development Steps — со всем необходимым внутри.",
+    copy: "Скопировать", copied: "Скопировано — вставьте агенту-кодеру.", openSteps: "Открыть Development Steps",
     noCasesTitle: "Сначала опишите пользовательские кейсы", noCasesBody: "У этой автоматизации ещё нет кейсов. Откройте Quiz на этой странице и опишите сценарии — без них разработку не начать.",
-    failed: "Не удалось подготовить шаги разработки.", none: "Незавершённых узлов нет — сейчас нечего разрабатывать.", noDescription: "Пока без описания.",
+    noNodesTitle: "Нет узлов для разработки", noNodesBody: "Все узлы уже построены — сейчас в разработку ничего не ждёт.",
+    failed: "Не удалось создать шаг разработки.", noDescription: "Пока без описания.",
   },
   es: {
     button: "Iniciar desarrollo", title: "Iniciar desarrollo",
-    intro: "Copia cada solicitud de abajo y pégala en tu agente de código de IA, pidiéndole que inicie el desarrollo de ese paso.",
-    agents: "Sirve cualquier agente de código — Claude Code, Codex, Gemini, Qwen, Kimi.",
-    building: "Preparando los pasos de desarrollo…", step: "Paso", copy: "Copiar la solicitud", copied: "Copiado — pégalo en el chat del agente de código.",
+    building: "Creando el paso de desarrollo…",
     reviewHeading: "Lee tus casos de uso y confirma antes de empezar el desarrollo",
-    reviewIntro: "Aquí es donde tú y la IA os ponéis de acuerdo. Lee lo que entendió; si algo está mal, cierra y corrige el caso con su lápiz en el panel. El desarrollo empieza solo después de que confirmes.",
+    reviewIntro: "Aquí es donde tú y la IA os ponéis de acuerdo. Lee lo que entendió; si algo está mal, cierra y corrige el caso con su lápiz. El desarrollo empieza solo después de que confirmes.",
     confirm: "Los leí — la IA me entendió", confirming: "Confirmando…",
+    doneHeading: "Paso de desarrollo creado",
+    runInstruction: "Pon en marcha el paso n.º {n}",
+    runHint: "Pega esta línea a tu agente de código de IA (Claude Code / Codex / …). Recoge el paso desde la página de Development Steps, con todo lo necesario dentro.",
+    copy: "Copiar", copied: "Copiado — pégalo a tu agente de código.", openSteps: "Abrir Development Steps",
     noCasesTitle: "Describe primero los casos de uso", noCasesBody: "Esta automatización aún no tiene casos de uso. Abre el Quiz en esta página y describe tus escenarios — sin ellos no se puede empezar el desarrollo.",
-    failed: "No se pudieron preparar los pasos de desarrollo.", none: "No hay nodos sin construir — nada que desarrollar ahora mismo.", noDescription: "Aún sin descripción.",
+    noNodesTitle: "No hay nodos para desarrollar", noNodesBody: "Todos los nodos ya están construidos — ahora mismo no hay nada esperando desarrollo.",
+    failed: "No se pudo crear el paso de desarrollo.", noDescription: "Aún sin descripción.",
   },
   fr: {
     button: "Démarrer le développement", title: "Démarrer le développement",
-    intro: "Copiez chaque requête ci-dessous et collez-la dans votre agent de code IA, en lui demandant de démarrer le développement de cette étape.",
-    agents: "N'importe quel agent de code convient — Claude Code, Codex, Gemini, Qwen, Kimi.",
-    building: "Préparation des étapes de développement…", step: "Étape", copy: "Copier la requête", copied: "Copié — collez-le dans le chat de l'agent de code.",
+    building: "Création de l'étape de développement…",
     reviewHeading: "Lisez vos cas d'usage et confirmez avant le début du développement",
-    reviewIntro: "C'est ici que vous et l'IA vous mettez d'accord. Lisez ce qu'elle a compris ; si quelque chose ne va pas, fermez et corrigez le cas avec son crayon dans le panneau. Le développement ne commence qu'après votre confirmation.",
+    reviewIntro: "C'est ici que vous et l'IA vous mettez d'accord. Lisez ce qu'elle a compris ; si quelque chose ne va pas, fermez et corrigez le cas avec son crayon. Le développement ne commence qu'après votre confirmation.",
     confirm: "Je les ai lus — l'IA m'a compris", confirming: "Confirmation…",
+    doneHeading: "Étape de développement créée",
+    runInstruction: "Lance l'étape n° {n}",
+    runHint: "Collez cette ligne à votre agent de code IA (Claude Code / Codex / …). Il récupère l'étape depuis la page Development Steps, avec tout le nécessaire dedans.",
+    copy: "Copier", copied: "Copié — collez-le à votre agent de code.", openSteps: "Ouvrir Development Steps",
     noCasesTitle: "Décrivez d'abord les cas d'usage", noCasesBody: "Cette automatisation n'a pas encore de cas d'usage. Ouvrez le Quiz sur cette page et décrivez vos scénarios — sans eux, le développement ne peut pas commencer.",
-    failed: "Impossible de préparer les étapes de développement.", none: "Aucun nœud non construit — rien à développer pour le moment.", noDescription: "Pas encore de description.",
+    noNodesTitle: "Aucun nœud à développer", noNodesBody: "Tous les nœuds sont déjà construits — rien n'attend le développement pour l'instant.",
+    failed: "Impossible de créer l'étape de développement.", noDescription: "Pas encore de description.",
   },
   it: {
     button: "Avvia lo sviluppo", title: "Avvia lo sviluppo",
-    intro: "Copia ogni richiesta qui sotto e incollala nel tuo agente di codice IA, chiedendogli di avviare lo sviluppo di quel passo.",
-    agents: "Va bene qualsiasi agente di codice — Claude Code, Codex, Gemini, Qwen, Kimi.",
-    building: "Preparazione dei passi di sviluppo…", step: "Passo", copy: "Copia la richiesta", copied: "Copiato — incollalo nella chat dell'agente di codice.",
+    building: "Creazione del passo di sviluppo…",
     reviewHeading: "Leggi i tuoi casi d'uso e conferma prima che inizi lo sviluppo",
-    reviewIntro: "Qui tu e l'IA vi mettete d'accordo. Leggi ciò che ha capito; se qualcosa non va, chiudi e correggi il caso con la sua matita nel pannello. Lo sviluppo inizia solo dopo la tua conferma.",
+    reviewIntro: "Qui tu e l'IA vi mettete d'accordo. Leggi ciò che ha capito; se qualcosa non va, chiudi e correggi il caso con la sua matita. Lo sviluppo inizia solo dopo la tua conferma.",
     confirm: "Li ho letti — l'IA mi ha capito", confirming: "Conferma…",
+    doneHeading: "Passo di sviluppo creato",
+    runInstruction: "Avvia il passo n. {n}",
+    runHint: "Incolla questa riga al tuo agente di codice IA (Claude Code / Codex / …). Prende il passo dalla pagina Development Steps, con tutto il necessario dentro.",
+    copy: "Copia", copied: "Copiato — incollalo al tuo agente di codice.", openSteps: "Apri Development Steps",
     noCasesTitle: "Descrivi prima i casi d'uso", noCasesBody: "Questa automazione non ha ancora casi d'uso. Apri il Quiz in questa pagina e descrivi i tuoi scenari — senza di essi non si può iniziare lo sviluppo.",
-    failed: "Impossibile preparare i passi di sviluppo.", none: "Nessun nodo da costruire — al momento non c'è nulla da sviluppare.", noDescription: "Ancora nessuna descrizione.",
+    noNodesTitle: "Nessun nodo da sviluppare", noNodesBody: "Tutti i nodi sono già costruiti — al momento non c'è nulla in attesa di sviluppo.",
+    failed: "Impossibile creare il passo di sviluppo.", noDescription: "Ancora nessuna descrizione.",
   },
   de: {
     button: "Entwicklung starten", title: "Entwicklung starten",
-    intro: "Kopiere jede Anfrage unten und füge sie in deinen KI-Coding-Agenten ein — mit der Bitte, die Entwicklung dieses Schritts zu beginnen.",
-    agents: "Jeder Coding-Agent funktioniert — Claude Code, Codex, Gemini, Qwen, Kimi.",
-    building: "Entwicklungsschritte werden vorbereitet…", step: "Schritt", copy: "Anfrage kopieren", copied: "Kopiert — füge sie in den Chat des Coding-Agenten ein.",
+    building: "Entwicklungsschritt wird erstellt…",
     reviewHeading: "Lies deine Anwendungsfälle und bestätige, bevor die Entwicklung beginnt",
-    reviewIntro: "Hier einigt ihr euch, du und die KI. Lies, was sie verstanden hat; wenn etwas nicht stimmt, schließe und korrigiere den Fall mit seinem Stift im Panel. Die Entwicklung startet erst nach deiner Bestätigung.",
+    reviewIntro: "Hier einigt ihr euch, du und die KI. Lies, was sie verstanden hat; wenn etwas nicht stimmt, schließe und korrigiere den Fall mit seinem Stift. Die Entwicklung startet erst nach deiner Bestätigung.",
     confirm: "Ich habe sie gelesen — die KI hat mich verstanden", confirming: "Bestätige…",
+    doneHeading: "Entwicklungsschritt erstellt",
+    runInstruction: "Starte Schritt Nr. {n}",
+    runHint: "Füge diese Zeile deinem KI-Coding-Agenten ein (Claude Code / Codex / …). Er holt den Schritt von der Development-Steps-Seite — mit allem Nötigen darin.",
+    copy: "Kopieren", copied: "Kopiert — füge es deinem Coding-Agenten ein.", openSteps: "Development Steps öffnen",
     noCasesTitle: "Beschreibe zuerst die Anwendungsfälle", noCasesBody: "Diese Automatisierung hat noch keine Anwendungsfälle. Öffne das Quiz auf dieser Seite und beschreibe deine Szenarien — ohne sie kann die Entwicklung nicht beginnen.",
-    failed: "Die Entwicklungsschritte konnten nicht vorbereitet werden.", none: "Keine ungebauten Knoten — im Moment gibt es nichts zu entwickeln.", noDescription: "Noch keine Beschreibung.",
+    noNodesTitle: "Keine Knoten zu entwickeln", noNodesBody: "Alle Knoten sind bereits gebaut — im Moment wartet nichts auf Entwicklung.",
+    failed: "Der Entwicklungsschritt konnte nicht erstellt werden.", noDescription: "Noch keine Beschreibung.",
   },
 };
 
@@ -103,12 +120,14 @@ export function StartDevelopment({ automation, hasDraft }: { automation: string;
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode>("loading");
   const [busy, setBusy] = useState(false);
-  const [steps, setSteps] = useState<Step[]>([]);
   const [cases, setCases] = useState<Case[]>([]);
+  const [stepNumber, setStepNumber] = useState<number | null>(null);
 
-  // Ask the server to materialize the steps. The gate answers 409: not-reviewed → show the cases to confirm
-  // right here; no-cases → tell the owner to describe them first. 200 → the steps are ready.
-  const prepare = useCallback(async () => {
+  const runLine = stepNumber !== null ? L.runInstruction.replace("{n}", String(stepNumber)) : "";
+
+  // Ask the server to create the ONE bundled step. The gate answers 409 (not-reviewed → show the cases to
+  // confirm right here; no-cases / no-nodes → say why). 200 → the step number is ready.
+  const create = useCallback(async () => {
     setMode("loading");
     setBusy(true);
     try {
@@ -117,28 +136,30 @@ export function StartDevelopment({ automation, hasDraft }: { automation: string;
         body: JSON.stringify({ automation }),
       });
       if (r.ok) {
-        const d = (await r.json()) as { steps: Step[] };
-        setSteps(d.steps ?? []);
-        setMode("steps");
+        const d = (await r.json()) as { number: number };
+        setStepNumber(d.number);
+        setMode("done");
+        router.refresh();
         return;
       }
       const d = (await r.json().catch(() => ({}))) as { reason?: string };
       if (d.reason === "not-reviewed") {
-        // Load the cases so the owner can read + confirm them inside THIS modal.
         const cr = await fetch(`/api/projects/use-cases?automation=${encodeURIComponent(automation)}`, { cache: "no-store" });
         const cd = (await cr.json().catch(() => ({}))) as { cases?: Case[] };
         setCases(cd.cases ?? []);
         setMode("review");
       } else if (d.reason === "no-cases") {
         setMode("no-cases");
+      } else if (d.reason === "no-nodes") {
+        setMode("no-nodes");
       } else {
         toast.error(L.failed);
         setOpen(false);
       }
     } finally { setBusy(false); }
-  }, [automation, L]);
+  }, [automation, L, router]);
 
-  // Confirm the cases, then immediately continue to the steps — the whole gate is one uninterrupted flow.
+  // Confirm the cases, then immediately continue to create the step — one uninterrupted flow.
   const confirmAndContinue = useCallback(async () => {
     setBusy(true);
     try {
@@ -147,14 +168,17 @@ export function StartDevelopment({ automation, hasDraft }: { automation: string;
         body: JSON.stringify({ automation }),
       });
       if (!r.ok) { toast.error(L.failed); return; }
-      router.refresh();          // the panel's status pill updates too
-      await prepare();           // gate now passes → the steps appear
+      await create();
     } finally { setBusy(false); }
-  }, [automation, L, prepare, router]);
+  }, [automation, L, create]);
 
   const onOpen = (v: boolean) => {
     setOpen(v);
-    if (v) void prepare();
+    if (v) { setStepNumber(null); void create(); }
+  };
+
+  const openSteps = () => {
+    window.open(`${adminBase()}/service/development-steps`, "_blank", "noopener");
   };
 
   if (!hasDraft) return null;
@@ -171,7 +195,9 @@ export function StartDevelopment({ automation, hasDraft }: { automation: string;
             <DialogTitle className="flex items-center gap-2">
               {mode === "review"
                 ? <><ListChecks className="size-4" /> {L.reviewHeading}</>
-                : <><Rocket className="size-4" /> {L.title}</>}
+                : mode === "done"
+                  ? <><CheckCheck className="size-4" /> {L.doneHeading}</>
+                  : <><Rocket className="size-4" /> {L.title}</>}
             </DialogTitle>
           </DialogHeader>
 
@@ -205,6 +231,26 @@ export function StartDevelopment({ automation, hasDraft }: { automation: string;
             </>
           )}
 
+          {/* DONE — the whole point: the owner sees only "Run development step #NN". */}
+          {mode === "done" && stepNumber !== null && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 rounded-lg border bg-muted p-3">
+                <code className="flex-1 text-sm font-medium">{runLine}</code>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { void navigator.clipboard.writeText(runLine); toast.success(L.copied); }}
+                >
+                  <Copy className="size-3.5" /> {L.copy}
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">{L.runHint}</p>
+              <Button variant="ghost" size="sm" onClick={openSteps}>
+                <ExternalLink className="size-3.5" /> {L.openSteps}
+              </Button>
+            </div>
+          )}
+
           {mode === "no-cases" && (
             <div className="space-y-1 py-4 text-sm">
               <p className="font-medium">{L.noCasesTitle}</p>
@@ -212,35 +258,11 @@ export function StartDevelopment({ automation, hasDraft }: { automation: string;
             </div>
           )}
 
-          {mode === "steps" && (
-            <>
-              <div className="shrink-0 space-y-1 text-sm text-muted-foreground">
-                <p>{L.intro}</p>
-                <p className="text-xs">{L.agents}</p>
-              </div>
-              <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
-                {!steps.length && <p className="text-sm text-muted-foreground">{L.none}</p>}
-                {steps.map((s) => (
-                  <div key={s.number} className="space-y-2 rounded-lg border p-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-medium">
-                        <span className="tabular-nums text-muted-foreground">{L.step} #{s.number}</span> — {s.name}
-                      </p>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => { void navigator.clipboard.writeText(s.message); toast.success(L.copied); }}
-                      >
-                        <Copy className="size-3.5" /> {L.copy}
-                      </Button>
-                    </div>
-                    <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded bg-muted p-2 text-xs text-muted-foreground">
-                      {s.message}
-                    </pre>
-                  </div>
-                ))}
-              </div>
-            </>
+          {mode === "no-nodes" && (
+            <div className="space-y-1 py-4 text-sm">
+              <p className="font-medium">{L.noNodesTitle}</p>
+              <p className="text-muted-foreground">{L.noNodesBody}</p>
+            </div>
           )}
         </DialogContent>
       </Dialog>

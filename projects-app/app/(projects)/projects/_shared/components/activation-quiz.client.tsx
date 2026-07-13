@@ -312,10 +312,11 @@ export function ActivationQuiz({
         return;
       }
       setNodeCount(d.nodeCount ?? 0);
-      toast.success(fill(L.nodeDesigned, { name: d.node?.name ?? "", step: d.step?.number ?? 0 }), {
-        description: L.handoffDesc,
-        duration: 20000,
-        action: d.step ? { label: L.copy, onClick: () => void navigator.clipboard.writeText(d.step!.message) } : undefined,
+      // Step 233: a finished node is a DRAFT on the canvas — no per-node step. The single handoff is the
+      // "Start development" button, which bundles all draft nodes into ONE step.
+      toast.success(fill(L.nodeDesignedOnly, { name: d.node?.name ?? "" }), {
+        description: L.nodeDesignedDesc,
+        duration: 15000,
       });
       setTurns(d.question ? [{ role: "assistant", content: d.question }] : []);
       if (d.done) await finish();

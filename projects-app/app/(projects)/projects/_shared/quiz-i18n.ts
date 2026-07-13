@@ -28,6 +28,7 @@ export type QuizStrings = {
   casesUpdated: string; casesUpdatedOne: string; nothingChanged: string;     // {n}
   keptAsDesc: string; editReplaced: string;
   casesMissing: string; casesMissingDesc: string;
+  nodeDesignedOnly: string; nodeDesignedDesc: string;   // {name} — step 233: node is a draft, no per-node step
 };
 
 /** Fill {name}/{n}/{step} placeholders. */
@@ -68,6 +69,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     editReplaced: "Your edit replaced the model's text — what gets built comes from it.",
     casesMissing: "The user cases are still missing",
     casesMissingDesc: "Without a detailed description the automation cannot be created — this opens again on your next visit.",
+    nodeDesignedOnly: "Node \"{name}\" designed", nodeDesignedDesc: "It is a draft on the diagram. When you are done designing, press \"Start development\" to hand every node to a coding agent as one step.",
   },
   ru: {
     banner: "Планирование автоматизации идёт намного эффективнее на самой мощной доступной вам модели. Выберите её в гамбургер-меню вверху страницы (Настройки → модель).",
@@ -101,6 +103,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     editReplaced: "Ваша правка заменила текст модели — из него и строится результат.",
     casesMissing: "Пользовательские кейсы всё ещё не заданы",
     casesMissingDesc: "Без подробного описания автоматизацию создать нельзя — окно откроется снова при следующем визите.",
+    nodeDesignedOnly: "Узел «{name}» спроектирован", nodeDesignedDesc: "Это черновик на диаграмме. Когда закончите проектировать, нажмите «Запустить разработку» — все узлы уйдут агенту-кодеру одним шагом.",
   },
   es: {
     banner: "Planificar una automatización funciona mucho mejor con el modelo más potente disponible. Elígelo en el menú de hamburguesa de la parte superior de la página (Ajustes → modelo).",
@@ -134,6 +137,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     editReplaced: "Tu edición reemplazó el texto del modelo — lo que se construye sale de ahí.",
     casesMissing: "Todavía faltan los casos de uso",
     casesMissingDesc: "Sin una descripción detallada no se puede crear la automatización — esto se abrirá de nuevo en tu próxima visita.",
+    nodeDesignedOnly: "Nodo «{name}» diseñado", nodeDesignedDesc: "Es un borrador en el diagrama. Cuando termines de diseñar, pulsa «Iniciar desarrollo» — todos los nodos se entregan al agente de código como un solo paso.",
   },
   fr: {
     banner: "La planification d'une automatisation est bien meilleure avec le modèle le plus puissant à votre disposition. Choisissez-le dans le menu hamburger en haut de la page (Paramètres → modèle).",
@@ -167,6 +171,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     editReplaced: "Votre modification a remplacé le texte du modèle — c'est de là que vient ce qui est construit.",
     casesMissing: "Les cas d'usage manquent encore",
     casesMissingDesc: "Sans description détaillée, l'automatisation ne peut pas être créée — ceci se rouvrira à votre prochaine visite.",
+    nodeDesignedOnly: "Nœud « {name} » conçu", nodeDesignedDesc: "C'est un brouillon sur le diagramme. Quand vous avez fini de concevoir, appuyez sur « Démarrer le développement » — tous les nœuds partent à l'agent de code en une seule étape.",
   },
   it: {
     banner: "Pianificare un'automazione funziona molto meglio con il modello più potente a tua disposizione. Sceglilo nel menu hamburger in cima alla pagina (Impostazioni → modello).",
@@ -200,6 +205,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     editReplaced: "La tua modifica ha sostituito il testo del modello — è da lì che nasce ciò che viene costruito.",
     casesMissing: "I casi d'uso mancano ancora",
     casesMissingDesc: "Senza una descrizione dettagliata l'automazione non può essere creata — si riaprirà alla tua prossima visita.",
+    nodeDesignedOnly: "Nodo «{name}» progettato", nodeDesignedDesc: "È una bozza sul diagramma. Quando hai finito di progettare, premi «Avvia lo sviluppo» — tutti i nodi vanno all'agente di codice in un unico passo.",
   },
   de: {
     banner: "Das Planen einer Automatisierung gelingt weit besser mit dem stärksten dir verfügbaren Modell. Wähle es im Hamburger-Menü oben auf der Seite (Einstellungen → Modell).",
@@ -233,6 +239,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     editReplaced: "Deine Änderung hat den Text des Modells ersetzt — daraus entsteht, was gebaut wird.",
     casesMissing: "Die Anwendungsfälle fehlen noch",
     casesMissingDesc: "Ohne ausführliche Beschreibung kann die Automatisierung nicht erstellt werden — es öffnet sich beim nächsten Besuch erneut.",
+    nodeDesignedOnly: "Knoten „{name}“ entworfen", nodeDesignedDesc: "Er ist ein Entwurf im Diagramm. Wenn du mit dem Entwerfen fertig bist, drücke „Entwicklung starten“ — alle Knoten gehen als ein Schritt an den Coding-Agenten.",
   },
 };
 

@@ -7,12 +7,10 @@ import { draftNodeStubFiles } from "@/app/(projects)/projects/_lib/draft-node-st
 import {
   authorize, resolveProject, syncIndexFromFiles, nextOrd, uniqueSlug, regenerateDiagram, liveSlugsInOrder,
 } from "@/lib/nodes";
-import { materializeNodeStep, nextStepNumber } from "@/lib/dev-steps";
 import {
   addTurn, advanceNode, automationInstruction, getPhase, getQuiz, nextQuestion, synthesizeNode, t, turnsOf,
   QUIZ_MAX_NODES,
 } from "@/lib/quiz";
-import { assertUseCasesReviewed } from "@/lib/use-cases";
 
 // "Finish this node → go to the next" (step 227) — the heart of the Quiz. It closes the current brainstorm
 // and, in ONE call:
@@ -35,20 +33,15 @@ export async function POST(req: NextRequest) {
   if (!quiz) return NextResponse.json({ error: "quiz not started" }, { status: 400 });
   if (quiz.status === "done") return NextResponse.json({ error: "quiz already finished" }, { status: 400 });
 
-  // THE USER-CASE GATE (step 231). A node — and the development step it hands to the coding agent — cannot
-  // exist before the scenarios do, and before the owner has read them back and confirmed the AI understood
-  // him. Both refusals are explicit (409 + the reason), never a silent skip.
+  // THE PHASE GATE (step 231): nodes cannot be designed before the scenarios exist — the use-case phase must
+  // finish first. The REVIEW gate (read + confirm the cases) moved to "Start development" (step 233): a node
+  // is now just a draft, so designing one no longer needs the confirmation — that belongs at the handoff.
   const target = { kind: "project" as const, key: proj.automation, automation: proj.automation, projectDir: proj.projectDir };
   if ((await getPhase(quiz, target)) === "usecases") {
     return NextResponse.json(
       { error: t("describeFirst", quiz.language), reason: "usecases-phase" },
       { status: 409 },
     );
-  }
-  const gate = await assertUseCasesReviewed(proj.automation);
-  if (!gate.ok) {
-    const error = t(gate.reason === "no-cases" ? "noCases" : "notReviewed", quiz.language);
-    return NextResponse.json({ error, reason: gate.reason }, { status: 409 });
   }
 
   const instruction = await automationInstruction(proj.projectDir);
@@ -77,14 +70,11 @@ export async function POST(req: NextRequest) {
   ).run(cuid, proj.automation, slug, node.name, ord);
   await regenerateDiagram(proj.projectDir, await liveSlugsInOrder(proj.automation));
 
-  // 3. one development sub-step for this node
-  const number = await nextStepNumber();
-  const { message } = await materializeNodeStep({
-    number, automation: proj.automation, nodeCuid: cuid, nodeSlug: slug, nodeName: node.name,
-    spec: node.spec, optimization: false, targetVersion: 1,
-  });
+  // Finishing a node creates the DRAFT node ONLY (step 233 model change). It no longer materializes a
+  // per-node development step: the single handoff is now "Start development", which bundles every draft node
+  // into ONE step (sub-steps = nodes) with the ordered read-first brief. Nodes accumulate as drafts here.
 
-  // 4. advance; ask the first question of the next node unless the cap is reached
+  // Advance; ask the first question of the next node unless the cap is reached.
   const { done, nodeCount } = await advanceNode(quiz);
   let question: string | null = null;
   if (!done) {
@@ -100,7 +90,6 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     ok: true,
     node: { cuid, slug, name: node.name, spec: node.spec },
-    step: { number, message },
     nodeCount,
     maxNodes: QUIZ_MAX_NODES,
     done,
