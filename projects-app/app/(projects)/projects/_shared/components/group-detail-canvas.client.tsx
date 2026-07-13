@@ -118,6 +118,14 @@ export function GroupDetailCanvas({
   const [activeEdge, setActiveEdge] = useState<GEdge | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
 
+  // BUG FIX (owner report: eye icon → endless "Loading the workspace graph"): `members` is a brand-new array
+  // literal (`.filter().map()`) computed fresh on EVERY render of the parent GlobalCanvasInner — including
+  // its own 4s background poll, which always produces new node objects even when nothing changed. Depending
+  // the fetch effect on `members` itself therefore re-ran the fetch (and re-showed the loading state) every
+  // few seconds, forever, faster than the fetch could ever visibly settle. The actual MEMBERSHIP only
+  // changes rarely, so a content key (not the array reference) is what the effect should watch.
+  const membersKey = members.map((m) => m.automation).join("|");
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -132,7 +140,9 @@ export function GroupDetailCanvas({
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [members]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally keyed on membersKey (content), not
+    // the `members` array reference, which changes on every unrelated parent poll (see comment above).
+  }, [membersKey]);
 
   const { nodes, memberEdges } = useMemo(() => {
     let originX = 0;
