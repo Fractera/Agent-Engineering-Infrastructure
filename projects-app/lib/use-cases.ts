@@ -158,7 +158,7 @@ export async function confirmReview(automation: string): Promise<ReviewState> {
 /** THE GATE (step 231) — every path that materializes a development step calls this first. No cases, or a
  *  case set the owner has not confirmed since it last changed → the step is refused.
  *
- *  It returns only the REASON, never the sentence: the owner-facing text lives in one place (the six-language
+ *  It returns only the REASON, never the sentence: the owner-facing text lives in one place (the ten-language
  *  table in lib/quiz.ts) and the routes attach it in his language. Keeping the text out of here also keeps
  *  the import one-way (quiz → use-cases), with no cycle. */
 export async function assertUseCasesReviewed(

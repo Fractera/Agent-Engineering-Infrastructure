@@ -1,7 +1,7 @@
-// SIX-LANGUAGE UI for the WHOLE Quiz flow (CLAUDE.md 4г; owner: "every text, every button, everywhere").
-// The six languages we ship (en, es, fr, it, ru, de); anything else falls back to English. This is the ONE
-// place the Quiz's owner-facing strings live — the modal chrome AND every toast the session raises. Strings
-// with {name}/{n}/{step} are templates; fill them with `fill()`.
+// TEN-LANGUAGE UI for the WHOLE Quiz flow (CLAUDE.md 4г; owner: "every text, every button, everywhere").
+// The ten languages we ship (en, es, fr, it, ru, de, pt, pl, tr, nl); anything else falls back to English.
+// This is the ONE place the Quiz's owner-facing strings live — the modal chrome AND every toast the session
+// raises. Strings with {name}/{n}/{step} are templates; fill them with `fill()`.
 
 export type QuizStrings = {
   // modal chrome

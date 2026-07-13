@@ -6,8 +6,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useUiLang } from "../use-ui-lang";
 
-// SIX-LANGUAGE UI (CLAUDE.md 4г) — the button, its tooltip and every toast this primitive shows are
-// translated for the six languages we ship; anything else falls back to English.
+// TEN-LANGUAGE UI (CLAUDE.md 4г) — the button, its tooltip and every toast this primitive shows are
+// translated for the ten languages we ship (en, es, fr, it, ru, de, pt, pl, tr, nl); anything else falls
+// back to English.
 type ViStrings = {
   hold: string; recording: string; transcribing: string;
   tipOk: string; tipInsecure: string;
@@ -95,6 +96,58 @@ const VI_I18N: Record<string, ViStrings> = {
     frameTitle: "Die Stimme braucht einen eigenen Tab",
     frameDesc: "Du bist in der Admin-Vorschau, in der der Browser das Mikrofon blockiert. Öffne diese Seite in einem eigenen Tab, um aufzunehmen.",
     openTab: "In neuem Tab öffnen", cancel: "Abbrechen",
+  },
+  pt: {
+    hold: "Mantenha pressionado para falar", recording: "A gravar…", transcribing: "A transcrever…",
+    tipOk: "Mantenha pressionado para falar — solte para transcrever. O texto surge onde está o cursor.",
+    tipInsecure: "A entrada de voz precisa de HTTPS (ou localhost). Ligue o seu domínio para a ativar — ou dite com o teclado do sistema.",
+    micUnavailable: "O microfone não está disponível",
+    micDenied: "O acesso ao microfone está bloqueado", micDeniedDesc: "Permita o microfone para este site no navegador e mantenha o botão pressionado novamente.",
+    micNoDevice: "Não foi encontrado nenhum microfone neste dispositivo.",
+    failed: "Não foi possível transcrever a gravação.", nothing: "Nada foi reconhecido — tente novamente, mais perto do microfone.",
+    noKey: "A entrada de voz precisa da chave OpenAI — adicione-a nas definições do espaço de trabalho.",
+    frameTitle: "A voz precisa do seu próprio separador",
+    frameDesc: "Está dentro da pré-visualização do administrador, onde o navegador bloqueia o microfone. Abra esta página no seu próprio separador para gravar.",
+    openTab: "Abrir num novo separador", cancel: "Cancelar",
+  },
+  pl: {
+    hold: "Przytrzymaj, aby mówić", recording: "Nagrywanie…", transcribing: "Transkrypcja…",
+    tipOk: "Przytrzymaj, aby mówić — puść, aby przepisać. Tekst trafia tam, gdzie jest kursor.",
+    tipInsecure: "Wprowadzanie głosowe wymaga HTTPS (lub localhost). Podłącz swoją domenę, aby je włączyć — lub dyktuj klawiaturą systemową.",
+    micUnavailable: "Mikrofon jest niedostępny",
+    micDenied: "Dostęp do mikrofonu jest zablokowany", micDeniedDesc: "Zezwól na mikrofon dla tej witryny w przeglądarce i ponownie przytrzymaj przycisk.",
+    micNoDevice: "Na tym urządzeniu nie znaleziono mikrofonu.",
+    failed: "Nie udało się przepisać nagrania.", nothing: "Nic nie rozpoznano — spróbuj ponownie, bliżej mikrofonu.",
+    noKey: "Wprowadzanie głosowe wymaga klucza OpenAI — dodaj go w ustawieniach przestrzeni roboczej.",
+    frameTitle: "Głos potrzebuje własnej karty",
+    frameDesc: "Jesteś w podglądzie administratora, gdzie przeglądarka blokuje mikrofon. Otwórz tę stronę we własnej karcie, aby nagrywać.",
+    openTab: "Otwórz w nowej karcie", cancel: "Anuluj",
+  },
+  tr: {
+    hold: "Konuşmak için basılı tutun", recording: "Kaydediliyor…", transcribing: "Metne dönüştürülüyor…",
+    tipOk: "Konuşmak için basılı tutun — bırakınca metne dönüştürülür. Metin imlecin olduğu yere gelir.",
+    tipInsecure: "Sesli giriş HTTPS (veya localhost) gerektirir. Etkinleştirmek için alan adınızı bağlayın — ya da sistem klavyenizle dikte edin.",
+    micUnavailable: "Mikrofon kullanılamıyor",
+    micDenied: "Mikrofon erişimi engellendi", micDeniedDesc: "Tarayıcıda bu site için mikrofona izin verin, ardından düğmeyi tekrar basılı tutun.",
+    micNoDevice: "Bu cihazda mikrofon bulunamadı.",
+    failed: "Kayıt metne dönüştürülemedi.", nothing: "Hiçbir şey tanınmadı — mikrofona daha yakın olarak tekrar deneyin.",
+    noKey: "Sesli giriş OpenAI anahtarı gerektirir — çalışma alanı ayarlarından ekleyin.",
+    frameTitle: "Ses kendi sekmesine ihtiyaç duyar",
+    frameDesc: "Tarayıcının mikrofonu engellediği yönetici önizlemesinin içindesiniz. Kaydetmek için bu sayfayı kendi sekmesinde açın.",
+    openTab: "Yeni sekmede aç", cancel: "İptal",
+  },
+  nl: {
+    hold: "Ingedrukt houden om te spreken", recording: "Opname…", transcribing: "Transcriberen…",
+    tipOk: "Houd ingedrukt om te spreken — laat los om te transcriberen. De tekst komt waar de cursor staat.",
+    tipInsecure: "Spraakinvoer heeft HTTPS (of localhost) nodig. Koppel je domein om het in te schakelen — of dicteer met je systeemtoetsenbord.",
+    micUnavailable: "De microfoon is niet beschikbaar",
+    micDenied: "Microfoontoegang is geblokkeerd", micDeniedDesc: "Sta de microfoon voor deze site toe in de browser en houd de knop opnieuw ingedrukt.",
+    micNoDevice: "Er is geen microfoon gevonden op dit apparaat.",
+    failed: "Kon de opname niet transcriberen.", nothing: "Er is niets herkend — probeer het opnieuw, dichter bij de microfoon.",
+    noKey: "Spraakinvoer heeft de OpenAI-sleutel nodig — voeg deze toe in de werkruimte-instellingen.",
+    frameTitle: "Spraak heeft een eigen tabblad nodig",
+    frameDesc: "Je bevindt je in de adminvoorvertoning, waar de browser de microfoon blokkeert. Open deze pagina in een eigen tabblad om op te nemen.",
+    openTab: "Openen in nieuw tabblad", cancel: "Annuleren",
   },
 };
 

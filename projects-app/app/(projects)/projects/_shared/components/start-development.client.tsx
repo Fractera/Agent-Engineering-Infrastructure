@@ -10,7 +10,8 @@ import { useUiLang } from "../use-ui-lang";
 import { adminBase } from "@/lib/runtime-urls";
 
 // "Start development" (step 233) — the owner's single top-level handoff on the automation page. When the
-// diagram still has an UNBUILT (draft) node, a button appears; it opens a modal (six languages) that:
+// diagram still has an UNBUILT (draft) node, a button appears; it opens a modal (ten languages, step 237.2)
+// that:
 //   1. enforces the REVIEW GATE inline — read the use cases + confirm (the confirm button lives right here,
 //      not in a hidden accordion),
 //   2. then creates ONE Development Step (sub-steps = nodes) via the existing API,
@@ -111,6 +112,62 @@ const I18N: Record<string, SD> = {
     noCasesTitle: "Beschreibe zuerst die Anwendungsfälle", noCasesBody: "Diese Automatisierung hat noch keine Anwendungsfälle. Öffne das Quiz auf dieser Seite und beschreibe deine Szenarien — ohne sie kann die Entwicklung nicht beginnen.",
     noNodesTitle: "Keine Knoten zu entwickeln", noNodesBody: "Alle Knoten sind bereits gebaut — im Moment wartet nichts auf Entwicklung.",
     failed: "Der Entwicklungsschritt konnte nicht erstellt werden.", noDescription: "Noch keine Beschreibung.",
+  },
+  pt: {
+    button: "Iniciar desenvolvimento", title: "Iniciar desenvolvimento",
+    building: "A criar o passo de desenvolvimento…",
+    reviewHeading: "Leia os seus casos de uso e confirme antes de o desenvolvimento começar",
+    reviewIntro: "É aqui que você e a IA chegam a acordo. Leia o que ela percebeu; se algo estiver errado, feche e corrija o caso com o lápis. O desenvolvimento só começa depois de confirmar.",
+    confirm: "Li-os — a IA percebeu-me", confirming: "A confirmar…",
+    doneHeading: "Passo de desenvolvimento criado",
+    runInstruction: "Executar o passo n.º {n}",
+    runHint: "Cole esta linha no seu agente de código de IA (Claude Code / Codex / …). Ele recolhe o passo a partir da página Development Steps — com tudo o que precisa lá dentro.",
+    copy: "Copiar", copied: "Copiado — cole-o no seu agente de código.", openSteps: "Abrir Development Steps",
+    noCasesTitle: "Descreva primeiro os casos de uso", noCasesBody: "Esta automação ainda não tem casos de uso. Abra o Quiz nesta página e descreva os seus cenários — sem eles o desenvolvimento não pode começar.",
+    noNodesTitle: "Não há nós para desenvolver", noNodesBody: "Todos os nós já estão construídos — neste momento não há nada à espera de desenvolvimento.",
+    failed: "Não foi possível criar o passo de desenvolvimento.", noDescription: "Ainda sem descrição.",
+  },
+  pl: {
+    button: "Uruchom rozwój", title: "Uruchom rozwój",
+    building: "Tworzę krok rozwoju…",
+    reviewHeading: "Przeczytaj swoje przypadki użycia i potwierdź przed rozpoczęciem rozwoju",
+    reviewIntro: "Tutaj ty i AI dochodzicie do porozumienia. Przeczytaj, co zrozumiała; jeśli coś jest nie tak, zamknij i popraw przypadek ołówkiem. Rozwój zaczyna się dopiero po twoim potwierdzeniu.",
+    confirm: "Przeczytałem je — AI mnie zrozumiała", confirming: "Potwierdzam…",
+    doneHeading: "Krok rozwoju utworzony",
+    runInstruction: "Uruchom krok nr {n}",
+    runHint: "Wklej tę linię swojemu agentowi kodującemu AI (Claude Code / Codex / …). Pobierze krok ze strony Development Steps — ze wszystkim, czego potrzebuje w środku.",
+    copy: "Kopiuj", copied: "Skopiowano — wklej agentowi kodującemu.", openSteps: "Otwórz Development Steps",
+    noCasesTitle: "Najpierw opisz przypadki użycia", noCasesBody: "Ta automatyzacja nie ma jeszcze przypadków użycia. Otwórz Quiz na tej stronie i opisz swoje scenariusze — bez nich rozwój nie może się rozpocząć.",
+    noNodesTitle: "Brak węzłów do rozwoju", noNodesBody: "Wszystkie węzły są już zbudowane — obecnie nic nie czeka na rozwój.",
+    failed: "Nie udało się utworzyć kroku rozwoju.", noDescription: "Jeszcze bez opisu.",
+  },
+  tr: {
+    button: "Geliştirmeyi başlat", title: "Geliştirmeyi başlat",
+    building: "Geliştirme adımı oluşturuluyor…",
+    reviewHeading: "Geliştirme başlamadan önce kullanım senaryolarınızı okuyun ve onaylayın",
+    reviewIntro: "Burada siz ve yapay zekâ anlaşırsınız. Ne anladığını okuyun; bir şey yanlışsa kapatın ve senaryoyu kalemiyle düzeltin. Geliştirme yalnızca onayınızdan sonra başlar.",
+    confirm: "Onları okudum — yapay zekâ beni anladı", confirming: "Onaylanıyor…",
+    doneHeading: "Geliştirme adımı oluşturuldu",
+    runInstruction: "#{n} numaralı geliştirme adımını çalıştır",
+    runHint: "Bu satırı yapay zekâ kod ajanınıza yapıştırın (Claude Code / Codex / …). İçinde ihtiyaç duyduğu her şeyle birlikte adımı Development Steps sayfasından alır.",
+    copy: "Kopyala", copied: "Kopyalandı — kod ajanınıza yapıştırın.", openSteps: "Development Steps'i aç",
+    noCasesTitle: "Önce kullanım senaryolarını tanımlayın", noCasesBody: "Bu otomasyonun henüz kullanım senaryosu yok. Bu sayfadaki Quiz'i açın ve senaryolarınızı tanımlayın — onlar olmadan geliştirme başlayamaz.",
+    noNodesTitle: "Geliştirilecek düğüm yok", noNodesBody: "Tüm düğümler zaten inşa edildi — şu anda geliştirme bekleyen hiçbir şey yok.",
+    failed: "Geliştirme adımı oluşturulamadı.", noDescription: "Henüz açıklama yok.",
+  },
+  nl: {
+    button: "Ontwikkeling starten", title: "Ontwikkeling starten",
+    building: "Ontwikkelstap wordt aangemaakt…",
+    reviewHeading: "Lees je use cases en bevestig voordat de ontwikkeling begint",
+    reviewIntro: "Hier komen jij en de AI tot overeenstemming. Lees wat ze begrepen heeft; klopt er iets niet, sluit dan en corrigeer de case met het potlood. De ontwikkeling begint pas na jouw bevestiging.",
+    confirm: "Ik heb ze gelezen — de AI heeft me begrepen", confirming: "Bevestigen…",
+    doneHeading: "Ontwikkelstap aangemaakt",
+    runInstruction: "Voer ontwikkelstap #{n} uit",
+    runHint: "Plak deze regel in je AI coding agent (Claude Code / Codex / …). Die haalt de stap op van de Development Steps-pagina — met alles wat nodig is erin.",
+    copy: "Kopiëren", copied: "Gekopieerd — plak het in je coding agent.", openSteps: "Development Steps openen",
+    noCasesTitle: "Beschrijf eerst de use cases", noCasesBody: "Deze automatisering heeft nog geen use cases. Open de Quiz op deze pagina en beschrijf je scenario's — zonder deze kan de ontwikkeling niet beginnen.",
+    noNodesTitle: "Geen nodes om te ontwikkelen", noNodesBody: "Alle nodes zijn al gebouwd — er wacht momenteel niets op ontwikkeling.",
+    failed: "Kon de ontwikkelstap niet aanmaken.", noDescription: "Nog geen beschrijving.",
   },
 };
 

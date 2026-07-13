@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 
-// THE UI LANGUAGE of the admin/projects layer (owner's rule, CLAUDE.md 4г) — the six languages we ship
-// (en, es, fr, it, ru, de), anything else falls back to English. One shared hook so every component reads
-// the SAME language without each mounting its own fetch: the default locale is fetched once per page and
-// memoized at module scope.
+// THE UI LANGUAGE of the admin/projects layer (owner's rule, CLAUDE.md 4г) — the ten languages we ship
+// (en, es, fr, it, ru, de, pt, pl, tr, nl), anything else falls back to English. One shared hook so every
+// component reads the SAME language without each mounting its own fetch: the default locale is fetched once
+// per page and memoized at module scope.
 //
-// It returns the two-letter code; a component pairs it with its own six-language dictionary:
+// It returns the two-letter code; a component pairs it with its own ten-language dictionary:
 //   const lang = useUiLang(); const L = MY_I18N[lang] ?? MY_I18N.en;
 
 let cached: string | null = null;
