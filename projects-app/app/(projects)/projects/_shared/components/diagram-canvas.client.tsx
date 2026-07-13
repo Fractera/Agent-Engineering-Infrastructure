@@ -7,6 +7,7 @@ import {
   Handle,
   Position,
   ReactFlow,
+  useNodesState,
   type Edge,
   type Node,
   type NodeProps,
@@ -29,10 +30,19 @@ import { StartDevelopment } from "./start-development.client";
 // and starts DRIVING it. Every node grows a "+" (add child) button; a new node is born a DRAFT with a RED
 // frame (not built yet, ignored by execution — a project with any draft is "In development"). The side
 // panel becomes the BuilderNodePanel (draft → free-form brief; materialized → system instruction + version
-// history + rollback). Nodes are draggable and the layout is saved on leaving Builder. The canvas renders
-// the LIVE index (GET /api/projects/nodes) unioned with the build-time nodes prop by cuid, so a node
-// created in Builder appears INSTANTLY — no rebuild (the files are written, the build follows at
-// materialize time).
+// history + rollback). Nodes are draggable and the layout is saved on leaving Builder (a BATCHED save — see
+// `positions`/`saveLayout` below, not per-drag). The canvas renders the LIVE index (GET /api/projects/nodes)
+// unioned with the build-time nodes prop by cuid, so a node created in Builder appears INSTANTLY — no
+// rebuild (the files are written, the build follows at materialize time).
+//
+// STEP 236.1 (same fix as global-canvas.client.tsx, same root cause): this canvas was ALSO controlled
+// (nodes={...}) with no onNodesChange — dragging a node in Builder never moved live, only jumped on release.
+// Fixed the same way: `nodes` is now real useNodesState, and a merge effect (below `layout`) refreshes
+// label/sub/draft/runStatus from the polled index WITHOUT touching a node's position once it exists — the
+// index-signature dedupe guard on `refetchIndex` already prevented the poll from touching x/y mid-drag (it
+// only updates when the SERVER's x/y itself changes, which only happens on the batched Builder-close save),
+// but that alone was never enough for LIVE drag — onNodesChange is what React Flow actually needs for that,
+// per its own docs (see the fuller writeup in global-canvas.client.tsx's header comment).
 export type IndexNode = {
   cuid: string; slug: string; name: string; parent_cuid: string | null; ord: number;
   x: number | null; y: number | null; draft: number; active_version: number; latest_version: number;
@@ -98,7 +108,10 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
   const [builder, setBuilder] = useState(false);
   const [index, setIndex] = useState<IndexNode[]>([]);
   const [sources, setSources] = useState<Sources>({});
+  // BATCHED save accumulator only now (step 236.1) — a drag no longer feeds rendering through this (that's
+  // `flowNodes` below, via onNodesChange); this purely remembers what to send when Builder closes.
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const [flowNodes, setFlowNodes, onFlowNodesChange] = useNodesState<CanvasNode>([]);
   const [busy, setBusy] = useState(false);
   const [testing, setTesting] = useState(false);
 
@@ -222,6 +235,32 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
     } finally { setBusy(false); }
   }, [automation, busy, refetchIndex]);
 
+  // MERGE into the live React Flow node array (step 236.1) — refreshes label/sub/draft/runStatus for a node
+  // that already exists WITHOUT touching its position (that stays whatever onNodesChange/a drag last put it
+  // at); a brand-new node (just materialized via addChild, or the very first load) gets its saved x/y, or the
+  // computed tree position. This is what makes dragging live: `flowNodes` is genuine useNodesState now, not
+  // re-derived from scratch every poll.
+  useEffect(() => {
+    setFlowNodes((current) => {
+      const byId = new Map(current.map((n) => [n.id, n]));
+      return view.map((v, i): CanvasNode => {
+        const existing = byId.get(v.id);
+        const position = existing
+          ? existing.position
+          : v.x !== null && v.y !== null
+            ? { x: v.x, y: v.y }
+            : (layout.get(v.cuid) ?? { x: i * 260, y: 0 });
+        return {
+          id: v.id, type: "diagram", position,
+          data: {
+            label: v.name, sub: v.sub, runStatus: runStatus[v.id] ?? "idle", draft: v.draft,
+            builder, onAddChild: addChild, cuid: v.cuid,
+          },
+        };
+      });
+    });
+  }, [view, runStatus, builder, layout, addChild, setFlowNodes]);
+
   const saveLayout = useCallback(async () => {
     if (!automation) return;
     const payload = Object.entries(positions).map(([cuid, p]) => ({ cuid, x: p.x, y: p.y }));
@@ -236,6 +275,9 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
   // AUTO-LAYOUT (step 224 L5) — arrange the nodes by the tree (depth → column, siblings → rows) and persist
   // it. Zero dependencies: the same computed `layout` the canvas falls back to, applied and saved. Manual
   // dragging still wins afterwards (the owner can arrange by hand; closing Builder saves that too).
+  // Step 236.1: also pushes the new positions straight into `flowNodes` — the merge effect above ONLY ever
+  // preserves an existing node's position, by design (that's what makes dragging live), so an explicit reset
+  // like this one has to bypass it and set the visual position directly.
   const autoLayout = useCallback(async () => {
     if (!automation) return;
     const next: Record<string, { x: number; y: number }> = {};
@@ -244,13 +286,18 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
       if (p) next[v.cuid] = p;
     }
     setPositions(next);
+    setFlowNodes((current) => current.map((n) => {
+      const v = view.find((x) => x.id === n.id);
+      const p = v ? next[v.cuid] : undefined;
+      return p ? { ...n, position: p } : n;
+    }));
     await fetch(`/api/projects/nodes/layout`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ automation, positions: Object.entries(next).map(([cuid, p]) => ({ cuid, ...p })) }),
     });
     await refetchIndex();
-  }, [automation, view, layout, refetchIndex]);
+  }, [automation, view, layout, refetchIndex, setFlowNodes]);
 
   const toggleBuilder = useCallback(async () => {
     if (builder) { await saveLayout(); await refetchIndex(); } // leaving Builder persists the layout
@@ -305,22 +352,6 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
     }
   }, [automation, view, refetchActive, simulating]);
 
-  const rfNodes = useMemo<CanvasNode[]>(
-    () =>
-      view.map((v, i) => ({
-        id: v.id,
-        type: "diagram",
-        // saved drag > persisted layout > computed tree layout
-        position: positions[v.cuid] ?? (v.x !== null && v.y !== null
-          ? { x: v.x, y: v.y }
-          : layout.get(v.cuid) ?? { x: i * 260, y: 0 }),
-        data: {
-          label: v.name, sub: v.sub, runStatus: runStatus[v.id] ?? "idle", draft: v.draft,
-          builder, onAddChild: addChild, cuid: v.cuid,
-        },
-      })),
-    [view, runStatus, builder, addChild, positions, layout],
-  );
   // Edges follow the TREE: a child links to ITS parent (parent_cuid). Roots chain to the previous root, so
   // the default Input → Logic → Output still reads as a line. This is what makes "+" branch off the clicked
   // node instead of appending to the end (the fatal bug the owner caught in L4).
@@ -396,12 +427,16 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
       <div className="relative h-[75vh] w-full overflow-hidden rounded-lg border">
         <ReactFlow
           key={fitKey}
-          nodes={rfNodes}
+          nodes={flowNodes}
           edges={rfEdges}
           nodeTypes={NODE_TYPES}
+          onNodesChange={onFlowNodesChange}
           onNodeClick={(_, node) => setActiveId(node.id)}
           onPaneClick={() => setActiveId(null)}
           onNodeDragStop={(_, node) => {
+            // onFlowNodesChange already applied the live drag to `flowNodes` (that's what makes it live,
+            // step 236.1) — this just remembers the FINAL position for the batched save-on-Builder-close
+            // (`positions`/`saveLayout` below), unchanged from before.
             const v = view.find((x) => x.id === node.id);
             if (v) setPositions((p) => ({ ...p, [v.cuid]: { x: node.position.x, y: node.position.y } }));
           }}
