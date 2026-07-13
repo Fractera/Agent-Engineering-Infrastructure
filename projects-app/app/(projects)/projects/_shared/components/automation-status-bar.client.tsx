@@ -6,6 +6,8 @@ import type { Probe } from "../tests";
 import type { AutomationType } from "../automation-type";
 import { AutomationMenu } from "./automation-menu.client";
 import { AutomationStatePill } from "./automation-state-pill.client";
+import { useUiLang } from "../use-ui-lang";
+import { categoryHubStrings } from "../category-hub-i18n";
 
 // FROZEN STANDARD (step 220) — the bar at the top of a fresh automation page: a breadcrumb back to the
 // categories index on the left, and on the right the generic automation menu (AI provider / model +
@@ -31,10 +33,12 @@ export function AutomationStatusBar({
   /** The immutable automation type — its badge sits LEFT of the state pill (step 224 §1.5). */
   type?: AutomationType;
 }) {
+  const lang = useUiLang();
+  const L = categoryHubStrings(lang);
   return (
     <div className="flex items-center justify-between gap-3 py-1">
       <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-        <Link href="/projects" className="hover:underline">← Projects</Link>
+        <Link href="/projects" className="hover:underline">{L.breadcrumb}</Link>
         <span aria-hidden>/</span>
         <Link href={`/projects/${category}`} className="hover:underline">{categoryLabel}</Link>
       </span>

@@ -492,7 +492,7 @@ export function ActivationQuiz({
               type="button"
               onClick={scrollToBottom}
               className="absolute bottom-2 left-1/2 flex size-8 -translate-x-1/2 animate-bounce items-center justify-center rounded-full border bg-background/90 text-foreground shadow-md backdrop-blur transition-colors hover:bg-muted"
-              aria-label="Scroll to the newest message"
+              aria-label={L.scrollDown}
             >
               <ChevronDown className="size-4" />
             </button>

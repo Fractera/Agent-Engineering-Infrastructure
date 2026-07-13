@@ -1,3 +1,5 @@
+import { createAutomationStrings } from "./create-automation-i18n";
+
 // AUTOMATION TYPES (frozen standard, step 224 §1.5; extended step 234) — an automation is ONE of three
 // kinds, chosen at creation and IMMUTABLE afterwards: the whole logic (above all: whether a run forks) grows
 // out of it. To change the type you delete the automation and create a new one — there is no "switch type".
@@ -56,6 +58,18 @@ export const AUTOMATION_TYPES: AutomationTypeSpec[] = [
   },
 ];
 
-export function automationTypeSpec(type: AutomationType | string | undefined): AutomationTypeSpec {
-  return AUTOMATION_TYPES.find((t) => t.type === type) ?? AUTOMATION_TYPES[0];
+// TEN-LANGUAGE title/description (CLAUDE.md 4г) — reuses create-automation-i18n.ts's own typeXTitle/typeXDesc
+// keys (the creation modal's TYPE_TEXT) rather than a second dictionary: same three types, same copy, one
+// source of truth. `lang` is optional so existing English-only callers stay source-compatible.
+export function automationTypeSpec(type: AutomationType | string | undefined, lang?: string): AutomationTypeSpec {
+  const spec = AUTOMATION_TYPES.find((t) => t.type === type) ?? AUTOMATION_TYPES[0];
+  if (!lang) return spec;
+  const L = createAutomationStrings(lang);
+  const byType: Record<AutomationType, { title: string; description: string }> = {
+    stream: { title: L.typeStreamTitle, description: L.typeStreamDesc },
+    instanced: { title: L.typeInstancedTitle, description: L.typeInstancedDesc },
+    chained: { title: L.typeChainedTitle, description: L.typeChainedDesc },
+  };
+  const t = byType[spec.type];
+  return { ...spec, title: t.title, description: t.description };
 }

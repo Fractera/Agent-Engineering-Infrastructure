@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/tooltip";
 import { adminBase } from "@/lib/runtime-urls";
 import { ThemeToggle } from "@/components/menu/shared/theme-toggle.client";
+import { useUiLang } from "../projects/_shared/use-ui-lang";
+import { projectsZoneFooterStrings } from "./projects-zone-footer-i18n";
 
 // THE single Projects-zone footer (step 213). Rendered ONCE by the zone layout so every project
 // page AND every hub carries the IDENTICAL footer — no page re-assembles it anymore (that was the
@@ -18,7 +20,6 @@ import { ThemeToggle } from "@/components/menu/shared/theme-toggle.client";
 // project focus — is DERIVED from the URL (usePathname), so there is zero per-page footer code and
 // no _meta field to keep in sync: a project route /projects/<cat>/<slug> focuses Architecture on
 // that project; a hub/index route links to Architecture generically.
-const THEME_LABELS = { system: "System theme", light: "Light theme", dark: "Dark theme" };
 
 // /projects/<category>/<slug> → "<category>/<slug>" ; /projects or /projects/<cat> → null.
 function projectFromPath(pathname: string): string | null {
@@ -31,6 +32,9 @@ function projectFromPath(pathname: string): string | null {
 // standard 85vw column, and the bar itself is 40px tall — it used to eat a lot of vertical space.
 export function ProjectsZoneFooter({ shortName }: { shortName: string }) {
   const pathname = usePathname();
+  const lang = useUiLang();
+  const L = projectsZoneFooterStrings(lang);
+  const THEME_LABELS = { system: L.themeSystem, light: L.themeLight, dark: L.themeDark };
   const [admin, setAdmin] = useState("");
   // Admin base derived from window.location after mount (IP vs domain) — anchors stay inert until
   // then to avoid a hydration mismatch.
@@ -56,36 +60,36 @@ export function ProjectsZoneFooter({ shortName }: { shortName: string }) {
               <a
                 href={architectureHref}
                 className="flex size-8 items-center justify-center rounded-md hover:bg-muted hover:text-foreground transition-colors"
-                aria-label="Architecture"
+                aria-label={L.architecture}
               >
                 <Settings2 className="size-4" />
               </a>
             </TooltipTrigger>
-            <TooltipContent>{project ? "Continue development" : "Architecture"}</TooltipContent>
+            <TooltipContent>{project ? L.continueDevelopment : L.architecture}</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <a
                 href={stepsHref}
                 className="flex size-8 items-center justify-center rounded-md hover:bg-muted hover:text-foreground transition-colors"
-                aria-label="Development steps"
+                aria-label={L.developmentSteps}
               >
                 <LayoutGrid className="size-4" />
               </a>
             </TooltipTrigger>
-            <TooltipContent>Development steps</TooltipContent>
+            <TooltipContent>{L.developmentSteps}</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <a
                 href={envHref}
                 className="flex size-8 items-center justify-center rounded-md hover:bg-muted hover:text-foreground transition-colors"
-                aria-label="Environment keys"
+                aria-label={L.environmentKeys}
               >
                 <KeyRound className="size-4" />
               </a>
             </TooltipTrigger>
-            <TooltipContent>Environment keys</TooltipContent>
+            <TooltipContent>{L.environmentKeys}</TooltipContent>
           </Tooltip>
           <ThemeToggle labels={THEME_LABELS} />
         </div>

@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { automationTypeSpec, type AutomationType } from "../automation-type";
+import { useUiLang } from "../use-ui-lang";
+import { automationStatePillStrings } from "../automation-state-pill-i18n";
+import { fill } from "../quiz-i18n";
 
 // FROZEN STANDARD (step 224 L6) — the top-bar pair every automation page carries: the immutable TYPE badge
 // and the automation STATE pill, in that order, left of the burger (owner's design).
@@ -25,7 +28,9 @@ export function AutomationStatePill({
   active?: boolean;
 }) {
   const [drafts, setDrafts] = useState<number | null>(null);
-  const spec = automationTypeSpec(type);
+  const lang = useUiLang();
+  const spec = automationTypeSpec(type, lang);
+  const L = automationStatePillStrings(lang);
 
   useEffect(() => {
     let alive = true;
@@ -42,10 +47,10 @@ export function AutomationStatePill({
 
   const inDevelopment = drafts === null ? false : drafts > 0;
   const state = inDevelopment
-    ? { dot: "bg-indigo-500", text: "text-indigo-600 dark:text-indigo-400", label: `In development${drafts ? ` — ${drafts} node${drafts > 1 ? "s" : ""} to build` : ""}` }
+    ? { dot: "bg-indigo-500", text: "text-indigo-600 dark:text-indigo-400", label: fill(drafts === 1 ? L.inDevOne : L.inDevN, { n: drafts ?? 0 }) }
     : active === false
-      ? { dot: "bg-red-500", text: "text-red-600 dark:text-red-500", label: "Stopped" }
-      : { dot: "bg-green-500", text: "text-green-600 dark:text-green-500", label: "Active" };
+      ? { dot: "bg-red-500", text: "text-red-600 dark:text-red-500", label: L.stopped }
+      : { dot: "bg-green-500", text: "text-green-600 dark:text-green-500", label: L.active };
 
   return (
     <span className="flex items-center gap-2">

@@ -14,15 +14,19 @@ export type ProjectCategory = {
   navLabel: string; // short label for the category nav buttons (step 207.10 item 3)
   description: string;
   // TEN-LANGUAGE TITLE/DESCRIPTION (step 234.1, additive — CLAUDE.md 4г) — ADDITIVE, optional. `title`/
-  // `description` above stay PLAIN STRINGS and every existing consumer (category-hub.server.tsx,
-  // frozen-project-starter.ts, projects-manifest.ts, api/projects/global/route.ts) keeps reading them
-  // unchanged. Only the root /projects index page reads these two, via categoryTitle()/categoryDescription()
-  // below. The 4 permanent categories are hand-authored here (fixed chrome, rule 4г: no model call); a
+  // `description` above stay PLAIN STRINGS and every existing consumer (frozen-project-starter.ts,
+  // projects-manifest.ts, api/projects/global/route.ts) keeps reading them unchanged. The root /projects
+  // index page AND category-hub.server.tsx (the /projects/<category> hub) read these translated variants,
+  // via categoryTitle()/categoryDescription() below. The 4 permanent categories are hand-authored here
+  // (fixed chrome, rule 4г: no model call); a
   // category the owner creates through the modal gets these LLM-translated at creation time instead
   // (app/api/projects/categories/route.ts + lib/quiz.ts translateCategoryCopy) — same fields, two population
   // paths.
   titleI18n?: Record<string, string>;
   descriptionI18n?: Record<string, string>;
+  // TEN-LANGUAGE NAV LABEL (CLAUDE.md 4г) — the short category-nav-button text; same additive/optional
+  // shape as titleI18n/descriptionI18n, same fallback pattern via categoryNavLabel() below.
+  navLabelI18n?: Record<string, string>;
 };
 
 export const PROJECT_CATEGORIES: ProjectCategory[] = [
@@ -50,6 +54,10 @@ export const PROJECT_CATEGORIES: ProjectCategory[] = [
       tr: "Tekrarlanabilir iş otomasyonları — zamanlanmış yayınlama, veri hatları, harici API entegrasyonları. Her proje tamamlanmış döngülü bir araçtır: tek bir görev için bir n8n.",
       nl: "Herhaalbare bedrijfsautomatiseringen — geplande publicatie, datapijplijnen, integraties met externe API's. Elk project is een tool met een afgesloten cyclus: een n8n voor één enkele taak.",
     },
+    navLabelI18n: {
+      en: "Business", ru: "Бизнес", es: "Negocio", fr: "Entreprise", it: "Attività",
+      de: "Unternehmen", pt: "Negócio", pl: "Biznes", tr: "İş", nl: "Zakelijk",
+    },
   },
   {
     slug: "personal",
@@ -74,6 +82,10 @@ export const PROJECT_CATEGORIES: ProjectCategory[] = [
       pl: "Prywatne narzędzia do własnej produktywności właściciela — przypomnienia, trackery, osobiste panele i asystenci.",
       tr: "Sahibinin kendi verimliliği için özel araçlar — hatırlatıcılar, izleyiciler, kişisel panolar ve asistanlar.",
       nl: "Privétools voor de eigen productiviteit van de eigenaar — herinneringen, trackers, persoonlijke dashboards en assistenten.",
+    },
+    navLabelI18n: {
+      en: "Personal", ru: "Личное", es: "Personal", fr: "Personnel", it: "Personale",
+      de: "Persönlich", pt: "Pessoal", pl: "Osobiste", tr: "Kişisel", nl: "Persoonlijk",
     },
   },
   {
@@ -100,6 +112,10 @@ export const PROJECT_CATEGORIES: ProjectCategory[] = [
       tr: "Bu çalışma alanının sayfalarını yöneten projeler — toplu içerik işlemleri, sayfa grubu bakımı, yayınlama iş akışları.",
       nl: "Projecten die de pagina's van deze werkruimte beheren — bulkcontentbewerkingen, onderhoud van paginagroepen, publicatieworkflows.",
     },
+    navLabelI18n: {
+      en: "Fractera pages", ru: "Страницы Fractera", es: "Páginas Fractera", fr: "Pages Fractera", it: "Pagine Fractera",
+      de: "Fractera-Seiten", pt: "Páginas Fractera", pl: "Strony Fractera", tr: "Fractera sayfaları", nl: "Fractera-pagina's",
+    },
   },
   {
     slug: "other",
@@ -124,6 +140,10 @@ export const PROJECT_CATEGORIES: ProjectCategory[] = [
       tr: "Yukarıdaki üç kategoriye uymayan projeler. Bir proje türü burada tekrarlanırsa, kendi kategorisi için adaydır.",
       nl: "Projecten die niet in de drie categorieën hierboven passen. Als een projecttype hier vaker voorkomt, is het kandidaat voor een eigen categorie.",
     },
+    navLabelI18n: {
+      en: "Other", ru: "Другое", es: "Otros", fr: "Autre", it: "Altro",
+      de: "Sonstiges", pt: "Outros", pl: "Inne", tr: "Diğer", nl: "Overig",
+    },
   },
 ];
 
@@ -135,4 +155,9 @@ export function categoryTitle(c: ProjectCategory, lang: string): string {
 /** The category's description in `lang`, falling back to English, then the plain (single-language) field. */
 export function categoryDescription(c: ProjectCategory, lang: string): string {
   return c.descriptionI18n?.[lang] ?? c.descriptionI18n?.en ?? c.description;
+}
+
+/** The category's nav-button label in `lang`, falling back to English, then the plain (single-language) field. */
+export function categoryNavLabel(c: ProjectCategory, lang: string): string {
+  return c.navLabelI18n?.[lang] ?? c.navLabelI18n?.en ?? c.navLabel;
 }

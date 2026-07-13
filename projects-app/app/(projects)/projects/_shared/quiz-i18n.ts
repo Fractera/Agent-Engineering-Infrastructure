@@ -29,6 +29,7 @@ export type QuizStrings = {
   keptAsDesc: string; editReplaced: string;
   casesMissing: string; casesMissingDesc: string;
   nodeDesignedOnly: string; nodeDesignedDesc: string;   // {name} — step 233: node is a draft, no per-node step
+  scrollDown: string;   // aria-label on the "scroll to newest message" button
 };
 
 /** Fill {name}/{n}/{step} placeholders. */
@@ -70,6 +71,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     casesMissing: "The user cases are still missing",
     casesMissingDesc: "Without a detailed description the automation cannot be created — this opens again on your next visit.",
     nodeDesignedOnly: "Node \"{name}\" designed", nodeDesignedDesc: "It is a draft on the diagram. When you are done designing, press \"Start development\" to hand every node to a coding agent as one step.",
+    scrollDown: "Scroll to the newest message",
   },
   ru: {
     banner: "Планирование автоматизации идёт намного эффективнее на самой мощной доступной вам модели. Выберите её в гамбургер-меню вверху страницы (Настройки → модель).",
@@ -104,6 +106,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     casesMissing: "Пользовательские кейсы всё ещё не заданы",
     casesMissingDesc: "Без подробного описания автоматизацию создать нельзя — окно откроется снова при следующем визите.",
     nodeDesignedOnly: "Узел «{name}» спроектирован", nodeDesignedDesc: "Это черновик на диаграмме. Когда закончите проектировать, нажмите «Запустить разработку» — все узлы уйдут агенту-кодеру одним шагом.",
+    scrollDown: "Прокрутить к новому сообщению",
   },
   es: {
     banner: "Planificar una automatización funciona mucho mejor con el modelo más potente disponible. Elígelo en el menú de hamburguesa de la parte superior de la página (Ajustes → modelo).",
@@ -138,6 +141,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     casesMissing: "Todavía faltan los casos de uso",
     casesMissingDesc: "Sin una descripción detallada no se puede crear la automatización — esto se abrirá de nuevo en tu próxima visita.",
     nodeDesignedOnly: "Nodo «{name}» diseñado", nodeDesignedDesc: "Es un borrador en el diagrama. Cuando termines de diseñar, pulsa «Iniciar desarrollo» — todos los nodos se entregan al agente de código como un solo paso.",
+    scrollDown: "Desplazarse al mensaje más reciente",
   },
   fr: {
     banner: "La planification d'une automatisation est bien meilleure avec le modèle le plus puissant à votre disposition. Choisissez-le dans le menu hamburger en haut de la page (Paramètres → modèle).",
@@ -172,6 +176,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     casesMissing: "Les cas d'usage manquent encore",
     casesMissingDesc: "Sans description détaillée, l'automatisation ne peut pas être créée — ceci se rouvrira à votre prochaine visite.",
     nodeDesignedOnly: "Nœud « {name} » conçu", nodeDesignedDesc: "C'est un brouillon sur le diagramme. Quand vous avez fini de concevoir, appuyez sur « Démarrer le développement » — tous les nœuds partent à l'agent de code en une seule étape.",
+    scrollDown: "Défiler jusqu'au message le plus récent",
   },
   it: {
     banner: "Pianificare un'automazione funziona molto meglio con il modello più potente a tua disposizione. Sceglilo nel menu hamburger in cima alla pagina (Impostazioni → modello).",
@@ -206,6 +211,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     casesMissing: "I casi d'uso mancano ancora",
     casesMissingDesc: "Senza una descrizione dettagliata l'automazione non può essere creata — si riaprirà alla tua prossima visita.",
     nodeDesignedOnly: "Nodo «{name}» progettato", nodeDesignedDesc: "È una bozza sul diagramma. Quando hai finito di progettare, premi «Avvia lo sviluppo» — tutti i nodi vanno all'agente di codice in un unico passo.",
+    scrollDown: "Scorri fino al messaggio più recente",
   },
   de: {
     banner: "Das Planen einer Automatisierung gelingt weit besser mit dem stärksten dir verfügbaren Modell. Wähle es im Hamburger-Menü oben auf der Seite (Einstellungen → Modell).",
@@ -240,6 +246,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     casesMissing: "Die Anwendungsfälle fehlen noch",
     casesMissingDesc: "Ohne ausführliche Beschreibung kann die Automatisierung nicht erstellt werden — es öffnet sich beim nächsten Besuch erneut.",
     nodeDesignedOnly: "Knoten „{name}“ entworfen", nodeDesignedDesc: "Er ist ein Entwurf im Diagramm. Wenn du mit dem Entwerfen fertig bist, drücke „Entwicklung starten“ — alle Knoten gehen als ein Schritt an den Coding-Agenten.",
+    scrollDown: "Zur neuesten Nachricht scrollen",
   },
   pt: {
     banner: "Planejar uma automação funciona muito melhor com o modelo mais poderoso disponível para você. Escolha-o no menu hambúrguer no topo da página (Definições → modelo).",
@@ -274,6 +281,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     casesMissing: "Os casos de uso ainda estão em falta",
     casesMissingDesc: "Sem uma descrição detalhada a automação não pode ser criada — isto abre novamente na sua próxima visita.",
     nodeDesignedOnly: "Nó «{name}» desenhado", nodeDesignedDesc: "É um rascunho no diagrama. Quando terminar de desenhar, prima «Iniciar desenvolvimento» para entregar todos os nós a um agente de código como um único passo.",
+    scrollDown: "Rolar até à mensagem mais recente",
   },
   pl: {
     banner: "Planowanie automatyzacji działa znacznie lepiej z najsilniejszym dostępnym Ci modelem. Wybierz go w menu hamburgera na górze strony (Ustawienia → model).",
@@ -308,6 +316,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     casesMissing: "Przypadki użycia nadal brakują",
     casesMissingDesc: "Bez szczegółowego opisu automatyzacji nie można utworzyć — otworzy się to ponownie przy następnej wizycie.",
     nodeDesignedOnly: "Węzeł „{name}” zaprojektowany", nodeDesignedDesc: "To szkic na diagramie. Gdy skończysz projektować, naciśnij „Uruchom rozwój”, aby przekazać wszystkie węzły agentowi kodującemu jako jeden krok.",
+    scrollDown: "Przewiń do najnowszej wiadomości",
   },
   tr: {
     banner: "Bir otomasyonu planlamak, sahip olduğunuz en güçlü modelle çok daha iyi çalışır. Sayfanın üstündeki hamburger menüsünden seçin (Ayarlar → model).",
@@ -342,6 +351,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     casesMissing: "Kullanım senaryoları hâlâ eksik",
     casesMissingDesc: "Ayrıntılı bir açıklama olmadan otomasyon oluşturulamaz — bu, bir sonraki ziyaretinizde tekrar açılır.",
     nodeDesignedOnly: "«{name}» düğümü tasarlandı", nodeDesignedDesc: "Bu, diyagramda bir taslaktır. Tasarımı bitirdiğinizde, tüm düğümleri kod ajanına tek bir adım olarak teslim etmek için «Geliştirmeyi başlat»a basın.",
+    scrollDown: "En yeni mesaja kaydır",
   },
   nl: {
     banner: "Een automatisering plannen werkt veel beter met het krachtigste model dat voor je beschikbaar is. Kies het in het hamburgermenu bovenaan de pagina (Instellingen → model).",
@@ -376,6 +386,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     casesMissing: "De use cases ontbreken nog steeds",
     casesMissingDesc: "Zonder gedetailleerde beschrijving kan de automatisering niet worden aangemaakt — dit opent opnieuw bij je volgende bezoek.",
     nodeDesignedOnly: "Node \"{name}\" ontworpen", nodeDesignedDesc: "Dit is een concept in het diagram. Druk, als je klaar bent met ontwerpen, op \"Ontwikkeling starten\" om alle nodes als één stap aan een coding agent over te dragen.",
+    scrollDown: "Scrollen naar het nieuwste bericht",
   },
 };
 

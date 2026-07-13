@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getAppConfig } from "@/config/app-config";
-import { PROJECT_CATEGORIES, type ProjectCategorySlug } from "./categories";
+import { defaultLanguage } from "@/lib/quiz";
+import { PROJECT_CATEGORIES, categoryTitle, categoryDescription, categoryNavLabel, type ProjectCategorySlug } from "./categories";
 import { listProjectSlugs } from "./projects-manifest";
 import { getProjectCard } from "./project-card";
 import { CreateAutomationCard } from "./components/create-automation-card.client";
+import { categoryHubStrings } from "./category-hub-i18n";
 
 // Hub page of one Projects-layer category (step 207.10 item 3 redesign): an admin-style header with
 // bordered/shadowed category nav buttons, then blog-style project cards (title, 2-line description, one
@@ -13,20 +15,26 @@ import { CreateAutomationCard } from "./components/create-automation-card.client
 // (project-card.ts). No DB read.
 const MAX_BADGES = 4;
 
+// TEN-LANGUAGE (CLAUDE.md 4г) — an ASYNC SERVER COMPONENT, so it reads the language via `defaultLanguage()`
+// (server-side, synchronous, lib/quiz.ts) rather than the client-only `useUiLang()` hook — same pattern as
+// projects-index.server.tsx. Category title/description/nav-label come from categories.ts's own
+// titleI18n/descriptionI18n/navLabelI18n; the breadcrumb + empty state come from category-hub-i18n.ts.
 export async function CategoryHub({ slug }: { slug: ProjectCategorySlug }) {
   const category = PROJECT_CATEGORIES.find((c) => c.slug === slug)!;
   const slugs = await listProjectSlugs(slug);
   const cards = await Promise.all(slugs.map((s) => getProjectCard(slug, s)));
   const cfg = getAppConfig();
+  const lang = defaultLanguage();
+  const L = categoryHubStrings(lang);
 
   return (
     <main className="mx-auto flex min-h-[70vh] w-[85vw] max-w-full flex-col px-6 py-10">
       {/* Breadcrumb back to the root index (step 217) — was plain text, no way back to /projects. */}
       <Link href="/projects" className="text-sm text-muted-foreground hover:underline">
-        ← Projects
+        {L.breadcrumb}
       </Link>
-      <h1 className="mt-1 text-3xl font-bold tracking-tight">{category.title}</h1>
-      <p className="mt-3 max-w-2xl text-muted-foreground">{category.description}</p>
+      <h1 className="mt-1 text-3xl font-bold tracking-tight">{categoryTitle(category, lang)}</h1>
+      <p className="mt-3 max-w-2xl text-muted-foreground">{categoryDescription(category, lang)}</p>
 
       {/* Category nav — admin-style bordered/shadowed buttons; the current category is highlighted. */}
       <nav className="mt-6 flex flex-wrap gap-2">
@@ -43,7 +51,7 @@ export async function CategoryHub({ slug }: { slug: ProjectCategorySlug }) {
                   : "bg-background hover:bg-muted hover:text-foreground"
               }`}
             >
-              {c.navLabel}
+              {categoryNavLabel(c, lang)}
             </Link>
           );
         })}
@@ -54,7 +62,7 @@ export async function CategoryHub({ slug }: { slug: ProjectCategorySlug }) {
       <div className="mt-8 flex-1">
         {cards.length === 0 && (
           <p className="mb-4 rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-            No automations here yet — add the first one with the card below.
+            {L.emptyState}
           </p>
         )}
         {
