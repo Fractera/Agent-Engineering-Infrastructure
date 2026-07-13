@@ -159,10 +159,12 @@ export function CreateAutomationDialog({
   // not a banner at the top of the whole dialog — automations created without touching categories never
   // need this key at all).
   const [needsKey, setNeedsKey] = useState(false);
-  // VoiceInput refs (step 236.4 — the owner flagged its absence here, unlike Quiz/chain-brief/edge-spec):
-  // only the two long free-text fields get a mic, matching the pattern everywhere else in this app — never
-  // the short one-line Name/category-name fields.
+  // VoiceInput refs (step 236.4 added it to the two long free-text fields; owner reversed the "short fields
+  // stay text-only" convention afterward — every field in this modal gets a mic now, VoiceInput already
+  // supports HTMLInputElement, not just HTMLTextAreaElement).
+  const nameRef = useRef<HTMLInputElement | null>(null);
   const instrRef = useRef<HTMLTextAreaElement | null>(null);
+  const categoryNameRef = useRef<HTMLInputElement | null>(null);
   const categoryDescRef = useRef<HTMLTextAreaElement | null>(null);
 
   const loadCategories = async () => {
@@ -317,7 +319,8 @@ export function CreateAutomationDialog({
 
           <div className="space-y-1.5">
             <Label htmlFor="a-name">{L.nameLabel}</Label>
-            <Input id="a-name" value={name} onChange={(e) => setName(e.target.value)} placeholder={L.namePlaceholder} />
+            <Input ref={nameRef} id="a-name" value={name} onChange={(e) => setName(e.target.value)} placeholder={L.namePlaceholder} />
+            <VoiceInput targetRef={nameRef} value={name} onChange={setName} />
           </div>
 
           <div className="space-y-1.5">
@@ -390,11 +393,13 @@ export function CreateAutomationDialog({
 
                 <Label htmlFor="c-name" className="text-xs">{L.newCategoryLabel}</Label>
                 <Input
+                  ref={categoryNameRef}
                   id="c-name"
                   value={categoryName}
                   onChange={(e) => setCategoryName(e.target.value)}
                   placeholder={L.newCategoryPlaceholder}
                 />
+                <VoiceInput targetRef={categoryNameRef} value={categoryName} onChange={setCategoryName} />
 
                 <Label htmlFor="c-desc" className="text-xs">{L.descriptionLabel}</Label>
                 <Textarea
