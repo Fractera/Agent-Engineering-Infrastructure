@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import { authorize, listNodes, resolveProject } from "@/lib/nodes";
 import { materializeAutomationStep, nextStepNumber, pendingSteps } from "@/lib/dev-steps";
-import { assertUseCasesReviewed, listCases } from "@/lib/use-cases";
+import { assertUseCasesReviewed } from "@/lib/use-cases";
 
 // "Start development" (step 233) — the owner's single top-level handoff on the automation page. It turns the
 // whole design so far into ONE Development Step: the sub-steps (tasks[]) are the draft nodes going into work,
@@ -32,31 +30,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, number: existing.number, name: existing.name, reused: true });
   }
 
-  // The nodes going into work = the DRAFT (unbuilt) nodes. Their specs are the Quiz result per node.
-  const nodes = await listNodes(proj.automation);
-  const drafts = nodes.filter((n) => n.draft === 1);
+  // The nodes going into work = the DRAFT (unbuilt) nodes. We pass only the ADDRESS + the node list; the
+  // coding agent extracts the full state (instruction, use cases, specs, diagram) from the automation's own
+  // folder — the source of truth already on disk (owner's insight, step 233). No snapshot, no staleness.
+  const drafts = (await listNodes(proj.automation)).filter((n) => n.draft === 1);
   if (!drafts.length) {
     return NextResponse.json({ reason: "no-nodes" }, { status: 409 });
   }
-
-  const instruction = (await readFile(join(proj.projectDir, "_data", "instruction.md"), "utf8").catch(() => "")).trim();
-  const cases = await listCases(proj.automation);
-  const nodeInputs = await Promise.all(
-    drafts.map(async (n) => ({
-      cuid: n.cuid,
-      slug: n.slug,
-      name: n.name,
-      spec: await readFile(join(proj.projectDir, "_nodes", n.slug, "spec.md"), "utf8").catch(() => ""),
-    })),
-  );
 
   const number = await nextStepNumber();
   const { name } = await materializeAutomationStep({
     number,
     automation: proj.automation,
-    instruction,
-    useCases: cases.map((c) => ({ title: c.title, summary: c.summary, status: c.status })),
-    nodes: nodeInputs,
+    nodes: drafts.map((n) => ({ cuid: n.cuid, slug: n.slug, name: n.name })),
   });
 
   return NextResponse.json({ ok: true, number, name });
