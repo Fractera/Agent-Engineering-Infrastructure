@@ -218,7 +218,11 @@ async function extractChain(automation: string, withHistory: boolean): Promise<E
   return { entityType: "chain", instances: [makeInstance("", identity, currentTask, history)] };
 }
 
-type StubEntityType = "dashboard" | "analytics" | "calendar" | "map" | "processes";
+// `fork-activation` (step 239) rides the SAME stub shape — automation-wide, one free-text brief — so it needs
+// no extractor of its own. The one difference is `toggleEnabled`: it has no visibility switch (it is simply
+// always there for an `instanced` automation), so extractStub reports `true` for it rather than reading a
+// toggle that does not exist.
+type StubEntityType = "dashboard" | "analytics" | "calendar" | "map" | "processes" | "fork-activation";
 
 // Dashboard/Analytics/Calendar/Map/Processes (step 238 P5-P9) — the owner writes a free-text REQUIREMENT
 // brief (the "Requirement" panel in each entity's accordion), automation-scoped (ref=''), same shape as the
@@ -230,7 +234,9 @@ async function extractStub(entityType: StubEntityType, automation: string, withH
     getLiveEntities(automation),
     getTransport(automation, entityType, ""),
   ]);
-  const identity: StubIdentity = { toggleEnabled: Boolean(live[entityType]) };
+  const identity: StubIdentity = {
+    toggleEnabled: entityType === "fork-activation" ? true : Boolean(live[entityType as keyof typeof live]),
+  };
   const briefText = (transport?.payload as { brief?: string } | undefined)?.brief ?? "";
   const currentTask: StubTask | null = briefText.trim() ? { brief: briefText } : null;
   let history: EntityTaskRecord<StubTask>[] = [];

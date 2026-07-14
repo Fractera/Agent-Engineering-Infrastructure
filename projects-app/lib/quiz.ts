@@ -6,6 +6,7 @@ import { createNodeId } from "@/lib/cuid";
 import { listNodes, resolveProject } from "@/lib/nodes";
 import { edgeByCuid, readEdgeFiles } from "@/lib/edges";
 import { caseByCuid, listCases } from "@/lib/use-cases";
+import { getTransport, type EntityType } from "@/lib/entity-store";
 // Aliased: this file already has its OWN local `UI_LANGS` (six languages, the Quiz-prompt system below,
 // step 232.1) — a different, older, unrelated concept. This import is the TEN admin-layer languages
 // (step 234.1/234.2, CLAUDE.md 4г), used only by translateCategoryCopy() further down.
@@ -40,15 +41,23 @@ export type Turn = { role: string; content: string; node_index: number };
 //     each existing case in turn and takes any new ones he adds,
 //   • usecase  → ONE case (the pencil on a case): the same brainstorm, scoped to it.
 // Both end the same way a node does: the change becomes ONE development step per changed/added case.
+// STEP 239 — one more subject: an ENTITY of an automation (dashboard / analytics / calendar / map /
+// processes / fork-activation). The owner presses "Add with AI" on that entity's Requirement panel and the
+// SAME brainstorm helps him articulate WHAT that component should do; its closing move writes the result into
+// the entity's transport container (never a second store, never a dev step — dispatch is a separate action,
+// the page-level wave in step 240). `entityType` is the EntityType string; the row key is
+// "entity:<automation>:<entityType>".
 export type QuizTarget =
   | { kind: "project"; key: string; automation: string; projectDir: string }
   | { kind: "edge"; key: string; cuid: string }
   | { kind: "usecases"; key: string; automation: string; projectDir: string }
-  | { kind: "usecase"; key: string; cuid: string; automation: string; projectDir: string };
+  | { kind: "usecase"; key: string; cuid: string; automation: string; projectDir: string }
+  | { kind: "entity"; key: string; automation: string; projectDir: string; entityType: string };
 
 export const edgeQuizKey = (cuid: string) => `edge:${cuid}`;
 export const useCaseQuizKey = (cuid: string) => `usecase:${cuid}`;
 export const useCasesQuizKey = (automation: string) => `usecases:${automation}`;
+export const entityQuizKey = (automation: string, entityType: string) => `entity:${automation}:${entityType}`;
 
 /** The automation a target belongs to ("" for an edge, which belongs to none). */
 export function targetAutomation(target: QuizTarget): string {
@@ -58,13 +67,25 @@ export function targetAutomation(target: QuizTarget): string {
 /** Resolve the subject of a request ({automation} | {edge} | {useCase} | {automation, cases:true}) into a
  *  target — used by every quiz route. */
 export async function resolveQuizTarget(
-  input: { automation?: unknown; edge?: unknown; useCase?: unknown; cases?: unknown },
+  input: { automation?: unknown; edge?: unknown; useCase?: unknown; cases?: unknown; entity?: unknown },
 ): Promise<{ ok: true; target: QuizTarget } | { ok: false; error: string }> {
   const edge = String(input.edge ?? "").trim();
   if (edge) {
     const row = await edgeByCuid(edge);
     if (!row) return { ok: false, error: "edge not found" };
     return { ok: true, target: { kind: "edge", key: edgeQuizKey(edge), cuid: edge } };
+  }
+
+  // STEP 239 — an entity subject: {entity: "<entityType>", automation}. Resolved before the plain project
+  // fallback (which is the no-subject default).
+  const entity = String(input.entity ?? "").trim();
+  if (entity) {
+    const p = resolveProject(String(input.automation ?? ""));
+    if (!p.ok) return { ok: false, error: p.error };
+    return {
+      ok: true,
+      target: { kind: "entity", key: entityQuizKey(p.automation, entity), automation: p.automation, projectDir: p.projectDir, entityType: entity },
+    };
   }
 
   const useCase = String(input.useCase ?? "").trim();
@@ -294,6 +315,50 @@ export async function edgeContext(cuid: string): Promise<string> {
     `THE LINK'S CURRENT BRIEF (spec.md):\n${files.spec.trim() || "(empty — nothing described yet)"}`,
   ].join("\n\n");
 }
+
+// ─── ENTITY subject (step 239) ─────────────────────────────────────────────────────────────────────────
+// The brainstorm for one accordion entity of an automation (dashboard / analytics / calendar / map /
+// processes / fork-activation). It needs to SEE what the automation IS (so the requirement fits the real
+// automation) and what this entity already asks for (the current transport brief). The result is plain
+// requirement TEXT — WHAT this component must do — that the owner then dispatches with the rest in the wave.
+
+const ENTITY_LABELS: Record<string, string> = {
+  dashboard: "Dashboard (a data view — tables/metrics of what the automation produces)",
+  analytics: "Analytics (charts/insights over the automation's data)",
+  calendar: "Calendar (a time view of the automation's events/schedule)",
+  map: "Map (a geographic view of the automation's data)",
+  processes: "Processes (the timeline of the automation's runs/forks)",
+  "fork-activation": "Fork activation (how a run of this INSTANCED automation is started: which start settings it takes, how a fork is created and passed those settings, and how its launch is scheduled)",
+};
+
+export async function entityContext(automation: string, projectDir: string, entityType: string): Promise<string> {
+  const instruction = await automationInstruction(projectDir);
+  const descSrc = await readFile(join(projectDir, "_data", "description.ts"), "utf8").catch(() => "");
+  const title = (descSrc.match(/title:\s*("(?:[^"\\]|\\.)*")/) ?? [])[1];
+  let name = automation;
+  try { if (title) name = JSON.parse(title) as string; } catch { /* keep slug */ }
+  const current = await getTransport(automation, entityType as EntityType, "").catch(() => null);
+  const brief = (current?.payload as { brief?: string } | undefined)?.brief?.trim() ?? "";
+  return [
+    `AUTOMATION: ${name} (${automation})`,
+    `WHAT IT DOES (the owner's instruction):\n${instruction || "(not stated)"}`,
+    `THE ENTITY YOU ARE DESIGNING: ${ENTITY_LABELS[entityType] ?? entityType}`,
+    `THIS ENTITY'S CURRENT REQUIREMENT:\n${brief || "(empty — nothing described yet)"}`,
+  ].join("\n\n");
+}
+
+const ENTITY_SYSTEM = (lang: string, ctx: string) =>
+  `You are helping the owner describe, in plain words, a REQUIREMENT for ONE part of their automation — the
+entity named below. You are NOT writing code and NOT choosing a component: you help the owner say clearly
+WHAT this part must show or do, so a coding agent can build it later.
+
+${ctx || "(no context)"}
+
+RULES
+- Ask ONE short question at a time, and only what you still need to understand THIS entity's requirement.
+- Ask at most 4 questions; the moment the requirement is clear, say so instead of asking more.
+- Never ask about code, frameworks or components — ask what the owner wants to see and why.
+- Write EVERY message in this language: ${lang}. Never switch to another language.`;
 
 const EDGE_SYSTEM = (lang: string, ctx: string) =>
   `You are designing, with its owner, a LINK between two automations — a programmable integration that lives
@@ -607,6 +672,7 @@ export async function quizSeed(target: QuizTarget): Promise<string> {
   if (target.kind === "edge") return edgeContext(target.cuid);
   if (target.kind === "usecases") return caseEditContext(target.automation, target.projectDir);
   if (target.kind === "usecase") return caseEditContext(target.automation, target.projectDir, target.cuid);
+  if (target.kind === "entity") return entityContext(target.automation, target.projectDir, target.entityType);
   return automationInstruction(target.projectDir);
 }
 
@@ -624,6 +690,15 @@ export async function nextQuestionFor(quiz: QuizRow, target: QuizTarget, seed: s
       { role: "user", content: history.length === 0
           ? "Start: ask me your first question."
           : "Ask your next question, or if you have what you need, reply with exactly: READY" },
+    ]);
+  }
+  if (target.kind === "entity") {
+    return chat([
+      { role: "system", content: ENTITY_SYSTEM(languageName(quiz.language), seed) },
+      ...history,
+      { role: "user", content: history.length === 0
+          ? "Ask me your first question about what I need from this part of the automation."
+          : "Ask your next question, or if the requirement is clear, reply with exactly: READY" },
     ]);
   }
   return chat([
@@ -649,6 +724,24 @@ The link name is shown on the global canvas — always English. The spec is writ
     return { name: (j.name ?? "").slice(0, 60).trim(), spec: (j.spec ?? "").trim() || "Not described." };
   } catch {
     return { name: "", spec: out || "Not described." };
+  }
+}
+
+/** Synthesize the ENTITY REQUIREMENT from the brainstorm (step 239) — plain text of WHAT this part must do,
+ *  in the project's language. It becomes the entity's transport brief; NO name, NO code, NO dev step. */
+export async function synthesizeEntity(quiz: QuizRow, seed: string, turns: Turn[]): Promise<{ brief: string }> {
+  const transcript = turns.map((t) => `${t.role === "user" ? "OWNER" : "YOU"}: ${t.content}`).join("\n");
+  const out = await chat([
+    { role: "system", content: `You turn a short conversation into ONE clear REQUIREMENT for a part of an automation. Reply with STRICT JSON only:
+{"brief":"<the requirement, in ${languageName(quiz.language)}: WHAT this part must show or do, its data, and any rules — never code or a component choice>"}
+The brief is written in ${languageName(quiz.language)}. Keep only what the owner actually wants; do not invent scope he did not state.` },
+    { role: "user", content: `${seed}\n\nThe conversation:\n${transcript || "(no questions were answered — infer the requirement from the context)"}` },
+  ], "gpt-4o-mini", { json: true });
+  try {
+    const j = JSON.parse(out.replace(/^```json\s*|\s*```$/g, "")) as { brief?: string };
+    return { brief: (j.brief ?? "").trim() || out.trim() || "Not described." };
+  } catch {
+    return { brief: out.trim() || "Not described." };
   }
 }
 
@@ -678,6 +771,18 @@ context above, using reasonable defaults where it is silent. Be concrete and sho
 with a clear statement of WHICH output of WHICH source node feeds WHICH input of WHICH target node, under
 what conditions, and how they stay in sync. Write ONLY in ${lang}. The owner is reading you live and may
 edit your text — so write it as the final brief, not as a chat.`;
+  }
+  if (target.kind === "entity") {
+    return `You are drafting the REQUIREMENT for one part of an automation ALONE, thinking out loud, in the
+language: ${lang}.
+
+${seed || "(no context)"}
+
+Run the brainstorm YOURSELF: ask the questions you would have asked the owner and answer them from the
+context above, using reasonable defaults where it is silent. Be concrete and short (under 200 words). End
+with a clear statement of WHAT this part must show or do for this automation — never code or a component
+choice. Write ONLY in ${lang}. The owner is reading you live and may edit your text — write it as the final
+requirement, not as a chat.`;
   }
   return `You are designing an automation ALONE, thinking out loud, in the language: ${lang}.
 

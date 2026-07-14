@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useUiLang } from "../use-ui-lang";
 import { automationMenuStrings } from "../automation-menu-i18n";
 import { fill } from "../quiz-i18n";
+import { VoiceInput } from "./voice-input.client";
+import { ActivationQuiz } from "./activation-quiz.client";
 import type { EntityType } from "@/lib/entity-store";
 
 // THE REQUIREMENT BRIEF PANEL (step 238 P5-P9; "Start development" added Phase 2) — the authoring surface
@@ -19,11 +21,20 @@ import type { EntityType } from "@/lib/entity-store";
 // clears the container — mirroring ChainBriefPanel's own Start-development button exactly (same use-cases
 // gate, same step-created toast with a copy action). One component, reused for all five — they are
 // structurally identical (a single free-text transport field, automation-scoped, ref='').
+//
+// STEP 239 — the panel became a real DESIGN surface: the shared VoiceInput primitive (232) sits under the
+// field, and "Add with AI" opens the SAME Quiz on this entity as its subject, writing the wording it produces
+// straight back into the field (the owner still reviews and saves). `entityLabel` is passed IN rather than
+// looked up here, because the caller (the accordion) already has the translated label and because the new
+// fork-activation entity is not a key of the menu's `entities` record.
 export function RequirementBriefPanel({
   entityType,
+  entityLabel,
   automation,
 }: {
   entityType: EntityType;
+  /** The entity's translated name — shown as the Quiz's subtitle. Falls back to the raw type. */
+  entityLabel?: string;
   automation?: string;
 }) {
   const L = automationMenuStrings(useUiLang());
@@ -32,6 +43,11 @@ export function RequirementBriefPanel({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [starting, setStarting] = useState(false);
+  // "Add with AI" (step 239) — opens the SAME Quiz, on the `entity` subject. Controlled: this panel owns the
+  // open state, and the closing move hands the requirement text straight back into the textarea below.
+  const [quizOpen, setQuizOpen] = useState(false);
+  // Caret target for the shared VoiceInput primitive (step 232) — spoken text lands where the cursor is.
+  const briefRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     if (!automation) return;
@@ -115,12 +131,33 @@ export function RequirementBriefPanel({
         {pending && <span className="text-xs text-amber-600 dark:text-amber-400">{L.requirementPendingHint}</span>}
       </div>
       <Textarea
+        ref={briefRef}
         value={brief}
         onChange={(e) => setBrief(e.target.value)}
         placeholder={L.requirementPlaceholder}
         className="min-h-24 text-sm"
       />
+      {/* The shared voice primitive (step 232) — one component for every input; never a second mic. In IP
+          mode it disables itself with a hint (getUserMedia needs HTTPS). */}
+      <VoiceInput targetRef={briefRef} value={brief} onChange={setBrief} />
+      {/* "Add with AI" (step 239) — the SAME Quiz, on this entity as its subject. It brainstorms WHAT this
+          part must do and writes the wording straight back into the field above; the owner still reviews it
+          and presses Save. Never a second Quiz implementation. */}
+      {automation && (
+        <ActivationQuiz
+          automation={automation}
+          entity={entityType}
+          entityName={entityLabel ?? entityType}
+          open={quizOpen}
+          onClose={() => setQuizOpen(false)}
+          onApplied={(text) => { if (text) { setBrief(text); setPending(true); } }}
+        />
+      )}
       <div className="flex items-center gap-2">
+        <Button size="sm" variant="secondary" onClick={() => setQuizOpen(true)} disabled={!automation} className="gap-2">
+          <Sparkles className="size-3.5" />
+          {L.requirementAddWithAi}
+        </Button>
         <Button size="sm" variant="outline" onClick={save} disabled={saving} className="gap-2">
           {saving && <Loader2 className="size-3.5 animate-spin" />}
           {L.requirementSave}

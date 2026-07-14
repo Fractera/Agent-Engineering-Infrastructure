@@ -77,7 +77,12 @@ function humanize(slug: string): string {
 // FIRST stage and they come from the Quiz, which opens on the first visit and refuses to design a single
 // node until the owner has described his scenarios. The file below is regenerated from the case store on
 // every add / edit / delete (lib/use-cases.ts), so a fresh project starts with an empty, generated list.
-const VERSION = 5;
+// v6 (step 239) — the entity accordions became real DESIGN surfaces: every requirement panel carries the
+// shared VoiceInput primitive + "Add with AI" (the same Quiz, on that entity as its subject), and an
+// `instanced` automation additionally gets the FORK ACTIVATION surface (how one run starts: its settings, the
+// fork created with them, the launch schedule). The skeleton passes AUTOMATION_TYPE to AutomationAccordions so
+// that surface appears without a lookup; projects generated before v6 fall back to a client type fetch.
+const VERSION = 6;
 const SKELETON: Record<string, string> = {
   "page.tsx": `import AutomationEntry from "./_components";
 
@@ -370,6 +375,7 @@ export default function AutomationEntry() {
           cases={USE_CASES}
           automation="{{CATEGORY}}/{{PROJECT}}"
           dashboard={PROJECT_DASHBOARD}
+          type={AUTOMATION_TYPE}
         />
         {/* Shown on the FIRST visit only (owner) — SkeletonIntro remembers per browser. */}
         <SkeletonIntro automation="{{CATEGORY}}/{{PROJECT}}">
