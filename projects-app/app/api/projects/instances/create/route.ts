@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   if (!session?.roles?.some((r) => ROLES.includes(r))) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
-  let body: { automation?: string; title?: string; specialization?: string };
+  let body: { automation?: string; title?: string; specialization?: string; params?: Record<string, unknown> };
   try {
     body = await req.json();
   } catch {
@@ -29,12 +29,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "automation and title are required" }, { status: 400 });
   }
 
+  // STEP 241 — a fork's PARAMETERS: the typed settings THIS run works from (the article's keyword, the word
+  // count…). They are what makes an instanced run a specific run rather than the Master's defaults, and the
+  // executor REFUSES to run a fork without them ("fork-without-params") rather than silently using defaults.
+  // They live in the instance's `overrides` JSON under `params`, alongside the per-node overrides — no new
+  // column (lesson 225 G4). The owner designs WHICH parameters a run takes in the fork-activation surface
+  // (step 239); this is where a concrete run supplies them.
+  const params = body.params && typeof body.params === "object" ? body.params : {};
+
   const id = randomUUID();
   await db
     .prepare(
-      `INSERT INTO automation_instances (id, automation, title, specialization) VALUES (?, ?, ?, ?)`,
+      `INSERT INTO automation_instances (id, automation, title, specialization, overrides) VALUES (?, ?, ?, ?, ?)`,
     )
-    .run(id, automation, title, specialization);
+    .run(id, automation, title, specialization, JSON.stringify({ params }));
 
-  return NextResponse.json({ id, title, specialization, status: "new" });
+  return NextResponse.json({ id, title, specialization, params, status: "new" });
 }
