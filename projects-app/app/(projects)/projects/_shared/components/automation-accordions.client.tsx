@@ -83,14 +83,14 @@ export function AutomationAccordions({
                     <DashboardAccordion automation={automation ?? ""} dashboard={dashboard} />
                     {/* The requirement brief (step 238 P5-P9) still applies on top of the real interface —
                         "what's the NEXT change I need here" is a separate concern from the live tables. */}
-                    <RequirementBriefPanel entityType="dashboard" automation={automation} />
+                    <RequirementBriefPanel entityType="dashboard" entityLabel={title} automation={automation} />
                   </>
                 ) : k === "processes" ? (
                   <>
                     {/* The Processes/Gantt timeline (step 230): a row per fork, laid out by estimated
                         duration, shifting as runs finish. Shown only when the automation has forks. */}
                     <ProcessesTimeline automation={automation ?? ""} />
-                    <RequirementBriefPanel entityType="processes" automation={automation} />
+                    <RequirementBriefPanel entityType="processes" entityLabel={title} automation={automation} />
                   </>
                 ) : k === "usecases" ? (
                   // The automation scopes the LIVE case store, the pencils and the review gate (step 231) —
@@ -99,7 +99,7 @@ export function AutomationAccordions({
                 ) : (
                   // Calendar/Map/Analytics (step 238 P5-P9) — no real interface yet, only the requirement
                   // brief: the owner's authoring surface for "the next thing I need here".
-                  <RequirementBriefPanel entityType={k as EntityType} automation={automation} />
+                  <RequirementBriefPanel entityType={k as EntityType} entityLabel={title} automation={automation} />
                 )}
               </AccordionContent>
             </AccordionItem>

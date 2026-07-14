@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Textarea } from "@/components/ui/textarea";
 import { VoiceInput } from "./voice-input.client";
 import { useUiLang } from "../use-ui-lang";
-import { fill, quizStrings } from "../quiz-i18n";
+import { fill, quizStrings, entityQuizStrings } from "../quiz-i18n";
 
 // ACTIVATION QUIZ (step 227) — phase 2 of an automation's birth. Opens on the FIRST visit of a freshly
 // created automation and turns the owner's instruction (phase 1) into a real automation through a brainstorm,
@@ -37,7 +37,7 @@ type Phase = "usecases" | "nodes";
 
 
 export function ActivationQuiz({
-  automation, edge, edgeName, useCase, useCaseName, cases,
+  automation, edge, edgeName, useCase, useCaseName, cases, entity, entityName, onApplied,
   open: openProp, autoStart, onClose,
 }: {
   automation?: string;
@@ -48,6 +48,12 @@ export function ActivationQuiz({
   useCaseName?: string;
   /** Revisit the WHOLE set of user cases — the pencil on the panel's header (needs `automation`). */
   cases?: boolean;
+  /** STEP 239 — the ENTITY subject: "Add with AI" on a Requirement panel (dashboard/analytics/calendar/map/
+   *  processes/fork-activation). Needs `automation`; its closing move writes the requirement into that
+   *  entity's transport container and calls `onApplied` so the panel shows it without a reload. */
+  entity?: string;
+  entityName?: string;
+  onApplied?: (brief: string) => void;
   /** Controlled mode (the global canvas, the Use cases panel): the parent owns the open state. */
   open?: boolean;
   /** Start the streaming auto-quiz as soon as the session is created (used right after "Add automation"). */
@@ -58,12 +64,13 @@ export function ActivationQuiz({
   const controlled = openProp !== undefined;
   const isEdge = Boolean(edge);
   const isCaseEdit = Boolean(useCase) || Boolean(cases);
+  const isEntity = Boolean(entity);
   const [openState, setOpenState] = useState(false);
   const open = controlled ? Boolean(openProp) : openState;
   const [turns, setTurns] = useState<Turn[]>([]);
   const [answer, setAnswer] = useState("");
   const [busy, setBusy] = useState(false);
-  const [phase, setPhase] = useState<Phase>(isEdge || isCaseEdit ? "nodes" : "usecases");
+  const [phase, setPhase] = useState<Phase>(isEdge || isCaseEdit || isEntity ? "nodes" : "usecases");
   const [nodeCount, setNodeCount] = useState(0);
   const [maxNodes, setMaxNodes] = useState(10);
   const [streaming, setStreaming] = useState(false);
@@ -95,14 +102,16 @@ export function ActivationQuiz({
   // The UI language of the modal (owner's rule, six languages) — the shared hook, memoized per page.
   const uiLang = useUiLang();
   const L = quizStrings(uiLang);
+  const E = entityQuizStrings(uiLang);
 
-  // The SUBJECT of every call — one API, four subjects (steps 225 G4 + 231).
+  // The SUBJECT of every call — one API, five subjects (steps 225 G4 + 231 + 239).
   const subject = useCallback(() => {
     if (useCase) return { useCase };
     if (cases) return { automation, cases: true };
     if (isEdge) return { edge };
+    if (isEntity) return { automation, entity };
     return { automation };
-  }, [useCase, cases, isEdge, edge, automation]);
+  }, [useCase, cases, isEdge, isEntity, edge, entity, automation]);
 
   const query = useCase
     ? `useCase=${encodeURIComponent(useCase)}`
@@ -110,7 +119,9 @@ export function ActivationQuiz({
       ? `automation=${encodeURIComponent(automation ?? "")}&cases=1`
       : isEdge
         ? `edge=${encodeURIComponent(edge ?? "")}`
-        : `automation=${encodeURIComponent(automation ?? "")}`;
+        : isEntity
+          ? `automation=${encodeURIComponent(automation ?? "")}&entity=${encodeURIComponent(entity ?? "")}`
+          : `automation=${encodeURIComponent(automation ?? "")}`;
 
   const close = useCallback(() => {
     if (!controlled) setOpenState(false);
@@ -204,7 +215,9 @@ export function ActivationQuiz({
   }, [open, query]);
 
   useEffect(() => {
-    if (controlled || isEdge || isCaseEdit || !automation) return;
+    // The FIRST-VISIT auto-open is the project subject only: an edge, a case pencil and an entity's "Add with
+    // AI" (239) are always opened deliberately by their caller (controlled), never on their own.
+    if (controlled || isEdge || isCaseEdit || isEntity || !automation) return;
     void (async () => {
       const r = await fetch(`/api/projects/quiz?${query}`, { cache: "no-store" });
       if (!r.ok) return;
@@ -244,7 +257,7 @@ export function ActivationQuiz({
     toast.info(L.sessionFinished, {
       description: d.report,
       duration: 30000,
-      action: isEdge || isCaseEdit || !automation
+      action: isEdge || isCaseEdit || isEntity || !automation
         ? undefined
         : {
             label: L.testIt,
@@ -378,11 +391,30 @@ export function ActivationQuiz({
     } finally { setBusy(false); }
   }, [subject, close, router, L]);
 
+  // THE ENTITY's closing move (step 239): the brainstorm becomes this entity's REQUIREMENT TEXT, written into
+  // its transport container — the very field the Requirement panel shows. NO development step is dispatched
+  // here: the owner reviews the text, and dispatch is a separate action (the page-level wave, step 240).
+  const applyEntity = useCallback(async () => {
+    setBusy(true);
+    try {
+      const r = await fetch(`/api/projects/quiz/entity-apply`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ automation, entity }),
+      });
+      const d = (await r.json()) as { brief?: string; error?: string };
+      if (!r.ok) { toast.error(d.error ?? L.errWriteLink); return; }
+      onApplied?.(d.brief ?? "");
+      toast.success(E.btnSaveRequirement, { description: E.hintEntity, duration: 15000 });
+      close();
+      router.refresh();
+    } finally { setBusy(false); }
+  }, [automation, entity, onApplied, close, router, L, E]);
+
   const pause = useCallback(() => { aborter?.abort(); setStreaming(false); }, [aborter]);
 
   const saveEdit = useCallback(async () => {
     if (!draftText.trim()) return;
-    const asOwner = phase === "usecases" && !isEdge && !isCaseEdit; // keeping the draft IS his description
+    const asOwner = phase === "usecases" && !isEdge && !isCaseEdit && !isEntity; // keeping the draft IS his description
     setBusy(true);
     try {
       await fetch(`/api/projects/quiz/edit`, {
@@ -399,13 +431,18 @@ export function ActivationQuiz({
   // silent: the automation cannot be built until they exist, and the Quiz reopens on the next visit.
   const onOpenChange = (v: boolean) => {
     if (v) { if (!controlled) setOpenState(true); return; }
-    if (!isEdge && !isCaseEdit && phase === "usecases") {
+    if (!isEdge && !isCaseEdit && !isEntity && phase === "usecases") {
       toast.warning(L.casesMissing, { description: L.casesMissingDesc, duration: 12000 });
     }
     close();
   };
 
-  const title = isEdge ? (
+  const title = isEntity ? (
+    <>
+      <Sparkles className="size-4" /> {E.tEntity}
+      <span className="truncate text-xs font-normal text-muted-foreground">{entityName ?? entity ?? ""}</span>
+    </>
+  ) : isEdge ? (
     <>
       <Link2 className="size-4" /> {L.tLink}
       <span className="truncate text-xs font-normal text-muted-foreground">{edgeName ?? ""}</span>
@@ -465,7 +502,7 @@ export function ActivationQuiz({
             {turns.length === 0 && busy && (
               <p className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="size-4 animate-spin" />
-                {isEdge ? L.loaderEdge : isCaseEdit ? L.loaderCase : L.loaderInstruction}
+                {isEdge ? L.loaderEdge : isCaseEdit || isEntity ? L.loaderCase : L.loaderInstruction}
               </p>
             )}
             {turns.map((t, i) => (
@@ -539,7 +576,7 @@ export function ActivationQuiz({
             rows={3}
             className="max-h-40 overflow-y-auto"
             placeholder={
-              phase === "usecases" && !isEdge && !isCaseEdit ? L.phScenarios : L.phAnswer
+              phase === "usecases" && !isEdge && !isCaseEdit && !isEntity ? L.phScenarios : L.phAnswer
             }
             disabled={busy || streaming}
           />
@@ -558,7 +595,11 @@ export function ActivationQuiz({
             <Button size="sm" variant="secondary" onClick={autoQuiz} disabled={busy || streaming}>
               <Sparkles className="size-3.5" /> {L.btnAuto}
             </Button>
-            {isEdge ? (
+            {isEntity ? (
+              <Button size="sm" variant="outline" onClick={applyEntity} disabled={busy || streaming}>
+                <SkipForward className="size-3.5" /> {E.btnSaveRequirement}
+              </Button>
+            ) : isEdge ? (
               <Button size="sm" variant="outline" onClick={applyEdge} disabled={busy || streaming}>
                 <SkipForward className="size-3.5" /> {L.btnFinishLink}
               </Button>
@@ -575,14 +616,14 @@ export function ActivationQuiz({
                 <SkipForward className="size-3.5" /> {L.btnFinishNode}
               </Button>
             )}
-            {!(phase === "usecases" && !isEdge && !isCaseEdit) && (
+            {!(phase === "usecases" && !isEdge && !isCaseEdit && !isEntity) && (
               <Button size="sm" variant="ghost" onClick={finish} disabled={busy || streaming}>
                 {L.btnEnd}
               </Button>
             )}
           </div>
           <p className="text-xs text-muted-foreground">
-            {isEdge ? L.hintLink : isCaseEdit ? L.hintCase : phase === "usecases" ? L.hintUsecases : L.hintNodes}
+            {isEntity ? E.hintEntity : isEdge ? L.hintLink : isCaseEdit ? L.hintCase : phase === "usecases" ? L.hintUsecases : L.hintNodes}
           </p>
         </div>
       </DialogContent>

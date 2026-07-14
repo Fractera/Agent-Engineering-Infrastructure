@@ -393,3 +393,25 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
 export function quizStrings(lang: string): QuizStrings {
   return QUIZ_I18N[lang.slice(0, 2)] ?? QUIZ_I18N.en;
 }
+
+// STEP 239 — the "Add with AI" (entity requirement) subject's own chrome, kept in a SEPARATE dictionary so
+// the ten existing QuizStrings blocks are untouched. Ten languages (rule 4г); English is the fallback. The
+// entity's own name in the title comes from the caller (automation-menu-i18n already carries it ×10).
+export type EntityQuizStrings = { tEntity: string; btnSaveRequirement: string; hintEntity: string };
+
+export const ENTITY_QUIZ_I18N: Record<string, EntityQuizStrings> = {
+  en: { tEntity: "Describe the requirement", btnSaveRequirement: "Save the requirement", hintEntity: "The AI helps you word what this part must do; the requirement lands in its panel, ready to save." },
+  es: { tEntity: "Describe el requisito", btnSaveRequirement: "Guardar el requisito", hintEntity: "La IA te ayuda a expresar qué debe hacer esta parte; el requisito llega a su panel, listo para guardar." },
+  fr: { tEntity: "Décrivez le besoin", btnSaveRequirement: "Enregistrer le besoin", hintEntity: "L'IA vous aide à formuler ce que cette partie doit faire ; le besoin arrive dans son panneau, prêt à enregistrer." },
+  it: { tEntity: "Descrivi il requisito", btnSaveRequirement: "Salva il requisito", hintEntity: "L'IA ti aiuta a esprimere cosa deve fare questa parte; il requisito arriva nel suo pannello, pronto da salvare." },
+  ru: { tEntity: "Опишите требование", btnSaveRequirement: "Сохранить требование", hintEntity: "ИИ помогает сформулировать, что должна делать эта часть; требование появится в её панели — останется сохранить." },
+  de: { tEntity: "Beschreibe die Anforderung", btnSaveRequirement: "Anforderung speichern", hintEntity: "Die KI hilft dir zu formulieren, was dieser Teil tun soll; die Anforderung landet in seinem Bereich, bereit zum Speichern." },
+  pt: { tEntity: "Descreva o requisito", btnSaveRequirement: "Guardar o requisito", hintEntity: "A IA ajuda-o a expressar o que esta parte deve fazer; o requisito chega ao seu painel, pronto a guardar." },
+  pl: { tEntity: "Opisz wymaganie", btnSaveRequirement: "Zapisz wymaganie", hintEntity: "AI pomaga ująć w słowa, co ta część ma robić; wymaganie trafia do jej panelu, gotowe do zapisania." },
+  tr: { tEntity: "Gereksinimi tanımlayın", btnSaveRequirement: "Gereksinimi kaydet", hintEntity: "Yapay zekâ bu bölümün ne yapması gerektiğini ifade etmenize yardımcı olur; gereksinim panelinize gelir, kaydetmeye hazır." },
+  nl: { tEntity: "Beschrijf de vereiste", btnSaveRequirement: "Vereiste opslaan", hintEntity: "De AI helpt je te verwoorden wat dit onderdeel moet doen; de vereiste komt in het paneel, klaar om op te slaan." },
+};
+
+export function entityQuizStrings(lang: string): EntityQuizStrings {
+  return ENTITY_QUIZ_I18N[lang.slice(0, 2)] ?? ENTITY_QUIZ_I18N.en;
+}

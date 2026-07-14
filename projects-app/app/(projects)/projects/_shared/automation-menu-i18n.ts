@@ -51,6 +51,8 @@ export type AutomationMenuStrings = {
   // Dashboard/Analytics/Calendar/Map/Processes accordions.
   requirementLabel: string;
   requirementPlaceholder: string;
+  /** "Add with AI" (step 239) — opens the Quiz on this entity, to help word the requirement. */
+  requirementAddWithAi: string;
   requirementSave: string;
   requirementSaved: string;
   requirementSaveFail: string;
@@ -112,6 +114,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     collectedHint: "Raw data — copy it into an external AI tool, or click below to get an answer here.",
     requirementLabel: "Requirement",
     requirementPlaceholder: "Describe the next requirement for this section...",
+    requirementAddWithAi: "Add with AI",
     requirementSave: "Save",
     requirementSaved: "Saved",
     requirementSaveFail: "Could not save the requirement.",
@@ -169,6 +172,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     collectedHint: "Сырые данные — скопируйте их во внешний ИИ-инструмент, или нажмите ниже, чтобы получить ответ прямо здесь.",
     requirementLabel: "Требование",
     requirementPlaceholder: "Опишите следующее требование для этого раздела...",
+    requirementAddWithAi: "Добавить с помощью ИИ",
     requirementSave: "Сохранить",
     requirementSaved: "Сохранено",
     requirementSaveFail: "Не удалось сохранить требование.",
@@ -226,6 +230,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     collectedHint: "Datos en bruto — cópialos en una herramienta de IA externa, o haz clic abajo para obtener una respuesta aquí.",
     requirementLabel: "Requisito",
     requirementPlaceholder: "Describe el próximo requisito para esta sección...",
+    requirementAddWithAi: "Añadir con IA",
     requirementSave: "Guardar",
     requirementSaved: "Guardado",
     requirementSaveFail: "No se pudo guardar el requisito.",
@@ -283,6 +288,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     collectedHint: "Données brutes — copiez-les dans un outil d'IA externe, ou cliquez ci-dessous pour obtenir une réponse ici.",
     requirementLabel: "Exigence",
     requirementPlaceholder: "Décrivez la prochaine exigence pour cette section...",
+    requirementAddWithAi: "Ajouter avec l'IA",
     requirementSave: "Enregistrer",
     requirementSaved: "Enregistré",
     requirementSaveFail: "Impossible d'enregistrer l'exigence.",
@@ -340,6 +346,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     collectedHint: "Dati grezzi — copiali in uno strumento IA esterno, oppure clicca qui sotto per ottenere una risposta qui.",
     requirementLabel: "Requisito",
     requirementPlaceholder: "Descrivi il prossimo requisito per questa sezione...",
+    requirementAddWithAi: "Aggiungi con l'IA",
     requirementSave: "Salva",
     requirementSaved: "Salvato",
     requirementSaveFail: "Impossibile salvare il requisito.",
@@ -397,6 +404,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     collectedHint: "Rohdaten — kopiere sie in ein externes KI-Tool, oder klicke unten, um hier eine Antwort zu erhalten.",
     requirementLabel: "Anforderung",
     requirementPlaceholder: "Beschreibe die nächste Anforderung für diesen Bereich...",
+    requirementAddWithAi: "Mit KI hinzufügen",
     requirementSave: "Speichern",
     requirementSaved: "Gespeichert",
     requirementSaveFail: "Die Anforderung konnte nicht gespeichert werden.",
@@ -454,6 +462,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     collectedHint: "Dados brutos — copie-os para uma ferramenta de IA externa, ou clique abaixo para obter uma resposta aqui.",
     requirementLabel: "Requisito",
     requirementPlaceholder: "Descreva o próximo requisito para esta seção...",
+    requirementAddWithAi: "Adicionar com IA",
     requirementSave: "Salvar",
     requirementSaved: "Salvo",
     requirementSaveFail: "Não foi possível salvar o requisito.",
@@ -511,6 +520,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     collectedHint: "Surowe dane — skopiuj je do zewnętrznego narzędzia AI, albo kliknij poniżej, aby uzyskać odpowiedź tutaj.",
     requirementLabel: "Wymaganie",
     requirementPlaceholder: "Opisz kolejne wymaganie dla tej sekcji...",
+    requirementAddWithAi: "Dodaj z pomocą AI",
     requirementSave: "Zapisz",
     requirementSaved: "Zapisano",
     requirementSaveFail: "Nie udało się zapisać wymagania.",
@@ -568,6 +578,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     collectedHint: "Ham veri — harici bir AI aracına kopyalayın veya burada yanıt almak için aşağıya tıklayın.",
     requirementLabel: "Gereksinim",
     requirementPlaceholder: "Bu bölüm için bir sonraki gereksinimi açıklayın...",
+    requirementAddWithAi: "Yapay zekâ ile ekle",
     requirementSave: "Kaydet",
     requirementSaved: "Kaydedildi",
     requirementSaveFail: "Gereksinim kaydedilemedi.",
@@ -625,6 +636,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     collectedHint: "Ruwe data — kopieer ze naar een externe AI-tool, of klik hieronder om hier een antwoord te krijgen.",
     requirementLabel: "Vereiste",
     requirementPlaceholder: "Beschrijf de volgende vereiste voor dit onderdeel...",
+    requirementAddWithAi: "Toevoegen met AI",
     requirementSave: "Opslaan",
     requirementSaved: "Opgeslagen",
     requirementSaveFail: "Kon de vereiste niet opslaan.",
