@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorize, resolveProject } from "@/lib/nodes";
 import { extractEntitySlice } from "@/lib/entity-architecture";
-import { setTransport, type EntityType } from "@/lib/entity-store";
+import {
+  setTransport, getTransport, writeVersionByRef, nextVersionByRef, nextVersionForAutomation,
+  type EntityType,
+} from "@/lib/entity-store";
 
 // ROUTE FACTORY (step 238) — the 27 per-entity sub-APIs (add-new-transport-task-entry /
 // extract-current-state-for-architecture / extract-full-history-for-architecture, one triad per entity)
@@ -36,6 +39,18 @@ export function addTransportRoute(entityType: EntityType) {
     const proj = resolveProject(String(body?.automation ?? ""));
     if (!proj.ok) return NextResponse.json({ error: proj.error }, { status: 400 });
     const ref = String(body?.ref ?? "");
+    // ARCHIVE the OUTGOING transport before overwriting it — the "a new brief supersedes the old one, but
+    // the old one is never lost" half of the step-238 standard (same rule P4 applied to the chain brief).
+    // node/edge/usecase never call this route for their real content (each has its own bespoke transport —
+    // files on disk or a review-gate field), so this only ever fires for entities that actually rely on the
+    // generic entity_transport table (today: dashboard/analytics/calendar/map/processes, step 238 P5-P9).
+    const prior = await getTransport(proj.automation, entityType, ref);
+    if (prior && Object.keys((prior.payload as Record<string, unknown>) ?? {}).length > 0) {
+      const version = ref
+        ? await nextVersionByRef(entityType, ref)
+        : await nextVersionForAutomation(proj.automation, entityType, ref);
+      await writeVersionByRef(proj.automation, entityType, ref, version, prior.payload, null);
+    }
     await setTransport(proj.automation, entityType, ref, body?.payload ?? {});
     return NextResponse.json({ ok: true });
   };

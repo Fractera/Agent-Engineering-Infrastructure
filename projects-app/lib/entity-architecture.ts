@@ -187,14 +187,24 @@ async function extractChain(automation: string, withHistory: boolean): Promise<{
 
 type StubEntityType = "dashboard" | "analytics" | "calendar" | "map" | "processes";
 
+// Dashboard/Analytics/Calendar/Map/Processes (step 238 P5-P9) — the owner writes a free-text REQUIREMENT
+// brief (the "Requirement" panel in each entity's accordion), same shape as the chain brief: automation-
+// scoped (ref=''), archived-on-overwrite by the generic add-new-transport-task-entry route
+// (entity-architecture-routes.ts). This is a data-entry surface, not a builder — no dedicated node/table
+// like dashboard's own live rows (228/229); it exists purely to carry the owner's NEXT requested change
+// through to a coding agent via JSON1/JSON2, same as every other entity.
 async function extractStub(entityType: StubEntityType, automation: string, withHistory: boolean): Promise<{ current: unknown; history?: unknown[] }> {
-  const live = await getLiveEntities(automation);
+  const [live, transport] = await Promise.all([
+    getLiveEntities(automation),
+    getTransport(automation, entityType, ""),
+  ]);
   const current = {
     toggleEnabled: Boolean(live[entityType]),
-    note: `No authoring surface exists yet for ${entityType} — only its visibility switch. Lands in step 238 Phase 5-9.`,
+    requirementBrief: (transport?.payload as { brief?: string } | undefined)?.brief ?? "",
   };
   if (!withHistory) return { current };
-  return { current, history: [] };
+  const history = await getHistory(automation, entityType, "");
+  return { current, history: history.map((v) => ({ version: v.version, payload: v.payload, createdAt: v.createdAt })) };
 }
 
 async function extractOne(entityType: EntityType, automation: string, withHistory: boolean): Promise<{ current: unknown; history?: unknown[] }> {

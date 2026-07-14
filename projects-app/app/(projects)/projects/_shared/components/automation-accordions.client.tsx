@@ -19,10 +19,12 @@ import type { DashboardConfig } from "../table-config";
 import { UseCasesPanel } from "./use-cases-panel.client";
 import { DashboardAccordion } from "./dashboard-accordion.client";
 import { ProcessesTimeline } from "./processes-timeline.client";
+import { RequirementBriefPanel } from "./requirement-brief-panel.client";
 import { useUiLang } from "../use-ui-lang";
 import { useCasesStrings } from "../use-cases-i18n";
 import { useEntitiesLive } from "../use-entities-live";
 import { automationMenuStrings } from "../automation-menu-i18n";
+import type { EntityType } from "@/lib/entity-store";
 
 // FROZEN STANDARD (step 222; toggles reversed in 237) — the series of entity accordions below the "Add or
 // modify automation" button. Driven by the project's _data/config.ts SEED (EntitiesConfig), merged with
@@ -73,24 +75,31 @@ export function AutomationAccordions({
                   <TooltipContent className="max-w-xs">{tooltip}</TooltipContent>
                 </Tooltip>
               </AccordionTrigger>
-              <AccordionContent>
+              <AccordionContent className="space-y-4">
                 {k === "dashboard" ? (
-                  // The Dashboard is the first entity with a real interface (step 228): ONE tab, any number
-                  // of config-driven tables. The others are still empty containers until their own step.
-                  <DashboardAccordion automation={automation ?? ""} dashboard={dashboard} />
+                  <>
+                    {/* The Dashboard is the first entity with a real interface (step 228): ONE tab, any
+                        number of config-driven tables. */}
+                    <DashboardAccordion automation={automation ?? ""} dashboard={dashboard} />
+                    {/* The requirement brief (step 238 P5-P9) still applies on top of the real interface —
+                        "what's the NEXT change I need here" is a separate concern from the live tables. */}
+                    <RequirementBriefPanel entityType="dashboard" automation={automation} />
+                  </>
                 ) : k === "processes" ? (
-                  // The Processes/Gantt timeline (step 230): a row per fork, laid out by estimated duration,
-                  // shifting as runs finish. Shown only when the automation has forks.
-                  <ProcessesTimeline automation={automation ?? ""} />
+                  <>
+                    {/* The Processes/Gantt timeline (step 230): a row per fork, laid out by estimated
+                        duration, shifting as runs finish. Shown only when the automation has forks. */}
+                    <ProcessesTimeline automation={automation ?? ""} />
+                    <RequirementBriefPanel entityType="processes" automation={automation} />
+                  </>
                 ) : k === "usecases" ? (
                   // The automation scopes the LIVE case store, the pencils and the review gate (step 231) —
                   // the gate stays mandatory no matter this switch; only the accordion's visibility follows it.
                   <UseCasesPanel cases={cases} automation={automation} />
                 ) : (
-                  <p className="text-sm text-muted-foreground">
-                    This section appears here once configured. For now it is an empty container — see the
-                    project README, &ldquo;The automation entities standard&rdquo;.
-                  </p>
+                  // Calendar/Map/Analytics (step 238 P5-P9) — no real interface yet, only the requirement
+                  // brief: the owner's authoring surface for "the next thing I need here".
+                  <RequirementBriefPanel entityType={k as EntityType} automation={automation} />
                 )}
               </AccordionContent>
             </AccordionItem>

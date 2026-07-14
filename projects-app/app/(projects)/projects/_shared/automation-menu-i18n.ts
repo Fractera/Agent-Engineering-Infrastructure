@@ -47,6 +47,14 @@ export type AutomationMenuStrings = {
   copyJson: string;
   copied: string;
   collectedHint: string;
+  // Requirement brief panel (step 238 P5-P9) — the free-text authoring surface inside the still-empty
+  // Dashboard/Analytics/Calendar/Map/Processes accordions.
+  requirementLabel: string;
+  requirementPlaceholder: string;
+  requirementSave: string;
+  requirementSaved: string;
+  requirementSaveFail: string;
+  requirementPendingHint: string;
 };
 
 export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
@@ -92,6 +100,12 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     copyJson: "Copy",
     copied: "Copied",
     collectedHint: "Raw data — copy it into an external AI tool, or click below to get an answer here.",
+    requirementLabel: "Requirement",
+    requirementPlaceholder: "Describe the next requirement for this section...",
+    requirementSave: "Save",
+    requirementSaved: "Saved",
+    requirementSaveFail: "Could not save the requirement.",
+    requirementPendingHint: "Pending — not yet picked up by development.",
   },
   ru: {
     howItWorks: "Как это работает",
@@ -135,6 +149,12 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     copyJson: "Скопировать",
     copied: "Скопировано",
     collectedHint: "Сырые данные — скопируйте их во внешний ИИ-инструмент, или нажмите ниже, чтобы получить ответ прямо здесь.",
+    requirementLabel: "Требование",
+    requirementPlaceholder: "Опишите следующее требование для этого раздела...",
+    requirementSave: "Сохранить",
+    requirementSaved: "Сохранено",
+    requirementSaveFail: "Не удалось сохранить требование.",
+    requirementPendingHint: "Ожидает — ещё не взято в разработку.",
   },
   es: {
     howItWorks: "Cómo funciona",
@@ -178,6 +198,12 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     copyJson: "Copiar",
     copied: "Copiado",
     collectedHint: "Datos en bruto — cópialos en una herramienta de IA externa, o haz clic abajo para obtener una respuesta aquí.",
+    requirementLabel: "Requisito",
+    requirementPlaceholder: "Describe el próximo requisito para esta sección...",
+    requirementSave: "Guardar",
+    requirementSaved: "Guardado",
+    requirementSaveFail: "No se pudo guardar el requisito.",
+    requirementPendingHint: "Pendiente — aún no incorporado al desarrollo.",
   },
   fr: {
     howItWorks: "Comment ça marche",
@@ -221,6 +247,12 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     copyJson: "Copier",
     copied: "Copié",
     collectedHint: "Données brutes — copiez-les dans un outil d'IA externe, ou cliquez ci-dessous pour obtenir une réponse ici.",
+    requirementLabel: "Exigence",
+    requirementPlaceholder: "Décrivez la prochaine exigence pour cette section...",
+    requirementSave: "Enregistrer",
+    requirementSaved: "Enregistré",
+    requirementSaveFail: "Impossible d'enregistrer l'exigence.",
+    requirementPendingHint: "En attente — pas encore pris en charge par le développement.",
   },
   it: {
     howItWorks: "Come funziona",
@@ -264,6 +296,12 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     copyJson: "Copia",
     copied: "Copiato",
     collectedHint: "Dati grezzi — copiali in uno strumento IA esterno, oppure clicca qui sotto per ottenere una risposta qui.",
+    requirementLabel: "Requisito",
+    requirementPlaceholder: "Descrivi il prossimo requisito per questa sezione...",
+    requirementSave: "Salva",
+    requirementSaved: "Salvato",
+    requirementSaveFail: "Impossibile salvare il requisito.",
+    requirementPendingHint: "In sospeso — non ancora preso in carico dallo sviluppo.",
   },
   de: {
     howItWorks: "So funktioniert es",
@@ -307,6 +345,12 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     copyJson: "Kopieren",
     copied: "Kopiert",
     collectedHint: "Rohdaten — kopiere sie in ein externes KI-Tool, oder klicke unten, um hier eine Antwort zu erhalten.",
+    requirementLabel: "Anforderung",
+    requirementPlaceholder: "Beschreibe die nächste Anforderung für diesen Bereich...",
+    requirementSave: "Speichern",
+    requirementSaved: "Gespeichert",
+    requirementSaveFail: "Die Anforderung konnte nicht gespeichert werden.",
+    requirementPendingHint: "Ausstehend — noch nicht in der Entwicklung aufgenommen.",
   },
   pt: {
     howItWorks: "Como funciona",
@@ -350,6 +394,12 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     copyJson: "Copiar",
     copied: "Copiado",
     collectedHint: "Dados brutos — copie-os para uma ferramenta de IA externa, ou clique abaixo para obter uma resposta aqui.",
+    requirementLabel: "Requisito",
+    requirementPlaceholder: "Descreva o próximo requisito para esta seção...",
+    requirementSave: "Salvar",
+    requirementSaved: "Salvo",
+    requirementSaveFail: "Não foi possível salvar o requisito.",
+    requirementPendingHint: "Pendente — ainda não incorporado ao desenvolvimento.",
   },
   pl: {
     howItWorks: "Jak to działa",
@@ -393,6 +443,12 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     copyJson: "Kopiuj",
     copied: "Skopiowano",
     collectedHint: "Surowe dane — skopiuj je do zewnętrznego narzędzia AI, albo kliknij poniżej, aby uzyskać odpowiedź tutaj.",
+    requirementLabel: "Wymaganie",
+    requirementPlaceholder: "Opisz kolejne wymaganie dla tej sekcji...",
+    requirementSave: "Zapisz",
+    requirementSaved: "Zapisano",
+    requirementSaveFail: "Nie udało się zapisać wymagania.",
+    requirementPendingHint: "Oczekujące — jeszcze nie podjęte do realizacji.",
   },
   tr: {
     howItWorks: "Nasıl çalışır",
@@ -436,6 +492,12 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     copyJson: "Kopyala",
     copied: "Kopyalandı",
     collectedHint: "Ham veri — harici bir AI aracına kopyalayın veya burada yanıt almak için aşağıya tıklayın.",
+    requirementLabel: "Gereksinim",
+    requirementPlaceholder: "Bu bölüm için bir sonraki gereksinimi açıklayın...",
+    requirementSave: "Kaydet",
+    requirementSaved: "Kaydedildi",
+    requirementSaveFail: "Gereksinim kaydedilemedi.",
+    requirementPendingHint: "Beklemede — henüz geliştirmeye alınmadı.",
   },
   nl: {
     howItWorks: "Hoe het werkt",
@@ -479,6 +541,12 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     copyJson: "Kopiëren",
     copied: "Gekopieerd",
     collectedHint: "Ruwe data — kopieer ze naar een externe AI-tool, of klik hieronder om hier een antwoord te krijgen.",
+    requirementLabel: "Vereiste",
+    requirementPlaceholder: "Beschrijf de volgende vereiste voor dit onderdeel...",
+    requirementSave: "Opslaan",
+    requirementSaved: "Opgeslagen",
+    requirementSaveFail: "Kon de vereiste niet opslaan.",
+    requirementPendingHint: "In behandeling — nog niet in ontwikkeling genomen.",
   },
 };
 
