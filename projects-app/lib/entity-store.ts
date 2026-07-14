@@ -22,11 +22,47 @@ export const ENTITY_TYPES: EntityType[] = [
   "node", "edge", "usecase", "chain", "dashboard", "analytics", "calendar", "map", "processes",
 ];
 
-export type EntitySlice = {
+// ─── THE UNIFIED SLICE CONTRACT (step 238, strengthened after review) ──────────────────────────────────
+// Owner's requirement: max legibility for a WEAK model + scales to an automation with HUNDREDS of nodes.
+// A first sketch (one `currentTask` per entity type) was wrong — node/edge/usecase can have hundreds of
+// INSTANCES per automation (many nodes), while chain/dashboard/analytics/calendar/map/processes have
+// exactly ONE instance per automation (ref=''). Only an ARRAY of instances serves "one" and "hundreds"
+// identically — quantity differs, shape never does. A weak model learns EXACTLY ONE pattern for all 9
+// entity types: find `instances[]`, check `pending`, if true read `currentTask`.
+
+/** One archived, resolved task — the SAME shape as `currentTask`, just wrapped with when it was archived
+ *  and which Development Step consumed it. */
+export type EntityTaskRecord<TTask> = {
+  version: number;
+  task: TTask;
+  devStepRef: string | null;
+  createdAt: string;
+};
+
+/** ONE instance of an entity — a node, an edge, a use case, or the single "instance" of an automation-wide
+ *  entity (chain/dashboard/...). `identity` carries descriptive facts (cuid, slug, status, draft, members)
+ *  — NOT the task; `currentTask`/`history[].task` share the identical `TTask` shape, deliberately flat (1-3
+ *  plain string fields) so "what do I need to do" never needs entity-specific parsing. */
+export type EntityInstance<TTask, TIdentity> = {
+  ref: string;                 // '' for automation-wide; cuid for node/edge/usecase
+  identity: TIdentity;
+  pending: boolean;            // ALWAYS derived from (currentTask !== null) by makeInstance() below — never
+                                // set independently, so it can never drift from currentTask. Exposed as its
+                                // own field so a weak model does a plain key check, never a null-inference.
+  currentTask: TTask | null;   // null = nothing pending right now
+  history: EntityTaskRecord<TTask>[];
+};
+
+/** Builds one instance, deriving `pending` from `currentTask` so the two fields can never disagree. */
+export function makeInstance<TTask, TIdentity>(
+  ref: string, identity: TIdentity, currentTask: TTask | null, history: EntityTaskRecord<TTask>[],
+): EntityInstance<TTask, TIdentity> {
+  return { ref, identity, pending: currentTask !== null, currentTask, history };
+}
+
+export type EntitySlice<TTask = unknown, TIdentity = unknown> = {
   entityType: EntityType;
-  pending: boolean; // true when a transport row has a non-empty payload — "changed since last consume"
-  current: unknown;
-  history?: unknown[]; // present only when the caller asked for full history
+  instances: EntityInstance<TTask, TIdentity>[];  // length 1 for chain/stubs, length N for node/edge/usecase
   error?: string; // set when this ONE entity's extraction failed — never aborts the whole bundle
 };
 

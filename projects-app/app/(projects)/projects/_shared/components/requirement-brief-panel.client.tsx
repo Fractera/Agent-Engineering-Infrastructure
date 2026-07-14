@@ -35,10 +35,12 @@ export function RequirementBriefPanel({
     setLoading(true);
     fetch(`/api/projects/${entityType}-architecture/extract-current-state-for-architecture?automation=${encodeURIComponent(automation)}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d: { current?: { requirementBrief?: string }; pending?: boolean } | null) => {
+      .then((d: { instances?: { currentTask?: { brief?: string } | null; pending?: boolean }[] } | null) => {
         if (!alive) return;
-        setBrief(d?.current?.requirementBrief ?? "");
-        setPending(Boolean(d?.pending));
+        // These 5 entities are always automation-wide — exactly one instance (ref=''), never zero/many.
+        const inst = d?.instances?.[0];
+        setBrief(inst?.currentTask?.brief ?? "");
+        setPending(Boolean(inst?.pending));
       })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
