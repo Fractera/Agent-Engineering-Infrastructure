@@ -331,6 +331,64 @@ export async function materializeChainStep(i: ChainStepInput): Promise<{ file: s
   return { file, message };
 }
 
+// ─── DASHBOARD/ANALYTICS/CALENDAR/MAP/PROCESSES REQUIREMENTS (step 238 P5-P9 + Phase 2): the same pipeline
+// as every other entity — the owner's free-text "Requirement" brief becomes ONE Development Step. This is
+// the REAL "handed to a coding agent" event for these 5 entities: the calling route
+// (<entity>-architecture/start-development) archives+clears the brief right after this materializes,
+// mirroring materializeChainStep exactly (same reasoning: a chain group and these 5 entities are both
+// AUTOMATION-SCOPED, ref='', with no code/version lifecycle of their own beyond the free-text ask).
+export type StubEntityStepKind = "dashboard" | "analytics" | "calendar" | "map" | "processes";
+
+export type StubEntityStepInput = {
+  number: number;
+  automation: string;
+  entityType: StubEntityStepKind;
+  brief: string;
+};
+
+export function buildStubEntityStepMessage(i: StubEntityStepInput): string {
+  return `Execute development step #${i.number} in the Fractera projects app.
+
+TASK: implement a ${i.entityType.toUpperCase()} requirement for the automation "${i.automation}".
+
+WHAT THE OWNER WANTS (verbatim):
+${i.brief.trim() || "(no brief given)"}
+
+WHAT TO DO
+${archContextLine(i.automation)}
+1. Read app/(projects)/README.md — "The automation entities (accordions) standard" and, if the ${i.entityType}
+   entity already has one, its own dedicated standard section (e.g. "The dashboard tables & columns
+   standard") for the existing conventions to follow.
+2. Implement the requirement inside this automation's OWN files — never create a shared/second
+   implementation elsewhere; keep everything co-located with this automation.
+3. Verify: GET http://localhost:3003/api/projects/validate?automation=${i.automation} returns ok:true.
+
+DONE = the requirement is implemented, the validator is clean.`;
+}
+
+export async function materializeStubEntityStep(i: StubEntityStepInput): Promise<{ file: string; message: string }> {
+  const message = buildStubEntityStepMessage(i);
+  const kindLabel = i.entityType.charAt(0).toUpperCase() + i.entityType.slice(1);
+  const name = `${kindLabel} requirement for ${i.automation}`;
+  const slug = i.automation.replace("/", "-");
+  const block = JSON.stringify({
+    number: i.number,
+    name,
+    importance: "mandatory",
+    status: "new",
+    completedAt: null,
+    description: `Implement a ${i.entityType} requirement for automation ${i.automation}, from the owner's brief.`,
+    tasks: [{ id: `${slug}-${i.entityType}`, body: `Implement: ${i.brief.trim().slice(0, 200) || "(no brief given)"}` }],
+  });
+  const body = `# ${String(i.number).padStart(2, "0")} — ${name}\n\n> Development step · importance: mandatory · generated from a ${i.entityType} requirement (step 238)\n\n## The brief (from the owner, in the ${i.entityType} accordion)\n\n${i.brief.trim() || "(no brief given)"}\n\n## The message handed to the coding agent\n\n\`\`\`\n${message}\n\`\`\`\n\n<!-- fractera:step\n${block}\n-->\n`;
+
+  const dir = join(STEPS_DIR(), "NEW-STEPS");
+  await mkdir(dir, { recursive: true });
+  const file = join(dir, `${String(i.number).padStart(2, "0")}-${i.entityType}-requirement-${slug}.md`);
+  await writeFile(file, body, "utf8");
+  return { file, message };
+}
+
 // ─── USER CASES (step 231): a CHANGED scenario is built by the same pipeline as a node ───────────────
 // A use case is what the automation must DO, in the owner's words. When he edits one (or adds one) after the
 // automation already exists, the code must follow — so the change leaves the Quiz as ONE development step in

@@ -7,15 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useUiLang } from "../use-ui-lang";
 import { automationMenuStrings } from "../automation-menu-i18n";
+import { fill } from "../quiz-i18n";
 import type { EntityType } from "@/lib/entity-store";
 
-// THE REQUIREMENT BRIEF PANEL (step 238 P5-P9) — the authoring surface for the five entities that had NONE
-// until now (Dashboard/Analytics/Calendar/Map/Processes): a free-text field for "the next thing I need
-// here", same shape as the chain brief. Saving POSTs to that entity's own
-// <entity>-architecture/add-new-transport-task-entry route (entity-architecture-routes.ts) — which ARCHIVES
-// the outgoing brief into entity_history before overwriting (same rule as the chain brief, step 238 P4), so
-// nothing the owner wrote is ever silently lost. One component, reused for all five — they are structurally
-// identical (a single free-text transport field, automation-scoped, ref='').
+// THE REQUIREMENT BRIEF PANEL (step 238 P5-P9; "Start development" added Phase 2) — the authoring surface
+// for the five entities that had NONE until now (Dashboard/Analytics/Calendar/Map/Processes): a free-text
+// field for "the next thing I need here", same shape as the chain brief. "Save" is a plain DRAFT overwrite
+// (<entity>-architecture/add-new-transport-task-entry) — nothing is archived yet, the owner may still be
+// editing. "Start development" (<entity>-architecture/start-development) is the REAL "handed to a coding
+// agent" event: it materializes a Development Step from the CURRENT brief, then archives it into history and
+// clears the container — mirroring ChainBriefPanel's own Start-development button exactly (same use-cases
+// gate, same step-created toast with a copy action). One component, reused for all five — they are
+// structurally identical (a single free-text transport field, automation-scoped, ref='').
 export function RequirementBriefPanel({
   entityType,
   automation,
@@ -28,6 +31,7 @@ export function RequirementBriefPanel({
   const [pending, setPending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [starting, setStarting] = useState(false);
 
   useEffect(() => {
     if (!automation) return;
@@ -65,6 +69,43 @@ export function RequirementBriefPanel({
     }
   }
 
+  async function startDevelopment() {
+    if (!automation) return;
+    setStarting(true);
+    try {
+      // Save whatever is currently in the textarea first, so "Start development" always hands over the
+      // LATEST text even if the owner never clicked "Save" — mirrors ChainBriefPanel's own button.
+      await fetch(`/api/projects/${entityType}-architecture/add-new-transport-task-entry`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ automation, ref: "", payload: { brief } }),
+      });
+      const r = await fetch(`/api/projects/${entityType}-architecture/start-development`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ automation }),
+      });
+      const d = (await r.json().catch(() => null)) as { number?: number; message?: string; reason?: string } | null;
+      if (r.status === 409 && (d?.reason === "no-cases" || d?.reason === "not-reviewed")) {
+        toast.error(d.reason === "no-cases" ? L.requirementNoCases : L.requirementNotReviewed);
+        return;
+      }
+      if (!r.ok) { toast.error(L.requirementStepFailed); return; }
+      // Archived + cleared server-side — reflect that immediately rather than waiting for a re-fetch.
+      setBrief("");
+      setPending(false);
+      toast.success(fill(L.requirementStepCreated, { step: d?.number ?? "" }), {
+        description: L.requirementStepCopyDesc,
+        duration: 30000,
+        action: { label: L.requirementCopyBtn, onClick: () => void navigator.clipboard.writeText(d?.message ?? "") },
+      });
+    } catch {
+      toast.error(L.requirementStepFailed);
+    } finally {
+      setStarting(false);
+    }
+  }
+
   if (loading) return <Loader2 className="size-4 animate-spin text-muted-foreground" />;
 
   return (
@@ -79,10 +120,16 @@ export function RequirementBriefPanel({
         placeholder={L.requirementPlaceholder}
         className="min-h-24 text-sm"
       />
-      <Button size="sm" onClick={save} disabled={saving} className="gap-2">
-        {saving && <Loader2 className="size-3.5 animate-spin" />}
-        {L.requirementSave}
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button size="sm" variant="outline" onClick={save} disabled={saving} className="gap-2">
+          {saving && <Loader2 className="size-3.5 animate-spin" />}
+          {L.requirementSave}
+        </Button>
+        <Button size="sm" onClick={startDevelopment} disabled={starting || !brief.trim()} className="gap-2">
+          {starting && <Loader2 className="size-3.5 animate-spin" />}
+          {starting ? L.requirementStarting : L.requirementStartDev}
+        </Button>
+      </div>
     </div>
   );
 }

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorize, resolveProject } from "@/lib/nodes";
-import { groupMembers, readChainSpec } from "@/lib/edges";
+import { groupMembers, readChainSpec, writeChainSpec } from "@/lib/edges";
 import { materializeChainStep, nextStepNumber } from "@/lib/dev-steps";
 import { assertUseCasesReviewed } from "@/lib/use-cases";
+import { writeVersionByRef, nextVersionForAutomation } from "@/lib/entity-store";
 
 // "Start development" for a CHAIN group (step 236.3) — mirrors /api/projects/edges/[cuid]/start-development
 // exactly (same queue, same brief-to-step shape), scoped to the group's CURRENT membership instead of one
@@ -16,6 +17,12 @@ import { assertUseCasesReviewed } from "@/lib/use-cases";
 // frozen skeleton, same _data/use-cases.ts) — this was the one path that had NOT been wired to that gate.
 // Same reason codes ("no-cases" | "not-reviewed") as /api/projects/start-development, so the client's error
 // toast can distinguish them with the same translated copy.
+//
+// ARCHIVE + CLEAR here, not in the PATCH (step 238 Phase 2 correction) — THIS is the real "handed to a
+// coding agent" event. Chain is AUTOMATION-SCOPED (ref='', shared across every automation), so its history
+// uses the automation-scoped helpers, never the CUID ref-based ones (those would collide across different
+// chain groups). After materializing the step, the brief is archived and the container clears — ready for
+// the owner to describe the NEXT requirement from scratch.
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
@@ -37,6 +44,12 @@ export async function POST(req: NextRequest) {
     members,
     spec,
   });
+
+  if (spec.trim()) {
+    const version = await nextVersionForAutomation(automation, "chain");
+    await writeVersionByRef(automation, "chain", "", version, { brief: spec }, String(number));
+    await writeChainSpec(automation, "");
+  }
 
   return NextResponse.json({ ok: true, number, file, message });
 }

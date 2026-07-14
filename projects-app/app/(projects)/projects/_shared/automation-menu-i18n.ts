@@ -55,6 +55,16 @@ export type AutomationMenuStrings = {
   requirementSaved: string;
   requirementSaveFail: string;
   requirementPendingHint: string;
+  // Requirement "Start development" (step 238 Phase 2) — materializes the brief as a Development Step,
+  // then archives+clears it (the real "handed to a coding agent" event).
+  requirementStartDev: string;
+  requirementStarting: string;
+  requirementStepFailed: string;
+  requirementNoCases: string;
+  requirementNotReviewed: string;
+  requirementStepCreated: string; // template: "{step}"
+  requirementStepCopyDesc: string;
+  requirementCopyBtn: string;
 };
 
 export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
@@ -106,6 +116,14 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementSaved: "Saved",
     requirementSaveFail: "Could not save the requirement.",
     requirementPendingHint: "Pending — not yet picked up by development.",
+    requirementStartDev: "Start development",
+    requirementStarting: "Starting…",
+    requirementStepFailed: "Could not start development.",
+    requirementNoCases: "This automation has no use cases yet — complete the Quiz first.",
+    requirementNotReviewed: "Read and confirm the use cases in the Quiz before development can start.",
+    requirementStepCreated: "Step #{step} created",
+    requirementStepCopyDesc: "Copy the message and paste it into your coder chat",
+    requirementCopyBtn: "Copy",
   },
   ru: {
     howItWorks: "Как это работает",
@@ -155,6 +173,14 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementSaved: "Сохранено",
     requirementSaveFail: "Не удалось сохранить требование.",
     requirementPendingHint: "Ожидает — ещё не взято в разработку.",
+    requirementStartDev: "Начать разработку",
+    requirementStarting: "Запускаю…",
+    requirementStepFailed: "Не удалось начать разработку.",
+    requirementNoCases: "У этой автоматизации ещё нет пользовательских кейсов — сначала пройдите Quiz.",
+    requirementNotReviewed: "Прочитайте и подтвердите кейсы в Quiz, прежде чем начать разработку.",
+    requirementStepCreated: "Шаг №{step} создан",
+    requirementStepCopyDesc: "Скопируйте сообщение и вставьте его в чат агента-кодера",
+    requirementCopyBtn: "Скопировать",
   },
   es: {
     howItWorks: "Cómo funciona",
@@ -204,6 +230,14 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementSaved: "Guardado",
     requirementSaveFail: "No se pudo guardar el requisito.",
     requirementPendingHint: "Pendiente — aún no incorporado al desarrollo.",
+    requirementStartDev: "Iniciar desarrollo",
+    requirementStarting: "Iniciando…",
+    requirementStepFailed: "No se pudo iniciar el desarrollo.",
+    requirementNoCases: "Esta automatización aún no tiene casos de uso — completa el Quiz primero.",
+    requirementNotReviewed: "Lee y confirma los casos de uso en el Quiz antes de que pueda empezar el desarrollo.",
+    requirementStepCreated: "Paso n.º {step} creado",
+    requirementStepCopyDesc: "Copia el mensaje y pégalo en tu chat de codificación",
+    requirementCopyBtn: "Copiar",
   },
   fr: {
     howItWorks: "Comment ça marche",
@@ -253,6 +287,14 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementSaved: "Enregistré",
     requirementSaveFail: "Impossible d'enregistrer l'exigence.",
     requirementPendingHint: "En attente — pas encore pris en charge par le développement.",
+    requirementStartDev: "Démarrer le développement",
+    requirementStarting: "Démarrage…",
+    requirementStepFailed: "Impossible de démarrer le développement.",
+    requirementNoCases: "Cette automatisation n'a pas encore de cas d'usage — terminez d'abord le Quiz.",
+    requirementNotReviewed: "Lisez et confirmez les cas d'usage dans le Quiz avant que le développement puisse commencer.",
+    requirementStepCreated: "Étape n° {step} créée",
+    requirementStepCopyDesc: "Copiez le message et collez-le dans votre chat de codage",
+    requirementCopyBtn: "Copier",
   },
   it: {
     howItWorks: "Come funziona",
@@ -302,6 +344,14 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementSaved: "Salvato",
     requirementSaveFail: "Impossibile salvare il requisito.",
     requirementPendingHint: "In sospeso — non ancora preso in carico dallo sviluppo.",
+    requirementStartDev: "Avvia sviluppo",
+    requirementStarting: "Avvio…",
+    requirementStepFailed: "Impossibile avviare lo sviluppo.",
+    requirementNoCases: "Questa automazione non ha ancora casi d'uso — completa prima il Quiz.",
+    requirementNotReviewed: "Leggi e conferma i casi d'uso nel Quiz prima che lo sviluppo possa iniziare.",
+    requirementStepCreated: "Passo n. {step} creato",
+    requirementStepCopyDesc: "Copia il messaggio e incollalo nella tua chat di sviluppo",
+    requirementCopyBtn: "Copia",
   },
   de: {
     howItWorks: "So funktioniert es",
@@ -351,6 +401,14 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementSaved: "Gespeichert",
     requirementSaveFail: "Die Anforderung konnte nicht gespeichert werden.",
     requirementPendingHint: "Ausstehend — noch nicht in der Entwicklung aufgenommen.",
+    requirementStartDev: "Entwicklung starten",
+    requirementStarting: "Wird gestartet…",
+    requirementStepFailed: "Die Entwicklung konnte nicht gestartet werden.",
+    requirementNoCases: "Diese Automatisierung hat noch keine Anwendungsfälle — schließe zuerst das Quiz ab.",
+    requirementNotReviewed: "Lies und bestätige die Anwendungsfälle im Quiz, bevor die Entwicklung beginnen kann.",
+    requirementStepCreated: "Schritt Nr. {step} erstellt",
+    requirementStepCopyDesc: "Kopiere die Nachricht und füge sie in deinen Coder-Chat ein",
+    requirementCopyBtn: "Kopieren",
   },
   pt: {
     howItWorks: "Como funciona",
@@ -400,6 +458,14 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementSaved: "Salvo",
     requirementSaveFail: "Não foi possível salvar o requisito.",
     requirementPendingHint: "Pendente — ainda não incorporado ao desenvolvimento.",
+    requirementStartDev: "Iniciar desenvolvimento",
+    requirementStarting: "Iniciando…",
+    requirementStepFailed: "Não foi possível iniciar o desenvolvimento.",
+    requirementNoCases: "Esta automação ainda não tem casos de uso — complete o Quiz primeiro.",
+    requirementNotReviewed: "Leia e confirme os casos de uso no Quiz antes que o desenvolvimento possa começar.",
+    requirementStepCreated: "Passo nº {step} criado",
+    requirementStepCopyDesc: "Copie a mensagem e cole-a no seu chat de codificação",
+    requirementCopyBtn: "Copiar",
   },
   pl: {
     howItWorks: "Jak to działa",
@@ -449,6 +515,14 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementSaved: "Zapisano",
     requirementSaveFail: "Nie udało się zapisać wymagania.",
     requirementPendingHint: "Oczekujące — jeszcze nie podjęte do realizacji.",
+    requirementStartDev: "Rozpocznij realizację",
+    requirementStarting: "Uruchamianie…",
+    requirementStepFailed: "Nie udało się rozpocząć realizacji.",
+    requirementNoCases: "Ta automatyzacja nie ma jeszcze przypadków użycia — najpierw ukończ Quiz.",
+    requirementNotReviewed: "Przeczytaj i potwierdź przypadki użycia w Quizie, zanim realizacja będzie mogła się rozpocząć.",
+    requirementStepCreated: "Utworzono krok nr {step}",
+    requirementStepCopyDesc: "Skopiuj wiadomość i wklej ją do czatu z agentem programistą",
+    requirementCopyBtn: "Kopiuj",
   },
   tr: {
     howItWorks: "Nasıl çalışır",
@@ -498,6 +572,14 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementSaved: "Kaydedildi",
     requirementSaveFail: "Gereksinim kaydedilemedi.",
     requirementPendingHint: "Beklemede — henüz geliştirmeye alınmadı.",
+    requirementStartDev: "Geliştirmeyi başlat",
+    requirementStarting: "Başlatılıyor…",
+    requirementStepFailed: "Geliştirme başlatılamadı.",
+    requirementNoCases: "Bu otomasyonun henüz kullanım senaryosu yok — önce Quiz'i tamamlayın.",
+    requirementNotReviewed: "Geliştirme başlayabilmesi için Quiz'deki kullanım senaryolarını okuyup onaylayın.",
+    requirementStepCreated: "Adım #{step} oluşturuldu",
+    requirementStepCopyDesc: "Mesajı kopyalayıp kodlama sohbetinize yapıştırın",
+    requirementCopyBtn: "Kopyala",
   },
   nl: {
     howItWorks: "Hoe het werkt",
@@ -547,6 +629,14 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementSaved: "Opgeslagen",
     requirementSaveFail: "Kon de vereiste niet opslaan.",
     requirementPendingHint: "In behandeling — nog niet in ontwikkeling genomen.",
+    requirementStartDev: "Ontwikkeling starten",
+    requirementStarting: "Bezig met starten…",
+    requirementStepFailed: "Kon de ontwikkeling niet starten.",
+    requirementNoCases: "Deze automatisering heeft nog geen use cases — rond eerst de Quiz af.",
+    requirementNotReviewed: "Lees en bevestig de use cases in de Quiz voordat de ontwikkeling kan beginnen.",
+    requirementStepCreated: "Stap #{step} aangemaakt",
+    requirementStepCopyDesc: "Kopieer het bericht en plak het in je codeerchat",
+    requirementCopyBtn: "Kopiëren",
   },
 };
 
