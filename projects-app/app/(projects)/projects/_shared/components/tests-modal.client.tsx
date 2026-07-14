@@ -12,18 +12,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { Probe, ProbeStage } from "../tests";
+import { useUiLang } from "../use-ui-lang";
+import { automationMenuStrings } from "../automation-menu-i18n";
 
 // FROZEN STANDARD (step 220) — the Tests modal, driven ENTIRELY by the project's PROBES declaration
 // (_data/tests.ts). Each card runs its binding (a frozen shared route /api/projects/tests/<kind>, or a
 // project route by the same { ok, detail } contract) and shows the probe's OWN prepared success/error
-// text — no hardcoded probe list, no free-form "custom test". Grouped by flow stage.
+// text — no hardcoded probe list, no free-form "custom test". Grouped by flow stage. The chrome (title,
+// stage labels, button) is 10-language (step 237); a probe's own label/hint/success/error text is
+// per-project content declared in _data/tests.ts — out of scope for this i18n pass.
 type Status = "idle" | "running" | "ok" | "fail";
 
-const STAGE_LABEL: Record<ProbeStage, string> = {
-  input: "Inputs",
-  intermediate: "Intermediate",
-  output: "Outputs",
-};
 const STAGE_ORDER: ProbeStage[] = ["input", "intermediate", "output"];
 
 async function runBinding(p: Probe): Promise<boolean> {
@@ -63,6 +62,12 @@ export function TestsModal({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const L = automationMenuStrings(useUiLang());
+  const STAGE_LABEL: Record<ProbeStage, string> = {
+    input: L.stageInput,
+    intermediate: L.stageIntermediate,
+    output: L.stageOutput,
+  };
   const [status, setStatus] = useState<Record<string, Status>>({});
   const [line, setLine] = useState<Record<string, string>>({});
 
@@ -82,19 +87,12 @@ export function TestsModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[600px] overflow-y-auto sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Tests</DialogTitle>
-          <DialogDescription>
-            One probe per entity the automation depends on. Each verifies it actually works.
-          </DialogDescription>
+          <DialogTitle>{L.testsTitle}</DialogTitle>
+          <DialogDescription>{L.testsDescription}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           {!probes.length && (
-            <p className="text-sm text-muted-foreground">
-              No tests declared yet. Declare one probe per entity this automation touches in{" "}
-              <code>_data/tests.ts</code> — grouped by stage (input / intermediate / output), each with
-              its binding (a shared <code>/api/projects/tests/&lt;kind&gt;</code> route or a project route)
-              and its own prepared success / error text. See app/(projects)/README.md.
-            </p>
+            <p className="text-sm text-muted-foreground">{L.testsEmpty}</p>
           )}
           {stages.map((st) => (
             <div key={st} className="space-y-2">
@@ -110,7 +108,7 @@ export function TestsModal({
                         <p className="truncate text-xs text-muted-foreground">{line[p.id] ?? p.hint}</p>
                       </div>
                       <Button variant="outline" size="sm" disabled={s === "running"} onClick={() => probe(p)}>
-                        Test
+                        {L.testButton}
                       </Button>
                     </div>
                   );

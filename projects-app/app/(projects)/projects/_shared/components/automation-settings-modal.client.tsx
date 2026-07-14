@@ -10,6 +10,8 @@ import {
 import type { InputChannel } from "../channels";
 import { ModelKeySettings } from "./model-key-settings.client";
 import { InputChannelsPanel } from "./input-channels-panel.client";
+import { useUiLang } from "../use-ui-lang";
+import { automationMenuStrings } from "../automation-menu-i18n";
 
 // FROZEN STANDARD (step 220) — the generic automation Settings, opened from the menu as a 600×600 modal
 // of FLAT sections (no accordion, owner rule). Driven entirely by the project's declarations: the AI
@@ -38,25 +40,23 @@ export function AutomationSettingsModal({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const L = automationMenuStrings(useUiLang());
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[600px] overflow-y-auto sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Settings</DialogTitle>
-          <DialogDescription>Configure this automation&apos;s model and input channels.</DialogDescription>
+          <DialogTitle>{L.settingsTitle}</DialogTitle>
+          <DialogDescription>{L.settingsDescription}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <Section title="AI model">
+          <Section title={L.aiModelSection}>
             <ModelKeySettings modelEnvKey={modelEnvKey} defaultModel={defaultModel} />
           </Section>
-          <Section title="Input channels">
+          <Section title={L.inputChannelsSection}>
             <InputChannelsPanel channels={channels} />
           </Section>
-          <Section title="Run interval">
-            <p className="text-sm text-muted-foreground">
-              This automation has no schedule yet. When it needs to run on a timer, declare a{" "}
-              <code>cron.json</code> and a settings endpoint — the interval picker then appears here.
-            </p>
+          <Section title={L.runIntervalSection}>
+            <p className="text-sm text-muted-foreground">{L.runIntervalBody}</p>
           </Section>
         </div>
       </DialogContent>

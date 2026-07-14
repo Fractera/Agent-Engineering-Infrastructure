@@ -3,11 +3,16 @@
 import { useEffect, useState } from "react";
 import type { NodeContract } from "../node-contract";
 import { DiagramCanvas } from "./diagram-canvas.client";
+import { useEntitiesLive } from "../use-entities-live";
 
-// FROZEN STANDARD (step 223.C — owner design). The Diagram is NOT an accordion: it is ALWAYS visible,
-// spanning the FULL screen width at 80vh, as the automation's centerpiece. It is rendered as a
-// full-width section (outside the page's centered max-w column), so the canvas is always on screen and
-// never hidden behind a collapsed accordion.
+// FROZEN STANDARD (step 223.C — owner design; toggle reversed in 237). The Diagram is NOT an accordion:
+// it spans the FULL screen width at 80vh, as the automation's centerpiece, when its switch is ON — outside
+// the page's centered max-w column so the canvas is never hidden behind a collapsed accordion. Owner
+// (step 237): on by default (useful while building/debugging), but an automation handed to a non-technical
+// end user can hide it from the hamburger menu — it is a plain if/else on the live entities flag now, not
+// a structurally mandatory section. No `seed` prop is threaded in from each project's _data/config.ts here
+// (every automation, old and new, already behaves as diagram:true today) — default true until the live
+// fetch resolves, then the DB override (if any) wins, same as every other entity.
 //
 // TIMELINE FOCUS (step 230): clicking a bar in the Processes/Gantt timeline scrolls up to THIS section (the
 // diagram is the automation's centerpiece) and titles it with the clicked node — the word "Diagram", the
@@ -23,6 +28,7 @@ function fmt(ms: number): string {
 // the canvas — they used to touch.
 export function DiagramSection({ nodes, automation }: { nodes: NodeContract[]; automation?: string }) {
   const [focus, setFocus] = useState<Focus>(null);
+  const { entities } = useEntitiesLive(automation, { diagram: true });
 
   useEffect(() => {
     const onFocus = (e: Event) => {
@@ -34,6 +40,8 @@ export function DiagramSection({ nodes, automation }: { nodes: NodeContract[]; a
     window.addEventListener("processes:focus-node", onFocus);
     return () => window.removeEventListener("processes:focus-node", onFocus);
   }, [automation]);
+
+  if (entities.diagram === false) return null;
 
   return (
     <section id="diagram-section" className="mx-auto mt-16 w-[85vw] max-w-full scroll-mt-4 rounded-lg border bg-muted/5 px-4 py-4">

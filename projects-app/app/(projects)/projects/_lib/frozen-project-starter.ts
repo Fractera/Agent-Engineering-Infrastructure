@@ -237,19 +237,22 @@ export const FUNCTIONS: NodeFunction[] = [];
 `,
   "_nodes/output/spec.md": `This node delivers the automation's result — a reply, a saved record, or a published page. Describe where and how the result is delivered, then Start development to build it.
 `,
-  "_data/config.ts": `// This automation's CONFIG (frozen standard v4, step 222 — see app/(projects)/README.md,
-// "The automation entities standard"). \`entities\` toggles the accordions shown below the
-// "Add or modify automation" button. \`diagram\` and \`dashboard\` are always on (mandatory); enable the
-// others when the automation actually needs them — an enabled entity shows an empty container (a tooltip
-// explains it), a disabled one is not rendered. Use cases are mandatory and live outside this config.
+  "_data/config.ts": `// This automation's CONFIG (frozen standard v4, step 222; toggles reversed in 237 — see
+// app/(projects)/README.md, "The automation entities standard"). \`entities\` is the SEED for the
+// hamburger menu's visibility switches (Diagram/Calendar/Map/Dashboard/Processes/Analytics/User cases) —
+// the owner's live overrides win at runtime, no rebuild involved (see use-entities-live.ts). Nothing is
+// structurally mandatory any more: \`diagram\` defaults on (useful while building), everything else
+// defaults off until the automation actually needs it. The User cases review gate (step 231) stays
+// mandatory before any Development Step regardless of this switch — this only toggles its accordion.
 export const PROJECT_CONFIG = {
   entities: {
     diagram: true,
-    dashboard: true,
+    dashboard: false,
     calendar: false,
     map: false,
     processes: false,
     analytics: false,
+    usecases: false,
   },
 } as const;
 `,
@@ -340,6 +343,7 @@ export default function AutomationEntry() {
           probes={PROBES}
           automation="{{CATEGORY}}/{{PROJECT}}"
           type={AUTOMATION_TYPE}
+          entitiesSeed={PROJECT_CONFIG.entities}
         />
         {/* PHASE 2 (step 227) — on the FIRST visit the activation Quiz opens and brainstorms the owner's
             instruction into nodes: one quiz step = one node + one development step for the coding agent. */}

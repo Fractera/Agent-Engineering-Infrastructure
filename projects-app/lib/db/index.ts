@@ -117,6 +117,17 @@ const SCHEMA = `
     values_json TEXT NOT NULL DEFAULT '{}',
     created_at  TEXT NOT NULL DEFAULT (datetime('now'))
   );
+  -- ENTITIES live overrides (step 237) — the hamburger-menu switches (Diagram/Calendar/Map/Dashboard/
+  -- Processes/Analytics/User cases) write here so a toggle takes effect INSTANTLY, no rebuild: the
+  -- automation page is statically prerendered (canon), so a flag baked only into _data/config.ts would need
+  -- a rebuild to show — same class of lag the owner already hit with category/automation creation (fix
+  -- 069030a). One JSON-blob row per automation (same class-immunity to live-ALTER as dashboard_rows, lesson
+  -- 225 G4); a project's _data/config.ts stays the SEED, this table is the override merged on top and wins.
+  CREATE TABLE IF NOT EXISTS automation_entities (
+    automation    TEXT PRIMARY KEY NOT NULL,
+    entities_json TEXT NOT NULL DEFAULT '{}',
+    updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
+  );
   -- Diagram Builder mode (step 224). Two axes the file-based diagram never had: a LIVE lightweight canvas
   -- index (so a Builder-created node renders instantly without a rebuild) and per-node VERSION HISTORY.
   -- Identity is a CUID (owner: weak models mangle the UUID format) that is stable across a folder rename,

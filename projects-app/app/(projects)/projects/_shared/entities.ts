@@ -1,25 +1,27 @@
-// FROZEN STANDARD — an automation's ENTITIES (step 222).
+// FROZEN STANDARD — an automation's ENTITIES (step 222; toggles moved to the menu + live store, step 237).
 //
 // Below the "Add or modify automation" button, a project shows a series of accordions — one per
-// ENTITY. Each entity is OPTIONAL and toggled in the project's _data/config.ts (except `diagram`,
-// which is always on with a minimal interface). At this stage an enabled entity renders an EMPTY
-// accordion whose title carries a hover tooltip explaining what it is; a disabled one is not rendered.
-// Later the data inside each container will drive real interface generation.
+// ENTITY (`diagram` renders separately, full-width, outside the accordion series — step 223.C). EVERY
+// entity, including `diagram`, is a plain if/else on its live flag now — nothing is structurally
+// mandatory any more (step 237, owner reversal of 222.1/231): the owner flips each one from the
+// hamburger menu, and the switch takes effect instantly (see `use-entities-live.ts` — a live DB override
+// merged over this seed, no rebuild). At this stage an enabled entity renders an EMPTY accordion whose
+// title carries a hover tooltip explaining what it is; a disabled one is not rendered. Later the data
+// inside each container will drive real interface generation.
 //
 // This registry IS the "table" of entities in code — reused by every project. See
 // app/(projects)/README.md, "The automation entities (accordions) standard", for the prose table.
-export type EntityKey = "diagram" | "calendar" | "map" | "dashboard" | "processes" | "analytics";
+export type EntityKey = "diagram" | "calendar" | "map" | "dashboard" | "processes" | "analytics" | "usecases";
 
 export type EntityMeta = {
-  /** Accordion title. */
+  /** Accordion title / switch label (English fallback — the menu and accordions show the 10-language
+   *  string from `automation-menu-i18n.ts` instead; this is the code-level identifier). */
   label: string;
-  /** Hover tooltip: what this entity/step means. */
+  /** Hover tooltip: what this entity/step means (English fallback, see above). */
   tooltip: string;
-  /** Always rendered regardless of config (currently only `diagram`). */
-  mandatory?: boolean;
 };
 
-// Render order of the accordion series.
+// Render order of the accordion series + the entities switch list in the menu.
 export const ENTITY_ORDER: EntityKey[] = [
   "diagram",
   "calendar",
@@ -27,14 +29,14 @@ export const ENTITY_ORDER: EntityKey[] = [
   "dashboard",
   "processes",
   "analytics",
+  "usecases",
 ];
 
 export const ENTITY_META: Record<EntityKey, EntityMeta> = {
   diagram: {
     label: "Diagram",
-    mandatory: true,
     tooltip:
-      "The diagram that implements this project's automation. Minimal here; it grows into the real node graph of the automation.",
+      "The diagram that implements this project's automation. Minimal here; it grows into the real node graph of the automation. On by default (useful while building) — an automation ready for a non-technical owner can hide it.",
   },
   calendar: {
     label: "Calendar",
@@ -48,7 +50,6 @@ export const ENTITY_META: Record<EntityKey, EntityMeta> = {
   },
   dashboard: {
     label: "Dashboard",
-    mandatory: true,
     tooltip:
       "Data-visualization slices — holds sub-dashboards when the automation needs different views of its data.",
   },
@@ -62,13 +63,21 @@ export const ENTITY_META: Record<EntityKey, EntityMeta> = {
     tooltip:
       "Charts you define to summarize performance, in a clear interface built on shadcn/charts.",
   },
+  usecases: {
+    label: "User cases",
+    tooltip:
+      "The cases agreed with the architect: what the automation should do. Hiding this switch only hides the accordion — the review gate before development steps stays mandatory regardless (step 231, unaffected by this switch).",
+  },
 };
 
-/** The per-project toggle map (in _data/config.ts). Mandatory entities (`diagram`, `dashboard`) render
- *  regardless; a fresh skeleton has the optional ones off. Consumers read it as `Partial` (a missing key
- *  = off), so adding a NEW entity later never breaks existing projects' configs.
+/** The per-project toggle map (in _data/config.ts) — the SEED / initial value a fresh automation is born
+ *  with. The owner's live overrides (menu switches) are layered on top at runtime and win; this file
+ *  never changes after that (no rebuild involved in toggling — see `use-entities-live.ts`). Consumers
+ *  read it as `Partial` (a missing key = off), so adding a NEW entity later never breaks existing
+ *  projects' configs.
  *
  *  Scaling — to add a new entity: (1) add its key to `EntityKey`, (2) add a row to `ENTITY_META`
- *  (label + tooltip, `mandatory` if always-on), (3) place it in `ENTITY_ORDER`. Existing projects need
- *  no edit — the key is simply absent from their config and reads as off until they enable it. */
+ *  (label + tooltip), (3) place it in `ENTITY_ORDER`, (4) add its 10-language label/tooltip to
+ *  `automation-menu-i18n.ts`. Existing projects need no edit — the key is simply absent from their
+ *  config and reads as off until the owner enables it. */
 export type EntitiesConfig = Record<EntityKey, boolean>;

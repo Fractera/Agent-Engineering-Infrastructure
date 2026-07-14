@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { InputChannel } from "../channels";
 import type { Probe } from "../tests";
 import type { AutomationType } from "../automation-type";
+import type { EntitiesConfig } from "../entities";
 import { AutomationMenu } from "./automation-menu.client";
 import { AutomationStatePill } from "./automation-state-pill.client";
 import { useUiLang } from "../use-ui-lang";
@@ -21,6 +22,7 @@ export function AutomationStatusBar({
   probes,
   automation,
   type,
+  entitiesSeed,
 }: {
   category: string;
   categoryLabel: string;
@@ -32,6 +34,8 @@ export function AutomationStatusBar({
   automation?: string;
   /** The immutable automation type — its badge sits LEFT of the state pill (step 224 §1.5). */
   type?: AutomationType;
+  /** The project's _data/config.ts entities — seeds the menu's live visibility switches (step 237). */
+  entitiesSeed?: Partial<EntitiesConfig>;
 }) {
   const lang = useUiLang();
   const L = categoryHubStrings(lang);
@@ -51,6 +55,8 @@ export function AutomationStatusBar({
           defaultModel={defaultModel}
           channels={channels}
           probes={probes}
+          automation={automation}
+          entitiesSeed={entitiesSeed}
         />
       </span>
     </div>
