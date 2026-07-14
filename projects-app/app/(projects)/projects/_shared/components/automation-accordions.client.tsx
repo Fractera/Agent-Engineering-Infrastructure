@@ -20,6 +20,7 @@ import { UseCasesPanel } from "./use-cases-panel.client";
 import { DashboardAccordion } from "./dashboard-accordion.client";
 import { ProcessesTimeline } from "./processes-timeline.client";
 import { RequirementBriefPanel } from "./requirement-brief-panel.client";
+import { AppPagesPanel } from "./app-pages-panel.client";
 import { useUiLang } from "../use-ui-lang";
 import { useCasesStrings } from "../use-cases-i18n";
 import { useEntitiesLive } from "../use-entities-live";
@@ -144,6 +145,10 @@ export function AutomationAccordions({
             // The automation scopes the LIVE case store, the pencils and the review gate (step 231) — the gate
             // stays mandatory no matter this switch; only the accordion's visibility follows it.
             <UseCasesPanel cases={cases} automation={automation} />
+          ) : k === "apppages" ? (
+            // Application pages (step 242): declare PUBLIC pages of the application layer for external users of
+            // this automation — a folder tree of the slot app/, "Add page", per-page to-dos (voice + Quiz).
+            <AppPagesPanel automation={automation ?? ""} />
           ) : (
             // Calendar/Map/Analytics (step 238 P5-P9) — the requirement brief: "the next thing I need here".
             <RequirementBriefPanel entityType={k as EntityType} entityLabel={title} automation={automation} />

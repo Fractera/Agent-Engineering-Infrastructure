@@ -52,12 +52,17 @@ export type QuizTarget =
   | { kind: "edge"; key: string; cuid: string }
   | { kind: "usecases"; key: string; automation: string; projectDir: string }
   | { kind: "usecase"; key: string; cuid: string; automation: string; projectDir: string }
-  | { kind: "entity"; key: string; automation: string; projectDir: string; entityType: string };
+  | { kind: "entity"; key: string; automation: string; projectDir: string; entityType: string }
+  // STEP 242 — a PUBLIC application page: the owner brainstorms what EXTERNAL users see/do on a page they
+  // declared in the application layer (slot app/). `pageRel` is the filesystem rel of the page folder; the
+  // brainstorm becomes a TO-DO LIST written into that page's README (page-apply), not an entity brief.
+  | { kind: "page"; key: string; automation: string; projectDir: string; pageRel: string };
 
 export const edgeQuizKey = (cuid: string) => `edge:${cuid}`;
 export const useCaseQuizKey = (cuid: string) => `usecase:${cuid}`;
 export const useCasesQuizKey = (automation: string) => `usecases:${automation}`;
 export const entityQuizKey = (automation: string, entityType: string) => `entity:${automation}:${entityType}`;
+export const pageQuizKey = (automation: string, rel: string) => `page:${automation}:${rel}`;
 
 /** The automation a target belongs to ("" for an edge, which belongs to none). */
 export function targetAutomation(target: QuizTarget): string {
@@ -67,7 +72,7 @@ export function targetAutomation(target: QuizTarget): string {
 /** Resolve the subject of a request ({automation} | {edge} | {useCase} | {automation, cases:true}) into a
  *  target — used by every quiz route. */
 export async function resolveQuizTarget(
-  input: { automation?: unknown; edge?: unknown; useCase?: unknown; cases?: unknown; entity?: unknown },
+  input: { automation?: unknown; edge?: unknown; useCase?: unknown; cases?: unknown; entity?: unknown; page?: unknown },
 ): Promise<{ ok: true; target: QuizTarget } | { ok: false; error: string }> {
   const edge = String(input.edge ?? "").trim();
   if (edge) {
@@ -85,6 +90,18 @@ export async function resolveQuizTarget(
     return {
       ok: true,
       target: { kind: "entity", key: entityQuizKey(p.automation, entity), automation: p.automation, projectDir: p.projectDir, entityType: entity },
+    };
+  }
+
+  // STEP 242 — a public application page: {page: "<rel>", automation}. Resolved before the project fallback,
+  // like the entity subject above.
+  const page = String(input.page ?? "").trim();
+  if (page) {
+    const p = resolveProject(String(input.automation ?? ""));
+    if (!p.ok) return { ok: false, error: p.error };
+    return {
+      ok: true,
+      target: { kind: "page", key: pageQuizKey(p.automation, page), automation: p.automation, projectDir: p.projectDir, pageRel: page },
     };
   }
 
@@ -358,6 +375,35 @@ RULES
 - Ask ONE short question at a time, and only what you still need to understand THIS entity's requirement.
 - Ask at most 4 questions; the moment the requirement is clear, say so instead of asking more.
 - Never ask about code, frameworks or components — ask what the owner wants to see and why.
+- Write EVERY message in this language: ${lang}. Never switch to another language.`;
+
+// STEP 242 — the PUBLIC APPLICATION PAGE subject. Same shape as entityContext (name + instruction), but the
+// subject is a page EXTERNAL users will use, addressed by its filesystem rel under the slot app/.
+export async function pageContext(automation: string, projectDir: string, rel: string): Promise<string> {
+  const instruction = await automationInstruction(projectDir);
+  const descSrc = await readFile(join(projectDir, "_data", "description.ts"), "utf8").catch(() => "");
+  const title = (descSrc.match(/title:\s*("(?:[^"\\]|\\.)*")/) ?? [])[1];
+  let name = automation;
+  try { if (title) name = JSON.parse(title) as string; } catch { /* keep slug */ }
+  return [
+    `AUTOMATION: ${name} (${automation})`,
+    `WHAT IT DOES (the owner's instruction):\n${instruction || "(not stated)"}`,
+    `THE PUBLIC PAGE YOU ARE DESIGNING: app/${rel} — used by EXTERNAL users of this automation (not just the owner).`,
+  ].join("\n\n");
+}
+
+const PAGE_SYSTEM = (lang: string, ctx: string) =>
+  `You are helping the owner describe a PUBLIC PAGE of their application — a page EXTERNAL users (not just the
+owner) will use: a registration page, a public interface, a landing page. You are NOT writing code and NOT
+choosing a component: you help the owner say clearly WHAT a visitor sees, enters and gets on this page, so a
+coding agent can build it later.
+
+${ctx || "(no context)"}
+
+RULES
+- Ask ONE short question at a time, only what you still need to understand THIS page.
+- Ask at most 4 questions; the moment the page is clear, say so instead of asking more.
+- Never ask about code, frameworks or components — ask what the visitor sees, does and receives.
 - Write EVERY message in this language: ${lang}. Never switch to another language.`;
 
 const EDGE_SYSTEM = (lang: string, ctx: string) =>
@@ -673,6 +719,7 @@ export async function quizSeed(target: QuizTarget): Promise<string> {
   if (target.kind === "usecases") return caseEditContext(target.automation, target.projectDir);
   if (target.kind === "usecase") return caseEditContext(target.automation, target.projectDir, target.cuid);
   if (target.kind === "entity") return entityContext(target.automation, target.projectDir, target.entityType);
+  if (target.kind === "page") return pageContext(target.automation, target.projectDir, target.pageRel);
   return automationInstruction(target.projectDir);
 }
 
@@ -699,6 +746,15 @@ export async function nextQuestionFor(quiz: QuizRow, target: QuizTarget, seed: s
       { role: "user", content: history.length === 0
           ? "Ask me your first question about what I need from this part of the automation."
           : "Ask your next question, or if the requirement is clear, reply with exactly: READY" },
+    ]);
+  }
+  if (target.kind === "page") {
+    return chat([
+      { role: "system", content: PAGE_SYSTEM(languageName(quiz.language), seed) },
+      ...history,
+      { role: "user", content: history.length === 0
+          ? "Ask me your first question about what this public page must do for its visitors."
+          : "Ask your next question, or if the page is clear, reply with exactly: READY" },
     ]);
   }
   return chat([
@@ -745,6 +801,26 @@ The brief is written in ${languageName(quiz.language)}. Keep only what the owner
   }
 }
 
+/** Synthesize the PUBLIC PAGE's to-do list from the brainstorm (step 242) — a short list of concrete,
+ *  buildable tasks (a section, a field, a behaviour), in the project's language. Each item is written into the
+ *  page's README to-do list by page-apply; NO code, NO component names, NO dev step. */
+export async function synthesizePage(quiz: QuizRow, seed: string, turns: Turn[]): Promise<{ todos: string[] }> {
+  const transcript = turns.map((t) => `${t.role === "user" ? "OWNER" : "YOU"}: ${t.content}`).join("\n");
+  const out = await chat([
+    { role: "system", content: `You turn a short conversation into a TO-DO LIST for a coding agent building ONE public application page. Reply with STRICT JSON only:
+{"todos":["<one concrete task, in ${languageName(quiz.language)}>", "..."]}
+Each item is one buildable task — a section, a field, a rule, a behaviour a visitor experiences — never code or a component name. Give 2-6 items. Keep only what the owner actually wants; do not invent scope he did not state.` },
+    { role: "user", content: `${seed}\n\nThe conversation:\n${transcript || "(no questions were answered — infer the page from the context)"}` },
+  ], "gpt-4o-mini", { json: true });
+  try {
+    const j = JSON.parse(out.replace(/^```json\s*|\s*```$/g, "")) as { todos?: unknown };
+    const todos = Array.isArray(j.todos) ? j.todos.map(String).map((s) => s.trim()).filter(Boolean).slice(0, 10) : [];
+    return { todos: todos.length ? todos : [out.trim() || "Not described."] };
+  } catch {
+    return { todos: [out.trim() || "Not described."] };
+  }
+}
+
 /** The system prompt of the STREAMING auto-quiz (227.B) — the model brainstorms with itself, per subject and
  *  per phase (in the use-case phase it drafts the SCENARIOS, not a node). */
 export async function autoSystemPrompt(quiz: QuizRow, target: QuizTarget, seed: string): Promise<string> {
@@ -783,6 +859,16 @@ context above, using reasonable defaults where it is silent. Be concrete and sho
 with a clear statement of WHAT this part must show or do for this automation — never code or a component
 choice. Write ONLY in ${lang}. The owner is reading you live and may edit your text — write it as the final
 requirement, not as a chat.`;
+  }
+  if (target.kind === "page") {
+    return `You are designing a PUBLIC APPLICATION PAGE ALONE, thinking out loud, in the language: ${lang}.
+
+${seed || "(no context)"}
+
+Run the brainstorm YOURSELF: ask the questions you would have asked the owner and answer them from the context
+above, using reasonable defaults where it is silent. Be concrete and short (under 200 words). End with a clear
+statement of WHAT a visitor sees, enters and gets on this page — never code or a component choice. Write ONLY
+in ${lang}. The owner is reading you live and may edit your text — write it as the final brief, not as a chat.`;
   }
   return `You are designing an automation ALONE, thinking out loud, in the language: ${lang}.
 

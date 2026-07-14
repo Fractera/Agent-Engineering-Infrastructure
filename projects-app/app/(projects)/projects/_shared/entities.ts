@@ -11,7 +11,7 @@
 //
 // This registry IS the "table" of entities in code — reused by every project. See
 // app/(projects)/README.md, "The automation entities (accordions) standard", for the prose table.
-export type EntityKey = "diagram" | "calendar" | "map" | "dashboard" | "processes" | "analytics" | "usecases";
+export type EntityKey = "diagram" | "calendar" | "map" | "dashboard" | "processes" | "analytics" | "usecases" | "apppages";
 
 export type EntityMeta = {
   /** Accordion title / switch label (English fallback — the menu and accordions show the 10-language
@@ -30,6 +30,7 @@ export const ENTITY_ORDER: EntityKey[] = [
   "processes",
   "analytics",
   "usecases",
+  "apppages",
 ];
 
 export const ENTITY_META: Record<EntityKey, EntityMeta> = {
@@ -67,6 +68,11 @@ export const ENTITY_META: Record<EntityKey, EntityMeta> = {
     label: "User cases",
     tooltip:
       "The cases agreed with the architect: what the automation should do. Hiding this switch only hides the accordion — the review gate before development steps stays mandatory regardless (step 231, unaffected by this switch).",
+  },
+  apppages: {
+    label: "Application pages",
+    tooltip:
+      "Public pages of the application layer for EXTERNAL users of this automation — a registration page, a public interface. Pick a folder, declare a page, describe it by voice or Quiz; a coding agent builds it. Multilingual by default.",
   },
 };
 

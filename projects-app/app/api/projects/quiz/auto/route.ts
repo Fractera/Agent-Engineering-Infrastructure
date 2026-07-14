@@ -19,10 +19,10 @@ const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 export async function POST(req: NextRequest) {
   if (!(await authorize(req))) return new Response("forbidden", { status: 403 });
   const body = (await req.json().catch(() => null)) as
-    | { automation?: string; edge?: string; useCase?: string; cases?: boolean; entity?: string }
+    | { automation?: string; edge?: string; useCase?: string; cases?: boolean; entity?: string; page?: string }
     | null;
   const t = await resolveQuizTarget({
-    automation: body?.automation, edge: body?.edge, useCase: body?.useCase, cases: body?.cases, entity: body?.entity,
+    automation: body?.automation, edge: body?.edge, useCase: body?.useCase, cases: body?.cases, entity: body?.entity, page: body?.page,
   });
   if (!t.ok) return new Response(t.error, { status: 400 });
   const quiz = await getQuizFor(t.target);
