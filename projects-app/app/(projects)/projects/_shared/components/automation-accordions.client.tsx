@@ -41,6 +41,7 @@ export function AutomationAccordions({
   cases,
   automation,
   dashboard,
+  type,
 }: {
   // Partial by design (step 222, scaling): a project's _data/config.ts may not list a key that was
   // added to the registry later — a missing key reads as "off", so adding a new entity never breaks
