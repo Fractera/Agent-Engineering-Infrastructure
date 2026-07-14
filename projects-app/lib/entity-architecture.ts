@@ -113,9 +113,19 @@ async function extractNode(automation: string, withHistory: boolean): Promise<En
   const instances = await Promise.all(nodes.map(async (n) => {
     const files = await readNodeFiles(proj.projectDir, n.slug);
     const identity: NodeIdentity = { cuid: n.cuid, slug: n.slug, name: n.name, status: n.status, draft: Boolean(n.draft) };
-    // A draft node IS its pending task (an unbuilt spec.md/instruction.ts waiting for a coder); a
-    // materialized node has nothing pending — the brief that built it lives in history, not here.
-    const currentTask: NodeTask | null = n.draft ? { instruction: files.instruction, spec: files.spec } : null;
+    // A draft node IS its pending task (an unbuilt spec.md/instruction.ts waiting for a coder).
+    //
+    // A MATERIALIZED node normally has nothing pending — the brief that built it lives in history. But since
+    // step 240 it can have ONE thing pending: an OPTIMIZATION. When the owner edits a live node's system
+    // instruction, the PATCH stages that new instruction in the node's transport slot (it used to be
+    // dispatched by the panel's own button, which the wave replaced). Surfacing it here is what puts the
+    // optimization into the wave — otherwise it would be silently dropped.
+    let currentTask: NodeTask | null = n.draft ? { instruction: files.instruction, spec: files.spec } : null;
+    if (!n.draft) {
+      const t = await getTransport(automation, "node", n.cuid);
+      const p = t?.payload as { instruction?: string; spec?: string } | undefined;
+      if (p?.instruction?.trim()) currentTask = { instruction: p.instruction, spec: p.spec ?? "" };
+    }
     let history: EntityTaskRecord<NodeTask>[] = [];
     if (withHistory) {
       // Oldest first — a chronological story. Reads the GENERIC entity_history table (step 238 Phase 1).

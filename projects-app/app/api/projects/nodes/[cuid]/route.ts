@@ -3,6 +3,7 @@ import { writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { db } from "@/lib/db";
 import { authorize, resolveProject, regenerateDiagram, liveSlugsInOrder, type NodeRow } from "@/lib/nodes";
+import { setTransport } from "@/lib/entity-store";
 
 // Edit or delete a node (step 224 L3). PATCH writes the panel edits to the co-located files: spec.md (a
 // draft's brief) and/or instruction.ts (a materialized node's system instruction — editing it is what turns
@@ -30,6 +31,15 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ cuid: str
   }
   if (typeof body.instruction === "string") {
     await writeFile(join(nodeDir, "instruction.ts"), `export const INSTRUCTION = ${JSON.stringify(body.instruction)};\n`, "utf8");
+    // STEP 240 — editing a LIVE node's system instruction is an OPTIMIZATION request, and it used to be
+    // dispatched by that panel's own "Start development" button. The wave replaces every per-entity button,
+    // so the edit must STAGE itself instead: a draft node is already pending (its spec.md IS the task), but a
+    // materialized node has nothing pending — so the new instruction goes into the node's transport slot, and
+    // the extractor surfaces it as this node's currentTask. Without this the wave would silently drop node
+    // optimizations. The wave's closing call archives + clears it, exactly like every other brief.
+    if (row.draft === 0) {
+      await setTransport(row.automation, "node", cuid, { instruction: body.instruction, spec: "" });
+    }
   }
   if (typeof body.name === "string" && body.name.trim()) {
     await db.prepare(`UPDATE automation_nodes SET name = ?, updated_at = datetime('now') WHERE cuid = ?`).run(body.name.trim(), cuid);

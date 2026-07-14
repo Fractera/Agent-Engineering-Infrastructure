@@ -1,15 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authorize, listNodes, resolveProject } from "@/lib/nodes";
-import { materializeAutomationStep, nextStepNumber, pendingSteps } from "@/lib/dev-steps";
+import { authorize, resolveProject } from "@/lib/nodes";
+import { materializeWaveStep, nextStepNumber } from "@/lib/dev-steps";
 import { assertUseCasesReviewed } from "@/lib/use-cases";
+import { pendingWaveStep, stagedItems, waveName } from "@/lib/wave";
 
-// "Start development" (step 233) — the owner's single top-level handoff on the automation page. It turns the
-// whole design so far into ONE Development Step: the sub-steps (tasks[]) are the draft nodes going into work,
-// and the brief carries the ordered mandatory read (AUTOMATION-PROJECTS.md → the Quiz result → the nodes).
-// The owner is handed only the NUMBER — "run step #NN" — never the raw brief.
+// "LAUNCH DEVELOPMENT" — the automation page's ONE and ONLY hand-off (step 240, replacing step 233's
+// draft-nodes-only bundle and, with it, every per-entity "Start development" button).
 //
-// THE GATE stays (step 231): no step is created until the owner has read the use cases and confirmed the AI
-// understood him. The refusal carries a reason so the modal can show the cases inline.
+// The owner's reasoning: handing each edit over on its own is slow and expensive. He wants to change several
+// things — a dashboard requirement, then analytics, a use case, a couple of nodes — and hand the WHOLE batch
+// to a coding agent at once, as one wave. So this route bundles EVERY staged change (every entity instance
+// flagged pending:true — step 238's own flag, across all ten entity types) into ONE Development Step, whose
+// sub-steps are those changes. The owner sees only the number: "run step #NN".
+//
+// After it, the page is LOCKED (a bundled wave step is pending) until the coding agent calls
+// development-wave/complete on a successful deploy. That is what stops the sent brief from silently going
+// stale while someone keeps editing.
+//
+// THE GATE stays (step 231): nothing is handed over until the owner has read the use cases back and confirmed
+// the AI understood him.
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
@@ -21,29 +30,22 @@ export async function POST(req: NextRequest) {
   const gate = await assertUseCasesReviewed(proj.automation);
   if (!gate.ok) return NextResponse.json({ reason: gate.reason }, { status: 409 });
 
-  // IDEMPOTENT: if a bundled "Develop <automation>" step is already waiting, return its number — one click,
-  // one step; a second click never queues a duplicate.
-  const existing = (await pendingSteps()).find(
-    (s) => s.automation === proj.automation && /^Develop /.test(s.name),
-  );
+  // IDEMPOTENT + THE LOCK: a wave already in flight is never duplicated — the owner just gets its number back
+  // (this is the same check the page's lock reads, so the two can never disagree).
+  const existing = await pendingWaveStep(proj.automation);
   if (existing) {
-    return NextResponse.json({ ok: true, number: existing.number, name: existing.name, reused: true });
+    return NextResponse.json({ ok: true, number: existing.number, name: existing.name, reused: true, locked: true });
   }
 
-  // The nodes going into work = the DRAFT (unbuilt) nodes. We pass only the ADDRESS + the node list; the
-  // coding agent extracts the full state (instruction, use cases, specs, diagram) from the automation's own
-  // folder — the source of truth already on disk (owner's insight, step 233). No snapshot, no staleness.
-  const drafts = (await listNodes(proj.automation)).filter((n) => n.draft === 1);
-  if (!drafts.length) {
-    return NextResponse.json({ reason: "no-nodes" }, { status: 409 });
-  }
+  const items = await stagedItems(proj.automation);
+  if (!items.length) return NextResponse.json({ reason: "nothing-staged" }, { status: 409 });
 
   const number = await nextStepNumber();
-  const { name } = await materializeAutomationStep({
-    number,
-    automation: proj.automation,
-    nodes: drafts.map((n) => ({ cuid: n.cuid, slug: n.slug, name: n.name })),
-  });
+  const name = waveName(proj.automation, items);
+  const { message } = await materializeWaveStep({ number, automation: proj.automation, name, items });
 
-  return NextResponse.json({ ok: true, number, name });
+  return NextResponse.json({
+    ok: true, number, name, message, locked: true,
+    items: items.map((i) => ({ entityType: i.entityType, ref: i.ref, label: i.label })),
+  });
 }

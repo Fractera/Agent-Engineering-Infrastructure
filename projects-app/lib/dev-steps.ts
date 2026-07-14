@@ -192,6 +192,120 @@ export async function materializeAutomationStep(i: AutomationStepInput): Promise
   return { file, message, name };
 }
 
+// ─── THE DEVELOPMENT WAVE (step 240) — ONE hand-off for EVERY staged change ───────────────────────────
+// Replaces the per-entity dispatch entirely (owner's decision): the owner edits as many entities as he likes
+// (requirements, use cases, nodes, edges, the chain brief, the fork activation), then presses ONE button.
+// Everything pending goes into ONE step whose sub-steps (tasks[]) are the staged changes, the page locks, and
+// the owner is handed a single number — "run step #NN".
+//
+// THE CLOSING CONTRACT (the owner's "the coder clears the ТЗ at the end"): the step's LAST task is a call to
+// development-wave/complete. That is what archives every consumed brief into entity_history, clears the
+// containers, closes the step file and thereby unlocks the page. It happens ONLY after a successful deploy —
+// so during the whole wave the owner and the coder look at exactly the same, unchanged brief.
+
+export type WaveStepItem = { entityType: string; ref: string; label: string; task: string };
+
+export type WaveStepInput = {
+  number: number;
+  automation: string;
+  name: string;             // the auto-name (lib/wave.ts waveName)
+  items: WaveStepItem[];
+};
+
+export function buildWaveStepMessage(i: WaveStepInput): string {
+  const root = `app/(projects)/projects/${i.automation}/`;
+  const list = i.items.length
+    ? i.items
+        .map((it, k) => {
+          const where = it.ref ? `${it.entityType} \`${it.ref}\`` : `the **${it.entityType}** of this automation`;
+          return `${k + 1}. **${it.label}** — ${where}\n\n\`\`\`\n${it.task.trim() || "(no brief given)"}\n\`\`\``;
+        })
+        .join("\n\n")
+    : "(nothing staged)";
+  return `Develop the automation **${i.automation}** — ${i.items.length} staged change(s) in ONE wave.
+
+## Read first (mandatory, in this order — before any code)
+1. Load the automation's complete architecture as ONE JSON, at the very start of your context window:
+   \`GET http://localhost:3003/api/projects/fetch-complete-automation-architecture-with-history?automation=${i.automation}\`
+   — read its \`passport\` and every entity flagged \`pending:true\`: those ARE the changes below.
+2. Read **${AUTOMATION_DOC}** at the project root — how automations are created, work and are improved.
+3. Read the automation itself at \`${root}\` (\`_data/\`, \`_nodes/\`) and extract its current state. The
+   **diagram is the single source of truth**; keep every node's work co-located in its own \`_nodes/<slug>/\`.
+
+## The staged changes (one sub-step each)
+${list}
+
+## Standards are a SAMPLE, not an obligation (owner's rule, step 239)
+Reference standards exist for some entities (\`app/(projects)/README.md\` — the dashboard tables & columns
+standard, the processes/Gantt standard, the node → functions contract). Reuse them where they fit; where the
+requirement is better served by something else, you are FREE to build it from scratch.
+
+## MANDATORY CLOSING CALL — this is what clears the briefs and unlocks the owner's page
+When every change above is implemented AND DEPLOYED SUCCESSFULLY (the page really works), call:
+\`\`\`
+curl -X POST http://localhost:3003/api/projects/development-wave/complete \\
+     -H "Content-Type: application/json" \\
+     -d '{"automation":"${i.automation}","step":${i.number}}'
+\`\`\`
+It archives every brief above into the entity history, empties the containers, and closes this step — the
+owner's page is LOCKED for editing until you do. Never call it before the deploy actually succeeded.
+
+DONE = every staged change is implemented, the validator is clean
+(\`GET http://localhost:3003/api/projects/validate?automation=${i.automation}\`), the deploy succeeded, and the
+closing call above returned ok:true.`;
+}
+
+/** Materialize the ONE bundled wave step. Its machine block carries the wave's exact contents
+ *  (`wave: [{entityType, ref}]`) so completion knows precisely which containers to archive + clear. */
+export async function materializeWaveStep(i: WaveStepInput): Promise<{ file: string; message: string; name: string }> {
+  const message = buildWaveStepMessage(i);
+  const slug = `develop-${i.automation.replace(/[^a-z0-9]+/gi, "-").replace(/(^-|-$)/g, "")}`;
+  const tasks = i.items.map((it) => ({
+    id: `${it.entityType}:${it.ref || "self"}`,
+    body: `${it.entityType}${it.ref ? ` (${it.ref})` : ""} — ${it.label}`,
+  }));
+  const block = JSON.stringify({
+    number: i.number,
+    name: i.name,
+    importance: "mandatory",
+    status: "new",
+    completedAt: null,
+    automation: i.automation,
+    // THE WAVE'S CONTENTS — the list development-wave/complete iterates to archive + clear.
+    wave: i.items.map((it) => ({ entityType: it.entityType, ref: it.ref })),
+    description: message,
+    tasks: tasks.length ? tasks : [{ id: "empty", body: "Nothing was staged" }],
+  });
+  const todo = tasks.length ? tasks.map((t) => `- ${t.body}`).join("\n") : "_No tasks._";
+  const body = `# ${String(i.number).padStart(2, "0")} — ${i.name}\n\n> Development step · importance: mandatory · generated by "Launch development" (the wave, step 240)\n\n${message}\n\n## To-do\n${todo}\n\n<!-- fractera:step\n${block}\n-->\n`;
+
+  const dir = join(STEPS_DIR(), "NEW-STEPS");
+  await mkdir(dir, { recursive: true });
+  const file = join(dir, `${String(i.number).padStart(2, "0")}-${slug}.md`);
+  await writeFile(file, body, "utf8");
+  return { file, message, name: i.name };
+}
+
+/** Read back a materialized wave step's contents (its machine block) — what completion must archive. */
+export async function readWaveStep(number: number): Promise<{ automation: string; wave: { entityType: string; ref: string }[] } | null> {
+  for (const sub of ["NEW-STEPS", "COMPLETED-STEPS"]) {
+    const dir = join(STEPS_DIR(), sub);
+    const files = (await readdir(dir).catch(() => [] as string[]))
+      .filter((f) => f.endsWith(".md") && Number((f.match(/^(\d+)-/) ?? [])[1]) === number);
+    if (!files.length) continue;
+    const body = await readFile(join(dir, files[0]), "utf8").catch(() => "");
+    const block = body.match(/<!--\s*fractera:step\s*([\s\S]*?)-->/);
+    if (!block) return null;
+    try {
+      const meta = JSON.parse(block[1].trim()) as { automation?: string; wave?: { entityType: string; ref: string }[] };
+      return { automation: meta.automation ?? "", wave: Array.isArray(meta.wave) ? meta.wave : [] };
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
 // ─── EDGES (step 225): a link between two automations is built by the same pipeline as a node ─────────
 
 export type EdgeStepInput = {
