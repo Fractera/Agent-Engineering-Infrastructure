@@ -1,0 +1,83 @@
+import { readdir, readFile, writeFile, mkdir } from "node:fs/promises";
+import { join } from "node:path";
+
+// THE EXECUTABLES REGISTRY (step 241) — how the general executor gets from "a node's cuid" to "the real
+// compiled function".
+//
+// WHY A GENERATED REGISTRY AND NOT A DYNAMIC IMPORT: a node's code lives at
+// app/(projects)/projects/<cat>/<slug>/_nodes/<node>/functions.ts. A path built at runtime cannot be imported
+// — the folder name "(projects)" is a Next.js route group, and a template-literal import() is not statically
+// analysable, so the bundler never includes those modules (proven the hard way in step 214). The one thing
+// that DOES work is what step 238 Phase 3 used: an ordinary static import of the module. So we GENERATE a
+// file full of static import() entries — one per node — and the executor looks its node up there. The
+// generated file is code, so the bundler sees every node; the registry is regenerated whenever the set of
+// nodes changes (create / materialize / delete), exactly like _data/diagram.ts.
+//
+// The key is "<category>/<slug>:<nodeSlug>" — the automation plus the node, which is what the executor holds.
+
+const GENERATED_REL = join("app", "(projects)", "projects", "_generated", "executables.ts");
+
+function projectsRoot(): string {
+  return join(process.cwd(), "app", "(projects)", "projects");
+}
+
+/** Every (automation, nodeSlug) pair that has a functions.ts on disk, sorted for a stable, diffable file. */
+async function scanNodes(): Promise<{ automation: string; node: string }[]> {
+  const root = projectsRoot();
+  const out: { automation: string; node: string }[] = [];
+  const categories = (await readdir(root, { withFileTypes: true }).catch(() => []))
+    .filter((d) => d.isDirectory() && !d.name.startsWith("_"))
+    .map((d) => d.name);
+  for (const category of categories.sort()) {
+    const projects = (await readdir(join(root, category), { withFileTypes: true }).catch(() => []))
+      .filter((d) => d.isDirectory() && !d.name.startsWith("_"))
+      .map((d) => d.name);
+    for (const project of projects.sort()) {
+      const nodesDir = join(root, category, project, "_nodes");
+      const nodes = (await readdir(nodesDir, { withFileTypes: true }).catch(() => []))
+        .filter((d) => d.isDirectory())
+        .map((d) => d.name);
+      for (const node of nodes.sort()) {
+        const src = await readFile(join(nodesDir, node, "functions.ts"), "utf8").catch(() => "");
+        // Only a node with REAL exported function bodies is executable. A draft (a signature-only stub) is
+        // deliberately left out: the executor must refuse to run it, not import an empty module.
+        if (!/export\s+(async\s+)?function\s+\w+/.test(src)) continue;
+        out.push({ automation: `${category}/${project}`, node });
+      }
+    }
+  }
+  return out;
+}
+
+/** Rewrite app/(projects)/projects/_generated/executables.ts from what is on disk. Called wherever the set of
+ *  nodes changes (create / materialize / delete) — the same places that regenerate _data/diagram.ts. */
+export async function regenerateExecutables(): Promise<{ count: number; file: string }> {
+  const nodes = await scanNodes();
+  const entries = nodes
+    .map(({ automation, node }) => {
+      const [category, project] = automation.split("/");
+      const rel = `../${category}/${project}/_nodes/${node}/functions`;
+      return `  ${JSON.stringify(`${automation}:${node}`)}: () => import(${JSON.stringify(rel)}),`;
+    })
+    .join("\n");
+
+  const body = `// GENERATED — do not edit by hand (lib/executables.ts, step 241).
+// One static import() per executable node: the bundler sees them all, so the general executor can call any
+// node's REAL compiled functions without a runtime path (which a "(projects)" route group makes impossible).
+// Regenerated whenever a node is created, materialized or deleted — like _data/diagram.ts.
+
+export type NodeModule = Record<string, unknown>;
+
+export const EXECUTABLES: Record<string, () => Promise<NodeModule>> = {
+${entries}
+};
+
+export function executableKeys(): string[] {
+  return Object.keys(EXECUTABLES);
+}
+`;
+  const file = join(process.cwd(), GENERATED_REL);
+  await mkdir(join(process.cwd(), "app", "(projects)", "projects", "_generated"), { recursive: true });
+  await writeFile(file, body, "utf8");
+  return { count: nodes.length, file };
+}

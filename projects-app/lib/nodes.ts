@@ -130,6 +130,13 @@ export async function regenerateDiagram(projectDir: string, slugsInOrder: string
     `export const DIAGRAM_NODES: NodeContract[] = [\n${calls.join("\n") || "  // no nodes yet"}\n];\n`;
   await mkdir(join(projectDir, "_data"), { recursive: true });
   await writeFile(join(projectDir, "_data", "diagram.ts"), body, "utf8");
+
+  // STEP 241 — the executables registry is regenerated with the diagram, from the ONE place every caller
+  // already goes through (create / materialize / rollback / delete / quiz). The two files must never disagree:
+  // the diagram says WHICH nodes exist, the registry says HOW to call them. Dynamic import: the generator
+  // imports lazily so this module keeps no import cycle with lib/executables.ts.
+  const { regenerateExecutables } = await import("@/lib/executables");
+  await regenerateExecutables().catch(() => { /* a failed regen must not break the write above */ });
 }
 
 /** The ordered slugs of the live (non-removed) nodes — used to regenerate the diagram. */
@@ -170,6 +177,15 @@ export async function readNodeFunctionCount(projectDir: string, slug: string): P
   const t = await readFile(join(projectDir, "_nodes", slug, "functions.ts"), "utf8").catch(() => "");
   const n = (t.match(/name\s*:/g) ?? []).length;
   return n > 0 ? n : 1;
+}
+
+/** The node's declared function NAMES, in the order its FUNCTIONS[] metadata lists them (step 241). This is
+ *  the execution order: the metadata is the contract, the module is the code, and the executor calls the
+ *  exported function of each declared name in turn. Reading it from the node's own file keeps ONE source of
+ *  truth — a function that is exported but not declared is not executed. */
+export async function readNodeFunctionNames(projectDir: string, slug: string): Promise<string[]> {
+  const t = await readFile(join(projectDir, "_nodes", slug, "functions.ts"), "utf8").catch(() => "");
+  return [...t.matchAll(/name:\s*"(\w+)"/g)].map((m) => m[1]);
 }
 
 /** A node's co-located source files (for a version snapshot / rollback). Missing files read as "". */
