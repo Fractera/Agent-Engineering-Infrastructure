@@ -6,6 +6,7 @@ import { resolveProject, listNodes, readNodeFunctionNames } from "@/lib/nodes";
 import { listEdges } from "@/lib/edges";
 import { readAutomationType } from "@/app/(projects)/projects/_shared/automation-type-reader";
 import { EXECUTABLES } from "@/app/(projects)/projects/_generated/executables";
+import { missingParams } from "@/lib/activation";
 
 // THE GENERAL NODE EXECUTOR (step 241) — the thing the whole product was missing: until now a node's
 // functions.ts was proven to RUN for exactly one hard-coded node (step 238 Phase 3), and the "runner" the
@@ -45,6 +46,7 @@ export type ActivationRefusal =
   | { reason: "not-executable"; nodes: string[] }
   | { reason: "no-fork" }                      // INSTANCED: a run IS a fork — without one there is nothing to run
   | { reason: "fork-without-params"; instanceId: string }
+  | { reason: "missing-params"; instanceId: string; params: string[] }  // declared as required, not supplied
   | { reason: "no-edges" };                    // CHAINED: a chain that links nothing cannot be activated
 
 export type ActivationCheck =
@@ -99,6 +101,13 @@ export async function canActivate(automation: string, instanceId?: string): Prom
     params = forkParams(fork);
     if (!Object.keys(params).length) {
       return { ok: false, refusal: { reason: "fork-without-params", instanceId: fork.id } };
+    }
+    // TYPED against the automation's OWN declaration (step 241 E3, _data/activation.ts): a parameter the
+    // automation declares REQUIRED and the fork does not carry is named precisely, never defaulted silently.
+    // The parameters themselves are custom to each automation — the product presumes none of them.
+    const missing = await missingParams(proj.automation, params);
+    if (missing.length) {
+      return { ok: false, refusal: { reason: "missing-params", instanceId: fork.id, params: missing } };
     }
     chosenFork = fork.id;
   }

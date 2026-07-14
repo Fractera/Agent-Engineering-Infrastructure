@@ -462,13 +462,29 @@ export type StubEntityStepInput = {
 // FORK ACTIVATION (step 239) — the one stub entity whose job is not a view but the automation's own STARTING
 // MECHANISM. An `instanced` automation forks Master -> Instance per run, and until now nothing described HOW
 // a run begins. Spell the three jobs out for the coder rather than leaving them inside the free-text brief.
-const FORK_ACTIVATION_JOBS = `This entity is HOW A RUN OF THIS INSTANCED AUTOMATION IS STARTED. The owner's brief above governs; the
-three jobs it normally has to answer are:
-   a) START SETTINGS — which parameters one run takes (e.g. the article's keyword), and where they come from.
-   b) FORK CREATION — create the Instance (POST /api/projects/instances/create) and pass those settings INTO
-      it, so the run's nodes actually receive them.
-   c) LAUNCH SCHEDULING — when the run starts (immediately / at a given time / rate-limited, e.g. "publish at
-      13:00, at most one of 100 per day").`;
+const FORK_ACTIVATION_JOBS = `This entity is HOW A RUN OF THIS INSTANCED AUTOMATION IS STARTED. A run of an instanced automation IS a fork
+carrying its OWN settings, and those settings are CUSTOM TO THIS AUTOMATION — you determine them from the
+owner's brief above. The product presumes NOTHING about them (no built-in schedules, no rate limits).
+
+   THE DELIVERABLE: write this automation's own _data/activation.ts — the DECLARATION of what one run takes:
+
+     import { type ActivationSchema } from "../../../_shared/activation";
+     export const ACTIVATION: ActivationSchema = {
+       title: "<the control panel's heading>",
+       description: "<one line: what ONE run does>",
+       params: [
+         { key: "<name>", label: "<what the owner sees>", type: "text|longtext|number|date|datetime|boolean|select",
+           required: true, help: "<how to fill it>" },
+       ],
+     };
+
+   A param's \`key\` MUST match the name the nodes expect (their \`paramsIn\`): the executor puts the fork's
+   params into the run context, and each node pulls its arguments out of it BY NAME. That is the whole wiring.
+   If the automation needs a start time, declare a \`datetime\` param — do not invent a scheduling mechanism.
+
+   The LAUNCH CONTROL PANEL (the permanent activation layer on the page) renders itself from that file, and
+   the executor validates a fork against it (a missing required param is refused, never defaulted silently).
+   So the panel and the run behaviour follow from the declaration — you write DATA, not UI.`;
 
 export function buildStubEntityStepMessage(i: StubEntityStepInput): string {
   if (i.entityType === "fork-activation") {

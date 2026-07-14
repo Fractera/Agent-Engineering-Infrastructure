@@ -27,6 +27,7 @@ const REFUSAL_STATUS: Record<ActivationRefusal["reason"], number> = {
   "not-executable": 409,
   "no-fork": 409,
   "fork-without-params": 409,
+  "missing-params": 409,
   "no-edges": 409,
 };
 
@@ -35,8 +36,9 @@ const REFUSAL_MESSAGE: Record<ActivationRefusal["reason"], string> = {
   "no-nodes": "this automation has no nodes yet — design them first",
   "has-drafts": "some nodes are still drafts — build them before running (the diagram is the truth)",
   "not-executable": "some nodes have no real function bodies yet — a coding agent must build them",
-  "no-fork": "an INSTANCED automation runs as a fork — create a fork (with its parameters) first",
-  "fork-without-params": "this fork has no parameters — an instanced run must carry its own settings (e.g. the keyword)",
+  "no-fork": "an INSTANCED automation runs as a fork — create a run on the launch panel first",
+  "fork-without-params": "this run carries no settings — an instanced run must carry its own (the automation declares which)",
+  "missing-params": "this run is missing settings the automation declares as required",
   "no-edges": "a CHAINED automation must be linked to another one — create the link first",
 };
 

@@ -49,6 +49,27 @@ async function scanNodes(): Promise<{ automation: string; node: string }[]> {
   return out;
 }
 
+/** Every automation that DECLARES its activation (_data/activation.ts) — the launch parameters one run of it
+ *  takes (step 241 E3). Same reason as the node scan: the file must be reachable by a STATIC import. */
+async function scanActivations(): Promise<string[]> {
+  const root = projectsRoot();
+  const out: string[] = [];
+  const categories = (await readdir(root, { withFileTypes: true }).catch(() => []))
+    .filter((d) => d.isDirectory() && !d.name.startsWith("_"))
+    .map((d) => d.name);
+  for (const category of categories.sort()) {
+    const projects = (await readdir(join(root, category), { withFileTypes: true }).catch(() => []))
+      .filter((d) => d.isDirectory() && !d.name.startsWith("_"))
+      .map((d) => d.name);
+    for (const project of projects.sort()) {
+      const src = await readFile(join(root, category, project, "_data", "activation.ts"), "utf8").catch(() => "");
+      if (!/export\s+const\s+ACTIVATION\b/.test(src)) continue;
+      out.push(`${category}/${project}`);
+    }
+  }
+  return out;
+}
+
 /** Rewrite app/(projects)/projects/_generated/executables.ts from what is on disk. Called wherever the set of
  *  nodes changes (create / materialize / delete) — the same places that regenerate _data/diagram.ts. */
 export async function regenerateExecutables(): Promise<{ count: number; file: string }> {
@@ -61,15 +82,32 @@ export async function regenerateExecutables(): Promise<{ count: number; file: st
     })
     .join("\n");
 
+  const activations = await scanActivations();
+  const activationEntries = activations
+    .map((automation) => {
+      const [category, project] = automation.split("/");
+      return `  ${JSON.stringify(automation)}: () => import(${JSON.stringify(`../${category}/${project}/_data/activation`)}),`;
+    })
+    .join("\n");
+
   const body = `// GENERATED — do not edit by hand (lib/executables.ts, step 241).
 // One static import() per executable node: the bundler sees them all, so the general executor can call any
 // node's REAL compiled functions without a runtime path (which a "(projects)" route group makes impossible).
 // Regenerated whenever a node is created, materialized or deleted — like _data/diagram.ts.
+//
+// ACTIVATIONS (E3): the same trick for each automation's _data/activation.ts — the launch parameters ONE RUN
+// of it takes. The control panel renders itself from that declaration and the executor validates a fork
+// against it, so both read the automation's own file rather than presuming anything.
 
 export type NodeModule = Record<string, unknown>;
+export type ActivationModule = Record<string, unknown>;
 
 export const EXECUTABLES: Record<string, () => Promise<NodeModule>> = {
 ${entries}
+};
+
+export const ACTIVATIONS: Record<string, () => Promise<ActivationModule>> = {
+${activationEntries}
 };
 
 export function executableKeys(): string[] {

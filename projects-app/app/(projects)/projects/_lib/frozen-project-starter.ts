@@ -87,7 +87,12 @@ function humanize(slug: string): string {
 // button is gone (the diagram's, the node panel's, each requirement panel's, the chain brief's) — a change is
 // SAVED (staged), and the banner hands the whole batch over as one step. After the hand-off the page is
 // LOCKED until the coding agent calls development-wave/complete on a successful deploy.
-const VERSION = 7;
+// v8 (step 241 E3) — THE ACTIVATION LAYER. Every automation is born with `_data/activation.ts` (empty, like
+// channels/tests: the coding agent declares what ONE RUN of THIS automation takes), and an INSTANCED
+// automation renders the launch control panel from it — a PERMANENT section, never an accordion, never
+// hideable. Nothing about schedules or limits is built into the product: they are just parameters an
+// automation may declare.
+const VERSION = 8;
 const SKELETON: Record<string, string> = {
   "page.tsx": `import AutomationEntry from "./_components";
 
@@ -156,6 +161,32 @@ export const PROBES: Probe[] = [];
 export const AUTOMATION_TYPE: AutomationType = "{{AUTOMATION_TYPE}}";
 `,
   "_data/instruction.md": `{{AUTOMATION_INSTRUCTION}}
+`,
+  "_data/activation.ts": `import { EMPTY_ACTIVATION, type ActivationSchema } from "../../../_shared/activation";
+
+// THIS AUTOMATION'S ACTIVATION (frozen standard v8, step 241 E3) — what ONE RUN of it takes.
+//
+// EMPTY BY DESIGN, like _data/channels.ts and _data/tests.ts: the product cannot know, and must never
+// presume, what a given automation's run needs. An INSTANCED automation runs as a FORK, and its parameters
+// are CUSTOM to it — the coding agent determines them while designing this automation's architecture (from
+// the owner's brief in the Fork activation panel) and declares them HERE. The launch control panel then
+// renders itself from this file: a working control panel is written as DATA, never as UI.
+//
+// The shape (see _shared/activation.ts):
+//
+//   export const ACTIVATION: ActivationSchema = {
+//     title: "Publish an article",
+//     description: "One run researches a topic, drafts an article and publishes it.",
+//     params: [
+//       { key: "topic", label: "Topic", type: "text", required: true, help: "The keyword this run is about." },
+//       { key: "publishAt", label: "Publish at", type: "datetime", help: "Empty = publish immediately." },
+//     ],
+//   };
+//
+// A param's \`key\` is the name the executor puts into the run's context, and the nodes pull their arguments
+// out of it BY NAME (their \`paramsIn\`) — that is the whole wiring. NOTHING about schedules or limits is
+// built in: an automation that needs a publish time simply declares a \`datetime\` param.
+export const ACTIVATION: ActivationSchema = EMPTY_ACTIVATION;
 `,
   "_data/diagram.ts": `import { assembleNode, type NodeContract } from "../../../_shared/node-contract";
 import { META as m_input } from "../_nodes/input/meta";
@@ -323,6 +354,7 @@ import { ActivationQuiz } from "../../../_shared/components/activation-quiz.clie
 import { AddModifyAutomationButton } from "../../../_shared/components/add-modify-automation-button.client";
 import { AutomationAccordions } from "../../../_shared/components/automation-accordions.client";
 import { DiagramSection } from "../../../_shared/components/diagram-section.client";
+import { ActivationLayer } from "../../../_shared/components/activation-layer.client";
 import { GroupDetailSection } from "../../../_shared/components/group-detail-section.client";
 import { SkeletonIntro } from "../../../_shared/components/skeleton-intro.client";
 import { PROJECT_CONFIG } from "../_data/config";
@@ -380,6 +412,11 @@ export default function AutomationEntry() {
       ) : (
         <DiagramSection nodes={DIAGRAM_NODES} automation="{{CATEGORY}}/{{PROJECT}}" />
       )}
+      {/* THE ACTIVATION LAYER (step 241 E3) — the launch control panel. It exists ONLY for an INSTANCED
+          automation (a run of one IS a fork with its own settings), and for it, it is PERMANENT: it is not an
+          accordion, it is not one of the hamburger's visibility switches, and it cannot be hidden. It renders
+          itself from this automation's own _data/activation.ts — the settings a coding agent declared for it. */}
+      {AUTOMATION_TYPE === "instanced" && <ActivationLayer automation="{{CATEGORY}}/{{PROJECT}}" />}
       <main className="mx-auto w-[85vw] max-w-full space-y-8 px-4 py-8">
         {/* The OTHER entity accordions (step 222) + the mandatory Use cases. The Diagram is above,
             outside the accordion series. Driven by _data/config.ts + _data/use-cases.ts. */}
