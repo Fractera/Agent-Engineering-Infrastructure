@@ -445,12 +445,11 @@ export async function materializeChainStep(i: ChainStepInput): Promise<{ file: s
   return { file, message };
 }
 
-// ─── DASHBOARD/ANALYTICS/CALENDAR/MAP/PROCESSES REQUIREMENTS (step 238 P5-P9 + Phase 2): the same pipeline
-// as every other entity — the owner's free-text "Requirement" brief becomes ONE Development Step. This is
-// the REAL "handed to a coding agent" event for these 5 entities: the calling route
-// (<entity>-architecture/start-development) archives+clears the brief right after this materializes,
-// mirroring materializeChainStep exactly (same reasoning: a chain group and these 5 entities are both
-// AUTOMATION-SCOPED, ref='', with no code/version lifecycle of their own beyond the free-text ask).
+// ─── REQUIREMENT ENTITIES (dashboard/analytics/calendar/map/processes + fork-activation) ──────────────
+// STEP 240 — these no longer have a dispatch route of their own (per-entity "Start development" is gone; the
+// wave hands everything over at once). The builders below survive because the WAVE reuses them: a wave step's
+// brief is assembled from each staged item, and buildStubEntityStepMessage still carries the per-entity
+// wording — above all fork-activation's three jobs (start settings → fork with them → launch schedule).
 export type StubEntityStepKind = "dashboard" | "analytics" | "calendar" | "map" | "processes" | "fork-activation";
 
 export type StubEntityStepInput = {

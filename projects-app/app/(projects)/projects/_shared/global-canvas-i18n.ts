@@ -36,6 +36,8 @@ export type GlobalCanvasStrings = {
   groupMembersHeader: string; // {n}
   groupMembersEmpty: string;
   chainBriefLabel: string; chainBriefPlaceholder: string;
+  /** Step 240 — the chain brief is SAVED (staged) here; the wave banner on the group's page launches it. */
+  chainBriefSave: string; chainBriefSaved: string;
   chainSavedToast: string;
   chainStepFailed: string;
   // step 236.5 — "copy the logic": a chained group is still a real automation underneath, so it gets the
@@ -96,6 +98,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     groupMembersHeader: "Automations inside this group ({n})",
     groupMembersEmpty: "Empty — unlock the group (its own lock button, top-right on the canvas box) and drag an automation onto it.",
     chainBriefLabel: "How should the automations in this chain hand off to each other?",
+    chainBriefSave: "Save", chainBriefSaved: "Saved — it will go into the next development wave.",
     chainBriefPlaceholder: "Which automation's completion should trigger the next one, what data passes between them, in what order…",
     chainSavedToast: "Chain brief saved.",
     chainStepFailed: "Could not create the development step.",
@@ -147,6 +150,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     groupMembersHeader: "Автоматизации внутри этой группы ({n})",
     groupMembersEmpty: "Пусто — разблокируйте группу (её собственная кнопка блокировки, вверху справа на холсте) и перетащите в неё автоматизацию.",
     chainBriefLabel: "Как автоматизации этой цепочки должны передавать эстафету друг другу?",
+    chainBriefSave: "Сохранить", chainBriefSaved: "Сохранено — войдёт в следующую волну разработки.",
     chainBriefPlaceholder: "Завершение какой автоматизации должно запускать следующую, какие данные передаются между ними, в каком порядке…",
     chainSavedToast: "Бриф цепочки сохранён.",
     chainStepFailed: "Не удалось создать шаг разработки.",
@@ -198,6 +202,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     groupMembersHeader: "Automatizaciones dentro de este grupo ({n})",
     groupMembersEmpty: "Vacío — desbloquea el grupo (su propio botón de bloqueo, arriba a la derecha en el lienzo) y arrastra una automatización sobre él.",
     chainBriefLabel: "¿Cómo deben pasarse el turno las automatizaciones de esta cadena?",
+    chainBriefSave: "Guardar", chainBriefSaved: "Guardado: entrará en la próxima oleada de desarrollo.",
     chainBriefPlaceholder: "La finalización de qué automatización debe activar la siguiente, qué datos pasan entre ellas, en qué orden…",
     chainSavedToast: "Resumen de la cadena guardado.",
     chainStepFailed: "No se pudo crear el paso de desarrollo.",
@@ -249,6 +254,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     groupMembersHeader: "Automatisations à l'intérieur de ce groupe ({n})",
     groupMembersEmpty: "Vide — déverrouillez le groupe (son propre bouton de verrouillage, en haut à droite sur le canevas) et glissez-y une automatisation.",
     chainBriefLabel: "Comment les automatisations de cette chaîne doivent-elles se passer le relais ?",
+    chainBriefSave: "Enregistrer", chainBriefSaved: "Enregistré — cela entrera dans la prochaine vague de développement.",
     chainBriefPlaceholder: "L'achèvement de quelle automatisation doit déclencher la suivante, quelles données passent entre elles, dans quel ordre…",
     chainSavedToast: "Résumé de la chaîne enregistré.",
     chainStepFailed: "Impossible de créer l'étape de développement.",
@@ -300,6 +306,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     groupMembersHeader: "Automazioni all'interno di questo gruppo ({n})",
     groupMembersEmpty: "Vuoto — sblocca il gruppo (il suo pulsante di blocco, in alto a destra sulla tela) e trascina un'automazione su di esso.",
     chainBriefLabel: "Come devono passarsi il testimone le automazioni di questa catena?",
+    chainBriefSave: "Salva", chainBriefSaved: "Salvato — entrerà nella prossima ondata di sviluppo.",
     chainBriefPlaceholder: "Il completamento di quale automazione deve attivare la successiva, quali dati passano tra loro, in quale ordine…",
     chainSavedToast: "Riepilogo della catena salvato.",
     chainStepFailed: "Impossibile creare il passo di sviluppo.",
@@ -351,6 +358,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     groupMembersHeader: "Automatisierungen innerhalb dieser Gruppe ({n})",
     groupMembersEmpty: "Leer — entsperre die Gruppe (ihr eigener Sperrknopf, oben rechts auf der Leinwand) und ziehe eine Automatisierung darauf.",
     chainBriefLabel: "Wie sollen sich die Automatisierungen dieser Kette gegenseitig übergeben?",
+    chainBriefSave: "Speichern", chainBriefSaved: "Gespeichert — es kommt in die nächste Entwicklungswelle.",
     chainBriefPlaceholder: "Der Abschluss welcher Automatisierung soll die nächste auslösen, welche Daten laufen zwischen ihnen, in welcher Reihenfolge…",
     chainSavedToast: "Ketten-Kurzbeschreibung gespeichert.",
     chainStepFailed: "Der Entwicklungsschritt konnte nicht erstellt werden.",
@@ -402,6 +410,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     groupMembersHeader: "Automações dentro deste grupo ({n})",
     groupMembersEmpty: "Vazio — desbloqueie o grupo (o seu próprio botão de bloqueio, em cima à direita na tela) e arraste uma automação para lá.",
     chainBriefLabel: "Como devem as automações desta cadeia passar o testemunho umas às outras?",
+    chainBriefSave: "Guardar", chainBriefSaved: "Guardado — entrará na próxima vaga de desenvolvimento.",
     chainBriefPlaceholder: "A conclusão de qual automação deve acionar a seguinte, que dados passam entre elas, em que ordem…",
     chainSavedToast: "Resumo da cadeia guardado.",
     chainStepFailed: "Não foi possível criar o passo de desenvolvimento.",
@@ -453,6 +462,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     groupMembersHeader: "Automatyzacje wewnątrz tej grupy ({n})",
     groupMembersEmpty: "Pusto — odblokuj grupę (jej własny przycisk blokady, w prawym górnym rogu na płótnie) i przeciągnij na nią automatyzację.",
     chainBriefLabel: "Jak automatyzacje w tym łańcuchu mają przekazywać sobie zadanie?",
+    chainBriefSave: "Zapisz", chainBriefSaved: "Zapisano — trafi do następnej fali rozwoju.",
     chainBriefPlaceholder: "Zakończenie której automatyzacji powinno uruchamiać kolejną, jakie dane przechodzą między nimi, w jakiej kolejności…",
     chainSavedToast: "Zapisano opis łańcucha.",
     chainStepFailed: "Nie udało się utworzyć kroku rozwoju.",
@@ -504,6 +514,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     groupMembersHeader: "Bu grubun içindeki otomasyonlar ({n})",
     groupMembersEmpty: "Boş — grubun kilidini açın (tuval üzerinde sağ üstteki kendi kilit düğmesi) ve üzerine bir otomasyon sürükleyin.",
     chainBriefLabel: "Bu zincirdeki otomasyonlar birbirine görevi nasıl devretmeli?",
+    chainBriefSave: "Kaydet", chainBriefSaved: "Kaydedildi — bir sonraki geliştirme dalgasına girecek.",
     chainBriefPlaceholder: "Hangi otomasyonun tamamlanması bir sonrakini tetiklemeli, aralarında hangi veri geçiyor, hangi sırayla…",
     chainSavedToast: "Zincir özeti kaydedildi.",
     chainStepFailed: "Geliştirme adımı oluşturulamadı.",
@@ -555,6 +566,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     groupMembersHeader: "Automatiseringen binnen deze groep ({n})",
     groupMembersEmpty: "Leeg — ontgrendel de groep (haar eigen vergrendelknop, rechtsboven op het canvas) en sleep er een automatisering op.",
     chainBriefLabel: "Hoe moeten de automatiseringen in deze keten het stokje aan elkaar doorgeven?",
+    chainBriefSave: "Opslaan", chainBriefSaved: "Opgeslagen — het gaat mee in de volgende ontwikkelgolf.",
     chainBriefPlaceholder: "Het voltooien van welke automatisering moet de volgende activeren, welke data gaat ertussen, in welke volgorde…",
     chainSavedToast: "Ketenoverzicht opgeslagen.",
     chainStepFailed: "Kon de ontwikkelstap niet aanmaken.",

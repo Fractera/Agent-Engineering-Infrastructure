@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authorize, listNodes } from "@/lib/nodes";
+import { authorize } from "@/lib/nodes";
 import {
   deleteQuiz, getQuizFor, quizSeed, resolveQuizTarget, synthesizeCaseEdit, turnsFor,
 } from "@/lib/quiz";
-import { materializeUseCaseStep, nextStepNumber } from "@/lib/dev-steps";
 import { addCase, caseByCuid, listCases, regenerateUseCasesFile, updateCase } from "@/lib/use-cases";
 
 // EDITING the user cases of a live automation (step 231) — the closing move of the pencil sessions:
@@ -44,50 +43,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: (e as Error).message }, { status: 502 });
   }
 
-  const nodes = (await listNodes(target.automation)).map((n) => ({ slug: n.slug, name: n.name, draft: n.draft === 1 }));
-  const steps: { number: number; message: string; title: string }[] = [];
+  // STEP 240 — a changed case no longer dispatches a development step of its own. It is STAGED: its status
+  // stays "new", which is exactly what makes it `pending` in the architecture bundle, so the page's wave
+  // banner picks it up together with everything else the owner changed in this round. (Jumping it straight to
+  // "in-development", as this route used to, would have HIDDEN it from the wave — a case is only pending
+  // while new/in-approval.) The old per-case steps also raced the review gate: the owner must re-confirm the
+  // case set anyway, since editing a case resets the confirmation (step 231).
+  let changed = 0;
 
   for (const e of edits) {
     const existing = e.cuid ? await caseByCuid(e.cuid) : undefined;
     // A case the model claims to edit must belong to THIS automation — never let a stray cuid cross projects.
     if (existing && existing.automation !== target.automation) continue;
 
-    const previous = existing ? `${existing.title}\n${existing.summary}` : "";
     if (existing) {
       if (existing.title === e.title && existing.summary === e.summary) continue; // nothing actually changed
-      await updateCase(existing.cuid, { title: e.title, summary: e.summary, status: "in-development" });
+      await updateCase(existing.cuid, { title: e.title, summary: e.summary, status: "new" });
     } else {
-      await addCase(target.automation, { title: e.title, summary: e.summary, status: "in-development" });
+      await addCase(target.automation, { title: e.title, summary: e.summary, status: "new" });
     }
-
-    const all = await listCases(target.automation);
-    const row = existing
-      ? all.find((c) => c.cuid === existing.cuid)!
-      : all[all.length - 1];
-    const number = await nextStepNumber();
-    const { message } = await materializeUseCaseStep({
-      number,
-      automation: target.automation,
-      caseCuid: row.cuid,
-      caseNumber: all.findIndex((c) => c.cuid === row.cuid) + 1,
-      title: row.title,
-      summary: row.summary,
-      previous,
-      nodes,
-    });
-    steps.push({ number, message, title: row.title });
+    changed++;
   }
 
-  if (steps.length) await regenerateUseCasesFile(target.projectDir, target.automation);
+  if (changed) await regenerateUseCasesFile(target.projectDir, target.automation);
   await deleteQuiz(quiz);
 
   return NextResponse.json({
     ok: true,
-    changed: steps.length,
-    steps,
+    changed,
+    steps: [],   // kept for the client's shape; the wave is what dispatches now
     cases: await listCases(target.automation),
-    report: steps.length
-      ? `${steps.length} case${steps.length === 1 ? "" : "s"} changed — ${steps.length === 1 ? "one development step is" : `${steps.length} development steps are`} waiting for the coding agent.`
+    report: changed
+      ? `${changed} case${changed === 1 ? "" : "s"} changed — staged for the next development wave. Confirm the cases, then press "Launch development" on the page.`
       : "Nothing changed — the cases stay as they were.",
   });
 }

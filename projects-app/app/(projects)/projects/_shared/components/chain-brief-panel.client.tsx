@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ListChecks, Loader2, Rocket } from "lucide-react";
+import { ListChecks, Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -46,31 +46,20 @@ export function ChainBriefPanel({ automation }: { automation: string }) {
 
   useEffect(() => { void load(); }, [load]);
 
-  const startChainDevelopment = useCallback(async () => {
+  // STEP 240 — the chain brief no longer dispatches its own development step. Saving STAGES it (a non-empty
+  // chain-spec.md is this group's pending task), and the group page's wave banner hands the whole batch —
+  // the chain brief plus anything else staged — to a coding agent in ONE step. Opened from the global canvas
+  // there is no banner in view: the brief is still saved/staged, and the launch happens on the group's page.
+  const saveChainBrief = useCallback(async () => {
     setBusy(true);
     try {
-      await fetch(`/api/projects/chain-spec`, {
+      const r = await fetch(`/api/projects/chain-spec`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ automation, spec: chainSpec }),
       });
-      const r = await fetch(`/api/projects/chain-spec/start-development`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ automation }),
-      });
-      const d = (await r.json()) as { number?: number; message?: string; error?: string; reason?: string };
-      if (r.status === 409 && (d.reason === "no-cases" || d.reason === "not-reviewed")) {
-        setReviewed(false); // re-surface the banner even if the initial fetch was stale
-        toast.error(d.reason === "no-cases" ? L.errGroupNoCases : L.errGroupNotReviewed);
-        return;
-      }
-      if (!r.ok) { toast.error(d.error ?? L.chainStepFailed); return; }
-      toast.success(fill(L.stepCreatedToast, { step: d.number ?? "" }), {
-        description: L.stepCopyDesc,
-        duration: 30000,
-        action: { label: L.copyBtn, onClick: () => void navigator.clipboard.writeText(d.message ?? "") },
-      });
+      if (!r.ok) { toast.error(L.chainStepFailed); return; }
+      toast.success(L.chainBriefSaved);
     } finally { setBusy(false); }
   }, [automation, chainSpec, L]);
 
@@ -94,8 +83,8 @@ export function ChainBriefPanel({ automation }: { automation: string }) {
           placeholder={L.chainBriefPlaceholder}
         />
         <VoiceInput targetRef={briefRef} value={chainSpec} onChange={setChainSpec} className="mt-1" />
-        <Button size="sm" variant="secondary" onClick={startChainDevelopment} disabled={busy} className="w-full">
-          {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Rocket className="size-3.5" />} {L.btnStartDevelopment}
+        <Button size="sm" variant="outline" onClick={saveChainBrief} disabled={busy} className="w-full">
+          {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />} {L.chainBriefSave}
         </Button>
       </div>
 

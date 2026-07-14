@@ -7,20 +7,21 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useUiLang } from "../use-ui-lang";
 import { automationMenuStrings } from "../automation-menu-i18n";
-import { fill } from "../quiz-i18n";
 import { VoiceInput } from "./voice-input.client";
 import { ActivationQuiz } from "./activation-quiz.client";
+import { useWaveLock } from "./wave-lock.client";
 import type { EntityType } from "@/lib/entity-store";
 
-// THE REQUIREMENT BRIEF PANEL (step 238 P5-P9; "Start development" added Phase 2) — the authoring surface
-// for the five entities that had NONE until now (Dashboard/Analytics/Calendar/Map/Processes): a free-text
-// field for "the next thing I need here", same shape as the chain brief. "Save" is a plain DRAFT overwrite
-// (<entity>-architecture/add-new-transport-task-entry) — nothing is archived yet, the owner may still be
-// editing. "Start development" (<entity>-architecture/start-development) is the REAL "handed to a coding
-// agent" event: it materializes a Development Step from the CURRENT brief, then archives it into history and
-// clears the container — mirroring ChainBriefPanel's own Start-development button exactly (same use-cases
-// gate, same step-created toast with a copy action). One component, reused for all five — they are
-// structurally identical (a single free-text transport field, automation-scoped, ref='').
+// THE REQUIREMENT BRIEF PANEL (step 238 P5-P9) — the authoring surface for the entities that had NONE until
+// then (Dashboard/Analytics/Calendar/Map/Processes, and fork-activation since step 239): a free-text field
+// for "the next thing I need here", same shape as the chain brief. One component, reused for all of them —
+// they are structurally identical (a single free-text transport field, automation-scoped, ref='').
+//
+// STEP 240 — this panel DISPATCHES NOTHING any more. "Save" writes the brief into the entity's transport
+// container (<entity>-architecture/add-new-transport-task-entry), which STAGES it (pending:true); the page's
+// single wave banner hands every staged change to a coding agent as ONE development step. The old per-entity
+// "Start development" button is gone — along with every other one on the page — so a hand-off cannot happen
+// behind the page lock's back.
 //
 // STEP 239 — the panel became a real DESIGN surface: the shared VoiceInput primitive (232) sits under the
 // field, and "Add with AI" opens the SAME Quiz on this entity as its subject, writing the wording it produces
@@ -38,11 +39,13 @@ export function RequirementBriefPanel({
   automation?: string;
 }) {
   const L = automationMenuStrings(useUiLang());
+  // The page-wide development lock (step 240): while a wave is with a coding agent, every tool here refuses
+  // to act and shows the lock modal instead — the brief the coder is working from must not change.
+  const { guard, refresh: refreshWave } = useWaveLock();
   const [brief, setBrief] = useState("");
   const [pending, setPending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [starting, setStarting] = useState(false);
   // "Add with AI" (step 239) — opens the SAME Quiz, on the `entity` subject. Controlled: this panel owns the
   // open state, and the closing move hands the requirement text straight back into the textarea below.
   const [quizOpen, setQuizOpen] = useState(false);
@@ -67,7 +70,7 @@ export function RequirementBriefPanel({
   }, [automation, entityType]);
 
   async function save() {
-    if (!automation) return;
+    if (!automation || !guard()) return;   // locked → the modal explains why nothing happened
     setSaving(true);
     try {
       const r = await fetch(`/api/projects/${entityType}-architecture/add-new-transport-task-entry`, {
@@ -78,6 +81,7 @@ export function RequirementBriefPanel({
       if (!r.ok) throw new Error(String(r.status));
       setPending(brief.trim().length > 0);
       toast.success(L.requirementSaved);
+      refreshWave();   // a saved requirement is a STAGED change — the banner must appear at once (step 240)
     } catch {
       toast.error(L.requirementSaveFail);
     } finally {
@@ -85,42 +89,9 @@ export function RequirementBriefPanel({
     }
   }
 
-  async function startDevelopment() {
-    if (!automation) return;
-    setStarting(true);
-    try {
-      // Save whatever is currently in the textarea first, so "Start development" always hands over the
-      // LATEST text even if the owner never clicked "Save" — mirrors ChainBriefPanel's own button.
-      await fetch(`/api/projects/${entityType}-architecture/add-new-transport-task-entry`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ automation, ref: "", payload: { brief } }),
-      });
-      const r = await fetch(`/api/projects/${entityType}-architecture/start-development`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ automation }),
-      });
-      const d = (await r.json().catch(() => null)) as { number?: number; message?: string; reason?: string } | null;
-      if (r.status === 409 && (d?.reason === "no-cases" || d?.reason === "not-reviewed")) {
-        toast.error(d.reason === "no-cases" ? L.requirementNoCases : L.requirementNotReviewed);
-        return;
-      }
-      if (!r.ok) { toast.error(L.requirementStepFailed); return; }
-      // Archived + cleared server-side — reflect that immediately rather than waiting for a re-fetch.
-      setBrief("");
-      setPending(false);
-      toast.success(fill(L.requirementStepCreated, { step: d?.number ?? "" }), {
-        description: L.requirementStepCopyDesc,
-        duration: 30000,
-        action: { label: L.requirementCopyBtn, onClick: () => void navigator.clipboard.writeText(d?.message ?? "") },
-      });
-    } catch {
-      toast.error(L.requirementStepFailed);
-    } finally {
-      setStarting(false);
-    }
-  }
+  // STEP 240 — this panel no longer dispatches anything. Saving STAGES the requirement (pending:true); the
+  // page's single banner hands the whole batch over as one wave. The per-entity "Start development" button
+  // that used to live here is gone, along with every other one on the page.
 
   if (loading) return <Loader2 className="size-4 animate-spin text-muted-foreground" />;
 
@@ -150,21 +121,23 @@ export function RequirementBriefPanel({
           entityName={entityLabel ?? entityType}
           open={quizOpen}
           onClose={() => setQuizOpen(false)}
-          onApplied={(text) => { if (text) { setBrief(text); setPending(true); } }}
+          onApplied={(text) => { if (text) { setBrief(text); setPending(true); refreshWave(); } }}
         />
       )}
       <div className="flex items-center gap-2">
-        <Button size="sm" variant="secondary" onClick={() => setQuizOpen(true)} disabled={!automation} className="gap-2">
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => { if (guard()) setQuizOpen(true); }}
+          disabled={!automation}
+          className="gap-2"
+        >
           <Sparkles className="size-3.5" />
           {L.requirementAddWithAi}
         </Button>
         <Button size="sm" variant="outline" onClick={save} disabled={saving} className="gap-2">
           {saving && <Loader2 className="size-3.5 animate-spin" />}
           {L.requirementSave}
-        </Button>
-        <Button size="sm" onClick={startDevelopment} disabled={starting || !brief.trim()} className="gap-2">
-          {starting && <Loader2 className="size-3.5 animate-spin" />}
-          {starting ? L.requirementStarting : L.requirementStartDev}
         </Button>
       </div>
     </div>

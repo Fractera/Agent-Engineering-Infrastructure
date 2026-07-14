@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CheckCheck, Copy, ExternalLink, Loader2, ListChecks, Rocket } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -9,14 +9,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useUiLang } from "../use-ui-lang";
 import { adminBase } from "@/lib/runtime-urls";
 
-// "Start development" (step 233) — the owner's single top-level handoff on the automation page. When the
-// diagram still has an UNBUILT (draft) node, a button appears; it opens a modal (ten languages, step 237.2)
-// that:
+// THE LAUNCH DIALOG (step 233; became the WAVE's launcher in step 240) — the owner's single hand-off. It:
 //   1. enforces the REVIEW GATE inline — read the use cases + confirm (the confirm button lives right here,
 //      not in a hidden accordion),
-//   2. then creates ONE Development Step (sub-steps = nodes) via the existing API,
+//   2. creates ONE Development Step carrying EVERY staged change (the wave — see lib/wave.ts),
 //   3. and shows the owner a SHORT instruction — "Run development step #NN" — NOT the raw brief. The coding
 //      agent picks the step up from the Development Steps page.
+//
+// STEP 240 — it no longer carries its own trigger button. The page has exactly ONE launcher now: the
+// notification banner (development-wave-banner.client.tsx), which owns the open state and renders this dialog.
+// Every per-entity "Start development" button is gone, so a hand-off can only ever happen here.
 type Case = { cuid: string; title: string; summary: string; status: string };
 type Mode = "loading" | "review" | "done" | "no-cases" | "no-nodes";
 
@@ -171,10 +173,21 @@ const I18N: Record<string, SD> = {
   },
 };
 
-export function StartDevelopment({ automation, hasDraft }: { automation: string; hasDraft: boolean }) {
+export function StartDevelopment({
+  automation,
+  open,
+  onOpenChange,
+  onLaunched,
+}: {
+  automation: string;
+  /** Controlled by the banner (step 240) — this dialog no longer has a trigger of its own. */
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  /** Fired once the wave step exists, so the banner can flip to its locked state immediately. */
+  onLaunched?: () => void;
+}) {
   const L = I18N[useUiLang()] ?? I18N.en;
   const router = useRouter();
-  const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode>("loading");
   const [busy, setBusy] = useState(false);
   const [cases, setCases] = useState<Case[]>([]);
@@ -196,6 +209,7 @@ export function StartDevelopment({ automation, hasDraft }: { automation: string;
         const d = (await r.json()) as { number: number };
         setStepNumber(d.number);
         setMode("done");
+        onLaunched?.();   // the page is LOCKED from now on — tell the banner at once (step 240)
         router.refresh();
         return;
       }
@@ -207,14 +221,15 @@ export function StartDevelopment({ automation, hasDraft }: { automation: string;
         setMode("review");
       } else if (d.reason === "no-cases") {
         setMode("no-cases");
-      } else if (d.reason === "no-nodes") {
+      } else if (d.reason === "nothing-staged" || d.reason === "no-nodes") {
+        // "no-nodes" was the pre-wave reason code; the wave's is "nothing-staged" (nothing pending at all).
         setMode("no-nodes");
       } else {
         toast.error(L.failed);
-        setOpen(false);
+        onOpenChange(false);
       }
     } finally { setBusy(false); }
-  }, [automation, L, router]);
+  }, [automation, L, router, onLaunched, onOpenChange]);
 
   // Confirm the cases, then immediately continue to create the step — one uninterrupted flow.
   const confirmAndContinue = useCallback(async () => {
@@ -229,23 +244,22 @@ export function StartDevelopment({ automation, hasDraft }: { automation: string;
     } finally { setBusy(false); }
   }, [automation, L, create]);
 
+  // Opening the dialog IS the launch attempt (the gate may still stop it). Kicked by the banner's button.
   const onOpen = (v: boolean) => {
-    setOpen(v);
+    onOpenChange(v);
     if (v) { setStepNumber(null); void create(); }
   };
+  useEffect(() => {
+    if (open && mode === "loading" && stepNumber === null && !busy) void create();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const openSteps = () => {
     window.open(`${adminBase()}/service/development-steps`, "_blank", "noopener");
   };
 
-  if (!hasDraft) return null;
-
   return (
     <>
-      <Button variant="default" size="sm" onClick={() => onOpen(true)}>
-        <Rocket className="size-3.5" /> {L.button}
-      </Button>
-
       <Dialog open={open} onOpenChange={onOpen}>
         <DialogContent className="flex max-h-[85vh] flex-col overflow-hidden sm:max-w-2xl">
           <DialogHeader className="shrink-0">

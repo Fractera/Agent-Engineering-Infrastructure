@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import type { NodeContract } from "../node-contract";
 import { DiagramPanel, NodeCard } from "./diagram-panel.client";
 import { BuilderNodePanel } from "./builder-node-panel.client";
-import { StartDevelopment } from "./start-development.client";
 
 // FROZEN STANDARD (step 223.C + 224) — the diagram CANVAS. Two modes:
 //
@@ -405,9 +404,9 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
           </Button>
           {!builder && automation && (
             <>
-              {/* START DEVELOPMENT (step 232) — appears while any node is still a draft: it turns the current
-                  draft nodes into development steps and hands the owner the copy-paste brief for a coding agent. */}
-              <StartDevelopment automation={automation} hasDraft={view.some((v) => v.draft)} />
+              {/* STEP 240 — the "Start development" button that used to sit here is GONE. Development is now
+                  launched in exactly ONE place on the page: the wave banner under the header, which hands over
+                  EVERY staged change at once (a draft node here is simply one of them). */}
               {/* THE MINIMAL TEST GUARANTEE (227.C): even an unfinished automation can be tested — the smoke
                   run goes through what is BUILT and reports honestly what is still missing. */}
               <Button variant="outline" size="sm" onClick={testRun} disabled={testing}>

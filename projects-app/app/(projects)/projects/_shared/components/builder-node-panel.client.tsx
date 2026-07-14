@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { History, Loader2, Rocket, Save, Trash2, Undo2 } from "lucide-react";
+import { History, Loader2, Save, Trash2, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { VoiceInput } from "./voice-input.client";
+import { useWaveLock } from "./wave-lock.client";
 import type { IndexNode } from "./diagram-canvas.client";
 
 // FROZEN STANDARD (step 224 L4) — the BUILDER side panel of a node. A DRAFT (red) node has no instruction
@@ -33,6 +34,8 @@ export function BuilderNodePanel({
   onChanged: () => void;
   onDeleted: () => void;
 }) {
+  // The page-wide development lock (step 240): while a wave is with a coding agent this panel is read-only.
+  const { guard, refresh: refreshWave } = useWaveLock();
   const [text, setText] = useState(node.draft ? spec : instruction);
   const [busy, setBusy] = useState(false);
   const [versions, setVersions] = useState<Version[]>([]);
@@ -42,6 +45,7 @@ export function BuilderNodePanel({
   useEffect(() => setText(node.draft ? spec : instruction), [node.cuid, node.draft, spec, instruction]);
 
   const save = useCallback(async () => {
+    if (!guard()) return;   // a wave is with a coding agent → the lock modal explains, nothing is written
     setBusy(true);
     try {
       await fetch(`/api/projects/nodes/${node.cuid}`, {
@@ -50,10 +54,11 @@ export function BuilderNodePanel({
         body: JSON.stringify(node.draft ? { spec: text } : { instruction: text }),
       });
       onChanged();
+      refreshWave();   // the node is now STAGED — the wave banner must appear at once (step 240)
     } finally {
       setBusy(false);
     }
-  }, [node.cuid, node.draft, text, onChanged]);
+  }, [node.cuid, node.draft, text, onChanged, guard, refreshWave]);
 
   const loadHistory = useCallback(async () => {
     const r = await fetch(`/api/projects/nodes/${node.cuid}/versions`, { cache: "no-store" });
@@ -78,48 +83,10 @@ export function BuilderNodePanel({
     [node.cuid, onChanged],
   );
 
-  // Save the brief/instruction first (so the step carries the latest text), then materialize the step file
-  // and show the copy-paste message. The owner pastes it into a coder chat; the agent executes step #N.
-  const startDevelopment = useCallback(async () => {
-    setBusy(true);
-    try {
-      await fetch(`/api/projects/nodes/${node.cuid}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(node.draft ? { spec: text } : { instruction: text }),
-      });
-      const r = await fetch(`/api/projects/nodes/${node.cuid}/start-development`, { method: "POST" });
-      if (!r.ok) {
-        // THE USER-CASE GATE (step 231): no cases, or the owner has not confirmed the current set. The server
-        // says exactly which — show it, and take him to the Use cases panel to settle it.
-        const err = (await r.json().catch(() => ({}))) as { error?: string; reason?: string };
-        const gated = err.reason === "no-cases" || err.reason === "not-reviewed";
-        toast.error(err.error ?? "Could not create the development step.", {
-          duration: 15000,
-          action: gated
-            ? {
-                label: "Open user cases",
-                // One Use cases panel per page — it listens for this and opens its review dialog.
-                onClick: () => window.dispatchEvent(new CustomEvent("usecases:review", { detail: {} })),
-              }
-            : undefined,
-        });
-        return;
-      }
-      const d = (await r.json()) as { number: number; message: string };
-      toast.success(`You created a technical brief for the coding agent (step #${d.number})`, {
-        description: "Copy this message and paste it into the coding agent's chat.",
-        duration: 30000,
-        action: {
-          label: "Copy",
-          onClick: () => { void navigator.clipboard.writeText(d.message); toast.success("Copied — paste it into the coder's chat."); },
-        },
-      });
-      onChanged();
-    } finally {
-      setBusy(false);
-    }
-  }, [node.cuid, node.draft, text, onChanged]);
+  // STEP 240 — this panel no longer dispatches a development step of its own (its "Start development" button
+  // is gone, like every other per-entity button). Saving STAGES the node: a draft's spec.md is pending by
+  // definition, and editing a LIVE node's instruction stages an optimization (the node PATCH writes it into
+  // the node's transport slot). The page's single wave banner hands the whole batch over at once.
 
   const remove = useCallback(async () => {
     setBusy(true);
@@ -177,12 +144,10 @@ export function BuilderNodePanel({
         </Button>
       </div>
 
-      {/* START DEVELOPMENT (step 224 L6) — saves the brief/instruction, materializes a development step file
-          into the product queue (:3002/service/development-steps) and shows the copy-paste message for the
-          coding agent. A draft = first build; a live node whose instruction was edited = an OPTIMIZATION. */}
-      <Button size="sm" variant="secondary" onClick={startDevelopment} disabled={busy} className="w-full">
-        {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Rocket className="size-3.5" />} Start development
-      </Button>
+      {/* STEP 240 — the node's own "Start development" button is GONE. Saving is what STAGES this node: a
+          draft's spec.md is pending by definition, and editing a LIVE node's instruction stages an
+          optimization (the PATCH writes it into the node's transport slot). The whole batch is then handed
+          over ONCE, by the wave banner under the page header. */}
 
       {showHistory && (
         <div className="space-y-1 rounded-md border p-2">

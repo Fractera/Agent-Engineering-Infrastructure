@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorize, resolveProject } from "@/lib/nodes";
 import { extractEntitySlice } from "@/lib/entity-architecture";
-import { setTransport, getTransport, archiveAndClearTransport, type EntityType } from "@/lib/entity-store";
-import { materializeStubEntityStep, nextStepNumber, type StubEntityStepKind } from "@/lib/dev-steps";
-import { assertUseCasesReviewed } from "@/lib/use-cases";
+import { setTransport, type EntityType } from "@/lib/entity-store";
 
 // ROUTE FACTORY (step 238) — the 27 per-entity sub-APIs (add-new-transport-task-entry /
 // extract-current-state-for-architecture / extract-full-history-for-architecture, one triad per entity)
@@ -48,32 +46,8 @@ export function addTransportRoute(entityType: EntityType) {
   };
 }
 
-/** "Start development" for a Dashboard/Analytics/Calendar/Map/Processes requirement (step 238 Phase 2) —
- *  the REAL "handed to a coding agent" event for these 5 entities, mirroring chain-spec/start-development
- *  exactly (same use-cases gate, same materialize-then-archive-then-clear order). Before this route existed,
- *  RequirementBriefPanel's transport was a dead end — nothing ever read it to spawn a Development Step. */
-export function stubStartDevelopmentRoute(entityType: StubEntityStepKind) {
-  return async function POST(req: NextRequest) {
-    if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
-    const body = (await req.json().catch(() => null)) as { automation?: string } | null;
-    const proj = resolveProject(String(body?.automation ?? ""));
-    if (!proj.ok) return NextResponse.json({ error: proj.error }, { status: 400 });
-
-    // THE USE-CASES GATE (step 236.5 pattern, "copy the logic") — no development step is handed to a coding
-    // agent until the owner has read the automation's user cases back and confirmed the AI understood him.
-    const gate = await assertUseCasesReviewed(proj.automation);
-    if (!gate.ok) return NextResponse.json({ reason: gate.reason }, { status: 409 });
-
-    const transport = await getTransport(proj.automation, entityType, "");
-    const brief = (transport?.payload as { brief?: string } | undefined)?.brief ?? "";
-
-    const number = await nextStepNumber();
-    const { file, message } = await materializeStubEntityStep({ number, automation: proj.automation, entityType, brief });
-
-    // ARCHIVE + CLEAR here, not on save — this IS the real consumption event. Reuses the generic
-    // entity_transport → entity_history archival Phase 0 already built but never wired to anything.
-    await archiveAndClearTransport(proj.automation, entityType, "", String(number));
-
-    return NextResponse.json({ ok: true, number, file, message });
-  };
-}
+// STEP 240 — `stubStartDevelopmentRoute` (the per-entity "Start development" of step 238 Phase 2) is GONE,
+// together with the six routes that bound it. Per-entity dispatch does not exist any more: a requirement is
+// SAVED (staged), and the page's single wave banner hands EVERY staged change over as ONE development step
+// (app/api/projects/start-development + lib/wave.ts). Keeping these routes alive would have left a path
+// around the page lock — a brief could be dispatched while a wave was already with a coding agent.
