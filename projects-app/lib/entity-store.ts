@@ -102,6 +102,23 @@ export async function setTransport(
   ).run(createNodeId(), automation, entityType, ref, JSON.stringify(payload ?? {}));
 }
 
+/** Drop a pending brief WITHOUT archiving it (step 241 E3.3 — the wave banner's "Reset"). Archiving belongs
+ *  to work that was actually HANDED OVER; a requirement the owner throws away before sending was never part
+ *  of any development, and writing it into history would recreate exactly the phantom-version bug that step
+ *  238 Phase 2 removed. So a reset erases, it does not archive. */
+export async function clearTransport(automation: string, entityType: EntityType, ref = ""): Promise<void> {
+  await db.prepare(`DELETE FROM entity_transport WHERE automation=? AND entity_type=? AND entity_ref=?`)
+    .run(automation, entityType, ref);
+}
+
+/** Every pending brief of an automation, whatever the entity or the ref — what "Reset" clears. */
+export async function listTransports(automation: string): Promise<{ entityType: EntityType; ref: string }[]> {
+  const rows = (await db
+    .prepare(`SELECT entity_type, entity_ref FROM entity_transport WHERE automation = ?`)
+    .all(automation)) as { entity_type: string; entity_ref: string }[];
+  return rows.map((r) => ({ entityType: r.entity_type as EntityType, ref: r.entity_ref }));
+}
+
 // ─── GENERIC HISTORY (append-only, never cleared) ───────────────────────────────────────────────────────
 
 export async function getHistory(

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Menu, Sparkles } from "lucide-react";
+import { Menu, Sparkles, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -18,6 +18,7 @@ import type { EntitiesConfig, EntityKey } from "../entities";
 import { ENTITY_ORDER } from "../entities";
 import { AutomationSettingsModal } from "./automation-settings-modal.client";
 import { TestsModal } from "./tests-modal.client";
+import { DeleteAutomationModal } from "./delete-automation-modal.client";
 import { HowItWorksModal } from "./how-it-works-modal.client";
 import { useUiLang } from "../use-ui-lang";
 import { automationMenuStrings } from "../automation-menu-i18n";
@@ -54,6 +55,7 @@ export function AutomationMenu({
   const [howItWorksOpen, setHowItWorksOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [testsOpen, setTestsOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const { entities, setEntity } = useEntitiesLive(automation, entitiesSeed ?? {});
 
   useEffect(() => {
@@ -115,8 +117,30 @@ export function AutomationMenu({
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setTestsOpen(true); }}>
             {M.testsItem}
           </DropdownMenuItem>
+          {/* DANGER ZONE (step 241 E3.2, owner's request) — the LAST item, visually separated and destructive.
+              Until now an automation could be created but never removed, so every test and abandoned idea
+              stayed forever. Deleting is irreversible, so it never happens from this click: it opens a modal
+              that requires the automation's own name to be typed. */}
+          {automation && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs font-normal text-rose-600 dark:text-rose-400">
+                {M.dangerZone}
+              </DropdownMenuLabel>
+              <DropdownMenuItem
+                onSelect={(e) => { e.preventDefault(); setDeleteOpen(true); }}
+                className="gap-2 text-rose-600 focus:text-rose-600 dark:text-rose-400"
+              >
+                <Trash2 className="size-4" /> {M.deleteAutomation}
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {automation && (
+        <DeleteAutomationModal automation={automation} open={deleteOpen} onOpenChange={setDeleteOpen} />
+      )}
       <HowItWorksModal automation={automation} open={howItWorksOpen} onOpenChange={setHowItWorksOpen} />
       <AutomationSettingsModal
         modelEnvKey={modelEnvKey}
