@@ -1,13 +1,18 @@
-import { readFile, writeFile, readdir } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { openAiKey } from "@/lib/quiz";
 
-// THE "HOW IT WORKS" DESCRIPTION (step 237) — a plain-language explanation of a single automation, written
-// BY THE AI from an analysis of the automation's own declared components (README, diagram, node
-// instructions), NOT hand-authored. Stored as a flat JSON file in the automation's own _data/ folder (NOT a
-// TS module — this route reads/writes it with plain fs, so no build/rebuild is involved on either side);
-// the modal's GET reads it directly, same as any other /api/projects/* route (already dynamic, canon-safe).
-// Regenerated on demand only — the owner clicks "Get answer from AI" in the modal, nothing runs automatically.
+// THE "HOW IT WORKS" DESCRIPTION (step 237; rewired onto the entity-architecture standard in 238) — a
+// plain-language explanation of a single automation, written BY THE AI, NOT hand-authored. Stored as a flat
+// JSON file in the automation's own _data/ folder (NOT a TS module — this route reads/writes it with plain
+// fs, so no build/rebuild is involved on either side); the modal's GET reads it directly, same as any other
+// /api/projects/* route (already dynamic, canon-safe). Regenerated on demand only — the owner clicks
+// "Get answer from AI" in the modal, nothing runs automatically.
+//
+// Step 238 split "collect" from "ask": the modal's own "Collect data" button already fetched the JSON2
+// snapshot (GET /api/projects/fetch-current-automation-architecture-snapshot) and shows it with a Copy
+// button; "Get answer from AI" then sends THAT SAME collected object here — no second gather, no drift
+// between what the owner saw/copied and what the model actually read.
 
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 const FILE = "how-it-works.json";
@@ -23,33 +28,12 @@ export async function readHowItWorks(projectDir: string): Promise<HowItWorks | n
   }
 }
 
-/** Every text component the project already declares about itself — the raw source, not a summary the
- *  model would have to trust second-hand. Node `functions.ts` bodies are deliberately excluded: the goal
- *  is a plain description for a non-technical owner, not a code review. */
-async function gatherContext(projectDir: string): Promise<string> {
-  const parts: string[] = [];
-  const readIfExists = async (rel: string) => {
-    const t = await readFile(join(projectDir, rel), "utf8").catch(() => "");
-    if (t.trim()) parts.push(`--- ${rel} ---\n${t.trim()}`);
-  };
-  await readIfExists("README.md");
-  await readIfExists("_data/description.ts");
-  await readIfExists("_data/diagram.ts");
-  const nodeDirs = await readdir(join(projectDir, "_nodes"), { withFileTypes: true }).catch(() => []);
-  for (const d of nodeDirs) {
-    if (!d.isDirectory()) continue;
-    await readIfExists(`_nodes/${d.name}/meta.ts`);
-    await readIfExists(`_nodes/${d.name}/instruction.ts`);
-  }
-  return parts.join("\n\n");
-}
-
-export async function generateHowItWorks(projectDir: string): Promise<{ ok: true; result: HowItWorks } | { ok: false; error: string }> {
+export async function generateHowItWorks(projectDir: string, collected: unknown): Promise<{ ok: true; result: HowItWorks } | { ok: false; error: string }> {
   const key = openAiKey();
   if (!key) return { ok: false, error: "OPENAI_API_KEY is not set" };
 
-  const context = await gatherContext(projectDir);
-  if (!context.trim()) {
+  const context = JSON.stringify(collected, null, 2);
+  if (!context.trim() || context === "{}" || context === "null") {
     return { ok: false, error: "Nothing declared about this automation yet — build it first." };
   }
 
@@ -57,7 +41,7 @@ export async function generateHowItWorks(projectDir: string): Promise<{ ok: true
     {
       role: "system",
       content:
-        "You explain automations to their non-technical owner. Given the automation's own README, diagram and node declarations below, write a short, clear, jargon-free explanation of WHAT it does and HOW it works, as a few short paragraphs. No headings, no bullet lists, no code, no file names — plain prose a business owner can read in under a minute.",
+        "You explain automations to their non-technical owner. Below is a JSON snapshot of this automation's current architecture (its nodes, links to other automations, use cases, and other declared entities). Write a short, clear, jargon-free explanation of WHAT it does and HOW it works, as a few short paragraphs. No headings, no bullet lists, no code, no JSON keys or file names — plain prose a business owner can read in under a minute.",
     },
     { role: "user", content: context },
   ];

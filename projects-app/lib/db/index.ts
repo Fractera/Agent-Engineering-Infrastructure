@@ -470,6 +470,37 @@ const SCHEMA = `
     expiry        INTEGER,
     created_at    INTEGER NOT NULL DEFAULT (strftime('%s','now'))
   );
+  -- UNIVERSAL ENTITY TRANSPORT + HISTORY (step 238) — every entity in an automation's architecture (node,
+  -- edge, usecase, chain, dashboard, analytics, calendar, map, processes) carries a TRANSPORT slot (the
+  -- current, not-yet-developed brief — cleared once a Development Step consumes it) and a HISTORY log
+  -- (append-only, every past consumed brief, never cleared). Generalizes the exact shape
+  -- automation_node_versions/automation_edge_versions already used (JSON-blob payload, arbitrary per row) —
+  -- same technique as dashboard_rows/automation_entities so no live-server ALTER is ever needed (lesson 225
+  -- G4) when a new entity_type is added. entity_ref is the instance id within that type (node cuid, use-case
+  -- cuid...); '' (empty string, NOT NULL — SQLite's UNIQUE treats every NULL as distinct, which would
+  -- silently allow duplicate rows) for automation-wide entities (chain, dashboard, analytics, calendar,
+  -- map, processes).
+  CREATE TABLE IF NOT EXISTS entity_transport (
+    id           TEXT PRIMARY KEY NOT NULL,
+    automation   TEXT NOT NULL,
+    entity_type  TEXT NOT NULL,
+    entity_ref   TEXT NOT NULL DEFAULT '',
+    payload_json TEXT NOT NULL DEFAULT '{}',
+    created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at   TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(automation, entity_type, entity_ref)
+  );
+  CREATE TABLE IF NOT EXISTS entity_history (
+    id           TEXT PRIMARY KEY NOT NULL,
+    automation   TEXT NOT NULL,
+    entity_type  TEXT NOT NULL,
+    entity_ref   TEXT NOT NULL DEFAULT '',
+    version      INTEGER NOT NULL,
+    payload_json TEXT NOT NULL DEFAULT '{}',
+    dev_step_ref TEXT,
+    created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(automation, entity_type, entity_ref, version)
+  );
 `
 
 // The architecture three streams (projects / pages / endpoints) and their tasks

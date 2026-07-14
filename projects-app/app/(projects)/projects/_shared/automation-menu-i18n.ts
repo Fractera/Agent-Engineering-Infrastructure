@@ -40,6 +40,13 @@ export type AutomationMenuStrings = {
   generating: string;
   generateFail: string;
   updatedAt: string; // template: "{date}"
+  // How it works — two-button split (step 238): collect data first, THEN ask the AI
+  collectData: string;
+  collecting: string;
+  collectFail: string;
+  copyJson: string;
+  copied: string;
+  collectedHint: string;
 };
 
 export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
@@ -79,6 +86,12 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     generating: "Thinking…",
     generateFail: "Could not generate the description.",
     updatedAt: "Last updated {date}",
+    collectData: "Collect data",
+    collecting: "Collecting…",
+    collectFail: "Could not collect the data.",
+    copyJson: "Copy",
+    copied: "Copied",
+    collectedHint: "Raw data — copy it into an external AI tool, or click below to get an answer here.",
   },
   ru: {
     howItWorks: "Как это работает",
@@ -116,6 +129,12 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     generating: "Формирую ответ…",
     generateFail: "Не удалось сформировать описание.",
     updatedAt: "Обновлено {date}",
+    collectData: "Собрать данные",
+    collecting: "Собираю…",
+    collectFail: "Не удалось собрать данные.",
+    copyJson: "Скопировать",
+    copied: "Скопировано",
+    collectedHint: "Сырые данные — скопируйте их во внешний ИИ-инструмент, или нажмите ниже, чтобы получить ответ прямо здесь.",
   },
   es: {
     howItWorks: "Cómo funciona",
@@ -153,6 +172,12 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     generating: "Pensando…",
     generateFail: "No se pudo generar la descripción.",
     updatedAt: "Última actualización {date}",
+    collectData: "Recopilar datos",
+    collecting: "Recopilando…",
+    collectFail: "No se pudieron recopilar los datos.",
+    copyJson: "Copiar",
+    copied: "Copiado",
+    collectedHint: "Datos en bruto — cópialos en una herramienta de IA externa, o haz clic abajo para obtener una respuesta aquí.",
   },
   fr: {
     howItWorks: "Comment ça marche",
@@ -190,6 +215,12 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     generating: "Réflexion en cours…",
     generateFail: "Impossible de générer la description.",
     updatedAt: "Dernière mise à jour {date}",
+    collectData: "Collecter les données",
+    collecting: "Collecte en cours…",
+    collectFail: "Impossible de collecter les données.",
+    copyJson: "Copier",
+    copied: "Copié",
+    collectedHint: "Données brutes — copiez-les dans un outil d'IA externe, ou cliquez ci-dessous pour obtenir une réponse ici.",
   },
   it: {
     howItWorks: "Come funziona",
@@ -227,6 +258,12 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     generating: "Sto pensando…",
     generateFail: "Impossibile generare la descrizione.",
     updatedAt: "Ultimo aggiornamento {date}",
+    collectData: "Raccogli dati",
+    collecting: "Raccolta in corso…",
+    collectFail: "Impossibile raccogliere i dati.",
+    copyJson: "Copia",
+    copied: "Copiato",
+    collectedHint: "Dati grezzi — copiali in uno strumento IA esterno, oppure clicca qui sotto per ottenere una risposta qui.",
   },
   de: {
     howItWorks: "So funktioniert es",
@@ -264,6 +301,12 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     generating: "Denke nach…",
     generateFail: "Die Beschreibung konnte nicht erstellt werden.",
     updatedAt: "Zuletzt aktualisiert am {date}",
+    collectData: "Daten sammeln",
+    collecting: "Sammle Daten…",
+    collectFail: "Die Daten konnten nicht gesammelt werden.",
+    copyJson: "Kopieren",
+    copied: "Kopiert",
+    collectedHint: "Rohdaten — kopiere sie in ein externes KI-Tool, oder klicke unten, um hier eine Antwort zu erhalten.",
   },
   pt: {
     howItWorks: "Como funciona",
@@ -301,6 +344,12 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     generating: "Pensando…",
     generateFail: "Não foi possível gerar a descrição.",
     updatedAt: "Última atualização {date}",
+    collectData: "Coletar dados",
+    collecting: "Coletando…",
+    collectFail: "Não foi possível coletar os dados.",
+    copyJson: "Copiar",
+    copied: "Copiado",
+    collectedHint: "Dados brutos — copie-os para uma ferramenta de IA externa, ou clique abaixo para obter uma resposta aqui.",
   },
   pl: {
     howItWorks: "Jak to działa",
@@ -338,6 +387,12 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     generating: "Myślę…",
     generateFail: "Nie udało się wygenerować opisu.",
     updatedAt: "Ostatnia aktualizacja {date}",
+    collectData: "Zbierz dane",
+    collecting: "Zbieranie…",
+    collectFail: "Nie udało się zebrać danych.",
+    copyJson: "Kopiuj",
+    copied: "Skopiowano",
+    collectedHint: "Surowe dane — skopiuj je do zewnętrznego narzędzia AI, albo kliknij poniżej, aby uzyskać odpowiedź tutaj.",
   },
   tr: {
     howItWorks: "Nasıl çalışır",
@@ -375,6 +430,12 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     generating: "Düşünüyor…",
     generateFail: "Açıklama oluşturulamadı.",
     updatedAt: "Son güncelleme {date}",
+    collectData: "Verileri topla",
+    collecting: "Toplanıyor…",
+    collectFail: "Veriler toplanamadı.",
+    copyJson: "Kopyala",
+    copied: "Kopyalandı",
+    collectedHint: "Ham veri — harici bir AI aracına kopyalayın veya burada yanıt almak için aşağıya tıklayın.",
   },
   nl: {
     howItWorks: "Hoe het werkt",
@@ -412,6 +473,12 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     generating: "Aan het nadenken…",
     generateFail: "Kon de beschrijving niet genereren.",
     updatedAt: "Laatst bijgewerkt {date}",
+    collectData: "Gegevens verzamelen",
+    collecting: "Verzamelen…",
+    collectFail: "Kon de gegevens niet verzamelen.",
+    copyJson: "Kopiëren",
+    copied: "Gekopieerd",
+    collectedHint: "Ruwe data — kopieer ze naar een externe AI-tool, of klik hieronder om hier een antwoord te krijgen.",
   },
 };
 
