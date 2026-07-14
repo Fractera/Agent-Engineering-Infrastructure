@@ -84,6 +84,19 @@ export async function syncIndexFromFiles(automation: string, projectDir: string)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     ).run(cuid, automation, slug, name, i, draft ? 1 : 0, draft ? 0 : 1, draft ? 0 : 1, draft ? "draft" : "materialized");
   }
+
+  // STEP 241 — TOMBSTONE THE DRIFT. The sync used to only ADD (folder → index) and never remove, so an index
+  // row whose folder had vanished lived on forever. Real damage, found by the executor's gate: the reference
+  // automation carried three phantom "draft" nodes with no folder on disk, which made it permanently
+  // unrunnable ("some nodes are still drafts") for nodes that did not exist. The FILES are the truth (the
+  // diagram invariant): a row with no folder is not a node, so it is tombstoned like any deleted one.
+  for (const row of existing) {
+    if (folders.includes(row.slug)) continue;
+    await db.prepare(
+      `UPDATE automation_nodes SET status = 'removed', updated_at = datetime('now')
+       WHERE automation = ? AND slug = ? AND status != 'removed'`,
+    ).run(automation, row.slug);
+  }
 }
 
 export async function listNodes(automation: string): Promise<NodeRow[]> {
