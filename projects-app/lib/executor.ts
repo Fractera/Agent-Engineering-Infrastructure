@@ -73,16 +73,12 @@ export async function canActivate(automation: string, instanceId?: string): Prom
   const type = await readAutomationType(proj.projectDir, proj.automation);
   const nodes = await listNodes(proj.automation);
 
-  // Common to every type: the diagram must be BUILT. A draft node is not code — running "around" it would
-  // execute a different automation than the one the diagram describes.
-  const live = nodes.filter((n) => n.status !== "removed");
-  if (!live.length) return { ok: false, refusal: { reason: "no-nodes" } };
-  const drafts = live.filter((n) => n.draft === 1).map((n) => n.slug);
-  if (drafts.length) return { ok: false, refusal: { reason: "has-drafts", drafts } };
-
-  // …and every built node must actually be in the executables registry (i.e. have real function bodies).
-  const missing = live.filter((n) => !EXECUTABLES[`${proj.automation}:${n.slug}`]).map((n) => n.slug);
-  if (missing.length) return { ok: false, refusal: { reason: "not-executable", nodes: missing } };
+  // THE TYPE'S OWN PRECONDITION COMES FIRST (owner's framing): it answers the more fundamental question —
+  // "can this thing be activated AS WHAT IT IS at all?" An instanced automation without a parametrised fork,
+  // or a chained one with nothing to chain to, is not a half-built automation: it is a category error, and
+  // saying "some nodes are still drafts" would send the owner to fix the wrong thing.
+  let chosenFork: string | null = null;
+  let params: Record<string, unknown> = {};
 
   if (type === "instanced") {
     // A run of an instanced automation IS a fork: the Master is a template, never a runnable thing. Without a
@@ -100,11 +96,11 @@ export async function canActivate(automation: string, instanceId?: string): Prom
       ? forks.find((f) => f.id === instanceId)
       : forks.find((f) => Object.keys(forkParams(f)).length) ?? forks[0];
     if (!fork) return { ok: false, refusal: { reason: "no-fork" } };
-    const params = forkParams(fork);
+    params = forkParams(fork);
     if (!Object.keys(params).length) {
       return { ok: false, refusal: { reason: "fork-without-params", instanceId: fork.id } };
     }
-    return { ok: true, type, instanceId: fork.id, params };
+    chosenFork = fork.id;
   }
 
   if (type === "chained") {
@@ -114,10 +110,18 @@ export async function canActivate(automation: string, instanceId?: string): Prom
       (e) => e.from_automation === proj.automation || e.to_automation === proj.automation,
     );
     if (!edges.length) return { ok: false, refusal: { reason: "no-edges" } };
-    return { ok: true, type, instanceId: null, params: {} };
   }
 
-  return { ok: true, type: "stream", instanceId: null, params: {} };
+  // THEN the build checks, common to every type: the diagram must be BUILT and really executable. A draft node
+  // is not code — running "around" it would execute a different automation than the one the diagram describes.
+  const live = nodes.filter((n) => n.status !== "removed");
+  if (!live.length) return { ok: false, refusal: { reason: "no-nodes" } };
+  const drafts = live.filter((n) => n.draft === 1).map((n) => n.slug);
+  if (drafts.length) return { ok: false, refusal: { reason: "has-drafts", drafts } };
+  const missing = live.filter((n) => !EXECUTABLES[`${proj.automation}:${n.slug}`]).map((n) => n.slug);
+  if (missing.length) return { ok: false, refusal: { reason: "not-executable", nodes: missing } };
+
+  return { ok: true, type, instanceId: chosenFork, params };
 }
 
 /** The functions of a node, in the order its metadata declares them (the metadata is the contract; the module
