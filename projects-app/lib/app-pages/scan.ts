@@ -57,7 +57,10 @@ async function walk(dir: string, rel: string): Promise<AppNode[]> {
   return nodes;
 }
 
-/** The whole slot-app folder tree (root's children are the top-level folders). */
+/** The declarable page surface = ONLY the `[lang]` layer (owner's feedback, step 242.1): the public,
+ *  localized pages an external user reaches. The `(service)` and `api` folders are the internal/architect
+ *  surface — showing them here only confused the owner, so they are excluded. The returned children are the
+ *  folders UNDER `[lang]` (their rel is already `[lang]/…`, so declaring inside one stays multilingual). */
 export async function scanAppTree(): Promise<{ children: AppNode[] }> {
-  return { children: await walk(appRoot(), "") };
+  return { children: await walk(join(appRoot(), "[lang]"), "[lang]") };
 }

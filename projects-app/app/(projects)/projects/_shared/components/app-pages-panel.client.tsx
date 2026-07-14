@@ -146,6 +146,7 @@ function DeclareModal({
   const [dynamic, setDynamic] = useState(false);
   const [multilingual, setMultilingual] = useState(true);
   const [busy, setBusy] = useState(false);
+  const titleRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => { if (open) { setTitle(""); setDynamic(false); setMultilingual(true); } }, [open]);
 
@@ -174,8 +175,10 @@ function DeclareModal({
         <div className="space-y-4">
           <div className="space-y-1">
             <label className="text-xs font-medium">{S.titleField}</label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={S.titlePlaceholder} autoComplete="off"
+            <Input ref={titleRef} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={S.titlePlaceholder} autoComplete="off"
               onKeyDown={(e) => { if (e.key === "Enter" && title.trim() && !busy) declare(); }} />
+            {/* The shared voice primitive (step 232) — the page title can be spoken too. */}
+            <VoiceInput targetRef={titleRef} value={title} onChange={setTitle} />
           </div>
           <label className="flex items-center justify-between gap-4 text-sm">
             <span className="flex items-center gap-2"><Globe className="size-4 text-muted-foreground" /> {S.multilingualField}</span>
