@@ -352,7 +352,6 @@ import { ActivationQuiz } from "../../../_shared/components/activation-quiz.clie
 import { AutomationAccordions } from "../../../_shared/components/automation-accordions.client";
 import { DiagramSection } from "../../../_shared/components/diagram-section.client";
 import { GroupDetailSection } from "../../../_shared/components/group-detail-section.client";
-import { SkeletonIntro } from "../../../_shared/components/skeleton-intro.client";
 import { PROJECT_CONFIG } from "../_data/config";
 import { USE_CASES } from "../_data/use-cases";
 import { PROJECT_DASHBOARD } from "../_data/dashboard";
@@ -418,25 +417,7 @@ export default function AutomationEntry() {
           dashboard={PROJECT_DASHBOARD}
           type={AUTOMATION_TYPE}
         />
-        {/* Shown on the FIRST visit only (owner) — SkeletonIntro remembers per browser. */}
-        <SkeletonIntro automation="{{CATEGORY}}/{{PROJECT}}">
-          <div className="space-y-2 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">This is a frozen automation skeleton.</p>
-            <p>
-              Open the menu (top right): <strong>Settings</strong> sets the AI model and declares input
-              channels; <strong>Tests</strong> runs the probes you declare. Both are driven by data:
-            </p>
-            <ul className="list-disc space-y-1 pl-5">
-              <li>Declare what this automation connects to in <code>_data/channels.ts</code>.</li>
-              <li>Declare one probe per entity it touches in <code>_data/tests.ts</code>.</li>
-              <li>Describe it in <code>_data/description.ts</code>; its card comes from <code>README.md</code>.</li>
-            </ul>
-            <p>
-              Do not invent logic from memory — follow this project&apos;s <code>README.md</code>, which
-              grows node by node.
-            </p>
-          </div>
-        </SkeletonIntro>
+        {/* The "This is a frozen automation skeleton" intro blurb was REMOVED here (owner, step 241). */}
       </main>
     </>
   );

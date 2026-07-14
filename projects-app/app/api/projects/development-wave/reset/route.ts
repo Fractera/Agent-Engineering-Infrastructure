@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorize, resolveProject } from "@/lib/nodes";
-import { clearTransport, listTransports } from "@/lib/entity-store";
+import { clearTransport, clearWaveSnooze, listTransports } from "@/lib/entity-store";
 import { readChainSpec, writeChainSpec } from "@/lib/edges";
 import { pendingWaveStep } from "@/lib/wave";
 
@@ -45,6 +45,10 @@ export async function POST(req: NextRequest) {
     await writeChainSpec(proj.automation, "");
     chainCleared = true;
   }
+
+  // Drop any postpone signature too: with the requirements gone the wave is idle, and a stale snooze row
+  // must not linger to suppress a genuinely new banner later.
+  await clearWaveSnooze(proj.automation);
 
   return NextResponse.json({
     ok: true,

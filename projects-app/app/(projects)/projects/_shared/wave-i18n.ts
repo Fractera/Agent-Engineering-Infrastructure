@@ -7,10 +7,15 @@ export type WaveStrings = {
   bannerTitle: string;
   bannerBody: string;        // {n} = number of staged changes
   bannerLaunch: string;
-  /** Step 241 E3.3 — the banner's other two actions. Dismiss only HIDES it (nothing is lost); Reset throws
-   *  the staged requirements away (irreversible, so it confirms first). */
-  bannerDismiss: string;
-  bannerReset: string;
+  /** Step 241 E3.3 — the banner's OTHER TWO actions (owner's final design):
+   *   • Postpone — hides the banner AND freezes the current staged state as "not worth a notification"; it
+   *                returns only when a requirement actually changes. Nothing is lost (server-persisted
+   *                signature, not a client-only hide that a reload would undo).
+   *   • Cancel   — throws the staged requirements away (all entities at once), behind a confirmation. */
+  bannerPostpone: string;
+  bannerCancel: string;
+  postponeDone: string;
+  postponeFailed: string;
   resetTitle: string;
   resetBody: string;         // {n}
   resetKeeps: string;
@@ -37,8 +42,10 @@ export const WAVE_I18N: Record<string, WaveStrings> = {
     bannerTitle: "Changes are waiting to be developed",
     bannerBody: "You have {n} change(s) staged. Finish everything you want in this round — every element — then launch development once, as a single batch.",
     bannerLaunch: "Launch development",
-    bannerDismiss: "Dismiss",
-    bannerReset: "Reset",
+    bannerPostpone: "Postpone launch",
+    bannerCancel: "Cancel launch",
+    postponeDone: "Postponed — the banner comes back when you change something.",
+    postponeFailed: "Could not postpone.",
     resetTitle: "Discard the staged requirements?",
     resetBody: "This throws away all {n} requirement(s) you have written across this automation's entities — the dashboard, analytics, calendar, map, processes, fork activation and the chain brief. They were never sent to a coding agent, so nothing goes into the history: they are simply gone.",
     resetKeeps: "Nodes you drafted and use cases you wrote are NOT requirements and stay where they are — delete a node in the Builder, a case with its bin.",
@@ -61,8 +68,10 @@ export const WAVE_I18N: Record<string, WaveStrings> = {
     bannerTitle: "Изменения ждут разработки",
     bannerBody: "У вас накоплено изменений: {n}. Завершите всё, что хотите в этом круге — по всем элементам — и запустите разработку один раз, одной волной.",
     bannerLaunch: "Запустить разработку",
-    bannerDismiss: "Отменить",
-    bannerReset: "Сбросить",
+    bannerPostpone: "Отложить запуск",
+    bannerCancel: "Отменить запуск",
+    postponeDone: "Отложено — баннер вернётся, когда вы что-нибудь измените.",
+    postponeFailed: "Не удалось отложить.",
     resetTitle: "Сбросить накопленные требования?",
     resetBody: "Это выбросит все требования ({n}), которые вы написали по сущностям этой автоматизации — дашборд, аналитика, календарь, карта, процессы, активация форка и бриф цепочки. Агенту-программисту они не отправлялись, поэтому в историю ничего не пишется: они просто исчезнут.",
     resetKeeps: "Черновые узлы и написанные вами кейсы — НЕ требования, они остаются на месте: узел удаляется в Builder, кейс — своей корзиной.",
@@ -85,8 +94,10 @@ export const WAVE_I18N: Record<string, WaveStrings> = {
     bannerTitle: "Hay cambios esperando desarrollo",
     bannerBody: "Tienes {n} cambio(s) preparados. Termina todo lo que quieras en esta ronda — en todos los elementos — y lanza el desarrollo una sola vez, en un único lote.",
     bannerLaunch: "Lanzar el desarrollo",
-    bannerDismiss: "Descartar aviso",
-    bannerReset: "Reiniciar",
+    bannerPostpone: "Posponer el lanzamiento",
+    bannerCancel: "Cancelar el lanzamiento",
+    postponeDone: "Pospuesto — el aviso vuelve cuando cambies algo.",
+    postponeFailed: "No se pudo posponer.",
     resetTitle: "¿Descartar los requisitos preparados?",
     resetBody: "Esto tira los {n} requisito(s) que has escrito en las entidades de esta automatización: panel, analítica, calendario, mapa, procesos, activación del fork y el resumen de la cadena. Nunca se enviaron a un agente de código, así que no van al historial: simplemente desaparecen.",
     resetKeeps: "Los nodos en borrador y los casos de uso NO son requisitos y se quedan donde están: un nodo se borra en el Builder, un caso con su papelera.",
@@ -109,8 +120,10 @@ export const WAVE_I18N: Record<string, WaveStrings> = {
     bannerTitle: "Des modifications attendent d'être développées",
     bannerBody: "Vous avez {n} modification(s) en attente. Terminez tout ce que vous voulez dans ce tour — sur tous les éléments — puis lancez le développement une seule fois, en un seul lot.",
     bannerLaunch: "Lancer le développement",
-    bannerDismiss: "Masquer",
-    bannerReset: "Réinitialiser",
+    bannerPostpone: "Reporter le lancement",
+    bannerCancel: "Annuler le lancement",
+    postponeDone: "Reporté — la bannière revient dès que vous modifiez quelque chose.",
+    postponeFailed: "Impossible de reporter.",
     resetTitle: "Abandonner les besoins en attente ?",
     resetBody: "Cela jette les {n} besoin(s) que vous avez écrits sur les entités de cette automatisation : tableau de bord, analyses, calendrier, carte, processus, activation du fork et le résumé de la chaîne. Ils n'ont jamais été envoyés à un agent de code : rien ne part dans l'historique, ils disparaissent simplement.",
     resetKeeps: "Les nœuds en brouillon et les cas d'usage NE sont PAS des besoins et restent en place : un nœud se supprime dans le Builder, un cas avec sa corbeille.",
@@ -133,8 +146,10 @@ export const WAVE_I18N: Record<string, WaveStrings> = {
     bannerTitle: "Ci sono modifiche in attesa di sviluppo",
     bannerBody: "Hai {n} modifica/e in sospeso. Completa tutto ciò che vuoi in questo giro — su ogni elemento — poi avvia lo sviluppo una sola volta, in un unico lotto.",
     bannerLaunch: "Avvia lo sviluppo",
-    bannerDismiss: "Nascondi",
-    bannerReset: "Azzera",
+    bannerPostpone: "Rimanda l'avvio",
+    bannerCancel: "Annulla l'avvio",
+    postponeDone: "Rimandato — il banner torna quando cambi qualcosa.",
+    postponeFailed: "Impossibile rimandare.",
     resetTitle: "Scartare i requisiti in sospeso?",
     resetBody: "Questo butta via tutti i {n} requisito/i che hai scritto sulle entità di questa automazione: dashboard, analytics, calendario, mappa, processi, attivazione del fork e il brief della catena. Non sono mai stati inviati a un agente di codice, quindi non finiscono nella cronologia: semplicemente spariscono.",
     resetKeeps: "I nodi in bozza e i casi d'uso NON sono requisiti e restano dove sono: un nodo si elimina nel Builder, un caso con il suo cestino.",
@@ -157,8 +172,10 @@ export const WAVE_I18N: Record<string, WaveStrings> = {
     bannerTitle: "Änderungen warten auf die Entwicklung",
     bannerBody: "Du hast {n} vorgemerkte Änderung(en). Schließe in dieser Runde alles ab, was du möchtest — über alle Elemente hinweg — und starte die Entwicklung dann EINMAL, als ein Paket.",
     bannerLaunch: "Entwicklung starten",
-    bannerDismiss: "Ausblenden",
-    bannerReset: "Zurücksetzen",
+    bannerPostpone: "Start verschieben",
+    bannerCancel: "Start abbrechen",
+    postponeDone: "Verschoben — das Banner kehrt zurück, sobald du etwas änderst.",
+    postponeFailed: "Konnte nicht verschoben werden.",
     resetTitle: "Die vorgemerkten Anforderungen verwerfen?",
     resetBody: "Das wirft alle {n} Anforderung(en) weg, die du über die Entitäten dieser Automatisierung geschrieben hast — Dashboard, Analytics, Kalender, Karte, Prozesse, Fork-Aktivierung und die Ketten-Kurzbeschreibung. Sie wurden nie an einen Coding-Agenten übergeben, also landet nichts in der Historie: Sie sind einfach weg.",
     resetKeeps: "Entworfene Knoten und geschriebene Anwendungsfälle sind KEINE Anforderungen und bleiben bestehen — einen Knoten löschst du im Builder, einen Fall über seinen Papierkorb.",
@@ -181,8 +198,10 @@ export const WAVE_I18N: Record<string, WaveStrings> = {
     bannerTitle: "Há alterações à espera de desenvolvimento",
     bannerBody: "Tem {n} alteração(ões) preparada(s). Termine tudo o que quiser nesta ronda — em todos os elementos — e lance o desenvolvimento uma única vez, num só lote.",
     bannerLaunch: "Lançar o desenvolvimento",
-    bannerDismiss: "Ocultar",
-    bannerReset: "Repor",
+    bannerPostpone: "Adiar o lançamento",
+    bannerCancel: "Cancelar o lançamento",
+    postponeDone: "Adiado — o aviso volta quando mudar algo.",
+    postponeFailed: "Não foi possível adiar.",
     resetTitle: "Descartar os requisitos preparados?",
     resetBody: "Isto deita fora todos os {n} requisito(s) que escreveu nas entidades desta automação — dashboard, analítica, calendário, mapa, processos, ativação do fork e o resumo da cadeia. Nunca foram entregues a um agente de código, por isso nada vai para o histórico: simplesmente desaparecem.",
     resetKeeps: "Os nós em rascunho e os casos de uso NÃO são requisitos e ficam onde estão — um nó apaga-se no Builder, um caso com o seu caixote.",
@@ -205,8 +224,10 @@ export const WAVE_I18N: Record<string, WaveStrings> = {
     bannerTitle: "Zmiany czekają na rozwój",
     bannerBody: "Masz przygotowane zmiany: {n}. Dokończ w tej rundzie wszystko, co chcesz — we wszystkich elementach — a potem uruchom rozwój RAZ, jedną falą.",
     bannerLaunch: "Uruchom rozwój",
-    bannerDismiss: "Ukryj",
-    bannerReset: "Zresetuj",
+    bannerPostpone: "Odłóż uruchomienie",
+    bannerCancel: "Anuluj uruchomienie",
+    postponeDone: "Odłożono — baner wróci, gdy coś zmienisz.",
+    postponeFailed: "Nie udało się odłożyć.",
     resetTitle: "Odrzucić przygotowane wymagania?",
     resetBody: "To wyrzuci wszystkie wymagania ({n}), które napisałeś w encjach tej automatyzacji — dashboard, analityka, kalendarz, mapa, procesy, aktywacja forka i brief łańcucha. Nigdy nie trafiły do agenta kodującego, więc nic nie idzie do historii: po prostu znikają.",
     resetKeeps: "Węzły w wersji roboczej i napisane przypadki użycia NIE są wymaganiami i zostają na miejscu — węzeł usuwa się w Builderze, przypadek swoim koszem.",
@@ -229,8 +250,10 @@ export const WAVE_I18N: Record<string, WaveStrings> = {
     bannerTitle: "Değişiklikler geliştirilmeyi bekliyor",
     bannerBody: "Hazırlanmış {n} değişikliğiniz var. Bu turda istediğiniz her şeyi — tüm ögelerde — tamamlayın, sonra geliştirmeyi tek seferde, tek parti olarak başlatın.",
     bannerLaunch: "Geliştirmeyi başlat",
-    bannerDismiss: "Gizle",
-    bannerReset: "Sıfırla",
+    bannerPostpone: "Başlatmayı ertele",
+    bannerCancel: "Başlatmayı iptal et",
+    postponeDone: "Ertelendi — bir şey değiştirdiğinizde afiş geri döner.",
+    postponeFailed: "Ertelenemedi.",
     resetTitle: "Hazırlanan gereksinimler atılsın mı?",
     resetBody: "Bu, bu otomasyonun ögelerinde yazdığınız {n} gereksinimin tamamını atar — pano, analitik, takvim, harita, süreçler, fork etkinleştirme ve zincir özeti. Hiçbiri kodlama ajanına gönderilmedi, bu yüzden geçmişe hiçbir şey yazılmaz: yalnızca silinirler.",
     resetKeeps: "Taslak düğümler ve yazdığınız kullanım senaryoları gereksinim DEĞİLDİR ve yerinde kalır — düğüm Builder'da, senaryo kendi çöp kutusuyla silinir.",
@@ -253,8 +276,10 @@ export const WAVE_I18N: Record<string, WaveStrings> = {
     bannerTitle: "Wijzigingen wachten op ontwikkeling",
     bannerBody: "Je hebt {n} wijziging(en) klaarstaan. Maak in deze ronde alles af wat je wilt — over alle onderdelen — en start de ontwikkeling daarna ÉÉN keer, als één batch.",
     bannerLaunch: "Ontwikkeling starten",
-    bannerDismiss: "Verbergen",
-    bannerReset: "Resetten",
+    bannerPostpone: "Start uitstellen",
+    bannerCancel: "Start annuleren",
+    postponeDone: "Uitgesteld — de banner komt terug zodra je iets wijzigt.",
+    postponeFailed: "Kon niet uitstellen.",
     resetTitle: "De klaargezette vereisten weggooien?",
     resetBody: "Dit gooit alle {n} vereiste(n) weg die je bij de onderdelen van deze automatisering hebt geschreven — dashboard, analytics, agenda, kaart, processen, fork-activering en de ketenopdracht. Ze zijn nooit naar een coding agent gegaan, dus er komt niets in de historie: ze zijn simpelweg weg.",
     resetKeeps: "Concept-nodes en geschreven use cases zijn GEEN vereisten en blijven staan — een node verwijder je in de Builder, een case met zijn prullenbak.",

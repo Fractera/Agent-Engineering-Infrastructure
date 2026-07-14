@@ -13,8 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { EntitiesConfig } from "../entities";
-import { ENTITY_ORDER } from "../entities";
+import type { EntitiesConfig, OrderableKey } from "../entities";
 import type { UseCase } from "../use-cases";
 import type { DashboardConfig } from "../table-config";
 import { UseCasesPanel } from "./use-cases-panel.client";
@@ -24,6 +23,7 @@ import { RequirementBriefPanel } from "./requirement-brief-panel.client";
 import { useUiLang } from "../use-ui-lang";
 import { useCasesStrings } from "../use-cases-i18n";
 import { useEntitiesLive } from "../use-entities-live";
+import { useEntityOrderLive } from "../use-entity-order-live";
 import { automationMenuStrings } from "../automation-menu-i18n";
 import type { EntityType } from "@/lib/entity-store";
 
@@ -61,6 +61,9 @@ export function AutomationAccordions({
   const L = useCasesStrings(lang);
   const M = automationMenuStrings(lang);
   const { entities: live } = useEntitiesLive(automation, config);
+  // The owner's dragged section order (step 241) — the accordions render in exactly this order, live. Same
+  // list the hamburger menu drags; a reorder there reaches here instantly through the shared window event.
+  const { order } = useEntityOrderLive(automation);
 
   // FORK ACTIVATION (step 239) — the tenth entity, shown ONLY for an `instanced` automation (it answers "how
   // does one run of this thing start", which is meaningless for stream/chained). It has no visibility switch:
@@ -80,79 +83,80 @@ export function AutomationAccordions({
     return () => { alive = false; };
   }, [type, automation]);
   const isInstanced = (type ?? fetchedType) === "instanced";
-  // The Diagram is NOT in this accordion series (owner design, step 223.C): it is rendered separately as
-  // a full-width section (DiagramSection), gated by its OWN live flag. Here we render the other entities,
-  // each a plain filter on the live-merged flag — nothing is structurally mandatory any more (step 237).
-  const shown = ENTITY_ORDER.filter((k) => k !== "diagram" && Boolean(live[k]));
+  // The section series, in the owner's live-dragged order (step 241). The Diagram is rendered SEPARATELY as a
+  // full-width section (DiagramSection, step 223.C), so it is dropped here whatever its rank. Fork activation
+  // is an accordion ONLY for an instanced automation; every other entity follows its own on/off flag.
+  const shown = order.filter((k) => {
+    if (k === "diagram") return false;
+    if (k === "fork-activation") return isInstanced && Boolean(automation);
+    return Boolean(live[k]);
+  });
+
+  const renderItem = (k: OrderableKey) => {
+    if (k === "fork-activation") {
+      // FORK ACTIVATION (step 239) — an instanced automation's starting mechanism: which settings one run
+      // takes, how the fork is created with them, and when it launches. Same design surface as every other
+      // requirement (voice + "Add with AI" + Save).
+      return (
+        <AccordionItem key={k} value={k}>
+          <AccordionTrigger className="text-left">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="font-medium">{M.forkActivationLabel}</span>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">{M.forkActivationTooltip}</TooltipContent>
+            </Tooltip>
+          </AccordionTrigger>
+          <AccordionContent className="space-y-4">
+            <RequirementBriefPanel entityType="fork-activation" entityLabel={M.forkActivationLabel} automation={automation} />
+          </AccordionContent>
+        </AccordionItem>
+      );
+    }
+    const title = k === "usecases" ? L.sectionTitle : M.entities[k].label;
+    const tooltip = k === "usecases" ? L.sectionTooltip : M.entities[k].tooltip;
+    return (
+      <AccordionItem key={k} value={k}>
+        <AccordionTrigger className="text-left">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="font-medium">{title}</span>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">{tooltip}</TooltipContent>
+          </Tooltip>
+        </AccordionTrigger>
+        <AccordionContent className="space-y-4">
+          {k === "dashboard" ? (
+            <>
+              {/* The Dashboard is the first entity with a real interface (step 228): ONE tab, any number of
+                  config-driven tables. */}
+              <DashboardAccordion automation={automation ?? ""} dashboard={dashboard} />
+              {/* The requirement brief (step 238 P5-P9) still applies on top of the real interface. */}
+              <RequirementBriefPanel entityType="dashboard" entityLabel={title} automation={automation} />
+            </>
+          ) : k === "processes" ? (
+            <>
+              {/* The Processes/Gantt timeline (step 230): a row per fork, laid out by estimated duration. */}
+              <ProcessesTimeline automation={automation ?? ""} />
+              <RequirementBriefPanel entityType="processes" entityLabel={title} automation={automation} />
+            </>
+          ) : k === "usecases" ? (
+            // The automation scopes the LIVE case store, the pencils and the review gate (step 231) — the gate
+            // stays mandatory no matter this switch; only the accordion's visibility follows it.
+            <UseCasesPanel cases={cases} automation={automation} />
+          ) : (
+            // Calendar/Map/Analytics (step 238 P5-P9) — the requirement brief: "the next thing I need here".
+            <RequirementBriefPanel entityType={k as EntityType} entityLabel={title} automation={automation} />
+          )}
+        </AccordionContent>
+      </AccordionItem>
+    );
+  };
+
   return (
     <TooltipProvider delayDuration={200}>
       <Accordion type="single" collapsible className="rounded-lg border px-4">
-        {shown.map((k) => {
-          const title = k === "usecases" ? L.sectionTitle : M.entities[k].label;
-          const tooltip = k === "usecases" ? L.sectionTooltip : M.entities[k].tooltip;
-          return (
-            <AccordionItem key={k} value={k}>
-              <AccordionTrigger className="text-left">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="font-medium">{title}</span>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">{tooltip}</TooltipContent>
-                </Tooltip>
-              </AccordionTrigger>
-              <AccordionContent className="space-y-4">
-                {k === "dashboard" ? (
-                  <>
-                    {/* The Dashboard is the first entity with a real interface (step 228): ONE tab, any
-                        number of config-driven tables. */}
-                    <DashboardAccordion automation={automation ?? ""} dashboard={dashboard} />
-                    {/* The requirement brief (step 238 P5-P9) still applies on top of the real interface —
-                        "what's the NEXT change I need here" is a separate concern from the live tables. */}
-                    <RequirementBriefPanel entityType="dashboard" entityLabel={title} automation={automation} />
-                  </>
-                ) : k === "processes" ? (
-                  <>
-                    {/* The Processes/Gantt timeline (step 230): a row per fork, laid out by estimated
-                        duration, shifting as runs finish. Shown only when the automation has forks. */}
-                    <ProcessesTimeline automation={automation ?? ""} />
-                    <RequirementBriefPanel entityType="processes" entityLabel={title} automation={automation} />
-                  </>
-                ) : k === "usecases" ? (
-                  // The automation scopes the LIVE case store, the pencils and the review gate (step 231) —
-                  // the gate stays mandatory no matter this switch; only the accordion's visibility follows it.
-                  <UseCasesPanel cases={cases} automation={automation} />
-                ) : (
-                  // Calendar/Map/Analytics (step 238 P5-P9) — no real interface yet, only the requirement
-                  // brief: the owner's authoring surface for "the next thing I need here".
-                  <RequirementBriefPanel entityType={k as EntityType} entityLabel={title} automation={automation} />
-                )}
-              </AccordionContent>
-            </AccordionItem>
-          );
-        })}
-
-        {/* FORK ACTIVATION (step 239) — an INSTANCED automation's own starting mechanism: which settings one
-            run takes, how the fork is created with them, and when it is launched. Same design surface as every
-            other requirement (voice + "Add with AI" + Save), so it is authored exactly like the rest. */}
-        {isInstanced && automation && (
-          <AccordionItem value="fork-activation">
-            <AccordionTrigger className="text-left">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="font-medium">{M.forkActivationLabel}</span>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">{M.forkActivationTooltip}</TooltipContent>
-              </Tooltip>
-            </AccordionTrigger>
-            <AccordionContent className="space-y-4">
-              <RequirementBriefPanel
-                entityType="fork-activation"
-                entityLabel={M.forkActivationLabel}
-                automation={automation}
-              />
-            </AccordionContent>
-          </AccordionItem>
-        )}
+        {shown.map(renderItem)}
       </Accordion>
     </TooltipProvider>
   );

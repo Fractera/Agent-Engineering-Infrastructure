@@ -119,6 +119,31 @@ export async function listTransports(automation: string): Promise<{ entityType: 
   return rows.map((r) => ({ entityType: r.entity_type as EntityType, ref: r.entity_ref }));
 }
 
+// ─── WAVE-BANNER SNOOZE (step 241 E3.3 — the owner's "Postpone launch") ─────────────────────────────────
+// The owner postpones the wave banner: it hides, and the CURRENT staged state is frozen as "not worth a
+// notification". The banner returns only when the staged requirements change. We store a SIGNATURE of the
+// staged state (computed in lib/wave.ts), not a boolean — that is what makes "hidden until you change
+// something" true: the banner compares the live signature against this one and reappears the moment they
+// differ. Pure storage here; the signature and the comparison live in lib/wave.ts.
+
+export async function getWaveSnooze(automation: string): Promise<string | null> {
+  const row = (await db
+    .prepare(`SELECT signature FROM wave_snooze WHERE automation = ?`)
+    .get(automation)) as { signature: string } | undefined;
+  return row?.signature ?? null;
+}
+
+export async function setWaveSnooze(automation: string, signature: string): Promise<void> {
+  await db.prepare(
+    `INSERT INTO wave_snooze (automation, signature, updated_at) VALUES (?, ?, datetime('now'))
+     ON CONFLICT(automation) DO UPDATE SET signature = excluded.signature, updated_at = excluded.updated_at`,
+  ).run(automation, signature);
+}
+
+export async function clearWaveSnooze(automation: string): Promise<void> {
+  await db.prepare(`DELETE FROM wave_snooze WHERE automation = ?`).run(automation);
+}
+
 // ─── GENERIC HISTORY (append-only, never cleared) ───────────────────────────────────────────────────────
 
 export async function getHistory(

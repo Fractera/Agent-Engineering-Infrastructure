@@ -11,11 +11,11 @@ export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  const body = (await req.json().catch(() => null)) as { automation?: string; collected?: unknown } | null;
+  const body = (await req.json().catch(() => null)) as { automation?: string; collected?: unknown; prompt?: string } | null;
   const proj = resolveProject(String(body?.automation ?? ""));
   if (!proj.ok) return NextResponse.json({ error: proj.error }, { status: 400 });
 
-  const outcome = await generateHowItWorks(proj.projectDir, body?.collected ?? null);
+  const outcome = await generateHowItWorks(proj.projectDir, body?.collected ?? null, body?.prompt);
   if (!outcome.ok) return NextResponse.json({ error: outcome.error }, { status: 502 });
   return NextResponse.json({ ok: true, result: outcome.result });
 }

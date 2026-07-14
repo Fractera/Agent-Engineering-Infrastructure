@@ -24,7 +24,9 @@ import { adminBase } from "@/lib/runtime-urls";
 
 type WaveItem = { entityType: string; ref: string; label: string };
 type WaveState = "idle" | "staging" | "locked";
-type Wave = { state: WaveState; items: WaveItem[]; step?: number };
+// `snoozed` (step 241 E3.3): the owner postponed the banner and nothing has changed since — the state is
+// still "staging" (the items are all here), the banner just hides itself while this is true.
+type Wave = { state: WaveState; items: WaveItem[]; step?: number; snoozed?: boolean };
 
 type Ctx = {
   wave: Wave;

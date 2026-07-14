@@ -28,7 +28,15 @@ export async function readHowItWorks(projectDir: string): Promise<HowItWorks | n
   }
 }
 
-export async function generateHowItWorks(projectDir: string, collected: unknown): Promise<{ ok: true; result: HowItWorks } | { ok: false; error: string }> {
+export async function generateHowItWorks(
+  projectDir: string,
+  collected: unknown,
+  // The owner's OWN free-text request (step 241) — spoken or typed in the modal. It SHAPES the answer:
+  // "keep it very short", "list it as first, second, third", "explain what happens if X". Empty = the
+  // default short prose. It never overrides the safety framing below (plain language, no jargon), it only
+  // steers length/structure/emphasis, so a weak or adversarial prompt cannot turn this into something else.
+  userPrompt?: string,
+): Promise<{ ok: true; result: HowItWorks } | { ok: false; error: string }> {
   const key = openAiKey();
   if (!key) return { ok: false, error: "OPENAI_API_KEY is not set" };
 
@@ -37,13 +45,17 @@ export async function generateHowItWorks(projectDir: string, collected: unknown)
     return { ok: false, error: "Nothing declared about this automation yet — build it first." };
   }
 
+  const shaping = (userPrompt ?? "").trim().slice(0, 2000);
   const messages = [
     {
       role: "system",
       content:
-        "You explain automations to their non-technical owner. Below is a JSON snapshot of this automation's current architecture (its nodes, links to other automations, use cases, and other declared entities). Write a short, clear, jargon-free explanation of WHAT it does and HOW it works, as a few short paragraphs. No headings, no bullet lists, no code, no JSON keys or file names — plain prose a business owner can read in under a minute.",
+        "You explain automations to their non-technical owner. Below is a JSON snapshot of this automation's current architecture (its nodes, links to other automations, use cases, and other declared entities). Write a clear, jargon-free explanation of WHAT it does and HOW it works. No code, no JSON keys or file names — plain prose a business owner can read quickly. If the owner asks below for a particular length, structure or emphasis, follow it; otherwise write a few short paragraphs.",
     },
     { role: "user", content: context },
+    ...(shaping
+      ? [{ role: "user", content: `How I want the answer written: ${shaping}` }]
+      : []),
   ];
 
   let upstream: Response;

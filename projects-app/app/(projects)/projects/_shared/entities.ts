@@ -81,3 +81,28 @@ export const ENTITY_META: Record<EntityKey, EntityMeta> = {
  *  `automation-menu-i18n.ts`. Existing projects need no edit — the key is simply absent from their
  *  config and reads as off until the owner enables it. */
 export type EntitiesConfig = Record<EntityKey, boolean>;
+
+// ─── ENTITY DISPLAY ORDER (step 241, owner) ─────────────────────────────────────────────────────────────
+// The owner can DRAG the page's sections into any order (in the hamburger menu), and the accordions follow.
+// The orderable list is every EntityKey PLUS `fork-activation` — the tenth entity (step 239), which renders
+// as an accordion for an instanced automation but has no visibility switch. `diagram` is orderable too (it
+// appears in the menu list), though it renders full-width above the accordions, so its rank only matters
+// relative to the others if it were ever moved into the series.
+export type OrderableKey = EntityKey | "fork-activation";
+
+/** The default section order a project starts from (before the owner drags anything). */
+export const DEFAULT_ENTITY_ORDER: OrderableKey[] = [...ENTITY_ORDER, "fork-activation"];
+
+/** Merge a stored order with the default: honour the stored ranking, drop anything unknown, and APPEND any
+ *  known key the stored order does not mention (so an automation whose order was saved before a new entity
+ *  existed still shows that entity, at the end). Deterministic and total — every known key appears once. */
+export function resolveEntityOrder(stored?: readonly string[] | null): OrderableKey[] {
+  const known = new Set<string>(DEFAULT_ENTITY_ORDER);
+  const seen = new Set<string>();
+  const out: OrderableKey[] = [];
+  for (const k of stored ?? []) {
+    if (known.has(k) && !seen.has(k)) { out.push(k as OrderableKey); seen.add(k); }
+  }
+  for (const k of DEFAULT_ENTITY_ORDER) if (!seen.has(k)) out.push(k);
+  return out;
+}

@@ -128,6 +128,15 @@ const SCHEMA = `
     entities_json TEXT NOT NULL DEFAULT '{}',
     updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
   );
+  -- THE ENTITY DISPLAY ORDER (step 241, owner) — one JSON array per automation holding the owner's dragged
+  -- order of the page's sections (diagram/calendar/map/dashboard/processes/analytics/usecases + fork
+  -- activation). Same live-override shape as automation_entities: _data/config.ts / DEFAULT_ENTITY_ORDER is
+  -- the SEED, a row here (once the owner drags) wins and reorders the accordions with NO rebuild.
+  CREATE TABLE IF NOT EXISTS automation_entity_order (
+    automation TEXT PRIMARY KEY NOT NULL,
+    order_json TEXT NOT NULL DEFAULT '[]',
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
   -- Diagram Builder mode (step 224). Two axes the file-based diagram never had: a LIVE lightweight canvas
   -- index (so a Builder-created node renders instantly without a rebuild) and per-node VERSION HISTORY.
   -- Identity is a CUID (owner: weak models mangle the UUID format) that is stable across a folder rename,
@@ -503,6 +512,16 @@ const SCHEMA = `
     dev_step_ref TEXT,
     created_at   TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(automation, entity_type, entity_ref, version)
+  );
+  -- THE WAVE-BANNER SNOOZE (step 241 E3.3, owner's "Postpone launch") — one row per automation, holding a
+  -- SIGNATURE of the staged requirements at the moment the owner postponed the banner. The banner stays
+  -- hidden only while the current staged state still hashes to this same signature; the instant ANY entity's
+  -- requirement changes, the signature no longer matches and the banner returns on its own. Storing a
+  -- signature (not a boolean) is what makes "hidden until you change something" true without a second signal.
+  CREATE TABLE IF NOT EXISTS wave_snooze (
+    automation TEXT PRIMARY KEY NOT NULL,
+    signature  TEXT NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 `
 

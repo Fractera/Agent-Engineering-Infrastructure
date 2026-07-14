@@ -86,6 +86,23 @@ export type AutomationMenuStrings = {
   requirementStepCreated: string; // template: "{step}"
   requirementStepCopyDesc: string;
   requirementCopyBtn: string;
+  // "How it works" — the owner's free-text ask that SHAPES the AI answer (step 241) + its voice input.
+  howItWorksAskLabel: string;
+  howItWorksAskPlaceholder: string;
+  // DANGER ZONE — RENAME an automation (step 241, owner). Non-destructive, but still an explicit modal (never
+  // a bare menu click): the owner types the new display name and confirms. {name} = current name.
+  renameAutomation: string;
+  renameTitle: string;
+  renameBody: string;
+  renameLabel: string;
+  renamePlaceholder: string;
+  renameConfirm: string;
+  renameCancel: string;
+  renaming: string;
+  renamed: string;
+  renameFailed: string;
+  /** aria-label on an entity row's drag handle in the menu (step 241 reorder). {name} = the entity's label. */
+  reorderAria: string;
 };
 
 export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
@@ -160,6 +177,19 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementStepCreated: "Step #{step} created",
     requirementStepCopyDesc: "Copy the message and paste it into your coder chat",
     requirementCopyBtn: "Copy",
+    howItWorksAskLabel: "How should the answer be written? (optional)",
+    howItWorksAskPlaceholder: "e.g. keep it very short; or: first this, then that, and what happens if…",
+    renameAutomation: "Rename this automation",
+    renameTitle: "Rename this automation",
+    renameBody: "This changes the automation's display name — the title on its page and its card. Its address and its data stay exactly as they are.",
+    renameLabel: "New name",
+    renamePlaceholder: "New display name",
+    renameConfirm: "Rename",
+    renameCancel: "Cancel",
+    renaming: "Renaming…",
+    renamed: "The automation was renamed.",
+    renameFailed: "Could not rename the automation.",
+    reorderAria: "Reorder {name}",
   },
   ru: {
     howItWorks: "Как это работает",
@@ -232,6 +262,19 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementStepCreated: "Шаг №{step} создан",
     requirementStepCopyDesc: "Скопируйте сообщение и вставьте его в чат агента-кодера",
     requirementCopyBtn: "Скопировать",
+    howItWorksAskLabel: "Как написать ответ? (необязательно)",
+    howItWorksAskPlaceholder: "напр.: очень коротко; или: сначала это, потом то, и что будет, если…",
+    renameAutomation: "Переименовать эту автоматизацию",
+    renameTitle: "Переименовать эту автоматизацию",
+    renameBody: "Меняется отображаемое имя автоматизации — заголовок на её странице и на карточке. Её адрес и данные остаются прежними.",
+    renameLabel: "Новое имя",
+    renamePlaceholder: "Новое отображаемое имя",
+    renameConfirm: "Переименовать",
+    renameCancel: "Отмена",
+    renaming: "Переименовываю…",
+    renamed: "Автоматизация переименована.",
+    renameFailed: "Не удалось переименовать автоматизацию.",
+    reorderAria: "Переместить {name}",
   },
   es: {
     howItWorks: "Cómo funciona",
@@ -304,6 +347,19 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementStepCreated: "Paso n.º {step} creado",
     requirementStepCopyDesc: "Copia el mensaje y pégalo en tu chat de codificación",
     requirementCopyBtn: "Copiar",
+    howItWorksAskLabel: "¿Cómo se debe escribir la respuesta? (opcional)",
+    howItWorksAskPlaceholder: "p. ej.: que sea muy breve; o: primero esto, luego aquello, y qué pasa si…",
+    renameAutomation: "Renombrar esta automatización",
+    renameTitle: "Renombrar esta automatización",
+    renameBody: "Esto cambia el nombre visible de la automatización — el título de su página y de su tarjeta. Su dirección y sus datos se mantienen igual.",
+    renameLabel: "Nuevo nombre",
+    renamePlaceholder: "Nuevo nombre visible",
+    renameConfirm: "Renombrar",
+    renameCancel: "Cancelar",
+    renaming: "Renombrando…",
+    renamed: "La automatización fue renombrada.",
+    renameFailed: "No se pudo renombrar la automatización.",
+    reorderAria: "Reordenar {name}",
   },
   fr: {
     howItWorks: "Comment ça marche",
@@ -376,6 +432,19 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementStepCreated: "Étape n° {step} créée",
     requirementStepCopyDesc: "Copiez le message et collez-le dans votre chat de codage",
     requirementCopyBtn: "Copier",
+    howItWorksAskLabel: "Comment la réponse doit-elle être rédigée ? (facultatif)",
+    howItWorksAskPlaceholder: "ex. : très court ; ou : d'abord ceci, puis cela, et que se passe-t-il si…",
+    renameAutomation: "Renommer cette automatisation",
+    renameTitle: "Renommer cette automatisation",
+    renameBody: "Cela change le nom affiché de l'automatisation — le titre de sa page et de sa carte. Son adresse et ses données restent inchangées.",
+    renameLabel: "Nouveau nom",
+    renamePlaceholder: "Nouveau nom affiché",
+    renameConfirm: "Renommer",
+    renameCancel: "Annuler",
+    renaming: "Renommage…",
+    renamed: "L'automatisation a été renommée.",
+    renameFailed: "Impossible de renommer l'automatisation.",
+    reorderAria: "Réorganiser {name}",
   },
   it: {
     howItWorks: "Come funziona",
@@ -448,6 +517,19 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementStepCreated: "Passo n. {step} creato",
     requirementStepCopyDesc: "Copia il messaggio e incollalo nella tua chat di sviluppo",
     requirementCopyBtn: "Copia",
+    howItWorksAskLabel: "Come deve essere scritta la risposta? (facoltativo)",
+    howItWorksAskPlaceholder: "es.: molto breve; oppure: prima questo, poi quello, e cosa succede se…",
+    renameAutomation: "Rinomina questa automazione",
+    renameTitle: "Rinomina questa automazione",
+    renameBody: "Questo cambia il nome visualizzato dell'automazione — il titolo sulla sua pagina e sulla sua scheda. Il suo indirizzo e i suoi dati restano invariati.",
+    renameLabel: "Nuovo nome",
+    renamePlaceholder: "Nuovo nome visualizzato",
+    renameConfirm: "Rinomina",
+    renameCancel: "Annulla",
+    renaming: "Rinomino…",
+    renamed: "L'automazione è stata rinominata.",
+    renameFailed: "Impossibile rinominare l'automazione.",
+    reorderAria: "Riordina {name}",
   },
   de: {
     howItWorks: "So funktioniert es",
@@ -520,6 +602,19 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementStepCreated: "Schritt Nr. {step} erstellt",
     requirementStepCopyDesc: "Kopiere die Nachricht und füge sie in deinen Coder-Chat ein",
     requirementCopyBtn: "Kopieren",
+    howItWorksAskLabel: "Wie soll die Antwort geschrieben werden? (optional)",
+    howItWorksAskPlaceholder: "z. B.: sehr kurz; oder: zuerst dies, dann das, und was passiert, wenn…",
+    renameAutomation: "Diese Automatisierung umbenennen",
+    renameTitle: "Diese Automatisierung umbenennen",
+    renameBody: "Das ändert den Anzeigenamen der Automatisierung — den Titel auf ihrer Seite und ihrer Karte. Ihre Adresse und ihre Daten bleiben unverändert.",
+    renameLabel: "Neuer Name",
+    renamePlaceholder: "Neuer Anzeigename",
+    renameConfirm: "Umbenennen",
+    renameCancel: "Abbrechen",
+    renaming: "Wird umbenannt…",
+    renamed: "Die Automatisierung wurde umbenannt.",
+    renameFailed: "Die Automatisierung konnte nicht umbenannt werden.",
+    reorderAria: "{name} neu anordnen",
   },
   pt: {
     howItWorks: "Como funciona",
@@ -592,6 +687,19 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementStepCreated: "Passo nº {step} criado",
     requirementStepCopyDesc: "Copie a mensagem e cole-a no seu chat de codificação",
     requirementCopyBtn: "Copiar",
+    howItWorksAskLabel: "Como a resposta deve ser escrita? (opcional)",
+    howItWorksAskPlaceholder: "ex.: bem curta; ou: primeiro isto, depois aquilo, e o que acontece se…",
+    renameAutomation: "Renomear esta automação",
+    renameTitle: "Renomear esta automação",
+    renameBody: "Isto muda o nome visível da automação — o título na sua página e no seu cartão. O seu endereço e os seus dados permanecem iguais.",
+    renameLabel: "Novo nome",
+    renamePlaceholder: "Novo nome visível",
+    renameConfirm: "Renomear",
+    renameCancel: "Cancelar",
+    renaming: "A renomear…",
+    renamed: "A automação foi renomeada.",
+    renameFailed: "Não foi possível renomear a automação.",
+    reorderAria: "Reordenar {name}",
   },
   pl: {
     howItWorks: "Jak to działa",
@@ -664,6 +772,19 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementStepCreated: "Utworzono krok nr {step}",
     requirementStepCopyDesc: "Skopiuj wiadomość i wklej ją do czatu z agentem programistą",
     requirementCopyBtn: "Kopiuj",
+    howItWorksAskLabel: "Jak ma być napisana odpowiedź? (opcjonalnie)",
+    howItWorksAskPlaceholder: "np.: bardzo krótko; albo: najpierw to, potem tamto, i co się stanie, jeśli…",
+    renameAutomation: "Zmień nazwę tej automatyzacji",
+    renameTitle: "Zmień nazwę tej automatyzacji",
+    renameBody: "To zmienia wyświetlaną nazwę automatyzacji — tytuł na jej stronie i na karcie. Jej adres i dane pozostają bez zmian.",
+    renameLabel: "Nowa nazwa",
+    renamePlaceholder: "Nowa wyświetlana nazwa",
+    renameConfirm: "Zmień nazwę",
+    renameCancel: "Anuluj",
+    renaming: "Zmienianie nazwy…",
+    renamed: "Nazwa automatyzacji została zmieniona.",
+    renameFailed: "Nie udało się zmienić nazwy automatyzacji.",
+    reorderAria: "Zmień kolejność: {name}",
   },
   tr: {
     howItWorks: "Nasıl çalışır",
@@ -736,6 +857,19 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementStepCreated: "Adım #{step} oluşturuldu",
     requirementStepCopyDesc: "Mesajı kopyalayıp kodlama sohbetinize yapıştırın",
     requirementCopyBtn: "Kopyala",
+    howItWorksAskLabel: "Yanıt nasıl yazılsın? (isteğe bağlı)",
+    howItWorksAskPlaceholder: "örn.: çok kısa olsun; ya da: önce şu, sonra bu, ve şöyle olursa ne olur…",
+    renameAutomation: "Bu otomasyonu yeniden adlandır",
+    renameTitle: "Bu otomasyonu yeniden adlandır",
+    renameBody: "Bu, otomasyonun görünen adını değiştirir — sayfasındaki ve kartındaki başlığı. Adresi ve verileri aynen kalır.",
+    renameLabel: "Yeni ad",
+    renamePlaceholder: "Yeni görünen ad",
+    renameConfirm: "Yeniden adlandır",
+    renameCancel: "İptal",
+    renaming: "Yeniden adlandırılıyor…",
+    renamed: "Otomasyon yeniden adlandırıldı.",
+    renameFailed: "Otomasyon yeniden adlandırılamadı.",
+    reorderAria: "{name} sırasını değiştir",
   },
   nl: {
     howItWorks: "Hoe het werkt",
@@ -808,6 +942,19 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementStepCreated: "Stap #{step} aangemaakt",
     requirementStepCopyDesc: "Kopieer het bericht en plak het in je codeerchat",
     requirementCopyBtn: "Kopiëren",
+    howItWorksAskLabel: "Hoe moet het antwoord geschreven worden? (optioneel)",
+    howItWorksAskPlaceholder: "bijv.: heel kort; of: eerst dit, dan dat, en wat gebeurt er als…",
+    renameAutomation: "Deze automatisering hernoemen",
+    renameTitle: "Deze automatisering hernoemen",
+    renameBody: "Dit wijzigt de weergavenaam van de automatisering — de titel op haar pagina en haar kaart. Haar adres en gegevens blijven precies hetzelfde.",
+    renameLabel: "Nieuwe naam",
+    renamePlaceholder: "Nieuwe weergavenaam",
+    renameConfirm: "Hernoemen",
+    renameCancel: "Annuleren",
+    renaming: "Bezig met hernoemen…",
+    renamed: "De automatisering is hernoemd.",
+    renameFailed: "Kon de automatisering niet hernoemen.",
+    reorderAria: "{name} herordenen",
   },
 };
 

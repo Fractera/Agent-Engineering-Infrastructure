@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2, Lock, RotateCcw, Rocket, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Loader2, Lock, RotateCcw, Rocket, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,14 +15,16 @@ import { StartDevelopment } from "./start-development.client";
 // (owner's decision): the page has exactly one place where work is handed over, so a batch can never leave
 // half-formed.
 //
-//   staging → "You have N changes staged." with THREE actions (owner's design):
+//   staging → "You have N changes staged." with the owner's THREE actions:
 //               • Launch development — hands the whole batch to a coding agent as ONE step,
-//               • Dismiss           — just hides the banner; NOTHING is lost, the changes stay staged and the
-//                                     banner returns on the next change or reload,
-//               • Reset             — throws the staged requirements away (all entities at once), behind a
+//               • Postpone launch    — hides the banner AND freezes the current staged state as "not worth a
+//                                     notification"; it returns only when a requirement actually changes.
+//                                     Nothing is lost — the state is persisted server-side (a signature), so a
+//                                     reload does NOT bring it back the way a plain hide would,
+//               • Cancel launch      — throws the staged requirements away (all entities at once), behind a
 //                                     confirmation, because it cannot be undone.
 //   locked  → "Development step #NN was handed over. This page is locked until it is finished."
-//   idle    → nothing at all.
+//   idle / snoozed → nothing at all.
 //
 // The state comes from WaveLockProvider (one poll for the whole page), so the banner and every tool's lock can
 // never disagree with each other.
@@ -30,9 +32,19 @@ export function DevelopmentWaveBanner({ automation }: { automation: string }) {
   const L = waveStrings(useUiLang());
   const { wave, refresh } = useWaveLock();
   const [open, setOpen] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+  // Optimistic hide the instant Postpone is clicked, so the banner does not linger during the round-trip; the
+  // next poll then reports snoozed:true and it stays hidden for real.
+  const [hidden, setHidden] = useState(false);
+  const [postponing, setPostponing] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
+
+  // The optimistic hide only stands until the server agrees the wave is postponed. The moment a poll reports
+  // it is NO LONGER snoozed (the owner changed a requirement, so the signature stopped matching), clear the
+  // local hide so the banner returns — otherwise it would stay hidden until a page reload.
+  useEffect(() => {
+    if (!wave.snoozed) setHidden(false);
+  }, [wave.snoozed]);
 
   if (wave.state === "idle") return null;
 
@@ -50,9 +62,33 @@ export function DevelopmentWaveBanner({ automation }: { automation: string }) {
     );
   }
 
-  // DISMISSED — the owner hid the banner. Nothing was lost: the changes are still staged, and the banner
-  // comes back on the next change or reload. That is the difference from Reset, and the UI must not blur it.
-  if (dismissed) return null;
+  // POSTPONED — the owner froze the current staged state (server-side signature). Nothing was lost: the
+  // changes are still staged, and the banner returns the moment any requirement changes (the signature stops
+  // matching). `hidden` is the optimistic local twin for the click-to-poll gap. This is the difference from
+  // Cancel, and the UI must not blur it.
+  if (hidden || wave.snoozed) return null;
+
+  async function doPostpone() {
+    setPostponing(true);
+    try {
+      const r = await fetch(`/api/projects/development-wave/postpone`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ automation }),
+      });
+      if (!r.ok) {
+        toast.error(L.postponeFailed);
+        return;
+      }
+      setHidden(true);
+      toast.success(L.postponeDone);
+      refresh();
+    } catch {
+      toast.error(L.postponeFailed);
+    } finally {
+      setPostponing(false);
+    }
+  }
 
   async function doReset() {
     setResetting(true);
@@ -92,13 +128,15 @@ export function DevelopmentWaveBanner({ automation }: { automation: string }) {
           <Button size="sm" onClick={() => setOpen(true)}>
             <Rocket className="size-3.5" /> {L.bannerLaunch}
           </Button>
-          {/* Hides the banner only — the staged changes are untouched. */}
-          <Button size="sm" variant="ghost" onClick={() => setDismissed(true)}>
-            <X className="size-3.5" /> {L.bannerDismiss}
+          {/* Postpone: hides the banner AND freezes the current staged state; it returns only on the next
+              change. Nothing is lost — persisted server-side, so a reload does not undo it. */}
+          <Button size="sm" variant="ghost" onClick={doPostpone} disabled={postponing}>
+            {postponing ? <Loader2 className="size-3.5 animate-spin" /> : <Clock className="size-3.5" />}
+            {L.bannerPostpone}
           </Button>
-          {/* Throws the staged requirements away — irreversible, so it asks first. */}
+          {/* Cancel: throws the staged requirements away — irreversible, so it asks first. */}
           <Button size="sm" variant="ghost" className="text-rose-600 dark:text-rose-400" onClick={() => setResetOpen(true)}>
-            <RotateCcw className="size-3.5" /> {L.bannerReset}
+            <RotateCcw className="size-3.5" /> {L.bannerCancel}
           </Button>
         </div>
       </div>

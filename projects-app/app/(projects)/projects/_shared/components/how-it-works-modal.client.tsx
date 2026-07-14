@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Sparkles, ClipboardCopy, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { useUiLang } from "../use-ui-lang";
 import { automationMenuStrings } from "../automation-menu-i18n";
+import { VoiceInput } from "./voice-input.client";
 
 // THE "HOW IT WORKS" MODAL (step 237, top of the hamburger menu; two-button split in 238) — TWO separate
 // actions, on purpose (owner's request): "Собрать данные" gathers the automation's current architecture
@@ -38,6 +40,10 @@ export function HowItWorksModal({
   const [collected, setCollected] = useState<unknown | null>(null);
   const [collecting, setCollecting] = useState(false);
   const [generating, setGenerating] = useState(false);
+  // The owner's OWN request that shapes the AI's answer (step 241) — spoken or typed, free-form. Empty is
+  // fine: the model then writes the default short prose.
+  const [prompt, setPrompt] = useState("");
+  const promptRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     if (!open || !automation) return;
@@ -79,7 +85,7 @@ export function HowItWorksModal({
       const r = await fetch("/api/projects/how-it-works/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ automation, collected }),
+        body: JSON.stringify({ automation, collected, prompt: prompt.trim() || undefined }),
       });
       const d = (await r.json().catch(() => null)) as { ok?: boolean; result?: Result; error?: string } | null;
       if (r.ok && d?.result) {
@@ -114,6 +120,21 @@ export function HowItWorksModal({
           ) : (
             <p className="text-sm text-muted-foreground">{L.howItWorksEmpty}</p>
           )}
+
+          {/* The owner's own request (step 241) — the field the modal was missing: it decides HOW the answer is
+              written (length, structure, emphasis), not just that one is produced. Optional; blank = default
+              short prose. Voice via the shared VoiceInput primitive (232) — never a second mic. */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">{L.howItWorksAskLabel}</label>
+            <Textarea
+              ref={promptRef}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder={L.howItWorksAskPlaceholder}
+              className="min-h-16 text-sm"
+            />
+            <VoiceInput targetRef={promptRef} value={prompt} onChange={setPrompt} />
+          </div>
 
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={collectData} disabled={collecting} className="gap-2">

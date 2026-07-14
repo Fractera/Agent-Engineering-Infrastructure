@@ -57,6 +57,7 @@ export function AutomationStatusBar({
           probes={probes}
           automation={automation}
           entitiesSeed={entitiesSeed}
+          type={type}
         />
       </span>
     </div>
