@@ -14,12 +14,19 @@ import { createNodeId } from "@/lib/cuid";
 // automation-scoped helpers, since their ref is always '' — shared across every automation.
 // FIVE entities (dashboard/analytics/calendar/map/processes) have NO authoring surface yet — Phases 5-9
 // build their real authoring UI + wire it onto entity_transport/entity_history like the other four.
+// STEP 239 — a TENTH entity: `fork-activation`. It is the design surface an INSTANCED automation had none of:
+// how a run is started — which start settings it takes (e.g. the article's keyword), how a fork is created and
+// those settings passed into it, and how its launch is scheduled (now / at a time / rate-limited). Like the
+// five requirement entities it is automation-wide (ref='') and carries a free-text brief; unlike them it has
+// no visibility toggle — it is always present for an `instanced` automation and absent for the other types.
 export type EntityType =
   | "node" | "edge" | "usecase" | "chain"
-  | "dashboard" | "analytics" | "calendar" | "map" | "processes";
+  | "dashboard" | "analytics" | "calendar" | "map" | "processes"
+  | "fork-activation";
 
 export const ENTITY_TYPES: EntityType[] = [
   "node", "edge", "usecase", "chain", "dashboard", "analytics", "calendar", "map", "processes",
+  "fork-activation",
 ];
 
 // ─── THE UNIFIED SLICE CONTRACT (step 238, strengthened after review) ──────────────────────────────────

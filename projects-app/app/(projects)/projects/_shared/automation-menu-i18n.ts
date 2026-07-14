@@ -53,6 +53,11 @@ export type AutomationMenuStrings = {
   requirementPlaceholder: string;
   /** "Add with AI" (step 239) — opens the Quiz on this entity, to help word the requirement. */
   requirementAddWithAi: string;
+  /** The fork-activation entity (step 239) — shown only for an `instanced` automation. Kept OUTSIDE the
+   *  `entities` record above, which is typed by EntityKey (the hamburger's visibility switches); fork
+   *  activation has no switch — it is simply always there for an instanced automation. */
+  forkActivationLabel: string;
+  forkActivationTooltip: string;
   requirementSave: string;
   requirementSaved: string;
   requirementSaveFail: string;
@@ -115,6 +120,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementLabel: "Requirement",
     requirementPlaceholder: "Describe the next requirement for this section...",
     requirementAddWithAi: "Add with AI",
+    forkActivationLabel: "Fork activation",
+    forkActivationTooltip: "How a run of this automation starts: the settings one run takes, how the fork is created with them, and when it is launched.",
     requirementSave: "Save",
     requirementSaved: "Saved",
     requirementSaveFail: "Could not save the requirement.",
@@ -173,6 +180,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementLabel: "Требование",
     requirementPlaceholder: "Опишите следующее требование для этого раздела...",
     requirementAddWithAi: "Добавить с помощью ИИ",
+    forkActivationLabel: "Активация форка",
+    forkActivationTooltip: "Как запускается один прогон этой автоматизации: какие настройки он принимает, как создаётся форк с этими настройками и когда он стартует.",
     requirementSave: "Сохранить",
     requirementSaved: "Сохранено",
     requirementSaveFail: "Не удалось сохранить требование.",
@@ -231,6 +240,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementLabel: "Requisito",
     requirementPlaceholder: "Describe el próximo requisito para esta sección...",
     requirementAddWithAi: "Añadir con IA",
+    forkActivationLabel: "Activación del fork",
+    forkActivationTooltip: "Cómo empieza una ejecución de esta automatización: qué parámetros toma, cómo se crea el fork con ellos y cuándo se lanza.",
     requirementSave: "Guardar",
     requirementSaved: "Guardado",
     requirementSaveFail: "No se pudo guardar el requisito.",
@@ -289,6 +300,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementLabel: "Exigence",
     requirementPlaceholder: "Décrivez la prochaine exigence pour cette section...",
     requirementAddWithAi: "Ajouter avec l'IA",
+    forkActivationLabel: "Activation du fork",
+    forkActivationTooltip: "Comment démarre une exécution de cette automatisation : les paramètres qu'elle prend, comment le fork est créé avec eux, et quand il est lancé.",
     requirementSave: "Enregistrer",
     requirementSaved: "Enregistré",
     requirementSaveFail: "Impossible d'enregistrer l'exigence.",
@@ -347,6 +360,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementLabel: "Requisito",
     requirementPlaceholder: "Descrivi il prossimo requisito per questa sezione...",
     requirementAddWithAi: "Aggiungi con l'IA",
+    forkActivationLabel: "Attivazione del fork",
+    forkActivationTooltip: "Come inizia un'esecuzione di questa automazione: quali parametri prende, come viene creato il fork con essi e quando viene avviato.",
     requirementSave: "Salva",
     requirementSaved: "Salvato",
     requirementSaveFail: "Impossibile salvare il requisito.",
@@ -405,6 +420,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementLabel: "Anforderung",
     requirementPlaceholder: "Beschreibe die nächste Anforderung für diesen Bereich...",
     requirementAddWithAi: "Mit KI hinzufügen",
+    forkActivationLabel: "Fork-Aktivierung",
+    forkActivationTooltip: "Wie ein Lauf dieser Automatisierung startet: welche Einstellungen er übernimmt, wie der Fork damit erzeugt wird und wann er gestartet wird.",
     requirementSave: "Speichern",
     requirementSaved: "Gespeichert",
     requirementSaveFail: "Die Anforderung konnte nicht gespeichert werden.",
@@ -463,6 +480,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementLabel: "Requisito",
     requirementPlaceholder: "Descreva o próximo requisito para esta seção...",
     requirementAddWithAi: "Adicionar com IA",
+    forkActivationLabel: "Ativação do fork",
+    forkActivationTooltip: "Como começa uma execução desta automação: que parâmetros recebe, como o fork é criado com eles e quando é lançado.",
     requirementSave: "Salvar",
     requirementSaved: "Salvo",
     requirementSaveFail: "Não foi possível salvar o requisito.",
@@ -521,6 +540,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementLabel: "Wymaganie",
     requirementPlaceholder: "Opisz kolejne wymaganie dla tej sekcji...",
     requirementAddWithAi: "Dodaj z pomocą AI",
+    forkActivationLabel: "Aktywacja forka",
+    forkActivationTooltip: "Jak zaczyna się jedno uruchomienie tej automatyzacji: jakie ustawienia przyjmuje, jak tworzony jest z nimi fork i kiedy zostaje uruchomiony.",
     requirementSave: "Zapisz",
     requirementSaved: "Zapisano",
     requirementSaveFail: "Nie udało się zapisać wymagania.",
@@ -579,6 +600,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementLabel: "Gereksinim",
     requirementPlaceholder: "Bu bölüm için bir sonraki gereksinimi açıklayın...",
     requirementAddWithAi: "Yapay zekâ ile ekle",
+    forkActivationLabel: "Fork etkinleştirme",
+    forkActivationTooltip: "Bu otomasyonun bir çalışması nasıl başlar: hangi ayarları alır, fork bu ayarlarla nasıl oluşturulur ve ne zaman başlatılır.",
     requirementSave: "Kaydet",
     requirementSaved: "Kaydedildi",
     requirementSaveFail: "Gereksinim kaydedilemedi.",
@@ -637,6 +660,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementLabel: "Vereiste",
     requirementPlaceholder: "Beschrijf de volgende vereiste voor dit onderdeel...",
     requirementAddWithAi: "Toevoegen met AI",
+    forkActivationLabel: "Fork-activering",
+    forkActivationTooltip: "Hoe een run van deze automatisering start: welke instellingen hij meekrijgt, hoe de fork daarmee wordt aangemaakt en wanneer die wordt gestart.",
     requirementSave: "Opslaan",
     requirementSaved: "Opgeslagen",
     requirementSaveFail: "Kon de vereiste niet opslaan.",

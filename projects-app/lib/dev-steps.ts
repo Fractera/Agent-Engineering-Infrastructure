@@ -337,7 +337,7 @@ export async function materializeChainStep(i: ChainStepInput): Promise<{ file: s
 // (<entity>-architecture/start-development) archives+clears the brief right after this materializes,
 // mirroring materializeChainStep exactly (same reasoning: a chain group and these 5 entities are both
 // AUTOMATION-SCOPED, ref='', with no code/version lifecycle of their own beyond the free-text ask).
-export type StubEntityStepKind = "dashboard" | "analytics" | "calendar" | "map" | "processes";
+export type StubEntityStepKind = "dashboard" | "analytics" | "calendar" | "map" | "processes" | "fork-activation";
 
 export type StubEntityStepInput = {
   number: number;
@@ -346,7 +346,37 @@ export type StubEntityStepInput = {
   brief: string;
 };
 
+// FORK ACTIVATION (step 239) — the one stub entity whose job is not a view but the automation's own STARTING
+// MECHANISM. An `instanced` automation forks Master -> Instance per run, and until now nothing described HOW
+// a run begins. Spell the three jobs out for the coder rather than leaving them inside the free-text brief.
+const FORK_ACTIVATION_JOBS = `This entity is HOW A RUN OF THIS INSTANCED AUTOMATION IS STARTED. The owner's brief above governs; the
+three jobs it normally has to answer are:
+   a) START SETTINGS — which parameters one run takes (e.g. the article's keyword), and where they come from.
+   b) FORK CREATION — create the Instance (POST /api/projects/instances/create) and pass those settings INTO
+      it, so the run's nodes actually receive them.
+   c) LAUNCH SCHEDULING — when the run starts (immediately / at a given time / rate-limited, e.g. "publish at
+      13:00, at most one of 100 per day").`;
+
 export function buildStubEntityStepMessage(i: StubEntityStepInput): string {
+  if (i.entityType === "fork-activation") {
+    return `Execute development step #${i.number} in the Fractera projects app.
+
+TASK: build the FORK ACTIVATION of the automation "${i.automation}" (an instanced automation).
+
+WHAT THE OWNER WANTS (verbatim):
+${i.brief.trim() || "(no brief given)"}
+
+${FORK_ACTIVATION_JOBS}
+
+WHAT TO DO
+${archContextLine(i.automation)}
+1. Read app/(projects)/README.md — "The diagram standard (Master & Instance)" (how a fork works) and "The
+   node -> functions contract". You are FREE to design this from scratch where no convention fits.
+2. Implement it inside this automation's OWN files (co-location) — never a shared/second implementation.
+3. Verify: GET http://localhost:3003/api/projects/validate?automation=${i.automation} returns ok:true.
+
+DONE = a run of this automation can be started with its own settings, as the brief describes; validator clean.`;
+  }
   return `Execute development step #${i.number} in the Fractera projects app.
 
 TASK: implement a ${i.entityType.toUpperCase()} requirement for the automation "${i.automation}".
@@ -356,9 +386,11 @@ ${i.brief.trim() || "(no brief given)"}
 
 WHAT TO DO
 ${archContextLine(i.automation)}
-1. Read app/(projects)/README.md — "The automation entities (accordions) standard" and, if the ${i.entityType}
-   entity already has one, its own dedicated standard section (e.g. "The dashboard tables & columns
-   standard") for the existing conventions to follow.
+1. BUILD WHAT THE REQUIREMENT ASKS FOR — you are FREE to design this component from scratch (owner's rule,
+   step 239). The product does ship reference standards for some entities (app/(projects)/README.md — e.g.
+   "The dashboard tables & columns standard", "The processes (Gantt) timeline standard"). They are an
+   OPTIONAL sample you MAY reuse when they fit, never an obligation: if the requirement is better served by
+   something else, build that instead.
 2. Implement the requirement inside this automation's OWN files — never create a shared/second
    implementation elsewhere; keep everything co-located with this automation.
 3. Verify: GET http://localhost:3003/api/projects/validate?automation=${i.automation} returns ok:true.

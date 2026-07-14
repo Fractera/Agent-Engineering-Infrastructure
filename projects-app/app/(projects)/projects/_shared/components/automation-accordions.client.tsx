@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -50,11 +51,34 @@ export function AutomationAccordions({
   automation?: string;
   /** The dashboard's tables (step 228). When present, the Dashboard accordion renders them. */
   dashboard?: DashboardConfig;
+  /** The automation's immutable type (step 239). Passed by the skeleton; when absent (a project generated
+   *  before this step, whose _components/index.tsx does not pass it yet) it is fetched below, so the
+   *  fork-activation surface appears for EXISTING instanced automations too, with no page regeneration. */
+  type?: "stream" | "instanced" | "chained";
 }) {
   const lang = useUiLang();
   const L = useCasesStrings(lang);
   const M = automationMenuStrings(lang);
   const { entities: live } = useEntitiesLive(automation, config);
+
+  // FORK ACTIVATION (step 239) — the tenth entity, shown ONLY for an `instanced` automation (it answers "how
+  // does one run of this thing start", which is meaningless for stream/chained). It has no visibility switch:
+  // an instanced automation always has it. `/api/projects/global` already carries every project's type (it is
+  // the canvas's own source of truth) — reuse it rather than adding a second type endpoint.
+  const [fetchedType, setFetchedType] = useState<string | null>(null);
+  useEffect(() => {
+    if (type || !automation) return;
+    let alive = true;
+    fetch(`/api/projects/global`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { projects?: { automation: string; type?: string }[] } | null) => {
+        if (!alive) return;
+        setFetchedType(d?.projects?.find((p) => p.automation === automation)?.type ?? null);
+      })
+      .catch(() => { /* type stays unknown → the surface simply does not render */ });
+    return () => { alive = false; };
+  }, [type, automation]);
+  const isInstanced = (type ?? fetchedType) === "instanced";
   // The Diagram is NOT in this accordion series (owner design, step 223.C): it is rendered separately as
   // a full-width section (DiagramSection), gated by its OWN live flag. Here we render the other entities,
   // each a plain filter on the live-merged flag — nothing is structurally mandatory any more (step 237).
@@ -105,6 +129,29 @@ export function AutomationAccordions({
             </AccordionItem>
           );
         })}
+
+        {/* FORK ACTIVATION (step 239) — an INSTANCED automation's own starting mechanism: which settings one
+            run takes, how the fork is created with them, and when it is launched. Same design surface as every
+            other requirement (voice + "Add with AI" + Save), so it is authored exactly like the rest. */}
+        {isInstanced && automation && (
+          <AccordionItem value="fork-activation">
+            <AccordionTrigger className="text-left">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="font-medium">{M.forkActivationLabel}</span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">{M.forkActivationTooltip}</TooltipContent>
+              </Tooltip>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-4">
+              <RequirementBriefPanel
+                entityType="fork-activation"
+                entityLabel={M.forkActivationLabel}
+                automation={automation}
+              />
+            </AccordionContent>
+          </AccordionItem>
+        )}
       </Accordion>
     </TooltipProvider>
   );
