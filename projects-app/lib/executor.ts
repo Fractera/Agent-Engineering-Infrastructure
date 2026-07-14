@@ -92,7 +92,13 @@ export async function canActivate(automation: string, instanceId?: string): Prom
       .prepare(`SELECT id, overrides, specialization, status FROM automation_instances WHERE automation = ? ORDER BY created_at ASC`)
       .all(proj.automation)) as Instance[];
     if (!forks.length) return { ok: false, refusal: { reason: "no-fork" } };
-    const fork = instanceId ? forks.find((f) => f.id === instanceId) : forks[0];
+    // Named fork → that one, exactly (and it must carry parameters). No fork named → the OLDEST RUNNABLE one,
+    // i.e. the first that actually carries parameters: a queue of forks is normal, and picking a param-less
+    // one just because it was created first would refuse a run the workspace can perfectly well perform.
+    // Only when NO fork has parameters is the refusal raised — naming the fork that needs them.
+    const fork = instanceId
+      ? forks.find((f) => f.id === instanceId)
+      : forks.find((f) => Object.keys(forkParams(f)).length) ?? forks[0];
     if (!fork) return { ok: false, refusal: { reason: "no-fork" } };
     const params = forkParams(fork);
     if (!Object.keys(params).length) {
