@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUiLang } from "../use-ui-lang";
 import { automationMenuStrings } from "../automation-menu-i18n";
 import { fill } from "../quiz-i18n";
+import { VoiceInput } from "./voice-input.client";
 import type { EntityType } from "@/lib/entity-store";
 
 // THE REQUIREMENT BRIEF PANEL (step 238 P5-P9; "Start development" added Phase 2) — the authoring surface
@@ -32,6 +33,8 @@ export function RequirementBriefPanel({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [starting, setStarting] = useState(false);
+  // Caret target for the shared VoiceInput primitive (step 232) — spoken text lands where the cursor is.
+  const briefRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     if (!automation) return;
@@ -115,11 +118,15 @@ export function RequirementBriefPanel({
         {pending && <span className="text-xs text-amber-600 dark:text-amber-400">{L.requirementPendingHint}</span>}
       </div>
       <Textarea
+        ref={briefRef}
         value={brief}
         onChange={(e) => setBrief(e.target.value)}
         placeholder={L.requirementPlaceholder}
         className="min-h-24 text-sm"
       />
+      {/* The shared voice primitive (step 232) — one component for every input; never a second mic. In IP
+          mode it disables itself with a hint (getUserMedia needs HTTPS). */}
+      <VoiceInput targetRef={briefRef} value={brief} onChange={setBrief} />
       <div className="flex items-center gap-2">
         <Button size="sm" variant="outline" onClick={save} disabled={saving} className="gap-2">
           {saving && <Loader2 className="size-3.5 animate-spin" />}
