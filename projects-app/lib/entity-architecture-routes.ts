@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorize, resolveProject } from "@/lib/nodes";
-import { extractEntitySlice, setTransport, type EntityType } from "@/lib/entity-architecture";
+import { extractEntitySlice } from "@/lib/entity-architecture";
+import { setTransport, type EntityType } from "@/lib/entity-store";
 
 // ROUTE FACTORY (step 238) — the 27 per-entity sub-APIs (add-new-transport-task-entry /
 // extract-current-state-for-architecture / extract-full-history-for-architecture, one triad per entity)

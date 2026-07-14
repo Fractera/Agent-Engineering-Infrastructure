@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { db } from "@/lib/db";
-import { getVersionByRef } from "@/lib/entity-architecture";
+import { getVersionByRef } from "@/lib/entity-store";
 import {
   authorize, resolveProject, nodeByCuid, regenerateDiagram, liveSlugsInOrder, scheduleRebuild,
 } from "@/lib/nodes";

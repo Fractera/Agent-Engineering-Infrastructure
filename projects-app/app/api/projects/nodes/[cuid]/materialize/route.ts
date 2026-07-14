@@ -3,7 +3,7 @@ import { writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { completeStep } from "@/lib/dev-steps";
 import { db } from "@/lib/db";
-import { writeVersionByRef } from "@/lib/entity-architecture";
+import { writeVersionByRef } from "@/lib/entity-store";
 import {
   authorize, resolveProject, nodeByCuid, readNodeFiles, functionsAreEmpty, stripDraftFlag,
   regenerateDiagram, liveSlugsInOrder, scheduleRebuild,

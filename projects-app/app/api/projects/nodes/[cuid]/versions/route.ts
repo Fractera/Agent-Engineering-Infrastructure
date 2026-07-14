@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorize } from "@/lib/nodes";
-import { listVersionsByRef } from "@/lib/entity-architecture";
+import { listVersionsByRef } from "@/lib/entity-store";
 
 // A node's version history (step 224 L3b) — the LIGHT list (no snapshot bodies), newest first. The full
 // snapshot of one version is GET .../versions/<n>. History is cold storage: fetched on demand for the

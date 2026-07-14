@@ -6,7 +6,7 @@ import { authorize } from "@/lib/nodes";
 import { completeStep } from "@/lib/dev-steps";
 import { edgeByCuid, edgesRoot, readEdgeFiles } from "@/lib/edges";
 import { scheduleRebuild } from "@/lib/nodes";
-import { writeVersionByRef } from "@/lib/entity-architecture";
+import { writeVersionByRef } from "@/lib/entity-store";
 
 // Materialize a LINK (step 225) — the coder's mandatory closing call, mirroring a node's materialize
 // (224 L3b): it requires real integration code, drops the draft flag, records a FULL version snapshot in

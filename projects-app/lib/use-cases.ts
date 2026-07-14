@@ -3,6 +3,7 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { db } from "@/lib/db";
 import { createNodeId } from "@/lib/cuid";
+import { writeVersionByRef, nextVersionByRef } from "@/lib/entity-store";
 
 // USER CASES (step 231) — the automation's scenarios, and the FIRST stage of its life. The owner's rule:
 // an automation cannot be created from an instruction alone. Before any node is designed, the Quiz collects
@@ -54,12 +55,24 @@ export async function addCase(
   return (await caseByCuid(cuid)) as UseCaseRow;
 }
 
+/** Archives the case's CURRENT (about-to-be-superseded) state into entity_history before a mutation lands —
+ *  the "a status transition archives the outgoing state" half of the step-238 standard. CUID-scoped like
+ *  node/edge (a case's cuid is already globally unique), so this reuses the same ref-based helpers. */
+async function archiveCaseVersion(row: UseCaseRow, reason: string): Promise<void> {
+  const version = await nextVersionByRef("usecase", row.cuid);
+  await writeVersionByRef(row.automation, "usecase", row.cuid, version, {
+    title: row.title, summary: row.summary, status: row.status, ord: row.ord, reason,
+  }, null);
+}
+
 export async function updateCase(
   cuid: string,
   patch: { title?: string; summary?: string; status?: string },
 ): Promise<void> {
   const cur = await caseByCuid(cuid);
   if (!cur) return;
+  const statusChanged = patch.status !== undefined && patch.status !== cur.status;
+  await archiveCaseVersion(cur, statusChanged ? `status: ${cur.status} -> ${patch.status}` : "edited");
   await db.prepare(
     `UPDATE automation_use_cases SET title = ?, summary = ?, status = ?, updated_at = ? WHERE cuid = ?`,
   ).run(
@@ -72,6 +85,8 @@ export async function updateCase(
 }
 
 export async function deleteCase(cuid: string): Promise<void> {
+  const cur = await caseByCuid(cuid);
+  if (cur) await archiveCaseVersion(cur, "deleted");
   await db.prepare(`DELETE FROM automation_use_cases WHERE cuid = ?`).run(cuid);
 }
 

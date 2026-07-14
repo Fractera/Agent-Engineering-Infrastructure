@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorize } from "@/lib/nodes";
-import { getVersionByRef } from "@/lib/entity-architecture";
+import { getVersionByRef } from "@/lib/entity-store";
 
 // The full snapshot of one node version (step 224 L3b) — meta/functions/instruction/spec sources, for the
 // version panel or an inspection before a rollback. Cold: fetched only on demand. Reads from the GENERIC
