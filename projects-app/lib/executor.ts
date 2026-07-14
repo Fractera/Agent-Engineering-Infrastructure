@@ -192,16 +192,22 @@ export async function executeAutomation(
         if (typeof fn !== "function") throw new Error(`function "${fname}" is declared but not exported by ${n.slug}/functions.ts`);
         const args = (paramsIn[fname] ?? []).map((p) => ctx[p]);
         last = await (fn as (...a: unknown[]) => unknown)(...args);
-        // The return goes back into the bag: under the node's single `out` key (so the next function/node
-        // finds it by the name the contract declares) and under the function's own name.
+        // THE RETURN GOES BACK INTO THE BAG, three ways — each one earns its place:
+        //   1. under the function's own name (so a later step can always address it explicitly);
+        //   2. under the node's single declared `out` key, when it has exactly one — this is what lets
+        //      searchSources' result arrive as `sources` for dedupeSources(sources);
+        //   3. SPREAD, when the function returns a plain object — this is what carries `pageId` from
+        //      createSitePage to schedulePublication(pageId, …) and publishNow(pageId).
+        // (3) is not decoration: without it, a node with SEVERAL declared outputs silently passed `undefined`
+        // between its own functions — the run reported "ok" while publish never actually published (caught on
+        // the first real end-to-end run: the dashboard row stayed a draft). A step that does nothing must
+        // never look like a step that worked.
         ctx[fname] = last;
         if (outKeys.length === 1) ctx[outKeys[0]] = last;
-      }
-      // A node with several declared outputs spreads its LAST return over them by key.
-      if (outKeys.length > 1 && last && typeof last === "object") {
-        for (const k of outKeys) {
-          const v = (last as Record<string, unknown>)[k];
-          if (v !== undefined) ctx[k] = v;
+        if (last && typeof last === "object" && !Array.isArray(last)) {
+          for (const [k, v] of Object.entries(last as Record<string, unknown>)) {
+            if (v !== undefined) ctx[k] = v;
+          }
         }
       }
 

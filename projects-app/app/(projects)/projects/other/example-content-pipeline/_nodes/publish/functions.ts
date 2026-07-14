@@ -24,16 +24,20 @@ export async function createSitePage(article: Article, slug: string): Promise<Pa
   return { pageId: row.id };
 }
 
-/** Record WHEN this page should go live — the seed of a fork's own launch schedule (E4). */
+/** Record WHEN this page should go live — the seed of a fork's own launch schedule (E4).
+ *  It THROWS when the row is not there: a step that changed nothing must never report success (the first real
+ *  end-to-end run reported "ok" while the record silently stayed a draft — never again). */
 export async function schedulePublication(pageId: string, publishAt: string): Promise<{ jobId: string }> {
-  await patchRow(pageId, { status: "scheduled", when: publishAt });
+  const ok = await patchRow(pageId, { status: "scheduled", when: publishAt });
+  if (!ok) throw new Error(`schedulePublication: no page "${pageId}" to schedule`);
   return { jobId: `job-${pageId}` };
 }
 
-/** Flip the record to published and return its address. */
+/** Flip the record to published and return its address. Throws if there is nothing to publish. */
 export async function publishNow(pageId: string): Promise<{ url: string; publishedAt: string }> {
   const publishedAt = new Date().toISOString();
-  await patchRow(pageId, { status: "published", color: "green", when: publishedAt });
+  const ok = await patchRow(pageId, { status: "published", color: "green", when: publishedAt });
+  if (!ok) throw new Error(`publishNow: no page "${pageId}" to publish`);
   return { url: `/projects/other/example-content-pipeline#${pageId}`, publishedAt };
 }
 
