@@ -35,6 +35,15 @@ export async function nextStepNumber(): Promise<number> {
   return max + 1;
 }
 
+// STEP 238 — every coder brief opens with the ONE architecture call. The step-233 principle stands (the
+// brief hands an ADDRESS, never a snapshot that goes stale) — the address now includes the bundler
+// endpoint, which serializes the automation's complete CURRENT state + full entity history on demand.
+// Entities flagged pending:true in that JSON carry the not-yet-developed task.
+const archContextLine = (automation: string) =>
+  `0. FIRST, at the start of your context window, load the automation's complete architecture as ONE JSON:
+   GET http://localhost:3003/api/projects/fetch-complete-automation-architecture-with-history?automation=${automation}
+   Read its "passport" (what the automation IS) and focus on entities flagged pending:true.`;
+
 export type NodeStepInput = {
   number: number;
   automation: string;      // "category/slug"
@@ -63,6 +72,7 @@ WHAT THE OWNER WANTS (verbatim):
 ${i.spec.trim() || "(no brief given)"}
 
 WHAT TO DO
+${archContextLine(i.automation)}
 1. Read app/(projects)/README.md — "The diagram standard" and "The node -> functions contract".
 2. Write the node's REAL functions in _nodes/${i.nodeSlug}/functions.ts as a typed NodeFunction[]:
    deterministic application code, each function with typed paramsIn and a typed return. AI is allowed ONLY
@@ -135,12 +145,15 @@ export function buildAutomationStepMessage(i: AutomationStepInput): string {
   return `Develop the automation **${i.automation}** — build its ${i.nodes.length} node(s). Everything you need already lives in the automation's own folder; extract it there, do not expect it inline here.
 
 ## Read first (mandatory, in this order — before any code)
-1. Read **${AUTOMATION_DOC}** at the project root — the single authoritative document on how automations (a.k.a. projects / projects-automation) are created, work and are improved. You cannot build correctly without it.
-2. Read the automation itself at \`${root}\` and EXTRACT its full current state:
+1. Load the automation's complete architecture as ONE JSON, at the very start of your context window:
+   \`GET http://localhost:3003/api/projects/fetch-complete-automation-architecture-with-history?automation=${i.automation}\`
+   — read its \`passport\` (what the automation IS) and focus on entities flagged \`pending:true\` (step 238).
+2. Read **${AUTOMATION_DOC}** at the project root — the single authoritative document on how automations (a.k.a. projects / projects-automation) are created, work and are improved. You cannot build correctly without it.
+3. Read the automation itself at \`${root}\` and EXTRACT its full current state:
    - \`_data/instruction.md\` — the owner's top-level instruction,
    - \`_data/use-cases.ts\` — the use cases (the agreed scenarios),
    - \`_data/diagram.ts\` + \`_nodes/<slug>/\` (\`meta.ts\`, \`functions.ts\`, \`spec.md\`) — the nodes and the **Quiz result per node**.
-3. The **diagram is the single source of truth**. Keep every node's work co-located in its own \`_nodes/<slug>/\` folder; never invent behaviour from memory.
+4. The **diagram is the single source of truth**. Keep every node's work co-located in its own \`_nodes/<slug>/\` folder; never invent behaviour from memory.
 
 ## Nodes to build (one sub-step each)
 ${nodeList}
@@ -210,6 +223,9 @@ WHAT THE OWNER WANTS (verbatim):
 ${i.spec.trim() || "(no brief given)"}
 
 WHAT TO DO
+0. FIRST, load BOTH endpoint automations' complete architectures as JSON (passport + entities + history):
+   GET http://localhost:3003/api/projects/fetch-complete-automation-architecture-with-history?automation=${i.from}
+   GET http://localhost:3003/api/projects/fetch-complete-automation-architecture-with-history?automation=${i.to}
 1. Read app/(projects)/README.md — the node/functions contract applies to a link too.
 2. Write the integration in _edges/${i.edgeCuid}/functions.ts as a typed NodeFunction[]: deterministic code
    that takes the SOURCE node's output and feeds the TARGET node's input, honouring the conditions above.
@@ -278,6 +294,9 @@ WHAT THE OWNER WANTS (verbatim):
 ${i.spec.trim() || "(no brief given)"}
 
 WHAT TO DO
+${archContextLine(i.groupAutomation)}
+   The group's JSON carries the chain slice with SHALLOW member snapshots; for any member you will actually
+   modify, call the same route for THAT member to get its full architecture.
 1. Read app/(projects)/README.md — the pub/sub mechanism (step 195) is how automations in a chain hand off to
    each other: a Trigger of kind "event" subscribes to a Subject transition another automation's Action emits.
 2. For each hand-off the brief describes, wire it INSIDE the two member automations' own node code — a chain
@@ -345,6 +364,7 @@ THE AUTOMATION'S CURRENT NODES:
 ${list}
 
 WHAT TO DO
+${archContextLine(i.automation)}
 1. Read app/(projects)/README.md — "User cases", "The diagram standard" and "The node -> functions contract".
 2. Work out WHICH nodes this case touches. The diagram is the source of truth: change existing nodes, or add
    a node through the Builder API — never write behaviour outside a node's own folder.

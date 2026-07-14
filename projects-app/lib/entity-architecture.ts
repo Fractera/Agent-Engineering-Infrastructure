@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { db } from "@/lib/db";
 import { createNodeId } from "@/lib/cuid";
 import { resolveProject, listNodes, readNodeFiles } from "@/lib/nodes";
@@ -101,11 +103,65 @@ export async function archiveAndClearTransport(
     .run(automation, entityType, ref);
 }
 
+// ─── THE PASSPORT (the automation's own identity — the bundle's opening section) ───────────────────────
+// Without it JSON1/JSON2 would carry nodes and cases of an automation whose NAME, PURPOSE and TYPE the
+// reading agent never sees — the "How it works" answer would regress vs step 237 (which read README +
+// description directly). The passport restores exactly that: title/description (_data/description.ts),
+// the immutable type (_data/automation.ts), the owner's original instruction (_data/instruction.md),
+// the README and the merged entity toggles.
+
+async function automationTypeOf(automation: string): Promise<string> {
+  const proj = resolveProject(automation);
+  if (!proj.ok) return "stream";
+  const t = await readFile(join(proj.projectDir, "_data", "automation.ts"), "utf8").catch(() => "");
+  return (t.match(/AUTOMATION_TYPE[^=]*=\s*["']([a-z]+)["']/) ?? [])[1] ?? "stream";
+}
+
+/** A JSON string literal captured by regex from a _data/*.ts source → its decoded value. */
+function jsonStr(m: RegExpMatchArray | null): string {
+  try { return m ? (JSON.parse(m[1]) as string) : ""; } catch { return ""; }
+}
+
+async function extractPassport(automation: string): Promise<unknown> {
+  const proj = resolveProject(automation);
+  if (!proj.ok) return { error: proj.error };
+  const read = (rel: string) => readFile(join(proj.projectDir, rel), "utf8").catch(() => "");
+  const [descSrc, type, instruction, readme, configSrc] = await Promise.all([
+    read("_data/description.ts"), automationTypeOf(automation),
+    read("_data/instruction.md"), read("README.md"), read("_data/config.ts"),
+  ]);
+  const title = jsonStr(descSrc.match(/title:\s*("(?:[^"\\]|\\.)*")/));
+  const description = jsonStr(descSrc.match(/description:\s*\n?\s*("(?:[^"\\]|\\.)*")/));
+  const seedToggles: Record<string, boolean> = {};
+  for (const m of configSrc.matchAll(/([a-z]+):\s*(true|false)/g)) seedToggles[m[1]] = m[2] === "true";
+  const live = await getLiveEntities(automation);
+  return {
+    automation, title, description, type,
+    isChainedGroup: type === "chained",
+    ownerInstruction: instruction.trim(),
+    readme: readme.trim(),
+    entityToggles: { ...seedToggles, ...live },
+  };
+}
+
 // ─── PER-ENTITY EXTRACTORS ───────────────────────────────────────────────────────────────────────────────
 
 async function extractNode(automation: string, withHistory: boolean): Promise<{ current: unknown; history?: unknown[] }> {
   const proj = resolveProject(automation);
   if (!proj.ok) return { current: [] };
+  // A CHAINED GROUP (step 234/236 — the `group`-kind subflow container on the global canvas) has no real
+  // workflow of its own: its frozen skeleton still carries draft input/logic/output nodes, but the page
+  // itself hides them (GroupDetailSection replaces DiagramSection). Serializing those skeleton drafts into
+  // the bundle would MISLEAD the reading agent — mark the slice not-applicable and point at `chain` instead.
+  if ((await automationTypeOf(automation)) === "chained") {
+    return {
+      current: {
+        applicable: false,
+        note: "This automation is a CHAINED GROUP — a canvas-only container of other automations. Its skeleton nodes are not part of its real architecture; read the `chain` slice (brief + member snapshots) instead.",
+      },
+      history: [],
+    };
+  }
   const nodes = await listNodes(automation);
   const current = await Promise.all(nodes.map(async (n) => {
     const files = await readNodeFiles(proj.projectDir, n.slug);
@@ -115,10 +171,13 @@ async function extractNode(automation: string, withHistory: boolean): Promise<{ 
     };
   }));
   if (!withHistory) return { current };
+  // History carries the RAW briefs of every version (spec_src = the draft ТЗ, instruction_src = the
+  // optimization ТЗ) — the owner's "исторические сырые задания". functions_src (the code) is deliberately
+  // excluded: the active code lives on disk (Model B) and would bloat the bundle without adding design intent.
   const history = await Promise.all(nodes.map(async (n) => {
     const rows = (await db
-      .prepare(`SELECT version, summary, dev_step_ref, created_at FROM automation_node_versions WHERE node_cuid=? ORDER BY version ASC`)
-      .all(n.cuid)) as { version: number; summary: string; dev_step_ref: string | null; created_at: string }[];
+      .prepare(`SELECT version, summary, spec_src, instruction_src, dev_step_ref, created_at FROM automation_node_versions WHERE node_cuid=? ORDER BY version ASC`)
+      .all(n.cuid)) as { version: number; summary: string; spec_src: string; instruction_src: string; dev_step_ref: string | null; created_at: string }[];
     return { cuid: n.cuid, slug: n.slug, versions: rows };
   }));
   return { current, history };
@@ -135,10 +194,11 @@ async function extractEdge(automation: string, withHistory: boolean): Promise<{ 
     };
   }));
   if (!withHistory) return { current };
+  // spec_src = the raw ТЗ of each version (same rationale as node history above; functions_src excluded).
   const history = await Promise.all(edges.map(async (e) => {
     const rows = (await db
-      .prepare(`SELECT version, summary, dev_step_ref, created_at FROM automation_edge_versions WHERE edge_cuid=? ORDER BY version ASC`)
-      .all(e.cuid)) as { version: number; summary: string; dev_step_ref: string | null; created_at: string }[];
+      .prepare(`SELECT version, summary, spec_src, dev_step_ref, created_at FROM automation_edge_versions WHERE edge_cuid=? ORDER BY version ASC`)
+      .all(e.cuid)) as { version: number; summary: string; spec_src: string; dev_step_ref: string | null; created_at: string }[];
     return { cuid: e.cuid, versions: rows };
   }));
   return { current, history };
@@ -156,7 +216,27 @@ async function extractUsecase(automation: string, withHistory: boolean): Promise
 async function extractChain(automation: string, withHistory: boolean): Promise<{ current: unknown; history?: unknown[] }> {
   const brief = await readChainSpec(automation);
   const members = await groupMembers(automation);
-  const current = { brief, members };
+  // SHALLOW member snapshots (owner's explicit "must support chained flow / group nodes"): member names
+  // alone are useless to an agent designing the chain — it needs each member's identity + node surface to
+  // reason about hand-offs. Shallow on purpose: identity + node names/statuses, never the members' full
+  // bundles (an agent that needs a member's depth calls the master route FOR that member).
+  const memberSnapshots = await Promise.all(members.map(async (m) => {
+    const proj = resolveProject(m);
+    if (!proj.ok) return { automation: m, error: proj.error };
+    const [descSrc, type, nodes] = await Promise.all([
+      readFile(join(proj.projectDir, "_data", "description.ts"), "utf8").catch(() => ""),
+      automationTypeOf(m),
+      listNodes(m),
+    ]);
+    return {
+      automation: m,
+      title: jsonStr(descSrc.match(/title:\s*("(?:[^"\\]|\\.)*")/)),
+      description: jsonStr(descSrc.match(/description:\s*\n?\s*("(?:[^"\\]|\\.)*")/)),
+      type,
+      nodes: nodes.map((n) => ({ slug: n.slug, name: n.name, status: n.status, draft: Boolean(n.draft) })),
+    };
+  }));
+  const current = { brief, members, memberSnapshots };
   if (!withHistory) return { current };
   return { current, history: [{ note: "Chain-group history lands in step 238 Phase 4 — not yet recorded." }] };
 }
@@ -184,17 +264,32 @@ async function extractOne(entityType: EntityType, automation: string, withHistor
 }
 
 /** Whether entity_type has ANY pending, not-yet-developed transport for this automation — drives the
- *  bundle's `changedSinceLastConsume` flag so a reading agent knows where to focus. */
+ *  bundle's `pending` flag so a reading agent knows where to focus. Until each entity migrates onto
+ *  entity_transport (Phases 1-4), the flag reads that entity's REAL current transport, wherever it lives
+ *  today — otherwise a fresh chain brief / unconfirmed case set would show pending:false and the agent
+ *  would skip exactly the place the owner told it to look. */
 async function hasPendingTransport(automation: string, entityType: EntityType): Promise<boolean> {
   const row = await getTransport(automation, entityType, "");
   if (row && Object.keys((row.payload as Record<string, unknown>) ?? {}).length > 0) return true;
-  if (entityType === "node" || entityType === "edge") {
-    // Node/edge aren't migrated onto entity_transport until Phase 1/2 — a draft node/edge IS its pending
-    // transport today (an unbuilt spec.md/instruction.ts waiting for a coder).
-    const nodes = entityType === "node" ? await listNodes(automation) : await listEdges();
-    return nodes.some((n: { draft: number }) => n.draft === 1);
+  switch (entityType) {
+    case "node":
+    case "edge": {
+      // A draft node/edge IS its pending transport today (an unbuilt spec.md waiting for a coder).
+      const rows = entityType === "node" ? await listNodes(automation) : await listEdges();
+      return rows.some((n: { draft: number }) => n.draft === 1);
+    }
+    case "usecase": {
+      // The review gate (step 231) is the use cases' transport: cases exist but the owner has not
+      // (re-)confirmed them → the set carries not-yet-consumed change.
+      const r = await reviewState(automation);
+      return r.hasCases && !r.reviewed;
+    }
+    case "chain":
+      // A non-empty chain brief is the group's transport until Phase 4 archives it on consume.
+      return (await readChainSpec(automation)).trim().length > 0;
+    default:
+      return false;
   }
-  return false;
 }
 
 export type ArchitectureBundle = {
@@ -202,17 +297,24 @@ export type ArchitectureBundle = {
   format: "full-with-history" | "current-snapshot";
   intro: string;
   generatedAt: string;
+  /** The automation's own identity — title, description, type, the owner's instruction, README, toggles. */
+  passport: unknown;
   entities: EntitySlice[];
 };
 
 const INTRO_FULL =
   "This is the COMPLETE architecture of one automation: every entity's current state AND its full version " +
-  "history. Use it at the start of a coding-agent context window or for deep debugging. Entities with " +
-  "changedSinceLastConsume:true carry a pending, not-yet-developed task — focus there first.";
+  "history. Use it at the start of a coding-agent context window or for deep debugging. Start with the " +
+  "`passport` (what this automation IS: title, purpose, type, the owner's original instruction). Entities " +
+  "flagged pending:true carry a not-yet-developed task — focus there first. If the passport says " +
+  "isChainedGroup:true, this automation is a container of other automations — its real architecture is the " +
+  "`chain` slice (brief + member snapshots), not its own nodes.";
 const INTRO_CURRENT =
   "This is the CURRENT state of one automation's architecture, with no version history. Use it for the " +
   "\"How it works\" description, use-case debugging, or as the 2nd+ context object within an ongoing " +
-  "development session. Entities with changedSinceLastConsume:true carry a pending, not-yet-developed task.";
+  "development session. Start with the `passport` (what this automation IS). Entities flagged pending:true " +
+  "carry a not-yet-developed task. If the passport says isChainedGroup:true, the real architecture is the " +
+  "`chain` slice (brief + member snapshots), not this automation's own nodes.";
 
 /** One entity's slice, on its own — backs the 18 per-entity extract-* sub-APIs (the master bundler below
  *  calls this same function for all 9 entities, wrapped in Promise.allSettled for error isolation). */
@@ -227,9 +329,12 @@ export async function extractEntitySlice(entityType: EntityType, automation: str
 }
 
 export async function buildArchitecture(automation: string, withHistory: boolean): Promise<ArchitectureBundle> {
-  const results = await Promise.allSettled(
-    ENTITY_TYPES.map((entityType) => extractEntitySlice(entityType, automation, withHistory)),
-  );
+  // The passport is isolated the same way the entity slices are — a broken description file must not
+  // take the whole bundle down with it.
+  const [passport, results] = await Promise.all([
+    extractPassport(automation).catch((e) => ({ error: String(e) })),
+    Promise.allSettled(ENTITY_TYPES.map((entityType) => extractEntitySlice(entityType, automation, withHistory))),
+  ]);
   const entities: EntitySlice[] = results.map((r, i) => {
     if (r.status === "fulfilled") return r.value;
     return { entityType: ENTITY_TYPES[i], pending: false, current: null, error: String(r.reason) };
@@ -239,6 +344,7 @@ export async function buildArchitecture(automation: string, withHistory: boolean
     format: withHistory ? "full-with-history" : "current-snapshot",
     intro: withHistory ? INTRO_FULL : INTRO_CURRENT,
     generatedAt: new Date().toISOString(),
+    passport,
     entities,
   };
 }
