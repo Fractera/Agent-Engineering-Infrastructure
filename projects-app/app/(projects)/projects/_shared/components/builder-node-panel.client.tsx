@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { History, Loader2, Rocket, Save, Trash2, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { VoiceInput } from "./voice-input.client";
 import type { IndexNode } from "./diagram-canvas.client";
 
 // FROZEN STANDARD (step 224 L4) — the BUILDER side panel of a node. A DRAFT (red) node has no instruction
@@ -12,6 +14,10 @@ import type { IndexNode } from "./diagram-canvas.client";
 // editing it is how a live node becomes a target for its OWN optimization — plus its version history with
 // a rollback to an earlier, more effective version. Fork/Instance nodes never reach this panel (a fork is
 // parameters + delete only, step 223.C.4).
+//
+// step 239.1 (owner) — the brief/instruction field carries the shared VoiceInput primitive, exactly as the
+// link panel and the chain-brief panel do: a real controlled <Textarea> + a ref, so speech lands at the
+// caret. There is no second microphone anywhere in the product — this MOUNTS the one primitive.
 type Version = { version: number; summary: string; created_at: string };
 
 export function BuilderNodePanel({
@@ -31,6 +37,7 @@ export function BuilderNodePanel({
   const [busy, setBusy] = useState(false);
   const [versions, setVersions] = useState<Version[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const textRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => setText(node.draft ? spec : instruction), [node.cuid, node.draft, spec, instruction]);
 
@@ -144,13 +151,16 @@ export function BuilderNodePanel({
         <label className="text-xs font-medium text-muted-foreground">
           {node.draft ? "Brief — how should this node work, what result does it bring?" : "System instruction"}
         </label>
-        <textarea
+        <Textarea
+          ref={textRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={8}
-          className="w-full rounded-md border bg-background p-2 text-sm"
           placeholder={node.draft ? "Describe what this node does and what it returns…" : "The node's system instruction…"}
         />
+        {/* THE ONE VOICE PRIMITIVE (step 232) — hold, speak, the transcript lands at the caret of the field
+            above. Mounted, never re-implemented. */}
+        <VoiceInput targetRef={textRef} value={text} onChange={setText} disabled={busy} className="mt-1" />
       </div>
 
       <div className="flex flex-wrap gap-2">
