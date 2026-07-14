@@ -347,14 +347,10 @@ export const USE_CASES: UseCase[] = [
 import { INPUT_CHANNELS } from "../_data/channels";
 import { PROBES } from "../_data/tests";
 import { AUTOMATION_TYPE } from "../_data/automation";
-import { WaveLockProvider } from "../../../_shared/components/wave-lock.client";
-import { DevelopmentWaveBanner } from "../../../_shared/components/development-wave-banner.client";
 import { AutomationStatusBar } from "../../../_shared/components/automation-status-bar.client";
 import { ActivationQuiz } from "../../../_shared/components/activation-quiz.client";
-import { AddModifyAutomationButton } from "../../../_shared/components/add-modify-automation-button.client";
 import { AutomationAccordions } from "../../../_shared/components/automation-accordions.client";
 import { DiagramSection } from "../../../_shared/components/diagram-section.client";
-import { ActivationLayer } from "../../../_shared/components/activation-layer.client";
 import { GroupDetailSection } from "../../../_shared/components/group-detail-section.client";
 import { SkeletonIntro } from "../../../_shared/components/skeleton-intro.client";
 import { PROJECT_CONFIG } from "../_data/config";
@@ -376,14 +372,12 @@ export default function AutomationEntry() {
   // root canvas's eye icon and side panel already use — never a second implementation of either.
   const isGroup = AUTOMATION_TYPE === "chained";
   return (
-    // THE DEVELOPMENT WAVE (step 240) wraps the whole page: one poll of the wave state feeds the banner AND
-    // every tool's lock, so they can never disagree. While a wave is with a coding agent the page is
-    // read-only — the brief he is working from must not change under him.
-    <WaveLockProvider automation="{{CATEGORY}}/{{PROJECT}}">
+    // THE PAGE-LEVEL CHROME IS NOT HERE (step 241 E3.1). The development-wave banner, the page lock and the
+    // launch control panel are mounted ONCE in the projects-zone layout, because THIS file only writes the
+    // pages of projects created from now on — mounting chrome here left every already-existing automation
+    // without it (the owner hit exactly that). The layout wraps every automation page, old and new.
+    <>
       <main className="mx-auto w-[85vw] max-w-full space-y-4 px-4 pt-8">
-        {/* THE ONLY LAUNCHER on the page (step 240): it appears as soon as anything is staged, and hands
-            EVERY staged change over as ONE wave. All the old per-entity "Start development" buttons are gone. */}
-        <DevelopmentWaveBanner automation="{{CATEGORY}}/{{PROJECT}}" />
         <AutomationStatusBar
           category="{{CATEGORY}}"
           categoryLabel={{CATEGORY_LABEL_JSON}}
@@ -398,10 +392,12 @@ export default function AutomationEntry() {
         {/* PHASE 2 (step 227) — on the FIRST visit the activation Quiz opens and brainstorms the owner's
             instruction into nodes: one quiz step = one node + one development step for the coding agent. */}
         <ActivationQuiz automation="{{CATEGORY}}/{{PROJECT}}" />
+        {/* Title + description. The "Add or modify automation" button that used to sit here is GONE (owner's
+            requirement, step 240): development is launched in exactly ONE place — the wave banner above — and
+            the automation is designed in the diagram's Builder and the entity panels. */}
         <div className="space-y-3">
           <h1 className="text-3xl font-semibold">{d.title}</h1>
           <p className="max-w-3xl text-muted-foreground">{d.description}</p>
-          <AddModifyAutomationButton category="{{CATEGORY}}" slug="{{PROJECT}}" />
         </div>
       </main>
       {/* The Diagram is ALWAYS visible — full screen width, 80vh — NOT an accordion (owner design,
@@ -412,11 +408,6 @@ export default function AutomationEntry() {
       ) : (
         <DiagramSection nodes={DIAGRAM_NODES} automation="{{CATEGORY}}/{{PROJECT}}" />
       )}
-      {/* THE ACTIVATION LAYER (step 241 E3) — the launch control panel. It exists ONLY for an INSTANCED
-          automation (a run of one IS a fork with its own settings), and for it, it is PERMANENT: it is not an
-          accordion, it is not one of the hamburger's visibility switches, and it cannot be hidden. It renders
-          itself from this automation's own _data/activation.ts — the settings a coding agent declared for it. */}
-      {AUTOMATION_TYPE === "instanced" && <ActivationLayer automation="{{CATEGORY}}/{{PROJECT}}" />}
       <main className="mx-auto w-[85vw] max-w-full space-y-8 px-4 py-8">
         {/* The OTHER entity accordions (step 222) + the mandatory Use cases. The Diagram is above,
             outside the accordion series. Driven by _data/config.ts + _data/use-cases.ts. */}
@@ -447,7 +438,7 @@ export default function AutomationEntry() {
           </div>
         </SkeletonIntro>
       </main>
-    </WaveLockProvider>
+    </>
   );
 }
 `,

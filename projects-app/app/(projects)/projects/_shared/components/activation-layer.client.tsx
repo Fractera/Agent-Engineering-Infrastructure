@@ -35,6 +35,7 @@ export function ActivationLayer({ automation }: { automation: string }) {
   const L = activationStrings(useUiLang());
   const [schema, setSchema] = useState<ActivationSchema | null>(null);
   const [designed, setDesigned] = useState(false);
+  const [isInstanced, setIsInstanced] = useState(false);
   const [loading, setLoading] = useState(true);
   const [values, setValues] = useState<Record<string, unknown>>({});
   const [title, setTitle] = useState("");
@@ -54,9 +55,13 @@ export function ActivationLayer({ automation }: { automation: string }) {
     void (async () => {
       const r = await fetch(`/api/projects/activation?automation=${encodeURIComponent(automation)}`, { cache: "no-store" });
       if (r.ok && alive) {
-        const d = (await r.json()) as { designed: boolean; schema: ActivationSchema };
+        const d = (await r.json()) as { designed: boolean; schema: ActivationSchema; type: string };
         setSchema(d.schema);
         setDesigned(d.designed);
+        // The launch console exists ONLY for an instanced automation (a run of one IS a fork with its own
+        // settings). Mounted from the zone layout, this component sees every automation — so it decides for
+        // itself, from the automation's own declared type, rather than the caller guessing.
+        setIsInstanced(d.type === "instanced");
         // Prefill the form with the declared defaults — the automation's own, not ours.
         const init: Record<string, unknown> = {};
         for (const p of d.schema.params) if (p.default !== undefined) init[p.key] = p.default;
@@ -115,7 +120,7 @@ export function ActivationLayer({ automation }: { automation: string }) {
     } finally { setRunningId(null); }
   }, [automation, L, loadForks]);
 
-  if (loading) return null;
+  if (loading || !isInstanced) return null;
 
   // NOT DESIGNED — say so, and open the surface where it gets designed (step 239): the SAME Quiz, on the
   // fork-activation entity. Its result is a requirement the coding agent turns into _data/activation.ts,

@@ -1,67 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Rocket } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { adminBase } from "@/lib/runtime-urls";
-
-// FROZEN STANDARD (step 220) — the "add / modify automation" button under a project's description.
-// Clicking it does NOT redirect straight away: it opens a confirmation that explains HOW to request a
-// change (write the requirements step by step in the to-do list on the RIGHT column of the Architecture
-// page, then press the rocket icon next to the automation on the LEFT column to launch them into
-// development). "Continue" then redirects to that project's section of the Architecture page
-// (admin :3002 /service/architecture?project=<category>/<slug> — the same deep-link the zone footer's
-// "Continue development" uses); "Cancel" closes it.
-export function AddModifyAutomationButton({
-  category,
-  slug,
-}: {
-  category: string;
-  slug: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const [admin, setAdmin] = useState("");
-  // Admin base derived from window.location after mount (IP vs domain) — the link stays inert until then.
-  useEffect(() => {
-    setAdmin(adminBase());
-  }, []);
-
-  const href = admin ? `${admin}/service/architecture?project=${category}/${slug}` : undefined;
-
-  return (
-    <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        <Rocket className="size-4" />
-        Add or modify automation
-      </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add or modify this automation</DialogTitle>
-            <DialogDescription>
-              To change how this automation works, lay out your requirements one by one in the to-do
-              list in the RIGHT column of the Architecture page. Then, in the LEFT column, press the
-              rocket icon next to the automation to launch your wishes into development.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => href && (window.location.href = href)} disabled={!href}>
-              Continue
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
+// RETIRED (step 241 E3.1, owner's requirement).
+//
+// This was the "Add or modify automation" button under a project's title and description (step 220): it
+// opened a dialog explaining that changes are requested through the Architecture page's to-do list. The owner
+// asked for it to go, and the product no longer needs it:
+//   • development is launched in exactly ONE place — the development-wave banner (step 240),
+//   • the automation is designed in the diagram's Builder and in the entity panels (steps 224 / 238 / 239),
+//   • and the "amend a brief that was already sent" path — the Architecture page's to-do list — is exactly
+//     what the wave's LOCK modal already offers, at the moment it is actually relevant.
+//
+// It renders NOTHING, deliberately, instead of being deleted: a project's page is GENERATED code, and every
+// automation created before this change still imports this component. Emptying it removes the button from
+// those pages too — deleting the file would break their build. New pages (skeleton v8+) no longer import it.
+export function AddModifyAutomationButton(_props: { category: string; slug: string }) {
+  return null;
 }

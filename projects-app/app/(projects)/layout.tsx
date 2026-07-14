@@ -8,6 +8,7 @@ import { requireRole } from "@/lib/auth/require-role";
 import { getAppConfig } from "@/config/app-config";
 import { ProjectsZoneHeader } from "@/app/(projects)/_components/projects-zone-header.server";
 import { ProjectsZoneFooter } from "@/app/(projects)/_components/projects-zone-footer.client";
+import { AutomationPageChrome } from "@/app/(projects)/projects/_shared/components/automation-page-chrome.client";
 
 // Root layout of the Projects layer (§3.12, step 175). Projects are independent
 // application levels for PRIVATE use by the architect or a project administrator —
@@ -46,7 +47,13 @@ export default async function ProjectsLayout({
       <body className={bodyFontClass}>
         <ThemeProvider>
           <ProjectsZoneHeader />
-          {children}
+          {/* THE AUTOMATION PAGE'S CHROME (step 241 E3.1) — the development-wave banner, the page lock and
+              the launch control panel, mounted ONCE here rather than in the frozen skeleton. A project's page
+              is GENERATED code: chrome mounted in the skeleton only ever reaches projects created afterwards,
+              so every automation that already existed showed nothing (the owner hit exactly this). The zone
+              layout wraps EVERY automation page — old and new — so this can never drift again. It renders
+              nothing on the hubs; the automation is derived from the URL, like the footer already does. */}
+          <AutomationPageChrome>{children}</AutomationPageChrome>
           {/* Single zone footer (step 213): identical for every project + hub, rendered
               ONCE here so no page re-assembles it. The Architecture deep-link focuses the
               current project, derived from the URL inside the footer. */}

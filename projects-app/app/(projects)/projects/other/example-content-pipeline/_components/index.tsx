@@ -2,7 +2,6 @@ import { PROJECT_DESCRIPTION } from "../_data/description";
 import { DIAGRAM_NODES } from "../_data/diagram";
 import { DiagramSection } from "../../../_shared/components/diagram-section.client";
 import { InstancesPanel } from "../../../_shared/components/instances-panel.client";
-import { ActivationLayer } from "../../../_shared/components/activation-layer.client";
 import { ValidateButton } from "../../../_shared/components/validate-button.client";
 import { DashboardAccordion } from "../../../_shared/components/dashboard-accordion.client";
 import { ProcessesTimeline } from "../../../_shared/components/processes-timeline.client";
@@ -29,10 +28,8 @@ export default function ExampleEntry() {
         <ValidateButton automation="other/example-content-pipeline" />
       </main>
       <DiagramSection nodes={DIAGRAM_NODES} automation="other/example-content-pipeline" />
-      {/* THE ACTIVATION LAYER (step 241 E3) — the launch control panel of this INSTANCED automation. It is a
-          PERMANENT section (never an accordion, never hideable) and it renders itself from this automation's
-          own _data/activation.ts: topic / count / slug / publishAt — the settings ONE run takes. */}
-      <ActivationLayer automation="other/example-content-pipeline" />
+      {/* The launch control panel is NOT mounted here (step 241 E3.1): page-level chrome lives in the
+          projects-zone layout, so every automation page gets it — this one included. */}
       <main className="mx-auto w-[85vw] max-w-full space-y-8 px-4 py-8">
         {/* Anchor for the Gantt bars' click-to-scroll (step 230). */}
         <div id="instances-panel">
