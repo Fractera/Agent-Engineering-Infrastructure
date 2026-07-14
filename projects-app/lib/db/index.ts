@@ -151,9 +151,10 @@ const SCHEMA = `
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
   );
-  -- Full snapshot of every node version (append-only, COLD storage). The canvas never loads this; it is
-  -- fetched on demand for the version panel, a rollback (restore the files from a snapshot), and a future
-  -- AI mining of automation-architecture evolution patterns. UNIQUE(node_cuid, version).
+  -- FROZEN (step 238 Phase 1) — superseded by the generic entity_history table (entity_type='node'). Kept
+  -- CREATE TABLE IF NOT EXISTS only so a pre-238 server's already-recorded rows are never dropped;
+  -- migrateLegacyVersionsOnce() (lib/entity-architecture.ts) copies them into entity_history once, after
+  -- which nothing reads or writes this table again. Do not add new columns or new writers here.
   CREATE TABLE IF NOT EXISTS automation_node_versions (
     id              TEXT PRIMARY KEY NOT NULL,
     automation      TEXT NOT NULL,
@@ -210,6 +211,8 @@ const SCHEMA = `
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
   );
+  -- FROZEN (step 238 Phase 2) — same reasoning as automation_node_versions above; superseded by
+  -- entity_history (entity_type='edge').
   CREATE TABLE IF NOT EXISTS automation_edge_versions (
     id            TEXT PRIMARY KEY NOT NULL,
     edge_cuid     TEXT NOT NULL,

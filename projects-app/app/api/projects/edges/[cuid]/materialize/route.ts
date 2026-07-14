@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
-import { createNodeId } from "@/lib/cuid";
 import { db } from "@/lib/db";
 import { authorize } from "@/lib/nodes";
 import { completeStep } from "@/lib/dev-steps";
 import { edgeByCuid, edgesRoot, readEdgeFiles } from "@/lib/edges";
 import { scheduleRebuild } from "@/lib/nodes";
+import { writeVersionByRef } from "@/lib/entity-architecture";
 
 // Materialize a LINK (step 225) — the coder's mandatory closing call, mirroring a node's materialize
-// (224 L3b): it requires real integration code, drops the draft flag, records a FULL version snapshot,
-// closes the development step (the file moves to COMPLETED-STEPS/) and schedules the rebuild. Once no draft
-// link is left, the global automation leaves "In development" and can be switched on.
+// (224 L3b): it requires real integration code, drops the draft flag, records a FULL version snapshot in
+// entity_history (step 238 Phase 2 — the generic table, entity_type "edge"; an edge belongs to no single
+// automation, so its rows use automation:'' by convention), closes the development step (the file moves to
+// COMPLETED-STEPS/) and schedules the rebuild. Once no draft link is left, the global automation leaves
+// "In development" and can be switched on.
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ cuid: string }> }) {
@@ -36,10 +38,9 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ cuid: stri
   if (files.spec) await rm(join(edgesRoot(), cuid, "spec.md"), { force: true });
 
   const version = edge.latest_version + 1;
-  await db.prepare(
-    `INSERT INTO automation_edge_versions (id, edge_cuid, version, meta_json, functions_src, spec_src, summary, dev_step_ref)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(createNodeId(), cuid, version, files.meta, files.functions, files.spec, summary, devStepRef);
+  await writeVersionByRef("", "edge", cuid, version, {
+    metaJson: files.meta, functionsSrc: files.functions, specSrc: files.spec, summary,
+  }, devStepRef);
 
   await db.prepare(
     `UPDATE automation_edges SET draft = 0, status = 'materialized', latest_version = ?, active_version = ?, updated_at = datetime('now') WHERE cuid = ?`,

@@ -14,9 +14,10 @@ import { getLiveEntities } from "@/lib/entities-live";
 //     fetch-current-automation-architecture-snapshot)
 //
 // FOUR entities (node/edge/usecase/chain) already have real authored content today — their extractors read
-// from that EXISTING storage (files + automation_node_versions/automation_edge_versions/automation_use_cases/
-// chain-spec.md). Node/Edge's history migration onto the new generic `entity_history` table is Phase 1/2 —
-// until then their `extractFull` reads the pre-existing bespoke version tables directly (not yet migrated).
+// from that EXISTING storage (files + entity_history/automation_use_cases/chain-spec.md). Node/Edge history
+// (Phases 1/2) now lives on the GENERIC entity_history table — migrateLegacyVersionsOnce() copies every
+// pre-existing row of the old bespoke automation_node_versions/automation_edge_versions tables over once,
+// idempotently; those old tables are frozen (never written to again, never dropped — read-only fallback).
 // FIVE entities (dashboard/analytics/calendar/map/processes) have NO authoring surface yet — their
 // extractors report today's only signal (the visibility toggle) and are explicit stubs; Phases 5-9 build
 // their real authoring UI + wire it onto entity_transport/entity_history like the other five.
@@ -103,6 +104,101 @@ export async function archiveAndClearTransport(
     .run(automation, entityType, ref);
 }
 
+// ─── NODE/EDGE VERSION HISTORY ON THE GENERIC TABLE (step 238 Phase 1/2) ───────────────────────────────
+// Node and edge identity is a CUID, already globally unique on its own (never reused across automations —
+// "weak models mangle the UUID format" is why this project picked CUIDs, step 224). So these ref-scoped
+// helpers look up by (entity_type, entity_ref) alone — `automation` is still stored on write (required by
+// the schema, NOT NULL) but is redundant for uniqueness here, unlike automation-wide entities (chain,
+// dashboard, ...) where entity_ref is '' and automation is the ONLY disambiguator. An edge belongs to no
+// single automation (it sits BETWEEN two) — its rows use automation:'' by convention, mirroring the
+// automation-wide sentinel.
+
+export async function listVersionsByRef(
+  entityType: EntityType, ref: string,
+): Promise<{ version: number; payload: unknown; devStepRef: string | null; createdAt: string }[]> {
+  await migrateLegacyVersionsOnce();
+  const rows = (await db
+    .prepare(`SELECT version, payload_json, dev_step_ref, created_at FROM entity_history WHERE entity_type=? AND entity_ref=? ORDER BY version DESC`)
+    .all(entityType, ref)) as { version: number; payload_json: string; dev_step_ref: string | null; created_at: string }[];
+  return rows.map((r) => {
+    let payload: unknown = {};
+    try { payload = JSON.parse(r.payload_json); } catch { /* corrupt row -> empty */ }
+    return { version: r.version, payload, devStepRef: r.dev_step_ref, createdAt: r.created_at };
+  });
+}
+
+export async function getVersionByRef(
+  entityType: EntityType, ref: string, version: number,
+): Promise<{ payload: unknown; devStepRef: string | null; createdAt: string } | null> {
+  await migrateLegacyVersionsOnce();
+  const row = (await db
+    .prepare(`SELECT payload_json, dev_step_ref, created_at FROM entity_history WHERE entity_type=? AND entity_ref=? AND version=?`)
+    .get(entityType, ref, version)) as { payload_json: string; dev_step_ref: string | null; created_at: string } | undefined;
+  if (!row) return null;
+  try {
+    return { payload: JSON.parse(row.payload_json), devStepRef: row.dev_step_ref, createdAt: row.created_at };
+  } catch {
+    return null;
+  }
+}
+
+export async function writeVersionByRef(
+  automation: string, entityType: EntityType, ref: string, version: number, payload: unknown, devStepRef: string | null,
+): Promise<void> {
+  await migrateLegacyVersionsOnce();
+  await db.prepare(
+    `INSERT INTO entity_history (id, automation, entity_type, entity_ref, version, payload_json, dev_step_ref)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+  ).run(createNodeId(), automation, entityType, ref, version, JSON.stringify(payload ?? {}), devStepRef);
+}
+
+// ─── ONE-TIME LEGACY DATA MIGRATION (step 238 Phase 1/2) ───────────────────────────────────────────────
+// Copies every pre-existing row of the bespoke automation_node_versions/automation_edge_versions tables
+// into the new generic entity_history — real history already recorded on a live server must survive the
+// switch. INSERT OR IGNORE + the table's own UNIQUE(automation, entity_type, entity_ref, version) makes this
+// idempotent and race-safe (concurrent requests may all attempt it; only the first actually inserts each
+// row). The legacy tables are NEVER dropped and NEVER written to again after this ships — they simply stop
+// being the write target (no risk to already-recorded history if anything here needs to be re-verified).
+// A shared PROMISE, not a boolean — a concurrent caller arriving while the first migration is still running
+// (its selects/inserts are async) awaits the SAME in-flight promise instead of seeing "already started" and
+// reading entity_history before the copy finishes (the lesson from the runner race, step 230).
+let legacyVersionsMigration: Promise<void> | null = null;
+
+export function migrateLegacyVersionsOnce(): Promise<void> {
+  if (!legacyVersionsMigration) legacyVersionsMigration = runLegacyVersionsMigration();
+  return legacyVersionsMigration;
+}
+
+async function runLegacyVersionsMigration(): Promise<void> {
+  type NodeVersionRow = {
+    automation: string; node_cuid: string; version: number; meta_json: string; functions_src: string;
+    instruction_src: string; spec_src: string; summary: string; dev_step_ref: string | null; created_at: string;
+  };
+  const nodeRows = (await db.prepare(`SELECT * FROM automation_node_versions`).all()) as NodeVersionRow[];
+  for (const r of nodeRows) {
+    const payload = {
+      metaJson: r.meta_json, functionsSrc: r.functions_src, instructionSrc: r.instruction_src,
+      specSrc: r.spec_src, summary: r.summary,
+    };
+    await db.prepare(
+      `INSERT OR IGNORE INTO entity_history (id, automation, entity_type, entity_ref, version, payload_json, dev_step_ref, created_at)
+       VALUES (?, ?, 'node', ?, ?, ?, ?, ?)`,
+    ).run(createNodeId(), r.automation, r.node_cuid, r.version, JSON.stringify(payload), r.dev_step_ref, r.created_at);
+  }
+  type EdgeVersionRow = {
+    edge_cuid: string; version: number; meta_json: string; functions_src: string;
+    spec_src: string; summary: string; dev_step_ref: string | null; created_at: string;
+  };
+  const edgeRows = (await db.prepare(`SELECT * FROM automation_edge_versions`).all()) as EdgeVersionRow[];
+  for (const r of edgeRows) {
+    const payload = { metaJson: r.meta_json, functionsSrc: r.functions_src, specSrc: r.spec_src, summary: r.summary };
+    await db.prepare(
+      `INSERT OR IGNORE INTO entity_history (id, automation, entity_type, entity_ref, version, payload_json, dev_step_ref, created_at)
+       VALUES (?, '', 'edge', ?, ?, ?, ?, ?)`,
+    ).run(createNodeId(), r.edge_cuid, r.version, JSON.stringify(payload), r.dev_step_ref, r.created_at);
+  }
+}
+
 // ─── THE PASSPORT (the automation's own identity — the bundle's opening section) ───────────────────────
 // Without it JSON1/JSON2 would carry nodes and cases of an automation whose NAME, PURPOSE and TYPE the
 // reading agent never sees — the "How it works" answer would regress vs step 237 (which read README +
@@ -171,13 +267,16 @@ async function extractNode(automation: string, withHistory: boolean): Promise<{ 
     };
   }));
   if (!withHistory) return { current };
-  // History carries the RAW briefs of every version (spec_src = the draft ТЗ, instruction_src = the
-  // optimization ТЗ) — the owner's "исторические сырые задания". functions_src (the code) is deliberately
-  // excluded: the active code lives on disk (Model B) and would bloat the bundle without adding design intent.
+  // History carries the RAW briefs of every version (specSrc = the draft ТЗ, instructionSrc = the
+  // optimization ТЗ) — the owner's "исторические сырые задания". functionsSrc (the code) is deliberately
+  // excluded: the active code lives on disk (Model B) and would bloat the bundle without adding design
+  // intent. Read from the GENERIC entity_history table (step 238 Phase 1) — see listVersionsByRef.
   const history = await Promise.all(nodes.map(async (n) => {
-    const rows = (await db
-      .prepare(`SELECT version, summary, spec_src, instruction_src, dev_step_ref, created_at FROM automation_node_versions WHERE node_cuid=? ORDER BY version ASC`)
-      .all(n.cuid)) as { version: number; summary: string; spec_src: string; instruction_src: string; dev_step_ref: string | null; created_at: string }[];
+    const versions = [...(await listVersionsByRef("node", n.cuid))].reverse(); // oldest first — a chronological story
+    const rows = versions.map((v) => {
+      const p = v.payload as { summary?: string; specSrc?: string; instructionSrc?: string };
+      return { version: v.version, summary: p.summary ?? "", specSrc: p.specSrc ?? "", instructionSrc: p.instructionSrc ?? "", devStepRef: v.devStepRef, createdAt: v.createdAt };
+    });
     return { cuid: n.cuid, slug: n.slug, versions: rows };
   }));
   return { current, history };
@@ -194,11 +293,14 @@ async function extractEdge(automation: string, withHistory: boolean): Promise<{ 
     };
   }));
   if (!withHistory) return { current };
-  // spec_src = the raw ТЗ of each version (same rationale as node history above; functions_src excluded).
+  // specSrc = the raw ТЗ of each version (same rationale as node history above; functionsSrc excluded).
+  // Read from the GENERIC entity_history table (step 238 Phase 2) — see listVersionsByRef.
   const history = await Promise.all(edges.map(async (e) => {
-    const rows = (await db
-      .prepare(`SELECT version, summary, spec_src, dev_step_ref, created_at FROM automation_edge_versions WHERE edge_cuid=? ORDER BY version ASC`)
-      .all(e.cuid)) as { version: number; summary: string; spec_src: string; dev_step_ref: string | null; created_at: string }[];
+    const versions = [...(await listVersionsByRef("edge", e.cuid))].reverse(); // oldest first
+    const rows = versions.map((v) => {
+      const p = v.payload as { summary?: string; specSrc?: string };
+      return { version: v.version, summary: p.summary ?? "", specSrc: p.specSrc ?? "", devStepRef: v.devStepRef, createdAt: v.createdAt };
+    });
     return { cuid: e.cuid, versions: rows };
   }));
   return { current, history };
