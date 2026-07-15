@@ -7,6 +7,7 @@ import type { DashboardConfig, DashboardTable } from "../table-config";
 import { ConfigRecordsTable } from "./config-records-table.client";
 import { useUiLang } from "../use-ui-lang";
 import { resolveLocalized } from "../localized-text";
+import { automationMenuStrings } from "../automation-menu-i18n";
 
 // THE DASHBOARD (step 228 + the telegram-notes standard). ONE tab that holds ANY number of tables, but only
 // ONE is shown at a time, behind a row of toggle buttons — exactly like the reference automation
@@ -55,6 +56,8 @@ function DashboardPane({
 }
 
 export function DashboardAccordion({ automation, dashboard }: { automation: string; dashboard?: DashboardConfig }) {
+  const lang = useUiLang();
+  const M = automationMenuStrings(lang);
   const tables = dashboard?.tables ?? [];
   const STORAGE = `dashboard-view:${automation}`;
 
@@ -89,13 +92,7 @@ export function DashboardAccordion({ automation, dashboard }: { automation: stri
   }, [left, right, split, STORAGE]);
 
   if (!tables.length) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        No tables configured yet. A dashboard holds any number of tables; each is declared in the project&rsquo;s
-        <code className="mx-1">_data/config.ts</code> and rendered through the shared table standard — see the
-        project README, &ldquo;The dashboard tables &amp; columns standard&rdquo;.
-      </p>
-    );
+    return <p className="text-sm text-muted-foreground">{M.dashboardEmpty}</p>;
   }
   if (!left) return null; // first paint, before the stored choice is read
 
@@ -105,7 +102,7 @@ export function DashboardAccordion({ automation, dashboard }: { automation: stri
       <div className="flex justify-end">
         <Button size="sm" variant="outline" onClick={() => persist({ split: !split })}>
           {split ? <Square className="size-3.5" /> : <Columns2 className="size-3.5" />}
-          {split ? "Single dashboard" : "Two dashboards"}
+          {split ? M.dashboardSingleView : M.dashboardTwoView}
         </Button>
       </div>
 

@@ -10,9 +10,11 @@ import { useUiLang } from "../use-ui-lang";
 import { activationStrings } from "../activation-i18n";
 import { VoiceInput } from "./voice-input.client";
 import { ActivationQuiz } from "./activation-quiz.client";
+import { FrozenTemplateNotice } from "./automation-accordions.client";
 import type { ActivationParam, ActivationSchema } from "../activation";
-import { resolveLocalized } from "../localized-text";
+import { resolveLocalized, resolveErrorText } from "../localized-text";
 import { notifyRunCompleted } from "../use-run-refresh";
+import { automationMenuStrings } from "../automation-menu-i18n";
 
 // THE ACTIVATION LAYER — the launch control panel (step 241 E3, owner's design; generalized to `stream` in
 // step 243 — the SAME declaration/panel mechanism, two render branches, never a second component).
@@ -45,6 +47,10 @@ type AskReport = { ok: boolean; nodes: RunReport[]; error?: string };
 export function ActivationLayer({ automation }: { automation: string }) {
   const lang = useUiLang();
   const L = activationStrings(lang);
+  // The frozen-template notice (step 243.2) already shown above every OTHER entity's real content — the
+  // owner's point (step 243.4): the launch console is exactly as much frozen-starter demo content as any
+  // accordion, so it gets the same banner. Reused text/component, never a second copy.
+  const M = automationMenuStrings(lang);
   const [schema, setSchema] = useState<ActivationSchema | null>(null);
   const [designed, setDesigned] = useState(false);
   const [isInstanced, setIsInstanced] = useState(false);
@@ -130,7 +136,7 @@ export function ActivationLayer({ automation }: { automation: string }) {
       }
       setReport((m) => ({ ...m, [instanceId]: d.nodes ?? [] }));
       (d.ok ? toast.success : toast.error)(d.ok ? L.runOk : L.runFailed, {
-        description: d.ok ? undefined : d.nodes?.find((n) => n.status === "fail")?.error,
+        description: d.ok ? undefined : resolveErrorText(d.nodes?.find((n) => n.status === "fail")?.error, lang),
         duration: 15000,
       });
       // Live refresh (step 243.2): a successful run may have written rows other sections on this page show
@@ -215,6 +221,8 @@ export function ActivationLayer({ automation }: { automation: string }) {
           <p className="text-sm text-muted-foreground">{resolveLocalized(schema?.description, lang) || L.layerSubtitle}</p>
         </div>
 
+        <FrozenTemplateNotice text={M.frozenTemplateNotice} />
+
         <div className="space-y-3 rounded-lg border p-4">
           <div className="grid gap-4 md:grid-cols-2">
             {(schema?.params ?? []).map((p) => (
@@ -239,7 +247,7 @@ export function ActivationLayer({ automation }: { automation: string }) {
           {askReport ? (
             <div className="space-y-2 rounded-md border bg-muted/30 p-3">
               {askReport.error ? (
-                <p className="text-sm text-rose-700 dark:text-rose-400">{askReport.error}</p>
+                <p className="text-sm text-rose-700 dark:text-rose-400">{resolveErrorText(askReport.error, lang)}</p>
               ) : null}
               {askReport.nodes.length ? (
                 <div className="flex flex-wrap gap-2">
@@ -251,7 +259,7 @@ export function ActivationLayer({ automation }: { automation: string }) {
                           ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-400"
                           : "border-rose-500/40 text-rose-700 dark:text-rose-400"
                       }`}
-                      title={n.error ?? ""}
+                      title={resolveErrorText(n.error, lang)}
                     >
                       {n.status === "ok" ? <CheckCircle2 className="size-3" /> : <AlertTriangle className="size-3" />}
                       {n.node} · {n.ms}ms
@@ -274,6 +282,8 @@ export function ActivationLayer({ automation }: { automation: string }) {
         </h2>
         <p className="text-sm text-muted-foreground">{resolveLocalized(schema?.description, lang) || L.layerSubtitle}</p>
       </div>
+
+      <FrozenTemplateNotice text={M.frozenTemplateNotice} />
 
       {/* THE FORM — one field per DECLARED parameter. Nothing here is hardcoded per automation. */}
       <div className="grid gap-4 rounded-lg border p-4 md:grid-cols-2">
@@ -333,7 +343,7 @@ export function ActivationLayer({ automation }: { automation: string }) {
                           ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-400"
                           : "border-rose-500/40 text-rose-700 dark:text-rose-400"
                       }`}
-                      title={n.error ?? ""}
+                      title={resolveErrorText(n.error, lang)}
                     >
                       {n.status === "ok" ? <CheckCircle2 className="size-3" /> : <AlertTriangle className="size-3" />}
                       {n.node} · {n.ms}ms

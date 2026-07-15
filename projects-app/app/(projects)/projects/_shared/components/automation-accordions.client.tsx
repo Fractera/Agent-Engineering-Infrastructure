@@ -42,7 +42,7 @@ import type { EntityType } from "@/lib/entity-store";
 // explore, not a promise of what a real, developed automation's section will show. Text is 10-language
 // (see `frozenTemplateNotice` in automation-menu-i18n.ts) — no "developed" flag exists yet (a later step),
 // so for now it always renders on the frozen starter's default state.
-function FrozenTemplateNotice({ text }: { text: string }) {
+export function FrozenTemplateNotice({ text }: { text: string }) {
   return (
     <p className="rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
       {text}

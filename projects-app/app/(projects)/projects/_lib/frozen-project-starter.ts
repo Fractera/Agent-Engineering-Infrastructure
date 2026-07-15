@@ -700,14 +700,44 @@ export async function extractCompanyMention(query: string): Promise<{ companyKey
   for (const key of Object.keys(COMPANIES)) {
     if (q.includes(key)) return { companyKey: key };
   }
-  throw new Error("Could not recognize a supported company in your request.");
+  // TEN LANGUAGES (step 243.4, rule 4г): a node's thrown message is normally a plain string (a real
+  // automation's own language) — but OUR OWN starting pattern's user-facing errors are our default content,
+  // so they throw JSON.stringify({en,ru,...}) instead. The shared ActivationLayer already recognizes this
+  // shape (resolveErrorText, _shared/localized-text.ts) and resolves it; a plain string still works exactly
+  // as before for any node that does not bother.
+  throw new Error(JSON.stringify({
+    en: "Could not recognize a supported company in your request.",
+    ru: "Не удалось распознать компанию по акциям в вашем запросе.",
+    es: "No se pudo reconocer una empresa admitida en tu solicitud.",
+    fr: "Impossible de reconnaître une entreprise prise en charge dans votre demande.",
+    it: "Impossibile riconoscere un'azienda supportata nella tua richiesta.",
+    de: "In Ihrer Anfrage konnte kein unterstütztes Unternehmen erkannt werden.",
+    pt: "Não foi possível reconhecer uma empresa suportada no seu pedido.",
+    pl: "Nie udało się rozpoznać obsługiwanej firmy w Twoim zapytaniu.",
+    tr: "İsteğinizde desteklenen bir şirket tanınamadı.",
+    nl: "Kon geen ondersteund bedrijf herkennen in uw verzoek.",
+  }));
 }
 
 /** Maps a recognized company key to its ticker. Throws a SPECIFIC message for a known-but-private company. */
 export async function resolveTicker(companyKey: string): Promise<{ company: string; ticker: string }> {
   const entry = COMPANIES[companyKey];
   if (!entry) throw new Error(\`Unknown company key "\${companyKey}".\`);
-  if (!entry.ticker) throw new Error(\`\${entry.display} is privately held — it has no public stock price.\`);
+  if (!entry.ticker) {
+    const name = entry.display;
+    throw new Error(JSON.stringify({
+      en: \`\${name} is privately held — it has no public stock price.\`,
+      ru: \`\${name} — частная компания, у неё нет публичной цены акций.\`,
+      es: \`\${name} es una empresa privada — no tiene precio de acción público.\`,
+      fr: \`\${name} est une entreprise privée — elle n'a pas de prix d'action public.\`,
+      it: \`\${name} è un'azienda privata — non ha un prezzo azionario pubblico.\`,
+      de: \`\${name} ist privat gehalten — es gibt keinen öffentlichen Aktienkurs.\`,
+      pt: \`\${name} é uma empresa privada — não tem preço de ação público.\`,
+      pl: \`\${name} jest spółką prywatną — nie ma publicznej ceny akcji.\`,
+      tr: \`\${name} özel bir şirkettir — halka açık hisse fiyatı yoktur.\`,
+      nl: \`\${name} is een particulier bedrijf — er is geen publieke aandelenkoers.\`,
+    }));
+  }
   return { company: entry.display, ticker: entry.ticker };
 }
 
@@ -764,13 +794,39 @@ export async function fetchPrice(ticker: string): Promise<PriceQuote> {
     headers: { "User-Agent": "Mozilla/5.0 (compatible; FracteraStockPriceLookup/1.0)" },
     cache: "no-store",
   });
-  if (!r.ok) throw new Error(\`fetchPrice: the quote service returned \${r.status} for "\${ticker}".\`);
+  // TEN LANGUAGES (step 243.4, rule 4г) — see the identical note in parse-request/functions.ts.
+  if (!r.ok) {
+    const status = r.status;
+    throw new Error(JSON.stringify({
+      en: \`The quote service returned an error (\${status}) for "\${ticker}".\`,
+      ru: \`Сервис котировок вернул ошибку (\${status}) для «\${ticker}».\`,
+      es: \`El servicio de cotizaciones devolvió un error (\${status}) para «\${ticker}».\`,
+      fr: \`Le service de cotation a renvoyé une erreur (\${status}) pour « \${ticker} ».\`,
+      it: \`Il servizio quotazioni ha restituito un errore (\${status}) per «\${ticker}».\`,
+      de: \`Der Kursdienst hat einen Fehler (\${status}) für „\${ticker}\\" zurückgegeben.\`,
+      pt: \`O serviço de cotações devolveu um erro (\${status}) para «\${ticker}».\`,
+      pl: \`Usługa notowań zwróciła błąd (\${status}) dla „\${ticker}\\".\`,
+      tr: \`"\${ticker}" için fiyat servisi bir hata (\${status}) döndürdü.\`,
+      nl: \`De koersendienst gaf een fout (\${status}) voor "\${ticker}".\`,
+    }));
+  }
   const data = (await r.json().catch(() => null)) as
     | { chart?: { result?: { meta?: { regularMarketPrice?: number } }[] } }
     | null;
   const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
   if (typeof price !== "number") {
-    throw new Error(\`fetchPrice: no live price was returned for "\${ticker}".\`);
+    throw new Error(JSON.stringify({
+      en: \`No live price was returned for "\${ticker}".\`,
+      ru: \`Для «\${ticker}» не пришла актуальная цена.\`,
+      es: \`No se recibió un precio en vivo para «\${ticker}».\`,
+      fr: \`Aucun cours en direct n'a été renvoyé pour « \${ticker} ».\`,
+      it: \`Nessun prezzo in tempo reale restituito per «\${ticker}».\`,
+      de: \`Für „\${ticker}\\" wurde kein aktueller Kurs zurückgegeben.\`,
+      pt: \`Não foi devolvido um preço em tempo real para «\${ticker}».\`,
+      pl: \`Nie zwrócono aktualnej ceny dla „\${ticker}\\".\`,
+      tr: \`"\${ticker}" için canlı fiyat alınamadı.\`,
+      nl: \`Er is geen actuele koers ontvangen voor "\${ticker}".\`,
+    }));
   }
   return { price, asOf: new Date().toISOString() };
 }
