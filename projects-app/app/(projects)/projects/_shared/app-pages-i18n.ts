@@ -45,6 +45,21 @@ export type AppPagesStrings = {
   aiApplying: string;
   aiApplied: string;       // {n}
   aiThinking: string;
+  // declare WIZARD (step 242.2) — step 1 audience, step 2 roles (others only), step 3 name.
+  audienceQuestion: string;
+  audienceSelf: string;
+  audienceSelfDesc: string;
+  audienceOthers: string;
+  audienceOthersDesc: string;
+  rolesTitle: string;
+  rolesHint: string;
+  nameStepTitle: string;
+  nameHint: string;
+  slugLabel: string;
+  cuidNote: string;
+  slugGenerating: string;
+  back: string;
+  next: string;
 };
 
 const EN_FULL =
@@ -86,6 +101,14 @@ export const APP_PAGES_I18N: Record<string, AppPagesStrings> = {
     saveFailed: "Could not save the task.", withAi: "Add with AI",
     aiTitle: "Describe the page with AI", aiStartFailed: "Could not start the AI.", aiPlaceholder: "Answer, or add anything you want…",
     aiSend: "Send", aiApply: "Add to to-dos", aiApplying: "Adding…", aiApplied: "{n} to-do(s) added.", aiThinking: "Thinking…",
+    audienceQuestion: "Who is this page for?",
+    audienceSelf: "Only for me", audienceSelfDesc: "A private page only you can open.",
+    audienceOthers: "Also for other users", audienceOthersDesc: "External people will use it too — it needs authorization.",
+    rolesTitle: "Which roles can use this page?",
+    rolesHint: "So each user sees only their own page, authorization is added. By default every signed-in user gets the role \"user\". Add other roles if you prefer — pick the roles this page is available to.",
+    nameStepTitle: "Name the page", nameHint: "Say it out loud — a short English name is generated for the folder.",
+    slugLabel: "Folder name (English)", cuidNote: "A unique id is appended on save, so pages never clash.", slugGenerating: "Generating…",
+    back: "Back", next: "Next",
   },
   ru: {
     descTeaser: "Выведите автоматизацию за пределы вашего пространства: объявите ПУБЛИЧНЫЕ страницы приложения — регистрацию, публичный интерфейс, — которыми смогут пользоваться внешние люди, а не только вы. Выберите папку, нажмите «Добавить страницу», опишите её голосом или в квизе — агент её построит.",
@@ -102,6 +125,14 @@ export const APP_PAGES_I18N: Record<string, AppPagesStrings> = {
     saveFailed: "Не удалось сохранить задачу.", withAi: "Добавить с помощью ИИ",
     aiTitle: "Опишите страницу с помощью ИИ", aiStartFailed: "Не удалось запустить ИИ.", aiPlaceholder: "Ответьте или добавьте, что хотите…",
     aiSend: "Отправить", aiApply: "Добавить в задачи", aiApplying: "Добавляю…", aiApplied: "Добавлено задач: {n}.", aiThinking: "Думаю…",
+    audienceQuestion: "Для кого эта страница?",
+    audienceSelf: "Только для меня", audienceSelfDesc: "Приватная страница, которую откроете только вы.",
+    audienceOthers: "В том числе для других пользователей", audienceOthersDesc: "Ею будут пользоваться и внешние люди — нужна авторизация.",
+    rolesTitle: "Каким ролям доступна эта страница?",
+    rolesHint: "Чтобы каждый пользователь видел только свою страницу, добавлена авторизация. По умолчанию каждый авторизованный пользователь получает роль «user». При желании добавьте другие роли — выберите, каким ролям доступна эта страница.",
+    nameStepTitle: "Название страницы", nameHint: "Продиктуйте голосом — для папки сформируется короткое английское имя.",
+    slugLabel: "Имя папки (английское)", cuidNote: "При сохранении к имени добавится уникальный идентификатор, чтобы страницы не дублировались.", slugGenerating: "Формирую…",
+    back: "Назад", next: "Далее",
   },
   es: {
     descTeaser: "Lleva esta automatización más allá de tu espacio: declara páginas PÚBLICAS de la aplicación — registro, interfaz pública — que personas externas puedan usar, no solo tú. Elige una carpeta, pulsa Añadir página, descríbela por voz o con el Quiz — un agente la construye.",
@@ -118,6 +149,14 @@ export const APP_PAGES_I18N: Record<string, AppPagesStrings> = {
     saveFailed: "No se pudo guardar la tarea.", withAi: "Añadir con IA",
     aiTitle: "Describe la página con IA", aiStartFailed: "No se pudo iniciar la IA.", aiPlaceholder: "Responde o añade lo que quieras…",
     aiSend: "Enviar", aiApply: "Añadir a las tareas", aiApplying: "Añadiendo…", aiApplied: "{n} tarea(s) añadida(s).", aiThinking: "Pensando…",
+    audienceQuestion: "¿Para quién es esta página?",
+    audienceSelf: "Solo para mí", audienceSelfDesc: "Una página privada que solo tú puedes abrir.",
+    audienceOthers: "También para otros usuarios", audienceOthersDesc: "También la usarán personas externas — necesita autorización.",
+    rolesTitle: "¿Qué roles pueden usar esta página?",
+    rolesHint: "Para que cada usuario vea solo su propia página, se añade autorización. Por defecto cada usuario autenticado obtiene el rol «user». Añade otros roles si lo prefieres — elige a qué roles está disponible esta página.",
+    nameStepTitle: "Nombra la página", nameHint: "Dilo en voz alta — se genera un nombre corto en inglés para la carpeta.",
+    slugLabel: "Nombre de carpeta (inglés)", cuidNote: "Al guardar se añade un identificador único para que las páginas no choquen.", slugGenerating: "Generando…",
+    back: "Atrás", next: "Siguiente",
   },
   fr: {
     descTeaser: "Emmenez cette automatisation au-delà de votre espace : déclarez des pages PUBLIQUES de l'application — inscription, interface publique — que des personnes externes peuvent utiliser, pas seulement vous. Choisissez un dossier, cliquez sur Ajouter une page, décrivez-la par la voix ou le Quiz — un agent la construit.",
@@ -134,6 +173,14 @@ export const APP_PAGES_I18N: Record<string, AppPagesStrings> = {
     saveFailed: "Impossible d'enregistrer la tâche.", withAi: "Ajouter avec l'IA",
     aiTitle: "Décrire la page avec l'IA", aiStartFailed: "Impossible de démarrer l'IA.", aiPlaceholder: "Répondez ou ajoutez ce que vous voulez…",
     aiSend: "Envoyer", aiApply: "Ajouter aux tâches", aiApplying: "Ajout…", aiApplied: "{n} tâche(s) ajoutée(s).", aiThinking: "Réflexion…",
+    audienceQuestion: "À qui s'adresse cette page ?",
+    audienceSelf: "Uniquement pour moi", audienceSelfDesc: "Une page privée que vous seul pouvez ouvrir.",
+    audienceOthers: "Aussi pour d'autres utilisateurs", audienceOthersDesc: "Des personnes externes l'utiliseront aussi — elle nécessite une autorisation.",
+    rolesTitle: "Quels rôles peuvent utiliser cette page ?",
+    rolesHint: "Pour que chaque utilisateur ne voie que sa propre page, une autorisation est ajoutée. Par défaut, chaque utilisateur connecté reçoit le rôle « user ». Ajoutez d'autres rôles si vous le souhaitez — choisissez les rôles auxquels cette page est accessible.",
+    nameStepTitle: "Nommez la page", nameHint: "Dites-le à voix haute — un nom court en anglais est généré pour le dossier.",
+    slugLabel: "Nom du dossier (anglais)", cuidNote: "Un identifiant unique est ajouté à l'enregistrement, pour que les pages ne se chevauchent jamais.", slugGenerating: "Génération…",
+    back: "Retour", next: "Suivant",
   },
   it: {
     descTeaser: "Porta questa automazione oltre il tuo spazio: dichiara pagine PUBBLICHE dell'applicazione — registrazione, interfaccia pubblica — che persone esterne possono usare, non solo tu. Scegli una cartella, premi Aggiungi pagina, descrivila a voce o col Quiz — un agente la costruisce.",
@@ -150,6 +197,14 @@ export const APP_PAGES_I18N: Record<string, AppPagesStrings> = {
     saveFailed: "Impossibile salvare l'attività.", withAi: "Aggiungi con l'IA",
     aiTitle: "Descrivi la pagina con l'IA", aiStartFailed: "Impossibile avviare l'IA.", aiPlaceholder: "Rispondi o aggiungi ciò che vuoi…",
     aiSend: "Invia", aiApply: "Aggiungi alle attività", aiApplying: "Aggiunta…", aiApplied: "{n} attività aggiunte.", aiThinking: "Sto pensando…",
+    audienceQuestion: "A chi è destinata questa pagina?",
+    audienceSelf: "Solo per me", audienceSelfDesc: "Una pagina privata che puoi aprire solo tu.",
+    audienceOthers: "Anche per altri utenti", audienceOthersDesc: "La useranno anche persone esterne — serve l'autorizzazione.",
+    rolesTitle: "Quali ruoli possono usare questa pagina?",
+    rolesHint: "Perché ogni utente veda solo la propria pagina, viene aggiunta l'autorizzazione. Per impostazione predefinita ogni utente autenticato riceve il ruolo «user». Aggiungi altri ruoli se preferisci — scegli a quali ruoli è disponibile questa pagina.",
+    nameStepTitle: "Dai un nome alla pagina", nameHint: "Dillo a voce — viene generato un nome breve in inglese per la cartella.",
+    slugLabel: "Nome cartella (inglese)", cuidNote: "Al salvataggio viene aggiunto un identificatore univoco, così le pagine non si sovrappongono mai.", slugGenerating: "Genero…",
+    back: "Indietro", next: "Avanti",
   },
   de: {
     descTeaser: "Führe diese Automatisierung über deinen eigenen Raum hinaus: deklariere ÖFFENTLICHE Seiten der Anwendung — eine Registrierungsseite, eine öffentliche Oberfläche —, die externe Personen nutzen können, nicht nur du. Wähle einen Ordner, klicke auf Seite hinzufügen, beschreibe sie per Sprache oder Quiz — ein Coding-Agent baut sie.",
@@ -166,6 +221,14 @@ export const APP_PAGES_I18N: Record<string, AppPagesStrings> = {
     saveFailed: "Die Aufgabe konnte nicht gespeichert werden.", withAi: "Mit KI hinzufügen",
     aiTitle: "Die Seite mit KI beschreiben", aiStartFailed: "Die KI konnte nicht gestartet werden.", aiPlaceholder: "Antworte oder ergänze, was du willst…",
     aiSend: "Senden", aiApply: "Zu den To-dos hinzufügen", aiApplying: "Wird hinzugefügt…", aiApplied: "{n} To-do(s) hinzugefügt.", aiThinking: "Denke nach…",
+    audienceQuestion: "Für wen ist diese Seite?",
+    audienceSelf: "Nur für mich", audienceSelfDesc: "Eine private Seite, die nur du öffnen kannst.",
+    audienceOthers: "Auch für andere Nutzer", audienceOthersDesc: "Auch externe Personen nutzen sie — sie braucht eine Autorisierung.",
+    rolesTitle: "Welche Rollen dürfen diese Seite nutzen?",
+    rolesHint: "Damit jeder Nutzer nur seine eigene Seite sieht, wird eine Autorisierung hinzugefügt. Standardmäßig erhält jeder angemeldete Nutzer die Rolle „user“. Füge bei Bedarf weitere Rollen hinzu — wähle, welchen Rollen diese Seite zur Verfügung steht.",
+    nameStepTitle: "Benenne die Seite", nameHint: "Sprich es laut aus — für den Ordner wird ein kurzer englischer Name erzeugt.",
+    slugLabel: "Ordnername (Englisch)", cuidNote: "Beim Speichern wird eine eindeutige ID angehängt, damit Seiten nie kollidieren.", slugGenerating: "Wird erzeugt…",
+    back: "Zurück", next: "Weiter",
   },
   pt: {
     descTeaser: "Leve esta automação para além do seu espaço: declare páginas PÚBLICAS da aplicação — registo, interface pública — que pessoas externas possam usar, não só você. Escolha uma pasta, clique em Adicionar página, descreva-a por voz ou no Quiz — um agente constrói-a.",
@@ -182,6 +245,14 @@ export const APP_PAGES_I18N: Record<string, AppPagesStrings> = {
     saveFailed: "Não foi possível guardar a tarefa.", withAi: "Adicionar com IA",
     aiTitle: "Descrever a página com IA", aiStartFailed: "Não foi possível iniciar a IA.", aiPlaceholder: "Responda ou acrescente o que quiser…",
     aiSend: "Enviar", aiApply: "Adicionar às tarefas", aiApplying: "A adicionar…", aiApplied: "{n} tarefa(s) adicionada(s).", aiThinking: "A pensar…",
+    audienceQuestion: "A quem se destina esta página?",
+    audienceSelf: "Apenas para mim", audienceSelfDesc: "Uma página privada que só você pode abrir.",
+    audienceOthers: "Também para outros utilizadores", audienceOthersDesc: "Pessoas externas também a vão usar — precisa de autorização.",
+    rolesTitle: "Que perfis podem usar esta página?",
+    rolesHint: "Para que cada utilizador veja apenas a sua própria página, é adicionada autorização. Por predefinição, cada utilizador autenticado recebe o perfil «user». Adicione outros perfis se preferir — escolha a que perfis esta página está disponível.",
+    nameStepTitle: "Dê um nome à página", nameHint: "Diga em voz alta — é gerado um nome curto em inglês para a pasta.",
+    slugLabel: "Nome da pasta (inglês)", cuidNote: "Ao guardar, é acrescentado um identificador único para que as páginas nunca colidam.", slugGenerating: "A gerar…",
+    back: "Voltar", next: "Seguinte",
   },
   pl: {
     descTeaser: "Wyprowadź tę automatyzację poza własną przestrzeń: zadeklaruj PUBLICZNE strony aplikacji — rejestrację, publiczny interfejs — z których mogą korzystać osoby z zewnątrz, nie tylko Ty. Wybierz folder, kliknij Dodaj stronę, opisz ją głosem lub w Quizie — agent ją zbuduje.",
@@ -198,6 +269,14 @@ export const APP_PAGES_I18N: Record<string, AppPagesStrings> = {
     saveFailed: "Nie udało się zapisać zadania.", withAi: "Dodaj z pomocą AI",
     aiTitle: "Opisz stronę z pomocą AI", aiStartFailed: "Nie udało się uruchomić AI.", aiPlaceholder: "Odpowiedz lub dodaj, co chcesz…",
     aiSend: "Wyślij", aiApply: "Dodaj do zadań", aiApplying: "Dodawanie…", aiApplied: "Dodano zadań: {n}.", aiThinking: "Myślę…",
+    audienceQuestion: "Dla kogo jest ta strona?",
+    audienceSelf: "Tylko dla mnie", audienceSelfDesc: "Prywatna strona, którą możesz otworzyć tylko Ty.",
+    audienceOthers: "Także dla innych użytkowników", audienceOthersDesc: "Będą z niej korzystać też osoby z zewnątrz — wymaga autoryzacji.",
+    rolesTitle: "Które role mogą używać tej strony?",
+    rolesHint: "Aby każdy użytkownik widział tylko swoją stronę, dodano autoryzację. Domyślnie każdy zalogowany użytkownik otrzymuje rolę „user”. Dodaj inne role, jeśli chcesz — wybierz, dla których ról ta strona jest dostępna.",
+    nameStepTitle: "Nazwij stronę", nameHint: "Powiedz na głos — dla folderu zostanie wygenerowana krótka angielska nazwa.",
+    slugLabel: "Nazwa folderu (angielska)", cuidNote: "Przy zapisie dodawany jest unikalny identyfikator, aby strony nigdy się nie dublowały.", slugGenerating: "Generowanie…",
+    back: "Wstecz", next: "Dalej",
   },
   tr: {
     descTeaser: "Bu otomasyonu kendi alanının ötesine taşı: uygulamanın yalnızca senin değil, dış kişilerin de kullanabileceği GENEL sayfalarını — kayıt sayfası, genel arayüz — tanımla. Bir klasör seç, Sayfa ekle'ye bas, sesle veya Quiz ile anlat — bir kodlama ajanı onu oluşturur.",
@@ -214,6 +293,14 @@ export const APP_PAGES_I18N: Record<string, AppPagesStrings> = {
     saveFailed: "Görev kaydedilemedi.", withAi: "Yapay zekâ ile ekle",
     aiTitle: "Sayfayı yapay zekâ ile anlat", aiStartFailed: "Yapay zekâ başlatılamadı.", aiPlaceholder: "Yanıtlayın veya istediğinizi ekleyin…",
     aiSend: "Gönder", aiApply: "Görevlere ekle", aiApplying: "Ekleniyor…", aiApplied: "{n} görev eklendi.", aiThinking: "Düşünüyor…",
+    audienceQuestion: "Bu sayfa kimin için?",
+    audienceSelf: "Yalnızca benim için", audienceSelfDesc: "Yalnızca sizin açabileceğiniz özel bir sayfa.",
+    audienceOthers: "Diğer kullanıcılar için de", audienceOthersDesc: "Dış kişiler de kullanacak — yetkilendirme gerekir.",
+    rolesTitle: "Bu sayfayı hangi roller kullanabilir?",
+    rolesHint: "Her kullanıcının yalnızca kendi sayfasını görmesi için yetkilendirme eklenir. Varsayılan olarak oturum açan her kullanıcı «user» rolünü alır. İsterseniz başka roller ekleyin — bu sayfanın hangi rollere açık olduğunu seçin.",
+    nameStepTitle: "Sayfaya ad verin", nameHint: "Sesli söyleyin — klasör için kısa bir İngilizce ad oluşturulur.",
+    slugLabel: "Klasör adı (İngilizce)", cuidNote: "Kaydederken benzersiz bir kimlik eklenir, böylece sayfalar asla çakışmaz.", slugGenerating: "Oluşturuluyor…",
+    back: "Geri", next: "İleri",
   },
   nl: {
     descTeaser: "Til deze automatisering boven je eigen ruimte uit: declareer OPENBARE pagina's van de applicatie — een registratiepagina, een openbare interface — die externe mensen kunnen gebruiken, niet alleen jij. Kies een map, klik op Pagina toevoegen, beschrijf die met spraak of de Quiz — een coding agent bouwt hem.",
@@ -230,6 +317,14 @@ export const APP_PAGES_I18N: Record<string, AppPagesStrings> = {
     saveFailed: "Kon de taak niet opslaan.", withAi: "Toevoegen met AI",
     aiTitle: "Beschrijf de pagina met AI", aiStartFailed: "Kon de AI niet starten.", aiPlaceholder: "Antwoord of voeg toe wat je wilt…",
     aiSend: "Versturen", aiApply: "Aan taken toevoegen", aiApplying: "Toevoegen…", aiApplied: "{n} taak/taken toegevoegd.", aiThinking: "Aan het denken…",
+    audienceQuestion: "Voor wie is deze pagina?",
+    audienceSelf: "Alleen voor mij", audienceSelfDesc: "Een privépagina die alleen jij kunt openen.",
+    audienceOthers: "Ook voor andere gebruikers", audienceOthersDesc: "Externe mensen gebruiken hem ook — er is autorisatie nodig.",
+    rolesTitle: "Welke rollen mogen deze pagina gebruiken?",
+    rolesHint: "Zodat elke gebruiker alleen zijn eigen pagina ziet, wordt autorisatie toegevoegd. Standaard krijgt elke ingelogde gebruiker de rol \"user\". Voeg desgewenst andere rollen toe — kies voor welke rollen deze pagina beschikbaar is.",
+    nameStepTitle: "Geef de pagina een naam", nameHint: "Zeg het hardop — er wordt een korte Engelse naam voor de map gegenereerd.",
+    slugLabel: "Mapnaam (Engels)", cuidNote: "Bij het opslaan wordt een unieke id toegevoegd, zodat pagina's nooit botsen.", slugGenerating: "Genereren…",
+    back: "Terug", next: "Volgende",
   },
 };
 

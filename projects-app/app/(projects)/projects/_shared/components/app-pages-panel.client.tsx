@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import {
-  ChevronDown, ChevronRight, FileText, Folder, FolderPlus, Globe, Loader2, Plus, Sparkles, X,
+  ChevronDown, ChevronRight, FileText, Folder, FolderPlus, Loader2, Plus, Sparkles, User, Users, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ALL_ROLES } from "@/lib/roles";
 import { useUiLang } from "../use-ui-lang";
 import { appPagesStrings } from "../app-pages-i18n";
 import { VoiceInput } from "./voice-input.client";
@@ -135,20 +136,51 @@ export function AppPagesPanel({ automation }: { automation: string }) {
   );
 }
 
-// ─── the declare modal ─────────────────────────────────────────────────────────────────────────────────
+// ─── the declare WIZARD (step 242.2, owner) ──────────────────────────────────────────────────────────────
+// Three guided steps so the logic of a page is clear from the first click:
+//   1. AUDIENCE — is this page only for you, or also for other users? A self page skips everything about
+//      multi-user access (no roles, no per-user isolation), because none of it applies.
+//   2. ROLES (others only) — pick which roles may use the page; `user` is pre-selected (every signed-in user).
+//   3. NAME — the human title (spoken or typed) → a short ENGLISH folder slug (a cuid is appended on save so
+//      pages never clash).
+const ASSIGNABLE_ROLES = ALL_ROLES.filter((r) => r !== "guest"); // guest = the unauthenticated tier, never assigned
+
 function DeclareModal({
-  automation, baseRel, baseLabel, open, onOpenChange, onDone, S,
+  automation, baseRel, open, onOpenChange, onDone, S,
 }: {
   automation: string; baseRel: string; baseLabel: string; open: boolean;
   onOpenChange: (v: boolean) => void; onDone: (rel: string) => void; S: ReturnType<typeof appPagesStrings>;
 }) {
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [audience, setAudience] = useState<"self" | "others">("others");
+  const [roles, setRoles] = useState<string[]>(["user"]);
   const [title, setTitle] = useState("");
-  const [dynamic, setDynamic] = useState(false);
-  const [multilingual, setMultilingual] = useState(true);
+  const [slug, setSlug] = useState("");
+  const [slugBusy, setSlugBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const titleRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => { if (open) { setTitle(""); setDynamic(false); setMultilingual(true); } }, [open]);
+  useEffect(() => {
+    if (open) { setStep(1); setAudience("others"); setRoles(["user"]); setTitle(""); setSlug(""); }
+  }, [open]);
+
+  // Preview the English folder name whenever the owner pauses on the title (any language → short english slug).
+  async function refreshSlug() {
+    const t = title.trim();
+    if (!t) { setSlug(""); return; }
+    setSlugBusy(true);
+    try {
+      const r = await fetch(`/api/projects/app-pages/suggest-slug`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: t }),
+      });
+      const d = (await r.json().catch(() => ({}))) as { slug?: string };
+      if (d.slug) setSlug(d.slug);
+    } finally { setSlugBusy(false); }
+  }
+
+  function toggleRole(role: string) {
+    setRoles((prev) => (prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]));
+  }
 
   async function declare() {
     if (!title.trim()) return;
@@ -156,7 +188,10 @@ function DeclareModal({
     try {
       const r = await fetch(`/api/projects/app-pages/declare`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ automation, base: baseRel, title: title.trim(), dynamic, multilingual }),
+        body: JSON.stringify({
+          automation, base: baseRel, title: title.trim(), slug: slug.trim(),
+          audience, roles: audience === "others" ? roles : [],
+        }),
       });
       const d = (await r.json().catch(() => ({}))) as { ok?: boolean; page?: { rel?: string }; error?: string };
       if (!r.ok || !d.ok) { toast.error(d.error ?? S.declareFailed); return; }
@@ -170,32 +205,81 @@ function DeclareModal({
     <Dialog open={open} onOpenChange={(v) => { if (!busy) onOpenChange(v); }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><FolderPlus className="size-4" /> {S.modalTitle.replace("{folder}", baseLabel)}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2"><FolderPlus className="size-4" /> {S.addPage}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-xs font-medium">{S.titleField}</label>
-            <Input ref={titleRef} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={S.titlePlaceholder} autoComplete="off"
-              onKeyDown={(e) => { if (e.key === "Enter" && title.trim() && !busy) declare(); }} />
-            {/* The shared voice primitive (step 232) — the page title can be spoken too. */}
-            <VoiceInput targetRef={titleRef} value={title} onChange={setTitle} />
+
+        {/* STEP 1 — audience */}
+        {step === 1 && (
+          <div className="space-y-3">
+            <p className="text-sm font-medium">{S.audienceQuestion}</p>
+            <button
+              onClick={() => { setAudience("self"); setStep(3); }}
+              className="flex w-full items-start gap-3 rounded-lg border p-3 text-left hover:border-primary/50 hover:bg-accent/40"
+            >
+              <User className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+              <span><span className="block text-sm font-medium">{S.audienceSelf}</span><span className="block text-xs text-muted-foreground">{S.audienceSelfDesc}</span></span>
+            </button>
+            <button
+              onClick={() => { setAudience("others"); setStep(2); }}
+              className="flex w-full items-start gap-3 rounded-lg border p-3 text-left hover:border-primary/50 hover:bg-accent/40"
+            >
+              <Users className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+              <span><span className="block text-sm font-medium">{S.audienceOthers}</span><span className="block text-xs text-muted-foreground">{S.audienceOthersDesc}</span></span>
+            </button>
           </div>
-          <label className="flex items-center justify-between gap-4 text-sm">
-            <span className="flex items-center gap-2"><Globe className="size-4 text-muted-foreground" /> {S.multilingualField}</span>
-            <Switch checked={multilingual} onCheckedChange={setMultilingual} />
-          </label>
-          <label className="flex items-center justify-between gap-4 text-sm">
-            <span>{S.dynamicField}</span>
-            <Switch checked={dynamic} onCheckedChange={setDynamic} />
-          </label>
-        </div>
-        <div className="flex justify-end gap-2 pt-2">
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={busy}>{S.cancel}</Button>
-          <Button onClick={declare} disabled={!title.trim() || busy} className="gap-2">
-            {busy ? <Loader2 className="size-4 animate-spin" /> : <FolderPlus className="size-4" />}
-            {busy ? S.declaring : S.declare}
-          </Button>
-        </div>
+        )}
+
+        {/* STEP 2 — roles (others only) */}
+        {step === 2 && (
+          <div className="space-y-3">
+            <p className="text-sm font-medium">{S.rolesTitle}</p>
+            <p className="rounded-md border border-amber-500/40 bg-amber-500/5 p-2 text-xs text-amber-700 dark:text-amber-300">{S.rolesHint}</p>
+            <div className="max-h-56 space-y-1 overflow-auto rounded-lg border p-1">
+              {ASSIGNABLE_ROLES.map((role) => (
+                <label key={role} className="flex items-center justify-between gap-4 rounded px-2 py-1.5 text-sm hover:bg-accent/40">
+                  <span className="font-mono text-xs">{role}</span>
+                  <Switch checked={roles.includes(role)} onCheckedChange={() => toggleRole(role)} aria-label={role} />
+                </label>
+              ))}
+            </div>
+            <div className="flex justify-between gap-2 pt-1">
+              <Button variant="ghost" onClick={() => setStep(1)}>{S.back}</Button>
+              <Button onClick={() => setStep(3)} disabled={roles.length === 0}>{S.next}</Button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3 — name (voice → english slug) */}
+        {step === 3 && (
+          <div className="space-y-3">
+            <p className="text-sm font-medium">{S.nameStepTitle}</p>
+            <div className="space-y-1">
+              <label className="text-xs font-medium">{S.titleField}</label>
+              <Input ref={titleRef} value={title} onChange={(e) => setTitle(e.target.value)} onBlur={refreshSlug}
+                placeholder={S.titlePlaceholder} autoComplete="off" />
+              <p className="text-xs text-muted-foreground">{S.nameHint}</p>
+              {/* Voice → title; the slug refreshes when the owner finishes speaking (onChange loses focus). */}
+              <VoiceInput targetRef={titleRef} value={title} onChange={(v) => { setTitle(v); }} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium">{S.slugLabel}</label>
+              <div className="flex items-center gap-2">
+                <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="calorie-counter" autoComplete="off" className="font-mono text-xs" />
+                <Button variant="outline" size="sm" onClick={refreshSlug} disabled={!title.trim() || slugBusy} className="h-8 shrink-0 px-2">
+                  {slugBusy ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">{S.cuidNote}</p>
+            </div>
+            <div className="flex justify-between gap-2 pt-1">
+              <Button variant="ghost" onClick={() => setStep(audience === "self" ? 1 : 2)} disabled={busy}>{S.back}</Button>
+              <Button onClick={declare} disabled={!title.trim() || busy} className="gap-2">
+                {busy ? <Loader2 className="size-4 animate-spin" /> : <FolderPlus className="size-4" />}
+                {busy ? S.declaring : S.declare}
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

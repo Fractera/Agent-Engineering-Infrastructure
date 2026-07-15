@@ -1,42 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stat } from "node:fs/promises";
-import { join } from "node:path";
 import { authorize, resolveProject } from "@/lib/nodes";
-import { dirForRel, writeMeta, relToUrl, type PageMeta, type Task } from "@/lib/app-pages/readme";
+import { createNodeId } from "@/lib/cuid";
+import { ALL_ROLES } from "@/lib/roles";
+import { writeMeta, relToUrl, type PageMeta } from "@/lib/app-pages/readme";
+import { slugify } from "@/lib/app-pages/slug";
 
-// DECLARE A PUBLIC APPLICATION PAGE (step 242) — the accordion's "Add page". Mirrors the service page's
-// `requested` POST, but: OWNER-facing, pages default under `[lang]` (multilingual), visibility PUBLIC (external
-// users), and the README is stamped with the automation that declared it. Declaring only writes a README (no
-// built file) — the tree scan is a live fs read, so no rebuild is needed to see it; a coding agent turns the
-// declaration into a real page later.
+// DECLARE A PUBLIC APPLICATION PAGE (step 242; wizard redesign 242.2) — the accordion's "Add page". Declaring
+// writes a README (no built file) under the slot `app/[lang]/…`; a coding agent turns it into a real page.
+//
+// AUDIENCE (owner's wizard, 242.2):
+//   • "self"   — the page is for the owner only → gated to the owner tier (role `architect`); no per-user
+//                isolation is needed, so no dynamic segment.
+//   • "others" — external users use it too → gated to the chosen roles (default `user`). Per-user isolation
+//                is done by authorization at build time (the coder reads the session user), NOT by a dynamic
+//                route segment — so the declared page is non-dynamic here as well.
+//
+// UNIQUENESS: the folder leaf is `<english-slug>-<cuid8>`. Appending a cuid (owner's rule) guarantees no two
+// declarations ever collide, so there is no name-probing loop.
 export const runtime = "nodejs";
-
-function slugify(s: string): string {
-  return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
-}
-function normBase(b: unknown): string {
-  return typeof b === "string" ? b.replace(/^\/+|\/+$/g, "").trim() : "";
-}
-async function taken(rel: string): Promise<boolean> {
-  try { await stat(join(dirForRel(rel), "README.md")); return true; } catch { /* not declared */ }
-  try { await stat(join(dirForRel(rel), "page.tsx")); return true; } catch { /* not built */ }
-  return false;
-}
-async function uniqueLeaf(base: string, seed: string, dynamic: boolean): Promise<string> {
-  const seg = (s: string) => (dynamic ? `[${s}]` : s);
-  const join_ = (leaf: string) => (base ? `${base}/${leaf}` : leaf);
-  const s0 = seed || "page";
-  if (!(await taken(join_(seg(s0))))) return s0;
-  let n = 2;
-  while (await taken(join_(seg(`${s0}-${n}`)))) n++;
-  return `${s0}-${n}`;
-}
 
 export async function POST(req: NextRequest) {
   if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const body = (await req.json().catch(() => null)) as
-    | { automation?: string; base?: string; title?: string; dynamic?: boolean; multilingual?: boolean; todo?: unknown[] }
+    | { automation?: string; base?: string; title?: string; slug?: string; audience?: string; roles?: unknown[] }
     | null;
+
   const title = String(body?.title ?? "").trim();
   if (!title) return NextResponse.json({ error: "title is required" }, { status: 400 });
 
@@ -48,25 +36,31 @@ export async function POST(req: NextRequest) {
     automation = p.automation;
   }
 
-  const multilingual = body?.multilingual !== false; // default ON (external users worldwide)
-  let base = normBase(body?.base);
-  // Multilingual pages live under [lang]; if the owner picked a folder that is not already localized, nest it.
-  if (multilingual && base.split("/")[0] !== "[lang]") base = base ? `[lang]/${base}` : "[lang]";
+  const forOthers = body?.audience === "others";
+  // Roles: only for a multi-user page, only known roles, defaulting to `user`. A self page is owner-only.
+  const roles = forOthers
+    ? (Array.isArray(body?.roles) ? body!.roles.map(String).filter((r) => (ALL_ROLES as readonly string[]).includes(r)) : [])
+    : ["architect"];
+  const effectiveRoles = roles.length ? roles : forOthers ? ["user"] : ["architect"];
 
-  const dynamic = !!body?.dynamic;
-  const slug = await uniqueLeaf(base, slugify(title), dynamic);
-  const leaf = dynamic ? `[${slug}]` : slug;
-  const rel = base ? `${base}/${leaf}` : leaf;
+  // Everything lives under [lang] (multilingual, step 242.1). Honour a base folder the owner picked in the
+  // tree (already under [lang]); otherwise the [lang] root.
+  let base = String(body?.base ?? "").replace(/^\/+|\/+$/g, "").trim();
+  if (base.split("/")[0] !== "[lang]") base = base ? `[lang]/${base}` : "[lang]";
 
-  const tasks: Task[] = Array.isArray(body?.todo)
-    ? body!.todo.map(String).map((s) => s.trim()).filter(Boolean).map((b) => ({ id: crypto.randomUUID(), body: b }))
-    : [];
+  // The English slug (from the wizard's suggest-slug preview, or slugified here) + a cuid suffix for uniqueness.
+  const englishSlug = slugify(String(body?.slug ?? "")) || slugify(title) || "page";
+  const leaf = `${englishSlug}-${createNodeId().slice(-8)}`;
+  const rel = `${base}/${leaf}`;
 
   const meta: PageMeta = {
-    rel, title, kind: "page", dynamic, description: null,
-    visibility: "public", automation, multilingual, tasks,
+    rel, title, kind: "page", dynamic: false, description: null,
+    visibility: "rolesOnly", roles: effectiveRoles, automation, multilingual: true, tasks: [],
   };
   await writeMeta(meta);
 
-  return NextResponse.json({ ok: true, page: { rel, title, url: relToUrl(rel), multilingual, automation, taskCount: tasks.length } }, { status: 201 });
+  return NextResponse.json(
+    { ok: true, page: { rel, title, url: relToUrl(rel), multilingual: true, roles: effectiveRoles, automation, taskCount: 0 } },
+    { status: 201 },
+  );
 }
