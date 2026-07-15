@@ -258,6 +258,62 @@ new projects are born with these modals and honest empty states) all follow from
 written above. When the starter emits it, this section is mirrored into the project's own `README.md`
 the same way the CARD standard is.
 
+## The activation (launch console) standard (step 241 E3, generalized to Stream in step 243)
+
+> The **third member of the declaration family**: `_data/channels.ts` (§1 above) declares WHAT the
+> automation talks to, `_data/tests.ts` (§2 above) declares WHAT it probes, and `_data/activation.ts`
+> declares **WHAT ONE RUN OF IT TAKES**. Declaration-driven exactly like the two above: a coding agent
+> writes DATA, the shared `ActivationLayer` component renders it AND runs it — there is no bespoke
+> launch UI to build per automation, ever. This is the standard a coding agent reads BEFORE inventing
+> "how does the owner trigger this automation" from scratch — the mechanism already exists and scales.
+
+**Where it lives.** `_shared/activation.ts` (`ActivationSchema`/`ActivationParam` types) + the ONE shared
+renderer `_shared/components/activation-layer.client.tsx`, mounted for every automation by the
+projects-zone layout (`automation-page-chrome.client.tsx`) — never per-project code, never a second
+console.
+
+```ts
+export type ActivationParamType =
+  | "text" | "longtext" | "number" | "date" | "datetime" | "boolean" | "select";
+
+export type ActivationParam = {
+  key: string;    // the name the executor puts into the run's context bag — MUST match a node's paramsIn
+  label: string;
+  type: ActivationParamType;
+  required?: boolean;
+  default?: unknown;
+  help?: string;
+  options?: { value: string; label: string }[]; // `select` only
+};
+
+export type ActivationSchema = { title?: string; description?: string; params: ActivationParam[] };
+```
+
+A fresh automation is born with `EMPTY_ACTIVATION` (`params: []`) — the product presumes **nothing**
+about what a run needs. The panel says so honestly and points at the Quiz's `fork-activation` entity
+(step 239) to design it; `designed = Boolean(schema.params.length)` is the ONE place that is decided
+(`GET /api/projects/activation`).
+
+**Two render branches, ONE component, chosen by the automation's own declared type** (`_data/automation.ts`):
+- **`instanced`** — a run IS a fork with its own settings: the panel creates named forks
+  (`POST /api/projects/instances/create`) and lists/relaunches them (`POST /api/projects/run
+  {automation, instanceId}`).
+- **`stream`** (step 243) — no fork at all: one field set from the SAME schema, one "Ask" button,
+  `POST /api/projects/run {automation, input}` (no `instanceId` — the executor's fork-precondition gate
+  in `canActivate()` runs only for `instanced`), the result shown **INLINE in the same panel** — the
+  run's `nodes[]` as chips (green ok / red fail with the failing node's error), never a toast.
+- **`chained`** — no launch console at all: a group has no run of its own.
+
+**The wiring is exactly the param's `key` — no second wiring layer exists.** The executor drops every
+declared param straight into the run's context bag; a node's function picks its arguments out of that
+bag by matching parameter NAME — `key: "topic"` here must equal `paramsIn: { topic: "string" }` in some
+node's `functions.ts`. Get the name right and the wiring is done; there is nothing else to connect.
+
+**Reference proof — read BOTH before designing a new automation's activation.** `other/example-
+content-pipeline` (instanced — 4 params, real forks, a real external-AI node) and `other/example-
+stream-stock-price` (stream — 1 param, one-shot ask, a real non-AI external HTTP node) are BOTH real,
+non-draft automations exercising this exact standard end to end on the live executor — not a mock.
+
 ## The automation entities (accordions) standard
 
 > Below the "Add or modify automation" button, a project shows a **series of accordions — one per
@@ -315,7 +371,7 @@ are never squashed.
 | `date` | when something happened / is due | localized date; `options.emphasizeIfFuture` | a parseable date/timestamp |
 | `link` | an outward reference | an "Open" link | a URL |
 | `image` | a visual the row owns | a thumbnail | an image URL |
-| `actions` | act on the row | a Details / delete button | the row id (`source: "id"`) |
+| `actions` | act on the row | a Details / delete / **Live** button (`options.action`) | the row id (`source: "id"`); **Live** needs `options.liveUrl` + the row's own values for its `{field}` tokens |
 
 **The rule of enough data.** A column is justified ONLY when a row can supply what its type *needs* (the
 table above). If the data cannot provide it — no color for a badge, no URL for a link, no number for a
@@ -335,13 +391,30 @@ standard, checked against `column-kinds.ts`.
 the config's seed: they live in the DB (`dashboard_rows`, keyed by `automation` + `table_id`, all fields in
 one `values_json` blob — never a column-per-field, since a live server cannot ALTER a table; lesson 225 G4).
 Because the data is in the DB, not in a file, **rows appear with no rebuild**.
-- **Read:** `GET /api/projects/dashboard/rows?automation=<cat/slug>&table=<id>&search=&offset=` →
+- **Read:** `GET /api/projects/dashboard/rows?automation=<cat/slug>&table=<id>&search=&offset=&limit=` →
   `{rows, hasMore, source}`. `source:"live"` = real rows; `source:"empty"` = the table shows the config's
   **seed** rows as a demo (a fresh dashboard is never blank). The first live row **replaces** the seed.
+  Newest-first is the API's own fixed order (`ORDER BY created_at DESC`) — never declared per table.
 - **Write:** `POST /api/projects/dashboard/rows {automation, table, values}` — the automation's own nodes
   fill their table this way as they run (role `agent`); the owner does the same with **"Add row"** in the UI.
   `DELETE /api/projects/dashboard/rows/<id>` removes a live row (seed rows are read-only demo). `values` is a
   flat map of `column.source → value`; the columns decide what to pull out of it.
+
+**Pagination + search debounce (step 243) — built into the UNIVERSAL table, every automation gets it for
+free, nothing to declare per project except an optional page size.** `DashboardTable.pageSize?: number`
+(default 20) sets how many rows load per page; a "Load more" control appears whenever the server reports
+`hasMore` and pages in OLDER rows. The search box does not fire on every keystroke: an EMPTY box reloads
+instantly (not a deliberate search), anything 1–2 characters never fires at all, and 3+ characters fire only
+after 3 seconds of typing idle — one request per pause, not one per keystroke. None of this is per-project
+code; it lives once in `config-records-table.client.tsx`.
+
+**The `"live"` action (step 243) — for data that goes stale the moment it's stored.** A stored row is a
+SNAPSHOT (a price, an external status); `action:"live"` + `liveUrl` (may contain `{field}` tokens, filled
+from that row's own `values` before the request) re-fetches the CURRENT value on click and shows the raw
+response in a modal (`live-lookup-dialog.client.tsx`, the same fetch-then-render pattern as the Tests modal)
+— it NEVER writes anything, purely a read. `liveUrl` is normally a thin, per-automation, read-only route the
+project supplies itself (see `other/example-stream-stock-price/app/api/.../price/route.ts`) — not a new
+shared mechanism per data shape, just a declared endpoint.
 
 ### User cases — numbered, status-badged, mandatory
 
