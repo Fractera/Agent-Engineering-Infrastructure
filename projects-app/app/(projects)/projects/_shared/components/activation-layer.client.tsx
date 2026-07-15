@@ -270,9 +270,9 @@ export function ActivationLayer({ automation }: { automation: string }) {
     <section className="mx-auto w-[85vw] max-w-full space-y-4 px-4 py-6">
       <div className="space-y-1">
         <h2 className="flex items-center gap-2 text-xl font-semibold">
-          <Rocket className="size-5" /> {schema?.title || L.layerTitle}
+          <Rocket className="size-5" /> {resolveLocalized(schema?.title, lang) || L.layerTitle}
         </h2>
-        <p className="text-sm text-muted-foreground">{schema?.description || L.layerSubtitle}</p>
+        <p className="text-sm text-muted-foreground">{resolveLocalized(schema?.description, lang) || L.layerSubtitle}</p>
       </div>
 
       {/* THE FORM — one field per DECLARED parameter. Nothing here is hardcoded per automation. */}
