@@ -109,7 +109,11 @@ function humanize(slug: string): string {
 // above its real content; the per-entity design tool (textarea/voice/AI/save) is collapsed by default
 // behind a "Construction mode" button; a successful ask/run now refreshes the dashboard table live (a
 // window CustomEvent, the SAME idiom already used by use-entities-live.ts — not telegram-notes' poll).
-const VERSION = 10;
+// v11 (owner, 2026-07-15) — THE CRON SLIDER. Every automation is born with the top-of-page cron bar
+// (CronProgressBar, generalized from telegram-notes into _shared): a 2px full-bleed orange bar that shrinks
+// left→right over one cron period, then resets — its speed IS the cron interval. It renders ONLY while cron
+// is ACTIVE (the Cron accordion's enabled switch, off by default) and updates live when the owner flips it.
+const VERSION = 11;
 const SKELETON: Record<string, string> = {
   "page.tsx": `import AutomationEntry from "./_components";
 
@@ -226,6 +230,7 @@ import { INPUT_CHANNELS } from "../_data/channels";
 import { PROBES } from "../_data/tests";
 import { AUTOMATION_TYPE } from "../_data/automation";
 import { AutomationStatusBar } from "../../../_shared/components/automation-status-bar.client";
+import { CronProgressBar } from "../../../_shared/components/cron-progress-bar.client";
 import { DevelopmentWaveBanner } from "../../../_shared/components/development-wave-banner.client";
 import { ActivationLayer } from "../../../_shared/components/activation-layer.client";
 import { ActivationQuiz } from "../../../_shared/components/activation-quiz.client";
@@ -237,7 +242,7 @@ import { USE_CASES } from "../_data/use-cases";
 import { PROJECT_DASHBOARD } from "../_data/dashboard";
 import { DIAGRAM_NODES } from "../_data/diagram";
 
-// Frozen automation skeleton — VERSION 9. Header/footer come from the Projects-zone layout (step 213).
+// Frozen automation skeleton — VERSION 11. Header/footer come from the Projects-zone layout (step 213).
 // A project is BORN with the automation menu (top right): Settings (AI model + input channels) and
 // Tests — BOTH declaration-driven, so a model developing this automation sees and learns the standard
 // from the first minute, BEFORE adapting anything to a real scenario. Grow it by filling
@@ -258,6 +263,11 @@ export default function AutomationEntry() {
     // this exact order is what EVERY future automation is born with; the layout only provides the
     // WaveLockProvider context (one poll for the whole page) — see automation-page-chrome.client.tsx.
     <>
+      {/* The cron slider (owner, 2026-07-15) — a 2px full-bleed orange bar at the very top that shrinks
+          left→right over one cron period, then resets. It renders ONLY while this automation's cron is
+          ACTIVE (the Cron accordion's enabled switch); off = no bar. It updates live when the switch flips.
+          Full-bleed on purpose, so it sits ABOVE the centered <main>. */}
+      <CronProgressBar automation="{{CATEGORY}}/{{PROJECT}}" />
       <main className="mx-auto w-[85vw] max-w-full space-y-4 px-4 pt-8">
         <AutomationStatusBar
           category="{{CATEGORY}}"
