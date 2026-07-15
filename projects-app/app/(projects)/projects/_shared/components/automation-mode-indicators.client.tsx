@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { AutomationType } from "../automation-type";
 import { useUiLang } from "../use-ui-lang";
 import { automationModeIndicatorsStrings } from "../automation-mode-indicators-i18n";
+import { useCronLive } from "../use-cron-live";
 
 // THE TWO MODE PILLS (Cron+Calendar step, owner's design) — next to AutomationStatePill, same visual shape
 // (dot + label in a rounded-full border pill). Two independent ways this automation's work can start:
@@ -37,6 +38,11 @@ export function AutomationModeIndicators({ automation, type }: { automation: str
       .catch(() => { if (alive) setCron({ exists: false, enabled: false }); });
     return () => { alive = false; };
   }, [automation, showHook]);
+
+  // Live update (Cron+Calendar step): a toggle in the Cron accordion (a sibling, not a parent/child of this
+  // component) publishes its new state right after saving — reflect it instantly, no page reload, no
+  // refetch (the new state rides along in the event itself).
+  useCronLive(automation, (enabled) => setCron((c) => ({ exists: c?.exists ?? true, enabled })));
 
   const pill = (dotClass: string, textClass: string, label: string) => (
     <span className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm">

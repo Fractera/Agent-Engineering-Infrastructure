@@ -12,6 +12,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useUiLang } from "../use-ui-lang";
 import { cronStrings } from "../cron-i18n";
+import { notifyCronChanged } from "../use-cron-live";
 
 // THE CRON ACCORDION — generalizes the ONE existing precedent (personal/telegram-notes'
 // `interval-settings.client.tsx`, hardcoded to its own automation) into a component ANY automation with a
@@ -46,6 +47,7 @@ export function CronAccordion({ automation }: { automation: string }) {
 
   async function save(next: Partial<Pick<State, "schedule" | "enabled">>) {
     const prev = state;
+    const merged = { ...state, ...next };
     setState((s) => ({ ...s, ...next }));
     setBusy(true);
     try {
@@ -60,6 +62,9 @@ export function CronAccordion({ automation }: { automation: string }) {
         return;
       }
       toast.success(L.saved);
+      // Live signal (Cron+Calendar step) — the top-bar Cron pill (a sibling component, not a parent/child)
+      // reflects this instantly instead of waiting for a page reload.
+      notifyCronChanged(automation, merged.enabled, merged.schedule);
     } catch {
       setState(prev);
       toast.error(L.saveFailed);
