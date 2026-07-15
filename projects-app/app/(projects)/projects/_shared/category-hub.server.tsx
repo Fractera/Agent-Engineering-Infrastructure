@@ -1,9 +1,17 @@
 import Link from "next/link";
 import { getAppConfig } from "@/config/app-config";
 import { defaultLanguage } from "@/lib/quiz";
+import { resolveProject } from "@/lib/nodes";
+import { automationReadiness } from "@/lib/edges";
+import { loadActivation } from "@/lib/activation";
+import { readCronState } from "@/lib/cron-state";
 import { PROJECT_CATEGORIES, categoryTitle, categoryDescription, categoryNavLabel, type ProjectCategorySlug } from "./categories";
 import { listProjectSlugs } from "./projects-manifest";
 import { getProjectCard } from "./project-card";
+import { readAutomationType } from "./automation-type-reader";
+import { automationTypeSpec } from "./automation-type";
+import { automationStatePillStrings } from "./automation-state-pill-i18n";
+import { automationModeIndicatorsStrings } from "./automation-mode-indicators-i18n";
 import { CreateAutomationCard } from "./components/create-automation-card.client";
 import { PendingAutomations } from "./components/pending-automations.client";
 import { AutomationCardTile } from "./components/automation-card-tile.client";
@@ -27,6 +35,38 @@ export async function CategoryHub({ slug }: { slug: ProjectCategorySlug }) {
   const cfg = getAppConfig();
   const lang = defaultLanguage();
   const L = categoryHubStrings(lang);
+
+  // COMPACT STATUS BADGES (owner's fix): one line at the top of each card — type, active, Hook, Cron — the
+  // SAME four signals the automation's own page shows in its top bar (AutomationStatePill +
+  // AutomationModeIndicators), condensed. Computed server-side here (this component already reads the
+  // filesystem for the card's README) so the card renders with its badges already correct, no client fetch,
+  // no loading flicker. `active` collapses AutomationStatePill's own logic: drafts>0 -> "in development"
+  // (shown as inactive here), else active — same derivation, condensed to a boolean for one line.
+  const SP = automationStatePillStrings(lang);
+  const MI = automationModeIndicatorsStrings(lang);
+  const statuses = await Promise.all(
+    cards.map(async (card) => {
+      const automation = `${slug}/${card.slug}`;
+      const proj = resolveProject(automation);
+      const [readiness, type, schema, cron] = await Promise.all([
+        automationReadiness(automation),
+        proj.ok ? readAutomationType(proj.projectDir, automation) : Promise.resolve("stream" as const),
+        loadActivation(automation),
+        proj.ok ? readCronState(proj.projectDir) : Promise.resolve({ exists: false, enabled: false, schedule: "" }),
+      ]);
+      const spec = automationTypeSpec(type, lang);
+      return {
+        typeLabel: spec.title,
+        typeBadgeClass: spec.badge,
+        active: readiness.drafts === 0,
+        activeLabel: SP.active,
+        hook: Boolean(schema?.params?.length),
+        hookLabel: MI.hookLabel,
+        cron: cron.enabled,
+        cronLabel: MI.cronLabel,
+      };
+    }),
+  );
 
   return (
     <main className="mx-auto flex min-h-[70vh] w-[85vw] max-w-full flex-col px-6 py-10">
@@ -69,7 +109,7 @@ export async function CategoryHub({ slug }: { slug: ProjectCategorySlug }) {
         {
           // Dynamic grid (owner): 2 cards, then 3 (xl), then 4 (2xl) on very wide screens.
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {cards.map((card) => {
+            {cards.map((card, i) => {
               const shown = card.badges.slice(0, MAX_BADGES);
               const more = card.badges.length - shown.length;
               return (
@@ -82,6 +122,7 @@ export async function CategoryHub({ slug }: { slug: ProjectCategorySlug }) {
                   description={card.description}
                   badges={shown}
                   more={more}
+                  status={statuses[i]}
                 />
               );
             })}

@@ -9,14 +9,47 @@ import { isPendingDeletion, clearPendingDeletion } from "./pending-deletions.cli
 
 const POLL_MS = 8000;
 
+/** The compact one-line status row (owner's fix): the SAME four signals the automation's own page shows in
+ *  its top bar (AutomationStatePill's type badge + active state, AutomationModeIndicators' Hook/Cron pills)
+ *  — condensed to fit atop a card. Computed server-side (category-hub.server.tsx already reads the
+ *  filesystem for the card itself) and passed down as plain data, no extra client fetch. */
+export type CardStatus = {
+  typeLabel: string;
+  /** The type badge's own established colour classes (automation-type.ts) — kept as-is, NOT part of the
+   *  active/inactive blue-or-grey scheme below (type is fixed identity, not a toggle). */
+  typeBadgeClass: string;
+  active: boolean;
+  activeLabel: string;
+  hook: boolean;
+  hookLabel: string;
+  cron: boolean;
+  cronLabel: string;
+};
+
+function StatusRow({ status }: { status: CardStatus }) {
+  const dot = (on: boolean, label: string) => (
+    <span className={on ? "font-bold text-blue-600 dark:text-blue-400" : "font-normal text-muted-foreground"}>
+      •&nbsp;{label}
+    </span>
+  );
+  return (
+    <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
+      <span className={`rounded border px-1.5 py-0.5 font-medium ${status.typeBadgeClass}`}>{status.typeLabel}</span>
+      {dot(status.active, status.activeLabel)}
+      {dot(status.hook, status.hookLabel)}
+      {dot(status.cron, status.cronLabel)}
+    </div>
+  );
+}
+
 // ONE hub card, now a client component so it can check (owner's fix, mirrors the pending-CREATION card)
 // whether it was JUST deleted by this same browser and, if so, show a muted spinner instead of a normal
 // link — polling its own URL until the background rebuild actually removes the route (404/4xx/5xx), then
 // dropping out of view entirely. A card that was NOT just deleted here renders exactly as before (same
 // markup/classes as the previous inline `<Link>` in category-hub.server.tsx) — zero visible change for the
-// overwhelming common case.
+// overwhelming common case, PLUS the new status row on top.
 export function AutomationCardTile({
-  category, slug, href, title, description, badges, more,
+  category, slug, href, title, description, badges, more, status,
 }: {
   category: string;
   slug: string;
@@ -25,6 +58,7 @@ export function AutomationCardTile({
   description: string;
   badges: string[];
   more: number;
+  status: CardStatus;
 }) {
   const L = createAutomationStrings(useUiLang());
   const [deleting, setDeleting] = useState(false);
@@ -70,6 +104,7 @@ export function AutomationCardTile({
       href={href}
       className="group flex flex-col rounded-xl border bg-card p-5 shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
     >
+      <StatusRow status={status} />
       <div className="flex items-start justify-between gap-2">
         <h3 className="font-semibold leading-tight">{title}</h3>
         <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
