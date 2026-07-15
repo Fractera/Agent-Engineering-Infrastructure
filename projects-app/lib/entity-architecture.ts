@@ -6,6 +6,9 @@ import { listCases, reviewState } from "@/lib/use-cases";
 import { getLiveEntities } from "@/lib/entities-live";
 import { readHowItWorks } from "@/lib/how-it-works";
 import {
+  NODE_ROLE_DESCRIPTIONS, INPUT_TYPE_DESCRIPTIONS, OUTPUT_TYPE_DESCRIPTIONS,
+} from "@/app/(projects)/projects/_shared/node-contract";
+import {
   type EntityType, ENTITY_TYPES, type EntitySlice, type EntityTaskRecord,
   getTransport, getHistory, listVersionsByRef, makeInstance,
 } from "@/lib/entity-store";
@@ -67,6 +70,75 @@ const AUTOMATION_TYPE_DESCRIPTIONS: Record<string, string> = {
   chained: "A container wiring several automations into one end-to-end flow.",
 };
 
+// ─── NODE ROLE — the bundle side (iteration 2, owner 2026-07-15) ────────────────────────────────────────
+// The node entity is presented GROUPED by role (input / intermediate / output + custom), because a flat list
+// hid the automation's shape from a reading agent. Each group carries a fixed, product-level SYSTEM
+// INSTRUCTION — a general explanation (same for every automation) of what that role's nodes DO in the app, so
+// the coding agent grasps each type's job without inferring it. The short ≤10-word dictionary
+// (available_node_roles_and_descriptions) mirrors the automation-type dictionary; custom roles are allowed.
+const CANONICAL_NODE_ROLES = ["input", "intermediate", "output"] as const;
+
+// CONCEPTUAL role descriptions (owner 2026-07-15): say what the role IS and how work flows through it — NOT
+// which channels exist today, and NOT how to program it. The available concrete channels/surfaces are a
+// SEPARATE taxonomy carried on each group (available_types), so these stay timeless.
+const NODE_ROLE_SYSTEM_INSTRUCTIONS: Record<string, string> = {
+  input:
+    "An INPUT node is the automation's entry point: it exists to RECEIVE incoming work and turn it into the " +
+    "typed payload the rest of the flow consumes. The work arrives either from a person or from ANOTHER " +
+    "automation's output node when automations are chained. An input node accepts that trigger, validates it, " +
+    "and shapes it for the nodes downstream; nothing runs until it has produced a resolved input.",
+  intermediate:
+    "An INTERMEDIATE node is the deterministic MIDDLE of the automation: it takes what the previous node " +
+    "produced and moves it toward the result — this is where the automation's real logic lives (computing, " +
+    "deciding, filtering, enriching, or calling an external tool). It neither receives the original trigger " +
+    "nor delivers the final result; it transforms one node's typed output into the next node's typed input.",
+  output:
+    "An OUTPUT node is the automation's exit point: it exists to DELIVER the finished result to its " +
+    "destination. That destination is a surface the user sees, an external channel, or ANOTHER automation's " +
+    "input node when automations are chained. It is the last step, reached only once the work has succeeded.",
+};
+
+/** One node role group in the bundle: the role, its (conceptual) system instruction, the finer input/output
+ *  type taxonomy that applies to it (input & output only — the channels/surfaces its nodes may use, `custom`
+ *  allowed), and the cuids of the nodes that have this role (resolve each against `instances[]`, which still
+ *  carries every node's full identity + task + history). */
+type NodeRoleGroup = {
+  role: string;
+  system_instruction: string;
+  available_types?: Record<string, string>;
+  node_refs: string[];
+};
+
+/** The node entity's slice — the uniform EntitySlice (so the one-pattern read still holds) PLUS the grouped,
+ *  role-aware view an agent uses to reason about the automation's shape. */
+type NodeArchitectureSlice = EntitySlice<NodeTask, NodeIdentity> & {
+  available_node_roles_and_descriptions: Record<string, string>;
+  custom_roles_allowed: boolean;
+  role_groups: NodeRoleGroup[];
+};
+
+/** Group the node instances by their role. Canonical roles (input → intermediate → output) always appear, in
+ *  order, even when empty (so the agent sees all three slots); any custom role is appended only if used. */
+function buildNodeSlice(instances: EntitySlice<NodeTask, NodeIdentity>["instances"]): NodeArchitectureSlice {
+  const roleOf = (i: (typeof instances)[number]) => (i.identity as NodeIdentity).role;
+  const customRoles = [...new Set(instances.map(roleOf))].filter((r) => !CANONICAL_NODE_ROLES.includes(r as never));
+  const typesForRole = (role: string): Record<string, string> | undefined =>
+    role === "input" ? INPUT_TYPE_DESCRIPTIONS : role === "output" ? OUTPUT_TYPE_DESCRIPTIONS : undefined;
+  const role_groups: NodeRoleGroup[] = [...CANONICAL_NODE_ROLES, ...customRoles].map((role) => ({
+    role,
+    system_instruction: NODE_ROLE_SYSTEM_INSTRUCTIONS[role] ?? "",
+    available_types: typesForRole(role),
+    node_refs: instances.filter((i) => roleOf(i) === role).map((i) => i.ref),
+  }));
+  return {
+    entityType: "node",
+    available_node_roles_and_descriptions: NODE_ROLE_DESCRIPTIONS,
+    custom_roles_allowed: true,
+    role_groups,
+    instances,
+  };
+}
+
 async function automationTypeOf(automation: string): Promise<string> {
   const proj = resolveProject(automation);
   if (!proj.ok) return "stream";
@@ -110,7 +182,7 @@ async function extractPassport(automation: string): Promise<unknown> {
 // do" never needs entity-specific parsing, only "read these string fields." Identity stays entity-specific
 // (expected — descriptive facts about the instance, not the task itself).
 
-type NodeIdentity = { cuid: string; slug: string; name: string; status: string; draft: boolean };
+type NodeIdentity = { cuid: string; slug: string; name: string; status: string; draft: boolean; role: string; ioType?: string };
 type NodeTask = { instruction: string; spec: string };
 
 type EdgeIdentity = { cuid: string; name: string; from: string; to: string; status: string; draft: boolean };
@@ -128,21 +200,25 @@ type StubTask = { brief: string };
 
 // ─── PER-ENTITY EXTRACTORS ───────────────────────────────────────────────────────────────────────────────
 
-async function extractNode(automation: string, withHistory: boolean): Promise<EntitySlice<NodeTask, NodeIdentity>> {
+async function extractNode(automation: string, withHistory: boolean): Promise<NodeArchitectureSlice> {
   const proj = resolveProject(automation);
-  if (!proj.ok) return { entityType: "node", instances: [] };
+  if (!proj.ok) return buildNodeSlice([]);
   // A CHAINED GROUP (step 234/236 — the `group`-kind subflow container on the global canvas) has no real
   // workflow of its own: its frozen skeleton still carries draft input/logic/output nodes, but the page
   // itself hides them (GroupDetailSection replaces DiagramSection). Serializing those skeleton drafts would
   // MISLEAD the reading agent — return an empty instance list; the passport's isChainedGroup:true + the
   // `chain` slice (brief + member snapshots) are the real architecture here.
   if ((await automationTypeOf(automation)) === "chained") {
-    return { entityType: "node", instances: [] };
+    return buildNodeSlice([]);
   }
   const nodes = await listNodes(automation);
   const instances = await Promise.all(nodes.map(async (n) => {
     const files = await readNodeFiles(proj.projectDir, n.slug);
-    const identity: NodeIdentity = { cuid: n.cuid, slug: n.slug, name: n.name, status: n.status, draft: Boolean(n.draft) };
+    // The role is authored in the node's own meta.ts (NodeContract.role) — the DB index carries no role
+    // column, so read it from the file source (readNodeFiles already loads meta.ts). Absent → intermediate.
+    const role = (files.meta.match(/\brole\s*:\s*["']([a-zA-Z0-9_-]+)["']/) ?? [])[1] ?? "intermediate";
+    const ioType = (files.meta.match(/\bioType\s*:\s*["']([a-zA-Z0-9_-]+)["']/) ?? [])[1];
+    const identity: NodeIdentity = { cuid: n.cuid, slug: n.slug, name: n.name, status: n.status, draft: Boolean(n.draft), role, ioType };
     // A draft node IS its pending task (an unbuilt spec.md/instruction.ts waiting for a coder).
     //
     // A MATERIALIZED node normally has nothing pending — the brief that built it lives in history. But since
@@ -167,7 +243,7 @@ async function extractNode(automation: string, withHistory: boolean): Promise<En
     }
     return makeInstance(n.cuid, identity, currentTask, history);
   }));
-  return { entityType: "node", instances };
+  return buildNodeSlice(instances);
 }
 
 async function extractEdge(automation: string, withHistory: boolean): Promise<EntitySlice<EdgeTask, EdgeIdentity>> {

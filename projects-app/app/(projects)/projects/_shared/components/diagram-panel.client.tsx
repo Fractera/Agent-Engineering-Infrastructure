@@ -7,6 +7,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import type { NodeContract, NodeFunction } from "../node-contract";
+import { RoleBadge, IoTypeBadge } from "./role-badge.client";
 
 // FROZEN STANDARD (step 223.C.1) — the Diagram panel: it renders a node's contract exactly as the
 // spec describes (README §1). Each node shows its name + description directly, then PRE-CLOSED
@@ -68,6 +69,14 @@ export function NodeCard({ node }: { node: NodeContract }) {
   return (
     <div className="space-y-2 rounded-lg border p-3">
       <div>
+        {/* The node badges (2026-07-15) — the SAME badges as on the diagram node, one to one: the coloured
+            ROLE badge and, next to it, the neutral I/O-TYPE badge (control-panel, dashboard, …). */}
+        {(node.role || node.ioType) && (
+          <div className="mb-1 flex flex-wrap items-center gap-1">
+            <RoleBadge role={node.role} />
+            <IoTypeBadge type={node.ioType} />
+          </div>
+        )}
         <p className="text-sm font-semibold">{node.name}</p>
         <p className="text-xs text-muted-foreground">{node.description}</p>
         <p className="mt-1 font-mono text-[11px] text-muted-foreground">

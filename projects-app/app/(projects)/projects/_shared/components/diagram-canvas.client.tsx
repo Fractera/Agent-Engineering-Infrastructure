@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import type { NodeContract } from "../node-contract";
 import { DiagramPanel, NodeCard } from "./diagram-panel.client";
 import { BuilderNodePanel } from "./builder-node-panel.client";
+import { RoleBadge, IoTypeBadge } from "./role-badge.client";
 
 // FROZEN STANDARD (step 223.C + 224) — the diagram CANVAS. Two modes:
 //
@@ -52,7 +53,7 @@ type Sources = Record<string, { spec: string; instruction: string }>;
 type RunStatus = "idle" | "running" | "ok" | "fail";
 type CanvasNodeData = {
   label: string; sub: string; runStatus: RunStatus; draft: boolean; builder: boolean;
-  onAddChild: (cuid: string) => void; cuid: string; role?: string;
+  onAddChild: (cuid: string) => void; cuid: string; role?: string; ioType?: string;
 };
 type CanvasNode = Node<CanvasNodeData, "diagram">;
 
@@ -61,15 +62,6 @@ const RUN_FRAME: Record<RunStatus, string> = {
   ok: "border-emerald-500",
   fail: "border-rose-500",
   idle: "border-border",
-};
-
-// The node-ROLE badge (2026-07-15) — each canonical role (input | intermediate | output) gets a fixed colour;
-// a CUSTOM role falls back to a neutral slate pill. Purely a visual marker of the node's place in the flow;
-// the role itself is authored in the node's meta.ts (NodeContract.role) and read from the build-time contract.
-const ROLE_BADGE: Record<string, string> = {
-  input: "border-sky-500/40 text-sky-700 dark:text-sky-300",
-  intermediate: "border-amber-500/40 text-amber-700 dark:text-amber-300",
-  output: "border-emerald-500/40 text-emerald-700 dark:text-emerald-300",
 };
 
 function DiagramNode({ data, selected }: NodeProps<CanvasNode>) {
@@ -85,15 +77,11 @@ function DiagramNode({ data, selected }: NodeProps<CanvasNode>) {
   return (
     <div className={`relative w-48 rounded-md border bg-background px-3 py-2 text-sm shadow-sm ${frame}`}>
       <Handle type="target" position={Position.Left} />
-      {data.role && (
-        <span
-          className={`mb-1 inline-block rounded-full border px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide ${
-            ROLE_BADGE[data.role] ?? "border-border text-muted-foreground"
-          }`}
-          title={`Node role: ${data.role}`}
-        >
-          {data.role}
-        </span>
+      {(data.role || data.ioType) && (
+        <div className="mb-1 flex flex-wrap items-center gap-1">
+          <RoleBadge role={data.role} />
+          <IoTypeBadge type={data.ioType} />
+        </div>
       )}
       <p className="truncate font-medium">{data.label}</p>
       <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
@@ -262,6 +250,7 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
   // live DB index yet (iteration 1), so we read it from the build-time contract and key it by id/slug. A fresh
   // frozen automation's three nodes always carry it; a node created later in Builder simply has no badge.
   const roleById = useMemo(() => new Map(nodes.map((n) => [n.id, n.role])), [nodes]);
+  const ioTypeById = useMemo(() => new Map(nodes.map((n) => [n.id, n.ioType])), [nodes]);
 
   useEffect(() => {
     setFlowNodes((current) => {
@@ -277,12 +266,12 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
           id: v.id, type: "diagram", position,
           data: {
             label: v.name, sub: v.sub, runStatus: runStatus[v.id] ?? "idle", draft: v.draft,
-            builder, onAddChild: addChild, cuid: v.cuid, role: roleById.get(v.id),
+            builder, onAddChild: addChild, cuid: v.cuid, role: roleById.get(v.id), ioType: ioTypeById.get(v.id),
           },
         };
       });
     });
-  }, [view, runStatus, builder, layout, addChild, setFlowNodes, roleById]);
+  }, [view, runStatus, builder, layout, addChild, setFlowNodes, roleById, ioTypeById]);
 
   const saveLayout = useCallback(async () => {
     if (!automation) return;

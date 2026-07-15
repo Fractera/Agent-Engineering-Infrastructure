@@ -29,6 +29,33 @@ export const NODE_ROLE_DESCRIPTIONS: Record<"input" | "intermediate" | "output",
   output: "Where the automation delivers its result — the exit point.",
 };
 
+// ─── INPUT / OUTPUT TYPES (2026-07-15 owner) ────────────────────────────────────────────────────────────────
+// A second, finer taxonomy UNDER the input and output roles: WHICH channel/surface a node's work arrives from
+// (input) or is delivered to (output). Deterministic dictionaries (type -> short description); OPEN sets — the
+// last entry `custom` says any other channel/surface is allowed. `intermediate` has no such taxonomy (its
+// sub-typing is a separate, later topic). Emitted in the architecture bundle under each role's group so a
+// coding agent knows which concrete kinds of entry and delivery are available.
+export const INPUT_TYPE_DESCRIPTIONS: Record<string, string> = {
+  "control-panel": "Request the user sends through the Control panel.",
+  webhook: "An external system calls in over HTTP.",
+  email: "An incoming email message triggers it.",
+  cron: "A scheduled tick fires it on a timer.",
+  "site-pages": "A form or control on the automation's own page.",
+  telegram: "A message the user sends its Telegram bot.",
+  custom: "Any other input source you define.",
+};
+
+export const OUTPUT_TYPE_DESCRIPTIONS: Record<string, string> = {
+  "site-pages": "A page on the automation's own website.",
+  dashboard: "A row or table on the dashboard.",
+  calendar: "An event on the automation's calendar.",
+  analytics: "A chart in the automation's analytics.",
+  map: "A marker on the automation's map.",
+  email: "An email the automation sends out.",
+  telegram: "A message sent through the Telegram bot.",
+  custom: "Any other delivery destination you define.",
+};
+
 /** One function of a node — deterministic application work with typed inputs and a typed return. */
 export type NodeFunction = {
   name: string;
@@ -64,6 +91,11 @@ export type NodeContract = {
    *  Drives the diagram badge and (iteration 2) the grouping of nodes in the architecture bundle. Absent →
    *  treated as `intermediate`. Lives in the node's own meta.ts, like every other descriptive fact. */
   role?: NodeRole;
+  /** The concrete INPUT/OUTPUT type of this node (2026-07-15) — the second, finer classifier UNDER the role:
+   *  for an `input` node a key of INPUT_TYPE_DESCRIPTIONS (e.g. "control-panel"), for an `output` node a key
+   *  of OUTPUT_TYPE_DESCRIPTIONS (e.g. "dashboard"). Open string (custom allowed). Meaningless for
+   *  `intermediate`. Shown as a SECOND badge next to the role badge. Absent → no io-type badge. */
+  ioType?: string;
   /** The node's own typed inputs / outputs. */
   in: Record<string, TypeSpec>;
   out: Record<string, TypeSpec>;
