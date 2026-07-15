@@ -19,6 +19,15 @@ export { ENTITY_TYPES };
 //   - the two master orchestrators (fetch-complete-automation-architecture-with-history,
 //     fetch-current-automation-architecture-snapshot)
 //
+// ⚑ WHAT THIS OBJECT IS (owner-confirmed, 2026-07-15 — recorded so it is never re-investigated): the
+// ArchitectureBundle is a PURELY INFORMATIONAL representation handed to a CODING AGENT — terminal read-only
+// output. `buildArchitecture` is called ONLY by the two master route handlers, and `extractEntitySlice` ONLY
+// by those handlers + the per-entity route factory (entity-architecture-routes.ts); every one of them just
+// serializes the result to JSON and returns it. NOTHING in the codebase consumes this object for control
+// flow, state, or any programmatic logic — it exists solely so an agent reading it understands the
+// automation and what is `pending`. So do NOT trace "who applies/uses this object": there are no such
+// consumers by design; edits here change only what an agent READS, never runtime behaviour.
+//
 // This is the TOP of the entity-architecture dependency graph: it imports the domain modules (nodes/edges/
 // use-cases) AND the generic storage layer (lib/entity-store.ts) to do the per-entity EXTRACTION. Nothing
 // should import FROM this file except the two master routes and the 27 per-entity sub-API routes — the
@@ -48,14 +57,14 @@ export { ENTITY_TYPES };
 // point of the request: when this snapshot is handed to a coding agent, that agent reads the same human
 // explanation the owner already validated, instead of re-deriving what the automation is from raw nodes.
 
-// A fixed, ~10-word plain-language description of each automation TYPE — a deterministic dictionary in code
-// (no model call). Carried in the passport next to `type` so a reading coding-agent instantly grasps what
-// KIND of automation this is and how the three kinds differ, without having to know the product's step
-// history. If a new type is ever added, add its line here.
+// A fixed, ≤10-word plain-language description of EACH automation TYPE — a deterministic dictionary in code
+// (no model call). Emitted in the passport as `available_types_and_descriptions`, right next to `type`, so a
+// reading coding-agent instantly grasps what KIND this automation is AND how all three kinds differ, natively
+// in the object — no need to look the meanings up elsewhere. If a new type is ever added, add its line here.
 const AUTOMATION_TYPE_DESCRIPTIONS: Record<string, string> = {
-  stream: "Always-on reactive automation; each request handled immediately, no separate finite runs.",
-  instanced: "Each request spawns an independent finite run, start to end, in parallel.",
-  chained: "A container that wires several automations into one end-to-end flow.",
+  stream: "Always-on; every request handled immediately, no separate finite runs.",
+  instanced: "Each request spawns an independent finite run, in parallel.",
+  chained: "A container wiring several automations into one end-to-end flow.",
 };
 
 async function automationTypeOf(automation: string): Promise<string> {
@@ -86,7 +95,7 @@ async function extractPassport(automation: string): Promise<unknown> {
   const live = await getLiveEntities(automation);
   return {
     automation, title, description, type,
-    typesDescription: AUTOMATION_TYPE_DESCRIPTIONS,
+    available_types_and_descriptions: AUTOMATION_TYPE_DESCRIPTIONS,
     isChainedGroup: type === "chained",
     ownerInstruction: instruction.trim(),
     howItWorks: howItWorks?.text ?? "",
@@ -330,7 +339,7 @@ export async function extractEntitySlice(entityType: EntityType, automation: str
 // the product is the activation DESIGN surface, not a development-instruction entity: a live instanced
 // automation could accumulate tens of thousands of activation records, and carrying them — or even its bare
 // stub — in this object adds no value to a coding agent whose job is to build the automation. What the type
-// IS is already conveyed by the passport (`type` + `typesDescription`). Its own accordion, activation quiz,
+// IS is already conveyed by the passport (`type` + `available_types_and_descriptions`). Its own accordion, activation quiz,
 // and dedicated fork-activation-architecture/* sub-APIs are untouched — this only trims the master bundle.
 const BUNDLE_ENTITY_TYPES: EntityType[] = ENTITY_TYPES.filter((t) => t !== "fork-activation");
 
