@@ -100,13 +100,14 @@ const NODE_ROLE_SYSTEM_INSTRUCTIONS: Record<string, string> = {
 
 /** One node role group in the bundle: the role, its (conceptual) system instruction, the finer input/output
  *  type taxonomy that applies to it (input & output only — the channels/surfaces its nodes may use, `custom`
- *  allowed), and the cuids of the nodes that have this role (resolve each against `instances[]`, which still
- *  carries every node's full identity + task + history). */
+ *  allowed), and the nodes that have this role. Each node entry ties the node to its CONCRETE `ioType` right
+ *  here (e.g. this input node → "control-panel"), so the role↔type link is explicit without cross-referencing
+ *  `instances[]`; `ref` is the node's cuid — look it up in `instances[]` for its full task/history/status. */
 type NodeRoleGroup = {
   role: string;
   system_instruction: string;
   available_types?: Record<string, string>;
-  node_refs: string[];
+  nodes: { ref: string; name: string; ioType?: string }[];
 };
 
 /** The node entity's slice — the uniform EntitySlice (so the one-pattern read still holds) PLUS the grouped,
@@ -128,7 +129,9 @@ function buildNodeSlice(instances: EntitySlice<NodeTask, NodeIdentity>["instance
     role,
     system_instruction: NODE_ROLE_SYSTEM_INSTRUCTIONS[role] ?? "",
     available_types: typesForRole(role),
-    node_refs: instances.filter((i) => roleOf(i) === role).map((i) => i.ref),
+    nodes: instances
+      .filter((i) => roleOf(i) === role)
+      .map((i) => ({ ref: i.ref, name: (i.identity as NodeIdentity).name, ioType: (i.identity as NodeIdentity).ioType })),
   }));
   return {
     entityType: "node",
