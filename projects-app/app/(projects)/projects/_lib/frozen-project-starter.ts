@@ -181,14 +181,18 @@ export const AUTOMATION_TYPE: AutomationType = "{{AUTOMATION_TYPE}}";
 `,
   "_data/config.ts": `// This automation's CONFIG (frozen standard v4, step 222; toggles reversed in 237 — see
 // app/(projects)/README.md, "The automation entities standard"). \`entities\` is the SEED for the
-// hamburger menu's visibility switches (Diagram/Calendar/Cron/Map/Dashboard/Processes/Analytics/User
-// cases) — the owner's live overrides win at runtime, no rebuild involved (see use-entities-live.ts).
-// \`diagram\`/\`calendar\`/\`cron\` default on (Calendar+Cron ship a real, if static/inert, preview the
-// moment an automation is created — the Cron+Calendar step); everything else defaults off until the
-// automation actually needs it. The User cases review gate (step 231) stays mandatory before any
-// Development Step regardless of this switch — this only toggles its accordion.
+// hamburger menu's visibility switches (Control panel/Diagram/Calendar/Cron/Map/Dashboard/Processes/
+// Analytics/User cases/Application pages) — the owner's live overrides win at runtime, no rebuild involved
+// (see use-entities-live.ts). \`controlpanel\`/\`diagram\`/\`calendar\`/\`cron\` default on (the launch
+// console, and Calendar+Cron which ship a real, if static/inert, preview the moment an automation is
+// created — the Cron+Calendar step); everything else defaults off until the automation actually needs it.
+// \`controlpanel\` (owner, 2026-07-15) toggles the launch console (ActivationLayer), which renders full-width
+// above the diagram like \`diagram\` — not one of the in-series accordions. The User cases review gate
+// (step 231) stays mandatory before any Development Step regardless of this switch — this only toggles its
+// accordion.
 export const PROJECT_CONFIG = {
   entities: {
+    controlpanel: true,
     diagram: true,
     dashboard: false,
     calendar: true,
@@ -197,6 +201,7 @@ export const PROJECT_CONFIG = {
     processes: false,
     analytics: false,
     usecases: false,
+    apppages: false,
   },
 } as const;
 `,

@@ -122,6 +122,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     aiModel: "AI model",
     entitiesHeading: "Sections shown on this page",
     entities: {
+      controlpanel: { label: "Control panel", tooltip: "The launch console of this automation: send a test request, or — for an instanced automation — set the start settings of a fork run. On by default; hide it once the automation is finished." },
       diagram: { label: "Diagram", tooltip: "The node graph that implements this automation. On by default — useful while building; a finished automation can hide it from a non-technical owner." },
       calendar: { label: "Calendar", tooltip: "Time-based events: reminders and dated items." },
       cron: { label: "Cron", tooltip: "Periodic schedule: wakes this automation on a timer, independent of requests." },
@@ -214,6 +215,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     aiModel: "Модель ИИ",
     entitiesHeading: "Разделы на этой странице",
     entities: {
+      controlpanel: { label: "Панель управления", tooltip: "Пульт запуска этой автоматизации: отправьте тестовый запрос или — для instanced-автоматизации — задайте стартовые настройки форка. Включена по умолчанию; скройте её, когда автоматизация готова." },
       diagram: { label: "Диаграмма", tooltip: "Граф узлов, реализующий эту автоматизацию. Включена по умолчанию — полезна при настройке; в готовой автоматизации её можно скрыть от обычного пользователя." },
       calendar: { label: "Календарь", tooltip: "События по времени: напоминания и записи с датой." },
       cron: { label: "Cron", tooltip: "Периодический тик: будит автоматизацию по таймеру, независимо от запросов." },
@@ -306,6 +308,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     aiModel: "Modelo de IA",
     entitiesHeading: "Secciones mostradas en esta página",
     entities: {
+      controlpanel: { label: "Panel de control", tooltip: "La consola de lanzamiento de esta automatización: envía una solicitud de prueba o —para una automatización instanciada— define los ajustes de inicio de una ejecución fork. Activado por defecto; ocúltalo cuando la automatización esté terminada." },
       diagram: { label: "Diagrama", tooltip: "El grafo de nodos que implementa esta automatización. Activado por defecto — útil durante la construcción; una automatización terminada puede ocultarlo para un usuario no técnico." },
       calendar: { label: "Calendario", tooltip: "Eventos basados en tiempo: recordatorios y elementos con fecha." },
       cron: { label: "Cron", tooltip: "Programación periódica: activa esta automatización por temporizador, independientemente de las solicitudes." },
@@ -398,6 +401,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     aiModel: "Modèle d'IA",
     entitiesHeading: "Sections affichées sur cette page",
     entities: {
+      controlpanel: { label: "Panneau de contrôle", tooltip: "La console de lancement de cette automatisation : envoyez une requête de test ou — pour une automatisation instanciée — définissez les paramètres de départ d'une exécution fork. Activé par défaut ; masquez-le une fois l'automatisation terminée." },
       diagram: { label: "Diagramme", tooltip: "Le graphe de nœuds qui met en œuvre cette automatisation. Activé par défaut — utile pendant la construction ; une automatisation terminée peut le masquer pour un utilisateur non technique." },
       calendar: { label: "Calendrier", tooltip: "Événements temporels : rappels et éléments datés." },
       cron: { label: "Cron", tooltip: "Planification périodique : réveille cette automatisation sur une minuterie, indépendamment des demandes." },
@@ -490,6 +494,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     aiModel: "Modello IA",
     entitiesHeading: "Sezioni mostrate in questa pagina",
     entities: {
+      controlpanel: { label: "Pannello di controllo", tooltip: "La console di avvio di questa automazione: invia una richiesta di prova oppure — per un'automazione instanced — imposta i parametri iniziali di un'esecuzione fork. Attivo di default; nascondilo quando l'automazione è completata." },
       diagram: { label: "Diagramma", tooltip: "Il grafo di nodi che implementa questa automazione. Attivo di default — utile durante la costruzione; un'automazione completata può nasconderlo a un utente non tecnico." },
       calendar: { label: "Calendario", tooltip: "Eventi basati sul tempo: promemoria ed elementi con data." },
       cron: { label: "Cron", tooltip: "Pianificazione periodica: attiva questa automazione a tempo, indipendentemente dalle richieste." },
@@ -582,6 +587,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     aiModel: "KI-Modell",
     entitiesHeading: "Auf dieser Seite angezeigte Bereiche",
     entities: {
+      controlpanel: { label: "Bedienfeld", tooltip: "Die Startkonsole dieser Automatisierung: sende eine Testanfrage oder — bei einer instanced-Automatisierung — lege die Starteinstellungen eines Fork-Laufs fest. Standardmäßig aktiv; blende es aus, sobald die Automatisierung fertig ist." },
       diagram: { label: "Diagramm", tooltip: "Der Knotengraph, der diese Automatisierung umsetzt. Standardmäßig aktiv — nützlich beim Erstellen; eine fertige Automatisierung kann es vor einem nicht-technischen Nutzer verbergen." },
       calendar: { label: "Kalender", tooltip: "Zeitbasierte Ereignisse: Erinnerungen und datierte Einträge." },
       cron: { label: "Cron", tooltip: "Periodischer Zeitplan: weckt diese Automatisierung per Timer, unabhängig von Anfragen." },
@@ -674,6 +680,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     aiModel: "Modelo de IA",
     entitiesHeading: "Seções mostradas nesta página",
     entities: {
+      controlpanel: { label: "Painel de controlo", tooltip: "A consola de lançamento desta automação: envie um pedido de teste ou — para uma automação instanciada — defina as configurações de início de uma execução fork. Ativado por padrão; oculte-o quando a automação estiver concluída." },
       diagram: { label: "Diagrama", tooltip: "O grafo de nós que implementa esta automação. Ativado por padrão — útil durante a construção; uma automação concluída pode ocultá-lo para um usuário não técnico." },
       calendar: { label: "Calendário", tooltip: "Eventos baseados em tempo: lembretes e itens com data." },
       cron: { label: "Cron", tooltip: "Agendamento periódico: ativa esta automação por temporizador, independentemente dos pedidos." },
@@ -766,6 +773,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     aiModel: "Model AI",
     entitiesHeading: "Sekcje pokazywane na tej stronie",
     entities: {
+      controlpanel: { label: "Panel sterowania", tooltip: "Konsola uruchamiania tej automatyzacji: wyślij żądanie testowe lub — dla automatyzacji instanced — ustaw ustawienia startowe uruchomienia fork. Domyślnie włączony; ukryj go, gdy automatyzacja jest gotowa." },
       diagram: { label: "Diagram", tooltip: "Graf węzłów realizujący tę automatyzację. Domyślnie włączony — przydatny podczas budowy; ukończona automatyzacja może go ukryć przed nietechnicznym użytkownikiem." },
       calendar: { label: "Kalendarz", tooltip: "Zdarzenia czasowe: przypomnienia i elementy z datą." },
       cron: { label: "Cron", tooltip: "Okresowy harmonogram: budzi tę automatyzację na czasomierzu, niezależnie od żądań." },
@@ -858,6 +866,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     aiModel: "AI modeli",
     entitiesHeading: "Bu sayfada gösterilen bölümler",
     entities: {
+      controlpanel: { label: "Kontrol paneli", tooltip: "Bu otomasyonun başlatma konsolu: bir test isteği gönderin veya — instanced bir otomasyon için — bir fork çalışmasının başlangıç ayarlarını belirleyin. Varsayılan olarak açık; otomasyon tamamlandığında gizleyin." },
       diagram: { label: "Diyagram", tooltip: "Bu otomasyonu uygulayan düğüm grafiği. Varsayılan olarak açık — geliştirme sırasında yararlı; tamamlanmış bir otomasyon bunu teknik olmayan bir kullanıcıdan gizleyebilir." },
       calendar: { label: "Takvim", tooltip: "Zamana dayalı olaylar: hatırlatıcılar ve tarihli öğeler." },
       cron: { label: "Cron", tooltip: "Periyodik zamanlama: bu otomasyonu isteklerden bağımsız olarak bir zamanlayıcıyla uyandırır." },
@@ -950,6 +959,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     aiModel: "AI-model",
     entitiesHeading: "Secties op deze pagina",
     entities: {
+      controlpanel: { label: "Bedieningspaneel", tooltip: "De startconsole van deze automatisering: stuur een testverzoek of — voor een instanced automatisering — stel de startinstellingen van een fork-run in. Standaard aan; verberg het zodra de automatisering klaar is." },
       diagram: { label: "Diagram", tooltip: "De knopengraaf die deze automatisering uitvoert. Standaard aan — nuttig tijdens het bouwen; een voltooide automatisering kan dit verbergen voor een niet-technische gebruiker." },
       calendar: { label: "Kalender", tooltip: "Tijdgebonden gebeurtenissen: herinneringen en items met een datum." },
       cron: { label: "Cron", tooltip: "Periodieke planning: wekt deze automatisering op een timer, onafhankelijk van verzoeken." },

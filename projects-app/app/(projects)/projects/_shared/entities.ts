@@ -11,7 +11,7 @@
 //
 // This registry IS the "table" of entities in code — reused by every project. See
 // app/(projects)/README.md, "The automation entities (accordions) standard", for the prose table.
-export type EntityKey = "diagram" | "calendar" | "cron" | "map" | "dashboard" | "processes" | "analytics" | "usecases" | "apppages";
+export type EntityKey = "controlpanel" | "diagram" | "calendar" | "cron" | "map" | "dashboard" | "processes" | "analytics" | "usecases" | "apppages";
 
 export type EntityMeta = {
   /** Accordion title / switch label (English fallback — the menu and accordions show the 10-language
@@ -23,6 +23,7 @@ export type EntityMeta = {
 
 // Render order of the accordion series + the entities switch list in the menu.
 export const ENTITY_ORDER: EntityKey[] = [
+  "controlpanel",
   "diagram",
   "calendar",
   "cron",
@@ -35,6 +36,11 @@ export const ENTITY_ORDER: EntityKey[] = [
 ];
 
 export const ENTITY_META: Record<EntityKey, EntityMeta> = {
+  controlpanel: {
+    label: "Control panel",
+    tooltip:
+      "The launch console of this automation: send a test request, or — for an instanced automation — set the start settings of a fork run. On by default; hide it once the automation is finished.",
+  },
   diagram: {
     label: "Diagram",
     tooltip:

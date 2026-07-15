@@ -1,11 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { AlertTriangle, CheckCircle2, Loader2, Play, Rocket, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useUiLang } from "../use-ui-lang";
 import { activationStrings } from "../activation-i18n";
 import { VoiceInput } from "./voice-input.client";
@@ -14,6 +26,7 @@ import { FrozenTemplateNotice } from "./automation-accordions.client";
 import type { ActivationParam, ActivationSchema } from "../activation";
 import { resolveLocalized, resolveErrorText } from "../localized-text";
 import { notifyRunCompleted } from "../use-run-refresh";
+import { useEntitiesLive } from "../use-entities-live";
 import { automationMenuStrings } from "../automation-menu-i18n";
 
 // THE ACTIVATION LAYER — the launch control panel (step 241 E3, owner's design; generalized to `stream` in
@@ -31,10 +44,13 @@ import { automationMenuStrings } from "../automation-menu-i18n";
 // from that declaration for BOTH types, so a new automation gets a working control panel by writing DATA,
 // never UI. The product presumes nothing about the parameters (no built-in schedules, no rate limits).
 //
-// IT IS A LAYER, NOT AN ACCORDION: it is mounted as a permanent full-width section beside the diagram, it is
-// NOT part of the entity-visibility switches (EntityKey), and it therefore CANNOT be hidden — it exists for
-// `instanced` AND `stream` automations (chained has no launch console: a group has no run of its own). This
-// is the owner's rule: the launch console of an automation is not an optional view.
+// IT IS NOW AN ACCORDION, AND HIDEABLE (owner reversal, 2026-07-15 — the prior "permanent, never an
+// accordion" rule is retired). The launch console is the `controlpanel` ENTITY: it renders full-width above
+// the diagram (its topmost position kept — exactly like `diagram`, it is NOT one of the in-series accordions
+// in AutomationAccordions), but its content is wrapped in a single "Control panel" accordion card and it
+// carries a visibility switch in the hamburger menu (EntityKey `controlpanel`, on by default, stored in the
+// live entities JSON — no rebuild). It still exists only for `instanced` AND `stream` automations (chained
+// has no launch console: a group has no run of its own).
 //
 // NOT DESIGNED YET is an honest state, never a dead end: the panel says so and opens the fork-activation
 // design surface (step 239) where the owner describes what a run should take — same for both types.
@@ -51,6 +67,13 @@ export function ActivationLayer({ automation }: { automation: string }) {
   // owner's point (step 243.4): the launch console is exactly as much frozen-starter demo content as any
   // accordion, so it gets the same banner. Reused text/component, never a second copy.
   const M = automationMenuStrings(lang);
+  // The `controlpanel` visibility toggle (owner, 2026-07-15) — the launch console is now a hideable entity
+  // like every other section. Default ON (seed `{ controlpanel: true }`); the owner flips it off from the
+  // hamburger menu and this panel disappears live (the shared entities event), no rebuild. We do NOT carry
+  // backward-compat for automations born before this key — this session's rule: the frozen template is the
+  // source of truth, existing automations are disposable.
+  const { entities } = useEntitiesLive(automation, { controlpanel: true });
+  const controlPanelOn = entities.controlpanel !== false;
   const [schema, setSchema] = useState<ActivationSchema | null>(null);
   const [designed, setDesigned] = useState(false);
   const [isInstanced, setIsInstanced] = useState(false);
@@ -178,14 +201,19 @@ export function ActivationLayer({ automation }: { automation: string }) {
     }
   }, [automation, values, L]);
 
+  // Hidden by the owner from the menu → render nothing (live, no rebuild).
+  if (!controlPanelOn) return null;
   if (loading || (!isInstanced && !isStream)) return null;
+
+  const cardLabel = M.entities.controlpanel.label;
+  const cardTooltip = M.entities.controlpanel.tooltip;
 
   // NOT DESIGNED — say so, and open the surface where it gets designed (step 239): the SAME Quiz, on the
   // fork-activation entity. Its result is a requirement the coding agent turns into _data/activation.ts,
   // and then this panel builds itself. Never a dead end. Same empty-state for both instanced and stream.
   if (!designed) {
     return (
-      <section className="mx-auto w-[85vw] max-w-full px-4 py-6">
+      <ControlPanelCard label={cardLabel} tooltip={cardTooltip}>
         <div className="flex flex-col gap-3 rounded-lg border border-dashed p-4">
           <p className="flex items-center gap-2 text-sm font-medium text-foreground">
             <Rocket className="size-4" /> {L.emptyTitle}
@@ -206,14 +234,14 @@ export function ActivationLayer({ automation }: { automation: string }) {
           onClose={() => setDesignOpen(false)}
           onApplied={() => toast.success(L.emptyCta, { description: L.emptyBody, duration: 12000 })}
         />
-      </section>
+      </ControlPanelCard>
     );
   }
 
   // STREAM — one-shot ask: same declared fields, no fork creation/list, result shown INLINE right here.
   if (isStream) {
     return (
-      <section className="mx-auto w-[85vw] max-w-full space-y-4 px-4 py-6">
+      <ControlPanelCard label={cardLabel} tooltip={cardTooltip}>
         <div className="space-y-1">
           <h2 className="flex items-center gap-2 text-xl font-semibold">
             <Rocket className="size-5" /> {resolveLocalized(schema?.title, lang) || L.layerTitle}
@@ -270,12 +298,12 @@ export function ActivationLayer({ automation }: { automation: string }) {
             </div>
           ) : null}
         </div>
-      </section>
+      </ControlPanelCard>
     );
   }
 
   return (
-    <section className="mx-auto w-[85vw] max-w-full space-y-4 px-4 py-6">
+    <ControlPanelCard label={cardLabel} tooltip={cardTooltip}>
       <div className="space-y-1">
         <h2 className="flex items-center gap-2 text-xl font-semibold">
           <Rocket className="size-5" /> {resolveLocalized(schema?.title, lang) || L.layerTitle}
@@ -355,6 +383,32 @@ export function ActivationLayer({ automation }: { automation: string }) {
           );
         })}
       </div>
+    </ControlPanelCard>
+  );
+}
+
+// THE CONTROL-PANEL CARD (owner, 2026-07-15) — the launch console is now presented as a single "Control
+// panel" accordion, full-width above the diagram (its topmost position kept). Same section width + accordion
+// chrome the other entity accordions use (AutomationAccordions), so it reads as one of the page's sections.
+// Open by default (defaultValue) — the console is the primary interaction, not something to hunt for.
+function ControlPanelCard({ label, tooltip, children }: { label: string; tooltip: string; children: ReactNode }) {
+  return (
+    <section className="mx-auto w-[85vw] max-w-full px-4 py-6">
+      <TooltipProvider delayDuration={200}>
+        <Accordion type="single" collapsible defaultValue="controlpanel" className="rounded-lg border px-4">
+          <AccordionItem value="controlpanel" className="border-none">
+            <AccordionTrigger className="text-left">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="font-medium">{label}</span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">{tooltip}</TooltipContent>
+              </Tooltip>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-4">{children}</AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </TooltipProvider>
     </section>
   );
 }

@@ -104,6 +104,11 @@ export function AutomationAccordions({
   // is an accordion ONLY for an instanced automation; every other entity follows its own on/off flag.
   const shown = order.filter((k) => {
     if (k === "diagram") return false;
+    // `controlpanel` (the launch console) is rendered SEPARATELY, full-width above the diagram, by
+    // ActivationLayer — exactly like `diagram`. It carries a visibility switch in the menu, but it is not
+    // one of the in-series accordions here, so drop it whatever its rank (its own accordion lives in
+    // ActivationLayer, gated on the same live toggle).
+    if (k === "controlpanel") return false;
     if (k === "fork-activation") return isInstanced && Boolean(automation);
     return Boolean(live[k]);
   });
