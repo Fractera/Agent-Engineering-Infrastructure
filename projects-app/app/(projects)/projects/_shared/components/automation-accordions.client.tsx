@@ -18,6 +18,8 @@ import type { UseCase } from "../use-cases";
 import type { DashboardConfig } from "../table-config";
 import { UseCasesPanel } from "./use-cases-panel.client";
 import { DashboardAccordion } from "./dashboard-accordion.client";
+import { CalendarAccordion } from "./calendar-accordion.client";
+import { CronAccordion } from "./cron-accordion.client";
 import { ProcessesTimeline } from "./processes-timeline.client";
 import { RequirementBriefPanel } from "./requirement-brief-panel.client";
 import { AppPagesPanel } from "./app-pages-panel.client";
@@ -164,8 +166,23 @@ export function AutomationAccordions({
             // Application pages (step 242): declare PUBLIC pages of the application layer for external users of
             // this automation — a folder tree of the slot app/, "Add page", per-page to-dos (voice + Quiz).
             <AppPagesPanel automation={automation ?? ""} />
+          ) : k === "calendar" ? (
+            <>
+              {/* The Calendar (Cron+Calendar step): a static month-grid + daily-timeline preview reading the
+                  SAME generic rows store as Dashboard (table id "calendar") — no interactive creation yet. */}
+              <CalendarAccordion automation={automation ?? ""} />
+              <RequirementBriefPanel entityType="calendar" entityLabel={title} automation={automation} />
+            </>
+          ) : k === "cron" ? (
+            <>
+              {/* The Cron entity (Cron+Calendar step): real periodicity control (co-located cron.json,
+                  read/written through the generic /api/projects/settings/cron route) — independent of the
+                  Hook (request-triggered) path; NOT yet wired to actuate anything (integration is later). */}
+              <CronAccordion automation={automation ?? ""} />
+              <RequirementBriefPanel entityType="cron" entityLabel={title} automation={automation} />
+            </>
           ) : (
-            // Calendar/Map/Analytics (step 238 P5-P9) — the requirement brief: "the next thing I need here".
+            // Map/Analytics (step 238 P5-P9) — the requirement brief: "the next thing I need here".
             <RequirementBriefPanel entityType={k as EntityType} entityLabel={title} automation={automation} />
           )}
         </AccordionContent>

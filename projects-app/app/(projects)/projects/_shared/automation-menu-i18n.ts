@@ -124,6 +124,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     entities: {
       diagram: { label: "Diagram", tooltip: "The node graph that implements this automation. On by default — useful while building; a finished automation can hide it from a non-technical owner." },
       calendar: { label: "Calendar", tooltip: "Time-based events: reminders and dated items." },
+      cron: { label: "Cron", tooltip: "Periodic schedule: wakes this automation on a timer, independent of requests." },
       map: { label: "Map", tooltip: "Tasks/events tied to a geographic location." },
       dashboard: { label: "Dashboard", tooltip: "Data-visualization tables and views for this automation." },
       processes: { label: "Processes", tooltip: "A timeline (Gantt) of this automation's runs." },
@@ -215,6 +216,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     entities: {
       diagram: { label: "Диаграмма", tooltip: "Граф узлов, реализующий эту автоматизацию. Включена по умолчанию — полезна при настройке; в готовой автоматизации её можно скрыть от обычного пользователя." },
       calendar: { label: "Календарь", tooltip: "События по времени: напоминания и записи с датой." },
+      cron: { label: "Cron", tooltip: "Периодический тик: будит автоматизацию по таймеру, независимо от запросов." },
       map: { label: "Карта", tooltip: "Задачи/события, привязанные к географическому месту." },
       dashboard: { label: "Дашборд", tooltip: "Таблицы и представления данных этой автоматизации." },
       processes: { label: "Процессы", tooltip: "Таймлайн (Gantt) прогонов этой автоматизации." },
@@ -306,6 +308,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     entities: {
       diagram: { label: "Diagrama", tooltip: "El grafo de nodos que implementa esta automatización. Activado por defecto — útil durante la construcción; una automatización terminada puede ocultarlo para un usuario no técnico." },
       calendar: { label: "Calendario", tooltip: "Eventos basados en tiempo: recordatorios y elementos con fecha." },
+      cron: { label: "Cron", tooltip: "Programación periódica: activa esta automatización por temporizador, independientemente de las solicitudes." },
       map: { label: "Mapa", tooltip: "Tareas/eventos vinculados a una ubicación geográfica." },
       dashboard: { label: "Panel", tooltip: "Tablas y vistas de datos de esta automatización." },
       processes: { label: "Procesos", tooltip: "Una línea de tiempo (Gantt) de las ejecuciones de esta automatización." },
@@ -397,6 +400,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     entities: {
       diagram: { label: "Diagramme", tooltip: "Le graphe de nœuds qui met en œuvre cette automatisation. Activé par défaut — utile pendant la construction ; une automatisation terminée peut le masquer pour un utilisateur non technique." },
       calendar: { label: "Calendrier", tooltip: "Événements temporels : rappels et éléments datés." },
+      cron: { label: "Cron", tooltip: "Planification périodique : réveille cette automatisation sur une minuterie, indépendamment des demandes." },
       map: { label: "Carte", tooltip: "Tâches/événements liés à un lieu géographique." },
       dashboard: { label: "Tableau de bord", tooltip: "Tables et vues de données de cette automatisation." },
       processes: { label: "Processus", tooltip: "Une chronologie (Gantt) des exécutions de cette automatisation." },
@@ -488,6 +492,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     entities: {
       diagram: { label: "Diagramma", tooltip: "Il grafo di nodi che implementa questa automazione. Attivo di default — utile durante la costruzione; un'automazione completata può nasconderlo a un utente non tecnico." },
       calendar: { label: "Calendario", tooltip: "Eventi basati sul tempo: promemoria ed elementi con data." },
+      cron: { label: "Cron", tooltip: "Pianificazione periodica: attiva questa automazione a tempo, indipendentemente dalle richieste." },
       map: { label: "Mappa", tooltip: "Attività/eventi legati a una posizione geografica." },
       dashboard: { label: "Dashboard", tooltip: "Tabelle e viste dei dati di questa automazione." },
       processes: { label: "Processi", tooltip: "Una timeline (Gantt) delle esecuzioni di questa automazione." },
@@ -579,6 +584,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     entities: {
       diagram: { label: "Diagramm", tooltip: "Der Knotengraph, der diese Automatisierung umsetzt. Standardmäßig aktiv — nützlich beim Erstellen; eine fertige Automatisierung kann es vor einem nicht-technischen Nutzer verbergen." },
       calendar: { label: "Kalender", tooltip: "Zeitbasierte Ereignisse: Erinnerungen und datierte Einträge." },
+      cron: { label: "Cron", tooltip: "Periodischer Zeitplan: weckt diese Automatisierung per Timer, unabhängig von Anfragen." },
       map: { label: "Karte", tooltip: "Aufgaben/Ereignisse mit geografischem Bezug." },
       dashboard: { label: "Dashboard", tooltip: "Datentabellen und -ansichten dieser Automatisierung." },
       processes: { label: "Prozesse", tooltip: "Ein Zeitstrahl (Gantt) der Läufe dieser Automatisierung." },
@@ -670,6 +676,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     entities: {
       diagram: { label: "Diagrama", tooltip: "O grafo de nós que implementa esta automação. Ativado por padrão — útil durante a construção; uma automação concluída pode ocultá-lo para um usuário não técnico." },
       calendar: { label: "Calendário", tooltip: "Eventos baseados em tempo: lembretes e itens com data." },
+      cron: { label: "Cron", tooltip: "Agendamento periódico: ativa esta automação por temporizador, independentemente dos pedidos." },
       map: { label: "Mapa", tooltip: "Tarefas/eventos vinculados a uma localização geográfica." },
       dashboard: { label: "Painel", tooltip: "Tabelas e visualizações de dados desta automação." },
       processes: { label: "Processos", tooltip: "Uma linha do tempo (Gantt) das execuções desta automação." },
@@ -761,6 +768,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     entities: {
       diagram: { label: "Diagram", tooltip: "Graf węzłów realizujący tę automatyzację. Domyślnie włączony — przydatny podczas budowy; ukończona automatyzacja może go ukryć przed nietechnicznym użytkownikiem." },
       calendar: { label: "Kalendarz", tooltip: "Zdarzenia czasowe: przypomnienia i elementy z datą." },
+      cron: { label: "Cron", tooltip: "Okresowy harmonogram: budzi tę automatyzację na czasomierzu, niezależnie od żądań." },
       map: { label: "Mapa", tooltip: "Zadania/zdarzenia powiązane z lokalizacją geograficzną." },
       dashboard: { label: "Panel", tooltip: "Tabele i widoki danych tej automatyzacji." },
       processes: { label: "Procesy", tooltip: "Oś czasu (Gantt) przebiegów tej automatyzacji." },
@@ -852,6 +860,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     entities: {
       diagram: { label: "Diyagram", tooltip: "Bu otomasyonu uygulayan düğüm grafiği. Varsayılan olarak açık — geliştirme sırasında yararlı; tamamlanmış bir otomasyon bunu teknik olmayan bir kullanıcıdan gizleyebilir." },
       calendar: { label: "Takvim", tooltip: "Zamana dayalı olaylar: hatırlatıcılar ve tarihli öğeler." },
+      cron: { label: "Cron", tooltip: "Periyodik zamanlama: bu otomasyonu isteklerden bağımsız olarak bir zamanlayıcıyla uyandırır." },
       map: { label: "Harita", tooltip: "Coğrafi konuma bağlı görevler/olaylar." },
       dashboard: { label: "Pano", tooltip: "Bu otomasyonun veri tabloları ve görünümleri." },
       processes: { label: "Süreçler", tooltip: "Bu otomasyonun çalıştırmalarının zaman çizelgesi (Gantt)." },
@@ -943,6 +952,7 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     entities: {
       diagram: { label: "Diagram", tooltip: "De knopengraaf die deze automatisering uitvoert. Standaard aan — nuttig tijdens het bouwen; een voltooide automatisering kan dit verbergen voor een niet-technische gebruiker." },
       calendar: { label: "Kalender", tooltip: "Tijdgebonden gebeurtenissen: herinneringen en items met een datum." },
+      cron: { label: "Cron", tooltip: "Periodieke planning: wekt deze automatisering op een timer, onafhankelijk van verzoeken." },
       map: { label: "Kaart", tooltip: "Taken/gebeurtenissen gekoppeld aan een geografische locatie." },
       dashboard: { label: "Dashboard", tooltip: "Datatabellen en weergaven van deze automatisering." },
       processes: { label: "Processen", tooltip: "Een tijdlijn (Gantt) van de runs van deze automatisering." },

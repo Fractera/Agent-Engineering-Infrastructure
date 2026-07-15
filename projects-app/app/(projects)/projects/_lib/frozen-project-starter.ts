@@ -26,6 +26,7 @@ import { join, dirname } from "node:path";
 import { PROJECT_CATEGORIES } from "../_shared/categories";
 import { createNodeId } from "@/lib/cuid";
 import { regenerateExecutables } from "@/lib/executables";
+import { addRow } from "@/lib/dashboard-rows";
 
 const SLUG_RE = /^[a-z][a-z0-9-]*$/;
 
@@ -180,16 +181,18 @@ export const AUTOMATION_TYPE: AutomationType = "{{AUTOMATION_TYPE}}";
 `,
   "_data/config.ts": `// This automation's CONFIG (frozen standard v4, step 222; toggles reversed in 237 — see
 // app/(projects)/README.md, "The automation entities standard"). \`entities\` is the SEED for the
-// hamburger menu's visibility switches (Diagram/Calendar/Map/Dashboard/Processes/Analytics/User cases) —
-// the owner's live overrides win at runtime, no rebuild involved (see use-entities-live.ts). Nothing is
-// structurally mandatory any more: \`diagram\` defaults on (useful while building), everything else
-// defaults off until the automation actually needs it. The User cases review gate (step 231) stays
-// mandatory before any Development Step regardless of this switch — this only toggles its accordion.
+// hamburger menu's visibility switches (Diagram/Calendar/Cron/Map/Dashboard/Processes/Analytics/User
+// cases) — the owner's live overrides win at runtime, no rebuild involved (see use-entities-live.ts).
+// \`diagram\`/\`calendar\`/\`cron\` default on (Calendar+Cron ship a real, if static/inert, preview the
+// moment an automation is created — the Cron+Calendar step); everything else defaults off until the
+// automation actually needs it. The User cases review gate (step 231) stays mandatory before any
+// Development Step regardless of this switch — this only toggles its accordion.
 export const PROJECT_CONFIG = {
   entities: {
     diagram: true,
     dashboard: false,
-    calendar: false,
+    calendar: true,
+    cron: true,
     map: false,
     processes: false,
     analytics: false,
@@ -319,9 +322,11 @@ input channels) and the Tests modal are driven ENTIRELY by those two files — s
 app/(projects)/README.md, "The settings & tests declaration standard".
 
 Below the "Add or modify automation" button the page shows the ENTITY ACCORDIONS (step 222): a series
-driven by \`_data/config.ts\` (\`entities\`) — \`diagram\` and \`dashboard\` always on, plus optional
-Calendar / Map / Processes / Analytics — each an EMPTY container with a hover tooltip until its
-interface is built; and the mandatory USER CASES (\`_data/use-cases.ts\`), numbered (01, 02, …) with a status badge,
+driven by \`_data/config.ts\` (\`entities\`) — \`diagram\`/\`dashboard\`/\`calendar\`/\`cron\` on by default
+(Calendar and Cron are real, not empty containers, even freshly created — a static demo preview and a
+real periodicity control respectively), plus optional Map / Processes / Analytics — each an EMPTY
+container with a hover tooltip until its interface is built; and the mandatory USER CASES
+(\`_data/use-cases.ts\`), numbered (01, 02, …) with a status badge,
 seeded with one case ("Architect planned the automation" / new). Break the request into cases and move
 each from "new" to "in use" over short iterations. Full rules: app/(projects)/README.md,
 "The automation entities standard".
@@ -1038,6 +1043,52 @@ export async function GET(req: NextRequest) {
 }
 `;
 
+// THE CRON DECLARATION (Cron+Calendar step) — a co-located cron.json, exactly the shape fractera-cron
+// already scans for on every 15s tick (services/cron/server.js — zero new scheduler infrastructure). ONE
+// job, DISABLED by default (the owner turns it on from the new Cron accordion when ready) at a 5-minute
+// default interval, pointed at this automation's OWN thin tick route below. `enabled` and `schedule` are
+// read/written generically by /api/projects/settings/cron — that route does not need to know this job's
+// `id`, but a predictable one keeps cron.json legible on disk.
+const STREAM_CRON_JSON = `{
+  "jobs": [
+    {
+      "id": "{{PROJECT}}-cron-tick",
+      "title": "{{PROJECT}}: periodic tick (Cron entity — not yet wired to actuate anything)",
+      "schedule": "*/5 * * * *",
+      "action": {
+        "type": "http",
+        "url": "http://127.0.0.1:3003/api/projects/{{CATEGORY}}/{{PROJECT}}/cron-tick",
+        "method": "POST",
+        "body": {}
+      },
+      "enabled": false,
+      "timeoutMs": 120000
+    }
+  ]
+}
+`;
+
+// The Cron entity's own thin, per-automation tick route (Cron+Calendar step) — written OUTSIDE
+// projectsRoot (app/api/, not app/(projects)/projects/), same reasoning as STREAM_PRICE_ROUTE: it is a
+// served API route, not project content, so deleting the automation must delete this too. STUB on
+// purpose: the owner scoped Cron and Calendar as two INDEPENDENT entities this step — no actuation logic
+// exists yet to call from here (a later, separate integration step fills this in). What matters now is
+// that the whole chain is real and reachable end to end: cron.json -> fractera-cron -> this route ->
+// authorized 200, nothing left to wire except the body of this handler.
+const STREAM_CRON_TICK_ROUTE = `import { NextRequest, NextResponse } from "next/server";
+import { authorize } from "@/lib/nodes";
+
+// THE CRON TICK ROUTE for this automation (Cron entity). Called by fractera-cron per the schedule
+// declared in this automation's own cron.json — the runner sends an agent identity header the shared
+// authorize() gate already recognizes (same as every other cron-triggered project route).
+export const runtime = "nodejs";
+
+export async function POST(req: NextRequest) {
+  if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  return NextResponse.json({ ok: true, note: "no actuation wired yet — pending a later integration step" });
+}
+`;
+
 // Resolve the projects root: default = <projects-app>/app/(projects)/projects, derived from cwd
 // (the projects-app root both in a terminal run and inside an API route on the server).
 function defaultProjectsRoot(): string {
@@ -1122,6 +1173,10 @@ export async function createFrozenProject(
     ...(isStream ? STREAM_NODE_FILES : DRAFT_NODE_FILES),
     "_data/activation.ts": isStream ? STREAM_ACTIVATION_FILE : DRAFT_ACTIVATION_FILE,
     "_data/dashboard.ts": isStream ? STREAM_DASHBOARD_FILE : DRAFT_DASHBOARD_FILE,
+    // Cron declaration (Cron+Calendar step) — STREAM only for now, same scoping as the other real-node
+    // starting patterns above; instanced/chained get their own cron.json once they get their own real
+    // starting pattern (mirrors the STREAM_NODE_FILES precedent).
+    ...(isStream ? { "cron.json": STREAM_CRON_JSON } : {}),
   };
 
   const files: string[] = [];
@@ -1144,7 +1199,36 @@ export async function createFrozenProject(
     await mkdir(apiRoot, { recursive: true });
     await writeFile(join(apiRoot, "route.ts"), sub(STREAM_PRICE_ROUTE), "utf8");
     files.push(`app/api/projects/${category}/${project}/price/route.ts`);
+
+    // The Cron entity's own tick route (Cron+Calendar step) — same "outside projectsRoot" reasoning as
+    // the price route above.
+    const cronApiRoot = join(process.cwd(), "app", "api", "projects", category, project, "cron-tick");
+    await mkdir(cronApiRoot, { recursive: true });
+    await writeFile(join(cronApiRoot, "route.ts"), sub(STREAM_CRON_TICK_ROUTE), "utf8");
+    files.push(`app/api/projects/${category}/${project}/cron-tick/route.ts`);
+
     await regenerateExecutables().catch(() => { /* the project is already written; a failed regen is not fatal */ });
+
+    // CALENDAR DEMO SEED (Cron+Calendar step) — a couple of clearly-labeled example rows so the new
+    // Calendar accordion is never an empty shell the moment the automation exists (same "ships a working
+    // example immediately" principle already proven for History). No interactive creation flow exists yet
+    // (the owner scoped this step to a STATIC preview) — this is the only source of rows for now.
+    // Best-effort: a failed seed must never fail automation creation itself.
+    try {
+      const automationKey = `${category}/${project}`;
+      const now = new Date();
+      const in2Days = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
+      const tomorrow9am = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      tomorrow9am.setHours(9, 0, 0, 0);
+      const d = (dt: Date) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+      const t = (dt: Date) => `${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}`;
+      await addRow(automationKey, "calendar", {
+        date: d(in2Days), time: t(now), title: "Demo: look at Apple stock", type: "event",
+      });
+      await addRow(automationKey, "calendar", {
+        date: d(tomorrow9am), time: "09:00", title: "Demo: prepare to check Tesla stock", type: "reminder",
+      });
+    } catch { /* the automation is already created; a failed demo seed is not fatal */ }
   }
 
   return {

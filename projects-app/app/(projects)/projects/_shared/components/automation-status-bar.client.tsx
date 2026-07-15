@@ -7,6 +7,7 @@ import type { AutomationType } from "../automation-type";
 import type { EntitiesConfig } from "../entities";
 import { AutomationMenu } from "./automation-menu.client";
 import { AutomationStatePill } from "./automation-state-pill.client";
+import { AutomationModeIndicators } from "./automation-mode-indicators.client";
 import { useUiLang } from "../use-ui-lang";
 import { categoryHubStrings } from "../category-hub-i18n";
 
@@ -50,6 +51,7 @@ export function AutomationStatusBar({
         {/* Type badge + state pill (step 224 §1.5 / L6) — left of the burger. "In development" (indigo)
             while any node is still a draft: the automation is auto-stopped until every node is built. */}
         {automation && <AutomationStatePill automation={automation} type={type ?? "stream"} />}
+        {automation && <AutomationModeIndicators automation={automation} type={type} />}
         <AutomationMenu
           modelEnvKey={modelEnvKey}
           defaultModel={defaultModel}

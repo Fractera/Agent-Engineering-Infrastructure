@@ -11,7 +11,7 @@
 //
 // This registry IS the "table" of entities in code — reused by every project. See
 // app/(projects)/README.md, "The automation entities (accordions) standard", for the prose table.
-export type EntityKey = "diagram" | "calendar" | "map" | "dashboard" | "processes" | "analytics" | "usecases" | "apppages";
+export type EntityKey = "diagram" | "calendar" | "cron" | "map" | "dashboard" | "processes" | "analytics" | "usecases" | "apppages";
 
 export type EntityMeta = {
   /** Accordion title / switch label (English fallback — the menu and accordions show the 10-language
@@ -25,6 +25,7 @@ export type EntityMeta = {
 export const ENTITY_ORDER: EntityKey[] = [
   "diagram",
   "calendar",
+  "cron",
   "map",
   "dashboard",
   "processes",
@@ -43,6 +44,11 @@ export const ENTITY_META: Record<EntityKey, EntityMeta> = {
     label: "Calendar",
     tooltip:
       "For time-based events: reminders and dated items. Can integrate Google Calendar and other tools.",
+  },
+  cron: {
+    label: "Cron",
+    tooltip:
+      "Periodic tick that wakes this automation up on a schedule (independent of the owner's own requests through the Hook/ask console) so scheduled work can be checked and actuated on time.",
   },
   map: {
     label: "Map",

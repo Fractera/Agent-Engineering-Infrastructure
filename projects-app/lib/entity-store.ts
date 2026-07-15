@@ -21,11 +21,11 @@ import { createNodeId } from "@/lib/cuid";
 // no visibility toggle — it is always present for an `instanced` automation and absent for the other types.
 export type EntityType =
   | "node" | "edge" | "usecase" | "chain"
-  | "dashboard" | "analytics" | "calendar" | "map" | "processes"
+  | "dashboard" | "analytics" | "calendar" | "cron" | "map" | "processes"
   | "fork-activation";
 
 export const ENTITY_TYPES: EntityType[] = [
-  "node", "edge", "usecase", "chain", "dashboard", "analytics", "calendar", "map", "processes",
+  "node", "edge", "usecase", "chain", "dashboard", "analytics", "calendar", "cron", "map", "processes",
   "fork-activation",
 ];
 
