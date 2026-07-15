@@ -10,6 +10,25 @@
  *  it is a label the panel shows and the agent honours; 223.C later binds it to real generated types. */
 export type TypeSpec = string;
 
+// ─── NODE ROLE (the three-part node taxonomy, 2026-07-15 owner) ────────────────────────────────────────────
+// Every node plays one of three canonical ROLES in the automation's flow — the SAME vocabulary the Tests
+// standard already uses for probes (`ProbeStage` in _shared/tests.ts: input | intermediate | output), reused
+// here so nodes and tests speak one language. CUSTOM roles are explicitly allowed: `role` is an OPEN string
+// union (`(string & {})`) — any other value is honoured and shown as its own badge on the diagram. The three
+// canonical roles are what a fresh automation is born with and what a coding agent picks from by default when
+// deciding which node is the entry and which is the exit. Absent → treated as `intermediate`.
+export type NodeRole = "input" | "intermediate" | "output" | (string & {});
+
+/** ≤10-word plain-language description of each CANONICAL node role — a deterministic dictionary in code (no
+ *  model call), the SAME pattern as the automation-type descriptions (available_types_and_descriptions). It is
+ *  emitted into the architecture bundle (iteration 2) so a coding agent instantly knows which role to choose;
+ *  custom roles are allowed beyond these three. */
+export const NODE_ROLE_DESCRIPTIONS: Record<"input" | "intermediate" | "output", string> = {
+  input: "Where the automation receives its work — the entry point.",
+  intermediate: "The deterministic middle — turns input into the result.",
+  output: "Where the automation delivers its result — the exit point.",
+};
+
 /** One function of a node — deterministic application work with typed inputs and a typed return. */
 export type NodeFunction = {
   name: string;
@@ -41,6 +60,10 @@ export type NodeContract = {
   cuid?: string;
   name: string;
   description: string;
+  /** This node's ROLE in the flow (2026-07-15) — `input` | `intermediate` | `output`, or a CUSTOM string.
+   *  Drives the diagram badge and (iteration 2) the grouping of nodes in the architecture bundle. Absent →
+   *  treated as `intermediate`. Lives in the node's own meta.ts, like every other descriptive fact. */
+  role?: NodeRole;
   /** The node's own typed inputs / outputs. */
   in: Record<string, TypeSpec>;
   out: Record<string, TypeSpec>;
