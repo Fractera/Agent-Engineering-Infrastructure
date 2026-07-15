@@ -15,6 +15,8 @@ export type AppPagesStrings = {
   badgeDeclared: string;
   tasksN: string;          // {n}
   pickHint: string;
+  yourPages: string;       // header above this automation's page list
+  noPages: string;         // empty state
   // declare modal
   modalTitle: string;      // {folder}
   rootFolder: string;
@@ -92,6 +94,7 @@ export const APP_PAGES_I18N: Record<string, AppPagesStrings> = {
     addPage: "Add page", treeLoading: "Loading the application tree…", treeEmpty: "No folders yet in the application layer.",
     badgeLive: "live", badgeDeclared: "declared", tasksN: "{n} to-do(s)",
     pickHint: "Select a declared page to add tasks, or press Add page above.",
+    yourPages: "Pages of this automation", noPages: "No pages yet — press Add page to declare one.",
     modalTitle: "Declare a page in {folder}", rootFolder: "the application root",
     titleField: "Page title", titlePlaceholder: "e.g. Register",
     dynamicField: "Dynamic segment ([id] — a page per record)", multilingualField: "Multilingual (build for all languages)",
@@ -116,6 +119,7 @@ export const APP_PAGES_I18N: Record<string, AppPagesStrings> = {
     addPage: "Добавить страницу", treeLoading: "Загружаю дерево приложения…", treeEmpty: "В слое приложения пока нет папок.",
     badgeLive: "готова", badgeDeclared: "объявлена", tasksN: "задач: {n}",
     pickHint: "Выберите объявленную страницу, чтобы добавить задачи, или нажмите «Добавить страницу» выше.",
+    yourPages: "Страницы этой автоматизации", noPages: "Страниц пока нет — нажмите «Добавить страницу».",
     modalTitle: "Объявить страницу в {folder}", rootFolder: "корне приложения",
     titleField: "Заголовок страницы", titlePlaceholder: "напр. Регистрация",
     dynamicField: "Динамический сегмент ([id] — страница на запись)", multilingualField: "Мультиязычная (сборка на всех языках)",
@@ -140,6 +144,7 @@ export const APP_PAGES_I18N: Record<string, AppPagesStrings> = {
     addPage: "Añadir página", treeLoading: "Cargando el árbol de la aplicación…", treeEmpty: "Aún no hay carpetas en la capa de aplicación.",
     badgeLive: "activa", badgeDeclared: "declarada", tasksN: "{n} tarea(s)",
     pickHint: "Selecciona una página declarada para añadir tareas, o pulsa Añadir página arriba.",
+    yourPages: "Páginas de esta automatización", noPages: "Aún no hay páginas — pulsa Añadir página.",
     modalTitle: "Declarar una página en {folder}", rootFolder: "la raíz de la aplicación",
     titleField: "Título de la página", titlePlaceholder: "p. ej. Registro",
     dynamicField: "Segmento dinámico ([id] — una página por registro)", multilingualField: "Multilingüe (construir para todos los idiomas)",
@@ -164,6 +169,7 @@ export const APP_PAGES_I18N: Record<string, AppPagesStrings> = {
     addPage: "Ajouter une page", treeLoading: "Chargement de l'arborescence…", treeEmpty: "Aucun dossier dans la couche application pour le moment.",
     badgeLive: "en ligne", badgeDeclared: "déclarée", tasksN: "{n} tâche(s)",
     pickHint: "Sélectionnez une page déclarée pour ajouter des tâches, ou cliquez sur Ajouter une page ci-dessus.",
+    yourPages: "Pages de cette automatisation", noPages: "Aucune page pour l'instant — cliquez sur Ajouter une page.",
     modalTitle: "Déclarer une page dans {folder}", rootFolder: "la racine de l'application",
     titleField: "Titre de la page", titlePlaceholder: "ex. Inscription",
     dynamicField: "Segment dynamique ([id] — une page par enregistrement)", multilingualField: "Multilingue (construire pour toutes les langues)",
@@ -188,6 +194,7 @@ export const APP_PAGES_I18N: Record<string, AppPagesStrings> = {
     addPage: "Aggiungi pagina", treeLoading: "Caricamento dell'albero dell'applicazione…", treeEmpty: "Ancora nessuna cartella nel livello applicazione.",
     badgeLive: "attiva", badgeDeclared: "dichiarata", tasksN: "{n} attività",
     pickHint: "Seleziona una pagina dichiarata per aggiungere attività, o premi Aggiungi pagina sopra.",
+    yourPages: "Pagine di questa automazione", noPages: "Ancora nessuna pagina — premi Aggiungi pagina.",
     modalTitle: "Dichiara una pagina in {folder}", rootFolder: "la radice dell'applicazione",
     titleField: "Titolo della pagina", titlePlaceholder: "es. Registrazione",
     dynamicField: "Segmento dinamico ([id] — una pagina per record)", multilingualField: "Multilingue (costruisci per tutte le lingue)",
@@ -212,6 +219,7 @@ export const APP_PAGES_I18N: Record<string, AppPagesStrings> = {
     addPage: "Seite hinzufügen", treeLoading: "Anwendungsbaum wird geladen…", treeEmpty: "Noch keine Ordner in der Anwendungsschicht.",
     badgeLive: "live", badgeDeclared: "deklariert", tasksN: "{n} Aufgabe(n)",
     pickHint: "Wähle eine deklarierte Seite, um Aufgaben hinzuzufügen, oder klicke oben auf Seite hinzufügen.",
+    yourPages: "Seiten dieser Automatisierung", noPages: "Noch keine Seiten — klicke auf Seite hinzufügen.",
     modalTitle: "Eine Seite in {folder} deklarieren", rootFolder: "dem Anwendungs-Root",
     titleField: "Seitentitel", titlePlaceholder: "z. B. Registrieren",
     dynamicField: "Dynamisches Segment ([id] — eine Seite pro Datensatz)", multilingualField: "Mehrsprachig (für alle Sprachen bauen)",
@@ -236,6 +244,7 @@ export const APP_PAGES_I18N: Record<string, AppPagesStrings> = {
     addPage: "Adicionar página", treeLoading: "A carregar a árvore da aplicação…", treeEmpty: "Ainda não há pastas na camada da aplicação.",
     badgeLive: "ativa", badgeDeclared: "declarada", tasksN: "{n} tarefa(s)",
     pickHint: "Selecione uma página declarada para adicionar tarefas, ou clique em Adicionar página acima.",
+    yourPages: "Páginas desta automação", noPages: "Ainda sem páginas — clique em Adicionar página.",
     modalTitle: "Declarar uma página em {folder}", rootFolder: "a raiz da aplicação",
     titleField: "Título da página", titlePlaceholder: "ex.: Registo",
     dynamicField: "Segmento dinâmico ([id] — uma página por registo)", multilingualField: "Multilingue (construir para todos os idiomas)",
@@ -260,6 +269,7 @@ export const APP_PAGES_I18N: Record<string, AppPagesStrings> = {
     addPage: "Dodaj stronę", treeLoading: "Ładowanie drzewa aplikacji…", treeEmpty: "W warstwie aplikacji nie ma jeszcze folderów.",
     badgeLive: "aktywna", badgeDeclared: "zadeklarowana", tasksN: "zadań: {n}",
     pickHint: "Wybierz zadeklarowaną stronę, aby dodać zadania, albo kliknij Dodaj stronę powyżej.",
+    yourPages: "Strony tej automatyzacji", noPages: "Brak stron — kliknij Dodaj stronę.",
     modalTitle: "Zadeklaruj stronę w {folder}", rootFolder: "katalogu głównym aplikacji",
     titleField: "Tytuł strony", titlePlaceholder: "np. Rejestracja",
     dynamicField: "Segment dynamiczny ([id] — strona na rekord)", multilingualField: "Wielojęzyczna (buduj dla wszystkich języków)",
@@ -284,6 +294,7 @@ export const APP_PAGES_I18N: Record<string, AppPagesStrings> = {
     addPage: "Sayfa ekle", treeLoading: "Uygulama ağacı yükleniyor…", treeEmpty: "Uygulama katmanında henüz klasör yok.",
     badgeLive: "yayında", badgeDeclared: "tanımlı", tasksN: "{n} görev",
     pickHint: "Görev eklemek için tanımlı bir sayfa seçin veya yukarıdan Sayfa ekle'ye basın.",
+    yourPages: "Bu otomasyonun sayfaları", noPages: "Henüz sayfa yok — Sayfa ekle'ye basın.",
     modalTitle: "{folder} içinde bir sayfa tanımla", rootFolder: "uygulama kökü",
     titleField: "Sayfa başlığı", titlePlaceholder: "örn. Kayıt",
     dynamicField: "Dinamik segment ([id] — kayıt başına bir sayfa)", multilingualField: "Çok dilli (tüm diller için oluştur)",
@@ -308,6 +319,7 @@ export const APP_PAGES_I18N: Record<string, AppPagesStrings> = {
     addPage: "Pagina toevoegen", treeLoading: "Applicatieboom laden…", treeEmpty: "Nog geen mappen in de applicatielaag.",
     badgeLive: "live", badgeDeclared: "gedeclareerd", tasksN: "{n} taak/taken",
     pickHint: "Selecteer een gedeclareerde pagina om taken toe te voegen, of klik hierboven op Pagina toevoegen.",
+    yourPages: "Pagina's van deze automatisering", noPages: "Nog geen pagina's — klik op Pagina toevoegen.",
     modalTitle: "Een pagina declareren in {folder}", rootFolder: "de applicatie-root",
     titleField: "Paginatitel", titlePlaceholder: "bijv. Registreren",
     dynamicField: "Dynamisch segment ([id] — een pagina per record)", multilingualField: "Meertalig (voor alle talen bouwen)",

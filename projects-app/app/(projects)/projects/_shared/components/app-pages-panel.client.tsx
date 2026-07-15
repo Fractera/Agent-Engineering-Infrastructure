@@ -1,9 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import {
-  ChevronDown, ChevronRight, FileText, Folder, FolderPlus, Loader2, Plus, Sparkles, User, Users, X,
-} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { FileText, FolderPlus, Loader2, Plus, Sparkles, User, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,77 +13,33 @@ import { useUiLang } from "../use-ui-lang";
 import { appPagesStrings } from "../app-pages-i18n";
 import { VoiceInput } from "./voice-input.client";
 
-// APPLICATION PAGES (step 242) — the owner's window onto the application layer (slot app/), to declare PUBLIC
-// pages EXTERNAL users of this automation will use. Mirrors the PRINCIPLES of the architect's Architecture
-// page (folder tree → pick a folder → declare a page → per-page to-do list a coding agent picks up), but this
-// is a COPY living in projects-app (fault-isolated: the tree/declare/tasks all hit the slot fs directly via
-// the app-pages API, never :3002), and it adds three things the service page lacks: 10-language chrome, a Quiz
-// that writes to-dos, and voice on every to-do. Tagged to this automation.
+// APPLICATION PAGES (step 242; simplified in 242.4) — the owner declares PUBLIC pages of the application layer
+// for EXTERNAL users of this automation. The slot-app FILE TREE was removed (owner's call — it showed other,
+// unrelated pages and only confused things). Now it is dead simple: one "Add page" button (the page always
+// lands under [lang]), a flat list of the pages THIS automation declared, and selecting one goes straight to
+// planning — its to-do list (+ voice) and the "Add with AI" Quiz. Fault-isolated: every call hits the slot fs
+// directly via the app-pages API, never :3002.
 
-type AppNode = {
-  rel: string; name: string; url: string; built: boolean; declared: boolean; taskCount: number; children: AppNode[];
-};
+type PageBrief = { rel: string; title: string; url: string; taskCount: number };
 type ClientTask = { id: string; body: string };
 
 export function AppPagesPanel({ automation }: { automation: string }) {
   const S = appPagesStrings(useUiLang());
-  const [tree, setTree] = useState<AppNode[] | null>(null);
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [selected, setSelected] = useState<AppNode | null>(null);
+  const [pages, setPages] = useState<PageBrief[] | null>(null);
+  const [selected, setSelected] = useState<string | null>(null); // rel
   const [showFull, setShowFull] = useState(false);
   const [declareOpen, setDeclareOpen] = useState(false);
 
-  const loadTree = useCallback(async () => {
+  const load = useCallback(async () => {
     try {
-      const r = await fetch(`/api/projects/app-pages/tree`, { cache: "no-store" });
-      const d = (await r.json().catch(() => null)) as { children?: AppNode[] } | null;
-      setTree(d?.children ?? []);
-    } catch { setTree([]); }
-  }, []);
-  useEffect(() => { loadTree(); }, [loadTree]);
+      const r = await fetch(`/api/projects/app-pages/list?automation=${encodeURIComponent(automation)}`, { cache: "no-store" });
+      const d = (await r.json().catch(() => null)) as { pages?: PageBrief[] } | null;
+      setPages(d?.pages ?? []);
+    } catch { setPages([]); }
+  }, [automation]);
+  useEffect(() => { load(); }, [load]);
 
-  // Re-select the same rel after a reload so the detail panel keeps its page after a declare/task change.
-  const reselect = useCallback((rel: string, nodes: AppNode[]): AppNode | null => {
-    for (const n of nodes) {
-      if (n.rel === rel) return n;
-      const hit = reselect(rel, n.children);
-      if (hit) return hit;
-    }
-    return null;
-  }, []);
-  useEffect(() => {
-    if (selected && tree) setSelected(reselect(selected.rel, tree));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tree]);
-
-  function renderNode(n: AppNode, depth: number): ReactNode {
-    const isSel = selected?.rel === n.rel;
-    const open = expanded[n.rel];
-    return (
-      <div key={n.rel}>
-        <div
-          className={`flex items-center gap-1.5 rounded px-2 py-1 text-sm ${isSel ? "bg-accent" : "hover:bg-accent/50"}`}
-          style={{ paddingLeft: `${depth * 14 + 8}px` }}
-        >
-          {n.children.length > 0 ? (
-            <button onClick={() => setExpanded((p) => ({ ...p, [n.rel]: !p[n.rel] }))} className="text-muted-foreground">
-              {open ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
-            </button>
-          ) : (
-            <span className="inline-block w-3.5" />
-          )}
-          <button onClick={() => setSelected(n)} className="flex min-w-0 flex-1 items-center gap-1.5 text-left">
-            {n.built ? <FileText className="size-3.5 shrink-0 text-primary" /> : <Folder className="size-3.5 shrink-0 text-muted-foreground" />}
-            <span className="truncate">{n.name}</span>
-            {n.built && <span className="shrink-0 rounded bg-primary/10 px-1 text-[10px] text-primary">{S.badgeLive}</span>}
-            {n.declared && <span className="shrink-0 rounded bg-amber-500/15 px-1 text-[10px] text-amber-600 dark:text-amber-400">{S.badgeDeclared}</span>}
-            {n.taskCount > 0 && <span className="shrink-0 text-[10px] text-muted-foreground">{S.tasksN.replace("{n}", String(n.taskCount))}</span>}
-          </button>
-        </div>
-        {open && n.children.map((c) => renderNode(c, depth + 1))}
-      </div>
-    );
-  }
+  const selectedPage = pages?.find((p) => p.rel === selected) ?? null;
 
   return (
     <div className="space-y-4">
@@ -99,56 +53,56 @@ export function AppPagesPanel({ automation }: { automation: string }) {
       </div>
 
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs text-muted-foreground">
-          {selected ? `${S.folderLabel}: app/${selected.rel}` : S.pickHint}
-        </p>
+        <p className="text-xs text-muted-foreground">{pages && pages.length > 0 ? S.yourPages : S.noPages}</p>
         <Button size="sm" onClick={() => setDeclareOpen(true)} className="gap-1.5">
           <FolderPlus className="size-3.5" /> {S.addPage}
         </Button>
       </div>
 
-      {/* THE TREE — the application layer as folders; pick any to declare a page in it. */}
-      <div className="max-h-80 overflow-auto rounded-lg border p-1">
-        {tree === null ? (
-          <p className="p-2 text-sm text-muted-foreground"><Loader2 className="mr-1 inline size-3.5 animate-spin" />{S.treeLoading}</p>
-        ) : tree.length === 0 ? (
-          <p className="p-2 text-sm text-muted-foreground">{S.treeEmpty}</p>
-        ) : (
-          tree.map((n) => renderNode(n, 0))
-        )}
-      </div>
+      {/* THIS AUTOMATION'S PAGES — a flat list; select one to plan it. No file tree. */}
+      {pages === null ? (
+        <p className="text-sm text-muted-foreground"><Loader2 className="mr-1 inline size-3.5 animate-spin" /></p>
+      ) : pages.length > 0 ? (
+        <div className="divide-y rounded-lg border">
+          {pages.map((p) => (
+            <button
+              key={p.rel}
+              onClick={() => setSelected(p.rel)}
+              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm ${selected === p.rel ? "bg-accent" : "hover:bg-accent/50"}`}
+            >
+              <FileText className="size-3.5 shrink-0 text-primary" />
+              <span className="min-w-0 flex-1 truncate">{p.title}</span>
+              <code className="shrink-0 text-xs text-muted-foreground">{p.url}</code>
+              {p.taskCount > 0 && <span className="shrink-0 text-[10px] text-muted-foreground">{S.tasksN.replace("{n}", String(p.taskCount))}</span>}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
-      {/* DETAIL — a declared page's to-do list (voice + Add with AI). Only for a declared (not-yet-built) page. */}
-      {selected?.declared && (
-        <PageDetail automation={automation} node={selected} onChanged={loadTree} S={S} />
-      )}
+      {/* PLANNING for the selected page — to-dos (voice) + the "Add with AI" Quiz. */}
+      {selectedPage && <PageDetail automation={automation} page={selectedPage} onChanged={load} S={S} />}
 
       <DeclareModal
         automation={automation}
-        baseRel={selected?.rel ?? ""}
-        baseLabel={selected ? `app/${selected.rel}` : S.rootFolder}
         open={declareOpen}
         onOpenChange={setDeclareOpen}
-        onDone={async (rel) => { await loadTree(); setSelected((s) => s); void rel; }}
+        onDone={async (rel) => { await load(); setSelected(rel); }}
         S={S}
       />
     </div>
   );
 }
 
-// ─── the declare WIZARD (step 242.2, owner) ──────────────────────────────────────────────────────────────
-// Three guided steps so the logic of a page is clear from the first click:
-//   1. AUDIENCE — is this page only for you, or also for other users? A self page skips everything about
-//      multi-user access (no roles, no per-user isolation), because none of it applies.
-//   2. ROLES (others only) — pick which roles may use the page; `user` is pre-selected (every signed-in user).
-//   3. NAME — the human title (spoken or typed) → a short ENGLISH folder slug (a cuid is appended on save so
-//      pages never clash).
+// ─── the declare WIZARD (step 242.2; page always lands under [lang] since 242.4) ─────────────────────────
+// Three guided steps: 1) audience (only me / also others), 2) roles (others only, `user` pre-selected),
+// 3) name (spoken or typed → a short ENGLISH slug; a cuid is appended on save so pages never clash). The page
+// is always created at the [lang] root — there is no folder to pick any more.
 const ASSIGNABLE_ROLES = ALL_ROLES.filter((r) => r !== "guest"); // guest = the unauthenticated tier, never assigned
 
 function DeclareModal({
-  automation, baseRel, open, onOpenChange, onDone, S,
+  automation, open, onOpenChange, onDone, S,
 }: {
-  automation: string; baseRel: string; baseLabel: string; open: boolean;
+  automation: string; open: boolean;
   onOpenChange: (v: boolean) => void; onDone: (rel: string) => void; S: ReturnType<typeof appPagesStrings>;
 }) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -188,8 +142,9 @@ function DeclareModal({
     try {
       const r = await fetch(`/api/projects/app-pages/declare`, {
         method: "POST", headers: { "Content-Type": "application/json" },
+        // base is always the [lang] root now — the server nests it there. No folder picker.
         body: JSON.stringify({
-          automation, base: baseRel, title: title.trim(), slug: slug.trim(),
+          automation, base: "", title: title.trim(), slug: slug.trim(),
           audience, roles: audience === "others" ? roles : [],
         }),
       });
@@ -258,8 +213,7 @@ function DeclareModal({
               <Input ref={titleRef} value={title} onChange={(e) => setTitle(e.target.value)} onBlur={refreshSlug}
                 placeholder={S.titlePlaceholder} autoComplete="off" />
               <p className="text-xs text-muted-foreground">{S.nameHint}</p>
-              {/* Voice → title; the slug refreshes when the owner finishes speaking (onChange loses focus). */}
-              <VoiceInput targetRef={titleRef} value={title} onChange={(v) => { setTitle(v); }} />
+              <VoiceInput targetRef={titleRef} value={title} onChange={setTitle} />
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium">{S.slugLabel}</label>
@@ -285,11 +239,11 @@ function DeclareModal({
   );
 }
 
-// ─── a declared page's to-do list + the AI dialog ────────────────────────────────────────────────────────
+// ─── a declared page's to-do list + the AI dialog (the "planning" surface) ───────────────────────────────
 function PageDetail({
-  automation, node, onChanged, S,
+  automation, page, onChanged, S,
 }: {
-  automation: string; node: AppNode; onChanged: () => void; S: ReturnType<typeof appPagesStrings>;
+  automation: string; page: PageBrief; onChanged: () => void; S: ReturnType<typeof appPagesStrings>;
 }) {
   const [tasks, setTasks] = useState<ClientTask[]>([]);
   const [draft, setDraft] = useState("");
@@ -297,10 +251,10 @@ function PageDetail({
   const draftRef = useRef<HTMLInputElement | null>(null);
 
   const load = useCallback(async () => {
-    const r = await fetch(`/api/projects/app-pages/tasks?rel=${encodeURIComponent(node.rel)}`, { cache: "no-store" });
+    const r = await fetch(`/api/projects/app-pages/tasks?rel=${encodeURIComponent(page.rel)}`, { cache: "no-store" });
     const d = (await r.json().catch(() => ({}))) as { tasks?: ClientTask[] };
     setTasks(d.tasks ?? []);
-  }, [node.rel]);
+  }, [page.rel]);
   useEffect(() => { load(); }, [load]);
 
   async function add() {
@@ -309,7 +263,7 @@ function PageDetail({
     setDraft("");
     const r = await fetch(`/api/projects/app-pages/tasks`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rel: node.rel, body }),
+      body: JSON.stringify({ rel: page.rel, body }),
     });
     if (!r.ok) { toast.error(S.saveFailed); return; }
     await load(); onChanged();
@@ -322,8 +276,8 @@ function PageDetail({
   return (
     <div className="space-y-2 rounded-lg border p-3">
       <div className="space-y-0.5">
-        <p className="text-sm font-medium">{node.name}</p>
-        <p className="text-xs text-muted-foreground">{S.urlLabel}: <code>{node.url}</code> · {S.folderLabel}: <code>app/{node.rel}</code></p>
+        <p className="text-sm font-medium">{page.title}</p>
+        <p className="text-xs text-muted-foreground">{S.urlLabel}: <code>{page.url}</code> · {S.folderLabel}: <code>app/{page.rel}</code></p>
       </div>
       <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{S.detailTitle}</p>
       <p className="text-xs text-muted-foreground">{S.detailHint}</p>
@@ -351,7 +305,7 @@ function PageDetail({
         </Button>
       </div>
 
-      <PageQuizDialog automation={automation} rel={node.rel} open={aiOpen} onOpenChange={setAiOpen}
+      <PageQuizDialog automation={automation} rel={page.rel} open={aiOpen} onOpenChange={setAiOpen}
         onApplied={async () => { await load(); onChanged(); }} S={S} />
     </div>
   );

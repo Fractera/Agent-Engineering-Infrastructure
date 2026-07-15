@@ -2,65 +2,37 @@ import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { appRoot, relToUrl, readMeta } from "./readme";
 
-// SLOT-APP TREE SCAN (step 242) — a trimmed copy of the service page's fs-scan.ts, walking ONE root: the slot
-// `app/` (the application layer). Returns a NESTED tree (the accordion renders a folder tree the owner picks
-// from), unlike the service scan's flat lists merged with a curated seed. A folder with a page/route file is
-// LIVE (built); with a README.md but no built file it is DECLARED; otherwise it is a plain container. Skips
-// Next.js internals and the co-location folders. Read-only.
+// THIS AUTOMATION'S APPLICATION PAGES (step 242; simplified in 242.4 — the file tree was removed). The owner's
+// call: showing the whole slot `app/` tree only confused things. An automation declares its public pages with
+// one button (always under `[lang]`), and this returns the flat list of the pages IT declared — matched by the
+// `automation` tag each page README carries. Read-only fs scan under `[lang]`, so a new page shows without a
+// rebuild.
 
-export type AppNode = {
-  rel: string;        // filesystem rel under slot app ("" = the app root)
-  name: string;       // this folder's own segment name
-  url: string;        // the URL it serves (display only; [lang] and (groups) stripped)
-  built: boolean;     // has a page/route file → live
-  declared: boolean;  // has a README.md but no built file → declared, waiting for a coder
-  taskCount: number;  // open to-dos in its README
-  children: AppNode[];
-};
+export type PageBrief = { rel: string; title: string; url: string; taskCount: number };
 
 const SKIP = new Set(["_components", "_lib", "_data", "_shared", "node_modules", ".next"]);
-const PAGE_FILES = ["page.tsx", "page.ts", "page.jsx", "page.js"];
-const ROUTE_FILES = ["route.ts", "route.js"];
 
-async function walk(dir: string, rel: string): Promise<AppNode[]> {
+async function collect(dir: string, rel: string, automation: string, out: PageBrief[]): Promise<void> {
   let entries: string[];
-  try { entries = await readdir(dir); } catch { return []; }
-  const nodes: AppNode[] = [];
+  try { entries = await readdir(dir); } catch { return; }
+  if (entries.includes("README.md")) {
+    const meta = await readMeta(rel).catch(() => null);
+    if (meta && meta.automation === automation) {
+      out.push({ rel, title: meta.title, url: relToUrl(rel), taskCount: meta.tasks.length });
+    }
+  }
   for (const name of entries) {
     if (SKIP.has(name) || name.startsWith(".")) continue;
     const full = join(dir, name);
     const st = await stat(full).catch(() => null);
-    if (!st?.isDirectory()) continue;
-    const childRel = rel ? `${rel}/${name}` : name;
-    let inner: string[] = [];
-    try { inner = await readdir(full); } catch { /* unreadable → treat as empty */ }
-    const set = new Set(inner);
-    const built = PAGE_FILES.some((f) => set.has(f)) || ROUTE_FILES.some((f) => set.has(f));
-    const hasReadme = set.has("README.md");
-    let taskCount = 0;
-    if (hasReadme) {
-      const meta = await readMeta(childRel).catch(() => null);
-      taskCount = meta?.tasks.length ?? 0;
-    }
-    nodes.push({
-      rel: childRel,
-      name,
-      url: relToUrl(childRel),
-      built,
-      declared: hasReadme && !built,
-      taskCount,
-      children: await walk(full, childRel),
-    });
+    if (st?.isDirectory()) await collect(full, rel ? `${rel}/${name}` : name, automation, out);
   }
-  // Folders first by name — stable, legible.
-  nodes.sort((a, b) => a.name.localeCompare(b.name));
-  return nodes;
 }
 
-/** The declarable page surface = ONLY the `[lang]` layer (owner's feedback, step 242.1): the public,
- *  localized pages an external user reaches. The `(service)` and `api` folders are the internal/architect
- *  surface — showing them here only confused the owner, so they are excluded. The returned children are the
- *  folders UNDER `[lang]` (their rel is already `[lang]/…`, so declaring inside one stays multilingual). */
-export async function scanAppTree(): Promise<{ children: AppNode[] }> {
-  return { children: await walk(join(appRoot(), "[lang]"), "[lang]") };
+/** Every page this automation declared, under the slot's `[lang]` layer, newest-agnostic (sorted by title). */
+export async function listAutomationPages(automation: string): Promise<PageBrief[]> {
+  const out: PageBrief[] = [];
+  await collect(join(appRoot(), "[lang]"), "[lang]", automation, out);
+  out.sort((a, b) => a.title.localeCompare(b.title));
+  return out;
 }
