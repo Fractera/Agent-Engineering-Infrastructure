@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { VoiceInput } from "./voice-input.client";
+import { announcePendingAutomation } from "./pending-automations.client";
 import { AUTOMATION_TYPES, type AutomationType } from "../automation-type";
 import { PROJECT_CATEGORIES } from "../categories";
 import { useUiLang } from "../use-ui-lang";
@@ -118,10 +119,22 @@ export function CreateAutomationDialog({
         description: L.automationCreatedDesc,
         duration: 12000,
       });
+      // The optimistic pending card (step 242.3): show a muted spinner card in the grid AT ONCE, so the page
+      // never seems to "vanish" while the static hub waits for its rebuild. A chained automation is
+      // canvas-only (never in a category grid), so it has no pending card. The category the card lives in is
+      // the resolved target (a chained one silently uses "other", but we skip it anyway).
+      const cat = d.category ?? target;
+      const slug = d.project ?? project;
+      if (type !== "chained") {
+        announcePendingAutomation({
+          automation: `${cat}/${slug}`, category: cat, slug,
+          title: name.trim() || slug, url: d.url ?? `/projects/${cat}/${slug}`,
+        });
+      }
       setName("");
       setInstruction("");
       onOpenChange(false);
-      onCreated?.(`${d.category ?? target}/${d.project ?? project}`);
+      onCreated?.(`${cat}/${slug}`);
     } finally {
       setBusy(false);
     }

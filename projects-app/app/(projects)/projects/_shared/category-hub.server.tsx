@@ -6,6 +6,7 @@ import { PROJECT_CATEGORIES, categoryTitle, categoryDescription, categoryNavLabe
 import { listProjectSlugs } from "./projects-manifest";
 import { getProjectCard } from "./project-card";
 import { CreateAutomationCard } from "./components/create-automation-card.client";
+import { PendingAutomations } from "./components/pending-automations.client";
 import { categoryHubStrings } from "./category-hub-i18n";
 
 // Hub page of one Projects-layer category (step 207.10 item 3 redesign): an admin-style header with
@@ -99,6 +100,10 @@ export async function CategoryHub({ slug }: { slug: ProjectCategorySlug }) {
                 </Link>
               );
             })}
+            {/* Optimistic pending cards (step 242.3): a just-created automation shows a muted spinner card
+                here immediately and lights up when its page finishes building — the static grid can't show it
+                until a rebuild, so this closes that gap. `existingSlugs` de-dupes once the grid catches up. */}
+            <PendingAutomations category={slug} existingSlugs={cards.map((c) => c.slug)} />
             <CreateAutomationCard category={slug} />
           </div>
         }

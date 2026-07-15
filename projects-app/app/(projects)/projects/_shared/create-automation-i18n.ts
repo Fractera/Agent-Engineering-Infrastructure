@@ -38,6 +38,11 @@ export type CreateAutomationStrings = {
   errCreateAutomation: string;
   automationCreated: string;
   automationCreatedDesc: string;
+  // Step 242.3 — the optimistic PENDING CARD shown in the grid the instant an automation is created, while
+  // its page is still building. `pendingBuilding` is the muted card's status line; `pendingReady` is its
+  // hint once the page is live and the card becomes a link.
+  pendingBuilding: string;
+  pendingReady: string;
   // Category creation moved OUT of this dialog into its own standalone AddCategoryButton (owner's fix,
   // 2026-07-14, closes the create-category-then-immediately-use-it race): the button's own label, its
   // dialog's own heading, and a hint line in THIS dialog's category picker pointing owners to it.
@@ -88,6 +93,8 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     errCreateAutomation: "Could not create the automation.",
     automationCreated: "Automation created — building the page (1-2 min).",
     automationCreatedDesc: "It opens in development: its nodes are drafts until you build them.",
+    pendingBuilding: "Building the page…",
+    pendingReady: "Ready — open it",
     addCategoryBtn: "Add category",
     newCategoryDialogTitle: "New category",
     categoryHintUseAddButton: "Don't see the category you need? Add one with the button next to the page title.",
@@ -133,6 +140,8 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     errCreateAutomation: "Не удалось создать автоматизацию.",
     automationCreated: "Автоматизация создана — страница строится (1-2 мин).",
     automationCreatedDesc: "Она откроется в разработке: её узлы — черновики, пока вы их не соберёте.",
+    pendingBuilding: "Страница строится…",
+    pendingReady: "Готово — открыть",
     addCategoryBtn: "Добавить категорию",
     newCategoryDialogTitle: "Новая категория",
     categoryHintUseAddButton: "Не видите нужную категорию? Добавьте её кнопкой рядом с заголовком страницы.",
@@ -178,6 +187,8 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     errCreateAutomation: "No se pudo crear la automatización.",
     automationCreated: "Automatización creada — construyendo la página (1-2 min).",
     automationCreatedDesc: "Se abre en desarrollo: sus nodos son borradores hasta que los construyas.",
+    pendingBuilding: "Construyendo la página…",
+    pendingReady: "Lista — ábrela",
     addCategoryBtn: "Añadir categoría",
     newCategoryDialogTitle: "Nueva categoría",
     categoryHintUseAddButton: "¿No ves la categoría que necesitas? Añádela con el botón junto al título de la página.",
@@ -223,6 +234,8 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     errCreateAutomation: "Impossible de créer l'automatisation.",
     automationCreated: "Automatisation créée — construction de la page (1-2 min).",
     automationCreatedDesc: "Elle s'ouvre en développement : ses nœuds sont des brouillons tant que vous ne les avez pas construits.",
+    pendingBuilding: "Construction de la page…",
+    pendingReady: "Prête — ouvrez-la",
     addCategoryBtn: "Ajouter une catégorie",
     newCategoryDialogTitle: "Nouvelle catégorie",
     categoryHintUseAddButton: "Vous ne voyez pas la catégorie qu'il vous faut ? Ajoutez-la avec le bouton à côté du titre de la page.",
@@ -268,6 +281,8 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     errCreateAutomation: "Impossibile creare l'automazione.",
     automationCreated: "Automazione creata — costruzione della pagina (1-2 min).",
     automationCreatedDesc: "Si apre in sviluppo: i suoi nodi sono bozze finché non li costruisci.",
+    pendingBuilding: "Costruzione della pagina…",
+    pendingReady: "Pronta — aprila",
     addCategoryBtn: "Aggiungi categoria",
     newCategoryDialogTitle: "Nuova categoria",
     categoryHintUseAddButton: "Non vedi la categoria che ti serve? Aggiungila con il pulsante accanto al titolo della pagina.",
@@ -313,6 +328,8 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     errCreateAutomation: "Die Automatisierung konnte nicht erstellt werden.",
     automationCreated: "Automatisierung erstellt — die Seite wird gebaut (1-2 Min.).",
     automationCreatedDesc: "Sie öffnet sich in der Entwicklung: Ihre Knoten sind Entwürfe, bis du sie baust.",
+    pendingBuilding: "Die Seite wird gebaut…",
+    pendingReady: "Fertig — öffnen",
     addCategoryBtn: "Kategorie hinzufügen",
     newCategoryDialogTitle: "Neue Kategorie",
     categoryHintUseAddButton: "Fehlt die passende Kategorie? Füge sie über die Schaltfläche neben dem Seitentitel hinzu.",
@@ -358,6 +375,8 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     errCreateAutomation: "Não foi possível criar a automação.",
     automationCreated: "Automação criada — a construir a página (1-2 min).",
     automationCreatedDesc: "Abre em desenvolvimento: os seus nós são rascunhos até serem construídos.",
+    pendingBuilding: "A construir a página…",
+    pendingReady: "Pronta — abrir",
     addCategoryBtn: "Adicionar categoria",
     newCategoryDialogTitle: "Nova categoria",
     categoryHintUseAddButton: "Não vê a categoria que precisa? Adicione-a com o botão junto ao título da página.",
@@ -403,6 +422,8 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     errCreateAutomation: "Nie udało się utworzyć automatyzacji.",
     automationCreated: "Automatyzacja utworzona — strona jest budowana (1-2 min).",
     automationCreatedDesc: "Otwiera się w trybie rozwoju: jej węzły są szkicami, dopóki ich nie zbudujesz.",
+    pendingBuilding: "Trwa budowanie strony…",
+    pendingReady: "Gotowe — otwórz",
     addCategoryBtn: "Dodaj kategorię",
     newCategoryDialogTitle: "Nowa kategoria",
     categoryHintUseAddButton: "Nie widzisz potrzebnej kategorii? Dodaj ją przyciskiem obok tytułu strony.",
@@ -448,6 +469,8 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     errCreateAutomation: "Otomasyon oluşturulamadı.",
     automationCreated: "Otomasyon oluşturuldu — sayfa inşa ediliyor (1-2 dk).",
     automationCreatedDesc: "Geliştirme aşamasında açılır: sen inşa edene kadar düğümleri taslaktır.",
+    pendingBuilding: "Sayfa inşa ediliyor…",
+    pendingReady: "Hazır — aç",
     addCategoryBtn: "Kategori ekle",
     newCategoryDialogTitle: "Yeni kategori",
     categoryHintUseAddButton: "İhtiyacınız olan kategoriyi görmüyor musunuz? Sayfa başlığının yanındaki düğmeyle ekleyin.",
@@ -493,6 +516,8 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     errCreateAutomation: "Kon de automatisering niet aanmaken.",
     automationCreated: "Automatisering aangemaakt — pagina wordt gebouwd (1-2 min).",
     automationCreatedDesc: "Ze opent in ontwikkeling: de nodes zijn concepten totdat je ze bouwt.",
+    pendingBuilding: "De pagina wordt gebouwd…",
+    pendingReady: "Klaar — openen",
     addCategoryBtn: "Categorie toevoegen",
     newCategoryDialogTitle: "Nieuwe categorie",
     categoryHintUseAddButton: "Zie je de categorie die je nodig hebt niet? Voeg er een toe met de knop naast de paginatitel.",
