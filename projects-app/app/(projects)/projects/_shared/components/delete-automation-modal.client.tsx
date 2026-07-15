@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useUiLang } from "../use-ui-lang";
 import { automationMenuStrings } from "../automation-menu-i18n";
+import { announcePendingDeletion } from "./pending-deletions.client";
 
 // DELETE AN AUTOMATION (step 241 E3.2, owner's request) — the Danger zone's modal.
 //
@@ -46,8 +47,13 @@ export function DeleteAutomationModal({
         return;
       }
       toast.success(L.deleted, { description: L.deletedDesc, duration: 15000 });
+      // Owner's fix: the hub grid is static and won't drop this card until the background rebuild finishes
+      // — mark it as pending-deletion (mirrors the pending-CREATION card) BEFORE navigating away, so the
+      // hub's own card tile shows a spinner instead of a stale, still-clickable card.
+      const category = automation.split("/")[0];
+      announcePendingDeletion(category, slug);
       // The automation's own page no longer exists — leave it for the category hub.
-      window.location.href = `/projects/${automation.split("/")[0]}`;
+      window.location.href = `/projects/${category}`;
     } finally {
       setBusy(false);
     }

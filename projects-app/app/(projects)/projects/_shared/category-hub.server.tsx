@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { getAppConfig } from "@/config/app-config";
 import { defaultLanguage } from "@/lib/quiz";
 import { PROJECT_CATEGORIES, categoryTitle, categoryDescription, categoryNavLabel, type ProjectCategorySlug } from "./categories";
@@ -7,6 +6,7 @@ import { listProjectSlugs } from "./projects-manifest";
 import { getProjectCard } from "./project-card";
 import { CreateAutomationCard } from "./components/create-automation-card.client";
 import { PendingAutomations } from "./components/pending-automations.client";
+import { AutomationCardTile } from "./components/automation-card-tile.client";
 import { categoryHubStrings } from "./category-hub-i18n";
 
 // Hub page of one Projects-layer category (step 207.10 item 3 redesign): an admin-style header with
@@ -73,31 +73,16 @@ export async function CategoryHub({ slug }: { slug: ProjectCategorySlug }) {
               const shown = card.badges.slice(0, MAX_BADGES);
               const more = card.badges.length - shown.length;
               return (
-                <Link
+                <AutomationCardTile
                   key={card.slug}
+                  category={slug}
+                  slug={card.slug}
                   href={`/projects/${slug}/${card.slug}`}
-                  className="group flex flex-col rounded-xl border bg-card p-5 shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold leading-tight">{card.title}</h3>
-                    <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
-                  </div>
-                  {card.description && (
-                    <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{card.description}</p>
-                  )}
-                  {(shown.length > 0 || more > 0) && (
-                    <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                      {shown.map((b) => (
-                        <span key={b} className="rounded border px-1.5 py-0.5 text-xs text-muted-foreground">
-                          {b}
-                        </span>
-                      ))}
-                      {more > 0 && (
-                        <span className="rounded border px-1.5 py-0.5 text-xs text-muted-foreground">+{more}</span>
-                      )}
-                    </div>
-                  )}
-                </Link>
+                  title={card.title}
+                  description={card.description}
+                  badges={shown}
+                  more={more}
+                />
               );
             })}
             {/* Optimistic pending cards (step 242.3): a just-created automation shows a muted spinner card
