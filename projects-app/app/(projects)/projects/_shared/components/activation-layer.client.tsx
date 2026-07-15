@@ -11,6 +11,8 @@ import { activationStrings } from "../activation-i18n";
 import { VoiceInput } from "./voice-input.client";
 import { ActivationQuiz } from "./activation-quiz.client";
 import type { ActivationParam, ActivationSchema } from "../activation";
+import { resolveLocalized } from "../localized-text";
+import { notifyRunCompleted } from "../use-run-refresh";
 
 // THE ACTIVATION LAYER — the launch control panel (step 241 E3, owner's design; generalized to `stream` in
 // step 243 — the SAME declaration/panel mechanism, two render branches, never a second component).
@@ -41,7 +43,8 @@ type RunReport = { node: string; status: string; ms: number; error?: string };
 type AskReport = { ok: boolean; nodes: RunReport[]; error?: string };
 
 export function ActivationLayer({ automation }: { automation: string }) {
-  const L = activationStrings(useUiLang());
+  const lang = useUiLang();
+  const L = activationStrings(lang);
   const [schema, setSchema] = useState<ActivationSchema | null>(null);
   const [designed, setDesigned] = useState(false);
   const [isInstanced, setIsInstanced] = useState(false);
@@ -95,7 +98,7 @@ export function ActivationLayer({ automation }: { automation: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           automation,
-          title: title.trim() || (schema?.title ?? "Run"),
+          title: title.trim() || resolveLocalized(schema?.title, lang) || "Run",
           params: values,
         }),
       });
@@ -104,7 +107,7 @@ export function ActivationLayer({ automation }: { automation: string }) {
       toast.success(L.created);
       await loadForks();
     } finally { setCreating(false); }
-  }, [automation, title, values, schema, L, loadForks]);
+  }, [automation, title, values, schema, lang, L, loadForks]);
 
   const run = useCallback(async (instanceId: string) => {
     setRunningId(instanceId);
@@ -130,6 +133,9 @@ export function ActivationLayer({ automation }: { automation: string }) {
         description: d.ok ? undefined : d.nodes?.find((n) => n.status === "fail")?.error,
         duration: 15000,
       });
+      // Live refresh (step 243.2): a successful run may have written rows other sections on this page show
+      // (the dashboard table, later other entities) — tell them, instead of requiring a manual reload.
+      if (d.ok) notifyRunCompleted(automation);
       await loadForks();
     } finally { setRunningId(null); }
   }, [automation, L, loadForks]);
@@ -159,6 +165,8 @@ export function ActivationLayer({ automation }: { automation: string }) {
         nodes: d.nodes ?? [],
         error: d.ok ? undefined : (d.nodes?.find((n) => n.status === "fail")?.error ?? d.error),
       });
+      // Live refresh (step 243.2) — see the identical call in run() above.
+      if (d.ok) notifyRunCompleted(automation);
     } finally {
       setAsking(false);
     }
@@ -202,9 +210,9 @@ export function ActivationLayer({ automation }: { automation: string }) {
       <section className="mx-auto w-[85vw] max-w-full space-y-4 px-4 py-6">
         <div className="space-y-1">
           <h2 className="flex items-center gap-2 text-xl font-semibold">
-            <Rocket className="size-5" /> {schema?.title || L.layerTitle}
+            <Rocket className="size-5" /> {resolveLocalized(schema?.title, lang) || L.layerTitle}
           </h2>
-          <p className="text-sm text-muted-foreground">{schema?.description || L.layerSubtitle}</p>
+          <p className="text-sm text-muted-foreground">{resolveLocalized(schema?.description, lang) || L.layerSubtitle}</p>
         </div>
 
         <div className="space-y-3 rounded-lg border p-4">
@@ -361,13 +369,17 @@ function ParamField({
   requiredHint: string;
   optionalHint: string;
 }) {
+  const lang = useUiLang();
   const areaRef = useRef<HTMLTextAreaElement | null>(null);
   const str = value === undefined || value === null ? "" : String(value);
+  // A longtext field spans the FULL width of the grid (step 243.2 — the owner's own field, a "how much is
+  // Apple stock" question, was rendering at ~50% width otherwise, cramped for no reason a short field has).
+  const wrapperClass = param.type === "longtext" ? "space-y-1 md:col-span-2" : "space-y-1";
 
   return (
-    <div className="space-y-1">
+    <div className={wrapperClass}>
       <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-        {param.label}
+        {resolveLocalized(param.label, lang)}
         <span className="text-[10px] uppercase tracking-wide opacity-70">
           {param.required ? requiredHint : optionalHint}
         </span>
@@ -375,7 +387,7 @@ function ParamField({
 
       {param.type === "longtext" ? (
         <>
-          <Textarea ref={areaRef} value={str} onChange={(e) => onChange(e.target.value)} className="min-h-20 text-sm" />
+          <Textarea ref={areaRef} value={str} onChange={(e) => onChange(e.target.value)} className="min-h-20 w-full text-sm" />
           <VoiceInput targetRef={areaRef} value={str} onChange={(v) => onChange(v)} />
         </>
       ) : param.type === "select" ? (
@@ -386,7 +398,7 @@ function ParamField({
         >
           <option value="">—</option>
           {(param.options ?? []).map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
+            <option key={o.value} value={o.value}>{resolveLocalized(o.label, lang)}</option>
           ))}
         </select>
       ) : param.type === "boolean" ? (
@@ -404,7 +416,7 @@ function ParamField({
         />
       )}
 
-      {param.help && <p className="text-xs text-muted-foreground">{param.help}</p>}
+      {param.help && <p className="text-xs text-muted-foreground">{resolveLocalized(param.help, lang)}</p>}
     </div>
   );
 }

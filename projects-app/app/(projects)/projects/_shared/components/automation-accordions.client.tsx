@@ -37,6 +37,19 @@ import type { EntityType } from "@/lib/entity-store";
 // (and generate real interfaces) comes in later steps. `usecases` is ONE of these entities (its accordion
 // visibility follows the switch like any other) but its review GATE (step 231) stays mandatory regardless
 // of the switch — hiding the accordion never bypasses the gate before a Development Step.
+// THE FROZEN-TEMPLATE NOTICE (step 243.2) — a small, dismissible-by-nature (it disappears once the section
+// carries real content) framing above every entity's real content: this is a DEMO the owner can freely
+// explore, not a promise of what a real, developed automation's section will show. Text is 10-language
+// (see `frozenTemplateNotice` in automation-menu-i18n.ts) — no "developed" flag exists yet (a later step),
+// so for now it always renders on the frozen starter's default state.
+function FrozenTemplateNotice({ text }: { text: string }) {
+  return (
+    <p className="rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
+      {text}
+    </p>
+  );
+}
+
 export function AutomationAccordions({
   config,
   cases,
@@ -109,6 +122,7 @@ export function AutomationAccordions({
             </Tooltip>
           </AccordionTrigger>
           <AccordionContent className="space-y-4">
+            <FrozenTemplateNotice text={M.frozenTemplateNotice} />
             <RequirementBriefPanel entityType="fork-activation" entityLabel={M.forkActivationLabel} automation={automation} />
           </AccordionContent>
         </AccordionItem>
@@ -127,6 +141,7 @@ export function AutomationAccordions({
           </Tooltip>
         </AccordionTrigger>
         <AccordionContent className="space-y-4">
+          <FrozenTemplateNotice text={M.frozenTemplateNotice} />
           {k === "dashboard" ? (
             <>
               {/* The Dashboard is the first entity with a real interface (step 228): ONE tab, any number of

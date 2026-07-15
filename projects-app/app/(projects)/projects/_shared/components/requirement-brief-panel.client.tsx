@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Sparkles } from "lucide-react";
+import { Hammer, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useUiLang } from "../use-ui-lang";
 import { automationMenuStrings } from "../automation-menu-i18n";
@@ -51,6 +52,11 @@ export function RequirementBriefPanel({
   const [quizOpen, setQuizOpen] = useState(false);
   // Caret target for the shared VoiceInput primitive (step 232) — spoken text lands where the cursor is.
   const briefRef = useRef<HTMLTextAreaElement | null>(null);
+  // CONSTRUCTION MODE (step 243.2, owner's design): this authoring block used to render wide open the
+  // instant the accordion item opened — visually loud for a tool most visits never touch. COLLAPSED by
+  // default now; a separator + one button reveal it. A pending (staged) requirement still gets its own
+  // hint even collapsed, so the owner isn't hiding work he already started.
+  const [buildMode, setBuildMode] = useState(false);
 
   useEffect(() => {
     if (!automation) return;
@@ -94,6 +100,19 @@ export function RequirementBriefPanel({
   // that used to live here is gone, along with every other one on the page.
 
   if (loading) return <Loader2 className="size-4 animate-spin text-muted-foreground" />;
+
+  if (!buildMode) {
+    return (
+      <div className="space-y-2">
+        <Separator />
+        <Button size="sm" variant="ghost" onClick={() => setBuildMode(true)} className="gap-2 text-muted-foreground">
+          <Hammer className="size-3.5" />
+          {L.requirementBuildMode}
+          {pending && <span className="text-amber-600 dark:text-amber-400">· {L.requirementPendingHint}</span>}
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2">

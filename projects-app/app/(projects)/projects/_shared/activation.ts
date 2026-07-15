@@ -1,6 +1,13 @@
+import type { LocalizedText } from "./localized-text";
+
 // FROZEN STANDARD — an automation's ACTIVATION (step 241 E3). The third member of the declaration family:
 // _data/channels.ts (219) declares WHAT the automation talks to, _data/tests.ts (220) declares WHAT it probes,
 // and _data/activation.ts declares WHAT ONE RUN OF IT TAKES.
+//
+// TEXT FIELDS ARE LocalizedText (step 243.2): a plain string for a real automation a coding agent writes in
+// the owner's own language (never forced to translate); a `{en,ru,...}` map for content WE author ourselves
+// that must ship in all ten (the frozen starter's own default activation). The panel resolves it via
+// `resolveLocalized(text, lang)` — see _shared/localized-text.ts.
 //
 // WHY IT EXISTS (owner's rule): an INSTANCED automation runs as a FORK — every run carries its own settings
 // (the article's keyword, how many sources, when to publish…). Those settings are CUSTOM TO EACH AUTOMATION:
@@ -30,7 +37,7 @@ export type ActivationParam = {
   /** The name the executor puts in the run context — must match what the nodes' paramsIn expect. */
   key: string;
   /** What the owner sees on the control panel, in plain words. */
-  label: string;
+  label: LocalizedText;
   type: ActivationParamType;
   /** A run cannot start without it: the executor refuses with `missing-params`, never a silent default. */
   required?: boolean;
@@ -38,16 +45,16 @@ export type ActivationParam = {
   default?: unknown;
   /** The per-field hint the panel shows — the same idea as ChannelKey.help (step 220): the form explains
    *  itself from data, instead of a hard-coded instruction living in the component. */
-  help?: string;
+  help?: LocalizedText;
   /** `select` only — the closed set of choices. */
-  options?: { value: string; label: string }[];
+  options?: { value: string; label: LocalizedText }[];
 };
 
 export type ActivationSchema = {
   /** The control panel's own heading, e.g. "Launch an article". */
-  title?: string;
+  title?: LocalizedText;
   /** One line: what ONE run of this automation actually does. */
-  description?: string;
+  description?: LocalizedText;
   /** The settings one run takes. EMPTY means: not designed yet (the panel says so honestly). */
   params: ActivationParam[];
 };

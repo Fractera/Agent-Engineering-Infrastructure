@@ -8,6 +8,12 @@
 // The canon of what each column KIND is for (its job, its visualization, its actions, when its data is
 // enough) lives in _shared/column-kinds.ts + app/(projects)/README.md "The dashboard tables & columns
 // standard". Read that before authoring a table so a model can judge whether it has enough data.
+//
+// TEXT FIELDS ARE LocalizedText (step 243.2) — see _shared/localized-text.ts: a plain string for a real
+// automation's own table (a coding agent writes it once, in the owner's language); a `{en,ru,...}` map for
+// content WE author ourselves that must ship in all ten (the frozen starter's own default tables).
+
+import type { LocalizedText } from "./localized-text";
 
 /** The CLOSED set of column types. A new visualization = a new type HERE + a renderer in the registry + a
  *  note in the canon — never new JSX inside a project. */
@@ -42,7 +48,7 @@ export type ColumnOptions = {
 /** One column of a dashboard table. `source` is the key in a row's `values` this column reads. */
 export type TableColumn = {
   id: string;
-  header: string;
+  header: LocalizedText;
   type: ColumnType;
   /** The key in a row's `values` map this column reads. */
   source: string;
@@ -60,8 +66,8 @@ export type TableRow = { id: string; values: Record<string, unknown> };
 /** One table inside the dashboard accordion. `storageKey` scopes the column-visibility choice per table. */
 export type DashboardTable = {
   id: string;
-  title: string;
-  description?: string;
+  title: LocalizedText;
+  description?: LocalizedText;
   columns: TableColumn[];
   /** Seed/demo rows rendered from the config (step 228). Absent/empty ⇒ an honest "No records yet". */
   rows?: TableRow[];

@@ -5,6 +5,8 @@ import { Columns2, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { DashboardConfig, DashboardTable } from "../table-config";
 import { ConfigRecordsTable } from "./config-records-table.client";
+import { useUiLang } from "../use-ui-lang";
+import { resolveLocalized } from "../localized-text";
 
 // THE DASHBOARD (step 228 + the telegram-notes standard). ONE tab that holds ANY number of tables, but only
 // ONE is shown at a time, behind a row of toggle buttons — exactly like the reference automation
@@ -14,8 +16,8 @@ import { ConfigRecordsTable } from "./config-records-table.client";
 // you can compare two tables side by side (and it is fine for the same table to be on both sides). The
 // choice (which table, and split on/off) is remembered per browser (localStorage).
 function TablePicker({
-  tables, value, onChange,
-}: { tables: DashboardTable[]; value: string; onChange: (id: string) => void }) {
+  tables, value, onChange, lang,
+}: { tables: DashboardTable[]; value: string; onChange: (id: string) => void; lang: string }) {
   return (
     <div className="inline-flex flex-wrap rounded-md border p-0.5">
       {tables.map((t) => (
@@ -26,7 +28,7 @@ function TablePicker({
           className="h-7 px-2 text-xs"
           onClick={() => onChange(t.id)}
         >
-          {t.title}
+          {resolveLocalized(t.title, lang)}
         </Button>
       ))}
     </div>
@@ -36,15 +38,16 @@ function TablePicker({
 function DashboardPane({
   automation, tables, value, onChange,
 }: { automation: string; tables: DashboardTable[]; value: string; onChange: (id: string) => void }) {
+  const lang = useUiLang();
   const table = tables.find((t) => t.id === value) ?? tables[0];
   return (
     <div className="min-w-0 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
-          <h4 className="truncate font-medium">{table.title}</h4>
-          {table.description && <p className="truncate text-xs text-muted-foreground">{table.description}</p>}
+          <h4 className="truncate font-medium">{resolveLocalized(table.title, lang)}</h4>
+          {table.description && <p className="truncate text-xs text-muted-foreground">{resolveLocalized(table.description, lang)}</p>}
         </div>
-        <TablePicker tables={tables} value={table.id} onChange={onChange} />
+        <TablePicker tables={tables} value={table.id} onChange={onChange} lang={lang} />
       </div>
       <ConfigRecordsTable automation={automation} table={table} />
     </div>

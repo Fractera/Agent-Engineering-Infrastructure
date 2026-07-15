@@ -14,6 +14,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { defaultVisibleColumnIds, tableStorageKey, type DashboardTable, type TableColumn, type TableRow } from "../table-config";
 import { ConfigRecordCell } from "./config-record-cell.client";
 import { LiveLookupDialog } from "./live-lookup-dialog.client";
+import { useRunRefresh } from "../use-run-refresh";
+import { useUiLang } from "../use-ui-lang";
+import { resolveLocalized } from "../localized-text";
 
 /** Fill `{field}` tokens in an `action:"live"` column's `liveUrl` from that row's own stored values. */
 function resolveLiveUrl(template: string, row: TableRow): string {
@@ -41,6 +44,7 @@ const SEARCH_MIN_CHARS = 3;
 const SEARCH_IDLE_MS = 3000;
 
 export function ConfigRecordsTable({ automation, table }: { automation: string; table: DashboardTable }) {
+  const lang = useUiLang();
   const seed = useMemo<TableRow[]>(() => table.rows ?? [], [table.rows]);
   const storageKey = tableStorageKey(automation, table);
   const pageSize = table.pageSize ?? 20;
@@ -90,6 +94,10 @@ export function ConfigRecordsTable({ automation, table }: { automation: string; 
   }, [loadLive, search, loadedCount]);
 
   useEffect(() => { void loadLive("", 0, false); }, [loadLive]);
+
+  // Live refresh (step 243.2): a successful run/ask elsewhere on this page (the launch console) may have
+  // just written a row here — reload from page 0 instead of making the owner reload the whole page.
+  useRunRefresh(automation, useCallback(() => { void loadLive(search, 0, false); }, [loadLive, search]));
 
   // Restore the user's personal column choice for this table.
   useEffect(() => {
@@ -190,7 +198,7 @@ export function ConfigRecordsTable({ automation, table }: { automation: string; 
                 onCheckedChange={(on) => setVisible(on ? [...visibleIds, c.id] : visibleIds.filter((id) => id !== c.id))}
                 onSelect={(e) => e.preventDefault()}
               >
-                {c.header}
+                {resolveLocalized(c.header, lang)}
               </DropdownMenuCheckboxItem>
             ))}
           </DropdownMenuContent>
@@ -212,7 +220,7 @@ export function ConfigRecordsTable({ automation, table }: { automation: string; 
           <thead>
             <tr className="border-b bg-muted/50 text-left">
               {cols.map((c) => (
-                <th key={c.id} className="whitespace-nowrap px-3 py-2 font-medium">{c.header}</th>
+                <th key={c.id} className="whitespace-nowrap px-3 py-2 font-medium">{resolveLocalized(c.header, lang)}</th>
               ))}
             </tr>
           </thead>
@@ -243,7 +251,7 @@ export function ConfigRecordsTable({ automation, table }: { automation: string; 
                           onDelete: (row) => void deleteRow(row),
                           onLive: (row, col2: TableColumn) => {
                             if (!col2.options?.liveUrl) return;
-                            setLiveTarget({ url: resolveLiveUrl(col2.options.liveUrl, row), title: col2.header });
+                            setLiveTarget({ url: resolveLiveUrl(col2.options.liveUrl, row), title: resolveLocalized(col2.header, lang) });
                           },
                         }}
                       />
@@ -279,7 +287,7 @@ export function ConfigRecordsTable({ automation, table }: { automation: string; 
             {detail.row &&
               table.columns.map((c) => (
                 <div key={c.id} className="flex gap-2">
-                  <span className="w-32 shrink-0 text-muted-foreground">{c.header}</span>
+                  <span className="w-32 shrink-0 text-muted-foreground">{resolveLocalized(c.header, lang)}</span>
                   <span className="whitespace-pre-wrap">{String(detail.row!.values[c.source] ?? "—")}</span>
                 </div>
               ))}
@@ -291,11 +299,11 @@ export function ConfigRecordsTable({ automation, table }: { automation: string; 
           the demo seed from now on. Fields are typed loosely (all strings; number columns parse on submit). */}
       <Dialog open={adding} onOpenChange={setAdding}>
         <DialogContent className="max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>{editingId ? "Edit row" : "Add a row"} — “{table.title}”</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editingId ? "Edit row" : "Add a row"} — “{resolveLocalized(table.title, lang)}”</DialogTitle></DialogHeader>
           <div className="space-y-3">
             {editableCols.map((c) => (
               <div key={c.id} className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">{c.header} <span className="opacity-60">({c.type})</span></label>
+                <label className="text-xs font-medium text-muted-foreground">{resolveLocalized(c.header, lang)} <span className="opacity-60">({c.type})</span></label>
                 {c.type === "longtext" ? (
                   <Textarea value={draft[c.source] ?? ""} onChange={(e) => setDraft((d) => ({ ...d, [c.source]: e.target.value }))} rows={3} />
                 ) : (

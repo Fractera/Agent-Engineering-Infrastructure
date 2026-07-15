@@ -75,6 +75,10 @@ export type AutomationMenuStrings = {
   requirementSave: string;
   requirementSaved: string;
   requirementSaveFail: string;
+  /** Step 243.2 — collapsed by default; reveals the requirement authoring block (textarea/voice/AI/save). */
+  requirementBuildMode: string;
+  /** Step 243.2 — shown above EVERY entity's real content on the frozen starter's default state. */
+  frozenTemplateNotice: string;
   requirementPendingHint: string;
   // Requirement "Start development" (step 238 Phase 2) — materializes the brief as a Development Step,
   // then archives+clears it (the real "handed to a coding agent" event).
@@ -169,6 +173,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementSave: "Save",
     requirementSaved: "Saved",
     requirementSaveFail: "Could not save the requirement.",
+    requirementBuildMode: "Construction mode",
+    frozenTemplateNotice: "You are viewing a starter frozen template for this automation type. Once you change your use cases and launch the project into development for the next iteration, you will get the real records for this section. Right now you are viewing a demo mode — but it is fully functional and you can explore it.",
     requirementPendingHint: "Pending — not yet picked up by development.",
     requirementStartDev: "Start development",
     requirementStarting: "Starting…",
@@ -255,6 +261,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementSave: "Сохранить",
     requirementSaved: "Сохранено",
     requirementSaveFail: "Не удалось сохранить требование.",
+    requirementBuildMode: "Режим строительства",
+    frozenTemplateNotice: "Вы просматриваете стартовый замороженный шаблон для этого типа автоматизации. Когда вы измените свои пользовательские кейсы и запустите проект в разработку на следующей итерации, вы получите настоящие записи для этой секции. Сейчас вы в демонстрационном режиме — однако он полностью работоспособен, и вы можете его исследовать.",
     requirementPendingHint: "Ожидает — ещё не взято в разработку.",
     requirementStartDev: "Начать разработку",
     requirementStarting: "Запускаю…",
@@ -341,6 +349,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementSave: "Guardar",
     requirementSaved: "Guardado",
     requirementSaveFail: "No se pudo guardar el requisito.",
+    requirementBuildMode: "Modo de construcción",
+    frozenTemplateNotice: "Estás viendo una plantilla inicial congelada para este tipo de automatización. Cuando cambies tus casos de uso y lances el proyecto a desarrollo en la siguiente iteración, obtendrás los registros reales de esta sección. Ahora mismo estás en modo demostración — pero es totalmente funcional y puedes explorarlo.",
     requirementPendingHint: "Pendiente — aún no incorporado al desarrollo.",
     requirementStartDev: "Iniciar desarrollo",
     requirementStarting: "Iniciando…",
@@ -427,6 +437,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementSave: "Enregistrer",
     requirementSaved: "Enregistré",
     requirementSaveFail: "Impossible d'enregistrer l'exigence.",
+    requirementBuildMode: "Mode construction",
+    frozenTemplateNotice: "Vous consultez un modèle de démarrage figé pour ce type d'automatisation. Une fois que vous aurez modifié vos cas d'usage et lancé le projet en développement lors de la prochaine itération, vous obtiendrez les vrais enregistrements pour cette section. Pour l'instant, vous êtes en mode démonstration — mais il est entièrement fonctionnel et vous pouvez l'explorer.",
     requirementPendingHint: "En attente — pas encore pris en charge par le développement.",
     requirementStartDev: "Démarrer le développement",
     requirementStarting: "Démarrage…",
@@ -513,6 +525,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementSave: "Salva",
     requirementSaved: "Salvato",
     requirementSaveFail: "Impossibile salvare il requisito.",
+    requirementBuildMode: "Modalità costruzione",
+    frozenTemplateNotice: "Stai visualizzando un modello iniziale congelato per questo tipo di automazione. Quando modificherai i tuoi casi d'uso e avvierai il progetto in sviluppo nella prossima iterazione, otterrai i record reali per questa sezione. Al momento sei in modalità demo — ma è pienamente funzionante e puoi esplorarla.",
     requirementPendingHint: "In sospeso — non ancora preso in carico dallo sviluppo.",
     requirementStartDev: "Avvia sviluppo",
     requirementStarting: "Avvio…",
@@ -599,6 +613,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementSave: "Speichern",
     requirementSaved: "Gespeichert",
     requirementSaveFail: "Die Anforderung konnte nicht gespeichert werden.",
+    requirementBuildMode: "Baumodus",
+    frozenTemplateNotice: "Sie sehen gerade eine eingefrorene Starter-Vorlage für diesen Automatisierungstyp. Sobald Sie Ihre Anwendungsfälle ändern und das Projekt in der nächsten Iteration in die Entwicklung schicken, erhalten Sie die echten Einträge für diesen Bereich. Im Moment befinden Sie sich im Demo-Modus — er ist jedoch voll funktionsfähig, und Sie können ihn erkunden.",
     requirementPendingHint: "Ausstehend — noch nicht in der Entwicklung aufgenommen.",
     requirementStartDev: "Entwicklung starten",
     requirementStarting: "Wird gestartet…",
@@ -685,6 +701,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementSave: "Salvar",
     requirementSaved: "Salvo",
     requirementSaveFail: "Não foi possível salvar o requisito.",
+    requirementBuildMode: "Modo de construção",
+    frozenTemplateNotice: "Você está visualizando um modelo inicial congelado para este tipo de automação. Quando você alterar seus casos de uso e lançar o projeto para desenvolvimento na próxima iteração, obterá os registros reais desta seção. Agora você está em modo de demonstração — mas ele é totalmente funcional e você pode explorá-lo.",
     requirementPendingHint: "Pendente — ainda não incorporado ao desenvolvimento.",
     requirementStartDev: "Iniciar desenvolvimento",
     requirementStarting: "Iniciando…",
@@ -771,6 +789,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementSave: "Zapisz",
     requirementSaved: "Zapisano",
     requirementSaveFail: "Nie udało się zapisać wymagania.",
+    requirementBuildMode: "Tryb budowy",
+    frozenTemplateNotice: "Przeglądasz startowy zamrożony szablon dla tego typu automatyzacji. Gdy zmienisz swoje przypadki użycia i uruchomisz projekt do rozwoju w następnej iteracji, otrzymasz prawdziwe wpisy dla tej sekcji. Obecnie jesteś w trybie demonstracyjnym — jest on jednak w pełni funkcjonalny i możesz go zbadać.",
     requirementPendingHint: "Oczekujące — jeszcze nie podjęte do realizacji.",
     requirementStartDev: "Rozpocznij realizację",
     requirementStarting: "Uruchamianie…",
@@ -857,6 +877,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementSave: "Kaydet",
     requirementSaved: "Kaydedildi",
     requirementSaveFail: "Gereksinim kaydedilemedi.",
+    requirementBuildMode: "Yapım modu",
+    frozenTemplateNotice: "Bu otomasyon türü için başlangıç dondurulmuş şablonunu görüntülüyorsunuz. Kullanım senaryolarınızı değiştirip projeyi bir sonraki yinelemede geliştirmeye başlattığınızda, bu bölüm için gerçek kayıtları alacaksınız. Şu anda demo modundasınız — ancak tamamen işlevseldir ve keşfedebilirsiniz.",
     requirementPendingHint: "Beklemede — henüz geliştirmeye alınmadı.",
     requirementStartDev: "Geliştirmeyi başlat",
     requirementStarting: "Başlatılıyor…",
@@ -943,6 +965,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementSave: "Opslaan",
     requirementSaved: "Opgeslagen",
     requirementSaveFail: "Kon de vereiste niet opslaan.",
+    requirementBuildMode: "Bouwmodus",
+    frozenTemplateNotice: "U bekijkt een bevroren startsjabloon voor dit automatiseringstype. Zodra u uw use cases wijzigt en het project in de volgende iteratie in ontwikkeling neemt, krijgt u de echte gegevens voor deze sectie. Op dit moment bevindt u zich in demomodus — maar deze is volledig functioneel en u kunt hem verkennen.",
     requirementPendingHint: "In behandeling — nog niet in ontwikkeling genomen.",
     requirementStartDev: "Ontwikkeling starten",
     requirementStarting: "Bezig met starten…",

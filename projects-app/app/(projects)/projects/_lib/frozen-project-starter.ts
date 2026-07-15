@@ -101,7 +101,14 @@ function humanize(slug: string): string {
 // wired) — the coding agent ADAPTS this pattern for the owner's actual task instead of inventing the shape
 // of "how does an automation work" from nothing. `instanced`/`chained` still get the old generic drafts —
 // steps 244/245 give them their own equally real starting pattern.
-const VERSION = 9;
+// v10 (step 243.2) — FIXES FROM LIVE OWNER TESTING: the stream starting pattern's own activation/dashboard
+// content is now TEN LANGUAGES (LocalizedText maps, not bare English strings — rule 4г applies to our own
+// default content); the launch console's longtext field spans the FULL grid width (was ~50%, a col-span
+// bug in the shared ParamField); every accordion section shows a standard "you're viewing a demo" notice
+// above its real content; the per-entity design tool (textarea/voice/AI/save) is collapsed by default
+// behind a "Construction mode" button; a successful ask/run now refreshes the dashboard table live (a
+// window CustomEvent, the SAME idiom already used by use-entities-live.ts — not telegram-notes' poll).
+const VERSION = 10;
 const SKELETON: Record<string, string> = {
   "page.tsx": `import AutomationEntry from "./_components";
 
@@ -840,16 +847,50 @@ const STREAM_ACTIVATION_FILE = `import type { ActivationSchema } from "../../../
 // paramsIn — that is the whole wiring. Full contract: app/(projects)/README.md, "The activation (launch
 // console) standard". ADAPT this for the owner's real task — change the label/help, add/remove params —
 // keeping each \`key\` in sync with whatever the first node's paramsIn expects.
+//
+// TEN LANGUAGES (step 243.2, rule 4г): this is OUR own default content, not a real automation's — title/
+// description/label/help are {en,ru,...} maps, resolved at render time (see _shared/localized-text.ts). A
+// real automation a coding agent designs later may keep it simple and just write ONE string in the owner's
+// own language — the type accepts both.
 export const ACTIVATION: ActivationSchema = {
-  title: "Ask for a stock price",
-  description: "Name a public company (e.g. \\"how much is Apple stock\\") and get its current price.",
+  title: {
+    en: "Ask for a stock price", ru: "Спросить цену акции", es: "Preguntar el precio de una acción",
+    fr: "Demander le prix d'une action", it: "Chiedi il prezzo di un'azione", de: "Nach einem Aktienkurs fragen",
+    pt: "Perguntar o preço de uma ação", pl: "Zapytaj o cenę akcji", tr: "Hisse fiyatı sor", nl: "Vraag naar een aandelenkoers",
+  },
+  description: {
+    en: "Name a public company (e.g. \\"how much is Apple stock\\") and get its current price.",
+    ru: "Назовите публичную компанию (например, «сколько стоит акция Apple») и получите её текущую цену.",
+    es: "Nombra una empresa pública (p. ej. «cuánto vale la acción de Apple») y obtén su precio actual.",
+    fr: "Nommez une entreprise cotée (p. ex. « combien vaut l'action Apple ») et obtenez son prix actuel.",
+    it: "Indica un'azienda quotata (es. «quanto vale l'azione Apple») e ottieni il suo prezzo attuale.",
+    de: "Nennen Sie ein börsennotiertes Unternehmen (z. B. „wie viel kostet die Apple-Aktie\\") und erhalten Sie den aktuellen Kurs.",
+    pt: "Indique uma empresa pública (ex.: «quanto vale a ação da Apple») e obtenha o preço atual.",
+    pl: "Podaj spółkę giełdową (np. „ile kosztuje akcja Apple\\") i uzyskaj jej aktualną cenę.",
+    tr: "Halka açık bir şirket adı verin (ör. \\"Apple hissesi ne kadar\\") ve güncel fiyatını öğrenin.",
+    nl: "Noem een beursgenoteerd bedrijf (bijv. \\"wat kost het Apple-aandeel\\") en krijg de actuele koers.",
+  },
   params: [
     {
       key: "query",
-      label: "Your question",
+      label: {
+        en: "Your question", ru: "Ваш вопрос", es: "Tu pregunta", fr: "Votre question", it: "La tua domanda",
+        de: "Ihre Frage", pt: "Sua pergunta", pl: "Twoje pytanie", tr: "Sorunuz", nl: "Uw vraag",
+      },
       type: "longtext",
       required: true,
-      help: "Type or speak a company name — e.g. Apple, Tesla, SpaceX.",
+      help: {
+        en: "Type or speak a company name — e.g. Apple, Tesla, SpaceX.",
+        ru: "Введите или произнесите название компании — например, Apple, Tesla, SpaceX.",
+        es: "Escribe o di el nombre de una empresa — p. ej. Apple, Tesla, SpaceX.",
+        fr: "Tapez ou dites le nom d'une entreprise — p. ex. Apple, Tesla, SpaceX.",
+        it: "Scrivi o pronuncia il nome di un'azienda — es. Apple, Tesla, SpaceX.",
+        de: "Geben Sie den Namen eines Unternehmens ein oder sprechen Sie ihn — z. B. Apple, Tesla, SpaceX.",
+        pt: "Digite ou fale o nome de uma empresa — ex.: Apple, Tesla, SpaceX.",
+        pl: "Wpisz lub wypowiedz nazwę firmy — np. Apple, Tesla, SpaceX.",
+        tr: "Bir şirket adı yazın veya söyleyin — örn. Apple, Tesla, SpaceX.",
+        nl: "Typ of spreek een bedrijfsnaam in — bijv. Apple, Tesla, SpaceX.",
+      },
     },
   ],
 };
@@ -862,18 +903,47 @@ const STREAM_DASHBOARD_FILE = `import type { DashboardConfig } from "../../../_s
 // universal table (pagination/search-debounce/live-refresh) — every automation gets them automatically the
 // moment it declares them here; nothing to build. Full contract: app/(projects)/README.md, "The dashboard
 // tables & columns standard". ADAPT the columns for the owner's real task.
+//
+// TEN LANGUAGES (step 243.2, rule 4г) — title/description/headers are {en,ru,...} maps, our own default
+// content; resolved at render time (_shared/localized-text.ts). A real automation may just write one string.
 export const PROJECT_DASHBOARD: DashboardConfig = {
   tables: [
     {
       id: "history",
-      title: "History",
-      description: "Every successful lookup. A failed ask is never recorded here.",
+      title: {
+        en: "History", ru: "История", es: "Historial", fr: "Historique", it: "Cronologia",
+        de: "Verlauf", pt: "Histórico", pl: "Historia", tr: "Geçmiş", nl: "Geschiedenis",
+      },
+      description: {
+        en: "Every successful lookup. A failed ask is never recorded here.",
+        ru: "Каждый успешный запрос. Неудачный запрос сюда никогда не записывается.",
+        es: "Cada consulta exitosa. Una consulta fallida nunca se registra aquí.",
+        fr: "Chaque recherche réussie. Une demande échouée n'est jamais enregistrée ici.",
+        it: "Ogni ricerca riuscita. Una richiesta fallita non viene mai registrata qui.",
+        de: "Jede erfolgreiche Abfrage. Eine fehlgeschlagene Anfrage wird hier nie aufgezeichnet.",
+        pt: "Cada consulta bem-sucedida. Um pedido malsucedido nunca é registrado aqui.",
+        pl: "Każde udane zapytanie. Nieudane zapytanie nigdy nie jest tu zapisywane.",
+        tr: "Her başarılı sorgu. Başarısız bir istek buraya asla kaydedilmez.",
+        nl: "Elke succesvolle opzoeking. Een mislukt verzoek wordt hier nooit vastgelegd.",
+      },
       pageSize: 10,
       columns: [
-        { id: "date", header: "Date", type: "date", source: "date", defaultVisible: true },
-        { id: "company", header: "Company", type: "text", source: "company", defaultVisible: true },
-        { id: "ticker", header: "Ticker", type: "text", source: "ticker", defaultVisible: true },
-        { id: "price", header: "Price", type: "number", source: "price", defaultVisible: true, options: { suffix: "$" } },
+        {
+          id: "date", type: "date", source: "date", defaultVisible: true,
+          header: { en: "Date", ru: "Дата", es: "Fecha", fr: "Date", it: "Data", de: "Datum", pt: "Data", pl: "Data", tr: "Tarih", nl: "Datum" },
+        },
+        {
+          id: "company", type: "text", source: "company", defaultVisible: true,
+          header: { en: "Company", ru: "Компания", es: "Empresa", fr: "Entreprise", it: "Azienda", de: "Unternehmen", pt: "Empresa", pl: "Firma", tr: "Şirket", nl: "Bedrijf" },
+        },
+        {
+          id: "ticker", type: "text", source: "ticker", defaultVisible: true,
+          header: { en: "Ticker", ru: "Тикер", es: "Ticker", fr: "Symbole", it: "Ticker", de: "Ticker", pt: "Ticker", pl: "Ticker", tr: "Sembol", nl: "Ticker" },
+        },
+        {
+          id: "price", type: "number", source: "price", defaultVisible: true, options: { suffix: "$" },
+          header: { en: "Price", ru: "Цена", es: "Precio", fr: "Prix", it: "Prezzo", de: "Preis", pt: "Preço", pl: "Cena", tr: "Fiyat", nl: "Prijs" },
+        },
         {
           id: "live", header: "", type: "actions", source: "ticker", defaultVisible: true,
           options: { action: "live", liveUrl: "/api/projects/{{CATEGORY}}/{{PROJECT}}/price?ticker={ticker}" },
