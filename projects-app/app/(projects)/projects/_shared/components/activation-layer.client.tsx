@@ -12,30 +12,40 @@ import { VoiceInput } from "./voice-input.client";
 import { ActivationQuiz } from "./activation-quiz.client";
 import type { ActivationParam, ActivationSchema } from "../activation";
 
-// THE ACTIVATION LAYER — the launch control panel (step 241 E3, owner's design).
+// THE ACTIVATION LAYER — the launch control panel (step 241 E3, owner's design; generalized to `stream` in
+// step 243 — the SAME declaration/panel mechanism, two render branches, never a second component).
 //
-// An INSTANCED automation runs as a FORK: every run carries its OWN settings. Which settings those are is
-// CUSTOM to each automation — the coding agent decides them while designing that automation's architecture
-// and writes them into its `_data/activation.ts`. This panel renders itself from that declaration, so a new
-// automation gets a working control panel by writing DATA, never UI. The product presumes nothing about the
-// parameters (no built-in schedules, no rate limits — if an automation wants a publish time, it declares one).
+// An INSTANCED automation runs as a FORK: every run carries its OWN settings, and forks are listed/relaunched.
+// A STREAM automation has no fork concept — it is a plain one-shot ask: the SAME declared params
+// (`_data/activation.ts`), the SAME VoiceInput-capable fields, but ONE button that POSTs straight to
+// `/api/projects/run` with no `instanceId` (the executor already supports this — `canActivate()`'s fork gate
+// lives entirely under `type === "instanced"`) and shows the result INLINE in this same container (never a
+// toast — the owner's explicit requirement for step 243) instead of a runs list.
+//
+// Which settings a run takes is CUSTOM to each automation — the coding agent decides them while designing
+// that automation's architecture and writes them into its `_data/activation.ts`. This panel renders itself
+// from that declaration for BOTH types, so a new automation gets a working control panel by writing DATA,
+// never UI. The product presumes nothing about the parameters (no built-in schedules, no rate limits).
 //
 // IT IS A LAYER, NOT AN ACCORDION: it is mounted as a permanent full-width section beside the diagram, it is
-// NOT part of the entity-visibility switches (EntityKey), and it therefore CANNOT be hidden — it exists only
-// for `instanced` automations, and for them it is always there. This is the owner's rule: the launch console
-// of an automation is not an optional view.
+// NOT part of the entity-visibility switches (EntityKey), and it therefore CANNOT be hidden — it exists for
+// `instanced` AND `stream` automations (chained has no launch console: a group has no run of its own). This
+// is the owner's rule: the launch console of an automation is not an optional view.
 //
 // NOT DESIGNED YET is an honest state, never a dead end: the panel says so and opens the fork-activation
-// design surface (step 239) where the owner describes what a run should take.
+// design surface (step 239) where the owner describes what a run should take — same for both types.
 
 type Fork = { id: string; title: string; specialization: string; overrides: string; status: string };
 type RunReport = { node: string; status: string; ms: number; error?: string };
+/** The stream console's own last-ask result — nodes chips + an optional short error line, shown INLINE. */
+type AskReport = { ok: boolean; nodes: RunReport[]; error?: string };
 
 export function ActivationLayer({ automation }: { automation: string }) {
   const L = activationStrings(useUiLang());
   const [schema, setSchema] = useState<ActivationSchema | null>(null);
   const [designed, setDesigned] = useState(false);
   const [isInstanced, setIsInstanced] = useState(false);
+  const [isStream, setIsStream] = useState(false);
   const [loading, setLoading] = useState(true);
   const [values, setValues] = useState<Record<string, unknown>>({});
   const [title, setTitle] = useState("");
@@ -44,6 +54,8 @@ export function ActivationLayer({ automation }: { automation: string }) {
   const [runningId, setRunningId] = useState<string | null>(null);
   const [report, setReport] = useState<Record<string, RunReport[]>>({});
   const [designOpen, setDesignOpen] = useState(false);
+  const [asking, setAsking] = useState(false);
+  const [askReport, setAskReport] = useState<AskReport | null>(null);
 
   const loadForks = useCallback(async () => {
     const r = await fetch(`/api/projects/instances/list?automation=${encodeURIComponent(automation)}`, { cache: "no-store" });
@@ -58,10 +70,12 @@ export function ActivationLayer({ automation }: { automation: string }) {
         const d = (await r.json()) as { designed: boolean; schema: ActivationSchema; type: string };
         setSchema(d.schema);
         setDesigned(d.designed);
-        // The launch console exists ONLY for an instanced automation (a run of one IS a fork with its own
-        // settings). Mounted from the zone layout, this component sees every automation — so it decides for
-        // itself, from the automation's own declared type, rather than the caller guessing.
+        // The launch console exists for `instanced` (a run IS a fork with its own settings) AND `stream` (a
+        // plain one-shot ask, step 243) — NOT for `chained` (a group has no run of its own). Mounted from the
+        // zone layout, this component sees every automation — so it decides for itself, from the automation's
+        // own declared type, rather than the caller guessing.
         setIsInstanced(d.type === "instanced");
+        setIsStream(d.type === "stream");
         // Prefill the form with the declared defaults — the automation's own, not ours.
         const init: Record<string, unknown> = {};
         for (const p of d.schema.params) if (p.default !== undefined) init[p.key] = p.default;
@@ -120,11 +134,41 @@ export function ActivationLayer({ automation }: { automation: string }) {
     } finally { setRunningId(null); }
   }, [automation, L, loadForks]);
 
-  if (loading || !isInstanced) return null;
+  const ask = useCallback(async () => {
+    setAsking(true);
+    setAskReport(null);
+    try {
+      const r = await fetch(`/api/projects/run`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ automation, input: values }),
+      });
+      const d = (await r.json()) as {
+        ok?: boolean; nodes?: RunReport[]; error?: string; reason?: string; params?: string[];
+      };
+      if (!r.ok) {
+        // The executor's REFUSAL — precise, shown inline (never a dead end, never a toast: owner's rule).
+        const detail = d.reason === "missing-params" && d.params?.length
+          ? L.missingParams.replace("{k}", d.params.join(", "))
+          : d.error ?? d.reason ?? "";
+        setAskReport({ ok: false, nodes: [], error: L.refused.replace("{k}", detail) });
+        return;
+      }
+      setAskReport({
+        ok: Boolean(d.ok),
+        nodes: d.nodes ?? [],
+        error: d.ok ? undefined : (d.nodes?.find((n) => n.status === "fail")?.error ?? d.error),
+      });
+    } finally {
+      setAsking(false);
+    }
+  }, [automation, values, L]);
+
+  if (loading || (!isInstanced && !isStream)) return null;
 
   // NOT DESIGNED — say so, and open the surface where it gets designed (step 239): the SAME Quiz, on the
   // fork-activation entity. Its result is a requirement the coding agent turns into _data/activation.ts,
-  // and then this panel builds itself. Never a dead end.
+  // and then this panel builds itself. Never a dead end. Same empty-state for both instanced and stream.
   if (!designed) {
     return (
       <section className="mx-auto w-[85vw] max-w-full px-4 py-6">
@@ -148,6 +192,68 @@ export function ActivationLayer({ automation }: { automation: string }) {
           onClose={() => setDesignOpen(false)}
           onApplied={() => toast.success(L.emptyCta, { description: L.emptyBody, duration: 12000 })}
         />
+      </section>
+    );
+  }
+
+  // STREAM — one-shot ask: same declared fields, no fork creation/list, result shown INLINE right here.
+  if (isStream) {
+    return (
+      <section className="mx-auto w-[85vw] max-w-full space-y-4 px-4 py-6">
+        <div className="space-y-1">
+          <h2 className="flex items-center gap-2 text-xl font-semibold">
+            <Rocket className="size-5" /> {schema?.title || L.layerTitle}
+          </h2>
+          <p className="text-sm text-muted-foreground">{schema?.description || L.layerSubtitle}</p>
+        </div>
+
+        <div className="space-y-3 rounded-lg border p-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            {(schema?.params ?? []).map((p) => (
+              <ParamField
+                key={p.key}
+                param={p}
+                value={values[p.key]}
+                onChange={(v) => setValues((s) => ({ ...s, [p.key]: v }))}
+                requiredHint={L.requiredHint}
+                optionalHint={L.optional}
+              />
+            ))}
+          </div>
+
+          <div>
+            <Button onClick={ask} disabled={asking} className="gap-2">
+              {asking ? <Loader2 className="size-4 animate-spin" /> : <Rocket className="size-4" />}
+              {asking ? L.asking : L.askButton}
+            </Button>
+          </div>
+
+          {askReport ? (
+            <div className="space-y-2 rounded-md border bg-muted/30 p-3">
+              {askReport.error ? (
+                <p className="text-sm text-rose-700 dark:text-rose-400">{askReport.error}</p>
+              ) : null}
+              {askReport.nodes.length ? (
+                <div className="flex flex-wrap gap-2">
+                  {askReport.nodes.map((n) => (
+                    <span
+                      key={n.node}
+                      className={`flex items-center gap-1 rounded-md border px-2 py-1 text-xs ${
+                        n.status === "ok"
+                          ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-400"
+                          : "border-rose-500/40 text-rose-700 dark:text-rose-400"
+                      }`}
+                      title={n.error ?? ""}
+                    >
+                      {n.status === "ok" ? <CheckCircle2 className="size-3" /> : <AlertTriangle className="size-3" />}
+                      {n.node} · {n.ms}ms
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
       </section>
     );
   }

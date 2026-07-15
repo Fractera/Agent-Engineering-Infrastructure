@@ -76,10 +76,17 @@ export const COLUMN_KINDS: Record<ColumnType, ColumnKind> = {
   },
   actions: {
     type: "actions",
-    purpose: "Let the user act on the row — see its full detail, or delete it.",
-    visualization: 'A ghost button: "Details" (options.action=detail) or a trash icon (options.action=delete).',
-    needs: "The row id (source=id). One actions column per action; keep them last.",
-    options: ["action"],
+    purpose:
+      "Let the user act on the row — see its full detail, delete it, or (step 243) fetch a FRESH live value " +
+      "for data the stored row can only snapshot (a price, a status from an external source).",
+    visualization:
+      'A ghost button: "Details" (options.action=detail), a trash icon (options.action=delete), or ' +
+      '(options.action=live) a button that GETs options.liveUrl ({field} tokens filled from this row\'s own ' +
+      "values) and shows the fresh response in a modal — never writes anything, purely a read.",
+    needs:
+      "The row id (source=id) for detail/delete. For live: options.liveUrl, and the row's own values must " +
+      "carry whatever {field} tokens that url needs (e.g. a stored ticker to re-look-up its current price).",
+    options: ["action", "liveUrl"],
     action: true,
   },
 };

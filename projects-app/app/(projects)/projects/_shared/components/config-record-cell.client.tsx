@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { RefreshCw, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { TableColumn, TableRow } from "../table-config";
@@ -40,6 +40,8 @@ export type CellCtx = {
   onToggleExpand: () => void;
   onDetail: (row: TableRow) => void;
   onDelete: (row: TableRow) => void;
+  /** For `action:"live"` (step 243) — the column carries its own `options.liveUrl`. */
+  onLive: (row: TableRow, col: TableColumn) => void;
 };
 
 export function ConfigRecordCell({ col, row, ctx }: { col: TableColumn; row: TableRow; ctx: CellCtx }) {
@@ -88,6 +90,13 @@ export function ConfigRecordCell({ col, row, ctx }: { col: TableColumn; row: Tab
         return (
           <Button variant="ghost" size="icon" aria-label="Delete row" className="text-muted-foreground hover:text-destructive" onClick={(e) => { e.stopPropagation(); ctx.onDelete(row); }}>
             <Trash2 className="size-4" />
+          </Button>
+        );
+      }
+      if (col.options?.action === "live") {
+        return (
+          <Button variant="ghost" size="sm" className="gap-1" onClick={(e) => { e.stopPropagation(); ctx.onLive(row, col); }}>
+            <RefreshCw className="size-3.5" /> Live
           </Button>
         );
       }

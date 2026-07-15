@@ -14,10 +14,14 @@ export const EXECUTABLES: Record<string, () => Promise<NodeModule>> = {
   "other/example-content-pipeline:find-sources": () => import("../other/example-content-pipeline/_nodes/find-sources/functions"),
   "other/example-content-pipeline:prepare-content": () => import("../other/example-content-pipeline/_nodes/prepare-content/functions"),
   "other/example-content-pipeline:publish": () => import("../other/example-content-pipeline/_nodes/publish/functions"),
+  "other/example-stream-stock-price:parse-request": () => import("../other/example-stream-stock-price/_nodes/parse-request/functions"),
+  "other/example-stream-stock-price:lookup-price": () => import("../other/example-stream-stock-price/_nodes/lookup-price/functions"),
+  "other/example-stream-stock-price:record-result": () => import("../other/example-stream-stock-price/_nodes/record-result/functions"),
 };
 
 export const ACTIVATIONS: Record<string, () => Promise<ActivationModule>> = {
   "other/example-content-pipeline": () => import("../other/example-content-pipeline/_data/activation"),
+  "other/example-stream-stock-price": () => import("../other/example-stream-stock-price/_data/activation"),
 };
 
 export function executableKeys(): string[] {

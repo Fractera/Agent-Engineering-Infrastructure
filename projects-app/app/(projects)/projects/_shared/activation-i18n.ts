@@ -28,6 +28,9 @@ export type ActivationStrings = {
   refused: string;          // {k} = the reason from the executor
   missingParams: string;    // {k} = the keys
   settings: string;
+  // the STREAM console (step 243) — one-shot ask, no fork/instance list
+  askButton: string;
+  asking: string;
 };
 
 export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
@@ -55,6 +58,8 @@ export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
     refused: "The automation refused to start: {k}",
     missingParams: "Missing required settings: {k}",
     settings: "Settings",
+    askButton: "Ask",
+    asking: "Asking…",
   },
   ru: {
     layerTitle: "Пульт запуска",
@@ -80,6 +85,8 @@ export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
     refused: "Автоматизация отказалась стартовать: {k}",
     missingParams: "Не хватает обязательных настроек: {k}",
     settings: "Настройки",
+    askButton: "Спросить",
+    asking: "Спрашиваю…",
   },
   es: {
     layerTitle: "Panel de lanzamiento",
@@ -105,6 +112,8 @@ export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
     refused: "La automatización se negó a arrancar: {k}",
     missingParams: "Faltan ajustes obligatorios: {k}",
     settings: "Ajustes",
+    askButton: "Preguntar",
+    asking: "Preguntando…",
   },
   fr: {
     layerTitle: "Pupitre de lancement",
@@ -130,6 +139,8 @@ export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
     refused: "L'automatisation a refusé de démarrer : {k}",
     missingParams: "Réglages obligatoires manquants : {k}",
     settings: "Réglages",
+    askButton: "Demander",
+    asking: "Interrogation…",
   },
   it: {
     layerTitle: "Plancia di lancio",
@@ -155,6 +166,8 @@ export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
     refused: "L'automazione ha rifiutato di partire: {k}",
     missingParams: "Mancano parametri obbligatori: {k}",
     settings: "Parametri",
+    askButton: "Chiedi",
+    asking: "Sto chiedendo…",
   },
   de: {
     layerTitle: "Startpult",
@@ -180,6 +193,8 @@ export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
     refused: "Die Automatisierung hat den Start verweigert: {k}",
     missingParams: "Fehlende erforderliche Einstellungen: {k}",
     settings: "Einstellungen",
+    askButton: "Fragen",
+    asking: "Frage läuft…",
   },
   pt: {
     layerTitle: "Painel de lançamento",
@@ -205,6 +220,8 @@ export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
     refused: "A automação recusou arrancar: {k}",
     missingParams: "Faltam definições obrigatórias: {k}",
     settings: "Definições",
+    askButton: "Perguntar",
+    asking: "A perguntar…",
   },
   pl: {
     layerTitle: "Pulpit uruchamiania",
@@ -230,6 +247,8 @@ export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
     refused: "Automatyzacja odmówiła startu: {k}",
     missingParams: "Brakuje wymaganych ustawień: {k}",
     settings: "Ustawienia",
+    askButton: "Zapytaj",
+    asking: "Pytam…",
   },
   tr: {
     layerTitle: "Başlatma paneli",
@@ -255,6 +274,8 @@ export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
     refused: "Otomasyon başlamayı reddetti: {k}",
     missingParams: "Eksik zorunlu ayarlar: {k}",
     settings: "Ayarlar",
+    askButton: "Sor",
+    asking: "Soruluyor…",
   },
   nl: {
     layerTitle: "Startpaneel",
@@ -280,6 +301,8 @@ export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
     refused: "De automatisering weigerde te starten: {k}",
     missingParams: "Ontbrekende verplichte instellingen: {k}",
     settings: "Instellingen",
+    askButton: "Vragen",
+    asking: "Bezig met vragen…",
   },
 };
 

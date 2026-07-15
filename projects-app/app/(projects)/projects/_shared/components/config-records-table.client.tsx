@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Columns3, Loader2, Plus } from "lucide-react";
+import { ChevronDown, Columns3, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,8 +11,14 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { defaultVisibleColumnIds, tableStorageKey, type DashboardTable, type TableRow } from "../table-config";
+import { defaultVisibleColumnIds, tableStorageKey, type DashboardTable, type TableColumn, type TableRow } from "../table-config";
 import { ConfigRecordCell } from "./config-record-cell.client";
+import { LiveLookupDialog } from "./live-lookup-dialog.client";
+
+/** Fill `{field}` tokens in an `action:"live"` column's `liveUrl` from that row's own stored values. */
+function resolveLiveUrl(template: string, row: TableRow): string {
+  return template.replace(/\{(\w+)\}/g, (_, key: string) => encodeURIComponent(String(row.values[key] ?? "")));
+}
 
 // The UNIVERSAL dashboard table (step 228 + LIVE data store, step 229) — ONE component for every automation,
 // driven entirely by CONFIG (DashboardTable). Columns are DATA; the user toggles column VISIBILITY via the
@@ -23,35 +29,67 @@ import { ConfigRecordCell } from "./config-record-cell.client";
 // dashboard is never blank). The owner adds rows with "Add row" and deletes a live row via the delete
 // action; the automation's own nodes write rows through the same API. Live rows need no rebuild — the data
 // is in the DB, not in a file.
+//
+// PAGINATION + SEARCH DEBOUNCE (step 243, generalized here for every table, not just its own): newest-first
+// is already the API's own sort order (nothing to do). "Load more" pages OLDER rows in, `pageSize` per page
+// (a table declares its own via `table.pageSize`, default 20 — unchanged from before this table had ANY
+// pagination UI at all). The search box no longer fires on every keystroke: it waits for either an EMPTY box
+// (instant — "show me everything again") or at least 3 characters, and even then only fires after 3s of
+// typing idle — cheap on the server, still snappy for a deliberate search.
 const API = "/api/projects/dashboard/rows";
+const SEARCH_MIN_CHARS = 3;
+const SEARCH_IDLE_MS = 3000;
 
 export function ConfigRecordsTable({ automation, table }: { automation: string; table: DashboardTable }) {
   const seed = useMemo<TableRow[]>(() => table.rows ?? [], [table.rows]);
   const storageKey = tableStorageKey(automation, table);
+  const pageSize = table.pageSize ?? 20;
 
   const [rows, setRows] = useState<TableRow[]>(seed);
   const [isLive, setIsLive] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadedCount, setLoadedCount] = useState(0); // how many live rows are currently shown — the next offset
   const [search, setSearch] = useState("");
   const [visibleIds, setVisibleIds] = useState<string[]>(() => defaultVisibleColumnIds(table.columns));
   const [expanded, setExpanded] = useState<string | null>(null);
   const [detail, setDetail] = useState<{ open: boolean; row: TableRow | null }>({ open: false, row: null });
+  const [liveTarget, setLiveTarget] = useState<{ url: string; title: string } | null>(null);
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null); // null = add, an id = edit that live row
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
 
-  // Load the live rows; fall back to the seed while the store is empty.
-  const loadLive = useCallback(async (q: string) => {
+  // Load the live rows (a page of them); fall back to the seed while the store is empty. `append` is true
+  // only for "Load more" — it grows the shown list instead of replacing it.
+  const loadLive = useCallback(async (q: string, offset: number, append: boolean) => {
     try {
-      const r = await fetch(`${API}?automation=${encodeURIComponent(automation)}&table=${encodeURIComponent(table.id)}&search=${encodeURIComponent(q)}`, { cache: "no-store" });
+      const r = await fetch(
+        `${API}?automation=${encodeURIComponent(automation)}&table=${encodeURIComponent(table.id)}&search=${encodeURIComponent(q)}&offset=${offset}&limit=${pageSize}`,
+        { cache: "no-store" },
+      );
       if (!r.ok) return;
-      const d = (await r.json()) as { rows: TableRow[]; source: "live" | "empty" };
-      if (d.source === "live") { setRows(d.rows); setIsLive(true); }
-      else { setIsLive(false); setRows(q.trim() ? seed.filter((row) => Object.values(row.values).some((v) => String(v ?? "").toLowerCase().includes(q.toLowerCase()))) : seed); }
+      const d = (await r.json()) as { rows: TableRow[]; hasMore: boolean; source: "live" | "empty" };
+      if (d.source === "live") {
+        setRows((prev) => (append ? [...prev, ...d.rows] : d.rows));
+        setLoadedCount((prev) => (append ? prev + d.rows.length : d.rows.length));
+        setIsLive(true);
+        setHasMore(d.hasMore);
+      } else {
+        setIsLive(false);
+        setHasMore(false);
+        setLoadedCount(0);
+        setRows(q.trim() ? seed.filter((row) => Object.values(row.values).some((v) => String(v ?? "").toLowerCase().includes(q.toLowerCase()))) : seed);
+      }
     } catch { /* keep whatever is shown */ }
-  }, [automation, table.id, seed]);
+  }, [automation, table.id, pageSize, seed]);
 
-  useEffect(() => { void loadLive(""); }, [loadLive]);
+  const loadMore = useCallback(async () => {
+    setLoadingMore(true);
+    try { await loadLive(search, loadedCount, true); } finally { setLoadingMore(false); }
+  }, [loadLive, search, loadedCount]);
+
+  useEffect(() => { void loadLive("", 0, false); }, [loadLive]);
 
   // Restore the user's personal column choice for this table.
   useEffect(() => {
@@ -69,9 +107,15 @@ export function ConfigRecordsTable({ automation, table }: { automation: string; 
   const cols = useMemo(() => table.columns.filter((c) => visibleIds.includes(c.id)), [table.columns, visibleIds]);
   const shown = rows;
 
-  // Debounced search: live rows search on the server; seed rows filter on the client (inside loadLive).
+  // Debounced search (step 243): an EMPTY box reloads instantly ("show me everything again" is not a
+  // deliberate search, no reason to wait). Anything shorter than SEARCH_MIN_CHARS never fires at all — a
+  // single keystroke isn't a query yet. At SEARCH_MIN_CHARS+ characters, wait SEARCH_IDLE_MS of typing idle
+  // before firing — one request per pause, not one per keystroke. Live rows search server-side; seed rows
+  // filter client-side (inside loadLive).
   useEffect(() => {
-    const t = setTimeout(() => void loadLive(search), 300);
+    if (search.length > 0 && search.length < SEARCH_MIN_CHARS) return;
+    const delay = search.length === 0 ? 0 : SEARCH_IDLE_MS;
+    const t = setTimeout(() => void loadLive(search, 0, false), delay);
     return () => clearTimeout(t);
   }, [search, loadLive]);
 
@@ -113,7 +157,7 @@ export function ConfigRecordsTable({ automation, table }: { automation: string; 
       setAdding(false);
       setEditingId(null);
       setDraft({});
-      await loadLive(search);
+      await loadLive(search, 0, false);
       toast.success(editingId ? "Row saved." : "Row added.");
     } finally { setBusy(false); }
   }, [automation, table.id, editableCols, draft, editingId, loadLive, search]);
@@ -124,6 +168,7 @@ export function ConfigRecordsTable({ automation, table }: { automation: string; 
       const r = await fetch(`${API}/${row.id}`, { method: "DELETE" });
       if (!r.ok) { toast.error("Could not delete the row."); return; }
       setRows((prev) => prev.filter((x) => x.id !== row.id));
+      setLoadedCount((prev) => Math.max(0, prev - 1));
       toast.success("Row deleted.");
     } catch { toast.error("Could not delete the row."); }
   }, [isLive]);
@@ -196,6 +241,10 @@ export function ConfigRecordsTable({ automation, table }: { automation: string; 
                           onToggleExpand: () => setExpanded(expanded === r.id ? null : r.id),
                           onDetail: (row) => setDetail({ open: true, row }),
                           onDelete: (row) => void deleteRow(row),
+                          onLive: (row, col2: TableColumn) => {
+                            if (!col2.options?.liveUrl) return;
+                            setLiveTarget({ url: resolveLiveUrl(col2.options.liveUrl, row), title: col2.header });
+                          },
                         }}
                       />
                     </td>
@@ -206,6 +255,22 @@ export function ConfigRecordsTable({ automation, table }: { automation: string; 
           </tbody>
         </table>
       </div>
+
+      {hasMore && (
+        <div className="flex justify-center">
+          <Button variant="outline" size="sm" onClick={() => void loadMore()} disabled={loadingMore}>
+            {loadingMore ? <Loader2 className="mr-1 size-4 animate-spin" /> : <ChevronDown className="mr-1 size-4" />}
+            Load more
+          </Button>
+        </div>
+      )}
+
+      <LiveLookupDialog
+        open={!!liveTarget}
+        url={liveTarget?.url ?? null}
+        title={liveTarget?.title ?? ""}
+        onClose={() => setLiveTarget(null)}
+      />
 
       <Dialog open={detail.open} onOpenChange={(o) => setDetail((d) => ({ ...d, open: o }))}>
         <DialogContent>

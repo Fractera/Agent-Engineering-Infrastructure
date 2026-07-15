@@ -42,9 +42,9 @@ export function AutomationPageChrome({ children }: { children: React.ReactNode }
         <DevelopmentWaveBanner automation={automation} />
       </div>
 
-      {/* The launch control panel (step 241 E3) — renders itself only for an INSTANCED automation whose
-          activation is declared; it decides that from the automation's own _data/activation.ts. Permanent:
-          it is not an accordion and cannot be hidden. */}
+      {/* The launch control panel (step 241 E3, generalized to `stream` in step 243) — renders itself only for
+          an INSTANCED or STREAM automation whose activation is declared; it decides that from the
+          automation's own _data/activation.ts + type. Permanent: it is not an accordion and cannot be hidden. */}
       <ActivationLayer automation={automation} />
 
       {children}

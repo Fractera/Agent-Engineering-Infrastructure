@@ -19,7 +19,7 @@ export type ColumnType =
   | "date"      // a formatted date/time; options.emphasizeIfFuture highlights upcoming ones
   | "link"      // an outward link ("Open")
   | "image"     // a thumbnail with a preview modal
-  | "actions";  // a row action button (detail | delete)
+  | "actions";  // a row action button (detail | delete | live)
 
 export type ColumnOptions = {
   /** For a badge: the field whose value maps to a color, or a fixed color token. */
@@ -28,8 +28,13 @@ export type ColumnOptions = {
   emphasizeIfFuture?: boolean;
   /** For a longtext: allow the cell to expand on click. */
   expand?: boolean;
-  /** For an actions column: which action this button performs. */
-  action?: "detail" | "delete";
+  /** For an actions column: which action this button performs. `"live"` (step 243) fetches `liveUrl` fresh
+   *  on click and shows the response in a modal — for data that goes stale (a price, a status) where the
+   *  STORED row is a snapshot, not the current truth. Never writes anything — pure read. */
+  action?: "detail" | "delete" | "live";
+  /** For `action:"live"`: the endpoint to GET on click. `{field}` tokens are replaced with that row's own
+   *  `values.field` before the request — e.g. `"/api/projects/other/x/price?ticker={ticker}"`. */
+  liveUrl?: string;
   /** For a number: an optional unit/suffix shown after the value (e.g. "$", "%"). */
   suffix?: string;
 };
@@ -62,6 +67,8 @@ export type DashboardTable = {
   rows?: TableRow[];
   /** localStorage key for this table's column-visibility choice. Defaults to the table id when omitted. */
   storageKey?: string;
+  /** Page size for "last N + load more" pagination (step 243). Absent ⇒ the API's own default (20). */
+  pageSize?: number;
 };
 
 /** The dashboard's config: the ordered set of tables the accordion renders. */

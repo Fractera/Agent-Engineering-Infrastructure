@@ -4,8 +4,10 @@ import { addRow, listRows } from "@/lib/dashboard-rows";
 
 // THE DASHBOARD ROWS API (step 229) — the live data store behind the config dashboard tables. Both the
 // owner (via the UI) and the automation's own nodes (via this API, role `agent`) write rows here.
-//   GET  ?automation=<cat/slug>&table=<id>&search=&offset=  -> { rows, hasMore, source: "live"|"empty" }
-//   POST { automation, table, values }                      -> the created row
+//   GET  ?automation=<cat/slug>&table=<id>&search=&offset=&limit=  -> { rows, hasMore, source: "live"|"empty" }
+//   POST { automation, table, values }                              -> the created row
+// `limit` (step 243) — page size for a table's "last N + load more" pagination; defaults to listRows()'s own
+// PAGE constant when omitted, so every pre-243 table keeps behaving exactly as before.
 // The client falls back to the config's SEED rows only when the live store is empty (source:"empty") — so a
 // fresh dashboard is never blank, and the first written row replaces the demo.
 export const runtime = "nodejs";
@@ -21,7 +23,9 @@ export async function GET(req: NextRequest) {
 
   const search = req.nextUrl.searchParams.get("search") ?? "";
   const offset = Number.parseInt(req.nextUrl.searchParams.get("offset") ?? "0", 10) || 0;
-  const { rows, hasMore } = await listRows(proj.automation, table, { search, offset });
+  const limitParam = req.nextUrl.searchParams.get("limit");
+  const limit = limitParam ? Number.parseInt(limitParam, 10) || undefined : undefined;
+  const { rows, hasMore } = await listRows(proj.automation, table, { search, offset, limit });
   // "empty" only when the FIRST page with no search is empty — that is when the client shows the seed.
   const source = rows.length === 0 && !search.trim() && offset === 0 ? "empty" : "live";
   return NextResponse.json({ rows, hasMore, source });

@@ -106,10 +106,25 @@ never a second code path. Pure template + token substitution, zero code generati
   from `test-run`'s pure timing/status simulation (step 227.C, which marks a built node `ok` without invoking
   anything). Live proof: two different inputs (`topic="cats"` vs `topic="purr"`) produced two different,
   correctly-computed outputs (deduped by URL) — not a canned response.
-- **Explicitly NOT proven / not built yet:** a *general* "run any node by cuid" executor (dynamic import by
-  resolved file path, branching, parallel `run` mode, retries). `run-real` proves the *convention* — a
-  compiled, co-located `functions.ts` module genuinely executes — for exactly one node. Building the general
-  executor is a separate, later step; do not assume one exists.
+- **Proven (step 241 E1+E2, then extended step 243) — a GENERAL executor now exists and is not a one-off.**
+  `lib/executor.ts` walks ANY automation's indexed nodes in order, dynamically loading each one's real
+  compiled `functions.ts` through a generated static-import registry (`_generated/executables.ts` — not a
+  runtime file-path import, which a `(projects)` route group breaks) and calling its functions by name,
+  merging return values back into a shared run context (by function name, by the node's own single `out` key,
+  and by spreading a plain-object return — three mechanisms, all live). `POST /api/projects/run` is the one
+  entry point for both automation types: `{automation, instanceId}` for an Instanced fork, `{automation,
+  input}` for a Stream ask (no fork at all — the fork-precondition gate in `canActivate()` runs only for
+  `type==="instanced"`). Refuses cleanly on draft nodes, on a missing executable, or on an empty diagram.
+  **Two independent reference automations now prove it, not one:** `example-content-pipeline` (Instanced —
+  sequential nodes + a real external AI call via `_shared/external-ai.ts`) and `example-stream-stock-price`
+  (Stream — sequential nodes, a multi-function node, and the first plain non-AI external HTTP fetch node in
+  the codebase; a thrown error stops the run before the output node, which is exactly why a failed ask never
+  writes a dashboard row — no special-casing needed).
+- **Still NOT proven / not built:** the node's own `run: "sequential"|"parallel"` field is declared metadata
+  only — the executor always runs a node's functions sequentially regardless of its value; true concurrent
+  execution has never been exercised anywhere. Retries are not built. A chained (cross-automation) run — one
+  automation's node `emit`-ing an event another automation's run reacts to — is not built either (planned for
+  a later step; the transport tables/dispatcher exist and are live, but nothing on either end calls them yet).
 - **A link between two automations** (`_edges/<cuid>/`) follows the identical contract, one directory level
   up (`projects/_edges/<cuid>/`, belonging to no single project). It has a **readiness gate**: it can only be
   created between automations with zero draft nodes on either side (409 otherwise, with a machine-readable
