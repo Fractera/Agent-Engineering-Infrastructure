@@ -211,6 +211,8 @@ import { INPUT_CHANNELS } from "../_data/channels";
 import { PROBES } from "../_data/tests";
 import { AUTOMATION_TYPE } from "../_data/automation";
 import { AutomationStatusBar } from "../../../_shared/components/automation-status-bar.client";
+import { DevelopmentWaveBanner } from "../../../_shared/components/development-wave-banner.client";
+import { ActivationLayer } from "../../../_shared/components/activation-layer.client";
 import { ActivationQuiz } from "../../../_shared/components/activation-quiz.client";
 import { AutomationAccordions } from "../../../_shared/components/automation-accordions.client";
 import { DiagramSection } from "../../../_shared/components/diagram-section.client";
@@ -220,7 +222,7 @@ import { USE_CASES } from "../_data/use-cases";
 import { PROJECT_DASHBOARD } from "../_data/dashboard";
 import { DIAGRAM_NODES } from "../_data/diagram";
 
-// Frozen automation skeleton — VERSION 4. Header/footer come from the Projects-zone layout (step 213).
+// Frozen automation skeleton — VERSION 9. Header/footer come from the Projects-zone layout (step 213).
 // A project is BORN with the automation menu (top right): Settings (AI model + input channels) and
 // Tests — BOTH declaration-driven, so a model developing this automation sees and learns the standard
 // from the first minute, BEFORE adapting anything to a real scenario. Grow it by filling
@@ -234,10 +236,12 @@ export default function AutomationEntry() {
   // root canvas's eye icon and side panel already use — never a second implementation of either.
   const isGroup = AUTOMATION_TYPE === "chained";
   return (
-    // THE PAGE-LEVEL CHROME IS NOT HERE (step 241 E3.1). The development-wave banner, the page lock and the
-    // launch control panel are mounted ONCE in the projects-zone layout, because THIS file only writes the
-    // pages of projects created from now on — mounting chrome here left every already-existing automation
-    // without it (the owner hit exactly that). The layout wraps every automation page, old and new.
+    // PAGE ORDER (owner's requirement, step 243.1): status bar (breadcrumb/indicator/menu) FIRST, then the
+    // development-wave NOTIFICATION, then the launch console, THEN the title — in that order, every time.
+    // The banner/console used to be mounted by the projects-zone layout, ABOVE this whole file (step 241
+    // E3.1) — that put them ABOVE the status bar, which the owner rejected. They are rendered HERE now, so
+    // this exact order is what EVERY future automation is born with; the layout only provides the
+    // WaveLockProvider context (one poll for the whole page) — see automation-page-chrome.client.tsx.
     <>
       <main className="mx-auto w-[85vw] max-w-full space-y-4 px-4 pt-8">
         <AutomationStatusBar
@@ -251,6 +255,8 @@ export default function AutomationEntry() {
           type={AUTOMATION_TYPE}
           entitiesSeed={PROJECT_CONFIG.entities}
         />
+        {/* The ONLY launcher of development (step 240): appears the moment anything is staged. */}
+        <DevelopmentWaveBanner automation="{{CATEGORY}}/{{PROJECT}}" />
         {/* PHASE 2 (step 227) — on the FIRST visit the activation Quiz opens and brainstorms the owner's
             instruction into nodes: one quiz step = one node + one development step for the coding agent. */}
         <ActivationQuiz automation="{{CATEGORY}}/{{PROJECT}}" />
@@ -262,6 +268,10 @@ export default function AutomationEntry() {
           <p className="max-w-3xl text-muted-foreground">{d.description}</p>
         </div>
       </main>
+      {/* The launch control panel (step 241 E3, generalized to \`stream\` in step 243) — renders itself only
+          for an INSTANCED or STREAM automation whose activation is declared; empty (null) otherwise. Its own
+          full-width section, so it sits OUTSIDE the \`<main>\` above (not nested inside it). */}
+      <ActivationLayer automation="{{CATEGORY}}/{{PROJECT}}" />
       {/* The Diagram is ALWAYS visible — full screen width, 80vh — NOT an accordion (owner design,
           step 223.C). It is the automation's centerpiece; the node panel opens on click. A CHAINED
           automation shows GroupDetailSection here instead (step 238) — see the isGroup comment above. */}

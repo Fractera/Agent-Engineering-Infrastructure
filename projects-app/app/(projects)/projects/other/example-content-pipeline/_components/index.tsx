@@ -5,6 +5,8 @@ import { InstancesPanel } from "../../../_shared/components/instances-panel.clie
 import { ValidateButton } from "../../../_shared/components/validate-button.client";
 import { DashboardAccordion } from "../../../_shared/components/dashboard-accordion.client";
 import { ProcessesTimeline } from "../../../_shared/components/processes-timeline.client";
+import { DevelopmentWaveBanner } from "../../../_shared/components/development-wave-banner.client";
+import { ActivationLayer } from "../../../_shared/components/activation-layer.client";
 import { EXAMPLE_DASHBOARD } from "../_data/dashboard";
 
 // Reference example (step 223.C). The Diagram is ALWAYS visible — full screen width, 80vh — not an
@@ -16,6 +18,11 @@ export default function ExampleEntry() {
   return (
     <>
       <main className="mx-auto w-[85vw] max-w-full space-y-3 px-4 pt-8">
+        {/* Notification + launch console (step 243.1): moved OUT of the projects-zone layout into every
+            automation's own page, so the owner's required order (status bar → notification → title) can be
+            expressed per-page. This project has no AutomationStatusBar of its own (a hand-built reference,
+            not a createFrozenProject output) — the banner/console sit at the very top instead. */}
+        <DevelopmentWaveBanner automation="other/example-content-pipeline" />
         <div className="space-y-1">
           <h1 className="text-3xl font-semibold">{d.title}</h1>
           <p className="max-w-3xl text-muted-foreground">{d.description}</p>
@@ -27,9 +34,8 @@ export default function ExampleEntry() {
         </div>
         <ValidateButton automation="other/example-content-pipeline" />
       </main>
+      <ActivationLayer automation="other/example-content-pipeline" />
       <DiagramSection nodes={DIAGRAM_NODES} automation="other/example-content-pipeline" />
-      {/* The launch control panel is NOT mounted here (step 241 E3.1): page-level chrome lives in the
-          projects-zone layout, so every automation page gets it — this one included. */}
       <main className="mx-auto w-[85vw] max-w-full space-y-8 px-4 py-8">
         {/* Anchor for the Gantt bars' click-to-scroll (step 230). */}
         <div id="instances-panel">

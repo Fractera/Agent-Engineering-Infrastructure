@@ -2,22 +2,23 @@
 
 import { usePathname } from "next/navigation";
 import { WaveLockProvider } from "./wave-lock.client";
-import { DevelopmentWaveBanner } from "./development-wave-banner.client";
-import { ActivationLayer } from "./activation-layer.client";
 
-// THE AUTOMATION PAGE'S CHROME (step 241 E3.1) — mounted ONCE, in the projects-zone layout.
+// THE AUTOMATION PAGE'S CHROME (step 241 E3.1; reordering fix step 243.1) — mounted ONCE, in the
+// projects-zone layout.
 //
-// THE BUG THIS FIXES (found by the owner testing step 240, and it is a real design error, not a slip): the
-// wave banner, the development lock and the activation layer were mounted in the frozen SKELETON. But a
-// project's page is GENERATED CODE, written when that project was created — so only projects created AFTER
-// the change would ever get them, while every automation that already exists kept an old page and showed
-// nothing. The owner saved a dashboard requirement, saw it staged, and no banner appeared: the banner was
-// not in his page's code at all.
+// WHAT THIS PROVIDES: only the `WaveLockProvider` CONTEXT (one poll for the whole page — the wave banner's
+// state, every tool's lock, all agree because they share this one provider). It renders NO visual chrome of
+// its own any more.
 //
-// The fix is structural: page-level chrome belongs to the ZONE LAYOUT, which wraps EVERY automation page —
-// old and new alike — so it can never drift from the generated pages again. The layout does not know which
-// automation it is rendering, but the URL does: /projects/<category>/<slug> (the zone footer already derives
-// it the same way).
+// WHY NOT THE BANNER/CONSOLE TOO (reversed from the original E3.1 fix, step 243.1): the owner required a
+// SPECIFIC on-page order — status bar (breadcrumb/indicator/menu) FIRST, then the notification banner, THEN
+// the title. The banner and the launch console both need to sit BETWEEN the status bar and the title, and
+// the status bar is per-project generated content (it needs that project's OWN channels/probes/entities,
+// not fetchable generically) — so the ONLY place that ordering can be expressed is the per-project
+// `_components/index.tsx` template (frozen-project-starter.ts SKELETON), not this shared layout. Every
+// automation's own `_components/index.tsx` now renders `<DevelopmentWaveBanner>` and `<ActivationLayer>`
+// itself, right after its `<AutomationStatusBar>` — the SKELETON template does this for every future
+// automation, and every existing automation was migrated once (step 243.1) so none lost the banner.
 //
 // It renders nothing on the hubs (/projects, /projects/<category>) — only on an automation's own page.
 
@@ -37,16 +38,6 @@ export function AutomationPageChrome({ children }: { children: React.ReactNode }
 
   return (
     <WaveLockProvider automation={automation}>
-      <div className="mx-auto w-[85vw] max-w-full px-4 pt-6">
-        {/* The ONLY launcher of development (step 240): appears the moment anything is staged. */}
-        <DevelopmentWaveBanner automation={automation} />
-      </div>
-
-      {/* The launch control panel (step 241 E3, generalized to `stream` in step 243) — renders itself only for
-          an INSTANCED or STREAM automation whose activation is declared; it decides that from the
-          automation's own _data/activation.ts + type. Permanent: it is not an accordion and cannot be hidden. */}
-      <ActivationLayer automation={automation} />
-
       {children}
     </WaveLockProvider>
   );
