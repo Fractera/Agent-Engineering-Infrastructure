@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rm } from "node:fs/promises";
+import { join } from "node:path";
 import { db } from "@/lib/db";
 import { authorize, resolveProject, scheduleRebuild } from "@/lib/nodes";
 import { regenerateExecutables } from "@/lib/executables";
@@ -80,6 +81,12 @@ export async function POST(req: NextRequest) {
 
   // 5. the folder — with it go the nodes, their functions, and every _data file. Zero technical debt.
   await rm(proj.projectDir, { recursive: true, force: true });
+
+  // 5b. a Stream automation's starting pattern (step 243) also writes a per-automation "live" action route
+  // OUTSIDE projectsRoot (app/api/projects/<cat>/<slug>/ — a served route, not project content). Absent for
+  // every automation that predates 243 or never declared a `live` column; rm with force never errors on a
+  // missing path, so this is a no-op for those.
+  await rm(join(process.cwd(), "app", "api", "projects", proj.category, proj.slug), { recursive: true, force: true });
 
   // 6. the generated executables/activations registry must forget it too, or the bundler would still carry
   //    an import of a folder that no longer exists (a build error, and a ghost node in the executor).
