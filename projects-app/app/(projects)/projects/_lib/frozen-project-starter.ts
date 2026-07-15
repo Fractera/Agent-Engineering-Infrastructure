@@ -670,14 +670,23 @@ import { INSTRUCTION as lookupInstruction } from "../_nodes/lookup-price/instruc
 import { META as recordMeta } from "../_nodes/record-result/meta";
 import { FUNCTIONS as recordFns } from "../_nodes/record-result/functions";
 import { INSTRUCTION as recordInstruction } from "../_nodes/record-result/instruction";
+import { META as ifSuccessMeta } from "../_nodes/if-success/meta";
+import { FUNCTIONS as ifSuccessFns } from "../_nodes/if-success/functions";
+import { META as ifNotExistsMeta } from "../_nodes/if-not-exists/meta";
+import { FUNCTIONS as ifNotExistsFns } from "../_nodes/if-not-exists/functions";
 
 // STARTING PATTERN (step 243) — a REAL, working Stream automation, not empty drafts. Read
-// app/(projects)/README.md "The activation (launch console) standard" first, then ADAPT these three nodes
-// for the owner's actual task (rename them, change what they do) — keep the SHAPE: sequential, a
-// multi-function node, a plain external call, a write gated by success.
+// app/(projects)/README.md "The activation (launch console) standard" first, then ADAPT these nodes for the
+// owner's actual task (rename them, change what they do) — keep the SHAPE: sequential, a multi-function node,
+// a plain external call, a write gated by success. The two CONDITION nodes (2026-07-15) branch off the lookup:
+// "If success" carries the flow into the output node, "If not exists" is a dead end (for now) — they read the
+// automation's control flow ON the diagram. They are visual no-ops today (pass-through); the real success/
+// failure gating still comes from lookup-price throwing on no price, so a failed ask never records a row.
 export const DIAGRAM_NODES: NodeContract[] = [
   assembleNode(parseMeta, parseFns, parseInstruction),
   assembleNode(lookupMeta, lookupFns, lookupInstruction),
+  assembleNode(ifSuccessMeta, ifSuccessFns),
+  assembleNode(ifNotExistsMeta, ifNotExistsFns),
   assembleNode(recordMeta, recordFns, recordInstruction),
 ];
 `,
@@ -798,6 +807,7 @@ export const META: NodeMeta = {
   cuid: "{{CUID_LOOKUP}}",
   name: "Look up the price",
   role: "intermediate",
+  parentId: "parse-request",
   description: "Calls the free Yahoo Finance quote endpoint for the resolved ticker.",
   in: { ticker: "string" },
   out: { price: "number", asOf: "ISODate" },
@@ -885,6 +895,7 @@ export const META: NodeMeta = {
   name: "Record the result",
   role: "output",
   ioType: "dashboard",
+  parentId: "if-success",
   description: "Writes the successful lookup into this automation's History dashboard table.",
   in: { company: "string", ticker: "string", price: "number" },
   out: { rowId: "string" },
@@ -923,6 +934,79 @@ export const INSTRUCTION = \`Build a deterministic function that writes a succes
 automation's own dashboard rows store (through the existing rows API — never a bespoke table). This node
 must be the LAST one, so it is reached only after every earlier node succeeded. Every function must be
 typed (inputs and return) and scoped to this node.\`;
+`,
+  // ── THE TWO CONDITION NODES (2026-07-15) — square gates that branch off lookup-price on the diagram ──────
+  "_nodes/if-success/meta.ts": `import type { NodeMeta } from "../../../../_shared/node-contract";
+
+// CONDITION node — the SUCCESS branch off lookup-price: carries the flow into the output node. Square on the
+// diagram (role "condition"); keep its label SHORT — it is read at a glance. Visual pass-through for now; the
+// real success/failure gating is lookup-price throwing on no price.
+export const META: NodeMeta = {
+  id: "if-success",
+  cuid: "{{CUID_IF_SUCCESS}}",
+  name: "If success",
+  role: "condition",
+  parentId: "lookup-price",
+  description: "The branch taken when a live price was found — the flow continues to the output node.",
+  in: { price: "number" },
+  out: { price: "number" },
+  conditions: ["a live price was returned"],
+  run: "sequential",
+  estDurationMs: 5,
+};
+`,
+  "_nodes/if-success/functions.ts": `import type { NodeFunction } from "../../../../_shared/node-contract";
+
+// Visual condition node — a pass-through gate. Forwards the price unchanged; the real decision is made
+// upstream by lookup-price throwing when there is no price. When condition nodes are standardized, this
+// becomes the real conditional-routing check.
+export async function whenPriceFound(price: number): Promise<{ price: number }> {
+  return { price };
+}
+
+export const FUNCTIONS: NodeFunction[] = [
+  {
+    name: "whenPriceFound",
+    paramsIn: { price: "number" },
+    returns: "{ price: number }",
+    rules: ["visual condition (pass-through) — carries a successful lookup forward to the output node"],
+  },
+];
+`,
+  "_nodes/if-not-exists/meta.ts": `import type { NodeMeta } from "../../../../_shared/node-contract";
+
+// CONDITION node — the FAILURE branch off lookup-price: taken when the company has no public stock. A dead
+// end for now (other conditions could leave it later). Square on the diagram (role "condition"), short label.
+export const META: NodeMeta = {
+  id: "if-not-exists",
+  cuid: "{{CUID_IF_NOT_EXISTS}}",
+  name: "If not exists",
+  role: "condition",
+  parentId: "lookup-price",
+  description: "The branch taken when no public stock exists for the request — the automation ends here.",
+  in: {},
+  out: {},
+  conditions: ["no live price for the ticker"],
+  run: "sequential",
+  estDurationMs: 5,
+};
+`,
+  "_nodes/if-not-exists/functions.ts": `import type { NodeFunction } from "../../../../_shared/node-contract";
+
+// Visual condition node — a no-op dead end. It does nothing: on a real failure lookup-price has already
+// thrown and stopped the run before this point, so no row is ever written down this branch.
+export async function whenNotFound(): Promise<Record<string, never>> {
+  return {};
+}
+
+export const FUNCTIONS: NodeFunction[] = [
+  {
+    name: "whenNotFound",
+    paramsIn: {},
+    returns: "{}",
+    rules: ["visual condition (no-op) — the dead-end branch when no stock exists"],
+  },
+];
 `,
 };
 
@@ -1183,6 +1267,9 @@ export async function createFrozenProject(
     "{{CUID_PARSE}}": createNodeId(),
     "{{CUID_LOOKUP}}": createNodeId(),
     "{{CUID_RECORD}}": createNodeId(),
+    // The two CONDITION nodes (2026-07-15) — the square gates branching off lookup-price.
+    "{{CUID_IF_SUCCESS}}": createNodeId(),
+    "{{CUID_IF_NOT_EXISTS}}": createNodeId(),
     // Phase 1 of an automation's birth (step 224 §1.5): the immutable type + the owner's instruction.
     "{{AUTOMATION_TYPE}}": type,
     "{{AUTOMATION_INSTRUCTION}}": instruction,

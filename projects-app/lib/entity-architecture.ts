@@ -96,6 +96,11 @@ const NODE_ROLE_SYSTEM_INSTRUCTIONS: Record<string, string> = {
     "An OUTPUT node is the automation's exit point: it exists to DELIVER the finished result to its " +
     "destination. That destination is a surface the user sees, an external channel, or ANOTHER automation's " +
     "input node when automations are chained. It is the last step, reached only once the work has succeeded.",
+  condition:
+    "A CONDITION node is a gate in the MIDDLE of the flow: it passes the result forward only when its " +
+    "condition holds. Several condition nodes sharing one parent express a BRANCH — success/error, or a " +
+    "multi-way split (e.g. <30% / 30-70% / >70%), never limited to a boolean. It is drawn as a square on the " +
+    "diagram. (Its full standardization is in progress; today it is a labelled branch marker.)",
 };
 
 /** One node role group in the bundle: the role, its (conceptual) system instruction, the finer input/output

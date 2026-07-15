@@ -65,6 +65,38 @@ const RUN_FRAME: Record<RunStatus, string> = {
 };
 
 function DiagramNode({ data, selected }: NodeProps<CanvasNode>) {
+  // A CONDITION node (2026-07-15) — a comparison/gate that passes the flow forward only when its condition
+  // holds. Rendered as a SQUARE (aspect-square, grows 1:1) in a distinct violet, so it reads at a glance as a
+  // different KIND of node from the rectangular work nodes. Short label centred; no role/io badges (the shape
+  // itself is the marker).
+  if (data.role === "condition") {
+    const cframe = data.draft
+      ? "border-rose-500 border-dashed"
+      : selected
+        ? "border-violet-500 ring-1 ring-violet-500"
+        : "border-violet-500/60";
+    return (
+      <div
+        className={`relative flex aspect-square min-h-[5.5rem] min-w-[5.5rem] max-w-[10rem] items-center justify-center rounded-md border-2 bg-violet-500/5 p-2 text-center shadow-sm ${cframe}`}
+        title="Condition node — passes the result forward when its condition holds"
+      >
+        <Handle type="target" position={Position.Left} />
+        <span className="break-words text-[11px] font-medium leading-tight">{data.label}</span>
+        {data.builder && (
+          <button
+            type="button"
+            aria-label="Add child node"
+            title="Add child node"
+            onClick={(e) => { e.stopPropagation(); data.onAddChild(data.cuid); }}
+            className="absolute -right-3 top-1/2 z-10 flex size-6 -translate-y-1/2 items-center justify-center rounded-full border bg-background shadow hover:bg-accent"
+          >
+            <Plus className="size-3.5" />
+          </button>
+        )}
+        <Handle type="source" position={Position.Right} />
+      </div>
+    );
+  }
   // The lifecycle frame (draft = red) is independent of the run frame; a running node still shows orange.
   const frame =
     data.runStatus !== "idle"
@@ -184,13 +216,18 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
         x: n.x, y: n.y, parentCuid: n.parent_cuid, node: n,
       }));
     }
-    // Before the index seeds, fall back to the build-time nodes (a linear chain — they have no parent).
-    return nodes.map((n, i) => ({
-      id: n.id, cuid: n.cuid ?? n.id, name: n.name, draft: !!n.draft, sub: n.run,
-      x: null as number | null, y: null as number | null,
-      parentCuid: i > 0 ? (nodes[i - 1].cuid ?? nodes[i - 1].id) : null,
-      node: undefined as IndexNode | undefined,
-    }));
+    // Before the index seeds, fall back to the build-time nodes. A node's parent is its declared `parentId`
+    // (a BRANCH — e.g. two condition nodes sharing one parent), or, when none is declared, the previous node
+    // (a plain linear chain — the default a simple sequence still gets for free).
+    return nodes.map((n, i) => {
+      const parent = n.parentId ? nodes.find((x) => x.id === n.parentId) : i > 0 ? nodes[i - 1] : undefined;
+      return {
+        id: n.id, cuid: n.cuid ?? n.id, name: n.name, draft: !!n.draft, sub: n.run,
+        x: null as number | null, y: null as number | null,
+        parentCuid: parent ? (parent.cuid ?? parent.id) : null,
+        node: undefined as IndexNode | undefined,
+      };
+    });
   }, [index, nodes]);
 
   // TREE layout (fixed in 224 L4.1 — the "+" adds a child OF THE CLICKED NODE, not at the end of the

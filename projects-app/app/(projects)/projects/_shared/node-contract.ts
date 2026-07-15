@@ -96,6 +96,11 @@ export type NodeContract = {
    *  of OUTPUT_TYPE_DESCRIPTIONS (e.g. "dashboard"). Open string (custom allowed). Meaningless for
    *  `intermediate`. Shown as a SECOND badge next to the role badge. Absent → no io-type badge. */
   ioType?: string;
+  /** The `id`/slug of this node's PARENT on the diagram (2026-07-15) — lets the frozen template express a
+   *  BRANCH, not just a linear chain: a `condition` node points at the node it evaluates, and two condition
+   *  nodes sharing one parent fan out from it. Absent → the diagram falls back to the linear "previous node"
+   *  chain (a plain sequence still needs no parentId). Drives the canvas layout + edges. */
+  parentId?: string;
   /** The node's own typed inputs / outputs. */
   in: Record<string, TypeSpec>;
   out: Record<string, TypeSpec>;
