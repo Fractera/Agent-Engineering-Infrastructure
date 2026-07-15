@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCheck, Loader2, Pencil, ShieldAlert, ShieldCheck, Trash2 } from "lucide-react";
+import { CheckCheck, Loader2, Pencil, ShieldAlert, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Accordion,
@@ -109,7 +109,29 @@ export function UseCasesPanel({ cases, automation }: { cases: UseCase[]; automat
   }, [automation, load, router]);
 
   if (!rows.length) {
-    return <p className="text-sm text-muted-foreground">{L.empty}</p>;
+    // Owner's request (step 243.2): the empty state used to just SAY "describe them in the Quiz on this
+    // page" without a way to actually open it here — now it does, the exact same session the header pencil
+    // opens once cases exist ("cases: true" — revisit/create the whole set).
+    return (
+      <div className="space-y-3">
+        <p className="text-sm text-muted-foreground">{L.empty}</p>
+        {automation && (
+          <Button size="sm" variant="secondary" onClick={() => setEditing({})}>
+            <Sparkles className="size-3.5" /> {L.createCases}
+          </Button>
+        )}
+        {editing && automation && (
+          <ActivationQuiz
+            automation={automation}
+            useCase={editing.cuid}
+            useCaseName={editing.title}
+            cases={!editing.cuid}
+            open
+            onClose={() => { setEditing(null); void load(); }}
+          />
+        )}
+      </div>
+    );
   }
 
   return (

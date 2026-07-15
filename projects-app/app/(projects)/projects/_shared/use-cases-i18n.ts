@@ -4,6 +4,8 @@
 export type UseCasesStrings = {
   sectionTitle: string; sectionTooltip: string;
   empty: string;
+  /** Step 243.2 — opens the SAME Quiz used by "editAll"; shown next to the empty-state message. */
+  createCases: string;
   reviewedYes: string; reviewedNo: string;
   readConfirm: string; editAll: string; editAllTip: string; editCaseTip: string; deleteTip: string;
   noDescription: string;
@@ -18,6 +20,7 @@ export const USE_CASES_I18N: Record<string, UseCasesStrings> = {
     sectionTitle: "Use cases",
     sectionTooltip: "The cases agreed with the architect: what the automation should do, one case at a time. Each carries a number (01, 02, …) and a status that moves from new to in use.",
     empty: "No use cases yet. They are the FIRST stage of this automation: describe your scenarios in the Quiz (it opens on the automation page) — nothing is built until they exist.",
+    createCases: "Create use cases",
     reviewedYes: "You confirmed these cases — development can start.",
     reviewedNo: "Not confirmed yet — development steps stay blocked until you read them.",
     readConfirm: "Read & confirm", editAll: "Edit all",
@@ -39,6 +42,7 @@ export const USE_CASES_I18N: Record<string, UseCasesStrings> = {
     sectionTitle: "Пользовательские кейсы",
     sectionTooltip: "Кейсы, согласованные с архитектором: что автоматизация должна делать, по одному кейсу за раз. У каждого есть номер (01, 02, …) и статус, который движется от «new» к «in use».",
     empty: "Пользовательских кейсов пока нет. Это ПЕРВЫЙ этап автоматизации: опишите свои сценарии в Quiz (он открывается на странице автоматизации) — пока их нет, ничего не строится.",
+    createCases: "Создать пользовательские кейсы",
     reviewedYes: "Вы подтвердили эти кейсы — разработку можно начинать.",
     reviewedNo: "Пока не подтверждено — шаги разработки заблокированы, пока вы их не прочитаете.",
     readConfirm: "Прочитать и подтвердить", editAll: "Редактировать все",
@@ -60,6 +64,7 @@ export const USE_CASES_I18N: Record<string, UseCasesStrings> = {
     sectionTitle: "Casos de uso",
     sectionTooltip: "Los casos acordados con el arquitecto: lo que la automatización debe hacer, un caso a la vez. Cada uno lleva un número (01, 02, …) y un estado que va de «new» a «in use».",
     empty: "Aún no hay casos de uso. Son la PRIMERA etapa de esta automatización: describe tus escenarios en el Quiz (se abre en la página de la automatización) — nada se construye hasta que existan.",
+    createCases: "Crear casos de uso",
     reviewedYes: "Confirmaste estos casos — el desarrollo puede empezar.",
     reviewedNo: "Aún sin confirmar — los pasos de desarrollo quedan bloqueados hasta que los leas.",
     readConfirm: "Leer y confirmar", editAll: "Editar todos",
@@ -81,6 +86,7 @@ export const USE_CASES_I18N: Record<string, UseCasesStrings> = {
     sectionTitle: "Cas d'usage",
     sectionTooltip: "Les cas convenus avec l'architecte : ce que l'automatisation doit faire, un cas à la fois. Chacun porte un numéro (01, 02, …) et un statut qui passe de « new » à « in use ».",
     empty: "Aucun cas d'usage pour l'instant. C'est la PREMIÈRE étape de cette automatisation : décrivez vos scénarios dans le Quiz (il s'ouvre sur la page de l'automatisation) — rien n'est construit tant qu'ils n'existent pas.",
+    createCases: "Créer des cas d'usage",
     reviewedYes: "Vous avez confirmé ces cas — le développement peut commencer.",
     reviewedNo: "Pas encore confirmé — les étapes de développement restent bloquées jusqu'à ce que vous les lisiez.",
     readConfirm: "Lire et confirmer", editAll: "Tout modifier",
@@ -102,6 +108,7 @@ export const USE_CASES_I18N: Record<string, UseCasesStrings> = {
     sectionTitle: "Casi d'uso",
     sectionTooltip: "I casi concordati con l'architetto: cosa deve fare l'automazione, un caso alla volta. Ognuno porta un numero (01, 02, …) e uno stato che va da «new» a «in use».",
     empty: "Ancora nessun caso d'uso. Sono la PRIMA fase di questa automazione: descrivi i tuoi scenari nel Quiz (si apre nella pagina dell'automazione) — finché non esistono, non si costruisce nulla.",
+    createCases: "Crea casi d'uso",
     reviewedYes: "Hai confermato questi casi — lo sviluppo può iniziare.",
     reviewedNo: "Non ancora confermato — i passi di sviluppo restano bloccati finché non li leggi.",
     readConfirm: "Leggi e conferma", editAll: "Modifica tutti",
@@ -123,6 +130,7 @@ export const USE_CASES_I18N: Record<string, UseCasesStrings> = {
     sectionTitle: "Anwendungsfälle",
     sectionTooltip: "Die mit dem Architekten vereinbarten Fälle: was die Automatisierung tun soll, ein Fall nach dem anderen. Jeder trägt eine Nummer (01, 02, …) und einen Status, der von „new“ zu „in use“ wandert.",
     empty: "Noch keine Anwendungsfälle. Sie sind die ERSTE Phase dieser Automatisierung: Beschreibe deine Szenarien im Quiz (es öffnet sich auf der Automatisierungsseite) — solange sie nicht existieren, wird nichts gebaut.",
+    createCases: "Anwendungsfälle erstellen",
     reviewedYes: "Du hast diese Fälle bestätigt — die Entwicklung kann beginnen.",
     reviewedNo: "Noch nicht bestätigt — Entwicklungsschritte bleiben blockiert, bis du sie liest.",
     readConfirm: "Lesen & bestätigen", editAll: "Alle bearbeiten",
@@ -144,6 +152,7 @@ export const USE_CASES_I18N: Record<string, UseCasesStrings> = {
     sectionTitle: "Casos de uso",
     sectionTooltip: "Os casos acordados com o arquiteto: o que a automação deve fazer, um caso de cada vez. Cada um tem um número (01, 02, …) e um estado que vai de «new» a «in use».",
     empty: "Ainda não há casos de uso. São a PRIMEIRA etapa desta automação: descreva os seus cenários no Quiz (abre-se na página da automação) — nada é construído enquanto não existirem.",
+    createCases: "Criar casos de uso",
     reviewedYes: "Confirmou estes casos — o desenvolvimento pode começar.",
     reviewedNo: "Ainda não confirmado — os passos de desenvolvimento ficam bloqueados até os ler.",
     readConfirm: "Ler e confirmar", editAll: "Editar todos",
@@ -165,6 +174,7 @@ export const USE_CASES_I18N: Record<string, UseCasesStrings> = {
     sectionTitle: "Przypadki użycia",
     sectionTooltip: "Przypadki uzgodnione z architektem: co automatyzacja powinna robić, jeden przypadek naraz. Każdy ma numer (01, 02, …) i status, który zmienia się z „new” na „in use”.",
     empty: "Nie ma jeszcze przypadków użycia. To PIERWSZY etap tej automatyzacji: opisz swoje scenariusze w Quizie (otwiera się na stronie automatyzacji) — dopóki ich nie ma, nic nie jest budowane.",
+    createCases: "Utwórz przypadki użycia",
     reviewedYes: "Potwierdziłeś te przypadki — rozwój może się rozpocząć.",
     reviewedNo: "Jeszcze niepotwierdzone — kroki rozwoju pozostają zablokowane, dopóki ich nie przeczytasz.",
     readConfirm: "Przeczytaj i potwierdź", editAll: "Edytuj wszystkie",
@@ -186,6 +196,7 @@ export const USE_CASES_I18N: Record<string, UseCasesStrings> = {
     sectionTitle: "Kullanım senaryoları",
     sectionTooltip: "Mimarla üzerinde anlaşılan senaryolar: otomasyonun ne yapması gerektiği, her seferinde bir senaryo. Her birinin bir numarası (01, 02, …) ve „new”den „in use”e ilerleyen bir durumu vardır.",
     empty: "Henüz kullanım senaryosu yok. Bunlar bu otomasyonun İLK aşamasıdır: senaryolarınızı Quiz'de tanımlayın (otomasyon sayfasında açılır) — onlar var olana kadar hiçbir şey inşa edilmez.",
+    createCases: "Kullanım senaryoları oluştur",
     reviewedYes: "Bu senaryoları onayladınız — geliştirme başlayabilir.",
     reviewedNo: "Henüz onaylanmadı — onları okuyana kadar geliştirme adımları engelli kalır.",
     readConfirm: "Oku ve onayla", editAll: "Tümünü düzenle",
@@ -207,6 +218,7 @@ export const USE_CASES_I18N: Record<string, UseCasesStrings> = {
     sectionTitle: "Use cases",
     sectionTooltip: "De met de architect afgesproken cases: wat de automatisering moet doen, één case tegelijk. Elke case heeft een nummer (01, 02, …) en een status die gaat van „new” naar „in use”.",
     empty: "Nog geen use cases. Dit is de EERSTE fase van deze automatisering: beschrijf je scenario's in de Quiz (deze opent op de automatiseringspagina) — zolang ze niet bestaan, wordt er niets gebouwd.",
+    createCases: "Use cases aanmaken",
     reviewedYes: "Je hebt deze cases bevestigd — de ontwikkeling kan beginnen.",
     reviewedNo: "Nog niet bevestigd — ontwikkelstappen blijven geblokkeerd totdat je ze leest.",
     readConfirm: "Lezen & bevestigen", editAll: "Alles bewerken",

@@ -432,7 +432,13 @@ export function ActivationQuiz({
   const onOpenChange = (v: boolean) => {
     if (v) { if (!controlled) setOpenState(true); return; }
     if (!isEdge && !isCaseEdit && !isEntity && phase === "usecases") {
-      toast.warning(L.casesMissing, { description: L.casesMissingDesc, duration: 12000 });
+      // Owner's request (step 243.2): the toast is not a dead end either — its own button reopens THIS
+      // exact session (uncontrolled → its open state lives right here) instead of making him hunt for it.
+      toast.warning(L.casesMissing, {
+        description: L.casesMissingDesc,
+        duration: 12000,
+        action: { label: L.casesMissingAction, onClick: () => setOpenState(true) },
+      });
     }
     close();
   };

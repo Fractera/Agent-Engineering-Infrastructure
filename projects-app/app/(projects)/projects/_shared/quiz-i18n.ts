@@ -27,7 +27,7 @@ export type QuizStrings = {
   casesWritten: string; casesWrittenOne: string; casesWrittenDesc: string;   // {n}
   casesUpdated: string; casesUpdatedOne: string; nothingChanged: string;     // {n}
   keptAsDesc: string; editReplaced: string;
-  casesMissing: string; casesMissingDesc: string;
+  casesMissing: string; casesMissingDesc: string; casesMissingAction: string;
   nodeDesignedOnly: string; nodeDesignedDesc: string;   // {name} — step 233: node is a draft, no per-node step
   scrollDown: string;   // aria-label on the "scroll to newest message" button
 };
@@ -70,6 +70,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     editReplaced: "Your edit replaced the model's text — what gets built comes from it.",
     casesMissing: "The user cases are still missing",
     casesMissingDesc: "Without a detailed description the automation cannot be created — this opens again on your next visit.",
+    casesMissingAction: "Describe them now",
     nodeDesignedOnly: "Node \"{name}\" designed", nodeDesignedDesc: "It is a draft on the diagram. When you are done designing, press \"Start development\" to hand every node to a coding agent as one step.",
     scrollDown: "Scroll to the newest message",
   },
@@ -105,6 +106,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     editReplaced: "Ваша правка заменила текст модели — из него и строится результат.",
     casesMissing: "Пользовательские кейсы всё ещё не заданы",
     casesMissingDesc: "Без подробного описания автоматизацию создать нельзя — окно откроется снова при следующем визите.",
+    casesMissingAction: "Описать сейчас",
     nodeDesignedOnly: "Узел «{name}» спроектирован", nodeDesignedDesc: "Это черновик на диаграмме. Когда закончите проектировать, нажмите «Запустить разработку» — все узлы уйдут агенту-кодеру одним шагом.",
     scrollDown: "Прокрутить к новому сообщению",
   },
@@ -140,6 +142,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     editReplaced: "Tu edición reemplazó el texto del modelo — lo que se construye sale de ahí.",
     casesMissing: "Todavía faltan los casos de uso",
     casesMissingDesc: "Sin una descripción detallada no se puede crear la automatización — esto se abrirá de nuevo en tu próxima visita.",
+    casesMissingAction: "Descríbelos ahora",
     nodeDesignedOnly: "Nodo «{name}» diseñado", nodeDesignedDesc: "Es un borrador en el diagrama. Cuando termines de diseñar, pulsa «Iniciar desarrollo» — todos los nodos se entregan al agente de código como un solo paso.",
     scrollDown: "Desplazarse al mensaje más reciente",
   },
@@ -175,6 +178,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     editReplaced: "Votre modification a remplacé le texte du modèle — c'est de là que vient ce qui est construit.",
     casesMissing: "Les cas d'usage manquent encore",
     casesMissingDesc: "Sans description détaillée, l'automatisation ne peut pas être créée — ceci se rouvrira à votre prochaine visite.",
+    casesMissingAction: "Les décrire maintenant",
     nodeDesignedOnly: "Nœud « {name} » conçu", nodeDesignedDesc: "C'est un brouillon sur le diagramme. Quand vous avez fini de concevoir, appuyez sur « Démarrer le développement » — tous les nœuds partent à l'agent de code en une seule étape.",
     scrollDown: "Défiler jusqu'au message le plus récent",
   },
@@ -210,6 +214,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     editReplaced: "La tua modifica ha sostituito il testo del modello — è da lì che nasce ciò che viene costruito.",
     casesMissing: "I casi d'uso mancano ancora",
     casesMissingDesc: "Senza una descrizione dettagliata l'automazione non può essere creata — si riaprirà alla tua prossima visita.",
+    casesMissingAction: "Descrivili ora",
     nodeDesignedOnly: "Nodo «{name}» progettato", nodeDesignedDesc: "È una bozza sul diagramma. Quando hai finito di progettare, premi «Avvia lo sviluppo» — tutti i nodi vanno all'agente di codice in un unico passo.",
     scrollDown: "Scorri fino al messaggio più recente",
   },
@@ -245,6 +250,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     editReplaced: "Deine Änderung hat den Text des Modells ersetzt — daraus entsteht, was gebaut wird.",
     casesMissing: "Die Anwendungsfälle fehlen noch",
     casesMissingDesc: "Ohne ausführliche Beschreibung kann die Automatisierung nicht erstellt werden — es öffnet sich beim nächsten Besuch erneut.",
+    casesMissingAction: "Jetzt beschreiben",
     nodeDesignedOnly: "Knoten „{name}“ entworfen", nodeDesignedDesc: "Er ist ein Entwurf im Diagramm. Wenn du mit dem Entwerfen fertig bist, drücke „Entwicklung starten“ — alle Knoten gehen als ein Schritt an den Coding-Agenten.",
     scrollDown: "Zur neuesten Nachricht scrollen",
   },
@@ -280,6 +286,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     editReplaced: "A sua edição substituiu o texto do modelo — o que é construído vem dela.",
     casesMissing: "Os casos de uso ainda estão em falta",
     casesMissingDesc: "Sem uma descrição detalhada a automação não pode ser criada — isto abre novamente na sua próxima visita.",
+    casesMissingAction: "Descrever agora",
     nodeDesignedOnly: "Nó «{name}» desenhado", nodeDesignedDesc: "É um rascunho no diagrama. Quando terminar de desenhar, prima «Iniciar desenvolvimento» para entregar todos os nós a um agente de código como um único passo.",
     scrollDown: "Rolar até à mensagem mais recente",
   },
@@ -315,6 +322,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     editReplaced: "Twoja edycja zastąpiła tekst modelu — to, co zostanie zbudowane, pochodzi z niej.",
     casesMissing: "Przypadki użycia nadal brakują",
     casesMissingDesc: "Bez szczegółowego opisu automatyzacji nie można utworzyć — otworzy się to ponownie przy następnej wizycie.",
+    casesMissingAction: "Opisz teraz",
     nodeDesignedOnly: "Węzeł „{name}” zaprojektowany", nodeDesignedDesc: "To szkic na diagramie. Gdy skończysz projektować, naciśnij „Uruchom rozwój”, aby przekazać wszystkie węzły agentowi kodującemu jako jeden krok.",
     scrollDown: "Przewiń do najnowszej wiadomości",
   },
@@ -350,6 +358,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     editReplaced: "Düzenlemeniz modelin metninin yerini aldı — inşa edilecek olan buradan gelir.",
     casesMissing: "Kullanım senaryoları hâlâ eksik",
     casesMissingDesc: "Ayrıntılı bir açıklama olmadan otomasyon oluşturulamaz — bu, bir sonraki ziyaretinizde tekrar açılır.",
+    casesMissingAction: "Şimdi tanımla",
     nodeDesignedOnly: "«{name}» düğümü tasarlandı", nodeDesignedDesc: "Bu, diyagramda bir taslaktır. Tasarımı bitirdiğinizde, tüm düğümleri kod ajanına tek bir adım olarak teslim etmek için «Geliştirmeyi başlat»a basın.",
     scrollDown: "En yeni mesaja kaydır",
   },
@@ -385,6 +394,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     editReplaced: "Jouw bewerking heeft de tekst van het model vervangen — wat gebouwd wordt komt hieruit voort.",
     casesMissing: "De use cases ontbreken nog steeds",
     casesMissingDesc: "Zonder gedetailleerde beschrijving kan de automatisering niet worden aangemaakt — dit opent opnieuw bij je volgende bezoek.",
+    casesMissingAction: "Nu beschrijven",
     nodeDesignedOnly: "Node \"{name}\" ontworpen", nodeDesignedDesc: "Dit is een concept in het diagram. Druk, als je klaar bent met ontwerpen, op \"Ontwikkeling starten\" om alle nodes als één stap aan een coding agent over te dragen.",
     scrollDown: "Scrollen naar het nieuwste bericht",
   },
