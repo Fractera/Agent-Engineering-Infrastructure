@@ -41,6 +41,18 @@ import { createAutomationStrings } from "../create-automation-i18n";
 const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 40);
 
+// The server's contract is /^[a-z][a-z0-9-]*$/ (frozen-project-starter SLUG_RE). A non-Latin name slugifies
+// to "" (fallback fires) — but a name like "Тест 2" slugifies to "2", which STARTS WITH A DIGIT and used to
+// bounce off the server with a kebab-case 400 the owner could not get past (step 247 fix). The derived slug
+// is an internal detail — repair it silently instead of failing: prefix digit-led remains, fall back to a
+// generated id when nothing usable survives.
+const deriveProjectSlug = (name: string): string => {
+  const raw = slugify(name);
+  if (/^[a-z]/.test(raw)) return raw;
+  if (raw) return `automation-${raw}`.slice(0, 40).replace(/-$/, "");
+  return `automation-${Date.now().toString(36).slice(-5)}`;
+};
+
 /** The creation form itself — ONE dialog, reused by the "+" card and by the global canvas. */
 export function CreateAutomationDialog({
   open, onOpenChange, category, onCreated,
@@ -102,7 +114,7 @@ export function CreateAutomationDialog({
     // same convention as any other automation) but the owner never chooses it — "other" is the silent
     // default, since a Chained automation is never meant to be found via a category hub anyway.
     const target = type === "chained" ? "other" : (category ?? pickedCategory);
-    const project = slugify(name) || `automation-${Date.now().toString(36).slice(-5)}`;
+    const project = deriveProjectSlug(name);
     setBusy(true);
     try {
       const r = await fetch("/api/projects/create", {
