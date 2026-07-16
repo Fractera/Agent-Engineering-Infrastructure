@@ -76,6 +76,10 @@ export function ActivationQuiz({
   const [streaming, setStreaming] = useState(false);
   const [draftText, setDraftText] = useState("");
   const [aborter, setAborter] = useState<AbortController | null>(null);
+  // Step 247 (owner's two-button flow): once Auto-quiz has been pressed in a use-cases session, its button
+  // is REPLACED by "Continue auto" + "Keep this Quiz" (the latter saves the draft and finishes the cases —
+  // the old cases-ready action, whose own button is gone).
+  const [autoUsed, setAutoUsed] = useState(false);
   const booted = useRef(false);
   // READY highlight (step 247, owner's fix for "which button do I press to leave the Quiz?"): once the
   // model has replied READY (the /answer route's signal — enough scenarios collected), the EXIT button
@@ -160,6 +164,7 @@ export function ActivationQuiz({
   // — so what gets built (the cases, the node, the link) is made from what the owner approved.
   const autoQuiz = useCallback(async () => {
     if (streaming) return;
+    setAutoUsed(true);
     setStreaming(true);
     setDraftText("");
     const ctrl = new AbortController();
@@ -436,6 +441,14 @@ export function ActivationQuiz({
     } finally { setBusy(false); }
   }, [draftText, subject, phase, isEdge, isCaseEdit, L]);
 
+  // "Keep this Quiz" (step 247, owner's two-button flow) — ONE exit: keep the streamed/edited draft as the
+  // owner's description (when there is one), then finish the cases — exactly what the removed
+  // "cases are ready" button did. Declared after saveEdit/applyUseCases (consts — TDZ).
+  const keepQuiz = useCallback(async () => {
+    if (draftText.trim()) await saveEdit();
+    await applyUseCases();
+  }, [draftText, saveEdit, applyUseCases]);
+
   // Leaving the use-case phase without cases is allowed (the owner may be interrupted), but it is never
   // silent: the automation cannot be built until they exist, and the Quiz reopens on the next visit.
   const onOpenChange = (v: boolean) => {
@@ -564,20 +577,16 @@ export function ActivationQuiz({
               rows={7}
               className="text-sm"
             />
-            <div className="flex flex-wrap gap-2">
-              {streaming ? (
+            {/* Step 247 (owner): the container's own Continue/Keep buttons are GONE — continuing and
+                accepting live in the footer ("Continue auto" / "Keep this Quiz"). Only Pause remains,
+                while streaming, because there is no other way to stop a stream mid-thought. */}
+            {streaming && (
+              <div className="flex flex-wrap gap-2">
                 <Button size="sm" variant="outline" onClick={pause}>
                   <Pause className="size-3.5" /> {L.btnPause}
                 </Button>
-              ) : (
-                <Button size="sm" variant="outline" onClick={autoQuiz} disabled={busy}>
-                  <Sparkles className="size-3.5" /> {L.btnContinue}
-                </Button>
-              )}
-              <Button size="sm" onClick={saveEdit} disabled={busy || streaming || !draftText.trim()}>
-                <Send className="size-3.5" /> {L.btnKeep}
-              </Button>
-            </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -607,9 +616,24 @@ export function ActivationQuiz({
             <Button size="sm" onClick={send} disabled={busy || streaming || !answer.trim()}>
               {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />} {L.btnAnswer}
             </Button>
-            <Button size="sm" variant="secondary" onClick={autoQuiz} disabled={busy || streaming}>
-              <Sparkles className="size-3.5" /> {L.btnAuto}
-            </Button>
+            {/* Step 247 (owner's two-button flow, use-cases phase): before the first Auto-quiz press —
+                one "Auto-quiz" button; after it — "Continue auto-quiz" + "Keep this Quiz" (the ONE exit;
+                the old "cases are ready" button is gone, keepQuiz performs its action). The READY pulse
+                (247.8) now lives on "Keep this Quiz" — it IS the exit the pulse was pointing at. */}
+            {!autoUsed || isEntity || isEdge || isCaseEdit || phase !== "usecases" ? (
+              <Button size="sm" variant="secondary" onClick={autoQuiz} disabled={busy || streaming}>
+                <Sparkles className="size-3.5" /> {L.btnAuto}
+              </Button>
+            ) : (
+              <>
+                <Button size="sm" variant="secondary" onClick={autoQuiz} disabled={busy || streaming}>
+                  <Sparkles className="size-3.5" /> {L.btnContinue}
+                </Button>
+                <Button size="sm" variant="outline" onClick={keepQuiz} disabled={busy || streaming} className={readyPulse}>
+                  <SkipForward className="size-3.5" /> {L.btnKeepQuiz}
+                </Button>
+              </>
+            )}
             {isEntity ? (
               <Button size="sm" variant="outline" onClick={applyEntity} disabled={busy || streaming}>
                 <SkipForward className="size-3.5" /> {E.btnSaveRequirement}
@@ -623,9 +647,14 @@ export function ActivationQuiz({
                 <SkipForward className="size-3.5" /> {L.btnSaveCases}
               </Button>
             ) : phase === "usecases" ? (
-              <Button size="sm" variant="outline" onClick={applyUseCases} disabled={busy || streaming} className={readyPulse}>
-                <SkipForward className="size-3.5" /> {L.btnCasesReady}
-              </Button>
+              /* The "cases are ready" button is REMOVED (owner): before Auto-quiz the exit is still
+                 needed for a purely spoken/typed session — it shows ONLY until the first Auto-quiz press,
+                 after which "Keep this Quiz" is the one exit. */
+              !autoUsed ? (
+                <Button size="sm" variant="outline" onClick={applyUseCases} disabled={busy || streaming} className={readyPulse}>
+                  <SkipForward className="size-3.5" /> {L.btnCasesReady}
+                </Button>
+              ) : null
             ) : (
               <Button size="sm" variant="outline" onClick={nextNode} disabled={busy || streaming}>
                 <SkipForward className="size-3.5" /> {L.btnFinishNode}

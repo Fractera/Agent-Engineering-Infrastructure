@@ -15,6 +15,9 @@ export type QuizStrings = {
   autoWriting: string; autoPaused: string; btnPause: string; btnContinue: string; btnKeep: string;
   btnAnswer: string; btnAuto: string;
   btnFinishLink: string; btnSaveCases: string; btnCasesReady: string; btnFinishNode: string; btnEnd: string;
+  /** Step 247 (owner) — after Auto-quiz is pressed its button becomes "Continue auto" + "Keep this Quiz";
+   *  the latter saves the draft (if any) and finishes the cases (the old cases-ready action). */
+  btnKeepQuiz: string;
   hintLink: string; hintCase: string; hintUsecases: string; hintNodes: string;
   designer: string;
   // toasts — session lifecycle
@@ -50,6 +53,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     btnAnswer: "Answer", btnAuto: "Auto-quiz",
     btnFinishLink: "Finish the link → development step", btnSaveCases: "Save the cases → development step",
     btnCasesReady: "The cases are ready → design the nodes", btnFinishNode: "Finish this node → next", btnEnd: "End the session",
+    btnKeepQuiz: "Keep this Quiz",
     hintLink: "Finishing the link writes its brief and queues one development step for the coding agent.",
     hintCase: "Saving writes the new case text and queues one development step per case you changed.",
     hintUsecases: "Nothing is built until the scenarios exist: they become your numbered user cases, and the nodes are designed from them.",
@@ -86,6 +90,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     btnAnswer: "Ответить", btnAuto: "Авто-квиз",
     btnFinishLink: "Завершить связь → шаг разработки", btnSaveCases: "Сохранить кейсы → шаг разработки",
     btnCasesReady: "Кейсы готовы → проектируем узлы", btnFinishNode: "Завершить узел → дальше", btnEnd: "Завершить сессию",
+    btnKeepQuiz: "Оставить этот Quiz",
     hintLink: "Завершение связи запишет её бриф и поставит один шаг разработки в очередь кодеру.",
     hintCase: "Сохранение запишет новый текст кейсов и поставит по одному шагу разработки на каждый изменённый кейс.",
     hintUsecases: "Ничего не строится, пока не описаны сценарии: они становятся пронумерованными кейсами, и из них проектируются узлы.",
@@ -122,6 +127,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     btnAnswer: "Responder", btnAuto: "Auto-quiz",
     btnFinishLink: "Terminar el enlace → paso de desarrollo", btnSaveCases: "Guardar los casos → paso de desarrollo",
     btnCasesReady: "Los casos están listos → diseñar los nodos", btnFinishNode: "Terminar este nodo → siguiente", btnEnd: "Terminar la sesión",
+    btnKeepQuiz: "Conservar este Quiz",
     hintLink: "Al terminar el enlace se escribe su resumen y se pone en cola un paso de desarrollo para el agente de código.",
     hintCase: "Al guardar se escribe el nuevo texto de los casos y se pone en cola un paso de desarrollo por cada caso que cambiaste.",
     hintUsecases: "No se construye nada hasta que existen los escenarios: se convierten en tus casos de uso numerados, y los nodos se diseñan a partir de ellos.",
@@ -158,6 +164,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     btnAnswer: "Répondre", btnAuto: "Auto-quiz",
     btnFinishLink: "Terminer le lien → étape de développement", btnSaveCases: "Enregistrer les cas → étape de développement",
     btnCasesReady: "Les cas sont prêts → concevoir les nœuds", btnFinishNode: "Terminer ce nœud → suivant", btnEnd: "Terminer la session",
+    btnKeepQuiz: "Garder ce Quiz",
     hintLink: "Terminer le lien écrit son résumé et met en file une étape de développement pour l'agent de code.",
     hintCase: "Enregistrer écrit le nouveau texte des cas et met en file une étape de développement par cas modifié.",
     hintUsecases: "Rien n'est construit tant que les scénarios n'existent pas : ils deviennent vos cas d'usage numérotés, et les nœuds en sont conçus.",
@@ -194,6 +201,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     btnAnswer: "Rispondi", btnAuto: "Auto-quiz",
     btnFinishLink: "Concludi il collegamento → passo di sviluppo", btnSaveCases: "Salva i casi → passo di sviluppo",
     btnCasesReady: "I casi sono pronti → progetta i nodi", btnFinishNode: "Concludi questo nodo → avanti", btnEnd: "Termina la sessione",
+    btnKeepQuiz: "Mantieni questo Quiz",
     hintLink: "Concludere il collegamento scrive il suo riassunto e mette in coda un passo di sviluppo per l'agente di codice.",
     hintCase: "Il salvataggio scrive il nuovo testo dei casi e mette in coda un passo di sviluppo per ogni caso modificato.",
     hintUsecases: "Non si costruisce nulla finché non esistono gli scenari: diventano i tuoi casi d'uso numerati, e da essi si progettano i nodi.",
@@ -230,6 +238,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     btnAnswer: "Antworten", btnAuto: "Auto-Quiz",
     btnFinishLink: "Verbindung abschließen → Entwicklungsschritt", btnSaveCases: "Fälle speichern → Entwicklungsschritt",
     btnCasesReady: "Die Fälle sind fertig → Knoten entwerfen", btnFinishNode: "Diesen Knoten abschließen → weiter", btnEnd: "Sitzung beenden",
+    btnKeepQuiz: "Dieses Quiz behalten",
     hintLink: "Das Abschließen der Verbindung schreibt ihre Kurzbeschreibung und reiht einen Entwicklungsschritt für den Coding-Agenten ein.",
     hintCase: "Das Speichern schreibt den neuen Fall-Text und reiht je geändertem Fall einen Entwicklungsschritt ein.",
     hintUsecases: "Nichts wird gebaut, solange die Szenarien nicht existieren: Sie werden zu deinen nummerierten Anwendungsfällen, und daraus werden die Knoten entworfen.",
@@ -266,6 +275,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     btnAnswer: "Responder", btnAuto: "Auto-quiz",
     btnFinishLink: "Terminar a ligação → passo de desenvolvimento", btnSaveCases: "Guardar os casos → passo de desenvolvimento",
     btnCasesReady: "Os casos estão prontos → desenhar os nós", btnFinishNode: "Terminar este nó → seguinte", btnEnd: "Terminar a sessão",
+    btnKeepQuiz: "Manter este Quiz",
     hintLink: "Terminar a ligação escreve o seu resumo e coloca na fila um passo de desenvolvimento para o agente de código.",
     hintCase: "Guardar escreve o novo texto dos casos e coloca na fila um passo de desenvolvimento por cada caso alterado.",
     hintUsecases: "Nada é construído até os cenários existirem: tornam-se os seus casos de uso numerados, e os nós são desenhados a partir deles.",
@@ -302,6 +312,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     btnAnswer: "Odpowiedz", btnAuto: "Auto-quiz",
     btnFinishLink: "Zakończ połączenie → krok rozwoju", btnSaveCases: "Zapisz przypadki → krok rozwoju",
     btnCasesReady: "Przypadki są gotowe → projektuj węzły", btnFinishNode: "Zakończ ten węzeł → dalej", btnEnd: "Zakończ sesję",
+    btnKeepQuiz: "Zachowaj ten Quiz",
     hintLink: "Zakończenie połączenia zapisuje jego opis i dodaje do kolejki jeden krok rozwoju dla agenta kodującego.",
     hintCase: "Zapis zapisuje nowy tekst przypadków i dodaje do kolejki jeden krok rozwoju na każdy zmieniony przypadek.",
     hintUsecases: "Nic nie jest budowane, dopóki nie istnieją scenariusze: stają się Twoimi numerowanymi przypadkami użycia, a węzły są z nich projektowane.",
@@ -338,6 +349,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     btnAnswer: "Cevapla", btnAuto: "Otomatik quiz",
     btnFinishLink: "Bağlantıyı bitir → geliştirme adımı", btnSaveCases: "Senaryoları kaydet → geliştirme adımı",
     btnCasesReady: "Senaryolar hazır → düğümleri tasarla", btnFinishNode: "Bu düğümü bitir → sonraki", btnEnd: "Oturumu sonlandır",
+    btnKeepQuiz: "Bu Quiz'i koru",
     hintLink: "Bağlantıyı bitirmek özetini yazar ve kod ajanı için bir geliştirme adımını kuyruğa ekler.",
     hintCase: "Kaydetmek yeni senaryo metnini yazar ve değiştirdiğiniz her senaryo için bir geliştirme adımını kuyruğa ekler.",
     hintUsecases: "Senaryolar var olana kadar hiçbir şey inşa edilmez: numaralandırılmış kullanım senaryolarınız olurlar ve düğümler onlardan tasarlanır.",
@@ -374,6 +386,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     btnAnswer: "Beantwoorden", btnAuto: "Auto-quiz",
     btnFinishLink: "Link afronden → ontwikkelstap", btnSaveCases: "Cases opslaan → ontwikkelstap",
     btnCasesReady: "De cases zijn klaar → nodes ontwerpen", btnFinishNode: "Deze node afronden → volgende", btnEnd: "Sessie beëindigen",
+    btnKeepQuiz: "Deze Quiz behouden",
     hintLink: "Het afronden van de link schrijft de samenvatting en plaatst één ontwikkelstap in de wachtrij voor de coding agent.",
     hintCase: "Opslaan schrijft de nieuwe casetekst en plaatst per gewijzigde case één ontwikkelstap in de wachtrij.",
     hintUsecases: "Er wordt niets gebouwd totdat de scenario's bestaan: ze worden je genummerde use cases, en de nodes worden daaruit ontworpen.",
