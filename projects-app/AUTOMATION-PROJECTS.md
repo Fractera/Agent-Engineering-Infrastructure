@@ -88,6 +88,25 @@ The owner's answer comes back appended to the object's rawRequest, the pair is a
 read it before re-attempting. Forbidden: second self-attempt of the same kind, stub instead of warning,
 calling Hermes yourself, clearing an unfinished rawRequest, bundling problems, demo-mismatch warnings.
 
+### 4.2 Existing connectors — check HERE before writing a hermesInstruction
+
+The workspace already owns connector plumbing; a warning's `hermesInstruction`/`expectedAnswer` must ask
+for what THIS plumbing accepts, never invent a parallel format. Known today:
+
+- **Google Calendar** — env `GOOGLE_OAUTH_CLIENT_ID` + `GOOGLE_OAUTH_CLIENT_SECRET` (the slot's
+  `.env.local`, runtime setter of step 143); per-automation OAuth tokens in the `automation_calendar_tokens`
+  table; status probe `GET /calendar/status`; full OAuth cycle implemented in
+  `personal/telegram-notes/_calendar/google-calendar.ts` — a LOGIC reference only (§8: never copy its file
+  structure). So the right `expectedAnswer` for a calendar blocker is the client id/secret pair (+ a
+  refresh token when the owner completes consent), not a homemade JSON.
+- **Telegram** — per-automation bot token via the channels declaration (`_data/channels.ts`,
+  `TELEGRAM_BOT_TOKEN`-style env keys, the step-143 runtime setter) + the automations-listener registry.
+- **OpenAI** — ONE global key (`project-config/openai-key`, step 208); per-automation only the model
+  (`<SLUG>_MODEL`). Never ask the owner for a second OpenAI key.
+
+When a blocker touches a service NOT listed here, grep the codebase for an existing connector before
+drafting the instruction — and say in your warning whether one was found.
+
 ## 5. The JSON bundle — the one source of state AND law
 
 - `GET /api/projects/fetch-complete-automation-architecture-with-history?automation=<cat>/<slug>` — full,

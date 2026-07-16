@@ -216,8 +216,14 @@ const AGENT_FIELD_CONTRACTS: FieldContract[] = [
       "Written ONLY when the rawRequest's task is impossible with your means (credentials, keys, captcha, " +
       "registration, or an owner decision). Structured, three layers (agent_instruction 4a): subject = ≤10 " +
       "plain words naming the need; blocker = 1-3 plain sentences for a non-technical owner; " +
-      "hermesInstruction = the technical brief for the Hermes agent. NEVER write fake stub code instead of " +
-      "raising a warning.",
+      "hermesInstruction = the technical brief for the Hermes agent. The THREE kinds, pick exactly one: " +
+      "\"hermes-scout\" = missing data/access a one-off external action can obtain (the Hermes agent goes " +
+      "and gets it; hermesInstruction REQUIRED); \"owner-decision\" = only the owner can decide (a choice, " +
+      "a payment, consent) — the blocker carries the question, no Hermes instruction; \"external-service\" = " +
+      "an external service itself is down/broken/refusing and nobody can fetch around it — the owner is " +
+      "informed and decides how to proceed. NEVER write fake stub code instead of raising a warning. A " +
+      "wave whose staged change is blocked still completes — the warning IS its legitimate terminal state " +
+      "for this iteration (the rawRequest stays for the next one).",
   },
 ];
 

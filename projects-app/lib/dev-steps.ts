@@ -227,7 +227,9 @@ export function buildWaveStepMessage(i: WaveStepInput): string {
 ## Read first (mandatory, in this order — before any code)
 1. Load the automation's complete architecture as ONE JSON, at the very start of your context window:
    \`GET http://localhost:3003/api/projects/fetch-complete-automation-architecture-with-history?automation=${i.automation}\`
-   — read its \`passport\` and every entity flagged \`pending:true\`: those ARE the changes below.
+   — read its \`passport\` and every entity flagged \`pending:true\`: those ARE the changes below. (Shape
+   note: \`diagram.nodes\` is an OBJECT — \`{instruction, role_groups, instances}\` — the node list is its
+   \`instances\` array, not the object itself.)
 2. Read **${AUTOMATION_DOC}** at the project root — how automations are created, work and are improved.
 3. Read the automation itself at \`${root}\` (\`_data/\`, \`_nodes/\`) and extract its current state. The
    **diagram is the single source of truth**; keep every node's work co-located in its own \`_nodes/<slug>/\`.
@@ -250,9 +252,18 @@ curl -X POST http://localhost:3003/api/projects/development-wave/complete \\
 It archives every brief above into the entity history, empties the containers, and closes this step — the
 owner's page is LOCKED for editing until you do. Never call it before the deploy actually succeeded.
 
-DONE = every staged change is implemented, the validator is clean
-(\`GET http://localhost:3003/api/projects/validate?automation=${i.automation}\`), the deploy succeeded, and the
-closing call above returned ok:true.`;
+## THE BLOCKED OUTCOME is legitimate (step 247 — the decision ladder, agent_instruction 4a)
+A staged change that hits ladder step 3/4 (data/access obtainable only by a one-off external action, or an
+owner decision) is NOT implemented and NOT stormed: write its structured \`warning\`
+(POST /api/projects/entity-warning), leave its rawRequest in place, and set it aside. The deploy
+requirement above applies ONLY to changes you actually implemented. Finishing the wave with warnings in
+place is the CORRECT ending for blocked changes — call the closing call once every change is either
+implemented (and deployed) or blocked-with-a-warning. A wave whose every change is blocked deploys nothing
+and still closes.
+
+DONE = every staged change is either implemented or blocked-with-a-warning, the validator is clean
+(\`GET http://localhost:3003/api/projects/validate?automation=${i.automation}\`), anything implemented is
+deployed, and the closing call above returned ok:true.`;
 }
 
 /** Materialize the ONE bundled wave step. Its machine block carries the wave's exact contents

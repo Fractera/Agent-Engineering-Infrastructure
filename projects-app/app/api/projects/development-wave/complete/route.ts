@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorize, resolveProject } from "@/lib/nodes";
 import { completeStep, readWaveStep } from "@/lib/dev-steps";
-import { archiveAndClearTransport, setLifecycleState, type EntityType } from "@/lib/entity-store";
+import { archiveAndClearTransport, setLifecycleState, listWarnings, type EntityType } from "@/lib/entity-store";
 import { writeChainSpec, readChainSpec } from "@/lib/edges";
 import { nextVersionForAutomation, writeVersionByRef } from "@/lib/entity-store";
 
@@ -61,10 +61,19 @@ export async function POST(req: NextRequest) {
   // Closing the step file is what UNLOCKS the page (locked ⟺ the wave step is still in NEW-STEPS/).
   const completed = await completeStep(step, `Wave completed — ${archived.length} staged change(s) archived.`);
 
-  // THE LIFECYCLE FLIP (step 247, owner's design): a completed wave means the graph is no longer the shipped
-  // demo — the automation becomes a "real-automation". Mechanical here (never left to the agent's memory);
-  // idempotent, later waves just re-assert the same state.
-  await setLifecycleState(proj.automation, "real-automation");
+  // THE LIFECYCLE FLIP (step 247, owner's design; guarded after the automation-14 live test): a completed
+  // wave means the graph is no longer the shipped demo — UNLESS every single change of this wave ended
+  // BLOCKED (an open warning on each item): then nothing was actually implemented and the graph is still
+  // the demo, so the flag stays "starter-template" until a wave really lands something. Mechanical here
+  // (never left to the agent's memory); idempotent, later waves just re-assert the state.
+  const open = await listWarnings(proj.automation);
+  const isBlocked = (t: string, r: string) => open.some((w) => w.entityType === t && w.ref === (r ?? ""));
+  const fullyBlocked = wave.wave.length > 0 && wave.wave.every((it) => isBlocked(it.entityType, it.ref ?? ""));
+  if (!fullyBlocked) await setLifecycleState(proj.automation, "real-automation");
 
-  return NextResponse.json({ ok: true, step, archived, completedStep: completed, unlocked: true, lifecycleState: "real-automation" });
+  return NextResponse.json({
+    ok: true, step, archived, completedStep: completed, unlocked: true,
+    lifecycleState: fullyBlocked ? "starter-template" : "real-automation",
+    ...(fullyBlocked ? { lifecycleNote: "every change of this wave is blocked by a warning — nothing was implemented, the graph is still the starter demo, the flag did not flip" } : {}),
+  });
 }
