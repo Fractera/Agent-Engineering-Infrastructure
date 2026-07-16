@@ -256,6 +256,29 @@ export async function clearWaveSnooze(automation: string): Promise<void> {
   await db.prepare(`DELETE FROM wave_snooze WHERE automation = ?`).run(automation);
 }
 
+// ─── THE LIFECYCLE FLAG (step 247, owner's design) ──────────────────────────────────────────────────────
+// Two states, verbatim English tokens: "starter-template" (the graph is still the shipped demo pattern —
+// every demo artifact is an example to reorient, never a requirement) and "real-automation" (the first
+// development wave completed; the graph now IS the owner's process). Born starter (no row = starter);
+// development-wave/complete flips it mechanically on the FIRST completed wave — the agent never has to
+// remember, and the passport + agent_instruction expose/explain the state to every reading agent.
+
+export type LifecycleState = "starter-template" | "real-automation";
+
+export async function getLifecycleState(automation: string): Promise<LifecycleState> {
+  const row = (await db
+    .prepare(`SELECT state FROM automation_lifecycle WHERE automation = ?`)
+    .get(automation)) as { state: string } | undefined;
+  return row?.state === "real-automation" ? "real-automation" : "starter-template";
+}
+
+export async function setLifecycleState(automation: string, state: LifecycleState): Promise<void> {
+  await db.prepare(
+    `INSERT INTO automation_lifecycle (automation, state, updated_at) VALUES (?, ?, datetime('now'))
+     ON CONFLICT(automation) DO UPDATE SET state = excluded.state, updated_at = excluded.updated_at`,
+  ).run(automation, state);
+}
+
 // ─── GENERIC HISTORY (append-only, never cleared) ───────────────────────────────────────────────────────
 
 export async function getHistory(

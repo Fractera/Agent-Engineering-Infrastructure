@@ -20,10 +20,14 @@ code, typed contracts, and a diagram that is the only place behaviour can live.
 Master → Instance with its own parameters) · `chained` (a canvas-only group container of other
 automations; no workflow of its own). Chosen at creation, **immutable**.
 
-**The starter ships a WORKING DEMO** (stream: parse → external HTTP → record; `instanced`/`chained` get
-their real pattern in steps 244/245). The demo is a **pattern with zero weight**: the owner's rawRequest
-and use cases always outrank it, and reorienting it IS the job — reporting a demo-vs-goal mismatch as a
-blocker/warning is forbidden.
+**The lifecycle flag — `passport.lifecycleState`, two verbatim states.** Every automation is born
+`"starter-template"`: its graph is STILL the working demo shipped by the frozen template (stream: parse →
+external HTTP → record; `instanced`/`chained` get their real pattern in steps 244/245). The demo is a
+**pattern with zero weight**: the owner's rawRequest and use cases always outrank it, reorienting it IS
+the job, and reporting a demo-vs-goal mismatch as a blocker/warning is forbidden. Completing the FIRST
+development wave flips the flag to `"real-automation"` — mechanically, inside
+`development-wave/complete` — and from then on nothing is a demo: every node is live behaviour to
+renovate, never to rebuild silently.
 
 ### 2.1 Node budget and decomposition (hard law)
 

@@ -29,6 +29,10 @@ type Passport = {
   automation: string; title: string; description: string;
   type: "stream" | "instanced" | "chained";
   available_types_and_descriptions: Record<string, string>;
+  lifecycleState: "starter-template" | "real-automation"; // step 247: starter = the graph is still the shipped
+                                            // demo pattern (examples, zero weight); flips to real-automation
+                                            // mechanically when the FIRST development wave completes
+  available_lifecycle_states_and_descriptions: Record<string, string>;
   isChainedGroup: boolean;
   ownerInstruction: string;                 // the owner's original free-form instruction
   rawRequest: string;                       // always "" at passport level (wishes ride the entities)

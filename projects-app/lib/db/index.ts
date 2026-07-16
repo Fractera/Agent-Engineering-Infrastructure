@@ -523,6 +523,15 @@ const SCHEMA = `
     signature  TEXT NOT NULL,
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
+  -- THE LIFECYCLE FLAG (step 247, owner's design): every automation is born a "starter-template" (its graph
+  -- is still the shipped demo pattern) and becomes a "real-automation" when its FIRST development wave
+  -- completes — development-wave/complete flips it mechanically, so it can never be forgotten. The passport
+  -- exposes it; the bundle's agent_instruction tells the agent what each state obliges. No row = starter.
+  CREATE TABLE IF NOT EXISTS automation_lifecycle (
+    automation TEXT PRIMARY KEY NOT NULL,
+    state      TEXT NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
   -- THE ENTITY SUMMARY (owner 2026-07-16, the rawRequest/summary refactor) — the AI-written compact result
   -- description of ONE entity instance (max 300 characters, in the owner language). The write half of the
   -- universal lifecycle: an agent finishing an entity development clears its rawRequest (archived to

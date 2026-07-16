@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorize, resolveProject } from "@/lib/nodes";
 import { completeStep, readWaveStep } from "@/lib/dev-steps";
-import { archiveAndClearTransport, type EntityType } from "@/lib/entity-store";
+import { archiveAndClearTransport, setLifecycleState, type EntityType } from "@/lib/entity-store";
 import { writeChainSpec, readChainSpec } from "@/lib/edges";
 import { nextVersionForAutomation, writeVersionByRef } from "@/lib/entity-store";
 
@@ -61,5 +61,10 @@ export async function POST(req: NextRequest) {
   // Closing the step file is what UNLOCKS the page (locked ⟺ the wave step is still in NEW-STEPS/).
   const completed = await completeStep(step, `Wave completed — ${archived.length} staged change(s) archived.`);
 
-  return NextResponse.json({ ok: true, step, archived, completedStep: completed, unlocked: true });
+  // THE LIFECYCLE FLIP (step 247, owner's design): a completed wave means the graph is no longer the shipped
+  // demo — the automation becomes a "real-automation". Mechanical here (never left to the agent's memory);
+  // idempotent, later waves just re-assert the same state.
+  await setLifecycleState(proj.automation, "real-automation");
+
+  return NextResponse.json({ ok: true, step, archived, completedStep: completed, unlocked: true, lifecycleState: "real-automation" });
 }

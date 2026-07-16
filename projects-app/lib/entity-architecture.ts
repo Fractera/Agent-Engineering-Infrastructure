@@ -10,7 +10,7 @@ import {
 } from "@/app/(projects)/projects/_shared/node-contract";
 import {
   type EntityType, ENTITY_TYPES, type EntitySlice, type EntityTaskRecord, type EntityInstance,
-  getTransport, getHistory, getSummary, getWarning, listVersionsByRef, makeInstance,
+  getTransport, getHistory, getSummary, getWarning, listVersionsByRef, makeInstance, getLifecycleState,
 } from "@/lib/entity-store";
 
 export type { EntityType, EntitySlice };
@@ -124,12 +124,17 @@ const AGENT_INSTRUCTION_CORE =
   "empty string means no request for that object. Non-empty text is a requirement written by a non-programmer " +
   "in everyday language — treat it critically but constructively, and interpret it against the WHOLE " +
   "automation's structure, never in isolation. " +
-  "(2a) THE STARTER DEMO IS A PATTERN, NOT A REQUIREMENT (step 247): a fresh automation is born with a " +
-  "WORKING example graph shipped by the frozen template (e.g. a stock-quote demo: parse -> external HTTP -> " +
-  "record). That demo exists ONLY to show you the working shape of nodes/functions/dashboard — it carries " +
-  "zero weight against the owner's goal. The owner's rawRequest and use cases ALWAYS outrank the demo: " +
-  "reorienting, renaming or replacing demo nodes to serve the real goal is your NORMAL first-pass work. " +
-  "NEVER report a demo-vs-goal mismatch as a conflict, a blocker or a warning — it is not one. " +
+  "(2a) THE LIFECYCLE FLAG — passport.lifecycleState, two verbatim states (step 247). \"starter-template\": " +
+  "this automation's graph is STILL the working demo pattern shipped by the frozen template (e.g. a " +
+  "stock-quote demo: parse -> external HTTP -> record). The demo exists ONLY to show you the working shape " +
+  "of nodes/functions/dashboard — it carries zero weight against the owner's goal; the owner's rawRequest " +
+  "and use cases ALWAYS outrank it, and reorienting, renaming or replacing demo nodes to serve the real " +
+  "goal is your NORMAL first-pass work. NEVER report a demo-vs-goal mismatch as a conflict, a blocker or a " +
+  "warning — it is not one. Completing the FIRST development wave MUST leave the project in state " +
+  "\"real-automation\" — the system flips the flag itself when you call development-wave/complete, so your " +
+  "duty is simply to finish the wave properly. \"real-automation\": nothing is a demo anymore — every node " +
+  "and entity is the owner's live behaviour; renovate it, never treat it as an example or rebuild it " +
+  "silently. " +
   "(3) Once you understand the current structure and every pending wish, develop the objects one by one — the " +
   "`diagram` FIRST (nodes and edges), then the other entities. " +
   "(4) Each object carries its own `instruction`; re-read and follow it when developing that object (an empty " +
@@ -162,6 +167,18 @@ const AGENT_INSTRUCTION_CORE =
   "summary, and so will you on the next development iteration. " +
   "(6) If the passport says isChainedGroup:true, this automation is a container of other automations — its " +
   "real architecture is the `chain` slice, not its own diagram.";
+// ─── THE LIFECYCLE FLAG's dictionary (step 247, owner's design) — shipped in the passport ─────────────────
+const LIFECYCLE_STATE_DESCRIPTIONS: Record<string, string> = {
+  "starter-template":
+    "This automation's graph is still the demo pattern shipped by the frozen template. Every demo node, " +
+    "table and setting is an EXAMPLE with zero weight against the owner's goal — reorient, rename or " +
+    "replace them to serve the real task; never report their mismatch with the goal as a problem. The " +
+    "system flips this state to real-automation when the FIRST development wave completes.",
+  "real-automation":
+    "The first development wave has completed: the graph now IS the owner's real process. Nothing here is " +
+    "a demo anymore — every node/entity is live behaviour to respect, renovate and never silently rebuild.",
+};
+
 // ─── THE FIELD CONTRACTS (step 247, owner's design) — the universal trio's lifecycle, IN the JSON itself ───
 // Self-describing law shipped with every bundle, so the reading agent learns the rawRequest/summary/warning
 // state machine from the object it holds, without the external document. Static in code, like every other
@@ -431,10 +448,10 @@ async function extractPassport(automation: string): Promise<unknown> {
   const proj = resolveProject(automation);
   if (!proj.ok) return { error: proj.error };
   const read = (rel: string) => readFile(join(proj.projectDir, rel), "utf8").catch(() => "");
-  const [descSrc, type, instruction, readme, configSrc, howItWorks] = await Promise.all([
+  const [descSrc, type, instruction, readme, configSrc, howItWorks, lifecycleState] = await Promise.all([
     read("_data/description.ts"), automationTypeOf(automation),
     read("_data/instruction.md"), read("README.md"), read("_data/config.ts"),
-    readHowItWorks(proj.projectDir),
+    readHowItWorks(proj.projectDir), getLifecycleState(automation),
   ]);
   const title = jsonStr(descSrc.match(/title:\s*("(?:[^"\\]|\\.)*")/));
   const description = jsonStr(descSrc.match(/description:\s*\n?\s*("(?:[^"\\]|\\.)*")/));
@@ -444,6 +461,11 @@ async function extractPassport(automation: string): Promise<unknown> {
   return {
     automation, title, description, type,
     available_types_and_descriptions: AUTOMATION_TYPE_DESCRIPTIONS,
+    // THE LIFECYCLE FLAG (step 247, owner's design) — verbatim English tokens. "starter-template" = the
+    // graph is still the shipped demo pattern; "real-automation" = the first development wave completed.
+    // The system flips it mechanically (development-wave/complete); agent_instruction 2a explains the duty.
+    lifecycleState,
+    available_lifecycle_states_and_descriptions: LIFECYCLE_STATE_DESCRIPTIONS,
     isChainedGroup: type === "chained",
     ownerInstruction: instruction.trim(),
     // The universal pair at automation level (owner 2026-07-16): the automation's own rawRequest rides the
