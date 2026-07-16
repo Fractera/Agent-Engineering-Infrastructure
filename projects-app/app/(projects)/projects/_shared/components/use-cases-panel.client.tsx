@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCheck, Loader2, Pencil, ShieldAlert, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
+import { CheckCheck, Loader2, Pencil, Plus, ShieldAlert, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Accordion,
@@ -12,9 +12,12 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import type { UseCase } from "../use-cases";
 import { STATUS_META } from "../use-cases";
 import { ActivationQuiz } from "./activation-quiz.client";
+import { VoiceInput } from "./voice-input.client";
 import { useUiLang } from "../use-ui-lang";
 import { useCasesStrings } from "../use-cases-i18n";
 import { fill } from "../quiz-i18n";
@@ -46,6 +49,29 @@ export function UseCasesPanel({ cases, automation }: { cases: UseCase[]; automat
   const [editing, setEditing] = useState<{ cuid?: string; title?: string } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<UseCase | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
+  // ADD ONE CASE (step 247, owner's find: the panel had edit and delete but NO direct add — the only path
+  // was the whole-set Quiz behind the header pencil). A small form: title + free-form summary, voice via
+  // the ONE VoiceInput primitive. POST without cuid = add (the existing API); the review stales by itself.
+  const [addOpen, setAddOpen] = useState(false);
+  const [addTitle, setAddTitle] = useState("");
+  const [addSummary, setAddSummary] = useState("");
+  const addSummaryRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const addCase = useCallback(async () => {
+    if (!automation || !addTitle.trim() || busy) return;
+    setBusy(true);
+    try {
+      const r = await fetch(`/api/projects/use-cases`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ automation, title: addTitle.trim(), summary: addSummary.trim() || undefined }),
+      });
+      if (!r.ok) { toast.error(L.addCaseFail); return; }
+      toast.success(L.addedTitle, { description: L.addedDesc });
+      setAddOpen(false); setAddTitle(""); setAddSummary("");
+      await load();
+      router.refresh();
+    } finally { setBusy(false); }
+  }, [automation, addTitle, addSummary, busy, load, router, L]);
 
   const load = useCallback(async () => {
     if (!automation) return;
@@ -153,6 +179,9 @@ export function UseCasesPanel({ cases, automation }: { cases: UseCase[]; automat
                 <CheckCheck className="size-3.5" /> {L.readConfirm}
               </Button>
             )}
+            <Button size="sm" variant="ghost" onClick={() => setAddOpen(true)}>
+              <Plus className="size-3.5" /> {L.addCase}
+            </Button>
             <Button size="sm" variant="ghost" title={L.editAllTip} onClick={() => setEditing({})}>
               <Pencil className="size-3.5" /> {L.editAll}
             </Button>
@@ -224,6 +253,41 @@ export function UseCasesPanel({ cases, automation }: { cases: UseCase[]; automat
           onClose={() => { setEditing(null); void load(); }}
         />
       )}
+
+      {/* ADD ONE CASE (step 247) — the direct path the panel was missing. */}
+      <Dialog open={addOpen} onOpenChange={(v) => { if (!busy) setAddOpen(v); }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="size-4" /> {L.addCaseTitle}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">{L.addCaseIntro}</p>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">{L.addCaseTitleLabel}</label>
+              <Input value={addTitle} onChange={(e) => setAddTitle(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">{L.addCaseSummaryLabel}</label>
+              <Textarea
+                ref={addSummaryRef}
+                value={addSummary}
+                onChange={(e) => setAddSummary(e.target.value)}
+                rows={5}
+                className="text-sm"
+              />
+              <VoiceInput targetRef={addSummaryRef} value={addSummary} onChange={setAddSummary} disabled={busy} />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="ghost" onClick={() => setAddOpen(false)} disabled={busy}>{L.cancel}</Button>
+            <Button onClick={addCase} disabled={busy || !addTitle.trim()} className="gap-2">
+              {busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} {L.addCaseSave}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete — always confirmed (owner's rule). */}
       <Dialog open={Boolean(confirmDelete)} onOpenChange={(v) => { if (!v) setConfirmDelete(null); }}>
