@@ -42,6 +42,12 @@ export function HowItWorksModal({
   const [showTypes, setShowTypes] = useState(false);
   const [result, setResult] = useState<Result>(null);
   const [loading, setLoading] = useState(false);
+  // The AI-interaction block collapses when an answer already exists (owner 2026-07-16): a divider + the
+  // "Get answer from AI" button re-opens it. With no answer yet the block is open from the start.
+  const [aiOpen, setAiOpen] = useState(false);
+  // The collected JSON + its typing hide behind a "Details" toggle (owner 2026-07-16) — the raw dump is for
+  // verification, not the default reading flow.
+  const [showDetails, setShowDetails] = useState(false);
   const [collected, setCollected] = useState<unknown | null>(null);
   const [collecting, setCollecting] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -57,7 +63,12 @@ export function HowItWorksModal({
     setCollected(null);
     fetch(`/api/projects/how-it-works?automation=${encodeURIComponent(automation)}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d: { result?: Result } | null) => { if (alive) setResult(d?.result ?? null); })
+      .then((d: { result?: Result } | null) => {
+        if (!alive) return;
+        setResult(d?.result ?? null);
+        setAiOpen(!d?.result);
+        setShowDetails(false);
+      })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [open, automation]);
@@ -117,7 +128,7 @@ export function HowItWorksModal({
             <Loader2 className="size-4 animate-spin text-muted-foreground" />
           ) : result ? (
             <div className="space-y-2">
-              <p className="whitespace-pre-line text-sm">{result.text}</p>
+              <p className="whitespace-pre-line break-words [overflow-wrap:anywhere] text-sm">{result.text}</p>
               <p className="text-xs text-muted-foreground">
                 {L.updatedAt.replace("{date}", new Date(result.updatedAt).toLocaleString())}
               </p>
@@ -126,65 +137,88 @@ export function HowItWorksModal({
             <p className="text-sm text-muted-foreground">{L.howItWorksEmpty}</p>
           )}
 
-          {/* The owner's own request (step 241) — the field the modal was missing: it decides HOW the answer is
-              written (length, structure, emphasis), not just that one is produced. Optional; blank = default
-              short prose. Voice via the shared VoiceInput primitive (232) — never a second mic. */}
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground">{L.howItWorksAskLabel}</label>
-            <Textarea
-              ref={promptRef}
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder={L.howItWorksAskPlaceholder}
-              className="min-h-16 text-sm"
-            />
-            <VoiceInput targetRef={promptRef} value={prompt} onChange={setPrompt} />
-          </div>
+          {!aiOpen ? (
+            /* An answer already exists → the AI interface rests collapsed behind a divider (owner
+               2026-07-16); this button only re-opens it, generation still requires collecting data. */
+            <div className="space-y-2 border-t pt-3">
+              <Button variant="outline" onClick={() => setAiOpen(true)} className="gap-2">
+                <Sparkles className="size-4" />
+                {L.getAiAnswer}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4 border-t pt-3">
+              {/* The owner's own request (step 241) — the field the modal was missing: it decides HOW the answer is
+                  written (length, structure, emphasis), not just that one is produced. Optional; blank = default
+                  short prose. Voice via the shared VoiceInput primitive (232) — never a second mic. */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">{L.howItWorksAskLabel}</label>
+                <Textarea
+                  ref={promptRef}
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder={L.howItWorksAskPlaceholder}
+                  className="min-h-16 text-sm"
+                />
+                <VoiceInput targetRef={promptRef} value={prompt} onChange={setPrompt} />
+              </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={collectData} disabled={collecting} className="gap-2">
-              {collecting ? <Loader2 className="size-4 animate-spin" /> : <Database className="size-4" />}
-              {collecting ? L.collecting : L.collectData}
-            </Button>
-            <Button onClick={generate} disabled={!collected || generating} className="gap-2">
-              {generating ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-              {generating ? L.generating : L.getAiAnswer}
-            </Button>
-          </div>
-
-          {collected != null && (
-            <div className="space-y-2 rounded-lg border p-3">
-              {/* Buttons FIRST, LEFT-ALIGNED (owner 2026-07-16): the copy button used to sit far right and
-                  fell out of view when the JSON forced horizontal scroll — the scroll is fine, the buttons
-                  must always stay visible in the left corner. */}
-              <div className="flex flex-wrap items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={copyCollected} className="shrink-0 gap-1">
-                  <ClipboardCopy className="size-3.5" />
-                  {L.copyJson}
+              <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={collectData} disabled={collecting} className="gap-2">
+                  {collecting ? <Loader2 className="size-4 animate-spin" /> : <Database className="size-4" />}
+                  {collecting ? L.collecting : L.collectData}
                 </Button>
-                {/* The object's TYPING (owner 2026-07-16): view + copy the TypeScript typing of this JSON, so
-                    the owner verifies the structure and a coding agent receiving the object alongside the
-                    types cannot break its shape when writing an updated one. */}
-                <Button variant="ghost" size="sm" onClick={() => setShowTypes((v) => !v)} className="shrink-0 gap-1">
-                  {showTypes ? B.hideTypes : B.showTypes}
-                </Button>
-                <Button
-                  variant="ghost" size="sm" className="shrink-0 gap-1"
-                  onClick={async () => { await navigator.clipboard.writeText(ARCHITECTURE_OBJECT_TYPES); toast.success(L.copied); }}
-                >
-                  <ClipboardCopy className="size-3.5" />
-                  {B.copyTypes}
+                <Button onClick={generate} disabled={!collected || generating} className="gap-2">
+                  {generating ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+                  {generating ? L.generating : L.getAiAnswer}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">{L.collectedHint}</p>
-              {showTypes && (
-                <pre className="max-h-64 overflow-auto rounded bg-muted/40 p-2 text-xs">
-                  {ARCHITECTURE_OBJECT_TYPES}
-                </pre>
+
+              {collected != null && (
+                <div className="space-y-2 rounded-lg border p-3">
+                  {/* Buttons FIRST, LEFT-ALIGNED (owner 2026-07-16): the copy button used to sit far right and
+                      fell out of view when the JSON forced horizontal scroll — the scroll is fine, the buttons
+                      must always stay visible in the left corner. The raw JSON + its typing hide behind the
+                      "Details" toggle (owner 2026-07-16). */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={copyCollected} className="shrink-0 gap-1">
+                      <ClipboardCopy className="size-3.5" />
+                      {L.copyJson}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setShowDetails((v) => !v)} className="shrink-0 gap-1">
+                      {showDetails ? L.howItWorksHideDetails : L.howItWorksDetails}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{L.collectedHint}</p>
+                  {showDetails && (
+                    <>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {/* The object's TYPING (owner 2026-07-16): view + copy the TypeScript typing of this JSON, so
+                            the owner verifies the structure and a coding agent receiving the object alongside the
+                            types cannot break its shape when writing an updated one. */}
+                        <Button variant="ghost" size="sm" onClick={() => setShowTypes((v) => !v)} className="shrink-0 gap-1">
+                          {showTypes ? B.hideTypes : B.showTypes}
+                        </Button>
+                        <Button
+                          variant="ghost" size="sm" className="shrink-0 gap-1"
+                          onClick={async () => { await navigator.clipboard.writeText(ARCHITECTURE_OBJECT_TYPES); toast.success(L.copied); }}
+                        >
+                          <ClipboardCopy className="size-3.5" />
+                          {B.copyTypes}
+                        </Button>
+                      </div>
+                      {showTypes && (
+                        <pre className="max-h-64 overflow-auto rounded bg-muted/40 p-2 text-xs">
+                          {ARCHITECTURE_OBJECT_TYPES}
+                        </pre>
+                      )}
+                      <pre className="max-h-64 overflow-auto rounded bg-muted/40 p-2 text-xs">
+                        {JSON.stringify(collected, null, 2)}
+                      </pre>
+                    </>
+                  )}
+                </div>
               )}
-              <pre className="max-h-64 overflow-auto rounded bg-muted/40 p-2 text-xs">
-                {JSON.stringify(collected, null, 2)}
-              </pre>
             </div>
           )}
         </div>

@@ -98,6 +98,9 @@ export type AutomationMenuStrings = {
   // "How it works" — the owner's free-text ask that SHAPES the AI answer (step 241) + its voice input.
   howItWorksAskLabel: string;
   howItWorksAskPlaceholder: string;
+  // "How it works" — the collected JSON + its typing are hidden behind a "Details" toggle (owner 2026-07-16).
+  howItWorksDetails: string;
+  howItWorksHideDetails: string;
   // DANGER ZONE — RENAME an automation (step 241, owner). Non-destructive, but still an explicit modal (never
   // a bare menu click): the owner types the new display name and confirms. {name} = current name.
   renameAutomation: string;
@@ -196,6 +199,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementCopyBtn: "Copy",
     howItWorksAskLabel: "How should the answer be written? (optional)",
     howItWorksAskPlaceholder: "e.g. keep it very short; or: first this, then that, and what happens if…",
+    howItWorksDetails: "Details",
+    howItWorksHideDetails: "Hide details",
     renameAutomation: "Rename this automation",
     renameTitle: "Rename this automation",
     renameBody: "This changes the automation's display name — the title on its page and its card. Its address and its data stay exactly as they are.",
@@ -289,6 +294,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementCopyBtn: "Скопировать",
     howItWorksAskLabel: "Как написать ответ? (необязательно)",
     howItWorksAskPlaceholder: "напр.: очень коротко; или: сначала это, потом то, и что будет, если…",
+    howItWorksDetails: "Подробнее",
+    howItWorksHideDetails: "Скрыть подробности",
     renameAutomation: "Переименовать эту автоматизацию",
     renameTitle: "Переименовать эту автоматизацию",
     renameBody: "Меняется отображаемое имя автоматизации — заголовок на её странице и на карточке. Её адрес и данные остаются прежними.",
@@ -382,6 +389,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementCopyBtn: "Copiar",
     howItWorksAskLabel: "¿Cómo se debe escribir la respuesta? (opcional)",
     howItWorksAskPlaceholder: "p. ej.: que sea muy breve; o: primero esto, luego aquello, y qué pasa si…",
+    howItWorksDetails: "Detalles",
+    howItWorksHideDetails: "Ocultar detalles",
     renameAutomation: "Renombrar esta automatización",
     renameTitle: "Renombrar esta automatización",
     renameBody: "Esto cambia el nombre visible de la automatización — el título de su página y de su tarjeta. Su dirección y sus datos se mantienen igual.",
@@ -475,6 +484,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementCopyBtn: "Copier",
     howItWorksAskLabel: "Comment la réponse doit-elle être rédigée ? (facultatif)",
     howItWorksAskPlaceholder: "ex. : très court ; ou : d'abord ceci, puis cela, et que se passe-t-il si…",
+    howItWorksDetails: "Détails",
+    howItWorksHideDetails: "Masquer les détails",
     renameAutomation: "Renommer cette automatisation",
     renameTitle: "Renommer cette automatisation",
     renameBody: "Cela change le nom affiché de l'automatisation — le titre de sa page et de sa carte. Son adresse et ses données restent inchangées.",
@@ -568,6 +579,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementCopyBtn: "Copia",
     howItWorksAskLabel: "Come deve essere scritta la risposta? (facoltativo)",
     howItWorksAskPlaceholder: "es.: molto breve; oppure: prima questo, poi quello, e cosa succede se…",
+    howItWorksDetails: "Dettagli",
+    howItWorksHideDetails: "Nascondi dettagli",
     renameAutomation: "Rinomina questa automazione",
     renameTitle: "Rinomina questa automazione",
     renameBody: "Questo cambia il nome visualizzato dell'automazione — il titolo sulla sua pagina e sulla sua scheda. Il suo indirizzo e i suoi dati restano invariati.",
@@ -661,6 +674,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementCopyBtn: "Kopieren",
     howItWorksAskLabel: "Wie soll die Antwort geschrieben werden? (optional)",
     howItWorksAskPlaceholder: "z. B.: sehr kurz; oder: zuerst dies, dann das, und was passiert, wenn…",
+    howItWorksDetails: "Details",
+    howItWorksHideDetails: "Details ausblenden",
     renameAutomation: "Diese Automatisierung umbenennen",
     renameTitle: "Diese Automatisierung umbenennen",
     renameBody: "Das ändert den Anzeigenamen der Automatisierung — den Titel auf ihrer Seite und ihrer Karte. Ihre Adresse und ihre Daten bleiben unverändert.",
@@ -754,6 +769,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementCopyBtn: "Copiar",
     howItWorksAskLabel: "Como a resposta deve ser escrita? (opcional)",
     howItWorksAskPlaceholder: "ex.: bem curta; ou: primeiro isto, depois aquilo, e o que acontece se…",
+    howItWorksDetails: "Detalhes",
+    howItWorksHideDetails: "Ocultar detalhes",
     renameAutomation: "Renomear esta automação",
     renameTitle: "Renomear esta automação",
     renameBody: "Isto muda o nome visível da automação — o título na sua página e no seu cartão. O seu endereço e os seus dados permanecem iguais.",
@@ -847,6 +864,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementCopyBtn: "Kopiuj",
     howItWorksAskLabel: "Jak ma być napisana odpowiedź? (opcjonalnie)",
     howItWorksAskPlaceholder: "np.: bardzo krótko; albo: najpierw to, potem tamto, i co się stanie, jeśli…",
+    howItWorksDetails: "Szczegóły",
+    howItWorksHideDetails: "Ukryj szczegóły",
     renameAutomation: "Zmień nazwę tej automatyzacji",
     renameTitle: "Zmień nazwę tej automatyzacji",
     renameBody: "To zmienia wyświetlaną nazwę automatyzacji — tytuł na jej stronie i na karcie. Jej adres i dane pozostają bez zmian.",
@@ -940,6 +959,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementCopyBtn: "Kopyala",
     howItWorksAskLabel: "Yanıt nasıl yazılsın? (isteğe bağlı)",
     howItWorksAskPlaceholder: "örn.: çok kısa olsun; ya da: önce şu, sonra bu, ve şöyle olursa ne olur…",
+    howItWorksDetails: "Ayrıntılar",
+    howItWorksHideDetails: "Ayrıntıları gizle",
     renameAutomation: "Bu otomasyonu yeniden adlandır",
     renameTitle: "Bu otomasyonu yeniden adlandır",
     renameBody: "Bu, otomasyonun görünen adını değiştirir — sayfasındaki ve kartındaki başlığı. Adresi ve verileri aynen kalır.",
@@ -1033,6 +1054,8 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     requirementCopyBtn: "Kopiëren",
     howItWorksAskLabel: "Hoe moet het antwoord geschreven worden? (optioneel)",
     howItWorksAskPlaceholder: "bijv.: heel kort; of: eerst dit, dan dat, en wat gebeurt er als…",
+    howItWorksDetails: "Details",
+    howItWorksHideDetails: "Details verbergen",
     renameAutomation: "Deze automatisering hernoemen",
     renameTitle: "Deze automatisering hernoemen",
     renameBody: "Dit wijzigt de weergavenaam van de automatisering — de titel op haar pagina en haar kaart. Haar adres en gegevens blijven precies hetzelfde.",
