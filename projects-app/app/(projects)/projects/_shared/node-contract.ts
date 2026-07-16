@@ -25,16 +25,17 @@ export type NodeRole = "input" | "intermediate" | "output" | (string & {});
  *  custom roles are allowed beyond these three. */
 export const NODE_ROLE_DESCRIPTIONS: Record<"input" | "intermediate" | "output", string> = {
   input: "Where the automation receives its work — the entry point.",
-  intermediate: "The deterministic middle — turns input into the result.",
+  intermediate: "The deterministic middle — turns input into the result (two kinds: transform | condition).",
   output: "Where the automation delivers its result — the exit point.",
 };
 
-// ─── INPUT / OUTPUT TYPES (2026-07-15 owner) ────────────────────────────────────────────────────────────────
-// A second, finer taxonomy UNDER the input and output roles: WHICH channel/surface a node's work arrives from
-// (input) or is delivered to (output). Deterministic dictionaries (type -> short description); OPEN sets — the
-// last entry `custom` says any other channel/surface is allowed. `intermediate` has no such taxonomy (its
-// sub-typing is a separate, later topic). Emitted in the architecture bundle under each role's group so a
-// coding agent knows which concrete kinds of entry and delivery are available.
+// ─── THE PER-ROLE TYPE TAXONOMIES (2026-07-15 owner) ────────────────────────────────────────────────────────
+// A second, finer taxonomy UNDER each role — carried on `ioType`. For INPUT / OUTPUT it says WHICH
+// channel/surface a node's work arrives from / is delivered to; for INTERMEDIATE it says WHICH KIND of middle
+// node it is (a regular transform vs a condition gate — the two types the owner asked to keep INSIDE the
+// intermediate group, 2026-07-15, rather than splitting `condition` off as its own role). Deterministic
+// dictionaries (type -> short description); OPEN sets. Emitted in the architecture bundle under each role's
+// group so a coding agent knows the concrete kinds available for that role.
 export const INPUT_TYPE_DESCRIPTIONS: Record<string, string> = {
   "control-panel": "Request the user sends through the Control panel.",
   webhook: "An external system calls in over HTTP.",
@@ -54,6 +55,21 @@ export const OUTPUT_TYPE_DESCRIPTIONS: Record<string, string> = {
   email: "An email the automation sends out.",
   telegram: "A message sent through the Telegram bot.",
   custom: "Any other delivery destination you define.",
+};
+
+// The INTERMEDIATE role's two kinds (owner 2026-07-15). The owner asked for the new condition/gate node to
+// live INSIDE the intermediate group as a second TYPE — not as a fourth role. So the middle of every flow now
+// has two kinds: a `transform` (the ordinary working node that was always here) and a `condition` (the square
+// gate that branches the flow). `transform` is the DEFAULT — a middle node with no explicit `ioType` is a
+// transform. Only a condition node sets `ioType: "condition"` (which is what draws it as a square).
+export const INTERMEDIATE_TYPE_DESCRIPTIONS: Record<string, string> = {
+  transform:
+    "The ordinary working node: it computes, decides, filters, enriches, or calls an external tool, and " +
+    "passes its typed result to the next node. This is the default kind of middle node.",
+  condition:
+    "A gate that passes the flow forward ONLY when its condition holds. Several condition nodes sharing one " +
+    "parent express a BRANCH — success/error, or a multi-way split (e.g. <30% / 30-70% / >70%), never limited " +
+    "to a boolean. Drawn as a square on the diagram so it reads as a different kind at a glance.",
 };
 
 /** One function of a node — deterministic application work with typed inputs and a typed return. */
@@ -91,10 +107,12 @@ export type NodeContract = {
    *  Drives the diagram badge and (iteration 2) the grouping of nodes in the architecture bundle. Absent →
    *  treated as `intermediate`. Lives in the node's own meta.ts, like every other descriptive fact. */
   role?: NodeRole;
-  /** The concrete INPUT/OUTPUT type of this node (2026-07-15) — the second, finer classifier UNDER the role:
-   *  for an `input` node a key of INPUT_TYPE_DESCRIPTIONS (e.g. "control-panel"), for an `output` node a key
-   *  of OUTPUT_TYPE_DESCRIPTIONS (e.g. "dashboard"). Open string (custom allowed). Meaningless for
-   *  `intermediate`. Shown as a SECOND badge next to the role badge. Absent → no io-type badge. */
+  /** The concrete TYPE of this node UNDER its role (2026-07-15) — the second, finer classifier: for an `input`
+   *  node a key of INPUT_TYPE_DESCRIPTIONS (e.g. "control-panel"), for an `output` node a key of
+   *  OUTPUT_TYPE_DESCRIPTIONS (e.g. "dashboard"), and for an `intermediate` node a key of
+   *  INTERMEDIATE_TYPE_DESCRIPTIONS — `"condition"` for a gate (drawn as a square), otherwise the default
+   *  `"transform"` (absent → transform). Open string (custom allowed). Shown as a SECOND badge next to the
+   *  role badge (except condition nodes, whose square shape is the marker). */
   ioType?: string;
   /** The `id`/slug of this node's PARENT on the diagram (2026-07-15) — lets the frozen template express a
    *  BRANCH, not just a linear chain: a `condition` node points at the node it evaluates, and two condition

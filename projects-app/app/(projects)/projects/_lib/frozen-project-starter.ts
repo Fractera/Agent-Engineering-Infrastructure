@@ -938,14 +938,16 @@ typed (inputs and return) and scoped to this node.\`;
   // ── THE TWO CONDITION NODES (2026-07-15) — square gates that branch off lookup-price on the diagram ──────
   "_nodes/if-success/meta.ts": `import type { NodeMeta } from "../../../../_shared/node-contract";
 
-// CONDITION node — the SUCCESS branch off lookup-price: carries the flow into the output node. Square on the
-// diagram (role "condition"); keep its label SHORT — it is read at a glance. Visual pass-through for now; the
+// CONDITION node — the SUCCESS branch off lookup-price: carries the flow into the output node. It is the
+// condition KIND of an intermediate node (role "intermediate", ioType "condition"), which is what draws it as
+// a SQUARE on the diagram; keep its label SHORT — it is read at a glance. Visual pass-through for now; the
 // real success/failure gating is lookup-price throwing on no price.
 export const META: NodeMeta = {
   id: "if-success",
   cuid: "{{CUID_IF_SUCCESS}}",
   name: "If success",
-  role: "condition",
+  role: "intermediate",
+  ioType: "condition",
   parentId: "lookup-price",
   description: "The branch taken when a live price was found — the flow continues to the output node.",
   in: { price: "number" },
@@ -976,12 +978,14 @@ export const FUNCTIONS: NodeFunction[] = [
   "_nodes/if-not-exists/meta.ts": `import type { NodeMeta } from "../../../../_shared/node-contract";
 
 // CONDITION node — the FAILURE branch off lookup-price: taken when the company has no public stock. A dead
-// end for now (other conditions could leave it later). Square on the diagram (role "condition"), short label.
+// end for now (other conditions could leave it later). The condition KIND of an intermediate node (role
+// "intermediate", ioType "condition") — drawn as a SQUARE on the diagram; short label.
 export const META: NodeMeta = {
   id: "if-not-exists",
   cuid: "{{CUID_IF_NOT_EXISTS}}",
   name: "If not exists",
-  role: "condition",
+  role: "intermediate",
+  ioType: "condition",
   parentId: "lookup-price",
   description: "The branch taken when no public stock exists for the request — the automation ends here.",
   in: {},

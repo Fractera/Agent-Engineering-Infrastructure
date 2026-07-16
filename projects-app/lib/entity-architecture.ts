@@ -6,11 +6,11 @@ import { listCases, reviewState } from "@/lib/use-cases";
 import { getLiveEntities } from "@/lib/entities-live";
 import { readHowItWorks } from "@/lib/how-it-works";
 import {
-  NODE_ROLE_DESCRIPTIONS, INPUT_TYPE_DESCRIPTIONS, OUTPUT_TYPE_DESCRIPTIONS,
+  NODE_ROLE_DESCRIPTIONS, INPUT_TYPE_DESCRIPTIONS, OUTPUT_TYPE_DESCRIPTIONS, INTERMEDIATE_TYPE_DESCRIPTIONS,
 } from "@/app/(projects)/projects/_shared/node-contract";
 import {
-  type EntityType, ENTITY_TYPES, type EntitySlice, type EntityTaskRecord,
-  getTransport, getHistory, listVersionsByRef, makeInstance,
+  type EntityType, ENTITY_TYPES, type EntitySlice, type EntityTaskRecord, type EntityInstance,
+  getTransport, getHistory, getSummary, listVersionsByRef, makeInstance,
 } from "@/lib/entity-store";
 
 export type { EntityType, EntitySlice };
@@ -60,14 +60,24 @@ export { ENTITY_TYPES };
 // point of the request: when this snapshot is handed to a coding agent, that agent reads the same human
 // explanation the owner already validated, instead of re-deriving what the automation is from raw nodes.
 
-// A fixed, ≤10-word plain-language description of EACH automation TYPE — a deterministic dictionary in code
-// (no model call). Emitted in the passport as `available_types_and_descriptions`, right next to `type`, so a
-// reading coding-agent instantly grasps what KIND this automation is AND how all three kinds differ, natively
-// in the object — no need to look the meanings up elsewhere. If a new type is ever added, add its line here.
+// A fixed plain-language description of EACH automation TYPE — a deterministic dictionary in code (no model
+// call). Emitted in the passport as `available_types_and_descriptions`, right next to `type`, so a reading
+// coding-agent instantly grasps what KIND this automation is AND how all three kinds differ, natively in the
+// object. stream/instanced stay ≤10 words; `chained` deliberately carries the full group doctrine (owner
+// 2026-07-16) — how groups arise, the activation rule, and the model requirement — because the group IS the
+// scale mechanism and an agent must never treat it as just "a folder of automations".
 const AUTOMATION_TYPE_DESCRIPTIONS: Record<string, string> = {
   stream: "Always-on; every request handled immediately, no separate finite runs.",
   instanced: "Each request spawns an independent finite run, in parallel.",
-  chained: "A container wiring several automations into one end-to-end flow.",
+  chained:
+    "A container wiring several automations into one end-to-end flow. Group members arise two ways: " +
+    "AUTOMATICALLY, when one automation outgrows the node budget (25 propose / 30 hard max) and is decomposed " +
+    "for efficient development; or MANUALLY, when the owner composes several standalone automations into one " +
+    "process. Production activation happens ONLY through the group; members stay individually editable and " +
+    "individually test-runnable. ⚠ IMPORTANT: working on a chained group requires the MOST POWERFUL AI model " +
+    "available to your coding agent — switch to it before continuing; and after development completes, the " +
+    "automation must run entirely WITHOUT AI (the two-phase doctrine: design once expensively, run forever " +
+    "cheaply).",
 };
 
 // ─── NODE ROLE — the bundle side (iteration 2, owner 2026-07-15) ────────────────────────────────────────
@@ -91,16 +101,89 @@ const NODE_ROLE_SYSTEM_INSTRUCTIONS: Record<string, string> = {
     "An INTERMEDIATE node is the deterministic MIDDLE of the automation: it takes what the previous node " +
     "produced and moves it toward the result — this is where the automation's real logic lives (computing, " +
     "deciding, filtering, enriching, or calling an external tool). It neither receives the original trigger " +
-    "nor delivers the final result; it transforms one node's typed output into the next node's typed input.",
+    "nor delivers the final result; it transforms one node's typed output into the next node's typed input. " +
+    "The middle comes in TWO kinds (see available_types): a `transform` (the ordinary working node) and a " +
+    "`condition` gate that branches the flow — a node's own `ioType` says which it is.",
   output:
     "An OUTPUT node is the automation's exit point: it exists to DELIVER the finished result to its " +
     "destination. That destination is a surface the user sees, an external channel, or ANOTHER automation's " +
     "input node when automations are chained. It is the last step, reached only once the work has succeeded.",
-  condition:
-    "A CONDITION node is a gate in the MIDDLE of the flow: it passes the result forward only when its " +
-    "condition holds. Several condition nodes sharing one parent express a BRANCH — success/error, or a " +
-    "multi-way split (e.g. <30% / 30-70% / >70%), never limited to a boolean. It is drawn as a square on the " +
-    "diagram. (Its full standardization is in progress; today it is a labelled branch marker.)",
+};
+
+// ─── THE STATIC INSTRUCTION SET (owner 2026-07-16 — the rawRequest/summary refactor) ───────────────────────
+// Deterministic dictionaries IN CODE, never model-generated per automation: if the AI rewrote its own
+// instructions each iteration, quality would degrade like a game of broken telephone. The dynamic part of the
+// object is ONLY rawRequest/summary; the law is static here. Adaptation to a concrete automation happens
+// naturally: static instruction + that object's own rawRequest = an individual brief.
+
+/** The GENERAL instruction at the top of the bundle — the reading agent's duties over the whole object. */
+const AGENT_INSTRUCTION_CORE =
+  "This object is the COMPLETE description of one automation. Your duties, in order: " +
+  "(1) READ THIS ENTIRE OBJECT before acting. " +
+  "(2) Focus on every `rawRequest` field across the object: it is the owner's wish, written in free form. An " +
+  "empty string means no request for that object. Non-empty text is a requirement written by a non-programmer " +
+  "in everyday language — treat it critically but constructively, and interpret it against the WHOLE " +
+  "automation's structure, never in isolation. " +
+  "(3) Once you understand the current structure and every pending wish, develop the objects one by one — the " +
+  "`diagram` FIRST (nodes and edges), then the other entities. " +
+  "(4) Each object carries its own `instruction`; re-read and follow it when developing that object (an empty " +
+  "instruction means no special rules for it yet). " +
+  "(5) On finishing an object: its rawRequest is cleared by the start-development machinery (the original is " +
+  "archived to history), and YOU write its compact `summary` — ≤300 characters per entity, in the owner's own " +
+  "language — via POST /api/projects/entity-summary {automation, entityType, ref, summary}; for a node, also " +
+  "keep its meta.ts `description` in sync (that is the summary's co-located home). The owner reads the " +
+  "summary, and so will you on the next development iteration. " +
+  "(6) If the passport says isChainedGroup:true, this automation is a container of other automations — its " +
+  "real architecture is the `chain` slice, not its own diagram.";
+const AGENT_INSTRUCTION_TAIL_FULL =
+  " FORMAT NOTE: this is the FULL format — every instance also carries its complete version history[] " +
+  "(oldest first). Use it at the start of a coding session or for deep debugging.";
+const AGENT_INSTRUCTION_TAIL_CURRENT =
+  " FORMAT NOTE: this is the CURRENT-STATE format — history[] is empty everywhere. Use it for the \"How it " +
+  "works\" description, use-case debugging, or as the 2nd+ context object within an ongoing session.";
+
+/** The DIAGRAM's own instruction — the node-building methodology (owner 2026-07-16) + the node budget. */
+const DIAGRAM_INSTRUCTION =
+  "The diagram (nodes + edges) is the ONLY source of truth for this automation's behaviour. Design it as an " +
+  "ITERATIVE loop over nodes and edges. Recommended default order — deviate only when you can justify it: " +
+  "(a) BOUNDARY FIRST — understand and fix the INPUT node and the OUTPUT node with their typed contracts, " +
+  "derived from the owner's request and the use cases; " +
+  "(b) add ONE main intermediate node carrying the core work; " +
+  "(c) ITERATE — ask \"what else must exist for the use cases to hold?\" and add one or a few nodes per pass, " +
+  "wire them with edges, fill their functions and summaries; a node exists only if a use case requires it; " +
+  "(d) VERIFY — run at least TWO virtual tests: walk the diagram end-to-end on concrete example inputs, one " +
+  "success path and one failure/branch path, checking every edge condition and that each edge's source output " +
+  "type satisfies its target input type. " +
+  "NODE BUDGET (hard law, see AUTOMATION-PROJECTS.md §2.1): at 25 nodes you MUST propose decomposition into a " +
+  "chained group; 30 nodes is the absolute maximum — no new node may be added past it under ANY phrasing; " +
+  "further growth happens only by decomposition. Only after the virtual tests pass move to the other entities.";
+
+/** The NODES group's instruction — how ANY node is built, identical for every role and type. */
+const NODES_INSTRUCTION =
+  "Every node is built the same way, regardless of role: take the node's `rawRequest` (the owner's free-form " +
+  "wish), then (1) reformat it into a SHORT, compressed instruction written in the owner's own language; " +
+  "(2) from it, design the deterministic application FUNCTIONS that fulfil the request; (3) record every " +
+  "function in the node's `functions` — its name, a one-line instruction, what it takes and what it returns. " +
+  "The node's `summary` (≤300 characters, owner's language) states how the node works now. The role/type only " +
+  "says WHERE the node sits in the flow and WHAT KIND of work it does — never how it is built.";
+
+/** The internal (diagram) EDGES' instruction. */
+const EDGES_INSTRUCTION =
+  "An edge states WHAT passes from its source node to its target node and UNDER WHAT CONDITION it is taken " +
+  "(`when`; null = always taken). Diagram edges are DERIVED from each node's declared parent (meta.ts " +
+  "`parentId` / the live index's parent_cuid) — to change the wiring, change the nodes' parents, never a " +
+  "separate file. The source node's typed output must satisfy the target node's typed input. Several edges " +
+  "leaving one parent through CONDITION nodes form a BRANCH — exactly one is taken at runtime.";
+
+/** Per-entity static instructions. Empty string = the owner has not authored this entity's law yet — an
+ *  agent treats it as "no special rules"; the entries fill in one by one as the owner dictates them. */
+const ENTITY_INSTRUCTIONS: Partial<Record<EntityType, string>> = {
+  node: NODES_INSTRUCTION,
+  edge:
+    "A LINK between two automations — one automation's output node feeding another automation's input node. " +
+    "Built like every object: compress the link's rawRequest into a short statement of what crosses the " +
+    "boundary and under what condition; both endpoint automations must have zero draft nodes before a link " +
+    "can be created (the readiness gate).",
 };
 
 /** One node role group in the bundle: the role, its (conceptual) system instruction, the finer input/output
@@ -115,36 +198,82 @@ type NodeRoleGroup = {
   nodes: { ref: string; name: string; ioType?: string }[];
 };
 
+/** One function INSIDE a node, as the reading agent sees it (owner 2026-07-16): its name, the one-line
+ *  instruction the AI formed, and — very shortly — what it takes and what it returns. Sourced from the node's
+ *  real compiled functions.ts (via the generated executables registry), never regex-guessed. */
+type NodeFunctionCard = { name: string; instruction: string; takes: Record<string, string>; returns: string };
+
+/** A node instance = the uniform EntityInstance PLUS its `functions` (the deterministic code living inside
+ *  this node). A draft node has no functions yet — an empty array. */
+type NodeInstance = EntityInstance<NodeTask, NodeIdentity> & { functions: NodeFunctionCard[] };
+
 /** The node entity's slice — the uniform EntitySlice (so the one-pattern read still holds) PLUS the grouped,
- *  role-aware view an agent uses to reason about the automation's shape. */
-type NodeArchitectureSlice = EntitySlice<NodeTask, NodeIdentity> & {
+ *  role-aware view an agent uses to reason about the automation's shape, and the static build law. */
+type NodeArchitectureSlice = Omit<EntitySlice<NodeTask, NodeIdentity>, "instances"> & {
+  instruction: string;
   available_node_roles_and_descriptions: Record<string, string>;
   custom_roles_allowed: boolean;
   role_groups: NodeRoleGroup[];
+  instances: NodeInstance[];
 };
 
 /** Group the node instances by their role. Canonical roles (input → intermediate → output) always appear, in
  *  order, even when empty (so the agent sees all three slots); any custom role is appended only if used. */
-function buildNodeSlice(instances: EntitySlice<NodeTask, NodeIdentity>["instances"]): NodeArchitectureSlice {
+function buildNodeSlice(instances: NodeInstance[]): NodeArchitectureSlice {
   const roleOf = (i: (typeof instances)[number]) => (i.identity as NodeIdentity).role;
   const customRoles = [...new Set(instances.map(roleOf))].filter((r) => !CANONICAL_NODE_ROLES.includes(r as never));
   const typesForRole = (role: string): Record<string, string> | undefined =>
-    role === "input" ? INPUT_TYPE_DESCRIPTIONS : role === "output" ? OUTPUT_TYPE_DESCRIPTIONS : undefined;
+    role === "input" ? INPUT_TYPE_DESCRIPTIONS
+      : role === "output" ? OUTPUT_TYPE_DESCRIPTIONS
+        : role === "intermediate" ? INTERMEDIATE_TYPE_DESCRIPTIONS
+          : undefined;
+  // Every intermediate node carries an explicit type here, so the two-kind split is always visible: a node
+  // that authored no `ioType` is the DEFAULT `transform`; only a condition gate sets `ioType: "condition"`.
+  const ioTypeOf = (i: (typeof instances)[number], role: string): string | undefined => {
+    const t = (i.identity as NodeIdentity).ioType;
+    return role === "intermediate" ? (t ?? "transform") : t;
+  };
   const role_groups: NodeRoleGroup[] = [...CANONICAL_NODE_ROLES, ...customRoles].map((role) => ({
     role,
     system_instruction: NODE_ROLE_SYSTEM_INSTRUCTIONS[role] ?? "",
     available_types: typesForRole(role),
     nodes: instances
       .filter((i) => roleOf(i) === role)
-      .map((i) => ({ ref: i.ref, name: (i.identity as NodeIdentity).name, ioType: (i.identity as NodeIdentity).ioType })),
+      .map((i) => ({ ref: i.ref, name: (i.identity as NodeIdentity).name, ioType: ioTypeOf(i, role) })),
   }));
   return {
     entityType: "node",
+    instruction: NODES_INSTRUCTION,
     available_node_roles_and_descriptions: NODE_ROLE_DESCRIPTIONS,
     custom_roles_allowed: true,
     role_groups,
     instances,
   };
+}
+
+/** The real compiled functions of one node, read through the generated executables registry (step 241) —
+ *  a static-import registry, so this NEVER regex-parses functions.ts. A draft (or a node whose module fails
+ *  to load) simply reports no functions. */
+async function nodeFunctionCards(automation: string, slug: string): Promise<NodeFunctionCard[]> {
+  try {
+    const { EXECUTABLES } = await import("@/app/(projects)/projects/_generated/executables");
+    const load = EXECUTABLES[`${automation}:${slug}`];
+    if (!load) return [];
+    const mod = await load();
+    const fns = (mod as { FUNCTIONS?: unknown }).FUNCTIONS;
+    if (!Array.isArray(fns)) return [];
+    return fns.map((f) => {
+      const o = f as { name?: string; paramsIn?: Record<string, string>; returns?: string; rules?: string[] };
+      return {
+        name: o.name ?? "",
+        instruction: Array.isArray(o.rules) ? o.rules.join("; ") : "",
+        takes: o.paramsIn ?? {},
+        returns: o.returns ?? "",
+      };
+    });
+  } catch {
+    return [];
+  }
 }
 
 async function automationTypeOf(automation: string): Promise<string> {
@@ -178,6 +307,11 @@ async function extractPassport(automation: string): Promise<unknown> {
     available_types_and_descriptions: AUTOMATION_TYPE_DESCRIPTIONS,
     isChainedGroup: type === "chained",
     ownerInstruction: instruction.trim(),
+    // The universal pair at automation level (owner 2026-07-16): the automation's own rawRequest rides the
+    // entities (each object carries its own wish), so the passport's is always ''; its summary is the
+    // owner-validated "How it works" text (≤300 words), falling back to the stored entity_summary row.
+    rawRequest: "",
+    summary: (howItWorks?.text ?? "") || description,
     howItWorks: howItWorks?.text ?? "",
     howItWorksUpdatedAt: howItWorks?.updatedAt ?? null,
     readme: readme.trim(),
@@ -227,6 +361,11 @@ async function extractNode(automation: string, withHistory: boolean): Promise<No
     const role = (files.meta.match(/\brole\s*:\s*["']([a-zA-Z0-9_-]+)["']/) ?? [])[1] ?? "intermediate";
     const ioType = (files.meta.match(/\bioType\s*:\s*["']([a-zA-Z0-9_-]+)["']/) ?? [])[1];
     const identity: NodeIdentity = { cuid: n.cuid, slug: n.slug, name: n.name, status: n.status, draft: Boolean(n.draft), role, ioType };
+    // The node's SUMMARY (owner 2026-07-16): the AI-written "how it works now". The entity_summary store wins
+    // when written; a node's co-located meta.ts `description` is the fallback home of the same fact.
+    const storedSummary = await getSummary(automation, "node", n.cuid);
+    const metaDescription = jsonStr(files.meta.match(/description:\s*\n?\s*("(?:[^"\\]|\\.)*")/));
+    const summary = storedSummary || metaDescription;
     // A draft node IS its pending task (an unbuilt spec.md/instruction.ts waiting for a coder).
     //
     // A MATERIALIZED node normally has nothing pending — the brief that built it lives in history. But since
@@ -249,9 +388,53 @@ async function extractNode(automation: string, withHistory: boolean): Promise<No
         return { version: v.version, task: { instruction: p.instructionSrc ?? "", spec: p.specSrc ?? "" }, devStepRef: v.devStepRef, createdAt: v.createdAt };
       });
     }
-    return makeInstance(n.cuid, identity, currentTask, history);
+    return {
+      ...makeInstance(n.cuid, identity, currentTask, history, summary),
+      functions: await nodeFunctionCards(automation, n.slug),
+    };
   }));
   return buildNodeSlice(instances);
+}
+
+// ─── THE DIAGRAM EDGES (owner 2026-07-16 — the second half of the `diagram` object) ─────────────────────
+// Derived, never separately stored: an edge is "this node declares that parent" (live index parent_cuid,
+// meta.ts parentId as fallback, the previous node for a legacy linear chain). `when` carries the target's
+// own conditions when the target is a CONDITION node — that is how a branch reads on the object: two edges
+// leave lookup, one per condition gate, and only the success gate's edge continues to the output.
+
+export type DiagramEdge = {
+  from: string; to: string; fromName: string; toName: string;
+  when: string | null; rawRequest: string; summary: string;
+};
+
+async function extractDiagramEdges(automation: string): Promise<DiagramEdge[]> {
+  const proj = resolveProject(automation);
+  if (!proj.ok) return [];
+  if ((await automationTypeOf(automation)) === "chained") return [];
+  const nodes = await listNodes(automation);
+  const metas = new Map<string, { parentId: string | null; ioType?: string; conditions: string[] }>();
+  for (const n of nodes) {
+    const files = await readNodeFiles(proj.projectDir, n.slug);
+    const parentId = (files.meta.match(/parentId:\s*["']([^"']+)["']/) ?? [])[1] ?? null;
+    const ioType = (files.meta.match(/\bioType\s*:\s*["']([a-zA-Z0-9_-]+)["']/) ?? [])[1];
+    const condBlock = (files.meta.match(/conditions:\s*\[([\s\S]*?)\]/) ?? [])[1] ?? "";
+    const conditions = [...condBlock.matchAll(/["']([^"']+)["']/g)].map((m) => m[1]);
+    metas.set(n.slug, { parentId, ioType, conditions });
+  }
+  const bySlug = new Map(nodes.map((n) => [n.slug, n]));
+  const byCuid = new Map(nodes.map((n) => [n.cuid, n]));
+  const edges: DiagramEdge[] = [];
+  nodes.forEach((n, i) => {
+    const meta = metas.get(n.slug);
+    const parent =
+      (n.parent_cuid ? byCuid.get(n.parent_cuid) : undefined)
+      ?? (meta?.parentId ? bySlug.get(meta.parentId) : undefined)
+      ?? (i > 0 ? nodes[i - 1] : undefined);
+    if (!parent || parent.cuid === n.cuid) return;
+    const when = meta?.ioType === "condition" && meta.conditions.length ? meta.conditions.join("; ") : null;
+    edges.push({ from: parent.cuid, to: n.cuid, fromName: parent.name, toName: n.name, when, rawRequest: "", summary: "" });
+  });
+  return edges;
 }
 
 async function extractEdge(automation: string, withHistory: boolean): Promise<EntitySlice<EdgeTask, EdgeIdentity>> {
@@ -272,9 +455,10 @@ async function extractEdge(automation: string, withHistory: boolean): Promise<En
         return { version: v.version, task: { spec: p.specSrc ?? "" }, devStepRef: v.devStepRef, createdAt: v.createdAt };
       });
     }
-    return makeInstance(e.cuid, identity, currentTask, history);
+    // An edge belongs to no single automation — its summary rows use automation:'' like its history rows.
+    return makeInstance(e.cuid, identity, currentTask, history, await getSummary("", "edge", e.cuid));
   }));
-  return { entityType: "edge", instances };
+  return { entityType: "edge", instruction: ENTITY_INSTRUCTIONS.edge ?? "", instances };
 }
 
 async function extractUsecase(automation: string, withHistory: boolean): Promise<EntitySlice<UsecaseTask, UsecaseIdentity>> {
@@ -299,9 +483,12 @@ async function extractUsecase(automation: string, withHistory: boolean): Promise
         return { version: v.version, task: { title: p.title ?? "", summary: p.summary ?? "", status: p.status ?? "" }, devStepRef: v.devStepRef, createdAt: v.createdAt };
       });
     }
-    return makeInstance(c.cuid, identity, currentTask, history);
+    // An approved+ case's own text IS its summary (settled behaviour); a stored entity_summary row wins.
+    const settled = currentTask ? "" : [c.title, c.summary].filter(Boolean).join(" — ");
+    const summary = (await getSummary(automation, "usecase", c.cuid)) || settled;
+    return makeInstance(c.cuid, identity, currentTask, history, summary);
   }));
-  return { entityType: "usecase", instances };
+  return { entityType: "usecase", instruction: ENTITY_INSTRUCTIONS.usecase ?? "", instances };
 }
 
 async function extractChain(automation: string, withHistory: boolean): Promise<EntitySlice<ChainTask, ChainIdentity>> {
@@ -339,7 +526,11 @@ async function extractChain(automation: string, withHistory: boolean): Promise<E
       return { version: v.version, task: { brief: p.brief ?? "" }, devStepRef: v.devStepRef, createdAt: v.createdAt };
     });
   }
-  return { entityType: "chain", instances: [makeInstance("", identity, currentTask, history)] };
+  return {
+    entityType: "chain",
+    instruction: ENTITY_INSTRUCTIONS.chain ?? "",
+    instances: [makeInstance("", identity, currentTask, history, await getSummary(automation, "chain", ""))],
+  };
 }
 
 // `fork-activation` (step 239) rides the SAME stub shape — automation-wide, one free-text brief — so it needs
@@ -354,9 +545,10 @@ type StubEntityType = "dashboard" | "analytics" | "calendar" | "cron" | "map" | 
 // live rows (228/229); it exists purely to carry the owner's NEXT requested change through to a coding
 // agent via JSON1/JSON2, same as every other entity.
 async function extractStub(entityType: StubEntityType, automation: string, withHistory: boolean): Promise<EntitySlice<StubTask, StubIdentity>> {
-  const [live, transport] = await Promise.all([
+  const [live, transport, summary] = await Promise.all([
     getLiveEntities(automation),
     getTransport(automation, entityType, ""),
+    getSummary(automation, entityType, ""),
   ]);
   const identity: StubIdentity = {
     toggleEnabled: entityType === "fork-activation" ? true : Boolean(live[entityType as keyof typeof live]),
@@ -371,7 +563,11 @@ async function extractStub(entityType: StubEntityType, automation: string, withH
       return { version: v.version, task: { brief: p.brief ?? "" }, devStepRef: v.devStepRef, createdAt: v.createdAt };
     });
   }
-  return { entityType, instances: [makeInstance("", identity, currentTask, history)] };
+  return {
+    entityType,
+    instruction: ENTITY_INSTRUCTIONS[entityType] ?? "",
+    instances: [makeInstance("", identity, currentTask, history, summary)],
+  };
 }
 
 async function extractOne(entityType: EntityType, automation: string, withHistory: boolean): Promise<EntitySlice> {
@@ -384,37 +580,33 @@ async function extractOne(entityType: EntityType, automation: string, withHistor
   }
 }
 
+/** The DIAGRAM object (owner 2026-07-16): nodes + edges grouped under one roof, with the diagram's own
+ *  static instruction (the iterative build methodology + the node budget) and its own universal pair. */
+export type DiagramObject = {
+  instruction: string;
+  rawRequest: string;
+  summary: string;
+  nodes: NodeArchitectureSlice;
+  edges: { instruction: string; instances: DiagramEdge[] };
+};
+
 export type ArchitectureBundle = {
   automation: string;
   format: "full-with-history" | "current-snapshot";
-  intro: string;
+  /** The GENERAL instruction for the reading agent — its duties over this whole object (static, in code). */
+  agent_instruction: string;
   generatedAt: string;
-  /** The automation's own identity — title, description, type, the owner's instruction, README, toggles. */
+  /** The automation's own identity — title, description, type, the owner's instruction, README, toggles,
+   *  plus the universal pair (rawRequest always ''; summary = the owner-validated "How it works"). */
   passport: unknown;
+  /** Nodes + edges, grouped (owner 2026-07-16) — the single source of truth for behaviour. */
+  diagram: DiagramObject;
+  /** Every OTHER entity (usecase / chain / edge-links / dashboard / …) in the uniform slice shape. */
   entities: EntitySlice[];
 };
 
-const INTRO_FULL =
-  "This is the COMPLETE architecture of one automation: every entity's current state AND its full version " +
-  "history. Use it at the start of a coding-agent context window or for deep debugging. Start with the " +
-  "`passport` (what this automation IS: title, purpose, type, the owner's original instruction, and " +
-  "`howItWorks` — the plain-language explanation the owner already validated; read it before the raw nodes). For each " +
-  "entity, read `instances[]` — one entry per node/edge/use-case, or a single entry for automation-wide " +
-  "entities (chain/dashboard/analytics/calendar/map/processes). An instance with `pending:true` carries a " +
-  "not-yet-developed `currentTask` — focus there first. If the passport says isChainedGroup:true, this " +
-  "automation is a container of other automations — its real architecture is the `chain` slice (brief + " +
-  "member snapshots), not its own nodes.";
-const INTRO_CURRENT =
-  "This is the CURRENT state of one automation's architecture, with no version history (every instance's " +
-  "`history` is empty). Use it for the \"How it works\" description, use-case debugging, or as the 2nd+ " +
-  "context object within an ongoing development session. Start with the `passport` (what this automation " +
-  "IS — including `howItWorks`, the plain-language explanation the owner already validated). For each entity, read `instances[]` — one entry per node/edge/use-case, or a single entry for " +
-  "automation-wide entities. An instance with `pending:true` carries a not-yet-developed `currentTask`. If " +
-  "the passport says isChainedGroup:true, the real architecture is the `chain` slice, not this automation's " +
-  "own nodes.";
-
-/** One entity's slice, on its own — backs the 18 per-entity extract-* sub-APIs (the master bundler below
- *  calls this same function for all 9 entities, wrapped in Promise.allSettled for error isolation). */
+/** One entity's slice, on its own — backs the per-entity extract-* sub-APIs and the wave (the master bundler
+ *  below calls this same function, wrapped in Promise.allSettled for error isolation). */
 export async function extractEntitySlice(entityType: EntityType, automation: string, withHistory: boolean): Promise<EntitySlice> {
   return extractOne(entityType, automation, withHistory);
 }
@@ -425,25 +617,36 @@ export async function extractEntitySlice(entityType: EntityType, automation: str
 // stub — in this object adds no value to a coding agent whose job is to build the automation. What the type
 // IS is already conveyed by the passport (`type` + `available_types_and_descriptions`). Its own accordion, activation quiz,
 // and dedicated fork-activation-architecture/* sub-APIs are untouched — this only trims the master bundle.
-const BUNDLE_ENTITY_TYPES: EntityType[] = ENTITY_TYPES.filter((t) => t !== "fork-activation");
+// `node` is excluded from the FLAT entities[] because it moved INTO the `diagram` object (owner 2026-07-16);
+// its per-entity sub-APIs still serve the node slice on its own via extractEntitySlice.
+const BUNDLE_ENTITY_TYPES: EntityType[] = ENTITY_TYPES.filter((t) => t !== "fork-activation" && t !== "node");
 
 export async function buildArchitecture(automation: string, withHistory: boolean): Promise<ArchitectureBundle> {
   // The passport is isolated the same way the entity slices are — a broken description file must not
   // take the whole bundle down with it.
-  const [passport, results] = await Promise.all([
+  const [passport, nodeSliceResult, diagramEdges, results] = await Promise.all([
     extractPassport(automation).catch((e) => ({ error: String(e) })),
+    extractNode(automation, withHistory).catch((e) => ({ ...buildNodeSlice([]), error: String(e) })),
+    extractDiagramEdges(automation).catch(() => [] as DiagramEdge[]),
     Promise.allSettled(BUNDLE_ENTITY_TYPES.map((entityType) => extractEntitySlice(entityType, automation, withHistory))),
   ]);
   const entities: EntitySlice[] = results.map((r, i) => {
     if (r.status === "fulfilled") return r.value;
-    return { entityType: BUNDLE_ENTITY_TYPES[i], instances: [], error: String(r.reason) };
+    return { entityType: BUNDLE_ENTITY_TYPES[i], instruction: "", instances: [], error: String(r.reason) };
   });
   return {
     automation,
     format: withHistory ? "full-with-history" : "current-snapshot",
-    intro: withHistory ? INTRO_FULL : INTRO_CURRENT,
+    agent_instruction: AGENT_INSTRUCTION_CORE + (withHistory ? AGENT_INSTRUCTION_TAIL_FULL : AGENT_INSTRUCTION_TAIL_CURRENT),
     generatedAt: new Date().toISOString(),
     passport,
+    diagram: {
+      instruction: DIAGRAM_INSTRUCTION,
+      rawRequest: "",
+      summary: "",
+      nodes: nodeSliceResult,
+      edges: { instruction: EDGES_INSTRUCTION, instances: diagramEdges },
+    },
     entities,
   };
 }

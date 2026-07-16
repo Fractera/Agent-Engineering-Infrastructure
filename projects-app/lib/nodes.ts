@@ -46,12 +46,15 @@ async function exists(p: string): Promise<boolean> {
 
 const ident = (slug: string) => slug.replace(/[^a-z0-9]/gi, "_");
 
-async function parseMeta(projectDir: string, slug: string): Promise<{ cuid: string; name: string; draft: boolean }> {
+async function parseMeta(projectDir: string, slug: string): Promise<{ cuid: string; name: string; draft: boolean; parentId: string | null }> {
   const t = await readFile(join(projectDir, "_nodes", slug, "meta.ts"), "utf8").catch(() => "");
   const cuid = (t.match(/cuid:\s*["']([^"']+)["']/) ?? [])[1] ?? "";
   const name = (t.match(/name:\s*["']([^"']+)["']/) ?? [])[1] ?? slug;
   const draft = /["']?draft["']?\s*:\s*true/.test(t);
-  return { cuid, name, draft };
+  // The node's declared diagram PARENT (NodeContract.parentId, 2026-07-16) — the slug of the node it
+  // branches off. Resolved to the parent's cuid by the seeding second pass below.
+  const parentId = (t.match(/parentId:\s*["']([^"']+)["']/) ?? [])[1] ?? null;
+  return { cuid, name, draft, parentId };
 }
 
 /** Slugs in the order the diagram references them (fallback for seeding order). */
@@ -96,6 +99,25 @@ export async function syncIndexFromFiles(automation: string, projectDir: string)
       `UPDATE automation_nodes SET status = 'removed', updated_at = datetime('now')
        WHERE automation = ? AND slug = ? AND status != 'removed'`,
     ).run(automation, row.slug);
+  }
+
+  // SECOND PASS — resolve the declared diagram parents (2026-07-16, the branch fix). The insert above never
+  // wrote parent_cuid, so every seeded node was a "root" and the live canvas drew a fresh frozen automation
+  // as a LINEAR chain even when its meta.ts declared a branch (two condition nodes off one parent). Resolve
+  // each folder's `parentId` (a slug) to that node's cuid and stamp it on rows that still have no parent —
+  // never overwriting a parent the Builder set by hand (the "+" flow writes parent_cuid itself).
+  const rows = (await db.prepare(
+    `SELECT cuid, slug, parent_cuid FROM automation_nodes WHERE automation = ? AND status != 'removed'`,
+  ).all(automation)) as { cuid: string; slug: string; parent_cuid: string | null }[];
+  const cuidBySlug = new Map(rows.map((r) => [r.slug, r.cuid]));
+  for (const row of rows) {
+    if (row.parent_cuid) continue;
+    const { parentId } = await parseMeta(projectDir, row.slug);
+    const parentCuid = parentId ? cuidBySlug.get(parentId) : undefined;
+    if (!parentCuid || parentCuid === row.cuid) continue;
+    await db.prepare(
+      `UPDATE automation_nodes SET parent_cuid = ?, updated_at = datetime('now') WHERE automation = ? AND slug = ?`,
+    ).run(parentCuid, automation, row.slug);
   }
 }
 

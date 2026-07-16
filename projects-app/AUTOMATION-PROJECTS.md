@@ -33,10 +33,60 @@ badge in the page's top bar.
 |---|---|---|
 | `stream` | No forks. Every incoming event runs the identical scheme end to end. | telegram-notes (historical — see §7) |
 | `instanced` | Each activation forks Master → Instance, with its own parameters; may be deferred, tracked, edited per-fork independently of the Master and its siblings. | "3 posts, publish Mon/Wed/Fri" — each post its own finite Instance |
-| `chained` | A link in a chain of two or more *other* automations (of either type above), in any sequence; renders as a canvas-only **group** container, never gets its own workflow. | outreach automation → hands off to a dialog-script automation |
+| `chained` | A link in a chain of two or more *other* automations (of either type above), in any sequence; renders as a canvas-only **group** container, never gets its own workflow. **Also the mandatory landing shape for any automation that outgrows the node budget (§2.1).** | outreach automation → hands off to a dialog-script automation |
 
 All three start from the identical frozen skeleton (three draft nodes: Input → Logic → Output) — only the
 stored type token and how the global canvas renders the project differ.
+
+### 2.1 The node budget and forced decomposition into a chained group (owner doctrine 2026-07-16; mechanics planned)
+
+Every `stream`/`instanced` automation has a **node budget**. This is a fundamental scale law, not a style
+preference — read it before adding ANY node to ANY automation:
+
+- **≤ 24 nodes** — normal zone. Grow freely, subject to "no use case → no node".
+- **25 nodes** — the decomposition threshold. The agent designing or renovating MUST propose a decomposition
+  seam to the owner in the same Development Step; growth may continue only while the proposal is pending.
+- **30 nodes** — the hard maximum. **No new node may be added, ever.** Any further growth happens ONLY by
+  decomposing into a chained group first. There is no owner phrasing that overrides this cap.
+
+**Why (follows from §1's two-phase doctrine):** the *runtime* does not degrade with node count — production
+is deterministic code and never reads the architecture JSON. What degrades is *development*: the
+architecture bundle grows linearly with nodes, and a coding agent's comprehension of one automation is
+bounded. Very large processes therefore scale **only** as a chained group of small automations — each member
+independently comprehensible, independently researched, independently tested and independently fixed. Fixing
+a bug in a 300-node monolith is archaeology; fixing it in one 20-node member with a clean typed contract at
+its seams is routine.
+
+**The decomposition operation (planned; executed as its own Development Step):**
+
+1. **Find the narrowest seam(s):** cut where the fewest edges cross, so each side gets a clean typed
+   input/output contract at the cut. The seam contract is designed FIRST, like any boundary (interface-first).
+2. **Create the parent `chained` group.** The group **takes over the original automation's public
+   identity** — its title and its role as the process's entry. Anything that pointed at the original as an
+   entry (links, application pages, external callers) must land on the group afterwards (identity takeover
+   preferred; an explicit redirect from the old address is the acceptable fallback).
+3. **Create the member automations** (each starting ≤ 25 nodes; e.g. "Medicine" splits into member cards
+   "Medicine 1" and "Medicine 2" inside the group "Medicine") and **move the nodes verbatim** — a
+   co-location move: each `_nodes/<slug>/` folder travels intact into its member's own tree.
+4. **Wire the seams as links** (`_edges/`, §4), under the same readiness gate.
+5. **Prove parity before retiring the original:** at least two virtual end-to-end tests walked THROUGH the
+   group (one success path, one failure/branch path) must reproduce the original's behaviour.
+
+**Entry, activation and the redirect rule after decomposition (planned):**
+
+- **No member is a standalone product entry.** Production activation happens only through the group: a
+  member's launch console is replaced by a pointer to the group's console, and `POST /api/projects/run` must
+  refuse a member's standalone production activation (409, `reason:"chained-member"`, naming the group).
+- **Members stay individually editable and individually TEST-runnable.** Each member keeps its own page
+  (reached from the group, shown with a "member of <group>" banner), its own diagram, entities
+  (dashboard/calendar/…), versions and development cycle. Test runs of one member in isolation are exactly
+  how a member is researched and fixed separately — forbidding them would make large groups undebuggable.
+  Only *production* activation is group-only.
+- **Single-pane observability lives at GROUP level.** To see all processes on one page, the owner builds the
+  group's own application pages / dashboard / analytics, aggregating across members. Per-member dashboards
+  remain as each member's local instruments — both levels coexist.
+- **Recursion is allowed and expected:** a group may itself become a member of a larger group. The node
+  budget applies per member automation, at every level; a group holds automations, never nodes of its own.
 
 ## 3. Creating an automation (proven end to end)
 
@@ -176,6 +226,15 @@ current task into `history[]` (via `archiveAndClearTransport`/`writeVersionByRef
 slot, in that order, only at that point — confirmed live (step 238 Phase 2): two plain draft saves produced
 zero history entries; the following `start-development` produced exactly one.
 
+**Planned refactor of the bundle (owner, 2026-07-16 — in progress; verify what is live before relying on
+either shape):** the bundle is moving to a universal pair of fields on EVERY object — `rawRequest` (the
+owner's free-form wish, the thing that goes into development; cleared on completion, original archived to
+history) and `summary` (the AI's compact result description, ≤300 characters per entity, in the owner's
+language) — plus a static per-object `instruction` and a top-level `agent_instruction`, with nodes and edges
+grouped under one `diagram` object. Pending-change detection ("offer to start development") will key off
+"any non-empty `rawRequest` anywhere in the object". Until that lands, the `currentTask`/`pending` shape
+above is the current truth.
+
 ## 6. Renovating an existing automation (proven entry points)
 
 Three ways to re-open development on a live automation, all converging on the identical "materialize one
@@ -193,6 +252,10 @@ Development Step → owner copies the step number → invokes the coding agent" 
 
 Deleting a node commonly breaks the whole automation — always follow deletion with an immediate renovation
 cycle, reported as its own Development Step; never leave a deletion unaccompanied by a follow-up plan.
+
+**Renovation is where the node budget bites (§2.1):** before adding nodes to a live automation, count the
+existing ones. At ≥ 25, propose the decomposition seam in the same step; at 30, refuse to add and decompose
+first — renovation requests are the most common way an automation silently outgrows its budget.
 
 ## 7. The Global Automation canvas (`/projects` root, React Flow — proven gating, UI cross-checked lightly)
 

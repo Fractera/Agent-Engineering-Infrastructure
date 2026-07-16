@@ -49,10 +49,21 @@ export type EntityTaskRecord<TTask> = {
 /** ONE instance of an entity — a node, an edge, a use case, or the single "instance" of an automation-wide
  *  entity (chain/dashboard/...). `identity` carries descriptive facts (cuid, slug, status, draft, members)
  *  — NOT the task; `currentTask`/`history[].task` share the identical `TTask` shape, deliberately flat (1-3
- *  plain string fields) so "what do I need to do" never needs entity-specific parsing. */
+ *  plain string fields) so "what do I need to do" never needs entity-specific parsing.
+ *
+ *  THE UNIVERSAL PAIR (owner 2026-07-16): every instance now also carries
+ *  - `rawRequest` — the owner's free-form wish for THIS object, exactly as he wrote/spoke it. Non-empty ⟺
+ *    something is waiting for development (it is the flattened text of `currentTask`, so it can never
+ *    disagree with `pending`). Cleared by development (the original is archived to entity_history by the
+ *    existing start-development machinery).
+ *  - `summary` — the AI's compact description of how the object works NOW (≤300 characters, in the owner's
+ *    language), written when development of the object completes. Read by the owner and by the next
+ *    development iteration. Empty until first written. */
 export type EntityInstance<TTask, TIdentity> = {
   ref: string;                 // '' for automation-wide; cuid for node/edge/usecase
   identity: TIdentity;
+  rawRequest: string;          // '' = no pending wish; non-empty = the owner's free-form request
+  summary: string;             // the AI-written compact "how it works now" (may be '')
   pending: boolean;            // ALWAYS derived from (currentTask !== null) by makeInstance() below — never
                                 // set independently, so it can never drift from currentTask. Exposed as its
                                 // own field so a weak model does a plain key check, never a null-inference.
@@ -60,15 +71,52 @@ export type EntityInstance<TTask, TIdentity> = {
   history: EntityTaskRecord<TTask>[];
 };
 
-/** Builds one instance, deriving `pending` from `currentTask` so the two fields can never disagree. */
+/** Flattens any of the deliberately-flat per-entity TTask shapes to the owner's raw request text — the
+ *  1-3 plain string fields, joined. One function for all entities (moved here from lib/wave.ts, which now
+ *  reads the derived `rawRequest` instead of re-flattening). */
+export function flattenTask(t: unknown): string {
+  if (!t || typeof t !== "object") return "";
+  const o = t as Record<string, unknown>;
+  return [o.title, o.summary, o.brief, o.instruction, o.spec]
+    .filter((v): v is string => typeof v === "string" && v.trim().length > 0)
+    .join("\n").trim();
+}
+
+/** Builds one instance, deriving `pending` from `currentTask` and `rawRequest` from the task's own text, so
+ *  the three fields can never disagree. `summary` is the AI-written result description (see above). */
 export function makeInstance<TTask, TIdentity>(
   ref: string, identity: TIdentity, currentTask: TTask | null, history: EntityTaskRecord<TTask>[],
+  summary = "",
 ): EntityInstance<TTask, TIdentity> {
-  return { ref, identity, pending: currentTask !== null, currentTask, history };
+  return { ref, identity, rawRequest: flattenTask(currentTask), summary, pending: currentTask !== null, currentTask, history };
+}
+
+// ─── THE ENTITY SUMMARY STORE (owner 2026-07-16) ────────────────────────────────────────────────────────
+// The write half of the rawRequest/summary lifecycle: an agent finishing an entity's development writes the
+// compact "how it works now" here (POST /api/projects/entity-summary). Nodes fall back to their co-located
+// meta.ts `description` when no row exists — see the node extractor.
+
+export async function getSummary(automation: string, entityType: EntityType, ref = ""): Promise<string> {
+  const row = (await db
+    .prepare(`SELECT summary FROM entity_summary WHERE automation=? AND entity_type=? AND entity_ref=?`)
+    .get(automation, entityType, ref)) as { summary: string } | undefined;
+  return row?.summary ?? "";
+}
+
+export async function setSummary(automation: string, entityType: EntityType, ref: string, summary: string): Promise<void> {
+  await db.prepare(
+    `INSERT INTO entity_summary (automation, entity_type, entity_ref, summary, updated_at)
+     VALUES (?, ?, ?, ?, datetime('now'))
+     ON CONFLICT(automation, entity_type, entity_ref) DO UPDATE SET
+       summary = excluded.summary, updated_at = excluded.updated_at`,
+  ).run(automation, entityType, ref, summary);
 }
 
 export type EntitySlice<TTask = unknown, TIdentity = unknown> = {
   entityType: EntityType;
+  /** This entity type's own STATIC law for the reading agent (owner 2026-07-16) — a deterministic dictionary
+   *  in code (lib/entity-architecture.ts ENTITY_INSTRUCTIONS), never model-generated. '' = not authored yet. */
+  instruction?: string;
   instances: EntityInstance<TTask, TIdentity>[];  // length 1 for chain/stubs, length N for node/edge/usecase
   error?: string; // set when this ONE entity's extraction failed — never aborts the whole bundle
 };

@@ -70,6 +70,10 @@ export type GlobalCanvasStrings = {
   // ─── GroupDetailSection (step 238) — the heading on a group automation's OWN dedicated page, above the
   // chain-brief editor + the expanded member-automations canvas ───
   groupPageHeading: string;
+  // The ALWAYS-ON ⚠ warning below the group's description (owner 2026-07-16): working on a chained group
+  // requires the strongest AI model available to the coding agent; after development the automation runs
+  // entirely without AI.
+  groupModelWarning: string;
 };
 
 export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
@@ -124,6 +128,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     btnCloseAutomation: "Close automation",
     errSameAutomationLink: "Both ends of a link must belong to different automations.",
     groupPageHeading: "Automations in this group",
+    groupModelWarning: "Creating and developing group automations requires the MOST powerful AI model available to your coding agent — switch to it before continuing. After development is complete, use the automation entirely without AI.",
   },
   ru: {
     title: "Глобальная архитектура",
@@ -176,6 +181,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     btnCloseAutomation: "Закрыть автоматизацию",
     errSameAutomationLink: "Оба конца связи должны принадлежать разным автоматизациям.",
     groupPageHeading: "Автоматизации в этой группе",
+    groupModelWarning: "Создание и разработка групповых автоматизаций требует максимально мощной модели ИИ у вашего агента-кодера — переключитесь на неё, прежде чем продолжать. После завершения разработки используйте автоматизацию вообще без ИИ.",
   },
   es: {
     title: "Arquitectura global",
@@ -228,6 +234,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     btnCloseAutomation: "Cerrar automatización",
     errSameAutomationLink: "Ambos extremos de un enlace deben pertenecer a automatizaciones diferentes.",
     groupPageHeading: "Automatizaciones de este grupo",
+    groupModelWarning: "Crear y desarrollar automatizaciones de grupo requiere el modelo de IA MÁS potente disponible para su agente programador: cambie a él antes de continuar. Una vez finalizado el desarrollo, use la automatización totalmente sin IA.",
   },
   fr: {
     title: "Architecture globale",
@@ -280,6 +287,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     btnCloseAutomation: "Fermer l'automatisation",
     errSameAutomationLink: "Les deux extrémités d'un lien doivent appartenir à des automatisations différentes.",
     groupPageHeading: "Automatisations de ce groupe",
+    groupModelWarning: "La création et le développement d'automatisations de groupe exigent le modèle d'IA le PLUS puissant disponible pour votre agent codeur — passez-y avant de continuer. Une fois le développement terminé, utilisez l'automatisation entièrement sans IA.",
   },
   it: {
     title: "Architettura globale",
@@ -332,6 +340,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     btnCloseAutomation: "Chiudi automazione",
     errSameAutomationLink: "Entrambe le estremità di un collegamento devono appartenere ad automazioni diverse.",
     groupPageHeading: "Automazioni in questo gruppo",
+    groupModelWarning: "La creazione e lo sviluppo di automazioni di gruppo richiedono il modello di IA PIÙ potente disponibile per il vostro agente programmatore: passate a esso prima di continuare. A sviluppo completato, usate l'automazione interamente senza IA.",
   },
   de: {
     title: "Globale Architektur",
@@ -384,6 +393,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     btnCloseAutomation: "Automatisierung schließen",
     errSameAutomationLink: "Beide Enden einer Verbindung müssen zu unterschiedlichen Automatisierungen gehören.",
     groupPageHeading: "Automatisierungen in dieser Gruppe",
+    groupModelWarning: "Das Erstellen und Entwickeln von Gruppen-Automatisierungen erfordert das LEISTUNGSSTÄRKSTE verfügbare KI-Modell Ihres Coding-Agenten — wechseln Sie darauf, bevor Sie fortfahren. Nach Abschluss der Entwicklung nutzen Sie die Automatisierung völlig ohne KI.",
   },
   pt: {
     title: "Arquitetura global",
@@ -436,6 +446,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     btnCloseAutomation: "Fechar automação",
     errSameAutomationLink: "As duas extremidades de uma ligação devem pertencer a automações diferentes.",
     groupPageHeading: "Automações neste grupo",
+    groupModelWarning: "Criar e desenvolver automações de grupo exige o modelo de IA MAIS poderoso disponível para o seu agente programador — mude para ele antes de continuar. Concluído o desenvolvimento, use a automação totalmente sem IA.",
   },
   pl: {
     title: "Globalna architektura",
@@ -488,6 +499,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     btnCloseAutomation: "Zamknij automatyzację",
     errSameAutomationLink: "Oba końce połączenia muszą należeć do różnych automatyzacji.",
     groupPageHeading: "Automatyzacje w tej grupie",
+    groupModelWarning: "Tworzenie i rozwijanie automatyzacji grupowych wymaga NAJPOTĘŻNIEJSZEGO dostępnego modelu AI u Twojego agenta-programisty — przełącz się na niego, zanim będziesz kontynuować. Po zakończeniu rozwoju używaj automatyzacji całkowicie bez AI.",
   },
   tr: {
     title: "Genel mimari",
@@ -540,6 +552,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     btnCloseAutomation: "Otomasyonu kapat",
     errSameAutomationLink: "Bir bağlantının her iki ucu da farklı otomasyonlara ait olmalıdır.",
     groupPageHeading: "Bu gruptaki otomasyonlar",
+    groupModelWarning: "Grup otomasyonları oluşturmak ve geliştirmek, kodlayıcı ajanınızda mevcut EN GÜÇLÜ yapay zekâ modelini gerektirir — devam etmeden önce ona geçin. Geliştirme tamamlandıktan sonra otomasyonu tamamen yapay zekâsız kullanın.",
   },
   nl: {
     title: "Globale architectuur",
@@ -592,6 +605,7 @@ export const GLOBAL_CANVAS_I18N: Record<string, GlobalCanvasStrings> = {
     btnCloseAutomation: "Automatisering sluiten",
     errSameAutomationLink: "Beide uiteinden van een link moeten tot verschillende automatiseringen behoren.",
     groupPageHeading: "Automatiseringen in deze groep",
+    groupModelWarning: "Het maken en ontwikkelen van groepsautomatiseringen vereist het KRACHTIGSTE AI-model dat voor uw codeeragent beschikbaar is — schakel daarnaar over voordat u verdergaat. Gebruik de automatisering na afronding van de ontwikkeling volledig zonder AI.",
   },
 };
 

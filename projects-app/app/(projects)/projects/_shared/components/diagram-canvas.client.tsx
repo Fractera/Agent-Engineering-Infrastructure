@@ -65,11 +65,11 @@ const RUN_FRAME: Record<RunStatus, string> = {
 };
 
 function DiagramNode({ data, selected }: NodeProps<CanvasNode>) {
-  // A CONDITION node (2026-07-15) — a comparison/gate that passes the flow forward only when its condition
-  // holds. Rendered as a SQUARE (aspect-square, grows 1:1) in a distinct violet, so it reads at a glance as a
-  // different KIND of node from the rectangular work nodes. Short label centred; no role/io badges (the shape
-  // itself is the marker).
-  if (data.role === "condition") {
+  // A CONDITION node (2026-07-15) — the condition KIND of an intermediate node (role "intermediate",
+  // ioType "condition"): a gate that passes the flow forward only when its condition holds. Rendered as a
+  // SQUARE (aspect-square, grows 1:1) in a distinct violet, so it reads at a glance as a different kind from
+  // the rectangular work nodes. Short label centred; no role/io badges (the shape itself is the marker).
+  if (data.ioType === "condition") {
     const cframe = data.draft
       ? "border-rose-500 border-dashed"
       : selected
