@@ -233,6 +233,17 @@ export function ActivationQuiz({
     // AI" (239) are always opened deliberately by their caller (controlled), never on their own.
     if (controlled || isEdge || isCaseEdit || isEntity || !automation) return;
     void (async () => {
+      // PRIORITY (step 247, owner's find on automation-14): OPEN PROBLEMS OUTRANK THE QUIZ. When a coding
+      // agent has left warnings, the owner's first duty on this page is to answer them — the problems modal
+      // auto-opens (warning-panel.client), and the Quiz must NOT bury it under a second dialog. It stays
+      // reachable as ever (its own buttons); it just does not auto-open while a warning is unanswered.
+      try {
+        const w = await fetch(`/api/projects/entity-warning?automation=${encodeURIComponent(automation)}`, { cache: "no-store" });
+        if (w.ok) {
+          const wd = (await w.json()) as { warnings?: unknown[] };
+          if (wd.warnings?.length) return;
+        }
+      } catch { /* the warning check must never block the Quiz itself */ }
       const r = await fetch(`/api/projects/quiz?${query}`, { cache: "no-store" });
       if (!r.ok) return;
       const d = (await r.json()) as { started: boolean; status?: string };
