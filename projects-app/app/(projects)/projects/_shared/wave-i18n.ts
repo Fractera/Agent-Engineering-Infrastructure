@@ -34,6 +34,9 @@ export type WaveStrings = {
   handoffLine: string;
   lockedCopy: string;
   lockedCopied: string;
+  /** The locked banner's jump to the admin workspace (owner 2026-07-16) — the coding agents live on
+   *  admin.<domain> / <ip>:3002, a DIFFERENT tab than the projects page the owner is reading. */
+  lockedOpenAdmin: string;
   // the lock modal (shown when a tool is used while locked)
   lockTitle: string;
   lockBody: string;          // {n} = step number
@@ -66,6 +69,7 @@ export const WAVE_I18N: Record<string, WaveStrings> = {
     handoffLine: "Run development step #{n}. When finished: save the build record to deployments, complete the step, and in your reply tell the user what was done and what they should do next.",
     lockedCopy: "Copy the brief",
     lockedCopied: "Copied — paste it to your coding agent.",
+    lockedOpenAdmin: "Open the admin workspace",
     lockTitle: "A new development is scheduled",
     lockBody: "Development step #{n} has already been handed over. Finish it before making further changes here — otherwise the brief your coding agent is working from would silently change.",
     lockBodyNoStep: "A development step has already been handed over. Finish it before making further changes here.",
@@ -95,6 +99,7 @@ export const WAVE_I18N: Record<string, WaveStrings> = {
     handoffLine: "Выполни шаг разработки №{n}. Когда закончишь: сохрани запись о сборке в deployments, заверши шаг и в ответе сообщи пользователю, что сделано и что делать дальше.",
     lockedCopy: "Скопировать задание",
     lockedCopied: "Скопировано — вставьте агенту-программисту.",
+    lockedOpenAdmin: "Открыть админ-панель",
     lockTitle: "Запланирована новая разработка",
     lockBody: "Шаг разработки №{n} уже передан. Завершите его, прежде чем вносить новые изменения здесь — иначе техническое задание, по которому работает агент, незаметно изменится.",
     lockBodyNoStep: "Шаг разработки уже передан. Завершите его, прежде чем вносить новые изменения здесь.",
@@ -124,6 +129,7 @@ export const WAVE_I18N: Record<string, WaveStrings> = {
     handoffLine: "Ejecuta el paso de desarrollo n.º {n}. Al terminar: guarda el registro de la build en deployments, completa el paso y en tu respuesta dile al usuario qué se hizo y qué debe hacer después.",
     lockedCopy: "Copiar el encargo",
     lockedCopied: "Copiado — pégalo a tu agente de código.",
+    lockedOpenAdmin: "Abrir el panel de administración",
     lockTitle: "Hay un nuevo desarrollo programado",
     lockBody: "El paso de desarrollo n.º {n} ya se entregó. Termínalo antes de hacer más cambios aquí; de lo contrario, el encargo con el que trabaja tu agente cambiaría sin avisar.",
     lockBodyNoStep: "Ya se entregó un paso de desarrollo. Termínalo antes de hacer más cambios aquí.",
@@ -153,6 +159,7 @@ export const WAVE_I18N: Record<string, WaveStrings> = {
     handoffLine: "Exécute l'étape de développement n° {n}. Une fois terminé : enregistre le build dans deployments, clôture l'étape et, dans ta réponse, indique à l'utilisateur ce qui a été fait et ce qu'il doit faire ensuite.",
     lockedCopy: "Copier le cahier des charges",
     lockedCopied: "Copié — collez-le à votre agent de code.",
+    lockedOpenAdmin: "Ouvrir le panneau d'administration",
     lockTitle: "Un nouveau développement est planifié",
     lockBody: "L'étape de développement n° {n} a déjà été transmise. Terminez-la avant d'apporter d'autres modifications ici, sinon le cahier des charges sur lequel travaille votre agent changerait sans prévenir.",
     lockBodyNoStep: "Une étape de développement a déjà été transmise. Terminez-la avant d'apporter d'autres modifications ici.",
@@ -182,6 +189,7 @@ export const WAVE_I18N: Record<string, WaveStrings> = {
     handoffLine: "Esegui il passo di sviluppo n. {n}. Al termine: salva il record della build in deployments, completa il passo e nella risposta comunica all'utente cosa è stato fatto e cosa deve fare dopo.",
     lockedCopy: "Copia la specifica",
     lockedCopied: "Copiato — incollalo al tuo agente di codice.",
+    lockedOpenAdmin: "Apri il pannello di amministrazione",
     lockTitle: "È programmato un nuovo sviluppo",
     lockBody: "Il passo di sviluppo n. {n} è già stato consegnato. Completalo prima di apportare altre modifiche qui, altrimenti le specifiche su cui lavora il tuo agente cambierebbero silenziosamente.",
     lockBodyNoStep: "Un passo di sviluppo è già stato consegnato. Completalo prima di apportare altre modifiche qui.",
@@ -211,6 +219,7 @@ export const WAVE_I18N: Record<string, WaveStrings> = {
     handoffLine: "Führe Entwicklungsschritt Nr. {n} aus. Wenn du fertig bist: speichere den Build-Eintrag in deployments, schließe den Schritt ab und teile dem Nutzer in deiner Antwort mit, was getan wurde und was er als Nächstes tun soll.",
     lockedCopy: "Vorgabe kopieren",
     lockedCopied: "Kopiert — füge es deinem Coding-Agenten ein.",
+    lockedOpenAdmin: "Admin-Bereich öffnen",
     lockTitle: "Eine neue Entwicklung ist eingeplant",
     lockBody: "Entwicklungsschritt Nr. {n} wurde bereits übergeben. Schließe ihn ab, bevor du hier weitere Änderungen vornimmst — sonst würde sich die Vorgabe, mit der dein Agent arbeitet, unbemerkt ändern.",
     lockBodyNoStep: "Ein Entwicklungsschritt wurde bereits übergeben. Schließe ihn ab, bevor du hier weitere Änderungen vornimmst.",
@@ -240,6 +249,7 @@ export const WAVE_I18N: Record<string, WaveStrings> = {
     handoffLine: "Executa o passo de desenvolvimento n.º {n}. Ao terminar: guarda o registo da build em deployments, conclui o passo e, na resposta, diz ao utilizador o que foi feito e o que deve fazer a seguir.",
     lockedCopy: "Copiar o caderno de encargos",
     lockedCopied: "Copiado — cole-o no seu agente de código.",
+    lockedOpenAdmin: "Abrir o painel de administração",
     lockTitle: "Está agendado um novo desenvolvimento",
     lockBody: "O passo de desenvolvimento n.º {n} já foi entregue. Conclua-o antes de fazer mais alterações aqui — caso contrário, o caderno de encargos com que o seu agente trabalha mudaria sem aviso.",
     lockBodyNoStep: "Já foi entregue um passo de desenvolvimento. Conclua-o antes de fazer mais alterações aqui.",
@@ -269,6 +279,7 @@ export const WAVE_I18N: Record<string, WaveStrings> = {
     handoffLine: "Wykonaj krok rozwoju nr {n}. Po zakończeniu: zapisz rekord builda w deployments, zamknij krok i w odpowiedzi poinformuj użytkownika, co zostało zrobione i co ma zrobić dalej.",
     lockedCopy: "Skopiuj specyfikację",
     lockedCopied: "Skopiowano — wklej agentowi kodującemu.",
+    lockedOpenAdmin: "Otwórz panel administracyjny",
     lockTitle: "Zaplanowano nowy rozwój",
     lockBody: "Krok rozwoju nr {n} został już przekazany. Ukończ go przed wprowadzaniem kolejnych zmian — inaczej specyfikacja, na której pracuje Twój agent, zmieniłaby się niepostrzeżenie.",
     lockBodyNoStep: "Krok rozwoju został już przekazany. Ukończ go przed wprowadzaniem kolejnych zmian tutaj.",
@@ -298,6 +309,7 @@ export const WAVE_I18N: Record<string, WaveStrings> = {
     handoffLine: "{n} numaralı geliştirme adımını çalıştır. Bitirince: build kaydını deployments'a kaydet, adımı tamamla ve yanıtında kullanıcıya ne yapıldığını ve bundan sonra ne yapması gerektiğini bildir.",
     lockedCopy: "Şartnameyi kopyala",
     lockedCopied: "Kopyalandı — kod ajanınıza yapıştırın.",
+    lockedOpenAdmin: "Yönetim panelini aç",
     lockTitle: "Yeni bir geliştirme planlandı",
     lockBody: "{n} numaralı geliştirme adımı zaten teslim edildi. Burada yeni değişiklikler yapmadan önce onu tamamlayın — aksi hâlde ajanınızın çalıştığı şartname sessizce değişirdi.",
     lockBodyNoStep: "Bir geliştirme adımı zaten teslim edildi. Burada yeni değişiklikler yapmadan önce onu tamamlayın.",
@@ -327,6 +339,7 @@ export const WAVE_I18N: Record<string, WaveStrings> = {
     handoffLine: "Voer ontwikkelstap #{n} uit. Als je klaar bent: sla het buildrecord op in deployments, rond de stap af en vertel de gebruiker in je antwoord wat er is gedaan en wat die daarna moet doen.",
     lockedCopy: "Opdracht kopiëren",
     lockedCopied: "Gekopieerd — plak het in je coding agent.",
+    lockedOpenAdmin: "Adminpaneel openen",
     lockTitle: "Er is een nieuwe ontwikkeling ingepland",
     lockBody: "Ontwikkelstap #{n} is al overgedragen. Rond die eerst af voordat je hier verdere wijzigingen maakt — anders zou de opdracht waarmee je agent werkt ongemerkt veranderen.",
     lockBodyNoStep: "Er is al een ontwikkelstap overgedragen. Rond die eerst af voordat je hier verdere wijzigingen maakt.",

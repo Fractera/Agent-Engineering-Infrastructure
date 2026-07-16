@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy, Loader2, Lock, RotateCcw, Rocket, Clock } from "lucide-react";
+import { Copy, ExternalLink, Loader2, Lock, RotateCcw, Rocket, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useUiLang } from "../use-ui-lang";
 import { waveStrings } from "../wave-i18n";
 import { useWaveLock } from "./wave-lock.client";
+import { adminBase } from "@/lib/runtime-urls";
 import { StartDevelopment } from "./start-development.client";
 import { ProblemsCenter } from "./warning-panel.client";
 
@@ -79,17 +80,28 @@ function WaveBannerInner({ automation }: { automation: string }) {
           </div>
         </div>
         {wave.step ? (
-          <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-background/60 p-2">
-            <code className="min-w-0 flex-1 break-words [overflow-wrap:anywhere] text-sm">{handoff}</code>
+          <>
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-background/60 p-2">
+              <code className="min-w-0 flex-1 break-words [overflow-wrap:anywhere] text-sm">{handoff}</code>
+              <Button
+                size="sm"
+                variant="outline"
+                className="shrink-0"
+                onClick={() => { void navigator.clipboard.writeText(handoff); toast.success(L.lockedCopied); }}
+              >
+                <Copy className="size-3.5" /> {L.lockedCopy}
+              </Button>
+            </div>
+            {/* The coding agents live in the ADMIN workspace (admin.<domain> / <ip>:3002) — a different tab
+                than this projects page, so the banner carries the jump itself (owner 2026-07-16). */}
             <Button
               size="sm"
-              variant="outline"
-              className="shrink-0"
-              onClick={() => { void navigator.clipboard.writeText(handoff); toast.success(L.lockedCopied); }}
+              variant="ghost"
+              onClick={() => window.open(adminBase(), "_blank", "noopener")}
             >
-              <Copy className="size-3.5" /> {L.lockedCopy}
+              <ExternalLink className="size-3.5" /> {L.lockedOpenAdmin}
             </Button>
-          </div>
+          </>
         ) : null}
       </div>
     );
