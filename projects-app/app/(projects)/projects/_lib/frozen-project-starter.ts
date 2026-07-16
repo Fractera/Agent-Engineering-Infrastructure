@@ -113,7 +113,11 @@ function humanize(slug: string): string {
 // (CronProgressBar, generalized from telegram-notes into _shared): a 2px full-bleed orange bar that shrinks
 // left→right over one cron period, then resets — its speed IS the cron interval. It renders ONLY while cron
 // is ACTIVE (the Cron accordion's enabled switch, off by default) and updates live when the owner flips it.
-const VERSION = 11;
+// v12 (owner, 2026-07-16) — ALL ENTITY SWITCHES ON AT BIRTH. _data/config.ts seeds every visibility toggle
+// (controlpanel/diagram/dashboard/calendar/cron/map/processes/analytics/usecases/apppages) to true: a fresh
+// automation shows every surface it has, and the owner switches OFF what he does not need — an unseen
+// switch is a surface the owner never discovers.
+const VERSION = 12;
 const SKELETON: Record<string, string> = {
   "page.tsx": `import AutomationEntry from "./_components";
 
@@ -187,25 +191,22 @@ export const AUTOMATION_TYPE: AutomationType = "{{AUTOMATION_TYPE}}";
 // app/(projects)/README.md, "The automation entities standard"). \`entities\` is the SEED for the
 // hamburger menu's visibility switches (Control panel/Diagram/Calendar/Cron/Map/Dashboard/Processes/
 // Analytics/User cases/Application pages) — the owner's live overrides win at runtime, no rebuild involved
-// (see use-entities-live.ts). \`controlpanel\`/\`diagram\`/\`calendar\`/\`cron\` default on (the launch
-// console, and Calendar+Cron which ship a real, if static/inert, preview the moment an automation is
-// created — the Cron+Calendar step); everything else defaults off until the automation actually needs it.
-// \`controlpanel\` (owner, 2026-07-15) toggles the launch console (ActivationLayer), which renders full-width
-// above the diagram like \`diagram\` — not one of the in-series accordions. The User cases review gate
-// (step 231) stays mandatory before any Development Step regardless of this switch — this only toggles its
-// accordion.
+// (see use-entities-live.ts). EVERYTHING defaults ON (owner, 2026-07-16): a fresh automation shows every
+// surface it has, and the owner switches OFF what he does not need — never the other way round (an unseen
+// switch is a surface the owner never discovers). The User cases review gate (step 231) stays mandatory
+// before any Development Step regardless of this switch — this only toggles its accordion.
 export const PROJECT_CONFIG = {
   entities: {
     controlpanel: true,
     diagram: true,
-    dashboard: false,
+    dashboard: true,
     calendar: true,
     cron: true,
-    map: false,
-    processes: false,
-    analytics: false,
-    usecases: false,
-    apppages: false,
+    map: true,
+    processes: true,
+    analytics: true,
+    usecases: true,
+    apppages: true,
   },
 } as const;
 `,
@@ -337,10 +338,11 @@ input channels) and the Tests modal are driven ENTIRELY by those two files — s
 app/(projects)/README.md, "The settings & tests declaration standard".
 
 Below the "Add or modify automation" button the page shows the ENTITY ACCORDIONS (step 222): a series
-driven by \`_data/config.ts\` (\`entities\`) — \`diagram\`/\`dashboard\`/\`calendar\`/\`cron\` on by default
-(Calendar and Cron are real, not empty containers, even freshly created — a static demo preview and a
-real periodicity control respectively), plus optional Map / Processes / Analytics — each an EMPTY
-container with a hover tooltip until its interface is built; and the mandatory USER CASES
+driven by \`_data/config.ts\` (\`entities\`) — ALL switches are ON at birth (owner, 2026-07-16): every
+surface is visible from the start (Calendar and Cron are real, not empty containers — a static demo
+preview and a real periodicity control; Map / Processes / Analytics are EMPTY containers with a hover
+tooltip until their interface is built), and the owner switches OFF in the hamburger menu whatever this
+automation does not need; and the mandatory USER CASES
 (\`_data/use-cases.ts\`), numbered (01, 02, …) with a status badge,
 seeded with one case ("Architect planned the automation" / new). Break the request into cases and move
 each from "new" to "in use" over short iterations. Full rules: app/(projects)/README.md,
