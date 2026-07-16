@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorize, resolveProject } from "@/lib/nodes";
-import { setWaveSnooze } from "@/lib/entity-store";
+import { setWaveSnooze, clearWaveSnooze } from "@/lib/entity-store";
 import { stagedItems, waveSignature } from "@/lib/wave";
 
 // POSTPONE THE WAVE BANNER (step 241 E3.3, owner's "Отложить запуск") — the middle of the banner's three
@@ -27,4 +27,16 @@ export async function POST(req: NextRequest) {
 
   await setWaveSnooze(proj.automation, waveSignature(items));
   return NextResponse.json({ ok: true, snoozed: true });
+}
+
+// UN-POSTPONE (step 247, owner's fix): the postponed banner had NO way back — hover mishaps hid the launch
+// invitation for good. The status bar's "Launch development" button calls this to clear the snooze; the
+// banner returns on the next poll with everything still staged.
+export async function DELETE(req: NextRequest) {
+  if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const body = (await req.json().catch(() => null)) as { automation?: string } | null;
+  const proj = resolveProject(String(body?.automation ?? ""));
+  if (!proj.ok) return NextResponse.json({ error: proj.error }, { status: 400 });
+  await clearWaveSnooze(proj.automation);
+  return NextResponse.json({ ok: true, snoozed: false });
 }

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { Rocket } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { InputChannel } from "../channels";
 import type { Probe } from "../tests";
 import type { AutomationType } from "../automation-type";
@@ -8,8 +10,37 @@ import type { EntitiesConfig } from "../entities";
 import { AutomationMenu } from "./automation-menu.client";
 import { AutomationStatePill } from "./automation-state-pill.client";
 import { AutomationModeIndicators } from "./automation-mode-indicators.client";
+import { useWaveLock } from "./wave-lock.client";
 import { useUiLang } from "../use-ui-lang";
 import { categoryHubStrings } from "../category-hub-i18n";
+import { waveStrings } from "../wave-i18n";
+
+// THE WAY BACK TO A POSTPONED WAVE (step 247, owner's fix): "Postpone launch" used to be a one-way door —
+// once the banner hid, NOTHING on the page could bring the launch invitation back. This small button sits
+// LEFT of the type badge and appears ONLY while changes are staged but the banner is postponed; clicking it
+// clears the snooze (DELETE development-wave/postpone) and the banner returns with everything still staged.
+function WaveReopenButton({ automation }: { automation: string }) {
+  const { wave, refresh } = useWaveLock();
+  const L = waveStrings(useUiLang());
+  if (wave.state !== "staging" || !wave.snoozed) return null;
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      className="h-6 gap-1 border-primary/50 px-2 text-xs text-primary"
+      onClick={async () => {
+        await fetch(`/api/projects/development-wave/postpone`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ automation }),
+        }).catch(() => {});
+        refresh();
+      }}
+    >
+      <Rocket className="size-3" /> {L.bannerLaunch}
+    </Button>
+  );
+}
 
 // FROZEN STANDARD (step 220) — the bar at the top of a fresh automation page: a breadcrumb back to the
 // categories index on the left, and on the right the generic automation menu (AI provider / model +
@@ -50,6 +81,7 @@ export function AutomationStatusBar({
       <span className="flex items-center gap-2">
         {/* Type badge + state pill (step 224 §1.5 / L6) — left of the burger. "In development" (indigo)
             while any node is still a draft: the automation is auto-stopped until every node is built. */}
+        {automation && <WaveReopenButton automation={automation} />}
         {automation && <AutomationStatePill automation={automation} type={type ?? "stream"} />}
         {automation && <AutomationModeIndicators automation={automation} type={type} />}
         <AutomationMenu

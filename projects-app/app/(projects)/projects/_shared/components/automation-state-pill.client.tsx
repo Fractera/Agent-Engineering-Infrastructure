@@ -61,8 +61,10 @@ export function AutomationStatePill({
       >
         {spec.title}
       </span>
-      <span className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm">
-        <span className={`size-2.5 rounded-full ${state.dot}`} aria-hidden />
+      {/* Same size as the type badge (owner 2026-07-16): px-2.5 / py-0.5 / text-xs — the badge was right,
+          the pills were oversized. */}
+      <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs">
+        <span className={`size-2 rounded-full ${state.dot}`} aria-hidden />
         <span className={state.text}>{state.label}</span>
       </span>
     </span>

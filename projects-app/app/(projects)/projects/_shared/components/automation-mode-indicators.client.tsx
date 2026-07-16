@@ -44,9 +44,10 @@ export function AutomationModeIndicators({ automation, type }: { automation: str
   // refetch (the new state rides along in the event itself).
   useCronLive(automation, (enabled) => setCron((c) => ({ exists: c?.exists ?? true, enabled })));
 
+  // Same size as the type badge (owner 2026-07-16): the pills were oversized next to it.
   const pill = (dotClass: string, textClass: string, label: string) => (
-    <span className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm">
-      <span className={`size-2.5 rounded-full ${dotClass}`} aria-hidden />
+    <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs">
+      <span className={`size-2 rounded-full ${dotClass}`} aria-hidden />
       <span className={textClass}>{label}</span>
     </span>
   );
