@@ -635,7 +635,7 @@ type DashboardTableIdentity = {
   tableId: string; title: string; description?: string;
   columns: TableColumnCard[];
   /** Where the rows physically live — the ONE shared store output nodes write through. */
-  rowStore: "dashboard_rows (lib/dashboard-rows.ts addRow/listRows)";
+  rowStore: string;
 };
 
 async function dashboardTablesOf(automation: string): Promise<DashboardTableIdentity[]> {
