@@ -57,22 +57,6 @@ export function UseCasesPanel({ cases, automation }: { cases: UseCase[]; automat
   const [addSummary, setAddSummary] = useState("");
   const addSummaryRef = useRef<HTMLTextAreaElement | null>(null);
 
-  const addCase = useCallback(async () => {
-    if (!automation || !addTitle.trim() || busy) return;
-    setBusy(true);
-    try {
-      const r = await fetch(`/api/projects/use-cases`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ automation, title: addTitle.trim(), summary: addSummary.trim() || undefined }),
-      });
-      if (!r.ok) { toast.error(L.addCaseFail); return; }
-      toast.success(L.addedTitle, { description: L.addedDesc });
-      setAddOpen(false); setAddTitle(""); setAddSummary("");
-      await load();
-      router.refresh();
-    } finally { setBusy(false); }
-  }, [automation, addTitle, addSummary, busy, load, router, L]);
-
   const load = useCallback(async () => {
     if (!automation) return;
     const r = await fetch(`/api/projects/use-cases?automation=${encodeURIComponent(automation)}`, { cache: "no-store" });
@@ -88,6 +72,23 @@ export function UseCasesPanel({ cases, automation }: { cases: UseCase[]; automat
   }, [automation]);
 
   useEffect(() => { void load(); }, [load]);
+
+  // Declared AFTER `load` — it closes over it (a const; referencing it earlier is a build error).
+  const addCase = useCallback(async () => {
+    if (!automation || !addTitle.trim() || busy) return;
+    setBusy(true);
+    try {
+      const r = await fetch(`/api/projects/use-cases`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ automation, title: addTitle.trim(), summary: addSummary.trim() || undefined }),
+      });
+      if (!r.ok) { toast.error(L.addCaseFail); return; }
+      toast.success(L.addedTitle, { description: L.addedDesc });
+      setAddOpen(false); setAddTitle(""); setAddSummary("");
+      await load();
+      router.refresh();
+    } finally { setBusy(false); }
+  }, [automation, addTitle, addSummary, busy, load, router, L]);
 
   // The Quiz (and the Builder) refuse a development step until the cases are confirmed, and tell the owner to
   // come here. That refusal dispatches this event — we open the review dialog for him.
