@@ -76,12 +76,15 @@ type EntityInstance = {
   history: { version: number; task: unknown; devStepRef: string | null; createdAt: string }[];
 };
 
-// The agent-to-owner escalation (step 246) — written via POST /api/projects/entity-warning when the agent
-// hits a blocker it cannot pass (see agent_instruction 4a / the nodes instruction's decision ladder):
+// The agent-to-owner escalation (step 246; three-layer contract step 247) — written via
+// POST /api/projects/entity-warning when the agent hits a blocker it cannot pass (see agent_instruction 4a /
+// the nodes instruction's decision ladder). ONE warning = ONE blocker of ONE kind:
 type EntityWarning = {
-  blocker: string;                          // 1-2 sentences, owner's language: what blocks the work
+  subject: string;                          // <=10 plain words, owner's language: WHAT was asked for
+  blocker: string;                          // 1-3 plain sentences FOR A NON-TECHNICAL OWNER (<=500 chars); no paths/ids
   kind: "hermes-scout" | "owner-decision" | "external-service";
-  hermesInstruction?: string;               // REQUIRED for hermes-scout: the ready instruction for the Hermes agent
+  hermesInstruction?: string;               // REQUIRED for hermes-scout: first-person tech brief for the Hermes agent
+                                            // (context -> tried -> failed why -> do -> return); ALL technical detail here
   expectedAnswer?: string;                  // what the agent expects back to pass the object next iteration
 };
 

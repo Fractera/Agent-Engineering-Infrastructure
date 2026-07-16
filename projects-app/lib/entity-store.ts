@@ -121,11 +121,21 @@ export async function setSummary(automation: string, entityType: EntityType, ref
 // captcha / stale data / an owner decision) and asks for help INSTEAD of retrying. kind "hermes-scout"
 // carries a ready instruction the owner copies to the Hermes agent (a one-off scout run).
 
+// THE THREE-LAYER CONTRACT (step 247, owner's design after the first live warning came out as an unreadable
+// wall): ONE warning = ONE blocker of ONE kind — never two questions bundled. Layer 1 (the framing) is
+// STATIC UI text (warning-i18n) the agent never writes; layer 2 (`subject` + `blocker`) is the agent's
+// plain-language essence FOR A NON-TECHNICAL OWNER; layer 3 (`hermesInstruction`) is the first-person
+// technical brief for the Hermes agent, hidden behind a copy button. Technical detail (paths, cuids, stack
+// traces, quoted stubs) belongs ONLY in layer 3.
 export type EntityWarning = {
-  /** 1-2 sentences, owner's language: what blocks the work. */
+  /** ≤10 words, owner's language, plain: WHAT was asked for (e.g. "интеграция с Google Calendar"). Feeds the
+   *  static framing sentence and names the problem in the modal header instead of a raw cuid. */
+  subject: string;
+  /** 1-3 sentences, owner's language, written for a NON-technical reader: what blocks the work and why. */
   blocker: string;
   kind: "hermes-scout" | "owner-decision" | "external-service";
-  /** REQUIRED for kind hermes-scout: the FULL ready instruction the owner copies to Hermes. */
+  /** REQUIRED for kind hermes-scout: the FULL ready first-person brief the owner copies to Hermes —
+   *  context (what we build) → what we tried → why it failed → what to do → what to return. */
   hermesInstruction?: string;
   /** What the agent expects back, so the next iteration can pass the node. */
   expectedAnswer?: string;

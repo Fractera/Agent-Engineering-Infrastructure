@@ -267,7 +267,7 @@ export function BuilderNodePanel({
           field. Below the instruction/functions, as the owner specified. */}
       {automation && nodeWarning && (
         <WarningBlock
-          automation={automation} entityType="node" refId={node.cuid} warning={nodeWarning.warning}
+          automation={automation} entityType="node" refId={node.cuid} warning={nodeWarning.warning} label={node.name}
           onAnswered={() => { setNodeWarning(null); onChanged(); refreshWave(); }}
         />
       )}

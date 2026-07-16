@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authorize, resolveProject } from "@/lib/nodes";
 import { materializeWaveStep, nextStepNumber } from "@/lib/dev-steps";
 import { assertUseCasesReviewed } from "@/lib/use-cases";
-import { pendingWaveStep, stagedItems, waveName } from "@/lib/wave";
+import { pendingWaveStep, stagedItems, stubItems, waveName } from "@/lib/wave";
 
 // "LAUNCH DEVELOPMENT" — the automation page's ONE and ONLY hand-off (step 240, replacing step 233's
 // draft-nodes-only bundle and, with it, every per-entity "Start development" button).
@@ -39,6 +39,15 @@ export async function POST(req: NextRequest) {
 
   const items = await stagedItems(proj.automation);
   if (!items.length) return NextResponse.json({ reason: "nothing-staged" }, { status: 409 });
+
+  // STEP 247 (П5) — STUB NODES NEVER REACH A CODING AGENT. A node whose spec is still the system stub has no
+  // requirement to build from; handing it over just makes the agent burn its escalation channel on "this
+  // node has no description" (the first live warning of step 246 was exactly that). The owner describes the
+  // node or deletes it — then launches.
+  const stubs = stubItems(items);
+  if (stubs.length) {
+    return NextResponse.json({ reason: "stub-nodes", nodes: stubs.map((s) => s.label) }, { status: 409 });
+  }
 
   const number = await nextStepNumber();
   const name = waveName(proj.automation, items);

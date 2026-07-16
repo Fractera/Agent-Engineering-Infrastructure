@@ -35,8 +35,14 @@ badge in the page's top bar.
 | `instanced` | Each activation forks Master → Instance, with its own parameters; may be deferred, tracked, edited per-fork independently of the Master and its siblings. | "3 posts, publish Mon/Wed/Fri" — each post its own finite Instance |
 | `chained` | A link in a chain of two or more *other* automations (of either type above), in any sequence; renders as a canvas-only **group** container, never gets its own workflow. **Also the mandatory landing shape for any automation that outgrows the node budget (§2.1).** | outreach automation → hands off to a dialog-script automation |
 
-All three start from the identical frozen skeleton (three draft nodes: Input → Logic → Output) — only the
-stored type token and how the global canvas renders the project differ.
+**The starter skeleton ships a WORKING DEMO, and the demo is a pattern — never a requirement (step 243 /
+247).** A fresh `stream` automation is born with a real, executing three-node example (parse → external
+HTTP call → record-on-success — a stock-quote demo), a working launch console and a live dashboard table;
+`instanced`/`chained` still get generic drafts until steps 244/245 give them their own real pattern. The
+demo exists ONLY to show a coding agent the working shape of nodes/functions/dashboard. It carries **zero
+weight** against the owner's goal: the owner's rawRequest and use cases always outrank it, and reorienting,
+renaming or replacing demo nodes to serve the real goal is the agent's NORMAL first-pass work. **Reporting
+a demo-vs-goal mismatch as a conflict, blocker or warning is forbidden** — it is not one.
 
 ### 2.1 The node budget and forced decomposition into a chained group (owner doctrine 2026-07-16; mechanics planned)
 
@@ -112,19 +118,25 @@ never a second code path. Pure template + token substitution, zero code generati
      `POST /api/projects/start-development` (409 with a reason if not yet confirmed). Editing the case set
      resets this confirmation.
   3. Once reviewed, the owner (or an agent) calls `POST /api/projects/start-development {automation}` — the
-     top-level "Start development" handoff (step 233). It is **idempotent** (a second click reuses the
-     already-queued step, never duplicates it) and **fails 409 with `reason:"no-nodes"`** if there are no
-     draft nodes to build. It materializes **exactly one** Development Step file into the product's own
-     queue (`DEVELOPMENT-STEPS/NEW-STEPS/` under the slot root — see `lib/dev-steps.ts`'s header comment for
-     why this is the one true queue, read by Admin `:3002/service/development-steps`), whose sub-steps
-     (`tasks[]`) are the draft nodes going into work. **The owner is handed only the step number** — "run
-     step #NN" — never the raw brief; the brief itself opens with the mandatory ordered read: (0) this
-     automation's complete architecture as one JSON (§5), (1) *this* document, (2) the automation's own files
-     on disk (`_data/instruction.md`, `_data/use-cases.ts`, `_data/diagram.ts`, each `_nodes/<slug>/`) — never
-     inline in the step, because the step is an **address**, not a stale snapshot.
+     page's ONE hand-off, which since step 240 launches the **development wave**: it bundles **every staged
+     change** (every entity instance with a non-empty `rawRequest`, across all entity types — `lib/wave.ts`),
+     not only draft nodes, into **exactly one** Development Step file in the product's own queue
+     (`DEVELOPMENT-STEPS/NEW-STEPS/` under the slot root — see `lib/dev-steps.ts`'s header comment for why
+     this is the one true queue, read by Admin `:3002/service/development-steps`). It is **idempotent** (a
+     second call returns the already-queued step's number) and refuses 409 with a machine reason:
+     `not-reviewed` (the case gate), `no-cases`, `nothing-staged` (nothing pending anywhere — the pre-wave
+     code said `no-nodes`), or `stub-nodes` + the node names (step 247: a node whose spec is still the
+     untouched system stub has no requirement to build from — the owner describes it or deletes it first).
+     After the hand-off the page LOCKS until the coding agent calls `development-wave/complete` on a
+     successful build. **The owner is handed only the step number** — "run step #NN" — never the raw brief;
+     the brief opens with the mandatory ordered read: (0) this automation's complete architecture as one
+     JSON (§5), (1) *this* document, (2) the automation's own files on disk (`_data/instruction.md`,
+     `_data/use-cases.ts`, `_data/diagram.ts`, each `_nodes/<slug>/`) — never inline in the step, because
+     the step is an **address**, not a stale snapshot.
   4. The coding agent builds each node (§4), calling `POST /api/projects/nodes/<cuid>/materialize` to close
-     it — this is what strips `draft`, records a version, regenerates `_data/diagram.ts`, and moves the
-     step file to `COMPLETED-STEPS/`.
+     it — this is what strips `draft`, records a version and regenerates `_data/diagram.ts`. The WAVE step
+     itself is closed by `POST /api/projects/development-wave/complete` on a successful build — that is
+     what moves the step file to `COMPLETED-STEPS/` and unlocks the page (step 240).
 - **Planned, not yet wired (verify before asserting otherwise):** an automatic test → deploy →
   `deployment_records` write on node/automation completion. The `deployment_records` table exists in the
   schema (`lib/db/index.ts`) but nothing in `materialize/route.ts` or `start-development/route.ts` writes to
@@ -184,13 +196,27 @@ never a second code path. Pure template + token substitution, zero code generati
   full-auto draining `GET /api/projects/dev-steps`) are exactly as documented in README §6.1 — this document
   does not repeat them.
 
-### 4.1 The self-sufficiency cutoff — the `warning` escalation (step 246, proven at the API level)
+### 4.1 The self-sufficiency cutoff — the `warning` escalation (step 246; three-layer contract step 247)
 
 A coding agent MUST NOT burn tokens storming a blocker it cannot pass with the means it has. Every object of
 the architecture bundle carries a third universal field, **`warning`** (beside `rawRequest`/`summary`): the
 agent→owner channel — "here is what blocks me and how to obtain it". Non-empty warning = the object is
 BLOCKED; the agent does no further work on it until the owner answers. A warning COEXISTS with the
 rawRequest (the task is not done); a warning and a summary are mutually exclusive for one iteration.
+
+**The three-layer contract (step 247 — the first live warning came out as a wall of text useless to both
+the owner and Hermes; never again).** ONE warning = ONE blocker of ONE kind — a bundle of questions must be
+split into separate warnings. Each layer has exactly one audience:
+
+- **Layer 1 — the framing** — is STATIC UI text (warning-i18n); you never write it. It already tells the
+  owner "the agent requested X, could not solve it alone, answer below or use the Hermes agent".
+- **Layer 2 — `subject` + `blocker`** — is for a NON-TECHNICAL owner. `subject`: ≤10 plain words in the
+  owner's language naming WHAT you need («интеграция с Google Calendar»). `blocker`: 1–3 plain sentences
+  (≤500 chars, API-enforced) saying what blocks you and why — no file paths, no identifiers, no quoted
+  system stubs, no log dumps.
+- **Layer 3 — `hermesInstruction`** — is the ONLY home of technical detail: a first-person brief the owner
+  copies to Hermes verbatim — *context (what we build) → what we tried → why it failed → what we need done →
+  what to return* (a ready result or a solution scenario, as pasteable text).
 
 **The decision ladder — answer BEFORE building any node, strictly in order:**
 
@@ -199,19 +225,20 @@ rawRequest (the task is not done); a warning and a summary are mutually exclusiv
    the tool to the node yourself, document it in `functions` — self-service, no warning.
 3. **Missing DATA/ACCESS obtainable only by a one-off external action** (credentials, captcha, login-walled
    parsing, stale/fresh data, manual registration) → do NOT storm it. Write the warning
-   (`POST /api/projects/entity-warning {automation, entityType, ref, warning:{blocker, kind,
+   (`POST /api/projects/entity-warning {automation, entityType, ref, warning:{subject, blocker, kind,
    hermesInstruction?, expectedAnswer?}}`), set THIS object aside, continue the others, finish the wave with
-   warnings in place. `kind:"hermes-scout"` MUST carry `hermesInstruction` — a complete, ready instruction
-   the owner copies to the **Hermes agent** (the workspace's one-off scout: it drives a browser and fetches
-   such results). Write INTO that instruction the requirement that Hermes's report begin verbatim with
-   «Согласно вашему требованию я провёл исследование и вот какие результаты я получил для вас:» and return a
-   pasteable text result.
+   warnings in place. `kind:"hermes-scout"` MUST carry `hermesInstruction` (the **Hermes agent** is the
+   workspace's one-off scout: it drives a browser and fetches such results). Write INTO that instruction the
+   requirement that Hermes's report begin verbatim with «Согласно вашему требованию я провёл исследование и
+   вот какие результаты я получил для вас:» and return a pasteable text result.
 4. **Needs an OWNER DECISION** (a choice, a payment, consent) → the same warning, `kind:"owner-decision"`,
    without a Hermes instruction, with the question.
 
 **Forbidden:** a second self-attempt after a failure of the same kind; faking a result with a stub instead
 of a warning; the agent calling Hermes itself (the system forms the call; the OWNER runs it — an automatic
-agent→Hermes bridge is a separate future step); clearing a rawRequest whose work was not finished.
+agent→Hermes bridge is a separate future step); clearing a rawRequest whose work was not finished; bundling
+two problems into one warning; reporting the starter demo's mismatch with the owner's goal as a warning
+(§2 — reorienting the demo IS the job).
 
 **The answer loop (proven):** the owner answers in the problems modal (or the node drawer) →
 `POST /api/projects/warning-answer` archives the warning+answer pair to `entity_history` (read it before
@@ -231,44 +258,51 @@ now* comes from one call:
 - `GET /api/projects/fetch-current-automation-architecture-snapshot?automation=<category>/<slug>` — same
   passport + entities, **current state only**, no history (cheaper when history isn't needed).
 
-Both are thin orchestrators over `lib/entity-architecture.ts`, which extracts **9 entity types** — `node`,
-`edge`, `usecase`, `chain`, `dashboard`, `analytics`, `calendar`, `map`, `processes` — through **one unified
-shape** (`lib/entity-store.ts`), so a weak model learns exactly one iteration pattern regardless of entity:
+Both are thin orchestrators over `lib/entity-architecture.ts`. **The bundle's shape (live since the
+rawRequest/summary refactor, 2026-07-16 — this section IS the current truth; the full typing ships inside
+the "How it works" modal and in `_shared/architecture-object-types.ts`):**
 
 ```ts
-type EntityInstance<TTask, TIdentity> = {
-  ref: string;                 // '' for automation-wide entities; a cuid for node/edge/usecase
-  identity: TIdentity;         // descriptive facts — NOT the task
-  pending: boolean;            // ALWAYS === (currentTask !== null); never inferred, never drifts
-  currentTask: TTask | null;   // null = nothing pending
-  history: EntityTaskRecord<TTask>[];  // same TTask shape, wrapped with version/devStepRef/createdAt
+type ArchitectureBundle = {
+  automation: string;                       // "<category>/<slug>"
+  format: "full-with-history" | "current-snapshot";
+  agent_instruction: string;                // the reading agent's duties — static law, includes the
+                                            // warning escalation (4a) and the demo-is-a-pattern rule (2a)
+  passport: Passport;                       // what this automation IS (title, immutable type, owner's
+                                            // original instruction, entity toggles, isChainedGroup)
+  diagram: {                                // nodes + edges — the ONLY source of behaviour
+    instruction: string;                    // node-building methodology + the 25/30 node budget (§2.1)
+    rawRequest: string; summary: string;
+    nodes: NodeSlice;                       // role_groups (input/intermediate/output) + instances
+    edges: { instruction: string; instances: DiagramEdge[] };
+  };
+  entities: EntitySlice[];                  // every OTHER entity, one uniform shape
 };
-type EntitySlice<TTask, TIdentity> = { entityType: EntityType; instances: EntityInstance<TTask, TIdentity>[]; error?: string };
 ```
 
-`node`/`edge`/`usecase` return **one instance per real item** (an automation with hundreds of nodes returns
-hundreds of array entries — quantity differs, shape never does); `chain`/`dashboard`/`analytics`/`calendar`/
-`map`/`processes` are automation-wide and always return **exactly one instance**, `ref: ""`. Reading any
-entity is therefore: find `instances[]` → check `pending` → if true, read `currentTask`.
+Every instance — node, edge, use case, or automation-wide entity — carries the **universal trio**:
 
-**Per-entity sub-APIs (proven, 27 routes, 3 per entity type, `<entity>-architecture/*`):**
-`add-new-transport-task-entry` (write a new not-yet-developed task), `extract-current-state-for-architecture`,
-`extract-full-history-for-architecture`. **The real "handed to a coding agent" event is a `start-development`
-call** on the entity (`chain-spec/start-development`, `nodes/<cuid>/start-development`,
-`edges/<cuid>/start-development`, or `<stub-entity>-architecture/start-development` for
-dashboard/analytics/calendar/map/processes) — **not** a draft save. A `start-development` call archives the
-current task into `history[]` (via `archiveAndClearTransport`/`writeVersionByRef`) and clears the pending
-slot, in that order, only at that point — confirmed live (step 238 Phase 2): two plain draft saves produced
-zero history entries; the following `start-development` produced exactly one.
+- **`rawRequest`** — the owner's free-form wish; `""` = nothing pending. "There are staged changes" ⟺
+  "some instance has a non-empty rawRequest" — this is the wave's one pending signal (`lib/wave.ts`).
+- **`summary`** — the AI's compact "how it works now" (≤300 chars, owner's language), written on finishing.
+- **`warning`** — the escalation of §4.1; `""` = none. A warning coexists with the rawRequest, never with a
+  fresh summary.
 
-**Planned refactor of the bundle (owner, 2026-07-16 — in progress; verify what is live before relying on
-either shape):** the bundle is moving to a universal pair of fields on EVERY object — `rawRequest` (the
-owner's free-form wish, the thing that goes into development; cleared on completion, original archived to
-history) and `summary` (the AI's compact result description, ≤300 characters per entity, in the owner's
-language) — plus a static per-object `instruction` and a top-level `agent_instruction`, with nodes and edges
-grouped under one `diagram` object. Pending-change detection ("offer to start development") will key off
-"any non-empty `rawRequest` anywhere in the object". Until that lands, the `currentTask`/`pending` shape
-above is the current truth.
+Plus `instruction` (static per-entity law), `identity` (descriptive facts), `pending` (always ===
+`currentTask !== null`), `currentTask` and `history[]` (each version wrapped with
+version/devStepRef/createdAt; empty in the snapshot format).
+
+The entity set is **11 types**: `node`, `edge`, `usecase`, `chain`, `dashboard`, `analytics`, `calendar`,
+`cron`, `map`, `processes`, `fork-activation` (the last exists only on `instanced` automations).
+`node`/`edge`/`usecase` return **one instance per real item**; the automation-wide types always return
+**exactly one instance**, `ref: ""`. Reading any entity is therefore: find the slice → walk `instances[]` →
+a non-empty `rawRequest` is work to do, the `summary` is what already stands.
+
+**Per-entity sub-APIs (27 routes, 3 per entity type, `<entity>-architecture/*`)** still exist for targeted
+writes: `add-new-transport-task-entry`, `extract-current-state-for-architecture`,
+`extract-full-history-for-architecture`. The "handed to a coding agent" event is the WAVE hand-off (§3) —
+it archives each current task into `history[]` and clears the pending slot; a plain draft save stages but
+never archives (confirmed live, step 238 Phase 2).
 
 ## 6. Renovating an existing automation (proven entry points)
 

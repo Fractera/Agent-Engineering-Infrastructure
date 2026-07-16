@@ -124,6 +124,12 @@ const AGENT_INSTRUCTION_CORE =
   "empty string means no request for that object. Non-empty text is a requirement written by a non-programmer " +
   "in everyday language — treat it critically but constructively, and interpret it against the WHOLE " +
   "automation's structure, never in isolation. " +
+  "(2a) THE STARTER DEMO IS A PATTERN, NOT A REQUIREMENT (step 247): a fresh automation is born with a " +
+  "WORKING example graph shipped by the frozen template (e.g. a stock-quote demo: parse -> external HTTP -> " +
+  "record). That demo exists ONLY to show you the working shape of nodes/functions/dashboard — it carries " +
+  "zero weight against the owner's goal. The owner's rawRequest and use cases ALWAYS outrank the demo: " +
+  "reorienting, renaming or replacing demo nodes to serve the real goal is your NORMAL first-pass work. " +
+  "NEVER report a demo-vs-goal mismatch as a conflict, a blocker or a warning — it is not one. " +
   "(3) Once you understand the current structure and every pending wish, develop the objects one by one — the " +
   "`diagram` FIRST (nodes and edges), then the other entities. " +
   "(4) Each object carries its own `instruction`; re-read and follow it when developing that object (an empty " +
@@ -133,16 +139,22 @@ const AGENT_INSTRUCTION_CORE =
   "search -> exa.ai), install and wire it yourself — no warning needed. But if you are blocked on DATA or " +
   "ACCESS obtainable only by a one-off external action (credentials, captcha, login-walled scraping, fresh " +
   "data, manual registration) or on an OWNER DECISION — do NOT storm it: write a structured `warning` via " +
-  "POST /api/projects/entity-warning {automation, entityType, ref, warning:{blocker, kind, hermesInstruction?, " +
-  "expectedAnswer?}}, set that object aside, continue the other objects, and finish the wave with warnings in " +
-  "place. kind \"hermes-scout\" MUST carry hermesInstruction — a complete, ready instruction the owner copies " +
-  "to the Hermes agent (a one-off scout that can drive a browser and fetch such results); write INTO it the " +
-  "requirement that Hermes's report begin verbatim with: \"Согласно вашему требованию я провёл исследование и " +
-  "вот какие результаты я получил для вас:\" and return the result as pasteable text. A SECOND self-attempt of " +
-  "the same failed kind is FORBIDDEN, and so is faking the result with a stub. Never clear a rawRequest whose " +
-  "work you did not finish — a warning and the rawRequest coexist; a warning and a summary do not. Before " +
-  "re-attempting an object that carries an answered warning, read its history — the warning+answer pair is " +
-  "archived there and is your context. " +
+  "POST /api/projects/entity-warning {automation, entityType, ref, warning:{subject, blocker, kind, " +
+  "hermesInstruction?, expectedAnswer?}}, set that object aside, continue the other objects, and finish the " +
+  "wave with warnings in place. THE WARNING IS READ BY A NON-TECHNICAL OWNER (step 247) — three layers, one " +
+  "audience each: `subject` = ≤10 plain words in the owner's language naming WHAT you need (\"интеграция с " +
+  "Google Calendar\"); `blocker` = 1-3 plain sentences (≤500 chars, enforced) saying what blocks you and why " +
+  "— NO file paths, NO identifiers, NO quoted system stubs; `hermesInstruction` = the ONLY place for " +
+  "technical detail, a first-person brief (context: what we build -> what we tried -> why it failed -> what " +
+  "to do -> what to return as pasteable text). ONE warning = ONE blocker of ONE kind — never bundle two " +
+  "questions; several problems = several warnings. kind \"hermes-scout\" MUST carry hermesInstruction (the " +
+  "owner copies it to the Hermes agent — a one-off scout that can drive a browser and fetch such results); " +
+  "write INTO it the requirement that Hermes's report begin verbatim with: \"Согласно вашему требованию я " +
+  "провёл исследование и вот какие результаты я получил для вас:\". A SECOND self-attempt of the same failed " +
+  "kind is FORBIDDEN, and so is faking the result with a stub. Never clear a rawRequest whose work you did " +
+  "not finish — a warning and the rawRequest coexist; a warning and a summary do not. Before re-attempting an " +
+  "object that carries an answered warning, read its history — the warning+answer pair is archived there and " +
+  "is your context. " +
   "(5) On finishing an object: its rawRequest is cleared by the start-development machinery (the original is " +
   "archived to history), and YOU write its compact `summary` — ≤300 characters per entity, in the owner's own " +
   "language — via POST /api/projects/entity-summary {automation, entityType, ref, summary}; for a node, also " +
@@ -186,11 +198,14 @@ const NODES_INSTRUCTION =
   "(2) MISSING A CAPABILITY an MCP tool covers (web search -> exa.ai, etc.) -> find, install and wire it to " +
   "the node yourself, document it in functions — self-service, no warning. (3) MISSING DATA/ACCESS obtainable " +
   "only by a one-off external action (credentials, captcha, login-walled parsing, fresh data, registration) " +
-  "-> do NOT storm it: write the node's `warning` (see agent_instruction 4a), set THIS node aside, continue " +
-  "the others. (4) NEEDS AN OWNER DECISION (a choice, a payment, consent) -> the same warning without a " +
-  "Hermes instruction, with the question. FORBIDDEN: a second self-attempt after a failure of the same kind; " +
-  "faking a result with a stub instead of a warning; calling Hermes yourself (the system forms the call, the " +
-  "owner runs it).";
+  "-> do NOT storm it: write the node's `warning` (see agent_instruction 4a — subject + plain-language " +
+  "blocker + technical detail ONLY in hermesInstruction), set THIS node aside, continue the others. " +
+  "(4) NEEDS AN OWNER DECISION (a choice, a payment, consent) -> the same warning without a Hermes " +
+  "instruction, with the question. ONE warning = ONE blocker — a node blocked by two independent problems " +
+  "gets its most fundamental one first; the rest wait for the next iteration. FORBIDDEN: a second " +
+  "self-attempt after a failure of the same kind; faking a result with a stub instead of a warning; calling " +
+  "Hermes yourself (the system forms the call, the owner runs it); reporting the starter demo's mismatch " +
+  "with the owner's goal as a warning (see agent_instruction 2a — reorienting the demo IS the job).";
 
 /** The internal (diagram) EDGES' instruction. */
 const EDGES_INSTRUCTION =

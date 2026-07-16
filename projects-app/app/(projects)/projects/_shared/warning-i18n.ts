@@ -3,6 +3,13 @@
 // in code.
 
 export type WarningStrings = {
+  // STEP 247 — LAYER 1, the static FRAMING the agent never writes: a human sentence built from the
+  // warning's short `subject` (+ the node's name when known), followed by a per-kind "what you can do".
+  framingIntroNode: string;  // "{name}" + "{subject}"
+  framingIntro: string;      // "{subject}" only (no node name known)
+  framingScout: string;      // kind hermes-scout: solve yourself OR copy the request to the Hermes agent
+  framingDecision: string;   // kind owner-decision: the agent waits for YOUR decision
+  framingExternal: string;   // kind external-service
   blockTitle: string;        // "⚠ Blocker" heading in the drawer / modal item
   scoutButton: string;       // "Use the Hermes agent as a scout"
   copyInstruction: string;   // copy the ready Hermes instruction
@@ -24,6 +31,11 @@ export type WarningStrings = {
 
 export const WARNING_I18N: Record<string, WarningStrings> = {
   en: {
+    framingIntroNode: "While developing the node “{name}”, the coding agent requested: {subject} — and could not solve it on its own, so it raised this notice.",
+    framingIntro: "During development the coding agent requested: {subject} — and could not solve it on its own, so it raised this notice.",
+    framingScout: "You can propose your own solution in the field below — or use the Hermes agent: it has extended tools and can obtain what is missing. Copy the request, hand it to the Hermes agent, then paste its answer into the field below — the development round repeats.",
+    framingDecision: "The agent is waiting for YOUR decision. Write it in the field below — the development round repeats.",
+    framingExternal: "The problem is on an external service's side. Write in the field below how to proceed (or paste the missing data) — the development round repeats.",
     blockTitle: "Blocker", scoutButton: "Use the Hermes agent as a scout",
     copyInstruction: "Copy instruction for Hermes", copied: "Copied",
     answerLabel: "Scout's answer / your decision",
@@ -36,6 +48,11 @@ export const WARNING_I18N: Record<string, WarningStrings> = {
     prev: "Previous", next: "Next", ofCounter: "{i} of {n}",
   },
   ru: {
+    framingIntroNode: "При разработке узла «{name}» агент-программист запросил: {subject} — и не смог решить эту задачу сам, поэтому вывел это предупреждение.",
+    framingIntro: "При разработке агент-программист запросил: {subject} — и не смог решить эту задачу сам, поэтому вывел это предупреждение.",
+    framingScout: "Вы можете предложить своё решение в поле ниже — или использовать Гермес-агента: у него расширенные инструменты, и он может добыть недостающее сам. Скопируйте запрос, передайте его Гермес-агенту, а полученный ответ вставьте в поле ниже — этап разработки повторится.",
+    framingDecision: "Агент ждёт ВАШЕГО решения. Напишите его в поле ниже — и этап разработки повторится.",
+    framingExternal: "Проблема на стороне внешнего сервиса. Напишите в поле ниже, как поступить (или вставьте недостающие данные), — и этап разработки повторится.",
     blockTitle: "Препятствие", scoutButton: "Использовать Гермес-агента как разведчика",
     copyInstruction: "Скопировать инструкцию для Гермеса", copied: "Скопировано",
     answerLabel: "Ответ разведчика / ваше решение",
@@ -48,6 +65,11 @@ export const WARNING_I18N: Record<string, WarningStrings> = {
     prev: "Назад", next: "Далее", ofCounter: "{i} из {n}",
   },
   es: {
+    framingIntroNode: "Al desarrollar el nodo «{name}», el agente programador solicitó: {subject} — y no pudo resolverlo por sí solo, por lo que emitió este aviso.",
+    framingIntro: "Durante el desarrollo, el agente programador solicitó: {subject} — y no pudo resolverlo por sí solo, por lo que emitió este aviso.",
+    framingScout: "Puede proponer su propia solución en el campo de abajo — o usar el agente Hermes: tiene herramientas ampliadas y puede obtener lo que falta. Copie la solicitud, entréguesela al agente Hermes y pegue su respuesta en el campo de abajo: la ronda de desarrollo se repetirá.",
+    framingDecision: "El agente espera SU decisión. Escríbala en el campo de abajo y la ronda de desarrollo se repetirá.",
+    framingExternal: "El problema está del lado de un servicio externo. Escriba abajo cómo proceder (o pegue los datos que faltan) y la ronda de desarrollo se repetirá.",
     blockTitle: "Obstáculo", scoutButton: "Usar el agente Hermes como explorador",
     copyInstruction: "Copiar instrucción para Hermes", copied: "Copiado",
     answerLabel: "Respuesta del explorador / su decisión",
@@ -60,6 +82,11 @@ export const WARNING_I18N: Record<string, WarningStrings> = {
     prev: "Anterior", next: "Siguiente", ofCounter: "{i} de {n}",
   },
   fr: {
+    framingIntroNode: "En développant le nœud « {name} », l'agent codeur a demandé : {subject} — et n'a pas pu résoudre cela seul, il a donc émis cet avertissement.",
+    framingIntro: "Pendant le développement, l'agent codeur a demandé : {subject} — et n'a pas pu résoudre cela seul, il a donc émis cet avertissement.",
+    framingScout: "Vous pouvez proposer votre propre solution dans le champ ci-dessous — ou utiliser l'agent Hermès : il dispose d'outils étendus et peut obtenir ce qui manque. Copiez la demande, remettez-la à l'agent Hermès, puis collez sa réponse dans le champ ci-dessous — le tour de développement se répétera.",
+    framingDecision: "L'agent attend VOTRE décision. Écrivez-la dans le champ ci-dessous — le tour de développement se répétera.",
+    framingExternal: "Le problème vient d'un service externe. Écrivez ci-dessous comment procéder (ou collez les données manquantes) — le tour de développement se répétera.",
     blockTitle: "Obstacle", scoutButton: "Utiliser l'agent Hermès comme éclaireur",
     copyInstruction: "Copier l'instruction pour Hermès", copied: "Copié",
     answerLabel: "Réponse de l'éclaireur / votre décision",
@@ -72,6 +99,11 @@ export const WARNING_I18N: Record<string, WarningStrings> = {
     prev: "Précédent", next: "Suivant", ofCounter: "{i} sur {n}",
   },
   it: {
+    framingIntroNode: "Sviluppando il nodo «{name}», l'agente programmatore ha richiesto: {subject} — e non ha potuto risolverlo da solo, quindi ha emesso questo avviso.",
+    framingIntro: "Durante lo sviluppo l'agente programmatore ha richiesto: {subject} — e non ha potuto risolverlo da solo, quindi ha emesso questo avviso.",
+    framingScout: "Può proporre la sua soluzione nel campo qui sotto — oppure usare l'agente Hermes: ha strumenti estesi e può procurarsi ciò che manca. Copi la richiesta, la consegni all'agente Hermes e incolli la sua risposta nel campo qui sotto: il giro di sviluppo si ripeterà.",
+    framingDecision: "L'agente attende la SUA decisione. La scriva nel campo qui sotto — il giro di sviluppo si ripeterà.",
+    framingExternal: "Il problema è dal lato di un servizio esterno. Scriva qui sotto come procedere (o incolli i dati mancanti) — il giro di sviluppo si ripeterà.",
     blockTitle: "Ostacolo", scoutButton: "Usare l'agente Hermes come esploratore",
     copyInstruction: "Copia istruzione per Hermes", copied: "Copiato",
     answerLabel: "Risposta dell'esploratore / la sua decisione",
@@ -84,6 +116,11 @@ export const WARNING_I18N: Record<string, WarningStrings> = {
     prev: "Precedente", next: "Successivo", ofCounter: "{i} di {n}",
   },
   de: {
+    framingIntroNode: "Bei der Entwicklung des Knotens „{name}“ hat der Coding-Agent Folgendes angefordert: {subject} — und konnte es nicht allein lösen, daher dieser Hinweis.",
+    framingIntro: "Während der Entwicklung hat der Coding-Agent Folgendes angefordert: {subject} — und konnte es nicht allein lösen, daher dieser Hinweis.",
+    framingScout: "Sie können unten Ihre eigene Lösung vorschlagen — oder den Hermes-Agenten einsetzen: Er hat erweiterte Werkzeuge und kann das Fehlende selbst beschaffen. Kopieren Sie die Anfrage, übergeben Sie sie dem Hermes-Agenten und fügen Sie seine Antwort unten ein — die Entwicklungsrunde wiederholt sich.",
+    framingDecision: "Der Agent wartet auf IHRE Entscheidung. Schreiben Sie sie unten hinein — die Entwicklungsrunde wiederholt sich.",
+    framingExternal: "Das Problem liegt bei einem externen Dienst. Schreiben Sie unten, wie verfahren werden soll (oder fügen Sie die fehlenden Daten ein) — die Entwicklungsrunde wiederholt sich.",
     blockTitle: "Hindernis", scoutButton: "Hermes-Agent als Späher einsetzen",
     copyInstruction: "Anweisung für Hermes kopieren", copied: "Kopiert",
     answerLabel: "Antwort des Spähers / Ihre Entscheidung",
@@ -96,6 +133,11 @@ export const WARNING_I18N: Record<string, WarningStrings> = {
     prev: "Zurück", next: "Weiter", ofCounter: "{i} von {n}",
   },
   pt: {
+    framingIntroNode: "Ao desenvolver o nó «{name}», o agente programador solicitou: {subject} — e não conseguiu resolver sozinho, por isso emitiu este aviso.",
+    framingIntro: "Durante o desenvolvimento, o agente programador solicitou: {subject} — e não conseguiu resolver sozinho, por isso emitiu este aviso.",
+    framingScout: "Pode propor a sua própria solução no campo abaixo — ou usar o agente Hermes: ele tem ferramentas alargadas e pode obter o que falta. Copie o pedido, entregue-o ao agente Hermes e cole a resposta dele no campo abaixo — a ronda de desenvolvimento repete-se.",
+    framingDecision: "O agente aguarda a SUA decisão. Escreva-a no campo abaixo — e a ronda de desenvolvimento repete-se.",
+    framingExternal: "O problema está do lado de um serviço externo. Escreva abaixo como proceder (ou cole os dados em falta) — e a ronda de desenvolvimento repete-se.",
     blockTitle: "Obstáculo", scoutButton: "Usar o agente Hermes como batedor",
     copyInstruction: "Copiar instrução para o Hermes", copied: "Copiado",
     answerLabel: "Resposta do batedor / a sua decisão",
@@ -108,6 +150,11 @@ export const WARNING_I18N: Record<string, WarningStrings> = {
     prev: "Anterior", next: "Seguinte", ofCounter: "{i} de {n}",
   },
   pl: {
+    framingIntroNode: "Podczas rozwoju węzła „{name}” agent-programista zażądał: {subject} — i nie mógł rozwiązać tego sam, dlatego wyświetlił to ostrzeżenie.",
+    framingIntro: "Podczas rozwoju agent-programista zażądał: {subject} — i nie mógł rozwiązać tego sam, dlatego wyświetlił to ostrzeżenie.",
+    framingScout: "Możesz zaproponować własne rozwiązanie w polu poniżej — albo użyć agenta Hermes: ma rozszerzone narzędzia i może sam zdobyć to, czego brakuje. Skopiuj zapytanie, przekaż je agentowi Hermes, a jego odpowiedź wklej w pole poniżej — runda rozwoju się powtórzy.",
+    framingDecision: "Agent czeka na TWOJĄ decyzję. Napisz ją w polu poniżej — runda rozwoju się powtórzy.",
+    framingExternal: "Problem leży po stronie zewnętrznej usługi. Napisz poniżej, jak postąpić (lub wklej brakujące dane) — runda rozwoju się powtórzy.",
     blockTitle: "Przeszkoda", scoutButton: "Użyj agenta Hermes jako zwiadowcy",
     copyInstruction: "Kopiuj instrukcję dla Hermesa", copied: "Skopiowano",
     answerLabel: "Odpowiedź zwiadowcy / Twoja decyzja",
@@ -120,6 +167,11 @@ export const WARNING_I18N: Record<string, WarningStrings> = {
     prev: "Wstecz", next: "Dalej", ofCounter: "{i} z {n}",
   },
   tr: {
+    framingIntroNode: "“{name}” düğümünü geliştirirken kodlayıcı ajan şunu talep etti: {subject} — ve bunu tek başına çözemediği için bu uyarıyı verdi.",
+    framingIntro: "Geliştirme sırasında kodlayıcı ajan şunu talep etti: {subject} — ve bunu tek başına çözemediği için bu uyarıyı verdi.",
+    framingScout: "Aşağıdaki alana kendi çözümünüzü yazabilirsiniz — ya da Hermes ajanını kullanın: genişletilmiş araçlara sahiptir ve eksik olanı kendisi edinebilir. Talebi kopyalayın, Hermes ajanına iletin ve yanıtını aşağıdaki alana yapıştırın — geliştirme turu tekrarlanır.",
+    framingDecision: "Ajan SİZİN kararınızı bekliyor. Aşağıdaki alana yazın — geliştirme turu tekrarlanır.",
+    framingExternal: "Sorun harici bir servis tarafında. Aşağıya nasıl ilerleneceğini yazın (veya eksik verileri yapıştırın) — geliştirme turu tekrarlanır.",
     blockTitle: "Engel", scoutButton: "Hermes ajanını keşifçi olarak kullan",
     copyInstruction: "Hermes için talimatı kopyala", copied: "Kopyalandı",
     answerLabel: "Keşifçinin yanıtı / kararınız",
@@ -132,6 +184,11 @@ export const WARNING_I18N: Record<string, WarningStrings> = {
     prev: "Geri", next: "İleri", ofCounter: "{i} / {n}",
   },
   nl: {
+    framingIntroNode: "Bij het ontwikkelen van de node “{name}” vroeg de codeeragent om: {subject} — en kon dit niet zelf oplossen, daarom gaf hij deze melding.",
+    framingIntro: "Tijdens de ontwikkeling vroeg de codeeragent om: {subject} — en kon dit niet zelf oplossen, daarom gaf hij deze melding.",
+    framingScout: "U kunt uw eigen oplossing in het veld hieronder voorstellen — of de Hermes-agent inzetten: die heeft uitgebreide tools en kan het ontbrekende zelf verkrijgen. Kopieer het verzoek, geef het aan de Hermes-agent en plak zijn antwoord in het veld hieronder — de ontwikkelronde herhaalt zich.",
+    framingDecision: "De agent wacht op UW beslissing. Schrijf die in het veld hieronder — de ontwikkelronde herhaalt zich.",
+    framingExternal: "Het probleem ligt bij een externe dienst. Schrijf hieronder hoe verder te gaan (of plak de ontbrekende gegevens) — de ontwikkelronde herhaalt zich.",
     blockTitle: "Obstakel", scoutButton: "Hermes-agent als verkenner inzetten",
     copyInstruction: "Instructie voor Hermes kopiëren", copied: "Gekopieerd",
     answerLabel: "Antwoord van de verkenner / uw beslissing",

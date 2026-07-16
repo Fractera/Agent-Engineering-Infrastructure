@@ -14,19 +14,30 @@ import type { EntityWarning } from "@/lib/entity-store";
 // STEP 246 — the agent→owner escalation surfaces. TWO mounts of ONE block:
 //   • the node drawer (BuilderNodePanel) shows the node's own warning under its brief;
 //   • the automation-level PROBLEMS modal (Quiz-like, owner's design) lists every open warning one by one.
-// The block: the blocker text, what the agent expects back, the "Use the Hermes agent as a scout" reveal
-// (the ready instruction + copy button), and the answer field (voice via the ONE VoiceInput primitive).
-// Sending the answer calls POST /api/projects/warning-answer — the pair is archived to history, the warning
-// clears, and the answer is APPENDED to the object's rawRequest (it re-enters the wave).
+// STEP 247 — the block opens with the STATIC FRAMING (layer 1, i18n — the agent never writes it): a human
+// sentence naming the node and the warning's short `subject`, then the per-kind "what you can do". Only
+// after it comes the agent's plain-language `blocker` (layer 2); the Hermes technical brief (layer 3) stays
+// behind the copy/reveal buttons. The answer field (voice via the ONE VoiceInput primitive) closes the loop:
+// POST /api/projects/warning-answer archives the pair to history, clears the warning, and appends the answer
+// to the object's rawRequest (it re-enters the wave).
 
-export type WarningRow = { entityType: string; ref: string; warning: EntityWarning };
+export type WarningRow = { entityType: string; ref: string; warning: EntityWarning; label?: string };
 
 export function WarningBlock({
-  automation, entityType, refId, warning, onAnswered,
+  automation, entityType, refId, warning, label, onAnswered,
 }: {
-  automation: string; entityType: string; refId: string; warning: EntityWarning; onAnswered?: () => void;
+  automation: string; entityType: string; refId: string; warning: EntityWarning; label?: string; onAnswered?: () => void;
 }) {
   const W = warningStrings(useUiLang());
+  // Layer 1 — the framing. Old warnings (written before step 247) have no `subject`; for them the framing
+  // degrades to the per-kind action sentence alone, and the blocker still renders below.
+  const subject = (warning.subject ?? "").trim();
+  const intro = subject
+    ? (label ? W.framingIntroNode.replace("{name}", label) : W.framingIntro).replace("{subject}", subject)
+    : "";
+  const action =
+    warning.kind === "hermes-scout" ? W.framingScout :
+    warning.kind === "owner-decision" ? W.framingDecision : W.framingExternal;
   const [showInstruction, setShowInstruction] = useState(false);
   const [answer, setAnswer] = useState("");
   const [sending, setSending] = useState(false);
@@ -56,9 +67,11 @@ export function WarningBlock({
         <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
         <div className="min-w-0 space-y-1">
           <p className="text-xs font-semibold text-amber-800 dark:text-amber-200">{W.blockTitle}</p>
-          <p className="text-sm text-amber-900 dark:text-amber-100">{warning.blocker}</p>
+          {intro && <p className="break-words text-sm text-amber-900 dark:text-amber-100">{intro}</p>}
+          <p className="break-words [overflow-wrap:anywhere] text-sm text-amber-900 dark:text-amber-100">{warning.blocker}</p>
+          <p className="text-xs text-muted-foreground">{action}</p>
           {warning.expectedAnswer && (
-            <p className="text-xs text-muted-foreground">
+            <p className="break-words text-xs text-muted-foreground">
               <span className="font-medium">{W.expectedLabel}:</span> {warning.expectedAnswer}
             </p>
           )}
@@ -157,12 +170,14 @@ export function ProblemsCenter({ automation }: { automation: string }) {
             <DialogDescription>{W.problemsDescription}</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
+            {/* STEP 247 — a human header: the node's name (enriched by the GET route) or the warning's own
+                short subject; NEVER a raw cuid in the owner's face. */}
             <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-              <span>{row.entityType}{row.ref ? ` · ${row.ref}` : ""}</span>
-              <span>{W.ofCounter.replace("{i}", String(i + 1)).replace("{n}", String(rows.length))}</span>
+              <span className="truncate font-medium">{row.label || row.warning.subject || row.entityType}</span>
+              <span className="shrink-0">{W.ofCounter.replace("{i}", String(i + 1)).replace("{n}", String(rows.length))}</span>
             </div>
             <WarningBlock
-              automation={automation} entityType={row.entityType} refId={row.ref} warning={row.warning}
+              automation={automation} entityType={row.entityType} refId={row.ref} warning={row.warning} label={row.label}
               onAnswered={() => { void refetch(); setIdx(0); }}
             />
             {rows.length > 1 && (

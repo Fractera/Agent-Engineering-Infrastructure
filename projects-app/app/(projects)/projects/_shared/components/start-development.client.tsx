@@ -21,7 +21,7 @@ import { adminBase } from "@/lib/runtime-urls";
 // notification banner (development-wave-banner.client.tsx), which owns the open state and renders this dialog.
 // Every per-entity "Start development" button is gone, so a hand-off can only ever happen here.
 type Case = { cuid: string; title: string; summary: string; status: string };
-type Mode = "loading" | "review" | "done" | "no-cases" | "no-nodes";
+type Mode = "loading" | "review" | "done" | "no-cases" | "no-nodes" | "stub-nodes";
 
 type SD = {
   button: string; title: string;
@@ -29,6 +29,9 @@ type SD = {
   reviewHeading: string; reviewIntro: string; confirm: string; confirming: string;
   doneHeading: string; runHint: string; copy: string; copied: string; openSteps: string;
   noCasesTitle: string; noCasesBody: string; noNodesTitle: string; noNodesBody: string;
+  /** Step 247 (П5): the launch gate refuses while a node still carries the untouched system stub. {nodes} =
+   *  the comma-joined node names. */
+  stubTitle: string; stubBody: string;
   failed: string; noDescription: string;
 };
 const I18N: Record<string, SD> = {
@@ -43,6 +46,7 @@ const I18N: Record<string, SD> = {
     copy: "Copy", copied: "Copied — paste it to your coding agent.", openSteps: "Open Development Steps",
     noCasesTitle: "Describe the use cases first", noCasesBody: "This automation has no use cases yet. Open the Quiz on this page and describe your scenarios — development cannot start without them.",
     noNodesTitle: "No nodes to develop", noNodesBody: "Every node is already built — there is nothing waiting for development right now.",
+    stubTitle: "Some nodes have no description", stubBody: "These nodes still carry the blank template text: {nodes}. A coding agent cannot build a node nobody described — open each one and say what it should do, or delete it. Then launch again.",
     failed: "Could not create the development step.", noDescription: "No description yet.",
   },
   ru: {
@@ -56,6 +60,7 @@ const I18N: Record<string, SD> = {
     copy: "Скопировать", copied: "Скопировано — вставьте агенту-кодеру.", openSteps: "Открыть Development Steps",
     noCasesTitle: "Сначала опишите пользовательские кейсы", noCasesBody: "У этой автоматизации ещё нет кейсов. Откройте Quiz на этой странице и опишите сценарии — без них разработку не начать.",
     noNodesTitle: "Нет узлов для разработки", noNodesBody: "Все узлы уже построены — сейчас в разработку ничего не ждёт.",
+    stubTitle: "У некоторых узлов нет описания", stubBody: "Эти узлы всё ещё несут пустой шаблонный текст: {nodes}. Агент-программист не может построить узел, который никто не описал — откройте каждый и скажите, что он должен делать, или удалите его. Затем запустите разработку снова.",
     failed: "Не удалось создать шаг разработки.", noDescription: "Пока без описания.",
   },
   es: {
@@ -69,6 +74,7 @@ const I18N: Record<string, SD> = {
     copy: "Copiar", copied: "Copiado — pégalo a tu agente de código.", openSteps: "Abrir Development Steps",
     noCasesTitle: "Describe primero los casos de uso", noCasesBody: "Esta automatización aún no tiene casos de uso. Abre el Quiz en esta página y describe tus escenarios — sin ellos no se puede empezar el desarrollo.",
     noNodesTitle: "No hay nodos para desarrollar", noNodesBody: "Todos los nodos ya están construidos — ahora mismo no hay nada esperando desarrollo.",
+    stubTitle: "Algunos nodos no tienen descripción", stubBody: "Estos nodos aún llevan el texto de plantilla vacío: {nodes}. Un agente de código no puede construir un nodo que nadie describió — abra cada uno y diga qué debe hacer, o elimínelo. Luego vuelva a lanzar.",
     failed: "No se pudo crear el paso de desarrollo.", noDescription: "Aún sin descripción.",
   },
   fr: {
@@ -82,6 +88,7 @@ const I18N: Record<string, SD> = {
     copy: "Copier", copied: "Copié — collez-le à votre agent de code.", openSteps: "Ouvrir Development Steps",
     noCasesTitle: "Décrivez d'abord les cas d'usage", noCasesBody: "Cette automatisation n'a pas encore de cas d'usage. Ouvrez le Quiz sur cette page et décrivez vos scénarios — sans eux, le développement ne peut pas commencer.",
     noNodesTitle: "Aucun nœud à développer", noNodesBody: "Tous les nœuds sont déjà construits — rien n'attend le développement pour l'instant.",
+    stubTitle: "Certains nœuds n'ont pas de description", stubBody: "Ces nœuds portent encore le texte de modèle vide : {nodes}. Un agent de code ne peut pas construire un nœud que personne n'a décrit — ouvrez chacun et dites ce qu'il doit faire, ou supprimez-le. Puis relancez.",
     failed: "Impossible de créer l'étape de développement.", noDescription: "Pas encore de description.",
   },
   it: {
@@ -95,6 +102,7 @@ const I18N: Record<string, SD> = {
     copy: "Copia", copied: "Copiato — incollalo al tuo agente di codice.", openSteps: "Apri Development Steps",
     noCasesTitle: "Descrivi prima i casi d'uso", noCasesBody: "Questa automazione non ha ancora casi d'uso. Apri il Quiz in questa pagina e descrivi i tuoi scenari — senza di essi non si può iniziare lo sviluppo.",
     noNodesTitle: "Nessun nodo da sviluppare", noNodesBody: "Tutti i nodi sono già costruiti — al momento non c'è nulla in attesa di sviluppo.",
+    stubTitle: "Alcuni nodi non hanno descrizione", stubBody: "Questi nodi portano ancora il testo di modello vuoto: {nodes}. Un agente di codice non può costruire un nodo che nessuno ha descritto — apra ciascuno e dica cosa deve fare, oppure lo elimini. Poi rilanci.",
     failed: "Impossibile creare il passo di sviluppo.", noDescription: "Ancora nessuna descrizione.",
   },
   de: {
@@ -108,6 +116,7 @@ const I18N: Record<string, SD> = {
     copy: "Kopieren", copied: "Kopiert — füge es deinem Coding-Agenten ein.", openSteps: "Development Steps öffnen",
     noCasesTitle: "Beschreibe zuerst die Anwendungsfälle", noCasesBody: "Diese Automatisierung hat noch keine Anwendungsfälle. Öffne das Quiz auf dieser Seite und beschreibe deine Szenarien — ohne sie kann die Entwicklung nicht beginnen.",
     noNodesTitle: "Keine Knoten zu entwickeln", noNodesBody: "Alle Knoten sind bereits gebaut — im Moment wartet nichts auf Entwicklung.",
+    stubTitle: "Einige Knoten haben keine Beschreibung", stubBody: "Diese Knoten tragen noch den leeren Vorlagentext: {nodes}. Ein Coding-Agent kann keinen Knoten bauen, den niemand beschrieben hat — öffne jeden und sage, was er tun soll, oder lösche ihn. Dann starte erneut.",
     failed: "Der Entwicklungsschritt konnte nicht erstellt werden.", noDescription: "Noch keine Beschreibung.",
   },
   pt: {
@@ -121,6 +130,7 @@ const I18N: Record<string, SD> = {
     copy: "Copiar", copied: "Copiado — cole-o no seu agente de código.", openSteps: "Abrir Development Steps",
     noCasesTitle: "Descreva primeiro os casos de uso", noCasesBody: "Esta automação ainda não tem casos de uso. Abra o Quiz nesta página e descreva os seus cenários — sem eles o desenvolvimento não pode começar.",
     noNodesTitle: "Não há nós para desenvolver", noNodesBody: "Todos os nós já estão construídos — neste momento não há nada à espera de desenvolvimento.",
+    stubTitle: "Alguns nós não têm descrição", stubBody: "Estes nós ainda trazem o texto de modelo vazio: {nodes}. Um agente de código não pode construir um nó que ninguém descreveu — abra cada um e diga o que deve fazer, ou elimine-o. Depois lance de novo.",
     failed: "Não foi possível criar o passo de desenvolvimento.", noDescription: "Ainda sem descrição.",
   },
   pl: {
@@ -134,6 +144,7 @@ const I18N: Record<string, SD> = {
     copy: "Kopiuj", copied: "Skopiowano — wklej agentowi kodującemu.", openSteps: "Otwórz Development Steps",
     noCasesTitle: "Najpierw opisz przypadki użycia", noCasesBody: "Ta automatyzacja nie ma jeszcze przypadków użycia. Otwórz Quiz na tej stronie i opisz swoje scenariusze — bez nich rozwój nie może się rozpocząć.",
     noNodesTitle: "Brak węzłów do rozwoju", noNodesBody: "Wszystkie węzły są już zbudowane — obecnie nic nie czeka na rozwój.",
+    stubTitle: "Niektóre węzły nie mają opisu", stubBody: "Te węzły wciąż niosą pusty tekst szablonu: {nodes}. Agent kodujący nie zbuduje węzła, którego nikt nie opisał — otwórz każdy i powiedz, co ma robić, albo go usuń. Potem uruchom ponownie.",
     failed: "Nie udało się utworzyć kroku rozwoju.", noDescription: "Jeszcze bez opisu.",
   },
   tr: {
@@ -147,6 +158,7 @@ const I18N: Record<string, SD> = {
     copy: "Kopyala", copied: "Kopyalandı — kod ajanınıza yapıştırın.", openSteps: "Development Steps'i aç",
     noCasesTitle: "Önce kullanım senaryolarını tanımlayın", noCasesBody: "Bu otomasyonun henüz kullanım senaryosu yok. Bu sayfadaki Quiz'i açın ve senaryolarınızı tanımlayın — onlar olmadan geliştirme başlayamaz.",
     noNodesTitle: "Geliştirilecek düğüm yok", noNodesBody: "Tüm düğümler zaten inşa edildi — şu anda geliştirme bekleyen hiçbir şey yok.",
+    stubTitle: "Bazı düğümlerin açıklaması yok", stubBody: "Bu düğümler hâlâ boş şablon metnini taşıyor: {nodes}. Kodlama ajanı kimsenin tanımlamadığı bir düğümü inşa edemez — her birini açıp ne yapması gerektiğini söyleyin ya da silin. Sonra yeniden başlatın.",
     failed: "Geliştirme adımı oluşturulamadı.", noDescription: "Henüz açıklama yok.",
   },
   nl: {
@@ -160,6 +172,7 @@ const I18N: Record<string, SD> = {
     copy: "Kopiëren", copied: "Gekopieerd — plak het in je coding agent.", openSteps: "Development Steps openen",
     noCasesTitle: "Beschrijf eerst de use cases", noCasesBody: "Deze automatisering heeft nog geen use cases. Open de Quiz op deze pagina en beschrijf je scenario's — zonder deze kan de ontwikkeling niet beginnen.",
     noNodesTitle: "Geen nodes om te ontwikkelen", noNodesBody: "Alle nodes zijn al gebouwd — er wacht momenteel niets op ontwikkeling.",
+    stubTitle: "Sommige nodes hebben geen beschrijving", stubBody: "Deze nodes dragen nog de lege sjabloontekst: {nodes}. Een coding agent kan geen node bouwen die niemand beschreven heeft — open elke node en zeg wat die moet doen, of verwijder hem. Start daarna opnieuw.",
     failed: "Kon de ontwikkelstap niet aanmaken.", noDescription: "Nog geen beschrijving.",
   },
 };
@@ -187,6 +200,8 @@ export function StartDevelopment({
   const [busy, setBusy] = useState(false);
   const [cases, setCases] = useState<Case[]>([]);
   const [stepNumber, setStepNumber] = useState<number | null>(null);
+  // Step 247 (П5): the node names the launch gate refused over — shown so the owner knows WHICH to describe.
+  const [stubNodes, setStubNodes] = useState<string[]>([]);
 
   const runLine = stepNumber !== null ? W.handoffLine.replace("{n}", String(stepNumber)) : "";
 
@@ -208,8 +223,11 @@ export function StartDevelopment({
         router.refresh();
         return;
       }
-      const d = (await r.json().catch(() => ({}))) as { reason?: string };
-      if (d.reason === "not-reviewed") {
+      const d = (await r.json().catch(() => ({}))) as { reason?: string; nodes?: string[] };
+      if (d.reason === "stub-nodes") {
+        setStubNodes(d.nodes ?? []);
+        setMode("stub-nodes");
+      } else if (d.reason === "not-reviewed") {
         const cr = await fetch(`/api/projects/use-cases?automation=${encodeURIComponent(automation)}`, { cache: "no-store" });
         const cd = (await cr.json().catch(() => ({}))) as { cases?: Case[] };
         setCases(cd.cases ?? []);
@@ -328,6 +346,15 @@ export function StartDevelopment({
             <div className="space-y-1 py-4 text-sm">
               <p className="font-medium">{L.noNodesTitle}</p>
               <p className="text-muted-foreground">{L.noNodesBody}</p>
+            </div>
+          )}
+
+          {mode === "stub-nodes" && (
+            <div className="space-y-1 py-4 text-sm">
+              <p className="font-medium">{L.stubTitle}</p>
+              <p className="text-muted-foreground">
+                {L.stubBody.replace("{nodes}", stubNodes.map((n) => `«${n}»`).join(", "))}
+              </p>
             </div>
           )}
         </DialogContent>

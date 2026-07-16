@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import {
   authorize, resolveProject, syncIndexFromFiles, nextOrd, uniqueSlug, regenerateDiagram, liveSlugsInOrder,
 } from "@/lib/nodes";
+import { NODE_STUB_SPEC } from "@/lib/wave";
 
 // Create a DRAFT node (step 224 L3). Generates a CUID, writes the co-located draft stub files
 // (meta draft:true + empty functions.ts + spec.md), inserts the live index row, and regenerates
@@ -23,7 +24,9 @@ export async function POST(req: NextRequest) {
   if (!proj.ok) return NextResponse.json({ error: proj.error }, { status: 400 });
 
   const name = String(body?.name ?? "").trim() || "New node";
-  const spec = String(body?.spec ?? "").trim() || "Describe how this node should work and what result it brings.";
+  // The stub is a SHARED constant (lib/wave.ts): the launch gate recognises it and refuses to hand a
+  // never-described node to a coding agent (step 247 П5).
+  const spec = String(body?.spec ?? "").trim() || NODE_STUB_SPEC;
   const parentCuid = body?.parentCuid ? String(body.parentCuid) : null;
 
   await syncIndexFromFiles(proj.automation, proj.projectDir);
