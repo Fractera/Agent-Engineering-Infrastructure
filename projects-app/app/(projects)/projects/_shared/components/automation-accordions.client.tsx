@@ -28,6 +28,7 @@ import { useCasesStrings } from "../use-cases-i18n";
 import { useEntitiesLive } from "../use-entities-live";
 import { useEntityOrderLive } from "../use-entity-order-live";
 import { automationMenuStrings } from "../automation-menu-i18n";
+import { requirementScope } from "../requirement-scope-i18n";
 import type { EntityType } from "@/lib/entity-store";
 
 // FROZEN STANDARD (step 222; toggles reversed in 237) — the series of entity accordions below the "Add or
@@ -130,7 +131,7 @@ export function AutomationAccordions({
           </AccordionTrigger>
           <AccordionContent className="space-y-4">
             <FrozenTemplateNotice text={M.frozenTemplateNotice} />
-            <RequirementBriefPanel entityType="fork-activation" entityLabel={M.forkActivationLabel} automation={automation} />
+            <RequirementBriefPanel entityType="fork-activation" entityLabel={M.forkActivationLabel} scopeLabel={requirementScope(lang, "fork-activation")} automation={automation} />
           </AccordionContent>
         </AccordionItem>
       );
@@ -155,13 +156,13 @@ export function AutomationAccordions({
                   config-driven tables. */}
               <DashboardAccordion automation={automation ?? ""} dashboard={dashboard} />
               {/* The requirement brief (step 238 P5-P9) still applies on top of the real interface. */}
-              <RequirementBriefPanel entityType="dashboard" entityLabel={title} automation={automation} />
+              <RequirementBriefPanel entityType="dashboard" entityLabel={title} scopeLabel={requirementScope(lang, "dashboard")} automation={automation} />
             </>
           ) : k === "processes" ? (
             <>
               {/* The Processes/Gantt timeline (step 230): a row per fork, laid out by estimated duration. */}
               <ProcessesTimeline automation={automation ?? ""} />
-              <RequirementBriefPanel entityType="processes" entityLabel={title} automation={automation} />
+              <RequirementBriefPanel entityType="processes" entityLabel={title} scopeLabel={requirementScope(lang, "processes")} automation={automation} />
             </>
           ) : k === "usecases" ? (
             // The automation scopes the LIVE case store, the pencils and the review gate (step 231) — the gate
@@ -176,7 +177,7 @@ export function AutomationAccordions({
               {/* The Calendar (Cron+Calendar step): a static month-grid + daily-timeline preview reading the
                   SAME generic rows store as Dashboard (table id "calendar") — no interactive creation yet. */}
               <CalendarAccordion automation={automation ?? ""} />
-              <RequirementBriefPanel entityType="calendar" entityLabel={title} automation={automation} />
+              <RequirementBriefPanel entityType="calendar" entityLabel={title} scopeLabel={requirementScope(lang, "calendar")} automation={automation} />
             </>
           ) : k === "cron" ? (
             <>
@@ -184,11 +185,11 @@ export function AutomationAccordions({
                   read/written through the generic /api/projects/settings/cron route) — independent of the
                   Hook (request-triggered) path; NOT yet wired to actuate anything (integration is later). */}
               <CronAccordion automation={automation ?? ""} />
-              <RequirementBriefPanel entityType="cron" entityLabel={title} automation={automation} />
+              <RequirementBriefPanel entityType="cron" entityLabel={title} scopeLabel={requirementScope(lang, "cron")} automation={automation} />
             </>
           ) : (
             // Map/Analytics (step 238 P5-P9) — the requirement brief: "the next thing I need here".
-            <RequirementBriefPanel entityType={k as EntityType} entityLabel={title} automation={automation} />
+            <RequirementBriefPanel entityType={k as EntityType} entityLabel={title} scopeLabel={requirementScope(lang, k as "map" | "analytics")} automation={automation} />
           )}
         </AccordionContent>
       </AccordionItem>

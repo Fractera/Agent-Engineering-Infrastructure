@@ -32,6 +32,9 @@ export type BuilderStrings = {
   showTypes: string;
   hideTypes: string;
   copyTypes: string;
+  // ── the per-table requirement panel's scope word (owner 2026-07-16): the button must read
+  // "Build mode — of the table" (ru: «Режим строительства — таблицы»), NEVER the table's own title. ──
+  tableScope: string;
 };
 
 export const BUILDER_I18N: Record<string, BuilderStrings> = {
@@ -48,6 +51,7 @@ export const BUILDER_I18N: Record<string, BuilderStrings> = {
     roleInput: "Input", roleIntermediate: "Intermediate", roleOutput: "Output",
     typeTransform: "Transform (regular work)", typeCondition: "Condition (branch gate)", typeCustom: "Custom…",
     showTypes: "Show types", hideTypes: "Hide types", copyTypes: "Copy types",
+    tableScope: "table",
   },
   ru: {
     buildNodes: "Строить узлы", closeBuildNodes: "Закрыть режим узлов",
@@ -62,6 +66,7 @@ export const BUILDER_I18N: Record<string, BuilderStrings> = {
     roleInput: "Входной", roleIntermediate: "Серединный", roleOutput: "Выходной",
     typeTransform: "Обычный (transform)", typeCondition: "Условие (ветвление)", typeCustom: "Свой…",
     showTypes: "Показать типизацию", hideTypes: "Скрыть типизацию", copyTypes: "Копировать типизацию",
+    tableScope: "таблицы",
   },
   es: {
     buildNodes: "Construir nodos", closeBuildNodes: "Cerrar modo nodos",
@@ -76,6 +81,7 @@ export const BUILDER_I18N: Record<string, BuilderStrings> = {
     roleInput: "Entrada", roleIntermediate: "Intermedio", roleOutput: "Salida",
     typeTransform: "Normal (transform)", typeCondition: "Condición (bifurcación)", typeCustom: "Propio…",
     showTypes: "Mostrar tipos", hideTypes: "Ocultar tipos", copyTypes: "Copiar tipos",
+    tableScope: "tabla",
   },
   fr: {
     buildNodes: "Construire des nœuds", closeBuildNodes: "Fermer le mode nœuds",
@@ -90,6 +96,7 @@ export const BUILDER_I18N: Record<string, BuilderStrings> = {
     roleInput: "Entrée", roleIntermediate: "Intermédiaire", roleOutput: "Sortie",
     typeTransform: "Normal (transform)", typeCondition: "Condition (branchement)", typeCustom: "Personnalisé…",
     showTypes: "Afficher les types", hideTypes: "Masquer les types", copyTypes: "Copier les types",
+    tableScope: "tableau",
   },
   it: {
     buildNodes: "Costruire nodi", closeBuildNodes: "Chiudi modalità nodi",
@@ -104,6 +111,7 @@ export const BUILDER_I18N: Record<string, BuilderStrings> = {
     roleInput: "Ingresso", roleIntermediate: "Intermedio", roleOutput: "Uscita",
     typeTransform: "Normale (transform)", typeCondition: "Condizione (diramazione)", typeCustom: "Personalizzato…",
     showTypes: "Mostra tipi", hideTypes: "Nascondi tipi", copyTypes: "Copia tipi",
+    tableScope: "tabella",
   },
   de: {
     buildNodes: "Knoten bauen", closeBuildNodes: "Knoten-Modus schließen",
@@ -118,6 +126,7 @@ export const BUILDER_I18N: Record<string, BuilderStrings> = {
     roleInput: "Eingang", roleIntermediate: "Zwischenknoten", roleOutput: "Ausgang",
     typeTransform: "Normal (transform)", typeCondition: "Bedingung (Verzweigung)", typeCustom: "Eigener…",
     showTypes: "Typen anzeigen", hideTypes: "Typen ausblenden", copyTypes: "Typen kopieren",
+    tableScope: "Tabelle",
   },
   pt: {
     buildNodes: "Construir nós", closeBuildNodes: "Fechar modo nós",
@@ -132,6 +141,7 @@ export const BUILDER_I18N: Record<string, BuilderStrings> = {
     roleInput: "Entrada", roleIntermediate: "Intermédio", roleOutput: "Saída",
     typeTransform: "Normal (transform)", typeCondition: "Condição (ramificação)", typeCustom: "Personalizado…",
     showTypes: "Mostrar tipos", hideTypes: "Ocultar tipos", copyTypes: "Copiar tipos",
+    tableScope: "tabela",
   },
   pl: {
     buildNodes: "Buduj węzły", closeBuildNodes: "Zamknij tryb węzłów",
@@ -146,6 +156,7 @@ export const BUILDER_I18N: Record<string, BuilderStrings> = {
     roleInput: "Wejściowy", roleIntermediate: "Pośredni", roleOutput: "Wyjściowy",
     typeTransform: "Zwykły (transform)", typeCondition: "Warunek (rozgałęzienie)", typeCustom: "Własny…",
     showTypes: "Pokaż typy", hideTypes: "Ukryj typy", copyTypes: "Kopiuj typy",
+    tableScope: "tabeli",
   },
   tr: {
     buildNodes: "Düğüm oluştur", closeBuildNodes: "Düğüm modunu kapat",
@@ -160,6 +171,7 @@ export const BUILDER_I18N: Record<string, BuilderStrings> = {
     roleInput: "Giriş", roleIntermediate: "Ara", roleOutput: "Çıkış",
     typeTransform: "Normal (transform)", typeCondition: "Koşul (dallanma)", typeCustom: "Özel…",
     showTypes: "Türleri göster", hideTypes: "Türleri gizle", copyTypes: "Türleri kopyala",
+    tableScope: "tablo",
   },
   nl: {
     buildNodes: "Knopen bouwen", closeBuildNodes: "Knopenmodus sluiten",
@@ -174,6 +186,7 @@ export const BUILDER_I18N: Record<string, BuilderStrings> = {
     roleInput: "Invoer", roleIntermediate: "Tussenliggend", roleOutput: "Uitvoer",
     typeTransform: "Normaal (transform)", typeCondition: "Conditie (vertakking)", typeCustom: "Eigen…",
     showTypes: "Types tonen", hideTypes: "Types verbergen", copyTypes: "Types kopiëren",
+    tableScope: "tabel",
   },
 };
 

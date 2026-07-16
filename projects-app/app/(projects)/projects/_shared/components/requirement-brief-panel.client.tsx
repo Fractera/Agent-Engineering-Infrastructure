@@ -34,6 +34,7 @@ export function RequirementBriefPanel({
   entityLabel,
   automation,
   refId = "",
+  scopeLabel,
 }: {
   entityType: EntityType;
   /** The entity's translated name — shown as the Quiz's subtitle. Falls back to the raw type. */
@@ -43,6 +44,10 @@ export function RequirementBriefPanel({
    *  (the historic behaviour); a table id scopes this panel to THAT table's own transport slot — the same
    *  stores, keyed by ref, so the wave picks a staged table requirement up automatically. */
   refId?: string;
+  /** The grammatically-correct scope word for the "Build mode — …" button (requirement-scope-i18n, owner
+   *  2026-07-16): «Режим строительства — таблицы / дашборда / карты …». NEVER a table's own title. The Quiz
+   *  subject keeps `entityLabel`. */
+  scopeLabel?: string;
 }) {
   const L = automationMenuStrings(useUiLang());
   // The page-wide development lock (step 240): while a wave is with a coding agent, every tool here refuses
@@ -107,12 +112,11 @@ export function RequirementBriefPanel({
 
   if (loading) return <Loader2 className="size-4 animate-spin text-muted-foreground" />;
 
-  // The SCOPE suffix (owner 2026-07-16): two of these panels can now sit near each other — a per-table one
-  // (refId = the table id, labelled with the table's title) right above the whole-dashboard one (ref='',
-  // labelled with the accordion's entity name). Identical "Build mode" buttons were indistinguishable, so
-  // the collapsed button and the expanded header always name their scope: "Build mode — History" vs
-  // "Build mode — Dashboard".
-  const scope = entityLabel ? ` — ${entityLabel}` : "";
+  // The SCOPE suffix (owner 2026-07-16): two of these panels can sit near each other (per-table + whole
+  // dashboard), and every entity's panel must name what it builds — «Режим строительства — таблицы /
+  // дашборда / карты …» (the grammatically-correct scope word, requirement-scope-i18n), NEVER a table's own
+  // title (the owner's explicit correction).
+  const scope = scopeLabel ? ` — ${scopeLabel}` : "";
 
   if (!buildMode) {
     return (

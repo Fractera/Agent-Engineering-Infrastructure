@@ -9,6 +9,7 @@ import { RequirementBriefPanel } from "./requirement-brief-panel.client";
 import { useUiLang } from "../use-ui-lang";
 import { resolveLocalized } from "../localized-text";
 import { automationMenuStrings } from "../automation-menu-i18n";
+import { requirementScope } from "../requirement-scope-i18n";
 
 // THE DASHBOARD (step 228 + the telegram-notes standard). ONE tab that holds ANY number of tables, but only
 // ONE is shown at a time, behind a row of toggle buttons — exactly like the reference automation
@@ -54,10 +55,13 @@ function DashboardPane({
       <ConfigRecordsTable automation={automation} table={table} />
       {/* PER-TABLE requirement (owner 2026-07-16): each table gets ITS OWN AI-interaction surface — the same
           RequirementBriefPanel primitive, scoped by refId = the table id (a per-table transport slot the wave
-          picks up). The whole-dashboard panel stays in the accordion body below, ref=''. */}
+          picks up). The whole-dashboard panel stays in the accordion body below, ref=''. The button reads
+          «Режим строительства — таблицы» (the scope WORD, never the table's own title — owner's correction);
+          the Quiz subject still gets the table's title. */}
       <RequirementBriefPanel
         entityType="dashboard"
         entityLabel={resolveLocalized(table.title, lang)}
+        scopeLabel={requirementScope(lang, "table")}
         automation={automation}
         refId={table.id}
       />
