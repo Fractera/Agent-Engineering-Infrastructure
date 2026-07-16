@@ -175,8 +175,9 @@ const EDGES_INSTRUCTION =
   "separate file. The source node's typed output must satisfy the target node's typed input. Several edges " +
   "leaving one parent through CONDITION nodes form a BRANCH — exactly one is taken at runtime.";
 
-/** Per-entity static instructions. Empty string = the owner has not authored this entity's law yet — an
- *  agent treats it as "no special rules"; the entries fill in one by one as the owner dictates them. */
+/** Per-entity static instructions (owner 2026-07-16 — authored entity by entity). Every instruction follows
+ *  one formula: what the entity IS → where its data lives → how to develop it from its rawRequest → the
+ *  invariant that must never break. Empty string = not authored yet ("no special rules"). */
 const ENTITY_INSTRUCTIONS: Partial<Record<EntityType, string>> = {
   node: NODES_INSTRUCTION,
   edge:
@@ -184,6 +185,57 @@ const ENTITY_INSTRUCTIONS: Partial<Record<EntityType, string>> = {
     "Built like every object: compress the link's rawRequest into a short statement of what crosses the " +
     "boundary and under what condition; both endpoint automations must have zero draft nodes before a link " +
     "can be created (the readiness gate).",
+  usecase:
+    "A USE CASE is one real scenario of this automation, in the owner's own words: who acts, what comes in, " +
+    "what must come out, what happens on error. Use cases are the automation's FIRST stage and its behavioural " +
+    "truth: every node must be justified by a case (no case → no node), and the diagram's virtual tests are " +
+    "walked one case at a time. When a case's rawRequest changes, re-check which nodes/edges that scenario " +
+    "touches and update them in the same wave. Never mark behaviour done that no case describes; never delete " +
+    "a case's consequences from the diagram without the owner's confirmation (the review gate).",
+  chain:
+    "The CHAIN is a chained group's real architecture: its member automations and the hand-offs between them. " +
+    "Develop it interface-first — design each seam as a typed contract (which member's output node feeds which " +
+    "member's input node, wired as a link), before touching the members' insides. Members stay individually " +
+    "comprehensible (node budget 25/30 each) and individually test-runnable; production activation is " +
+    "group-only. Read memberSnapshots for each member's surface; when a member's own depth is needed, fetch " +
+    "THAT member's architecture — never inline it here. Requires the most powerful model available.",
+  dashboard:
+    "The DASHBOARD is the automation's table surface: config-driven tables whose rows are written by output " +
+    "nodes (ioType \"dashboard\") through the shared row store (lib/dashboard-rows.ts — addRow/listRows, the " +
+    "dashboard_rows table). Develop from the rawRequest: define/adjust the table's columns to carry exactly " +
+    "what the owner asks to see, then make the writing output node's function supply those values. NEVER " +
+    "invent a parallel storage or a second write path — one store, written only by output nodes, read only by " +
+    "the dashboard UI. A row is a RESULT: only a successful run writes one.",
+  analytics:
+    "ANALYTICS is the automation's chart surface: visual aggregates computed over the SAME data the automation " +
+    "already records (dashboard rows, run history) — never over a copy. Develop from the rawRequest: pick the " +
+    "smallest set of charts that answers the owner's question, compute aggregates server-side with " +
+    "deterministic code, and state each chart's source (which table/rows, which field, which period). If the " +
+    "data a chart needs is not being recorded yet, first extend the recording node — do not fabricate data.",
+  calendar:
+    "The CALENDAR is the automation's time surface: month and timeline views of event rows read through the " +
+    "same shared row store as the dashboard (a calendar event is a row with a date). An output node with " +
+    "ioType \"calendar\" writes events; the calendar only displays them. Develop from the rawRequest: define " +
+    "what an event IS for this automation (title, when, what extra fields), make the writing node supply it, " +
+    "and keep the display read-only — behaviour lives in the diagram, never in the calendar itself.",
+  cron:
+    "CRON is the automation's own timer: its settings (enabled flag + interval) live in the automation's " +
+    "cron.json, edited through the Cron accordion and read by the fractera-cron runner, which fires the " +
+    "automation's entry on schedule. Develop from the rawRequest: set the periodicity the owner asks for and " +
+    "make sure the input node the tick fires exists and handles a scheduled (unattended) trigger — validate " +
+    "inputs, fail quietly into the run log, never wait for a human. Cron STARTS work; what the work is remains " +
+    "entirely the diagram's.",
+  map:
+    "The MAP is the automation's geo surface: markers/geo rows recorded by an output node (ioType \"map\") and " +
+    "displayed read-only. Develop from the rawRequest: define what a marker means for this automation (what is " +
+    "placed, from which field the coordinates come, what a click shows), make the writing node supply " +
+    "coordinates + label, and keep all behaviour in the diagram — the map only shows what was recorded.",
+  processes:
+    "PROCESSES is the automation's Gantt/timeline surface: planned vs actual duration of runs, computed from " +
+    "each node's estDurationMs (meta.ts) and the recorded runs (automation_runs / automation_schedule). " +
+    "Develop from the rawRequest: keep every node's estDurationMs an honest estimate (refine it against " +
+    "actual run data), and express the owner's planning wishes (ordering, expected lengths) through those " +
+    "estimates and the schedule — never through hidden logic outside the diagram.",
 };
 
 /** One node role group in the bundle: the role, its (conceptual) system instruction, the finer input/output
