@@ -64,15 +64,25 @@ type DiagramEdge = {
   rawRequest: string; summary: string;
 };
 
-// EVERY entity instance carries the universal pair:
+// EVERY entity instance carries the universal trio:
 type EntityInstance = {
   ref: string;                              // "" = automation-wide; a cuid; or a dashboard TABLE id
   identity: unknown;                        // descriptive facts (entity-specific)
   rawRequest: string;                       // the owner's free-form wish; non-empty = pending development
   summary: string;                          // the AI's compact "how it works now" (<=300 chars, owner's language)
+  warning: EntityWarning | "";              // step 246: non-empty = BLOCKED on something external; "" = none
   pending: boolean;                         // always === (currentTask !== null)
   currentTask: unknown | null;              // the flat task shape (1-3 string fields)
   history: { version: number; task: unknown; devStepRef: string | null; createdAt: string }[];
+};
+
+// The agent-to-owner escalation (step 246) — written via POST /api/projects/entity-warning when the agent
+// hits a blocker it cannot pass (see agent_instruction 4a / the nodes instruction's decision ladder):
+type EntityWarning = {
+  blocker: string;                          // 1-2 sentences, owner's language: what blocks the work
+  kind: "hermes-scout" | "owner-decision" | "external-service";
+  hermesInstruction?: string;               // REQUIRED for hermes-scout: the ready instruction for the Hermes agent
+  expectedAnswer?: string;                  // what the agent expects back to pass the object next iteration
 };
 
 type EntitySlice = {

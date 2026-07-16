@@ -542,6 +542,19 @@ const SCHEMA = `
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(automation, from_cuid, to_cuid)
   );
+  -- THE ENTITY WARNING (step 246) — the agent-to-owner channel of the universal lifecycle: a coding agent
+  -- that hits a hard external blocker (missing credentials, captcha, stale data, an owner decision) writes a
+  -- structured warning here instead of burning tokens on hopeless retries. One row per object; the owner
+  -- answers through the problems modal, the pair warning+answer is archived to entity_history, the row is
+  -- deleted and the answer is appended to the object rawRequest. Non-empty warning = the object is BLOCKED.
+  CREATE TABLE IF NOT EXISTS entity_warning (
+    automation   TEXT NOT NULL,
+    entity_type  TEXT NOT NULL,
+    entity_ref   TEXT NOT NULL DEFAULT '',
+    warning_json TEXT NOT NULL DEFAULT '{}',
+    created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(automation, entity_type, entity_ref)
+  );
   CREATE TABLE IF NOT EXISTS entity_summary (
     automation  TEXT NOT NULL,
     entity_type TEXT NOT NULL,

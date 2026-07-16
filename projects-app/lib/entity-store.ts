@@ -64,6 +64,10 @@ export type EntityInstance<TTask, TIdentity> = {
   identity: TIdentity;
   rawRequest: string;          // '' = no pending wish; non-empty = the owner's free-form request
   summary: string;             // the AI-written compact "how it works now" (may be '')
+  /** step 246 — the agent→owner escalation: non-empty = this object is BLOCKED on something external (see
+   *  EntityWarning). "" = no warning. rawRequest STAYS non-empty alongside a warning (the task is not done);
+   *  a warning and a summary are mutually exclusive for one iteration (either finished or blocked). */
+  warning: EntityWarning | "";
   pending: boolean;            // ALWAYS derived from (currentTask !== null) by makeInstance() below — never
                                 // set independently, so it can never drift from currentTask. Exposed as its
                                 // own field so a weak model does a plain key check, never a null-inference.
@@ -86,9 +90,9 @@ export function flattenTask(t: unknown): string {
  *  the three fields can never disagree. `summary` is the AI-written result description (see above). */
 export function makeInstance<TTask, TIdentity>(
   ref: string, identity: TIdentity, currentTask: TTask | null, history: EntityTaskRecord<TTask>[],
-  summary = "",
+  summary = "", warning: EntityWarning | null = null,
 ): EntityInstance<TTask, TIdentity> {
-  return { ref, identity, rawRequest: flattenTask(currentTask), summary, pending: currentTask !== null, currentTask, history };
+  return { ref, identity, rawRequest: flattenTask(currentTask), summary, warning: warning ?? "", pending: currentTask !== null, currentTask, history };
 }
 
 // ─── THE ENTITY SUMMARY STORE (owner 2026-07-16) ────────────────────────────────────────────────────────
@@ -110,6 +114,56 @@ export async function setSummary(automation: string, entityType: EntityType, ref
      ON CONFLICT(automation, entity_type, entity_ref) DO UPDATE SET
        summary = excluded.summary, updated_at = excluded.updated_at`,
   ).run(automation, entityType, ref, summary);
+}
+
+// ─── THE ENTITY WARNING STORE (step 246 — the agent→owner escalation channel) ───────────────────────────
+// A structured blocker: the agent cannot finish an object with the means it has (missing credentials /
+// captcha / stale data / an owner decision) and asks for help INSTEAD of retrying. kind "hermes-scout"
+// carries a ready instruction the owner copies to the Hermes agent (a one-off scout run).
+
+export type EntityWarning = {
+  /** 1-2 sentences, owner's language: what blocks the work. */
+  blocker: string;
+  kind: "hermes-scout" | "owner-decision" | "external-service";
+  /** REQUIRED for kind hermes-scout: the FULL ready instruction the owner copies to Hermes. */
+  hermesInstruction?: string;
+  /** What the agent expects back, so the next iteration can pass the node. */
+  expectedAnswer?: string;
+};
+
+export async function getWarning(automation: string, entityType: EntityType, ref = ""): Promise<EntityWarning | null> {
+  const row = (await db
+    .prepare(`SELECT warning_json FROM entity_warning WHERE automation=? AND entity_type=? AND entity_ref=?`)
+    .get(automation, entityType, ref)) as { warning_json: string } | undefined;
+  if (!row) return null;
+  try { return JSON.parse(row.warning_json) as EntityWarning; } catch { return null; }
+}
+
+export async function setWarning(automation: string, entityType: EntityType, ref: string, warning: EntityWarning): Promise<void> {
+  await db.prepare(
+    `INSERT INTO entity_warning (automation, entity_type, entity_ref, warning_json, created_at)
+     VALUES (?, ?, ?, ?, datetime('now'))
+     ON CONFLICT(automation, entity_type, entity_ref) DO UPDATE SET
+       warning_json = excluded.warning_json, created_at = excluded.created_at`,
+  ).run(automation, entityType, ref, JSON.stringify(warning));
+}
+
+export async function clearWarning(automation: string, entityType: EntityType, ref = ""): Promise<void> {
+  await db.prepare(`DELETE FROM entity_warning WHERE automation=? AND entity_type=? AND entity_ref=?`)
+    .run(automation, entityType, ref);
+}
+
+/** Every open warning of an automation — the problems modal's list and the ⚠ badge's count. */
+export async function listWarnings(automation: string): Promise<{ entityType: EntityType; ref: string; warning: EntityWarning }[]> {
+  const rows = (await db
+    .prepare(`SELECT entity_type, entity_ref, warning_json FROM entity_warning WHERE automation = ? ORDER BY created_at ASC`)
+    .all(automation)) as { entity_type: string; entity_ref: string; warning_json: string }[];
+  const out: { entityType: EntityType; ref: string; warning: EntityWarning }[] = [];
+  for (const r of rows) {
+    try { out.push({ entityType: r.entity_type as EntityType, ref: r.entity_ref, warning: JSON.parse(r.warning_json) as EntityWarning }); }
+    catch { /* corrupt row -> skipped */ }
+  }
+  return out;
 }
 
 export type EntitySlice<TTask = unknown, TIdentity = unknown> = {

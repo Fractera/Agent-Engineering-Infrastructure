@@ -184,6 +184,41 @@ never a second code path. Pure template + token substitution, zero code generati
   full-auto draining `GET /api/projects/dev-steps`) are exactly as documented in README §6.1 — this document
   does not repeat them.
 
+### 4.1 The self-sufficiency cutoff — the `warning` escalation (step 246, proven at the API level)
+
+A coding agent MUST NOT burn tokens storming a blocker it cannot pass with the means it has. Every object of
+the architecture bundle carries a third universal field, **`warning`** (beside `rawRequest`/`summary`): the
+agent→owner channel — "here is what blocks me and how to obtain it". Non-empty warning = the object is
+BLOCKED; the agent does no further work on it until the owner answers. A warning COEXISTS with the
+rawRequest (the task is not done); a warning and a summary are mutually exclusive for one iteration.
+
+**The decision ladder — answer BEFORE building any node, strictly in order:**
+
+1. **Can do myself** (deterministic code + already-wired tools) → build.
+2. **Missing a CAPABILITY an MCP tool covers** (web search → exa.ai, and the like) → find, install and wire
+   the tool to the node yourself, document it in `functions` — self-service, no warning.
+3. **Missing DATA/ACCESS obtainable only by a one-off external action** (credentials, captcha, login-walled
+   parsing, stale/fresh data, manual registration) → do NOT storm it. Write the warning
+   (`POST /api/projects/entity-warning {automation, entityType, ref, warning:{blocker, kind,
+   hermesInstruction?, expectedAnswer?}}`), set THIS object aside, continue the others, finish the wave with
+   warnings in place. `kind:"hermes-scout"` MUST carry `hermesInstruction` — a complete, ready instruction
+   the owner copies to the **Hermes agent** (the workspace's one-off scout: it drives a browser and fetches
+   such results). Write INTO that instruction the requirement that Hermes's report begin verbatim with
+   «Согласно вашему требованию я провёл исследование и вот какие результаты я получил для вас:» and return a
+   pasteable text result.
+4. **Needs an OWNER DECISION** (a choice, a payment, consent) → the same warning, `kind:"owner-decision"`,
+   without a Hermes instruction, with the question.
+
+**Forbidden:** a second self-attempt after a failure of the same kind; faking a result with a stub instead
+of a warning; the agent calling Hermes itself (the system forms the call; the OWNER runs it — an automatic
+agent→Hermes bridge is a separate future step); clearing a rawRequest whose work was not finished.
+
+**The answer loop (proven):** the owner answers in the problems modal (or the node drawer) →
+`POST /api/projects/warning-answer` archives the warning+answer pair to `entity_history` (read it before
+re-attempting — it is your context), clears the warning, and APPENDS to the object's rawRequest: «В ответ на
+твой warning предоставляю следующую информацию: …». The non-empty rawRequest re-enters the wave; the next
+iteration passes the blocker.
+
 ## 5. The architecture bundle — the two JSON sources a coding agent needs (proven)
 
 Per the reframe that produced this document: a Development Step should be able to say **one line** ("build

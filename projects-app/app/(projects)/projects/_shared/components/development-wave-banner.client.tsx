@@ -9,6 +9,7 @@ import { useUiLang } from "../use-ui-lang";
 import { waveStrings } from "../wave-i18n";
 import { useWaveLock } from "./wave-lock.client";
 import { StartDevelopment } from "./start-development.client";
+import { ProblemsCenter } from "./warning-panel.client";
 
 // THE WAVE BANNER (step 240; three actions since 241 E3.3) — the FIRST element under the page header, and the
 // automation page's ONLY launcher of development. Every per-entity "Start development" button is gone
@@ -28,7 +29,20 @@ import { StartDevelopment } from "./start-development.client";
 //
 // The state comes from WaveLockProvider (one poll for the whole page), so the banner and every tool's lock can
 // never disagree with each other.
+// STEP 246 — the banner also hosts the PROBLEMS CENTER (the ⚠ N badge + the Quiz-like problems modal):
+// warnings a coding agent left (the escalation channel) surface right where development is launched, on
+// every automation page, regardless of the wave's own state. Split into an inner component because the
+// banner's own render has early returns (idle/locked/snoozed) that must not unmount the problems UI.
 export function DevelopmentWaveBanner({ automation }: { automation: string }) {
+  return (
+    <>
+      <ProblemsCenter automation={automation} />
+      <WaveBannerInner automation={automation} />
+    </>
+  );
+}
+
+function WaveBannerInner({ automation }: { automation: string }) {
   const L = waveStrings(useUiLang());
   const { wave, refresh } = useWaveLock();
   const [open, setOpen] = useState(false);

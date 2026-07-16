@@ -11,6 +11,7 @@ import type { IndexNode } from "./diagram-canvas.client";
 import { INPUT_TYPE_DESCRIPTIONS, OUTPUT_TYPE_DESCRIPTIONS, INTERMEDIATE_TYPE_DESCRIPTIONS } from "../node-contract";
 import { useUiLang } from "../use-ui-lang";
 import { builderStrings } from "../builder-i18n";
+import { WarningBlock, type WarningRow } from "./warning-panel.client";
 
 // FROZEN STANDARD (step 224 L4) — the BUILDER side panel of a node. A DRAFT (red) node has no instruction
 // yet: the owner writes a free-form spec (what it should do, what result it brings) and presses "Start
@@ -30,6 +31,7 @@ export function BuilderNodePanel({
   instruction,
   role,
   ioType,
+  automation,
   onChanged,
   onDeleted,
 }: {
@@ -39,6 +41,8 @@ export function BuilderNodePanel({
   /** The node's LIVE role/type from its meta.ts (polled with the index) — the type editor's current value. */
   role?: string;
   ioType?: string;
+  /** "category/slug" — needed to read/answer this node's WARNING (step 246). */
+  automation?: string;
   onChanged: () => void;
   onDeleted: () => void;
 }) {
@@ -67,6 +71,20 @@ export function BuilderNodePanel({
   const [customType, setCustomType] = useState(ioType && !isCanonical(role ?? "intermediate", ioType) ? ioType : "");
 
   useEffect(() => setText(node.draft ? spec : instruction), [node.cuid, node.draft, spec, instruction]);
+
+  // THIS NODE'S WARNING (step 246) — the drawer shows the agent's blocker (with the Hermes-scout reveal and
+  // the answer field) right under the node's own brief; answering clears it and re-stages the node.
+  const [nodeWarning, setNodeWarning] = useState<WarningRow | null>(null);
+  const refetchWarning = useCallback(async () => {
+    if (!automation) return;
+    try {
+      const r = await fetch(`/api/projects/entity-warning?automation=${encodeURIComponent(automation)}`, { cache: "no-store" });
+      if (!r.ok) return;
+      const d = (await r.json()) as { warnings?: WarningRow[] };
+      setNodeWarning((d.warnings ?? []).find((w) => w.entityType === "node" && w.ref === node.cuid) ?? null);
+    } catch { /* keep last */ }
+  }, [automation, node.cuid]);
+  useEffect(() => { void refetchWarning(); }, [refetchWarning]);
   useEffect(() => {
     const r = role ?? "intermediate";
     setEditRole(r);
@@ -244,6 +262,15 @@ export function BuilderNodePanel({
           draft's spec.md is pending by definition, and editing a LIVE node's instruction stages an
           optimization (the PATCH writes it into the node's transport slot). The whole batch is then handed
           over ONCE, by the wave banner under the page header. */}
+
+      {/* STEP 246 — the node's WARNING (the agent's blocker), with the Hermes-scout reveal + the answer
+          field. Below the instruction/functions, as the owner specified. */}
+      {automation && nodeWarning && (
+        <WarningBlock
+          automation={automation} entityType="node" refId={node.cuid} warning={nodeWarning.warning}
+          onAnswered={() => { setNodeWarning(null); onChanged(); refreshWave(); }}
+        />
+      )}
 
       {showHistory && (
         <div className="space-y-1 rounded-md border p-2">

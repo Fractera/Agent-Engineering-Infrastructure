@@ -10,7 +10,7 @@ import {
 } from "@/app/(projects)/projects/_shared/node-contract";
 import {
   type EntityType, ENTITY_TYPES, type EntitySlice, type EntityTaskRecord, type EntityInstance,
-  getTransport, getHistory, getSummary, listVersionsByRef, makeInstance,
+  getTransport, getHistory, getSummary, getWarning, listVersionsByRef, makeInstance,
 } from "@/lib/entity-store";
 
 export type { EntityType, EntitySlice };
@@ -128,6 +128,21 @@ const AGENT_INSTRUCTION_CORE =
   "`diagram` FIRST (nodes and edges), then the other entities. " +
   "(4) Each object carries its own `instruction`; re-read and follow it when developing that object (an empty " +
   "instruction means no special rules for it yet). " +
+  "(4a) THE SELF-SUFFICIENCY CUTOFF (step 246): before developing an object, decide honestly whether you can " +
+  "finish it with the means you have. If a MISSING CAPABILITY is covered by an installable MCP tool (e.g. web " +
+  "search -> exa.ai), install and wire it yourself — no warning needed. But if you are blocked on DATA or " +
+  "ACCESS obtainable only by a one-off external action (credentials, captcha, login-walled scraping, fresh " +
+  "data, manual registration) or on an OWNER DECISION — do NOT storm it: write a structured `warning` via " +
+  "POST /api/projects/entity-warning {automation, entityType, ref, warning:{blocker, kind, hermesInstruction?, " +
+  "expectedAnswer?}}, set that object aside, continue the other objects, and finish the wave with warnings in " +
+  "place. kind \"hermes-scout\" MUST carry hermesInstruction — a complete, ready instruction the owner copies " +
+  "to the Hermes agent (a one-off scout that can drive a browser and fetch such results); write INTO it the " +
+  "requirement that Hermes's report begin verbatim with: \"Согласно вашему требованию я провёл исследование и " +
+  "вот какие результаты я получил для вас:\" and return the result as pasteable text. A SECOND self-attempt of " +
+  "the same failed kind is FORBIDDEN, and so is faking the result with a stub. Never clear a rawRequest whose " +
+  "work you did not finish — a warning and the rawRequest coexist; a warning and a summary do not. Before " +
+  "re-attempting an object that carries an answered warning, read its history — the warning+answer pair is " +
+  "archived there and is your context. " +
   "(5) On finishing an object: its rawRequest is cleared by the start-development machinery (the original is " +
   "archived to history), and YOU write its compact `summary` — ≤300 characters per entity, in the owner's own " +
   "language — via POST /api/projects/entity-summary {automation, entityType, ref, summary}; for a node, also " +
@@ -165,7 +180,17 @@ const NODES_INSTRUCTION =
   "(2) from it, design the deterministic application FUNCTIONS that fulfil the request; (3) record every " +
   "function in the node's `functions` — its name, a one-line instruction, what it takes and what it returns. " +
   "The node's `summary` (≤300 characters, owner's language) states how the node works now. The role/type only " +
-  "says WHERE the node sits in the flow and WHAT KIND of work it does — never how it is built.";
+  "says WHERE the node sits in the flow and WHAT KIND of work it does — never how it is built. " +
+  "THE DECISION LADDER (step 246) — BEFORE building a node, answer: can I build it COMPLETELY with available " +
+  "means? Strictly in order: (1) CAN DO MYSELF (deterministic code + already-wired tools) -> build. " +
+  "(2) MISSING A CAPABILITY an MCP tool covers (web search -> exa.ai, etc.) -> find, install and wire it to " +
+  "the node yourself, document it in functions — self-service, no warning. (3) MISSING DATA/ACCESS obtainable " +
+  "only by a one-off external action (credentials, captcha, login-walled parsing, fresh data, registration) " +
+  "-> do NOT storm it: write the node's `warning` (see agent_instruction 4a), set THIS node aside, continue " +
+  "the others. (4) NEEDS AN OWNER DECISION (a choice, a payment, consent) -> the same warning without a " +
+  "Hermes instruction, with the question. FORBIDDEN: a second self-attempt after a failure of the same kind; " +
+  "faking a result with a stub instead of a warning; calling Hermes yourself (the system forms the call, the " +
+  "owner runs it).";
 
 /** The internal (diagram) EDGES' instruction. */
 const EDGES_INSTRUCTION =
@@ -446,7 +471,7 @@ async function extractNode(automation: string, withHistory: boolean): Promise<No
       });
     }
     return {
-      ...makeInstance(n.cuid, identity, currentTask, history, summary),
+      ...makeInstance(n.cuid, identity, currentTask, history, summary, await getWarning(automation, "node", n.cuid)),
       functions: await nodeFunctionCards(automation, n.slug),
     };
   }));
@@ -677,9 +702,10 @@ async function extractDashboard(automation: string, withHistory: boolean): Promi
   const base = await extractStub("dashboard", automation, withHistory);
   const tables = await dashboardTablesOf(automation);
   const tableInstances = await Promise.all(tables.map(async (identity) => {
-    const [transport, summary] = await Promise.all([
+    const [transport, summary, warning] = await Promise.all([
       getTransport(automation, "dashboard", identity.tableId),
       getSummary(automation, "dashboard", identity.tableId),
+      getWarning(automation, "dashboard", identity.tableId),
     ]);
     const briefText = (transport?.payload as { brief?: string } | undefined)?.brief ?? "";
     const currentTask: StubTask | null = briefText.trim() ? { brief: briefText } : null;
@@ -691,7 +717,7 @@ async function extractDashboard(automation: string, withHistory: boolean): Promi
         return { version: v.version, task: { brief: p.brief ?? "" }, devStepRef: v.devStepRef, createdAt: v.createdAt };
       });
     }
-    return makeInstance(identity.tableId, identity as unknown, currentTask, history, summary);
+    return makeInstance(identity.tableId, identity as unknown, currentTask, history, summary, warning);
   }));
   const { COLUMN_TYPE_DESCRIPTIONS, ACTION_TYPE_DESCRIPTIONS } = await import("@/app/(projects)/projects/_shared/table-config");
   return {
@@ -709,10 +735,11 @@ async function extractDashboard(automation: string, withHistory: boolean): Promi
 // live rows (228/229); it exists purely to carry the owner's NEXT requested change through to a coding
 // agent via JSON1/JSON2, same as every other entity.
 async function extractStub(entityType: StubEntityType, automation: string, withHistory: boolean): Promise<EntitySlice<StubTask, StubIdentity>> {
-  const [live, transport, summary] = await Promise.all([
+  const [live, transport, summary, warning] = await Promise.all([
     getLiveEntities(automation),
     getTransport(automation, entityType, ""),
     getSummary(automation, entityType, ""),
+    getWarning(automation, entityType, ""),
   ]);
   const identity: StubIdentity = {
     toggleEnabled: entityType === "fork-activation" ? true : Boolean(live[entityType as keyof typeof live]),
@@ -730,7 +757,7 @@ async function extractStub(entityType: StubEntityType, automation: string, withH
   return {
     entityType,
     instruction: ENTITY_INSTRUCTIONS[entityType] ?? "",
-    instances: [makeInstance("", identity, currentTask, history, summary)],
+    instances: [makeInstance("", identity, currentTask, history, summary, warning)],
   };
 }
 

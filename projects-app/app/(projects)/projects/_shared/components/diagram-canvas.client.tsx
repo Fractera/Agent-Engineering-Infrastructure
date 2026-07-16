@@ -618,6 +618,7 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
                 instruction={sources[activeView.cuid]?.instruction ?? ""}
                 role={liveRole(activeView.cuid, activeView.id)}
                 ioType={liveIoType(activeView.cuid, activeView.id)}
+                automation={automation}
                 onChanged={() => void refetchIndex()}
                 onDeleted={() => { setActiveId(null); void refetchIndex(); }}
               />
