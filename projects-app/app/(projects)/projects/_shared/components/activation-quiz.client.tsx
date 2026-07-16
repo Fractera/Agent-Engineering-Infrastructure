@@ -77,6 +77,15 @@ export function ActivationQuiz({
   const [draftText, setDraftText] = useState("");
   const [aborter, setAborter] = useState<AbortController | null>(null);
   const booted = useRef(false);
+  // READY highlight (step 247, owner's fix for "which button do I press to leave the Quiz?"): once the
+  // model has replied READY (the /answer route's signal — enough scenarios collected), the EXIT button
+  // ("The cases are ready" / "Save the cases") turns orange and pulses gently. STICKY for the session —
+  // the owner may keep talking past READY, the exit stays lit. Derived from the transcript itself, so a
+  // reopened session that was already READY lights up too.
+  const ready = turns.some((t) => t.role === "assistant" && /^READY\b/i.test(t.content.trim()));
+  const readyPulse = ready
+    ? "animate-pulse border-orange-500 text-orange-600 hover:text-orange-600 dark:border-orange-400 dark:text-orange-400"
+    : "";
   // The field voice writes into (step 232): the transcript lands at the CARET, so the owner can dictate into
   // the middle of what he already wrote.
   const answerRef = useRef<HTMLTextAreaElement | null>(null);
@@ -610,11 +619,11 @@ export function ActivationQuiz({
                 <SkipForward className="size-3.5" /> {L.btnFinishLink}
               </Button>
             ) : isCaseEdit ? (
-              <Button size="sm" variant="outline" onClick={applyCaseEdit} disabled={busy || streaming}>
+              <Button size="sm" variant="outline" onClick={applyCaseEdit} disabled={busy || streaming} className={readyPulse}>
                 <SkipForward className="size-3.5" /> {L.btnSaveCases}
               </Button>
             ) : phase === "usecases" ? (
-              <Button size="sm" variant="outline" onClick={applyUseCases} disabled={busy || streaming}>
+              <Button size="sm" variant="outline" onClick={applyUseCases} disabled={busy || streaming} className={readyPulse}>
                 <SkipForward className="size-3.5" /> {L.btnCasesReady}
               </Button>
             ) : (
