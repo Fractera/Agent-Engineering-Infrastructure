@@ -65,8 +65,11 @@ functions.ts,instruction.ts}` — nothing behavioural outside the node's folder,
 diagram defines behaviour, ever. AI inside a node only as an explicit `externalAi` tool-call step. The
 general executor (`lib/executor.ts`, `POST /api/projects/run`) walks any automation's nodes and calls
 their compiled functions — proven on two reference automations (`example-content-pipeline`,
-`example-stream-stock-price`). Not built yet: parallel function execution, retries, cross-automation
-runs. Links between automations (`_edges/<cuid>/`) follow the same contract with a readiness gate (zero
+`example-stream-stock-price`). **The walk is SEQUENTIAL, in diagram order, through one shared context
+bag:** fan-in and fan-out work through the bag, but edges/`when` are NOT evaluated — condition nodes do
+not gate branches at runtime (decide conditions inside a node's functions; keep chains a linear tree).
+Not built yet (step 241, after 244/245): edge traversal + condition branching, parallel execution,
+retries, cross-automation runs. Links between automations (`_edges/<cuid>/`) follow the same contract with a readiness gate (zero
 draft nodes on both sides). Full specs: README, sections "The diagram standard" and "The node → functions
 contract".
 

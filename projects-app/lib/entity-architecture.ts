@@ -242,7 +242,13 @@ const DIAGRAM_INSTRUCTION =
   "type satisfies its target input type. " +
   "NODE BUDGET (hard law, see AUTOMATION-PROJECTS.md §2.1): at 25 nodes you MUST propose decomposition into a " +
   "chained group; 30 nodes is the absolute maximum — no new node may be added past it under ANY phrasing; " +
-  "further growth happens only by decomposition. Only after the virtual tests pass move to the other entities.";
+  "further growth happens only by decomposition. Only after the virtual tests pass move to the other entities. " +
+  "RUNTIME LIMIT (until the graph executor lands — step 241): today's executor runs the nodes SEQUENTIALLY in " +
+  "diagram order through one shared context bag — fan-in (several nodes feeding one) and fan-out (one node's " +
+  "result read by several) WORK through the bag, but condition nodes are NOT evaluated as branch gates: every " +
+  "node executes. Do not design mutually-exclusive branches — decide conditions INSIDE a node's functions " +
+  "(check, then return the according result) and keep the chain a linear tree whose order respects who " +
+  "produces what.";
 
 /** The NODES group's instruction — how ANY node is built, identical for every role and type. */
 const NODES_INSTRUCTION =
@@ -272,7 +278,10 @@ const EDGES_INSTRUCTION =
   "(`when`; null = always taken). Diagram edges are DERIVED from each node's declared parent (meta.ts " +
   "`parentId` / the live index's parent_cuid) — to change the wiring, change the nodes' parents, never a " +
   "separate file. The source node's typed output must satisfy the target node's typed input. Several edges " +
-  "leaving one parent through CONDITION nodes form a BRANCH — exactly one is taken at runtime.";
+  "leaving one parent through CONDITION nodes form a BRANCH — the DESIGN law is that exactly one is taken; " +
+  "but the CURRENT executor does not evaluate edges or `when` at runtime (see the diagram instruction's " +
+  "runtime limit) — until step 241 lands, decide conditions inside a node's functions instead of relying on " +
+  "branch gating.";
 
 /** Per-entity static instructions (owner 2026-07-16 — authored entity by entity). Every instruction follows
  *  one formula: what the entity IS → where its data lives → how to develop it from its rawRequest → the

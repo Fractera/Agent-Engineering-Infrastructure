@@ -79,8 +79,10 @@ type NodeContract = {
   instanced = durable runs per fork.
 - **The executor is real** (`lib/executor.ts`, `POST /api/projects/run` — `{automation, input}` for
   stream, `{automation, instanceId}` for instanced): it loads each node's compiled `functions.ts` via the
-  generated `_generated/executables.ts` registry and merges returns into the run's context bag. Not
-  built: parallel function runs, retries, cross-automation runs.
+  generated `_generated/executables.ts` registry and merges returns into the run's context bag. **It runs
+  nodes SEQUENTIALLY in diagram order and does not evaluate edges/`when`** — fan-in/fan-out work through
+  the bag; condition branching does not (decide conditions inside functions). Not built (step 241):
+  edge traversal + condition gating, parallel runs, retries, cross-automation runs.
 
 ## The activation (launch console) standard
 
