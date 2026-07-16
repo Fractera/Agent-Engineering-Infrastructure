@@ -13,13 +13,15 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { FlaskConical, Hammer, LayoutGrid, Play, Plus, X } from "lucide-react";
+import { FlaskConical, Hammer, LayoutGrid, Play, Plus, Spline, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { NodeContract } from "../node-contract";
 import { DiagramPanel, NodeCard } from "./diagram-panel.client";
 import { BuilderNodePanel } from "./builder-node-panel.client";
 import { RoleBadge, IoTypeBadge } from "./role-badge.client";
+import { useUiLang } from "../use-ui-lang";
+import { builderStrings } from "../builder-i18n";
 
 // FROZEN STANDARD (step 223.C + 224) — the diagram CANVAS. Two modes:
 //
@@ -48,7 +50,7 @@ export type IndexNode = {
   x: number | null; y: number | null; draft: number; active_version: number; latest_version: number;
   status: string;
 };
-type Sources = Record<string, { spec: string; instruction: string }>;
+type Sources = Record<string, { spec: string; instruction: string; role?: string; ioType?: string }>;
 
 type RunStatus = "idle" | "running" | "ok" | "fail";
 type CanvasNodeData = {
@@ -139,11 +141,17 @@ const NODE_TYPES = { diagram: DiagramNode };
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; automation?: string }) {
+  const L = builderStrings(useUiLang());
   const [activeId, setActiveId] = useState<string | null>(null);
   const [runStatus, setRunStatus] = useState<Record<string, RunStatus>>({});
   const [currentNode, setCurrentNode] = useState<string | null>(null);
   const [simulating, setSimulating] = useState(false);
   const [builder, setBuilder] = useState(false);
+  // EDGE MODE (owner 2026-07-16) — a SEPARATE mode from node building, never merged into one ("that would
+  // create button confusion"): here the owner draws an edge by dragging between nodes and deletes a selected
+  // edge. An edge IS the target node's parent (parent_cuid) — connect/delete PATCH that one field.
+  const [edgeMode, setEdgeMode] = useState(false);
+  const [selectedEdge, setSelectedEdge] = useState<{ source: string; target: string } | null>(null);
   const [index, setIndex] = useState<IndexNode[]>([]);
   const [sources, setSources] = useState<Sources>({});
   // BATCHED save accumulator only now (step 236.1) — a drag no longer feeds rendering through this (that's
@@ -167,7 +175,10 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
       if (!r.ok) return;
       const d = (await r.json()) as { nodes: IndexNode[]; sources?: Sources };
       const nodes = d.nodes ?? [];
-      const sig = JSON.stringify(nodes.map((n) => [n.cuid, n.slug, n.name, n.draft, n.active_version, n.x, n.y, n.parent_cuid, n.status]));
+      // role/ioType are part of the signature (owner 2026-07-16): saving a draft's type must repaint the
+      // canvas (square ⇄ rectangle, badges) on the next poll, not only when a node row itself changes.
+      const sig = JSON.stringify(nodes.map((n) => [n.cuid, n.slug, n.name, n.draft, n.active_version, n.x, n.y, n.parent_cuid, n.status,
+        d.sources?.[n.cuid]?.role, d.sources?.[n.cuid]?.ioType]));
       if (sig === indexSig.current) return; // nothing changed — do NOT churn the canvas
       indexSig.current = sig;
       setIndex(nodes);
@@ -278,16 +289,60 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
     } finally { setBusy(false); }
   }, [automation, busy, refetchIndex]);
 
+  // A FREE (unlinked) draft node (owner 2026-07-16) — no parent, so no edge: the owner first places it,
+  // then sets its role + type in the drawer (e.g. input + custom "WhatsApp") and wires it in edge mode.
+  const addFreeNode = useCallback(async () => {
+    if (!automation || busy) return;
+    setBusy(true);
+    try {
+      await fetch(`/api/projects/nodes/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ automation, name: "New node" }),
+      });
+      await refetchIndex();
+    } finally { setBusy(false); }
+  }, [automation, busy, refetchIndex]);
+
+  // Edge mode's two operations — both are one PATCH of the TARGET node's parentCuid (an edge is derived
+  // state, never a separate record; same doctrine as the architecture bundle's edges).
+  const connectNodes = useCallback(async (sourceId: string, targetId: string) => {
+    const src = view.find((v) => v.id === sourceId);
+    const tgt = view.find((v) => v.id === targetId);
+    if (!src || !tgt || src.cuid === tgt.cuid) return;
+    const r = await fetch(`/api/projects/nodes/${tgt.cuid}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ parentCuid: src.cuid }),
+    });
+    if (r.ok) { toast.success(L.edgeRewired); await refetchIndex(); }
+    else toast.error(((await r.json().catch(() => null)) as { error?: string } | null)?.error ?? "Failed");
+  }, [view, refetchIndex, L.edgeRewired]);
+
+  const deleteSelectedEdge = useCallback(async () => {
+    if (!selectedEdge) return;
+    const tgt = view.find((v) => v.id === selectedEdge.target);
+    if (!tgt) return;
+    const r = await fetch(`/api/projects/nodes/${tgt.cuid}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ parentCuid: null }),
+    });
+    if (r.ok) { toast.success(L.edgeDeleted); setSelectedEdge(null); await refetchIndex(); }
+  }, [selectedEdge, view, refetchIndex, L.edgeDeleted]);
+
   // MERGE into the live React Flow node array (step 236.1) — refreshes label/sub/draft/runStatus for a node
   // that already exists WITHOUT touching its position (that stays whatever onNodesChange/a drag last put it
   // at); a brand-new node (just materialized via addChild, or the very first load) gets its saved x/y, or the
   // computed tree position. This is what makes dragging live: `flowNodes` is genuine useNodesState now, not
   // re-derived from scratch every poll.
-  // The node ROLE (2026-07-15) is authored in the node's own meta.ts (NodeContract.role) — it is NOT on the
-  // live DB index yet (iteration 1), so we read it from the build-time contract and key it by id/slug. A fresh
-  // frozen automation's three nodes always carry it; a node created later in Builder simply has no badge.
+  // The node ROLE/TYPE (2026-07-15/16) is authored in the node's own meta.ts. The LIVE values now ride the
+  // polled index (`sources`, keyed by cuid) so a draft's type change repaints instantly; the build-time
+  // contract stays as the pre-seed fallback.
   const roleById = useMemo(() => new Map(nodes.map((n) => [n.id, n.role])), [nodes]);
   const ioTypeById = useMemo(() => new Map(nodes.map((n) => [n.id, n.ioType])), [nodes]);
+  const liveRole = useCallback((cuid: string, id: string) => sources[cuid]?.role ?? roleById.get(id), [sources, roleById]);
+  const liveIoType = useCallback((cuid: string, id: string) => sources[cuid]?.ioType ?? ioTypeById.get(id), [sources, ioTypeById]);
 
   useEffect(() => {
     setFlowNodes((current) => {
@@ -303,12 +358,12 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
           id: v.id, type: "diagram", position,
           data: {
             label: v.name, sub: v.sub, runStatus: runStatus[v.id] ?? "idle", draft: v.draft,
-            builder, onAddChild: addChild, cuid: v.cuid, role: roleById.get(v.id), ioType: ioTypeById.get(v.id),
+            builder, onAddChild: addChild, cuid: v.cuid, role: liveRole(v.cuid, v.id), ioType: liveIoType(v.cuid, v.id),
           },
         };
       });
     });
-  }, [view, runStatus, builder, layout, addChild, setFlowNodes, roleById, ioTypeById]);
+  }, [view, runStatus, builder, layout, addChild, setFlowNodes, liveRole, liveIoType]);
 
   const saveLayout = useCallback(async () => {
     if (!automation) return;
@@ -401,24 +456,27 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
     }
   }, [automation, view, refetchActive, simulating]);
 
-  // Edges follow the TREE: a child links to ITS parent (parent_cuid). Roots chain to the previous root, so
-  // the default Input → Logic → Output still reads as a line. This is what makes "+" branch off the clicked
-  // node instead of appending to the end (the fatal bug the owner caught in L4).
+  // Edges follow the TREE: a child links to ITS parent (parent_cuid) — and ONLY its parent (owner
+  // 2026-07-16): the old "roots chain to the previous root" fallback is gone, because a root with no parent
+  // is now a deliberate state — the FREE node ("Add free node") must stand unlinked until the owner wires it
+  // in edge mode. Fresh frozen automations seed parent_cuid for every non-root node (lib/nodes.ts second
+  // pass), so nothing legitimate relied on the chain; the pre-seed build-time fallback still renders a line.
+  // In edge mode the selected edge is highlighted and can be deleted with the toolbar button.
   const rfEdges = useMemo<Edge[]>(() => {
     const byCuid = new Map(view.map((v) => [v.cuid, v]));
     const edges: Edge[] = [];
-    let prevRoot: (typeof view)[number] | undefined;
     for (const v of view) {
       const parent = v.parentCuid ? byCuid.get(v.parentCuid) : undefined;
-      if (parent) {
-        edges.push({ id: `${parent.id}->${v.id}`, source: parent.id, target: v.id });
-      } else {
-        if (prevRoot) edges.push({ id: `${prevRoot.id}->${v.id}`, source: prevRoot.id, target: v.id });
-        prevRoot = v;
-      }
+      if (!parent) continue;
+      const isSel = selectedEdge?.source === parent.id && selectedEdge?.target === v.id;
+      edges.push({
+        id: `${parent.id}->${v.id}`, source: parent.id, target: v.id,
+        selectable: edgeMode, focusable: edgeMode,
+        style: isSel ? { stroke: "#e11d48", strokeWidth: 2.5 } : undefined,
+      });
     }
     return edges;
-  }, [view]);
+  }, [view, edgeMode, selectedEdge]);
 
   const activeView = activeId ? view.find((v) => v.id === activeId) : undefined;
   const activeContract = activeId ? nodes.find((n) => n.id === activeId) : undefined;
@@ -435,24 +493,49 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground">
           {builder ? (
-            <span className="text-primary">Builder — add, edit or delete nodes; drag to arrange</span>
+            <span className="text-primary">{L.nodesHint}</span>
+          ) : edgeMode ? (
+            <span className="text-primary">{L.edgesHint}</span>
           ) : currentNode ? (
             <span className="text-orange-600 dark:text-orange-400">● running: {currentNode}</span>
           ) : (
             "Not running"
           )}
         </p>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           {builder && (
-            <Button variant="outline" size="sm" onClick={autoLayout} disabled={busy}>
-              <LayoutGrid className="size-3.5" /> Auto-layout
+            <>
+              <Button variant="outline" size="sm" onClick={addFreeNode} disabled={busy}>
+                <Plus className="size-3.5" /> {L.addFreeNode}
+              </Button>
+              <Button variant="outline" size="sm" onClick={autoLayout} disabled={busy}>
+                <LayoutGrid className="size-3.5" /> {L.autoLayout}
+              </Button>
+            </>
+          )}
+          {edgeMode && selectedEdge && (
+            <Button variant="outline" size="sm" onClick={deleteSelectedEdge} className="text-rose-600">
+              <Trash2 className="size-3.5" /> {L.deleteEdge}
             </Button>
           )}
-          <Button variant={builder ? "default" : "outline"} size="sm" onClick={toggleBuilder} disabled={busy}>
-            <Hammer className="size-3.5" />
-            {builder ? "Close Builder" : "Builder"}
-          </Button>
+          {/* The two build modes are DELIBERATELY separate buttons (owner 2026-07-16) — enabling one
+              closes the other, so the canvas is always in exactly one of: view / node mode / edge mode. */}
+          {!edgeMode && (
+            <Button variant={builder ? "default" : "outline"} size="sm" onClick={toggleBuilder} disabled={busy}>
+              <Hammer className="size-3.5" />
+              {builder ? L.closeBuildNodes : L.buildNodes}
+            </Button>
+          )}
           {!builder && automation && (
+            <Button
+              variant={edgeMode ? "default" : "outline"} size="sm" disabled={busy}
+              onClick={() => { setEdgeMode((m) => !m); setSelectedEdge(null); setActiveId(null); }}
+            >
+              <Spline className="size-3.5" />
+              {edgeMode ? L.closeBuildEdges : L.buildEdges}
+            </Button>
+          )}
+          {!builder && !edgeMode && automation && (
             <>
               {/* STEP 240 — the "Start development" button that used to sit here is GONE. Development is now
                   launched in exactly ONE place on the page: the wave banner under the header, which hands over
@@ -489,7 +572,9 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
             const v = view.find((x) => x.id === node.id);
             if (v) setPositions((p) => ({ ...p, [v.cuid]: { x: node.position.x, y: node.position.y } }));
           }}
-          nodesConnectable={false}
+          nodesConnectable={edgeMode}
+          onConnect={(c) => { if (edgeMode && c.source && c.target) void connectNodes(c.source, c.target); }}
+          onEdgeClick={(_, e) => { if (edgeMode) setSelectedEdge({ source: e.source, target: e.target }); }}
           nodesDraggable={builder}
           deleteKeyCode={null}
           fitView
@@ -514,6 +599,8 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
                 node={activeView.node}
                 spec={sources[activeView.cuid]?.spec ?? ""}
                 instruction={sources[activeView.cuid]?.instruction ?? ""}
+                role={liveRole(activeView.cuid, activeView.id)}
+                ioType={liveIoType(activeView.cuid, activeView.id)}
                 onChanged={() => void refetchIndex()}
                 onDeleted={() => { setActiveId(null); void refetchIndex(); }}
               />

@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, rm } from "node:fs/promises";
+import { readFile, writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { db } from "@/lib/db";
 import { authorize, resolveProject, regenerateDiagram, liveSlugsInOrder, type NodeRow } from "@/lib/nodes";
 import { setTransport } from "@/lib/entity-store";
+
+// Insert or replace one simple string field of a meta.ts source (role / ioType / parentId — the owner's
+// Builder type editor, 2026-07-16). value === null removes the field. The field is placed right after the
+// `name:` line when absent, so the file stays a hand-formatted literal like every authored meta.ts.
+function upsertMetaField(src: string, key: string, value: string | null): string {
+  const line = new RegExp(`^\\s*${key}:\\s*["'][^"']*["'],?\\s*\\n`, "m");
+  if (value === null) return src.replace(line, "");
+  const rendered = `  ${key}: ${JSON.stringify(value)},\n`;
+  if (line.test(src)) return src.replace(line, rendered);
+  return src.replace(/^(\s*name:\s*["'][^"']*["'],?\s*\n)/m, `$1${rendered}`);
+}
 
 // Edit or delete a node (step 224 L3). PATCH writes the panel edits to the co-located files: spec.md (a
 // draft's brief) and/or instruction.ts (a materialized node's system instruction — editing it is what turns
@@ -23,8 +34,47 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ cuid: str
   if (!row) return NextResponse.json({ error: "node not found" }, { status: 404 });
   const proj = resolveProject(row.automation);
   if (!proj.ok) return NextResponse.json({ error: proj.error }, { status: 400 });
-  const body = (await req.json().catch(() => ({}))) as { spec?: string; instruction?: string; name?: string };
+  const body = (await req.json().catch(() => ({}))) as {
+    spec?: string; instruction?: string; name?: string;
+    /** The Builder type editor (owner 2026-07-16): a draft's role and its per-role type (ioType — for an
+     *  intermediate node "transform" | "condition" | custom; for input/output a channel/surface key or a
+     *  custom name like "WhatsApp"). Written into the node's own meta.ts, the authored home of both. */
+    role?: string; ioType?: string;
+    /** Edge mode (owner 2026-07-16): rewire this node's PARENT — the diagram edge parent→node. A string
+     *  cuid connects, an explicit null disconnects (deletes the edge). Live truth = the index column;
+     *  meta.ts parentId is kept in sync as the seed-time fallback. */
+    parentCuid?: string | null;
+  };
   const nodeDir = join(proj.projectDir, "_nodes", row.slug);
+
+  if (typeof body.role === "string" || typeof body.ioType === "string") {
+    const metaPath = join(nodeDir, "meta.ts");
+    let meta = await readFile(metaPath, "utf8").catch(() => "");
+    if (meta) {
+      if (typeof body.role === "string" && body.role.trim()) meta = upsertMetaField(meta, "role", body.role.trim());
+      if (typeof body.ioType === "string") meta = upsertMetaField(meta, "ioType", body.ioType.trim() || null);
+      await writeFile(metaPath, meta, "utf8");
+    }
+  }
+  if (body.parentCuid !== undefined) {
+    // No self-loops, no unknown parents; null = disconnect. Cycle safety: the layout walker is already
+    // cycle-guarded, and a cycle can only arise from deliberate misuse of edge mode — still, refuse the
+    // trivial self-parent here.
+    const parentCuid = body.parentCuid === null ? null : String(body.parentCuid);
+    if (parentCuid === cuid) return NextResponse.json({ error: "a node cannot be its own parent" }, { status: 400 });
+    let parentSlug: string | null = null;
+    if (parentCuid) {
+      const p = await nodeByCuid(parentCuid);
+      if (!p || p.automation !== row.automation || p.status === "removed") {
+        return NextResponse.json({ error: "parent node not found in this automation" }, { status: 400 });
+      }
+      parentSlug = p.slug;
+    }
+    await db.prepare(`UPDATE automation_nodes SET parent_cuid = ?, updated_at = datetime('now') WHERE cuid = ?`).run(parentCuid, cuid);
+    const metaPath = join(nodeDir, "meta.ts");
+    const meta = await readFile(metaPath, "utf8").catch(() => "");
+    if (meta) await writeFile(metaPath, upsertMetaField(meta, "parentId", parentSlug), "utf8");
+  }
 
   if (typeof body.spec === "string") {
     await writeFile(join(nodeDir, "spec.md"), `${body.spec.trim()}\n`, "utf8");

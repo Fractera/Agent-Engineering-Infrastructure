@@ -8,6 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { VoiceInput } from "./voice-input.client";
 import { useWaveLock } from "./wave-lock.client";
 import type { IndexNode } from "./diagram-canvas.client";
+import { INPUT_TYPE_DESCRIPTIONS, OUTPUT_TYPE_DESCRIPTIONS, INTERMEDIATE_TYPE_DESCRIPTIONS } from "../node-contract";
+import { useUiLang } from "../use-ui-lang";
+import { builderStrings } from "../builder-i18n";
 
 // FROZEN STANDARD (step 224 L4) — the BUILDER side panel of a node. A DRAFT (red) node has no instruction
 // yet: the owner writes a free-form spec (what it should do, what result it brings) and presses "Start
@@ -25,15 +28,21 @@ export function BuilderNodePanel({
   node,
   spec,
   instruction,
+  role,
+  ioType,
   onChanged,
   onDeleted,
 }: {
   node: IndexNode;
   spec: string;
   instruction: string;
+  /** The node's LIVE role/type from its meta.ts (polled with the index) — the type editor's current value. */
+  role?: string;
+  ioType?: string;
   onChanged: () => void;
   onDeleted: () => void;
 }) {
+  const L = builderStrings(useUiLang());
   // The page-wide development lock (step 240): while a wave is with a coding agent this panel is read-only.
   const { guard, refresh: refreshWave } = useWaveLock();
   const [text, setText] = useState(node.draft ? spec : instruction);
@@ -42,7 +51,45 @@ export function BuilderNodePanel({
   const [showHistory, setShowHistory] = useState(false);
   const textRef = useRef<HTMLTextAreaElement | null>(null);
 
+  // THE TYPE EDITOR (owner 2026-07-16) — while a node is a DRAFT the owner can (re)classify it: pick the
+  // role (input/intermediate/output), then the per-role type — for an intermediate node the two kinds
+  // (transform | condition, the owner's "switch between the two middle types to build logic chains"), for
+  // input/output a channel/surface from the taxonomy or a CUSTOM name typed by hand (e.g. "WhatsApp").
+  const canonicalTypes = (r: string): string[] =>
+    r === "input" ? Object.keys(INPUT_TYPE_DESCRIPTIONS).filter((k) => k !== "custom")
+      : r === "output" ? Object.keys(OUTPUT_TYPE_DESCRIPTIONS).filter((k) => k !== "custom")
+        : Object.keys(INTERMEDIATE_TYPE_DESCRIPTIONS);
+  const [editRole, setEditRole] = useState(role ?? "intermediate");
+  const isCanonical = (r: string, t: string | undefined) => !!t && canonicalTypes(r).includes(t);
+  const [editType, setEditType] = useState<string>(
+    ioType && isCanonical(role ?? "intermediate", ioType) ? ioType : ioType ? "custom" : (role ?? "intermediate") === "intermediate" ? "transform" : "",
+  );
+  const [customType, setCustomType] = useState(ioType && !isCanonical(role ?? "intermediate", ioType) ? ioType : "");
+
   useEffect(() => setText(node.draft ? spec : instruction), [node.cuid, node.draft, spec, instruction]);
+  useEffect(() => {
+    const r = role ?? "intermediate";
+    setEditRole(r);
+    setEditType(ioType && isCanonical(r, ioType) ? ioType : ioType ? "custom" : r === "intermediate" ? "transform" : "");
+    setCustomType(ioType && !isCanonical(r, ioType) ? ioType : "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [node.cuid, role, ioType]);
+
+  const saveType = useCallback(async () => {
+    if (!guard()) return;
+    const finalType = editType === "custom" ? customType.trim() : editType;
+    setBusy(true);
+    try {
+      const r = await fetch(`/api/projects/nodes/${node.cuid}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: editRole, ioType: finalType }),
+      });
+      if (r.ok) { toast.success(L.typeSaved); onChanged(); }
+    } finally {
+      setBusy(false);
+    }
+  }, [node.cuid, editRole, editType, customType, guard, onChanged, L.typeSaved]);
 
   const save = useCallback(async () => {
     if (!guard()) return;   // a wave is with a coding agent → the lock modal explains, nothing is written
@@ -113,6 +160,55 @@ export function BuilderNodePanel({
           )}
         </p>
       </div>
+
+      {node.draft === 1 && (
+        <div className="space-y-2 rounded-md border p-2">
+          <p className="text-xs font-medium text-muted-foreground">{L.typeSection}</p>
+          <div className="space-y-1">
+            <label className="text-[11px] text-muted-foreground">{L.roleLabel}</label>
+            <select
+              className="w-full rounded-md border bg-background px-2 py-1.5 text-xs"
+              value={editRole}
+              onChange={(e) => {
+                const r = e.target.value;
+                setEditRole(r);
+                setEditType(r === "intermediate" ? "transform" : canonicalTypes(r)[0] ?? "custom");
+                setCustomType("");
+              }}
+            >
+              <option value="input">{L.roleInput}</option>
+              <option value="intermediate">{L.roleIntermediate}</option>
+              <option value="output">{L.roleOutput}</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[11px] text-muted-foreground">{L.typeLabel}</label>
+            <select
+              className="w-full rounded-md border bg-background px-2 py-1.5 text-xs"
+              value={editType}
+              onChange={(e) => setEditType(e.target.value)}
+            >
+              {canonicalTypes(editRole).map((t) => (
+                <option key={t} value={t}>
+                  {editRole === "intermediate" ? (t === "transform" ? L.typeTransform : L.typeCondition) : t}
+                </option>
+              ))}
+              <option value="custom">{L.typeCustom}</option>
+            </select>
+          </div>
+          {editType === "custom" && (
+            <input
+              className="w-full rounded-md border bg-background px-2 py-1.5 text-xs"
+              value={customType}
+              onChange={(e) => setCustomType(e.target.value)}
+              placeholder={L.customTypePlaceholder}
+            />
+          )}
+          <Button size="sm" variant="outline" onClick={saveType} disabled={busy || (editType === "custom" && !customType.trim())}>
+            {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />} {L.saveType}
+          </Button>
+        </div>
+      )}
 
       <div className="space-y-1">
         <label className="text-xs font-medium text-muted-foreground">

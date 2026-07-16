@@ -43,10 +43,18 @@ export async function GET(req: NextRequest) {
   }
 
   if (req.nextUrl.searchParams.get("withSources") === "1") {
-    const sources: Record<string, { spec: string; instruction: string }> = {};
+    // role/ioType ride along (owner 2026-07-16, the Builder type editor): the LIVE values from each node's
+    // meta.ts — the canvas must reflect a just-changed draft type instantly, without waiting for a rebuild
+    // of the build-time DIAGRAM_NODES prop.
+    const sources: Record<string, { spec: string; instruction: string; role?: string; ioType?: string }> = {};
     for (const n of nodes) {
       const f = await readNodeFiles(proj.projectDir, n.slug);
-      sources[n.cuid] = { spec: f.spec, instruction: parseInstruction(f.instruction) };
+      sources[n.cuid] = {
+        spec: f.spec,
+        instruction: parseInstruction(f.instruction),
+        role: (f.meta.match(/\brole\s*:\s*["']([^"']+)["']/) ?? [])[1],
+        ioType: (f.meta.match(/\bioType\s*:\s*["']([^"']+)["']/) ?? [])[1],
+      };
     }
     return NextResponse.json({ nodes, sources });
   }
