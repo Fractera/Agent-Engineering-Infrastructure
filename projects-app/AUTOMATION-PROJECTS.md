@@ -268,6 +268,8 @@ type ArchitectureBundle = {
   format: "full-with-history" | "current-snapshot";
   agent_instruction: string;                // the reading agent's duties — static law, includes the
                                             // warning escalation (4a) and the demo-is-a-pattern rule (2a)
+  agentFieldContracts: FieldContract[];     // the trio's lifecycle self-described IN the JSON (step 247):
+                                            // rawRequest=trigger -> summary=success-state | warning=blocked-state
   passport: Passport;                       // what this automation IS (title, immutable type, owner's
                                             // original instruction, entity toggles, isChainedGroup)
   diagram: {                                // nodes + edges — the ONLY source of behaviour

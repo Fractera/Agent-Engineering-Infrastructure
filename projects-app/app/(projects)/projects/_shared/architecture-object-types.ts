@@ -9,10 +9,20 @@ type ArchitectureBundle = {
   automation: string;                       // "<category>/<slug>"
   format: "full-with-history" | "current-snapshot";
   agent_instruction: string;                // the reading agent's duties over this whole object (static law)
+  agentFieldContracts: FieldContract[];     // the universal trio's lifecycle, self-described IN the JSON (step 247)
   generatedAt: string;                      // ISO timestamp
   passport: Passport;                       // what this automation IS
   diagram: DiagramObject;                   // nodes + edges — the ONLY source of behaviour
   entities: EntitySlice[];                  // every other entity, one uniform shape
+};
+
+// The state machine of every instance's universal trio — shipped with the bundle so the agent learns it
+// from the object itself: rawRequest (trigger) -> SUCCESS fills summary (rawRequest cleared, archived) OR
+// BLOCKED fills warning (rawRequest STAYS until the owner answers):
+type FieldContract = {
+  field: "rawRequest" | "summary" | "warning";
+  systemRole: "trigger" | "success-state" | "blocked-state";
+  instruction: string;
 };
 
 type Passport = {

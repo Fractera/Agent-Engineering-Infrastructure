@@ -162,6 +162,48 @@ const AGENT_INSTRUCTION_CORE =
   "summary, and so will you on the next development iteration. " +
   "(6) If the passport says isChainedGroup:true, this automation is a container of other automations — its " +
   "real architecture is the `chain` slice, not its own diagram.";
+// ─── THE FIELD CONTRACTS (step 247, owner's design) — the universal trio's lifecycle, IN the JSON itself ───
+// Self-describing law shipped with every bundle, so the reading agent learns the rawRequest/summary/warning
+// state machine from the object it holds, without the external document. Static in code, like every other
+// instruction. One correction to the owner's draft is deliberate: on BLOCKED the rawRequest is NOT cleared —
+// it coexists with the warning (step 246), only SUCCESS clears it (the system archives the original).
+export type FieldContract = {
+  field: "rawRequest" | "summary" | "warning";
+  systemRole: "trigger" | "success-state" | "blocked-state";
+  instruction: string;
+};
+
+const AGENT_FIELD_CONTRACTS: FieldContract[] = [
+  {
+    field: "rawRequest",
+    systemRole: "trigger",
+    instruction:
+      "The incoming development trigger. Non-empty = the owner left a wish you MUST take into development: " +
+      "research the request and drive this node/edge/object to one of two terminal states — SUCCESS (you " +
+      "write its summary) or BLOCKED (you write its warning). On SUCCESS the system clears this field (the " +
+      "original is archived to history). On BLOCKED it STAYS, coexisting with the warning — the task is not " +
+      "done, and the owner's answer will be appended right here to re-enter the wave.",
+  },
+  {
+    field: "summary",
+    systemRole: "success-state",
+    instruction:
+      "Written ONLY when the rawRequest's task is successfully realised. A compact text (≤300 characters, in " +
+      "the owner's language) saying how this object works now: what it takes in and what it returns under " +
+      "its contract. Written via POST /api/projects/entity-summary. Never fill it for unfinished work.",
+  },
+  {
+    field: "warning",
+    systemRole: "blocked-state",
+    instruction:
+      "Written ONLY when the rawRequest's task is impossible with your means (credentials, keys, captcha, " +
+      "registration, or an owner decision). Structured, three layers (agent_instruction 4a): subject = ≤10 " +
+      "plain words naming the need; blocker = 1-3 plain sentences for a non-technical owner; " +
+      "hermesInstruction = the technical brief for the Hermes agent. NEVER write fake stub code instead of " +
+      "raising a warning.",
+  },
+];
+
 const AGENT_INSTRUCTION_TAIL_FULL =
   " FORMAT NOTE: this is the FULL format — every instance also carries its complete version history[] " +
   "(oldest first). Use it at the start of a coding session or for deep debugging.";
@@ -802,6 +844,9 @@ export type ArchitectureBundle = {
   format: "full-with-history" | "current-snapshot";
   /** The GENERAL instruction for the reading agent — its duties over this whole object (static, in code). */
   agent_instruction: string;
+  /** The universal trio's lifecycle (trigger / success-state / blocked-state), self-described IN the JSON
+   *  (step 247) — the agent learns the state machine from the object itself, not the external document. */
+  agentFieldContracts: FieldContract[];
   generatedAt: string;
   /** The automation's own identity — title, description, type, the owner's instruction, README, toggles,
    *  plus the universal pair (rawRequest always ''; summary = the owner-validated "How it works"). */
@@ -845,6 +890,7 @@ export async function buildArchitecture(automation: string, withHistory: boolean
     automation,
     format: withHistory ? "full-with-history" : "current-snapshot",
     agent_instruction: AGENT_INSTRUCTION_CORE + (withHistory ? AGENT_INSTRUCTION_TAIL_FULL : AGENT_INSTRUCTION_TAIL_CURRENT),
+    agentFieldContracts: AGENT_FIELD_CONTRACTS,
     generatedAt: new Date().toISOString(),
     passport,
     diagram: {
