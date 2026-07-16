@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Lock, RotateCcw, Rocket, Clock } from "lucide-react";
+import { Copy, Loader2, Lock, RotateCcw, Rocket, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -63,15 +63,34 @@ function WaveBannerInner({ automation }: { automation: string }) {
   if (wave.state === "idle") return null;
 
   if (wave.state === "locked") {
+    // The locked banner GUIDES, not just informs (owner 2026-07-16): it says whom to hand the brief to and
+    // carries the SAME copyable hand-off instruction as the launch dialog — so a reload never strands the
+    // owner without the text his coding agent needs.
+    const handoff = wave.step ? L.handoffLine.replace("{n}", String(wave.step)) : "";
     return (
-      <div className="flex items-start gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
-        <Lock className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
-        <div className="space-y-1">
-          <p className="text-sm font-medium text-foreground">{L.lockedTitle}</p>
-          <p className="text-sm text-muted-foreground">
-            {wave.step ? L.lockedBody.replace("{n}", String(wave.step)) : L.lockBodyNoStep}
-          </p>
+      <div className="space-y-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
+        <div className="flex items-start gap-3">
+          <Lock className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">{L.lockedTitle}</p>
+            <p className="text-sm text-muted-foreground">
+              {wave.step ? L.lockedBody.replace("{n}", String(wave.step)) : L.lockBodyNoStep}
+            </p>
+          </div>
         </div>
+        {wave.step ? (
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-background/60 p-2">
+            <code className="min-w-0 flex-1 break-words [overflow-wrap:anywhere] text-sm">{handoff}</code>
+            <Button
+              size="sm"
+              variant="outline"
+              className="shrink-0"
+              onClick={() => { void navigator.clipboard.writeText(handoff); toast.success(L.lockedCopied); }}
+            >
+              <Copy className="size-3.5" /> {L.lockedCopy}
+            </Button>
+          </div>
+        ) : null}
       </div>
     );
   }

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useUiLang } from "../use-ui-lang";
+import { waveStrings } from "../wave-i18n";
 import { adminBase } from "@/lib/runtime-urls";
 
 // THE LAUNCH DIALOG (step 233; became the WAVE's launcher in step 240) — the owner's single hand-off. It:
@@ -26,7 +27,7 @@ type SD = {
   button: string; title: string;
   building: string;
   reviewHeading: string; reviewIntro: string; confirm: string; confirming: string;
-  doneHeading: string; runInstruction: string; runHint: string; copy: string; copied: string; openSteps: string;
+  doneHeading: string; runHint: string; copy: string; copied: string; openSteps: string;
   noCasesTitle: string; noCasesBody: string; noNodesTitle: string; noNodesBody: string;
   failed: string; noDescription: string;
 };
@@ -38,7 +39,6 @@ const I18N: Record<string, SD> = {
     reviewIntro: "This is where you and the AI agree. Read what it understood; if anything is wrong, close this and fix the case with its pencil. Development starts only after you confirm.",
     confirm: "I read them — the AI understood me", confirming: "Confirming…",
     doneHeading: "Development step created",
-    runInstruction: "Run development step #{n}",
     runHint: "Paste this line to your AI coding agent (Claude Code / Codex / …). It picks the step up from the Development Steps page — with everything it needs inside.",
     copy: "Copy", copied: "Copied — paste it to your coding agent.", openSteps: "Open Development Steps",
     noCasesTitle: "Describe the use cases first", noCasesBody: "This automation has no use cases yet. Open the Quiz on this page and describe your scenarios — development cannot start without them.",
@@ -52,7 +52,6 @@ const I18N: Record<string, SD> = {
     reviewIntro: "Здесь вы и ИИ договариваетесь. Прочитайте, что он понял; если что-то не так — закройте и поправьте кейс карандашом. Разработка начнётся только после подтверждения.",
     confirm: "Я прочитал — ИИ понял меня правильно", confirming: "Подтверждаю…",
     doneHeading: "Шаг разработки создан",
-    runInstruction: "Запусти в работу шаг №{n}",
     runHint: "Вставьте эту строку вашему ИИ-агенту-кодеру (Claude Code / Codex / …). Он возьмёт шаг со страницы Development Steps — со всем необходимым внутри.",
     copy: "Скопировать", copied: "Скопировано — вставьте агенту-кодеру.", openSteps: "Открыть Development Steps",
     noCasesTitle: "Сначала опишите пользовательские кейсы", noCasesBody: "У этой автоматизации ещё нет кейсов. Откройте Quiz на этой странице и опишите сценарии — без них разработку не начать.",
@@ -66,7 +65,6 @@ const I18N: Record<string, SD> = {
     reviewIntro: "Aquí es donde tú y la IA os ponéis de acuerdo. Lee lo que entendió; si algo está mal, cierra y corrige el caso con su lápiz. El desarrollo empieza solo después de que confirmes.",
     confirm: "Los leí — la IA me entendió", confirming: "Confirmando…",
     doneHeading: "Paso de desarrollo creado",
-    runInstruction: "Pon en marcha el paso n.º {n}",
     runHint: "Pega esta línea a tu agente de código de IA (Claude Code / Codex / …). Recoge el paso desde la página de Development Steps, con todo lo necesario dentro.",
     copy: "Copiar", copied: "Copiado — pégalo a tu agente de código.", openSteps: "Abrir Development Steps",
     noCasesTitle: "Describe primero los casos de uso", noCasesBody: "Esta automatización aún no tiene casos de uso. Abre el Quiz en esta página y describe tus escenarios — sin ellos no se puede empezar el desarrollo.",
@@ -80,7 +78,6 @@ const I18N: Record<string, SD> = {
     reviewIntro: "C'est ici que vous et l'IA vous mettez d'accord. Lisez ce qu'elle a compris ; si quelque chose ne va pas, fermez et corrigez le cas avec son crayon. Le développement ne commence qu'après votre confirmation.",
     confirm: "Je les ai lus — l'IA m'a compris", confirming: "Confirmation…",
     doneHeading: "Étape de développement créée",
-    runInstruction: "Lance l'étape n° {n}",
     runHint: "Collez cette ligne à votre agent de code IA (Claude Code / Codex / …). Il récupère l'étape depuis la page Development Steps, avec tout le nécessaire dedans.",
     copy: "Copier", copied: "Copié — collez-le à votre agent de code.", openSteps: "Ouvrir Development Steps",
     noCasesTitle: "Décrivez d'abord les cas d'usage", noCasesBody: "Cette automatisation n'a pas encore de cas d'usage. Ouvrez le Quiz sur cette page et décrivez vos scénarios — sans eux, le développement ne peut pas commencer.",
@@ -94,7 +91,6 @@ const I18N: Record<string, SD> = {
     reviewIntro: "Qui tu e l'IA vi mettete d'accordo. Leggi ciò che ha capito; se qualcosa non va, chiudi e correggi il caso con la sua matita. Lo sviluppo inizia solo dopo la tua conferma.",
     confirm: "Li ho letti — l'IA mi ha capito", confirming: "Conferma…",
     doneHeading: "Passo di sviluppo creato",
-    runInstruction: "Avvia il passo n. {n}",
     runHint: "Incolla questa riga al tuo agente di codice IA (Claude Code / Codex / …). Prende il passo dalla pagina Development Steps, con tutto il necessario dentro.",
     copy: "Copia", copied: "Copiato — incollalo al tuo agente di codice.", openSteps: "Apri Development Steps",
     noCasesTitle: "Descrivi prima i casi d'uso", noCasesBody: "Questa automazione non ha ancora casi d'uso. Apri il Quiz in questa pagina e descrivi i tuoi scenari — senza di essi non si può iniziare lo sviluppo.",
@@ -108,7 +104,6 @@ const I18N: Record<string, SD> = {
     reviewIntro: "Hier einigt ihr euch, du und die KI. Lies, was sie verstanden hat; wenn etwas nicht stimmt, schließe und korrigiere den Fall mit seinem Stift. Die Entwicklung startet erst nach deiner Bestätigung.",
     confirm: "Ich habe sie gelesen — die KI hat mich verstanden", confirming: "Bestätige…",
     doneHeading: "Entwicklungsschritt erstellt",
-    runInstruction: "Starte Schritt Nr. {n}",
     runHint: "Füge diese Zeile deinem KI-Coding-Agenten ein (Claude Code / Codex / …). Er holt den Schritt von der Development-Steps-Seite — mit allem Nötigen darin.",
     copy: "Kopieren", copied: "Kopiert — füge es deinem Coding-Agenten ein.", openSteps: "Development Steps öffnen",
     noCasesTitle: "Beschreibe zuerst die Anwendungsfälle", noCasesBody: "Diese Automatisierung hat noch keine Anwendungsfälle. Öffne das Quiz auf dieser Seite und beschreibe deine Szenarien — ohne sie kann die Entwicklung nicht beginnen.",
@@ -122,7 +117,6 @@ const I18N: Record<string, SD> = {
     reviewIntro: "É aqui que você e a IA chegam a acordo. Leia o que ela percebeu; se algo estiver errado, feche e corrija o caso com o lápis. O desenvolvimento só começa depois de confirmar.",
     confirm: "Li-os — a IA percebeu-me", confirming: "A confirmar…",
     doneHeading: "Passo de desenvolvimento criado",
-    runInstruction: "Executar o passo n.º {n}",
     runHint: "Cole esta linha no seu agente de código de IA (Claude Code / Codex / …). Ele recolhe o passo a partir da página Development Steps — com tudo o que precisa lá dentro.",
     copy: "Copiar", copied: "Copiado — cole-o no seu agente de código.", openSteps: "Abrir Development Steps",
     noCasesTitle: "Descreva primeiro os casos de uso", noCasesBody: "Esta automação ainda não tem casos de uso. Abra o Quiz nesta página e descreva os seus cenários — sem eles o desenvolvimento não pode começar.",
@@ -136,7 +130,6 @@ const I18N: Record<string, SD> = {
     reviewIntro: "Tutaj ty i AI dochodzicie do porozumienia. Przeczytaj, co zrozumiała; jeśli coś jest nie tak, zamknij i popraw przypadek ołówkiem. Rozwój zaczyna się dopiero po twoim potwierdzeniu.",
     confirm: "Przeczytałem je — AI mnie zrozumiała", confirming: "Potwierdzam…",
     doneHeading: "Krok rozwoju utworzony",
-    runInstruction: "Uruchom krok nr {n}",
     runHint: "Wklej tę linię swojemu agentowi kodującemu AI (Claude Code / Codex / …). Pobierze krok ze strony Development Steps — ze wszystkim, czego potrzebuje w środku.",
     copy: "Kopiuj", copied: "Skopiowano — wklej agentowi kodującemu.", openSteps: "Otwórz Development Steps",
     noCasesTitle: "Najpierw opisz przypadki użycia", noCasesBody: "Ta automatyzacja nie ma jeszcze przypadków użycia. Otwórz Quiz na tej stronie i opisz swoje scenariusze — bez nich rozwój nie może się rozpocząć.",
@@ -150,7 +143,6 @@ const I18N: Record<string, SD> = {
     reviewIntro: "Burada siz ve yapay zekâ anlaşırsınız. Ne anladığını okuyun; bir şey yanlışsa kapatın ve senaryoyu kalemiyle düzeltin. Geliştirme yalnızca onayınızdan sonra başlar.",
     confirm: "Onları okudum — yapay zekâ beni anladı", confirming: "Onaylanıyor…",
     doneHeading: "Geliştirme adımı oluşturuldu",
-    runInstruction: "#{n} numaralı geliştirme adımını çalıştır",
     runHint: "Bu satırı yapay zekâ kod ajanınıza yapıştırın (Claude Code / Codex / …). İçinde ihtiyaç duyduğu her şeyle birlikte adımı Development Steps sayfasından alır.",
     copy: "Kopyala", copied: "Kopyalandı — kod ajanınıza yapıştırın.", openSteps: "Development Steps'i aç",
     noCasesTitle: "Önce kullanım senaryolarını tanımlayın", noCasesBody: "Bu otomasyonun henüz kullanım senaryosu yok. Bu sayfadaki Quiz'i açın ve senaryolarınızı tanımlayın — onlar olmadan geliştirme başlayamaz.",
@@ -164,7 +156,6 @@ const I18N: Record<string, SD> = {
     reviewIntro: "Hier komen jij en de AI tot overeenstemming. Lees wat ze begrepen heeft; klopt er iets niet, sluit dan en corrigeer de case met het potlood. De ontwikkeling begint pas na jouw bevestiging.",
     confirm: "Ik heb ze gelezen — de AI heeft me begrepen", confirming: "Bevestigen…",
     doneHeading: "Ontwikkelstap aangemaakt",
-    runInstruction: "Voer ontwikkelstap #{n} uit",
     runHint: "Plak deze regel in je AI coding agent (Claude Code / Codex / …). Die haalt de stap op van de Development Steps-pagina — met alles wat nodig is erin.",
     copy: "Kopiëren", copied: "Gekopieerd — plak het in je coding agent.", openSteps: "Development Steps openen",
     noCasesTitle: "Beschrijf eerst de use cases", noCasesBody: "Deze automatisering heeft nog geen use cases. Open de Quiz op deze pagina en beschrijf je scenario's — zonder deze kan de ontwikkeling niet beginnen.",
@@ -186,14 +177,18 @@ export function StartDevelopment({
   /** Fired once the wave step exists, so the banner can flip to its locked state immediately. */
   onLaunched?: () => void;
 }) {
-  const L = I18N[useUiLang()] ?? I18N.en;
+  const lang = useUiLang();
+  const L = I18N[lang] ?? I18N.en;
+  // The hand-off line comes from wave-i18n (single source, owner 2026-07-16) — the locked banner shows the
+  // exact same text, so what the owner copies never depends on WHERE he copies it.
+  const W = waveStrings(lang);
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("loading");
   const [busy, setBusy] = useState(false);
   const [cases, setCases] = useState<Case[]>([]);
   const [stepNumber, setStepNumber] = useState<number | null>(null);
 
-  const runLine = stepNumber !== null ? L.runInstruction.replace("{n}", String(stepNumber)) : "";
+  const runLine = stepNumber !== null ? W.handoffLine.replace("{n}", String(stepNumber)) : "";
 
   // Ask the server to create the ONE bundled step. The gate answers 409 (not-reviewed → show the cases to
   // confirm right here; no-cases / no-nodes → say why). 200 → the step number is ready.
@@ -306,7 +301,7 @@ export function StartDevelopment({
           {mode === "done" && stepNumber !== null && (
             <div className="space-y-3">
               <div className="flex items-center gap-2 rounded-lg border bg-muted p-3">
-                <code className="flex-1 text-sm font-medium">{runLine}</code>
+                <code className="min-w-0 flex-1 break-words [overflow-wrap:anywhere] text-sm font-medium">{runLine}</code>
                 <Button
                   size="sm"
                   variant="outline"
