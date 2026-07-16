@@ -524,10 +524,10 @@ const SCHEMA = `
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
   -- THE ENTITY SUMMARY (owner 2026-07-16, the rawRequest/summary refactor) — the AI-written compact result
-  -- description of ONE entity instance (≤300 characters, in the owner's language). The write half of the
-  -- universal lifecycle: an agent finishing an entity's development clears its rawRequest (archived to
+  -- description of ONE entity instance (max 300 characters, in the owner language). The write half of the
+  -- universal lifecycle: an agent finishing an entity development clears its rawRequest (archived to
   -- entity_history by the existing start-development machinery) and WRITES its summary here. Nodes fall back
-  -- to their co-located meta.ts `description` when no row exists. Same (automation, entity_type, entity_ref)
+  -- to their co-located meta.ts description when no row exists. Same (automation, entity_type, entity_ref)
   -- key as entity_transport/entity_history.
   CREATE TABLE IF NOT EXISTS entity_summary (
     automation  TEXT NOT NULL,
