@@ -529,6 +529,19 @@ const SCHEMA = `
   -- entity_history by the existing start-development machinery) and WRITES its summary here. Nodes fall back
   -- to their co-located meta.ts description when no row exists. Same (automation, entity_type, entity_ref)
   -- key as entity_transport/entity_history.
+  -- DIAGRAM EDGES (owner 2026-07-16) — the INTERNAL edges of one automation's diagram as their own list,
+  -- many-to-many. Until now an edge was derived from the node's single parent_cuid, which made FAN-IN
+  -- impossible (connecting a second edge into a node silently replaced the first). A node can now have any
+  -- number of incoming and outgoing edges (two inputs converging on one dashboard output is normal); the
+  -- only rules are no exact duplicates (the UNIQUE) and no self-loops (checked in the route). parent_cuid
+  -- stays as the LAYOUT hint (tree columns), no longer the edge truth.
+  CREATE TABLE IF NOT EXISTS automation_diagram_edges (
+    automation TEXT NOT NULL,
+    from_cuid  TEXT NOT NULL,
+    to_cuid    TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(automation, from_cuid, to_cuid)
+  );
   CREATE TABLE IF NOT EXISTS entity_summary (
     automation  TEXT NOT NULL,
     entity_type TEXT NOT NULL,

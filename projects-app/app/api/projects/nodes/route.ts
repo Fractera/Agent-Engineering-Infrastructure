@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authorize, resolveProject, syncIndexFromFiles, listNodes, readNodeFiles, readNodePorts } from "@/lib/nodes";
+import { authorize, resolveProject, syncIndexFromFiles, listNodes, listDiagramEdges, readNodeFiles, readNodePorts } from "@/lib/nodes";
 
 // The live canvas index (step 224 L3) — GET ?automation=<category>/<slug> returns the lightweight node
 // list the Builder canvas renders (cuid, name, draft, position, versions). It seeds the index from the
@@ -31,6 +31,9 @@ export async function GET(req: NextRequest) {
   if (!proj.ok) return NextResponse.json({ error: proj.error }, { status: 400 });
   await syncIndexFromFiles(proj.automation, proj.projectDir);
   const nodes = await listNodes(proj.automation);
+  // The diagram's edge LIST (owner 2026-07-16, fan-in fix) — rides every index response; the canvas renders
+  // edges from THIS, never from the single parent_cuid (which stays as a layout hint only).
+  const edges = await listDiagramEdges(proj.automation);
 
   // The Builder panel also needs each node's editable text — a draft's spec.md, a materialized node's
   // instruction.ts. Small (the panel edits them); the heavy version snapshots are never included.
@@ -39,7 +42,7 @@ export async function GET(req: NextRequest) {
   if (req.nextUrl.searchParams.get("withPorts") === "1") {
     const ports: Record<string, { in: string[]; out: string[] }> = {};
     for (const n of nodes) ports[n.cuid] = await readNodePorts(proj.projectDir, n.slug);
-    return NextResponse.json({ nodes, ports });
+    return NextResponse.json({ nodes, edges, ports });
   }
 
   if (req.nextUrl.searchParams.get("withSources") === "1") {
@@ -56,7 +59,7 @@ export async function GET(req: NextRequest) {
         ioType: (f.meta.match(/\bioType\s*:\s*["']([^"']+)["']/) ?? [])[1],
       };
     }
-    return NextResponse.json({ nodes, sources });
+    return NextResponse.json({ nodes, edges, sources });
   }
-  return NextResponse.json({ nodes });
+  return NextResponse.json({ nodes, edges });
 }

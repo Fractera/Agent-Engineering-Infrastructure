@@ -119,6 +119,30 @@ export async function syncIndexFromFiles(automation: string, projectDir: string)
       `UPDATE automation_nodes SET parent_cuid = ?, updated_at = datetime('now') WHERE automation = ? AND slug = ?`,
     ).run(parentCuid, automation, row.slug);
   }
+
+  // THIRD PASS — seed the diagram-edge LIST from the parents (owner 2026-07-16, the fan-in fix). Edges are
+  // their own many-to-many table now (automation_diagram_edges); a fresh frozen automation's declared tree
+  // lands there as its initial edges, and edge mode then adds/removes rows freely — several edges INTO one
+  // node are normal. INSERT OR IGNORE keeps this idempotent on every canvas poll.
+  const fresh = (await db.prepare(
+    `SELECT cuid, parent_cuid FROM automation_nodes WHERE automation = ? AND status != 'removed'`,
+  ).all(automation)) as { cuid: string; parent_cuid: string | null }[];
+  for (const r of fresh) {
+    if (!r.parent_cuid || r.parent_cuid === r.cuid) continue;
+    await db.prepare(
+      `INSERT OR IGNORE INTO automation_diagram_edges (automation, from_cuid, to_cuid) VALUES (?, ?, ?)`,
+    ).run(automation, r.parent_cuid, r.cuid);
+  }
+}
+
+/** The diagram's edge list (owner 2026-07-16) — live rows only (both endpoints alive). */
+export async function listDiagramEdges(automation: string): Promise<{ from_cuid: string; to_cuid: string }[]> {
+  return (await db.prepare(
+    `SELECT e.from_cuid, e.to_cuid FROM automation_diagram_edges e
+     JOIN automation_nodes a ON a.cuid = e.from_cuid AND a.status != 'removed'
+     JOIN automation_nodes b ON b.cuid = e.to_cuid   AND b.status != 'removed'
+     WHERE e.automation = ?`,
+  ).all(automation)) as { from_cuid: string; to_cuid: string }[];
 }
 
 export async function listNodes(automation: string): Promise<NodeRow[]> {

@@ -51,6 +51,7 @@ export type IndexNode = {
   status: string;
 };
 type Sources = Record<string, { spec: string; instruction: string; role?: string; ioType?: string }>;
+type EdgeRow = { from_cuid: string; to_cuid: string };
 
 type RunStatus = "idle" | "running" | "ok" | "fail";
 type CanvasNodeData = {
@@ -149,9 +150,12 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
   const [builder, setBuilder] = useState(false);
   // EDGE MODE (owner 2026-07-16) — a SEPARATE mode from node building, never merged into one ("that would
   // create button confusion"): here the owner draws an edge by dragging between nodes and deletes a selected
-  // edge. An edge IS the target node's parent (parent_cuid) — connect/delete PATCH that one field.
+  // edge. Edges are their OWN many-to-many list (automation_diagram_edges, the fan-in fix) — a node takes
+  // any number of incoming and outgoing edges; connecting a second edge into a node no longer replaces the
+  // first. No "may these connect?" validation, by the owner's explicit ruling.
   const [edgeMode, setEdgeMode] = useState(false);
   const [selectedEdge, setSelectedEdge] = useState<{ source: string; target: string } | null>(null);
+  const [edgeRows, setEdgeRows] = useState<EdgeRow[]>([]);
   const [index, setIndex] = useState<IndexNode[]>([]);
   const [sources, setSources] = useState<Sources>({});
   // BATCHED save accumulator only now (step 236.1) — a drag no longer feeds rendering through this (that's
@@ -173,15 +177,19 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
         cache: "no-store",
       });
       if (!r.ok) return;
-      const d = (await r.json()) as { nodes: IndexNode[]; sources?: Sources };
+      const d = (await r.json()) as { nodes: IndexNode[]; edges?: EdgeRow[]; sources?: Sources };
       const nodes = d.nodes ?? [];
-      // role/ioType are part of the signature (owner 2026-07-16): saving a draft's type must repaint the
-      // canvas (square ⇄ rectangle, badges) on the next poll, not only when a node row itself changes.
-      const sig = JSON.stringify(nodes.map((n) => [n.cuid, n.slug, n.name, n.draft, n.active_version, n.x, n.y, n.parent_cuid, n.status,
-        d.sources?.[n.cuid]?.role, d.sources?.[n.cuid]?.ioType]));
+      // role/ioType and the edge list are part of the signature (owner 2026-07-16): saving a draft's type or
+      // wiring an edge must repaint the canvas on the next poll, not only when a node row itself changes.
+      const sig = JSON.stringify([
+        nodes.map((n) => [n.cuid, n.slug, n.name, n.draft, n.active_version, n.x, n.y, n.parent_cuid, n.status,
+          d.sources?.[n.cuid]?.role, d.sources?.[n.cuid]?.ioType]),
+        d.edges ?? [],
+      ]);
       if (sig === indexSig.current) return; // nothing changed — do NOT churn the canvas
       indexSig.current = sig;
       setIndex(nodes);
+      setEdgeRows(d.edges ?? []);
       setSources(d.sources ?? {});
     } catch { /* keep the last good index */ }
   }, [automation]);
@@ -304,32 +312,33 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
     } finally { setBusy(false); }
   }, [automation, busy, refetchIndex]);
 
-  // Edge mode's two operations — both are one PATCH of the TARGET node's parentCuid (an edge is derived
-  // state, never a separate record; same doctrine as the architecture bundle's edges).
+  // Edge mode's two operations — plain rows in the edge list (owner 2026-07-16, fan-in fix): connect ADDS a
+  // row (never replacing an existing edge into the same node), delete removes exactly the selected row.
   const connectNodes = useCallback(async (sourceId: string, targetId: string) => {
     const src = view.find((v) => v.id === sourceId);
     const tgt = view.find((v) => v.id === targetId);
-    if (!src || !tgt || src.cuid === tgt.cuid) return;
-    const r = await fetch(`/api/projects/nodes/${tgt.cuid}`, {
-      method: "PATCH",
+    if (!src || !tgt || src.cuid === tgt.cuid || !automation) return;
+    const r = await fetch(`/api/projects/nodes/edges`, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ parentCuid: src.cuid }),
+      body: JSON.stringify({ automation, fromCuid: src.cuid, toCuid: tgt.cuid }),
     });
     if (r.ok) { toast.success(L.edgeRewired); await refetchIndex(); }
     else toast.error(((await r.json().catch(() => null)) as { error?: string } | null)?.error ?? "Failed");
-  }, [view, refetchIndex, L.edgeRewired]);
+  }, [view, automation, refetchIndex, L.edgeRewired]);
 
   const deleteSelectedEdge = useCallback(async () => {
-    if (!selectedEdge) return;
+    if (!selectedEdge || !automation) return;
+    const src = view.find((v) => v.id === selectedEdge.source);
     const tgt = view.find((v) => v.id === selectedEdge.target);
-    if (!tgt) return;
-    const r = await fetch(`/api/projects/nodes/${tgt.cuid}`, {
-      method: "PATCH",
+    if (!src || !tgt) return;
+    const r = await fetch(`/api/projects/nodes/edges`, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ parentCuid: null }),
+      body: JSON.stringify({ automation, fromCuid: src.cuid, toCuid: tgt.cuid, remove: true }),
     });
     if (r.ok) { toast.success(L.edgeDeleted); setSelectedEdge(null); await refetchIndex(); }
-  }, [selectedEdge, view, refetchIndex, L.edgeDeleted]);
+  }, [selectedEdge, view, automation, refetchIndex, L.edgeDeleted]);
 
   // MERGE into the live React Flow node array (step 236.1) — refreshes label/sub/draft/runStatus for a node
   // that already exists WITHOUT touching its position (that stays whatever onNodesChange/a drag last put it
@@ -456,27 +465,35 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
     }
   }, [automation, view, refetchActive, simulating]);
 
-  // Edges follow the TREE: a child links to ITS parent (parent_cuid) — and ONLY its parent (owner
-  // 2026-07-16): the old "roots chain to the previous root" fallback is gone, because a root with no parent
-  // is now a deliberate state — the FREE node ("Add free node") must stand unlinked until the owner wires it
-  // in edge mode. Fresh frozen automations seed parent_cuid for every non-root node (lib/nodes.ts second
-  // pass), so nothing legitimate relied on the chain; the pre-seed build-time fallback still renders a line.
+  // Edges render from the EDGE LIST (owner 2026-07-16, fan-in fix) — automation_diagram_edges rows, seeded
+  // from the template's declared tree and edited freely in edge mode. Many-to-many: several edges INTO one
+  // node (Telegram + site → one dashboard) are normal. parent_cuid is only the layout hint now. Before the
+  // index seeds, fall back to the build-time linear chain so a brand-new page still shows a line.
   // In edge mode the selected edge is highlighted and can be deleted with the toolbar button.
   const rfEdges = useMemo<Edge[]>(() => {
     const byCuid = new Map(view.map((v) => [v.cuid, v]));
-    const edges: Edge[] = [];
-    for (const v of view) {
-      const parent = v.parentCuid ? byCuid.get(v.parentCuid) : undefined;
-      if (!parent) continue;
-      const isSel = selectedEdge?.source === parent.id && selectedEdge?.target === v.id;
-      edges.push({
-        id: `${parent.id}->${v.id}`, source: parent.id, target: v.id,
+    const pairs: { s: string; t: string }[] = [];
+    if (edgeRows.length || index.length) {
+      for (const e of edgeRows) {
+        const s = byCuid.get(e.from_cuid);
+        const t = byCuid.get(e.to_cuid);
+        if (s && t) pairs.push({ s: s.id, t: t.id });
+      }
+    } else {
+      for (const v of view) {
+        const parent = v.parentCuid ? byCuid.get(v.parentCuid) : undefined;
+        if (parent) pairs.push({ s: parent.id, t: v.id });
+      }
+    }
+    return pairs.map(({ s, t }) => {
+      const isSel = selectedEdge?.source === s && selectedEdge?.target === t;
+      return {
+        id: `${s}->${t}`, source: s, target: t,
         selectable: edgeMode, focusable: edgeMode,
         style: isSel ? { stroke: "#e11d48", strokeWidth: 2.5 } : undefined,
-      });
-    }
-    return edges;
-  }, [view, edgeMode, selectedEdge]);
+      };
+    });
+  }, [view, index.length, edgeRows, edgeMode, selectedEdge]);
 
   const activeView = activeId ? view.find((v) => v.id === activeId) : undefined;
   const activeContract = activeId ? nodes.find((n) => n.id === activeId) : undefined;

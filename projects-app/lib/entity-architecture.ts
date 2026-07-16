@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { resolveProject, listNodes, readNodeFiles } from "@/lib/nodes";
+import { resolveProject, listNodes, listDiagramEdges, readNodeFiles } from "@/lib/nodes";
 import { listEdges, readEdgeFiles, readChainSpec, groupMembers } from "@/lib/edges";
 import { listCases, reviewState } from "@/lib/use-cases";
 import { getLiveEntities } from "@/lib/entities-live";
@@ -397,10 +397,12 @@ async function extractNode(automation: string, withHistory: boolean): Promise<No
 }
 
 // ─── THE DIAGRAM EDGES (owner 2026-07-16 — the second half of the `diagram` object) ─────────────────────
-// Derived, never separately stored: an edge is "this node declares that parent" (live index parent_cuid,
-// meta.ts parentId as fallback, the previous node for a legacy linear chain). `when` carries the target's
-// own conditions when the target is a CONDITION node — that is how a branch reads on the object: two edges
-// leave lookup, one per condition gate, and only the success gate's edge continues to the output.
+// Read from the diagram's own edge LIST (automation_diagram_edges — the fan-in fix: a node takes any number
+// of incoming and outgoing edges; a second edge into a node no longer replaces the first). The list is
+// seeded from the template's declared parents by syncIndexFromFiles and edited in the canvas's edge mode.
+// `when` carries the TARGET's own conditions when the target is a CONDITION node — that is how a branch
+// reads on the object: two edges leave lookup, one per condition gate, and only the success gate's edge
+// continues to the output. Fallback (empty list, e.g. an automation never opened): derive from the parents.
 
 export type DiagramEdge = {
   from: string; to: string; fromName: string; toName: string;
@@ -423,6 +425,22 @@ async function extractDiagramEdges(automation: string): Promise<DiagramEdge[]> {
   }
   const bySlug = new Map(nodes.map((n) => [n.slug, n]));
   const byCuid = new Map(nodes.map((n) => [n.cuid, n]));
+  const whenOf = (target: (typeof nodes)[number]): string | null => {
+    const meta = metas.get(target.slug);
+    return meta?.ioType === "condition" && meta.conditions.length ? meta.conditions.join("; ") : null;
+  };
+  const rows = await listDiagramEdges(automation);
+  if (rows.length) {
+    const edges: DiagramEdge[] = [];
+    for (const r of rows) {
+      const s = byCuid.get(r.from_cuid);
+      const t = byCuid.get(r.to_cuid);
+      if (!s || !t) continue;
+      edges.push({ from: s.cuid, to: t.cuid, fromName: s.name, toName: t.name, when: whenOf(t), rawRequest: "", summary: "" });
+    }
+    return edges;
+  }
+  // Fallback — the declared-parent derivation (an automation whose index/edge list was never seeded).
   const edges: DiagramEdge[] = [];
   nodes.forEach((n, i) => {
     const meta = metas.get(n.slug);
@@ -431,8 +449,7 @@ async function extractDiagramEdges(automation: string): Promise<DiagramEdge[]> {
       ?? (meta?.parentId ? bySlug.get(meta.parentId) : undefined)
       ?? (i > 0 ? nodes[i - 1] : undefined);
     if (!parent || parent.cuid === n.cuid) return;
-    const when = meta?.ioType === "condition" && meta.conditions.length ? meta.conditions.join("; ") : null;
-    edges.push({ from: parent.cuid, to: n.cuid, fromName: parent.name, toName: n.name, when, rawRequest: "", summary: "" });
+    edges.push({ from: parent.cuid, to: n.cuid, fromName: parent.name, toName: n.name, when: whenOf(n), rawRequest: "", summary: "" });
   });
   return edges;
 }

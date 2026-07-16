@@ -106,6 +106,8 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ cuid: st
   if (!proj.ok) return NextResponse.json({ error: proj.error }, { status: 400 });
 
   await db.prepare(`UPDATE automation_nodes SET status = 'removed', updated_at = datetime('now') WHERE cuid = ?`).run(cuid);
+  // Purge the node's diagram edges (owner 2026-07-16) — a deleted node leaves no dangling rows either way.
+  await db.prepare(`DELETE FROM automation_diagram_edges WHERE from_cuid = ? OR to_cuid = ?`).run(cuid, cuid);
   await rm(join(proj.projectDir, "_nodes", row.slug), { recursive: true, force: true });
   await regenerateDiagram(proj.projectDir, await liveSlugsInOrder(row.automation));
   return NextResponse.json({ ok: true });
