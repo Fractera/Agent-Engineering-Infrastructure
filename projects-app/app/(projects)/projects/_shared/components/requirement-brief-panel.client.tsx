@@ -107,13 +107,20 @@ export function RequirementBriefPanel({
 
   if (loading) return <Loader2 className="size-4 animate-spin text-muted-foreground" />;
 
+  // The SCOPE suffix (owner 2026-07-16): two of these panels can now sit near each other — a per-table one
+  // (refId = the table id, labelled with the table's title) right above the whole-dashboard one (ref='',
+  // labelled with the accordion's entity name). Identical "Build mode" buttons were indistinguishable, so
+  // the collapsed button and the expanded header always name their scope: "Build mode — History" vs
+  // "Build mode — Dashboard".
+  const scope = entityLabel ? ` — ${entityLabel}` : "";
+
   if (!buildMode) {
     return (
       <div className="space-y-2">
         <Separator />
         <Button size="sm" variant="ghost" onClick={() => setBuildMode(true)} className="gap-2 text-muted-foreground">
           <Hammer className="size-3.5" />
-          {L.requirementBuildMode}
+          {L.requirementBuildMode}{scope}
           {pending && <span className="text-amber-600 dark:text-amber-400">· {L.requirementPendingHint}</span>}
         </Button>
       </div>
@@ -123,7 +130,7 @@ export function RequirementBriefPanel({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{L.requirementLabel}</span>
+        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{L.requirementLabel}{scope}</span>
         {pending && <span className="text-xs text-amber-600 dark:text-amber-400">{L.requirementPendingHint}</span>}
       </div>
       <Textarea
