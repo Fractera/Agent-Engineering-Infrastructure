@@ -1120,7 +1120,16 @@ export const PROJECT_DASHBOARD: DashboardConfig = {
         },
         {
           id: "live", header: "", type: "actions", source: "ticker", defaultVisible: true,
-          options: { action: "live", liveUrl: "/api/projects/{{CATEGORY}}/{{PROJECT}}/price?ticker={ticker}" },
+          // actionDescription (2026-07-16) — REQUIRED alongside every cell action: the plain-language
+          // statement of what the opened modal does, read by a coding agent from the architecture bundle.
+          options: {
+            action: "live",
+            liveUrl: "/api/projects/{{CATEGORY}}/{{PROJECT}}/price?ticker={ticker}",
+            actionDescription: {
+              en: "Opens a modal that fetches the CURRENT live price for this row's ticker (the stored price is a snapshot). Read-only.",
+              ru: "Открывает модальное окно, которое запрашивает ТЕКУЩУЮ живую цену по тикеру строки (сохранённая цена — снимок). Только чтение.",
+            },
+          },
         },
       ],
       rows: [],

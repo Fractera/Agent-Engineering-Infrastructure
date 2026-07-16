@@ -5,6 +5,7 @@ import { Columns2, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { DashboardConfig, DashboardTable } from "../table-config";
 import { ConfigRecordsTable } from "./config-records-table.client";
+import { RequirementBriefPanel } from "./requirement-brief-panel.client";
 import { useUiLang } from "../use-ui-lang";
 import { resolveLocalized } from "../localized-text";
 import { automationMenuStrings } from "../automation-menu-i18n";
@@ -51,6 +52,15 @@ function DashboardPane({
         <TablePicker tables={tables} value={table.id} onChange={onChange} lang={lang} />
       </div>
       <ConfigRecordsTable automation={automation} table={table} />
+      {/* PER-TABLE requirement (owner 2026-07-16): each table gets ITS OWN AI-interaction surface — the same
+          RequirementBriefPanel primitive, scoped by refId = the table id (a per-table transport slot the wave
+          picks up). The whole-dashboard panel stays in the accordion body below, ref=''. */}
+      <RequirementBriefPanel
+        entityType="dashboard"
+        entityLabel={resolveLocalized(table.title, lang)}
+        automation={automation}
+        refId={table.id}
+      />
     </div>
   );
 }

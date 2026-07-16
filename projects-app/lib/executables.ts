@@ -70,6 +70,28 @@ async function scanActivations(): Promise<string[]> {
   return out;
 }
 
+/** Every automation that DECLARES dashboard tables (_data/dashboard.ts, `export const PROJECT_DASHBOARD`) —
+ *  the architecture bundle reads the REAL typed config through this registry (owner 2026-07-16, per-table
+ *  dashboard slice), never a regex parse. Same static-import trick as nodes/activations. */
+async function scanDashboards(): Promise<string[]> {
+  const root = projectsRoot();
+  const out: string[] = [];
+  const categories = (await readdir(root, { withFileTypes: true }).catch(() => []))
+    .filter((d) => d.isDirectory() && !d.name.startsWith("_"))
+    .map((d) => d.name);
+  for (const category of categories.sort()) {
+    const projects = (await readdir(join(root, category), { withFileTypes: true }).catch(() => []))
+      .filter((d) => d.isDirectory() && !d.name.startsWith("_"))
+      .map((d) => d.name);
+    for (const project of projects.sort()) {
+      const src = await readFile(join(root, category, project, "_data", "dashboard.ts"), "utf8").catch(() => "");
+      if (!/export\s+const\s+PROJECT_DASHBOARD\b/.test(src)) continue;
+      out.push(`${category}/${project}`);
+    }
+  }
+  return out;
+}
+
 /** Rewrite app/(projects)/projects/_generated/executables.ts from what is on disk. Called wherever the set of
  *  nodes changes (create / materialize / delete) — the same places that regenerate _data/diagram.ts. */
 export async function regenerateExecutables(): Promise<{ count: number; file: string }> {
@@ -90,6 +112,14 @@ export async function regenerateExecutables(): Promise<{ count: number; file: st
     })
     .join("\n");
 
+  const dashboards = await scanDashboards();
+  const dashboardEntries = dashboards
+    .map((automation) => {
+      const [category, project] = automation.split("/");
+      return `  ${JSON.stringify(automation)}: () => import(${JSON.stringify(`../${category}/${project}/_data/dashboard`)}),`;
+    })
+    .join("\n");
+
   const body = `// GENERATED — do not edit by hand (lib/executables.ts, step 241).
 // One static import() per executable node: the bundler sees them all, so the general executor can call any
 // node's REAL compiled functions without a runtime path (which a "(projects)" route group makes impossible).
@@ -101,6 +131,7 @@ export async function regenerateExecutables(): Promise<{ count: number; file: st
 
 export type NodeModule = Record<string, unknown>;
 export type ActivationModule = Record<string, unknown>;
+export type DashboardModule = Record<string, unknown>;
 
 export const EXECUTABLES: Record<string, () => Promise<NodeModule>> = {
 ${entries}
@@ -108,6 +139,12 @@ ${entries}
 
 export const ACTIVATIONS: Record<string, () => Promise<ActivationModule>> = {
 ${activationEntries}
+};
+
+// DASHBOARDS (owner 2026-07-16): each automation's _data/dashboard.ts (PROJECT_DASHBOARD) — the architecture
+// bundle reads the real typed table configs (columns, actions) through this, never a regex parse.
+export const DASHBOARDS: Record<string, () => Promise<DashboardModule>> = {
+${dashboardEntries}
 };
 
 export function executableKeys(): string[] {

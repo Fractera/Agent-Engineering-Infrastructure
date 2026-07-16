@@ -38,6 +38,10 @@ export type ColumnOptions = {
    *  on click and shows the response in a modal — for data that goes stale (a price, a status) where the
    *  STORED row is a snapshot, not the current truth. Never writes anything — pure read. */
   action?: "detail" | "delete" | "live";
+  /** Plain-language description of what this cell's ACTION does — what the modal it opens shows / what
+   *  happens (owner 2026-07-16). Authored by the coding agent alongside the action itself, and emitted into
+   *  the architecture bundle so a model reading the table understands its behaviour without opening the UI. */
+  actionDescription?: LocalizedText;
   /** For `action:"live"`: the endpoint to GET on click. `{field}` tokens are replaced with that row's own
    *  `values.field` before the request — e.g. `"/api/projects/other/x/price?ticker={ticker}"`. */
   liveUrl?: string;
@@ -79,6 +83,26 @@ export type DashboardTable = {
 
 /** The dashboard's config: the ordered set of tables the accordion renders. */
 export type DashboardConfig = { tables: DashboardTable[] };
+
+// ─── THE BUNDLE-SIDE DICTIONARIES (owner 2026-07-16) — deterministic, in code, same pattern as the node
+// role/type dictionaries: emitted into the architecture bundle's dashboard slice so a coding agent reading a
+// table instantly knows what each column KIND and each cell ACTION does, without opening the UI.
+export const COLUMN_TYPE_DESCRIPTIONS: Record<ColumnType, string> = {
+  badge: "A small colored label — a status or category.",
+  text: "One short line of text, truncated.",
+  longtext: "A long text field; the cell expands on click.",
+  number: "A right-aligned numeric value (optional unit suffix).",
+  date: "A formatted date/time; future values can be emphasized.",
+  link: "An outward link the user opens.",
+  image: "A thumbnail that opens a preview modal.",
+  actions: "A row action button — see available_action_types.",
+};
+
+export const ACTION_TYPE_DESCRIPTIONS: Record<string, string> = {
+  detail: "Opens a modal showing this row's full record.",
+  delete: "Deletes this row (with confirmation).",
+  live: "Fetches liveUrl fresh on click and shows the CURRENT value in a modal — the stored row is a snapshot; pure read, never writes.",
+};
 
 export function defaultVisibleColumnIds(cols: TableColumn[]): string[] {
   return cols.filter((c) => c.defaultVisible).map((c) => c.id);

@@ -200,12 +200,17 @@ const ENTITY_INSTRUCTIONS: Partial<Record<EntityType, string>> = {
     "group-only. Read memberSnapshots for each member's surface; when a member's own depth is needed, fetch " +
     "THAT member's architecture — never inline it here. Requires the most powerful model available.",
   dashboard:
-    "The DASHBOARD is the automation's table surface: config-driven tables whose rows are written by output " +
-    "nodes (ioType \"dashboard\") through the shared row store (lib/dashboard-rows.ts — addRow/listRows, the " +
-    "dashboard_rows table). Develop from the rawRequest: define/adjust the table's columns to carry exactly " +
-    "what the owner asks to see, then make the writing output node's function supply those values. NEVER " +
-    "invent a parallel storage or a second write path — one store, written only by output nodes, read only by " +
-    "the dashboard UI. A row is a RESULT: only a successful run writes one.",
+    "The DASHBOARD is the automation's table surface: 0..N config-driven TABLES (this slice carries ONE " +
+    "instance PER TABLE, ref = the table id, after the automation-wide instance ref='' for whole-dashboard " +
+    "requirements). A table's identity is typed: its columns (closed ColumnType set — see " +
+    "available_column_types) each with id/type/source, and its cell ACTIONS (available_action_types) each " +
+    "with an authored plain-language actionDescription saying what the opened modal does — author it whenever " +
+    "you add an action. Rows are written by output nodes (ioType \"dashboard\") through the shared row store " +
+    "(lib/dashboard-rows.ts — addRow/listRows, the dashboard_rows table); the table config lives in the " +
+    "automation's own _data/dashboard.ts. Develop from each table's OWN rawRequest: adjust that table's " +
+    "columns to carry exactly what the owner asks to see, then make the writing node supply those values. " +
+    "NEVER invent a parallel storage or a second write path — one store, written only by output nodes, read " +
+    "only by the dashboard UI. A row is a RESULT: only a successful run writes one.",
   analytics:
     "ANALYTICS is the automation's chart surface: visual aggregates computed over the SAME data the automation " +
     "already records (dashboard rows, run history) — never over a copy. Develop from the rawRequest: pick the " +
@@ -608,6 +613,96 @@ async function extractChain(automation: string, withHistory: boolean): Promise<E
 // toggle that does not exist.
 type StubEntityType = "dashboard" | "analytics" | "calendar" | "cron" | "map" | "processes" | "fork-activation";
 
+// ─── THE DASHBOARD'S PER-TABLE SLICE (owner 2026-07-16) ─────────────────────────────────────────────────
+// The dashboard holds 0..N TABLES, so one automation-wide instance hid them: requirements could only target
+// "the dashboard as a whole". Now the slice carries ONE instance PER TABLE (ref = the table id) after the
+// automation-wide instance (ref='' — whole-dashboard requirements, the visibility toggle). Each table's
+// identity is TYPED: its columns (id/type/source, from the closed ColumnType set) and its cell ACTIONS
+// (type + the authored plain-language actionDescription — what the modal does), read from the automation's
+// real _data/dashboard.ts through the generated DASHBOARDS registry (never a regex parse). Per-table
+// rawRequest/summary/history ride the same entity_transport/entity_history/entity_summary stores, keyed by
+// the table-id ref — the wave picks a staged table requirement up automatically.
+
+type LocalizedTextLike = string | Record<string, string>;
+const localizedToString = (t: LocalizedTextLike | undefined): string =>
+  typeof t === "string" ? t : t ? (t.en ?? Object.values(t)[0] ?? "") : "";
+
+type TableColumnCard = {
+  id: string; header: string; type: string; source: string;
+  action?: string; actionDescription?: string; suffix?: string; liveUrl?: string;
+};
+type DashboardTableIdentity = {
+  tableId: string; title: string; description?: string;
+  columns: TableColumnCard[];
+  /** Where the rows physically live — the ONE shared store output nodes write through. */
+  rowStore: "dashboard_rows (lib/dashboard-rows.ts addRow/listRows)";
+};
+
+async function dashboardTablesOf(automation: string): Promise<DashboardTableIdentity[]> {
+  try {
+    const mod = (await import("@/app/(projects)/projects/_generated/executables")) as {
+      DASHBOARDS?: Record<string, () => Promise<Record<string, unknown>>>;
+    };
+    const load = mod.DASHBOARDS?.[automation];
+    if (!load) return [];
+    const config = ((await load()) as { PROJECT_DASHBOARD?: { tables?: unknown[] } }).PROJECT_DASHBOARD;
+    if (!Array.isArray(config?.tables)) return [];
+    return config.tables.map((raw) => {
+      const t = raw as {
+        id?: string; title?: LocalizedTextLike; description?: LocalizedTextLike;
+        columns?: { id?: string; header?: LocalizedTextLike; type?: string; source?: string; options?: {
+          action?: string; actionDescription?: LocalizedTextLike; suffix?: string; liveUrl?: string;
+        } }[];
+      };
+      return {
+        tableId: t.id ?? "",
+        title: localizedToString(t.title),
+        description: localizedToString(t.description) || undefined,
+        columns: (t.columns ?? []).map((c) => ({
+          id: c.id ?? "", header: localizedToString(c.header), type: c.type ?? "text", source: c.source ?? "",
+          action: c.options?.action,
+          actionDescription: localizedToString(c.options?.actionDescription) || undefined,
+          suffix: c.options?.suffix, liveUrl: c.options?.liveUrl,
+        })),
+        rowStore: "dashboard_rows (lib/dashboard-rows.ts addRow/listRows)",
+      };
+    }).filter((t) => t.tableId);
+  } catch {
+    return [];
+  }
+}
+
+async function extractDashboard(automation: string, withHistory: boolean): Promise<EntitySlice<StubTask, unknown>> {
+  // The automation-wide instance (ref='') keeps working exactly as before — whole-dashboard requirements.
+  const base = await extractStub("dashboard", automation, withHistory);
+  const tables = await dashboardTablesOf(automation);
+  const tableInstances = await Promise.all(tables.map(async (identity) => {
+    const [transport, summary] = await Promise.all([
+      getTransport(automation, "dashboard", identity.tableId),
+      getSummary(automation, "dashboard", identity.tableId),
+    ]);
+    const briefText = (transport?.payload as { brief?: string } | undefined)?.brief ?? "";
+    const currentTask: StubTask | null = briefText.trim() ? { brief: briefText } : null;
+    let history: EntityTaskRecord<StubTask>[] = [];
+    if (withHistory) {
+      const versions = await getHistory(automation, "dashboard", identity.tableId);
+      history = versions.map((v) => {
+        const p = v.payload as { brief?: string };
+        return { version: v.version, task: { brief: p.brief ?? "" }, devStepRef: v.devStepRef, createdAt: v.createdAt };
+      });
+    }
+    return makeInstance(identity.tableId, identity as unknown, currentTask, history, summary);
+  }));
+  const { COLUMN_TYPE_DESCRIPTIONS, ACTION_TYPE_DESCRIPTIONS } = await import("@/app/(projects)/projects/_shared/table-config");
+  return {
+    ...base,
+    instances: [...base.instances, ...tableInstances],
+    // The dictionaries a reading agent needs to understand any table's columns/actions (same pattern as the
+    // node role/type dictionaries) — carried on the slice, once, not per table.
+    ...( { available_column_types: COLUMN_TYPE_DESCRIPTIONS, available_action_types: ACTION_TYPE_DESCRIPTIONS } as object),
+  } as EntitySlice<StubTask, unknown>;
+}
+
 // Dashboard/Analytics/Calendar/Map/Processes (step 238 P5-P9) — the owner writes a free-text REQUIREMENT
 // brief (the "Requirement" panel in each entity's accordion), automation-scoped (ref=''), same shape as the
 // chain brief. This is a data-entry surface, not a builder — no dedicated node/table like dashboard's own
@@ -645,6 +740,7 @@ async function extractOne(entityType: EntityType, automation: string, withHistor
     case "edge": return extractEdge(automation, withHistory);
     case "usecase": return extractUsecase(automation, withHistory);
     case "chain": return extractChain(automation, withHistory);
+    case "dashboard": return extractDashboard(automation, withHistory);
     default: return extractStub(entityType, automation, withHistory);
   }
 }

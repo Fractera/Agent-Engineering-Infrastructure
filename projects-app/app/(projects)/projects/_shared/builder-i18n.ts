@@ -28,6 +28,10 @@ export type BuilderStrings = {
   typeTransform: string;
   typeCondition: string;
   typeCustom: string;
+  // ── the "How it works" modal's typing view (owner 2026-07-16) ──
+  showTypes: string;
+  hideTypes: string;
+  copyTypes: string;
 };
 
 export const BUILDER_I18N: Record<string, BuilderStrings> = {
@@ -43,6 +47,7 @@ export const BUILDER_I18N: Record<string, BuilderStrings> = {
     saveType: "Save type", typeSaved: "Node type saved",
     roleInput: "Input", roleIntermediate: "Intermediate", roleOutput: "Output",
     typeTransform: "Transform (regular work)", typeCondition: "Condition (branch gate)", typeCustom: "Custom…",
+    showTypes: "Show types", hideTypes: "Hide types", copyTypes: "Copy types",
   },
   ru: {
     buildNodes: "Строить узлы", closeBuildNodes: "Закрыть режим узлов",
@@ -56,6 +61,7 @@ export const BUILDER_I18N: Record<string, BuilderStrings> = {
     saveType: "Сохранить тип", typeSaved: "Тип узла сохранён",
     roleInput: "Входной", roleIntermediate: "Серединный", roleOutput: "Выходной",
     typeTransform: "Обычный (transform)", typeCondition: "Условие (ветвление)", typeCustom: "Свой…",
+    showTypes: "Показать типизацию", hideTypes: "Скрыть типизацию", copyTypes: "Копировать типизацию",
   },
   es: {
     buildNodes: "Construir nodos", closeBuildNodes: "Cerrar modo nodos",
@@ -69,6 +75,7 @@ export const BUILDER_I18N: Record<string, BuilderStrings> = {
     saveType: "Guardar tipo", typeSaved: "Tipo de nodo guardado",
     roleInput: "Entrada", roleIntermediate: "Intermedio", roleOutput: "Salida",
     typeTransform: "Normal (transform)", typeCondition: "Condición (bifurcación)", typeCustom: "Propio…",
+    showTypes: "Mostrar tipos", hideTypes: "Ocultar tipos", copyTypes: "Copiar tipos",
   },
   fr: {
     buildNodes: "Construire des nœuds", closeBuildNodes: "Fermer le mode nœuds",
@@ -82,6 +89,7 @@ export const BUILDER_I18N: Record<string, BuilderStrings> = {
     saveType: "Enregistrer le type", typeSaved: "Type de nœud enregistré",
     roleInput: "Entrée", roleIntermediate: "Intermédiaire", roleOutput: "Sortie",
     typeTransform: "Normal (transform)", typeCondition: "Condition (branchement)", typeCustom: "Personnalisé…",
+    showTypes: "Afficher les types", hideTypes: "Masquer les types", copyTypes: "Copier les types",
   },
   it: {
     buildNodes: "Costruire nodi", closeBuildNodes: "Chiudi modalità nodi",
@@ -95,6 +103,7 @@ export const BUILDER_I18N: Record<string, BuilderStrings> = {
     saveType: "Salva tipo", typeSaved: "Tipo di nodo salvato",
     roleInput: "Ingresso", roleIntermediate: "Intermedio", roleOutput: "Uscita",
     typeTransform: "Normale (transform)", typeCondition: "Condizione (diramazione)", typeCustom: "Personalizzato…",
+    showTypes: "Mostra tipi", hideTypes: "Nascondi tipi", copyTypes: "Copia tipi",
   },
   de: {
     buildNodes: "Knoten bauen", closeBuildNodes: "Knoten-Modus schließen",
@@ -108,6 +117,7 @@ export const BUILDER_I18N: Record<string, BuilderStrings> = {
     saveType: "Typ speichern", typeSaved: "Knotentyp gespeichert",
     roleInput: "Eingang", roleIntermediate: "Zwischenknoten", roleOutput: "Ausgang",
     typeTransform: "Normal (transform)", typeCondition: "Bedingung (Verzweigung)", typeCustom: "Eigener…",
+    showTypes: "Typen anzeigen", hideTypes: "Typen ausblenden", copyTypes: "Typen kopieren",
   },
   pt: {
     buildNodes: "Construir nós", closeBuildNodes: "Fechar modo nós",
@@ -121,6 +131,7 @@ export const BUILDER_I18N: Record<string, BuilderStrings> = {
     saveType: "Guardar tipo", typeSaved: "Tipo de nó guardado",
     roleInput: "Entrada", roleIntermediate: "Intermédio", roleOutput: "Saída",
     typeTransform: "Normal (transform)", typeCondition: "Condição (ramificação)", typeCustom: "Personalizado…",
+    showTypes: "Mostrar tipos", hideTypes: "Ocultar tipos", copyTypes: "Copiar tipos",
   },
   pl: {
     buildNodes: "Buduj węzły", closeBuildNodes: "Zamknij tryb węzłów",
@@ -134,6 +145,7 @@ export const BUILDER_I18N: Record<string, BuilderStrings> = {
     saveType: "Zapisz typ", typeSaved: "Typ węzła zapisany",
     roleInput: "Wejściowy", roleIntermediate: "Pośredni", roleOutput: "Wyjściowy",
     typeTransform: "Zwykły (transform)", typeCondition: "Warunek (rozgałęzienie)", typeCustom: "Własny…",
+    showTypes: "Pokaż typy", hideTypes: "Ukryj typy", copyTypes: "Kopiuj typy",
   },
   tr: {
     buildNodes: "Düğüm oluştur", closeBuildNodes: "Düğüm modunu kapat",
@@ -147,6 +159,7 @@ export const BUILDER_I18N: Record<string, BuilderStrings> = {
     saveType: "Türü kaydet", typeSaved: "Düğüm türü kaydedildi",
     roleInput: "Giriş", roleIntermediate: "Ara", roleOutput: "Çıkış",
     typeTransform: "Normal (transform)", typeCondition: "Koşul (dallanma)", typeCustom: "Özel…",
+    showTypes: "Türleri göster", hideTypes: "Türleri gizle", copyTypes: "Türleri kopyala",
   },
   nl: {
     buildNodes: "Knopen bouwen", closeBuildNodes: "Knopenmodus sluiten",
@@ -160,6 +173,7 @@ export const BUILDER_I18N: Record<string, BuilderStrings> = {
     saveType: "Type opslaan", typeSaved: "Knooptype opgeslagen",
     roleInput: "Invoer", roleIntermediate: "Tussenliggend", roleOutput: "Uitvoer",
     typeTransform: "Normaal (transform)", typeCondition: "Conditie (vertakking)", typeCustom: "Eigen…",
+    showTypes: "Types tonen", hideTypes: "Types verbergen", copyTypes: "Types kopiëren",
   },
 };
 

@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/dialog";
 import { useUiLang } from "../use-ui-lang";
 import { automationMenuStrings } from "../automation-menu-i18n";
+import { builderStrings } from "../builder-i18n";
+import { ARCHITECTURE_OBJECT_TYPES } from "../architecture-object-types";
 import { VoiceInput } from "./voice-input.client";
 
 // THE "HOW IT WORKS" MODAL (step 237, top of the hamburger menu; two-button split in 238) — TWO separate
@@ -34,7 +36,10 @@ export function HowItWorksModal({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const L = automationMenuStrings(useUiLang());
+  const lang = useUiLang();
+  const L = automationMenuStrings(lang);
+  const B = builderStrings(lang);
+  const [showTypes, setShowTypes] = useState(false);
   const [result, setResult] = useState<Result>(null);
   const [loading, setLoading] = useState(false);
   const [collected, setCollected] = useState<unknown | null>(null);
@@ -149,13 +154,34 @@ export function HowItWorksModal({
 
           {collected != null && (
             <div className="space-y-2 rounded-lg border p-3">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-xs text-muted-foreground">{L.collectedHint}</p>
+              {/* Buttons FIRST, LEFT-ALIGNED (owner 2026-07-16): the copy button used to sit far right and
+                  fell out of view when the JSON forced horizontal scroll — the scroll is fine, the buttons
+                  must always stay visible in the left corner. */}
+              <div className="flex flex-wrap items-center gap-2">
                 <Button variant="ghost" size="sm" onClick={copyCollected} className="shrink-0 gap-1">
                   <ClipboardCopy className="size-3.5" />
                   {L.copyJson}
                 </Button>
+                {/* The object's TYPING (owner 2026-07-16): view + copy the TypeScript typing of this JSON, so
+                    the owner verifies the structure and a coding agent receiving the object alongside the
+                    types cannot break its shape when writing an updated one. */}
+                <Button variant="ghost" size="sm" onClick={() => setShowTypes((v) => !v)} className="shrink-0 gap-1">
+                  {showTypes ? B.hideTypes : B.showTypes}
+                </Button>
+                <Button
+                  variant="ghost" size="sm" className="shrink-0 gap-1"
+                  onClick={async () => { await navigator.clipboard.writeText(ARCHITECTURE_OBJECT_TYPES); toast.success(L.copied); }}
+                >
+                  <ClipboardCopy className="size-3.5" />
+                  {B.copyTypes}
+                </Button>
               </div>
+              <p className="text-xs text-muted-foreground">{L.collectedHint}</p>
+              {showTypes && (
+                <pre className="max-h-64 overflow-auto rounded bg-muted/40 p-2 text-xs">
+                  {ARCHITECTURE_OBJECT_TYPES}
+                </pre>
+              )}
               <pre className="max-h-64 overflow-auto rounded bg-muted/40 p-2 text-xs">
                 {JSON.stringify(collected, null, 2)}
               </pre>

@@ -33,11 +33,16 @@ export function RequirementBriefPanel({
   entityType,
   entityLabel,
   automation,
+  refId = "",
 }: {
   entityType: EntityType;
   /** The entity's translated name — shown as the Quiz's subtitle. Falls back to the raw type. */
   entityLabel?: string;
   automation?: string;
+  /** Instance scope (owner 2026-07-16, per-table dashboard requirements): '' = the automation-wide brief
+   *  (the historic behaviour); a table id scopes this panel to THAT table's own transport slot — the same
+   *  stores, keyed by ref, so the wave picks a staged table requirement up automatically. */
+  refId?: string;
 }) {
   const L = automationMenuStrings(useUiLang());
   // The page-wide development lock (step 240): while a wave is with a coding agent, every tool here refuses
@@ -64,16 +69,17 @@ export function RequirementBriefPanel({
     setLoading(true);
     fetch(`/api/projects/${entityType}-architecture/extract-current-state-for-architecture?automation=${encodeURIComponent(automation)}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d: { instances?: { currentTask?: { brief?: string } | null; pending?: boolean }[] } | null) => {
+      .then((d: { instances?: { ref?: string; currentTask?: { brief?: string } | null; pending?: boolean }[] } | null) => {
         if (!alive) return;
-        // These 5 entities are always automation-wide — exactly one instance (ref=''), never zero/many.
-        const inst = d?.instances?.[0];
+        // Match by ref: '' = the automation-wide instance (the historic single-instance behaviour), a table
+        // id = that table's own instance (per-table dashboard requirements, 2026-07-16).
+        const inst = d?.instances?.find((i) => (i.ref ?? "") === refId);
         setBrief(inst?.currentTask?.brief ?? "");
         setPending(Boolean(inst?.pending));
       })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [automation, entityType]);
+  }, [automation, entityType, refId]);
 
   async function save() {
     if (!automation || !guard()) return;   // locked → the modal explains why nothing happened
@@ -82,7 +88,7 @@ export function RequirementBriefPanel({
       const r = await fetch(`/api/projects/${entityType}-architecture/add-new-transport-task-entry`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ automation, ref: "", payload: { brief } }),
+        body: JSON.stringify({ automation, ref: refId, payload: { brief } }),
       });
       if (!r.ok) throw new Error(String(r.status));
       setPending(brief.trim().length > 0);
