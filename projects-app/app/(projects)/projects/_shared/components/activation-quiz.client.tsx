@@ -246,9 +246,12 @@ export function ActivationQuiz({
       } catch { /* the warning check must never block the Quiz itself */ }
       const r = await fetch(`/api/projects/quiz?${query}`, { cache: "no-store" });
       if (!r.ok) return;
-      const d = (await r.json()) as { started: boolean; status?: string };
-      // First visit (no session yet) or an interrupted one → open; the effect above then loads it.
-      if (!d.started || d.status === "active") setOpenState(true);
+      const d = (await r.json()) as { started: boolean; status?: string; phase?: Phase };
+      // AUTO-OPEN = THE USE-CASE GATE ONLY (step 247, owner's complaint on automation-14): the forced
+      // opening exists to make the owner describe his cases (step 231) — nothing else. A session that
+      // already moved past the cases (phase "nodes": cases written and confirmed, plan agreed) must NOT
+      // reopen itself on every page load; the owner opens the design tools deliberately.
+      if (!d.started || (d.status === "active" && d.phase === "usecases")) setOpenState(true);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [automation]);
