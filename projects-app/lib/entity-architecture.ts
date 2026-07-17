@@ -136,6 +136,14 @@ const AGENT_INSTRUCTION_CORE =
   "finish the objects properly. \"real-automation\": nothing is a demo anymore — every node " +
   "and entity is the owner's live behaviour; renovate it, never treat it as an example or rebuild it " +
   "silently. " +
+  "(2b) SCALE ASSESSMENT IS YOUR FIRST DECISION (step 250, hard law — before ANY change): estimate the node " +
+  "count the pending work implies against the node budget (AUTOMATION-PROJECTS.md §2.1: 25 nodes = " +
+  "decomposition is mandatory, 30 = absolute cap). If the task would exceed the budget or inherently needs " +
+  "SEVERAL automations, you make ZERO changes to this automation — no node, no edge, no file. Instead you " +
+  "finish by producing a DECOMPOSITION RECOMMENDATION: the list of proposed automations, a ready-to-paste " +
+  "creation instruction for each, and a grouping instruction for wiring them into a chained group — " +
+  "persisted as an owner-decision warning on the `general` entity so the owner finds it later. This outcome " +
+  "is a SUCCESS, not a failure or an error. " +
   "(3) Once you understand the current structure and every pending wish, develop the objects one by one — the " +
   "`diagram` FIRST (nodes and edges), then the other entities. " +
   "(4) Each object carries its own `instruction`; re-read and follow it when developing that object (an empty " +

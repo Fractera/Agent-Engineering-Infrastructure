@@ -42,6 +42,11 @@ group takes over the public identity → members keep their own pages/diagrams a
 test-runnable (production activation is group-only) → prove parity with two virtual end-to-end tests.
 Recursion allowed; the budget applies per member.
 
+**The in-product development agent's FIRST duty is scale assessment (step 250, law 2b in
+`agent_instruction`):** over budget → ZERO changes; instead a decomposition recommendation (proposed
+automations + a ready-to-paste creation instruction each + a grouping instruction), persisted as an
+`owner-decision` warning on `general`. That outcome is a SUCCESS.
+
 ## 3. Lifecycle (create → cases → hand-off → build → per-object close)
 
 1. **Create:** `POST /api/projects/create` → `createFrozenProject` (template + token substitution, zero
@@ -49,15 +54,17 @@ Recursion allowed; the budget applies per member.
 2. **Use cases first:** the Quiz opens on first visit and refuses to design nodes until the owner
    describes his scenarios; the **review gate** blocks any hand-off until he confirms the AI understood
    (409 `not-reviewed` / `no-cases`).
-3. **The hand-off (step 249 — the light flow; NO Development Step, NO page lock):**
-   `GET /api/projects/handoff?automation=…` returns TWO copyable tasks the launch dialog stacks:
-   **full** (the agent's FIRST session — an address + a mandate: load the bundle §5 yourself, read this
-   file, execute every pending object) and **delta** (a CONTINUATION of an already-warm session — only
-   the staged briefs, inline, with an explicit "do not reload the full JSON"). Same gates as ever
-   (409 `not-reviewed` / `no-cases` / `nothing-staged` / `stub-nodes` + names). The owner copies one,
-   pastes it into a coder chat, and is told to wait until the agent finishes before editing further —
-   discipline, not machinery. The owner's FREE comment (the ✦ button — "I know what I dislike, not where
-   to fix it") lands as the `general` entity's brief and joins the staged set like any requirement.
+3. **The launch (step 250 — the in-product agent; NO copy hand-off, NO Development Step, NO page lock):**
+   "Запустить разработку" runs `POST /api/projects/develop` — an OpenAI Chat Completions tool-calling
+   loop streamed live into the launch dialog (SSE). Context = the full bundle (§5, current state, no
+   history) + the staged briefs; the model works DELTA-only through narrow per-object tools (write node
+   functions → instant compile, wire edges, per-object closes, warnings, finish-with-report). Same gates
+   as ever (409 `not-reviewed` / `no-cases` / `nothing-staged` / `stub-nodes` + names). Every press is a
+   fresh stateless run — continuity lives in the architecture's state, not in a chat session. The owner's
+   FREE comment (the ✦ button — "I know what I dislike, not where to fix it") lands as the `general`
+   entity's brief and joins the staged set like any requirement.
+   *(`GET /api/projects/handoff` still returns the old full/delta copyable texts as a legacy escape
+   hatch for handing work to an external agent manually.)*
 4. **Build:** each node per §4.
 5. **Close PER OBJECT — no global closing call:** a node → `POST /api/projects/nodes/<cuid>/materialize`
    {summary} (compiles its runtime artifact — the node is LIVE instantly, no rebuild; strips draft,

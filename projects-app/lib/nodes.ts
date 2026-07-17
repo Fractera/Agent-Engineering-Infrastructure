@@ -1,9 +1,12 @@
-import { readdir, readFile, writeFile, mkdir, stat } from "node:fs/promises";
+import { readdir, readFile, writeFile, mkdir, stat, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
 import type { NextRequest } from "next/server";
 import { getSession } from "@/lib/auth/get-session";
+import { createNodeId } from "@/lib/cuid";
 import { db } from "@/lib/db";
+import { setTransport } from "@/lib/entity-store";
+import { draftNodeStubFiles } from "@/app/(projects)/projects/_lib/draft-node-stub";
 
 // Shared helpers for the Builder node API (step 224 L3). The DB table `automation_nodes` is the LIVE
 // lightweight canvas index; the files under _nodes/<slug>/ are the executable truth (Model B). These
@@ -263,6 +266,163 @@ export function functionsAreEmpty(src: string): boolean {
 /** Remove the `draft: true` line from a meta.ts source — the file becomes a materialized node's meta. */
 export function stripDraftFlag(metaText: string): string {
   return metaText.replace(/\n[^\n]*["']?draft["']?\s*:\s*true\s*,?/, "");
+}
+
+// ─── Extracted write paths (step 250) — the API routes AND the in-product develop agent's tool executors
+// call these SAME functions in-process, so the two entry points can never drift. Each function assumes the
+// caller already authorized the request and resolved the project (resolveProject = the scoping boundary).
+
+export type ResolvedProject = { category: string; slug: string; automation: string; projectDir: string };
+
+/** Insert or replace one simple string field of a meta.ts source (role / ioType / parentId). value === null
+ *  removes the field. Placed right after the `name:` line when absent, so the file stays a hand-formatted
+ *  literal like every authored meta.ts. */
+export function upsertMetaField(src: string, key: string, value: string | null): string {
+  const line = new RegExp(`^\\s*${key}:\\s*["'][^"']*["'],?\\s*\\n`, "m");
+  if (value === null) return src.replace(line, "");
+  const rendered = `  ${key}: ${JSON.stringify(value)},\n`;
+  if (line.test(src)) return src.replace(line, rendered);
+  return src.replace(/^(\s*name:\s*["'][^"']*["'],?\s*\n)/m, `$1${rendered}`);
+}
+
+/** Create a DRAFT node (extracted from nodes/create, step 250): cuid, co-located stub files, index row,
+ *  diagram regen. A child is inserted RIGHT AFTER its parent so the diagram order follows the tree. */
+export async function createDraftNode(
+  proj: ResolvedProject,
+  opts: { name: string; spec: string; parentCuid: string | null },
+): Promise<{ cuid: string; slug: string; name: string }> {
+  const name = opts.name.trim() || "New node";
+  await syncIndexFromFiles(proj.automation, proj.projectDir);
+  const slug = await uniqueSlug(name, proj.projectDir);
+  const cuid = createNodeId();
+
+  let ord: number;
+  if (opts.parentCuid) {
+    const p = (await db.prepare(`SELECT ord FROM automation_nodes WHERE cuid = ?`).get(opts.parentCuid)) as { ord: number } | undefined;
+    if (p) {
+      ord = p.ord + 1;
+      await db.prepare(
+        `UPDATE automation_nodes SET ord = ord + 1 WHERE automation = ? AND ord >= ? AND status != 'removed'`,
+      ).run(proj.automation, ord);
+    } else {
+      ord = await nextOrd(proj.automation);
+    }
+  } else {
+    ord = await nextOrd(proj.automation);
+  }
+
+  const nodeDir = join(proj.projectDir, "_nodes", slug);
+  await mkdir(nodeDir, { recursive: true });
+  for (const [rel, content] of Object.entries(draftNodeStubFiles({ cuid, slug, name, spec: opts.spec }))) {
+    await writeFile(join(nodeDir, rel), content, "utf8");
+  }
+
+  await db.prepare(
+    `INSERT INTO automation_nodes
+     (cuid, automation, slug, name, parent_cuid, ord, draft, active_version, latest_version, status)
+     VALUES (?, ?, ?, ?, ?, ?, 1, 0, 0, 'draft')`,
+  ).run(cuid, proj.automation, slug, name, opts.parentCuid, ord);
+
+  await regenerateDiagram(proj.projectDir, await liveSlugsInOrder(proj.automation));
+  return { cuid, slug, name };
+}
+
+/** Edit a node's panel fields (extracted from PATCH nodes/[cuid], step 250). `stage` controls the step-240
+ *  side effect: an OWNER editing a live node's instruction stages an optimization request (true, the route's
+ *  behavior); the develop agent editing the same field must NOT restage its own work (false). Returns an
+ *  error string instead of throwing so the tool executor can hand it to the model. */
+export async function patchNode(
+  proj: ResolvedProject,
+  row: NodeRow,
+  body: {
+    spec?: string; instruction?: string; name?: string; role?: string; ioType?: string;
+    parentCuid?: string | null;
+  },
+  stage: boolean,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const nodeDir = join(proj.projectDir, "_nodes", row.slug);
+
+  if (typeof body.role === "string" || typeof body.ioType === "string") {
+    const metaPath = join(nodeDir, "meta.ts");
+    let meta = await readFile(metaPath, "utf8").catch(() => "");
+    if (meta) {
+      if (typeof body.role === "string" && body.role.trim()) meta = upsertMetaField(meta, "role", body.role.trim());
+      if (typeof body.ioType === "string") meta = upsertMetaField(meta, "ioType", body.ioType.trim() || null);
+      await writeFile(metaPath, meta, "utf8");
+    }
+  }
+  if (body.parentCuid !== undefined) {
+    const parentCuid = body.parentCuid === null ? null : String(body.parentCuid);
+    if (parentCuid === row.cuid) return { ok: false, error: "a node cannot be its own parent" };
+    let parentSlug: string | null = null;
+    if (parentCuid) {
+      const p = await nodeByCuid(parentCuid);
+      if (!p || p.automation !== row.automation || p.status === "removed") {
+        return { ok: false, error: "parent node not found in this automation" };
+      }
+      parentSlug = p.slug;
+    }
+    await db.prepare(`UPDATE automation_nodes SET parent_cuid = ?, updated_at = datetime('now') WHERE cuid = ?`).run(parentCuid, row.cuid);
+    const metaPath = join(nodeDir, "meta.ts");
+    const meta = await readFile(metaPath, "utf8").catch(() => "");
+    if (meta) await writeFile(metaPath, upsertMetaField(meta, "parentId", parentSlug), "utf8");
+  }
+
+  if (typeof body.spec === "string") {
+    await writeFile(join(nodeDir, "spec.md"), `${body.spec.trim()}\n`, "utf8");
+  }
+  if (typeof body.instruction === "string") {
+    await writeFile(join(nodeDir, "instruction.ts"), `export const INSTRUCTION = ${JSON.stringify(body.instruction)};\n`, "utf8");
+    if (stage && row.draft === 0) {
+      await setTransport(row.automation, "node", row.cuid, { instruction: body.instruction, spec: "" });
+    }
+  }
+  if (typeof body.name === "string" && body.name.trim()) {
+    await db.prepare(`UPDATE automation_nodes SET name = ?, updated_at = datetime('now') WHERE cuid = ?`).run(body.name.trim(), row.cuid);
+  }
+  return { ok: true };
+}
+
+/** Soft-delete a node (extracted from DELETE nodes/[cuid], step 250): tombstone the row, purge its diagram
+ *  edges, remove the folder, regenerate the diagram. */
+export async function softDeleteNode(proj: ResolvedProject, row: NodeRow): Promise<void> {
+  await db.prepare(`UPDATE automation_nodes SET status = 'removed', updated_at = datetime('now') WHERE cuid = ?`).run(row.cuid);
+  await db.prepare(`DELETE FROM automation_diagram_edges WHERE from_cuid = ? OR to_cuid = ?`).run(row.cuid, row.cuid);
+  await rm(join(proj.projectDir, "_nodes", row.slug), { recursive: true, force: true });
+  await regenerateDiagram(proj.projectDir, await liveSlugsInOrder(row.automation));
+}
+
+/** Connect / disconnect one diagram edge (extracted from nodes/edges, step 250). Deliberately NO
+ *  "can this connect?" validation beyond self-loop (the owner's explicit ruling). parent_cuid stays a
+ *  LAYOUT hint: connect stamps it on an orphan target, remove clears it only when it pointed here. */
+export async function writeDiagramEdge(
+  automation: string,
+  fromCuid: string,
+  toCuid: string,
+  remove: boolean,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!fromCuid || !toCuid) return { ok: false, error: "fromCuid and toCuid required" };
+  if (fromCuid === toCuid) return { ok: false, error: "a node cannot link to itself" };
+
+  if (remove) {
+    await db.prepare(
+      `DELETE FROM automation_diagram_edges WHERE automation = ? AND from_cuid = ? AND to_cuid = ?`,
+    ).run(automation, fromCuid, toCuid);
+    await db.prepare(
+      `UPDATE automation_nodes SET parent_cuid = NULL, updated_at = datetime('now')
+       WHERE cuid = ? AND parent_cuid = ?`,
+    ).run(toCuid, fromCuid);
+    return { ok: true };
+  }
+
+  await db.prepare(
+    `INSERT OR IGNORE INTO automation_diagram_edges (automation, from_cuid, to_cuid) VALUES (?, ?, ?)`,
+  ).run(automation, fromCuid, toCuid);
+  await db.prepare(
+    `UPDATE automation_nodes SET parent_cuid = ?, updated_at = datetime('now')
+     WHERE cuid = ? AND parent_cuid IS NULL`,
+  ).run(fromCuid, toCuid);
+  return { ok: true };
 }
 
 /** Detached rebuild + reload after a change to the built files (materialize / rollback). Serialized with
