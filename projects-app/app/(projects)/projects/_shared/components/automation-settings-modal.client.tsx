@@ -52,12 +52,15 @@ export function AutomationSettingsModal({
           <Section title={L.aiModelSection}>
             <ModelKeySettings modelEnvKey={modelEnvKey} defaultModel={defaultModel} />
           </Section>
-          <Section title={L.inputChannelsSection}>
-            <InputChannelsPanel channels={channels} />
-          </Section>
-          <Section title={L.runIntervalSection}>
-            <p className="text-sm text-muted-foreground">{L.runIntervalBody}</p>
-          </Section>
+          {/* Step 248 cleanup (owner): no empty containers. The Run interval stub is GONE (scheduling lives
+              in the Cron entity now); the channels/keys section renders ONLY when the automation actually
+              declares keys — it is the door the missing-credentials warning and the funnel open, so it
+              cannot be removed outright, but a fresh skeleton shows just the AI model. */}
+          {channels.length > 0 && (
+            <Section title={L.inputChannelsSection}>
+              <InputChannelsPanel channels={channels} />
+            </Section>
+          )}
         </div>
       </DialogContent>
     </Dialog>
