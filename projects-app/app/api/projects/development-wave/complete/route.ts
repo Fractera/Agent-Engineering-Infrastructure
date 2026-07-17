@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authorize, resolveProject } from "@/lib/nodes";
+import { authorize, resolveProject, nodeByCuid } from "@/lib/nodes";
+import { edgeByCuid } from "@/lib/edges";
 import { completeStep, readWaveStep } from "@/lib/dev-steps";
 import { archiveAndClearTransport, setLifecycleState, listWarnings, type EntityType } from "@/lib/entity-store";
 import { writeChainSpec, readChainSpec } from "@/lib/edges";
@@ -63,12 +64,26 @@ export async function POST(req: NextRequest) {
 
   // THE LIFECYCLE FLIP (step 247, owner's design; guarded after the automation-14 live test): a completed
   // wave means the graph is no longer the shipped demo — UNLESS every single change of this wave ended
-  // BLOCKED (an open warning on each item): then nothing was actually implemented and the graph is still
-  // the demo, so the flag stays "starter-template" until a wave really lands something. Mechanical here
-  // (never left to the agent's memory); idempotent, later waves just re-assert the state.
+  // BLOCKED: then nothing was actually implemented and the graph is still the demo, so the flag stays
+  // "starter-template" until a wave really lands something. Mechanical here (never left to the agent's
+  // memory); idempotent, later waves just re-assert the state.
+  //
+  // SECOND GUARD (step 249, caught on wave №10 of automation-14): the open-warning check alone is
+  // order-fragile — that live wave called complete BEFORE writing its missing-credentials warning, so
+  // listWarnings was empty at that instant and the flag flipped with nothing implemented (and a warning
+  // auto-resolved from Settings re-opens the same hole for a repeated complete call). A node or edge that
+  // is STILL A DRAFT at completion time was definitionally not implemented, whatever the warning timing —
+  // so a draft item counts as blocked too.
   const open = await listWarnings(proj.automation);
-  const isBlocked = (t: string, r: string) => open.some((w) => w.entityType === t && w.ref === (r ?? ""));
-  const fullyBlocked = wave.wave.length > 0 && wave.wave.every((it) => isBlocked(it.entityType, it.ref ?? ""));
+  const hasWarning = (t: string, r: string) => open.some((w) => w.entityType === t && w.ref === (r ?? ""));
+  const isBlocked = async (t: string, r: string) => {
+    if (hasWarning(t, r)) return true;
+    if (t === "node") return Boolean((await nodeByCuid(r))?.draft);
+    if (t === "edge") return Boolean((await edgeByCuid(r))?.draft);
+    return false;
+  };
+  const blockedFlags = await Promise.all(wave.wave.map((it) => isBlocked(it.entityType, it.ref ?? "")));
+  const fullyBlocked = wave.wave.length > 0 && blockedFlags.every(Boolean);
   if (!fullyBlocked) await setLifecycleState(proj.automation, "real-automation");
 
   return NextResponse.json({

@@ -27,7 +27,10 @@ external HTTP → record; `instanced`/`chained` get their real pattern in steps 
 the job, and reporting a demo-vs-goal mismatch as a blocker/warning is forbidden. Completing the FIRST
 development wave flips the flag to `"real-automation"` — mechanically, inside
 `development-wave/complete` — and from then on nothing is a demo: every node is live behaviour to
-renovate, never to rebuild silently.
+renovate, never to rebuild silently. A wave that lands NOTHING does not flip: an item with an open
+warning — or a node/edge still a draft at completion time (step 249: warnings can be written after the
+closing call or auto-resolved from Settings; draft state is the order-proof evidence) — counts as
+blocked, and a fully-blocked wave keeps `"starter-template"`.
 
 ### 2.1 Node budget and decomposition (hard law)
 
