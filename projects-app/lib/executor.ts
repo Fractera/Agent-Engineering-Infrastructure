@@ -6,6 +6,7 @@ import { resolveProject, listNodes, readNodeFunctionNames } from "@/lib/nodes";
 import { listEdges } from "@/lib/edges";
 import { readAutomationType } from "@/app/(projects)/projects/_shared/automation-type-reader";
 import { EXECUTABLES } from "@/app/(projects)/projects/_generated/executables";
+import { loadCompiledNode, hasCompiledNode } from "@/lib/node-compile";
 import { missingParams } from "@/lib/activation";
 
 // THE GENERAL NODE EXECUTOR (step 241) — the thing the whole product was missing: until now a node's
@@ -127,7 +128,14 @@ export async function canActivate(automation: string, instanceId?: string): Prom
   if (!live.length) return { ok: false, refusal: { reason: "no-nodes" } };
   const drafts = live.filter((n) => n.draft === 1).map((n) => n.slug);
   if (drafts.length) return { ok: false, refusal: { reason: "has-drafts", drafts } };
-  const missing = live.filter((n) => !EXECUTABLES[`${proj.automation}:${n.slug}`]).map((n) => n.slug);
+  // Executable = a runtime artifact on disk (step 249 — materialize compiles it, no rebuild needed) OR an
+  // entry in the build-time registry (the fallback for nodes last compiled by a full build).
+  const missing: string[] = [];
+  for (const n of live) {
+    if (EXECUTABLES[`${proj.automation}:${n.slug}`]) continue;
+    if (await hasCompiledNode(proj.projectDir, n.slug)) continue;
+    missing.push(n.slug);
+  }
   if (missing.length) return { ok: false, refusal: { reason: "not-executable", nodes: missing } };
 
   return { ok: true, type, instanceId: chosenFork, params };
@@ -192,9 +200,15 @@ export async function executeAutomation(
     ).run(rowId, runId, n.slug);
 
     try {
-      const load = EXECUTABLES[`${proj.automation}:${n.slug}`];
-      if (!load) throw new Error(`node "${n.slug}" is not in the executables registry`);
-      const mod = await load();
+      // THE RUNTIME ARTIFACT WINS (step 249): a node materialized after the last build lives ONLY on disk
+      // (functions.compiled.mjs), and a re-materialized node's fresh code must beat the stale bundled copy.
+      // The registry stays as the fallback for nodes never compiled per-node.
+      let mod = await loadCompiledNode(proj.projectDir, n.slug);
+      if (!mod) {
+        const load = EXECUTABLES[`${proj.automation}:${n.slug}`];
+        if (!load) throw new Error(`node "${n.slug}" has no runtime artifact and is not in the executables registry`);
+        mod = await load();
+      }
       const order = await nodeFunctionsInOrder(proj.projectDir, n.slug);
       const paramsIn = await nodeParamsIn(proj.projectDir, n.slug);
       const outKeys = await nodeOutKeys(proj.projectDir, n.slug);

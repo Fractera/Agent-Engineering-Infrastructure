@@ -131,9 +131,9 @@ const AGENT_INSTRUCTION_CORE =
   "of nodes/functions/dashboard — it carries zero weight against the owner's goal; the owner's rawRequest " +
   "and use cases ALWAYS outrank it, and reorienting, renaming or replacing demo nodes to serve the real " +
   "goal is your NORMAL first-pass work. NEVER report a demo-vs-goal mismatch as a conflict, a blocker or a " +
-  "warning — it is not one. Completing the FIRST development wave MUST leave the project in state " +
-  "\"real-automation\" — the system flips the flag itself when you call development-wave/complete, so your " +
-  "duty is simply to finish the wave properly. \"real-automation\": nothing is a demo anymore — every node " +
+  "warning — it is not one. The system flips the flag itself to \"real-automation\" the first time an " +
+  "object really lands (a node's materialize / an entity-summary call, step 249) — your duty is simply to " +
+  "finish the objects properly. \"real-automation\": nothing is a demo anymore — every node " +
   "and entity is the owner's live behaviour; renovate it, never treat it as an example or rebuild it " +
   "silently. " +
   "(3) Once you understand the current structure and every pending wish, develop the objects one by one — the " +
@@ -173,11 +173,14 @@ const AGENT_INSTRUCTION_CORE =
   "not finish — a warning and the rawRequest coexist; a warning and a summary do not. Before re-attempting an " +
   "object that carries an answered warning, read its history — the warning+answer pair is archived there and " +
   "is your context. " +
-  "(5) On finishing an object: its rawRequest is cleared by the start-development machinery (the original is " +
-  "archived to history), and YOU write its compact `summary` — ≤300 characters per entity, in the owner's own " +
-  "language — via POST /api/projects/entity-summary {automation, entityType, ref, summary}; for a node, also " +
-  "keep its meta.ts `description` in sync (that is the summary's co-located home). The owner reads the " +
-  "summary, and so will you on the next development iteration. " +
+  "(5) CLOSING IS PER-OBJECT (step 249 — no global closing call): finishing a NODE = POST " +
+  "/api/projects/nodes/<cuid>/materialize {summary} — it compiles the node's runtime artifact (the node is " +
+  "live instantly, no rebuild; a compile error comes back in the response), records the version, archives " +
+  "the node's rawRequest to history and clears it. Finishing ANY OTHER object = POST " +
+  "/api/projects/entity-summary {automation, entityType, ref, summary} — it archives + clears that object's " +
+  "rawRequest itself (409 while the object carries an open warning). The summary is ≤300 characters, in the " +
+  "owner's own language; for a node, also keep its meta.ts `description` in sync (the summary's co-located " +
+  "home). The owner reads the summary, and so will you on the next development iteration. " +
   "(6) If the passport says isChainedGroup:true, this automation is a container of other automations — its " +
   "real architecture is the `chain` slice, not its own diagram.";
 // ─── THE LIFECYCLE FLAG's dictionary (step 247, owner's design) — shipped in the passport ─────────────────
@@ -186,9 +189,10 @@ const LIFECYCLE_STATE_DESCRIPTIONS: Record<string, string> = {
     "This automation's graph is still the demo pattern shipped by the frozen template. Every demo node, " +
     "table and setting is an EXAMPLE with zero weight against the owner's goal — reorient, rename or " +
     "replace them to serve the real task; never report their mismatch with the goal as a problem. The " +
-    "system flips this state to real-automation when the FIRST development wave completes.",
+    "system flips this state to real-automation at the first per-object closure that really lands " +
+    "(a node materialized / an entity summarized).",
   "real-automation":
-    "The first development wave has completed: the graph now IS the owner's real process. Nothing here is " +
+    "Development has really landed something: the graph now IS the owner's real process. Nothing here is " +
     "a demo anymore — every node/entity is live behaviour to respect, renovate and never silently rebuild.",
 };
 
@@ -210,9 +214,9 @@ const AGENT_FIELD_CONTRACTS: FieldContract[] = [
     instruction:
       "The incoming development trigger. Non-empty = the owner left a wish you MUST take into development: " +
       "research the request and drive this node/edge/object to one of two terminal states — SUCCESS (you " +
-      "write its summary) or BLOCKED (you write its warning). On SUCCESS the system clears this field (the " +
-      "original is archived to history). On BLOCKED it STAYS, coexisting with the warning — the task is not " +
-      "done, and the owner's answer will be appended right here to re-enter the wave.",
+      "write its summary) or BLOCKED (you write its warning). On SUCCESS the closing call clears this field " +
+      "(the original is archived to history). On BLOCKED it STAYS, coexisting with the warning — the task is " +
+      "not done, and the owner's answer will be appended right here to re-enter development.",
   },
   {
     field: "summary",
@@ -220,7 +224,9 @@ const AGENT_FIELD_CONTRACTS: FieldContract[] = [
     instruction:
       "Written ONLY when the rawRequest's task is successfully realised. A compact text (≤300 characters, in " +
       "the owner's language) saying how this object works now: what it takes in and what it returns under " +
-      "its contract. Written via POST /api/projects/entity-summary. Never fill it for unfinished work.",
+      "its contract. Written via POST /api/projects/entity-summary (for a node, the summary travels in its " +
+      "materialize call) — that call IS the object's closure: it archives the rawRequest and clears it " +
+      "(step 249). Never fill it for unfinished work.",
   },
   {
     field: "warning",
@@ -239,8 +245,8 @@ const AGENT_FIELD_CONTRACTS: FieldContract[] = [
       "_data/channels.ts. Its lifecycle differs: the owner fills the keys in the Settings modal, the " +
       "system auto-resolves the warning and appends a MANDATORY re-test to the rawRequest — the next " +
       "iteration must really test with the keys before finishing. NEVER write fake stub code instead of " +
-      "raising a warning. A wave whose staged change is blocked still completes — the warning IS its " +
-      "legitimate terminal state for this iteration (the rawRequest stays for the next one).",
+      "raising a warning. Ending your session with an object blocked-with-a-warning is a legitimate " +
+      "terminal state for this iteration (the rawRequest stays for the next one).",
   },
 ];
 
@@ -376,6 +382,12 @@ const ENTITY_INSTRUCTIONS: Partial<Record<EntityType, string>> = {
     "Develop from the rawRequest: keep every node's estDurationMs an honest estimate (refine it against " +
     "actual run data), and express the owner's planning wishes (ordering, expected lengths) through those " +
     "estimates and the schedule — never through hidden logic outside the diagram.",
+  general:
+    "GENERAL is the owner's free comment on the WHOLE automation (the Sparkles button): he does not know " +
+    "which entity or node the fix belongs to — locating it is YOUR job. Read the rawRequest against the full " +
+    "architecture, work out which objects it really touches, implement the change there (co-located, diagram " +
+    "first), and close THIS object with a summary saying what was changed and where. If the wish is really " +
+    "several independent wishes, implement them all — one general brief may fan out into several objects.",
 };
 
 /** One node role group in the bundle: the role, its (conceptual) system instruction, the finer input/output
@@ -788,7 +800,7 @@ async function extractChain(automation: string, withHistory: boolean): Promise<E
 // no extractor of its own. The one difference is `toggleEnabled`: it has no visibility switch (it is simply
 // always there for an `instanced` automation), so extractStub reports `true` for it rather than reading a
 // toggle that does not exist.
-type StubEntityType = "dashboard" | "analytics" | "calendar" | "cron" | "map" | "processes" | "fork-activation";
+type StubEntityType = "dashboard" | "analytics" | "calendar" | "cron" | "map" | "processes" | "fork-activation" | "general";
 
 // ─── THE DASHBOARD'S PER-TABLE SLICE (owner 2026-07-16) ─────────────────────────────────────────────────
 // The dashboard holds 0..N TABLES, so one automation-wide instance hid them: requirements could only target

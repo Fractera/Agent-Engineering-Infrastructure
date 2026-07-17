@@ -23,14 +23,15 @@ explicitly asked for. Machine-enforced: `lib/diagram/validate.ts` + `GET /api/pr
   `functions.ts`, a `spec.md` brief). Drafts render instantly (DB canvas index) and are ignored by
   execution; any draft ⇒ the automation is "In development" and cannot activate. Materialized ⇒
   non-empty `functions.ts`, no `spec.md`.
-- **Build mechanics (the wave era, step 240+):** requirements are STAGED by saving (a non-empty
-  `rawRequest`); the page's ONE banner hands the whole batch over as a single step
-  (`POST /api/projects/start-development`). The agent builds each node and closes it with the MANDATORY
-  `POST /api/projects/nodes/<cuid>/materialize {summary, devStepRef}` (drops draft, records a version,
-  regenerates `_data/diagram.ts`); the wave itself is closed by
-  `POST /api/projects/development-wave/complete` (moves the step file, unlocks the page, flips the
-  lifecycle flag). Full-auto: `GET /api/projects/dev-steps` drains the queue. Rollback:
-  `GET .../versions` + `POST .../rollback {version}`.
+- **Build mechanics (the light hand-off, step 249):** requirements are STAGED by saving (a non-empty
+  `rawRequest` — including the owner's free ✦-comment, the `general` entity); the page's banner opens a
+  dialog with TWO copyable tasks (`GET /api/projects/handoff` — full for a first session, delta for a
+  warm one; no Development Step file, no page lock). The agent closes each object PER-OBJECT: a node via
+  the MANDATORY `POST /api/projects/nodes/<cuid>/materialize {summary}` (compiles the runtime artifact
+  `functions.compiled.mjs` — the node is LIVE instantly, no rebuild; drops draft, records a version,
+  archives the brief, regenerates `_data/diagram.ts`), any other entity via
+  `POST /api/projects/entity-summary` (archives + clears its brief). The lifecycle flag flips at the
+  first real closure. Rollback: `GET .../versions` + `POST .../rollback {version}` (recompiles).
 - **Links between automations** (`projects/_edges/<cuid>/` — same meta/spec/functions contract, owned by
   no project): readiness gate — both endpoints must have zero draft nodes (409 with `gate:{from,to}`;
   read it, build the nodes, retry). Agent loop: `GET /api/projects/global` →

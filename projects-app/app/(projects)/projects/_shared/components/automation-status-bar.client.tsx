@@ -8,6 +8,7 @@ import type { Probe } from "../tests";
 import type { AutomationType } from "../automation-type";
 import type { EntitiesConfig } from "../entities";
 import { AutomationMenu } from "./automation-menu.client";
+import { SparklesComment } from "./sparkles-comment.client";
 import { AutomationStatePill } from "./automation-state-pill.client";
 import { AutomationModeIndicators } from "./automation-mode-indicators.client";
 import { MissingKeysFunnel } from "./missing-keys-funnel.client";
@@ -97,6 +98,9 @@ export function AutomationStatusBar({
           entitiesSeed={entitiesSeed}
           type={type}
         />
+        {/* Step 249 — the owner's free comment ("I know what I dislike, not where to fix it"): saved as the
+            `general` entity's brief, then handed over through the same two-button dialog. */}
+        {automation && <SparklesComment automation={automation} />}
       </span>
     </div>
   );

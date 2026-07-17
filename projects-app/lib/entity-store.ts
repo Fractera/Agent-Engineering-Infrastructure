@@ -19,14 +19,19 @@ import { createNodeId } from "@/lib/cuid";
 // those settings passed into it, and how its launch is scheduled (now / at a time / rate-limited). Like the
 // five requirement entities it is automation-wide (ref='') and carries a free-text brief; unlike them it has
 // no visibility toggle — it is always present for an `instanced` automation and absent for the other types.
+// STEP 249 — a TWELFTH entity: `general`. The owner's FREE comment on the whole automation ("I don't know
+// which part to fix — I know what I dislike"), entered from the Sparkles button next to the automation menu.
+// Automation-wide (ref=''), a plain brief like the requirement entities, no accordion and no visibility
+// toggle — it exists purely to carry the wish into the staged set and hand it to a coding agent, who works
+// out WHERE the fix belongs.
 export type EntityType =
   | "node" | "edge" | "usecase" | "chain"
   | "dashboard" | "analytics" | "calendar" | "cron" | "map" | "processes"
-  | "fork-activation";
+  | "fork-activation" | "general";
 
 export const ENTITY_TYPES: EntityType[] = [
   "node", "edge", "usecase", "chain", "dashboard", "analytics", "calendar", "cron", "map", "processes",
-  "fork-activation",
+  "fork-activation", "general",
 ];
 
 // ─── THE UNIFIED SLICE CONTRACT (step 238, strengthened after review) ──────────────────────────────────

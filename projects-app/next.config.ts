@@ -16,7 +16,10 @@ import { withWorkflow } from "workflow/next";
 // Keep it the outermost wrapper (same contract as FNS next.config.ts, 183.B).
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  serverExternalPackages: ["better-sqlite3"],
+  // esbuild joined for step 249: lib/node-compile.ts imports it at runtime to bundle a node's
+  // functions.ts into functions.compiled.mjs — it must stay a real node_modules require, never
+  // be bundled into the server build (it ships a native binary).
+  serverExternalPackages: ["better-sqlite3", "esbuild"],
   turbopack: {
     root: __dirname,
   },

@@ -24,13 +24,12 @@ automations; no workflow of its own). Chosen at creation, **immutable**.
 `"starter-template"`: its graph is STILL the working demo shipped by the frozen template (stream: parse →
 external HTTP → record; `instanced`/`chained` get their real pattern in steps 244/245). The demo is a
 **pattern with zero weight**: the owner's rawRequest and use cases always outrank it, reorienting it IS
-the job, and reporting a demo-vs-goal mismatch as a blocker/warning is forbidden. Completing the FIRST
-development wave flips the flag to `"real-automation"` — mechanically, inside
-`development-wave/complete` — and from then on nothing is a demo: every node is live behaviour to
-renovate, never to rebuild silently. A wave that lands NOTHING does not flip: an item with an open
-warning — or a node/edge still a draft at completion time (step 249: warnings can be written after the
-closing call or auto-resolved from Settings; draft state is the order-proof evidence) — counts as
-blocked, and a fully-blocked wave keeps `"starter-template"`.
+the job, and reporting a demo-vs-goal mismatch as a blocker/warning is forbidden. The flag flips to
+`"real-automation"` mechanically at the FIRST per-object closure that really lands something — a node's
+`materialize` or an entity's `entity-summary` (step 249) — and from then on nothing is a demo: every node
+is live behaviour to renovate, never to rebuild silently. A blocked object (an open warning, a node still
+a draft) never flips anything. (The legacy wave path keeps its own guarded flip inside
+`development-wave/complete`.)
 
 ### 2.1 Node budget and decomposition (hard law)
 
@@ -43,23 +42,31 @@ group takes over the public identity → members keep their own pages/diagrams a
 test-runnable (production activation is group-only) → prove parity with two virtual end-to-end tests.
 Recursion allowed; the budget applies per member.
 
-## 3. Lifecycle (create → cases → wave → build → complete)
+## 3. Lifecycle (create → cases → hand-off → build → per-object close)
 
 1. **Create:** `POST /api/projects/create` → `createFrozenProject` (template + token substitution, zero
    codegen). One entry point for terminal and agents alike.
 2. **Use cases first:** the Quiz opens on first visit and refuses to design nodes until the owner
    describes his scenarios; the **review gate** blocks any hand-off until he confirms the AI understood
    (409 `not-reviewed` / `no-cases`).
-3. **The wave:** `POST /api/projects/start-development {automation}` bundles EVERY staged change (any
-   instance with a non-empty `rawRequest`) into ONE Development Step in `DEVELOPMENT-STEPS/NEW-STEPS/`
-   (the product's one true queue, read by Admin `:3002/service/development-steps`). Idempotent; refuses
-   409 `nothing-staged` or `stub-nodes` + names (a never-described node is not handed over). The owner
-   gets ONLY the step number; the step is an **address**, not a snapshot — it orders the read: (0) the
-   bundle JSON (§5), (1) this file, (2) the automation's own files on disk.
-4. **Build:** each node per §4; `POST /api/projects/nodes/<cuid>/materialize` closes a node (strips
-   draft, records a version, regenerates `_data/diagram.ts`).
-5. **Complete:** `POST /api/projects/development-wave/complete` on a successful build moves the step to
-   `COMPLETED-STEPS/` and unlocks the page.
+3. **The hand-off (step 249 — the light flow; NO Development Step, NO page lock):**
+   `GET /api/projects/handoff?automation=…` returns TWO copyable tasks the launch dialog stacks:
+   **full** (the agent's FIRST session — an address + a mandate: load the bundle §5 yourself, read this
+   file, execute every pending object) and **delta** (a CONTINUATION of an already-warm session — only
+   the staged briefs, inline, with an explicit "do not reload the full JSON"). Same gates as ever
+   (409 `not-reviewed` / `no-cases` / `nothing-staged` / `stub-nodes` + names). The owner copies one,
+   pastes it into a coder chat, and is told to wait until the agent finishes before editing further —
+   discipline, not machinery. The owner's FREE comment (the ✦ button — "I know what I dislike, not where
+   to fix it") lands as the `general` entity's brief and joins the staged set like any requirement.
+4. **Build:** each node per §4.
+5. **Close PER OBJECT — no global closing call:** a node → `POST /api/projects/nodes/<cuid>/materialize`
+   {summary} (compiles its runtime artifact — the node is LIVE instantly, no rebuild; strips draft,
+   records a version, archives its brief to history, asserts the lifecycle flag); any other entity →
+   `POST /api/projects/entity-summary` (archives + clears its brief; 409 while the object carries an open
+   warning); a blocked object → `POST /api/projects/entity-warning`, its brief stays in place.
+
+   *(The wave path — `start-development` + `development-wave/complete` with a Development Step file and a
+   page lock — still exists for compatibility, but the UI no longer drives it.)*
 
 ## 4. Building a node
 
@@ -68,7 +75,10 @@ functions.ts,instruction.ts}` — nothing behavioural outside the node's folder,
 diagram defines behaviour, ever. AI inside a node only as an explicit `externalAi` tool-call step. The
 general executor (`lib/executor.ts`, `POST /api/projects/run`) walks any automation's nodes and calls
 their compiled functions — proven on two reference automations (`example-content-pipeline`,
-`example-stream-stock-price`). **The walk is SEQUENTIAL, in diagram order, through one shared context
+`example-stream-stock-price`). **A node's live code is its runtime artifact** (step 249):
+`materialize` bundles `functions.ts` into `_nodes/<slug>/functions.compiled.mjs` (esbuild,
+`lib/node-compile.ts`) and the executor imports that file from disk — editing a node NEVER rebuilds the
+app, and a compile error comes back in the materialize response itself. **The walk is SEQUENTIAL, in diagram order, through one shared context
 bag:** fan-in and fan-out work through the bag, but edges/`when` are NOT evaluated — condition nodes do
 not gate branches at runtime (decide conditions inside a node's functions; keep chains a linear tree).
 Not built yet (step 241, after 244/245): edge traversal + condition branching, parallel execution,
@@ -135,10 +145,10 @@ Shape (full typing ships in the bundle's own "How it works" modal and
 `_shared/architecture-object-types.ts`): `agent_instruction` (your duties — static law) +
 `agentFieldContracts` (the trio's lifecycle: `rawRequest`=trigger → SUCCESS fills `summary` /
 BLOCKED fills `warning`, rawRequest stays) + `passport` + `diagram` (nodes grouped by role + edges — the
-only source of behaviour) + `entities[]` (11 types, one uniform shape). Every instance carries
-`rawRequest`/`summary`/`warning` + its static `instruction`. Non-empty `rawRequest` anywhere ⟺ staged
-work (that IS the wave's signal). Per-entity sub-APIs (`<entity>-architecture/*`) exist for targeted
-reads/writes.
+only source of behaviour) + `entities[]` (12 types, one uniform shape; `general` = the owner's free
+✦-comment on the whole automation — locating where its fix belongs is the agent's job). Every instance
+carries `rawRequest`/`summary`/`warning` + its static `instruction`. Non-empty `rawRequest` anywhere ⟺
+staged work. Per-entity sub-APIs (`<entity>-architecture/*`) exist for targeted reads/writes.
 
 ## 6. Renovating a live automation
 
