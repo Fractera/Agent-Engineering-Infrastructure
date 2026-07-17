@@ -28,14 +28,16 @@ export function MissingKeysFunnel({ automation, channels }: { automation: string
     const keys = requiredEnvKeys(channels);
     if (!keys.length) return;
     let alive = true;
-    void (async () => {
+
+    const check = async (allowAutoOpen: boolean) => {
       try {
         const r = await fetch(`/api/project-config/env?keys=${keys.join(",")}`, { cache: "no-store" });
         if (!r.ok || !alive) return;
         const d = (await r.json()) as { present?: Record<string, boolean> };
         const gaps = keys.filter((k) => !d.present?.[k]);
-        if (!alive || !gaps.length) return;
-        setMissing(gaps);
+        if (!alive) return;
+        setMissing(gaps);           // [] hides the badge — a re-check after a save clears it
+        if (!gaps.length || !allowAutoOpen) return;
         // Auto-open once per load — but NEVER over the problems modal (warnings outrank the funnel).
         if (autoOpened.current) return;
         autoOpened.current = true;
@@ -46,8 +48,15 @@ export function MissingKeysFunnel({ automation, channels }: { automation: string
         }
         if (alive) setOpen(true);
       } catch { /* a failed check never blocks the page */ }
-    })();
-    return () => { alive = false; };
+    };
+
+    void check(true);
+    // A key was just saved in Settings (owner's find: the badge used to hang forever after the keys were
+    // in): re-check presence and hide the badge. The save triggers a ~5s pm2 restart, so re-check after a
+    // delay AND once more later — whichever request survives the bounce updates the state.
+    const onSaved = () => { setTimeout(() => void check(false), 1500); setTimeout(() => void check(false), 8000); };
+    window.addEventListener("automation:keys-saved", onSaved);
+    return () => { alive = false; window.removeEventListener("automation:keys-saved", onSaved); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [automation]);
 

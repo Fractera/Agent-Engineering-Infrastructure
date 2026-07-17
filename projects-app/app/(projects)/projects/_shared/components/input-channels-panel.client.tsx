@@ -54,6 +54,9 @@ function ChannelKeyRow({
         onSaved(env, value.trim());
         setValue("");
         toast.success(`${label} saved — applying (a brief restart).`);
+        // Step 248 — tell the page a key landed: the missing-keys funnel re-checks presence and hides
+        // itself, the problems badge refetches (a credentials warning may have auto-resolved server-side).
+        window.dispatchEvent(new CustomEvent("automation:keys-saved", { detail: { env } }));
       }
     } finally {
       setBusy(false);
