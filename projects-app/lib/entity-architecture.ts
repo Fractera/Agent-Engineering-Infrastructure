@@ -602,10 +602,16 @@ async function extractNode(automation: string, withHistory: boolean): Promise<No
     // dispatched by the panel's own button, which the wave replaced). Surfacing it here is what puts the
     // optimization into the wave — otherwise it would be silently dropped.
     let currentTask: NodeTask | null = n.draft ? { instruction: files.instruction, spec: files.spec } : null;
+    const t = await getTransport(automation, "node", n.cuid);
+    const p = t?.payload as { instruction?: string; spec?: string } | undefined;
     if (!n.draft) {
-      const t = await getTransport(automation, "node", n.cuid);
-      const p = t?.payload as { instruction?: string; spec?: string } | undefined;
       if (p?.instruction?.trim()) currentTask = { instruction: p.instruction, spec: p.spec ?? "" };
+    } else if (p?.instruction?.trim()) {
+      // A DRAFT's task is its spec.md — but a warning ANSWER (owner's reply, or the step-248 credentials
+      // auto-resolve with its re-test mandate) lands in the transport slot. Without this merge the answer
+      // was INVISIBLE for draft nodes (caught live on automation-14: the mandate never reached the bundle's
+      // rawRequest). The transport text joins the draft task, so the wave and the agent see both.
+      currentTask = { instruction: [files.instruction, p.instruction].filter(Boolean).join("\n\n"), spec: files.spec };
     }
     let history: EntityTaskRecord<NodeTask>[] = [];
     if (withHistory) {
