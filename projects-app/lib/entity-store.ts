@@ -133,10 +133,16 @@ export type EntityWarning = {
   subject: string;
   /** 1-3 sentences, owner's language, written for a NON-technical reader: what blocks the work and why. */
   blocker: string;
-  kind: "hermes-scout" | "owner-decision" | "external-service";
+  /** Step 248 adds "missing-credentials" — PERMANENT keys the automation needs to operate. Its lifecycle
+   *  differs from the other three: the owner adds the keys in the Settings modal → the env write
+   *  auto-resolves the warning (no answer field) → the object re-enters the wave for a MANDATORY re-test. */
+  kind: "hermes-scout" | "owner-decision" | "external-service" | "missing-credentials";
   /** REQUIRED for kind hermes-scout: the FULL ready first-person brief the owner copies to Hermes —
    *  context (what we build) → what we tried → why it failed → what to do → what to return. */
   hermesInstruction?: string;
+  /** REQUIRED for kind missing-credentials: the env key names the owner must fill in Settings. The keys
+   *  MUST also be declared as a channel in _data/channels.ts — that is what draws their Settings fields. */
+  keys?: string[];
   /** What the agent expects back, so the next iteration can pass the node. */
   expectedAnswer?: string;
 };
@@ -174,6 +180,55 @@ export async function listWarnings(automation: string): Promise<{ entityType: En
     catch { /* corrupt row -> skipped */ }
   }
   return out;
+}
+
+/** Every open warning across EVERY automation (step 248) — the env setter scans this after a key write to
+ *  auto-resolve `missing-credentials` warnings whose keys are now all present. Env keys are workspace-wide,
+ *  so the scan cannot be scoped to one automation. */
+export async function listEveryWarning(): Promise<{ automation: string; entityType: EntityType; ref: string; warning: EntityWarning }[]> {
+  const rows = (await db
+    .prepare(`SELECT automation, entity_type, entity_ref, warning_json FROM entity_warning ORDER BY created_at ASC`)
+    .all()) as { automation: string; entity_type: string; entity_ref: string; warning_json: string }[];
+  const out: { automation: string; entityType: EntityType; ref: string; warning: EntityWarning }[] = [];
+  for (const r of rows) {
+    try { out.push({ automation: r.automation, entityType: r.entity_type as EntityType, ref: r.entity_ref, warning: JSON.parse(r.warning_json) as EntityWarning }); }
+    catch { /* corrupt row -> skipped */ }
+  }
+  return out;
+}
+
+/** THE ANSWER CORE (step 246; extracted in 248 so the env setter can auto-resolve credential warnings
+ *  through the exact same lifecycle as the owner's manual answer): (a) archive the warning+answer pair to
+ *  entity_history, (b) clear the warning, (c) APPEND the answer to the object's rawRequest (transport slot)
+ *  — append, never overwrite; the non-empty rawRequest re-enters the wave. Returns the archived version,
+ *  or null when there is no open warning (idempotent for double calls). */
+export async function answerWarning(
+  automation: string, entityType: EntityType, ref: string, answer: string,
+): Promise<number | null> {
+  const warning = await getWarning(automation, entityType, ref);
+  if (!warning) return null;
+
+  const cuidScoped = entityType === "node" || entityType === "edge" || entityType === "usecase";
+  const version = cuidScoped
+    ? await nextVersionByRef(entityType, ref)
+    : await nextVersionForAutomation(automation, entityType, ref);
+  await writeVersionByRef(automation, entityType, ref, version, { warning, answer }, null);
+
+  await clearWarning(automation, entityType, ref);
+
+  const current = await getTransport(automation, entityType, ref);
+  const p = (current?.payload ?? {}) as Record<string, unknown>;
+  const answerLine = `В ответ на твой warning предоставляю следующую информацию: ${answer}`;
+  if (entityType === "node") {
+    const prev = typeof p.instruction === "string" ? p.instruction : "";
+    await setTransport(automation, entityType, ref, {
+      ...p, instruction: prev ? `${prev}\n\n${answerLine}` : answerLine, spec: typeof p.spec === "string" ? p.spec : "",
+    });
+  } else {
+    const prev = typeof p.brief === "string" ? p.brief : "";
+    await setTransport(automation, entityType, ref, { ...p, brief: prev ? `${prev}\n\n${answerLine}` : answerLine });
+  }
+  return version;
 }
 
 export type EntitySlice<TTask = unknown, TIdentity = unknown> = {

@@ -252,14 +252,16 @@ curl -X POST http://localhost:3003/api/projects/development-wave/complete \\
 It archives every brief above into the entity history, empties the containers, and closes this step — the
 owner's page is LOCKED for editing until you do. Never call it before the deploy actually succeeded.
 
-## THE BLOCKED OUTCOME is legitimate (step 247 — the decision ladder, agent_instruction 4a)
-A staged change that hits ladder step 3/4 (data/access obtainable only by a one-off external action, or an
-owner decision) is NOT implemented and NOT stormed: write its structured \`warning\`
-(POST /api/projects/entity-warning), leave its rawRequest in place, and set it aside. The deploy
-requirement above applies ONLY to changes you actually implemented. Finishing the wave with warnings in
-place is the CORRECT ending for blocked changes — call the closing call once every change is either
-implemented (and deployed) or blocked-with-a-warning. A wave whose every change is blocked deploys nothing
-and still closes.
+## THE BLOCKED OUTCOME is legitimate (step 247 — the decision ladder, agent_instruction 4a/4b)
+A staged change that hits ladder step 3/4 (permanent credentials, one-off data/access, or an owner
+decision) is NOT implemented and NOT stormed: write its structured \`warning\`
+(POST /api/projects/entity-warning), leave its rawRequest in place, and set it aside. TWO lifecycles:
+permanent keys → kind \`missing-credentials\` + keys[] (+ declare the channel in _data/channels.ts) — the
+owner fills them in Settings and the system re-queues the object with a mandatory re-test; everything
+else → the answer-field kinds (hermes-scout / owner-decision / external-service). The deploy requirement
+above applies ONLY to changes you actually implemented. Finishing the wave with warnings in place is the
+CORRECT ending for blocked changes — call the closing call once every change is either implemented (and
+deployed) or blocked-with-a-warning. A wave whose every change is blocked deploys nothing and still closes.
 
 DONE = every staged change is either implemented or blocked-with-a-warning, the validator is clean
 (\`GET http://localhost:3003/api/projects/validate?automation=${i.automation}\`), anything implemented is

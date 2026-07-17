@@ -102,7 +102,13 @@ Declarations live in `_data/` (never `_meta.ts`); shared components render them.
 
 - **Channels** — `_data/channels.ts`: `InputChannel = { name, description, keys: ChannelKey[] }`,
   `ChannelKey = { env, label, help?, optional?, secret? }`. A connector IS an input channel. Required
-  env keys derive from channels (`requiredEnvKeys()`) — no parallel list.
+  env keys derive from channels (`requiredEnvKeys()`) — no parallel list. **The credentials loop
+  (step 248):** the declared keys surface in `passport.credentials` with a `present` flag each (never a
+  value); a required key with no value shows the amber **missing-keys funnel** in the status bar; a
+  `missing-credentials` warning lists its keys and its "Open Settings" button fires the
+  `automation:open-settings` event; saving the keys in Settings (`POST /api/project-config/env`)
+  **auto-resolves** the warning and appends a **mandatory re-test** to the object's rawRequest — an
+  automation is never accepted without a real test with the real keys.
 - **Tests** — `_data/tests.ts`: one explicit probe per touched entity, staged input|intermediate|output,
   `binding` either `{type:"shared", kind: openai|telegram|lightrag|google-calendar}` (frozen route
   `app/api/projects/tests/[kind]/`) or `{type:"project", route, method?, body?}`. Route contract:

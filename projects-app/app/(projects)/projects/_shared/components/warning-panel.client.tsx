@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AlertTriangle, ChevronLeft, ChevronRight, ClipboardCopy, Loader2, Send } from "lucide-react";
+import { AlertTriangle, ChevronLeft, ChevronRight, ClipboardCopy, Loader2, Send, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,7 +37,9 @@ export function WarningBlock({
     : "";
   const action =
     warning.kind === "hermes-scout" ? W.framingScout :
-    warning.kind === "owner-decision" ? W.framingDecision : W.framingExternal;
+    warning.kind === "owner-decision" ? W.framingDecision :
+    warning.kind === "missing-credentials" ? W.framingCredentials.replace("{keys}", (warning.keys ?? []).join(", ")) :
+    W.framingExternal;
   const [showInstruction, setShowInstruction] = useState(false);
   const [answer, setAnswer] = useState("");
   const [sending, setSending] = useState(false);
@@ -77,6 +79,29 @@ export function WarningBlock({
           )}
         </div>
       </div>
+
+      {/* Step 248 — kind missing-credentials: the keys are SETTINGS fields, not an answer to paste. The
+          list + one button that opens the Settings modal (a CustomEvent the AutomationMenu listens for);
+          saving the keys there auto-resolves this warning server-side. The answer field below stays as the
+          manual fallback. */}
+      {warning.kind === "missing-credentials" && (
+        <div className="space-y-2">
+          {(warning.keys ?? []).length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-xs font-medium text-muted-foreground">{W.keysLabel}:</span>
+              {(warning.keys ?? []).map((k) => (
+                <code key={k} className="rounded bg-muted/60 px-1.5 py-0.5 text-xs">{k}</code>
+              ))}
+            </div>
+          )}
+          <Button
+            size="sm" variant="outline" className="gap-1.5"
+            onClick={() => window.dispatchEvent(new CustomEvent("automation:open-settings", { detail: { automation } }))}
+          >
+            <Settings className="size-3.5" /> {W.openSettings}
+          </Button>
+        </div>
+      )}
 
       {warning.kind === "hermes-scout" && warning.hermesInstruction && (
         <div className="space-y-2">

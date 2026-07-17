@@ -76,22 +76,36 @@ contract".
 ### 4.1 The warning escalation (the self-sufficiency cutoff)
 
 Never storm a blocker. The ladder (also in the bundle's instructions — obey that copy): can do myself →
-build; missing capability an MCP tool covers → install it yourself; missing data/access (credentials,
-captcha, registration) → write a `warning` (`POST /api/projects/entity-warning`) and set the object
-aside; owner decision needed → the same, kind `owner-decision`. The warning is **three-layered** (the
-bundle's `agentFieldContracts` + agent_instruction 4a carry the full contract): `subject` ≤10 plain
-words, `blocker` 1–3 plain sentences for a non-technical owner (≤500 chars, enforced), ALL technical
-detail only in `hermesInstruction` — a first-person brief the owner copies to the **Hermes agent** (the
-workspace's one-off scout with a browser and extended tools; its report must begin «Согласно вашему
-требованию я провёл исследование и вот какие результаты я получил для вас:»). One warning = one blocker.
-The owner's answer comes back appended to the object's rawRequest, the pair is archived to history —
-read it before re-attempting. Forbidden: second self-attempt of the same kind, stub instead of warning,
-calling Hermes yourself, clearing an unfinished rawRequest, bundling problems, demo-mismatch warnings.
+build; missing capability an MCP tool covers → install it yourself; missing **permanent credentials** →
+declare the channel + warning `missing-credentials` (below); missing **one-off** data/access (captcha,
+registration, a consent walk-through) → warning `hermes-scout`; owner decision needed → `owner-decision`.
+The warning is **three-layered** (the bundle's `agentFieldContracts` + agent_instruction 4a/4b carry the
+full contract): `subject` ≤10 plain words, `blocker` 1–3 plain sentences for a non-technical owner (≤500
+chars, enforced), ALL technical detail only in `hermesInstruction`. One warning = one blocker.
+
+**The four kinds and their lifecycles:**
+
+| kind | who resolves | how it clears | what happens next |
+|---|---|---|---|
+| `hermes-scout` | the Hermes agent (owner copies `hermesInstruction`; report begins «Согласно вашему требованию я провёл исследование и вот какие результаты я получил для вас:») | owner pastes the report into the answer field | answer appended to rawRequest → re-enters the wave |
+| `owner-decision` | the owner (the blocker carries the question) | owner writes the decision in the answer field | same |
+| `external-service` | nobody can fetch around it — the owner is informed | owner writes how to proceed | same |
+| `missing-credentials` (step 248) | the owner, in the **Settings modal** — REQUIRES `keys:[env names]`, the same keys declared as a channel in `_data/channels.ts` | **auto-resolves**: the env write detects all keys present, archives the pair, clears the warning | a **mandatory re-test** is appended to rawRequest — the agent never tested without the keys, so the next iteration must really test before finishing |
+
+The answer (manual or synthetic) is always archived to history with the warning — read the pair before
+re-attempting. Check `passport.credentials` BEFORE asking for any key — `present:true` is never requested
+again. A secret VALUE met anywhere in the owner's text goes to env at once (`POST /api/project-config/env`);
+specs/summaries/git carry only the KEY NAME. Forbidden: second self-attempt of the same kind, stub instead
+of warning, calling Hermes yourself, clearing an unfinished rawRequest, bundling problems, demo-mismatch
+warnings, asking for a `present:true` key.
 
 ### 4.2 Existing connectors — check HERE before writing a hermesInstruction
 
 The workspace already owns connector plumbing; a warning's `hermesInstruction`/`expectedAnswer` must ask
-for what THIS plumbing accepts, never invent a parallel format. Known today:
+for what THIS plumbing accepts, never invent a parallel format. **The declaration mechanism is the
+channels standard** (`_data/channels.ts` — README "settings & tests"): declaring a channel with its keys
+is what draws the owner's Settings fields, feeds `passport.credentials`, and arms the auto-resolve of a
+`missing-credentials` warning. Known connectors today:
 
 - **Google Calendar** — env `GOOGLE_OAUTH_CLIENT_ID` + `GOOGLE_OAUTH_CLIENT_SECRET` (the slot's
   `.env.local`, runtime setter of step 143); per-automation OAuth tokens in the `automation_calendar_tokens`

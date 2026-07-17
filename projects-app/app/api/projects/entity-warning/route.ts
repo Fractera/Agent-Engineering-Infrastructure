@@ -15,7 +15,7 @@ import { ENTITY_TYPES, setWarning, listWarnings, type EntityType, type EntityWar
 // GET lists an automation's open warnings — the problems modal and the ⚠ badge read it. Rows are enriched
 // with a human `label` (the node's name) so the UI never shows a raw cuid to the owner.
 
-const KINDS = ["hermes-scout", "owner-decision", "external-service"] as const;
+const KINDS = ["hermes-scout", "owner-decision", "external-service", "missing-credentials"] as const;
 const SUBJECT_MAX = 120;   // ≤10 words of plain language
 const BLOCKER_MAX = 500;   // 1-3 sentences; a wall of text gets rejected, not rendered
 
@@ -62,9 +62,17 @@ export async function POST(req: NextRequest) {
   if (kind === "hermes-scout" && !hermesInstruction) {
     return NextResponse.json({ error: "kind hermes-scout requires warning.hermesInstruction — the full ready first-person brief the owner copies to the Hermes agent: context (what we build) -> what we tried -> why it failed -> what to do -> what to return" }, { status: 400 });
   }
+  // Step 248: PERMANENT credentials are not a scout job — they are Settings fields. The warning must name
+  // the env keys, and those keys must be declared as a channel in _data/channels.ts (that is what draws
+  // their Settings inputs; the write there auto-resolves this warning and mandates a re-test).
+  const keys = Array.isArray(w.keys) ? w.keys.map((k) => String(k).trim()).filter(Boolean) : [];
+  if (kind === "missing-credentials" && !keys.length) {
+    return NextResponse.json({ error: "kind missing-credentials requires warning.keys — the UPPER_SNAKE env key names the owner must fill in Settings; declare the same keys as a channel in _data/channels.ts so the Settings modal renders their fields" }, { status: 400 });
+  }
   await setWarning(proj.automation, entityType, String(body.ref ?? ""), {
     subject, blocker, kind,
     hermesInstruction: hermesInstruction || undefined,
+    keys: keys.length ? keys : undefined,
     expectedAnswer: typeof w.expectedAnswer === "string" ? w.expectedAnswer.trim() || undefined : undefined,
   });
   return NextResponse.json({ ok: true });

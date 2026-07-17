@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { spawn } from "node:child_process"
-import { readFile, writeFile } from "node:fs/promises"
-import { join } from "node:path"
+import { writeFile } from "node:fs/promises"
 import { getSession } from "@/lib/auth/get-session"
+import { envPath, readEnvLines, presentFromLines } from "@/lib/env-presence"
+import { listEveryWarning, answerWarning } from "@/lib/entity-store"
 
 // Slot-scoped, single-key env setter for the Projects layer (step 186.4).
 // The admin whole-file setter (bridges/app .../api/config/env) rewrites the ENTIRE
@@ -33,9 +34,8 @@ const LOCKED_KEYS = new Set([
 ])
 const KEY_RE = /^[A-Z][A-Z0-9_]*$/
 
-function envPath(): string {
-  return process.env.APP_ENV_PATH ?? join(process.cwd(), ".env.local")
-}
+// envPath/readEnvLines/presentFromLines moved to lib/env-presence.ts (step 248) — the bundle's
+// passport.credentials and the credential-warning auto-resolve read presence through the same parser.
 
 function keyRejection(key: string): string | null {
   if (!KEY_RE.test(key)) return "key must be UPPER_SNAKE_CASE"
@@ -44,29 +44,9 @@ function keyRejection(key: string): string | null {
   return null
 }
 
-async function readEnvLines(): Promise<string[]> {
-  try {
-    const raw = await readFile(envPath(), "utf8")
-    return raw.length ? raw.split(/\r?\n/) : []
-  } catch {
-    return []
-  }
-}
-
 function serializeValue(value: string): string {
   // Quote only when the value carries characters dotenv would mis-parse.
   return /[\s#"'\\]/.test(value) ? `"${value.replace(/(["\\])/g, "\\$1")}"` : value
-}
-
-function presentFromLines(lines: string[], keys: string[]): Record<string, boolean> {
-  const found: Record<string, string> = {}
-  for (const line of lines) {
-    const m = /^\s*([A-Z][A-Z0-9_]*)\s*=(.*)$/.exec(line)
-    if (m) found[m[1]] = m[2].trim().replace(/^["']|["']$/g, "")
-  }
-  const out: Record<string, boolean> = {}
-  for (const k of keys) out[k] = Boolean(found[k] && found[k].length)
-  return out
 }
 
 async function authorize(req: NextRequest): Promise<boolean> {
@@ -143,6 +123,35 @@ export async function POST(req: NextRequest) {
   }
   await writeFile(envPath(), next.join("\n"), "utf8")
 
+  // THE CREDENTIAL-WARNING AUTO-RESOLVE (step 248, owner's design): a `missing-credentials` warning is not
+  // answered in a text field — the owner adds the keys HERE, in Settings. After every successful key write,
+  // scan every open warning of that kind (workspace-wide: env keys are not per-automation) and resolve each
+  // whose declared keys are now ALL present, through the SAME lifecycle as a manual answer (archive pair →
+  // clear → append to rawRequest). The synthetic answer MANDATES a re-test: the agent never got to test the
+  // node without the keys, so the object re-enters the wave and the automation is only accepted after a
+  // real test passes. Best-effort: a failure here must never break the key write itself.
+  const resolved: { automation: string; entityType: string; ref: string }[] = []
+  try {
+    const open = (await listEveryWarning()).filter(
+      (w) => w.warning.kind === "missing-credentials" && Array.isArray(w.warning.keys) && w.warning.keys.length,
+    )
+    if (open.length) {
+      const allKeys = [...new Set(open.flatMap((w) => w.warning.keys ?? []))]
+      const present = presentFromLines(next, allKeys)
+      for (const w of open) {
+        if (!(w.warning.keys ?? []).every((k) => present[k])) continue
+        const keyList = (w.warning.keys ?? []).join(", ")
+        await answerWarning(
+          w.automation, w.entityType, w.ref,
+          `Владелец добавил ключи (${keyList}) через Настройки. Проведи РЕАЛЬНЫЙ тест этого объекта с этими ключами и только после успешного теста завершай его — без явного тестирования работа не принимается.`,
+        )
+        resolved.push({ automation: w.automation, entityType: w.entityType, ref: w.ref })
+      }
+    }
+  } catch {
+    // the write succeeded; an auto-resolve hiccup is recoverable by re-saving the key
+  }
+
   // Runtime var → detached restart so it takes effect without a rebuild. A tiny
   // sleep lets THIS response flush before pm2 recycles the process. Production only;
   // in dev (hot-reload, no pm2) the value is already live on next read. Skipped when
@@ -159,5 +168,5 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, key, restarting: willRestart })
+  return NextResponse.json({ ok: true, key, restarting: willRestart, resolvedWarnings: resolved })
 }

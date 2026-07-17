@@ -10,6 +10,7 @@ import type { EntitiesConfig } from "../entities";
 import { AutomationMenu } from "./automation-menu.client";
 import { AutomationStatePill } from "./automation-state-pill.client";
 import { AutomationModeIndicators } from "./automation-mode-indicators.client";
+import { MissingKeysFunnel } from "./missing-keys-funnel.client";
 import { useWaveLock } from "./wave-lock.client";
 import { useUiLang } from "../use-ui-lang";
 import { categoryHubStrings } from "../category-hub-i18n";
@@ -82,6 +83,9 @@ export function AutomationStatusBar({
         {/* Type badge + state pill (step 224 §1.5 / L6) — left of the burger. "In development" (indigo)
             while any node is still a draft: the automation is auto-stopped until every node is built. */}
         {automation && <WaveReopenButton automation={automation} />}
+        {/* Step 248 — declared required keys with no value yet: an amber badge + a once-per-load funnel
+            pointing at Settings (never over the problems modal). */}
+        {automation && <MissingKeysFunnel automation={automation} channels={channels} />}
         {automation && <AutomationStatePill automation={automation} type={type ?? "stream"} />}
         {automation && <AutomationModeIndicators automation={automation} type={type} />}
         <AutomationMenu

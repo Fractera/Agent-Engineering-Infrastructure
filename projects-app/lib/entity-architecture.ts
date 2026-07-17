@@ -12,6 +12,7 @@ import {
   type EntityType, ENTITY_TYPES, type EntitySlice, type EntityTaskRecord, type EntityInstance,
   getTransport, getHistory, getSummary, getWarning, listVersionsByRef, makeInstance, getLifecycleState,
 } from "@/lib/entity-store";
+import { readEnvPresence } from "@/lib/env-presence";
 
 export type { EntityType, EntitySlice };
 export { ENTITY_TYPES };
@@ -145,8 +146,20 @@ const AGENT_INSTRUCTION_CORE =
   "ACCESS obtainable only by a one-off external action (credentials, captcha, login-walled scraping, fresh " +
   "data, manual registration) or on an OWNER DECISION — do NOT storm it: write a structured `warning` via " +
   "POST /api/projects/entity-warning {automation, entityType, ref, warning:{subject, blocker, kind, " +
-  "hermesInstruction?, expectedAnswer?}}, set that object aside, continue the other objects, and finish the " +
-  "wave with warnings in place. THE WARNING IS READ BY A NON-TECHNICAL OWNER (step 247) — three layers, one " +
+  "hermesInstruction?, keys?, expectedAnswer?}}, set that object aside, continue the other objects, and " +
+  "finish the wave with warnings in place. " +
+  "(4b) PERMANENT CREDENTIALS ARE SETTINGS FIELDS, NOT A SCOUT JOB (step 248): when the blocker is keys/" +
+  "tokens the automation needs PERMANENTLY to operate (a bot token, an API key pair), first read " +
+  "passport.credentials — a key with present:true is already filled, never ask for it again. Missing? " +
+  "(1) DECLARE the channel with its keys in _data/channels.ts (the channels standard — this is what draws " +
+  "the fields in the owner's Settings modal), (2) write the warning with kind \"missing-credentials\" and " +
+  "keys:[env names] — no hermesInstruction. The owner fills the keys in Settings; the system then resolves " +
+  "the warning ITSELF and appends a re-test mandate to the object's rawRequest — you never got to test " +
+  "without the keys, so the next iteration MUST really test before finishing. kind \"hermes-scout\" stays " +
+  "for ONE-OFF data/actions (scraping, a captcha, a consent walk-through), never for permanent keys. A " +
+  "secret VALUE you meet anywhere in the owner's text goes to env at once (POST /api/project-config/env) — " +
+  "in specs/summaries/git only the KEY NAME, never the value. " +
+  "THE WARNING IS READ BY A NON-TECHNICAL OWNER (step 247) — three layers, one " +
   "audience each: `subject` = ≤10 plain words in the owner's language naming WHAT you need (\"интеграция с " +
   "Google Calendar\"); `blocker` = 1-3 plain sentences (≤500 chars, enforced) saying what blocks you and why " +
   "— NO file paths, NO identifiers, NO quoted system stubs; `hermesInstruction` = the ONLY place for " +
@@ -216,14 +229,18 @@ const AGENT_FIELD_CONTRACTS: FieldContract[] = [
       "Written ONLY when the rawRequest's task is impossible with your means (credentials, keys, captcha, " +
       "registration, or an owner decision). Structured, three layers (agent_instruction 4a): subject = ≤10 " +
       "plain words naming the need; blocker = 1-3 plain sentences for a non-technical owner; " +
-      "hermesInstruction = the technical brief for the Hermes agent. The THREE kinds, pick exactly one: " +
-      "\"hermes-scout\" = missing data/access a one-off external action can obtain (the Hermes agent goes " +
-      "and gets it; hermesInstruction REQUIRED); \"owner-decision\" = only the owner can decide (a choice, " +
-      "a payment, consent) — the blocker carries the question, no Hermes instruction; \"external-service\" = " +
+      "hermesInstruction = the technical brief for the Hermes agent. The FOUR kinds, pick exactly one: " +
+      "\"hermes-scout\" = ONE-OFF data/access an external action can obtain (the Hermes agent goes and " +
+      "gets it; hermesInstruction REQUIRED); \"owner-decision\" = only the owner can decide (a choice, a " +
+      "payment, consent) — the blocker carries the question, no Hermes instruction; \"external-service\" = " +
       "an external service itself is down/broken/refusing and nobody can fetch around it — the owner is " +
-      "informed and decides how to proceed. NEVER write fake stub code instead of raising a warning. A " +
-      "wave whose staged change is blocked still completes — the warning IS its legitimate terminal state " +
-      "for this iteration (the rawRequest stays for the next one).",
+      "informed and decides how to proceed; \"missing-credentials\" (step 248) = PERMANENT keys the " +
+      "automation needs to operate — keys:[env names] REQUIRED, the same keys declared as a channel in " +
+      "_data/channels.ts. Its lifecycle differs: the owner fills the keys in the Settings modal, the " +
+      "system auto-resolves the warning and appends a MANDATORY re-test to the rawRequest — the next " +
+      "iteration must really test with the keys before finishing. NEVER write fake stub code instead of " +
+      "raising a warning. A wave whose staged change is blocked still completes — the warning IS its " +
+      "legitimate terminal state for this iteration (the rawRequest stays for the next one).",
   },
 ];
 
@@ -267,10 +284,14 @@ const NODES_INSTRUCTION =
   "THE DECISION LADDER (step 246) — BEFORE building a node, answer: can I build it COMPLETELY with available " +
   "means? Strictly in order: (1) CAN DO MYSELF (deterministic code + already-wired tools) -> build. " +
   "(2) MISSING A CAPABILITY an MCP tool covers (web search -> exa.ai, etc.) -> find, install and wire it to " +
-  "the node yourself, document it in functions — self-service, no warning. (3) MISSING DATA/ACCESS obtainable " +
-  "only by a one-off external action (credentials, captcha, login-walled parsing, fresh data, registration) " +
-  "-> do NOT storm it: write the node's `warning` (see agent_instruction 4a — subject + plain-language " +
-  "blocker + technical detail ONLY in hermesInstruction), set THIS node aside, continue the others. " +
+  "the node yourself, document it in functions — self-service, no warning. (3a) MISSING PERMANENT " +
+  "CREDENTIALS (keys/tokens the automation needs to operate) -> check passport.credentials first " +
+  "(present:true = already filled); missing -> declare the channel in _data/channels.ts AND write the " +
+  "node's warning kind \"missing-credentials\" with keys:[env names] (agent_instruction 4b) — the owner " +
+  "fills them in Settings, the system re-queues the node with a mandatory re-test. (3b) MISSING ONE-OFF " +
+  "DATA/ACCESS (captcha, login-walled parsing, fresh data, registration) -> do NOT storm it: write the " +
+  "node's `warning` kind \"hermes-scout\" (see agent_instruction 4a — subject + plain-language blocker + " +
+  "technical detail ONLY in hermesInstruction), set THIS node aside, continue the others. " +
   "(4) NEEDS AN OWNER DECISION (a choice, a payment, consent) -> the same warning without a Hermes " +
   "instruction, with the question. ONE warning = ONE blocker — a node blocked by two independent problems " +
   "gets its most fundamental one first; the rest wait for the next iteration. FORBIDDEN: a second " +
@@ -459,14 +480,39 @@ function jsonStr(m: RegExpMatchArray | null): string {
   try { return m ? (JSON.parse(m[1]) as string) : ""; } catch { return ""; }
 }
 
+// THE CREDENTIALS VIEW (step 248) — the passport surfaces the automation's declared channel keys with a
+// PRESENCE flag each (never a value): the agent sees what the automation needs and what the owner already
+// filled in Settings, so a present key is never asked for twice. Source of truth stays _data/channels.ts
+// (the channels standard — README "settings & tests"); this is a read-only projection of it, parsed with
+// the same regex approach the passport already uses on description.ts.
+async function extractCredentials(projectDir: string): Promise<{ keys: { env: string; channel: string; label: string; optional: boolean; secret: boolean; present: boolean }[] }> {
+  const src = await readFile(join(projectDir, "_data/channels.ts"), "utf8").catch(() => "");
+  const names = [...src.matchAll(/name:\s*("(?:[^"\\]|\\.)*")/g)].map((m) => ({ i: m.index ?? 0, name: jsonStr(m as RegExpMatchArray) }));
+  const keys: { env: string; channel: string; label: string; optional: boolean; secret: boolean }[] = [];
+  for (const m of src.matchAll(/\{[^{}]*env:\s*"([A-Z][A-Z0-9_]*)"[^{}]*\}/g)) {
+    const body = m[0];
+    const label = /label:\s*("(?:[^"\\]|\\.)*")/.exec(body);
+    const channel = [...names].reverse().find((n) => n.i < (m.index ?? 0))?.name ?? "";
+    keys.push({
+      env: m[1], channel,
+      label: label ? jsonStr(label) : m[1],
+      optional: /optional:\s*true/.test(body),
+      secret: /secret:\s*true/.test(body),
+    });
+  }
+  if (!keys.length) return { keys: [] };
+  const present = await readEnvPresence(keys.map((k) => k.env));
+  return { keys: keys.map((k) => ({ ...k, present: Boolean(present[k.env]) })) };
+}
+
 async function extractPassport(automation: string): Promise<unknown> {
   const proj = resolveProject(automation);
   if (!proj.ok) return { error: proj.error };
   const read = (rel: string) => readFile(join(proj.projectDir, rel), "utf8").catch(() => "");
-  const [descSrc, type, instruction, readme, configSrc, howItWorks, lifecycleState] = await Promise.all([
+  const [descSrc, type, instruction, readme, configSrc, howItWorks, lifecycleState, credentials] = await Promise.all([
     read("_data/description.ts"), automationTypeOf(automation),
     read("_data/instruction.md"), read("README.md"), read("_data/config.ts"),
-    readHowItWorks(proj.projectDir), getLifecycleState(automation),
+    readHowItWorks(proj.projectDir), getLifecycleState(automation), extractCredentials(proj.projectDir),
   ]);
   const title = jsonStr(descSrc.match(/title:\s*("(?:[^"\\]|\\.)*")/));
   const description = jsonStr(descSrc.match(/description:\s*\n?\s*("(?:[^"\\]|\\.)*")/));
@@ -481,6 +527,9 @@ async function extractPassport(automation: string): Promise<unknown> {
     // The system flips it mechanically (development-wave/complete); agent_instruction 2a explains the duty.
     lifecycleState,
     available_lifecycle_states_and_descriptions: LIFECYCLE_STATE_DESCRIPTIONS,
+    // Step 248 — declared channel keys with presence flags (NEVER values): read this BEFORE asking the
+    // owner for any key; present:true is never requested again.
+    credentials,
     isChainedGroup: type === "chained",
     ownerInstruction: instruction.trim(),
     // The universal pair at automation level (owner 2026-07-16): the automation's own rawRequest rides the

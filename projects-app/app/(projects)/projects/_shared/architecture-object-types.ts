@@ -33,6 +33,9 @@ type Passport = {
                                             // demo pattern (examples, zero weight); flips to real-automation
                                             // mechanically when the FIRST development wave completes
   available_lifecycle_states_and_descriptions: Record<string, string>;
+  credentials: {                            // step 248: declared channel keys + presence — NEVER values.
+    keys: { env: string; channel: string; label: string; optional: boolean; secret: boolean; present: boolean }[];
+  };                                        // present:true = filled in Settings — never ask for it again
   isChainedGroup: boolean;
   ownerInstruction: string;                 // the owner's original free-form instruction
   rawRequest: string;                       // always "" at passport level (wishes ride the entities)
@@ -96,9 +99,12 @@ type EntityInstance = {
 type EntityWarning = {
   subject: string;                          // <=10 plain words, owner's language: WHAT was asked for
   blocker: string;                          // 1-3 plain sentences FOR A NON-TECHNICAL OWNER (<=500 chars); no paths/ids
-  kind: "hermes-scout" | "owner-decision" | "external-service";
+  kind: "hermes-scout" | "owner-decision" | "external-service" | "missing-credentials";
   hermesInstruction?: string;               // REQUIRED for hermes-scout: first-person tech brief for the Hermes agent
                                             // (context -> tried -> failed why -> do -> return); ALL technical detail here
+  keys?: string[];                          // REQUIRED for missing-credentials (step 248): the env key names the owner
+                                            // fills in Settings; declare the same keys as a channel in _data/channels.ts.
+                                            // Saving them auto-resolves the warning + mandates a re-test
   expectedAnswer?: string;                  // what the agent expects back to pass the object next iteration
 };
 

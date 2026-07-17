@@ -96,6 +96,19 @@ export function AutomationMenu({
     return () => { cancelled = true; };
   }, [modelEnvKey]);
 
+  // OPEN SETTINGS FROM OUTSIDE (step 248): a `missing-credentials` warning and the missing-keys funnel
+  // both carry an "Open Settings" button — they dispatch this event, the menu owns the modal state.
+  // The detail's automation (when given) must match ours, so two automations on one page never cross-open.
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const d = (e as CustomEvent).detail as { automation?: string } | undefined;
+      if (d?.automation && automation && d.automation !== automation) return;
+      setSettingsOpen(true);
+    };
+    window.addEventListener("automation:open-settings", onOpen);
+    return () => window.removeEventListener("automation:open-settings", onOpen);
+  }, [automation]);
+
   const rowLabel = (k: OrderableKey): string =>
     k === "fork-activation" ? M.forkActivationLabel : k === "usecases" ? U.sectionTitle : M.entities[k].label;
 
