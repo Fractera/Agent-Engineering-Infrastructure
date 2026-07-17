@@ -486,7 +486,10 @@ function jsonStr(m: RegExpMatchArray | null): string {
 // (the channels standard — README "settings & tests"); this is a read-only projection of it, parsed with
 // the same regex approach the passport already uses on description.ts.
 async function extractCredentials(projectDir: string): Promise<{ keys: { env: string; channel: string; label: string; optional: boolean; secret: boolean; present: boolean }[] }> {
-  const src = await readFile(join(projectDir, "_data/channels.ts"), "utf8").catch(() => "");
+  const raw = await readFile(join(projectDir, "_data/channels.ts"), "utf8").catch(() => "");
+  // STRIP COMMENTS FIRST — the frozen skeleton ships a commented-out Google Calendar EXAMPLE in this very
+  // file, and a naive regex read it as a live declaration (caught on automation-14's first live bundle).
+  const src = raw.replace(/\/\*[\s\S]*?\*\//g, "").split(/\r?\n/).map((l) => l.replace(/\/\/.*$/, "")).join("\n");
   const names = [...src.matchAll(/name:\s*("(?:[^"\\]|\\.)*")/g)].map((m) => ({ i: m.index ?? 0, name: jsonStr(m as RegExpMatchArray) }));
   const keys: { env: string; channel: string; label: string; optional: boolean; secret: boolean }[] = [];
   for (const m of src.matchAll(/\{[^{}]*env:\s*"([A-Z][A-Z0-9_]*)"[^{}]*\}/g)) {
