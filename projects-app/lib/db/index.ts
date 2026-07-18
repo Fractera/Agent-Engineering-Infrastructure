@@ -585,6 +585,16 @@ const SCHEMA = `
     updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(automation, entity_type, entity_ref)
   );
+  -- THE AUTOMATION CATALOG INDEX (step 258, the reuse thesis) — one row per automation whose "How it works"
+  -- text is indexed in the LightRAG vector store (lib/automation-catalog.ts). track_id is the vector-doc
+  -- handle: it lets a re-index delete the PREVIOUS doc before ingesting the fresh text (so the catalog never
+  -- accumulates stale prose), and delete/clone forget the automation cleanly. The vector docs live in
+  -- LightRAG; this table is only the automation→track_id map. Absent LightRAG → the table simply stays empty.
+  CREATE TABLE IF NOT EXISTS automation_catalog_index (
+    automation TEXT PRIMARY KEY NOT NULL,
+    track_id   TEXT NOT NULL DEFAULT '',
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
 `
 
 // The architecture three streams (projects / pages / endpoints) and their tasks

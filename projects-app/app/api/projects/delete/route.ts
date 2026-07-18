@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { db } from "@/lib/db";
 import { authorize, resolveProject, scheduleRebuild } from "@/lib/nodes";
 import { regenerateExecutables } from "@/lib/executables";
+import { getCatalogTrack, catalogDelete, clearCatalogTrack } from "@/lib/automation-catalog";
 
 // DELETE AN AUTOMATION (step 241 E3.2, owner's request) — the tool the product was missing entirely: you
 // could create automations but never remove one, so every test and every abandoned idea stayed forever.
@@ -52,6 +53,12 @@ export async function POST(req: NextRequest) {
   }
 
   const automation = proj.automation;
+
+  // 0. the catalog vector doc (step 258) — drop it from LightRAG before the row goes, so a deleted automation
+  //    never lingers as a searchable ghost. Best-effort: absent LightRAG is a no-op.
+  const track = await getCatalogTrack(automation);
+  if (track) await catalogDelete(track);
+  await clearCatalogTrack(automation);
 
   // 1. run-node rows hang off the runs, not off the automation — clear them before their parents.
   await db.prepare(

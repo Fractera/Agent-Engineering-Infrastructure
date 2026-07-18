@@ -32,6 +32,11 @@ decompose a small task to feel safe — apply the numbers, not a feeling.
 
 ## 3. The decomposition recommendation (its exact contract)
 
+REUSE BEFORE BUILD (step 258): the product ships with many READY automations. Before proposing to BUILD a
+member, SEARCH the catalog (the \`search_automation_catalog\` tool) for one that already does it — a strong
+match should be REUSED (the owner clones it), not built again. For each such member the plan says "reuse
+<automation> (clone it)" instead of a creation instruction.
+
 The recommendation is persisted as an owner-decision warning on the \`general\` entity, and the owner ACTS
 on it by hand (this current automation cannot be developed — its type is fixed, so it cannot become the
 group by itself). Therefore the plan must be a HUMAN, NUMBERED, ready-to-execute procedure in the owner's

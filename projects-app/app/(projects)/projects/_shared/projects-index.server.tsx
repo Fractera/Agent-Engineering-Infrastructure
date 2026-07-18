@@ -7,6 +7,7 @@ import { listProjectSlugs } from "./projects-manifest";
 import { getProjectCard } from "./project-card";
 import { GlobalCanvas } from "./components/global-canvas.client";
 import { CreateAutomationRootCard } from "./components/create-automation-card.client";
+import { FindAutomationCard } from "./components/find-automation-card.client";
 import { AddCategoryButton } from "./components/add-category-button.client";
 import { projectsIndexStrings } from "./projects-index-i18n";
 
@@ -50,6 +51,10 @@ export async function ProjectsIndex() {
 
       {/* Dynamic grid (owner): 2 cards, then 3, then 4 on very wide screens. */}
       <div className="mt-8 grid flex-1 content-start gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        {/* THE "FIND AN AUTOMATION" CARD (step 258, owner's placement) — the VERY FIRST card, ahead of even the
+            Group automations card: with a library of hundreds of ready automations the owner's first move is to
+            search for one that fits (and clone it), not to scroll categories. Same soft bg-muted/30 accent. */}
+        <FindAutomationCard />
         {/* THE "GROUP AUTOMATIONS" CARD (step 238, reordered + restyled per owner) — listed FIRST, ahead of the
             four real categories: a chained automation cuts across all of them, so its card leads the grid. The
             background is a touch different from every other card (bg-muted/30 vs bg-card) — soft, not loud —

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { authorize, resolveProject } from "@/lib/nodes";
 import { generateHowItWorks } from "@/lib/how-it-works";
+import { reindexAutomation } from "@/lib/automation-catalog";
 
 // POST { automation, collected } -> { ok: true, result } | { ok: false, error } — the modal's "Get answer
 // from AI" button (step 237, rewired 238). `collected` is the JSON2 snapshot the modal's OWN "Collect data"
@@ -17,5 +20,17 @@ export async function POST(req: NextRequest) {
 
   const outcome = await generateHowItWorks(proj.projectDir, body?.collected ?? null, body?.prompt);
   if (!outcome.ok) return NextResponse.json({ error: outcome.error }, { status: 502 });
+
+  // CATALOG RE-INDEX (step 258) — the freshly written "How it works" text IS the automation's search embedding.
+  // Best-effort and NON-BLOCKING to the response: a missing/slow LightRAG must never fail the owner's answer.
+  void (async () => {
+    let title = proj.slug;
+    try {
+      const desc = await readFile(join(proj.projectDir, "_data", "description.ts"), "utf8");
+      title = (desc.match(/\btitle:\s*"((?:[^"\\]|\\.)*)"/) ?? [])[1] || proj.slug;
+    } catch { /* no description.ts — the slug is a fine fallback title */ }
+    await reindexAutomation(proj.automation, title, outcome.result.text);
+  })();
+
   return NextResponse.json({ ok: true, result: outcome.result });
 }

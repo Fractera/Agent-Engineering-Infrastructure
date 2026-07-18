@@ -3,6 +3,7 @@ import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { agentCanon } from "@/app/(projects)/projects/_lib/automation-agent-canon";
 import { setAutomationType, type AutomationType } from "@/lib/automation-type-write";
+import { catalogQuery } from "@/lib/automation-catalog";
 import { SCALE_RULES } from "@/app/(projects)/projects/_lib/scale-rules";
 import { WIRING_RULES } from "@/app/(projects)/projects/_lib/wiring-rules";
 import { buildArchitecture } from "@/lib/entity-architecture";
@@ -202,6 +203,21 @@ const TOOLS = [
   {
     type: "function",
     function: {
+      name: "search_automation_catalog",
+      description:
+        "Search the catalog of READY automations by meaning (their indexed descriptions). Use it during a decomposition: BEFORE recommending to BUILD a proposed sub-automation, search for one that already does it — a strong match should be REUSED (cloned) instead of built. Returns the closest automations by id.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: { type: "string", description: "A plain description of the capability you are looking for." },
+        },
+        required: ["query"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "finish",
       description:
         "End the run with the final report (owner's language). If the task exceeded the node budget (law 2b), pass `decomposition` INSTEAD of making any changes — that is a successful outcome.",
@@ -331,6 +347,17 @@ async function execTool(proj: ResolvedProject, name: string, args: Record<string
     if (!res.ok) return { ok: false, detail: res.error, payload: { error: res.error } };
     if (!res.changed) return { ok: true, detail: `already ${res.to}`, payload: { ok: true, changed: false, type: res.to } };
     return { ok: true, detail: `type ${res.from} → ${res.to}`, payload: { ok: true, changed: true, from: res.from, to: res.to } };
+  }
+
+  if (name === "search_automation_catalog") {
+    const hits = await catalogQuery(str("query"));
+    // Never point the agent at its OWN automation (it is developing it, not reusing it).
+    const others = hits.filter((h) => h.automation !== proj.automation);
+    return {
+      ok: true,
+      detail: others.length ? `${others.length} match(es)` : "no matches",
+      payload: { ok: true, matches: others.map((h) => ({ automation: h.automation, snippet: h.snippet })) },
+    };
   }
 
   if (name === "close_entity") {
