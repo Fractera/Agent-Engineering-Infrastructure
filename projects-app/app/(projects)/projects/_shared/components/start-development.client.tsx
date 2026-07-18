@@ -1,38 +1,45 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { CheckCheck, Copy, Loader2, ListChecks, Rocket, MessageSquarePlus } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Check, CheckCheck, Copy, Loader2, ListChecks, Rocket, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useUiLang } from "../use-ui-lang";
 
-// THE LAUNCH DIALOG (step 233 → the wave in 240 → the LIGHT HAND-OFF in 249). The owner's single hand-off,
-// with the step machinery REMOVED (owner 2026-07-17): no Development Step file, no page lock, no number to
-// run. The dialog now shows TWO copyable tasks, stacked:
-//
-//   1. FIRST SESSION — the full-context task: an address + a mandate (the agent loads the architecture JSON
-//      itself). Copy this when the coding agent has not worked on this automation yet.
-//   2. CONTINUATION — the delta task: only the changes staged since the last hand-off (one or many), briefs
-//      inline, with an explicit "do not reload the full JSON" (a warm agent already holds the context —
-//      re-pasting everything would only overflow it).
-//
-// Discipline is the owner's own (maximal minimalism, his decision): after copying, a toast says to wait for
-// the agent to finish before editing further. No lock is taken anywhere.
+// THE LAUNCH DIALOG (step 233 → the wave in 240 → the light hand-off in 249 → THE IN-PRODUCT DEVELOPER in
+// step 250). The button no longer hands out a copyable task: after the gates pass, the dialog itself POSTs
+// /api/projects/develop and the built-in agent works LIVE — the ribbon streams the model's text and every
+// tool call (spinner → ✓/✗, a compile error shown verbatim), ending in a report with a Copy button. The
+// legacy copyable hand-off stays available at GET /api/projects/handoff for manual use.
 //
 // THE GATES STAY (they were never about steps): the use-case review gate (step 231, confirm button right
-// here), the stub-node refusal (step 247 П5) and "nothing staged". They now live in GET /api/projects/handoff.
+// here), the stub-node refusal (step 247 П5) and "nothing staged" — plus three run-time refusals of the
+// develop route (no key / a model without tools / already running). The client branches on Content-Type:
+// a 409 JSON is a gate, an event-stream is a run. Closing the dialog aborts the run (the started tool
+// finishes server-side — each is atomic per-object).
 type Case = { cuid: string; title: string; summary: string; status: string };
-type Mode = "loading" | "review" | "ready" | "no-cases" | "nothing-staged" | "stub-nodes";
+type Mode =
+  | "loading" | "review" | "run"
+  | "no-cases" | "nothing-staged" | "stub-nodes"
+  | "already-running" | "no-key" | "model-no-tools";
+
+type FeedItem =
+  | { kind: "info"; text: string }
+  | { kind: "text"; text: string }
+  | { kind: "tool"; name: string; status: "run" | "ok" | "fail"; detail?: string };
+
+type DoneState = { report: string; outcome: "implemented" | "decomposition" } | null;
 
 type SD = {
   title: string;
   preparing: string;
   reviewHeading: string; reviewIntro: string; confirm: string; confirming: string;
-  readyIntro: string;
-  firstTitle: string; firstBody: string;
-  nextTitle: string; nextBody: string;
-  copy: string; copiedWait: string;
+  runIntro: string; phaseContext: string; turnLabel: string;
+  doneTitle: string; doneDecompositionTitle: string; doneDecompositionBody: string;
+  copyReport: string; copied: string;
+  runFailed: string; runAborted: string;
+  alreadyRunning: string; noKey: string; modelNoTools: string;
   noCasesTitle: string; noCasesBody: string; noStagedTitle: string; noStagedBody: string;
   stubTitle: string; stubBody: string;
   failed: string; noDescription: string;
@@ -40,155 +47,239 @@ type SD = {
 const I18N: Record<string, SD> = {
   en: {
     title: "Start development",
-    preparing: "Preparing the task…",
+    preparing: "Preparing…",
     reviewHeading: "Read your use cases and confirm before development starts",
     reviewIntro: "This is where you and the AI agree. Read what it understood; if anything is wrong, close this and fix the case with its pencil. Development starts only after you confirm.",
     confirm: "I read them — the AI understood me", confirming: "Confirming…",
-    readyIntro: "Copy ONE of the two tasks below and paste it into your AI coding agent's chat (Claude Code / Codex / …).",
-    firstTitle: "First session", firstBody: "The agent has not worked on this automation yet: this task gives it the full context.",
-    nextTitle: "Continue the session", nextBody: "The agent is already working on this automation: this task carries only the new changes ({n}).",
-    copy: "Copy", copiedWait: "Copied. After handing it to the agent, wait for it to finish before making new changes.",
+    runIntro: "The built-in AI developer is working. Closing this window stops the run.",
+    phaseContext: "Context handed to {model} — {n} staged task(s).",
+    turnLabel: "Turn {n}",
+    doneTitle: "Development finished",
+    doneDecompositionTitle: "The task is bigger than one automation",
+    doneDecompositionBody: "The AI made no changes and saved a decomposition plan instead. Open the warnings panel to read and copy it.",
+    copyReport: "Copy report", copied: "Copied.",
+    runFailed: "The run stopped with an error: {code}", runAborted: "The run was stopped.",
+    alreadyRunning: "Development is already running for this automation — wait for it to finish.",
+    noKey: "Save the OpenAI key in the settings first.",
+    modelNoTools: "The model {model} does not support tools — pick another model in the settings.",
     noCasesTitle: "Describe the use cases first", noCasesBody: "This automation has no use cases yet. Open the Quiz on this page and describe your scenarios — development cannot start without them.",
     noStagedTitle: "Nothing staged for development", noStagedBody: "There are no pending requirements right now — describe a change first (a node's brief, a requirement, or a Sparkles comment).",
     stubTitle: "Some nodes have no description", stubBody: "These nodes still carry the blank template text: {nodes}. A coding agent cannot build a node nobody described — open each one and say what it should do, or delete it. Then launch again.",
-    failed: "Could not prepare the task.", noDescription: "No description yet.",
+    failed: "Could not start development.", noDescription: "No description yet.",
   },
   ru: {
     title: "Запустить разработку",
-    preparing: "Готовлю задание…",
+    preparing: "Готовлю…",
     reviewHeading: "Прочитайте кейсы и подтвердите — до начала разработки",
     reviewIntro: "Здесь вы и ИИ договариваетесь. Прочитайте, что он понял; если что-то не так — закройте и поправьте кейс карандашом. Разработка начнётся только после подтверждения.",
     confirm: "Я прочитал — ИИ понял меня правильно", confirming: "Подтверждаю…",
-    readyIntro: "Скопируйте ОДНО из двух заданий ниже и вставьте его в чат вашего ИИ-агента-кодера (Claude Code / Codex / …).",
-    firstTitle: "Первая сессия", firstBody: "Агент ещё не работал с этой автоматизацией: задание даст ему полный контекст.",
-    nextTitle: "Продолжить сессию", nextBody: "Агент уже работает с этой автоматизацией: задание содержит только новые изменения ({n}).",
-    copy: "Скопировать", copiedWait: "Скопировано. Передав задание агенту, дождитесь завершения его работы, прежде чем вносить новые изменения.",
+    runIntro: "Встроенный ИИ-разработчик работает. Закрытие окна остановит запуск.",
+    phaseContext: "Контекст передан модели {model} — заданий: {n}.",
+    turnLabel: "Ход {n}",
+    doneTitle: "Разработка завершена",
+    doneDecompositionTitle: "Задача больше одной автоматизации",
+    doneDecompositionBody: "ИИ не вносил изменений и вместо этого сохранил план декомпозиции. Откройте панель предупреждений, чтобы прочитать и скопировать его.",
+    copyReport: "Скопировать отчёт", copied: "Скопировано.",
+    runFailed: "Запуск остановился с ошибкой: {code}", runAborted: "Запуск остановлен.",
+    alreadyRunning: "Разработка этой автоматизации уже идёт — дождитесь завершения.",
+    noKey: "Сначала сохраните ключ OpenAI в настройках.",
+    modelNoTools: "Модель {model} не поддерживает инструменты — выберите другую в настройках.",
     noCasesTitle: "Сначала опишите пользовательские кейсы", noCasesBody: "У этой автоматизации ещё нет кейсов. Откройте Quiz на этой странице и опишите сценарии — без них разработку не начать.",
     noStagedTitle: "В разработку ничего не передано", noStagedBody: "Сейчас нет ожидающих требований — сначала опишите изменение (требование узла, требование сущности или комментарий через ✦).",
     stubTitle: "У некоторых узлов нет описания", stubBody: "Эти узлы всё ещё несут пустой шаблонный текст: {nodes}. Агент-программист не может построить узел, который никто не описал — откройте каждый и скажите, что он должен делать, или удалите его. Затем запустите разработку снова.",
-    failed: "Не удалось подготовить задание.", noDescription: "Пока без описания.",
+    failed: "Не удалось запустить разработку.", noDescription: "Пока без описания.",
   },
   es: {
     title: "Iniciar desarrollo",
-    preparing: "Preparando la tarea…",
+    preparing: "Preparando…",
     reviewHeading: "Lee tus casos de uso y confirma antes de empezar el desarrollo",
     reviewIntro: "Aquí es donde tú y la IA os ponéis de acuerdo. Lee lo que entendió; si algo está mal, cierra y corrige el caso con su lápiz. El desarrollo empieza solo después de que confirmes.",
     confirm: "Los leí — la IA me entendió", confirming: "Confirmando…",
-    readyIntro: "Copia UNA de las dos tareas de abajo y pégala en el chat de tu agente de código de IA (Claude Code / Codex / …).",
-    firstTitle: "Primera sesión", firstBody: "El agente aún no ha trabajado con esta automatización: esta tarea le da el contexto completo.",
-    nextTitle: "Continuar la sesión", nextBody: "El agente ya trabaja con esta automatización: esta tarea lleva solo los cambios nuevos ({n}).",
-    copy: "Copiar", copiedWait: "Copiado. Tras entregarla al agente, espera a que termine antes de hacer nuevos cambios.",
+    runIntro: "El desarrollador de IA integrado está trabajando. Cerrar esta ventana detiene la ejecución.",
+    phaseContext: "Contexto entregado a {model} — {n} tareas pendientes.",
+    turnLabel: "Turno {n}",
+    doneTitle: "Desarrollo terminado",
+    doneDecompositionTitle: "La tarea es más grande que una automatización",
+    doneDecompositionBody: "La IA no hizo cambios y guardó en su lugar un plan de descomposición. Abre el panel de avisos para leerlo y copiarlo.",
+    copyReport: "Copiar informe", copied: "Copiado.",
+    runFailed: "La ejecución se detuvo con un error: {code}", runAborted: "Ejecución detenida.",
+    alreadyRunning: "El desarrollo de esta automatización ya está en marcha — espera a que termine.",
+    noKey: "Guarda primero la clave de OpenAI en los ajustes.",
+    modelNoTools: "El modelo {model} no admite herramientas — elige otro en los ajustes.",
     noCasesTitle: "Describe primero los casos de uso", noCasesBody: "Esta automatización aún no tiene casos de uso. Abre el Quiz en esta página y describe tus escenarios — sin ellos no se puede empezar el desarrollo.",
     noStagedTitle: "Nada pendiente de desarrollo", noStagedBody: "Ahora mismo no hay requisitos pendientes — describe primero un cambio (el requisito de un nodo, de una entidad o un comentario con ✦).",
     stubTitle: "Algunos nodos no tienen descripción", stubBody: "Estos nodos aún llevan el texto de plantilla vacío: {nodes}. Un agente de código no puede construir un nodo que nadie describió — abra cada uno y diga qué debe hacer, o elimínelo. Luego vuelva a lanzar.",
-    failed: "No se pudo preparar la tarea.", noDescription: "Aún sin descripción.",
+    failed: "No se pudo iniciar el desarrollo.", noDescription: "Aún sin descripción.",
   },
   fr: {
     title: "Démarrer le développement",
-    preparing: "Préparation de la tâche…",
+    preparing: "Préparation…",
     reviewHeading: "Lisez vos cas d'usage et confirmez avant le début du développement",
     reviewIntro: "C'est ici que vous et l'IA vous mettez d'accord. Lisez ce qu'elle a compris ; si quelque chose ne va pas, fermez et corrigez le cas avec son crayon. Le développement ne commence qu'après votre confirmation.",
     confirm: "Je les ai lus — l'IA m'a compris", confirming: "Confirmation…",
-    readyIntro: "Copiez UNE des deux tâches ci-dessous et collez-la dans le chat de votre agent de code IA (Claude Code / Codex / …).",
-    firstTitle: "Première session", firstBody: "L'agent n'a pas encore travaillé sur cette automatisation : cette tâche lui donne le contexte complet.",
-    nextTitle: "Poursuivre la session", nextBody: "L'agent travaille déjà sur cette automatisation : cette tâche ne porte que les nouveaux changements ({n}).",
-    copy: "Copier", copiedWait: "Copié. Après l'avoir remise à l'agent, attendez qu'il termine avant de faire de nouveaux changements.",
+    runIntro: "Le développeur IA intégré travaille. Fermer cette fenêtre arrête l'exécution.",
+    phaseContext: "Contexte transmis à {model} — {n} tâches en attente.",
+    turnLabel: "Tour {n}",
+    doneTitle: "Développement terminé",
+    doneDecompositionTitle: "La tâche dépasse une seule automatisation",
+    doneDecompositionBody: "L'IA n'a fait aucun changement et a enregistré à la place un plan de décomposition. Ouvrez le panneau des avertissements pour le lire et le copier.",
+    copyReport: "Copier le rapport", copied: "Copié.",
+    runFailed: "L'exécution s'est arrêtée avec une erreur : {code}", runAborted: "Exécution arrêtée.",
+    alreadyRunning: "Le développement de cette automatisation est déjà en cours — attendez qu'il se termine.",
+    noKey: "Enregistrez d'abord la clé OpenAI dans les réglages.",
+    modelNoTools: "Le modèle {model} ne prend pas en charge les outils — choisissez-en un autre dans les réglages.",
     noCasesTitle: "Décrivez d'abord les cas d'usage", noCasesBody: "Cette automatisation n'a pas encore de cas d'usage. Ouvrez le Quiz sur cette page et décrivez vos scénarios — sans eux, le développement ne peut pas commencer.",
     noStagedTitle: "Rien en attente de développement", noStagedBody: "Aucune exigence en attente pour l'instant — décrivez d'abord un changement (l'exigence d'un nœud, d'une entité ou un commentaire via ✦).",
     stubTitle: "Certains nœuds n'ont pas de description", stubBody: "Ces nœuds portent encore le texte de modèle vide : {nodes}. Un agent de code ne peut pas construire un nœud que personne n'a décrit — ouvrez chacun et dites ce qu'il doit faire, ou supprimez-le. Puis relancez.",
-    failed: "Impossible de préparer la tâche.", noDescription: "Pas encore de description.",
+    failed: "Impossible de démarrer le développement.", noDescription: "Pas encore de description.",
   },
   it: {
     title: "Avvia lo sviluppo",
-    preparing: "Preparo il compito…",
+    preparing: "Preparo…",
     reviewHeading: "Leggi i tuoi casi d'uso e conferma prima che inizi lo sviluppo",
     reviewIntro: "Qui tu e l'IA vi mettete d'accordo. Leggi ciò che ha capito; se qualcosa non va, chiudi e correggi il caso con la sua matita. Lo sviluppo inizia solo dopo la tua conferma.",
     confirm: "Li ho letti — l'IA mi ha capito", confirming: "Conferma…",
-    readyIntro: "Copia UNO dei due compiti qui sotto e incollalo nella chat del tuo agente di codice IA (Claude Code / Codex / …).",
-    firstTitle: "Prima sessione", firstBody: "L'agente non ha ancora lavorato su questa automazione: questo compito gli dà il contesto completo.",
-    nextTitle: "Continua la sessione", nextBody: "L'agente sta già lavorando su questa automazione: questo compito porta solo le modifiche nuove ({n}).",
-    copy: "Copia", copiedWait: "Copiato. Dopo averlo consegnato all'agente, attendi che finisca prima di fare nuove modifiche.",
+    runIntro: "Lo sviluppatore IA integrato sta lavorando. Chiudere questa finestra interrompe l'esecuzione.",
+    phaseContext: "Contesto consegnato a {model} — {n} compiti in attesa.",
+    turnLabel: "Turno {n}",
+    doneTitle: "Sviluppo completato",
+    doneDecompositionTitle: "Il compito è più grande di una singola automazione",
+    doneDecompositionBody: "L'IA non ha fatto modifiche e ha salvato invece un piano di scomposizione. Apri il pannello degli avvisi per leggerlo e copiarlo.",
+    copyReport: "Copia il rapporto", copied: "Copiato.",
+    runFailed: "L'esecuzione si è fermata con un errore: {code}", runAborted: "Esecuzione interrotta.",
+    alreadyRunning: "Lo sviluppo di questa automazione è già in corso — attendi che finisca.",
+    noKey: "Salva prima la chiave OpenAI nelle impostazioni.",
+    modelNoTools: "Il modello {model} non supporta gli strumenti — scegline un altro nelle impostazioni.",
     noCasesTitle: "Descrivi prima i casi d'uso", noCasesBody: "Questa automazione non ha ancora casi d'uso. Apri il Quiz in questa pagina e descrivi i tuoi scenari — senza di essi non si può iniziare lo sviluppo.",
     noStagedTitle: "Niente in attesa di sviluppo", noStagedBody: "Al momento non ci sono richieste in sospeso — descrivi prima una modifica (la richiesta di un nodo, di un'entità o un commento con ✦).",
     stubTitle: "Alcuni nodi non hanno descrizione", stubBody: "Questi nodi portano ancora il testo di modello vuoto: {nodes}. Un agente di codice non può costruire un nodo che nessuno ha descritto — apra ciascuno e dica cosa deve fare, oppure lo elimini. Poi rilanci.",
-    failed: "Impossibile preparare il compito.", noDescription: "Ancora nessuna descrizione.",
+    failed: "Impossibile avviare lo sviluppo.", noDescription: "Ancora nessuna descrizione.",
   },
   de: {
     title: "Entwicklung starten",
-    preparing: "Aufgabe wird vorbereitet…",
+    preparing: "Vorbereitung…",
     reviewHeading: "Lies deine Anwendungsfälle und bestätige, bevor die Entwicklung beginnt",
     reviewIntro: "Hier einigt ihr euch, du und die KI. Lies, was sie verstanden hat; wenn etwas nicht stimmt, schließe und korrigiere den Fall mit seinem Stift. Die Entwicklung startet erst nach deiner Bestätigung.",
     confirm: "Ich habe sie gelesen — die KI hat mich verstanden", confirming: "Bestätige…",
-    readyIntro: "Kopiere EINE der beiden Aufgaben unten und füge sie in den Chat deines KI-Coding-Agenten ein (Claude Code / Codex / …).",
-    firstTitle: "Erste Sitzung", firstBody: "Der Agent hat noch nicht an dieser Automatisierung gearbeitet: diese Aufgabe gibt ihm den vollen Kontext.",
-    nextTitle: "Sitzung fortsetzen", nextBody: "Der Agent arbeitet bereits an dieser Automatisierung: diese Aufgabe trägt nur die neuen Änderungen ({n}).",
-    copy: "Kopieren", copiedWait: "Kopiert. Warte nach der Übergabe an den Agenten, bis er fertig ist, bevor du neue Änderungen machst.",
+    runIntro: "Der eingebaute KI-Entwickler arbeitet. Das Schließen dieses Fensters stoppt den Lauf.",
+    phaseContext: "Kontext an {model} übergeben — {n} anstehende Aufgaben.",
+    turnLabel: "Zug {n}",
+    doneTitle: "Entwicklung abgeschlossen",
+    doneDecompositionTitle: "Die Aufgabe ist größer als eine Automatisierung",
+    doneDecompositionBody: "Die KI hat keine Änderungen gemacht und stattdessen einen Zerlegungsplan gespeichert. Öffne das Warnungs-Panel, um ihn zu lesen und zu kopieren.",
+    copyReport: "Bericht kopieren", copied: "Kopiert.",
+    runFailed: "Der Lauf endete mit einem Fehler: {code}", runAborted: "Lauf gestoppt.",
+    alreadyRunning: "Die Entwicklung dieser Automatisierung läuft bereits — warte, bis sie fertig ist.",
+    noKey: "Speichere zuerst den OpenAI-Schlüssel in den Einstellungen.",
+    modelNoTools: "Das Modell {model} unterstützt keine Tools — wähle in den Einstellungen ein anderes.",
     noCasesTitle: "Beschreibe zuerst die Anwendungsfälle", noCasesBody: "Diese Automatisierung hat noch keine Anwendungsfälle. Öffne das Quiz auf dieser Seite und beschreibe deine Szenarien — ohne sie kann die Entwicklung nicht beginnen.",
     noStagedTitle: "Nichts zur Entwicklung vorgemerkt", noStagedBody: "Es gibt gerade keine offenen Anforderungen — beschreibe zuerst eine Änderung (die Anforderung eines Knotens, einer Entität oder einen Kommentar über ✦).",
     stubTitle: "Einige Knoten haben keine Beschreibung", stubBody: "Diese Knoten tragen noch den leeren Vorlagentext: {nodes}. Ein Coding-Agent kann keinen Knoten bauen, den niemand beschrieben hat — öffne jeden und sage, was er tun soll, oder lösche ihn. Dann starte erneut.",
-    failed: "Die Aufgabe konnte nicht vorbereitet werden.", noDescription: "Noch keine Beschreibung.",
+    failed: "Die Entwicklung konnte nicht gestartet werden.", noDescription: "Noch keine Beschreibung.",
   },
   pt: {
     title: "Iniciar desenvolvimento",
-    preparing: "A preparar a tarefa…",
+    preparing: "A preparar…",
     reviewHeading: "Leia os seus casos de uso e confirme antes de o desenvolvimento começar",
     reviewIntro: "É aqui que você e a IA chegam a acordo. Leia o que ela percebeu; se algo estiver errado, feche e corrija o caso com o lápis. O desenvolvimento só começa depois de confirmar.",
     confirm: "Li-os — a IA percebeu-me", confirming: "A confirmar…",
-    readyIntro: "Copie UMA das duas tarefas abaixo e cole-a no chat do seu agente de código de IA (Claude Code / Codex / …).",
-    firstTitle: "Primeira sessão", firstBody: "O agente ainda não trabalhou nesta automação: esta tarefa dá-lhe o contexto completo.",
-    nextTitle: "Continuar a sessão", nextBody: "O agente já está a trabalhar nesta automação: esta tarefa traz apenas as alterações novas ({n}).",
-    copy: "Copiar", copiedWait: "Copiado. Depois de a entregar ao agente, espere que termine antes de fazer novas alterações.",
+    runIntro: "O desenvolvedor de IA integrado está a trabalhar. Fechar esta janela interrompe a execução.",
+    phaseContext: "Contexto entregue a {model} — {n} tarefas pendentes.",
+    turnLabel: "Turno {n}",
+    doneTitle: "Desenvolvimento concluído",
+    doneDecompositionTitle: "A tarefa é maior do que uma automação",
+    doneDecompositionBody: "A IA não fez alterações e guardou em vez disso um plano de decomposição. Abra o painel de avisos para o ler e copiar.",
+    copyReport: "Copiar relatório", copied: "Copiado.",
+    runFailed: "A execução parou com um erro: {code}", runAborted: "Execução interrompida.",
+    alreadyRunning: "O desenvolvimento desta automação já está em curso — aguarde que termine.",
+    noKey: "Guarde primeiro a chave OpenAI nas definições.",
+    modelNoTools: "O modelo {model} não suporta ferramentas — escolha outro nas definições.",
     noCasesTitle: "Descreva primeiro os casos de uso", noCasesBody: "Esta automação ainda não tem casos de uso. Abra o Quiz nesta página e descreva os seus cenários — sem eles o desenvolvimento não pode começar.",
     noStagedTitle: "Nada pendente de desenvolvimento", noStagedBody: "Não há requisitos pendentes neste momento — descreva primeiro uma alteração (o requisito de um nó, de uma entidade ou um comentário via ✦).",
     stubTitle: "Alguns nós não têm descrição", stubBody: "Estes nós ainda trazem o texto de modelo vazio: {nodes}. Um agente de código não pode construir um nó que ninguém descreveu — abra cada um e diga o que deve fazer, ou elimine-o. Depois lance de novo.",
-    failed: "Não foi possível preparar a tarefa.", noDescription: "Ainda sem descrição.",
+    failed: "Não foi possível iniciar o desenvolvimento.", noDescription: "Ainda sem descrição.",
   },
   pl: {
     title: "Uruchom rozwój",
-    preparing: "Przygotowuję zadanie…",
+    preparing: "Przygotowuję…",
     reviewHeading: "Przeczytaj swoje przypadki użycia i potwierdź przed rozpoczęciem rozwoju",
     reviewIntro: "Tutaj ty i AI dochodzicie do porozumienia. Przeczytaj, co zrozumiała; jeśli coś jest nie tak, zamknij i popraw przypadek ołówkiem. Rozwój zaczyna się dopiero po twoim potwierdzeniu.",
     confirm: "Przeczytałem je — AI mnie zrozumiała", confirming: "Potwierdzam…",
-    readyIntro: "Skopiuj JEDNO z dwóch zadań poniżej i wklej je do czatu swojego agenta kodującego AI (Claude Code / Codex / …).",
-    firstTitle: "Pierwsza sesja", firstBody: "Agent nie pracował jeszcze z tą automatyzacją: to zadanie daje mu pełny kontekst.",
-    nextTitle: "Kontynuuj sesję", nextBody: "Agent już pracuje z tą automatyzacją: to zadanie niesie tylko nowe zmiany ({n}).",
-    copy: "Kopiuj", copiedWait: "Skopiowano. Po przekazaniu agentowi poczekaj, aż skończy, zanim wprowadzisz nowe zmiany.",
+    runIntro: "Wbudowany deweloper AI pracuje. Zamknięcie tego okna zatrzyma uruchomienie.",
+    phaseContext: "Kontekst przekazany modelowi {model} — oczekujących zadań: {n}.",
+    turnLabel: "Ruch {n}",
+    doneTitle: "Rozwój zakończony",
+    doneDecompositionTitle: "Zadanie jest większe niż jedna automatyzacja",
+    doneDecompositionBody: "AI nie wprowadziła zmian i zamiast tego zapisała plan dekompozycji. Otwórz panel ostrzeżeń, aby go przeczytać i skopiować.",
+    copyReport: "Skopiuj raport", copied: "Skopiowano.",
+    runFailed: "Uruchomienie zatrzymało się z błędem: {code}", runAborted: "Uruchomienie zatrzymane.",
+    alreadyRunning: "Rozwój tej automatyzacji już trwa — poczekaj, aż się zakończy.",
+    noKey: "Najpierw zapisz klucz OpenAI w ustawieniach.",
+    modelNoTools: "Model {model} nie obsługuje narzędzi — wybierz inny w ustawieniach.",
     noCasesTitle: "Najpierw opisz przypadki użycia", noCasesBody: "Ta automatyzacja nie ma jeszcze przypadków użycia. Otwórz Quiz na tej stronie i opisz swoje scenariusze — bez nich rozwój nie może się rozpocząć.",
     noStagedTitle: "Nic nie czeka na rozwój", noStagedBody: "Obecnie nie ma oczekujących wymagań — najpierw opisz zmianę (wymaganie węzła, encji lub komentarz przez ✦).",
     stubTitle: "Niektóre węzły nie mają opisu", stubBody: "Te węzły wciąż niosą pusty tekst szablonu: {nodes}. Agent kodujący nie zbuduje węzła, którego nikt nie opisał — otwórz każdy i powiedz, co ma robić, albo go usuń. Potem uruchom ponownie.",
-    failed: "Nie udało się przygotować zadania.", noDescription: "Jeszcze bez opisu.",
+    failed: "Nie udało się uruchomić rozwoju.", noDescription: "Jeszcze bez opisu.",
   },
   tr: {
     title: "Geliştirmeyi başlat",
-    preparing: "Görev hazırlanıyor…",
+    preparing: "Hazırlanıyor…",
     reviewHeading: "Geliştirme başlamadan önce kullanım senaryolarınızı okuyun ve onaylayın",
     reviewIntro: "Burada siz ve yapay zekâ anlaşırsınız. Ne anladığını okuyun; bir şey yanlışsa kapatın ve senaryoyu kalemiyle düzeltin. Geliştirme yalnızca onayınızdan sonra başlar.",
     confirm: "Onları okudum — yapay zekâ beni anladı", confirming: "Onaylanıyor…",
-    readyIntro: "Aşağıdaki iki görevden BİRİNİ kopyalayın ve yapay zekâ kod ajanınızın sohbetine yapıştırın (Claude Code / Codex / …).",
-    firstTitle: "İlk oturum", firstBody: "Ajan bu otomasyonla henüz çalışmadı: bu görev ona tam bağlamı verir.",
-    nextTitle: "Oturuma devam et", nextBody: "Ajan bu otomasyonla zaten çalışıyor: bu görev yalnızca yeni değişiklikleri taşır ({n}).",
-    copy: "Kopyala", copiedWait: "Kopyalandı. Ajana teslim ettikten sonra, yeni değişiklikler yapmadan önce bitirmesini bekleyin.",
+    runIntro: "Yerleşik yapay zekâ geliştirici çalışıyor. Bu pencereyi kapatmak çalışmayı durdurur.",
+    phaseContext: "Bağlam {model} modeline iletildi — bekleyen görev: {n}.",
+    turnLabel: "Tur {n}",
+    doneTitle: "Geliştirme tamamlandı",
+    doneDecompositionTitle: "Görev tek bir otomasyondan büyük",
+    doneDecompositionBody: "Yapay zekâ değişiklik yapmadı ve bunun yerine bir ayrıştırma planı kaydetti. Okumak ve kopyalamak için uyarılar panelini açın.",
+    copyReport: "Raporu kopyala", copied: "Kopyalandı.",
+    runFailed: "Çalışma bir hatayla durdu: {code}", runAborted: "Çalışma durduruldu.",
+    alreadyRunning: "Bu otomasyonun geliştirmesi zaten sürüyor — bitmesini bekleyin.",
+    noKey: "Önce ayarlarda OpenAI anahtarını kaydedin.",
+    modelNoTools: "{model} modeli araçları desteklemiyor — ayarlardan başka bir model seçin.",
     noCasesTitle: "Önce kullanım senaryolarını tanımlayın", noCasesBody: "Bu otomasyonun henüz kullanım senaryosu yok. Bu sayfadaki Quiz'i açın ve senaryolarınızı tanımlayın — onlar olmadan geliştirme başlayamaz.",
     noStagedTitle: "Geliştirme bekleyen bir şey yok", noStagedBody: "Şu anda bekleyen gereksinim yok — önce bir değişiklik tanımlayın (bir düğümün, bir varlığın gereksinimi ya da ✦ ile bir yorum).",
     stubTitle: "Bazı düğümlerin açıklaması yok", stubBody: "Bu düğümler hâlâ boş şablon metnini taşıyor: {nodes}. Kodlama ajanı kimsenin tanımlamadığı bir düğümü inşa edemez — her birini açıp ne yapması gerektiğini söyleyin ya da silin. Sonra yeniden başlatın.",
-    failed: "Görev hazırlanamadı.", noDescription: "Henüz açıklama yok.",
+    failed: "Geliştirme başlatılamadı.", noDescription: "Henüz açıklama yok.",
   },
   nl: {
     title: "Ontwikkeling starten",
-    preparing: "Taak wordt voorbereid…",
+    preparing: "Voorbereiden…",
     reviewHeading: "Lees je use cases en bevestig voordat de ontwikkeling begint",
     reviewIntro: "Hier komen jij en de AI tot overeenstemming. Lees wat ze begrepen heeft; klopt er iets niet, sluit dan en corrigeer de case met het potlood. De ontwikkeling begint pas na jouw bevestiging.",
     confirm: "Ik heb ze gelezen — de AI heeft me begrepen", confirming: "Bevestigen…",
-    readyIntro: "Kopieer ÉÉN van de twee taken hieronder en plak die in de chat van je AI coding agent (Claude Code / Codex / …).",
-    firstTitle: "Eerste sessie", firstBody: "De agent heeft nog niet aan deze automatisering gewerkt: deze taak geeft hem de volledige context.",
-    nextTitle: "Sessie voortzetten", nextBody: "De agent werkt al aan deze automatisering: deze taak bevat alleen de nieuwe wijzigingen ({n}).",
-    copy: "Kopiëren", copiedWait: "Gekopieerd. Wacht na de overdracht aan de agent tot hij klaar is voordat je nieuwe wijzigingen maakt.",
+    runIntro: "De ingebouwde AI-ontwikkelaar is aan het werk. Dit venster sluiten stopt de run.",
+    phaseContext: "Context overgedragen aan {model} — {n} openstaande taken.",
+    turnLabel: "Beurt {n}",
+    doneTitle: "Ontwikkeling voltooid",
+    doneDecompositionTitle: "De taak is groter dan één automatisering",
+    doneDecompositionBody: "De AI heeft geen wijzigingen gemaakt en in plaats daarvan een decompositieplan opgeslagen. Open het waarschuwingenpaneel om het te lezen en te kopiëren.",
+    copyReport: "Rapport kopiëren", copied: "Gekopieerd.",
+    runFailed: "De run stopte met een fout: {code}", runAborted: "Run gestopt.",
+    alreadyRunning: "De ontwikkeling van deze automatisering loopt al — wacht tot die klaar is.",
+    noKey: "Sla eerst de OpenAI-sleutel op in de instellingen.",
+    modelNoTools: "Het model {model} ondersteunt geen tools — kies een ander in de instellingen.",
     noCasesTitle: "Beschrijf eerst de use cases", noCasesBody: "Deze automatisering heeft nog geen use cases. Open de Quiz op deze pagina en beschrijf je scenario's — zonder deze kan de ontwikkeling niet beginnen.",
     noStagedTitle: "Niets wacht op ontwikkeling", noStagedBody: "Er zijn momenteel geen openstaande eisen — beschrijf eerst een wijziging (de eis van een node, een entiteit of een opmerking via ✦).",
     stubTitle: "Sommige nodes hebben geen beschrijving", stubBody: "Deze nodes dragen nog de lege sjabloontekst: {nodes}. Een coding agent kan geen node bouwen die niemand beschreven heeft — open elke node en zeg wat die moet doen, of verwijder hem. Start daarna opnieuw.",
-    failed: "Kon de taak niet voorbereiden.", noDescription: "Nog geen beschrijving.",
+    failed: "Kon de ontwikkeling niet starten.", noDescription: "Nog geen beschrijving.",
   },
 };
+
+/** The 150px fade at both ends of the ribbon (owner's spec): the feed melts into transparency instead of
+ *  clipping — no silent waiting, no hard edges. */
+const RIBBON_MASK =
+  "linear-gradient(to bottom, transparent 0, black 150px, black calc(100% - 150px), transparent 100%)";
+
+type DevelopEvent =
+  | { type: "phase"; staged: number; model: string }
+  | { type: "turn"; n: number }
+  | { type: "delta"; text: string }
+  | { type: "tool"; name: string }
+  | { type: "tool-result"; name: string; ok: boolean; detail?: string }
+  | { type: "done"; report: string; outcome: "implemented" | "decomposition" }
+  | { type: "error"; code: string };
 
 export function StartDevelopment({
   automation,
@@ -200,7 +291,7 @@ export function StartDevelopment({
   /** Controlled by the banner (step 240) — this dialog no longer has a trigger of its own. */
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  /** Kept for the banner's wiring; the light flow (step 249) takes no lock, so it is never fired. */
+  /** Kept for the banner's wiring; the develop flow closes per-object, so it is never fired. */
   onLaunched?: () => void;
 }) {
   void onLaunched;
@@ -209,48 +300,123 @@ export function StartDevelopment({
   const [mode, setMode] = useState<Mode>("loading");
   const [busy, setBusy] = useState(false);
   const [cases, setCases] = useState<Case[]>([]);
-  const [fullTask, setFullTask] = useState("");
-  const [deltaTask, setDeltaTask] = useState("");
-  const [staged, setStaged] = useState(0);
   // Step 247 (П5): the node names the launch gate refused over — shown so the owner knows WHICH to describe.
   const [stubNodes, setStubNodes] = useState<string[]>([]);
+  const [refusedModel, setRefusedModel] = useState("");
+  const [feed, setFeed] = useState<FeedItem[]>([]);
+  const [done, setDone] = useState<DoneState>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const stickRef = useRef(true);
 
-  // Ask the server for the two copyable tasks. The gate answers 409 (not-reviewed → show the cases to
-  // confirm right here; no-cases / nothing-staged / stub-nodes → say why). 200 → both tasks are ready.
+  // The ribbon sticks to the bottom while the owner has not scrolled away; a manual scroll up unsticks it,
+  // scrolling back to the bottom re-sticks it.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el && stickRef.current) el.scrollTop = el.scrollHeight;
+  }, [feed, done]);
+
+  const applyEvent = useCallback((e: DevelopEvent) => {
+    if (e.type === "phase") {
+      setFeed((f) => [...f, { kind: "info", text: L.phaseContext.replace("{model}", e.model).replace("{n}", String(e.staged)) }]);
+    } else if (e.type === "turn") {
+      setFeed((f) => [...f, { kind: "info", text: L.turnLabel.replace("{n}", String(e.n)) }]);
+    } else if (e.type === "delta") {
+      setFeed((f) => {
+        const last = f[f.length - 1];
+        if (last?.kind === "text") return [...f.slice(0, -1), { kind: "text", text: last.text + e.text }];
+        return [...f, { kind: "text", text: e.text }];
+      });
+    } else if (e.type === "tool") {
+      setFeed((f) => [...f, { kind: "tool", name: e.name, status: "run" }]);
+    } else if (e.type === "tool-result") {
+      setFeed((f) => {
+        const i = f.findLastIndex((it) => it.kind === "tool" && it.name === e.name && it.status === "run");
+        if (i < 0) return [...f, { kind: "tool", name: e.name, status: e.ok ? "ok" : "fail", detail: e.detail }];
+        const next = [...f];
+        next[i] = { kind: "tool", name: e.name, status: e.ok ? "ok" : "fail", detail: e.detail };
+        return next;
+      });
+    } else if (e.type === "done") {
+      setDone({ report: e.report, outcome: e.outcome });
+    } else if (e.type === "error") {
+      setFeed((f) => [...f, {
+        kind: "info",
+        text: e.code === "aborted" ? L.runAborted : L.runFailed.replace("{code}", e.code),
+      }]);
+    }
+  }, [L]);
+
+  // Start (or gate) the run: POST /develop. A 409 JSON is a gate answer; an event-stream is the live run —
+  // the stream-reading pattern of activation-quiz (fetch + AbortController + getReader + line buffer).
   const load = useCallback(async () => {
+    abortRef.current?.abort();
+    const ctl = new AbortController();
+    abortRef.current = ctl;
     setMode("loading");
     setBusy(true);
+    setFeed([]);
+    setDone(null);
+    stickRef.current = true;
     try {
-      const r = await fetch(`/api/projects/handoff?automation=${encodeURIComponent(automation)}`, { cache: "no-store" });
-      if (r.ok) {
-        const d = (await r.json()) as { full: string; delta: string; staged: number };
-        setFullTask(d.full);
-        setDeltaTask(d.delta);
-        setStaged(d.staged);
-        setMode("ready");
+      const r = await fetch(`/api/projects/develop`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ automation }),
+        signal: ctl.signal,
+      });
+      if (!(r.headers.get("Content-Type") ?? "").includes("text/event-stream")) {
+        const d = (await r.json().catch(() => ({}))) as { reason?: string; nodes?: string[]; model?: string };
+        if (d.reason === "stub-nodes") {
+          setStubNodes(d.nodes ?? []);
+          setMode("stub-nodes");
+        } else if (d.reason === "not-reviewed") {
+          const cr = await fetch(`/api/projects/use-cases?automation=${encodeURIComponent(automation)}`, { cache: "no-store" });
+          const cd = (await cr.json().catch(() => ({}))) as { cases?: Case[] };
+          setCases(cd.cases ?? []);
+          setMode("review");
+        } else if (d.reason === "no-cases" || d.reason === "nothing-staged" || d.reason === "already-running" || d.reason === "no-key") {
+          setMode(d.reason);
+        } else if (d.reason === "model-no-tools") {
+          setRefusedModel(d.model ?? "");
+          setMode("model-no-tools");
+        } else {
+          toast.error(L.failed);
+          onOpenChange(false);
+        }
         return;
       }
-      const d = (await r.json().catch(() => ({}))) as { reason?: string; nodes?: string[] };
-      if (d.reason === "stub-nodes") {
-        setStubNodes(d.nodes ?? []);
-        setMode("stub-nodes");
-      } else if (d.reason === "not-reviewed") {
-        const cr = await fetch(`/api/projects/use-cases?automation=${encodeURIComponent(automation)}`, { cache: "no-store" });
-        const cd = (await cr.json().catch(() => ({}))) as { cases?: Case[] };
-        setCases(cd.cases ?? []);
-        setMode("review");
-      } else if (d.reason === "no-cases") {
-        setMode("no-cases");
-      } else if (d.reason === "nothing-staged") {
-        setMode("nothing-staged");
-      } else {
+
+      setMode("run");
+      setBusy(false);
+      const reader = r.body!.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      try {
+        for (;;) {
+          const { done: d, value } = await reader.read();
+          if (d) break;
+          buf += decoder.decode(value, { stream: true });
+          const lines = buf.split("\n");
+          buf = lines.pop() ?? "";
+          for (const line of lines) {
+            const s = line.trim();
+            if (!s.startsWith("data:")) continue;
+            const payload = s.slice(5).trim();
+            if (payload === "[DONE]") continue;
+            try { applyEvent(JSON.parse(payload) as DevelopEvent); } catch { /* skip a partial frame */ }
+          }
+        }
+      } catch { /* aborted by closing the dialog — nothing to render */ }
+    } catch (e) {
+      if (!(e instanceof DOMException && e.name === "AbortError")) {
         toast.error(L.failed);
         onOpenChange(false);
       }
     } finally { setBusy(false); }
-  }, [automation, L, onOpenChange]);
+  }, [automation, L, onOpenChange, applyEvent]);
 
-  // Confirm the cases, then immediately continue to the tasks — one uninterrupted flow.
+  // Confirm the cases, then immediately continue to the run — one uninterrupted flow.
   const confirmAndContinue = useCallback(async () => {
     setBusy(true);
     try {
@@ -266,108 +432,154 @@ export function StartDevelopment({
   const onOpen = (v: boolean) => {
     onOpenChange(v);
     if (v) void load();
+    else abortRef.current?.abort();
   };
   useEffect(() => {
     if (open && mode === "loading" && !busy) void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+  useEffect(() => () => abortRef.current?.abort(), []);
 
-  const copyTask = (text: string) => {
-    void navigator.clipboard.writeText(text);
-    toast.success(L.copiedWait, { duration: 6000 });
+  const copyReport = () => {
+    if (!done) return;
+    void navigator.clipboard.writeText(done.report);
+    toast.success(L.copied);
   };
 
   return (
-    <>
-      <Dialog open={open} onOpenChange={onOpen}>
-        <DialogContent className="flex max-h-[85vh] flex-col overflow-hidden sm:max-w-2xl">
-          <DialogHeader className="shrink-0">
-            <DialogTitle className="flex items-center gap-2">
-              {mode === "review"
-                ? <><ListChecks className="size-4" /> {L.reviewHeading}</>
-                : <><Rocket className="size-4" /> {L.title}</>}
-            </DialogTitle>
-          </DialogHeader>
+    <Dialog open={open} onOpenChange={onOpen}>
+      <DialogContent className="flex max-h-[85vh] flex-col overflow-hidden sm:max-w-2xl">
+        <DialogHeader className="shrink-0">
+          <DialogTitle className="flex items-center gap-2">
+            {mode === "review"
+              ? <><ListChecks className="size-4" /> {L.reviewHeading}</>
+              : <><Rocket className="size-4" /> {L.title}</>}
+          </DialogTitle>
+        </DialogHeader>
 
-          {mode === "loading" && (
-            <p className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" /> {L.preparing}
+        {mode === "loading" && (
+          <p className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" /> {L.preparing}
+          </p>
+        )}
+
+        {/* THE GATE — read the cases, confirm, continue. The confirm button is RIGHT HERE. */}
+        {mode === "review" && (
+          <>
+            <p className="shrink-0 text-sm text-muted-foreground">{L.reviewIntro}</p>
+            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+              {cases.map((c, i) => (
+                <div key={c.cuid} className="rounded-lg border p-3">
+                  <p className="flex items-center gap-2 text-sm font-medium">
+                    <span className="tabular-nums text-muted-foreground">{String(i + 1).padStart(2, "0")}</span>
+                    {c.title}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">{c.summary || L.noDescription}</p>
+                </div>
+              ))}
+            </div>
+            <div className="flex shrink-0 justify-end border-t pt-3">
+              <Button onClick={confirmAndContinue} disabled={busy}>
+                {busy ? <Loader2 className="size-4 animate-spin" /> : <CheckCheck className="size-4" />}
+                {busy ? L.confirming : L.confirm}
+              </Button>
+            </div>
+          </>
+        )}
+
+        {/* THE RUN (step 250) — the live ribbon: fixed height, 150px fade top and bottom, stuck to the
+            bottom until the owner scrolls; tool rows flip spinner → ✓/✗; the report closes the run. */}
+        {mode === "run" && (
+          <div className="flex min-h-0 flex-1 flex-col gap-3">
+            <p className="shrink-0 text-sm text-muted-foreground">{L.runIntro}</p>
+            <div
+              ref={scrollRef}
+              onScroll={(e) => {
+                const el = e.currentTarget;
+                stickRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+              }}
+              className={`${done ? "h-[220px]" : "h-[420px]"} shrink-0 overflow-y-auto py-[150px] pr-1`}
+              style={{ maskImage: RIBBON_MASK, WebkitMaskImage: RIBBON_MASK }}
+            >
+              <div className="space-y-2">
+                {feed.map((it, i) => {
+                  if (it.kind === "info") {
+                    return <p key={i} className="text-xs text-muted-foreground">{it.text}</p>;
+                  }
+                  if (it.kind === "text") {
+                    return <p key={i} className="whitespace-pre-wrap text-sm">{it.text}</p>;
+                  }
+                  return (
+                    <div key={i} className="text-sm">
+                      <p className="flex items-center gap-2">
+                        {it.status === "run" && <Loader2 className="size-3.5 shrink-0 animate-spin text-muted-foreground" />}
+                        {it.status === "ok" && <Check className="size-3.5 shrink-0 text-green-600" />}
+                        {it.status === "fail" && <X className="size-3.5 shrink-0 text-red-600" />}
+                        <code className="text-xs">{it.name}</code>
+                        {it.status === "ok" && it.detail ? (
+                          <span className="truncate text-xs text-muted-foreground">{it.detail}</span>
+                        ) : null}
+                      </p>
+                      {it.status === "fail" && it.detail ? (
+                        <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap rounded bg-muted p-2 text-xs">{it.detail}</pre>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            {done && (
+              <div className="min-h-0 space-y-2 overflow-y-auto rounded-lg border p-3">
+                <p className="text-sm font-medium">
+                  {done.outcome === "decomposition" ? L.doneDecompositionTitle : L.doneTitle}
+                </p>
+                {done.outcome === "decomposition" && (
+                  <p className="text-sm text-muted-foreground">{L.doneDecompositionBody}</p>
+                )}
+                {done.report ? <p className="whitespace-pre-wrap text-sm">{done.report}</p> : null}
+                <Button size="sm" variant="outline" onClick={copyReport}>
+                  <Copy className="size-3.5" /> {L.copyReport}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {mode === "no-cases" && (
+          <div className="space-y-1 py-4 text-sm">
+            <p className="font-medium">{L.noCasesTitle}</p>
+            <p className="text-muted-foreground">{L.noCasesBody}</p>
+          </div>
+        )}
+
+        {mode === "nothing-staged" && (
+          <div className="space-y-1 py-4 text-sm">
+            <p className="font-medium">{L.noStagedTitle}</p>
+            <p className="text-muted-foreground">{L.noStagedBody}</p>
+          </div>
+        )}
+
+        {mode === "stub-nodes" && (
+          <div className="space-y-1 py-4 text-sm">
+            <p className="font-medium">{L.stubTitle}</p>
+            <p className="text-muted-foreground">
+              {L.stubBody.replace("{nodes}", stubNodes.map((n) => `«${n}»`).join(", "))}
             </p>
-          )}
+          </div>
+        )}
 
-          {/* THE GATE — read the cases, confirm, continue. The confirm button is RIGHT HERE. */}
-          {mode === "review" && (
-            <>
-              <p className="shrink-0 text-sm text-muted-foreground">{L.reviewIntro}</p>
-              <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
-                {cases.map((c, i) => (
-                  <div key={c.cuid} className="rounded-lg border p-3">
-                    <p className="flex items-center gap-2 text-sm font-medium">
-                      <span className="tabular-nums text-muted-foreground">{String(i + 1).padStart(2, "0")}</span>
-                      {c.title}
-                    </p>
-                    <p className="mt-1 text-sm text-muted-foreground">{c.summary || L.noDescription}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="flex shrink-0 justify-end border-t pt-3">
-                <Button onClick={confirmAndContinue} disabled={busy}>
-                  {busy ? <Loader2 className="size-4 animate-spin" /> : <CheckCheck className="size-4" />}
-                  {busy ? L.confirming : L.confirm}
-                </Button>
-              </div>
-            </>
-          )}
+        {mode === "already-running" && (
+          <p className="py-4 text-sm text-muted-foreground">{L.alreadyRunning}</p>
+        )}
 
-          {/* READY — the two copyable tasks, stacked (step 249: first session / continuation). */}
-          {mode === "ready" && (
-            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
-              <p className="text-sm text-muted-foreground">{L.readyIntro}</p>
-              <div className="space-y-2 rounded-lg border p-3">
-                <p className="flex items-center gap-2 text-sm font-medium">
-                  <Rocket className="size-4 text-muted-foreground" /> {L.firstTitle}
-                </p>
-                <p className="text-sm text-muted-foreground">{L.firstBody}</p>
-                <Button size="sm" variant="outline" onClick={() => copyTask(fullTask)}>
-                  <Copy className="size-3.5" /> {L.copy}
-                </Button>
-              </div>
-              <div className="space-y-2 rounded-lg border p-3">
-                <p className="flex items-center gap-2 text-sm font-medium">
-                  <MessageSquarePlus className="size-4 text-muted-foreground" /> {L.nextTitle}
-                </p>
-                <p className="text-sm text-muted-foreground">{L.nextBody.replace("{n}", String(staged))}</p>
-                <Button size="sm" variant="outline" onClick={() => copyTask(deltaTask)}>
-                  <Copy className="size-3.5" /> {L.copy}
-                </Button>
-              </div>
-            </div>
-          )}
+        {mode === "no-key" && (
+          <p className="py-4 text-sm text-muted-foreground">{L.noKey}</p>
+        )}
 
-          {mode === "no-cases" && (
-            <div className="space-y-1 py-4 text-sm">
-              <p className="font-medium">{L.noCasesTitle}</p>
-              <p className="text-muted-foreground">{L.noCasesBody}</p>
-            </div>
-          )}
-
-          {mode === "nothing-staged" && (
-            <div className="space-y-1 py-4 text-sm">
-              <p className="font-medium">{L.noStagedTitle}</p>
-              <p className="text-muted-foreground">{L.noStagedBody}</p>
-            </div>
-          )}
-
-          {mode === "stub-nodes" && (
-            <div className="space-y-1 py-4 text-sm">
-              <p className="font-medium">{L.stubTitle}</p>
-              <p className="text-muted-foreground">
-                {L.stubBody.replace("{nodes}", stubNodes.map((n) => `«${n}»`).join(", "))}
-              </p>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-    </>
+        {mode === "model-no-tools" && (
+          <p className="py-4 text-sm text-muted-foreground">{L.modelNoTools.replace("{model}", refusedModel)}</p>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

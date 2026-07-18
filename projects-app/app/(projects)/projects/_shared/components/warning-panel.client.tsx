@@ -103,7 +103,9 @@ export function WarningBlock({
         </div>
       )}
 
-      {warning.kind === "hermes-scout" && warning.hermesInstruction && (
+      {/* Step 250 — kind owner-decision joins hermes-scout here: the develop agent's saved decomposition
+          plan lives in hermesInstruction, and the owner reads/copies it with the same two buttons. */}
+      {(warning.kind === "hermes-scout" || warning.kind === "owner-decision") && warning.hermesInstruction && (
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" variant="outline" onClick={() => setShowInstruction((v) => !v)}>
