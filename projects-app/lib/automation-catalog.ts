@@ -32,7 +32,9 @@ export async function catalogIngest(automation: string, title: string, text: str
     const r = await fetch(`${RAG_URL}/documents/text`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-API-Key": RAG_KEY, "X-Agent-Identity": CATALOG_IDENTITY },
-      body: JSON.stringify({ text: doc }),
+      // Provenance (step 260): the project address as the LightRAG source, so the catalog doc is traceable to
+      // its automation and never "unknown_source" (the AUTOMATION_ID line in the text is kept too).
+      body: JSON.stringify({ text: doc, file_source: `projects/${automation}` }),
       signal: AbortSignal.timeout(30_000),
     });
     if (!r.ok) return null;

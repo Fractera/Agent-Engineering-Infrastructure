@@ -1085,7 +1085,9 @@ async function ragIngestText(doc: string): Promise<string | null> {
     const r = await fetch(`${RAG_URL}/documents/text`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-API-Key": RAG_KEY, "X-Agent-Identity": PROJECT_SLUG },
-      body: JSON.stringify({ text: doc }),
+      // Provenance (step 260): the project address as the LightRAG source, so notes/finance memory docs are
+      // traceable to this automation instead of the anonymous "unknown_source" they carried before.
+      body: JSON.stringify({ text: doc, file_source: `projects/personal/${PROJECT_SLUG}` }),
       signal: AbortSignal.timeout(30_000),
     });
     if (!r.ok) return null;

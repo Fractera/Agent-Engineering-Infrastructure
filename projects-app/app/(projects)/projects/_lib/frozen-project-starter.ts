@@ -142,10 +142,13 @@ export type AutomationType = "stream" | "instanced" | "chained";
 // rows store. A node imports "../../_lib/rows", never "@/lib/..." directly; when the route grows its own
 // api/ door (sub-step 254.11) this file switches to it and NO node changes. The self-sufficiency gate
 // allows the platform import ONLY here.
-const LIB_ROWS_FILE = `// 🔒 THE DECLARED BRIDGE (step 254.9) — the single allowed crossing into the platform rows store.
-// Nodes import { addRow } from "../../_lib/rows". Do not add other platform imports to this route:
-// this file is the whole doorway, and the check-route-self-sufficiency gate enforces that.
+const LIB_ROWS_FILE = `// 🔒 THE DECLARED BRIDGE (step 254.9) — the single allowed crossing into the platform stores.
+// Nodes import { addRow, ingestToMemory } from "../../_lib/rows", never "@/lib/..." directly: this file is
+// the whole doorway, and the check-route-self-sufficiency gate enforces that.
 export { addRow, listRows } from "@/lib/dashboard-rows";
+// PROVENANCE-CARRYING VECTOR MEMORY (step 260) — the output node writes its result here too, tagged with this
+// automation's address projects/<category>/<slug>, so every automation's answers become searchable memory.
+export { ingestToMemory } from "@/lib/vector-memory";
 `;
 const SKELETON: Record<string, string> = {
   "page.tsx": `import AutomationEntry from "./_components";
@@ -964,17 +967,27 @@ export const META: NodeMeta = {
 };
 `,
   "_nodes/record-result/functions.ts": `import type { NodeFunction } from "../../_types/node-contract";
-import { addRow } from "../../_lib/rows";
+import { addRow, ingestToMemory } from "../../_lib/rows";
 
 // STARTING PATTERN (step 243; imports through the route's OWN _lib/rows bridge since 254.9 — a node never
 // reaches outside its route). Writes into the same rows store the owner's "Add row" writes to, never a
 // bespoke table. ADAPT the fields for the owner's real task — keep this node LAST.
+//
+// TWO-STORE OUTPUT (step 260, owner's rule): the output node writes the result to BOTH stores — the
+// automation's own dashboard table (structured rows) AND vector memory (searchable, tagged with this
+// automation's address projects/{{CATEGORY}}/{{PROJECT}} as provenance, never "unknown_source"). When you
+// adapt this node for the real task, keep BOTH writes: a plain-language summary of the answer goes to memory.
 export async function recordLookup(company: string, ticker: string, price: number): Promise<{ rowId: string }> {
   const row = await addRow("{{CATEGORY}}/{{PROJECT}}", "history", {
     date: new Date().toISOString(),
     company,
     ticker,
     price,
+  });
+  // Best-effort, never blocks the row write: remember the answer so it can be found later by meaning.
+  await ingestToMemory({
+    automation: "{{CATEGORY}}/{{PROJECT}}",
+    text: \`\${company} (\${ticker}) price \${price} on \${new Date().toISOString()}\`,
   });
   return { rowId: row.id };
 }
@@ -989,10 +1002,13 @@ export const FUNCTIONS: NodeFunction[] = [
 ];
 `,
   "_nodes/record-result/instruction.ts": `// The system instruction that generated this node's functions (co-located per node, step 243).
-export const INSTRUCTION = \`Build a deterministic function that writes a successful result into this
-automation's own dashboard rows store (through the existing rows API — never a bespoke table). This node
-must be the LAST one, so it is reached only after every earlier node succeeded. Every function must be
-typed (inputs and return) and scoped to this node.\`;
+export const INSTRUCTION = \`Build a deterministic function that writes a successful result into BOTH of this
+automation's stores: (1) its dashboard rows store (through the existing rows API — never a bespoke table),
+and (2) vector memory via ingestToMemory({ automation: "<category>/<slug>", text: <a plain-language summary
+of the answer> }) — imported from ../../_lib/rows — so every answer is searchable later and tagged with this
+automation's own address as provenance (never "unknown_source"). This node must be the LAST one, so it is
+reached only after every earlier node succeeded. Every function must be typed (inputs and return) and scoped
+to this node.\`;
 `,
   // ── THE TWO CONDITION NODES (2026-07-15) — square gates that branch off lookup-price on the diagram ──────
   "_nodes/if-success/meta.ts": `import type { NodeMeta } from "../../_types/node-contract";
