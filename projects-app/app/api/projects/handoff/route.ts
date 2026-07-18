@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorize, resolveProject } from "@/lib/nodes";
-import { assertUseCasesReviewed } from "@/lib/use-cases";
-import { stagedItems, stubItems } from "@/lib/wave";
+import { launchGate } from "@/lib/wave";
 
 // THE LIGHT HAND-OFF (step 249) — the copyable task text the owner pastes into a coding-agent chat, in TWO
 // modes matching the two buttons of the launch dialog:
@@ -56,24 +55,20 @@ export async function GET(req: NextRequest) {
   const proj = resolveProject((req.nextUrl.searchParams.get("automation") ?? "").trim());
   if (!proj.ok) return NextResponse.json({ error: proj.error }, { status: 400 });
 
-  // THE GATES SURVIVE THE STEP MACHINERY (they were never about steps): the owner must have read his use
-  // cases back (step 231), a stub node has no requirement to hand over (step 247 П5), and an empty staged
-  // set means there is nothing to develop. Same reason codes as the wave route, so the dialog logic is one.
-  const gate = await assertUseCasesReviewed(proj.automation);
-  if (!gate.ok) return NextResponse.json({ reason: gate.reason }, { status: 409 });
-
-  const items = await stagedItems(proj.automation);
-  if (!items.length) return NextResponse.json({ reason: "nothing-staged" }, { status: 409 });
-
-  const stubs = stubItems(items);
-  if (stubs.length) {
-    return NextResponse.json({ reason: "stub-nodes", nodes: stubs.map((s) => s.label) }, { status: 409 });
+  // THE GATES SURVIVE THE STEP MACHINERY (they were never about steps) — launchGate (lib/wave.ts, step 250)
+  // is the ONE set of checks every development entry point passes, with the reason codes the dialog speaks.
+  const gate = await launchGate(proj.automation);
+  if (!gate.ok) {
+    return NextResponse.json(
+      gate.nodes ? { reason: gate.reason, nodes: gate.nodes } : { reason: gate.reason },
+      { status: 409 },
+    );
   }
 
   return NextResponse.json({
     ok: true,
-    staged: items.length,
+    staged: gate.items.length,
     full: fullText(proj.automation),
-    delta: deltaText(proj.automation, items),
+    delta: deltaText(proj.automation, gate.items),
   });
 }

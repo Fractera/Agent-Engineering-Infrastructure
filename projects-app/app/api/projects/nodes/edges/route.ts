@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { authorize, resolveProject } from "@/lib/nodes";
+import { authorize, resolveProject, writeDiagramEdge } from "@/lib/nodes";
 
-// DIAGRAM EDGE operations (owner 2026-07-16, the fan-in fix) — edges are their own many-to-many list
-// (automation_diagram_edges), NOT the node's single parent: a node takes any number of incoming and
-// outgoing edges (two input channels converging on one dashboard output is normal). DELIBERATELY NO
-// validation logic beyond self-loop and duplicates (the owner's explicit ruling: no "can this connect?"
-// checks). POST {automation, fromCuid, toCuid} connects; {…, remove:true} disconnects.
-//
-// parent_cuid is kept as a LAYOUT hint only: a connect stamps it on a target that has no parent yet (so the
-// tree layout places the node), and a remove clears it only when it pointed at this exact edge's source.
+// DIAGRAM EDGE operations (owner 2026-07-16, the fan-in fix) — a thin wrapper since step 250: the write
+// path lives in writeDiagramEdge (lib/nodes.ts), shared with the in-product develop agent's tool executor.
+// Edges are their own many-to-many list; DELIBERATELY NO validation beyond self-loop (the owner's explicit
+// ruling). POST {automation, fromCuid, toCuid} connects; {…, remove:true} disconnects.
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
@@ -19,28 +14,10 @@ export async function POST(req: NextRequest) {
   };
   const proj = resolveProject(String(body.automation ?? ""));
   if (!proj.ok) return NextResponse.json({ error: proj.error }, { status: 400 });
-  const from = String(body.fromCuid ?? "");
-  const to = String(body.toCuid ?? "");
-  if (!from || !to) return NextResponse.json({ error: "fromCuid and toCuid required" }, { status: 400 });
-  if (from === to) return NextResponse.json({ error: "a node cannot link to itself" }, { status: 400 });
 
-  if (body.remove) {
-    await db.prepare(
-      `DELETE FROM automation_diagram_edges WHERE automation = ? AND from_cuid = ? AND to_cuid = ?`,
-    ).run(proj.automation, from, to);
-    await db.prepare(
-      `UPDATE automation_nodes SET parent_cuid = NULL, updated_at = datetime('now')
-       WHERE cuid = ? AND parent_cuid = ?`,
-    ).run(to, from);
-    return NextResponse.json({ ok: true, removed: true });
-  }
-
-  await db.prepare(
-    `INSERT OR IGNORE INTO automation_diagram_edges (automation, from_cuid, to_cuid) VALUES (?, ?, ?)`,
-  ).run(proj.automation, from, to);
-  await db.prepare(
-    `UPDATE automation_nodes SET parent_cuid = ?, updated_at = datetime('now')
-     WHERE cuid = ? AND parent_cuid IS NULL`,
-  ).run(from, to);
-  return NextResponse.json({ ok: true });
+  const res = await writeDiagramEdge(
+    proj.automation, String(body.fromCuid ?? ""), String(body.toCuid ?? ""), Boolean(body.remove),
+  );
+  if (!res.ok) return NextResponse.json({ error: res.error }, { status: 400 });
+  return NextResponse.json(body.remove ? { ok: true, removed: true } : { ok: true });
 }
