@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Menu, Sparkles, Trash2, Pencil, GripVertical } from "lucide-react";
+import { Menu, Sparkles, Trash2, Pencil, Copy, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -19,6 +19,7 @@ import { AutomationSettingsModal } from "./automation-settings-modal.client";
 import { TestsModal } from "./tests-modal.client";
 import { DeleteAutomationModal } from "./delete-automation-modal.client";
 import { RenameAutomationModal } from "./rename-automation-modal.client";
+import { CloneAutomationModal } from "./clone-automation-modal.client";
 import { HowItWorksModal } from "./how-it-works-modal.client";
 import { useUiLang } from "../use-ui-lang";
 import { automationMenuStrings } from "../automation-menu-i18n";
@@ -62,6 +63,7 @@ export function AutomationMenu({
   const [testsOpen, setTestsOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
+  const [cloneOpen, setCloneOpen] = useState(false);
   const { entities, setEntity } = useEntitiesLive(automation, entitiesSeed ?? {});
   // The owner's dragged section order (step 241) — the same list AutomationAccordions renders in; dropping a
   // row here reorders the accordions instantly through the shared window event.
@@ -202,6 +204,15 @@ export function AutomationMenu({
               >
                 <Pencil className="size-4" /> {M.renameAutomation}
               </DropdownMenuItem>
+              {/* Clone (owner 2026-07-18) — reuse a ready automation as a building block: same nodes/scenarios,
+                  a clean copy in the same category. Not destructive, so a normal item that opens an explicit
+                  modal. */}
+              <DropdownMenuItem
+                onSelect={(e) => { e.preventDefault(); setCloneOpen(true); }}
+                className="gap-2"
+              >
+                <Copy className="size-4" /> {M.cloneAutomation}
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={(e) => { e.preventDefault(); setDeleteOpen(true); }}
                 className="gap-2 text-rose-600 focus:text-rose-600 dark:text-rose-400"
@@ -217,6 +228,7 @@ export function AutomationMenu({
         <>
           <DeleteAutomationModal automation={automation} open={deleteOpen} onOpenChange={setDeleteOpen} />
           <RenameAutomationModal automation={automation} open={renameOpen} onOpenChange={setRenameOpen} />
+          <CloneAutomationModal automation={automation} open={cloneOpen} onOpenChange={setCloneOpen} />
         </>
       )}
       <HowItWorksModal automation={automation} open={howItWorksOpen} onOpenChange={setHowItWorksOpen} />

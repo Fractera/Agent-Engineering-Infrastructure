@@ -113,6 +113,16 @@ export type AutomationMenuStrings = {
   renaming: string;
   renamed: string;
   renameFailed: string;
+  // CLONE (owner 2026-07-18) — the Danger zone's third action: a clean copy of a ready automation (building
+  // block) in the same category. Reuses renameLabel/renamePlaceholder/renameCancel for the modal's field.
+  cloneAutomation: string;
+  cloneTitle: string;
+  cloneBody: string;
+  cloneConfirm: string;
+  cloning: string;
+  cloned: string;
+  cloneFailed: string;
+  cloneSuffix: string;   // the word appended to the seeded name, e.g. "clone"
   /** aria-label on an entity row's drag handle in the menu (step 241 reorder). {name} = the entity's label. */
   reorderAria: string;
 };
@@ -211,6 +221,14 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     renaming: "Renaming…",
     renamed: "The automation was renamed.",
     renameFailed: "Could not rename the automation.",
+    cloneAutomation: "Clone this automation",
+    cloneTitle: "Clone this automation",
+    cloneBody: "Creates a clean copy in the same category — the same nodes, diagram and scenarios, but no accumulated data and no keys (you set those on the copy). The original stays untouched. The copy appears after a short rebuild.",
+    cloneConfirm: "Clone",
+    cloning: "Cloning…",
+    cloned: "The automation was cloned — the copy appears after a short rebuild.",
+    cloneFailed: "Could not clone the automation.",
+    cloneSuffix: "clone",
     reorderAria: "Reorder {name}",
   },
   ru: {
@@ -306,6 +324,14 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     renaming: "Переименовываю…",
     renamed: "Автоматизация переименована.",
     renameFailed: "Не удалось переименовать автоматизацию.",
+    cloneAutomation: "Клонировать эту автоматизацию",
+    cloneTitle: "Клонировать эту автоматизацию",
+    cloneBody: "Создаёт чистую копию в той же категории — те же узлы, диаграмма и сценарии, но без накопленных данных и без ключей (их вы задаёте у копии). Оригинал остаётся нетронутым. Копия появится после короткой пересборки.",
+    cloneConfirm: "Клонировать",
+    cloning: "Клонирую…",
+    cloned: "Автоматизация клонирована — копия появится после короткой пересборки.",
+    cloneFailed: "Не удалось клонировать автоматизацию.",
+    cloneSuffix: "клон",
     reorderAria: "Переместить {name}",
   },
   es: {
@@ -401,6 +427,14 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     renaming: "Renombrando…",
     renamed: "La automatización fue renombrada.",
     renameFailed: "No se pudo renombrar la automatización.",
+    cloneAutomation: "Clonar esta automatización",
+    cloneTitle: "Clonar esta automatización",
+    cloneBody: "Crea una copia limpia en la misma categoría — los mismos nodos, diagrama y escenarios, pero sin datos acumulados ni claves (esas las defines en la copia). El original queda intacto. La copia aparece tras una breve reconstrucción.",
+    cloneConfirm: "Clonar",
+    cloning: "Clonando…",
+    cloned: "La automatización fue clonada — la copia aparece tras una breve reconstrucción.",
+    cloneFailed: "No se pudo clonar la automatización.",
+    cloneSuffix: "clon",
     reorderAria: "Reordenar {name}",
   },
   fr: {
@@ -496,6 +530,14 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     renaming: "Renommage…",
     renamed: "L'automatisation a été renommée.",
     renameFailed: "Impossible de renommer l'automatisation.",
+    cloneAutomation: "Cloner cette automatisation",
+    cloneTitle: "Cloner cette automatisation",
+    cloneBody: "Crée une copie propre dans la même catégorie — les mêmes nœuds, le même schéma et les mêmes scénarios, mais sans données accumulées ni clés (vous les définissez sur la copie). L'original reste intact. La copie apparaît après une courte reconstruction.",
+    cloneConfirm: "Cloner",
+    cloning: "Clonage…",
+    cloned: "L'automatisation a été clonée — la copie apparaît après une courte reconstruction.",
+    cloneFailed: "Impossible de cloner l'automatisation.",
+    cloneSuffix: "clone",
     reorderAria: "Réorganiser {name}",
   },
   it: {
@@ -591,6 +633,14 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     renaming: "Rinomino…",
     renamed: "L'automazione è stata rinominata.",
     renameFailed: "Impossibile rinominare l'automazione.",
+    cloneAutomation: "Clona questa automazione",
+    cloneTitle: "Clona questa automazione",
+    cloneBody: "Crea una copia pulita nella stessa categoria — gli stessi nodi, diagramma e scenari, ma senza dati accumulati né chiavi (quelle le imposti sulla copia). L'originale resta intatto. La copia appare dopo una breve ricostruzione.",
+    cloneConfirm: "Clona",
+    cloning: "Clonazione…",
+    cloned: "L'automazione è stata clonata — la copia appare dopo una breve ricostruzione.",
+    cloneFailed: "Impossibile clonare l'automazione.",
+    cloneSuffix: "clone",
     reorderAria: "Riordina {name}",
   },
   de: {
@@ -686,6 +736,14 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     renaming: "Wird umbenannt…",
     renamed: "Die Automatisierung wurde umbenannt.",
     renameFailed: "Die Automatisierung konnte nicht umbenannt werden.",
+    cloneAutomation: "Diese Automatisierung klonen",
+    cloneTitle: "Diese Automatisierung klonen",
+    cloneBody: "Erstellt eine saubere Kopie in derselben Kategorie — dieselben Knoten, dasselbe Diagramm und dieselben Szenarien, aber ohne angesammelte Daten und ohne Schlüssel (die legen Sie an der Kopie fest). Das Original bleibt unberührt. Die Kopie erscheint nach einem kurzen Neuaufbau.",
+    cloneConfirm: "Klonen",
+    cloning: "Klone…",
+    cloned: "Die Automatisierung wurde geklont — die Kopie erscheint nach einem kurzen Neuaufbau.",
+    cloneFailed: "Die Automatisierung konnte nicht geklont werden.",
+    cloneSuffix: "Klon",
     reorderAria: "{name} neu anordnen",
   },
   pt: {
@@ -781,6 +839,14 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     renaming: "A renomear…",
     renamed: "A automação foi renomeada.",
     renameFailed: "Não foi possível renomear a automação.",
+    cloneAutomation: "Clonar esta automação",
+    cloneTitle: "Clonar esta automação",
+    cloneBody: "Cria uma cópia limpa na mesma categoria — os mesmos nós, diagrama e cenários, mas sem dados acumulados nem chaves (essas define na cópia). O original fica intacto. A cópia aparece após uma breve reconstrução.",
+    cloneConfirm: "Clonar",
+    cloning: "A clonar…",
+    cloned: "A automação foi clonada — a cópia aparece após uma breve reconstrução.",
+    cloneFailed: "Não foi possível clonar a automação.",
+    cloneSuffix: "clone",
     reorderAria: "Reordenar {name}",
   },
   pl: {
@@ -876,6 +942,14 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     renaming: "Zmienianie nazwy…",
     renamed: "Nazwa automatyzacji została zmieniona.",
     renameFailed: "Nie udało się zmienić nazwy automatyzacji.",
+    cloneAutomation: "Sklonuj tę automatyzację",
+    cloneTitle: "Sklonuj tę automatyzację",
+    cloneBody: "Tworzy czystą kopię w tej samej kategorii — te same węzły, diagram i scenariusze, ale bez nagromadzonych danych i bez kluczy (te ustawiasz w kopii). Oryginał pozostaje nietknięty. Kopia pojawia się po krótkiej przebudowie.",
+    cloneConfirm: "Sklonuj",
+    cloning: "Klonowanie…",
+    cloned: "Automatyzacja została sklonowana — kopia pojawi się po krótkiej przebudowie.",
+    cloneFailed: "Nie udało się sklonować automatyzacji.",
+    cloneSuffix: "klon",
     reorderAria: "Zmień kolejność: {name}",
   },
   tr: {
@@ -971,6 +1045,14 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     renaming: "Yeniden adlandırılıyor…",
     renamed: "Otomasyon yeniden adlandırıldı.",
     renameFailed: "Otomasyon yeniden adlandırılamadı.",
+    cloneAutomation: "Bu otomasyonu klonla",
+    cloneTitle: "Bu otomasyonu klonla",
+    cloneBody: "Aynı kategoride temiz bir kopya oluşturur — aynı düğümler, diyagram ve senaryolar, ancak birikmiş veri ve anahtar olmadan (bunları kopyada ayarlarsınız). Orijinal dokunulmadan kalır. Kopya kısa bir yeniden derlemeden sonra görünür.",
+    cloneConfirm: "Klonla",
+    cloning: "Klonlanıyor…",
+    cloned: "Otomasyon klonlandı — kopya kısa bir yeniden derlemeden sonra görünür.",
+    cloneFailed: "Otomasyon klonlanamadı.",
+    cloneSuffix: "kopya",
     reorderAria: "{name} sırasını değiştir",
   },
   nl: {
@@ -1066,6 +1148,14 @@ export const AUTOMATION_MENU_I18N: Record<string, AutomationMenuStrings> = {
     renaming: "Bezig met hernoemen…",
     renamed: "De automatisering is hernoemd.",
     renameFailed: "Kon de automatisering niet hernoemen.",
+    cloneAutomation: "Deze automatisering klonen",
+    cloneTitle: "Deze automatisering klonen",
+    cloneBody: "Maakt een schone kopie in dezelfde categorie — dezelfde nodes, diagram en scenario's, maar zonder opgebouwde gegevens en zonder sleutels (die stelt u in op de kopie). Het origineel blijft ongemoeid. De kopie verschijnt na een korte herbouw.",
+    cloneConfirm: "Klonen",
+    cloning: "Klonen…",
+    cloned: "De automatisering is gekloond — de kopie verschijnt na een korte herbouw.",
+    cloneFailed: "Kon de automatisering niet klonen.",
+    cloneSuffix: "kloon",
     reorderAria: "{name} herordenen",
   },
 };
