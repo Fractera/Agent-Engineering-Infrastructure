@@ -20,7 +20,7 @@ import { UseCasesPanel } from "./use-cases-panel.client";
 import { DashboardAccordion } from "./dashboard-accordion.client";
 import { CalendarEntity } from "../entities/calendar";
 import { CronEntity } from "../entities/cron";
-import { ProcessesTimeline } from "./processes-timeline.client";
+import { ProcessesEntity } from "../entities/processes";
 import { RequirementBriefPanel } from "./requirement-brief-panel.client";
 import { AppPagesPanel } from "./app-pages-panel.client";
 import { useUiLang } from "../use-ui-lang";
@@ -159,11 +159,9 @@ export function AutomationAccordions({
               <RequirementBriefPanel entityType="dashboard" entityLabel={title} scopeLabel={requirementScope(lang, "dashboard")} automation={automation} />
             </>
           ) : k === "processes" ? (
-            <>
-              {/* The Processes/Gantt timeline (step 230): a row per fork, laid out by estimated duration. */}
-              <ProcessesTimeline automation={automation ?? ""} />
-              <RequirementBriefPanel entityType="processes" entityLabel={title} scopeLabel={requirementScope(lang, "processes")} automation={automation} />
-            </>
+            // The Processes entity container (step 254.6): admin mode = the Gantt timeline with Run/Reset
+            // in its toolbar + the requirement panel — all composed INSIDE the container now.
+            <ProcessesEntity automation={automation ?? ""} mode="admin" />
           ) : k === "usecases" ? (
             // The automation scopes the LIVE case store, the pencils and the review gate (step 231) — the gate
             // stays mandatory no matter this switch; only the accordion's visibility follows it.
