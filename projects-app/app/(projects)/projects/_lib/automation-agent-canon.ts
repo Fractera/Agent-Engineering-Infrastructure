@@ -82,6 +82,7 @@ PLATFORM API (the whitelist — using these is NOT leaving your territory; all o
   flagged pending:true (diagram.nodes is an object — the node list is its "instances" array).
 - POST /api/projects/nodes/<cuid>/materialize  {"summary":"<=300 chars, owner's language"}
   — compiles the node and puts it LIVE instantly; a compile error comes back in this call — fix and retry.
+  It emits _nodes/<slug>/functions.compiled.mjs — the node's RUNTIME artifact. NEVER delete or edit it.
 - POST /api/projects/entity-summary  {"automation":"${a}","entityType":"<t>","ref":"<ref>","summary":"..."}
   — closes any non-node object after you implement it.
 - POST /api/projects/entity-warning — a BLOCKED object (structured escalation; kind

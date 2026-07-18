@@ -14,7 +14,11 @@ import { join } from "node:path";
 // MATERIALIZED node (no draft flag) is the opposite: a NON-empty functions.ts and NO spec.md. So spec.md is
 // now an allowed node file, and the two states are enforced below. This is the documented softening of
 // "the diagram is the single source of truth" — a draft is on the canvas (files) but ignored by execution.
-const ALLOWED_NODE_FILES = new Set(["meta.ts", "functions.ts", "instruction.ts", "spec.md", "index.ts"]);
+// functions.compiled.mjs joined in step 251: it is the RUNTIME ARTIFACT materialize emits since the light
+// loop (step 249) — the executor imports it from disk. Before this line, validate flagged it as a
+// violation and an honest agent DELETED it to pass validation, silently unplugging its own live node
+// (caught in the step-251 Haiku test).
+const ALLOWED_NODE_FILES = new Set(["meta.ts", "functions.ts", "instruction.ts", "spec.md", "index.ts", "functions.compiled.mjs"]);
 
 export type DiagramValidation = { ok: boolean; violations: string[] };
 
