@@ -60,7 +60,12 @@ function ControlPanelCard({ label, tooltip, mode, children }: { label: string; t
   );
 }
 
-export function ControlPanelEntity({ automation, mode }: { automation: string; mode: ControlPanelMode }) {
+/** SSR seed (ROUTE-V3 law 1): the route's OWN declarations, passed by its server component — the panel
+ *  renders on the server immediately; the API fetch below only refreshes/corrects after mount. Without a
+ *  seed the panel is client-only (the old ActivationLayer behavior — kept for the compat wrapper). */
+export type ControlPanelInitial = { schema: ActivationSchema; designed: boolean; type: string };
+
+export function ControlPanelEntity({ automation, mode, initial }: { automation: string; mode: ControlPanelMode; initial?: ControlPanelInitial }) {
   const lang = useUiLang();
   const L = activationStrings(lang);
   const M = automationMenuStrings(lang);
@@ -68,10 +73,10 @@ export function ControlPanelEntity({ automation, mode }: { automation: string; m
   // hamburger menu hides the panel live (the shared entities event), no rebuild.
   const { entities } = useEntitiesLive(automation, { controlpanel: true });
   const controlPanelOn = entities.controlpanel !== false;
-  const [schema, setSchema] = useState<ActivationSchema | null>(null);
-  const [designed, setDesigned] = useState(false);
-  const [type, setType] = useState<string>("");
-  const [loading, setLoading] = useState(true);
+  const [schema, setSchema] = useState<ActivationSchema | null>(initial?.schema ?? null);
+  const [designed, setDesigned] = useState(initial?.designed ?? false);
+  const [type, setType] = useState<string>(initial?.type ?? "");
+  const [loading, setLoading] = useState(!initial);
 
   useEffect(() => {
     let alive = true;
