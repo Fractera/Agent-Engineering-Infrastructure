@@ -12,9 +12,10 @@ import { authBaseFromHost } from "@/lib/auth-base-server"
 //
 // IP/onboarding mode: open (shouldBypassAuth). Agents (x-agent-identity): allowed.
 export async function requireRole(roles: string[]): Promise<void> {
-  if (shouldBypassAuth()) return
-
   const h = await headers()
+  // HOST-AWARE (256.4b): the bypass opens only IP/localhost hosts — a domain request enforces auth.
+  if (shouldBypassAuth(h.get("x-forwarded-host") ?? h.get("host"))) return
+
   if (h.get("x-agent-identity")) return
 
   const authUrl =

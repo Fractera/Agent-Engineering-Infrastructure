@@ -13,7 +13,10 @@ export async function getSession(req?: NextRequest): Promise<AppSession | null> 
     return { userId: `${agentId}@agent`, email: `${agentId}@agent`, roles: ['agent'] }
   }
 
-  if (shouldBypassAuth()) {
+  // HOST-AWARE (256.4b): the demo identity exists only on IP/localhost hosts; a domain request reads
+  // the real session. A call without a request (internal server code) keeps the legacy bypass.
+  const host = req?.headers.get('x-forwarded-host') ?? req?.headers.get('host')
+  if (req ? shouldBypassAuth(host) : shouldBypassAuth()) {
     return { userId: 'demo@local', email: 'demo@local', roles: ['architect'] }
   }
 

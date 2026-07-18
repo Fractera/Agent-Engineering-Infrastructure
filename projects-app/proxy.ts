@@ -44,7 +44,10 @@ export async function proxy(req: NextRequest) {
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-pathname", url.pathname + url.search);
 
-  if (shouldBypassAuth()) {
+  // HOST-AWARE bypass (256.4b): the onboarding bypass applies only to IP/localhost hosts — a DOMAIN
+  // request (projects.<apex>) is the protected flow and enforces auth even while the env is IP mode.
+  const reqHost = req.headers.get("x-forwarded-host") || req.headers.get("host");
+  if (shouldBypassAuth(reqHost)) {
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
