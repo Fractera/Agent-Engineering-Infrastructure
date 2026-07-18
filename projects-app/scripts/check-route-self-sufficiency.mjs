@@ -40,7 +40,9 @@ for (const file of walk(ROUTE)) {
   if (!SCANNED_TOPS.has(top)) continue; // the cockpit surface is base-layer territory (later sub-steps)
   const isBridge = rel === "_lib/rows.ts";
   const src = readFileSync(file, "utf8");
-  for (const m of src.matchAll(/from\s+["']([^"']+)["']/g)) {
+  // Only REAL import/export statements — a `from "..."` inside a comment is prose, not a dependency
+  // (the rows bridge's own header comment was the first false positive).
+  for (const m of src.matchAll(/^\s*(?:import|export)[^;\n]*?from\s+["']([^"']+)["']/gm)) {
     const imp = m[1];
     if (isBridge && imp === "@/lib/dashboard-rows") continue; // the one declared crossing
     if (imp.startsWith("@/")) {

@@ -27,7 +27,8 @@ for (const file of files) {
   const rel = relative(ROOT, file).split(sep).join("/"); // "<entity>/(view|admin|...)/file"
   const [entity, layer] = rel.split("/");
   const src = readFileSync(file, "utf8");
-  const imports = [...src.matchAll(/from\s+["']([^"']+)["']/g)].map((m) => m[1]);
+  // Only REAL import/export statements — a `from "..."` inside a comment is prose (lesson 254.9).
+  const imports = [...src.matchAll(/^\s*(?:import|export)[^;\n]*?from\s+["']([^"']+)["']/gm)].map((m) => m[1]);
 
   for (const imp of imports) {
     // Law 1: a view/ file must not import admin/ (its own or anyone's).
