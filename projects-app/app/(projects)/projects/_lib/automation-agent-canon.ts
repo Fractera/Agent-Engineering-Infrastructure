@@ -42,16 +42,19 @@ goal — that is normal first-pass work, not a conflict.`;
     ? `
 
 YOUR TERRITORY (HARD BOUNDARY — violating it is failure, not initiative):
-- You may WRITE only inside: (1) this folder, and (2) this automation's own served routes under
-  app/api/projects/${a}/** (they are part of it and die with it).
+- You may WRITE only inside THIS folder. Since ROUTE-V3 it is COMPLETE: the automation's api routes live
+  in its own api/ (served at /projects/${a}/api/...), its types in _types/, its helpers in _lib/, its
+  runtime pages in pages/ — nothing of yours exists outside this folder.
 - CRITICAL PROHIBITION: never leave this territory and never research the platform's external code —
   UNDER NO CIRCUMSTANCES. Everything you must know about the platform is written in this file; what is
   not here, you do not need. Do not open _shared/, lib/, other automations, or platform sources.
 - Also forbidden: git mutations (commit/push/reset), pm2, npm run build (materialize compiles your node
   by itself, no rebuild exists in your flow), installing packages, touching any other automation.
-- Allowed platform IMPORTS in your code (import them, never open or edit their sources):
-  type imports from "../../../../_shared/node-contract"; addRow from "@/lib/dashboard-rows" (writes a row
-  into a table declared in _data/dashboard.ts); authorize from "@/lib/nodes" (inside your own routes).`
+- IMPORTS (ROUTE-V3 law 1 — arrows point inward): a node imports ONLY inside the route — types from
+  "../../_types/..." and the rows bridge from "../../_lib/rows" (the ONE declared platform crossing;
+  writes a row into a table declared in _data/dashboard.ts). Never "@/..." and never "_shared" in
+  _nodes/_data/_lib/_types — the check-route-self-sufficiency gate refuses them. Inside your own api/
+  routes, authorize from "@/lib/nodes" is the allowed exception.`
     : `
 
 YOUR TERRITORY: your tools ARE the boundary — every write they make is scoped to this automation. Work

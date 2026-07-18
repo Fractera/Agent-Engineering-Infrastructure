@@ -31,6 +31,13 @@ is live behaviour to renovate, never to rebuild silently. A blocked object (an o
 a draft) never flips anything. (The legacy wave path keeps its own guarded flip inside
 `development-wave/complete`.)
 
+### 2.0 The route architecture (hard law) → ROUTE-V3.md
+
+Since mega-step 254 the automation route is governed by **[ROUTE-V3.md](ROUTE-V3.md)** — the eight laws
+(self-sufficiency with inward-only arrows, the entity pattern, view/admin/container, the sterile-room
+projection with the gated apply, parallel routing, the route's own api doors, rebuild-free runtime pages,
+the six born documents). This section is a pointer, not a copy (the step-253 dedup law).
+
 ### 2.1 Node budget and decomposition (hard law) → SCALE-RULES.md
 
 The canonical law lives in **THE SCALE RULES** (source: `_lib/scale-rules.ts`), born as `SCALE-RULES.md`
