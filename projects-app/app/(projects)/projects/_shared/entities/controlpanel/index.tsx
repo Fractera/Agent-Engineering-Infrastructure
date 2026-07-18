@@ -120,7 +120,7 @@ export function ControlPanelEntity({ automation, mode, initial }: { automation: 
           </h2>
           <p className="text-sm text-muted-foreground">{resolveLocalized(schema?.description, lang) || L.layerSubtitle}</p>
         </div>
-        {mode === "admin" && <FrozenTemplateNotice text={M.frozenTemplateNotice} />}
+        {mode === "admin" && <FrozenTemplateNotice text={M.frozenTemplateNotice} automation={automation} />}
         {schema && <StreamAskConsole automation={automation} schema={schema} />}
       </ControlPanelCard>
     );
@@ -136,7 +136,7 @@ export function ControlPanelEntity({ automation, mode, initial }: { automation: 
         </h2>
         <p className="text-sm text-muted-foreground">{resolveLocalized(schema?.description, lang) || L.layerSubtitle}</p>
       </div>
-      <FrozenTemplateNotice text={M.frozenTemplateNotice} />
+      <FrozenTemplateNotice text={M.frozenTemplateNotice} automation={automation} />
       {schema && <InstancedForkManager automation={automation} schema={schema} />}
     </ControlPanelCard>
   );

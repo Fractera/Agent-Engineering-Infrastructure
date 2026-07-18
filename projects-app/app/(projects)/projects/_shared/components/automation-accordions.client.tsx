@@ -47,9 +47,31 @@ import type { EntityType } from "@/lib/entity-store";
 // explore, not a promise of what a real, developed automation's section will show. Text is 10-language
 // (see `frozenTemplateNotice` in automation-menu-i18n.ts) — no "developed" flag exists yet (a later step),
 // so for now it always renders on the frozen starter's default state.
-export function FrozenTemplateNotice({ text }: { text: string }) {
+// LIFECYCLE-AWARE since step 255.B5 (the owner's rule): the notice shows only while the automation is
+// still the frozen demo — the FIRST really-landed object (materialize / entity-summary flips the
+// lifecycle flag, step 249) makes every notice vanish, live (the same window-event pattern the entity
+// toggles use; a `automation:lifecycle-changed` dispatch after a landing refreshes without reload).
+export function FrozenTemplateNotice({ text, automation }: { text: string; automation?: string }) {
+  const [real, setReal] = useState(false);
+  useEffect(() => {
+    if (!automation) return;
+    let alive = true;
+    const check = () => {
+      fetch(`/api/projects/lifecycle?automation=${encodeURIComponent(automation)}`, { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d: { state?: string } | null) => { if (alive && d?.state === "real-automation") setReal(true); })
+        .catch(() => { /* keep showing */ });
+    };
+    check();
+    const onChanged = (e: Event) => {
+      if ((e as CustomEvent).detail?.automation === automation) check();
+    };
+    window.addEventListener("automation:lifecycle-changed", onChanged);
+    return () => { alive = false; window.removeEventListener("automation:lifecycle-changed", onChanged); };
+  }, [automation]);
+  if (real) return null;
   return (
-    <p className="rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
+    <p className="rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground" data-frozen-notice="1">
       {text}
     </p>
   );
@@ -132,7 +154,7 @@ export function AutomationAccordions({
             </Tooltip>
           </AccordionTrigger>
           <AccordionContent className="space-y-4">
-            <FrozenTemplateNotice text={M.frozenTemplateNotice} />
+            <FrozenTemplateNotice text={M.frozenTemplateNotice} automation={automation} />
             <RequirementBriefPanel entityType="fork-activation" entityLabel={M.forkActivationLabel} scopeLabel={requirementScope(lang, "fork-activation")} automation={automation} />
           </AccordionContent>
         </AccordionItem>
@@ -151,7 +173,7 @@ export function AutomationAccordions({
           </Tooltip>
         </AccordionTrigger>
         <AccordionContent className="space-y-4">
-          <FrozenTemplateNotice text={M.frozenTemplateNotice} />
+          <FrozenTemplateNotice text={M.frozenTemplateNotice} automation={automation} />
           {k === "dashboard" ? (
             <>
               {/* The Dashboard is the first entity with a real interface (step 228): ONE tab, any number of
