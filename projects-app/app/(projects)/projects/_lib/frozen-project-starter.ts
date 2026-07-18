@@ -155,6 +155,8 @@ import { PROJECT_CONFIG } from "./_data/config";
 import { USE_CASES } from "./_data/use-cases";
 import { PROJECT_DASHBOARD } from "./_data/dashboard";
 import { DIAGRAM_NODES } from "./_data/diagram";
+import { ACTIVATION } from "./_data/activation";
+import { AUTOMATION_TYPE } from "./_data/automation";
 
 // Thin server entry of a frozen automation project. Header + footer come from the Projects-zone layout
 // (step 213). TWO compositions (step 254.12, ROUTE-V3 law 5): the default is the owner's COCKPIT
@@ -173,6 +175,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
         dashboard={PROJECT_DASHBOARD}
         cases={USE_CASES}
         config={PROJECT_CONFIG.entities}
+        controlPanel={{ schema: ACTIVATION, designed: ACTIVATION.params.length > 0, type: AUTOMATION_TYPE }}
       />
     );
   }

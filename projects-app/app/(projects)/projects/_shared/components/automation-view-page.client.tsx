@@ -10,7 +10,7 @@ import { automationMenuStrings } from "../automation-menu-i18n";
 import { useEntitiesLive } from "../use-entities-live";
 import { useEntityOrderLive } from "../use-entity-order-live";
 import { EntitySection } from "../entity-section";
-import { ControlPanelEntity } from "../entities/controlpanel";
+import { ControlPanelEntity, type ControlPanelInitial } from "../entities/controlpanel";
 import { DiagramEntity } from "../entities/diagram";
 import { DashboardEntity } from "../entities/dashboard";
 import { CalendarEntity } from "../entities/calendar";
@@ -34,6 +34,7 @@ export function AutomationViewPage({
   dashboard,
   cases,
   config,
+  controlPanel,
 }: {
   automation: string;
   title: string;
@@ -42,6 +43,8 @@ export function AutomationViewPage({
   dashboard?: DashboardConfig;
   cases: UseCase[];
   config: Partial<EntitiesConfig>;
+  /** The SSR seed of the console (the 254.3 rule: first paint from the route's own declarations). */
+  controlPanel?: ControlPanelInitial;
 }) {
   const lang = useUiLang();
   const L = useCasesStrings(lang);
@@ -81,7 +84,7 @@ export function AutomationViewPage({
       </section>
 
       {/* THE CONSOLE — the interaction plane (ask by voice or words), full-width like the cockpit. */}
-      <ControlPanelEntity automation={automation} mode="view" />
+      <ControlPanelEntity automation={automation} mode="view" initial={controlPanel} />
 
       {/* THE DIAGRAM — the read-only living canvas. */}
       <DiagramEntity nodes={nodes} automation={automation} mode="view" />
