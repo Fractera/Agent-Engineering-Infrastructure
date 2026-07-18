@@ -1265,6 +1265,63 @@ export async function POST(req: NextRequest) {
 }
 `;
 
+// THE RUN DOOR (step 254.11, ROUTE-V3 law 6) — the route's OWN activation endpoint, called by BOTH
+// surfaces (the cockpit console and the public page): POST {input, instanceId?} executes THIS automation
+// through the one platform executor; a future "when" schedules instead (254.8e), identically to the
+// global run route. The automation name is fixed at birth — this door can never run anyone else.
+const STREAM_RUN_ROUTE = `import { NextRequest, NextResponse } from "next/server";
+import { authorize } from "@/lib/nodes";
+import { executeAutomation } from "@/lib/executor";
+import { createScheduledRequest, parseWhen } from "@/lib/scheduled-requests";
+
+// THE RUN DOOR of this automation (step 254.11) — the single runtime entrance both the cockpit and the
+// public surface call: /projects/{{CATEGORY}}/{{PROJECT}}/api/run. Fixed to THIS automation by birth.
+export const runtime = "nodejs";
+
+const AUTOMATION = "{{CATEGORY}}/{{PROJECT}}";
+
+export async function POST(req: NextRequest) {
+  if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const body = (await req.json().catch(() => null)) as
+    | { input?: Record<string, unknown>; instanceId?: string }
+    | null;
+  const input = body?.input ?? {};
+  const dueMs = body?.instanceId ? null : parseWhen(input);
+  if (dueMs) {
+    const r = await createScheduledRequest(AUTOMATION, input, dueMs);
+    return NextResponse.json({ ok: true, scheduled: true, dueAt: r.due_at, requestId: r.id });
+  }
+  const result = await executeAutomation(AUTOMATION, input, { instanceId: body?.instanceId });
+  if ("refusal" in result) return NextResponse.json({ ok: false, ...result.refusal }, { status: 409 });
+  return NextResponse.json(result);
+}
+`;
+
+// THE ROWS DOOR (step 254.11) — the route's OWN table reads, same contract as the global rows route
+// ({rows, hasMore, source}), THROUGH the route's own _lib/rows bridge: the door and the nodes share the
+// one declared crossing. Read-only: row mutations stay an admin (cockpit) affair.
+const STREAM_ROWS_ROUTE = `import { NextRequest, NextResponse } from "next/server";
+import { authorize } from "@/lib/nodes";
+import { listRows } from "../../_lib/rows";
+
+// THE ROWS DOOR of this automation (step 254.11): GET ?table=&search=&offset=&limit= →
+// { rows, hasMore, source } — the same contract the universal table already speaks.
+export const runtime = "nodejs";
+
+const AUTOMATION = "{{CATEGORY}}/{{PROJECT}}";
+
+export async function GET(req: NextRequest) {
+  if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const table = (req.nextUrl.searchParams.get("table") ?? "history").trim();
+  const search = req.nextUrl.searchParams.get("search") ?? "";
+  const offset = Number.parseInt(req.nextUrl.searchParams.get("offset") ?? "0", 10) || 0;
+  const limit = Number.parseInt(req.nextUrl.searchParams.get("limit") ?? "20", 10) || 20;
+  const { rows, hasMore } = await listRows(AUTOMATION, table, { search, offset, limit });
+  const source = rows.length === 0 && !search.trim() && offset === 0 ? "empty" : "live";
+  return NextResponse.json({ rows, hasMore, source });
+}
+`;
+
 // Resolve the projects root: default = <projects-app>/app/(projects)/projects, derived from cwd
 // (the projects-app root both in a terminal run and inside an API route on the server).
 function defaultProjectsRoot(): string {
@@ -1416,7 +1473,10 @@ export async function createFrozenProject(
   // shows in the URL) and die with it; deleting the automation needs no second-tree cleanup. Then the
   // executables registry is regenerated so the general executor sees the real nodes immediately.
   if (isStream) {
-    for (const [relDir, tpl] of [["price", STREAM_PRICE_ROUTE], ["cron-tick", STREAM_CRON_TICK_ROUTE]] as const) {
+    for (const [relDir, tpl] of [
+      ["price", STREAM_PRICE_ROUTE], ["cron-tick", STREAM_CRON_TICK_ROUTE],
+      ["run", STREAM_RUN_ROUTE], ["rows", STREAM_ROWS_ROUTE],
+    ] as const) {
       const dir = join(destBase, "api", relDir);
       await mkdir(dir, { recursive: true });
       await writeFile(join(dir, "route.ts"), sub(tpl), "utf8");

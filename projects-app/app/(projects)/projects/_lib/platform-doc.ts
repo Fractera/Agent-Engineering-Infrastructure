@@ -54,8 +54,9 @@ platform source. What is not in these four documents, you do not need.
 - POST /api/projects/entity-warning — kinds: hermes-scout (needs hermesInstruction) / owner-decision /
   external-service / missing-credentials (needs keys[], declared in _data/channels.ts).
 - GET  /api/projects/validate?automation=${a} — must return ok:true when you are done.
-- POST /api/projects/run {"automation":"${a}","input":{...}} — activate (the same door the launch console
-  and the public page use).
+- POST /api/projects/run {"automation":"${a}","input":{...}} — activate. This automation also carries its
+  OWN doors, served inside its folder (step 254.11): POST /projects/${a}/api/run {"input":{...}} and
+  GET /projects/${a}/api/rows?table=… — both surfaces (cockpit and public page) call these.
 
 ## Budgets and honesty
 
