@@ -24,7 +24,7 @@ import { MapEntity } from "../entities/map";
 import { AnalyticsEntity } from "../entities/analytics";
 import { ProcessesEntity } from "../entities/processes";
 import { RequirementBriefPanel } from "./requirement-brief-panel.client";
-import { AppPagesPanel } from "./app-pages-panel.client";
+import { AppPagesEntity } from "../entities/apppages";
 import { useUiLang } from "../use-ui-lang";
 import { useCasesStrings } from "../use-cases-i18n";
 import { useEntitiesLive } from "../use-entities-live";
@@ -169,9 +169,9 @@ export function AutomationAccordions({
             // review gate — mandatory regardless of the visibility switch, step 231).
             <UseCasesEntity cases={cases} automation={automation} mode="admin" />
           ) : k === "apppages" ? (
-            // Application pages (step 242): declare PUBLIC pages of the application layer for external users of
-            // this automation — a folder tree of the slot app/, "Add page", per-page to-dos (voice + Quiz).
-            <AppPagesPanel automation={automation ?? ""} />
+            // The application-pages entity container (step 254.8d): admin = the declaration panel (step 242)
+            // + the page-format PREVIEW (hero → AI console → table → cases as Q&A) right below it.
+            <AppPagesEntity automation={automation ?? ""} dashboard={dashboard} cases={cases} mode="admin" />
           ) : k === "calendar" ? (
             // The Calendar entity container (step 254.4): admin mode = instruction banner + the read-only
             // month-grid/planner view + the requirement panel — all composed INSIDE the container now.
