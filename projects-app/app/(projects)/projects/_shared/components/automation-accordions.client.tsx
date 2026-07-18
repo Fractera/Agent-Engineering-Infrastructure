@@ -19,7 +19,7 @@ import type { DashboardConfig } from "../table-config";
 import { UseCasesPanel } from "./use-cases-panel.client";
 import { DashboardAccordion } from "./dashboard-accordion.client";
 import { CalendarEntity } from "../entities/calendar";
-import { CronAccordion } from "./cron-accordion.client";
+import { CronEntity } from "../entities/cron";
 import { ProcessesTimeline } from "./processes-timeline.client";
 import { RequirementBriefPanel } from "./requirement-brief-panel.client";
 import { AppPagesPanel } from "./app-pages-panel.client";
@@ -177,13 +177,9 @@ export function AutomationAccordions({
             // month-grid/planner view + the requirement panel — all composed INSIDE the container now.
             <CalendarEntity automation={automation ?? ""} mode="admin" />
           ) : k === "cron" ? (
-            <>
-              {/* The Cron entity (Cron+Calendar step): real periodicity control (co-located cron.json,
-                  read/written through the generic /api/projects/settings/cron route) — independent of the
-                  Hook (request-triggered) path; NOT yet wired to actuate anything (integration is later). */}
-              <CronAccordion automation={automation ?? ""} />
-              <RequirementBriefPanel entityType="cron" entityLabel={title} scopeLabel={requirementScope(lang, "cron")} automation={automation} />
-            </>
+            // The Cron entity container (step 254.5): admin mode = description + the schedule controls
+            // (cron.json writes) + the requirement panel — all composed INSIDE the container now.
+            <CronEntity automation={automation ?? ""} mode="admin" />
           ) : (
             // Map/Analytics (step 238 P5-P9) — the requirement brief: "the next thing I need here".
             <RequirementBriefPanel entityType={k as EntityType} entityLabel={title} scopeLabel={requirementScope(lang, k as "map" | "analytics")} automation={automation} />
