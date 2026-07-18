@@ -44,7 +44,7 @@ export async function materializeNode(
   await writeVersionByRef(row.automation, "node", row.cuid, version, {
     metaJson: materializedMeta, functionsSrc: files.functions, instructionSrc: files.instruction,
     specSrc: files.spec, summary,
-  }, devStepRef ?? undefined);
+  }, devStepRef ?? null);
 
   await db.prepare(
     `UPDATE automation_nodes SET draft = 0, status = 'materialized', latest_version = ?, active_version = ?, updated_at = datetime('now') WHERE cuid = ?`,
