@@ -60,8 +60,11 @@ export function DashboardEntity({
   const tables = dashboard?.tables ?? [];
   const STORAGE = `dashboard-view:${automation}`;
 
-  const [left, setLeft] = useState<string>("");
-  const [right, setRight] = useState<string>("");
+  // Born with the config defaults so the FIRST paint (and SSR) already shows the pane — the stored
+  // browser choice corrects it after mount. The old monolith returned null until localStorage was read,
+  // which blanked the server HTML and flashed on the client (caught by the 254.2 DOM verification).
+  const [left, setLeft] = useState<string>(tables[0]?.id ?? "");
+  const [right, setRight] = useState<string>(tables[1]?.id ?? tables[0]?.id ?? "");
   const [split, setSplit] = useState(false);
 
   useEffect(() => {
@@ -93,7 +96,6 @@ export function DashboardEntity({
   if (!tables.length) {
     return <p className="text-sm text-muted-foreground">{M.dashboardEmpty}</p>;
   }
-  if (!left) return null; // first paint, before the stored choice is read
 
   const Pane = mode === "admin" ? AdminPane : DashboardPaneView;
 
