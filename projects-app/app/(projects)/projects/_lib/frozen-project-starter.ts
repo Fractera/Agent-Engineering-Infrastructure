@@ -16,7 +16,7 @@
 //
 // See app/api/projects/create/route.ts for the route that calls this function directly.
 // ─────────────────────────────────────────────────────────────────────────────
-import { mkdir, writeFile, stat } from "node:fs/promises";
+import { mkdir, writeFile, stat, readFile } from "node:fs/promises";
 import { join, dirname } from "node:path";
 // Single source of truth for category slugs (step 215) — this file used to carry its OWN
 // duplicate ["automation","fractera-pages","personal","other"] list, exactly the kind of
@@ -28,6 +28,7 @@ import { createNodeId } from "@/lib/cuid";
 import { regenerateExecutables } from "@/lib/executables";
 import { addRow } from "@/lib/dashboard-rows";
 import { agentCanon } from "./automation-agent-canon";
+import { platformDoc } from "./platform-doc";
 import { SCALE_RULES } from "./scale-rules";
 import { WIRING_RULES } from "./wiring-rules";
 
@@ -120,7 +121,32 @@ function humanize(slug: string): string {
 // (controlpanel/diagram/dashboard/calendar/cron/map/processes/analytics/usecases/apppages) to true: a fresh
 // automation shows every surface it has, and the owner switches OFF what he does not need — an unseen
 // switch is a surface the owner never discovers.
-const VERSION = 12;
+const VERSION = 13;
+
+// THE _types LAYER (step 254.9, ROUTE-V3 law 1) — the route's OWN copies of the platform type contracts,
+// copied VERBATIM from _shared at birth. Duplication is the accepted price of autonomy: the route's nodes
+// and _data import "../_types/...", never a platform source. localized-text rides along because
+// table-config/activation import "./localized-text" relatively (the copy set must close over itself).
+const TYPES_FILES = [
+  "node-contract.ts", "channels.ts", "table-config.ts", "activation.ts",
+  "tests.ts", "use-cases.ts", "localized-text.ts",
+];
+
+// automation-type.ts is NOT copied (its canonical file drags the whole creation i18n along) — the route
+// needs only the three-value type, so it is born minimal.
+const TYPES_AUTOMATION_TYPE = `// The automation's immutable kind (the route's own minimal copy, step 254.9).
+export type AutomationType = "stream" | "instanced" | "chained";
+`;
+
+// THE ROWS BRIDGE (step 254.9) — the ONE declared crossing from a route's behaviour into the platform's
+// rows store. A node imports "../../_lib/rows", never "@/lib/..." directly; when the route grows its own
+// api/ door (sub-step 254.11) this file switches to it and NO node changes. The self-sufficiency gate
+// allows the platform import ONLY here.
+const LIB_ROWS_FILE = `// 🔒 THE DECLARED BRIDGE (step 254.9) — the single allowed crossing into the platform rows store.
+// Nodes import { addRow } from "../../_lib/rows". Do not add other platform imports to this route:
+// this file is the whole doorway, and the check-route-self-sufficiency gate enforces that.
+export { addRow, listRows } from "@/lib/dashboard-rows";
+`;
 const SKELETON: Record<string, string> = {
   "page.tsx": `import AutomationEntry from "./_components";
 
@@ -137,7 +163,7 @@ export const PROJECT_DESCRIPTION = {
   description: {{PROJECT_DESCRIPTION_JSON}},
 } as const;
 `,
-  "_data/channels.ts": `import type { InputChannel } from "../../../_shared/channels";
+  "_data/channels.ts": `import type { InputChannel } from "../_types/channels";
 
 // This automation's INPUT CHANNELS (frozen standard — see _shared/channels.ts).
 // EMPTY BY DESIGN: a fresh skeleton talks to nothing yet. Declare a channel when the
@@ -160,7 +186,7 @@ export const PROJECT_DESCRIPTION = {
 //   ];
 export const INPUT_CHANNELS: InputChannel[] = [];
 `,
-  "_data/tests.ts": `import type { Probe } from "../../../_shared/tests";
+  "_data/tests.ts": `import type { Probe } from "../_types/tests";
 
 // This automation's TESTS (frozen standard v3, step 220 — see _shared/tests.ts and
 // app/(projects)/README.md "The settings & tests declaration standard"). EMPTY BY DESIGN: a fresh
@@ -178,7 +204,7 @@ export const INPUT_CHANNELS: InputChannel[] = [];
 //   ];
 export const PROBES: Probe[] = [];
 `,
-  "_data/automation.ts": `import type { AutomationType } from "../../../_shared/automation-type";
+  "_data/automation.ts": `import type { AutomationType } from "../_types/automation-type";
 
 // This automation's IMMUTABLE TYPE (frozen standard, step 224, extended 234.3). Chosen once at creation; the
 // whole logic grows out of it (above all: whether a run forks). To change it you delete the automation and
@@ -213,7 +239,7 @@ export const PROJECT_CONFIG = {
   },
 } as const;
 `,
-  "_data/use-cases.ts": `import type { UseCase } from "../../../_shared/use-cases";
+  "_data/use-cases.ts": `import type { UseCase } from "../_types/use-cases";
 
 // This automation's USER CASES (frozen standard v5, step 231 — see _shared/use-cases.ts).
 //
@@ -516,7 +542,7 @@ export default meta
 // ─────────────────────────────────────────────────────────────────────────────
 
 const DRAFT_NODE_FILES: Record<string, string> = {
-  "_data/diagram.ts": `import { assembleNode, type NodeContract } from "../../../_shared/node-contract";
+  "_data/diagram.ts": `import { assembleNode, type NodeContract } from "../_types/node-contract";
 import { META as m_input } from "../_nodes/input/meta";
 import { FUNCTIONS as f_input } from "../_nodes/input/functions";
 import { META as m_logic } from "../_nodes/logic/meta";
@@ -538,7 +564,7 @@ export const DIAGRAM_NODES: NodeContract[] = [
   assembleNode(m_output, f_output),
 ];
 `,
-  "_nodes/input/meta.ts": `import type { NodeMeta } from "../../../../_shared/node-contract";
+  "_nodes/input/meta.ts": `import type { NodeMeta } from "../../_types/node-contract";
 
 // Default draft node (step 224). Not built yet — empty functions + spec.md; a red frame; ignored by
 // execution. Build it in the Builder or delete it. The cuid is the stable identity for version history.
@@ -556,14 +582,14 @@ export const META: NodeMeta = {
   estDurationMs: 60000,
 };
 `,
-  "_nodes/input/functions.ts": `import type { NodeFunction } from "../../../../_shared/node-contract";
+  "_nodes/input/functions.ts": `import type { NodeFunction } from "../../_types/node-contract";
 
 // Draft — no functions yet. The coder materializes these from spec.md (step 224).
 export const FUNCTIONS: NodeFunction[] = [];
 `,
   "_nodes/input/spec.md": `This node receives the automation's work — a message, a request, or a scheduled tick. Describe what triggers it and what payload it produces, then Start development to build it.
 `,
-  "_nodes/logic/meta.ts": `import type { NodeMeta } from "../../../../_shared/node-contract";
+  "_nodes/logic/meta.ts": `import type { NodeMeta } from "../../_types/node-contract";
 
 // Default draft node (step 224). Not built yet — empty functions + spec.md; a red frame; ignored by
 // execution. Split it into real, named nodes as the automation is designed from the user cases.
@@ -580,14 +606,14 @@ export const META: NodeMeta = {
   estDurationMs: 60000,
 };
 `,
-  "_nodes/logic/functions.ts": `import type { NodeFunction } from "../../../../_shared/node-contract";
+  "_nodes/logic/functions.ts": `import type { NodeFunction } from "../../_types/node-contract";
 
 // Draft — no functions yet. The coder materializes these from spec.md (step 224).
 export const FUNCTIONS: NodeFunction[] = [];
 `,
   "_nodes/logic/spec.md": `This node is the middle — the deterministic work that turns the input into the result. As the automation is designed from the user cases, split it into real, named nodes, each a typed container of functions.
 `,
-  "_nodes/output/meta.ts": `import type { NodeMeta } from "../../../../_shared/node-contract";
+  "_nodes/output/meta.ts": `import type { NodeMeta } from "../../_types/node-contract";
 
 // Default draft node (step 224). Not built yet — empty functions + spec.md; a red frame; ignored by
 // execution. Build it in the Builder or delete it.
@@ -605,7 +631,7 @@ export const META: NodeMeta = {
   estDurationMs: 60000,
 };
 `,
-  "_nodes/output/functions.ts": `import type { NodeFunction } from "../../../../_shared/node-contract";
+  "_nodes/output/functions.ts": `import type { NodeFunction } from "../../_types/node-contract";
 
 // Draft — no functions yet. The coder materializes these from spec.md (step 224).
 export const FUNCTIONS: NodeFunction[] = [];
@@ -614,7 +640,7 @@ export const FUNCTIONS: NodeFunction[] = [];
 `,
 };
 
-const DRAFT_ACTIVATION_FILE = `import { EMPTY_ACTIVATION, type ActivationSchema } from "../../../_shared/activation";
+const DRAFT_ACTIVATION_FILE = `import { EMPTY_ACTIVATION, type ActivationSchema } from "../_types/activation";
 
 // THIS AUTOMATION'S ACTIVATION (frozen standard, step 241 E3) — what ONE RUN of it takes.
 //
@@ -627,7 +653,7 @@ const DRAFT_ACTIVATION_FILE = `import { EMPTY_ACTIVATION, type ActivationSchema 
 export const ACTIVATION: ActivationSchema = EMPTY_ACTIVATION;
 `;
 
-const DRAFT_DASHBOARD_FILE = `import type { DashboardConfig } from "../../../_shared/table-config";
+const DRAFT_DASHBOARD_FILE = `import type { DashboardConfig } from "../_types/table-config";
 
 // This automation's DASHBOARD (frozen standard, step 228 — see app/(projects)/README.md, "The dashboard
 // tables & columns standard"). ONE tab, ANY number of tables; a column is DATA, not JSX — the shared table
@@ -665,7 +691,7 @@ export const PROJECT_DASHBOARD: DashboardConfig = {
 // these three nodes for the owner's real task — rename them, change what they check/call/write, keep the
 // contract. This is a demonstration to build on, not a fixture to preserve.
 const STREAM_NODE_FILES: Record<string, string> = {
-  "_data/diagram.ts": `import { assembleNode, type NodeContract } from "../../../_shared/node-contract";
+  "_data/diagram.ts": `import { assembleNode, type NodeContract } from "../_types/node-contract";
 import { META as parseMeta } from "../_nodes/parse-request/meta";
 import { FUNCTIONS as parseFns } from "../_nodes/parse-request/functions";
 import { INSTRUCTION as parseInstruction } from "../_nodes/parse-request/instruction";
@@ -695,7 +721,7 @@ export const DIAGRAM_NODES: NodeContract[] = [
   assembleNode(recordMeta, recordFns, recordInstruction),
 ];
 `,
-  "_nodes/parse-request/meta.ts": `import type { NodeMeta } from "../../../../_shared/node-contract";
+  "_nodes/parse-request/meta.ts": `import type { NodeMeta } from "../../_types/node-contract";
 
 // STARTING PATTERN node (step 243) — real, not draft. Adapt freely for the owner's real task.
 export const META: NodeMeta = {
@@ -712,7 +738,7 @@ export const META: NodeMeta = {
   estDurationMs: 20,
 };
 `,
-  "_nodes/parse-request/functions.ts": `import type { NodeFunction } from "../../../../_shared/node-contract";
+  "_nodes/parse-request/functions.ts": `import type { NodeFunction } from "../../_types/node-contract";
 
 // STARTING PATTERN (step 243) — deterministic, no AI. A small CLOSED dictionary of well-known public
 // companies + a couple of common aliases. Deliberately NOT an intent classifier: a request that mentions no
@@ -803,7 +829,7 @@ free-text ask and resolve it to what the next node needs. Do NOT attempt intent 
 request outside the small dictionary must be rejected the same honest way whether it is off-topic or
 just unlisted. Every function must be typed (inputs and return) and scoped to this node.\`;
 `,
-  "_nodes/lookup-price/meta.ts": `import type { NodeMeta } from "../../../../_shared/node-contract";
+  "_nodes/lookup-price/meta.ts": `import type { NodeMeta } from "../../_types/node-contract";
 
 // STARTING PATTERN node (step 243) — real, not draft. The first plain external HTTP call in this
 // automation's diagram (no AI) — adapt the endpoint/logic for the owner's real task.
@@ -821,7 +847,7 @@ export const META: NodeMeta = {
   estDurationMs: 800,
 };
 `,
-  "_nodes/lookup-price/functions.ts": `import type { NodeFunction } from "../../../../_shared/node-contract";
+  "_nodes/lookup-price/functions.ts": `import type { NodeFunction } from "../../_types/node-contract";
 
 // STARTING PATTERN (step 243) — a plain external HTTP fetch, no AI. Deterministic, throws loudly on
 // failure, never silently succeeds. ADAPT the endpoint/logic for the owner's real task — keep the shape:
@@ -889,7 +915,7 @@ keyless external service (no AI, no fabricated values). Throw a clear error when
 return something usable — a step that found nothing must never report success. Every function must be
 typed (inputs and return) and scoped to this node.\`;
 `,
-  "_nodes/record-result/meta.ts": `import type { NodeMeta } from "../../../../_shared/node-contract";
+  "_nodes/record-result/meta.ts": `import type { NodeMeta } from "../../_types/node-contract";
 
 // STARTING PATTERN node (step 243) — real, not draft. The automation's OUTPUT node: reached ONLY when
 // both previous nodes succeeded (the executor stops the run at the first throw) — which is exactly what
@@ -909,12 +935,12 @@ export const META: NodeMeta = {
   estDurationMs: 20,
 };
 `,
-  "_nodes/record-result/functions.ts": `import type { NodeFunction } from "../../../../_shared/node-contract";
-import { addRow } from "@/lib/dashboard-rows";
+  "_nodes/record-result/functions.ts": `import type { NodeFunction } from "../../_types/node-contract";
+import { addRow } from "../../_lib/rows";
 
-// STARTING PATTERN (step 243) — writes through the EXISTING rows API (steps 228/229 — lib/dashboard-rows.ts,
-// the same store the owner's "Add row" writes to), never a bespoke table. ADAPT the fields for the owner's
-// real task — keep this node LAST, so it is reached only when every earlier node succeeded.
+// STARTING PATTERN (step 243; imports through the route's OWN _lib/rows bridge since 254.9 — a node never
+// reaches outside its route). Writes into the same rows store the owner's "Add row" writes to, never a
+// bespoke table. ADAPT the fields for the owner's real task — keep this node LAST.
 export async function recordLookup(company: string, ticker: string, price: number): Promise<{ rowId: string }> {
   const row = await addRow("{{CATEGORY}}/{{PROJECT}}", "history", {
     date: new Date().toISOString(),
@@ -941,7 +967,7 @@ must be the LAST one, so it is reached only after every earlier node succeeded. 
 typed (inputs and return) and scoped to this node.\`;
 `,
   // ── THE TWO CONDITION NODES (2026-07-15) — square gates that branch off lookup-price on the diagram ──────
-  "_nodes/if-success/meta.ts": `import type { NodeMeta } from "../../../../_shared/node-contract";
+  "_nodes/if-success/meta.ts": `import type { NodeMeta } from "../../_types/node-contract";
 
 // CONDITION node — the SUCCESS branch off lookup-price: carries the flow into the output node. It is the
 // condition KIND of an intermediate node (role "intermediate", ioType "condition"), which is what draws it as
@@ -962,7 +988,7 @@ export const META: NodeMeta = {
   estDurationMs: 5,
 };
 `,
-  "_nodes/if-success/functions.ts": `import type { NodeFunction } from "../../../../_shared/node-contract";
+  "_nodes/if-success/functions.ts": `import type { NodeFunction } from "../../_types/node-contract";
 
 // Visual condition node — a pass-through gate. Forwards the price unchanged; the real decision is made
 // upstream by lookup-price throwing when there is no price. When condition nodes are standardized, this
@@ -980,7 +1006,7 @@ export const FUNCTIONS: NodeFunction[] = [
   },
 ];
 `,
-  "_nodes/if-not-exists/meta.ts": `import type { NodeMeta } from "../../../../_shared/node-contract";
+  "_nodes/if-not-exists/meta.ts": `import type { NodeMeta } from "../../_types/node-contract";
 
 // CONDITION node — the FAILURE branch off lookup-price: taken when the company has no public stock. A dead
 // end for now (other conditions could leave it later). The condition KIND of an intermediate node (role
@@ -1000,7 +1026,7 @@ export const META: NodeMeta = {
   estDurationMs: 5,
 };
 `,
-  "_nodes/if-not-exists/functions.ts": `import type { NodeFunction } from "../../../../_shared/node-contract";
+  "_nodes/if-not-exists/functions.ts": `import type { NodeFunction } from "../../_types/node-contract";
 
 // Visual condition node — a no-op dead end. It does nothing: on a real failure lookup-price has already
 // thrown and stopped the run before this point, so no row is ever written down this branch.
@@ -1019,7 +1045,7 @@ export const FUNCTIONS: NodeFunction[] = [
 `,
 };
 
-const STREAM_ACTIVATION_FILE = `import type { ActivationSchema } from "../../../_shared/activation";
+const STREAM_ACTIVATION_FILE = `import type { ActivationSchema } from "../_types/activation";
 
 // STARTING PATTERN (step 243) — NOT empty: this is what makes the launch console (below the diagram) work
 // the moment this automation is created. The key ("query") matches "parse-request"'s first function's
@@ -1075,7 +1101,7 @@ export const ACTIVATION: ActivationSchema = {
 };
 `;
 
-const STREAM_DASHBOARD_FILE = `import type { DashboardConfig } from "../../../_shared/table-config";
+const STREAM_DASHBOARD_FILE = `import type { DashboardConfig } from "../_types/table-config";
 
 // STARTING PATTERN (step 243) — a REAL table wired to what "record-result" actually writes, not a demo seed
 // disconnected from the nodes. \`pageSize\` + the \`live\` action column are the step-243 upgrades to the
@@ -1329,14 +1355,38 @@ export async function createFrozenProject(
     await writeFile(join(destBase, rel), canon, "utf8");
     files.push(`app/(projects)/projects/${category}/${project}/${rel}`);
   }
-  // THE BORN DOCUMENT SET (steps 252-253) — next to AGENTS.md/CLAUDE.md every automation carries:
-  // WIRING-RULES.md (how to reason about nodes and edges before mounting) and SCALE-RULES.md (the
-  // decomposition law: node budget, first-duty scale assessment, the recommendation contract, the seam
-  // law). One source module each; the in-product developer receives the same texts in its prompt.
-  for (const [rel, text] of [["WIRING-RULES.md", WIRING_RULES], ["SCALE-RULES.md", SCALE_RULES]] as const) {
+  // THE BORN DOCUMENT SET (steps 252-254.9) — next to AGENTS.md/CLAUDE.md every automation carries:
+  // WIRING-RULES.md (nodes & edges reasoning), SCALE-RULES.md (the decomposition law) and PLATFORM.md
+  // (the distilled platform map — lifecycle, the route-is-the-world layout, data, the API whitelist —
+  // so an agent NEVER reads the project root). One source module each.
+  for (const [rel, text] of [
+    ["WIRING-RULES.md", WIRING_RULES],
+    ["SCALE-RULES.md", SCALE_RULES],
+    ["PLATFORM.md", platformDoc({ category, project })],
+  ] as const) {
     await writeFile(join(destBase, rel), text, "utf8");
     files.push(`app/(projects)/projects/${category}/${project}/${rel}`);
   }
+
+  // THE _types LAYER + THE ROWS BRIDGE (step 254.9, ROUTE-V3 law 1) — the route's own type contracts
+  // (verbatim copies of the canonical _shared files + the minimal automation-type) and its single
+  // declared platform crossing. Emitted BEFORE the skeleton loop's imports could ever dangle.
+  const sharedDir = join(projectsRoot, "_shared");
+  await mkdir(join(destBase, "_types"), { recursive: true });
+  for (const f of TYPES_FILES) {
+    const body = await readFile(join(sharedDir, f), "utf8");
+    await writeFile(
+      join(destBase, "_types", f),
+      `// COPIED AT BIRTH from _shared/${f} (step 254.9) — this route's OWN contract. Edit only if THIS\n// automation needs a divergent shape; the platform never edits it after birth.\n${body}`,
+      "utf8",
+    );
+    files.push(`app/(projects)/projects/${category}/${project}/_types/${f}`);
+  }
+  await writeFile(join(destBase, "_types", "automation-type.ts"), TYPES_AUTOMATION_TYPE, "utf8");
+  files.push(`app/(projects)/projects/${category}/${project}/_types/automation-type.ts`);
+  await mkdir(join(destBase, "_lib"), { recursive: true });
+  await writeFile(join(destBase, "_lib", "rows.ts"), LIB_ROWS_FILE, "utf8");
+  files.push(`app/(projects)/projects/${category}/${project}/_lib/rows.ts`);
 
   // STREAM's launch-console "live" action needs its own thin, read-only route — served under app/api/, a
   // different root than projectsRoot (project CONTENT vs a served API route). Written only for stream; then

@@ -172,7 +172,12 @@ export async function uniqueSlug(base: string, projectDir: string): Promise<stri
 /** Regenerate _data/diagram.ts from the ordered slugs. instruction.ts is imported only when present (a
  *  draft has none). This keeps the file topology (223.C.5 truth) in step with the index. */
 export async function regenerateDiagram(projectDir: string, slugsInOrder: string[]): Promise<void> {
-  const imports = [`import { assembleNode, type NodeContract } from "../../../_shared/node-contract";`];
+  // ROUTE-V3 (step 254.9): a route born with its own _types/ layer imports its OWN contract copy; a
+  // pre-v3 route (no _types folder) keeps the platform import — both generations regenerate cleanly.
+  const contractPath = (await exists(join(projectDir, "_types", "node-contract.ts")))
+    ? "../_types/node-contract"
+    : "../../../_shared/node-contract";
+  const imports = [`import { assembleNode, type NodeContract } from "${contractPath}";`];
   const calls: string[] = [];
   for (const slug of slugsInOrder) {
     const id = ident(slug);
