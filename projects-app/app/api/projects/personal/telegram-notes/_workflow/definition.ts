@@ -4,6 +4,9 @@ import { journalRunStart, journalRunFinish } from "./journal";
 // exactly how @/lib/db imports fs/better-sqlite3 and runs fine inside steps. (step 207.16 round 3)
 import { readFileSync } from "fs";
 import { db } from "@/lib/db";
+// Vector-memory provenance primitive (step 260) — same alias-import style as @/lib/db, safe in a workflow
+// module (plain fetch, no node: protocol). Gives every ingested note its extensible project-address source.
+import { ingestToMemory } from "@/lib/vector-memory";
 // Finance presets (step 207): FIXED 10 income + 10 expense categories (multi-flag). The model segments a
 // money movement into one or more of these ids; normalizeCategories validates against the preset.
 import {
@@ -1079,21 +1082,17 @@ async function extractMapsLink(text: string): Promise<{ lat: number; lng: number
   return coords ? { ...coords, cleaned } : null;
 }
 
-// Shared low-level ingest: POST one doc text to LightRAG, return the track id (or null). Best-effort.
+// Shared low-level ingest: store one doc in vector memory, return the track id (or null). Best-effort.
+// Provenance (step 260): routes through the shared ingestToMemory primitive so the doc carries the extensible
+// source projects/personal/telegram-notes?channel=telegram (not "unknown_source"). identity is kept at
+// PROJECT_SLUG to stay in the SAME LightRAG workspace as every note ingested before this change.
 async function ragIngestText(doc: string): Promise<string | null> {
-  try {
-    const r = await fetch(`${RAG_URL}/documents/text`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-API-Key": RAG_KEY, "X-Agent-Identity": PROJECT_SLUG },
-      // Provenance (step 260): the project address as the LightRAG source, so notes/finance memory docs are
-      // traceable to this automation instead of the anonymous "unknown_source" they carried before.
-      body: JSON.stringify({ text: doc, file_source: `projects/personal/${PROJECT_SLUG}` }),
-      signal: AbortSignal.timeout(30_000),
-    });
-    if (!r.ok) return null;
-    const data = (await r.json()) as { track_id?: string };
-    return data.track_id ?? null;
-  } catch { return null; }
+  return ingestToMemory({
+    automation: `personal/${PROJECT_SLUG}`,
+    text: doc,
+    identity: PROJECT_SLUG,
+    facets: { channel: "telegram" },
+  });
 }
 
 // "with photos: …" block for a vector doc (rule R4): the vision DESCRIPTIONS (never URLs) make records
