@@ -121,7 +121,7 @@ function humanize(slug: string): string {
 // (controlpanel/diagram/dashboard/calendar/cron/map/processes/analytics/usecases/apppages) to true: a fresh
 // automation shows every surface it has, and the owner switches OFF what he does not need — an unseen
 // switch is a surface the owner never discovers.
-const VERSION = 13;
+const VERSION = 14;
 
 // THE _types LAYER (step 254.9, ROUTE-V3 law 1) — the route's OWN copies of the platform type contracts,
 // copied VERBATIM from _shared at birth. Duplication is the accepted price of autonomy: the route's nodes
@@ -1180,7 +1180,7 @@ export const PROJECT_DASHBOARD: DashboardConfig = {
           // statement of what the opened modal does, read by a coding agent from the architecture bundle.
           options: {
             action: "live",
-            liveUrl: "/api/projects/{{CATEGORY}}/{{PROJECT}}/price?ticker={ticker}",
+            liveUrl: "/projects/{{CATEGORY}}/{{PROJECT}}/api/price?ticker={ticker}",
             actionDescription: {
               en: "Opens a modal that fetches the CURRENT live price for this row's ticker (the stored price is a snapshot). Read-only.",
               ru: "Открывает модальное окно, которое запрашивает ТЕКУЩУЮ живую цену по тикеру строки (сохранённая цена — снимок). Только чтение.",
@@ -1194,13 +1194,12 @@ export const PROJECT_DASHBOARD: DashboardConfig = {
 };
 `;
 
-// The "live" action's thin, read-only, per-automation route (step 243) — written OUTSIDE projectsRoot
-// (app/api/, not app/(projects)/projects/) since it is a served API route, not project content. Reuses the
-// SAME fetchPrice function the "lookup-price" node calls — co-location preserved, deleting the automation
-// deletes this route's target too.
+// The "live" action's thin, read-only, per-automation route (step 243; MOVED INSIDE the route in 254.10 —
+// ROUTE-V3 law 6: the route's own api/ is the single runtime door, served in place at
+// /projects/<cat>/<slug>/api/price, and it dies WITH the folder). Imports its own node RELATIVELY.
 const STREAM_PRICE_ROUTE = `import { NextRequest, NextResponse } from "next/server";
 import { authorize } from "@/lib/nodes";
-import { fetchPrice } from "@/app/(projects)/projects/{{CATEGORY}}/{{PROJECT}}/_nodes/lookup-price/functions";
+import { fetchPrice } from "../../_nodes/lookup-price/functions";
 
 // THE "LIVE" ACTION ROUTE for this automation's History table (step 243, table-config.ts \`action:"live"\`).
 //   GET ?ticker=<symbol>  ->  { ticker, price, asOf }
@@ -1235,7 +1234,7 @@ const STREAM_CRON_JSON = `{
       "schedule": "*/5 * * * *",
       "action": {
         "type": "http",
-        "url": "http://127.0.0.1:3003/api/projects/{{CATEGORY}}/{{PROJECT}}/cron-tick",
+        "url": "http://127.0.0.1:3003/projects/{{CATEGORY}}/{{PROJECT}}/api/cron-tick",
         "method": "POST",
         "body": {}
       },
@@ -1246,9 +1245,8 @@ const STREAM_CRON_JSON = `{
 }
 `;
 
-// The Cron entity's own thin, per-automation tick route (Cron+Calendar step) — written OUTSIDE
-// projectsRoot (app/api/, not app/(projects)/projects/), same reasoning as STREAM_PRICE_ROUTE: it is a
-// served API route, not project content, so deleting the automation must delete this too. STUB on
+// The Cron entity's own thin, per-automation tick route (Cron+Calendar step; INSIDE the route since
+// 254.10 — the api/ door is part of the automation and dies with its folder). STUB on
 // purpose: the owner scoped Cron and Calendar as two INDEPENDENT entities this step — no actuation logic
 // exists yet to call from here (a later, separate integration step fills this in). What matters now is
 // that the whole chain is real and reachable end to end: cron.json -> fractera-cron -> this route ->
@@ -1413,22 +1411,17 @@ export async function createFrozenProject(
   await writeFile(join(destBase, "_lib", "rows.ts"), LIB_ROWS_FILE, "utf8");
   files.push(`app/(projects)/projects/${category}/${project}/_lib/rows.ts`);
 
-  // STREAM's launch-console "live" action needs its own thin, read-only route — served under app/api/, a
-  // different root than projectsRoot (project CONTENT vs a served API route). Written only for stream; then
-  // the executables registry is regenerated so the general executor can see the three real new nodes
-  // immediately (the same regen the Builder's materialize step calls — step 241/243).
+  // THE ROUTE'S OWN api/ DOOR (step 254.10, ROUTE-V3 law 6) — the per-automation routes live INSIDE the
+  // route folder now (served in place: /projects/<cat>/<slug>/api/... — the "(projects)" group never
+  // shows in the URL) and die with it; deleting the automation needs no second-tree cleanup. Then the
+  // executables registry is regenerated so the general executor sees the real nodes immediately.
   if (isStream) {
-    const apiRoot = join(process.cwd(), "app", "api", "projects", category, project, "price");
-    await mkdir(apiRoot, { recursive: true });
-    await writeFile(join(apiRoot, "route.ts"), sub(STREAM_PRICE_ROUTE), "utf8");
-    files.push(`app/api/projects/${category}/${project}/price/route.ts`);
-
-    // The Cron entity's own tick route (Cron+Calendar step) — same "outside projectsRoot" reasoning as
-    // the price route above.
-    const cronApiRoot = join(process.cwd(), "app", "api", "projects", category, project, "cron-tick");
-    await mkdir(cronApiRoot, { recursive: true });
-    await writeFile(join(cronApiRoot, "route.ts"), sub(STREAM_CRON_TICK_ROUTE), "utf8");
-    files.push(`app/api/projects/${category}/${project}/cron-tick/route.ts`);
+    for (const [relDir, tpl] of [["price", STREAM_PRICE_ROUTE], ["cron-tick", STREAM_CRON_TICK_ROUTE]] as const) {
+      const dir = join(destBase, "api", relDir);
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, "route.ts"), sub(tpl), "utf8");
+      files.push(`app/(projects)/projects/${category}/${project}/api/${relDir}/route.ts`);
+    }
 
     await regenerateExecutables().catch(() => { /* the project is already written; a failed regen is not fatal */ });
 
