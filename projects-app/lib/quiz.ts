@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { createNodeId } from "@/lib/cuid";
 import { listNodes, resolveProject } from "@/lib/nodes";
 import { edgeByCuid, readEdgeFiles } from "@/lib/edges";
-import { caseByCuid, listCases } from "@/lib/use-cases";
+import { caseByCuid, listCases, reviewState } from "@/lib/use-cases";
 import { getTransport, type EntityType } from "@/lib/entity-store";
 // Aliased: this file already has its OWN local `UI_LANGS` (six languages, the Quiz-prompt system below,
 // step 232.1) — a different, older, unrelated concept. This import is the TEN admin-layer languages
@@ -936,9 +936,14 @@ export async function getPhase(quiz: QuizRow, target: QuizTarget): Promise<QuizP
     | { phase: string }
     | undefined;
   if (row?.phase === "nodes" || row?.phase === "usecases") return row.phase;
-  // No row: a quiz that predates this step. It is mid-node-design if it already produced nodes; otherwise it
-  // has not really started, so it begins where every automation now begins — with the user cases.
-  return quiz.node_count > 0 ? "nodes" : "usecases";
+  // No explicit row. It is mid-node-design if it already produced nodes. But node_count only counts nodes the
+  // QUIZ itself made — the in-product develop agent (step 250) and the Builder create nodes with node_count
+  // still 0, which used to pin the phase at "usecases" forever and force the use-cases modal open on every
+  // visit even after the cases were written AND approved (probe-250c). The real signal the use-cases stage is
+  // done is the step-231 REVIEW: cases exist and the owner confirmed them → the automation is past use cases.
+  if (quiz.node_count > 0) return "nodes";
+  const rev = await reviewState(target.automation);
+  return rev.hasCases && rev.reviewed ? "nodes" : "usecases";
 }
 
 export async function setPhase(quiz: QuizRow, phase: QuizPhase): Promise<void> {

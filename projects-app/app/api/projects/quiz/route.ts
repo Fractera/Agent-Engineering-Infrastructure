@@ -4,7 +4,7 @@ import {
   addTurnFor, getPhase, getQuizFor, nextQuestionFor, quizSeed, reopenQuiz, resolveQuizTarget, startQuizFor,
   turnsFor, useCasesGreeting, QUIZ_MAX_NODES,
 } from "@/lib/quiz";
-import { listCases } from "@/lib/use-cases";
+import { listCases, reviewState } from "@/lib/use-cases";
 
 // The Quiz state (step 227; generalized over its SUBJECT in step 225 G4; two PHASES since step 231). GET
 // tells the caller whether to open the Quiz (no row yet → first visit) and resumes an interrupted one with
@@ -30,11 +30,18 @@ export async function GET(req: NextRequest) {
   });
   if (!t.ok) return NextResponse.json({ error: t.error }, { status: 400 });
 
+  // THE USE-CASE GATE STATE (step 231) — the client's first-visit auto-open keys off THIS, not the quiz
+  // phase: force the use-cases modal open only while the gate is unmet (no cases, or cases not yet confirmed).
+  // Once the owner has described AND approved his cases, the page opens nothing on its own — even if nodes
+  // were later built by the develop agent (which leaves the quiz phase at "usecases").
+  const rev = t.target.kind === "project" ? await reviewState(t.target.automation) : null;
+
   const quiz = await getQuizFor(t.target);
   if (!quiz) {
     return NextResponse.json({
       started: false, subject: t.target.kind, phase: t.target.kind === "project" ? "usecases" : "nodes",
       maxNodes: QUIZ_MAX_NODES,
+      hasCases: rev?.hasCases ?? false, reviewed: rev?.reviewed ?? false,
     });
   }
   const phase = await getPhase(quiz, t.target);
@@ -42,6 +49,8 @@ export async function GET(req: NextRequest) {
     started: true,
     subject: t.target.kind,
     phase,
+    hasCases: rev?.hasCases ?? false,
+    reviewed: rev?.reviewed ?? false,
     caseCount: t.target.kind === "project" ? (await listCases(t.target.automation)).length : 0,
     status: quiz.status,
     language: quiz.language,
