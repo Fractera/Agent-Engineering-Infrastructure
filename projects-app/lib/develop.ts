@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { agentCanon } from "@/app/(projects)/projects/_lib/automation-agent-canon";
 import { buildArchitecture } from "@/lib/entity-architecture";
 import {
   ENTITY_TYPES, setSummary, setWarning, listWarnings, archiveAndClearTransport, setLifecycleState,
@@ -376,9 +377,20 @@ async function systemPrompt(proj: ResolvedProject, items: WaveItem[]): Promise<s
   const bundle = await buildArchitecture(proj.automation, false);
   const nodes = await listNodes(proj.automation);
   const slugByCuid = new Map(nodes.map((n) => [n.cuid, n.slug]));
+  // THE SHARED CANON (step 251) — the same instruction every automation carries as AGENTS.md/CLAUDE.md,
+  // in its "prompt" delivery (no filesystem boundary/API sections — the seven tools ARE those). One
+  // module feeds both deliveries, so the file agents and this developer can never drift apart.
+  const passport = bundle.passport as { title?: string; type?: string } | null;
+  const canon = agentCanon({
+    category: proj.category, project: proj.slug,
+    title: passport?.title || proj.slug, type: passport?.type || "stream",
+    modelEnvKey: `${proj.slug.toUpperCase().replace(/-/g, "_")}_MODEL`,
+  }, "prompt");
   // Law (2b) is stated NUMERICALLY here — the first live run proved a small model over-triggers the cutoff
   // when left to "assess scale" in the abstract (a 1-node task on a 6-node automation got "decompose").
   return `You are the in-product developer of the automation "${proj.automation}" in the Fractera projects app.
+
+${canon}
 
 THE ARCHITECTURE BUNDLE BELOW IS THE LAW — its agent_instruction is your contract. Apply law (2b) SCALE
 ASSESSMENT numerically, as arithmetic, not as a feeling: this automation currently has ${nodes.length} nodes;

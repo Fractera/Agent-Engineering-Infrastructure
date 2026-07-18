@@ -27,6 +27,7 @@ import { PROJECT_CATEGORIES } from "../_shared/categories";
 import { createNodeId } from "@/lib/cuid";
 import { regenerateExecutables } from "@/lib/executables";
 import { addRow } from "@/lib/dashboard-rows";
+import { agentCanon } from "./automation-agent-canon";
 
 const SLUG_RE = /^[a-z][a-z0-9-]*$/;
 
@@ -1314,6 +1315,16 @@ export async function createFrozenProject(
     const dest = join(destBase, rel);
     await mkdir(dirname(dest), { recursive: true });
     await writeFile(dest, body, "utf8");
+    files.push(`app/(projects)/projects/${category}/${project}/${rel}`);
+  }
+
+  // THE PER-AUTOMATION AGENT CANON (step 251) — every automation is born carrying its own agent
+  // instruction: AGENTS.md (the cross-agent standard Codex/Kimi load) + CLAUDE.md (a byte-identical
+  // mirror Claude Code loads), rendered from the ONE canon module (automation-agent-canon.ts, also
+  // injected into the in-product developer's prompt). Written directly — no {{...}} tokens to leak.
+  const canon = agentCanon({ category, project, title, type, modelEnvKey });
+  for (const rel of ["AGENTS.md", "CLAUDE.md"]) {
+    await writeFile(join(destBase, rel), canon, "utf8");
     files.push(`app/(projects)/projects/${category}/${project}/${rel}`);
   }
 
