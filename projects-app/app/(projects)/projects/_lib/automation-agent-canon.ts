@@ -71,7 +71,10 @@ THE NODE CONTRACT (all you need — do not go reading _shared to learn it):
   "condition"), parentId (the slug it branches off), description, in, out, run, estDurationMs }.
 - _nodes/<slug>/instruction.ts: export const INSTRUCTION = "the system instruction of this node".
 - A DRAFT node also carries spec.md — the owner's requirement. Fulfil THAT node; do not create a
-  duplicate next to it.`;
+  duplicate next to it.
+- BEFORE adding any node or edge: ${files ? "read WIRING-RULES.md (in this folder)" : "apply THE WIRING RULES below"} and
+  answer its checklist IN WRITING — roles, edge-count laws, and the full input→…→output path trace are
+  mandatory; a node whose output nobody consumes must not be mounted.`;
 
   const platformApi = files
     ? `

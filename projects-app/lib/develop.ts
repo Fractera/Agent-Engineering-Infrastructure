@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { agentCanon } from "@/app/(projects)/projects/_lib/automation-agent-canon";
+import { WIRING_RULES } from "@/app/(projects)/projects/_lib/wiring-rules";
 import { buildArchitecture } from "@/lib/entity-architecture";
 import {
   ENTITY_TYPES, setSummary, setWarning, listWarnings, archiveAndClearTransport, setLifecycleState,
@@ -391,6 +392,8 @@ async function systemPrompt(proj: ResolvedProject, items: WaveItem[]): Promise<s
   return `You are the in-product developer of the automation "${proj.automation}" in the Fractera projects app.
 
 ${canon}
+
+${WIRING_RULES}
 
 THE ARCHITECTURE BUNDLE BELOW IS THE LAW — its agent_instruction is your contract. Apply law (2b) SCALE
 ASSESSMENT numerically, as arithmetic, not as a feeling: this automation currently has ${nodes.length} nodes;

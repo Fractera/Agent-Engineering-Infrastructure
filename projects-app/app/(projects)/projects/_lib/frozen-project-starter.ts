@@ -28,6 +28,7 @@ import { createNodeId } from "@/lib/cuid";
 import { regenerateExecutables } from "@/lib/executables";
 import { addRow } from "@/lib/dashboard-rows";
 import { agentCanon } from "./automation-agent-canon";
+import { WIRING_RULES } from "./wiring-rules";
 
 const SLUG_RE = /^[a-z][a-z0-9-]*$/;
 
@@ -1327,6 +1328,11 @@ export async function createFrozenProject(
     await writeFile(join(destBase, rel), canon, "utf8");
     files.push(`app/(projects)/projects/${category}/${project}/${rel}`);
   }
+  // THE WIRING RULES (step 252) — the second born document: how to reason about nodes and edges before
+  // mounting them (roles, edge-count laws, the reasoning chain, the written checklist). AGENTS.md points
+  // at it; the in-product developer receives the same text in its prompt (lib/develop.ts).
+  await writeFile(join(destBase, "WIRING-RULES.md"), WIRING_RULES, "utf8");
+  files.push(`app/(projects)/projects/${category}/${project}/WIRING-RULES.md`);
 
   // STREAM's launch-console "live" action needs its own thin, read-only route — served under app/api/, a
   // different root than projectsRoot (project CONTENT vs a served API route). Written only for stream; then
