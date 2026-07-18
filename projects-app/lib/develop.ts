@@ -213,14 +213,24 @@ const TOOLS = [
 
 type ExecResult = { ok: boolean; detail?: string; payload: unknown };
 
-async function nodeBySlug(automation: string, slug: string): Promise<NodeRow | undefined> {
-  return (await listNodes(automation)).find((n) => n.slug === slug);
+/** Find a node by slug OR cuid — the first live run proved the model copies CUIDS out of the bundle (its
+ *  node refs are cuids) even when told to speak slugs, so the executor accepts both. A miss returns the
+ *  live slug list in the error: the self-heal loop only converges when the error TEACHES. */
+async function findNode(
+  automation: string, key: string,
+): Promise<{ row: NodeRow | undefined; notFound: string }> {
+  const all = await listNodes(automation);
+  const row = all.find((n) => n.slug === key || n.cuid === key);
+  return {
+    row,
+    notFound: `node "${key}" not found — the existing nodes (by slug): ${all.map((n) => n.slug).join(", ") || "(none)"}`,
+  };
 }
 
 /** close_entity / raise_warning accept a node's SLUG as ref (the model speaks slugs); the store speaks cuids. */
 async function resolveRef(automation: string, entityType: EntityType, ref: string): Promise<string> {
   if (entityType !== "node" || !ref) return ref;
-  const row = await nodeBySlug(automation, ref);
+  const { row } = await findNode(automation, ref);
   return row ? row.cuid : ref;
 }
 
@@ -230,9 +240,9 @@ async function execTool(proj: ResolvedProject, name: string, args: Record<string
   if (name === "upsert_node") {
     let parentCuid: string | null | undefined;
     if (str("parentSlug")) {
-      const p = await nodeBySlug(proj.automation, str("parentSlug"));
-      if (!p) return { ok: false, detail: `parent node "${str("parentSlug")}" not found`, payload: { error: `parent node "${str("parentSlug")}" not found` } };
-      parentCuid = p.cuid;
+      const p = await findNode(proj.automation, str("parentSlug"));
+      if (!p.row) return { ok: false, detail: `parent ${p.notFound}`, payload: { error: `parent ${p.notFound}` } };
+      parentCuid = p.row.cuid;
     }
     if (!str("slug")) {
       const created = await createDraftNode(proj, {
@@ -240,14 +250,15 @@ async function execTool(proj: ResolvedProject, name: string, args: Record<string
         spec: str("instruction").trim() || NODE_STUB_SPEC,
         parentCuid: parentCuid ?? null,
       });
-      const row = await nodeBySlug(proj.automation, created.slug);
-      if (row && (str("role") || str("ioType"))) {
-        await patchNode(proj, row, { role: str("role") || undefined, ioType: str("ioType") || undefined }, false);
+      const fresh = await findNode(proj.automation, created.slug);
+      if (fresh.row && (str("role") || str("ioType"))) {
+        await patchNode(proj, fresh.row, { role: str("role") || undefined, ioType: str("ioType") || undefined }, false);
       }
       return { ok: true, detail: `draft ${created.slug}`, payload: { ok: true, slug: created.slug, cuid: created.cuid, draft: true } };
     }
-    const row = await nodeBySlug(proj.automation, str("slug"));
-    if (!row) return { ok: false, detail: `node "${str("slug")}" not found`, payload: { error: `node "${str("slug")}" not found` } };
+    const found = await findNode(proj.automation, str("slug"));
+    if (!found.row) return { ok: false, detail: found.notFound, payload: { error: found.notFound } };
+    const row = found.row;
     const res = await patchNode(proj, row, {
       name: str("name") || undefined,
       role: str("role") || undefined,
@@ -260,8 +271,9 @@ async function execTool(proj: ResolvedProject, name: string, args: Record<string
   }
 
   if (name === "write_node_functions") {
-    const row = await nodeBySlug(proj.automation, str("slug"));
-    if (!row) return { ok: false, detail: `node "${str("slug")}" not found`, payload: { error: `node "${str("slug")}" not found — create it with upsert_node first` } };
+    const found = await findNode(proj.automation, str("slug"));
+    if (!found.row) return { ok: false, detail: found.notFound, payload: { error: `${found.notFound}; create a new node with upsert_node first` } };
+    const row = found.row;
     const summary = str("summary").trim();
     if (!summary || summary.length > 300) {
       return { ok: false, detail: "summary must be 1..300 chars", payload: { error: `summary must be 1..300 characters (got ${summary.length})` } };
@@ -277,22 +289,20 @@ async function execTool(proj: ResolvedProject, name: string, args: Record<string
   }
 
   if (name === "connect_nodes") {
-    const from = await nodeBySlug(proj.automation, str("fromSlug"));
-    const to = await nodeBySlug(proj.automation, str("toSlug"));
-    if (!from || !to) {
-      const missing = !from ? str("fromSlug") : str("toSlug");
-      return { ok: false, detail: `node "${missing}" not found`, payload: { error: `node "${missing}" not found` } };
-    }
-    const res = await writeDiagramEdge(proj.automation, from.cuid, to.cuid, Boolean(args.remove));
+    const from = await findNode(proj.automation, str("fromSlug"));
+    if (!from.row) return { ok: false, detail: from.notFound, payload: { error: from.notFound } };
+    const to = await findNode(proj.automation, str("toSlug"));
+    if (!to.row) return { ok: false, detail: to.notFound, payload: { error: to.notFound } };
+    const res = await writeDiagramEdge(proj.automation, from.row.cuid, to.row.cuid, Boolean(args.remove));
     if (!res.ok) return { ok: false, detail: res.error, payload: { error: res.error } };
-    return { ok: true, detail: `${from.slug} → ${to.slug}${args.remove ? " removed" : ""}`, payload: { ok: true } };
+    return { ok: true, detail: `${from.row.slug} → ${to.row.slug}${args.remove ? " removed" : ""}`, payload: { ok: true } };
   }
 
   if (name === "delete_node") {
-    const row = await nodeBySlug(proj.automation, str("slug"));
-    if (!row) return { ok: false, detail: `node "${str("slug")}" not found`, payload: { error: `node "${str("slug")}" not found` } };
-    await softDeleteNode(proj, row);
-    return { ok: true, detail: row.slug, payload: { ok: true } };
+    const found = await findNode(proj.automation, str("slug"));
+    if (!found.row) return { ok: false, detail: found.notFound, payload: { error: found.notFound } };
+    await softDeleteNode(proj, found.row);
+    return { ok: true, detail: found.row.slug, payload: { ok: true } };
   }
 
   if (name === "close_entity") {
@@ -379,7 +389,7 @@ ends with \`finish\` + a decomposition recommendation instead of changes (that o
 
 HOW YOU WORK (delta-only):
 - You change the automation ONLY through the tools. There is no "return everything" — every call is one
-  narrow delta. Address nodes by SLUG.
+  narrow delta. Address nodes by SLUG (a node's cuid from the bundle is accepted too).
 - A node goes LIVE through write_node_functions: it compiles instantly (no rebuild). A compile error comes
   back as the tool result — fix the source and call it again.
 - Closing semantics are PER-OBJECT: write_node_functions closes the node it materializes; close_entity
