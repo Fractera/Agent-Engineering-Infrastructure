@@ -20,6 +20,8 @@ import { UseCasesPanel } from "./use-cases-panel.client";
 import { DashboardAccordion } from "./dashboard-accordion.client";
 import { CalendarEntity } from "../entities/calendar";
 import { CronEntity } from "../entities/cron";
+import { MapEntity } from "../entities/map";
+import { AnalyticsEntity } from "../entities/analytics";
 import { ProcessesEntity } from "../entities/processes";
 import { RequirementBriefPanel } from "./requirement-brief-panel.client";
 import { AppPagesPanel } from "./app-pages-panel.client";
@@ -178,8 +180,13 @@ export function AutomationAccordions({
             // The Cron entity container (step 254.5): admin mode = description + the schedule controls
             // (cron.json writes) + the requirement panel — all composed INSIDE the container now.
             <CronEntity automation={automation ?? ""} mode="admin" />
+          ) : k === "map" ? (
+            // Requirement-only entity containers (step 254.7) — admin mode = the requirement panel.
+            <MapEntity automation={automation ?? ""} mode="admin" />
+          ) : k === "analytics" ? (
+            <AnalyticsEntity automation={automation ?? ""} mode="admin" />
           ) : (
-            // Map/Analytics (step 238 P5-P9) — the requirement brief: "the next thing I need here".
+            // Any future entity not yet migrated to a container — the requirement brief fallback.
             <RequirementBriefPanel entityType={k as EntityType} entityLabel={title} scopeLabel={requirementScope(lang, k as "map" | "analytics")} automation={automation} />
           )}
         </AccordionContent>
