@@ -149,7 +149,7 @@ export { addRow, listRows } from "@/lib/dashboard-rows";
 `;
 const SKELETON: Record<string, string> = {
   "page.tsx": `import AutomationEntry from "./_components";
-import { AutomationViewPage } from "../../../_shared/components/automation-view-page.client";
+import { AutomationViewPage } from "../../_shared/components/automation-view-page.client";
 import { PROJECT_DESCRIPTION } from "./_data/description";
 import { PROJECT_CONFIG } from "./_data/config";
 import { USE_CASES } from "./_data/use-cases";
