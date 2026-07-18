@@ -107,7 +107,7 @@ export function ProcessesTimelineView({
     document.getElementById("diagram-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [automation]);
 
-  if (rows === null) return <p className="text-sm text-muted-foreground">Loading the timeline…</p>;
+  if (rows === null) return <p className="text-sm text-muted-foreground" data-processes-view="loading">Loading the timeline…</p>;
   if (!rows.length) {
     return (
       <p className="text-sm text-muted-foreground" data-processes-view="empty">
