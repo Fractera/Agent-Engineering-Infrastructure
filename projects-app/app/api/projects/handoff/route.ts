@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorize, resolveProject } from "@/lib/nodes";
+import { buildProjection } from "@/lib/projection";
 import { launchGate } from "@/lib/wave";
 
 // THE LIGHT HAND-OFF (step 249) — the copyable task text the owner pastes into a coding-agent chat, in TWO
@@ -50,6 +51,33 @@ ${list}
 ${CLOSING.replaceAll("<a>", automation)}`;
 }
 
+function roomText(automation: string, roomPath: string, tokens: number, items: { entityType: string; ref: string; label: string; task: string }[]): string {
+  const list = items
+    .map((i, k) => {
+      const where = i.ref ? `${i.entityType} ${i.ref}` : `the automation's ${i.entityType}`;
+      return `${k + 1}. ${i.label} — ${where}\n${i.task.trim() || "(no brief given)"}`;
+    })
+    .join("\n\n");
+  return `Develop the automation "${automation}" in its STERILE ROOM (step 254 flow — you never open the admin app).
+
+YOUR WORKSPACE: ${roomPath}  (~${tokens} tokens — the automation's complete essence; a fresh projection
+was built for you just now). Its local mirror for the owner: ai-workspace/agent-rooms/${automation}/.
+
+HOW TO WORK
+1. Read the room's AGENTS.md FIRST and obey it (WIRING-RULES.md and SCALE-RULES.md before any node/edge
+   change; PLATFORM.md is the whole platform contract).
+2. Edit ONLY inside the room. The five law documents and *.compiled.mjs are immutable; deleting files
+   does nothing (deletions go through the platform APIs).
+3. When done (or per finished object): POST http://localhost:3003/api/projects/projection/apply
+   {"automation":"${automation}"} — your diff is gated (authorship whitelist + node compilation) and
+   lands atomically; a refusal names exactly what to fix. Then close objects per PLATFORM.md
+   (materialize / entity-summary / entity-warning) and verify:
+   GET http://localhost:3003/api/projects/validate?automation=${automation} → ok:true.
+
+THE STAGED ITEMS (${items.length}):
+${list}`;
+}
+
 export async function GET(req: NextRequest) {
   if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const proj = resolveProject((req.nextUrl.searchParams.get("automation") ?? "").trim());
@@ -65,9 +93,16 @@ export async function GET(req: NextRequest) {
     );
   }
 
+  // THE ROOM HAND-OFF (step 254.15, ROUTE-V3 law 4) — the PRIMARY task now: a FRESH projection is built
+  // at hand-off time (deterministic — always the current truth) and the agent is pointed at the sterile
+  // room, never at the admin app. full/delta stay as the legacy tail for the old copy-paste flow.
+  const projection = await buildProjection(proj.automation);
+  const room = projection.ok ? roomText(proj.automation, projection.root, projection.tokens, gate.items) : null;
+
   return NextResponse.json({
     ok: true,
     staged: gate.items.length,
+    ...(room ? { room, roomPath: projection.ok ? projection.root : undefined } : {}),
     full: fullText(proj.automation),
     delta: deltaText(proj.automation, gate.items),
   });
