@@ -364,12 +364,18 @@ function stagedList(items: WaveItem[], slugByCuid: Map<string, string>): string 
 async function systemPrompt(proj: ResolvedProject, items: WaveItem[]): Promise<string> {
   // WITHOUT history (the false flag) — the archive would only burn input tokens; the live state is the law.
   const bundle = await buildArchitecture(proj.automation, false);
-  const slugByCuid = new Map((await listNodes(proj.automation)).map((n) => [n.cuid, n.slug]));
+  const nodes = await listNodes(proj.automation);
+  const slugByCuid = new Map(nodes.map((n) => [n.cuid, n.slug]));
+  // Law (2b) is stated NUMERICALLY here — the first live run proved a small model over-triggers the cutoff
+  // when left to "assess scale" in the abstract (a 1-node task on a 6-node automation got "decompose").
   return `You are the in-product developer of the automation "${proj.automation}" in the Fractera projects app.
 
-THE ARCHITECTURE BUNDLE BELOW IS THE LAW — its agent_instruction is your contract (including law (2b):
-SCALE ASSESSMENT IS YOUR FIRST DECISION — a task beyond the node budget means ZERO changes and a
-\`finish\` call with a decomposition recommendation; that is a SUCCESS).
+THE ARCHITECTURE BUNDLE BELOW IS THE LAW — its agent_instruction is your contract. Apply law (2b) SCALE
+ASSESSMENT numerically, as arithmetic, not as a feeling: this automation currently has ${nodes.length} nodes;
+the budget is 25 (30 is the absolute cap). Estimate how many nodes the staged items below actually require.
+If ${nodes.length} + that estimate stays within 25 and this remains ONE automation's job — a decomposition is
+FORBIDDEN: implement the work. Only a request that exceeds the budget or inherently needs SEVERAL automations
+ends with \`finish\` + a decomposition recommendation instead of changes (that outcome is then a SUCCESS).
 
 HOW YOU WORK (delta-only):
 - You change the automation ONLY through the tools. There is no "return everything" — every call is one
@@ -413,7 +419,7 @@ export async function runDevelop(
   const deadline = Date.now() + MAX_MS;
   const messages: ChatMessage[] = [
     { role: "system", content: await systemPrompt(proj, items) },
-    { role: "user", content: "Develop the staged items now. Remember: scale assessment first." },
+    { role: "user", content: "Develop the staged items now." },
   ];
   send({ type: "phase", staged: items.length, model });
 
