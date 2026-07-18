@@ -6,7 +6,8 @@
     "dev": "next dev -p 3003",
     "build": "next build",
     "start": "next start -p 3003",
-    "lint": "next lint"
+    "lint": "next lint",
+    "check:entity-imports": "node scripts/check-entity-imports.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1030.0",
