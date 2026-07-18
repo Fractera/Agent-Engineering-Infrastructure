@@ -1,0 +1,308 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Check, Circle, ClipboardCopy, ClipboardPaste, Copy, Loader2, LogOut, Play, TerminalSquare } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { ptyUrl } from "@/lib/pty-url";
+import { XtermTerminal, type XtermTerminalHandle } from "./xterm-terminal.client";
+
+// THE DEV CONSOLE (step 255.B2-B4, the owner's scenario) — the live control desk of an external
+// coding-agent session, INSIDE the launch dialog on :3003. Design (the owner delegated it):
+//   header  — the working folder (mono, copyable) + the session badge (new / reattached);
+//   cards   — the two v1 providers (Claude Code · Codex) with live readiness badges; a model select
+//             under the chosen one;
+//   center  — the terminal (dark, ~55vh) + a toolbar: Paste (subscription auth), Copy output, Exit;
+//   footer  — the CONDUCTOR strip (cd ✓ → pwd ✓ → CLI → login → task handed) + the do-not-reload note
+//             (and the honest promise: an accidental reload REATTACHES — keepAlive, 255.A2).
+//
+// THE CONDUCTOR (B3): the system drives the agent itself by reading the terminal — verify pwd equals
+// the room, type the CLI launch (with the model), watch for the OAuth login prompt (auto-fill on
+// detect), then hand the room task as the first message. The user watches; Paste stays as the manual
+// fallback. SESSION (B4): sessionId = dev:<automation>, keepAlive — a reload reattaches with history;
+// only Exit (double-confirm) kills it.
+
+type Readiness = { platform: string; installed: boolean; logged_in: boolean; busy: boolean | null };
+type ModelInfo = { id: string; name: string };
+type Step = "pwd" | "cli" | "login" | "task" | "free";
+type StepState = "todo" | "doing" | "done" | "fail";
+
+const PROVIDERS = [
+  { id: "claude-code", label: "Claude Code", cli: (model: string) => `claude${model ? ` --model ${model}` : ""}\n` },
+  { id: "codex", label: "Codex", cli: (model: string) => `codex${model ? ` -m ${model}` : ""}\n` },
+] as const;
+
+type CD = {
+  workspace: string; sessionNew: string; sessionReattached: string;
+  provider: string; model: string; startAgent: string; agentRunning: string;
+  paste: string; pasteTitle: string; pasteSend: string; copyOut: string; copied: string;
+  exit: string; exitConfirm: string;
+  stepPwd: string; stepCli: string; stepLogin: string; stepTask: string; stepFree: string;
+  noReload: string; notInstalled: string; notLoggedIn: string; busy: string;
+  pwdFail: string;
+};
+const I18N: Record<string, CD> = {
+  en: { workspace: "Workspace", sessionNew: "new session", sessionReattached: "session restored", provider: "Coding agent", model: "Model", startAgent: "Start the agent", agentRunning: "Agent running", paste: "Paste", pasteTitle: "Paste into the terminal (login codes, answers)", pasteSend: "Send", copyOut: "Copy output", copied: "Copied.", exit: "Exit", exitConfirm: "End the session for good? The agent's terminal will be closed.", stepPwd: "Workspace verified", stepCli: "Agent launched", stepLogin: "Subscription login", stepTask: "Task handed over", stepFree: "Development in progress", noReload: "Please don't reload the page. If it reloads accidentally, the session reconnects with its history.", notInstalled: "not installed", notLoggedIn: "no subscription login", busy: "busy", pwdFail: "The workspace check failed — the terminal is not in the project room." },
+  ru: { workspace: "Рабочая папка", sessionNew: "новая сессия", sessionReattached: "сессия восстановлена", provider: "Агент-программист", model: "Модель", startAgent: "Запустить агента", agentRunning: "Агент работает", paste: "Вставить", pasteTitle: "Вставить в терминал (коды входа, ответы)", pasteSend: "Отправить", copyOut: "Скопировать вывод", copied: "Скопировано.", exit: "Выход", exitConfirm: "Завершить сессию насовсем? Терминал агента будет закрыт.", stepPwd: "Рабочая папка проверена", stepCli: "Агент запущен", stepLogin: "Вход в подписку", stepTask: "Задание передано", stepFree: "Идёт разработка", noReload: "Не перезагружайте страницу. При случайной перезагрузке сессия восстановится с историей.", notInstalled: "не установлен", notLoggedIn: "нет входа в подписку", busy: "занят", pwdFail: "Проверка рабочей папки не прошла — терминал не в комнате проекта." },
+  es: { workspace: "Carpeta de trabajo", sessionNew: "sesión nueva", sessionReattached: "sesión restaurada", provider: "Agente de código", model: "Modelo", startAgent: "Iniciar el agente", agentRunning: "Agente en marcha", paste: "Pegar", pasteTitle: "Pegar en la terminal (códigos, respuestas)", pasteSend: "Enviar", copyOut: "Copiar salida", copied: "Copiado.", exit: "Salir", exitConfirm: "¿Terminar la sesión definitivamente? La terminal del agente se cerrará.", stepPwd: "Carpeta verificada", stepCli: "Agente lanzado", stepLogin: "Acceso a la suscripción", stepTask: "Tarea entregada", stepFree: "Desarrollo en curso", noReload: "No recargues la página. Si se recarga por accidente, la sesión se reconecta con su historial.", notInstalled: "no instalado", notLoggedIn: "sin acceso a la suscripción", busy: "ocupado", pwdFail: "La verificación de la carpeta falló — la terminal no está en la sala del proyecto." },
+  fr: { workspace: "Dossier de travail", sessionNew: "nouvelle session", sessionReattached: "session restaurée", provider: "Agent de code", model: "Modèle", startAgent: "Démarrer l'agent", agentRunning: "Agent en cours", paste: "Coller", pasteTitle: "Coller dans le terminal (codes, réponses)", pasteSend: "Envoyer", copyOut: "Copier la sortie", copied: "Copié.", exit: "Quitter", exitConfirm: "Terminer la session définitivement ? Le terminal de l'agent sera fermé.", stepPwd: "Dossier vérifié", stepCli: "Agent lancé", stepLogin: "Connexion à l'abonnement", stepTask: "Tâche transmise", stepFree: "Développement en cours", noReload: "Ne rechargez pas la page. En cas de rechargement accidentel, la session se reconnecte avec son historique.", notInstalled: "non installé", notLoggedIn: "pas de connexion", busy: "occupé", pwdFail: "La vérification du dossier a échoué — le terminal n'est pas dans la salle du projet." },
+  it: { workspace: "Cartella di lavoro", sessionNew: "nuova sessione", sessionReattached: "sessione ripristinata", provider: "Agente di codice", model: "Modello", startAgent: "Avvia l'agente", agentRunning: "Agente in esecuzione", paste: "Incolla", pasteTitle: "Incolla nel terminale (codici, risposte)", pasteSend: "Invia", copyOut: "Copia output", copied: "Copiato.", exit: "Esci", exitConfirm: "Terminare la sessione definitivamente? Il terminale dell'agente verrà chiuso.", stepPwd: "Cartella verificata", stepCli: "Agente avviato", stepLogin: "Accesso all'abbonamento", stepTask: "Compito consegnato", stepFree: "Sviluppo in corso", noReload: "Non ricaricare la pagina. In caso di ricarica accidentale, la sessione si riconnette con la cronologia.", notInstalled: "non installato", notLoggedIn: "nessun accesso", busy: "occupato", pwdFail: "La verifica della cartella è fallita — il terminale non è nella stanza del progetto." },
+  de: { workspace: "Arbeitsordner", sessionNew: "neue Sitzung", sessionReattached: "Sitzung wiederhergestellt", provider: "Coding-Agent", model: "Modell", startAgent: "Agent starten", agentRunning: "Agent läuft", paste: "Einfügen", pasteTitle: "In das Terminal einfügen (Codes, Antworten)", pasteSend: "Senden", copyOut: "Ausgabe kopieren", copied: "Kopiert.", exit: "Beenden", exitConfirm: "Sitzung endgültig beenden? Das Terminal des Agenten wird geschlossen.", stepPwd: "Ordner geprüft", stepCli: "Agent gestartet", stepLogin: "Abo-Anmeldung", stepTask: "Aufgabe übergeben", stepFree: "Entwicklung läuft", noReload: "Bitte die Seite nicht neu laden. Bei versehentlichem Neuladen verbindet sich die Sitzung mit ihrer Historie neu.", notInstalled: "nicht installiert", notLoggedIn: "keine Anmeldung", busy: "beschäftigt", pwdFail: "Die Ordnerprüfung schlug fehl — das Terminal ist nicht im Projektraum." },
+  pt: { workspace: "Pasta de trabalho", sessionNew: "sessão nova", sessionReattached: "sessão restaurada", provider: "Agente de código", model: "Modelo", startAgent: "Iniciar o agente", agentRunning: "Agente em execução", paste: "Colar", pasteTitle: "Colar no terminal (códigos, respostas)", pasteSend: "Enviar", copyOut: "Copiar saída", copied: "Copiado.", exit: "Sair", exitConfirm: "Terminar a sessão definitivamente? O terminal do agente será fechado.", stepPwd: "Pasta verificada", stepCli: "Agente iniciado", stepLogin: "Login da assinatura", stepTask: "Tarefa entregue", stepFree: "Desenvolvimento em curso", noReload: "Não recarregue a página. Numa recarga acidental, a sessão reconecta-se com o histórico.", notInstalled: "não instalado", notLoggedIn: "sem login", busy: "ocupado", pwdFail: "A verificação da pasta falhou — o terminal não está na sala do projeto." },
+  pl: { workspace: "Folder roboczy", sessionNew: "nowa sesja", sessionReattached: "sesja przywrócona", provider: "Agent kodujący", model: "Model", startAgent: "Uruchom agenta", agentRunning: "Agent pracuje", paste: "Wklej", pasteTitle: "Wklej do terminala (kody, odpowiedzi)", pasteSend: "Wyślij", copyOut: "Kopiuj wyjście", copied: "Skopiowano.", exit: "Zakończ", exitConfirm: "Zakończyć sesję na stałe? Terminal agenta zostanie zamknięty.", stepPwd: "Folder zweryfikowany", stepCli: "Agent uruchomiony", stepLogin: "Logowanie subskrypcji", stepTask: "Zadanie przekazane", stepFree: "Trwa rozwój", noReload: "Nie przeładowuj strony. Przy przypadkowym przeładowaniu sesja połączy się ponownie z historią.", notInstalled: "niezainstalowany", notLoggedIn: "brak logowania", busy: "zajęty", pwdFail: "Weryfikacja folderu nie powiodła się — terminal nie jest w pokoju projektu." },
+  tr: { workspace: "Çalışma klasörü", sessionNew: "yeni oturum", sessionReattached: "oturum geri yüklendi", provider: "Kodlama ajanı", model: "Model", startAgent: "Ajanı başlat", agentRunning: "Ajan çalışıyor", paste: "Yapıştır", pasteTitle: "Terminale yapıştır (kodlar, yanıtlar)", pasteSend: "Gönder", copyOut: "Çıktıyı kopyala", copied: "Kopyalandı.", exit: "Çıkış", exitConfirm: "Oturum kalıcı olarak sonlandırılsın mı? Ajanın terminali kapatılacak.", stepPwd: "Klasör doğrulandı", stepCli: "Ajan başlatıldı", stepLogin: "Abonelik girişi", stepTask: "Görev iletildi", stepFree: "Geliştirme sürüyor", noReload: "Sayfayı yeniden yüklemeyin. Yanlışlıkla yeniden yüklenirse oturum geçmişiyle birlikte yeniden bağlanır.", notInstalled: "kurulu değil", notLoggedIn: "abonelik girişi yok", busy: "meşgul", pwdFail: "Klasör doğrulaması başarısız — terminal proje odasında değil." },
+  nl: { workspace: "Werkmap", sessionNew: "nieuwe sessie", sessionReattached: "sessie hersteld", provider: "Coding-agent", model: "Model", startAgent: "Agent starten", agentRunning: "Agent actief", paste: "Plakken", pasteTitle: "In de terminal plakken (codes, antwoorden)", pasteSend: "Versturen", copyOut: "Uitvoer kopiëren", copied: "Gekopieerd.", exit: "Afsluiten", exitConfirm: "Sessie definitief beëindigen? De terminal van de agent wordt gesloten.", stepPwd: "Werkmap geverifieerd", stepCli: "Agent gestart", stepLogin: "Abonnement-login", stepTask: "Taak overgedragen", stepFree: "Ontwikkeling bezig", noReload: "Herlaad de pagina niet. Bij een onbedoelde herlaad verbindt de sessie opnieuw met de historie.", notInstalled: "niet geïnstalleerd", notLoggedIn: "geen login", busy: "bezet", pwdFail: "De werkmapcontrole is mislukt — de terminal is niet in de projectkamer." },
+};
+
+function StepDot({ state }: { state: StepState }) {
+  if (state === "done") return <Check className="size-3.5 text-emerald-500" />;
+  if (state === "doing") return <Loader2 className="size-3.5 animate-spin text-muted-foreground" />;
+  if (state === "fail") return <Circle className="size-3.5 fill-rose-500 text-rose-500" />;
+  return <Circle className="size-3 text-muted-foreground/40" />;
+}
+
+export function DevConsole({
+  automation, roomPath, roomTask, lang, onExited,
+}: {
+  automation: string;
+  /** The server-side room path from the handoff (the terminal's cwd). */
+  roomPath: string;
+  /** The room task text — the first message the conductor hands to the agent. */
+  roomTask: string;
+  lang: string;
+  onExited?: () => void;
+}) {
+  const T = I18N[lang] ?? I18N.en;
+  const termRef = useRef<XtermTerminalHandle | null>(null);
+  const [readiness, setReadiness] = useState<Readiness[]>([]);
+  const [provider, setProvider] = useState<string>("claude-code");
+  const [models, setModels] = useState<ModelInfo[]>([]);
+  const [model, setModel] = useState("");
+  const [reattached, setReattached] = useState(false);
+  const [steps, setSteps] = useState<Record<Step, StepState>>({ pwd: "doing", cli: "todo", login: "todo", task: "todo", free: "todo" });
+  const [agentStarted, setAgentStarted] = useState(false);
+  const [pasteOpen, setPasteOpen] = useState(false);
+  const [pasteText, setPasteText] = useState("");
+  const [exitArm, setExitArm] = useState(false);
+
+  // The rolling terminal transcript the conductor reads (and Copy-output copies).
+  const outRef = useRef("");
+  const stepsRef = useRef(steps);
+  stepsRef.current = steps;
+  const startedRef = useRef(false);
+  const quietTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const setStep = useCallback((k: Step, v: StepState) => setSteps((s) => ({ ...s, [k]: v })), []);
+
+  // Readiness + models.
+  useEffect(() => {
+    fetch("/api/projects/agents/readiness", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { agents?: { agents?: Readiness[] } } | null) => {
+        const list = d?.agents?.agents ?? [];
+        if (list.length) setReadiness(list);
+      })
+      .catch(() => { /* badges stay unknown */ });
+  }, []);
+  useEffect(() => {
+    setModels([]);
+    setModel("");
+    fetch(`/api/projects/agents/models?platform=${encodeURIComponent(provider)}`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { models?: ModelInfo[] } | null) => {
+        if (d?.models?.length) { setModels(d.models); setModel(d.models[0].id); }
+      })
+      .catch(() => { /* manual model less critical: CLI default */ });
+  }, [provider]);
+
+  // THE CONDUCTOR (B3) — reads every terminal chunk.
+  const onData = useCallback((chunk: string) => {
+    outRef.current = (outRef.current + chunk).slice(-100_000);
+    const s = stepsRef.current;
+
+    if (chunk.includes("[session reattached]")) {
+      setReattached(true);
+      setSteps({ pwd: "done", cli: "done", login: "done", task: "done", free: "doing" });
+      setAgentStarted(true);
+      startedRef.current = true;
+      return;
+    }
+    // Step 1 — pwd verification: our own probe answer contains the room path on its own line.
+    if (s.pwd === "doing" && outRef.current.includes(roomPath)) {
+      setStep("pwd", "done");
+    }
+    // Step 3 — login prompt detection (the coding-window pattern): an OAuth URL in the output.
+    if (startedRef.current && s.login !== "done" && /https:\/\/\S*(oauth|login|auth)\S*/i.test(chunk)) {
+      setStep("login", "doing");
+      toast.info(T.pasteTitle, { duration: 10000 });
+    }
+    // Step 4 — after the CLI starts, a quiet period (no output ~4s) means the prompt is ready: hand the task.
+    if (startedRef.current && s.task === "todo") {
+      if (quietTimer.current) clearTimeout(quietTimer.current);
+      quietTimer.current = setTimeout(() => {
+        const cur = stepsRef.current;
+        if (cur.task !== "todo") return;
+        setStep("login", "done");
+        setStep("task", "doing");
+        termRef.current?.sendStdin(roomTask.replace(/\r?\n/g, "\n") + "\n");
+        setTimeout(() => { setStep("task", "done"); setStep("free", "doing"); }, 1500);
+      }, 4000);
+    }
+  }, [roomPath, roomTask, setStep, T.pasteTitle]);
+
+  // The pwd probe once the shell settles (fresh sessions only).
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (!reattached && stepsRef.current.pwd === "doing") termRef.current?.sendStdin("pwd\n");
+    }, 1600);
+    return () => clearTimeout(t);
+  }, [reattached]);
+
+  const startAgent = useCallback(() => {
+    if (stepsRef.current.pwd !== "done") { toast.error(T.pwdFail); return; }
+    const p = PROVIDERS.find((x) => x.id === provider) ?? PROVIDERS[0];
+    setAgentStarted(true);
+    startedRef.current = true;
+    setStep("cli", "done");
+    setStep("login", "doing");
+    termRef.current?.sendStdin(p.cli(model));
+  }, [provider, model, setStep, T.pwdFail]);
+
+  const copyWorkspace = () => { void navigator.clipboard.writeText(roomPath); toast.success(T.copied); };
+  const copyOutput = () => { void navigator.clipboard.writeText(outRef.current.slice(-20_000)); toast.success(T.copied); };
+  const sendPaste = () => {
+    if (!pasteText) return;
+    termRef.current?.sendStdin(pasteText);
+    termRef.current?.focus();
+    setPasteOpen(false);
+    setPasteText("");
+  };
+  const doExit = () => {
+    termRef.current?.sendExit();
+    setExitArm(false);
+    onExited?.();
+  };
+
+  const readinessOf = (id: string) => readiness.find((r) => r.platform === id);
+  const stepList: { k: Step; label: string }[] = [
+    { k: "pwd", label: T.stepPwd }, { k: "cli", label: T.stepCli },
+    { k: "login", label: T.stepLogin }, { k: "task", label: T.stepTask }, { k: "free", label: T.stepFree },
+  ];
+  const wsUrl = useMemo(() => ptyUrl(), []);
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-3" data-dev-console="1">
+      {/* HEADER — the workspace + the session badge. */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <button type="button" onClick={copyWorkspace} className="group flex min-w-0 items-center gap-2 rounded-md border bg-muted/30 px-2 py-1 text-left" title={T.workspace}>
+          <TerminalSquare className="size-3.5 shrink-0 text-muted-foreground" />
+          <code className="truncate text-xs">{roomPath}</code>
+          <Copy className="size-3 shrink-0 opacity-0 transition group-hover:opacity-60" />
+        </button>
+        <span className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide ${reattached ? "border-emerald-500/50 text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
+          {reattached ? T.sessionReattached : T.sessionNew}
+        </span>
+      </div>
+
+      {/* PROVIDERS + MODEL — hidden once the agent is running (the terminal is the show now). */}
+      {!agentStarted && (
+        <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+          {PROVIDERS.map((p) => {
+            const r = readinessOf(p.id);
+            const blocked = r ? !r.installed || !r.logged_in : false;
+            const reason = r && !r.installed ? T.notInstalled : r && !r.logged_in ? T.notLoggedIn : r?.busy ? T.busy : "";
+            const active = provider === p.id;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                disabled={blocked}
+                onClick={() => setProvider(p.id)}
+                className={`rounded-lg border p-3 text-left transition ${active ? "border-primary ring-1 ring-primary" : ""} ${blocked ? "opacity-45" : "hover:bg-muted/40"}`}
+                data-provider={p.id}
+              >
+                <p className="flex items-center justify-between text-sm font-medium">
+                  {p.label}
+                  {r && (
+                    <span className={`size-2 rounded-full ${!r.installed || !r.logged_in ? "bg-rose-500" : r.busy ? "bg-amber-500" : "bg-emerald-500"}`} />
+                  )}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{reason || (r ? "ready" : "…")}</p>
+              </button>
+            );
+          })}
+          <div className="flex flex-col justify-between gap-2">
+            <Select value={model} onValueChange={setModel} disabled={!models.length}>
+              <SelectTrigger className="w-full sm:w-52"><SelectValue placeholder={T.model} /></SelectTrigger>
+              <SelectContent>
+                {models.map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Button size="sm" onClick={startAgent} disabled={steps.pwd !== "done"} data-dev-console-start="1">
+              <Play className="size-3.5" /> {T.startAgent}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* THE TERMINAL + toolbar. */}
+      <div className="overflow-hidden rounded-lg border bg-[#09090b]" style={{ height: "55vh" }}>
+        <XtermTerminal
+          ref={termRef}
+          wsUrl={wsUrl}
+          platform="system"
+          cwd={roomPath}
+          sessionId={`dev:${automation}`}
+          keepAlive
+          onData={onData}
+        />
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button size="sm" variant="outline" onClick={() => setPasteOpen(true)}>
+          <ClipboardPaste className="size-3.5" /> {T.paste}
+        </Button>
+        <Button size="sm" variant="outline" onClick={copyOutput}>
+          <ClipboardCopy className="size-3.5" /> {T.copyOut}
+        </Button>
+        <span className="mx-1 flex-1" />
+        {exitArm ? (
+          <>
+            <span className="text-xs text-rose-600 dark:text-rose-400">{T.exitConfirm}</span>
+            <Button size="sm" variant="destructive" onClick={doExit}>{T.exit}</Button>
+            <Button size="sm" variant="ghost" onClick={() => setExitArm(false)}>✕</Button>
+          </>
+        ) : (
+          <Button size="sm" variant="outline" className="text-rose-600" onClick={() => setExitArm(true)}>
+            <LogOut className="size-3.5" /> {T.exit}
+          </Button>
+        )}
+      </div>
+
+      {/* THE CONDUCTOR STRIP + the reload note. */}
+      <div className="space-y-1.5 rounded-lg border bg-muted/20 p-3">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          {stepList.map(({ k, label }) => (
+            <span key={k} className="flex items-center gap-1.5 text-xs" data-conductor-step={k} data-state={steps[k]}>
+              <StepDot state={steps[k]} /> {label}
+            </span>
+          ))}
+        </div>
+        <p className="text-[11px] text-muted-foreground">{T.noReload}</p>
+      </div>
+
+      {/* PASTE — the subscription-auth helper. */}
+      <Dialog open={pasteOpen} onOpenChange={setPasteOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{T.pasteTitle}</DialogTitle></DialogHeader>
+          <Textarea value={pasteText} onChange={(e) => setPasteText(e.target.value)} rows={4} autoFocus />
+          <Button onClick={sendPaste} disabled={!pasteText}>{T.pasteSend}</Button>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

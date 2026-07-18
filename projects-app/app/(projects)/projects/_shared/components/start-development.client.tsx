@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useUiLang } from "../use-ui-lang";
+import { DevConsole } from "./dev-console.client";
 
 // THE LAUNCH DIALOG (step 233 → the wave in 240 → the light hand-off in 249 → THE IN-PRODUCT DEVELOPER in
 // step 250). The button no longer hands out a copyable task: after the gates pass, the dialog itself POSTs
@@ -20,7 +21,7 @@ import { useUiLang } from "../use-ui-lang";
 // finishes server-side — each is atomic per-object).
 type Case = { cuid: string; title: string; summary: string; status: string };
 type Mode =
-  | "loading" | "review" | "run"
+  | "loading" | "review" | "run" | "confirm" | "console"
   | "no-cases" | "nothing-staged" | "stub-nodes"
   | "already-running" | "no-key" | "model-no-tools";
 
@@ -43,6 +44,7 @@ type SD = {
   noCasesTitle: string; noCasesBody: string; noStagedTitle: string; noStagedBody: string;
   stubTitle: string; stubBody: string;
   failed: string; noDescription: string;
+  confirmTitle: string; confirmBody: string; cancelEdit: string; startNow: string; builtInAlt: string;
 };
 const I18N: Record<string, SD> = {
   en: {
@@ -66,6 +68,8 @@ const I18N: Record<string, SD> = {
     noStagedTitle: "Nothing staged for development", noStagedBody: "There are no pending requirements right now — describe a change first (a node's brief, a requirement, or a Sparkles comment).",
     stubTitle: "Some nodes have no description", stubBody: "These nodes still carry the blank template text: {nodes}. A coding agent cannot build a node nobody described — open each one and say what it should do, or delete it. Then launch again.",
     failed: "Could not start development.", noDescription: "No description yet.",
+    confirmTitle: "Development is about to start", confirmBody: "The coding agent will work in this project's own room, live in the terminal below. You can cancel and keep editing — this window returns whenever you press the launch button.",
+    cancelEdit: "Cancel and keep editing", startNow: "Start now", builtInAlt: "Use the built-in developer (OpenAI) instead",
   },
   ru: {
     title: "Запустить разработку",
@@ -88,6 +92,8 @@ const I18N: Record<string, SD> = {
     noStagedTitle: "В разработку ничего не передано", noStagedBody: "Сейчас нет ожидающих требований — сначала опишите изменение (требование узла, требование сущности или комментарий через ✦).",
     stubTitle: "У некоторых узлов нет описания", stubBody: "Эти узлы всё ещё несут пустой шаблонный текст: {nodes}. Агент-программист не может построить узел, который никто не описал — откройте каждый и скажите, что он должен делать, или удалите его. Затем запустите разработку снова.",
     failed: "Не удалось запустить разработку.", noDescription: "Пока без описания.",
+    confirmTitle: "Разработка сейчас начнётся", confirmBody: "Агент-программист будет работать в собственной комнате проекта, вживую в терминале ниже. Можно отменить и продолжить правки — это окно вернётся при следующем нажатии кнопки запуска.",
+    cancelEdit: "Отменить и продолжить правки", startNow: "Стартовать сейчас", builtInAlt: "Использовать встроенного разработчика (OpenAI)",
   },
   es: {
     title: "Iniciar desarrollo",
@@ -110,6 +116,8 @@ const I18N: Record<string, SD> = {
     noStagedTitle: "Nada pendiente de desarrollo", noStagedBody: "Ahora mismo no hay requisitos pendientes — describe primero un cambio (el requisito de un nodo, de una entidad o un comentario con ✦).",
     stubTitle: "Algunos nodos no tienen descripción", stubBody: "Estos nodos aún llevan el texto de plantilla vacío: {nodes}. Un agente de código no puede construir un nodo que nadie describió — abra cada uno y diga qué debe hacer, o elimínelo. Luego vuelva a lanzar.",
     failed: "No se pudo iniciar el desarrollo.", noDescription: "Aún sin descripción.",
+    confirmTitle: "El desarrollo está a punto de comenzar", confirmBody: "El agente trabajará en la sala propia del proyecto, en vivo en la terminal. Puedes cancelar y seguir editando — esta ventana vuelve con el botón de inicio.",
+    cancelEdit: "Cancelar y seguir editando", startNow: "Empezar ahora", builtInAlt: "Usar el desarrollador integrado (OpenAI)",
   },
   fr: {
     title: "Démarrer le développement",
@@ -132,6 +140,8 @@ const I18N: Record<string, SD> = {
     noStagedTitle: "Rien en attente de développement", noStagedBody: "Aucune exigence en attente pour l'instant — décrivez d'abord un changement (l'exigence d'un nœud, d'une entité ou un commentaire via ✦).",
     stubTitle: "Certains nœuds n'ont pas de description", stubBody: "Ces nœuds portent encore le texte de modèle vide : {nodes}. Un agent de code ne peut pas construire un nœud que personne n'a décrit — ouvrez chacun et dites ce qu'il doit faire, ou supprimez-le. Puis relancez.",
     failed: "Impossible de démarrer le développement.", noDescription: "Pas encore de description.",
+    confirmTitle: "Le développement va commencer", confirmBody: "L'agent travaillera dans la salle du projet, en direct dans le terminal. Vous pouvez annuler et continuer vos modifications — cette fenêtre revient au prochain lancement.",
+    cancelEdit: "Annuler et continuer", startNow: "Démarrer maintenant", builtInAlt: "Utiliser le développeur intégré (OpenAI)",
   },
   it: {
     title: "Avvia lo sviluppo",
@@ -154,6 +164,8 @@ const I18N: Record<string, SD> = {
     noStagedTitle: "Niente in attesa di sviluppo", noStagedBody: "Al momento non ci sono richieste in sospeso — descrivi prima una modifica (la richiesta di un nodo, di un'entità o un commento con ✦).",
     stubTitle: "Alcuni nodi non hanno descrizione", stubBody: "Questi nodi portano ancora il testo di modello vuoto: {nodes}. Un agente di codice non può costruire un nodo che nessuno ha descritto — apra ciascuno e dica cosa deve fare, oppure lo elimini. Poi rilanci.",
     failed: "Impossibile avviare lo sviluppo.", noDescription: "Ancora nessuna descrizione.",
+    confirmTitle: "Lo sviluppo sta per iniziare", confirmBody: "L'agente lavorerà nella stanza del progetto, in diretta nel terminale. Puoi annullare e continuare a modificare — questa finestra torna al prossimo avvio.",
+    cancelEdit: "Annulla e continua", startNow: "Avvia ora", builtInAlt: "Usa lo sviluppatore integrato (OpenAI)",
   },
   de: {
     title: "Entwicklung starten",
@@ -176,6 +188,8 @@ const I18N: Record<string, SD> = {
     noStagedTitle: "Nichts zur Entwicklung vorgemerkt", noStagedBody: "Es gibt gerade keine offenen Anforderungen — beschreibe zuerst eine Änderung (die Anforderung eines Knotens, einer Entität oder einen Kommentar über ✦).",
     stubTitle: "Einige Knoten haben keine Beschreibung", stubBody: "Diese Knoten tragen noch den leeren Vorlagentext: {nodes}. Ein Coding-Agent kann keinen Knoten bauen, den niemand beschrieben hat — öffne jeden und sage, was er tun soll, oder lösche ihn. Dann starte erneut.",
     failed: "Die Entwicklung konnte nicht gestartet werden.", noDescription: "Noch keine Beschreibung.",
+    confirmTitle: "Die Entwicklung beginnt gleich", confirmBody: "Der Agent arbeitet im eigenen Raum des Projekts, live im Terminal. Du kannst abbrechen und weiter bearbeiten — dieses Fenster kehrt beim nächsten Start zurück.",
+    cancelEdit: "Abbrechen und weiter bearbeiten", startNow: "Jetzt starten", builtInAlt: "Den eingebauten Entwickler (OpenAI) verwenden",
   },
   pt: {
     title: "Iniciar desenvolvimento",
@@ -198,6 +212,8 @@ const I18N: Record<string, SD> = {
     noStagedTitle: "Nada pendente de desenvolvimento", noStagedBody: "Não há requisitos pendentes neste momento — descreva primeiro uma alteração (o requisito de um nó, de uma entidade ou um comentário via ✦).",
     stubTitle: "Alguns nós não têm descrição", stubBody: "Estes nós ainda trazem o texto de modelo vazio: {nodes}. Um agente de código não pode construir um nó que ninguém descreveu — abra cada um e diga o que deve fazer, ou elimine-o. Depois lance de novo.",
     failed: "Não foi possível iniciar o desenvolvimento.", noDescription: "Ainda sem descrição.",
+    confirmTitle: "O desenvolvimento vai começar", confirmBody: "O agente trabalhará na sala própria do projeto, ao vivo no terminal. Pode cancelar e continuar a editar — esta janela volta no próximo arranque.",
+    cancelEdit: "Cancelar e continuar", startNow: "Começar agora", builtInAlt: "Usar o desenvolvedor integrado (OpenAI)",
   },
   pl: {
     title: "Uruchom rozwój",
@@ -220,6 +236,8 @@ const I18N: Record<string, SD> = {
     noStagedTitle: "Nic nie czeka na rozwój", noStagedBody: "Obecnie nie ma oczekujących wymagań — najpierw opisz zmianę (wymaganie węzła, encji lub komentarz przez ✦).",
     stubTitle: "Niektóre węzły nie mają opisu", stubBody: "Te węzły wciąż niosą pusty tekst szablonu: {nodes}. Agent kodujący nie zbuduje węzła, którego nikt nie opisał — otwórz każdy i powiedz, co ma robić, albo go usuń. Potem uruchom ponownie.",
     failed: "Nie udało się uruchomić rozwoju.", noDescription: "Jeszcze bez opisu.",
+    confirmTitle: "Rozwój zaraz się rozpocznie", confirmBody: "Agent będzie pracować we własnym pokoju projektu, na żywo w terminalu. Możesz anulować i dalej edytować — to okno wróci przy następnym uruchomieniu.",
+    cancelEdit: "Anuluj i edytuj dalej", startNow: "Rozpocznij teraz", builtInAlt: "Użyj wbudowanego dewelopera (OpenAI)",
   },
   tr: {
     title: "Geliştirmeyi başlat",
@@ -242,6 +260,8 @@ const I18N: Record<string, SD> = {
     noStagedTitle: "Geliştirme bekleyen bir şey yok", noStagedBody: "Şu anda bekleyen gereksinim yok — önce bir değişiklik tanımlayın (bir düğümün, bir varlığın gereksinimi ya da ✦ ile bir yorum).",
     stubTitle: "Bazı düğümlerin açıklaması yok", stubBody: "Bu düğümler hâlâ boş şablon metnini taşıyor: {nodes}. Kodlama ajanı kimsenin tanımlamadığı bir düğümü inşa edemez — her birini açıp ne yapması gerektiğini söyleyin ya da silin. Sonra yeniden başlatın.",
     failed: "Geliştirme başlatılamadı.", noDescription: "Henüz açıklama yok.",
+    confirmTitle: "Geliştirme başlamak üzere", confirmBody: "Ajan, projenin kendi odasında, aşağıdaki terminalde canlı çalışacak. İptal edip düzenlemeye devam edebilirsiniz — bu pencere bir sonraki başlatmada geri döner.",
+    cancelEdit: "İptal et ve düzenlemeye devam et", startNow: "Şimdi başlat", builtInAlt: "Yerleşik geliştiriciyi (OpenAI) kullan",
   },
   nl: {
     title: "Ontwikkeling starten",
@@ -264,6 +284,8 @@ const I18N: Record<string, SD> = {
     noStagedTitle: "Niets wacht op ontwikkeling", noStagedBody: "Er zijn momenteel geen openstaande eisen — beschrijf eerst een wijziging (de eis van een node, een entiteit of een opmerking via ✦).",
     stubTitle: "Sommige nodes hebben geen beschrijving", stubBody: "Deze nodes dragen nog de lege sjabloontekst: {nodes}. Een coding agent kan geen node bouwen die niemand beschreven heeft — open elke node en zeg wat die moet doen, of verwijder hem. Start daarna opnieuw.",
     failed: "Kon de ontwikkeling niet starten.", noDescription: "Nog geen beschrijving.",
+    confirmTitle: "De ontwikkeling gaat zo beginnen", confirmBody: "De agent werkt in de eigen kamer van het project, live in de terminal. Je kunt annuleren en verder bewerken — dit venster keert terug bij de volgende start.",
+    cancelEdit: "Annuleren en verder bewerken", startNow: "Nu starten", builtInAlt: "De ingebouwde ontwikkelaar (OpenAI) gebruiken",
   },
 };
 
@@ -305,6 +327,9 @@ export function StartDevelopment({
   const [refusedModel, setRefusedModel] = useState("");
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [done, setDone] = useState<DoneState>(null);
+  // The dev console (step 255): the room the terminal works in + the first task the conductor hands over.
+  const [roomPath, setRoomPath] = useState("");
+  const [roomTask, setRoomTask] = useState("");
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const stickRef = useRef(true);
@@ -347,9 +372,45 @@ export function StartDevelopment({
     }
   }, [L]);
 
-  // Start (or gate) the run: POST /develop. A 409 JSON is a gate answer; an event-stream is the live run —
-  // the stream-reading pattern of activation-quiz (fetch + AbortController + getReader + line buffer).
+  // THE ENTRY (step 255): the gates run via GET handoff (the ONE launchGate set); passing them shows the
+  // CONFIRM screen (cancel-and-keep-editing / start-now — the owner's repeatable cycle) and stores the
+  // room hand-off for the console. The built-in OpenAI developer stays reachable from that screen.
   const load = useCallback(async () => {
+    setMode("loading");
+    setBusy(true);
+    try {
+      const r = await fetch(`/api/projects/handoff?automation=${encodeURIComponent(automation)}`, { cache: "no-store" });
+      const d = (await r.json().catch(() => ({}))) as {
+        ok?: boolean; reason?: string; nodes?: string[]; room?: string; roomPath?: string;
+      };
+      if (!r.ok) {
+        if (d.reason === "stub-nodes") {
+          setStubNodes(d.nodes ?? []);
+          setMode("stub-nodes");
+        } else if (d.reason === "not-reviewed") {
+          const cr = await fetch(`/api/projects/use-cases?automation=${encodeURIComponent(automation)}`, { cache: "no-store" });
+          const cd = (await cr.json().catch(() => ({}))) as { cases?: Case[] };
+          setCases(cd.cases ?? []);
+          setMode("review");
+        } else if (d.reason === "no-cases" || d.reason === "nothing-staged") {
+          setMode(d.reason);
+        } else {
+          toast.error(L.failed);
+          onOpenChange(false);
+        }
+        return;
+      }
+      setRoomPath(d.roomPath ?? "");
+      setRoomTask(d.room ?? "");
+      setMode("confirm");
+    } catch {
+      toast.error(L.failed);
+      onOpenChange(false);
+    } finally { setBusy(false); }
+  }, [automation, L, onOpenChange]);
+
+  // THE BUILT-IN DEVELOPER (step 250, unchanged flow) — now started explicitly from the confirm screen.
+  const runBuiltIn = useCallback(async () => {
     abortRef.current?.abort();
     const ctl = new AbortController();
     abortRef.current = ctl;
@@ -367,22 +428,14 @@ export function StartDevelopment({
       });
       if (!(r.headers.get("Content-Type") ?? "").includes("text/event-stream")) {
         const d = (await r.json().catch(() => ({}))) as { reason?: string; nodes?: string[]; model?: string };
-        if (d.reason === "stub-nodes") {
-          setStubNodes(d.nodes ?? []);
-          setMode("stub-nodes");
-        } else if (d.reason === "not-reviewed") {
-          const cr = await fetch(`/api/projects/use-cases?automation=${encodeURIComponent(automation)}`, { cache: "no-store" });
-          const cd = (await cr.json().catch(() => ({}))) as { cases?: Case[] };
-          setCases(cd.cases ?? []);
-          setMode("review");
-        } else if (d.reason === "no-cases" || d.reason === "nothing-staged" || d.reason === "already-running" || d.reason === "no-key") {
+        if (d.reason === "already-running" || d.reason === "no-key") {
           setMode(d.reason);
         } else if (d.reason === "model-no-tools") {
           setRefusedModel(d.model ?? "");
           setMode("model-no-tools");
         } else {
           toast.error(L.failed);
-          onOpenChange(false);
+          setMode("confirm");
         }
         return;
       }
@@ -448,7 +501,7 @@ export function StartDevelopment({
 
   return (
     <Dialog open={open} onOpenChange={onOpen}>
-      <DialogContent className="flex max-h-[85vh] flex-col overflow-hidden sm:max-w-2xl">
+      <DialogContent className={`flex max-h-[92vh] flex-col overflow-hidden ${mode === "console" ? "sm:max-w-5xl" : "sm:max-w-2xl"}`}>
         <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
             {mode === "review"
@@ -461,6 +514,34 @@ export function StartDevelopment({
           <p className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" /> {L.preparing}
           </p>
+        )}
+
+        {/* THE CONFIRM SCREEN (step 255, the owner's cycle): cancel-and-keep-editing always returns here. */}
+        {mode === "confirm" && (
+          <div className="space-y-4 py-2">
+            <p className="text-sm font-medium">{L.confirmTitle}</p>
+            <p className="text-sm text-muted-foreground">{L.confirmBody}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>{L.cancelEdit}</Button>
+              <Button onClick={() => setMode("console")} data-start-console="1">
+                <Rocket className="size-4" /> {L.startNow}
+              </Button>
+            </div>
+            <button type="button" onClick={() => void runBuiltIn()} className="text-xs text-muted-foreground underline-offset-2 hover:underline">
+              {L.builtInAlt}
+            </button>
+          </div>
+        )}
+
+        {/* THE DEV CONSOLE (step 255) — the live external-agent session. */}
+        {mode === "console" && (
+          <DevConsole
+            automation={automation}
+            roomPath={roomPath}
+            roomTask={roomTask}
+            lang={lang}
+            onExited={() => onOpenChange(false)}
+          />
         )}
 
         {/* THE GATE — read the cases, confirm, continue. The confirm button is RIGHT HERE. */}
