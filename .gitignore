@@ -26,6 +26,13 @@ app/storage/*
 app/dist/
 app/tsconfig.tsbuildinfo
 
+# LightRAG vector memory (fractera-rag) — bootstrap-created runtime, NOT part of the repo. It showed as
+# `?? services/rag/` (untracked AND unignored), so a routine `git clean -fd` would silently delete the whole
+# vector memory — the storage-wipe incident of 2026-07-18 (query failed: missing kv_store_llm_response_cache
+# .json → recall + catalog search broke). Ignoring it here brings it in line with the other runtime storage
+# dirs below, so `git clean` skips it and `git status` no longer flags it. bootstrap.sh `mkdir -p`s it.
+services/rag/
+
 # Media service — data and uploads stay on server
 services/media/data/*.db
 services/media/data/*.db-shm
