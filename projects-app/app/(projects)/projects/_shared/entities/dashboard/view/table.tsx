@@ -17,6 +17,12 @@ import { useRunRefresh } from "../../../use-run-refresh";
 import { useUiLang } from "../../../use-ui-lang";
 import { resolveLocalized } from "../../../localized-text";
 
+// 🔒 ARCHITECTURE LOCK (ROUTE-V3 law 3 — breaking this breaks the whole chain, FORBIDDEN):
+// this is a VIEW file — it must NEVER import admin/ (its own or any entity's) and NEVER import another
+// entity. Admin chrome attaches ONLY through the declared bridge points below. The container (../index)
+// is the only place view and admin compose. `npm run check:entity-imports` enforces this — never weaken
+// the gate to make an import pass.
+//
 // THE DASHBOARD TABLE — VIEW CORE (step 254.2, ROUTE-V3 law 3). The PUBLIC, read-only universal table:
 // live rows + seed fallback, debounced search, pagination, column picker, detail dialog, read-only live
 // lookup. It carries ZERO mutation code. Admin chrome (add/edit/delete) attaches ONLY through the

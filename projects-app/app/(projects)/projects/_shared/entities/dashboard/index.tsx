@@ -12,6 +12,10 @@ import { RequirementBriefPanel } from "../../components/requirement-brief-panel.
 import { DashboardPaneView } from "./view/pane";
 import { useDashboardTableAdmin } from "./admin/chrome";
 
+// 🔒 ARCHITECTURE LOCK (ROUTE-V3 law 3 — breaking this breaks the whole chain, FORBIDDEN):
+// the CONTAINER is the ONLY place view and admin compose. Never move admin chrome into view files, never
+// bypass the declared bridge, never import another entity. Enforced by `npm run check:entity-imports`.
+//
 // THE DASHBOARD ENTITY CONTAINER (step 254.2, ROUTE-V3 law 3) — the pilot of the view/admin/container
 // pattern. ONE component, TWO compositions:
 //   mode="view"  — the public core alone: pane + read-only table (a visitor's dashboard);

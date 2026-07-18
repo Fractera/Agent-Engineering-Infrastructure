@@ -104,6 +104,18 @@ The BASE LAYER (the only thing a route may import): `@/components/ui` (the UI ki
 the framework, and the platform `entity-section` machinery (the accordion frame + registry contract) —
 the cockpit shell that renders any route's entity declarations uniformly.
 
+## 🔒 The architecture lock (owner's hard requirement, 2026-07-18)
+
+Every file of the entity pattern (view/ · admin/ · container · the entity-section machinery) carries this
+lock as its header block, and it binds EVERY editor — human or AI:
+
+> Changing the architecture in a way that breaks the chain is FORBIDDEN: view/ never imports admin/ or
+> another entity; admin/ attaches only through the view's declared bridge points; the container is the
+> only composition place; presence stays one enum; the section frame stays singular. The gates
+> (`check:entity-imports` and friends) enforce these laws — WEAKENING A GATE TO MAKE A CHANGE PASS IS
+> ITSELF THE VIOLATION. If a task seems to require breaking a law, stop and escalate to the owner —
+> never "adapt" the architecture silently.
+
 ## Gates (each artifact has its own — "compiles ≠ works", step 251)
 
 - `check:entity-imports` — the one-arrow law (`view/` importing `admin/` fails the build).

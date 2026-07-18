@@ -12,6 +12,11 @@ import { useUiLang } from "../../../use-ui-lang";
 import { resolveLocalized } from "../../../localized-text";
 import type { TableAdminBridge } from "../view/table";
 
+// 🔒 ARCHITECTURE LOCK (ROUTE-V3 law 3 — breaking this breaks the whole chain, FORBIDDEN):
+// ADMIN file — may import view/ (the allowed direction), must NEVER be imported by view/ and never
+// reach into another entity. Attach to the view ONLY through its declared bridge points — never patch
+// admin behavior into a view file "for convenience". Enforced by `npm run check:entity-imports`.
+//
 // THE DASHBOARD ADMIN CHROME (step 254.2, ROUTE-V3 law 3) — every row MUTATION of the dashboard table:
 // the Add/Edit dialog, the delete action, and the bridge that plugs them into the view core's declared
 // points. This side imports view/ freely; view/ never imports this file (the one-arrow law).

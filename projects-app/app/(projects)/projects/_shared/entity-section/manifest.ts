@@ -1,3 +1,7 @@
+// 🔒 ARCHITECTURE LOCK (ROUTE-V3 law 2 — breaking this breaks the whole chain, FORBIDDEN): presence
+// stays ONE enum (never two booleans), the manifest carries only the CODE default, the owner's runtime
+// setting overrides it in resolvePresence — never merge the two truths anywhere else.
+//
 // THE ENTITY SECTION MANIFEST (step 254.1, ROUTE-V3 law 2) — the ONE shape every page entity declares.
 //
 // `presence` is a single ENUM, never two booleans: "expanded" (on the page, open), "collapsed" (on the

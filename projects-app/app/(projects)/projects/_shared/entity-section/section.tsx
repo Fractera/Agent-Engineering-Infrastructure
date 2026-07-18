@@ -9,6 +9,9 @@ import {
 } from "@/components/ui/accordion";
 import type { EntityPresence } from "./manifest";
 
+// 🔒 ARCHITECTURE LOCK (ROUTE-V3 law 2 — breaking this breaks the whole chain, FORBIDDEN): this frame
+// stays the ONLY accordion chrome for entities — never copy it into an entity, never fork a second frame.
+//
 // THE ENTITY SECTION FRAME (step 254.1, ROUTE-V3 law 2) — the ONE accordion frame every page entity
 // renders through. The entity supplies only its CONTENT; the frame owns presentation, so fixing the
 // accordion is one edit, never ten. Presence semantics:

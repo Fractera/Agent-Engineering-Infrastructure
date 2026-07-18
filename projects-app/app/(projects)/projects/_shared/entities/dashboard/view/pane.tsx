@@ -7,6 +7,10 @@ import { useUiLang } from "../../../use-ui-lang";
 import { resolveLocalized } from "../../../localized-text";
 import { DashboardTableView, type TableAdminBridge } from "./table";
 
+// 🔒 ARCHITECTURE LOCK (ROUTE-V3 law 3 — breaking this breaks the whole chain, FORBIDDEN):
+// VIEW file — never import admin/ or another entity; admin enters only via the declared points
+// (`admin` bridge + `paneExtra`). Enforced by `npm run check:entity-imports`; never weaken the gate.
+//
 // THE DASHBOARD PANE — VIEW CORE (step 254.2): title + description + the table picker + the table.
 // Visitor-safe: picking which table to look at is a READ act. Admin chrome enters only through the
 // declared points: the table's admin bridge and the `paneExtra` slot (the per-table requirement panel
