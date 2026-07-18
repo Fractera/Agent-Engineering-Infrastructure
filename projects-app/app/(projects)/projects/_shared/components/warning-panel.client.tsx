@@ -104,18 +104,19 @@ export function WarningBlock({
       )}
 
       {/* Step 250 — kind owner-decision joins hermes-scout here: the develop agent's saved decomposition
-          plan lives in hermesInstruction, and the owner reads/copies it with the same two buttons. */}
+          plan lives in hermesInstruction. Step 253 — owner-decision gets its OWN button labels (it is a
+          plan the OWNER executes, not a brief for Hermes): "Show the plan" / "Copy the plan". */}
       {(warning.kind === "hermes-scout" || warning.kind === "owner-decision") && warning.hermesInstruction && (
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" variant="outline" onClick={() => setShowInstruction((v) => !v)}>
-              {W.scoutButton}
+              {warning.kind === "owner-decision" ? W.decisionReveal : W.scoutButton}
             </Button>
             <Button
               size="sm" variant="ghost" className="gap-1"
               onClick={async () => { await navigator.clipboard.writeText(warning.hermesInstruction ?? ""); toast.success(W.copied); }}
             >
-              <ClipboardCopy className="size-3.5" /> {W.copyInstruction}
+              <ClipboardCopy className="size-3.5" /> {warning.kind === "owner-decision" ? W.decisionCopy : W.copyInstruction}
             </Button>
           </div>
           {showInstruction && (

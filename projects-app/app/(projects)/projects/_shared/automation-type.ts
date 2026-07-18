@@ -1,8 +1,11 @@
 import { createAutomationStrings } from "./create-automation-i18n";
 
 // AUTOMATION TYPES (frozen standard, step 224 §1.5; extended step 234) — an automation is ONE of three
-// kinds, chosen at creation and IMMUTABLE afterwards: the whole logic (above all: whether a run forks) grows
-// out of it. To change the type you delete the automation and create a new one — there is no "switch type".
+// kinds, chosen at creation: the whole logic (above all: whether a run forks) grows out of it. The owner has
+// no casual "switch type" button. The ONE controlled exception (step 253, variant «а»): when the founding
+// instruction plainly describes a different type than the one chosen, the develop agent force-corrects it in
+// place (lib/automation-type-write.ts rewrites _data/automation.ts's token + a flock'd rebuild) — safe
+// because the frozen skeleton is the same file set for all three types, only the stored token differs.
 //
 //  • STREAM   — like telegram-notes: NO forks. Every incoming event runs the SAME scheme end to end.
 //  • INSTANCED — a run FORKS Master -> Instance (223.C.4): each run carries its own input parameters, may be

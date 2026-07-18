@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { agentCanon } from "@/app/(projects)/projects/_lib/automation-agent-canon";
+import { setAutomationType, type AutomationType } from "@/lib/automation-type-write";
 import { SCALE_RULES } from "@/app/(projects)/projects/_lib/scale-rules";
 import { WIRING_RULES } from "@/app/(projects)/projects/_lib/wiring-rules";
 import { buildArchitecture } from "@/lib/entity-architecture";
@@ -135,6 +136,22 @@ const TOOLS = [
   {
     type: "function",
     function: {
+      name: "set_automation_type",
+      description:
+        "FORCE-CHANGE this automation's type (stream | instanced | chained) when the owner's founding instruction plainly describes a DIFFERENT type than the one currently set — e.g. it was created as stream but the spec describes per-run forks with tracked progress (instanced) or a link triggered by another automation's event (chained). This is the recommended correction: do it, then develop in the corrected type, and explain the change in your final report. Use it ONLY for a genuine mismatch, never on a doubt.",
+      parameters: {
+        type: "object",
+        properties: {
+          type: { type: "string", description: "The correct type: stream | instanced | chained." },
+          reason: { type: "string", description: "One plain sentence (owner's language) naming what in the spec proves this type." },
+        },
+        required: ["type"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "delete_node",
       description: "Soft-delete a node by slug (tombstoned row, removed folder, purged edges, regenerated diagram).",
       parameters: {
@@ -200,7 +217,8 @@ const TOOLS = [
               overview: { type: "string", description: "≤500 chars, 1-3 plain sentences: why it must be split." },
               plan: {
                 type: "string",
-                description: "The FULL plan: the list of automations, a ready creation instruction for each, and how to group them.",
+                description:
+                  "The FULL plan as a HUMAN, NUMBERED procedure in the owner's language (never a dry outline — see THE SCALE RULES §3). Step 1..N: create each automation, each step stating its Type / exact Name / exact Description to paste into the creation form. Step N+1: create the parent chained group and which member feeds which. FINAL step: delete THIS automation (it is too big to develop), recommending the owner first copy its current name and type.",
               },
             },
             required: ["subject", "overview", "plan"],
@@ -308,6 +326,13 @@ async function execTool(proj: ResolvedProject, name: string, args: Record<string
     return { ok: true, detail: found.row.slug, payload: { ok: true } };
   }
 
+  if (name === "set_automation_type") {
+    const res = await setAutomationType(proj, str("type") as AutomationType);
+    if (!res.ok) return { ok: false, detail: res.error, payload: { error: res.error } };
+    if (!res.changed) return { ok: true, detail: `already ${res.to}`, payload: { ok: true, changed: false, type: res.to } };
+    return { ok: true, detail: `type ${res.from} → ${res.to}`, payload: { ok: true, changed: true, from: res.from, to: res.to } };
+  }
+
   if (name === "close_entity") {
     const entityType = str("entityType") as EntityType;
     if (!ENTITY_TYPES.includes(entityType)) {
@@ -402,6 +427,14 @@ ${SCALE_RULES}
 THE ARCHITECTURE BUNDLE BELOW IS THE LAW — its agent_instruction is your contract. Apply THE SCALE RULES
 as arithmetic, not as a feeling: this automation currently has ${nodes.length} nodes against the budget of
 25 (30 is the absolute cap) — within the budget and one process, a decomposition is FORBIDDEN: implement.
+
+TYPE FIT CHECK (do this once, before developing). This automation's type is "${passport?.type || "stream"}".
+Read the owner's founding instruction against it: stream = every event runs the same scheme, no forks;
+instanced = each run forks into its own tracked, adjustable, possibly-deferred instance; chained = a link
+triggered by (or emitting) another automation's event. If the spec PLAINLY describes a different type than
+the one set (a genuine mismatch, not a doubt), call \`set_automation_type\` to correct it — that is the
+recommended fix — then develop in the corrected type and state the change in your final report. If it
+merely could be argued either way, leave the type as chosen and implement.
 
 HOW YOU WORK (delta-only):
 - You change the automation ONLY through the tools. There is no "return everything" — every call is one

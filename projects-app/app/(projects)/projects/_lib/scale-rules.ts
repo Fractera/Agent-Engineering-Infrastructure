@@ -32,13 +32,23 @@ decompose a small task to feel safe — apply the numbers, not a feeling.
 
 ## 3. The decomposition recommendation (its exact contract)
 
-Deliver three things, persisted as an owner-decision warning on the \`general\` entity (so the owner finds
-and copies it later):
-1. **The list of proposed automations** — name + one-line mission each.
-2. **A ready-to-paste creation instruction for each** — complete enough that pasting it into the creation
-   form births that automation with the right type and founding instruction.
-3. **A grouping instruction** — how to wire the members into a chained group (which member feeds which,
-   through what typed contract).
+The recommendation is persisted as an owner-decision warning on the \`general\` entity, and the owner ACTS
+on it by hand (this current automation cannot be developed — its type is fixed, so it cannot become the
+group by itself). Therefore the plan must be a HUMAN, NUMBERED, ready-to-execute procedure in the owner's
+language — never a dry outline. Write it as literal steps the owner copies and follows:
+
+- **Step 1..N — create each proposed automation.** One numbered step per automation. Each step states, in
+  plain words: its TYPE (Stream / Instanced / Chained), the exact NAME to type, and the exact founding
+  DESCRIPTION to paste into the creation form — complete enough that pasting it births that automation
+  ready to develop. One line naming its mission goes first, then "Type: … / Name: … / Description: …".
+- **Step N+1 — group them.** Create the parent \`chained\` group and state which member feeds which,
+  through what typed contract (the narrowest seam, §4).
+- **Final step — delete THIS automation.** Say it explicitly: this automation is too big to develop and
+  will not be built; before deleting it, RECOMMEND the owner copy its current name and type (they may
+  reuse them for one of the new automations). Only then delete it. Never leave it orphaned.
+
+Keep every step imperative and self-contained: an owner who reads only the plan, with no other context,
+must know exactly what to click, type, and paste at each step.
 
 ## 4. How to cut (the seam law)
 
