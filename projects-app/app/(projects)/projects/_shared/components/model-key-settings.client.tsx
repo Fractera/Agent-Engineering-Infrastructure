@@ -17,7 +17,9 @@ import {
 // automation) + this automation's OWN model, picked from the LIVE /api/openai-models dropdown and saved
 // to its own runtime env key (modelEnvKey). The manual input is only the graceful fallback when the live
 // list is unavailable (no key yet / OpenAI down).
-type LiveModel = { id: string; family: string; recommended: boolean };
+// `tools` (step 250): the develop agent needs tool calling — models without it are hidden from the picker.
+// Optional so a stale cached payload (no `tools` field) keeps showing everything (backward compatible).
+type LiveModel = { id: string; family: string; recommended: boolean; tools?: boolean };
 
 export function ModelKeySettings({
   modelEnvKey,
@@ -36,7 +38,10 @@ export function ModelKeySettings({
   useEffect(() => {
     fetch("/api/openai-models", { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setLive(Array.isArray(d?.models) && d.models.length ? (d.models as LiveModel[]) : []))
+      .then((d) => {
+        const models = Array.isArray(d?.models) ? (d.models as LiveModel[]).filter((m) => m.tools !== false) : [];
+        setLive(models.length ? models : []);
+      })
       .catch(() => setLive([]));
     fetch(`/api/project-config/env?keys=${modelEnvKey}`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))

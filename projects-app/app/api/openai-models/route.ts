@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readFileSync } from "fs";
 import { getSession } from "@/lib/auth/get-session";
+import { modelSupportsTools } from "@/lib/openai-model-caps";
 
 // Live OpenAI model list for the Projects layer's model pickers (step 220 — self-sufficiency rule).
 // The model dropdown in the Settings modal is ALWAYS fed by the real /v1/models list, never a stale
@@ -76,7 +77,9 @@ export async function GET(req: NextRequest) {
     const models = list.map((m) => {
       const recommended = !seen.has(m.family);
       if (recommended) seen.add(m.family);
-      return { id: m.id, family: m.family, recommended };
+      // tools (step 250): the in-product develop agent needs tool calling — the picker hides models
+      // that cannot drive it.
+      return { id: m.id, family: m.family, recommended, tools: modelSupportsTools(m.id) };
     });
     const payload = { models, cachedAt: Date.now() };
     cache = { at: Date.now(), payload };
