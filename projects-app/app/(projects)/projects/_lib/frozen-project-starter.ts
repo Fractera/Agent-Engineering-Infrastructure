@@ -28,6 +28,7 @@ import { createNodeId } from "@/lib/cuid";
 import { regenerateExecutables } from "@/lib/executables";
 import { addRow } from "@/lib/dashboard-rows";
 import { agentCanon } from "./automation-agent-canon";
+import { SCALE_RULES } from "./scale-rules";
 import { WIRING_RULES } from "./wiring-rules";
 
 const SLUG_RE = /^[a-z][a-z0-9-]*$/;
@@ -1328,11 +1329,14 @@ export async function createFrozenProject(
     await writeFile(join(destBase, rel), canon, "utf8");
     files.push(`app/(projects)/projects/${category}/${project}/${rel}`);
   }
-  // THE WIRING RULES (step 252) — the second born document: how to reason about nodes and edges before
-  // mounting them (roles, edge-count laws, the reasoning chain, the written checklist). AGENTS.md points
-  // at it; the in-product developer receives the same text in its prompt (lib/develop.ts).
-  await writeFile(join(destBase, "WIRING-RULES.md"), WIRING_RULES, "utf8");
-  files.push(`app/(projects)/projects/${category}/${project}/WIRING-RULES.md`);
+  // THE BORN DOCUMENT SET (steps 252-253) — next to AGENTS.md/CLAUDE.md every automation carries:
+  // WIRING-RULES.md (how to reason about nodes and edges before mounting) and SCALE-RULES.md (the
+  // decomposition law: node budget, first-duty scale assessment, the recommendation contract, the seam
+  // law). One source module each; the in-product developer receives the same texts in its prompt.
+  for (const [rel, text] of [["WIRING-RULES.md", WIRING_RULES], ["SCALE-RULES.md", SCALE_RULES]] as const) {
+    await writeFile(join(destBase, rel), text, "utf8");
+    files.push(`app/(projects)/projects/${category}/${project}/${rel}`);
+  }
 
   // STREAM's launch-console "live" action needs its own thin, read-only route — served under app/api/, a
   // different root than projectsRoot (project CONTENT vs a served API route). Written only for stream; then

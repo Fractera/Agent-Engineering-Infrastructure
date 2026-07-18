@@ -31,21 +31,14 @@ is live behaviour to renovate, never to rebuild silently. A blocked object (an o
 a draft) never flips anything. (The legacy wave path keeps its own guarded flip inside
 `development-wave/complete`.)
 
-### 2.1 Node budget and decomposition (hard law)
+### 2.1 Node budget and decomposition (hard law) → SCALE-RULES.md
 
-≤24 nodes — grow freely (no use case → no node). **25** — you MUST propose a decomposition seam into a
-chained group in the same step. **30** — absolute cap: no new node under any phrasing; growth continues
-only by decomposition. Why: runtime never degrades with node count, but a coding agent's comprehension of
-one automation is bounded — big processes scale only as groups of small, independently fixable members.
-Decomposition (own Development Step): cut at the narrowest seam (typed contract first) → parent `chained`
-group takes over the public identity → members keep their own pages/diagrams and stay individually
-test-runnable (production activation is group-only) → prove parity with two virtual end-to-end tests.
-Recursion allowed; the budget applies per member.
-
-**The in-product development agent's FIRST duty is scale assessment (step 250, law 2b in
-`agent_instruction`):** over budget → ZERO changes; instead a decomposition recommendation (proposed
-automations + a ready-to-paste creation instruction each + a grouping instruction), persisted as an
-`owner-decision` warning on `general`. That outcome is a SUCCESS.
+The canonical law lives in **THE SCALE RULES** (source: `_lib/scale-rules.ts`), born as `SCALE-RULES.md`
+in every automation's own folder (step 253) and delivered in-prompt to the in-product developer — this
+section is a MAP pointer, not a second copy. In one breath: budget 25 nodes (30 = absolute cap); scale
+assessment is every developing agent's FIRST duty; over budget or inherently several automations → ZERO
+changes, a decomposition recommendation instead (persisted as an `owner-decision` warning on `general` —
+a SUCCESS); cut at the narrowest seam into a `chained` group of individually runnable members.
 
 ## 3. Lifecycle (create → cases → hand-off → build → per-object close)
 

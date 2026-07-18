@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { agentCanon } from "@/app/(projects)/projects/_lib/automation-agent-canon";
+import { SCALE_RULES } from "@/app/(projects)/projects/_lib/scale-rules";
 import { WIRING_RULES } from "@/app/(projects)/projects/_lib/wiring-rules";
 import { buildArchitecture } from "@/lib/entity-architecture";
 import {
@@ -387,20 +388,20 @@ async function systemPrompt(proj: ResolvedProject, items: WaveItem[]): Promise<s
     title: passport?.title || proj.slug, type: passport?.type || "stream",
     modelEnvKey: `${proj.slug.toUpperCase().replace(/-/g, "_")}_MODEL`,
   }, "prompt");
-  // Law (2b) is stated NUMERICALLY here — the first live run proved a small model over-triggers the cutoff
-  // when left to "assess scale" in the abstract (a 1-node task on a 6-node automation got "decompose").
+  // THE SCALE RULES arrive as the canonical document (step 253 dedup) + ONE dynamic arithmetic line —
+  // the first live run proved a small model over-triggers the cutoff when left to "assess scale" in the
+  // abstract (a 1-node task on a 6-node automation got "decompose"), so the live node count is stated.
   return `You are the in-product developer of the automation "${proj.automation}" in the Fractera projects app.
 
 ${canon}
 
 ${WIRING_RULES}
 
-THE ARCHITECTURE BUNDLE BELOW IS THE LAW — its agent_instruction is your contract. Apply law (2b) SCALE
-ASSESSMENT numerically, as arithmetic, not as a feeling: this automation currently has ${nodes.length} nodes;
-the budget is 25 (30 is the absolute cap). Estimate how many nodes the staged items below actually require.
-If ${nodes.length} + that estimate stays within 25 and this remains ONE automation's job — a decomposition is
-FORBIDDEN: implement the work. Only a request that exceeds the budget or inherently needs SEVERAL automations
-ends with \`finish\` + a decomposition recommendation instead of changes (that outcome is then a SUCCESS).
+${SCALE_RULES}
+
+THE ARCHITECTURE BUNDLE BELOW IS THE LAW — its agent_instruction is your contract. Apply THE SCALE RULES
+as arithmetic, not as a feeling: this automation currently has ${nodes.length} nodes against the budget of
+25 (30 is the absolute cap) — within the budget and one process, a decomposition is FORBIDDEN: implement.
 
 HOW YOU WORK (delta-only):
 - You change the automation ONLY through the tools. There is no "return everything" — every call is one

@@ -74,7 +74,10 @@ THE NODE CONTRACT (all you need — do not go reading _shared to learn it):
   duplicate next to it.
 - BEFORE adding any node or edge: ${files ? "read WIRING-RULES.md (in this folder)" : "apply THE WIRING RULES below"} and
   answer its checklist IN WRITING — roles, edge-count laws, and the full input→…→output path trace are
-  mandatory; a node whose output nobody consumes must not be mounted.`;
+  mandatory; a node whose output nobody consumes must not be mounted.
+- BEFORE any change at all: ${files ? "read SCALE-RULES.md (in this folder)" : "apply THE SCALE RULES below"} — scale
+  assessment is your FIRST decision; a task over the node budget (or inherently several automations)
+  means ZERO changes and a decomposition recommendation instead, and that outcome is a SUCCESS.`;
 
   const platformApi = files
     ? `
