@@ -18,7 +18,7 @@ import type { UseCase } from "../use-cases";
 import type { DashboardConfig } from "../table-config";
 import { UseCasesPanel } from "./use-cases-panel.client";
 import { DashboardAccordion } from "./dashboard-accordion.client";
-import { CalendarAccordion } from "./calendar-accordion.client";
+import { CalendarEntity } from "../entities/calendar";
 import { CronAccordion } from "./cron-accordion.client";
 import { ProcessesTimeline } from "./processes-timeline.client";
 import { RequirementBriefPanel } from "./requirement-brief-panel.client";
@@ -173,12 +173,9 @@ export function AutomationAccordions({
             // this automation — a folder tree of the slot app/, "Add page", per-page to-dos (voice + Quiz).
             <AppPagesPanel automation={automation ?? ""} />
           ) : k === "calendar" ? (
-            <>
-              {/* The Calendar (Cron+Calendar step): a static month-grid + daily-timeline preview reading the
-                  SAME generic rows store as Dashboard (table id "calendar") — no interactive creation yet. */}
-              <CalendarAccordion automation={automation ?? ""} />
-              <RequirementBriefPanel entityType="calendar" entityLabel={title} scopeLabel={requirementScope(lang, "calendar")} automation={automation} />
-            </>
+            // The Calendar entity container (step 254.4): admin mode = instruction banner + the read-only
+            // month-grid/planner view + the requirement panel — all composed INSIDE the container now.
+            <CalendarEntity automation={automation ?? ""} mode="admin" />
           ) : k === "cron" ? (
             <>
               {/* The Cron entity (Cron+Calendar step): real periodicity control (co-located cron.json,
