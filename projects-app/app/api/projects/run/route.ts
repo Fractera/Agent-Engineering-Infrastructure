@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorize } from "@/lib/nodes";
 import { canActivate, executeAutomation, type ActivationRefusal } from "@/lib/executor";
+import { createScheduledRequest, parseWhen } from "@/lib/scheduled-requests";
 
 // RUN AN AUTOMATION FOR REAL (step 241) — the general executor's HTTP door.
 //
@@ -60,7 +61,17 @@ export async function POST(req: NextRequest) {
     | null;
   const automation = String(body?.automation ?? "").trim();
 
-  const result = await executeAutomation(automation, body?.input ?? {}, { instanceId: body?.instanceId });
+  // SCHEDULED ASK (step 254.8e, owner's law: «напомни через час» fires IN an hour). A declared future
+  // "when" stores the request instead of executing; the in-process ticker runs it on time, and the
+  // Processes timeline shows it grey until then. Absent/past "when" → execute now, as always.
+  const input = body?.input ?? {};
+  const dueMs = body?.instanceId ? null : parseWhen(input);
+  if (dueMs) {
+    const r = await createScheduledRequest(automation, input, dueMs);
+    return NextResponse.json({ ok: true, scheduled: true, dueAt: r.due_at, requestId: r.id });
+  }
+
+  const result = await executeAutomation(automation, input, { instanceId: body?.instanceId });
   if ("refusal" in result) {
     return NextResponse.json(
       { ok: false, ...result.refusal, error: REFUSAL_MESSAGE[result.refusal.reason] },

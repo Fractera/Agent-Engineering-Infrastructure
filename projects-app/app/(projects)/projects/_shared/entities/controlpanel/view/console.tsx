@@ -21,8 +21,9 @@ import { notifyRunCompleted } from "../../../use-run-refresh";
 // quiz and the demo notice are ADMIN chrome (../admin/chrome.tsx); this file never imports them.
 
 export type RunReport = { node: string; status: string; ms: number; error?: string };
-/** The console's own last-ask result — node chips + an optional short error line, shown INLINE. */
-export type AskReport = { ok: boolean; nodes: RunReport[]; error?: string };
+/** The console's own last-ask result — node chips + an optional short error line, shown INLINE.
+ *  `notice` (step 254.8e) — a green informational line (a scheduled ask's confirmation). */
+export type AskReport = { ok: boolean; nodes: RunReport[]; error?: string; notice?: string };
 
 /** One DECLARED parameter, rendered by its declared type. A `longtext` gets the shared voice primitive —
  *  the same one every input of the product uses (step 232), never a second microphone. */
@@ -133,6 +134,7 @@ export function StreamAskConsole({ automation, schema }: { automation: string; s
       });
       const d = (await r.json()) as {
         ok?: boolean; nodes?: RunReport[]; error?: string; reason?: string; params?: string[];
+        scheduled?: boolean; dueAt?: string;
       };
       if (!r.ok) {
         // The executor's REFUSAL — precise, shown inline (never a dead end, never a toast: owner's rule).
@@ -140,6 +142,13 @@ export function StreamAskConsole({ automation, schema }: { automation: string; s
           ? L.missingParams.replace("{k}", d.params.join(", "))
           : d.error ?? d.reason ?? "";
         setAskReport({ ok: false, nodes: [], error: L.refused.replace("{k}", detail) });
+        return;
+      }
+      // SCHEDULED (step 254.8e): the ask carried a future "when" — confirm the due time inline; the
+      // Processes timeline shows it as a grey planned bar until the ticker runs it.
+      if (d.scheduled) {
+        const t = d.dueAt ? new Date(d.dueAt).toLocaleString() : "";
+        setAskReport({ ok: true, nodes: [], error: undefined, notice: L.scheduledFor.replace("{t}", t) });
         return;
       }
       setAskReport({
@@ -180,6 +189,9 @@ export function StreamAskConsole({ automation, schema }: { automation: string; s
         <div className="space-y-2 rounded-md border bg-muted/30 p-3">
           {askReport.error ? (
             <p className="text-sm text-rose-700 dark:text-rose-400">{resolveErrorText(askReport.error, lang)}</p>
+          ) : null}
+          {askReport.notice ? (
+            <p className="text-sm text-emerald-700 dark:text-emerald-400" data-controlpanel-scheduled="1">{askReport.notice}</p>
           ) : null}
           <RunReportChips nodes={askReport.nodes} />
         </div>

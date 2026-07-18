@@ -219,7 +219,7 @@ export async function recomputeSchedule(automation: string): Promise<ScheduleRow
   await advanceRuns(proj.automation);
 
   const insts = await instancesOf(proj.automation);
-  if (!insts.length) return [];
+  if (!insts.length) return streamRows(proj.automation);
   const base = await nodeDurations(proj.automation);
 
   const now = Date.now();
@@ -268,6 +268,67 @@ export async function recomputeSchedule(automation: string): Promise<ScheduleRow
     );
   }
 
+  rows.sort((a, b) => a.plannedStart - b.plannedStart);
+  return rows;
+}
+
+/** STREAM PROCESSES (step 254.8e, owner's law): a stream automation has no forks — each REQUEST is one
+ *  process. A finished run is a green bar anchored at its actual start/end; a pending scheduled request
+ *  («напомни через час») is a grey bar anchored at its due time, its length = the nodes' estimate. */
+async function streamRows(automation: string): Promise<ScheduleRow[]> {
+  const runs = (await db.prepare(
+    `SELECT id, status, started_at, finished_at FROM automation_runs
+     WHERE automation = ? AND instance_id IS NULL ORDER BY started_at DESC LIMIT 20`,
+  ).all(automation)) as { id: string; status: string; started_at: string; finished_at: string | null }[];
+  const pending = (await db.prepare(
+    `SELECT id, due_at, input_json FROM automation_scheduled_requests
+     WHERE automation = ? AND status = 'pending' ORDER BY due_at ASC LIMIT 20`,
+  ).all(automation)) as { id: string; due_at: string; input_json: string }[];
+  if (!runs.length && !pending.length) return [];
+
+  const base = await nodeDurations(automation);
+  const estTotal = Math.max(base.reduce((s, n) => s + n.ms, 0), 60_000);
+  const fmtT = (ms: number) => new Date(ms).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  const rows: ScheduleRow[] = [];
+
+  let ord = 0;
+  for (const r of runs) {
+    const start = parseSqlite(r.started_at) ?? Date.now();
+    const end = parseSqlite(r.finished_at) ?? start + 1000;
+    const dur = Math.max(end - start, 1000);
+    const done = r.status === "done";
+    rows.push({
+      instanceId: r.id, title: `${fmtT(start)} · request`, ord: ord++,
+      plannedStart: start, plannedDurationMs: dur, actualStart: start, actualEnd: end,
+      status: done ? "done" : r.status === "running" ? "running" : "done",
+      nodes: base.length
+        ? base.map((n, i) => ({
+            name: n.name,
+            startMs: start + Math.round((dur * base.slice(0, i).reduce((s, x) => s + x.ms, 0)) / Math.max(estTotal, 1)),
+            durationMs: Math.max(Math.round((dur * n.ms) / Math.max(estTotal, 1)), 200),
+            status: done ? "done" as const : "pending" as const,
+          }))
+        : [{ name: "run", startMs: start, durationMs: dur, status: done ? "done" as const : "pending" as const }],
+    });
+  }
+  for (const p of pending) {
+    const due = Date.parse(p.due_at);
+    let title = `${fmtT(due)} · scheduled`;
+    try {
+      const q = Object.values(JSON.parse(p.input_json || "{}") as Record<string, unknown>).find((v) => typeof v === "string" && (v as string).length > 2);
+      if (q) title = `${fmtT(due)} · ${(q as string).slice(0, 40)}`;
+    } catch { /* the time-only title stands */ }
+    rows.push({
+      instanceId: p.id, title, ord: ord++,
+      plannedStart: due, plannedDurationMs: estTotal, actualStart: null, actualEnd: null,
+      status: "scheduled",
+      nodes: base.map((n, i) => ({
+        name: n.name,
+        startMs: due + base.slice(0, i).reduce((s, x) => s + x.ms, 0),
+        durationMs: n.ms, status: "pending" as const,
+      })),
+    });
+  }
   rows.sort((a, b) => a.plannedStart - b.plannedStart);
   return rows;
 }

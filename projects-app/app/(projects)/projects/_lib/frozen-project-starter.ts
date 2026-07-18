@@ -1097,6 +1097,31 @@ export const ACTIVATION: ActivationSchema = {
         nl: "Typ of spreek een bedrijfsnaam in — bijv. Apple, Tesla, SpaceX.",
       },
     },
+    // SCHEDULED ASK (step 254.8e, owner's law: «напомни через час» must fire in an hour, not instantly).
+    // "when" is consumed by the RUN ROUTE, never by the nodes: a future value stores the request and the
+    // in-process ticker executes it on time; the Processes timeline shows it grey until then.
+    {
+      key: "when",
+      label: {
+        en: "When (optional)", ru: "Когда (необязательно)", es: "Cuándo (opcional)", fr: "Quand (facultatif)",
+        it: "Quando (facoltativo)", de: "Wann (optional)", pt: "Quando (opcional)", pl: "Kiedy (opcjonalnie)",
+        tr: "Ne zaman (isteğe bağlı)", nl: "Wanneer (optioneel)",
+      },
+      type: "datetime",
+      required: false,
+      help: {
+        en: "Leave empty to run now, or pick a future time — the request runs then and shows on the Processes timeline.",
+        ru: "Оставьте пустым для запуска сейчас или выберите время в будущем — запрос выполнится тогда и появится на таймлайне «Процессы».",
+        es: "Déjalo vacío para ejecutar ahora, o elige un momento futuro — la solicitud se ejecutará entonces y aparecerá en «Procesos».",
+        fr: "Laissez vide pour exécuter maintenant, ou choisissez un moment futur — la demande s'exécutera alors et apparaîtra dans « Processus ».",
+        it: "Lascia vuoto per eseguire ora, o scegli un momento futuro — la richiesta verrà eseguita allora e apparirà in «Processi».",
+        de: "Leer lassen für sofort, oder eine künftige Zeit wählen — die Anfrage läuft dann und erscheint in der Prozess-Zeitleiste.",
+        pt: "Deixe vazio para executar agora, ou escolha um momento futuro — o pedido será executado então e aparecerá em «Processos».",
+        pl: "Zostaw puste, aby uruchomić teraz, lub wybierz przyszły czas — zapytanie uruchomi się wtedy i pojawi na osi «Procesy».",
+        tr: "Şimdi çalıştırmak için boş bırakın veya gelecekte bir zaman seçin — istek o zaman çalışır ve «Süreçler» zaman çizelgesinde görünür.",
+        nl: "Laat leeg om nu uit te voeren, of kies een toekomstig tijdstip — het verzoek draait dan en verschijnt op de «Processen»-tijdlijn.",
+      },
+    },
   ],
 };
 `;

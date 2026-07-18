@@ -31,6 +31,8 @@ export type ActivationStrings = {
   // the STREAM console (step 243) — one-shot ask, no fork/instance list
   askButton: string;
   asking: string;
+  /** step 254.8e — the inline confirmation of a scheduled ask; {t} = the due time. */
+  scheduledFor: string;
 };
 
 export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
@@ -60,6 +62,7 @@ export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
     settings: "Settings",
     askButton: "Ask",
     asking: "Asking…",
+    scheduledFor: "Scheduled — will run at {t}.",
   },
   ru: {
     layerTitle: "Пульт запуска",
@@ -87,6 +90,7 @@ export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
     settings: "Настройки",
     askButton: "Спросить",
     asking: "Спрашиваю…",
+    scheduledFor: "Запланировано — выполнится в {t}.",
   },
   es: {
     layerTitle: "Panel de lanzamiento",
@@ -114,6 +118,7 @@ export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
     settings: "Ajustes",
     askButton: "Preguntar",
     asking: "Preguntando…",
+    scheduledFor: "Programado — se ejecutará a las {t}.",
   },
   fr: {
     layerTitle: "Pupitre de lancement",
@@ -141,6 +146,7 @@ export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
     settings: "Réglages",
     askButton: "Demander",
     asking: "Interrogation…",
+    scheduledFor: "Planifié — s'exécutera à {t}.",
   },
   it: {
     layerTitle: "Plancia di lancio",
@@ -168,6 +174,7 @@ export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
     settings: "Parametri",
     askButton: "Chiedi",
     asking: "Sto chiedendo…",
+    scheduledFor: "Pianificato — verrà eseguito alle {t}.",
   },
   de: {
     layerTitle: "Startpult",
@@ -195,6 +202,7 @@ export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
     settings: "Einstellungen",
     askButton: "Fragen",
     asking: "Frage läuft…",
+    scheduledFor: "Geplant — wird um {t} ausgeführt.",
   },
   pt: {
     layerTitle: "Painel de lançamento",
@@ -222,6 +230,7 @@ export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
     settings: "Definições",
     askButton: "Perguntar",
     asking: "A perguntar…",
+    scheduledFor: "Agendado — será executado às {t}.",
   },
   pl: {
     layerTitle: "Pulpit uruchamiania",
@@ -249,6 +258,7 @@ export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
     settings: "Ustawienia",
     askButton: "Zapytaj",
     asking: "Pytam…",
+    scheduledFor: "Zaplanowano — uruchomi się o {t}.",
   },
   tr: {
     layerTitle: "Başlatma paneli",
@@ -276,6 +286,7 @@ export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
     settings: "Ayarlar",
     askButton: "Sor",
     asking: "Soruluyor…",
+    scheduledFor: "Planlandı — {t} saatinde çalışacak.",
   },
   nl: {
     layerTitle: "Startpaneel",
@@ -303,6 +314,7 @@ export const ACTIVATION_I18N: Record<string, ActivationStrings> = {
     settings: "Instellingen",
     askButton: "Vragen",
     asking: "Bezig met vragen…",
+    scheduledFor: "Gepland — wordt uitgevoerd om {t}.",
   },
 };
 

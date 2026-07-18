@@ -237,6 +237,19 @@ const SCHEMA = `
   -- The global automation itself has a state: in-development (any edge is still a draft) | on | off.
   -- OFF does NOT stop the projects — they keep running exactly as before, only the global SYNCHRONISATION
   -- between them (the edges) stops. One row; it also stores the canvas layout of the project nodes.
+  -- SCHEDULED REQUESTS (step 254.8e, owner: "напомни через час" must fire IN an hour, not instantly).
+  -- A stream ask carrying a future "when" lands here instead of executing; the in-process ticker
+  -- (instrumentation.ts) executes due rows and stamps the run id. The Processes timeline shows pending
+  -- rows grey (planned) and executed ones green — each request IS one process (owner's law).
+  CREATE TABLE IF NOT EXISTS automation_scheduled_requests (
+    id          TEXT PRIMARY KEY NOT NULL,
+    automation  TEXT NOT NULL,
+    input_json  TEXT NOT NULL DEFAULT '{}',
+    due_at      TEXT NOT NULL,
+    status      TEXT NOT NULL DEFAULT 'pending',  -- pending | done | failed
+    run_id      TEXT,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+  );
   CREATE TABLE IF NOT EXISTS global_automation (
     id         INTEGER PRIMARY KEY CHECK (id = 1),
     status     TEXT NOT NULL DEFAULT 'in-development',
