@@ -46,7 +46,11 @@ const AUTH_ENV  = "/opt/fractera/services/auth/.env.local";
 const ADMIN_ENV = "/opt/fractera/bridges/app/.env.local";
 const APP_ENV   = "/opt/fractera/app/.env.local";
 const DATA_ENV  = "/opt/fractera/services/data/.env";
-const ENV_FILES = [AUTH_ENV, ADMIN_ENV, APP_ENV, DATA_ENV];
+// 256.4c — the layers born AFTER this switcher was written (step 197) were missing from the mode flip:
+// the owner attached a domain and the projects layer alone kept demo-mode (caught live 2026-07-18).
+const PROJECTS_ENV = "/opt/fractera/projects-app/.env.local";
+const DESIGN_ENV   = "/opt/fractera/design-app/.env.local";
+const ENV_FILES = [AUTH_ENV, ADMIN_ENV, APP_ENV, DATA_ENV, PROJECTS_ENV, DESIGN_ENV];
 
 const BACKUP_ROOT = "/etc/fractera/backups/pre-domain-switch";
 
@@ -108,6 +112,18 @@ function writeStrictEnvs(domain: string): void {
   const data = readEnvFile(DATA_ENV);
   data.FRACTERA_IP_NODOMAIN_MODE = "false";
   writeEnvFile(DATA_ENV, data);
+
+  // projects-app/.env.local + design-app/.env.local (256.4c — the post-197 layers join the flip;
+  // best-effort: a missing design-app on an older install must not fail the activation).
+  for (const envFile of [PROJECTS_ENV, DESIGN_ENV]) {
+    try {
+      if (!fs.existsSync(path.dirname(envFile))) continue;
+      const layer = readEnvFile(envFile);
+      layer.FRACTERA_IP_NODOMAIN_MODE = "false";
+      layer.AUTH_SERVICE_URL = `https://auth.${domain}`;
+      writeEnvFile(envFile, layer);
+    } catch { /* best-effort */ }
+  }
 }
 
 function pm2ReloadAllDetached(delayMs = 800): void {

@@ -17,6 +17,9 @@ const ENV_FILES = [
   "/opt/fractera/bridges/app/.env.local",
   "/opt/fractera/app/.env.local",
   "/opt/fractera/services/data/.env",
+  // 256.4c — the post-197 layers (projects/design) must flip back to demo mode with the others.
+  "/opt/fractera/projects-app/.env.local",
+  "/opt/fractera/design-app/.env.local",
 ];
 const BACKUP_ROOT = "/etc/fractera/backups/pre-domain-switch";
 const CUSTOM_NGINX = "/etc/nginx/sites-enabled/fractera-custom";
@@ -65,6 +68,17 @@ export async function POST(req: NextRequest) {
   try {
     if (!backupDir || !restoreFromBackup(backupDir)) {
       forceDemoEnvs();
+    }
+    // 256.4c — a backup taken BEFORE this fix has no projects/design entry, so restore would leave
+    // them in secure mode. Always force the post-197 layers back to demo (idempotent, best-effort).
+    for (const envFile of ["/opt/fractera/projects-app/.env.local", "/opt/fractera/design-app/.env.local"]) {
+      try {
+        if (!fs.existsSync(envFile)) continue;
+        const vars = readEnvFile(envFile);
+        vars.FRACTERA_IP_NODOMAIN_MODE = "true";
+        delete vars.AUTH_SERVICE_URL;
+        writeEnvFile(envFile, vars);
+      } catch { /* best-effort */ }
     }
   } catch (e) {
     return NextResponse.json({ error: `Env restore failed: ${e}` }, { status: 500 });
