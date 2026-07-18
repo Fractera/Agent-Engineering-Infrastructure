@@ -1,7 +1,7 @@
 import { WebSocketServer } from 'ws'
 import http from 'node:http'
 import { spawn, execSync } from 'child_process'
-import { readFileSync } from 'fs'
+import { readFileSync, realpathSync } from 'fs'
 import pty from 'node-pty'
 import { createInterface } from 'readline'
 import { config } from 'dotenv'
@@ -301,98 +301,196 @@ wss.on('connection', (ws) => {
   ws.on('error', (err) => console.error('[bridge] ws error:', err.message))
 })
 
-// PTY server — real interactive terminal on :3201
+// PTY server — real interactive terminal on :3201.
+//
+// PROTOCOL (extended in step 255 — the projects dev console; the admin flow is byte-compatible):
+//   client → server:  { type:'init', platform, cwd?, sessionId?, keepAlive? }   (first message)
+//                     { type:'stdin', data } · { type:'resize', cols, rows } · { type:'exit' }
+//   server → client:  raw PTY bytes; on reattach the session's ring buffer is replayed first.
+// - `cwd` (255.A1): the working directory the shell spawns in. Accepted ONLY inside the agent rooms or
+//   the projects tree (realpath-checked); anything else gets a teaching refusal and the default dir.
+// - `sessionId` + `keepAlive:true` (255.A2): the session SURVIVES a ws disconnect (the page may reload);
+//   a later init with the same sessionId REATTACHES (buffer replay). The session dies only on
+//   {type:'exit'}, the shell's own exit, or 24h with no client. Without keepAlive (the admin terminals)
+//   the old behavior stands: disconnect kills the pty.
 const PTY_PORT = process.env.CLAUDE_PTY_PORT ?? 3201
 const ptywss = new WebSocketServer({ port: Number(PTY_PORT) })
 console.log(`PTY Bridge listening on ws://localhost:${PTY_PORT}`)
 
+// Keep-alive session registry (255.A2). Ring buffer keeps the tail of the output for reattach replay.
+const ptySessions = new Map() // sessionId -> { proc, platformCli, chunks: [], bytes: 0, clients: Set<ws>, lastDetach: number }
+const PTY_BUFFER_MAX = 200 * 1024
+const PTY_SESSION_TTL_MS = 24 * 60 * 60 * 1000
+
+setInterval(() => {
+  const now = Date.now()
+  for (const [id, s] of ptySessions) {
+    if (s.clients.size === 0 && now - s.lastDetach > PTY_SESSION_TTL_MS) {
+      console.log(`[pty] session ${id} expired (24h unattended)`)
+      try { s.proc.kill() } catch {}
+      ptySessions.delete(id)
+    }
+  }
+}, 10 * 60 * 1000).unref?.()
+
+// cwd validation (255.A1) — the two families of directories a dev-console shell may start in.
+function resolvePtyCwd(requested) {
+  if (!requested || typeof requested !== 'string') return { cwd: PROJECT_DIR }
+  let real
+  try { real = realpathSync(requested) } catch {
+    return { cwd: PROJECT_DIR, refusal: `cwd "${requested}" does not exist — the shell starts in the default directory. Build the projection first (POST /api/projects/projection).` }
+  }
+  const allowedRoots = [
+    resolve(PROJECT_DIR, '../agent-rooms'),
+    resolve(PROJECT_DIR, '../projects-app/app/(projects)/projects'),
+  ]
+  if (allowedRoots.some((root) => real === root || real.startsWith(root + '/'))) return { cwd: real }
+  return {
+    cwd: PROJECT_DIR,
+    refusal: `cwd "${requested}" is outside the allowed workspaces (agent-rooms/ or the projects tree) — the shell starts in the default directory instead.`,
+  }
+}
+
+function spawnPty(cwd) {
+  return pty.spawn('/bin/zsh', [], {
+    name: 'xterm-256color',
+    cols: 500,
+    rows: 24,
+    cwd,
+    env: {
+      HOME: process.env.HOME,
+      TERM: 'xterm-256color',
+      SHELL: '/bin/zsh',
+      PATH: process.env.PATH ?? '/usr/local/bin:/usr/bin:/bin',
+      USER: process.env.USER,
+      LOGNAME: process.env.LOGNAME,
+      TMPDIR: process.env.TMPDIR,
+      OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
+      // Per-agent MCP clients (.mcp.json / config.toml in the slot) authenticate
+      // to the L2 owner bridges with `Bearer ${HERMES_MCP_SECRET}`. The interactive
+      // terminal passes a curated env allowlist, so the secret must be named here or
+      // the agent can't resolve it. (Direct prompt-mode spawns inherit full env.)
+      HERMES_MCP_SECRET: process.env.HERMES_MCP_SECRET,
+    },
+  })
+}
+
+function cliCommandFor(platform) {
+  return platform === 'codex'       ? `${CODEX_BIN}\n`
+       : platform === 'gemini-cli'  ? `${GEMINI_BIN}\n`
+       : platform === 'qwen-code'   ? `${QWEN_BIN}\n`
+       : platform === 'kimi-code'   ? `${KIMI_BIN}\n`
+       : platform === 'open-code'   ? `${OPENCODE_BIN}\n`
+       : `${CLAUDE_BIN}\n`
+}
+
 ptywss.on('connection', (ws) => {
   console.log('[pty] client connected')
-  const shell = '/bin/zsh'
-  let proc
-  let platformCli = null // will be set on 'init' message
+  let session = null      // the keep-alive session this ws is attached to (or an ephemeral one)
+  let initialized = false
 
-  try {
-    proc = pty.spawn(shell, [], {
-      name: 'xterm-256color',
-      cols: 500,
-      rows: 24,
-      cwd: PROJECT_DIR,
-      env: {
-        HOME: process.env.HOME,
-        TERM: 'xterm-256color',
-        SHELL: '/bin/zsh',
-        PATH: process.env.PATH ?? '/usr/local/bin:/usr/bin:/bin',
-        USER: process.env.USER,
-        LOGNAME: process.env.LOGNAME,
-        TMPDIR: process.env.TMPDIR,
-        OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
-        // Per-agent MCP clients (.mcp.json / config.toml in the slot) authenticate
-        // to the L2 owner bridges with `Bearer ${HERMES_MCP_SECRET}`. The interactive
-        // terminal passes a curated env allowlist, so the secret must be named here or
-        // the agent can't resolve it. (Direct prompt-mode spawns inherit full env.)
-        HERMES_MCP_SECRET: process.env.HERMES_MCP_SECRET,
-      },
-    })
-  } catch (err) {
-    console.error('[pty] spawn error:', err.message, err.stack)
-    if (ws.readyState === ws.OPEN) ws.send(`\r\n[PTY error: ${err.message}]\r\n`)
-    return
+  const attach = (s) => {
+    session = s
+    s.clients.add(ws)
   }
-
-  proc.onData((data) => {
-    if (ws.readyState === ws.OPEN) ws.send(data)
-  })
-
-  proc.onExit(({ exitCode }) => {
-    console.log(`[pty] exited (${exitCode})`)
-    if (ws.readyState === ws.OPEN) ws.close()
-  })
 
   ws.on('message', (raw) => {
     try {
       const msg = JSON.parse(raw.toString())
 
-      // System terminal — a plain project-level shell, NO CLI launched. Used to
-      // install tools, link Telegram↔Hermes, etc. zsh already spawned in app/;
-      // cd up to the repo root (/opt/fractera) where the services live. Must be
-      // matched BEFORE the generic platform block below (whose else-branch would
-      // otherwise launch Claude for any unknown platform value).
-      if (msg.type === 'init' && msg.platform === 'system' && !platformCli) {
-        platformCli = 'system'
-        const root = resolve(PROJECT_DIR, '..') // /opt/fractera
-        setTimeout(() => { try { proc.write(`cd ${root}\n`) } catch {} }, 300)
-        activePtys.set('system', (text) => { try { proc.write(text); return true } catch { return false } })
-        return
-      }
+      if (msg.type === 'init' && !initialized) {
+        initialized = true
 
-      // Platform init — auto-launch the right CLI
-      if (msg.type === 'init' && msg.platform && !platformCli) {
-        platformCli = msg.platform
-        const cliCmd = msg.platform === 'codex'      ? `${CODEX_BIN}\n`
-                     : msg.platform === 'gemini-cli'  ? `${GEMINI_BIN}\n`
-                     : msg.platform === 'qwen-code'   ? `${QWEN_BIN}\n`
-                     : msg.platform === 'kimi-code'   ? `${KIMI_BIN}\n`
-                     : msg.platform === 'open-code'   ? `${OPENCODE_BIN}\n`
-                     : `${CLAUDE_BIN}\n`
-        console.log(`[pty] platform: ${msg.platform}, launching: ${cliCmd.trim()}`)
-        setTimeout(() => { try { proc.write(cliCmd) } catch {} }, 800)
-        // Register PTY for MCP terminal access
+        // REATTACH (255.A2): the same sessionId while the shell still lives → replay the buffer, wire up.
+        const existing = msg.sessionId ? ptySessions.get(msg.sessionId) : null
+        if (existing) {
+          console.log(`[pty] reattach: ${msg.sessionId}`)
+          attach(existing)
+          try { for (const chunk of existing.chunks) ws.send(chunk) } catch {}
+          ws.send('\r\n[session reattached]\r\n')
+          return
+        }
+
+        // FRESH SPAWN — with the validated cwd (255.A1); the refusal (if any) teaches in-terminal.
+        const platformCli = msg.platform || 'claude-code'
+        const { cwd, refusal } = resolvePtyCwd(msg.cwd)
+        let proc
+        try {
+          proc = spawnPty(cwd)
+        } catch (err) {
+          console.error('[pty] spawn error:', err.message, err.stack)
+          if (ws.readyState === ws.OPEN) ws.send(`\r\n[PTY error: ${err.message}]\r\n`)
+          return
+        }
+        const s = {
+          proc, platformCli, chunks: [], bytes: 0,
+          clients: new Set(), lastDetach: Date.now(),
+          keepAlive: Boolean(msg.keepAlive && msg.sessionId),
+          id: msg.sessionId ?? null,
+        }
+        attach(s)
+        if (s.keepAlive) ptySessions.set(msg.sessionId, s)
+
+        proc.onData((data) => {
+          if (s.keepAlive) {
+            s.chunks.push(data)
+            s.bytes += data.length
+            while (s.bytes > PTY_BUFFER_MAX && s.chunks.length > 1) s.bytes -= s.chunks.shift().length
+          }
+          for (const client of s.clients) {
+            if (client.readyState === client.OPEN) client.send(data)
+          }
+        })
+        proc.onExit(({ exitCode }) => {
+          console.log(`[pty] exited (${exitCode})`)
+          if (s.id) ptySessions.delete(s.id)
+          activePtys.delete(s.platformCli)
+          for (const client of s.clients) { try { client.close() } catch {} }
+        })
+
+        if (refusal && ws.readyState === ws.OPEN) ws.send(`\r\n[cwd refused] ${refusal}\r\n`)
+
+        if (platformCli === 'system') {
+          // System terminal — a plain shell, NO CLI. Historic default: cd to the repo root — but only
+          // when no explicit cwd was accepted (a dev-console system shell stays in its room).
+          if (!msg.cwd || refusal) {
+            const root = resolve(PROJECT_DIR, '..')
+            setTimeout(() => { try { proc.write(`cd ${root}\n`) } catch {} }, 300)
+          }
+        } else {
+          const cliCmd = cliCommandFor(platformCli)
+          console.log(`[pty] platform: ${platformCli}, cwd: ${cwd}, launching: ${cliCmd.trim()}`)
+          setTimeout(() => { try { proc.write(cliCmd) } catch {} }, 800)
+        }
+        // Register PTY for MCP terminal access (unchanged semantics: keyed by platform).
         activePtys.set(platformCli, (text) => { try { proc.write(text); return true } catch { return false } })
         return
       }
 
-      if (msg.type === 'stdin' && typeof msg.data === 'string') proc.write(msg.data)
-      else if (msg.type === 'resize' && msg.cols && msg.rows) proc.resize(Number(msg.cols), Number(msg.rows))
+      if (!session) return
+      if (msg.type === 'stdin' && typeof msg.data === 'string') session.proc.write(msg.data)
+      else if (msg.type === 'resize' && msg.cols && msg.rows) session.proc.resize(Number(msg.cols), Number(msg.rows))
+      else if (msg.type === 'exit') {
+        // The EXPLICIT end (255.A2) — the only client-side way to kill a keep-alive session.
+        console.log(`[pty] explicit exit${session.id ? `: ${session.id}` : ''}`)
+        try { session.proc.kill() } catch {}
+        if (session.id) ptySessions.delete(session.id)
+      }
     } catch {
-      proc.write(raw.toString())
+      if (session) session.proc.write(raw.toString())
     }
   })
 
   ws.on('close', () => {
     console.log('[pty] disconnected')
-    if (platformCli) activePtys.delete(platformCli)
-    try { proc.kill() } catch {}
+    if (!session) return
+    session.clients.delete(ws)
+    session.lastDetach = Date.now()
+    if (!session.keepAlive) {
+      // The pre-255 behavior (admin terminals): disconnect kills the pty.
+      activePtys.delete(session.platformCli)
+      try { session.proc.kill() } catch {}
+    }
   })
 
   ws.on('error', (err) => console.error('[pty] ws error:', err.message))
