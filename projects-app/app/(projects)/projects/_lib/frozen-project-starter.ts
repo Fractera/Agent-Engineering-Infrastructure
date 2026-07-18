@@ -121,7 +121,7 @@ function humanize(slug: string): string {
 // (controlpanel/diagram/dashboard/calendar/cron/map/processes/analytics/usecases/apppages) to true: a fresh
 // automation shows every surface it has, and the owner switches OFF what he does not need — an unseen
 // switch is a surface the owner never discovers.
-const VERSION = 15;
+const VERSION = 16;
 
 // THE _types LAYER (step 254.9, ROUTE-V3 law 1) — the route's OWN copies of the platform type contracts,
 // copied VERBATIM from _shared at birth. Duplication is the accepted price of autonomy: the route's nodes
@@ -1348,6 +1348,75 @@ export async function GET(req: NextRequest) {
 }
 `;
 
+// THE PAGE HOST (step 254.17, ROUTE-V3 law 7) — a STATIC route born with the automation (dynamic
+// segments are banned — the 249 revert): /projects/<cat>/<slug>/p?name=<page> dynamic-imports the
+// page's compiled artifact (mtime cache-bust) and renders it. A page is live the moment it compiles;
+// pages appear/change with ZERO rebuilds.
+const PAGE_HOST_ROUTE = `import { loadCompiledPage } from "@/lib/page-compile";
+
+// THE RUNTIME-PAGE HOST of this automation (step 254.17). Static path, the page picked by ?name= —
+// never a dynamic segment. Renders pages/<name>/page.compiled.mjs; compile via
+// POST /api/projects/pages/compile {"automation":"{{CATEGORY}}/{{PROJECT}}","page":"<name>"}.
+import { join } from "node:path";
+
+export const dynamic = "force-dynamic";
+
+export default async function PageHost({ searchParams }: { searchParams: Promise<{ name?: string }> }) {
+  const { name } = await searchParams;
+  const projectDir = join(process.cwd(), "app", "(projects)", "projects", "{{CATEGORY}}", "{{PROJECT}}");
+  const mod = name ? await loadCompiledPage(projectDir, name) : null;
+  if (!mod?.default) {
+    return (
+      <div style={{ maxWidth: 640, margin: "4rem auto", textAlign: "center", color: "#888" }}>
+        <p>No live page named “{name ?? ""}”. Author pages/&lt;name&gt;/page.tsx and compile it
+        (POST /api/projects/pages/compile) — it appears here instantly, no rebuild.</p>
+      </div>
+    );
+  }
+  const Page = mod.default as unknown as () => Promise<unknown>;
+  return <>{(await Page()) as import("react").ReactNode}</>;
+}
+`;
+
+// The DEMO runtime page (step 254.17) — born compiled-less on purpose: the owner (or the agent) compiles
+// it once and sees the loop work. Self-contained per the dependency contract: async server component,
+// global fetch against the route's OWN rows door, inline styles.
+const PAGES_WELCOME_TSX = `// Runtime page "welcome" (the dependency contract, ROUTE-V3 law 7): SELF-CONTAINED — no imports;
+// an async server component; data via this automation's own api door; inline styles.
+export default async function Page() {
+  let rows: { values: Record<string, unknown> }[] = [];
+  try {
+    const r = await fetch("http://localhost:3003/projects/{{CATEGORY}}/{{PROJECT}}/api/rows?table=history&limit=5", { cache: "no-store" });
+    if (r.ok) rows = ((await r.json()) as { rows?: { values: Record<string, unknown> }[] }).rows ?? [];
+  } catch { /* the table renders empty */ }
+  return (
+    <div style={{ maxWidth: 720, margin: "3rem auto", padding: "0 1rem", fontFamily: "inherit" }}>
+      <h1 style={{ fontSize: "2rem", fontWeight: 700, textAlign: "center" }}>{{PROJECT_TITLE_JSON}}</h1>
+      <p style={{ textAlign: "center", opacity: 0.7 }}>A runtime page — live without any rebuild.</p>
+      <table style={{ width: "100%", marginTop: "2rem", borderCollapse: "collapse" }}>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i} style={{ borderBottom: "1px solid #8883" }}>
+              {Object.entries(r.values).slice(0, 4).map(([k, v]) => (
+                <td key={k} style={{ padding: "6px 8px" }}>{String(v ?? "")}</td>
+              ))}
+            </tr>
+          ))}
+          {!rows.length && <tr><td style={{ padding: "6px 8px", opacity: 0.6 }}>No records yet.</td></tr>}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+`;
+
+const PAGES_WELCOME_SPEC = `The "welcome" runtime page — the born demo of the rebuild-free page loop (step 254.17).
+Compile it: POST /api/projects/pages/compile {"automation":"{{CATEGORY}}/{{PROJECT}}","page":"welcome"}
+Open it:    /projects/{{CATEGORY}}/{{PROJECT}}/p?name=welcome
+Edit pages/welcome/page.tsx, compile again — the change is live instantly. The dependency contract is in
+PLATFORM.md / the compile error text: self-contained async server component, no imports.
+`;
+
 // Resolve the projects root: default = <projects-app>/app/(projects)/projects, derived from cwd
 // (the projects-app root both in a terminal run and inside an API route on the server).
 function defaultProjectsRoot(): string {
@@ -1493,6 +1562,19 @@ export async function createFrozenProject(
   await mkdir(join(destBase, "_lib"), { recursive: true });
   await writeFile(join(destBase, "_lib", "rows.ts"), LIB_ROWS_FILE, "utf8");
   files.push(`app/(projects)/projects/${category}/${project}/_lib/rows.ts`);
+
+  // THE RUNTIME-PAGE LOOP (steps 254.16-17): the static host (/p?name=…) + the born "welcome" demo page
+  // (source + spec, compiled on first use — the loop's proof lives in every automation).
+  for (const [rel, tpl] of [
+    ["p/page.tsx", PAGE_HOST_ROUTE],
+    ["pages/welcome/page.tsx", PAGES_WELCOME_TSX],
+    ["pages/welcome/spec.md", PAGES_WELCOME_SPEC],
+  ] as const) {
+    const dest = join(destBase, rel);
+    await mkdir(dirname(dest), { recursive: true });
+    await writeFile(dest, sub(tpl), "utf8");
+    files.push(`app/(projects)/projects/${category}/${project}/${rel}`);
+  }
 
   // THE ROUTE'S OWN api/ DOOR (step 254.10, ROUTE-V3 law 6) — the per-automation routes live INSIDE the
   // route folder now (served in place: /projects/<cat>/<slug>/api/... — the "(projects)" group never
