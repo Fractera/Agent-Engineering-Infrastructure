@@ -129,6 +129,10 @@ export async function POST(req: NextRequest) {
   // Everything ELSE keyed by the automation (runs, instances, schedule, dashboard rows, finance, images, geo,
   // calendar tokens, quiz, transport/history, lifecycle) is deliberately NOT copied — a clean clone. Secrets
   // are never in the folder (app/.env.local is slot-level, keyed by the slug), so the clone starts unconfigured.
+  // VECTOR MEMORY is likewise NOT copied (step 261, owner's decision): the clone starts with empty memory and
+  // accrues its own under its OWN provenance `projects/<cat>/<clone-slug>`; its catalog doc is born on the
+  // first "How it works" click. Copying the source's memory would make the clone inherit the original's whole
+  // history under a re-sourced address — a clean clone must not.
 
   // 6. Title — the owner's chosen name, on the page (_data/description.ts) and the card (README meta).
   const descPath = join(cloneDir, "_data", "description.ts");

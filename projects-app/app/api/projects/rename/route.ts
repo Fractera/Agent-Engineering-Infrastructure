@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { authorize, resolveProject, scheduleRebuild } from "@/lib/nodes";
+import { reindexAutomation } from "@/lib/automation-catalog";
 
 // RENAME AN AUTOMATION (step 241 E3.2, owner's request) — the Danger zone's second action, beside Delete.
 //
@@ -78,6 +79,20 @@ export async function POST(req: NextRequest) {
   if (!changed) {
     return NextResponse.json({ error: "could not find a display name to change" }, { status: 400 });
   }
+
+  // Vector memory on rename (step 261) — the slug stays (identity: URL, DB keys, edges, provenance source all
+  // unchanged), so retrieval is untouched. What CAN go stale is the display NAME embedded in the catalog "How
+  // it works" doc (its AUTOMATION_NAME line). Re-index it with the new name IF one exists — reindexAutomation
+  // deletes the old catalog doc and re-ingests under the SAME `projects/<cat>/<slug>` source. Non-blocking to
+  // the response, best-effort: absent LightRAG or no how-it-works.json → nothing to refresh. Content docs
+  // (notes / results) don't bear the display name and the slug is stable, so they are correctly left as-is.
+  void (async () => {
+    try {
+      const raw = await readFile(join(proj.projectDir, "_data", "how-it-works.json"), "utf8");
+      const text = (JSON.parse(raw) as { text?: string }).text ?? "";
+      if (text.trim()) await reindexAutomation(proj.automation, title, text);
+    } catch { /* no catalog doc for this automation yet — nothing to rename in the vector store */ }
+  })();
 
   scheduleRebuild();
   return NextResponse.json({ ok: true, title, rebuilding: true });

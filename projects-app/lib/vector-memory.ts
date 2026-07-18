@@ -44,6 +44,48 @@ export function memorySource(automation: string, facets?: Record<string, string 
   return `${base}?${qs}`;
 }
 
+type RagDoc = { id?: string; file_path?: string };
+
+/** List every catalog/memory doc whose provenance belongs to this automation — its base source
+ *  `projects/<automation>` OR any facet variant `projects/<automation>?…`. Reads the GLOBAL /documents list
+ *  (not identity-scoped — proven in step 258: one list spans every workspace) and filters by `file_path`
+ *  (the provenance field). Best-effort → [] on any failure. */
+export async function listMemoryBySource(automation: string): Promise<RagDoc[]> {
+  const base = `projects/${automation}`;
+  try {
+    const r = await fetch(`${RAG_URL}/documents`, {
+      headers: { "X-API-Key": RAG_KEY }, signal: AbortSignal.timeout(20_000),
+    });
+    if (!r.ok) return [];
+    const data = (await r.json()) as { statuses?: Record<string, RagDoc[]> };
+    const all = Object.values(data.statuses ?? {}).flat();
+    return all.filter((d) => {
+      const src = d.file_path ?? "";
+      return src === base || src.startsWith(`${base}?`);
+    });
+  } catch { return []; }
+}
+
+/** PURGE every vector-memory doc of one automation — the lifecycle mutation behind DELETE (step 261): a
+ *  deleted automation must leave no memory behind (its notes, finance rows, output-node results AND its
+ *  catalog doc — all carry `projects/<automation>` provenance). Deletion is by doc id and is NOT
+ *  identity-scoped (same contract the notes bot's deleteVectorDoc uses in production). Best-effort — never
+ *  throws; returns how many docs were removed. */
+export async function purgeMemoryBySource(automation: string): Promise<number> {
+  const docs = await listMemoryBySource(automation);
+  const ids = docs.map((d) => d.id).filter((x): x is string => !!x);
+  if (!ids.length) return 0;
+  try {
+    await fetch(`${RAG_URL}/documents/delete_document`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", "X-API-Key": RAG_KEY },
+      body: JSON.stringify({ doc_ids: ids }),
+      signal: AbortSignal.timeout(30_000),
+    });
+  } catch { /* best-effort — the automation is being deleted regardless */ }
+  return ids.length;
+}
+
 /** Write one document to vector memory, tagged with its project-address provenance. Returns the LightRAG
  *  track id (or null on any failure / when there is nothing to store). Best-effort — never throws. */
 export async function ingestToMemory(opts: IngestOptions): Promise<string | null> {
