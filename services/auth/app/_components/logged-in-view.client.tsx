@@ -8,11 +8,14 @@ type Props = {
   email: string;
   appUrl: string;
   adminUrl: string;
+  /** The Projects layer (step 256.2) — shown to architects AND managers (the zone's role set). */
+  projectsUrl?: string;
   roles: string[];
 };
 
-export function LoggedInView({ email, appUrl, adminUrl, roles }: Props) {
+export function LoggedInView({ email, appUrl, adminUrl, projectsUrl, roles }: Props) {
   const isAdmin = roles.includes("architect");
+  const canProjects = isAdmin || roles.includes("manager");
 
   useEffect(() => {
     if (window.parent !== window) {
@@ -30,14 +33,22 @@ export function LoggedInView({ email, appUrl, adminUrl, roles }: Props) {
         <Button variant="outline" onClick={() => signOut({ callbackUrl: "/login" })}>
           Sign out
         </Button>
-        {(appUrl || (isAdmin && adminUrl)) && (
-          <div className="flex flex-row gap-4 pt-1 border-t border-border justify-center">
+        {(appUrl || (canProjects && projectsUrl) || (isAdmin && adminUrl)) && (
+          <div className="flex flex-row flex-wrap gap-4 pt-1 border-t border-border justify-center">
             {appUrl && (
               <a
                 href={appUrl}
                 className="text-sm text-center text-primary hover:underline"
               >
                 Go to App
+              </a>
+            )}
+            {canProjects && projectsUrl && (
+              <a
+                href={projectsUrl}
+                className="text-sm text-center text-primary hover:underline"
+              >
+                Go to Projects
               </a>
             )}
             {isAdmin && adminUrl && (

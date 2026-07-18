@@ -38,8 +38,14 @@ function publicCallbackUrl(req: NextRequest): string {
 }
 
 export async function proxy(req: NextRequest) {
+  // 256.1 — hand the current path to server components: requireRole() (the second belt) needs it to
+  // build a callbackUrl, and headers() alone cannot see the pathname. Set on EVERY pass-through.
+  const url = new URL(req.url);
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-pathname", url.pathname + url.search);
+
   if (shouldBypassAuth()) {
-    return NextResponse.next();
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
   const cookie = req.headers.get("cookie") ?? "";
@@ -62,11 +68,13 @@ export async function proxy(req: NextRequest) {
   if (!allowed) {
     const registerUrl = new URL(`${publicAuthBase(req)}/register`);
     registerUrl.searchParams.set("callbackUrl", publicCallbackUrl(req));
-    registerUrl.searchParams.set("requireRole", "architect");
+    // 256.1 — the zone admits architect AND manager; require the LEAST privileged sufficient role
+    // (auth's requireRole is "the minimum needed", and its extra architect gate must not fire here).
+    registerUrl.searchParams.set("requireRole", "manager");
     return NextResponse.redirect(registerUrl);
   }
 
-  return NextResponse.next();
+  return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
 export const config = {

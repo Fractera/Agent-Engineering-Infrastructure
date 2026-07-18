@@ -18,6 +18,12 @@ import type { ProjectsManifest } from "@/app/(projects)/projects/_shared/project
 // decides whether to SHOW the section).
 const PROJECTS_ROLES = ["architect", "manager"];
 
+// 256.3 — the demo-mode badge label (rule 4г: ten languages, deterministic dictionary in code).
+const DEMO_BADGE: Record<string, string> = {
+  en: "Demo mode", ru: "Демо-режим", es: "Modo demo", fr: "Mode démo", it: "Modalità demo",
+  de: "Demo-Modus", pt: "Modo demo", pl: "Tryb demo", tr: "Demo modu", nl: "Demomodus",
+};
+
 // Full-height account drawer (step 161). Opens from the side set by NEXT_PUBLIC_APP_SHELL_AUTH;
 // taller than the left/right page drawers (which start below the header). Three zones:
 //   (top) sticky title; (middle) scroll area — the Projects accordion for architect/manager
@@ -75,7 +81,16 @@ export function AccountDrawer({ lang, side, labels, email, roles, projects }: {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <span className="text-sm text-foreground truncate">{email}</span>
+              {/* 256.3 — the honest demo badge: in IP/onboarding mode the session is the fabricated
+                  demo@local bypass (get-session.ts), and showing that string read as a bug. Say what it
+                  IS instead; real emails render unchanged in secure mode. */}
+              {email === "demo@local" ? (
+                <span className="truncate rounded border border-dashed px-1.5 py-0.5 text-xs text-muted-foreground" title="IP onboarding mode — real sign-in arrives with a custom domain (secure mode)">
+                  {DEMO_BADGE[lang] ?? DEMO_BADGE.en}
+                </span>
+              ) : (
+                <span className="text-sm text-foreground truncate">{email}</span>
+              )}
             </div>
             <Separator />
             {/* Sign out mirrors sign-in (step 169): a RELATIVE /logout link that proxy.ts

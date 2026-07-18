@@ -39,7 +39,16 @@ export async function requireRole(roles: string[]): Promise<void> {
   // Same convention as requireAdmin(): the register/login forms live on the AUTH
   // service host — a relative "/register" would be language-prefixed by proxy.ts
   // into a page this app does not have. Build the absolute auth URL instead.
+  //
+  // 256.1 — the redirect now carries a callbackUrl (the owner's rule: after login the user RETURNS to
+  // the page they wanted), built from x-forwarded-* + the x-pathname header the proxy stamps on every
+  // pass-through. requireRole = the LEAST privileged sufficient role (a manager-friendly zone must not
+  // demand architect at the auth gate).
   const proto = h.get("x-forwarded-proto") ?? "https"
   const host = h.get("x-forwarded-host") ?? h.get("host")
-  redirect(`${authBaseFromHost(host, proto)}/register?requireRole=${roles[0]}`)
+  const target = new URL(`${authBaseFromHost(host, proto)}/register`)
+  const path = h.get("x-pathname")
+  if (host && path) target.searchParams.set("callbackUrl", `${proto}://${host}${path}`)
+  target.searchParams.set("requireRole", roles.includes("manager") ? "manager" : roles[0])
+  redirect(target.toString())
 }
