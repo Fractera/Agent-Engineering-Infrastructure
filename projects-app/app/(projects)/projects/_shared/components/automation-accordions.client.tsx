@@ -16,7 +16,7 @@ import {
 import type { EntitiesConfig, OrderableKey } from "../entities";
 import type { UseCase } from "../use-cases";
 import type { DashboardConfig } from "../table-config";
-import { UseCasesPanel } from "./use-cases-panel.client";
+import { UseCasesEntity } from "../entities/usecases";
 import { DashboardAccordion } from "./dashboard-accordion.client";
 import { CalendarEntity } from "../entities/calendar";
 import { CronEntity } from "../entities/cron";
@@ -165,9 +165,9 @@ export function AutomationAccordions({
             // in its toolbar + the requirement panel — all composed INSIDE the container now.
             <ProcessesEntity automation={automation ?? ""} mode="admin" />
           ) : k === "usecases" ? (
-            // The automation scopes the LIVE case store, the pencils and the review gate (step 231) — the gate
-            // stays mandatory no matter this switch; only the accordion's visibility follows it.
-            <UseCasesPanel cases={cases} automation={automation} />
+            // The use-cases entity container (step 254.8): admin = the full owner panel (pencils, Quiz,
+            // review gate — mandatory regardless of the visibility switch, step 231).
+            <UseCasesEntity cases={cases} automation={automation} mode="admin" />
           ) : k === "apppages" ? (
             // Application pages (step 242): declare PUBLIC pages of the application layer for external users of
             // this automation — a folder tree of the slot app/, "Add page", per-page to-dos (voice + Quiz).

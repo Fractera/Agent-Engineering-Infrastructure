@@ -141,7 +141,7 @@ function DiagramNode({ data, selected }: NodeProps<CanvasNode>) {
 const NODE_TYPES = { diagram: DiagramNode };
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; automation?: string }) {
+export function DiagramCanvas({ nodes, automation, readOnly = false }: { nodes: NodeContract[]; automation?: string; readOnly?: boolean }) {
   const L = builderStrings(useUiLang());
   const [activeId, setActiveId] = useState<string | null>(null);
   const [runStatus, setRunStatus] = useState<Record<string, RunStatus>>({});
@@ -519,7 +519,9 @@ export function DiagramCanvas({ nodes, automation }: { nodes: NodeContract[]; au
             "Not running"
           )}
         </p>
-        <div className="flex flex-wrap justify-end gap-2">
+        {/* READ-ONLY (step 254.8, ROUTE-V3 law 3): the view plane sees the living canvas — zoom, pan,
+            statuses — but NO management tools: no Builder, no edge mode, no test/simulate. */}
+        <div className={readOnly ? "hidden" : "flex flex-wrap justify-end gap-2"}>
           {builder && (
             <>
               <Button variant="outline" size="sm" onClick={addFreeNode} disabled={busy}>
