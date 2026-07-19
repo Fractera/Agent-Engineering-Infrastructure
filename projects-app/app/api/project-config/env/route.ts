@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { spawn } from "node:child_process"
 import { writeFile } from "node:fs/promises"
-import { getSession } from "@/lib/auth/get-session"
+import { authorize as sharedAuthorize } from "@/lib/nodes"
 import { envPath, readEnvLines, presentFromLines } from "@/lib/env-presence"
 import { listEveryWarning, answerWarning } from "@/lib/entity-store"
 
@@ -17,9 +17,11 @@ import { listEveryWarning, answerWarning } from "@/lib/entity-store"
 // Node runtime: child_process + fs.
 export const runtime = "nodejs"
 
-// Roles allowed to write project env — the /projects zone is architect/manager
-// gated (requireRole in app/(projects)/layout.tsx); agents (Hermes) too.
-const WRITE_ROLES = ["architect", "manager", "agent"]
+// Auth: the SHARED authorize() from lib/nodes (263.1 round 7) — session roles, IP-mode bypass AND the
+// in-room agent's X-Fractera-Agent-Gate pass. Root cause fixed here: the coding agent's doctrine says
+// "a secret from the owner's text goes to env at once (POST this route)", but this route only knew
+// browser sessions — the agent got 403, hunted ~10 alternative paths (all 403/404) and had to bounce
+// the key back to the owner as a warning. LOCKED_KEYS below still protects platform secrets.
 
 // Keys this route refuses to touch: build-time public vars (their path is a rebuild,
 // not a restart — rule 143) and platform-locked secrets (owned by the admin/platform,
@@ -50,8 +52,7 @@ function serializeValue(value: string): string {
 }
 
 async function authorize(req: NextRequest): Promise<boolean> {
-  const session = await getSession(req)
-  return Boolean(session?.roles?.some((r) => WRITE_ROLES.includes(r)))
+  return sharedAuthorize(req)
 }
 
 // Non-secret keys whose VALUE may be returned (step 207.19 — the model picker must show the CURRENT

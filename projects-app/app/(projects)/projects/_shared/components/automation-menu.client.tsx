@@ -236,6 +236,7 @@ export function AutomationMenu({
         modelEnvKey={modelEnvKey}
         defaultModel={defaultModel}
         channels={channels}
+        automation={automation}
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
       />

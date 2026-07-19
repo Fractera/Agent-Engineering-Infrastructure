@@ -24,9 +24,13 @@ import type { EntityWarning } from "@/lib/entity-store";
 export type WarningRow = { entityType: string; ref: string; warning: EntityWarning; label?: string };
 
 export function WarningBlock({
-  automation, entityType, refId, warning, label, onAnswered,
+  automation, entityType, refId, warning, label, onAnswered, onOpenSettings,
 }: {
   automation: string; entityType: string; refId: string; warning: EntityWarning; label?: string; onAnswered?: () => void;
+  /** Called right before the Settings modal opens — the HOSTING dialog must close itself first
+      (263.1 round 7): two stacked Radix dialogs fight over focus/overlays and the close buttons of
+      the lower one look dead (the owner could not close the problems modal at all). */
+  onOpenSettings?: () => void;
 }) {
   const W = warningStrings(useUiLang());
   // Layer 1 — the framing. Old warnings (written before step 247) have no `subject`; for them the framing
@@ -96,7 +100,10 @@ export function WarningBlock({
           )}
           <Button
             size="sm" variant="outline" className="gap-1.5"
-            onClick={() => window.dispatchEvent(new CustomEvent("automation:open-settings", { detail: { automation } }))}
+            onClick={() => {
+              onOpenSettings?.(); // close the hosting dialog FIRST — never stack two Radix dialogs
+              window.dispatchEvent(new CustomEvent("automation:open-settings", { detail: { automation } }));
+            }}
           >
             <Settings className="size-3.5" /> {W.openSettings}
           </Button>
@@ -207,6 +214,7 @@ export function ProblemsCenter({ automation }: { automation: string }) {
             <WarningBlock
               automation={automation} entityType={row.entityType} refId={row.ref} warning={row.warning} label={row.label}
               onAnswered={() => { void refetch(); setIdx(0); }}
+              onOpenSettings={() => setOpen(false)}
             />
             {rows.length > 1 && (
               <div className="flex justify-between">

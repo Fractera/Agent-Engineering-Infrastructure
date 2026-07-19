@@ -34,6 +34,10 @@ export function ModelKeySettings({
   const [current, setCurrent] = useState("");
   const [modelBusy, setModelBusy] = useState(false);
   const [live, setLive] = useState<LiveModel[] | null>(null); // null = loading; [] = unavailable
+  // The stored key is NEVER echoed back (write-only field) — but an empty input read as "no key set"
+  // and sent the owner re-entering a key that was already live (263.1 round 7). Presence is the honest
+  // middle: a green "key is set" note + a masked placeholder, value still never leaves the server.
+  const [keySet, setKeySet] = useState<boolean | null>(null);
 
   useEffect(() => {
     fetch("/api/openai-models", { credentials: "include" })
@@ -43,11 +47,13 @@ export function ModelKeySettings({
         setLive(models.length ? models : []);
       })
       .catch(() => setLive([]));
-    fetch(`/api/project-config/env?keys=${modelEnvKey}`, { credentials: "include" })
+    fetch(`/api/project-config/env?keys=${modelEnvKey},OPENAI_API_KEY`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         const v = d?.values?.[modelEnvKey];
         if (typeof v === "string" && v) { setCurrent(v); setModel(v); }
+        const p = d?.present?.OPENAI_API_KEY;
+        if (typeof p === "boolean") setKeySet(p);
       })
       .catch(() => {});
   }, [modelEnvKey]);
@@ -67,6 +73,7 @@ export function ModelKeySettings({
         return;
       }
       setApiKey("");
+      setKeySet(true);
       toast.success("OpenAI key saved — applying to every automation (a brief restart).");
     } finally {
       setKeyBusy(false);
@@ -98,12 +105,21 @@ export function ModelKeySettings({
   return (
     <div className="space-y-4">
       <div className="space-y-1">
-        <label className="text-sm font-medium">OpenAI API key</label>
+        <label className="flex items-center gap-2 text-sm font-medium">
+          OpenAI API key
+          {keySet === true && (
+            <span className="rounded-full border border-emerald-500/50 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-400">
+              key is set — working
+            </span>
+          )}
+        </label>
         <p className="text-xs text-muted-foreground">
-          One global key powers every automation. platform.openai.com → API keys → Create new secret key.
+          {keySet === true
+            ? "A global key is already saved and powers every automation. Paste a new one only to replace it."
+            : "One global key powers every automation. platform.openai.com → API keys → Create new secret key."}
         </p>
         <div className="flex gap-2">
-          <Input type="password" autoComplete="off" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="sk-…" />
+          <Input type="password" autoComplete="off" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder={keySet === true ? "sk-•••••••• (saved)" : "sk-…"} />
           <Button onClick={saveKey} disabled={keyBusy || !apiKey.trim()}>Save</Button>
         </div>
       </div>
