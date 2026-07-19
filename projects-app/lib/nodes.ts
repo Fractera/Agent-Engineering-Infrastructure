@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { spawn } from "node:child_process";
 import type { NextRequest } from "next/server";
 import { getSession } from "@/lib/auth/get-session";
+import { agentGateSecret } from "@/lib/agent-gate";
 import { createNodeId } from "@/lib/cuid";
 import { db } from "@/lib/db";
 import { setTransport } from "@/lib/entity-store";
@@ -25,6 +26,10 @@ export type NodeRow = {
 
 export async function authorize(req: NextRequest): Promise<boolean> {
   if (IP_MODE) return true; // onboarding surface — open, like the other project routes
+  // THE AGENT GATE (263.1): the in-room coding agent has no browser cookie — it presents the
+  // per-server secret instead (see lib/agent-gate.ts for the trust model and the root cause).
+  const gate = req.headers.get("x-fractera-agent-gate");
+  if (gate && gate === (await agentGateSecret())) return true;
   const session = await getSession(req);
   return Boolean(session?.roles?.some((r) => WRITE_ROLES.includes(r)));
 }

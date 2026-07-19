@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authorize, resolveProject } from "@/lib/nodes";
 import { buildProjection } from "@/lib/projection";
 import { launchGate } from "@/lib/wave";
+import { agentGateSecret } from "@/lib/agent-gate";
 
 // THE LIGHT HAND-OFF (step 249) — the copyable task text the owner pastes into a coding-agent chat, in TWO
 // modes matching the two buttons of the launch dialog:
@@ -51,7 +52,7 @@ ${list}
 ${CLOSING.replaceAll("<a>", automation)}`;
 }
 
-function roomText(automation: string, roomPath: string, tokens: number, items: { entityType: string; ref: string; label: string; task: string }[]): string {
+function roomText(automation: string, roomPath: string, tokens: number, items: { entityType: string; ref: string; label: string; task: string }[], gateSecret: string): string {
   const list = items
     .map((i, k) => {
       const where = i.ref ? `${i.entityType} ${i.ref}` : `the automation's ${i.entityType}`;
@@ -73,6 +74,8 @@ HOW TO WORK
    lands atomically; a refusal names exactly what to fix. Then close objects per PLATFORM.md
    (materialize / entity-summary / entity-warning) and verify:
    GET http://localhost:3003/api/projects/validate?automation=${automation} → ok:true.
+4. EVERY platform HTTP call above MUST carry this header (your service pass — without it the API
+   answers 403): X-Fractera-Agent-Gate: ${gateSecret}
 
 ${items.length
     ? `THE STAGED ITEMS (${items.length}):\n${list}`
@@ -101,7 +104,10 @@ export async function GET(req: NextRequest) {
   // at hand-off time (deterministic — always the current truth) and the agent is pointed at the sterile
   // room, never at the admin app. full/delta stay as the legacy tail for the old copy-paste flow.
   const projection = await buildProjection(proj.automation);
-  const room = projection.ok ? roomText(proj.automation, projection.root, projection.tokens, gate.items) : null;
+  // The service pass (263.1 round 6) — embedded into the room task so the in-room agent's platform
+  // calls pass authorize() in Secure mode (they carried no cookie and died with 403 before this).
+  const gateSecret = await agentGateSecret();
+  const room = projection.ok ? roomText(proj.automation, projection.root, projection.tokens, gate.items, gateSecret) : null;
 
   return NextResponse.json({
     ok: true,
