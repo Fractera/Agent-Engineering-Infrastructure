@@ -71,9 +71,13 @@ const TEST_PROMPT =
 const devPrompt = (task: string) =>
   `FIRST, before anything else, print one single line that joins these two parts with NOTHING between them: @@FRACTERA_ + DEV_STARTED@@ - then immediately carry out the task below.\n\n${task}`;
 
+// AUTO MODE (owner 2026-07-19): the agent must code WITHOUT stopping to ask permission every step —
+// clicking "yes" every 2 seconds is unusable. Both CLIs take their bypass flag AT LAUNCH (it cannot be
+// applied to a running session). This is safe HERE by construction: the terminal is jailed to the
+// sterile room (a projection of one automation) and every change returns through the gated apply.
 const PROVIDERS = [
-  { id: "claude-code", label: "Claude Code", cli: (model: string) => `claude${model ? ` --model ${model}` : ""}\n` },
-  { id: "codex", label: "Codex", cli: (model: string) => `codex${model ? ` -m ${model}` : ""}\n` },
+  { id: "claude-code", label: "Claude Code", cli: (model: string) => `claude --dangerously-skip-permissions${model ? ` --model ${model}` : ""}\n` },
+  { id: "codex", label: "Codex", cli: (model: string) => `codex --dangerously-bypass-approvals-and-sandbox${model ? ` -m ${model}` : ""}\n` },
 ] as const;
 
 type CD = {
