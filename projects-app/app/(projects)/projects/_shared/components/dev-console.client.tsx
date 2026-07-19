@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, Circle, ClipboardCopy, ClipboardPaste, Copy, Loader2, LogOut, Play, TerminalSquare } from "lucide-react";
+import { Check, Circle, ClipboardCopy, ClipboardPaste, Copy, FlaskConical, Loader2, LogOut, Play, TerminalSquare } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -36,16 +36,38 @@ const stripAnsi = (s: string) => s.replace(ANSI_OSC_RE, "").replace(ANSI_CSI_RE,
 //   footer  — the CONDUCTOR strip (cd ✓ → pwd ✓ → CLI → login → task handed) + the do-not-reload note
 //             (and the honest promise: an accidental reload REATTACHES — keepAlive, 255.A2).
 //
-// THE CONDUCTOR (B3): the system drives the agent itself by reading the terminal — verify pwd equals
-// the room, type the CLI launch (with the model), watch for the OAuth login prompt (auto-fill on
-// detect), then hand the room task as the first message. The user watches; Paste stays as the manual
-// fallback. SESSION (B4): sessionId = dev:<automation>, keepAlive — a reload reattaches with history;
+// THE CONDUCTOR (B3, reworked 263.1 owner decision): the system verifies pwd equals the room, types
+// the CLI launch (with the model) and watches for the OAuth login prompt (guided modal on detect).
+// Task delivery is EXPLICIT, two-staged — the old "4s of silence" auto-delivery is GONE (it lost the
+// task whenever an auth flow swallowed the quiet window and left no button to retry):
+//   stage 1 — the TEST button: sends a canonical mini-prompt that demands an ack marker; the marker in
+//             the transcript = green toast, the button swaps to "Start development";
+//   stage 2 — the START DEVELOPMENT button: sends the room task prefixed with a "print the marker
+//             first" demand, auto-submits (\r), and STAYS on screen (re-clickable) until the agent
+//             prints the DEV marker — only that proves development actually began.
+// Both markers are written SPLIT inside the prompts, so the terminal's echo of the prompt itself can
+// never satisfy the detector. The user watches; Paste stays as the manual fallback.
+// SESSION (B4): sessionId = dev:<automation>, keepAlive — a reload reattaches with history;
 // only Exit (double-confirm) kills it.
 
 type Readiness = { platform: string; installed: boolean; logged_in: boolean; busy: boolean | null };
 type ModelInfo = { id: string; name: string };
 type Step = "pwd" | "cli" | "login" | "task" | "free";
 type StepState = "todo" | "doing" | "done" | "fail";
+/** The explicit delivery ladder (263.1): idle → testing → tested → handing → developing. */
+type Phase = "idle" | "testing" | "tested" | "handing" | "developing";
+
+// THE HANDSHAKE MARKERS. The agent is told to PRINT these; the conductor only trusts what it sees in
+// the transcript. Inside the prompts the marker is written SPLIT with a "+" between the halves — the
+// terminal echoes the prompt back, and a split marker in the echo can never satisfy the detector
+// (detection runs on a de-spaced buffer, so a space alone would not be enough of a guard).
+const TEST_MARKER = "@@FRACTERA_TEST_OK@@";
+const DEV_MARKER = "@@FRACTERA_DEV_STARTED@@";
+// The canonical test prompt (finding 12): folder + model + readiness, plus the ack marker.
+const TEST_PROMPT =
+  "If you can read this, print one single line that joins these two parts with NOTHING between them: @@FRACTERA_ + TEST_OK@@ — then print your current working folder and your model name, and wait for the next instruction.";
+const devPrompt = (task: string) =>
+  `FIRST, before anything else, print one single line that joins these two parts with NOTHING between them: @@FRACTERA_ + DEV_STARTED@@ — then immediately carry out the task below.\n\n${task}`;
 
 const PROVIDERS = [
   { id: "claude-code", label: "Claude Code", cli: (model: string) => `claude${model ? ` --model ${model}` : ""}\n` },
@@ -60,18 +82,20 @@ type CD = {
   stepPwd: string; stepCli: string; stepLogin: string; stepTask: string; stepFree: string;
   noReload: string; notInstalled: string; notLoggedIn: string; busy: string;
   pwdFail: string;
+  test: string; testRunning: string; testOk: string; testFail: string;
+  startDev: string; devWaitAck: string; devHanded: string;
 };
 const I18N: Record<string, CD> = {
-  en: { workspace: "Workspace", sessionNew: "new session", sessionReattached: "session restored", provider: "Coding agent", model: "Model", startAgent: "Start the agent", agentRunning: "Agent running", paste: "Paste", pasteTitle: "Paste into the terminal (login codes, answers)", pasteSend: "Send", copyOut: "Copy output", copied: "Copied.", exit: "Exit", exitConfirm: "End the session for good? The agent's terminal will be closed.", stepPwd: "Workspace verified", stepCli: "Agent launched", stepLogin: "Subscription login", stepTask: "Task handed over", stepFree: "Development in progress", noReload: "Please don't reload the page. If it reloads accidentally, the session reconnects with its history.", notInstalled: "not installed", notLoggedIn: "no subscription login", busy: "busy", pwdFail: "The workspace check failed — the terminal is not in the project room." },
-  ru: { workspace: "Рабочая папка", sessionNew: "новая сессия", sessionReattached: "сессия восстановлена", provider: "Агент-программист", model: "Модель", startAgent: "Запустить агента", agentRunning: "Агент работает", paste: "Вставить", pasteTitle: "Вставить в терминал (коды входа, ответы)", pasteSend: "Отправить", copyOut: "Скопировать вывод", copied: "Скопировано.", exit: "Выход", exitConfirm: "Завершить сессию насовсем? Терминал агента будет закрыт.", stepPwd: "Рабочая папка проверена", stepCli: "Агент запущен", stepLogin: "Вход в подписку", stepTask: "Задание передано", stepFree: "Идёт разработка", noReload: "Не перезагружайте страницу. При случайной перезагрузке сессия восстановится с историей.", notInstalled: "не установлен", notLoggedIn: "нет входа в подписку", busy: "занят", pwdFail: "Проверка рабочей папки не прошла — терминал не в комнате проекта." },
-  es: { workspace: "Carpeta de trabajo", sessionNew: "sesión nueva", sessionReattached: "sesión restaurada", provider: "Agente de código", model: "Modelo", startAgent: "Iniciar el agente", agentRunning: "Agente en marcha", paste: "Pegar", pasteTitle: "Pegar en la terminal (códigos, respuestas)", pasteSend: "Enviar", copyOut: "Copiar salida", copied: "Copiado.", exit: "Salir", exitConfirm: "¿Terminar la sesión definitivamente? La terminal del agente se cerrará.", stepPwd: "Carpeta verificada", stepCli: "Agente lanzado", stepLogin: "Acceso a la suscripción", stepTask: "Tarea entregada", stepFree: "Desarrollo en curso", noReload: "No recargues la página. Si se recarga por accidente, la sesión se reconecta con su historial.", notInstalled: "no instalado", notLoggedIn: "sin acceso a la suscripción", busy: "ocupado", pwdFail: "La verificación de la carpeta falló — la terminal no está en la sala del proyecto." },
-  fr: { workspace: "Dossier de travail", sessionNew: "nouvelle session", sessionReattached: "session restaurée", provider: "Agent de code", model: "Modèle", startAgent: "Démarrer l'agent", agentRunning: "Agent en cours", paste: "Coller", pasteTitle: "Coller dans le terminal (codes, réponses)", pasteSend: "Envoyer", copyOut: "Copier la sortie", copied: "Copié.", exit: "Quitter", exitConfirm: "Terminer la session définitivement ? Le terminal de l'agent sera fermé.", stepPwd: "Dossier vérifié", stepCli: "Agent lancé", stepLogin: "Connexion à l'abonnement", stepTask: "Tâche transmise", stepFree: "Développement en cours", noReload: "Ne rechargez pas la page. En cas de rechargement accidentel, la session se reconnecte avec son historique.", notInstalled: "non installé", notLoggedIn: "pas de connexion", busy: "occupé", pwdFail: "La vérification du dossier a échoué — le terminal n'est pas dans la salle du projet." },
-  it: { workspace: "Cartella di lavoro", sessionNew: "nuova sessione", sessionReattached: "sessione ripristinata", provider: "Agente di codice", model: "Modello", startAgent: "Avvia l'agente", agentRunning: "Agente in esecuzione", paste: "Incolla", pasteTitle: "Incolla nel terminale (codici, risposte)", pasteSend: "Invia", copyOut: "Copia output", copied: "Copiato.", exit: "Esci", exitConfirm: "Terminare la sessione definitivamente? Il terminale dell'agente verrà chiuso.", stepPwd: "Cartella verificata", stepCli: "Agente avviato", stepLogin: "Accesso all'abbonamento", stepTask: "Compito consegnato", stepFree: "Sviluppo in corso", noReload: "Non ricaricare la pagina. In caso di ricarica accidentale, la sessione si riconnette con la cronologia.", notInstalled: "non installato", notLoggedIn: "nessun accesso", busy: "occupato", pwdFail: "La verifica della cartella è fallita — il terminale non è nella stanza del progetto." },
-  de: { workspace: "Arbeitsordner", sessionNew: "neue Sitzung", sessionReattached: "Sitzung wiederhergestellt", provider: "Coding-Agent", model: "Modell", startAgent: "Agent starten", agentRunning: "Agent läuft", paste: "Einfügen", pasteTitle: "In das Terminal einfügen (Codes, Antworten)", pasteSend: "Senden", copyOut: "Ausgabe kopieren", copied: "Kopiert.", exit: "Beenden", exitConfirm: "Sitzung endgültig beenden? Das Terminal des Agenten wird geschlossen.", stepPwd: "Ordner geprüft", stepCli: "Agent gestartet", stepLogin: "Abo-Anmeldung", stepTask: "Aufgabe übergeben", stepFree: "Entwicklung läuft", noReload: "Bitte die Seite nicht neu laden. Bei versehentlichem Neuladen verbindet sich die Sitzung mit ihrer Historie neu.", notInstalled: "nicht installiert", notLoggedIn: "keine Anmeldung", busy: "beschäftigt", pwdFail: "Die Ordnerprüfung schlug fehl — das Terminal ist nicht im Projektraum." },
-  pt: { workspace: "Pasta de trabalho", sessionNew: "sessão nova", sessionReattached: "sessão restaurada", provider: "Agente de código", model: "Modelo", startAgent: "Iniciar o agente", agentRunning: "Agente em execução", paste: "Colar", pasteTitle: "Colar no terminal (códigos, respostas)", pasteSend: "Enviar", copyOut: "Copiar saída", copied: "Copiado.", exit: "Sair", exitConfirm: "Terminar a sessão definitivamente? O terminal do agente será fechado.", stepPwd: "Pasta verificada", stepCli: "Agente iniciado", stepLogin: "Login da assinatura", stepTask: "Tarefa entregue", stepFree: "Desenvolvimento em curso", noReload: "Não recarregue a página. Numa recarga acidental, a sessão reconecta-se com o histórico.", notInstalled: "não instalado", notLoggedIn: "sem login", busy: "ocupado", pwdFail: "A verificação da pasta falhou — o terminal não está na sala do projeto." },
-  pl: { workspace: "Folder roboczy", sessionNew: "nowa sesja", sessionReattached: "sesja przywrócona", provider: "Agent kodujący", model: "Model", startAgent: "Uruchom agenta", agentRunning: "Agent pracuje", paste: "Wklej", pasteTitle: "Wklej do terminala (kody, odpowiedzi)", pasteSend: "Wyślij", copyOut: "Kopiuj wyjście", copied: "Skopiowano.", exit: "Zakończ", exitConfirm: "Zakończyć sesję na stałe? Terminal agenta zostanie zamknięty.", stepPwd: "Folder zweryfikowany", stepCli: "Agent uruchomiony", stepLogin: "Logowanie subskrypcji", stepTask: "Zadanie przekazane", stepFree: "Trwa rozwój", noReload: "Nie przeładowuj strony. Przy przypadkowym przeładowaniu sesja połączy się ponownie z historią.", notInstalled: "niezainstalowany", notLoggedIn: "brak logowania", busy: "zajęty", pwdFail: "Weryfikacja folderu nie powiodła się — terminal nie jest w pokoju projektu." },
-  tr: { workspace: "Çalışma klasörü", sessionNew: "yeni oturum", sessionReattached: "oturum geri yüklendi", provider: "Kodlama ajanı", model: "Model", startAgent: "Ajanı başlat", agentRunning: "Ajan çalışıyor", paste: "Yapıştır", pasteTitle: "Terminale yapıştır (kodlar, yanıtlar)", pasteSend: "Gönder", copyOut: "Çıktıyı kopyala", copied: "Kopyalandı.", exit: "Çıkış", exitConfirm: "Oturum kalıcı olarak sonlandırılsın mı? Ajanın terminali kapatılacak.", stepPwd: "Klasör doğrulandı", stepCli: "Ajan başlatıldı", stepLogin: "Abonelik girişi", stepTask: "Görev iletildi", stepFree: "Geliştirme sürüyor", noReload: "Sayfayı yeniden yüklemeyin. Yanlışlıkla yeniden yüklenirse oturum geçmişiyle birlikte yeniden bağlanır.", notInstalled: "kurulu değil", notLoggedIn: "abonelik girişi yok", busy: "meşgul", pwdFail: "Klasör doğrulaması başarısız — terminal proje odasında değil." },
-  nl: { workspace: "Werkmap", sessionNew: "nieuwe sessie", sessionReattached: "sessie hersteld", provider: "Coding-agent", model: "Model", startAgent: "Agent starten", agentRunning: "Agent actief", paste: "Plakken", pasteTitle: "In de terminal plakken (codes, antwoorden)", pasteSend: "Versturen", copyOut: "Uitvoer kopiëren", copied: "Gekopieerd.", exit: "Afsluiten", exitConfirm: "Sessie definitief beëindigen? De terminal van de agent wordt gesloten.", stepPwd: "Werkmap geverifieerd", stepCli: "Agent gestart", stepLogin: "Abonnement-login", stepTask: "Taak overgedragen", stepFree: "Ontwikkeling bezig", noReload: "Herlaad de pagina niet. Bij een onbedoelde herlaad verbindt de sessie opnieuw met de historie.", notInstalled: "niet geïnstalleerd", notLoggedIn: "geen login", busy: "bezet", pwdFail: "De werkmapcontrole is mislukt — de terminal is niet in de projectkamer." },
+  en: { workspace: "Workspace", sessionNew: "new session", sessionReattached: "session restored", provider: "Coding agent", model: "Model", startAgent: "Start the agent", agentRunning: "Agent running", paste: "Paste", pasteTitle: "Paste into the terminal (login codes, answers)", pasteSend: "Send", copyOut: "Copy output", copied: "Copied.", exit: "Exit", exitConfirm: "End the session for good? The agent's terminal will be closed.", stepPwd: "Workspace verified", stepCli: "Agent launched", stepLogin: "Subscription login", stepTask: "Task handed over", stepFree: "Development in progress", noReload: "Please don't reload the page. If it reloads accidentally, the session reconnects with its history.", notInstalled: "not installed", notLoggedIn: "no subscription login", busy: "busy", pwdFail: "The workspace check failed — the terminal is not in the project room.", test: "Test", testRunning: "Testing…", testOk: "The agent responded — everything works. You can start development.", testFail: "The agent did not respond to the test. Recovery: press Exit to end the session, then reopen the console and try again.", startDev: "Start development", devWaitAck: "Task sent. The button stays until the agent confirms the start.", devHanded: "The agent confirmed — development is running." },
+  ru: { workspace: "Рабочая папка", sessionNew: "новая сессия", sessionReattached: "сессия восстановлена", provider: "Агент-программист", model: "Модель", startAgent: "Запустить агента", agentRunning: "Агент работает", paste: "Вставить", pasteTitle: "Вставить в терминал (коды входа, ответы)", pasteSend: "Отправить", copyOut: "Скопировать вывод", copied: "Скопировано.", exit: "Выход", exitConfirm: "Завершить сессию насовсем? Терминал агента будет закрыт.", stepPwd: "Рабочая папка проверена", stepCli: "Агент запущен", stepLogin: "Вход в подписку", stepTask: "Задание передано", stepFree: "Идёт разработка", noReload: "Не перезагружайте страницу. При случайной перезагрузке сессия восстановится с историей.", notInstalled: "не установлен", notLoggedIn: "нет входа в подписку", busy: "занят", pwdFail: "Проверка рабочей папки не прошла — терминал не в комнате проекта.", test: "Тест", testRunning: "Проверка…", testOk: "Агент ответил — всё работает. Можно запускать разработку.", testFail: "Агент не ответил на тест. Восстановление: нажмите «Выход», затем откройте пульт заново и повторите.", startDev: "Запустить разработку", devWaitAck: "Задание отправлено. Кнопка останется, пока агент не подтвердит старт.", devHanded: "Агент подтвердил — идёт разработка." },
+  es: { workspace: "Carpeta de trabajo", sessionNew: "sesión nueva", sessionReattached: "sesión restaurada", provider: "Agente de código", model: "Modelo", startAgent: "Iniciar el agente", agentRunning: "Agente en marcha", paste: "Pegar", pasteTitle: "Pegar en la terminal (códigos, respuestas)", pasteSend: "Enviar", copyOut: "Copiar salida", copied: "Copiado.", exit: "Salir", exitConfirm: "¿Terminar la sesión definitivamente? La terminal del agente se cerrará.", stepPwd: "Carpeta verificada", stepCli: "Agente lanzado", stepLogin: "Acceso a la suscripción", stepTask: "Tarea entregada", stepFree: "Desarrollo en curso", noReload: "No recargues la página. Si se recarga por accidente, la sesión se reconecta con su historial.", notInstalled: "no instalado", notLoggedIn: "sin acceso a la suscripción", busy: "ocupado", pwdFail: "La verificación de la carpeta falló — la terminal no está en la sala del proyecto.", test: "Prueba", testRunning: "Probando…", testOk: "El agente respondió — todo funciona. Puedes iniciar el desarrollo.", testFail: "El agente no respondió a la prueba. Recuperación: pulsa «Salir», reabre la consola e inténtalo de nuevo.", startDev: "Iniciar desarrollo", devWaitAck: "Tarea enviada. El botón permanece hasta que el agente confirme el inicio.", devHanded: "El agente confirmó — el desarrollo está en marcha." },
+  fr: { workspace: "Dossier de travail", sessionNew: "nouvelle session", sessionReattached: "session restaurée", provider: "Agent de code", model: "Modèle", startAgent: "Démarrer l'agent", agentRunning: "Agent en cours", paste: "Coller", pasteTitle: "Coller dans le terminal (codes, réponses)", pasteSend: "Envoyer", copyOut: "Copier la sortie", copied: "Copié.", exit: "Quitter", exitConfirm: "Terminer la session définitivement ? Le terminal de l'agent sera fermé.", stepPwd: "Dossier vérifié", stepCli: "Agent lancé", stepLogin: "Connexion à l'abonnement", stepTask: "Tâche transmise", stepFree: "Développement en cours", noReload: "Ne rechargez pas la page. En cas de rechargement accidentel, la session se reconnecte avec son historique.", notInstalled: "non installé", notLoggedIn: "pas de connexion", busy: "occupé", pwdFail: "La vérification du dossier a échoué — le terminal n'est pas dans la salle du projet.", test: "Test", testRunning: "Test en cours…", testOk: "L'agent a répondu — tout fonctionne. Vous pouvez lancer le développement.", testFail: "L'agent n'a pas répondu au test. Récupération : cliquez sur « Quitter », rouvrez la console et réessayez.", startDev: "Lancer le développement", devWaitAck: "Tâche envoyée. Le bouton reste jusqu'à ce que l'agent confirme le démarrage.", devHanded: "L'agent a confirmé — le développement est en cours." },
+  it: { workspace: "Cartella di lavoro", sessionNew: "nuova sessione", sessionReattached: "sessione ripristinata", provider: "Agente di codice", model: "Modello", startAgent: "Avvia l'agente", agentRunning: "Agente in esecuzione", paste: "Incolla", pasteTitle: "Incolla nel terminale (codici, risposte)", pasteSend: "Invia", copyOut: "Copia output", copied: "Copiato.", exit: "Esci", exitConfirm: "Terminare la sessione definitivamente? Il terminale dell'agente verrà chiuso.", stepPwd: "Cartella verificata", stepCli: "Agente avviato", stepLogin: "Accesso all'abbonamento", stepTask: "Compito consegnato", stepFree: "Sviluppo in corso", noReload: "Non ricaricare la pagina. In caso di ricarica accidentale, la sessione si riconnette con la cronologia.", notInstalled: "non installato", notLoggedIn: "nessun accesso", busy: "occupato", pwdFail: "La verifica della cartella è fallita — il terminale non è nella stanza del progetto.", test: "Test", testRunning: "Test in corso…", testOk: "L'agente ha risposto — tutto funziona. Puoi avviare lo sviluppo.", testFail: "L'agente non ha risposto al test. Recupero: premi «Esci», riapri la console e riprova.", startDev: "Avvia lo sviluppo", devWaitAck: "Compito inviato. Il pulsante resta finché l'agente non conferma l'avvio.", devHanded: "L'agente ha confermato — lo sviluppo è in corso." },
+  de: { workspace: "Arbeitsordner", sessionNew: "neue Sitzung", sessionReattached: "Sitzung wiederhergestellt", provider: "Coding-Agent", model: "Modell", startAgent: "Agent starten", agentRunning: "Agent läuft", paste: "Einfügen", pasteTitle: "In das Terminal einfügen (Codes, Antworten)", pasteSend: "Senden", copyOut: "Ausgabe kopieren", copied: "Kopiert.", exit: "Beenden", exitConfirm: "Sitzung endgültig beenden? Das Terminal des Agenten wird geschlossen.", stepPwd: "Ordner geprüft", stepCli: "Agent gestartet", stepLogin: "Abo-Anmeldung", stepTask: "Aufgabe übergeben", stepFree: "Entwicklung läuft", noReload: "Bitte die Seite nicht neu laden. Bei versehentlichem Neuladen verbindet sich die Sitzung mit ihrer Historie neu.", notInstalled: "nicht installiert", notLoggedIn: "keine Anmeldung", busy: "beschäftigt", pwdFail: "Die Ordnerprüfung schlug fehl — das Terminal ist nicht im Projektraum.", test: "Test", testRunning: "Test läuft…", testOk: "Der Agent hat geantwortet — alles funktioniert. Sie können die Entwicklung starten.", testFail: "Der Agent hat auf den Test nicht geantwortet. Wiederherstellung: «Beenden» drücken, die Konsole neu öffnen und erneut versuchen.", startDev: "Entwicklung starten", devWaitAck: "Aufgabe gesendet. Der Button bleibt, bis der Agent den Start bestätigt.", devHanded: "Der Agent hat bestätigt — die Entwicklung läuft." },
+  pt: { workspace: "Pasta de trabalho", sessionNew: "sessão nova", sessionReattached: "sessão restaurada", provider: "Agente de código", model: "Modelo", startAgent: "Iniciar o agente", agentRunning: "Agente em execução", paste: "Colar", pasteTitle: "Colar no terminal (códigos, respostas)", pasteSend: "Enviar", copyOut: "Copiar saída", copied: "Copiado.", exit: "Sair", exitConfirm: "Terminar a sessão definitivamente? O terminal do agente será fechado.", stepPwd: "Pasta verificada", stepCli: "Agente iniciado", stepLogin: "Login da assinatura", stepTask: "Tarefa entregue", stepFree: "Desenvolvimento em curso", noReload: "Não recarregue a página. Numa recarga acidental, a sessão reconecta-se com o histórico.", notInstalled: "não instalado", notLoggedIn: "sem login", busy: "ocupado", pwdFail: "A verificação da pasta falhou — o terminal não está na sala do projeto.", test: "Teste", testRunning: "Testando…", testOk: "O agente respondeu — tudo funciona. Pode iniciar o desenvolvimento.", testFail: "O agente não respondeu ao teste. Recuperação: prima «Sair», reabra a consola e tente novamente.", startDev: "Iniciar desenvolvimento", devWaitAck: "Tarefa enviada. O botão permanece até o agente confirmar o início.", devHanded: "O agente confirmou — o desenvolvimento está em curso." },
+  pl: { workspace: "Folder roboczy", sessionNew: "nowa sesja", sessionReattached: "sesja przywrócona", provider: "Agent kodujący", model: "Model", startAgent: "Uruchom agenta", agentRunning: "Agent pracuje", paste: "Wklej", pasteTitle: "Wklej do terminala (kody, odpowiedzi)", pasteSend: "Wyślij", copyOut: "Kopiuj wyjście", copied: "Skopiowano.", exit: "Zakończ", exitConfirm: "Zakończyć sesję na stałe? Terminal agenta zostanie zamknięty.", stepPwd: "Folder zweryfikowany", stepCli: "Agent uruchomiony", stepLogin: "Logowanie subskrypcji", stepTask: "Zadanie przekazane", stepFree: "Trwa rozwój", noReload: "Nie przeładowuj strony. Przy przypadkowym przeładowaniu sesja połączy się ponownie z historią.", notInstalled: "niezainstalowany", notLoggedIn: "brak logowania", busy: "zajęty", pwdFail: "Weryfikacja folderu nie powiodła się — terminal nie jest w pokoju projektu.", test: "Test", testRunning: "Testowanie…", testOk: "Agent odpowiedział — wszystko działa. Możesz rozpocząć rozwój.", testFail: "Agent nie odpowiedział na test. Odzyskiwanie: naciśnij «Zakończ», otwórz konsolę ponownie i spróbuj jeszcze raz.", startDev: "Rozpocznij rozwój", devWaitAck: "Zadanie wysłane. Przycisk pozostaje, dopóki agent nie potwierdzi startu.", devHanded: "Agent potwierdził — rozwój trwa." },
+  tr: { workspace: "Çalışma klasörü", sessionNew: "yeni oturum", sessionReattached: "oturum geri yüklendi", provider: "Kodlama ajanı", model: "Model", startAgent: "Ajanı başlat", agentRunning: "Ajan çalışıyor", paste: "Yapıştır", pasteTitle: "Terminale yapıştır (kodlar, yanıtlar)", pasteSend: "Gönder", copyOut: "Çıktıyı kopyala", copied: "Kopyalandı.", exit: "Çıkış", exitConfirm: "Oturum kalıcı olarak sonlandırılsın mı? Ajanın terminali kapatılacak.", stepPwd: "Klasör doğrulandı", stepCli: "Ajan başlatıldı", stepLogin: "Abonelik girişi", stepTask: "Görev iletildi", stepFree: "Geliştirme sürüyor", noReload: "Sayfayı yeniden yüklemeyin. Yanlışlıkla yeniden yüklenirse oturum geçmişiyle birlikte yeniden bağlanır.", notInstalled: "kurulu değil", notLoggedIn: "abonelik girişi yok", busy: "meşgul", pwdFail: "Klasör doğrulaması başarısız — terminal proje odasında değil.", test: "Test", testRunning: "Test ediliyor…", testOk: "Ajan yanıt verdi — her şey çalışıyor. Geliştirmeyi başlatabilirsiniz.", testFail: "Ajan teste yanıt vermedi. Kurtarma: «Çıkış»a basın, konsolu yeniden açın ve tekrar deneyin.", startDev: "Geliştirmeyi başlat", devWaitAck: "Görev gönderildi. Ajan başlangıcı onaylayana kadar düğme kalır.", devHanded: "Ajan onayladı — geliştirme sürüyor." },
+  nl: { workspace: "Werkmap", sessionNew: "nieuwe sessie", sessionReattached: "sessie hersteld", provider: "Coding-agent", model: "Model", startAgent: "Agent starten", agentRunning: "Agent actief", paste: "Plakken", pasteTitle: "In de terminal plakken (codes, antwoorden)", pasteSend: "Versturen", copyOut: "Uitvoer kopiëren", copied: "Gekopieerd.", exit: "Afsluiten", exitConfirm: "Sessie definitief beëindigen? De terminal van de agent wordt gesloten.", stepPwd: "Werkmap geverifieerd", stepCli: "Agent gestart", stepLogin: "Abonnement-login", stepTask: "Taak overgedragen", stepFree: "Ontwikkeling bezig", noReload: "Herlaad de pagina niet. Bij een onbedoelde herlaad verbindt de sessie opnieuw met de historie.", notInstalled: "niet geïnstalleerd", notLoggedIn: "geen login", busy: "bezet", pwdFail: "De werkmapcontrole is mislukt — de terminal is niet in de projectkamer.", test: "Test", testRunning: "Testen…", testOk: "De agent reageerde — alles werkt. Je kunt de ontwikkeling starten.", testFail: "De agent reageerde niet op de test. Herstel: druk op «Afsluiten», open de console opnieuw en probeer het nogmaals.", startDev: "Ontwikkeling starten", devWaitAck: "Taak verzonden. De knop blijft totdat de agent de start bevestigt.", devHanded: "De agent bevestigde — de ontwikkeling loopt." },
 };
 
 function StepDot({ state }: { state: StepState }) {
@@ -101,6 +125,12 @@ export function DevConsole({
   const [reattached, setReattached] = useState(false);
   const [steps, setSteps] = useState<Record<Step, StepState>>({ pwd: "doing", cli: "todo", login: "todo", task: "todo", free: "todo" });
   const [agentStarted, setAgentStarted] = useState(false);
+  // THE DELIVERY LADDER (263.1, owner's design): Test → green toast → Start development → DEV marker.
+  const [phase, setPhase] = useState<Phase>("idle");
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
+  const testTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const failToastId = useRef<string | number | null>(null);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const [exitArm, setExitArm] = useState(false);
@@ -123,7 +153,6 @@ export function DevConsole({
   const stepsRef = useRef(steps);
   stepsRef.current = steps;
   const startedRef = useRef(false);
-  const quietTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const setStep = useCallback((k: Step, v: StepState) => setSteps((s) => ({ ...s, [k]: v })), []);
 
@@ -154,11 +183,16 @@ export function DevConsole({
     const s = stepsRef.current;
 
     if (chunk.includes("[session reattached]")) {
+      // A reattach proves the CLI session survived, NOT that the task was ever delivered (the owner's
+      // live failure: an auth flow ate the old silence window and the task was lost with no button
+      // left). So resume in "tested" — "Start development" is on screen again, re-clickable. If the
+      // 200KB replay contains the DEV marker, the detector below flips us to "developing" honestly.
       setReattached(true);
-      setSteps({ pwd: "done", cli: "done", login: "done", task: "done", free: "doing" });
+      setSteps({ pwd: "done", cli: "done", login: "done", task: "todo", free: "todo" });
       setAgentStarted(true);
       startedRef.current = true;
-      return;
+      if (phaseRef.current === "idle") setPhase("tested");
+      // no return — the replayed chunk must still reach the marker scan below
     }
     // Step 1 — pwd verification: our own probe answer contains the room path on its own line.
     if (s.pwd === "doing" && outRef.current.includes(roomPath)) {
@@ -196,25 +230,29 @@ export function DevConsole({
         }
       }, 300);
     }
-    // Step 4 — after the CLI starts, a quiet period (no output ~4s) means the prompt is ready: hand the
-    // task. NEVER while the auth modal is open (263.1 fix): during a browser sign-in the terminal is
-    // quiet for far longer than 4s, and the old code typed the task INTO the login prompt.
-    if (startedRef.current && s.task === "todo") {
-      if (quietTimer.current) clearTimeout(quietTimer.current);
-      quietTimer.current = setTimeout(() => {
-        const cur = stepsRef.current;
-        if (cur.task !== "todo") return;
-        if (activeAuthRef.current) return; // auth in progress — the next output re-arms this timer
-        setStep("login", "done");
-        setStep("task", "doing");
-        // Send the task AND submit it (owner 2026-07-19, finding 13): a trailing \r presses Enter in the
-        // CLI prompt — the owner no longer has to focus the terminal and hit Enter himself.
-        termRef.current?.sendStdin(roomTask.replace(/\r?\n/g, "\n") + "\n");
-        setTimeout(() => termRef.current?.sendStdin("\r"), 250);
-        setTimeout(() => { setStep("task", "done"); setStep("free", "doing"); }, 1500);
-      }, 4000);
+    // Step 4 — THE MARKER HANDSHAKE (263.1, replaces the old "4s of silence" auto-delivery which lost
+    // the task whenever an auth flow ate the quiet window). We authored the prompts, so we demand a
+    // printed ack: the agent's own output is the only proof. The scan runs on the de-spaced clean
+    // buffer (PTY line-wraps reassembled); the prompts carry the marker SPLIT, so the echo never matches.
+    const despaced = rawBufRef.current.replace(/ /g, "");
+    if (phaseRef.current === "testing" && despaced.includes(TEST_MARKER)) {
+      if (testTimer.current) clearTimeout(testTimer.current);
+      if (failToastId.current != null) { toast.dismiss(failToastId.current); failToastId.current = null; }
+      rawBufRef.current = "";
+      setPhase("tested");
+      setStep("login", "done");
+      toast.success(T.testOk);
+    } else if ((phaseRef.current === "handing" || phaseRef.current === "tested") && despaced.includes(DEV_MARKER)) {
+      // Development has REALLY begun — only now do the buttons leave the screen. ("tested" is accepted
+      // too: a reattach replay may carry the marker before any click this session.)
+      rawBufRef.current = "";
+      setPhase("developing");
+      setStep("login", "done");
+      setStep("task", "done");
+      setStep("free", "doing");
+      toast.success(T.devHanded);
     }
-  }, [roomPath, roomTask, setStep]);
+  }, [roomPath, setStep, T.testOk, T.devHanded]);
 
   // The pwd probe once the shell settles (fresh sessions only).
   useEffect(() => {
@@ -233,6 +271,41 @@ export function DevConsole({
     setStep("login", "doing");
     termRef.current?.sendStdin(p.cli(model));
   }, [provider, model, setStep, T.pwdFail]);
+
+  // STAGE 1 — the TEST button (findings 12 + owner's two-stage design): send the canonical mini-prompt,
+  // wait for the printed ack marker. Success = green toast + the button swaps to "Start development".
+  // No ack within the window = a RED persistent toast whose primary advice is the clean cycle ("Exit,
+  // re-enter") — the causes of a broken session are unpredictable, a fresh start covers them all.
+  const armTestTimeout = useCallback(() => {
+    if (testTimer.current) clearTimeout(testTimer.current);
+    testTimer.current = setTimeout(() => {
+      if (phaseRef.current !== "testing") return;
+      // An open auth modal legitimately stalls the terminal — keep waiting, don't fail the test.
+      if (activeAuthRef.current) { armTestTimeout(); return; }
+      setPhase("idle");
+      failToastId.current = toast.error(T.testFail, { duration: Infinity });
+    }, 60_000);
+  }, [T.testFail]);
+
+  const runTest = useCallback(() => {
+    if (failToastId.current != null) { toast.dismiss(failToastId.current); failToastId.current = null; }
+    setPhase("testing");
+    // Send AND submit (finding 13): the trailing \r presses Enter in the CLI prompt.
+    termRef.current?.sendStdin(TEST_PROMPT + "\n");
+    setTimeout(() => termRef.current?.sendStdin("\r"), 250);
+    armTestTimeout();
+  }, [armTestTimeout]);
+
+  // STAGE 2 — START DEVELOPMENT: hand the room task prefixed with the marker demand. The button does
+  // NOT leave the screen on click — only the printed DEV marker (the handshake) hides it, so a delivery
+  // swallowed by an auth prompt can simply be retried.
+  const startDevelopment = useCallback(() => {
+    setPhase("handing");
+    setStep("task", "doing");
+    toast.message(T.devWaitAck);
+    termRef.current?.sendStdin(devPrompt(roomTask).replace(/\r?\n/g, "\n") + "\n");
+    setTimeout(() => termRef.current?.sendStdin("\r"), 250);
+  }, [roomTask, setStep, T.devWaitAck]);
 
   const copyWorkspace = () => { void navigator.clipboard.writeText(roomPath); toast.success(T.copied); };
   // "Copy output" → the transcript MODAL (owner 2026-07-19): show the tail, let the owner select by hand.
@@ -257,6 +330,8 @@ export function DevConsole({
     setStep("login", "done");
   };
   const doExit = () => {
+    if (failToastId.current != null) { toast.dismiss(failToastId.current); failToastId.current = null; }
+    if (testTimer.current) clearTimeout(testTimer.current);
     termRef.current?.sendExit();
     setExitArm(false);
     onExited?.();
@@ -337,6 +412,20 @@ export function DevConsole({
         />
       </div>
       <div className="flex flex-wrap items-center gap-2">
+        {/* THE DELIVERY LADDER (263.1): Test first; a green toast swaps it for Start development, which
+            stays (re-clickable) until the agent prints the DEV marker — proof development really began. */}
+        {agentStarted && (phase === "idle" || phase === "testing") && (
+          <Button size="sm" onClick={runTest} disabled={phase === "testing" || !!activeAuth} data-dev-console-test="1">
+            {phase === "testing" ? <Loader2 className="size-3.5 animate-spin" /> : <FlaskConical className="size-3.5" />}
+            {phase === "testing" ? T.testRunning : T.test}
+          </Button>
+        )}
+        {agentStarted && (phase === "tested" || phase === "handing") && (
+          <Button size="sm" onClick={startDevelopment} disabled={!!activeAuth} data-dev-console-startdev="1">
+            {phase === "handing" ? <Loader2 className="size-3.5 animate-spin" /> : <Play className="size-3.5" />}
+            {T.startDev}
+          </Button>
+        )}
         <Button size="sm" variant="outline" onClick={() => setPasteOpen(true)}>
           <ClipboardPaste className="size-3.5" /> {T.paste}
         </Button>

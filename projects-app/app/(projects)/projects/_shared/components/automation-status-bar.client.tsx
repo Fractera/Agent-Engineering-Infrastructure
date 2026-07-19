@@ -74,36 +74,44 @@ export function AutomationStatusBar({
   const lang = useUiLang();
   const L = categoryHubStrings(lang);
   return (
-    // Below XL the bar does not fit one line (owner 2026-07-19, 263.1): the badges+buttons move to their
-    // OWN row ABOVE the breadcrumb, horizontally scrollable with the scrollbar hidden. XL+ keeps the
-    // classic single row (breadcrumb left, badges right) via the order swap.
-    <div className="flex flex-col gap-1 py-1 xl:flex-row xl:items-center xl:justify-between xl:gap-3">
-      <span className="order-2 flex items-center gap-1.5 text-sm text-muted-foreground xl:order-1">
-        <Link href="/projects" className="hover:underline">{L.breadcrumb}</Link>
-        <span aria-hidden>/</span>
-        <Link href={`/projects/${category}`} className="hover:underline">{categoryLabel}</Link>
-      </span>
-      <span className="order-1 flex items-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden xl:order-2 xl:overflow-visible">
-        {/* Type badge + state pill (step 224 §1.5 / L6) — left of the burger. "In development" (indigo)
-            while any node is still a draft: the automation is auto-stopped until every node is built. */}
-        {automation && <WaveReopenButton automation={automation} />}
-        {/* Step 248 — declared required keys with no value yet: an amber badge + a once-per-load funnel
-            pointing at Settings (never over the problems modal). */}
-        {automation && <MissingKeysFunnel automation={automation} channels={channels} />}
-        {automation && <AutomationStatePill automation={automation} type={type ?? "stream"} />}
-        {automation && <AutomationModeIndicators automation={automation} type={type} />}
-        <AutomationMenu
-          modelEnvKey={modelEnvKey}
-          defaultModel={defaultModel}
-          channels={channels}
-          probes={probes}
-          automation={automation}
-          entitiesSeed={entitiesSeed}
-          type={type}
-        />
-        {/* Step 249 — the owner's free comment ("I know what I dislike, not where to fix it"): saved as the
-            `general` entity's brief, then handed over through the same two-button dialog. */}
-        {automation && <SparklesComment automation={automation} />}
+    // The owner's layout (263.1 finding 6, the SAME on every screen size — no XL branching):
+    //   row 1 — ONLY the badges (WaveReopen, MissingKeys, StatePill, ModeIndicators), horizontally
+    //           scrollable with the scrollbar hidden;
+    //   row 2 — the breadcrumb on the left, the navigation buttons (burger menu + Sparkle) on the right.
+    // (The previous variant put the menu+Sparkle in the badge row — wrong, per the owner.)
+    <div className="flex flex-col gap-1 py-1">
+      {automation && (
+        <span className="flex items-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {/* Type badge + state pill (step 224 §1.5 / L6). "In development" (indigo) while any node is
+              still a draft: the automation is auto-stopped until every node is built. */}
+          <WaveReopenButton automation={automation} />
+          {/* Step 248 — declared required keys with no value yet: an amber badge + a once-per-load funnel
+              pointing at Settings (never over the problems modal). */}
+          <MissingKeysFunnel automation={automation} channels={channels} />
+          <AutomationStatePill automation={automation} type={type ?? "stream"} />
+          <AutomationModeIndicators automation={automation} type={type} />
+        </span>
+      )}
+      <span className="flex items-center justify-between gap-3">
+        <span className="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
+          <Link href="/projects" className="hover:underline">{L.breadcrumb}</Link>
+          <span aria-hidden>/</span>
+          <Link href={`/projects/${category}`} className="truncate hover:underline">{categoryLabel}</Link>
+        </span>
+        <span className="flex shrink-0 items-center gap-2">
+          <AutomationMenu
+            modelEnvKey={modelEnvKey}
+            defaultModel={defaultModel}
+            channels={channels}
+            probes={probes}
+            automation={automation}
+            entitiesSeed={entitiesSeed}
+            type={type}
+          />
+          {/* Step 249 — the owner's free comment ("I know what I dislike, not where to fix it"): saved as
+              the `general` entity's brief, then handed over through the same two-button dialog. */}
+          {automation && <SparklesComment automation={automation} />}
+        </span>
       </span>
     </div>
   );
