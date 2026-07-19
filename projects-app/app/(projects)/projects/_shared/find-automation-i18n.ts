@@ -14,6 +14,12 @@ export type FindStrings = {
   noResults: string;        // catalog returned nothing
   resultsHeading: string;   // "{n}"
   openAutomation: string;   // the per-result "open" affordance label (aria)
+  refreshButton: string;    // catalog backfill (owner 2026-07-19): index the existing automations' "How it works"
+  refreshing: string;
+  refreshHelp: string;      // the "?" hover text beside the refresh button — why/when to run it
+  refreshDone: string;      // toast: "{n}" indexed, "{m}" skipped (no description yet)
+  refreshFailed: string;
+  newSearchHint: string;    // shown under the results — the search form is gone; reopen for a fresh search
 };
 
 export const FIND_I18N: Record<string, FindStrings> = {
@@ -30,6 +36,12 @@ export const FIND_I18N: Record<string, FindStrings> = {
     noResults: "Nothing matched yet. Try describing it differently, or build a new automation.",
     resultsHeading: "Found {n}",
     openAutomation: "Open automation",
+    refreshButton: "Update search database",
+    refreshing: "Updating…",
+    refreshHelp: "Run this on first use — it adds the existing automations to the search database. Automations without a generated description are skipped until it is generated.",
+    refreshDone: "Search database updated: {n} added, {m} without a description yet",
+    refreshFailed: "Could not update the search database. Please try again.",
+    newSearchHint: "To run a new search, close this window and open it again.",
   },
   ru: {
     cardTitle: "Найти автоматизацию",
@@ -44,6 +56,12 @@ export const FIND_I18N: Record<string, FindStrings> = {
     noResults: "Пока ничего не нашлось. Попробуйте описать иначе или создайте новую автоматизацию.",
     resultsHeading: "Найдено: {n}",
     openAutomation: "Открыть автоматизацию",
+    refreshButton: "Обновить базу поиска",
+    refreshing: "Обновляю…",
+    refreshHelp: "Выполните это при первом использовании — информация о существующих автоматизациях добавится в базу данных поиска. Автоматизации без сгенерированного описания пропускаются, пока оно не появится.",
+    refreshDone: "База поиска обновлена: добавлено {n}, без описания — {m}",
+    refreshFailed: "Не удалось обновить базу поиска. Попробуйте ещё раз.",
+    newSearchHint: "Для нового поиска закройте окно и откройте его снова.",
   },
   es: {
     cardTitle: "Buscar una automatización",
@@ -58,6 +76,12 @@ export const FIND_I18N: Record<string, FindStrings> = {
     noResults: "Nada coincidió aún. Prueba a describirlo de otro modo o crea una nueva automatización.",
     resultsHeading: "Encontradas {n}",
     openAutomation: "Abrir automatización",
+    refreshButton: "Actualizar la base de búsqueda",
+    refreshing: "Actualizando…",
+    refreshHelp: "Ejecútalo la primera vez que uses la búsqueda: añade las automatizaciones existentes a la base de datos de búsqueda. Las que aún no tienen descripción generada se omiten hasta que exista.",
+    refreshDone: "Base de búsqueda actualizada: {n} añadidas, {m} aún sin descripción",
+    refreshFailed: "No se pudo actualizar la base de búsqueda. Inténtalo de nuevo.",
+    newSearchHint: "Para una nueva búsqueda, cierra esta ventana y vuelve a abrirla.",
   },
   fr: {
     cardTitle: "Trouver une automatisation",
@@ -72,6 +96,12 @@ export const FIND_I18N: Record<string, FindStrings> = {
     noResults: "Rien ne correspond encore. Décrivez-le autrement ou créez une nouvelle automatisation.",
     resultsHeading: "{n} trouvée(s)",
     openAutomation: "Ouvrir l'automatisation",
+    refreshButton: "Mettre à jour la base de recherche",
+    refreshing: "Mise à jour…",
+    refreshHelp: "Exécutez ceci à la première utilisation — les automatisations existantes seront ajoutées à la base de données de recherche. Celles sans description générée sont ignorées jusqu'à ce qu'elle existe.",
+    refreshDone: "Base de recherche mise à jour : {n} ajoutées, {m} encore sans description",
+    refreshFailed: "Impossible de mettre à jour la base de recherche. Réessayez.",
+    newSearchHint: "Pour une nouvelle recherche, fermez cette fenêtre et rouvrez-la.",
   },
   it: {
     cardTitle: "Trova un'automazione",
@@ -86,6 +116,12 @@ export const FIND_I18N: Record<string, FindStrings> = {
     noResults: "Ancora nessuna corrispondenza. Prova a descriverlo diversamente o crea una nuova automazione.",
     resultsHeading: "Trovate {n}",
     openAutomation: "Apri automazione",
+    refreshButton: "Aggiorna la base di ricerca",
+    refreshing: "Aggiornamento…",
+    refreshHelp: "Eseguilo al primo utilizzo — le automazioni esistenti verranno aggiunte al database di ricerca. Quelle senza descrizione generata vengono saltate finché non esiste.",
+    refreshDone: "Base di ricerca aggiornata: {n} aggiunte, {m} ancora senza descrizione",
+    refreshFailed: "Impossibile aggiornare la base di ricerca. Riprova.",
+    newSearchHint: "Per una nuova ricerca, chiudi questa finestra e riaprila.",
   },
   de: {
     cardTitle: "Automatisierung finden",
@@ -100,6 +136,12 @@ export const FIND_I18N: Record<string, FindStrings> = {
     noResults: "Noch nichts gefunden. Beschreiben Sie es anders oder erstellen Sie eine neue Automatisierung.",
     resultsHeading: "{n} gefunden",
     openAutomation: "Automatisierung öffnen",
+    refreshButton: "Suchdatenbank aktualisieren",
+    refreshing: "Aktualisiere…",
+    refreshHelp: "Führen Sie dies bei der ersten Nutzung aus — die vorhandenen Automatisierungen werden der Suchdatenbank hinzugefügt. Automatisierungen ohne generierte Beschreibung werden übersprungen, bis sie existiert.",
+    refreshDone: "Suchdatenbank aktualisiert: {n} hinzugefügt, {m} noch ohne Beschreibung",
+    refreshFailed: "Die Suchdatenbank konnte nicht aktualisiert werden. Bitte erneut versuchen.",
+    newSearchHint: "Für eine neue Suche schließen Sie dieses Fenster und öffnen es erneut.",
   },
   pt: {
     cardTitle: "Encontrar uma automação",
@@ -114,6 +156,12 @@ export const FIND_I18N: Record<string, FindStrings> = {
     noResults: "Ainda nada correspondeu. Tente descrever de outra forma ou crie uma nova automação.",
     resultsHeading: "Encontradas {n}",
     openAutomation: "Abrir automação",
+    refreshButton: "Atualizar a base de pesquisa",
+    refreshing: "A atualizar…",
+    refreshHelp: "Execute isto na primeira utilização — as automações existentes serão adicionadas à base de dados de pesquisa. As que ainda não têm descrição gerada são ignoradas até que exista.",
+    refreshDone: "Base de pesquisa atualizada: {n} adicionadas, {m} ainda sem descrição",
+    refreshFailed: "Não foi possível atualizar a base de pesquisa. Tente novamente.",
+    newSearchHint: "Para uma nova pesquisa, feche esta janela e abra-a novamente.",
   },
   pl: {
     cardTitle: "Znajdź automatyzację",
@@ -128,6 +176,12 @@ export const FIND_I18N: Record<string, FindStrings> = {
     noResults: "Na razie nic nie pasuje. Opisz to inaczej lub utwórz nową automatyzację.",
     resultsHeading: "Znaleziono {n}",
     openAutomation: "Otwórz automatyzację",
+    refreshButton: "Zaktualizuj bazę wyszukiwania",
+    refreshing: "Aktualizuję…",
+    refreshHelp: "Wykonaj to przy pierwszym użyciu — istniejące automatyzacje zostaną dodane do bazy danych wyszukiwania. Automatyzacje bez wygenerowanego opisu są pomijane, dopóki nie powstanie.",
+    refreshDone: "Baza wyszukiwania zaktualizowana: dodano {n}, {m} jeszcze bez opisu",
+    refreshFailed: "Nie udało się zaktualizować bazy wyszukiwania. Spróbuj ponownie.",
+    newSearchHint: "Aby wyszukać ponownie, zamknij to okno i otwórz je jeszcze raz.",
   },
   tr: {
     cardTitle: "Otomasyon bul",
@@ -142,6 +196,12 @@ export const FIND_I18N: Record<string, FindStrings> = {
     noResults: "Henüz eşleşme yok. Farklı anlatmayı deneyin veya yeni bir otomasyon oluşturun.",
     resultsHeading: "{n} bulundu",
     openAutomation: "Otomasyonu aç",
+    refreshButton: "Arama veritabanını güncelle",
+    refreshing: "Güncelleniyor…",
+    refreshHelp: "Aramayı ilk kez kullanırken bunu çalıştır — mevcut otomasyonlar arama veritabanına eklenir. Açıklaması henüz oluşturulmamış otomasyonlar, oluşturulana kadar atlanır.",
+    refreshDone: "Arama veritabanı güncellendi: {n} eklendi, {m} henüz açıklamasız",
+    refreshFailed: "Arama veritabanı güncellenemedi. Lütfen tekrar deneyin.",
+    newSearchHint: "Yeni bir arama için bu pencereyi kapatıp yeniden açın.",
   },
   nl: {
     cardTitle: "Automatisering zoeken",
@@ -156,6 +216,12 @@ export const FIND_I18N: Record<string, FindStrings> = {
     noResults: "Nog niets gevonden. Beschrijf het anders of maak een nieuwe automatisering.",
     resultsHeading: "{n} gevonden",
     openAutomation: "Automatisering openen",
+    refreshButton: "Zoekdatabase bijwerken",
+    refreshing: "Bijwerken…",
+    refreshHelp: "Voer dit uit bij het eerste gebruik — de bestaande automatiseringen worden aan de zoekdatabase toegevoegd. Automatiseringen zonder gegenereerde beschrijving worden overgeslagen totdat die bestaat.",
+    refreshDone: "Zoekdatabase bijgewerkt: {n} toegevoegd, {m} nog zonder beschrijving",
+    refreshFailed: "Kon de zoekdatabase niet bijwerken. Probeer het opnieuw.",
+    newSearchHint: "Sluit dit venster en open het opnieuw voor een nieuwe zoekopdracht.",
   },
 };
 
