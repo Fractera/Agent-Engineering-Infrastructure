@@ -37,7 +37,7 @@ const ALLOWED = [
 ];
 
 export type ApplyResult =
-  | { ok: true; applied: string[]; recompiled: string[]; ignoredDeletions: string[] }
+  | { ok: true; applied: string[]; recompiled: string[]; ignoredDeletions: string[]; renamed?: string[]; syncWarning?: string }
   | { ok: false; error: string; violations?: string[] };
 
 async function walk(dir: string): Promise<string[]> {
@@ -187,10 +187,18 @@ export async function applyProjection(automation: string): Promise<ApplyResult> 
     const res = await compileNode(proj.projectDir, slug);
     if (res.ok) recompiled.push(slug);
   }
+  let renamed: string[] = [];
+  let syncWarning: string | undefined;
   if (touchedSlugs.length) {
     await regenerateDiagram(proj.projectDir, await liveSlugsInOrder(proj.automation)).catch(() => { /* diagram regen is best-effort here */ });
     // The canvas reads DB rows, not meta.ts — an applied rename must reach it (the two-truths seam).
-    await syncNodeNamesFromMeta(proj.automation, proj.projectDir).catch(() => { /* best-effort */ });
+    // NOT silent: the sync's outcome is part of the apply answer, so a failure here is visible in the
+    // agent's transcript instead of quietly reproducing the stale-canvas bug it exists to kill.
+    try {
+      renamed = await syncNodeNamesFromMeta(proj.automation, proj.projectDir);
+    } catch (e) {
+      syncWarning = `canvas name sync failed (${e}) — the canvas may show stale node names until the next successful apply`;
+    }
   }
-  return { ok: true, applied: changed, recompiled, ignoredDeletions };
+  return { ok: true, applied: changed, recompiled, ignoredDeletions, renamed, ...(syncWarning ? { syncWarning } : {}) };
 }
