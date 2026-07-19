@@ -114,6 +114,21 @@ export async function applyProjection(automation: string): Promise<ApplyResult> 
       violations.push(`${rel}: an existing node's ioType is FOR LIFE ("${was.ioType}" → "${now.ioType}" is forbidden). A new channel enters through a NEW input node that joins the existing midstream (WIRING-RULES law 5) — it never repurposes another surface's node.`);
     }
   }
+  // GATE A3 — INPUT IS PUSHED, NEVER POLLED (263.1, owner's law after the Opus cron-getUpdates invention):
+  // the platform listener owns getUpdates exclusively — one bot token, one consumer; an in-automation
+  // poll EATS the listener's messages and breaks the channel. Any changed file that introduces a
+  // getUpdates call is refused whole, with the lawful path spelled out.
+  for (const rel of changed) {
+    const txt = await readFile(join(room, rel), "utf8").catch(() => "");
+    if (/getUpdates/.test(txt) && !/getUpdates/.test(await readFile(join(proj.projectDir, rel), "utf8").catch(() => ""))) {
+      violations.push(
+        `${rel}: polls for input (getUpdates) — forbidden. Incoming events are PUSHED by the platform: ` +
+        `declare the bot token's env key in _data/channels.ts and register the bot via POST ` +
+        `/api/project-config/register-bot {"category","project","token"}; every message then arrives at ` +
+        `api/run as the telegram envelope. cron.json is for scheduled OUTPUT work and external DATA APIs only.`,
+      );
+    }
+  }
   if (violations.length) return { ok: false, error: "the diff was refused — fix the violations and re-apply (nothing was changed)", violations };
 
   // GATE B — changed nodes must compile IN THE ROOM before anything lands.

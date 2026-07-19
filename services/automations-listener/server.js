@@ -66,29 +66,61 @@ function loadRegistry() {
 // ── Dispatch: FORWARD the message to the owning automation's /run with the message as input (a JSON
 // string envelope; the automation's reception step reads it). No matching — the bot already selected
 // the automation. The automation replies via its own bot; we do not.
-async function dispatch(entry, message) {
-  const url = `${APP_URL}/api/projects/${entry.category}/${entry.project}/run`
+
+// THE AGENT GATE (263.1): a ROUTE-V3 automation's run door authorizes by cookie OR the per-server
+// agent-gate secret — `x-agent-identity` is NOT accepted, so in secure mode the forward got 403.
+// Same fix as fractera-cron: present the secret, read fresh per call, omit when absent (IP mode).
+const PROJECTS_DIR_FOR_GATE = env('PROJECTS_DIR') ?? '/opt/fractera/projects-app'
+function agentGateHeader() {
   try {
+    const s = readFileSync(resolve(PROJECTS_DIR_FOR_GATE, 'project-config', 'agent-gate-secret'), 'utf8').trim()
+    return s ? { 'x-fractera-agent-gate': s } : {}
+  } catch { return {} }
+}
+
+// ROUTE-V3 (263.1): a v3 automation's run door lives IN THE ROUTE — /projects/<cat>/<proj>/api/run —
+// while pre-v3 automations (telegram-notes) keep the platform path /api/projects/<cat>/<proj>/run.
+// Try the v3 door first; on 404 fall back to the legacy path. The winning URL is remembered per
+// automation so the extra probe happens once, and forgotten on failure so a migration re-probes.
+const runUrlCache = new Map()
+async function postRun(entry, payload) {
+  const key = `${entry.category}/${entry.project}`
+  const v3 = `${APP_URL}/projects/${entry.category}/${entry.project}/api/run`
+  const legacy = `${APP_URL}/api/projects/${entry.category}/${entry.project}/run`
+  const candidates = runUrlCache.has(key) ? [runUrlCache.get(key)] : [v3, legacy]
+  for (const url of candidates) {
     const r = await fetch(url, {
       method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-agent-identity': 'fractera-automations' },
-      body: JSON.stringify({ input: JSON.stringify({
-        source: 'telegram', chatId: message.chat?.id, messageId: message.message_id,
-        text: message.text ?? message.caption ?? '', date: message.date,
-        // Photo (step 205 §E, receipt digitization): forward the largest PhotoSize's file_id so the
-        // automation can fetch + digitize it. Telegram sends the array smallest→largest.
-        photoFileId: Array.isArray(message.photo) && message.photo.length
-          ? message.photo[message.photo.length - 1].file_id : undefined,
-        // Location (step 207.20, geo-mark registry): a shared location / venue carries coordinates —
-        // the ONLY geo source (Bot API strips EXIF/GPS from photos). venue.title = the place name.
-        location: message.location
-          ? { lat: message.location.latitude, lng: message.location.longitude,
-              title: message.venue?.title ?? '' }
-          : undefined,
-      }) }),
+      headers: { 'content-type': 'application/json', 'x-agent-identity': 'fractera-automations', ...agentGateHeader() },
+      body: JSON.stringify(payload),
       signal: AbortSignal.timeout(30000),
     })
-    console.log(`[auto] ${entry.category}/${entry.project} <- msg ${message.message_id}: /run HTTP ${r.status}`)
+    if (r.status === 404 && candidates.length > 1) continue
+    if (r.ok) runUrlCache.set(key, url)
+    else runUrlCache.delete(key)
+    return { r, url }
+  }
+  runUrlCache.delete(key)
+  return { r: { status: 404, ok: false }, url: legacy }
+}
+
+async function dispatch(entry, message) {
+  try {
+    const { r, url } = await postRun(entry, { input: JSON.stringify({
+      source: 'telegram', chatId: message.chat?.id, messageId: message.message_id,
+      text: message.text ?? message.caption ?? '', date: message.date,
+      // Photo (step 205 §E, receipt digitization): forward the largest PhotoSize's file_id so the
+      // automation can fetch + digitize it. Telegram sends the array smallest→largest.
+      photoFileId: Array.isArray(message.photo) && message.photo.length
+        ? message.photo[message.photo.length - 1].file_id : undefined,
+      // Location (step 207.20, geo-mark registry): a shared location / venue carries coordinates —
+      // the ONLY geo source (Bot API strips EXIF/GPS from photos). venue.title = the place name.
+      location: message.location
+        ? { lat: message.location.latitude, lng: message.location.longitude,
+            title: message.venue?.title ?? '' }
+        : undefined,
+    }) })
+    console.log(`[auto] ${entry.category}/${entry.project} <- msg ${message.message_id}: ${url} HTTP ${r.status}`)
   } catch (e) {
     console.error(`[auto] dispatch to ${entry.category}/${entry.project} failed: ${e.message ?? e}`)
   }
@@ -97,18 +129,12 @@ async function dispatch(entry, message) {
 // ── Callback dispatch (step 205 §D): an inline-button tap. Forward it as a callback envelope so the
 // automation can resolve the pending message + forced action and act on it (it also acks the tap).
 async function dispatchCallback(entry, cb) {
-  const url = `${APP_URL}/api/projects/${entry.category}/${entry.project}/run`
   try {
-    const r = await fetch(url, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-agent-identity': 'fractera-automations' },
-      body: JSON.stringify({ input: JSON.stringify({
-        source: 'telegram', kind: 'callback', data: cb.data,
-        chatId: cb.message?.chat?.id, callbackQueryId: cb.id, messageId: cb.message?.message_id,
-      }) }),
-      signal: AbortSignal.timeout(30000),
-    })
-    console.log(`[auto] ${entry.category}/${entry.project} <- callback '${cb.data}': /run HTTP ${r.status}`)
+    const { r, url } = await postRun(entry, { input: JSON.stringify({
+      source: 'telegram', kind: 'callback', data: cb.data,
+      chatId: cb.message?.chat?.id, callbackQueryId: cb.id, messageId: cb.message?.message_id,
+    }) })
+    console.log(`[auto] ${entry.category}/${entry.project} <- callback '${cb.data}': ${url} HTTP ${r.status}`)
   } catch (e) {
     console.error(`[auto] callback dispatch to ${entry.category}/${entry.project} failed: ${e.message ?? e}`)
   }

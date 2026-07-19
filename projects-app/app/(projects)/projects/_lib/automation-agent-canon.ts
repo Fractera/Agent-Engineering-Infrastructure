@@ -122,6 +122,27 @@ BASH OUTPUT LOST — THE REBUILT-ROOM ANTIPATTERN (a known platform trap; recogn
   automation: if you learn another session is working here, stop and say so.`
     : "";
 
+  // 263.1, owner's hard law after the Opus cron-getUpdates invention on medicine/v2: incoming events are
+  // HOOK-DRIVEN by the platform — an automation never polls for its own input. The substrate listener
+  // (step 205) holds one instant long-poll per registered bot and PUSHES every message into the run door;
+  // a second getUpdates consumer on the same token EATS messages (Telegram hands each update to exactly
+  // one caller), so in-automation polling is not merely slow — it breaks the channel.
+  const inputEvents = `
+
+INPUT EVENTS ARE PUSHED — NEVER POLL FOR YOUR OWN INPUT (hard architecture law):
+- Every incoming event (a Telegram message, any input-channel signal) reaches this automation as a PUSH
+  into its run door (api/run): the platform's listener receives it and calls the door instantly, as a
+  JSON-string envelope in "input" (telegram: { source:"telegram", chatId, messageId, text, date,
+  photoFileId?, location? }). Your input node's job is to CONSUME that envelope — parse it in the node's
+  first function and normalise into the midstream contract.
+- To connect a Telegram bot: declare the token's env key in _data/channels.ts (its Settings field), and
+  register the bot with POST /api/project-config/register-bot {"category","project","token"} — the
+  platform starts pushing that bot's messages into api/run with no restart.
+- FORBIDDEN: calling getUpdates anywhere, scheduling an input-polling job in cron.json, or any other
+  self-made polling for input. Two getUpdates consumers on one token eat each other's messages — your
+  poll BREAKS the platform listener. cron.json exists ONLY for scheduled OUTPUT work (reports, digests)
+  and pulls of external DATA APIs — never for input channels.`;
+
   const secrets = `
 
 SECRETS (hard rule): a token/key pasted in a task is configuration, NEVER code. Do not hardcode it.
@@ -137,5 +158,5 @@ warning marks an object blocked (leave its brief in place, continue with the res
 subject and report in the OWNER'S language (the language of the briefs). This automation's own model is
 env ${t.modelEnvKey}. When every staged object is closed or blocked${files ? ", verify with the validate call" : ""}.`;
 
-  return whereYouAre + territory + nodeContract + platformApi + bashLoss + secrets + closing + "\n";
+  return whereYouAre + territory + nodeContract + platformApi + inputEvents + bashLoss + secrets + closing + "\n";
 }

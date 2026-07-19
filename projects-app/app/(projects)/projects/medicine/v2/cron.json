@@ -1,0 +1,17 @@
+{
+  "jobs": [
+    {
+      "id": "v2-cron-tick",
+      "title": "v2: scheduled tick (disabled — Telegram input is pushed by the platform listener, never cron-polled; WIRING-RULES law 5g)",
+      "schedule": "* * * * *",
+      "action": {
+        "type": "http",
+        "url": "http://127.0.0.1:3003/projects/medicine/v2/api/cron-tick",
+        "method": "POST",
+        "body": {}
+      },
+      "enabled": false,
+      "timeoutMs": 120000
+    }
+  ]
+}

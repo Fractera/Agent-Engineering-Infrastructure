@@ -122,6 +122,16 @@ finished only when BOTH the new and every old surface run green. The protocol:
 - (5f) THE PARITY TEST closes the task: after wiring the new channel, run EVERY pre-existing surface
   (the control panel ask, the cron tick, each old channel) and show they still succeed. A channel
   addition that breaks another channel is a failed task, not a partial success.
+- (5g) INPUT IS PUSHED, NEVER POLLED (owner's law, 2026-07-20). Incoming events reach this automation
+  as a PUSH into its run door (api/run): the platform listener holds the channel connection and calls
+  the door instantly with the message envelope. Connecting a Telegram bot = declare the token's env key
+  in _data/channels.ts + register via POST /api/project-config/register-bot — nothing else. Writing
+  your own getUpdates call, or scheduling input polling in cron.json, is FORBIDDEN and machine-refused
+  by the apply gate: a second getUpdates consumer on one token eats the listener's messages and breaks
+  the channel (Telegram hands each update to exactly one caller). cron.json exists only for scheduled
+  OUTPUT work (reports, digests) and pulls of external DATA APIs — never for input channels.
+  (Real failure: a strong model wired a one-minute cron getUpdates poll on medicine/v2 instead of the
+  one register-bot call — latency became a minute, and the poll fought the platform listener.)
 
 ## 6. Worked example — the failure this document exists to prevent
 
