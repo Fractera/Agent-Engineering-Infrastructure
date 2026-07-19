@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { join } from "node:path";
-import { getSession } from "@/lib/auth/get-session";
+import { authorize } from "@/lib/nodes";
 import { validateProjectDiagram } from "@/lib/diagram/validate";
 
 // Validate a project's diagram invariants (step 223.C.5) — the machine enforcement of "the diagram is
-// the only source of truth" + co-location. Returns { ok, violations }. Role-gated.
+// the only source of truth" + co-location. Returns { ok, violations }. Role-gated via the shared
+// authorize() (263.1 round 6): validate is part of the room contract, and the in-room agent reaches it
+// with the X-Fractera-Agent-Gate pass — this route's private getSession check was the one door the
+// pass could not open.
 export const runtime = "nodejs";
 
-const ROLES = ["architect", "manager", "agent"];
 const SLUG = /^[a-z][a-z0-9-]*$/;
 
 export async function GET(req: NextRequest) {
-  const session = await getSession(req);
-  if (!session?.roles?.some((r) => ROLES.includes(r))) {
+  if (!(await authorize(req))) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   const automation = (req.nextUrl.searchParams.get("automation") ?? "").trim();
