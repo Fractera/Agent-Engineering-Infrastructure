@@ -183,15 +183,17 @@ export function DevConsole({
     const s = stepsRef.current;
 
     if (chunk.includes("[session reattached]")) {
-      // A reattach proves the CLI session survived, NOT that the task was ever delivered (the owner's
-      // live failure: an auth flow ate the old silence window and the task was lost with no button
-      // left). So resume in "tested" — "Start development" is on screen again, re-clickable. If the
-      // 200KB replay contains the DEV marker, the detector below flips us to "developing" honestly.
+      // A reattach proves the PTY session survived — NOTHING more. We do not know whether the CLI
+      // agent is still running inside it, so the ladder restarts at TEST (owner 2026-07-19, second
+      // round: my first version jumped straight to "Start development" here, skipping the test —
+      // exactly the shortcut the owner forbade). Test proves the agent is alive and in the room;
+      // only a green test unlocks "Start development" (which sends the FULL instruction — the room
+      // task is refetched by the parent on every dialog open, it is never lost). If the 200KB replay
+      // contains the DEV marker, the detector below flips us to "developing" honestly.
       setReattached(true);
-      setSteps({ pwd: "done", cli: "done", login: "done", task: "todo", free: "todo" });
+      setSteps({ pwd: "done", cli: "done", login: "todo", task: "todo", free: "todo" });
       setAgentStarted(true);
       startedRef.current = true;
-      if (phaseRef.current === "idle") setPhase("tested");
       // no return — the replayed chunk must still reach the marker scan below
     }
     // Step 1 — pwd verification: our own probe answer contains the room path on its own line.
@@ -242,9 +244,9 @@ export function DevConsole({
       setPhase("tested");
       setStep("login", "done");
       toast.success(T.testOk);
-    } else if ((phaseRef.current === "handing" || phaseRef.current === "tested") && despaced.includes(DEV_MARKER)) {
-      // Development has REALLY begun — only now do the buttons leave the screen. ("tested" is accepted
-      // too: a reattach replay may carry the marker before any click this session.)
+    } else if (phaseRef.current !== "developing" && despaced.includes(DEV_MARKER)) {
+      // Development has REALLY begun — only now do the buttons leave the screen. Accepted from ANY
+      // phase (a reattach replay may carry the marker before any click this session).
       rawBufRef.current = "";
       setPhase("developing");
       setStep("login", "done");
@@ -413,9 +415,11 @@ export function DevConsole({
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {/* THE DELIVERY LADDER (263.1): Test first; a green toast swaps it for Start development, which
-            stays (re-clickable) until the agent prints the DEV marker — proof development really began. */}
-        {agentStarted && (phase === "idle" || phase === "testing") && (
-          <Button size="sm" onClick={runTest} disabled={phase === "testing" || !!activeAuth} data-dev-console-test="1">
+            stays (re-clickable) until the agent prints the DEV marker — proof development really began.
+            The Test button is ALWAYS VISIBLE from the first open (owner, second round: hiding it until
+            the agent starts read as "there is no test button") — merely disabled until the CLI runs. */}
+        {(phase === "idle" || phase === "testing") && (
+          <Button size="sm" onClick={runTest} disabled={!agentStarted || phase === "testing" || !!activeAuth} data-dev-console-test="1">
             {phase === "testing" ? <Loader2 className="size-3.5 animate-spin" /> : <FlaskConical className="size-3.5" />}
             {phase === "testing" ? T.testRunning : T.test}
           </Button>
