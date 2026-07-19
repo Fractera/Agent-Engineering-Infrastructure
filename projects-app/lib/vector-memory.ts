@@ -19,9 +19,22 @@
 // the bare form — the same convention @/lib/db uses to run fs inside workflow steps (definition.ts, 207.16).
 import { promises as fsp } from "fs";
 import { join } from "path";
+import { randomBytes } from "crypto";
+import { AsyncLocalStorage } from "async_hooks";
 
 const RAG_URL = (process.env.LIGHTRAG_URL ?? "http://localhost:9621").replace(/\/+$/, "");
 const RAG_KEY = process.env.LIGHTRAG_API_KEY ?? "";
+
+// ── THE RUN PROVENANCE CHANNEL (263.1, owner's identity law) ──────────────────────────────────────────
+// The executor knows, at run time, which input surface actually fired and which node is running — the two
+// facets a memory write cannot learn statically. It publishes them here; ingestToMemory reads them.
+// SHARED VIA globalThis on purpose: a node's functions.compiled.mjs BUNDLES its own copy of this module,
+// and two module instances would otherwise hold two different AsyncLocalStorage objects — the bundled
+// ingest would never see the platform executor's values. One global instance = every copy reads the same
+// async context.
+export type RunProvenance = { channel?: string; node?: string };
+const provGlobal = globalThis as { __fracteraRunProvenance?: AsyncLocalStorage<RunProvenance> };
+export const runProvenance = (provGlobal.__fracteraRunProvenance ??= new AsyncLocalStorage<RunProvenance>());
 
 export type IngestOptions = {
   /** The automation address "<category>/<slug>" — the base provenance `projects/<category>/<slug>`. */
@@ -126,9 +139,25 @@ export async function ingestToMemory(opts: IngestOptions): Promise<string | null
   // the automation's detected input channel. An explicit channel (e.g. the notes bot's "telegram") is never
   // overridden; a full fileSource override skips detection entirely.
   const facets = { ...(opts.facets ?? {}) };
-  if (opts.fileSource === undefined && facets.channel === undefined) {
-    const ch = await detectChannel(opts.automation);
-    if (ch) facets.channel = ch;
+  if (opts.fileSource === undefined) {
+    // THE FULL ROUTE OF KEYS (owner's identity law, 2026-07-20). Channel: the RUN's actual surface wins
+    // (the executor publishes the ioType of the input node that really fired — a multi-input automation
+    // gets the true per-run channel, where the static graph guess honestly returned nothing); the static
+    // detection stays as the fallback for calls outside a run (the catalog).
+    const live = runProvenance.getStore();
+    if (facets.channel === undefined) {
+      facets.channel = live?.channel ?? (await detectChannel(opts.automation));
+    }
+    // Node: the authoring node of this memory — the executor knows which node is running right now.
+    if (facets.node === undefined && live?.node) facets.node = live.node;
+    // THE UNIQUENESS LAW — the reason this block exists. LightRAG treats `file_source` as the document's
+    // IDENTITY: one path = one document, and a second ingest with an existing path is silently DROPPED
+    // (proven live on medicine/v2 — six meals vanished behind the first one). A memory record therefore
+    // MUST carry a unique tail. If the caller supplied none (record / instance / event), one is stamped
+    // here — a collision is constructively impossible from now on.
+    if (!facets.record && !facets.instance && !facets.event) {
+      facets.record = randomBytes(6).toString("hex");
+    }
   }
   const fileSource = opts.fileSource ?? memorySource(opts.automation, facets);
   const identity = opts.identity ?? opts.automation;

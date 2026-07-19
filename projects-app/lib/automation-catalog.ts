@@ -32,9 +32,13 @@ export async function catalogIngest(automation: string, title: string, text: str
     const r = await fetch(`${RAG_URL}/documents/text`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-API-Key": RAG_KEY, "X-Agent-Identity": CATALOG_IDENTITY },
-      // Provenance (step 260): the project address as the LightRAG source, so the catalog doc is traceable to
-      // its automation and never "unknown_source" (the AUTOMATION_ID line in the text is kept too).
-      body: JSON.stringify({ text: doc, file_source: `projects/${automation}` }),
+      // Provenance (step 260, hardened 263.1): the project address + the catalog facet. LightRAG treats
+      // file_source as the document's IDENTITY (one path = one doc, a duplicate is silently dropped) —
+      // the bare address collided with the automation's memory records, and on medicine/v2 a meal record
+      // claimed the path first and every catalog re-index after it was silently swallowed. ?kind=catalog
+      // gives the catalog doc its own identity; ONE doc per automation here is intended (re-index =
+      // delete old + insert), and the ?-prefix keeps it inside purge-by-source (261).
+      body: JSON.stringify({ text: doc, file_source: `projects/${automation}?kind=catalog` }),
       signal: AbortSignal.timeout(30_000),
     });
     if (!r.ok) return null;

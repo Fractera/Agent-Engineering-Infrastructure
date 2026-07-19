@@ -171,6 +171,11 @@ async function nodeRole(projectDir: string, slug: string): Promise<string | unde
   return src.match(/role:\s*["']([^"']+)["']/)?.[1];
 }
 
+async function nodeIoType(projectDir: string, slug: string): Promise<string | undefined> {
+  const src = await readFile(join(projectDir, "_nodes", slug, "meta.ts"), "utf8").catch(() => "");
+  return src.match(/ioType:\s*["']([^"']+)["']/)?.[1];
+}
+
 /** RUN an automation end to end: walk its diagram, call every node's real functions, record what happened. */
 export async function executeAutomation(
   automation: string,
@@ -234,7 +239,16 @@ export async function executeAutomation(
   const report: RunOutcome["nodes"] = [];
   let failed: string | undefined;
 
+  // RUN PROVENANCE (263.1, owner's identity law): the whole node walk runs inside one async context that
+  // publishes the run's TRUE channel (the ioType of the input node that actually fired — not a static
+  // graph guess) and the currently running node. ingestToMemory reads both, so every memory this run
+  // writes carries the full route of keys. One mutable object — later nodes see the channel the fed
+  // input established.
+  const prov: import("@/lib/vector-memory").RunProvenance = {};
+  const { runProvenance } = await import("@/lib/vector-memory");
+  await runProvenance.run(prov, async () => {
   for (const n of nodes) {
+    prov.node = n.slug;
     const started = Date.now();
     await db.prepare(`UPDATE automation_runs SET current_node = ? WHERE id = ?`).run(n.slug, runId);
     const rowId = randomUUID();
@@ -264,12 +278,17 @@ export async function executeAutomation(
       // Rule, deliberately narrow: only a role:"input" node, and only when EVERY param of its FIRST
       // function (the trigger contract) is absent. It reports honestly as "skipped" — never as "ok".
       const firstParams = paramsIn[order[0] ?? ""] ?? [];
-      if (firstParams.length && firstParams.every((p) => ctx[p] === undefined)
-          && (await nodeRole(proj.projectDir, n.slug)) === "input") {
+      const role = await nodeRole(proj.projectDir, n.slug);
+      if (firstParams.length && firstParams.every((p) => ctx[p] === undefined) && role === "input") {
         await db.prepare(`UPDATE automation_run_nodes SET status = 'skipped', payload = ? WHERE id = ?`)
           .run(JSON.stringify({ real: true, skipped: "unfed input surface", ms: 0 }), rowId);
         report.push({ node: n.slug, status: "skipped", ms: 0 });
         continue;
+      }
+      // The FED input node establishes the run's channel — its ioType IS the surface this run came
+      // through (first fed input wins; a run rarely feeds two).
+      if (role === "input" && prov.channel === undefined) {
+        prov.channel = await nodeIoType(proj.projectDir, n.slug);
       }
 
       let last: unknown;
@@ -311,6 +330,7 @@ export async function executeAutomation(
       break;   // the chain stops at the first failure — a later node would work on data that never arrived
     }
   }
+  });
 
   await db.prepare(
     `UPDATE automation_runs SET status = ?, current_node = NULL, finished_at = datetime('now') WHERE id = ?`,
