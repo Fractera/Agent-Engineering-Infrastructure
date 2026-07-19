@@ -81,8 +81,9 @@ A node is a **typed container of deterministic functions**, co-located in `_node
 functions.ts,instruction.ts}` — nothing behavioural outside the node's folder, nothing outside the
 diagram defines behaviour, ever. AI inside a node only as an explicit `externalAi` tool-call step. The
 general executor (`lib/executor.ts`, `POST /api/projects/run`) walks any automation's nodes and calls
-their compiled functions — proven on two reference automations (`example-content-pipeline`,
-`example-stream-stock-price`). **A node's live code is its runtime artifact** (step 249):
+their compiled functions — proven live (historically on two reference automations, since retired;
+every automation born from the frozen template ships its own working example). **A node's live code is
+its runtime artifact** (step 249):
 `materialize` bundles `functions.ts` into `_nodes/<slug>/functions.compiled.mjs` (esbuild,
 `lib/node-compile.ts`) and the executor imports that file from disk — editing a node NEVER rebuilds the
 app, and a compile error comes back in the materialize response itself. **The walk is SEQUENTIAL, in diagram order, through one shared context
