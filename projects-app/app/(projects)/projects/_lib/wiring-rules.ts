@@ -25,6 +25,16 @@ Ask two questions about the capability you are about to build:
 One node = one role. A capability that both receives and replies (a chat bot) is TWO nodes: an input
 node for receiving and an output node for replying.
 
+A ROLE IS FOR LIFE (owner's law, 2026-07-19 — born from a real mutation). Once a node exists, its role
+and its ioType NEVER change: an input stays an input on its channel, a transform stays a transform, a
+condition stays a condition, an output stays an output. You may not "promote" an input into a
+transform, repurpose a control-panel input as a telegram input, or turn anything into anything else.
+If a spot in the graph needs a DIFFERENT role — that is a NEW node (create it, wire it), and if the old
+node truly lost its purpose, remove it through the platform's DELETE API and say so in your report.
+The apply gate enforces this mechanically: a diff that changes an existing node's role or ioType is
+refused whole. This law exists because a strong model once read "reorient the demo" as permission to
+shift a live control-panel input aside while adding a telegram channel — and mutated the project.
+
 ## 2. The two intermediate kinds
 
 - TRANSFORM (ioType "transform"): consumes data, produces different data (parse, transcribe, enrich,
@@ -69,13 +79,40 @@ A transform never decides routes.
    "telegram-voice → transcribe → record-to-history". If you cannot recite an input→…→output path that
    passes through your node, the wiring is wrong — do not mount it.
 5. NEVER attach to the existing chain "just to have a parent". If your capability starts a new flow, it
-   starts at a NEW input node (or reorients the demo input) — it does not dangle off a node whose data
-   it neither consumes nor serves.
-6. REORIENT, don't append. When the owner's task replaces the demo's purpose, rewire the demo chain to
-   the new purpose (rename, retype, reconnect) instead of leaving the demo intact and bolting your node
-   to its side.
+   starts at a NEW input node — it does not dangle off a node whose data it neither consumes nor serves.
+6. REORIENT THE DEMO, and ONLY the demo. When the owner's FIRST real task replaces the purpose of the
+   untouched newborn demo chain, rewire that demo chain to the new purpose: rename nodes, reconnect
+   edges, rewrite functions. Reorientation NEVER includes changing any node's role or ioType (the
+   role-for-life law above) — and it applies ONLY to the demo that no real task has claimed yet. A chain
+   that already serves the owner is live infrastructure: you extend it additively (law 5 below), you do
+   not shift it.
 
-## 5. Worked example — the failure this document exists to prevent
+## 5. Adding a channel — the ADDITIVE protocol (owner's law, 2026-07-19)
+
+"Add a Telegram channel" NEVER means "replace the control panel". Unless the owner explicitly says to
+REMOVE a surface, every existing input and output channel keeps working exactly as before — the task is
+finished only when BOTH the new and every old surface run green. The protocol:
+
+- (5a) The new channel enters through a NEW INPUT node (role "input", ioType = the channel key,
+  0 in / 1 out). Existing input nodes are not touched, not moved, not retyped, not renamed.
+- (5b) NORMALIZE, then JOIN. The new input node's job is to convert its channel's raw payload into the
+  SAME data the existing midstream already consumes (the same out-key names), and its one outgoing edge
+  plugs into the EXISTING midstream node that solves the task. Fan-in of the same need into one
+  transform is normal and legal (law 3).
+- (5c) REUSE before build. If an existing node solves (or almost solves) the task your channel needs —
+  connect to it. If it almost solves it, STRENGTHEN that node by ADDING functions or ADDING optional
+  parameters. Only when no node solves the task at all do you create a new transform.
+- (5d) AN EXISTING NODE'S CONTRACT IS PUBLIC. Its function names, its paramsIn names and its out keys
+  are relied upon by every other surface and by the cockpit. You may add; you may NEVER rename, remove
+  or repurpose an existing name. (Real failure: renaming an entry parameter "ask" → "query" to suit the
+  new channel silently broke the control panel that still sent "ask".)
+- (5e) A channel that must REPLY gets its OWN output node (telegram-in → … → telegram-reply-out).
+  Existing outputs keep serving their own surfaces; an output never grows an outgoing edge (law 3).
+- (5f) THE PARITY TEST closes the task: after wiring the new channel, run EVERY pre-existing surface
+  (the control panel ask, the cron tick, each old channel) and show they still succeed. A channel
+  addition that breaks another channel is a failed task, not a partial success.
+
+## 6. Worked example — the failure this document exists to prevent
 
 Task: "voice notes from a Telegram bot must land in the history table."
 
@@ -90,7 +127,7 @@ RIGHT (what the reasoning chain produces):
       → record-note [OUTPUT: writes the notes into the history table]
 Path recited: input → transform → output. Every out port has a consumer. Every count is legal.
 
-## 6. The wiring checklist — answer in writing BEFORE materialize
+## 7. The wiring checklist — answer in writing BEFORE materialize
 
 1. What data flows out of this node, and which node consumes it? (name it)
 2. Role: input / intermediate / output — and why?
@@ -99,6 +136,11 @@ Path recited: input → transform → output. Every out port has a consumer. Eve
 5. Recite one full input→…→output path through this node.
 6. Does any produced port remain unconsumed? (must be "no", or the node is an output)
 7. Did I reorient the demo chain where my task replaces its purpose, instead of appending to it?
+   (Demo only — a chain already serving the owner is extended additively, law 5.)
+8. Does every EXISTING node keep its role, its ioType, and every existing function/param/out-key name
+   untouched? (role-for-life + the public contract, laws 1 and 5d)
+9. If I added a channel: which existing midstream node does it join, and did EVERY old surface pass
+   the parity test? (laws 5b and 5f)
 
 A "no answer" to any question means: do not mount — redesign first.
 `;

@@ -84,6 +84,30 @@ export async function applyProjection(automation: string): Promise<ApplyResult> 
       violations.push(`${rel}: outside the authorship whitelist (node sources, _data, _lib, _types, api/**/route.ts, pages/**, README.md, cron.json). If this file belongs to the cockpit or the platform, it is not yours to change.`);
     }
   }
+
+  // GATE A2 — A ROLE IS FOR LIFE (owner's law 2026-07-19, WIRING-RULES §1/§5): an EXISTING node's role
+  // and ioType are immutable. Born from a real mutation: while "adding a Telegram channel" an agent
+  // shifted the live control-panel input aside and repurposed it — prose alone did not stop it, so the
+  // gate does. New nodes (no route-side meta yet) are free to declare anything.
+  const identity = (src: string) => ({
+    role: src.match(/role:\s*["']([^"']+)["']/)?.[1],
+    ioType: src.match(/ioType:\s*["']([^"']+)["']/)?.[1],
+  });
+  for (const rel of changed) {
+    const m = rel.match(/^_nodes\/([^/]+)\/meta\.ts$/);
+    if (!m) continue;
+    const before = await readFile(join(proj.projectDir, rel), "utf8").catch(() => null);
+    if (before === null) continue; // a NEW node — its identity is being born, not changed
+    const after = await readFile(join(room, rel), "utf8").catch(() => "");
+    const was = identity(before);
+    const now = identity(after);
+    if (was.role && now.role && was.role !== now.role) {
+      violations.push(`${rel}: an existing node's role is FOR LIFE ("${was.role}" → "${now.role}" is forbidden). Need a different role at this spot? Create a NEW node with the right role, wire it in, and remove the obsolete node through the platform DELETE API — never by retyping.`);
+    }
+    if (was.ioType && now.ioType && was.ioType !== now.ioType) {
+      violations.push(`${rel}: an existing node's ioType is FOR LIFE ("${was.ioType}" → "${now.ioType}" is forbidden). A new channel enters through a NEW input node that joins the existing midstream (WIRING-RULES law 5) — it never repurposes another surface's node.`);
+    }
+  }
   if (violations.length) return { ok: false, error: "the diff was refused — fix the violations and re-apply (nothing was changed)", violations };
 
   // GATE B — changed nodes must compile IN THE ROOM before anything lands.
