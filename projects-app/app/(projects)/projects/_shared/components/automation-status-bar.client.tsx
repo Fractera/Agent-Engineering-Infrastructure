@@ -74,13 +74,16 @@ export function AutomationStatusBar({
   const lang = useUiLang();
   const L = categoryHubStrings(lang);
   return (
-    <div className="flex items-center justify-between gap-3 py-1">
-      <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+    // Below XL the bar does not fit one line (owner 2026-07-19, 263.1): the badges+buttons move to their
+    // OWN row ABOVE the breadcrumb, horizontally scrollable with the scrollbar hidden. XL+ keeps the
+    // classic single row (breadcrumb left, badges right) via the order swap.
+    <div className="flex flex-col gap-1 py-1 xl:flex-row xl:items-center xl:justify-between xl:gap-3">
+      <span className="order-2 flex items-center gap-1.5 text-sm text-muted-foreground xl:order-1">
         <Link href="/projects" className="hover:underline">{L.breadcrumb}</Link>
         <span aria-hidden>/</span>
         <Link href={`/projects/${category}`} className="hover:underline">{categoryLabel}</Link>
       </span>
-      <span className="flex items-center gap-2">
+      <span className="order-1 flex items-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden xl:order-2 xl:overflow-visible">
         {/* Type badge + state pill (step 224 §1.5 / L6) — left of the burger. "In development" (indigo)
             while any node is still a draft: the automation is auto-stopped until every node is built. */}
         {automation && <WaveReopenButton automation={automation} />}

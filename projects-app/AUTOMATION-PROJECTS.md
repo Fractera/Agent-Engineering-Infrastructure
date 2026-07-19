@@ -54,15 +54,16 @@ a SUCCESS); cut at the narrowest seam into a `chained` group of individually run
 2. **Use cases first:** the Quiz opens on first visit and refuses to design nodes until the owner
    describes his scenarios; the **review gate** blocks any hand-off until he confirms the AI understood
    (409 `not-reviewed` / `no-cases`).
-3. **The launch (step 250 — the in-product agent; NO copy hand-off, NO Development Step, NO page lock):**
-   "Запустить разработку" runs `POST /api/projects/develop` — an OpenAI Chat Completions tool-calling
-   loop streamed live into the launch dialog (SSE). Context = the full bundle (§5, current state, no
-   history) + the staged briefs; the model works DELTA-only through narrow per-object tools (write node
-   functions → instant compile, wire edges, per-object closes, warnings, finish-with-report). Same gates
-   as ever (409 `not-reviewed` / `no-cases` / `nothing-staged` / `stub-nodes` + names). Every press is a
-   fresh stateless run — continuity lives in the architecture's state, not in a chat session. The owner's
-   FREE comment (the ✦ button — "I know what I dislike, not where to fix it") lands as the `general`
-   entity's brief and joins the staged set like any requirement.
+3. **The launch (ONE path — the sterile-room dev console, steps 254–255; NO Development Step, NO page
+   lock):** "Запустить разработку" passes the gates (`GET /api/projects/handoff`: 409 `not-reviewed` /
+   `no-cases`; `stub-nodes` is ADVISORY since 263.1 — the dialog offers "launch anyway" via `?force=1`;
+   an empty staged set is NOT a refusal — confirmed use cases alone are the mandate), then opens the
+   terminal console: an external agent works in the automation's projection room and its diff returns
+   through the gated apply. *The step-250 in-product OpenAI developer was REMOVED in 263.1 (2026-07-19):
+   it wrote into the live automation through tools, bypassing the room + gated apply (its one live run
+   duplicated an input node and mis-wired it). Any future built-in fallback must run through the same
+   room + gates.* The owner's FREE comment (the ✦ button — "I know what I dislike, not where to fix
+   it") lands as the `general` entity's brief and joins the staged set like any requirement.
    *(`GET /api/projects/handoff` still returns the old full/delta copyable texts as a legacy escape
    hatch for handing work to an external agent manually.)*
 4. **Build:** each node per §4.

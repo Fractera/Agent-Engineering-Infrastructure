@@ -1,41 +1,33 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Check, CheckCheck, Copy, Loader2, ListChecks, Rocket, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { CheckCheck, Loader2, ListChecks, Rocket } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useUiLang } from "../use-ui-lang";
 import { DevConsole } from "./dev-console.client";
 
-// THE LAUNCH DIALOG (step 233 → the wave in 240 → the light hand-off in 249 → THE IN-PRODUCT DEVELOPER in
-// step 250). The button no longer hands out a copyable task: after the gates pass, the dialog itself POSTs
-// /api/projects/develop and the built-in agent works LIVE — the ribbon streams the model's text and every
-// tool call (spinner → ✓/✗, a compile error shown verbatim), ending in a report with a Copy button. The
-// legacy copyable hand-off stays available at GET /api/projects/handoff for manual use.
+// THE LAUNCH DIALOG (step 233 → the wave in 240 → the light hand-off in 249 → the dev console in 255).
+// ONE development path (owner 2026-07-19, 263.1): the sterile-room terminal. The step-250 in-product
+// OpenAI developer was CUT OUT this day — it wrote into the live automation through tools, bypassing the
+// room + gated apply entirely (its one live run duplicated an input node and mis-wired it). Any future
+// built-in fallback must go through the same projection → room → gated-apply discipline as every agent.
+// The legacy copyable hand-off stays available at GET /api/projects/handoff for manual use.
 //
 // THE GATES STAY (they were never about steps): the use-case review gate (step 231, confirm button right
-// here), the stub-node refusal (step 247 П5) and "nothing staged" — plus three run-time refusals of the
-// develop route (no key / a model without tools / already running). The client branches on Content-Type:
-// a 409 JSON is a gate, an event-stream is a run. Closing the dialog aborts the run (the started tool
-// finishes server-side — each is atomic per-object).
+// here), the advisory stub-node screen (263.1) and the no-cases refusal.
 type Case = { cuid: string; title: string; summary: string; status: string };
 type Mode =
-  | "loading" | "review" | "run" | "confirm" | "console"
-  | "no-cases" | "nothing-staged" | "stub-nodes"
-  | "already-running" | "no-key" | "model-no-tools";
-
-type FeedItem =
-  | { kind: "info"; text: string }
-  | { kind: "text"; text: string }
-  | { kind: "tool"; name: string; status: "run" | "ok" | "fail"; detail?: string };
-
-type DoneState = { report: string; outcome: "implemented" | "decomposition" } | null;
+  | "loading" | "review" | "confirm" | "console"
+  | "no-cases" | "nothing-staged" | "stub-nodes";
 
 type SD = {
   title: string;
   preparing: string;
   reviewHeading: string; reviewIntro: string; confirm: string; confirming: string;
+  // runIntro…builtInAlt: DORMANT strings of the removed step-250 built-in developer (263.1) — kept in the
+  // entries so the ten language blocks need no surgery; nothing renders them.
   runIntro: string; phaseContext: string; turnLabel: string;
   doneTitle: string; doneDecompositionTitle: string; doneDecompositionBody: string;
   copyReport: string; copied: string;
@@ -301,20 +293,6 @@ const I18N: Record<string, SD> = {
   },
 };
 
-/** The 150px fade at both ends of the ribbon (owner's spec): the feed melts into transparency instead of
- *  clipping — no silent waiting, no hard edges. */
-const RIBBON_MASK =
-  "linear-gradient(to bottom, transparent 0, black 150px, black calc(100% - 150px), transparent 100%)";
-
-type DevelopEvent =
-  | { type: "phase"; staged: number; model: string }
-  | { type: "turn"; n: number }
-  | { type: "delta"; text: string }
-  | { type: "tool"; name: string }
-  | { type: "tool-result"; name: string; ok: boolean; detail?: string }
-  | { type: "done"; report: string; outcome: "implemented" | "decomposition" }
-  | { type: "error"; code: string };
-
 export function StartDevelopment({
   automation,
   open,
@@ -333,67 +311,19 @@ export function StartDevelopment({
   const L = I18N[lang] ?? I18N.en;
   const [mode, setMode] = useState<Mode>("loading");
   const [busy, setBusy] = useState(false);
-  // "Launch anyway" (owner 2026-07-19): once pressed on the advisory stub screen, every later call in this
-  // dialog session (handoff re-check AND the built-in developer POST) carries the same force flag.
-  const [forced, setForced] = useState(false);
   const [cases, setCases] = useState<Case[]>([]);
   // Step 247 (П5): the node names the launch gate refused over — shown so the owner knows WHICH to describe.
   const [stubNodes, setStubNodes] = useState<string[]>([]);
-  const [refusedModel, setRefusedModel] = useState("");
-  const [feed, setFeed] = useState<FeedItem[]>([]);
-  const [done, setDone] = useState<DoneState>(null);
   // The dev console (step 255): the room the terminal works in + the first task the conductor hands over.
   const [roomPath, setRoomPath] = useState("");
   const [roomTask, setRoomTask] = useState("");
-  const abortRef = useRef<AbortController | null>(null);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
-  const stickRef = useRef(true);
-
-  // The ribbon sticks to the bottom while the owner has not scrolled away; a manual scroll up unsticks it,
-  // scrolling back to the bottom re-sticks it.
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (el && stickRef.current) el.scrollTop = el.scrollHeight;
-  }, [feed, done]);
-
-  const applyEvent = useCallback((e: DevelopEvent) => {
-    if (e.type === "phase") {
-      setFeed((f) => [...f, { kind: "info", text: L.phaseContext.replace("{model}", e.model).replace("{n}", String(e.staged)) }]);
-    } else if (e.type === "turn") {
-      setFeed((f) => [...f, { kind: "info", text: L.turnLabel.replace("{n}", String(e.n)) }]);
-    } else if (e.type === "delta") {
-      setFeed((f) => {
-        const last = f[f.length - 1];
-        if (last?.kind === "text") return [...f.slice(0, -1), { kind: "text", text: last.text + e.text }];
-        return [...f, { kind: "text", text: e.text }];
-      });
-    } else if (e.type === "tool") {
-      setFeed((f) => [...f, { kind: "tool", name: e.name, status: "run" }]);
-    } else if (e.type === "tool-result") {
-      setFeed((f) => {
-        const i = f.findLastIndex((it) => it.kind === "tool" && it.name === e.name && it.status === "run");
-        if (i < 0) return [...f, { kind: "tool", name: e.name, status: e.ok ? "ok" : "fail", detail: e.detail }];
-        const next = [...f];
-        next[i] = { kind: "tool", name: e.name, status: e.ok ? "ok" : "fail", detail: e.detail };
-        return next;
-      });
-    } else if (e.type === "done") {
-      setDone({ report: e.report, outcome: e.outcome });
-    } else if (e.type === "error") {
-      setFeed((f) => [...f, {
-        kind: "info",
-        text: e.code === "aborted" ? L.runAborted : L.runFailed.replace("{code}", e.code),
-      }]);
-    }
-  }, [L]);
 
   // THE ENTRY (step 255): the gates run via GET handoff (the ONE launchGate set); passing them shows the
   // CONFIRM screen (cancel-and-keep-editing / start-now — the owner's repeatable cycle) and stores the
-  // room hand-off for the console. The built-in OpenAI developer stays reachable from that screen.
+  // room hand-off for the console. `force` = the advisory stub screen's "launch anyway" (263.1).
   const load = useCallback(async (force = false) => {
     setMode("loading");
     setBusy(true);
-    if (force) setForced(true);
     try {
       const r = await fetch(
         `/api/projects/handoff?automation=${encodeURIComponent(automation)}${force ? "&force=1" : ""}`,
@@ -428,66 +358,6 @@ export function StartDevelopment({
     } finally { setBusy(false); }
   }, [automation, L, onOpenChange]);
 
-  // THE BUILT-IN DEVELOPER (step 250, unchanged flow) — now started explicitly from the confirm screen.
-  const runBuiltIn = useCallback(async () => {
-    abortRef.current?.abort();
-    const ctl = new AbortController();
-    abortRef.current = ctl;
-    setMode("loading");
-    setBusy(true);
-    setFeed([]);
-    setDone(null);
-    stickRef.current = true;
-    try {
-      const r = await fetch(`/api/projects/develop`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ automation, force: forced }),
-        signal: ctl.signal,
-      });
-      if (!(r.headers.get("Content-Type") ?? "").includes("text/event-stream")) {
-        const d = (await r.json().catch(() => ({}))) as { reason?: string; nodes?: string[]; model?: string };
-        if (d.reason === "already-running" || d.reason === "no-key") {
-          setMode(d.reason);
-        } else if (d.reason === "model-no-tools") {
-          setRefusedModel(d.model ?? "");
-          setMode("model-no-tools");
-        } else {
-          toast.error(L.failed);
-          setMode("confirm");
-        }
-        return;
-      }
-
-      setMode("run");
-      setBusy(false);
-      const reader = r.body!.getReader();
-      const decoder = new TextDecoder();
-      let buf = "";
-      try {
-        for (;;) {
-          const { done: d, value } = await reader.read();
-          if (d) break;
-          buf += decoder.decode(value, { stream: true });
-          const lines = buf.split("\n");
-          buf = lines.pop() ?? "";
-          for (const line of lines) {
-            const s = line.trim();
-            if (!s.startsWith("data:")) continue;
-            const payload = s.slice(5).trim();
-            if (payload === "[DONE]") continue;
-            try { applyEvent(JSON.parse(payload) as DevelopEvent); } catch { /* skip a partial frame */ }
-          }
-        }
-      } catch { /* aborted by closing the dialog — nothing to render */ }
-    } catch (e) {
-      if (!(e instanceof DOMException && e.name === "AbortError")) {
-        toast.error(L.failed);
-        onOpenChange(false);
-      }
-    } finally { setBusy(false); }
-  }, [automation, L, onOpenChange, applyEvent]);
-
   // Confirm the cases, then immediately continue to the run — one uninterrupted flow.
   const confirmAndContinue = useCallback(async () => {
     setBusy(true);
@@ -504,19 +374,11 @@ export function StartDevelopment({
   const onOpen = (v: boolean) => {
     onOpenChange(v);
     if (v) void load();
-    else abortRef.current?.abort();
   };
   useEffect(() => {
     if (open && mode === "loading" && !busy) void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
-  useEffect(() => () => abortRef.current?.abort(), []);
-
-  const copyReport = () => {
-    if (!done) return;
-    void navigator.clipboard.writeText(done.report);
-    toast.success(L.copied);
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpen}>
@@ -546,9 +408,8 @@ export function StartDevelopment({
                 <Rocket className="size-4" /> {L.startNow}
               </Button>
             </div>
-            <button type="button" onClick={() => void runBuiltIn()} className="text-xs text-muted-foreground underline-offset-2 hover:underline">
-              {L.builtInAlt}
-            </button>
+            {/* The step-250 built-in OpenAI developer's link stood here — removed 2026-07-19 (263.1): it
+                bypassed the room + gated apply and wrote straight into the live automation. */}
           </div>
         )}
 
@@ -587,64 +448,6 @@ export function StartDevelopment({
           </>
         )}
 
-        {/* THE RUN (step 250) — the live ribbon: fixed height, 150px fade top and bottom, stuck to the
-            bottom until the owner scrolls; tool rows flip spinner → ✓/✗; the report closes the run. */}
-        {mode === "run" && (
-          <div className="flex min-h-0 flex-1 flex-col gap-3">
-            <p className="shrink-0 text-sm text-muted-foreground">{L.runIntro}</p>
-            <div
-              ref={scrollRef}
-              onScroll={(e) => {
-                const el = e.currentTarget;
-                stickRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
-              }}
-              className={`${done ? "h-[220px]" : "h-[420px]"} shrink-0 overflow-y-auto py-[150px] pr-1`}
-              style={{ maskImage: RIBBON_MASK, WebkitMaskImage: RIBBON_MASK }}
-            >
-              <div className="space-y-2">
-                {feed.map((it, i) => {
-                  if (it.kind === "info") {
-                    return <p key={i} className="text-xs text-muted-foreground">{it.text}</p>;
-                  }
-                  if (it.kind === "text") {
-                    return <p key={i} className="whitespace-pre-wrap text-sm">{it.text}</p>;
-                  }
-                  return (
-                    <div key={i} className="text-sm">
-                      <p className="flex items-center gap-2">
-                        {it.status === "run" && <Loader2 className="size-3.5 shrink-0 animate-spin text-muted-foreground" />}
-                        {it.status === "ok" && <Check className="size-3.5 shrink-0 text-green-600" />}
-                        {it.status === "fail" && <X className="size-3.5 shrink-0 text-red-600" />}
-                        <code className="text-xs">{it.name}</code>
-                        {it.status === "ok" && it.detail ? (
-                          <span className="truncate text-xs text-muted-foreground">{it.detail}</span>
-                        ) : null}
-                      </p>
-                      {it.status === "fail" && it.detail ? (
-                        <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap rounded bg-muted p-2 text-xs">{it.detail}</pre>
-                      ) : null}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            {done && (
-              <div className="min-h-0 space-y-2 overflow-y-auto rounded-lg border p-3">
-                <p className="text-sm font-medium">
-                  {done.outcome === "decomposition" ? L.doneDecompositionTitle : L.doneTitle}
-                </p>
-                {done.outcome === "decomposition" && (
-                  <p className="text-sm text-muted-foreground">{L.doneDecompositionBody}</p>
-                )}
-                {done.report ? <p className="whitespace-pre-wrap text-sm">{done.report}</p> : null}
-                <Button size="sm" variant="outline" onClick={copyReport}>
-                  <Copy className="size-3.5" /> {L.copyReport}
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-
         {mode === "no-cases" && (
           <div className="space-y-1 py-4 text-sm">
             <p className="font-medium">{L.noCasesTitle}</p>
@@ -674,17 +477,6 @@ export function StartDevelopment({
           </div>
         )}
 
-        {mode === "already-running" && (
-          <p className="py-4 text-sm text-muted-foreground">{L.alreadyRunning}</p>
-        )}
-
-        {mode === "no-key" && (
-          <p className="py-4 text-sm text-muted-foreground">{L.noKey}</p>
-        )}
-
-        {mode === "model-no-tools" && (
-          <p className="py-4 text-sm text-muted-foreground">{L.modelNoTools.replace("{model}", refusedModel)}</p>
-        )}
       </DialogContent>
     </Dialog>
   );
