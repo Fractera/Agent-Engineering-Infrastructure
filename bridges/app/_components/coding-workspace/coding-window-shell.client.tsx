@@ -333,13 +333,39 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     else toast.error("Import failed: " + (result.error ?? "unknown error"));
   }
 
-  useEffect(() => {
+  // THE BRIDGE PROBE (263.1, owner's "bridges offline again" complaint): it used to run ONCE on mount —
+  // a single failed handshake (e.g. the tab loading during a pm2 reload) left a STICKY false "Offline"
+  // until a hard reload. Now: re-probe every 20s (self-healing), plus the Bridges panel's manual
+  // "Reconnect" and the real "Restart bridge" (pm2, /api/bridges/restart) for a genuine crash.
+  const probeBridge = useCallback(() => {
     const ws = new WebSocket(urls.claudeUrl);
-    const timer = setTimeout(() => { ws.close(); setBridgeStatus("offline"); }, 3000);
+    const timer = setTimeout(() => { try { ws.close(); } catch {} setBridgeStatus("offline"); }, 3000);
     ws.onopen  = () => { clearTimeout(timer); ws.close(); setBridgeStatus("online"); };
     ws.onerror = () => { clearTimeout(timer); setBridgeStatus("offline"); };
-    return () => { clearTimeout(timer); try { ws.close(); } catch {} };
-  }, []);
+  }, [urls.claudeUrl]);
+  useEffect(() => {
+    probeBridge();
+    const id = setInterval(probeBridge, 20_000);
+    return () => clearInterval(id);
+  }, [probeBridge]);
+
+  const [bridgePanelOpen, setBridgePanelOpen] = useState(false);
+  const [restartingBridge, setRestartingBridge] = useState(false);
+  async function restartBridge() {
+    setRestartingBridge(true);
+    try {
+      const r = await fetch("/api/bridges/restart", { method: "POST" });
+      if (r.ok) {
+        toast.success("Bridge restart requested — probing again…");
+        setTimeout(probeBridge, 2500);
+        setTimeout(probeBridge, 6000);
+      } else {
+        const d = await r.json().catch(() => ({}));
+        toast.error(d.error ?? "Bridge restart failed");
+      }
+    } catch { toast.error("Bridge restart failed"); }
+    setRestartingBridge(false);
+  }
 
   function cancelPlatformConfirm() {
     if (countdownRef.current) clearTimeout(countdownRef.current);
@@ -744,22 +770,46 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
 
       {/* ── Carousel ── */}
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: CAROUSEL_H }} className="border-b border-border bg-background flex items-center gap-2 px-2">
-        {(
+        {/* The Bridges chip (263.1): clickable — the panel carries the info text + the two remedies
+            (Reconnect = re-probe now; Restart bridge = pm2 restart for a genuine crash). */}
+        <div className="relative shrink-0">
           <TooltipProvider delayDuration={0}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className={`shrink-0 flex items-center justify-center gap-1.5 rounded-md border border-border h-9 text-[11px] text-muted-foreground select-none px-2 cursor-help${!isAuthenticated ? " opacity-40 pointer-events-none" : ""}`}>
+                <button
+                  type="button"
+                  onClick={() => isAuthenticated && setBridgePanelOpen((v) => !v)}
+                  className={`shrink-0 flex items-center justify-center gap-1.5 rounded-md border border-border h-9 text-[11px] text-muted-foreground select-none px-2 transition-colors hover:bg-muted${!isAuthenticated ? " opacity-40 pointer-events-none" : ""}`}
+                >
                   {bridgeStatus === "online"  && <><Wifi size={12} className="text-green-500" />{!isMobile && <span className="text-green-500 font-medium">Bridge</span>}</>}
                   {bridgeStatus === "offline" && <><WifiOff size={12} className="text-destructive" />{!isMobile && <span className="text-destructive">Offline</span>}</>}
                   {bridgeStatus === "unknown" && <><Loader2 size={12} className="animate-spin" />{!isMobile && <span>Bridge…</span>}</>}
-                </div>
+                </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-[220px] whitespace-pre-line text-[11px] leading-relaxed" style={{ zIndex: 99999 }}>
                 {BRIDGE_TOOLTIP}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-        )}
+          {bridgePanelOpen && (
+            <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 99999 }}
+              className="bg-background border border-border rounded-md shadow-lg min-w-[240px] max-w-[280px] p-3 flex flex-col gap-2">
+              <span className="text-[11px] text-muted-foreground whitespace-pre-line leading-relaxed">{BRIDGE_TOOLTIP}</span>
+              <div className="flex gap-2 pt-1 border-t border-border">
+                <button type="button"
+                  onClick={() => { probeBridge(); toast.info("Probing the bridge…"); }}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-md border border-border h-8 text-[11px] hover:bg-muted transition-colors">
+                  <Wifi size={11} />Reconnect
+                </button>
+                <button type="button" disabled={restartingBridge}
+                  onClick={() => void restartBridge()}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-md border border-border h-8 text-[11px] hover:bg-muted transition-colors disabled:opacity-50">
+                  {restartingBridge ? <Loader2 size={11} className="animate-spin" /> : <WifiOff size={11} />}Restart bridge
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Settings button */}
         <div className="relative shrink-0">
