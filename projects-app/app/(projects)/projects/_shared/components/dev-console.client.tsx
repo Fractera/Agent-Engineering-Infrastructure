@@ -320,6 +320,11 @@ export function DevConsole({
     // printed ack: the agent's own output is the only proof. The scan runs on the de-spaced clean
     // buffer (PTY line-wraps reassembled); the prompts carry the marker SPLIT, so the echo never matches.
     const despaced = rawBufRef.current.replace(/ /g, "");
+    // SNAPSHOT before any marker consumption (owner 2026-07-20, "the report modal no longer appears"):
+    // a reattach replay carries DEV marker AND report markers in ONE pass, and the DEV block below
+    // clears rawBufRef — the report block then read an EMPTY buffer and the report died silently.
+    // All extraction below works on this snapshot; the clears only affect FUTURE passes.
+    const scanBuf = rawBufRef.current;
     if (phaseRef.current === "testing" && despaced.includes(TEST_MARKER)) {
       if (testTimer.current) clearTimeout(testTimer.current);
       if (failToastId.current != null) { toast.dismiss(failToastId.current); failToastId.current = null; }
@@ -345,13 +350,15 @@ export function DevConsole({
     // flag allowed ONE report per console open, so an agent's second report in the same session (a
     // follow-up task) was swallowed forever. Same consumption pattern as the other markers above:
     // extract, then CLEAR the buffer — the next report accumulates fresh and fires again.
-    if (phaseRef.current === "developing" && despaced.includes(REPORT_END)) {
-      const buf = rawBufRef.current;
-      const mBegin = tolerant(REPORT_BEGIN).exec(buf);
-      const mEnd = tolerant(REPORT_END).exec(buf);
+    // Gate: the session is developing, OR this very pass carries the DEV marker (a replay delivers the
+    // whole history at once — the phase flip above and the report arrive in the SAME chunk, and the
+    // phase ref may not have flipped yet when this line runs).
+    if ((phaseRef.current === "developing" || despaced.includes(DEV_MARKER)) && despaced.includes(REPORT_END)) {
+      const mBegin = tolerant(REPORT_BEGIN).exec(scanBuf);
+      const mEnd = tolerant(REPORT_END).exec(scanBuf);
       if (mBegin && mEnd && mBegin.index + mBegin[0].length < mEnd.index) {
         rawBufRef.current = "";
-        const report = buf.slice(mBegin.index + mBegin[0].length, mEnd.index).replace(/\s+/g, " ").trim();
+        const report = scanBuf.slice(mBegin.index + mBegin[0].length, mEnd.index).replace(/\s+/g, " ").trim();
         setStep("free", "done");
         fetch("/api/projects/dev-report", {
           method: "POST",
