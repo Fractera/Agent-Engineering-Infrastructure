@@ -46,13 +46,6 @@ function stripAnsi(s: string): string {
   return s.replace(ANSI_OSC_RE, "").replace(ANSI_CSI_RE, "").replace(ANSI_OTHER_RE, "");
 }
 
-// LATENT BUG caught live in the dev console (263.1, 2026-07-19; this file is the CANON of the pair —
-// projects-app dev-console.client.tsx carries the same fix): the detector searches a buffer with ALL
-// SPACES REMOVED, so CLI words printed right after the URL ("Paste code here if prompted") got GLUED
-// onto the state value. Cure #1: prefer a match on the spaced buffer (an unwrapped URL ends at the real
-// space). Cure #2: on the de-spaced fallback, trim a glued sentence-start tail.
-const GLUED_TAIL_RE = /(?:Paste|Press|Copy|Open|Then|Use|If|Browser|Sign|Login|Enter)[A-Za-z]*$/;
-
 const BRIDGE_TOOLTIP = "Bridge — all platform servers status\n\nOne process runs all platforms:\nClaude Code :3200 · PTY :3201\nCodex :3202 · Gemini :3203\nQwen :3204 · Kimi :3205\n\n🟢 Online — all platforms available\n🔴 Offline — bridge server not running\n\nTo start: cd bridges/platforms && node server.js";
 
 
@@ -286,22 +279,17 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     if (urlDetectTimer.current) clearTimeout(urlDetectTimer.current);
     urlDetectTimer.current = setTimeout(() => {
       if (activeAuthRef.current) return;
-      const spaced = rawBufRef.current;
-      const bufForSearch = spaced.replace(/ /g, "");
+      const bufForSearch = rawBufRef.current.replace(/ /g, "");
       for (const descriptor of AUTH_FLOW_DESCRIPTORS) {
-        const direct = spaced.match(descriptor.detectUrl);
-        const match = direct ?? bufForSearch.match(descriptor.detectUrl);
+        const match = bufForSearch.match(descriptor.detectUrl);
         if (match) {
           // bufForSearch has all spaces removed — PTY line-wrap artifacts are gone,
           // URL is reconstructed whole. detectUrl patterns end at &state=<value>
           // so the match stops precisely at the URL boundary.
-          // A direct match ends at a REAL space, but PTY wraps may have injected spaces INSIDE the URL
-          // (`.*?` bridges them — live "redirect URI …/oa uth/…" failure): strip them, the tail is clean.
-          let extractedUrl = direct ? match[0].replace(/ /g, "") : match[0];
+          let extractedUrl = match[0];
           // Guard against duplicate URLs if PTY reprints via \r.
           const dupeIdx = extractedUrl.indexOf("https://", 8);
           if (dupeIdx !== -1) extractedUrl = extractedUrl.slice(0, dupeIdx);
-          if (!direct) extractedUrl = extractedUrl.replace(GLUED_TAIL_RE, "");
           // For device-code flow, extract the one-time code from the raw buffer (spaces
           // preserved so the match stops at whitespace and doesn't bleed into the next word)
           let extractedCode: string | undefined;
