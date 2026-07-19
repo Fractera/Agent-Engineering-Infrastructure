@@ -22,6 +22,14 @@ const ANSI_OSC_RE   = /\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g;
 const ANSI_OTHER_RE = /\x1b[=>NOPVWXYZ\\\]^_]/g;
 const stripAnsi = (s: string) => s.replace(ANSI_OSC_RE, "").replace(ANSI_CSI_RE, "").replace(ANSI_OTHER_RE, "");
 
+// LATENT CANON BUG, caught live 2026-07-19: the detector searches a buffer with ALL SPACES REMOVED (to
+// re-join PTY line-wraps), so the CLI's own words printed right after the URL ("Paste code here if
+// prompted") get GLUED onto the state value — the state charset swallows them and the copied link is
+// garbage. Cure #1: prefer a match on the spaced buffer (an unwrapped URL ends at the real space).
+// Cure #2: on the de-spaced fallback, trim a glued sentence-start tail — an OAuth state ending in a
+// natural-language word chain is practically impossible, a glued CLI phrase always starts with one.
+const GLUED_TAIL_RE = /(?:Paste|Press|Copy|Open|Then|Use|If|Browser|Sign|Login|Enter)[A-Za-z]*$/;
+
 // THE DEV CONSOLE (step 255.B2-B4, the owner's scenario) — the live control desk of an external
 // coding-agent session, INSIDE the launch dialog on :3003. Design (the owner delegated it):
 //   header  — the working folder (mono, copyable) + the session badge (new / reattached);
@@ -167,13 +175,16 @@ export function DevConsole({
       if (urlDetectTimer.current) clearTimeout(urlDetectTimer.current);
       urlDetectTimer.current = setTimeout(() => {
         if (activeAuthRef.current) return;
-        const bufForSearch = rawBufRef.current.replace(/ /g, "");
+        const spaced = rawBufRef.current;
+        const bufForSearch = spaced.replace(/ /g, "");
         for (const descriptor of AUTH_FLOW_DESCRIPTORS) {
-          const match = bufForSearch.match(descriptor.detectUrl);
+          const direct = spaced.match(descriptor.detectUrl);
+          const match = direct ?? bufForSearch.match(descriptor.detectUrl);
           if (match) {
             let extractedUrl = match[0];
             const dupeIdx = extractedUrl.indexOf("https://", 8);
             if (dupeIdx !== -1) extractedUrl = extractedUrl.slice(0, dupeIdx);
+            if (!direct) extractedUrl = extractedUrl.replace(GLUED_TAIL_RE, "");
             let extractedCode: string | undefined;
             if (descriptor.detectCode) {
               const codeMatch = rawBufRef.current.match(descriptor.detectCode);
