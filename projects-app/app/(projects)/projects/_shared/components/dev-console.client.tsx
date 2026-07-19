@@ -64,10 +64,12 @@ type Phase = "idle" | "testing" | "tested" | "handing" | "developing";
 const TEST_MARKER = "@@FRACTERA_TEST_OK@@";
 const DEV_MARKER = "@@FRACTERA_DEV_STARTED@@";
 // The canonical test prompt (finding 12): folder + model + readiness, plus the ack marker.
+// STRICTLY ASCII (owner's round-3 transcript): a non-ASCII em-dash went through the PTY as
+// "<ffffffff>"/"???" mojibake. Everything we type into the terminal ourselves stays 7-bit.
 const TEST_PROMPT =
-  "If you can read this, print one single line that joins these two parts with NOTHING between them: @@FRACTERA_ + TEST_OK@@ — then print your current working folder and your model name, and wait for the next instruction.";
+  "If you can read this, print one single line that joins these two parts with NOTHING between them: @@FRACTERA_ + TEST_OK@@ - then print your current working folder and your model name, and wait for the next instruction.";
 const devPrompt = (task: string) =>
-  `FIRST, before anything else, print one single line that joins these two parts with NOTHING between them: @@FRACTERA_ + DEV_STARTED@@ — then immediately carry out the task below.\n\n${task}`;
+  `FIRST, before anything else, print one single line that joins these two parts with NOTHING between them: @@FRACTERA_ + DEV_STARTED@@ - then immediately carry out the task below.\n\n${task}`;
 
 const PROVIDERS = [
   { id: "claude-code", label: "Claude Code", cli: (model: string) => `claude${model ? ` --model ${model}` : ""}\n` },
@@ -183,17 +185,17 @@ export function DevConsole({
     const s = stepsRef.current;
 
     if (chunk.includes("[session reattached]")) {
-      // A reattach proves the PTY session survived — NOTHING more. We do not know whether the CLI
-      // agent is still running inside it, so the ladder restarts at TEST (owner 2026-07-19, second
-      // round: my first version jumped straight to "Start development" here, skipping the test —
-      // exactly the shortcut the owner forbade). Test proves the agent is alive and in the room;
-      // only a green test unlocks "Start development" (which sends the FULL instruction — the room
-      // task is refetched by the parent on every dialog open, it is never lost). If the 200KB replay
-      // contains the DEV marker, the detector below flips us to "developing" honestly.
+      // A reattach proves ONE thing: the PTY (a zsh shell in the room) survived. It does NOT prove
+      // the CLI agent ever started — the owner's live disaster (round 3): he had exited before
+      // starting any agent, the restored session was BARE ZSH, my code assumed "agent running",
+      // enabled Test, and the test prompt was executed BY THE SHELL ("zsh: no matches found").
+      // So a reattach restores the terminal history and NOTHING else: the ladder restarts from the
+      // very beginning (provider cards + "Start the agent"; Test stays disabled until then). Only
+      // hard evidence moves us forward: the DEV marker in the 200KB replay flips to "developing"
+      // below. The full instruction is never lost either way — the parent refetches the handoff on
+      // every dialog open.
       setReattached(true);
-      setSteps({ pwd: "done", cli: "done", login: "todo", task: "todo", free: "todo" });
-      setAgentStarted(true);
-      startedRef.current = true;
+      setSteps({ pwd: "done", cli: "todo", login: "todo", task: "todo", free: "todo" });
       // no return — the replayed chunk must still reach the marker scan below
     }
     // Step 1 — pwd verification: our own probe answer contains the room path on its own line.
@@ -249,9 +251,9 @@ export function DevConsole({
       // phase (a reattach replay may carry the marker before any click this session).
       rawBufRef.current = "";
       setPhase("developing");
-      setStep("login", "done");
-      setStep("task", "done");
-      setStep("free", "doing");
+      setAgentStarted(true);
+      startedRef.current = true;
+      setSteps({ pwd: "done", cli: "done", login: "done", task: "done", free: "doing" });
       toast.success(T.devHanded);
     }
   }, [roomPath, setStep, T.testOk, T.devHanded]);
@@ -286,7 +288,7 @@ export function DevConsole({
       if (activeAuthRef.current) { armTestTimeout(); return; }
       setPhase("idle");
       failToastId.current = toast.error(T.testFail, { duration: Infinity });
-    }, 60_000);
+    }, 25_000);
   }, [T.testFail]);
 
   const runTest = useCallback(() => {
