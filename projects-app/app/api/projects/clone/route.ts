@@ -30,13 +30,27 @@ async function exists(p: string): Promise<boolean> {
 
 const SLUG_OK = /^[a-z0-9-]+$/;
 
+// Cyrillic → Latin transliteration BEFORE slugifying (owner 2026-07-19): the owner names clones in
+// Russian («Телеграм диетолог»), and the old slugify stripped every non-Latin char — the slug collapsed
+// to the bare "clone" fallback, an identity that ages badly (clone, clone-2, …). A slug must stay
+// recognizably derived from the chosen name.
+const CYR: Record<string, string> = {
+  а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "e", ж: "zh", з: "z", и: "i", й: "y",
+  к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f",
+  х: "h", ц: "ts", ч: "ch", ш: "sh", щ: "sch", ъ: "", ы: "y", ь: "", э: "e", ю: "yu", я: "ya",
+};
+
 function slugify(s: string): string {
-  return s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48);
+  return s.toLowerCase()
+    .replace(/[а-яё]/g, (c) => CYR[c] ?? "")
+    .normalize("NFKD")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48);
 }
 
-/** A slug not yet taken in this category (the automation folder must not exist). */
-async function uniqueAutomationSlug(category: string, base: string): Promise<string> {
-  const root = slugify(base) || "clone";
+/** A slug not yet taken in this category (the automation folder must not exist). The fallback derives
+ *  from the SOURCE slug (never a bare "clone") so even an untranslatable name yields a usable identity. */
+async function uniqueAutomationSlug(category: string, base: string, sourceSlug: string): Promise<string> {
+  const root = slugify(base) || `${sourceSlug}-clone`.slice(0, 48);
   let slug = root;
   let i = 2;
   while (await exists(join(projectsRoot(), category, slug))) slug = `${root}-${i++}`;
@@ -71,7 +85,7 @@ export async function POST(req: NextRequest) {
   if (!(await exists(src.projectDir))) return NextResponse.json({ error: "source automation not found" }, { status: 404 });
 
   const title = String(body?.title ?? "").trim().slice(0, 120) || `${src.slug} clone`;
-  const cloneSlug = await uniqueAutomationSlug(src.category, title);
+  const cloneSlug = await uniqueAutomationSlug(src.category, title, src.slug);
   const cloneAutomation = `${src.category}/${cloneSlug}`;
   const cloneDir = join(projectsRoot(), src.category, cloneSlug);
 
