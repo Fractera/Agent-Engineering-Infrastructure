@@ -143,6 +143,9 @@ export function DevConsole({
   // A small FRESH window for CLI-startup errors (round 4): reset on every launch/test so replayed old
   // junk can never trigger it; scanned only between "Start the agent" and a confirmed development.
   const cliErrBufRef = useRef("");
+  // Claude Code's one-time Bypass-Permissions consent screen (round 5): the conductor answers it
+  // itself ("2. Yes, I accept") — once per launch, guarded by this flag.
+  const bypassAckRef = useRef(false);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const [exitArm, setExitArm] = useState(false);
@@ -219,6 +222,16 @@ export function DevConsole({
     if (startedRef.current && (phaseRef.current === "idle" || phaseRef.current === "testing")) {
       cliErrBufRef.current = (cliErrBufRef.current + stripAnsi(chunk)).slice(-500);
       const w = cliErrBufRef.current;
+      // Step 2c — Claude Code's Bypass-Permissions consent screen (owner's round-5 transcript): the CLI
+      // itself asks "Yes, I accept" once before entering auto mode. The conductor answers for the user:
+      // "2" selects the accept option, the trailing Enter confirms. Harmless if already confirmed.
+      if (!bypassAckRef.current && w.includes("Yes, I accept")) {
+        bypassAckRef.current = true;
+        cliErrBufRef.current = "";
+        termRef.current?.sendStdin("2");
+        setTimeout(() => termRef.current?.sendStdin("\r"), 250);
+        return;
+      }
       if (w.includes("cannot be used with root") || w.includes("command not found")) {
         cliErrBufRef.current = "";
         if (testTimer.current) clearTimeout(testTimer.current);
@@ -298,6 +311,7 @@ export function DevConsole({
     if (stepsRef.current.pwd !== "done") { toast.error(T.pwdFail); return; }
     if (failToastId.current != null) { toast.dismiss(failToastId.current); failToastId.current = null; }
     cliErrBufRef.current = "";
+    bypassAckRef.current = false;
     const p = PROVIDERS.find((x) => x.id === provider) ?? PROVIDERS[0];
     setAgentStarted(true);
     startedRef.current = true;
