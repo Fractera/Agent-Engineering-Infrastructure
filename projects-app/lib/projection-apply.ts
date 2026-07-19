@@ -1,6 +1,7 @@
 import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, join, relative, sep } from "node:path";
 import { compileNode } from "@/lib/node-compile";
+import { analyzeGraphFlow } from "@/lib/graph-flow";
 import { regenerateDiagram, liveSlugsInOrder, resolveProject } from "@/lib/nodes";
 
 // THE GATED APPLY (step 254.14, ROUTE-V3 law 4) — the return path from the agent's sterile room. NEVER a
@@ -14,6 +15,10 @@ import { regenerateDiagram, liveSlugsInOrder, resolveProject } from "@/lib/nodes
 //      _lib/_types, its api routes, its pages, README.md, cron.json. The five law documents are
 //      platform-authored and IMMUTABLE; *.compiled.mjs is runtime truth (the step-251 lesson).
 //   B. Node compilation IN THE ROOM — a changed node must bundle before anything is applied.
+//   C. DESIGN + DATA FLOW (263.1, after automation-48qwh): adding a NEW node requires the TARGET-GRAPH.md
+//      design artifact in the room (design before code — weak models fill forms better than they reason
+//      freely), and the room's whole graph must pass the data-flow gate (no starved nodes, no dead ends —
+//      lib/graph-flow.ts). Structural validation alone happily accepted a meaningless two-node island.
 //   Deletions are IGNORED (reported): removing an object goes through the delete APIs, never via a
 //   missing file in a room.
 
@@ -28,6 +33,7 @@ const ALLOWED = [
   /^pages\/.+$/,
   /^README\.md$/,
   /^cron\.json$/,
+  /^TARGET-GRAPH\.md$/, // the design artifact (gate C) — authored by the agent BEFORE any node code
 ];
 
 export type ApplyResult =
@@ -118,6 +124,43 @@ export async function applyProjection(automation: string): Promise<ApplyResult> 
       return { ok: false, error: `node "${slug}" does not compile — nothing was applied. Fix the source in the room and re-apply:\n${res.error}` };
     }
     await rm(join(room, "_nodes", slug, "functions.compiled.mjs"), { force: true }); // a gate artifact, not authored
+  }
+
+  // GATE C1 — DESIGN BEFORE CODE (263.1): a diff that ADDS a node must carry the TARGET-GRAPH.md design
+  // artifact (in this diff or already applied earlier). Weak models skip optional prose — a required
+  // deliverable they do not skip.
+  const addsNewNode = await (async () => {
+    for (const rel of changed) {
+      const m = rel.match(/^_nodes\/([^/]+)\/meta\.ts$/);
+      if (m && (await readFile(join(proj.projectDir, rel)).catch(() => null)) === null) return true;
+    }
+    return false;
+  })();
+  if (addsNewNode) {
+    const hasPlan = changed.includes("TARGET-GRAPH.md")
+      || (await stat(join(proj.projectDir, "TARGET-GRAPH.md")).then(() => true).catch(() => false));
+    if (!hasPlan) {
+      return {
+        ok: false,
+        error:
+          "the diff adds a new node but carries no TARGET-GRAPH.md — design before code (nothing was applied). " +
+          "Write TARGET-GRAPH.md at the room root FIRST: a table of every node (role, ioType, in/out keys), every " +
+          "edge, the full input→…→output paths recited per surface, and the fate of every EXISTING node " +
+          "(kept / reoriented / deleted — with the reason). Then re-apply with your nodes.",
+      };
+    }
+  }
+
+  // GATE C2 — THE DATA-FLOW GATE (263.1, lib/graph-flow.ts): the room IS the future state of the route,
+  // so its whole graph must be sound — no starved nodes, no dead ends. The automation-48qwh failure
+  // (an unfed, unread two-node island) passed every structural check; this is the check it could not pass.
+  const flowViolations = await analyzeGraphFlow(join(room, "_nodes"));
+  if (flowViolations.length) {
+    return {
+      ok: false,
+      error: "the diff was refused — the resulting graph does not hold water (nothing was applied). Fix the flow in the room and re-apply.",
+      violations: flowViolations,
+    };
   }
 
   // APPLY — atomic: back up every target, copy, roll back everything on any failure.

@@ -66,6 +66,17 @@ A transform never decides routes.
   and named in its conditions[] ("no price found → stop"). If both cases continue somewhere, it needs
   two branches.
 
+## 3b. The design artifact — TARGET-GRAPH.md, BEFORE any code (owner's law, 2026-07-19)
+
+You do not design in your head. Your FIRST authored file is TARGET-GRAPH.md at the project root:
+- a table of EVERY node: role, ioType, in keys, out keys;
+- every edge, and the full input→…→output path recited for EVERY surface;
+- the fate of every EXISTING node: kept / reoriented / deleted — with the reason.
+The apply gate refuses a diff that adds nodes without this artifact, and refuses any resulting graph
+with a STARVED node (its inputs producible by no one) or a DEAD END (its outputs read by no one).
+Born from a real failure: a model bolted a two-node island onto a demo — nothing fed it, nobody read
+it, and structural validation passed it. The plan-then-gate loop is what keeps design honest.
+
 ## 4. The reasoning chain — run it for EVERY new node or edge
 
 1. NAME THE DATA. Write down exactly what flows OUT of this node (its out ports) and WHO consumes it.

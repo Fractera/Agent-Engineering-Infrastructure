@@ -67,15 +67,23 @@ was built for you just now). Its local mirror for the owner: ai-workspace/agent-
 HOW TO WORK
 1. Read the room's AGENTS.md FIRST and obey it (WIRING-RULES.md and SCALE-RULES.md before any node/edge
    change; PLATFORM.md is the whole platform contract).
-2. Edit ONLY inside the room. The five law documents and *.compiled.mjs are immutable; deleting files
+2. DESIGN BEFORE CODE — your FIRST authored file is TARGET-GRAPH.md at the room root: a table of every
+   node (role, ioType, in/out keys), every edge, the full input->...->output path recited for EVERY
+   surface, and the fate of every EXISTING node (kept / reoriented / deleted + why). The apply gate
+   refuses new nodes without it, and refuses any graph with starved nodes or dead ends (a node no one
+   feeds, a result no one reads). Only after the plan — write the code that matches it.
+3. Edit ONLY inside the room. The five law documents and *.compiled.mjs are immutable; deleting files
    does nothing (deletions go through the platform APIs).
-3. When done (or per finished object): POST http://localhost:3003/api/projects/projection/apply
-   {"automation":"${automation}"} — your diff is gated (authorship whitelist + node compilation) and
-   lands atomically; a refusal names exactly what to fix. Then close objects per PLATFORM.md
-   (materialize / entity-summary / entity-warning) and verify:
+4. When done (or per finished object): POST http://localhost:3003/api/projects/projection/apply
+   {"automation":"${automation}"} — your diff is gated (authorship whitelist + node compilation +
+   design/data-flow) and lands atomically; a refusal names exactly what to fix. Then close objects per
+   PLATFORM.md (materialize / entity-summary / entity-warning) and verify:
    GET http://localhost:3003/api/projects/validate?automation=${automation} → ok:true.
-4. EVERY platform HTTP call above MUST carry this header (your service pass — without it the API
+5. EVERY platform HTTP call above MUST carry this header (your service pass — without it the API
    answers 403): X-Fractera-Agent-Gate: ${gateSecret}
+6. REPORT ONLY FACTS. If a platform call failed, quote its exact response verbatim. NEVER attribute a
+   failure to an invented cause ("system artifact buildup", "backend configuration issue") — there is
+   no such machinery, and a made-up diagnosis is treated as a failed task.
 
 ${items.length
     ? `THE STAGED ITEMS (${items.length}):\n${list}`
