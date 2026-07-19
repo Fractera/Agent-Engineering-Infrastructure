@@ -382,7 +382,16 @@ export function StartDevelopment({
 
   return (
     <Dialog open={open} onOpenChange={onOpen}>
-      <DialogContent className={`flex max-h-[92vh] flex-col overflow-hidden ${mode === "console" ? "sm:max-w-5xl" : "sm:max-w-2xl"}`}>
+      {/* The launch dialog closes ONLY via its explicit controls (owner 2026-07-19): Escape belongs to
+          the TERMINAL (Claude Code uses it to interrupt), and a stray outside-click/Esc must never kill
+          a live agent session. Radix's Esc/outside-click closing is disabled for every mode — the X
+          button, "cancel and keep editing" and Exit remain the only doors. */}
+      <DialogContent
+        className={`flex max-h-[92vh] flex-col overflow-hidden ${mode === "console" ? "sm:max-w-5xl" : "sm:max-w-2xl"}`}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
             {mode === "review"
