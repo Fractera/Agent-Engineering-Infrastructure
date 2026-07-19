@@ -2,7 +2,7 @@ import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs
 import { dirname, join, relative, sep } from "node:path";
 import { compileNode } from "@/lib/node-compile";
 import { analyzeGraphFlow } from "@/lib/graph-flow";
-import { regenerateDiagram, liveSlugsInOrder, resolveProject, syncNodeNamesFromMeta } from "@/lib/nodes";
+import { regenerateDiagram, liveSlugsInOrder, resolveProject, syncNodeNamesFromMeta, syncOrphanEdgesFromPorts } from "@/lib/nodes";
 
 // THE GATED APPLY (step 254.14, ROUTE-V3 law 4) — the return path from the agent's sterile room. NEVER a
 // merge: the room's diff against the route is computed, every change passes the gates, and only then the
@@ -37,7 +37,7 @@ const ALLOWED = [
 ];
 
 export type ApplyResult =
-  | { ok: true; applied: string[]; recompiled: string[]; ignoredDeletions: string[]; renamed?: string[]; syncWarning?: string }
+  | { ok: true; applied: string[]; recompiled: string[]; ignoredDeletions: string[]; renamed?: string[]; linked?: string[]; syncWarning?: string }
   | { ok: false; error: string; violations?: string[] };
 
 async function walk(dir: string): Promise<string[]> {
@@ -188,6 +188,7 @@ export async function applyProjection(automation: string): Promise<ApplyResult> 
     if (res.ok) recompiled.push(slug);
   }
   let renamed: string[] = [];
+  let linked: string[] = [];
   let syncWarning: string | undefined;
   if (touchedSlugs.length) {
     await regenerateDiagram(proj.projectDir, await liveSlugsInOrder(proj.automation)).catch(() => { /* diagram regen is best-effort here */ });
@@ -199,6 +200,11 @@ export async function applyProjection(automation: string): Promise<ApplyResult> 
     } catch (e) {
       syncWarning = `canvas name sync failed (${e}) — the canvas may show stale node names until the next successful apply`;
     }
+    try {
+      linked = await syncOrphanEdgesFromPorts(proj.automation, proj.projectDir);
+    } catch (e) {
+      syncWarning = `${syncWarning ? `${syncWarning}; ` : ""}orphan-edge sync failed (${e}) — a new node may show without its line until the next successful apply`;
+    }
   }
-  return { ok: true, applied: changed, recompiled, ignoredDeletions, renamed, ...(syncWarning ? { syncWarning } : {}) };
+  return { ok: true, applied: changed, recompiled, ignoredDeletions, renamed, linked, ...(syncWarning ? { syncWarning } : {}) };
 }

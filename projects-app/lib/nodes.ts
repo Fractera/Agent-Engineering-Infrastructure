@@ -235,6 +235,56 @@ export async function syncNodeNamesFromMeta(automation: string, projectDir: stri
   return renamed;
 }
 
+/** THE ORPHAN-EDGE SYNC (263.1 round 13, owner's "yes ofcourse"). A gated apply materializes nodes on disk
+ *  but writes no `automation_diagram_edges` rows, so an agent-added alternative input sat VISUALLY alone on
+ *  the canvas forever (medicine/v2 telegram input) even though the executor's bag semantics had it fully
+ *  wired. This derives the missing line the same conservative way lib/graph-flow.ts reasons: ONLY for a node
+ *  no edge row touches at all (never fights topology the owner drew or deleted), and only on an exact
+ *  contract match — every out key consumed by one node's ins (producer → that consumer), or every in key
+ *  produced by one node's outs (that producer → node). INSERT OR IGNORE keeps it idempotent. */
+export async function syncOrphanEdgesFromPorts(automation: string, projectDir: string): Promise<string[]> {
+  const nodes = await listNodes(automation);
+  if (nodes.length < 2) return [];
+  const edges = await listDiagramEdges(automation);
+  const touched = new Set<string>();
+  for (const e of edges) { touched.add(e.from_cuid); touched.add(e.to_cuid); }
+  const ports = new Map<string, { in: string[]; out: string[] }>();
+  for (const n of nodes) ports.set(n.cuid, await readNodePorts(projectDir, n.slug));
+  const names = (l: string[]) => l.map((s) => s.split(":")[0].trim()).filter(Boolean);
+  const link = async (fromCuid: string, toCuid: string) => {
+    await db.prepare(
+      `INSERT OR IGNORE INTO automation_diagram_edges (automation, from_cuid, to_cuid) VALUES (?, ?, ?)`,
+    ).run(automation, fromCuid, toCuid);
+  };
+  const added: string[] = [];
+  for (const n of nodes) {
+    if (touched.has(n.cuid)) continue;
+    const mine = ports.get(n.cuid)!;
+    const out = names(mine.out);
+    if (out.length) {
+      const consumer = nodes.find(
+        (c) => c.cuid !== n.cuid && out.every((k) => names(ports.get(c.cuid)!.in).includes(k)),
+      );
+      if (consumer) {
+        await link(n.cuid, consumer.cuid);
+        added.push(`${n.slug} → ${consumer.slug}`);
+        continue;
+      }
+    }
+    const inn = names(mine.in);
+    if (inn.length) {
+      const producer = nodes.find(
+        (p) => p.cuid !== n.cuid && inn.every((k) => names(ports.get(p.cuid)!.out).includes(k)),
+      );
+      if (producer) {
+        await link(producer.cuid, n.cuid);
+        added.push(`${producer.slug} → ${n.slug}`);
+      }
+    }
+  }
+  return added;
+}
+
 export async function nodeByCuid(cuid: string): Promise<NodeRow | undefined> {
   return (await db.prepare(`SELECT * FROM automation_nodes WHERE cuid = ?`).get(cuid)) as NodeRow | undefined;
 }
