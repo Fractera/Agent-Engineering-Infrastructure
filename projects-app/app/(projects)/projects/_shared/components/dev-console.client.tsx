@@ -81,7 +81,7 @@ const TEST_PROMPT =
 const devPrompt = (task: string) =>
   `FIRST, before anything else, print one single line that joins these two parts with NOTHING between them: @@FRACTERA_ + DEV_STARTED@@ - then immediately carry out the task below.
 
-WHEN THE WHOLE TASK IS DONE (your gated apply succeeded and you verified the result), print your final report for the owner: one plain-English paragraph, max 500 characters, saying WHAT you built/changed and HOW you verified it. Print it between two marker lines: before it a line joining @@FRACTERA_ + REPORT_BEGIN@@ and after it a line joining @@FRACTERA_ + REPORT_END@@ (each joined with NOTHING between the parts).
+WHEN THE WHOLE TASK IS DONE (your gated apply succeeded and you verified the result), print your final report for the owner: one plain-English paragraph, max 500 characters, saying WHAT you built/changed and HOW you verified it. End the report with one extra line: "Tokens used: <your total token consumption for this session — exact if you can see it, otherwise your best estimate like ~120k, never omit the line>". Print the whole report between two marker lines: before it a line joining @@FRACTERA_ + REPORT_BEGIN@@ and after it a line joining @@FRACTERA_ + REPORT_END@@ (each joined with NOTHING between the parts).
 
 ${task}`;
 
@@ -334,10 +334,13 @@ export function DevConsole({
         })
           .then((r) => (r.ok ? r.json() : null))
           .then((d: { text?: string } | null) => {
+            // A content-heavy toast (owner 2026-07-19): widen it beyond sonner's ~356px default so the
+            // report + token line read comfortably; the viewport cap keeps phones safe.
             toast.success(T.reportTitle, {
               description: d?.text || report,
               duration: Infinity,
               action: { label: T.close, onClick: () => {} },
+              style: { width: "min(480px, calc(100vw - 32px))" },
             });
           })
           .catch(() => {
@@ -345,6 +348,7 @@ export function DevConsole({
               description: report,
               duration: Infinity,
               action: { label: T.close, onClick: () => {} },
+              style: { width: "min(480px, calc(100vw - 32px))" },
             });
           });
       }
