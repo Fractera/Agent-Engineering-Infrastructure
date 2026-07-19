@@ -74,8 +74,11 @@ HOW TO WORK
    (materialize / entity-summary / entity-warning) and verify:
    GET http://localhost:3003/api/projects/validate?automation=${automation} → ok:true.
 
-THE STAGED ITEMS (${items.length}):
-${list}`;
+${items.length
+    ? `THE STAGED ITEMS (${items.length}):\n${list}`
+    // The use-cases-only launch (owner 2026-07-19): confirmed use cases alone are a valid mandate.
+    : `THERE ARE NO INDIVIDUALLY STAGED ITEMS. Your mandate is the automation itself: read the room's use
+cases and founding instruction and build/adjust the nodes so the use cases actually run.`}`;
 }
 
 export async function GET(req: NextRequest) {
@@ -85,7 +88,8 @@ export async function GET(req: NextRequest) {
 
   // THE GATES SURVIVE THE STEP MACHINERY (they were never about steps) — launchGate (lib/wave.ts, step 250)
   // is the ONE set of checks every development entry point passes, with the reason codes the dialog speaks.
-  const gate = await launchGate(proj.automation);
+  // ?force=1 (owner 2026-07-19): the dialog's "launch anyway" — the stub-node check becomes advisory.
+  const gate = await launchGate(proj.automation, { force: req.nextUrl.searchParams.get("force") === "1" });
   if (!gate.ok) {
     return NextResponse.json(
       gate.nodes ? { reason: gate.reason, nodes: gate.nodes } : { reason: gate.reason },

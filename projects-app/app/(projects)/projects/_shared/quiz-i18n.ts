@@ -28,6 +28,7 @@ export type QuizStrings = {
   nodeDesigned: string;           // {name} {step}
   linkDesigned: string;           // {name} {step}
   casesWritten: string; casesWrittenOne: string; casesWrittenDesc: string;   // {n}
+  casesWrittenAction: string;     // the toast button that jumps straight to the review/confirm dialog (owner 2026-07-19)
   casesUpdated: string; casesUpdatedOne: string; nothingChanged: string;     // {n}
   keptAsDesc: string; editReplaced: string;
   casesMissing: string; casesMissingDesc: string; casesMissingAction: string;
@@ -69,6 +70,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     linkDesigned: "Link \"{name}\" designed — development step #{step} created",
     casesWritten: "{n} user cases written", casesWrittenOne: "1 user case written",
     casesWrittenDesc: "Read them in the Use cases panel and confirm them — development starts only after that. Now we design the nodes.",
+    casesWrittenAction: "Review and confirm",
     casesUpdated: "{n} user cases updated", casesUpdatedOne: "1 user case updated", nothingChanged: "Nothing changed",
     keptAsDesc: "Kept as your description of the scenarios — the cases will be written from it.",
     editReplaced: "Your edit replaced the model's text — what gets built comes from it.",
@@ -106,6 +108,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     linkDesigned: "Связь «{name}» спроектирована — создан шаг разработки №{step}",
     casesWritten: "Записано кейсов: {n}", casesWrittenOne: "Записан 1 кейс",
     casesWrittenDesc: "Прочитайте их в панели «Кейсы» и подтвердите — разработка начнётся только после этого. Теперь проектируем узлы.",
+    casesWrittenAction: "Прочитать и подтвердить",
     casesUpdated: "Обновлено кейсов: {n}", casesUpdatedOne: "Обновлён 1 кейс", nothingChanged: "Ничего не изменилось",
     keptAsDesc: "Сохранено как ваше описание сценариев — из него будут записаны кейсы.",
     editReplaced: "Ваша правка заменила текст модели — из него и строится результат.",
@@ -143,6 +146,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     linkDesigned: "Enlace «{name}» diseñado — paso de desarrollo n.º {step} creado",
     casesWritten: "{n} casos de uso escritos", casesWrittenOne: "1 caso de uso escrito",
     casesWrittenDesc: "Léelos en el panel de casos de uso y confírmalos — el desarrollo empieza solo después de eso. Ahora diseñamos los nodos.",
+    casesWrittenAction: "Leer y confirmar",
     casesUpdated: "{n} casos de uso actualizados", casesUpdatedOne: "1 caso de uso actualizado", nothingChanged: "Nada cambió",
     keptAsDesc: "Guardado como tu descripción de los escenarios — de ahí se escribirán los casos.",
     editReplaced: "Tu edición reemplazó el texto del modelo — lo que se construye sale de ahí.",
@@ -180,6 +184,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     linkDesigned: "Lien « {name} » conçu — étape de développement n° {step} créée",
     casesWritten: "{n} cas d'usage écrits", casesWrittenOne: "1 cas d'usage écrit",
     casesWrittenDesc: "Lisez-les dans le panneau des cas d'usage et confirmez-les — le développement ne commence qu'après. Concevons maintenant les nœuds.",
+    casesWrittenAction: "Lire et confirmer",
     casesUpdated: "{n} cas d'usage mis à jour", casesUpdatedOne: "1 cas d'usage mis à jour", nothingChanged: "Rien n'a changé",
     keptAsDesc: "Enregistré comme votre description des scénarios — les cas en seront écrits.",
     editReplaced: "Votre modification a remplacé le texte du modèle — c'est de là que vient ce qui est construit.",
@@ -217,6 +222,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     linkDesigned: "Collegamento «{name}» progettato — passo di sviluppo n. {step} creato",
     casesWritten: "{n} casi d'uso scritti", casesWrittenOne: "1 caso d'uso scritto",
     casesWrittenDesc: "Leggili nel pannello dei casi d'uso e confermali — lo sviluppo inizia solo dopo. Ora progettiamo i nodi.",
+    casesWrittenAction: "Leggi e conferma",
     casesUpdated: "{n} casi d'uso aggiornati", casesUpdatedOne: "1 caso d'uso aggiornato", nothingChanged: "Nulla è cambiato",
     keptAsDesc: "Salvato come la tua descrizione degli scenari — da essa saranno scritti i casi.",
     editReplaced: "La tua modifica ha sostituito il testo del modello — è da lì che nasce ciò che viene costruito.",
@@ -254,6 +260,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     linkDesigned: "Verbindung „{name}“ entworfen — Entwicklungsschritt Nr. {step} erstellt",
     casesWritten: "{n} Anwendungsfälle geschrieben", casesWrittenOne: "1 Anwendungsfall geschrieben",
     casesWrittenDesc: "Lies sie im Anwendungsfälle-Panel und bestätige sie — die Entwicklung startet erst danach. Jetzt entwerfen wir die Knoten.",
+    casesWrittenAction: "Lesen und bestätigen",
     casesUpdated: "{n} Anwendungsfälle aktualisiert", casesUpdatedOne: "1 Anwendungsfall aktualisiert", nothingChanged: "Nichts geändert",
     keptAsDesc: "Als deine Beschreibung der Szenarien gespeichert — daraus werden die Fälle geschrieben.",
     editReplaced: "Deine Änderung hat den Text des Modells ersetzt — daraus entsteht, was gebaut wird.",
@@ -291,6 +298,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     linkDesigned: "Ligação «{name}» desenhada — passo de desenvolvimento n.º {step} criado",
     casesWritten: "{n} casos de uso escritos", casesWrittenOne: "1 caso de uso escrito",
     casesWrittenDesc: "Leia-os no painel de casos de uso e confirme-os — o desenvolvimento só começa depois disso. Agora vamos desenhar os nós.",
+    casesWrittenAction: "Ler e confirmar",
     casesUpdated: "{n} casos de uso atualizados", casesUpdatedOne: "1 caso de uso atualizado", nothingChanged: "Nada mudou",
     keptAsDesc: "Mantido como a sua descrição dos cenários — os casos serão escritos a partir dela.",
     editReplaced: "A sua edição substituiu o texto do modelo — o que é construído vem dela.",
@@ -328,6 +336,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     linkDesigned: "Połączenie „{name}” zaprojektowane — utworzono krok rozwoju nr {step}",
     casesWritten: "Zapisano przypadków użycia: {n}", casesWrittenOne: "Zapisano 1 przypadek użycia",
     casesWrittenDesc: "Przeczytaj je w panelu przypadków użycia i potwierdź — rozwój zacznie się dopiero potem. Teraz projektujemy węzły.",
+    casesWrittenAction: "Przeczytaj i potwierdź",
     casesUpdated: "Zaktualizowano przypadków użycia: {n}", casesUpdatedOne: "Zaktualizowano 1 przypadek użycia", nothingChanged: "Nic się nie zmieniło",
     keptAsDesc: "Zachowano jako Twój opis scenariuszy — na jego podstawie zostaną napisane przypadki.",
     editReplaced: "Twoja edycja zastąpiła tekst modelu — to, co zostanie zbudowane, pochodzi z niej.",
@@ -365,6 +374,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     linkDesigned: "«{name}» bağlantısı tasarlandı — #{step} geliştirme adımı oluşturuldu",
     casesWritten: "{n} kullanım senaryosu yazıldı", casesWrittenOne: "1 kullanım senaryosu yazıldı",
     casesWrittenDesc: "Bunları Kullanım Senaryoları panelinde okuyun ve onaylayın — geliştirme yalnızca bundan sonra başlar. Şimdi düğümleri tasarlıyoruz.",
+    casesWrittenAction: "Oku ve onayla",
     casesUpdated: "{n} kullanım senaryosu güncellendi", casesUpdatedOne: "1 kullanım senaryosu güncellendi", nothingChanged: "Hiçbir şey değişmedi",
     keptAsDesc: "Senaryolarınızın açıklaması olarak saklandı — senaryolar bundan yazılacak.",
     editReplaced: "Düzenlemeniz modelin metninin yerini aldı — inşa edilecek olan buradan gelir.",
@@ -402,6 +412,7 @@ export const QUIZ_I18N: Record<string, QuizStrings> = {
     linkDesigned: "Link \"{name}\" ontworpen — ontwikkelstap #{step} aangemaakt",
     casesWritten: "{n} use cases geschreven", casesWrittenOne: "1 use case geschreven",
     casesWrittenDesc: "Lees ze in het use cases-paneel en bevestig ze — de ontwikkeling begint pas daarna. Nu ontwerpen we de nodes.",
+    casesWrittenAction: "Lezen en bevestigen",
     casesUpdated: "{n} use cases bijgewerkt", casesUpdatedOne: "1 use case bijgewerkt", nothingChanged: "Niets veranderd",
     keptAsDesc: "Bewaard als jouw beschrijving van de scenario's — de cases worden hieruit geschreven.",
     editReplaced: "Jouw bewerking heeft de tekst van het model vervangen — wat gebouwd wordt komt hieruit voort.",

@@ -13,11 +13,12 @@ export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  const body = (await req.json().catch(() => null)) as { automation?: string } | null;
+  const body = (await req.json().catch(() => null)) as { automation?: string; force?: boolean } | null;
   const proj = resolveProject(String(body?.automation ?? ""));
   if (!proj.ok) return NextResponse.json({ error: proj.error }, { status: 400 });
 
-  const gate = await launchGate(proj.automation);
+  // `force` (owner 2026-07-19): the dialog's "launch anyway" — the stub-node check becomes advisory.
+  const gate = await launchGate(proj.automation, { force: body?.force === true });
   if (!gate.ok) {
     return NextResponse.json(
       gate.nodes ? { reason: gate.reason, nodes: gate.nodes } : { reason: gate.reason },

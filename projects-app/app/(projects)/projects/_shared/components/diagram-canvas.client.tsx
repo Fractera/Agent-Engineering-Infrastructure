@@ -183,7 +183,9 @@ export function DiagramCanvas({ nodes, automation, readOnly = false }: { nodes: 
       // wiring an edge must repaint the canvas on the next poll, not only when a node row itself changes.
       const sig = JSON.stringify([
         nodes.map((n) => [n.cuid, n.slug, n.name, n.draft, n.active_version, n.x, n.y, n.parent_cuid, n.status,
-          d.sources?.[n.cuid]?.role, d.sources?.[n.cuid]?.ioType]),
+          // The spec is part of the signature too (owner 2026-07-19): the read-only brief in the side panel
+          // must refresh after a Builder save, not show the poll-before-save text.
+          d.sources?.[n.cuid]?.role, d.sources?.[n.cuid]?.ioType, d.sources?.[n.cuid]?.spec]),
         d.edges ?? [],
       ]);
       if (sig === indexSig.current) return; // nothing changed — do NOT churn the canvas
@@ -626,6 +628,14 @@ export function DiagramCanvas({ nodes, automation, readOnly = false }: { nodes: 
               />
             ) : activeContract ? (
               <NodeCard node={activeContract} />
+            ) : activeView.draft && (sources[activeView.cuid]?.spec ?? "").trim() ? (
+              // The saved brief must NOT vanish outside the Builder (owner 2026-07-19, 263.1: "I wrote the
+              // description, closed the Builder — and the records are gone"). The spec is already fetched;
+              // show it read-only, with the pencil path back to the Builder.
+              <div className="space-y-1 text-sm">
+                <p className="text-xs text-muted-foreground">Draft brief (edit it in the Builder):</p>
+                <p className="whitespace-pre-wrap">{sources[activeView.cuid]?.spec}</p>
+              </div>
             ) : (
               <p className="text-sm text-muted-foreground">
                 {activeView.draft ? "Draft — not built yet. Open Builder to write its brief." : "No contract built yet."}

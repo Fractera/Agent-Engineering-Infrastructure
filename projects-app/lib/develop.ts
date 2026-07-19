@@ -477,8 +477,14 @@ HOW YOU WORK (delta-only):
 THE ARCHITECTURE (JSON):
 ${JSON.stringify(bundle)}
 
-THE STAGED ITEMS TO DEVELOP (${items.length}):
-${stagedList(items, slugByCuid)}`;
+${items.length
+    ? `THE STAGED ITEMS TO DEVELOP (${items.length}):\n${stagedList(items, slugByCuid)}`
+    // The use-cases-only launch (owner 2026-07-19): confirmed use cases alone are a valid mandate — the
+    // owner is not required to stage anything by hand before pressing the launch button.
+    : `THERE ARE NO INDIVIDUALLY STAGED ITEMS. Your mandate is the automation itself: read the use cases
+and the founding instruction in the architecture JSON and build/adjust the nodes so the use cases actually
+run (write each touched node live through write_node_functions). When the automation realizes its use
+cases, call \`finish\`.`}`;
 }
 
 // ─── The loop ──────────────────────────────────────────────────────────────────────────────────────────

@@ -323,6 +323,12 @@ export function ActivationQuiz({
       toast.success(n === 1 ? L.casesWrittenOne : fill(L.casesWritten, { n }), {
         description: L.casesWrittenDesc,
         duration: 15000,
+        // The jump button (owner 2026-07-19): straight into the review/confirm dialog — the use-cases
+        // panel already listens for this event (the same one the refusal toasts dispatch).
+        action: {
+          label: L.casesWrittenAction,
+          onClick: () => window.dispatchEvent(new CustomEvent("usecases:review", { detail: { automation } })),
+        },
       });
       router.refresh();
     } finally { setBusy(false); }

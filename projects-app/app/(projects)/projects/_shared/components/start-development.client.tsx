@@ -43,6 +43,8 @@ type SD = {
   alreadyRunning: string; noKey: string; modelNoTools: string;
   noCasesTitle: string; noCasesBody: string; noStagedTitle: string; noStagedBody: string;
   stubTitle: string; stubBody: string;
+  /** owner 2026-07-19 (263.1): the stub gate is ADVISORY — the hint + the "launch anyway" button. */
+  stubAdvisory: string; launchAnyway: string;
   failed: string; noDescription: string;
   confirmTitle: string; confirmBody: string; cancelEdit: string; startNow: string; builtInAlt: string;
 };
@@ -67,6 +69,7 @@ const I18N: Record<string, SD> = {
     noCasesTitle: "Describe the use cases first", noCasesBody: "This automation has no use cases yet. Open the Quiz on this page and describe your scenarios — development cannot start without them.",
     noStagedTitle: "Nothing staged for development", noStagedBody: "There are no pending requirements right now — describe a change first (a node's brief, a requirement, or a Sparkles comment).",
     stubTitle: "Some nodes have no description", stubBody: "These nodes still carry the blank template text: {nodes}. A coding agent cannot build a node nobody described — open each one and say what it should do, or delete it. Then launch again.",
+    stubAdvisory: "This is advisory only: the agent can usually infer an undescribed node's purpose from your use cases and the automation's description.", launchAnyway: "Launch anyway",
     failed: "Could not start development.", noDescription: "No description yet.",
     confirmTitle: "Development is about to start", confirmBody: "The coding agent will work in this project's own room, live in the terminal below. You can cancel and keep editing — this window returns whenever you press the launch button.",
     cancelEdit: "Cancel and keep editing", startNow: "Start now", builtInAlt: "Use the built-in developer (OpenAI) instead",
@@ -91,6 +94,7 @@ const I18N: Record<string, SD> = {
     noCasesTitle: "Сначала опишите пользовательские кейсы", noCasesBody: "У этой автоматизации ещё нет кейсов. Откройте Quiz на этой странице и опишите сценарии — без них разработку не начать.",
     noStagedTitle: "В разработку ничего не передано", noStagedBody: "Сейчас нет ожидающих требований — сначала опишите изменение (требование узла, требование сущности или комментарий через ✦).",
     stubTitle: "У некоторых узлов нет описания", stubBody: "Эти узлы всё ещё несут пустой шаблонный текст: {nodes}. Агент-программист не может построить узел, который никто не описал — откройте каждый и скажите, что он должен делать, или удалите его. Затем запустите разработку снова.",
+    stubAdvisory: "Это носит рекомендательный характер: агент обычно сам понимает назначение неописанного узла из ваших кейсов и описания автоматизации.", launchAnyway: "Всё равно запустить",
     failed: "Не удалось запустить разработку.", noDescription: "Пока без описания.",
     confirmTitle: "Разработка сейчас начнётся", confirmBody: "Агент-программист будет работать в собственной комнате проекта, вживую в терминале ниже. Можно отменить и продолжить правки — это окно вернётся при следующем нажатии кнопки запуска.",
     cancelEdit: "Отменить и продолжить правки", startNow: "Стартовать сейчас", builtInAlt: "Использовать встроенного разработчика (OpenAI)",
@@ -115,6 +119,7 @@ const I18N: Record<string, SD> = {
     noCasesTitle: "Describe primero los casos de uso", noCasesBody: "Esta automatización aún no tiene casos de uso. Abre el Quiz en esta página y describe tus escenarios — sin ellos no se puede empezar el desarrollo.",
     noStagedTitle: "Nada pendiente de desarrollo", noStagedBody: "Ahora mismo no hay requisitos pendientes — describe primero un cambio (el requisito de un nodo, de una entidad o un comentario con ✦).",
     stubTitle: "Algunos nodos no tienen descripción", stubBody: "Estos nodos aún llevan el texto de plantilla vacío: {nodes}. Un agente de código no puede construir un nodo que nadie describió — abra cada uno y diga qué debe hacer, o elimínelo. Luego vuelva a lanzar.",
+    stubAdvisory: "Esto es solo una recomendación: el agente normalmente deduce el propósito de un nodo sin describir a partir de tus casos de uso y la descripción de la automatización.", launchAnyway: "Lanzar de todos modos",
     failed: "No se pudo iniciar el desarrollo.", noDescription: "Aún sin descripción.",
     confirmTitle: "El desarrollo está a punto de comenzar", confirmBody: "El agente trabajará en la sala propia del proyecto, en vivo en la terminal. Puedes cancelar y seguir editando — esta ventana vuelve con el botón de inicio.",
     cancelEdit: "Cancelar y seguir editando", startNow: "Empezar ahora", builtInAlt: "Usar el desarrollador integrado (OpenAI)",
@@ -139,6 +144,7 @@ const I18N: Record<string, SD> = {
     noCasesTitle: "Décrivez d'abord les cas d'usage", noCasesBody: "Cette automatisation n'a pas encore de cas d'usage. Ouvrez le Quiz sur cette page et décrivez vos scénarios — sans eux, le développement ne peut pas commencer.",
     noStagedTitle: "Rien en attente de développement", noStagedBody: "Aucune exigence en attente pour l'instant — décrivez d'abord un changement (l'exigence d'un nœud, d'une entité ou un commentaire via ✦).",
     stubTitle: "Certains nœuds n'ont pas de description", stubBody: "Ces nœuds portent encore le texte de modèle vide : {nodes}. Un agent de code ne peut pas construire un nœud que personne n'a décrit — ouvrez chacun et dites ce qu'il doit faire, ou supprimez-le. Puis relancez.",
+    stubAdvisory: "Ceci n'est qu'une recommandation : l'agent déduit généralement le rôle d'un nœud non décrit à partir de vos cas d'usage et de la description de l'automatisation.", launchAnyway: "Lancer quand même",
     failed: "Impossible de démarrer le développement.", noDescription: "Pas encore de description.",
     confirmTitle: "Le développement va commencer", confirmBody: "L'agent travaillera dans la salle du projet, en direct dans le terminal. Vous pouvez annuler et continuer vos modifications — cette fenêtre revient au prochain lancement.",
     cancelEdit: "Annuler et continuer", startNow: "Démarrer maintenant", builtInAlt: "Utiliser le développeur intégré (OpenAI)",
@@ -163,6 +169,7 @@ const I18N: Record<string, SD> = {
     noCasesTitle: "Descrivi prima i casi d'uso", noCasesBody: "Questa automazione non ha ancora casi d'uso. Apri il Quiz in questa pagina e descrivi i tuoi scenari — senza di essi non si può iniziare lo sviluppo.",
     noStagedTitle: "Niente in attesa di sviluppo", noStagedBody: "Al momento non ci sono richieste in sospeso — descrivi prima una modifica (la richiesta di un nodo, di un'entità o un commento con ✦).",
     stubTitle: "Alcuni nodi non hanno descrizione", stubBody: "Questi nodi portano ancora il testo di modello vuoto: {nodes}. Un agente di codice non può costruire un nodo che nessuno ha descritto — apra ciascuno e dica cosa deve fare, oppure lo elimini. Poi rilanci.",
+    stubAdvisory: "È solo una raccomandazione: l'agente di solito deduce lo scopo di un nodo non descritto dai casi d'uso e dalla descrizione dell'automazione.", launchAnyway: "Avvia comunque",
     failed: "Impossibile avviare lo sviluppo.", noDescription: "Ancora nessuna descrizione.",
     confirmTitle: "Lo sviluppo sta per iniziare", confirmBody: "L'agente lavorerà nella stanza del progetto, in diretta nel terminale. Puoi annullare e continuare a modificare — questa finestra torna al prossimo avvio.",
     cancelEdit: "Annulla e continua", startNow: "Avvia ora", builtInAlt: "Usa lo sviluppatore integrato (OpenAI)",
@@ -187,6 +194,7 @@ const I18N: Record<string, SD> = {
     noCasesTitle: "Beschreibe zuerst die Anwendungsfälle", noCasesBody: "Diese Automatisierung hat noch keine Anwendungsfälle. Öffne das Quiz auf dieser Seite und beschreibe deine Szenarien — ohne sie kann die Entwicklung nicht beginnen.",
     noStagedTitle: "Nichts zur Entwicklung vorgemerkt", noStagedBody: "Es gibt gerade keine offenen Anforderungen — beschreibe zuerst eine Änderung (die Anforderung eines Knotens, einer Entität oder einen Kommentar über ✦).",
     stubTitle: "Einige Knoten haben keine Beschreibung", stubBody: "Diese Knoten tragen noch den leeren Vorlagentext: {nodes}. Ein Coding-Agent kann keinen Knoten bauen, den niemand beschrieben hat — öffne jeden und sage, was er tun soll, oder lösche ihn. Dann starte erneut.",
+    stubAdvisory: "Dies ist nur eine Empfehlung: Der Agent leitet den Zweck eines unbeschriebenen Knotens meist aus Ihren Anwendungsfällen und der Beschreibung der Automatisierung ab.", launchAnyway: "Trotzdem starten",
     failed: "Die Entwicklung konnte nicht gestartet werden.", noDescription: "Noch keine Beschreibung.",
     confirmTitle: "Die Entwicklung beginnt gleich", confirmBody: "Der Agent arbeitet im eigenen Raum des Projekts, live im Terminal. Du kannst abbrechen und weiter bearbeiten — dieses Fenster kehrt beim nächsten Start zurück.",
     cancelEdit: "Abbrechen und weiter bearbeiten", startNow: "Jetzt starten", builtInAlt: "Den eingebauten Entwickler (OpenAI) verwenden",
@@ -211,6 +219,7 @@ const I18N: Record<string, SD> = {
     noCasesTitle: "Descreva primeiro os casos de uso", noCasesBody: "Esta automação ainda não tem casos de uso. Abra o Quiz nesta página e descreva os seus cenários — sem eles o desenvolvimento não pode começar.",
     noStagedTitle: "Nada pendente de desenvolvimento", noStagedBody: "Não há requisitos pendentes neste momento — descreva primeiro uma alteração (o requisito de um nó, de uma entidade ou um comentário via ✦).",
     stubTitle: "Alguns nós não têm descrição", stubBody: "Estes nós ainda trazem o texto de modelo vazio: {nodes}. Um agente de código não pode construir um nó que ninguém descreveu — abra cada um e diga o que deve fazer, ou elimine-o. Depois lance de novo.",
+    stubAdvisory: "Isto é apenas uma recomendação: o agente normalmente deduz o propósito de um nó não descrito a partir dos casos de uso e da descrição da automação.", launchAnyway: "Lançar mesmo assim",
     failed: "Não foi possível iniciar o desenvolvimento.", noDescription: "Ainda sem descrição.",
     confirmTitle: "O desenvolvimento vai começar", confirmBody: "O agente trabalhará na sala própria do projeto, ao vivo no terminal. Pode cancelar e continuar a editar — esta janela volta no próximo arranque.",
     cancelEdit: "Cancelar e continuar", startNow: "Começar agora", builtInAlt: "Usar o desenvolvedor integrado (OpenAI)",
@@ -235,6 +244,7 @@ const I18N: Record<string, SD> = {
     noCasesTitle: "Najpierw opisz przypadki użycia", noCasesBody: "Ta automatyzacja nie ma jeszcze przypadków użycia. Otwórz Quiz na tej stronie i opisz swoje scenariusze — bez nich rozwój nie może się rozpocząć.",
     noStagedTitle: "Nic nie czeka na rozwój", noStagedBody: "Obecnie nie ma oczekujących wymagań — najpierw opisz zmianę (wymaganie węzła, encji lub komentarz przez ✦).",
     stubTitle: "Niektóre węzły nie mają opisu", stubBody: "Te węzły wciąż niosą pusty tekst szablonu: {nodes}. Agent kodujący nie zbuduje węzła, którego nikt nie opisał — otwórz każdy i powiedz, co ma robić, albo go usuń. Potem uruchom ponownie.",
+    stubAdvisory: "To tylko zalecenie: agent zwykle sam wywnioskuje przeznaczenie nieopisanego węzła z przypadków użycia i opisu automatyzacji.", launchAnyway: "Uruchom mimo to",
     failed: "Nie udało się uruchomić rozwoju.", noDescription: "Jeszcze bez opisu.",
     confirmTitle: "Rozwój zaraz się rozpocznie", confirmBody: "Agent będzie pracować we własnym pokoju projektu, na żywo w terminalu. Możesz anulować i dalej edytować — to okno wróci przy następnym uruchomieniu.",
     cancelEdit: "Anuluj i edytuj dalej", startNow: "Rozpocznij teraz", builtInAlt: "Użyj wbudowanego dewelopera (OpenAI)",
@@ -259,6 +269,7 @@ const I18N: Record<string, SD> = {
     noCasesTitle: "Önce kullanım senaryolarını tanımlayın", noCasesBody: "Bu otomasyonun henüz kullanım senaryosu yok. Bu sayfadaki Quiz'i açın ve senaryolarınızı tanımlayın — onlar olmadan geliştirme başlayamaz.",
     noStagedTitle: "Geliştirme bekleyen bir şey yok", noStagedBody: "Şu anda bekleyen gereksinim yok — önce bir değişiklik tanımlayın (bir düğümün, bir varlığın gereksinimi ya da ✦ ile bir yorum).",
     stubTitle: "Bazı düğümlerin açıklaması yok", stubBody: "Bu düğümler hâlâ boş şablon metnini taşıyor: {nodes}. Kodlama ajanı kimsenin tanımlamadığı bir düğümü inşa edemez — her birini açıp ne yapması gerektiğini söyleyin ya da silin. Sonra yeniden başlatın.",
+    stubAdvisory: "Bu yalnızca bir öneridir: ajan, tanımlanmamış bir düğümün amacını genellikle kullanım senaryolarınızdan ve otomasyonun açıklamasından çıkarır.", launchAnyway: "Yine de başlat",
     failed: "Geliştirme başlatılamadı.", noDescription: "Henüz açıklama yok.",
     confirmTitle: "Geliştirme başlamak üzere", confirmBody: "Ajan, projenin kendi odasında, aşağıdaki terminalde canlı çalışacak. İptal edip düzenlemeye devam edebilirsiniz — bu pencere bir sonraki başlatmada geri döner.",
     cancelEdit: "İptal et ve düzenlemeye devam et", startNow: "Şimdi başlat", builtInAlt: "Yerleşik geliştiriciyi (OpenAI) kullan",
@@ -283,6 +294,7 @@ const I18N: Record<string, SD> = {
     noCasesTitle: "Beschrijf eerst de use cases", noCasesBody: "Deze automatisering heeft nog geen use cases. Open de Quiz op deze pagina en beschrijf je scenario's — zonder deze kan de ontwikkeling niet beginnen.",
     noStagedTitle: "Niets wacht op ontwikkeling", noStagedBody: "Er zijn momenteel geen openstaande eisen — beschrijf eerst een wijziging (de eis van een node, een entiteit of een opmerking via ✦).",
     stubTitle: "Sommige nodes hebben geen beschrijving", stubBody: "Deze nodes dragen nog de lege sjabloontekst: {nodes}. Een coding agent kan geen node bouwen die niemand beschreven heeft — open elke node en zeg wat die moet doen, of verwijder hem. Start daarna opnieuw.",
+    stubAdvisory: "Dit is slechts een aanbeveling: de agent leidt het doel van een onbeschreven node meestal af uit uw use cases en de beschrijving van de automatisering.", launchAnyway: "Toch starten",
     failed: "Kon de ontwikkeling niet starten.", noDescription: "Nog geen beschrijving.",
     confirmTitle: "De ontwikkeling gaat zo beginnen", confirmBody: "De agent werkt in de eigen kamer van het project, live in de terminal. Je kunt annuleren en verder bewerken — dit venster keert terug bij de volgende start.",
     cancelEdit: "Annuleren en verder bewerken", startNow: "Nu starten", builtInAlt: "De ingebouwde ontwikkelaar (OpenAI) gebruiken",
@@ -321,6 +333,9 @@ export function StartDevelopment({
   const L = I18N[lang] ?? I18N.en;
   const [mode, setMode] = useState<Mode>("loading");
   const [busy, setBusy] = useState(false);
+  // "Launch anyway" (owner 2026-07-19): once pressed on the advisory stub screen, every later call in this
+  // dialog session (handoff re-check AND the built-in developer POST) carries the same force flag.
+  const [forced, setForced] = useState(false);
   const [cases, setCases] = useState<Case[]>([]);
   // Step 247 (П5): the node names the launch gate refused over — shown so the owner knows WHICH to describe.
   const [stubNodes, setStubNodes] = useState<string[]>([]);
@@ -375,11 +390,15 @@ export function StartDevelopment({
   // THE ENTRY (step 255): the gates run via GET handoff (the ONE launchGate set); passing them shows the
   // CONFIRM screen (cancel-and-keep-editing / start-now — the owner's repeatable cycle) and stores the
   // room hand-off for the console. The built-in OpenAI developer stays reachable from that screen.
-  const load = useCallback(async () => {
+  const load = useCallback(async (force = false) => {
     setMode("loading");
     setBusy(true);
+    if (force) setForced(true);
     try {
-      const r = await fetch(`/api/projects/handoff?automation=${encodeURIComponent(automation)}`, { cache: "no-store" });
+      const r = await fetch(
+        `/api/projects/handoff?automation=${encodeURIComponent(automation)}${force ? "&force=1" : ""}`,
+        { cache: "no-store" },
+      );
       const d = (await r.json().catch(() => ({}))) as {
         ok?: boolean; reason?: string; nodes?: string[]; room?: string; roomPath?: string;
       };
@@ -423,7 +442,7 @@ export function StartDevelopment({
       const r = await fetch(`/api/projects/develop`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ automation }),
+        body: JSON.stringify({ automation, force: forced }),
         signal: ctl.signal,
       });
       if (!(r.headers.get("Content-Type") ?? "").includes("text/event-stream")) {
@@ -641,11 +660,17 @@ export function StartDevelopment({
         )}
 
         {mode === "stub-nodes" && (
-          <div className="space-y-1 py-4 text-sm">
+          <div className="space-y-2 py-4 text-sm">
             <p className="font-medium">{L.stubTitle}</p>
             <p className="text-muted-foreground">
               {L.stubBody.replace("{nodes}", stubNodes.map((n) => `«${n}»`).join(", "))}
             </p>
+            {/* ADVISORY, not a wall (owner 2026-07-19): the hint says so, and "launch anyway" re-runs the
+                gates with force — the agent infers an undescribed node's purpose from the use cases. */}
+            <p className="text-xs text-muted-foreground">{L.stubAdvisory}</p>
+            <Button size="sm" variant="outline" onClick={() => load(true)} disabled={busy}>
+              {L.launchAnyway}
+            </Button>
           </div>
         )}
 
