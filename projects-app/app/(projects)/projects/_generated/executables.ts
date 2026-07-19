@@ -9,19 +9,20 @@
 
 export type NodeModule = Record<string, unknown>;
 export type ActivationModule = Record<string, unknown>;
+export type DashboardModule = Record<string, unknown>;
 
 export const EXECUTABLES: Record<string, () => Promise<NodeModule>> = {
-  "other/example-content-pipeline:find-sources": () => import("../other/example-content-pipeline/_nodes/find-sources/functions"),
-  "other/example-content-pipeline:prepare-content": () => import("../other/example-content-pipeline/_nodes/prepare-content/functions"),
-  "other/example-content-pipeline:publish": () => import("../other/example-content-pipeline/_nodes/publish/functions"),
-  "other/example-stream-stock-price:parse-request": () => import("../other/example-stream-stock-price/_nodes/parse-request/functions"),
-  "other/example-stream-stock-price:lookup-price": () => import("../other/example-stream-stock-price/_nodes/lookup-price/functions"),
-  "other/example-stream-stock-price:record-result": () => import("../other/example-stream-stock-price/_nodes/record-result/functions"),
+
 };
 
 export const ACTIVATIONS: Record<string, () => Promise<ActivationModule>> = {
-  "other/example-content-pipeline": () => import("../other/example-content-pipeline/_data/activation"),
-  "other/example-stream-stock-price": () => import("../other/example-stream-stock-price/_data/activation"),
+
+};
+
+// DASHBOARDS (owner 2026-07-16): each automation's _data/dashboard.ts (PROJECT_DASHBOARD) — the architecture
+// bundle reads the real typed table configs (columns, actions) through this, never a regex parse.
+export const DASHBOARDS: Record<string, () => Promise<DashboardModule>> = {
+
 };
 
 export function executableKeys(): string[] {
