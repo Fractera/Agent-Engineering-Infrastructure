@@ -216,6 +216,25 @@ export async function liveSlugsInOrder(automation: string): Promise<string[]> {
   return (await listNodes(automation)).map((n) => n.slug);
 }
 
+/** THE TWO-TRUTHS SEAM (263.1 round 12, owner's live find on medicine/v2). The canvas label is the DB row
+ *  (`automation_nodes.name`, polled every 3s) while the node's authored identity is disk (`meta.ts` name) —
+ *  a gated apply rewrites only disk, so a rename by the coding agent NEVER reached the canvas (old names
+ *  outside, new names inside the panel, and no rebuild can help because the poll wins over the build-time
+ *  prop). This sync carries the disk truth into the DB row wherever they disagree; call it after any flow
+ *  that rewrites meta.ts outside the Builder (apply is the known one). */
+export async function syncNodeNamesFromMeta(automation: string, projectDir: string): Promise<string[]> {
+  const renamed: string[] = [];
+  for (const n of await listNodes(automation)) {
+    const t = await readFile(join(projectDir, "_nodes", n.slug, "meta.ts"), "utf8").catch(() => "");
+    const m = t.match(/\bname\s*:\s*["']([^"']+)["']/);
+    if (m && m[1] && m[1] !== n.name) {
+      await db.prepare(`UPDATE automation_nodes SET name = ?, updated_at = datetime('now') WHERE cuid = ?`).run(m[1], n.cuid);
+      renamed.push(`${n.slug} → ${m[1]}`);
+    }
+  }
+  return renamed;
+}
+
 export async function nodeByCuid(cuid: string): Promise<NodeRow | undefined> {
   return (await db.prepare(`SELECT * FROM automation_nodes WHERE cuid = ?`).get(cuid)) as NodeRow | undefined;
 }

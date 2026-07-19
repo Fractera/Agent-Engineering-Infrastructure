@@ -2,7 +2,7 @@ import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs
 import { dirname, join, relative, sep } from "node:path";
 import { compileNode } from "@/lib/node-compile";
 import { analyzeGraphFlow } from "@/lib/graph-flow";
-import { regenerateDiagram, liveSlugsInOrder, resolveProject } from "@/lib/nodes";
+import { regenerateDiagram, liveSlugsInOrder, resolveProject, syncNodeNamesFromMeta } from "@/lib/nodes";
 
 // THE GATED APPLY (step 254.14, ROUTE-V3 law 4) — the return path from the agent's sterile room. NEVER a
 // merge: the room's diff against the route is computed, every change passes the gates, and only then the
@@ -189,6 +189,8 @@ export async function applyProjection(automation: string): Promise<ApplyResult> 
   }
   if (touchedSlugs.length) {
     await regenerateDiagram(proj.projectDir, await liveSlugsInOrder(proj.automation)).catch(() => { /* diagram regen is best-effort here */ });
+    // The canvas reads DB rows, not meta.ts — an applied rename must reach it (the two-truths seam).
+    await syncNodeNamesFromMeta(proj.automation, proj.projectDir).catch(() => { /* best-effort */ });
   }
   return { ok: true, applied: changed, recompiled, ignoredDeletions };
 }
