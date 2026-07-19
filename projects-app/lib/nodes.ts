@@ -323,7 +323,8 @@ export async function createDraftNode(
 
   const nodeDir = join(proj.projectDir, "_nodes", slug);
   await mkdir(nodeDir, { recursive: true });
-  for (const [rel, content] of Object.entries(draftNodeStubFiles({ cuid, slug, name, spec: opts.spec }))) {
+  const hasOwnTypes = await exists(join(proj.projectDir, "_types", "node-contract.ts"));
+  for (const [rel, content] of Object.entries(draftNodeStubFiles({ cuid, slug, name, spec: opts.spec, hasOwnTypes }))) {
     await writeFile(join(nodeDir, rel), content, "utf8");
   }
 

@@ -16,6 +16,10 @@ export type DraftNodeInput = {
   spec: string;
   /** Estimated process time in ms (step 230, the Processes timeline). Absent → the default estimate. */
   estDurationMs?: number;
+  /** v16 routes (254.9) carry their OWN _types/node-contract — the stub must import THAT, or the
+      check:route gate flags every newborn draft (caught live on automation-48qwh, 263.1). The caller
+      checks the route's _types/node-contract.ts on disk; pre-v16 routes keep the _shared relic. */
+  hasOwnTypes?: boolean;
 };
 
 /** The three files of a fresh draft node folder: meta.ts (draft:true), empty functions.ts, spec.md. */
@@ -24,8 +28,9 @@ export function draftNodeStubFiles(input: DraftNodeInput): Record<string, string
   const cuid = JSON.stringify(input.cuid);
   const id = JSON.stringify(input.slug);
   const est = typeof input.estDurationMs === "number" && input.estDurationMs > 0 ? input.estDurationMs : 60000;
+  const contract = input.hasOwnTypes ? "../../_types/node-contract" : "../../../../_shared/node-contract";
   return {
-    "meta.ts": `import type { NodeMeta } from "../../../../_shared/node-contract";
+    "meta.ts": `import type { NodeMeta } from "${contract}";
 
 // Draft node (step 224) — not yet built. Empty functions + a spec.md brief; a red frame on the canvas;
 // ignored by execution until the coder materializes it. The cuid is the stable identity the DB canvas
@@ -42,7 +47,7 @@ export const META: NodeMeta = {
   estDurationMs: ${est},
 };
 `,
-    "functions.ts": `import type { NodeFunction } from "../../../../_shared/node-contract";
+    "functions.ts": `import type { NodeFunction } from "${contract}";
 
 // Draft — no functions yet. The coder materializes these from spec.md (step 224).
 export const FUNCTIONS: NodeFunction[] = [];
