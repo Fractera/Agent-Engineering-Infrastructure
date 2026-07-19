@@ -44,9 +44,10 @@ export async function readLiveChannels(projectDir: string): Promise<LiveChannel[
       alias: { "@": process.cwd() },
       external: ["better-sqlite3"],
     });
-    const mod = (await import(`${pathToFileURL(outfile).href}?v=${mtime}`)) as {
-      INPUT_CHANNELS?: unknown;
-    };
+    // An indirect import defeats the app bundler's static analysis (the node-compile.ts lesson —
+    // a direct dynamic import silently failed inside the built Next server, proven live round 7).
+    const importer = new Function("u", "return import(u)") as (u: string) => Promise<{ INPUT_CHANNELS?: unknown }>;
+    const mod = await importer(`${pathToFileURL(outfile).href}?v=${mtime}`);
     const list = mod.INPUT_CHANNELS;
     if (!Array.isArray(list)) return null;
     // Shape-check defensively: the file is agent-authored.
