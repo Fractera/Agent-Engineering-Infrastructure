@@ -977,6 +977,9 @@ import { addRow, ingestToMemory } from "../../_lib/rows";
 // automation's own dashboard table (structured rows) AND vector memory (searchable, tagged with this
 // automation's address projects/{{CATEGORY}}/{{PROJECT}} as provenance, never "unknown_source"). When you
 // adapt this node for the real task, keep BOTH writes: a plain-language summary of the answer goes to memory.
+// The input CHANNEL is stamped AUTOMATICALLY (step 261): ingestToMemory reads this automation's input node and
+// appends ?channel=<its ioType> to the provenance — you never pass a channel here. Retype the input node (e.g.
+// to "telegram") and the memory's channel follows on its own.
 export async function recordLookup(company: string, ticker: string, price: number): Promise<{ rowId: string }> {
   const row = await addRow("{{CATEGORY}}/{{PROJECT}}", "history", {
     date: new Date().toISOString(),

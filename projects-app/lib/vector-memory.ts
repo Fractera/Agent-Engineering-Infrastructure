@@ -14,6 +14,12 @@
 // a silent no-op; it must NEVER throw into a product flow. Mirrors the proven contract of the catalog and the
 // notes bot (POST /documents/text → { track_id }); the only addition is the `file_source` provenance field.
 
+// Bare "fs"/"path" specifiers on purpose (not the "node:" prefix): telegram-notes' WDK workflow imports this
+// module through ingestToMemory, and the workflow compiler REJECTS "node:"-prefixed imports while accepting
+// the bare form — the same convention @/lib/db uses to run fs inside workflow steps (definition.ts, 207.16).
+import { promises as fsp } from "fs";
+import { join } from "path";
+
 const RAG_URL = (process.env.LIGHTRAG_URL ?? "http://localhost:9621").replace(/\/+$/, "");
 const RAG_KEY = process.env.LIGHTRAG_API_KEY ?? "";
 
@@ -31,6 +37,30 @@ export type IngestOptions = {
   /** Override the whole provenance source. Defaults to the base + facets built below. */
   fileSource?: string;
 };
+
+/** AUTO-DETECT THE INPUT CHANNEL of an automation (step 261 follow-up, owner 2026-07-19) — so a memory born
+ *  from the frozen template stamps the channel it actually came in through, with no per-node wiring. The
+ *  channel is an INPUT node's ioType (role:"input" → ioType is the channel/surface key, e.g. "telegram",
+ *  "control-panel"). Returns it only when the automation has EXACTLY ONE input surface; 0 or several (an
+ *  ambiguous multi-channel automation) → undefined, so provenance stays base rather than guessing. Best-effort,
+ *  file-read: any failure → undefined. */
+export async function detectChannel(automation: string): Promise<string | undefined> {
+  try {
+    const [category, slug] = automation.split("/");
+    if (!category || !slug) return undefined;
+    const nodesDir = join(process.cwd(), "app", "(projects)", "projects", category, slug, "_nodes");
+    const entries = await fsp.readdir(nodesDir, { withFileTypes: true });
+    const channels = new Set<string>();
+    for (const e of entries) {
+      if (!e.isDirectory()) continue;
+      const meta = await fsp.readFile(join(nodesDir, e.name, "meta.ts"), "utf8").catch(() => "");
+      if ((meta.match(/role:\s*["']([^"']+)["']/)?.[1]) !== "input") continue;
+      const ioType = meta.match(/ioType:\s*["']([^"']+)["']/)?.[1];
+      if (ioType) channels.add(ioType);
+    }
+    return channels.size === 1 ? [...channels][0] : undefined;
+  } catch { return undefined; }
+}
 
 /** Build the extensible provenance URI: `projects/<automation>` + sorted `?facet=value` for the facets that
  *  actually apply. Deterministic (keys sorted) so the same logical source is a stable string. */
@@ -91,7 +121,16 @@ export async function purgeMemoryBySource(automation: string): Promise<number> {
 export async function ingestToMemory(opts: IngestOptions): Promise<string | null> {
   const text = (opts.text ?? "").trim();
   if (!text) return null;
-  const fileSource = opts.fileSource ?? memorySource(opts.automation, opts.facets);
+  // AUTO-CHANNEL (step 261 follow-up): when the caller did not specify a channel (the frozen template's
+  // output node doesn't — it can't know it at authoring time) and did not override the whole source, stamp
+  // the automation's detected input channel. An explicit channel (e.g. the notes bot's "telegram") is never
+  // overridden; a full fileSource override skips detection entirely.
+  const facets = { ...(opts.facets ?? {}) };
+  if (opts.fileSource === undefined && facets.channel === undefined) {
+    const ch = await detectChannel(opts.automation);
+    if (ch) facets.channel = ch;
+  }
+  const fileSource = opts.fileSource ?? memorySource(opts.automation, facets);
   const identity = opts.identity ?? opts.automation;
   try {
     const r = await fetch(`${RAG_URL}/documents/text`, {
