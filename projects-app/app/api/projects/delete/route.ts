@@ -97,6 +97,11 @@ export async function POST(req: NextRequest) {
   // missing path, so this is a no-op for those.
   await rm(join(process.cwd(), "app", "api", "projects", proj.category, proj.slug), { recursive: true, force: true });
 
+  // 5c. the agent's sterile room (step 254.13) — a projection is a derived artifact of the automation, so
+  // it dies with it. Left behind, an orphan room would present a deleted automation as a live workspace to
+  // the next hand-off (263.1 audit finding). Same force-rm: a no-op when no projection was ever built.
+  await rm(join(process.cwd(), "..", "agent-rooms", proj.category, proj.slug), { recursive: true, force: true });
+
   // 6. the generated executables/activations registry must forget it too, or the bundler would still carry
   //    an import of a folder that no longer exists (a build error, and a ghost node in the executor).
   await regenerateExecutables().catch(() => { /* the delete itself already succeeded */ });
