@@ -161,8 +161,6 @@ export function DevConsole({
   // Claude Code's one-time Bypass-Permissions consent screen (round 5): the conductor answers it
   // itself ("2. Yes, I accept") — once per launch, guarded by this flag.
   const bypassAckRef = useRef(false);
-  // The final report is captured and shown ONCE per hand-over (round 6).
-  const reportShownRef = useRef(false);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const [exitArm, setExitArm] = useState(false);
@@ -343,12 +341,16 @@ export function DevConsole({
     // the REPORT markers. Capture the text from the SPACED buffer (space-tolerant markers — PTY wraps),
     // have the server translate it into the UI language, and show it in a toast that NEVER auto-closes
     // (duration Infinity; the action button is the only way to dismiss — owner 2026-07-19).
-    if (!reportShownRef.current && phaseRef.current === "developing" && despaced.includes(REPORT_END)) {
+    // NOT one-shot (owner 2026-07-20: "the report modal did not appear at all"): the old reportShownRef
+    // flag allowed ONE report per console open, so an agent's second report in the same session (a
+    // follow-up task) was swallowed forever. Same consumption pattern as the other markers above:
+    // extract, then CLEAR the buffer — the next report accumulates fresh and fires again.
+    if (phaseRef.current === "developing" && despaced.includes(REPORT_END)) {
       const buf = rawBufRef.current;
       const mBegin = tolerant(REPORT_BEGIN).exec(buf);
       const mEnd = tolerant(REPORT_END).exec(buf);
       if (mBegin && mEnd && mBegin.index + mBegin[0].length < mEnd.index) {
-        reportShownRef.current = true;
+        rawBufRef.current = "";
         const report = buf.slice(mBegin.index + mBegin[0].length, mEnd.index).replace(/\s+/g, " ").trim();
         setStep("free", "done");
         fetch("/api/projects/dev-report", {
@@ -413,7 +415,6 @@ export function DevConsole({
   // NOT leave the screen on click — only the printed DEV marker (the handshake) hides it, so a delivery
   // swallowed by an auth prompt can simply be retried.
   const startDevelopment = useCallback(() => {
-    reportShownRef.current = false;
     setPhase("handing");
     setStep("task", "doing");
     toast.message(T.devWaitAck);
