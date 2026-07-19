@@ -83,16 +83,22 @@ function agentGateHeader() {
 // Try the v3 door first; on 404 fall back to the legacy path. The winning URL is remembered per
 // automation so the extra probe happens once, and forgotten on failure so a migration re-probes.
 const runUrlCache = new Map()
-async function postRun(entry, payload) {
+// The v3 door takes `input` as an OBJECT (the executor's context bag) and additionally receives the RAW
+// Telegram update under `update` — a v3 telegram input node declares paramsIn {update} and parses it
+// itself. The legacy door keeps the original JSON-STRING envelope (telegram-notes' reception contract).
+async function postRun(entry, envelope, rawUpdate) {
   const key = `${entry.category}/${entry.project}`
   const v3 = `${APP_URL}/projects/${entry.category}/${entry.project}/api/run`
   const legacy = `${APP_URL}/api/projects/${entry.category}/${entry.project}/run`
   const candidates = runUrlCache.has(key) ? [runUrlCache.get(key)] : [v3, legacy]
   for (const url of candidates) {
+    const body = url.includes('/api/run')
+      ? { input: { ...envelope, update: rawUpdate } }
+      : { input: JSON.stringify(envelope) }
     const r = await fetch(url, {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-agent-identity': 'fractera-automations', ...agentGateHeader() },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
       signal: AbortSignal.timeout(30000),
     })
     if (r.status === 404 && candidates.length > 1) continue
@@ -106,7 +112,7 @@ async function postRun(entry, payload) {
 
 async function dispatch(entry, message) {
   try {
-    const { r, url } = await postRun(entry, { input: JSON.stringify({
+    const { r, url } = await postRun(entry, {
       source: 'telegram', chatId: message.chat?.id, messageId: message.message_id,
       text: message.text ?? message.caption ?? '', date: message.date,
       // Photo (step 205 §E, receipt digitization): forward the largest PhotoSize's file_id so the
@@ -119,7 +125,7 @@ async function dispatch(entry, message) {
         ? { lat: message.location.latitude, lng: message.location.longitude,
             title: message.venue?.title ?? '' }
         : undefined,
-    }) })
+    }, { message })
     console.log(`[auto] ${entry.category}/${entry.project} <- msg ${message.message_id}: ${url} HTTP ${r.status}`)
   } catch (e) {
     console.error(`[auto] dispatch to ${entry.category}/${entry.project} failed: ${e.message ?? e}`)
@@ -130,10 +136,10 @@ async function dispatch(entry, message) {
 // automation can resolve the pending message + forced action and act on it (it also acks the tap).
 async function dispatchCallback(entry, cb) {
   try {
-    const { r, url } = await postRun(entry, { input: JSON.stringify({
+    const { r, url } = await postRun(entry, {
       source: 'telegram', kind: 'callback', data: cb.data,
       chatId: cb.message?.chat?.id, callbackQueryId: cb.id, messageId: cb.message?.message_id,
-    }) })
+    }, { callback_query: cb })
     console.log(`[auto] ${entry.category}/${entry.project} <- callback '${cb.data}': ${url} HTTP ${r.status}`)
   } catch (e) {
     console.error(`[auto] callback dispatch to ${entry.category}/${entry.project} failed: ${e.message ?? e}`)

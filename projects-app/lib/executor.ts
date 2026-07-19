@@ -187,7 +187,44 @@ export async function executeAutomation(
   // makes this run specific).
   const ctx: Record<string, unknown> = { ...input, ...check.params };
 
-  const nodes = (await listNodes(proj.automation)).filter((n) => n.status !== "removed" && n.draft === 0);
+  // TOPOLOGICAL ORDER (263.1, the Opus agent's true find on medicine/v2): DB order (ord) is BIRTH order,
+  // not data-flow order — an input node added later sits after the midstream it feeds, so on that
+  // surface's runs the midstream ran first and crashed on an empty bag before the input ever produced
+  // it. Kahn over the live diagram edges, ord as the stable tiebreaker; inputs (no incoming edge) come
+  // first by construction, a cycle falls back to ord (the flow gate refuses cycles upstream anyway).
+  const unordered = (await listNodes(proj.automation)).filter((n) => n.status !== "removed" && n.draft === 0);
+  const nodes = await (async () => {
+    try {
+      const { listDiagramEdges } = await import("@/lib/nodes");
+      const edges = await listDiagramEdges(proj.automation);
+      const alive = new Set(unordered.map((n) => n.cuid));
+      const indeg = new Map(unordered.map((n) => [n.cuid, 0]));
+      for (const e of edges) {
+        if (alive.has(e.from_cuid) && alive.has(e.to_cuid)) indeg.set(e.to_cuid, (indeg.get(e.to_cuid) ?? 0) + 1);
+      }
+      const byOrd = [...unordered].sort((a, b) => a.ord - b.ord);
+      const out: typeof unordered = [];
+      const ready = byOrd.filter((n) => (indeg.get(n.cuid) ?? 0) === 0);
+      const queued = new Set(ready.map((n) => n.cuid));
+      while (ready.length) {
+        const n = ready.shift()!;
+        out.push(n);
+        for (const e of edges) {
+          if (e.from_cuid !== n.cuid || !alive.has(e.to_cuid)) continue;
+          indeg.set(e.to_cuid, (indeg.get(e.to_cuid) ?? 0) - 1);
+          if ((indeg.get(e.to_cuid) ?? 0) === 0 && !queued.has(e.to_cuid)) {
+            queued.add(e.to_cuid);
+            const t = byOrd.find((x) => x.cuid === e.to_cuid);
+            if (t) ready.push(t);
+          }
+        }
+        ready.sort((a, b) => a.ord - b.ord);
+      }
+      return out.length === unordered.length ? out : byOrd; // a cycle → honest ord fallback
+    } catch {
+      return unordered;
+    }
+  })();
   const runId = randomUUID();
   await db.prepare(
     `INSERT INTO automation_runs (id, automation, instance_id, current_node, status, started_at)
