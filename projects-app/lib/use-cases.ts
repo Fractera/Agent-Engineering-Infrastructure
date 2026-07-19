@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { db } from "@/lib/db";
 import { createNodeId } from "@/lib/cuid";
@@ -100,8 +100,12 @@ export async function regenerateUseCasesFile(projectDir: string, automation: str
   const rows = cases
     .map((c) => `  { id: "${esc(c.cuid)}", title: "${esc(c.title)}", status: "${c.status}", summary: "${esc(c.summary)}" },`)
     .join("\n");
+  // v16 routes (254.9) carry their OWN _types/use-cases — the artefact must import THAT, or check:route
+  // flags every quiz-born route (caught live on automation-48qwh, 263.1). Pre-v16 routes keep _shared.
+  const hasOwnTypes = await stat(join(projectDir, "_types", "use-cases.ts")).then(() => true).catch(() => false);
+  const contract = hasOwnTypes ? "../_types/use-cases" : "../../../_shared/use-cases";
   const body =
-    `import type { UseCase } from "../../../_shared/use-cases";\n\n` +
+    `import type { UseCase } from "${contract}";\n\n` +
     `// GENERATED from the use-case store (step 231) — the cases the owner described in the Quiz, in order.\n` +
     `// The DB is the source; this file is the artefact the build and the coding agent read. Do not hand-edit:\n` +
     `// it is rewritten on every add / edit / delete. To change a case, use the pencil in the Use cases panel.\n` +

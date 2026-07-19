@@ -2,7 +2,9 @@
 // reaches outside its own folder:
 //   - _nodes/** and _data/**: imports must be relative and stay INSIDE the route (its _types/_lib/_data);
 //     "@/..." and anything containing "_shared" are violations;
-//   - _lib/rows.ts is the ONE declared bridge: it (and only it) may import "@/lib/dashboard-rows";
+//   - _lib/rows.ts is the ONE declared bridge: it (and only it) may import "@/lib/dashboard-rows" and
+//     "@/lib/vector-memory" (the step-260 law: the output node writes to BOTH stores — rows + vector
+//     provenance; adding that crossing here is SYNC with deployed law, not a weakening);
 //   - the cockpit surface (page.tsx, _components/, _meta.ts) is BASE-LAYER territory and is not scanned
 //     here (its machinery migrates in later sub-steps).
 // Run: node scripts/check-route-self-sufficiency.mjs <category>/<slug>. Teaching messages, exit 1 on any
@@ -44,7 +46,7 @@ for (const file of walk(ROUTE)) {
   // (the rows bridge's own header comment was the first false positive).
   for (const m of src.matchAll(/^\s*(?:import|export)[^;\n]*?from\s+["']([^"']+)["']/gm)) {
     const imp = m[1];
-    if (isBridge && imp === "@/lib/dashboard-rows") continue; // the one declared crossing
+    if (isBridge && (imp === "@/lib/dashboard-rows" || imp === "@/lib/vector-memory")) continue; // the declared crossings (rows + step-260 vector provenance)
     if (imp.startsWith("@/")) {
       violations.push(
         `${rel}: imports "${imp}" — a route's behaviour NEVER imports platform code ("@/..."). Copy the ` +
