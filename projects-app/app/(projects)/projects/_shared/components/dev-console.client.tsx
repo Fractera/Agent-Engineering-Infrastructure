@@ -216,7 +216,11 @@ export function DevConsole({
   // it must be copyable) + Close (still the only way to dismiss; duration stays Infinity).
   const showReport = useCallback((text: string) => {
     toast.custom((id) => (
-      <div className="w-[min(480px,calc(100vw-32px))] rounded-lg border bg-background p-4 shadow-lg">
+      // pointer-events-auto is LOAD-BEARING (owner 2026-07-20): the dev console is a MODAL Radix dialog —
+      // while it is open, body gets pointer-events:none and the toast inherits it, so Copy/Close were dead
+      // until the console itself was closed. The card re-enables its own pointer events; the report must be
+      // closable independently of the main development window.
+      <div className="pointer-events-auto w-[min(480px,calc(100vw-32px))] rounded-lg border bg-background p-4 shadow-lg">
         <p className="text-sm font-semibold">{T.reportTitle}</p>
         <p className="mt-2 max-h-[50vh] select-text overflow-y-auto whitespace-pre-wrap text-sm text-muted-foreground">{text}</p>
         <div className="mt-3 flex justify-end gap-2">
