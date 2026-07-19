@@ -51,6 +51,15 @@ export async function proxy(req: NextRequest) {
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
+  // IN-ROUTE API DOORS (254.10/254.11) live INSIDE the page tree — /projects/<cat>/<slug>/api/… — so the
+  // matcher's root `api/` carve-out misses them and this page gate answered them with a 307 to the auth
+  // LANDING PAGE (useless for a machine caller; proven live 263.1 round 8: the room agent's own run/rows
+  // calls bounced). They are APIs: every one self-gates through the shared authorize() (session, IP mode,
+  // or the agent-gate pass) and must return honest JSON 403s, not redirects.
+  if (/^\/projects\/[^/]+\/[^/]+\/api\//.test(url.pathname)) {
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
   const cookie = req.headers.get("cookie") ?? "";
 
   let allowed = false;

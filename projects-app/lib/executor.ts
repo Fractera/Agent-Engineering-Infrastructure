@@ -34,7 +34,7 @@ export type RunOutcome = {
   runId: string;
   automation: string;
   instanceId: string | null;
-  nodes: { node: string; status: "ok" | "fail"; ms: number; result?: unknown; error?: string }[];
+  nodes: { node: string; status: "ok" | "fail" | "skipped"; ms: number; result?: unknown; error?: string }[];
   context: Record<string, unknown>;
   error?: string;
 };
@@ -165,6 +165,12 @@ async function nodeParamsIn(projectDir: string, slug: string): Promise<Record<st
   return out;
 }
 
+/** A node's declared role, read from its meta.ts (the detectChannel parser — one convention). */
+async function nodeRole(projectDir: string, slug: string): Promise<string | undefined> {
+  const src = await readFile(join(projectDir, "_nodes", slug, "meta.ts"), "utf8").catch(() => "");
+  return src.match(/role:\s*["']([^"']+)["']/)?.[1];
+}
+
 /** RUN an automation end to end: walk its diagram, call every node's real functions, record what happened. */
 export async function executeAutomation(
   automation: string,
@@ -212,6 +218,22 @@ export async function executeAutomation(
       const order = await nodeFunctionsInOrder(proj.projectDir, n.slug);
       const paramsIn = await nodeParamsIn(proj.projectDir, n.slug);
       const outKeys = await nodeOutKeys(proj.projectDir, n.slug);
+
+      // AN UNFED ALTERNATE ENTRY IS SKIPPED, NOT A CRASH (263.1 round 8, the owner's live failure): an
+      // automation may declare SEVERAL input surfaces (control panel + a Telegram bot). A run triggered
+      // through one surface carries only that surface's payload — the OTHER input node's trigger params
+      // are simply absent from the bag. The old behavior called it anyway (undefined update →
+      // "Cannot read properties of undefined" → the WHOLE run failed after every real node had worked).
+      // Rule, deliberately narrow: only a role:"input" node, and only when EVERY param of its FIRST
+      // function (the trigger contract) is absent. It reports honestly as "skipped" — never as "ok".
+      const firstParams = paramsIn[order[0] ?? ""] ?? [];
+      if (firstParams.length && firstParams.every((p) => ctx[p] === undefined)
+          && (await nodeRole(proj.projectDir, n.slug)) === "input") {
+        await db.prepare(`UPDATE automation_run_nodes SET status = 'skipped', payload = ? WHERE id = ?`)
+          .run(JSON.stringify({ real: true, skipped: "unfed input surface", ms: 0 }), rowId);
+        report.push({ node: n.slug, status: "skipped", ms: 0 });
+        continue;
+      }
 
       let last: unknown;
       for (const fname of order) {
