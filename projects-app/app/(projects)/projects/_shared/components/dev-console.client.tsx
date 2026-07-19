@@ -11,6 +11,16 @@ import {
 } from "@/components/ui/select";
 import { ptyUrl } from "@/lib/pty-url";
 import { XtermTerminal, type XtermTerminalHandle } from "./xterm-terminal.client";
+import { VoiceInput } from "./voice-input.client";
+import { AuthFlowModal } from "./auth-flow-modal.client";
+import { AUTH_FLOW_DESCRIPTORS, type AuthFlowDescriptor } from "../auth-flow-descriptors";
+
+// ANSI strippers (the coding-window pair, :3002) — the auth-URL detector reads a CLEAN transcript:
+// PTY colour codes and line-wraps would otherwise tear the OAuth URL apart and the detector would miss it.
+const ANSI_CSI_RE   = /\x1b\[[0-?]*[ -/]*[@-~]/g;
+const ANSI_OSC_RE   = /\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g;
+const ANSI_OTHER_RE = /\x1b[=>NOPVWXYZ\\\]^_]/g;
+const stripAnsi = (s: string) => s.replace(ANSI_OSC_RE, "").replace(ANSI_CSI_RE, "").replace(ANSI_OTHER_RE, "");
 
 // THE DEV CONSOLE (step 255.B2-B4, the owner's scenario) — the live control desk of an external
 // coding-agent session, INSIDE the launch dialog on :3003. Design (the owner delegated it):
@@ -89,8 +99,21 @@ export function DevConsole({
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const [exitArm, setExitArm] = useState(false);
+  // "Copy output" opens a MODAL of the recent transcript (owner 2026-07-19): the owner SELECTS what he
+  // needs by hand instead of a blind 20k-char clipboard dump (which was unusable — 445 lines).
+  const [outOpen, setOutOpen] = useState(false);
+  const [outText, setOutText] = useState("");
+  const pasteRef = useRef<HTMLTextAreaElement | null>(null);
+  // THE AUTH CONVEYOR (263.1 critical fix — the :3002 coding-window pipeline, ported): when the terminal
+  // prints a subscription-auth URL, extract it from the clean transcript and open the guided modal
+  // (open link → sign in → paste code / relay callback / device code). Without this the owner was stuck
+  // at the raw OAuth prompt with no way through.
+  const [activeAuth, setActiveAuth] = useState<{ descriptor: AuthFlowDescriptor; url: string; code?: string } | null>(null);
+  const activeAuthRef = useRef<typeof activeAuth>(null);
+  const rawBufRef = useRef("");
+  const urlDetectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // The rolling terminal transcript the conductor reads (and Copy-output copies).
+  // The rolling terminal transcript the conductor reads (and the output modal shows).
   const outRef = useRef("");
   const stepsRef = useRef(steps);
   stepsRef.current = steps;
@@ -136,24 +159,54 @@ export function DevConsole({
     if (s.pwd === "doing" && outRef.current.includes(roomPath)) {
       setStep("pwd", "done");
     }
-    // Step 3 — login prompt detection (the coding-window pattern): an OAuth URL in the output.
-    if (startedRef.current && s.login !== "done" && /https:\/\/\S*(oauth|login|auth)\S*/i.test(chunk)) {
-      setStep("login", "doing");
-      toast.info(T.pasteTitle, { duration: 10000 });
+    // Step 3 — THE AUTH CONVEYOR (the :3002 pipeline): keep a clean joined buffer, debounce 300ms, match
+    // the per-platform descriptors against a space-stripped copy (PTY line-wraps reassembled), extract
+    // the URL (+ device code) and open the guided modal. One modal at a time.
+    rawBufRef.current = (rawBufRef.current + stripAnsi(chunk).replace(/\r\n|\r|\n/g, " ")).slice(-4000);
+    if (!activeAuthRef.current) {
+      if (urlDetectTimer.current) clearTimeout(urlDetectTimer.current);
+      urlDetectTimer.current = setTimeout(() => {
+        if (activeAuthRef.current) return;
+        const bufForSearch = rawBufRef.current.replace(/ /g, "");
+        for (const descriptor of AUTH_FLOW_DESCRIPTORS) {
+          const match = bufForSearch.match(descriptor.detectUrl);
+          if (match) {
+            let extractedUrl = match[0];
+            const dupeIdx = extractedUrl.indexOf("https://", 8);
+            if (dupeIdx !== -1) extractedUrl = extractedUrl.slice(0, dupeIdx);
+            let extractedCode: string | undefined;
+            if (descriptor.detectCode) {
+              const codeMatch = rawBufRef.current.match(descriptor.detectCode);
+              if (codeMatch) extractedCode = codeMatch[0];
+            }
+            const next = { descriptor, url: extractedUrl, code: extractedCode };
+            activeAuthRef.current = next;
+            setActiveAuth(next);
+            setStep("login", "doing");
+            break;
+          }
+        }
+      }, 300);
     }
-    // Step 4 — after the CLI starts, a quiet period (no output ~4s) means the prompt is ready: hand the task.
+    // Step 4 — after the CLI starts, a quiet period (no output ~4s) means the prompt is ready: hand the
+    // task. NEVER while the auth modal is open (263.1 fix): during a browser sign-in the terminal is
+    // quiet for far longer than 4s, and the old code typed the task INTO the login prompt.
     if (startedRef.current && s.task === "todo") {
       if (quietTimer.current) clearTimeout(quietTimer.current);
       quietTimer.current = setTimeout(() => {
         const cur = stepsRef.current;
         if (cur.task !== "todo") return;
+        if (activeAuthRef.current) return; // auth in progress — the next output re-arms this timer
         setStep("login", "done");
         setStep("task", "doing");
+        // Send the task AND submit it (owner 2026-07-19, finding 13): a trailing \r presses Enter in the
+        // CLI prompt — the owner no longer has to focus the terminal and hit Enter himself.
         termRef.current?.sendStdin(roomTask.replace(/\r?\n/g, "\n") + "\n");
+        setTimeout(() => termRef.current?.sendStdin("\r"), 250);
         setTimeout(() => { setStep("task", "done"); setStep("free", "doing"); }, 1500);
       }, 4000);
     }
-  }, [roomPath, roomTask, setStep, T.pasteTitle]);
+  }, [roomPath, roomTask, setStep]);
 
   // The pwd probe once the shell settles (fresh sessions only).
   useEffect(() => {
@@ -174,13 +227,26 @@ export function DevConsole({
   }, [provider, model, setStep, T.pwdFail]);
 
   const copyWorkspace = () => { void navigator.clipboard.writeText(roomPath); toast.success(T.copied); };
-  const copyOutput = () => { void navigator.clipboard.writeText(outRef.current.slice(-20_000)); toast.success(T.copied); };
+  // "Copy output" → the transcript MODAL (owner 2026-07-19): show the tail, let the owner select by hand.
+  const openOutput = () => { setOutText(stripAnsi(outRef.current.slice(-20_000))); setOutOpen(true); };
+  const copyAllOutput = () => { void navigator.clipboard.writeText(outText); toast.success(T.copied); };
   const sendPaste = () => {
     if (!pasteText) return;
     termRef.current?.sendStdin(pasteText);
     termRef.current?.focus();
     setPasteOpen(false);
     setPasteText("");
+  };
+  // The auth modal's send: the pasted code goes to the PTY + Enter; focus wakes the xterm canvas.
+  const sendAuthCode = (code: string) => {
+    termRef.current?.sendStdin(code + "\n");
+    setTimeout(() => termRef.current?.focus(), 80);
+  };
+  const closeAuth = () => {
+    activeAuthRef.current = null;
+    setActiveAuth(null);
+    rawBufRef.current = "";
+    setStep("login", "done");
   };
   const doExit = () => {
     termRef.current?.sendExit();
@@ -266,7 +332,7 @@ export function DevConsole({
         <Button size="sm" variant="outline" onClick={() => setPasteOpen(true)}>
           <ClipboardPaste className="size-3.5" /> {T.paste}
         </Button>
-        <Button size="sm" variant="outline" onClick={copyOutput}>
+        <Button size="sm" variant="outline" onClick={openOutput}>
           <ClipboardCopy className="size-3.5" /> {T.copyOut}
         </Button>
         <span className="mx-1 flex-1" />
@@ -295,14 +361,39 @@ export function DevConsole({
         <p className="text-[11px] text-muted-foreground">{T.noReload}</p>
       </div>
 
-      {/* PASTE — the subscription-auth helper. */}
+      {/* PASTE — the manual fallback (login codes, answers) + the ONE voice primitive (step 232). */}
       <Dialog open={pasteOpen} onOpenChange={setPasteOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>{T.pasteTitle}</DialogTitle></DialogHeader>
-          <Textarea value={pasteText} onChange={(e) => setPasteText(e.target.value)} rows={4} autoFocus />
+          <Textarea ref={pasteRef} value={pasteText} onChange={(e) => setPasteText(e.target.value)} rows={4} autoFocus />
+          <VoiceInput targetRef={pasteRef} value={pasteText} onChange={setPasteText} />
           <Button onClick={sendPaste} disabled={!pasteText}>{T.pasteSend}</Button>
         </DialogContent>
       </Dialog>
+
+      {/* OUTPUT — the transcript modal (owner 2026-07-19): select by hand, or copy the whole tail. */}
+      <Dialog open={outOpen} onOpenChange={setOutOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader><DialogTitle>{T.copyOut}</DialogTitle></DialogHeader>
+          <pre className="max-h-[55vh] select-text overflow-y-auto whitespace-pre-wrap rounded-md border bg-muted/30 p-3 text-xs" style={{ userSelect: "text", WebkitUserSelect: "text" }}>
+            {outText}
+          </pre>
+          <Button size="sm" variant="outline" onClick={copyAllOutput}>
+            <ClipboardCopy className="size-3.5" /> {T.copyOut}
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      {/* THE AUTH CONVEYOR MODAL (263.1) — the guided subscription sign-in, exactly as on :3002. */}
+      {activeAuth && (
+        <AuthFlowModal
+          descriptor={activeAuth.descriptor}
+          url={activeAuth.url}
+          code={activeAuth.code}
+          onClose={closeAuth}
+          onSendCode={sendAuthCode}
+        />
+      )}
     </div>
   );
 }
