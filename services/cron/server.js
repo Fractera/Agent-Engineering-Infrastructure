@@ -315,7 +315,7 @@ async function dispatchEvents() {
       try {
         const r = await fetch(t.runUrl, {
           method: 'POST',
-          headers: { 'content-type': 'application/json', 'x-agent-identity': 'fractera-cron' },
+          headers: { 'content-type': 'application/json', 'x-agent-identity': 'fractera-cron', ...agentGateHeader() },
           // input is forwarded by the run route only as a STRING → send the handoff as a JSON string;
           // the subscriber's event step JSON.parses it to read { subjectId, event, from }.
           body: JSON.stringify({ input: JSON.stringify({ subjectId: row.subject_id, event: row.event, from: row.from_automation }) }),
@@ -333,6 +333,18 @@ async function dispatchEvents() {
 
 // ── Actions ─────────────────────────────────────────────────────────────────────────────────
 
+// THE AGENT GATE (263.1, owner's Telegram-diet find): in secure mode the projects-app in-route api
+// doors authorize by cookie OR the per-server agent-gate secret — `x-agent-identity` is NOT accepted,
+// so every cron http action / event dispatch got 403 the moment the server left IP mode. The runner
+// presents the same secret the in-room coding agent uses. Read fresh per call (the file appears on
+// first gate use and can rotate); absent file → header omitted (IP mode works without it).
+function agentGateHeader() {
+  try {
+    const s = readFileSync(join(PROJECTS_DIR, 'project-config', 'agent-gate-secret'), 'utf8').trim()
+    return s ? { 'x-fractera-agent-gate': s } : {}
+  } catch { return {} }
+}
+
 function extractResult(candidate) {
   if (!candidate || typeof candidate !== 'object') return {}
   const title = candidate.resultTitle ?? candidate.title
@@ -349,7 +361,7 @@ async function runHttpAction(job) {
   try {
     const r = await fetch(job.action.url, {
       method: job.action.method ?? 'POST',
-      headers: { 'content-type': 'application/json', 'x-agent-identity': 'fractera-cron' },
+      headers: { 'content-type': 'application/json', 'x-agent-identity': 'fractera-cron', ...agentGateHeader() },
       body: job.action.body !== undefined ? JSON.stringify(job.action.body) : undefined,
       signal: controller.signal,
     })
