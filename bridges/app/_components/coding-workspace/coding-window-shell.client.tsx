@@ -295,7 +295,9 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
           // bufForSearch has all spaces removed — PTY line-wrap artifacts are gone,
           // URL is reconstructed whole. detectUrl patterns end at &state=<value>
           // so the match stops precisely at the URL boundary.
-          let extractedUrl = match[0];
+          // A direct match ends at a REAL space, but PTY wraps may have injected spaces INSIDE the URL
+          // (`.*?` bridges them — live "redirect URI …/oa uth/…" failure): strip them, the tail is clean.
+          let extractedUrl = direct ? match[0].replace(/ /g, "") : match[0];
           // Guard against duplicate URLs if PTY reprints via \r.
           const dupeIdx = extractedUrl.indexOf("https://", 8);
           if (dupeIdx !== -1) extractedUrl = extractedUrl.slice(0, dupeIdx);

@@ -181,7 +181,10 @@ export function DevConsole({
           const direct = spaced.match(descriptor.detectUrl);
           const match = direct ?? bufForSearch.match(descriptor.detectUrl);
           if (match) {
-            let extractedUrl = match[0];
+            // A direct match ends at a REAL space (the state charset cannot cross one) — but PTY wraps
+            // may have injected spaces INSIDE the URL (`.*?` bridges them): caught live 2026-07-19 as
+            // "redirect URI …/oa uth/… not supported". Strip them; the tail is already clean.
+            let extractedUrl = direct ? match[0].replace(/ /g, "") : match[0];
             const dupeIdx = extractedUrl.indexOf("https://", 8);
             if (dupeIdx !== -1) extractedUrl = extractedUrl.slice(0, dupeIdx);
             if (!direct) extractedUrl = extractedUrl.replace(GLUED_TAIL_RE, "");
