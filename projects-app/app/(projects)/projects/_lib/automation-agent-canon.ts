@@ -99,6 +99,29 @@ PLATFORM API (the whitelist — using these is NOT leaving your territory; all o
 - GET  /api/projects/validate?automation=${a} — must return ok:true when you are done.`
     : "";
 
+  // 263.1, owner's live find on medicine/v2: the room the CLI agent works in is a DISPOSABLE projection —
+  // the platform wipes and rebuilds it between console opens, and a session that survives a reopen keeps
+  // a cwd pointing at the DELETED directory inode. Its Bash task files then vanish (ENOENT with Claude
+  // Code's misleading "another process deleted it" guess) and relative writes land in the orphaned inode,
+  // invisible to apply. The agent cannot prevent this — it must recognise it and cope.
+  const bashLoss = files
+    ? `
+
+BASH OUTPUT LOST — THE REBUILT-ROOM ANTIPATTERN (a known platform trap; recognising it is your job):
+- This workspace is a disposable projection: the platform may WIPE AND REBUILD it between development
+  sessions. Symptom: a Bash call fails with "<bash output unavailable: ... tasks/....output could not be
+  read (ENOENT) ... another Claude Code process ... deleted it during startup cleanup>", or paths grow an
+  "undefined" segment.
+- That message's guess is usually WRONG here — the folder was rebuilt under you. It is NOT a signal to
+  retry in a loop, to rm anything, or to recreate the missing directories.
+- Cope like this: (1) re-list the workspace root and re-read the task files — work from the files as they
+  are NOW; (2) use ABSOLUTE paths in every command (relative writes after a rebuild land in an orphaned
+  folder nobody can see); (3) if it repeats, say so in your report and keep working through the file tools
+  (Read/Write/Edit) — they are unaffected; (4) never create or use a directory literally named
+  "undefined" — its appearance is a symptom to report, not a path to build on. One agent session per
+  automation: if you learn another session is working here, stop and say so.`
+    : "";
+
   const secrets = `
 
 SECRETS (hard rule): a token/key pasted in a task is configuration, NEVER code. Do not hardcode it.
@@ -114,5 +137,5 @@ warning marks an object blocked (leave its brief in place, continue with the res
 subject and report in the OWNER'S language (the language of the briefs). This automation's own model is
 env ${t.modelEnvKey}. When every staged object is closed or blocked${files ? ", verify with the validate call" : ""}.`;
 
-  return whereYouAre + territory + nodeContract + platformApi + secrets + closing + "\n";
+  return whereYouAre + territory + nodeContract + platformApi + bashLoss + secrets + closing + "\n";
 }
