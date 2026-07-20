@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { db } from "@/lib/db";
+import { db } from "@/lib/db"; // still needed for automation_instances — moved in the next sub-step
+import { insertRun, patchRun, insertRunNode, patchRunNode } from "@/lib/runs-store";
 import { resolveProject, listNodes, readNodeFunctionNames } from "@/lib/nodes";
 import { listEdges } from "@/lib/edges";
 import { readAutomationType } from "@/app/(projects)/projects/_shared/automation-type-reader";
@@ -19,7 +20,7 @@ import { missingParams } from "@/lib/activation";
 //     will not invent a step that is not there;
 //   • a node's functions are DETERMINISTIC application code — the executor just calls them. AI happens only
 //     inside a function that declares `externalAi` and calls the one shared helper (_shared/external-ai.ts);
-//   • state is recorded in the tables that already exist (automation_runs / automation_run_nodes with their
+//   • state is recorded in the automation's own run journal (_data/runtime/runs.jsonl, block 4) with their
 //     JSON payload column) — no new schema (lesson 225 G4).
 //
 // HOW ARGUMENTS FLOW (the convention this step establishes, and the docs will state):
@@ -231,10 +232,9 @@ export async function executeAutomation(
     }
   })();
   const runId = randomUUID();
-  await db.prepare(
-    `INSERT INTO automation_runs (id, automation, instance_id, current_node, status, started_at)
-     VALUES (?, ?, ?, ?, 'running', datetime('now'))`,
-  ).run(runId, proj.automation, check.instanceId, nodes[0]?.slug ?? null);
+  await insertRun(proj.automation, {
+    id: runId, instanceId: check.instanceId, currentNode: nodes[0]?.slug ?? null, status: "running",
+  });
 
   const report: RunOutcome["nodes"] = [];
   let failed: string | undefined;
@@ -250,11 +250,9 @@ export async function executeAutomation(
   for (const n of nodes) {
     prov.node = n.slug;
     const started = Date.now();
-    await db.prepare(`UPDATE automation_runs SET current_node = ? WHERE id = ?`).run(n.slug, runId);
+    await patchRun(proj.automation, runId, { current_node: n.slug });
     const rowId = randomUUID();
-    await db.prepare(
-      `INSERT INTO automation_run_nodes (id, run_id, node_id, status) VALUES (?, ?, ?, 'running')`,
-    ).run(rowId, runId, n.slug);
+    await insertRunNode(proj.automation, { id: rowId, runId, nodeId: n.slug, status: "running" });
 
     try {
       // THE RUNTIME ARTIFACT WINS (step 249): a node materialized after the last build lives ONLY on disk
@@ -280,8 +278,9 @@ export async function executeAutomation(
       const firstParams = paramsIn[order[0] ?? ""] ?? [];
       const role = await nodeRole(proj.projectDir, n.slug);
       if (firstParams.length && firstParams.every((p) => ctx[p] === undefined) && role === "input") {
-        await db.prepare(`UPDATE automation_run_nodes SET status = 'skipped', payload = ? WHERE id = ?`)
-          .run(JSON.stringify({ real: true, skipped: "unfed input surface", ms: 0 }), rowId);
+        await patchRunNode(proj.automation, rowId, {
+          status: "skipped", payload: JSON.stringify({ real: true, skipped: "unfed input surface", ms: 0 }),
+        });
         report.push({ node: n.slug, status: "skipped", ms: 0 });
         continue;
       }
@@ -317,14 +316,16 @@ export async function executeAutomation(
       }
 
       const ms = Date.now() - started;
-      await db.prepare(`UPDATE automation_run_nodes SET status = 'ok', payload = ? WHERE id = ?`)
-        .run(JSON.stringify({ real: true, result: last, ms }), rowId);
+      await patchRunNode(proj.automation, rowId, {
+        status: "ok", payload: JSON.stringify({ real: true, result: last, ms }),
+      });
       report.push({ node: n.slug, status: "ok", ms, result: last });
     } catch (e) {
       const ms = Date.now() - started;
       const error = (e as Error).message ?? String(e);
-      await db.prepare(`UPDATE automation_run_nodes SET status = 'fail', payload = ? WHERE id = ?`)
-        .run(JSON.stringify({ real: true, error, ms }), rowId);
+      await patchRunNode(proj.automation, rowId, {
+        status: "fail", payload: JSON.stringify({ real: true, error, ms }),
+      });
       report.push({ node: n.slug, status: "fail", ms, error });
       failed = error;
       break;   // the chain stops at the first failure — a later node would work on data that never arrived
@@ -332,9 +333,9 @@ export async function executeAutomation(
   }
   });
 
-  await db.prepare(
-    `UPDATE automation_runs SET status = ?, current_node = NULL, finished_at = datetime('now') WHERE id = ?`,
-  ).run(failed ? "fail" : "done", runId);
+  await patchRun(proj.automation, runId, {
+    status: failed ? "fail" : "done", current_node: null, finished_at: new Date().toISOString().replace("T", " ").slice(0, 19),
+  });
 
   return {
     ok: !failed,

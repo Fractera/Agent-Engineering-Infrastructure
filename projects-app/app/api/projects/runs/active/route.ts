@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/get-session";
-import { db } from "@/lib/db";
+import { latestRun, runNodes } from "@/lib/runs-store";
 import { advanceRuns } from "@/lib/schedule";
 
 // Active run of an automation (step 223.C.3) — the read side of the unified run model. Returns the most
@@ -27,19 +27,11 @@ export async function GET(req: NextRequest) {
   // background job. Best-effort — a scheduling hiccup must not blank the highlight.
   try { await advanceRuns(automation); } catch { /* keep serving the last state */ }
 
-  const run = (await db
-    .prepare(
-      `SELECT id, current_node, status, instance_id FROM automation_runs
-       WHERE automation = ? AND status = 'running'
-       ORDER BY started_at DESC LIMIT 1`,
-    )
-    .get(automation)) as RunRow | undefined;
+  const run = (await latestRun(automation, { status: "running" })) as RunRow | undefined;
 
   if (!run) return NextResponse.json({ run: null, nodes: {} });
 
-  const rows = (await db
-    .prepare(`SELECT node_id, status FROM automation_run_nodes WHERE run_id = ?`)
-    .all(run.id)) as NodeRow[];
+  const rows = (await runNodes(automation, run.id)) as NodeRow[];
   const nodes: Record<string, string> = {};
   for (const r of rows) nodes[r.node_id] = r.status;
 

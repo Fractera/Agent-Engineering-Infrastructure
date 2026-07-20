@@ -1,4 +1,8 @@
 import { db } from "@/lib/db";
+import {
+  clearRuns, hasAnyRun, latestRun, listRuns, patchAllRunNodes, patchRun, patchRunNodeByNode, runNodes,
+  startRunIfIdle,
+} from "@/lib/runs-store";
 import { randomUUID } from "node:crypto";
 import { resolveProject, listNodes, readNodeDuration, readNodeFunctionCount } from "@/lib/nodes";
 
@@ -7,7 +11,7 @@ import { resolveProject, listNodes, readNodeDuration, readNodeFunctionCount } fr
 // run one at a time, IN ORDER: the first fork starts, its nodes turn green (ok) as their time elapses, the
 // whole fork turns green when it finishes, then the next fork starts. This is a DERIVED runner — a node
 // "takes" its estDurationMs and is guaranteed success (a simple timed process, as the owner asked); the run
-// state is persisted in automation_runs / automation_run_nodes, so a reload CONTINUES the run instead of
+// state is persisted in the automation's run journal (_data/runtime/runs.jsonl), so a reload CONTINUES instead of
 // restarting it. The real function-executing runner (223.C.6) will replace the derivation later; the shape
 // (a run row + per-node statuses) is identical, so nothing above changes.
 
@@ -69,15 +73,13 @@ const parseSqlite = (s: string | null): number | null => {
 type RunRow = { id: string; instance_id: string; started_at: string | null; finished_at: string | null; status: string; payload: string };
 
 async function runOf(automation: string, instanceId: string): Promise<RunRow | undefined> {
-  return (await db
-    .prepare(`SELECT id, instance_id, started_at, finished_at, status, payload FROM automation_runs WHERE automation = ? AND instance_id = ? ORDER BY started_at DESC LIMIT 1`)
-    .get(automation, instanceId)) as RunRow | undefined;
+  return (await latestRun(automation, { instanceId })) as RunRow | undefined;
 }
 
 // A test/imitation run uses RANDOM actual durations (owner: each node pauses a random 10-20s; the OUTPUT
 // node's pause = the sum of the earlier nodes). The plan (meta estDurationMs) is what the timeline drew
 // BEFORE running; the actual random durations are what it runs by — so plan vs actual differ and the
-// timeline visibly shifts. Stored per run in automation_runs.payload so a reload keeps the same durations.
+// timeline visibly shifts. Stored in the run's own payload so a reload keeps the same durations.
 const rnd10to20 = () => 10000 + Math.floor(Math.random() * 10001);
 function genActualDurations(fnodes: ForkNode[]): Record<string, number> {
   const d: Record<string, number> = {};
@@ -112,9 +114,7 @@ export async function advanceRuns(automation: string): Promise<void> {
   const now = Date.now();
 
   // 1. progress the currently running fork (if any).
-  let running = (await db
-    .prepare(`SELECT id, instance_id, started_at, finished_at, status, payload FROM automation_runs WHERE automation = ? AND status = 'running' ORDER BY started_at DESC LIMIT 1`)
-    .get(proj.automation)) as RunRow | undefined;
+  let running = (await latestRun(proj.automation, { status: "running" })) as RunRow | undefined;
 
   if (running) {
     const inst = insts.find((i) => i.id === running!.instance_id);
@@ -127,8 +127,10 @@ export async function advanceRuns(automation: string): Promise<void> {
 
     if (total <= 0 || elapsed >= total) {
       // finished — the whole fork turns green (guaranteed success).
-      await db.prepare(`UPDATE automation_runs SET status = 'done', current_node = NULL, finished_at = datetime('now') WHERE id = ?`).run(running.id);
-      await db.prepare(`UPDATE automation_run_nodes SET status = 'ok' WHERE run_id = ?`).run(running.id);
+      await patchRun(proj.automation, running.id, {
+        status: "done", current_node: null, finished_at: new Date().toISOString().replace("T", " ").slice(0, 19),
+      });
+      await patchAllRunNodes(proj.automation, running.id, { status: "ok" });
       running = undefined; // free the slot so the next fork can start
     } else {
       // derive per-node status from elapsed: done nodes green, the current one orange, the rest idle.
@@ -137,10 +139,10 @@ export async function advanceRuns(automation: string): Promise<void> {
       for (const n of fnodes) {
         const st = elapsed >= cum + n.ms ? "ok" : elapsed >= cum ? "running" : "idle";
         if (st === "running") current = n.slug;
-        await db.prepare(`UPDATE automation_run_nodes SET status = ? WHERE run_id = ? AND node_id = ?`).run(st, running.id, n.slug);
+        await patchRunNodeByNode(proj.automation, running.id, n.slug, { status: st });
         cum += n.ms;
       }
-      await db.prepare(`UPDATE automation_runs SET current_node = ? WHERE id = ?`).run(current, running.id);
+      await patchRun(proj.automation, running.id, { current_node: current });
     }
   }
 
@@ -148,8 +150,7 @@ export async function advanceRuns(automation: string): Promise<void> {
   //    fork here. The queue runs only after the owner presses "Run" (runAutomation), so the timeline does not
   //    start itself on a page poll or the cron tick. "Already active" = at least one fork has a run.
   if (!running) {
-    const anyRun = (await db.prepare(`SELECT 1 FROM automation_runs WHERE automation = ? LIMIT 1`).get(proj.automation)) as unknown;
-    if (!anyRun) return; // idle — waiting for the Run button
+    if (!(await hasAnyRun(proj.automation))) return; // idle — waiting for the Run button
     for (const inst of insts) {
       const existing = await runOf(proj.automation, inst.id);
       if (existing) continue; // this fork already ran (running or done)
@@ -160,27 +161,18 @@ export async function advanceRuns(automation: string): Promise<void> {
 }
 
 /** Start ONE fork atomically (step 230 runner). The page polls advanceRuns (schedule 3s + runs/active 1.5s),
- *  so the INSERT fires only WHERE no fork of this automation is already running AND this fork has no run —
- *  SQLite serializes writers, so exactly one concurrent call wins and forks run strictly one at a time. */
+ *  so the start fires only when no fork of this automation is running AND this fork has no run yet. The
+ *  guarantee used to come from SQLite serializing writers; it now comes from startRunIfIdle's per-automation
+ *  chain (lib/runs-store.ts) — same invariant: forks run strictly one at a time. */
 async function startFork(automation: string, inst: Instance, base: { slug: string; name: string; ms: number; fns: number }[]): Promise<void> {
   const fnodes = forkNodes(base, inst);
   const actual = genActualDurations(fnodes); // random 10-20s per node; output = sum of the earlier ones
   const runId = randomUUID();
-  const res = (await db.prepare(
-    `INSERT INTO automation_runs (id, automation, instance_id, current_node, status, payload)
-     SELECT ?, ?, ?, ?, 'running', ?
-     WHERE NOT EXISTS (SELECT 1 FROM automation_runs WHERE automation = ? AND status = 'running')
-       AND NOT EXISTS (SELECT 1 FROM automation_runs WHERE automation = ? AND instance_id = ?)`,
-  ).run(
-    runId, automation, inst.id, fnodes[0]?.slug ?? null, JSON.stringify({ durations: actual }),
-    automation, automation, inst.id,
-  )) as { changes?: number };
-  if ((res.changes ?? 0) > 0) {
-    for (let i = 0; i < fnodes.length; i++) {
-      await db.prepare(`INSERT INTO automation_run_nodes (id, run_id, node_id, status) VALUES (?, ?, ?, ?)`)
-        .run(randomUUID(), runId, fnodes[i].slug, i === 0 ? "running" : "idle");
-    }
-  }
+  await startRunIfIdle(
+    automation,
+    { id: runId, instanceId: inst.id, currentNode: fnodes[0]?.slug ?? null, payload: JSON.stringify({ durations: actual }) },
+    fnodes.map((n, i) => ({ id: randomUUID(), nodeId: n.slug, status: i === 0 ? "running" : "idle" })),
+  );
 }
 
 /** RUN the automation from the start (the "Run" button, step 230): clear any prior runs, then start the
@@ -195,8 +187,7 @@ export async function runAutomation(automation: string): Promise<void> {
 
 /** RESET the automation (the "Reset" button): drop all runs so the timeline returns to the plan. */
 export async function resetAutomation(automation: string): Promise<void> {
-  await db.prepare(`DELETE FROM automation_run_nodes WHERE run_id IN (SELECT id FROM automation_runs WHERE automation = ?)`).run(automation);
-  await db.prepare(`DELETE FROM automation_runs WHERE automation = ?`).run(automation);
+  await clearRuns(automation);
   await db.prepare(`DELETE FROM automation_schedule WHERE automation = ?`).run(automation);
 }
 
@@ -204,7 +195,7 @@ export async function resetAutomation(automation: string): Promise<void> {
 async function nodeStatuses(automation: string, instanceId: string): Promise<Record<string, string>> {
   const run = await runOf(automation, instanceId);
   if (!run) return {};
-  const rows = (await db.prepare(`SELECT node_id, status FROM automation_run_nodes WHERE run_id = ?`).all(run.id)) as { node_id: string; status: string }[];
+  const rows = await runNodes(automation, run.id);
   const out: Record<string, string> = {};
   for (const r of rows) out[r.node_id] = r.status;
   return out;
@@ -276,10 +267,7 @@ export async function recomputeSchedule(automation: string): Promise<ScheduleRow
  *  process. A finished run is a green bar anchored at its actual start/end; a pending scheduled request
  *  («напомни через час») is a grey bar anchored at its due time, its length = the nodes' estimate. */
 async function streamRows(automation: string): Promise<ScheduleRow[]> {
-  const runs = (await db.prepare(
-    `SELECT id, status, started_at, finished_at FROM automation_runs
-     WHERE automation = ? AND instance_id IS NULL ORDER BY started_at DESC LIMIT 20`,
-  ).all(automation)) as { id: string; status: string; started_at: string; finished_at: string | null }[];
+  const runs = (await listRuns(automation)).filter((r) => r.instance_id === null).slice(0, 20);
   const pending = (await db.prepare(
     `SELECT id, due_at, input_json FROM automation_scheduled_requests
      WHERE automation = ? AND status = 'pending' ORDER BY due_at ASC LIMIT 20`,

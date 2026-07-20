@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { db } from "@/lib/db";
+import { insertRun, insertRunNode } from "@/lib/runs-store";
 import { authorize, resolveProject, syncIndexFromFiles, listNodes } from "@/lib/nodes";
 import { validateProjectDiagram } from "@/lib/diagram/validate";
 import { pendingSteps } from "@/lib/dev-steps";
@@ -35,14 +35,12 @@ export async function POST(req: NextRequest) {
   let runId: string | null = null;
   if (built.length) {
     runId = randomUUID();
-    await db.prepare(
-      `INSERT INTO automation_runs (id, automation, current_node, status, finished_at)
-       VALUES (?, ?, NULL, 'done', datetime('now'))`,
-    ).run(runId, proj.automation);
+    await insertRun(proj.automation, {
+      id: runId, currentNode: null, status: "done",
+      finishedAt: new Date().toISOString().replace("T", " ").slice(0, 19),
+    });
     for (const n of built) {
-      await db.prepare(
-        `INSERT INTO automation_run_nodes (id, run_id, node_id, status) VALUES (?, ?, ?, 'ok')`,
-      ).run(randomUUID(), runId, n.slug);
+      await insertRunNode(proj.automation, { id: randomUUID(), runId, nodeId: n.slug, status: "ok" });
     }
   }
 

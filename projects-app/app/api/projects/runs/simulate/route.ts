@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { getSession } from "@/lib/auth/get-session";
-import { db } from "@/lib/db";
+import { insertRun, insertRunNode, latestRun, patchRun, patchRunNodeByNode } from "@/lib/runs-store";
 import { recomputeSchedule } from "@/lib/schedule";
 
 // TEMPORARY demonstrator (step 223.C.3) — steps a run's current_node through the Master's nodes so the
@@ -32,25 +32,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "automation and nodeIds are required" }, { status: 400 });
   }
 
-  const active = (await db
-    .prepare(
-      `SELECT id, current_node FROM automation_runs
-       WHERE automation = ? AND status = 'running' ORDER BY started_at DESC LIMIT 1`,
-    )
-    .get(automation)) as RunRow | undefined;
+  const active = (await latestRun(automation, { status: "running" })) as RunRow | undefined;
 
   // START — no active run: create one, first node running, the rest idle.
   if (!active) {
     const runId = randomUUID();
-    await db
-      .prepare(
-        `INSERT INTO automation_runs (id, automation, current_node, status) VALUES (?, ?, ?, 'running')`,
-      )
-      .run(runId, automation, nodeIds[0]);
+    await insertRun(automation, { id: runId, currentNode: nodeIds[0], status: "running" });
     for (let i = 0; i < nodeIds.length; i++) {
-      await db
-        .prepare(`INSERT INTO automation_run_nodes (id, run_id, node_id, status) VALUES (?, ?, ?, ?)`)
-        .run(randomUUID(), runId, nodeIds[i], i === 0 ? "running" : "idle");
+      await insertRunNode(automation, {
+        id: randomUUID(), runId, nodeId: nodeIds[i], status: i === 0 ? "running" : "idle",
+      });
     }
     return NextResponse.json({ runId, current_node: nodeIds[0], status: "running" });
   }
@@ -59,24 +50,18 @@ export async function POST(req: NextRequest) {
   const cur = active.current_node;
   const idx = cur ? nodeIds.indexOf(cur) : -1;
   if (cur) {
-    await db
-      .prepare(`UPDATE automation_run_nodes SET status = 'ok' WHERE run_id = ? AND node_id = ?`)
-      .run(active.id, cur);
+    await patchRunNodeByNode(automation, active.id, cur, { status: "ok" });
   }
   const next = idx >= 0 && idx + 1 < nodeIds.length ? nodeIds[idx + 1] : null;
   if (next) {
-    await db
-      .prepare(`UPDATE automation_run_nodes SET status = 'running' WHERE run_id = ? AND node_id = ?`)
-      .run(active.id, next);
-    await db.prepare(`UPDATE automation_runs SET current_node = ? WHERE id = ?`).run(next, active.id);
+    await patchRunNodeByNode(automation, active.id, next, { status: "running" });
+    await patchRun(automation, active.id, { current_node: next });
     return NextResponse.json({ runId: active.id, current_node: next, status: "running" });
   }
   // No next node — finish the run.
-  await db
-    .prepare(
-      `UPDATE automation_runs SET status = 'done', current_node = NULL, finished_at = datetime('now') WHERE id = ?`,
-    )
-    .run(active.id);
+  await patchRun(automation, active.id, {
+    status: "done", current_node: null, finished_at: new Date().toISOString().replace("T", " ").slice(0, 19),
+  });
   // A finished run is a FACT that shifts the Gantt timeline (step 230): recompute so the next fork's planned
   // start moves to reflect that this one ended (earlier or later than planned). Best-effort.
   try { await recomputeSchedule(automation); } catch { /* the run is already finished; the tick will catch up */ }
