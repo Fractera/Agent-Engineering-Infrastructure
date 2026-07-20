@@ -353,7 +353,7 @@ const ENTITY_INSTRUCTIONS: Partial<Record<EntityType, string>> = {
     "available_column_types) each with id/type/source, and its cell ACTIONS (available_action_types) each " +
     "with an authored plain-language actionDescription saying what the opened modal does — author it whenever " +
     "you add an action. Rows are written by output nodes (ioType \"dashboard\") through the shared row store " +
-    "(lib/dashboard-rows.ts — addRow/listRows, the dashboard_rows table); the table config lives in the " +
+    "(lib/dashboard-rows.ts — addRow/listRows, the journal _data/runtime/rows.jsonl); the table config lives in the " +
     "automation's own _data/dashboard.ts. Develop from each table's OWN rawRequest: adjust that table's " +
     "columns to carry exactly what the owner asks to see, then make the writing node supply those values. " +
     "NEVER invent a parallel storage or a second write path — one store, written only by output nodes, read " +
@@ -859,7 +859,7 @@ async function dashboardTablesOf(automation: string): Promise<DashboardTableIden
           actionDescription: localizedToString(c.options?.actionDescription) || undefined,
           suffix: c.options?.suffix, liveUrl: c.options?.liveUrl,
         })),
-        rowStore: "dashboard_rows (lib/dashboard-rows.ts addRow/listRows)",
+        rowStore: "_data/runtime/rows.jsonl (lib/dashboard-rows.ts addRow/listRows)",
       };
     }).filter((t) => t.tableId);
   } catch {
