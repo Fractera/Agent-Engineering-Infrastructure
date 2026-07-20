@@ -26,6 +26,10 @@ your diff. So there is nothing to keep in step — change the wiring HERE and it
 connected to. The retired \`parentId\` field was exactly that second source of wiring: an edge dragged on
 the canvas never reached it, an edge written into it never reached the canvas. Do not reintroduce it.
 
+An edge BETWEEN two automations is a different animal and lives elsewhere: its own folder
+\`projects/_edges/<cuid>/\` with \`meta.json\` (the record: from, to, endpoints, lifecycle), \`spec.md\` (the
+brief) and \`functions.ts\` (the integration code). The folder IS the edge — deleting it deletes the edge.
+
 ## 1. The three roles — classify FIRST, before anything else
 
 Ask two questions about the capability you are about to build:

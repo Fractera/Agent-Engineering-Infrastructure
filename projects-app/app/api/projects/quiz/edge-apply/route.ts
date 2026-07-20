@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
 import { authorize } from "@/lib/nodes";
-import { edgeByCuid, writeEdgeSpec } from "@/lib/edges";
+import { edgeByCuid, patchEdge, writeEdgeSpec } from "@/lib/edges";
 import { materializeEdgeStep, nextStepNumber } from "@/lib/dev-steps";
 import { edgeContext, finishQuiz, getQuizByKey, edgeQuizKey, synthesizeEdge, turnsOf } from "@/lib/quiz";
 
@@ -42,8 +41,7 @@ export async function POST(req: NextRequest) {
   // The model's name is adopted only while the link is still a DRAFT (a built link keeps the name the owner
   // and the canvas already know).
   if (link.name && edge.draft === 1) {
-    await db.prepare(`UPDATE automation_edges SET name = ?, updated_at = datetime('now') WHERE cuid = ?`)
-      .run(link.name, cuid);
+    await patchEdge(cuid, { name: link.name });
   }
 
   // 3. one development step for this link (the existing file queue — no new mechanism)

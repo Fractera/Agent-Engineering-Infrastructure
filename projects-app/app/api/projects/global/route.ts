@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
 import { authorize, resolveProject } from "@/lib/nodes";
 import { PROJECT_CATEGORIES } from "@/app/(projects)/projects/_shared/categories";
 import { listProjectSlugs } from "@/app/(projects)/projects/_shared/projects-manifest";
 import { readAutomationType } from "@/app/(projects)/projects/_shared/automation-type-reader";
-import { automationReadiness, getGlobalLayout, listEdges, pruneDeadEdges, type Layout } from "@/lib/edges";
+import {
+  automationReadiness, getGlobalLayout, listEdges, pruneDeadEdges, readGlobalState, writeGlobalState, type Layout,
+} from "@/lib/edges";
 
 // THE GLOBAL CANVAS STATE (step 225) — everything the workspace-level graph needs, in one poll:
 //   • every PROJECT as a node, with its readiness (a project still "In development" or inactive is drawn
@@ -23,13 +24,11 @@ export type GlobalProject = {
   type: "stream" | "instanced" | "chained";
 };
 
+// The workspace state is a FILE now (_data/global-automation.json, block 2 of the file-system refactor):
+// no row to create, no default to insert — a missing file simply reads as the default state.
 async function globalRow(): Promise<{ status: string; layout: string }> {
-  const row = (await db.prepare(`SELECT status, layout FROM global_automation WHERE id = 1`).get()) as
-    | { status: string; layout: string }
-    | undefined;
-  if (row) return row;
-  await db.prepare(`INSERT OR IGNORE INTO global_automation (id, status) VALUES (1, 'in-development')`).run();
-  return { status: "in-development", layout: "{}" };
+  const state = await readGlobalState();
+  return { status: state.status, layout: JSON.stringify(state.layout) };
 }
 
 export async function GET(req: NextRequest) {
@@ -74,7 +73,7 @@ export async function POST(req: NextRequest) {
   await globalRow();
 
   if (body?.status && ["in-development", "on", "off"].includes(body.status)) {
-    await db.prepare(`UPDATE global_automation SET status = ?, updated_at = datetime('now') WHERE id = 1`).run(body.status);
+    await writeGlobalState({ status: body.status });
   }
   if (body?.layout) {
     // Light validation (step 234.3): reject self-parenting; everything else (positions, group size) is
@@ -84,8 +83,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: `"${automation}" cannot be its own group` }, { status: 400 });
       }
     }
-    await db.prepare(`UPDATE global_automation SET layout = ?, updated_at = datetime('now') WHERE id = 1`)
-      .run(JSON.stringify(body.layout));
+    await writeGlobalState({ layout: body.layout });
   }
   return NextResponse.json({ ok: true });
 }

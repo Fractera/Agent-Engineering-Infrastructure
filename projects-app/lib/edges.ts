@@ -1,6 +1,5 @@
-import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { db } from "@/lib/db";
 import { createNodeId } from "@/lib/cuid";
 import { listNodes, projectsRoot, resolveProject, syncIndexFromFiles } from "@/lib/nodes";
 
@@ -37,7 +36,8 @@ export async function groupMembers(groupAutomation: string): Promise<string[]> {
 
 // GLOBAL EDGES (step 225) — a programmable integration BETWEEN two automations. An edge is a first-class
 // entity with the same lifecycle as a node (draft -> spec -> development step -> coder -> version), and its
-// code lives in its OWN folder: projects/_edges/<cuid>/{meta.ts, spec.md, functions.ts}. It belongs to no
+// code lives in its OWN folder: projects/_edges/<cuid>/{meta.json, spec.md, functions.ts} — the folder IS
+// the edge (block 2 of the file-system refactor). It belongs to no
 // project — it is between them — so deleting a project cascades to its edges and leaves no orphans.
 
 export type EdgeRow = {
@@ -48,6 +48,69 @@ export type EdgeRow = {
 
 export function edgesRoot(): string {
   return join(projectsRoot(), "_edges");
+}
+
+// ─── THE EDGE RECORD ON DISK (block 2 of the file-system refactor, owner 2026-07-20) ──────────────────
+// A global edge used to exist TWICE: its code in _edges/<cuid>/ and its identity in the automation_edges
+// table — the same split that made the intra-automation graph drift (block 1). Now the folder IS the edge:
+// `meta.json` is its whole record and the folder's existence is its existence. The old `meta.ts` stub is
+// gone: it carried a SUBSET of the same fields (cuid/name/from/to) and would have been a third source.
+//
+// A deleted edge takes its folder with it — there is no tombstone, because nothing keys off a dead edge
+// (its version history lives under its cuid in entity_history and survives independently).
+
+const edgeDir = (cuid: string) => join(edgesRoot(), cuid);
+const edgeMetaPath = (cuid: string) => join(edgeDir(cuid), "meta.json");
+
+/** The on-disk record. Field names are the readable ones; toEdgeRow() maps to the row shape callers use. */
+type EdgeRecord = {
+  cuid: string; name: string; from: string; to: string;
+  fromNodeCuid: string | null; toNodeCuid: string | null;
+  draft: boolean; status: string; activeVersion: number; latestVersion: number;
+  createdAt: string; updatedAt: string;
+};
+
+const toEdgeRow = (r: EdgeRecord): EdgeRow => ({
+  cuid: r.cuid, from_automation: r.from, to_automation: r.to,
+  from_node_cuid: r.fromNodeCuid ?? null, to_node_cuid: r.toNodeCuid ?? null,
+  name: r.name, draft: r.draft ? 1 : 0,
+  active_version: r.activeVersion ?? 0, latest_version: r.latestVersion ?? 0,
+  status: r.status,
+});
+
+async function readEdgeRecord(cuid: string): Promise<EdgeRecord | null> {
+  try {
+    const raw = JSON.parse(await readFile(edgeMetaPath(cuid), "utf8")) as Partial<EdgeRecord>;
+    if (!raw.cuid || !raw.from || !raw.to) return null;
+    return {
+      cuid: raw.cuid, name: raw.name ?? "", from: raw.from, to: raw.to,
+      fromNodeCuid: raw.fromNodeCuid ?? null, toNodeCuid: raw.toNodeCuid ?? null,
+      draft: raw.draft ?? true, status: raw.status ?? "draft",
+      activeVersion: raw.activeVersion ?? 0, latestVersion: raw.latestVersion ?? 0,
+      createdAt: raw.createdAt ?? "", updatedAt: raw.updatedAt ?? "",
+    };
+  } catch { return null; }
+}
+
+async function writeEdgeRecord(rec: EdgeRecord): Promise<void> {
+  rec.updatedAt = new Date().toISOString();
+  const target = edgeMetaPath(rec.cuid);
+  const tmp = `${target}.tmp-${process.pid}-${Date.now()}`;
+  await mkdir(edgeDir(rec.cuid), { recursive: true });
+  await writeFile(tmp, `${JSON.stringify(rec, null, 2)}\n`, "utf8");
+  await rename(tmp, target);
+}
+
+/** Patch an edge's record (name, endpoints, lifecycle). The one door replacing every UPDATE on the table. */
+export async function patchEdge(
+  cuid: string,
+  patch: Partial<Pick<EdgeRecord, "name" | "fromNodeCuid" | "toNodeCuid" | "draft" | "status" | "activeVersion" | "latestVersion">>,
+): Promise<EdgeRow | undefined> {
+  const rec = await readEdgeRecord(cuid);
+  if (!rec) return undefined;
+  Object.assign(rec, patch);
+  await writeEdgeRecord(rec);
+  return toEdgeRow(rec);
 }
 
 // ─── AUTOMATION READINESS (display only, step 224/225) ──────────────────────────────────────────────
@@ -68,10 +131,11 @@ export async function automationReadiness(automation: string): Promise<Readiness
 }
 
 // ─── THE GLOBAL CANVAS LAYOUT (step 234.3) ────────────────────────────────────────────────────────────
-// The global canvas (global-canvas.client.tsx) persists node positions AND group/subflow membership in one
-// JSON blob (global_automation.layout — no schema change, same free-form TEXT column since step 225). Shared
-// reader so app/api/projects/global/route.ts (renders the canvas), the same-group connection rule below, and
-// groupMembers() (the chain brief) all parse the SAME shape identically.
+// The global canvas (global-canvas.client.tsx) persists node positions AND group/subflow membership. It
+// used to live in the global_automation table; since block 2 of the file-system refactor it is a file at
+// the root of the projects tree, _data/global-automation.json, together with the global on/off status.
+// Shared reader so app/api/projects/global/route.ts (renders the canvas), the same-group connection rule
+// below, and groupMembers() (the chain brief) all parse the SAME shape identically.
 export type LayoutEntry = {
   x: number;
   y: number;
@@ -83,12 +147,36 @@ export type LayoutEntry = {
 };
 export type Layout = Record<string, LayoutEntry>;
 
+/** The workspace-level state file: the canvas layout + the global on/off status. One file at the root of
+ *  the projects tree, next to the automations it describes (block 2 of the file-system refactor). */
+export type GlobalState = { status: string; layout: Layout };
+
+const globalStatePath = () => join(projectsRoot(), "_data", "global-automation.json");
+
+export async function readGlobalState(): Promise<GlobalState> {
+  try {
+    const raw = JSON.parse(await readFile(globalStatePath(), "utf8")) as Partial<GlobalState>;
+    return {
+      status: typeof raw.status === "string" ? raw.status : "in-development",
+      layout: (raw.layout ?? {}) as Layout,
+    };
+  } catch {
+    return { status: "in-development", layout: {} };
+  }
+}
+
+export async function writeGlobalState(patch: Partial<GlobalState>): Promise<GlobalState> {
+  const next = { ...(await readGlobalState()), ...patch };
+  const target = globalStatePath();
+  const tmp = `${target}.tmp-${process.pid}-${Date.now()}`;
+  await mkdir(join(projectsRoot(), "_data"), { recursive: true });
+  await writeFile(tmp, `${JSON.stringify(next, null, 2)}\n`, "utf8");
+  await rename(tmp, target);
+  return next;
+}
+
 export async function getGlobalLayout(): Promise<Layout> {
-  const row = (await db.prepare(`SELECT layout FROM global_automation WHERE id = 1`).get()) as
-    | { layout: string }
-    | undefined;
-  if (!row?.layout) return {};
-  try { return JSON.parse(row.layout) as Layout; } catch { return {}; }
+  return (await readGlobalState()).layout;
 }
 
 // ─── THE CONNECTION RULE (step 236.3, replaces the old readiness gate + the inverted nesting gate) ──────
@@ -110,12 +198,7 @@ export async function sameGroup(from: string, to: string): Promise<SameGroupResu
 // ─── the edge's co-located files (the same shape as a node's) ────────────────────────────────────────
 
 export function edgeStubFiles(e: { cuid: string; name: string; from: string; to: string; spec: string }): Record<string, string> {
-  const meta = JSON.stringify({ cuid: e.cuid, name: e.name, from: e.from, to: e.to }, null, 2);
   return {
-    "meta.ts": `// Edge (step 225) — a programmable integration BETWEEN two automations. It belongs to no project.
-// Draft: no functions yet, a spec.md brief; the coder builds it and calls materialize.
-export const META = ${meta} as const;
-`,
     "functions.ts": `import type { NodeFunction } from "../../_shared/node-contract";
 
 // Draft — no integration code yet. The coder materializes these from spec.md (step 225).
@@ -128,11 +211,18 @@ export const FUNCTIONS: NodeFunction[] = [];
 // ─── CRUD ────────────────────────────────────────────────────────────────────────────────────────────
 
 export async function listEdges(): Promise<EdgeRow[]> {
-  return (await db.prepare(`SELECT * FROM automation_edges WHERE status != 'removed' ORDER BY created_at ASC`).all()) as EdgeRow[];
+  const records: EdgeRecord[] = [];
+  for (const cuid of await edgeFoldersOnDisk()) {
+    const rec = await readEdgeRecord(cuid);
+    if (rec && rec.status !== "removed") records.push(rec);
+  }
+  records.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  return records.map(toEdgeRow);
 }
 
 export async function edgeByCuid(cuid: string): Promise<EdgeRow | undefined> {
-  return (await db.prepare(`SELECT * FROM automation_edges WHERE cuid = ?`).get(cuid)) as EdgeRow | undefined;
+  const rec = await readEdgeRecord(cuid);
+  return rec ? toEdgeRow(rec) : undefined;
 }
 
 export async function createEdge(input: {
@@ -140,32 +230,35 @@ export async function createEdge(input: {
 }): Promise<EdgeRow> {
   const cuid = createNodeId();
   const name = (input.name ?? "").trim() || `${input.from.split("/")[1]} → ${input.to.split("/")[1]}`;
-  const dir = join(edgesRoot(), cuid);
+  const dir = edgeDir(cuid);
   await mkdir(dir, { recursive: true });
   for (const [rel, body] of Object.entries(
     edgeStubFiles({ cuid, name, from: input.from, to: input.to, spec: input.spec ?? "" }),
   )) {
     await writeFile(join(dir, rel), body, "utf8");
   }
-  await db.prepare(
-    `INSERT INTO automation_edges (cuid, from_automation, to_automation, from_node_cuid, to_node_cuid, name)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-  ).run(cuid, input.from, input.to, input.fromNodeCuid ?? null, input.toNodeCuid ?? null, name);
-  return (await edgeByCuid(cuid)) as EdgeRow;
+  const now = new Date().toISOString();
+  const rec: EdgeRecord = {
+    cuid, name, from: input.from, to: input.to,
+    fromNodeCuid: input.fromNodeCuid ?? null, toNodeCuid: input.toNodeCuid ?? null,
+    draft: true, status: "draft", activeVersion: 0, latestVersion: 0,
+    createdAt: now, updatedAt: now,
+  };
+  await writeEdgeRecord(rec);
+  return toEdgeRow(rec);
 }
 
 export async function removeEdge(cuid: string): Promise<void> {
-  await db.prepare(`UPDATE automation_edges SET status = 'removed', updated_at = datetime('now') WHERE cuid = ?`).run(cuid);
-  await rm(join(edgesRoot(), cuid), { recursive: true, force: true });
+  // The folder IS the edge — removing it removes the edge, record and code together. No tombstone row can
+  // survive to haunt the canvas the way a stale index row used to.
+  await rm(edgeDir(cuid), { recursive: true, force: true });
 }
 
 /** Deleting a project must not leave dangling links — cascade to every edge that touches it. */
 export async function removeEdgesOfAutomation(automation: string): Promise<number> {
-  const rows = (await db.prepare(
-    `SELECT cuid FROM automation_edges WHERE (from_automation = ? OR to_automation = ?) AND status != 'removed'`,
-  ).all(automation, automation)) as { cuid: string }[];
-  for (const r of rows) await removeEdge(r.cuid);
-  return rows.length;
+  const dead = (await listEdges()).filter((e) => e.from_automation === automation || e.to_automation === automation);
+  for (const e of dead) await removeEdge(e.cuid);
+  return dead.length;
 }
 
 /** Prune links whose project no longer exists (a project is deleted by removing its folder — there is no
@@ -179,13 +272,14 @@ export async function pruneDeadEdges(existingAutomations: string[]): Promise<num
 }
 
 export async function readEdgeFiles(cuid: string): Promise<{ meta: string; functions: string; spec: string }> {
-  const dir = join(edgesRoot(), cuid);
+  const dir = edgeDir(cuid);
   const read = (f: string) => readFile(join(dir, f), "utf8").catch(() => "");
-  return { meta: await read("meta.ts"), functions: await read("functions.ts"), spec: await read("spec.md") };
+  // `meta` is the record itself now (meta.json), not a TS module that restated four of its fields.
+  return { meta: await read("meta.json"), functions: await read("functions.ts"), spec: await read("spec.md") };
 }
 
 export async function writeEdgeSpec(cuid: string, spec: string): Promise<void> {
-  await writeFile(join(edgesRoot(), cuid, "spec.md"), `${spec.trim()}\n`, "utf8");
+  await writeFile(join(edgeDir(cuid), "spec.md"), `${spec.trim()}\n`, "utf8");
 }
 
 /** Edge folders on disk (used by the validator to catch orphans). */

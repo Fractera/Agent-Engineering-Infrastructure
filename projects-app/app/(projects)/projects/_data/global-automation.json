@@ -1,0 +1,15 @@
+{
+  "status": "on",
+  "layout": {
+    "personal/telegram-notes": {
+      "x": 500,
+      "y": 250,
+      "parent": null
+    },
+    "other/test-stream-frozen-starter": {
+      "x": 90,
+      "y": 40,
+      "parent": null
+    }
+  }
+}

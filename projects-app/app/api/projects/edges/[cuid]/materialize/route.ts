@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
-import { db } from "@/lib/db";
 import { authorize } from "@/lib/nodes";
 import { completeStep } from "@/lib/dev-steps";
-import { edgeByCuid, edgesRoot, readEdgeFiles } from "@/lib/edges";
+import { edgeByCuid, edgesRoot, patchEdge, readEdgeFiles } from "@/lib/edges";
 import { scheduleRebuild } from "@/lib/nodes";
 import { writeVersionByRef } from "@/lib/entity-store";
 
@@ -42,9 +41,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ cuid: stri
     metaJson: files.meta, functionsSrc: files.functions, specSrc: files.spec, summary,
   }, devStepRef);
 
-  await db.prepare(
-    `UPDATE automation_edges SET draft = 0, status = 'materialized', latest_version = ?, active_version = ?, updated_at = datetime('now') WHERE cuid = ?`,
-  ).run(version, version, cuid);
+  await patchEdge(cuid, { draft: false, status: "materialized", latestVersion: version, activeVersion: version });
 
   let completed: string | null = null;
   if (devStepRef) completed = await completeStep(Number(devStepRef), summary);

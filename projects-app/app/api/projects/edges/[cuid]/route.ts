@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
 import { authorize } from "@/lib/nodes";
-import { edgeByCuid, readEdgeFiles, removeEdge, writeEdgeSpec } from "@/lib/edges";
+import { edgeByCuid, patchEdge, readEdgeFiles, removeEdge, writeEdgeSpec } from "@/lib/edges";
 
 // One edge (step 225): GET reads it with its co-located sources (the panel edits the spec and picks the
 // endpoint NODES — an edge may join ANY node of X to ANY node of Y, not only leaves or parents/children).
@@ -27,16 +26,14 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ cuid: str
     { spec?: string; name?: string; fromNodeCuid?: string | null; toNodeCuid?: string | null };
 
   if (typeof body.spec === "string") await writeEdgeSpec(cuid, body.spec);
-  await db.prepare(
-    `UPDATE automation_edges SET
-       name = COALESCE(?, name),
-       from_node_cuid = COALESCE(?, from_node_cuid),
-       to_node_cuid = COALESCE(?, to_node_cuid),
-       updated_at = datetime('now')
-     WHERE cuid = ?`,
-  ).run(body.name ?? null, body.fromNodeCuid ?? null, body.toNodeCuid ?? null, cuid);
+  // COALESCE semantics kept exactly: only the fields actually sent are touched.
+  const patch: Parameters<typeof patchEdge>[1] = {};
+  if (typeof body.name === "string") patch.name = body.name;
+  if (body.fromNodeCuid !== undefined && body.fromNodeCuid !== null) patch.fromNodeCuid = body.fromNodeCuid;
+  if (body.toNodeCuid !== undefined && body.toNodeCuid !== null) patch.toNodeCuid = body.toNodeCuid;
+  const updated = Object.keys(patch).length ? await patchEdge(cuid, patch) : await edgeByCuid(cuid);
 
-  return NextResponse.json({ ok: true, edge: await edgeByCuid(cuid) });
+  return NextResponse.json({ ok: true, edge: updated });
 }
 
 export async function DELETE(req: NextRequest, ctx: { params: Promise<{ cuid: string }> }) {
