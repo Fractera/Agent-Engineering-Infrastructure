@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { authorize, resolveProject, scheduleRebuild } from "@/lib/nodes";
 import { regenerateExecutables } from "@/lib/executables";
 import { clearCatalogTrack } from "@/lib/automation-catalog";
+import { removeEdgesOfAutomation } from "@/lib/edges";
 import { purgeMemoryBySource } from "@/lib/vector-memory";
 
 // DELETE AN AUTOMATION (step 241 E3.2, owner's request) — the tool the product was missing entirely: you
@@ -26,8 +27,6 @@ const BY_AUTOMATION = [
   "automation_runs",
   "automation_instances",
   "automation_schedule",
-  "automation_nodes",
-  "automation_entities",
   "automation_use_cases",
   "automation_use_cases_review",
   "automation_quiz_phase",
@@ -82,11 +81,10 @@ export async function POST(req: NextRequest) {
     } catch { /* table absent on this database — nothing of ours is in it */ }
   }
 
-  // 4. links: an edge belongs to NO automation — it sits BETWEEN two. Deleting one endpoint prunes it, so
+  // 4. links: an edge is its own FOLDER now (block 2) — removeEdgesOfAutomation deletes the folders. An edge
+  //    belongs to NO automation — it sits BETWEEN two. Deleting one endpoint prunes it, so
   //    nothing dangles on the global canvas (the rule the edge standard already states, step 225).
-  await db.prepare(
-    `DELETE FROM automation_edges WHERE from_automation = ? OR to_automation = ?`,
-  ).run(automation, automation);
+  await removeEdgesOfAutomation(automation);
 
   // 5. the folder — with it go the nodes, their functions, and every _data file. Zero technical debt.
   await rm(proj.projectDir, { recursive: true, force: true });

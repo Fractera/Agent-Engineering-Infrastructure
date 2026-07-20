@@ -254,7 +254,7 @@ export async function syncNodeNamesFromMeta(automation: string, projectDir: stri
 }
 
 /** THE ORPHAN-EDGE SYNC (263.1 round 13, owner's "yes ofcourse"). A gated apply materializes nodes on disk
- *  but writes no `automation_diagram_edges` rows, so an agent-added alternative input sat VISUALLY alone on
+ *  but wrote no edge into the graph, so an agent-added alternative input sat VISUALLY alone on
  *  the canvas forever (medicine/v2 telegram input) even though the executor's bag semantics had it fully
  *  wired. This derives the missing line the same conservative way lib/graph-flow.ts reasons: ONLY for a node
  *  no edge row touches at all (never fights topology the owner drew or deleted), and only on an exact
