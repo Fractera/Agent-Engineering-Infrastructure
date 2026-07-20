@@ -5,24 +5,42 @@ import type { NextRequest } from "next/server";
 import { getSession } from "@/lib/auth/get-session";
 import { agentGateSecret } from "@/lib/agent-gate";
 import { createNodeId } from "@/lib/cuid";
-import { db } from "@/lib/db";
 import { setTransport } from "@/lib/entity-store";
+import {
+  allGraphAutomations, derivedParent, liveEdges, liveNodes, readGraph, withGraph,
+  type Graph, type GraphNode,
+} from "@/lib/graph-store";
 import { draftNodeStubFiles } from "@/app/(projects)/projects/_lib/draft-node-stub";
 
-// Shared helpers for the Builder node API (step 224 L3). The DB table `automation_nodes` is the LIVE
-// lightweight canvas index; the files under _nodes/<slug>/ are the executable truth (Model B). These
-// helpers keep the two in sync: seed the index from the files, regenerate _data/diagram.ts from the index,
-// and resolve/authorize a project.
+// Shared helpers for the Builder node API (step 224 L3), rewritten onto the FILE-SYSTEM graph store
+// (owner 2026-07-20). There is no longer a DB index to keep in sync with the files: `_data/graph.json` IS
+// the structure (nodes, edges, order, layout, status) and `_nodes/<slug>/` IS the behaviour. Every function
+// below keeps its previous signature and NodeRow shape on purpose — the ~15 callers (node APIs, quiz, clone,
+// delete, materialize, the canvas through its API) needed no edits.
 
 const SLUG = /^[a-z][a-z0-9-]*$/;
 const WRITE_ROLES = ["architect", "manager", "agent"];
 const IP_MODE = process.env.FRACTERA_IP_NODOMAIN_MODE === "true";
 
+/** The shape every caller already knows. `parent_cuid` is DERIVED from the edges now (the first incoming edge) —
+ *  it is a layout hint for the canvas, never a stored second source of the topology. */
 export type NodeRow = {
   cuid: string; automation: string; slug: string; name: string; parent_cuid: string | null;
   ord: number; x: number | null; y: number | null; draft: number; active_version: number;
   latest_version: number; status: string;
 };
+
+/** Disk shape → the row shape the callers expect. */
+function toRow(automation: string, g: Graph, n: GraphNode): NodeRow {
+  return {
+    cuid: n.cuid, automation, slug: n.slug, name: n.name,
+    parent_cuid: derivedParent(g, n.cuid),
+    ord: n.ord, x: n.x ?? null, y: n.y ?? null,
+    draft: n.draft ? 1 : 0,
+    active_version: n.activeVersion ?? 0, latest_version: n.latestVersion ?? 0,
+    status: n.status,
+  };
+}
 
 export async function authorize(req: NextRequest): Promise<boolean> {
   if (IP_MODE) return true; // onboarding surface — open, like the other project routes
@@ -71,8 +89,17 @@ async function orderedSlugsFromDiagram(projectDir: string): Promise<string[]> {
   return [...new Set([...t.matchAll(/_nodes\/([a-z0-9-]+)\//g)].map((m) => m[1]))];
 }
 
-/** Seed the index from the files: any _nodes/<slug>/ not yet in the index is inserted (materialized unless
- *  meta says draft). Idempotent — the canvas can call it freely. */
+/** Seed / reconcile `_data/graph.json` from the folders on disk. Idempotent — the canvas calls it freely.
+ *
+ *  THIS IS ALSO THE MIGRATION. An automation created before the file-system refactor has no graph.json: on
+ *  the first call its nodes are read from the `_nodes/` folders and its edges from the retired `parentId`
+ *  declarations, and from then on the file is the truth. `parentId` is consulted ONLY for a node the graph
+ *  has never seen — otherwise an edge the owner deleted on the canvas would resurrect on the next poll
+ *  (the old DB seeding did exactly that, because it re-ran INSERT OR IGNORE forever).
+ *
+ *  It also TOMBSTONES drift in the other direction: a node whose folder has vanished is marked removed. The
+ *  files are the truth, and a node with no folder is not a node — that bug once left three phantom drafts in
+ *  the index and made the automation permanently unrunnable ("some nodes are still drafts"). */
 export async function syncIndexFromFiles(automation: string, projectDir: string): Promise<void> {
   let folders: string[] = [];
   try {
@@ -80,90 +107,74 @@ export async function syncIndexFromFiles(automation: string, projectDir: string)
       .filter((e) => e.isDirectory()).map((e) => e.name);
   } catch { return; }
   if (!folders.length) return;
-  const existing = (await db.prepare(`SELECT slug FROM automation_nodes WHERE automation = ?`).all(automation)) as { slug: string }[];
-  const known = new Set(existing.map((r) => r.slug));
-  const order = await orderedSlugsFromDiagram(projectDir);
-  const ordered = [...order.filter((s) => folders.includes(s)), ...folders.filter((s) => !order.includes(s))];
-  for (let i = 0; i < ordered.length; i++) {
-    const slug = ordered[i];
-    if (known.has(slug)) continue;
-    const { cuid, name, draft } = await parseMeta(projectDir, slug);
-    if (!cuid) continue; // predates 224 (no cuid) — skip; nothing to join version history on
-    await db.prepare(
-      `INSERT OR IGNORE INTO automation_nodes
-       (cuid, automation, slug, name, ord, draft, active_version, latest_version, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    ).run(cuid, automation, slug, name, i, draft ? 1 : 0, draft ? 0 : 1, draft ? 0 : 1, draft ? "draft" : "materialized");
-  }
 
-  // STEP 241 — TOMBSTONE THE DRIFT. The sync used to only ADD (folder → index) and never remove, so an index
-  // row whose folder had vanished lived on forever. Real damage, found by the executor's gate: the reference
-  // automation carried three phantom "draft" nodes with no folder on disk, which made it permanently
-  // unrunnable ("some nodes are still drafts") for nodes that did not exist. The FILES are the truth (the
-  // diagram invariant): a row with no folder is not a node, so it is tombstoned like any deleted one.
-  for (const row of existing) {
-    if (folders.includes(row.slug)) continue;
-    await db.prepare(
-      `UPDATE automation_nodes SET status = 'removed', updated_at = datetime('now')
-       WHERE automation = ? AND slug = ? AND status != 'removed'`,
-    ).run(automation, row.slug);
-  }
+  // Parse every folder's meta.ts OUTSIDE the lock — file reads must not serialize behind other writers.
+  const metas = new Map<string, { cuid: string; name: string; draft: boolean; parentId: string | null }>();
+  for (const slug of folders) metas.set(slug, await parseMeta(projectDir, slug));
+  const diagramOrder = await orderedSlugsFromDiagram(projectDir);
 
-  // SECOND PASS — resolve the declared diagram parents (2026-07-16, the branch fix). The insert above never
-  // wrote parent_cuid, so every seeded node was a "root" and the live canvas drew a fresh frozen automation
-  // as a LINEAR chain even when its meta.ts declared a branch (two condition nodes off one parent). Resolve
-  // each folder's `parentId` (a slug) to that node's cuid and stamp it on rows that still have no parent —
-  // never overwriting a parent the Builder set by hand (the "+" flow writes parent_cuid itself).
-  const rows = (await db.prepare(
-    `SELECT cuid, slug, parent_cuid FROM automation_nodes WHERE automation = ? AND status != 'removed'`,
-  ).all(automation)) as { cuid: string; slug: string; parent_cuid: string | null }[];
-  const cuidBySlug = new Map(rows.map((r) => [r.slug, r.cuid]));
-  for (const row of rows) {
-    if (row.parent_cuid) continue;
-    const { parentId } = await parseMeta(projectDir, row.slug);
-    const parentCuid = parentId ? cuidBySlug.get(parentId) : undefined;
-    if (!parentCuid || parentCuid === row.cuid) continue;
-    await db.prepare(
-      `UPDATE automation_nodes SET parent_cuid = ?, updated_at = datetime('now') WHERE automation = ? AND slug = ?`,
-    ).run(parentCuid, automation, row.slug);
-  }
+  await withGraph(projectDir, automation, (g) => {
+    const known = new Set(g.nodes.map((n) => n.slug));
+    const ordered = [
+      ...diagramOrder.filter((s) => folders.includes(s)),
+      ...folders.filter((s) => !diagramOrder.includes(s)),
+    ];
 
-  // THIRD PASS — seed the diagram-edge LIST from the parents (owner 2026-07-16, the fan-in fix). Edges are
-  // their own many-to-many table now (automation_diagram_edges); a fresh frozen automation's declared tree
-  // lands there as its initial edges, and edge mode then adds/removes rows freely — several edges INTO one
-  // node are normal. INSERT OR IGNORE keeps this idempotent on every canvas poll.
-  const fresh = (await db.prepare(
-    `SELECT cuid, parent_cuid FROM automation_nodes WHERE automation = ? AND status != 'removed'`,
-  ).all(automation)) as { cuid: string; parent_cuid: string | null }[];
-  for (const r of fresh) {
-    if (!r.parent_cuid || r.parent_cuid === r.cuid) continue;
-    await db.prepare(
-      `INSERT OR IGNORE INTO automation_diagram_edges (automation, from_cuid, to_cuid) VALUES (?, ?, ?)`,
-    ).run(automation, r.parent_cuid, r.cuid);
-  }
+    // 1. NEW FOLDERS → nodes. A folder that appeared without passing through the Builder (the coding
+    //    agent's gated apply is the usual author) joins the graph here.
+    const born: string[] = [];
+    let nextOrdinal = g.nodes.reduce((m, n) => Math.max(m, n.ord), -1) + 1;
+    for (const slug of ordered) {
+      if (known.has(slug)) continue;
+      const m = metas.get(slug)!;
+      if (!m.cuid) continue; // predates the cuid convention — nothing to hang history on
+      g.nodes.push({
+        cuid: m.cuid, slug, name: m.name, ord: nextOrdinal++,
+        x: null, y: null, draft: m.draft, status: m.draft ? "draft" : "materialized",
+        activeVersion: m.draft ? 0 : 1, latestVersion: m.draft ? 0 : 1,
+      });
+      born.push(slug);
+    }
+
+    // 2. VANISHED FOLDERS → tombstones.
+    for (const n of g.nodes) {
+      if (n.status === "removed" || folders.includes(n.slug)) continue;
+      n.status = "removed";
+    }
+
+    // 3. DECLARED PARENTS → edges, for newly born nodes only (see the note above about resurrection).
+    if (born.length) {
+      const cuidBySlug = new Map(g.nodes.map((n) => [n.slug, n.cuid]));
+      for (const slug of born) {
+        const parentId = metas.get(slug)?.parentId;
+        if (!parentId) continue;
+        const from = cuidBySlug.get(parentId);
+        const to = cuidBySlug.get(slug);
+        if (!from || !to || from === to) continue;
+        if (g.edges.some((e) => e.from === from && e.to === to)) continue;
+        g.edges.push({ from, to });
+      }
+    }
+  });
 }
 
-/** The diagram's edge list (owner 2026-07-16) — live rows only (both endpoints alive). */
+/** The diagram's edge list — live rows only (both endpoints alive). */
 export async function listDiagramEdges(automation: string): Promise<{ from_cuid: string; to_cuid: string }[]> {
-  return (await db.prepare(
-    `SELECT e.from_cuid, e.to_cuid FROM automation_diagram_edges e
-     JOIN automation_nodes a ON a.cuid = e.from_cuid AND a.status != 'removed'
-     JOIN automation_nodes b ON b.cuid = e.to_cuid   AND b.status != 'removed'
-     WHERE e.automation = ?`,
-  ).all(automation)) as { from_cuid: string; to_cuid: string }[];
+  const proj = resolveProject(automation);
+  if (!proj.ok) return [];
+  const g = await readGraph(proj.projectDir, automation);
+  return liveEdges(g).map((e) => ({ from_cuid: e.from, to_cuid: e.to }));
 }
 
 export async function listNodes(automation: string): Promise<NodeRow[]> {
-  return (await db.prepare(
-    `SELECT * FROM automation_nodes WHERE automation = ? AND status != 'removed' ORDER BY ord ASC`,
-  ).all(automation)) as NodeRow[];
+  const proj = resolveProject(automation);
+  if (!proj.ok) return [];
+  const g = await readGraph(proj.projectDir, automation);
+  return liveNodes(g).map((n) => toRow(automation, g, n));
 }
 
 export async function nextOrd(automation: string): Promise<number> {
-  const r = (await db.prepare(
-    `SELECT COALESCE(MAX(ord), -1) + 1 AS n FROM automation_nodes WHERE automation = ? AND status != 'removed'`,
-  ).get(automation)) as { n: number };
-  return r.n;
+  return (await listNodes(automation)).reduce((m, n) => Math.max(m, n.ord), -1) + 1;
 }
 
 export async function uniqueSlug(base: string, projectDir: string): Promise<string> {
@@ -223,16 +234,23 @@ export async function liveSlugsInOrder(automation: string): Promise<string[]> {
  *  prop). This sync carries the disk truth into the DB row wherever they disagree; call it after any flow
  *  that rewrites meta.ts outside the Builder (apply is the known one). */
 export async function syncNodeNamesFromMeta(automation: string, projectDir: string): Promise<string[]> {
-  const renamed: string[] = [];
+  const names = new Map<string, string>();
   for (const n of await listNodes(automation)) {
     const t = await readFile(join(projectDir, "_nodes", n.slug, "meta.ts"), "utf8").catch(() => "");
     const m = t.match(/\bname\s*:\s*["']([^"']+)["']/);
-    if (m && m[1] && m[1] !== n.name) {
-      await db.prepare(`UPDATE automation_nodes SET name = ?, updated_at = datetime('now') WHERE cuid = ?`).run(m[1], n.cuid);
-      renamed.push(`${n.slug} → ${m[1]}`);
-    }
+    if (m && m[1] && m[1] !== n.name) names.set(n.cuid, m[1]);
   }
-  return renamed;
+  if (!names.size) return [];
+  return withGraph(projectDir, automation, (g) => {
+    const renamed: string[] = [];
+    for (const n of g.nodes) {
+      const fresh = names.get(n.cuid);
+      if (!fresh) continue;
+      renamed.push(`${n.slug} → ${fresh}`);
+      n.name = fresh;
+    }
+    return renamed;
+  });
 }
 
 /** THE ORPHAN-EDGE SYNC (263.1 round 13, owner's "yes ofcourse"). A gated apply materializes nodes on disk
@@ -251,11 +269,8 @@ export async function syncOrphanEdgesFromPorts(automation: string, projectDir: s
   const ports = new Map<string, { in: string[]; out: string[] }>();
   for (const n of nodes) ports.set(n.cuid, await readNodePorts(projectDir, n.slug));
   const names = (l: string[]) => l.map((s) => s.split(":")[0].trim()).filter(Boolean);
-  const link = async (fromCuid: string, toCuid: string) => {
-    await db.prepare(
-      `INSERT OR IGNORE INTO automation_diagram_edges (automation, from_cuid, to_cuid) VALUES (?, ?, ?)`,
-    ).run(automation, fromCuid, toCuid);
-  };
+  const pending: { from: string; to: string }[] = [];
+  const link = async (fromCuid: string, toCuid: string) => { pending.push({ from: fromCuid, to: toCuid }); };
   const added: string[] = [];
   for (const n of nodes) {
     if (touched.has(n.cuid)) continue;
@@ -282,11 +297,32 @@ export async function syncOrphanEdgesFromPorts(automation: string, projectDir: s
       }
     }
   }
+  if (pending.length) {
+    const proj = resolveProject(automation);
+    if (proj.ok) {
+      await withGraph(proj.projectDir, automation, (g) => {
+        for (const p of pending) {
+          if (g.edges.some((e) => e.from === p.from && e.to === p.to)) continue;
+          g.edges.push({ from: p.from, to: p.to });
+        }
+      });
+    }
+  }
   return added;
 }
 
+/** Find a node by cuid ANYWHERE in the workspace. The DB answered this with one indexed lookup; the file
+ *  store scans the graph files instead — a handful of automations, each a small JSON, and only the node
+ *  APIs (which already hit the disk for meta.ts) take this path. */
 export async function nodeByCuid(cuid: string): Promise<NodeRow | undefined> {
-  return (await db.prepare(`SELECT * FROM automation_nodes WHERE cuid = ?`).get(cuid)) as NodeRow | undefined;
+  for (const automation of await allGraphAutomations(projectsRoot())) {
+    const proj = resolveProject(automation);
+    if (!proj.ok) continue;
+    const g = await readGraph(proj.projectDir, automation);
+    const n = g.nodes.find((x) => x.cuid === cuid);
+    if (n) return toRow(automation, g, n);
+  }
+  return undefined;
 }
 
 /** A node's typed PORTS — its declared inputs and outputs, parsed from meta.ts (step 225 G5). An AI wiring
@@ -375,21 +411,6 @@ export async function createDraftNode(
   const slug = await uniqueSlug(name, proj.projectDir);
   const cuid = createNodeId();
 
-  let ord: number;
-  if (opts.parentCuid) {
-    const p = (await db.prepare(`SELECT ord FROM automation_nodes WHERE cuid = ?`).get(opts.parentCuid)) as { ord: number } | undefined;
-    if (p) {
-      ord = p.ord + 1;
-      await db.prepare(
-        `UPDATE automation_nodes SET ord = ord + 1 WHERE automation = ? AND ord >= ? AND status != 'removed'`,
-      ).run(proj.automation, ord);
-    } else {
-      ord = await nextOrd(proj.automation);
-    }
-  } else {
-    ord = await nextOrd(proj.automation);
-  }
-
   const nodeDir = join(proj.projectDir, "_nodes", slug);
   await mkdir(nodeDir, { recursive: true });
   const hasOwnTypes = await exists(join(proj.projectDir, "_types", "node-contract.ts"));
@@ -397,11 +418,23 @@ export async function createDraftNode(
     await writeFile(join(nodeDir, rel), content, "utf8");
   }
 
-  await db.prepare(
-    `INSERT INTO automation_nodes
-     (cuid, automation, slug, name, parent_cuid, ord, draft, active_version, latest_version, status)
-     VALUES (?, ?, ?, ?, ?, ?, 1, 0, 0, 'draft')`,
-  ).run(cuid, proj.automation, slug, name, opts.parentCuid, ord);
+  // A child is inserted RIGHT AFTER its parent so the diagram order follows the tree; the edge to the
+  // parent is written in the SAME transaction as the node, so the graph is never momentarily inconsistent.
+  await withGraph(proj.projectDir, proj.automation, (g) => {
+    const parent = opts.parentCuid ? g.nodes.find((n) => n.cuid === opts.parentCuid && n.status !== "removed") : undefined;
+    let ord: number;
+    if (parent) {
+      ord = parent.ord + 1;
+      for (const n of g.nodes) if (n.status !== "removed" && n.ord >= ord) n.ord += 1;
+    } else {
+      ord = g.nodes.filter((n) => n.status !== "removed").reduce((m, n) => Math.max(m, n.ord), -1) + 1;
+    }
+    g.nodes.push({
+      cuid, slug, name, ord, x: null, y: null,
+      draft: true, status: "draft", activeVersion: 0, latestVersion: 0,
+    });
+    if (parent) g.edges.push({ from: parent.cuid, to: cuid });
+  });
 
   await regenerateDiagram(proj.projectDir, await liveSlugsInOrder(proj.automation));
   return { cuid, slug, name };
@@ -434,18 +467,18 @@ export async function patchNode(
   if (body.parentCuid !== undefined) {
     const parentCuid = body.parentCuid === null ? null : String(body.parentCuid);
     if (parentCuid === row.cuid) return { ok: false, error: "a node cannot be its own parent" };
-    let parentSlug: string | null = null;
     if (parentCuid) {
       const p = await nodeByCuid(parentCuid);
       if (!p || p.automation !== row.automation || p.status === "removed") {
         return { ok: false, error: "parent node not found in this automation" };
       }
-      parentSlug = p.slug;
     }
-    await db.prepare(`UPDATE automation_nodes SET parent_cuid = ?, updated_at = datetime('now') WHERE cuid = ?`).run(parentCuid, row.cuid);
-    const metaPath = join(nodeDir, "meta.ts");
-    const meta = await readFile(metaPath, "utf8").catch(() => "");
-    if (meta) await writeFile(metaPath, upsertMetaField(meta, "parentId", parentSlug), "utf8");
+    // "Set the parent" is now exactly "replace the incoming edges" — there is no separate parent field to
+    // keep in step, and meta.ts is no longer touched (parentId is retired: it was the duplicate source).
+    await withGraph(proj.projectDir, row.automation, (g) => {
+      g.edges = g.edges.filter((e) => e.to !== row.cuid);
+      if (parentCuid) g.edges.push({ from: parentCuid, to: row.cuid });
+    });
   }
 
   if (typeof body.spec === "string") {
@@ -458,7 +491,11 @@ export async function patchNode(
     }
   }
   if (typeof body.name === "string" && body.name.trim()) {
-    await db.prepare(`UPDATE automation_nodes SET name = ?, updated_at = datetime('now') WHERE cuid = ?`).run(body.name.trim(), row.cuid);
+    const fresh = body.name.trim();
+    await withGraph(proj.projectDir, row.automation, (g) => {
+      const n = g.nodes.find((x) => x.cuid === row.cuid);
+      if (n) n.name = fresh;
+    });
   }
   return { ok: true };
 }
@@ -466,15 +503,18 @@ export async function patchNode(
 /** Soft-delete a node (extracted from DELETE nodes/[cuid], step 250): tombstone the row, purge its diagram
  *  edges, remove the folder, regenerate the diagram. */
 export async function softDeleteNode(proj: ResolvedProject, row: NodeRow): Promise<void> {
-  await db.prepare(`UPDATE automation_nodes SET status = 'removed', updated_at = datetime('now') WHERE cuid = ?`).run(row.cuid);
-  await db.prepare(`DELETE FROM automation_diagram_edges WHERE from_cuid = ? OR to_cuid = ?`).run(row.cuid, row.cuid);
+  await withGraph(proj.projectDir, row.automation, (g) => {
+    const n = g.nodes.find((x) => x.cuid === row.cuid);
+    if (n) n.status = "removed";
+    g.edges = g.edges.filter((e) => e.from !== row.cuid && e.to !== row.cuid);
+  });
   await rm(join(proj.projectDir, "_nodes", row.slug), { recursive: true, force: true });
   await regenerateDiagram(proj.projectDir, await liveSlugsInOrder(row.automation));
 }
 
 /** Connect / disconnect one diagram edge (extracted from nodes/edges, step 250). Deliberately NO
- *  "can this connect?" validation beyond self-loop (the owner's explicit ruling). parent_cuid stays a
- *  LAYOUT hint: connect stamps it on an orphan target, remove clears it only when it pointed here. */
+ *  "can this connect?" validation beyond the self-loop (the owner's explicit ruling). The old version also
+ *  maintained `parent_cuid` alongside the edge row — that second write is gone: the parent IS the edge now. */
 export async function writeDiagramEdge(
   automation: string,
   fromCuid: string,
@@ -483,26 +523,69 @@ export async function writeDiagramEdge(
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   if (!fromCuid || !toCuid) return { ok: false, error: "fromCuid and toCuid required" };
   if (fromCuid === toCuid) return { ok: false, error: "a node cannot link to itself" };
+  const proj = resolveProject(automation);
+  if (!proj.ok) return { ok: false, error: proj.error };
 
-  if (remove) {
-    await db.prepare(
-      `DELETE FROM automation_diagram_edges WHERE automation = ? AND from_cuid = ? AND to_cuid = ?`,
-    ).run(automation, fromCuid, toCuid);
-    await db.prepare(
-      `UPDATE automation_nodes SET parent_cuid = NULL, updated_at = datetime('now')
-       WHERE cuid = ? AND parent_cuid = ?`,
-    ).run(toCuid, fromCuid);
-    return { ok: true };
-  }
-
-  await db.prepare(
-    `INSERT OR IGNORE INTO automation_diagram_edges (automation, from_cuid, to_cuid) VALUES (?, ?, ?)`,
-  ).run(automation, fromCuid, toCuid);
-  await db.prepare(
-    `UPDATE automation_nodes SET parent_cuid = ?, updated_at = datetime('now')
-     WHERE cuid = ? AND parent_cuid IS NULL`,
-  ).run(fromCuid, toCuid);
+  await withGraph(proj.projectDir, automation, (g) => {
+    if (remove) {
+      g.edges = g.edges.filter((e) => !(e.from === fromCuid && e.to === toCuid));
+      return;
+    }
+    if (!g.edges.some((e) => e.from === fromCuid && e.to === toCuid)) g.edges.push({ from: fromCuid, to: toCuid });
+  });
   return { ok: true };
+}
+
+/** Patch the graph-owned fields of ONE node (status/draft/version pointers/name/position). The single door
+ *  every caller that used to run `UPDATE automation_nodes SET …` goes through now — materialize, rollback,
+ *  the layout save and the quiz. Keeping it here means no route imports the store directly. */
+export async function patchGraphNode(
+  automation: string,
+  cuid: string,
+  patch: Partial<Pick<GraphNode, "name" | "x" | "y" | "draft" | "status" | "activeVersion" | "latestVersion">>,
+): Promise<void> {
+  const proj = resolveProject(automation);
+  if (!proj.ok) return;
+  await withGraph(proj.projectDir, automation, (g) => {
+    const n = g.nodes.find((x) => x.cuid === cuid);
+    if (n) Object.assign(n, patch);
+  });
+}
+
+/** Save many canvas positions in ONE write (the Builder posts the whole layout at once). */
+export async function saveNodeLayout(
+  automation: string,
+  positions: { cuid: string; x: number; y: number }[],
+): Promise<number> {
+  const proj = resolveProject(automation);
+  if (!proj.ok) return 0;
+  return withGraph(proj.projectDir, automation, (g) => {
+    let saved = 0;
+    for (const p of positions) {
+      const n = g.nodes.find((x) => x.cuid === p.cuid);
+      if (!n) continue;
+      n.x = p.x; n.y = p.y; saved++;
+    }
+    return saved;
+  });
+}
+
+/** Append a node that already exists on disk (the quiz writes its files itself, then registers it here). */
+export async function registerNode(
+  automation: string,
+  node: { cuid: string; slug: string; name: string; draft: boolean },
+): Promise<void> {
+  const proj = resolveProject(automation);
+  if (!proj.ok) return;
+  await withGraph(proj.projectDir, automation, (g) => {
+    if (g.nodes.some((n) => n.cuid === node.cuid)) return;
+    const ord = g.nodes.filter((n) => n.status !== "removed").reduce((m, n) => Math.max(m, n.ord), -1) + 1;
+    g.nodes.push({
+      cuid: node.cuid, slug: node.slug, name: node.name, ord, x: null, y: null,
+      draft: node.draft, status: node.draft ? "draft" : "materialized",
+      activeVersion: node.draft ? 0 : 1, latestVersion: node.draft ? 0 : 1,
+    });
+  });
 }
 
 /** Detached rebuild + reload after a change to the built files (materialize / rollback). Serialized with

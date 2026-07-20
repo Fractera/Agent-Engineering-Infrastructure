@@ -27,6 +27,9 @@ platform source. What is not in these four documents, you do not need.
 
 ## The route is the world (ROUTE-V3)
 
+- The STRUCTURE of the automation is _data/graph.json: which nodes exist, how they are wired (edges by
+  cuid), their order and canvas positions. It is the ONE source — the canvas, the executor's ordering and
+  the apply gate all read it. Rewire by editing that file; never look for a parent field in a node's meta.
 - Everything of this automation lives in ITS OWN folder: _data/ (declarations), _nodes/<slug>/ (behaviour),
   _types/ (ITS OWN copies of the platform type contracts — import types from "../../_types/...", never
   from platform sources), _lib/ (its own helpers; _lib/rows.ts is the declared bridge for writing table

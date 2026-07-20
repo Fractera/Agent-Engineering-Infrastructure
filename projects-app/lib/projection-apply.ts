@@ -132,6 +132,40 @@ export async function applyProjection(automation: string): Promise<ApplyResult> 
       );
     }
   }
+  // GATE A4 — THE GRAPH FILE MUST BE A GRAPH (the file-system refactor, owner 2026-07-20). `_data/graph.json`
+  // is now the automation's structure, so a malformed one is not a bad file, it is a destroyed automation:
+  // the canvas, the executor's ordering and the apply gate all read it. Checked BEFORE anything lands.
+  if (changed.includes("_data/graph.json")) {
+    const raw = await readFile(join(room, "_data", "graph.json"), "utf8").catch(() => "");
+    try {
+      const g = JSON.parse(raw) as { nodes?: { cuid?: string; slug?: string }[]; edges?: { from?: string; to?: string }[] };
+      const nodes = Array.isArray(g.nodes) ? g.nodes : null;
+      const edges = Array.isArray(g.edges) ? g.edges : null;
+      if (!nodes || !edges) {
+        violations.push(`_data/graph.json: must have a "nodes" array and an "edges" array.`);
+      } else {
+        const known = new Set(nodes.map((n) => n.cuid).filter(Boolean) as string[]);
+        for (const n of nodes) {
+          if (!n.cuid || !n.slug) violations.push(`_data/graph.json: every node needs "cuid" and "slug" (found ${JSON.stringify(n)}).`);
+        }
+        for (const e of edges) {
+          if (!e.from || !e.to) { violations.push(`_data/graph.json: every edge needs "from" and "to".`); continue; }
+          if (e.from === e.to) violations.push(`_data/graph.json: a node cannot link to itself (${e.from}).`);
+          for (const end of [e.from, e.to]) {
+            if (!known.has(end)) {
+              violations.push(
+                `_data/graph.json: edge endpoint "${end}" is not one of this automation's node cuids. Edges join ` +
+                `nodes BY CUID — copy the cuid from the node entry above, never invent one.`,
+              );
+            }
+          }
+        }
+      }
+    } catch {
+      violations.push(`_data/graph.json: not valid JSON — the automation's whole structure lives in this file, so it must parse.`);
+    }
+  }
+
   if (violations.length) return { ok: false, error: "the diff was refused — fix the violations and re-apply (nothing was changed)", violations };
 
   // GATE B — changed nodes must compile IN THE ROOM before anything lands.

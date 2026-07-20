@@ -13,6 +13,19 @@ An edge is DATA FLOWING DOWNSTREAM — never a decoration, never "just a parent"
 below must be made BEFORE you mount a node into the project, and the checklist at the end must be
 answered in writing (in the node's spec or your report) before materialize.
 
+## 0. Where the wiring LIVES
+
+\`_data/graph.json\` — one file, the whole structure: \`nodes\` (cuid, slug, name, ord, x, y, draft, status)
+and \`edges\` (\`{ "from": "<cuid>", "to": "<cuid>" }\`). Edges join nodes BY CUID, taken from the node
+entries in that same file.
+
+Everything reads it: the canvas the owner drags, the executor that orders the run, the gate that judges
+your diff. So there is nothing to keep in step — change the wiring HERE and it is changed everywhere.
+
+\`meta.ts\` describes what a node DOES (role, ioType, ports, duration) and says nothing about what it is
+connected to. The retired \`parentId\` field was exactly that second source of wiring: an edge dragged on
+the canvas never reached it, an edge written into it never reached the canvas. Do not reintroduce it.
+
 ## 1. The three roles — classify FIRST, before anything else
 
 Ask two questions about the capability you are about to build:

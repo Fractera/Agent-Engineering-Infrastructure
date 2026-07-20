@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cp, readFile, writeFile, readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { db } from "@/lib/db";
 import {
-  authorize, projectsRoot, resolveProject, scheduleRebuild, syncIndexFromFiles,
+  authorize, projectsRoot, resolveProject, scheduleRebuild, syncIndexFromFiles, listDiagramEdges, writeDiagramEdge,
 } from "@/lib/nodes";
 import { regenerateExecutables } from "@/lib/executables";
 import { createNodeId } from "@/lib/cuid";
@@ -115,21 +114,16 @@ export async function POST(req: NextRequest) {
   await syncIndexFromFiles(cloneAutomation, cloneDir);
   await regenerateExecutables().catch(() => { /* the clone folder already exists; a rebuild will retry */ });
 
-  // 4. Diagram edges (the edge truth is the DB, keyed by cuid) — copy the source's, remapped to the new cuids.
+  // 4. Diagram edges (the edge truth is _data/graph.json, keyed by cuid) — copy the source's, remapped.
   //    Any edge whose endpoint had no cuid to remap is skipped (it could not be drawn anyway).
   try {
-    const edges = (await db.prepare(
-      `SELECT from_cuid, to_cuid FROM automation_diagram_edges WHERE automation = ?`,
-    ).all(src.automation)) as { from_cuid: string; to_cuid: string }[];
-    for (const e of edges) {
+    for (const e of await listDiagramEdges(src.automation)) {
       const from = cuidMap.get(e.from_cuid);
       const to = cuidMap.get(e.to_cuid);
-      if (!from || !to) continue;
-      await db.prepare(
-        `INSERT OR IGNORE INTO automation_diagram_edges (automation, from_cuid, to_cuid) VALUES (?, ?, ?)`,
-      ).run(cloneAutomation, from, to);
+      if (!from || !to) continue; // an endpoint with no cuid to remap could not be drawn anyway
+      await writeDiagramEdge(cloneAutomation, from, to, false);
     }
-  } catch { /* no diagram-edges table on an older DB — the file diagram still copied */ }
+  } catch { /* the clone's files are already in place; its graph can be re-derived from them */ }
 
   // 5. Use cases are DESIGN (the scenarios), not runtime data — carry them as FRESH (status "new", no review
   //    row), so the clone keeps its scenarios but the owner re-confirms them for this new instance. Then

@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { createNodeId } from "@/lib/cuid";
-import { db } from "@/lib/db";
 import { draftNodeStubFiles } from "@/app/(projects)/projects/_lib/draft-node-stub";
 import {
-  authorize, resolveProject, syncIndexFromFiles, nextOrd, uniqueSlug, regenerateDiagram, liveSlugsInOrder,
+  authorize, resolveProject, syncIndexFromFiles, uniqueSlug, regenerateDiagram, liveSlugsInOrder, registerNode,
 } from "@/lib/nodes";
 import {
   addTurn, advanceNode, automationInstruction, getPhase, getQuiz, nextQuestion, synthesizeNode, t, turnsOf,
@@ -58,17 +57,13 @@ export async function POST(req: NextRequest) {
   await syncIndexFromFiles(proj.automation, proj.projectDir);
   const slug = await uniqueSlug(node.name, proj.projectDir);
   const cuid = createNodeId();
-  const ord = await nextOrd(proj.automation);
   const nodeDir = join(proj.projectDir, "_nodes", slug);
   await mkdir(nodeDir, { recursive: true });
   const hasOwnTypes = await stat(join(proj.projectDir, "_types", "node-contract.ts")).then(() => true).catch(() => false);
   for (const [rel, content] of Object.entries(draftNodeStubFiles({ cuid, slug, name: node.name, spec: node.spec, estDurationMs: node.estDurationMs, hasOwnTypes }))) {
     await writeFile(join(nodeDir, rel), content, "utf8");
   }
-  await db.prepare(
-    `INSERT INTO automation_nodes (cuid, automation, slug, name, ord, draft, active_version, latest_version, status)
-     VALUES (?, ?, ?, ?, ?, 1, 0, 0, 'draft')`,
-  ).run(cuid, proj.automation, slug, node.name, ord);
+  await registerNode(proj.automation, { cuid, slug, name: node.name, draft: true });
   await regenerateDiagram(proj.projectDir, await liveSlugsInOrder(proj.automation));
 
   // Finishing a node creates the DRAFT node ONLY (step 233 model change). It no longer materializes a

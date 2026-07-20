@@ -71,7 +71,13 @@ THE NODE CONTRACT (all you need — do not go reading _shared to learn it):
   the run stops honestly.
 - _nodes/<slug>/meta.ts: export const META: NodeMeta = { id (slug), cuid (never change it), name, role
   ("input" | "intermediate" | "output"), ioType (per role: a channel/surface key, or "transform" |
-  "condition"), parentId (the slug it branches off), description, in, out, run, estDurationMs }.
+  "condition"), description, in, out, run, estDurationMs }. meta.ts says what a node DOES — it does NOT
+  say what it is connected to. \`parentId\` is retired: it was a second, drifting source of the wiring.
+- _data/graph.json: THE STRUCTURE — the ONE place that says which nodes exist, how they are wired and in
+  what order they sit: { nodes: [{ cuid, slug, name, ord, x, y, draft, status, activeVersion,
+  latestVersion }], edges: [{ from, to }] }. Edges join nodes BY CUID; several edges into one node (fan-in)
+  and out of one node (branching) are normal. To rewire the automation, edit THIS file — the canvas, the
+  executor's ordering and the apply gate all read it, so there is nothing else to keep in step.
 - _nodes/<slug>/instruction.ts: export const INSTRUCTION = "the system instruction of this node".
 - A DRAFT node also carries spec.md — the owner's requirement. Fulfil THAT node; do not create a
   duplicate next to it.

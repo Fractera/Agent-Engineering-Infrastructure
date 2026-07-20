@@ -9,7 +9,6 @@ export const META: NodeMeta = {
   name: "Record the result",
   role: "output",
   ioType: "dashboard",
-  parentId: "if-success",
   description: "Writes the successful lookup into this automation's History dashboard table.",
   in: { company: "string", ticker: "string", price: "number" },
   out: { rowId: "string" },

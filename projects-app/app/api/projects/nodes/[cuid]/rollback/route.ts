@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
-import { db } from "@/lib/db";
 import { getVersionByRef } from "@/lib/entity-store";
 import { compileNode } from "@/lib/node-compile";
 import {
-  authorize, resolveProject, nodeByCuid, regenerateDiagram, liveSlugsInOrder,
+  authorize, resolveProject, nodeByCuid, regenerateDiagram, liveSlugsInOrder, patchGraphNode,
 } from "@/lib/nodes";
 
 // Roll a node back to an earlier version (step 224 L3b) — restore the files from that version's snapshot and
@@ -44,9 +43,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ cuid: stri
     return NextResponse.json({ error: `rollback restored the files, but they no longer compile:\n${compiled.error}` }, { status: 409 });
   }
 
-  await db.prepare(
-    `UPDATE automation_nodes SET draft = 0, status = 'materialized', active_version = ?, updated_at = datetime('now') WHERE cuid = ?`,
-  ).run(version, cuid);
+  await patchGraphNode(row.automation, cuid, { draft: false, status: "materialized", activeVersion: version });
 
   await regenerateDiagram(proj.projectDir, await liveSlugsInOrder(row.automation));
   return NextResponse.json({ ok: true, cuid, active_version: version, live: true });

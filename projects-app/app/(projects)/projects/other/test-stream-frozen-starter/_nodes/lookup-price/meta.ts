@@ -7,7 +7,6 @@ export const META: NodeMeta = {
   cuid: "cmrtd2jv14obd4320673759786029e",
   name: "Look up the price",
   role: "intermediate",
-  parentId: "parse-request",
   description: "Calls the free Yahoo Finance quote endpoint for the resolved ticker.",
   in: { ticker: "string" },
   out: { price: "number", asOf: "ISODate" },

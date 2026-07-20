@@ -10,7 +10,6 @@ export const META: NodeMeta = {
   name: "If success",
   role: "intermediate",
   ioType: "condition",
-  parentId: "lookup-price",
   description: "The branch taken when a live price was found — the flow continues to the output node.",
   in: { price: "number" },
   out: { price: "number" },

@@ -1,11 +1,10 @@
 import { writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { completeStep } from "@/lib/dev-steps";
-import { db } from "@/lib/db";
 import { writeVersionByRef, archiveAndClearTransport, setLifecycleState } from "@/lib/entity-store";
 import { compileNode } from "@/lib/node-compile";
 import {
-  readNodeFiles, functionsAreEmpty, stripDraftFlag, regenerateDiagram, liveSlugsInOrder,
+  readNodeFiles, functionsAreEmpty, stripDraftFlag, regenerateDiagram, liveSlugsInOrder, patchGraphNode,
   type NodeRow, type ResolvedProject,
 } from "@/lib/nodes";
 
@@ -46,9 +45,9 @@ export async function materializeNode(
     specSrc: files.spec, summary,
   }, devStepRef ?? null);
 
-  await db.prepare(
-    `UPDATE automation_nodes SET draft = 0, status = 'materialized', latest_version = ?, active_version = ?, updated_at = datetime('now') WHERE cuid = ?`,
-  ).run(version, version, row.cuid);
+  await patchGraphNode(row.automation, row.cuid, {
+    draft: false, status: "materialized", latestVersion: version, activeVersion: version,
+  });
 
   let completed: string | null = null;
   if (devStepRef) completed = await completeStep(Number(devStepRef), summary);

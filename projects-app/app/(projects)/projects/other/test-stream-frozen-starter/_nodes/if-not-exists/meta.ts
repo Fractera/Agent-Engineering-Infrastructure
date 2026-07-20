@@ -9,7 +9,6 @@ export const META: NodeMeta = {
   name: "If not exists",
   role: "intermediate",
   ioType: "condition",
-  parentId: "lookup-price",
   description: "The branch taken when no public stock exists for the request — the automation ends here.",
   in: {},
   out: {},

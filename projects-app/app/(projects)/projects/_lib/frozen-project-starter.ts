@@ -869,7 +869,6 @@ export const META: NodeMeta = {
   cuid: "{{CUID_LOOKUP}}",
   name: "Look up the price",
   role: "intermediate",
-  parentId: "parse-request",
   description: "Calls the free Yahoo Finance quote endpoint for the resolved ticker.",
   in: { ticker: "string" },
   out: { price: "number", asOf: "ISODate" },
@@ -957,7 +956,6 @@ export const META: NodeMeta = {
   name: "Record the result",
   role: "output",
   ioType: "dashboard",
-  parentId: "if-success",
   description: "Writes the successful lookup into this automation's History dashboard table.",
   in: { company: "string", ticker: "string", price: "number" },
   out: { rowId: "string" },
@@ -1028,7 +1026,6 @@ export const META: NodeMeta = {
   name: "If success",
   role: "intermediate",
   ioType: "condition",
-  parentId: "lookup-price",
   description: "The branch taken when a live price was found — the flow continues to the output node.",
   in: { price: "number" },
   out: { price: "number" },
@@ -1066,7 +1063,6 @@ export const META: NodeMeta = {
   name: "If not exists",
   role: "intermediate",
   ioType: "condition",
-  parentId: "lookup-price",
   description: "The branch taken when no public stock exists for the request — the automation ends here.",
   in: {},
   out: {},
@@ -1450,6 +1446,51 @@ async function exists(p: string): Promise<boolean> {
   try { await stat(p); return true; } catch { return false; }
 }
 
+
+// THE BORN GRAPH (the file-system refactor, owner 2026-07-20) — `_data/graph.json` is the ONE source of the
+// automation's structure: which nodes exist, how they are wired, in what order and where they sit on the
+// canvas. It replaces the old pair "parentId in every meta.ts" + "rows in automation_nodes/…_diagram_edges",
+// which drifted apart the moment the owner dragged an edge or the coding agent rewrote a meta.
+// meta.ts keeps answering "what does this node DO"; this file answers "how are they connected".
+const STREAM_GRAPH_JSON = `{
+  "version": 1,
+  "automation": "{{CATEGORY}}/{{PROJECT}}",
+  "nodes": [
+    { "cuid": "{{CUID_PARSE}}", "slug": "parse-request", "name": "Parse the request", "ord": 0, "x": null, "y": null, "draft": false, "status": "materialized", "activeVersion": 1, "latestVersion": 1 },
+    { "cuid": "{{CUID_LOOKUP}}", "slug": "lookup-price", "name": "Look up the price", "ord": 1, "x": null, "y": null, "draft": false, "status": "materialized", "activeVersion": 1, "latestVersion": 1 },
+    { "cuid": "{{CUID_RECORD}}", "slug": "record-result", "name": "Record the result", "ord": 2, "x": null, "y": null, "draft": false, "status": "materialized", "activeVersion": 1, "latestVersion": 1 },
+    { "cuid": "{{CUID_IF_SUCCESS}}", "slug": "if-success", "name": "If success", "ord": 3, "x": null, "y": null, "draft": false, "status": "materialized", "activeVersion": 1, "latestVersion": 1 },
+    { "cuid": "{{CUID_IF_NOT_EXISTS}}", "slug": "if-not-exists", "name": "If not exists", "ord": 4, "x": null, "y": null, "draft": false, "status": "materialized", "activeVersion": 1, "latestVersion": 1 }
+  ],
+  "edges": [
+    { "from": "{{CUID_PARSE}}", "to": "{{CUID_LOOKUP}}" },
+    { "from": "{{CUID_LOOKUP}}", "to": "{{CUID_IF_SUCCESS}}" },
+    { "from": "{{CUID_LOOKUP}}", "to": "{{CUID_IF_NOT_EXISTS}}" },
+    { "from": "{{CUID_IF_SUCCESS}}", "to": "{{CUID_RECORD}}" }
+  ],
+  "updatedAt": "{{BORN_AT}}"
+}
+`;
+
+// The generic three drafts (instanced / chained until 244/245 give them their own pattern): input → logic →
+// output. They were born UNWIRED before, because no meta declared a parent — the graph makes the intended
+// chain explicit instead of leaving three islands on the canvas.
+const DRAFT_GRAPH_JSON = `{
+  "version": 1,
+  "automation": "{{CATEGORY}}/{{PROJECT}}",
+  "nodes": [
+    { "cuid": "{{CUID_INPUT}}", "slug": "input", "name": "Input", "ord": 0, "x": null, "y": null, "draft": true, "status": "draft", "activeVersion": 0, "latestVersion": 0 },
+    { "cuid": "{{CUID_LOGIC}}", "slug": "logic", "name": "Logic", "ord": 1, "x": null, "y": null, "draft": true, "status": "draft", "activeVersion": 0, "latestVersion": 0 },
+    { "cuid": "{{CUID_OUTPUT}}", "slug": "output", "name": "Output", "ord": 2, "x": null, "y": null, "draft": true, "status": "draft", "activeVersion": 0, "latestVersion": 0 }
+  ],
+  "edges": [
+    { "from": "{{CUID_INPUT}}", "to": "{{CUID_LOGIC}}" },
+    { "from": "{{CUID_LOGIC}}", "to": "{{CUID_OUTPUT}}" }
+  ],
+  "updatedAt": "{{BORN_AT}}"
+}
+`;
+
 export async function createFrozenProject(
   input: FrozenProjectInput,
   opts?: { projectsRoot?: string },
@@ -1515,6 +1556,7 @@ export async function createFrozenProject(
     // Phase 1 of an automation's birth (step 224 §1.5): the immutable type + the owner's instruction.
     "{{AUTOMATION_TYPE}}": type,
     "{{AUTOMATION_INSTRUCTION}}": instruction,
+    "{{BORN_AT}}": new Date().toISOString(),
   };
   const sub = (s: string) => Object.entries(tokens).reduce((acc, [k, v]) => acc.split(k).join(v), s);
 
@@ -1531,6 +1573,7 @@ export async function createFrozenProject(
     // starting patterns above; instanced/chained get their own cron.json once they get their own real
     // starting pattern (mirrors the STREAM_NODE_FILES precedent).
     ...(isStream ? { "cron.json": STREAM_CRON_JSON } : {}),
+    "_data/graph.json": isStream ? STREAM_GRAPH_JSON : DRAFT_GRAPH_JSON,
   };
 
   const files: string[] = [];
