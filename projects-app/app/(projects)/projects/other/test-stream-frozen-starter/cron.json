@@ -1,0 +1,17 @@
+{
+  "jobs": [
+    {
+      "id": "test-stream-frozen-starter-cron-tick",
+      "title": "test-stream-frozen-starter: periodic tick (Cron entity — not yet wired to actuate anything)",
+      "schedule": "*/5 * * * *",
+      "action": {
+        "type": "http",
+        "url": "http://127.0.0.1:3003/projects/other/test-stream-frozen-starter/api/cron-tick",
+        "method": "POST",
+        "body": {}
+      },
+      "enabled": false,
+      "timeoutMs": 120000
+    }
+  ]
+}

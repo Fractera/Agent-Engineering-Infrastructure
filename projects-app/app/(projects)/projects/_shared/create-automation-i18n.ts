@@ -43,6 +43,8 @@ export type CreateAutomationStrings = {
   // hint once the page is live and the card becomes a link.
   pendingBuilding: string;
   pendingReady: string;
+  /** The dead-card escape hatch (owner 2026-07-20) — dismiss a pending card by hand. */
+  pendingDismiss: string;
   // The mirror-image status line (owner's fix): the card of an automation that was just DELETED stays
   // visible on the stale static hub grid until the background rebuild regenerates it — this is the muted
   // spinner card's status line while that happens (see pending-deletions.client.tsx).
@@ -99,6 +101,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     automationCreatedDesc: "It opens in development: its nodes are drafts until you build them.",
     pendingBuilding: "Building the page…",
     pendingReady: "Ready — open it",
+    pendingDismiss: "Remove this card",
     pendingDeleting: "Deleting…",
     addCategoryBtn: "Add category",
     newCategoryDialogTitle: "New category",
@@ -147,6 +150,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     automationCreatedDesc: "Она откроется в разработке: её узлы — черновики, пока вы их не соберёте.",
     pendingBuilding: "Страница строится…",
     pendingReady: "Готово — открыть",
+    pendingDismiss: "Убрать карточку",
     pendingDeleting: "Удаление…",
     addCategoryBtn: "Добавить категорию",
     newCategoryDialogTitle: "Новая категория",
@@ -195,6 +199,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     automationCreatedDesc: "Se abre en desarrollo: sus nodos son borradores hasta que los construyas.",
     pendingBuilding: "Construyendo la página…",
     pendingReady: "Lista — ábrela",
+    pendingDismiss: "Quitar esta tarjeta",
     pendingDeleting: "Eliminando…",
     addCategoryBtn: "Añadir categoría",
     newCategoryDialogTitle: "Nueva categoría",
@@ -243,6 +248,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     automationCreatedDesc: "Elle s'ouvre en développement : ses nœuds sont des brouillons tant que vous ne les avez pas construits.",
     pendingBuilding: "Construction de la page…",
     pendingReady: "Prête — ouvrez-la",
+    pendingDismiss: "Retirer cette carte",
     pendingDeleting: "Suppression…",
     addCategoryBtn: "Ajouter une catégorie",
     newCategoryDialogTitle: "Nouvelle catégorie",
@@ -291,6 +297,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     automationCreatedDesc: "Si apre in sviluppo: i suoi nodi sono bozze finché non li costruisci.",
     pendingBuilding: "Costruzione della pagina…",
     pendingReady: "Pronta — aprila",
+    pendingDismiss: "Rimuovi questa scheda",
     pendingDeleting: "Eliminazione…",
     addCategoryBtn: "Aggiungi categoria",
     newCategoryDialogTitle: "Nuova categoria",
@@ -339,6 +346,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     automationCreatedDesc: "Sie öffnet sich in der Entwicklung: Ihre Knoten sind Entwürfe, bis du sie baust.",
     pendingBuilding: "Die Seite wird gebaut…",
     pendingReady: "Fertig — öffnen",
+    pendingDismiss: "Diese Karte entfernen",
     pendingDeleting: "Wird gelöscht…",
     addCategoryBtn: "Kategorie hinzufügen",
     newCategoryDialogTitle: "Neue Kategorie",
@@ -387,6 +395,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     automationCreatedDesc: "Abre em desenvolvimento: os seus nós são rascunhos até serem construídos.",
     pendingBuilding: "A construir a página…",
     pendingReady: "Pronta — abrir",
+    pendingDismiss: "Remover este cartão",
     pendingDeleting: "Excluindo…",
     addCategoryBtn: "Adicionar categoria",
     newCategoryDialogTitle: "Nova categoria",
@@ -435,6 +444,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     automationCreatedDesc: "Otwiera się w trybie rozwoju: jej węzły są szkicami, dopóki ich nie zbudujesz.",
     pendingBuilding: "Trwa budowanie strony…",
     pendingReady: "Gotowe — otwórz",
+    pendingDismiss: "Usuń tę kartę",
     pendingDeleting: "Usuwanie…",
     addCategoryBtn: "Dodaj kategorię",
     newCategoryDialogTitle: "Nowa kategoria",
@@ -483,6 +493,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     automationCreatedDesc: "Geliştirme aşamasında açılır: sen inşa edene kadar düğümleri taslaktır.",
     pendingBuilding: "Sayfa inşa ediliyor…",
     pendingReady: "Hazır — aç",
+    pendingDismiss: "Bu kartı kaldır",
     pendingDeleting: "Siliniyor…",
     addCategoryBtn: "Kategori ekle",
     newCategoryDialogTitle: "Yeni kategori",
@@ -531,6 +542,7 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     automationCreatedDesc: "Ze opent in ontwikkeling: de nodes zijn concepten totdat je ze bouwt.",
     pendingBuilding: "De pagina wordt gebouwd…",
     pendingReady: "Klaar — openen",
+    pendingDismiss: "Deze kaart verwijderen",
     pendingDeleting: "Wordt verwijderd…",
     addCategoryBtn: "Categorie toevoegen",
     newCategoryDialogTitle: "Nieuwe categorie",

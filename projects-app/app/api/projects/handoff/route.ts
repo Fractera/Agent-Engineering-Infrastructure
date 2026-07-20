@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorize, resolveProject } from "@/lib/nodes";
-import { buildProjection } from "@/lib/projection";
+import { buildProjection, roomState } from "@/lib/projection";
+import { readdir, stat } from "node:fs/promises";
+import { join } from "node:path";
 import { launchGate } from "@/lib/wave";
 import { agentGateSecret } from "@/lib/agent-gate";
 
@@ -18,6 +20,20 @@ import { agentGateSecret } from "@/lib/agent-gate";
 // making the discipline explicit — hand the text over, then wait for the agent to finish before editing.
 // Closing is PER-OBJECT (materialize / entity-summary / entity-warning), so nothing here needs cleaning up.
 export const runtime = "nodejs";
+
+// The size line of the kept room (the built path gets it from the manifest). Same bytes/4 estimate.
+async function roomTokens(root: string): Promise<number> {
+  let bytes = 0;
+  const walk = async (dir: string): Promise<void> => {
+    for (const name of await readdir(dir).catch(() => [] as string[])) {
+      const p = join(dir, name);
+      const st = await stat(p);
+      if (st.isDirectory()) await walk(p); else bytes += st.size;
+    }
+  };
+  await walk(root);
+  return Math.round(bytes / 4);
+}
 
 const CLOSING = `HOW TO CLOSE EACH OBJECT (per-object, no global closing call):
 - a node: write _nodes/<slug>/functions.ts (+ instruction.ts), then POST http://localhost:3003/api/projects/nodes/<cuid>/materialize {"summary":"<what it does now, owner's language, <=300 chars>"} — it compiles the node and puts it LIVE instantly (no rebuild; a compile error comes back in this call).
@@ -52,7 +68,7 @@ ${list}
 ${CLOSING.replaceAll("<a>", automation)}`;
 }
 
-function roomText(automation: string, roomPath: string, tokens: number, items: { entityType: string; ref: string; label: string; task: string }[], gateSecret: string): string {
+function roomText(automation: string, roomPath: string, tokens: number, items: { entityType: string; ref: string; label: string; task: string }[], gateSecret: string, kept: boolean): string {
   const list = items
     .map((i, k) => {
       const where = i.ref ? `${i.entityType} ${i.ref}` : `the automation's ${i.entityType}`;
@@ -61,8 +77,9 @@ function roomText(automation: string, roomPath: string, tokens: number, items: {
     .join("\n\n");
   return `Develop the automation "${automation}" in its STERILE ROOM (step 254 flow — you never open the admin app).
 
-YOUR WORKSPACE: ${roomPath}  (~${tokens} tokens — the automation's complete essence; a fresh projection
-was built for you just now). Its local mirror for the owner: ai-workspace/agent-rooms/${automation}/.
+YOUR WORKSPACE: ${roomPath}  (~${tokens} tokens — the automation's complete essence). ${kept
+    ? "This room was KEPT exactly as it stood: it ALREADY HOLDS work that has not been applied yet. Read what is there before you write anything, and CONTINUE it — do not start over."
+    : "A fresh projection was built for you just now."} Its local mirror for the owner: ai-workspace/agent-rooms/${automation}/.
 
 HOW TO WORK
 1. Read the room's AGENTS.md FIRST and obey it (WIRING-RULES.md and SCALE-RULES.md before any node/edge
@@ -108,18 +125,36 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // THE ROOM HAND-OFF (step 254.15, ROUTE-V3 law 4) — the PRIMARY task now: a FRESH projection is built
-  // at hand-off time (deterministic — always the current truth) and the agent is pointed at the sterile
-  // room, never at the admin app. full/delta stay as the legacy tail for the old copy-paste flow.
-  const projection = await buildProjection(proj.automation);
+  // THE ROOM HAND-OFF (step 254.15, ROUTE-V3 law 4) — the PRIMARY task: the agent is pointed at the
+  // sterile room, never at the admin app. full/delta stay as the legacy tail for the old copy-paste flow.
+  //
+  // ⚠ WHY THIS IS NOT AN UNCONDITIONAL REBUILD (owner 2026-07-20). This route runs on EVERY open of the
+  // launch dialog — including the reattach path, the one that exists to make an accidental reload safe.
+  // buildProjection() rebuilds the room from the sources, so rebuilding here silently threw away whatever
+  // the live agent had authored and not yet applied. The rule now:
+  //   no room            → build (nothing to lose);
+  //   room, clean        → rebuild (freshness is free — nobody has written anything);
+  //   room, DIRTY        → KEEP IT, and tell the client so the dialog can say so;
+  //   ?rebuild=1         → the owner's explicit "start this room over" (the old room still goes to the
+  //                        trash, not the void — lib/projection.ts retireRoom).
+  const wantRebuild = req.nextUrl.searchParams.get("rebuild") === "1";
+  const state = await roomState(proj.automation);
+  const keepRoom = state.exists && state.dirty && !wantRebuild;
+  const projection = keepRoom
+    ? { ok: true as const, root: state.root, tokens: await roomTokens(state.root) }
+    : await buildProjection(proj.automation);
   // The service pass (263.1 round 6) — embedded into the room task so the in-room agent's platform
   // calls pass authorize() in Secure mode (they carried no cookie and died with 403 before this).
   const gateSecret = await agentGateSecret();
-  const room = projection.ok ? roomText(proj.automation, projection.root, projection.tokens, gate.items, gateSecret) : null;
+  const room = projection.ok ? roomText(proj.automation, projection.root, projection.tokens, gate.items, gateSecret, keepRoom) : null;
 
   return NextResponse.json({
     ok: true,
     staged: gate.items.length,
+    // The dialog needs the truth about the room it is about to hand over: kept (with unapplied work
+    // inside) or freshly built. Silence here is what made the loss invisible in the first place.
+    roomKept: keepRoom,
+    roomDirtyFiles: keepRoom && state.exists ? [...state.added, ...state.modified].slice(0, 20) : [],
     ...(room ? { room, roomPath: projection.ok ? projection.root : undefined } : {}),
     full: fullText(proj.automation),
     delta: deltaText(proj.automation, gate.items),

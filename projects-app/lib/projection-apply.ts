@@ -2,6 +2,7 @@ import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs
 import { dirname, join, relative, sep } from "node:path";
 import { compileNode } from "@/lib/node-compile";
 import { analyzeGraphFlow } from "@/lib/graph-flow";
+import { MANIFEST_FILE } from "@/lib/projection";
 import { regenerateDiagram, liveSlugsInOrder, resolveProject, syncNodeNamesFromMeta, syncOrphanEdgesFromPorts } from "@/lib/nodes";
 
 // THE GATED APPLY (step 254.14, ROUTE-V3 law 4) — the return path from the agent's sterile room. NEVER a
@@ -62,7 +63,9 @@ export async function applyProjection(automation: string): Promise<ApplyResult> 
 
   // The diff: room files whose content differs from (or is missing in) the route.
   const roomFiles = (await walk(room)).map((f) => relative(room, f).split(sep).join("/"))
-    .filter((f) => !f.endsWith(".compiled.mjs"));
+    // .projection.json is the room's own birth certificate (lib/projection.ts) — platform bookkeeping,
+    // not authored content. Without this filter every apply would die on gate A ("outside the whitelist").
+    .filter((f) => !f.endsWith(".compiled.mjs") && f !== MANIFEST_FILE);
   const changed: string[] = [];
   for (const rel of roomFiles) {
     const a = await readFile(join(room, rel)).catch(() => null);

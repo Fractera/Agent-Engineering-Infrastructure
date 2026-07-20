@@ -1,12 +1,10 @@
 import type { RouteMeta } from "@/lib/architecture/route-meta"
 
-// STANDARD ROUTE DESCRIPTOR — do not delete any field.
-// Category hub of the Projects layer (§3.12): private application levels for the
-// architect / project administrator. Categories always exist, even when empty.
+// STANDARD ROUTE DESCRIPTOR — do not delete any field. Frozen automation skeleton v1.
 const meta: RouteMeta = {
   kind: "page",
-  path: "/projects/fractera-pages",
-  filePath: "app/app/(projects)/projects/fractera-pages/page.tsx",
+  path: "/projects/other/test-stream-frozen-starter",
+  filePath: "app/app/(projects)/projects/other/test-stream-frozen-starter/page.tsx",
   status: "live",
   todo: [],
 
@@ -47,7 +45,7 @@ const meta: RouteMeta = {
   pageIsClient: false,
   entryIsClient: false,
   localComponents: ["index"],
-  sharedComponents: ["_shared/category-hub.server", "_shared/categories"],
+  sharedComponents: [],
 
   hasLoading: false,
   hasError: false,
@@ -56,14 +54,13 @@ const meta: RouteMeta = {
 
   methods: [],
 
-  description:
-    "Fractera-pages category hub of the Projects layer — projects that manage the pages of this workspace.",
-  dataDependencies: ["filesystem: project folders under app/(projects)/projects/fractera-pages/"],
-  relatedRoutes: ["/projects/automation", "/projects/fractera-pages", "/projects/personal", "/projects/other"],
+  description: "Тестовая автоматизация типа Stream, рождённая из замороженного стартера — для проверки синхронизации сервера с локальной папкой.",
+  dataDependencies: [],
+  relatedRoutes: ["/projects/other"],
   notes:
-    "Projects-layer route: monolingual (site default language, outside [lang]); " +
-    "a project = a NAMED folder /projects/fractera-pages/<project-slug> — dynamic segments " +
-    "are forbidden in this layer (§3.12). Folder name = project slug (source of truth).",
+    "Projects-layer route: monolingual (site default language, outside [lang]); a project = a NAMED " +
+    "folder /projects/other/test-stream-frozen-starter — dynamic segments are forbidden (§3.12). Grown node by " +
+    "node from the frozen automation skeleton (v2: title + description + input-channel declaration).",
 
   owner: undefined,
   createdBy: undefined,

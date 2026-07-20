@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Loader2, X } from "lucide-react";
 import { useUiLang } from "../use-ui-lang";
 import { createAutomationStrings } from "../create-automation-i18n";
 
@@ -24,9 +24,13 @@ import { createAutomationStrings } from "../create-automation-i18n";
 
 const EVENT = "fractera:automation-pending";
 const POLL_MS = 8000;
+/** A build takes a minute or two. An hour is generous; past it the entry is residue, not progress. */
+const MAX_AGE_MS = 60 * 60 * 1000;
 
 export type PendingDetail = { automation: string; category: string; slug: string; title: string; url: string };
-type Entry = PendingDetail & { ready: boolean };
+/** `at` = when the creation was registered (owner 2026-07-20) — absent on entries stored before the expiry
+ *  guard existed; those are kept until the mount probe rules on them. */
+type Entry = PendingDetail & { ready: boolean; at?: number };
 
 const lsKey = (category: string) => `pending-automations:${category}`;
 
@@ -47,14 +51,60 @@ export function PendingAutomations({ category, existingSlugs }: { category: stri
   const L = createAutomationStrings(useUiLang());
   const [entries, setEntries] = useState<Entry[]>([]);
 
-  // Load any survivors from a reload, minus the ones the server grid now lists.
+  // Load any survivors from a reload, minus the ones the server grid now lists — then VERIFY them.
+  //
+  // ⚠ THE IMMORTAL DEAD CARD (owner 2026-07-20). This list lives in the browser, and an entry was only ever
+  // dropped when the server grid listed its slug. So an automation that never materialised — a creation that
+  // failed, or one deleted afterwards — left a card that no reload could remove, pointing at a URL that 404s.
+  // The owner saw "Готово — открыть" on a page that does not exist, and had no way to dismiss it.
+  //
+  // Two guards, both client-side because the residue is client-side:
+  //   1. VERIFY ON MOUNT — every survivor (ready ones included) is probed once; a 404 means the automation is
+  //      gone, and the card goes with it. This is what heals the cards already stuck in owners' browsers.
+  //   2. EXPIRY — an entry older than MAX_AGE_MS is dropped regardless. A build takes a minute or two; a
+  //      card still "building" an hour later is not building, it is dead.
   useEffect(() => {
     const have = new Set(existingSlugs);
-    const initial = loadStored(category).filter((e) => !have.has(e.slug));
-    setEntries(initial);
-    store(category, initial);
+    const fresh = Date.now() - MAX_AGE_MS;
+    const survivors = loadStored(category)
+      .filter((e) => !have.has(e.slug))
+      .filter((e) => !e.at || e.at > fresh);
+    setEntries(survivors);
+    store(category, survivors);
+
+    if (survivors.length === 0) return;
+    let cancelled = false;
+    void (async () => {
+      const alive = await Promise.all(
+        survivors.map(async (e) => {
+          try {
+            const r = await fetch(e.url, { method: "GET", cache: "no-store", redirect: "manual" });
+            // 404 = the automation does not exist. Anything else (including a still-building route or a
+            // redirect to auth) keeps the card: only a definite "not there" is grounds for removal.
+            return r.status === 404 ? null : e.slug;
+          } catch { return e.slug; } // network hiccup — never delete a card on a guess
+        }),
+      );
+      if (cancelled) return;
+      const keep = new Set(alive.filter(Boolean) as string[]);
+      if (keep.size === survivors.length) return;
+      setEntries((prev) => {
+        const next = prev.filter((e) => keep.has(e.slug));
+        store(category, next);
+        return next;
+      });
+    })();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category]);
+
+  /** Manual dismissal — the owner should never need us to ship a fix to get rid of a card. */
+  const dismiss = (slug: string) =>
+    setEntries((prev) => {
+      const next = prev.filter((e) => e.slug !== slug);
+      store(category, next);
+      return next;
+    });
 
   // Listen for new creations in this category.
   useEffect(() => {
@@ -63,7 +113,7 @@ export function PendingAutomations({ category, existingSlugs }: { category: stri
       if (!d || d.category !== category) return;
       setEntries((prev) => {
         if (prev.some((e) => e.slug === d.slug) || existingSlugs.includes(d.slug)) return prev;
-        const next = [...prev, { ...d, ready: false }];
+        const next = [...prev, { ...d, ready: false, at: Date.now() }];
         store(category, next);
         return next;
       });
@@ -113,7 +163,19 @@ export function PendingAutomations({ category, existingSlugs }: { category: stri
           >
             <div className="flex items-start justify-between gap-2">
               <h3 className="font-semibold leading-tight">{e.title || e.slug}</h3>
-              <ArrowRight className="size-4 shrink-0 text-primary transition-transform group-hover:translate-x-0.5" />
+              <span className="flex shrink-0 items-center gap-1">
+                {/* The escape hatch: inside a Link, so the click must not navigate. */}
+                <button
+                  type="button"
+                  aria-label={L.pendingDismiss}
+                  title={L.pendingDismiss}
+                  onClick={(ev) => { ev.preventDefault(); ev.stopPropagation(); dismiss(e.slug); }}
+                  className="rounded p-0.5 text-muted-foreground opacity-0 transition hover:bg-muted group-hover:opacity-100"
+                >
+                  <X className="size-3.5" />
+                </button>
+                <ArrowRight className="size-4 text-primary transition-transform group-hover:translate-x-0.5" />
+              </span>
             </div>
             <p className="mt-2 text-sm text-primary">{L.pendingReady}</p>
           </Link>

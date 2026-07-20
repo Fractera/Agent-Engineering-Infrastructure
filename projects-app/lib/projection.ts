@@ -1,4 +1,5 @@
-import { cp, mkdir, readdir, rm, stat } from "node:fs/promises";
+import { cp, mkdir, readFile, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { join, relative, sep } from "node:path";
 import { resolveProject } from "@/lib/nodes";
 
@@ -6,8 +7,19 @@ import { resolveProject } from "@/lib/nodes";
 // "here is the whole admin app": buildProjection exports the route's ESSENCE — the six born documents,
 // declarations, node sources, its own helpers/types/api — into a NEUTRAL workspace outside the served
 // trees. An external agent works THERE (a few thousand tokens of pure signal), and its diff comes back
-// through the gated apply (254.14). Deterministic: the room is wiped and rebuilt on every call, so a
-// projection is always the CURRENT truth, never an accumulation.
+// through the gated apply (254.14). Deterministic: the room is rebuilt from the sources on every call, so
+// a projection is always the CURRENT truth, never an accumulation.
+//
+// ⚠ THE ROOM IS THE AGENT'S WORK PRODUCT, NOT A CACHE (owner 2026-07-20, the "мина"). A rebuild used to
+// begin with `rm -rf <room>` — and the launch dialog calls this on EVERY open, including the reattach
+// path that exists precisely to be safe. So returning to a live session silently destroyed everything the
+// agent had authored and not yet applied (TARGET-GRAPH.md, half-written functions), with no error and no
+// way back. Two changes make that impossible:
+//   1. NOTHING IS DELETED — the old room is MOVED to agent-rooms/.trash/<cat>-<slug>-<ts> (last
+//      TRASH_KEEP kept). Every mistake, ours or the owner's, stays recoverable.
+//   2. THE ROOM KNOWS WHAT IT WAS BORN AS — .projection.json records file → sha256 at build time, so
+//      "did the agent write anything here?" is answered locally and cheaply by roomState() below. The
+//      callers (hand-off) use it to REFUSE to rebuild a dirty room unless explicitly told to.
 //
 // WHAT IS PROJECTED (the essence) vs NOT (the cockpit):
 //   in:  AGENTS.md CLAUDE.md WIRING-RULES.md SCALE-RULES.md PLATFORM.md README.md cron.json
@@ -20,6 +32,13 @@ const ROOM_ROOT = () => join(process.cwd(), "..", "agent-rooms");
 
 const PROJECT_DOCS = ["AGENTS.md", "CLAUDE.md", "WIRING-RULES.md", "SCALE-RULES.md", "PLATFORM.md", "README.md", "cron.json"];
 const PROJECT_DIRS = ["_data", "_nodes", "_lib", "_types", "api", "pages"];
+
+/** The birth certificate of a room: what buildProjection wrote, so later changes are attributable. */
+export const MANIFEST_FILE = ".projection.json";
+/** How many superseded rooms per automation survive in the trash. Old enough is old enough. */
+const TRASH_KEEP = 5;
+
+const sha = (b: Buffer) => createHash("sha256").update(b).digest("hex");
 
 export type ProjectionManifest = {
   ok: true;
@@ -46,12 +65,71 @@ async function walk(dir: string): Promise<string[]> {
   return out;
 }
 
+// LAYER 1 — NOTHING IS DELETED. The superseded room is moved aside, not destroyed; only the oldest
+// copies beyond TRASH_KEEP are finally removed. A rename is atomic and costs nothing, which is exactly
+// what makes it an acceptable price for never losing an agent's work again.
+async function retireRoom(room: string, tag: string): Promise<void> {
+  if (!(await exists(room))) return;
+  const trash = join(ROOM_ROOT(), ".trash");
+  await mkdir(trash, { recursive: true });
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  await rename(room, join(trash, `${tag}-${stamp}`));
+
+  const mine = (await readdir(trash).catch(() => [] as string[]))
+    .filter((n) => n.startsWith(`${tag}-`))
+    .sort();
+  for (const old of mine.slice(0, Math.max(0, mine.length - TRASH_KEEP))) {
+    await rm(join(trash, old), { recursive: true, force: true });
+  }
+}
+
+export type RoomState =
+  /** No room on disk — building one loses nothing. */
+  | { exists: false }
+  /** A room stands. `dirty` = it holds work that was not there at birth. */
+  | { exists: true; root: string; dirty: boolean; added: string[]; modified: string[]; builtAt: string | null };
+
+// LAYER 2 — IS THERE WORK IN THERE? Answered from the room's own birth certificate: a file that is new,
+// or whose bytes no longer hash to what was written at build time, is the agent's (or the owner's) work.
+// No terminal, no cross-service call, no guessing — just the filesystem.
+export async function roomState(automation: string): Promise<RoomState> {
+  const proj = resolveProject(automation);
+  if (!proj.ok) return { exists: false };
+  const root = join(ROOM_ROOT(), proj.category, proj.slug);
+  if (!(await exists(root))) return { exists: false };
+
+  let born: Record<string, string> = {};
+  let builtAt: string | null = null;
+  try {
+    const raw = JSON.parse(await readFile(join(root, MANIFEST_FILE), "utf8")) as
+      { files?: Record<string, string>; builtAt?: string };
+    born = raw.files ?? {};
+    builtAt = raw.builtAt ?? null;
+  } catch {
+    // A pre-manifest room (built before this change): treat it as DIRTY. Assuming "clean" here would
+    // authorise exactly the destruction this whole layer exists to prevent.
+    return { exists: true, root, dirty: true, added: [], modified: [], builtAt: null };
+  }
+
+  const added: string[] = [];
+  const modified: string[] = [];
+  for (const f of await walk(root)) {
+    const rel = relative(root, f).split(sep).join("/");
+    if (rel === MANIFEST_FILE) continue;
+    const was = born[rel];
+    if (!was) { added.push(rel); continue; }
+    if (sha(await readFile(f)) !== was) modified.push(rel);
+  }
+  added.sort(); modified.sort();
+  return { exists: true, root, dirty: added.length > 0 || modified.length > 0, added, modified, builtAt };
+}
+
 export async function buildProjection(automation: string): Promise<ProjectionManifest | { ok: false; error: string }> {
   const proj = resolveProject(automation);
   if (!proj.ok) return { ok: false, error: proj.error };
 
   const room = join(ROOM_ROOT(), proj.category, proj.slug);
-  await rm(room, { recursive: true, force: true });
+  await retireRoom(room, `${proj.category}-${proj.slug}`);
   await mkdir(room, { recursive: true });
 
   for (const doc of PROJECT_DOCS) {
@@ -71,11 +149,22 @@ export async function buildProjection(automation: string): Promise<ProjectionMan
   }
 
   const files: string[] = [];
+  const born: Record<string, string> = {};
   let bytes = 0;
   for (const f of await walk(room)) {
-    files.push(relative(room, f).split(sep).join("/"));
+    const rel = relative(room, f).split(sep).join("/");
+    files.push(rel);
     bytes += (await stat(f)).size;
+    born[rel] = sha(await readFile(f));
   }
   files.sort();
+
+  // The birth certificate, written LAST so it never hashes itself.
+  await writeFile(
+    join(room, MANIFEST_FILE),
+    JSON.stringify({ automation: proj.automation, builtAt: new Date().toISOString(), files: born }, null, 2),
+    "utf8",
+  );
+
   return { ok: true, automation: proj.automation, root: room, files, bytes, tokens: Math.round(bytes / 4) };
 }

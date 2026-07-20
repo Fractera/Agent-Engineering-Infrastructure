@@ -4,10 +4,7 @@
 // layer. Slugs are fixed English identifiers (never localized, never renamed).
 export type ProjectCategorySlug =
   | "automation"
-  | "fractera-pages"
   | "personal"
-  | "medicine"
-  | "groups"
   | "other";
 
 export type ProjectCategory = {
@@ -89,47 +86,6 @@ export const PROJECT_CATEGORIES: ProjectCategory[] = [
       en: "Personal", ru: "Личное", es: "Personal", fr: "Personnel", it: "Personale",
       de: "Persönlich", pt: "Pessoal", pl: "Osobiste", tr: "Kişisel", nl: "Persoonlijk",
     },
-  },
-  {
-    slug: "fractera-pages",
-    title: "Fractera pages",
-    navLabel: "Fractera pages",
-    description:
-      "Projects that manage the pages of this workspace — bulk content " +
-      "operations, page-group maintenance, publishing workflows.",
-    titleI18n: {
-      en: "Fractera pages", ru: "Страницы Fractera", es: "Páginas de Fractera", fr: "Pages Fractera",
-      it: "Pagine Fractera", de: "Fractera-Seiten", pt: "Páginas Fractera", pl: "Strony Fractera",
-      tr: "Fractera sayfaları", nl: "Fractera-pagina's",
-    },
-    descriptionI18n: {
-      en: "Projects that manage the pages of this workspace — bulk content operations, page-group maintenance, publishing workflows.",
-      ru: "Проекты, управляющие страницами этого рабочего пространства — массовые операции с контентом, обслуживание групп страниц, конвейеры публикации.",
-      es: "Proyectos que gestionan las páginas de este espacio de trabajo — operaciones masivas de contenido, mantenimiento de grupos de páginas, flujos de publicación.",
-      fr: "Projets qui gèrent les pages de cet espace de travail — opérations de contenu en masse, maintenance de groupes de pages, flux de publication.",
-      it: "Progetti che gestiscono le pagine di questo spazio di lavoro — operazioni di contenuto in blocco, manutenzione di gruppi di pagine, flussi di pubblicazione.",
-      de: "Projekte, die die Seiten dieses Workspace verwalten — Massen-Content-Operationen, Pflege von Seitengruppen, Veröffentlichungs-Workflows.",
-      pt: "Projetos que gerem as páginas deste espaço de trabalho — operações de conteúdo em massa, manutenção de grupos de páginas, fluxos de publicação.",
-      pl: "Projekty zarządzające stronami tej przestrzeni roboczej — masowe operacje na treści, utrzymanie grup stron, przepływy publikacji.",
-      tr: "Bu çalışma alanının sayfalarını yöneten projeler — toplu içerik işlemleri, sayfa grubu bakımı, yayınlama iş akışları.",
-      nl: "Projecten die de pagina's van deze werkruimte beheren — bulkcontentbewerkingen, onderhoud van paginagroepen, publicatieworkflows.",
-    },
-    navLabelI18n: {
-      en: "Fractera pages", ru: "Страницы Fractera", es: "Páginas Fractera", fr: "Pages Fractera", it: "Pagine Fractera",
-      de: "Fractera-Seiten", pt: "Páginas Fractera", pl: "Strony Fractera", tr: "Fractera sayfaları", nl: "Fractera-pagina's",
-    },
-  },
-  {
-    slug: "medicine",
-    title: "Medicine",
-    navLabel: "Medicine",
-    description: "Health and nutrition automations.",
-  },
-  {
-    slug: "groups",
-    title: "Groups",
-    navLabel: "Groups",
-    description: "Chained automation groups.",
   },
   {
     slug: "other",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { CheckCheck, Loader2, ListChecks, Rocket } from "lucide-react";
+import { ArchiveRestore, CheckCheck, Loader2, ListChecks, Rocket } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -38,6 +38,8 @@ type SD = {
   /** owner 2026-07-19 (263.1): the stub gate is ADVISORY — the hint + the "launch anyway" button. */
   stubAdvisory: string; launchAnyway: string;
   failed: string; noDescription: string;
+  /** THE KEPT-ROOM NOTICE (owner 2026-07-20) — the room now survives a reopen; the owner is told. */
+  roomKeptTitle: string; roomKeptBody: string; rebuildRoom: string; rebuildHint: string;
   confirmTitle: string; confirmBody: string; cancelEdit: string; startNow: string; builtInAlt: string;
 };
 const I18N: Record<string, SD> = {
@@ -65,6 +67,8 @@ const I18N: Record<string, SD> = {
     failed: "Could not start development.", noDescription: "No description yet.",
     confirmTitle: "Development is about to start", confirmBody: "The coding agent will work in this project's own room, live in the terminal below. You can cancel and keep editing — this window returns whenever you press the launch button.",
     cancelEdit: "Cancel and keep editing", startNow: "Start now", builtInAlt: "Use the built-in developer (OpenAI) instead",
+    roomKeptTitle: "The room was kept — it holds unapplied work", roomKeptBody: "The coding agent has already written something here that has not been applied to the automation yet. It has been preserved, and the agent is told to continue it instead of starting over.",
+    rebuildRoom: "Rebuild the room from scratch", rebuildHint: "The current work moves to the trash folder on the server — it is not erased.",
   },
   ru: {
     title: "Запустить разработку",
@@ -90,6 +94,8 @@ const I18N: Record<string, SD> = {
     failed: "Не удалось запустить разработку.", noDescription: "Пока без описания.",
     confirmTitle: "Разработка сейчас начнётся", confirmBody: "Агент-программист будет работать в собственной комнате проекта, вживую в терминале ниже. Можно отменить и продолжить правки — это окно вернётся при следующем нажатии кнопки запуска.",
     cancelEdit: "Отменить и продолжить правки", startNow: "Стартовать сейчас", builtInAlt: "Использовать встроенного разработчика (OpenAI)",
+    roomKeptTitle: "Комната сохранена — в ней есть несданная работа", roomKeptBody: "Агент-программист уже что-то здесь написал, и это ещё не применено к автоматизации. Работа сохранена, а агенту сказано продолжить её, а не начинать заново.",
+    rebuildRoom: "Собрать комнату заново", rebuildHint: "Текущая работа уедет в корзину на сервере — она не стирается.",
   },
   es: {
     title: "Iniciar desarrollo",
@@ -115,6 +121,8 @@ const I18N: Record<string, SD> = {
     failed: "No se pudo iniciar el desarrollo.", noDescription: "Aún sin descripción.",
     confirmTitle: "El desarrollo está a punto de comenzar", confirmBody: "El agente trabajará en la sala propia del proyecto, en vivo en la terminal. Puedes cancelar y seguir editando — esta ventana vuelve con el botón de inicio.",
     cancelEdit: "Cancelar y seguir editando", startNow: "Empezar ahora", builtInAlt: "Usar el desarrollador integrado (OpenAI)",
+    roomKeptTitle: "La sala se conservó — contiene trabajo sin aplicar", roomKeptBody: "El agente ya escribió algo aquí que aún no se ha aplicado a la automatización. Se ha conservado y se le indica al agente que lo continúe en lugar de empezar de nuevo.",
+    rebuildRoom: "Reconstruir la sala desde cero", rebuildHint: "El trabajo actual pasa a la papelera del servidor — no se borra.",
   },
   fr: {
     title: "Démarrer le développement",
@@ -140,6 +148,8 @@ const I18N: Record<string, SD> = {
     failed: "Impossible de démarrer le développement.", noDescription: "Pas encore de description.",
     confirmTitle: "Le développement va commencer", confirmBody: "L'agent travaillera dans la salle du projet, en direct dans le terminal. Vous pouvez annuler et continuer vos modifications — cette fenêtre revient au prochain lancement.",
     cancelEdit: "Annuler et continuer", startNow: "Démarrer maintenant", builtInAlt: "Utiliser le développeur intégré (OpenAI)",
+    roomKeptTitle: "La salle a été conservée — elle contient un travail non appliqué", roomKeptBody: "L’agent y a déjà écrit quelque chose qui n’a pas encore été appliqué à l’automatisation. Ce travail est conservé et l’agent reçoit la consigne de le poursuivre plutôt que de recommencer.",
+    rebuildRoom: "Reconstruire la salle à zéro", rebuildHint: "Le travail actuel part à la corbeille sur le serveur — il n’est pas effacé.",
   },
   it: {
     title: "Avvia lo sviluppo",
@@ -165,6 +175,8 @@ const I18N: Record<string, SD> = {
     failed: "Impossibile avviare lo sviluppo.", noDescription: "Ancora nessuna descrizione.",
     confirmTitle: "Lo sviluppo sta per iniziare", confirmBody: "L'agente lavorerà nella stanza del progetto, in diretta nel terminale. Puoi annullare e continuare a modificare — questa finestra torna al prossimo avvio.",
     cancelEdit: "Annulla e continua", startNow: "Avvia ora", builtInAlt: "Usa lo sviluppatore integrato (OpenAI)",
+    roomKeptTitle: "La stanza è stata mantenuta — contiene lavoro non applicato", roomKeptBody: "L’agente ha già scritto qui qualcosa che non è ancora stato applicato all’automazione. È stato conservato e all’agente viene detto di continuarlo invece di ricominciare.",
+    rebuildRoom: "Ricostruire la stanza da zero", rebuildHint: "Il lavoro attuale finisce nel cestino sul server — non viene cancellato.",
   },
   de: {
     title: "Entwicklung starten",
@@ -190,6 +202,8 @@ const I18N: Record<string, SD> = {
     failed: "Die Entwicklung konnte nicht gestartet werden.", noDescription: "Noch keine Beschreibung.",
     confirmTitle: "Die Entwicklung beginnt gleich", confirmBody: "Der Agent arbeitet im eigenen Raum des Projekts, live im Terminal. Du kannst abbrechen und weiter bearbeiten — dieses Fenster kehrt beim nächsten Start zurück.",
     cancelEdit: "Abbrechen und weiter bearbeiten", startNow: "Jetzt starten", builtInAlt: "Den eingebauten Entwickler (OpenAI) verwenden",
+    roomKeptTitle: "Der Raum wurde behalten — er enthält nicht übernommene Arbeit", roomKeptBody: "Der Coding-Agent hat hier bereits etwas geschrieben, das noch nicht auf die Automatisierung angewendet wurde. Es bleibt erhalten, und dem Agenten wird gesagt, es fortzusetzen statt neu zu beginnen.",
+    rebuildRoom: "Raum neu aufbauen", rebuildHint: "Die aktuelle Arbeit wandert in den Papierkorb auf dem Server — sie wird nicht gelöscht.",
   },
   pt: {
     title: "Iniciar desenvolvimento",
@@ -215,6 +229,8 @@ const I18N: Record<string, SD> = {
     failed: "Não foi possível iniciar o desenvolvimento.", noDescription: "Ainda sem descrição.",
     confirmTitle: "O desenvolvimento vai começar", confirmBody: "O agente trabalhará na sala própria do projeto, ao vivo no terminal. Pode cancelar e continuar a editar — esta janela volta no próximo arranque.",
     cancelEdit: "Cancelar e continuar", startNow: "Começar agora", builtInAlt: "Usar o desenvolvedor integrado (OpenAI)",
+    roomKeptTitle: "A sala foi mantida — contém trabalho por aplicar", roomKeptBody: "O agente já escreveu aqui algo que ainda não foi aplicado à automação. Foi preservado, e o agente é instruído a continuá-lo em vez de recomeçar.",
+    rebuildRoom: "Reconstruir a sala do zero", rebuildHint: "O trabalho atual vai para a reciclagem no servidor — não é apagado.",
   },
   pl: {
     title: "Uruchom rozwój",
@@ -240,6 +256,8 @@ const I18N: Record<string, SD> = {
     failed: "Nie udało się uruchomić rozwoju.", noDescription: "Jeszcze bez opisu.",
     confirmTitle: "Rozwój zaraz się rozpocznie", confirmBody: "Agent będzie pracować we własnym pokoju projektu, na żywo w terminalu. Możesz anulować i dalej edytować — to okno wróci przy następnym uruchomieniu.",
     cancelEdit: "Anuluj i edytuj dalej", startNow: "Rozpocznij teraz", builtInAlt: "Użyj wbudowanego dewelopera (OpenAI)",
+    roomKeptTitle: "Pokój został zachowany — zawiera niezastosowaną pracę", roomKeptBody: "Agent już coś tu napisał, a to nie zostało jeszcze zastosowane do automatyzacji. Praca została zachowana, a agent ma polecenie ją kontynuować, a nie zaczynać od nowa.",
+    rebuildRoom: "Zbuduj pokój od nowa", rebuildHint: "Obecna praca trafia do kosza na serwerze — nie jest usuwana.",
   },
   tr: {
     title: "Geliştirmeyi başlat",
@@ -265,6 +283,8 @@ const I18N: Record<string, SD> = {
     failed: "Geliştirme başlatılamadı.", noDescription: "Henüz açıklama yok.",
     confirmTitle: "Geliştirme başlamak üzere", confirmBody: "Ajan, projenin kendi odasında, aşağıdaki terminalde canlı çalışacak. İptal edip düzenlemeye devam edebilirsiniz — bu pencere bir sonraki başlatmada geri döner.",
     cancelEdit: "İptal et ve düzenlemeye devam et", startNow: "Şimdi başlat", builtInAlt: "Yerleşik geliştiriciyi (OpenAI) kullan",
+    roomKeptTitle: "Oda korundu — uygulanmamış çalışma içeriyor", roomKeptBody: "Kodlama ajanı burada henüz otomasyona uygulanmamış bir şeyler yazmış. Bu korundu ve ajana baştan başlamak yerine devam etmesi söylendi.",
+    rebuildRoom: "Odayı sıfırdan kur", rebuildHint: "Mevcut çalışma sunucudaki çöp kutusuna taşınır — silinmez.",
   },
   nl: {
     title: "Ontwikkeling starten",
@@ -290,6 +310,8 @@ const I18N: Record<string, SD> = {
     failed: "Kon de ontwikkeling niet starten.", noDescription: "Nog geen beschrijving.",
     confirmTitle: "De ontwikkeling gaat zo beginnen", confirmBody: "De agent werkt in de eigen kamer van het project, live in de terminal. Je kunt annuleren en verder bewerken — dit venster keert terug bij de volgende start.",
     cancelEdit: "Annuleren en verder bewerken", startNow: "Nu starten", builtInAlt: "De ingebouwde ontwikkelaar (OpenAI) gebruiken",
+    roomKeptTitle: "De kamer is behouden — er staat niet-toegepast werk in", roomKeptBody: "De coding-agent heeft hier al iets geschreven dat nog niet op de automatisering is toegepast. Het is bewaard, en de agent krijgt te horen het voort te zetten in plaats van opnieuw te beginnen.",
+    rebuildRoom: "Kamer opnieuw opbouwen", rebuildHint: "Het huidige werk gaat naar de prullenbak op de server — het wordt niet gewist.",
   },
 };
 
@@ -315,22 +337,25 @@ export function StartDevelopment({
   // Step 247 (П5): the node names the launch gate refused over — shown so the owner knows WHICH to describe.
   const [stubNodes, setStubNodes] = useState<string[]>([]);
   // The dev console (step 255): the room the terminal works in + the first task the conductor hands over.
+  const [roomKept, setRoomKept] = useState(false);
+  const [roomDirtyFiles, setRoomDirtyFiles] = useState<string[]>([]);
   const [roomPath, setRoomPath] = useState("");
   const [roomTask, setRoomTask] = useState("");
 
   // THE ENTRY (step 255): the gates run via GET handoff (the ONE launchGate set); passing them shows the
   // CONFIRM screen (cancel-and-keep-editing / start-now — the owner's repeatable cycle) and stores the
   // room hand-off for the console. `force` = the advisory stub screen's "launch anyway" (263.1).
-  const load = useCallback(async (force = false) => {
+  const load = useCallback(async (force = false, rebuild = false) => {
     setMode("loading");
     setBusy(true);
     try {
       const r = await fetch(
-        `/api/projects/handoff?automation=${encodeURIComponent(automation)}${force ? "&force=1" : ""}`,
+        `/api/projects/handoff?automation=${encodeURIComponent(automation)}${force ? "&force=1" : ""}${rebuild ? "&rebuild=1" : ""}`,
         { cache: "no-store" },
       );
       const d = (await r.json().catch(() => ({}))) as {
         ok?: boolean; reason?: string; nodes?: string[]; room?: string; roomPath?: string;
+        roomKept?: boolean; roomDirtyFiles?: string[];
       };
       if (!r.ok) {
         if (d.reason === "stub-nodes") {
@@ -349,6 +374,8 @@ export function StartDevelopment({
         }
         return;
       }
+      setRoomKept(!!d.roomKept);
+      setRoomDirtyFiles(d.roomDirtyFiles ?? []);
       setRoomPath(d.roomPath ?? "");
       setRoomTask(d.room ?? "");
       setMode("confirm");
@@ -411,6 +438,27 @@ export function StartDevelopment({
           <div className="space-y-4 py-2">
             <p className="text-sm font-medium">{L.confirmTitle}</p>
             <p className="text-sm text-muted-foreground">{L.confirmBody}</p>
+            {/* THE KEPT-ROOM NOTICE (owner 2026-07-20). Opening this dialog used to rebuild the room and
+                silently destroy an agent's unapplied work. The room is now KEPT when it holds work — and
+                the owner is TOLD, because a preserved state nobody mentions is just a different kind of
+                surprise. Starting over stays possible, but only as a deliberate, warned choice. */}
+            {roomKept && (
+              <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-3 text-sm">
+                <p className="flex items-center gap-2 font-medium text-amber-700 dark:text-amber-400">
+                  <ArchiveRestore className="size-4 shrink-0" /> {L.roomKeptTitle}
+                </p>
+                <p className="mt-1 text-muted-foreground">{L.roomKeptBody}</p>
+                {roomDirtyFiles.length > 0 && (
+                  <ul className="mt-2 space-y-0.5 font-mono text-xs text-muted-foreground">
+                    {roomDirtyFiles.map((f) => <li key={f} className="truncate">{f}</li>)}
+                  </ul>
+                )}
+                <Button size="sm" variant="outline" className="mt-3" disabled={busy} onClick={() => void load(false, true)}>
+                  {L.rebuildRoom}
+                </Button>
+                <p className="mt-1 text-xs text-muted-foreground">{L.rebuildHint}</p>
+              </div>
+            )}
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" onClick={() => onOpenChange(false)}>{L.cancelEdit}</Button>
               <Button onClick={() => setMode("console")} data-start-console="1">
