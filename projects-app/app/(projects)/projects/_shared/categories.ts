@@ -6,6 +6,8 @@ export type ProjectCategorySlug =
   | "automation"
   | "fractera-pages"
   | "personal"
+  | "medicine"
+  | "groups"
   | "other";
 
 export type ProjectCategory = {
@@ -116,6 +118,18 @@ export const PROJECT_CATEGORIES: ProjectCategory[] = [
       en: "Fractera pages", ru: "Страницы Fractera", es: "Páginas Fractera", fr: "Pages Fractera", it: "Pagine Fractera",
       de: "Fractera-Seiten", pt: "Páginas Fractera", pl: "Strony Fractera", tr: "Fractera sayfaları", nl: "Fractera-pagina's",
     },
+  },
+  {
+    slug: "medicine",
+    title: "Medicine",
+    navLabel: "Medicine",
+    description: "Health and nutrition automations.",
+  },
+  {
+    slug: "groups",
+    title: "Groups",
+    navLabel: "Groups",
+    description: "Chained automation groups.",
   },
   {
     slug: "other",
