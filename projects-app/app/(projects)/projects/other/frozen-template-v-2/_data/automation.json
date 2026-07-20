@@ -1,0 +1,124 @@
+{
+  "passport": {
+    "title": "Frozen template v2",
+    "description": "",
+    "type": "stream",
+    "lifecycle": "frozen-template",
+    "fracteraPro": null
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "input",
+        "kind": "input",
+        "name": "Input",
+        "description": "Where the automation receives its work — a message, a request, or a scheduled tick.",
+        "state": "visible",
+        "ioType": "control-panel",
+        "instruction": "Receive the incoming request as it is and name it for the nodes downstream.",
+        "summary": "Takes the raw request and passes it on as payload.",
+        "status": "materialized",
+        "functions": [
+          {
+            "name": "receiveRequest",
+            "summary": "Takes the raw incoming request and names it for the nodes downstream.",
+            "accepts": "The raw request as it arrived from the channel.",
+            "returns": "payload — the request, untouched."
+          }
+        ],
+        "in": {},
+        "out": { "payload": "unknown" },
+        "run": "sequential",
+        "estDurationMs": 60000
+      },
+      {
+        "id": "logic",
+        "kind": "transform",
+        "name": "Logic",
+        "description": "The middle — the deterministic work that turns the input into the output.",
+        "state": "visible",
+        "ioType": null,
+        "instruction": "Turn the incoming payload into the automation's result.",
+        "summary": "Turns payload into result; no transformation of its own yet.",
+        "status": "materialized",
+        "functions": [
+          {
+            "name": "transformPayload",
+            "summary": "Turns the incoming payload into the automation's result.",
+            "accepts": "payload — whatever the input node produced.",
+            "returns": "result — the value the output node delivers."
+          }
+        ],
+        "in": { "payload": "unknown" },
+        "out": { "result": "unknown" },
+        "run": "sequential",
+        "estDurationMs": 60000
+      },
+      {
+        "id": "output",
+        "kind": "output",
+        "name": "Output",
+        "description": "Where the automation delivers its result — a reply, a saved record, or a published page.",
+        "state": "visible",
+        "ioType": "dashboard",
+        "instruction": "Deliver the result where the automation is supposed to deliver it.",
+        "summary": "Delivers the result; the destination channel is not chosen yet.",
+        "status": "materialized",
+        "functions": [
+          {
+            "name": "deliverResult",
+            "summary": "Delivers the automation's result to its destination.",
+            "accepts": "result — the value produced by the middle of the flow.",
+            "returns": "Nothing — an output node ends the flow."
+          }
+        ],
+        "in": { "result": "unknown" },
+        "out": {},
+        "run": "sequential",
+        "estDurationMs": 60000
+      }
+    ],
+    "edges": [
+      { "from": "input", "to": "logic", "state": "visible" },
+      { "from": "logic", "to": "output", "state": "visible" }
+    ]
+  },
+  "components": {
+    "tabs": [
+      {
+        "name": "calendar",
+        "presence": "expanded",
+        "instruction": "",
+        "summary": "",
+        "status": "in-development",
+        "entities": [
+          {
+            "id": "main",
+            "name": "Main calendar",
+            "instruction": "",
+            "summary": "",
+            "status": "in-development",
+            "data": {}
+          }
+        ]
+      },
+      {
+        "name": "analytics",
+        "presence": "collapsed",
+        "instruction": "",
+        "summary": "",
+        "status": "in-development",
+        "entities": [
+          {
+            "id": "main",
+            "name": "Main analytics",
+            "instruction": "",
+            "summary": "",
+            "status": "in-development",
+            "data": {}
+          }
+        ]
+      }
+    ]
+  }
+}

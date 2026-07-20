@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Settings2, KeyRound, LayoutGrid } from "lucide-react";
+import { Code2, KeyRound } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -46,7 +46,6 @@ export function ProjectsZoneFooter({ shortName }: { shortName: string }) {
   const architectureHref = admin
     ? `${admin}/service/architecture${project ? `?project=${project}` : ""}`
     : undefined;
-  const stepsHref = admin ? `${admin}/service/development-steps` : undefined;
   const envHref = admin ? `${admin}/?panel=env` : undefined;
 
   return (
@@ -62,22 +61,10 @@ export function ProjectsZoneFooter({ shortName }: { shortName: string }) {
                 className="flex size-8 items-center justify-center rounded-md hover:bg-muted hover:text-foreground transition-colors"
                 aria-label={L.architecture}
               >
-                <Settings2 className="size-4" />
+                <Code2 className="size-4" />
               </a>
             </TooltipTrigger>
             <TooltipContent>{project ? L.continueDevelopment : L.architecture}</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <a
-                href={stepsHref}
-                className="flex size-8 items-center justify-center rounded-md hover:bg-muted hover:text-foreground transition-colors"
-                aria-label={L.developmentSteps}
-              >
-                <LayoutGrid className="size-4" />
-              </a>
-            </TooltipTrigger>
-            <TooltipContent>{L.developmentSteps}</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
