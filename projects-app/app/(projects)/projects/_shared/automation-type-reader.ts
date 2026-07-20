@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { db } from "@/lib/db";
+import { hasInstances } from "@/lib/instances-store";
 
 // SHARED automation-type reader (step 238 — extracted from app/api/projects/global/route.ts's private
 // automationType(), which the new groups-manifest.ts also needs). The type is declared in the project's
@@ -14,6 +14,6 @@ export async function readAutomationType(
   const src = await readFile(join(projectDir, "_data", "automation.ts"), "utf8").catch(() => "");
   const m = src.match(/AUTOMATION_TYPE\s*:\s*AutomationType\s*=\s*["'](stream|instanced|chained)["']/);
   if (m) return m[1] as "stream" | "instanced" | "chained";
-  const fork = (await db.prepare(`SELECT 1 FROM automation_instances WHERE automation = ? LIMIT 1`).get(automation)) as unknown;
+  const fork = (await hasInstances(automation)) || undefined;
   return fork ? "instanced" : "stream";
 }

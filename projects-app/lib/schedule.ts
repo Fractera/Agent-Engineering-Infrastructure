@@ -1,12 +1,15 @@
 import { db } from "@/lib/db";
 import {
+  automationsWithInstances, clearSchedule, listInstances, saveSchedule, type PlanRow,
+} from "@/lib/instances-store";
+import {
   clearRuns, hasAnyRun, latestRun, listRuns, patchAllRunNodes, patchRun, patchRunNodeByNode, runNodes,
   startRunIfIdle,
 } from "@/lib/runs-store";
 import { randomUUID } from "node:crypto";
 import { resolveProject, listNodes, readNodeDuration, readNodeFunctionCount } from "@/lib/nodes";
 
-// PROCESSES / Gantt timeline (step 230) + the minimal RUNNER (step 230 fix). Each FORK (automation_instances)
+// PROCESSES / Gantt timeline (step 230) + the minimal RUNNER (step 230 fix). Each FORK (_data/runtime/instances.jsonl)
 // is a bar; its length is the sum of its nodes' estimated process times (node meta.ts estDurationMs). Forks
 // run one at a time, IN ORDER: the first fork starts, its nodes turn green (ok) as their time elapses, the
 // whole fork turns green when it finishes, then the next fork starts. This is a DERIVED runner — a node
@@ -54,9 +57,8 @@ export type ScheduleRow = {
 };
 
 async function instancesOf(automation: string): Promise<(Instance & { title: string; ord: number })[]> {
-  const rows = (await db
-    .prepare(`SELECT id, title, specialization, overrides, status, created_at FROM automation_instances WHERE automation = ? ORDER BY created_at ASC`)
-    .all(automation)) as { id: string; title: string; overrides: string; status: string }[];
+  const rows = (await listInstances(automation)) as unknown as
+    { id: string; title: string; overrides: string; status: string }[];
   return rows.map((r, i) => {
     let overrides: Instance["overrides"] = {};
     try { overrides = JSON.parse(r.overrides) as Instance["overrides"]; } catch { /* empty */ }
@@ -188,7 +190,7 @@ export async function runAutomation(automation: string): Promise<void> {
 /** RESET the automation (the "Reset" button): drop all runs so the timeline returns to the plan. */
 export async function resetAutomation(automation: string): Promise<void> {
   await clearRuns(automation);
-  await db.prepare(`DELETE FROM automation_schedule WHERE automation = ?`).run(automation);
+  await clearSchedule(automation);
 }
 
 /** Per-node run status (slug → ok|running|idle) of a fork's latest run, for the timeline colors. */
@@ -211,6 +213,9 @@ export async function recomputeSchedule(automation: string): Promise<ScheduleRow
 
   const insts = await instancesOf(proj.automation);
   if (!insts.length) return streamRows(proj.automation);
+  // The computed plan is persisted at the end of the walk (block 4c) — one atomic file write instead of a
+  // row-by-row upsert, because the plan is always recomputed whole.
+  const plan: PlanRow[] = [];
   const base = await nodeDurations(proj.automation);
 
   const now = Date.now();
@@ -247,19 +252,17 @@ export async function recomputeSchedule(automation: string): Promise<ScheduleRow
 
     cursor = endMs ?? (anchor + plannedDurationMs);
 
-    await db.prepare(
-      `INSERT INTO automation_schedule (instance_id, automation, ord, planned_start, planned_duration_ms, actual_start, actual_end, status, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-       ON CONFLICT(instance_id) DO UPDATE SET
-         ord = excluded.ord, planned_start = excluded.planned_start, planned_duration_ms = excluded.planned_duration_ms,
-         actual_start = excluded.actual_start, actual_end = excluded.actual_end, status = excluded.status, updated_at = datetime('now')`,
-    ).run(
-      inst.id, proj.automation, inst.ord, new Date(anchor).toISOString(), plannedDurationMs,
-      startMs ? new Date(startMs).toISOString() : null, endMs ? new Date(endMs).toISOString() : null, status,
-    );
+    plan.push({
+      instance_id: inst.id, ord: inst.ord,
+      planned_start: new Date(anchor).toISOString(), planned_duration_ms: plannedDurationMs,
+      actual_start: startMs ? new Date(startMs).toISOString() : null,
+      actual_end: endMs ? new Date(endMs).toISOString() : null,
+      status,
+    });
   }
 
   rows.sort((a, b) => a.plannedStart - b.plannedStart);
+  await saveSchedule(proj.automation, plan);
   return rows;
 }
 
@@ -323,6 +326,6 @@ async function streamRows(automation: string): Promise<ScheduleRow[]> {
 
 /** Every automation that has at least one fork — the set the cron tick recomputes. */
 export async function automationsWithForks(): Promise<string[]> {
-  const rows = (await db.prepare(`SELECT DISTINCT automation FROM automation_instances`).all()) as { automation: string }[];
+  const rows = (await automationsWithInstances()).map((automation) => ({ automation }));
   return rows.map((r) => r.automation);
 }

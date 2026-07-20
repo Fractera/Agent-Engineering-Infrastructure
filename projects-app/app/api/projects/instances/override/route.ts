@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/get-session";
-import { db } from "@/lib/db";
+import { instanceById, setInstanceOverrides } from "@/lib/instances-store";
 
 // Set a per-node OVERRIDE on an Instance (step 223.C.4) — how a run is edited node by node without
 // touching the Master or sibling Instances. Merges { disabledFunctions[], note } for one node into the
@@ -32,9 +32,7 @@ export async function POST(req: NextRequest) {
     : [];
   const note = typeof body.note === "string" ? body.note : "";
 
-  const row = (await db
-    .prepare(`SELECT overrides FROM automation_instances WHERE id = ?`)
-    .get(instanceId)) as Row | undefined;
+  const row = (await instanceById(instanceId)) as Row | undefined;
   if (!row) return NextResponse.json({ error: "instance not found" }, { status: 404 });
 
   let overrides: Record<string, { disabledFunctions?: string[]; note?: string }>;
@@ -47,9 +45,7 @@ export async function POST(req: NextRequest) {
   if (disabledFunctions.length === 0 && !note) delete overrides[nodeId];
   else overrides[nodeId] = { disabledFunctions, note };
 
-  await db
-    .prepare(`UPDATE automation_instances SET overrides = ? WHERE id = ?`)
-    .run(JSON.stringify(overrides), instanceId);
+  await setInstanceOverrides(instanceId, JSON.stringify(overrides));
 
   return NextResponse.json({ ok: true, nodeId, overrides: overrides[nodeId] ?? null });
 }

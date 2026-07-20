@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { getSession } from "@/lib/auth/get-session";
-import { db } from "@/lib/db";
+import { createInstance } from "@/lib/instances-store";
 
 // Create an Instance = FORK the Master (step 223.C.4). The Instance inherits ALL the Master's nodes by
 // reference (the Master lives in code); here we record only what makes THIS run different: a title and
@@ -38,11 +38,7 @@ export async function POST(req: NextRequest) {
   const params = body.params && typeof body.params === "object" ? body.params : {};
 
   const id = randomUUID();
-  await db
-    .prepare(
-      `INSERT INTO automation_instances (id, automation, title, specialization, overrides) VALUES (?, ?, ?, ?, ?)`,
-    )
-    .run(id, automation, title, specialization, JSON.stringify({ params }));
+  await createInstance(automation, { id, title, specialization, overrides: JSON.stringify({ params }) });
 
   return NextResponse.json({ id, title, specialization, params, status: "new" });
 }

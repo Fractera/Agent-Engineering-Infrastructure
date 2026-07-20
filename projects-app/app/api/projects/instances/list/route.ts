@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/get-session";
-import { db } from "@/lib/db";
+import { listInstances } from "@/lib/instances-store";
 
 // List an automation's Instances (step 223.C.4). NOTE: projects-app's db is ASYNC — every query is
 // awaited (see reports/errors/projects-app-db-is-async-await-required.md). Role-gated.
@@ -25,12 +25,7 @@ export async function GET(req: NextRequest) {
   const automation = (req.nextUrl.searchParams.get("automation") ?? "").trim();
   if (!automation) return NextResponse.json({ instances: [] });
 
-  const rows = (await db
-    .prepare(
-      `SELECT id, title, specialization, overrides, status, created_at FROM automation_instances
-       WHERE automation = ? ORDER BY created_at ASC`,
-    )
-    .all(automation)) as InstanceRow[];
+  const rows = (await listInstances(automation)) as unknown as InstanceRow[];
 
   const instances = rows.map((r) => ({
     id: r.id,
