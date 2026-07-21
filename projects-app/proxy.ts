@@ -37,22 +37,6 @@ function publicCallbackUrl(req: NextRequest): string {
   return host ? `${proto}://${host}${pathname}` : req.url;
 }
 
-// SURFACE BY ADDRESS (requirement 4) — the PUBLIC surface is the apex host (aifa.dev), the COCKPIT is the
-// `projects.` service subdomain. The public host is any real domain whose first label is NOT a known
-// service prefix; IP / localhost is neither (its onboarding bypass is handled elsewhere). An automation's
-// content page on the public host is a visitor page and is served WITHOUT auth (surface="public"); the
-// cockpit host keeps its architect/manager gate exactly as before — this branch never touches it.
-function isPublicHost(host: string | null): boolean {
-  const hostname = (host || "").split(":")[0];
-  if (!hostname) return false;
-  if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(hostname) || hostname === "localhost") return false;
-  const labels = hostname.split(".");
-  return labels.length >= 2 && !KNOWN_PREFIXES.includes(labels[0]);
-}
-
-// Only an automation's own content page (…/projects/<cat>/<slug>[/…], optional /<lang> prefix) is public.
-const PUBLIC_PAGE = /^\/(?:[a-z]{2}\/)?projects\/[^/]+\/[^/]+/;
-
 export async function proxy(req: NextRequest) {
   // 256.1 — hand the current path to server components: requireRole() (the second belt) needs it to
   // build a callbackUrl, and headers() alone cannot see the pathname. Set on EVERY pass-through.
@@ -60,21 +44,9 @@ export async function proxy(req: NextRequest) {
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-pathname", url.pathname + url.search);
 
-  // The surface the page must render (requirement 4): public on the apex host, admin otherwise. Set on
-  // every pass-through so the page component reads it from headers().
-  const reqHost = req.headers.get("x-forwarded-host") || req.headers.get("host");
-  const publicSurface = isPublicHost(reqHost);
-  requestHeaders.set("x-surface", publicSurface ? "public" : "admin");
-
-  // PUBLIC VISITOR PAGE (requirement 4): the automation's own page on the public host is open — no auth.
-  // Its API doors still self-gate (a visitor has no session), and only content pages match; service pages
-  // and the cockpit host fall through to the gate below, untouched.
-  if (publicSurface && PUBLIC_PAGE.test(url.pathname)) {
-    return NextResponse.next({ request: { headers: requestHeaders } });
-  }
-
   // HOST-AWARE bypass (256.4b): the onboarding bypass applies only to IP/localhost hosts — a DOMAIN
   // request (projects.<apex>) is the protected flow and enforces auth even while the env is IP mode.
+  const reqHost = req.headers.get("x-forwarded-host") || req.headers.get("host");
   if (shouldBypassAuth(reqHost)) {
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
