@@ -738,7 +738,7 @@
         "name": "calendar",
         "presence": "expanded",
         "info": {
-          "crudUser": "Календарь автоматизации — требования владельца ещё не заданы."
+          "aiSummary": "Вкладка календаря объявлена и пуста: владелец ещё не сказал, что она должна показывать."
         },
         "status": "in-development",
         "warnings": [],
@@ -748,7 +748,7 @@
             "cuid": "cmruca7ra4n1jwbadc6ef980db7976",
             "name": "Main calendar",
             "info": {
-              "crudUser": "Основной календарь — требования владельца ещё не заданы."
+              "aiSummary": "Заготовка «Main calendar»: создана вместе со вкладкой, требований владельца пока нет."
             },
             "status": "in-development",
             "warnings": [],
@@ -762,7 +762,7 @@
         "name": "analytics",
         "presence": "collapsed",
         "info": {
-          "crudUser": "Аналитика автоматизации — требования владельца ещё не заданы."
+          "aiSummary": "Вкладка аналитики объявлена и пуста: владелец ещё не сказал, что она должна считать."
         },
         "status": "in-development",
         "warnings": [],
@@ -772,7 +772,7 @@
             "cuid": "cmruca7ra4n1jx7b35a7781f60b53f",
             "name": "Main analytics",
             "info": {
-              "crudUser": "Основная аналитика — требования владельца ещё не заданы."
+              "aiSummary": "Заготовка «Main analytics»: создана вместе со вкладкой, требований владельца пока нет."
             },
             "status": "in-development",
             "warnings": [],
