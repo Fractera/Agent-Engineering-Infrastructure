@@ -4,83 +4,165 @@
     "description": "",
     "type": "stream",
     "lifecycle": "frozen-template",
-    "fracteraPro": null
+    "fracteraPro": null,
+    "info": {
+      "aiSummary": "Стартовый замороженный шаблон: все узлы скрыты, кейсов ещё нет — автоматизация рождается из пользовательских кейсов владельца."
+    }
   },
   "graph": {
     "nodes": [
       {
-        "id": "input",
+        "cuid": "cmruewqs51sbelfc3dc9457a2a3fac",
+        "kind": "input-connector",
+        "name": "Incoming connector",
+        "description": "Receives data from a node of ANOTHER automation — the door through which this automation joins a group.",
+        "state": "hidden",
+        "ioType": "custom",
+        "info": { "aiSummary": "Ждёт данные из соседней автоматизации; в одиночной автоматизации стоит скрытым." },
+        "status": "materialized",
+        "warnings": [],
+        "envKeys": [],
+        "function": {
+          "name": "receiveFromExternal",
+          "summary": "Takes the payload handed over by another automation and names it for this one.",
+          "accepts": "The payload as another automation handed it over.",
+          "returns": "payload — the same value, named for this automation."
+        },
+        "in": { "state": "optional", "connections": ["external"] },
+        "out": { "state": "required", "connections": ["transform"] },
+        "run": "sequential",
+        "estDurationMs": 60000
+      },
+      {
+        "cuid": "cmruca7r64n1jr7c4ca119ed7b7c4d",
         "kind": "input",
         "name": "Input",
         "description": "Where the automation receives its work — a message, a request, or a scheduled tick.",
-        "state": "visible",
+        "state": "hidden",
         "ioType": "control-panel",
-        "instruction": "Receive the incoming request as it is and name it for the nodes downstream.",
-        "summary": "Takes the raw request and passes it on as payload.",
+        "info": { "aiSummary": "Принимает обращение из Пульта запуска и передаёт его дальше как payload." },
         "status": "materialized",
-        "functions": [
-          {
-            "name": "receiveRequest",
-            "summary": "Takes the raw incoming request and names it for the nodes downstream.",
-            "accepts": "The raw request as it arrived from the channel.",
-            "returns": "payload — the request, untouched."
-          }
-        ],
-        "in": {},
-        "out": { "payload": "unknown" },
+        "warnings": [],
+        "envKeys": [],
+        "function": {
+          "name": "receiveRequest",
+          "summary": "Takes the raw incoming request and names it for the nodes downstream.",
+          "accepts": "The raw request as it arrived from the channel.",
+          "returns": "payload — the request, untouched."
+        },
+        "in": { "state": "prohibit", "connections": null },
+        "out": { "state": "required", "connections": ["transform"] },
         "run": "sequential",
         "estDurationMs": 60000
       },
       {
-        "id": "logic",
+        "cuid": "cmruca7ra4n1jsdcdee0feb026f3a4",
         "kind": "transform",
         "name": "Logic",
         "description": "The middle — the deterministic work that turns the input into the output.",
-        "state": "visible",
+        "state": "hidden",
         "ioType": null,
-        "instruction": "Turn the incoming payload into the automation's result.",
-        "summary": "Turns payload into result; no transformation of its own yet.",
+        "info": { "aiSummary": "Превращает payload в результат; собственного преобразования пока нет." },
         "status": "materialized",
-        "functions": [
-          {
-            "name": "transformPayload",
-            "summary": "Turns the incoming payload into the automation's result.",
-            "accepts": "payload — whatever the input node produced.",
-            "returns": "result — the value the output node delivers."
-          }
-        ],
-        "in": { "payload": "unknown" },
-        "out": { "result": "unknown" },
+        "warnings": [],
+        "envKeys": [],
+        "function": {
+          "name": "transformPayload",
+          "summary": "Turns the incoming payload into the automation's result.",
+          "accepts": "payload — whatever the input node produced.",
+          "returns": "result — the value the output node delivers."
+        },
+        "in": { "state": "required", "connections": ["input", "transform", "condition-success"] },
+        "out": { "state": "required", "connections": ["transform", "condition-success", "condition-failure"] },
         "run": "sequential",
         "estDurationMs": 60000
       },
       {
-        "id": "output",
+        "cuid": "cmruddnrpho70e8af12589d1deaa",
+        "kind": "condition-success",
+        "name": "If success",
+        "description": "The branch taken when the middle produced a result — the flow continues to the output.",
+        "state": "hidden",
+        "ioType": null,
+        "info": { "aiSummary": "Пропускает результат дальше, когда середина отработала успешно." },
+        "status": "materialized",
+        "warnings": [],
+        "envKeys": [],
+        "function": {
+          "name": "ifSuccess",
+          "summary": "Lets the flow through only when the middle produced a result.",
+          "accepts": "result — the value produced by the middle of the flow.",
+          "returns": "result — the same value, when the branch holds."
+        },
+        "in": { "state": "required", "connections": ["transform"] },
+        "out": { "state": "required", "connections": ["transform", "output"] },
+        "run": "sequential",
+        "estDurationMs": 60000
+      },
+      {
+        "cuid": "cmruca7ra4n1jt639afc902fa70f5b",
         "kind": "output",
         "name": "Output",
         "description": "Where the automation delivers its result — a reply, a saved record, or a published page.",
-        "state": "visible",
+        "state": "hidden",
         "ioType": "dashboard",
-        "instruction": "Deliver the result where the automation is supposed to deliver it.",
-        "summary": "Delivers the result; the destination channel is not chosen yet.",
+        "info": { "aiSummary": "Доставляет результат строкой на дашборд." },
         "status": "materialized",
-        "functions": [
-          {
-            "name": "deliverResult",
-            "summary": "Delivers the automation's result to its destination.",
-            "accepts": "result — the value produced by the middle of the flow.",
-            "returns": "Nothing — an output node ends the flow."
-          }
-        ],
-        "in": { "result": "unknown" },
-        "out": {},
+        "warnings": [],
+        "envKeys": [],
+        "function": {
+          "name": "deliverResult",
+          "summary": "Delivers the automation's result to its destination.",
+          "accepts": "result — the value produced by the middle of the flow.",
+          "returns": "Nothing — an output node ends the flow."
+        },
+        "in": { "state": "required", "connections": ["condition-success"] },
+        "out": { "state": "prohibit", "connections": null },
+        "run": "sequential",
+        "estDurationMs": 60000
+      },
+      {
+        "cuid": "cmruewqs71sbem314de6797f24f39c",
+        "kind": "output-connector",
+        "name": "Outgoing connector",
+        "description": "Hands the result over to a node of ANOTHER automation — the door out into a group.",
+        "state": "hidden",
+        "ioType": "custom",
+        "info": { "aiSummary": "Передаёт результат соседней автоматизации; в одиночной автоматизации стоит скрытым." },
+        "status": "materialized",
+        "warnings": [],
+        "envKeys": [],
+        "function": {
+          "name": "handToExternal",
+          "summary": "Hands the result over to the automation waiting on the other side.",
+          "accepts": "result — the value carried by the success branch.",
+          "returns": "The same value, handed to another automation."
+        },
+        "in": { "state": "required", "connections": ["condition-success"] },
+        "out": { "state": "optional", "connections": ["external"] },
         "run": "sequential",
         "estDurationMs": 60000
       }
     ],
     "edges": [
-      { "from": "input", "to": "logic", "state": "visible" },
-      { "from": "logic", "to": "output", "state": "visible" }
+      {
+        "cuid": "cmruca7ra4n1jue15372fe6f060166",
+        "from": "cmruca7r64n1jr7c4ca119ed7b7c4d",
+        "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cmruca7ra4n1jve4c7d2b0bc5335bf",
+        "from": "cmruca7ra4n1jsdcdee0feb026f3a4",
+        "to": "cmruddnrpho70e8af12589d1deaa",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cmruddnrtho8bbc2f3099cba1759",
+        "from": "cmruddnrpho70e8af12589d1deaa",
+        "to": "cmruca7ra4n1jt639afc902fa70f5b",
+        "state": "hidden"
+      }
     ]
   },
   "components": {
@@ -88,16 +170,18 @@
       {
         "name": "calendar",
         "presence": "expanded",
-        "instruction": "",
-        "summary": "",
+        "info": { "crudUser": "Календарь автоматизации — требования владельца ещё не заданы." },
         "status": "in-development",
+        "warnings": [],
+        "envKeys": [],
         "entities": [
           {
-            "id": "main",
+            "cuid": "cmruca7ra4n1jwbadc6ef980db7976",
             "name": "Main calendar",
-            "instruction": "",
-            "summary": "",
+            "info": { "crudUser": "Основной календарь — требования владельца ещё не заданы." },
             "status": "in-development",
+            "warnings": [],
+            "envKeys": [],
             "data": {}
           }
         ]
@@ -105,20 +189,23 @@
       {
         "name": "analytics",
         "presence": "collapsed",
-        "instruction": "",
-        "summary": "",
+        "info": { "crudUser": "Аналитика автоматизации — требования владельца ещё не заданы." },
         "status": "in-development",
+        "warnings": [],
+        "envKeys": [],
         "entities": [
           {
-            "id": "main",
+            "cuid": "cmruca7ra4n1jx7b35a7781f60b53f",
             "name": "Main analytics",
-            "instruction": "",
-            "summary": "",
+            "info": { "crudUser": "Основная аналитика — требования владельца ещё не заданы." },
             "status": "in-development",
+            "warnings": [],
+            "envKeys": [],
             "data": {}
           }
         ]
       }
     ]
-  }
+  },
+  "useCases": []
 }
