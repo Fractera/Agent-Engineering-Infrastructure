@@ -6,71 +6,47 @@ import { z } from "zod";
 
 const TEXT_LIMIT = 200;
 
-// ─── SYSTEM INSTRUCTIONS — the authored texts, in ONE place ─────────────────────────────────────────
-// Each kind of entity has a SYSTEM INSTRUCTION: the short, authoritative text telling a model what is
-// expected of THAT entity. This is what replaces a long document no weak model finishes reading.
+// ─── SYSTEM INSTRUCTIONS — the law texts, one file each ─────────────────────────────────────────────
+// Each kind of entity has a SYSTEM INSTRUCTION: the short, authoritative text saying what is expected of
+// THAT entity. It is what replaces a long document no weak model finishes reading.
 //
-// THE TEXT LIVES HERE AND NOWHERE ELSE — the core (`automation.json`) does NOT carry a copy. The doors
-// attach the relevant instruction to what they return (`api/work` gives each waiting object the
-// instruction of its kind; `api/core` gives the root ones with the cover), so a model reads the law
-// exactly where it reads the object — while the text itself exists once.
+// WHERE THE TEXT LIVES: `_instructions/<name>.md` — one file per name, and nowhere else. The object in
+// the core carries the NAME of its instruction (`systemInstructionName`), never a copy of the text: the
+// link is visible right in the object, and costs ONE WORD instead of ~1 800 bytes. Nineteen copies of the
+// text would have doubled the core file (~11 700 tokens on every full read); nineteen names cost ~400.
 //
-// That single home also settles the question of editing: a model cannot rewrite an instruction it never
-// receives as data. Changing one is a deliberate act in THIS file.
-//
-// The cost this avoids is real: 19 places in the core × ~1 800 bytes each ≈ 35 KB — the copies alone
-// would have DOUBLED the core file and cost ~11 700 tokens on every full read.
-//
-// They start empty on purpose: the owner writes them in, one by one, and each of them replaces a piece of
-// `NODE-TREE-RULES.md`.
-export const SYSTEM_INSTRUCTIONS = {
-  // THE STARTING INSTRUCTION. The passport is the first object read, so this is where an agent is told
-  // HOW to work here at all — the doors it has, and the order that keeps its context small.
-  passport: [
-    "You develop THIS automation and nothing else. Its whole description is this core; its laws come as a",
-    "digest, not as a schema file.",
-    "DOORS (relative to this automation's address): GET api/core — the cover: passport, counts and the LAW",
-    "DIGEST (what connects to what, group quotas, channels, what is never writable); GET api/core?select=",
-    "<address> — one object (node:<cuid>, edge:<cuid>, tab:<name>, entity:<tab>/<cuid>, useCase:<cuid>,",
-    "group:<input|middle|output>, or a root object; ?select=all is the whole core and is a deliberate,",
-    "expensive choice); GET api/work — ONLY the objects waiting for work; POST api/patch {address, set} —",
-    "change ONE object (also {op:\"add\", group, node} and {op:\"delete\", address}).",
-    "ORDER OF WORK. First iteration: read api/core (cover + law digest), then the objects you actually need.",
-    "Second and every later iteration: START AT api/work — an empty list means there is nothing to do and",
-    "is a lawful end. Read the full schema only when the digest was not enough to explain a refusal.",
-    "HOW THE OWNER TALKS TO YOU. He does not write you letters: he leaves a record ON an object — his own",
-    "words in info.crudUser, or a warning. That record IS the task; api/work returns exactly those objects.",
-    "WRITING. Never rewrite the core file: one object, one patch, by address. systemInstruction, cuid, kind",
-    "and the ports are refused by name — they are law, not data. When you finish an object, replace the",
-    "owner's words with your own account of what now exists (info: {aiSummary}) and set status",
-    "\"materialized\". Blocked on something you cannot obtain? Do not guess and do not retry: write a warning",
-    "on that object and go on to the next one.",
-    "AT THE END of a round of work, append one version to history: the date as dd-mm-yyyy hh:mm:ss, how many",
-    "objects you created, updated or deleted, and up to 500 characters saying what changed.",
-  ].join(" "),
-  fracteraPro: "",
-  graph: "",
-  nodes: "", // for ALL nodes, whatever their kind
-  "group.input": "",
-  "group.middle": "",
-  "group.output": "",
-  "kind.input": "",
-  "kind.input-connector": "",
-  "kind.transform": "",
-  "kind.condition-success": "",
-  "kind.condition-failure": "",
-  "kind.output": "",
-  "kind.output-connector": "",
-  components: "", // for ALL components
-  tab: "", // for every tab
-  useCases: "",
-  history: "",
-} as const;
+// The schema therefore knows only the LIST of lawful names and demands the right one of every object — a
+// node carries `nodes`, a tab `tab`, the input group `group.input`. The name cannot be swapped: it is law,
+// merely a cheap one. The owner edits the law as plain markdown, with no rebuild and no code change.
+export const SYSTEM_INSTRUCTION_NAMES = [
+  "passport", // the STARTING instruction: how to work here at all (doors, order of iterations)
+  "fracteraPro",
+  "graph",
+  "nodes", // for ALL nodes, whatever their kind
+  "group.input",
+  "group.middle",
+  "group.output",
+  "kind.input",
+  "kind.input-connector",
+  "kind.transform",
+  "kind.condition-success",
+  "kind.condition-failure",
+  "kind.output",
+  "kind.output-connector",
+  "components", // for ALL components
+  "tab", // for every tab
+  "useCases",
+  "history",
+] as const;
 
-export type SystemInstructionKey = keyof typeof SYSTEM_INSTRUCTIONS;
+export const SystemInstructionNameSchema = z.enum(SYSTEM_INSTRUCTION_NAMES);
+export type SystemInstructionName = (typeof SYSTEM_INSTRUCTION_NAMES)[number];
 
-/** The instruction a door attaches to an object of this kind. */
-export const instructionFor = (key: SystemInstructionKey): string => SYSTEM_INSTRUCTIONS[key];
+/** The field an object carries: the NAME of its law, pinned to the one that governs this kind of object. */
+const instructionName = (name: SystemInstructionName) =>
+  z.string().refine((value) => value === name, {
+    message: `this object is governed by the instruction "${name}" — the name is law, not a choice`,
+  });
 
 // IDENTITY — every entity that can be pointed at carries a CUID, and nothing else identifies it.
 // A cuid-style id: a leading letter then lowercase alphanumerics — hyphen-free and never all-digits, so a
@@ -168,6 +144,7 @@ export const SharingSchema = z.enum(["private", "public"]);
 
 export const PassportSchema = z
   .object({
+    systemInstructionName: instructionName("passport"),
     title: z.string().min(1, "the automation must have a title"),
     description: z.string(),
     type: AutomationTypeSchema,
@@ -180,6 +157,7 @@ export const PassportSchema = z
     // speak of: an instruction that disappears with the feature could never explain how to turn it on.
     fracteraPro: z
       .object({
+        systemInstructionName: instructionName("fracteraPro"),
         config: FracteraProSchema.nullable(),
       })
       .strict(),
@@ -434,6 +412,7 @@ export const GroupNameSchema = z.enum(["input", "middle", "output"]);
 // its value schema by key).
 export const KindPolicySchema = z
   .object({
+    systemInstructionName: SystemInstructionNameSchema,
     deletion: PermissionSchema,
     addition: PermissionSchema,
     minNodes: z.number().int().positive(),
@@ -492,6 +471,7 @@ const sameKinds = (a: readonly string[], b: readonly string[]) => a.length === b
 const groupOf = (name: z.infer<typeof GroupNameSchema>) =>
   z
     .object({
+      systemInstructionName: instructionName(`group.${name}` as SystemInstructionName),
       minKinds: z.number().int().positive(),
       // the keys are node kinds, but the record is deliberately PARTIAL: a group names only its own kinds.
       // (`z.record(NodeKindSchema, …)` would demand every kind of the enum in every group.) The keys are
@@ -523,6 +503,14 @@ const groupOf = (name: z.infer<typeof GroupNameSchema>) =>
         });
         if (declared.minNodes !== rule.minNodes) {
           ctx.addIssue({ code: "custom", path: ["kinds", kind, "minNodes"], message: `there are never fewer than ${rule.minNodes} "${kind}" node(s)` });
+        }
+        // each kind names ITS OWN law — `kind.transform` governs transforms and nothing else
+        if (declared.systemInstructionName !== `kind.${kind}`) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["kinds", kind, "systemInstructionName"],
+            message: `a "${kind}" is governed by the instruction "kind.${kind}" — the name is law, not a choice`,
+          });
         }
       });
 
@@ -570,6 +558,7 @@ const groupOf = (name: z.infer<typeof GroupNameSchema>) =>
 
 export const NodesSchema = z
   .object({
+    systemInstructionName: instructionName("nodes"),
     // the instruction for ALL nodes, whatever their kind — the per-kind ones live in each group's `kinds`
     groups: z
       .object({
@@ -603,6 +592,7 @@ export const EdgeSchema = z
 // unique cuids, both ends of an edge existing, and the direction being lawful for the kind.
 export const GraphSchema = z
   .object({
+    systemInstructionName: instructionName("graph"),
     nodes: NodesSchema,
     edges: z.array(EdgeSchema),
   })
@@ -732,6 +722,7 @@ export const EntitySchema = z
 
 export const TabSchema = z
   .object({
+    systemInstructionName: instructionName("tab"),
     name: z.string().min(1),
     presence: PresenceSchema,
     ...buildRecord,
@@ -750,6 +741,7 @@ export const TabSchema = z
 
 export const ComponentsSchema = z
   .object({
+    systemInstructionName: instructionName("components"),
     tabs: z.array(TabSchema),
   })
   .strict();
@@ -774,6 +766,7 @@ export const UseCaseSchema = z
 // single case (each one is fine on its own), so it has nowhere else to live.
 export const UseCasesSchema = z
   .object({
+    systemInstructionName: instructionName("useCases"),
     warnings: z.array(WarningSchema),
     cases: z.array(UseCaseSchema),
   })
@@ -813,6 +806,7 @@ export const VersionSchema = z
 
 export const HistorySchema = z
   .object({
+    systemInstructionName: instructionName("history"),
     versions: z.array(VersionSchema),
   })
   .strict()

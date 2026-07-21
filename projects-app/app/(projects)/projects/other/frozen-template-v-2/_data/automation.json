@@ -1,5 +1,6 @@
 {
   "passport": {
+    "systemInstructionName": "passport",
     "title": "Frozen template v2",
     "description": "",
     "type": "stream",
@@ -7,6 +8,7 @@
     "author": "",
     "sharing": "private",
     "fracteraPro": {
+      "systemInstructionName": "fracteraPro",
       "config": null
     },
     "info": {
@@ -14,17 +16,22 @@
     }
   },
   "graph": {
+    "systemInstructionName": "graph",
     "nodes": {
+      "systemInstructionName": "nodes",
       "groups": {
         "input": {
+          "systemInstructionName": "group.input",
           "minKinds": 2,
           "kinds": {
             "input": {
+              "systemInstructionName": "kind.input",
               "deletion": "forbidden",
               "addition": "allowed",
               "minNodes": 6
             },
             "input-connector": {
+              "systemInstructionName": "kind.input-connector",
               "deletion": "forbidden",
               "addition": "forbidden",
               "minNodes": 1
@@ -260,19 +267,23 @@
           ]
         },
         "middle": {
+          "systemInstructionName": "group.middle",
           "minKinds": 3,
           "kinds": {
             "transform": {
+              "systemInstructionName": "kind.transform",
               "deletion": "allowed",
               "addition": "allowed",
               "minNodes": 1
             },
             "condition-success": {
+              "systemInstructionName": "kind.condition-success",
               "deletion": "allowed",
               "addition": "allowed",
               "minNodes": 1
             },
             "condition-failure": {
+              "systemInstructionName": "kind.condition-failure",
               "deletion": "allowed",
               "addition": "allowed",
               "minNodes": 1
@@ -387,14 +398,17 @@
           ]
         },
         "output": {
+          "systemInstructionName": "group.output",
           "minKinds": 2,
           "kinds": {
             "output": {
+              "systemInstructionName": "kind.output",
               "deletion": "forbidden",
               "addition": "allowed",
               "minNodes": 8
             },
             "output-connector": {
+              "systemInstructionName": "kind.output-connector",
               "deletion": "forbidden",
               "addition": "forbidden",
               "minNodes": 1
@@ -717,8 +731,10 @@
     ]
   },
   "components": {
+    "systemInstructionName": "components",
     "tabs": [
       {
+        "systemInstructionName": "tab",
         "name": "calendar",
         "presence": "expanded",
         "info": {
@@ -742,6 +758,7 @@
         ]
       },
       {
+        "systemInstructionName": "tab",
         "name": "analytics",
         "presence": "collapsed",
         "info": {
@@ -767,10 +784,12 @@
     ]
   },
   "useCases": {
+    "systemInstructionName": "useCases",
     "warnings": [],
     "cases": []
   },
   "history": {
+    "systemInstructionName": "history",
     "versions": []
   }
 }

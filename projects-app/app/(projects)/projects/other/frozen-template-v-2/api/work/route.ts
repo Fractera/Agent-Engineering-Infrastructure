@@ -14,7 +14,7 @@ export const runtime = "nodejs";
 export async function GET(req: NextRequest) {
   if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const core = await readCore();
-  const pending = pendingWork(core);
+  const pending = await pendingWork(core);
   return NextResponse.json({
     count: pending.length,
     pending,

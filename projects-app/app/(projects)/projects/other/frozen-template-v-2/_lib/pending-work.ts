@@ -1,4 +1,5 @@
-import { SYSTEM_INSTRUCTIONS, allNodes, type Automation, type Info, type Warning } from "../_data/automation.schema";
+import { allNodes, type Automation, type Info, type SystemInstructionName, type Warning } from "../_data/automation.schema";
+import { readInstruction } from "./instructions";
 import { addressText, type Address } from "./core-io";
 
 // «ЧТО ЖДЁТ РАБОТЫ» — как владелец разговаривает с агентом.
@@ -42,27 +43,27 @@ const item = (
   };
 };
 
-export function pendingWork(core: Automation): WorkItem[] {
+export async function pendingWork(core: Automation): Promise<WorkItem[]> {
   const found: (WorkItem | null)[] = [];
 
   // the automation as a whole — the owner may instruct it, not only its parts
-  found.push(item({ object: "passport" }, SYSTEM_INSTRUCTIONS.passport, core.passport.title, core.passport.info, []));
+  found.push(item({ object: "passport" }, await readInstruction("passport"), core.passport.title, core.passport.info, []));
 
   // the set of use cases — a CONFLICT between cases belongs to no single case
-  found.push(item({ object: "useCases" }, SYSTEM_INSTRUCTIONS.useCases, "use cases", null, core.useCases.warnings));
+  found.push(item({ object: "useCases" }, await readInstruction("useCases"), "use cases", null, core.useCases.warnings));
 
   // nodes, each with the instruction of ITS kind — the law it is developed by
   for (const node of allNodes(core.graph.nodes)) {
-    const key = `kind.${node.kind}` as keyof typeof SYSTEM_INSTRUCTIONS;
-    found.push(item({ object: "node", cuid: node.cuid }, SYSTEM_INSTRUCTIONS[key], node.name, node.info, node.warnings, node.status));
+    const key = `kind.${node.kind}` as SystemInstructionName;
+    found.push(item({ object: "node", cuid: node.cuid }, await readInstruction(key), node.name, node.info, node.warnings, node.status));
   }
 
   // tabs and the entities inside them
   for (const tab of core.components.tabs) {
-    found.push(item({ object: "tab", name: tab.name }, SYSTEM_INSTRUCTIONS.tab, tab.name, tab.info, tab.warnings, tab.status));
+    found.push(item({ object: "tab", name: tab.name }, await readInstruction("tab"), tab.name, tab.info, tab.warnings, tab.status));
     for (const entity of tab.entities) {
       found.push(
-        item({ object: "entity", tab: tab.name, cuid: entity.cuid }, SYSTEM_INSTRUCTIONS.tab, entity.name, entity.info, entity.warnings, entity.status),
+        item({ object: "entity", tab: tab.name, cuid: entity.cuid }, await readInstruction("tab"), entity.name, entity.info, entity.warnings, entity.status),
       );
     }
   }

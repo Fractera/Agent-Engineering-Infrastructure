@@ -2,11 +2,13 @@ import { type NextRequest, NextResponse } from "next/server";
 import { authorize } from "@/lib/nodes";
 import { readCore, locate, type Address } from "../../_lib/core-io";
 import { lawDigest } from "../../_lib/law-digest";
-import { allNodes, SYSTEM_INSTRUCTIONS, type SystemInstructionKey } from "../../_data/automation.schema";
+import { allNodes, type SystemInstructionName } from "../../_data/automation.schema";
+import { readInstruction } from "../../_lib/instructions";
 
-// The law is attached to what is returned, not stored in the core: one authored text, read where the
-// object is read. Which instruction belongs to which address:
-const instructionKey = (a: Address): SystemInstructionKey => {
+// The object names its law (`systemInstructionName`); the door reads that named file and attaches the
+// TEXT to the answer, so a model gets the law where it gets the object — while the text itself exists in
+// exactly one place, `_instructions/<name>.md`.
+const instructionOf = (a: Address): SystemInstructionName => {
   switch (a.object) {
     case "node":
       return "nodes"; // the kind's own instruction rides with the object below
@@ -18,7 +20,7 @@ const instructionKey = (a: Address): SystemInstructionKey => {
     case "useCase":
       return "useCases";
     default:
-      return a.object as SystemInstructionKey;
+      return a.object as SystemInstructionName;
   }
 };
 
@@ -66,7 +68,7 @@ export async function GET(req: NextRequest) {
   if (!select) {
     const nodes = allNodes(core.graph.nodes);
     return NextResponse.json({
-      systemInstruction: SYSTEM_INSTRUCTIONS.passport, // the starting instruction: how to work here at all
+      systemInstruction: await readInstruction("passport"), // the starting instruction: how to work here at all
       passport: core.passport,
       counts: {
         nodes: nodes.length,
@@ -85,13 +87,13 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  if (select === "all") return NextResponse.json({ systemInstruction: SYSTEM_INSTRUCTIONS.passport, ...core });
+  if (select === "all") return NextResponse.json({ systemInstruction: await readInstruction("passport"), ...core });
 
   if (select.startsWith("group:")) {
     const name = select.slice("group:".length) as "input" | "middle" | "output";
     const group = core.graph.nodes.groups[name];
     return group
-      ? NextResponse.json({ systemInstruction: SYSTEM_INSTRUCTIONS[`group.${name}`], group: name, ...group })
+      ? NextResponse.json({ systemInstruction: await readInstruction(`group.${name}`), group: name, ...group })
       : NextResponse.json({ error: `no group named "${name}" — there are input, middle, output` }, { status: 400 });
   }
 
@@ -103,8 +105,8 @@ export async function GET(req: NextRequest) {
   // a node also carries the instruction of ITS KIND — the law it is developed by
   const kind = address.object === "node" ? (found.target.kind as string) : null;
   return NextResponse.json({
-    systemInstruction: SYSTEM_INSTRUCTIONS[instructionKey(address)],
-    ...(kind ? { kindInstruction: SYSTEM_INSTRUCTIONS[`kind.${kind}` as SystemInstructionKey] } : {}),
+    systemInstruction: await readInstruction(instructionOf(address)),
+    ...(kind ? { kindInstruction: await readInstruction(`kind.${kind}` as SystemInstructionName) } : {}),
     ...found.target,
   });
 }
