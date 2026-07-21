@@ -2,16 +2,14 @@
 
 import { useState } from "react";
 import { chromeStrings } from "./i18n";
-import { SparkleIcon, CloseIcon } from "./icons";
+import { SparkleIcon } from "./icons";
+import HowItWorksModal from "./how-it-works-modal.client";
 
-// «КАК ЭТО РАБОТАЕТ» (публичная поверхность) — иконка Sparkle в правом верхнем углу открывает модальное
-// окно по центру: max-height 600px, вертикальная прокрутка, заголовок на языке владельца. Тело пока
-// плейсхолдер — ответ на вопрос «как работает автоматизация» появится здесь из passport.howItWorks
-// (шаг 265). Кнопка деградирует без JS (это допускается каноном) — текст остаётся на странице.
+// «КАК ЭТО РАБОТАЕТ» на ПУБЛИЧНОЙ поверхности — иконка Sparkle в правом верхнем углу открывает общую
+// модалку. Деградирует без JS (это допускается каноном) — на странице остаётся сам герой.
 export default function HowItWorks({ lang }: { lang: string }) {
   const L = chromeStrings(lang);
   const [open, setOpen] = useState(false);
-
   return (
     <>
       <button
@@ -23,33 +21,7 @@ export default function HowItWorks({ lang }: { lang: string }) {
       >
         <SparkleIcon className="size-4" />
       </button>
-
-      {open ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-          onClick={() => setOpen(false)}
-        >
-          <div
-            role="dialog"
-            aria-label={L.howItWorks}
-            onClick={(e) => e.stopPropagation()}
-            className="flex max-h-[600px] w-full max-w-[600px] flex-col overflow-hidden rounded-lg border bg-background shadow-xl"
-          >
-            <div className="flex items-center justify-between border-b px-4 py-3">
-              <span className="flex items-center gap-2 text-sm font-semibold">
-                <SparkleIcon className="size-4" />
-                {L.howItWorks}
-              </span>
-              <button type="button" onClick={() => setOpen(false)} aria-label={L.cancel} className="text-muted-foreground hover:text-foreground">
-                <CloseIcon className="size-4" />
-              </button>
-            </div>
-            <div className="overflow-y-auto p-4">
-              <p className="text-sm text-muted-foreground">{L.howItWorksEmpty}</p>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <HowItWorksModal lang={lang} open={open} onClose={() => setOpen(false)} />
     </>
   );
 }
