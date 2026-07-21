@@ -109,15 +109,17 @@ export async function POST(req: NextRequest) {
     if (!target) return bad(`no node with cuid "${to}"`, 404);
     if (core.graph.edges.some((e) => e.from === from && e.to === to)) return bad("these two nodes are already connected");
 
+    const cuid = createCuid();
     core.graph.edges.push({
-      cuid: createCuid(),
+      cuid,
       from,
       to,
       state: source.state === "visible" && target.state === "visible" ? "visible" : "hidden",
     });
 
+    // the new edge's cuid goes back in the answer — it is the only way to address it later
     const written = await writeCore(core);
-    return written.ok ? NextResponse.json({ ok: true }) : bad(written.errors, 422);
+    return written.ok ? NextResponse.json({ ok: true, cuid }) : bad(written.errors, 422);
   }
 
   // ─── УБРАТЬ РЕБРО ─────────────────────────────────────────────────────────────────────────────────
