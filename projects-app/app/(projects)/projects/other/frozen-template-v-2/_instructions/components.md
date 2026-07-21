@@ -14,6 +14,26 @@ has not been delivered. Node work and component work go hand in hand — finish 
   calendars. Need a second calendar? Add an ENTITY to the existing tab — never a second calendar tab.
 - `name` must match a folder in `_components/`; that is how the page finds the tab's code.
 
+## What you actually write — plain React, live without a rebuild
+
+A component is a PURE REACT COMPONENT and nothing more exotic. It is compiled the moment you save it
+and is on the page immediately — on the owner's cockpit and on the public mirror alike. THERE IS NO
+DEPLOYMENT IN YOUR FLOW: never ask for a build, never wait for one, never tell the owner to restart
+anything. If your change is not visible, it did not compile — read the error and fix it.
+
+The contract that makes that possible is deliberately strict:
+
+- ONE DEFAULT EXPORT, an async server component: `export default async function Calendar() { … }`.
+- PLAIN JSX. The runtime is bundled in for you; you do not import React.
+- NO IMPORT STATEMENTS AT ALL. A foreign import that works today becomes a dependency nobody owns
+  tomorrow, and it breaks the law that this folder must run unchanged in any other account.
+- DATA COMES FROM THIS AUTOMATION'S OWN DOORS, fetched by their address — never from another
+  automation, never from a platform module.
+- STYLING is inline or the utility classes already present in the page.
+
+Everything you cannot express under that contract is a signal, not an obstacle: say so in a warning
+rather than reaching outside the folder.
+
 ## Where the components appear
 
 - THE OWNER'S COCKPIT — `projects.<domain>/projects/<category>/<slug>` (port 3003 when there is no
