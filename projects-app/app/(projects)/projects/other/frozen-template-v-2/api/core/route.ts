@@ -2,7 +2,25 @@ import { type NextRequest, NextResponse } from "next/server";
 import { authorize } from "@/lib/nodes";
 import { readCore, locate, type Address } from "../../_lib/core-io";
 import { lawDigest } from "../../_lib/law-digest";
-import { allNodes } from "../../_data/automation.schema";
+import { allNodes, SYSTEM_INSTRUCTIONS, type SystemInstructionKey } from "../../_data/automation.schema";
+
+// The law is attached to what is returned, not stored in the core: one authored text, read where the
+// object is read. Which instruction belongs to which address:
+const instructionKey = (a: Address): SystemInstructionKey => {
+  switch (a.object) {
+    case "node":
+      return "nodes"; // the kind's own instruction rides with the object below
+    case "edge":
+      return "graph";
+    case "tab":
+    case "entity":
+      return "tab";
+    case "useCase":
+      return "useCases";
+    default:
+      return a.object as SystemInstructionKey;
+  }
+};
 
 // ДВЕРЬ ЧТЕНИЯ — СРЕЗОМ, а не целиком.
 //
@@ -48,6 +66,7 @@ export async function GET(req: NextRequest) {
   if (!select) {
     const nodes = allNodes(core.graph.nodes);
     return NextResponse.json({
+      systemInstruction: SYSTEM_INSTRUCTIONS.passport, // the starting instruction: how to work here at all
       passport: core.passport,
       counts: {
         nodes: nodes.length,
@@ -66,18 +85,26 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  if (select === "all") return NextResponse.json(core);
+  if (select === "all") return NextResponse.json({ systemInstruction: SYSTEM_INSTRUCTIONS.passport, ...core });
 
   if (select.startsWith("group:")) {
     const name = select.slice("group:".length) as "input" | "middle" | "output";
     const group = core.graph.nodes.groups[name];
     return group
-      ? NextResponse.json({ group: name, ...group })
+      ? NextResponse.json({ systemInstruction: SYSTEM_INSTRUCTIONS[`group.${name}`], group: name, ...group })
       : NextResponse.json({ error: `no group named "${name}" — there are input, middle, output` }, { status: 400 });
   }
 
   const address = parseAddress(select);
   if (!address) return NextResponse.json({ error: `cannot read the address "${select}"` }, { status: 400 });
   const found = locate(core, address);
-  return found.ok ? NextResponse.json(found.target) : NextResponse.json({ error: found.error }, { status: 404 });
+  if (!found.ok) return NextResponse.json({ error: found.error }, { status: 404 });
+
+  // a node also carries the instruction of ITS KIND — the law it is developed by
+  const kind = address.object === "node" ? (found.target.kind as string) : null;
+  return NextResponse.json({
+    systemInstruction: SYSTEM_INSTRUCTIONS[instructionKey(address)],
+    ...(kind ? { kindInstruction: SYSTEM_INSTRUCTIONS[`kind.${kind}` as SystemInstructionKey] } : {}),
+    ...found.target,
+  });
 }

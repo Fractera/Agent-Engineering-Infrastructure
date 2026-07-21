@@ -132,7 +132,8 @@ export const WRITABLE: Record<Address["object"], string[]> = {
   useCase: ["text", "status"],
 };
 
-const PINNED_REFUSAL = "the system instruction is fixed — it is authored in automation.schema.ts and cannot be written here";
+const PINNED_REFUSAL =
+  "a system instruction is not part of the core at all — it is authored in automation.schema.ts and attached by the doors when they answer";
 const DERIVED_REFUSAL: Record<string, string> = {
   cuid: "a cuid is identity — it is never rewritten",
   kind: "a node's kind is for life — another kind means another node (add it, hide this one)",

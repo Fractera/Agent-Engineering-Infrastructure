@@ -6,15 +6,20 @@ import { z } from "zod";
 
 const TEXT_LIMIT = 200;
 
-// ─── SYSTEM INSTRUCTIONS — the pinned texts ─────────────────────────────────────────────────────────
-// Each entity of the core carries a SYSTEM INSTRUCTION: the short, authoritative text telling a model what
-// is expected of THAT entity, read where the entity itself is read. This is what replaces a long document
-// no weak model finishes reading.
+// ─── SYSTEM INSTRUCTIONS — the authored texts, in ONE place ─────────────────────────────────────────
+// Each kind of entity has a SYSTEM INSTRUCTION: the short, authoritative text telling a model what is
+// expected of THAT entity. This is what replaces a long document no weak model finishes reading.
 //
-// THE TEXTS ARE FIXED. The authored value lives here and nowhere else; the core must repeat it exactly. A
-// model that edits an instruction in `automation.json` does not "change the rules" — it fails validation,
-// by name of the field. Changing an instruction is therefore a deliberate act in THIS file, never a side
-// effect of a generation pass.
+// THE TEXT LIVES HERE AND NOWHERE ELSE — the core (`automation.json`) does NOT carry a copy. The doors
+// attach the relevant instruction to what they return (`api/work` gives each waiting object the
+// instruction of its kind; `api/core` gives the root ones with the cover), so a model reads the law
+// exactly where it reads the object — while the text itself exists once.
+//
+// That single home also settles the question of editing: a model cannot rewrite an instruction it never
+// receives as data. Changing one is a deliberate act in THIS file.
+//
+// The cost this avoids is real: 19 places in the core × ~1 800 bytes each ≈ 35 KB — the copies alone
+// would have DOUBLED the core file and cost ~11 700 tokens on every full read.
 //
 // They start empty on purpose: the owner writes them in, one by one, and each of them replaces a piece of
 // `NODE-TREE-RULES.md`.
@@ -64,12 +69,8 @@ export const SYSTEM_INSTRUCTIONS = {
 
 export type SystemInstructionKey = keyof typeof SYSTEM_INSTRUCTIONS;
 
-// A pinned field: it must carry exactly the authored text. This is the machine form of "approved, and not
-// to be edited by a model".
-const pinned = (key: SystemInstructionKey) =>
-  z.string().refine((value) => value === SYSTEM_INSTRUCTIONS[key], {
-    message: `the system instruction "${key}" is fixed — it is authored in automation.schema.ts and a model may not edit it here`,
-  });
+/** The instruction a door attaches to an object of this kind. */
+export const instructionFor = (key: SystemInstructionKey): string => SYSTEM_INSTRUCTIONS[key];
 
 // IDENTITY — every entity that can be pointed at carries a CUID, and nothing else identifies it.
 // A cuid-style id: a leading letter then lowercase alphanumerics — hyphen-free and never all-digits, so a
@@ -167,7 +168,6 @@ export const SharingSchema = z.enum(["private", "public"]);
 
 export const PassportSchema = z
   .object({
-    systemInstruction: pinned("passport"),
     title: z.string().min(1, "the automation must have a title"),
     description: z.string(),
     type: AutomationTypeSchema,
@@ -180,7 +180,6 @@ export const PassportSchema = z
     // speak of: an instruction that disappears with the feature could never explain how to turn it on.
     fracteraPro: z
       .object({
-        systemInstruction: pinned("fracteraPro"),
         config: FracteraProSchema.nullable(),
       })
       .strict(),
@@ -435,7 +434,6 @@ export const GroupNameSchema = z.enum(["input", "middle", "output"]);
 // its value schema by key).
 export const KindPolicySchema = z
   .object({
-    systemInstruction: z.string(),
     deletion: PermissionSchema,
     addition: PermissionSchema,
     minNodes: z.number().int().positive(),
@@ -494,7 +492,6 @@ const sameKinds = (a: readonly string[], b: readonly string[]) => a.length === b
 const groupOf = (name: z.infer<typeof GroupNameSchema>) =>
   z
     .object({
-      systemInstruction: pinned(`group.${name}` as SystemInstructionKey),
       minKinds: z.number().int().positive(),
       // the keys are node kinds, but the record is deliberately PARTIAL: a group names only its own kinds.
       // (`z.record(NodeKindSchema, …)` would demand every kind of the enum in every group.) The keys are
@@ -526,15 +523,6 @@ const groupOf = (name: z.infer<typeof GroupNameSchema>) =>
         });
         if (declared.minNodes !== rule.minNodes) {
           ctx.addIssue({ code: "custom", path: ["kinds", kind, "minNodes"], message: `there are never fewer than ${rule.minNodes} "${kind}" node(s)` });
-        }
-        // the kind's system instruction is pinned exactly like every other one
-        const key = `kind.${kind}` as SystemInstructionKey;
-        if (declared.systemInstruction !== SYSTEM_INSTRUCTIONS[key]) {
-          ctx.addIssue({
-            code: "custom",
-            path: ["kinds", kind, "systemInstruction"],
-            message: `the system instruction "${key}" is fixed — it is authored in automation.schema.ts and a model may not edit it here`,
-          });
         }
       });
 
@@ -583,7 +571,6 @@ const groupOf = (name: z.infer<typeof GroupNameSchema>) =>
 export const NodesSchema = z
   .object({
     // the instruction for ALL nodes, whatever their kind — the per-kind ones live in each group's `kinds`
-    systemInstruction: pinned("nodes"),
     groups: z
       .object({
         input: groupOf("input"),
@@ -616,7 +603,6 @@ export const EdgeSchema = z
 // unique cuids, both ends of an edge existing, and the direction being lawful for the kind.
 export const GraphSchema = z
   .object({
-    systemInstruction: pinned("graph"),
     nodes: NodesSchema,
     edges: z.array(EdgeSchema),
   })
@@ -746,7 +732,6 @@ export const EntitySchema = z
 
 export const TabSchema = z
   .object({
-    systemInstruction: pinned("tab"),
     name: z.string().min(1),
     presence: PresenceSchema,
     ...buildRecord,
@@ -765,7 +750,6 @@ export const TabSchema = z
 
 export const ComponentsSchema = z
   .object({
-    systemInstruction: pinned("components"),
     tabs: z.array(TabSchema),
   })
   .strict();
@@ -790,7 +774,6 @@ export const UseCaseSchema = z
 // single case (each one is fine on its own), so it has nowhere else to live.
 export const UseCasesSchema = z
   .object({
-    systemInstruction: pinned("useCases"),
     warnings: z.array(WarningSchema),
     cases: z.array(UseCaseSchema),
   })
@@ -830,7 +813,6 @@ export const VersionSchema = z
 
 export const HistorySchema = z
   .object({
-    systemInstruction: pinned("history"),
     versions: z.array(VersionSchema),
   })
   .strict()
