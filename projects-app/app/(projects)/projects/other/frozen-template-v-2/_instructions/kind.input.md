@@ -8,7 +8,7 @@ CHANNEL: `ioType` is one key of the input vocabulary — `control-panel`, `webho
 
 ITS FUNCTION does exactly one thing: take the envelope the channel pushed in and RETURN THE SHAPE THE
 MIDDLE ALREADY CONSUMES — the same key names every other door produces. Parsing belongs here;
-deciding does not, and neither does business work. Code lives in `_functions/<function.name>.ts`.
+deciding does not, and neither does business work. Code lives in `_lib/nodes/<function-name>.ts`.
 
 - The event ARRIVES; you never fetch it. No polling loop, no scheduled fetch of your own input.
 - `cron` is the one channel that is a clock rather than a message: its envelope carries the tick time,

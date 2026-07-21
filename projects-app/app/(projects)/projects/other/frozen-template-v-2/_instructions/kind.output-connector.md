@@ -16,4 +16,4 @@ automation, do not design a protocol, do not assume anyone is listening.
 - There is exactly ONE of them: adding a second is refused, deleting this one is refused.
 - Its `ioType` names the destination the handed-over data would speak, from the output vocabulary.
 - Its function shapes the data for handover and nothing more. Code lives in
-  `_functions/<function.name>.ts`.
+  `_lib/nodes/<function-name>.ts`.

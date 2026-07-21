@@ -67,7 +67,7 @@ export function lawDigest(): LawDigest {
       "a node carries exactly ONE function — a node that seems to need two is two nodes",
       "hidden node = its function does not run; it passes data through like an edge without logic",
       "an unused door is HIDDEN, never deleted — that is how an automation keeps the ability to join a group",
-      "a function name is unique in this automation — it is the address of its file, `_functions/<name>.ts`",
+      "a function name is unique in this automation — it addresses its file, `_lib/nodes/<kebab-name>.ts`",
       "an edge is lawful when the target's kind is named in the source's out-connections",
       "an edge is visible only when both its ends are visible",
       "frozen-template = every node hidden; real-project = at least one visible node, one use case and an author",

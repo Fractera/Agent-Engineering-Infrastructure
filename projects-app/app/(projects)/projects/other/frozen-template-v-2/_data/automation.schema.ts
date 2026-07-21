@@ -627,7 +627,7 @@ export const GraphSchema = z
     });
 
     // A FUNCTION NAME IS AN ADDRESS. The code of a node's function lives in
-    // `_functions/<function.name>.ts` — one file per function — so two nodes claiming the same name
+    // `_lib/nodes/<kebab-of-the-name>.ts` — one file per function — so two nodes claiming the name
     // would claim the same file. The name is also a public contract other nodes call by, which is why
     // it is never renamed; here it is additionally forced to be unique.
     const seenFunctions = new Map<string, string>();

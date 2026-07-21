@@ -5,7 +5,7 @@ PORTS (law, not a choice): `in` — required, from an `input`, another `transfor
 `condition-failure`. It carries NO channel: `ioType` is `null`.
 
 WHAT IT IS FOR: it consumes data and returns DIFFERENT data — parse, normalise, extract, enrich,
-deduplicate, calculate, format. Code lives in `_functions/<function.name>.ts`.
+deduplicate, calculate, format. Code lives in `_lib/nodes/<function-name>.ts`.
 
 - IT NEVER DECIDES WHERE THE FLOW GOES. Choosing a path is a condition's job. If your function is
   about to end in "…and then, depending on the result, do A or B", stop: what you have is a transform

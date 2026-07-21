@@ -6,7 +6,7 @@ continues past it, ever. No channel: `ioType` is `null`.
 WHAT IT IS FOR: it states, in the owner's words, WHY the run stopped here — "no date in the text",
 "the client is not in the list", "the calendar refused". A run that ends at such a node ended
 honestly; a run that dies inside a function with no node to point at is a defect. Code lives in
-`_functions/<function.name>.ts`.
+`_lib/nodes/<function-name>.ts`.
 
 - ONE REASON, ONE NODE. Two different reasons to stop are two failure nodes, not one node with an
   "or" in its name — the owner must see on the canvas WHICH wall his run hit.

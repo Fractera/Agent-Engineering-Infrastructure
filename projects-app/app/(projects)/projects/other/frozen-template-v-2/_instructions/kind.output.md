@@ -8,7 +8,7 @@ DESTINATION: `ioType` is one key of the output vocabulary — `public-page`, `da
 
 ITS FUNCTION takes what the branch handed over, puts it into the form this destination demands, and
 delivers or persists it. Nothing else: no deciding, no enriching — that work belongs upstream. Code
-lives in `_functions/<function.name>.ts`.
+lives in `_lib/nodes/<function-name>.ts`.
 
 - Delivery that fails must THROW. A door that swallows an error reports success the owner will
   discover to be false days later.

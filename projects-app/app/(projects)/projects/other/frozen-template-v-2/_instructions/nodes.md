@@ -15,6 +15,13 @@ One object, never a list.
   receives, and the two must match along every edge you draw. If naming what it returns needs the word
   "and", this is two nodes.
 
+## Where the code lives
+
+`_lib/nodes/<function-name>.ts` — ONE file per function, and the file name is the kebab-case of the
+function name: `ifSuccess` lives in `if-success.ts`, `transformPayload` in `transform-payload.ts`.
+The node says WHAT it does; that folder says HOW. Because the name is the address, no two nodes in
+this automation may claim the same function name — the core refuses it.
+
 ## How the function must behave
 
 - DETERMINISTIC: same input, same result. No model call at run time unless the owner asked for exactly

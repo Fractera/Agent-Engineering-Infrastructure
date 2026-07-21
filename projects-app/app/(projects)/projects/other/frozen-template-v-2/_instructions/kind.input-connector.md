@@ -16,4 +16,4 @@ elsewhere. Do not build an integration, do not call another automation, do not g
 - There is exactly ONE of them: adding a second is refused, deleting this one is refused.
 - Its `ioType` names the channel the incoming work would speak, from the input vocabulary.
 - Its function is the same normalisation an ordinary input door performs: whatever arrives, hand the
-  middle the shape it already consumes. Code lives in `_functions/<function.name>.ts`.
+  middle the shape it already consumes. Code lives in `_lib/nodes/<function-name>.ts`.
