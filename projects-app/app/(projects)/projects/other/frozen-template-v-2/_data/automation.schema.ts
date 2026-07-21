@@ -335,108 +335,149 @@ export const NodeSchema = z.discriminatedUnion("kind", [
 // reads its law locally, without holding the whole table of kinds in its head, and a rule it ignores does
 // not merely go against the documentation — it fails validation.
 //
-//   allowedKinds — the only kinds this group may hold;
-//   deletion     — may a node be removed from this group at all;
-//   addition     — may a new node be put into it;
-//   minNodes     — the floor: how few nodes the group may ever hold.
+// THE QUOTA HAS TWO LEVELS, because one level counts the wrong thing: "at least two nodes" is satisfied by
+// two `input` nodes and no connector at all.
+//
+//   at the GROUP level — `minKinds`: how many DIFFERENT kinds must be present;
+//   at the KIND level  — each kind's own rules, because a connector and an ordinary входной узел do not
+//                        live by the same law:
+//        deletion — may a node of this kind be removed;
+//        addition — may another one be added;
+//        minNodes — how many nodes of this kind there must be.
+//
+// The keys of `kinds` ARE the group's allowed kinds — no second list that could disagree with the first.
 export const PermissionSchema = z.enum(["allowed", "forbidden"]);
 export const GroupNameSchema = z.enum(["input", "middle", "output"]);
 
-type GroupPolicy = {
-  allowedKinds: z.infer<typeof NodeKindSchema>[];
-  deletion: z.infer<typeof PermissionSchema>;
-  addition: z.infer<typeof PermissionSchema>;
-  minNodes: number;
-};
+export const KindPolicySchema = z
+  .object({
+    deletion: PermissionSchema,
+    addition: PermissionSchema,
+    minNodes: z.number().int().positive(),
+  })
+  .strict();
+
+type KindPolicy = z.infer<typeof KindPolicySchema>;
+type GroupPolicy = { minKinds: number; kinds: Partial<Record<z.infer<typeof NodeKindSchema>, KindPolicy>> };
+
+// How many channels an automation is born ready for: EVERY channel of the vocabulary except `custom` —
+// that one is the open door, a node for it is made when it is actually needed. Counted FROM the vocabulary
+// itself, never typed in as a number: a new channel raises the quota by itself, and the two cannot drift.
+const channelCount = (options: readonly string[]) => options.filter((c) => c !== "custom").length;
+export const INPUT_CHANNEL_QUOTA = channelCount(InputChannelSchema.options);
+export const OUTPUT_CHANNEL_QUOTA = channelCount(OutputChannelSchema.options);
 
 // THE GROUP TABLE — the law, stated once. A group's own declaration must repeat its row word for word.
 //
-// The minimums are NOT arbitrary; each is the smallest number the other laws already force:
-//   input  = 2 — one `input` (the automation's own door) + one `input-connector` (the door to a group);
-//   output = 2 — one `output` + one `output-connector`, by the same argument;
-//   middle = 2 — the flow physically cannot reach the exit through fewer: an `input` may lead ONLY into a
-//                `transform`, and an `output` may be entered ONLY from a `condition-success`.
-// Deletion is forbidden in the two outer groups: an unused door is HIDDEN, never removed — that is what
-// keeps an automation able to join a group of automations later.
+// The numbers are NOT arbitrary:
+//   input / output — one node per channel of the vocabulary: the automation is born with the FULL
+//                    inventory of its doors, all hidden, and the builder only ever UNHIDES one. That is
+//                    what makes an automation's composition predictable before it is read.
+//   connectors     — exactly one each: deletion AND addition are both forbidden, so the count can neither
+//                    fall below one nor rise above it.
+//   middle         — one of each kind at the floor, and the group may grow freely: the middle is where the
+//                    automation's real work is decomposed.
 export const GROUP_POLICY: Record<z.infer<typeof GroupNameSchema>, GroupPolicy> = {
   input: {
-    allowedKinds: ["input", "input-connector"],
-    deletion: "forbidden",
-    addition: "allowed",
-    minNodes: 2,
+    minKinds: 2,
+    kinds: {
+      input: { deletion: "forbidden", addition: "allowed", minNodes: INPUT_CHANNEL_QUOTA },
+      "input-connector": { deletion: "forbidden", addition: "forbidden", minNodes: 1 },
+    },
   },
   middle: {
-    allowedKinds: ["transform", "condition-success", "condition-failure"],
-    deletion: "allowed",
-    addition: "allowed",
-    minNodes: 2,
+    minKinds: 3,
+    kinds: {
+      transform: { deletion: "allowed", addition: "allowed", minNodes: 1 },
+      "condition-success": { deletion: "allowed", addition: "allowed", minNodes: 1 },
+      "condition-failure": { deletion: "allowed", addition: "allowed", minNodes: 1 },
+    },
   },
   output: {
-    allowedKinds: ["output", "output-connector"],
-    deletion: "forbidden",
-    addition: "allowed",
-    minNodes: 2,
+    minKinds: 2,
+    kinds: {
+      output: { deletion: "forbidden", addition: "allowed", minNodes: OUTPUT_CHANNEL_QUOTA },
+      "output-connector": { deletion: "forbidden", addition: "forbidden", minNodes: 1 },
+    },
   },
 };
 
 const sameKinds = (a: readonly string[], b: readonly string[]) => a.length === b.length && a.every((v, i) => v === b[i]);
 
-// One group: its four rules + the nodes it holds. The rules are checked against the table, the nodes
-// against the rules.
+// One group: the minimum number of kinds, the per-kind rules, and the nodes. The rules are checked against
+// the table, the nodes against the rules.
 const groupOf = (name: z.infer<typeof GroupNameSchema>) =>
   z
     .object({
-      allowedKinds: z.array(NodeKindSchema).min(1),
-      deletion: PermissionSchema,
-      addition: PermissionSchema,
-      minNodes: z.number().int().positive(),
+      minKinds: z.number().int().positive(),
+      kinds: z.record(NodeKindSchema, KindPolicySchema),
       nodes: z.array(NodeSchema),
     })
     .strict()
     .superRefine((group, ctx) => {
       const law = GROUP_POLICY[name];
+      const lawKinds = Object.keys(law.kinds) as z.infer<typeof NodeKindSchema>[];
 
-      if (!sameKinds(group.allowedKinds, law.allowedKinds)) {
-        ctx.addIssue({ code: "custom", path: ["allowedKinds"], message: `the "${name}" group holds exactly: ${law.allowedKinds.join(", ")}` });
+      if (group.minKinds !== law.minKinds) {
+        ctx.addIssue({ code: "custom", path: ["minKinds"], message: `the "${name}" group carries ${law.minKinds} kinds, not ${group.minKinds}` });
       }
-      (["deletion", "addition"] as const).forEach((rule) => {
-        if (group[rule] !== law[rule]) {
-          ctx.addIssue({ code: "custom", path: [rule], message: `in the "${name}" group ${rule} is "${law[rule]}"` });
+
+      // the declared kinds, and their rules, must repeat the table exactly
+      if (!sameKinds(Object.keys(group.kinds), lawKinds)) {
+        ctx.addIssue({ code: "custom", path: ["kinds"], message: `the "${name}" group holds exactly: ${lawKinds.join(", ")}` });
+      }
+      lawKinds.forEach((kind) => {
+        const declared = group.kinds[kind];
+        const rule = law.kinds[kind]!;
+        if (!declared) return; // already reported above
+        (["deletion", "addition"] as const).forEach((key) => {
+          if (declared[key] !== rule[key]) {
+            ctx.addIssue({ code: "custom", path: ["kinds", kind, key], message: `for "${kind}" ${key} is "${rule[key]}"` });
+          }
+        });
+        if (declared.minNodes !== rule.minNodes) {
+          ctx.addIssue({ code: "custom", path: ["kinds", kind, "minNodes"], message: `there are never fewer than ${rule.minNodes} "${kind}" node(s)` });
         }
       });
-      if (group.minNodes !== law.minNodes) {
-        ctx.addIssue({ code: "custom", path: ["minNodes"], message: `the "${name}" group never holds fewer than ${law.minNodes} nodes` });
-      }
 
       group.nodes.forEach((node, i) => {
-        if (!law.allowedKinds.includes(node.kind)) {
+        if (!lawKinds.includes(node.kind)) {
           ctx.addIssue({
             code: "custom",
             path: ["nodes", i, "kind"],
-            message: `a "${node.kind}" cannot live in the "${name}" group — it holds ${law.allowedKinds.join(", ")}`,
+            message: `a "${node.kind}" cannot live in the "${name}" group — it holds ${lawKinds.join(", ")}`,
           });
         }
       });
 
-      if (group.nodes.length < law.minNodes) {
+      // THE FLOOR and THE CEILING. `deletion: "forbidden"` means the count cannot fall below the floor —
+      // an unused door is HIDDEN, never removed. `addition: "forbidden"` means it cannot rise above it
+      // either: there is exactly one connector, no more.
+      lawKinds.forEach((kind) => {
+        const rule = law.kinds[kind]!;
+        const count = group.nodes.filter((n) => n.kind === kind).length;
+        if (count < rule.minNodes) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["nodes"],
+            message: `the "${name}" group carries ${count} "${kind}" node(s) — never fewer than ${rule.minNodes}; an unused one is hidden, not deleted`,
+          });
+        }
+        if (rule.addition === "forbidden" && count > rule.minNodes) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["nodes"],
+            message: `a second "${kind}" cannot be added — there is exactly ${rule.minNodes} of it`,
+          });
+        }
+      });
+
+      const present = new Set(group.nodes.map((n) => n.kind)).size;
+      if (present < law.minKinds) {
         ctx.addIssue({
           code: "custom",
           path: ["nodes"],
-          message: `the "${name}" group holds ${group.nodes.length} node(s) — its floor is ${law.minNodes}`,
-        });
-      }
-
-      // Where deletion is forbidden, EVERY allowed kind must still be present: that is the machine form of
-      // "never delete, hide instead" — a removed door cannot be hidden away unnoticed.
-      if (law.deletion === "forbidden") {
-        law.allowedKinds.forEach((kind) => {
-          if (!group.nodes.some((n) => n.kind === kind)) {
-            ctx.addIssue({
-              code: "custom",
-              path: ["nodes"],
-              message: `the "${name}" group must always carry a "${kind}" — an unused one is hidden, never deleted`,
-            });
-          }
+          message: `the "${name}" group shows ${present} kind(s) of node — it must carry at least ${law.minKinds}`,
         });
       }
     });
@@ -712,6 +753,7 @@ export type NodeFunction = z.infer<typeof NodeFunctionSchema>;
 export type Node = z.infer<typeof NodeSchema>;
 export type Edge = z.infer<typeof EdgeSchema>;
 export type Permission = z.infer<typeof PermissionSchema>;
+export type KindPolicyType = z.infer<typeof KindPolicySchema>;
 export type GroupName = z.infer<typeof GroupNameSchema>;
 export type Nodes = z.infer<typeof NodesSchema>;
 export type NodeGroup = Nodes["groups"]["input"];

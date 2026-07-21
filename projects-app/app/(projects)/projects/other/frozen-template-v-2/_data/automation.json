@@ -13,13 +13,19 @@
     "nodes": {
       "groups": {
         "input": {
-          "allowedKinds": [
-            "input",
-            "input-connector"
-          ],
-          "deletion": "forbidden",
-          "addition": "allowed",
-          "minNodes": 2,
+          "minKinds": 2,
+          "kinds": {
+            "input": {
+              "deletion": "forbidden",
+              "addition": "allowed",
+              "minNodes": 6
+            },
+            "input-connector": {
+              "deletion": "forbidden",
+              "addition": "forbidden",
+              "minNodes": 1
+            }
+          },
           "nodes": [
             {
               "cuid": "cmruewqs51sbelfc3dc9457a2a3fac",
@@ -86,18 +92,188 @@
               },
               "run": "sequential",
               "estDurationMs": 60000
+            },
+            {
+              "cuid": "cmruqdpjl51eha9a65832422ad3a53",
+              "kind": "input",
+              "name": "Webhook input",
+              "description": "An external system calls in over HTTP.",
+              "state": "hidden",
+              "ioType": "webhook",
+              "info": {
+                "aiSummary": "Заготовка канала «webhook»: объявлена и скрыта, функция появится, когда узел раскроют."
+              },
+              "status": "in-development",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "receiveWebhook",
+                "summary": "Takes the incoming request through the webhook channel.",
+                "accepts": "The raw request as it arrived from the webhook channel.",
+                "returns": "payload — the request, untouched."
+              },
+              "in": {
+                "state": "prohibit",
+                "connections": null
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform"
+                ]
+              },
+              "run": "sequential",
+              "estDurationMs": 60000
+            },
+            {
+              "cuid": "cmruqdpjm51ehb6c5e6bd9a8614a87",
+              "kind": "input",
+              "name": "Cron input",
+              "description": "A scheduled tick fires it on a timer.",
+              "state": "hidden",
+              "ioType": "cron",
+              "info": {
+                "aiSummary": "Заготовка канала «cron»: объявлена и скрыта, функция появится, когда узел раскроют."
+              },
+              "status": "in-development",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "receiveCron",
+                "summary": "Takes the incoming request through the cron channel.",
+                "accepts": "The raw request as it arrived from the cron channel.",
+                "returns": "payload — the request, untouched."
+              },
+              "in": {
+                "state": "prohibit",
+                "connections": null
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform"
+                ]
+              },
+              "run": "sequential",
+              "estDurationMs": 60000
+            },
+            {
+              "cuid": "cmruqdpjm51ehc433ccaf2f7677d66",
+              "kind": "input",
+              "name": "Public Page input",
+              "description": "A form or control on the automation own public page.",
+              "state": "hidden",
+              "ioType": "public-page",
+              "info": {
+                "aiSummary": "Заготовка канала «public-page»: объявлена и скрыта, функция появится, когда узел раскроют."
+              },
+              "status": "in-development",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "receivePublicPage",
+                "summary": "Takes the incoming request through the public-page channel.",
+                "accepts": "The raw request as it arrived from the public-page channel.",
+                "returns": "payload — the request, untouched."
+              },
+              "in": {
+                "state": "prohibit",
+                "connections": null
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform"
+                ]
+              },
+              "run": "sequential",
+              "estDurationMs": 60000
+            },
+            {
+              "cuid": "cmruqdpjm51ehd18d5a1f37ce38e1c",
+              "kind": "input",
+              "name": "Telegram Bot input",
+              "description": "A message sent to the automation own Telegram bot.",
+              "state": "hidden",
+              "ioType": "telegram-bot",
+              "info": {
+                "aiSummary": "Заготовка канала «telegram-bot»: объявлена и скрыта, функция появится, когда узел раскроют."
+              },
+              "status": "in-development",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "receiveTelegramBot",
+                "summary": "Takes the incoming request through the telegram-bot channel.",
+                "accepts": "The raw request as it arrived from the telegram-bot channel.",
+                "returns": "payload — the request, untouched."
+              },
+              "in": {
+                "state": "prohibit",
+                "connections": null
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform"
+                ]
+              },
+              "run": "sequential",
+              "estDurationMs": 60000
+            },
+            {
+              "cuid": "cmruqdpjm51ehe2f58b91a619fdc71",
+              "kind": "input",
+              "name": "User Telegram Chat input",
+              "description": "A message read from the user own Telegram chat.",
+              "state": "hidden",
+              "ioType": "user-telegram-chat",
+              "info": {
+                "aiSummary": "Заготовка канала «user-telegram-chat»: объявлена и скрыта, функция появится, когда узел раскроют."
+              },
+              "status": "in-development",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "receiveUserTelegramChat",
+                "summary": "Takes the incoming request through the user-telegram-chat channel.",
+                "accepts": "The raw request as it arrived from the user-telegram-chat channel.",
+                "returns": "payload — the request, untouched."
+              },
+              "in": {
+                "state": "prohibit",
+                "connections": null
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform"
+                ]
+              },
+              "run": "sequential",
+              "estDurationMs": 60000
             }
           ]
         },
         "middle": {
-          "allowedKinds": [
-            "transform",
-            "condition-success",
-            "condition-failure"
-          ],
-          "deletion": "allowed",
-          "addition": "allowed",
-          "minNodes": 2,
+          "minKinds": 3,
+          "kinds": {
+            "transform": {
+              "deletion": "allowed",
+              "addition": "allowed",
+              "minNodes": 1
+            },
+            "condition-success": {
+              "deletion": "allowed",
+              "addition": "allowed",
+              "minNodes": 1
+            },
+            "condition-failure": {
+              "deletion": "allowed",
+              "addition": "allowed",
+              "minNodes": 1
+            }
+          },
           "nodes": [
             {
               "cuid": "cmruca7ra4n1jsdcdee0feb026f3a4",
@@ -171,17 +347,55 @@
               },
               "run": "sequential",
               "estDurationMs": 60000
+            },
+            {
+              "cuid": "cmruqdpjn51ehmdd7904ad3a6abaf6",
+              "kind": "condition-failure",
+              "name": "If failure",
+              "description": "The branch taken when the middle could not produce a result — the flow ends here.",
+              "state": "hidden",
+              "ioType": null,
+              "info": {
+                "aiSummary": "Ветка отказа: поток останавливается, дальше ничего не доставляется."
+              },
+              "status": "in-development",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "ifFailure",
+                "summary": "Ends the flow when the middle produced no result.",
+                "accepts": "The failure reported by the middle of the flow.",
+                "returns": "Nothing — a failure branch ends the flow."
+              },
+              "in": {
+                "state": "required",
+                "connections": [
+                  "transform"
+                ]
+              },
+              "out": {
+                "state": "prohibit",
+                "connections": null
+              },
+              "run": "sequential",
+              "estDurationMs": 60000
             }
           ]
         },
         "output": {
-          "allowedKinds": [
-            "output",
-            "output-connector"
-          ],
-          "deletion": "forbidden",
-          "addition": "allowed",
-          "minNodes": 2,
+          "minKinds": 2,
+          "kinds": {
+            "output": {
+              "deletion": "forbidden",
+              "addition": "allowed",
+              "minNodes": 8
+            },
+            "output-connector": {
+              "deletion": "forbidden",
+              "addition": "forbidden",
+              "minNodes": 1
+            }
+          },
           "nodes": [
             {
               "cuid": "cmruca7ra4n1jt639afc902fa70f5b",
@@ -245,6 +459,230 @@
                 "connections": [
                   "external"
                 ]
+              },
+              "run": "sequential",
+              "estDurationMs": 60000
+            },
+            {
+              "cuid": "cmruqdpjm51ehf50515a4931dd04d7",
+              "kind": "output",
+              "name": "Public Page output",
+              "description": "A page on the automation own website.",
+              "state": "hidden",
+              "ioType": "public-page",
+              "info": {
+                "aiSummary": "Заготовка канала «public-page»: объявлена и скрыта, функция появится, когда узел раскроют."
+              },
+              "status": "in-development",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "deliverPublicPage",
+                "summary": "Delivers the result through the public-page channel.",
+                "accepts": "result — the value carried by the success branch.",
+                "returns": "Nothing — an output node ends the flow."
+              },
+              "in": {
+                "state": "required",
+                "connections": [
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "prohibit",
+                "connections": null
+              },
+              "run": "sequential",
+              "estDurationMs": 60000
+            },
+            {
+              "cuid": "cmruqdpjm51ehgbc4cd8289c717fde",
+              "kind": "output",
+              "name": "Calendar output",
+              "description": "An event on the automation calendar.",
+              "state": "hidden",
+              "ioType": "calendar",
+              "info": {
+                "aiSummary": "Заготовка канала «calendar»: объявлена и скрыта, функция появится, когда узел раскроют."
+              },
+              "status": "in-development",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "deliverCalendar",
+                "summary": "Delivers the result through the calendar channel.",
+                "accepts": "result — the value carried by the success branch.",
+                "returns": "Nothing — an output node ends the flow."
+              },
+              "in": {
+                "state": "required",
+                "connections": [
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "prohibit",
+                "connections": null
+              },
+              "run": "sequential",
+              "estDurationMs": 60000
+            },
+            {
+              "cuid": "cmruqdpjm51ehh558398f6e19c27c3",
+              "kind": "output",
+              "name": "Analytics output",
+              "description": "A chart in the automation analytics.",
+              "state": "hidden",
+              "ioType": "analytics",
+              "info": {
+                "aiSummary": "Заготовка канала «analytics»: объявлена и скрыта, функция появится, когда узел раскроют."
+              },
+              "status": "in-development",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "deliverAnalytics",
+                "summary": "Delivers the result through the analytics channel.",
+                "accepts": "result — the value carried by the success branch.",
+                "returns": "Nothing — an output node ends the flow."
+              },
+              "in": {
+                "state": "required",
+                "connections": [
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "prohibit",
+                "connections": null
+              },
+              "run": "sequential",
+              "estDurationMs": 60000
+            },
+            {
+              "cuid": "cmruqdpjm51ehi292f9cb0fc27987c",
+              "kind": "output",
+              "name": "Map output",
+              "description": "A marker on the automation map.",
+              "state": "hidden",
+              "ioType": "map",
+              "info": {
+                "aiSummary": "Заготовка канала «map»: объявлена и скрыта, функция появится, когда узел раскроют."
+              },
+              "status": "in-development",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "deliverMap",
+                "summary": "Delivers the result through the map channel.",
+                "accepts": "result — the value carried by the success branch.",
+                "returns": "Nothing — an output node ends the flow."
+              },
+              "in": {
+                "state": "required",
+                "connections": [
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "prohibit",
+                "connections": null
+              },
+              "run": "sequential",
+              "estDurationMs": 60000
+            },
+            {
+              "cuid": "cmruqdpjn51ehjeb00a0bb1dcde063",
+              "kind": "output",
+              "name": "Email output",
+              "description": "An email the automation sends out.",
+              "state": "hidden",
+              "ioType": "email",
+              "info": {
+                "aiSummary": "Заготовка канала «email»: объявлена и скрыта, функция появится, когда узел раскроют."
+              },
+              "status": "in-development",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "deliverEmail",
+                "summary": "Delivers the result through the email channel.",
+                "accepts": "result — the value carried by the success branch.",
+                "returns": "Nothing — an output node ends the flow."
+              },
+              "in": {
+                "state": "required",
+                "connections": [
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "prohibit",
+                "connections": null
+              },
+              "run": "sequential",
+              "estDurationMs": 60000
+            },
+            {
+              "cuid": "cmruqdpjn51ehk0971dc21b875fe16",
+              "kind": "output",
+              "name": "Telegram Bot output",
+              "description": "A message sent through the automation own Telegram bot.",
+              "state": "hidden",
+              "ioType": "telegram-bot",
+              "info": {
+                "aiSummary": "Заготовка канала «telegram-bot»: объявлена и скрыта, функция появится, когда узел раскроют."
+              },
+              "status": "in-development",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "deliverTelegramBot",
+                "summary": "Delivers the result through the telegram-bot channel.",
+                "accepts": "result — the value carried by the success branch.",
+                "returns": "Nothing — an output node ends the flow."
+              },
+              "in": {
+                "state": "required",
+                "connections": [
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "prohibit",
+                "connections": null
+              },
+              "run": "sequential",
+              "estDurationMs": 60000
+            },
+            {
+              "cuid": "cmruqdpjn51ehl1bc14d0bb0ca3b9b",
+              "kind": "output",
+              "name": "User Telegram Chat output",
+              "description": "A message written into the user own Telegram chat.",
+              "state": "hidden",
+              "ioType": "user-telegram-chat",
+              "info": {
+                "aiSummary": "Заготовка канала «user-telegram-chat»: объявлена и скрыта, функция появится, когда узел раскроют."
+              },
+              "status": "in-development",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "deliverUserTelegramChat",
+                "summary": "Delivers the result through the user-telegram-chat channel.",
+                "accepts": "result — the value carried by the success branch.",
+                "returns": "Nothing — an output node ends the flow."
+              },
+              "in": {
+                "state": "required",
+                "connections": [
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "prohibit",
+                "connections": null
               },
               "run": "sequential",
               "estDurationMs": 60000
