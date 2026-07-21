@@ -410,7 +410,10 @@ const groupOf = (name: z.infer<typeof GroupNameSchema>) =>
   z
     .object({
       minKinds: z.number().int().positive(),
-      kinds: z.record(NodeKindSchema, KindPolicySchema),
+      // the keys are node kinds, but the record is deliberately PARTIAL: a group names only its own kinds.
+      // (`z.record(NodeKindSchema, …)` would demand every kind of the enum in every group.) The keys are
+      // checked against the table below, so nothing arbitrary gets in.
+      kinds: z.record(z.string(), KindPolicySchema),
       nodes: z.array(NodeSchema),
     })
     .strict()
