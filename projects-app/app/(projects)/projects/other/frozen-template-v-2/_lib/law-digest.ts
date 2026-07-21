@@ -3,7 +3,7 @@ import {
   KIND_PORTS,
   InputChannelSchema,
   OutputChannelSchema,
-  SYSTEM_INSTRUCTIONS,
+  SYSTEM_INSTRUCTION_NAMES,
   NodeKindSchema,
   type GroupName,
   type NodeKind,
@@ -17,7 +17,7 @@ import {
 // zod-обвязки, а собственно закона — около 800.
 //
 // Поэтому выжимка ПОРОЖДАЕТСЯ из тех же самых констант, что и проверка (`KIND_PORTS`, `GROUP_POLICY`,
-// словари каналов, ключи `SYSTEM_INSTRUCTIONS`). Она не пишется руками и потому не может разойтись с
+// словари каналов, список имён инструкций). Она не пишется руками и потому не может разойтись с
 // законом: изменится закон — изменится и выжимка, в одну правку.
 
 const ports = (kind: NodeKind) => {
@@ -70,7 +70,7 @@ export function lawDigest(): LawDigest {
       "an edge is lawful when the target's kind is named in the source's out-connections",
       "an edge is visible only when both its ends are visible",
       "frozen-template = every node hidden; real-project = at least one visible node, one use case and an author",
-      `the ${Object.keys(SYSTEM_INSTRUCTIONS).length} system instructions are pinned: authored in the schema, repeated verbatim in the core, never edited by a model`,
+      `an object names its law in systemInstructionName; the text lives in _instructions/<name>.md (${SYSTEM_INSTRUCTION_NAMES.length} of them) — read it by name, never copy it into the core`,
     ],
   };
 }
