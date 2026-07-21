@@ -177,7 +177,7 @@ export const PassportSchema = z
 // tab, an entity inside a tab. An empty list means "nothing to say"; a warning means the agent stopped
 // and is telling the owner something instead of guessing.
 //
-// One of its duties is named in the law (`NODE-TREE-RULES.md`): when fundamentally different tasks pile
+// One of its duties is named in the law (`_instructions/passport.md`): when fundamentally different tasks pile
 // up inside a single automation, the agent must PROPOSE a group of automations here — never build them
 // all into one.
 export const WarningSchema = z
