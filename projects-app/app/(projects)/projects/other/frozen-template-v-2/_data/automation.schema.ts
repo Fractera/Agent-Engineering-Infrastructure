@@ -329,8 +329,136 @@ export const NodeSchema = z.discriminatedUnion("kind", [
   nodeOf("condition-failure", z.null()),
 ]);
 
-// The kinds that must exist in every automation, whatever it does — see the law in the graph check below.
-export const MANDATORY_KINDS: z.infer<typeof NodeKindSchema>[] = ["input", "output", "input-connector", "output-connector"];
+// ─── NODE GROUPS ────────────────────────────────────────────────────────────────────────────────────
+// The nodes are not one flat pile: they live in THREE GROUPS — the way in, the middle, the way out — and
+// each group states its own rules RIGHT ABOVE the array they govern. A model editing a group therefore
+// reads its law locally, without holding the whole table of kinds in its head, and a rule it ignores does
+// not merely go against the documentation — it fails validation.
+//
+//   allowedKinds — the only kinds this group may hold;
+//   deletion     — may a node be removed from this group at all;
+//   addition     — may a new node be put into it;
+//   minNodes     — the floor: how few nodes the group may ever hold.
+export const PermissionSchema = z.enum(["allowed", "forbidden"]);
+export const GroupNameSchema = z.enum(["input", "middle", "output"]);
+
+type GroupPolicy = {
+  allowedKinds: z.infer<typeof NodeKindSchema>[];
+  deletion: z.infer<typeof PermissionSchema>;
+  addition: z.infer<typeof PermissionSchema>;
+  minNodes: number;
+};
+
+// THE GROUP TABLE — the law, stated once. A group's own declaration must repeat its row word for word.
+//
+// The minimums are NOT arbitrary; each is the smallest number the other laws already force:
+//   input  = 2 — one `input` (the automation's own door) + one `input-connector` (the door to a group);
+//   output = 2 — one `output` + one `output-connector`, by the same argument;
+//   middle = 2 — the flow physically cannot reach the exit through fewer: an `input` may lead ONLY into a
+//                `transform`, and an `output` may be entered ONLY from a `condition-success`.
+// Deletion is forbidden in the two outer groups: an unused door is HIDDEN, never removed — that is what
+// keeps an automation able to join a group of automations later.
+export const GROUP_POLICY: Record<z.infer<typeof GroupNameSchema>, GroupPolicy> = {
+  input: {
+    allowedKinds: ["input", "input-connector"],
+    deletion: "forbidden",
+    addition: "allowed",
+    minNodes: 2,
+  },
+  middle: {
+    allowedKinds: ["transform", "condition-success", "condition-failure"],
+    deletion: "allowed",
+    addition: "allowed",
+    minNodes: 2,
+  },
+  output: {
+    allowedKinds: ["output", "output-connector"],
+    deletion: "forbidden",
+    addition: "allowed",
+    minNodes: 2,
+  },
+};
+
+const sameKinds = (a: readonly string[], b: readonly string[]) => a.length === b.length && a.every((v, i) => v === b[i]);
+
+// One group: its four rules + the nodes it holds. The rules are checked against the table, the nodes
+// against the rules.
+const groupOf = (name: z.infer<typeof GroupNameSchema>) =>
+  z
+    .object({
+      allowedKinds: z.array(NodeKindSchema).min(1),
+      deletion: PermissionSchema,
+      addition: PermissionSchema,
+      minNodes: z.number().int().positive(),
+      nodes: z.array(NodeSchema),
+    })
+    .strict()
+    .superRefine((group, ctx) => {
+      const law = GROUP_POLICY[name];
+
+      if (!sameKinds(group.allowedKinds, law.allowedKinds)) {
+        ctx.addIssue({ code: "custom", path: ["allowedKinds"], message: `the "${name}" group holds exactly: ${law.allowedKinds.join(", ")}` });
+      }
+      (["deletion", "addition"] as const).forEach((rule) => {
+        if (group[rule] !== law[rule]) {
+          ctx.addIssue({ code: "custom", path: [rule], message: `in the "${name}" group ${rule} is "${law[rule]}"` });
+        }
+      });
+      if (group.minNodes !== law.minNodes) {
+        ctx.addIssue({ code: "custom", path: ["minNodes"], message: `the "${name}" group never holds fewer than ${law.minNodes} nodes` });
+      }
+
+      group.nodes.forEach((node, i) => {
+        if (!law.allowedKinds.includes(node.kind)) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["nodes", i, "kind"],
+            message: `a "${node.kind}" cannot live in the "${name}" group — it holds ${law.allowedKinds.join(", ")}`,
+          });
+        }
+      });
+
+      if (group.nodes.length < law.minNodes) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["nodes"],
+          message: `the "${name}" group holds ${group.nodes.length} node(s) — its floor is ${law.minNodes}`,
+        });
+      }
+
+      // Where deletion is forbidden, EVERY allowed kind must still be present: that is the machine form of
+      // "never delete, hide instead" — a removed door cannot be hidden away unnoticed.
+      if (law.deletion === "forbidden") {
+        law.allowedKinds.forEach((kind) => {
+          if (!group.nodes.some((n) => n.kind === kind)) {
+            ctx.addIssue({
+              code: "custom",
+              path: ["nodes"],
+              message: `the "${name}" group must always carry a "${kind}" — an unused one is hidden, never deleted`,
+            });
+          }
+        });
+      }
+    });
+
+export const NodesSchema = z
+  .object({
+    groups: z
+      .object({
+        input: groupOf("input"),
+        middle: groupOf("middle"),
+        output: groupOf("output"),
+      })
+      .strict(),
+  })
+  .strict();
+
+// Every graph-wide check works on the flat list; this is the ONE place that flattens the groups.
+export const allNodes = (nodes: z.infer<typeof NodesSchema>): z.infer<typeof NodeSchema>[] => [
+  ...nodes.groups.input.nodes,
+  ...nodes.groups.middle.nodes,
+  ...nodes.groups.output.nodes,
+];
 
 // AN EDGE — a link between two nodes. It carries its own cuid (an edge is an entity like any other and
 // must be addressable), the cuids of its ends, and whether it is shown on the diagram.
@@ -347,15 +475,16 @@ export const EdgeSchema = z
 // unique cuids, both ends of an edge existing, and the direction being lawful for the kind.
 export const GraphSchema = z
   .object({
-    nodes: z.array(NodeSchema),
+    nodes: NodesSchema,
     edges: z.array(EdgeSchema),
   })
   .strict()
   .superRefine((graph, ctx) => {
+    const nodes = allNodes(graph.nodes);
     const byCuid = new Map<string, z.infer<typeof NodeSchema>>();
-    graph.nodes.forEach((node, i) => {
+    nodes.forEach((node) => {
       if (byCuid.has(node.cuid)) {
-        ctx.addIssue({ code: "custom", path: ["nodes", i, "cuid"], message: `node "${node.cuid}" is declared twice` });
+        ctx.addIssue({ code: "custom", path: ["nodes"], message: `node "${node.name}" carries a cuid that is declared twice` });
         return;
       }
       byCuid.set(node.cuid, node);
@@ -365,8 +494,8 @@ export const GraphSchema = z
         if (!samePort(node[side], KIND_PORTS[node.kind][side])) {
           ctx.addIssue({
             code: "custom",
-            path: ["nodes", i, side],
-            message: `a node of kind "${node.kind}" must declare ${side}: ${JSON.stringify(KIND_PORTS[node.kind][side])}`,
+            path: ["nodes"],
+            message: `node "${node.name}" of kind "${node.kind}" must declare ${side}: ${JSON.stringify(KIND_PORTS[node.kind][side])}`,
           });
         }
       });
@@ -432,30 +561,20 @@ export const GraphSchema = z
     // transparent pipe: its function does not run and it may stand unwired (that is how a frozen template
     // ships, with every node hidden). An OPTIONAL port may always stand unwired — that is exactly what a
     // connector's outward side is for: its counterpart lives in another automation, outside this graph.
-    graph.nodes.forEach((node, i) => {
+    nodes.forEach((node) => {
       if (node.state !== "visible") return;
       const wiredIn = graph.edges.some((e) => e.to === node.cuid);
       const wiredOut = graph.edges.some((e) => e.from === node.cuid);
       if (node.in.state === "required" && !wiredIn) {
-        ctx.addIssue({ code: "custom", path: ["nodes", i, "in"], message: `node "${node.name}" requires an incoming edge and has none` });
+        ctx.addIssue({ code: "custom", path: ["nodes"], message: `node "${node.name}" requires an incoming edge and has none` });
       }
       if (node.out.state === "required" && !wiredOut) {
-        ctx.addIssue({ code: "custom", path: ["nodes", i, "out"], message: `node "${node.name}" requires an outgoing edge and has none` });
+        ctx.addIssue({ code: "custom", path: ["nodes"], message: `node "${node.name}" requires an outgoing edge and has none` });
       }
     });
 
-    // THE MANDATORY SET — four kinds are present in EVERY automation, always: the two doors of the
-    // automation itself and the two connectors that let it join a group. They are never deleted; a kind
-    // this automation does not use is HIDDEN, not removed. Extra nodes may be added freely.
-    MANDATORY_KINDS.forEach((kind) => {
-      if (!graph.nodes.some((n) => n.kind === kind)) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["nodes"],
-          message: `every automation must carry a node of kind "${kind}" — an unused one is hidden, never deleted`,
-        });
-      }
-    });
+    // The mandatory set of kinds is no longer stated here: it is the groups' own law (GROUP_POLICY —
+    // deletion "forbidden" ⇒ every allowed kind stays present). One law, one place.
   });
 
 // COMPONENTS — which tabs the automation has and what state each one is in.
@@ -555,7 +674,8 @@ export const AutomationSchema = z
   .strict()
   .superRefine((automation, ctx) => {
     const { lifecycle } = automation.passport;
-    const visible = automation.graph.nodes.filter((n) => n.state === "visible");
+    const nodes = allNodes(automation.graph.nodes);
+    const visible = nodes.filter((n) => n.state === "visible");
 
     if (lifecycle === "frozen-template" && visible.length > 0) {
       ctx.addIssue({
@@ -564,7 +684,7 @@ export const AutomationSchema = z
         message: `a frozen template shows nothing: ${visible.length} node(s) are visible while lifecycle is "frozen-template"`,
       });
     }
-    if (lifecycle === "real-project" && automation.graph.nodes.length > 0 && visible.length === 0) {
+    if (lifecycle === "real-project" && nodes.length > 0 && visible.length === 0) {
       ctx.addIssue({ code: "custom", path: ["graph", "nodes"], message: "a real project must have at least one visible node" });
     }
     if (lifecycle === "real-project" && automation.useCases.length === 0) {
@@ -591,6 +711,10 @@ export type NodeKind = z.infer<typeof NodeKindSchema>;
 export type NodeFunction = z.infer<typeof NodeFunctionSchema>;
 export type Node = z.infer<typeof NodeSchema>;
 export type Edge = z.infer<typeof EdgeSchema>;
+export type Permission = z.infer<typeof PermissionSchema>;
+export type GroupName = z.infer<typeof GroupNameSchema>;
+export type Nodes = z.infer<typeof NodesSchema>;
+export type NodeGroup = Nodes["groups"]["input"];
 export type Graph = z.infer<typeof GraphSchema>;
 export type Presence = z.infer<typeof PresenceSchema>;
 export type BuildStatus = z.infer<typeof BuildStatusSchema>;
