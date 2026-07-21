@@ -69,3 +69,11 @@ export function CloseIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+export function ChevronDownIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden>
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}

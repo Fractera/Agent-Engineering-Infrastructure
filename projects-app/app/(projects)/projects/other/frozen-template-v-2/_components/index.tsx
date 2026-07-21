@@ -1,33 +1,32 @@
-import type { ComponentType } from "react";
 import { loadAutomation } from "../_data/load";
 import type { Surface } from "./surface";
+import { ChevronDownIcon } from "./chrome/icons";
 
-// ОБЩИЙ МАРШРУТИЗАТОР АВТОМАТИЗАЦИИ.
-// Состав вкладок он НЕ знает и не хранит: читает его из ядра (`_data/automation.json`) и по имени
-// вкладки берёт код из папки того же имени. Списка вкладок в коде нет — есть только один список,
-// в ядре. Состояние вкладки решает всё: absent — не рисуем, collapsed — схлопнутой, expanded — раскрытой.
+// СЕКЦИИ НА ХОЛСТЕ — серия аккордеонов, дизайн взят из v1 (`automation-accordions.client.tsx`:
+// контейнер `rounded-lg border px-4`, каждый item — `border-b`, триггер с шевроном), воспроизведён
+// самодостаточно через стилизованный <details> (работает и без JS; закон 0 — код внутри папки).
+//
+// ПРИСУТСТВИЕ секции связано с переключателем в гамбургер-меню: он пишет `tab.presence` в ядро
+// (absent = секции нет; иначе — закрытый аккордеон на холсте). Одно ядро читают ОБЕ поверхности —
+// админ и публичная — поэтому набор секций у них одинаковый и правится из меню без пересборки.
+//
+// Аккордеон рождается ЗАКРЫТЫМ и пока ПУСТ внутри: содержимое секций придёт отдельными шагами.
 export default async function AutomationComponents({ surface }: { surface: Surface }) {
   const { components } = await loadAutomation();
-
-  const tabs = await Promise.all(
-    components.tabs
-      .filter((tab) => tab.presence !== "absent")
-      .map(async (tab) => {
-        // the folder name IS the tab name — no registry of tabs anywhere in the code
-        const mod = (await import(`./${tab.name}/index`)) as {
-          default: ComponentType<{ surface: Surface }>;
-        };
-        return { ...tab, Component: mod.default };
-      }),
-  );
+  const tabs = components.tabs.filter((tab) => tab.presence !== "absent");
+  if (tabs.length === 0) return null;
 
   return (
-    <div data-components-root data-surface={surface} className="space-y-3">
-      {tabs.map(({ name, presence, Component }) => (
-        // a native <details>: folding works with JavaScript switched off
-        <details key={name} data-tab={name} data-presence={presence} open={presence === "expanded"}>
-          <summary className="cursor-pointer text-sm font-medium capitalize">{name}</summary>
-          <Component surface={surface} />
+    <div data-components-root data-surface={surface} className="mt-6 rounded-lg border px-4">
+      {tabs.map((tab) => (
+        // a native <details>: закрыт по умолчанию, раскрытие работает без JavaScript
+        <details key={tab.name} data-tab={tab.name} className="group border-b last:border-b-0">
+          <summary className="flex cursor-pointer list-none items-center justify-between py-4 text-sm font-medium hover:underline [&::-webkit-details-marker]:hidden">
+            <span className="capitalize">{tab.name}</span>
+            <ChevronDownIcon className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+          </summary>
+          {/* пусто на этом этапе — содержимое секции появится позже */}
+          <div className="pb-4 pt-0 text-sm text-muted-foreground" />
         </details>
       ))}
     </div>
