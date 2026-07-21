@@ -120,7 +120,7 @@ export function locate(core: Automation, a: Address): { ok: true; target: Record
 //   cuid / kind       — идентичность и вид не меняются: другой вид = другой узел;
 //   in / out          — выводятся из вида по таблице связей, а не объявляются заново.
 export const WRITABLE: Record<Address["object"], string[]> = {
-  passport: ["title", "description", "author", "sharing", "info", "lifecycle"],
+  passport: ["title", "description", "author", "sharing", "info", "lifecycle", "howItWorks"],
   graph: [],
   components: [],
   history: [],

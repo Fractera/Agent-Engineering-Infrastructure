@@ -163,6 +163,13 @@ export const PassportSchema = z
       .strict(),
     // the owner's instruction for the automation as a whole (or the model's summary of it)
     info: InfoSchema,
+    // HOW IT WORKS — the answer to the owner's question "how does this automation work?", written by
+    // the model from the WHOLE context and kept as a list of statements rather than one blob: a list
+    // can be extended, re-stated line by line and embedded piece by piece. This text is what the
+    // vector record is built from, and therefore what makes this automation FINDABLE among hundreds —
+    // it is the automation's public account of itself, not a changelog and not a duplicate of `info`
+    // (which is the owner's brief). Empty while nothing has been built yet.
+    howItWorks: z.array(z.string().min(1, "an empty line says nothing — remove it instead")),
   })
   .strict();
 
@@ -617,6 +624,24 @@ export const GraphSchema = z
           });
         }
       });
+    });
+
+    // A FUNCTION NAME IS AN ADDRESS. The code of a node's function lives in
+    // `_functions/<function.name>.ts` — one file per function — so two nodes claiming the same name
+    // would claim the same file. The name is also a public contract other nodes call by, which is why
+    // it is never renamed; here it is additionally forced to be unique.
+    const seenFunctions = new Map<string, string>();
+    nodes.forEach((node) => {
+      const owner = seenFunctions.get(node.function.name);
+      if (owner) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["nodes"],
+          message: `two nodes claim the function "${node.function.name}" ("${owner}" and "${node.name}") — a function name is the address of its file, and there is only one of it`,
+        });
+        return;
+      }
+      seenFunctions.set(node.function.name, node.name);
     });
 
     const seenEdges = new Set<string>();

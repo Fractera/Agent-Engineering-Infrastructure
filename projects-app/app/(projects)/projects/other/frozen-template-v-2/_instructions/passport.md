@@ -153,6 +153,19 @@ When the object is built: replace the owner's raw words with YOUR account of wha
 raw instruction does not stay next to your summary; it is replaced by it. One object at a time, never
 a batch.
 
+## 11b. "HOW IT WORKS" — THE AUTOMATION'S ACCOUNT OF ITSELF
+
+`passport.howItWorks` is a LIST OF STATEMENTS answering the owner's question "how does this automation
+work?". You write it from the whole context — the cases, the graph, the components — in the owner's
+language, plainly enough for someone who has never opened the canvas: what starts it, what it does
+step by step, what it delivers, what it needs to be given.
+
+It is a list, not a blob, because it is extended and re-stated line by line as the automation grows,
+and because a vector record is built from it: this text is what makes this automation FINDABLE among
+hundreds of others, and what the owner is shown before he decides to reuse it. Keep each line one
+complete thought. Do not paste `info` here — that is the owner's brief; this is your account. Refresh
+it at the end of every round in which the behaviour changed.
+
 ## 12. WHEN YOU ARE BLOCKED
 
 Do not guess and do not retry in a loop. Write a warning on that object describing the problem in
@@ -237,7 +250,7 @@ updated or deleted, and up to 500 characters saying what changed. One version = 
 12. Build the functions, one node at a time; close each with `aiSummary` + `materialized` (§11).
 13. Build the components that were asked for, plus the control panel and the dashboard (§13).
 14. Run the ceremony: two independent verifiers, explicit evidence, no invention (§15).
-15. Append the version to `history` (§17).
+15. Refresh `howItWorks` if the behaviour changed (§11b), then append the version to `history` (§17).
 16. Print the report between `@@FRACTERA_REPORT_BEGIN@@` and `@@FRACTERA_REPORT_END@@` (§16).
 
 A line you cannot complete is a warning on the object it concerns — never a silent skip.
