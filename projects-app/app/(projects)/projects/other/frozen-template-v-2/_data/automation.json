@@ -1,26 +1,37 @@
 {
   "passport": {
+    "systemInstruction": "",
     "title": "Frozen template v2",
     "description": "",
     "type": "stream",
     "lifecycle": "frozen-template",
-    "fracteraPro": null,
+    "author": "",
+    "sharing": "private",
+    "fracteraPro": {
+      "systemInstruction": "",
+      "config": null
+    },
     "info": {
       "aiSummary": "Стартовый замороженный шаблон: все узлы скрыты, кейсов ещё нет — автоматизация рождается из пользовательских кейсов владельца."
     }
   },
   "graph": {
+    "systemInstruction": "",
     "nodes": {
+      "systemInstruction": "",
       "groups": {
         "input": {
+          "systemInstruction": "",
           "minKinds": 2,
           "kinds": {
             "input": {
+              "systemInstruction": "",
               "deletion": "forbidden",
               "addition": "allowed",
               "minNodes": 6
             },
             "input-connector": {
+              "systemInstruction": "",
               "deletion": "forbidden",
               "addition": "forbidden",
               "minNodes": 1
@@ -256,19 +267,23 @@
           ]
         },
         "middle": {
+          "systemInstruction": "",
           "minKinds": 3,
           "kinds": {
             "transform": {
+              "systemInstruction": "",
               "deletion": "allowed",
               "addition": "allowed",
               "minNodes": 1
             },
             "condition-success": {
+              "systemInstruction": "",
               "deletion": "allowed",
               "addition": "allowed",
               "minNodes": 1
             },
             "condition-failure": {
+              "systemInstruction": "",
               "deletion": "allowed",
               "addition": "allowed",
               "minNodes": 1
@@ -383,14 +398,17 @@
           ]
         },
         "output": {
+          "systemInstruction": "",
           "minKinds": 2,
           "kinds": {
             "output": {
+              "systemInstruction": "",
               "deletion": "forbidden",
               "addition": "allowed",
               "minNodes": 8
             },
             "output-connector": {
+              "systemInstruction": "",
               "deletion": "forbidden",
               "addition": "forbidden",
               "minNodes": 1
@@ -713,8 +731,10 @@
     ]
   },
   "components": {
+    "systemInstruction": "",
     "tabs": [
       {
+        "systemInstruction": "",
         "name": "calendar",
         "presence": "expanded",
         "info": {
@@ -738,6 +758,7 @@
         ]
       },
       {
+        "systemInstruction": "",
         "name": "analytics",
         "presence": "collapsed",
         "info": {
@@ -762,5 +783,13 @@
       }
     ]
   },
-  "useCases": []
+  "useCases": {
+    "systemInstruction": "",
+    "warnings": [],
+    "cases": []
+  },
+  "history": {
+    "systemInstruction": "",
+    "versions": []
+  }
 }

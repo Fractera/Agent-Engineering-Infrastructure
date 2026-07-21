@@ -6,6 +6,48 @@ import { z } from "zod";
 
 const TEXT_LIMIT = 200;
 
+// ─── SYSTEM INSTRUCTIONS — the pinned texts ─────────────────────────────────────────────────────────
+// Each entity of the core carries a SYSTEM INSTRUCTION: the short, authoritative text telling a model what
+// is expected of THAT entity, read where the entity itself is read. This is what replaces a long document
+// no weak model finishes reading.
+//
+// THE TEXTS ARE FIXED. The authored value lives here and nowhere else; the core must repeat it exactly. A
+// model that edits an instruction in `automation.json` does not "change the rules" — it fails validation,
+// by name of the field. Changing an instruction is therefore a deliberate act in THIS file, never a side
+// effect of a generation pass.
+//
+// They start empty on purpose: the owner writes them in, one by one, and each of them replaces a piece of
+// `NODE-TREE-RULES.md`.
+export const SYSTEM_INSTRUCTIONS = {
+  passport: "",
+  fracteraPro: "",
+  graph: "",
+  nodes: "", // for ALL nodes, whatever their kind
+  "group.input": "",
+  "group.middle": "",
+  "group.output": "",
+  "kind.input": "",
+  "kind.input-connector": "",
+  "kind.transform": "",
+  "kind.condition-success": "",
+  "kind.condition-failure": "",
+  "kind.output": "",
+  "kind.output-connector": "",
+  components: "", // for ALL components
+  tab: "", // for every tab
+  useCases: "",
+  history: "",
+} as const;
+
+export type SystemInstructionKey = keyof typeof SYSTEM_INSTRUCTIONS;
+
+// A pinned field: it must carry exactly the authored text. This is the machine form of "approved, and not
+// to be edited by a model".
+const pinned = (key: SystemInstructionKey) =>
+  z.string().refine((value) => value === SYSTEM_INSTRUCTIONS[key], {
+    message: `the system instruction "${key}" is fixed — it is authored in automation.schema.ts and a model may not edit it here`,
+  });
+
 // IDENTITY — every entity that can be pointed at carries a CUID, and nothing else identifies it.
 // A cuid-style id: a leading letter then lowercase alphanumerics — hyphen-free and never all-digits, so a
 // model can echo it without the UUID pitfalls. Human-readable names live in `name`, never in the id: a name
@@ -96,13 +138,29 @@ export const InfoSchema = z.union([
   z.object({ aiSummary: z.string().min(1, "the summary cannot be empty") }).strict(),
 ]);
 
+// SHARING — may this automation be published into the public space, or is it for its author alone?
+// One field, two honest answers; nothing is public by accident.
+export const SharingSchema = z.enum(["private", "public"]);
+
 export const PassportSchema = z
   .object({
+    systemInstruction: pinned("passport"),
     title: z.string().min(1, "the automation must have a title"),
     description: z.string(),
     type: AutomationTypeSchema,
     lifecycle: LifecycleSchema,
-    fracteraPro: FracteraProSchema.nullable(),
+    // WHO made it: the id of the user who created this automation. Empty only while the automation is
+    // still the untouched frozen template — a real project always has an author (checked in the core law).
+    author: z.string(),
+    sharing: SharingSchema,
+    // Fractera Pro keeps its own instruction ALWAYS, even in the plain mode where there is no config to
+    // speak of: an instruction that disappears with the feature could never explain how to turn it on.
+    fracteraPro: z
+      .object({
+        systemInstruction: pinned("fracteraPro"),
+        config: FracteraProSchema.nullable(),
+      })
+      .strict(),
     // the owner's instruction for the automation as a whole (or the model's summary of it)
     info: InfoSchema,
   })
@@ -349,15 +407,19 @@ export const NodeSchema = z.discriminatedUnion("kind", [
 export const PermissionSchema = z.enum(["allowed", "forbidden"]);
 export const GroupNameSchema = z.enum(["input", "middle", "output"]);
 
+// A kind's own rules, plus the system instruction of that kind — the text a model reads before it touches
+// a node of this kind. The instruction is pinned per kind in the group check below (a record cannot vary
+// its value schema by key).
 export const KindPolicySchema = z
   .object({
+    systemInstruction: z.string(),
     deletion: PermissionSchema,
     addition: PermissionSchema,
     minNodes: z.number().int().positive(),
   })
   .strict();
 
-type KindPolicy = z.infer<typeof KindPolicySchema>;
+type KindPolicy = { deletion: z.infer<typeof PermissionSchema>; addition: z.infer<typeof PermissionSchema>; minNodes: number };
 type GroupPolicy = { minKinds: number; kinds: Partial<Record<z.infer<typeof NodeKindSchema>, KindPolicy>> };
 
 // How many channels an automation is born ready for: EVERY channel of the vocabulary except `custom` —
@@ -409,6 +471,7 @@ const sameKinds = (a: readonly string[], b: readonly string[]) => a.length === b
 const groupOf = (name: z.infer<typeof GroupNameSchema>) =>
   z
     .object({
+      systemInstruction: pinned(`group.${name}` as SystemInstructionKey),
       minKinds: z.number().int().positive(),
       // the keys are node kinds, but the record is deliberately PARTIAL: a group names only its own kinds.
       // (`z.record(NodeKindSchema, …)` would demand every kind of the enum in every group.) The keys are
@@ -440,6 +503,15 @@ const groupOf = (name: z.infer<typeof GroupNameSchema>) =>
         });
         if (declared.minNodes !== rule.minNodes) {
           ctx.addIssue({ code: "custom", path: ["kinds", kind, "minNodes"], message: `there are never fewer than ${rule.minNodes} "${kind}" node(s)` });
+        }
+        // the kind's system instruction is pinned exactly like every other one
+        const key = `kind.${kind}` as SystemInstructionKey;
+        if (declared.systemInstruction !== SYSTEM_INSTRUCTIONS[key]) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["kinds", kind, "systemInstruction"],
+            message: `the system instruction "${key}" is fixed — it is authored in automation.schema.ts and a model may not edit it here`,
+          });
         }
       });
 
@@ -487,6 +559,8 @@ const groupOf = (name: z.infer<typeof GroupNameSchema>) =>
 
 export const NodesSchema = z
   .object({
+    // the instruction for ALL nodes, whatever their kind — the per-kind ones live in each group's `kinds`
+    systemInstruction: pinned("nodes"),
     groups: z
       .object({
         input: groupOf("input"),
@@ -519,6 +593,7 @@ export const EdgeSchema = z
 // unique cuids, both ends of an edge existing, and the direction being lawful for the kind.
 export const GraphSchema = z
   .object({
+    systemInstruction: pinned("graph"),
     nodes: NodesSchema,
     edges: z.array(EdgeSchema),
   })
@@ -648,6 +723,7 @@ export const EntitySchema = z
 
 export const TabSchema = z
   .object({
+    systemInstruction: pinned("tab"),
     name: z.string().min(1),
     presence: PresenceSchema,
     ...buildRecord,
@@ -666,6 +742,7 @@ export const TabSchema = z
 
 export const ComponentsSchema = z
   .object({
+    systemInstruction: pinned("components"),
     tabs: z.array(TabSchema),
   })
   .strict();
@@ -685,22 +762,71 @@ export const UseCaseSchema = z
   })
   .strict();
 
-export const UseCasesSchema = z.array(UseCaseSchema).superRefine((cases, ctx) => {
-  const seenCuid = new Set<string>();
-  const seenNumber = new Set<number>();
-  cases.forEach((useCase, i) => {
-    if (seenCuid.has(useCase.cuid)) {
-      ctx.addIssue({ code: "custom", path: [i, "cuid"], message: `case "${useCase.cuid}" is declared twice` });
-    }
-    seenCuid.add(useCase.cuid);
-    if (seenNumber.has(useCase.number)) {
-      ctx.addIssue({ code: "custom", path: [i, "number"], message: `case number ${useCase.number} is used twice — the owner refers to cases by number` });
-    }
-    seenNumber.add(useCase.number);
+// The use cases as a WHOLE carry their own warnings — the place where the agent reports a CONFLICT: two
+// cases contradicting each other so plainly that building is impossible. Such a conflict belongs to no
+// single case (each one is fine on its own), so it has nowhere else to live.
+export const UseCasesSchema = z
+  .object({
+    systemInstruction: pinned("useCases"),
+    warnings: z.array(WarningSchema),
+    cases: z.array(UseCaseSchema),
+  })
+  .strict()
+  .superRefine((useCases, ctx) => {
+    const seenCuid = new Set<string>();
+    const seenNumber = new Set<number>();
+    useCases.cases.forEach((useCase, i) => {
+      if (seenCuid.has(useCase.cuid)) {
+        ctx.addIssue({ code: "custom", path: ["cases", i, "cuid"], message: `case "${useCase.cuid}" is declared twice` });
+      }
+      seenCuid.add(useCase.cuid);
+      if (seenNumber.has(useCase.number)) {
+        ctx.addIssue({ code: "custom", path: ["cases", i, "number"], message: `case number ${useCase.number} is used twice — the owner refers to cases by number` });
+      }
+      seenNumber.add(useCase.number);
+    });
   });
-});
 
-// THE CORE as a whole — four objects, plus the two laws that bind them.
+// ─── HISTORY — the fifth object of the core ─────────────────────────────────────────────────────────
+// What has been done to this automation, version by version. A version is one round of work: when it
+// happened, HOW MUCH was touched (the plain count of nodes and components created, updated or deleted),
+// and a short account of what changed. The summary is capped: it is a note for a human and a model, not a
+// changelog to hide a wall of text in.
+const SUMMARY_LIMIT = 500;
+const DATE_FORMAT = /^\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}$/; // dd-mm-yyyy hh:mm:ss
+
+export const VersionSchema = z
+  .object({
+    cuid: CuidSchema,
+    number: z.number().int().positive(),
+    createdAt: z.string().regex(DATE_FORMAT, "the date is dd-mm-yyyy hh:mm:ss"),
+    objectsTouched: z.number().int().nonnegative(),
+    summary: z.string().min(1, "a version without an account of it is not a version").max(SUMMARY_LIMIT, `the summary must be at most ${SUMMARY_LIMIT} characters`),
+  })
+  .strict();
+
+export const HistorySchema = z
+  .object({
+    systemInstruction: pinned("history"),
+    versions: z.array(VersionSchema),
+  })
+  .strict()
+  .superRefine((history, ctx) => {
+    const seenCuid = new Set<string>();
+    const seenNumber = new Set<number>();
+    history.versions.forEach((version, i) => {
+      if (seenCuid.has(version.cuid)) {
+        ctx.addIssue({ code: "custom", path: ["versions", i, "cuid"], message: `version "${version.cuid}" is declared twice` });
+      }
+      seenCuid.add(version.cuid);
+      if (seenNumber.has(version.number)) {
+        ctx.addIssue({ code: "custom", path: ["versions", i, "number"], message: `version number ${version.number} is used twice` });
+      }
+      seenNumber.add(version.number);
+    });
+  });
+
+// THE CORE as a whole — five objects, plus the laws that bind them.
 //
 // THE LIFECYCLE LAW. `lifecycle` lives in the passport and NOWHERE else (one fact, one place), and it
 // governs the whole graph:
@@ -714,6 +840,7 @@ export const AutomationSchema = z
     graph: GraphSchema,
     components: ComponentsSchema,
     useCases: UseCasesSchema,
+    history: HistorySchema,
   })
   .strict()
   .superRefine((automation, ctx) => {
@@ -731,8 +858,12 @@ export const AutomationSchema = z
     if (lifecycle === "real-project" && nodes.length > 0 && visible.length === 0) {
       ctx.addIssue({ code: "custom", path: ["graph", "nodes"], message: "a real project must have at least one visible node" });
     }
-    if (lifecycle === "real-project" && automation.useCases.length === 0) {
-      ctx.addIssue({ code: "custom", path: ["useCases"], message: "a real project is defined by its use cases — there must be at least one" });
+    if (lifecycle === "real-project" && automation.useCases.cases.length === 0) {
+      ctx.addIssue({ code: "custom", path: ["useCases", "cases"], message: "a real project is defined by its use cases — there must be at least one" });
+    }
+    // A real project was made by somebody; the untouched template was made by nobody yet.
+    if (lifecycle === "real-project" && !automation.passport.author.trim()) {
+      ctx.addIssue({ code: "custom", path: ["passport", "author"], message: "a real project must name its author — the id of the user who created it" });
     }
   });
 
@@ -771,4 +902,8 @@ export type EnvKeyStatus = z.infer<typeof EnvKeyStatusSchema>;
 export type EnvKey = z.infer<typeof EnvKeySchema>;
 export type UseCaseStatus = z.infer<typeof UseCaseStatusSchema>;
 export type UseCase = z.infer<typeof UseCaseSchema>;
+export type UseCases = z.infer<typeof UseCasesSchema>;
+export type Sharing = z.infer<typeof SharingSchema>;
+export type Version = z.infer<typeof VersionSchema>;
+export type History = z.infer<typeof HistorySchema>;
 export type Automation = z.infer<typeof AutomationSchema>;
