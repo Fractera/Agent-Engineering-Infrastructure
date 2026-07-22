@@ -22,7 +22,7 @@ export default async function AutomationComponents({ surface }: { surface: Surfa
         // a native <details>: закрыт по умолчанию, раскрытие работает без JavaScript
         <details key={tab.name} data-tab={tab.name} className="group border-b last:border-b-0">
           <summary className="flex cursor-pointer list-none items-center justify-between py-4 text-sm font-medium hover:underline [&::-webkit-details-marker]:hidden">
-            <span className="capitalize">{tab.name}</span>
+            <span className="capitalize">{tab.name.replace(/-/g, " ")}</span>
             <ChevronDownIcon className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
           </summary>
           {/* пусто на этом этапе — содержимое секции появится позже */}

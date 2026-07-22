@@ -781,6 +781,78 @@
             "data": {}
           }
         ]
+      },
+      {
+        "systemInstructionName": "tab",
+        "name": "dashboard",
+        "presence": "collapsed",
+        "info": {
+          "aiSummary": "Вкладка дашборда объявлена и пуста: таблицы появятся, когда владелец их закажет."
+        },
+        "status": "in-development",
+        "warnings": [],
+        "envKeys": [],
+        "entities": []
+      },
+      {
+        "systemInstructionName": "tab",
+        "name": "map",
+        "presence": "collapsed",
+        "info": {
+          "aiSummary": "Вкладка карты объявлена и пуста."
+        },
+        "status": "in-development",
+        "warnings": [],
+        "envKeys": [],
+        "entities": []
+      },
+      {
+        "systemInstructionName": "tab",
+        "name": "processes",
+        "presence": "collapsed",
+        "info": {
+          "aiSummary": "Вкладка процессов (таймлайн) объявлена и пуста."
+        },
+        "status": "in-development",
+        "warnings": [],
+        "envKeys": [],
+        "entities": []
+      },
+      {
+        "systemInstructionName": "tab",
+        "name": "cron",
+        "presence": "collapsed",
+        "info": {
+          "aiSummary": "Вкладка расписания объявлена и пуста."
+        },
+        "status": "in-development",
+        "warnings": [],
+        "envKeys": [],
+        "entities": []
+      },
+      {
+        "systemInstructionName": "tab",
+        "name": "use-cases",
+        "presence": "collapsed",
+        "info": {
+          "aiSummary": "Вкладка пользовательских кейсов объявлена и пуста."
+        },
+        "status": "in-development",
+        "warnings": [],
+        "envKeys": [],
+        "entities": []
+      },
+      {
+        "systemInstructionName": "tab",
+        "name": "app-pages",
+        "presence": "collapsed",
+        "info": {
+          "aiSummary": "Вкладка страниц приложения объявлена и пуста."
+        },
+        "status": "in-development",
+        "warnings": [],
+        "envKeys": [],
+        "entities": []
       }
     ]
   },
