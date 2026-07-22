@@ -4,7 +4,7 @@
     "title": "Stock price (v2)",
     "description": "Автоматизация типа Stream: по названию публичной компании возвращает живую цену её акции и сохраняет в историю.",
     "type": "stream",
-    "lifecycle": "frozen-template",
+    "lifecycle": "real-project",
     "author": "architect",
     "sharing": "private",
     "fracteraPro": {
@@ -35,7 +35,7 @@
               "systemInstructionName": "kind.input",
               "deletion": "forbidden",
               "addition": "allowed",
-              "minNodes": 6
+              "minNodes": 7
             },
             "input-connector": {
               "systemInstructionName": "kind.input-connector",
@@ -84,7 +84,7 @@
               "kind": "input",
               "name": "Input",
               "description": "Where the automation receives its work — a message, a request, or a scheduled tick.",
-              "state": "hidden",
+              "state": "visible",
               "ioType": "control-panel",
               "info": {
                 "aiSummary": "Распознаёт публичную компанию из запроса по словарю и отдаёт её тикер; неизвестная или частная компания — прогон останавливается понятным сообщением."
@@ -270,6 +270,40 @@
               },
               "run": "sequential",
               "estDurationMs": 60000
+            },
+            {
+              "cuid": "creceivehcadxvwfh",
+              "name": "Hermes agent input",
+              "description": "Вход из агентного рантайма Hermes.",
+              "state": "hidden",
+              "kind": "input",
+              "ioType": "hermes",
+              "in": {
+                "state": "optional",
+                "connections": [
+                  "external"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform"
+                ]
+              },
+              "info": {
+                "aiSummary": "Дверь канала Hermes: задание, переданное агентом рабочего пространства. Узел скрыт — канал объявлен, но пока не настроен."
+              },
+              "status": "in-development",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "receiveHermesAgent",
+                "summary": "Дверь канала Hermes: задание, переданное агентом рабочего пространства. Узел скрыт — канал объявлен, но пока не настроен.",
+                "accepts": "Задание агента Hermes.",
+                "returns": "Названный вход для середины."
+              },
+              "run": "sequential",
+              "estDurationMs": 60000
             }
           ]
         },
@@ -302,7 +336,7 @@
               "kind": "transform",
               "name": "Logic",
               "description": "The middle — the deterministic work that turns the input into the output.",
-              "state": "hidden",
+              "state": "visible",
               "ioType": null,
               "info": {
                 "aiSummary": "Берёт живую цену акции по тикеру из Yahoo Finance (без ключа, без AI); если цены нет — прогон падает и ничего не записывается."
@@ -340,7 +374,7 @@
               "kind": "condition-success",
               "name": "If success",
               "description": "The branch taken when the middle produced a result — the flow continues to the output.",
-              "state": "hidden",
+              "state": "visible",
               "ioType": null,
               "info": {
                 "aiSummary": "Ветка успеха: пропускает результат к записи. Настоящий гейт — бросок в узле цены, поэтому сюда доходит только успешный поток."
@@ -375,7 +409,7 @@
               "kind": "condition-failure",
               "name": "If failure",
               "description": "The branch taken when the middle could not produce a result — the flow ends here.",
-              "state": "hidden",
+              "state": "visible",
               "ioType": null,
               "info": {
                 "aiSummary": "Ветка отказа: визуальный тупик. Реальный отказ уже остановил прогон в узле цены, поэтому функция ничего не делает."
@@ -412,7 +446,7 @@
               "systemInstructionName": "kind.output",
               "deletion": "forbidden",
               "addition": "allowed",
-              "minNodes": 8
+              "minNodes": 11
             },
             "output-connector": {
               "systemInstructionName": "kind.output-connector",
@@ -427,7 +461,7 @@
               "kind": "output",
               "name": "Output",
               "description": "Where the automation delivers its result — a reply, a saved record, or a published page.",
-              "state": "hidden",
+              "state": "visible",
               "ioType": "dashboard",
               "info": {
                 "aiSummary": "Пишет строку (дата, компания, тикер, цена) в таблицу history дашборда автоматизации."
@@ -711,6 +745,102 @@
               },
               "run": "sequential",
               "estDurationMs": 60000
+            },
+            {
+              "cuid": "cdelivervih3efrq9",
+              "name": "Vector memory output",
+              "description": "Выход в агентную векторную память (LightRAG).",
+              "state": "hidden",
+              "kind": "output",
+              "ioType": "vector-memory",
+              "in": {
+                "state": "required",
+                "connections": [
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "prohibit",
+                "connections": null
+              },
+              "info": {
+                "aiSummary": "Дверь канала векторной памяти: факт, запоминаемый в агентной памяти LightRAG. Узел скрыт — канал объявлен, но пока не настроен."
+              },
+              "status": "in-development",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "deliverVectorMemory",
+                "summary": "Дверь канала векторной памяти: факт, запоминаемый в агентной памяти LightRAG. Узел скрыт — канал объявлен, но пока не настроен.",
+                "accepts": "Результат успешной ветки.",
+                "returns": "Запись в векторной памяти."
+              },
+              "run": "sequential",
+              "estDurationMs": 60000
+            },
+            {
+              "cuid": "cdeliverdndd14qyz",
+              "name": "Database output",
+              "description": "Выход в локальную базу данных автоматизации.",
+              "state": "hidden",
+              "kind": "output",
+              "ioType": "database",
+              "in": {
+                "state": "required",
+                "connections": [
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "prohibit",
+                "connections": null
+              },
+              "info": {
+                "aiSummary": "Дверь канала локальной базы: запись в собственной базе автоматизации. Узел скрыт — канал объявлен, но пока не настроен."
+              },
+              "status": "in-development",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "deliverDatabase",
+                "summary": "Дверь канала локальной базы: запись в собственной базе автоматизации. Узел скрыт — канал объявлен, но пока не настроен.",
+                "accepts": "Результат успешной ветки.",
+                "returns": "Строка в локальной базе."
+              },
+              "run": "sequential",
+              "estDurationMs": 60000
+            },
+            {
+              "cuid": "cdelivers3oz5tpd6",
+              "name": "Storage output",
+              "description": "Выход в локальное хранилище файлов автоматизации.",
+              "state": "hidden",
+              "kind": "output",
+              "ioType": "storage",
+              "in": {
+                "state": "required",
+                "connections": [
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "prohibit",
+                "connections": null
+              },
+              "info": {
+                "aiSummary": "Дверь канала локального хранилища: файл, сохранённый рядом с автоматизацией. Узел скрыт — канал объявлен, но пока не настроен."
+              },
+              "status": "in-development",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "deliverStorage",
+                "summary": "Дверь канала локального хранилища: файл, сохранённый рядом с автоматизацией. Узел скрыт — канал объявлен, но пока не настроен.",
+                "accepts": "Результат успешной ветки.",
+                "returns": "Файл в локальном хранилище."
+              },
+              "run": "sequential",
+              "estDurationMs": 60000
             }
           ]
         }
@@ -721,25 +851,25 @@
         "cuid": "cmrvy25ez1pjaw648c44d369e3",
         "from": "cmruca7r64n1jr7c4ca119ed7b7c4d",
         "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cmrvy25f21pjaxf3222f069e86",
         "from": "cmruca7ra4n1jsdcdee0feb026f3a4",
         "to": "cmruddnrpho70e8af12589d1deaa",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cmrvy25f31pjay5b734893f76d",
         "from": "cmruca7ra4n1jsdcdee0feb026f3a4",
         "to": "cmruqdpjn51ehmdd7904ad3a6abaf6",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cmrvy25f31pjaz4dd95ea63fc4",
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cmruca7ra4n1jt639afc902fa70f5b",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cmrvwdp1t49a2a3d016f55de37",
@@ -1072,6 +1202,78 @@
         "warnings": [],
         "envKeys": [],
         "entities": []
+      },
+      {
+        "systemInstructionName": "tab",
+        "name": "vector-memory",
+        "presence": "collapsed",
+        "info": {
+          "aiSummary": "Вкладка векторной памяти объявлена и пуста: показывать, что автоматизация запомнила, будем когда владелец скажет что именно."
+        },
+        "status": "in-development",
+        "warnings": [],
+        "envKeys": [],
+        "entities": [
+          {
+            "cuid": "cvectormesrc1v6z1",
+            "name": "Main memory",
+            "info": {
+              "aiSummary": "Заготовка «Main memory»: создана вместе со вкладкой, требований владельца пока нет."
+            },
+            "status": "in-development",
+            "warnings": [],
+            "envKeys": [],
+            "data": {}
+          }
+        ]
+      },
+      {
+        "systemInstructionName": "tab",
+        "name": "database",
+        "presence": "collapsed",
+        "info": {
+          "aiSummary": "Вкладка локальной базы объявлена и пуста: какие записи показывать, решает владелец."
+        },
+        "status": "in-development",
+        "warnings": [],
+        "envKeys": [],
+        "entities": [
+          {
+            "cuid": "cdatabasew8kfh3ov",
+            "name": "Main database",
+            "info": {
+              "aiSummary": "Заготовка «Main database»: создана вместе со вкладкой, требований владельца пока нет."
+            },
+            "status": "in-development",
+            "warnings": [],
+            "envKeys": [],
+            "data": {}
+          }
+        ]
+      },
+      {
+        "systemInstructionName": "tab",
+        "name": "storage",
+        "presence": "collapsed",
+        "info": {
+          "aiSummary": "Вкладка локального хранилища объявлена и пуста: здесь будут файлы автоматизации, например изображения."
+        },
+        "status": "in-development",
+        "warnings": [],
+        "envKeys": [],
+        "entities": [
+          {
+            "cuid": "cstorageqze512pd",
+            "name": "Main storage",
+            "info": {
+              "aiSummary": "Заготовка «Main storage»: создана вместе со вкладкой, требований владельца пока нет."
+            },
+            "status": "in-development",
+            "warnings": [],
+            "envKeys": [],
+            "data": {}
+          }
+        ]
       }
     ]
   },

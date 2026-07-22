@@ -244,6 +244,7 @@ export const InputChannelSchema = z.enum([
   "public-page", // a form or control on the automation's own public page
   "telegram-bot", // a message sent to the automation's own Telegram bot
   "user-telegram-chat", // a message read from the user's own Telegram chat
+  "hermes", // a task handed in by the Hermes agent (the workspace's own agent runtime)
   "custom", // any other input source the owner defines
 ]);
 
@@ -256,6 +257,9 @@ export const OutputChannelSchema = z.enum([
   "email", // an email the automation sends out
   "telegram-bot", // a message sent through the automation's own Telegram bot
   "user-telegram-chat", // a message written into the user's own Telegram chat
+  "vector-memory", // a fact remembered in the agent vector memory (LightRAG)
+  "database", // a record written into the automation's own local database
+  "storage", // a file kept in the automation's own local storage
   "custom", // any other delivery destination the owner defines
 ]);
 
