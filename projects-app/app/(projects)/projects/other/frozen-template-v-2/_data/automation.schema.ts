@@ -882,6 +882,32 @@ export const AutomationSchema = z
     if (lifecycle === "real-project" && nodes.length > 0 && visible.length === 0) {
       ctx.addIssue({ code: "custom", path: ["graph", "nodes"], message: "a real project must have at least one visible node" });
     }
+    // A WAY IN AND A WAY OUT (owner, 2026-07-22). "At least one visible node" is not enough: an automation
+    // whose visible nodes are all middle ones can be neither triggered nor read — it is born dead. So the
+    // moment the template becomes a real project, at least one door on EACH side must be open.
+    //
+    // This is the machine half of the launch law. Its human half lives in the system instructions
+    // (`passport.md` §6.1, `group.input.md`, `group.output.md`): the agent REVEALS the channels the owner
+    // named in the use cases, and falls back to control-panel in / dashboard out when he named none.
+    // The instruction tells the agent what to do; this law makes forgetting it impossible.
+    //
+    // A connector counts as a door: a chained automation legitimately receives from — or hands to — a
+    // neighbour instead of a channel of its own.
+    if (lifecycle === "real-project" && nodes.length > 0) {
+      for (const side of ["input", "output"] as const) {
+        const open = automation.graph.nodes.groups[side].nodes.filter((n) => n.state === "visible");
+        if (open.length === 0) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["graph", "nodes", "groups", side],
+            message:
+              `a real project needs at least one visible ${side} — otherwise it can never ` +
+              `${side === "input" ? "be triggered" : "deliver a result"}. Reveal the ${side} channel the owner asked ` +
+              `for in the use cases, or the default one (${side === "input" ? "control-panel" : "dashboard"}).`,
+          });
+        }
+      }
+    }
     if (lifecycle === "real-project" && automation.useCases.cases.length === 0) {
       ctx.addIssue({ code: "custom", path: ["useCases", "cases"], message: "a real project is defined by its use cases — there must be at least one" });
     }

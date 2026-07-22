@@ -14,6 +14,16 @@ This automation was born carrying one `output` node for EVERY destination of the
 - `custom` has no door of its own — a node for an owner-defined destination is ADDED when it is really
   needed.
 
+## Which door to open at launch
+
+The owner is asked, as a separate question of the Quiz that cannot be skipped, where results should GO.
+Open exactly the destinations he named. If he named none, open `dashboard` — the History table on the
+automation's own page: it is always present, needs no external service, and gives the owner something
+to look at after the very first run. The core refuses a real project with every output door shut.
+
+Opening the `dashboard` door has a second half: make its tab visible as well (`tab` → `presence:
+"expanded"`). A result nobody can see is not delivered.
+
 ## What an output node owes you
 
 - NOTHING leaves it. An output has no outgoing edge, ever: it is where the flow ends.

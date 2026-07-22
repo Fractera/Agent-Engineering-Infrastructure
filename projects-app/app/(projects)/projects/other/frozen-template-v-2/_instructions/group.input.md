@@ -16,6 +16,14 @@ plus exactly ONE `input-connector`. So:
 - `custom` is the only channel with no door of its own. It is the open door for a channel the owner
   defines himself; a node for it is ADDED when it is actually needed, never in advance.
 
+## Which door to open at launch
+
+The owner is asked, as a separate question of the Quiz that cannot be skipped, where requests should
+ENTER. Open exactly the doors he named. If he named none, open `control-panel` — the automation's own
+page exists from the first minute and needs no setup, no token and no external service, so it is the
+one channel that always works. The core refuses a real project with every input door shut, so "open
+none" is not an option you have.
+
 ## What an input node owes you
 
 - It has NO incoming port. Nothing flows into it — the outside world is its source.

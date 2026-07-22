@@ -12,6 +12,11 @@ its ENTITIES: one concrete calendar, one concrete chart. Many entities, one tab.
 It is one field on purpose: "present" plus "expanded" as two flags could contradict each other. Choose
 by how much room the tab deserves on first sight, not by how proud you are of it.
 
+AT LAUNCH, `dashboard` IS `expanded` BY DEFAULT. When the automation becomes a real project the
+`dashboard` output door is opened unless the owner asked for another destination (see `group.output`),
+and the tab that shows what that door writes must be open with it — not folded away. This is the one
+tab whose starting presence is decided for you; every other tab you choose by the rule above.
+
 ## Working inside a tab
 
 - `name` matches the folder in `_components/` — that is how its code is found. Renaming a tab without

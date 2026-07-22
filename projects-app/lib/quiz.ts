@@ -564,6 +564,81 @@ const PROMPTS: Record<UiLang, Record<PromptKey, string>> = {
   },
 };
 
+// ─── THE TWO MANDATORY CHANNEL QUESTIONS — A STEP THAT CANNOT BE SKIPPED (owner, 2026-07-22) ─────────
+// The prompt above already TELLS the interviewer to ask them. A prompt is not a law: a model that got
+// carried away by a vivid scenario can reply READY having never asked where the work enters or where the
+// result goes — and then the agent opens doors by guesswork. So READY is GATED here: if either side is
+// still unnamed, READY is refused and the missing question is asked instead, in the owner's language.
+//
+// The texts are deterministic, exactly like PROMPTS above and for the same reason: a question that failed
+// to translate would leave the owner staring at English (or at nothing) on the one step he may not skip.
+// They live in their own table rather than inside PROMPTS so that the live, months-proven wording of the
+// existing prompts is not touched at all.
+const CHANNEL_QUESTIONS: Record<UiLang, { input: string; output: string }> = {
+  en: {
+    input: "One thing I still must know: WHERE SHOULD REQUESTS ENTER this automation? An input channel is the door work arrives through. The usual ones: the control panel on the automation's own page (always available), a Telegram bot, a public web page, a schedule (cron), an incoming e-mail or a webhook. Several at once is normal. If you have no preference, say so and I will use the control panel.",
+    output: "And WHERE SHOULD THE RESULTS GO? An output channel is where the result is delivered or stored. The usual ones: the History table on the automation's own page (always available), a reply in Telegram, a web page, an e-mail, another system. Several at once is normal. If you have no preference, say so and I will use the History table.",
+  },
+  es: {
+    input: "Aún necesito saber una cosa: ¿POR DÓNDE DEBEN ENTRAR LAS SOLICITUDES a esta automatización? Un canal de entrada es la puerta por la que llega el trabajo. Los habituales: el panel de control de la propia página (siempre disponible), un bot de Telegram, una página web pública, una programación (cron), un correo entrante o un webhook. Varios a la vez es normal. Si no tienes preferencia, dilo y usaré el panel de control.",
+    output: "¿Y ADÓNDE DEBEN IR LOS RESULTADOS? Un canal de salida es donde el resultado se entrega o se guarda. Los habituales: la tabla de Historial de la propia página (siempre disponible), una respuesta en Telegram, una página web, un correo, otro sistema. Varios a la vez es normal. Si no tienes preferencia, dilo y usaré la tabla de Historial.",
+  },
+  fr: {
+    input: "Il me manque encore une chose : PAR OÙ LES DEMANDES DOIVENT-ELLES ENTRER dans cette automatisation ? Un canal d'entrée est la porte par laquelle le travail arrive. Les plus courants : le panneau de commande de la page de l'automatisation (toujours disponible), un bot Telegram, une page web publique, une planification (cron), un e-mail entrant ou un webhook. Plusieurs à la fois est normal. Si vous n'avez pas de préférence, dites-le et j'utiliserai le panneau de commande.",
+    output: "Et OÙ LES RÉSULTATS DOIVENT-ILS ALLER ? Un canal de sortie est l'endroit où le résultat est livré ou stocké. Les plus courants : le tableau Historique de la page (toujours disponible), une réponse dans Telegram, une page web, un e-mail, un autre système. Plusieurs à la fois est normal. Sans préférence, je prendrai le tableau Historique.",
+  },
+  it: {
+    input: "Mi manca ancora una cosa: DA DOVE DEVONO ENTRARE LE RICHIESTE in questa automazione? Un canale di ingresso è la porta da cui arriva il lavoro. I soliti: il pannello di controllo sulla pagina dell'automazione (sempre disponibile), un bot Telegram, una pagina web pubblica, una pianificazione (cron), un'e-mail in arrivo o un webhook. Diversi insieme è normale. Se non hai preferenze, dillo e userò il pannello di controllo.",
+    output: "E DOVE DEVONO ANDARE I RISULTATI? Un canale di uscita è dove il risultato viene consegnato o salvato. I soliti: la tabella Cronologia sulla stessa pagina (sempre disponibile), una risposta in Telegram, una pagina web, un'e-mail, un altro sistema. Diversi insieme è normale. Senza preferenze userò la tabella Cronologia.",
+  },
+  ru: {
+    input: "Мне осталось узнать одно: ОТКУДА В ЭТУ АВТОМАТИЗАЦИЮ ДОЛЖНЫ ПРИХОДИТЬ ЗАПРОСЫ? Входной канал — это дверь, через которую попадает работа. Обычные варианты: пульт управления на странице самой автоматизации (есть всегда), телеграм-бот, публичная страница сайта, расписание (крон), входящее письмо или вебхук. Несколько сразу — нормально. Если вам всё равно — так и скажите, я возьму пульт управления.",
+    output: "И КУДА ДОЛЖНЫ ПОПАДАТЬ РЕЗУЛЬТАТЫ? Выходной канал — это место, куда результат доставляется или записывается. Обычные варианты: таблица «История» на странице самой автоматизации (есть всегда), ответ в телеграме, страница сайта, письмо, другая система. Несколько сразу — нормально. Если вам всё равно — так и скажите, я возьму таблицу «История».",
+  },
+  de: {
+    input: "Eines muss ich noch wissen: WO SOLLEN ANFRAGEN in diese Automatisierung HEREINKOMMEN? Ein Eingangskanal ist die Tür, durch die die Arbeit ankommt. Üblich sind: das Bedienfeld auf der Seite der Automatisierung (immer vorhanden), ein Telegram-Bot, eine öffentliche Webseite, ein Zeitplan (Cron), eine eingehende E-Mail oder ein Webhook. Mehrere gleichzeitig sind normal. Wenn es Ihnen egal ist, sagen Sie es — dann nehme ich das Bedienfeld.",
+    output: "Und WOHIN SOLLEN DIE ERGEBNISSE? Ein Ausgangskanal ist der Ort, an den das Ergebnis geliefert oder gespeichert wird. Üblich sind: die Verlaufstabelle auf derselben Seite (immer vorhanden), eine Antwort in Telegram, eine Webseite, eine E-Mail, ein anderes System. Mehrere gleichzeitig sind normal. Ohne Präferenz nehme ich die Verlaufstabelle.",
+  },
+  pt: {
+    input: "Ainda preciso saber uma coisa: POR ONDE OS PEDIDOS DEVEM ENTRAR nesta automação? Um canal de entrada é a porta por onde o trabalho chega. Os habituais: o painel de controlo na página da automação (sempre disponível), um bot do Telegram, uma página web pública, um agendamento (cron), um e-mail recebido ou um webhook. Vários ao mesmo tempo é normal. Se não tiver preferência, diga e eu uso o painel de controlo.",
+    output: "E PARA ONDE DEVEM IR OS RESULTADOS? Um canal de saída é onde o resultado é entregue ou guardado. Os habituais: a tabela de Histórico na mesma página (sempre disponível), uma resposta no Telegram, uma página web, um e-mail, outro sistema. Vários é normal. Sem preferência, uso a tabela de Histórico.",
+  },
+  pl: {
+    input: "Muszę jeszcze wiedzieć jedno: SKĄD MAJĄ PRZYCHODZIĆ ŻĄDANIA do tej automatyzacji? Kanał wejściowy to drzwi, którymi trafia praca. Typowe: panel sterowania na stronie samej automatyzacji (zawsze dostępny), bot Telegram, publiczna strona WWW, harmonogram (cron), przychodzący e-mail lub webhook. Kilka naraz to norma. Jeśli nie masz preferencji, powiedz — wezmę panel sterowania.",
+    output: "A DOKĄD MAJĄ TRAFIAĆ WYNIKI? Kanał wyjściowy to miejsce, gdzie wynik jest dostarczany lub zapisywany. Typowe: tabela Historia na tej samej stronie (zawsze dostępna), odpowiedź w Telegramie, strona WWW, e-mail, inny system. Kilka naraz to norma. Bez preferencji wezmę tabelę Historia.",
+  },
+  tr: {
+    input: "Bir şeyi daha bilmem gerekiyor: İSTEKLER bu otomasyona NEREDEN GİRMELİ? Girdi kanalı, işin geldiği kapıdır. Yaygın olanlar: otomasyonun kendi sayfasındaki kontrol paneli (her zaman var), bir Telegram botu, herkese açık bir web sayfası, bir zamanlama (cron), gelen e-posta veya webhook. Aynı anda birkaçı normaldir. Tercihiniz yoksa söyleyin, kontrol panelini kullanırım.",
+    output: "Peki SONUÇLAR NEREYE GİTMELİ? Çıktı kanalı, sonucun teslim edildiği veya saklandığı yerdir. Yaygın olanlar: aynı sayfadaki Geçmiş tablosu (her zaman var), Telegram'da bir yanıt, bir web sayfası, e-posta, başka bir sistem. Birkaçı normaldir. Tercihiniz yoksa Geçmiş tablosunu kullanırım.",
+  },
+  nl: {
+    input: "Eén ding moet ik nog weten: WAAR MOETEN VERZOEKEN deze automatisering BINNENKOMEN? Een invoerkanaal is de deur waardoor het werk binnenkomt. De gebruikelijke: het bedieningspaneel op de eigen pagina van de automatisering (altijd aanwezig), een Telegram-bot, een openbare webpagina, een planning (cron), een binnenkomende e-mail of een webhook. Meerdere tegelijk is normaal. Heb je geen voorkeur, zeg het dan — ik neem het bedieningspaneel.",
+    output: "En WAAR MOETEN DE RESULTATEN HEEN? Een uitvoerkanaal is waar het resultaat wordt afgeleverd of opgeslagen. De gebruikelijke: de Geschiedenis-tabel op dezelfde pagina (altijd aanwezig), een antwoord in Telegram, een webpagina, een e-mail, een ander systeem. Meerdere is normaal. Zonder voorkeur neem ik de Geschiedenis-tabel.",
+  },
+};
+
+/** Which of the two channel sides the owner has actually spoken about, read off the transcript. */
+async function channelsNamed(turns: Turn[]): Promise<{ input: boolean; output: boolean }> {
+  const transcript = turns.map((t) => `${t.role === "user" ? "OWNER" : "INTERVIEWER"}: ${t.content}`).join("\n");
+  const raw = await chat(
+    [
+      {
+        role: "system",
+        content:
+          'You read an interview about an automation and report ONLY whether the OWNER has stated where work ENTERS ' +
+          'it and where results GO. Saying "I do not mind" or "you decide" COUNTS as stated — he was asked and he ' +
+          'answered. A channel merely suggested by the interviewer and never answered does NOT count. ' +
+          'Reply with strict JSON: {"input": true|false, "output": true|false}',
+      },
+      { role: "user", content: transcript },
+    ],
+    "gpt-4o-mini",
+    { json: true },
+  );
+  const parsed = JSON.parse(raw) as { input?: unknown; output?: unknown };
+  return { input: parsed.input === true, output: parsed.output === true };
+}
+
 /** The owner-facing text in HIS language: one of the six we ship, English for anything else. */
 export function t(key: PromptKey, language: string = defaultLanguage()): string {
   const code = language.toLowerCase().slice(0, 2) as UiLang;
@@ -613,13 +688,30 @@ RULES
 /** The next question of the use-case interview (phase 1). READY = the description is detailed enough. */
 export async function nextUseCaseQuestion(quiz: QuizRow, instruction: string, turns: Turn[]): Promise<string> {
   const history = turns.map((t) => ({ role: t.role === "user" ? "user" : "assistant", content: t.content }));
-  return chat([
+  const question = await chat([
     { role: "system", content: USECASES_SYSTEM(languageName(quiz.language), instruction) },
     ...history,
     { role: "user", content: history.length <= 1
         ? "Ask your first question about the scenarios."
         : "Ask your next question, or if the scenarios are described in enough detail, reply with exactly: READY" },
   ]);
+
+  // THE GATE. READY is a claim, not a fact: it is accepted only once BOTH channel sides have been named.
+  // A missing side is asked about instead — the input side first, so the two questions keep their order.
+  if (/^READY\b/i.test(question.trim())) {
+    const code = quiz.language.toLowerCase().slice(0, 2) as UiLang;
+    const ask = CHANNEL_QUESTIONS[code] ?? CHANNEL_QUESTIONS.en;
+    try {
+      const named = await channelsNamed(turns);
+      if (!named.input) return ask.input;
+      if (!named.output) return ask.output;
+    } catch {
+      // The gate must not become a wall: if the check itself fails (no key, a bad JSON reply, the API
+      // down), let READY through. Blocking the owner out of his own automation because a helper call
+      // stumbled would be a worse failure than a channel we later default to control-panel / dashboard.
+    }
+  }
+  return question;
 }
 
 /** Turn the interview into NUMBERED user cases. Each case = one scenario, told from the user's side. */

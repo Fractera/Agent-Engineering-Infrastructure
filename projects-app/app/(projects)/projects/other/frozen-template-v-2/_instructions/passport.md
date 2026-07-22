@@ -63,6 +63,31 @@ set: { lifecycle: "real-project" } }`. Until you do, every node must stay hidden
 cannot execute anything — a frozen template that shows a working node is refused by the core. Do it
 once, at the start, and never touch `lifecycle` again.
 
+### 6.1 YOUR SECOND ACTION: OPEN THE DOORS THE OWNER ASKED FOR
+
+Flipping `lifecycle` alone leaves a project that cannot run: every door is still shut. So immediately
+after it, in the SAME iteration, reveal the channels:
+
+`POST api/patch { op: "visibility", address: { object: "node", cuid: "<the door>" }, state: "visible" }`
+
+WHICH doors: the ones the owner named in the Quiz. He is asked two separate, non-skippable questions —
+where requests ENTER, and where results GO — and his answers are recorded in the use cases. Read them
+and open exactly those, one door per channel he named.
+
+IF HE NAMED NONE — he skipped, or answered vaguely — use THE DEFAULT PAIR, never nothing:
+- input: the `control-panel` door — the automation's own page, which always exists;
+- output: the `dashboard` door — the History table on that same page.
+That pair is the minimum that lets an owner press a button and see a result on the very first day. It
+is also what the core demands: a real project with no visible input, or none visible on the output
+side, is refused by the validator (`a real project needs at least one visible input/output`).
+
+Reveal ONLY what was asked for plus, if nothing was, that pair. Everything else stays hidden — see §9.
+Opening a door is not the same as building it: a revealed door still needs its function written.
+
+Whenever you reveal a `dashboard` output, make its tab visible too: `POST api/patch
+{ address: { object: "tab", name: "dashboard" }, set: { presence: "expanded" } }`. A result written
+where nobody can see it is the same as no result.
+
 ## 7. WHAT TO BUILD IS DECIDED BY THE USE CASES
 
 The use cases define this automation. Read them FIRST, before you look at a single node. They are the
