@@ -41,7 +41,7 @@ export function graphToFlow(graph: Automation["graph"]): DiagramVM {
         name: n.name,
         description: n.description,
         kind: n.kind,
-        ioType: n.ioType ?? null,
+        ioType: typeof n.ioType === "string" ? n.ioType : null,
         group,
         col: COL_OF[group],
         row: i,
