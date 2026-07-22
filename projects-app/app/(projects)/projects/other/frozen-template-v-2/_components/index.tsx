@@ -1,6 +1,8 @@
 import { loadAutomation } from "../_data/load";
 import type { Surface } from "./surface";
 import { ChevronDownIcon } from "./chrome/icons";
+import { graphToFlow } from "./diagram/graph-to-flow";
+import { DiagramCanvasV2 } from "./diagram/canvas.client";
 
 // СЕКЦИИ НА ХОЛСТЕ — серия аккордеонов, дизайн взят из v1 (`automation-accordions.client.tsx`:
 // контейнер `rounded-lg border px-4`, каждый item — `border-b`, триггер с шевроном), воспроизведён
@@ -10,11 +12,15 @@ import { ChevronDownIcon } from "./chrome/icons";
 // (absent = секции нет; иначе — закрытый аккордеон на холсте). Одно ядро читают ОБЕ поверхности —
 // админ и публичная — поэтому набор секций у них одинаковый и правится из меню без пересборки.
 //
-// Аккордеон рождается ЗАКРЫТЫМ и пока ПУСТ внутри: содержимое секций придёт отдельными шагами.
-export default async function AutomationComponents({ surface }: { surface: Surface }) {
-  const { components } = await loadAutomation();
+// Аккордеон рождается ЗАКРЫТЫМ и пока ПУСТ внутри: содержимое секций придёт отдельными шагами. ИСКЛЮЧЕНИЕ —
+// секция `diagram`: её содержимое (read-only канвас графа) уже готово и рисуется из ядра automation.json.
+// Обе поверхности (admin и public) читают ОДНО ядро → диаграмма видна и в кокпите, и на витрине.
+export default async function AutomationComponents({ surface, lang }: { surface: Surface; lang: string }) {
+  const { components, graph } = await loadAutomation();
   const tabs = components.tabs.filter((tab) => tab.presence !== "absent");
   if (tabs.length === 0) return null;
+
+  const flow = graphToFlow(graph);
 
   return (
     <div data-components-root data-surface={surface} className="mt-6 rounded-lg border px-4">
@@ -26,8 +32,14 @@ export default async function AutomationComponents({ surface }: { surface: Surfa
             <span className="capitalize">{tab.name.replace(/-/g, " ")}</span>
             <ChevronDownIcon className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
           </summary>
-          {/* пусто на этом этапе — содержимое секции появится позже */}
-          <div className="pb-4 pt-0 text-sm text-muted-foreground" />
+          <div className="pb-4 pt-0 text-sm text-muted-foreground">
+            {tab.name === "diagram" ? (
+              <DiagramCanvasV2 vm={flow} lang={lang} />
+            ) : (
+              /* пусто на этом этапе — содержимое секции появится позже */
+              null
+            )}
+          </div>
         </details>
       ))}
     </div>

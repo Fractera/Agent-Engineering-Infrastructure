@@ -20,7 +20,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-6">
       <AutomationChrome surface={surface} passport={passport} lang={lang} tabs={tabs} publicHref="?view=public" />
-      <AutomationComponents surface={surface} />
+      <AutomationComponents surface={surface} lang={lang} />
     </main>
   );
 }

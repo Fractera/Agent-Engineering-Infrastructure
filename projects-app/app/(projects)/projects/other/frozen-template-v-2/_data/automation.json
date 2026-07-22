@@ -736,8 +736,20 @@
     "tabs": [
       {
         "systemInstructionName": "tab",
-        "name": "calendar",
+        "name": "diagram",
         "presence": "expanded",
+        "info": {
+          "aiSummary": "Диаграмма автоматизации: read-only канвас графа из ядра (три плоскости вход/середина/выход, скрытые двери каналов и рабочий путь). Рисуется и в кокпите, и на публичной витрине."
+        },
+        "status": "materialized",
+        "warnings": [],
+        "envKeys": [],
+        "entities": []
+      },
+      {
+        "systemInstructionName": "tab",
+        "name": "calendar",
+        "presence": "collapsed",
         "info": {
           "aiSummary": "Вкладка календаря объявлена и пуста: владелец ещё не сказал, что она должна показывать."
         },
