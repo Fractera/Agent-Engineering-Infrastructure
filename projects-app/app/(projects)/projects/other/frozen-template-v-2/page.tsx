@@ -1,7 +1,7 @@
 import { loadAutomation } from "./_data/load";
 import AutomationChrome from "./_components/chrome";
 import AutomationComponents from "./_components";
-import NotBuiltNotice from "./_components/shared/not-built-notice.client";
+import NotBuiltPage from "./_components/shared/not-built-page";
 
 // Страница автоматизации. Паттерн v1 (test-stream-frozen-starter/page.tsx): ДВЕ композиции на одном
 // маршруте — по умолчанию КОКПИТ владельца (surface="admin", полоса-шапка), а `?view=public` рисует
@@ -24,8 +24,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
   const built = passport.lifecycle === "real-project";
   if (surface === "public" && !built) {
     return (
-      <main data-zone-column data-automation-state="not-built" className="mx-auto w-full max-w-4xl px-4 py-6">
-        <NotBuiltNotice />
+      <main data-zone-column className="mx-auto w-full max-w-4xl px-4">
+        <NotBuiltPage />
       </main>
     );
   }
