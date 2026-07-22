@@ -899,6 +899,23 @@
                     "nl": "Apple"
                   }
                 }
+              ],
+              "answer": {
+                "en": "{company} ({ticker}) — ${price}",
+                "es": "{company} ({ticker}) — {price} $",
+                "fr": "{company} ({ticker}) — {price} $",
+                "it": "{company} ({ticker}) — {price} $",
+                "ru": "{company} ({ticker}) — {price} $",
+                "de": "{company} ({ticker}) — {price} $",
+                "pt": "{company} ({ticker}) — {price} $",
+                "pl": "{company} ({ticker}) — {price} $",
+                "tr": "{company} ({ticker}) — {price} $",
+                "nl": "{company} ({ticker}) — ${price}"
+              },
+              "answerKeys": [
+                "company",
+                "ticker",
+                "price"
               ]
             }
           }

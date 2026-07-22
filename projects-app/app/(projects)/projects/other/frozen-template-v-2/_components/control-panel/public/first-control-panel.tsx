@@ -6,8 +6,9 @@ import type { Surface } from "../../surface";
 import { controlPanelStrings, pick } from "../i18n";
 import { paramsOf, dataText } from "../params";
 import ParamField from "./components/param-field.client";
-import RunReport, { type Outcome } from "./components/run-report.client";
+import RunReport, { type Outcome, readError } from "./components/run-report.client";
 import { notifyRunCompleted } from "../../shared/run-events";
+import Toast, { type ToastTone } from "../../shared/toast.client";
 
 // ПЕРВЫЙ ПУЛЬТ ЗАПУСКА — публичная половина вкладки: поля запроса, кнопка и результат. Только
 // использование. Виден на обеих поверхностях: посетителю — как вся вкладка, владельцу — как её верхняя
@@ -29,16 +30,35 @@ export default function FirstControlPanel({
 }) {
   const L = controlPanelStrings(lang);
   const params = paramsOf(entity);
+  // ДВА ОБЛИКА ОДНОГО ПУЛЬТА (образец v1). На ВИТРИНЕ пульт — это ФОРМА ЗАЯВКИ лендинга: карточка по
+  // центру, крупный заголовок, поля в одну колонку, широкая кнопка призыва, а ответ — тостом. В КОКПИТЕ —
+  // рабочий инструмент внутри аккордеона: компактно, две колонки, цепочка узлов под формой. Логика одна и
+  // та же — разное только оформление, поэтому второй компонент не нужен.
+  const landing = surface === "public";
   const [values, setValues] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [toast, setToast] = useState<{ text: string; tone: ToastTone; auto?: number } | null>(null);
 
   const missing = params.filter((p) => p.required && !String(values[p.key] ?? "").trim()).map((p) => p.key);
+
+  // ОТВЕТ ПОСЕТИТЕЛЮ — строка, СОБРАННАЯ ПО ШАБЛОНУ ИЗ ЯДРА (`entity.data.answer`, десять языков):
+  // «{company} ({ticker}) — {price} $». Шаблон в ядре, а не в компоненте, потому что пульт — общий
+  // примитив: у другой автоматизации ответ другой, а код тот же. Цена округляется до копеек.
+  function answerText(context: Record<string, unknown>): string {
+    const tpl = pick(dataText(entity, "answer"), lang);
+    if (!tpl) return "";
+    return tpl.replace(/\{(\w+)\}/g, (_, key: string) => {
+      const v = context[key];
+      return typeof v === "number" ? v.toFixed(2) : String(v ?? "");
+    });
+  }
 
   async function ask() {
     if (missing.length) return;
     setBusy(true);
     setOutcome(null);
+    setToast(null);
     try {
       const apiBase = location.pathname.replace(/\/+$/, "") + "/api";
       const r = await fetch(`${apiBase}/run`, {
@@ -51,8 +71,24 @@ export default function FirstControlPanel({
       // Прогон мог записать строки, которые читают соседние секции страницы — объявляем факт, и они
       // обновляются сами. Перезагрузка страницы для этого не нужна и не должна быть нужна.
       if (!("refusal" in result) && result.ok) notifyRunCompleted();
+
+      // ВИТРИНА ОТВЕЧАЕТ ЧЕЛОВЕКУ, А НЕ ОТЧИТЫВАЕТСЯ: вместо цепочки узлов — тост с самим ответом
+      // (зелёный, гаснет сам через три секунды). Отказ тоже тостом, но красным и БЕЗ автозакрытия:
+      // причину нужно успеть прочитать. Цепочка узлов остаётся кокпиту владельца.
+      if (landing) {
+        if ("refusal" in result) {
+          setToast({ text: L.refused.replace("{k}", result.refusal), tone: "fail" });
+        } else if (result.ok) {
+          const text = answerText(result.context ?? {});
+          setToast({ text: text || L.done, tone: "ok", auto: 3000 });
+        } else {
+          setToast({ text: readError(result.error, lang) || L.failed, tone: "fail" });
+        }
+      }
     } catch (e) {
-      setOutcome({ ok: false, nodes: [], error: e instanceof Error ? e.message : String(e) });
+      const text = e instanceof Error ? e.message : String(e);
+      setOutcome({ ok: false, nodes: [], error: text });
+      if (landing) setToast({ text, tone: "fail" });
     } finally {
       setBusy(false);
     }
@@ -60,12 +96,6 @@ export default function FirstControlPanel({
 
   const title = pick(dataText(entity, "title"), lang) || entity.name;
   const description = pick(dataText(entity, "description"), lang);
-
-  // ДВА ОБЛИКА ОДНОГО ПУЛЬТА (образец v1). На ВИТРИНЕ пульт — это ФОРМА ЗАЯВКИ лендинга: карточка по
-  // центру, крупный заголовок, поля в одну колонку, широкая кнопка призыва. В КОКПИТЕ — рабочий
-  // инструмент внутри аккордеона: компактно, поля в две колонки, обычная кнопка. Логика одна и та же —
-  // разное только оформление, поэтому второй компонент не нужен.
-  const landing = surface === "public";
 
   return (
     <section
@@ -116,7 +146,11 @@ export default function FirstControlPanel({
         ) : null}
       </div>
 
-      {outcome ? <RunReport outcome={outcome} lang={lang} /> : null}
+      {/* Цепочка узлов — знание владельца: на витрине её нет, там ответ говорит тост. */}
+      {outcome && !landing ? <RunReport outcome={outcome} lang={lang} /> : null}
+      {toast ? (
+        <Toast text={toast.text} tone={toast.tone} autoCloseMs={toast.auto} onClose={() => setToast(null)} />
+      ) : null}
     </section>
   );
 }

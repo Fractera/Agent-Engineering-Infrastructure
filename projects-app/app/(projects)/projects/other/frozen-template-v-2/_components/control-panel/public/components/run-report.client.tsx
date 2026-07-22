@@ -5,7 +5,9 @@ import { controlPanelStrings, pick } from "../../i18n";
 // ОТЧЁТ ПРОГОНА — что вернула дверь api/run: цепочка узлов чипами (образец v1) и одна строка исхода.
 // Общий компонент публичной половины: так отчитывается любой пульт вкладки.
 export type NodeReport = { cuid: string; name: string; fn: string; status: "ok" | "stopped" | "fail"; error?: string };
-export type Outcome = { ok: boolean; nodes: NodeReport[]; error?: string } | { refusal: string };
+export type Outcome =
+  | { ok: boolean; nodes: NodeReport[]; error?: string; context?: Record<string, unknown> }
+  | { refusal: string };
 
 /** Ошибка узла приходит либо строкой, либо JSON-картой десяти языков (так бросает `receiveRequest`). */
 export function readError(raw: unknown, lang: string): string {
