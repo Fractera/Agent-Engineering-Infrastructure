@@ -6,6 +6,7 @@ import { controlPanelStrings, pick } from "../i18n";
 import { paramsOf, dataText } from "../params";
 import ParamField from "./components/param-field.client";
 import RunReport, { type Outcome } from "./components/run-report.client";
+import { notifyRunCompleted } from "../../shared/run-events";
 
 // ПЕРВЫЙ ПУЛЬТ ЗАПУСКА — публичная половина вкладки: поля запроса, кнопка и результат. Только
 // использование. Виден на обеих поверхностях: посетителю — как вся вкладка, владельцу — как её верхняя
@@ -36,7 +37,11 @@ export default function FirstControlPanel({ entity, lang }: { entity: Entity; la
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ input: values }),
       });
-      setOutcome((await r.json()) as Outcome);
+      const result = (await r.json()) as Outcome;
+      setOutcome(result);
+      // Прогон мог записать строки, которые читают соседние секции страницы — объявляем факт, и они
+      // обновляются сами. Перезагрузка страницы для этого не нужна и не должна быть нужна.
+      if (!("refusal" in result) && result.ok) notifyRunCompleted();
     } catch (e) {
       setOutcome({ ok: false, nodes: [], error: e instanceof Error ? e.message : String(e) });
     } finally {

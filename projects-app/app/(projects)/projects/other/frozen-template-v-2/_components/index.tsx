@@ -5,6 +5,7 @@ import { graphToFlow } from "./diagram/graph-to-flow";
 import { DiagramCanvasV2 } from "./diagram/canvas.client";
 import DashboardTable from "./dashboard/table";
 import ControlPanel from "./control-panel";
+import AutoRefresh from "./shared/auto-refresh.client";
 
 // СЕКЦИИ НА ХОЛСТЕ — серия аккордеонов, дизайн взят из v1 (`automation-accordions.client.tsx`:
 // контейнер `rounded-lg border px-4`, каждый item — `border-b`, триггер с шевроном), воспроизведён
@@ -26,6 +27,10 @@ export default async function AutomationComponents({ surface, lang }: { surface:
 
   return (
     <div data-components-root data-surface={surface} className="mt-6 rounded-lg border px-4">
+      {/* ЗАКОН СТРАНИЦЫ, а не забота отдельной секции: завершился прогон — серверные данные перечитываются,
+          и каждая таблица показывает свежие записи БЕЗ перезагрузки. Монтируется здесь один раз на все
+          вкладки, поэтому новая секция получает автообновление даром. */}
+      <AutoRefresh />
       {tabs.map((tab) => (
         // a native <details>: presence управляет начальным состоянием — collapsed закрыт, expanded открыт;
         // раскрытие/схлопывание кликом работает и без JavaScript
