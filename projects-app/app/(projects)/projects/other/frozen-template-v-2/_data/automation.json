@@ -279,10 +279,8 @@
               "kind": "input",
               "ioType": "hermes",
               "in": {
-                "state": "optional",
-                "connections": [
-                  "external"
-                ]
+                "state": "prohibit",
+                "connections": null
               },
               "out": {
                 "state": "required",
