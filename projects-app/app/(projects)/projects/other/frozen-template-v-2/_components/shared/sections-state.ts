@@ -10,7 +10,12 @@
 //
 // Хранится ТОЛЬКО отличие от того, что решило ядро (presence вкладки, первая сущность открыта): не нашли
 // записи — берём умолчание ядра. Поэтому смена умолчаний в ядре доходит до всех, кто ничего не трогал.
-export type SectionsState = { tabs: Record<string, { open?: boolean; entities?: Record<string, boolean> }> };
+export type SectionsState = {
+  tabs: Record<string, { open?: boolean; entities?: Record<string, boolean> }>;
+  /** Раскрывашки ОГЛАВЛЕНИЯ витрины — по имени вкладки. Отдельная ветка: это состояние ящика навигации,
+   *  а не самой страницы, и путать их нельзя (раздел может быть раскрыт, а его пункт в оглавлении — нет). */
+  nav?: Record<string, boolean>;
+};
 
 /** Адрес автоматизации из URL — без хардкода слага (закон 0: папку можно перенести). */
 function automationKey(): string {
@@ -52,5 +57,17 @@ export function writeOpen(tab: string, open: boolean, cuid?: string): void {
   } else {
     t.open = open;
   }
+  write(state);
+}
+
+/** Раскрывашка оглавления: раскрыта ли категория ящика навигации. Умолчание — ЗАКРЫТА. */
+export function readNavOpen(tab: string): boolean {
+  return read().nav?.[tab] === true;
+}
+
+export function writeNavOpen(tab: string, open: boolean): void {
+  const state = read();
+  state.nav ??= {};
+  state.nav[tab] = open;
   write(state);
 }

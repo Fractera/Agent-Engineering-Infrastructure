@@ -4,6 +4,7 @@ import FirstControlPanel from "./public/first-control-panel";
 import SecondControlPanel from "./public/second-control-panel";
 import RequestSettings from "./admin/request-settings";
 import SectionAccordion from "../shared/section-accordion.client";
+import BuildWithAi from "../shared/build-with-ai.client";
 import { controlPanelStrings, pick } from "./i18n";
 import { dataText } from "./params";
 
@@ -44,15 +45,24 @@ export default function ControlPanel({
 }) {
   const L = controlPanelStrings(lang);
   const many = entities.length > 1;
+  const tabTitle = "control panel";
   const landing = surface === "public";
 
   return (
-    <div data-entity="control-panel" data-surface={surface} className="space-y-4">
+    <div data-entity="control-panel" data-surface={surface} className="divide-y">
       {entities.map((entity, i) => {
         const Panel = PANELS[fileOf(entity.name)];
         const title = pick(dataText(entity, "title"), lang) || entity.name;
+        const pending = "crudUser" in entity.info ? entity.info.crudUser : undefined;
+        // ЗАЯВКА НА ОДИН ПУЛЬТ — свой адрес в ядре (entity), поэтому и раскрывашка своя, названная
+        // именем этого пульта. В кокпите она идёт сразу под ним; посетителю не показывается.
         const body = Panel ? (
-          <Panel entity={entity} lang={lang} surface={surface} />
+          <div className="space-y-3">
+            <Panel entity={entity} lang={lang} surface={surface} />
+            {surface === "admin" ? (
+              <BuildWithAi target={{ object: "entity", tab: "control-panel", cuid: entity.cuid }} name={title} pending={pending} lang={lang} />
+            ) : null}
+          </div>
         ) : (
           <p className="py-2 text-sm text-rose-700 dark:text-rose-400">
             {L.noComponent.replace("{k}", entity.name)}
@@ -61,7 +71,7 @@ export default function ControlPanel({
 
         // якорь для навигации публичной страницы — по нему прокручивает ящик слева
         return (
-          <div key={entity.cuid} id={`entity-${entity.cuid}`} className="scroll-mt-20">
+          <div key={entity.cuid} id={`entity-${entity.cuid}`} className="scroll-mt-20 py-3 first:pt-0 last:pb-0">
             {many && !landing ? (
               <SectionAccordion tab="control-panel" cuid={entity.cuid} title={title} defaultOpen={i === 0}>
                 {body}
@@ -72,7 +82,13 @@ export default function ControlPanel({
           </div>
         );
       })}
-      {surface === "admin" ? <RequestSettings entities={entities} lang={lang} /> : null}
+      {surface === "admin" ? (
+        <>
+          <RequestSettings entities={entities} lang={lang} />
+          {/* ЗАЯВКА НА ВСЮ ВКЛАДКУ — другой объект ядра (tab), поэтому отдельная раскрывашка внизу. */}
+          <BuildWithAi target={{ object: "tab", name: "control-panel" }} name={tabTitle} lang={lang} />
+        </>
+      ) : null}
     </div>
   );
 }

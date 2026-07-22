@@ -4,6 +4,7 @@ import History from "./public/history";
 import SecondTable from "./public/second-table";
 import TableSettings from "./admin/table-settings";
 import SectionAccordion from "../shared/section-accordion.client";
+import BuildWithAi from "../shared/build-with-ai.client";
 import { pick } from "../shared/localized";
 
 // МАРШРУТИЗАТОР ДАШБОРДА — не переключатель, а композиция: рисует две половины друг под другом.
@@ -43,12 +44,19 @@ export default function Dashboard({
   const landing = surface === "public";
 
   return (
-    <div data-entity="dashboard" data-surface={surface} className="space-y-4">
+    <div data-entity="dashboard" data-surface={surface} className="divide-y">
       {entities.map((entity, i) => {
         const Table = TABLES[fileOf(entity.name)];
         const title = pick((entity.data as Record<string, unknown>).title, lang) || entity.name;
+        const pending = "crudUser" in entity.info ? entity.info.crudUser : undefined;
+        // ЗАЯВКА НА ОДНУ ТАБЛИЦУ — свой адрес в ядре (entity) и своё имя в заголовке раскрывашки.
         const body = Table ? (
-          <Table entity={entity} lang={lang} />
+          <div className="space-y-3">
+            <Table entity={entity} lang={lang} />
+            {surface === "admin" ? (
+              <BuildWithAi target={{ object: "entity", tab: "dashboard", cuid: entity.cuid }} name={title} pending={pending} lang={lang} />
+            ) : null}
+          </div>
         ) : (
           // ядро объявило таблицу, файла под неё нет — говорим прямо, а не показываем пустоту
           <p className="py-2 text-sm text-rose-700 dark:text-rose-400">{entity.name}</p>
@@ -56,7 +64,7 @@ export default function Dashboard({
 
         // якорь для навигации публичной страницы — по нему прокручивает ящик слева
         return (
-          <div key={entity.cuid} id={`entity-${entity.cuid}`} className="scroll-mt-20">
+          <div key={entity.cuid} id={`entity-${entity.cuid}`} className="scroll-mt-20 py-3 first:pt-0 last:pb-0">
             {many && !landing ? (
               <SectionAccordion tab="dashboard" cuid={entity.cuid} title={title} defaultOpen={i === 0}>
                 {body}
@@ -67,7 +75,13 @@ export default function Dashboard({
           </div>
         );
       })}
-      {surface === "admin" ? <TableSettings entities={entities} lang={lang} /> : null}
+      {surface === "admin" ? (
+        <>
+          <TableSettings entities={entities} lang={lang} />
+          {/* ЗАЯВКА НА ВЕСЬ ДАШБОРД — объект tab, отдельно от заявок на отдельные таблицы. */}
+          <BuildWithAi target={{ object: "tab", name: "dashboard" }} name="dashboard" lang={lang} />
+        </>
+      ) : null}
     </div>
   );
 }

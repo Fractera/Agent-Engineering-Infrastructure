@@ -29,7 +29,7 @@ export default function SectionAccordion({
   /** cuid сущности, если это вложенный аккордеон одной таблицы/пульта; для самой вкладки не задаётся. */
   cuid?: string;
   title: string;
-  /** Сколько всего внутри (сущностей) — показывается справа; 0/1 не показываем. */
+  /** Сколько всего внутри (сущностей) — показывается справа у КАЖДОГО раздела, даже если запись одна. */
   count?: number;
   /** Шаблон подписи счётчика с «{n}» на языке страницы. */
   countLabel?: string;
@@ -62,7 +62,7 @@ export default function SectionAccordion({
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-4 text-sm font-medium hover:underline [&::-webkit-details-marker]:hidden">
         <span className="min-w-0 truncate capitalize">{title}</span>
         <span className="flex shrink-0 items-center gap-2">
-          {count && count > 1 && countLabel ? (
+          {count && countLabel ? (
             <span className="text-xs font-normal text-muted-foreground">{countLabel.replace("{n}", String(count))}</span>
           ) : null}
           <ChevronDownIcon className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
