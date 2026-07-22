@@ -21,17 +21,20 @@ export default function AutomationChrome({
   lang,
   tabs,
   publicHref,
+  built,
 }: {
   surface: Surface;
   passport: Passport;
   lang: string;
   tabs: TabRow[];
   publicHref: string;
+  /** Построена ли автоматизация (паспорт: lifecycle=real-project) — от этого зависит судьба публичной ссылки. */
+  built: boolean;
 }) {
   if (surface === "admin") {
     return (
       <div data-chrome-root="admin">
-        <StatusBar passport={passport} lang={lang} tabs={tabs} publicHref={publicHref} />
+        <StatusBar passport={passport} lang={lang} tabs={tabs} publicHref={publicHref} built={built} />
       </div>
     );
   }

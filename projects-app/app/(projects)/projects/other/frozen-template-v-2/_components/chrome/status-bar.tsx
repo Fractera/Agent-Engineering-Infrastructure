@@ -13,11 +13,13 @@ export default function StatusBar({
   lang,
   tabs,
   publicHref,
+  built,
 }: {
   passport: Passport;
   lang: string;
   tabs: TabRow[];
   publicHref: string;
+  built: boolean;
 }) {
   return (
     <div data-chrome="status-bar" className="flex flex-col gap-1 border-b py-1">
@@ -27,7 +29,7 @@ export default function StatusBar({
       <span className="flex items-center justify-between gap-3">
         <span className="min-w-0 truncate text-sm font-medium">{passport.title}</span>
         <span className="flex shrink-0 items-center gap-2">
-          <Menu lang={lang} tabs={tabs} publicHref={publicHref} />
+          <Menu lang={lang} tabs={tabs} publicHref={publicHref} built={built} />
           <SendTask lang={lang} />
         </span>
       </span>

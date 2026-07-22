@@ -1,6 +1,7 @@
 import { loadAutomation } from "./_data/load";
 import AutomationChrome from "./_components/chrome";
 import AutomationComponents from "./_components";
+import NotBuiltNotice from "./_components/shared/not-built-notice.client";
 
 // Страница автоматизации. Паттерн v1 (test-stream-frozen-starter/page.tsx): ДВЕ композиции на одном
 // маршруте — по умолчанию КОКПИТ владельца (surface="admin", полоса-шапка), а `?view=public` рисует
@@ -16,13 +17,25 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
   const { passport, components } = await loadAutomation();
   const lang = (process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? "en").toLowerCase().slice(0, 2);
   const tabs = components.tabs.map((t) => ({ name: t.name, presence: t.presence }));
+  // ПОСТРОЕНА ЛИ АВТОМАТИЗАЦИЯ — один факт из паспорта (`lifecycle`), и он решает судьбу ВИТРИНЫ:
+  // замороженному шаблону публичной страницы нет. Показывать посетителю пустую витрину значило бы
+  // обещать работу, которой ещё нет, — вместо страницы отдаём один честный тост с тем, что делать.
+  // Кокпит владельца открыт всегда: именно из него автоматизацию и достраивают.
+  const built = passport.lifecycle === "real-project";
+  if (surface === "public" && !built) {
+    return (
+      <main data-zone-column data-automation-state="not-built" className="mx-auto w-full max-w-4xl px-4 py-6">
+        <NotBuiltNotice />
+      </main>
+    );
+  }
 
   // data-zone-column — колонка страницы подчиняется переключателю ширины в футере зоны:
   // обычный режим оставляет её как есть (max-w-4xl), широкий раскрывает на весь экран
   // с мостом 32px. Атрибут, а не класс: раскладка страницы остаётся в её собственном коде.
   return (
     <main data-zone-column className="mx-auto w-full max-w-4xl px-4 py-6">
-      <AutomationChrome surface={surface} passport={passport} lang={lang} tabs={tabs} publicHref="?view=public" />
+      <AutomationChrome surface={surface} passport={passport} lang={lang} tabs={tabs} publicHref="?view=public" built={built} />
       <AutomationComponents surface={surface} lang={lang} />
     </main>
   );

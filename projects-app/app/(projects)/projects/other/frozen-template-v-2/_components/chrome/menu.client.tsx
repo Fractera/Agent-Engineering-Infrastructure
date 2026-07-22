@@ -4,6 +4,7 @@ import { useState } from "react";
 import { chromeStrings } from "./i18n";
 import { HamburgerIcon, SparkleIcon, GripVerticalIcon, PencilIcon, CopyIcon, TrashIcon } from "./icons";
 import Switch from "./switch.client";
+import Toast from "../shared/toast.client";
 import HowItWorksModal from "./how-it-works-modal.client";
 import PlaceholderModal from "./placeholder-modal.client";
 
@@ -20,13 +21,25 @@ type Modal = null | "howItWorks" | { title: string };
 const item = "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-none hover:bg-accent";
 const sep = <div className="my-1 h-px bg-border" />;
 
-export default function Menu({ lang, tabs, publicHref }: { lang: string; tabs: TabRow[]; publicHref: string }) {
+export default function Menu({
+  lang,
+  tabs,
+  publicHref,
+  built,
+}: {
+  lang: string;
+  tabs: TabRow[];
+  publicHref: string;
+  /** Построена ли автоматизация: замороженному шаблону публичной страницы ещё нет. */
+  built: boolean;
+}) {
   const L = chromeStrings(lang);
   const [rows, setRows] = useState<TabRow[]>(tabs);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [modal, setModal] = useState<Modal>(null);
+  const [notBuilt, setNotBuilt] = useState(false);
 
   async function toggleVisibility(name: string, presence: TabRow["presence"]) {
     // OFF → absent (скрыта); ON → collapsed (видна, закрыта по умолчанию). Раскрытие (expanded) —
@@ -75,8 +88,18 @@ export default function Menu({ lang, tabs, publicHref }: { lang: string; tabs: T
             {L.howItWorks}
           </button>
 
-          {/* NEW (the one addition): Public page */}
-          <a href={publicHref} className={item}>{L.publicPage}</a>
+          {/* NEW (the one addition): Public page — ОТКРЫВАЕТСЯ ОТДЕЛЬНЫМ ОКНОМ (кокпит владельца при
+              этом не теряется), но ТОЛЬКО если автоматизация построена. Замороженный шаблон публичной
+              страницы не имеет: вместо перехода в никуда — тост с тем, что нужно сделать. */}
+          {built ? (
+            <a href={publicHref} target="_blank" rel="noopener noreferrer" className={item}>
+              {L.publicPage}
+            </a>
+          ) : (
+            <button type="button" className={item} onClick={() => setNotBuilt(true)}>
+              {L.publicPage}
+            </button>
+          )}
 
           {sep}
           <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">{L.automationLabel}</div>
@@ -138,6 +161,16 @@ export default function Menu({ lang, tabs, publicHref }: { lang: string; tabs: T
           </button>
         </div>
       </details>
+
+      {/* Отказ владельцу, а не тупик: объясняем, ПОЧЕМУ ссылки ещё нет и что даст её появление.
+          Текст пока только английский — решение владельца на этот шаг. */}
+      {notBuilt ? (
+        <Toast
+          tone="fail"
+          text="This automation is still a frozen template. Build it first — once it runs, its public page becomes available and this link will open it."
+          onClose={() => setNotBuilt(false)}
+        />
+      ) : null}
 
       <HowItWorksModal lang={lang} open={modal === "howItWorks"} onClose={() => setModal(null)} />
       <PlaceholderModal
