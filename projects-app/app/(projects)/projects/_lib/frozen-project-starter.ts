@@ -329,7 +329,7 @@ export default function AutomationEntry() {
           ACTIVE (the Cron accordion's enabled switch); off = no bar. It updates live when the switch flips.
           Full-bleed on purpose, so it sits ABOVE the centered <main>. */}
       <CronProgressBar automation="{{CATEGORY}}/{{PROJECT}}" />
-      <main className="mx-auto w-[85vw] max-w-full space-y-4 px-4 pt-8">
+      <main className="mx-auto w-[var(--zone-w)] max-w-full space-y-4 px-4 pt-8">
         <AutomationStatusBar
           category="{{CATEGORY}}"
           categoryLabel={{CATEGORY_LABEL_JSON}}
@@ -366,7 +366,7 @@ export default function AutomationEntry() {
       ) : (
         <DiagramSection nodes={DIAGRAM_NODES} automation="{{CATEGORY}}/{{PROJECT}}" />
       )}
-      <main className="mx-auto w-[85vw] max-w-full space-y-8 px-4 py-8">
+      <main className="mx-auto w-[var(--zone-w)] max-w-full space-y-8 px-4 py-8">
         {/* The OTHER entity accordions (step 222) + the mandatory Use cases. The Diagram is above,
             outside the accordion series. Driven by _data/config.ts + _data/use-cases.ts. */}
         <AutomationAccordions

@@ -21,7 +21,7 @@ export async function GroupsHub() {
   const cards = await Promise.all(groups.map((g) => getProjectCard(g.category, g.slug).then((card) => ({ ...card, category: g.category }))));
 
   return (
-    <main className="mx-auto flex min-h-[70vh] w-[85vw] max-w-full flex-col px-6 py-10">
+    <main className="mx-auto flex min-h-[70vh] w-[var(--zone-w)] max-w-full flex-col px-6 py-10">
       <Link href="/projects" className="text-sm text-muted-foreground hover:underline">
         ← {L.breadcrumb}
       </Link>

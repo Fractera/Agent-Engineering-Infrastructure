@@ -8,6 +8,7 @@ import { requireRole } from "@/lib/auth/require-role";
 import { getAppConfig } from "@/config/app-config";
 import { ProjectsZoneHeader } from "@/app/(projects)/_components/projects-zone-header.server";
 import { ProjectsZoneFooter } from "@/app/(projects)/_components/projects-zone-footer.client";
+import { ZoneWidthInit } from "@/app/(projects)/_components/zone-width-init";
 import { AutomationPageChrome } from "@/app/(projects)/projects/_shared/components/automation-page-chrome.client";
 
 // Root layout of the Projects layer (§3.12, step 175). Projects are independent
@@ -43,6 +44,9 @@ export default async function ProjectsLayout({
     <html lang={DEFAULT_LANGUAGE} suppressHydrationWarning>
       <head>
         <ThemeInit />
+        {/* Ширина колонки зоны (обычная ↔ широкая) — поднимается до отрисовки,
+            как и тема, чтобы широкий режим не «прыгал» после гидрации. */}
+        <ZoneWidthInit />
       </head>
       <body className={bodyFontClass}>
         <ThemeProvider>

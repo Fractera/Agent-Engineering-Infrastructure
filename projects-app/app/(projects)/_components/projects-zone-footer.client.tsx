@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import { adminBase } from "@/lib/runtime-urls";
 import { ThemeToggle } from "@/components/menu/shared/theme-toggle.client";
+import { ZoneWidthToggle } from "./zone-width-toggle.client";
 import { useUiLang } from "../projects/_shared/use-ui-lang";
 import { projectsZoneFooterStrings } from "./projects-zone-footer-i18n";
 
@@ -50,7 +51,7 @@ export function ProjectsZoneFooter({ shortName }: { shortName: string }) {
 
   return (
     <footer className="mt-8 w-full border-t text-sm text-muted-foreground">
-      <div className="mx-auto flex h-10 w-[85vw] max-w-full items-center justify-between px-4">
+      <div className="mx-auto flex h-10 w-[var(--zone-w)] max-w-full items-center justify-between px-4">
       <span className="font-medium">{shortName}</span>
       <TooltipProvider>
         <div className="flex items-center gap-1">
@@ -78,6 +79,9 @@ export function ProjectsZoneFooter({ shortName }: { shortName: string }) {
             </TooltipTrigger>
             <TooltipContent>{L.environmentKeys}</TooltipContent>
           </Tooltip>
+          {/* Ширина колонки для всего потока :3003 (обычная 85vw ↔ вся ширина экрана
+              с мостом 32px). На мобильном компонент сам себя прячет — там свой режим. */}
+          <ZoneWidthToggle labels={{ wide: L.widthWide, normal: L.widthNormal }} />
           <ThemeToggle labels={THEME_LABELS} />
         </div>
       </TooltipProvider>

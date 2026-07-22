@@ -39,7 +39,7 @@ export function DiagramEntity({ nodes, automation, mode }: { nodes: NodeContract
   return (
     <section
       id="diagram-section"
-      className="mx-auto mt-16 w-[85vw] max-w-full scroll-mt-4 rounded-lg border bg-muted/5 px-4 py-4"
+      className="mx-auto mt-16 w-[var(--zone-w)] max-w-full scroll-mt-4 rounded-lg border bg-muted/5 px-4 py-4"
       data-entity-mode={mode}
       data-entity-section="diagram"
     >

@@ -40,7 +40,7 @@ export type ControlPanelMode = "view" | "admin";
 
 function ControlPanelCard({ label, tooltip, mode, children }: { label: string; tooltip: string; mode: ControlPanelMode; children: ReactNode }) {
   return (
-    <section className="mx-auto w-[85vw] max-w-full px-4 py-6" data-entity-mode={mode} data-entity-section="controlpanel">
+    <section className="mx-auto w-[var(--zone-w)] max-w-full px-4 py-6" data-entity-mode={mode} data-entity-section="controlpanel">
       <TooltipProvider delayDuration={200}>
         <Accordion type="single" collapsible defaultValue="controlpanel" className="rounded-lg border px-4">
           <AccordionItem value="controlpanel" className="border-none">

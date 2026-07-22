@@ -35,7 +35,7 @@ export async function ProjectsIndex() {
 
   return (
     <>
-    <main className="mx-auto flex w-[85vw] max-w-full flex-col px-6 py-10">
+    <main className="mx-auto flex w-[var(--zone-w)] max-w-full flex-col px-6 py-10">
       <p className="text-sm text-muted-foreground">{L.breadcrumb}</p>
       {/* "Add category" — opposite the title, right-aligned (owner's placement, 2026-07-14). Category
           creation used to live inline inside CreateAutomationDialog; moved here into its own standalone
@@ -117,7 +117,7 @@ export async function ProjectsIndex() {
     {/* THE GLOBAL AUTOMATION CANVAS (step 225) — below the cards, at the root: every project is a node, every
         link a programmable integration between two automations. It sits OUTSIDE the centered max-w-4xl column
         (which was clamping it): the canvas is 85vw × 75vh, so it needs the full page width to expand into. */}
-    <section className="mx-auto w-[85vw] max-w-full px-6 pb-10">
+    <section className="mx-auto w-[var(--zone-w)] max-w-full px-6 pb-10">
       <GlobalCanvas />
     </section>
     </>

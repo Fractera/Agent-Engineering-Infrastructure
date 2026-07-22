@@ -90,7 +90,7 @@ export function AutomationViewPage({
       <DiagramEntity nodes={nodes} automation={automation} mode="view" />
 
       {/* THE SECTIONS — every visible entity, view mode, in the owner's order. */}
-      <div className="mx-auto w-[85vw] max-w-full space-y-3 px-4 py-6">
+      <div className="mx-auto w-[var(--zone-w)] max-w-full space-y-3 px-4 py-6">
         {shown.map((k) => {
           const content = body(k as EntityKey);
           if (!content) return null;
