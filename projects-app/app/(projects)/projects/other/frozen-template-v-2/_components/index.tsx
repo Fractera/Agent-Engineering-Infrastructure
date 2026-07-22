@@ -35,7 +35,7 @@ export default async function AutomationComponents({ surface, lang }: { surface:
           </summary>
           <div className="pb-4 pt-0 text-sm text-muted-foreground">
             {tab.name === "diagram" ? (
-              <DiagramCanvasV2 vm={flow} lang={lang} />
+              <DiagramCanvasV2 vm={flow} lang={lang} readOnly={surface === "public"} />
             ) : tab.name === "dashboard" ? (
               <DashboardTable lang={lang} />
             ) : (

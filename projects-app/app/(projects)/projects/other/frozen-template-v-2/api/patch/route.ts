@@ -21,6 +21,7 @@ import { KIND_PORTS, allNodes, type GroupName, type NodeKind } from "../../_data
 //   POST { op: "delete", address }           — удалить узел вместе с его рёбрами (тоже по квоте)
 //   POST { op: "connect", from, to }         — соединить два узла ребром
 //   POST { op: "disconnect", edge }          — убрать ребро
+//   POST { op: "visibility", address, state } — раскрыть или скрыть узел ВМЕСТЕ с его рёбрами
 //   POST { op: "append", object, value }     — дописать версию в историю или кейс в набор
 //
 // Почему рождение сущности — операция, а не запись поля: `cuid` есть идентичность, и её выдаёт ядро,
@@ -33,7 +34,7 @@ import { KIND_PORTS, allNodes, type GroupName, type NodeKind } from "../../_data
 export const runtime = "nodejs";
 
 type Body = {
-  op?: "set" | "add" | "delete" | "connect" | "disconnect" | "append";
+  op?: "set" | "add" | "delete" | "connect" | "disconnect" | "visibility" | "append";
   address?: Address;
   set?: Record<string, unknown>;
   group?: GroupName;
@@ -41,6 +42,7 @@ type Body = {
   from?: string;
   to?: string;
   edge?: string;
+  state?: "visible" | "hidden";
   object?: "history" | "useCases";
   value?: Record<string, unknown>;
 };
@@ -131,6 +133,68 @@ export async function POST(req: NextRequest) {
 
     const written = await writeCore(core);
     return written.ok ? NextResponse.json({ ok: true }) : bad(written.errors, 422);
+  }
+
+  // ─── РАСКРЫТЬ ИЛИ СКРЫТЬ УЗЕЛ ─────────────────────────────────────────────────────────────────────
+  // ОДНА операция вместо трёх правок подряд — и это не удобство, а необходимость. Видимость ребра
+  // ПРОИЗВОДНА от концов (закон схемы: видимое ребро со скрытым концом — нарушение), поэтому «скрыть
+  // узел» и «скрыть его рёбра» обязаны попасть в ОДНУ запись: между двумя отдельными запросами ядро
+  // побывало бы в незаконном состоянии и вторая правка уже не прошла бы валидацию.
+  //
+  // Три закона владельца (2026-07-22). Отказ формулируется человеческим языком — отказ и есть обучение:
+  //   1) срединный узел скрывают только в стартовом шаблоне: в реальном проекте середина — это сама
+  //      работа автоматизации, её нельзя погасить кликом;
+  //   2) последний видимый вход и последний видимый выход скрыть нельзя — иначе автоматизация,
+  //      которую владелец нечаянно «разделся», перестала бы работать;
+  //   3) всё остальное — свободно: владелец держит на холсте ровно те каналы, которые ему нужны.
+  if (op === "visibility") {
+    const address = body.address;
+    const next = body.state;
+    if (!address || address.object !== "node") return bad("op visibility takes the address of a node");
+    if (next !== "visible" && next !== "hidden") return bad('op visibility needs state: "visible" | "hidden"');
+
+    const node = allNodes(core.graph.nodes).find((n) => n.cuid === address.cuid);
+    if (!node) return bad(`no node with cuid "${address.cuid}"`, 404);
+    const group = groupOfNode(core, address.cuid)!;
+
+    if (node.state === next) return bad(`node "${node.name}" is already ${next}`);
+
+    if (group === "middle" && core.passport.lifecycle === "real-project") {
+      return bad(
+        `"${node.name}" is a middle node — the automation's own work. Middle nodes may only be hidden while the ` +
+          `automation is still a frozen template; this one is a real project. Inputs and outputs stay switchable.`,
+      );
+    }
+
+    if (next === "hidden" && core.passport.lifecycle === "real-project" && (group === "input" || group === "output")) {
+      const stillVisible = core.graph.nodes.groups[group].nodes.filter((n) => n.state === "visible" && n.cuid !== node.cuid);
+      if (stillVisible.length === 0) {
+        return bad(
+          `"${node.name}" is the last visible ${group} — hiding it would leave the automation with no ${group} ` +
+            `at all and it would stop working. Open another ${group} channel first, then hide this one.`,
+        );
+      }
+    }
+
+    node.state = next;
+
+    // Рёбра выводятся, а не спрашиваются: ребро видно ровно тогда, когда видны ОБА его конца.
+    const byCuid = new Map(allNodes(core.graph.nodes).map((n) => [n.cuid, n]));
+    const touched: string[] = [];
+    for (const edge of core.graph.edges) {
+      if (edge.from !== node.cuid && edge.to !== node.cuid) continue;
+      const from = byCuid.get(edge.from);
+      const to = byCuid.get(edge.to);
+      const derived = from?.state === "visible" && to?.state === "visible" ? "visible" : "hidden";
+      if (edge.state !== derived) {
+        edge.state = derived;
+        touched.push(`${from?.name ?? edge.from} → ${to?.name ?? edge.to}: ${derived}`);
+      }
+    }
+
+    const written = await writeCore(core);
+    // Что именно изменилось — уходит наружу: ни один вывод не молчит, иначе он воспроизведётся незаметно.
+    return written.ok ? NextResponse.json({ ok: true, node: node.name, state: next, edges: touched }) : bad(written.errors, 422);
   }
 
   // ─── ДОПИСАТЬ В СПИСОК ────────────────────────────────────────────────────────────────────────────

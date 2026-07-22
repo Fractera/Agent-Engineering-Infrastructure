@@ -77,3 +77,46 @@ export function ChevronDownIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+// Молоток и кривая — иконки двух режимов строительства на холсте. Формы повторяют lucide Hammer и
+// Spline: те же иконки стоят на этих кнопках в канвасе v1, и владелец узнаёт кнопки по виду.
+export function HammerIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden>
+      <path d="M15 12l-8.5 8.5a2.1 2.1 0 0 1-3-3L12 9" />
+      <path d="M17.6 6.4l-4.2 4.2" />
+      <path d="M12.8 2.8l8.4 8.4-2.4 2.4-8.4-8.4z" />
+    </svg>
+  );
+}
+
+export function SplineIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden>
+      <circle cx="19" cy="5" r="2" />
+      <circle cx="5" cy="19" r="2" />
+      <path d="M5 17A12 12 0 0 1 17 5" />
+    </svg>
+  );
+}
+
+// Глаз и перечёркнутый глаз — «показать узел» и «скрыть узел» в ящике справа.
+export function EyeIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden>
+      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+export function EyeOffIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden>
+      <path d="M10.7 5.1A10.6 10.6 0 0 1 12 5c6.4 0 10 7 10 7a18 18 0 0 1-3.1 4.1" />
+      <path d="M6.6 6.6A18 18 0 0 0 2 12s3.6 7 10 7a10.5 10.5 0 0 0 5.4-1.4" />
+      <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+      <line x1="3" y1="3" x2="21" y2="21" />
+    </svg>
+  );
+}
