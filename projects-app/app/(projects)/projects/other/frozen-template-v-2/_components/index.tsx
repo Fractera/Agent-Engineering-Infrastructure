@@ -19,8 +19,9 @@ export default async function AutomationComponents({ surface }: { surface: Surfa
   return (
     <div data-components-root data-surface={surface} className="mt-6 rounded-lg border px-4">
       {tabs.map((tab) => (
-        // a native <details>: закрыт по умолчанию, раскрытие работает без JavaScript
-        <details key={tab.name} data-tab={tab.name} className="group border-b last:border-b-0">
+        // a native <details>: presence управляет начальным состоянием — collapsed закрыт, expanded открыт;
+        // раскрытие/схлопывание кликом работает и без JavaScript
+        <details key={tab.name} data-tab={tab.name} open={tab.presence === "expanded"} className="group border-b last:border-b-0">
           <summary className="flex cursor-pointer list-none items-center justify-between py-4 text-sm font-medium hover:underline [&::-webkit-details-marker]:hidden">
             <span className="capitalize">{tab.name.replace(/-/g, " ")}</span>
             <ChevronDownIcon className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />

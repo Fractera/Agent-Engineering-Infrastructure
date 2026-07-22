@@ -29,7 +29,9 @@ export default function Menu({ lang, tabs, publicHref }: { lang: string; tabs: T
   const [modal, setModal] = useState<Modal>(null);
 
   async function toggleVisibility(name: string, presence: TabRow["presence"]) {
-    const next = presence === "absent" ? "expanded" : "absent";
+    // OFF → absent (скрыта); ON → collapsed (видна, закрыта по умолчанию). Раскрытие (expanded) —
+    // отдельное состояние поля presence, а не результат этого переключателя.
+    const next = presence === "absent" ? "collapsed" : "absent";
     setBusy(name);
     try {
       const apiBase = location.pathname.replace(/\/+$/, "") + "/api";
