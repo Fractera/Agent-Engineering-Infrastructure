@@ -343,8 +343,14 @@ export const KIND_PORTS: Record<z.infer<typeof NodeKindSchema>, { in: Port; out:
     out: { state: "required", connections: ["transform", "condition-success", "condition-failure"] },
   },
   "condition-success": {
+    // ВЕТКА УСПЕХА ВЕДЁТ И В ВЫХОДНОЙ КОННЕКТОР (2026-07-22). Закон связи проверяется со стороны
+    // ИСТОЧНИКА, а `output-connector` объявлял вход «только из condition-success» — и при этом ни один
+    // вид не называл его в своих исходящих. Требуемый вход коннектора был невыполним: его нельзя было
+    // соединить ни с чем законным, и он навсегда оставался висеть отдельно от графа (владелец увидел
+    // это на диаграмме). Односторонняя запись была ошибкой, а не задумкой: коннектор доставляет
+    // результат наружу ровно так же, как выходной узел доставляет его внутрь автоматизации.
     in: { state: "required", connections: ["transform"] },
-    out: { state: "required", connections: ["transform", "output"] },
+    out: { state: "required", connections: ["transform", "output", "output-connector"] },
   },
   "condition-failure": {
     in: { state: "required", connections: ["transform"] },

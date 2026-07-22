@@ -396,7 +396,8 @@
                 "state": "required",
                 "connections": [
                   "transform",
-                  "output"
+                  "output",
+                  "output-connector"
                 ]
               },
               "run": "sequential",
