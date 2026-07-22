@@ -29,8 +29,9 @@ function projectFromPath(pathname: string): string | null {
   return segs.length >= 3 ? `${segs[1]}/${segs[2]}` : null;
 }
 
-// Layout (owner): the top border spans the FULL screen width (like the header), the content sits in the
-// standard 85vw column, and the bar itself is 40px tall — it used to eat a lot of vertical space.
+// Layout (owner): the footer is a FULL-WIDTH bar exactly like the header — same w-full px-6 md:px-8
+// gutters — and it stays that way no matter what the width toggle does: the toggle governs the CONTENT
+// column only (the middle of the page), never the zone's chrome. The bar itself is 40px tall.
 export function ProjectsZoneFooter({ shortName }: { shortName: string }) {
   const pathname = usePathname();
   const lang = useUiLang();
@@ -51,7 +52,7 @@ export function ProjectsZoneFooter({ shortName }: { shortName: string }) {
 
   return (
     <footer className="mt-8 w-full border-t text-sm text-muted-foreground">
-      <div className="mx-auto flex h-10 w-[var(--zone-w)] max-w-full items-center justify-between px-4">
+      <div className="flex h-10 w-full items-center justify-between px-6 md:px-8">
       <span className="font-medium">{shortName}</span>
       <TooltipProvider>
         <div className="flex items-center gap-1">
