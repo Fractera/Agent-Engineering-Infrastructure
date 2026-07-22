@@ -20,7 +20,7 @@ import { controlPanelStrings } from "./i18n";
 // закон, что у функций узлов: имя есть АДРЕС файла. Реестр статический (шаблонный import по имени в
 // route-group `(projects)` не резолвится в рантайме — урок v1); ядро объявило пульт без файла — говорим
 // об этом честно, а не молчим.
-const PANELS: Record<string, React.ComponentType<{ entity: Entity; lang: string }>> = {
+const PANELS: Record<string, React.ComponentType<{ entity: Entity; lang: string; surface: Surface }>> = {
   "first-control-panel": FirstControlPanel,
 };
 
@@ -48,7 +48,7 @@ export default function ControlPanel({
             </p>
           );
         }
-        return <Panel key={entity.cuid} entity={entity} lang={lang} />;
+        return <Panel key={entity.cuid} entity={entity} lang={lang} surface={surface} />;
       })}
       {surface === "admin" ? <RequestSettings entities={entities} lang={lang} /> : null}
     </div>

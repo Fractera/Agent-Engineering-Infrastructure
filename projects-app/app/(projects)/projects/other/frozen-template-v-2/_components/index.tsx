@@ -25,13 +25,28 @@ export default async function AutomationComponents({ surface, lang }: { surface:
 
   const flow = graphToFlow(graph);
 
+  // ПУЛЬТ НА ВИТРИНЕ НЕ АККОРДЕОН (образец v1): под героем идёт ФОРМА ЗАЯВКИ — то, ради чего посетитель
+  // пришёл, а не строка списка, которую надо догадаться раскрыть. В кокпите пульт остаётся первым
+  // аккордеоном наравне с остальными вкладками: там это рабочий инструмент, а не призыв.
+  const landingPanel = surface === "public" ? tabs.find((t) => t.name === "control-panel") : undefined;
+  const series = landingPanel ? tabs.filter((t) => t !== landingPanel) : tabs;
+
   return (
-    <div data-components-root data-surface={surface} className="mt-6 rounded-lg border px-4">
+    <>
       {/* ЗАКОН СТРАНИЦЫ, а не забота отдельной секции: завершился прогон — серверные данные перечитываются,
-          и каждая таблица показывает свежие записи БЕЗ перезагрузки. Монтируется здесь один раз на все
-          вкладки, поэтому новая секция получает автообновление даром. */}
+          и каждая таблица показывает свежие записи БЕЗ перезагрузки. Монтируется один раз на все вкладки,
+          поэтому новая секция получает автообновление даром. */}
       <AutoRefresh />
-      {tabs.map((tab) => (
+
+      {landingPanel ? (
+        <div className="mt-6">
+          <ControlPanel surface={surface} entities={landingPanel.entities} lang={lang} />
+        </div>
+      ) : null}
+
+      {series.length === 0 ? null : (
+    <div data-components-root data-surface={surface} className="mt-6 rounded-lg border px-4">
+      {series.map((tab) => (
         // a native <details>: presence управляет начальным состоянием — collapsed закрыт, expanded открыт;
         // раскрытие/схлопывание кликом работает и без JavaScript
         <details key={tab.name} data-tab={tab.name} open={tab.presence === "expanded"} className="group border-b last:border-b-0">
@@ -56,5 +71,7 @@ export default async function AutomationComponents({ surface, lang }: { surface:
         </details>
       ))}
     </div>
+      )}
+    </>
   );
 }

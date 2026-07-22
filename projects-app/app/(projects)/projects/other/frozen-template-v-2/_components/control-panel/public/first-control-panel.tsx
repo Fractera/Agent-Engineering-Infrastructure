@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Entity } from "../../../_data/automation.schema";
+import type { Surface } from "../../surface";
 import { controlPanelStrings, pick } from "../i18n";
 import { paramsOf, dataText } from "../params";
 import ParamField from "./components/param-field.client";
@@ -17,7 +18,15 @@ import { notifyRunCompleted } from "../../shared/run-events";
 //
 // Что спрашивать — сказано в ядре (`entity.data.params`), здесь только рисуется. Запуск идёт в
 // собственную дверь `api/run` ОТНОСИТЕЛЬНО текущего пути (закон 0: папка переносима).
-export default function FirstControlPanel({ entity, lang }: { entity: Entity; lang: string }) {
+export default function FirstControlPanel({
+  entity,
+  lang,
+  surface,
+}: {
+  entity: Entity;
+  lang: string;
+  surface: Surface;
+}) {
   const L = controlPanelStrings(lang);
   const params = paramsOf(entity);
   const [values, setValues] = useState<Record<string, string>>({});
@@ -52,17 +61,29 @@ export default function FirstControlPanel({ entity, lang }: { entity: Entity; la
   const title = pick(dataText(entity, "title"), lang) || entity.name;
   const description = pick(dataText(entity, "description"), lang);
 
+  // ДВА ОБЛИКА ОДНОГО ПУЛЬТА (образец v1). На ВИТРИНЕ пульт — это ФОРМА ЗАЯВКИ лендинга: карточка по
+  // центру, крупный заголовок, поля в одну колонку, широкая кнопка призыва. В КОКПИТЕ — рабочий
+  // инструмент внутри аккордеона: компактно, поля в две колонки, обычная кнопка. Логика одна и та же —
+  // разное только оформление, поэтому второй компонент не нужен.
+  const landing = surface === "public";
+
   return (
-    <section data-control-panel="public" data-entity-cuid={entity.cuid} className="space-y-3 py-2">
-      <div className="space-y-1">
-        <h3 className="text-base font-semibold text-foreground">{title}</h3>
-        {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
+    <section
+      data-control-panel="public"
+      data-entity-cuid={entity.cuid}
+      className={landing ? "mx-auto max-w-2xl space-y-5 rounded-xl border bg-card p-6 shadow-sm" : "space-y-3 py-2"}
+    >
+      <div className={landing ? "space-y-2 text-center" : "space-y-1"}>
+        <h3 className={landing ? "text-2xl font-bold tracking-tight" : "text-base font-semibold text-foreground"}>{title}</h3>
+        {description ? (
+          <p className={landing ? "text-sm text-muted-foreground" : "text-sm text-muted-foreground"}>{description}</p>
+        ) : null}
       </div>
 
       {params.length === 0 ? (
         <p className="text-sm text-muted-foreground">{L.noParams}</p>
       ) : (
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className={landing ? "grid gap-4" : "grid gap-3 md:grid-cols-2"}>
           {params.map((p) => (
             <ParamField
               key={p.key}
@@ -75,17 +96,23 @@ export default function FirstControlPanel({ entity, lang }: { entity: Entity; la
         </div>
       )}
 
-      <div className="flex items-center gap-3">
+      <div className={landing ? "space-y-2" : "flex items-center gap-3"}>
         <button
           type="button"
           onClick={ask}
           disabled={busy || missing.length > 0}
-          className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          className={
+            landing
+              ? "w-full rounded-lg bg-primary px-4 py-3 text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+              : "rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          }
         >
           {busy ? L.asking : L.ask}
         </button>
         {missing.length ? (
-          <span className="text-xs text-muted-foreground">{L.fill.replace("{k}", missing.join(", "))}</span>
+          <span className={landing ? "block text-center text-xs text-muted-foreground" : "text-xs text-muted-foreground"}>
+            {L.fill.replace("{k}", missing.join(", "))}
+          </span>
         ) : null}
       </div>
 
