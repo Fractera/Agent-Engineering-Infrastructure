@@ -59,9 +59,8 @@ export default function DataTable({ columns, rows, lang }: { columns: Column[]; 
           className="h-8 w-full max-w-xs rounded-md border bg-transparent px-3 text-sm outline-none focus:ring-1 focus:ring-primary"
         />
         <details className="relative">
-          <summary className="flex cursor-pointer list-none items-center gap-1 rounded-md border px-2 py-1 text-xs hover:bg-accent">
+          <summary className="flex cursor-pointer list-none items-center rounded-md border px-2 py-1 text-xs hover:bg-accent">
             {L.columns}
-            <span className="text-muted-foreground">▾</span>
           </summary>
           <div className="absolute right-0 z-20 mt-1 w-56 rounded-md border bg-background p-1 text-sm shadow-md">
             {columns.map((c) => (

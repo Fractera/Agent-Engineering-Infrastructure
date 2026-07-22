@@ -4,6 +4,7 @@ import { graphToFlow } from "./diagram/graph-to-flow";
 import { DiagramCanvasV2 } from "./diagram/canvas.client";
 import Dashboard from "./dashboard";
 import ControlPanel from "./control-panel";
+import GenericTab from "./generic";
 import AutoRefresh from "./shared/auto-refresh.client";
 import SectionAccordion from "./shared/section-accordion.client";
 import { sectionsStrings } from "./shared/sections-i18n";
@@ -39,7 +40,12 @@ export default async function AutomationComponents({ surface, lang }: { surface:
       <DiagramCanvasV2 vm={flow} lang={lang} readOnly={landing} />
     ) : tab.name === "dashboard" ? (
       <Dashboard surface={surface} entities={tab.entities} lang={lang} />
-    ) : null;
+    ) : (
+      // У вкладки ещё нет своей папки — показываем её сущности общим видом: место на странице, якорь для
+      // оглавления и обе ступени заявки «строить вместе с ИИ». Пропускать раздел нельзя: тогда заказать
+      // его разработку негде.
+      <GenericTab surface={surface} tab={tab.name} entities={tab.entities} lang={lang} />
+    );
 
   const titleOf = (name: string) => name.replace(/-/g, " ");
 
@@ -53,7 +59,6 @@ export default async function AutomationComponents({ surface, lang }: { surface:
         {panel ? <div className="mt-6">{bodyOf(panel)}</div> : null}
         {rest.map((tab) => {
           const body = bodyOf(tab);
-          if (!body) return null; // вкладка объявлена, содержимого пока нет — на витрине пустых мест не делаем
           return (
             <section key={tab.name} data-tab={tab.name} className="mt-8 space-y-3 scroll-mt-20">
               <h2 className="text-lg font-semibold capitalize tracking-tight">{titleOf(tab.name)}</h2>

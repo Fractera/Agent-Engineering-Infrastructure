@@ -15,9 +15,8 @@ export default function RequestSettings({ entities, lang }: { entities: Entity[]
   return (
     <section data-control-panel="admin" className="border-t pt-3">
       <details className="group">
-        <summary className="flex cursor-pointer list-none items-center justify-between py-2 text-sm font-medium hover:underline">
+        <summary className="flex cursor-pointer list-none items-center py-2 text-sm font-medium hover:underline">
           {L.settings}
-          <span className="text-xs text-muted-foreground transition-transform group-open:rotate-180">▾</span>
         </summary>
         <div className="space-y-4 pb-2 pt-1">
           <p className="text-xs text-muted-foreground">{L.settingsHint}</p>
