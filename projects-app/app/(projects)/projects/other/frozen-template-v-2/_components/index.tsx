@@ -4,6 +4,7 @@ import { ChevronDownIcon } from "./chrome/icons";
 import { graphToFlow } from "./diagram/graph-to-flow";
 import { DiagramCanvasV2 } from "./diagram/canvas.client";
 import DashboardTable from "./dashboard/table";
+import ControlPanel from "./control-panel";
 
 // СЕКЦИИ НА ХОЛСТЕ — серия аккордеонов, дизайн взят из v1 (`automation-accordions.client.tsx`:
 // контейнер `rounded-lg border px-4`, каждый item — `border-b`, триггер с шевроном), воспроизведён
@@ -34,7 +35,11 @@ export default async function AutomationComponents({ surface, lang }: { surface:
             <ChevronDownIcon className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
           </summary>
           <div className="pb-4 pt-0 text-sm text-muted-foreground">
-            {tab.name === "diagram" ? (
+            {tab.name === "control-panel" ? (
+              /* пульт запуска — своя папка с маршрутизатором: публичная половина (по одному пульту на
+                 entity вкладки) + административная настройка запроса под ней */
+              <ControlPanel surface={surface} entities={tab.entities} lang={lang} />
+            ) : tab.name === "diagram" ? (
               <DiagramCanvasV2 vm={flow} lang={lang} readOnly={surface === "public"} />
             ) : tab.name === "dashboard" ? (
               <DashboardTable lang={lang} />

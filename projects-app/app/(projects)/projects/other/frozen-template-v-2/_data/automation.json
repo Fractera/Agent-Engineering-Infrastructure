@@ -826,6 +826,86 @@
     "tabs": [
       {
         "systemInstructionName": "tab",
+        "name": "control-panel",
+        "presence": "expanded",
+        "info": {
+          "aiSummary": "Пульт запуска: поля запроса из ядра, кнопка запуска в дверь api/run и цепочка узлов прогона. Публичная половина — сам пульт (её видят все), административная — настройка запроса (только владелец)."
+        },
+        "status": "materialized",
+        "warnings": [],
+        "envKeys": [],
+        "entities": [
+          {
+            "cuid": "cmrw3k9p2q7control0panel01",
+            "name": "First control panel",
+            "info": {
+              "aiSummary": "Единственный пульт вкладки: спрашивает название публичной компании и запускает прогон «цена акции». Поля объявлены здесь, в data.params — компонент их только рисует."
+            },
+            "status": "materialized",
+            "warnings": [],
+            "envKeys": [],
+            "data": {
+              "title": {
+                "en": "Stock price request",
+                "es": "Consulta de precio de acción",
+                "fr": "Demande de cours de bourse",
+                "it": "Richiesta prezzo azionario",
+                "ru": "Запрос цены акции",
+                "de": "Aktienkurs-Abfrage",
+                "pt": "Consulta de preço de ação",
+                "pl": "Zapytanie o cenę akcji",
+                "tr": "Hisse fiyatı sorgusu",
+                "nl": "Aandelenkoers opvragen"
+              },
+              "description": {
+                "en": "Name a public company — the automation returns its live share price and stores the row in the dashboard.",
+                "es": "Nombra una empresa pública: la automatización devuelve el precio actual de su acción y guarda la fila en el panel.",
+                "fr": "Nommez une société cotée : l'automatisation renvoie le cours actuel de son action et enregistre la ligne dans le tableau de bord.",
+                "it": "Indica un'azienda quotata: l'automazione restituisce il prezzo attuale dell'azione e salva la riga nella dashboard.",
+                "ru": "Назовите публичную компанию — автоматизация вернёт живую цену её акции и сохранит строку в дашборде.",
+                "de": "Nenne ein börsennotiertes Unternehmen — die Automatisierung liefert den aktuellen Aktienkurs und speichert die Zeile im Dashboard.",
+                "pt": "Indique uma empresa pública — a automação devolve o preço atual da ação e guarda a linha no painel.",
+                "pl": "Podaj spółkę publiczną — automatyzacja zwróci bieżącą cenę akcji i zapisze wiersz w panelu.",
+                "tr": "Halka açık bir şirket adı verin — otomasyon güncel hisse fiyatını döndürür ve satırı panoya kaydeder.",
+                "nl": "Noem een beursgenoteerd bedrijf — de automatisering geeft de actuele koers terug en bewaart de rij in het dashboard."
+              },
+              "params": [
+                {
+                  "key": "query",
+                  "type": "text",
+                  "required": true,
+                  "label": {
+                    "en": "Company",
+                    "es": "Empresa",
+                    "fr": "Entreprise",
+                    "it": "Azienda",
+                    "ru": "Компания",
+                    "de": "Unternehmen",
+                    "pt": "Empresa",
+                    "pl": "Firma",
+                    "tr": "Şirket",
+                    "nl": "Bedrijf"
+                  },
+                  "placeholder": {
+                    "en": "Apple",
+                    "es": "Apple",
+                    "fr": "Apple",
+                    "it": "Apple",
+                    "ru": "Apple",
+                    "de": "Apple",
+                    "pt": "Apple",
+                    "pl": "Apple",
+                    "tr": "Apple",
+                    "nl": "Apple"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "systemInstructionName": "tab",
         "name": "diagram",
         "presence": "expanded",
         "info": {
