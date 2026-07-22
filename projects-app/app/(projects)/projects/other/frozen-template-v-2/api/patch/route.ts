@@ -200,10 +200,16 @@ export async function POST(req: NextRequest) {
 
     if (node.state === next) return bad(`node "${node.name}" is already ${next}`);
 
-    if (group === "middle" && core.passport.lifecycle === "real-project") {
+    // ОДНОСТОРОННИЙ закон (исправлено в 273.A по живому тесту). Владелец сказал: срединный узел нельзя
+    // СКРЫТЬ после перехода в реальный проект — середина и есть работа автоматизации. Про раскрытие он
+    // не говорил ничего, и запрещать его нельзя: свободный срединный узел рождается скрытым, и
+    // раскрытие — единственный способ его сохранить. Симметричный запрет делал новую механику
+    // неработающей by construction.
+    if (group === "middle" && next === "hidden" && core.passport.lifecycle === "real-project") {
       return bad(
-        `"${node.name}" is a middle node — the automation's own work. Middle nodes may only be hidden while the ` +
-          `automation is still a frozen template; this one is a real project. Inputs and outputs stay switchable.`,
+        `"${node.name}" is a middle node — the automation's own work. A middle node may only be hidden while the ` +
+          `automation is still a frozen template; this one is a real project. Inputs and outputs stay switchable, ` +
+          `and a middle node can always be REVEALED — it is hiding one that is refused.`,
       );
     }
 
