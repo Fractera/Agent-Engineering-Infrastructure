@@ -182,6 +182,44 @@ const DICT: Record<Lang, Labels> = {
   },
 };
 
+// ─── ПОДПИСИ СТРОИТЕЛЬСТВА (шаг 273) ───────────────────────────────────────────────────────────────
+// Отдельная таблица, а не новые ключи в DICT: словарь выше уже прошёл проверку владельцем, и его
+// незачем перетряхивать ради семи слов. Тот же приём, что у CHANNEL_QUESTIONS в квизе.
+// Слова короткие намеренно — это подписи кнопок и полей, а не проза.
+const BUILD: Record<Lang, {
+  addNode: string; relayout: string; group: string; kind: string; channel: string;
+  brief: string; briefHint: string; create: string; cancel: string; bornHidden: string;
+}> = {
+  en: { addNode: "Add node", relayout: "Re-layout", group: "Group", kind: "Kind", channel: "Channel", brief: "What must it do?", briefHint: "Your own words — this is the task for the coding agent.", create: "Create", cancel: "Cancel", bornHidden: "The node is created HIDDEN. Wire it, then show it — that is when the rules are checked." },
+  es: { addNode: "Añadir nodo", relayout: "Reorganizar", group: "Grupo", kind: "Tipo", channel: "Canal", brief: "¿Qué debe hacer?", briefHint: "Con tus palabras: esta es la tarea para el agente programador.", create: "Crear", cancel: "Cancelar", bornHidden: "El nodo se crea OCULTO. Conéctalo y luego muéstralo: ahí se comprueban las reglas." },
+  fr: { addNode: "Ajouter un nœud", relayout: "Réorganiser", group: "Groupe", kind: "Type", channel: "Canal", brief: "Que doit-il faire ?", briefHint: "Vos propres mots — c'est la tâche pour l'agent développeur.", create: "Créer", cancel: "Annuler", bornHidden: "Le nœud est créé CACHÉ. Reliez-le puis affichez-le : c'est là que les règles sont vérifiées." },
+  it: { addNode: "Aggiungi nodo", relayout: "Riorganizza", group: "Gruppo", kind: "Tipo", channel: "Canale", brief: "Che cosa deve fare?", briefHint: "Parole tue: è il compito per l'agente programmatore.", create: "Crea", cancel: "Annulla", bornHidden: "Il nodo nasce NASCOSTO. Collegalo, poi mostralo: è lì che si controllano le regole." },
+  ru: { addNode: "Добавить узел", relayout: "Расставить", group: "Группа", kind: "Вид", channel: "Канал", brief: "Что он должен делать?", briefHint: "Своими словами — это и есть задание агенту-программисту.", create: "Создать", cancel: "Отмена", bornHidden: "Узел создаётся СКРЫТЫМ. Соедините его, потом покажите — тогда и проверятся правила." },
+  de: { addNode: "Knoten hinzufügen", relayout: "Neu anordnen", group: "Gruppe", kind: "Art", channel: "Kanal", brief: "Was soll er tun?", briefHint: "Ihre eigenen Worte — das ist die Aufgabe für den Programmier-Agenten.", create: "Erstellen", cancel: "Abbrechen", bornHidden: "Der Knoten entsteht VERBORGEN. Verbinden Sie ihn, dann zeigen Sie ihn — dann greifen die Regeln." },
+  pt: { addNode: "Adicionar nó", relayout: "Reorganizar", group: "Grupo", kind: "Tipo", channel: "Canal", brief: "O que ele deve fazer?", briefHint: "Nas suas palavras — esta é a tarefa para o agente programador.", create: "Criar", cancel: "Cancelar", bornHidden: "O nó nasce OCULTO. Ligue-o e depois mostre-o: é aí que as regras são verificadas." },
+  pl: { addNode: "Dodaj węzeł", relayout: "Rozmieść", group: "Grupa", kind: "Rodzaj", channel: "Kanał", brief: "Co ma robić?", briefHint: "Własnymi słowami — to jest zadanie dla agenta programisty.", create: "Utwórz", cancel: "Anuluj", bornHidden: "Węzeł powstaje UKRYTY. Połącz go, potem pokaż — wtedy sprawdzane są reguły." },
+  tr: { addNode: "Düğüm ekle", relayout: "Yeniden yerleştir", group: "Grup", kind: "Tür", channel: "Kanal", brief: "Ne yapmalı?", briefHint: "Kendi sözlerinizle — bu, kodlayıcı ajan için görevdir.", create: "Oluştur", cancel: "İptal", bornHidden: "Düğüm GİZLİ oluşturulur. Bağlayın, sonra gösterin — kurallar o zaman denetlenir." },
+  nl: { addNode: "Node toevoegen", relayout: "Herschikken", group: "Groep", kind: "Soort", channel: "Kanaal", brief: "Wat moet die doen?", briefHint: "Je eigen woorden — dit is de taak voor de programmeer-agent.", create: "Aanmaken", cancel: "Annuleren", bornHidden: "De node wordt VERBORGEN aangemaakt. Verbind hem en toon hem dan — dan gelden de regels." },
+};
+
+const NAME_LABEL: Record<Lang, string> = { en: "Name", es: "Nombre", fr: "Nom", it: "Nome", ru: "Название", de: "Name", pt: "Nome", pl: "Nazwa", tr: "Ad", nl: "Naam" };
+
+// Что можно добавить в каждую группу — ВЫВЕДЕНО из закона групп ядра (GROUP_POLICY): коннекторы
+// добавлять нельзя (их ровно по одному), остальное — можно. Второй список здесь не заводится.
+const ADDABLE_KINDS = {
+  input: ["input"],
+  middle: ["transform", "condition-success", "condition-failure"],
+  output: ["output"],
+} as const;
+
+// Словари каналов — копия закрытых перечислений ядра (InputChannelSchema / OutputChannelSchema).
+const CHANNELS = {
+  input: ["control-panel", "webhook", "cron", "public-page", "telegram-bot", "user-telegram-chat", "custom"],
+  output: ["public-page", "dashboard", "calendar", "analytics", "map", "email", "telegram-bot", "user-telegram-chat", "custom"],
+} as const;
+
+type Group = keyof typeof ADDABLE_KINDS;
+
 type Mode = "view" | "nodes" | "edges";
 type CanvasNodeData = DiagramVMNode & { selected: boolean; build: boolean };
 type CanvasNode = Node<CanvasNodeData, "diagram">;
@@ -273,12 +311,19 @@ export function DiagramCanvasV2({
   /** Публичная поверхность — плоскость просмотра: никаких инструментов управления (закон ROUTE-V3 3). */
   readOnly?: boolean;
 }) {
-  const L = DICT[(lang as Lang) in DICT ? (lang as Lang) : "en"];
+  const code = (lang as Lang) in DICT ? (lang as Lang) : "en";
+  const L = DICT[code];
+  const B = BUILD[code];
   const router = useRouter();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("view");
   const [selectedEdge, setSelectedEdge] = useState<string | null>(null);
   const [refusal, setRefusal] = useState<string | null>(null);
+  const [draft, setDraft] = useState<{ group: Group; kind: string; channel: string; name: string; brief: string } | null>(null);
+  // Экземпляр канваса нужен ровно для одного действия — «Расставить»: раскладка в v2 ВЫЧИСЛЯЕМАЯ
+  // (колонка = ранг по потоку), узлы не таскают и координат в ядре нет, поэтому «авторасстановка» v1
+  // здесь честно означает вернуть обзор к вычисленной раскладке, а не пересчитать сохранённые позиции.
+  const [flow, setFlow] = useState<{ fitView: (o?: { padding?: number; duration?: number }) => void } | null>(null);
   const [pending, startTransition] = useTransition();
   const [busy, setBusy] = useState(false);
 
@@ -390,6 +435,24 @@ export function DiagramCanvasV2({
     [callPatch],
   );
 
+  // СВОБОДНЫЙ УЗЕЛ. Клиент посылает только то, что владелец выбрал; всё остальное — идентичность,
+  // порты, имя функции, состояние — выдаёт ядро (см. `op:"add"` в api/patch).
+  const createNode = useCallback(async () => {
+    if (!draft) return;
+    const isMiddle = draft.group === "middle";
+    const ok = await callPatch({
+      op: "add",
+      group: draft.group,
+      node: {
+        kind: draft.kind,
+        ioType: isMiddle ? null : draft.channel,
+        name: draft.name.trim() || "New node",
+        ...(draft.brief.trim() ? { info: { crudUser: draft.brief.trim() } } : {}),
+      },
+    });
+    if (ok) setDraft(null);
+  }, [draft, callPatch]);
+
   const working = busy || pending;
 
   return (
@@ -410,6 +473,21 @@ export function DiagramCanvasV2({
             холст всегда ровно в одном из состояний просмотр / узлы / рёбра. На публичной поверхности
             инструментов управления нет вовсе. */}
         <div className={readOnly ? "hidden" : "flex flex-wrap justify-end gap-2"}>
+          {/* Инструменты режима узлов — как в v1: добавить узел и расставить. */}
+          {mode === "nodes" && (
+            <>
+              <ModeButton
+                active={false}
+                disabled={working}
+                onClick={() => setDraft({ group: "middle", kind: "transform", channel: "custom", name: "", brief: "" })}
+              >
+                + {B.addNode}
+              </ModeButton>
+              <ModeButton active={false} disabled={working} onClick={() => flow?.fitView({ padding: 0.15, duration: 300 })}>
+                {B.relayout}
+              </ModeButton>
+            </>
+          )}
           {mode !== "edges" && (
             <ModeButton
               active={mode === "nodes"}
@@ -483,13 +561,103 @@ export function DiagramCanvasV2({
             elementsSelectable
             deleteKeyCode={null}
             fitView
+            onInit={(instance) => setFlow(instance)}
             proOptions={{ hideAttribution: true }}
           >
             <Background />
             <Controls showInteractive={false} />
           </ReactFlow>
         )}
-        {active && (
+        {/* ДИАЛОГ СВОБОДНОГО УЗЛА. Владелец выбирает только то, что действительно его решение: группа,
+            вид, канал и его собственные слова. Всё прочее — закон, и его выдаёт ядро. */}
+        {draft && !readOnly && (
+          <aside className="absolute inset-y-0 right-0 w-80 space-y-3 overflow-y-auto border-l bg-background/95 p-4 text-sm">
+            <p className="font-semibold">{B.addNode}</p>
+            <label className="block space-y-1">
+              <span className="text-xs text-muted-foreground">{B.group}</span>
+              <select
+                value={draft.group}
+                onChange={(e) => {
+                  const group = e.target.value as Group;
+                  setDraft({ ...draft, group, kind: ADDABLE_KINDS[group][0], channel: CHANNELS[group === "output" ? "output" : "input"][0] });
+                }}
+                className="w-full rounded-md border bg-background px-2 py-1"
+              >
+                <option value="input">input</option>
+                <option value="middle">middle</option>
+                <option value="output">output</option>
+              </select>
+            </label>
+            <label className="block space-y-1">
+              <span className="text-xs text-muted-foreground">{B.kind}</span>
+              <select
+                value={draft.kind}
+                onChange={(e) => setDraft({ ...draft, kind: e.target.value })}
+                className="w-full rounded-md border bg-background px-2 py-1"
+              >
+                {ADDABLE_KINDS[draft.group].map((k) => (
+                  <option key={k} value={k}>{k}</option>
+                ))}
+              </select>
+            </label>
+            {/* Канал есть только у входа и выхода: у срединного узла ioType = null, и это закон схемы. */}
+            {draft.group !== "middle" && (
+              <label className="block space-y-1">
+                <span className="text-xs text-muted-foreground">{B.channel}</span>
+                <select
+                  value={draft.channel}
+                  onChange={(e) => setDraft({ ...draft, channel: e.target.value })}
+                  className="w-full rounded-md border bg-background px-2 py-1"
+                >
+                  {CHANNELS[draft.group].map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <label className="block space-y-1">
+              <span className="text-xs text-muted-foreground">{NAME_LABEL[code]}</span>
+              <input
+                value={draft.name}
+                onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                placeholder="New node"
+                className="w-full rounded-md border bg-background px-2 py-1"
+              />
+            </label>
+            <label className="block space-y-1">
+              <span className="text-xs text-muted-foreground">{B.brief}</span>
+              <textarea
+                value={draft.brief}
+                onChange={(e) => setDraft({ ...draft, brief: e.target.value })}
+                rows={4}
+                className="w-full rounded-md border bg-background px-2 py-1"
+              />
+              <span className="block text-[11px] text-muted-foreground">{B.briefHint}</span>
+            </label>
+            <p className="rounded-md border border-violet-500/40 bg-violet-500/10 p-2 text-[11px] text-violet-700 dark:text-violet-300">
+              {B.bornHidden}
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={working}
+                onClick={() => void createNode()}
+                className="inline-flex h-8 flex-1 items-center justify-center rounded-md border border-primary bg-primary px-3 text-xs font-medium text-primary-foreground shadow-sm hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
+              >
+                {B.create}
+              </button>
+              <button
+                type="button"
+                disabled={working}
+                onClick={() => setDraft(null)}
+                className="inline-flex h-8 items-center justify-center rounded-md border px-3 text-xs font-medium shadow-sm hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
+              >
+                {B.cancel}
+              </button>
+            </div>
+          </aside>
+        )}
+        {active && !draft && (
           <aside className="absolute inset-y-0 right-0 w-80 space-y-3 overflow-y-auto border-l bg-background/95 p-4 text-sm">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">

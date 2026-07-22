@@ -72,6 +72,47 @@ export async function POST(req: NextRequest) {
     draft.cuid = createCuid();
     draft.in = KIND_PORTS[kind].in;
     draft.out = KIND_PORTS[kind].out;
+
+    // THE FREE NODE (step 273). The canvas sends only what the owner actually chose — group, kind, the
+    // channel and his own words — and the core fills the rest. Two reasons this belongs here and not in
+    // the client: a node must be lawful the moment it is written (the whole core is validated), and the
+    // defaults ARE law, so they may not drift in a component.
+    //
+    // IT IS BORN HIDDEN, and that is the whole trick: a visible node with a required port and no edge is
+    // refused, but a HIDDEN one may stand unwired — that is how the frozen template ships. So the owner
+    // gets his node on the canvas immediately, wires it at his leisure, and REVEALING it (op: "visibility")
+    // is the moment the law checks his work. There is no "unsaved draft" state anywhere, and no second
+    // code path: revealing IS saving.
+    draft.state ??= "hidden";
+    draft.name ||= "New node";
+    draft.description ??= "";
+    // The owner's own words are the task itself (`info.crudUser`) — see the `nodes` instruction. When he
+    // wrote nothing, the honest record is that the node is still unexplained, not an invented summary.
+    if (!draft.info) draft.info = { crudUser: `${String(draft.name)} — not described yet.` };
+    draft.status ??= "in-development";
+    draft.warnings ??= [];
+    draft.envKeys ??= [];
+    draft.run ??= "sequential";
+    draft.estDurationMs ??= 60000;
+    if (!draft.function) {
+      // A function name is the address of its file and must be unique across the core, so the core issues
+      // it rather than trusting a caller who cannot see the other nodes.
+      const taken = new Set(allNodes(core.graph.nodes).map((n) => n.function.name));
+      const stem =
+        String(draft.name)
+          .toLowerCase()
+          .replace(/[^a-z0-9]+(.)/g, (_, c: string) => c.toUpperCase())
+          .replace(/[^a-zA-Z0-9]/g, "") || "newNode";
+      let name = stem;
+      for (let i = 2; taken.has(name); i++) name = `${stem}${i}`;
+      draft.function = {
+        name,
+        summary: "Not written yet — this node is the owner's request, not built code.",
+        accepts: "Not defined yet.",
+        returns: "Not defined yet.",
+      };
+    }
+
     core.graph.nodes.groups[group].nodes.push(draft as never);
 
     const written = await writeCore(core);
