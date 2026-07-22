@@ -1,10 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { controlPanelStrings } from "../../i18n";
-import VoiceInput from "../../../shared/voice-input.client";
+import { sendStrings } from "./send-to-development-i18n";
+import VoiceInput from "./voice-input.client";
 
-// ОТПРАВИТЬ ПУЛЬТ В РАЗРАБОТКУ — слова владельца ложатся в ЯДРО, в `info.crudUser` ЭТОГО пульта
+// ОТПРАВИТЬ СУЩНОСТЬ В РАЗРАБОТКУ — общий компонент ВСЕХ вкладок (пульт, дашборд, дальше остальные).
+//  слова владельца ложатся в ЯДРО, в `info.crudUser` ЭТОГО пульта
 // (адрес `{object:"entity", tab:"control-panel", cuid}`), а статус пульта становится `in-development`.
 // Ровно то же, что делает «Отправить задание» в шапке, только адресно: задание принадлежит пульту, а не
 // автоматизации целиком, поэтому модель видит, ЧТО именно просили переделать.
@@ -16,7 +17,7 @@ import VoiceInput from "../../../shared/voice-input.client";
 // ЭТО НЕ ЗАПУСК КОНВЕЙЕРА РАЗРАБОТКИ: уведомление кодеру и полный цикл — следующий шаг. Здесь только
 // настройка: задание записано в ядро и ждёт.
 export default function SendToDevelopment({ tab, cuid, lang }: { tab: string; cuid: string; lang: string }) {
-  const L = controlPanelStrings(lang);
+  const L = sendStrings(lang);
   const [text, setText] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "saved" | "failed">("idle");
   // Задание в разработку диктуется голосом — тот же единственный примитив папки, что и в публичном поле.

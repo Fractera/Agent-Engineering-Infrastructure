@@ -948,6 +948,12 @@
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cmruqdpjn51ehl1bc14d0bb0ca3b9b",
         "state": "hidden"
+      },
+      {
+        "cuid": "cedgeoutconn9wb4gc",
+        "from": "cmruddnrpho70e8af12589d1deaa",
+        "to": "cmruewqs71sbem314de6797f24f39c",
+        "state": "hidden"
       }
     ]
   },
@@ -1134,11 +1140,79 @@
             "data": {
               "table": "history",
               "columns": [
-                "date",
-                "company",
-                "ticker",
-                "price"
-              ]
+                {
+                  "key": "date",
+                  "label": {
+                    "en": "Date",
+                    "es": "Fecha",
+                    "fr": "Date",
+                    "it": "Data",
+                    "ru": "Дата",
+                    "de": "Datum",
+                    "pt": "Data",
+                    "pl": "Data",
+                    "tr": "Tarih",
+                    "nl": "Datum"
+                  }
+                },
+                {
+                  "key": "company",
+                  "label": {
+                    "en": "Company",
+                    "es": "Empresa",
+                    "fr": "Entreprise",
+                    "it": "Azienda",
+                    "ru": "Компания",
+                    "de": "Firma",
+                    "pt": "Empresa",
+                    "pl": "Firma",
+                    "tr": "Şirket",
+                    "nl": "Bedrijf"
+                  }
+                },
+                {
+                  "key": "ticker",
+                  "label": {
+                    "en": "Ticker",
+                    "es": "Símbolo",
+                    "fr": "Symbole",
+                    "it": "Simbolo",
+                    "ru": "Тикер",
+                    "de": "Kürzel",
+                    "pt": "Símbolo",
+                    "pl": "Symbol",
+                    "tr": "Sembol",
+                    "nl": "Symbool"
+                  }
+                },
+                {
+                  "key": "price",
+                  "label": {
+                    "en": "Price",
+                    "es": "Precio",
+                    "fr": "Prix",
+                    "it": "Prezzo",
+                    "ru": "Цена",
+                    "de": "Preis",
+                    "pt": "Preço",
+                    "pl": "Cena",
+                    "tr": "Fiyat",
+                    "nl": "Prijs"
+                  }
+                }
+              ],
+              "title": {
+                "en": "Request history",
+                "es": "Historial de consultas",
+                "fr": "Historique des demandes",
+                "it": "Cronologia richieste",
+                "ru": "История запросов",
+                "de": "Anfrageverlauf",
+                "pt": "Histórico de pedidos",
+                "pl": "Historia zapytań",
+                "tr": "Sorgu geçmişi",
+                "nl": "Aanvraaggeschiedenis"
+              }
             }
           }
         ]

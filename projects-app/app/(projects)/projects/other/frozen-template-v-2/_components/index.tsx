@@ -3,7 +3,7 @@ import type { Surface } from "./surface";
 import { ChevronDownIcon } from "./chrome/icons";
 import { graphToFlow } from "./diagram/graph-to-flow";
 import { DiagramCanvasV2 } from "./diagram/canvas.client";
-import DashboardTable from "./dashboard/table";
+import Dashboard from "./dashboard";
 import ControlPanel from "./control-panel";
 import AutoRefresh from "./shared/auto-refresh.client";
 
@@ -62,7 +62,7 @@ export default async function AutomationComponents({ surface, lang }: { surface:
             ) : tab.name === "diagram" ? (
               <DiagramCanvasV2 vm={flow} lang={lang} readOnly={surface === "public"} />
             ) : tab.name === "dashboard" ? (
-              <DashboardTable lang={lang} />
+              <Dashboard surface={surface} entities={tab.entities} lang={lang} />
             ) : (
               /* пусто на этом этапе — содержимое секции появится позже */
               null

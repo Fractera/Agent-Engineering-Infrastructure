@@ -245,11 +245,23 @@ function DiagramNode({ data }: NodeProps<CanvasNode>) {
       </div>
     );
   }
+  // КОННЕКТОРЫ — ОРАНЖЕВАЯ РАМКА (владелец 2026-07-22). Дверь наружу к другой автоматизации не должна
+  // теряться в общей массе входов и выходов: их всего по одному на граф, они не удаляются и не
+  // добавляются, и работают они не с человеком, а с соседней автоматизацией. Цвет отличает их от
+  // обычных дверей (нейтральная рамка) и от условий (фиолетовый квадрат) — вид читается сразу.
+  const connector = data.isConnector;
+
   return (
     <div
       className={`relative w-48 rounded-md border bg-background px-3 py-2 text-sm shadow-sm ${
-        data.selected ? "border-primary ring-1 ring-primary" : "border-border"
-      } ${pale ? "border-dashed border-violet-400/70 bg-violet-400/10 text-violet-700 opacity-80 dark:text-violet-300" : ""}`}
+        connector
+          ? data.selected
+            ? "border-2 border-orange-500 ring-1 ring-orange-500"
+            : "border-2 border-orange-500/70"
+          : data.selected
+            ? "border-primary ring-1 ring-primary"
+            : "border-border"
+      } ${pale ? `border-dashed ${connector ? "border-orange-400/70 bg-orange-400/10 text-orange-700 dark:text-orange-300" : "border-violet-400/70 bg-violet-400/10 text-violet-700 dark:text-violet-300"} opacity-80` : ""}`}
       title={data.description}
     >
       <Handle type="target" position={Position.Left} />
