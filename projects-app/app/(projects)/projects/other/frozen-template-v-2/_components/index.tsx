@@ -1,77 +1,90 @@
 import { loadAutomation } from "../_data/load";
 import type { Surface } from "./surface";
-import { ChevronDownIcon } from "./chrome/icons";
 import { graphToFlow } from "./diagram/graph-to-flow";
 import { DiagramCanvasV2 } from "./diagram/canvas.client";
 import Dashboard from "./dashboard";
 import ControlPanel from "./control-panel";
 import AutoRefresh from "./shared/auto-refresh.client";
+import SectionAccordion from "./shared/section-accordion.client";
+import { sectionsStrings } from "./shared/sections-i18n";
 
-// СЕКЦИИ НА ХОЛСТЕ — серия аккордеонов, дизайн взят из v1 (`automation-accordions.client.tsx`:
-// контейнер `rounded-lg border px-4`, каждый item — `border-b`, триггер с шевроном), воспроизведён
-// самодостаточно через стилизованный <details> (работает и без JS; закон 0 — код внутри папки).
+// СЕКЦИИ НА ХОЛСТЕ. Одно ядро читают ОБЕ поверхности, но показывают по-разному:
 //
-// ПРИСУТСТВИЕ секции связано с переключателем в гамбургер-меню: он пишет `tab.presence` в ядро
-// (absent = секции нет; иначе — закрытый аккордеон на холсте). Одно ядро читают ОБЕ поверхности —
-// админ и публичная — поэтому набор секций у них одинаковый и правится из меню без пересборки.
+//   КОКПИТ (admin) — серия аккордеонов (дизайн v1): вкладка = раздел, presence из ядра задаёт, раскрыт
+//     он при первом заходе или свёрнут. Дальше решает ВЛАДЕЛЕЦ: что он раскрыл или свернул, помнит
+//     браузер (`shared/sections-state.ts`) отдельно для каждой автоматизации, и перезагрузка это не
+//     стирает. Справа от заголовка — счётчик сущностей внутри.
 //
-// Аккордеон рождается ЗАКРЫТЫМ и пока ПУСТ внутри: содержимое секций придёт отдельными шагами. ИСКЛЮЧЕНИЕ —
-// секция `diagram`: её содержимое (read-only канвас графа) уже готово и рисуется из ядра automation.json.
-// Обе поверхности (admin и public) читают ОДНО ядро → диаграмма видна и в кокпите, и на витрине.
+//   ВИТРИНА (public) — АККОРДЕОНОВ НЕТ ВОВСЕ (правило владельца 2026-07-22): всё, что владелец выбрал
+//     показывать, посетитель видит раскрытым, как диаграмму. Прятать от посетителя то, ради чего он
+//     пришёл, за клик — значит терять его. Для перемещения по длинной странице служит ящик навигации
+//     слева (гамбургер в шапке витрины).
+//
+// ПРИСУТСТВИЕ секции по-прежнему связано с переключателем в гамбургер-меню кокпита: `absent` — секции нет
+// нигде, ни в кокпите, ни на витрине.
 export default async function AutomationComponents({ surface, lang }: { surface: Surface; lang: string }) {
   const { components, graph } = await loadAutomation();
   const tabs = components.tabs.filter((tab) => tab.presence !== "absent");
   if (tabs.length === 0) return null;
 
+  const S = sectionsStrings(lang);
   const flow = graphToFlow(graph);
+  const landing = surface === "public";
 
-  // ПУЛЬТ НА ВИТРИНЕ НЕ АККОРДЕОН (образец v1): под героем идёт ФОРМА ЗАЯВКИ — то, ради чего посетитель
-  // пришёл, а не строка списка, которую надо догадаться раскрыть. В кокпите пульт остаётся первым
-  // аккордеоном наравне с остальными вкладками: там это рабочий инструмент, а не призыв.
-  const landingPanel = surface === "public" ? tabs.find((t) => t.name === "control-panel") : undefined;
-  const series = landingPanel ? tabs.filter((t) => t !== landingPanel) : tabs;
+  // Содержимое вкладки — одно и то же на обеих поверхностях; отличается только обёртка.
+  const bodyOf = (tab: (typeof tabs)[number]) =>
+    tab.name === "control-panel" ? (
+      <ControlPanel surface={surface} entities={tab.entities} lang={lang} />
+    ) : tab.name === "diagram" ? (
+      <DiagramCanvasV2 vm={flow} lang={lang} readOnly={landing} />
+    ) : tab.name === "dashboard" ? (
+      <Dashboard surface={surface} entities={tab.entities} lang={lang} />
+    ) : null;
 
+  const titleOf = (name: string) => name.replace(/-/g, " ");
+
+  // ── ВИТРИНА: пульт первым, крупной формой заявки; ниже остальные разделы, все раскрытые.
+  if (landing) {
+    const panel = tabs.find((t) => t.name === "control-panel");
+    const rest = tabs.filter((t) => t !== panel);
+    return (
+      <>
+        <AutoRefresh />
+        {panel ? <div className="mt-6">{bodyOf(panel)}</div> : null}
+        {rest.map((tab) => {
+          const body = bodyOf(tab);
+          if (!body) return null; // вкладка объявлена, содержимого пока нет — на витрине пустых мест не делаем
+          return (
+            <section key={tab.name} data-tab={tab.name} className="mt-8 space-y-3 scroll-mt-20">
+              <h2 className="text-lg font-semibold capitalize tracking-tight">{titleOf(tab.name)}</h2>
+              {body}
+            </section>
+          );
+        })}
+      </>
+    );
+  }
+
+  // ── КОКПИТ: серия аккордеонов, состояние каждого помнит браузер.
   return (
     <>
       {/* ЗАКОН СТРАНИЦЫ, а не забота отдельной секции: завершился прогон — серверные данные перечитываются,
-          и каждая таблица показывает свежие записи БЕЗ перезагрузки. Монтируется один раз на все вкладки,
-          поэтому новая секция получает автообновление даром. */}
+          и каждая таблица показывает свежие записи БЕЗ перезагрузки. Монтируется один раз на все вкладки. */}
       <AutoRefresh />
-
-      {landingPanel ? (
-        <div className="mt-6">
-          <ControlPanel surface={surface} entities={landingPanel.entities} lang={lang} />
-        </div>
-      ) : null}
-
-      {series.length === 0 ? null : (
-    <div data-components-root data-surface={surface} className="mt-6 rounded-lg border px-4">
-      {series.map((tab) => (
-        // a native <details>: presence управляет начальным состоянием — collapsed закрыт, expanded открыт;
-        // раскрытие/схлопывание кликом работает и без JavaScript
-        <details key={tab.name} data-tab={tab.name} open={tab.presence === "expanded"} className="group border-b last:border-b-0">
-          <summary className="flex cursor-pointer list-none items-center justify-between py-4 text-sm font-medium hover:underline [&::-webkit-details-marker]:hidden">
-            <span className="capitalize">{tab.name.replace(/-/g, " ")}</span>
-            <ChevronDownIcon className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
-          </summary>
-          <div className="pb-4 pt-0 text-sm text-muted-foreground">
-            {tab.name === "control-panel" ? (
-              /* пульт запуска — своя папка с маршрутизатором: публичная половина (по одному пульту на
-                 entity вкладки) + административная настройка запроса под ней */
-              <ControlPanel surface={surface} entities={tab.entities} lang={lang} />
-            ) : tab.name === "diagram" ? (
-              <DiagramCanvasV2 vm={flow} lang={lang} readOnly={surface === "public"} />
-            ) : tab.name === "dashboard" ? (
-              <Dashboard surface={surface} entities={tab.entities} lang={lang} />
-            ) : (
-              /* пусто на этом этапе — содержимое секции появится позже */
-              null
-            )}
-          </div>
-        </details>
-      ))}
-    </div>
-      )}
+      <div data-components-root data-surface={surface} className="mt-6 rounded-lg border px-4">
+        {tabs.map((tab) => (
+          <SectionAccordion
+            key={tab.name}
+            tab={tab.name}
+            title={titleOf(tab.name)}
+            count={tab.entities.length}
+            countLabel={S.items}
+            defaultOpen={tab.presence === "expanded"}
+          >
+            {bodyOf(tab)}
+          </SectionAccordion>
+        ))}
+      </div>
     </>
   );
 }

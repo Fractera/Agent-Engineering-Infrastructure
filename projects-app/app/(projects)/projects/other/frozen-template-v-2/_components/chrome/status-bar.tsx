@@ -6,7 +6,7 @@ import SendTask from "./send-task.client";
 // ПОЛОСА-ШАПКА (админ) — верхний блок: ряд 1 только бейджи (горизонтальная прокрутка, скроллбар скрыт),
 // ряд 2 имя автоматизации слева, гамбургер-меню и кнопка «отправить задание» справа.
 // (Требование владельца: меню + кнопка — во втором ряду, НЕ в ряду бейджей.)
-type TabRow = { name: string; presence: "absent" | "collapsed" | "expanded" };
+type TabRow = { name: string; presence: "absent" | "collapsed" | "expanded"; entities?: { cuid: string; title: string }[] };
 
 export default function StatusBar({
   passport,

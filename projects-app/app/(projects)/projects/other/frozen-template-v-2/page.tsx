@@ -2,6 +2,7 @@ import { loadAutomation } from "./_data/load";
 import AutomationChrome from "./_components/chrome";
 import AutomationComponents from "./_components";
 import NotBuiltPage from "./_components/shared/not-built-page";
+import { pick } from "./_components/shared/localized";
 
 // Страница автоматизации. Паттерн v1 (test-stream-frozen-starter/page.tsx): ДВЕ композиции на одном
 // маршруте — по умолчанию КОКПИТ владельца (surface="admin", полоса-шапка), а `?view=public` рисует
@@ -16,7 +17,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
   const surface = view === "public" ? "public" : "admin";
   const { passport, components } = await loadAutomation();
   const lang = (process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? "en").toLowerCase().slice(0, 2);
-  const tabs = components.tabs.map((t) => ({ name: t.name, presence: t.presence }));
+  // Строки вкладок для шапки: присутствие для меню + сущности с подписями для оглавления витрины.
+  const tabs = components.tabs.map((t) => ({
+    name: t.name,
+    presence: t.presence,
+    entities: t.entities.map((e) => ({
+      cuid: e.cuid,
+      title: pick((e.data as Record<string, unknown>).title, lang) || e.name,
+    })),
+  }));
   // ПОСТРОЕНА ЛИ АВТОМАТИЗАЦИЯ — один факт из паспорта (`lifecycle`), и он решает судьбу ВИТРИНЫ:
   // замороженному шаблону публичной страницы нет. Показывать посетителю пустую витрину значило бы
   // обещать работу, которой ещё нет, — вместо страницы отдаём один честный тост с тем, что делать.

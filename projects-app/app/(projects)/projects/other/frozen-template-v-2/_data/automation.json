@@ -1053,6 +1053,90 @@
                 "price"
               ]
             }
+          },
+          {
+            "cuid": "csecondpanel6fcyjvy0",
+            "name": "Second control panel",
+            "info": {
+              "aiSummary": "ВРЕМЕННЫЙ ДУБЛЬ первого пульта — заведён, чтобы владелец проверил вложенные аккордеоны. Удаляется после проверки."
+            },
+            "status": "materialized",
+            "warnings": [],
+            "envKeys": [],
+            "data": {
+              "title": {
+                "en": "Stock price request (2)",
+                "es": "Consulta de precio de acción (2)",
+                "fr": "Demande de cours de bourse (2)",
+                "it": "Richiesta prezzo azionario (2)",
+                "ru": "Запрос цены акции (2)",
+                "de": "Aktienkurs-Abfrage (2)",
+                "pt": "Consulta de preço de ação (2)",
+                "pl": "Zapytanie o cenę akcji (2)",
+                "tr": "Hisse fiyatı sorgusu (2)",
+                "nl": "Aandelenkoers opvragen (2)"
+              },
+              "description": {
+                "en": "Name a public company — the automation returns its live share price and stores the row in the dashboard.",
+                "es": "Nombra una empresa pública: la automatización devuelve el precio actual de su acción y guarda la fila en el panel.",
+                "fr": "Nommez une société cotée : l'automatisation renvoie le cours actuel de son action et enregistre la ligne dans le tableau de bord.",
+                "it": "Indica un'azienda quotata: l'automazione restituisce il prezzo attuale dell'azione e salva la riga nella dashboard.",
+                "ru": "Назовите публичную компанию — автоматизация вернёт живую цену её акции и сохранит строку в дашборде.",
+                "de": "Nenne ein börsennotiertes Unternehmen — die Automatisierung liefert den aktuellen Aktienkurs und speichert die Zeile im Dashboard.",
+                "pt": "Indique uma empresa pública — a automação devolve o preço atual da ação e guarda a linha no painel.",
+                "pl": "Podaj spółkę publiczną — automatyzacja zwróci bieżącą cenę akcji i zapisze wiersz w panelu.",
+                "tr": "Halka açık bir şirket adı verin — otomasyon güncel hisse fiyatını döndürür ve satırı panoya kaydeder.",
+                "nl": "Noem een beursgenoteerd bedrijf — de automatisering geeft de actuele koers terug en bewaart de rij in het dashboard."
+              },
+              "params": [
+                {
+                  "key": "query",
+                  "type": "text",
+                  "required": true,
+                  "label": {
+                    "en": "Company",
+                    "es": "Empresa",
+                    "fr": "Entreprise",
+                    "it": "Azienda",
+                    "ru": "Компания",
+                    "de": "Unternehmen",
+                    "pt": "Empresa",
+                    "pl": "Firma",
+                    "tr": "Şirket",
+                    "nl": "Bedrijf"
+                  },
+                  "placeholder": {
+                    "en": "Apple",
+                    "es": "Apple",
+                    "fr": "Apple",
+                    "it": "Apple",
+                    "ru": "Apple",
+                    "de": "Apple",
+                    "pt": "Apple",
+                    "pl": "Apple",
+                    "tr": "Apple",
+                    "nl": "Apple"
+                  }
+                }
+              ],
+              "answer": {
+                "en": "{company} ({ticker}) — ${price}",
+                "es": "{company} ({ticker}) — {price} $",
+                "fr": "{company} ({ticker}) — {price} $",
+                "it": "{company} ({ticker}) — {price} $",
+                "ru": "{company} ({ticker}) — {price} $",
+                "de": "{company} ({ticker}) — {price} $",
+                "pt": "{company} ({ticker}) — {price} $",
+                "pl": "{company} ({ticker}) — {price} $",
+                "tr": "{company} ({ticker}) — {price} $",
+                "nl": "{company} ({ticker}) — ${price}"
+              },
+              "answerKeys": [
+                "company",
+                "ticker",
+                "price"
+              ]
+            }
           }
         ]
       },
@@ -1211,6 +1295,93 @@
                 "pl": "Historia zapytań",
                 "tr": "Sorgu geçmişi",
                 "nl": "Aanvraaggeschiedenis"
+              }
+            }
+          },
+          {
+            "cuid": "csecondtablebfze6vk8",
+            "name": "Second table",
+            "info": {
+              "aiSummary": "ВРЕМЕННЫЙ ДУБЛЬ первой таблицы — заведён, чтобы владелец проверил вложенные аккордеоны. Удаляется после проверки."
+            },
+            "status": "materialized",
+            "warnings": [],
+            "envKeys": [],
+            "data": {
+              "table": "history",
+              "columns": [
+                {
+                  "key": "date",
+                  "label": {
+                    "en": "Date",
+                    "es": "Fecha",
+                    "fr": "Date",
+                    "it": "Data",
+                    "ru": "Дата",
+                    "de": "Datum",
+                    "pt": "Data",
+                    "pl": "Data",
+                    "tr": "Tarih",
+                    "nl": "Datum"
+                  }
+                },
+                {
+                  "key": "company",
+                  "label": {
+                    "en": "Company",
+                    "es": "Empresa",
+                    "fr": "Entreprise",
+                    "it": "Azienda",
+                    "ru": "Компания",
+                    "de": "Firma",
+                    "pt": "Empresa",
+                    "pl": "Firma",
+                    "tr": "Şirket",
+                    "nl": "Bedrijf"
+                  }
+                },
+                {
+                  "key": "ticker",
+                  "label": {
+                    "en": "Ticker",
+                    "es": "Símbolo",
+                    "fr": "Symbole",
+                    "it": "Simbolo",
+                    "ru": "Тикер",
+                    "de": "Kürzel",
+                    "pt": "Símbolo",
+                    "pl": "Symbol",
+                    "tr": "Sembol",
+                    "nl": "Symbool"
+                  }
+                },
+                {
+                  "key": "price",
+                  "label": {
+                    "en": "Price",
+                    "es": "Precio",
+                    "fr": "Prix",
+                    "it": "Prezzo",
+                    "ru": "Цена",
+                    "de": "Preis",
+                    "pt": "Preço",
+                    "pl": "Cena",
+                    "tr": "Fiyat",
+                    "nl": "Prijs"
+                  }
+                }
+              ],
+              "title": {
+                "en": "Request history (2)",
+                "es": "Historial de consultas (2)",
+                "fr": "Historique des demandes (2)",
+                "it": "Cronologia richieste (2)",
+                "ru": "История запросов (2)",
+                "de": "Anfrageverlauf (2)",
+                "pt": "Histórico de pedidos (2)",
+                "pl": "Historia zapytań (2)",
+                "tr": "Sorgu geçmişi (2)",
+                "nl": "Aanvraaggeschiedenis (2)"
               }
             }
           }

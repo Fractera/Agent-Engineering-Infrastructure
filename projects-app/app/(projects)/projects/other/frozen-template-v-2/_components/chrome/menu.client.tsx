@@ -15,7 +15,7 @@ import PlaceholderModal from "./placeholder-modal.client";
 // Записи, чей бэкенд v1 в v2 ещё не построен (Настройки · Тесты · Переименовать · Клонировать · Удалить),
 // выглядят как в v1, но открывают честную заглушку. Работают уже сейчас: «Как это работает», переключатели
 // видимости (пишут tab.presence в ядро через api/patch) и перетаскивание строк (порядок — будущий op).
-type TabRow = { name: string; presence: "absent" | "collapsed" | "expanded" };
+type TabRow = { name: string; presence: "absent" | "collapsed" | "expanded"; entities?: { cuid: string; title: string }[] };
 type Modal = null | "howItWorks" | { title: string };
 
 const item = "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-none hover:bg-accent";

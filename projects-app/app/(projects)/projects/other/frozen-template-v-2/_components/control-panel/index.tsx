@@ -1,8 +1,11 @@
 import type { Entity } from "../../_data/automation.schema";
 import type { Surface } from "../surface";
 import FirstControlPanel from "./public/first-control-panel";
+import SecondControlPanel from "./public/second-control-panel";
 import RequestSettings from "./admin/request-settings";
-import { controlPanelStrings } from "./i18n";
+import SectionAccordion from "../shared/section-accordion.client";
+import { controlPanelStrings, pick } from "./i18n";
+import { dataText } from "./params";
 
 // МАРШРУТИЗАТОР ПУЛЬТА ЗАПУСКА — не переключатель, а композиция: рисует две половины друг под другом.
 // Публичная половина сверху — её видят все. Административная под ней — её берёт только админ-слой.
@@ -13,15 +16,19 @@ import { controlPanelStrings } from "./i18n";
 //   i18n.ts   — словарь вкладки на десять языков; params.ts — чтение объявления формы из ядра.
 //
 // СКОЛЬКО ПУЛЬТОВ — РЕШАЕТ ЯДРО: по одному на каждую entity вкладки `control-panel` в automation.json
-// (закон вкладки: «две сущности одного вида — две entity, а не вторая вкладка»; так же живут таблицы
-// дашборда и календари). По умолчанию пульт один.
+// (закон вкладки: две сущности одного вида — две entity, а не вторая вкладка).
 //
 // Имя файла = kebab имени entity («First control panel» → `public/first-control-panel.tsx`) — тот же
 // закон, что у функций узлов: имя есть АДРЕС файла. Реестр статический (шаблонный import по имени в
 // route-group `(projects)` не резолвится в рантайме — урок v1); ядро объявило пульт без файла — говорим
 // об этом честно, а не молчим.
+//
+// ДВА ПУЛЬТА — ДВА ВЛОЖЕННЫХ АККОРДЕОНА (правило владельца 2026-07-22): начиная со второго каждый пульт
+// получает свой аккордеон внутри главного; первый раскрыт, остальные свёрнуты, состояние каждого
+// запоминается в браузере. НА ВИТРИНЕ аккордеонов нет: там все пульты раскрыты всегда.
 const PANELS: Record<string, React.ComponentType<{ entity: Entity; lang: string; surface: Surface }>> = {
   "first-control-panel": FirstControlPanel,
+  "second-control-panel": SecondControlPanel,
 };
 
 const fileOf = (name: string) => name.trim().toLowerCase().replace(/\s+/g, "-");
@@ -36,19 +43,34 @@ export default function ControlPanel({
   lang: string;
 }) {
   const L = controlPanelStrings(lang);
+  const many = entities.length > 1;
+  const landing = surface === "public";
 
   return (
-    <div data-entity="control-panel" data-surface={surface}>
-      {entities.map((entity) => {
+    <div data-entity="control-panel" data-surface={surface} className="space-y-4">
+      {entities.map((entity, i) => {
         const Panel = PANELS[fileOf(entity.name)];
-        if (!Panel) {
-          return (
-            <p key={entity.cuid} className="py-2 text-sm text-rose-700 dark:text-rose-400">
-              {L.noComponent.replace("{k}", entity.name)}
-            </p>
-          );
-        }
-        return <Panel key={entity.cuid} entity={entity} lang={lang} surface={surface} />;
+        const title = pick(dataText(entity, "title"), lang) || entity.name;
+        const body = Panel ? (
+          <Panel entity={entity} lang={lang} surface={surface} />
+        ) : (
+          <p className="py-2 text-sm text-rose-700 dark:text-rose-400">
+            {L.noComponent.replace("{k}", entity.name)}
+          </p>
+        );
+
+        // якорь для навигации публичной страницы — по нему прокручивает ящик слева
+        return (
+          <div key={entity.cuid} id={`entity-${entity.cuid}`} className="scroll-mt-20">
+            {many && !landing ? (
+              <SectionAccordion tab="control-panel" cuid={entity.cuid} title={title} defaultOpen={i === 0}>
+                {body}
+              </SectionAccordion>
+            ) : (
+              body
+            )}
+          </div>
+        );
       })}
       {surface === "admin" ? <RequestSettings entities={entities} lang={lang} /> : null}
     </div>
