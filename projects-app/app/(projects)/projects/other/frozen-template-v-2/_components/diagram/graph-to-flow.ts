@@ -28,14 +28,25 @@ export type DiagramVMEdge = { id: string; from: string; to: string; hidden: bool
 
 export type DiagramVM = { nodes: DiagramVMNode[]; edges: DiagramVMEdge[] };
 
-const COL_OF: Record<"input" | "middle" | "output", number> = { input: 0, middle: 1, output: 2 };
+// Колонка = ранг по ПОТОКУ, а не просто группа: вход(0) → transform(1) → condition(2) → output(3).
+// Так рёбра `input → transform → condition → output` читаются строго слева направо, без петель. Условия
+// живут в группе «середина», но в потоке стоят ПОСЛЕ transform — поэтому им отдельная колонка справа от него.
+function colOf(group: "input" | "middle" | "output", kind: string): number {
+  if (group === "input") return 0;
+  if (group === "output") return 3;
+  return kind === "transform" ? 1 : 2;
+}
 
 export function graphToFlow(graph: Automation["graph"]): DiagramVM {
   const groups = graph.nodes.groups;
   const nodes: DiagramVMNode[] = [];
+  const rowByCol = new Map<number, number>();
 
   for (const group of ["input", "middle", "output"] as const) {
-    groups[group].nodes.forEach((n, i) => {
+    for (const n of groups[group].nodes) {
+      const col = colOf(group, n.kind);
+      const row = rowByCol.get(col) ?? 0;
+      rowByCol.set(col, row + 1);
       nodes.push({
         id: n.cuid,
         name: n.name,
@@ -43,8 +54,8 @@ export function graphToFlow(graph: Automation["graph"]): DiagramVM {
         kind: n.kind,
         ioType: typeof n.ioType === "string" ? n.ioType : null,
         group,
-        col: COL_OF[group],
-        row: i,
+        col,
+        row,
         isCondition: n.kind === "condition-success" || n.kind === "condition-failure",
         isConnector: n.kind === "input-connector" || n.kind === "output-connector",
         hidden: n.state === "hidden",
@@ -55,7 +66,7 @@ export function graphToFlow(graph: Automation["graph"]): DiagramVM {
           returns: n.function.returns,
         },
       });
-    });
+    }
   }
 
   const edges: DiagramVMEdge[] = graph.edges.map((e) => ({
