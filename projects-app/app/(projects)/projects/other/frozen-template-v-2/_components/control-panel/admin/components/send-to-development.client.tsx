@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { controlPanelStrings } from "../../i18n";
+import VoiceInput from "../../../shared/voice-input.client";
 
 // ОТПРАВИТЬ ПУЛЬТ В РАЗРАБОТКУ — слова владельца ложатся в ЯДРО, в `info.crudUser` ЭТОГО пульта
 // (адрес `{object:"entity", tab:"control-panel", cuid}`), а статус пульта становится `in-development`.
@@ -18,6 +19,8 @@ export default function SendToDevelopment({ tab, cuid, lang }: { tab: string; cu
   const L = controlPanelStrings(lang);
   const [text, setText] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "saved" | "failed">("idle");
+  // Задание в разработку диктуется голосом — тот же единственный примитив папки, что и в публичном поле.
+  const areaRef = useRef<HTMLTextAreaElement | null>(null);
 
   async function submit() {
     const brief = text.trim();
@@ -45,6 +48,7 @@ export default function SendToDevelopment({ tab, cuid, lang }: { tab: string; cu
     <div className="space-y-2 rounded-md border border-dashed p-3">
       <p className="text-sm font-medium">{L.devTitle}</p>
       <textarea
+        ref={areaRef}
         value={text}
         onChange={(e) => {
           setText(e.target.value);
@@ -52,6 +56,15 @@ export default function SendToDevelopment({ tab, cuid, lang }: { tab: string; cu
         }}
         placeholder={L.devPlaceholder}
         className="min-h-20 w-full resize-y rounded-md border bg-transparent p-2 text-sm outline-none focus:ring-1 focus:ring-primary"
+      />
+      <VoiceInput
+        targetRef={areaRef}
+        value={text}
+        lang={lang}
+        onChange={(next) => {
+          setText(next);
+          setStatus("idle");
+        }}
       />
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs text-muted-foreground">
