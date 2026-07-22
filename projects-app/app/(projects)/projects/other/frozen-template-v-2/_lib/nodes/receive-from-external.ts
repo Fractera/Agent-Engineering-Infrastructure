@@ -1,7 +1,10 @@
-// ФУНКЦИЯ УЗЛА «INPUT-CONNECTOR» — принимает данные от узла ДРУГОЙ автоматизации: это дверь, через
-// которую автоматизация входит в групповую. По закону вида узла (`_instructions/kind.input-connector.md`) коннектор
-// присутствует всегда; в одиночной автоматизации он просто скрыт и не исполняется.
-export function receiveFromExternal(handover: unknown): { payload: unknown } {
-  // the connector does not interpret the handover — it only names it for this automation
-  return { payload: handover };
+// ФУНКЦИЯ УЗЛА «INPUT-CONNECTOR» — принимает данные от узла ДРУГОЙ автоматизации: дверь в групповую.
+// По закону вида коннектор присутствует всегда; в одиночной автоматизации он СКРЫТ и не исполняется
+// (в сценарии «цена акции» тоже). Имя `receiveFromExternal` — публичный контракт.
+//
+// Контракт: (ctx) => частичный ctx. Проброс handover как payload.
+import type { NodeCtx } from "../executor";
+
+export function receiveFromExternal(ctx: NodeCtx): { payload: unknown } {
+  return { payload: ctx.handover ?? ctx.payload ?? null };
 }

@@ -1,20 +1,26 @@
 {
   "passport": {
     "systemInstructionName": "passport",
-    "title": "Frozen template v2",
-    "description": "",
+    "title": "Stock price (v2)",
+    "description": "Автоматизация типа Stream: по названию публичной компании возвращает живую цену её акции и сохраняет в историю.",
     "type": "stream",
-    "lifecycle": "frozen-template",
-    "author": "",
+    "lifecycle": "real-project",
+    "author": "architect",
     "sharing": "private",
     "fracteraPro": {
       "systemInstructionName": "fracteraPro",
       "config": null
     },
     "info": {
-      "aiSummary": "Стартовый замороженный шаблон: все узлы скрыты, кейсов ещё нет — автоматизация рождается из пользовательских кейсов владельца."
+      "aiSummary": "Рабочая v2-автоматизация «цена акции»: пульт → распознавание компании → живой курс Yahoo → запись в дашборд. Реперный E2E-образец собственного рантайма v2."
     },
-    "howItWorks": []
+    "howItWorks": [
+      "Вы называете публичную компанию (например «Apple») в пульте запуска.",
+      "Автоматизация распознаёт компанию и берёт её биржевой тикер.",
+      "По тикеру запрашивается живая цена акции с Yahoo Finance.",
+      "Если цена получена — строка с датой, компанией, тикером и ценой попадает в дашборд.",
+      "Если компания не распознана или цена недоступна — прогон честно останавливается и ничего не пишет."
+    ]
   },
   "graph": {
     "systemInstructionName": "graph",
@@ -78,10 +84,10 @@
               "kind": "input",
               "name": "Input",
               "description": "Where the automation receives its work — a message, a request, or a scheduled tick.",
-              "state": "hidden",
+              "state": "visible",
               "ioType": "control-panel",
               "info": {
-                "aiSummary": "Принимает обращение из Пульта запуска и передаёт его дальше как payload."
+                "aiSummary": "Распознаёт публичную компанию из запроса по словарю и отдаёт её тикер; неизвестная или частная компания — прогон останавливается понятным сообщением."
               },
               "status": "materialized",
               "warnings": [],
@@ -296,10 +302,10 @@
               "kind": "transform",
               "name": "Logic",
               "description": "The middle — the deterministic work that turns the input into the output.",
-              "state": "hidden",
+              "state": "visible",
               "ioType": null,
               "info": {
-                "aiSummary": "Превращает payload в результат; собственного преобразования пока нет."
+                "aiSummary": "Берёт живую цену акции по тикеру из Yahoo Finance (без ключа, без AI); если цены нет — прогон падает и ничего не записывается."
               },
               "status": "materialized",
               "warnings": [],
@@ -334,10 +340,10 @@
               "kind": "condition-success",
               "name": "If success",
               "description": "The branch taken when the middle produced a result — the flow continues to the output.",
-              "state": "hidden",
+              "state": "visible",
               "ioType": null,
               "info": {
-                "aiSummary": "Пропускает результат дальше, когда середина отработала успешно."
+                "aiSummary": "Ветка успеха: пропускает результат к записи. Настоящий гейт — бросок в узле цены, поэтому сюда доходит только успешный поток."
               },
               "status": "materialized",
               "warnings": [],
@@ -369,12 +375,12 @@
               "kind": "condition-failure",
               "name": "If failure",
               "description": "The branch taken when the middle could not produce a result — the flow ends here.",
-              "state": "hidden",
+              "state": "visible",
               "ioType": null,
               "info": {
-                "aiSummary": "Ветка отказа: поток останавливается, дальше ничего не доставляется."
+                "aiSummary": "Ветка отказа: визуальный тупик. Реальный отказ уже остановил прогон в узле цены, поэтому функция ничего не делает."
               },
-              "status": "in-development",
+              "status": "materialized",
               "warnings": [],
               "envKeys": [],
               "function": {
@@ -421,10 +427,10 @@
               "kind": "output",
               "name": "Output",
               "description": "Where the automation delivers its result — a reply, a saved record, or a published page.",
-              "state": "hidden",
+              "state": "visible",
               "ioType": "dashboard",
               "info": {
-                "aiSummary": "Доставляет результат строкой на дашборд."
+                "aiSummary": "Пишет строку (дата, компания, тикер, цена) в таблицу history дашборда автоматизации."
               },
               "status": "materialized",
               "warnings": [],
@@ -712,106 +718,28 @@
     },
     "edges": [
       {
-        "cuid": "cmruca7ra4n1jue15372fe6f060166",
+        "cuid": "cmrvy25ez1pjaw648c44d369e3",
         "from": "cmruca7r64n1jr7c4ca119ed7b7c4d",
         "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
+        "state": "visible"
       },
       {
-        "cuid": "cmruca7ra4n1jve4c7d2b0bc5335bf",
+        "cuid": "cmrvy25f21pjaxf3222f069e86",
         "from": "cmruca7ra4n1jsdcdee0feb026f3a4",
         "to": "cmruddnrpho70e8af12589d1deaa",
-        "state": "hidden"
+        "state": "visible"
       },
       {
-        "cuid": "cmruddnrtho8bbc2f3099cba1759",
-        "from": "cmruddnrpho70e8af12589d1deaa",
-        "to": "cmruca7ra4n1jt639afc902fa70f5b",
-        "state": "hidden"
-      },
-      {
-        "cuid": "cmrvwdp1t49a2a3d016f55de37",
-        "from": "cmruewqs51sbelfc3dc9457a2a3fac",
-        "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
-      },
-      {
-        "cuid": "cmrvwdp1v49a2b439a6fb1fc09",
-        "from": "cmruqdpjl51eha9a65832422ad3a53",
-        "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
-      },
-      {
-        "cuid": "cmrvwdp1v49a2c3afe5b8b9595",
-        "from": "cmruqdpjm51ehb6c5e6bd9a8614a87",
-        "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
-      },
-      {
-        "cuid": "cmrvwdp1v49a2d9d146408ab14",
-        "from": "cmruqdpjm51ehc433ccaf2f7677d66",
-        "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
-      },
-      {
-        "cuid": "cmrvwdp1v49a2e842832a1d23d",
-        "from": "cmruqdpjm51ehd18d5a1f37ce38e1c",
-        "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
-      },
-      {
-        "cuid": "cmrvwdp1v49a2fe0b90cfedff6",
-        "from": "cmruqdpjm51ehe2f58b91a619fdc71",
-        "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
-      },
-      {
-        "cuid": "cmrvwdp1v49a2g4ac48e9df3bd",
+        "cuid": "cmrvy25f31pjay5b734893f76d",
         "from": "cmruca7ra4n1jsdcdee0feb026f3a4",
         "to": "cmruqdpjn51ehmdd7904ad3a6abaf6",
-        "state": "hidden"
+        "state": "visible"
       },
       {
-        "cuid": "cmrvwdp1v49a2h36b3a279f3de",
+        "cuid": "cmrvy25f31pjaz4dd95ea63fc4",
         "from": "cmruddnrpho70e8af12589d1deaa",
-        "to": "cmruqdpjm51ehf50515a4931dd04d7",
-        "state": "hidden"
-      },
-      {
-        "cuid": "cmrvwdp1v49a2i3c2d074f1cb4",
-        "from": "cmruddnrpho70e8af12589d1deaa",
-        "to": "cmruqdpjm51ehgbc4cd8289c717fde",
-        "state": "hidden"
-      },
-      {
-        "cuid": "cmrvwdp1v49a2jd7be9889f242",
-        "from": "cmruddnrpho70e8af12589d1deaa",
-        "to": "cmruqdpjm51ehh558398f6e19c27c3",
-        "state": "hidden"
-      },
-      {
-        "cuid": "cmrvwdp1v49a2k982bfd6ccd06",
-        "from": "cmruddnrpho70e8af12589d1deaa",
-        "to": "cmruqdpjm51ehi292f9cb0fc27987c",
-        "state": "hidden"
-      },
-      {
-        "cuid": "cmrvwdp1v49a2l7d1ea7b4f179",
-        "from": "cmruddnrpho70e8af12589d1deaa",
-        "to": "cmruqdpjn51ehjeb00a0bb1dcde063",
-        "state": "hidden"
-      },
-      {
-        "cuid": "cmrvwdp1v49a2m8bebf3baa61c",
-        "from": "cmruddnrpho70e8af12589d1deaa",
-        "to": "cmruqdpjn51ehk0971dc21b875fe16",
-        "state": "hidden"
-      },
-      {
-        "cuid": "cmrvwdp1v49a2ne9b104b77e56",
-        "from": "cmruddnrpho70e8af12589d1deaa",
-        "to": "cmruqdpjn51ehl1bc14d0bb0ca3b9b",
-        "state": "hidden"
+        "to": "cmruca7ra4n1jt639afc902fa70f5b",
+        "state": "visible"
       }
     ]
   },
@@ -883,12 +811,32 @@
         "name": "dashboard",
         "presence": "collapsed",
         "info": {
-          "aiSummary": "Вкладка дашборда объявлена и пуста: таблицы появятся, когда владелец их закажет."
+          "aiSummary": "Таблица history: дата, компания, тикер, цена — по строке на успешный прогон запроса цены."
         },
-        "status": "in-development",
+        "status": "materialized",
         "warnings": [],
         "envKeys": [],
-        "entities": []
+        "entities": [
+          {
+            "cuid": "cmrvy25f31pjb1ad4c23af1ee9",
+            "name": "History",
+            "info": {
+              "aiSummary": "Строки прогонов: дата, компания, тикер, цена. Наполняется выходным узлом при каждом успешном запросе."
+            },
+            "status": "materialized",
+            "warnings": [],
+            "envKeys": [],
+            "data": {
+              "table": "history",
+              "columns": [
+                "date",
+                "company",
+                "ticker",
+                "price"
+              ]
+            }
+          }
+        ]
       },
       {
         "systemInstructionName": "tab",
@@ -955,7 +903,14 @@
   "useCases": {
     "systemInstructionName": "useCases",
     "warnings": [],
-    "cases": []
+    "cases": [
+      {
+        "cuid": "cmrvy25f31pjb09c1e7cab94b2",
+        "number": 1,
+        "text": "Хочу спросить цену акции публичной компании своими словами (например «сколько стоит Apple») и получить живую цену, сохранённую в историю.",
+        "status": "in-use"
+      }
+    ]
   },
   "history": {
     "systemInstructionName": "history",

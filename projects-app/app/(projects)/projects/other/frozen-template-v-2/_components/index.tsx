@@ -3,6 +3,7 @@ import type { Surface } from "./surface";
 import { ChevronDownIcon } from "./chrome/icons";
 import { graphToFlow } from "./diagram/graph-to-flow";
 import { DiagramCanvasV2 } from "./diagram/canvas.client";
+import DashboardTable from "./dashboard/table";
 
 // СЕКЦИИ НА ХОЛСТЕ — серия аккордеонов, дизайн взят из v1 (`automation-accordions.client.tsx`:
 // контейнер `rounded-lg border px-4`, каждый item — `border-b`, триггер с шевроном), воспроизведён
@@ -35,6 +36,8 @@ export default async function AutomationComponents({ surface, lang }: { surface:
           <div className="pb-4 pt-0 text-sm text-muted-foreground">
             {tab.name === "diagram" ? (
               <DiagramCanvasV2 vm={flow} lang={lang} />
+            ) : tab.name === "dashboard" ? (
+              <DashboardTable lang={lang} />
             ) : (
               /* пусто на этом этапе — содержимое секции появится позже */
               null

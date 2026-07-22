@@ -1,7 +1,11 @@
-// ФУНКЦИЯ УЗЛА «CONDITION-SUCCESS» — ветка успеха: пропускает поток дальше только тогда, когда середина
-// действительно дала результат. По закону вида узла (`_instructions/kind.condition-success.md`) выходной узел принимает
-// связь ТОЛЬКО от ветки успеха, поэтому этот узел стоит между `transform` и `output`.
-export function ifSuccess(input: { result: unknown }): { result: unknown } | null {
-  // no result — the branch does not hold, and the flow does not reach the output node
-  return input.result === undefined || input.result === null ? null : { result: input.result };
+// ФУНКЦИЯ УЗЛА «CONDITION-SUCCESS» — ветка успеха: пропускает поток дальше к выходу. В сценарии «цена
+// акции» настоящий гейт — БРОСОК в `transformPayload` (нет цены → прогон падает и сюда не доходит),
+// поэтому здесь честный визуальный проброс. Имя `ifSuccess` — публичный контракт, не переименовывать.
+//
+// Контракт: (ctx) => частичный ctx (ничего не добавляем — данные уже в bag). Возврат `null` означал бы
+// «ветка не держит — стоп»; в этом сценарии до узла доходит только успешный поток, поэтому возвращаем {}.
+import type { NodeCtx } from "../executor";
+
+export function ifSuccess(_ctx: NodeCtx): Record<string, never> {
+  return {};
 }
