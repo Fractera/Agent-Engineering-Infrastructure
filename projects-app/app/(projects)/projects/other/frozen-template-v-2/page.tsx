@@ -17,10 +17,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
   const lang = (process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? "en").toLowerCase().slice(0, 2);
   const tabs = components.tabs.map((t) => ({ name: t.name, presence: t.presence }));
 
+  // data-zone-column — колонка страницы подчиняется переключателю ширины в футере зоны:
+  // обычный режим оставляет её как есть (max-w-4xl), широкий раскрывает на весь экран
+  // с мостом 32px. Атрибут, а не класс: раскладка страницы остаётся в её собственном коде.
   return (
-    {/* data-zone-column — колонка страницы подчиняется переключателю ширины в футере зоны:
-        обычный режим оставляет её как есть (max-w-4xl), широкий раскрывает на весь экран
-        с мостом 32px. Атрибут, а не класс: раскладка страницы остаётся в её собственном коде. */}
     <main data-zone-column className="mx-auto w-full max-w-4xl px-4 py-6">
       <AutomationChrome surface={surface} passport={passport} lang={lang} tabs={tabs} publicHref="?view=public" />
       <AutomationComponents surface={surface} lang={lang} />
