@@ -7,6 +7,6 @@ import FirstControlPanel from "./first-control-panel";
 //
 // Что пульт спрашивает и как отвечает — сказано в ядре (`entity.data`), поэтому дубль ссылается на тот же
 // вид: у второго пульта своя entity, свои поля и свой ответ, а разметка одна.
-export default function SecondControlPanel({ entity, lang, surface }: { entity: Entity; lang: string; surface: Surface }) {
-  return <FirstControlPanel entity={entity} lang={lang} surface={surface} />;
+export default function SecondControlPanel({ entity, lang, surface, heading }: { entity: Entity; lang: string; surface: Surface; heading?: boolean }) {
+  return <FirstControlPanel entity={entity} lang={lang} surface={surface} heading={heading} />;
 }

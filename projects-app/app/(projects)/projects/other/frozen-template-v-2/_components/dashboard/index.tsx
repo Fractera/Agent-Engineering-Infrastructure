@@ -24,7 +24,7 @@ import { pick } from "../shared/localized";
 // есть, а начиная со второй каждая получает свой аккордеон внутри главного; первая раскрыта, остальные
 // свёрнуты, и состояние каждой запоминается в браузере. НА ВИТРИНЕ аккордеонов нет вовсе: там всё
 // раскрыто всегда, как диаграмма.
-const TABLES: Record<string, React.ComponentType<{ entity: Entity; lang: string }>> = {
+const TABLES: Record<string, React.ComponentType<{ entity: Entity; lang: string; heading?: boolean }>> = {
   history: History,
   "second-table": SecondTable,
 };
@@ -48,11 +48,12 @@ export default function Dashboard({
       {entities.map((entity, i) => {
         const Table = TABLES[fileOf(entity.name)];
         const title = pick((entity.data as Record<string, unknown>).title, lang) || entity.name;
+        const nested = many && !landing; // имя стоит в шапке вложенного аккордеона
         const pending = "crudUser" in entity.info ? entity.info.crudUser : undefined;
         // ЗАЯВКА НА ОДНУ ТАБЛИЦУ — свой адрес в ядре (entity) и своё имя в заголовке раскрывашки.
         const body = Table ? (
           <div className="space-y-3">
-            <Table entity={entity} lang={lang} />
+            <Table entity={entity} lang={lang} heading={!nested} />
             {surface === "admin" ? (
               <BuildWithAi target={{ object: "entity", tab: "dashboard", cuid: entity.cuid }} name={title} pending={pending} lang={lang} />
             ) : null}
@@ -65,7 +66,7 @@ export default function Dashboard({
         // якорь для навигации публичной страницы — по нему прокручивает ящик слева
         return (
           <div key={entity.cuid} id={`entity-${entity.cuid}`} className="scroll-mt-20 py-3 first:pt-0 last:pb-0">
-            {many && !landing ? (
+            {nested ? (
               <SectionAccordion tab="dashboard" cuid={entity.cuid} title={title} defaultOpen={i === 0}>
                 {body}
               </SectionAccordion>

@@ -63,12 +63,13 @@ export default function BuildWithAi({
 
   return (
     <details
-      className="group rounded-md border border-dashed"
+      className="rounded-md border border-dashed"
       data-build-with-ai={target.object === "tab" ? target.name : target.cuid}
     >
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-sm font-medium hover:underline">
+      {/* Без иконки: раскрывашка открывается кликом по названию, и этого достаточно (владелец
+          2026-07-22 — стрелка странно вела себя при наведении). */}
+      <summary className="flex cursor-pointer list-none items-center px-3 py-2 text-sm font-medium hover:underline">
         {L.buildWith.replace("{name}", name)}
-        <span className="text-xs text-muted-foreground transition-transform group-open:rotate-180">▾</span>
       </summary>
       <div className="space-y-2 px-3 pb-3">
         {pending ? (

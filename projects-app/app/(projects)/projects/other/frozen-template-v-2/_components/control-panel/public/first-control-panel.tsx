@@ -23,10 +23,13 @@ export default function FirstControlPanel({
   entity,
   lang,
   surface,
+  heading = true,
 }: {
   entity: Entity;
   lang: string;
   surface: Surface;
+  /** Рисовать ли имя пульта: во вложенном аккордеоне оно уже стоит в шапке, второй раз не нужно. */
+  heading?: boolean;
 }) {
   const L = controlPanelStrings(lang);
   const params = paramsOf(entity);
@@ -103,12 +106,14 @@ export default function FirstControlPanel({
       data-entity-cuid={entity.cuid}
       className={landing ? "mx-auto max-w-2xl space-y-5 rounded-xl border bg-card p-6 shadow-sm" : "space-y-3 py-2"}
     >
+      {heading ? (
       <div className={landing ? "space-y-2 text-center" : "space-y-1"}>
         <h3 className={landing ? "text-2xl font-bold tracking-tight" : "text-base font-semibold text-foreground"}>{title}</h3>
         {description ? (
           <p className={landing ? "text-sm text-muted-foreground" : "text-sm text-muted-foreground"}>{description}</p>
         ) : null}
       </div>
+      ) : null}
 
       {params.length === 0 ? (
         <p className="text-sm text-muted-foreground">{L.noParams}</p>

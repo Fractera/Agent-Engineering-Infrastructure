@@ -6,6 +6,6 @@ import History from "./history";
 //
 // Состав таблицы полностью описан в ядре (`entity.data`), поэтому дубль — это ссылка на тот же вид, а не
 // копия разметки: копировать было бы нечего, кроме ошибки.
-export default function SecondTable({ entity, lang }: { entity: Entity; lang: string }) {
-  return <History entity={entity} lang={lang} />;
+export default function SecondTable({ entity, lang, heading }: { entity: Entity; lang: string; heading?: boolean }) {
+  return <History entity={entity} lang={lang} heading={heading} />;
 }

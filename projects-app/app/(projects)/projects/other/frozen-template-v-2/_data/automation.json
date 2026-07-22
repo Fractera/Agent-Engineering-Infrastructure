@@ -1397,7 +1397,19 @@
         "status": "in-development",
         "warnings": [],
         "envKeys": [],
-        "entities": []
+        "entities": [
+          {
+            "cuid": "cmap6ryzr5iv",
+            "name": "Main map",
+            "info": {
+              "aiSummary": "Заготовка «Main map»: создана вместе со вкладкой, требований владельца пока нет."
+            },
+            "status": "in-development",
+            "warnings": [],
+            "envKeys": [],
+            "data": {}
+          }
+        ]
       },
       {
         "systemInstructionName": "tab",
@@ -1409,7 +1421,19 @@
         "status": "in-development",
         "warnings": [],
         "envKeys": [],
-        "entities": []
+        "entities": [
+          {
+            "cuid": "cprocessef8h42u5l",
+            "name": "Main processes",
+            "info": {
+              "aiSummary": "Заготовка «Main processes»: создана вместе со вкладкой, требований владельца пока нет."
+            },
+            "status": "in-development",
+            "warnings": [],
+            "envKeys": [],
+            "data": {}
+          }
+        ]
       },
       {
         "systemInstructionName": "tab",
@@ -1421,7 +1445,19 @@
         "status": "in-development",
         "warnings": [],
         "envKeys": [],
-        "entities": []
+        "entities": [
+          {
+            "cuid": "ccron3p103skw",
+            "name": "Main schedule",
+            "info": {
+              "aiSummary": "Заготовка «Main schedule»: создана вместе со вкладкой, требований владельца пока нет."
+            },
+            "status": "in-development",
+            "warnings": [],
+            "envKeys": [],
+            "data": {}
+          }
+        ]
       },
       {
         "systemInstructionName": "tab",
@@ -1433,7 +1469,19 @@
         "status": "in-development",
         "warnings": [],
         "envKeys": [],
-        "entities": []
+        "entities": [
+          {
+            "cuid": "cusecasesovy1zgny",
+            "name": "Main use cases",
+            "info": {
+              "aiSummary": "Заготовка «Main use cases»: создана вместе со вкладкой, требований владельца пока нет."
+            },
+            "status": "in-development",
+            "warnings": [],
+            "envKeys": [],
+            "data": {}
+          }
+        ]
       },
       {
         "systemInstructionName": "tab",
@@ -1445,7 +1493,19 @@
         "status": "in-development",
         "warnings": [],
         "envKeys": [],
-        "entities": []
+        "entities": [
+          {
+            "cuid": "capppagesnz2fyyz7",
+            "name": "Main pages",
+            "info": {
+              "aiSummary": "Заготовка «Main pages»: создана вместе со вкладкой, требований владельца пока нет."
+            },
+            "status": "in-development",
+            "warnings": [],
+            "envKeys": [],
+            "data": {}
+          }
+        ]
       },
       {
         "systemInstructionName": "tab",

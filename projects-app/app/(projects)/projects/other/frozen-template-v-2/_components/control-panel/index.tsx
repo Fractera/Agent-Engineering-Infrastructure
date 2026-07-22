@@ -27,7 +27,7 @@ import { dataText } from "./params";
 // ДВА ПУЛЬТА — ДВА ВЛОЖЕННЫХ АККОРДЕОНА (правило владельца 2026-07-22): начиная со второго каждый пульт
 // получает свой аккордеон внутри главного; первый раскрыт, остальные свёрнуты, состояние каждого
 // запоминается в браузере. НА ВИТРИНЕ аккордеонов нет: там все пульты раскрыты всегда.
-const PANELS: Record<string, React.ComponentType<{ entity: Entity; lang: string; surface: Surface }>> = {
+const PANELS: Record<string, React.ComponentType<{ entity: Entity; lang: string; surface: Surface; heading?: boolean }>> = {
   "first-control-panel": FirstControlPanel,
   "second-control-panel": SecondControlPanel,
 };
@@ -53,12 +53,13 @@ export default function ControlPanel({
       {entities.map((entity, i) => {
         const Panel = PANELS[fileOf(entity.name)];
         const title = pick(dataText(entity, "title"), lang) || entity.name;
+        const nested = many && !landing; // имя стоит в шапке вложенного аккордеона
         const pending = "crudUser" in entity.info ? entity.info.crudUser : undefined;
         // ЗАЯВКА НА ОДИН ПУЛЬТ — свой адрес в ядре (entity), поэтому и раскрывашка своя, названная
         // именем этого пульта. В кокпите она идёт сразу под ним; посетителю не показывается.
         const body = Panel ? (
           <div className="space-y-3">
-            <Panel entity={entity} lang={lang} surface={surface} />
+            <Panel entity={entity} lang={lang} surface={surface} heading={!nested} />
             {surface === "admin" ? (
               <BuildWithAi target={{ object: "entity", tab: "control-panel", cuid: entity.cuid }} name={title} pending={pending} lang={lang} />
             ) : null}
@@ -72,7 +73,7 @@ export default function ControlPanel({
         // якорь для навигации публичной страницы — по нему прокручивает ящик слева
         return (
           <div key={entity.cuid} id={`entity-${entity.cuid}`} className="scroll-mt-20 py-3 first:pt-0 last:pb-0">
-            {many && !landing ? (
+            {nested ? (
               <SectionAccordion tab="control-panel" cuid={entity.cuid} title={title} defaultOpen={i === 0}>
                 {body}
               </SectionAccordion>
