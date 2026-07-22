@@ -3,8 +3,6 @@ import { columnsOf, tableOf } from "../columns";
 import { dashboardStrings } from "../i18n";
 import { pick } from "../../shared/localized";
 import ColumnsTable from "./components/columns-table";
-import SendToDevelopment from "../../shared/send-to-development.client";
-import { sendStrings } from "../../shared/send-to-development-i18n";
 
 // НАСТРОЙКА ТАБЛИЦ — административная половина вкладки: то, что дописывается ПОД публичными таблицами и
 // видно только владельцу. Посетителю не отдаётся никогда (тот же закон, что у пульта: использование
@@ -14,7 +12,6 @@ import { sendStrings } from "../../shared/send-to-development-i18n";
 // колонки и отправка задания в разработку — тем же общим компонентом, что и у пульта.
 export default function TableSettings({ entities, lang }: { entities: Entity[]; lang: string }) {
   const L = dashboardStrings(lang);
-  const S = sendStrings(lang);
 
   return (
     <section data-dashboard="admin" className="border-t pt-3">
@@ -34,13 +31,6 @@ export default function TableSettings({ entities, lang }: { entities: Entity[]; 
                 </span>
               </p>
               <ColumnsTable columns={columnsOf(entity)} lang={lang} />
-              {/* Задание владельца, уже записанное в ядро и ещё не разобранное моделью. */}
-              {"crudUser" in entity.info ? (
-                <p className="text-xs text-muted-foreground">
-                  <span className="font-medium">{S.devPending}</span> {entity.info.crudUser}
-                </p>
-              ) : null}
-              <SendToDevelopment tab="dashboard" cuid={entity.cuid} lang={lang} />
             </div>
           ))}
         </div>
