@@ -8,7 +8,7 @@ import { keysStrings } from "../shared/keys-i18n";
 import { pick } from "../shared/localized";
 import { servicesOf, type Service } from "../channels";
 import AiPicker from "./ai-picker.client";
-import type { ProviderKey } from "../ai";
+import { PROVIDER_ENV_KEYS, type ProviderKey } from "../ai";
 
 // НАСТРОЙКИ — здесь настраивают СЕРВИСЫ, и больше ничего.
 //
@@ -44,7 +44,10 @@ export default function SettingsModal({
   const K = keysStrings(lang);
   const [present, setPresent] = useState<Record<string, boolean>>({});
   const [asking, setAsking] = useState<Service | null>(null);
-  const services = servicesOf(envKeys);
+  // Ключи провайдеров ИИ из списка сервисов ИСКЛЮЧЕНЫ: их статус и ввод живут в КАРТОЧКЕ ИИ выше, по
+  // ВЫБРАННОМУ провайдеру. Иначе в списке всплыла бы карточка невыбранного провайдера (правка владельца
+  // 2026-07-23: «почему нет OpenAI already set» — потому что она должна идти по выбору, а не по узлу).
+  const services = servicesOf(envKeys.filter((k) => !PROVIDER_ENV_KEYS.has(k)));
 
   useEffect(() => {
     if (!open || envKeys.length === 0) return;
