@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { chromeStrings } from "./i18n";
 import { HamburgerIcon, SparkleIcon, GripVerticalIcon, PencilIcon, CopyIcon, TrashIcon } from "./icons";
 import Switch from "./switch.client";
@@ -42,6 +43,7 @@ export default function Menu({
   built: boolean;
 }) {
   const L = chromeStrings(lang);
+  const router = useRouter();
   const [rows, setRows] = useState<TabRow[]>(tabs);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
@@ -53,7 +55,9 @@ export default function Menu({
     // OFF → absent (скрыта); ON → collapsed (видна, закрыта по умолчанию). Раскрытие (expanded) —
     // отдельное состояние поля presence, а не результат этого переключателя.
     const next = presence === "absent" ? "collapsed" : "absent";
+    const prev = rows;
     setBusy(name);
+    setRows((rs) => rs.map((r) => (r.name === name ? { ...r, presence: next } : r))); // оптимистично — свитч встаёт сразу
     try {
       const apiBase = location.pathname.replace(/\/+$/, "") + "/api";
       const r = await fetch(`${apiBase}/patch`, {
@@ -62,9 +66,12 @@ export default function Menu({
         body: JSON.stringify({ address: { object: "tab", name }, set: { presence: next } }),
       });
       if (!r.ok) throw new Error(String(r.status));
-      // the server re-renders from the changed core — reload so the page below and the menu agree
-      location.reload();
+      // МЯГКАЯ СИНХРОНИЗАЦИЯ, НЕ ПЕРЕЗАГРУЗКА: раздел ниже — серверный, `router.refresh()` перечитывает его
+      // без падения страницы, свитч уже стоит оптимистично, меню не закрывается (правка владельца 2026-07-23).
+      router.refresh();
+      setBusy(null);
     } catch {
+      setRows(prev); // ядро не приняло — возвращаем прежнее состояние свитчей
       setBusy(null);
     }
   }

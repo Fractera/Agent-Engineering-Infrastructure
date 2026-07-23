@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Switch from "../../../chrome/switch.client";
 import { PERIODS, type CronSettings } from "../../schedule";
 import { cronStrings } from "../../i18n";
@@ -20,6 +21,7 @@ export default function ScheduleForm({
   lang: string;
 }) {
   const L = cronStrings(lang);
+  const router = useRouter();
   const [busy, setBusy] = useState(false);
 
   async function save(set: Record<string, unknown>) {
@@ -32,7 +34,10 @@ export default function ScheduleForm({
         body: JSON.stringify({ address: { object: "entity", tab: "cron", cuid }, set: { data: { ...set } } }),
       });
       if (!r.ok) throw new Error(String(r.status));
-      location.reload(); // такт читает не только этот раздел — пусть страница согласуется целиком
+      // МЯГКАЯ СИНХРОНИЗАЦИЯ, НЕ ПЕРЕЗАГРУЗКА: такт читают и полоса-пульс, и сторож — `router.refresh()`
+      // обновляет их без падения страницы (правка владельца 2026-07-23: reload вырубал форму).
+      router.refresh();
+      setBusy(false);
     } catch {
       setBusy(false);
     }

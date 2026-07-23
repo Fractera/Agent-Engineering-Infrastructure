@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { INTEGRATION_ICONS } from "../../../chrome/icons";
 import type { Surface } from "../../../surface";
 import { pick } from "../../../shared/localized";
@@ -34,6 +35,7 @@ export default function IntegrationsMenu({
   lang: string;
 }) {
   const L = calendarStrings(lang);
+  const router = useRouter();
   const editable = surface === "admin";
   const [list, setList] = useState(integrations);
   const [busy, setBusy] = useState(false);
@@ -71,7 +73,10 @@ export default function IntegrationsMenu({
         body: JSON.stringify({ address: { object: "entity", tab: "calendar", cuid }, set: { data: { integrations: next } } }),
       });
       if (!r.ok) throw new Error(String(r.status));
-      location.reload(); // иконки на строках выводятся из этого же списка — страница согласуется целиком
+      // МЯГКАЯ СИНХРОНИЗАЦИЯ, НЕ ПЕРЕЗАГРУЗКА: иконки на строках — серверные, `router.refresh()` обновляет
+      // их без падения страницы, список уже стоит оптимистично (правка владельца 2026-07-23).
+      router.refresh();
+      setBusy(false);
     } catch {
       setList(list); // ядро не приняло правку — возвращаем то, что в нём осталось
       setBusy(false);

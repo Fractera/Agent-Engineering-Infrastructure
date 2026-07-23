@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { chromeStrings } from "./i18n";
 import { PROVIDERS, providerOf, type ProviderKey } from "../ai";
 
@@ -26,6 +27,7 @@ export default function AiPicker({
   lang: string;
 }) {
   const L = chromeStrings(lang);
+  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const [choice, setChoice] = useState({ provider, model });
@@ -42,7 +44,11 @@ export default function AiPicker({
         body: JSON.stringify({ address: { object: "passport" }, set: { ai: next } }),
       });
       if (!r.ok) throw new Error(String(r.status));
-      location.reload(); // меню читает то же поле — пусть страница согласуется целиком
+      // МЯГКАЯ СИНХРОНИЗАЦИЯ, НЕ ПЕРЕЗАГРУЗКА: меню читает то же поле ядра — `router.refresh()`
+      // перечитывает серверные данные, НЕ роняя страницу и НЕ закрывая окно настроек, поэтому владелец
+      // может менять настройки подряд (правка владельца 2026-07-23: `location.reload()` вырубал форму).
+      router.refresh();
+      setBusy(false);
     } catch {
       setChoice({ provider, model }); // ядро не приняло — возвращаем то, что в нём осталось
       setFailed(true);
