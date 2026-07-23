@@ -1,58 +1,88 @@
 import { type NextRequest, NextResponse } from "next/server";
-import WebSocket from "ws";
 import { authorize } from "@/lib/nodes";
+import { readEnvLines } from "@/lib/env-presence";
 
 export const runtime = "nodejs";
 
-// ЖИВЫЕ МОДЕЛИ ПРОВАЙДЕРА (шаг 298) — список моделей запрашивается у МОСТА платформы, а не хардкодится.
+// ЖИВЫЕ МОДЕЛИ ПРОВАЙДЕРА (шаг 298, переработано) — список берётся из НАСТОЯЩЕГО API провайдера
+// (`/v1/models`), а НЕ из моста кодинг-агента.
 //
-// ЗАЧЕМ. Хардкод моделей устаревает молча: список в коде расходится с тем, что провайдер реально даёт
-// СЕГОДНЯ (правка владельца 2026-07-23 — «предоставляй реальную модель на текущий момент»). Правильное
-// решение уже живёт в пульте разработки (`_shared/dev-console`, шаг 255.B1): он спрашивает мост
-// платформы по WebSocket `{type:"get_models"}` → `{type:"models", models:[…]}`. Тот же источник здесь.
+// ПОЧЕМУ НЕ МОСТ. Сначала я скопировал источник из пульта разработки (мост Codex `get_models`). Но тот
+// мост запускает КОДИНГ-АГЕНТА и знает лишь 2–3 модели, которые CLI-подписка даёт для написания кода
+// (`~/.codex/models_cache.json`, visibility=list). Автоматизация же думает через API-КЛЮЧ, а у API
+// совсем другой, ПОЛНЫЙ каталог (у OpenAI ~110 чат-моделей). Владелец пять раз видел «только две» именно
+// из-за неверного источника (2026-07-23). Правильный источник — API самого провайдера.
 //
-// БЕЗ КЛЮЧА. Мост отдаёт список из установленного CLI/подписки, ключ API для этого не нужен — поэтому
-// прежний довод «живой список требует ключа, а выбрать надо до ключа» неверен, и хардкод не оправдан.
+// КЛЮЧ НУЖЕН — И ЭТО ЧЕСТНО. Полный список отдаёт только API, а он требует ключ. Ключ не введён → список
+// пуст, форма покажет выбранную модель как есть и подсказку «введите ключ». Значение ключа читается
+// сервер-сайд и НАРУЖУ НЕ УХОДИТ (как и во всех дверях этой папки) — уходит только список моделей.
 //
-// САМОДОСТАТОЧНОСТЬ (закон 0). Это СОБСТВЕННАЯ дверь автоматизации, а не вызов чужого роута: она,
-// как и двери каналов, говорит с localhost-мостом (внешний сервис), карту порт↔провайдер держит у себя.
-const BRIDGE_PORT: Record<string, number> = {
-  anthropic: 3200, // PROMPT-мост Claude
-  openai: 3202, // PROMPT-мост Codex
+// САМОДОСТАТОЧНОСТЬ (закон 0): дверь сама говорит с внешним API провайдера, карту «провайдер → эндпоинт»
+// держит у себя; чужих роутов не зовёт.
+
+function keyFromEnv(lines: string[], name: string): string | null {
+  for (const line of lines) {
+    const m = new RegExp(`^\\s*${name}\\s*=(.*)$`).exec(line);
+    if (m) { const v = m[1].trim().replace(/^["']|["']$/g, ""); return v || null; }
+  }
+  return null;
+}
+
+// Порядок для выпадающего списка: базовые имена (gpt-4o, gpt-4.1, o3) ВПЕРЁД, датированные снимки
+// (gpt-4o-2024-…) — ниже. Сортируем по [длине id, алфавиту]: короткое = основное.
+const byRelevance = (a: { id: string }, b: { id: string }) =>
+  a.id.length - b.id.length || a.id.localeCompare(b.id);
+
+async function openaiModels(key: string): Promise<{ id: string; label: string }[]> {
+  const r = await fetch("https://api.openai.com/v1/models", { headers: { authorization: `Bearer ${key}` } });
+  if (!r.ok) throw new Error(`OpenAI /v1/models HTTP ${r.status}`);
+  const d = (await r.json()) as { data?: { id: string }[] };
+  // Только текстовые чат-модели: без встраиваний, аудио, изображений, модерации, realtime и completion-only.
+  const keep = (id: string) =>
+    /^(gpt-|o1|o3|o4|chatgpt)/.test(id) &&
+    !/(image|audio|realtime|tts|transcribe|whisper|embedding|moderation|search|instruct|dall)/.test(id);
+  return (d.data ?? [])
+    .map((m) => m.id)
+    .filter(keep)
+    .sort()
+    .map((id) => ({ id, label: id }))
+    .sort(byRelevance);
+}
+
+async function anthropicModels(key: string): Promise<{ id: string; label: string }[]> {
+  const r = await fetch("https://api.anthropic.com/v1/models?limit=100", {
+    headers: { "x-api-key": key, "anthropic-version": "2023-06-01" },
+  });
+  if (!r.ok) throw new Error(`Anthropic /v1/models HTTP ${r.status}`);
+  const d = (await r.json()) as { data?: { id: string; display_name?: string }[] };
+  return (d.data ?? [])
+    .filter((m) => m.id.startsWith("claude"))
+    .map((m) => ({ id: m.id, label: m.display_name ?? m.id }))
+    .sort(byRelevance);
+}
+
+const PROVIDER_KEY_NAME: Record<string, string> = {
+  anthropic: "ANTHROPIC_API_KEY",
+  openai: "OPENAI_API_KEY",
 };
 
 export async function GET(req: NextRequest) {
   if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const provider = (req.nextUrl.searchParams.get("provider") ?? "anthropic").trim();
-  const port = BRIDGE_PORT[provider];
-  if (!port) return NextResponse.json({ error: `unknown provider "${provider}"` }, { status: 400 });
+  const keyName = PROVIDER_KEY_NAME[provider];
+  if (!keyName) return NextResponse.json({ error: `unknown provider "${provider}"` }, { status: 400 });
+
+  const key = keyFromEnv(await readEnvLines(), keyName);
+  if (!key) {
+    // Ключа нет — полный список взять неоткуда. Честно: пусто + причина, форма подскажет ввести ключ.
+    return NextResponse.json({ ok: false, provider, models: [], reason: "no_key" });
+  }
 
   try {
-    const raw = await new Promise<any[]>((resolvePromise, reject) => {
-      const ws = new WebSocket(`ws://127.0.0.1:${port}/`);
-      const timer = setTimeout(() => { try { ws.close(); } catch { /* closed */ } reject(new Error("bridge timeout")); }, 8000);
-      ws.on("open", () => ws.send(JSON.stringify({ type: "get_models" })));
-      ws.on("message", (frame: Buffer) => {
-        try {
-          const msg = JSON.parse(frame.toString()) as { type?: string; models?: unknown };
-          if (msg.type === "models") {
-            clearTimeout(timer);
-            try { ws.close(); } catch { /* closed */ }
-            resolvePromise(Array.isArray(msg.models) ? msg.models : []);
-          }
-        } catch { /* пропускаем не-JSON кадры */ }
-      });
-      ws.on("error", (e: Error) => { clearTimeout(timer); reject(e); });
-    });
-    // Приводим к тому, что нужно выпадающему списку: id + человеческое имя. Мост зовёт его `name`.
-    const models = raw
-      .filter((m) => m && typeof m.id === "string")
-      .map((m) => ({ id: String(m.id), label: String(m.name ?? m.id) }));
+    const models = provider === "openai" ? await openaiModels(key) : await anthropicModels(key);
     return NextResponse.json({ ok: true, provider, models });
   } catch (e) {
-    // Мост не ответил — НЕ подсовываем хардкод: пустой список честнее устаревшего. Форма покажет
-    // выбранную модель как есть и подсказку, что список сейчас недоступен.
-    return NextResponse.json({ ok: false, provider, models: [], error: `models unavailable: ${e}` }, { status: 502 });
+    return NextResponse.json({ ok: false, provider, models: [], reason: `models unavailable: ${e}` }, { status: 502 });
   }
 }
