@@ -86,7 +86,10 @@ export default function Menu({
           <HamburgerIcon className="size-4" />
         </summary>
 
-        <div className="absolute right-0 z-30 mt-2 w-72 rounded-md border bg-background p-1 text-sm shadow-md">
+        {/* ВЫСОТА МЕНЮ ОГРАНИЧЕНА 560px, ПРОКРУТКА ВНУТРИ (требование владельца): разделов и записей
+            прибавляется, и список не имеет права уходить за нижний край экрана — иначе нижние пункты
+            становятся недостижимыми, а на коротком экране пропадает и «Опасная зона». */}
+        <div className="absolute right-0 z-30 mt-2 max-h-[560px] w-72 overflow-y-auto rounded-md border bg-background p-1 text-sm shadow-md">
           {/* How it works — top, font-medium, Sparkles (v1) */}
           <button type="button" className={`${item} font-medium`} onClick={() => setModal("howItWorks")}>
             <SparkleIcon className="size-4" />
@@ -118,7 +121,10 @@ export default function Menu({
           </div>
 
           {sep}
-          <button type="button" className={item} onClick={() => setModal({ title: L.settingsItem })}>{L.settingsItem}</button>
+          {/* НАСТРОЙКИ — своё окно, а не заглушка и не список внутри меню: там живут каналы и всё,
+              что настраивают. Меню — навигация; настройка канала — работа, и внутри выпадающего
+              списка она растит его до края экрана и захлопывается от случайного клика мимо. */}
+          <button type="button" className={item} onClick={() => setModal("settings")}>{L.settingsItem}</button>
 
           {sep}
           <div className="px-2 py-1.5 text-xs font-normal text-muted-foreground">{L.entitiesHeading}</div>

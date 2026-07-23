@@ -12,8 +12,9 @@ import ChannelsSection, { type ChannelRow } from "./channels-section.client";
 // выпадающего списка растит его до высоты экрана и захлопывается от случайного клика мимо. Поэтому
 // меню осталось меню, а настройки получили своё окно.
 //
-// ВЫСОТА ОГРАНИЧЕНА 600px, ПРОКРУТКА ВНУТРИ (требование владельца): настроек будет прибавляться, и окно
-// не имеет права расти вниз за край экрана — иначе нижняя часть станет недостижимой.
+// ВЫСОТА ОГРАНИЧЕНА 560px, ПРОКРУТКА ВНУТРИ (требование владельца): настроек будет прибавляться, и окно
+// не имеет права расти вниз за край экрана — иначе нижняя часть станет недостижимой. Столько же у
+// самого меню — два разных предела выглядели бы как случайность.
 export default function SettingsModal({
   lang,
   channels,
@@ -35,7 +36,7 @@ export default function SettingsModal({
         aria-label={L.settingsItem}
         onClick={(e) => e.stopPropagation()}
         className="flex w-full max-w-[520px] flex-col rounded-lg border bg-background shadow-xl"
-        style={{ maxHeight: 600 }}
+        style={{ maxHeight: 560 }}
       >
         {/* Шапка и подвал не прокручиваются — крестик обязан оставаться на месте при любом объёме настроек. */}
         <div className="flex shrink-0 items-center justify-between border-b px-4 py-3">
