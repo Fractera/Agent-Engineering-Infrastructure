@@ -220,8 +220,16 @@
               "status": "in-development",
               "warnings": [],
               "envKeys": [
-                "TELEGRAM_BOT_TOKEN",
-                "TELEGRAM_ALLOWED_CHAT_ID"
+                {
+                  "name": "TELEGRAM_BOT_TOKEN",
+                  "status": "missing",
+                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                },
+                {
+                  "name": "TELEGRAM_ALLOWED_CHAT_ID",
+                  "status": "missing",
+                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                }
               ],
               "function": {
                 "name": "receiveTelegramBot",
@@ -255,8 +263,16 @@
               "status": "in-development",
               "warnings": [],
               "envKeys": [
-                "TELEGRAM_BOT_TOKEN",
-                "TELEGRAM_ALLOWED_CHAT_ID"
+                {
+                  "name": "TELEGRAM_BOT_TOKEN",
+                  "status": "missing",
+                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                },
+                {
+                  "name": "TELEGRAM_ALLOWED_CHAT_ID",
+                  "status": "missing",
+                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                }
               ],
               "function": {
                 "name": "receiveUserTelegramChat",
@@ -300,9 +316,21 @@
               "status": "in-development",
               "warnings": [],
               "envKeys": [
-                "RESEND_API_KEY",
-                "RESEND_FROM_EMAIL",
-                "RESEND_INBOUND_SECRET"
+                {
+                  "name": "RESEND_API_KEY",
+                  "status": "missing",
+                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                },
+                {
+                  "name": "RESEND_FROM_EMAIL",
+                  "status": "missing",
+                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                },
+                {
+                  "name": "RESEND_INBOUND_SECRET",
+                  "status": "missing",
+                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                }
               ],
               "function": {
                 "name": "receiveEmail",
@@ -672,8 +700,16 @@
               "status": "in-development",
               "warnings": [],
               "envKeys": [
-                "RESEND_API_KEY",
-                "RESEND_FROM_EMAIL"
+                {
+                  "name": "RESEND_API_KEY",
+                  "status": "missing",
+                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                },
+                {
+                  "name": "RESEND_FROM_EMAIL",
+                  "status": "missing",
+                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                }
               ],
               "function": {
                 "name": "deliverEmail",
@@ -707,8 +743,16 @@
               "status": "in-development",
               "warnings": [],
               "envKeys": [
-                "TELEGRAM_BOT_TOKEN",
-                "TELEGRAM_ALLOWED_CHAT_ID"
+                {
+                  "name": "TELEGRAM_BOT_TOKEN",
+                  "status": "missing",
+                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                },
+                {
+                  "name": "TELEGRAM_ALLOWED_CHAT_ID",
+                  "status": "missing",
+                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                }
               ],
               "function": {
                 "name": "deliverTelegramBot",
@@ -742,8 +786,16 @@
               "status": "in-development",
               "warnings": [],
               "envKeys": [
-                "TELEGRAM_BOT_TOKEN",
-                "TELEGRAM_ALLOWED_CHAT_ID"
+                {
+                  "name": "TELEGRAM_BOT_TOKEN",
+                  "status": "missing",
+                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                },
+                {
+                  "name": "TELEGRAM_ALLOWED_CHAT_ID",
+                  "status": "missing",
+                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                }
               ],
               "function": {
                 "name": "deliverUserTelegramChat",

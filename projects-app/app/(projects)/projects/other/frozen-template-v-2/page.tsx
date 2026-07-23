@@ -39,7 +39,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
         ioType: typeof n.ioType === "string" ? n.ioType : "",
         group,
         state: n.state,
-        envKeys: [...n.envKeys],
+        // `envKeys` узла — ОТЧЁТ агента (`{name, status, comment}`), а не список строк. Меню нужны
+        // только имена: живую правду о том, задан ключ или нет, даёт дверь `api/env`, а `status` — это
+        // последнее наблюдение агента, и подменять им живую проверку нельзя.
+        envKeys: n.envKeys.map((k) => k.name),
         hasFunction: Boolean(NODE_FUNCTIONS[n.function.name]),
       })),
   );

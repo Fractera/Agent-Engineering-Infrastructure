@@ -132,8 +132,3 @@ export function keysOf(envKeys: readonly string[]): ChannelKey[] {
 
 /** Ключи, отсутствие которых ДЕЙСТВИТЕЛЬНО не даёт каналу работать (необязательные не в счёт). */
 export const requiredOf = (keys: ChannelKey[]): string[] => keys.filter((k) => !k.optional).map((k) => k.env);
-
-/** Все ключи, объявленные автоматизацией, — один запрос присутствия на страницу вместо запроса на канал. */
-export function allDeclaredKeys(nodes: readonly { envKeys: readonly string[] }[]): string[] {
-  return [...new Set(nodes.flatMap((n) => n.envKeys))];
-}
