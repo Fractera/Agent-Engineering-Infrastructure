@@ -89,6 +89,27 @@ export default function AiPicker({
     return () => { alive = false; };
   }, [providerEnvKeys.join(",")]);
 
+  // СМЕНА ПРОВАЙДЕРА → берём ЖИВОЙ список нового провайдера и ставим его ПЕРВУЮ модель. Иначе модель
+  // осталась бы от прежнего провайдера и в ядро ушла бы несочетаемая пара (напр. openai + claude-opus):
+  // именно этот баг владелец и увидел (2026-07-23). Живой список асинхронный, поэтому спрашиваем его
+  // ПРЯМО ЗДЕСЬ, до записи, а не полагаемся на фоновый эффект. Мост молчит — провайдера не переключаем
+  // (пустую/старую модель писать нельзя: дверь требует валидный id).
+  async function changeProvider(nextKey: ProviderKey) {
+    setBusy(true);
+    setModelsError(false);
+    try {
+      const r = await fetch(`${apiBase()}/ai-models?provider=${encodeURIComponent(nextKey)}`, { cache: "no-store" });
+      const d = (await r.json().catch(() => null)) as { models?: ModelOption[] } | null;
+      const first = d?.models?.[0]?.id;
+      if (!first) { setModelsError(true); setBusy(false); return; }
+      setModels(d!.models!);
+      await save({ provider: nextKey, model: first });
+    } catch {
+      setModelsError(true);
+      setBusy(false);
+    }
+  }
+
   async function save(next: { provider: ProviderKey; model: string }) {
     setChoice(next); // сначала показываем — ожидание записи не должно выглядеть как «не нажалось»
     setBusy(true);
@@ -121,12 +142,7 @@ export default function AiPicker({
         <select
           value={choice.provider}
           disabled={busy}
-          onChange={(e) => {
-            // смена провайдера: модель ставим временно на прежнюю, живой список подтянется эффектом и
-            // первая его модель станет умолчанием ниже; сохраняем сразу выбранный провайдер.
-            const nextProvider = providerOf(e.target.value).key;
-            void save({ provider: nextProvider, model: choice.model });
-          }}
+          onChange={(e) => void changeProvider(providerOf(e.target.value).key)}
           className="h-8 rounded-md border bg-transparent px-2 text-sm outline-none focus:ring-1 focus:ring-primary"
         >
           {PROVIDERS.map((p) => (
