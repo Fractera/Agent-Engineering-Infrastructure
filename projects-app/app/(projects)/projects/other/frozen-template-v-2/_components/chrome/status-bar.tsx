@@ -1,6 +1,7 @@
 import type { Passport } from "../../_data/automation.schema";
 import Badges from "./badges";
 import Menu from "./menu.client";
+import type { ChannelRow } from "./channels-section.client";
 import SendTask from "./send-task.client";
 
 // ПОЛОСА-ШАПКА (админ) — верхний блок: ряд 1 только бейджи (горизонтальная прокрутка, скроллбар скрыт),
@@ -12,12 +13,14 @@ export default function StatusBar({
   passport,
   lang,
   tabs,
+  channels,
   publicHref,
   built,
 }: {
   passport: Passport;
   lang: string;
   tabs: TabRow[];
+  channels: ChannelRow[];
   publicHref: string;
   built: boolean;
 }) {
@@ -29,7 +32,7 @@ export default function StatusBar({
       <span className="flex items-center justify-between gap-3">
         <span className="min-w-0 truncate text-sm font-medium">{passport.title}</span>
         <span className="flex shrink-0 items-center gap-2">
-          <Menu lang={lang} tabs={tabs} publicHref={publicHref} built={built} />
+          <Menu lang={lang} tabs={tabs} channels={channels} publicHref={publicHref} built={built} />
           <SendTask lang={lang} />
         </span>
       </span>

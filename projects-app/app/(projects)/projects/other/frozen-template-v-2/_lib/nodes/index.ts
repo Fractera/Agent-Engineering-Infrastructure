@@ -11,6 +11,8 @@ import { ifFailure } from "./if-failure";
 import { deliverResult } from "./deliver-result";
 import { receiveFromExternal } from "./receive-from-external";
 import { handToExternal } from "./hand-to-external";
+import { receiveEmail } from "./receive-email";
+import { deliverEmail } from "./deliver-email";
 
 export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   receiveRequest,
@@ -20,4 +22,6 @@ export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   deliverResult,
   receiveFromExternal,
   handToExternal,
+  receiveEmail,
+  deliverEmail,
 };

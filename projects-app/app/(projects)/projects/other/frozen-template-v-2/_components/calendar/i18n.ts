@@ -29,6 +29,7 @@ export type CalendarStrings = {
   noSchedule: string;
   // интеграции (шаг 292)
   integrations: string;
+  keysMissing: string;
   integrationsHint: string;
   noIntegrations: string;
   active: string;
@@ -60,6 +61,7 @@ export const CALENDAR_I18N: Record<string, CalendarStrings> = {
     acknowledge: "Okay, I understand", notifyBefore: "Warn me", minutes: "min",
     atTheMoment: "at the moment itself",
     noSchedule: "The schedule is off — nothing is watched and no reminder is raised.",
+    keysMissing: "keys are not set — click to connect",
     integrations: "Integrations",
     integrationsHint: "What this event can also be sent to. Declared in the core; what exactly goes out is written per entry.",
     noIntegrations: "This entry has no integrations connected.",
@@ -83,6 +85,7 @@ export const CALENDAR_I18N: Record<string, CalendarStrings> = {
     acknowledge: "Vale, lo entiendo", notifyBefore: "Avisarme", minutes: "min",
     atTheMoment: "en el momento exacto",
     noSchedule: "La programación está apagada: no se vigila nada ni se avisa de nada.",
+    keysMissing: "claves no puestas — haz clic para conectar",
     integrations: "Integraciones",
     integrationsHint: "A dónde más puede enviarse este evento. Se declara en el núcleo; lo que sale exactamente se escribe en cada entrada.",
     noIntegrations: "Esta entrada no tiene integraciones conectadas.",
@@ -106,6 +109,7 @@ export const CALENDAR_I18N: Record<string, CalendarStrings> = {
     acknowledge: "D'accord, j'ai compris", notifyBefore: "Me prévenir", minutes: "min",
     atTheMoment: "au moment même",
     noSchedule: "La planification est arrêtée : rien n'est surveillé et aucun rappel n'est levé.",
+    keysMissing: "clés non renseignées — cliquez pour connecter",
     integrations: "Intégrations",
     integrationsHint: "Où cet événement peut aussi être envoyé. Déclaré dans le noyau ; ce qui part exactement s'écrit dans chaque entrée.",
     noIntegrations: "Cette entrée n'a aucune intégration connectée.",
@@ -129,6 +133,7 @@ export const CALENDAR_I18N: Record<string, CalendarStrings> = {
     acknowledge: "Va bene, ho capito", notifyBefore: "Avvisami", minutes: "min",
     atTheMoment: "nel momento stesso",
     noSchedule: "La pianificazione è spenta: non si sorveglia nulla e non arriva alcun promemoria.",
+    keysMissing: "chiavi non impostate — clicca per collegare",
     integrations: "Integrazioni",
     integrationsHint: "Dove questo evento può essere inviato anche. Dichiarato nel nucleo; che cosa esce esattamente si scrive in ogni voce.",
     noIntegrations: "Questa voce non ha integrazioni collegate.",
@@ -152,6 +157,7 @@ export const CALENDAR_I18N: Record<string, CalendarStrings> = {
     acknowledge: "Окей, я это понимаю", notifyBefore: "Предупредить за", minutes: "мин",
     atTheMoment: "в сам момент",
     noSchedule: "Расписание выключено — календарь никто не проверяет и ни о чём не напоминает.",
+    keysMissing: "ключи не введены — нажмите, чтобы подключить",
     integrations: "Интеграции",
     integrationsHint: "Куда это событие может уйти ещё. Объявлено в ядре; что именно уходит — записано у каждой записи.",
     noIntegrations: "У этой записи нет подключённых интеграций.",
@@ -175,6 +181,7 @@ export const CALENDAR_I18N: Record<string, CalendarStrings> = {
     acknowledge: "Okay, ich habe verstanden", notifyBefore: "Vorwarnung", minutes: "Min",
     atTheMoment: "genau im Moment",
     noSchedule: "Der Zeitplan ist aus — es wird nichts überwacht und an nichts erinnert.",
+    keysMissing: "Schlüssel fehlen — zum Verbinden klicken",
     integrations: "Integrationen",
     integrationsHint: "Wohin dieses Ereignis außerdem gehen kann. Im Kern deklariert; was genau hinausgeht, steht am jeweiligen Eintrag.",
     noIntegrations: "Dieser Eintrag hat keine Integrationen verbunden.",
@@ -198,6 +205,7 @@ export const CALENDAR_I18N: Record<string, CalendarStrings> = {
     acknowledge: "Certo, eu percebi", notifyBefore: "Avisar", minutes: "min",
     atTheMoment: "no próprio momento",
     noSchedule: "O agendamento está desligado — nada é vigiado nem lembrado.",
+    keysMissing: "chaves não definidas — clique para ligar",
     integrations: "Integrações",
     integrationsHint: "Para onde este evento também pode ser enviado. Declarado no núcleo; o que sai exatamente escreve-se em cada entrada.",
     noIntegrations: "Esta entrada não tem integrações ligadas.",
@@ -221,6 +229,7 @@ export const CALENDAR_I18N: Record<string, CalendarStrings> = {
     acknowledge: "Dobrze, rozumiem", notifyBefore: "Ostrzeż na", minutes: "min",
     atTheMoment: "dokładnie w tym momencie",
     noSchedule: "Harmonogram jest wyłączony — nic nie jest pilnowane ani przypominane.",
+    keysMissing: "brak kluczy — kliknij, aby podłączyć",
     integrations: "Integracje",
     integrationsHint: "Dokąd to zdarzenie może jeszcze trafić. Zadeklarowane w rdzeniu; co dokładnie wychodzi, zapisuje się przy wpisie.",
     noIntegrations: "Ten wpis nie ma podłączonych integracji.",
@@ -244,6 +253,7 @@ export const CALENDAR_I18N: Record<string, CalendarStrings> = {
     acknowledge: "Tamam, anladım", notifyBefore: "Şu kadar önce uyar", minutes: "dk",
     atTheMoment: "tam o anda",
     noSchedule: "Zamanlama kapalı — hiçbir şey izlenmiyor ve hatırlatılmıyor.",
+    keysMissing: "anahtarlar girilmedi — bağlamak için tıklayın",
     integrations: "Entegrasyonlar",
     integrationsHint: "Bu etkinliğin ayrıca nereye gönderilebileceği. Çekirdekte tanımlanır; tam olarak ne gittiği her kayıtta yazılır.",
     noIntegrations: "Bu kaydın bağlı entegrasyonu yok.",
@@ -267,6 +277,7 @@ export const CALENDAR_I18N: Record<string, CalendarStrings> = {
     acknowledge: "Oké, ik begrijp het", notifyBefore: "Waarschuw", minutes: "min",
     atTheMoment: "op het moment zelf",
     noSchedule: "De planning staat uit — er wordt niets bewaakt en nergens aan herinnerd.",
+    keysMissing: "sleutels niet ingesteld — klik om te verbinden",
     integrations: "Integraties",
     integrationsHint: "Waar deze gebeurtenis ook heen kan. Gedeclareerd in de kern; wat er precies uitgaat staat bij elk item.",
     noIntegrations: "Dit item heeft geen integraties gekoppeld.",

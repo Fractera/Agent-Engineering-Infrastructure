@@ -219,7 +219,10 @@
               },
               "status": "in-development",
               "warnings": [],
-              "envKeys": [],
+              "envKeys": [
+                "TELEGRAM_BOT_TOKEN",
+                "TELEGRAM_ALLOWED_CHAT_ID"
+              ],
               "function": {
                 "name": "receiveTelegramBot",
                 "summary": "Takes the incoming request through the telegram-bot channel.",
@@ -251,7 +254,10 @@
               },
               "status": "in-development",
               "warnings": [],
-              "envKeys": [],
+              "envKeys": [
+                "TELEGRAM_BOT_TOKEN",
+                "TELEGRAM_ALLOWED_CHAT_ID"
+              ],
               "function": {
                 "name": "receiveUserTelegramChat",
                 "summary": "Takes the incoming request through the user-telegram-chat channel.",
@@ -272,12 +278,12 @@
               "estDurationMs": 60000
             },
             {
-              "cuid": "creceivehcadxvwfh",
-              "name": "Hermes agent input",
-              "description": "Вход из агентного рантайма Hermes.",
+              "cuid": "cemailinp7k2vq4x9",
+              "name": "Email input",
+              "description": "Вход письма, доставленного на адрес приёма автоматизации.",
               "state": "hidden",
               "kind": "input",
-              "ioType": "hermes",
+              "ioType": "email",
               "in": {
                 "state": "prohibit",
                 "connections": null
@@ -289,15 +295,19 @@
                 ]
               },
               "info": {
-                "aiSummary": "Дверь канала Hermes: задание, переданное агентом рабочего пространства. Узел скрыт — канал объявлен, но пока не настроен."
+                "aiSummary": "Дверь канала email: письмо, пришедшее на адрес приёма. Провайдер толкает его в дверь api/inbound-email — опроса ящика нет (закон «вход только push»)."
               },
               "status": "in-development",
               "warnings": [],
-              "envKeys": [],
+              "envKeys": [
+                "RESEND_API_KEY",
+                "RESEND_FROM_EMAIL",
+                "RESEND_INBOUND_SECRET"
+              ],
               "function": {
-                "name": "receiveHermesAgent",
-                "summary": "Дверь канала Hermes: задание, переданное агентом рабочего пространства. Узел скрыт — канал объявлен, но пока не настроен.",
-                "accepts": "Задание агента Hermes.",
+                "name": "receiveEmail",
+                "summary": "Дверь канала email: письмо, пришедшее на адрес приёма.",
+                "accepts": "Разобранное письмо: отправитель, тема, текст.",
                 "returns": "Названный вход для середины."
               },
               "run": "sequential",
@@ -661,7 +671,10 @@
               },
               "status": "in-development",
               "warnings": [],
-              "envKeys": [],
+              "envKeys": [
+                "RESEND_API_KEY",
+                "RESEND_FROM_EMAIL"
+              ],
               "function": {
                 "name": "deliverEmail",
                 "summary": "Delivers the result through the email channel.",
@@ -693,7 +706,10 @@
               },
               "status": "in-development",
               "warnings": [],
-              "envKeys": [],
+              "envKeys": [
+                "TELEGRAM_BOT_TOKEN",
+                "TELEGRAM_ALLOWED_CHAT_ID"
+              ],
               "function": {
                 "name": "deliverTelegramBot",
                 "summary": "Delivers the result through the telegram-bot channel.",
@@ -725,7 +741,10 @@
               },
               "status": "in-development",
               "warnings": [],
-              "envKeys": [],
+              "envKeys": [
+                "TELEGRAM_BOT_TOKEN",
+                "TELEGRAM_ALLOWED_CHAT_ID"
+              ],
               "function": {
                 "name": "deliverUserTelegramChat",
                 "summary": "Delivers the result through the user-telegram-chat channel.",
@@ -955,12 +974,6 @@
         "state": "hidden"
       },
       {
-        "cuid": "cedgehermesin7q4v2b",
-        "from": "creceivehcadxvwfh",
-        "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
-      },
-      {
         "cuid": "cedgevectorout5m8kx1",
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cdelivervih3efrq9",
@@ -976,6 +989,12 @@
         "cuid": "cedgestorageout8r2ny4",
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cdelivers3oz5tpd6",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cedgeemailin4t8wz2",
+        "from": "cemailinp7k2vq4x9",
+        "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
         "state": "hidden"
       }
     ]
@@ -1205,6 +1224,9 @@
                         "nl": "Bericht"
                       }
                     }
+                  ],
+                  "envKeys": [
+                    "TELEGRAM_BOT_TOKEN"
                   ]
                 },
                 {
@@ -1271,6 +1293,10 @@
                         "nl": "Bericht"
                       }
                     }
+                  ],
+                  "envKeys": [
+                    "RESEND_API_KEY",
+                    "RESEND_FROM_EMAIL"
                   ]
                 },
                 {
@@ -1337,7 +1363,8 @@
                         "nl": "Gegevens"
                       }
                     }
-                  ]
+                  ],
+                  "envKeys": []
                 }
               ]
             }

@@ -6,8 +6,7 @@ on the success branch and on no other. `out` — prohibited: nothing continues p
 DESTINATION: `ioType` is one key of the output vocabulary — `public-page`, `dashboard`, `calendar`,
 `analytics`, `map`, `email`, `telegram-bot`, `user-telegram-chat`, `vector-memory`, `database`,
 `storage`, or `custom`. Fixed for life. (The three stores — `vector-memory`, `database`, `storage` —
-joined the vocabulary together with the `hermes` input channel; a door is never deleted, an unused one
-is HIDDEN.)
+were added to the vocabulary in step 287; a door is never deleted, an unused one is HIDDEN.)
 
 ITS FUNCTION takes what the branch handed over, puts it into the form this destination demands, and
 delivers or persists it. Nothing else: no deciding, no enriching — that work belongs upstream. Code

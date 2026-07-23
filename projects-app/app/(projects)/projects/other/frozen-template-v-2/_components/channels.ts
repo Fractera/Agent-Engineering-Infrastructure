@@ -1,0 +1,139 @@
+// КАНАЛЫ И ИХ КЛЮЧИ — единый принцип на всю автоматизацию (шаг 293).
+//
+// ДВА ФАКТА, ДВА МЕСТА, И ОНИ НЕ ПЕРЕСЕКАЮТСЯ:
+//   • КАКИЕ ключи нужны каналу — говорит ЯДРО, в `envKeys` его узла. Это свойство конкретной
+//     автоматизации: у одной телеграм-вход есть, у другой нет;
+//   • ЧТО такое каждый ключ (как называется по-человечески, где его взять, секрет ли он) — говорит
+//     каталог ниже. Это свойство самого сервиса, одинаковое для всех автоматизаций на свете.
+// Стандарт объявления перенесён из v1 (`_shared/channels.ts`, шаг 219/220) внутрь папки (закон 0).
+//
+// ГДЕ ЛЕЖАТ ЗНАЧЕНИЯ. В `.env.local` слоя Проекты — ОДИН файл на все автоматизации (решение владельца:
+// один аккаунт Resend и один бот на проект, как единый ключ OpenAI). Пишутся и читаются они через
+// единственную дверь `api/env`; значение секрета не отдаётся наружу никогда, только присутствие.
+//
+// ПОДСКАЗКА `help` ЖИВЁТ В ДАННЫХ, а не в компоненте: форма ключей объясняет себя сама, и добавление
+// нового сервиса не требует править разметку.
+
+export type ChannelKey = {
+  /** Имя переменной окружения — то, что стоит в `envKeys` узла. */
+  env: string;
+  /** Что это словами, на десяти языках. */
+  label: Record<string, string>;
+  /** Где взять и куда пойти — на десяти языках. */
+  help: Record<string, string>;
+  /** Секрет: маскированный ввод, значение наружу не отдаётся. */
+  secret?: boolean;
+  /** Пустое значение — законное умолчание, а не отсутствие ключа. */
+  optional?: boolean;
+};
+
+const L = (en: string, es: string, fr: string, it: string, ru: string, de: string, pt: string, pl: string, tr: string, nl: string) =>
+  ({ en, es, fr, it, ru, de, pt, pl, tr, nl });
+
+export const KEY_CATALOG: Record<string, ChannelKey> = {
+  TELEGRAM_BOT_TOKEN: {
+    env: "TELEGRAM_BOT_TOKEN",
+    secret: true,
+    label: L("Bot token", "Token del bot", "Jeton du bot", "Token del bot", "Токен бота", "Bot-Token", "Token do bot", "Token bota", "Bot jetonu", "Bot-token"),
+    help: L(
+      "Write to @BotFather in Telegram → /newbot → copy the token it returns.",
+      "Escribe a @BotFather en Telegram → /newbot → copia el token que devuelve.",
+      "Écrivez à @BotFather dans Telegram → /newbot → copiez le jeton renvoyé.",
+      "Scrivi a @BotFather su Telegram → /newbot → copia il token restituito.",
+      "Напишите @BotFather в Telegram → /newbot → скопируйте выданный токен.",
+      "Schreiben Sie @BotFather in Telegram → /newbot → kopieren Sie den Token.",
+      "Escreva a @BotFather no Telegram → /newbot → copie o token devolvido.",
+      "Napisz do @BotFather w Telegramie → /newbot → skopiuj zwrócony token.",
+      "Telegram'da @BotFather'a yazın → /newbot → dönen jetonu kopyalayın.",
+      "Schrijf @BotFather in Telegram → /newbot → kopieer het teruggegeven token.",
+    ),
+  },
+  TELEGRAM_ALLOWED_CHAT_ID: {
+    env: "TELEGRAM_ALLOWED_CHAT_ID",
+    optional: true,
+    label: L("Allowed chat id", "Id de chat permitido", "Id de discussion autorisée", "Id chat consentita", "Разрешённый чат", "Erlaubte Chat-ID", "Id de chat permitido", "Dozwolony id czatu", "İzinli sohbet kimliği", "Toegestane chat-id"),
+    help: L(
+      "Leave empty to accept every chat. To restrict it, write to the bot and take the chat id from its reply.",
+      "Déjalo vacío para aceptar cualquier chat. Para restringirlo, escribe al bot y toma el id de su respuesta.",
+      "Laissez vide pour accepter toutes les discussions. Pour restreindre, écrivez au bot et prenez l'id dans sa réponse.",
+      "Lascia vuoto per accettare ogni chat. Per limitarlo, scrivi al bot e prendi l'id dalla sua risposta.",
+      "Пусто — принимать любой чат. Чтобы ограничить, напишите боту и возьмите id чата из его ответа.",
+      "Leer lassen, um jeden Chat zu akzeptieren. Zum Einschränken dem Bot schreiben und die Chat-ID aus der Antwort nehmen.",
+      "Deixe vazio para aceitar qualquer chat. Para restringir, escreva ao bot e tire o id da resposta.",
+      "Zostaw puste, aby przyjmować każdy czat. Aby ograniczyć, napisz do bota i weź id z odpowiedzi.",
+      "Her sohbeti kabul etmek için boş bırakın. Sınırlamak için bota yazın ve yanıtındaki kimliği alın.",
+      "Laat leeg om elke chat te accepteren. Om te beperken: schrijf de bot en neem de chat-id uit het antwoord.",
+    ),
+  },
+  RESEND_API_KEY: {
+    env: "RESEND_API_KEY",
+    secret: true,
+    label: L("Resend API key", "Clave API de Resend", "Clé API Resend", "Chiave API Resend", "Ключ API Resend", "Resend-API-Schlüssel", "Chave API do Resend", "Klucz API Resend", "Resend API anahtarı", "Resend API-sleutel"),
+    help: L(
+      "resend.com/api-keys → Create API key → copy it once (it is shown a single time).",
+      "resend.com/api-keys → Create API key → cópiala una vez (se muestra solo una vez).",
+      "resend.com/api-keys → Create API key → copiez-la (elle n'est affichée qu'une fois).",
+      "resend.com/api-keys → Create API key → copiala subito (viene mostrata una sola volta).",
+      "resend.com/api-keys → Create API key → скопируйте сразу, показывается один раз.",
+      "resend.com/api-keys → Create API key → sofort kopieren, er wird nur einmal angezeigt.",
+      "resend.com/api-keys → Create API key → copie já, é mostrada uma única vez.",
+      "resend.com/api-keys → Create API key → skopiuj od razu, pokazywany jest raz.",
+      "resend.com/api-keys → Create API key → hemen kopyalayın, yalnızca bir kez gösterilir.",
+      "resend.com/api-keys → Create API key → kopieer meteen, hij wordt één keer getoond.",
+    ),
+  },
+  RESEND_FROM_EMAIL: {
+    env: "RESEND_FROM_EMAIL",
+    label: L("Sender address", "Dirección del remitente", "Adresse d'expéditeur", "Indirizzo mittente", "Адрес отправителя", "Absenderadresse", "Endereço do remetente", "Adres nadawcy", "Gönderen adresi", "Afzenderadres"),
+    help: L(
+      "An address on a domain VERIFIED in resend.com/domains — Resend refuses to send from anything else.",
+      "Una dirección de un dominio VERIFICADO en resend.com/domains: Resend rechaza cualquier otra.",
+      "Une adresse sur un domaine VÉRIFIÉ dans resend.com/domains — Resend refuse toute autre.",
+      "Un indirizzo su un dominio VERIFICATO in resend.com/domains — Resend rifiuta gli altri.",
+      "Адрес на домене, ПОДТВЕРЖДЁННОМ в resend.com/domains — с других Resend отправлять откажется.",
+      "Eine Adresse auf einer in resend.com/domains VERIFIZIERTEN Domain — andere lehnt Resend ab.",
+      "Um endereço num domínio VERIFICADO em resend.com/domains — Resend recusa os outros.",
+      "Adres w domenie ZWERYFIKOWANEJ w resend.com/domains — z innych Resend odmówi wysyłki.",
+      "resend.com/domains'te DOĞRULANMIŞ bir alan adındaki adres — Resend diğerlerini reddeder.",
+      "Een adres op een in resend.com/domains GEVERIFIEERD domein — andere weigert Resend.",
+    ),
+  },
+  RESEND_INBOUND_SECRET: {
+    env: "RESEND_INBOUND_SECRET",
+    secret: true,
+    label: L("Inbound webhook secret", "Secreto del webhook entrante", "Secret du webhook entrant", "Segreto del webhook in entrata", "Секрет входящего вебхука", "Secret des Eingangs-Webhooks", "Segredo do webhook de entrada", "Sekret webhooka przychodzącego", "Gelen webhook sırrı", "Geheim van inkomende webhook"),
+    help: L(
+      "resend.com → Webhooks → add this automation's api/inbound-email address and copy the signing secret. Receiving also needs MX records on the inbound domain.",
+      "resend.com → Webhooks → añade la dirección api/inbound-email de esta automatización y copia el secreto de firma. Recibir requiere además registros MX en el dominio.",
+      "resend.com → Webhooks → ajoutez l'adresse api/inbound-email de cette automatisation et copiez le secret de signature. La réception exige aussi des enregistrements MX.",
+      "resend.com → Webhooks → aggiungi l'indirizzo api/inbound-email di questa automazione e copia il segreto di firma. Ricevere richiede anche i record MX.",
+      "resend.com → Webhooks → добавьте адрес api/inbound-email этой автоматизации и скопируйте секрет подписи. Для приёма нужны ещё MX-записи на домене.",
+      "resend.com → Webhooks → die api/inbound-email-Adresse dieser Automatisierung hinzufügen und das Signatur-Secret kopieren. Empfang braucht zusätzlich MX-Einträge.",
+      "resend.com → Webhooks → adicione o endereço api/inbound-email desta automação e copie o segredo de assinatura. Receber exige ainda registos MX.",
+      "resend.com → Webhooks → dodaj adres api/inbound-email tej automatyzacji i skopiuj sekret podpisu. Odbiór wymaga też rekordów MX.",
+      "resend.com → Webhooks → bu otomasyonun api/inbound-email adresini ekleyin ve imza sırrını kopyalayın. Almak için ayrıca MX kayıtları gerekir.",
+      "resend.com → Webhooks → voeg het api/inbound-email-adres van deze automatisering toe en kopieer het ondertekeningsgeheim. Ontvangen vereist ook MX-records.",
+    ),
+  },
+};
+
+/** Ключи узла, развёрнутые в их описания. Неизвестное имя показываем как есть — молчать о нём хуже. */
+export function keysOf(envKeys: readonly string[]): ChannelKey[] {
+  return envKeys.map(
+    (env) =>
+      KEY_CATALOG[env] ?? {
+        env,
+        label: { en: env },
+        help: { en: "Declared by this automation; no description in the catalogue yet." },
+        secret: /TOKEN|KEY|SECRET|PASSWORD/i.test(env),
+      },
+  );
+}
+
+/** Ключи, отсутствие которых ДЕЙСТВИТЕЛЬНО не даёт каналу работать (необязательные не в счёт). */
+export const requiredOf = (keys: ChannelKey[]): string[] => keys.filter((k) => !k.optional).map((k) => k.env);
+
+/** Все ключи, объявленные автоматизацией, — один запрос присутствия на страницу вместо запроса на канал. */
+export function allDeclaredKeys(nodes: readonly { envKeys: readonly string[] }[]): string[] {
+  return [...new Set(nodes.flatMap((n) => n.envKeys))];
+}

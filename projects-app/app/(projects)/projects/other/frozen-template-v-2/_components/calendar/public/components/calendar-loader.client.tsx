@@ -63,6 +63,28 @@ export default function CalendarLoader({
     return () => { alive = false; };
   }, [table]);
 
+  // ПРИСУТСТВИЕ КЛЮЧЕЙ — один запрос на весь календарь, чтобы иконки строк знали, какой канал ГОТОВ
+  // работать, а какой только объявлен (шаг 293). Не смогли спросить — считаем ключи незаданными:
+  // приглушённая иконка честнее яркой, за которой ничего нет.
+  const [present, setPresent] = useState<Record<string, boolean>>({});
+  const declaredKeys = [...new Set(integrations.flatMap((i) => i.envKeys))].join(",");
+  useEffect(() => {
+    if (!declaredKeys) return;
+    let alive = true;
+    void (async () => {
+      try {
+        const apiBase = location.pathname.replace(/\/+$/, "") + "/api";
+        const r = await fetch(`${apiBase}/env?keys=${encodeURIComponent(declaredKeys)}`, { cache: "no-store" });
+        if (!r.ok) return;
+        const d = (await r.json()) as { present: Record<string, boolean> };
+        if (alive) setPresent(d.present ?? {});
+      } catch {
+        /* оставляем пустым — см. закон выше */
+      }
+    })();
+    return () => { alive = false; };
+  }, [declaredKeys]);
+
   const replaceRow = useCallback((next: CalRow) => {
     setRows((list) => (list ?? []).map((r) => (r.id === next.id ? next : r)));
   }, []);
@@ -99,6 +121,7 @@ export default function CalendarLoader({
           entries={byDate.get(selected) ?? []}
           types={types}
           integrations={integrations}
+          present={present}
           table={table}
           surface={surface}
           filter={filter}

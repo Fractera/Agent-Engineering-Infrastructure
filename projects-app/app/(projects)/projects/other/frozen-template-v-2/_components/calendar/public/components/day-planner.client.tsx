@@ -6,7 +6,7 @@ import { INTEGRATION_ICONS } from "../../../chrome/icons";
 import type { Surface } from "../../../surface";
 import { pick } from "../../../shared/localized";
 import type { EntryType, Tone } from "../../entries";
-import { enabledOf, type Integration } from "../../integrations";
+import { enabledOf, missingKeysOf, type Integration } from "../../integrations";
 import { calendarStrings } from "../../i18n";
 import IntegrationDrawer from "./integration-drawer.client";
 
@@ -30,6 +30,7 @@ export default function DayPlanner({
   entries,
   types,
   integrations,
+  present,
   table,
   surface,
   filter,
@@ -41,6 +42,8 @@ export default function DayPlanner({
   entries: CalRow[];
   types: EntryType[];
   integrations: Integration[];
+  /** Присутствие ключей: канал без них рисуется приглушённым — объявлен, но работать не может. */
+  present: Record<string, boolean>;
   table: string;
   surface: Surface;
   filter: string;
@@ -127,16 +130,22 @@ export default function DayPlanner({
                               const Icon = INTEGRATION_ICONS[i.key];
                               if (!Icon) return null;
                               const on = Boolean(e.integrations[i.key]?.active);
+                              // ТРИ ЯРКОСТИ, ТРИ СМЫСЛА: горит — канал включён у этой записи и настроен;
+                              // полупрозрачна — канал есть, но у записи выключен; самая бледная — ключей
+                              // нет, и канал не сработает, сколько его ни включай.
+                              const ready = missingKeysOf(i, present).length === 0;
+                              const name = pick(i.label, lang) || i.key;
                               return (
                                 <button
                                   key={i.key}
                                   type="button"
-                                  title={pick(i.label, lang) || i.key}
-                                  aria-label={pick(i.label, lang) || i.key}
+                                  title={ready ? name : `${name} — ${L.keysMissing}`}
+                                  aria-label={name}
                                   onClick={() => setOpen({ row: e, only: i.key })}
-                                  className={`shrink-0 rounded p-0.5 hover:bg-black/5 dark:hover:bg-white/10 ${on ? "opacity-100" : "opacity-30"}`}
+                                  className={`shrink-0 rounded p-0.5 hover:bg-black/5 dark:hover:bg-white/10 ${!ready ? "opacity-20" : on ? "opacity-100" : "opacity-40"}`}
                                   data-integration-icon={i.key}
                                   data-active={on ? "yes" : "no"}
+                                  data-ready={ready ? "yes" : "no"}
                                 >
                                   <Icon className="size-3.5" />
                                 </button>

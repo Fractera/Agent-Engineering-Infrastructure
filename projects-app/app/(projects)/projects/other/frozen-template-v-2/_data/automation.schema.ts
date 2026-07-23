@@ -249,9 +249,13 @@ export const InputChannelSchema = z.enum([
   "public-page", // a form or control on the automation's own public page
   "telegram-bot", // a message sent to the automation's own Telegram bot
   "user-telegram-chat", // a message read from the user's own Telegram chat
-  "hermes", // a task handed in by the Hermes agent (the workspace's own agent runtime)
+  "email", // a letter delivered to the automation's own inbound address
   "custom", // any other input source the owner defines
 ]);
+// `hermes` was removed from this vocabulary by the owner (step 293): an automation is not fed by the
+// workspace's agent runtime. Its slot in the input quota is taken by `email`, so the count is unchanged.
+// This deletion is an EXCEPTION to "a door is never removed, an unused one is hidden" — a channel that
+// must not exist at all is a different case from one that exists and is unused.
 
 export const OutputChannelSchema = z.enum([
   "public-page", // a page on the automation's own website

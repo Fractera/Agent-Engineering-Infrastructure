@@ -15,8 +15,15 @@ import type { Entity } from "../../_data/automation.schema";
 /** ПОЛЕ объекта, который уйдёт в канал: ключ, тип ввода и подпись на языках. */
 export type IntegrationField = { key: string; type?: "text" | "longtext"; label?: unknown };
 
-/** ИНТЕГРАЦИЯ: ключ канала, подпись, включена ли она у этого календаря, и форма её объекта. */
-export type Integration = { key: string; label?: unknown; enabled: boolean; fields: IntegrationField[] };
+/** ИНТЕГРАЦИЯ: ключ канала, подпись, включена ли она у этого календаря, форма объекта и её ключи. */
+export type Integration = {
+  key: string;
+  label?: unknown;
+  enabled: boolean;
+  fields: IntegrationField[];
+  /** Переменные окружения, без которых канал не подключить. Пусто — ключей не требует (шаг 293). */
+  envKeys: string[];
+};
 
 export function integrationsOf(entity: Entity): Integration[] {
   const raw = (entity.data as Record<string, unknown>).integrations;
@@ -29,10 +36,19 @@ export function integrationsOf(entity: Entity): Integration[] {
         label: d.label,
         enabled: d.enabled !== false,
         fields: Array.isArray(d.fields) ? (d.fields as IntegrationField[]) : [],
+        envKeys: Array.isArray(d.envKeys) ? d.envKeys.map(String) : [],
       };
     })
     .filter((i) => Boolean(i.key));
 }
+
+/**
+ * ГОТОВА ЛИ ИНТЕГРАЦИЯ К РАБОТЕ. Объявленная и даже отмеченная галочкой интеграция бесполезна, пока не
+ * введены её ключи, — и владелец должен видеть это ГЛАЗАМИ, а не узнавать из провалившегося прогона.
+ * Поэтому «включена» и «настроена» — два разных факта, и они не схлопываются.
+ */
+export const missingKeysOf = (integration: Integration, present: Record<string, boolean>): string[] =>
+  integration.envKeys.filter((k) => !present[k]);
 
 /** Только подключённые — то, что рисуется иконками на строках и бейджами на диаграмме. */
 export const enabledOf = (list: Integration[]): Integration[] => list.filter((i) => i.enabled);
