@@ -107,9 +107,18 @@ the other two.
 The server looks back at most 24 hours. A server that stood still for a day must not fire off a barrage
 of everything it missed.
 
-**State today:** the delivery path is built and runs on the schedule. Whether anything actually leaves
-depends on the keys: no `RESEND_API_KEY` and the report says "channel not connected", honestly, in the
-scheduler's journal. Do not "fix" a missing key by sending from the browser.
+**State today (PROVEN LIVE 2026-07-23):** the delivery path is built, runs on the schedule, and has
+delivered end-to-end — a due entry left through Telegram to the owner's chat, and the EXACTLY-ONCE mark
+held: the scheduler fired every minute and the row was sent once, never again (one `deliveredAt` in the
+row store, no repeat). Whether a given channel leaves anything still depends on its keys: no
+`RESEND_API_KEY` and the report says "channel not connected", honestly, in the scheduler's journal. Do
+not "fix" a missing key by sending from the browser.
+
+For Telegram, note the address nuance already encoded in `_lib/transport.ts`: on the INPUT side an empty
+`TELEGRAM_ALLOWED_CHAT_ID` means "accept any chat", but on the OUTPUT side it is the DESTINATION and
+cannot be empty — sending has nowhere to go without it. The owner fills it natively (the "Link my
+Telegram" button on the key form, step 296): press Start at the bot, the chat id is read back from the
+bot's own update. No third-party bot, no hand-typed numbers.
 
 ## 5. Integrations
 

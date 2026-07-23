@@ -36,6 +36,9 @@ export type ChannelKey = {
   secret?: boolean;
   /** Пустое значение — законное умолчание, а не отсутствие ключа. */
   optional?: boolean;
+  /** ОРАНЖЕВОЕ предупреждение под полем — когда сам факт ввода ключа имеет неочевидную цену (напр.
+   *  ключ Anthropic переводит биллинг с подписки на поштучный API — «неожиданно дорого»). Десять языков. */
+  warning?: Record<string, string>;
   /**
    * У поля есть НАТИВНОЕ определение значения: форма рисует кнопку, которая узнаёт значение сама, вместо
    * того чтобы владелец искал его руками. `"telegram"` — связывание chat id через дверь `api/telegram/link`
@@ -133,6 +136,18 @@ export const KEY_CATALOG: Record<string, ChannelKey> = {
     env: "ANTHROPIC_API_KEY",
     service: "anthropic", serviceLabel: ANTHROPIC,
     secret: true,
+    warning: L(
+      "Heads up: an Anthropic API key bills PER TOKEN, not by subscription — this can get unexpectedly expensive. A present key also makes the Claude coding agent leave your subscription and bill through the API too.",
+      "Atención: una clave API de Anthropic se cobra POR TOKEN, no por suscripción, y puede salir inesperadamente cara. Una clave presente también hace que el agente de código Claude deje la suscripción y cobre por API.",
+      "Attention : une clé API Anthropic est facturée AU JETON, pas à l'abonnement — cela peut devenir étonnamment cher. Une clé présente fait aussi quitter l'abonnement à l'agent de code Claude, facturé via l'API.",
+      "Attenzione: una chiave API Anthropic si paga A TOKEN, non ad abbonamento — può diventare inaspettatamente costoso. Una chiave presente fa anche uscire l'agente di codice Claude dall'abbonamento, con fatturazione via API.",
+      "Внимание: ключ Anthropic API тарифицируется ПОШТУЧНО за токены, а не по подписке — это может оказаться неожиданно дорого. Введённый ключ к тому же уводит кодинг-агент Claude с подписки на оплату через API.",
+      "Achtung: Ein Anthropic-API-Schlüssel wird PRO TOKEN abgerechnet, nicht per Abo — das kann unerwartet teuer werden. Ein vorhandener Schlüssel nimmt zudem den Claude-Coding-Agenten vom Abo und rechnet über die API ab.",
+      "Atenção: uma chave API da Anthropic é cobrada POR TOKEN, não por subscrição — pode ficar inesperadamente caro. Uma chave presente também faz o agente de código Claude sair da subscrição e cobrar via API.",
+      "Uwaga: klucz API Anthropic jest rozliczany ZA TOKEN, nie w abonamencie — może to być nieoczekiwanie drogie. Obecny klucz sprawia też, że agent kodujący Claude opuszcza abonament i rozlicza się przez API.",
+      "Dikkat: Anthropic API anahtarı abonelikle değil TOKEN başına ücretlendirilir — beklenmedik şekilde pahalı olabilir. Mevcut bir anahtar ayrıca Claude kodlama ajanını abonelikten çıkarıp API üzerinden ücretlendirir.",
+      "Let op: een Anthropic API-sleutel wordt PER TOKEN afgerekend, niet per abonnement — dit kan onverwacht duur worden. Een aanwezige sleutel haalt ook de Claude-codeeragent van het abonnement en rekent via de API af.",
+    ),
     label: L("API key", "Clave API", "Clé API", "Chiave API", "Ключ API", "API-Schlüssel", "Chave API", "Klucz API", "API anahtarı", "API-sleutel"),
     help: L(
       "platform.claude.com → API keys → Create key. One key serves every automation in the project.",

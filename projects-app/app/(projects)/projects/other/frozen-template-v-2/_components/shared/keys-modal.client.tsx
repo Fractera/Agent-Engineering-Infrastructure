@@ -160,6 +160,9 @@ export default function KeysModal({
                   />
                   {/* ГДЕ ВЗЯТЬ — из каталога, а не из разметки: новый сервис не требует правки формы. */}
                   <span className="block text-xs text-muted-foreground">{pick(k.help, lang)}</span>
+                  {/* ОРАНЖЕВОЕ ПРЕДУПРЕЖДЕНИЕ — когда сам ввод ключа имеет неочевидную цену (ключ Anthropic
+                      = поштучный API вместо подписки, «неожиданно дорого»). Текст — из каталога, ×10. */}
+                  {k.warning ? <span className="block text-xs font-medium text-orange-600 dark:text-orange-400">{pick(k.warning, lang)}</span> : null}
                   {present[k.env] ? <span className="block text-[10px] text-muted-foreground">{L.keepValue}</span> : null}
                   {/* НАТИВНОЕ ОПРЕДЕЛЕНИЕ ЗНАЧЕНИЯ (шаг 296): кнопка узнаёт chat id сама, число подставляется
                       в поле выше; записывает его обычное «Сохранить». */}

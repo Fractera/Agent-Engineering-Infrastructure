@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { chromeStrings } from "./i18n";
 import { keysStrings } from "../shared/keys-i18n";
+import { pick } from "../shared/localized";
 import { PROVIDERS, providerOf, type ProviderKey } from "../ai";
 import { keysOf } from "../channels";
 import KeysModal from "../shared/keys-modal.client";
@@ -174,25 +175,30 @@ export default function AiPicker({
       <div className="space-y-1 border-t pt-2">
         {PROVIDERS.map((p) => {
           const set = present[p.envKey];
+          const warning = keysOf([p.envKey])[0]?.warning;
           return (
-            <div key={p.key} className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-xs">
-                <span className="text-muted-foreground">{p.label}</span>{" "}
-                {set === undefined ? (
-                  <span className="text-muted-foreground">…</span>
-                ) : set ? (
-                  <span className="text-emerald-600 dark:text-emerald-400">{K.alreadySet}</span>
-                ) : (
-                  <span className="text-muted-foreground">—</span>
-                )}
-              </span>
-              <button
-                type="button"
-                onClick={() => setAsking(p.key)}
-                className="rounded-md border px-2 py-1 text-xs hover:bg-accent"
-              >
-                {set ? K.change : K.connect.replace("{k}", p.label)}
-              </button>
+            <div key={p.key} className="space-y-0.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-xs">
+                  <span className="text-muted-foreground">{p.label}</span>{" "}
+                  {set === undefined ? (
+                    <span className="text-muted-foreground">…</span>
+                  ) : set ? (
+                    <span className="text-emerald-600 dark:text-emerald-400">{K.alreadySet}</span>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setAsking(p.key)}
+                  className="rounded-md border px-2 py-1 text-xs hover:bg-accent"
+                >
+                  {set ? K.change : K.connect.replace("{k}", p.label)}
+                </button>
+              </div>
+              {/* Оранжевое предупреждение о поштучном биллинге — видно ещё до открытия формы ключа. */}
+              {warning ? <p className="text-[11px] font-medium text-orange-600 dark:text-orange-400">{pick(warning, lang)}</p> : null}
             </div>
           );
         })}
