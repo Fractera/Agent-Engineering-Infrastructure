@@ -1,7 +1,6 @@
 import type { Entity } from "../../_data/automation.schema";
 import type { Surface } from "../surface";
 import FirstControlPanel from "./public/first-control-panel";
-import SecondControlPanel from "./public/second-control-panel";
 import RequestSettings from "./admin/request-settings";
 import SectionAccordion from "../shared/section-accordion.client";
 import BuildWithAi from "../shared/build-with-ai.client";
@@ -29,7 +28,6 @@ import { dataText } from "./params";
 // запоминается в браузере. НА ВИТРИНЕ аккордеонов нет: там все пульты раскрыты всегда.
 const PANELS: Record<string, React.ComponentType<{ entity: Entity; lang: string; surface: Surface; heading?: boolean }>> = {
   "first-control-panel": FirstControlPanel,
-  "second-control-panel": SecondControlPanel,
 };
 
 const fileOf = (name: string) => name.trim().toLowerCase().replace(/\s+/g, "-");

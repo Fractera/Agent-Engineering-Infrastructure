@@ -120,3 +120,31 @@ export function EyeOffIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+// Стрелки влево-вправо — перелистывание месяца в календаре; «i» в круге — пояснение владельцу.
+// Формы повторяют lucide ChevronLeft / ChevronRight / Info, стоявшие на этих же местах в v1.
+export function ChevronLeftIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden>
+      <path d="M15 18l-6-6 6-6" />
+    </svg>
+  );
+}
+
+export function ChevronRightIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden>
+      <path d="M9 18l6-6-6-6" />
+    </svg>
+  );
+}
+
+export function InfoIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden>
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="11" x2="12" y2="16" />
+      <line x1="12" y1="8" x2="12" y2="8" />
+    </svg>
+  );
+}

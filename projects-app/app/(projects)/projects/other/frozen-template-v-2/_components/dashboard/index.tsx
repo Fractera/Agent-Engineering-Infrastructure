@@ -1,7 +1,6 @@
 import type { Entity } from "../../_data/automation.schema";
 import type { Surface } from "../surface";
 import History from "./public/history";
-import SecondTable from "./public/second-table";
 import TableSettings from "./admin/table-settings";
 import SectionAccordion from "../shared/section-accordion.client";
 import BuildWithAi from "../shared/build-with-ai.client";
@@ -26,7 +25,6 @@ import { pick } from "../shared/localized";
 // раскрыто всегда, как диаграмма.
 const TABLES: Record<string, React.ComponentType<{ entity: Entity; lang: string; heading?: boolean }>> = {
   history: History,
-  "second-table": SecondTable,
 };
 
 const fileOf = (name: string) => name.trim().toLowerCase().replace(/\s+/g, "-");

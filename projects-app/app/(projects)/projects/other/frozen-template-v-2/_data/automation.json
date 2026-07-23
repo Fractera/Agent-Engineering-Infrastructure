@@ -953,6 +953,30 @@
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cmruewqs71sbem314de6797f24f39c",
         "state": "hidden"
+      },
+      {
+        "cuid": "cedgehermesin7q4v2b",
+        "from": "creceivehcadxvwfh",
+        "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cedgevectorout5m8kx1",
+        "from": "cmruddnrpho70e8af12589d1deaa",
+        "to": "cdelivervih3efrq9",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cedgedatabaseout3j7pw9",
+        "from": "cmruddnrpho70e8af12589d1deaa",
+        "to": "cdeliverdndd14qyz",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cedgestorageout8r2ny4",
+        "from": "cmruddnrpho70e8af12589d1deaa",
+        "to": "cdelivers3oz5tpd6",
+        "state": "hidden"
       }
     ]
   },
@@ -1053,90 +1077,6 @@
                 "price"
               ]
             }
-          },
-          {
-            "cuid": "csecondpanel6fcyjvy0",
-            "name": "Second control panel",
-            "info": {
-              "aiSummary": "ВРЕМЕННЫЙ ДУБЛЬ первого пульта — заведён, чтобы владелец проверил вложенные аккордеоны. Удаляется после проверки."
-            },
-            "status": "materialized",
-            "warnings": [],
-            "envKeys": [],
-            "data": {
-              "title": {
-                "en": "Stock price request (2)",
-                "es": "Consulta de precio de acción (2)",
-                "fr": "Demande de cours de bourse (2)",
-                "it": "Richiesta prezzo azionario (2)",
-                "ru": "Запрос цены акции (2)",
-                "de": "Aktienkurs-Abfrage (2)",
-                "pt": "Consulta de preço de ação (2)",
-                "pl": "Zapytanie o cenę akcji (2)",
-                "tr": "Hisse fiyatı sorgusu (2)",
-                "nl": "Aandelenkoers opvragen (2)"
-              },
-              "description": {
-                "en": "Name a public company — the automation returns its live share price and stores the row in the dashboard.",
-                "es": "Nombra una empresa pública: la automatización devuelve el precio actual de su acción y guarda la fila en el panel.",
-                "fr": "Nommez une société cotée : l'automatisation renvoie le cours actuel de son action et enregistre la ligne dans le tableau de bord.",
-                "it": "Indica un'azienda quotata: l'automazione restituisce il prezzo attuale dell'azione e salva la riga nella dashboard.",
-                "ru": "Назовите публичную компанию — автоматизация вернёт живую цену её акции и сохранит строку в дашборде.",
-                "de": "Nenne ein börsennotiertes Unternehmen — die Automatisierung liefert den aktuellen Aktienkurs und speichert die Zeile im Dashboard.",
-                "pt": "Indique uma empresa pública — a automação devolve o preço atual da ação e guarda a linha no painel.",
-                "pl": "Podaj spółkę publiczną — automatyzacja zwróci bieżącą cenę akcji i zapisze wiersz w panelu.",
-                "tr": "Halka açık bir şirket adı verin — otomasyon güncel hisse fiyatını döndürür ve satırı panoya kaydeder.",
-                "nl": "Noem een beursgenoteerd bedrijf — de automatisering geeft de actuele koers terug en bewaart de rij in het dashboard."
-              },
-              "params": [
-                {
-                  "key": "query",
-                  "type": "text",
-                  "required": true,
-                  "label": {
-                    "en": "Company",
-                    "es": "Empresa",
-                    "fr": "Entreprise",
-                    "it": "Azienda",
-                    "ru": "Компания",
-                    "de": "Unternehmen",
-                    "pt": "Empresa",
-                    "pl": "Firma",
-                    "tr": "Şirket",
-                    "nl": "Bedrijf"
-                  },
-                  "placeholder": {
-                    "en": "Apple",
-                    "es": "Apple",
-                    "fr": "Apple",
-                    "it": "Apple",
-                    "ru": "Apple",
-                    "de": "Apple",
-                    "pt": "Apple",
-                    "pl": "Apple",
-                    "tr": "Apple",
-                    "nl": "Apple"
-                  }
-                }
-              ],
-              "answer": {
-                "en": "{company} ({ticker}) — ${price}",
-                "es": "{company} ({ticker}) — {price} $",
-                "fr": "{company} ({ticker}) — {price} $",
-                "it": "{company} ({ticker}) — {price} $",
-                "ru": "{company} ({ticker}) — {price} $",
-                "de": "{company} ({ticker}) — {price} $",
-                "pt": "{company} ({ticker}) — {price} $",
-                "pl": "{company} ({ticker}) — {price} $",
-                "tr": "{company} ({ticker}) — {price} $",
-                "nl": "{company} ({ticker}) — ${price}"
-              },
-              "answerKeys": [
-                "company",
-                "ticker",
-                "price"
-              ]
-            }
           }
         ]
       },
@@ -1157,9 +1097,9 @@
         "name": "calendar",
         "presence": "collapsed",
         "info": {
-          "aiSummary": "Вкладка календаря объявлена и пуста: владелец ещё не сказал, что она должна показывать."
+          "aiSummary": "Календарь автоматизации: сетка месяца и дневной планер на получасовых слотах, перенос вида из v1. Записи читаются из строк вывода (таблица calendar), руками здесь ничего не создаётся. Публичная половина — сам календарь (её видят все), административная — настройка (только владелец)."
         },
-        "status": "in-development",
+        "status": "materialized",
         "warnings": [],
         "envKeys": [],
         "entities": [
@@ -1167,19 +1107,79 @@
             "cuid": "cmruca7ra4n1jwbadc6ef980db7976",
             "name": "Main calendar",
             "info": {
-              "aiSummary": "Заготовка «Main calendar»: создана вместе со вкладкой, требований владельца пока нет."
+              "aiSummary": "Единственный календарь вкладки: показывает запланированные события и напоминания этой автоматизации. Хранилище и виды записей объявлены здесь, в data — компоненты их только рисуют."
             },
-            "status": "in-development",
+            "status": "materialized",
             "warnings": [],
             "envKeys": [],
-            "data": {}
+            "data": {
+              "table": "calendar",
+              "title": {
+                "en": "Schedule",
+                "es": "Agenda",
+                "fr": "Agenda",
+                "it": "Agenda",
+                "ru": "Расписание",
+                "de": "Terminplan",
+                "pt": "Agenda",
+                "pl": "Harmonogram",
+                "tr": "Takvim",
+                "nl": "Agenda"
+              },
+              "description": {
+                "en": "Scheduled events and reminders of this automation.",
+                "es": "Eventos y recordatorios programados de esta automatización.",
+                "fr": "Événements et rappels planifiés de cette automatisation.",
+                "it": "Eventi e promemoria pianificati di questa automazione.",
+                "ru": "Запланированные события и напоминания этой автоматизации.",
+                "de": "Geplante Ereignisse und Erinnerungen dieser Automatisierung.",
+                "pt": "Eventos e lembretes agendados desta automação.",
+                "pl": "Zaplanowane zdarzenia i przypomnienia tej automatyzacji.",
+                "tr": "Bu otomasyonun zamanlanmış etkinlikleri ve hatırlatıcıları.",
+                "nl": "Geplande gebeurtenissen en herinneringen van deze automatisering."
+              },
+              "types": [
+                {
+                  "key": "event",
+                  "tone": "event",
+                  "label": {
+                    "en": "event",
+                    "es": "evento",
+                    "fr": "événement",
+                    "it": "evento",
+                    "ru": "событие",
+                    "de": "Ereignis",
+                    "pt": "evento",
+                    "pl": "zdarzenie",
+                    "tr": "etkinlik",
+                    "nl": "gebeurtenis"
+                  }
+                },
+                {
+                  "key": "reminder",
+                  "tone": "reminder",
+                  "label": {
+                    "en": "reminder",
+                    "es": "recordatorio",
+                    "fr": "rappel",
+                    "it": "promemoria",
+                    "ru": "напоминание",
+                    "de": "Erinnerung",
+                    "pt": "lembrete",
+                    "pl": "przypomnienie",
+                    "tr": "hatırlatıcı",
+                    "nl": "herinnering"
+                  }
+                }
+              ]
+            }
           }
         ]
       },
       {
         "systemInstructionName": "tab",
         "name": "analytics",
-        "presence": "collapsed",
+        "presence": "absent",
         "info": {
           "aiSummary": "Вкладка аналитики объявлена и пуста: владелец ещё не сказал, что она должна считать."
         },
@@ -1297,100 +1297,13 @@
                 "nl": "Aanvraaggeschiedenis"
               }
             }
-          },
-          {
-            "cuid": "csecondtablebfze6vk8",
-            "name": "Second table",
-            "info": {
-              "aiSummary": "ВРЕМЕННЫЙ ДУБЛЬ первой таблицы — заведён, чтобы владелец проверил вложенные аккордеоны. Удаляется после проверки."
-            },
-            "status": "materialized",
-            "warnings": [],
-            "envKeys": [],
-            "data": {
-              "table": "history",
-              "columns": [
-                {
-                  "key": "date",
-                  "label": {
-                    "en": "Date",
-                    "es": "Fecha",
-                    "fr": "Date",
-                    "it": "Data",
-                    "ru": "Дата",
-                    "de": "Datum",
-                    "pt": "Data",
-                    "pl": "Data",
-                    "tr": "Tarih",
-                    "nl": "Datum"
-                  }
-                },
-                {
-                  "key": "company",
-                  "label": {
-                    "en": "Company",
-                    "es": "Empresa",
-                    "fr": "Entreprise",
-                    "it": "Azienda",
-                    "ru": "Компания",
-                    "de": "Firma",
-                    "pt": "Empresa",
-                    "pl": "Firma",
-                    "tr": "Şirket",
-                    "nl": "Bedrijf"
-                  }
-                },
-                {
-                  "key": "ticker",
-                  "label": {
-                    "en": "Ticker",
-                    "es": "Símbolo",
-                    "fr": "Symbole",
-                    "it": "Simbolo",
-                    "ru": "Тикер",
-                    "de": "Kürzel",
-                    "pt": "Símbolo",
-                    "pl": "Symbol",
-                    "tr": "Sembol",
-                    "nl": "Symbool"
-                  }
-                },
-                {
-                  "key": "price",
-                  "label": {
-                    "en": "Price",
-                    "es": "Precio",
-                    "fr": "Prix",
-                    "it": "Prezzo",
-                    "ru": "Цена",
-                    "de": "Preis",
-                    "pt": "Preço",
-                    "pl": "Cena",
-                    "tr": "Fiyat",
-                    "nl": "Prijs"
-                  }
-                }
-              ],
-              "title": {
-                "en": "Request history (2)",
-                "es": "Historial de consultas (2)",
-                "fr": "Historique des demandes (2)",
-                "it": "Cronologia richieste (2)",
-                "ru": "История запросов (2)",
-                "de": "Anfrageverlauf (2)",
-                "pt": "Histórico de pedidos (2)",
-                "pl": "Historia zapytań (2)",
-                "tr": "Sorgu geçmişi (2)",
-                "nl": "Aanvraaggeschiedenis (2)"
-              }
-            }
           }
         ]
       },
       {
         "systemInstructionName": "tab",
         "name": "map",
-        "presence": "collapsed",
+        "presence": "absent",
         "info": {
           "aiSummary": "Вкладка карты объявлена и пуста."
         },
@@ -1414,7 +1327,7 @@
       {
         "systemInstructionName": "tab",
         "name": "processes",
-        "presence": "collapsed",
+        "presence": "absent",
         "info": {
           "aiSummary": "Вкладка процессов (таймлайн) объявлена и пуста."
         },
@@ -1438,7 +1351,7 @@
       {
         "systemInstructionName": "tab",
         "name": "cron",
-        "presence": "collapsed",
+        "presence": "absent",
         "info": {
           "aiSummary": "Вкладка расписания объявлена и пуста."
         },
@@ -1462,7 +1375,7 @@
       {
         "systemInstructionName": "tab",
         "name": "use-cases",
-        "presence": "collapsed",
+        "presence": "absent",
         "info": {
           "aiSummary": "Вкладка пользовательских кейсов объявлена и пуста."
         },
@@ -1486,7 +1399,7 @@
       {
         "systemInstructionName": "tab",
         "name": "app-pages",
-        "presence": "collapsed",
+        "presence": "absent",
         "info": {
           "aiSummary": "Вкладка страниц приложения объявлена и пуста."
         },
@@ -1510,7 +1423,7 @@
       {
         "systemInstructionName": "tab",
         "name": "vector-memory",
-        "presence": "collapsed",
+        "presence": "absent",
         "info": {
           "aiSummary": "Вкладка векторной памяти объявлена и пуста: показывать, что автоматизация запомнила, будем когда владелец скажет что именно."
         },
@@ -1534,7 +1447,7 @@
       {
         "systemInstructionName": "tab",
         "name": "database",
-        "presence": "collapsed",
+        "presence": "absent",
         "info": {
           "aiSummary": "Вкладка локальной базы объявлена и пуста: какие записи показывать, решает владелец."
         },
@@ -1558,7 +1471,7 @@
       {
         "systemInstructionName": "tab",
         "name": "storage",
-        "presence": "collapsed",
+        "presence": "absent",
         "info": {
           "aiSummary": "Вкладка локального хранилища объявлена и пуста: здесь будут файлы автоматизации, например изображения."
         },

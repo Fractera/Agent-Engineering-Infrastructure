@@ -4,6 +4,7 @@ import { graphToFlow } from "./diagram/graph-to-flow";
 import { DiagramCanvasV2 } from "./diagram/canvas.client";
 import Dashboard from "./dashboard";
 import ControlPanel from "./control-panel";
+import Calendar from "./calendar";
 import GenericTab from "./generic";
 import AutoRefresh from "./shared/auto-refresh.client";
 import SectionAccordion from "./shared/section-accordion.client";
@@ -40,6 +41,8 @@ export default async function AutomationComponents({ surface, lang }: { surface:
       <DiagramCanvasV2 vm={flow} lang={lang} readOnly={landing} />
     ) : tab.name === "dashboard" ? (
       <Dashboard surface={surface} entities={tab.entities} lang={lang} />
+    ) : tab.name === "calendar" ? (
+      <Calendar surface={surface} entities={tab.entities} lang={lang} />
     ) : (
       // У вкладки ещё нет своей папки — показываем её сущности общим видом: место на странице, якорь для
       // оглавления и обе ступени заявки «строить вместе с ИИ». Пропускать раздел нельзя: тогда заказать
