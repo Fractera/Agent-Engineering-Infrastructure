@@ -12,6 +12,11 @@ import {
   type Address,
 } from "../../_lib/core-io";
 import { KIND_PORTS, allNodes, type GroupName, type NodeKind } from "../../_data/automation.schema";
+import { readEnvPresence } from "@/lib/env-presence";
+
+// Ключи, пустое значение которых — законное умолчание, а не отсутствие. Список короткий и живёт рядом
+// с законом, который им пользуется; каталог `_components/channels.ts` знает то же самое для формы ввода.
+const OPTIONAL_ENV_KEYS = new Set(["TELEGRAM_ALLOWED_CHAT_ID"]);
 
 // ДВЕРЬ ПРАВКИ — ОДИН объект по адресу. Переписывать файл целиком не нужно и запрещено: правка стоит
 // десятки токенов вместо тысяч и не может задеть соседа.
@@ -199,6 +204,25 @@ export async function POST(req: NextRequest) {
     const group = groupOfNode(core, address.cuid)!;
 
     if (node.state === next) return bad(`node "${node.name}" is already ${next}`);
+
+    // ЗАКОН «СНАЧАЛА КЛЮЧИ, ПОТОМ КАНАЛ» (владелец, шаг 293; переехал сюда из экрана настроек в 294).
+    // Раскрыть канал, к которому нельзя подключиться, значит соврать на холсте: узел будет выглядеть
+    // рабочим и падать на каждом прогоне. Здесь закон стоит потому, что дверь — единственное место,
+    // через которое проходят ВСЕ: холст, меню, агент. В компоненте он защищал бы один экран из трёх.
+    //
+    // Необязательный ключ (пустой = законное умолчание) раскрытию не мешает — проверяются только те,
+    // без которых канал не работает вовсе.
+    if (next === "visible" && node.envKeys.length) {
+      const required = node.envKeys.filter((k) => !OPTIONAL_ENV_KEYS.has(k.name)).map((k) => k.name);
+      const present = await readEnvPresence(required);
+      const missing = required.filter((k) => !present[k]);
+      if (missing.length) {
+        return bad(
+          `"${node.name}" cannot be revealed yet: its channel needs ${missing.join(", ")}. ` +
+            `Open Settings and connect the service — then reveal the node.`,
+        );
+      }
+    }
 
     // ОДНОСТОРОННИЙ закон (исправлено в 273.A по живому тесту). Владелец сказал: срединный узел нельзя
     // СКРЫТЬ после перехода в реальный проект — середина и есть работа автоматизации. Про раскрытие он

@@ -3,7 +3,7 @@ import AutomationChrome from "./_components/chrome";
 import AutomationComponents from "./_components";
 import NotBuiltPage from "./_components/shared/not-built-page";
 import { pick } from "./_components/shared/localized";
-import { NODE_FUNCTIONS } from "./_lib/nodes";
+import { allNodes } from "./_data/automation.schema";
 
 // Страница автоматизации. Паттерн v1 (test-stream-frozen-starter/page.tsx): ДВЕ композиции на одном
 // маршруте — по умолчанию КОКПИТ владельца (surface="admin", полоса-шапка), а `?view=public` рисует
@@ -27,25 +27,26 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
       title: pick((e.data as Record<string, unknown>).title, lang) || e.name,
     })),
   }));
-  // КАНАЛЫ ДЛЯ МЕНЮ (шаг 293): двери входа и выхода — чем автоматизация слушает и чем отвечает.
-  // Коннекторы сюда НЕ идут: это двери в соседнюю автоматизацию, а не канал наружу. `hasFunction`
-  // считается ЗДЕСЬ, на сервере: реестр функций — серверный модуль, и знать о нём меню не должно.
-  const channels = (["input", "output"] as const).flatMap((group) =>
-    graph.nodes.groups[group].nodes
-      .filter((n) => n.kind === group)
-      .map((n) => ({
-        cuid: n.cuid,
-        name: n.name,
-        ioType: typeof n.ioType === "string" ? n.ioType : "",
-        group,
-        state: n.state,
-        // `envKeys` узла — ОТЧЁТ агента (`{name, status, comment}`), а не список строк. Меню нужны
-        // только имена: живую правду о том, задан ключ или нет, даёт дверь `api/env`, а `status` — это
-        // последнее наблюдение агента, и подменять им живую проверку нельзя.
-        envKeys: n.envKeys.map((k) => k.name),
-        hasFunction: Boolean(NODE_FUNCTIONS[n.function.name]),
-      })),
+  // ЧТО НАСТРАИВАЕТСЯ (шаг 294) — имена переменных, объявленные ЭТОЙ автоматизацией: узлами-каналами
+  // и интеграциями её вкладок. Больше окну настроек ничего не нужно: настраивают СЕРВИС, а не канал —
+  // шесть узлов делят один токен бота, и это одна карточка, а не шесть строк. Канал, не объявивший
+  // ключей, в настройки не попадает вовсе: включают его на холсте, настраивать в нём нечего.
+  //
+  // `envKeys` узла — ОТЧЁТ агента (`{name, status, comment}`), а не список строк; берём только имена.
+  // Живую правду «задан или нет» даёт дверь `api/env`: `status` — последнее наблюдение агента, и
+  // подменять им живую проверку нельзя.
+  const nodeKeys = allNodes(graph.nodes).flatMap((n) => n.envKeys.map((k) => k.name));
+  const integrationKeys = components.tabs.flatMap((tab) =>
+    tab.entities.flatMap((entity) => {
+      const raw = (entity.data as Record<string, unknown>).integrations;
+      if (!Array.isArray(raw)) return [];
+      return raw.flatMap((i) => {
+        const keys = (i as { envKeys?: unknown }).envKeys;
+        return Array.isArray(keys) ? keys.map(String) : [];
+      });
+    }),
   );
+  const envKeys = [...new Set([...nodeKeys, ...integrationKeys])];
   // ПОСТРОЕНА ЛИ АВТОМАТИЗАЦИЯ — один факт из паспорта (`lifecycle`), и он решает судьбу ВИТРИНЫ:
   // замороженному шаблону публичной страницы нет. Показывать посетителю пустую витрину значило бы
   // обещать работу, которой ещё нет, — вместо страницы отдаём один честный тост с тем, что делать.
@@ -64,7 +65,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
   // с мостом 32px. Атрибут, а не класс: раскладка страницы остаётся в её собственном коде.
   return (
     <main data-zone-column className="mx-auto w-full max-w-4xl px-4 py-6">
-      <AutomationChrome surface={surface} passport={passport} lang={lang} tabs={tabs} channels={channels} publicHref="?view=public" built={built} />
+      <AutomationChrome surface={surface} passport={passport} lang={lang} tabs={tabs} envKeys={envKeys} publicHref="?view=public" built={built} />
       <AutomationComponents surface={surface} lang={lang} />
     </main>
   );

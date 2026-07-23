@@ -8,7 +8,6 @@ import Toast from "../shared/toast.client";
 import HowItWorksModal from "./how-it-works-modal.client";
 import PlaceholderModal from "./placeholder-modal.client";
 import SettingsModal from "./settings-modal.client";
-import type { ChannelRow } from "./channels-section.client";
 
 // ГАМБУРГЕР-МЕНЮ (админ) — ФАКСИМИЛЕ меню v1 (automation-menu.client.tsx), воспроизведённое самодостаточно
 // (закон 0: без shadcn/lucide/_shared). Порядок, метки, иконки и разделители — один-в-один с образцом.
@@ -26,13 +25,13 @@ const sep = <div className="my-1 h-px bg-border" />;
 export default function Menu({
   lang,
   tabs,
-  channels,
+  envKeys,
   publicHref,
   built,
 }: {
   lang: string;
-  /** Каналы автоматизации — второй список меню; включение канала гейтится ключами (шаг 293). */
-  channels: ChannelRow[];
+  /** Имена переменных, объявленные автоматизацией: из них выводятся карточки настроек. */
+  envKeys: string[];
   tabs: TabRow[];
   publicHref: string;
   /** Построена ли автоматизация: замороженному шаблону публичной страницы ещё нет. */
@@ -184,7 +183,7 @@ export default function Menu({
       ) : null}
 
       <HowItWorksModal lang={lang} open={modal === "howItWorks"} onClose={() => setModal(null)} />
-      <SettingsModal lang={lang} channels={channels} open={modal === "settings"} onClose={() => setModal(null)} />
+      <SettingsModal lang={lang} envKeys={envKeys} open={modal === "settings"} onClose={() => setModal(null)} />
       {/* Заглушка достаётся ТОЛЬКО записям без своего окна: у «Как это работает» и «Настроек» окна свои,
           и различает их не строка заголовка, а сам вид состояния — поэтому проверяем тип, а не текст. */}
       <PlaceholderModal

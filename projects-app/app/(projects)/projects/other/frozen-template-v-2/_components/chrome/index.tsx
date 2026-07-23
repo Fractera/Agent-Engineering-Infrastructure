@@ -4,7 +4,6 @@ import Hero from "./hero";
 import StatusBar from "./status-bar";
 import HowItWorks from "./how-it-works.client";
 import NavDrawer, { type NavGroup } from "./nav-drawer.client";
-import type { ChannelRow } from "./channels-section.client";
 
 // ШАПКА АВТОМАТИЗАЦИИ — маршрутизатор по поверхности. Всё, что она рисует, выведено из ядра (паспорт +
 // список вкладок), переданного пропсами: страница (page.tsx) — единственная точка, читающая платформу,
@@ -28,7 +27,7 @@ export default function AutomationChrome({
   passport,
   lang,
   tabs,
-  channels,
+  envKeys,
   publicHref,
   built,
 }: {
@@ -36,8 +35,8 @@ export default function AutomationChrome({
   passport: Passport;
   lang: string;
   tabs: TabRow[];
-  /** Каналы автоматизации — нужны только админ-меню; витрина о них не спрашивает. */
-  channels: ChannelRow[];
+  /** Объявленные переменные окружения — нужны только админ-меню; витрина о них не спрашивает. */
+  envKeys: string[];
   publicHref: string;
   /** Построена ли автоматизация (паспорт: lifecycle=real-project) — от этого зависит судьба публичной ссылки. */
   built: boolean;
@@ -45,7 +44,7 @@ export default function AutomationChrome({
   if (surface === "admin") {
     return (
       <div data-chrome-root="admin">
-        <StatusBar passport={passport} lang={lang} tabs={tabs} channels={channels} publicHref={publicHref} built={built} />
+        <StatusBar passport={passport} lang={lang} tabs={tabs} envKeys={envKeys} publicHref={publicHref} built={built} />
       </div>
     );
   }

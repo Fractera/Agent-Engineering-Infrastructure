@@ -17,6 +17,17 @@
 export type ChannelKey = {
   /** Имя переменной окружения — то, что стоит в `envKeys` узла. */
   env: string;
+  /**
+   * СЕРВИС, которому принадлежит ключ, и его человеческое имя.
+   *
+   * Настраивают не КАНАЛ, а СЕРВИС. Шесть узлов (вход и выход телеграм-бота, личный чат, и так далее)
+   * делят один `TELEGRAM_BOT_TOKEN`, потому что ключи общие на проект. Показывать шесть настроек там,
+   * где настройка одна, — шум, а не полнота (правка владельца 2026-07-23). Поэтому окно настроек
+   * группирует ключи по этому полю и показывает РОВНО столько карточек, сколько сервисов реально
+   * объявлено этой автоматизацией.
+   */
+  service: string;
+  serviceLabel: Record<string, string>;
   /** Что это словами, на десяти языках. */
   label: Record<string, string>;
   /** Где взять и куда пойти — на десяти языках. */
@@ -30,9 +41,14 @@ export type ChannelKey = {
 const L = (en: string, es: string, fr: string, it: string, ru: string, de: string, pt: string, pl: string, tr: string, nl: string) =>
   ({ en, es, fr, it, ru, de, pt, pl, tr, nl });
 
+// Имена сервисов — по одному на карточку настроек, а не по одному на канал.
+const TELEGRAM = L("Telegram bot", "Bot de Telegram", "Bot Telegram", "Bot Telegram", "Телеграм-бот", "Telegram-Bot", "Bot do Telegram", "Bot Telegram", "Telegram botu", "Telegram-bot");
+const RESEND = L("Email delivery (Resend)", "Envío de correo (Resend)", "Envoi d'e-mails (Resend)", "Invio email (Resend)", "Почтовая рассылка (Resend)", "E-Mail-Versand (Resend)", "Envio de email (Resend)", "Wysyłka e-mail (Resend)", "E-posta gönderimi (Resend)", "E-mailverzending (Resend)");
+
 export const KEY_CATALOG: Record<string, ChannelKey> = {
   TELEGRAM_BOT_TOKEN: {
     env: "TELEGRAM_BOT_TOKEN",
+    service: "telegram", serviceLabel: TELEGRAM,
     secret: true,
     label: L("Bot token", "Token del bot", "Jeton du bot", "Token del bot", "Токен бота", "Bot-Token", "Token do bot", "Token bota", "Bot jetonu", "Bot-token"),
     help: L(
@@ -50,6 +66,7 @@ export const KEY_CATALOG: Record<string, ChannelKey> = {
   },
   TELEGRAM_ALLOWED_CHAT_ID: {
     env: "TELEGRAM_ALLOWED_CHAT_ID",
+    service: "telegram", serviceLabel: TELEGRAM,
     optional: true,
     label: L("Allowed chat id", "Id de chat permitido", "Id de discussion autorisée", "Id chat consentita", "Разрешённый чат", "Erlaubte Chat-ID", "Id de chat permitido", "Dozwolony id czatu", "İzinli sohbet kimliği", "Toegestane chat-id"),
     help: L(
@@ -67,6 +84,7 @@ export const KEY_CATALOG: Record<string, ChannelKey> = {
   },
   RESEND_API_KEY: {
     env: "RESEND_API_KEY",
+    service: "resend", serviceLabel: RESEND,
     secret: true,
     label: L("Resend API key", "Clave API de Resend", "Clé API Resend", "Chiave API Resend", "Ключ API Resend", "Resend-API-Schlüssel", "Chave API do Resend", "Klucz API Resend", "Resend API anahtarı", "Resend API-sleutel"),
     help: L(
@@ -84,6 +102,7 @@ export const KEY_CATALOG: Record<string, ChannelKey> = {
   },
   RESEND_FROM_EMAIL: {
     env: "RESEND_FROM_EMAIL",
+    service: "resend", serviceLabel: RESEND,
     label: L("Sender address", "Dirección del remitente", "Adresse d'expéditeur", "Indirizzo mittente", "Адрес отправителя", "Absenderadresse", "Endereço do remetente", "Adres nadawcy", "Gönderen adresi", "Afzenderadres"),
     help: L(
       "An address on a domain VERIFIED in resend.com/domains — Resend refuses to send from anything else.",
@@ -100,6 +119,7 @@ export const KEY_CATALOG: Record<string, ChannelKey> = {
   },
   RESEND_INBOUND_SECRET: {
     env: "RESEND_INBOUND_SECRET",
+    service: "resend", serviceLabel: RESEND,
     secret: true,
     label: L("Inbound webhook secret", "Secreto del webhook entrante", "Secret du webhook entrant", "Segreto del webhook in entrata", "Секрет входящего вебхука", "Secret des Eingangs-Webhooks", "Segredo do webhook de entrada", "Sekret webhooka przychodzącego", "Gelen webhook sırrı", "Geheim van inkomende webhook"),
     help: L(
@@ -123,6 +143,8 @@ export function keysOf(envKeys: readonly string[]): ChannelKey[] {
     (env) =>
       KEY_CATALOG[env] ?? {
         env,
+        service: env.split("_")[0].toLowerCase() || "other",
+        serviceLabel: { en: env.split("_")[0] || "Other" },
         label: { en: env },
         help: { en: "Declared by this automation; no description in the catalogue yet." },
         secret: /TOKEN|KEY|SECRET|PASSWORD/i.test(env),
@@ -132,3 +154,26 @@ export function keysOf(envKeys: readonly string[]): ChannelKey[] {
 
 /** Ключи, отсутствие которых ДЕЙСТВИТЕЛЬНО не даёт каналу работать (необязательные не в счёт). */
 export const requiredOf = (keys: ChannelKey[]): string[] => keys.filter((k) => !k.optional).map((k) => k.env);
+
+/** СЕРВИС — то, что владелец настраивает: имя и все его ключи вместе. */
+export type Service = { key: string; label: Record<string, string>; keys: ChannelKey[] };
+
+/**
+ * Объявленные имена переменных → карточки сервисов.
+ *
+ * Именно здесь список схлопывается: восемнадцать каналов автоматизации объявляют суммарно пять
+ * переменных, принадлежащих ДВУМ сервисам, и настроек в окне ровно две. Канал, не требующий ключей,
+ * сюда не попадает вовсе — настраивать в нём нечего, а включают его на холсте.
+ *
+ * Неизвестное имя ключа получает собственную карточку: молча потерять объявленный ключ хуже, чем
+ * показать его без описания.
+ */
+export function servicesOf(envKeys: readonly string[]): Service[] {
+  const out = new Map<string, Service>();
+  for (const key of keysOf([...new Set(envKeys)])) {
+    const existing = out.get(key.service);
+    if (existing) existing.keys.push(key);
+    else out.set(key.service, { key: key.service, label: key.serviceLabel, keys: [key] });
+  }
+  return [...out.values()];
+}
