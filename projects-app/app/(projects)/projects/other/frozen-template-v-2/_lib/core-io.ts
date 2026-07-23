@@ -192,8 +192,12 @@ export async function writeCore(candidate: unknown): Promise<{ ok: true } | { ok
   if (!result.success) {
     return { ok: false, errors: result.error.issues.map((i) => `${i.path.join(".") || "<root>"} — ${i.message}`) };
   }
+  // Пишется РАЗОБРАННОЕ значение, а не то, что дал вызывающий: zod собирает объект в порядке схемы,
+  // поэтому одно и то же содержимое всегда даёт одни и те же байты. Раньше писался `candidate`, чей
+  // порядок ключей зависел от того, как его собрал вызывающий, — и правка, ничего не менявшая по сути,
+  // переписывала файл целиком (145 строк туда, 145 обратно) и молча срывала `git pull` на сервере.
   const tmp = `${CORE_PATH}.tmp`;
-  await writeFile(tmp, `${JSON.stringify(candidate, null, 2)}\n`, "utf8");
+  await writeFile(tmp, `${JSON.stringify(result.data, null, 2)}\n`, "utf8");
   await rename(tmp, CORE_PATH);
   return { ok: true };
 }

@@ -7,3 +7,12 @@ tsconfig.tsbuildinfo
 # instances live in _data/runtime/*.jsonl. This is DATA, not code: it grows on every run and
 # differs per server, exactly like the app.db it replaced. Pull it on demand, never commit it.
 _data/runtime/
+
+# SWC cache — written by the compiler on every build.
+/.swc
+
+# WORKSPACE STATE — пишется кликами владельца на общем холсте (позиции узлов, вложенность, глобальный
+# статус: lib/edges.ts writeGlobalState). Это ДАННЫЕ сервера, а не исходник: файл менялся на каждом
+# перетаскивании и молча срывал `git pull`. Отсутствует — читатель честно возвращает пустую раскладку
+# и статус "in-development", поэтому свежему серверу файл в репозитории не нужен.
+app/(projects)/projects/_data/global-automation.json

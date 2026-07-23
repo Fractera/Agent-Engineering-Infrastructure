@@ -5,6 +5,10 @@
     "description": "Автоматизация типа Stream: по названию публичной компании возвращает живую цену её акции и сохраняет в историю.",
     "type": "stream",
     "lifecycle": "real-project",
+    "ai": {
+      "provider": "anthropic",
+      "model": "claude-opus-4-8"
+    },
     "author": "architect",
     "sharing": "private",
     "fracteraPro": {
@@ -20,11 +24,7 @@
       "По тикеру запрашивается живая цена акции с Yahoo Finance.",
       "Если цена получена — строка с датой, компанией, тикером и ценой попадает в дашборд.",
       "Если компания не распознана или цена недоступна — прогон честно останавливается и ничего не пишет."
-    ],
-    "ai": {
-      "provider": "anthropic",
-      "model": "claude-opus-4-8"
-    }
+    ]
   },
   "graph": {
     "systemInstructionName": "graph",
@@ -51,11 +51,9 @@
           "nodes": [
             {
               "cuid": "cmruewqs51sbelfc3dc9457a2a3fac",
-              "kind": "input-connector",
               "name": "Incoming connector",
               "description": "Receives data from a node of ANOTHER automation — the door through which this automation joins a group.",
               "state": "hidden",
-              "ioType": "custom",
               "info": {
                 "aiSummary": "Ждёт данные из соседней автоматизации; в одиночной автоматизации стоит скрытым."
               },
@@ -68,6 +66,10 @@
                 "accepts": "The payload as another automation handed it over.",
                 "returns": "payload — the same value, named for this automation."
               },
+              "run": "sequential",
+              "estDurationMs": 60000,
+              "kind": "input-connector",
+              "ioType": "custom",
               "in": {
                 "state": "optional",
                 "connections": [
@@ -79,17 +81,13 @@
                 "connections": [
                   "transform"
                 ]
-              },
-              "run": "sequential",
-              "estDurationMs": 60000
+              }
             },
             {
               "cuid": "cmruca7r64n1jr7c4ca119ed7b7c4d",
-              "kind": "input",
               "name": "Input",
               "description": "Where the automation receives its work — a message, a request, or a scheduled tick.",
               "state": "visible",
-              "ioType": "control-panel",
               "info": {
                 "aiSummary": "Распознаёт публичную компанию из запроса по словарю и отдаёт её тикер; неизвестная или частная компания — прогон останавливается понятным сообщением."
               },
@@ -102,6 +100,10 @@
                 "accepts": "The raw request as it arrived from the channel.",
                 "returns": "payload — the request, untouched."
               },
+              "run": "sequential",
+              "estDurationMs": 60000,
+              "kind": "input",
+              "ioType": "control-panel",
               "in": {
                 "state": "prohibit",
                 "connections": null
@@ -111,17 +113,13 @@
                 "connections": [
                   "transform"
                 ]
-              },
-              "run": "sequential",
-              "estDurationMs": 60000
+              }
             },
             {
               "cuid": "cmruqdpjl51eha9a65832422ad3a53",
-              "kind": "input",
               "name": "Webhook input",
               "description": "An external system calls in over HTTP.",
               "state": "hidden",
-              "ioType": "webhook",
               "info": {
                 "aiSummary": "Заготовка канала «webhook»: объявлена и скрыта, функция появится, когда узел раскроют."
               },
@@ -134,6 +132,10 @@
                 "accepts": "The raw request as it arrived from the webhook channel.",
                 "returns": "payload — the request, untouched."
               },
+              "run": "sequential",
+              "estDurationMs": 60000,
+              "kind": "input",
+              "ioType": "webhook",
               "in": {
                 "state": "prohibit",
                 "connections": null
@@ -143,17 +145,13 @@
                 "connections": [
                   "transform"
                 ]
-              },
-              "run": "sequential",
-              "estDurationMs": 60000
+              }
             },
             {
               "cuid": "cmruqdpjm51ehb6c5e6bd9a8614a87",
-              "kind": "input",
               "name": "Cron input",
               "description": "A scheduled tick fires it on a timer.",
               "state": "hidden",
-              "ioType": "cron",
               "info": {
                 "aiSummary": "Заготовка канала «cron»: объявлена и скрыта, функция появится, когда узел раскроют."
               },
@@ -166,6 +164,10 @@
                 "accepts": "The raw request as it arrived from the cron channel.",
                 "returns": "payload — the request, untouched."
               },
+              "run": "sequential",
+              "estDurationMs": 60000,
+              "kind": "input",
+              "ioType": "cron",
               "in": {
                 "state": "prohibit",
                 "connections": null
@@ -175,17 +177,13 @@
                 "connections": [
                   "transform"
                 ]
-              },
-              "run": "sequential",
-              "estDurationMs": 60000
+              }
             },
             {
               "cuid": "cmruqdpjm51ehc433ccaf2f7677d66",
-              "kind": "input",
               "name": "Public Page input",
               "description": "A form or control on the automation own public page.",
               "state": "hidden",
-              "ioType": "public-page",
               "info": {
                 "aiSummary": "Заготовка канала «public-page»: объявлена и скрыта, функция появится, когда узел раскроют."
               },
@@ -198,6 +196,10 @@
                 "accepts": "The raw request as it arrived from the public-page channel.",
                 "returns": "payload — the request, untouched."
               },
+              "run": "sequential",
+              "estDurationMs": 60000,
+              "kind": "input",
+              "ioType": "public-page",
               "in": {
                 "state": "prohibit",
                 "connections": null
@@ -207,17 +209,13 @@
                 "connections": [
                   "transform"
                 ]
-              },
-              "run": "sequential",
-              "estDurationMs": 60000
+              }
             },
             {
               "cuid": "cmruqdpjm51ehd18d5a1f37ce38e1c",
-              "kind": "input",
               "name": "Telegram Bot input",
               "description": "A message sent to the automation own Telegram bot.",
               "state": "hidden",
-              "ioType": "telegram-bot",
               "info": {
                 "aiSummary": "Заготовка канала «telegram-bot»: объявлена и скрыта, функция появится, когда узел раскроют."
               },
@@ -241,6 +239,10 @@
                 "accepts": "The raw request as it arrived from the telegram-bot channel.",
                 "returns": "payload — the request, untouched."
               },
+              "run": "sequential",
+              "estDurationMs": 60000,
+              "kind": "input",
+              "ioType": "telegram-bot",
               "in": {
                 "state": "prohibit",
                 "connections": null
@@ -250,17 +252,13 @@
                 "connections": [
                   "transform"
                 ]
-              },
-              "run": "sequential",
-              "estDurationMs": 60000
+              }
             },
             {
               "cuid": "cmruqdpjm51ehe2f58b91a619fdc71",
-              "kind": "input",
               "name": "User Telegram Chat input",
               "description": "A message read from the user own Telegram chat.",
               "state": "hidden",
-              "ioType": "user-telegram-chat",
               "info": {
                 "aiSummary": "Заготовка канала «user-telegram-chat»: объявлена и скрыта, функция появится, когда узел раскроют."
               },
@@ -284,6 +282,10 @@
                 "accepts": "The raw request as it arrived from the user-telegram-chat channel.",
                 "returns": "payload — the request, untouched."
               },
+              "run": "sequential",
+              "estDurationMs": 60000,
+              "kind": "input",
+              "ioType": "user-telegram-chat",
               "in": {
                 "state": "prohibit",
                 "connections": null
@@ -293,27 +295,13 @@
                 "connections": [
                   "transform"
                 ]
-              },
-              "run": "sequential",
-              "estDurationMs": 60000
+              }
             },
             {
               "cuid": "cemailinp7k2vq4x9",
               "name": "Email input",
               "description": "Вход письма, доставленного на адрес приёма автоматизации.",
               "state": "hidden",
-              "kind": "input",
-              "ioType": "email",
-              "in": {
-                "state": "prohibit",
-                "connections": null
-              },
-              "out": {
-                "state": "required",
-                "connections": [
-                  "transform"
-                ]
-              },
               "info": {
                 "aiSummary": "Дверь канала email: письмо, пришедшее на адрес приёма. Провайдер толкает его в дверь api/inbound-email — опроса ящика нет (закон «вход только push»)."
               },
@@ -343,7 +331,19 @@
                 "returns": "Названный вход для середины."
               },
               "run": "sequential",
-              "estDurationMs": 60000
+              "estDurationMs": 60000,
+              "kind": "input",
+              "ioType": "email",
+              "in": {
+                "state": "prohibit",
+                "connections": null
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform"
+                ]
+              }
             }
           ]
         },
@@ -373,11 +373,9 @@
           "nodes": [
             {
               "cuid": "cmruca7ra4n1jsdcdee0feb026f3a4",
-              "kind": "transform",
               "name": "Logic",
               "description": "The middle — the deterministic work that turns the input into the output.",
               "state": "visible",
-              "ioType": null,
               "info": {
                 "aiSummary": "Берёт живую цену акции по тикеру из Yahoo Finance (без ключа, без AI); если цены нет — прогон падает и ничего не записывается."
               },
@@ -396,6 +394,10 @@
                 "accepts": "payload — whatever the input node produced.",
                 "returns": "result — the value the output node delivers."
               },
+              "run": "sequential",
+              "estDurationMs": 60000,
+              "kind": "transform",
+              "ioType": null,
               "in": {
                 "state": "required",
                 "connections": [
@@ -411,17 +413,13 @@
                   "condition-success",
                   "condition-failure"
                 ]
-              },
-              "run": "sequential",
-              "estDurationMs": 60000
+              }
             },
             {
               "cuid": "cmruddnrpho70e8af12589d1deaa",
-              "kind": "condition-success",
               "name": "If success",
               "description": "The branch taken when the middle produced a result — the flow continues to the output.",
               "state": "visible",
-              "ioType": null,
               "info": {
                 "aiSummary": "Ветка успеха: пропускает результат к записи. Настоящий гейт — бросок в узле цены, поэтому сюда доходит только успешный поток."
               },
@@ -434,6 +432,10 @@
                 "accepts": "result — the value produced by the middle of the flow.",
                 "returns": "result — the same value, when the branch holds."
               },
+              "run": "sequential",
+              "estDurationMs": 60000,
+              "kind": "condition-success",
+              "ioType": null,
               "in": {
                 "state": "required",
                 "connections": [
@@ -447,17 +449,13 @@
                   "output",
                   "output-connector"
                 ]
-              },
-              "run": "sequential",
-              "estDurationMs": 60000
+              }
             },
             {
               "cuid": "cmruqdpjn51ehmdd7904ad3a6abaf6",
-              "kind": "condition-failure",
               "name": "If failure",
               "description": "The branch taken when the middle could not produce a result — the flow ends here.",
               "state": "visible",
-              "ioType": null,
               "info": {
                 "aiSummary": "Ветка отказа: визуальный тупик. Реальный отказ уже остановил прогон в узле цены, поэтому функция ничего не делает."
               },
@@ -470,6 +468,10 @@
                 "accepts": "The failure reported by the middle of the flow.",
                 "returns": "Nothing — a failure branch ends the flow."
               },
+              "run": "sequential",
+              "estDurationMs": 60000,
+              "kind": "condition-failure",
+              "ioType": null,
               "in": {
                 "state": "required",
                 "connections": [
@@ -479,9 +481,7 @@
               "out": {
                 "state": "prohibit",
                 "connections": null
-              },
-              "run": "sequential",
-              "estDurationMs": 60000
+              }
             }
           ]
         },
@@ -505,11 +505,9 @@
           "nodes": [
             {
               "cuid": "cmruca7ra4n1jt639afc902fa70f5b",
-              "kind": "output",
               "name": "Output",
               "description": "Where the automation delivers its result — a reply, a saved record, or a published page.",
               "state": "visible",
-              "ioType": "dashboard",
               "info": {
                 "aiSummary": "Пишет строку (дата, компания, тикер, цена) в таблицу history дашборда автоматизации."
               },
@@ -522,6 +520,10 @@
                 "accepts": "result — the value produced by the middle of the flow.",
                 "returns": "Nothing — an output node ends the flow."
               },
+              "run": "sequential",
+              "estDurationMs": 60000,
+              "kind": "output",
+              "ioType": "dashboard",
               "in": {
                 "state": "required",
                 "connections": [
@@ -531,17 +533,13 @@
               "out": {
                 "state": "prohibit",
                 "connections": null
-              },
-              "run": "sequential",
-              "estDurationMs": 60000
+              }
             },
             {
               "cuid": "cmruewqs71sbem314de6797f24f39c",
-              "kind": "output-connector",
               "name": "Outgoing connector",
               "description": "Hands the result over to a node of ANOTHER automation — the door out into a group.",
               "state": "hidden",
-              "ioType": "custom",
               "info": {
                 "aiSummary": "Передаёт результат соседней автоматизации; в одиночной автоматизации стоит скрытым."
               },
@@ -554,6 +552,10 @@
                 "accepts": "result — the value carried by the success branch.",
                 "returns": "The same value, handed to another automation."
               },
+              "run": "sequential",
+              "estDurationMs": 60000,
+              "kind": "output-connector",
+              "ioType": "custom",
               "in": {
                 "state": "required",
                 "connections": [
@@ -565,17 +567,13 @@
                 "connections": [
                   "external"
                 ]
-              },
-              "run": "sequential",
-              "estDurationMs": 60000
+              }
             },
             {
               "cuid": "cmruqdpjm51ehf50515a4931dd04d7",
-              "kind": "output",
               "name": "Public Page output",
               "description": "A page on the automation own website.",
               "state": "hidden",
-              "ioType": "public-page",
               "info": {
                 "aiSummary": "Заготовка канала «public-page»: объявлена и скрыта, функция появится, когда узел раскроют."
               },
@@ -588,6 +586,10 @@
                 "accepts": "result — the value carried by the success branch.",
                 "returns": "Nothing — an output node ends the flow."
               },
+              "run": "sequential",
+              "estDurationMs": 60000,
+              "kind": "output",
+              "ioType": "public-page",
               "in": {
                 "state": "required",
                 "connections": [
@@ -597,17 +599,13 @@
               "out": {
                 "state": "prohibit",
                 "connections": null
-              },
-              "run": "sequential",
-              "estDurationMs": 60000
+              }
             },
             {
               "cuid": "cmruqdpjm51ehgbc4cd8289c717fde",
-              "kind": "output",
               "name": "Calendar output",
               "description": "An event on the automation calendar.",
               "state": "hidden",
-              "ioType": "calendar",
               "info": {
                 "aiSummary": "Заготовка канала «calendar»: объявлена и скрыта, функция появится, когда узел раскроют."
               },
@@ -620,6 +618,10 @@
                 "accepts": "result — the value carried by the success branch.",
                 "returns": "Nothing — an output node ends the flow."
               },
+              "run": "sequential",
+              "estDurationMs": 60000,
+              "kind": "output",
+              "ioType": "calendar",
               "in": {
                 "state": "required",
                 "connections": [
@@ -629,17 +631,13 @@
               "out": {
                 "state": "prohibit",
                 "connections": null
-              },
-              "run": "sequential",
-              "estDurationMs": 60000
+              }
             },
             {
               "cuid": "cmruqdpjm51ehh558398f6e19c27c3",
-              "kind": "output",
               "name": "Analytics output",
               "description": "A chart in the automation analytics.",
               "state": "hidden",
-              "ioType": "analytics",
               "info": {
                 "aiSummary": "Заготовка канала «analytics»: объявлена и скрыта, функция появится, когда узел раскроют."
               },
@@ -652,6 +650,10 @@
                 "accepts": "result — the value carried by the success branch.",
                 "returns": "Nothing — an output node ends the flow."
               },
+              "run": "sequential",
+              "estDurationMs": 60000,
+              "kind": "output",
+              "ioType": "analytics",
               "in": {
                 "state": "required",
                 "connections": [
@@ -661,17 +663,13 @@
               "out": {
                 "state": "prohibit",
                 "connections": null
-              },
-              "run": "sequential",
-              "estDurationMs": 60000
+              }
             },
             {
               "cuid": "cmruqdpjm51ehi292f9cb0fc27987c",
-              "kind": "output",
               "name": "Map output",
               "description": "A marker on the automation map.",
               "state": "hidden",
-              "ioType": "map",
               "info": {
                 "aiSummary": "Заготовка канала «map»: объявлена и скрыта, функция появится, когда узел раскроют."
               },
@@ -684,6 +682,10 @@
                 "accepts": "result — the value carried by the success branch.",
                 "returns": "Nothing — an output node ends the flow."
               },
+              "run": "sequential",
+              "estDurationMs": 60000,
+              "kind": "output",
+              "ioType": "map",
               "in": {
                 "state": "required",
                 "connections": [
@@ -693,17 +695,13 @@
               "out": {
                 "state": "prohibit",
                 "connections": null
-              },
-              "run": "sequential",
-              "estDurationMs": 60000
+              }
             },
             {
               "cuid": "cmruqdpjn51ehjeb00a0bb1dcde063",
-              "kind": "output",
               "name": "Email output",
               "description": "An email the automation sends out.",
               "state": "hidden",
-              "ioType": "email",
               "info": {
                 "aiSummary": "Заготовка канала «email»: объявлена и скрыта, функция появится, когда узел раскроют."
               },
@@ -727,6 +725,10 @@
                 "accepts": "result — the value carried by the success branch.",
                 "returns": "Nothing — an output node ends the flow."
               },
+              "run": "sequential",
+              "estDurationMs": 60000,
+              "kind": "output",
+              "ioType": "email",
               "in": {
                 "state": "required",
                 "connections": [
@@ -736,17 +738,13 @@
               "out": {
                 "state": "prohibit",
                 "connections": null
-              },
-              "run": "sequential",
-              "estDurationMs": 60000
+              }
             },
             {
               "cuid": "cmruqdpjn51ehk0971dc21b875fe16",
-              "kind": "output",
               "name": "Telegram Bot output",
               "description": "A message sent through the automation own Telegram bot.",
               "state": "hidden",
-              "ioType": "telegram-bot",
               "info": {
                 "aiSummary": "Заготовка канала «telegram-bot»: объявлена и скрыта, функция появится, когда узел раскроют."
               },
@@ -770,6 +768,10 @@
                 "accepts": "result — the value carried by the success branch.",
                 "returns": "Nothing — an output node ends the flow."
               },
+              "run": "sequential",
+              "estDurationMs": 60000,
+              "kind": "output",
+              "ioType": "telegram-bot",
               "in": {
                 "state": "required",
                 "connections": [
@@ -779,17 +781,13 @@
               "out": {
                 "state": "prohibit",
                 "connections": null
-              },
-              "run": "sequential",
-              "estDurationMs": 60000
+              }
             },
             {
               "cuid": "cmruqdpjn51ehl1bc14d0bb0ca3b9b",
-              "kind": "output",
               "name": "User Telegram Chat output",
               "description": "A message written into the user own Telegram chat.",
               "state": "hidden",
-              "ioType": "user-telegram-chat",
               "info": {
                 "aiSummary": "Заготовка канала «user-telegram-chat»: объявлена и скрыта, функция появится, когда узел раскроют."
               },
@@ -813,6 +811,10 @@
                 "accepts": "result — the value carried by the success branch.",
                 "returns": "Nothing — an output node ends the flow."
               },
+              "run": "sequential",
+              "estDurationMs": 60000,
+              "kind": "output",
+              "ioType": "user-telegram-chat",
               "in": {
                 "state": "required",
                 "connections": [
@@ -822,27 +824,13 @@
               "out": {
                 "state": "prohibit",
                 "connections": null
-              },
-              "run": "sequential",
-              "estDurationMs": 60000
+              }
             },
             {
               "cuid": "cdelivervih3efrq9",
               "name": "Vector memory output",
               "description": "Выход в агентную векторную память (LightRAG).",
               "state": "hidden",
-              "kind": "output",
-              "ioType": "vector-memory",
-              "in": {
-                "state": "required",
-                "connections": [
-                  "condition-success"
-                ]
-              },
-              "out": {
-                "state": "prohibit",
-                "connections": null
-              },
               "info": {
                 "aiSummary": "Дверь канала векторной памяти: факт, запоминаемый в агентной памяти LightRAG. Узел скрыт — канал объявлен, но пока не настроен."
               },
@@ -856,15 +844,9 @@
                 "returns": "Запись в векторной памяти."
               },
               "run": "sequential",
-              "estDurationMs": 60000
-            },
-            {
-              "cuid": "cdeliverdndd14qyz",
-              "name": "Database output",
-              "description": "Выход в локальную базу данных автоматизации.",
-              "state": "hidden",
+              "estDurationMs": 60000,
               "kind": "output",
-              "ioType": "database",
+              "ioType": "vector-memory",
               "in": {
                 "state": "required",
                 "connections": [
@@ -874,7 +856,13 @@
               "out": {
                 "state": "prohibit",
                 "connections": null
-              },
+              }
+            },
+            {
+              "cuid": "cdeliverdndd14qyz",
+              "name": "Database output",
+              "description": "Выход в локальную базу данных автоматизации.",
+              "state": "hidden",
               "info": {
                 "aiSummary": "Дверь канала локальной базы: запись в собственной базе автоматизации. Узел скрыт — канал объявлен, но пока не настроен."
               },
@@ -888,15 +876,9 @@
                 "returns": "Строка в локальной базе."
               },
               "run": "sequential",
-              "estDurationMs": 60000
-            },
-            {
-              "cuid": "cdelivers3oz5tpd6",
-              "name": "Storage output",
-              "description": "Выход в локальное хранилище файлов автоматизации.",
-              "state": "hidden",
+              "estDurationMs": 60000,
               "kind": "output",
-              "ioType": "storage",
+              "ioType": "database",
               "in": {
                 "state": "required",
                 "connections": [
@@ -906,7 +888,13 @@
               "out": {
                 "state": "prohibit",
                 "connections": null
-              },
+              }
+            },
+            {
+              "cuid": "cdelivers3oz5tpd6",
+              "name": "Storage output",
+              "description": "Выход в локальное хранилище файлов автоматизации.",
+              "state": "hidden",
               "info": {
                 "aiSummary": "Дверь канала локального хранилища: файл, сохранённый рядом с автоматизацией. Узел скрыт — канал объявлен, но пока не настроен."
               },
@@ -920,7 +908,19 @@
                 "returns": "Файл в локальном хранилище."
               },
               "run": "sequential",
-              "estDurationMs": 60000
+              "estDurationMs": 60000,
+              "kind": "output",
+              "ioType": "storage",
+              "in": {
+                "state": "required",
+                "connections": [
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "prohibit",
+                "connections": null
+              }
             }
           ]
         }
