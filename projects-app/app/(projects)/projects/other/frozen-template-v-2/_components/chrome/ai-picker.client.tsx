@@ -44,8 +44,10 @@ export default function AiPicker({
   const [choice, setChoice] = useState({ provider, model });
   const [models, setModels] = useState<ModelOption[]>([]);
   const [modelsError, setModelsError] = useState(false);
-  const [present, setPresent] = useState<boolean | null>(null); // задан ли ключ ВЫБРАННОГО провайдера
-  const [asking, setAsking] = useState(false);
+  // Статус ключа КАЖДОГО провайдера, не только выбранного: у обоих своя строка «уже задан / Подключить»,
+  // потому что владелец вправе завести оба ключа (правка владельца 2026-07-23).
+  const [present, setPresent] = useState<Record<string, boolean | null>>({});
+  const [asking, setAsking] = useState<ProviderKey | null>(null);
 
   const current = providerOf(choice.provider);
   const apiBase = () => (typeof location !== "undefined" ? location.pathname.replace(/\/+$/, "") + "/api" : "/api");
@@ -69,21 +71,23 @@ export default function AiPicker({
     return () => { alive = false; };
   }, [choice.provider]);
 
-  // СТАТУС КЛЮЧА выбранного провайдера — живая правда из двери `api/env` (присутствие, не значение).
+  // СТАТУС КЛЮЧЕЙ ОБОИХ провайдеров — живая правда из двери `api/env` (присутствие, не значение). Один
+  // запрос на все ключи провайдеров; статус каждого рисуется своей строкой.
+  const providerEnvKeys = PROVIDERS.map((p) => p.envKey);
   useEffect(() => {
     let alive = true;
-    setPresent(null);
+    setPresent({});
     void (async () => {
       try {
-        const r = await fetch(`${apiBase()}/env?keys=${encodeURIComponent(current.envKey)}`, { cache: "no-store" });
+        const r = await fetch(`${apiBase()}/env?keys=${encodeURIComponent(providerEnvKeys.join(","))}`, { cache: "no-store" });
         const d = (await r.json().catch(() => null)) as { present?: Record<string, boolean> } | null;
-        if (alive) setPresent(Boolean(d?.present?.[current.envKey]));
+        if (alive) setPresent(d?.present ?? {});
       } catch {
-        if (alive) setPresent(false);
+        if (alive) setPresent(Object.fromEntries(providerEnvKeys.map((k) => [k, false])));
       }
     })();
     return () => { alive = false; };
-  }, [current.envKey]);
+  }, [providerEnvKeys.join(",")]);
 
   async function save(next: { provider: ProviderKey; model: string }) {
     setChoice(next); // сначала показываем — ожидание записи не должно выглядеть как «не нажалось»
@@ -105,8 +109,8 @@ export default function AiPicker({
     }
   }
 
-  const providerKey = keysOf([current.envKey]);
   const modelKnown = models.some((m) => m.id === choice.model);
+  const askingProvider = asking ? providerOf(asking) : null;
 
   return (
     <section data-settings="ai" className="space-y-3 rounded-md border p-3">
@@ -149,38 +153,50 @@ export default function AiPicker({
       </label>
       {modelsError ? <p className="text-xs text-amber-600 dark:text-amber-400">{L.aiModelsUnavailable}</p> : null}
 
-      {/* КЛЮЧ ВЫБРАННОГО ПРОВАЙДЕРА — статус и ввод здесь же, по выбору. */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-2">
-        <span className="text-xs">
-          <span className="text-muted-foreground">{current.label}</span>{" "}
-          {present === null ? (
-            <span className="text-muted-foreground">…</span>
-          ) : present ? (
-            <span className="text-emerald-600 dark:text-emerald-400">{K.alreadySet}</span>
-          ) : (
-            <span className="text-muted-foreground">—</span>
-          )}
-        </span>
-        <button
-          type="button"
-          onClick={() => setAsking(true)}
-          className="rounded-md border px-2 py-1 text-xs hover:bg-accent"
-        >
-          {present ? K.change : K.connect.replace("{k}", current.label)}
-        </button>
+      {/* КЛЮЧИ ОБОИХ ПРОВАЙДЕРОВ — по строке на каждого, статус и ввод здесь же. Владелец видит, что
+          у одного ключ задан (зелёное «уже задан»), а другой можно подключить. */}
+      <div className="space-y-1 border-t pt-2">
+        {PROVIDERS.map((p) => {
+          const set = present[p.envKey];
+          return (
+            <div key={p.key} className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs">
+                <span className="text-muted-foreground">{p.label}</span>{" "}
+                {set === undefined ? (
+                  <span className="text-muted-foreground">…</span>
+                ) : set ? (
+                  <span className="text-emerald-600 dark:text-emerald-400">{K.alreadySet}</span>
+                ) : (
+                  <span className="text-muted-foreground">—</span>
+                )}
+              </span>
+              <button
+                type="button"
+                onClick={() => setAsking(p.key)}
+                className="rounded-md border px-2 py-1 text-xs hover:bg-accent"
+              >
+                {set ? K.change : K.connect.replace("{k}", p.label)}
+              </button>
+            </div>
+          );
+        })}
       </div>
 
       {failed ? <p className="text-xs text-rose-700 dark:text-rose-400">{L.aiSaveFailed}</p> : null}
       <p className="text-xs text-muted-foreground">{L.aiKeyHint}</p>
 
       <KeysModal
-        open={asking}
-        channelName={current.label}
-        keys={providerKey}
-        present={{ [current.envKey]: Boolean(present) }}
+        open={Boolean(askingProvider)}
+        channelName={askingProvider?.label ?? ""}
+        keys={askingProvider ? keysOf([askingProvider.envKey]) : []}
+        present={askingProvider ? { [askingProvider.envKey]: Boolean(present[askingProvider.envKey]) } : {}}
         lang={lang}
-        onCancel={() => setAsking(false)}
-        onSaved={() => { setPresent(true); setAsking(false); router.refresh(); }}
+        onCancel={() => setAsking(null)}
+        onSaved={() => {
+          if (askingProvider) setPresent((pr) => ({ ...pr, [askingProvider.envKey]: true }));
+          setAsking(null);
+          router.refresh();
+        }}
       />
     </section>
   );
