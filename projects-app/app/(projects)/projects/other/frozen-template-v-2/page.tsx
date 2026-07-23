@@ -4,6 +4,8 @@ import AutomationComponents from "./_components";
 import NotBuiltPage from "./_components/shared/not-built-page";
 import { pick } from "./_components/shared/localized";
 import { allNodes } from "./_data/automation.schema";
+import { cronOf } from "./_components/cron/schedule";
+import TopPulseBar from "./_components/cron/public/components/top-pulse-bar.client";
 
 // Страница автоматизации. Паттерн v1 (test-stream-frozen-starter/page.tsx): ДВЕ композиции на одном
 // маршруте — по умолчанию КОКПИТ владельца (surface="admin", полоса-шапка), а `?view=public` рисует
@@ -52,6 +54,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
   // обещать работу, которой ещё нет, — вместо страницы отдаём один честный тост с тем, что делать.
   // Кокпит владельца открыт всегда: именно из него автоматизацию и достраивают.
   const built = passport.lifecycle === "real-project";
+  // ТАКТ КРОНА для верхней полосы-пульса — из ядра, `null` если раздела нет или он выключен (тогда
+  // полоса не рисуется). Читается здесь, на единственной точке чтения платформы, и уходит пропсом.
+  const cron = cronOf(components);
   if (surface === "public" && !built) {
     return (
       <main data-zone-column className="mx-auto w-full max-w-4xl px-4">
@@ -65,6 +70,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
   // с мостом 32px. Атрибут, а не класс: раскладка страницы остаётся в её собственном коде.
   return (
     <main data-zone-column className="mx-auto w-full max-w-4xl px-4 py-6">
+      {/* ФИКСИРОВАННЫЙ ВВЕРХУ ПУЛЬС такта (правка владельца 2026-07-23): «слайдер» крона живёт наверху
+          страницы, на 1px ниже хедера, всегда видимый. Ничего не рисует, если крона нет/выключен. */}
+      {cron ? <TopPulseBar everyMinutes={cron.everyMinutes} enabled={cron.enabled} /> : null}
       <AutomationChrome surface={surface} passport={passport} lang={lang} tabs={tabs} envKeys={envKeys} publicHref="?view=public" built={built} />
       <AutomationComponents surface={surface} lang={lang} />
     </main>

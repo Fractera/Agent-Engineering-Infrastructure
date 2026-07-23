@@ -4,21 +4,18 @@ import { useEffect, useState } from "react";
 import { secondsLeft } from "../../schedule";
 import { cronStrings } from "../../i18n";
 
-// ПОЛОСА-ПУЛЬС — перенос идиомы v1 (`_shared/components/cron-progress-bar.client.tsx`) внутрь папки
-// (закон 0). Оранжевая полоса убывает слева направо за ОДИН период расписания и сбрасывается: это
-// живой пульс, скорость которого И ЕСТЬ период этой автоматизации.
+// ОБРАТНЫЙ ОТСЧЁТ РАЗДЕЛА — В САМОЙ автоматизации такт показан ОБЫЧНЫМ ЧИСЛОМ, а не полосой-«лазером»
+// (правка владельца 2026-07-23). «Лазер» — живая полоса — переехал наверх страницы фиксированным
+// индикатором (`top-pulse-bar.client.tsx`); дублировать его здесь незачем, в разделе нужен точный
+// остаток секунд цифрой.
 //
-// ПОКАЗЫВАЕТСЯ ТОЛЬКО ПРИ ВКЛЮЧЁННОМ РАСПИСАНИИ — правило владельца из v1: выключенный крон не должен
-// изображать работу.
+// ПОКАЗЫВАЕТСЯ ТОЛЬКО ПРИ ВКЛЮЧЁННОМ РАСПИСАНИИ — правило владельца из v1: выключенный крон не изображает
+// работу. Отсчёт выровнен по стенным часам (`secondsLeft`), а не от загрузки страницы: раздел, витрина и
+// верхняя полоса показывают ОДИН И ТОТ ЖЕ момент следующей проверки.
 //
-// Отсчёт выровнен по стенным часам (`secondsLeft`), а не от момента загрузки страницы: полоса на
-// витрине и полоса в кокпите обязаны показывать ОДИН И ТОТ ЖЕ момент следующей проверки — иначе
-// владелец видит два разных «скоро» для одного и того же события.
-//
-// ЧТО ЭТО ЗНАЧИТ (читать перед правкой, тот же примечательный абзац, что в v1): полоса изображает
-// ИСХОДЯЩУЮ, плановую сторону — напомнить о наступившем, опросить календарь, сделать периодическую
-// проверку. О ВХОДЯЩИХ событиях она не говорит ничего: те приходят мгновенно через push-канал и к
-// этому таймеру отношения не имеют.
+// ЧТО ЭТО ЗНАЧИТ: число считает ИСХОДЯЩУЮ, плановую сторону — напомнить о наступившем, опросить
+// календарь. О ВХОДЯЩИХ событиях оно молчит: те приходят мгновенно push-каналом, к таймеру отношения
+// не имеют.
 export default function PulseBar({ everyMinutes, enabled, lang }: { everyMinutes: number; enabled: boolean; lang: string }) {
   const L = cronStrings(lang);
   const [left, setLeft] = useState(() => secondsLeft(everyMinutes));
@@ -33,17 +30,14 @@ export default function PulseBar({ everyMinutes, enabled, lang }: { everyMinutes
 
   if (!enabled) return null;
 
-  const period = Math.max(1, everyMinutes) * 60;
-  const percent = Math.round((left / period) * 100);
-
+  // Обычное число обратного отсчёта: `nextIn` = «следующая проверка через {n} с». Число выделено
+  // моноширинным tabular-nums, чтобы ширина не прыгала на каждой секунде.
+  const [before, after] = L.nextIn.split("{n}");
   return (
-    <div data-cron="pulse" className="space-y-1">
-      <div className="h-0.5 w-full overflow-hidden rounded-full bg-muted">
-        <div className="h-full bg-orange-500 transition-[width] duration-1000 ease-linear" style={{ width: `${percent}%` }} />
-      </div>
-      <p className="text-xs text-muted-foreground">
-        {L.every.replace("{n}", String(everyMinutes))} · {L.nextIn.replace("{n}", String(left))}
-      </p>
-    </div>
+    <p data-cron="countdown" className="text-xs text-muted-foreground">
+      {L.every.replace("{n}", String(everyMinutes))} · {before}
+      <span className="font-mono tabular-nums text-foreground">{left}</span>
+      {after}
+    </p>
   );
 }
