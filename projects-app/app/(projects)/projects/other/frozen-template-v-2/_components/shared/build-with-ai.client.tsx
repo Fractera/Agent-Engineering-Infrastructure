@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { sendStrings } from "./build-with-ai-i18n";
 import VoiceInput from "./voice-input.client";
 
@@ -38,6 +39,7 @@ export default function BuildWithAi({
   lang: string;
 }) {
   const L = sendStrings(lang);
+  const router = useRouter();
   const [text, setText] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "saved" | "failed">("idle");
   const areaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -56,6 +58,10 @@ export default function BuildWithAi({
       if (!r.ok) throw new Error(String(r.status));
       setStatus("saved");
       setText("");
+      // Задание записано в ядро (status → in-development) — просим Next перечитать серверные данные, чтобы
+      // полоса-уведомление пересчитала поводы БЕЗ перезагрузки (так же, как это делает разморозка узла на
+      // диаграмме). Клиентское состояние («сохранено») переживает refresh.
+      router.refresh();
     } catch {
       setStatus("failed");
     }

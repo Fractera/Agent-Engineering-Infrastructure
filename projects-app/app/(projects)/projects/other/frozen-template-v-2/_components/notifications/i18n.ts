@@ -1,37 +1,34 @@
 // СЛОВАРЬ ПОЛОСЫ-УВЕДОМЛЕНИЯ — десять языков (закон 4г), англ. фолбэк. Живёт в папке сущности (закон 0).
 //
-// ПЕРЕНОС ПЕРЕВОДОВ ИЗ v1 (правило шага 297, память feedback-reuse-v1-translation-library): готовые фразы
-// НЕ переводим заново, а копируем из библиотеки v1 дословно.
-//   `warning` — из `_shared/warning-i18n.ts` (`WARNING_I18N.blockTitle`), дословно;
-//   `unbuilt` — ведущая часть `_shared/automation-state-pill-i18n.ts` (`inDev*`, «В разработке — …»), дословно.
-// Заново написаны только три фразы, которых в v1 нет: `title` (с числом), `newCase`, `details`.
-// Тексты предупреждений и кейсов (авторская проза) НЕ переводятся — показываются как есть.
+// 🔒 НИ ОДНОЙ ВЫДУМАННОЙ ФРАЗЫ (требование владельца, шаг 297): каждая строка СКОПИРОВАНА ДОСЛОВНО из уже
+// существующего словаря v1 — переиспользуем мультиязычность, а не сочиняем новые переводы.
+//   warning — `_shared/warning-i18n.ts` (`WARNING_I18N.blockTitle`);
+//   unbuilt — `_shared/automation-state-pill-i18n.ts` (ведущая часть `inDev*`, «В разработке — …»);
+//   details — `_shared/automation-menu-i18n.ts` (`howItWorksDetails`);
+//   launch  — `_shared/wave-i18n.ts` (`bannerLaunch`) — кнопка запуска разработки, как в оригинале v1.
+// Заголовка-предложения и слова «новый кейс» здесь НЕТ намеренно: их роль берут счётчики и цветные иконки,
+// поэтому и переводить нечего. Тексты предупреждений и кейсов (проза автора) не переводятся.
+// Тело модалки-заглушки берётся из `chrome/i18n.ts` (`placeholderNote`) — тоже готовый перевод.
 export type NotificationStrings = {
-  title: string; // "{n}" — сколько объектов требуют внимания
-  details: string; // раскрыть/подробнее
-  warning: string; // метка категории «предупреждение» (v1 blockTitle)
-  unbuilt: string; // метка категории «не построено» (v1 state-pill)
-  newCase: string; // метка категории «новый кейс»
+  warning: string; // метка категории «предупреждение»
+  unbuilt: string; // метка категории «не построено»
+  details: string; // раскрыть список
+  launch: string; // кнопка «Запустить разработку»
 };
 
 const I18N: Record<string, NotificationStrings> = {
-  en: { title: "{n} objects need attention", details: "Details", warning: "Blocker", unbuilt: "In development", newCase: "New use case" },
-  ru: { title: "объектов требуют внимания: {n}", details: "Подробнее", warning: "Препятствие", unbuilt: "В разработке", newCase: "Новый кейс" },
-  es: { title: "{n} objetos requieren atención", details: "Detalles", warning: "Obstáculo", unbuilt: "En desarrollo", newCase: "Nuevo caso" },
-  fr: { title: "{n} objets nécessitent votre attention", details: "Détails", warning: "Obstacle", unbuilt: "En développement", newCase: "Nouveau cas" },
-  it: { title: "{n} oggetti richiedono attenzione", details: "Dettagli", warning: "Ostacolo", unbuilt: "In sviluppo", newCase: "Nuovo caso" },
-  de: { title: "{n} Objekte erfordern Aufmerksamkeit", details: "Details", warning: "Hindernis", unbuilt: "In Entwicklung", newCase: "Neuer Fall" },
-  pt: { title: "{n} objetos requerem atenção", details: "Detalhes", warning: "Obstáculo", unbuilt: "Em desenvolvimento", newCase: "Novo caso" },
-  pl: { title: "obiektów wymaga uwagi: {n}", details: "Szczegóły", warning: "Przeszkoda", unbuilt: "W trakcie tworzenia", newCase: "Nowy przypadek" },
-  tr: { title: "{n} nesne dikkat gerektiriyor", details: "Ayrıntılar", warning: "Engel", unbuilt: "Geliştirme aşamasında", newCase: "Yeni senaryo" },
-  nl: { title: "{n} objecten vragen aandacht", details: "Details", warning: "Obstakel", unbuilt: "In ontwikkeling", newCase: "Nieuwe use case" },
+  en: { warning: "Blocker", unbuilt: "In development", details: "Details", launch: "Launch development" },
+  ru: { warning: "Препятствие", unbuilt: "В разработке", details: "Подробнее", launch: "Запустить разработку" },
+  es: { warning: "Obstáculo", unbuilt: "En desarrollo", details: "Detalles", launch: "Lanzar el desarrollo" },
+  fr: { warning: "Obstacle", unbuilt: "En développement", details: "Détails", launch: "Lancer le développement" },
+  it: { warning: "Ostacolo", unbuilt: "In sviluppo", details: "Dettagli", launch: "Avvia lo sviluppo" },
+  de: { warning: "Hindernis", unbuilt: "In Entwicklung", details: "Details", launch: "Entwicklung starten" },
+  pt: { warning: "Obstáculo", unbuilt: "Em desenvolvimento", details: "Detalhes", launch: "Lançar o desenvolvimento" },
+  pl: { warning: "Przeszkoda", unbuilt: "W trakcie tworzenia", details: "Szczegóły", launch: "Uruchom rozwój" },
+  tr: { warning: "Engel", unbuilt: "Geliştirme aşamasında", details: "Ayrıntılar", launch: "Geliştirmeyi başlat" },
+  nl: { warning: "Obstakel", unbuilt: "In ontwikkeling", details: "Details", launch: "Ontwikkeling starten" },
 };
 
 export function notificationStrings(lang: string): NotificationStrings {
   return I18N[lang.toLowerCase().slice(0, 2)] ?? I18N.en;
-}
-
-/** Подставить число в строку с «{n}». */
-export function fill(text: string, n: number): string {
-  return text.replace("{n}", String(n));
 }
