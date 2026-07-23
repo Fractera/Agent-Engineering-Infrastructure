@@ -104,9 +104,21 @@ export async function GET(req: NextRequest) {
 
   // a node also carries the instruction of ITS KIND — the law it is developed by
   const kind = address.object === "node" ? (found.target.kind as string) : null;
+
+  // A TAB MAY HAVE A LAW OF ITS OWN, and it is DERIVED from the tab's name, never declared: the object
+  // keeps naming the general `tab` law, and `tab.<name>.md` rides along when that file exists. Exactly
+  // the same shape as a node and its kind above — and for the same reason. A second field on the tab
+  // would be a second source of truth about which law governs it, and the two would drift.
+  //
+  // Why it matters: an instruction no door attaches is an orphan. The agent reads the core through this
+  // door; a law that lives only in a file nobody serves is a law the agent never sees.
+  const tabName = address.object === "tab" ? address.name : address.object === "entity" ? address.tab : null;
+  const tabInstruction = tabName ? await readInstruction(`tab.${tabName}` as SystemInstructionName) : "";
+
   return NextResponse.json({
     systemInstruction: await readInstruction(instructionOf(address)),
     ...(kind ? { kindInstruction: await readInstruction(`kind.${kind}` as SystemInstructionName) } : {}),
+    ...(tabInstruction ? { tabInstruction } : {}), // не написана — поля нет вовсе, а не пустая строка
     ...found.target,
   });
 }
