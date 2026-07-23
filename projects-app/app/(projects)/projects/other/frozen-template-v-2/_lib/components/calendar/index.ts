@@ -7,8 +7,19 @@
 //   date  "YYYY-MM-DD" — без неё запись не встаёт в сетку и отбрасывается;
 //   time  "HH:MM"      — место в дневном планере, по умолчанию полночь;
 //   title              — что показать в записи;
-//   type               — ключ вида записи (в v1 их ровно два: event и reminder).
-export type CalRow = { id: string; date: string; time: string; title: string; type: string };
+//   type               — ключ вида записи (в v1 их ровно два: event и reminder);
+//   notifyBefore       — за сколько минут предупредить; 0 или нет поля = ровно в момент (шаг 292);
+//   integrations       — что уйдёт во внешние каналы, по объекту на подключённый тип (шаг 292).
+export type RowIntegration = { active: boolean } & Record<string, unknown>;
+export type CalRow = {
+  id: string;
+  date: string;
+  time: string;
+  title: string;
+  type: string;
+  notifyBefore: number;
+  integrations: Record<string, RowIntegration>;
+};
 
 /** Дата в том виде, в каком она лежит в строке: "YYYY-MM-DD". Ключ, по которому сходятся обе колонки. */
 export function ymd(y: number, m: number, d: number): string {
@@ -27,14 +38,46 @@ export function slotLabel(min: number): string {
 /** Строки двери `api/rows` → записи календаря. Строка без даты встать в сетку не может — отбрасываем. */
 export function toCalRows(raw: Record<string, unknown>[]): CalRow[] {
   return raw
-    .map((r) => ({
-      id: String(r.id ?? ""),
-      date: String(r.date ?? ""),
-      time: String(r.time ?? "00:00"),
-      title: String(r.title ?? ""),
-      type: String(r.type ?? "event"),
-    }))
+    .map((r) => {
+      const before = Number(r.notifyBefore);
+      return {
+        id: String(r.id ?? ""),
+        date: String(r.date ?? ""),
+        time: String(r.time ?? "00:00"),
+        title: String(r.title ?? ""),
+        type: String(r.type ?? "event"),
+        notifyBefore: Number.isFinite(before) && before > 0 ? Math.floor(before) : 0,
+        integrations: (r.integrations && typeof r.integrations === "object" ? r.integrations : {}) as Record<string, RowIntegration>,
+      };
+    })
     .filter((r) => r.date);
+}
+
+// ─── КОГДА НАПОМИНАТЬ ───────────────────────────────────────────────────────────────────────────────
+// Момент записи — её дата и время по МЕСТНЫМ часам того, кто смотрит (строка "2026-07-23T09:30" без
+// зоны читается как местная). Момент напоминания — он же минус упреждение.
+
+/** Момент самой записи в миллисекундах, или `null`, если дата и время не разбираются. */
+export function dueAtMs(row: CalRow): number | null {
+  const t = new Date(`${row.date}T${(row.time || "00:00").padStart(5, "0")}`).getTime();
+  return Number.isFinite(t) ? t : null;
+}
+
+/** Момент, в который о записи нужно предупредить. */
+export function notifyAtMs(row: CalRow): number | null {
+  const due = dueAtMs(row);
+  return due === null ? null : due - row.notifyBefore * 60_000;
+}
+
+/**
+ * НАСТУПИЛА ЛИ ЗАПИСЬ В ЭТОМ ТАКТЕ. Не «когда-либо в прошлом», а именно в последнем периоде крона —
+ * и это осознанное ограничение, а не упрощение: сторож живёт в браузере, и без окна открытая наутро
+ * страница вывалила бы разом стопку тостов обо всём, что случилось за ночь. Пропущенное, пока никто не
+ * смотрел, остаётся пропущенным — честнее, чем лавина уведомлений о прошлом.
+ */
+export function isDueInWindow(row: CalRow, nowMs: number, windowMs: number): boolean {
+  const at = notifyAtMs(row);
+  return at !== null && at <= nowMs && at > nowMs - windowMs;
 }
 
 /** Записи по датам — считается ОДИН раз на обе колонки: сетка ставит по ним точки, планер берёт день. */

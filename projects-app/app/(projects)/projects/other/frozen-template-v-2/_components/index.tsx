@@ -5,6 +5,8 @@ import { DiagramCanvasV2 } from "./diagram/canvas.client";
 import Dashboard from "./dashboard";
 import ControlPanel from "./control-panel";
 import Calendar from "./calendar";
+import Cron from "./cron";
+import { cronOf } from "./cron/schedule";
 import GenericTab from "./generic";
 import AutoRefresh from "./shared/auto-refresh.client";
 import SectionAccordion from "./shared/section-accordion.client";
@@ -30,8 +32,12 @@ export default async function AutomationComponents({ surface, lang }: { surface:
   if (tabs.length === 0) return null;
 
   const S = sectionsStrings(lang);
-  const flow = graphToFlow(graph);
+  const flow = graphToFlow(graph, components);
   const landing = surface === "public";
+  // ТАКТ РАСПИСАНИЯ читается ЗДЕСЬ и раздаётся тем вкладкам, которым он нужен. Он объявлен во вкладке
+  // `cron`, а нужен календарю — и лезть из одной вкладки в объявление другой запрещено: композиция
+  // страницы и есть то единственное место, которое видит все вкладки сразу.
+  const cron = cronOf(components);
 
   // Содержимое вкладки — одно и то же на обеих поверхностях; отличается только обёртка.
   const bodyOf = (tab: (typeof tabs)[number]) =>
@@ -42,7 +48,9 @@ export default async function AutomationComponents({ surface, lang }: { surface:
     ) : tab.name === "dashboard" ? (
       <Dashboard surface={surface} entities={tab.entities} lang={lang} />
     ) : tab.name === "calendar" ? (
-      <Calendar surface={surface} entities={tab.entities} lang={lang} />
+      <Calendar surface={surface} entities={tab.entities} cron={cron} lang={lang} />
+    ) : tab.name === "cron" ? (
+      <Cron surface={surface} entities={tab.entities} lang={lang} />
     ) : (
       // У вкладки ещё нет своей папки — показываем её сущности общим видом: место на странице, якорь для
       // оглавления и обе ступени заявки «строить вместе с ИИ». Пропускать раздел нельзя: тогда заказать

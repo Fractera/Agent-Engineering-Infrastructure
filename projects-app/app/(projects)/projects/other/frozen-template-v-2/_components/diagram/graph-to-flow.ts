@@ -25,6 +25,11 @@ export type DiagramVMNode = {
   isConnector: boolean; // *-connector → дверь в соседнюю автоматизацию
   hidden: boolean; // state === "hidden" — скелет замороженного шаблона
   fn: { name: string; summary: string; accepts: string; returns: string };
+  // ВЫХОДНЫЕ ИНТЕГРАЦИИ узла — ключи каналов, в которые он умеет отправлять СВЕРХ своего назначения
+  // (шаг 292). Непустой список бывает только там, где вкладка того же имени объявила интеграции:
+  // сегодня это календарь. Структура графа от них не меняется — узла не прибавляется, ребра не
+  // прибавляется; меняется только то, что на узле НАПИСАНО.
+  integrations: string[];
 };
 
 export type DiagramVMEdge = { id: string; from: string; to: string; hidden: boolean };
@@ -40,10 +45,34 @@ function colOf(group: "input" | "middle" | "output", kind: string): number {
   return kind === "transform" ? 1 : 2;
 }
 
-export function graphToFlow(graph: Automation["graph"]): DiagramVM {
+/**
+ * ИНТЕГРАЦИИ ПО ИМЕНИ ВКЛАДКИ. Канал узла (`ioType`) и имя вкладки — одно и то же слово: выходной узел
+ * `calendar` и вкладка `calendar` описывают одну сущность с двух сторон (граф и страница). Поэтому
+ * бейджи узла выводятся, а не объявляются второй раз: включённые интеграции вкладки И ЕСТЬ выходные
+ * интеграции её узла.
+ */
+function integrationsByTab(components?: Automation["components"]): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+  for (const tab of components?.tabs ?? []) {
+    const keys = new Set<string>();
+    for (const entity of tab.entities) {
+      const raw = (entity.data as Record<string, unknown>).integrations;
+      if (!Array.isArray(raw)) continue;
+      for (const i of raw) {
+        const d = i as { key?: unknown; enabled?: unknown };
+        if (typeof d.key === "string" && d.key && d.enabled !== false) keys.add(d.key);
+      }
+    }
+    if (keys.size) map.set(tab.name, [...keys]);
+  }
+  return map;
+}
+
+export function graphToFlow(graph: Automation["graph"], components?: Automation["components"]): DiagramVM {
   const groups = graph.nodes.groups;
   const nodes: DiagramVMNode[] = [];
   const rowByCol = new Map<number, number>();
+  const byTab = integrationsByTab(components);
 
   for (const group of ["input", "middle", "output"] as const) {
     for (const n of groups[group].nodes) {
@@ -68,6 +97,8 @@ export function graphToFlow(graph: Automation["graph"]): DiagramVM {
           accepts: n.function.accepts,
           returns: n.function.returns,
         },
+        // только у выхода: «входная интеграция» — это уже другой канал, а не бейдж на двери
+        integrations: group === "output" && typeof n.ioType === "string" ? byTab.get(n.ioType) ?? [] : [],
       });
     }
   }

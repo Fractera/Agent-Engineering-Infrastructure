@@ -148,3 +148,40 @@ export function InfoIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+// ИКОНКИ ИНТЕГРАЦИЙ КАЛЕНДАРЯ (шаг 292) — по иконке на канал, чтобы синюю строку можно было прочитать
+// одним взглядом: бумажный самолётик = Telegram, конверт = письмо, две связанные окружности = другая
+// автоматизация. Ключ канала → иконка сводится в `INTEGRATION_ICONS` ниже: один список, один читатель.
+export function SendIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden>
+      <path d="M21 3L10.5 13.5" />
+      <path d="M21 3l-6.5 18-4-8-8-4L21 3z" />
+    </svg>
+  );
+}
+
+export function MailIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden>
+      <rect x="2" y="5" width="20" height="14" rx="2" />
+      <path d="M3 7l9 6 9-6" />
+    </svg>
+  );
+}
+
+export function LinkIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden>
+      <path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1" />
+      <path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1" />
+    </svg>
+  );
+}
+
+/** Ключ канала → его иконка. Незнакомый ключ иконки не получает — рисовать чужой значок хуже, чем ни одного. */
+export const INTEGRATION_ICONS: Record<string, (p: IconProps) => React.ReactElement> = {
+  "telegram-bot": SendIcon,
+  email: MailIcon,
+  "external-automation": LinkIcon,
+};

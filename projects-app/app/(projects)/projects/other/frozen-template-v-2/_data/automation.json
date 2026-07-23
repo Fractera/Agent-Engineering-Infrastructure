@@ -1107,7 +1107,7 @@
             "cuid": "cmruca7ra4n1jwbadc6ef980db7976",
             "name": "Main calendar",
             "info": {
-              "aiSummary": "Единственный календарь вкладки: показывает запланированные события и напоминания этой автоматизации. Хранилище и виды записей объявлены здесь, в data — компоненты их только рисуют."
+              "aiSummary": "Единственный календарь вкладки: показывает запланированные события и напоминания этой автоматизации. Хранилище, виды записей и каталог внешних интеграций объявлены здесь, в data — компоненты их только рисуют."
             },
             "status": "materialized",
             "warnings": [],
@@ -1170,6 +1170,174 @@
                     "tr": "hatırlatıcı",
                     "nl": "herinnering"
                   }
+                }
+              ],
+              "integrations": [
+                {
+                  "key": "telegram-bot",
+                  "enabled": true,
+                  "label": {
+                    "en": "Telegram bot",
+                    "es": "Bot de Telegram",
+                    "fr": "Bot Telegram",
+                    "it": "Bot Telegram",
+                    "ru": "Телеграм-бот",
+                    "de": "Telegram-Bot",
+                    "pt": "Bot do Telegram",
+                    "pl": "Bot Telegram",
+                    "tr": "Telegram botu",
+                    "nl": "Telegram-bot"
+                  },
+                  "fields": [
+                    {
+                      "key": "text",
+                      "type": "longtext",
+                      "label": {
+                        "en": "Message",
+                        "es": "Mensaje",
+                        "fr": "Message",
+                        "it": "Messaggio",
+                        "ru": "Сообщение",
+                        "de": "Nachricht",
+                        "pt": "Mensagem",
+                        "pl": "Wiadomość",
+                        "tr": "Mesaj",
+                        "nl": "Bericht"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "key": "email",
+                  "enabled": true,
+                  "label": {
+                    "en": "Email",
+                    "es": "Correo",
+                    "fr": "E-mail",
+                    "it": "Email",
+                    "ru": "Электронная почта",
+                    "de": "E-Mail",
+                    "pt": "E-mail",
+                    "pl": "E-mail",
+                    "tr": "E-posta",
+                    "nl": "E-mail"
+                  },
+                  "fields": [
+                    {
+                      "key": "to",
+                      "type": "text",
+                      "label": {
+                        "en": "Recipient",
+                        "es": "Destinatario",
+                        "fr": "Destinataire",
+                        "it": "Destinatario",
+                        "ru": "Получатель",
+                        "de": "Empfänger",
+                        "pt": "Destinatário",
+                        "pl": "Odbiorca",
+                        "tr": "Alıcı",
+                        "nl": "Ontvanger"
+                      }
+                    },
+                    {
+                      "key": "subject",
+                      "type": "text",
+                      "label": {
+                        "en": "Subject",
+                        "es": "Asunto",
+                        "fr": "Objet",
+                        "it": "Oggetto",
+                        "ru": "Тема",
+                        "de": "Betreff",
+                        "pt": "Assunto",
+                        "pl": "Temat",
+                        "tr": "Konu",
+                        "nl": "Onderwerp"
+                      }
+                    },
+                    {
+                      "key": "body",
+                      "type": "longtext",
+                      "label": {
+                        "en": "Body",
+                        "es": "Cuerpo",
+                        "fr": "Corps",
+                        "it": "Corpo",
+                        "ru": "Тело письма",
+                        "de": "Text",
+                        "pt": "Corpo",
+                        "pl": "Treść",
+                        "tr": "Gövde",
+                        "nl": "Bericht"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "key": "external-automation",
+                  "enabled": true,
+                  "label": {
+                    "en": "External automation",
+                    "es": "Automatización externa",
+                    "fr": "Automatisation externe",
+                    "it": "Automazione esterna",
+                    "ru": "Внешняя автоматизация",
+                    "de": "Externe Automatisierung",
+                    "pt": "Automação externa",
+                    "pl": "Automatyzacja zewnętrzna",
+                    "tr": "Dış otomasyon",
+                    "nl": "Externe automatisering"
+                  },
+                  "fields": [
+                    {
+                      "key": "automationId",
+                      "type": "text",
+                      "label": {
+                        "en": "Automation id",
+                        "es": "ID de automatización",
+                        "fr": "Identifiant d'automatisation",
+                        "it": "ID automazione",
+                        "ru": "Идентификатор автоматизации",
+                        "de": "Automatisierungs-ID",
+                        "pt": "ID da automação",
+                        "pl": "Identyfikator automatyzacji",
+                        "tr": "Otomasyon kimliği",
+                        "nl": "Automatiserings-id"
+                      }
+                    },
+                    {
+                      "key": "event",
+                      "type": "text",
+                      "label": {
+                        "en": "Event name",
+                        "es": "Nombre del evento",
+                        "fr": "Nom de l'événement",
+                        "it": "Nome dell'evento",
+                        "ru": "Название события",
+                        "de": "Ereignisname",
+                        "pt": "Nome do evento",
+                        "pl": "Nazwa zdarzenia",
+                        "tr": "Olay adı",
+                        "nl": "Naam van de gebeurtenis"
+                      }
+                    },
+                    {
+                      "key": "data",
+                      "type": "longtext",
+                      "label": {
+                        "en": "Data",
+                        "es": "Datos",
+                        "fr": "Données",
+                        "it": "Dati",
+                        "ru": "Данные",
+                        "de": "Daten",
+                        "pt": "Dados",
+                        "pl": "Dane",
+                        "tr": "Veri",
+                        "nl": "Gegevens"
+                      }
+                    }
+                  ]
                 }
               ]
             }
@@ -1351,11 +1519,11 @@
       {
         "systemInstructionName": "tab",
         "name": "cron",
-        "presence": "absent",
+        "presence": "collapsed",
         "info": {
-          "aiSummary": "Вкладка расписания объявлена и пуста."
+          "aiSummary": "Такт автоматизации: раз в сколько минут она оглядывается на саму себя. Нужен не самому разделу, а календарю — его сторож поднимает уведомления ровно в этом ритме. Выключенное расписание означает, что напоминать некому."
         },
-        "status": "in-development",
+        "status": "materialized",
         "warnings": [],
         "envKeys": [],
         "entities": [
@@ -1363,12 +1531,39 @@
             "cuid": "ccron3p103skw",
             "name": "Main schedule",
             "info": {
-              "aiSummary": "Заготовка «Main schedule»: создана вместе со вкладкой, требований владельца пока нет."
+              "aiSummary": "Единственное расписание вкладки: включено ли оно и с каким периодом. Период читают полоса-пульс и сторож календаря."
             },
-            "status": "in-development",
+            "status": "materialized",
             "warnings": [],
             "envKeys": [],
-            "data": {}
+            "data": {
+              "enabled": true,
+              "everyMinutes": 5,
+              "title": {
+                "en": "Schedule",
+                "es": "Programación",
+                "fr": "Planification",
+                "it": "Pianificazione",
+                "ru": "Расписание",
+                "de": "Zeitplan",
+                "pt": "Agendamento",
+                "pl": "Harmonogram",
+                "tr": "Zamanlama",
+                "nl": "Planning"
+              },
+              "description": {
+                "en": "How often the automation looks back at itself.",
+                "es": "Cada cuánto la automatización se revisa a sí misma.",
+                "fr": "À quelle fréquence l'automatisation se relit.",
+                "it": "Ogni quanto l'automazione si ricontrolla.",
+                "ru": "Как часто автоматизация оглядывается на саму себя.",
+                "de": "Wie oft die Automatisierung sich selbst prüft.",
+                "pt": "Com que frequência a automação se revê.",
+                "pl": "Jak często automatyzacja sprawdza samą siebie.",
+                "tr": "Otomasyonun kendini ne sıklıkla gözden geçirdiği.",
+                "nl": "Hoe vaak de automatisering zichzelf nakijkt."
+              }
+            }
           }
         ]
       },

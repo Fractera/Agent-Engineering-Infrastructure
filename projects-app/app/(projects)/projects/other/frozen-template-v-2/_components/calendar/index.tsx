@@ -1,5 +1,6 @@
 import type { Entity } from "../../_data/automation.schema";
 import type { Surface } from "../surface";
+import type { CronSettings } from "../cron/schedule";
 import MainCalendar from "./public/main-calendar";
 import CalendarSettings from "./admin/calendar-settings";
 import SectionAccordion from "../shared/section-accordion.client";
@@ -23,7 +24,14 @@ import { pick } from "../shared/localized";
 // как есть, а начиная со второго каждый получает свой аккордеон внутри главного; первый раскрыт,
 // остальные свёрнуты, состояние каждого помнит браузер. НА ВИТРИНЕ аккордеонов нет вовсе: там всё
 // раскрыто всегда, как диаграмма.
-const CALENDARS: Record<string, React.ComponentType<{ entity: Entity; lang: string; heading?: boolean }>> = {
+//
+// ТАКТ РАСПИСАНИЯ ПРИХОДИТ СВЕРХУ и насквозь уходит в каждый календарь. Он объявлен в ДРУГОЙ вкладке
+// (`cron`), поэтому читает его композиция страницы (`_components/index.tsx`), а не календарь: лезть из
+// одной вкладки в объявление другой значило бы завести второй источник истины о такте.
+const CALENDARS: Record<
+  string,
+  React.ComponentType<{ entity: Entity; cron: CronSettings | null; surface: Surface; lang: string; heading?: boolean }>
+> = {
   "main-calendar": MainCalendar,
 };
 
@@ -32,10 +40,12 @@ const fileOf = (name: string) => name.trim().toLowerCase().replace(/\s+/g, "-");
 export default function Calendar({
   surface,
   entities,
+  cron,
   lang,
 }: {
   surface: Surface;
   entities: Entity[];
+  cron: CronSettings | null;
   lang: string;
 }) {
   const many = entities.length > 1;
@@ -51,7 +61,7 @@ export default function Calendar({
         // ЗАЯВКА НА ОДИН КАЛЕНДАРЬ — свой адрес в ядре (entity) и своё имя в заголовке раскрывашки.
         const body = Cal ? (
           <div className="space-y-3">
-            <Cal entity={entity} lang={lang} heading={!nested} />
+            <Cal entity={entity} cron={cron} surface={surface} lang={lang} heading={!nested} />
             {surface === "admin" ? (
               <BuildWithAi target={{ object: "entity", tab: "calendar", cuid: entity.cuid }} name={title} pending={pending} lang={lang} />
             ) : null}

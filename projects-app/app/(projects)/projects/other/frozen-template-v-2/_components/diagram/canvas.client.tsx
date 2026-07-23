@@ -280,6 +280,23 @@ function DiagramNode({ data }: NodeProps<CanvasNode>) {
       </div>
       <p className="truncate font-medium">{data.name}</p>
       <p className="truncate text-[10px] uppercase tracking-wide text-muted-foreground">{data.fn.name}</p>
+      {/* ВЫХОДНЫЕ ИНТЕГРАЦИИ (шаг 292) — единственное, чем узел-планировщик отличается от остальных
+          выходных дверей на холсте. Ни узла, ни ребра они не добавляют: это подпись о том, куда узел
+          умеет отправить наступившее событие сверх своего назначения. Список выведен из ядра
+          (включённые интеграции вкладки того же имени), поэтому врать он не может. */}
+      {data.integrations.length > 0 && (
+        <div className="mt-1 flex flex-wrap gap-1">
+          {data.integrations.map((key) => (
+            <span
+              key={key}
+              data-node-integration={key}
+              className="rounded bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-medium text-blue-700 dark:text-blue-300"
+            >
+              {key}
+            </span>
+          ))}
+        </div>
+      )}
       <Handle type="source" position={Position.Right} />
     </div>
   );

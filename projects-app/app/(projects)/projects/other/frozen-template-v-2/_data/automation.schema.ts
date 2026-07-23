@@ -35,6 +35,11 @@ export const SYSTEM_INSTRUCTION_NAMES = [
   "kind.output-connector",
   "components", // for ALL components
   "tab", // for every tab
+  // A TAB WITH A LAW OF ITS OWN gets an ADDITIONAL instruction `tab.<name>`, and the general `tab` law
+  // keeps governing it — the object's pinned name stays `tab`, so nothing in the core changes. The extra
+  // one exists for tabs whose behaviour cannot be derived from the general law: the calendar is the
+  // first (it raises due notices on the schedule's beat and may declare outward integrations).
+  "tab.calendar",
   "useCases",
   "history",
 ] as const;

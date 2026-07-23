@@ -1,16 +1,25 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { daySlots, type CalRow } from "../../../../_lib/components/calendar";
-import type { EntryType, Tone } from "../../entries";
-import { calendarStrings } from "../../i18n";
+import { INTEGRATION_ICONS } from "../../../chrome/icons";
+import type { Surface } from "../../../surface";
 import { pick } from "../../../shared/localized";
+import type { EntryType, Tone } from "../../entries";
+import { enabledOf, type Integration } from "../../integrations";
+import { calendarStrings } from "../../i18n";
+import IntegrationDrawer from "./integration-drawer.client";
 
 // ДНЕВНОЙ ПЛАНЕР — правая колонка календаря, перенесённая из v1 один-в-один: дата и счётчики в шапке,
-// чипы фильтра под ней, сетка получасовых слотов рабочего дня, записи цветом своего вида.
-//
-// Она НИЧЕГО НЕ ПОМНИТ: день и фильтр приходят сверху от загрузчика — см. его комментарий. Раскладка
+// чипы фильтра под ней, сетка получасовых слотов рабочего дня, записи цветом своего вида. Раскладка
 // слотов считается в `_lib/components/calendar` (закон: всё, что не разметка, живёт в `_lib`).
+//
+// ЧТО ДОБАВЛЕНО К v1 (шаг 292) — ИНТЕГРАЦИИ, И ТОЛЬКО НА СИНИХ СТРОКАХ. Янтарная памятка ничего наружу
+// не отправляет: она напоминание владельцу, а не сообщение кому-то. Поэтому иконки каналов появляются
+// у СОБЫТИЙ, и по их яркости видно подключение: горит — этот канал у записи включён, приглушена —
+// канал у календаря есть, но у этой записи он выключен.
+//
+// ДВА ВХОДА В ЯЩИК СПРАВА: клик по ИКОНКЕ открывает один канал, клик по ЗАГОЛОВКУ — все сразу.
 const CHIP: Record<Tone, string> = {
   event: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
   reminder: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
@@ -20,18 +29,28 @@ export default function DayPlanner({
   date,
   entries,
   types,
+  integrations,
+  table,
+  surface,
   filter,
   onFilter,
+  onRowChange,
   lang,
 }: {
   date: string;
   entries: CalRow[];
   types: EntryType[];
+  integrations: Integration[];
+  table: string;
+  surface: Surface;
   filter: string;
   onFilter: (key: string) => void;
+  onRowChange: (row: CalRow) => void;
   lang: string;
 }) {
   const L = calendarStrings(lang);
+  const channels = enabledOf(integrations);
+  const [open, setOpen] = useState<{ row: CalRow; only: string | null } | null>(null);
 
   // ПОДПИСЬ ВНУТРИ ЗАПИСИ — как её назвало ядро («событие»), иначе словарь, иначе сам ключ:
   // безымянный вид лучше показать ключом, чем пустотой.
@@ -81,11 +100,50 @@ export default function DayPlanner({
               <div className="flex-1 space-y-1">
                 {s.items.map((e) => {
                   const type = types.find((t) => t.key === e.type);
+                  const tone = toneOf(e.type);
+                  const isEvent = tone === "event";
                   return (
-                    <div key={e.id} className={`rounded px-2 py-1 text-sm ${CHIP[toneOf(e.type)]}`}>
-                      <span className="font-mono text-[11px] opacity-70">{e.time}</span>{" "}
-                      <span className="text-[10px] uppercase opacity-60">{type ? labelOf(type) : e.type}</span>{" "}
-                      — {e.title}
+                    <div key={e.id} className={`rounded px-2 py-1 text-sm ${CHIP[tone]}`}>
+                      <div className="flex flex-wrap items-center gap-x-1 gap-y-1">
+                        <span className="font-mono text-[11px] opacity-70">{e.time}</span>
+                        <span className="text-[10px] uppercase opacity-60">{type ? labelOf(type) : e.type}</span>
+                        <span aria-hidden>—</span>
+                        {/* Заголовок СОБЫТИЯ — вход в ящик со всеми каналами сразу. У памятки заголовок
+                            остаётся обычным текстом: открывать ей нечего. */}
+                        {isEvent && channels.length > 0 ? (
+                          <button
+                            type="button"
+                            onClick={() => setOpen({ row: e, only: null })}
+                            className="min-w-0 flex-1 truncate text-left underline-offset-2 hover:underline"
+                          >
+                            {e.title}
+                          </button>
+                        ) : (
+                          <span className="min-w-0 flex-1 truncate">{e.title}</span>
+                        )}
+
+                        {isEvent
+                          ? channels.map((i) => {
+                              const Icon = INTEGRATION_ICONS[i.key];
+                              if (!Icon) return null;
+                              const on = Boolean(e.integrations[i.key]?.active);
+                              return (
+                                <button
+                                  key={i.key}
+                                  type="button"
+                                  title={pick(i.label, lang) || i.key}
+                                  aria-label={pick(i.label, lang) || i.key}
+                                  onClick={() => setOpen({ row: e, only: i.key })}
+                                  className={`shrink-0 rounded p-0.5 hover:bg-black/5 dark:hover:bg-white/10 ${on ? "opacity-100" : "opacity-30"}`}
+                                  data-integration-icon={i.key}
+                                  data-active={on ? "yes" : "no"}
+                                >
+                                  <Icon className="size-3.5" />
+                                </button>
+                              );
+                            })
+                          : null}
+                      </div>
                     </div>
                   );
                 })}
@@ -94,6 +152,17 @@ export default function DayPlanner({
           ))}
         </div>
       )}
+
+      <IntegrationDrawer
+        row={open?.row ?? null}
+        only={open?.only ?? null}
+        table={table}
+        integrations={channels}
+        surface={surface}
+        lang={lang}
+        onClose={() => setOpen(null)}
+        onSaved={onRowChange}
+      />
     </div>
   );
 }
