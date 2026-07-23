@@ -32,9 +32,12 @@ is the whole contract:
   THIS automation, what a key means is a property of the service;
 - the keys are PROJECT-WIDE (the owner's decision): one Resend account, one bot, one set of keys for
   every automation in the project — the same shape as the single global OpenAI key;
-- a channel is REVEALED only after its required keys are present. The switch in the main menu enforces
-  it: no keys → the key form opens; the form is cancelled → nothing is written, and the switch returns
-  to where it was. Revealing a channel that cannot connect would be a lie told on the canvas.
+- a channel is REVEALED only after its required keys are present, and **the DOOR enforces it**, not a
+  screen: `api/patch` with `op: "visibility"` refuses to reveal a node whose required keys are missing,
+  and names them. It lives there because the door is the one place everything passes through — canvas,
+  menu, agent alike. In a component the law would guard one screen out of three. An OPTIONAL key
+  (empty = a lawful default) never blocks a reveal. Revealing a channel that cannot connect would be a
+  lie told on the canvas.
 
 An inbound channel whose provider PUSHES into a door of ours (email is the first) authenticates by the
 provider's SIGNATURE, not by a session — see the comment in `api/inbound-email`. That is an exception
