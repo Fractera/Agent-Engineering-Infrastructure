@@ -36,6 +36,13 @@ export type ChannelKey = {
   secret?: boolean;
   /** Пустое значение — законное умолчание, а не отсутствие ключа. */
   optional?: boolean;
+  /**
+   * У поля есть НАТИВНОЕ определение значения: форма рисует кнопку, которая узнаёт значение сама, вместо
+   * того чтобы владелец искал его руками. `"telegram"` — связывание chat id через дверь `api/telegram/link`
+   * (пользователь жмёт START у бота, мы читаем chat id из его же сообщения). Значение всё равно записывает
+   * обычное «Сохранить»: кнопка лишь подставляет его в поле, закон отмены формы не трогается.
+   */
+  autoLink?: "telegram";
 };
 
 const L = (en: string, es: string, fr: string, it: string, ru: string, de: string, pt: string, pl: string, tr: string, nl: string) =>
@@ -72,18 +79,19 @@ export const KEY_CATALOG: Record<string, ChannelKey> = {
     env: "TELEGRAM_ALLOWED_CHAT_ID",
     service: "telegram", serviceLabel: TELEGRAM,
     optional: true,
+    autoLink: "telegram",
     label: L("Allowed chat id", "Id de chat permitido", "Id de discussion autorisée", "Id chat consentita", "Разрешённый чат", "Erlaubte Chat-ID", "Id de chat permitido", "Dozwolony id czatu", "İzinli sohbet kimliği", "Toegestane chat-id"),
     help: L(
-      "To find your id, write to @userinfobot in Telegram — it replies with your numeric id. Leave empty to accept every chat.",
-      "Para conocer tu id, escribe a @userinfobot en Telegram — te responde con tu id numérico. Déjalo vacío para aceptar cualquier chat.",
-      "Pour trouver votre id, écrivez à @userinfobot dans Telegram — il renvoie votre id numérique. Laissez vide pour accepter toutes les discussions.",
-      "Per trovare il tuo id, scrivi a @userinfobot su Telegram — risponde con il tuo id numerico. Lascia vuoto per accettare ogni chat.",
-      "Чтобы узнать свой id, напишите @userinfobot в Telegram — он пришлёт ваш numeric id. Пусто — принимать любой чат.",
-      "Um Ihre ID zu finden, schreiben Sie @userinfobot in Telegram — er antwortet mit Ihrer numerischen ID. Leer lassen, um jeden Chat zu akzeptieren.",
-      "Para descobrir o seu id, escreva a @userinfobot no Telegram — ele responde com o seu id numérico. Deixe vazio para aceitar qualquer chat.",
-      "Aby poznać swój id, napisz do @userinfobot w Telegramie — odpowie Twoim numerycznym id. Zostaw puste, aby przyjmować każdy czat.",
-      "Kimliğinizi bulmak için Telegram'da @userinfobot'a yazın — sayısal kimliğinizle yanıt verir. Her sohbeti kabul etmek için boş bırakın.",
-      "Om je id te vinden, schrijf @userinfobot in Telegram — het antwoordt met je numerieke id. Laat leeg om elke chat te accepteren.",
+      "Press “Link my Telegram” below — it opens the bot, you tap Start, and the id fills in itself. Leave empty to accept every chat.",
+      "Pulsa «Vincular mi Telegram» abajo — abre el bot, pulsas Iniciar y el id se rellena solo. Déjalo vacío para aceptar cualquier chat.",
+      "Appuyez sur « Lier mon Telegram » ci-dessous — le bot s'ouvre, vous appuyez sur Démarrer et l'id se remplit tout seul. Laissez vide pour accepter toutes les discussions.",
+      "Premi «Collega il mio Telegram» qui sotto — apre il bot, tocchi Avvia e l'id si compila da solo. Lascia vuoto per accettare ogni chat.",
+      "Нажмите «Связать мой Telegram» ниже — откроется бот, вы жмёте Start, и id подставится сам. Пусто — принимать любой чат.",
+      "Klicken Sie unten auf „Mein Telegram verknüpfen“ — der Bot öffnet sich, Sie tippen auf Start und die ID füllt sich selbst aus. Leer lassen, um jeden Chat zu akzeptieren.",
+      "Carregue em «Ligar o meu Telegram» abaixo — abre o bot, toca em Iniciar e o id preenche-se sozinho. Deixe vazio para aceitar qualquer chat.",
+      "Naciśnij „Połącz mój Telegram” poniżej — otworzy bota, klikasz Start, a id wpisze się sam. Zostaw puste, aby przyjmować każdy czat.",
+      "Aşağıdaki «Telegram'ımı bağla»ya basın — bot açılır, Başlat'a dokunursunuz ve kimlik kendiliğinden dolar. Her sohbeti kabul etmek için boş bırakın.",
+      "Klik hieronder op “Mijn Telegram koppelen” — de bot opent, je tikt op Start en de id vult zichzelf in. Laat leeg om elke chat te accepteren.",
     ),
   },
   RESEND_API_KEY: {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CloseIcon } from "../chrome/icons";
 import { pick } from "./localized";
 import { keysStrings } from "./keys-i18n";
@@ -44,12 +44,53 @@ export default function KeysModal({
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
 
+  // НАТИВНОЕ СВЯЗЫВАНИЕ TELEGRAM (шаг 296): состояние одной кнопки «Связать мой Telegram». Опрос двери
+  // `api/telegram/link` живёт здесь, в таймере; при закрытии формы он гасится, чтобы не течь фоном.
+  const [link, setLink] = useState<{ status: "idle" | "opening" | "waiting" | "linked" | "failed"; who?: string }>({ status: "idle" });
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stopPoll = () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; } };
+
   useEffect(() => {
     if (open) {
       setValues({});
       setFailed(null);
+      setLink({ status: "idle" });
     }
+    return stopPoll; // закрытие формы (и размонтирование) гасит опрос
   }, [open]);
+
+  const apiBase = () => (typeof location !== "undefined" ? location.pathname.replace(/\/+$/, "") + "/api" : "/api");
+
+  async function startLink(envKey: string) {
+    stopPoll();
+    setLink({ status: "opening" });
+    try {
+      const r = await fetch(`${apiBase()}/telegram/link?action=start`);
+      const info = (await r.json().catch(() => null)) as { code?: string; deepLink?: string } | null;
+      if (!r.ok || !info?.code || !info.deepLink) throw new Error("start");
+      window.open(info.deepLink, "_blank", "noopener");
+      setLink({ status: "waiting" });
+      const startedAt = Date.now();
+      pollRef.current = setInterval(async () => {
+        // Пятиминутный потолок: пользователь мог передумать — не крутить опрос вечно.
+        if (Date.now() - startedAt > 5 * 60_000) { stopPoll(); setLink({ status: "failed" }); return; }
+        try {
+          const p = await fetch(`${apiBase()}/telegram/link?action=poll&code=${encodeURIComponent(info.code!)}`);
+          const s = (await p.json().catch(() => null)) as { status?: string; chatId?: string; who?: string } | null;
+          if (s?.status === "linked" && s.chatId) {
+            stopPoll();
+            setValues((v) => ({ ...v, [envKey]: s.chatId! })); // подставляем в поле; запишет «Сохранить»
+            setLink({ status: "linked", who: s.who });
+          } else if (s?.status === "expired") {
+            stopPoll();
+            setLink({ status: "failed" });
+          }
+        } catch { /* сеть моргнула — следующий тик повторит */ }
+      }, 2000);
+    } catch {
+      setLink({ status: "failed" });
+    }
+  }
 
   if (!open) return null;
 
@@ -120,6 +161,24 @@ export default function KeysModal({
                   {/* ГДЕ ВЗЯТЬ — из каталога, а не из разметки: новый сервис не требует правки формы. */}
                   <span className="block text-xs text-muted-foreground">{pick(k.help, lang)}</span>
                   {present[k.env] ? <span className="block text-[10px] text-muted-foreground">{L.keepValue}</span> : null}
+                  {/* НАТИВНОЕ ОПРЕДЕЛЕНИЕ ЗНАЧЕНИЯ (шаг 296): кнопка узнаёт chat id сама, число подставляется
+                      в поле выше; записывает его обычное «Сохранить». */}
+                  {k.autoLink === "telegram" ? (
+                    <span className="mt-1 flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={link.status === "opening" || link.status === "waiting"}
+                        onClick={() => void startLink(k.env)}
+                        className="rounded-md border px-2 py-1 text-xs font-medium hover:bg-accent disabled:opacity-50"
+                      >
+                        {L.linkBtn}
+                      </button>
+                      {link.status === "opening" ? <span className="text-[10px] text-muted-foreground">{L.linkOpening}</span> : null}
+                      {link.status === "waiting" ? <span className="text-[10px] text-amber-600 dark:text-amber-400">{L.linkWaiting}</span> : null}
+                      {link.status === "linked" ? <span className="text-[10px] text-emerald-600 dark:text-emerald-400">{L.linkDone.replace("{k}", link.who ?? "")}</span> : null}
+                      {link.status === "failed" ? <span className="text-[10px] text-rose-700 dark:text-rose-400">{L.linkFailed}</span> : null}
+                    </span>
+                  ) : null}
                 </label>
               ))}
             </div>
