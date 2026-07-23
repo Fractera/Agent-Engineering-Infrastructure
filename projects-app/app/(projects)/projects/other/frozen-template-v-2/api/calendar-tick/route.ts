@@ -20,15 +20,28 @@ import { deliverDue } from "../../_lib/components/calendar/deliver";
 // наступило ничего.
 export const runtime = "nodejs";
 
-/** Секрет пропуска нужен, чтобы толкнуть СОСЕДНЮЮ автоматизацию: её дверь тоже под охраной. */
+/**
+ * Секрет пропуска нужен, чтобы толкнуть СОСЕДНЮЮ автоматизацию: её дверь тоже под охраной.
+ *
+ * Путь взят у планировщика (`services/cron/server.js`), а не угадан: он лежит В КОРНЕ слоя, а не внутри
+ * дерева маршрутов. Я сначала указал `app/(projects)/projects/project-config/…` — файла там нет, и
+ * доставка в соседнюю автоматизацию молча теряла бы пропуск, отказывая с 403 без внятной причины.
+ * Второй путь оставлен запасным на случай другой раскладки слота.
+ */
 async function gateSecret(): Promise<string | undefined> {
-  try {
-    const path = join(process.cwd(), "app", "(projects)", "projects", "project-config", "agent-gate-secret");
-    const s = (await readFile(path, "utf8")).trim();
-    return s || undefined;
-  } catch {
-    return undefined; // нет секрета — доставка в соседнюю автоматизацию честно упадёт и попадёт в отчёт
+  const candidates = [
+    join(process.cwd(), "project-config", "agent-gate-secret"),
+    join(process.cwd(), "app", "(projects)", "projects", "project-config", "agent-gate-secret"),
+  ];
+  for (const path of candidates) {
+    try {
+      const s = (await readFile(path, "utf8")).trim();
+      if (s) return s;
+    } catch {
+      // следующий кандидат
+    }
   }
+  return undefined; // нет секрета — доставка в соседнюю автоматизацию честно упадёт и попадёт в отчёт
 }
 
 async function tick(req: NextRequest) {
