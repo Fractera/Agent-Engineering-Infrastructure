@@ -179,10 +179,12 @@ export default function Menu({
 
       <HowItWorksModal lang={lang} open={modal === "howItWorks"} onClose={() => setModal(null)} />
       <SettingsModal lang={lang} channels={channels} open={modal === "settings"} onClose={() => setModal(null)} />
+      {/* Заглушка достаётся ТОЛЬКО записям без своего окна: у «Как это работает» и «Настроек» окна свои,
+          и различает их не строка заголовка, а сам вид состояния — поэтому проверяем тип, а не текст. */}
       <PlaceholderModal
         lang={lang}
-        title={modal && modal !== "howItWorks" ? modal.title : ""}
-        open={Boolean(modal && modal !== "howItWorks")}
+        title={typeof modal === "object" && modal !== null ? modal.title : ""}
+        open={typeof modal === "object" && modal !== null}
         onClose={() => setModal(null)}
       />
     </>
