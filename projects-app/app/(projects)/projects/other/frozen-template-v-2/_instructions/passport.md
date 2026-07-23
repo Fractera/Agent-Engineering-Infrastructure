@@ -20,9 +20,23 @@ input, same path, same result.
 
 ## 3. YOUR TERRITORY
 
-You may write only inside this automation's folder, and only through the doors below. The core file is
-never rewritten by hand: one object, one patch, by address. Fields that are law — `systemInstruction`,
-`cuid`, `kind`, `in`, `out` — are refused by name, and the refusal names them for you.
+You may write only inside this automation's folder.
+
+READING is free: open any file here with your ordinary tools. The read doors in §4 hand you ONE object
+instead of the whole core — that is an economy for a model working in a narrow context, not a rule that
+forbids reading. If you can afford to read the file, read it.
+
+WRITING to the core is not free. `_data/automation.json` is a validated structure whose laws cross
+objects, and a hand edit that looks right can leave it unlawful in a way nothing notices until much
+later. Two lawful ways, in order of preference:
+
+1. `POST api/patch` — one object by address; the WHOLE core is validated before anything is written, so
+   an unlawful result writes nothing and comes back as a list of violations in words;
+2. edit the file, then run `npm run check:core` — the same schema, the same laws, green or the exact
+   paths of every violation. Use it when you restructure several objects at once.
+
+Editing without checking is the one habit that breaks this project quietly. Fields that are law —
+`systemInstruction`, `cuid`, `kind`, `in`, `out` — are refused by name whichever way you go.
 
 ## 4. THE DOORS (addresses are relative to this automation)
 

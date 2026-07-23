@@ -7,7 +7,8 @@ import Switch from "./switch.client";
 import Toast from "../shared/toast.client";
 import HowItWorksModal from "./how-it-works-modal.client";
 import PlaceholderModal from "./placeholder-modal.client";
-import ChannelsSection, { type ChannelRow } from "./channels-section.client";
+import SettingsModal from "./settings-modal.client";
+import type { ChannelRow } from "./channels-section.client";
 
 // ГАМБУРГЕР-МЕНЮ (админ) — ФАКСИМИЛЕ меню v1 (automation-menu.client.tsx), воспроизведённое самодостаточно
 // (закон 0: без shadcn/lucide/_shared). Порядок, метки, иконки и разделители — один-в-один с образцом.
@@ -17,7 +18,7 @@ import ChannelsSection, { type ChannelRow } from "./channels-section.client";
 // выглядят как в v1, но открывают честную заглушку. Работают уже сейчас: «Как это работает», переключатели
 // видимости (пишут tab.presence в ядро через api/patch) и перетаскивание строк (порядок — будущий op).
 type TabRow = { name: string; presence: "absent" | "collapsed" | "expanded"; entities?: { cuid: string; title: string }[] };
-type Modal = null | "howItWorks" | { title: string };
+type Modal = null | "howItWorks" | "settings" | { title: string };
 
 const item = "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-none hover:bg-accent";
 const sep = <div className="my-1 h-px bg-border" />;
@@ -150,9 +151,6 @@ export default function Menu({
           })}
 
           {sep}
-          <ChannelsSection channels={channels} lang={lang} />
-
-          {sep}
           <button type="button" className={item} onClick={() => setModal({ title: L.testsItem })}>{L.testsItem}</button>
 
           {sep}
@@ -180,6 +178,7 @@ export default function Menu({
       ) : null}
 
       <HowItWorksModal lang={lang} open={modal === "howItWorks"} onClose={() => setModal(null)} />
+      <SettingsModal lang={lang} channels={channels} open={modal === "settings"} onClose={() => setModal(null)} />
       <PlaceholderModal
         lang={lang}
         title={modal && modal !== "howItWorks" ? modal.title : ""}
