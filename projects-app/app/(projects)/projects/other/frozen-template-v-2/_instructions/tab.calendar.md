@@ -76,13 +76,40 @@ watcher. The tempting branch — "if the tab happens to be open, send from there
 explicitly: it produces an automation that works for whoever is watching it and stays silent for whoever
 closed their laptop. That is the worst kind of unreliability, because it looks like it works.
 
-When it is built, the server tick pushes the automation through its OWN `api/run` door, the same way
-every other channel enters (the law "input arrives by push"). No second execution path is created: an
-automation has one point of entry, and a due event comes in through it.
+### How it is actually built (and a correction to what this page said first)
 
-**State today: nothing is delivered on due.** Integrations are declared, their contents are editable,
-keys can be entered, and the email send/receive functions exist — but no server-side runner of the
-schedule exists yet. This is an OPEN OBLIGATION, not a bug. Do not "fix" it by sending from the browser.
+This page first said the server tick would push the automation through its own `api/run` door. **That
+was wrong, and it is corrected here rather than quietly changed.** `api/run` executes the automation's
+GRAPH — input, middle, output. Due-delivery is not a graph run: it is the calendar TAB's own work, the
+same work the browser watcher does, done on the server instead. Sending it through `api/run` would fire
+the automation's business flow every minute for no reason.
+
+So it has its OWN door, and the law "one point of entry" is not broken: **graph execution still lives
+only in `api/run`.**
+
+- `cron.json` in this folder declares one job — the platform scheduler rescans folders every tick, so
+  editing that file needs no restart of anything.
+- The job knocks on `api/calendar-tick` EVERY MINUTE, and does not read the schedule's `everyMinutes`.
+  That number is the beat of the BROWSER notice; repeating it in `cron.json` would give one fact two
+  owners. The door decides what is due, so an extra knock costs nothing.
+- The door is guarded by the ordinary `authorize`: the owner's session, or the agent-gate secret that
+  the scheduler sends. Without it the delivery silently would not work — that has happened before.
+- Delivery logic: `_lib/components/calendar/deliver.ts`, and the transports it uses live in
+  `_lib/transport.ts` — the same module the `deliverEmail` node calls, so a stale key is fixed in one
+  place.
+
+**EXACTLY ONCE.** A tick may repeat — process restart, overlapping schedules, a manual check. The mark
+of delivery lives IN THE ENTRY (`integrations[channel].deliveredAt`) and is written the same append-only
+way as any row edit, AFTER a successful send: a failed send must retry on the next tick. A failure of
+one channel never cancels the others — three addressees, and one silent channel is no reason to deprive
+the other two.
+
+The server looks back at most 24 hours. A server that stood still for a day must not fire off a barrage
+of everything it missed.
+
+**State today:** the delivery path is built and runs on the schedule. Whether anything actually leaves
+depends on the keys: no `RESEND_API_KEY` and the report says "channel not connected", honestly, in the
+scheduler's journal. Do not "fix" a missing key by sending from the browser.
 
 ## 5. Integrations
 
