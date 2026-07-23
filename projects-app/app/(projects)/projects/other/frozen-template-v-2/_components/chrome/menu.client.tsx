@@ -8,6 +8,7 @@ import Toast from "../shared/toast.client";
 import HowItWorksModal from "./how-it-works-modal.client";
 import PlaceholderModal from "./placeholder-modal.client";
 import SettingsModal from "./settings-modal.client";
+import type { ProviderKey } from "../ai";
 
 // ГАМБУРГЕР-МЕНЮ (админ) — ФАКСИМИЛЕ меню v1 (automation-menu.client.tsx), воспроизведённое самодостаточно
 // (закон 0: без shadcn/lucide/_shared). Порядок, метки, иконки и разделители — один-в-один с образцом.
@@ -26,12 +27,15 @@ export default function Menu({
   lang,
   tabs,
   envKeys,
+  ai,
   publicHref,
   built,
 }: {
   lang: string;
   /** Имена переменных, объявленные автоматизацией: из них выводятся карточки настроек. */
   envKeys: string[];
+  /** Выбранные провайдер и модель — ПОКАЗЫВАЮТСЯ здесь, меняются в Настройках. */
+  ai: { provider: ProviderKey; model: string; providerLabel: string; modelLabel: string };
   tabs: TabRow[];
   publicHref: string;
   /** Построена ли автоматизация: замороженному шаблону публичной страницы ещё нет. */
@@ -112,11 +116,11 @@ export default function Menu({
           <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">{L.automationLabel}</div>
           <div className="flex items-center justify-between gap-4 px-2 py-1.5">
             <span className="text-muted-foreground">{L.aiProvider}</span>
-            <span className="font-medium">OpenAI API</span>
+            <span className="font-medium">{ai.providerLabel}</span>
           </div>
           <div className="flex items-center justify-between gap-4 px-2 py-1.5">
             <span className="text-muted-foreground">{L.aiModel}</span>
-            <span className="font-medium text-muted-foreground">—</span>
+            <span className="font-medium">{ai.modelLabel}</span>
           </div>
 
           {sep}
@@ -183,7 +187,7 @@ export default function Menu({
       ) : null}
 
       <HowItWorksModal lang={lang} open={modal === "howItWorks"} onClose={() => setModal(null)} />
-      <SettingsModal lang={lang} envKeys={envKeys} open={modal === "settings"} onClose={() => setModal(null)} />
+      <SettingsModal lang={lang} envKeys={envKeys} ai={ai} open={modal === "settings"} onClose={() => setModal(null)} />
       {/* Заглушка достаётся ТОЛЬКО записям без своего окна: у «Как это работает» и «Настроек» окна свои,
           и различает их не строка заголовка, а сам вид состояния — поэтому проверяем тип, а не текст. */}
       <PlaceholderModal

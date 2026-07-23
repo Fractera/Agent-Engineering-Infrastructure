@@ -20,7 +20,11 @@
       "По тикеру запрашивается живая цена акции с Yahoo Finance.",
       "Если цена получена — строка с датой, компанией, тикером и ценой попадает в дашборд.",
       "Если компания не распознана или цена недоступна — прогон честно останавливается и ничего не пишет."
-    ]
+    ],
+    "ai": {
+      "provider": "anthropic",
+      "model": "claude-opus-4-8"
+    }
   },
   "graph": {
     "systemInstructionName": "graph",
@@ -379,7 +383,13 @@
               },
               "status": "materialized",
               "warnings": [],
-              "envKeys": [],
+              "envKeys": [
+                {
+                  "name": "ANTHROPIC_API_KEY",
+                  "status": "missing",
+                  "comment": "Объявлен выбранным провайдером ИИ; живое присутствие проверяет дверь api/env."
+                }
+              ],
               "function": {
                 "name": "transformPayload",
                 "summary": "Turns the incoming payload into the automation's result.",

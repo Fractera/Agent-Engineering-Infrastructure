@@ -7,6 +7,8 @@ import KeysModal from "../shared/keys-modal.client";
 import { keysStrings } from "../shared/keys-i18n";
 import { pick } from "../shared/localized";
 import { servicesOf, type Service } from "../channels";
+import AiPicker from "./ai-picker.client";
+import type { ProviderKey } from "../ai";
 
 // НАСТРОЙКИ — здесь настраивают СЕРВИСЫ, и больше ничего.
 //
@@ -26,12 +28,15 @@ import { servicesOf, type Service } from "../channels";
 export default function SettingsModal({
   lang,
   envKeys,
+  ai,
   open,
   onClose,
 }: {
   lang: string;
   /** Все имена переменных, объявленные этой автоматизацией. Карточки выводятся из них. */
   envKeys: string[];
+  /** Выбранные провайдер и модель — из паспорта; меню показывает их, эта форма меняет. */
+  ai: { provider: ProviderKey; model: string };
   open: boolean;
   onClose: () => void;
 }) {
@@ -78,6 +83,10 @@ export default function SettingsModal({
           </div>
 
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+            {/* ЧЕМ АВТОМАТИЗАЦИЯ ДУМАЕТ — первым: это её собственное свойство, а карточки ниже
+                настраивают внешние сервисы, общие на весь проект. */}
+            <AiPicker provider={ai.provider} model={ai.model} lang={lang} />
+
             {services.length === 0 ? (
               <p className="text-sm text-muted-foreground">{K.noKeys}</p>
             ) : (

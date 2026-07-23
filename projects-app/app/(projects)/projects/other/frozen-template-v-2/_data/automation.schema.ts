@@ -71,6 +71,26 @@ export const AutomationTypeSchema = z.enum(["stream", "instanced", "chained"]);
 // each other, one cannot.
 export const LifecycleSchema = z.enum(["frozen-template", "real-project"]);
 
+// THE AI THIS AUTOMATION THINKS WITH — which provider and which model.
+//
+// It lives in the PASSPORT, not in the environment, because it is a property of THIS automation, the
+// same way its type and its lifecycle are. The provider's KEY is a project-wide secret and lives in the
+// environment like every other credential; the CHOICE of model does not — two automations sharing one
+// key may legitimately think with different models.
+//
+// The model id is a free string on purpose: the catalogue of available models lives in code
+// (`_components/ai.ts`) and changes with the world, while the core only records what was chosen. A
+// closed enum here would mean a schema edit — and a failed validation of every existing automation —
+// every time a provider ships a model.
+export const AiProviderSchema = z.enum(["anthropic", "openai"]);
+
+export const AiSchema = z
+  .object({
+    provider: AiProviderSchema,
+    model: z.string().min(1, "a model id is required — the catalogue lives in _components/ai.ts"),
+  })
+  .strict();
+
 // PARALLEL ROUTING PAGES — the places on the host page where a Fractera Pro automation can be placed.
 export const ParallelPageSchema = z.enum([
   "promo",
@@ -154,6 +174,8 @@ export const PassportSchema = z
     description: z.string(),
     type: AutomationTypeSchema,
     lifecycle: LifecycleSchema,
+    // WHICH AI it thinks with — see AiSchema above. The menu shows it, Settings changes it.
+    ai: AiSchema,
     // WHO made it: the id of the user who created this automation. Empty only while the automation is
     // still the untouched frozen template — a real project always has an author (checked in the core law).
     author: z.string(),

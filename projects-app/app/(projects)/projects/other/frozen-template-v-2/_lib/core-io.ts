@@ -120,7 +120,9 @@ export function locate(core: Automation, a: Address): { ok: true; target: Record
 //   cuid / kind       — идентичность и вид не меняются: другой вид = другой узел;
 //   in / out          — выводятся из вида по таблице связей, а не объявляются заново.
 export const WRITABLE: Record<Address["object"], string[]> = {
-  passport: ["title", "description", "author", "sharing", "info", "lifecycle", "howItWorks"],
+  // `ai` — какой моделью думает эта автоматизация; меняется в Настройках (шаг 295). Тип и адрес
+  // по-прежнему не пишутся: тип — решение о природе автоматизации, адрес задаётся положением папки.
+  passport: ["title", "description", "author", "sharing", "info", "lifecycle", "howItWorks", "ai"],
   graph: [],
   components: [],
   history: [],

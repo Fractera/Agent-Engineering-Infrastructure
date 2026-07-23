@@ -44,6 +44,10 @@ const L = (en: string, es: string, fr: string, it: string, ru: string, de: strin
 // Имена сервисов — по одному на карточку настроек, а не по одному на канал.
 const TELEGRAM = L("Telegram bot", "Bot de Telegram", "Bot Telegram", "Bot Telegram", "Телеграм-бот", "Telegram-Bot", "Bot do Telegram", "Bot Telegram", "Telegram botu", "Telegram-bot");
 const RESEND = L("Email delivery (Resend)", "Envío de correo (Resend)", "Envoi d'e-mails (Resend)", "Invio email (Resend)", "Почтовая рассылка (Resend)", "E-Mail-Versand (Resend)", "Envio de email (Resend)", "Wysyłka e-mail (Resend)", "E-posta gönderimi (Resend)", "E-mailverzending (Resend)");
+// Провайдеры ИИ — их ключи вводятся тем же механизмом, что и ключи каналов: второго способа
+// вводить секреты в продукте нет. Какой провайдер ВЫБРАН — свойство автоматизации, оно в паспорте.
+const ANTHROPIC = L("Anthropic", "Anthropic", "Anthropic", "Anthropic", "Anthropic", "Anthropic", "Anthropic", "Anthropic", "Anthropic", "Anthropic");
+const OPENAI = L("OpenAI", "OpenAI", "OpenAI", "OpenAI", "OpenAI", "OpenAI", "OpenAI", "OpenAI", "OpenAI", "OpenAI");
 
 export const KEY_CATALOG: Record<string, ChannelKey> = {
   TELEGRAM_BOT_TOKEN: {
@@ -115,6 +119,42 @@ export const KEY_CATALOG: Record<string, ChannelKey> = {
       "Adres w domenie ZWERYFIKOWANEJ w resend.com/domains — z innych Resend odmówi wysyłki.",
       "resend.com/domains'te DOĞRULANMIŞ bir alan adındaki adres — Resend diğerlerini reddeder.",
       "Een adres op een in resend.com/domains GEVERIFIEERD domein — andere weigert Resend.",
+    ),
+  },
+  ANTHROPIC_API_KEY: {
+    env: "ANTHROPIC_API_KEY",
+    service: "anthropic", serviceLabel: ANTHROPIC,
+    secret: true,
+    label: L("API key", "Clave API", "Clé API", "Chiave API", "Ключ API", "API-Schlüssel", "Chave API", "Klucz API", "API anahtarı", "API-sleutel"),
+    help: L(
+      "platform.claude.com → API keys → Create key. One key serves every automation in the project.",
+      "platform.claude.com → API keys → Create key. Una clave sirve a todas las automatizaciones del proyecto.",
+      "platform.claude.com → API keys → Create key. Une seule clé sert toutes les automatisations du projet.",
+      "platform.claude.com → API keys → Create key. Una chiave serve tutte le automazioni del progetto.",
+      "platform.claude.com → API keys → Create key. Один ключ обслуживает все автоматизации проекта.",
+      "platform.claude.com → API keys → Create key. Ein Schlüssel bedient alle Automatisierungen des Projekts.",
+      "platform.claude.com → API keys → Create key. Uma chave serve todas as automações do projeto.",
+      "platform.claude.com → API keys → Create key. Jeden klucz obsługuje wszystkie automatyzacje projektu.",
+      "platform.claude.com → API keys → Create key. Tek anahtar projedeki tüm otomasyonlara hizmet eder.",
+      "platform.claude.com → API keys → Create key. Eén sleutel bedient alle automatiseringen van het project.",
+    ),
+  },
+  OPENAI_API_KEY: {
+    env: "OPENAI_API_KEY",
+    service: "openai", serviceLabel: OPENAI,
+    secret: true,
+    label: L("API key", "Clave API", "Clé API", "Chiave API", "Ключ API", "API-Schlüssel", "Chave API", "Klucz API", "API anahtarı", "API-sleutel"),
+    help: L(
+      "platform.openai.com → API keys → Create new secret key. One key serves every automation in the project.",
+      "platform.openai.com → API keys → Create new secret key. Una clave sirve a todas las automatizaciones del proyecto.",
+      "platform.openai.com → API keys → Create new secret key. Une seule clé sert toutes les automatisations du projet.",
+      "platform.openai.com → API keys → Create new secret key. Una chiave serve tutte le automazioni del progetto.",
+      "platform.openai.com → API keys → Create new secret key. Один ключ обслуживает все автоматизации проекта.",
+      "platform.openai.com → API keys → Create new secret key. Ein Schlüssel bedient alle Automatisierungen des Projekts.",
+      "platform.openai.com → API keys → Create new secret key. Uma chave serve todas as automações do projeto.",
+      "platform.openai.com → API keys → Create new secret key. Jeden klucz obsługuje wszystkie automatyzacje projektu.",
+      "platform.openai.com → API keys → Create new secret key. Tek anahtar projedeki tüm otomasyonlara hizmet eder.",
+      "platform.openai.com → API keys → Create new secret key. Eén sleutel bedient alle automatiseringen van het project.",
     ),
   },
   RESEND_INBOUND_SECRET: {
