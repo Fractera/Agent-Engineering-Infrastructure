@@ -27,7 +27,7 @@ import type { TableAdminBridge } from "./table.client";
 const apiBase = () => location.pathname.replace(/\/+$/, "") + "/api";
 
 export function useDashboardTableAdmin({
-  automation, table,
+  automation, table, lang,
 }: { automation: string; table: DashboardTable; lang: string }): { bridge: TableAdminBridge; modals: ReactNode } {
   const L = dashboardAdminStrings(lang);
   const [adding, setAdding] = useState(false);

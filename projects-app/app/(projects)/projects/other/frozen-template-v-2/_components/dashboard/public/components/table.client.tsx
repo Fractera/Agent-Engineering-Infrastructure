@@ -57,7 +57,7 @@ export type TableAdminBridge = {
 };
 
 export function DashboardTableView({
-  automation, table, admin,
+  automation, table, admin, lang,
 }: { automation: string; table: DashboardTable; admin?: TableAdminBridge; lang: string }) {
   const L = dashboardAdminStrings(lang);
   const seed = useMemo<TableRow[]>(() => table.rows ?? [], [table.rows]);
