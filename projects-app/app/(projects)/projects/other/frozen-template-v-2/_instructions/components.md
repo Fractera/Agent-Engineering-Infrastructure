@@ -14,24 +14,36 @@ has not been delivered. Node work and component work go hand in hand — finish 
   calendars. Need a second calendar? Add an ENTITY to the existing tab — never a second calendar tab.
 - `name` must match a folder in `_components/`; that is how the page finds the tab's code.
 
-## What you actually write — plain React, live without a rebuild
+## What you actually write — the HARD runtime layer
 
-A component is a PURE REACT COMPONENT and nothing more exotic. It is compiled the moment you save it
-and is on the page immediately — on the owner's cockpit and on the public mirror alike. THERE IS NO
-DEPLOYMENT IN YOUR FLOW: never ask for a build, never wait for one, never tell the owner to restart
-anything. If your change is not visible, it did not compile — read the error and fix it.
+The components you build are the RUNTIME (public) layer — what the END USER sees after development is
+over. They belong to the hard side of the resilience law "production hard, development soft": they live
+inside this folder and are self-contained, so the folder runs unchanged in any other account and ships as
+a ZIP. A component is a PURE REACT COMPONENT and nothing more exotic; it is compiled the moment you save
+it and is on the page immediately — on the owner's cockpit and on the public mirror alike. Your flow needs
+no build step for a runtime component: if a change is not visible, it did not compile — read the error and
+fix it, don't ask anyone to restart anything.
 
-The contract that makes that possible is deliberately strict:
+The contract that makes that possible:
 
 - ONE DEFAULT EXPORT, an async server component: `export default async function Calendar() { … }`.
 - PLAIN JSX. The runtime is bundled in for you; you do not import React.
-- NO IMPORT STATEMENTS AT ALL. A foreign import that works today becomes a dependency nobody owns
-  tomorrow, and it breaks the law that this folder must run unchanged in any other account.
+- REACH NOTHING OUTSIDE THIS FOLDER. A runtime/public component imports only its own folder (its
+  siblings, `_lib/`, `_data/`) plus `zod`. It never imports another automation, a platform module, the v1
+  `_shared`, or the soft dev layer `_shared-v2`. A foreign import that works today becomes a dependency
+  nobody owns tomorrow, and it breaks self-containment. (`scripts/check-entity-imports.mjs` enforces this:
+  the ONE lawful outside path is `_shared-v2`, and ONLY from the dev-slot files — never from a public
+  component.)
 - DATA COMES FROM THIS AUTOMATION'S OWN DOORS, fetched by their address — never from another
   automation, never from a platform module.
 - STYLING is inline or the utility classes already present in the page.
 
-Everything you cannot express under that contract is a signal, not an obstacle: say so in a warning
+The SOFT layer — the "Build with AI" buttons and the admin settings — is not yours: it lives outside in
+`_shared-v2` and is wired in through the fail-silent dev-slot (`_components/shared/dev-slot*`). Production
+never depends on it: remove `_shared-v2` and those dev affordances simply stop appearing while every
+runtime component keeps working. You do not build or study that layer (AGENTS.md §0).
+
+Everything you cannot express under this contract is a signal, not an obstacle: say so in a warning
 rather than reaching outside the folder.
 
 ## Where the components appear

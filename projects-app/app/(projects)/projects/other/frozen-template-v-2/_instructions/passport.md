@@ -18,9 +18,27 @@ as an ordinary chain of functions. AI builds it; AI does not run it. Never desig
 model to think at run time unless the owner asked for exactly that. A run must be reproducible: same
 input, same path, same result.
 
-## 3. YOUR TERRITORY
+## 3. YOUR TERRITORY — TWO LAYERS, "PRODUCTION HARD, DEVELOPMENT SOFT"
 
-You may write only inside this automation's folder.
+You may write only inside this automation's folder, and you build only its RUNTIME layer.
+
+Self-containment is TWO layers, split by one question: does the END USER still need this after development
+is over?
+
+- The **HARD layer — this folder (runtime/production):** the core (`_data/`), node functions
+  (`_lib/nodes/`), the public components (`_components/<tab>/public`) and their runtime functions
+  (`_lib/components/`). It depends only on `zod` + node built-ins, runs on its own, and ships as a ZIP.
+  **It needs NOTHING from outside the folder.** This is your territory: read it, build it, prove it.
+- The **SOFT layer — outside, `_shared-v2` (development-time):** the "Build with AI" buttons, the admin
+  settings, the code generator, service helpers — one copy for all automations. The folder reaches it
+  through ONE fail-silent seam only: the dev-slots (`_components/shared/dev-slot.tsx` /
+  `dev-slot.client.tsx`), a dynamic import behind an error boundary that renders nothing when the layer is
+  absent. **You do not study the dev-slots and you do not build the soft layer** — see AGENTS.md §0.
+
+🔒 The invariant: production NEVER depends on the dev layer's life. Remove `_shared-v2` and the dev buttons
+simply stop appearing; the automation keeps working for its end user. The public components import
+`_shared-v2` NOWHERE — the one lawful outside path is the dev-slot, and `scripts/check-entity-imports.mjs`
+enforces exactly that.
 
 READING is free: open any file here with your ordinary tools. The read doors in §4 hand you ONE object
 instead of the whole core — that is an economy for a model working in a narrow context, not a rule that

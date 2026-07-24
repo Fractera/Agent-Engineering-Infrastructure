@@ -3,7 +3,8 @@ import type { Surface } from "../surface";
 import MainSchedule from "./public/main-schedule";
 import CronSettings from "./admin/cron-settings";
 import SectionAccordion from "../shared/section-accordion.client";
-import BuildWithAi from "../shared/build-with-ai.client";
+import { DevSlot } from "../shared/dev-slot";
+import { DevBuildWithAi } from "../shared/dev-slot.client";
 import { pick } from "../shared/localized";
 
 // МАРШРУТИЗАТОР РАСПИСАНИЯ — та же композиция, что у пульта, дашборда и календаря: публичная половина
@@ -46,7 +47,9 @@ export default function Cron({
           <div className="space-y-3">
             <Schedule entity={entity} lang={lang} heading={!nested} />
             {surface === "admin" ? (
-              <BuildWithAi target={{ object: "entity", tab: "cron", cuid: entity.cuid }} name={title} pending={pending} lang={lang} />
+              <DevSlot>
+                <DevBuildWithAi target={{ object: "entity", tab: "cron", cuid: entity.cuid }} name={title} pending={pending} lang={lang} />
+              </DevSlot>
             ) : null}
           </div>
         ) : (
@@ -66,10 +69,10 @@ export default function Cron({
         );
       })}
       {surface === "admin" ? (
-        <>
+        <DevSlot>
           <CronSettings entities={entities} lang={lang} />
-          <BuildWithAi target={{ object: "tab", name: "cron" }} name="cron" lang={lang} />
-        </>
+          <DevBuildWithAi target={{ object: "tab", name: "cron" }} name="cron" lang={lang} />
+        </DevSlot>
       ) : null}
     </div>
   );

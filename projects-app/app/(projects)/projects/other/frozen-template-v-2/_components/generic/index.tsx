@@ -1,7 +1,8 @@
 import type { Entity } from "../../_data/automation.schema";
 import type { Surface } from "../surface";
 import SectionAccordion from "../shared/section-accordion.client";
-import BuildWithAi from "../shared/build-with-ai.client";
+import { DevSlot } from "../shared/dev-slot";
+import { DevBuildWithAi } from "../shared/dev-slot.client";
 import { sectionsStrings } from "../shared/sections-i18n";
 
 // РАЗДЕЛ БЕЗ СОБСТВЕННОЙ ПАПКИ — общий вид для каждой вкладки, которую ещё не построили (карта,
@@ -37,12 +38,14 @@ export default function GenericTab({
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">{S.notBuiltYet}</p>
             {surface === "admin" ? (
-              <BuildWithAi
-                target={{ object: "entity", tab, cuid: entity.cuid }}
-                name={entity.name}
-                pending={"crudUser" in entity.info ? entity.info.crudUser : undefined}
-                lang={lang}
-              />
+              <DevSlot>
+                <DevBuildWithAi
+                  target={{ object: "entity", tab, cuid: entity.cuid }}
+                  name={entity.name}
+                  pending={"crudUser" in entity.info ? entity.info.crudUser : undefined}
+                  lang={lang}
+                />
+              </DevSlot>
             ) : null}
           </div>
         );
@@ -64,7 +67,9 @@ export default function GenericTab({
         );
       })}
       {surface === "admin" ? (
-        <BuildWithAi target={{ object: "tab", name: tab }} name={tab.replace(/-/g, " ")} lang={lang} />
+        <DevSlot>
+          <DevBuildWithAi target={{ object: "tab", name: tab }} name={tab.replace(/-/g, " ")} lang={lang} />
+        </DevSlot>
       ) : null}
     </div>
   );

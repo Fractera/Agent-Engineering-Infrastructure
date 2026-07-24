@@ -1,11 +1,30 @@
 # AGENTS.md — start here
 
-You have landed in the folder of ONE automation. It is self-contained: everything that describes it,
-runs it and governs it is inside this folder. Read this page first — it is short on purpose — then read
-`_instructions/passport.md`, which is the full starting law.
+You have landed in the folder of ONE automation. Everything the END USER needs — everything that
+describes it, runs it and governs it — is inside this folder: the RUNTIME layer is self-contained and
+depends only on `zod` + node built-ins, so the folder runs on its own and ships as a ZIP. Read this page
+first — it is short on purpose — then read `_instructions/passport.md`, which is the full starting law.
 
 This file is in English because its reader is a model. `ARCHITECTURE.md` is in Russian because its
 reader is the owner.
+
+## 0. READ ONLY THE RUNTIME LAYER — skip the dev-slots
+
+Everything that describes and runs this automation for its end user is here: the core (`_data/`), node
+functions (`_lib/nodes/`), the public components (`_components/<tab>/public`) and their runtime functions
+(`_lib/components/`). That is the whole substance — read it freely.
+
+**You may SKIP the dev-slots.** A few thin client files (`_components/shared/dev-slot.tsx` and
+`dev-slot.client.tsx`) only DYNAMICALLY IMPORT external development tools from `_shared-v2` — the "Build
+with AI" buttons and the admin settings — behind a fail-silent boundary. They are NOT part of this
+automation's substance, do NOT affect what you build, and degrade to nothing if that external layer is
+absent. Studying them teaches nothing about this automation — do not spend tokens on them.
+
+This is the RESILIENCE law, "production hard, development soft": the runtime layer above is HARD and lives
+in this folder; the development tooling is SOFT and lives outside in `_shared-v2`, reached only through the
+dev-slot. Production never depends on the dev layer's life — remove `_shared-v2` and the dev buttons simply
+stop appearing while the automation keeps working. You build the hard layer; the soft layer is not yours to
+study.
 
 ## 1. Where the truth is
 

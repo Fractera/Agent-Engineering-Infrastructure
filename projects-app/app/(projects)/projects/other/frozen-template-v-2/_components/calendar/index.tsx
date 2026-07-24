@@ -4,7 +4,8 @@ import type { CronSettings } from "../cron/schedule";
 import MainCalendar from "./public/main-calendar";
 import CalendarSettings from "./admin/calendar-settings";
 import SectionAccordion from "../shared/section-accordion.client";
-import BuildWithAi from "../shared/build-with-ai.client";
+import { DevSlot } from "../shared/dev-slot";
+import { DevBuildWithAi } from "../shared/dev-slot.client";
 import { pick } from "../shared/localized";
 
 // МАРШРУТИЗАТОР КАЛЕНДАРЯ — не переключатель, а композиция: рисует две половины друг под другом.
@@ -63,7 +64,9 @@ export default function Calendar({
           <div className="space-y-3">
             <Cal entity={entity} cron={cron} surface={surface} lang={lang} heading={!nested} />
             {surface === "admin" ? (
-              <BuildWithAi target={{ object: "entity", tab: "calendar", cuid: entity.cuid }} name={title} pending={pending} lang={lang} />
+              <DevSlot>
+                <DevBuildWithAi target={{ object: "entity", tab: "calendar", cuid: entity.cuid }} name={title} pending={pending} lang={lang} />
+              </DevSlot>
             ) : null}
           </div>
         ) : (
@@ -85,11 +88,11 @@ export default function Calendar({
         );
       })}
       {surface === "admin" ? (
-        <>
+        <DevSlot>
           <CalendarSettings entities={entities} lang={lang} />
           {/* ЗАЯВКА НА ВЕСЬ КАЛЕНДАРЬ — объект tab, отдельно от заявок на отдельные календари. */}
-          <BuildWithAi target={{ object: "tab", name: "calendar" }} name="calendar" lang={lang} />
-        </>
+          <DevBuildWithAi target={{ object: "tab", name: "calendar" }} name="calendar" lang={lang} />
+        </DevSlot>
       ) : null}
     </div>
   );

@@ -3,7 +3,8 @@ import type { Surface } from "../surface";
 import FirstControlPanel from "./public/first-control-panel";
 import RequestSettings from "./admin/request-settings";
 import SectionAccordion from "../shared/section-accordion.client";
-import BuildWithAi from "../shared/build-with-ai.client";
+import { DevSlot } from "../shared/dev-slot";
+import { DevBuildWithAi } from "../shared/dev-slot.client";
 import { controlPanelStrings, pick } from "./i18n";
 import { dataText } from "./params";
 
@@ -59,7 +60,9 @@ export default function ControlPanel({
           <div className="space-y-3">
             <Panel entity={entity} lang={lang} surface={surface} heading={!nested} />
             {surface === "admin" ? (
-              <BuildWithAi target={{ object: "entity", tab: "control-panel", cuid: entity.cuid }} name={title} pending={pending} lang={lang} />
+              <DevSlot>
+                <DevBuildWithAi target={{ object: "entity", tab: "control-panel", cuid: entity.cuid }} name={title} pending={pending} lang={lang} />
+              </DevSlot>
             ) : null}
           </div>
         ) : (
@@ -82,11 +85,11 @@ export default function ControlPanel({
         );
       })}
       {surface === "admin" ? (
-        <>
+        <DevSlot>
           <RequestSettings entities={entities} lang={lang} />
           {/* ЗАЯВКА НА ВСЮ ВКЛАДКУ — другой объект ядра (tab), поэтому отдельная раскрывашка внизу. */}
-          <BuildWithAi target={{ object: "tab", name: "control-panel" }} name={tabTitle} lang={lang} />
-        </>
+          <DevBuildWithAi target={{ object: "tab", name: "control-panel" }} name={tabTitle} lang={lang} />
+        </DevSlot>
       ) : null}
     </div>
   );

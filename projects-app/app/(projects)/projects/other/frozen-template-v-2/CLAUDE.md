@@ -9,8 +9,11 @@ automatically, so this file exists to send you one file onward.
 
 The four things worth carrying before you get there:
 
-1. **Read any file in this folder freely** — nothing is hidden behind an API, and the read doors are an
-   economy for weak models, not a gate.
+1. **Read only the RUNTIME layer** — the core (`_data/`), node functions (`_lib/nodes/`), the public
+   components (`_components/<tab>/public`) and their runtime functions (`_lib/components/`). Read it
+   freely — nothing is hidden behind an API. **SKIP the dev-slots** (`_components/shared/dev-slot*`): thin
+   files that only dynamically import external dev tools from `_shared-v2` behind a fail-silent boundary —
+   not this automation's substance, they teach nothing about it (AGENTS.md §0, resilience law).
 2. **Never hand-edit `_data/automation.json` without checking it.** Change it through `POST api/patch`
    (validates the whole core before writing, refuses in words), or edit and then run
    `npm run check:core`. Editing without checking is the one habit that breaks this project quietly.

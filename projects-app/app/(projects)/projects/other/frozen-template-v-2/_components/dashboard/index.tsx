@@ -3,7 +3,8 @@ import type { Surface } from "../surface";
 import History from "./public/history";
 import TableSettings from "./admin/table-settings";
 import SectionAccordion from "../shared/section-accordion.client";
-import BuildWithAi from "../shared/build-with-ai.client";
+import { DevSlot } from "../shared/dev-slot";
+import { DevBuildWithAi } from "../shared/dev-slot.client";
 import { pick } from "../shared/localized";
 
 // МАРШРУТИЗАТОР ДАШБОРДА — не переключатель, а композиция: рисует две половины друг под другом.
@@ -53,7 +54,9 @@ export default function Dashboard({
           <div className="space-y-3">
             <Table entity={entity} lang={lang} heading={!nested} />
             {surface === "admin" ? (
-              <BuildWithAi target={{ object: "entity", tab: "dashboard", cuid: entity.cuid }} name={title} pending={pending} lang={lang} />
+              <DevSlot>
+                <DevBuildWithAi target={{ object: "entity", tab: "dashboard", cuid: entity.cuid }} name={title} pending={pending} lang={lang} />
+              </DevSlot>
             ) : null}
           </div>
         ) : (
@@ -75,11 +78,11 @@ export default function Dashboard({
         );
       })}
       {surface === "admin" ? (
-        <>
+        <DevSlot>
           <TableSettings entities={entities} lang={lang} />
           {/* ЗАЯВКА НА ВЕСЬ ДАШБОРД — объект tab, отдельно от заявок на отдельные таблицы. */}
-          <BuildWithAi target={{ object: "tab", name: "dashboard" }} name="dashboard" lang={lang} />
-        </>
+          <DevBuildWithAi target={{ object: "tab", name: "dashboard" }} name="dashboard" lang={lang} />
+        </DevSlot>
       ) : null}
     </div>
   );
