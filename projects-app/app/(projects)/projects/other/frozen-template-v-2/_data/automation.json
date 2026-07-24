@@ -1441,11 +1441,11 @@
       {
         "systemInstructionName": "tab",
         "name": "analytics",
-        "presence": "absent",
+        "presence": "collapsed",
         "info": {
           "aiSummary": "Вкладка аналитики объявлена и пуста: владелец ещё не сказал, что она должна считать."
         },
-        "status": "in-development",
+        "status": "materialized",
         "warnings": [],
         "envKeys": [],
         "entities": [
@@ -1455,10 +1455,23 @@
             "info": {
               "aiSummary": "Заготовка «Main analytics»: создана вместе со вкладкой, требований владельца пока нет."
             },
-            "status": "in-development",
+            "status": "materialized",
             "warnings": [],
             "envKeys": [],
-            "data": {}
+            "data": {
+              "title": {
+                "en": "Weekly analytics",
+                "ru": "Аналитика за неделю",
+                "es": "Análisis semanal",
+                "fr": "Analytique hebdomadaire",
+                "it": "Analisi settimanale",
+                "de": "Wochenanalyse",
+                "pt": "Análise semanal",
+                "pl": "Analityka tygodniowa",
+                "tr": "Haftalık analiz",
+                "nl": "Weekanalyse"
+              }
+            }
           }
         ]
       },

@@ -6,6 +6,7 @@ import ControlPanel from "./control-panel";
 import Calendar from "./calendar";
 import Cron from "./cron";
 import Map from "./map";
+import Analytics from "./analytics";
 import { cronOf } from "./shared/schedule";
 import GenericTab from "./generic";
 import UseCases from "./use-cases";
@@ -60,6 +61,8 @@ export default async function AutomationComponents({ surface, lang }: { surface:
       <Cron surface={surface} entities={tab.entities} lang={lang} />
     ) : tab.name === "map" ? (
       <Map surface={surface} entities={tab.entities} lang={lang} />
+    ) : tab.name === "analytics" ? (
+      <Analytics surface={surface} entities={tab.entities} lang={lang} />
     ) : (
       // У вкладки ещё нет своей папки — показываем её сущности общим видом: место на странице, якорь для
       // оглавления и обе ступени заявки «строить вместе с ИИ». Пропускать раздел нельзя: тогда заказать
