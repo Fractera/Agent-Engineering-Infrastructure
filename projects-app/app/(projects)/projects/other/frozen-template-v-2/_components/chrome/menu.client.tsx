@@ -4,7 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { chromeStrings } from "./i18n";
 import { Menu as HamburgerIcon, Sparkles as SparkleIcon, GripVertical as GripVerticalIcon, Pencil as PencilIcon, Copy as CopyIcon, Trash2 as TrashIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Toast from "../shared/toast.client";
 import HowItWorksModal from "./how-it-works-modal.client";
 import PlaceholderModal from "./placeholder-modal.client";
@@ -12,17 +21,20 @@ import SettingsModal from "./settings-modal.client";
 import type { ProviderKey } from "../ai";
 
 // ГАМБУРГЕР-МЕНЮ (админ) — ФАКСИМИЛЕ меню v1 (automation-menu.client.tsx), воспроизведённое самодостаточно
-// (закон 0: без shadcn/lucide/_shared). Порядок, метки, иконки и разделители — один-в-один с образцом.
+// Порядок, метки, иконки и разделители — один-в-один с образцом v1.
 // Единственное ДОБАВЛЕНИЕ — пункт «Публичная страница» (требование владельца).
 //
-// Записи, чей бэкенд v1 в v2 ещё не построен (Настройки · Тесты · Переименовать · Клонировать · Удалить),
-// выглядят как в v1, но открывают честную заглушку. Работают уже сейчас: «Как это работает», переключатели
+// 🔒 НА shadcn (шаг 298, правило владельца: самописные UI-элементы во v2 запрещены). Прежняя реализация
+// была самодельной раскрывашкой `<details>/<summary>` с десятком сырых `<button>` — теперь это
+// `DropdownMenu` (Item/Label/Separator), иконки из `lucide`, тумблеры — shadcn `Switch`. Строки-
+// переключатели НЕ закрывают меню (`onSelect` → `preventDefault`): владелец включает разделы подряд, и
+// захлопывать список после каждого клика — терять его работу.
+//
+// Записи, чей бэкенд v1 в v2 ещё не построен (Тесты · Переименовать · Клонировать · Удалить), выглядят как
+// в v1, но открывают честную заглушку. Работают уже сейчас: «Как это работает», Настройки, переключатели
 // видимости (пишут tab.presence в ядро через api/patch) и перетаскивание строк (порядок — будущий op).
 type TabRow = { name: string; presence: "absent" | "collapsed" | "expanded"; entities?: { cuid: string; title: string }[] };
 type Modal = null | "howItWorks" | "settings" | { title: string };
-
-const item = "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-none hover:bg-accent";
-const sep = <div className="my-1 h-px bg-border" />;
 
 export default function Menu({
   lang,
@@ -91,64 +103,66 @@ export default function Menu({
 
   return (
     <>
-      <details data-chrome="menu" className="relative">
-        <summary className="flex cursor-pointer list-none items-center rounded-md px-2 py-1.5 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label={L.menuAria}>
-          <HamburgerIcon className="size-4" />
-        </summary>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className="size-8 text-muted-foreground" aria-label={L.menuAria} data-chrome="menu">
+            <HamburgerIcon className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
 
         {/* ВЫСОТА МЕНЮ ОГРАНИЧЕНА 560px, ПРОКРУТКА ВНУТРИ (требование владельца): разделов и записей
             прибавляется, и список не имеет права уходить за нижний край экрана — иначе нижние пункты
             становятся недостижимыми, а на коротком экране пропадает и «Опасная зона». */}
-        <div className="absolute right-0 z-30 mt-2 max-h-[560px] w-72 overflow-y-auto rounded-md border bg-background p-1 text-sm shadow-md">
+        <DropdownMenuContent align="end" className="max-h-[560px] w-72 overflow-y-auto">
           {/* How it works — top, font-medium, Sparkles (v1) */}
-          <button type="button" className={`${item} font-medium`} onClick={() => setModal("howItWorks")}>
+          <DropdownMenuItem className="font-medium" onSelect={() => setModal("howItWorks")}>
             <SparkleIcon className="size-4" />
             {L.howItWorks}
-          </button>
+          </DropdownMenuItem>
 
           {/* NEW (the one addition): Public page — ОТКРЫВАЕТСЯ ОТДЕЛЬНЫМ ОКНОМ (кокпит владельца при
               этом не теряется), но ТОЛЬКО если автоматизация построена. Замороженный шаблон публичной
               страницы не имеет: вместо перехода в никуда — тост с тем, что нужно сделать. */}
           {built ? (
-            <a href={publicHref} target="_blank" rel="noopener noreferrer" className={item}>
-              {L.publicPage}
-            </a>
+            <DropdownMenuItem asChild>
+              <a href={publicHref} target="_blank" rel="noopener noreferrer">{L.publicPage}</a>
+            </DropdownMenuItem>
           ) : (
-            <button type="button" className={item} onClick={() => setNotBuilt(true)}>
-              {L.publicPage}
-            </button>
+            <DropdownMenuItem onSelect={() => setNotBuilt(true)}>{L.publicPage}</DropdownMenuItem>
           )}
 
-          {sep}
-          <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">{L.automationLabel}</div>
-          <div className="flex items-center justify-between gap-4 px-2 py-1.5">
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel className="text-xs text-muted-foreground">{L.automationLabel}</DropdownMenuLabel>
+          {/* Выбор ИИ — не пункт меню, а ФАКТ о автоматизации: здесь его показывают, меняют в Настройках. */}
+          <div className="flex items-center justify-between gap-4 px-2 py-1.5 text-sm">
             <span className="text-muted-foreground">{L.aiProvider}</span>
             <span className="font-medium">{ai.providerLabel}</span>
           </div>
-          <div className="flex items-center justify-between gap-4 px-2 py-1.5">
+          <div className="flex items-center justify-between gap-4 px-2 py-1.5 text-sm">
             <span className="text-muted-foreground">{L.aiModel}</span>
             <span className="font-medium">{ai.modelLabel}</span>
           </div>
 
-          {sep}
+          <DropdownMenuSeparator />
           {/* НАСТРОЙКИ — своё окно, а не заглушка и не список внутри меню: там живут каналы и всё,
               что настраивают. Меню — навигация; настройка канала — работа, и внутри выпадающего
               списка она растит его до края экрана и захлопывается от случайного клика мимо. */}
-          <button type="button" className={item} onClick={() => setModal("settings")}>{L.settingsItem}</button>
+          <DropdownMenuItem onSelect={() => setModal("settings")}>{L.settingsItem}</DropdownMenuItem>
 
-          {sep}
-          <div className="px-2 py-1.5 text-xs font-normal text-muted-foreground">{L.entitiesHeading}</div>
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">{L.entitiesHeading}</DropdownMenuLabel>
           {/* Sortable rows: grip (left) + label + visibility switch — v1 design; here the switch writes
-              tab.presence to the core, the grip reorders locally (future persist). */}
+              tab.presence to the core, the grip reorders locally (future persist). Пункт НЕ закрывает меню. */}
           {rows.map((tab, i) => {
             const isVisible = tab.presence !== "absent";
             const reorder = L.reorderAria.replace("{name}", tab.name);
             return (
-              <div
+              <DropdownMenuItem
                 key={tab.name}
+                onSelect={(e) => e.preventDefault()}
                 onDragOver={(e) => { e.preventDefault(); if (overIndex !== i) setOverIndex(i); }}
                 onDrop={(e) => { e.preventDefault(); drop(i); }}
-                className={`flex items-center gap-2 rounded-sm px-2 py-1.5 ${overIndex === i && dragIndex !== null && dragIndex !== i ? "bg-accent" : ""} ${dragIndex === i ? "opacity-50" : ""}`}
+                className={`gap-2 ${overIndex === i && dragIndex !== null && dragIndex !== i ? "bg-accent" : ""} ${dragIndex === i ? "opacity-50" : ""}`}
               >
                 <span
                   draggable
@@ -162,26 +176,26 @@ export default function Menu({
                 </span>
                 <span className="flex-1 truncate capitalize">{tab.name}</span>
                 <Switch checked={isVisible} disabled={busy === tab.name} aria-label={tab.name} onCheckedChange={() => toggleVisibility(tab.name, tab.presence)} />
-              </div>
+              </DropdownMenuItem>
             );
           })}
 
-          {sep}
-          <button type="button" className={item} onClick={() => setModal({ title: L.testsItem })}>{L.testsItem}</button>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={() => setModal({ title: L.testsItem })}>{L.testsItem}</DropdownMenuItem>
 
-          {sep}
-          <div className="px-2 py-1.5 text-xs font-normal text-rose-600 dark:text-rose-400">{L.dangerZone}</div>
-          <button type="button" className={item} onClick={() => setModal({ title: L.renameAutomation })}>
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel className="text-xs font-normal text-rose-600 dark:text-rose-400">{L.dangerZone}</DropdownMenuLabel>
+          <DropdownMenuItem onSelect={() => setModal({ title: L.renameAutomation })}>
             <PencilIcon className="size-4" /> {L.renameAutomation}
-          </button>
-          <button type="button" className={item} onClick={() => setModal({ title: L.cloneAutomation })}>
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setModal({ title: L.cloneAutomation })}>
             <CopyIcon className="size-4" /> {L.cloneAutomation}
-          </button>
-          <button type="button" className={`${item} text-rose-600 dark:text-rose-400`} onClick={() => setModal({ title: L.deleteAutomation })}>
+          </DropdownMenuItem>
+          <DropdownMenuItem variant="destructive" onSelect={() => setModal({ title: L.deleteAutomation })}>
             <TrashIcon className="size-4" /> {L.deleteAutomation}
-          </button>
-        </div>
-      </details>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {/* Отказ владельцу, а не тупик: объясняем, ПОЧЕМУ ссылки ещё нет и что даст её появление.
           Текст пока только английский — решение владельца на этот шаг. */}
