@@ -13,8 +13,6 @@ import { useCasesSectionTitle } from "./use-cases/i18n";
 import AutoRefresh from "./shared/auto-refresh.client";
 import SectionAccordion from "./shared/section-accordion.client";
 import { sectionsStrings } from "./shared/sections-i18n";
-import { DevSlot } from "./shared/dev-slot";
-import { DevUseCasesPanel } from "./shared/dev-slot.client";
 
 // СЕКЦИИ НА ХОЛСТЕ. Одно ядро читают ОБЕ поверхности, но показывают по-разному:
 //
@@ -84,11 +82,12 @@ export default async function AutomationComponents({ surface, lang }: { surface:
           );
         })}
         {/* ПОЛЬЗОВАТЕЛЬСКИЕ КЕЙСЫ — ВСЕГДА последняя секция, за сепаратором, ОТКРЫТА (решение владельца:
-            не отслеживать раскрыт/скрыт). Витрина — read-only список из `_components/use-cases/`. */}
+            не отслеживать раскрыт/скрыт). Единый `<UseCases>` (тройка index/public/admin); витрина =
+            surface="public" → только публичный read-only список. */}
         {useCases.cases.length ? (
           <section data-section="use-cases" className="mt-10 scroll-mt-20 border-t pt-6">
             <h2 className="mb-3 text-lg font-semibold tracking-tight">{useCasesSectionTitle(lang)}</h2>
-            <UseCases cases={useCases.cases} lang={lang} />
+            <UseCases cases={useCases.cases} surface={surface} lang={lang} />
           </section>
         ) : null}
       </>
@@ -119,12 +118,11 @@ export default async function AutomationComponents({ surface, lang }: { surface:
       ) : null}
       {/* ПОЛЬЗОВАТЕЛЬСКИЕ КЕЙСЫ — ВСЕГДА последняя секция страницы, за сепаратором, ОТКРЫТА (решение
           владельца 2026-07-24: не отслеживать раскрыт/скрыт, всегда рисовать; кейсы живут в топ-уровневом
-          `useCases`, не во вкладках). Кокпит — дев-инструмент из `_shared-v2` через дев-слот. */}
+          `useCases`, не во вкладках). Единый `<UseCases>` (тройка index/public/admin): публичный список +
+          админ-половина через дев-слот. Общий index НЕ монтирует DevSlot сам — это делает `use-cases/admin/`. */}
       <section data-section="use-cases" className="mt-10 border-t pt-6">
         <h2 className="mb-3 text-lg font-semibold tracking-tight">{useCasesSectionTitle(lang)}</h2>
-        <DevSlot>
-          <DevUseCasesPanel />
-        </DevSlot>
+        <UseCases cases={useCases.cases} surface={surface} lang={lang} />
       </section>
     </>
   );

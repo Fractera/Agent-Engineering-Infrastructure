@@ -8,6 +8,7 @@
     "start": "next start -p 3003",
     "lint": "next lint",
     "check:entity-imports": "node scripts/check-entity-imports.mjs",
+    "check:tab-structure": "node scripts/check-tab-structure.mjs",
     "check:route": "node scripts/check-route-self-sufficiency.mjs",
     "check:core": "node scripts/check-core.mjs"
   },

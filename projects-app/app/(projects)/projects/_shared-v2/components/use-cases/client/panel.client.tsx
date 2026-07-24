@@ -167,11 +167,13 @@ export function UseCasesPanel() {
     </Accordion>
   );
 
-  // ── INITIAL — лёгкий слой: только тексты кейсов + человеческая кнопка входа в настройку. ─────────────────
+  // ── INITIAL — только КНОПКА входа в настройку. Сам список кейсов рисует ПУБЛИЧНАЯ половина (`public/`),
+  //    поэтому здесь его НЕ повторяем: админ-половина лишь добавляет управление под публичным списком
+  //    (тот же приём, что у calendar/dashboard: public сверху, admin-настройка снизу). ────────────────────
   if (mode === "initial") {
     return (
       <div className="space-y-3">
-        {rows.length ? caseList : <p className="text-sm text-muted-foreground">{L.empty}</p>}
+        {rows.length === 0 ? <p className="text-sm text-muted-foreground">{L.empty}</p> : null}
         <Button variant="secondary" onClick={() => setMode("settings")}>
           <Settings2 className="size-4" /> {L.configureCases}
         </Button>

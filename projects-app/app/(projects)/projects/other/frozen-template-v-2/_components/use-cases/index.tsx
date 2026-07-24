@@ -1,14 +1,26 @@
+import type { Surface } from "../surface";
 import CaseList from "./public/case-list.client";
+import UseCasesSettings from "./admin/settings";
 
-// ВКЛАДКА ПОЛЬЗОВАТЕЛЬСКИХ КЕЙСОВ — РАНТАЙМ-половина (закон устойчивости: продакшн твёрдый). Здесь только
-// то, что видит конечный пользователь — read-only список кейсов (номер + заголовок + статус + описание),
-// ровно как v1 «view mode». Живёт В ПАПКЕ автоматизации, зависит только от `zod`/shadcn — уезжает ZIP.
+// МАРШРУТИЗАТОР КЕЙСОВ — не переключатель, а КОМПОЗИЦИЯ (стандарт папки-вкладки, образец calendar/dashboard):
+// публичная половина сверху (видят все), административная под ней (только админ-слой).
 //
-// Полный инструмент владельца (кнопка «Настроить», режимы settings/review, весь Quiz) — это ДЕВ/АДМИН
-// слой, он живёт СНАРУЖИ в `_shared-v2/components/use-cases/` и подтягивается fail-silent дев-слотом. Нет
-// `_shared-v2` — остаётся этот read-only список, продакшн не задет.
+// КАРТА ПАПКИ:
+//   public/  — read-only список кейсов (номер + заголовок + статус + описание), что видит конечный
+//              пользователь; работает без `_shared-v2` (закон 0 + shadcn);
+//   admin/   — АДМИНИСТРАТИВНАЯ половина, тянет `_shared-v2` через дев-слот (кнопка «Настроить», режимы
+//              настройки/подтверждения, Quiz создания кейсов);
+//   i18n.ts  — строки секции; status.ts — статусы кейса и их бейджи.
+//
+// Кейсы живут в ТОП-УРОВНЕВОМ `core.useCases`, а не в `components.tabs` — это секция, а не вкладка; но
+// внутренняя тройка public/admin/index у неё та же, что у любой вкладки.
 type Case = { cuid: string; number: number; title: string; text: string; status: string };
 
-export default function UseCases({ cases, lang }: { cases: Case[]; lang: string }) {
-  return <CaseList cases={cases} lang={lang} />;
+export default function UseCases({ cases, surface, lang }: { cases: Case[]; surface: Surface; lang: string }) {
+  return (
+    <div data-entity="use-cases" data-surface={surface} className="space-y-3">
+      <CaseList cases={cases} lang={lang} />
+      {surface === "admin" ? <UseCasesSettings /> : null}
+    </div>
+  );
 }

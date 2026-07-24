@@ -51,6 +51,23 @@ runtime component keeps working. You do not build or study that layer (AGENTS.md
 Everything you cannot express under this contract is a signal, not an obstacle: say so in a warning
 rather than reaching outside the folder.
 
+## The tab-folder standard — the SAME shape everywhere (step 298)
+
+Every tab/section folder under `_components/` has ONE shape, identical everywhere (models: `calendar/`,
+`dashboard/`). `npm run check:tab-structure` enforces it.
+
+- `<tab>/index.tsx` — the **composition**, never a switch: the public half on top (everyone sees), the
+  admin half below (wrapped in `<DevSlot>`, `surface === "admin"` only).
+- `<tab>/public/` — the **runtime/public** half: read-only, works without `_shared-v2` (law 0 + shadcn).
+  One file per entity + `public/components/` for shared parts.
+- `<tab>/admin/` — the **admin** half: the settings shown to the owner + `admin/components/`. This is the
+  half tied to the administrative surface; the dev-slot mount (`shared/dev-slot` → `_shared-v2`) is composed
+  here or in the tab's own `index.tsx` — NEVER in the automation's top-level `_components/index.tsx`, which
+  only CALLS `<Tab/>`. Its counterpart in the dev layer is a microservice `_shared-v2/components/<feature>/`
+  with `client | server | types`.
+
+A section that lives outside the tab row (like `use-cases`) still carries the same triple.
+
 ## Where the components appear
 
 - THE OWNER'S COCKPIT — `projects.<domain>/projects/<category>/<slug>` (port 3003 when there is no
