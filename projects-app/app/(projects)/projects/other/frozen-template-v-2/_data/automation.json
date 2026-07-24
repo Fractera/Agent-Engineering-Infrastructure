@@ -1626,11 +1626,11 @@
       {
         "systemInstructionName": "tab",
         "name": "map",
-        "presence": "absent",
+        "presence": "collapsed",
         "info": {
           "aiSummary": "Вкладка карты объявлена и пуста."
         },
-        "status": "in-development",
+        "status": "materialized",
         "warnings": [],
         "envKeys": [],
         "entities": [
@@ -1640,10 +1640,23 @@
             "info": {
               "aiSummary": "Заготовка «Main map»: создана вместе со вкладкой, требований владельца пока нет."
             },
-            "status": "in-development",
+            "status": "materialized",
             "warnings": [],
             "envKeys": [],
-            "data": {}
+            "data": {
+              "title": {
+                "en": "Europe map",
+                "ru": "Карта Европы",
+                "es": "Mapa de Europa",
+                "fr": "Carte de l'Europe",
+                "it": "Mappa d'Europa",
+                "de": "Europakarte",
+                "pt": "Mapa da Europa",
+                "pl": "Mapa Europy",
+                "tr": "Avrupa haritası",
+                "nl": "Kaart van Europa"
+              }
+            }
           }
         ]
       },
