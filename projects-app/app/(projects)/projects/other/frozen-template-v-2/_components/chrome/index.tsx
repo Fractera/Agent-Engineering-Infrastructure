@@ -5,6 +5,7 @@ import StatusBar from "./status-bar";
 import HowItWorks from "./how-it-works.client";
 import NavDrawer, { type NavGroup } from "./nav-drawer.client";
 import Notifications from "../notifications";
+import Warnings from "../warnings";
 
 // ШАПКА АВТОМАТИЗАЦИИ — маршрутизатор по поверхности. Всё, что она рисует, выведено из ядра (паспорт +
 // список вкладок), переданного пропсами: страница (page.tsx) — единственная точка, читающая платформу,
@@ -49,6 +50,9 @@ export default function AutomationChrome({
       <div data-chrome-root="admin">
         <StatusBar passport={passport} lang={lang} tabs={tabs} envKeys={envKeys} publicHref={publicHref} built={built} />
         <Notifications surface={surface} lang={lang} />
+        {/* ЦЕНТР ПРОБЛЕМ (шаг 298) — бейдж «⚠ N» + модалка с открытыми предупреждениями агента. Своя
+            сущность со своим провайдером (единый источник), рядом с полосой-уведомлением. */}
+        <Warnings surface={surface} lang={lang} />
       </div>
     );
   }

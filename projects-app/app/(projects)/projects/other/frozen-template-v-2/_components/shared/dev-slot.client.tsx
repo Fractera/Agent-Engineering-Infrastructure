@@ -90,3 +90,30 @@ export function DevNotifications({ lang }: { lang: string }) {
     </NullBoundary>
   );
 }
+
+// Центр проблем — провайдер (единый источник открытых предупреждений) + панель-модалка, тот же fail-silent
+// путь. Нет `_shared-v2` — центра нет вовсе, продакшн не задет.
+const WarningsLazy = dynamic(
+  () =>
+    import("../../../../_shared-v2")
+      .then((m) => {
+        const { WarningProvider, ProblemsCenter } = m;
+        const Mounted = ({ lang }: { lang: string }) => (
+          <WarningProvider>
+            <ProblemsCenter lang={lang} />
+          </WarningProvider>
+        );
+        return { default: Mounted };
+      })
+      .catch(() => ({ default: () => null })),
+  { ssr: false, loading: () => null },
+);
+
+/** Провайдер + Центр проблем за fail-silent границей — монтируется в шапке кокпита. */
+export function DevWarnings({ lang }: { lang: string }) {
+  return (
+    <NullBoundary>
+      <WarningsLazy lang={lang} />
+    </NullBoundary>
+  );
+}

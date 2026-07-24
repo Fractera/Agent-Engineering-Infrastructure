@@ -23,3 +23,7 @@ export { UseCasesPanel } from "./components/use-cases/client/panel.client";
 // через дверь `api/projects/notices`) + сама полоса. Дев-инструмент кокпита, подключается дев-слотом.
 export { NotificationProvider } from "./components/notifications/client/provider.client";
 export { NotificationBanner } from "./components/notifications/client/banner.client";
+// Центр проблем (микросервис `components/warnings`) — провайдер (единый источник открытых предупреждений
+// из ядра через дверь `api/projects/warnings`) + панель-модалка. Дев-инструмент кокпита.
+export { WarningProvider } from "./components/warnings/client/provider.client";
+export { ProblemsCenter } from "./components/warnings/client/panel.client";
