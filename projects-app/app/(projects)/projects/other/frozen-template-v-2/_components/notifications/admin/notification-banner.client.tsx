@@ -62,10 +62,10 @@ export default function NotificationBanner({ notices, lang }: { notices: Notice[
   const canDevelop = notices.some((n) => n.category === "ready");
 
   return (
-    <details data-chrome="notifications" className="mt-2 rounded-lg border border-primary/40 bg-primary/5">
+    <details data-chrome="notifications" className="mt-2 rounded-lg border border-orange-500/50 bg-orange-500/10">
         <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-sm">
-          {/* колокол */}
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="size-4 shrink-0 text-primary">
+          {/* колокол — оранжевый, чтобы полоса была заметной (правка владельца 2026-07-24) */}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="size-4 shrink-0 text-orange-600 dark:text-orange-400">
             <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
             <path d="M10 21a2 2 0 0 0 4 0" />
           </svg>
