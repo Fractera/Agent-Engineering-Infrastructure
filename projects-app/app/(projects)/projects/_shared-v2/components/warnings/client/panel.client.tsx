@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, TriangleAlert } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Send, TriangleAlert } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import VoiceInput from "../../../tools/voice-input/client/voice-input.client";
 import { useWarnings } from "./provider.client";
 import { warningStrings } from "./i18n";
 
@@ -15,12 +18,41 @@ import { warningStrings } from "./i18n";
 //
 // Ответ на предупреждение (v1 писал в историю и возвращал в разработку) — отдельный будущий шаг; здесь
 // Центр показывает и перебирает проблемы из ядра.
+/** Двери ЭТОЙ автоматизации — относительным путём от адреса страницы (папка переносима). */
+const apiBase = () => location.pathname.replace(/\/+$/, "") + "/api";
+
 export function ProblemsCenter({ lang }: { lang: string }) {
-  const { warnings } = useWarnings();
+  const { warnings, refresh } = useWarnings();
   const W = warningStrings(lang);
   const [open, setOpen] = useState(false);
   const [idx, setIdx] = useState(0);
   const autoOpened = useRef(false);
+  // ОТВЕТ АГЕНТУ — обратная связь прямо в Центре проблем (требование владельца 2026-07-24).
+  const [answer, setAnswer] = useState("");
+  const [sending, setSending] = useState(false);
+  const answerRef = useRef<HTMLTextAreaElement | null>(null);
+
+  async function sendAnswer(warningCuid: string) {
+    const text = answer.trim();
+    if (!text || sending) return;
+    setSending(true);
+    try {
+      const r = await fetch(`${apiBase()}/patch`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ op: "answer-warning", warningCuid, answer: text }),
+      });
+      if (!r.ok) { toast.error(W.answerFailed); return; }
+      toast.success(W.answerSent);
+      setAnswer("");
+      setIdx(0);
+      refresh(); // предупреждение снято — список перечитывается
+      // Полоса-уведомление должна показать, что владелец ОТВЕТИЛ: её провайдер слушает это событие.
+      window.dispatchEvent(new CustomEvent("fractera:notices-refresh"));
+    } finally {
+      setSending(false);
+    }
+  }
 
   // Автооткрытие ОДИН раз за загрузку страницы, когда появились открытые проблемы.
   useEffect(() => {
@@ -64,6 +96,26 @@ export function ProblemsCenter({ lang }: { lang: string }) {
                 <TriangleAlert className="size-4 shrink-0" /> {W.blockTitle}
               </p>
               <p className="whitespace-pre-wrap break-words text-sm text-amber-900 dark:text-amber-100">{row.text}</p>
+            </div>
+
+            {/* ОТВЕТ АГЕНТУ — обратная связь замыкает круг: агент спросил, владелец отвечает здесь же.
+                Отправка снимает предупреждение и кладёт ответ в СЫРУЮ ИНСТРУКЦИЮ объекта вместе с полным
+                текстом снятого предупреждения — чтобы агент читал ответ в контексте своего же вопроса. */}
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground">{W.answerLabel}</label>
+              <Textarea
+                ref={answerRef}
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                placeholder={W.answerPlaceholder}
+                rows={3}
+                className="text-sm"
+                disabled={sending}
+              />
+              <VoiceInput targetRef={answerRef} value={answer} onChange={setAnswer} lang={lang} disabled={sending} />
+              <Button size="sm" onClick={() => void sendAnswer(row.cuid)} disabled={sending || !answer.trim()}>
+                {sending ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />} {W.sendAnswer}
+              </Button>
             </div>
 
             {warnings.length > 1 ? (

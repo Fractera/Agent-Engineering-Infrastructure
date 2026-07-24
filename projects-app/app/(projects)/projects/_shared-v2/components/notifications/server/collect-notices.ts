@@ -1,5 +1,9 @@
 import type { CoreNode, Notice, NoticesCore } from "../types/notifications";
 
+// МАРКЕР ОТВЕТА НА ПРЕДУПРЕЖДЕНИЕ — им начинается сырая инструкция, которую пишет дверь 
+// (). Одна строка-договор между дверью и полосой: меняется в двух местах вместе.
+const ANSWER_MARKER = "ОТВЕТ НА ПРЕДУПРЕЖДЕНИЕ.";
+
 // СЕРВЕРНАЯ ДЕРИВАЦИЯ микросервиса «уведомления» — ЕДИНЫЙ ИСТОЧНИК поводов внимания (шаг 298, перенос из
 // папки автоматизации в дев-слой). Чистая функция над ядром: ничего не хранит (закон 2 — единственный
 // источник истины — ядро). Её вызывает дверь `api/projects/notices`, а провайдер раздаёт результат ОДИН РАЗ
@@ -54,16 +58,27 @@ export function collectNotices(core: NoticesCore): Notice[] {
     warnings.push({ category: "warning", scope: "use-cases", name: "use-cases", text: w.text });
   }
 
+  // ОТВЕТ ВЛАДЕЛЬЦА НА ПРЕДУПРЕЖДЕНИЕ — отдельный повод (требование владельца 2026-07-24). Когда владелец
+  // отвечает агенту в Центре проблем, предупреждение СНИМАЕТСЯ, а его ответ ложится в сырую инструкцию
+  // объекта с маркером. Полоса обязана это показать: иначе повод «предупреждение» просто исчезает, и
+  // выглядит так, будто вопрос пропал сам. Признак выводится ИЗ ЯДРА (маркер в `info.crudUser`), а не
+  // хранится отдельным полем — второго источника истины о том же факте быть не должно.
+  const answered: Notice[] = [];
+  const isAnswer = (info?: { crudUser?: string }) => Boolean(info?.crudUser?.startsWith(ANSWER_MARKER));
+
   for (const node of nodes) {
+    if (isAnswer(node.info)) { answered.push({ category: "answered", scope: "node", name: node.name }); continue; }
     if (node.state === "visible" && node.status === "in-development") {
       unbuilt.push({ category: "unbuilt", scope: "node", name: node.name });
     }
   }
   for (const tab of core.components.tabs) {
     if (tab.presence === "absent") continue;
-    if (tab.status === "in-development") unbuilt.push({ category: "unbuilt", scope: "tab", name: tab.name });
+    if (isAnswer(tab.info)) answered.push({ category: "answered", scope: "tab", name: tab.name });
+    else if (tab.status === "in-development") unbuilt.push({ category: "unbuilt", scope: "tab", name: tab.name });
     for (const entity of tab.entities) {
-      if (entity.status === "in-development") unbuilt.push({ category: "unbuilt", scope: "entity", name: entity.name });
+      if (isAnswer(entity.info)) answered.push({ category: "answered", scope: "entity", name: entity.name });
+      else if (entity.status === "in-development") unbuilt.push({ category: "unbuilt", scope: "entity", name: entity.name });
     }
   }
 
@@ -82,5 +97,6 @@ export function collectNotices(core: NoticesCore): Notice[] {
     ready.push({ category: "ready", scope: "use-cases", name: "use-cases" });
   }
 
-  return [...warnings, ...unbuilt, ...ready, ...newCases];
+  // Порядок: предупреждения → ОТВЕТЫ владельца (он их ждёт больше всего) → недоделанное → готовность → кейсы.
+  return [...warnings, ...answered, ...unbuilt, ...ready, ...newCases];
 }

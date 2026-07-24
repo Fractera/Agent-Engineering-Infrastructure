@@ -39,7 +39,7 @@ const OPTIONAL_ENV_KEYS = new Set(["TELEGRAM_ALLOWED_CHAT_ID"]);
 export const runtime = "nodejs";
 
 type Body = {
-  op?: "set" | "add" | "delete" | "connect" | "disconnect" | "visibility" | "append";
+  op?: "set" | "add" | "delete" | "connect" | "disconnect" | "visibility" | "append" | "answer-warning";
   address?: Address;
   set?: Record<string, unknown>;
   group?: GroupName;
@@ -50,7 +50,31 @@ type Body = {
   state?: "visible" | "hidden";
   object?: "history" | "useCases";
   value?: Record<string, unknown>;
+  /** `op:"answer-warning"` — какое предупреждение закрывает ответ и что ответил владелец. */
+  warningCuid?: string;
+  answer?: string;
 };
+
+/** Объект ядра, у которого есть `warnings[]` и `info`/`status` — то, что закрывает ответ владельца. */
+type WarnHolder = { name?: string; warnings: { cuid: string; text: string }[]; info: unknown; status: string };
+
+/**
+ * ТЕКСТ СЫРОЙ ИНСТРУКЦИИ ИЗ ОТВЕТА НА ПРЕДУПРЕЖДЕНИЕ (требование владельца 2026-07-24).
+ *
+ * Ответ владельца НЕ ложится в ядро голым: агент, читающий `info.crudUser`, обязан понимать, ЧТО это
+ * ответ на его же вопрос — иначе он прочтёт реплику без контекста и переспросит снова. Поэтому запись
+ * несёт три части: пометку «это ответ на предупреждение», ПОЛНЫЙ текст предупреждения и слова владельца.
+ */
+const answerBrief = (warningText: string, answer: string) =>
+  [
+    "ОТВЕТ НА ПРЕДУПРЕЖДЕНИЕ. Это сообщение получено в ответ на предупреждение, которое ты сформировал при предыдущем обращении.",
+    `ПОЛНЫЙ ТЕКСТ ПРЕДУПРЕЖДЕНИЯ: ${warningText}`,
+    `ОТВЕТ ВЛАДЕЛЬЦА: ${answer}`,
+    "Запусти разработку по этому объекту с учётом ответа.",
+  ].join("\n");
+
+/** Маркер, по которому полоса-уведомление узнаёт, что владелец ОТВЕТИЛ на предупреждение. */
+export const ANSWER_MARKER = "ОТВЕТ НА ПРЕДУПРЕЖДЕНИЕ.";
 
 const bad = (error: string | string[], status = 400) =>
   NextResponse.json(Array.isArray(error) ? { errors: error } : { error }, { status });
@@ -61,6 +85,38 @@ export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => ({}))) as Body;
   const op = body.op ?? "set";
   const core = await readCore();
+
+  // ─── ОТВЕТ НА ПРЕДУПРЕЖДЕНИЕ ──────────────────────────────────────────────────────────────────────
+  // Владелец отвечает агенту прямо в Центре проблем. Одним действием, атомарно:
+  //   1. предупреждение СНИМАЕТСЯ с объекта (вопрос закрыт — висеть ему больше незачем);
+  //   2. ответ ложится в СЫРУЮ ИНСТРУКЦИЮ объекта (`info.crudUser`) вместе с полным текстом снятого
+  //      предупреждения — чтобы агент читал ответ В КОНТЕКСТЕ своего же вопроса;
+  //   3. объект переходит в `in-development` — работа по нему возобновляется.
+  // Разбить это на три вызова нельзя: между ними ядро побывало бы в состоянии «вопрос снят, ответа нет».
+  if (op === "answer-warning") {
+    const cuid = String(body.warningCuid ?? "").trim();
+    const answer = String(body.answer ?? "").trim();
+    if (!cuid) return bad("warningCuid is required — an answer closes ONE warning");
+    if (!answer) return bad("answer is empty — an answer without words is not an answer");
+
+    // Ищем владельца предупреждения среди всех объектов, у которых есть `warnings[]`.
+    const holders: WarnHolder[] = [
+      ...(allNodes(core.graph.nodes) as unknown as WarnHolder[]),
+      ...(core.components.tabs as unknown as WarnHolder[]),
+      ...(core.components.tabs.flatMap((t) => t.entities) as unknown as WarnHolder[]),
+      core.useCases as unknown as WarnHolder,
+    ];
+    const holder = holders.find((h) => h.warnings?.some((w) => w.cuid === cuid));
+    if (!holder) return bad(`no warning with cuid "${cuid}"`, 404);
+    const warning = holder.warnings.find((w) => w.cuid === cuid)!;
+
+    holder.warnings = holder.warnings.filter((w) => w.cuid !== cuid);
+    holder.info = { crudUser: answerBrief(warning.text, answer) };
+    holder.status = "in-development";
+
+    const written = await writeCore(core);
+    return written.ok ? NextResponse.json({ ok: true }) : bad(written.errors, 422);
+  }
 
   // ─── ДОБАВИТЬ УЗЕЛ ────────────────────────────────────────────────────────────────────────────────
   if (op === "add") {

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Bell, ChevronDown, CheckCircle2, Clock, PlusCircle, Rocket, TriangleAlert } from "lucide-react";
+import { Bell, ChevronDown, CheckCircle2, Clock, MessageSquareReply, PlusCircle, Rocket, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -18,11 +18,12 @@ import { useNotices } from "./provider.client";
 // клик показывает красный тост с кнопкой «Детали», которая прокручивает к секции кейсов и открывает
 // подтверждение.
 
-const ORDER: NoticeCategory[] = ["warning", "unbuilt", "ready", "new-case"];
+const ORDER: NoticeCategory[] = ["warning", "answered", "unbuilt", "ready", "new-case"];
 
 const TONE: Record<NoticeCategory, string> = {
   warning: "text-amber-600 dark:text-amber-400",
   unbuilt: "text-blue-600 dark:text-blue-400",
+  answered: "text-violet-600 dark:text-violet-400",
   ready: "text-emerald-600 dark:text-emerald-400",
   "new-case": "text-emerald-600 dark:text-emerald-400",
 };
@@ -30,6 +31,7 @@ const TONE: Record<NoticeCategory, string> = {
 const ICON: Record<NoticeCategory, typeof TriangleAlert> = {
   warning: TriangleAlert,
   unbuilt: Clock,
+  answered: MessageSquareReply,
   ready: CheckCircle2,
   "new-case": PlusCircle,
 };
@@ -104,7 +106,12 @@ export function NotificationBanner({ lang }: { lang: string }) {
                 <span className="min-w-0">
                   {notice.category === "new-case" ? (
                     <span className="font-medium text-foreground">№{notice.name}</span>
-                  ) : notice.category === "ready" ? (
+                  ) : notice.category === "answered" ? (
+                  <>
+                    <span className="text-muted-foreground">{L.answered}: </span>
+                    <span className="font-medium text-foreground">{notice.name}</span>
+                  </>
+                ) : notice.category === "ready" ? (
                     <span className="font-medium text-foreground">{L.ready}</span>
                   ) : (
                     <>
