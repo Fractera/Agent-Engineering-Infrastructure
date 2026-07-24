@@ -72,14 +72,6 @@ export default async function AutomationComponents({ surface, lang }: { surface:
       <>
         <AutoRefresh />
         {panel ? <div className="mt-6">{bodyOf(panel)}</div> : null}
-        {/* ПОЛЬЗОВАТЕЛЬСКИЕ КЕЙСЫ на витрине — read-only список (рантайм-половина `_components/use-cases/`).
-            Кейсы живут в топ-уровневом `useCases`, а не в `components.tabs` — это секция, не вкладка. */}
-        {useCases.cases.length ? (
-          <section data-section="use-cases" className="mt-8 space-y-3 scroll-mt-20">
-            <h2 className="text-lg font-semibold tracking-tight">{useCasesSectionTitle(lang)}</h2>
-            <UseCases cases={useCases.cases} lang={lang} />
-          </section>
-        ) : null}
         {rest.map((tab) => {
           const body = bodyOf(tab);
           return (
@@ -89,6 +81,14 @@ export default async function AutomationComponents({ surface, lang }: { surface:
             </section>
           );
         })}
+        {/* ПОЛЬЗОВАТЕЛЬСКИЕ КЕЙСЫ — ВСЕГДА последняя секция, за сепаратором, ОТКРЫТА (решение владельца:
+            не отслеживать раскрыт/скрыт). Витрина — read-only список из `_components/use-cases/`. */}
+        {useCases.cases.length ? (
+          <section data-section="use-cases" className="mt-10 scroll-mt-20 border-t pt-6">
+            <h2 className="mb-3 text-lg font-semibold tracking-tight">{useCasesSectionTitle(lang)}</h2>
+            <UseCases cases={useCases.cases} lang={lang} />
+          </section>
+        ) : null}
       </>
     );
   }
@@ -100,20 +100,6 @@ export default async function AutomationComponents({ surface, lang }: { surface:
           и каждая таблица показывает свежие записи БЕЗ перезагрузки. Монтируется один раз на все вкладки. */}
       <AutoRefresh />
       <div data-components-root data-surface={surface} className="mt-6 rounded-lg border px-4">
-        {/* ПОЛЬЗОВАТЕЛЬСКИЕ КЕЙСЫ — самостоятельная секция (НЕ вкладка): кейсы живут в топ-уровневом
-            `useCases`, а не в `components.tabs`. Кокпит показывает дев-инструмент (лёгкий слой → настройка
-            → подтверждение) из `_shared-v2` через дев-слот; счётчик — по ЧИСЛУ КЕЙСОВ, не по сущностям. */}
-        <SectionAccordion
-          tab="use-cases"
-          title={useCasesSectionTitle(lang)}
-          count={useCases.cases.length}
-          countLabel={S.items}
-          defaultOpen
-        >
-          <DevSlot>
-            <DevUseCasesPanel />
-          </DevSlot>
-        </SectionAccordion>
         {tabs.map((tab) => (
           <SectionAccordion
             key={tab.name}
@@ -127,6 +113,15 @@ export default async function AutomationComponents({ surface, lang }: { surface:
           </SectionAccordion>
         ))}
       </div>
+      {/* ПОЛЬЗОВАТЕЛЬСКИЕ КЕЙСЫ — ВСЕГДА последняя секция страницы, за сепаратором, ОТКРЫТА (решение
+          владельца 2026-07-24: не отслеживать раскрыт/скрыт, всегда рисовать; кейсы живут в топ-уровневом
+          `useCases`, не во вкладках). Кокпит — дев-инструмент из `_shared-v2` через дев-слот. */}
+      <section data-section="use-cases" className="mt-10 border-t pt-6">
+        <h2 className="mb-3 text-lg font-semibold tracking-tight">{useCasesSectionTitle(lang)}</h2>
+        <DevSlot>
+          <DevUseCasesPanel />
+        </DevSlot>
+      </section>
     </>
   );
 }
