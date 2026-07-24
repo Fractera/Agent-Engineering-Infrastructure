@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { Columns2, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { DashboardTable } from "../types/table-config";
-import { tablesFromCore, type CoreDashboardEntity } from "./from-core";
-import { dashboardAdminStrings } from "./i18n";
-import { DashboardPaneView } from "./pane.client";
-import { useDashboardTableAdmin } from "./admin-chrome.client";
+import type { DashboardTable } from "../table-config";
+import { tablesFromCore, type CoreDashboardEntity } from "../from-core";
+import { dashboardAdminStrings } from "../i18n";
+import { DashboardPaneView } from "./components/pane.client";
+import { useDashboardTableAdmin } from "./components/row-editing.client";
 
 // КОНТЕЙНЕР ДАШБОРДА — перенос v1 `entities/dashboard/index.tsx` (шаг 298, «max copy»): ОДИН компонент, ДВЕ
 // композиции, и РАЗДЕЛЁННЫЙ ВИД (одна таблица или две рядом), запомненный в браузере.
@@ -25,13 +25,13 @@ import { useDashboardTableAdmin } from "./admin-chrome.client";
 export type DashboardMode = "view" | "admin";
 
 function AdminPane({
-  automation, tables, value, onChange,
-}: { automation: string; tables: DashboardTable[]; value: string; onChange: (id: string) => void }) {
+  automation, tables, value, onChange, lang,
+}: { automation: string; tables: DashboardTable[]; value: string; onChange: (id: string) => void; lang: string }) {
   const table = tables.find((t) => t.id === value) ?? tables[0];
-  const { bridge, modals } = useDashboardTableAdmin({ automation, table });
+  const { bridge, modals } = useDashboardTableAdmin({ automation, table, lang });
   return (
     <>
-      <DashboardPaneView automation={automation} tables={tables} value={value} onChange={onChange} admin={bridge} />
+      <DashboardPaneView automation={automation} tables={tables} value={value} onChange={onChange} admin={bridge} lang={lang} />
       {modals}
     </>
   );
@@ -97,9 +97,9 @@ export function Dashboard({ lang, mode = "admin" }: { lang: string; mode?: Dashb
 
   const Pane = ({ value, onChange }: { value: string; onChange: (id: string) => void }) =>
     mode === "admin" ? (
-      <AdminPane automation={automation} tables={tables} value={value} onChange={onChange} />
+      <AdminPane automation={automation} tables={tables} value={value} onChange={onChange} lang={lang} />
     ) : (
-      <DashboardPaneView automation={automation} tables={tables} value={value} onChange={onChange} />
+      <DashboardPaneView automation={automation} tables={tables} value={value} onChange={onChange} lang={lang} />
     );
 
   return (

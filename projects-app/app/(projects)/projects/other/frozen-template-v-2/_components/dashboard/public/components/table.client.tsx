@@ -10,13 +10,12 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { defaultVisibleColumnIds, tableStorageKey, type DashboardTable, type TableColumn, type TableRow } from "../types/table-config";
+import { defaultVisibleColumnIds, tableStorageKey, type DashboardTable, type TableColumn, type TableRow } from "../../table-config";
 import { ConfigRecordCell } from "./config-record-cell.client";
 import { LiveLookupDialog } from "./live-lookup-dialog.client";
 import { useRunRefresh } from "./use-run-refresh";
-import { useUiLang } from "../../../use-ui-lang";
-import { resolveLocalized } from "../types/localized-text";
-import { dashboardAdminStrings } from "./i18n";
+import { resolveLocalized } from "../../localized-text";
+import { dashboardAdminStrings } from "../../i18n";
 
 // 🔒 ARCHITECTURE LOCK (ROUTE-V3 law 3 — breaking this breaks the whole chain, FORBIDDEN):
 // this is a VIEW file — it must NEVER import admin/ (its own or any entity's) and NEVER import another
@@ -59,8 +58,7 @@ export type TableAdminBridge = {
 
 export function DashboardTableView({
   automation, table, admin,
-}: { automation: string; table: DashboardTable; admin?: TableAdminBridge }) {
-  const lang = useUiLang();
+}: { automation: string; table: DashboardTable; admin?: TableAdminBridge; lang: string }) {
   const L = dashboardAdminStrings(lang);
   const seed = useMemo<TableRow[]>(() => table.rows ?? [], [table.rows]);
   const storageKey = tableStorageKey(automation, table);

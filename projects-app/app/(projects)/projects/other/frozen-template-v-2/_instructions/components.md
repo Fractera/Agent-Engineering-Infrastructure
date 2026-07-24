@@ -62,6 +62,21 @@ You own their DATA and nothing else: `graph.nodes` / `graph.edges` and `useCases
 `api/patch`. Change the data — the view follows, everywhere, unchanged. Never reimplement the canvas, the
 cases panel or the Quiz inside this folder; if one looks wrong, raise a `warning` instead.
 
+## Which half a thing belongs in — the "Build with AI" test (owner, 2026-07-24)
+
+Ask ONE question about the object: **does it have a "Build with AI" request form?**
+
+- **NO → PLATFORM VIEW** (diagram, use cases). Nobody designs it with AI; its code lives once in
+  `_shared-v2`, and you never touch it. You change only its DATA in the core.
+- **YES → PRODUCT SURFACE** (dashboard tables, calendar, map, control panel, and everything of that kind).
+  The owner sends briefs about it, and YOU implement them by editing files in THIS folder. Therefore its
+  WHOLE LOGIC lives in `<tab>/public/` — the half you may develop — and `<tab>/admin/` holds ONLY the
+  AI-request form, nothing else.
+
+Putting a product surface's logic into `_shared-v2` breaks the automation: the layer is closed to you, so
+the brief "put a video in that column" becomes impossible, and every automation would be stuck with the
+same table instead of its own.
+
 ## The tab-folder standard — the SAME shape everywhere (step 298)
 
 Every tab/section folder under `_components/` has ONE shape, identical everywhere (models: `calendar/`,

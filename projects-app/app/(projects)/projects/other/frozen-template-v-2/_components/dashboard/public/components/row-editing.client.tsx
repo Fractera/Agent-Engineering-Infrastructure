@@ -7,10 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import type { DashboardTable, TableRow } from "../types/table-config";
-import { useUiLang } from "../../../use-ui-lang";
-import { resolveLocalized } from "../types/localized-text";
-import { dashboardAdminStrings } from "./i18n";
+import type { DashboardTable, TableRow } from "../../table-config";
+import { resolveLocalized } from "../../localized-text";
+import { dashboardAdminStrings } from "../../i18n";
 import type { TableAdminBridge } from "./table.client";
 
 // 🔒 ARCHITECTURE LOCK (ROUTE-V3 law 3 — breaking this breaks the whole chain, FORBIDDEN):
@@ -29,8 +28,7 @@ const apiBase = () => location.pathname.replace(/\/+$/, "") + "/api";
 
 export function useDashboardTableAdmin({
   automation, table,
-}: { automation: string; table: DashboardTable }): { bridge: TableAdminBridge; modals: ReactNode } {
-  const lang = useUiLang();
+}: { automation: string; table: DashboardTable; lang: string }): { bridge: TableAdminBridge; modals: ReactNode } {
   const L = dashboardAdminStrings(lang);
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null); // null = add, an id = edit that live row

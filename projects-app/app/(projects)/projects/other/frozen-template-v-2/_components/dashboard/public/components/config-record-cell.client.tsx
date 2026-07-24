@@ -3,8 +3,8 @@
 import { RefreshCw, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { TableColumn, TableRow } from "../types/table-config";
-import { dashboardAdminStrings } from "./i18n";
+import type { TableColumn, TableRow } from "../../table-config";
+import { dashboardAdminStrings } from "../../i18n";
 
 // The CLOSED renderer registry of the universal dashboard table (step 228) — one renderer per column type.
 // A new column is DATA in the config (table-config.ts), never new JSX; a genuinely new visual = a new type

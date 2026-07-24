@@ -33,8 +33,3 @@ export { ControlPanelSettings } from "./components/control-panel/client/settings
 // Диаграмма (микросервис `components/diagram`) — ПЛАТФОРМЕННЫЙ ВИД над ядром: холст + адаптер живут одной
 // копией здесь, автоматизация владеет только данными графа (AGENTS.md §0a).
 export { Diagram } from "./components/diagram/client/diagram.client";
-// Дашборд (микросервис `components/dashboard`) — ПЕРЕНОС ТАБЛИЦЫ v1 «max copy»: универсальная таблица по
-// объявлению (8 типов колонок, действия строки, live-lookup, дебаунс-поиск, пагинация, выбор колонок с
-// памятью), разделённый вид (одна/две таблицы) и админ-хром (добавить/править/удалить) через мост.
-export { Dashboard } from "./components/dashboard/client/dashboard.client";
-export { DashboardSettings } from "./components/dashboard/client/settings.client";

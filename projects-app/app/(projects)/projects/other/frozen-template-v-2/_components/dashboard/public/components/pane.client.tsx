@@ -2,9 +2,8 @@
 
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import type { DashboardTable } from "../types/table-config";
-import { useUiLang } from "../../../use-ui-lang";
-import { resolveLocalized } from "../types/localized-text";
+import type { DashboardTable } from "../../table-config";
+import { resolveLocalized } from "../../localized-text";
 import { DashboardTableView, type TableAdminBridge } from "./table.client";
 
 // 🔒 ARCHITECTURE LOCK (ROUTE-V3 law 3 — breaking this breaks the whole chain, FORBIDDEN):
@@ -17,9 +16,8 @@ import { DashboardTableView, type TableAdminBridge } from "./table.client";
 // lives there in admin mode).
 
 export function TablePicker({
-  tables, value, onChange,
-}: { tables: DashboardTable[]; value: string; onChange: (id: string) => void }) {
-  const lang = useUiLang();
+  tables, value, onChange, lang,
+}: { tables: DashboardTable[]; value: string; onChange: (id: string) => void; lang: string }) {
   return (
     <div className="inline-flex flex-wrap rounded-md border p-0.5">
       {tables.map((t) => (
@@ -38,7 +36,7 @@ export function TablePicker({
 }
 
 export function DashboardPaneView({
-  automation, tables, value, onChange, admin, paneExtra,
+  automation, tables, value, onChange, admin, paneExtra, lang,
 }: {
   automation: string;
   tables: DashboardTable[];
@@ -46,8 +44,8 @@ export function DashboardPaneView({
   onChange: (id: string) => void;
   admin?: TableAdminBridge;
   paneExtra?: ReactNode;
+  lang: string;
 }) {
-  const lang = useUiLang();
   const table = tables.find((t) => t.id === value) ?? tables[0];
   return (
     <div className="min-w-0 space-y-3">
@@ -56,9 +54,9 @@ export function DashboardPaneView({
           <h4 className="truncate font-medium">{resolveLocalized(table.title, lang)}</h4>
           {table.description && <p className="truncate text-xs text-muted-foreground">{resolveLocalized(table.description, lang)}</p>}
         </div>
-        <TablePicker tables={tables} value={table.id} onChange={onChange} />
+        <TablePicker tables={tables} value={table.id} onChange={onChange} lang={lang} />
       </div>
-      <DashboardTableView automation={automation} table={table} admin={admin} />
+      <DashboardTableView automation={automation} table={table} admin={admin} lang={lang} />
       {paneExtra}
     </div>
   );

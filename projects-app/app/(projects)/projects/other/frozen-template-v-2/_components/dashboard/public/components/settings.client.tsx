@@ -7,8 +7,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { dashboardAdminStrings, pick } from "./i18n";
-import { columnsOf, tableOf, type Column, type DashboardTab, type TableEntity } from "../types/dashboard";
+import { dashboardAdminStrings, pick } from "../../i18n";
+import { columnsOf, tableOf, type Column, type DashboardTab, type TableEntity } from "../../types-dashboard";
 
 // НАСТРОЙКА ТАБЛИЦ — АДМИН-половина дашборда (дев-слой, шаг 298). Для каждой таблицы: её хранилище и
 // объявленные колонки, ровно так, как это записано в ЯДРЕ.

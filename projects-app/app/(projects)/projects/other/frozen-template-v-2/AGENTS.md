@@ -48,6 +48,21 @@ belongs to the platform. Change the data and the view follows, everywhere, uncha
 If a diagram or a use-cases panel looks wrong to you, that is not a coding task: say so in a `warning` on
 the object and let the owner decide. Never reimplement either surface inside this folder.
 
+### The test that tells the two classes apart: does the object have a "Build with AI" form?
+
+| | PLATFORM VIEW | PRODUCT SURFACE |
+|---|---|---|
+| Examples | diagram, use cases | dashboard tables, calendar, map, control panel, everything below them |
+| "Build with AI" request | **none** — nobody designs it | **yes** — the owner sends you a brief |
+| Where its code lives | once in `_shared-v2` | **in THIS folder, `_components/<tab>/public/`** |
+| Your rights | forbidden to touch | **you develop it — that is the job** |
+
+A PRODUCT SURFACE is yours. The owner writes a brief ("put a video in that column", "build a calculator
+inside a cell", "add this logic to the table") — you read the files of THIS folder and implement it in the
+public half. Its cell types, its renderers, its behaviour are OPEN: extend them here, in this automation's
+own copy. The admin half of such a tab holds ONE thing only — the AI-request form; never move a surface's
+logic there, and never expect to find it in `_shared-v2`.
+
 ## 1. Where the truth is
 
 | What | Where |

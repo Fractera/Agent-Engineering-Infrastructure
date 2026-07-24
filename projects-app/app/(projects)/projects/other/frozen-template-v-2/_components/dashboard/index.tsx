@@ -1,22 +1,20 @@
 import type { Entity } from "../../_data/automation.schema";
 import type { Surface } from "../surface";
-import DashboardTables from "./admin/tables";
-import DashboardPublic from "./public/tables";
-import { DevSlot } from "../shared/dev-slot";
-import { DevBuildWithAi } from "../shared/dev-slot.client";
-import { pick } from "../shared/localized";
+import DashboardTables from "./public/tables";
+import DashboardAiRequest from "./admin/ai-request";
 
 // МАРШРУТИЗАТОР ДАШБОРДА — та же тройка index/public/admin, что у всех сущностей v2.
 //
-// 🔒 ЧТО ИЗМЕНИЛОСЬ В ШАГЕ 298 («max copy» по требованию владельца): универсальная таблица первой версии
-// перенесена целиком и живёт ОДНОЙ копией в `_shared-v2/components/dashboard` — вместе со своим админ-хромом
-// и мостом между ними, как это было в v1 (вид + admin + контейнер рядом). Копия в каждой папке означала бы
-// N расходящихся таблиц; таблица универсальна и рисует ЛЮБОЕ объявление, так что её место — в платформе.
+// 🔒 ГЛАВНЫЙ ЗАКОН ЭТОЙ ВКЛАДКИ (владелец 2026-07-24, после разбора моей ошибки). Дашборд — НЕ платформенный
+// вид, как диаграмма. У таблицы ЕСТЬ режим «строить вместе с ИИ»: владелец пишет техзадание, а агент читает
+// ИСХОДНИКИ ЭТОЙ ПАПКИ и меняет таблицу — кладёт видео в колонку, собирает калькулятор внутри ячейки,
+// добавляет свою логику. Значит:
 //
-// В папке остаются: `public/` — витринная половина (та же таблица в режиме только-чтение), `admin/` —
-// половина владельца (таблица с правкой строк + настройка объявленных колонок). Обе — через дев-слот.
+//   ВСЯ ЛОГИКА ТАБЛИЦЫ ЖИВЁТ В `public/` — в зоне, которую агент имеет право и обязан развивать;
+//   в `admin/` уходит ТОЛЬКО инструмент работы с ИИ — форма заявки, и всё.
 //
-// ЗАЯВКА «строить вместе с ИИ» остаётся здесь: она про ЭТУ автоматизацию, а не про таблицу как инструмент.
+// Держать таблицу в общем слое `_shared-v2` было бы фатально: агенту он запрещён, и заявка «сделай видео в
+// колонке» стала бы невыполнимой, а таблица — одинаковой для всех автоматизаций вместо своей у каждой.
 export default function Dashboard({
   surface,
   entities,
@@ -28,26 +26,11 @@ export default function Dashboard({
 }) {
   return (
     <div data-entity="dashboard" data-surface={surface} className="space-y-3">
-      {surface === "admin" ? <DashboardTables lang={lang} /> : <DashboardPublic lang={lang} />}
-      {surface === "admin" ? (
-        <DevSlot>
-          {entities.map((entity) => {
-            const title = pick((entity.data as Record<string, unknown>).title, lang) || entity.name;
-            const pending = "crudUser" in entity.info ? entity.info.crudUser : undefined;
-            return (
-              <DevBuildWithAi
-                key={entity.cuid}
-                target={{ object: "entity", tab: "dashboard", cuid: entity.cuid }}
-                name={title}
-                pending={pending}
-                lang={lang}
-              />
-            );
-          })}
-          {/* ЗАЯВКА НА ВСЮ ВКЛАДКУ — другой объект ядра (tab), поэтому отдельная раскрывашка. */}
-          <DevBuildWithAi target={{ object: "tab", name: "dashboard" }} name="dashboard" lang={lang} />
-        </DevSlot>
-      ) : null}
+      {/* ПУБЛИЧНАЯ ПОЛОВИНА — вся таблица целиком (перенос v1): типы колонок, действия строки, поиск,
+          пагинация, выбор колонок, разделённый вид, правка строк. На витрине — только чтение. */}
+      <DashboardTables lang={lang} mode={surface === "admin" ? "admin" : "view"} />
+      {/* АДМИН-ПОЛОВИНА — только заявка ИИ на разработку таблиц. */}
+      {surface === "admin" ? <DashboardAiRequest entities={entities} lang={lang} /> : null}
     </div>
   );
 }
