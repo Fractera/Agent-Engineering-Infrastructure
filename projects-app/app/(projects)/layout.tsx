@@ -10,7 +10,7 @@ import { ProjectsZoneHeader } from "@/app/(projects)/_components/projects-zone-h
 import { ProjectsZoneFooter } from "@/app/(projects)/_components/projects-zone-footer.client";
 import { ZoneWidthInit } from "@/app/(projects)/_components/zone-width-init";
 import { AutomationPageChrome } from "@/app/(projects)/projects/_shared/components/automation-page-chrome.client";
-import { DevConsoleLauncher } from "@/app/(projects)/projects/_shared/components/dev-console-launcher.client";
+import { DevConsoleProvider } from "@/app/(projects)/projects/_shared-v2/tools/dev-console/client/provider.client";
 
 // Root layout of the Projects layer (§3.12, step 175). Projects are independent
 // application levels for PRIVATE use by the architect or a project administrator —
@@ -58,16 +58,19 @@ export default async function ProjectsLayout({
               so every automation that already existed showed nothing (the owner hit exactly this). The zone
               layout wraps EVERY automation page — old and new — so this can never drift again. It renders
               nothing on the hubs; the automation is derived from the URL, like the footer already does. */}
-          <AutomationPageChrome>{children}</AutomationPageChrome>
+          {/* THE DEV CONSOLE PROVIDER (step 298) — zone-level, mounted ONCE, wraps every automation page.
+              It is the SINGLE owner of the dev console: all launch requests converge on one guarded `launch`
+              (one development at a time — a second automation is refused while one is active), so different
+              automations can never launch development simultaneously. In-folder triggers dispatch the DOM
+              event `fractera:launch-development` (law 0); dev-slot triggers call `useDevConsole().launch`.
+              Lives here (not in the self-contained folder) — the console + PTY + rooms are shared infra. */}
+          <DevConsoleProvider>
+            <AutomationPageChrome>{children}</AutomationPageChrome>
+          </DevConsoleProvider>
           {/* Single zone footer (step 213): identical for every project + hub, rendered
               ONCE here so no page re-assembles it. The Architecture deep-link focuses the
               current project, derived from the URL inside the footer. */}
           <ProjectsZoneFooter shortName={getAppConfig().short_name} />
-          {/* THE DEV CONSOLE LAUNCHER (step 298) — zone-level, mounted once. It opens the shared dev-console
-              terminal for a v2 automation when its page dispatches `fractera:launch-development`. Lives here
-              (not in the self-contained automation folder) because the console + PTY + rooms are shared
-              infrastructure; the folder only fires the event (law 0). */}
-          <DevConsoleLauncher />
           <Toaster position="bottom-right" richColors closeButton />
         </ThemeProvider>
       </body>
