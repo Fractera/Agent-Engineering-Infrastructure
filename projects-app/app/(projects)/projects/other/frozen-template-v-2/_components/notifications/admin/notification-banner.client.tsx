@@ -1,18 +1,26 @@
 "use client";
 
-import { useState } from "react";
 import type { Notice, NoticeCategory } from "../../../_lib/components/notifications";
 import { notificationStrings } from "../i18n";
-import PlaceholderModal from "../../chrome/placeholder-modal.client";
+
+// АДРЕС АВТОМАТИЗАЦИИ ИЗ URL — страница живёт по /projects/<кат>/<слаг>, отсюда и берём слаг для события.
+// Так папка остаётся самодостаточной (закон 0): она не знает своего адреса в ядре, только читает его из URL.
+function automationFromPath(): string {
+  if (typeof window === "undefined") return "";
+  const parts = window.location.pathname.split("?")[0].split("/").filter(Boolean);
+  return parts.length >= 3 && parts[0] === "projects" ? `${parts[1]}/${parts[2]}` : "";
+}
 
 // ПОЛОСА-УВЕДОМЛЕНИЕ (административная половина) — первый элемент под шапкой кокпита (порядок v1
 // «статус-бар → уведомление»). Отслеживает НЕ волну разработки (её в продукте нет), а объекты
 // `automation.json`: поводы внимания приходят готовым списком пропсом из `_lib/components/notifications`.
 // Компонент ничего не считает и не хранит — только показывает (закон 2).
 //
-// КНОПКА «ЗАПУСТИТЬ РАЗРАБОТКУ» — как в оригинале v1. Настоящий запуск конвейера — будущий шаг (и папка
-// самодостаточна, закон 0: изнутри неё пайплайн уровня «Проекты» не дёрнуть), поэтому пока кнопка
-// открывает модалку-заглушку (`PlaceholderModal`, честно говорит «появится в шаблоне позже»).
+// КНОПКА «ЗАПУСТИТЬ РАЗРАБОТКУ» — как в оригинале v1. Теперь она открывает ЖИВУЮ консоль разработки
+// (терминал агента Claude Code / Codex, шаг 298). Папка самодостаточна (закон 0: изнутри неё нельзя дёрнуть
+// консоль уровня «Проекты»), поэтому кнопка лишь ДИСПАТЧИТ DOM-событие `fractera:launch-development` со своим
+// адресом из URL — его ловит запускатель уровня зоны (`_shared/components/dev-console-launcher.client.tsx`)
+// и открывает консоль. Рефактор дверей чтения/записи ядра для этой консоли — фаза 2 шага 298.
 //
 // РАСКРЫТИЕ СПИСКА — нативный <details> (работает без JS). Заголовка-предложения нет: сколько и чего —
 // говорят счётчики с цветными иконками. Иконки — inline SVG (закон 0). Нет поводов → полосы нет вовсе.
@@ -39,15 +47,13 @@ function CatIcon({ category }: { category: NoticeCategory }) {
 }
 
 export default function NotificationBanner({ notices, lang }: { notices: Notice[]; lang: string }) {
-  const [launchOpen, setLaunchOpen] = useState(false);
   // Нет поводов — полосы нет вовсе (на готовом примере она молчит).
   if (notices.length === 0) return null;
   const L = notificationStrings(lang);
   const counts = ORDER.map((category) => ({ category, n: notices.filter((x) => x.category === category).length })).filter((g) => g.n > 0);
 
   return (
-    <>
-      <details data-chrome="notifications" className="mt-2 rounded-lg border border-primary/40 bg-primary/5">
+    <details data-chrome="notifications" className="mt-2 rounded-lg border border-primary/40 bg-primary/5">
         <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-sm">
           {/* колокол */}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="size-4 shrink-0 text-primary">
@@ -63,11 +69,18 @@ export default function NotificationBanner({ notices, lang }: { notices: Notice[
               </span>
             ))}
           </span>
-          {/* Запустить разработку — как в v1; пока открывает заглушку. preventDefault, чтобы клик не
-              сворачивал <details>. */}
+          {/* Запустить разработку (шаг 298) — диспатчит DOM-событие, которое ловит запускатель уровня зоны
+              (`dev-console-launcher.client.tsx`) и открывает ЖИВУЮ консоль с терминалом. Папка ничего не
+              импортирует наружу (закон 0), только шлёт событие со своим адресом из URL. preventDefault —
+              чтобы клик не сворачивал <details>. */}
           <button
             type="button"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLaunchOpen(true); }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const automation = automationFromPath();
+              if (automation) window.dispatchEvent(new CustomEvent("fractera:launch-development", { detail: { automation } }));
+            }}
             className="ml-auto shrink-0 rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:opacity-90"
           >
             {L.launch}
@@ -97,7 +110,5 @@ export default function NotificationBanner({ notices, lang }: { notices: Notice[
           ))}
         </ul>
       </details>
-      <PlaceholderModal lang={lang} title={L.launch} open={launchOpen} onClose={() => setLaunchOpen(false)} />
-    </>
   );
 }

@@ -10,6 +10,7 @@ import { ProjectsZoneHeader } from "@/app/(projects)/_components/projects-zone-h
 import { ProjectsZoneFooter } from "@/app/(projects)/_components/projects-zone-footer.client";
 import { ZoneWidthInit } from "@/app/(projects)/_components/zone-width-init";
 import { AutomationPageChrome } from "@/app/(projects)/projects/_shared/components/automation-page-chrome.client";
+import { DevConsoleLauncher } from "@/app/(projects)/projects/_shared/components/dev-console-launcher.client";
 
 // Root layout of the Projects layer (§3.12, step 175). Projects are independent
 // application levels for PRIVATE use by the architect or a project administrator —
@@ -62,6 +63,11 @@ export default async function ProjectsLayout({
               ONCE here so no page re-assembles it. The Architecture deep-link focuses the
               current project, derived from the URL inside the footer. */}
           <ProjectsZoneFooter shortName={getAppConfig().short_name} />
+          {/* THE DEV CONSOLE LAUNCHER (step 298) — zone-level, mounted once. It opens the shared dev-console
+              terminal for a v2 automation when its page dispatches `fractera:launch-development`. Lives here
+              (not in the self-contained automation folder) because the console + PTY + rooms are shared
+              infrastructure; the folder only fires the event (law 0). */}
+          <DevConsoleLauncher />
           <Toaster position="bottom-right" richColors closeButton />
         </ThemeProvider>
       </body>
