@@ -36,6 +36,18 @@ export async function updateRow(table: string, id: string, patch: Record<string,
   return next;
 }
 
+/**
+ * Удаление строки — тем же журнальным приёмом, что и правка (шаг 298, перенос таблицы v1): дописываем
+ * версию с тем же `id` и меткой `deleted`, а чтение такие записи пропускает. Файл остаётся append-only:
+ * видно, что запись была и когда её убрали. `false` — строки с таким id в этой таблице нет.
+ */
+export async function deleteRow(table: string, id: string): Promise<boolean> {
+  const current = (await listRows(table, Infinity)).find((r) => r.id === id);
+  if (!current) return false;
+  await append({ ...current, id, table, createdAt: current.createdAt, updatedAt: new Date().toISOString(), deleted: true });
+  return true;
+}
+
 async function append(row: Row): Promise<void> {
   await mkdir(RUNTIME_DIR, { recursive: true });
   await appendFile(ROWS_FILE, `${JSON.stringify(row)}\n`, "utf8");
@@ -58,7 +70,8 @@ export async function listRows(table: string, limit = 100): Promise<Row[]> {
       if (row.table !== table) continue;
       latest.set(row.id, row);
     }
-    const rows = [...latest.values()];
+    // Удалённые записи (надгробие `deleted`) в выдачу не попадают, но в журнале остаются.
+    const rows = [...latest.values()].filter((r) => r.deleted !== true);
     return limit === Infinity ? rows.reverse() : rows.slice(-limit).reverse();
   } catch {
     return []; // no rows yet

@@ -19,7 +19,7 @@ import { missingKeysOf, type Integration } from "../../integrations";
 import { calendarStrings } from "../../i18n";
 
 // ВЫПАДАЮЩИЙ СПИСОК ИНТЕГРАЦИЙ — справа в шапке календаря, ровно как выбор колонок у таблицы дашборда
-// (`dashboard/public/components/data-table.client.tsx`): тот же shadcn-`DropdownMenu` с чекбоксами.
+// (перенесённая таблица v1 в `_shared-v2/components/dashboard`): тот же shadcn-`DropdownMenu` с чекбоксами.
 // Одинаковые вещи должны выглядеть и работать одинаково — владелец не должен угадывать, что это меню
 // такое же.
 //

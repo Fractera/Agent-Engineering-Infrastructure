@@ -155,3 +155,39 @@ export function DevDiagram({ lang, readOnly }: { lang: string; readOnly?: boolea
     </NullBoundary>
   );
 }
+
+// ДАШБОРД — перенесённая таблица v1 целиком (универсальная таблица по объявлению + разделённый вид + мост
+// админа). Конфиг таблиц и строки она читает сама через двери `api/core` и `api/rows`.
+const DashboardLazy = dynamic(
+  () =>
+    import("../../../../_shared-v2")
+      .then((m) => ({ default: m.Dashboard }))
+      .catch(() => ({ default: () => null })),
+  { ssr: false, loading: () => null },
+);
+
+/** Дашборд за fail-silent границей: `mode="admin"` — с правкой строк, `"view"` — только чтение. */
+export function DevDashboard({ lang, mode }: { lang: string; mode?: "view" | "admin" }) {
+  return (
+    <NullBoundary>
+      <DashboardLazy lang={lang} mode={mode} />
+    </NullBoundary>
+  );
+}
+
+const DashboardSettingsLazy = dynamic(
+  () =>
+    import("../../../../_shared-v2")
+      .then((m) => ({ default: m.DashboardSettings }))
+      .catch(() => ({ default: () => null })),
+  { ssr: false, loading: () => null },
+);
+
+/** Настройка таблиц (объявленные колонки) за fail-silent границей. */
+export function DevDashboardSettings({ lang }: { lang: string }) {
+  return (
+    <NullBoundary>
+      <DashboardSettingsLazy lang={lang} />
+    </NullBoundary>
+  );
+}

@@ -1498,7 +1498,10 @@
                     "pl": "Data",
                     "tr": "Tarih",
                     "nl": "Datum"
-                  }
+                  },
+                  "type": "date",
+                  "source": "date",
+                  "defaultVisible": true
                 },
                 {
                   "key": "company",
@@ -1513,7 +1516,10 @@
                     "pl": "Firma",
                     "tr": "Şirket",
                     "nl": "Bedrijf"
-                  }
+                  },
+                  "type": "text",
+                  "source": "company",
+                  "defaultVisible": true
                 },
                 {
                   "key": "ticker",
@@ -1528,6 +1534,12 @@
                     "pl": "Symbol",
                     "tr": "Sembol",
                     "nl": "Symbool"
+                  },
+                  "type": "badge",
+                  "source": "ticker",
+                  "defaultVisible": true,
+                  "options": {
+                    "colorFrom": "blue"
                   }
                 },
                 {
@@ -1543,6 +1555,54 @@
                     "pl": "Cena",
                     "tr": "Fiyat",
                     "nl": "Prijs"
+                  },
+                  "type": "number",
+                  "source": "price",
+                  "defaultVisible": true,
+                  "options": {
+                    "suffix": "$"
+                  }
+                },
+                {
+                  "key": "row-actions",
+                  "label": {
+                    "en": "",
+                    "ru": "",
+                    "es": "",
+                    "fr": "",
+                    "it": "",
+                    "de": "",
+                    "pt": "",
+                    "pl": "",
+                    "tr": "",
+                    "nl": ""
+                  },
+                  "type": "actions",
+                  "source": "id",
+                  "defaultVisible": true,
+                  "options": {
+                    "action": "detail"
+                  }
+                },
+                {
+                  "key": "row-delete",
+                  "label": {
+                    "en": "",
+                    "ru": "",
+                    "es": "",
+                    "fr": "",
+                    "it": "",
+                    "de": "",
+                    "pt": "",
+                    "pl": "",
+                    "tr": "",
+                    "nl": ""
+                  },
+                  "type": "actions",
+                  "source": "id",
+                  "defaultVisible": true,
+                  "options": {
+                    "action": "delete"
                   }
                 }
               ],
@@ -1557,7 +1617,8 @@
                 "pl": "Historia zapytań",
                 "tr": "Sorgu geçmişi",
                 "nl": "Aanvraaggeschiedenis"
-              }
+              },
+              "pageSize": 20
             }
           }
         ]
