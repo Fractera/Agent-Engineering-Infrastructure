@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import type { Notice, NoticeCategory } from "../../../_lib/components/notifications";
 import { notificationStrings } from "../i18n";
 
@@ -56,6 +57,9 @@ export default function NotificationBanner({ notices, lang }: { notices: Notice[
   if (notices.length === 0) return null;
   const L = notificationStrings(lang);
   const counts = ORDER.map((category) => ({ category, n: notices.filter((x) => x.category === category).length })).filter((g) => g.n > 0);
+  // ГЕЙТ ЗАПУСКА (правило шага 231): разработку можно начинать ТОЛЬКО когда кейсы подтверждены — это повод
+  // `ready` (панель записала подпись в ядро, collectNotices её подтвердил). Нет `ready` — запуск заблокирован.
+  const canDevelop = notices.some((n) => n.category === "ready");
 
   return (
     <details data-chrome="notifications" className="mt-2 rounded-lg border border-primary/40 bg-primary/5">
@@ -83,10 +87,18 @@ export default function NotificationBanner({ notices, lang }: { notices: Notice[
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              // Кейсы не подтверждены → НЕ запускаем разработку: показываем причину и открываем подтверждение
+              // (панель кейсов ловит `usecases:review` и переходит в режим review).
+              if (!canDevelop) {
+                toast.error(L.blocked, { duration: 10000, action: { label: L.details, onClick: () => window.dispatchEvent(new CustomEvent("usecases:review")) } });
+                window.dispatchEvent(new CustomEvent("usecases:review"));
+                return;
+              }
               const automation = automationFromPath();
               if (automation) window.dispatchEvent(new CustomEvent("fractera:launch-development", { detail: { automation } }));
             }}
-            className="ml-auto shrink-0 rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:opacity-90"
+            title={canDevelop ? undefined : L.blocked}
+            className={`ml-auto shrink-0 rounded-md px-3 py-1 text-xs font-medium ${canDevelop ? "bg-primary text-primary-foreground hover:opacity-90" : "cursor-not-allowed bg-muted text-muted-foreground hover:bg-muted/80"}`}
           >
             {L.launch}
           </button>
