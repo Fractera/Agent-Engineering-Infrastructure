@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { X as CloseIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { pick } from "./localized";
 import { keysStrings } from "./keys-i18n";
 import type { ChannelKey } from "../channels";
@@ -92,7 +94,6 @@ export default function KeysModal({
     }
   }
 
-  if (!open) return null;
 
   // Готовность: у каждого обязательного ключа либо уже есть значение, либо владелец ввёл его сейчас.
   const ready = keys.every((k) => k.optional || present[k.env] || (values[k.env] ?? "").trim().length > 0);
@@ -124,18 +125,14 @@ export default function KeysModal({
     }
   }
 
+  // 🔒 НА shadcn `Dialog` (шаг 298): прежде — самодельный оверлей `fixed inset-0` со своей кнопкой
+  // закрытия и ручным `stopPropagation`. Фокус-ловушка, Esc, крестик и клик вне окна — от примитива.
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" onClick={onCancel}>
-      <div
-        className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-lg border bg-background p-4 shadow-lg"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mb-2 flex items-start justify-between gap-2">
-          <h3 className="text-sm font-medium">{L.connect.replace("{k}", channelName)}</h3>
-          <button type="button" onClick={onCancel} className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground">
-            <CloseIcon className="size-4" />
-          </button>
-        </div>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onCancel(); }}>
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="text-sm">{L.connect.replace("{k}", channelName)}</DialogTitle>
+        </DialogHeader>
 
         {keys.length === 0 ? (
           <p className="text-sm text-muted-foreground">{L.noKeys}</p>
@@ -151,12 +148,12 @@ export default function KeysModal({
                     {k.optional ? <span className="text-[10px] text-muted-foreground">({L.optional})</span> : null}
                     {present[k.env] ? <span className="text-[10px] text-emerald-600 dark:text-emerald-400">({L.alreadySet})</span> : null}
                   </span>
-                  <input
+                  <Input
                     type={k.secret ? "password" : "text"}
                     autoComplete="off"
                     value={values[k.env] ?? ""}
                     onChange={(e) => setValues((v) => ({ ...v, [k.env]: e.target.value }))}
-                    className="h-8 w-full rounded-md border bg-transparent px-2 text-sm outline-none focus:ring-1 focus:ring-primary"
+                    className="h-8"
                   />
                   {/* ГДЕ ВЗЯТЬ — из каталога, а не из разметки: новый сервис не требует правки формы. */}
                   <span className="block text-xs text-muted-foreground">{pick(k.help, lang)}</span>
@@ -168,14 +165,15 @@ export default function KeysModal({
                       в поле выше; записывает его обычное «Сохранить». */}
                   {k.autoLink === "telegram" ? (
                     <span className="mt-1 flex flex-wrap items-center gap-2">
-                      <button
-                        type="button"
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs"
                         disabled={link.status === "opening" || link.status === "waiting"}
                         onClick={() => void startLink(k.env)}
-                        className="rounded-md border px-2 py-1 text-xs font-medium hover:bg-accent disabled:opacity-50"
                       >
                         {L.linkBtn}
-                      </button>
+                      </Button>
                       {link.status === "opening" ? <span className="text-[10px] text-muted-foreground">{L.linkOpening}</span> : null}
                       {link.status === "waiting" ? <span className="text-[10px] text-amber-600 dark:text-amber-400">{L.linkWaiting}</span> : null}
                       {link.status === "linked" ? <span className="text-[10px] text-emerald-600 dark:text-emerald-400">{L.linkDone.replace("{k}", link.who ?? "")}</span> : null}
@@ -191,19 +189,12 @@ export default function KeysModal({
         {failed ? <p className="mt-3 text-sm text-rose-700 dark:text-rose-400">{failed}</p> : null}
 
         <div className="mt-4 flex items-center gap-2">
-          <button
-            type="button"
-            disabled={busy || !ready}
-            onClick={() => void save()}
-            className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
-          >
+          <Button disabled={busy || !ready} onClick={() => void save()}>
             {busy ? L.saving : L.save}
-          </button>
-          <button type="button" onClick={onCancel} className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent">
-            {L.cancel}
-          </button>
+          </Button>
+          <Button variant="outline" onClick={onCancel}>{L.cancel}</Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

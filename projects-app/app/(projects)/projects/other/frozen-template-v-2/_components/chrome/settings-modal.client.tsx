@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { chromeStrings } from "./i18n";
-import { X as CloseIcon } from "lucide-react";
 import KeysModal from "../shared/keys-modal.client";
 import { keysStrings } from "../shared/keys-i18n";
 import { pick } from "../shared/localized";
@@ -66,26 +67,16 @@ export default function SettingsModal({
     return () => { alive = false; };
   }, [open, envKeys.join(",")]);
 
-  if (!open) return null;
-
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-        <div
-          role="dialog"
-          aria-label={L.settingsItem}
-          onClick={(e) => e.stopPropagation()}
-          className="flex w-full max-w-[520px] flex-col rounded-lg border bg-background shadow-xl"
-          style={{ maxHeight: 560 }}
-        >
-          <div className="flex shrink-0 items-center justify-between border-b px-4 py-3">
-            <span className="text-sm font-semibold">{L.settingsItem}</span>
-            <button type="button" onClick={onClose} aria-label={L.cancel} className="text-muted-foreground hover:text-foreground">
-              <CloseIcon className="size-4" />
-            </button>
-          </div>
+      <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+        {/* ВЫСОТА 500px, ПРОКРУТКА ВНУТРИ, шапка не уезжает — столько же у самого меню. */}
+        <DialogContent className="flex max-h-[500px] flex-col overflow-hidden sm:max-w-[520px]">
+          <DialogHeader className="shrink-0">
+            <DialogTitle>{L.settingsItem}</DialogTitle>
+          </DialogHeader>
 
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto">
             {/* ЧЕМ АВТОМАТИЗАЦИЯ ДУМАЕТ — первым: это её собственное свойство, а карточки ниже
                 настраивают внешние сервисы, общие на весь проект. */}
             <AiPicker provider={ai.provider} model={ai.model} lang={lang} />
@@ -99,13 +90,9 @@ export default function SettingsModal({
                   <section key={service.key} data-service={service.key} className="space-y-2 rounded-md border p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="text-sm font-medium">{pick(service.label, lang) || service.key}</span>
-                      <button
-                        type="button"
-                        onClick={() => setAsking(service)}
-                        className="rounded-md border px-2 py-1 text-xs hover:bg-accent"
-                      >
+                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setAsking(service)}>
                         {missing.length ? K.connect.replace("{k}", pick(service.label, lang) || service.key) : K.change}
-                      </button>
+                      </Button>
                     </div>
                     {/* Состояние КАЖДОГО ключа, а не одна общая галочка: у сервиса их несколько, и
                         владелец должен видеть, какого именно не хватает. Значение не показываем никогда. */}
@@ -127,8 +114,8 @@ export default function SettingsModal({
               })
             )}
           </div>
-        </div>
-      </div>
+        </DialogContent>
+      </Dialog>
 
       <KeysModal
         open={Boolean(asking)}

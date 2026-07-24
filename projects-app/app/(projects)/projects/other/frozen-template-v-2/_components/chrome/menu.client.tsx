@@ -110,10 +110,10 @@ export default function Menu({
           </Button>
         </DropdownMenuTrigger>
 
-        {/* ВЫСОТА МЕНЮ ОГРАНИЧЕНА 560px, ПРОКРУТКА ВНУТРИ (требование владельца): разделов и записей
+        {/* ВЫСОТА МЕНЮ ОГРАНИЧЕНА 500px, ПРОКРУТКА ВНУТРИ (требование владельца): разделов и записей
             прибавляется, и список не имеет права уходить за нижний край экрана — иначе нижние пункты
             становятся недостижимыми, а на коротком экране пропадает и «Опасная зона». */}
-        <DropdownMenuContent align="end" className="max-h-[560px] w-72 overflow-y-auto">
+        <DropdownMenuContent align="end" className="max-h-[500px] w-72 overflow-y-auto">
           {/* How it works — top, font-medium, Sparkles (v1) */}
           <DropdownMenuItem className="font-medium" onSelect={() => setModal("howItWorks")}>
             <SparkleIcon className="size-4" />
