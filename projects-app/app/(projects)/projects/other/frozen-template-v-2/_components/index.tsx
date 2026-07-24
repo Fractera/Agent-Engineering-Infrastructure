@@ -1,7 +1,6 @@
 import { loadAutomation } from "../_data/load";
 import type { Surface } from "./surface";
-import { graphToFlow } from "./diagram/graph-to-flow";
-import { DiagramCanvasV2 } from "./diagram/canvas.client";
+import Diagram from "./diagram";
 import Dashboard from "./dashboard";
 import ControlPanel from "./control-panel";
 import Calendar from "./calendar";
@@ -29,14 +28,14 @@ import { sectionsStrings } from "./shared/sections-i18n";
 // ПРИСУТСТВИЕ секции по-прежнему связано с переключателем в гамбургер-меню кокпита: `absent` — секции нет
 // нигде, ни в кокпите, ни на витрине.
 export default async function AutomationComponents({ surface, lang }: { surface: Surface; lang: string }) {
-  const { components, graph, useCases } = await loadAutomation();
+  // `graph` здесь больше НЕ читается: диаграмма — платформенный вид, она берёт граф сама через `api/core`.
+  const { components, useCases } = await loadAutomation();
   const tabs = components.tabs.filter((tab) => tab.presence !== "absent");
   // ⚠ БЕЗ раннего `return null` при пустых вкладках: секция ПОЛЬЗОВАТЕЛЬСКИХ КЕЙСОВ рисуется ВСЕГДА
   // (решение владельца) и НЕ зависит от вкладок. Владелец может отключить все аккордеоны в меню — кейсы
   // всё равно остаются последней секцией страницы. Пустой ряд вкладок просто не рисует свой контейнер.
 
   const S = sectionsStrings(lang);
-  const flow = graphToFlow(graph, components);
   const landing = surface === "public";
   // ТАКТ РАСПИСАНИЯ читается ЗДЕСЬ и раздаётся тем вкладкам, которым он нужен. Он объявлен во вкладке
   // `cron`, а нужен календарю — и лезть из одной вкладки в объявление другой запрещено: композиция
@@ -48,7 +47,8 @@ export default async function AutomationComponents({ surface, lang }: { surface:
     tab.name === "control-panel" ? (
       <ControlPanel surface={surface} entities={tab.entities} lang={lang} />
     ) : tab.name === "diagram" ? (
-      <DiagramCanvasV2 vm={flow} lang={lang} readOnly={landing} />
+      // Диаграмма — платформенный вид: холст живёт в `_shared-v2`, данные он читает сам из ядра.
+      <Diagram surface={surface} lang={lang} />
     ) : tab.name === "dashboard" ? (
       <Dashboard surface={surface} entities={tab.entities} lang={lang} />
     ) : tab.name === "calendar" ? (

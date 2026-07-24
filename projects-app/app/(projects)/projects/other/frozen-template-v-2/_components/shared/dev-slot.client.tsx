@@ -136,3 +136,22 @@ export function DevControlPanelSettings({ lang }: { lang: string }) {
     </NullBoundary>
   );
 }
+
+// Диаграмма — ПЛАТФОРМЕННЫЙ ВИД (AGENTS.md §0a): холст живёт одной копией в `_shared-v2`, автоматизация
+// владеет только данными графа. Данные холст читает сам через дверь `api/core`.
+const DiagramLazy = dynamic(
+  () =>
+    import("../../../../_shared-v2")
+      .then((m) => ({ default: m.Diagram }))
+      .catch(() => ({ default: () => null })),
+  { ssr: false, loading: () => null },
+);
+
+/** Холст диаграммы за fail-silent границей — монтируется в разделе «diagram». */
+export function DevDiagram({ lang, readOnly }: { lang: string; readOnly?: boolean }) {
+  return (
+    <NullBoundary>
+      <DiagramLazy lang={lang} readOnly={readOnly} />
+    </NullBoundary>
+  );
+}

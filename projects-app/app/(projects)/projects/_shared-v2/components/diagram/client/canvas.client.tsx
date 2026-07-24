@@ -14,7 +14,9 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import type { DiagramVM, DiagramVMNode } from "./graph-to-flow";
-import { HammerIcon, SplineIcon, EyeIcon, EyeOffIcon } from "../chrome/icons";
+// Иконки — lucide (правило владельца: во v2 самописные UI-элементы запрещены). Прежние самодельные SVG
+// из `chrome/icons` заменены один-к-одному по смыслу.
+import { Hammer as HammerIcon, Spline as SplineIcon, Eye as EyeIcon, EyeOff as EyeOffIcon } from "lucide-react";
 
 // КАНВАС ДИАГРАММЫ v2. Рендер узлов взят ОДИН-К-ОДНОМУ из канваса v1
 // (_shared/components/diagram-canvas.client.tsx: прямоугольный рабочий узел + фиолетовый КВАДРАТ для

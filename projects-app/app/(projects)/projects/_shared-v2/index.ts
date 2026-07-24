@@ -30,3 +30,6 @@ export { ProblemsCenter } from "./components/warnings/client/panel.client";
 // Настройка запроса (микросервис `components/control-panel`) — админ-половина пульта: читает объявление
 // формы из ядра автоматизации через её дверь `api/core` и показывает поля каждого пульта.
 export { ControlPanelSettings } from "./components/control-panel/client/settings.client";
+// Диаграмма (микросервис `components/diagram`) — ПЛАТФОРМЕННЫЙ ВИД над ядром: холст + адаптер живут одной
+// копией здесь, автоматизация владеет только данными графа (AGENTS.md §0a).
+export { Diagram } from "./components/diagram/client/diagram.client";

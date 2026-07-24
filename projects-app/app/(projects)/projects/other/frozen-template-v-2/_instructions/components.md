@@ -51,6 +51,17 @@ runtime component keeps working. You do not build or study that layer (AGENTS.md
 Everything you cannot express under this contract is a signal, not an obstacle: say so in a warning
 rather than reaching outside the folder.
 
+## 🔒 TWO SURFACES YOU DO NOT CODE — the diagram and the use cases
+
+The DIAGRAM (the canvas) and the USE-CASES panel are **platform views derived from the core**, not features
+of this automation. Their single copy lives in the development layer (`_shared-v2/components/{diagram,
+use-cases}`) and is identical for every automation in every account. **Coding them is outside your
+competence and is forbidden** (AGENTS.md §0a).
+
+You own their DATA and nothing else: `graph.nodes` / `graph.edges` and `useCases.cases`, changed through
+`api/patch`. Change the data — the view follows, everywhere, unchanged. Never reimplement the canvas, the
+cases panel or the Quiz inside this folder; if one looks wrong, raise a `warning` instead.
+
 ## The tab-folder standard — the SAME shape everywhere (step 298)
 
 Every tab/section folder under `_components/` has ONE shape, identical everywhere (models: `calendar/`,

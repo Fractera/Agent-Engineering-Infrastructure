@@ -26,6 +26,28 @@ dev-slot. Production never depends on the dev layer's life — remove `_shared-v
 stop appearing while the automation keeps working. You build the hard layer; the soft layer is not yours to
 study.
 
+## 0a. 🔒 TWO SURFACES ARE NOT YOURS TO CODE — the DIAGRAM and the USE CASES
+
+**You are NOT authorised to develop the CODE of the diagram (the canvas) or of the use-cases panel. It is
+outside your competence as a coding agent, and it is forbidden.** They are not features of this automation —
+they are PLATFORM VIEWS derived from the core, and their single copy lives in the development layer
+(`_shared-v2/components/{diagram,use-cases}`), identical for every automation in every account.
+
+What you DO own is their DATA, and only through the core:
+
+| Surface | You change | You never touch |
+|---|---|---|
+| Diagram | `graph.nodes`, `graph.edges` in `_data/automation.json` (via `api/patch`) | the canvas, its layout, its buttons, `graph-to-flow` |
+| Use cases | `useCases.cases` (via `api/patch`) | the cases panel, the Quiz, the review gate |
+
+**Why this is a law and not a preference.** The rendering is the same code for every automation. If it lived
+in this folder, each automation would carry its own copy, and one "improvement" would make this automation
+incompatible with the rest — reuse across accounts would break. Data belongs to the automation; the view
+belongs to the platform. Change the data and the view follows, everywhere, unchanged.
+
+If a diagram or a use-cases panel looks wrong to you, that is not a coding task: say so in a `warning` on
+the object and let the owner decide. Never reimplement either surface inside this folder.
+
 ## 1. Where the truth is
 
 | What | Where |

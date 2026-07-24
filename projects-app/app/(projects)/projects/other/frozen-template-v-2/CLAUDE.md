@@ -19,5 +19,10 @@ The four things worth carrying before you get there:
    `npm run check:core`. Editing without checking is the one habit that breaks this project quietly.
 3. **A role is for life, adding a channel is additive, input is pushed never polled, a secret is
    configuration never code.** These four are never bent.
+3a. **🔒 The DIAGRAM and the USE CASES are not yours to code.** Their rendering is a PLATFORM view that
+   lives once in `_shared-v2/components/{diagram,use-cases}` and is identical in every account. You change
+   only their DATA in the core — `graph.nodes`/`graph.edges` and `useCases.cases`, through `api/patch` —
+   and never reimplement the canvas, the cases panel or the Quiz inside this folder. Coding them is outside
+   your competence and would break reuse of this automation between accounts (AGENTS.md §0a).
 4. **Green `check:core` is not proof that the automation works** — it proves the core is lawful. Proof
    is a real run with a real result.
