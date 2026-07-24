@@ -27,3 +27,6 @@ export { NotificationBanner } from "./components/notifications/client/banner.cli
 // из ядра через дверь `api/projects/warnings`) + панель-модалка. Дев-инструмент кокпита.
 export { WarningProvider } from "./components/warnings/client/provider.client";
 export { ProblemsCenter } from "./components/warnings/client/panel.client";
+// Настройка запроса (микросервис `components/control-panel`) — админ-половина пульта: читает объявление
+// формы из ядра автоматизации через её дверь `api/core` и показывает поля каждого пульта.
+export { ControlPanelSettings } from "./components/control-panel/client/settings.client";

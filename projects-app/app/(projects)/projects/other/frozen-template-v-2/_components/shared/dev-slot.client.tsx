@@ -117,3 +117,22 @@ export function DevWarnings({ lang }: { lang: string }) {
     </NullBoundary>
   );
 }
+
+// Настройка запроса (админ-половина пульта) — тот же fail-silent путь. Объявление формы она читает сама
+// через дверь `api/core`, поэтому пропсов, кроме языка, ей не нужно.
+const ControlPanelSettingsLazy = dynamic(
+  () =>
+    import("../../../../_shared-v2")
+      .then((m) => ({ default: m.ControlPanelSettings }))
+      .catch(() => ({ default: () => null })),
+  { ssr: false, loading: () => null },
+);
+
+/** Настройка запроса за fail-silent границей — монтируется под пультами в кокпите. */
+export function DevControlPanelSettings({ lang }: { lang: string }) {
+  return (
+    <NullBoundary>
+      <ControlPanelSettingsLazy lang={lang} />
+    </NullBoundary>
+  );
+}

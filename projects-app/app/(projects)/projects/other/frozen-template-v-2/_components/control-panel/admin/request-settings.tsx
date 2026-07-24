@@ -1,44 +1,13 @@
-import type { Entity } from "../../../_data/automation.schema";
-import { controlPanelStrings, pick } from "../i18n";
-import { paramsOf, dataText } from "../params";
-import ParamsTable from "./components/params-table";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { DevControlPanelSettings } from "../../shared/dev-slot.client";
 
-// НАСТРОЙКА ЗАПРОСА — административная половина вкладки: то, что дописывается ПОД публичной половиной
-// и видно только владельцу. Посетителю не отдаётся никогда (образец v1: использование отдельно,
-// управление отдельно).
+// АДМИНИСТРАТИВНАЯ ПОЛОВИНА пульта — ТОНКИЙ МОНТАЖ (шаг 298, рефакторинг «микросервисы»).
 //
-// Раскрывашка на shadcn-`Accordion` (обязательность shadcn во v2, решение A). Компонент остаётся
-// серверным: аккордеон — клиентский островок, а его содержимое (таблицы полей) рендерится на сервере и
-// передаётся детьми. Живёт в кокпите владельца (admin-поверхность), а он свободен от канона no-JS.
-// Показывает поля КАЖДОГО пульта вкладки так, как они объявлены в ядре: источник истины один, здесь его
-// видно глазами.
-export default function RequestSettings({ entities, lang }: { entities: Entity[]; lang: string }) {
-  const L = controlPanelStrings(lang);
-
-  return (
-    <section data-control-panel="admin" className="border-t pt-3">
-      <Accordion type="single" collapsible>
-        <AccordionItem value="request-settings">
-          <AccordionTrigger className="py-2">{L.settings}</AccordionTrigger>
-          <AccordionContent>
-            <div className="space-y-4 pt-1">
-              <p className="text-xs text-muted-foreground">{L.settingsHint}</p>
-              {entities.map((entity) => (
-                <div key={entity.cuid} className="space-y-2">
-                  <p className="text-sm font-medium">{pick(dataText(entity, "title"), lang) || entity.name}</p>
-                  <ParamsTable params={paramsOf(entity)} lang={lang} />
-                </div>
-              ))}
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </section>
-  );
+// Вся суть настройки запроса (аккордеон, таблица объявленных полей, словарь) переехала в микросервис
+// `_shared-v2/components/control-panel/{client,server,types}` и читает объявление формы из ядра САМА через
+// дверь `api/core`. Здесь остаётся только подключение административного слоя через fail-silent дев-слот:
+// нет `_shared-v2` — настройки нет, публичный пульт работает как ни в чём не бывало.
+//
+// Вызывающий (`../index.tsx`) уже оборачивает админ-блок в `<DevSlot>`, поэтому здесь только сам компонент.
+export default function RequestSettings({ lang }: { lang: string }) {
+  return <DevControlPanelSettings lang={lang} />;
 }

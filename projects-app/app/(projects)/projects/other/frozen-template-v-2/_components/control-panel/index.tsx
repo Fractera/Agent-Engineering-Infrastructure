@@ -86,7 +86,7 @@ export default function ControlPanel({
       })}
       {surface === "admin" ? (
         <DevSlot>
-          <RequestSettings entities={entities} lang={lang} />
+          <RequestSettings lang={lang} />
           {/* ЗАЯВКА НА ВСЮ ВКЛАДКУ — другой объект ядра (tab), поэтому отдельная раскрывашка внизу. */}
           <DevBuildWithAi target={{ object: "tab", name: "control-panel" }} name={tabTitle} lang={lang} />
         </DevSlot>
