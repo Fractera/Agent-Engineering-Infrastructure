@@ -1,7 +1,7 @@
 import type { Entity } from "../../_data/automation.schema";
 import type { Surface } from "../surface";
 import FirstControlPanel from "./public/first-control-panel";
-import RequestSettings from "./public/components/request-settings.client";
+import { ControlPanelSettings as RequestSettings } from "./public/components/request-settings.client";
 import SectionAccordion from "../shared/section-accordion.client";
 import { DevSlot } from "../shared/dev-slot";
 import { DevBuildWithAi } from "../shared/dev-slot.client";
