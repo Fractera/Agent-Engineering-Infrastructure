@@ -1,20 +1,15 @@
 import type { Surface } from "../surface";
-import type { Notice } from "../../_lib/components/notifications";
-import NotificationBanner from "./admin/notification-banner.client";
+import NotificationsAdmin from "./admin/notifications";
 
-// МАРШРУТИЗАТОР СУЩНОСТИ «NOTIFICATION» — та же единая раскладка, что у всех сущностей v2 (эталон
-// `calendar/index.tsx`): у сущности есть публичная и административная половина, и маршрутизатор их
-// СКЛАДЫВАЕТ (публичная сверху, административная под ней).
+// МАРШРУТИЗАТОР сущности «уведомления» — та же тройка index/public/admin, что у всех сущностей v2.
 //
-// 🔒 ОСОБЕННОСТЬ ЭТОЙ СУЩНОСТИ: публичная половина ПУСТА (папка `public/` есть, но кода в ней нет).
-// Уведомление о состоянии сборки — внутренняя правда для владельца, посетителю витрины показывать её
-// нечего. Поэтому весь код живёт в `admin/`, а раскладка public/admin сохранена ради ЕДИНОЙ системы
-// разделения слоёв: у Notification она устроена так же, как у календаря, а не особым случаем.
+// 🔒 ОСОБЕННОСТЬ: публичная половина ПУСТА (папка `public/` есть, кода нет). Полоса-уведомление — внутренняя
+// правда для владельца о состоянии сборки; посетителю витрины показывать нечего. Раскладка public/admin
+// сохранена ради ЕДИНОЙ системы разделения слоёв.
 //
-// Список поводов внимания считает `_lib/components/notifications` на единственной точке чтения платформы
-// (`page.tsx`) и передаёт сюда готовым — компонент только показывает (закон 2: ничего не хранит).
-export default function Notifications({ surface, notices, lang }: { surface: Surface; notices: Notice[]; lang: string }) {
-  // Публичной половины нет — на витрине сущность не рисуется вовсе.
-  if (surface !== "admin") return null;
-  return <NotificationBanner notices={notices} lang={lang} />;
+// Вся суть (деривация ядра, провайдер-единый-источник, полоса, словарь) живёт в микросервисе
+// `_shared-v2/components/notifications`; здесь — только тонкий монтаж через `admin/` (дев-слот).
+export default function Notifications({ surface, lang }: { surface: Surface; lang: string }) {
+  if (surface !== "admin") return null; // публичной половины нет — на витрине не рисуется
+  return <NotificationsAdmin lang={lang} />;
 }

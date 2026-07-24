@@ -19,3 +19,7 @@ export { default as BuildWithAi, type BuildTarget } from "./build-with-ai.client
 // Панель пользовательских кейсов (микросервис `components/use-cases`) — дев-инструмент первой стадии
 // автоматизации (согласование кейсов с ИИ + ревью-гейт). Подключается тем же fail-silent дев-слотом.
 export { UseCasesPanel } from "./components/use-cases/client/panel.client";
+// Полоса-уведомление (микросервис `components/notifications`) — провайдер (единый источник поводов из ядра
+// через дверь `api/projects/notices`) + сама полоса. Дев-инструмент кокпита, подключается дев-слотом.
+export { NotificationProvider } from "./components/notifications/client/provider.client";
+export { NotificationBanner } from "./components/notifications/client/banner.client";

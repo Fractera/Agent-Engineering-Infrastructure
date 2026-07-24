@@ -1,6 +1,5 @@
 import type { Passport } from "../../_data/automation.schema";
 import type { Surface } from "../surface";
-import type { Notice } from "../../_lib/components/notifications";
 import Hero from "./hero";
 import StatusBar from "./status-bar";
 import HowItWorks from "./how-it-works.client";
@@ -32,7 +31,6 @@ export default function AutomationChrome({
   envKeys,
   publicHref,
   built,
-  notices,
 }: {
   surface: Surface;
   passport: Passport;
@@ -43,8 +41,6 @@ export default function AutomationChrome({
   publicHref: string;
   /** Построена ли автоматизация (паспорт: lifecycle=real-project) — от этого зависит судьба публичной ссылки. */
   built: boolean;
-  /** Поводы внимания из ядра — для полосы-уведомления (только кокпит). Пусто на витрине. */
-  notices: Notice[];
 }) {
   if (surface === "admin") {
     // ПОРЯДОК v1 (шаг 243.1): статус-бар → уведомление. Полоса стоит сразу под статус-баром и рисуется
@@ -52,7 +48,7 @@ export default function AutomationChrome({
     return (
       <div data-chrome-root="admin">
         <StatusBar passport={passport} lang={lang} tabs={tabs} envKeys={envKeys} publicHref={publicHref} built={built} />
-        <Notifications surface={surface} notices={notices} lang={lang} />
+        <Notifications surface={surface} lang={lang} />
       </div>
     );
   }

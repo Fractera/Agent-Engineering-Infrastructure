@@ -101,6 +101,9 @@ export function UseCasesPanel() {
       toast.success(L.addedTitle, { description: L.addedDesc });
       setAddOpen(false); setAddTitle(""); setAddSummary("");
       await load();
+      // Полоса-уведомление тянет поводы своим провайдером (клиентский единый источник) — router.refresh
+      // его не обновит, поэтому шлём событие пересчёта поводов из ядра.
+      window.dispatchEvent(new CustomEvent("fractera:notices-refresh"));
       router.refresh();
     } finally { setBusy(false); }
   }, [addTitle, addSummary, busy, load, router, L]);
@@ -117,6 +120,9 @@ export function UseCasesPanel() {
       toast.success(L.deletedTitle, { description: L.deletedDesc });
       setConfirmDelete(null);
       await load();
+      // Полоса-уведомление тянет поводы своим провайдером (клиентский единый источник) — router.refresh
+      // его не обновит, поэтому шлём событие пересчёта поводов из ядра.
+      window.dispatchEvent(new CustomEvent("fractera:notices-refresh"));
       router.refresh();
     } finally { setBusy(false); }
   }, [confirmDelete, load, router, L]);
@@ -133,8 +139,9 @@ export function UseCasesPanel() {
       toast.success(L.confirmedTitle, { description: L.confirmedDesc });
       await load();
       setMode("initial");
-      // Серверные данные перечитываются — полоса уведомлений пересчитает поводы и покажет «можно запускать
-      // разработку» БЕЗ перезагрузки страницы.
+      // Полоса уведомлений пересчитает поводы и покажет «можно запускать разработку» БЕЗ перезагрузки:
+      // её провайдер (единый источник) слушает это событие и заново тянет поводы из ядра.
+      window.dispatchEvent(new CustomEvent("fractera:notices-refresh"));
       router.refresh();
     } finally { setBusy(false); }
   }, [rows, load, router, L]);

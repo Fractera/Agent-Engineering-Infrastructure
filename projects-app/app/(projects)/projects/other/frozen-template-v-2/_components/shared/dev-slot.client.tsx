@@ -63,3 +63,30 @@ export function DevUseCasesPanel() {
     </NullBoundary>
   );
 }
+
+// Полоса-уведомление — провайдер (единый источник) + сама полоса, тот же fail-silent путь. Провайдер сам
+// тянет поводы из двери `api/projects/notices`; язык приходит пропсом. Нет `_shared-v2` — полосы нет вовсе.
+const NotificationsLazy = dynamic(
+  () =>
+    import("../../../../_shared-v2")
+      .then((m) => {
+        const { NotificationProvider, NotificationBanner } = m;
+        const Mounted = ({ lang }: { lang: string }) => (
+          <NotificationProvider>
+            <NotificationBanner lang={lang} />
+          </NotificationProvider>
+        );
+        return { default: Mounted };
+      })
+      .catch(() => ({ default: () => null })),
+  { ssr: false, loading: () => null },
+);
+
+/** Провайдер + полоса-уведомление за fail-silent границей — монтируется в шапке кокпита под статус-баром. */
+export function DevNotifications({ lang }: { lang: string }) {
+  return (
+    <NullBoundary>
+      <NotificationsLazy lang={lang} />
+    </NullBoundary>
+  );
+}
