@@ -1,35 +1,29 @@
 "use client";
 
+import { Sparkles as SparkleIcon } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { chromeStrings } from "./i18n";
-import { Sparkles as SparkleIcon, X as CloseIcon } from "lucide-react";
 
 // МОДАЛКА «КАК ЭТО РАБОТАЕТ» — управляемая (open/onClose), общая для публичной иконки Sparkle и для пункта
-// меню (образец v1: одна модалка, два входа). max-height 600px, вертикальная прокрутка, заголовок на языке
+// меню (образец v1: одна модалка, два входа). Высота ограничена, прокрутка внутри, заголовок на языке
 // владельца. Тело — плейсхолдер под ответ из passport.howItWorks (шаг 265).
+//
+// 🔒 НА shadcn `Dialog` (шаг 298): прежде — самодельный оверлей со своей кнопкой закрытия.
 export default function HowItWorksModal({ lang, open, onClose }: { lang: string; open: boolean; onClose: () => void }) {
-  if (!open) return null;
   const L = chromeStrings(lang);
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div
-        role="dialog"
-        aria-label={L.howItWorks}
-        onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[600px] w-full max-w-[600px] flex-col overflow-hidden rounded-lg border bg-background shadow-xl"
-      >
-        <div className="flex items-center justify-between border-b px-4 py-3">
-          <span className="flex items-center gap-2 text-sm font-semibold">
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="flex max-h-[600px] flex-col overflow-hidden sm:max-w-[600px]">
+        <DialogHeader className="shrink-0">
+          <DialogTitle className="flex items-center gap-2">
             <SparkleIcon className="size-4" />
             {L.howItWorks}
-          </span>
-          <button type="button" onClick={onClose} aria-label={L.cancel} className="text-muted-foreground hover:text-foreground">
-            <CloseIcon className="size-4" />
-          </button>
-        </div>
-        <div className="overflow-y-auto p-4">
+          </DialogTitle>
+        </DialogHeader>
+        <div className="min-h-0 flex-1 overflow-y-auto">
           <p className="text-sm text-muted-foreground">{L.howItWorksEmpty}</p>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

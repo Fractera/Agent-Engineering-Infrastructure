@@ -1,11 +1,14 @@
 "use client";
 
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { chromeStrings } from "./i18n";
-import { X as CloseIcon } from "lucide-react";
 
-// ЗАГЛУШКА — для записей меню, чьи бэкенды v1 в самодостаточном v2 ещё не построены (Настройки, Тесты,
-// Переименовать, Клонировать, Удалить). Запись выглядит один-в-один как в v1 (решение владельца
-// «переноси по виду»), но пока честно сообщает, что появится в шаблоне позже — не притворяется рабочей.
+// ЗАГЛУШКА — для записей меню, чьи бэкенды v1 в самодостаточном v2 ещё не построены (Тесты, Переименовать,
+// Клонировать, Удалить). Запись выглядит один-в-один как в v1 (решение владельца «переноси по виду»), но
+// пока честно сообщает, что появится в шаблоне позже — не притворяется рабочей.
+//
+// 🔒 НА shadcn `Dialog` (шаг 298): прежде это был самодельный оверлей `fixed inset-0` со своей кнопкой
+// закрытия и ручным `stopPropagation`. Теперь фокус-ловушка, Esc, клик вне окна и крестик — от примитива.
 export default function PlaceholderModal({
   lang,
   title,
@@ -17,26 +20,15 @@ export default function PlaceholderModal({
   open: boolean;
   onClose: () => void;
 }) {
-  if (!open) return null;
   const L = chromeStrings(lang);
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div
-        role="dialog"
-        aria-label={title}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[440px] rounded-lg border bg-background shadow-xl"
-      >
-        <div className="flex items-center justify-between border-b px-4 py-3">
-          <span className="text-sm font-semibold">{title}</span>
-          <button type="button" onClick={onClose} aria-label={L.cancel} className="text-muted-foreground hover:text-foreground">
-            <CloseIcon className="size-4" />
-          </button>
-        </div>
-        <div className="p-4">
-          <p className="text-sm text-muted-foreground">{L.placeholderNote}</p>
-        </div>
-      </div>
-    </div>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="sm:max-w-[440px]">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">{L.placeholderNote}</p>
+      </DialogContent>
+    </Dialog>
   );
 }
