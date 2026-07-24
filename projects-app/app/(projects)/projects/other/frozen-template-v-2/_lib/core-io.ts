@@ -126,12 +126,15 @@ export const WRITABLE: Record<Address["object"], string[]> = {
   graph: [],
   components: [],
   history: [],
-  useCases: ["warnings"],
+  // `reviewedSignature` — подпись подтверждённого набора кейсов (ревью-гейт, шаг 298): её пишет панель
+  // кейсов, когда владелец подтверждает «я прочитал». Набор кейсов целиком по-прежнему не переписывается —
+  // растёт через `op:"append"`, а отдельный кейс правится по адресу `useCase`.
+  useCases: ["warnings", "reviewedSignature"],
   node: ["name", "description", "state", "ioType", "info", "status", "warnings", "envKeys", "function", "run", "estDurationMs"],
   edge: ["state"],
   tab: ["presence", "info", "status", "warnings", "envKeys"],
   entity: ["name", "info", "status", "warnings", "envKeys", "data"],
-  useCase: ["text", "status"],
+  useCase: ["title", "text", "status"],
 };
 
 const PINNED_REFUSAL =

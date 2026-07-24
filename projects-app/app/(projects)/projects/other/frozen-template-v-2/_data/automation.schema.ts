@@ -822,6 +822,9 @@ export const UseCaseSchema = z
   .object({
     cuid: CuidSchema,
     number: z.number().int().positive(),
+    // TITLE — a short name for the case (v1 parity, step 298). The use-cases panel shows it next to the
+    // number; `text` stays the full description. Two fields, exactly as the owner's panel expects them.
+    title: z.string().min(1, "a case needs a short title"),
     text: z.string().min(1, "a case without text is not a case"),
     status: UseCaseStatusSchema,
   })
@@ -835,6 +838,11 @@ export const UseCasesSchema = z
     systemInstructionName: instructionName("useCases"),
     warnings: z.array(WarningSchema),
     cases: z.array(UseCaseSchema),
+    // REVIEW SIGNATURE (step 298, review gate) — the signature of the case set the owner LAST CONFIRMED.
+    // Empty = never reviewed. Any add/edit/delete changes the current set's signature, so it no longer
+    // matches and the gate asks the owner to read and confirm again (step 231's rule, now derived from the
+    // core instead of a v1 server flag). Optional with a default so older cores stay valid.
+    reviewedSignature: z.string().default(""),
   })
   .strict()
   .superRefine((useCases, ctx) => {

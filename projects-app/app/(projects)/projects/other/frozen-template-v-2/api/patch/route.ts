@@ -127,7 +127,16 @@ export async function POST(req: NextRequest) {
   // ─── УДАЛИТЬ УЗЕЛ ─────────────────────────────────────────────────────────────────────────────────
   if (op === "delete") {
     const address = body.address;
-    if (!address || address.object !== "node") return bad("op delete takes the address of a node");
+    // Удалить КЕЙС по адресу (шаг 298, панель кейсов). Кейс — не узел: у него нет квоты группы и рёбер,
+    // он просто уходит из набора. Набор целиком не переписывается — удаляют по одному, как и добавляют.
+    if (address?.object === "useCase") {
+      const before = core.useCases.cases.length;
+      core.useCases.cases = core.useCases.cases.filter((c) => c.cuid !== address.cuid);
+      if (core.useCases.cases.length === before) return bad(`no use case with cuid "${address.cuid}"`, 404);
+      const written = await writeCore(core);
+      return written.ok ? NextResponse.json({ ok: true }) : bad(written.errors, 422);
+    }
+    if (!address || address.object !== "node") return bad("op delete takes the address of a node or a use case");
     const node = allNodes(core.graph.nodes).find((n) => n.cuid === address.cuid);
     if (!node) return bad(`no node with cuid "${address.cuid}"`, 404);
     const group = groupOfNode(core, address.cuid)!;
