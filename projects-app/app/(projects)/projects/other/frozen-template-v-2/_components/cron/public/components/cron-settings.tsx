@@ -1,8 +1,8 @@
-import type { Entity } from "../../../_data/automation.schema";
-import { scheduleOf } from "../schedule";
-import { cronStrings } from "../i18n";
-import { pick } from "../../shared/localized";
-import ScheduleForm from "./components/schedule-form.client";
+import type { Entity } from "../../../../_data/automation.schema";
+import { scheduleOf } from "../../../shared/schedule";
+import { cronStrings } from "../../i18n";
+import { pick } from "../../../shared/localized";
+import ScheduleForm from "./schedule-form.client";
 
 // НАСТРОЙКА РАСПИСАНИЯ — административная половина вкладки: дописывается ПОД публичной и видна только
 // владельцу. Тот же закон, что у пульта, дашборда и календаря: использование отдельно, управление

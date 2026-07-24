@@ -1,5 +1,5 @@
 import type { Entity } from "../../../_data/automation.schema";
-import { scheduleOf } from "../schedule";
+import { scheduleOf } from "../../shared/schedule";
 import { cronStrings } from "../i18n";
 import { pick } from "../../shared/localized";
 import PulseBar from "./components/pulse-bar.client";

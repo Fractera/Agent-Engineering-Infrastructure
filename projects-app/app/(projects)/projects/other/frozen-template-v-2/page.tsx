@@ -4,7 +4,7 @@ import AutomationComponents from "./_components";
 import NotBuiltPage from "./_components/shared/not-built-page";
 import { pick } from "./_components/shared/localized";
 import { allNodes } from "./_data/automation.schema";
-import { cronOf } from "./_components/cron/schedule";
+import { cronOf } from "./_components/shared/schedule";
 import TopPulseBar from "./_components/cron/public/components/top-pulse-bar.client";
 
 // Страница автоматизации. Паттерн v1 (test-stream-frozen-starter/page.tsx): ДВЕ композиции на одном

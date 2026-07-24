@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { secondsLeft } from "../../schedule";
+import { secondsLeft } from "../../../shared/schedule";
 import { cronStrings } from "../../i18n";
 
 // ОБРАТНЫЙ ОТСЧЁТ РАЗДЕЛА — В САМОЙ автоматизации такт показан ОБЫЧНЫМ ЧИСЛОМ, а не полосой-«лазером»

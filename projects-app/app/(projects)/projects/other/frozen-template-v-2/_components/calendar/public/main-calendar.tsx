@@ -1,6 +1,5 @@
 import type { Entity } from "../../../_data/automation.schema";
 import type { Surface } from "../../surface";
-import type { CronSettings } from "../../cron/schedule";
 import { tableOf, typesOf } from "../entries";
 import { integrationsOf } from "../integrations";
 import { calendarStrings } from "../i18n";
@@ -21,13 +20,11 @@ import IntegrationsMenu from "./components/integrations-menu.client";
 // на их месте стоит контейнер с загрузчиком, и к серверу никто не ходит.
 export default function MainCalendar({
   entity,
-  cron,
   surface,
   lang,
   heading = true,
 }: {
   entity: Entity;
-  cron: CronSettings | null;
   surface: Surface;
   lang: string;
   heading?: boolean;
@@ -53,16 +50,12 @@ export default function MainCalendar({
         <IntegrationsMenu cuid={entity.cuid} integrations={integrations} surface={surface} lang={lang} />
       </div>
 
-      {/* Нет расписания — календарь честно говорит, что напоминать некому. Молчаливый календарь,
-          который «должен был» предупредить, хуже, чем календарь, сказавший о своём молчании. */}
-      {cron?.enabled ? null : <p className="text-xs text-muted-foreground">{L.noSchedule}</p>}
 
       <LazyBlock minHeight={320}>
         <CalendarLoader
           table={tableOf(entity)}
           types={typesOf(entity)}
           integrations={integrations}
-          cron={cron}
           surface={surface}
           lang={lang}
         />

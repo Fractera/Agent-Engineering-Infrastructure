@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { groupByDate, shiftMonth, toCalRows, ymd, type CalRow } from "../../../../_lib/components/calendar";
-import type { CronSettings } from "../../../cron/schedule";
+import { useCron } from "../../../shared/cron-context.client";
 import type { Surface } from "../../../surface";
 import type { EntryType } from "../../entries";
 import type { Integration } from "../../integrations";
@@ -27,19 +27,17 @@ export default function CalendarLoader({
   table,
   types,
   integrations,
-  cron,
   surface,
   lang,
 }: {
   table: string;
   types: EntryType[];
   integrations: Integration[];
-  /** Такт расписания или `null`, если крона нет: тогда сторож не работает вовсе. */
-  cron: CronSettings | null;
   surface: Surface;
   lang: string;
 }) {
   const L = calendarStrings(lang);
+  const cron = useCron();
   const [rows, setRows] = useState<CalRow[] | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -107,6 +105,10 @@ export default function CalendarLoader({
 
   return (
     <>
+      {/* Нет расписания — календарь честно говорит, что напоминать некому. Молчаливый календарь, который
+          «должен был» предупредить, хуже, чем календарь, сказавший о своём молчании. Такт берётся из общего
+          провайдера (шаг 298), поэтому подсказка живёт здесь, в клиентской половине, а не выше по цепочке. */}
+      {cron?.enabled ? null : <p className="text-xs text-muted-foreground">{L.noSchedule}</p>}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start" data-calendar-view="grid">
         <MonthGrid
           view={view}
@@ -133,7 +135,7 @@ export default function CalendarLoader({
       </div>
       {/* СТОРОЖ живёт рядом с данными, а не внутри колонки: он следит за ВСЕМИ записями календаря, а не
           за выбранным днём, и его тосты принадлежат странице, а не правой колонке. */}
-      <DueWatch rows={rows} cron={cron} types={types} lang={lang} />
+      <DueWatch rows={rows} types={types} lang={lang} />
     </>
   );
 }

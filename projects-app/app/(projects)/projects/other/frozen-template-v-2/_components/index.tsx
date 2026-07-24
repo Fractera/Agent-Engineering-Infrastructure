@@ -5,13 +5,14 @@ import Dashboard from "./dashboard";
 import ControlPanel from "./control-panel";
 import Calendar from "./calendar";
 import Cron from "./cron";
-import { cronOf } from "./cron/schedule";
+import { cronOf } from "./shared/schedule";
 import GenericTab from "./generic";
 import UseCases from "./use-cases";
 import { useCasesSectionTitle } from "./use-cases/i18n";
 import AutoRefresh from "./shared/auto-refresh.client";
 import SectionAccordion from "./shared/section-accordion.client";
 import { sectionsStrings } from "./shared/sections-i18n";
+import { CronProvider } from "./shared/cron-context.client";
 
 // СЕКЦИИ НА ХОЛСТЕ. Одно ядро читают ОБЕ поверхности, но показывают по-разному:
 //
@@ -37,9 +38,10 @@ export default async function AutomationComponents({ surface, lang }: { surface:
 
   const S = sectionsStrings(lang);
   const landing = surface === "public";
-  // ТАКТ РАСПИСАНИЯ читается ЗДЕСЬ и раздаётся тем вкладкам, которым он нужен. Он объявлен во вкладке
-  // `cron`, а нужен календарю — и лезть из одной вкладки в объявление другой запрещено: композиция
-  // страницы и есть то единственное место, которое видит все вкладки сразу.
+  // ТАКТ РАСПИСАНИЯ читается ЗДЕСЬ ОДИН РАЗ — композиция страницы и есть то единственное место, которое
+  // видит все вкладки сразу (лезть из одной вкладки в объявление другой запрещено). Дальше он раздаётся
+  // не пропом, а ПРОВАЙДЕРОМ (`shared/cron-context`): такт — общий сигнал автоматизации, и потребителей у
+  // него будет больше (сегодня календарь и полоса-пульс, завтра хранилище, дайджест, новая вкладка).
   const cron = cronOf(components);
 
   // Содержимое вкладки — одно и то же на обеих поверхностях; отличается только обёртка.
@@ -52,7 +54,7 @@ export default async function AutomationComponents({ surface, lang }: { surface:
     ) : tab.name === "dashboard" ? (
       <Dashboard surface={surface} entities={tab.entities} lang={lang} />
     ) : tab.name === "calendar" ? (
-      <Calendar surface={surface} entities={tab.entities} cron={cron} lang={lang} />
+      <Calendar surface={surface} entities={tab.entities} lang={lang} />
     ) : tab.name === "cron" ? (
       <Cron surface={surface} entities={tab.entities} lang={lang} />
     ) : (
@@ -69,7 +71,7 @@ export default async function AutomationComponents({ surface, lang }: { surface:
     const panel = tabs.find((t) => t.name === "control-panel");
     const rest = tabs.filter((t) => t !== panel);
     return (
-      <>
+      <CronProvider cron={cron}>
         <AutoRefresh />
         {panel ? <div className="mt-6">{bodyOf(panel)}</div> : null}
         {rest.map((tab) => {
@@ -90,13 +92,13 @@ export default async function AutomationComponents({ surface, lang }: { surface:
             <UseCases cases={useCases.cases} surface={surface} lang={lang} />
           </section>
         ) : null}
-      </>
+      </CronProvider>
     );
   }
 
   // ── КОКПИТ: серия аккордеонов, состояние каждого помнит браузер.
   return (
-    <>
+    <CronProvider cron={cron}>
       {/* ЗАКОН СТРАНИЦЫ, а не забота отдельной секции: завершился прогон — серверные данные перечитываются,
           и каждая таблица показывает свежие записи БЕЗ перезагрузки. Монтируется один раз на все вкладки. */}
       <AutoRefresh />
@@ -124,6 +126,6 @@ export default async function AutomationComponents({ surface, lang }: { surface:
         <h2 className="mb-3 text-lg font-semibold tracking-tight">{useCasesSectionTitle(lang)}</h2>
         <UseCases cases={useCases.cases} surface={surface} lang={lang} />
       </section>
-    </>
+    </CronProvider>
   );
 }

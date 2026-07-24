@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Switch from "../../../chrome/switch.client";
-import { PERIODS, type CronSettings } from "../../schedule";
+import { PERIODS, type CronSettings } from "../../../shared/schedule";
 import { cronStrings } from "../../i18n";
 
 // ФОРМА РАСПИСАНИЯ — единственное место, где такт МЕНЯЮТ. Пишет прямо в ядро дверью `api/patch` по

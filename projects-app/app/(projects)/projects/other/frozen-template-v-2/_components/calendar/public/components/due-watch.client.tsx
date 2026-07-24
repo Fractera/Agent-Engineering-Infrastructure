@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { isDueInWindow, notifyAtMs, type CalRow } from "../../../../_lib/components/calendar";
-import { secondsLeft, type CronSettings } from "../../../cron/schedule";
+import { secondsLeft } from "../../../shared/schedule";
+import { useCron } from "../../../shared/cron-context.client";
 import { Toast, ToastStack } from "../../../shared/toast.client";
 import type { EntryType } from "../../entries";
 import { calendarStrings } from "../../i18n";
@@ -63,12 +64,10 @@ type Notice = { key: string; row: CalRow; raisedAt: number };
 
 export default function DueWatch({
   rows,
-  cron,
   types,
   lang,
 }: {
   rows: CalRow[];
-  cron: CronSettings | null;
   types: EntryType[];
   lang: string;
 }) {
@@ -79,6 +78,8 @@ export default function DueWatch({
   const rowsRef = useRef(rows);
   rowsRef.current = rows;
 
+  // ТАКТ берётся из общего провайдера, а не пропом: он — сигнал всей автоматизации (шаг 298).
+  const cron = useCron();
   const enabled = Boolean(cron?.enabled);
   const everyMinutes = cron?.everyMinutes ?? 0;
 

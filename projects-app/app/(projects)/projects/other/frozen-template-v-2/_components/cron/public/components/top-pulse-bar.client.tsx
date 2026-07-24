@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { secondsLeft } from "../../schedule";
+import { secondsLeft } from "../../../shared/schedule";
 
 // ВЕРХНЯЯ ПОЛОСА-ПУЛЬС — живой индикатор такта, ЗАКРЕПЛЁННЫЙ вверху страницы (правка владельца
 // 2026-07-23). Это тот самый «слайдер» из раздела крона, вынесенный наружу: тонкая оранжевая полоса на

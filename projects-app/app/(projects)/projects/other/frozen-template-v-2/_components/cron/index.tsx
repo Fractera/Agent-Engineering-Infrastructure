@@ -1,7 +1,8 @@
 import type { Entity } from "../../_data/automation.schema";
 import type { Surface } from "../surface";
 import MainSchedule from "./public/main-schedule";
-import CronSettings from "./admin/cron-settings";
+import CronSettings from "./public/components/cron-settings";
+import CronAiRequest from "./admin/ai-request";
 import SectionAccordion from "../shared/section-accordion.client";
 import { DevSlot } from "../shared/dev-slot";
 import { DevBuildWithAi } from "../shared/dev-slot.client";
@@ -68,12 +69,11 @@ export default function Cron({
           </div>
         );
       })}
-      {surface === "admin" ? (
-        <DevSlot>
-          <CronSettings entities={entities} lang={lang} />
-          <DevBuildWithAi target={{ object: "tab", name: "cron" }} name="cron" lang={lang} />
-        </DevSlot>
-      ) : null}
+      {/* НАСТРОЙКА РАСПИСАНИЯ — ПУБЛИЧНАЯ половина (закон владельца 2026-07-24): крон — продуктовая
+          поверхность, вся его логика живёт там, где агент читает и правит её по заявке ИИ. */}
+      {surface === "admin" ? <CronSettings entities={entities} lang={lang} /> : null}
+      {/* АДМИН-ПОЛОВИНА — только заявка ИИ на вкладку целиком. */}
+      {surface === "admin" ? <CronAiRequest lang={lang} /> : null}
     </div>
   );
 }
