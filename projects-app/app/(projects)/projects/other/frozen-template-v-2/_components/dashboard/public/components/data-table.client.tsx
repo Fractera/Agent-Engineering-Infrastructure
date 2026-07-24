@@ -1,14 +1,33 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Columns3 } from "lucide-react";
 import type { Column } from "../../columns";
 import { dashboardStrings } from "../../i18n";
 import { pick } from "../../../shared/localized";
+import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 // ТАБЛИЦА ДАННЫХ — ВИДИМАЯ ЧАСТЬ ПЕРЕНЕСЕНА ИЗ v1 ОДИН-В-ОДИН (`_shared/entities/dashboard/view/table.tsx`):
 // панель инструментов с поиском и выбором колонок, сама таблица, клик по строке открывает карточку записи,
-// внизу счётчик «показано N из M» и кнопка «показать ещё». Реализация своя, без shadcn/lucide (закон 0):
-// выпадающий список колонок — на <details>, карточка записи — обычный слой поверх.
+// внизу счётчик «показано N из M» и кнопка «показать ещё». Элементы интерфейса — примитивы shadcn (решение A,
+// шаг 298): поиск = `Input`, выбор колонок = `DropdownMenu` с галочками, кнопка «ещё» = `Button`, карточка
+// записи = `Dialog`. Сама таблица остаётся `<table>` (полноценного DataTable-примитива в стеке нет),
+// оформлена токенами shadcn.
 //
 // Строки приходят СВЕРХУ, уже прочитанными на сервере: страница остаётся рабочей без JavaScript (канон
 // статики), а поиск, выбор колонок и карточка — надстройка поверх готовой разметки.
@@ -52,32 +71,34 @@ export default function DataTable({ columns, rows, lang }: { columns: Column[]; 
     <div className="space-y-3" data-dashboard-table="view">
       {/* ПАНЕЛЬ ИНСТРУМЕНТОВ — поиск слева, выбор колонок справа (раскладка v1) */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <input
+        <Input
           value={search}
           onChange={(e) => { setSearch(e.target.value); setLimit(PAGE); }}
           placeholder={L.search}
-          className="h-8 w-full max-w-xs rounded-md border bg-transparent px-3 text-sm outline-none focus:ring-1 focus:ring-primary"
+          className="w-full max-w-xs"
         />
-        <details className="relative">
-          <summary className="flex cursor-pointer list-none items-center rounded-md border px-2 py-1 text-xs hover:bg-accent">
-            {L.columns}
-          </summary>
-          <div className="absolute right-0 z-20 mt-1 w-56 rounded-md border bg-background p-1 text-sm shadow-md">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Columns3 />
+              {L.columns}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
             {columns.map((c) => (
-              <label key={c.key} className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 hover:bg-accent">
-                <input
-                  type="checkbox"
-                  className="size-3.5"
-                  checked={!hidden.includes(c.key)}
-                  onChange={() =>
-                    setHidden((h) => (h.includes(c.key) ? h.filter((k) => k !== c.key) : [...h, c.key]))
-                  }
-                />
+              <DropdownMenuCheckboxItem
+                key={c.key}
+                checked={!hidden.includes(c.key)}
+                onCheckedChange={() =>
+                  setHidden((h) => (h.includes(c.key) ? h.filter((k) => k !== c.key) : [...h, c.key]))
+                }
+                onSelect={(e) => e.preventDefault()}
+              >
                 <span className="truncate">{label(c)}</span>
-              </label>
+              </DropdownMenuCheckboxItem>
             ))}
-          </div>
-        </details>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {rows.length === 0 ? (
@@ -115,34 +136,24 @@ export default function DataTable({ columns, rows, lang }: { columns: Column[]; 
               {L.rowsShown.replace("{n}", String(page.length)).replace("{total}", String(found.length))}
             </span>
             {page.length < found.length ? (
-              <button
-                type="button"
-                onClick={() => setLimit((n) => n + PAGE)}
-                className="rounded-md border px-2 py-1 text-xs hover:bg-accent"
-              >
+              <Button type="button" variant="outline" size="sm" onClick={() => setLimit((n) => n + PAGE)}>
                 {L.more}
-              </button>
+              </Button>
             ) : null}
           </div>
         </>
       )}
 
       {/* КАРТОЧКА ЗАПИСИ — все поля строки, включая скрытые в таблице колонки (поведение v1) */}
-      {detail ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          onClick={() => setDetail(null)}
-        >
-          <div
-            className="max-h-[80vh] w-full max-w-md overflow-y-auto rounded-lg border bg-background p-4 shadow-lg"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-sm font-medium">{L.details}</span>
-              <button type="button" onClick={() => setDetail(null)} className="text-sm text-muted-foreground hover:text-foreground">
-                {L.close}
-              </button>
-            </div>
+      <Dialog open={detail !== null} onOpenChange={(open) => { if (!open) setDetail(null); }}>
+        <DialogContent showCloseButton={false} className="max-h-[80vh] max-w-md overflow-y-auto">
+          <DialogHeader className={cn("flex-row items-center justify-between space-y-0")}>
+            <DialogTitle className="text-sm font-medium">{L.details}</DialogTitle>
+            <DialogClose asChild>
+              <Button type="button" variant="ghost" size="sm">{L.close}</Button>
+            </DialogClose>
+          </DialogHeader>
+          {detail ? (
             <dl className="space-y-2">
               {columns.map((c) => (
                 <div key={c.key} className="grid grid-cols-3 gap-2">
@@ -151,9 +162,9 @@ export default function DataTable({ columns, rows, lang }: { columns: Column[]; 
                 </div>
               ))}
             </dl>
-          </div>
-        </div>
-      ) : null}
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

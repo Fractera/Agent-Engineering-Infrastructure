@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 import type { Column } from "../../columns";
 import { dashboardStrings } from "../../i18n";
 import DataTable, { type Row } from "./data-table.client";
@@ -37,7 +38,7 @@ export default function RowsLoader({ table, columns, lang }: { table: string; co
   if (rows === null) {
     return (
       <div className="flex min-h-24 items-center justify-center">
-        <span className="size-5 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground" />
+        <Loader2 className="size-5 animate-spin text-muted-foreground" />
       </div>
     );
   }
