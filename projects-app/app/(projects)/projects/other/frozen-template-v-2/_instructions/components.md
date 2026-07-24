@@ -38,6 +38,9 @@ The contract that makes that possible:
   `_shared-v2` — the latter ONLY from the dev-slot files, never from a public component.)
 - DATA COMES FROM THIS AUTOMATION'S OWN DOORS, fetched by their address — never from another
   automation, never from a platform module.
+- CHARTS ARE shadcn charts (step 298): `@/components/ui/chart` (ChartContainer/ChartTooltip…) over `recharts`
+  (a bare package, part of the shadcn stack). Colors come from `--color-chart-1…5`. Prefer a vertical bar
+  chart for magnitude-by-day. Do NOT hand-draw a chart with divs when a real chart is asked for.
 - STYLING AND UI ELEMENTS ARE shadcn — MANDATORY (step 298). Hand-rolled UI elements (a custom `<button>`,
   a bespoke dialog, an ad-hoc select) are FORBIDDEN; reach for the shadcn primitive instead. The only excuse
   is a case shadcn genuinely cannot express — and then say so in a warning, never quietly hand-roll. Meet a
