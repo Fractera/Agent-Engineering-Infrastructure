@@ -33,7 +33,9 @@ import { DevUseCasesPanel } from "./shared/dev-slot.client";
 export default async function AutomationComponents({ surface, lang }: { surface: Surface; lang: string }) {
   const { components, graph, useCases } = await loadAutomation();
   const tabs = components.tabs.filter((tab) => tab.presence !== "absent");
-  if (tabs.length === 0) return null;
+  // ⚠ БЕЗ раннего `return null` при пустых вкладках: секция ПОЛЬЗОВАТЕЛЬСКИХ КЕЙСОВ рисуется ВСЕГДА
+  // (решение владельца) и НЕ зависит от вкладок. Владелец может отключить все аккордеоны в меню — кейсы
+  // всё равно остаются последней секцией страницы. Пустой ряд вкладок просто не рисует свой контейнер.
 
   const S = sectionsStrings(lang);
   const flow = graphToFlow(graph, components);
@@ -99,20 +101,22 @@ export default async function AutomationComponents({ surface, lang }: { surface:
       {/* ЗАКОН СТРАНИЦЫ, а не забота отдельной секции: завершился прогон — серверные данные перечитываются,
           и каждая таблица показывает свежие записи БЕЗ перезагрузки. Монтируется один раз на все вкладки. */}
       <AutoRefresh />
-      <div data-components-root data-surface={surface} className="mt-6 rounded-lg border px-4">
-        {tabs.map((tab) => (
-          <SectionAccordion
-            key={tab.name}
-            tab={tab.name}
-            title={titleOf(tab.name)}
-            count={tab.entities.length}
-            countLabel={S.items}
-            defaultOpen={tab.presence === "expanded"}
-          >
-            {bodyOf(tab)}
-          </SectionAccordion>
-        ))}
-      </div>
+      {tabs.length > 0 ? (
+        <div data-components-root data-surface={surface} className="mt-6 rounded-lg border px-4">
+          {tabs.map((tab) => (
+            <SectionAccordion
+              key={tab.name}
+              tab={tab.name}
+              title={titleOf(tab.name)}
+              count={tab.entities.length}
+              countLabel={S.items}
+              defaultOpen={tab.presence === "expanded"}
+            >
+              {bodyOf(tab)}
+            </SectionAccordion>
+          ))}
+        </div>
+      ) : null}
       {/* ПОЛЬЗОВАТЕЛЬСКИЕ КЕЙСЫ — ВСЕГДА последняя секция страницы, за сепаратором, ОТКРЫТА (решение
           владельца 2026-07-24: не отслеживать раскрыт/скрыт, всегда рисовать; кейсы живут в топ-уровневом
           `useCases`, не во вкладках). Кокпит — дев-инструмент из `_shared-v2` через дев-слот. */}
