@@ -1,4 +1,4 @@
-import type { ColumnType, DashboardTable, TableColumn } from "../types/table-config";
+import type { ColumnType, DashboardTable, TableColumn } from "./table-config";
 
 // ЯДРО → КОНФИГ ТАБЛИЦ. Единственное отличие переноса v1-таблицы в v2: конфиг не приходит из платформенного
 // стора, а ВЫВОДИТСЯ из ядра автоматизации (`components.tabs[dashboard].entities[].data`). Дальше работает
