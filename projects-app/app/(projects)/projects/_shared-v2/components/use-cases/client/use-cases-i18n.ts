@@ -308,7 +308,26 @@ const QUIZ_SOON: Record<string, string> = {
   nl: "Bewerken met de Quiz komt in een latere stap — cases toevoegen en verwijderen werkt al.",
 };
 
-export function useCasesStrings(lang: string): UseCasesStrings & { quizSoon: string } {
+// НОВЫЕ фразы (v2, шаг 298) — обычная человеческая кнопка входа в режим настройки и «Готово» из него.
+// Десять языков (CLAUDE.md 4г).
+const CONFIGURE_CASES: Record<string, string> = {
+  en: "Configure / add use cases", ru: "Настроить / добавить пользовательские кейсы",
+  es: "Configurar / añadir casos de uso", fr: "Configurer / ajouter des cas d'usage",
+  it: "Configura / aggiungi casi d'uso", de: "Anwendungsfälle einrichten / hinzufügen",
+  pt: "Configurar / adicionar casos de uso", pl: "Skonfiguruj / dodaj przypadki użycia",
+  tr: "Kullanım senaryolarını yapılandır / ekle", nl: "Use cases instellen / toevoegen",
+};
+const DONE_CONFIG: Record<string, string> = {
+  en: "Done", ru: "Готово", es: "Listo", fr: "Terminé", it: "Fatto", de: "Fertig",
+  pt: "Concluído", pl: "Gotowe", tr: "Bitti", nl: "Klaar",
+};
+
+export function useCasesStrings(lang: string): UseCasesStrings & { quizSoon: string; configureCases: string; doneConfig: string } {
   const k = lang.slice(0, 2);
-  return { ...(USE_CASES_I18N[k] ?? USE_CASES_I18N.en), quizSoon: QUIZ_SOON[k] ?? QUIZ_SOON.en };
+  return {
+    ...(USE_CASES_I18N[k] ?? USE_CASES_I18N.en),
+    quizSoon: QUIZ_SOON[k] ?? QUIZ_SOON.en,
+    configureCases: CONFIGURE_CASES[k] ?? CONFIGURE_CASES.en,
+    doneConfig: DONE_CONFIG[k] ?? DONE_CONFIG.en,
+  };
 }
