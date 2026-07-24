@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { chromeStrings } from "./i18n";
 import { keysStrings } from "../shared/keys-i18n";
 import { pick } from "../shared/localized";
@@ -138,36 +140,41 @@ export default function AiPicker({
     <section data-settings="ai" className="space-y-3 rounded-md border p-3">
       <p className="text-sm font-medium">{L.automationLabel}</p>
 
-      <label className="flex flex-wrap items-center gap-2 text-sm">
+      {/* ВЫБОР ПРОВАЙДЕРА И МОДЕЛИ — shadcn `Select` (шаг 298: сырые `<select>` во v2 запрещены). */}
+      <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="text-muted-foreground">{L.aiProvider}</span>
-        <select
+        <Select
           value={choice.provider}
           disabled={busy}
-          onChange={(e) => void changeProvider(providerOf(e.target.value).key)}
-          className="h-8 rounded-md border bg-transparent px-2 text-sm outline-none focus:ring-1 focus:ring-primary"
+          onValueChange={(v) => void changeProvider(providerOf(v).key)}
         >
-          {PROVIDERS.map((p) => (
-            <option key={p.key} value={p.key}>{p.label}</option>
-          ))}
-        </select>
-      </label>
+          <SelectTrigger size="sm" className="w-40"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {PROVIDERS.map((p) => (
+              <SelectItem key={p.key} value={p.key}>{p.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-      <label className="flex flex-wrap items-center gap-2 text-sm">
+      <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="text-muted-foreground">{L.aiModel}</span>
-        <select
+        <Select
           value={choice.model}
           disabled={busy || models.length === 0}
-          onChange={(e) => void save({ provider: choice.provider, model: e.target.value })}
-          className="h-8 rounded-md border bg-transparent px-2 text-sm outline-none focus:ring-1 focus:ring-primary disabled:opacity-60"
+          onValueChange={(v) => void save({ provider: choice.provider, model: v })}
         >
-          {/* Выбранная модель, которой нет в живом списке, показывается как есть: подменять её молча —
-              врать о том, чем автоматизация на самом деле думает. */}
-          {modelKnown ? null : <option value={choice.model}>{choice.model}</option>}
-          {models.map((m) => (
-            <option key={m.id} value={m.id}>{m.label}</option>
-          ))}
-        </select>
-      </label>
+          <SelectTrigger size="sm" className="w-64"><SelectValue /></SelectTrigger>
+          <SelectContent className="max-h-72">
+            {/* Выбранная модель, которой нет в живом списке, показывается как есть: подменять её молча —
+                врать о том, чем автоматизация на самом деле думает. */}
+            {modelKnown ? null : <SelectItem value={choice.model}>{choice.model}</SelectItem>}
+            {models.map((m) => (
+              <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       {modelsError ? <p className="text-xs text-amber-600 dark:text-amber-400">{L.aiModelsUnavailable}</p> : null}
 
       {/* КЛЮЧИ ОБОИХ ПРОВАЙДЕРОВ — по строке на каждого, статус и ввод здесь же. Владелец видит, что
@@ -189,13 +196,9 @@ export default function AiPicker({
                     <span className="text-muted-foreground">—</span>
                   )}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => setAsking(p.key)}
-                  className="rounded-md border px-2 py-1 text-xs hover:bg-accent"
-                >
+                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setAsking(p.key)}>
                   {set ? K.change : K.connect.replace("{k}", p.label)}
-                </button>
+                </Button>
               </div>
               {/* Оранжевое предупреждение о поштучном биллинге — видно ещё до открытия формы ключа. */}
               {warning ? <p className="text-[11px] font-medium text-orange-600 dark:text-orange-400">{pick(warning, lang)}</p> : null}
