@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ChevronDownIcon } from "../chrome/icons";
+import { ChevronDown as ChevronDownIcon } from "lucide-react";
 import { readOpen, writeOpen } from "./sections-state";
 
 // АККОРДЕОН РАЗДЕЛА — один на всю автоматизацию: им обёрнута и вкладка (dashboard, control panel…), и

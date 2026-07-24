@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { chromeStrings } from "./i18n";
-import { HamburgerIcon, SparkleIcon, GripVerticalIcon, PencilIcon, CopyIcon, TrashIcon } from "./icons";
-import Switch from "./switch.client";
+import { Menu as HamburgerIcon, Sparkles as SparkleIcon, GripVertical as GripVerticalIcon, Pencil as PencilIcon, Copy as CopyIcon, Trash2 as TrashIcon } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import Toast from "../shared/toast.client";
 import HowItWorksModal from "./how-it-works-modal.client";
 import PlaceholderModal from "./placeholder-modal.client";
@@ -161,7 +161,7 @@ export default function Menu({
                   <GripVerticalIcon className="size-4" />
                 </span>
                 <span className="flex-1 truncate capitalize">{tab.name}</span>
-                <Switch checked={isVisible} disabled={busy === tab.name} ariaLabel={tab.name} onCheckedChange={() => toggleVisibility(tab.name, tab.presence)} />
+                <Switch checked={isVisible} disabled={busy === tab.name} aria-label={tab.name} onCheckedChange={() => toggleVisibility(tab.name, tab.presence)} />
               </div>
             );
           })}

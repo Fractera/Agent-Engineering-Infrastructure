@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { CloseIcon } from "../chrome/icons";
+import { X as CloseIcon } from "lucide-react";
 
 // ЯЩИК СПРАВА — общий примитив. Механика целиком взята у ящика навигации витрины
 // (`chrome/nav-drawer.client.tsx`): выезд с анимацией, затемнение, начало ПОД шапкой (`top-14`),

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { daySlots, type CalRow } from "../../../../_lib/components/calendar";
-import { INTEGRATION_ICONS } from "../../../chrome/icons";
+import { INTEGRATION_ICONS } from "../../../chrome/integration-icons";
 import type { Surface } from "../../../surface";
 import { pick } from "../../../shared/localized";
 import type { EntryType, Tone } from "../../entries";

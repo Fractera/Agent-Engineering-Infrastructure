@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { chromeStrings } from "./i18n";
-import { CloseIcon } from "./icons";
+import { X as CloseIcon } from "lucide-react";
 
 // КНОПКА «ОТПРАВИТЬ ЗАДАНИЕ» — живая запись в ядро: текст владельца ложится в passport.info.crudUser
 // через собственную дверь api/patch (то поле, что будущий агент читает как задачу). Двусторонняя связь

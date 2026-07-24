@@ -1,7 +1,7 @@
 "use client";
 
 import { chromeStrings } from "./i18n";
-import { SparkleIcon, CloseIcon } from "./icons";
+import { Sparkles as SparkleIcon, X as CloseIcon } from "lucide-react";
 
 // МОДАЛКА «КАК ЭТО РАБОТАЕТ» — управляемая (open/onClose), общая для публичной иконки Sparkle и для пункта
 // меню (образец v1: одна модалка, два входа). max-height 600px, вертикальная прокрутка, заголовок на языке

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { chromeStrings } from "./i18n";
-import { SparkleIcon } from "./icons";
+import { Sparkles as SparkleIcon } from "lucide-react";
 import HowItWorksModal from "./how-it-works-modal.client";
 
 // «КАК ЭТО РАБОТАЕТ» на ПУБЛИЧНОЙ поверхности — иконка Sparkle в правом верхнем углу открывает общую

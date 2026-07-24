@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Switch from "../../../chrome/switch.client";
+import { Switch } from "@/components/ui/switch";
 import { PERIODS, type CronSettings } from "../../../shared/schedule";
 import { cronStrings } from "../../i18n";
 
@@ -49,7 +49,7 @@ export default function ScheduleForm({
         <Switch
           checked={settings.enabled}
           disabled={busy}
-          ariaLabel={L.enabled}
+          aria-label={L.enabled}
           onCheckedChange={(v) => void save({ ...settings, enabled: v })}
         />
         <span>{L.enabled}</span>

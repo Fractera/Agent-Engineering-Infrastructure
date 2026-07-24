@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CloseIcon } from "../chrome/icons";
+import { X as CloseIcon } from "lucide-react";
 import { pick } from "./localized";
 import { keysStrings } from "./keys-i18n";
 import type { ChannelKey } from "../channels";

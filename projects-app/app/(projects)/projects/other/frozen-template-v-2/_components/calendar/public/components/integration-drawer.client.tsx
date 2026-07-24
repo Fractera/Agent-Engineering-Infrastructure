@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import type { CalRow, RowIntegration } from "../../../../_lib/components/calendar";
 import type { Surface } from "../../../surface";
-import { INTEGRATION_ICONS } from "../../../chrome/icons";
+import { INTEGRATION_ICONS } from "../../../chrome/integration-icons";
 import { pick } from "../../../shared/localized";
 import type { Integration } from "../../integrations";
 import { calendarStrings } from "../../i18n";

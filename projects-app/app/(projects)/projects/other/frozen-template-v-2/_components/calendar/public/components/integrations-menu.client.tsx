@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { INTEGRATION_ICONS } from "../../../chrome/icons";
+import { INTEGRATION_ICONS } from "../../../chrome/integration-icons";
 import type { Surface } from "../../../surface";
 import { pick } from "../../../shared/localized";
 import KeysModal from "../../../shared/keys-modal.client";

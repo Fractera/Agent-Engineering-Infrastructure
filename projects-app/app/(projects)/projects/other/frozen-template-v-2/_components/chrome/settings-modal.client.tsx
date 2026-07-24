@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { chromeStrings } from "./i18n";
-import { CloseIcon } from "./icons";
+import { X as CloseIcon } from "lucide-react";
 import KeysModal from "../shared/keys-modal.client";
 import { keysStrings } from "../shared/keys-i18n";
 import { pick } from "../shared/localized";

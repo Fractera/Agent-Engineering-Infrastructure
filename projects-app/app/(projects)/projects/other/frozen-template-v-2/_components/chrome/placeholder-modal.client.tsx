@@ -1,7 +1,7 @@
 "use client";
 
 import { chromeStrings } from "./i18n";
-import { CloseIcon } from "./icons";
+import { X as CloseIcon } from "lucide-react";
 
 // ЗАГЛУШКА — для записей меню, чьи бэкенды v1 в самодостаточном v2 ещё не построены (Настройки, Тесты,
 // Переименовать, Клонировать, Удалить). Запись выглядит один-в-один как в v1 (решение владельца
