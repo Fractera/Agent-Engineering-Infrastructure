@@ -87,10 +87,11 @@ export default function NotificationBanner({ notices, lang }: { notices: Notice[
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              // Кейсы не подтверждены → НЕ запускаем разработку: показываем причину и открываем подтверждение
-              // (панель кейсов ловит `usecases:review` и переходит в режим review).
+              // Кейсы не подтверждены → НЕ запускаем разработку: показываем причину, ПРОКРУЧИВАЕМ к секции
+              // кейсов (она внизу страницы) и открываем подтверждение (панель ловит `usecases:review`).
               if (!canDevelop) {
-                toast.error(L.blocked, { duration: 10000, action: { label: L.details, onClick: () => window.dispatchEvent(new CustomEvent("usecases:review")) } });
+                toast.error(L.blocked, { duration: 10000 });
+                document.querySelector('[data-section="use-cases"]')?.scrollIntoView({ behavior: "smooth", block: "start" });
                 window.dispatchEvent(new CustomEvent("usecases:review"));
                 return;
               }
