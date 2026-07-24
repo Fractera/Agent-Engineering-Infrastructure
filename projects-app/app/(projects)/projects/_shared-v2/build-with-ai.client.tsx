@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { sendStrings } from "./build-with-ai-i18n";
-import VoiceInput from "./voice-input.client";
+import VoiceInput from "./tools/voice-input/client/voice-input.client";
 
 // «СТРОИТЬ … ВМЕСТЕ С ИИ» — раскрывашка, через которую владелец оставляет задание модели. Общий компонент
 // ВСЕХ вкладок: и пульт, и дашборд, и будущие календарь с хранилищем зовут ровно её.

@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import type { Param } from "../../params";
 import { controlPanelStrings, pick } from "../../i18n";
-import VoiceInput from "../../../shared/voice-input.client";
+import VoiceInput from "../../../tools/voice-input/client/voice-input.client";
 
 // ОДНО ПОЛЕ ФОРМЫ, нарисованное по своему объявленному типу. Общий компонент публичной половины: любой
 // пульт вкладки рисует свои поля им, поэтому поля выглядят одинаково во всех пультах.
