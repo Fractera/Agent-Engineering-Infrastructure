@@ -1659,11 +1659,11 @@
       {
         "systemInstructionName": "tab",
         "name": "use-cases",
-        "presence": "absent",
+        "presence": "expanded",
         "info": {
           "aiSummary": "Вкладка пользовательских кейсов объявлена и пуста."
         },
-        "status": "in-development",
+        "status": "materialized",
         "warnings": [],
         "envKeys": [],
         "entities": [
@@ -1673,7 +1673,7 @@
             "info": {
               "aiSummary": "Заготовка «Main use cases»: создана вместе со вкладкой, требований владельца пока нет."
             },
-            "status": "in-development",
+            "status": "materialized",
             "warnings": [],
             "envKeys": [],
             "data": {}

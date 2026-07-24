@@ -53,6 +53,13 @@ export default async function AutomationComponents({ surface, lang }: { surface:
       <Calendar surface={surface} entities={tab.entities} cron={cron} lang={lang} />
     ) : tab.name === "cron" ? (
       <Cron surface={surface} entities={tab.entities} lang={lang} />
+    ) : tab.name === "use-cases" ? (
+      // Вкладка кейсов рендерит ПАНЕЛЬ кейсов (дев-слой), а НЕ общий вид с «Строить с ИИ»: у кейсов есть
+      // своя сущность в `_shared-v2` (лёгкий слой → настройка → подтверждение). Нет `_shared-v2` — секции
+      // нет, продакшн не задет. Так у кейсов ОДНА поверхность, без дубля-заглушки GenericTab.
+      <DevSlot>
+        <DevUseCasesPanel />
+      </DevSlot>
     ) : (
       // У вкладки ещё нет своей папки — показываем её сущности общим видом: место на странице, якорь для
       // оглавления и обе ступени заявки «строить вместе с ИИ». Пропускать раздел нельзя: тогда заказать
@@ -89,14 +96,6 @@ export default async function AutomationComponents({ surface, lang }: { surface:
       {/* ЗАКОН СТРАНИЦЫ, а не забота отдельной секции: завершился прогон — серверные данные перечитываются,
           и каждая таблица показывает свежие записи БЕЗ перезагрузки. Монтируется один раз на все вкладки. */}
       <AutoRefresh />
-      {/* ПОЛЬЗОВАТЕЛЬСКИЕ КЕЙСЫ — первая стадия автоматизации и точка согласия с ИИ (шаг 231). Инструмент
-          РАЗРАБОТКИ: живёт в мягком слое `_shared-v2` и монтируется fail-silent дев-слотом — только в
-          кокпите, не на витрине. Нет `_shared-v2` — секции просто нет, продакшн не задет. */}
-      <DevSlot>
-        <div className="mt-6">
-          <DevUseCasesPanel />
-        </div>
-      </DevSlot>
       <div data-components-root data-surface={surface} className="mt-6 rounded-lg border px-4">
         {tabs.map((tab) => (
           <SectionAccordion
