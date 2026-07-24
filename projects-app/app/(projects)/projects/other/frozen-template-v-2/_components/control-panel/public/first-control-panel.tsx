@@ -9,6 +9,7 @@ import ParamField from "./components/param-field.client";
 import RunReport, { type Outcome, readError } from "./components/run-report.client";
 import { notifyRunCompleted } from "../../shared/run-events";
 import Toast, { type ToastTone } from "../../shared/toast.client";
+import { Button } from "@/components/ui/button";
 
 // ПЕРВЫЙ ПУЛЬТ ЗАПУСКА — публичная половина вкладки: поля запроса, кнопка и результат. Только
 // использование. Виден на обеих поверхностях: посетителю — как вся вкладка, владельцу — как её верхняя
@@ -132,18 +133,15 @@ export default function FirstControlPanel({
       )}
 
       <div className={landing ? "space-y-2" : "flex items-center gap-3"}>
-        <button
+        <Button
           type="button"
           onClick={ask}
           disabled={busy || missing.length > 0}
-          className={
-            landing
-              ? "w-full rounded-lg bg-primary px-4 py-3 text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
-              : "rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
-          }
+          size={landing ? "lg" : "sm"}
+          className={landing ? "h-11 w-full text-base font-semibold" : undefined}
         >
           {busy ? L.asking : L.ask}
-        </button>
+        </Button>
         {missing.length ? (
           <span className={landing ? "block text-center text-xs text-muted-foreground" : "text-xs text-muted-foreground"}>
             {L.fill.replace("{k}", missing.join(", "))}

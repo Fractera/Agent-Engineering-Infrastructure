@@ -1,9 +1,13 @@
 "use client";
 
-import { useRef } from "react";
+import { useId, useRef } from "react";
 import type { Param } from "../../params";
 import { controlPanelStrings, pick } from "../../i18n";
 import VoiceInput from "../../../tools/voice-input/client/voice-input.client";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 // ОДНО ПОЛЕ ФОРМЫ, нарисованное по своему объявленному типу. Общий компонент публичной половины: любой
 // пульт вкладки рисует свои поля им, поэтому поля выглядят одинаково во всех пультах.
@@ -28,31 +32,33 @@ export default function ParamField({
   const areaRef = useRef<HTMLTextAreaElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const voice = param.type !== "number";
+  const fieldId = useId();
 
   return (
-    <label className={`space-y-1 ${wide}`}>
-      <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+    <div className={cn("space-y-1", wide)}>
+      <Label htmlFor={fieldId} className="text-xs text-muted-foreground">
         {label}
         <span className="text-[10px] uppercase tracking-wide opacity-70">
           {param.required ? L.required : L.optional}
         </span>
-      </span>
+      </Label>
       {param.type === "longtext" ? (
-        <textarea
+        <Textarea
           ref={areaRef}
+          id={fieldId}
           value={value}
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
-          className="min-h-20 w-full resize-y rounded-md border bg-transparent p-2 text-sm outline-none focus:ring-1 focus:ring-primary"
+          className="min-h-20 resize-y"
         />
       ) : (
-        <input
+        <Input
           ref={inputRef}
+          id={fieldId}
           type={param.type === "number" ? "number" : "text"}
           value={value}
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
-          className="h-9 w-full rounded-md border bg-transparent px-3 text-sm outline-none focus:ring-1 focus:ring-primary"
         />
       )}
       {voice ? (
@@ -63,6 +69,6 @@ export default function ParamField({
           lang={lang}
         />
       ) : null}
-    </label>
+    </div>
   );
 }

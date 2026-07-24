@@ -1,6 +1,8 @@
 "use client";
 
 import { controlPanelStrings, pick } from "../../i18n";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 // ОТЧЁТ ПРОГОНА — что вернула дверь api/run: цепочка узлов чипами (образец v1) и одна строка исхода.
 // Общий компонент публичной половины: так отчитывается любой пульт вкладки.
@@ -41,19 +43,20 @@ export default function RunReport({ outcome, lang }: { outcome: Outcome; lang: s
       )}
       <div className="flex flex-wrap gap-2">
         {outcome.nodes.map((n) => (
-          <span
+          <Badge
             key={n.cuid}
+            variant="outline"
             title={readError(n.error, lang)}
-            className={`rounded-md border px-2 py-1 text-xs ${
+            className={cn(
               n.status === "ok"
                 ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-400"
                 : n.status === "stopped"
                   ? "border-border text-muted-foreground"
-                  : "border-rose-500/40 text-rose-700 dark:text-rose-400"
-            }`}
+                  : "border-rose-500/40 text-rose-700 dark:text-rose-400",
+            )}
           >
             {n.name} · {n.status}
-          </span>
+          </Badge>
         ))}
       </div>
     </div>
