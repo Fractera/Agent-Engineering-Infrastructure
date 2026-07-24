@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCheck, Loader2, Pencil, Plus, Settings2, ShieldAlert, ShieldCheck, Trash2 } from "lucide-react";
+import { CheckCheck, Loader2, Pencil, Plus, Settings2, ShieldAlert, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Accordion,
@@ -20,6 +20,7 @@ import type { UseCase } from "../types/use-cases";
 import { STATUS_META } from "../types/use-cases";
 import { useCasesStrings } from "./use-cases-i18n";
 import { signatureOf } from "./signature";
+import { CreateQuiz } from "./create-quiz.client";
 
 // ПАНЕЛЬ ПОЛЬЗОВАТЕЛЬСКИХ КЕЙСОВ — ДЕВ-СЛОЙ (`_shared-v2`, шаг 298). Три режима (замысел владельца 2026-07-24):
 //
@@ -51,6 +52,7 @@ export function UseCasesPanel() {
   const lang = useUiLang();
   const L = useCasesStrings(lang);
   const [mode, setMode] = useState<Mode>("initial");
+  const [quizOpen, setQuizOpen] = useState(false);
   const [rows, setRows] = useState<UseCase[]>([]);
   const [reviewedSignature, setReviewedSignature] = useState("");
   const [busy, setBusy] = useState(false);
@@ -220,8 +222,8 @@ export function UseCasesPanel() {
           <Button size="sm" variant="ghost" onClick={() => setAddOpen(true)}>
             <Plus className="size-3.5" /> {L.addCase}
           </Button>
-          <Button size="sm" variant="ghost" title={L.editAllTip} onClick={editSoon}>
-            <Pencil className="size-3.5" /> {L.editAll}
+          <Button size="sm" variant="ghost" title={L.editAllTip} onClick={() => setQuizOpen(true)}>
+            <Sparkles className="size-3.5" /> {L.editAll}
           </Button>
         </span>
       </div>
@@ -310,6 +312,9 @@ export function UseCasesPanel() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* СОЗДАНИЕ КЕЙСОВ С ИИ — диалог Quiz (описание → вопросы → автоквиз-стрим → синтез в ядро). */}
+      <CreateQuiz open={quizOpen} lang={lang} onClose={() => setQuizOpen(false)} onApplied={load} />
     </div>
   );
 }
