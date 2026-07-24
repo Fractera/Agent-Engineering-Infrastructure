@@ -93,9 +93,14 @@ for (const auto of V2_AUTOMATIONS) {
         }
         continue; // lawful when in a dev-slot file — this is the ONE allowed external path
       }
-      // Anything else that leaves the folder is forbidden (there is only one lawful outside path).
+      // Anything else that leaves the folder is forbidden — with ONE more lawful path added in step 298
+      // (decision A): the shadcn primitive stack. v2 forbids hand-rolled UI elements (shadcn is mandatory),
+      // so a runtime component MUST be able to reach the shared shadcn primitives `@/components/ui/*` and the
+      // `cn` helper `@/lib/utils`. This ties the folder's portability to a host that ships the shadcn stack —
+      // an accepted trade for one consistent UI system across the product. Nothing ELSE under `@/` is lawful.
       let outside = false;
-      if (imp.startsWith("@/")) outside = true;
+      if (imp.startsWith("@/components/ui/") || imp === "@/lib/utils") outside = false; // the shadcn stack
+      else if (imp.startsWith("@/")) outside = true;
       else if (/(^|\/)_shared(\/|$)/.test(imp)) outside = true; // the v1 shared layer — not this folder's
       else if (imp.startsWith(".")) {
         const ups = (imp.match(/\.\.\//g) ?? []).length;

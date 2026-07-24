@@ -28,15 +28,20 @@ The contract that makes that possible:
 
 - ONE DEFAULT EXPORT, an async server component: `export default async function Calendar() { … }`.
 - PLAIN JSX. The runtime is bundled in for you; you do not import React.
-- REACH NOTHING OUTSIDE THIS FOLDER. A runtime/public component imports only its own folder (its
-  siblings, `_lib/`, `_data/`) plus `zod`. It never imports another automation, a platform module, the v1
-  `_shared`, or the soft dev layer `_shared-v2`. A foreign import that works today becomes a dependency
-  nobody owns tomorrow, and it breaks self-containment. (`scripts/check-entity-imports.mjs` enforces this:
-  the ONE lawful outside path is `_shared-v2`, and ONLY from the dev-slot files — never from a public
-  component.)
+- REACH NOTHING OUTSIDE THIS FOLDER — with two named exceptions. A runtime/public component imports its
+  own folder (its siblings, `_lib/`, `_data/`) plus `zod`, plus **the shadcn stack** (step 298, decision A):
+  the primitives `@/components/ui/*`, the `cn` helper `@/lib/utils`, and the bare packages the stack rides on
+  (`lucide-react`, `sonner`, `class-variance-authority`, `clsx`, `tailwind-merge`, `@radix-ui/*`). It never
+  imports another automation, any OTHER platform module, the v1 `_shared`, or the soft dev layer `_shared-v2`.
+  A foreign import beyond those becomes a dependency nobody owns tomorrow and breaks self-containment.
+  (`scripts/check-entity-imports.mjs` enforces this: the lawful outside paths are the shadcn stack and
+  `_shared-v2` — the latter ONLY from the dev-slot files, never from a public component.)
 - DATA COMES FROM THIS AUTOMATION'S OWN DOORS, fetched by their address — never from another
   automation, never from a platform module.
-- STYLING is inline or the utility classes already present in the page.
+- STYLING AND UI ELEMENTS ARE shadcn — MANDATORY (step 298). Hand-rolled UI elements (a custom `<button>`,
+  a bespoke dialog, an ad-hoc select) are FORBIDDEN; reach for the shadcn primitive instead. The only excuse
+  is a case shadcn genuinely cannot express — and then say so in a warning, never quietly hand-roll. Meet a
+  hand-written element from an earlier step? Rewrite it to shadcn on sight. Compose with `cn` + Tailwind.
 
 The SOFT layer — the "Build with AI" buttons and the admin settings — is not yours: it lives outside in
 `_shared-v2` and is wired in through the fail-silent dev-slot (`_components/shared/dev-slot*`). Production
