@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useUiLang } from "../use-ui-lang";
-import { DevConsole } from "./dev-console.client";
+// v1 dev-console удалён (шаг 298) — v2-запуск идёт через провайдер `_shared-v2/tools/dev-console`.
 
 // THE LAUNCH DIALOG (step 233 → the wave in 240 → the light hand-off in 249 → the dev console in 255).
 // ONE development path (owner 2026-07-19, 263.1): the sterile-room terminal. The step-250 in-product
@@ -19,7 +19,7 @@ import { DevConsole } from "./dev-console.client";
 // here), the advisory stub-node screen (263.1) and the no-cases refusal.
 type Case = { cuid: string; title: string; summary: string; status: string };
 type Mode =
-  | "loading" | "review" | "confirm" | "console"
+  | "loading" | "review" | "confirm"
   | "no-cases" | "nothing-staged" | "stub-nodes";
 
 type SD = {
@@ -339,8 +339,6 @@ export function StartDevelopment({
   // The dev console (step 255): the room the terminal works in + the first task the conductor hands over.
   const [roomKept, setRoomKept] = useState(false);
   const [roomDirtyFiles, setRoomDirtyFiles] = useState<string[]>([]);
-  const [roomPath, setRoomPath] = useState("");
-  const [roomTask, setRoomTask] = useState("");
 
   // THE ENTRY (step 255): the gates run via GET handoff (the ONE launchGate set); passing them shows the
   // CONFIRM screen (cancel-and-keep-editing / start-now — the owner's repeatable cycle) and stores the
@@ -376,8 +374,6 @@ export function StartDevelopment({
       }
       setRoomKept(!!d.roomKept);
       setRoomDirtyFiles(d.roomDirtyFiles ?? []);
-      setRoomPath(d.roomPath ?? "");
-      setRoomTask(d.room ?? "");
       setMode("confirm");
     } catch {
       toast.error(L.failed);
@@ -414,7 +410,7 @@ export function StartDevelopment({
           a live agent session. Radix's Esc/outside-click closing is disabled for every mode — the X
           button, "cancel and keep editing" and Exit remain the only doors. */}
       <DialogContent
-        className={`flex max-h-[92vh] flex-col overflow-hidden ${mode === "console" ? "sm:max-w-5xl" : "sm:max-w-2xl"}`}
+        className="flex max-h-[92vh] flex-col overflow-hidden sm:max-w-2xl"
         onEscapeKeyDown={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
@@ -461,7 +457,10 @@ export function StartDevelopment({
             )}
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" onClick={() => onOpenChange(false)}>{L.cancelEdit}</Button>
-              <Button onClick={() => setMode("console")} data-start-console="1">
+              <Button
+                onClick={() => { window.dispatchEvent(new CustomEvent("fractera:launch-development", { detail: { automation } })); onOpenChange(false); }}
+                data-start-console="1"
+              >
                 <Rocket className="size-4" /> {L.startNow}
               </Button>
             </div>
@@ -470,16 +469,8 @@ export function StartDevelopment({
           </div>
         )}
 
-        {/* THE DEV CONSOLE (step 255) — the live external-agent session. */}
-        {mode === "console" && (
-          <DevConsole
-            automation={automation}
-            roomPath={roomPath}
-            roomTask={roomTask}
-            lang={lang}
-            onExited={() => onOpenChange(false)}
-          />
-        )}
+        {/* v1 dev-console удалён (шаг 298): «Запустить сейчас» диспатчит v2-событие, консоль открывает
+            провайдер `_shared-v2/tools/dev-console`. Этот v1-диалог и его гейты уходят отдельными шагами. */}
 
         {/* THE GATE — read the cases, confirm, continue. The confirm button is RIGHT HERE. */}
         {mode === "review" && (
