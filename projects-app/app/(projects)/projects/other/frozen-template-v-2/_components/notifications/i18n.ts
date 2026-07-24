@@ -14,19 +14,20 @@ export type NotificationStrings = {
   unbuilt: string; // метка категории «не построено»
   details: string; // раскрыть список
   launch: string; // кнопка «Запустить разработку»
+  ready: string; // повод «кейсы подтверждены — можно запускать разработку» (дословно v1 `reviewedYes`)
 };
 
 const I18N: Record<string, NotificationStrings> = {
-  en: { warning: "Blocker", unbuilt: "In development", details: "Details", launch: "Launch development" },
-  ru: { warning: "Препятствие", unbuilt: "В разработке", details: "Подробнее", launch: "Запустить разработку" },
-  es: { warning: "Obstáculo", unbuilt: "En desarrollo", details: "Detalles", launch: "Lanzar el desarrollo" },
-  fr: { warning: "Obstacle", unbuilt: "En développement", details: "Détails", launch: "Lancer le développement" },
-  it: { warning: "Ostacolo", unbuilt: "In sviluppo", details: "Dettagli", launch: "Avvia lo sviluppo" },
-  de: { warning: "Hindernis", unbuilt: "In Entwicklung", details: "Details", launch: "Entwicklung starten" },
-  pt: { warning: "Obstáculo", unbuilt: "Em desenvolvimento", details: "Detalhes", launch: "Lançar o desenvolvimento" },
-  pl: { warning: "Przeszkoda", unbuilt: "W trakcie tworzenia", details: "Szczegóły", launch: "Uruchom rozwój" },
-  tr: { warning: "Engel", unbuilt: "Geliştirme aşamasında", details: "Ayrıntılar", launch: "Geliştirmeyi başlat" },
-  nl: { warning: "Obstakel", unbuilt: "In ontwikkeling", details: "Details", launch: "Ontwikkeling starten" },
+  en: { warning: "Blocker", unbuilt: "In development", details: "Details", launch: "Launch development", ready: "You confirmed these cases — development can start." },
+  ru: { warning: "Препятствие", unbuilt: "В разработке", details: "Подробнее", launch: "Запустить разработку", ready: "Вы подтвердили эти кейсы — разработку можно начинать." },
+  es: { warning: "Obstáculo", unbuilt: "En desarrollo", details: "Detalles", launch: "Lanzar el desarrollo", ready: "Confirmaste estos casos — el desarrollo puede empezar." },
+  fr: { warning: "Obstacle", unbuilt: "En développement", details: "Détails", launch: "Lancer le développement", ready: "Vous avez confirmé ces cas — le développement peut commencer." },
+  it: { warning: "Ostacolo", unbuilt: "In sviluppo", details: "Dettagli", launch: "Avvia lo sviluppo", ready: "Hai confermato questi casi — lo sviluppo può iniziare." },
+  de: { warning: "Hindernis", unbuilt: "In Entwicklung", details: "Details", launch: "Entwicklung starten", ready: "Du hast diese Fälle bestätigt — die Entwicklung kann beginnen." },
+  pt: { warning: "Obstáculo", unbuilt: "Em desenvolvimento", details: "Detalhes", launch: "Lançar o desenvolvimento", ready: "Confirmou estes casos — o desenvolvimento pode começar." },
+  pl: { warning: "Przeszkoda", unbuilt: "W trakcie tworzenia", details: "Szczegóły", launch: "Uruchom rozwój", ready: "Potwierdziłeś te przypadki — rozwój może się rozpocząć." },
+  tr: { warning: "Engel", unbuilt: "Geliştirme aşamasında", details: "Ayrıntılar", launch: "Geliştirmeyi başlat", ready: "Bu senaryoları onayladınız — geliştirme başlayabilir." },
+  nl: { warning: "Obstakel", unbuilt: "In ontwikkeling", details: "Details", launch: "Ontwikkeling starten", ready: "Je hebt deze cases bevestigd — de ontwikkeling kan beginnen." },
 };
 
 export function notificationStrings(lang: string): NotificationStrings {

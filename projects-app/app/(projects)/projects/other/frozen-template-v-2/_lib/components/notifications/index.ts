@@ -17,8 +17,22 @@
 //   new-case  — пользовательский кейс со статусом `new`: заявка, которую ещё не начали.
 import { allNodes, type Automation } from "../../../_data/automation.schema";
 
-export type NoticeCategory = "unbuilt" | "warning" | "new-case";
+export type NoticeCategory = "unbuilt" | "warning" | "new-case" | "ready";
 export type NoticeScope = "node" | "tab" | "entity" | "use-cases" | "case";
+
+// ПОДПИСЬ НАБОРА КЕЙСОВ — ДОЛЖНА БАЙТ-В-БАЙТ совпадать с
+// `_shared-v2/components/use-cases/client/signature.ts` (панель пишет подпись подтверждённого набора в
+// ядро, полоса читает из ядра «подтверждено» и считает подпись ТЕМ ЖЕ способом — иначе «подтверждено»
+// никогда не совпадёт). Копия намеренная: слой панели (`_shared-v2`) и слой папки (закон 0) не делят код.
+function useCasesSignature(cases: { cuid: string; title: string; text: string }[]): string {
+  const body = cases.map((c) => `${c.cuid}␟${c.title}␟${c.text}`).join("␞");
+  let h = 2166136261; // FNV-1a 32-бит
+  for (let i = 0; i < body.length; i++) {
+    h ^= body.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(36);
+}
 
 /** Один повод внимания. `name` — человеческое имя объекта (или номер кейса); `text` — текст предупреждения
  *  либо текст кейса, как их написал автор (проза, НЕ переводится). */
@@ -73,5 +87,17 @@ export function collectNotices(core: Automation): Notice[] {
     }
   }
 
-  return [...warnings, ...unbuilt, ...newCases];
+  // READY — набор кейсов ПОДТВЕРЖДЁН: подпись текущего набора совпала с записанной в ядре
+  // (`reviewedSignature`). Владелец согласовал, что должна делать автоматизация → разработку можно начинать.
+  // Любая правка набора расходит подпись, и этот повод гаснет сам (правило шага 231).
+  const ready: Notice[] = [];
+  if (
+    core.useCases.cases.length > 0 &&
+    core.useCases.reviewedSignature &&
+    core.useCases.reviewedSignature === useCasesSignature(core.useCases.cases)
+  ) {
+    ready.push({ category: "ready", scope: "use-cases", name: "use-cases" });
+  }
+
+  return [...warnings, ...unbuilt, ...ready, ...newCases];
 }

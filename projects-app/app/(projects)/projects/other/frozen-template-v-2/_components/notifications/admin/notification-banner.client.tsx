@@ -25,12 +25,13 @@ function automationFromPath(): string {
 // РАСКРЫТИЕ СПИСКА — нативный <details> (работает без JS). Заголовка-предложения нет: сколько и чего —
 // говорят счётчики с цветными иконками. Иконки — inline SVG (закон 0). Нет поводов → полосы нет вовсе.
 
-const ORDER: NoticeCategory[] = ["warning", "unbuilt", "new-case"];
+const ORDER: NoticeCategory[] = ["warning", "unbuilt", "ready", "new-case"];
 
 /** Цвет категории — один и тот же у счётчика и у пункта списка. */
 const TONE: Record<NoticeCategory, string> = {
   warning: "text-amber-600 dark:text-amber-400",
   unbuilt: "text-blue-600 dark:text-blue-400",
+  ready: "text-emerald-600 dark:text-emerald-400",
   "new-case": "text-emerald-600 dark:text-emerald-400",
 };
 
@@ -42,6 +43,10 @@ function CatIcon({ category }: { category: NoticeCategory }) {
   }
   if (category === "unbuilt") {
     return (<svg {...common}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>);
+  }
+  // ready — зелёная галочка в круге (кейсы подтверждены).
+  if (category === "ready") {
+    return (<svg {...common}><circle cx="12" cy="12" r="9" /><path d="m8.5 12 2.5 2.5 4.5-5" /></svg>);
   }
   return (<svg {...common}><circle cx="12" cy="12" r="9" /><path d="M12 8v8" /><path d="M8 12h8" /></svg>);
 }
@@ -98,6 +103,8 @@ export default function NotificationBanner({ notices, lang }: { notices: Notice[
                     его отличают зелёная иконка и номер (машинный, не переводится). */}
                 {notice.category === "new-case" ? (
                   <span className="font-medium text-foreground">№{notice.name}</span>
+                ) : notice.category === "ready" ? (
+                  <span className="font-medium text-foreground">{L.ready}</span>
                 ) : (
                   <>
                     <span className="text-muted-foreground">{notice.category === "warning" ? L.warning : L.unbuilt}: </span>
