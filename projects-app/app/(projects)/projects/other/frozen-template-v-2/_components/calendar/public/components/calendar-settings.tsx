@@ -1,7 +1,7 @@
-import type { Entity } from "../../../_data/automation.schema";
-import { tableOf, typesOf } from "../entries";
-import { calendarStrings } from "../i18n";
-import { pick } from "../../shared/localized";
+import type { Entity } from "../../../../_data/automation.schema";
+import { tableOf, typesOf } from "../../entries";
+import { calendarStrings } from "../../i18n";
+import { pick } from "../../../shared/localized";
 import { Info } from "lucide-react";
 import {
   Accordion,
@@ -9,7 +9,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import EntryTypesTable from "./components/entry-types-table";
+import EntryTypesTable from "./entry-types-table";
 
 // НАСТРОЙКА КАЛЕНДАРЕЙ — административная половина вкладки: то, что дописывается ПОД публичными
 // календарями и видно только владельцу. Посетителю не отдаётся никогда (тот же закон, что у пульта и

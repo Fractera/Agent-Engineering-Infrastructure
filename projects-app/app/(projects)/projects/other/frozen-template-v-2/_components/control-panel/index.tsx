@@ -1,7 +1,7 @@
 import type { Entity } from "../../_data/automation.schema";
 import type { Surface } from "../surface";
 import FirstControlPanel from "./public/first-control-panel";
-import RequestSettings from "./admin/request-settings";
+import RequestSettings from "./public/components/request-settings.client";
 import SectionAccordion from "../shared/section-accordion.client";
 import { DevSlot } from "../shared/dev-slot";
 import { DevBuildWithAi } from "../shared/dev-slot.client";
@@ -84,10 +84,14 @@ export default function ControlPanel({
           </div>
         );
       })}
+      {/* НАСТРОЙКА ЗАПРОСА — ПУБЛИЧНАЯ половина (закон владельца 2026-07-24): пульт — продуктовая
+          поверхность, вся его логика живёт там, где агент читает и правит её по заявке. Показывается
+          владельцу в кокпите; посетителю витрины внутренности запроса не нужны. */}
+      {surface === "admin" ? <RequestSettings lang={lang} /> : null}
+      {/* АДМИН-ПОЛОВИНА — только заявка ИИ (на вкладку целиком). Заявка на отдельный пульт стоит выше,
+          сразу под своим пультом. */}
       {surface === "admin" ? (
         <DevSlot>
-          <RequestSettings lang={lang} />
-          {/* ЗАЯВКА НА ВСЮ ВКЛАДКУ — другой объект ядра (tab), поэтому отдельная раскрывашка внизу. */}
           <DevBuildWithAi target={{ object: "tab", name: "control-panel" }} name={tabTitle} lang={lang} />
         </DevSlot>
       ) : null}

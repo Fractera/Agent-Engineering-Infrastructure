@@ -8,8 +8,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { controlPanelAdminStrings, pick } from "./i18n";
-import { paramsOf, type ControlPanelTab, type Param, type PanelEntity } from "../types/control-panel";
+import { controlPanelStrings as controlPanelAdminStrings, pick } from "../../i18n";
+import { paramsOf, type ControlPanelTab, type Param, type PanelEntity } from "../../types-panel";
 
 // НАСТРОЙКА ЗАПРОСА — АДМИН-половина пульта (дев-слой, шаг 298). Показывает поля КАЖДОГО пульта вкладки
 // так, как они объявлены в ЯДРЕ: источник истины один, здесь его видно глазами.

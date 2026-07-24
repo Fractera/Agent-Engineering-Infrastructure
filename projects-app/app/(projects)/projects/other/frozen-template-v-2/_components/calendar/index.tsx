@@ -2,7 +2,8 @@ import type { Entity } from "../../_data/automation.schema";
 import type { Surface } from "../surface";
 import type { CronSettings } from "../cron/schedule";
 import MainCalendar from "./public/main-calendar";
-import CalendarSettings from "./admin/calendar-settings";
+import CalendarSettings from "./public/components/calendar-settings";
+import CalendarAiRequest from "./admin/ai-request";
 import SectionAccordion from "../shared/section-accordion.client";
 import { DevSlot } from "../shared/dev-slot";
 import { DevBuildWithAi } from "../shared/dev-slot.client";
@@ -87,13 +88,11 @@ export default function Calendar({
           </div>
         );
       })}
-      {surface === "admin" ? (
-        <DevSlot>
-          <CalendarSettings entities={entities} lang={lang} />
-          {/* ЗАЯВКА НА ВЕСЬ КАЛЕНДАРЬ — объект tab, отдельно от заявок на отдельные календари. */}
-          <DevBuildWithAi target={{ object: "tab", name: "calendar" }} name="calendar" lang={lang} />
-        </DevSlot>
-      ) : null}
+      {/* НАСТРОЙКА КАЛЕНДАРЕЙ — ПУБЛИЧНАЯ половина (закон владельца 2026-07-24): календарь — продуктовая
+          поверхность, вся его логика живёт там, где агент читает и правит её по заявке ИИ. */}
+      {surface === "admin" ? <CalendarSettings entities={entities} lang={lang} /> : null}
+      {/* АДМИН-ПОЛОВИНА — только заявка ИИ на вкладку целиком (заявка на отдельный календарь — выше). */}
+      {surface === "admin" ? <CalendarAiRequest lang={lang} /> : null}
     </div>
   );
 }

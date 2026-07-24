@@ -118,24 +118,9 @@ export function DevWarnings({ lang }: { lang: string }) {
   );
 }
 
-// Настройка запроса (админ-половина пульта) — тот же fail-silent путь. Объявление формы она читает сама
-// через дверь `api/core`, поэтому пропсов, кроме языка, ей не нужно.
-const ControlPanelSettingsLazy = dynamic(
-  () =>
-    import("../../../../_shared-v2")
-      .then((m) => ({ default: m.ControlPanelSettings }))
-      .catch(() => ({ default: () => null })),
-  { ssr: false, loading: () => null },
-);
-
-/** Настройка запроса за fail-silent границей — монтируется под пультами в кокпите. */
-export function DevControlPanelSettings({ lang }: { lang: string }) {
-  return (
-    <NullBoundary>
-      <ControlPanelSettingsLazy lang={lang} />
-    </NullBoundary>
-  );
-}
+// ⚠ ПУЛЬТА, ДАШБОРДА И КАЛЕНДАРЯ ЗДЕСЬ НЕТ И БЫТЬ НЕ ДОЛЖНО (закон владельца 2026-07-24). Это ПРОДУКТОВЫЕ
+// ПОВЕРХНОСТИ: у каждой есть заявка «строить вместе с ИИ», поэтому вся их логика живёт в `<tab>/public/`,
+// где агент читает и правит её по техзаданию. В дев-слое им положена только форма заявки (`DevBuildWithAi`).
 
 // Диаграмма — ПЛАТФОРМЕННЫЙ ВИД (AGENTS.md §0a): холст живёт одной копией в `_shared-v2`, автоматизация
 // владеет только данными графа. Данные холст читает сам через дверь `api/core`.
