@@ -85,18 +85,21 @@ export function EuropeMapView() {
             />
           ))}
           {pins.map((c) => (
+            // ПИН — `Button` с СОБСТВЕННЫМ боксом клика (`size-6`). Важно: shadcn Button ставит дочернему
+            // svg `pointer-events-none`, поэтому клик по иконке ловит именно кнопка, а не тайл под ней — без
+            // реального бокса (был `size-auto p-0`) клик проваливался сквозь пин, и ящик не открывался.
             <Button
               key={c.name}
               type="button"
               variant="ghost"
               size="icon"
               onClick={() => setActive(c)}
-              className="group absolute size-auto -translate-x-1/2 -translate-y-full bg-transparent p-0 hover:bg-transparent"
+              className="group absolute size-6 -translate-x-1/2 -translate-y-full rounded-full bg-transparent p-0 hover:bg-transparent"
               title={c.name}
               data-map-pin={c.name}
               style={{ left: `${(c.left / W) * 100}%`, top: `${(c.top / H) * 100}%` }}
             >
-              <MapPin className="size-6 fill-primary/80 text-primary drop-shadow group-hover:scale-110" />
+              <MapPin className="!size-6 fill-primary/80 text-primary drop-shadow transition-transform group-hover:scale-110" />
               <span className="absolute left-1/2 top-full -translate-x-1/2 whitespace-nowrap rounded bg-background/90 px-1 text-[10px] font-medium shadow-sm">
                 {c.name}
               </span>
