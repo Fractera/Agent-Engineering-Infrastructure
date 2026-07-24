@@ -1,4 +1,4 @@
-import DashboardTablesClient from "./tables.client";
+import { Dashboard as DashboardTablesClient } from "./tables.client";
 
 // ПУБЛИЧНАЯ ПОЛОВИНА дашборда — ВСЯ таблица целиком, в папке автоматизации (закон владельца 2026-07-24:
 // логика таблицы живёт там, где её читает и правит агент по заявке «строить вместе с ИИ»).
