@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { groupByDate, shiftMonth, toCalRows, ymd, type CalRow } from "../../../../_lib/components/calendar";
 import type { CronSettings } from "../../../cron/schedule";
 import type { Surface } from "../../../surface";
@@ -95,7 +96,7 @@ export default function CalendarLoader({
   if (rows === null) {
     return (
       <div className="flex min-h-24 items-center justify-center">
-        <span className="size-5 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground" />
+        <Loader2 className="size-5 animate-spin text-muted-foreground" />
       </div>
     );
   }

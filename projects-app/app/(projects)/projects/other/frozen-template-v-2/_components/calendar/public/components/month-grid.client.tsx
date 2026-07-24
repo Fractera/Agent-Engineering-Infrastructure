@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { ChevronLeftIcon, ChevronRightIcon } from "../../../chrome/icons";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { monthCells, type CalRow } from "../../../../_lib/components/calendar";
 import type { EntryType, Tone } from "../../entries";
 import { calendarStrings } from "../../i18n";
@@ -50,15 +52,15 @@ export default function MonthGrid({
   return (
     <div className="w-full rounded-lg border p-3 sm:w-[300px] sm:shrink-0" data-calendar-part="month">
       <div className="mb-2 flex items-center justify-between">
-        <button type="button" onClick={() => onShift(-1)} className="rounded p-1 hover:bg-muted" aria-label={L.prevMonth}>
-          <ChevronLeftIcon className="size-4" />
-        </button>
+        <Button type="button" variant="ghost" size="icon-sm" onClick={() => onShift(-1)} aria-label={L.prevMonth}>
+          <ChevronLeft className="size-4" />
+        </Button>
         <span className="text-sm font-medium capitalize">
           {monthFmt.format(new Date(view.y, view.m, 1))} {view.y}
         </span>
-        <button type="button" onClick={() => onShift(1)} className="rounded p-1 hover:bg-muted" aria-label={L.nextMonth}>
-          <ChevronRightIcon className="size-4" />
-        </button>
+        <Button type="button" variant="ghost" size="icon-sm" onClick={() => onShift(1)} aria-label={L.nextMonth}>
+          <ChevronRight className="size-4" />
+        </Button>
       </div>
 
       <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] capitalize text-muted-foreground">
@@ -80,21 +82,22 @@ export default function MonthGrid({
           if (list.some((e) => !types.some((t) => t.key === e.type)) && !tones.includes("event")) tones.push("event");
           const isSel = c.date === selected;
           return (
-            <button
+            <Button
               key={i}
               type="button"
+              variant={isSel ? "default" : "ghost"}
               onClick={() => onSelect(c.date)}
-              className={`relative aspect-square rounded hover:bg-muted ${isSel ? "bg-primary text-primary-foreground" : ""}`}
+              className="relative aspect-square h-auto w-full rounded p-0 text-xs font-normal"
             >
               {c.day}
               {tones.length > 0 && (
                 <span className="absolute bottom-0.5 left-1/2 flex -translate-x-1/2 gap-0.5">
                   {tones.map((t, k) => (
-                    <span key={k} className={`size-1 rounded-full ${DOT[t]}`} />
+                    <span key={k} className={cn("size-1 rounded-full", DOT[t])} />
                   ))}
                 </span>
               )}
-            </button>
+            </Button>
           );
         })}
       </div>

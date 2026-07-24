@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import { INTEGRATION_ICONS } from "../../../chrome/icons";
 import type { Surface } from "../../../surface";
 import { pick } from "../../../shared/localized";
@@ -11,7 +19,7 @@ import { missingKeysOf, type Integration } from "../../integrations";
 import { calendarStrings } from "../../i18n";
 
 // ВЫПАДАЮЩИЙ СПИСОК ИНТЕГРАЦИЙ — справа в шапке календаря, ровно как выбор колонок у таблицы дашборда
-// (`dashboard/public/components/data-table.client.tsx`): та же раскрывашка на <details>, те же чекбоксы.
+// (`dashboard/public/components/data-table.client.tsx`): тот же shadcn-`DropdownMenu` с чекбоксами.
 // Одинаковые вещи должны выглядеть и работать одинаково — владелец не должен угадывать, что это меню
 // такое же.
 //
@@ -92,39 +100,38 @@ export default function IntegrationsMenu({
 
   return (
     <>
-      <details className="relative" data-calendar="integrations-menu">
-        <summary className="flex cursor-pointer list-none items-center rounded-md border px-2 py-1 text-xs hover:bg-accent">
-          {L.integrations}
-        </summary>
-        <div className="absolute right-0 z-20 mt-1 w-72 rounded-md border bg-background p-1 text-sm shadow-md">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild data-calendar="integrations-menu">
+          <Button variant="outline" size="sm" className="text-xs">
+            {L.integrations}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-72">
           {list.map((i) => {
             const Icon = INTEGRATION_ICONS[i.key];
             const missing = missingKeysOf(i, present);
             return (
-              <label
+              <DropdownMenuCheckboxItem
                 key={i.key}
                 data-integration-row={i.key}
                 data-ready={missing.length ? "no" : "yes"}
-                className={`flex items-center gap-2 rounded-sm px-2 py-1.5 ${editable ? "cursor-pointer hover:bg-accent" : "opacity-70"} ${missing.length ? "opacity-50" : ""}`}
+                checked={i.enabled}
+                disabled={!editable || busy}
+                onCheckedChange={() => toggle(i)}
+                onSelect={(e) => e.preventDefault()}
+                className={cn(!editable ? "opacity-70" : "", missing.length ? "opacity-50" : "")}
               >
-                <input
-                  type="checkbox"
-                  className="size-3.5"
-                  checked={i.enabled}
-                  disabled={!editable || busy}
-                  onChange={() => toggle(i)}
-                />
                 {Icon ? <Icon className="size-3.5 shrink-0 text-muted-foreground" /> : null}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate">{pick(i.label, lang) || i.key}</span>
                   {missing.length ? <span className="block truncate text-[10px] text-muted-foreground">{L.keysMissing}</span> : null}
                 </span>
-              </label>
+              </DropdownMenuCheckboxItem>
             );
           })}
           {!editable ? <p className="px-2 py-1 text-xs text-muted-foreground">{L.viewOnly}</p> : null}
-        </div>
-      </details>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {/* Та же форма ключей, что и в главном меню. Отмена — галочка НЕ ставится, в ядро ничего не идёт. */}
       <KeysModal

@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import type { CalRow, RowIntegration } from "../../../../_lib/components/calendar";
 import type { Surface } from "../../../surface";
 import { INTEGRATION_ICONS } from "../../../chrome/icons";
-import SideDrawer from "../../../shared/side-drawer.client";
-import Switch from "../../../chrome/switch.client";
 import { pick } from "../../../shared/localized";
 import type { Integration } from "../../integrations";
 import { calendarStrings } from "../../i18n";
@@ -92,8 +96,12 @@ export default function IntegrationDrawer({
   }
 
   return (
-    <SideDrawer open={Boolean(row)} title={`${row.time} · ${row.title}`} onClose={onClose}>
-      <div className="space-y-4">
+    <Sheet open={Boolean(row)} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <SheetContent side="right" className="w-96 max-w-[90vw] gap-0 overflow-y-auto p-4">
+        <SheetHeader className="p-0">
+          <SheetTitle className="truncate text-sm font-medium">{`${row.time} · ${row.title}`}</SheetTitle>
+        </SheetHeader>
+        <div className="mt-3 space-y-4">
         <p className="text-xs text-muted-foreground">{L.integrationsHint}</p>
 
         {shown.length === 0 ? (
@@ -103,12 +111,12 @@ export default function IntegrationDrawer({
             {/* «Все сразу» — только когда каналов показано больше одного: у единственного это шум. */}
             {editable && shown.length > 1 ? (
               <div className="flex gap-2">
-                <button type="button" onClick={() => setAll(true)} className="rounded-md border px-2 py-1 text-xs hover:bg-accent">
+                <Button type="button" variant="outline" size="xs" onClick={() => setAll(true)}>
                   {L.allOn}
-                </button>
-                <button type="button" onClick={() => setAll(false)} className="rounded-md border px-2 py-1 text-xs hover:bg-accent">
+                </Button>
+                <Button type="button" variant="outline" size="xs" onClick={() => setAll(false)}>
                   {L.allOff}
-                </button>
+                </Button>
               </div>
             ) : null}
 
@@ -125,7 +133,7 @@ export default function IntegrationDrawer({
                     {editable ? (
                       <Switch
                         checked={Boolean(value.active)}
-                        ariaLabel={L.active}
+                        aria-label={L.active}
                         onCheckedChange={(v) => setValue(integration.key, { active: v })}
                       />
                     ) : (
@@ -137,25 +145,23 @@ export default function IntegrationDrawer({
                     const text = String(value[field.key] ?? "");
                     const label = pick(field.label, lang) || field.key;
                     return (
-                      <label key={field.key} className="block space-y-1">
+                      <Label key={field.key} className="block space-y-1 font-normal">
                         <span className="text-xs text-muted-foreground">{label}</span>
                         {!editable ? (
                           <p className="whitespace-pre-line rounded-md border bg-muted/30 px-2 py-1 text-sm">{text || "—"}</p>
                         ) : field.type === "longtext" ? (
-                          <textarea
+                          <Textarea
                             value={text}
                             rows={3}
                             onChange={(e) => setValue(integration.key, { [field.key]: e.target.value })}
-                            className="w-full rounded-md border bg-transparent px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-primary"
                           />
                         ) : (
-                          <input
+                          <Input
                             value={text}
                             onChange={(e) => setValue(integration.key, { [field.key]: e.target.value })}
-                            className="h-8 w-full rounded-md border bg-transparent px-2 text-sm outline-none focus:ring-1 focus:ring-primary"
                           />
                         )}
-                      </label>
+                      </Label>
                     );
                   })}
                 </section>
@@ -168,22 +174,18 @@ export default function IntegrationDrawer({
 
         {editable ? (
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => void save()}
-              className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
-            >
+            <Button type="button" disabled={busy} onClick={() => void save()}>
               {busy ? L.saving : L.save}
-            </button>
-            <button type="button" onClick={onClose} className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent">
+            </Button>
+            <Button type="button" variant="outline" onClick={onClose}>
               {L.cancel}
-            </button>
+            </Button>
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">{L.viewOnly}</p>
         )}
-      </div>
-    </SideDrawer>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { daySlots, type CalRow } from "../../../../_lib/components/calendar";
 import { INTEGRATION_ICONS } from "../../../chrome/icons";
 import type { Surface } from "../../../surface";
@@ -82,14 +84,15 @@ export default function DayPlanner({
 
       <div className="mb-3 flex flex-wrap gap-1">
         {[{ key: "all", label: L.filterAll }, ...types.map((t) => ({ key: t.key, label: filterLabelOf(t) }))].map((f) => (
-          <button
+          <Button
             key={f.key}
             type="button"
+            variant={filter === f.key ? "default" : "secondary"}
+            size="xs"
             onClick={() => onFilter(f.key)}
-            className={`rounded px-2 py-0.5 text-xs ${filter === f.key ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/70"}`}
           >
             {f.label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -114,13 +117,14 @@ export default function DayPlanner({
                         {/* Заголовок СОБЫТИЯ — вход в ящик со всеми каналами сразу. У памятки заголовок
                             остаётся обычным текстом: открывать ей нечего. */}
                         {isEvent && channels.length > 0 ? (
-                          <button
+                          <Button
                             type="button"
+                            variant="link"
                             onClick={() => setOpen({ row: e, only: null })}
-                            className="min-w-0 flex-1 truncate text-left underline-offset-2 hover:underline"
+                            className="h-auto min-w-0 flex-1 justify-start truncate p-0 font-normal text-inherit underline-offset-2 hover:underline"
                           >
                             {e.title}
-                          </button>
+                          </Button>
                         ) : (
                           <span className="min-w-0 flex-1 truncate">{e.title}</span>
                         )}
@@ -136,19 +140,21 @@ export default function DayPlanner({
                               const ready = missingKeysOf(i, present).length === 0;
                               const name = pick(i.label, lang) || i.key;
                               return (
-                                <button
+                                <Button
                                   key={i.key}
                                   type="button"
+                                  variant="ghost"
+                                  size="icon-xs"
                                   title={ready ? name : `${name} — ${L.keysMissing}`}
                                   aria-label={name}
                                   onClick={() => setOpen({ row: e, only: i.key })}
-                                  className={`shrink-0 rounded p-0.5 hover:bg-black/5 dark:hover:bg-white/10 ${!ready ? "opacity-20" : on ? "opacity-100" : "opacity-40"}`}
+                                  className={cn("size-6 shrink-0", !ready ? "opacity-20" : on ? "opacity-100" : "opacity-40")}
                                   data-integration-icon={i.key}
                                   data-active={on ? "yes" : "no"}
                                   data-ready={ready ? "yes" : "no"}
                                 >
                                   <Icon className="size-3.5" />
-                                </button>
+                                </Button>
                               );
                             })
                           : null}
