@@ -1658,30 +1658,6 @@
       },
       {
         "systemInstructionName": "tab",
-        "name": "use-cases",
-        "presence": "expanded",
-        "info": {
-          "aiSummary": "Вкладка пользовательских кейсов объявлена и пуста."
-        },
-        "status": "materialized",
-        "warnings": [],
-        "envKeys": [],
-        "entities": [
-          {
-            "cuid": "cusecasesovy1zgny",
-            "name": "Main use cases",
-            "info": {
-              "aiSummary": "Заготовка «Main use cases»: создана вместе со вкладкой, требований владельца пока нет."
-            },
-            "status": "materialized",
-            "warnings": [],
-            "envKeys": [],
-            "data": {}
-          }
-        ]
-      },
-      {
-        "systemInstructionName": "tab",
         "name": "app-pages",
         "presence": "absent",
         "info": {

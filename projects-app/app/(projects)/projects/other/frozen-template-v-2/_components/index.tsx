@@ -8,6 +8,8 @@ import Calendar from "./calendar";
 import Cron from "./cron";
 import { cronOf } from "./cron/schedule";
 import GenericTab from "./generic";
+import UseCases from "./use-cases";
+import { useCasesSectionTitle } from "./use-cases/i18n";
 import AutoRefresh from "./shared/auto-refresh.client";
 import SectionAccordion from "./shared/section-accordion.client";
 import { sectionsStrings } from "./shared/sections-i18n";
@@ -29,7 +31,7 @@ import { DevUseCasesPanel } from "./shared/dev-slot.client";
 // ПРИСУТСТВИЕ секции по-прежнему связано с переключателем в гамбургер-меню кокпита: `absent` — секции нет
 // нигде, ни в кокпите, ни на витрине.
 export default async function AutomationComponents({ surface, lang }: { surface: Surface; lang: string }) {
-  const { components, graph } = await loadAutomation();
+  const { components, graph, useCases } = await loadAutomation();
   const tabs = components.tabs.filter((tab) => tab.presence !== "absent");
   if (tabs.length === 0) return null;
 
@@ -53,13 +55,6 @@ export default async function AutomationComponents({ surface, lang }: { surface:
       <Calendar surface={surface} entities={tab.entities} cron={cron} lang={lang} />
     ) : tab.name === "cron" ? (
       <Cron surface={surface} entities={tab.entities} lang={lang} />
-    ) : tab.name === "use-cases" ? (
-      // Вкладка кейсов рендерит ПАНЕЛЬ кейсов (дев-слой), а НЕ общий вид с «Строить с ИИ»: у кейсов есть
-      // своя сущность в `_shared-v2` (лёгкий слой → настройка → подтверждение). Нет `_shared-v2` — секции
-      // нет, продакшн не задет. Так у кейсов ОДНА поверхность, без дубля-заглушки GenericTab.
-      <DevSlot>
-        <DevUseCasesPanel />
-      </DevSlot>
     ) : (
       // У вкладки ещё нет своей папки — показываем её сущности общим видом: место на странице, якорь для
       // оглавления и обе ступени заявки «строить вместе с ИИ». Пропускать раздел нельзя: тогда заказать
@@ -77,6 +72,14 @@ export default async function AutomationComponents({ surface, lang }: { surface:
       <>
         <AutoRefresh />
         {panel ? <div className="mt-6">{bodyOf(panel)}</div> : null}
+        {/* ПОЛЬЗОВАТЕЛЬСКИЕ КЕЙСЫ на витрине — read-only список (рантайм-половина `_components/use-cases/`).
+            Кейсы живут в топ-уровневом `useCases`, а не в `components.tabs` — это секция, не вкладка. */}
+        {useCases.cases.length ? (
+          <section data-section="use-cases" className="mt-8 space-y-3 scroll-mt-20">
+            <h2 className="text-lg font-semibold tracking-tight">{useCasesSectionTitle(lang)}</h2>
+            <UseCases cases={useCases.cases} lang={lang} />
+          </section>
+        ) : null}
         {rest.map((tab) => {
           const body = bodyOf(tab);
           return (
@@ -97,6 +100,20 @@ export default async function AutomationComponents({ surface, lang }: { surface:
           и каждая таблица показывает свежие записи БЕЗ перезагрузки. Монтируется один раз на все вкладки. */}
       <AutoRefresh />
       <div data-components-root data-surface={surface} className="mt-6 rounded-lg border px-4">
+        {/* ПОЛЬЗОВАТЕЛЬСКИЕ КЕЙСЫ — самостоятельная секция (НЕ вкладка): кейсы живут в топ-уровневом
+            `useCases`, а не в `components.tabs`. Кокпит показывает дев-инструмент (лёгкий слой → настройка
+            → подтверждение) из `_shared-v2` через дев-слот; счётчик — по ЧИСЛУ КЕЙСОВ, не по сущностям. */}
+        <SectionAccordion
+          tab="use-cases"
+          title={useCasesSectionTitle(lang)}
+          count={useCases.cases.length}
+          countLabel={S.items}
+          defaultOpen
+        >
+          <DevSlot>
+            <DevUseCasesPanel />
+          </DevSlot>
+        </SectionAccordion>
         {tabs.map((tab) => (
           <SectionAccordion
             key={tab.name}
