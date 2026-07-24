@@ -44,3 +44,22 @@ export function DevBuildWithAi(props: { target: BuildTarget; name: string; pendi
     </NullBoundary>
   );
 }
+
+// Панель пользовательских кейсов — тот же fail-silent путь. Пропсов нет: язык и двери она берёт сама
+// (`useUiLang` + `location.pathname`). Нет `_shared-v2` — панель просто не появляется, продакшн не задет.
+const UseCasesPanelLazy = dynamic(
+  () =>
+    import("../../../../_shared-v2")
+      .then((m) => ({ default: m.UseCasesPanel }))
+      .catch(() => ({ default: () => null })),
+  { ssr: false, loading: () => null },
+);
+
+/** Панель кейсов за fail-silent границей — монтируется секцией кокпита. */
+export function DevUseCasesPanel() {
+  return (
+    <NullBoundary>
+      <UseCasesPanelLazy />
+    </NullBoundary>
+  );
+}

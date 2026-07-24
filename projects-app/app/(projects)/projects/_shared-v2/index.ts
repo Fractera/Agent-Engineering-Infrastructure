@@ -16,3 +16,6 @@
 // Этот барель — стабильная точка входа: подключающийся импортирует отсюда, а не из внутренних файлов, и
 // перестановка файлов внутри слоя его не касается.
 export { default as BuildWithAi, type BuildTarget } from "./build-with-ai.client";
+// Панель пользовательских кейсов (микросервис `components/use-cases`) — дев-инструмент первой стадии
+// автоматизации (согласование кейсов с ИИ + ревью-гейт). Подключается тем же fail-silent дев-слотом.
+export { UseCasesPanel } from "./components/use-cases/client/panel.client";

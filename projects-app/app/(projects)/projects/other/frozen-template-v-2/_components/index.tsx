@@ -11,6 +11,8 @@ import GenericTab from "./generic";
 import AutoRefresh from "./shared/auto-refresh.client";
 import SectionAccordion from "./shared/section-accordion.client";
 import { sectionsStrings } from "./shared/sections-i18n";
+import { DevSlot } from "./shared/dev-slot";
+import { DevUseCasesPanel } from "./shared/dev-slot.client";
 
 // СЕКЦИИ НА ХОЛСТЕ. Одно ядро читают ОБЕ поверхности, но показывают по-разному:
 //
@@ -87,6 +89,14 @@ export default async function AutomationComponents({ surface, lang }: { surface:
       {/* ЗАКОН СТРАНИЦЫ, а не забота отдельной секции: завершился прогон — серверные данные перечитываются,
           и каждая таблица показывает свежие записи БЕЗ перезагрузки. Монтируется один раз на все вкладки. */}
       <AutoRefresh />
+      {/* ПОЛЬЗОВАТЕЛЬСКИЕ КЕЙСЫ — первая стадия автоматизации и точка согласия с ИИ (шаг 231). Инструмент
+          РАЗРАБОТКИ: живёт в мягком слое `_shared-v2` и монтируется fail-silent дев-слотом — только в
+          кокпите, не на витрине. Нет `_shared-v2` — секции просто нет, продакшн не задет. */}
+      <DevSlot>
+        <div className="mt-6">
+          <DevUseCasesPanel />
+        </div>
+      </DevSlot>
       <div data-components-root data-surface={surface} className="mt-6 rounded-lg border px-4">
         {tabs.map((tab) => (
           <SectionAccordion
