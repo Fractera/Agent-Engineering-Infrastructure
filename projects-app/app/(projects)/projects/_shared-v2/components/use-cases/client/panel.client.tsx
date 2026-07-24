@@ -58,6 +58,7 @@ export function UseCasesPanel() {
   const [addOpen, setAddOpen] = useState(false);
   const [addTitle, setAddTitle] = useState("");
   const [addSummary, setAddSummary] = useState("");
+  const addTitleRef = useRef<HTMLInputElement | null>(null);
   const addSummaryRef = useRef<HTMLTextAreaElement | null>(null);
 
   // «Подтверждено» — производная: набор непуст И его подпись совпадает с записанной в ядре.
@@ -278,7 +279,8 @@ export function UseCasesPanel() {
             <p className="text-sm text-muted-foreground">{L.addCaseIntro}</p>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">{L.addCaseTitleLabel}</label>
-              <Input value={addTitle} onChange={(e) => setAddTitle(e.target.value)} />
+              <Input ref={addTitleRef} value={addTitle} onChange={(e) => setAddTitle(e.target.value)} />
+              <VoiceInput targetRef={addTitleRef} value={addTitle} onChange={setAddTitle} lang={lang} disabled={busy} />
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">{L.addCaseSummaryLabel}</label>
