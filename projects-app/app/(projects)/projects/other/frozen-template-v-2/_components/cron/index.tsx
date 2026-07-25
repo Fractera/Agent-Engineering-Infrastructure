@@ -47,7 +47,10 @@ export default function Cron({
         const body = Schedule ? (
           <div className="space-y-3">
             <Schedule entity={entity} lang={lang} heading={!nested} />
-            {surface === "admin" ? (
+            {/* Заявка на ОДНО расписание — только когда расписаний БОЛЬШЕ ОДНОГО (закон владельца 2026-07-25):
+                при единственной сущности per-entity кнопка дублирует «строить весь раздел», поэтому её не
+                показываем — остаётся только заявка на вкладку. */}
+            {surface === "admin" && many ? (
               <DevSlot>
                 <DevBuildWithAi target={{ object: "entity", tab: "cron", cuid: entity.cuid }} name={title} pending={pending} lang={lang} />
               </DevSlot>

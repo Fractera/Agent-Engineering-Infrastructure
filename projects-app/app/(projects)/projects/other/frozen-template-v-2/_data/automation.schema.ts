@@ -781,21 +781,54 @@ export const EntitySchema = z
   .object({
     cuid: CuidSchema,
     name: z.string().min(1),
+    // Human/owner caption for the component object — distinct from `info` (the AI brief). May be empty.
+    description: z.string(),
     ...buildRecord,
     data: z.record(z.string(), z.unknown()),
   })
   .strict();
 
+// SINGLETON TABS (owner's law 2026-07-25). Some tabs hold a single thing that CANNOT meaningfully be
+// duplicated: one object storage, one vector memory, one app-pages section. Their core carries ONE `entity`
+// object, NOT an `entities` array — the model itself forbids a second object (no "add another storage").
+// Every other tab (dashboard, calendar, map, control-panel, cron, analytics, database …) carries the
+// `entities` ARRAY: it can legitimately hold many.
+export const SINGLETON_TABS = ["storage", "vector-memory", "app-pages"] as const;
+export const isSingletonTab = (name: string): boolean => (SINGLETON_TABS as readonly string[]).includes(name);
+
 export const TabSchema = z
   .object({
     systemInstructionName: instructionName("tab"),
     name: z.string().min(1),
+    // Human/owner caption for the section — distinct from `info` (the AI brief). May be empty.
+    description: z.string(),
     presence: PresenceSchema,
     ...buildRecord,
-    entities: z.array(EntitySchema),
+    // EXACTLY ONE of the two, decided by the tab kind and checked below: a singleton tab carries `entity`
+    // (one object), a multi tab carries `entities` (an array). Both optional in the object so `.strict()`
+    // does not reject the lawful shape; the refinement makes the wrong one an error.
+    entities: z.array(EntitySchema).optional(),
+    entity: EntitySchema.optional(),
   })
   .strict()
   .superRefine((tab, ctx) => {
+    if (isSingletonTab(tab.name)) {
+      if (tab.entity === undefined) {
+        ctx.addIssue({ code: "custom", path: ["entity"], message: `tab "${tab.name}" is a singleton — it must carry ONE "entity" object` });
+      }
+      if (tab.entities !== undefined) {
+        ctx.addIssue({ code: "custom", path: ["entities"], message: `tab "${tab.name}" is a singleton — it carries a single "entity", never an "entities" array` });
+      }
+      return;
+    }
+    // A multi tab: the array is mandatory, a lone `entity` is forbidden, and cuids must be unique.
+    if (tab.entity !== undefined) {
+      ctx.addIssue({ code: "custom", path: ["entity"], message: `tab "${tab.name}" carries an "entities" array, not a single "entity"` });
+    }
+    if (tab.entities === undefined) {
+      ctx.addIssue({ code: "custom", path: ["entities"], message: `tab "${tab.name}" must carry an "entities" array` });
+      return;
+    }
     const seen = new Set<string>();
     tab.entities.forEach((entity, i) => {
       if (seen.has(entity.cuid)) {
@@ -995,6 +1028,15 @@ export type Presence = z.infer<typeof PresenceSchema>;
 export type BuildStatus = z.infer<typeof BuildStatusSchema>;
 export type Entity = z.infer<typeof EntitySchema>;
 export type Tab = z.infer<typeof TabSchema>;
+
+// THE ENTITY READER — uniform access to a tab's entities regardless of its kind: a multi tab returns its
+// `entities` array; a singleton tab returns its lone `entity` wrapped in a one-element array; neither set
+// returns []. Every reader goes through this, so the array/object split stays invisible to consumers, and
+// a writer that mutates the returned entity in place gets the SAME reference (for a singleton, `tab.entity`
+// itself). One place holds the fallback — nowhere else repeats `tab.entities ?? [tab.entity]`.
+export function entitiesOf(tab: Tab): Entity[] {
+  return tab.entities ?? (tab.entity ? [tab.entity] : []);
+}
 export type Components = z.infer<typeof ComponentsSchema>;
 export type Warning = z.infer<typeof WarningSchema>;
 export type EnvKeyStatus = z.infer<typeof EnvKeyStatusSchema>;

@@ -11,7 +11,7 @@ import {
   groupOfNode,
   type Address,
 } from "../../_lib/core-io";
-import { KIND_PORTS, allNodes, type GroupName, type NodeKind } from "../../_data/automation.schema";
+import { KIND_PORTS, allNodes, entitiesOf, type GroupName, type NodeKind } from "../../_data/automation.schema";
 import { readEnvPresence } from "@/lib/env-presence";
 
 // Ключи, пустое значение которых — законное умолчание, а не отсутствие. Список короткий и живёт рядом
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
     const holders: WarnHolder[] = [
       ...(allNodes(core.graph.nodes) as unknown as WarnHolder[]),
       ...(core.components.tabs as unknown as WarnHolder[]),
-      ...(core.components.tabs.flatMap((t) => t.entities) as unknown as WarnHolder[]),
+      ...(core.components.tabs.flatMap((t) => entitiesOf(t)) as unknown as WarnHolder[]),
       core.useCases as unknown as WarnHolder,
     ];
     const holder = holders.find((h) => h.warnings?.some((w) => w.cuid === cuid));

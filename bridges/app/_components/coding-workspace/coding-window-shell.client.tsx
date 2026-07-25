@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
-import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, Repeat, Send, KeyRound, Palette, LayoutGrid, X } from "lucide-react";
+import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, Repeat, Send, KeyRound, Palette, LayoutGrid, Map as MapIcon, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
 import { PLATFORMS, COMING_SOON, EMBED_CARDS, type Platform, type TerminalStatus, type EmbedCard, type EmbedCardId, type EmbedTarget } from "./platforms";
@@ -11,6 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { EnvEditorPanel } from "./env-editor-panel.client";
 import { MediaLibraryPanel } from "./media-library-panel.client";
 import { DbBrowserPanel } from "./db-browser-panel.client";
+import { MapPanel } from "./map-panel.client";
 import { AUTH_FLOW_DESCRIPTORS, type AuthFlowDescriptor } from "./auth-flow-descriptors";
 import { AuthFlowModal } from "./auth-flow-modal.client";
 import { PasteTextModal } from "./paste-text-modal.client";
@@ -199,6 +200,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const [envFocusKey, setEnvFocusKey]               = useState<string | undefined>(undefined);
   const [showMediaLibrary, setShowMediaLibrary]     = useState(false);
   const [showDbBrowser, setShowDbBrowser]           = useState(false);
+  const [showMapPanel, setShowMapPanel]             = useState(false);
   const [showUsers, setShowUsers]                   = useState(false);
   const [showDeployments, setShowDeployments]       = useState(false);
   const [showSiteSettings, setShowSiteSettings]     = useState(false);
@@ -832,9 +834,16 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <ImagePlus size={11} />Upload media
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDbBrowser((v) => !v); setShowEnvEditor(false); setShowMediaLibrary(false); setShowInfo(false); setShowUsers(false); setShowHelp(false); setShowDomainPanel(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDbBrowser((v) => !v); setShowMapPanel(false); setShowEnvEditor(false); setShowMediaLibrary(false); setShowInfo(false); setShowUsers(false); setShowHelp(false); setShowDomainPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Database size={11} />Database
+              </button>
+              {/* Map settings — сепаратор + карта (закон владельца 2026-07-25): рядом с настройкой баз данных.
+                  Регион работы (данные OpenStreetMap), статус движков, топливо по умолчанию. */}
+              <div className="h-px bg-border mx-2" />
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowMapPanel((v) => !v); setShowDbBrowser(false); setShowEnvEditor(false); setShowMediaLibrary(false); setShowInfo(false); setShowUsers(false); setShowHelp(false); setShowDomainPanel(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                <MapIcon size={11} />Map settings
               </button>
               {/* (step 205) The "Hermes Agent" menu item was removed — the Brain carousel button
                   now opens the agent (:9119) directly, so there is no duplicate entry here. */}
@@ -1186,6 +1195,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
 
       {/* ── DB browser panel ── */}
       {showDbBrowser && <DbBrowserPanel onClose={() => setShowDbBrowser(false)} />}
+      {showMapPanel && <MapPanel onClose={() => setShowMapPanel(false)} />}
 
       {/* ── Domain panel ── (available in BOTH IP and secure mode — this is how the owner attaches a domain) */}
       {showDomainPanel && (

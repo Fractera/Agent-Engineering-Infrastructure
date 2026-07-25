@@ -30,3 +30,23 @@ export { ProblemsCenter } from "./components/warnings/client/panel.client";
 // Диаграмма (микросервис `components/diagram`) — ПЛАТФОРМЕННЫЙ ВИД над ядром: холст + адаптер живут одной
 // копией здесь, автоматизация владеет только данными графа (AGENTS.md §0a).
 export { Diagram } from "./components/diagram/client/diagram.client";
+// Обрезка изображения (Кокпит-инструмент `tools/image-crop`) — ОДИН переиспользуемый примитив всей группы
+// v2: когда владелец вручную кладёт в склад запись-изображение, поле зовёт этот инструмент, а не свою
+// вторую реализацию кадрирования. Чисто клиентский (canvas → JPEG-blob), сервер не нужен.
+export { ImageCropper } from "./tools/image-crop/client/image-crop.client";
+export type { CropMode, ImageCropperProps } from "./tools/image-crop/types/image-crop";
+// Кокпит-инструмент «добавить объект» (микросервис `components/storage`) — ручная запись изображения в
+// склад: crop → объектное хранилище (`api/files`) → строка базы (`api/rows`). Дев-инструмент, монтируется
+// в папку автоматизации через dev-slot; сам тянет crop из соседнего `tools/image-crop`.
+export { StorageAddObject } from "./components/storage/client/add-object.client";
+export type { StorageAddObjectProps } from "./components/storage/types/storage";
+// Кокпит-инструмент «добавить строку» локальной базы (микросервис `components/database`): имя + опционально
+// изображение (crop → объектное хранилище → ссылка в `storageIds`). Каждая строка по умолчанию несёт
+// массивы связей `storageIds`/`vectorIds` (закон складов — связи всех-ко-всем).
+export { DatabaseAddRow } from "./components/database/client/add-row.client";
+export type { DatabaseAddRowProps } from "./components/database/types/database";
+// Кокпит-инструмент «добавить запись» векторной памяти (микросервис `components/vector-memory`) — третий
+// склад v2 тем же образцом: имя + текст-факт + опционально изображение (crop → объектное хранилище → ссылка
+// в `storageIds`). Дев-инструмент, монтируется в папку автоматизации через dev-slot.
+export { VectorMemoryAddRecord } from "./components/vector-memory/client/add-record.client";
+export type { VectorMemoryAddRecordProps } from "./components/vector-memory/types/vector-memory";

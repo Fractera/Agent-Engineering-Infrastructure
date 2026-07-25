@@ -5,6 +5,7 @@ import {
   AutomationSchema,
   GROUP_POLICY,
   allNodes,
+  entitiesOf,
   type Automation,
   type Node,
   type GroupName,
@@ -102,7 +103,7 @@ export function locate(core: Automation, a: Address): { ok: true; target: Record
     case "entity": {
       const tab = core.components.tabs.find((t) => t.name === a.tab);
       if (!tab) return { ok: false, error: `no tab named "${a.tab}"` };
-      const entity = tab.entities.find((en) => en.cuid === a.cuid);
+      const entity = entitiesOf(tab).find((en) => en.cuid === a.cuid);
       return entity ? { ok: true, target: entity as unknown as Record<string, unknown> } : { ok: false, error: `tab "${a.tab}" has no entity "${a.cuid}"` };
     }
     case "useCase": {

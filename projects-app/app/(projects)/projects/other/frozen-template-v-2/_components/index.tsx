@@ -1,4 +1,5 @@
 import { loadAutomation } from "../_data/load";
+import { entitiesOf } from "../_data/automation.schema";
 import type { Surface } from "./surface";
 import Diagram from "./diagram";
 import Dashboard from "./dashboard";
@@ -7,6 +8,9 @@ import Calendar from "./calendar";
 import Cron from "./cron";
 import Map from "./map";
 import Analytics from "./analytics";
+import Storage from "./storage";
+import Database from "./database";
+import VectorMemory from "./vector-memory";
 import { cronOf } from "./shared/schedule";
 import GenericTab from "./generic";
 import UseCases from "./use-cases";
@@ -49,25 +53,31 @@ export default async function AutomationComponents({ surface, lang }: { surface:
   // Содержимое вкладки — одно и то же на обеих поверхностях; отличается только обёртка.
   const bodyOf = (tab: (typeof tabs)[number]) =>
     tab.name === "control-panel" ? (
-      <ControlPanel surface={surface} entities={tab.entities} lang={lang} />
+      <ControlPanel surface={surface} entities={entitiesOf(tab)} lang={lang} />
     ) : tab.name === "diagram" ? (
       // Диаграмма — платформенный вид: холст живёт в `_shared-v2`, данные он читает сам из ядра.
       <Diagram surface={surface} lang={lang} />
     ) : tab.name === "dashboard" ? (
-      <Dashboard surface={surface} entities={tab.entities} lang={lang} />
+      <Dashboard surface={surface} entities={entitiesOf(tab)} lang={lang} />
     ) : tab.name === "calendar" ? (
-      <Calendar surface={surface} entities={tab.entities} lang={lang} />
+      <Calendar surface={surface} entities={entitiesOf(tab)} lang={lang} />
     ) : tab.name === "cron" ? (
-      <Cron surface={surface} entities={tab.entities} lang={lang} />
+      <Cron surface={surface} entities={entitiesOf(tab)} lang={lang} />
     ) : tab.name === "map" ? (
-      <Map surface={surface} entities={tab.entities} lang={lang} />
+      <Map surface={surface} entities={entitiesOf(tab)} lang={lang} />
     ) : tab.name === "analytics" ? (
-      <Analytics surface={surface} entities={tab.entities} lang={lang} />
+      <Analytics surface={surface} entities={entitiesOf(tab)} lang={lang} />
+    ) : tab.name === "storage" ? (
+      <Storage surface={surface} entities={entitiesOf(tab)} lang={lang} />
+    ) : tab.name === "database" ? (
+      <Database surface={surface} entities={entitiesOf(tab)} lang={lang} />
+    ) : tab.name === "vector-memory" ? (
+      <VectorMemory surface={surface} entities={entitiesOf(tab)} lang={lang} />
     ) : (
       // У вкладки ещё нет своей папки — показываем её сущности общим видом: место на странице, якорь для
       // оглавления и обе ступени заявки «строить вместе с ИИ». Пропускать раздел нельзя: тогда заказать
       // его разработку негде.
-      <GenericTab surface={surface} tab={tab.name} entities={tab.entities} lang={lang} />
+      <GenericTab surface={surface} tab={tab.name} entities={entitiesOf(tab)} lang={lang} />
     );
 
   const titleOf = (name: string) => name.replace(/-/g, " ");
@@ -115,7 +125,7 @@ export default async function AutomationComponents({ surface, lang }: { surface:
               key={tab.name}
               tab={tab.name}
               title={titleOf(tab.name)}
-              count={tab.entities.length}
+              count={entitiesOf(tab).length}
               countLabel={S.items}
               defaultOpen={tab.presence === "expanded"}
             >

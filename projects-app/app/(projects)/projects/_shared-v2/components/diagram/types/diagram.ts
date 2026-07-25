@@ -28,6 +28,14 @@ export type DiagramGraph = {
   edges: DiagramCoreEdge[];
 };
 
+// Вкладка несёт ЛИБО массив `entities`, ЛИБО один `entity` (singleton, закон владельца 2026-07-25) — читатель
+// берёт их через `diagramEntitiesOf`, форма ему невидима.
+type DiagramCoreEntity = { data: Record<string, unknown> };
 export type DiagramComponents = {
-  tabs: { name: string; entities: { data: Record<string, unknown> }[] }[];
+  tabs: { name: string; entities?: DiagramCoreEntity[]; entity?: DiagramCoreEntity }[];
 };
+
+/** Единообразное чтение сущностей вкладки: массив как есть, либо singleton-объект в массиве из одного, либо []. */
+export function diagramEntitiesOf(tab: DiagramComponents["tabs"][number]): DiagramCoreEntity[] {
+  return tab.entities ?? (tab.entity ? [tab.entity] : []);
+}

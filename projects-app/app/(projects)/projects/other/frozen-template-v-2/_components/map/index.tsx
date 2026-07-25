@@ -20,7 +20,7 @@ export default function Map({
 }) {
   return (
     <div data-entity="map" data-surface={surface} className="space-y-3">
-      <MainMap />
+      <MainMap lang={lang} />
       {surface === "admin" ? <MapAiRequest entities={entities} lang={lang} /> : null}
     </div>
   );

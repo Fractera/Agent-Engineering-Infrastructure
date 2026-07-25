@@ -144,3 +144,64 @@ export function DevDiagram({ lang, readOnly }: { lang: string; readOnly?: boolea
 // ⚠ ДАШБОРДА ЗДЕСЬ НЕТ И БЫТЬ НЕ ДОЛЖНО (закон владельца 2026-07-24). Таблица — продуктовая поверхность с
 // режимом «строить вместе с ИИ»: её логика живёт в `_components/dashboard/public/`, где агент читает и
 // правит её по заявке. В дев-слое у дашборда только форма заявки (`DevBuildWithAi`), она уже есть выше.
+
+// Склад: инструмент «добавить объект» (crop → объектное хранилище → строка). Это КОКПИТ-ИНСТРУМЕНТ, а не
+// логика таблицы: сама таблица склада живёт в `_components/storage/public/` (продуктовая поверхность). Он
+// здесь потому, что зовёт crop из `_shared-v2/tools/image-crop`, а публичной половине внешний слой закрыт —
+// единственный законный путь к нему = этот dev-slot. Монтируется в админ-половине склада.
+const StorageAddLazy = dynamic(
+  () =>
+    import("../../../../_shared-v2")
+      .then((m) => ({ default: m.StorageAddObject }))
+      .catch(() => ({ default: () => null })),
+  { ssr: false, loading: () => null },
+);
+
+/** Инструмент «добавить объект в склад» за fail-silent границей — монтируется в админ-половине склада. */
+export function DevStorageAdd({ table, lang }: { table?: string; lang: string }) {
+  return (
+    <NullBoundary>
+      <StorageAddLazy table={table} lang={lang} />
+    </NullBoundary>
+  );
+}
+
+// Локальная база: инструмент «добавить строку» (имя + опц. изображение → объектное хранилище → `storageIds`).
+// Тот же закон, что у склада: Кокпит-инструмент, зовёт crop из `_shared-v2/tools/image-crop`, а публичной
+// таблице внешний слой закрыт — путь только через этот dev-slot. Монтируется в админ-половине базы.
+const DatabaseAddLazy = dynamic(
+  () =>
+    import("../../../../_shared-v2")
+      .then((m) => ({ default: m.DatabaseAddRow }))
+      .catch(() => ({ default: () => null })),
+  { ssr: false, loading: () => null },
+);
+
+/** Инструмент «добавить строку в базу» за fail-silent границей — монтируется в админ-половине базы. */
+export function DevDatabaseAdd({ table, lang }: { table?: string; lang: string }) {
+  return (
+    <NullBoundary>
+      <DatabaseAddLazy table={table} lang={lang} />
+    </NullBoundary>
+  );
+}
+
+// Векторная память: инструмент «добавить запись» (имя + текст-факт + опц. изображение → объектное хранилище
+// → `storageIds`). Третий склад v2 тем же законом, что склад и база: Кокпит-инструмент, зовёт crop из
+// `_shared-v2/tools/image-crop`, а публичной таблице внешний слой закрыт — путь только через этот dev-slot.
+const VectorAddLazy = dynamic(
+  () =>
+    import("../../../../_shared-v2")
+      .then((m) => ({ default: m.VectorMemoryAddRecord }))
+      .catch(() => ({ default: () => null })),
+  { ssr: false, loading: () => null },
+);
+
+/** Инструмент «добавить запись в векторную память» за fail-silent границей — монтируется в её админ-половине. */
+export function DevVectorAdd({ table, lang }: { table?: string; lang: string }) {
+  return (
+    <NullBoundary>
+      <VectorAddLazy table={table} lang={lang} />
+    </NullBoundary>
+  );
+}

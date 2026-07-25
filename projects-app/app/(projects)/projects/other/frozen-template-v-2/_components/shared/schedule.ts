@@ -1,4 +1,4 @@
-import type { Automation, Entity } from "../../_data/automation.schema";
+import { entitiesOf, type Automation, type Entity } from "../../_data/automation.schema";
 
 // ОБЪЯВЛЕНИЕ РАСПИСАНИЯ — единственное место, где читается крон из ядра. Обе половины раздела и
 // календарь (ему нужен период проверки) берут его отсюда: одно объявление — один читатель.
@@ -33,8 +33,10 @@ export function scheduleOf(entity: Entity): CronSettings {
  */
 export function cronOf(components: Automation["components"]): CronSettings | null {
   const tab = components.tabs.find((t) => t.name === "cron");
-  if (!tab || tab.presence === "absent" || tab.entities.length === 0) return null;
-  return scheduleOf(tab.entities[0]);
+  if (!tab) return null;
+  const entities = entitiesOf(tab);
+  if (tab.presence === "absent" || entities.length === 0) return null;
+  return scheduleOf(entities[0]);
 }
 
 /** Секунд до конца текущего периода. Выровнено по стенным часам — см. закон выше. */

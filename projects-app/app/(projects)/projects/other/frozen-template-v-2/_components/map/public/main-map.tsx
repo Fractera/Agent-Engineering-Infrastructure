@@ -1,7 +1,12 @@
-import { EuropeMapView } from "./components/europe-map.client";
+import CourierMapClient from "./components/courier-map.client";
 
-// ПУБЛИЧНАЯ ПОЛОВИНА карты — сама карта (перенос v1). На витрине и в кокпите — одна и та же карта; отличие
-// поверхностей несёт только `index.tsx` (в кокпите под картой добавляется заявка ИИ).
-export default function MainMap() {
-  return <EuropeMapView />;
+// ПУБЛИЧНАЯ ПОЛОВИНА карты — РАБОЧАЯ карта-инструмент: планировщик маршрута курьера с минимумом бензина
+// (клик по карте/адрес → geocode → TSP-оптимизация → маршрут + бензин), через дверь `api/geo` к сервису
+// fractera-geo. Настоящая зумируемая карта Leaflet поверх тайлов OpenStreetMap. Логика живёт здесь, где
+// агент правит её по заявке ИИ (продуктовая поверхность).
+//
+// Прежняя обзорная демо-карта (`europe-map`, пять столиц, статичная) УДАЛЕНА по решению владельца
+// 2026-07-25 — на холсте должна быть одна карта, рабочая.
+export default function MainMap({ lang }: { lang: string }) {
+  return <CourierMapClient lang={lang} />;
 }

@@ -59,7 +59,10 @@ export default function ControlPanel({
         const body = Panel ? (
           <div className="space-y-3">
             <Panel entity={entity} lang={lang} surface={surface} heading={!nested} />
-            {surface === "admin" ? (
+            {/* Заявка на ОДИН пульт — только когда пультов БОЛЬШЕ ОДНОГО (закон владельца 2026-07-25):
+                при единственном пульте «строить этот пульт» и «строить весь раздел» (внизу) — одно и то же,
+                поэтому per-entity кнопку не показываем. */}
+            {surface === "admin" && many ? (
               <DevSlot>
                 <DevBuildWithAi target={{ object: "entity", tab: "control-panel", cuid: entity.cuid }} name={title} pending={pending} lang={lang} />
               </DevSlot>

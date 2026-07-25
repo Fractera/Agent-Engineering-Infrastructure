@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, useTransition, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
   Background,
@@ -41,6 +41,49 @@ import { Hammer as HammerIcon, Spline as SplineIcon, Eye as EyeIcon, EyeOff as E
 
 // ─── i18n подписей (правило 4г: новые строки админ/проектного слоя — на 10 языках) ─────────────────────
 type Lang = "en" | "es" | "fr" | "it" | "ru" | "de" | "pt" | "pl" | "tr" | "nl";
+
+// «Подробнее / свернуть» для описания узла (правило 4г, десять языков).
+const MORE_LESS: Record<Lang, { more: string; less: string }> = {
+  en: { more: "read more", less: "show less" },
+  es: { more: "leer más", less: "mostrar menos" },
+  fr: { more: "lire plus", less: "afficher moins" },
+  it: { more: "leggi altro", less: "mostra meno" },
+  ru: { more: "подробнее", less: "свернуть" },
+  de: { more: "mehr lesen", less: "weniger anzeigen" },
+  pt: { more: "ler mais", less: "mostrar menos" },
+  pl: { more: "czytaj więcej", less: "pokaż mniej" },
+  tr: { more: "devamını oku", less: "daha az göster" },
+  nl: { more: "meer lezen", less: "minder tonen" },
+};
+
+// ОПИСАНИЕ УЗЛА — две строки, затем «… <подробнее>»; клик раскрывает полный текст (и «свернуть»). Кнопка
+// появляется ТОЛЬКО когда текст реально не помещается в две строки (замер переполнения по ссылке).
+function ClampText({ text, more, less }: { text: string; more: string; less: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (el) setOverflows(el.scrollHeight > el.clientHeight + 1);
+  }, [text]);
+  return (
+    <div className="space-y-1">
+      <p ref={ref} className={expanded ? "whitespace-pre-wrap text-muted-foreground" : "line-clamp-2 text-muted-foreground"}>
+        {text}
+      </p>
+      {(overflows || expanded) && (
+        <button
+          type="button"
+          onClick={() => setExpanded((e) => !e)}
+          className="text-xs font-medium text-violet-600 hover:underline dark:text-violet-300"
+        >
+          {expanded ? less : `… ${more}`}
+        </button>
+      )}
+    </div>
+  );
+}
+
 type Labels = {
   caption: string;
   function: string;
@@ -344,6 +387,7 @@ export function DiagramCanvasV2({
 }) {
   const code = (lang as Lang) in DICT ? (lang as Lang) : "en";
   const L = DICT[code];
+  const ml = MORE_LESS[code];
   const B = BUILD[code];
   const router = useRouter();
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -720,7 +764,7 @@ export function DiagramCanvasV2({
                 {active.hidden ? L.show : L.hide}
               </button>
             )}
-            {active.description && <p className="whitespace-pre-wrap text-muted-foreground">{active.description}</p>}
+            {active.description && <ClampText text={active.description} more={ml.more} less={ml.less} />}
             <div className="space-y-1 rounded-md border p-2">
               <p className="text-xs font-medium">
                 {L.function}: <code className="text-[11px]">{active.fn.name}</code>

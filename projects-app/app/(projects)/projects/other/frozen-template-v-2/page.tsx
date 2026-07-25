@@ -3,7 +3,7 @@ import AutomationChrome from "./_components/chrome";
 import AutomationComponents from "./_components";
 import NotBuiltPage from "./_components/shared/not-built-page";
 import { pick } from "./_components/shared/localized";
-import { allNodes } from "./_data/automation.schema";
+import { allNodes, entitiesOf } from "./_data/automation.schema";
 import { cronOf } from "./_components/shared/schedule";
 import TopPulseBar from "./_components/cron/public/components/top-pulse-bar.client";
 
@@ -25,7 +25,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
   const tabs = components.tabs.map((t) => ({
     name: t.name,
     presence: t.presence,
-    entities: t.entities.map((e) => ({
+    entities: entitiesOf(t).map((e) => ({
       cuid: e.cuid,
       title: pick((e.data as Record<string, unknown>).title, lang) || e.name,
     })),
@@ -40,7 +40,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
   // подменять им живую проверку нельзя.
   const nodeKeys = allNodes(graph.nodes).flatMap((n) => n.envKeys.map((k) => k.name));
   const integrationKeys = components.tabs.flatMap((tab) =>
-    tab.entities.flatMap((entity) => {
+    entitiesOf(tab).flatMap((entity) => {
       const raw = (entity.data as Record<string, unknown>).integrations;
       if (!Array.isArray(raw)) return [];
       return raw.flatMap((i) => {

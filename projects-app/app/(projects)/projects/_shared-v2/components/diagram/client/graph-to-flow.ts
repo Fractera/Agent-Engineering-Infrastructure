@@ -13,7 +13,7 @@
 // 🔒 ДЕВ-СЛОЙ (шаг 298): адаптер живёт ОДНОЙ копией на все автоматизации, поэтому типы здесь СТРУКТУРНЫЕ,
 // а не импорт схемы конкретной автоматизации (её здесь нет и быть не должно). Форма — ровно то, что
 // адаптер читает из ядра; ядро приходит из двери `api/core`.
-import type { DiagramGraph, DiagramComponents } from "../types/diagram";
+import { diagramEntitiesOf, type DiagramGraph, type DiagramComponents } from "../types/diagram";
 type Automation = { graph: DiagramGraph; components: DiagramComponents };
 
 export type DiagramVMNode = {
@@ -59,7 +59,7 @@ function integrationsByTab(components?: Automation["components"]): Map<string, s
   const map = new Map<string, string[]>();
   for (const tab of components?.tabs ?? []) {
     const keys = new Set<string>();
-    for (const entity of tab.entities) {
+    for (const entity of diagramEntitiesOf(tab)) {
       const raw = (entity.data as Record<string, unknown>).integrations;
       if (!Array.isArray(raw)) continue;
       for (const i of raw) {

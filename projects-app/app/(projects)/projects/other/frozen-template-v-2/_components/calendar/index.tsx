@@ -61,7 +61,10 @@ export default function Calendar({
         const body = Cal ? (
           <div className="space-y-3">
             <Cal entity={entity} surface={surface} lang={lang} heading={!nested} />
-            {surface === "admin" ? (
+            {/* Заявка на ОДИН календарь — только когда календарей БОЛЬШЕ ОДНОГО (закон владельца 2026-07-25):
+                при единственной сущности «строить этот календарь» и «строить весь раздел» — одно и то же,
+                поэтому per-entity кнопку не показываем, остаётся только заявка на вкладку (ниже). */}
+            {surface === "admin" && many ? (
               <DevSlot>
                 <DevBuildWithAi target={{ object: "entity", tab: "calendar", cuid: entity.cuid }} name={title} pending={pending} lang={lang} />
               </DevSlot>

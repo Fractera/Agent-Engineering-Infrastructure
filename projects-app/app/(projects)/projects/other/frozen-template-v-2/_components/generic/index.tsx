@@ -37,7 +37,10 @@ export default function GenericTab({
         const body = (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">{S.notBuiltYet}</p>
-            {surface === "admin" ? (
+            {/* Заявка на ОДНУ сущность — только когда их больше одной (закон владельца 2026-07-25): при
+                единственной сущности она дублирует «строить весь раздел» (ниже), поэтому её не показываем.
+                Singleton-вкладки (app-pages и т.п.) всегда с одной сущностью — здесь остаётся одна кнопка. */}
+            {surface === "admin" && many ? (
               <DevSlot>
                 <DevBuildWithAi
                   target={{ object: "entity", tab, cuid: entity.cuid }}

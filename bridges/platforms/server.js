@@ -20,6 +20,7 @@ import { ContentOrchestratorMcpServer } from './content-orchestrator-mcp-server.
 import { LanguageExpansionMcpServer } from './language-expansion-mcp-server.js'
 import { ProjectsRouterMcpServer } from './projects-router-mcp-server.js'
 import { DocTransferMcpServer } from './doc-transfer-mcp-server.js'
+import { GeoMcpServer } from './geo-mcp-server.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, '../../app/.env.local') })
@@ -1395,6 +1396,15 @@ new DocTransferMcpServer({
   appDir: process.env.SLOT_APP_DIR ?? '/opt/fractera/app',
   ragUrl: process.env.LIGHTRAG_URL ?? 'http://localhost:9621',
   ragKey: process.env.LIGHTRAG_API_KEY ?? '',
+}).start()
+
+// ── Geo MCP server (singleton, port 3232) ────────────────────────────────────
+// Exposes the fractera-geo service (:3400) to agents: geocode / matrix / route /
+// courier TSP optimize. Read-only proxy; returns { error } when maps are off.
+// → MCP-REGISTRY §24, ARCHITECTURE §3.1.
+new GeoMcpServer({
+  port: Number(process.env.GEO_MCP_PORT ?? 3232),
+  secret: MCP_SECRET,
 }).start()
 
 // ── Hermes dashboard reverse proxy — Brain in IP mode (step 207.15) ────────────

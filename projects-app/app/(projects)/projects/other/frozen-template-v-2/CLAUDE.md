@@ -26,3 +26,7 @@ The four things worth carrying before you get there:
    your competence and would break reuse of this automation between accounts (AGENTS.md §0a).
 4. **Green `check:core` is not proof that the automation works** — it proves the core is lawful. Proof
    is a real run with a real result.
+5. **Reusable tools already exist outside your folder — wire them, don't rebuild.** An image cropper, a
+   voice-input mic and more live in `_shared-v2/tools/`. Before building such an affordance, read
+   [`tools-docs/`](tools-docs/) (one short reference per tool: call, params, return, constraints). Wire the
+   existing one; never copy it into this folder (AGENTS.md §0b).

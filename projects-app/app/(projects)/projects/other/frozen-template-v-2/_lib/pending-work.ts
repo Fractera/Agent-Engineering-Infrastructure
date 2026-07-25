@@ -1,4 +1,4 @@
-import { allNodes, type Automation, type Info, type SystemInstructionName, type Warning } from "../_data/automation.schema";
+import { allNodes, entitiesOf, type Automation, type Info, type SystemInstructionName, type Warning } from "../_data/automation.schema";
 import { readInstruction } from "./instructions";
 import { addressText, type Address } from "./core-io";
 
@@ -61,7 +61,7 @@ export async function pendingWork(core: Automation): Promise<WorkItem[]> {
   // tabs and the entities inside them
   for (const tab of core.components.tabs) {
     found.push(item({ object: "tab", name: tab.name }, await readInstruction("tab"), tab.name, tab.info, tab.warnings, tab.status));
-    for (const entity of tab.entities) {
+    for (const entity of entitiesOf(tab)) {
       found.push(
         item({ object: "entity", tab: tab.name, cuid: entity.cuid }, await readInstruction("tab"), entity.name, entity.info, entity.warnings, entity.status),
       );

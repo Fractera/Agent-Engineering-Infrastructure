@@ -2,7 +2,7 @@
   "passport": {
     "systemInstructionName": "passport",
     "title": "Stock price (v2)",
-    "description": "Автоматизация типа Stream: по названию публичной компании возвращает живую цену её акции и сохраняет в историю.",
+    "description": "Stream-type automation: given the name of a public company, it returns its live share price and saves it to history.",
     "type": "stream",
     "lifecycle": "real-project",
     "ai": {
@@ -16,14 +16,14 @@
       "config": null
     },
     "info": {
-      "aiSummary": "Рабочая v2-автоматизация «цена акции»: пульт → распознавание компании → живой курс Yahoo → запись в дашборд. Реперный E2E-образец собственного рантайма v2."
+      "aiSummary": "Working v2 \"share price\" automation: control panel → company recognition → live Yahoo quote → write to the dashboard. Reference E2E example of v2's own runtime."
     },
     "howItWorks": [
-      "Вы называете публичную компанию (например «Apple») в пульте запуска.",
-      "Автоматизация распознаёт компанию и берёт её биржевой тикер.",
-      "По тикеру запрашивается живая цена акции с Yahoo Finance.",
-      "Если цена получена — строка с датой, компанией, тикером и ценой попадает в дашборд.",
-      "Если компания не распознана или цена недоступна — прогон честно останавливается и ничего не пишет."
+      "You name a public company (for example \"Apple\") in the launch panel.",
+      "The automation recognises the company and takes its stock ticker.",
+      "By the ticker, the live share price is requested from Yahoo Finance.",
+      "If the price is obtained, a row with the date, company, ticker and price is added to the dashboard.",
+      "If the company is not recognised or the price is unavailable, the run honestly stops and writes nothing."
     ]
   },
   "graph": {
@@ -55,7 +55,7 @@
               "description": "Receives data from a node of ANOTHER automation — the door through which this automation joins a group.",
               "state": "hidden",
               "info": {
-                "aiSummary": "Ждёт данные из соседней автоматизации; в одиночной автоматизации стоит скрытым."
+                "aiSummary": "Waits for data from a neighbouring automation; in a standalone automation it stays hidden."
               },
               "status": "materialized",
               "warnings": [],
@@ -89,7 +89,7 @@
               "description": "Where the automation receives its work — a message, a request, or a scheduled tick.",
               "state": "visible",
               "info": {
-                "aiSummary": "Распознаёт публичную компанию из запроса по словарю и отдаёт её тикер; неизвестная или частная компания — прогон останавливается понятным сообщением."
+                "aiSummary": "Recognises a public company from the request against a dictionary and returns its ticker; an unknown or private company stops the run with a clear message."
               },
               "status": "materialized",
               "warnings": [],
@@ -121,7 +121,7 @@
               "description": "An external system calls in over HTTP.",
               "state": "hidden",
               "info": {
-                "aiSummary": "Заготовка канала «webhook»: объявлена и скрыта, функция появится, когда узел раскроют."
+                "aiSummary": "Blank for the \"webhook\" channel: declared and hidden; the function will appear when the node is revealed."
               },
               "status": "in-development",
               "warnings": [],
@@ -153,7 +153,7 @@
               "description": "A scheduled tick fires it on a timer.",
               "state": "hidden",
               "info": {
-                "aiSummary": "Заготовка канала «cron»: объявлена и скрыта, функция появится, когда узел раскроют."
+                "aiSummary": "Blank for the \"cron\" channel: declared and hidden; the function will appear when the node is revealed."
               },
               "status": "in-development",
               "warnings": [],
@@ -185,7 +185,7 @@
               "description": "A form or control on the automation own public page.",
               "state": "hidden",
               "info": {
-                "aiSummary": "Заготовка канала «public-page»: объявлена и скрыта, функция появится, когда узел раскроют."
+                "aiSummary": "Blank for the \"public-page\" channel: declared and hidden; the function will appear when the node is revealed."
               },
               "status": "in-development",
               "warnings": [],
@@ -217,7 +217,7 @@
               "description": "A message sent to the automation own Telegram bot.",
               "state": "hidden",
               "info": {
-                "aiSummary": "Заготовка канала «telegram-bot»: объявлена и скрыта, функция появится, когда узел раскроют."
+                "aiSummary": "Blank for the \"telegram-bot\" channel: declared and hidden; the function will appear when the node is revealed."
               },
               "status": "in-development",
               "warnings": [],
@@ -225,12 +225,12 @@
                 {
                   "name": "TELEGRAM_BOT_TOKEN",
                   "status": "missing",
-                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                  "comment": "Declared by the channel; the api/env door checks its live presence."
                 },
                 {
                   "name": "TELEGRAM_ALLOWED_CHAT_ID",
                   "status": "missing",
-                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                  "comment": "Declared by the channel; the api/env door checks its live presence."
                 }
               ],
               "function": {
@@ -260,7 +260,7 @@
               "description": "A message read from the user own Telegram chat.",
               "state": "hidden",
               "info": {
-                "aiSummary": "Заготовка канала «user-telegram-chat»: объявлена и скрыта, функция появится, когда узел раскроют."
+                "aiSummary": "Blank for the \"user-telegram-chat\" channel: declared and hidden; the function will appear when the node is revealed."
               },
               "status": "in-development",
               "warnings": [],
@@ -268,12 +268,12 @@
                 {
                   "name": "TELEGRAM_BOT_TOKEN",
                   "status": "missing",
-                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                  "comment": "Declared by the channel; the api/env door checks its live presence."
                 },
                 {
                   "name": "TELEGRAM_ALLOWED_CHAT_ID",
                   "status": "missing",
-                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                  "comment": "Declared by the channel; the api/env door checks its live presence."
                 }
               ],
               "function": {
@@ -300,10 +300,10 @@
             {
               "cuid": "cemailinp7k2vq4x9",
               "name": "Email input",
-              "description": "Вход письма, доставленного на адрес приёма автоматизации.",
+              "description": "Input for an email delivered to the automation's intake address.",
               "state": "hidden",
               "info": {
-                "aiSummary": "Дверь канала email: письмо, пришедшее на адрес приёма. Провайдер толкает его в дверь api/inbound-email — опроса ящика нет (закон «вход только push»)."
+                "aiSummary": "The email channel door: a message arriving at the intake address. The provider pushes it into the api/inbound-email door — there is no mailbox polling (the \"input is push-only\" law)."
               },
               "status": "in-development",
               "warnings": [],
@@ -311,24 +311,24 @@
                 {
                   "name": "RESEND_API_KEY",
                   "status": "missing",
-                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                  "comment": "Declared by the channel; the api/env door checks its live presence."
                 },
                 {
                   "name": "RESEND_FROM_EMAIL",
                   "status": "missing",
-                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                  "comment": "Declared by the channel; the api/env door checks its live presence."
                 },
                 {
                   "name": "RESEND_INBOUND_SECRET",
                   "status": "missing",
-                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                  "comment": "Declared by the channel; the api/env door checks its live presence."
                 }
               ],
               "function": {
                 "name": "receiveEmail",
-                "summary": "Дверь канала email: письмо, пришедшее на адрес приёма.",
-                "accepts": "Разобранное письмо: отправитель, тема, текст.",
-                "returns": "Названный вход для середины."
+                "summary": "The email channel door: a message arriving at the intake address.",
+                "accepts": "The parsed email: sender, subject, body.",
+                "returns": "A named input for the middle."
               },
               "run": "sequential",
               "estDurationMs": 60000,
@@ -377,20 +377,20 @@
               "description": "The middle — the deterministic work that turns the input into the output.",
               "state": "visible",
               "info": {
-                "aiSummary": "Берёт живую цену акции по тикеру из Yahoo Finance (без ключа, без AI); если цены нет — прогон падает и ничего не записывается."
+                "aiSummary": "Takes the live share price by ticker from Yahoo Finance (no key, no AI); if there is no price, the run fails and nothing is written."
               },
               "status": "materialized",
               "warnings": [
                 {
                   "cuid": "cwarndemo298logic0001",
-                  "text": "Yahoo Finance иногда отвечает пустым телом на неизвестный тикер, и прогон падает без внятной причины. Как поступать: отвечать владельцу «такой компании не нашлось» или пробовать второй источник цены?"
+                  "text": "Yahoo Finance sometimes returns an empty body for an unknown ticker, and the run fails without a clear reason. What should it do: reply to the owner \"no such company was found\", or try a second price source?"
                 }
               ],
               "envKeys": [
                 {
                   "name": "ANTHROPIC_API_KEY",
                   "status": "missing",
-                  "comment": "Объявлен выбранным провайдером ИИ; живое присутствие проверяет дверь api/env."
+                  "comment": "Declared by the chosen AI provider; the api/env door checks its live presence."
                 }
               ],
               "function": {
@@ -426,7 +426,7 @@
               "description": "The branch taken when the middle produced a result — the flow continues to the output.",
               "state": "visible",
               "info": {
-                "aiSummary": "Ветка успеха: пропускает результат к записи. Настоящий гейт — бросок в узле цены, поэтому сюда доходит только успешный поток."
+                "aiSummary": "The success branch: passes the result on to be written. The real gate is the throw in the price node, so only the successful flow reaches here."
               },
               "status": "materialized",
               "warnings": [],
@@ -462,7 +462,7 @@
               "description": "The branch taken when the middle could not produce a result — the flow ends here.",
               "state": "visible",
               "info": {
-                "aiSummary": "Ветка отказа: визуальный тупик. Реальный отказ уже остановил прогон в узле цены, поэтому функция ничего не делает."
+                "aiSummary": "The failure branch: a visual dead end. The real failure already stopped the run in the price node, so the function does nothing."
               },
               "status": "materialized",
               "warnings": [],
@@ -514,7 +514,7 @@
               "description": "Where the automation delivers its result — a reply, a saved record, or a published page.",
               "state": "visible",
               "info": {
-                "aiSummary": "Пишет строку (дата, компания, тикер, цена) в таблицу history дашборда автоматизации."
+                "aiSummary": "Writes a row (date, company, ticker, price) into the automation dashboard's history table."
               },
               "status": "materialized",
               "warnings": [],
@@ -546,7 +546,7 @@
               "description": "Hands the result over to a node of ANOTHER automation — the door out into a group.",
               "state": "hidden",
               "info": {
-                "aiSummary": "Передаёт результат соседней автоматизации; в одиночной автоматизации стоит скрытым."
+                "aiSummary": "Passes the result to a neighbouring automation; in a standalone automation it stays hidden."
               },
               "status": "materialized",
               "warnings": [],
@@ -580,7 +580,7 @@
               "description": "A page on the automation own website.",
               "state": "hidden",
               "info": {
-                "aiSummary": "Заготовка канала «public-page»: объявлена и скрыта, функция появится, когда узел раскроют."
+                "aiSummary": "Blank for the \"public-page\" channel: declared and hidden; the function will appear when the node is revealed."
               },
               "status": "in-development",
               "warnings": [],
@@ -612,7 +612,7 @@
               "description": "An event on the automation calendar.",
               "state": "hidden",
               "info": {
-                "aiSummary": "Заготовка канала «calendar»: объявлена и скрыта, функция появится, когда узел раскроют."
+                "aiSummary": "Blank for the \"calendar\" channel: declared and hidden; the function will appear when the node is revealed."
               },
               "status": "in-development",
               "warnings": [],
@@ -644,7 +644,7 @@
               "description": "A chart in the automation analytics.",
               "state": "hidden",
               "info": {
-                "aiSummary": "Заготовка канала «analytics»: объявлена и скрыта, функция появится, когда узел раскроют."
+                "aiSummary": "Blank for the \"analytics\" channel: declared and hidden; the function will appear when the node is revealed."
               },
               "status": "in-development",
               "warnings": [],
@@ -676,7 +676,7 @@
               "description": "A marker on the automation map.",
               "state": "hidden",
               "info": {
-                "aiSummary": "Заготовка канала «map»: объявлена и скрыта, функция появится, когда узел раскроют."
+                "aiSummary": "Blank for the \"map\" channel: declared and hidden; the function will appear when the node is revealed."
               },
               "status": "in-development",
               "warnings": [],
@@ -708,7 +708,7 @@
               "description": "An email the automation sends out.",
               "state": "hidden",
               "info": {
-                "aiSummary": "Заготовка канала «email»: объявлена и скрыта, функция появится, когда узел раскроют."
+                "aiSummary": "Blank for the \"email\" channel: declared and hidden; the function will appear when the node is revealed."
               },
               "status": "in-development",
               "warnings": [],
@@ -716,12 +716,12 @@
                 {
                   "name": "RESEND_API_KEY",
                   "status": "missing",
-                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                  "comment": "Declared by the channel; the api/env door checks its live presence."
                 },
                 {
                   "name": "RESEND_FROM_EMAIL",
                   "status": "missing",
-                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                  "comment": "Declared by the channel; the api/env door checks its live presence."
                 }
               ],
               "function": {
@@ -751,7 +751,7 @@
               "description": "A message sent through the automation own Telegram bot.",
               "state": "hidden",
               "info": {
-                "aiSummary": "Заготовка канала «telegram-bot»: объявлена и скрыта, функция появится, когда узел раскроют."
+                "aiSummary": "Blank for the \"telegram-bot\" channel: declared and hidden; the function will appear when the node is revealed."
               },
               "status": "in-development",
               "warnings": [],
@@ -759,12 +759,12 @@
                 {
                   "name": "TELEGRAM_BOT_TOKEN",
                   "status": "missing",
-                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                  "comment": "Declared by the channel; the api/env door checks its live presence."
                 },
                 {
                   "name": "TELEGRAM_ALLOWED_CHAT_ID",
                   "status": "missing",
-                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                  "comment": "Declared by the channel; the api/env door checks its live presence."
                 }
               ],
               "function": {
@@ -794,7 +794,7 @@
               "description": "A message written into the user own Telegram chat.",
               "state": "hidden",
               "info": {
-                "aiSummary": "Заготовка канала «user-telegram-chat»: объявлена и скрыта, функция появится, когда узел раскроют."
+                "aiSummary": "Blank for the \"user-telegram-chat\" channel: declared and hidden; the function will appear when the node is revealed."
               },
               "status": "in-development",
               "warnings": [],
@@ -802,12 +802,12 @@
                 {
                   "name": "TELEGRAM_BOT_TOKEN",
                   "status": "missing",
-                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                  "comment": "Declared by the channel; the api/env door checks its live presence."
                 },
                 {
                   "name": "TELEGRAM_ALLOWED_CHAT_ID",
                   "status": "missing",
-                  "comment": "Объявлен каналом; живое присутствие проверяет дверь api/env."
+                  "comment": "Declared by the channel; the api/env door checks its live presence."
                 }
               ],
               "function": {
@@ -834,19 +834,19 @@
             {
               "cuid": "cdelivervih3efrq9",
               "name": "Vector memory output",
-              "description": "Выход в агентную векторную память (LightRAG).",
+              "description": "Output to the agent vector memory (LightRAG).",
               "state": "hidden",
               "info": {
-                "aiSummary": "Дверь канала векторной памяти: факт, запоминаемый в агентной памяти LightRAG. Узел скрыт — канал объявлен, но пока не настроен."
+                "aiSummary": "The vector-memory channel door: a fact remembered in the LightRAG agent memory. The node is hidden — the channel is declared but not yet configured."
               },
               "status": "in-development",
               "warnings": [],
               "envKeys": [],
               "function": {
                 "name": "deliverVectorMemory",
-                "summary": "Дверь канала векторной памяти: факт, запоминаемый в агентной памяти LightRAG. Узел скрыт — канал объявлен, но пока не настроен.",
-                "accepts": "Результат успешной ветки.",
-                "returns": "Запись в векторной памяти."
+                "summary": "The vector-memory channel door: a fact remembered in the LightRAG agent memory. The node is hidden — the channel is declared but not yet configured.",
+                "accepts": "The result of the success branch.",
+                "returns": "A record in the vector memory."
               },
               "run": "sequential",
               "estDurationMs": 60000,
@@ -866,19 +866,19 @@
             {
               "cuid": "cdeliverdndd14qyz",
               "name": "Database output",
-              "description": "Выход в локальную базу данных автоматизации.",
+              "description": "If you activate this node, you can store and retrieve data in your own local database. If you also use object storage or a vector database, the local database keeps the links that locate those objects, too.",
               "state": "hidden",
               "info": {
-                "aiSummary": "Дверь канала локальной базы: запись в собственной базе автоматизации. Узел скрыт — канал объявлен, но пока не настроен."
+                "aiSummary": "The local-database channel door: a record in the automation's own database. The node is hidden — the channel is declared but not yet configured."
               },
               "status": "in-development",
               "warnings": [],
               "envKeys": [],
               "function": {
                 "name": "deliverDatabase",
-                "summary": "Дверь канала локальной базы: запись в собственной базе автоматизации. Узел скрыт — канал объявлен, но пока не настроен.",
-                "accepts": "Результат успешной ветки.",
-                "returns": "Строка в локальной базе."
+                "summary": "The local-database channel door: a record in the automation's own database. The node is hidden — the channel is declared but not yet configured.",
+                "accepts": "The result of the success branch.",
+                "returns": "A row in the local database."
               },
               "run": "sequential",
               "estDurationMs": 60000,
@@ -898,19 +898,19 @@
             {
               "cuid": "cdelivers3oz5tpd6",
               "name": "Storage output",
-              "description": "Выход в локальное хранилище файлов автоматизации.",
+              "description": "If you activate this node, you can save and use media files and documents related to this automation in your own local storage.",
               "state": "hidden",
               "info": {
-                "aiSummary": "Дверь канала локального хранилища: файл, сохранённый рядом с автоматизацией. Узел скрыт — канал объявлен, но пока не настроен."
+                "aiSummary": "The local-storage channel door: a file saved next to the automation. The node is hidden — the channel is declared but not yet configured."
               },
               "status": "in-development",
               "warnings": [],
               "envKeys": [],
               "function": {
                 "name": "deliverStorage",
-                "summary": "Дверь канала локального хранилища: файл, сохранённый рядом с автоматизацией. Узел скрыт — канал объявлен, но пока не настроен.",
-                "accepts": "Результат успешной ветки.",
-                "returns": "Файл в локальном хранилище."
+                "summary": "The local-storage channel door: a file saved next to the automation. The node is hidden — the channel is declared but not yet configured.",
+                "accepts": "The result of the success branch.",
+                "returns": "A file in the local storage."
               },
               "run": "sequential",
               "estDurationMs": 60000,
@@ -1072,9 +1072,10 @@
       {
         "systemInstructionName": "tab",
         "name": "control-panel",
+        "description": "",
         "presence": "expanded",
         "info": {
-          "aiSummary": "Пульт запуска: поля запроса из ядра, кнопка запуска в дверь api/run и цепочка узлов прогона. Публичная половина — сам пульт (её видят все), административная — настройка запроса (только владелец)."
+          "aiSummary": "Launch panel: the request fields from the core, the run button into the api/run door, and the chain of run nodes. The public half is the panel itself (everyone sees it), the administrative half is the request setup (owner only)."
         },
         "status": "materialized",
         "warnings": [],
@@ -1083,8 +1084,9 @@
           {
             "cuid": "cmrw3k9p2q7control0panel01",
             "name": "First control panel",
+            "description": "",
             "info": {
-              "aiSummary": "Единственный пульт вкладки: спрашивает название публичной компании и запускает прогон «цена акции». Поля объявлены здесь, в data.params — компонент их только рисует."
+              "aiSummary": "The tab's only panel: asks for a public company's name and starts the \"share price\" run. The fields are declared here, in data.params — the component only renders them."
             },
             "status": "materialized",
             "warnings": [],
@@ -1169,9 +1171,10 @@
       {
         "systemInstructionName": "tab",
         "name": "diagram",
+        "description": "",
         "presence": "expanded",
         "info": {
-          "aiSummary": "Диаграмма автоматизации: read-only канвас графа из ядра (три плоскости вход/середина/выход, скрытые двери каналов и рабочий путь). Рисуется и в кокпите, и на публичной витрине."
+          "aiSummary": "Automation diagram: a read-only canvas of the graph from the core (three planes input/middle/output, the hidden channel doors and the working path). Rendered both in the cockpit and on the public storefront."
         },
         "status": "materialized",
         "warnings": [],
@@ -1181,9 +1184,10 @@
       {
         "systemInstructionName": "tab",
         "name": "calendar",
+        "description": "",
         "presence": "collapsed",
         "info": {
-          "aiSummary": "Календарь автоматизации: сетка месяца и дневной планер на получасовых слотах, перенос вида из v1. Записи читаются из строк вывода (таблица calendar), руками здесь ничего не создаётся. Публичная половина — сам календарь (её видят все), административная — настройка (только владелец)."
+          "aiSummary": "Automation calendar: a month grid and a day planner on half-hour slots, the view ported from v1. Entries are read from the output rows (the calendar table); nothing is created here by hand. The public half is the calendar itself (everyone sees it), the administrative half is the setup (owner only)."
         },
         "status": "materialized",
         "warnings": [],
@@ -1192,8 +1196,9 @@
           {
             "cuid": "cmruca7ra4n1jwbadc6ef980db7976",
             "name": "Main calendar",
+            "description": "",
             "info": {
-              "aiSummary": "Единственный календарь вкладки: показывает запланированные события и напоминания этой автоматизации. Хранилище, виды записей и каталог внешних интеграций объявлены здесь, в data — компоненты их только рисуют."
+              "aiSummary": "The tab's only calendar: shows this automation's scheduled events and reminders. The storage, the entry types and the catalogue of external integrations are declared here, in data — the components only render them."
             },
             "status": "materialized",
             "warnings": [],
@@ -1441,9 +1446,10 @@
       {
         "systemInstructionName": "tab",
         "name": "analytics",
+        "description": "",
         "presence": "collapsed",
         "info": {
-          "aiSummary": "Вкладка аналитики объявлена и пуста: владелец ещё не сказал, что она должна считать."
+          "aiSummary": "The analytics tab is declared and empty: the owner has not yet said what it should compute."
         },
         "status": "materialized",
         "warnings": [],
@@ -1452,8 +1458,9 @@
           {
             "cuid": "cmruca7ra4n1jx7b35a7781f60b53f",
             "name": "Main analytics",
+            "description": "",
             "info": {
-              "aiSummary": "Заготовка «Main analytics»: создана вместе со вкладкой, требований владельца пока нет."
+              "aiSummary": "Blank \"Main analytics\": created together with the tab, no owner requirements yet."
             },
             "status": "materialized",
             "warnings": [],
@@ -1478,9 +1485,10 @@
       {
         "systemInstructionName": "tab",
         "name": "dashboard",
+        "description": "",
         "presence": "collapsed",
         "info": {
-          "aiSummary": "Таблица history: дата, компания, тикер, цена — по строке на успешный прогон запроса цены."
+          "aiSummary": "The history table: date, company, ticker, price — one row per successful price-request run."
         },
         "status": "materialized",
         "warnings": [],
@@ -1489,8 +1497,9 @@
           {
             "cuid": "cmrvy25f31pjb1ad4c23af1ee9",
             "name": "History",
+            "description": "",
             "info": {
-              "aiSummary": "Строки прогонов: дата, компания, тикер, цена. Наполняется выходным узлом при каждом успешном запросе."
+              "aiSummary": "Run rows: date, company, ticker, price. Filled by the output node on every successful request."
             },
             "status": "materialized",
             "warnings": [],
@@ -1639,9 +1648,10 @@
       {
         "systemInstructionName": "tab",
         "name": "map",
-        "presence": "collapsed",
+        "description": "Активируйте раздел «Карта», чтобы строить автоматизации с картами, маршрутами и поиском по адресу. Например: рассчитать курьеру самый экономный по бензину маршрут через несколько точек — а также множество других сценариев (доставка, точки на карте, геопоиск).",
+        "presence": "expanded",
         "info": {
-          "aiSummary": "Вкладка карты объявлена и пуста."
+          "aiSummary": "Map section — build map/route/geocoding automations here. Do NOT rebuild a map renderer, router or geocoder: wire the existing geo capability via the folder door api/geo (op: geocode | matrix | route | optimize) and render with the map component in _components/map/public. Read tools-docs/map.md first. The active map region is chosen by the owner in Admin → Settings → Map settings; this automation only consumes it."
         },
         "status": "materialized",
         "warnings": [],
@@ -1650,8 +1660,9 @@
           {
             "cuid": "cmap6ryzr5iv",
             "name": "Main map",
+            "description": "",
             "info": {
-              "aiSummary": "Заготовка «Main map»: создана вместе со вкладкой, требований владельца пока нет."
+              "aiSummary": "Blank \"Main map\": created together with the tab, no owner requirements yet."
             },
             "status": "materialized",
             "warnings": [],
@@ -1676,9 +1687,10 @@
       {
         "systemInstructionName": "tab",
         "name": "cron",
+        "description": "",
         "presence": "collapsed",
         "info": {
-          "aiSummary": "Такт автоматизации: раз в сколько минут она оглядывается на саму себя. Нужен не самому разделу, а календарю — его сторож поднимает уведомления ровно в этом ритме. Выключенное расписание означает, что напоминать некому."
+          "aiSummary": "The automation's tick: how often, in minutes, it looks back at itself. It is needed not by this section but by the calendar — its watcher raises notifications at exactly this rhythm. A disabled schedule means there is no one to remind."
         },
         "status": "materialized",
         "warnings": [],
@@ -1687,8 +1699,9 @@
           {
             "cuid": "ccron3p103skw",
             "name": "Main schedule",
+            "description": "",
             "info": {
-              "aiSummary": "Единственное расписание вкладки: включено ли оно и с каким периодом. Период читают полоса-пульс и сторож календаря."
+              "aiSummary": "The tab's only schedule: whether it is enabled and with what period. The period is read by the pulse bar and the calendar watcher."
             },
             "status": "materialized",
             "warnings": [],
@@ -1727,57 +1740,58 @@
       {
         "systemInstructionName": "tab",
         "name": "app-pages",
+        "description": "",
         "presence": "absent",
         "info": {
-          "aiSummary": "Вкладка страниц приложения объявлена и пуста."
+          "aiSummary": "The application pages tab is declared and empty."
         },
         "status": "in-development",
         "warnings": [],
         "envKeys": [],
-        "entities": [
-          {
-            "cuid": "capppagesnz2fyyz7",
-            "name": "Main pages",
-            "info": {
-              "aiSummary": "Заготовка «Main pages»: создана вместе со вкладкой, требований владельца пока нет."
-            },
-            "status": "in-development",
-            "warnings": [],
-            "envKeys": [],
-            "data": {}
-          }
-        ]
+        "entity": {
+          "cuid": "capppagesnz2fyyz7",
+          "name": "Main pages",
+          "description": "",
+          "info": {
+            "aiSummary": "Blank \"Main pages\": created together with the tab, no owner requirements yet."
+          },
+          "status": "in-development",
+          "warnings": [],
+          "envKeys": [],
+          "data": {}
+        }
       },
       {
         "systemInstructionName": "tab",
         "name": "vector-memory",
+        "description": "",
         "presence": "absent",
         "info": {
-          "aiSummary": "Вкладка векторной памяти объявлена и пуста: показывать, что автоматизация запомнила, будем когда владелец скажет что именно."
+          "aiSummary": "The vector-memory tab is declared and empty: we will show what the automation has remembered once the owner says what exactly."
         },
         "status": "in-development",
         "warnings": [],
         "envKeys": [],
-        "entities": [
-          {
-            "cuid": "cvectormesrc1v6z1",
-            "name": "Main memory",
-            "info": {
-              "aiSummary": "Заготовка «Main memory»: создана вместе со вкладкой, требований владельца пока нет."
-            },
-            "status": "in-development",
-            "warnings": [],
-            "envKeys": [],
-            "data": {}
-          }
-        ]
+        "entity": {
+          "cuid": "cvectormesrc1v6z1",
+          "name": "Main memory",
+          "description": "",
+          "info": {
+            "aiSummary": "Blank \"Main memory\": created together with the tab, no owner requirements yet."
+          },
+          "status": "in-development",
+          "warnings": [],
+          "envKeys": [],
+          "data": {}
+        }
       },
       {
         "systemInstructionName": "tab",
         "name": "database",
+        "description": "",
         "presence": "absent",
         "info": {
-          "aiSummary": "Вкладка локальной базы объявлена и пуста: какие записи показывать, решает владелец."
+          "aiSummary": "The local-database tab is declared and empty: the owner decides which records to show."
         },
         "status": "in-development",
         "warnings": [],
@@ -1786,8 +1800,9 @@
           {
             "cuid": "cdatabasew8kfh3ov",
             "name": "Main database",
+            "description": "",
             "info": {
-              "aiSummary": "Заготовка «Main database»: создана вместе со вкладкой, требований владельца пока нет."
+              "aiSummary": "Blank \"Main database\": created together with the tab, no owner requirements yet."
             },
             "status": "in-development",
             "warnings": [],
@@ -1799,26 +1814,26 @@
       {
         "systemInstructionName": "tab",
         "name": "storage",
+        "description": "If you activate this node, you can save and use media files and documents related to this automation in your own local storage.",
         "presence": "absent",
         "info": {
-          "aiSummary": "Вкладка локального хранилища объявлена и пуста: здесь будут файлы автоматизации, например изображения."
+          "aiSummary": "The local-storage tab is declared and empty: this is where the automation's files will live, for example images."
         },
         "status": "in-development",
         "warnings": [],
         "envKeys": [],
-        "entities": [
-          {
-            "cuid": "cstorageqze512pd",
-            "name": "Main storage",
-            "info": {
-              "aiSummary": "Заготовка «Main storage»: создана вместе со вкладкой, требований владельца пока нет."
-            },
-            "status": "in-development",
-            "warnings": [],
-            "envKeys": [],
-            "data": {}
-          }
-        ]
+        "entity": {
+          "cuid": "cstorageqze512pd",
+          "name": "Main storage",
+          "description": "",
+          "info": {
+            "aiSummary": "Blank \"Main storage\": created together with the tab, no owner requirements yet."
+          },
+          "status": "in-development",
+          "warnings": [],
+          "envKeys": [],
+          "data": {}
+        }
       }
     ]
   },
@@ -1829,15 +1844,15 @@
       {
         "cuid": "cmrvy25f31pjb09c1e7cab94b2",
         "number": 1,
-        "title": "Цена акции по названию компании",
-        "text": "Хочу спросить цену акции публичной компании своими словами (например «сколько стоит Apple») и получить живую цену, сохранённую в историю.",
+        "title": "Share price by company name",
+        "text": "I want to ask for a public company's share price in my own words (for example \"how much is Apple\") and get a live price saved to history.",
         "status": "in-use"
       },
       {
         "cuid": "cmrvy25f31pjb09c1e7cab94b3",
         "number": 2,
-        "title": "Уведомление о резком изменении цены",
-        "text": "Хочу, чтобы при резком изменении цены отслеживаемой акции мне приходило уведомление в Telegram с новой ценой и величиной изменения.",
+        "title": "Alert on a sharp price change",
+        "text": "I want to receive a Telegram notification with the new price and the size of the change whenever a tracked stock's price changes sharply.",
         "status": "new"
       }
     ]

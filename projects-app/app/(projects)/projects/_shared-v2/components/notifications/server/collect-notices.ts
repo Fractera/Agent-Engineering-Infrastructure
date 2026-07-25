@@ -1,4 +1,4 @@
-import type { CoreNode, Notice, NoticesCore } from "../types/notifications";
+import { coreEntitiesOf, type CoreNode, type Notice, type NoticesCore } from "../types/notifications";
 
 // МАРКЕР ОТВЕТА НА ПРЕДУПРЕЖДЕНИЕ — им начинается сырая инструкция, которую пишет дверь 
 // (). Одна строка-договор между дверью и полосой: меняется в двух местах вместе.
@@ -50,7 +50,7 @@ export function collectNotices(core: NoticesCore): Notice[] {
   }
   for (const tab of core.components.tabs) {
     for (const w of tab.warnings) warnings.push({ category: "warning", scope: "tab", name: tab.name, text: w.text });
-    for (const entity of tab.entities) {
+    for (const entity of coreEntitiesOf(tab)) {
       for (const w of entity.warnings) warnings.push({ category: "warning", scope: "entity", name: entity.name, text: w.text });
     }
   }
@@ -76,7 +76,7 @@ export function collectNotices(core: NoticesCore): Notice[] {
     if (tab.presence === "absent") continue;
     if (isAnswer(tab.info)) answered.push({ category: "answered", scope: "tab", name: tab.name });
     else if (tab.status === "in-development") unbuilt.push({ category: "unbuilt", scope: "tab", name: tab.name });
-    for (const entity of tab.entities) {
+    for (const entity of coreEntitiesOf(tab)) {
       if (isAnswer(entity.info)) answered.push({ category: "answered", scope: "entity", name: entity.name });
       else if (entity.status === "in-development") unbuilt.push({ category: "unbuilt", scope: "entity", name: entity.name });
     }

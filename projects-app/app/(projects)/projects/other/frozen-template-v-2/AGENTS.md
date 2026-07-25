@@ -63,6 +63,23 @@ public half. Its cell types, its renderers, its behaviour are OPEN: extend them 
 own copy. The admin half of such a tab holds ONE thing only — the AI-request form; never move a surface's
 logic there, and never expect to find it in `_shared-v2`.
 
+## 0b. REUSABLE TOOLS EXIST OUTSIDE YOUR FOLDER — wire them, do NOT rebuild
+
+Some capabilities are shared PRIMITIVES the platform already ships — an image cropper, a voice-input
+microphone, and more added over time. Their code lives outside your folder (`_shared-v2/tools/`), so
+browsing your workspace will NOT reveal them, and you might waste a brief re-implementing one from scratch
+(a second cropper, another `MediaRecorder`). Do not.
+
+**Before you build any such affordance, check [`tools-docs/`](tools-docs/) — one short reference per tool:**
+what it is, where it lives, how to call it (props in, what comes back), how to persist its output, and its
+constraints. If a tool covers the brief, wire the existing one; never copy it into this folder.
+
+Today: [`tools-docs/image-crop.md`](tools-docs/image-crop.md) (crop → JPEG blob → object storage + row),
+[`tools-docs/voice-input.md`](tools-docs/voice-input.md) (dictation into a field),
+[`tools-docs/map.md`](tools-docs/map.md) (maps, routing, address search, courier TSP — via the `api/geo` door
+to the self-hosted geo service; never rebuild a map/router/geocoder),
+[`tools-docs/dev-console.md`](tools-docs/dev-console.md) (the terminal you run inside — nothing to wire).
+
 ## 1. Where the truth is
 
 | What | Where |
@@ -73,6 +90,7 @@ logic there, and never expect to find it in `_shared-v2`.
 | What each node actually does | `_lib/nodes/<function-name>.ts` |
 | What each tab shows | `_components/<tab>/` |
 | Its data — rows written by runs | `_data/runtime/` |
+| Reusable shared tools you may wire (crop, voice, …) | `tools-docs/` (reference); code in `_shared-v2/tools/` |
 
 ## 2. READ FILES FREELY. THAT IS NOT A WORKAROUND.
 
