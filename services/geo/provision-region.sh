@@ -30,9 +30,11 @@ for u in "${URLS[@]}"; do
   FILES+=("$f"); i=$((i+1))
 done
 
+# osmium нужен и для склейки нескольких карт, и для вычисления центра региона из заголовка PBF — ставим всегда.
+command -v osmium >/dev/null 2>&1 || { apt-get update -y >/dev/null 2>&1; apt-get install -y osmium-tool >/dev/null 2>&1; }
+
 if [ "${#FILES[@]}" -gt 1 ]; then
   write_status "processing" "merge"
-  command -v osmium >/dev/null 2>&1 || { apt-get update -y >/dev/null 2>&1; apt-get install -y osmium-tool >/dev/null 2>&1; }
   osmium merge "${FILES[@]}" -o "$PBF" --overwrite || fail "osmium-merge"
 else
   cp -f "${FILES[0]}" "$PBF" || fail "copy"
@@ -57,6 +59,24 @@ docker run -d --name fractera-nominatim --restart unless-stopped \
   -v "$OSRM_DIR":/nominatim-data \
   -p 127.0.0.1:8080:8080 mediagis/nominatim:4.4 || fail "nominatim-run"
 
-node -e 'const fs=require("fs");const p=process.env.CFG;let c={};try{c=JSON.parse(fs.readFileSync(p))}catch{}; c.region=process.env.REG; fs.writeFileSync(p,JSON.stringify(c,null,2))' CFG="$CONFIG" REG="$REGION" 2>/dev/null || true
+# Центр и рамка активного региона из заголовка PBF — чтобы карта в продукте центрировалась на него, а не на
+# фиксированный Париж. header.boxes[0] = [minlon,minlat,maxlon,maxlat]. ВАЖНО: переменные CONFIG/REGION/BBOX
+# передаём как ОКРУЖЕНИЕ (префикс перед node), а не как argv — прежняя версия писала их в argv, поэтому
+# process.env был пуст и geo-config.json не создавался вовсе.
+BBOX=$(osmium fileinfo -j "$PBF" 2>/dev/null | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const b=JSON.parse(s).header.boxes[0];process.stdout.write(JSON.stringify(b))}catch{process.stdout.write("null")}})' 2>/dev/null)
+CFG="$CONFIG" REG="$REGION" BBOX="$BBOX" node -e '
+const fs=require("fs");
+const p=process.env.CFG;
+let c={}; try{c=JSON.parse(fs.readFileSync(p,"utf8"))}catch{}
+c.region=process.env.REG;
+try{
+  const b=JSON.parse(process.env.BBOX);            // [minlon,minlat,maxlon,maxlat]
+  if(Array.isArray(b)&&b.length===4){
+    c.bbox=[b[1],b[0],b[3],b[2]];                  // [minLat,minLon,maxLat,maxLon]
+    c.center=[(b[1]+b[3])/2,(b[0]+b[2])/2];        // [lat,lon]
+  }
+}catch{}
+fs.writeFileSync(p,JSON.stringify(c,null,2));
+' 2>/dev/null || true
 
 write_status "ready" "done"

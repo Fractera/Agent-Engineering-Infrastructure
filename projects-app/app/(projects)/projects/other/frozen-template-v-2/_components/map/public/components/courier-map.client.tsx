@@ -48,15 +48,24 @@ export default function CourierMapClient({ lang }: { lang: string }) {
   const addPointRef = useRef(addPoint);
   addPointRef.current = addPoint;
 
-  // Инициализация карты один раз (клиент-only: Leaflet грузится динамически).
+  // Инициализация карты один раз (клиент-only: Leaflet грузится динамически). Начальный вид — АКТИВНЫЙ регион
+  // гео-сервиса (config.center/bbox из `api/geo`), а не фиксированный Париж: при смене региона (напр. Канары)
+  // карта открывается там, где реально лежат данные маршрутизации. Фолбэк — Париж, если конфиг недоступен.
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const L = (await import("leaflet")).default;
+      const [L, cfg] = await Promise.all([
+        import("leaflet").then((m) => m.default),
+        fetch(`${apiBase()}/geo`).then((r) => r.json()).then((d) => d.config as { center?: [number, number]; bbox?: number[] } | null).catch(() => null),
+      ]);
       if (cancelled || !mapEl.current || mapRef.current) return;
       LRef.current = L;
-      const map = L.map(mapEl.current).setView(PARIS, 12);
+      const map = L.map(mapEl.current);
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap contributors", maxZoom: 19 }).addTo(map);
+      const bbox = Array.isArray(cfg?.bbox) && cfg!.bbox!.length === 4 ? (cfg!.bbox as number[]) : null;
+      const center = Array.isArray(cfg?.center) && cfg!.center!.length === 2 ? (cfg!.center as [number, number]) : PARIS;
+      if (bbox) map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { maxZoom: 13 });
+      else map.setView(center, 11);
       map.on("click", (e) => addPointRef.current(e.latlng.lat, e.latlng.lng));
       markersRef.current = L.layerGroup().addTo(map);
       routeRef.current = L.layerGroup().addTo(map);

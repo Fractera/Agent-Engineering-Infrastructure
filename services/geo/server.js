@@ -33,6 +33,8 @@ const DEFAULT_CONFIG = {
   provider: 'self',                                         // 'self' (fractera-geo) | 'external' (ключ)
   externalKey: '',
   fuel: { consumption: 8, price: 1.9, currency: 'EUR' },    // л/100км, цена/литр
+  center: [48.8566, 2.3522],                               // [lat,lon] — центр активного региона (Париж до провижининга)
+  bbox: [48.12, 1.44, 49.24, 3.56],                        // [minLat,minLon,maxLat,maxLon] — рамка региона (Île-de-France)
 }
 const readConfig = () => {
   try { return { ...DEFAULT_CONFIG, ...JSON.parse(readFileSync(CONFIG_PATH, 'utf8')) } }
@@ -48,6 +50,9 @@ const sanitizeConfig = (body, cur) => ({
     price: Number.isFinite(body?.fuel?.price) ? Number(body.fuel.price) : cur.fuel.price,
     currency: typeof body?.fuel?.currency === 'string' && body.fuel.currency.trim() ? body.fuel.currency.trim() : cur.fuel.currency,
   },
+  // center/bbox пишет провижининг региона (provision-region.sh); правка настроек (провайдер/топливо) их НЕ трогает.
+  center: Array.isArray(body?.center) && body.center.length === 2 ? body.center.map(Number) : cur.center,
+  bbox: Array.isArray(body?.bbox) && body.bbox.length === 4 ? body.bbox.map(Number) : cur.bbox,
 })
 
 // OSRM ждёт координаты как "lon,lat;lon,lat;…" (долгота первой — легко ошибиться).
