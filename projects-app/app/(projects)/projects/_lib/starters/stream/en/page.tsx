@@ -37,6 +37,11 @@ export default async function Page() {
   // Живую правду «задан или нет» даёт дверь `api/env`: `status` — последнее наблюдение агента, и
   // подменять им живую проверку нельзя.
   const nodeKeys = allNodes(graph.nodes).flatMap((n) => n.envKeys.map((k) => k.name));
+  // ЕСТЬ ЛИ У АВТОМАТИЗАЦИИ КАРТЫ — присутствует ли вкладка `map` (шаг 301). Тогда в настройках показывается
+  // read-only статус карт (регион + online). Берём ПРИСУТСТВИЕ ВКЛАДКИ (поверхность карты у владельца), а не
+  // видимость выходного узла: узел у замороженного новорождённого скрыт, и статус карт был бы не виден
+  // именно там, где владелец настраивает автоматизацию.
+  const hasMap = components.tabs.some((t) => t.name === "map" && t.presence !== "absent");
   const integrationKeys = components.tabs.flatMap((tab) =>
     entitiesOf(tab).flatMap((entity) => {
       const raw = (entity.data as Record<string, unknown>).integrations;
@@ -62,7 +67,7 @@ export default async function Page() {
       {/* ФИКСИРОВАННЫЙ ВВЕРХУ ПУЛЬС такта (правка владельца 2026-07-23): «слайдер» крона живёт наверху
           страницы, на 1px ниже хедера, всегда видимый. Ничего не рисует, если крона нет/выключен. */}
       {cron && !onboarding ? <TopPulseBar everyMinutes={cron.everyMinutes} enabled={cron.enabled} /> : null}
-      <AutomationChrome passport={passport} lang={lang} tabs={tabs} envKeys={envKeys} />
+      <AutomationChrome passport={passport} lang={lang} tabs={tabs} envKeys={envKeys} hasMap={hasMap} />
       <AutomationComponents lang={lang} onboarding={onboarding} />
     </main>
   );

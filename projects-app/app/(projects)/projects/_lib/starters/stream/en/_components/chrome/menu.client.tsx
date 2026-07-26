@@ -38,11 +38,14 @@ export default function Menu({
   lang,
   tabs,
   envKeys,
+  hasMap,
   ai,
 }: {
   lang: string;
   /** Имена переменных, объявленные автоматизацией: из них выводятся карточки настроек. */
   envKeys: string[];
+  /** Виден ли выходной узел канала `map` — тогда в Настройках рисуется статус-карточка карт (шаг 301). */
+  hasMap: boolean;
   /** Выбранные провайдер и модель — ПОКАЗЫВАЮТСЯ здесь, меняются в Настройках. */
   ai: { provider: ProviderKey; model: string; providerLabel: string; modelLabel: string };
   tabs: TabRow[];
@@ -179,7 +182,7 @@ export default function Menu({
       </DropdownMenu>
 
       <HowItWorksModal lang={lang} open={modal === "howItWorks"} onClose={() => setModal(null)} />
-      <SettingsModal lang={lang} envKeys={envKeys} ai={ai} open={modal === "settings"} onClose={() => setModal(null)} />
+      <SettingsModal lang={lang} envKeys={envKeys} hasMap={hasMap} ai={ai} open={modal === "settings"} onClose={() => setModal(null)} />
       {/* Заглушка достаётся ТОЛЬКО записям без своего окна: у «Как это работает» и «Настроек» окна свои,
           и различает их не строка заголовка, а сам вид состояния — поэтому проверяем тип, а не текст. */}
       <PlaceholderModal

@@ -14,11 +14,13 @@ export default function StatusBar({
   lang,
   tabs,
   envKeys,
+  hasMap,
 }: {
   passport: Passport;
   lang: string;
   tabs: TabRow[];
   envKeys: string[];
+  hasMap: boolean;
 }) {
   // Выбор ИИ выводится ЗДЕСЬ, из паспорта, который у полосы уже есть: тянуть его отдельным пропсом
   // через всю цепочку значило бы завести второй путь к одному и тому же факту.
@@ -36,6 +38,7 @@ export default function StatusBar({
             lang={lang}
             tabs={tabs}
             envKeys={envKeys}
+            hasMap={hasMap}
             ai={{ provider: provider.key, model: model.id, providerLabel: provider.label, modelLabel: model.label }}
           />
           <SendTask lang={lang} />

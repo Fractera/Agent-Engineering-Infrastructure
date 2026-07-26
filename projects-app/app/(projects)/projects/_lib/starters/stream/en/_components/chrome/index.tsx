@@ -21,16 +21,19 @@ export default function AutomationChrome({
   lang,
   tabs,
   envKeys,
+  hasMap,
 }: {
   passport: Passport;
   lang: string;
   tabs: TabRow[];
   /** Объявленные переменные окружения — из них меню выводит карточки настроек. */
   envKeys: string[];
+  /** Виден ли выходной узел канала `map` — тогда в настройках показывается статус-карточка карт (шаг 301). */
+  hasMap: boolean;
 }) {
   return (
     <div data-chrome-root="admin">
-      <StatusBar passport={passport} lang={lang} tabs={tabs} envKeys={envKeys} />
+      <StatusBar passport={passport} lang={lang} tabs={tabs} envKeys={envKeys} hasMap={hasMap} />
       <Notifications lang={lang} />
       {/* ЦЕНТР ПРОБЛЕМ (шаг 298) — бейдж «⚠ N» + модалка с открытыми предупреждениями агента. Своя
           сущность со своим провайдером (единый источник), рядом с полосой-уведомлением. */}

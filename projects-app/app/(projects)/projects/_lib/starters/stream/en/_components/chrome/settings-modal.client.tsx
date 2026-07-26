@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ExternalLink, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { chromeStrings } from "./i18n";
@@ -29,6 +30,7 @@ import { PROVIDER_ENV_KEYS, type ProviderKey } from "../ai";
 export default function SettingsModal({
   lang,
   envKeys,
+  hasMap,
   ai,
   open,
   onClose,
@@ -36,6 +38,8 @@ export default function SettingsModal({
   lang: string;
   /** Все имена переменных, объявленные этой автоматизацией. Карточки выводятся из них. */
   envKeys: string[];
+  /** Использует ли автоматизация канал `map` (виден выходной узел) — тогда рисуется статус-карточка карт. */
+  hasMap: boolean;
   /** Выбранные провайдер и модель — из паспорта; меню показывает их, эта форма меняет. */
   ai: { provider: ProviderKey; model: string };
   open: boolean;
@@ -80,6 +84,12 @@ export default function SettingsModal({
             {/* ЧЕМ АВТОМАТИЗАЦИЯ ДУМАЕТ — первым: это её собственное свойство, а карточки ниже
                 настраивают внешние сервисы, общие на весь проект. */}
             <AiPicker provider={ai.provider} model={ai.model} lang={lang} />
+
+            {/* КАРТЫ — read-only статус (шаг 301). Карты, в отличие от почты/телеграма, НЕ ключ на
+                автоматизацию: гео-сервис и регион глобальны на проект и настраиваются в Admin. Здесь только
+                показываем состояние (регион + online/offline из `api/geo`) и ведём в Admin — единственный
+                источник истины остаётся там. Рисуется, только если автоматизация использует канал `map`. */}
+            {hasMap ? <MapsStatusCard open={open} /> : null}
 
             {services.length === 0 ? (
               <p className="text-sm text-muted-foreground">{K.noKeys}</p>
@@ -131,5 +141,71 @@ export default function SettingsModal({
         }}
       />
     </>
+  );
+}
+
+// СТАТУС-КАРТОЧКА КАРТ (шаг 301) — read-only. Тянет `api/geo` (GET): 200 → гео-сервис онлайн, регион из
+// `config.region`; 502/ошибка → офлайн. Настройка карт (регион/провижининг) — глобальная, в Admin: сюда её
+// НЕ дублируем (единственный источник истины), только показываем и ведём туда. Тексты — английские (стартер
+// одноязычный; правило владельца). Ссылка на Admin строится от текущего хоста на :3002 в рантайме (папка не
+// хардкодит платформенный хост — читает его из `location`, как это уже делает компонент карты).
+function MapsStatusCard({ open }: { open: boolean }) {
+  const [state, setState] = useState<{ online: boolean; region: string } | null | "loading">("loading");
+
+  useEffect(() => {
+    if (!open) return;
+    let alive = true;
+    setState("loading");
+    void (async () => {
+      try {
+        const apiBase = location.pathname.replace(/\/+$/, "") + "/api";
+        const r = await fetch(`${apiBase}/geo`, { cache: "no-store" });
+        const d = (await r.json().catch(() => null)) as { config?: { region?: string } | null } | null;
+        if (!alive) return;
+        setState(r.ok && d?.config ? { online: true, region: String(d.config.region ?? "") } : { online: false, region: "" });
+      } catch {
+        if (alive) setState({ online: false, region: "" });
+      }
+    })();
+    return () => { alive = false; };
+  }, [open]);
+
+  // Регион приходит слагом (`ile-de-france`) — показываем человекочитаемо.
+  const regionLabel = state && state !== "loading" && state.region
+    ? state.region.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    : "—";
+
+  const openAdmin = () => {
+    // Admin живёт на :3002 того же хоста; точный deep-link в панель карт нестабилен, поэтому открываем Admin,
+    // а путь называем словами (Settings → Map settings). Новая вкладка — кокпит автоматизации не теряется.
+    if (typeof window !== "undefined") window.open(`${location.protocol}//${location.hostname}:3002`, "_blank", "noopener");
+  };
+
+  return (
+    <section data-service="map" className="space-y-2 rounded-md border p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="flex items-center gap-1.5 text-sm font-medium"><MapPin className="size-4" /> Maps</span>
+        {state === "loading" ? (
+          <span className="text-xs text-muted-foreground">checking…</span>
+        ) : (
+          <span className={state?.online ? "text-xs font-medium text-emerald-600 dark:text-emerald-400" : "text-xs font-medium text-muted-foreground"}>
+            {state?.online ? "online" : "offline"}
+          </span>
+        )}
+      </div>
+      <ul className="space-y-1 text-xs">
+        <li className="flex items-baseline justify-between gap-2">
+          <span className="text-muted-foreground">Active region</span>
+          <span className="shrink-0 font-medium">{state === "loading" ? "…" : regionLabel}</span>
+        </li>
+      </ul>
+      <p className="text-xs text-muted-foreground">
+        The map region and the geo service are set once for the whole project, in Admin — this automation only
+        uses them.
+      </p>
+      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={openAdmin}>
+        <ExternalLink className="size-3.5" /> Open Admin → Settings → Map settings
+      </Button>
+    </section>
   );
 }
