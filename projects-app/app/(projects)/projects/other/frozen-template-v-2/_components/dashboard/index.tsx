@@ -1,5 +1,4 @@
 import type { Entity } from "../../_data/automation.schema";
-import type { Surface } from "../surface";
 import DashboardTables from "./public/tables";
 import DashboardAiRequest from "./admin/ai-request";
 
@@ -15,22 +14,14 @@ import DashboardAiRequest from "./admin/ai-request";
 //
 // Держать таблицу в общем слое `_shared-v2` было бы фатально: агенту он запрещён, и заявка «сделай видео в
 // колонке» стала бы невыполнимой, а таблица — одинаковой для всех автоматизаций вместо своей у каждой.
-export default function Dashboard({
-  surface,
-  entities,
-  lang,
-}: {
-  surface: Surface;
-  entities: Entity[];
-  lang: string;
-}) {
+export default function Dashboard({ entities, lang }: { entities: Entity[]; lang: string }) {
   return (
-    <div data-entity="dashboard" data-surface={surface} className="space-y-3">
+    <div data-entity="dashboard" className="space-y-3">
       {/* ПУБЛИЧНАЯ ПОЛОВИНА — вся таблица целиком (перенос v1): типы колонок, действия строки, поиск,
           пагинация, выбор колонок, разделённый вид, правка строк. На витрине — только чтение. */}
-      <DashboardTables lang={lang} mode={surface === "admin" ? "admin" : "view"} />
+      <DashboardTables lang={lang} mode="admin" />
       {/* АДМИН-ПОЛОВИНА — только заявка ИИ на разработку таблиц. */}
-      {surface === "admin" ? <DashboardAiRequest entities={entities} lang={lang} /> : null}
+      <DashboardAiRequest entities={entities} lang={lang} />
     </div>
   );
 }

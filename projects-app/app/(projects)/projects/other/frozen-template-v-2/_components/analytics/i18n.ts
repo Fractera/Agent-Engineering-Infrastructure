@@ -2,23 +2,23 @@
 // Названия дней недели НЕ здесь — их даёт `Intl.DateTimeFormat(lang, {weekday})` из языка страницы,
 // поэтому переводить нечего: это данные календаря, а не строка интерфейса.
 export type AnalyticsStrings = {
-  requestsTitle: string; // «Запросов в день»
-  valueTitle: string; // «Стоимость акций за день»
+  requestsTitle: string; // «Сообщений в день»
+  valueTitle: string; // «Объём текста в день»
   empty: string; // записей ещё нет
-  requestsUnit: string; // подпись значения графика запросов (напр. «запр.»)
+  requestsUnit: string; // подпись значения графика сообщений (напр. «сообщ.»)
 };
 
 const I18N: Record<string, AnalyticsStrings> = {
-  en: { requestsTitle: "Requests per day", valueTitle: "Stock value per day", empty: "No data yet — the charts fill as the automation is used.", requestsUnit: "req." },
-  ru: { requestsTitle: "Запросов в день", valueTitle: "Стоимость акций за день", empty: "Данных пока нет — графики наполняются по мере работы автоматизации.", requestsUnit: "запр." },
-  es: { requestsTitle: "Solicitudes por día", valueTitle: "Valor de acciones por día", empty: "Aún no hay datos — los gráficos se llenan a medida que se usa la automatización.", requestsUnit: "sol." },
-  fr: { requestsTitle: "Requêtes par jour", valueTitle: "Valeur des actions par jour", empty: "Pas encore de données — les graphiques se remplissent à l'usage de l'automatisation.", requestsUnit: "req." },
-  it: { requestsTitle: "Richieste al giorno", valueTitle: "Valore delle azioni al giorno", empty: "Ancora nessun dato — i grafici si riempiono man mano che l'automazione viene usata.", requestsUnit: "ric." },
-  de: { requestsTitle: "Anfragen pro Tag", valueTitle: "Aktienwert pro Tag", empty: "Noch keine Daten — die Diagramme füllen sich mit der Nutzung der Automatisierung.", requestsUnit: "Anfr." },
-  pt: { requestsTitle: "Pedidos por dia", valueTitle: "Valor das ações por dia", empty: "Ainda sem dados — os gráficos preenchem-se à medida que a automação é usada.", requestsUnit: "ped." },
-  pl: { requestsTitle: "Zapytania na dzień", valueTitle: "Wartość akcji na dzień", empty: "Brak danych — wykresy wypełniają się w miarę używania automatyzacji.", requestsUnit: "zap." },
-  tr: { requestsTitle: "Günlük istek sayısı", valueTitle: "Günlük hisse değeri", empty: "Henüz veri yok — otomasyon kullanıldıkça grafikler dolar.", requestsUnit: "istek" },
-  nl: { requestsTitle: "Verzoeken per dag", valueTitle: "Aandelenwaarde per dag", empty: "Nog geen gegevens — de grafieken vullen zich naarmate de automatisering wordt gebruikt.", requestsUnit: "verz." },
+  en: { requestsTitle: "Messages per day", valueTitle: "Text volume per day", empty: "No data yet — the charts fill as the automation is used.", requestsUnit: "msg." },
+  ru: { requestsTitle: "Сообщений в день", valueTitle: "Объём текста в день", empty: "Данных пока нет — графики наполняются по мере работы автоматизации.", requestsUnit: "сообщ." },
+  es: { requestsTitle: "Mensajes por día", valueTitle: "Volumen de texto por día", empty: "Aún no hay datos — los gráficos se llenan a medida que se usa la automatización.", requestsUnit: "msj." },
+  fr: { requestsTitle: "Messages par jour", valueTitle: "Volume de texte par jour", empty: "Pas encore de données — les graphiques se remplissent à l'usage de l'automatisation.", requestsUnit: "msg." },
+  it: { requestsTitle: "Messaggi al giorno", valueTitle: "Volume di testo al giorno", empty: "Ancora nessun dato — i grafici si riempiono man mano che l'automazione viene usata.", requestsUnit: "msg." },
+  de: { requestsTitle: "Nachrichten pro Tag", valueTitle: "Textvolumen pro Tag", empty: "Noch keine Daten — die Diagramme füllen sich mit der Nutzung der Automatisierung.", requestsUnit: "Nachr." },
+  pt: { requestsTitle: "Mensagens por dia", valueTitle: "Volume de texto por dia", empty: "Ainda sem dados — os gráficos preenchem-se à medida que a automação é usada.", requestsUnit: "msg." },
+  pl: { requestsTitle: "Wiadomości dziennie", valueTitle: "Objętość tekstu dziennie", empty: "Brak danych — wykresy wypełniają się w miarę używania automatyzacji.", requestsUnit: "wiad." },
+  tr: { requestsTitle: "Günlük mesaj sayısı", valueTitle: "Günlük metin hacmi", empty: "Henüz veri yok — otomasyon kullanıldıkça grafikler dolar.", requestsUnit: "mesaj" },
+  nl: { requestsTitle: "Berichten per dag", valueTitle: "Tekstvolume per dag", empty: "Nog geen gegevens — de grafieken vullen zich naarmate de automatisering wordt gebruikt.", requestsUnit: "ber." },
 };
 
 export const analyticsStrings = (lang: string): AnalyticsStrings =>

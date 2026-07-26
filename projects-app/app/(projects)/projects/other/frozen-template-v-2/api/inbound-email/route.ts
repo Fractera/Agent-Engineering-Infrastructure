@@ -53,7 +53,10 @@ export async function POST(req: NextRequest) {
   // Конверт провайдера бывает вложенным (`{ type, data: {...} }`) — берём внутренность, если она есть.
   const letter = (payload.data && typeof payload.data === "object" ? payload.data : payload) as Record<string, unknown>;
   const from = letter.from ?? letter.sender ?? "";
+  // `source: "email"` — метка канала прогона (шаг 300): движок исполняет все видимые узлы, и каждый
+  // приёмник по этой метке решает, его ли это прогон. Дверь письма знает канал достоверно.
   const input = {
+    source: "email",
     from: typeof from === "string" ? from : ((from as { email?: string })?.email ?? ""),
     subject: String(letter.subject ?? ""),
     text: String(letter.text ?? letter.html ?? ""),

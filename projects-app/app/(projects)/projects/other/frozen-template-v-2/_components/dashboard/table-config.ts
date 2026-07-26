@@ -43,7 +43,7 @@ export type ColumnOptions = {
    *  the architecture bundle so a model reading the table understands its behaviour without opening the UI. */
   actionDescription?: LocalizedText;
   /** For `action:"live"`: the endpoint to GET on click. `{field}` tokens are replaced with that row's own
-   *  `values.field` before the request — e.g. `"/api/projects/other/x/price?ticker={ticker}"`. */
+   *  `values.field` before the request — e.g. `"/api/projects/other/x/lookup?key={id}"`. */
   liveUrl?: string;
   /** For a number: an optional unit/suffix shown after the value (e.g. "$", "%"). */
   suffix?: string;

@@ -14,7 +14,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import Toast from "../shared/toast.client";
 import HowItWorksModal from "./how-it-works-modal.client";
 import PlaceholderModal from "./placeholder-modal.client";
 import SettingsModal from "./settings-modal.client";
@@ -22,7 +21,6 @@ import type { ProviderKey } from "../ai";
 
 // ГАМБУРГЕР-МЕНЮ (админ) — ФАКСИМИЛЕ меню v1 (automation-menu.client.tsx), воспроизведённое самодостаточно
 // Порядок, метки, иконки и разделители — один-в-один с образцом v1.
-// Единственное ДОБАВЛЕНИЕ — пункт «Публичная страница» (требование владельца).
 //
 // 🔒 НА shadcn (шаг 298, правило владельца: самописные UI-элементы во v2 запрещены). Прежняя реализация
 // была самодельной раскрывашкой `<details>/<summary>` с десятком сырых `<button>` — теперь это
@@ -41,8 +39,6 @@ export default function Menu({
   tabs,
   envKeys,
   ai,
-  publicHref,
-  built,
 }: {
   lang: string;
   /** Имена переменных, объявленные автоматизацией: из них выводятся карточки настроек. */
@@ -50,9 +46,6 @@ export default function Menu({
   /** Выбранные провайдер и модель — ПОКАЗЫВАЮТСЯ здесь, меняются в Настройках. */
   ai: { provider: ProviderKey; model: string; providerLabel: string; modelLabel: string };
   tabs: TabRow[];
-  publicHref: string;
-  /** Построена ли автоматизация: замороженному шаблону публичной страницы ещё нет. */
-  built: boolean;
 }) {
   const L = chromeStrings(lang);
   const router = useRouter();
@@ -61,7 +54,6 @@ export default function Menu({
   const [overIndex, setOverIndex] = useState<number | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [modal, setModal] = useState<Modal>(null);
-  const [notBuilt, setNotBuilt] = useState(false);
 
   async function toggleVisibility(name: string, presence: TabRow["presence"]) {
     // OFF → absent (скрыта); ON → collapsed (видна, закрыта по умолчанию). Раскрытие (expanded) —
@@ -119,17 +111,6 @@ export default function Menu({
             <SparkleIcon className="size-4" />
             {L.howItWorks}
           </DropdownMenuItem>
-
-          {/* NEW (the one addition): Public page — ОТКРЫВАЕТСЯ ОТДЕЛЬНЫМ ОКНОМ (кокпит владельца при
-              этом не теряется), но ТОЛЬКО если автоматизация построена. Замороженный шаблон публичной
-              страницы не имеет: вместо перехода в никуда — тост с тем, что нужно сделать. */}
-          {built ? (
-            <DropdownMenuItem asChild>
-              <a href={publicHref} target="_blank" rel="noopener noreferrer">{L.publicPage}</a>
-            </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem onSelect={() => setNotBuilt(true)}>{L.publicPage}</DropdownMenuItem>
-          )}
 
           <DropdownMenuSeparator />
           <DropdownMenuLabel className="text-xs text-muted-foreground">{L.automationLabel}</DropdownMenuLabel>
@@ -196,16 +177,6 @@ export default function Menu({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      {/* Отказ владельцу, а не тупик: объясняем, ПОЧЕМУ ссылки ещё нет и что даст её появление.
-          Текст пока только английский — решение владельца на этот шаг. */}
-      {notBuilt ? (
-        <Toast
-          tone="fail"
-          text="This automation is still a frozen template. Build it first — once it runs, its public page becomes available and this link will open it."
-          onClose={() => setNotBuilt(false)}
-        />
-      ) : null}
 
       <HowItWorksModal lang={lang} open={modal === "howItWorks"} onClose={() => setModal(null)} />
       <SettingsModal lang={lang} envKeys={envKeys} ai={ai} open={modal === "settings"} onClose={() => setModal(null)} />

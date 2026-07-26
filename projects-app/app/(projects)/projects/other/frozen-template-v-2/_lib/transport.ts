@@ -31,10 +31,14 @@ export async function sendEmail(to: string, subject: string, text: string): Prom
   return answer.id;
 }
 
-/** СООБЩЕНИЕ боту. Чат обязателен: без него отправлять некуда, и это не «необязательный ключ». */
-export async function sendTelegram(text: string): Promise<string> {
+/**
+ * СООБЩЕНИЕ боту. Чат обязателен: без него отправлять некуда, и это не «необязательный ключ».
+ * `toChatId` — аддитивное расширение (шаг 300): выход «личный чат пользователя» шлёт тем же ботом,
+ * но другому адресату; без аргумента поведение прежнее (рабочий чат из окружения).
+ */
+export async function sendTelegram(text: string, toChatId?: string): Promise<string> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_ALLOWED_CHAT_ID;
+  const chatId = toChatId?.trim() || process.env.TELEGRAM_ALLOWED_CHAT_ID;
   if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not set — connect the Telegram channel in Settings first");
   // У ВХОДА пустой чат означает «принимать любой» — законное умолчание. У ВЫХОДА пустой чат означает,
   // что адресата нет вовсе. Один и тот же ключ, два разных смысла, и молчать о втором нельзя.

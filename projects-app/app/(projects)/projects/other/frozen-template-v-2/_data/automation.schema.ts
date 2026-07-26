@@ -358,15 +358,15 @@ export const PortSchema = z
 //   input              prohibit  —                                     required  transform
 //   output             required  condition-success                     prohibit  —
 //   transform          required  input | transform | condition-success required  transform | condition-success | condition-failure
-//   condition-success  required  transform                             required  transform | output
+//   condition-success  required  transform                             required  transform | output | output-connector
 //   condition-failure  required  transform                             prohibit  —
 //
-// ⚠️ TWO ASYMMETRIES, left exactly as the owner dictated them and flagged rather than quietly "fixed":
-//   1. `input-connector`.out names `transform`, but `transform`.in does not name `input-connector`;
-//   2. `output-connector`.in names `condition-success`, but `condition-success`.out does not name
-//      `output-connector`.
-// An edge is therefore checked from its SOURCE side only. Should the check ever run from both ends, these
-// two rows must first be closed — until then a connector edge would be refused by the far end.
+// ⚠️ ONE ASYMMETRY, left exactly as the owner dictated it and flagged rather than quietly "fixed":
+//   `input-connector`.out names `transform`, but `transform`.in does not name `input-connector`.
+// (A second one — `condition-success`.out not naming `output-connector` — was closed on 2026-07-22, see
+// the note inside KIND_PORTS below; this table was brought back in line with the code in step 300.)
+// An edge is therefore checked from its SOURCE side only. Should the check ever run from both ends, that
+// row must first be closed — until then an input-connector edge would be refused by the far end.
 type Port = z.infer<typeof PortSchema>;
 
 export const KIND_PORTS: Record<z.infer<typeof NodeKindSchema>, { in: Port; out: Port }> = {
