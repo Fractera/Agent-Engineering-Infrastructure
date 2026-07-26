@@ -18,9 +18,10 @@ import { join, relative, sep } from "node:path";
 const PROJECTS = join(process.cwd(), "app", "(projects)", "projects");
 const ENTITIES_ROOT = join(PROJECTS, "_shared", "entities");
 
-// v2 automation folders whose _components/ surface obeys the one-external-path law. The frozen template is
-// the canonical case; add clones here as they graduate to the v2 two-layer model.
-const V2_AUTOMATIONS = [join("other", "frozen-template-v-2")];
+// v2 automation folders whose _components/ surface obeys the one-external-path law. The frozen STARTER
+// (the donor cloned on birth, step 301) is the canonical case; it lives under the platform lib area, not in
+// a category. Add real clones here as they graduate to the v2 two-layer model.
+const V2_AUTOMATIONS = [join("_lib", "starters", "stream", "en")];
 // The ONE allowed external path, and the ONLY files inside the folder permitted to import it.
 const DEV_LAYER = "_shared-v2";
 const DEV_SLOT_FILES = new Set(["_components/shared/dev-slot.tsx", "_components/shared/dev-slot.client.tsx"]);

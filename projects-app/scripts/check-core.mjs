@@ -14,7 +14,7 @@ import { pathToFileURL } from "node:url";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-const base = "app/(projects)/projects/other/frozen-template-v-2/_data";
+const base = "app/(projects)/projects/_lib/starters/stream/en/_data";
 const schemaTs = join(base, "automation.schema.ts");
 const coreJson = join(base, "automation.json");
 const out = join(tmpdir(), "check-core-schema.mjs");

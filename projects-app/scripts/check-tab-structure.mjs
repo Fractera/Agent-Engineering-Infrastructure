@@ -21,7 +21,7 @@ import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 
 const PROJECTS = join(process.cwd(), "app", "(projects)", "projects");
-const V2_AUTOMATIONS = [join("other", "frozen-template-v-2")];
+const V2_AUTOMATIONS = [join("_lib", "starters", "stream", "en")];
 // Folders directly under `_components/` that are NOT tabs (shared plumbing / infra).
 const NOT_TABS = new Set(["shared", "diagram", "generic", "notifications", "chrome", "tools"]);
 const DEV_MARKERS = ["_shared-v2", "dev-slot", "DevSlot", "DevUseCasesPanel", "DevBuildWithAi"];
