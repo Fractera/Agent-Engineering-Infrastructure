@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCheck, Loader2, Pencil, Plus, Settings2, ShieldAlert, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
+import { ArrowLeft, CheckCheck, Loader2, Pencil, Plus, Rocket, ShieldAlert, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Accordion,
@@ -22,36 +22,42 @@ import { useCasesStrings } from "./use-cases-i18n";
 import { signatureOf } from "./signature";
 import { CreateQuiz } from "./create-quiz.client";
 
-// ПАНЕЛЬ ПОЛЬЗОВАТЕЛЬСКИХ КЕЙСОВ — ДЕВ-СЛОЙ (`_shared-v2`, шаг 298). Три режима (замысел владельца 2026-07-24):
+// ПАНЕЛЬ ПОЛЬЗОВАТЕЛЬСКИХ КЕЙСОВ — ДЕВ-СЛОЙ (`_shared-v2`). ЛИНЕЙНЫЙ ПОТОК опиши → подтверди → запусти
+// (шаг 301, лечение «скрытого гейта»: раньше подтверждение пряталось за двумя кликами, а после него панель
+// сворачивалась и запуск был только в верхней полосе — владелец не понимал, что делать дальше).
 //
-//   initial  — ЛЁГКИЙ слой: кейсы read-only (номер + заголовок + статус + описание) и одна обычная кнопка
-//              «Настроить / добавить пользовательские кейсы». Никакого тяжёлого интерактива.
-//   settings — по кнопке верх исчезает и рисуется ПОЛНЫЙ интерактив (добавить / удалить / карандаши), плюс
-//              «Подтвердить» (→ review) и «Готово» (→ initial).
-//   review   — режим настройки убирается, открывается подтверждение набора: владелец перечитывает кейсы и
-//              подтверждает. Подтвердил → назад в initial, и в полосе уведомлений появляется «можно
-//              запускать разработку» (полоса пересчитывается сама после `router.refresh()`).
+// Панель ВСЕГДА показывает текущий шаг и его единственное следующее действие; она выводится по ДВУМ фактам
+// из ядра — есть ли кейсы и подтверждён ли набор (`reviewed` = подпись набора совпала с `reviewedSignature`):
 //
-// Источник кейсов — ЯДРО автоматизации (`automation.json`): двери v2 `api/core` / `api/patch` относительным
-// путём от страницы. Ревью-гейт выведен из ядра через подпись (`reviewedSignature`): любая правка набора
-// расходит подпись → «подтверждено» гаснет (правило шага 231, без серверного флага v1).
+//   нет кейсов                 → приглашение: собрать через Quiz / добавить руками.
+//   кейсы есть, mode="edit"    → правка: добавить/удалить/карандаш + основная «Готово — к подтверждению».
+//   кейсы есть, НЕ подтверждены→ ОРАНЖЕВЫЙ экран подтверждения: read-only список + «Прочитать и подтвердить»
+//                                / «Вернуться к редактированию». Открывается САМ после Quiz.
+//   кейсы подтверждены         → ЗЕЛЁНЫЙ экран: «можно запускать» + кнопка «Запустить разработку» ПРЯМО ЗДЕСЬ
+//                                (то же событие, что и верхняя полоса) + «Изменить кейсы».
 //
-// AI-Quiz (описание сценариев голосом → автоквиз-стрим → синтез в кейсы) — отдельный слой генерации, его
-// движок уже перенесён в этот микросервис (`server/`), карандаши подключатся к нему следующим шагом; пока
-// карандаш показывает подсказку `quizSoon`. Добавление, удаление и ревью работают на ядре уже сейчас.
+// Любая правка набора расходит подпись → «подтверждено» гаснет (правило шага 231, без серверного флага v1).
+// Ревью-гейт и данные — из ядра (`api/core`/`api/patch` относительным путём от страницы).
 
-/** {title} → значение — крохотная замена v1 `fill()`, чтобы не тянуть quiz-i18n из v1. */
+/** {title} → значение — крохотная замена v1 `fill()`. */
 const fill = (t: string, v: Record<string, string>) => t.replace(/\{(\w+)\}/g, (_, k) => v[k] ?? "");
-/** Двери ЭТОЙ автоматизации: тот же приём, что у «Строить вместе с ИИ» — база от адреса страницы. */
+/** Двери ЭТОЙ автоматизации: база от адреса страницы (папка самодостаточна, знает себя только по URL). */
 const apiBase = () => location.pathname.replace(/\/+$/, "") + "/api";
+/** Адрес автоматизации из URL — для события запуска разработки (то же, что делает полоса-уведомление). */
+function automationFromPath(): string {
+  if (typeof window === "undefined") return "";
+  const p = window.location.pathname.split("?")[0].split("/").filter(Boolean);
+  return p.length >= 3 && p[0] === "projects" ? `${p[1]}/${p[2]}` : "";
+}
 
-type Mode = "initial" | "settings" | "review";
+// Две поверхности панели: обычный ВИД (по факту подтверждения — оранжевый или зелёный) и РЕДАКТИРОВАНИЕ.
+type Mode = "view" | "edit";
 
 export function UseCasesPanel() {
   const router = useRouter();
   const lang = useUiLang();
   const L = useCasesStrings(lang);
-  const [mode, setMode] = useState<Mode>("initial");
+  const [mode, setMode] = useState<Mode>("view");
   const [quizOpen, setQuizOpen] = useState(false);
   const [rows, setRows] = useState<UseCase[]>([]);
   const [reviewedSignature, setReviewedSignature] = useState("");
@@ -81,11 +87,18 @@ export function UseCasesPanel() {
 
   useEffect(() => { void load(); }, [load]);
 
-  // The Quiz (and other flows) can jump the owner straight to confirmation — that dispatches this event.
+  // Полоса-уведомление при клике по заблокированному запуску просит открыть подтверждение — показываем ВИД
+  // (там оранжевый экран, если набор не подтверждён).
   useEffect(() => {
-    const onAsk = () => setMode("review");
+    const onAsk = () => setMode("view");
     window.addEventListener("usecases:review", onAsk);
     return () => window.removeEventListener("usecases:review", onAsk);
+  }, []);
+
+  /** Запуск разработки прямо из секции — то же событие, что шлёт верхняя полоса; ловит его провайдер зоны. */
+  const launch = useCallback(() => {
+    const a = automationFromPath();
+    if (a) window.dispatchEvent(new CustomEvent("fractera:launch-development", { detail: { automation: a } }));
   }, []);
 
   const addCase = useCallback(async () => {
@@ -94,15 +107,13 @@ export function UseCasesPanel() {
     try {
       const r = await fetch(`${apiBase()}/patch`, {
         method: "POST", headers: { "content-type": "application/json" },
-        // Ядро требует непустой `text`: если владелец не описал сценарий, берём заголовок как минимум.
         body: JSON.stringify({ op: "append", object: "useCases", value: { title: addTitle.trim(), text: addSummary.trim() || addTitle.trim(), status: "new" } }),
       });
       if (!r.ok) { toast.error(L.addCaseFail); return; }
       toast.success(L.addedTitle, { description: L.addedDesc });
       setAddOpen(false); setAddTitle(""); setAddSummary("");
       await load();
-      // Полоса-уведомление тянет поводы своим провайдером (клиентский единый источник) — router.refresh
-      // его не обновит, поэтому шлём событие пересчёта поводов из ядра.
+      setMode("edit"); // остаёмся в правке — владелец может добавить ещё; «Готово» уведёт к подтверждению
       window.dispatchEvent(new CustomEvent("fractera:notices-refresh"));
       router.refresh();
     } finally { setBusy(false); }
@@ -120,8 +131,6 @@ export function UseCasesPanel() {
       toast.success(L.deletedTitle, { description: L.deletedDesc });
       setConfirmDelete(null);
       await load();
-      // Полоса-уведомление тянет поводы своим провайдером (клиентский единый источник) — router.refresh
-      // его не обновит, поэтому шлём событие пересчёта поводов из ядра.
       window.dispatchEvent(new CustomEvent("fractera:notices-refresh"));
       router.refresh();
     } finally { setBusy(false); }
@@ -138,106 +147,63 @@ export function UseCasesPanel() {
       if (!r.ok) { toast.error(d.error ?? L.confirmFail); return; }
       toast.success(L.confirmedTitle, { description: L.confirmedDesc });
       await load();
-      setMode("initial");
-      // Полоса уведомлений пересчитает поводы и покажет «можно запускать разработку» БЕЗ перезагрузки:
-      // её провайдер (единый источник) слушает это событие и заново тянет поводы из ядра.
+      setMode("view"); // reviewed=true → отрисуется ЗЕЛЁНЫЙ экран с кнопкой запуска
       window.dispatchEvent(new CustomEvent("fractera:notices-refresh"));
       router.refresh();
     } finally { setBusy(false); }
   }, [rows, load, router, L]);
 
-  // Карандаш (Quiz) — движок уже в микросервисе, подключение карандашей к нему следующим шагом.
+  // Карандаш (Quiz-на-один-кейс) — движок в микросервисе, подключение следующим шагом.
   const editSoon = () => toast.info(L.quizSoon);
 
-  // Read-only список кейсов — общий для initial и review; крупный номер, заголовок, цветной статус, описание.
-  const caseList = (
-    <Accordion type="single" collapsible defaultValue={rows[0]?.id} className="rounded-lg border px-4">
-      {rows.map((c, i) => {
-        const st = STATUS_META[c.status] ?? STATUS_META["new"];
-        return (
-          <AccordionItem key={c.id} value={c.id}>
-            <AccordionTrigger className="text-left">
-              <span className="flex items-center gap-3">
-                <span className="text-2xl font-bold tabular-nums text-muted-foreground">{String(i + 1).padStart(2, "0")}</span>
-                <span className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium">{c.title}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${st.className}`}>{st.label}</span>
-                </span>
-              </span>
-            </AccordionTrigger>
-            <AccordionContent>
-              <p className="text-sm leading-relaxed text-muted-foreground">{c.summary || L.noDescription}</p>
-            </AccordionContent>
-          </AccordionItem>
-        );
-      })}
-    </Accordion>
+  // Read-only список кейсов — для оранжевого экрана подтверждения.
+  const readOnlyList = (
+    <div className="space-y-2">
+      {rows.map((c, i) => (
+        <div key={c.id} className="rounded-lg border bg-background/60 p-3">
+          <p className="flex items-center gap-2 text-sm font-medium">
+            <span className="tabular-nums text-muted-foreground">{String(i + 1).padStart(2, "0")}</span>
+            {c.title}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{c.summary || L.noDescription}</p>
+        </div>
+      ))}
+    </div>
   );
 
-  // ── INITIAL — только КНОПКА входа в настройку. Сам список кейсов рисует ПУБЛИЧНАЯ половина (`public/`),
-  //    поэтому здесь его НЕ повторяем: админ-половина лишь добавляет управление под публичным списком
-  //    (тот же приём, что у calendar/dashboard: public сверху, admin-настройка снизу). ────────────────────
-  if (mode === "initial") {
-    return (
-      <div className="space-y-3">
-        {rows.length === 0 ? <p className="text-sm text-muted-foreground">{L.empty}</p> : null}
-        <Button variant="secondary" onClick={() => setMode("settings")}>
-          <Settings2 className="size-4" /> {L.configureCases}
-        </Button>
-      </div>
-    );
-  }
+  // ── СОДЕРЖИМОЕ по состоянию. Диалоги (добавить/удалить/Quiz) монтируются ниже ОДИН раз для всех веток. ──
+  let content: ReactNode;
 
-  // ── REVIEW — режим настройки убран, владелец перечитывает набор и подтверждает. ──────────────────────────
-  if (mode === "review") {
-    return (
+  if (rows.length === 0) {
+    // ПУСТО — приглашение описать кейсы.
+    content = (
       <div className="space-y-3">
-        <p className="flex items-center gap-2 text-sm font-medium"><CheckCheck className="size-4" /> {L.reviewTitle}</p>
-        <p className="text-sm text-muted-foreground">{L.reviewIntro}</p>
-        <div className="space-y-3">
-          {rows.map((c, i) => (
-            <div key={c.id} className="rounded-lg border p-3">
-              <p className="flex items-center gap-2 text-sm font-medium">
-                <span className="tabular-nums text-muted-foreground">{String(i + 1).padStart(2, "0")}</span>
-                {c.title}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">{c.summary || L.noDescription}</p>
-            </div>
-          ))}
-        </div>
-        <div className="flex justify-end gap-2 border-t pt-3">
-          <Button variant="ghost" onClick={() => setMode("settings")} disabled={busy}>{L.notYet}</Button>
-          <Button onClick={confirmReview} disabled={busy}>
-            {busy ? <Loader2 className="size-4 animate-spin" /> : <CheckCheck className="size-4" />} {L.confirmBtn}
-          </Button>
+        <p className="text-sm text-muted-foreground">{L.empty}</p>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => setQuizOpen(true)}><Sparkles className="size-4" /> {L.createCases}</Button>
+          <Button variant="secondary" onClick={() => setAddOpen(true)}><Plus className="size-4" /> {L.addFirstCase}</Button>
         </div>
       </div>
     );
-  }
+  } else if (mode === "edit") {
+    // ПРАВКА — полный интерактив + основная «Готово — к подтверждению».
+    content = (
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span
+            className={`flex items-center gap-1.5 text-xs font-medium ${
+              reviewed ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
+            }`}
+          >
+            {reviewed ? <ShieldCheck className="size-4" /> : <ShieldAlert className="size-4" />}
+            {reviewed ? L.reviewedYes : L.reviewedNo}
+          </span>
+          <span className="flex items-center gap-1">
+            <Button size="sm" variant="ghost" onClick={() => setAddOpen(true)}><Plus className="size-3.5" /> {L.addCase}</Button>
+            <Button size="sm" variant="ghost" title={L.editAllTip} onClick={() => setQuizOpen(true)}><Sparkles className="size-3.5" /> {L.editAll}</Button>
+          </span>
+        </div>
 
-  // ── SETTINGS — полный интерактив: добавить / удалить / карандаши, плюс «Подтвердить» и «Готово». ──────────
-  return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span
-          className={`flex items-center gap-1.5 text-xs font-medium ${
-            reviewed ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
-          }`}
-        >
-          {reviewed ? <ShieldCheck className="size-4" /> : <ShieldAlert className="size-4" />}
-          {reviewed ? L.reviewedYes : L.reviewedNo}
-        </span>
-        <span className="flex items-center gap-1">
-          <Button size="sm" variant="ghost" onClick={() => setAddOpen(true)}>
-            <Plus className="size-3.5" /> {L.addCase}
-          </Button>
-          <Button size="sm" variant="ghost" title={L.editAllTip} onClick={() => setQuizOpen(true)}>
-            <Sparkles className="size-3.5" /> {L.editAll}
-          </Button>
-        </span>
-      </div>
-
-      {rows.length ? (
         <Accordion type="single" collapsible defaultValue={rows[0]?.id} className="rounded-lg border px-4">
           {rows.map((c, i) => {
             const st = STATUS_META[c.status] ?? STATUS_META["new"];
@@ -254,12 +220,8 @@ export function UseCasesPanel() {
                     </span>
                   </AccordionTrigger>
                   <span className="ml-auto flex shrink-0 items-center gap-0.5">
-                    <Button size="icon" variant="ghost" className="size-8" title={L.editCaseTip} onClick={editSoon}>
-                      <Pencil className="size-3.5" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="size-8 text-destructive" title={L.deleteTip} onClick={() => setConfirmDelete(c)}>
-                      <Trash2 className="size-3.5" />
-                    </Button>
+                    <Button size="icon" variant="ghost" className="size-8" title={L.editCaseTip} onClick={editSoon}><Pencil className="size-3.5" /></Button>
+                    <Button size="icon" variant="ghost" className="size-8 text-destructive" title={L.deleteTip} onClick={() => setConfirmDelete(c)}><Trash2 className="size-3.5" /></Button>
                   </span>
                 </div>
                 <AccordionContent>
@@ -269,16 +231,56 @@ export function UseCasesPanel() {
             );
           })}
         </Accordion>
-      ) : (
-        <p className="text-sm text-muted-foreground">{L.empty}</p>
-      )}
 
-      <div className="flex justify-end gap-2 border-t pt-3">
-        <Button variant="ghost" onClick={() => setMode("initial")} disabled={busy}>{L.doneConfig}</Button>
-        <Button variant="secondary" onClick={() => setMode("review")} disabled={busy || !rows.length}>
-          <CheckCheck className="size-4" /> {L.readConfirm}
-        </Button>
+        <div className="flex justify-end border-t pt-3">
+          <Button onClick={() => setMode("view")} disabled={busy || !rows.length}>
+            <CheckCheck className="size-4" /> {L.doneToConfirm}
+          </Button>
+        </div>
       </div>
+    );
+  } else if (reviewed) {
+    // ЗЕЛЁНЫЙ — подтверждено, можно запускать разработку ПРЯМО ОТСЮДА.
+    content = (
+      <div className="space-y-3 rounded-xl border border-emerald-500/50 bg-emerald-500/5 p-4">
+        <p className="flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+          <ShieldCheck className="size-4" /> {L.confirmedScreenTitle}
+        </p>
+        <p className="text-sm text-muted-foreground">{L.confirmedScreenBody}</p>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-emerald-500/20 pt-3">
+          <Button variant="ghost" size="sm" onClick={() => setMode("edit")} disabled={busy}>
+            <Pencil className="size-3.5" /> {L.editCases}
+          </Button>
+          <Button onClick={launch} className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700">
+            <Rocket className="size-4" /> {L.launchDevelopment}
+          </Button>
+        </div>
+      </div>
+    );
+  } else {
+    // ОРАНЖЕВЫЙ — есть кейсы, не подтверждены: перечитать и подтвердить (или назад в правку).
+    content = (
+      <div className="space-y-3 rounded-xl border border-amber-500/50 bg-amber-500/5 p-4">
+        <p className="flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-400">
+          <ShieldAlert className="size-4" /> {L.confirmScreenTitle}
+        </p>
+        <p className="text-sm text-muted-foreground">{L.confirmScreenIntro}</p>
+        {readOnlyList}
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-amber-500/20 pt-3">
+          <Button variant="ghost" size="sm" onClick={() => setMode("edit")} disabled={busy}>
+            <ArrowLeft className="size-3.5" /> {L.backToEditing}
+          </Button>
+          <Button onClick={confirmReview} disabled={busy} className="gap-2 bg-amber-600 text-white hover:bg-amber-700">
+            {busy ? <Loader2 className="size-4 animate-spin" /> : <CheckCheck className="size-4" />} {L.readConfirm}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {content}
 
       {/* ADD ONE CASE — прямой путь (title + описание, голос). */}
       <Dialog open={addOpen} onOpenChange={(v) => { if (!busy) setAddOpen(v); }}>
@@ -322,8 +324,8 @@ export function UseCasesPanel() {
         </DialogContent>
       </Dialog>
 
-      {/* СОЗДАНИЕ КЕЙСОВ С ИИ — диалог Quiz (описание → вопросы → автоквиз-стрим → синтез в ядро). */}
-      <CreateQuiz open={quizOpen} lang={lang} onClose={() => setQuizOpen(false)} onApplied={load} />
+      {/* СОЗДАНИЕ КЕЙСОВ С ИИ — Quiz. Применил кейсы → перезагрузка + ВИД (оранжевый экран подтверждения). */}
+      <CreateQuiz open={quizOpen} lang={lang} onClose={() => setQuizOpen(false)} onApplied={async () => { await load(); setMode("view"); }} />
     </div>
   );
 }

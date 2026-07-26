@@ -322,12 +322,34 @@ const DONE_CONFIG: Record<string, string> = {
   pt: "Concluído", pl: "Gotowe", tr: "Bitti", nl: "Klaar",
 };
 
-export function useCasesStrings(lang: string): UseCasesStrings & { quizSoon: string; configureCases: string; doneConfig: string } {
+// STEP 301 — the linear review → confirm → launch flow that replaces the hidden confirm gate. ENGLISH ONLY
+// for now (owner's decision 2026-07-26: this admin panel stays multilingual by rule 4г, but new strings ship
+// in English and get their ten languages later). Returned for every `lang` (English fallback throughout).
+const UX_301 = {
+  // amber confirmation screen (shown when cases exist but are not confirmed)
+  confirmScreenTitle: "Confirm your use cases",
+  confirmScreenIntro: "The AI will build exactly what these cases describe. Read them, then confirm to unlock development — or go back to editing.",
+  backToEditing: "Back to editing",
+  // green confirmed screen (cases confirmed — development can start)
+  confirmedScreenTitle: "Use cases confirmed",
+  confirmedScreenBody: "You and the AI agree on what this automation must do. You can start development now.",
+  launchDevelopment: "Launch development",
+  editCases: "Edit cases",
+  // editing view → the prominent primary that advances to confirmation
+  doneToConfirm: "Done — review & confirm",
+  // empty state second action
+  addFirstCase: "Add a case by hand",
+};
+
+export function useCasesStrings(
+  lang: string,
+): UseCasesStrings & { quizSoon: string; configureCases: string; doneConfig: string } & typeof UX_301 {
   const k = lang.slice(0, 2);
   return {
     ...(USE_CASES_I18N[k] ?? USE_CASES_I18N.en),
     quizSoon: QUIZ_SOON[k] ?? QUIZ_SOON.en,
     configureCases: CONFIGURE_CASES[k] ?? CONFIGURE_CASES.en,
     doneConfig: DONE_CONFIG[k] ?? DONE_CONFIG.en,
+    ...UX_301,
   };
 }
