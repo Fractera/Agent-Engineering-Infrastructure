@@ -129,6 +129,15 @@ export function DeleteDialog({ open, onClose }: { open: boolean; onClose: () => 
       const d = (await r.json().catch(() => ({}))) as { ok?: boolean; error?: string };
       if (!r.ok) { toast.error(d.error ?? "Could not delete the automation."); return; }
       toast.success("Automation deleted.");
+      // Снять «оптимистичную» карточку этой автоматизации из localStorage зоны СРАЗУ — иначе после
+      // перезагрузки на хабе повиснет карточка-призрак (маршрут ещё отвечает 2xx во время пересборки, и
+      // разовая проверка сочла бы её живой). Ключ — контракт с `_shared/components/pending-automations`.
+      try {
+        const [cat, s] = automationFromPath().split("/");
+        const key = `pending-automations:${cat}`;
+        const arr = JSON.parse(localStorage.getItem(key) || "[]") as Array<{ slug?: string }>;
+        localStorage.setItem(key, JSON.stringify(arr.filter((e) => e.slug !== s)));
+      } catch { /* localStorage недоступен — призрак снимет самолечащийся опрос зоны */ }
       // Страницы автоматизации больше нет — уходим на список её категории.
       window.location.href = `/projects/${automationFromPath().split("/")[0] || ""}`;
     } finally { setBusy(false); }

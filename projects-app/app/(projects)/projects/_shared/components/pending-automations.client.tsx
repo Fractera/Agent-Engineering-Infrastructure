@@ -122,29 +122,39 @@ export function PendingAutomations({ category, existingSlugs }: { category: stri
     return () => window.removeEventListener(EVENT, onPending as EventListener);
   }, [category, existingSlugs]);
 
-  // Poll readiness: a HEAD to the project URL is 404 while building, 200 once the rebuild has served it.
+  // Poll the project URL: 404 while building OR after a delete, 200 once the rebuild has served it.
+  //
+  // ⚠ THE POLL WATCHES **EVERY** ENTRY, READY ONES INCLUDED (owner 2026-07-26, the ghost-after-delete bug).
+  // The one-shot mount verify runs DURING the delete's rebuild window, when the old route still answers 2xx,
+  // so it wrongly keeps the card; and it never re-checks. Now the poll re-probes ready cards too and DROPS
+  // any that turn 404 — so a deleted automation's card heals itself within a cycle, without a reload. It runs
+  // while ANY entry survives (not only while something is "building"), which is exactly what makes the ghost
+  // removable. A real automation's card is short-lived here anyway: the hub reload folds it into the grid and
+  // the mount de-dup drops it.
   useEffect(() => {
-    if (entries.length === 0 || entries.every((e) => e.ready)) return;
+    if (entries.length === 0) return;
     const t = setInterval(async () => {
-      const building = entries.filter((e) => !e.ready);
       const results = await Promise.all(
-        building.map(async (e) => {
+        entries.map(async (e) => {
           try {
-            // GET (not HEAD): a page route reliably answers GET through the proxy; 404 while the route is
-            // still building, 200 once the rebuild has served it. no-store so a poll never reads a cache.
             const r = await fetch(e.url, { method: "GET", cache: "no-store", redirect: "manual" });
-            return { slug: e.slug, ready: r.ok || r.status === 0 || (r.status >= 200 && r.status < 400) };
-          } catch { return { slug: e.slug, ready: false }; } // pm2 reload window → still building
+            // A definite 404 = the automation is gone (deleted or never materialised) → drop it. Anything
+            // else (2xx, a still-building route, a redirect to auth) means it exists → keep and, if it was a
+            // spinner, light it up.
+            if (r.status === 404) return { slug: e.slug, state: "gone" as const };
+            return { slug: e.slug, state: "alive" as const };
+          } catch { return { slug: e.slug, state: "alive" as const }; } // network/pm2 hiccup — never drop on a guess
         }),
       );
-      const nowReady = new Set(results.filter((r) => r.ready).map((r) => r.slug));
-      if (nowReady.size) {
-        setEntries((prev) => {
-          const next = prev.map((e) => (nowReady.has(e.slug) ? { ...e, ready: true } : e));
-          store(category, next);
-          return next;
-        });
-      }
+      const gone = new Set(results.filter((r) => r.state === "gone").map((r) => r.slug));
+      setEntries((prev) => {
+        const next = prev
+          .filter((e) => !gone.has(e.slug)) // deleted / never-built → remove the ghost
+          .map((e) => (e.ready ? e : { ...e, ready: true })); // survivors that were building are now served
+        // Only touch storage if something actually changed (avoid a needless write every 8s).
+        if (gone.size || prev.some((e) => !e.ready)) store(category, next);
+        return next;
+      });
     }, POLL_MS);
     return () => clearInterval(t);
   }, [entries, category]);
