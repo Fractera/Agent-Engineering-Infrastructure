@@ -100,9 +100,13 @@ export function CreateAutomationDialog({
         toast.error(d.error ?? L.errCreateAutomation);
         return;
       }
-      toast.success(L.automationCreated, {
+      // NOT a success toast (step 301): the POST only STARTS the build — the automation isn't ready yet, its
+      // route still 404s. A neutral "building" toast here; the real SUCCESS/ERROR toast is raised by the
+      // pending card when the build actually lands or fails (pending-automations.client.tsx). Announcing
+      // "created" now was the misleading claim the owner called out.
+      toast(L.automationCreated, {
         description: L.automationCreatedDesc,
-        duration: 12000,
+        duration: 8000,
       });
       // The optimistic pending card (step 242.3): show a muted spinner card in the grid AT ONCE, so the page
       // never seems to "vanish" while the static hub waits for its rebuild.

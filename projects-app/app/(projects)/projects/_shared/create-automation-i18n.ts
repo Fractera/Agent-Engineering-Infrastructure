@@ -47,6 +47,12 @@ export type CreateAutomationStrings = {
   // hint once the page is live and the card becomes a link.
   pendingBuilding: string;
   pendingReady: string;
+  // Step 301 — the pending card stays until the build TRULY finishes: a success toast + the card morphing to
+  // a clickable link on completion, an error toast + a failed card if the build never lands. `pendingDoneToast`
+  // and `pendingFailedToast` carry {title}; `pendingFailed` is the failed card's own status line.
+  pendingDoneToast: string;
+  pendingFailed: string;
+  pendingFailedToast: string;
   /** The dead-card escape hatch (owner 2026-07-20) — dismiss a pending card by hand. */
   pendingDismiss: string;
   // The mirror-image status line (owner's fix): the card of an automation that was just DELETED stays
@@ -107,6 +113,9 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     afterBirthNoticePrefix: "You'll describe how it works next, in its use-cases. The Quiz runs in", afterBirthNoticeSuffix: ". To change the default language, use the workspace settings.",
     pendingBuilding: "Building the page…",
     pendingReady: "Ready — open it",
+    pendingDoneToast: "Automation «{title}» is ready.",
+    pendingFailed: "Couldn't build the page.",
+    pendingFailedToast: "Couldn't finish creating «{title}».",
     pendingDismiss: "Remove this card",
     pendingDeleting: "Deleting…",
     addCategoryBtn: "Add category",
@@ -158,6 +167,9 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     afterBirthNoticePrefix: "Как она работает, вы опишете дальше — в пользовательских кейсах. Quiz будет на языке", afterBirthNoticeSuffix: ". Чтобы изменить язык по умолчанию, используйте настройки рабочего пространства.",
     pendingBuilding: "Страница строится…",
     pendingReady: "Готово — открыть",
+    pendingDoneToast: "Автоматизация «{title}» готова.",
+    pendingFailed: "Не удалось собрать страницу.",
+    pendingFailedToast: "Не удалось создать «{title}».",
     pendingDismiss: "Убрать карточку",
     pendingDeleting: "Удаление…",
     addCategoryBtn: "Добавить категорию",
@@ -209,6 +221,9 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     afterBirthNoticePrefix: "Describirás cómo funciona a continuación, en sus casos de uso. El Quiz se ejecutará en", afterBirthNoticeSuffix: ". Para cambiar el idioma predeterminado, usa los ajustes del espacio de trabajo.",
     pendingBuilding: "Construyendo la página…",
     pendingReady: "Lista — ábrela",
+    pendingDoneToast: "La automatización «{title}» está lista.",
+    pendingFailed: "No se pudo construir la página.",
+    pendingFailedToast: "No se pudo terminar de crear «{title}».",
     pendingDismiss: "Quitar esta tarjeta",
     pendingDeleting: "Eliminando…",
     addCategoryBtn: "Añadir categoría",
@@ -260,6 +275,9 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     afterBirthNoticePrefix: "Vous décrirez ensuite son fonctionnement, dans ses cas d'usage. Le Quiz se déroulera en", afterBirthNoticeSuffix: ". Pour changer la langue par défaut, utilisez les paramètres de l'espace de travail.",
     pendingBuilding: "Construction de la page…",
     pendingReady: "Prête — ouvrez-la",
+    pendingDoneToast: "L'automatisation « {title} » est prête.",
+    pendingFailed: "Impossible de construire la page.",
+    pendingFailedToast: "Impossible de terminer la création de « {title} ».",
     pendingDismiss: "Retirer cette carte",
     pendingDeleting: "Suppression…",
     addCategoryBtn: "Ajouter une catégorie",
@@ -311,6 +329,9 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     afterBirthNoticePrefix: "Descriverai come funziona nel passo successivo, nei suoi casi d'uso. Il Quiz si svolgerà in", afterBirthNoticeSuffix: ". Per cambiare la lingua predefinita, usa le impostazioni dello spazio di lavoro.",
     pendingBuilding: "Costruzione della pagina…",
     pendingReady: "Pronta — aprila",
+    pendingDoneToast: "L'automazione «{title}» è pronta.",
+    pendingFailed: "Impossibile costruire la pagina.",
+    pendingFailedToast: "Impossibile completare la creazione di «{title}».",
     pendingDismiss: "Rimuovi questa scheda",
     pendingDeleting: "Eliminazione…",
     addCategoryBtn: "Aggiungi categoria",
@@ -362,6 +383,9 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     afterBirthNoticePrefix: "Wie sie funktioniert, beschreibst du als Nächstes in ihren Use-Cases. Das Quiz läuft auf", afterBirthNoticeSuffix: ". Um die Standardsprache zu ändern, nutze die Workspace-Einstellungen.",
     pendingBuilding: "Die Seite wird gebaut…",
     pendingReady: "Fertig — öffnen",
+    pendingDoneToast: "Automatisierung „{title}“ ist fertig.",
+    pendingFailed: "Die Seite konnte nicht gebaut werden.",
+    pendingFailedToast: "Erstellung von „{title}“ konnte nicht abgeschlossen werden.",
     pendingDismiss: "Diese Karte entfernen",
     pendingDeleting: "Wird gelöscht…",
     addCategoryBtn: "Kategorie hinzufügen",
@@ -413,6 +437,9 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     afterBirthNoticePrefix: "Vai descrever como funciona a seguir, nos seus casos de uso. O Quiz decorrerá em", afterBirthNoticeSuffix: ". Para mudar o idioma predefinido, use as definições do espaço de trabalho.",
     pendingBuilding: "A construir a página…",
     pendingReady: "Pronta — abrir",
+    pendingDoneToast: "A automação «{title}» está pronta.",
+    pendingFailed: "Não foi possível construir a página.",
+    pendingFailedToast: "Não foi possível concluir a criação de «{title}».",
     pendingDismiss: "Remover este cartão",
     pendingDeleting: "Excluindo…",
     addCategoryBtn: "Adicionar categoria",
@@ -464,6 +491,9 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     afterBirthNoticePrefix: "Jak działa, opiszesz w następnym kroku — w jej przypadkach użycia. Quiz będzie prowadzony w języku", afterBirthNoticeSuffix: ". Aby zmienić domyślny język, użyj ustawień przestrzeni roboczej.",
     pendingBuilding: "Trwa budowanie strony…",
     pendingReady: "Gotowe — otwórz",
+    pendingDoneToast: "Automatyzacja „{title}“ jest gotowa.",
+    pendingFailed: "Nie udało się zbudować strony.",
+    pendingFailedToast: "Nie udało się dokończyć tworzenia „{title}“.",
     pendingDismiss: "Usuń tę kartę",
     pendingDeleting: "Usuwanie…",
     addCategoryBtn: "Dodaj kategorię",
@@ -515,6 +545,9 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     afterBirthNoticePrefix: "Nasıl çalıştığını bir sonraki adımda, kullanım senaryolarında anlatacaksın. Quiz şu dilde çalışacak:", afterBirthNoticeSuffix: ". Varsayılan dili değiştirmek için çalışma alanı ayarlarını kullan.",
     pendingBuilding: "Sayfa inşa ediliyor…",
     pendingReady: "Hazır — aç",
+    pendingDoneToast: "«{title}» otomasyonu hazır.",
+    pendingFailed: "Sayfa oluşturulamadı.",
+    pendingFailedToast: "«{title}» oluşturma tamamlanamadı.",
     pendingDismiss: "Bu kartı kaldır",
     pendingDeleting: "Siliniyor…",
     addCategoryBtn: "Kategori ekle",
@@ -566,6 +599,9 @@ export const CREATE_AUTOMATION_I18N: Record<string, CreateAutomationStrings> = {
     afterBirthNoticePrefix: "Hoe ze werkt, beschrijf je hierna in haar use-cases. De Quiz verloopt in", afterBirthNoticeSuffix: ". Wijzig de standaardtaal via de werkruimte-instellingen.",
     pendingBuilding: "De pagina wordt gebouwd…",
     pendingReady: "Klaar — openen",
+    pendingDoneToast: "Automatisering «{title}» is klaar.",
+    pendingFailed: "Kon de pagina niet bouwen.",
+    pendingFailedToast: "Kon het aanmaken van «{title}» niet voltooien.",
     pendingDismiss: "Deze kaart verwijderen",
     pendingDeleting: "Wordt verwijderd…",
     addCategoryBtn: "Categorie toevoegen",
