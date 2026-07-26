@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/auth/get-session"
-import { createFrozenProject } from "@/app/(projects)/projects/_lib/frozen-project-starter"
+import { createV2Automation } from "@/app/(projects)/projects/_lib/v2-birth"
 import { scheduleRebuild } from "@/lib/nodes"
 
-// The "запусти проект автоматизации" endpoint (step 214). ONE function — createFrozenProject —
-// serves both the owner's terminal command (a curl to this route) and a future AI-driven call:
-// same code path, never two. It materializes the frozen automation skeleton (v1: header + footer
-// from the zone layout + a centered "coming soon") into projects-app, then spawns a detached
-// rebuild + reload so the new page comes up on its own — one command → the white screen.
+// The "создать автоматизацию" endpoint (step 214, rewired to v2 birth in step 301). ONE function —
+// createV2Automation — serves both the owner's form (a fetch from create-automation-card) and a future
+// AI-driven call: same code path, never two. It CLONES the frozen v2 stream starter
+// (_lib/starters/stream/en) into a new category folder, gives the clone a fresh passport.uuid + the
+// owner's title + empty use-cases (the description is written afterwards in the use-cases Quiz), leaving
+// it frozen with every node hidden — the newborn shows an empty canvas and invites the owner to describe
+// its use-cases. Then a detached rebuild brings the new page up on its own.
 //
 // Terminal (owner, IP mode bypasses auth; secure mode needs an architect/manager session):
 //   curl -X POST http://<ip>:3003/api/projects/create \
 //        -H "Content-Type: application/json" \
-//        -d '{"category":"personal","project":"youtube","title":"YouTube"}'
+//        -d '{"category":"personal","project":"telegram-dietolog","title":"Telegram диетолог"}'
 export const runtime = "nodejs"
 
 const WRITE_ROLES = ["architect", "manager", "agent"]
@@ -27,26 +29,24 @@ async function authorize(req: NextRequest): Promise<boolean> {
 export async function POST(req: NextRequest) {
   if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 })
 
-  let body: {
-    category?: string; project?: string; title?: string; description?: string; force?: boolean
-    type?: string; instruction?: string
-  }
+  let body: { category?: string; project?: string; title?: string; force?: boolean }
   try {
     body = await req.json()
   } catch {
     return NextResponse.json({ error: "invalid JSON body" }, { status: 400 })
   }
 
-  const result = await createFrozenProject({
+  // Step 301: only the STREAM v2 starter exists, so type is not chosen at birth (per-type v2 starters and
+  // the description now live AFTER birth — the description is authored in the use-cases Quiz). The author is
+  // the creating user when a session is present (secure mode), else the onboarding architect (IP mode).
+  const session = IP_MODE ? null : await getSession(req)
+  const author = session?.userId ? String(session.userId) : "architect"
+
+  const result = await createV2Automation({
     category: String(body.category ?? ""),
     project: String(body.project ?? ""),
     title: body.title ? String(body.title) : undefined,
-    description: body.description ? String(body.description) : undefined,
-    // Phase 1 (step 224 §1.5): the immutable automation type + the owner's mandatory instruction. "chained"
-    // (step 234, made real in 234.3) is stored as-is now — it renders as a group container on the global
-    // canvas (_shared/components/global-canvas.client.tsx), the frozen skeleton is unchanged.
-    type: body.type === "instanced" ? "instanced" : body.type === "chained" ? "chained" : "stream",
-    instruction: body.instruction ? String(body.instruction) : undefined,
+    author,
     force: !!body.force,
   })
 

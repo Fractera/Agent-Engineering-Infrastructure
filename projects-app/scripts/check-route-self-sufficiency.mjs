@@ -12,9 +12,11 @@
 import { readdirSync, readFileSync, statSync, existsSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 
+// Accepts a real automation `<category>/<slug>` AND the frozen STARTER's lib path
+// `_lib/starters/stream/en` (step 301: the donor lives under the platform lib area, not in a category).
 const arg = process.argv[2];
-if (!arg || !/^[a-z][a-z0-9-]*\/[a-z][a-z0-9-]*$/.test(arg)) {
-  console.error("usage: node scripts/check-route-self-sufficiency.mjs <category>/<slug>");
+if (!arg || !/^[a-z_][a-z0-9-]*(\/[a-z][a-z0-9-]*)+$/.test(arg)) {
+  console.error("usage: node scripts/check-route-self-sufficiency.mjs <category>/<slug>  (or _lib/starters/stream/en)");
   process.exit(2);
 }
 const ROUTE = join(process.cwd(), "app", "(projects)", "projects", ...arg.split("/"));
