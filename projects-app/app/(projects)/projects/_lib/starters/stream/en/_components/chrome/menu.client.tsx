@@ -15,7 +15,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import HowItWorksModal from "./how-it-works-modal.client";
-import PlaceholderModal from "./placeholder-modal.client";
 import SettingsModal from "./settings-modal.client";
 import { RenameDialog, CloneDialog, DeleteDialog } from "./danger-actions.client";
 import type { ProviderKey } from "../ai";
@@ -33,7 +32,7 @@ import type { ProviderKey } from "../ai";
 // в v1, но открывают честную заглушку. Работают уже сейчас: «Как это работает», Настройки, переключатели
 // видимости (пишут tab.presence в ядро через api/patch) и перетаскивание строк (порядок — будущий op).
 type TabRow = { name: string; presence: "absent" | "collapsed" | "expanded"; entities?: { cuid: string; title: string }[] };
-type Modal = null | "howItWorks" | "settings" | "rename" | "clone" | "delete" | { title: string };
+type Modal = null | "howItWorks" | "settings" | "rename" | "clone" | "delete";
 
 export default function Menu({
   lang,
@@ -166,9 +165,6 @@ export default function Menu({
           })}
 
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => setModal({ title: L.testsItem })}>{L.testsItem}</DropdownMenuItem>
-
-          <DropdownMenuSeparator />
           <DropdownMenuLabel className="text-xs font-normal text-rose-600 dark:text-rose-400">{L.dangerZone}</DropdownMenuLabel>
           <DropdownMenuItem onSelect={() => setModal("rename")}>
             <PencilIcon className="size-4" /> {L.renameAutomation}
@@ -189,14 +185,6 @@ export default function Menu({
       <RenameDialog open={modal === "rename"} onClose={() => setModal(null)} />
       <CloneDialog open={modal === "clone"} onClose={() => setModal(null)} />
       <DeleteDialog open={modal === "delete"} onClose={() => setModal(null)} />
-      {/* Заглушка достаётся ТОЛЬКО записям без своего окна: у «Как это работает» и «Настроек» окна свои,
-          и различает их не строка заголовка, а сам вид состояния — поэтому проверяем тип, а не текст. */}
-      <PlaceholderModal
-        lang={lang}
-        title={typeof modal === "object" && modal !== null ? modal.title : ""}
-        open={typeof modal === "object" && modal !== null}
-        onClose={() => setModal(null)}
-      />
     </>
   );
 }
