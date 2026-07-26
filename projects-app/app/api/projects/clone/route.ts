@@ -4,6 +4,7 @@ import { join } from "node:path";
 import {
   authorize, projectsRoot, resolveProject, scheduleRebuild, syncIndexFromFiles, listDiagramEdges, writeDiagramEdge,
 } from "@/lib/nodes";
+import { cloneV2Automation } from "@/app/(projects)/projects/_lib/v2-birth";
 import { regenerateExecutables } from "@/lib/executables";
 import { createNodeId } from "@/lib/cuid";
 import { addCase, listCases, regenerateUseCasesFile } from "@/lib/use-cases";
@@ -82,6 +83,15 @@ export async function POST(req: NextRequest) {
   const src = resolveProject(String(body?.automation ?? ""));
   if (!src.ok) return NextResponse.json({ error: src.error }, { status: 400 });
   if (!(await exists(src.projectDir))) return NextResponse.json({ error: "source automation not found" }, { status: 404 });
+
+  // v2 (typed core) — a bare folder copy would collide on `passport.uuid` and leave slug-bound runtime paths
+  // pointing at the source. Clone it the v2 way (fresh uuid + slug substitution, shared with birth). Step 301.
+  if (await exists(join(src.projectDir, "_data", "automation.json"))) {
+    const res = await cloneV2Automation(src.automation, String(body?.title ?? ""), "architect");
+    if (!res.ok) return NextResponse.json(res, { status: 400 });
+    scheduleRebuild();
+    return NextResponse.json({ ...res, rebuilding: true });
+  }
 
   const title = String(body?.title ?? "").trim().slice(0, 120) || `${src.slug} clone`;
   const cloneSlug = await uniqueAutomationSlug(src.category, title, src.slug);

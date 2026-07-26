@@ -51,21 +51,40 @@ async function exists(p: string): Promise<boolean> {
   }
 }
 
-/** Рекурсивно заменить `DONOR_ADDRESS` → `address` во всех текстовых файлах папки. */
-async function substituteAddress(dir: string, address: string): Promise<void> {
+/** Рекурсивно заменить адрес `from` → `to` во всех текстовых файлах папки (paths.ts, cron.json URL, проза). */
+async function substituteAddress(dir: string, from: string, to: string): Promise<void> {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
     const p = join(dir, entry.name);
     if (entry.isDirectory()) {
-      await substituteAddress(p, address);
+      await substituteAddress(p, from, to);
       continue;
     }
     const dot = entry.name.lastIndexOf(".");
     const ext = dot >= 0 ? entry.name.slice(dot) : "";
     if (!TEXT_EXT.has(ext)) continue;
     const src = await readFile(p, "utf8");
-    if (!src.includes(DONOR_ADDRESS)) continue;
-    await writeFile(p, src.split(DONOR_ADDRESS).join(address), "utf8");
+    if (!src.includes(from)) continue;
+    await writeFile(p, src.split(from).join(to), "utf8");
   }
+}
+
+// Слаг из имени (клон именуется владельцем, часто по-русски) — транслит кириллицы + kebab; пустой → фолбэк.
+const CYR: Record<string, string> = {
+  а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "e", ж: "zh", з: "z", и: "i", й: "y",
+  к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f",
+  х: "h", ц: "ts", ч: "ch", ш: "sh", щ: "sch", ъ: "", ы: "y", ь: "", э: "e", ю: "yu", я: "ya",
+};
+function slugify(s: string): string {
+  const raw = s.toLowerCase().replace(/[а-яё]/g, (c) => CYR[c] ?? "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48);
+  return /^[a-z]/.test(raw) ? raw : raw ? `a-${raw}`.slice(0, 48).replace(/-+$/, "") : "";
+}
+/** Свободный слаг в категории (папки ещё нет). Фолбэк — от исходного слага, а не голый «clone». */
+async function uniqueSlug(root: string, category: string, base: string, sourceSlug: string): Promise<string> {
+  const rootSlug = slugify(base) || `${sourceSlug}-clone`.slice(0, 48);
+  let slug = rootSlug;
+  let i = 2;
+  while (await exists(join(root, category, slug))) slug = `${rootSlug}-${i++}`;
+  return slug;
 }
 
 /** Патч идентичности ядра новорождённого: свежая uuid, имя, автор, пустые кейсы/история, остаётся frozen. */
@@ -121,9 +140,55 @@ export async function createV2Automation(
   // 2. Свежий рантайм: доказательные строки стартера в клон не переносятся.
   await rm(join(destBase, "_data", "runtime"), { recursive: true, force: true });
   // 3. Подстановка адреса во всех текстовых файлах копии (paths.ts, cron.json URL, проза).
-  await substituteAddress(destBase, address);
+  await substituteAddress(destBase, DONOR_ADDRESS, address);
   // 4. Идентичность ядра.
   await resetCoreIdentity(join(destBase, "_data", "automation.json"), title, author);
 
   return { ok: true, category, project, automation: address, url: `/projects/${address}` };
+}
+
+// КЛОН СУЩЕСТВУЮЩЕЙ v2-АВТОМАТИЗАЦИИ (шаг 301) — отличается от рождения из стартера: копируется НЕ пустой
+// донор, а рабочая автоматизация СО ВСЕМ содержимым (узлы, кейсы, компоненты, lifecycle). Меняется только
+// идентичность: свежая `passport.uuid` (иначе коллизия с исходной), новое имя, автор, СБРОС подтверждения
+// (`reviewedSignature` — клон переподтверждают) и истории; рантайм-данные (строки прогонов) НЕ переносятся —
+// чистый клон. Слаг подставляется во всех файлах так же, как при рождении. Клон ложится в ТУ ЖЕ категорию.
+export async function cloneV2Automation(
+  sourceAddress: string,
+  title: string,
+  author: string,
+  opts?: { projectsRoot?: string },
+): Promise<V2BirthResult> {
+  const root = opts?.projectsRoot ?? projectsRoot();
+  const [category, sourceSlug] = String(sourceAddress ?? "").trim().split("/");
+  if (!category || !sourceSlug) return { ok: false, error: "source automation address must be <category>/<slug>" };
+  const sourceDir = join(root, category, sourceSlug);
+  if (!(await exists(join(sourceDir, "_data", "automation.json")))) {
+    return { ok: false, error: "not a v2 automation (no _data/automation.json) — nothing to clone" };
+  }
+
+  const name = String(title ?? "").trim() || `${sourceSlug} copy`;
+  const slug = await uniqueSlug(root, category, name, sourceSlug);
+  const address = `${category}/${slug}`;
+  const destBase = join(root, category, slug);
+
+  await cp(sourceDir, destBase, { recursive: true, force: true });
+  await rm(join(destBase, "_data", "runtime"), { recursive: true, force: true });
+  await substituteAddress(destBase, sourceAddress, address);
+
+  // Идентичность клона: свежая uuid + имя + автор, СБРОС подтверждения и истории. Кейсы, граф, компоненты и
+  // lifecycle сохраняются (клон рабочей автоматизации остаётся рабочим).
+  const corePath = join(destBase, "_data", "automation.json");
+  const core = JSON.parse(await readFile(corePath, "utf8")) as {
+    passport: Record<string, unknown>;
+    useCases: Record<string, unknown>;
+    history: Record<string, unknown>;
+  };
+  core.passport.uuid = randomUUID();
+  core.passport.title = name;
+  core.passport.author = author || "architect";
+  core.useCases.reviewedSignature = "";
+  core.history.versions = [];
+  await writeFile(corePath, `${JSON.stringify(core, null, 2)}\n`, "utf8");
+
+  return { ok: true, category, project: slug, automation: address, url: `/projects/${address}` };
 }
