@@ -2,13 +2,19 @@
 
 import { Component, type ReactNode } from "react";
 import dynamic from "next/dynamic";
-import type { BuildTarget } from "../../../../_shared-v2";
+import type { BuildTarget } from "@/app/(projects)/projects/_shared-v2";
 
 // FAIL-SILENT ДЕВ-СЛОТ — клиентская половина (закон устойчивости, шаг 298).
 //
 // Это ЕДИНСТВЕННОЕ место во всей папке автоматизации, которому разрешён внешний импорт, и ровно один путь —
 // `_shared-v2` (мягкий дев-слой). Публичные (рантайм) компоненты его не импортируют вовсе (гейт
 // `scripts/check-entity-imports.mjs`).
+//
+// 🔒 ПУТЬ — АЛИАС `@/…`, НЕ относительный (шаг 301). Замороженный стартер живёт глубоко
+// (`_lib/starters/stream/en`), а его КЛОН — на другой глубине (`<категория>/<слаг>`): относительный
+// `../../../../_shared-v2` не достаёт из обоих. Абсолютный алиас глубина-независим — резолвится одинаково
+// у стартера и у любого клона. Гейт импортов по-прежнему видит подстроку `_shared-v2` и пускает её только
+// в этом дев-слот-файле.
 //
 // Дев-кнопка «Строить вместе с ИИ» тянется ДИНАМИЧЕСКИМ импортом (`next/dynamic`, `ssr:false`,
 // `loading:()=>null`) за React error-boundary с null-фолбёком. Модуль не загрузился/бросил → рисуется
@@ -30,7 +36,7 @@ class NullBoundary extends Component<{ children: ReactNode }, { failed: boolean 
 // `dynamic`; не загрузилось — отдаём компонент-пустышку, и это НЕ ошибка, а штатная деградация.
 const BuildWithAiLazy = dynamic(
   () =>
-    import("../../../../_shared-v2")
+    import("@/app/(projects)/projects/_shared-v2")
       .then((m) => ({ default: m.BuildWithAi }))
       .catch(() => ({ default: () => null })),
   { ssr: false, loading: () => null },
@@ -49,7 +55,7 @@ export function DevBuildWithAi(props: { target: BuildTarget; name: string; pendi
 // (`useUiLang` + `location.pathname`). Нет `_shared-v2` — панель просто не появляется, продакшн не задет.
 const UseCasesPanelLazy = dynamic(
   () =>
-    import("../../../../_shared-v2")
+    import("@/app/(projects)/projects/_shared-v2")
       .then((m) => ({ default: m.UseCasesPanel }))
       .catch(() => ({ default: () => null })),
   { ssr: false, loading: () => null },
@@ -68,7 +74,7 @@ export function DevUseCasesPanel() {
 // тянет поводы из двери `api/projects/notices`; язык приходит пропсом. Нет `_shared-v2` — полосы нет вовсе.
 const NotificationsLazy = dynamic(
   () =>
-    import("../../../../_shared-v2")
+    import("@/app/(projects)/projects/_shared-v2")
       .then((m) => {
         const { NotificationProvider, NotificationBanner } = m;
         const Mounted = ({ lang }: { lang: string }) => (
@@ -95,7 +101,7 @@ export function DevNotifications({ lang }: { lang: string }) {
 // путь. Нет `_shared-v2` — центра нет вовсе, продакшн не задет.
 const WarningsLazy = dynamic(
   () =>
-    import("../../../../_shared-v2")
+    import("@/app/(projects)/projects/_shared-v2")
       .then((m) => {
         const { WarningProvider, ProblemsCenter } = m;
         const Mounted = ({ lang }: { lang: string }) => (
@@ -126,7 +132,7 @@ export function DevWarnings({ lang }: { lang: string }) {
 // владеет только данными графа. Данные холст читает сам через дверь `api/core`.
 const DiagramLazy = dynamic(
   () =>
-    import("../../../../_shared-v2")
+    import("@/app/(projects)/projects/_shared-v2")
       .then((m) => ({ default: m.Diagram }))
       .catch(() => ({ default: () => null })),
   { ssr: false, loading: () => null },
@@ -151,7 +157,7 @@ export function DevDiagram({ lang, readOnly }: { lang: string; readOnly?: boolea
 // единственный законный путь к нему = этот dev-slot. Монтируется в админ-половине склада.
 const StorageAddLazy = dynamic(
   () =>
-    import("../../../../_shared-v2")
+    import("@/app/(projects)/projects/_shared-v2")
       .then((m) => ({ default: m.StorageAddObject }))
       .catch(() => ({ default: () => null })),
   { ssr: false, loading: () => null },
@@ -171,7 +177,7 @@ export function DevStorageAdd({ table, lang }: { table?: string; lang: string })
 // таблице внешний слой закрыт — путь только через этот dev-slot. Монтируется в админ-половине базы.
 const DatabaseAddLazy = dynamic(
   () =>
-    import("../../../../_shared-v2")
+    import("@/app/(projects)/projects/_shared-v2")
       .then((m) => ({ default: m.DatabaseAddRow }))
       .catch(() => ({ default: () => null })),
   { ssr: false, loading: () => null },
@@ -191,7 +197,7 @@ export function DevDatabaseAdd({ table, lang }: { table?: string; lang: string }
 // `_shared-v2/tools/image-crop`, а публичной таблице внешний слой закрыт — путь только через этот dev-slot.
 const VectorAddLazy = dynamic(
   () =>
-    import("../../../../_shared-v2")
+    import("@/app/(projects)/projects/_shared-v2")
       .then((m) => ({ default: m.VectorMemoryAddRecord }))
       .catch(() => ({ default: () => null })),
   { ssr: false, loading: () => null },
