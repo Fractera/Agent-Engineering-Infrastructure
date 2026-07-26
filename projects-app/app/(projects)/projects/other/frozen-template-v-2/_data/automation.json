@@ -1,6 +1,7 @@
 {
   "passport": {
     "systemInstructionName": "passport",
+    "uuid": "7ecc99e8-944e-48ec-b042-88f8e3995bec",
     "title": "Stock price (v2)",
     "description": "Stream-type automation: given the name of a public company, it returns its live share price and saves it to history.",
     "type": "stream",

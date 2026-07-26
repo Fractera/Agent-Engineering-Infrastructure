@@ -79,10 +79,19 @@ once. A second identical refusal means you misread the law — read the instruct
 
 ## 5. THE ORDER OF WORK
 
-- FIRST iteration: `api/core` (cover + law digest), then only the objects you actually need.
+- FIRST iteration, FIRST read — THE LAW OF CONNECTION. `api/core` hands you the LAW DIGEST: the table of
+  WHAT MAY CONNECT TO WHAT (every kind's allowed `in`/`out`), the group quotas, the channels, what is never
+  writable. This digest IS the schema's law in working form — read it BEFORE you add a single node or edge.
+  It is AUTHORITATIVE: these instructions only SUPPLEMENT it, never override it, and where a word here seems
+  to disagree with the law, the law wins. Building a graph without having read it is exactly how a strong
+  model ends up wiring nodes at random — do not.
+- Then read only the objects you actually need.
 - SECOND and every later iteration: START AT `api/work`. An empty list means there is nothing to do,
   and that is a lawful end — say so and stop.
-- Read the full schema only when the digest failed to explain a refusal.
+- The doors ENFORCE this law: `api/patch` refuses any unlawful node or edge and answers with the exact
+  violation in words. That refusal is not an obstacle — it is the teaching: read it, fix that one thing,
+  never hardcode around it and never argue with it. Read the full 12k schema file only when the digest
+  failed to explain a refusal — the digest, not the raw schema, is what you start from.
 
 ## 6. WHERE THIS AUTOMATION CAME FROM, AND YOUR FIRST ACTION
 
@@ -155,6 +164,19 @@ that sentence implies. Derive it in this order, in writing, before you touch any
    answer, wrong shape, empty result, rate limit, duplicate, missing key. Every failure you can name
    and want the run to survive gets its own `condition-failure` with the reason spelled out. A run
    that dies silently is a defect; a run that ends at a named failure node is correct behaviour.
+5a. NATIVE OR EXTERNAL? — DECIDE IT FOR EVERY NODE, AND NEVER IMPROVISE THE ANSWER. As you name each step,
+    classify HOW its function is fulfilled. NATIVE is your own deterministic code in `_lib/nodes/`: parse,
+    normalise, calculate, format, and ordinary calls you can write directly (an HTTP GET to a public
+    endpoint, a DB read). An EXTERNAL CAPABILITY is when the function's CORE WORK must reach a WORLD TOOL you
+    cannot write from scratch — generate a video or an image, clone a voice, synchronise lips,
+    machine-translate at quality. The test is NOT "can I pull this off?" — it is "does the core work reach a
+    world tool I cannot write?". If yes, this node is a CAPABILITY, and the tool is NOT yours to choose or
+    improvise: set its `capability` to `{ status: "needed", reason: "<why an outside tool is required>",
+    type: null, ref: "", tool: "", fallback: "", attempts: [] }`, write a warning on it, and STOP on that
+    node — the owner supplies the tool (he can search the world; you cannot guarantee you know it). When in
+    doubt, WARN — never invent an external integration the owner did not authorise: a needless warning costs
+    a moment, a silent fake corrupts the automation. Read `tools-docs/external-capabilities.md` the moment a
+    node is a capability.
 6. THE INVISIBLE STEPS ARE NODES TOO — one each: validate the incoming payload; normalise it into the
    shape the middle speaks; deduplicate against what is already recorded; enrich what is missing;
    format for the destination; persist; confirm back to the sender. A weak model writes all seven
@@ -210,6 +232,11 @@ When the object is built: replace the owner's raw words with YOUR account of wha
 raw instruction does not stay next to your summary; it is replaced by it. One object at a time, never
 a batch.
 
+`materialized` says the CODE IS WRITTEN — not that it works. Proof of working is the closing ceremony
+(§15): a real run through `api/run`, executed as a plain chain of functions by the runtime, with a real
+result. You write a node's function by ORDINARY editing of `_lib/nodes/<fn>.ts`; you change its contract
+in the core only through `api/patch`. Contract through the door, code by hand.
+
 ## 11b. "HOW IT WORKS" — THE AUTOMATION'S ACCOUNT OF ITSELF
 
 `passport.howItWorks` is a LIST OF STATEMENTS answering the owner's question "how does this automation
@@ -246,6 +273,11 @@ Where components appear:
 Build components ONLY when the owner asks for them. Two exceptions you build without being asked: the
 CONTROL PANEL, which is the default way input reaches the automation, and the DASHBOARD, which needs
 at least one page. Everything else waits for a request.
+
+Build a surface's LOGIC in its STOREFRONT half — `_components/<tab>/public/`, what the end user actually
+sees and uses — never in the admin half (which holds only the AI-request form) and never by reaching into
+`_shared-v2` (the dev layer, §3). Stay in the storefront's field of view; leave the workshop alone. See
+AGENTS.md §0a.
 
 ## 14. FOUR LAWS THAT ARE NEVER BENT
 
@@ -293,13 +325,17 @@ updated or deleted, and up to 500 characters saying what changed. One version = 
 
 ## 18. THE ITERATION CHECKLIST — walk it in order, report on every line
 
-1. Read `api/core`; on later iterations read `api/work` first and stop if it is empty.
+1. Read `api/core` — THE LAW OF CONNECTION (what may connect to what, the quotas) — BEFORE anything else;
+   it is the schema's law, these instructions only supplement it (§5). On later iterations read `api/work`
+   first and stop if it is empty.
 2. Print `@@FRACTERA_DEV_STARTED@@`.
 3. First iteration only: set `lifecycle` to `real-project`.
 4. Read the use cases. Missing information → a warning on `useCases`, not a guess.
 5. Recite one real run in writing (§8.1).
 6. Extract the verbs, split them to atoms, turn every spoken "if" into a condition node (§8.2–4).
 7. Name the failure surface and give each survivable failure its own failure node (§8.5).
+7a. Classify every node native vs external capability; a capability gets `needed` + reason + a warning,
+    never an improvised integration (§8.5a).
 8. Add the invisible steps as their own nodes (§8.6).
 9. Reverse-check every node: who consumes its output (§8.8).
 10. Reveal the input and output doors you need; delete nothing (§8.9, §9).

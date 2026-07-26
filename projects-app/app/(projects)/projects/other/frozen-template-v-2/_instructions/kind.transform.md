@@ -21,3 +21,8 @@ deduplicate, calculate, format. Code lives in `_lib/nodes/<function-name>.ts`.
   that is branching — insert a condition.
 - ITS CONTRACT IS PUBLIC. Once other nodes rely on the names in `accepts` / `returns`, you may add to
   them; you may never rename or repurpose them.
+- IT MAY BE NATIVE OR AN EXTERNAL CAPABILITY. Most transforms are native code (the list above). But a
+  transform whose CORE WORK must reach a world tool you cannot write — machine-translate, clone a voice,
+  synthesise media — is an EXTERNAL CAPABILITY: carry it in the node's `capability`, and if no tool is
+  supplied yet, set `capability.status: "needed"` + a warning and do not improvise. See passport §8.5a and
+  `tools-docs/external-capabilities.md`.

@@ -22,10 +22,17 @@ function name: `ifSuccess` lives in `if-success.ts`, `transformPayload` in `tran
 The node says WHAT it does; that folder says HOW. Because the name is the address, no two nodes in
 this automation may claim the same function name — the core refuses it.
 
+TWO DIFFERENT WRITES — do not confuse them. The node's CONTRACT in the core (its `name`, `description`,
+`state`, the `function` fields, its ports) is changed ONLY through the door `POST api/patch`, which
+validates the whole core before writing. The function's CODE in `_lib/nodes/<fn>.ts` is written by ORDINARY
+file editing — there is no door for code, and none is needed. Contract through the door; code by hand.
+
 ## How the function must behave
 
-- DETERMINISTIC: same input, same result. No model call at run time unless the owner asked for exactly
-  that — a finished automation runs without AI.
+- DETERMINISTIC: same input, same result. A finished automation runs WITHOUT AI — no model call at run
+  time. The ONE sanctioned exception is an EXTERNAL CAPABILITY node (§8.5a of passport): an authorised call
+  out to a world tool (an MCP/skill/API — image or video generation, translation). That is not "AI inside
+  the app"; it is a declared outward call, and it is the only reason a node's core work leaves its own code.
 - NO SIDE EFFECT except the single one this node exists for. Nothing at import time.
 - FAIL LOUDLY: on a real failure throw, so the run stops honestly and the `condition-failure` branch
   handles it. Never return an empty value that pretends to be a result.
@@ -43,6 +50,7 @@ this automation may claim the same function name — the core refuses it.
 | `estDurationMs` | your honest estimate while building; replace it with the measured value once a real run has happened |
 | `info`, `status` | the owner's brief, then your account of what exists (passport §10–11) |
 | `warnings`, `envKeys` | what blocked you, and which keys you used (passport §12, §14.4) |
+| `capability` | `null` if the function is your own code (the usual case); an object only when it is fulfilled by an EXTERNAL tool (MCP / skill / API) — read `tools-docs/external-capabilities.md` first |
 
 ## Never yours to write
 

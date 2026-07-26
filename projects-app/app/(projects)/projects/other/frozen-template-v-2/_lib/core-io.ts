@@ -1,5 +1,5 @@
 import { readFile, writeFile, rename } from "node:fs/promises";
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { join } from "node:path";
 import {
   AutomationSchema,
@@ -41,6 +41,20 @@ export function createCuid(): string {
   const time = Date.now().toString(36);
   const count = (counter++ & 0xffffff).toString(36);
   return `c${time}${count}${randomBytes(8).toString("hex")}`;
+}
+
+// THE AUTOMATION'S GLOBAL IDENTITY — a fresh v4 uuid for `passport.uuid`. Unlike a cuid (which names a PART
+// of one core), this names the WHOLE automation, once, for its life, so it can be accumulated across the
+// fleet and uploaded to Fractera's own store (a future step).
+//
+// 🔒 BIRTH MUST CALL THIS. When a new automation is born by cloning this template's folder, the clone would
+// otherwise inherit the TEMPLATE's uuid — every clone sharing one identity, which breaks accumulation. The
+// birth flow (not built yet — v2 is still the single reference automation) must overwrite `passport.uuid`
+// with a fresh `createUuid()` the moment it writes the clone's core. The agent can never do this itself:
+// `uuid` is absent from WRITABLE.passport, so `api/patch` refuses it — identity is issued by the core, not
+// typed in, exactly like a cuid.
+export function createUuid(): string {
+  return randomUUID();
 }
 
 // ─── АДРЕС ОБЪЕКТА ──────────────────────────────────────────────────────────────────────────────────

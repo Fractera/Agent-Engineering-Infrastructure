@@ -63,6 +63,11 @@ public half. Its cell types, its renderers, its behaviour are OPEN: extend them 
 own copy. The admin half of such a tab holds ONE thing only — the AI-request form; never move a surface's
 logic there, and never expect to find it in `_shared-v2`.
 
+**STAY IN THE STOREFRONT.** The `public/` half is the STOREFRONT — what the end user actually sees and
+uses — and that is where a product surface's logic belongs and where you work. Do not drift into the admin
+half, the dev-slots or `_shared-v2` to "improve" the development tooling: that is the SOFT layer, not yours
+(§0). Build in the storefront; leave the workshop alone.
+
 ## 0b. REUSABLE TOOLS EXIST OUTSIDE YOUR FOLDER — wire them, do NOT rebuild
 
 Some capabilities are shared PRIMITIVES the platform already ships — an image cropper, a voice-input
@@ -79,6 +84,19 @@ Today: [`tools-docs/image-crop.md`](tools-docs/image-crop.md) (crop → JPEG blo
 [`tools-docs/map.md`](tools-docs/map.md) (maps, routing, address search, courier TSP — via the `api/geo` door
 to the self-hosted geo service; never rebuild a map/router/geocoder),
 [`tools-docs/dev-console.md`](tools-docs/dev-console.md) (the terminal you run inside — nothing to wire).
+
+## 0c. EXTERNAL CAPABILITIES — only for the automation that needs one
+
+The tools in §0b are INTERNAL primitives the platform ships. Some automations also reach OUTSIDE the
+platform: a node whose function is done not by our code but by an external **MCP server, agent skill or
+third-party API** (translate into ten languages, clone a voice, sync lips to new audio). That node records
+the binding in its `capability` field.
+
+**Most automations never do this — skip it unless a use case demands an outside tool.** If one does, read
+[`tools-docs/external-capabilities.md`](tools-docs/external-capabilities.md) before you wire anything: it is
+the one place that explains the field (`type`, `ref`, `tool`, `status: candidate→bound→proven`, `fallback`),
+why it never repeats the io-contract (`function`) or the credentials (`envKeys`), and how to prove a binding.
+A native node leaves `capability` as `null`.
 
 ## 1. Where the truth is
 

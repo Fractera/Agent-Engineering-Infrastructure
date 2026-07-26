@@ -167,9 +167,21 @@ export const InfoSchema = z.union([
 // One field, two honest answers; nothing is public by accident.
 export const SharingSchema = z.enum(["private", "public"]);
 
+// UUID — the automation's STABLE GLOBAL identity: a canonical v4 uuid, assigned ONCE at birth and never
+// changed. It is deliberately not the same as anything else that identifies a thing here:
+//   - NOT the folder address (that changes if the folder is moved or renamed);
+//   - NOT an internal `cuid` (those identify a PART — a node, an edge — never the automation as a whole).
+// This is the identity by which the automation is ACCUMULATED across the fleet and, in a future step,
+// uploaded to Fractera's own automation store (open or closed). Empty only while the automation is the
+// untouched frozen template — a real project always carries one (checked in the core law). Optional with a
+// default so cores written before this field existed stay valid.
+export const UUID_FORMAT = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export const PassportSchema = z
   .object({
     systemInstructionName: instructionName("passport"),
+    // the automation's stable global identity — see UUID_FORMAT above
+    uuid: z.string().default(""),
     title: z.string().min(1, "the automation must have a title"),
     description: z.string(),
     type: AutomationTypeSchema,
@@ -211,6 +223,11 @@ export const WarningSchema = z
   .object({
     cuid: CuidSchema,
     text: z.string().min(1, "a warning without text is not a warning"),
+    // THE OWNER'S REPLY to this warning — the one place the answer lives, right next to the question. When
+    // the agent pauses on a `needed` capability ("this node must do 123 — find me a tool"), the owner writes
+    // the solution they found HERE, and the agent reads it to fill the capability instead of guessing. Empty
+    // = not answered yet. Default so every warning written before this field stays valid.
+    reply: z.string().default(""),
   })
   .strict();
 
@@ -397,6 +414,88 @@ const samePort = (a: Port, b: Port) =>
     ? a.connections === b.connections
     : a.connections.length === b.connections.length && a.connections.every((v, i) => v === b.connections![i]));
 
+// ─── CAPABILITY — how a node's function is FULFILLED when it is NOT our own code ─────────────────────
+// A node's function is usually plain native code in `_lib/nodes/`. Sometimes it is not: it reaches into
+// the world through an EXTERNAL tool — an MCP server, an agent skill, a third-party API. `capability`
+// records that binding. Its ABSENCE (`null`, the default) IS the statement "this is native code": a
+// native node carries no binding at all, so `native` is not a value here.
+//
+// It is ORTHOGONAL to the node's kind: a `transform` that calls a translation MCP carries it, a `transform`
+// that only glues two payloads together does not. Most automations never touch this field; the ones that
+// do read `tools-docs/external-capabilities.md` first.
+//
+// It deliberately does NOT repeat what the node already states, so the same fact never lives twice:
+//   - the io-contract is `function.accepts` / `function.returns` (what goes in, what comes out);
+//   - the credentials it needs are `envKeys` (the key, and whether it is present / missing / in error).
+// `capability` adds ONLY the four facts those two do not carry.
+export const CapabilityTypeSchema = z.enum(["mcp", "skill", "api"]);
+
+// THE BINDING'S OWN LIFECYCLE — distinct from the build status and from the run history:
+//   needed    — the PLATFORM has predicted this node cannot be built with our own code and MUST reach an
+//               external tool, but NO tool is chosen yet. The tool is the USER's to supply: the platform
+//               writes a warning, pauses, and waits for the owner to reply with the solution they found.
+//               While `needed`, `type`/`ref`/`tool` are not known yet — only `reason` is (the prediction).
+//   candidate — a tool has been NAMED (by the owner's reply, or later by the catalogue), not yet wired;
+//   bound     — the node's function actually calls it (the code is written);
+//   proven    — a real run reached it and came back with a real result.
+// A binding can be `bound` yet never `proven` (the code calls it but no run has confirmed it works).
+// build-status `materialized` says "the code is written"; `proven` says "it worked in a real run" — two
+// different questions, so two different fields.
+export const CapabilityStatusSchema = z.enum(["needed", "candidate", "bound", "proven"]);
+
+// AN ATTEMPT — one tool the owner tried for this node, kept so the choosing is not thrown away. The owner's
+// path is rarely a straight line ("tried tool A, disliked the result, asked for tool B, came back to A"),
+// and that path is exactly the signal a future model is trained on: which tool was chosen over which, and
+// why. The array is ordered — its order IS the sequence of attempts.
+//   outcome — chosen (settled on it), rejected (owner did not like the result), failed (it did not work).
+export const CapabilityOutcomeSchema = z.enum(["chosen", "rejected", "failed"]);
+
+export const CapabilityAttemptSchema = z
+  .object({
+    ref: z.string().min(1, "an attempt names the tool that was tried"),
+    tool: z.string().min(1, "an attempt names the exact tool/method that was tried"),
+    outcome: CapabilityOutcomeSchema,
+    // the owner's requirement/why for this attempt, in short (may be empty, but a reason is the training gold)
+    note: z.string().max(TEXT_LIMIT, `an attempt note must be at most ${TEXT_LIMIT} characters`),
+  })
+  .strict();
+
+export const CapabilitySchema = z
+  .object({
+    // `type` is unknown while the need is only predicted (`needed`) — the platform knows a tool is required
+    // before it knows which KIND. It is required the moment a tool is named (checked below).
+    type: CapabilityTypeSchema.nullable(),
+    // `reason` — WHY this node needs an external tool ("it must do 123, which our code cannot"). This is the
+    // platform's prediction, known from the first moment, so it is required in every status.
+    reason: shortText("the reason this node needs an external tool"),
+    // `ref` — the id the tool is known by (an MCP server name, a skill id, an API name). Today it is a plain
+    // name the owner writes; when the world catalogue (LightRAG) lands, it will be that catalogue's id.
+    // `tool` — the exact tool / method / endpoint called on that ref. Both empty while status is `needed`.
+    ref: z.string(),
+    tool: z.string(),
+    status: CapabilityStatusSchema,
+    // `fallback` — another ref to try when this one is unavailable; empty string = no fallback.
+    fallback: z.string(),
+    // the ordered log of tools tried for this node — the choosing kept for training (see above)
+    attempts: z.array(CapabilityAttemptSchema),
+  })
+  .strict()
+  .superRefine((cap, ctx) => {
+    // Once a tool is named (anything past `needed`), its kind and its ids must be present. While `needed`,
+    // they are legitimately blank — the owner has not supplied the tool yet.
+    if (cap.status !== "needed") {
+      if (cap.type === null) {
+        ctx.addIssue({ code: "custom", path: ["type"], message: `a "${cap.status}" capability has a named tool — its type (mcp/skill/api) is required` });
+      }
+      if (!cap.ref.trim()) {
+        ctx.addIssue({ code: "custom", path: ["ref"], message: `a "${cap.status}" capability must name the external tool it binds to` });
+      }
+      if (!cap.tool.trim()) {
+        ctx.addIssue({ code: "custom", path: ["tool"], message: `a "${cap.status}" capability must name the exact tool/method it calls` });
+      }
+    }
+  });
+
 // Fields every node carries, whatever its kind.
 const nodeBase = {
   cuid: CuidSchema,
@@ -407,6 +506,10 @@ const nodeBase = {
   ...buildRecord,
   // ONE function per node — not a list. A node that seems to need two functions is two nodes.
   function: NodeFunctionSchema,
+  // HOW the function is fulfilled: `null` = our own native code (the default); an object = an external
+  // tool (see CapabilitySchema). Optional with a `null` default so every core written before this field
+  // existed stays valid without a rewrite.
+  capability: CapabilitySchema.nullable().default(null),
   run: z.enum(["sequential", "parallel"]),
   estDurationMs: z.number().int().positive(),
 };
@@ -997,6 +1100,10 @@ export const AutomationSchema = z
     if (lifecycle === "real-project" && !automation.passport.author.trim()) {
       ctx.addIssue({ code: "custom", path: ["passport", "author"], message: "a real project must name its author — the id of the user who created it" });
     }
+    // A real project has a stable global identity; the untouched template has none until it is born.
+    if (lifecycle === "real-project" && !UUID_FORMAT.test(automation.passport.uuid)) {
+      ctx.addIssue({ code: "custom", path: ["passport", "uuid"], message: "a real project must carry a valid v4 uuid — its stable global identity for accumulation" });
+    }
   });
 
 // Editor types — inferred from the schemas, never written by hand.
@@ -1016,6 +1123,11 @@ export type PortTarget = z.infer<typeof PortTargetSchema>;
 export type NodePort = z.infer<typeof PortSchema>;
 export type NodeKind = z.infer<typeof NodeKindSchema>;
 export type NodeFunction = z.infer<typeof NodeFunctionSchema>;
+export type CapabilityType = z.infer<typeof CapabilityTypeSchema>;
+export type CapabilityStatus = z.infer<typeof CapabilityStatusSchema>;
+export type CapabilityOutcome = z.infer<typeof CapabilityOutcomeSchema>;
+export type CapabilityAttempt = z.infer<typeof CapabilityAttemptSchema>;
+export type Capability = z.infer<typeof CapabilitySchema>;
 export type Node = z.infer<typeof NodeSchema>;
 export type Edge = z.infer<typeof EdgeSchema>;
 export type Permission = z.infer<typeof PermissionSchema>;
