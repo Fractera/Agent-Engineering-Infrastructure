@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { daySlots, type CalRow } from "../../../../_lib/components/calendar";
 import { INTEGRATION_ICONS } from "../../../chrome/integration-icons";
-import type { Surface } from "../../../surface";
 import { pick } from "../../../shared/localized";
 import type { EntryType, Tone } from "../../entries";
 import { enabledOf, missingKeysOf, type Integration } from "../../integrations";
@@ -34,7 +33,6 @@ export default function DayPlanner({
   integrations,
   present,
   table,
-  surface,
   filter,
   onFilter,
   onRowChange,
@@ -47,7 +45,6 @@ export default function DayPlanner({
   /** Присутствие ключей: канал без них рисуется приглушённым — объявлен, но работать не может. */
   present: Record<string, boolean>;
   table: string;
-  surface: Surface;
   filter: string;
   onFilter: (key: string) => void;
   onRowChange: (row: CalRow) => void;
@@ -173,7 +170,6 @@ export default function DayPlanner({
         only={open?.only ?? null}
         table={table}
         integrations={channels}
-        surface={surface}
         lang={lang}
         onClose={() => setOpen(null)}
         onSaved={onRowChange}

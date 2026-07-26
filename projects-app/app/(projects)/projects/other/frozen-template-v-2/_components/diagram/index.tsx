@@ -1,4 +1,3 @@
-import type { Surface } from "../surface";
 import DiagramCanvas from "./admin/canvas";
 
 // МАРШРУТИЗАТОР ДИАГРАММЫ — та же тройка index/public/admin, что у всех сущностей v2.
@@ -10,7 +9,6 @@ import DiagramCanvas from "./admin/canvas";
 // автоматизация остаётся переиспользуемой.
 //
 // Агент-кодер владеет только ДАННЫМИ графа; править код холста ему запрещено (AGENTS.md §0a).
-export default function Diagram({ surface, lang }: { surface: Surface; lang: string }) {
-  // На витрине холст только для чтения: посетителю нечего строить.
-  return <DiagramCanvas lang={lang} readOnly={surface === "public"} />;
+export default function Diagram({ lang }: { lang: string }) {
+  return <DiagramCanvas lang={lang} readOnly={false} />;
 }

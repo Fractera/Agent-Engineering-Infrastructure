@@ -1,4 +1,3 @@
-import type { Surface } from "../surface";
 import CaseList from "./public/case-list.client";
 import UseCasesSettings from "./admin/settings";
 
@@ -16,11 +15,11 @@ import UseCasesSettings from "./admin/settings";
 // внутренняя тройка public/admin/index у неё та же, что у любой вкладки.
 type Case = { cuid: string; number: number; title: string; text: string; status: string };
 
-export default function UseCases({ cases, surface, lang }: { cases: Case[]; surface: Surface; lang: string }) {
+export default function UseCases({ cases, lang }: { cases: Case[]; lang: string }) {
   return (
-    <div data-entity="use-cases" data-surface={surface} className="space-y-3">
+    <div data-entity="use-cases" className="space-y-3">
       <CaseList cases={cases} lang={lang} />
-      {surface === "admin" ? <UseCasesSettings /> : null}
+      <UseCasesSettings />
     </div>
   );
 }

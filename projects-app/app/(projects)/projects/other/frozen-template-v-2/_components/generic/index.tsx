@@ -1,5 +1,4 @@
 import type { Entity } from "../../_data/automation.schema";
-import type { Surface } from "../surface";
 import SectionAccordion from "../shared/section-accordion.client";
 import { DevSlot } from "../shared/dev-slot";
 import { DevBuildWithAi } from "../shared/dev-slot.client";
@@ -16,23 +15,13 @@ import { sectionsStrings } from "../shared/sections-i18n";
 //
 // Когда у вкладки появится собственная папка (`_components/<tab>/`), этот общий вид её просто перестанет
 // касаться — маршрутизатор в `_components/index.tsx` выберет папку.
-export default function GenericTab({
-  surface,
-  tab,
-  entities,
-  lang,
-}: {
-  surface: Surface;
-  tab: string;
-  entities: Entity[];
-  lang: string;
-}) {
+export default function GenericTab({ tab, entities, lang }: { tab: string; entities: Entity[]; lang: string }) {
   const S = sectionsStrings(lang);
   const many = entities.length > 1;
-  const nested = many && surface === "admin";
+  const nested = many;
 
   return (
-    <div data-entity={tab} data-surface={surface} className="divide-y">
+    <div data-entity={tab} className="divide-y">
       {entities.map((entity, i) => {
         const body = (
           <div className="space-y-3">
@@ -40,7 +29,7 @@ export default function GenericTab({
             {/* Заявка на ОДНУ сущность — только когда их больше одной (закон владельца 2026-07-25): при
                 единственной сущности она дублирует «строить весь раздел» (ниже), поэтому её не показываем.
                 Singleton-вкладки (app-pages и т.п.) всегда с одной сущностью — здесь остаётся одна кнопка. */}
-            {surface === "admin" && many ? (
+            {many ? (
               <DevSlot>
                 <DevBuildWithAi
                   target={{ object: "entity", tab, cuid: entity.cuid }}
@@ -69,11 +58,9 @@ export default function GenericTab({
           </div>
         );
       })}
-      {surface === "admin" ? (
-        <DevSlot>
-          <DevBuildWithAi target={{ object: "tab", name: tab }} name={tab.replace(/-/g, " ")} lang={lang} />
-        </DevSlot>
-      ) : null}
+      <DevSlot>
+        <DevBuildWithAi target={{ object: "tab", name: tab }} name={tab.replace(/-/g, " ")} lang={lang} />
+      </DevSlot>
     </div>
   );
 }

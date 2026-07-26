@@ -1,5 +1,4 @@
 import type { Entity } from "../../_data/automation.schema";
-import type { Surface } from "../surface";
 import MainStorage from "./public/main-storage";
 import StorageAiRequest from "./admin/ai-request";
 
@@ -10,19 +9,11 @@ import StorageAiRequest from "./admin/ai-request";
 // техзаданию. В `admin/` — только Кокпит-инструменты за dev-slot: «добавить объект» (crop → хранилище →
 // строка) и форма заявки ИИ. Публичная половина одинакова на витрине и в кокпите; в кокпите под ней
 // добавляются инструменты владельца.
-export default function Storage({
-  surface,
-  entities,
-  lang,
-}: {
-  surface: Surface;
-  entities: Entity[];
-  lang: string;
-}) {
+export default function Storage({ entities, lang }: { entities: Entity[]; lang: string }) {
   return (
-    <div data-entity="storage" data-surface={surface} className="space-y-3">
-      <MainStorage lang={lang} mode={surface === "admin" ? "admin" : "view"} />
-      {surface === "admin" ? <StorageAiRequest entities={entities} lang={lang} /> : null}
+    <div data-entity="storage" className="space-y-3">
+      <MainStorage lang={lang} mode="admin" />
+      <StorageAiRequest entities={entities} lang={lang} />
     </div>
   );
 }

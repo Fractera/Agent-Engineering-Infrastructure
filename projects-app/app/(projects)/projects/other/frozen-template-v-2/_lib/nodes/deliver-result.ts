@@ -1,18 +1,15 @@
-// ФУНКЦИЯ УЗЛА «OUTPUT» (канал dashboard) — доставляет результат: пишет строку в таблицу `history`
-// дашборда автоматизации (эталон v1 record-result). Достигается ТОЛЬКО после ветки успеха, поэтому в bag
-// уже лежат company/ticker/price. Имя `deliverResult` — публичный контракт, не переименовывать.
+// ФУНКЦИЯ УЗЛА «OUTPUT» (канал dashboard) — доставляет сообщение в таблицу `history` дашборда:
+// одна строка на каждый успешный прогон (дата · канал · заголовок · текст). Достигается ТОЛЬКО после
+// ветки успеха, поэтому сообщение в контексте уже проверено серединой.
 //
-// Контракт: (ctx) => частичный ctx. Хранилище строк — локальное (_lib/rows.ts → _data/runtime/rows.jsonl),
-// внутри папки: закон 0 (никакого платформенного lib/dashboard-rows).
+// Хранилище строк — локальное (_lib/rows.ts → _data/runtime/rows.jsonl), внутри папки: закон 0.
+// Имя `deliverResult` — публичный контракт, не переименовывать.
 import type { NodeCtx } from "../executor";
+import { messageOf } from "../message";
 import { addRow } from "../rows";
 
 export async function deliverResult(ctx: NodeCtx): Promise<{ rowId: string }> {
-  const row = await addRow("history", {
-    date: new Date().toISOString(),
-    company: String(ctx.company ?? ""),
-    ticker: String(ctx.ticker ?? ""),
-    price: typeof ctx.price === "number" ? ctx.price : null,
-  });
+  const m = messageOf(ctx);
+  const row = await addRow("history", { date: m.at, source: m.source, title: m.title, text: m.text });
   return { rowId: row.id };
 }

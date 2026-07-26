@@ -1,5 +1,4 @@
 import type { Entity } from "../../_data/automation.schema";
-import type { Surface } from "../surface";
 import FirstControlPanel from "./public/first-control-panel";
 import { ControlPanelSettings as RequestSettings } from "./public/components/request-settings.client";
 import SectionAccordion from "../shared/section-accordion.client";
@@ -27,42 +26,33 @@ import { dataText } from "./params";
 // ДВА ПУЛЬТА — ДВА ВЛОЖЕННЫХ АККОРДЕОНА (правило владельца 2026-07-22): начиная со второго каждый пульт
 // получает свой аккордеон внутри главного; первый раскрыт, остальные свёрнуты, состояние каждого
 // запоминается в браузере. НА ВИТРИНЕ аккордеонов нет: там все пульты раскрыты всегда.
-const PANELS: Record<string, React.ComponentType<{ entity: Entity; lang: string; surface: Surface; heading?: boolean }>> = {
+const PANELS: Record<string, React.ComponentType<{ entity: Entity; lang: string; heading?: boolean }>> = {
   "first-control-panel": FirstControlPanel,
 };
 
 const fileOf = (name: string) => name.trim().toLowerCase().replace(/\s+/g, "-");
 
-export default function ControlPanel({
-  surface,
-  entities,
-  lang,
-}: {
-  surface: Surface;
-  entities: Entity[];
-  lang: string;
-}) {
+export default function ControlPanel({ entities, lang }: { entities: Entity[]; lang: string }) {
   const L = controlPanelStrings(lang);
   const many = entities.length > 1;
   const tabTitle = "control panel";
-  const landing = surface === "public";
 
   return (
-    <div data-entity="control-panel" data-surface={surface} className="divide-y">
+    <div data-entity="control-panel" className="divide-y">
       {entities.map((entity, i) => {
         const Panel = PANELS[fileOf(entity.name)];
         const title = pick(dataText(entity, "title"), lang) || entity.name;
-        const nested = many && !landing; // имя стоит в шапке вложенного аккордеона
+        const nested = many; // имя стоит в шапке вложенного аккордеона
         const pending = "crudUser" in entity.info ? entity.info.crudUser : undefined;
         // ЗАЯВКА НА ОДИН ПУЛЬТ — свой адрес в ядре (entity), поэтому и раскрывашка своя, названная
         // именем этого пульта. В кокпите она идёт сразу под ним; посетителю не показывается.
         const body = Panel ? (
           <div className="space-y-3">
-            <Panel entity={entity} lang={lang} surface={surface} heading={!nested} />
+            <Panel entity={entity} lang={lang} heading={!nested} />
             {/* Заявка на ОДИН пульт — только когда пультов БОЛЬШЕ ОДНОГО (закон владельца 2026-07-25):
                 при единственном пульте «строить этот пульт» и «строить весь раздел» (внизу) — одно и то же,
                 поэтому per-entity кнопку не показываем. */}
-            {surface === "admin" && many ? (
+            {many ? (
               <DevSlot>
                 <DevBuildWithAi target={{ object: "entity", tab: "control-panel", cuid: entity.cuid }} name={title} pending={pending} lang={lang} />
               </DevSlot>
@@ -90,14 +80,12 @@ export default function ControlPanel({
       {/* НАСТРОЙКА ЗАПРОСА — ПУБЛИЧНАЯ половина (закон владельца 2026-07-24): пульт — продуктовая
           поверхность, вся его логика живёт там, где агент читает и правит её по заявке. Показывается
           владельцу в кокпите; посетителю витрины внутренности запроса не нужны. */}
-      {surface === "admin" ? <RequestSettings lang={lang} /> : null}
+      <RequestSettings lang={lang} />
       {/* АДМИН-ПОЛОВИНА — только заявка ИИ (на вкладку целиком). Заявка на отдельный пульт стоит выше,
           сразу под своим пультом. */}
-      {surface === "admin" ? (
-        <DevSlot>
-          <DevBuildWithAi target={{ object: "tab", name: "control-panel" }} name={tabTitle} lang={lang} />
-        </DevSlot>
-      ) : null}
+      <DevSlot>
+        <DevBuildWithAi target={{ object: "tab", name: "control-panel" }} name={tabTitle} lang={lang} />
+      </DevSlot>
     </div>
   );
 }

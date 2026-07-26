@@ -3,8 +3,8 @@ import { authorize } from "@/lib/nodes";
 import { executeAutomation } from "../../_lib/executor";
 
 // ДВЕРЬ ЗАПУСКА — единственная точка ИСПОЛНЕНИЯ автоматизации. Вход PUSH'ится сюда (закон 3: без polling).
-//   POST api/run { query: "Apple" }        — короткая форма
-//   POST api/run { input: { query: "Apple" } } — явная
+//   POST api/run { text: "hello" }                       — короткая форма (канал по умолчанию — пульт)
+//   POST api/run { input: { source: "webhook", text: "hello" } } — явная, с меткой канала
 // Возвращает outcome движка (ok, узлы, context) либо 409 с обучающим отказом (замороженный шаблон/нет
 // видимых узлов). Исполняются только видимые узлы; первый throw узла останавливает цепочку.
 export const runtime = "nodejs";

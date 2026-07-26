@@ -23,13 +23,15 @@ const OBJECTS_DIR = join(
   "objects",
 );
 
-// Расширение → MIME. Только то, что кладём: картинки. Неизвестное отдаём как поток байтов.
+// Расширение → MIME. Только то, что кладём: картинки и текст (шаг 300 — выход склада сохраняет
+// сообщение файлом .txt). Неизвестное отдаём как поток байтов.
 const MIME: Record<string, string> = {
   jpg: "image/jpeg",
   jpeg: "image/jpeg",
   png: "image/png",
   webp: "image/webp",
   gif: "image/gif",
+  txt: "text/plain; charset=utf-8",
 };
 
 /** Ключ вида `obj<time><rand>.<ext>` — без слэшей и точек в теле, поэтому обход каталога невозможен. */

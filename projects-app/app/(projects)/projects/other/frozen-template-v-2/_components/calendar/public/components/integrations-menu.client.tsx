@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { INTEGRATION_ICONS } from "../../../chrome/integration-icons";
-import type { Surface } from "../../../surface";
 import { pick } from "../../../shared/localized";
 import KeysModal from "../../../shared/keys-modal.client";
 import { keysOf } from "../../../channels";
@@ -34,17 +33,15 @@ import { calendarStrings } from "../../i18n";
 export default function IntegrationsMenu({
   cuid,
   integrations,
-  surface,
   lang,
 }: {
   cuid: string;
   integrations: Integration[];
-  surface: Surface;
   lang: string;
 }) {
   const L = calendarStrings(lang);
   const router = useRouter();
-  const editable = surface === "admin";
+  const editable = true; // поверхность одна — кокпит (шаг 300)
   const [list, setList] = useState(integrations);
   const [busy, setBusy] = useState(false);
   const [present, setPresent] = useState<Record<string, boolean>>({});

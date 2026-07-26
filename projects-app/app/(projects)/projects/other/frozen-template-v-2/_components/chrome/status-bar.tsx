@@ -14,15 +14,11 @@ export default function StatusBar({
   lang,
   tabs,
   envKeys,
-  publicHref,
-  built,
 }: {
   passport: Passport;
   lang: string;
   tabs: TabRow[];
   envKeys: string[];
-  publicHref: string;
-  built: boolean;
 }) {
   // Выбор ИИ выводится ЗДЕСЬ, из паспорта, который у полосы уже есть: тянуть его отдельным пропсом
   // через всю цепочку значило бы завести второй путь к одному и тому же факту.
@@ -31,7 +27,7 @@ export default function StatusBar({
   return (
     <div data-chrome="status-bar" className="flex flex-col gap-1 border-b py-1">
       <span className="flex items-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <Badges passport={passport} surface="admin" />
+        <Badges passport={passport} />
       </span>
       <span className="flex items-center justify-between gap-3">
         <span className="min-w-0 truncate text-sm font-medium">{passport.title}</span>
@@ -41,8 +37,6 @@ export default function StatusBar({
             tabs={tabs}
             envKeys={envKeys}
             ai={{ provider: provider.key, model: model.id, providerLabel: provider.label, modelLabel: model.label }}
-            publicHref={publicHref}
-            built={built}
           />
           <SendTask lang={lang} />
         </span>

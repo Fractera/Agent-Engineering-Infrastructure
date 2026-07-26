@@ -2,8 +2,8 @@
   "passport": {
     "systemInstructionName": "passport",
     "uuid": "7ecc99e8-944e-48ec-b042-88f8e3995bec",
-    "title": "Stock price (v2)",
-    "description": "Stream-type automation: given the name of a public company, it returns its live share price and saves it to history.",
+    "title": "Capture & fan-out (v2)",
+    "description": "Universal starter automation: it captures a message from any input channel and fans it out to every open output channel.",
     "type": "stream",
     "lifecycle": "real-project",
     "ai": {
@@ -17,14 +17,15 @@
       "config": null
     },
     "info": {
-      "aiSummary": "Working v2 \"share price\" automation: control panel → company recognition → live Yahoo quote → write to the dashboard. Reference E2E example of v2's own runtime."
+      "aiSummary": "Maximal working v2 starter, domain-neutral. Every input channel (control panel, webhook, cron, public page, Telegram bot, user Telegram chat, email) normalizes its raw payload into one shared Message (text · source · at · title · optional lat/lng, _lib/message.ts); the middle validates it and derives the title; every output channel delivers it (dashboard, public page, calendar, analytics, map, email, Telegram ×2, vector memory, database, storage). Key-gated channels send for real when configured and skip honestly otherwise. Runs without AI."
     },
     "howItWorks": [
-      "You name a public company (for example \"Apple\") in the launch panel.",
-      "The automation recognises the company and takes its stock ticker.",
-      "By the ticker, the live share price is requested from Yahoo Finance.",
-      "If the price is obtained, a row with the date, company, ticker and price is added to the dashboard.",
-      "If the company is not recognised or the price is unavailable, the run honestly stops and writes nothing."
+      "A message enters through any input channel: the control panel form, an HTTP webhook, a scheduled tick, the public page form, the automation's Telegram bot, the user's own Telegram chat, or an inbound email.",
+      "The input node of that channel normalizes the raw payload into one shared Message: text, source, capture time, and coordinates when the channel provides them.",
+      "The middle validates the message — an empty capture honestly fails the run — and derives a short title from the first line of the text.",
+      "The success branch fans the message out to every open output at once: a dashboard row, a database record, a .txt file in local storage, a fact in vector memory, a calendar event, a per-channel analytics counter, a marker on the map when the message carries coordinates, and a post on the public page feed.",
+      "Key-gated deliveries (email, Telegram) send for real when their keys are configured in Settings, and otherwise skip honestly, naming the missing key in the run report.",
+      "Everything is deterministic: no AI runs at execution time, and the same input always takes the same path."
     ]
   },
   "graph": {
@@ -53,7 +54,7 @@
             {
               "cuid": "cmruewqs51sbelfc3dc9457a2a3fac",
               "name": "Incoming connector",
-              "description": "Receives data from a node of ANOTHER automation — the door through which this automation joins a group.",
+              "description": "Receives data from a node of ANOTHER automation — the door through which this automation joins a group. It is an OFFER, not a dependency: kept hidden, the automation runs perfectly well on its own.",
               "state": "hidden",
               "info": {
                 "aiSummary": "Waits for data from a neighbouring automation; in a standalone automation it stays hidden."
@@ -68,7 +69,7 @@
                 "returns": "payload — the same value, named for this automation."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 1000,
               "kind": "input-connector",
               "ioType": "custom",
               "in": {
@@ -86,23 +87,23 @@
             },
             {
               "cuid": "cmruca7r64n1jr7c4ca119ed7b7c4d",
-              "name": "Input",
-              "description": "Where the automation receives its work — a message, a request, or a scheduled tick.",
+              "name": "Control panel input",
+              "description": "The default door: the owner's message typed into the control panel form.",
               "state": "visible",
               "info": {
-                "aiSummary": "Recognises a public company from the request against a dictionary and returns its ticker; an unknown or private company stops the run with a clear message."
+                "aiSummary": "Captures the control-panel form message (the default channel when a run names no source) and normalizes it into the shared Message. An empty message is refused at the door in ten languages; a run of another channel is passed through untouched."
               },
               "status": "materialized",
               "warnings": [],
               "envKeys": [],
               "function": {
                 "name": "receiveRequest",
-                "summary": "Takes the raw incoming request and names it for the nodes downstream.",
-                "accepts": "The raw request as it arrived from the channel.",
-                "returns": "payload — the request, untouched."
+                "summary": "Captures the control-panel form message and normalizes it into the shared Message shape.",
+                "accepts": "The form fields of a run started from the control panel: text (required), optional lat/lng.",
+                "returns": "Message fields merged into the context: text, source=\"control-panel\", at, and lat/lng when given."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 200,
               "kind": "input",
               "ioType": "control-panel",
               "in": {
@@ -120,21 +121,21 @@
               "cuid": "cmruqdpjl51eha9a65832422ad3a53",
               "name": "Webhook input",
               "description": "An external system calls in over HTTP.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
-                "aiSummary": "Blank for the \"webhook\" channel: declared and hidden; the function will appear when the node is revealed."
+                "aiSummary": "Captures an HTTP push (POST api/run with source=\"webhook\") and normalizes its JSON body into the shared Message: text ← text/message/payload, a structured payload is serialized rather than lost. Empty body — refused at the door. Input is push-only: nothing is polled."
               },
-              "status": "in-development",
+              "status": "materialized",
               "warnings": [],
               "envKeys": [],
               "function": {
                 "name": "receiveWebhook",
-                "summary": "Takes the incoming request through the webhook channel.",
-                "accepts": "The raw request as it arrived from the webhook channel.",
-                "returns": "payload — the request, untouched."
+                "summary": "Normalizes an external HTTP push into the shared Message; a structured payload is serialized, never lost.",
+                "accepts": "The JSON body of POST api/run with source=\"webhook\": text, message or payload, optional lat/lng.",
+                "returns": "Message fields merged into the context: text, source=\"webhook\", at, and lat/lng when given."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 200,
               "kind": "input",
               "ioType": "webhook",
               "in": {
@@ -152,21 +153,21 @@
               "cuid": "cmruqdpjm51ehb6c5e6bd9a8614a87",
               "name": "Cron input",
               "description": "A scheduled tick fires it on a timer.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
-                "aiSummary": "Blank for the \"cron\" channel: declared and hidden; the function will appear when the node is revealed."
+                "aiSummary": "Turns a scheduler tick (POST api/run with source=\"cron\") into a synthetic Message — the tick's own text or \"Scheduled tick at <time>\". The schedule itself is declared in the folder's cron.json when the owner enables the channel; the tick is a push, not a poll."
               },
-              "status": "in-development",
+              "status": "materialized",
               "warnings": [],
               "envKeys": [],
               "function": {
                 "name": "receiveCron",
-                "summary": "Takes the incoming request through the cron channel.",
-                "accepts": "The raw request as it arrived from the cron channel.",
-                "returns": "payload — the request, untouched."
+                "summary": "Turns a scheduled tick into a synthetic Message so downstream work is exercised on a timer.",
+                "accepts": "The tick pushed by the scheduler: optional text/message; nothing else is required.",
+                "returns": "Message fields merged into the context: text (given or synthetic), source=\"cron\", at."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 200,
               "kind": "input",
               "ioType": "cron",
               "in": {
@@ -184,21 +185,21 @@
               "cuid": "cmruqdpjm51ehc433ccaf2f7677d66",
               "name": "Public Page input",
               "description": "A form or control on the automation own public page.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
-                "aiSummary": "Blank for the \"public-page\" channel: declared and hidden; the function will appear when the node is revealed."
+                "aiSummary": "Captures a visitor's message from the automation's public page form (POST api/run with source=\"public-page\") and normalizes it into the shared Message. Same normalization as the control panel; a separate channel so outputs can tell visitors from the owner."
               },
-              "status": "in-development",
+              "status": "materialized",
               "warnings": [],
               "envKeys": [],
               "function": {
                 "name": "receivePublicPage",
-                "summary": "Takes the incoming request through the public-page channel.",
-                "accepts": "The raw request as it arrived from the public-page channel.",
-                "returns": "payload — the request, untouched."
+                "summary": "Captures a visitor's message from the public page form and normalizes it into the shared Message.",
+                "accepts": "The form fields of a run with source=\"public-page\": text (required), optional lat/lng.",
+                "returns": "Message fields merged into the context: text, source=\"public-page\", at, and lat/lng when given."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 200,
               "kind": "input",
               "ioType": "public-page",
               "in": {
@@ -216,11 +217,11 @@
               "cuid": "cmruqdpjm51ehd18d5a1f37ce38e1c",
               "name": "Telegram Bot input",
               "description": "A message sent to the automation own Telegram bot.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
-                "aiSummary": "Blank for the \"telegram-bot\" channel: declared and hidden; the function will appear when the node is revealed."
+                "aiSummary": "Captures a message sent to the automation's own Telegram bot: the listener pushes the update into api/run with source=\"telegram-bot\", and the node understands both the raw Telegram shape ({message:{text,chat}}) and a pre-parsed text. The sender's chat id is kept in the context so a reply can reach exactly them. Live intake is gated on the channel keys."
               },
-              "status": "in-development",
+              "status": "materialized",
               "warnings": [],
               "envKeys": [
                 {
@@ -236,12 +237,12 @@
               ],
               "function": {
                 "name": "receiveTelegramBot",
-                "summary": "Takes the incoming request through the telegram-bot channel.",
-                "accepts": "The raw request as it arrived from the telegram-bot channel.",
-                "returns": "payload — the request, untouched."
+                "summary": "Normalizes a Telegram-bot update into the shared Message and keeps the sender's chat id for replies.",
+                "accepts": "A pushed update with source=\"telegram-bot\": raw {message:{text,chat:{id}}} or pre-parsed text.",
+                "returns": "Message fields (text, source=\"telegram-bot\", at) plus telegramChatId when the update names the chat."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 300,
               "kind": "input",
               "ioType": "telegram-bot",
               "in": {
@@ -259,11 +260,11 @@
               "cuid": "cmruqdpjm51ehe2f58b91a619fdc71",
               "name": "User Telegram Chat input",
               "description": "A message read from the user own Telegram chat.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
-                "aiSummary": "Blank for the \"user-telegram-chat\" channel: declared and hidden; the function will appear when the node is revealed."
+                "aiSummary": "Captures a message from the user's own Telegram chat (linked natively via api/telegram/link): the listener pushes it into api/run with source=\"user-telegram-chat\". Differs from telegram-bot by WHO writes — the user in their personal chat, not outsiders writing to the automation's bot. Live intake is gated on the channel keys."
               },
-              "status": "in-development",
+              "status": "materialized",
               "warnings": [],
               "envKeys": [
                 {
@@ -279,12 +280,12 @@
               ],
               "function": {
                 "name": "receiveUserTelegramChat",
-                "summary": "Takes the incoming request through the user-telegram-chat channel.",
-                "accepts": "The raw request as it arrived from the user-telegram-chat channel.",
-                "returns": "payload — the request, untouched."
+                "summary": "Normalizes a message from the user's own linked Telegram chat into the shared Message.",
+                "accepts": "A pushed update with source=\"user-telegram-chat\": raw Telegram shape or pre-parsed text.",
+                "returns": "Message fields (text, source=\"user-telegram-chat\", at) plus telegramChatId when named."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 300,
               "kind": "input",
               "ioType": "user-telegram-chat",
               "in": {
@@ -302,11 +303,11 @@
               "cuid": "cemailinp7k2vq4x9",
               "name": "Email input",
               "description": "Input for an email delivered to the automation's intake address.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
-                "aiSummary": "The email channel door: a message arriving at the intake address. The provider pushes it into the api/inbound-email door — there is no mailbox polling (the \"input is push-only\" law)."
+                "aiSummary": "Captures an inbound email: the provider pushes it into the api/inbound-email door (signature-checked), which starts a run with source=\"email\". The body (or the subject when the body is empty) becomes the Message text; sender and subject stay in the context so the email output can reply to the sender. No mailbox polling — input is push-only."
               },
-              "status": "in-development",
+              "status": "materialized",
               "warnings": [],
               "envKeys": [
                 {
@@ -327,12 +328,12 @@
               ],
               "function": {
                 "name": "receiveEmail",
-                "summary": "The email channel door: a message arriving at the intake address.",
-                "accepts": "The parsed email: sender, subject, body.",
-                "returns": "A named input for the middle."
+                "summary": "Normalizes an inbound email into the shared Message; sender and subject stay available for a reply.",
+                "accepts": "The parsed letter pushed by api/inbound-email: from (required), subject, text.",
+                "returns": "Message fields (text, source=\"email\", at) plus emailFrom and emailSubject."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 300,
               "kind": "input",
               "ioType": "email",
               "in": {
@@ -378,30 +379,19 @@
               "description": "The middle — the deterministic work that turns the input into the output.",
               "state": "visible",
               "info": {
-                "aiSummary": "Takes the live share price by ticker from Yahoo Finance (no key, no AI); if there is no price, the run fails and nothing is written."
+                "aiSummary": "Validates and normalizes the captured Message: non-empty text (an empty capture fails the run in ten languages), collapsed whitespace, a title derived from the first line, stamped at/source. Deterministic, no keys, no AI — this throw is the real success/failure gate of the flow."
               },
               "status": "materialized",
-              "warnings": [
-                {
-                  "cuid": "cwarndemo298logic0001",
-                  "text": "Yahoo Finance sometimes returns an empty body for an unknown ticker, and the run fails without a clear reason. What should it do: reply to the owner \"no such company was found\", or try a second price source?"
-                }
-              ],
-              "envKeys": [
-                {
-                  "name": "ANTHROPIC_API_KEY",
-                  "status": "missing",
-                  "comment": "Declared by the chosen AI provider; the api/env door checks its live presence."
-                }
-              ],
+              "warnings": [],
+              "envKeys": [],
               "function": {
                 "name": "transformPayload",
-                "summary": "Turns the incoming payload into the automation's result.",
-                "accepts": "payload — whatever the input node produced.",
-                "returns": "result — the value the output node delivers."
+                "summary": "Validates the captured message and derives its title; an empty capture honestly fails the run.",
+                "accepts": "The Message fields put into the context by the input node of the run's channel.",
+                "returns": "text · title · at · source — the normalized message every output node consumes."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 200,
               "kind": "transform",
               "ioType": null,
               "in": {
@@ -427,19 +417,19 @@
               "description": "The branch taken when the middle produced a result — the flow continues to the output.",
               "state": "visible",
               "info": {
-                "aiSummary": "The success branch: passes the result on to be written. The real gate is the throw in the price node, so only the successful flow reaches here."
+                "aiSummary": "The success branch: holds only when the normalized message carries non-empty text — then the flow fans out to every open output. When it does not hold, the node returns null and the run stops lawfully (the middle's throw is the loud failure; this is the quiet gate)."
               },
               "status": "materialized",
               "warnings": [],
               "envKeys": [],
               "function": {
                 "name": "ifSuccess",
-                "summary": "Lets the flow through only when the middle produced a result.",
-                "accepts": "result — the value produced by the middle of the flow.",
-                "returns": "result — the same value, when the branch holds."
+                "summary": "Lets the flow through to the outputs only when a non-empty normalized message exists.",
+                "accepts": "The normalized message (text · title · at · source) produced by the middle.",
+                "returns": "The same context when the branch holds; null (a lawful stop) when it does not."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 100,
               "kind": "condition-success",
               "ioType": null,
               "in": {
@@ -463,19 +453,19 @@
               "description": "The branch taken when the middle could not produce a result — the flow ends here.",
               "state": "visible",
               "info": {
-                "aiSummary": "The failure branch: a visual dead end. The real failure already stopped the run in the price node, so the function does nothing."
+                "aiSummary": "The failure branch: a named dead end on the canvas. The real failure has already stopped the run with the middle's throw (empty capture, refused input), so the function is an honest no-op — the node exists so the owner SEES where a failed run ends."
               },
               "status": "materialized",
               "warnings": [],
               "envKeys": [],
               "function": {
                 "name": "ifFailure",
-                "summary": "Ends the flow when the middle produced no result.",
+                "summary": "Ends the flow when the middle produced no message; the canvas shows where a failed run stops.",
                 "accepts": "The failure reported by the middle of the flow.",
                 "returns": "Nothing — a failure branch ends the flow."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 100,
               "kind": "condition-failure",
               "ioType": null,
               "in": {
@@ -511,23 +501,23 @@
           "nodes": [
             {
               "cuid": "cmruca7ra4n1jt639afc902fa70f5b",
-              "name": "Output",
-              "description": "Where the automation delivers its result — a reply, a saved record, or a published page.",
+              "name": "Dashboard output",
+              "description": "A row in the automation dashboard's history table.",
               "state": "visible",
               "info": {
-                "aiSummary": "Writes a row (date, company, ticker, price) into the automation dashboard's history table."
+                "aiSummary": "Writes the captured message into the dashboard history table: one row per successful run — date · source · title · text (folder-local rows store, _lib/rows.ts)."
               },
               "status": "materialized",
               "warnings": [],
               "envKeys": [],
               "function": {
                 "name": "deliverResult",
-                "summary": "Delivers the automation's result to its destination.",
-                "accepts": "result — the value produced by the middle of the flow.",
-                "returns": "Nothing — an output node ends the flow."
+                "summary": "Writes one history row per successful run: date, source channel, title and text of the message.",
+                "accepts": "The normalized message (text · title · at · source) carried by the success branch.",
+                "returns": "rowId — the id of the history row written to the dashboard."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 300,
               "kind": "output",
               "ioType": "dashboard",
               "in": {
@@ -547,19 +537,19 @@
               "description": "Hands the result over to a node of ANOTHER automation — the door out into a group.",
               "state": "hidden",
               "info": {
-                "aiSummary": "Passes the result to a neighbouring automation; in a standalone automation it stays hidden."
+                "aiSummary": "Passes the WHOLE shared Message to a neighbouring automation — the far side receives the same contract every channel speaks. Provable only inside a group of automations, so in the standalone starter it stays hidden."
               },
               "status": "materialized",
               "warnings": [],
               "envKeys": [],
               "function": {
                 "name": "handToExternal",
-                "summary": "Hands the result over to the automation waiting on the other side.",
-                "accepts": "result — the value carried by the success branch.",
-                "returns": "The same value, handed to another automation."
+                "summary": "Hands the whole shared Message over to the automation waiting on the other side.",
+                "accepts": "The normalized message (text · title · at · source, optional lat/lng) of the success branch.",
+                "returns": "handover — the Message object, handed to another automation."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 1000,
               "kind": "output-connector",
               "ioType": "custom",
               "in": {
@@ -579,21 +569,21 @@
               "cuid": "cmruqdpjm51ehf50515a4931dd04d7",
               "name": "Public Page output",
               "description": "A page on the automation own website.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
-                "aiSummary": "Blank for the \"public-page\" channel: declared and hidden; the function will appear when the node is revealed."
+                "aiSummary": "Publishes the captured message to the public page feed: a row in the public-page table (date · source · title · text), read through api/rows?table=public-page. The node delivers the feed's DATA; how to render it is the page component's choice."
               },
-              "status": "in-development",
+              "status": "materialized",
               "warnings": [],
               "envKeys": [],
               "function": {
                 "name": "deliverPublicPage",
-                "summary": "Delivers the result through the public-page channel.",
-                "accepts": "result — the value carried by the success branch.",
-                "returns": "Nothing — an output node ends the flow."
+                "summary": "Appends the message to the public page feed table so the page can show it.",
+                "accepts": "The normalized message (text · title · at · source) carried by the success branch.",
+                "returns": "publicPageRowId — the id of the feed row written."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 300,
               "kind": "output",
               "ioType": "public-page",
               "in": {
@@ -611,21 +601,21 @@
               "cuid": "cmruqdpjm51ehgbc4cd8289c717fde",
               "name": "Calendar output",
               "description": "An event on the automation calendar.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
-                "aiSummary": "Blank for the \"calendar\" channel: declared and hidden; the function will appear when the node is revealed."
+                "aiSummary": "Places the captured message as an event on the automation calendar: a row in the calendar table in the exact v1 shape the tab reads (date YYYY-MM-DD · time HH:MM · title · type \"event\" · notifyBefore 0 · integrations {}), timed at the capture moment."
               },
-              "status": "in-development",
+              "status": "materialized",
               "warnings": [],
               "envKeys": [],
               "function": {
                 "name": "deliverCalendar",
-                "summary": "Delivers the result through the calendar channel.",
-                "accepts": "result — the value carried by the success branch.",
-                "returns": "Nothing — an output node ends the flow."
+                "summary": "Creates a calendar event titled like the message at its capture moment.",
+                "accepts": "The normalized message (text · title · at · source) carried by the success branch.",
+                "returns": "calendarRowId — the id of the calendar row written."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 300,
               "kind": "output",
               "ioType": "calendar",
               "in": {
@@ -643,21 +633,21 @@
               "cuid": "cmruqdpjm51ehh558398f6e19c27c3",
               "name": "Analytics output",
               "description": "A chart in the automation analytics.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
-                "aiSummary": "Blank for the \"analytics\" channel: declared and hidden; the function will appear when the node is revealed."
+                "aiSummary": "Keeps per-channel counters of captured messages: one analytics-table row per input channel (metric \"captured\" · source · count · lastAt); every successful run increments its channel's counter through the journal store (the edit history keeps itself)."
               },
-              "status": "in-development",
+              "status": "materialized",
               "warnings": [],
               "envKeys": [],
               "function": {
                 "name": "deliverAnalytics",
-                "summary": "Delivers the result through the analytics channel.",
-                "accepts": "result — the value carried by the success branch.",
-                "returns": "Nothing — an output node ends the flow."
+                "summary": "Increments the captured-messages counter of the run's input channel in the analytics table.",
+                "accepts": "The normalized message (text · title · at · source) carried by the success branch.",
+                "returns": "analyticsCount — the channel's counter value after this run."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 300,
               "kind": "output",
               "ioType": "analytics",
               "in": {
@@ -675,21 +665,21 @@
               "cuid": "cmruqdpjm51ehi292f9cb0fc27987c",
               "name": "Map output",
               "description": "A marker on the automation map.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
-                "aiSummary": "Blank for the \"map\" channel: declared and hidden; the function will appear when the node is revealed."
+                "aiSummary": "Puts a marker on the automation map: a row in the map table (date · title · source · lat · lng). Coordinates are optional in the contract, so a message without lat/lng is delivered honestly-degraded — a skip with the reason in the run context, never an invented point."
               },
-              "status": "in-development",
+              "status": "materialized",
               "warnings": [],
               "envKeys": [],
               "function": {
                 "name": "deliverMap",
-                "summary": "Delivers the result through the map channel.",
-                "accepts": "result — the value carried by the success branch.",
-                "returns": "Nothing — an output node ends the flow."
+                "summary": "Writes a map marker at the message's lat/lng; without coordinates it skips honestly with a reason.",
+                "accepts": "The normalized message; lat/lng when the input channel captured them.",
+                "returns": "mapDelivery — \"marker <id> at lat,lng\" or \"skipped: …\" naming the missing coordinates."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 300,
               "kind": "output",
               "ioType": "map",
               "in": {
@@ -707,11 +697,11 @@
               "cuid": "cmruqdpjn51ehjeb00a0bb1dcde063",
               "name": "Email output",
               "description": "An email the automation sends out.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
-                "aiSummary": "Blank for the \"email\" channel: declared and hidden; the function will appear when the node is revealed."
+                "aiSummary": "Sends the captured message as an email via the shared transport (_lib/transport.ts, Resend). Recipient by explicitness: emailTo from the flow → the inbound sender (an honest reply) → RESEND_TO_EMAIL. An unconfigured channel (no key / no recipient) skips honestly with the reason; a refusal from the service with live keys throws."
               },
-              "status": "in-development",
+              "status": "materialized",
               "warnings": [],
               "envKeys": [
                 {
@@ -723,16 +713,21 @@
                   "name": "RESEND_FROM_EMAIL",
                   "status": "missing",
                   "comment": "Declared by the channel; the api/env door checks its live presence."
+                },
+                {
+                  "name": "RESEND_TO_EMAIL",
+                  "status": "missing",
+                  "comment": "Optional owner address for fan-out letters; without it and without emailTo/emailFrom in the flow the node skips honestly."
                 }
               ],
               "function": {
                 "name": "deliverEmail",
-                "summary": "Delivers the result through the email channel.",
-                "accepts": "result — the value carried by the success branch.",
-                "returns": "Nothing — an output node ends the flow."
+                "summary": "Emails the message via Resend; unconfigured channel skips honestly, a service refusal throws.",
+                "accepts": "The normalized message plus an optional recipient (emailTo, or emailFrom of an inbound letter).",
+                "returns": "emailDelivery — \"sent <id> to <address>\" or \"skipped: …\" naming what is not configured."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 3000,
               "kind": "output",
               "ioType": "email",
               "in": {
@@ -750,11 +745,11 @@
               "cuid": "cmruqdpjn51ehk0971dc21b875fe16",
               "name": "Telegram Bot output",
               "description": "A message sent through the automation own Telegram bot.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
-                "aiSummary": "Blank for the \"telegram-bot\" channel: declared and hidden; the function will appear when the node is revealed."
+                "aiSummary": "Sends the captured message through the automation's own Telegram bot into its working chat (TELEGRAM_ALLOWED_CHAT_ID) via the shared transport. Unconfigured channel (no token/chat) skips honestly with the reason; a Telegram refusal with live keys throws."
               },
-              "status": "in-development",
+              "status": "materialized",
               "warnings": [],
               "envKeys": [
                 {
@@ -770,12 +765,12 @@
               ],
               "function": {
                 "name": "deliverTelegramBot",
-                "summary": "Delivers the result through the telegram-bot channel.",
-                "accepts": "result — the value carried by the success branch.",
-                "returns": "Nothing — an output node ends the flow."
+                "summary": "Sends the message through the automation's bot; unconfigured channel skips honestly, a refusal throws.",
+                "accepts": "The normalized message (text · title · at · source) carried by the success branch.",
+                "returns": "telegramBotDelivery — \"sent <message id>\" or \"skipped: …\" naming the missing key."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 3000,
               "kind": "output",
               "ioType": "telegram-bot",
               "in": {
@@ -793,11 +788,11 @@
               "cuid": "cmruqdpjn51ehl1bc14d0bb0ca3b9b",
               "name": "User Telegram Chat output",
               "description": "A message written into the user own Telegram chat.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
-                "aiSummary": "Blank for the \"user-telegram-chat\" channel: declared and hidden; the function will appear when the node is revealed."
+                "aiSummary": "Writes the captured message into the USER'S personal Telegram chat (linked via api/telegram/link → TELEGRAM_USER_CHAT_ID; a chat id carried by the run itself wins — an honest reply to the sender). Same bot token as the bot channel: one service, one key. Unconfigured → honest skip; a refusal with live keys throws."
               },
-              "status": "in-development",
+              "status": "materialized",
               "warnings": [],
               "envKeys": [
                 {
@@ -806,19 +801,19 @@
                   "comment": "Declared by the channel; the api/env door checks its live presence."
                 },
                 {
-                  "name": "TELEGRAM_ALLOWED_CHAT_ID",
+                  "name": "TELEGRAM_USER_CHAT_ID",
                   "status": "missing",
-                  "comment": "Declared by the channel; the api/env door checks its live presence."
+                  "comment": "The user's personal chat, linked natively via api/telegram/link (step 296); a run's own telegramChatId wins over it."
                 }
               ],
               "function": {
                 "name": "deliverUserTelegramChat",
-                "summary": "Delivers the result through the user-telegram-chat channel.",
-                "accepts": "result — the value carried by the success branch.",
-                "returns": "Nothing — an output node ends the flow."
+                "summary": "Writes the message into the user's linked personal chat; unconfigured channel skips honestly.",
+                "accepts": "The normalized message plus an optional telegramChatId carried by the run.",
+                "returns": "userTelegramDelivery — \"sent <id> to <chat>\" or \"skipped: …\" naming what is missing."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 3000,
               "kind": "output",
               "ioType": "user-telegram-chat",
               "in": {
@@ -836,21 +831,32 @@
               "cuid": "cdelivervih3efrq9",
               "name": "Vector memory output",
               "description": "Output to the agent vector memory (LightRAG).",
-              "state": "hidden",
+              "state": "visible",
               "info": {
-                "aiSummary": "The vector-memory channel door: a fact remembered in the LightRAG agent memory. The node is hidden — the channel is declared but not yet configured."
+                "aiSummary": "Remembers the captured message as a FACT: ingests it into LightRAG (folder-own call _lib/memory.ts, provenance projects/other/frozen-template-v-2?channel=<source>&record=<unique> — the unique tail is the uniqueness law) and writes a visible row into the vector-memory table (name · content · trackId). Service unreachable → honest skip; service refusal → throw."
               },
-              "status": "in-development",
+              "status": "materialized",
               "warnings": [],
-              "envKeys": [],
+              "envKeys": [
+                {
+                  "name": "LIGHTRAG_URL",
+                  "status": "missing",
+                  "comment": "Optional — the node defaults to http://127.0.0.1:9621 (the platform memory service); an unreachable service degrades to an honest skip."
+                },
+                {
+                  "name": "LIGHTRAG_API_KEY",
+                  "status": "missing",
+                  "comment": "Optional — sent as X-API-Key when the memory service requires one for writes."
+                }
+              ],
               "function": {
                 "name": "deliverVectorMemory",
-                "summary": "The vector-memory channel door: a fact remembered in the LightRAG agent memory. The node is hidden — the channel is declared but not yet configured.",
-                "accepts": "The result of the success branch.",
-                "returns": "A record in the vector memory."
+                "summary": "Ingests the message into LightRAG with unique provenance and records the fact row; unreachable service skips honestly.",
+                "accepts": "The normalized message (text · title · at · source) carried by the success branch.",
+                "returns": "vectorMemoryDelivery (\"remembered <track id>\" or \"skipped: …\") and vectorRowId of the fact row."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 5000,
               "kind": "output",
               "ioType": "vector-memory",
               "in": {
@@ -868,21 +874,21 @@
               "cuid": "cdeliverdndd14qyz",
               "name": "Database output",
               "description": "If you activate this node, you can store and retrieve data in your own local database. If you also use object storage or a vector database, the local database keeps the links that locate those objects, too.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
-                "aiSummary": "The local-database channel door: a record in the automation's own database. The node is hidden — the channel is declared but not yet configured."
+                "aiSummary": "Writes the captured message as a record of the automation's own local database: a database-table row (name · text · source · date · storageIds · vectorIds). By the stores law the record HOLDS LINKS to the neighbouring stores: the vector fact's row id lands in vectorIds when the memory output ran earlier in the same fan-out."
               },
-              "status": "in-development",
+              "status": "materialized",
               "warnings": [],
               "envKeys": [],
               "function": {
                 "name": "deliverDatabase",
-                "summary": "The local-database channel door: a record in the automation's own database. The node is hidden — the channel is declared but not yet configured.",
-                "accepts": "The result of the success branch.",
-                "returns": "A row in the local database."
+                "summary": "Writes a database record of the message, linking the vector fact written earlier in the same run.",
+                "accepts": "The normalized message plus vectorRowId when the vector-memory output already ran.",
+                "returns": "databaseRowId — the id of the database record written."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 300,
               "kind": "output",
               "ioType": "database",
               "in": {
@@ -900,21 +906,21 @@
               "cuid": "cdelivers3oz5tpd6",
               "name": "Storage output",
               "description": "If you activate this node, you can save and use media files and documents related to this automation in your own local storage.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
-                "aiSummary": "The local-storage channel door: a file saved next to the automation. The node is hidden — the channel is declared but not yet configured."
+                "aiSummary": "Saves the captured message as a .txt FILE in the folder's object storage (_lib/store.ts → _data/runtime/objects/) and writes the storage-table row holding the link (fileKey · name · kind \"text\" · size) — bytes live in the store, the row holds the reference: the database→storage link of the stores law."
               },
-              "status": "in-development",
+              "status": "materialized",
               "warnings": [],
               "envKeys": [],
               "function": {
                 "name": "deliverStorage",
-                "summary": "The local-storage channel door: a file saved next to the automation. The node is hidden — the channel is declared but not yet configured.",
-                "accepts": "The result of the success branch.",
-                "returns": "A file in the local storage."
+                "summary": "Saves the message as a .txt object and records the storage row holding its fileKey link.",
+                "accepts": "The normalized message (text · title · at · source) carried by the success branch.",
+                "returns": "storageFileKey and storageRowId — the object's key and the row that links to it."
               },
               "run": "sequential",
-              "estDurationMs": 60000,
+              "estDurationMs": 500,
               "kind": "output",
               "ioType": "storage",
               "in": {
@@ -967,73 +973,73 @@
         "cuid": "cmrvwdp1v49a2b439a6fb1fc09",
         "from": "cmruqdpjl51eha9a65832422ad3a53",
         "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cmrvwdp1v49a2c3afe5b8b9595",
         "from": "cmruqdpjm51ehb6c5e6bd9a8614a87",
         "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cmrvwdp1v49a2d9d146408ab14",
         "from": "cmruqdpjm51ehc433ccaf2f7677d66",
         "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cmrvwdp1v49a2e842832a1d23d",
         "from": "cmruqdpjm51ehd18d5a1f37ce38e1c",
         "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cmrvwdp1v49a2fe0b90cfedff6",
         "from": "cmruqdpjm51ehe2f58b91a619fdc71",
         "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cmrvwdp1v49a2h36b3a279f3de",
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cmruqdpjm51ehf50515a4931dd04d7",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cmrvwdp1v49a2i3c2d074f1cb4",
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cmruqdpjm51ehgbc4cd8289c717fde",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cmrvwdp1v49a2jd7be9889f242",
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cmruqdpjm51ehh558398f6e19c27c3",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cmrvwdp1v49a2k982bfd6ccd06",
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cmruqdpjm51ehi292f9cb0fc27987c",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cmrvwdp1v49a2l7d1ea7b4f179",
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cmruqdpjn51ehjeb00a0bb1dcde063",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cmrvwdp1v49a2m8bebf3baa61c",
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cmruqdpjn51ehk0971dc21b875fe16",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cmrvwdp1v49a2ne9b104b77e56",
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cmruqdpjn51ehl1bc14d0bb0ca3b9b",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cedgeoutconn9wb4gc",
@@ -1045,25 +1051,25 @@
         "cuid": "cedgevectorout5m8kx1",
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cdelivervih3efrq9",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cedgedatabaseout3j7pw9",
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cdeliverdndd14qyz",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cedgestorageout8r2ny4",
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cdelivers3oz5tpd6",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cedgeemailin4t8wz2",
         "from": "cemailinp7k2vq4x9",
         "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
+        "state": "visible"
       }
     ]
   },
@@ -1076,7 +1082,7 @@
         "description": "",
         "presence": "expanded",
         "info": {
-          "aiSummary": "Launch panel: the request fields from the core, the run button into the api/run door, and the chain of run nodes. The public half is the panel itself (everyone sees it), the administrative half is the request setup (owner only)."
+          "aiSummary": "Launch panel: one longtext message field declared in the core (data.params), the run button into api/run, the run report. The default input door of the capture→fan-out starter."
         },
         "status": "materialized",
         "warnings": [],
@@ -1087,83 +1093,82 @@
             "name": "First control panel",
             "description": "",
             "info": {
-              "aiSummary": "The tab's only panel: asks for a public company's name and starts the \"share price\" run. The fields are declared here, in data.params — the component only renders them."
+              "aiSummary": "The tab's only panel: asks for a message and starts the capture→fan-out run. The field, the answer template and its keys are declared here in data — the component only renders them."
             },
             "status": "materialized",
             "warnings": [],
             "envKeys": [],
             "data": {
               "title": {
-                "en": "Stock price request",
-                "es": "Consulta de precio de acción",
-                "fr": "Demande de cours de bourse",
-                "it": "Richiesta prezzo azionario",
-                "ru": "Запрос цены акции",
-                "de": "Aktienkurs-Abfrage",
-                "pt": "Consulta de preço de ação",
-                "pl": "Zapytanie o cenę akcji",
-                "tr": "Hisse fiyatı sorgusu",
-                "nl": "Aandelenkoers opvragen"
+                "en": "Send a message",
+                "es": "Enviar un mensaje",
+                "fr": "Envoyer un message",
+                "it": "Invia un messaggio",
+                "ru": "Отправить сообщение",
+                "de": "Nachricht senden",
+                "pt": "Enviar uma mensagem",
+                "pl": "Wyślij wiadomość",
+                "tr": "Mesaj gönder",
+                "nl": "Bericht versturen"
               },
               "description": {
-                "en": "Name a public company — the automation returns its live share price and stores the row in the dashboard.",
-                "es": "Nombra una empresa pública: la automatización devuelve el precio actual de su acción y guarda la fila en el panel.",
-                "fr": "Nommez une société cotée : l'automatisation renvoie le cours actuel de son action et enregistre la ligne dans le tableau de bord.",
-                "it": "Indica un'azienda quotata: l'automazione restituisce il prezzo attuale dell'azione e salva la riga nella dashboard.",
-                "ru": "Назовите публичную компанию — автоматизация вернёт живую цену её акции и сохранит строку в дашборде.",
-                "de": "Nenne ein börsennotiertes Unternehmen — die Automatisierung liefert den aktuellen Aktienkurs und speichert die Zeile im Dashboard.",
-                "pt": "Indique uma empresa pública — a automação devolve o preço atual da ação e guarda a linha no painel.",
-                "pl": "Podaj spółkę publiczną — automatyzacja zwróci bieżącą cenę akcji i zapisze wiersz w panelu.",
-                "tr": "Halka açık bir şirket adı verin — otomasyon güncel hisse fiyatını döndürür ve satırı panoya kaydeder.",
-                "nl": "Noem een beursgenoteerd bedrijf — de automatisering geeft de actuele koers terug en bewaart de rij in het dashboard."
+                "en": "Write anything — the automation captures it and fans it out to every open output channel.",
+                "es": "Escribe lo que quieras: la automatización lo captura y lo reparte a todos los canales de salida abiertos.",
+                "fr": "Écrivez ce que vous voulez : l'automatisation le capture et le distribue à tous les canaux de sortie ouverts.",
+                "it": "Scrivi qualsiasi cosa: l'automazione la cattura e la distribuisce a tutti i canali di uscita aperti.",
+                "ru": "Напишите что угодно — автоматизация захватит сообщение и развезёт его по всем открытым выходным каналам.",
+                "de": "Schreibe irgendetwas — die Automatisierung erfasst es und verteilt es an alle offenen Ausgabekanäle.",
+                "pt": "Escreva qualquer coisa — a automação captura a mensagem e distribui-a por todos os canais de saída abertos.",
+                "pl": "Napisz cokolwiek — automatyzacja przechwyci wiadomość i roześle ją do wszystkich otwartych kanałów wyjściowych.",
+                "tr": "Herhangi bir şey yazın — otomasyon mesajı yakalar ve tüm açık çıkış kanallarına dağıtır.",
+                "nl": "Schrijf wat dan ook — de automatisering legt het vast en verspreidt het naar alle open uitvoerkanalen."
               },
               "params": [
                 {
-                  "key": "query",
-                  "type": "text",
+                  "key": "text",
+                  "type": "longtext",
                   "required": true,
                   "label": {
-                    "en": "Company",
-                    "es": "Empresa",
-                    "fr": "Entreprise",
-                    "it": "Azienda",
-                    "ru": "Компания",
-                    "de": "Unternehmen",
-                    "pt": "Empresa",
-                    "pl": "Firma",
-                    "tr": "Şirket",
-                    "nl": "Bedrijf"
+                    "en": "Message",
+                    "es": "Mensaje",
+                    "fr": "Message",
+                    "it": "Messaggio",
+                    "ru": "Сообщение",
+                    "de": "Nachricht",
+                    "pt": "Mensagem",
+                    "pl": "Wiadomość",
+                    "tr": "Mesaj",
+                    "nl": "Bericht"
                   },
                   "placeholder": {
-                    "en": "Apple",
-                    "es": "Apple",
-                    "fr": "Apple",
-                    "it": "Apple",
-                    "ru": "Apple",
-                    "de": "Apple",
-                    "pt": "Apple",
-                    "pl": "Apple",
-                    "tr": "Apple",
-                    "nl": "Apple"
+                    "en": "Team meeting tomorrow at 10:00",
+                    "es": "Reunión del equipo mañana a las 10:00",
+                    "fr": "Réunion d'équipe demain à 10h00",
+                    "it": "Riunione del team domani alle 10:00",
+                    "ru": "Встреча команды завтра в 10:00",
+                    "de": "Teammeeting morgen um 10:00",
+                    "pt": "Reunião da equipa amanhã às 10:00",
+                    "pl": "Spotkanie zespołu jutro o 10:00",
+                    "tr": "Yarın saat 10:00'da ekip toplantısı",
+                    "nl": "Teamvergadering morgen om 10:00"
                   }
                 }
               ],
               "answer": {
-                "en": "{company} ({ticker}) — ${price}",
-                "es": "{company} ({ticker}) — {price} $",
-                "fr": "{company} ({ticker}) — {price} $",
-                "it": "{company} ({ticker}) — {price} $",
-                "ru": "{company} ({ticker}) — {price} $",
-                "de": "{company} ({ticker}) — {price} $",
-                "pt": "{company} ({ticker}) — {price} $",
-                "pl": "{company} ({ticker}) — {price} $",
-                "tr": "{company} ({ticker}) — {price} $",
-                "nl": "{company} ({ticker}) — ${price}"
+                "en": "“{title}” — captured from {source} and delivered to every open output.",
+                "es": "«{title}»: capturado desde {source} y entregado a todas las salidas abiertas.",
+                "fr": "« {title} » — capturé depuis {source} et distribué à toutes les sorties ouvertes.",
+                "it": "«{title}» — catturato da {source} e consegnato a tutte le uscite aperte.",
+                "ru": "«{title}» — захвачено из {source} и доставлено во все открытые выходы.",
+                "de": "„{title}“ — aus {source} erfasst und an alle offenen Ausgänge zugestellt.",
+                "pt": "«{title}» — capturado de {source} e entregue em todas as saídas abertas.",
+                "pl": "„{title}” — przechwycono z {source} i dostarczono do wszystkich otwartych wyjść.",
+                "tr": "“{title}” — {source} kanalından yakalandı ve tüm açık çıkışlara iletildi.",
+                "nl": "“{title}” — vastgelegd via {source} en bezorgd aan alle open uitvoeren."
               },
               "answerKeys": [
-                "company",
-                "ticker",
-                "price"
+                "title",
+                "source"
               ]
             }
           }
@@ -1450,7 +1455,7 @@
         "description": "",
         "presence": "collapsed",
         "info": {
-          "aiSummary": "The analytics tab is declared and empty: the owner has not yet said what it should compute."
+          "aiSummary": "Weekly charts computed client-side from live history rows; additionally the analytics output node keeps per-channel captured counters in the analytics table (api/rows?table=analytics)."
         },
         "status": "materialized",
         "warnings": [],
@@ -1487,9 +1492,9 @@
         "systemInstructionName": "tab",
         "name": "dashboard",
         "description": "",
-        "presence": "collapsed",
+        "presence": "expanded",
         "info": {
-          "aiSummary": "The history table: date, company, ticker, price — one row per successful price-request run."
+          "aiSummary": "The history table of captured messages: date · source channel · title · text — one row per successful run, written by the dashboard output node."
         },
         "status": "materialized",
         "warnings": [],
@@ -1500,7 +1505,7 @@
             "name": "History",
             "description": "",
             "info": {
-              "aiSummary": "Run rows: date, company, ticker, price. Filled by the output node on every successful request."
+              "aiSummary": "Run rows: date, source channel, title, text. Filled by the dashboard output node on every successful capture→fan-out run."
             },
             "status": "materialized",
             "warnings": [],
@@ -1527,73 +1532,70 @@
                   "defaultVisible": true
                 },
                 {
-                  "key": "company",
+                  "key": "source",
                   "label": {
-                    "en": "Company",
-                    "es": "Empresa",
-                    "fr": "Entreprise",
-                    "it": "Azienda",
-                    "ru": "Компания",
-                    "de": "Firma",
-                    "pt": "Empresa",
-                    "pl": "Firma",
-                    "tr": "Şirket",
-                    "nl": "Bedrijf"
-                  },
-                  "type": "text",
-                  "source": "company",
-                  "defaultVisible": true
-                },
-                {
-                  "key": "ticker",
-                  "label": {
-                    "en": "Ticker",
-                    "es": "Símbolo",
-                    "fr": "Symbole",
-                    "it": "Simbolo",
-                    "ru": "Тикер",
-                    "de": "Kürzel",
-                    "pt": "Símbolo",
-                    "pl": "Symbol",
-                    "tr": "Sembol",
-                    "nl": "Symbool"
+                    "en": "Source",
+                    "es": "Origen",
+                    "fr": "Source",
+                    "it": "Origine",
+                    "ru": "Канал",
+                    "de": "Quelle",
+                    "pt": "Origem",
+                    "pl": "Źródło",
+                    "tr": "Kaynak",
+                    "nl": "Bron"
                   },
                   "type": "badge",
-                  "source": "ticker",
+                  "source": "source",
                   "defaultVisible": true,
                   "options": {
                     "colorFrom": "blue"
                   }
                 },
                 {
-                  "key": "price",
+                  "key": "title",
                   "label": {
-                    "en": "Price",
-                    "es": "Precio",
-                    "fr": "Prix",
-                    "it": "Prezzo",
-                    "ru": "Цена",
-                    "de": "Preis",
-                    "pt": "Preço",
-                    "pl": "Cena",
-                    "tr": "Fiyat",
-                    "nl": "Prijs"
+                    "en": "Title",
+                    "es": "Título",
+                    "fr": "Titre",
+                    "it": "Titolo",
+                    "ru": "Заголовок",
+                    "de": "Titel",
+                    "pt": "Título",
+                    "pl": "Tytuł",
+                    "tr": "Başlık",
+                    "nl": "Titel"
                   },
-                  "type": "number",
-                  "source": "price",
-                  "defaultVisible": true,
-                  "options": {
-                    "suffix": "$"
-                  }
+                  "type": "text",
+                  "source": "title",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "text",
+                  "label": {
+                    "en": "Text",
+                    "es": "Texto",
+                    "fr": "Texte",
+                    "it": "Testo",
+                    "ru": "Текст",
+                    "de": "Text",
+                    "pt": "Texto",
+                    "pl": "Tekst",
+                    "tr": "Metin",
+                    "nl": "Tekst"
+                  },
+                  "type": "text",
+                  "source": "text",
+                  "defaultVisible": true
                 },
                 {
                   "key": "row-actions",
                   "label": {
                     "en": "",
-                    "ru": "",
                     "es": "",
                     "fr": "",
                     "it": "",
+                    "ru": "",
                     "de": "",
                     "pt": "",
                     "pl": "",
@@ -1611,10 +1613,10 @@
                   "key": "row-delete",
                   "label": {
                     "en": "",
-                    "ru": "",
                     "es": "",
                     "fr": "",
                     "it": "",
+                    "ru": "",
                     "de": "",
                     "pt": "",
                     "pl": "",
@@ -1630,16 +1632,16 @@
                 }
               ],
               "title": {
-                "en": "Request history",
-                "es": "Historial de consultas",
-                "fr": "Historique des demandes",
-                "it": "Cronologia richieste",
-                "ru": "История запросов",
-                "de": "Anfrageverlauf",
-                "pt": "Histórico de pedidos",
-                "pl": "Historia zapytań",
-                "tr": "Sorgu geçmişi",
-                "nl": "Aanvraaggeschiedenis"
+                "en": "Captured messages",
+                "es": "Mensajes capturados",
+                "fr": "Messages capturés",
+                "it": "Messaggi catturati",
+                "ru": "Захваченные сообщения",
+                "de": "Erfasste Nachrichten",
+                "pt": "Mensagens capturadas",
+                "pl": "Przechwycone wiadomości",
+                "tr": "Yakalanan mesajlar",
+                "nl": "Vastgelegde berichten"
               },
               "pageSize": 20
             }
@@ -1766,7 +1768,7 @@
         "systemInstructionName": "tab",
         "name": "vector-memory",
         "description": "",
-        "presence": "absent",
+        "presence": "collapsed",
         "info": {
           "aiSummary": "The vector-memory tab is declared and empty: we will show what the automation has remembered once the owner says what exactly."
         },
@@ -1790,7 +1792,7 @@
         "systemInstructionName": "tab",
         "name": "database",
         "description": "",
-        "presence": "absent",
+        "presence": "collapsed",
         "info": {
           "aiSummary": "The local-database tab is declared and empty: the owner decides which records to show."
         },
@@ -1816,7 +1818,7 @@
         "systemInstructionName": "tab",
         "name": "storage",
         "description": "If you activate this node, you can save and use media files and documents related to this automation in your own local storage.",
-        "presence": "absent",
+        "presence": "collapsed",
         "info": {
           "aiSummary": "The local-storage tab is declared and empty: this is where the automation's files will live, for example images."
         },
@@ -1845,21 +1847,29 @@
       {
         "cuid": "cmrvy25f31pjb09c1e7cab94b2",
         "number": 1,
-        "title": "Share price by company name",
-        "text": "I want to ask for a public company's share price in my own words (for example \"how much is Apple\") and get a live price saved to history.",
+        "title": "Capture a message from any channel",
+        "text": "I want to send a message through any input channel — the control panel, an HTTP webhook, a scheduled tick, the public page form, the automation's Telegram bot, my own Telegram chat or an inbound email — and have the automation capture it as one common message.",
         "status": "in-use"
       },
       {
         "cuid": "cmrvy25f31pjb09c1e7cab94b3",
         "number": 2,
-        "title": "Alert on a sharp price change",
-        "text": "I want to receive a Telegram notification with the new price and the size of the change whenever a tracked stock's price changes sharply.",
-        "status": "new"
+        "title": "Fan the message out to every output",
+        "text": "I want every captured message delivered everywhere at once — a dashboard row, a database record, a .txt file in storage, a fact in vector memory, a calendar event, an analytics counter, a map marker when the message carries coordinates, a post on the public page, an email and a Telegram message — so every delivery pattern of the platform is real and explorable.",
+        "status": "in-use"
       }
     ]
   },
   "history": {
     "systemInstructionName": "history",
-    "versions": []
+    "versions": [
+      {
+        "cuid": "cver300fanout0001",
+        "number": 1,
+        "createdAt": "26-07-2026 14:34:42",
+        "objectsTouched": 30,
+        "summary": "Step 300: the stock-price demo became the domain-neutral capture→fan-out starter. All 7 input channels and all 11 output channels carry real functions speaking one Message contract (text · source · at · title · lat/lng); key-gated deliveries skip honestly when unconfigured; the stock domain, the demo warning and the v1 ?view=public surface were removed."
+      }
+    ]
   }
 }

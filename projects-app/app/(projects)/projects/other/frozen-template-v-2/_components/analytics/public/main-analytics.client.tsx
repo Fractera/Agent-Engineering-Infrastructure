@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BarChart3, DollarSign } from "lucide-react";
+import { AlignLeft, BarChart3 } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   ChartContainer,
@@ -13,8 +13,8 @@ import { analyticsStrings } from "../i18n";
 
 // АНАЛИТИКА — РАНТАЙМ (public). ДВА графика ВЕРТИКАЛЬНЫХ столбиков (shadcn charts / recharts) за ПОСЛЕДНИЕ
 // 7 ДНЕЙ (по числу дней недели), из ЖИВЫХ строк истории (`api/rows`, та же дверь, что кормит дашборд):
-//   1. сколько запросов сделано в каждый день (штук);
-//   2. суммарная стоимость акций за каждый день (сумма поля `price`).
+//   1. сколько сообщений захвачено в каждый день (штук);
+//   2. объём захваченного текста за каждый день (сумма длин поля `text`, в знаках).
 //
 // Каждый график ОДНО-СЕРИЙНЫЙ (навык dataviz): легенда не нужна — заголовок называет; одна краска-магнитуда
 // (`--color-chart-1` / `--color-chart-2`), скруглённый верх столбика, спокойная сетка, tooltip по столбику.
@@ -38,7 +38,7 @@ export default function MainAnalytics({ lang }: { lang: string }) {
     return () => { alive = false; };
   }, []);
 
-  // Семь последних дней слева направо. Строку относим к дню по `createdAt` (момент запроса — факт), а не по
+  // Семь последних дней слева направо. Строку относим к дню по `createdAt` (момент захвата — факт), а не по
   // полю `date`, которое агент может переопределить.
   const { requests, values } = useMemo(() => {
     const count = new Map<string, number>();
@@ -48,8 +48,8 @@ export default function MainAnalytics({ lang }: { lang: string }) {
       const day = iso.slice(0, 10);
       if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) continue;
       count.set(day, (count.get(day) ?? 0) + 1);
-      const price = Number(r.price);
-      if (Number.isFinite(price)) sum.set(day, (sum.get(day) ?? 0) + price);
+      const chars = String(r.text ?? "").length;
+      if (chars > 0) sum.set(day, (sum.get(day) ?? 0) + chars);
     }
     const weekday = new Intl.DateTimeFormat(lang, { weekday: "short" });
     const req: DayPoint[] = [];
@@ -91,7 +91,7 @@ export default function MainAnalytics({ lang }: { lang: string }) {
 
       <section className="space-y-2 rounded-lg border p-3">
         <h4 className="flex items-center gap-2 text-sm font-medium">
-          <DollarSign className="size-4 text-muted-foreground" /> {L.valueTitle}
+          <AlignLeft className="size-4 text-muted-foreground" /> {L.valueTitle}
         </h4>
         <ChartContainer config={valConfig} className="aspect-auto h-48 w-full">
           <BarChart data={values} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>

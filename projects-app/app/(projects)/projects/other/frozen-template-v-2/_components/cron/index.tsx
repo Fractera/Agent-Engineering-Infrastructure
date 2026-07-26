@@ -1,5 +1,4 @@
 import type { Entity } from "../../_data/automation.schema";
-import type { Surface } from "../surface";
 import MainSchedule from "./public/main-schedule";
 import CronSettings from "./public/components/cron-settings";
 import CronAiRequest from "./admin/ai-request";
@@ -25,24 +24,15 @@ const SCHEDULES: Record<string, React.ComponentType<{ entity: Entity; lang: stri
 
 const fileOf = (name: string) => name.trim().toLowerCase().replace(/\s+/g, "-");
 
-export default function Cron({
-  surface,
-  entities,
-  lang,
-}: {
-  surface: Surface;
-  entities: Entity[];
-  lang: string;
-}) {
+export default function Cron({ entities, lang }: { entities: Entity[]; lang: string }) {
   const many = entities.length > 1;
-  const landing = surface === "public";
 
   return (
-    <div data-entity="cron" data-surface={surface} className="divide-y">
+    <div data-entity="cron" className="divide-y">
       {entities.map((entity, i) => {
         const Schedule = SCHEDULES[fileOf(entity.name)];
         const title = pick((entity.data as Record<string, unknown>).title, lang) || entity.name;
-        const nested = many && !landing;
+        const nested = many;
         const pending = "crudUser" in entity.info ? entity.info.crudUser : undefined;
         const body = Schedule ? (
           <div className="space-y-3">
@@ -50,7 +40,7 @@ export default function Cron({
             {/* Заявка на ОДНО расписание — только когда расписаний БОЛЬШЕ ОДНОГО (закон владельца 2026-07-25):
                 при единственной сущности per-entity кнопка дублирует «строить весь раздел», поэтому её не
                 показываем — остаётся только заявка на вкладку. */}
-            {surface === "admin" && many ? (
+            {many ? (
               <DevSlot>
                 <DevBuildWithAi target={{ object: "entity", tab: "cron", cuid: entity.cuid }} name={title} pending={pending} lang={lang} />
               </DevSlot>
@@ -74,9 +64,9 @@ export default function Cron({
       })}
       {/* НАСТРОЙКА РАСПИСАНИЯ — ПУБЛИЧНАЯ половина (закон владельца 2026-07-24): крон — продуктовая
           поверхность, вся его логика живёт там, где агент читает и правит её по заявке ИИ. */}
-      {surface === "admin" ? <CronSettings entities={entities} lang={lang} /> : null}
+      <CronSettings entities={entities} lang={lang} />
       {/* АДМИН-ПОЛОВИНА — только заявка ИИ на вкладку целиком. */}
-      {surface === "admin" ? <CronAiRequest lang={lang} /> : null}
+      <CronAiRequest lang={lang} />
     </div>
   );
 }

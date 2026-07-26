@@ -1,5 +1,4 @@
 import type { Entity } from "../../../_data/automation.schema";
-import type { Surface } from "../../surface";
 import { tableOf, typesOf } from "../entries";
 import { integrationsOf } from "../integrations";
 import { calendarStrings } from "../i18n";
@@ -20,12 +19,10 @@ import IntegrationsMenu from "./components/integrations-menu.client";
 // на их месте стоит контейнер с загрузчиком, и к серверу никто не ходит.
 export default function MainCalendar({
   entity,
-  surface,
   lang,
   heading = true,
 }: {
   entity: Entity;
-  surface: Surface;
   lang: string;
   heading?: boolean;
 }) {
@@ -47,7 +44,7 @@ export default function MainCalendar({
         ) : (
           <span />
         )}
-        <IntegrationsMenu cuid={entity.cuid} integrations={integrations} surface={surface} lang={lang} />
+        <IntegrationsMenu cuid={entity.cuid} integrations={integrations} lang={lang} />
       </div>
 
 
@@ -56,7 +53,6 @@ export default function MainCalendar({
           table={tableOf(entity)}
           types={typesOf(entity)}
           integrations={integrations}
-          surface={surface}
           lang={lang}
         />
       </LazyBlock>

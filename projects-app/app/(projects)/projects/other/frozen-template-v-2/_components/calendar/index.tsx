@@ -1,5 +1,4 @@
 import type { Entity } from "../../_data/automation.schema";
-import type { Surface } from "../surface";
 import MainCalendar from "./public/main-calendar";
 import CalendarSettings from "./public/components/calendar-settings";
 import CalendarAiRequest from "./admin/ai-request";
@@ -31,40 +30,31 @@ import { pick } from "../shared/localized";
 // одной вкладки в объявление другой значило бы завести второй источник истины о такте.
 const CALENDARS: Record<
   string,
-  React.ComponentType<{ entity: Entity; surface: Surface; lang: string; heading?: boolean }>
+  React.ComponentType<{ entity: Entity; lang: string; heading?: boolean }>
 > = {
   "main-calendar": MainCalendar,
 };
 
 const fileOf = (name: string) => name.trim().toLowerCase().replace(/\s+/g, "-");
 
-export default function Calendar({
-  surface,
-  entities,
-  lang,
-}: {
-  surface: Surface;
-  entities: Entity[];
-  lang: string;
-}) {
+export default function Calendar({ entities, lang }: { entities: Entity[]; lang: string }) {
   const many = entities.length > 1;
-  const landing = surface === "public";
 
   return (
-    <div data-entity="calendar" data-surface={surface} className="divide-y">
+    <div data-entity="calendar" className="divide-y">
       {entities.map((entity, i) => {
         const Cal = CALENDARS[fileOf(entity.name)];
         const title = pick((entity.data as Record<string, unknown>).title, lang) || entity.name;
-        const nested = many && !landing; // имя стоит в шапке вложенного аккордеона
+        const nested = many; // имя стоит в шапке вложенного аккордеона
         const pending = "crudUser" in entity.info ? entity.info.crudUser : undefined;
         // ЗАЯВКА НА ОДИН КАЛЕНДАРЬ — свой адрес в ядре (entity) и своё имя в заголовке раскрывашки.
         const body = Cal ? (
           <div className="space-y-3">
-            <Cal entity={entity} surface={surface} lang={lang} heading={!nested} />
+            <Cal entity={entity} lang={lang} heading={!nested} />
             {/* Заявка на ОДИН календарь — только когда календарей БОЛЬШЕ ОДНОГО (закон владельца 2026-07-25):
                 при единственной сущности «строить этот календарь» и «строить весь раздел» — одно и то же,
                 поэтому per-entity кнопку не показываем, остаётся только заявка на вкладку (ниже). */}
-            {surface === "admin" && many ? (
+            {many ? (
               <DevSlot>
                 <DevBuildWithAi target={{ object: "entity", tab: "calendar", cuid: entity.cuid }} name={title} pending={pending} lang={lang} />
               </DevSlot>
@@ -90,9 +80,9 @@ export default function Calendar({
       })}
       {/* НАСТРОЙКА КАЛЕНДАРЕЙ — ПУБЛИЧНАЯ половина (закон владельца 2026-07-24): календарь — продуктовая
           поверхность, вся его логика живёт там, где агент читает и правит её по заявке ИИ. */}
-      {surface === "admin" ? <CalendarSettings entities={entities} lang={lang} /> : null}
+      <CalendarSettings entities={entities} lang={lang} />
       {/* АДМИН-ПОЛОВИНА — только заявка ИИ на вкладку целиком (заявка на отдельный календарь — выше). */}
-      {surface === "admin" ? <CalendarAiRequest lang={lang} /> : null}
+      <CalendarAiRequest lang={lang} />
     </div>
   );
 }

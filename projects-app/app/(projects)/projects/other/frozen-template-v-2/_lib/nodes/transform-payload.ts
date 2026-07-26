@@ -1,51 +1,33 @@
-// ФУНКЦИЯ УЗЛА «LOGIC» (transform) — срединная работа: по тикеру берёт ЖИВУЮ цену акции.
-// Реальный внешний вызов Yahoo Finance (без ключа, без AI, детерминированно). Нет цены → БРОСАЕТ:
-// это и есть настоящий гейт успеха/провала — упавший прогон не доходит до записи (эталон v1 lookup-price).
+// ФУНКЦИЯ УЗЛА «LOGIC» (transform) — срединная работа: проверить и нормализовать захваченное
+// сообщение (шаг 300). Ровно один приёмник этого прогона положил в контекст поля контракта `Message`;
+// здесь текст проверяется на пустоту, схлопываются пробелы и выводится заголовок (`title`).
 //
-// Контракт: (ctx) => частичный ctx. company/ticker уже в bag (их положил receiveRequest); сюда добавляем
-// price/asOf. Имя `transformPayload` — публичный контракт, не переименовывать.
+// НЕТ ТЕКСТА → БРОСАЕТ (десять языков): это настоящий гейт успеха/провала — упавший прогон не доходит
+// ни до одного выхода, и ветка `condition-failure` честно достигнута. Без ключей, без AI,
+// детерминированно. Имя `transformPayload` — публичный контракт, не переименовывать.
 import type { NodeCtx } from "../executor";
+import { deriveTitle, refuse } from "../message";
 
-const quoteUrl = (ticker: string) =>
-  `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}`;
-
-const serviceError = (status: number) => ({
-  en: `The quote service returned an error (${status}). Try again in a moment.`,
-  es: `El servicio de cotizaciones devolvió un error (${status}). Inténtalo de nuevo.`,
-  fr: `Le service de cotation a renvoyé une erreur (${status}). Réessayez plus tard.`,
-  it: `Il servizio quotazioni ha restituito un errore (${status}). Riprova tra poco.`,
-  ru: `Сервис котировок вернул ошибку (${status}). Попробуйте ещё раз.`,
-  de: `Der Kursdienst gab einen Fehler zurück (${status}). Versuche es gleich erneut.`,
-  pt: `O serviço de cotações retornou um erro (${status}). Tente novamente.`,
-  pl: `Serwis notowań zwrócił błąd (${status}). Spróbuj ponownie.`,
-  tr: `Fiyat servisi bir hata döndürdü (${status}). Birazdan tekrar deneyin.`,
-  nl: `De koersdienst gaf een fout (${status}). Probeer het zo opnieuw.`,
-});
-
-const noPrice = {
-  en: "No live price is available for this ticker right now.",
-  es: "No hay precio en vivo disponible para este ticker ahora mismo.",
-  fr: "Aucun cours en direct n'est disponible pour ce symbole pour le moment.",
-  it: "Nessun prezzo in tempo reale disponibile per questo ticker al momento.",
-  ru: "Живой цены по этому тикеру сейчас нет.",
-  de: "Für dieses Kürzel ist derzeit kein Live-Kurs verfügbar.",
-  pt: "Não há preço ao vivo disponível para este ticker agora.",
-  pl: "Brak aktualnej ceny dla tego symbolu w tej chwili.",
-  tr: "Bu sembol için şu anda canlı fiyat yok.",
-  nl: "Er is momenteel geen live koers beschikbaar voor dit symbool.",
+const noMessage = {
+  en: "No message was captured — the run's input channel delivered nothing to fan out.",
+  es: "No se capturó ningún mensaje: el canal de entrada no entregó nada que repartir.",
+  fr: "Aucun message capturé — le canal d'entrée n'a rien transmis à distribuer.",
+  it: "Nessun messaggio catturato: il canale d'ingresso non ha consegnato nulla da distribuire.",
+  ru: "Сообщение не захвачено — входной канал прогона не принёс ничего для развозки.",
+  de: "Keine Nachricht erfasst — der Eingangskanal lieferte nichts zum Verteilen.",
+  pt: "Nenhuma mensagem capturada — o canal de entrada não entregou nada para distribuir.",
+  pl: "Nie przechwycono wiadomości — kanał wejściowy nie dostarczył niczego do rozesłania.",
+  tr: "Mesaj yakalanamadı — girdi kanalı dağıtılacak bir şey iletmedi.",
+  nl: "Geen bericht vastgelegd — het invoerkanaal leverde niets om te verspreiden.",
 };
 
-export async function transformPayload(ctx: NodeCtx): Promise<{ price: number; asOf: string }> {
-  const ticker = String(ctx.ticker ?? "");
-  const r = await fetch(quoteUrl(ticker), {
-    headers: { "User-Agent": "Mozilla/5.0 (compatible; FracteraStockPriceLookup/1.0)" },
-    cache: "no-store",
-  });
-  if (!r.ok) throw new Error(JSON.stringify(serviceError(r.status)));
-  const data = (await r.json().catch(() => null)) as
-    | { chart?: { result?: Array<{ meta?: { regularMarketPrice?: unknown } }> } }
-    | null;
-  const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-  if (typeof price !== "number") throw new Error(JSON.stringify(noPrice));
-  return { price, asOf: new Date().toISOString() };
+export function transformPayload(ctx: NodeCtx): { text: string; title: string; at: string; source: string } {
+  const text = String(ctx.text ?? "").replace(/\s+/g, " ").trim();
+  if (!text) refuse(noMessage);
+  return {
+    text,
+    title: deriveTitle(String(ctx.text ?? "")),
+    at: String(ctx.at ?? new Date().toISOString()),
+    source: String(ctx.source ?? "unknown"),
+  };
 }

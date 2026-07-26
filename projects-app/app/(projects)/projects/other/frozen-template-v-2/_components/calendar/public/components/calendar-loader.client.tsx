@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { groupByDate, shiftMonth, toCalRows, ymd, type CalRow } from "../../../../_lib/components/calendar";
 import { useCron } from "../../../shared/cron-context.client";
-import type { Surface } from "../../../surface";
 import type { EntryType } from "../../entries";
 import type { Integration } from "../../integrations";
 import { calendarStrings } from "../../i18n";
@@ -27,13 +26,11 @@ export default function CalendarLoader({
   table,
   types,
   integrations,
-  surface,
   lang,
 }: {
   table: string;
   types: EntryType[];
   integrations: Integration[];
-  surface: Surface;
   lang: string;
 }) {
   const L = calendarStrings(lang);
@@ -126,7 +123,6 @@ export default function CalendarLoader({
           integrations={integrations}
           present={present}
           table={table}
-          surface={surface}
           filter={filter}
           onFilter={setFilter}
           onRowChange={replaceRow}

@@ -1,27 +1,22 @@
 import { loadAutomation } from "./_data/load";
 import AutomationChrome from "./_components/chrome";
 import AutomationComponents from "./_components";
-import NotBuiltPage from "./_components/shared/not-built-page";
 import { pick } from "./_components/shared/localized";
 import { allNodes, entitiesOf } from "./_data/automation.schema";
 import { cronOf } from "./_components/shared/schedule";
 import TopPulseBar from "./_components/cron/public/components/top-pulse-bar.client";
 
-// Страница автоматизации. Паттерн v1 (test-stream-frozen-starter/page.tsx): ДВЕ композиции на одном
-// маршруте — по умолчанию КОКПИТ владельца (surface="admin", полоса-шапка), а `?view=public` рисует
-// ВИТРИНУ (surface="public", герой + Sparkle, без админ-хрома). Публичная поверхность за параллельной
-// маршрутизацией /projects* отдаёт ровно эту композицию.
+// Страница автоматизации — ОДНА композиция, кокпит (шаг 300: `?view=public`/`surface` удалены как
+// v1-остаток; отдельной витрины-по-параметру больше нет).
 //
 // page.tsx — единственная точка чтения платформы (язык по умолчанию); дальше всё уходит в компоненты
 // пропсами, папка остаётся переносимой (закон 0). Отображение шапки выведено из automation.json:
 // бейджи/имя/описание — из паспорта, список контейнеров — из components. Меняется ядро — меняется дизайн.
-export default async function Page({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
-  const { view } = await searchParams;
-  const surface = view === "public" ? "public" : "admin";
+export default async function Page() {
   const core = await loadAutomation();
   const { passport, components, graph } = core;
   const lang = (process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? "en").toLowerCase().slice(0, 2);
-  // Строки вкладок для шапки: присутствие для меню + сущности с подписями для оглавления витрины.
+  // Строки вкладок для шапки: присутствие для меню + сущности с подписями для якорной навигации.
   const tabs = components.tabs.map((t) => ({
     name: t.name,
     presence: t.presence,
@@ -50,23 +45,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
     }),
   );
   const envKeys = [...new Set([...nodeKeys, ...integrationKeys])];
-  // ПОСТРОЕНА ЛИ АВТОМАТИЗАЦИЯ — один факт из паспорта (`lifecycle`), и он решает судьбу ВИТРИНЫ:
-  // замороженному шаблону публичной страницы нет. Показывать посетителю пустую витрину значило бы
-  // обещать работу, которой ещё нет, — вместо страницы отдаём один честный тост с тем, что делать.
-  // Кокпит владельца открыт всегда: именно из него автоматизацию и достраивают.
-  const built = passport.lifecycle === "real-project";
   // ТАКТ КРОНА для верхней полосы-пульса — из ядра, `null` если раздела нет или он выключен (тогда
   // полоса не рисуется). Читается здесь, на единственной точке чтения платформы, и уходит пропсом.
   const cron = cronOf(components);
-  // ПОЛОСА-УВЕДОМЛЕНИЕ теперь сама тянет поводы из двери `api/projects/notices` через свой провайдер (единый
-  // источник, микросервис `_shared-v2/components/notifications`) — page.tsx их больше не считает и не передаёт.
-  if (surface === "public" && !built) {
-    return (
-      <main data-zone-column className="mx-auto w-full max-w-4xl px-4">
-        <NotBuiltPage />
-      </main>
-    );
-  }
+  // ПОЛОСА-УВЕДОМЛЕНИЕ сама тянет поводы из двери `api/projects/notices` через свой провайдер (единый
+  // источник, микросервис `_shared-v2/components/notifications`) — page.tsx их не считает и не передаёт.
 
   // data-zone-column — колонка страницы подчиняется переключателю ширины в футере зоны:
   // обычный режим оставляет её как есть (max-w-4xl), широкий раскрывает на весь экран
@@ -76,8 +59,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
       {/* ФИКСИРОВАННЫЙ ВВЕРХУ ПУЛЬС такта (правка владельца 2026-07-23): «слайдер» крона живёт наверху
           страницы, на 1px ниже хедера, всегда видимый. Ничего не рисует, если крона нет/выключен. */}
       {cron ? <TopPulseBar everyMinutes={cron.everyMinutes} enabled={cron.enabled} /> : null}
-      <AutomationChrome surface={surface} passport={passport} lang={lang} tabs={tabs} envKeys={envKeys} publicHref="?view=public" built={built} />
-      <AutomationComponents surface={surface} lang={lang} />
+      <AutomationChrome passport={passport} lang={lang} tabs={tabs} envKeys={envKeys} />
+      <AutomationComponents lang={lang} />
     </main>
   );
 }
