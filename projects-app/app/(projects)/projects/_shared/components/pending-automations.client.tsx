@@ -67,7 +67,11 @@ export function PendingAutomations({ category, existingSlugs }: { category: stri
     const have = new Set(existingSlugs);
     const fresh = Date.now() - MAX_AGE_MS;
     const survivors = loadStored(category)
-      .filter((e) => !have.has(e.slug))
+      // Drop an entry ONLY when the grid ALREADY lists it AND it is READY — i.e. the real card exists and
+      // works (step 301, the double-card fix). A BUILDING entry is kept even if the folder scan already
+      // listed it: its route is not compiled yet, so its spinner must stay (and it hides the not-yet-ready
+      // real card below). Dropping it here was what left the broken real card and killed the spinner.
+      .filter((e) => !(have.has(e.slug) && e.ready))
       .filter((e) => !e.at || e.at > fresh);
     setEntries(survivors);
     store(category, survivors);
@@ -112,7 +116,10 @@ export function PendingAutomations({ category, existingSlugs }: { category: stri
       const d = (ev as CustomEvent<PendingDetail>).detail;
       if (!d || d.category !== category) return;
       setEntries((prev) => {
-        if (prev.some((e) => e.slug === d.slug) || existingSlugs.includes(d.slug)) return prev;
+        // Add the spinner even if the folder scan already lists the slug: a just-created automation's route
+        // is not built yet, so we WANT the spinner (it hides the not-ready real card). Only skip a true
+        // duplicate of an existing pending entry.
+        if (prev.some((e) => e.slug === d.slug)) return prev;
         const next = [...prev, { ...d, ready: false, at: Date.now() }];
         store(category, next);
         return next;
@@ -120,7 +127,18 @@ export function PendingAutomations({ category, existingSlugs }: { category: stri
     };
     window.addEventListener(EVENT, onPending as EventListener);
     return () => window.removeEventListener(EVENT, onPending as EventListener);
-  }, [category, existingSlugs]);
+  }, [category]);
+
+  // Once the grid catches up (a reload after the route is built), the READY spinner is dropped so the real
+  // card takes over — building spinners are kept (see the mount filter). One card at every moment.
+  useEffect(() => {
+    const have = new Set(existingSlugs);
+    setEntries((prev) => {
+      const next = prev.filter((e) => !(e.ready && have.has(e.slug)));
+      if (next.length !== prev.length) { store(category, next); return next; }
+      return prev;
+    });
+  }, [existingSlugs, category]);
 
   // Poll the project URL: 404 while building OR after a delete, 200 once the rebuild has served it.
   //
@@ -161,8 +179,16 @@ export function PendingAutomations({ category, existingSlugs }: { category: stri
 
   if (entries.length === 0) return null;
 
+  // Пока карточка СТРОИТСЯ, прячем её реальную карточку в сетке (если хаб её уже отсканировал): на экране —
+  // только спиннер, без второй, сырой карточки, чей маршрут ещё 404. Слаги — `[a-z0-9-]`, в CSS-селекторе
+  // безопасны. Как только карточка `ready`, её убирают из `entries` (эффекты выше) → правило исчезает.
+  const buildingSlugs = entries.filter((e) => !e.ready).map((e) => e.slug);
+
   return (
     <>
+      {buildingSlugs.length > 0 ? (
+        <style>{buildingSlugs.map((s) => `[data-automation-card="${s}"]{display:none!important}`).join("")}</style>
+      ) : null}
       {entries.map((e) =>
         e.ready ? (
           // Lit up — a real card, now a link. Same shape as a hub card.

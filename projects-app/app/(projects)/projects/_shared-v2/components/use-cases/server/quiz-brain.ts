@@ -85,8 +85,9 @@ WHAT A GOOD SET OF USER CASES CONTAINS
 - the normal path, and the variations the owner cares about,
 - what should happen when something goes wrong or the input is unexpected.
 
-Ask ONE short question at a time, in ${languageName(lang)}. When you have enough to write the scenarios,
-reply with exactly: READY`;
+Ask ONE short question at a time, IN THE SAME LANGUAGE THE OWNER WRITES IN — mirror the language of their
+messages exactly (before they have written anything, use ${languageName(lang)}). When you have enough to
+write the scenarios, reply with exactly: READY`;
 }
 
 /** Следующий вопрос по описанию сценариев (ручной режим). Разговор целиком приходит от клиента. */
@@ -103,17 +104,21 @@ export async function nextUseCaseQuestion(lang: string, instruction: string, tur
 // ── АВТОКВИЗ — система, дословно из v1 `USECASES_AUTO_SYSTEM`. ────────────────────────────────────────────
 export function autoMessages(lang: string, instruction: string, turns: Turn[]) {
   const transcript = turns.map((x) => `${x.role === "user" ? "OWNER" : "DESIGNER"}: ${x.content}`).join("\n");
-  const system = `You are describing the USER CASES of an automation ALONE, thinking out loud, in the language: ${languageName(lang)}.
+  const system = `You are describing the USER CASES of an automation ALONE, thinking out loud, IN THE SAME
+LANGUAGE THE OWNER USES in the text below — mirror their language exactly (if there is no owner text yet, use
+${languageName(lang)}).
 
 The owner's instruction (the seed):
 """
 ${instruction || "(not stated)"}
 """
 
-Write the scenarios the automation must handle: who triggers it, what comes in, what must come out, the
-variations, and what happens when something goes wrong. Be concrete and short (under 250 words). The owner is
-reading you live and may edit your text — write it as the final description of the scenarios, not as a chat.
-Write ONLY in ${languageName(lang)}.`;
+ENUMERATE the DISTINCT scenarios the automation must handle — the main flow, its meaningful variations, the
+different triggers and outputs, and what happens when something goes wrong — EACH AS ITS OWN SHORT PARAGRAPH.
+Do NOT merge them into one blob: the more clearly separated the scenarios are here, the better they become
+real, separate user cases. Be concrete and short (aim under 300 words total). The owner reads you live and may
+edit your text — write it as the final description of the scenarios, not as a chat. Write ONLY in the owner's
+language.`;
   return [
     { role: "system", content: system },
     { role: "user", content: transcript ? `What has been said so far:\n${transcript}\n\nContinue describing the user cases.` : "Describe the user cases." },
@@ -125,9 +130,15 @@ export async function synthesizeUseCases(lang: string, instruction: string, turn
   const transcript = turns.map((t) => `${t.role === "user" ? "OWNER" : "YOU"}: ${t.content}`).join("\n");
   const out = await chat([
     { role: "system", content: `You turn a conversation about an automation into its USER CASES. Reply with STRICT JSON only:
-{"cases":[{"title":"<a short case title, max 8 words, in ${languageName(lang)}>","summary":"<the scenario in 1-4 sentences, in ${languageName(lang)}: who does what, the input, the expected result, the edge case>"}]}
-Write 1 to 8 cases. One case = ONE scenario — never merge two, never invent a scenario the owner did not
-imply. If the owner described only one thing, return exactly one case.` },
+{"cases":[{"title":"<a short case title, max 8 words>","summary":"<the scenario in 1-4 sentences: who does what, the input, the expected result, the edge case>"}]}
+
+DECOMPOSE the owner's description into its DISTINCT user cases: the main path, each meaningful variation, each
+different trigger or output, and the important failure / edge cases — EACH AS A SEPARATE CASE. Aim for SEVERAL
+(typically 3 to 8), not one. NEVER invent a scenario the owner did not imply or state. Only if the owner truly
+described a single, indivisible scenario is one case acceptable — but first look for the natural sub-scenarios
+inside what they said (e.g. "log a meal", "get the calorie count back", "the daily summary", "an unrecognised
+photo" are four cases, not one).
+Write the title and summary in the SAME LANGUAGE the owner used in the conversation.` },
     { role: "user", content: `The owner's instruction:\n${instruction || "(not stated)"}\n\nThe conversation:\n${transcript || "(the owner said nothing — derive the cases from the instruction alone)"}` },
   ], { json: true });
   try {

@@ -40,11 +40,28 @@ type ProjectMeta = {
 
 export async function getProjectCard(category: ProjectCategorySlug, slug: string): Promise<ProjectCard> {
   const fallback: ProjectCard = { slug, title: prettify(slug), description: "", badges: [] };
+  const dir = join(process.cwd(), "app", "(projects)", "projects", category, slug);
+
+  // v2 AUTOMATION (typed core): title/description live in `_data/automation.json` (passport), NOT the v1
+  // README meta. Without this the card fell back to `prettify(slug)` — a freshly created v2 automation showed
+  // "Automation 68jr9" instead of the owner's typed name (step 301 bug). Read the core first; a v1 project
+  // has no such file and falls through to the README block below.
   try {
-    const raw = await readFile(
-      join(process.cwd(), "app", "(projects)", "projects", category, slug, "README.md"),
-      "utf8",
-    );
+    const core = JSON.parse(await readFile(join(dir, "_data", "automation.json"), "utf8")) as {
+      passport?: { title?: string; description?: string };
+    };
+    if (core?.passport) {
+      return {
+        slug,
+        title: core.passport.title?.trim() || prettify(slug),
+        description: core.passport.description?.trim() || "",
+        badges: [], // v2 card badges come from the hub's own type/status reader, not from here
+      };
+    }
+  } catch { /* not a v2 automation — fall through to the v1 README meta */ }
+
+  try {
+    const raw = await readFile(join(dir, "README.md"), "utf8");
     const m = raw.match(/<!--\s*fractera:project\s*([\s\S]*?)-->/);
     if (!m) return fallback;
     const meta = JSON.parse(m[1].trim()) as ProjectMeta;

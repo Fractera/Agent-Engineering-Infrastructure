@@ -89,7 +89,7 @@ export function AutomationCardTile({
 
   if (deleting) {
     return (
-      <div className="flex flex-col rounded-xl border border-dashed bg-muted/30 p-5 opacity-70" aria-busy="true">
+      <div data-automation-card={slug} className="flex flex-col rounded-xl border border-dashed bg-muted/30 p-5 opacity-70" aria-busy="true">
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-semibold leading-tight text-muted-foreground">{title}</h3>
           <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
@@ -102,6 +102,7 @@ export function AutomationCardTile({
   return (
     <Link
       href={href}
+      data-automation-card={slug}
       className="group flex flex-col rounded-xl border bg-card p-5 shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
     >
       <StatusRow status={status} />

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { FolderPlus, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -179,11 +178,14 @@ export function CreateAutomationDialog({
 
 /** The "+" card that closes a category grid — the category is FIXED to that grid's. */
 export function CreateAutomationCard({ category }: { category: string }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const uiLang = useUiLang();
   const L = createAutomationStrings(uiLang);
 
+  // NO router.refresh() on create (step 301, the double-card fix). Refreshing re-read the hub's live folder
+  // scan the instant the folder was written — so the automation's REAL card appeared BEFORE its route was
+  // compiled (a 404 on click) and DE-DUPED away the correct spinner card. Now the optimistic spinner card is
+  // the single card while the page builds; the hub picks up the real card on the next reload (route ready).
   return (
     <>
       <button
@@ -194,12 +196,7 @@ export function CreateAutomationCard({ category }: { category: string }) {
         <Plus className="size-8" />
         <span className="text-sm font-medium">{L.addAutomationCard}</span>
       </button>
-      <CreateAutomationDialog
-        open={open}
-        onOpenChange={setOpen}
-        category={category}
-        onCreated={() => router.refresh()}
-      />
+      <CreateAutomationDialog open={open} onOpenChange={setOpen} category={category} />
     </>
   );
 }
@@ -208,11 +205,11 @@ export function CreateAutomationCard({ category }: { category: string }) {
  *  difference the per-category card cannot have: the root spans EVERY category, so the owner CHOOSES where
  *  the new automation lives (the dropdown). A folder icon — it creates a project, not a node. */
 export function CreateAutomationRootCard() {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const uiLang = useUiLang();
   const L = createAutomationStrings(uiLang);
 
+  // No router.refresh() on create — see CreateAutomationCard above (the double-card fix, step 301).
   return (
     <>
       <button
@@ -224,11 +221,7 @@ export function CreateAutomationRootCard() {
         <span className="text-sm font-medium">{L.createProjectCard}</span>
         <span className="text-xs">{L.createProjectCardHint}</span>
       </button>
-      <CreateAutomationDialog
-        open={open}
-        onOpenChange={setOpen}
-        onCreated={() => router.refresh()}
-      />
+      <CreateAutomationDialog open={open} onOpenChange={setOpen} />
     </>
   );
 }
