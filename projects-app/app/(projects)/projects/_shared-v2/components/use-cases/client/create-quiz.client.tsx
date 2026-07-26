@@ -18,8 +18,8 @@ import VoiceInput from "../../../tools/voice-input/client/voice-input.client";
 type Turn = { role: "user" | "assistant"; content: string };
 
 const STR = {
-  en: { title: "Describe the user cases", banner: "Planning is where the model's strength shows most — pick a strong model in the automation menu.", designer: "Designer", placeholder: "Describe your scenarios in your own words — voice works.", answer: "Answer", auto: "Auto-quiz", autoWriting: "The model is writing…", autoPaused: "Paused — edit the text, then keep it.", pause: "Pause", useText: "Keep this text", create: "Create the cases", loading: "Reading your instruction…", hint: "When the scenarios are clear, press «Create the cases» — the AI turns the conversation into numbered cases.", errStart: "Could not start.", errAuto: "Could not start the auto-quiz.", added: (n: number) => `${n} case${n === 1 ? "" : "s"} added.`, kept: "Kept as your description." },
-  ru: { title: "Опишите пользовательские кейсы", banner: "Планирование — там, где сила модели видна сильнее всего; выберите мощную модель в меню автоматизации.", designer: "Проектировщик", placeholder: "Опишите сценарии своими словами — можно голосом.", answer: "Ответить", auto: "Автоквиз", autoWriting: "Модель пишет…", autoPaused: "Пауза — поправьте текст и сохраните.", pause: "Пауза", useText: "Сохранить этот текст", create: "Создать кейсы", loading: "Читаю ваше задание…", hint: "Когда сценарии ясны, нажмите «Создать кейсы» — ИИ превратит разговор в пронумерованные кейсы.", errStart: "Не удалось начать.", errAuto: "Не удалось запустить автоквиз.", added: (n: number) => `Добавлено кейсов: ${n}.`, kept: "Сохранено как ваше описание." },
+  en: { title: "Describe the user cases", banner: "Planning is where the model's strength shows most — pick a strong model in the automation menu.", designer: "Designer", placeholder: "Describe your scenarios in your own words — voice works.", answer: "Answer", auto: "Auto-quiz", autoWriting: "The model is writing…", autoPaused: "Paused — edit the text, then keep it.", pause: "Pause", useText: "Keep this text", create: "Create the cases", loading: "Reading your instruction…", hint: "When the scenarios are clear, press «Create the cases» — the AI turns the conversation into numbered cases.", errStart: "Could not start.", errAuto: "Could not start the auto-quiz.", added: (n: number) => `${n} case${n === 1 ? "" : "s"} added.`, kept: "Kept as your description.", autoNeedsSeed: "First describe your scenarios in your own words in the field above and press «Answer». Auto-quiz then expands your description into cases — it has nothing to build on from a blank start." },
+  ru: { title: "Опишите пользовательские кейсы", banner: "Планирование — там, где сила модели видна сильнее всего; выберите мощную модель в меню автоматизации.", designer: "Проектировщик", placeholder: "Опишите сценарии своими словами — можно голосом.", answer: "Ответить", auto: "Автоквиз", autoWriting: "Модель пишет…", autoPaused: "Пауза — поправьте текст и сохраните.", pause: "Пауза", useText: "Сохранить этот текст", create: "Создать кейсы", loading: "Читаю ваше задание…", hint: "Когда сценарии ясны, нажмите «Создать кейсы» — ИИ превратит разговор в пронумерованные кейсы.", errStart: "Не удалось начать.", errAuto: "Не удалось запустить автоквиз.", added: (n: number) => `Добавлено кейсов: ${n}.`, kept: "Сохранено как ваше описание.", autoNeedsSeed: "Сначала опишите сценарии своими словами в поле выше и нажмите «Ответить». Автоквиз развернёт ваше описание в кейсы — с пустого места ему не на чем строить." },
 };
 const strings = (lang: string) => STR[(lang.slice(0, 2) as keyof typeof STR)] ?? STR.en;
 
@@ -68,10 +68,17 @@ export function CreateQuiz({ open, lang, onClose, onApplied }: { open: boolean; 
 
   const autoQuiz = useCallback(async () => {
     if (streaming) return;
+    // АВТОКВИЗ РАЗВОРАЧИВАЕТ ОПИСАНИЕ ВЛАДЕЛЬЦА В КЕЙСЫ, а не пишет с нуля (правка владельца 2026-07-26). Без
+    // затравки (ни одного ответа владельца, ни текста в поле) ему нечего разворачивать — вышла бы
+    // бессмыслица. Поэтому: нет затравки → ведём тостом «сначала опиши», НЕ запускаем. Есть текст в поле, но
+    // не отправлен → подшиваем его в разговор, чтобы описание НЕ потерялось и попало в автоквиз.
+    const seedTurns: Turn[] = answer.trim() ? [...turns, { role: "user", content: answer.trim() }] : turns;
+    if (!seedTurns.some((t) => t.role === "user")) { toast.info(L.autoNeedsSeed, { duration: 8000 }); return; }
+    if (answer.trim()) { setTurns(seedTurns); setAnswer(""); }
     setStreaming(true); setDraft("");
     const ctrl = new AbortController(); setAborter(ctrl);
     try {
-      const r = await fetch(`${API}/auto`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ turns }), signal: ctrl.signal });
+      const r = await fetch(`${API}/auto`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ turns: seedTurns }), signal: ctrl.signal });
       if (!r.ok || !r.body) { toast.error(L.errAuto); return; }
       const reader = r.body.getReader(); const dec = new TextDecoder(); let buf = "";
       for (;;) {
@@ -85,7 +92,7 @@ export function CreateQuiz({ open, lang, onClose, onApplied }: { open: boolean; 
         }
       }
     } catch { /* paused */ } finally { setStreaming(false); setAborter(null); }
-  }, [streaming, turns, L]);
+  }, [streaming, turns, answer, L]);
 
   const useDraft = useCallback(() => {
     if (!draft.trim()) return;
