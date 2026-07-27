@@ -1,20 +1,16 @@
-// ПРИВЕТСТВИЕ НОВОРОЖДЁННОЙ АВТОМАТИЗАЦИИ (шаг 301). Показывается, пока автоматизация — только что
-// созданный замороженный клон стартера БЕЗ единого пользовательского кейса: пустой холст, имя в шапке и
-// это приглашение. Смысл — увести владельца в пользовательские кейсы: описание рождается там, в Quiz, и
-// только из него ИИ понимает, что строить (закон `passport.md` §7: «нет кейса — нет узла»).
+import { DevWelcome } from "./dev-slot.client";
+
+// ПРИВЕТСТВИЕ НОВОРОЖДЁННОЙ АВТОМАТИЗАЦИИ — ТОНКИЙ МОНТАЖ (шаг 302).
 //
-// 🔒 СТАРТЕР — ОДНОЯЗЫЧНЫЙ (английский), решение владельца: мультиязычность стартера убирается в шаге 302,
-// где рождается по одному стартеру на язык (`starters/stream/<lang>/`). Поэтому здесь НЕ словарь на десять
-// языков, а один английский текст. `lang` не читается намеренно.
-export default function Welcome(_props: { lang: string }) {
-  return (
-    <section data-section="welcome" className="mt-6 rounded-xl border border-dashed bg-card/50 p-6 text-center">
-      <h2 className="text-xl font-semibold tracking-tight">Your automation is born — now describe it</h2>
-      <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
-        It is still an empty, frozen template: nothing runs and the canvas is bare. To bring it to life,
-        describe how it should work in the use-cases below — the AI reads exactly those to build it.
-      </p>
-      <p className="mt-3 text-sm font-medium text-foreground">Open the use-cases below and fill in the Quiz. ↓</p>
-    </section>
-  );
+// 🔒 Раньше здесь лежал одноязычный английский текст. По границе «кто смотрит» онбординг обращён к
+// СТРОИТЕЛЮ автоматизации (уводит его в Quiz), а не к конечному пользователю продукта → это КОКПИТ, а он
+// десятиязычен. Поэтому сам текст и его словарь на десять языков переехали в `_shared-v2/components/welcome`,
+// одной копией на все автоматизации, а здесь осталось лишь подключение через fail-silent дев-слот
+// (`DevWelcome`): нет `_shared-v2` — приветствия нет, продакшн не задет (закон устойчивости, шаг 298).
+//
+// ⚠ Прежняя идея «по одному стартеру на язык» (`starters/stream/<lang>/`) ОТМЕНЕНА в шаге 302: языковые
+// стартеры не делаем — builder-компоненты уезжают в 10-язычный `_shared-v2`, стартер остаётся англоязычным
+// лишь по собственной СУТИ автоматизации (её рантайм/узлы).
+export default function Welcome({ lang }: { lang: string }) {
+  return <DevWelcome lang={lang} />;
 }

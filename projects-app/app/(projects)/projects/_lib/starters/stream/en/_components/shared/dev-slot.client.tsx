@@ -147,6 +147,26 @@ export function DevDiagram({ lang, readOnly }: { lang: string; readOnly?: boolea
   );
 }
 
+// Приветствие новорождённой автоматизации — builder-facing онбординг (шаг 302). Десятиязычная копия живёт в
+// `_shared-v2/components/welcome`; здесь только fail-silent подключение. Нет `_shared-v2` — приветствия нет,
+// продакшн не задет. Раньше это был одноязычный английский хардкод внутри стартера.
+const WelcomeLazy = dynamic(
+  () =>
+    import("@/app/(projects)/projects/_shared-v2")
+      .then((m) => ({ default: m.Welcome }))
+      .catch(() => ({ default: () => null })),
+  { ssr: false, loading: () => null },
+);
+
+/** Приветствие новорождённой автоматизации за fail-silent границей — монтируется в онбординг-виде стартера. */
+export function DevWelcome({ lang }: { lang: string }) {
+  return (
+    <NullBoundary>
+      <WelcomeLazy lang={lang} />
+    </NullBoundary>
+  );
+}
+
 // ⚠ ДАШБОРДА ЗДЕСЬ НЕТ И БЫТЬ НЕ ДОЛЖНО (закон владельца 2026-07-24). Таблица — продуктовая поверхность с
 // режимом «строить вместе с ИИ»: её логика живёт в `_components/dashboard/public/`, где агент читает и
 // правит её по заявке. В дев-слое у дашборда только форма заявки (`DevBuildWithAi`), она уже есть выше.
