@@ -310,3 +310,40 @@ export function PendingAutomations({ category, existingSlugs }: { category: stri
 export function announcePendingAutomation(detail: PendingDetail) {
   window.dispatchEvent(new CustomEvent<PendingDetail>(EVENT, { detail }));
 }
+
+// ── GLOBAL «is any automation building?» — gate for the create button (owner 2026-07-27). ───────────────────
+// Creating an automation triggers a projects-app rebuild under a SHARED flock; a SECOND creation started
+// while the first still builds races that lock — the second build can miss the first's folder (404) or leave
+// stale `.next/types` (500). So while ANY creation is building, every «create automation» affordance is
+// disabled, on every category. The pending list already lives in localStorage per category; we scan all keys.
+
+/** True if any pending-creation entry (any category) is still building — neither ready nor failed. */
+export function anyBuildingAutomation(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || !k.startsWith("pending-automations:")) continue;
+      const arr = JSON.parse(localStorage.getItem(k) || "[]") as Entry[];
+      if (Array.isArray(arr) && arr.some((e) => !e.ready && !e.failed)) return true;
+    }
+  } catch { /* localStorage unavailable — cannot gate, allow */ }
+  return false;
+}
+
+/** Reactive `anyBuildingAutomation()`: instant on announce (EVENT), cross-tab (storage), plus a light poll to
+ *  catch the build→ready transition (PendingAutomations updates the stored list on its own probe cycle).
+ *  Starts `false` so SSR and first client render agree, then syncs in the effect (no hydration mismatch). */
+export function useAnyBuildingAutomation(): boolean {
+  const [building, setBuilding] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    const sync = () => { if (alive) setBuilding(anyBuildingAutomation()); };
+    sync();
+    window.addEventListener(EVENT, sync);
+    window.addEventListener("storage", sync);
+    const t = setInterval(sync, 2500);
+    return () => { alive = false; window.removeEventListener(EVENT, sync); window.removeEventListener("storage", sync); clearInterval(t); };
+  }, []);
+  return building;
+}

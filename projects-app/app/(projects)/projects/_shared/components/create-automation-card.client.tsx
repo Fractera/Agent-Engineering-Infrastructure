@@ -9,7 +9,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { VoiceInput } from "./voice-input.client";
-import { announcePendingAutomation } from "./pending-automations.client";
+import { announcePendingAutomation, useAnyBuildingAutomation } from "./pending-automations.client";
+
+// ПОДСКАЗКА, ПОКА ИДЁТ СБОРКА (владелец, 2026-07-27) — десять языков (закон 4г). Пока хоть одна автоматизация
+// создаётся/собирается, кнопки создания гаснут на всех категориях (общий flock пересборки — вторая гонка
+// ломает первую). Наведение показывает эту причину.
+const BUILDING_WAIT: Record<string, string> = {
+  en: "Please wait — an automation is being created", ru: "Подождите — идёт создание автоматизации",
+  es: "Espera — se está creando una automatización", fr: "Veuillez patienter — une automatisation est en cours de création",
+  it: "Attendi — un'automazione è in fase di creazione", de: "Bitte warten — eine Automatisierung wird erstellt",
+  pt: "Aguarde — uma automação está a ser criada", pl: "Poczekaj — trwa tworzenie automatyzacji",
+  tr: "Lütfen bekleyin — bir otomasyon oluşturuluyor", nl: "Even wachten — er wordt een automatisering aangemaakt",
+};
+const buildingWait = (lang: string): string => BUILDING_WAIT[lang.toLowerCase().slice(0, 2)] ?? BUILDING_WAIT.en;
 import { PROJECT_CATEGORIES } from "../categories";
 import { useUiLang } from "../use-ui-lang";
 import { createAutomationStrings } from "../create-automation-i18n";
@@ -58,6 +70,8 @@ export function CreateAutomationDialog({
   const [name, setName] = useState("");
   const [pickedCategory, setPickedCategory] = useState<string>(PROJECT_CATEGORIES[0].slug);
   const [busy, setBusy] = useState(false);
+  // Гейт гонки и внутри диалога: если сборка началась, пока диалог открыт (напр. в другой вкладке).
+  const building = useAnyBuildingAutomation();
   const [lang, setLang] = useState<{ code: string; name: string } | null>(null);
   // The categories are read LIVE (not from the compiled constant): a category created here must appear in
   // the dropdown at once, before the rebuild that serves its hub route has finished.
@@ -171,8 +185,8 @@ export function CreateAutomationDialog({
             {L.afterBirthNoticePrefix} <span className="font-medium text-foreground">{lang?.name ?? "…"}</span>{L.afterBirthNoticeSuffix}
           </p>
 
-          <Button onClick={create} disabled={busy} className="w-full">
-            {busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} {L.createBtn}
+          <Button onClick={create} disabled={busy || building} title={building ? buildingWait(uiLang) : undefined} className="w-full">
+            {busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} {building ? buildingWait(uiLang) : L.createBtn}
           </Button>
         </div>
       </DialogContent>
@@ -185,6 +199,8 @@ export function CreateAutomationCard({ category }: { category: string }) {
   const [open, setOpen] = useState(false);
   const uiLang = useUiLang();
   const L = createAutomationStrings(uiLang);
+  // Пока идёт создание/сборка любой автоматизации — кнопка гаснет (защита от гонки общего flock, владелец).
+  const building = useAnyBuildingAutomation();
 
   // NO router.refresh() on create (step 301, the double-card fix). Refreshing re-read the hub's live folder
   // scan the instant the folder was written — so the automation's REAL card appeared BEFORE its route was
@@ -195,10 +211,12 @@ export function CreateAutomationCard({ category }: { category: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex min-h-40 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed bg-card/50 p-5 text-muted-foreground transition-all hover:border-primary/50 hover:text-foreground"
+        disabled={building}
+        title={building ? buildingWait(uiLang) : undefined}
+        className="flex min-h-40 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed bg-card/50 p-5 text-muted-foreground transition-all hover:border-primary/50 hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
       >
-        <Plus className="size-8" />
-        <span className="text-sm font-medium">{L.addAutomationCard}</span>
+        {building ? <Loader2 className="size-8 animate-spin" /> : <Plus className="size-8" />}
+        <span className="text-sm font-medium">{building ? buildingWait(uiLang) : L.addAutomationCard}</span>
       </button>
       <CreateAutomationDialog open={open} onOpenChange={setOpen} category={category} />
     </>
@@ -212,6 +230,7 @@ export function CreateAutomationRootCard() {
   const [open, setOpen] = useState(false);
   const uiLang = useUiLang();
   const L = createAutomationStrings(uiLang);
+  const building = useAnyBuildingAutomation();
 
   // No router.refresh() on create — see CreateAutomationCard above (the double-card fix, step 301).
   return (
@@ -219,11 +238,13 @@ export function CreateAutomationRootCard() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="group flex min-h-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed bg-card/50 p-5 text-muted-foreground transition-all hover:border-primary/50 hover:text-foreground"
+        disabled={building}
+        title={building ? buildingWait(uiLang) : undefined}
+        className="group flex min-h-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed bg-card/50 p-5 text-muted-foreground transition-all hover:border-primary/50 hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
       >
-        <FolderPlus className="size-8" />
-        <span className="text-sm font-medium">{L.createProjectCard}</span>
-        <span className="text-xs">{L.createProjectCardHint}</span>
+        {building ? <Loader2 className="size-8 animate-spin" /> : <FolderPlus className="size-8" />}
+        <span className="text-sm font-medium">{building ? buildingWait(uiLang) : L.createProjectCard}</span>
+        {!building && <span className="text-xs">{L.createProjectCardHint}</span>}
       </button>
       <CreateAutomationDialog open={open} onOpenChange={setOpen} />
     </>
