@@ -17,6 +17,10 @@ export type Message = {
   title?: string;
   lat?: number;
   lng?: number;
+  // ИДЕНТИФИКАТОР КАНАЛА-БОТА — публичный ID Telegram-бота (числовой префикс токена). Один проект может
+  // иметь НЕСКОЛЬКО ботов (у каждого пользователя свой), поэтому без него векторная память не различит, от
+  // кого пришёл факт. Толкает ЛИСТЕНЕР бота в payload запуска (`ctx.botId`) — узел ключей не читает (закон 3).
+  botId?: string;
 };
 
 // КАКОЙ КАНАЛ ЗАПУСТИЛ ЭТОТ ПРОГОН. Дверь запуска кладёт в input поле `source`; движок исполняет ВСЕ
@@ -55,7 +59,7 @@ export function deriveTitle(text: string): string {
 }
 
 /** Сообщение, каким его видит ВЫХОДНОЙ узел: середина уже проверила текст и вывела заголовок. */
-export function messageOf(ctx: Record<string, unknown>): Required<Pick<Message, "text" | "source" | "at" | "title">> & Pick<Message, "lat" | "lng"> {
+export function messageOf(ctx: Record<string, unknown>): Required<Pick<Message, "text" | "source" | "at" | "title">> & Pick<Message, "lat" | "lng" | "botId"> {
   return {
     text: String(ctx.text ?? ""),
     source: String(ctx.source ?? "unknown"),
@@ -63,6 +67,8 @@ export function messageOf(ctx: Record<string, unknown>): Required<Pick<Message, 
     title: String(ctx.title ?? deriveTitle(String(ctx.text ?? ""))),
     lat: numberField(ctx.lat),
     lng: numberField(ctx.lng),
+    // Идентификатор бота, если приёмник его пронёс (см. Message.botId) — выход-память впишет его в провенанс.
+    botId: ctx.botId ? String(ctx.botId).trim() || undefined : undefined,
   };
 }
 

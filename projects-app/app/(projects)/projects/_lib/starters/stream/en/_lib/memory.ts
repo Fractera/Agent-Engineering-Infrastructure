@@ -6,6 +6,10 @@
 // с `?channel=<канал>&record=<случайный хвост>`. Хвост обязателен: LightRAG считает `file_source`
 // ИДЕНТИЧНОСТЬЮ документа, и второй факт с тем же адресом молча пропал бы (доказано на medicine/v2).
 //
+// ФАСЕТ `bot` (2026-07-27): один проект может иметь НЕСКОЛЬКО Telegram-ботов (у каждого пользователя свой),
+// поэтому для канала telegram-bot к фасетам добавляется публичный ID бота — `&bot=<botId>`. Без него в
+// векторной памяти нельзя различить, от какого пользователя (бота) пришёл факт. Секрет токена сюда НЕ идёт.
+//
 // ДВЕ РАЗНЫЕ НЕУДАЧИ — ДВА РАЗНЫХ ОТВЕТА:
 //   сервис НЕДОСТУПЕН (нет процесса на :9621) → `null`: памяти на этом сервере нет, узел честно
 //     пропускает доставку с причиной — проект без LightRAG не должен терять всю развозку;
@@ -15,11 +19,13 @@ import { randomBytes } from "node:crypto";
 import { AUTOMATION_ADDRESS as AUTOMATION } from "./paths";
 const ragUrl = () => (process.env.LIGHTRAG_URL ?? "http://127.0.0.1:9621").replace(/\/+$/, "");
 
-export async function rememberFact(text: string, source: string): Promise<string | null> {
+export async function rememberFact(text: string, source: string, botId?: string): Promise<string | null> {
   const body = (t: string) => t.trim();
   if (!body(text)) return null;
 
-  const fileSource = `projects/${AUTOMATION}?channel=${encodeURIComponent(source)}&record=${randomBytes(6).toString("hex")}`;
+  // Фасет `bot` — только при наличии botId (канал telegram-bot). Публичный ID, без секрета токена.
+  const botFacet = botId && botId.trim() ? `&bot=${encodeURIComponent(botId.trim())}` : "";
+  const fileSource = `projects/${AUTOMATION}?channel=${encodeURIComponent(source)}${botFacet}&record=${randomBytes(6).toString("hex")}`;
   let r: Response;
   try {
     r = await fetch(`${ragUrl()}/documents/text`, {

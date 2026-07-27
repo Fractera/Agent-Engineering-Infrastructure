@@ -14,7 +14,7 @@ import { addRow } from "../rows";
 
 export async function deliverVectorMemory(ctx: NodeCtx): Promise<{ vectorMemoryDelivery: string; vectorRowId?: string }> {
   const m = messageOf(ctx);
-  const trackId = await rememberFact(m.text, m.source);
+  const trackId = await rememberFact(m.text, m.source, m.botId);
   if (trackId === null) {
     return { vectorMemoryDelivery: "skipped: the vector-memory service (LightRAG) is unreachable on this server" };
   }

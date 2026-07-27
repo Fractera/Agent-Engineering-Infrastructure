@@ -16,5 +16,13 @@ export function receiveTelegramBot(ctx: NodeCtx): NodeCtx {
   if (!text) refuse(emptyInput("telegram-bot"));
   const chat = (update.chat && typeof update.chat === "object" ? update.chat : {}) as Record<string, unknown>;
   const chatId = String(ctx.telegramChatId ?? chat.id ?? "").trim();
-  return { ...captured(ctx, "telegram-bot", text), ...(chatId ? { telegramChatId: chatId } : {}) };
+  // ID БОТА, ЧЕРЕЗ КОТОРОГО ПРИШЁЛ ЗАПРОС — его толкает листенер (`ctx.botId`; при мульти-боте у каждого
+  // пользователя свой бот). Узел ключей не читает (закон 3) — только проносит пушнутое дальше, чтобы
+  // выход-«векторная память» вписал `&bot=<botId>` в провенанс и различил, от кого пришёл факт.
+  const botId = String(ctx.botId ?? "").trim();
+  return {
+    ...captured(ctx, "telegram-bot", text),
+    ...(chatId ? { telegramChatId: chatId } : {}),
+    ...(botId ? { botId } : {}),
+  };
 }
