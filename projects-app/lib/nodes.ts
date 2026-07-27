@@ -591,12 +591,13 @@ export async function registerNode(
 /** Detached rebuild + reload after a change to the built files (materialize / rollback / create). Serialized
  *  with flock so two rebuilds never run concurrently (a corrupted .next was the risk); best-effort.
  *
- *  🔒 `rm -rf .next/types` ПЕРЕД сборкой (фикс рецидива 404 при создании, 2026-07-27). Когда автоматизацию
- *  удаляют (или создание не долетело), Next оставляет в `.next/types/**​/<slug>/page.ts` ссылку на её
- *  `page.js`. Следующая сборка (в т.ч. пересборка ПРИ СОЗДАНИИ новой автоматизации) падает с `Type error:
- *  Cannot find module '.../page.js'` — молча (stdio ignore), маршрут не компилируется, карточка висит и
- *  переход даёт 404. Чистка типов заставляет Next перегенерировать их ТОЛЬКО для существующих маршрутов, и
- *  осиротевшая ссылка исчезает. Компилированные чанки не трогаем — регенерируются самой сборкой. */
+ *  🔒 `rm -rf .next` ПЕРЕД сборкой (фикс рецидива 404 создания/удаления, 2026-07-27). Когда автоматизацию
+ *  УДАЛЯЮТ, Next оставляет осиротевшую ссылку на её `page.js` — и НЕ только в `.next/types`, но и в
+ *  `.next/server` (доказано: `rm .next/types` не спас, полная чистка спасла). Любая следующая сборка (в т.ч.
+ *  пересборка ПРИ СОЗДАНИИ ДРУГОЙ автоматизации) падает `Type error: Cannot find module '.../page.js'` — молча
+ *  (см. лог ниже), маршрут не компилируется, карточка висит «Страница строится…», переход даёт 404. Полная
+ *  `rm -rf .next` гарантированно убирает ВСЕ осиротевшие ссылки и регенерирует всё по текущим папкам. Чуть
+ *  дольше (полная сборка), но НАДЁЖНО — рецидив закрыт и для создания, и для удаления. */
 export function scheduleRebuild(): void {
   try {
     // 🔎 ВЫВОД СБОРКИ ПИШЕТСЯ В `/tmp/schedule-rebuild.log` (2026-07-27). Раньше `stdio:"ignore"` глушил
@@ -606,7 +607,7 @@ export function scheduleRebuild(): void {
     // родитель — pm2-процесс с урезанным PATH (вероятная причина молчаливого «npm: not found»).
     spawn(
       "bash",
-      ["-lc", "cd /opt/fractera/projects-app && ( flock 9; rm -rf .next/types; npm run build && pm2 reload fractera-projects ) >/tmp/schedule-rebuild.log 2>&1 9>/tmp/projects-build.lock"],
+      ["-lc", "cd /opt/fractera/projects-app && ( flock 9; rm -rf .next; npm run build && pm2 reload fractera-projects ) >/tmp/schedule-rebuild.log 2>&1 9>/tmp/projects-build.lock"],
       { detached: true, stdio: "ignore" },
     ).unref();
   } catch { /* best-effort — the files/DB are already updated */ }
