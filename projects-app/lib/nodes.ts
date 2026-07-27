@@ -599,9 +599,14 @@ export async function registerNode(
  *  осиротевшая ссылка исчезает. Компилированные чанки не трогаем — регенерируются самой сборкой. */
 export function scheduleRebuild(): void {
   try {
+    // 🔎 ВЫВОД СБОРКИ ПИШЕТСЯ В `/tmp/schedule-rebuild.log` (2026-07-27). Раньше `stdio:"ignore"` глушил
+    // фоновую сборку создания — падение было НЕВИДИМЫМ (маршрут не компилировался, карточка висела «Страница
+    // строится…», переход давал 404), и причину приходилось гадать. Теперь любое падение видно в логе.
+    // `bash -lc` (а не `sh -c`) грузит логин-окружение → PATH с node/npm гарантированно есть, даже когда
+    // родитель — pm2-процесс с урезанным PATH (вероятная причина молчаливого «npm: not found»).
     spawn(
-      "sh",
-      ["-c", "cd /opt/fractera/projects-app && ( flock 9; rm -rf .next/types; npm run build && pm2 reload fractera-projects ) 9>/tmp/projects-build.lock"],
+      "bash",
+      ["-lc", "cd /opt/fractera/projects-app && ( flock 9; rm -rf .next/types; npm run build && pm2 reload fractera-projects ) >/tmp/schedule-rebuild.log 2>&1 9>/tmp/projects-build.lock"],
       { detached: true, stdio: "ignore" },
     ).unref();
   } catch { /* best-effort — the files/DB are already updated */ }
