@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { WaveLockProvider } from "./wave-lock.client";
+import { AutomationBreadcrumb } from "./automation-breadcrumb.client";
 
 // THE AUTOMATION PAGE'S CHROME (step 241 E3.1; reordering fix step 243.1) — mounted ONCE, in the
 // projects-zone layout.
@@ -36,8 +37,13 @@ export function AutomationPageChrome({ children }: { children: React.ReactNode }
 
   if (!automation) return <>{children}</>;
 
+  const [category, slug] = automation.split("/");
+
   return (
     <WaveLockProvider automation={automation}>
+      {/* ХЛЕБНЫЕ КРОШКИ — общий слой зоны, поэтому есть на КАЖДОЙ автоматизации (в т.ч. уже созданной), в
+          отличие от per-clone chrome. Даёт вернуться в раздел или в корень. Стоят над контентом страницы. */}
+      <AutomationBreadcrumb category={category} slug={slug} />
       {children}
     </WaveLockProvider>
   );
