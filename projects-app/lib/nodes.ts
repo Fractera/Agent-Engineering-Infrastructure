@@ -591,13 +591,13 @@ export async function registerNode(
 /** Detached rebuild + reload after a change to the built files (materialize / rollback / create). Serialized
  *  with flock so two rebuilds never run concurrently (a corrupted .next was the risk); best-effort.
  *
- *  🔒 `rm -rf .next` ПЕРЕД сборкой (фикс рецидива 404 создания/удаления, 2026-07-27). Когда автоматизацию
- *  УДАЛЯЮТ, Next оставляет осиротевшую ссылку на её `page.js` — и НЕ только в `.next/types`, но и в
- *  `.next/server` (доказано: `rm .next/types` не спас, полная чистка спасла). Любая следующая сборка (в т.ч.
- *  пересборка ПРИ СОЗДАНИИ ДРУГОЙ автоматизации) падает `Type error: Cannot find module '.../page.js'` — молча
- *  (см. лог ниже), маршрут не компилируется, карточка висит «Страница строится…», переход даёт 404. Полная
- *  `rm -rf .next` гарантированно убирает ВСЕ осиротевшие ссылки и регенерирует всё по текущим папкам. Чуть
- *  дольше (полная сборка), но НАДЁЖНО — рецидив закрыт и для создания, и для удаления. */
+ *  🔒 `rm -rf .next/types` (НЕ полная `.next`) ПЕРЕД сборкой (фикс рецидива 404 удалить→создать, 2026-07-27,
+ *  гипотеза владельца). Когда автоматизацию УДАЛЯЮТ, Next оставляет в `.next/types/**/<slug>/page.ts` ссылку
+ *  на её `page.js`; следующая пересборка (при СОЗДАНИИ другой) падает `Type error: Cannot find module` молча
+ *  (см. лог ниже) → 404. Чистка ТОЛЬКО типов заставляет их регенерироваться по текущим папкам — ссылка
+ *  исчезает. Компилированные чанки (`.next/server`, `.next/static`) НЕ трогаем: их регенерирует сама сборка,
+ *  а живой процесс продолжает по ним отдавать — поэтому сайт НЕ ломается во время сборки (в отличие от полной
+ *  `rm -rf .next`, которая сносила `.next` у работающего процесса на 3-4 мин и удваивала время удалить→создать). */
 export function scheduleRebuild(): void {
   try {
     // 🔎 ВЫВОД СБОРКИ ПИШЕТСЯ В `/tmp/schedule-rebuild.log` (2026-07-27). Раньше `stdio:"ignore"` глушил
@@ -607,7 +607,7 @@ export function scheduleRebuild(): void {
     // родитель — pm2-процесс с урезанным PATH (вероятная причина молчаливого «npm: not found»).
     spawn(
       "bash",
-      ["-lc", "cd /opt/fractera/projects-app && ( flock 9; rm -rf .next; npm run build && pm2 reload fractera-projects ) >/tmp/schedule-rebuild.log 2>&1 9>/tmp/projects-build.lock"],
+      ["-lc", "cd /opt/fractera/projects-app && ( flock 9; rm -rf .next/types; npm run build && pm2 reload fractera-projects ) >/tmp/schedule-rebuild.log 2>&1 9>/tmp/projects-build.lock"],
       { detached: true, stdio: "ignore" },
     ).unref();
   } catch { /* best-effort — the files/DB are already updated */ }
