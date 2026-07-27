@@ -39,6 +39,7 @@ export default function StatusBar({
             tabs={tabs}
             envKeys={envKeys}
             hasMap={hasMap}
+            frozen={passport.lifecycle === "frozen-template"}
             ai={{ provider: provider.key, model: model.id, providerLabel: provider.label, modelLabel: model.label }}
           />
           <SendTask lang={lang} />

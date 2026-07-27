@@ -1,4 +1,4 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { openAiKey } from "@/lib/quiz";
 
@@ -29,7 +29,7 @@ export async function readHowItWorks(projectDir: string): Promise<HowItWorks | n
 }
 
 export async function generateHowItWorks(
-  projectDir: string,
+  _projectDir: string,
   collected: unknown,
   // The owner's OWN free-text request (step 241) — spoken or typed in the modal. It SHAPES the answer:
   // "keep it very short", "list it as first, second, third", "explain what happens if X". Empty = the
@@ -50,7 +50,7 @@ export async function generateHowItWorks(
     {
       role: "system",
       content:
-        "You explain automations to their non-technical owner. Below is a JSON snapshot of this automation's current architecture (its nodes, links to other automations, use cases, and other declared entities). Write a clear, jargon-free explanation of WHAT it does and HOW it works. No code, no JSON keys or file names — plain prose a business owner can read quickly. If the owner asks below for a particular length, structure or emphasis, follow it; otherwise write a few short paragraphs.",
+        "You explain automations to their non-technical owner. Below is a JSON snapshot of this automation's current architecture (its nodes, links to other automations, use cases, and other declared entities). Write a clear, jargon-free explanation of WHAT it does and HOW it works. No code, no JSON keys or file names — plain prose a business owner can read quickly. If the owner asks below for a particular length, structure or emphasis, follow it; otherwise aim for about 200 words in a few short paragraphs.",
     },
     { role: "user", content: context },
     ...(shaping
@@ -77,6 +77,8 @@ export async function generateHowItWorks(
   if (!text) return { ok: false, error: "OpenAI returned no text" };
 
   const result: HowItWorks = { text, updatedAt: new Date().toISOString() };
-  await writeFile(join(projectDir, "_data", FILE), JSON.stringify(result, null, 2), "utf8");
+  // (A) ЕДИНЫЙ ИСТОЧНИК — `passport.howItWorks` в automation.json (решение владельца 2026-07-27). Отдельный
+  // файл `how-it-works.json` больше НЕ пишем: дверь только генерирует текст и возвращает его, а модалка
+  // сохраняет ответ в ЯДРО через `api/patch` (каноничная `writeCore`). `projectDir` здесь больше не нужен.
   return { ok: true, result };
 }

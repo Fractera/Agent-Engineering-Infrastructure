@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 import HowItWorksModal from "./how-it-works-modal.client";
 import SettingsModal from "./settings-modal.client";
 import { RenameDialog, CloneDialog, DeleteDialog } from "./danger-actions.client";
@@ -39,6 +40,7 @@ export default function Menu({
   tabs,
   envKeys,
   hasMap,
+  frozen,
   ai,
 }: {
   lang: string;
@@ -46,6 +48,8 @@ export default function Menu({
   envKeys: string[];
   /** Виден ли выходной узел канала `map` — тогда в Настройках рисуется статус-карточка карт (шаг 301). */
   hasMap: boolean;
+  /** Замороженный тест-шаблон (`lifecycle==="frozen-template"`): «Как это работает» ещё нечего объяснять. */
+  frozen: boolean;
   /** Выбранные провайдер и модель — ПОКАЗЫВАЮТСЯ здесь, меняются в Настройках. */
   ai: { provider: ProviderKey; model: string; providerLabel: string; modelLabel: string };
   tabs: TabRow[];
@@ -109,8 +113,12 @@ export default function Menu({
             прибавляется, и список не имеет права уходить за нижний край экрана — иначе нижние пункты
             становятся недостижимыми, а на коротком экране пропадает и «Опасная зона». */}
         <DropdownMenuContent align="end" className="max-h-[500px] w-72 overflow-y-auto">
-          {/* How it works — top, font-medium, Sparkles (v1) */}
-          <DropdownMenuItem className="font-medium" onSelect={() => setModal("howItWorks")}>
+          {/* How it works — top, font-medium, Sparkles (v1). У замороженного тест-шаблона объяснять нечего:
+              вместо открытия модалки — тост «сначала постройте автоматизацию» (решение владельца). */}
+          <DropdownMenuItem
+            className="font-medium"
+            onSelect={() => (frozen ? toast.info(L.howItWorksFrozen) : setModal("howItWorks"))}
+          >
             <SparkleIcon className="size-4" />
             {L.howItWorks}
           </DropdownMenuItem>
