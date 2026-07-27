@@ -592,7 +592,7 @@ export async function registerNode(
  *  with flock so two rebuilds never run concurrently (a corrupted .next was the risk); best-effort.
  *
  *  🔒 `rm -rf .next/types` (НЕ полная `.next`) ПЕРЕД сборкой (фикс рецидива 404 удалить→создать, 2026-07-27,
- *  гипотеза владельца). Когда автоматизацию УДАЛЯЮТ, Next оставляет в `.next/types/**/<slug>/page.ts` ссылку
+ *  гипотеза владельца). Когда автоматизацию УДАЛЯЮТ, Next оставляет в `.next/types/…/<slug>/page.ts` ссылку
  *  на её `page.js`; следующая пересборка (при СОЗДАНИИ другой) падает `Type error: Cannot find module` молча
  *  (см. лог ниже) → 404. Чистка ТОЛЬКО типов заставляет их регенерироваться по текущим папкам — ссылка
  *  исчезает. Компилированные чанки (`.next/server`, `.next/static`) НЕ трогаем: их регенерирует сама сборка,
