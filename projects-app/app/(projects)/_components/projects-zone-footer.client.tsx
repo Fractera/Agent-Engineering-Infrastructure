@@ -12,6 +12,7 @@ import {
 import { adminBase } from "@/lib/runtime-urls";
 import { ThemeToggle } from "@/components/menu/shared/theme-toggle.client";
 import { ZoneWidthToggle } from "./zone-width-toggle.client";
+import { ZoneLanguageSelect } from "./zone-language-select.client";
 import { useUiLang } from "../projects/_shared/use-ui-lang";
 import { projectsZoneFooterStrings } from "./projects-zone-footer-i18n";
 
@@ -84,6 +85,9 @@ export function ProjectsZoneFooter({ shortName }: { shortName: string }) {
               с мостом 32px). На мобильном компонент сам себя прячет — там свой режим. */}
           <ZoneWidthToggle labels={{ wide: L.widthWide, normal: L.widthNormal }} />
           <ThemeToggle labels={THEME_LABELS} />
+          {/* Ручной выбор языка кокпита (владелец, 2026-07-27): десять языков, переключение без
+              перезагрузки страницы (localStorage + событие → все `useUiLang()` перерисовываются). */}
+          <ZoneLanguageSelect />
         </div>
       </TooltipProvider>
       </div>

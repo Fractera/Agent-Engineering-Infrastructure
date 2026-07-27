@@ -1,0 +1,45 @@
+"use client";
+
+import { Languages } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { UI_LANGS } from "../projects/_shared/ui-langs";
+import { useUiLang, setUiLang } from "../projects/_shared/use-ui-lang";
+
+// THE ZONE-FOOTER LANGUAGE SELECTOR (owner, 2026-07-27). The cockpit was locked to the server default
+// language with no way to switch — so the ten-language admin layer looked English no matter the browser.
+// This dropdown lets the owner pick any of the ten manually; the pick is stored + broadcast, and every
+// `useUiLang()` consumer re-renders in the new language WITHOUT a page reload (see `setUiLang`).
+//
+// Each language is shown in its OWN name (endonym) — a language picker never localises its own list, and
+// these are proper names, not translatable UI strings (CLAUDE.md 4г: machine/proper strings are exempt).
+const LANG_NAMES: Record<string, string> = {
+  en: "English",
+  es: "Español",
+  fr: "Français",
+  it: "Italiano",
+  ru: "Русский",
+  de: "Deutsch",
+  pt: "Português",
+  pl: "Polski",
+  tr: "Türkçe",
+  nl: "Nederlands",
+};
+
+export function ZoneLanguageSelect() {
+  const lang = useUiLang();
+  return (
+    <Select value={lang} onValueChange={(v) => setUiLang(v)}>
+      <SelectTrigger size="sm" className="h-8 w-auto gap-1.5 border-none px-2 shadow-none hover:bg-muted hover:text-foreground focus-visible:ring-0">
+        <Languages className="size-4" />
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {UI_LANGS.map((code) => (
+          <SelectItem key={code} value={code}>
+            {LANG_NAMES[code] ?? code}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}

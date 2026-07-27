@@ -1,42 +1,107 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { UI_LANGS } from "./ui-langs";
 
 // THE UI LANGUAGE of the admin/projects layer (owner's rule, CLAUDE.md 4г) — the ten languages we ship
 // (en, es, fr, it, ru, de, pt, pl, tr, nl), anything else falls back to English. One shared hook so every
-// component reads the SAME language without each mounting its own fetch: the default locale is fetched once
-// per page and memoized at module scope.
+// component reads the SAME language without each mounting its own fetch.
+//
+// TWO SOURCES, override wins (footer language selector, 2026-07-27):
+//   1. MANUAL OVERRIDE — the owner's pick from the zone-footer dropdown, kept in localStorage. When set,
+//      it beats the server default. Switching it broadcasts an event so EVERY `useUiLang()` consumer
+//      re-renders in the new language WITHOUT a page reload (owner's requirement).
+//   2. SERVER DEFAULT — `/api/projects/language` (first of NEXT_PUBLIC_SUPPORTED_LANGUAGES, English if unset),
+//      fetched once per page and memoized at module scope. Used until/unless the owner overrides.
 //
 // It returns the two-letter code; a component pairs it with its own ten-language dictionary:
 //   const lang = useUiLang(); const L = MY_I18N[lang] ?? MY_I18N.en;
 
-let cached: string | null = null;
+const LS_KEY = "fractera-ui-lang";
+const EVT = "fractera:ui-lang";
+
+let fetchedDefault: string | null = null; // server default, memoized across the page
 let inFlight: Promise<string> | null = null;
 
-function fetchLang(): Promise<string> {
-  if (cached) return Promise.resolve(cached);
+/** The manual override from localStorage, or null. Only the ten shipped languages are honoured. */
+function readOverride(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const v = window.localStorage.getItem(LS_KEY);
+    if (v && (UI_LANGS as readonly string[]).includes(v)) return v;
+  } catch {
+    /* localStorage unavailable — no override */
+  }
+  return null;
+}
+
+function fetchDefault(): Promise<string> {
+  if (fetchedDefault) return Promise.resolve(fetchedDefault);
   if (!inFlight) {
     inFlight = fetch(`/api/projects/language`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d: { code?: string } | null) => {
-        cached = (d?.code ?? "en").toLowerCase().slice(0, 2);
-        return cached;
+        fetchedDefault = (d?.code ?? "en").toLowerCase().slice(0, 2);
+        return fetchedDefault;
       })
       .catch(() => {
-        cached = "en";
-        return cached;
+        fetchedDefault = "en";
+        return fetchedDefault;
       });
   }
   return inFlight;
 }
 
-/** The two-letter default-locale code, English until it is known. Shared + memoized across the page. */
+/** The current UI language: manual override if set, else the memoized server default, else English. */
+function currentLang(): string {
+  return readOverride() ?? fetchedDefault ?? "en";
+}
+
+/**
+ * Set the manual UI-language override for the WHOLE cockpit — persists to localStorage and broadcasts so
+ * every mounted `useUiLang()` re-renders instantly (no page reload). Called by the zone-footer selector.
+ */
+export function setUiLang(code: string): void {
+  const c = code.toLowerCase().slice(0, 2);
+  try {
+    window.localStorage.setItem(LS_KEY, c);
+  } catch {
+    /* ignore — the event below still switches this tab for the session */
+  }
+  window.dispatchEvent(new CustomEvent(EVT, { detail: c }));
+}
+
+/** The current override (or null) — for the selector to show the active choice. Client-only. */
+export function readUiLangOverride(): string | null {
+  return readOverride();
+}
+
+/** The two-letter UI-language code, reactive to the footer selector. English until the default is known. */
 export function useUiLang(): string {
-  const [lang, setLang] = useState<string>(cached ?? "en");
+  // Initial state is deterministic ("en" or the already-fetched default) — the override is applied in the
+  // effect below, NOT in the initializer, so server HTML and first client render match (no hydration jump).
+  const [lang, setLang] = useState<string>(fetchedDefault ?? "en");
   useEffect(() => {
     let alive = true;
-    void fetchLang().then((c) => { if (alive) setLang(c); });
-    return () => { alive = false; };
+    const sync = () => {
+      if (alive) setLang(currentLang());
+    };
+    // Apply an existing override immediately; if none, fetch the server default and adopt it (unless the
+    // owner picks an override in the meantime).
+    if (readOverride()) {
+      sync();
+    } else {
+      void fetchDefault().then(() => {
+        if (alive && !readOverride()) setLang(currentLang());
+      });
+    }
+    window.addEventListener(EVT, sync); // same-tab switch from the footer
+    window.addEventListener("storage", sync); // another tab switched — follow it
+    return () => {
+      alive = false;
+      window.removeEventListener(EVT, sync);
+      window.removeEventListener("storage", sync);
+    };
   }, []);
   return lang;
 }
