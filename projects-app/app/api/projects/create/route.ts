@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/auth/get-session"
 import { createV2Automation } from "@/app/(projects)/projects/_lib/v2-birth"
-import { scheduleRebuild } from "@/lib/nodes"
+import { authorize, scheduleRebuild } from "@/lib/nodes"
 
 // The "создать автоматизацию" endpoint (step 214, rewired to v2 birth in step 301). ONE function —
 // createV2Automation — serves both the owner's form (a fetch from create-automation-card) and a future
@@ -17,14 +17,10 @@ import { scheduleRebuild } from "@/lib/nodes"
 //        -d '{"category":"personal","project":"telegram-dietolog","title":"Telegram диетолог"}'
 export const runtime = "nodejs"
 
-const WRITE_ROLES = ["architect", "manager", "agent"]
+// Шаг 303: своя локальная копия authorize здесь НЕ принимала `X-Fractera-Agent-Gate` — терминальный
+// вызов из примера выше в secure-режиме получал 403. Дверь delete уже ходит через общий authorize из
+// lib/nodes (IP-режим / агент-гейт / сессия с ролями) — create выровнен на него же.
 const IP_MODE = process.env.FRACTERA_IP_NODOMAIN_MODE === "true"
-
-async function authorize(req: NextRequest): Promise<boolean> {
-  if (IP_MODE) return true // onboarding surface — open, like the other project-config routes
-  const session = await getSession(req)
-  return Boolean(session?.roles?.some((r) => WRITE_ROLES.includes(r)))
-}
 
 export async function POST(req: NextRequest) {
   if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 })
@@ -60,6 +56,6 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     ...result,
     building: true,
-    message: `Created ${result.category}/${result.project}. Rebuilding projects-app (~1-2 min) — then open ${result.url}.`,
+    message: `Created ${result.category}/${result.project}. Rebuilding projects-app (~3-4 min) — then open ${result.url}.`,
   })
 }

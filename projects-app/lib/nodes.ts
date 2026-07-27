@@ -588,26 +588,27 @@ export async function registerNode(
   });
 }
 
-/** Detached rebuild + reload after a change to the built files (materialize / rollback / create). Serialized
- *  with flock so two rebuilds never run concurrently (a corrupted .next was the risk); best-effort.
+/** Detached rebuild + reload after a change to the built files (materialize / rollback / create / delete).
+ *  Вся механика — в `scripts/rebuild.sh` (flock-сериализация, `rm -rf .next/types`, лог на каждую сборку,
+ *  коалесценция по времени старта, `pm2 reload` в конце). Здесь остаётся только ЗАПУСК, и его форма — суть
+ *  фикса шага 303 (корень вечного 404 «удалить → сразу создать», доказан живым экспериментом 2026-07-27):
  *
- *  🔒 `rm -rf .next/types` (НЕ полная `.next`) ПЕРЕД сборкой (фикс рецидива 404 удалить→создать, 2026-07-27,
- *  гипотеза владельца). Когда автоматизацию УДАЛЯЮТ, Next оставляет в `.next/types/…/<slug>/page.ts` ссылку
- *  на её `page.js`; следующая пересборка (при СОЗДАНИИ другой) падает `Type error: Cannot find module` молча
- *  (см. лог ниже) → 404. Чистка ТОЛЬКО типов заставляет их регенерироваться по текущим папкам — ссылка
- *  исчезает. Компилированные чанки (`.next/server`, `.next/static`) НЕ трогаем: их регенерирует сама сборка,
- *  а живой процесс продолжает по ним отдавать — поэтому сайт НЕ ломается во время сборки (в отличие от полной
- *  `rm -rf .next`, которая сносила `.next` у работающего процесса на 3-4 мин и удваивала время удалить→создать). */
+ *  🔒 ДВОЙНОЙ FORK ОБЯЗАТЕЛЕН. `pm2 reload fractera-projects` убивает ВСЁ дерево процессов старого
+ *  инстанса (treekill) — а detached-потомок route-handler'а (даже с `detached:true`+`unref`, это лишь новая
+ *  сессия, ppid остаётся наш) сидит в этом дереве. Сборка удаления в конце делала reload → treekill убивал
+ *  сборку создания, ещё ждущую flock → маршрут новой автоматизации не компилировался никогда. Внешний bash
+ *  порождает скрипт через `nohup … &` и сразу выходит → сборка переподчиняется PID 1, вне дерева pm2, и
+ *  переживает любой reload (проверено: ppid=1, старый потомок жив после reload).
+ *
+ *  Аргумент скрипту — момент запроса (ns): сборка, НАЧАВШАЯСЯ позже него, уже видела наши папки, и
+ *  очередная сборка в flock-очереди тогда молча выходит (не гоняем лишние 3-4 минуты). */
 export function scheduleRebuild(): void {
   try {
-    // 🔎 ВЫВОД СБОРКИ ПИШЕТСЯ В `/tmp/schedule-rebuild.log` (2026-07-27). Раньше `stdio:"ignore"` глушил
-    // фоновую сборку создания — падение было НЕВИДИМЫМ (маршрут не компилировался, карточка висела «Страница
-    // строится…», переход давал 404), и причину приходилось гадать. Теперь любое падение видно в логе.
-    // `bash -lc` (а не `sh -c`) грузит логин-окружение → PATH с node/npm гарантированно есть, даже когда
-    // родитель — pm2-процесс с урезанным PATH (вероятная причина молчаливого «npm: not found»).
+    const req = `${Date.now()}000000`; // ms → ns, та же шкала, что `date +%s%N` в скрипте
+    // `bash -lc` — логин-окружение, PATH с node/npm даже под pm2-родителем с урезанным PATH
     spawn(
       "bash",
-      ["-lc", "cd /opt/fractera/projects-app && ( flock 9; rm -rf .next/types; npm run build && pm2 reload fractera-projects ) >/tmp/schedule-rebuild.log 2>&1 9>/tmp/projects-build.lock"],
+      ["-lc", `nohup bash /opt/fractera/projects-app/scripts/rebuild.sh ${req} >/dev/null 2>&1 & exit 0`],
       { detached: true, stdio: "ignore" },
     ).unref();
   } catch { /* best-effort — the files/DB are already updated */ }

@@ -9,7 +9,7 @@ import { createAutomationStrings } from "../create-automation-i18n";
 
 // THE OPTIMISTIC PENDING CARD (step 242.3, owner) — closes the gap between "create an automation" and "its
 // card appears". A freshly created automation is a REAL folder cloned on disk, but its page is a COMPILED
-// static route, so it does NOT show and 404s on click until the background rebuild (~1-2 min) regenerates
+// static route, so it does NOT show and 404s on click until the background rebuild (~3-4 min) regenerates
 // the app. The instant an automation is created, the dialog dispatches a window event and THIS client
 // component — mounted inside the grid — renders a muted spinner card with the automation's name and holds it
 // there until the build TRULY finishes.
@@ -36,11 +36,13 @@ import { createAutomationStrings } from "../create-automation-i18n";
 
 const EVENT = "fractera:automation-pending";
 const POLL_MS = 8000;
-/** A build takes a minute or two. An hour is generous; past it the entry is residue, not progress. */
+/** A build takes 3-4 minutes. An hour is generous; past it the entry is residue, not progress. */
 const MAX_AGE_MS = 60 * 60 * 1000;
 /** A build that has not served the route after this long has failed (or is stuck) — surface an error. The
- *  poll keeps probing afterwards, so a genuinely slow build still heals into a ready card if it lands. */
-const FAIL_AFTER_MS = 5 * 60 * 1000;
+ *  poll keeps probing afterwards, so a genuinely slow build still heals into a ready card if it lands.
+ *  10 min, не 5: «удалить → сразу создать» = ДВЕ сборки в flock-очереди по 3-4 мин (шаг 303) — честная
+ *  очередь не должна выглядеть ошибкой. */
+const FAIL_AFTER_MS = 10 * 60 * 1000;
 
 export type PendingDetail = { automation: string; category: string; slug: string; title: string; url: string };
 /** `at` = when the creation was registered (owner 2026-07-20). `failed` = the build did not land in time or
