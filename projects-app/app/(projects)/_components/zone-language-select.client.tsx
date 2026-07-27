@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Languages } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UI_LANGS } from "../projects/_shared/ui-langs";
@@ -27,8 +28,15 @@ const LANG_NAMES: Record<string, string> = {
 
 export function ZoneLanguageSelect() {
   const lang = useUiLang();
+  const router = useRouter();
+  // Pick → override (client, instant) + cookie (server) + a SOFT server re-render so server-rendered text
+  // (welcome, section titles) switches too, WITHOUT a full page reload (owner's requirement).
+  const onPick = (v: string) => {
+    setUiLang(v);
+    router.refresh();
+  };
   return (
-    <Select value={lang} onValueChange={(v) => setUiLang(v)}>
+    <Select value={lang} onValueChange={onPick}>
       <SelectTrigger size="sm" className="h-8 w-auto gap-1.5 border-none px-2 shadow-none hover:bg-muted hover:text-foreground focus-visible:ring-0">
         <Languages className="size-4" />
         <SelectValue />

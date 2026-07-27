@@ -58,16 +58,24 @@ function currentLang(): string {
 }
 
 /**
- * Set the manual UI-language override for the WHOLE cockpit — persists to localStorage and broadcasts so
- * every mounted `useUiLang()` re-renders instantly (no page reload). Called by the zone-footer selector.
+ * Set the manual UI-language override for the WHOLE cockpit. Three writes so BOTH the client and the server
+ * follow the pick with no page reload:
+ *   1. localStorage — survives navigation/reload for the pure-client `useUiLang()` consumers.
+ *   2. a cookie — the SERVER reads it (each automation's `page.tsx` is the single platform read point,
+ *      закон 0) so server-rendered text (welcome, section titles, tabs) re-renders in the chosen language
+ *      after `router.refresh()`.
+ *   3. a broadcast event — every mounted `useUiLang()` re-renders instantly in this tab.
+ * The selector pairs this with `router.refresh()` to re-run the server tree against the new cookie.
  */
 export function setUiLang(code: string): void {
   const c = code.toLowerCase().slice(0, 2);
   try {
     window.localStorage.setItem(LS_KEY, c);
   } catch {
-    /* ignore — the event below still switches this tab for the session */
+    /* ignore — the cookie + event below still switch this session */
   }
+  // Cookie for the SERVER read point. One year, path=/ (the whole zone), Lax (same-site nav only).
+  document.cookie = `${LS_KEY}=${c}; path=/; max-age=31536000; samesite=lax`;
   window.dispatchEvent(new CustomEvent(EVT, { detail: c }));
 }
 

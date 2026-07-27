@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { loadAutomation } from "./_data/load";
 import AutomationChrome from "./_components/chrome";
 import AutomationComponents from "./_components";
@@ -15,7 +16,12 @@ import TopPulseBar from "./_components/cron/public/components/top-pulse-bar.clie
 export default async function Page() {
   const core = await loadAutomation();
   const { passport, components, graph, useCases } = core;
-  const lang = (process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? "en").toLowerCase().slice(0, 2);
+  // ЯЗЫК КОКПИТА — единственная точка чтения платформы (закон 0). Приоритет: ручной выбор владельца из
+  // селектора в футере зоны (cookie `fractera-ui-lang`), иначе язык по умолчанию платформы. Так серверно
+  // отрисованный текст (приветствие, заголовки секций, вкладки) следует за селектором после `router.refresh()`
+  // — без перезагрузки страницы. Мусор в cookie не страшен: компоненты сами падают на англ. фолбэк.
+  const pickedLang = (await cookies()).get("fractera-ui-lang")?.value;
+  const lang = (pickedLang || process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "en").toLowerCase().slice(0, 2);
   // ОНБОРДИНГ (шаг 301): только что рождённый замороженный клон стартера без единого кейса. Пока это так —
   // страница показывает приветствие и кейсы вместо продуктовых вкладок (пустой холст + приглашение описать).
   const onboarding = passport.lifecycle === "frozen-template" && useCases.cases.length === 0;
