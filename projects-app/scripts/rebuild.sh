@@ -11,14 +11,54 @@
 # НАЧАВШАЯСЯ после запроса, она сканировала папки уже с нашим изменением — повторная сборка не нужна.
 REQ="${1:-0}"
 LOCK=/tmp/projects-build.lock
-DONE=/tmp/projects-build.done   # время СТАРТА последней успешной сборки (ns)
+DONE=/tmp/projects-build.done           # время СТАРТА последней успешной сборки (ns)
+RELOAD_FLAG=/tmp/projects-build.reload-pending  # успешная сборка ждёт reload
+
+# 🔒 RELOAD ДЕЛАЕТ ТОЛЬКО ПОСЛЕДНЯЯ СБОРКА ОЧЕРЕДИ (инцидент 2026-07-27, «Internal Server Error» на всей
+# зоне). Если reload сделать, пока СЛЕДУЮЩАЯ сборка уже переписывает `.next`, свежеперезапущенный
+# `next start` стартует поверх наполовину переписанного каталога (manifest на мгновение исчезает) и
+# отдаёт 500 на КАЖДЫЙ запрос до конца той сборки. Поэтому: успешная сборка ставит RELOAD_FLAG, а сам
+# reload выполняется только когда очередь пуста — сервер живёт на старом `.next` весь цикл очереди и
+# перезапускается ровно один раз, по финальному состоянию.
+#
+# Очередь считается ЯВНЫМИ маркерами PID (не fuser: тот считал и собственный подпроцесс $(…) скрипта —
+# reload откладывался вечно при пустой очереди). Каждый rebuild.sh до flock кладёт файл со своим PID,
+# после захвата замка убирает; маркер мёртвого PID — мусор, чистится на месте.
+QUEUE=/tmp/projects-build.queue
+mkdir -p "$QUEUE"
+echo $$ > "$QUEUE/$$"
+
+queue_busy() {
+  local f pid
+  for f in "$QUEUE"/*; do
+    [ -e "$f" ] || continue
+    pid=$(basename "$f")
+    if kill -0 "$pid" 2>/dev/null; then return 0; else rm -f "$f"; fi
+  done
+  return 1
+}
+
+reload_if_last() {
+  if queue_busy; then
+    [ -n "${LOG:-}" ] && echo "=== reload deferred: очередь не пуста — перезапустит последняя сборка" >>"$LOG"
+    return 0
+  fi
+  if [ -f "$RELOAD_FLAG" ]; then
+    rm -f "$RELOAD_FLAG"
+    pm2 reload fractera-projects >>"${LOG:-/dev/null}" 2>&1
+  fi
+}
 
 exec 9>"$LOCK"
 flock 9
+rm -f "$QUEUE/$$"   # замок наш — из очереди ожидания мы вышли
 
 LAST_START=$(cat "$DONE" 2>/dev/null || echo 0)
 if [ "$LAST_START" -gt "$REQ" ] 2>/dev/null; then
-  exit 0  # состояние папок на момент запроса уже собрано более поздней сборкой
+  # состояние папок на момент запроса уже собрано более поздней сборкой; но если та сборка отложила
+  # reload на очередь (а очередь — это мы), перезапуск обязан случиться здесь
+  reload_if_last
+  exit 0
 fi
 
 START=$(date +%s%N)
@@ -38,8 +78,9 @@ rm -rf .next/types
 
 if npm run build >>"$LOG" 2>&1; then
   echo "$START" >"$DONE"
-  echo "=== build ok $(date -Is) — pm2 reload" >>"$LOG"
-  pm2 reload fractera-projects >>"$LOG" 2>&1
+  touch "$RELOAD_FLAG"
+  echo "=== build ok $(date -Is)" >>"$LOG"
+  reload_if_last
 else
   echo "=== BUILD FAILED $(date -Is)" >>"$LOG"
 fi

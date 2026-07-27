@@ -75,7 +75,11 @@ async function probeEntry(e: Entry): Promise<Phase> {
   } catch {
     return "building"; // route unreachable (pm2 reload window etc.) — never drop on a guess
   }
-  if (routeStatus !== 404) return "ready"; // 2xx/3xx → compiled route serves → live & clickable
+  // ТОЛЬКО 2xx/3xx = «маршрут жив и кликабелен». 5xx — НЕ готовность (инцидент 2026-07-27: во время
+  // окна reload-посреди-сборки вся зона отдавала 500, карточка приняла 500 за «готово» без спиннера, и
+  // клик владельца привёл на Internal Server Error) — сервер нездоров, держим спиннер.
+  if (routeStatus < 400) return "ready";
+  if (routeStatus !== 404) return "building";
   // 404 is ambiguous — still compiling, or the folder is gone. Ask the server which.
   try {
     const x = await fetch(`/api/projects/exists?automation=${encodeURIComponent(`${e.category}/${e.slug}`)}`, { cache: "no-store" });
