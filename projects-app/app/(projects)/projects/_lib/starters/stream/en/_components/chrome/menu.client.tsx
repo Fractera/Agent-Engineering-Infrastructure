@@ -182,9 +182,9 @@ export default function Menu({
       <SettingsModal lang={lang} envKeys={envKeys} hasMap={hasMap} ai={ai} open={modal === "settings"} onClose={() => setModal(null)} />
       {/* DANGER ZONE (шаг 301) — реальные действия вместо заглушек: переименовать (имя), клонировать (v2),
           удалить (с впечатыванием слага). */}
-      <RenameDialog open={modal === "rename"} onClose={() => setModal(null)} />
-      <CloneDialog open={modal === "clone"} onClose={() => setModal(null)} />
-      <DeleteDialog open={modal === "delete"} onClose={() => setModal(null)} />
+      <RenameDialog open={modal === "rename"} onClose={() => setModal(null)} lang={lang} />
+      <CloneDialog open={modal === "clone"} onClose={() => setModal(null)} lang={lang} />
+      <DeleteDialog open={modal === "delete"} onClose={() => setModal(null)} lang={lang} />
     </>
   );
 }
