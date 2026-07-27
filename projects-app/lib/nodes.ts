@@ -588,13 +588,20 @@ export async function registerNode(
   });
 }
 
-/** Detached rebuild + reload after a change to the built files (materialize / rollback). Serialized with
- *  flock so two rebuilds never run concurrently (a corrupted .next was the risk); best-effort. */
+/** Detached rebuild + reload after a change to the built files (materialize / rollback / create). Serialized
+ *  with flock so two rebuilds never run concurrently (a corrupted .next was the risk); best-effort.
+ *
+ *  🔒 `rm -rf .next/types` ПЕРЕД сборкой (фикс рецидива 404 при создании, 2026-07-27). Когда автоматизацию
+ *  удаляют (или создание не долетело), Next оставляет в `.next/types/**​/<slug>/page.ts` ссылку на её
+ *  `page.js`. Следующая сборка (в т.ч. пересборка ПРИ СОЗДАНИИ новой автоматизации) падает с `Type error:
+ *  Cannot find module '.../page.js'` — молча (stdio ignore), маршрут не компилируется, карточка висит и
+ *  переход даёт 404. Чистка типов заставляет Next перегенерировать их ТОЛЬКО для существующих маршрутов, и
+ *  осиротевшая ссылка исчезает. Компилированные чанки не трогаем — регенерируются самой сборкой. */
 export function scheduleRebuild(): void {
   try {
     spawn(
       "sh",
-      ["-c", "cd /opt/fractera/projects-app && ( flock 9; npm run build && pm2 reload fractera-projects ) 9>/tmp/projects-build.lock"],
+      ["-c", "cd /opt/fractera/projects-app && ( flock 9; rm -rf .next/types; npm run build && pm2 reload fractera-projects ) 9>/tmp/projects-build.lock"],
       { detached: true, stdio: "ignore" },
     ).unref();
   } catch { /* best-effort — the files/DB are already updated */ }
