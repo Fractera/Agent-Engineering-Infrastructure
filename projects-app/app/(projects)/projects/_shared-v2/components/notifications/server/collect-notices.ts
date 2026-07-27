@@ -97,6 +97,16 @@ export function collectNotices(core: NoticesCore): Notice[] {
     ready.push({ category: "ready", scope: "use-cases", name: "use-cases" });
   }
 
-  // Порядок: предупреждения → ОТВЕТЫ владельца (он их ждёт больше всего) → недоделанное → готовность → кейсы.
-  return [...warnings, ...answered, ...unbuilt, ...ready, ...newCases];
+  // ЗАДАНИЕ ВЛАДЕЛЬЦА — кнопка «Отправить задание» пишет текст в `passport.info.crudUser` (то поле, что
+  // будущий агент читает как задачу). Непустое задание = повод внимания: полоса-уведомление обязана его
+  // показать, чтобы задание не «утонуло» в ядре молча (требование владельца 2026-07-27). Маркер ответа сюда
+  // не попадает (он на узлах/вкладках, не на паспорте), но проверяем на всякий случай.
+  const tasks: Notice[] = [];
+  const taskText = core.passport?.info?.crudUser?.trim();
+  if (taskText && !taskText.startsWith(ANSWER_MARKER)) {
+    tasks.push({ category: "task", scope: "automation", name: "task", text: taskText });
+  }
+
+  // Порядок: предупреждения → ОТВЕТЫ владельца (он их ждёт больше всего) → ЗАДАНИЕ → недоделанное → готовность → кейсы.
+  return [...warnings, ...answered, ...tasks, ...unbuilt, ...ready, ...newCases];
 }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Bell, ChevronDown, CheckCircle2, Clock, MessageSquareReply, PlusCircle, Rocket, TriangleAlert } from "lucide-react";
+import { Bell, ChevronDown, CheckCircle2, ClipboardList, Clock, MessageSquareReply, PlusCircle, Rocket, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,7 @@ import { useNotices } from "./provider.client";
 // клик показывает красный тост с кнопкой «Детали», которая прокручивает к секции кейсов и открывает
 // подтверждение.
 
-const ORDER: NoticeCategory[] = ["warning", "answered", "unbuilt", "ready", "new-case"];
+const ORDER: NoticeCategory[] = ["warning", "answered", "task", "unbuilt", "ready", "new-case"];
 
 const TONE: Record<NoticeCategory, string> = {
   warning: "text-amber-600 dark:text-amber-400",
@@ -26,6 +26,7 @@ const TONE: Record<NoticeCategory, string> = {
   answered: "text-violet-600 dark:text-violet-400",
   ready: "text-emerald-600 dark:text-emerald-400",
   "new-case": "text-emerald-600 dark:text-emerald-400",
+  task: "text-indigo-600 dark:text-indigo-400",
 };
 
 const ICON: Record<NoticeCategory, typeof TriangleAlert> = {
@@ -34,6 +35,7 @@ const ICON: Record<NoticeCategory, typeof TriangleAlert> = {
   answered: MessageSquareReply,
   ready: CheckCircle2,
   "new-case": PlusCircle,
+  task: ClipboardList,
 };
 
 function automationFromPath(): string {
@@ -113,6 +115,8 @@ export function NotificationBanner({ lang }: { lang: string }) {
                   </>
                 ) : notice.category === "ready" ? (
                     <span className="font-medium text-foreground">{L.ready}</span>
+                  ) : notice.category === "task" ? (
+                    <span className="font-medium text-foreground">{L.task}</span>
                   ) : (
                     <>
                       <span className="text-muted-foreground">{notice.category === "warning" ? L.warning : L.unbuilt}: </span>

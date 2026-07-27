@@ -1,19 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { chromeStrings } from "./i18n";
+import VoiceInput from "../tools/voice-input/client/voice-input.client";
 
 // КНОПКА «ОТПРАВИТЬ ЗАДАНИЕ» — живая запись в ядро: текст владельца ложится в passport.info.crudUser
 // через собственную дверь api/patch (то поле, что будущий агент читает как задачу). Двусторонняя связь
 // шапка ↔ ядро. Дверь адресуется ОТНОСИТЕЛЬНО текущего пути — без хардкода слага (закон 0: папка
 // переносима; на новом месте путь другой, а код тот же).
 //
+// ГОЛОС (шаг 302): поле принимает речь тем же переиспользуемым примитивом `VoiceInput`, что и пульт —
+// задание можно надиктовать. УВЕДОМЛЕНИЕ (шаг 302): как только задание легло в ядро, шлём событие
+// `fractera:notices-refresh` — полоса-уведомление перечитывает поводы и показывает новый повод категории
+// `task` СРАЗУ, без перезагрузки (деривация `collectNotices` читает `passport.info.crudUser`).
+//
 // 🔒 НА shadcn (шаг 298): прежде — сырые `<button>` + `<textarea>` и самодельная всплывашка на `absolute`.
 // Теперь `Dialog` + `Textarea` + `Button`: фокус-ловушка, Esc, крестик и клик вне окна — от примитива.
-// (`Popover` в наборе нет, а выдумывать свой примитив запрещено — задание пишут в окне, и это уместно.)
 type Status = "idle" | "sending" | "saved" | "failed";
 
 export default function SendTask({ lang }: { lang: string }) {
@@ -21,6 +26,7 @@ export default function SendTask({ lang }: { lang: string }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [status, setStatus] = useState<Status>("idle");
+  const areaRef = useRef<HTMLTextAreaElement | null>(null);
 
   async function submit() {
     const brief = text.trim();
@@ -36,6 +42,8 @@ export default function SendTask({ lang }: { lang: string }) {
       if (!r.ok) throw new Error(String(r.status));
       setStatus("saved");
       setText("");
+      // Задание в ядре → полоса-уведомление перечитывает поводы: новый `task` появится сразу, без перезагрузки.
+      window.dispatchEvent(new CustomEvent("fractera:notices-refresh"));
     } catch {
       setStatus("failed");
     }
@@ -51,10 +59,19 @@ export default function SendTask({ lang }: { lang: string }) {
           <DialogTitle>{L.sendTitle}</DialogTitle>
         </DialogHeader>
         <Textarea
+          ref={areaRef}
           value={text}
           onChange={(e) => { setText(e.target.value); setStatus("idle"); }}
           placeholder={L.sendPlaceholder}
           className="min-h-24 resize-y text-sm"
+        />
+        {/* Голос — тот же примитив, что в пульте: задание можно надиктовать. Курсор помнит место вставки. */}
+        <VoiceInput
+          targetRef={areaRef}
+          value={text}
+          onChange={(v) => { setText(v); setStatus("idle"); }}
+          lang={lang}
+          disabled={status === "sending"}
         />
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs text-muted-foreground">

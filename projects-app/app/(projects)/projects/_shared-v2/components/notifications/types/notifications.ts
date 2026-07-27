@@ -2,8 +2,8 @@
 // ядра (только то, что читает деривация), а НЕ импорт схемы конкретной автоматизации — микросервис один на
 // все автоматизации.
 
-export type NoticeCategory = "unbuilt" | "warning" | "new-case" | "ready" | "answered";
-export type NoticeScope = "node" | "tab" | "entity" | "use-cases" | "case";
+export type NoticeCategory = "unbuilt" | "warning" | "new-case" | "ready" | "answered" | "task";
+export type NoticeScope = "node" | "tab" | "entity" | "use-cases" | "case" | "automation";
 
 /** Один повод внимания. `name` — человеческое имя объекта (или номер кейса); `text` — текст предупреждения
  *  либо текст кейса, как их написал автор (проза, НЕ переводится). */
@@ -34,4 +34,7 @@ export type NoticesCore = {
   graph: { nodes: { groups: { input?: { nodes: CoreNode[] }; middle?: { nodes: CoreNode[] }; output?: { nodes: CoreNode[] } } } };
   components: { tabs: CoreTab[] };
   useCases: { warnings: { text: string }[]; cases: CoreUseCase[]; reviewedSignature?: string };
+  // ПАСПОРТ — его `info.crudUser` несёт ЗАДАНИЕ, которое владелец записал кнопкой «Отправить задание»
+  // (модалка `chrome/send-task`). Непустое задание → повод внимания категории `task` (см. collectNotices).
+  passport?: { info?: CoreInfo };
 };
