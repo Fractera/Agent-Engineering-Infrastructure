@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getAppConfig } from "@/config/app-config";
-import { defaultLanguage } from "@/lib/quiz";
+import { cockpitLang } from "./cockpit-lang";
 import { resolveProject } from "@/lib/nodes";
 import { automationReadiness } from "@/lib/edges";
 import { loadActivation } from "@/lib/activation";
@@ -33,7 +33,7 @@ export async function CategoryHub({ slug }: { slug: ProjectCategorySlug }) {
   const slugs = await listProjectSlugs(slug);
   const cards = await Promise.all(slugs.map((s) => getProjectCard(slug, s)));
   const cfg = getAppConfig();
-  const lang = defaultLanguage();
+  const lang = await cockpitLang();
   const L = categoryHubStrings(lang);
 
   // COMPACT STATUS BADGES (owner's fix): one line at the top of each card — type, active, Hook, Cron — the

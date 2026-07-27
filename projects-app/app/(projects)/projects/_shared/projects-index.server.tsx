@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getAppConfig } from "@/config/app-config";
-import { defaultLanguage } from "@/lib/quiz";
+import { cockpitLang } from "./cockpit-lang";
 import { PROJECT_CATEGORIES, categoryTitle, categoryDescription } from "./categories";
 import { listProjectSlugs } from "./projects-manifest";
 import { getProjectCard } from "./project-card";
@@ -23,7 +23,7 @@ import { projectsIndexStrings } from "./projects-index-i18n";
 // 4 built-ins, LLM-translated for owner-created ones); project-name badges stay untranslated (live data).
 export async function ProjectsIndex() {
   const cfg = getAppConfig();
-  const lang = defaultLanguage();
+  const lang = await cockpitLang();
   const L = projectsIndexStrings(lang);
   const categories = await Promise.all(
     PROJECT_CATEGORIES.map(async (c) => {

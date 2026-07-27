@@ -322,34 +322,37 @@ const DONE_CONFIG: Record<string, string> = {
   pt: "Concluído", pl: "Gotowe", tr: "Bitti", nl: "Klaar",
 };
 
-// STEP 301 — the linear review → confirm → launch flow that replaces the hidden confirm gate. ENGLISH ONLY
-// for now (owner's decision 2026-07-26: this admin panel stays multilingual by rule 4г, but new strings ship
-// in English and get their ten languages later). Returned for every `lang` (English fallback throughout).
-const UX_301 = {
-  // amber confirmation screen (shown when cases exist but are not confirmed)
-  confirmScreenTitle: "Confirm your use cases",
-  confirmScreenIntro: "The AI will build exactly what these cases describe. Read them, then confirm to unlock development — or go back to editing.",
-  backToEditing: "Back to editing",
-  // green confirmed screen (cases confirmed — development can start)
-  confirmedScreenTitle: "Use cases confirmed",
-  confirmedScreenBody: "You and the AI agree on what this automation must do. You can start development now.",
-  launchDevelopment: "Launch development",
-  editCases: "Edit cases",
-  // editing view → the prominent primary that advances to confirmation
-  doneToConfirm: "Done — review & confirm",
-  // empty state second action
-  addFirstCase: "Add a case by hand",
+// STEP 301 — the linear review → confirm → launch flow. Shipped English-only «на потом», now translated to
+// the ten admin-layer languages (owner, 2026-07-27 — «потом» настало). `confirmScreenTitle`/`confirmScreenIntro`/
+// `backToEditing` (amber confirm screen), `confirmedScreenTitle`/`confirmedScreenBody`/`launchDevelopment`/
+// `editCases` (green confirmed screen), `doneToConfirm` (editing primary), `addFirstCase` (empty-state action).
+type Ux301 = {
+  confirmScreenTitle: string; confirmScreenIntro: string; backToEditing: string;
+  confirmedScreenTitle: string; confirmedScreenBody: string; launchDevelopment: string; editCases: string;
+  doneToConfirm: string; addFirstCase: string;
+};
+const UX_301_I18N: Record<string, Ux301> = {
+  en: { confirmScreenTitle: "Confirm your use cases", confirmScreenIntro: "The AI will build exactly what these cases describe. Read them, then confirm to unlock development — or go back to editing.", backToEditing: "Back to editing", confirmedScreenTitle: "Use cases confirmed", confirmedScreenBody: "You and the AI agree on what this automation must do. You can start development now.", launchDevelopment: "Launch development", editCases: "Edit cases", doneToConfirm: "Done — review & confirm", addFirstCase: "Add a case by hand" },
+  ru: { confirmScreenTitle: "Подтвердите пользовательские кейсы", confirmScreenIntro: "ИИ построит ровно то, что описано в этих кейсах. Прочитайте их и подтвердите, чтобы разблокировать разработку — или вернитесь к редактированию.", backToEditing: "Назад к редактированию", confirmedScreenTitle: "Кейсы подтверждены", confirmedScreenBody: "Вы и ИИ согласны в том, что должна делать эта автоматизация. Можно начинать разработку.", launchDevelopment: "Запустить разработку", editCases: "Изменить кейсы", doneToConfirm: "Готово — к проверке и подтверждению", addFirstCase: "Добавить кейс вручную" },
+  es: { confirmScreenTitle: "Confirma tus casos de uso", confirmScreenIntro: "La IA construirá exactamente lo que describen estos casos. Léelos y confirma para desbloquear el desarrollo — o vuelve a editar.", backToEditing: "Volver a editar", confirmedScreenTitle: "Casos de uso confirmados", confirmedScreenBody: "Tú y la IA estáis de acuerdo en lo que debe hacer esta automatización. Ya puedes empezar el desarrollo.", launchDevelopment: "Iniciar desarrollo", editCases: "Editar casos", doneToConfirm: "Listo — revisar y confirmar", addFirstCase: "Añadir un caso a mano" },
+  fr: { confirmScreenTitle: "Confirmez vos cas d'usage", confirmScreenIntro: "L'IA construira exactement ce que décrivent ces cas. Lisez-les, puis confirmez pour débloquer le développement — ou revenez à l'édition.", backToEditing: "Revenir à l'édition", confirmedScreenTitle: "Cas d'usage confirmés", confirmedScreenBody: "Vous et l'IA êtes d'accord sur ce que cette automatisation doit faire. Vous pouvez lancer le développement.", launchDevelopment: "Lancer le développement", editCases: "Modifier les cas", doneToConfirm: "Terminé — vérifier et confirmer", addFirstCase: "Ajouter un cas à la main" },
+  it: { confirmScreenTitle: "Conferma i tuoi casi d'uso", confirmScreenIntro: "L'IA costruirà esattamente ciò che descrivono questi casi. Leggili, poi conferma per sbloccare lo sviluppo — o torna alla modifica.", backToEditing: "Torna alla modifica", confirmedScreenTitle: "Casi d'uso confermati", confirmedScreenBody: "Tu e l'IA siete d'accordo su cosa deve fare questa automazione. Puoi iniziare lo sviluppo.", launchDevelopment: "Avvia lo sviluppo", editCases: "Modifica casi", doneToConfirm: "Fatto — rivedi e conferma", addFirstCase: "Aggiungi un caso a mano" },
+  de: { confirmScreenTitle: "Bestätige deine Anwendungsfälle", confirmScreenIntro: "Die KI baut genau das, was diese Fälle beschreiben. Lies sie und bestätige, um die Entwicklung freizuschalten — oder kehre zur Bearbeitung zurück.", backToEditing: "Zurück zur Bearbeitung", confirmedScreenTitle: "Anwendungsfälle bestätigt", confirmedScreenBody: "Du und die KI seid euch einig, was diese Automatisierung tun soll. Du kannst jetzt mit der Entwicklung beginnen.", launchDevelopment: "Entwicklung starten", editCases: "Fälle bearbeiten", doneToConfirm: "Fertig — prüfen und bestätigen", addFirstCase: "Fall manuell hinzufügen" },
+  pt: { confirmScreenTitle: "Confirme os seus casos de uso", confirmScreenIntro: "A IA vai construir exatamente o que estes casos descrevem. Leia-os e confirme para desbloquear o desenvolvimento — ou volte a editar.", backToEditing: "Voltar a editar", confirmedScreenTitle: "Casos de uso confirmados", confirmedScreenBody: "Você e a IA concordam sobre o que esta automação deve fazer. Já pode iniciar o desenvolvimento.", launchDevelopment: "Iniciar desenvolvimento", editCases: "Editar casos", doneToConfirm: "Concluído — rever e confirmar", addFirstCase: "Adicionar um caso manualmente" },
+  pl: { confirmScreenTitle: "Potwierdź przypadki użycia", confirmScreenIntro: "SI zbuduje dokładnie to, co opisują te przypadki. Przeczytaj je i potwierdź, aby odblokować rozwój — albo wróć do edycji.", backToEditing: "Wróć do edycji", confirmedScreenTitle: "Przypadki użycia potwierdzone", confirmedScreenBody: "Ty i SI zgadzacie się co do tego, co ma robić ta automatyzacja. Możesz zacząć rozwój.", launchDevelopment: "Uruchom rozwój", editCases: "Edytuj przypadki", doneToConfirm: "Gotowe — przejrzyj i potwierdź", addFirstCase: "Dodaj przypadek ręcznie" },
+  tr: { confirmScreenTitle: "Kullanım senaryolarınızı onaylayın", confirmScreenIntro: "Yapay zekâ tam olarak bu senaryoların anlattığını inşa edecek. Onları okuyun, sonra geliştirmeyi açmak için onaylayın — ya da düzenlemeye dönün.", backToEditing: "Düzenlemeye dön", confirmedScreenTitle: "Kullanım senaryoları onaylandı", confirmedScreenBody: "Siz ve yapay zekâ bu otomasyonun ne yapması gerektiği konusunda hemfikirsiniz. Artık geliştirmeye başlayabilirsiniz.", launchDevelopment: "Geliştirmeyi başlat", editCases: "Senaryoları düzenle", doneToConfirm: "Bitti — gözden geçir ve onayla", addFirstCase: "Senaryoyu elle ekle" },
+  nl: { confirmScreenTitle: "Bevestig je use-cases", confirmScreenIntro: "De AI bouwt precies wat deze cases beschrijven. Lees ze en bevestig om de ontwikkeling te ontgrendelen — of ga terug naar bewerken.", backToEditing: "Terug naar bewerken", confirmedScreenTitle: "Use-cases bevestigd", confirmedScreenBody: "Jij en de AI zijn het eens over wat deze automatisering moet doen. Je kunt nu met de ontwikkeling beginnen.", launchDevelopment: "Ontwikkeling starten", editCases: "Cases bewerken", doneToConfirm: "Klaar — controleren en bevestigen", addFirstCase: "Voeg een case handmatig toe" },
 };
 
 export function useCasesStrings(
   lang: string,
-): UseCasesStrings & { quizSoon: string; configureCases: string; doneConfig: string } & typeof UX_301 {
+): UseCasesStrings & { quizSoon: string; configureCases: string; doneConfig: string } & Ux301 {
   const k = lang.slice(0, 2);
   return {
     ...(USE_CASES_I18N[k] ?? USE_CASES_I18N.en),
     quizSoon: QUIZ_SOON[k] ?? QUIZ_SOON.en,
     configureCases: CONFIGURE_CASES[k] ?? CONFIGURE_CASES.en,
     doneConfig: DONE_CONFIG[k] ?? DONE_CONFIG.en,
-    ...UX_301,
+    ...(UX_301_I18N[k] ?? UX_301_I18N.en),
   };
 }

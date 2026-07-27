@@ -1,10 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Languages } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UI_LANGS } from "../projects/_shared/ui-langs";
-import { useUiLang, setUiLang } from "../projects/_shared/use-ui-lang";
+import { useUiLang, setUiLang, readUiLangOverride } from "../projects/_shared/use-ui-lang";
 
 // THE ZONE-FOOTER LANGUAGE SELECTOR (owner, 2026-07-27). The cockpit was locked to the server default
 // language with no way to switch — so the ten-language admin layer looked English no matter the browser.
@@ -29,8 +30,23 @@ const LANG_NAMES: Record<string, string> = {
 export function ZoneLanguageSelect() {
   const lang = useUiLang();
   const router = useRouter();
+
+  // WRITE-THROUGH на монтировании (2026-07-27): если владелец выбрал язык РАНЬШЕ, чем код стал писать cookie
+  // (выбор жил только в localStorage), серверный текст оставался на дефолте, а клиентский — на русском. Здесь
+  // на первой загрузке доводим cookie до localStorage-выбора и один раз мягко перерисовываем сервер. Условие
+  // «cookie ≠ override» защищает от цикла: после refresh значения совпадают и эффект больше ничего не делает.
+  useEffect(() => {
+    const ov = readUiLangOverride();
+    if (!ov) return;
+    const m = document.cookie.match(/(?:^|;\s*)fractera-ui-lang=([a-z]{2})/);
+    if (m?.[1] !== ov) {
+      document.cookie = `fractera-ui-lang=${ov}; path=/; max-age=31536000; samesite=lax`;
+      router.refresh();
+    }
+  }, [router]);
+
   // Pick → override (client, instant) + cookie (server) + a SOFT server re-render so server-rendered text
-  // (welcome, section titles) switches too, WITHOUT a full page reload (owner's requirement).
+  // (welcome, section titles, hubs) switches too, WITHOUT a full page reload (owner's requirement).
   const onPick = (v: string) => {
     setUiLang(v);
     router.refresh();

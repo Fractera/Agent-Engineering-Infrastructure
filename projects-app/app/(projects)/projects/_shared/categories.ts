@@ -31,15 +31,15 @@ export type ProjectCategory = {
 export const PROJECT_CATEGORIES: ProjectCategory[] = [
   {
     slug: "automation",
-    title: "Automation",
+    title: "Business automations",
     navLabel: "Business",
     description:
       "Repeatable business automations — scheduled publishing, data pipelines, " +
       "integrations with external APIs. Each project is a finished-cycle tool: " +
       "an n8n for one single task.",
     titleI18n: {
-      en: "Automation", ru: "Автоматизация", es: "Automatización", fr: "Automatisation", it: "Automazione",
-      de: "Automatisierung", pt: "Automação", pl: "Automatyzacja", tr: "Otomasyon", nl: "Automatisering",
+      en: "Business automations", ru: "Бизнес-автоматизации", es: "Automatizaciones de negocio", fr: "Automatisations métier", it: "Automazioni aziendali",
+      de: "Geschäftsautomatisierungen", pt: "Automações de negócio", pl: "Automatyzacje biznesowe", tr: "İş otomasyonları", nl: "Bedrijfsautomatiseringen",
     },
     descriptionI18n: {
       en: "Repeatable business automations — scheduled publishing, data pipelines, integrations with external APIs. Each project is a finished-cycle tool: an n8n for one single task.",
