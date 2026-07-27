@@ -61,6 +61,10 @@ export default function CourierMapClient({ lang }: { lang: string }) {
       if (cancelled || !mapEl.current || mapRef.current) return;
       LRef.current = L;
       const map = L.map(mapEl.current);
+      // Убираем флаг Украины из атрибуции: Leaflet с версии 1.8 вшивает его в ДЕФОЛТНЫЙ префикс контрола
+      // атрибуции. Задаём префикс сами — остаётся «Leaflet | © OpenStreetMap contributors» без флага. Наш
+      // setPrefix ВСЕГДА перекрывает дефолт, поэтому при обновлениях Leaflet флаг не вернётся.
+      map.attributionControl.setPrefix('<a href="https://leafletjs.com" target="_blank" rel="noopener noreferrer">Leaflet</a>');
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap contributors", maxZoom: 19 }).addTo(map);
       const bbox = Array.isArray(cfg?.bbox) && cfg!.bbox!.length === 4 ? (cfg!.bbox as number[]) : null;
       const center = Array.isArray(cfg?.center) && cfg!.center!.length === 2 ? (cfg!.center as [number, number]) : PARIS;
