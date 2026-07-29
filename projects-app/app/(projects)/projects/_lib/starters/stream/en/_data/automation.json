@@ -488,6 +488,44 @@
               }
             },
             {
+              "cuid": "cmd307parsedate03c4d5e6f7a8b9",
+              "name": "Parse date",
+              "description": "The middle — extracts the reminder date-and-time from the captured text into ctx.when (ISO), or flags ctx.needsWhen when there is none. The message text is left unchanged.",
+              "state": "hidden",
+              "info": {
+                "aiSummary": "Extracts a single reminder datetime from the captured text via the passport model, then validates the answer DETERMINISTICALLY (strict ISO or the word none; any garbage = needsWhen). Result: ctx.when (ISO) or ctx.needsWhen=true; the text is untouched (this is preparation for the calendar output). Server-local timezone (the model gets the server now). Model unavailable/refused → needsWhen (safer to ask when? than to set a wrong time). Node-skill #3 of the middle library (step 307)."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "parseDate",
+                "summary": "Extracts the reminder datetime from the captured text into ctx.when, or flags ctx.needsWhen; deterministic validation, server-local timezone.",
+                "accepts": "The normalized message text (a reminder request in free wording).",
+                "returns": "when (ISO) and needsWhen=false, OR needsWhen=true (with optional dateError). The text is unchanged."
+              },
+              "run": "sequential",
+              "estDurationMs": 6000,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              }
+            },
+            {
               "cuid": "cmruddnrpho70e8af12589d1deaa",
               "name": "If success",
               "description": "The branch taken when the middle produced a result — the flow continues to the output.",
