@@ -510,6 +510,15 @@ const nodeBase = {
   // tool (see CapabilitySchema). Optional with a `null` default so every core written before this field
   // existed stays valid without a rewrite.
   capability: CapabilitySchema.nullable().default(null),
+  // WHICH USE CASES this node serves — the cuids of the cases it exists for. This is the "why" that a
+  // bare node object lacks: a node summarised "parse date" says nothing about the scenario it served.
+  // The federated skill corpus (step 307) reads it to build a node's passport. Additive with a `[]`
+  // default so every core written before it stays valid; v1 precedent — a node's `actions` column.
+  serves: z.array(CuidSchema).default([]),
+  // LINEAGE — the permanent id of the SKILL PATTERN this node is an instance of; it TRAVELS WITH A COPY.
+  // The local `cuid` is the identity of THIS instance; `lineage` is the identity of the pattern across
+  // the whole fleet, and telemetry aggregates by it. Empty = not (yet) a corpus skill. Additive default.
+  lineage: z.string().default(""),
   run: z.enum(["sequential", "parallel"]),
   estDurationMs: z.number().int().positive(),
 };

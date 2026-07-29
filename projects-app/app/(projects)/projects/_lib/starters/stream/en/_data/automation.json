@@ -409,7 +409,9 @@
                   "condition-success",
                   "condition-failure"
                 ]
-              }
+              },
+              "lineage": "nsk-transform-payload-v1",
+              "serves": []
             },
             {
               "cuid": "cmd307recallmem01a2b3c4d5e6f7",
@@ -447,7 +449,9 @@
                   "condition-success",
                   "condition-failure"
                 ]
-              }
+              },
+              "lineage": "nsk-recall-memory-v1",
+              "serves": []
             },
             {
               "cuid": "cmd307aitransform02b3c4d5e6f7",
@@ -485,7 +489,9 @@
                   "condition-success",
                   "condition-failure"
                 ]
-              }
+              },
+              "lineage": "nsk-ai-transform-v1",
+              "serves": []
             },
             {
               "cuid": "cmd307parsedate03c4d5e6f7a8b9",
@@ -523,7 +529,9 @@
                   "condition-success",
                   "condition-failure"
                 ]
-              }
+              },
+              "lineage": "nsk-parse-date-v1",
+              "serves": []
             },
             {
               "cuid": "cmruddnrpho70e8af12589d1deaa",
