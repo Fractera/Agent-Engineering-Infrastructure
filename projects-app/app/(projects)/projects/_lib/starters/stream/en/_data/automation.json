@@ -717,7 +717,7 @@
               "description": "An event on the automation calendar.",
               "state": "hidden",
               "info": {
-                "aiSummary": "Places the captured message as an event on the automation calendar: a row in the calendar table in the exact v1 shape the tab reads (date YYYY-MM-DD · time HH:MM · title · type \"event\" · notifyBefore 0 · integrations {}), timed at the capture moment."
+                "aiSummary": "Places the captured message as a calendar event. The event time is ctx.when (parsed by parseDate) when present, else the capture moment; ctx.needsWhen (no date found) is an honest ten-language \"when?\" refusal — no row is created. To make an occurrence actually deliver, it sets an ACTIVE integration on the SOURCE telegram channel (asked in Telegram → reminded in Telegram); api/calendar-tick then delivers it (step 307.6)."
               },
               "status": "materialized",
               "warnings": [],
@@ -725,8 +725,8 @@
               "function": {
                 "name": "deliverCalendar",
                 "summary": "Creates a calendar event titled like the message at its capture moment.",
-                "accepts": "The normalized message (text · title · at · source) carried by the success branch.",
-                "returns": "calendarRowId — the id of the calendar row written."
+                "accepts": "The captured message; optionally ctx.when (parsed date from parseDate) and ctx.needsWhen.",
+                "returns": "calendarRowId and calendarWhen (ISO); refuses in ten languages when needsWhen is set."
               },
               "run": "sequential",
               "estDurationMs": 300,
