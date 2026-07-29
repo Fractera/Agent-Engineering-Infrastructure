@@ -17,6 +17,7 @@ import { receiveEmail } from "./receive-email";
 import { receiveFromExternal } from "./receive-from-external";
 import { transformPayload } from "./transform-payload";
 import { recallFromMemory } from "./recall-from-memory";
+import { aiTransform } from "./ai-transform";
 import { ifSuccess } from "./if-success";
 import { ifFailure } from "./if-failure";
 import { deliverResult } from "./deliver-result";
@@ -42,9 +43,10 @@ export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   receiveUserTelegramChat,
   receiveEmail,
   receiveFromExternal,
-  // середина (библиотека узловых навыков — шаг 307: навык №1 recallFromMemory)
+  // середина (библиотека узловых навыков — шаг 307: №1 recallFromMemory, №2 aiTransform)
   transformPayload,
   recallFromMemory,
+  aiTransform,
   ifSuccess,
   ifFailure,
   // выходная группа — 11 каналов + коннектор

@@ -450,6 +450,44 @@
               }
             },
             {
+              "cuid": "cmd307aitransform02b3c4d5e6f7",
+              "name": "AI transform",
+              "description": "The middle — thinks with the automation's chosen model (passport.ai): runs the captured text through an instruction and passes the result onward.",
+              "state": "hidden",
+              "info": {
+                "aiSummary": "Runs the captured text through the model selected in the passport (passport.ai) by an instruction (ctx.aiInstruction, default: a concise fact-and-date-preserving summary) and passes the result onward as ctx.text; the original is kept in ctx.original. Native call, no SDK (folder law 0). Soft-degrade: model unavailable (no key/network) or refused → the full original text is kept and the run continues (aiUsed=false, aiError set) — losing information is worse than losing the summary. Node-skill #2 of the middle library (step 307)."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "aiTransform",
+                "summary": "Thinks with the passport model over the captured text by an instruction; degrades to the untouched original when the model is unavailable or refuses.",
+                "accepts": "The normalized message text plus an optional ctx.aiInstruction.",
+                "returns": "text (the model result or the untouched original) · original · title · at · source · aiUsed."
+              },
+              "run": "sequential",
+              "estDurationMs": 8000,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              }
+            },
+            {
               "cuid": "cmruddnrpho70e8af12589d1deaa",
               "name": "If success",
               "description": "The branch taken when the middle produced a result — the flow continues to the output.",
