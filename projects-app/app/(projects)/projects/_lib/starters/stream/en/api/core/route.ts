@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
         useCases: core.useCases.cases.length,
         versions: core.history.versions.length,
       },
-      law: lawDigest(),
+      law: lawDigest(core),
       doors: {
         work: "GET api/work — only the objects waiting for work; start every iteration after the first here",
         core: "GET api/core?select=<address> — one object; ?select=all for the whole core",

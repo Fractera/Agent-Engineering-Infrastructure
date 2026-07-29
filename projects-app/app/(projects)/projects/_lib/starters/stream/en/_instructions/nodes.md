@@ -57,3 +57,20 @@ file editing — there is no door for code, and none is needed. Contract through
 `cuid` (identity), `kind` (a role is for life), `in` and `out` (the ports follow from the kind through
 the connection table). Another kind means ANOTHER node: add it, hide this one. What a given kind is
 allowed to connect to, and which channel it may carry, is stated by its own instruction — `kind.<kind>`.
+
+## The three outcomes of a middle need (step 307 — the law of the node-skill library)
+
+The frozen middle group is a LIBRARY of node skills: hidden `transform` nodes born with the automation,
+each carrying a real, proven function (the law digest lists them as `middleLibrary`). When the build
+needs middle logic, it is met in exactly one of THREE ways, checked in this order:
+
+1. **A library skill.** Read `middleLibrary` in the law digest first. If an existing skill does the job —
+   reveal that node (or add a node naming its function); never rebuild what the library already carries.
+2. **Own code.** Logic no library skill covers is written as a new function in `_lib/nodes/` — one file,
+   one function, registered in `_lib/nodes/index.ts` — obeying the folder's law (zod + node builtins only).
+3. **A capability with a warning.** Work that reaches OUTSIDE what our own code can do (an MCP server, an
+   agent skill, a third-party API) is declared as `capability: needed` with a warning to the owner naming
+   what the node must do. The owner supplies the tool; the build pauses there honestly.
+
+**«This automation cannot do it» does not exist as an outcome.** A need that fits no skill and no code is
+a `needed` capability plus a warning — never a refusal, never a silent stub.

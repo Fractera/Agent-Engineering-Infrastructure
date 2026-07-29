@@ -412,6 +412,44 @@
               }
             },
             {
+              "cuid": "cmd307recallmem01a2b3c4d5e6f7",
+              "name": "Recall from memory",
+              "description": "The middle — asks the vector memory (LightRAG) with the captured text and passes the ANSWER onward instead of the question.",
+              "state": "hidden",
+              "info": {
+                "aiSummary": "Semantic recall over the automation's vector memory: the captured text becomes a question, LightRAG synthesizes an answer from the saved facts, and the answer replaces ctx.text so any output channel delivers it as an ordinary message (the original question is kept in ctx.question). Three honest outcomes, none of which fails the run: memory unreachable → a ten-language unavailable notice; an empty answer → a ten-language nothing-found notice with the query; an answer → the answer itself. Node-skill #1 of the middle library (step 307)."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "recallFromMemory",
+                "summary": "Asks the vector memory with the captured text and passes the synthesized answer onward; degrades honestly when memory is unreachable or empty.",
+                "accepts": "The normalized message text — the user's question to the saved facts.",
+                "returns": "text (the answer or an honest notice) · title · question · at · source."
+              },
+              "run": "sequential",
+              "estDurationMs": 5000,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              }
+            },
+            {
               "cuid": "cmruddnrpho70e8af12589d1deaa",
               "name": "If success",
               "description": "The branch taken when the middle produced a result — the flow continues to the output.",

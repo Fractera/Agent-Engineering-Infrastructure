@@ -5,6 +5,7 @@ import {
   OutputChannelSchema,
   SYSTEM_INSTRUCTION_NAMES,
   NodeKindSchema,
+  type Automation,
   type GroupName,
   type NodeKind,
 } from "../_data/automation.schema";
@@ -31,11 +32,12 @@ export type LawDigest = {
   kinds: { kind: NodeKind; in: string; out: string }[];
   groups: { group: GroupName; minKinds: number; kinds: { kind: string; deletion: string; addition: string; minNodes: number }[] }[];
   channels: { input: readonly string[]; output: readonly string[]; note: string };
+  middleLibrary?: { skill: string; state: string; summary: string }[];
   neverWritable: string[];
   laws: string[];
 };
 
-export function lawDigest(): LawDigest {
+export function lawDigest(core?: Automation): LawDigest {
   return {
     // WHAT MAY CONNECT TO WHAT — read this before adding a node or an edge.
     kinds: NodeKindSchema.options.map((kind) => ({ kind, ...ports(kind) })),
@@ -59,6 +61,17 @@ export function lawDigest(): LawDigest {
       note: "an input kind takes an input channel, an output kind an output channel, a middle kind none (null)",
     },
 
+    // THE MIDDLE LIBRARY — the node skills this automation was born with (step 307). DERIVED from the
+    // core's own middle group, never hand-written: the hidden middle nodes ARE the registry. Read this
+    // before writing a new transform function — reveal an existing skill instead of rebuilding it.
+    ...(core
+      ? {
+          middleLibrary: core.graph.nodes.groups.middle.nodes
+            .filter((n) => n.kind === "transform")
+            .map((n) => ({ skill: n.function.name, state: n.state, summary: n.function.summary })),
+        }
+      : {}),
+
     // Fields no write ever touches — asking for them is refused, by name.
     neverWritable: ["systemInstruction", "cuid", "kind", "in", "out"],
 
@@ -72,6 +85,7 @@ export function lawDigest(): LawDigest {
       "an edge is visible only when both its ends are visible",
       "frozen-template = every node hidden; real-project = at least one visible node, one use case and an author",
       `an object names its law in systemInstructionName; the text lives in _instructions/<name>.md (${SYSTEM_INSTRUCTION_NAMES.length} of them) — read it by name, never copy it into the core`,
+      "a middle need is met one of THREE ways: (a) a skill from middleLibrary, (b) own code in `_lib/nodes/`, (c) capability:needed plus a warning to the owner — «cannot be done» does not exist as an outcome",
     ],
   };
 }

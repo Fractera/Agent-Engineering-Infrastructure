@@ -1,6 +1,9 @@
-// ВЕКТОРНАЯ ПАМЯТЬ — как автоматизация запоминает факт в LightRAG. Папка самодостаточна (закон 0),
-// поэтому платформенный `lib/vector-memory` НЕ импортируется: здесь собственный тонкий вызов того же
-// проверенного контракта (`POST /documents/text` → `{ track_id }`, провенанс в `file_source`).
+// ВЕКТОРНАЯ ПАМЯТЬ — как автоматизация ЗАПОМИНАЕТ факт в LightRAG и ВСПОМИНАЕТ по вопросу (шаг 307:
+// чтение — штатная способность v2, узловой навык №1). Папка самодостаточна (закон 0), поэтому
+// платформенный `lib/vector-memory` НЕ импортируется: здесь собственные тонкие вызовы тех же
+// проверенных контрактов (`POST /documents/text` → `{ track_id }`, провенанс в `file_source`;
+// `POST /query {query, mode:"hybrid"}` → `{ response }` — тот же нативный контракт, что у
+// платформенного прокси `api/rag/query` и hermes-плагина).
 //
 // ПРОВЕНАНС — адрес автоматизации + фасеты (закон шага 260): `projects/other/frozen-template-v-2`
 // с `?channel=<канал>&record=<случайный хвост>`. Хвост обязателен: LightRAG считает `file_source`
@@ -44,4 +47,36 @@ export async function rememberFact(text: string, source: string, botId?: string)
   if (!r.ok) throw new Error(`vector memory refused the fact (HTTP ${r.status})`);
   const data = (await r.json().catch(() => null)) as { track_id?: string } | null;
   return data?.track_id ?? "accepted";
+}
+
+// ВСПОМНИТЬ — семантический вопрос к памяти. Ответ LightRAG — СИНТЕЗИРОВАННАЯ ПРОЗА (retrieval +
+// generation на стороне памяти), готовая уйти пользователю как есть.
+//
+// Контракт неудач ЗЕРКАЛИТ запись (те же два разных ответа, см. шапку):
+//   сервис НЕДОСТУПЕН → `null`: памяти на этом сервере нет — узел мягко деградирует, не падает;
+//   сервис ОТВЕТИЛ ОТКАЗОМ → бросок: память есть, но вопрос не принят — молчать нельзя.
+// Пустая строка ответа — законный исход «в памяти ничего не нашлось»; решает вызывающий узел.
+export async function recallFacts(query: string): Promise<string | null> {
+  const q = query.trim();
+  if (!q) return "";
+
+  let r: Response;
+  try {
+    r = await fetch(`${ragUrl()}/query`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-API-Key": process.env.LIGHTRAG_API_KEY ?? "",
+        "X-Agent-Identity": AUTOMATION,
+      },
+      body: JSON.stringify({ query: q, mode: "hybrid" }),
+      // Чтение дольше записи: память синтезирует ответ моделью, а не просто принимает документ.
+      signal: AbortSignal.timeout(60_000),
+    });
+  } catch {
+    return null; // сервиса памяти нет — «канал не подключён», а не «поиск провален»
+  }
+  if (!r.ok) throw new Error(`vector memory refused the question (HTTP ${r.status})`);
+  const data = (await r.json().catch(() => null)) as { response?: string } | null;
+  return (data?.response ?? "").trim();
 }
