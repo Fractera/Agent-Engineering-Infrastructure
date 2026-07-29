@@ -30,3 +30,7 @@ The four things worth carrying before you get there:
    voice-input mic and more live in `_shared-v2/tools/`. Before building such an affordance, read
    [`tools-docs/`](tools-docs/) (one short reference per tool: call, params, return, constraints). Wire the
    existing one; never copy it into this folder (AGENTS.md §0b).
+6. **The middle is a LIBRARY of node skills — reveal one before writing one, and never say "cannot".** A
+   middle need is met one of three ways: a skill from `middleLibrary` (in the `GET api/core` digest) → own
+   code in `_lib/nodes/` → `capability: needed` + a warning to the owner. There is no fourth outcome —
+   «this automation cannot do it» does not exist (AGENTS.md §0d, `_instructions/nodes.md`).

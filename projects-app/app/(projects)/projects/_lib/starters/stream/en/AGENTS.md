@@ -98,6 +98,26 @@ the one place that explains the field (`type`, `ref`, `tool`, `status: candidate
 why it never repeats the io-contract (`function`) or the credentials (`envKeys`), and how to prove a binding.
 A native node leaves `capability` as `null`.
 
+## 0d. THE MIDDLE LIBRARY — reveal a node skill before you write one
+
+The middle of the graph is a LIBRARY of node skills: hidden `transform` nodes born with the automation,
+each carrying a real, proven function (recall from memory, an AI transform, date parsing, reading the
+database or object storage, a hook gate). The law digest (`GET api/core`) lists them under
+`middleLibrary` — read it before writing any new middle function.
+
+**A middle need is met one of THREE ways, in this order — and no fourth exists:**
+
+1. **A library skill** — an entry in `middleLibrary` already does it → reveal that node (or add one naming
+   its function). Never rebuild what the library carries.
+2. **Own code** — logic no skill covers → a new function in `_lib/nodes/` (one file, one function,
+   registered in `index.ts`), obeying the folder's law (zod + builtins only).
+3. **A capability with a warning** — work reaching OUTSIDE our own code (an MCP server, an agent skill, a
+   third-party API) → `capability: needed` plus a `warning` to the owner naming what the node must do; the
+   owner supplies the tool (§0c), the build pauses there honestly.
+
+**"This automation cannot do it" is not an outcome.** A need that fits no skill and no code is a `needed`
+capability plus a warning — never a refusal, never a silent stub. The full law: `_instructions/nodes.md`.
+
 ## 1. Where the truth is
 
 | What | Where |
