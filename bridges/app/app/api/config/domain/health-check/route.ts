@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { promises as dns } from "dns";
 import https from "https";
 import { requireAuth } from "@/lib/require-auth";
 import { readServerIp, SUBDOMAINS, hostFor } from "@/lib/server-ip";
+import { resolve4Public } from "@/lib/public-dns";
 
 type HostResult = {
   host: string;
@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
     let dnsOk = false;
     let dnsError: string | null = null;
     try {
-      resolved = await dns.resolve4(host);
+      resolved = await resolve4Public(host);
       dnsOk = !!serverIp && resolved.includes(serverIp);
     } catch (err: unknown) {
       dnsError = (err as { code?: string })?.code ?? "ERROR";

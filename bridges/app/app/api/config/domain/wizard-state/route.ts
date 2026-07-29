@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { promises as dns } from "dns";
 import Database from "better-sqlite3";
 import { requireAuth } from "@/lib/require-auth";
 import { readServerIp, SUBDOMAINS, hostFor } from "@/lib/server-ip";
+import { resolve4Public } from "@/lib/public-dns";
 import { readCertInfo, coversAllHostnames } from "@/lib/cert-info";
 import { readEnvFile } from "@/lib/env-file";
 
@@ -42,7 +42,7 @@ async function dnsCheck(domain: string, serverIp: string | null) {
   const hosts = SUBDOMAINS.map((p) => hostFor(p, domain));
   const results = await Promise.all(hosts.map(async (h) => {
     try {
-      const resolved = await dns.resolve4(h);
+      const resolved = await resolve4Public(h);
       return { host: h, matches: !!serverIp && resolved.includes(serverIp) };
     } catch {
       return { host: h, matches: false };

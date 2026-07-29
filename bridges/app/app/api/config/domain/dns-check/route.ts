@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { promises as dns } from "dns";
 import { requireAuth } from "@/lib/require-auth";
 import { readServerIp, SUBDOMAINS as SUBDOMAIN_PREFIXES, hostFor } from "@/lib/server-ip";
+import { resolve4Public } from "@/lib/public-dns";
 
 // Lightweight in-memory cache so a user clicking the "check" button a
 // few times in a row doesn't slam our recursive resolver.
@@ -18,7 +18,7 @@ type RecordResult = {
 
 async function checkHost(host: string, serverIp: string | null): Promise<RecordResult> {
   try {
-    const resolved = await dns.resolve4(host);
+    const resolved = await resolve4Public(host);
     const matchesServer = !!serverIp && resolved.includes(serverIp);
     return { host, resolved, matchesServer, error: null };
   } catch (err: unknown) {
