@@ -74,3 +74,18 @@ needs middle logic, it is met in exactly one of THREE ways, checked in this orde
 
 **«This automation cannot do it» does not exist as an outcome.** A need that fits no skill and no code is
 a `needed` capability plus a warning — never a refusal, never a silent stub.
+
+## One chat, several scenarios = a GROUP of automations (step 307.7 — the hook-gate convention)
+
+v2 has NO N-way router by design: the executor runs every visible node in topological order, and the only
+branch is success/failure. So "if the message says A do X, if it says B do Y" is NOT one automation with a
+router — it is a GROUP of automations, each self-gating on its own trigger phrase.
+
+The `hookGate` skill (in `middleLibrary`) is how each member gates: it reads the automation's trigger
+phrases from `ctx.hookPhrases`, and if the captured text starts with one, it passes the run on with the
+tail as the payload; a foreign phrase returns `null` — a lawful stop, so that run simply belongs to a
+sibling automation. All members listen to the same channel (one personal Telegram chat); the gate, not a
+router, decides whose run it is.
+
+Never add a middle "router" node or an N-way switch. Fundamentally different tasks in one chat → propose a
+group of automations (passport.md, the warning duty), one `hookGate` phrase each.

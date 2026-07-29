@@ -93,3 +93,27 @@ export const emptyInput = (channel: string): Record<string, string> => ({
   tr: `${channel} kanalı metin iletmedi — boş bir mesaj hiçbir şey başlatmaz.`,
   nl: `Het kanaal ${channel} leverde geen tekst — een leeg bericht start niets.`,
 });
+
+/**
+ * СОВПАДЕНИЕ HOOK-ФРАЗЫ (шаг 307.7) — начинается ли текст одной из фраз-триггеров. Так группа
+ * автоматизаций делит один канал: каждая сама-гейтит СВОЮ фразу, чужая → не её прогон. Нормализация —
+ * регистр, `ё→е`, схлопнутые пробелы (голос и клавиатура пишут по-разному). Детерминированно, БЕЗ AI.
+ * Возвращает `payload` (хвост ПОСЛЕ фразы) и саму `phrase`, либо `null`, если ни одна не подошла.
+ */
+const foldHook = (s: string): string => s.toLowerCase().replace(/ё/g, "е").replace(/\s+/g, " ").trim();
+
+export function matchHook(text: string, phrases: readonly string[]): { payload: string; phrase: string } | null {
+  const clean = text.replace(/\s+/g, " ").trim();
+  const folded = foldHook(clean);
+  for (const raw of phrases) {
+    const phrase = raw.replace(/\s+/g, " ").trim();
+    if (!phrase) continue;
+    // Свёртка сохраняет длину (регистр и ё→е — 1:1, пробелы уже схлопнуты), поэтому срез оригинала по
+    // длине фразы совпадает с концом совпавшего префикса.
+    if (folded.startsWith(foldHook(phrase))) {
+      const payload = clean.slice(phrase.length).replace(/^[\s,:.!?—–-]+/, "").trim();
+      return { payload, phrase };
+    }
+  }
+  return null;
+}

@@ -534,6 +534,46 @@
               "serves": []
             },
             {
+              "cuid": "cmd307hookgate04d5e6f7a8b9c0",
+              "name": "Hook gate",
+              "description": "The middle — self-gates the run on this automation's trigger phrase so several automations can share one chat without an N-way router.",
+              "state": "hidden",
+              "info": {
+                "aiSummary": "Deterministic hook self-gate (step 307.7): reads trigger phrases from ctx.hookPhrases and passes the run on ONLY if the captured text starts with one of them (normalizing case, ё/е, whitespace), putting the tail after the phrase into ctx.text and the phrase into ctx.hookPhrase. A foreign phrase returns null — a lawful stop (this run is not mine). No phrases set → the gate is open. No AI. This is how a GROUP of automations shares one personal chat, since v2 has no N-way router by design. Node-skill #6 of the middle library."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "serves": [],
+              "lineage": "nsk-hook-gate-v1",
+              "function": {
+                "name": "hookGate",
+                "summary": "Passes the run on only when the captured text starts with one of this automation's trigger phrases; a foreign phrase stops the run cleanly.",
+                "accepts": "The captured message text plus ctx.hookPhrases (this automation's trigger phrases).",
+                "returns": "text (the payload after the phrase) · hookPhrase · hookMatched — OR null (foreign phrase, lawful stop)."
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              }
+            },
+            {
               "cuid": "cmruddnrpho70e8af12589d1deaa",
               "name": "If success",
               "description": "The branch taken when the middle produced a result — the flow continues to the output.",

@@ -19,6 +19,7 @@ import { transformPayload } from "./transform-payload";
 import { recallFromMemory } from "./recall-from-memory";
 import { aiTransform } from "./ai-transform";
 import { parseDate } from "./parse-date";
+import { hookGate } from "./hook-gate";
 import { ifSuccess } from "./if-success";
 import { ifFailure } from "./if-failure";
 import { deliverResult } from "./deliver-result";
@@ -44,11 +45,12 @@ export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   receiveUserTelegramChat,
   receiveEmail,
   receiveFromExternal,
-  // середина (библиотека узловых навыков — шаг 307: №1 recallFromMemory, №2 aiTransform, №3 parseDate)
+  // середина (библиотека узловых навыков — шаг 307: recallFromMemory · aiTransform · parseDate · hookGate)
   transformPayload,
   recallFromMemory,
   aiTransform,
   parseDate,
+  hookGate,
   ifSuccess,
   ifFailure,
   // выходная группа — 11 каналов + коннектор
