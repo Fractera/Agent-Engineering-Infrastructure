@@ -54,8 +54,13 @@ export async function deliverCalendar(ctx: NodeCtx): Promise<NodeCtx> {
   const when = Number.isFinite(parsed.getTime()) ? parsed : new Date();
   const pad = (n: number) => String(n).padStart(2, "0");
 
+  // ЧАТ ДЛЯ ОТЛОЖЕННОЙ РАЗВОЗКИ ЕДЕТ С ЗАПИСЬЮ (308, авто-захват): id личного чата берём из самого
+  // прогона (`telegramChatId`, его принёс входной узел из сообщения владельца) и кладём в запись. Так
+  // напоминание в срок доходит БЕЗ ручного ввода `TELEGRAM_USER_CHAT_ID` — владельцу достаточно ввести
+  // токен и написать боту. Пусто (запуск не из чата) → развозка честно падёт на env-фолбэк.
+  const chatId = String((ctx as Record<string, unknown>).telegramChatId ?? "").trim();
   const integrations = REPLY_CHANNELS.has(m.source)
-    ? { [m.source]: { active: true, text: m.text } }
+    ? { [m.source]: { active: true, text: m.text, ...(chatId ? { chatId } : {}) } }
     : {};
 
   const row = await addRow("calendar", {

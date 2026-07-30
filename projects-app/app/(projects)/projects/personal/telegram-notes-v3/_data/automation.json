@@ -270,11 +270,6 @@
                   "name": "TELEGRAM_BOT_TOKEN",
                   "status": "missing",
                   "comment": "Declared by the channel; the api/env door checks its live presence."
-                },
-                {
-                  "name": "TELEGRAM_ALLOWED_CHAT_ID",
-                  "status": "missing",
-                  "comment": "Declared by the channel; the api/env door checks its live presence."
                 }
               ],
               "function": {

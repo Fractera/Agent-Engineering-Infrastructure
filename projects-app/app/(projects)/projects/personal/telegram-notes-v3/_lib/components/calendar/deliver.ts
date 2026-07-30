@@ -92,11 +92,13 @@ async function send(
     case "telegram-bot":
       return sendTelegram(String(value.text ?? "").trim() || fallbackText(row));
     case "user-telegram-chat": {
-      // Доставка по наступлению в ЛИЧНЫЙ чат человека (шаг 307.6): тот же бот, другой адресат —
-      // chat id связан нативно (`api/telegram/link`) и лежит в `TELEGRAM_USER_CHAT_ID`. Не задан →
-      // «канал не подключён», а не «отправка провалена»: разные слова для разных причин.
-      const chatId = (process.env.TELEGRAM_USER_CHAT_ID ?? "").trim();
-      if (!chatId) throw new Error("TELEGRAM_USER_CHAT_ID is not set — link your Telegram chat in Settings first");
+      // Доставка по наступлению в ЛИЧНЫЙ чат человека (шаг 307.6): тот же бот, другой адресат.
+      // ЧАТ БЕРЁТСЯ ИЗ САМОЙ ЗАПИСИ (308, авто-захват): `deliverCalendar` положил в интеграцию
+      // `chatId` из сообщения владельца — так напоминание доходит БЕЗ ручного ввода. Фолбэк —
+      // env `TELEGRAM_USER_CHAT_ID` (если запись старая или запуск был не из чата). Ни там, ни там
+      // нет → «канал не подключён» честной ошибкой (а не тихий провал).
+      const chatId = String(value.chatId ?? "").trim() || (process.env.TELEGRAM_USER_CHAT_ID ?? "").trim();
+      if (!chatId) throw new Error("no chat to remind — write to the bot once so it learns your chat, or set TELEGRAM_USER_CHAT_ID in Settings");
       return sendTelegram(String(value.text ?? "").trim() || fallbackText(row), chatId);
     }
     case "email":

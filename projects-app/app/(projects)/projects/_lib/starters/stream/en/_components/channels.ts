@@ -58,6 +58,7 @@ const RESEND = L("Email delivery (Resend)", "Envío de correo (Resend)", "Envoi 
 // вводить секреты в продукте нет. Какой провайдер ВЫБРАН — свойство автоматизации, оно в паспорте.
 const ANTHROPIC = L("Anthropic", "Anthropic", "Anthropic", "Anthropic", "Anthropic", "Anthropic", "Anthropic", "Anthropic", "Anthropic", "Anthropic");
 const OPENAI = L("OpenAI", "OpenAI", "OpenAI", "OpenAI", "OpenAI", "OpenAI", "OpenAI", "OpenAI", "OpenAI", "OpenAI");
+const MEMORY = L("Memory (LightRAG)", "Memoria (LightRAG)", "Mémoire (LightRAG)", "Memoria (LightRAG)", "Память (LightRAG)", "Speicher (LightRAG)", "Memória (LightRAG)", "Pamięć (LightRAG)", "Bellek (LightRAG)", "Geheugen (LightRAG)");
 
 export const KEY_CATALOG: Record<string, ChannelKey> = {
   TELEGRAM_BOT_TOKEN: {
@@ -95,6 +96,24 @@ export const KEY_CATALOG: Record<string, ChannelKey> = {
       "Naciśnij „Połącz mój Telegram” poniżej — otworzy bota, klikasz Start, a id wpisze się sam. Zostaw puste, aby przyjmować każdy czat.",
       "Aşağıdaki «Telegram'ımı bağla»ya basın — bot açılır, Başlat'a dokunursunuz ve kimlik kendiliğinden dolar. Her sohbeti kabul etmek için boş bırakın.",
       "Klik hieronder op “Mijn Telegram koppelen” — de bot opent, je tikt op Start en de id vult zichzelf in. Laat leeg om elke chat te accepteren.",
+    ),
+  },
+  TELEGRAM_USER_CHAT_ID: {
+    env: "TELEGRAM_USER_CHAT_ID",
+    service: "telegram", serviceLabel: TELEGRAM,
+    optional: true,
+    label: L("Your chat id", "Id de tu chat", "Id de ta discussion", "Id della tua chat", "Твой чат", "Deine Chat-ID", "Id do teu chat", "Id twojego czatu", "Sohbet kimliğin", "Jouw chat-id"),
+    help: L(
+      "Leave empty — it fills in AUTOMATICALLY from your first message to the bot. Enter only the bot token above, then write anything to the bot; the automation remembers your chat for delayed reminders.",
+      "Déjalo vacío: se rellena AUTOMÁTICAMENTE con tu primer mensaje al bot. Introduce solo el token arriba y escribe algo al bot; la automatización recuerda tu chat para los recordatorios.",
+      "Laisse vide — il se remplit AUTOMATIQUEMENT dès ton premier message au bot. Saisis seulement le jeton ci-dessus, puis écris n'importe quoi au bot ; l'automatisation retient ta discussion pour les rappels.",
+      "Lascialo vuoto: si compila AUTOMATICAMENTE dal tuo primo messaggio al bot. Inserisci solo il token sopra, poi scrivi qualcosa al bot; l'automazione ricorda la tua chat per i promemoria.",
+      "Оставь пустым — заполнится АВТОМАТИЧЕСКИ с твоего первого сообщения боту. Введи только токен выше, потом напиши боту что угодно; автоматизация запомнит твой чат для отложенных напоминаний.",
+      "Leer lassen — sie füllt sich AUTOMATISCH mit deiner ersten Nachricht an den Bot. Gib oben nur den Token ein, schreib dann irgendetwas an den Bot; die Automatisierung merkt sich deinen Chat für Erinnerungen.",
+      "Deixa vazio — preenche-se AUTOMATICAMENTE com a tua primeira mensagem ao bot. Introduz só o token acima e escreve algo ao bot; a automação lembra o teu chat para os lembretes.",
+      "Zostaw puste — wypełni się AUTOMATYCZNIE od Twojej pierwszej wiadomości do bota. Wpisz tylko token powyżej, potem napisz cokolwiek do bota; automatyzacja zapamięta Twój czat do przypomnień.",
+      "Boş bırak — bota ilk mesajınla OTOMATİK dolar. Yukarıya yalnızca jetonu gir, sonra bota bir şey yaz; otomasyon hatırlatmalar için sohbetini hatırlar.",
+      "Laat leeg — het vult zichzelf AUTOMATISCH in vanaf je eerste bericht aan de bot. Voer boven alleen het token in, schrijf dan iets naar de bot; de automatisering onthoudt je chat voor herinneringen.",
     ),
   },
   RESEND_API_KEY: {
@@ -178,6 +197,42 @@ export const KEY_CATALOG: Record<string, ChannelKey> = {
       "platform.openai.com → API keys → Create new secret key. Jeden klucz obsługuje wszystkie automatyzacje projektu.",
       "platform.openai.com → API keys → Create new secret key. Tek anahtar projedeki tüm otomasyonlara hizmet eder.",
       "platform.openai.com → API keys → Create new secret key. Eén sleutel bedient alle automatiseringen van het project.",
+    ),
+  },
+  LIGHTRAG_URL: {
+    env: "LIGHTRAG_URL",
+    service: "memory", serviceLabel: MEMORY,
+    optional: true,
+    label: L("Memory service URL", "URL del servicio de memoria", "URL du service mémoire", "URL del servizio memoria", "URL сервиса памяти", "Speicherdienst-URL", "URL do serviço de memória", "URL usługi pamięci", "Bellek servisi URL'si", "URL geheugendienst"),
+    help: L(
+      "Leave empty — the automation uses the platform memory at http://127.0.0.1:9621 by default.",
+      "Déjalo vacío: la automatización usa la memoria de la plataforma en http://127.0.0.1:9621 por defecto.",
+      "Laisse vide — l'automatisation utilise la mémoire de la plateforme sur http://127.0.0.1:9621 par défaut.",
+      "Lascialo vuoto: l'automazione usa la memoria della piattaforma su http://127.0.0.1:9621 di default.",
+      "Оставь пустым — по умолчанию используется память платформы на http://127.0.0.1:9621.",
+      "Leer lassen — die Automatisierung nutzt standardmäßig den Plattformspeicher unter http://127.0.0.1:9621.",
+      "Deixa vazio — a automação usa a memória da plataforma em http://127.0.0.1:9621 por omissão.",
+      "Zostaw puste — automatyzacja domyślnie używa pamięci platformy pod http://127.0.0.1:9621.",
+      "Boş bırak — otomasyon varsayılan olarak http://127.0.0.1:9621 adresindeki platform belleğini kullanır.",
+      "Laat leeg — de automatisering gebruikt standaard het platformgeheugen op http://127.0.0.1:9621.",
+    ),
+  },
+  LIGHTRAG_API_KEY: {
+    env: "LIGHTRAG_API_KEY",
+    service: "memory", serviceLabel: MEMORY,
+    optional: true, secret: true,
+    label: L("Memory API key", "Clave API de memoria", "Clé API mémoire", "Chiave API memoria", "Ключ API памяти", "Speicher-API-Schlüssel", "Chave API de memória", "Klucz API pamięci", "Bellek API anahtarı", "Geheugen-API-sleutel"),
+    help: L(
+      "Leave empty — only needed if the memory service was configured to require a key.",
+      "Déjalo vacío: solo si el servicio de memoria se configuró para exigir clave.",
+      "Laisse vide — utile seulement si le service mémoire exige une clé.",
+      "Lascialo vuoto: serve solo se il servizio memoria richiede una chiave.",
+      "Оставь пустым — нужен только если сервис памяти настроен требовать ключ.",
+      "Leer lassen — nur nötig, wenn der Speicherdienst einen Schlüssel verlangt.",
+      "Deixa vazio — só é preciso se o serviço de memória exigir uma chave.",
+      "Zostaw puste — potrzebny tylko, gdy usługa pamięci wymaga klucza.",
+      "Boş bırak — yalnızca bellek servisi anahtar gerektiriyorsa gerekir.",
+      "Laat leeg — alleen nodig als de geheugendienst een sleutel vereist.",
     ),
   },
   RESEND_INBOUND_SECRET: {
