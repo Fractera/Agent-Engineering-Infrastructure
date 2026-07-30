@@ -19,6 +19,7 @@ import type { NodeCtx } from "../executor";
 import { recallFacts } from "../memory";
 import { deriveTitle, refuse, servesIntent } from "../message";
 import { listRows } from "../rows";
+import { isAggregateQuestion, financeAggregate } from "../components/conversation/finance-summary";
 
 // 🔒 РАЗРЕШЕНИЕ ОБРАТНЫХ МАРКЕРОВ (шаг 308.7): в тексте ответа памяти могут стоять маркеры вида
 // `[mem#id]`/`[note#id]`/`[fin#id]`, вшитые при ингесте. Каждый указывает на локальную строку И её
@@ -111,9 +112,18 @@ export async function recallFromMemory(ctx: NodeCtx): Promise<NodeCtx> {
     }).join("\n");
   }
 
+  // ПРИБЛИЗИТЕЛЬНАЯ СВОДКА (310): вопрос «сколько потратил на X за период» → считаем сумму САМИ по записям
+  // (детерминированно) и даём модели ГОТОВЫЙ факт — число будет верным, а не «на глаз». Это не бухгалтерия
+  // (грубая ориентировка), поэтому помечаем approximate; модель разъяснит на языке владельца.
+  let computed = "";
+  if (isAggregateQuestion(question)) {
+    const agg = financeAggregate(question, (await listRows("finance", Infinity)) as Record<string, unknown>[]);
+    if (agg) computed = `Computed approximate total for "${agg.subject}" (${agg.period}, ${agg.count} record(s)): ${agg.total}${agg.currency}. Report this as an APPROXIMATE figure, not exact accounting.`;
+  }
+
   // Глоссарий алиасов (309) — в запрос памяти: «в Меркадоне» матчится на store="SODO ADEJE".
   const glossary = String(ctx.glossary ?? "").trim();
-  const enriched = [glossary, question, financeFacts ? `Known receipts:\n${financeFacts}` : ""].filter(Boolean).join("\n\n");
+  const enriched = [glossary, computed, question, financeFacts ? `Known receipts:\n${financeFacts}` : ""].filter(Boolean).join("\n\n");
   const answer = await recallFacts(enriched || question);
 
   // Недоступно / пусто — честные исходы без маркеров. Реальный ответ → разрешаем маркеры в строки+картинки.

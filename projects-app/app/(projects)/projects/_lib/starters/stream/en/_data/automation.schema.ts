@@ -215,6 +215,12 @@ export const PassportSchema = z
     // shared vocabulary (RoleSchema). EMPTY = fully public (the pre-309 default, every existing automation
     // stays valid): the body is open to everyone. Additive with a `[]` default so all prior cores validate.
     access: z.array(RoleSchema).default([]),
+    // PUBLIC URL — the automation's own address on the public app (:3000), e.g.
+    // `https://<domain>/<lang>/<category>/<slug>` (step 310, owner's request). EVERY automation has one; the
+    // agent records it when the automation is created so the assistant can answer «where can I see this?» →
+    // «on your page: <url>». Empty until assigned (honest: «the address is not assigned yet»). Additive with
+    // a "" default so all prior cores validate.
+    publicUrl: z.string().default(""),
   })
   .strict();
 

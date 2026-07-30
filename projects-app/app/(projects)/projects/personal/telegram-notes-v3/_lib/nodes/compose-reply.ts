@@ -48,6 +48,12 @@ const T = {
   glossary: (l: Lang, term: string, meaning: string) =>
     l === "ru" ? `✅ Запомнил: ${term} = ${meaning}` : `✅ Got it: ${term} = ${meaning}`,
   placeSaved: (l: Lang, d: string) => (l === "ru" ? `📍 Место записано: ${d}` : `📍 Place saved: ${d}`),
+  dupAsk: (l: Lang, m: string) =>
+    l === "ru"
+      ? `🤔 Похоже, это уже записано: ${m}. Записать ещё раз или пропустить? (да / нет)`
+      : `🤔 This looks already recorded: ${m}. Record it again or skip? (yes / no)`,
+  dupWritten: (l: Lang) => (l === "ru" ? "✅ Записал ещё раз." : "✅ Recorded again."),
+  dupSkipped: (l: Lang) => (l === "ru" ? "👍 Пропустил — не стал дублировать." : "👍 Skipped — no duplicate created."),
   unknown: (l: Lang) => (l === "ru" ? "🤔 Не понял сообщение.\n\n" : "🤔 I didn't understand.\n\n"),
 };
 
@@ -64,6 +70,15 @@ export function composeReply(ctx: NodeCtx): NodeCtx {
 
   // C: представление возможностей — /start, «что ты умеешь».
   if (ctx.showHelp === true) return { reply: CAPABILITIES[L] };
+
+  // ДУБ-КОНТРОЛЬ (310) — ТЕРМИНАЛЬНЫЕ исходы: запись придержана `dedupeGuard`, поэтому НЕ собираем строки
+  // finance/save (иначе отчитались бы «записал» о том, что не записали). Отвечаем только про дубль.
+  if (ctx.duplicateAsk && typeof ctx.duplicateAsk === "object") {
+    const m = String((ctx.duplicateAsk as { match?: string }).match ?? "");
+    return { reply: T.dupAsk(L, m) };
+  }
+  if (ctx.duplicateResolved === "written") return { reply: T.dupWritten(L) };
+  if (ctx.duplicateResolved === "skipped") return { reply: T.dupSkipped(L) };
 
   const intents = Array.isArray(ctx.intent) ? (ctx.intent as unknown[]).map(String) : [];
   const has = (i: string) => intents.length === 0 || intents.includes(i);

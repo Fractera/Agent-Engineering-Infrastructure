@@ -7,15 +7,31 @@ import { assistantStrings } from "../i18n";
 // АККОРДЕОН «ДОСТУП» (шаг 309, требование владельца) — какие РОЛИ видят РЕАЛЬНУЮ автоматизацию на
 // ПУБЛИЧНОМ приложении (3000), а не превью. Пишет прямо в паспорт (`passport.access: Role[]`) дверью
 // `api/patch` (address {object:"passport"}); публичный слой (`api/projects/public-catalog`) читает этот
-// список и гейтит тело. Пустой список = полностью публично (как было). Словарь ролей — общий (RoleSchema).
-export const PUBLIC_FACING_ROLES = [
-  "guest", "user", "buyer", "vip_user",
-  "subscriber_lite", "subscriber_standard", "subscriber_max",
+// список и гейтит тело. Пустой список = полностью публично (как было).
+//
+// 🔒 СЛОВАРЬ РОЛЕЙ — ПОЛНЫЙ, как в админке (Admin :3002 → settings → users → edit → roles). Это КОПИЯ
+// авторитетного `ALL_ROLES` (`bridges/app/lib/roles.ts`, зеркало `app/config/ui/initial-app-config.ts`),
+// совпадает с `RoleSchema` паспорта. Закон 0 запрещает импорт снаружи папки → список скопирован и должен
+// пере-сверяться при изменении ролей платформы. Раньше здесь был урезанный набор 7 ролей (без architect,
+// staff, admin; «vip» вместо `vip_user`) — владелец указал, что это неверно (2026-07-30).
+export const ACCESS_ROLES = [
+  // access tiers (enforced)
+  "guest", "user", "architect",
+  // customer-facing
+  "buyer", "vip_user", "subscriber_lite", "subscriber_standard", "subscriber_max",
+  // staff / operations
+  "manager", "senior_manager", "support_manager", "delivery_manager", "finance", "content_editor",
+  // admin
+  "admin",
 ] as const;
 
 const ROLE_LABEL: Record<string, string> = {
-  guest: "Guest", user: "User", buyer: "Buyer", vip_user: "VIP",
+  guest: "Guest", user: "User", architect: "Architect",
+  buyer: "Buyer", vip_user: "VIP",
   subscriber_lite: "Subscriber Lite", subscriber_standard: "Subscriber Standard", subscriber_max: "Subscriber Max",
+  manager: "Manager", senior_manager: "Senior Manager", support_manager: "Support Manager",
+  delivery_manager: "Delivery Manager", finance: "Finance", content_editor: "Content Editor",
+  admin: "Admin",
 };
 
 export default function AccessRoles({ access, lang }: { access: string[]; lang: string }) {
@@ -56,7 +72,7 @@ export default function AccessRoles({ access, lang }: { access: string[]; lang: 
         ) : null}
       </p>
       <div className="flex flex-wrap gap-2">
-        {PUBLIC_FACING_ROLES.map((role) => {
+        {ACCESS_ROLES.map((role) => {
           const on = roles.includes(role);
           return (
             <button

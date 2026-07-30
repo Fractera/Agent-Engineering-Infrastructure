@@ -36,6 +36,19 @@ function isFuture(v: unknown): boolean {
   return !Number.isNaN(d.getTime()) && d.getTime() > Date.now();
 }
 
+// IMAGE SOURCE RESOLVER (step 310). An `image` column may point at a ready URL OR at a stored file id /
+// array of ids (e.g. finance.storageIds = ["abc"]). Resolve: array → first; absolute URL / leading-slash →
+// as-is; a bare id → the folder's own files door `./api/files?key=<id>` (same pattern the old finance table
+// used). Empty → null (renders "—"). Backward-compatible: columns already carrying URLs are untouched.
+function imageSrc(v: unknown): string | null {
+  const first = Array.isArray(v) ? v[0] : v;
+  const s = first == null ? "" : String(first).trim();
+  if (!s) return null;
+  if (/^(https?:)?\/\//i.test(s) || s.startsWith("/")) return s;
+  const base = typeof location !== "undefined" ? location.pathname.replace(/\/+$/, "") + "/api" : "/api";
+  return `${base}/files?key=${encodeURIComponent(s)}`;
+}
+
 export type CellCtx = {
   expanded: boolean;
   onToggleExpand: () => void;
@@ -80,13 +93,15 @@ export function ConfigRecordCell({ col, row, ctx, lang }: { col: TableColumn; ro
       ) : (
         <span className="text-muted-foreground">—</span>
       );
-    case "image":
-      return v ? (
+    case "image": {
+      const src = imageSrc(v);
+      return src ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={String(v)} alt="" className="size-10 rounded object-cover" />
+        <img src={src} alt="" className="size-10 rounded object-cover" />
       ) : (
         <span className="text-muted-foreground">—</span>
       );
+    }
     case "actions":
       if (col.options?.action === "delete") {
         return (

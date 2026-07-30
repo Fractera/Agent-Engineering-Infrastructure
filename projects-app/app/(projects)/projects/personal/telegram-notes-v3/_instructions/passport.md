@@ -104,6 +104,12 @@ set: { lifecycle: "real-project" } }`. Until you do, every node must stay hidden
 cannot execute anything — a frozen template that shows a working node is refused by the core. Do it
 once, at the start, and never touch `lifecycle` again.
 
+RECORD THE PUBLIC ADDRESS (step 310, owner's law). Every automation has a page on the public app
+(:3000), and its address belongs in the passport so the assistant can answer «where can I see this?».
+When the automation is created (and whenever its public slug/category is decided), set it:
+`POST api/patch { address: { object: "passport" }, set: { publicUrl: "https://<domain>/<lang>/<category>/<slug>" } }`.
+Leave it empty only while the address genuinely does not exist yet — never invent one.
+
 ### 6.1 YOUR SECOND ACTION: OPEN THE DOORS THE OWNER ASKED FOR
 
 Flipping `lifecycle` alone leaves a project that cannot run: every door is still shut. So immediately

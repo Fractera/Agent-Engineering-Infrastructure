@@ -10,7 +10,9 @@
 import { addRow, listRows, updateRow } from "../../rows";
 
 export type ChatMessage = { role: "user" | "assistant"; text: string; at: string };
-export type PendingAsk = { kind: string; at: string } | null; // напр. {kind:"remind-when"} / {kind:"place-desc"}
+// напр. {kind:"remind-when"} / {kind:"place-desc"}; `payload` (310) держит отложенные данные между
+// сообщениями — hold-and-confirm дуб-контроля: строки, которые запишем, ЕСЛИ владелец подтвердит дубль.
+export type PendingAsk = { kind: string; at: string; payload?: Record<string, unknown> } | null;
 export type ChatState = { id: string; messages: ChatMessage[]; lang: string; pending: PendingAsk };
 
 const TABLE = "chat-state";

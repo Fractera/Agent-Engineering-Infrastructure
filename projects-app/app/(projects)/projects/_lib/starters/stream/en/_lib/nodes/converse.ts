@@ -52,7 +52,13 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   const chatId = String(ctx.telegramChatId ?? "").trim();
 
   let cfg;
-  try { cfg = assistantConfigOf((await readCore()).components); }
+  let publicUrl = "";
+  try {
+    const core = await readCore();
+    cfg = assistantConfigOf(core.components);
+    // Публичный адрес автоматизации (310) — из паспорта; ассистент даёт его на «где посмотреть».
+    publicUrl = String((core.passport as { publicUrl?: unknown } | undefined)?.publicUrl ?? "").trim();
+  }
   catch { return composeReply(ctx); } // ядро недоступно — детерминированный фолбэк
 
   // Память диалога: положить входящее сообщение в буфер (окно N/TTL из настроек), прочитать состояние.
@@ -84,6 +90,15 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
     return { reply: help };
   }
 
+  // ДУБ-КОНТРОЛЬ (310) — вопрос «записать ещё раз?» и его разрешение отдаём ДЕТЕРМИНИРОВАННО: чёткий
+  // да/нет-промпт надёжнее модельного парафраза (модель может размыть вопрос и владелец не поймёт, что от
+  // него хотят). Тот же приём, что с представлением возможностей.
+  if (ctx.duplicateAsk || ctx.duplicateResolved) {
+    const reply = composeReply({ ...ctx, lang }).reply as string;
+    if (chatId) await pushMessage(chatId, { role: "assistant", text: reply, at: new Date().toISOString() }, cfg.lastN, cfg.ttlMinutes);
+    return { reply };
+  }
+
   const recorded = recordedSummary(ctx);
   const recallAnswer = String(ctx.recallAnswer ?? "").trim();
   const qaHit = matchQa(incoming, cfg.qa);
@@ -109,8 +124,14 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
         `use it to answer such questions truthfully and specifically. Do NOT say anything was "saved". Reply naturally as this assistant.`;
   // Глоссарий алиасов — СИСТЕМНОЙ ПРЕАМБУЛОЙ (309): модель раскрывает сокращения владельца в ответах.
   const glossaryPreamble = String(ctx.glossary ?? "").trim();
+  // Публичный адрес (310): когда владелец спрашивает «где это посмотреть / покажи страницу» — отвечай
+  // адресом; не назначен → честно скажи, что адреса пока нет (не выдумывай ссылку).
+  const publicUrlLine = publicUrl
+    ? `The automation's public page is: ${publicUrl}. When the owner asks where to see it, give this address.`
+    : `The automation's public page address is not assigned yet — if asked where to see it, say so honestly, do not invent a link.`;
   const system =
     (glossaryPreamble ? `${glossaryPreamble}\n\n` : "") +
+    `${publicUrlLine}\n\n` +
     `${cfg.instruction}\n\nReply ONLY in language "${lang}". Keep it to one short, warm message. ` +
     // ГАРДРЕЙЛ ОТ ГАЛЛЮЦИНАЦИЙ (309, живой тест): модель НЕ знает внутреннего устройства и НЕ должна его
     // выдумывать. Инцидент: на «почему не сохранил в таблицу» бот сочинил «храню как заметку» — а трата

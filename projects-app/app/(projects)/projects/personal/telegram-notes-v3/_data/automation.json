@@ -711,6 +711,46 @@
               ]
             },
             {
+              "cuid": "cmd310dedupeguard02b3c4e7",
+              "name": "Dedupe guard",
+              "description": "The middle — before a record is written, checks for a likely duplicate (the same money statement / receipt / note said twice) and, if found, holds the write and asks the owner «record it again or skip?».",
+              "state": "visible",
+              "info": {
+                "aiSummary": "Duplicate control (step 310, owner's request; node-skill of the middle library): sits before deliverDatabase, gated save|finance. TWO jobs in one node like askAddress: (1) RESOLVE — a dup-confirm question is pending in chat state → THIS message is the yes/no answer: «yes/again» writes the HELD rows (payload from pending) and clears; «no» clears and writes nothing; unclear clears and processes the message anew — every outcome sets ctx.skipDatabase so the store never double-writes. (2) DETECT — else it builds the rows deliverDatabase would write (shared builders financeRowFrom/noteRowFrom — one row-shape in one place) and looks for a similar existing row deterministically (dedupe.ts, strict threshold: same amount+store/counterparty within a few days; near-identical note text). Found → holds ALL run rows in pending.payload, sets ctx.skipDatabase + ctx.duplicateAsk (composeReply/converse ask the owner). Not found → passes through unchanged, the store writes as usual. Hold-and-confirm, never a silent merge: the human decides whether Дима really gave 10€ twice."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "serves": [],
+              "lineage": "nsk-dedupe-guard-v1",
+              "function": {
+                "name": "dedupeGuard",
+                "summary": "Holds a likely-duplicate record and asks the owner to confirm before it is written twice.",
+                "accepts": "ctx.finance / a save message, gated on save|finance; and a pending dup-confirm answer.",
+                "returns": "skipDatabase + duplicateAsk (held for confirmation) OR duplicateResolved (written|skipped) OR {} (no duplicate, pass through)."
+              },
+              "run": "sequential",
+              "estDurationMs": 40,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              }
+            },
+            {
               "cuid": "cmd307aitransform02b3c4d5e6f7",
               "name": "AI transform",
               "description": "The middle — thinks with the automation's chosen model (passport.ai): runs the captured text through an instruction and passes the result onward.",
@@ -1656,6 +1696,12 @@
       {
         "cuid": "cms7irvhod712fb9e0d6e6f6f",
         "from": "cmd307recallmem01a2b3c4d5e6f7",
+        "to": "cmd310dedupeguard02b3c4e7",
+        "state": "visible"
+      },
+      {
+        "cuid": "cms310dedupeedge01a2b3c4d5e6",
+        "from": "cmd310dedupeguard02b3c4e7",
         "to": "cmruddnrpho70e8af12589d1deaa",
         "state": "visible"
       },
@@ -2086,9 +2132,9 @@
         "systemInstructionName": "tab",
         "name": "dashboard",
         "description": "",
-        "presence": "collapsed",
+        "presence": "expanded",
         "info": {
-          "aiSummary": "The history table of captured messages: date · source channel · title · text — one row per successful run, written by the dashboard output node."
+          "aiSummary": "The dashboard holds ALL data tables of this automation (step 310, owner: a data table belongs in the dashboard, not its own tab): (1) History — captured messages (date · source · title · text); (2) Finance — the money ledger (date · item · amount · currency · store · kind · receipt), written by deliverDatabase from digitizeMoney. Add a table = add an entity here, never a new tab."
         },
         "status": "materialized",
         "warnings": [],
@@ -2237,6 +2283,90 @@
                 "tr": "Yakalanan mesajlar",
                 "nl": "Vastgelegde berichten"
               },
+              "pageSize": 20
+            }
+          },
+          {
+            "cuid": "cmrvy25f31pjb1finance0dashb01",
+            "name": "Finance",
+            "description": "",
+            "info": {
+              "aiSummary": "The money ledger INSIDE the dashboard (step 310, owner: a data table belongs in the dashboard, not its own tab): rows of the finance table — date, amount, store, categories, receipt image. Written by deliverDatabase from digitizeMoney; view/delete here."
+            },
+            "status": "materialized",
+            "warnings": [],
+            "envKeys": [],
+            "data": {
+              "table": "finance",
+              "columns": [
+                {
+                  "key": "date",
+                  "label": { "en": "Date", "es": "Fecha", "fr": "Date", "it": "Data", "ru": "Дата", "de": "Datum", "pt": "Data", "pl": "Data", "tr": "Tarih", "nl": "Datum" },
+                  "type": "date",
+                  "source": "date",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "name",
+                  "label": { "en": "Item", "es": "Concepto", "fr": "Libellé", "it": "Voce", "ru": "Назначение", "de": "Posten", "pt": "Item", "pl": "Pozycja", "tr": "Kalem", "nl": "Post" },
+                  "type": "text",
+                  "source": "name",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "amount",
+                  "label": { "en": "Amount", "es": "Importe", "fr": "Montant", "it": "Importo", "ru": "Сумма", "de": "Betrag", "pt": "Valor", "pl": "Kwota", "tr": "Tutar", "nl": "Bedrag" },
+                  "type": "number",
+                  "source": "amount",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "currency",
+                  "label": { "en": "Currency", "es": "Moneda", "fr": "Devise", "it": "Valuta", "ru": "Валюта", "de": "Währung", "pt": "Moeda", "pl": "Waluta", "tr": "Para birimi", "nl": "Valuta" },
+                  "type": "text",
+                  "source": "currency",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "store",
+                  "label": { "en": "Store", "es": "Tienda", "fr": "Magasin", "it": "Negozio", "ru": "Магазин", "de": "Geschäft", "pt": "Loja", "pl": "Sklep", "tr": "Mağaza", "nl": "Winkel" },
+                  "type": "text",
+                  "source": "store",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "kind",
+                  "label": { "en": "Kind", "es": "Tipo", "fr": "Type", "it": "Tipo", "ru": "Тип", "de": "Art", "pt": "Tipo", "pl": "Rodzaj", "tr": "Tür", "nl": "Soort" },
+                  "type": "badge",
+                  "source": "kind",
+                  "defaultVisible": true,
+                  "options": { "colorFrom": "green" }
+                },
+                {
+                  "key": "receipt",
+                  "label": { "en": "Receipt", "es": "Recibo", "fr": "Reçu", "it": "Ricevuta", "ru": "Чек", "de": "Beleg", "pt": "Recibo", "pl": "Paragon", "tr": "Fiş", "nl": "Bon" },
+                  "type": "image",
+                  "source": "storageIds",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "row-actions",
+                  "label": { "en": "", "es": "", "fr": "", "it": "", "ru": "", "de": "", "pt": "", "pl": "", "tr": "", "nl": "" },
+                  "type": "actions",
+                  "source": "id",
+                  "defaultVisible": true,
+                  "options": { "action": "detail" }
+                },
+                {
+                  "key": "row-delete",
+                  "label": { "en": "", "es": "", "fr": "", "it": "", "ru": "", "de": "", "pt": "", "pl": "", "tr": "", "nl": "" },
+                  "type": "actions",
+                  "source": "id",
+                  "defaultVisible": true,
+                  "options": { "action": "delete" }
+                }
+              ],
+              "title": { "en": "Finance", "es": "Finanzas", "fr": "Finances", "it": "Finanze", "ru": "Финансы", "de": "Finanzen", "pt": "Finanças", "pl": "Finanse", "tr": "Finans", "nl": "Financiën" },
               "pageSize": 20
             }
           }
@@ -2462,7 +2592,7 @@
         "systemInstructionName": "tab",
         "name": "finance",
         "description": "",
-        "presence": "expanded",
+        "presence": "absent",
         "info": {
           "aiSummary": "The money ledger: expenses and incomes recorded by digitizeMoney from receipt photos or words (kind, amount, categories, summary, receipt image), written to the separate finance table by deliverDatabase. Separate from notes (v1 parity). View-only here; populated by the flow."
         },
