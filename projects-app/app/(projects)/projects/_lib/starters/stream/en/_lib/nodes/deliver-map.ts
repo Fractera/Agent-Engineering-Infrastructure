@@ -16,6 +16,9 @@ import { addRow } from "../rows";
 
 export async function deliverMap(ctx: NodeCtx): Promise<{ mapDelivery: string }> {
   if (!servesIntent(ctx, "place")) return { mapDelivery: "skipped: not a place intent" };
+  // Гео-строку уже создал/связал `askAddress` (геометка v1: создание и связывание в одном месте, любой
+  // порядок) — тогда выход не задваивает строку. skipMap ставит askAddress.
+  if (ctx.skipMap) return { mapDelivery: "handled by askAddress (geo-mark created/linked)" };
   const m = messageOf(ctx);
   if (m.lat === undefined || m.lng === undefined) {
     return { mapDelivery: "skipped: the message carries no lat/lng — this channel captured no coordinates" };

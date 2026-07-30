@@ -5,6 +5,15 @@
 // решать сам, что бы ни случилось выше. Имя `ifSuccess` — публичный контракт, не переименовывать.
 import type { NodeCtx } from "../executor";
 
+// Прогон «успешен» (есть что доставлять), если середина оставила ЛЮБОЙ значимый результат — не только
+// текст. Сообщение-локация и чек-фото ТЕКСТА не несут, но несут координаты / финанс-запись / вложение;
+// раньше `ifSuccess` их ронял (гейт только по тексту), и локация/фото терялись до выходов (баг 308,
+// живой тест). Теперь ветка держит при тексте ИЛИ координатах ИЛИ finance ИЛИ вложениях.
 export function ifSuccess(ctx: NodeCtx): NodeCtx | null {
-  return String(ctx.text ?? "").trim() ? {} : null;
+  const has =
+    String(ctx.text ?? "").trim() !== "" ||
+    (ctx.lat != null && ctx.lng != null) ||
+    ctx.finance != null ||
+    (Array.isArray(ctx.attachments) && ctx.attachments.length > 0);
+  return has ? {} : null;
 }
