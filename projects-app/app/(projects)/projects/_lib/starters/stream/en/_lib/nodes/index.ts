@@ -16,6 +16,7 @@ import { receiveUserTelegramChat } from "./receive-user-telegram-chat";
 import { receiveEmail } from "./receive-email";
 import { receiveFromExternal } from "./receive-from-external";
 import { transformPayload } from "./transform-payload";
+import { classifyIntent } from "./classify-intent";
 import { recallFromMemory } from "./recall-from-memory";
 import { aiTransform } from "./ai-transform";
 import { parseDate } from "./parse-date";
@@ -45,8 +46,9 @@ export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   receiveUserTelegramChat,
   receiveEmail,
   receiveFromExternal,
-  // середина (библиотека узловых навыков — шаг 307: recallFromMemory · aiTransform · parseDate · hookGate)
+  // середина (библиотека узловых навыков — 307: recallFromMemory · aiTransform · parseDate · hookGate; 308: classifyIntent)
   transformPayload,
+  classifyIntent,
   recallFromMemory,
   aiTransform,
   parseDate,

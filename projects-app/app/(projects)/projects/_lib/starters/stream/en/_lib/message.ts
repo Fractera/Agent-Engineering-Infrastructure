@@ -102,6 +102,22 @@ export const emptyInput = (channel: string): Record<string, string> => ({
  */
 const foldHook = (s: string): string => s.toLowerCase().replace(/ё/g, "е").replace(/\s+/g, " ").trim();
 
+/**
+ * INTENT-САМО-ГЕЙТ (шаг 308.0) — «моё ли это намерение?». Так ОДНА автоматизация делает всё: узел
+ * `classifyIntent` ставит `ctx.intent` (мульти-флаг), а каждый узел-действие в начале спрашивает
+ * `servesIntent(ctx, 'save')` и, если не его флаг, пропускает поток без изменений (`return {}`), НЕ
+ * останавливая цепочку (иначе линейный движок убил бы соседние ветки).
+ *
+ * 🔒 ОБРАТНАЯ СОВМЕСТИМОСТЬ: если `ctx.intent` не задан (простой стартер «захват→развозка» без
+ * классификатора) — возвращает `true`, и узел работает КАК РАНЬШЕ. Классификатор — опция v3, не налог
+ * на простой стартер.
+ */
+export function servesIntent(ctx: Record<string, unknown>, mine: string): boolean {
+  const intent = ctx.intent;
+  if (!Array.isArray(intent)) return true; // нет классификатора — узел работает безусловно (простой стартер)
+  return intent.map(String).includes(mine);
+}
+
 export function matchHook(text: string, phrases: readonly string[]): { payload: string; phrase: string } | null {
   const clean = text.replace(/\s+/g, " ").trim();
   const folded = foldHook(clean);

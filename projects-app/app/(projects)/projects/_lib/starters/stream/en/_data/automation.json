@@ -414,6 +414,46 @@
               "serves": []
             },
             {
+              "cuid": "cmd308classifyintent01a2b3c4",
+              "name": "Classify intent",
+              "description": "The middle — labels the message with one or more intents (save/remind/recall/finance/place) so ONE automation can fan out to several branches, each self-gating on its flag. Hidden until a builder reveals it.",
+              "state": "hidden",
+              "info": {
+                "aiSummary": "Intent classifier (step 308.0): sets ctx.intent (multi-flag from save|remind|recall|finance|place) via the passport model with deterministic parsing; attachment presence (photo→finance, location→place) is a hard, model-free signal; empty/failed → ['save'] so a message is never lost. Downstream action nodes self-gate with servesIntent(ctx,'<intent>') and pass through unchanged when not their intent (never null). No classifier present ⇒ ctx.intent absent ⇒ nodes act unconditionally (the simple capture→fan-out starter is unaffected). This is how v3 is ONE automation doing everything, incl. compound messages — v1's classify→fan-out in v2's linear engine. Node-skill of the middle library."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "serves": [],
+              "lineage": "nsk-classify-intent-v1",
+              "function": {
+                "name": "classifyIntent",
+                "summary": "Labels the captured message with one or more intents so downstream branches can self-gate.",
+                "accepts": "The captured message text plus optional attachment signals (ctx.photoFileId, ctx.location).",
+                "returns": "intent: string[] — a subset of save|remind|recall|finance|place (never empty; defaults to ['save'])."
+              },
+              "run": "sequential",
+              "estDurationMs": 400,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              }
+            },
+            {
               "cuid": "cmd307recallmem01a2b3c4d5e6f7",
               "name": "Recall from memory",
               "description": "The middle — asks the vector memory (LightRAG) with the captured text and passes the ANSWER onward instead of the question.",
