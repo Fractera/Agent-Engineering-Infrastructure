@@ -23,7 +23,8 @@ const ALLOWED = new Set<string>(INTENTS);
 export async function classifyIntent(ctx: NodeCtx): Promise<NodeCtx> {
   const text = String(ctx.text ?? "").trim();
   const hasPhoto = Boolean(ctx.photoFileId);
-  const hasLocation = ctx.location != null;
+  // «Есть локация» = нормализованные координаты от входного узла (308.2), либо сырой `ctx.location`.
+  const hasLocation = (ctx.lat != null && ctx.lng != null) || ctx.location != null;
 
   // Сигнал вложения — детерминированный, БЕЗ модели: чек-фото без слов = расход; шаринг локации = место.
   const hardFlags = new Set<string>();

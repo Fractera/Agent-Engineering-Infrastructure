@@ -21,6 +21,12 @@ export type Message = {
   // иметь НЕСКОЛЬКО ботов (у каждого пользователя свой), поэтому без него векторная память не различит, от
   // кого пришёл факт. Толкает ЛИСТЕНЕР бота в payload запуска (`ctx.botId`) — узел ключей не читает (закон 3).
   botId?: string;
+  // ВЛОЖЕНИЯ (шаг 308.2) — не-текстовый вход. `photoFileId` — id самого большого PhotoSize (чек/фото;
+  // скачивается через Telegram getFile в узлах-навыках 308.3/308.5). `placeTitle` — имя места из шаринга
+  // локации (venue). Координаты живут в `lat`/`lng` выше. Их проносит ВХОДНОЙ узел канала; середина
+  // (классификатор, digitizeMoney, гео) читает их из контекста — не из ключей (закон 3).
+  photoFileId?: string;
+  placeTitle?: string;
 };
 
 // КАКОЙ КАНАЛ ЗАПУСТИЛ ЭТОТ ПРОГОН. Дверь запуска кладёт в input поле `source`; движок исполняет ВСЕ
@@ -59,7 +65,7 @@ export function deriveTitle(text: string): string {
 }
 
 /** Сообщение, каким его видит ВЫХОДНОЙ узел: середина уже проверила текст и вывела заголовок. */
-export function messageOf(ctx: Record<string, unknown>): Required<Pick<Message, "text" | "source" | "at" | "title">> & Pick<Message, "lat" | "lng" | "botId"> {
+export function messageOf(ctx: Record<string, unknown>): Required<Pick<Message, "text" | "source" | "at" | "title">> & Pick<Message, "lat" | "lng" | "botId" | "photoFileId" | "placeTitle"> {
   return {
     text: String(ctx.text ?? ""),
     source: String(ctx.source ?? "unknown"),
@@ -69,6 +75,9 @@ export function messageOf(ctx: Record<string, unknown>): Required<Pick<Message, 
     lng: numberField(ctx.lng),
     // Идентификатор бота, если приёмник его пронёс (см. Message.botId) — выход-память впишет его в провенанс.
     botId: ctx.botId ? String(ctx.botId).trim() || undefined : undefined,
+    // Вложения (308.2): выход-хранилище/карта читают их отсюда.
+    photoFileId: ctx.photoFileId ? String(ctx.photoFileId).trim() || undefined : undefined,
+    placeTitle: ctx.placeTitle ? String(ctx.placeTitle).trim() || undefined : undefined,
   };
 }
 
