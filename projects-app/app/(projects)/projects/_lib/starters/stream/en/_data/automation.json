@@ -454,6 +454,52 @@
               }
             },
             {
+              "cuid": "cmd308digitizemoney02b3c4d5",
+              "name": "Digitize money",
+              "description": "The middle — turns a receipt photo or words about a payment into a structured money record (kind, amount, categories, summary). Hidden until a builder reveals it.",
+              "state": "hidden",
+              "info": {
+                "aiSummary": "Money digitizer (step 308.3, v1 parity of parse-document): self-gates on the 'finance' intent; a receipt PHOTO → one vision call (askModelVision, Telegram getFile URL) extracts line items and their sum, WORDS → the same via askModel. Output is deterministic: strict JSON parsed and validated, categories forced through the fixed 10+10 preset (normalizeCategories drops hallucinated ids), amount null when unreadable. Three outcomes: own code (default); model unavailable/no key → soft degrade (financeUsed:false, never fabricates money); provider refusal (e.g. non-vision model) → throw. Node-skill of the middle library."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [
+                {
+                  "name": "TELEGRAM_BOT_TOKEN",
+                  "status": "missing",
+                  "comment": "Needed to fetch a receipt photo via getFile for the vision call."
+                }
+              ],
+              "serves": [],
+              "lineage": "nsk-digitize-money-v1",
+              "function": {
+                "name": "digitizeMoney",
+                "summary": "Turns a receipt photo or words about a payment into a structured money record.",
+                "accepts": "ctx.text and/or ctx.photoFileId, gated on the 'finance' intent.",
+                "returns": "finance: {kind, amount, categories[], summary, items[]} + financeUsed:true — OR financeUsed:false with financeError on soft degrade."
+              },
+              "run": "sequential",
+              "estDurationMs": 1500,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              }
+            },
+            {
               "cuid": "cmd307recallmem01a2b3c4d5e6f7",
               "name": "Recall from memory",
               "description": "The middle — asks the vector memory (LightRAG) with the captured text and passes the ANSWER onward instead of the question.",

@@ -39,6 +39,86 @@ export async function askModel(opts: AskOptions): Promise<string | null> {
     : askOpenAI(key, model, opts.system, user, maxTokens);
 }
 
+export type AskVisionOptions = { system: string; user: string; imageUrl: string; maxTokens?: number };
+
+/**
+ * Спросить модель ПО КАРТИНКЕ (шаг 308.3) — то же разрешение провайдера/модели/ключа, что у `askModel`,
+ * но пользовательское сообщение мультимодальное: текст + изображение по URL (для Telegram-чека это
+ * временный file-URL из `getFile`). Модель паспорта должна быть vision-способной; иначе провайдер вернёт
+ * ошибку → бросок (как обычный HTTP-отказ). Нет ключа/сети → `null` (мягкая деградация, как у `askModel`).
+ */
+export async function askModelVision(opts: AskVisionOptions): Promise<string | null> {
+  const url = opts.imageUrl.trim();
+  if (!url) return null;
+
+  const core = await readCore();
+  const provider = providerOf(core.passport.ai.provider);
+  const model = core.passport.ai.model.trim();
+  if (!model) return null;
+  const key = (process.env[provider.envKey] ?? "").trim();
+  if (!key) return null;
+
+  const maxTokens = opts.maxTokens ?? DEFAULT_MAX_TOKENS;
+  const user = opts.user.slice(0, MAX_INPUT_CHARS);
+  return provider.key === "anthropic"
+    ? askAnthropicVision(key, model, opts.system, user, url, maxTokens)
+    : askOpenAIVision(key, model, opts.system, user, url, maxTokens);
+}
+
+async function askOpenAIVision(key: string, model: string, system: string, user: string, imageUrl: string, maxTokens: number): Promise<string | null> {
+  let r: Response;
+  try {
+    r = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: [
+            { type: "text", text: user },
+            { type: "image_url", image_url: { url: imageUrl } },
+          ] },
+        ],
+        max_completion_tokens: maxTokens,
+      }),
+      signal: AbortSignal.timeout(60_000),
+    });
+  } catch {
+    return null;
+  }
+  if (!r.ok) throw new Error(`OpenAI vision chat/completions HTTP ${r.status}`);
+  const d = (await r.json().catch(() => null)) as { choices?: { message?: { content?: string } }[] } | null;
+  const text = d?.choices?.[0]?.message?.content?.trim() ?? "";
+  return text || null;
+}
+
+async function askAnthropicVision(key: string, model: string, system: string, user: string, imageUrl: string, maxTokens: number): Promise<string | null> {
+  let r: Response;
+  try {
+    r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify({
+        model,
+        max_tokens: maxTokens,
+        system,
+        messages: [{ role: "user", content: [
+          { type: "text", text: user },
+          { type: "image", source: { type: "url", url: imageUrl } },
+        ] }],
+      }),
+      signal: AbortSignal.timeout(60_000),
+    });
+  } catch {
+    return null;
+  }
+  if (!r.ok) throw new Error(`Anthropic vision messages HTTP ${r.status}`);
+  const d = (await r.json().catch(() => null)) as { content?: { type?: string; text?: string }[] } | null;
+  const text = (d?.content ?? []).filter((b) => b.type === "text").map((b) => b.text ?? "").join("").trim();
+  return text || null;
+}
+
 async function askOpenAI(key: string, model: string, system: string, user: string, maxTokens: number): Promise<string | null> {
   let r: Response;
   try {
