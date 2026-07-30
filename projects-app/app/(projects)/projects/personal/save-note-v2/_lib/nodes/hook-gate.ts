@@ -14,7 +14,7 @@
 import type { NodeCtx } from "../executor";
 import { matchHook } from "../message";
 import { readCore } from "../core-io";
-import { allNodes } from "../_data/automation.schema";
+import { allNodes } from "../../_data/automation.schema";
 
 export async function hookGate(ctx: NodeCtx): Promise<NodeCtx | null> {
   const text = String(ctx.text ?? "").trim();
