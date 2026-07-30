@@ -60,3 +60,6 @@ npm-debug.log*
 # App slot — TRANSIENT: cloned on demand at dev/deploy, never committed (pivot 2026-06-16)
 /app/*
 !/app/.gitkeep
+
+# runtime bot registry of the automations listener (bot tokens — written by the connect modal, never committed)
+services/automations-listener/registry.json
