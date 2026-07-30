@@ -620,6 +620,46 @@
               "serves": []
             },
             {
+              "cuid": "cmd308askaddress03c4d5e6",
+              "name": "Ask address",
+              "description": "The middle — for a 'place' with no coordinates, honestly asks the user to share the location or send an address (the device has no auto-geolocation). Hidden until revealed.",
+              "state": "hidden",
+              "info": {
+                "aiSummary": "Address request (step 308.4, v1 parity): self-gates on the 'place' intent. Coordinates present (user shared a point/venue → carried in lat/lng by the input node) → stays silent ({}), deliverMap places the marker. No coordinates → needsAddress:true and a 10-language question in text so the reply node asks the user (same pattern as the calendar 'when?'). Deterministic, no model, never fabricates a point. Node-skill of the middle library."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "serves": [],
+              "lineage": "nsk-ask-address-v1",
+              "function": {
+                "name": "askAddress",
+                "summary": "For a place without coordinates, asks the user to share the location or send an address.",
+                "accepts": "ctx.lat/ctx.lng (optional) gated on the 'place' intent.",
+                "returns": "{} when coordinates are present; needsAddress:true + a question in text when they are not."
+              },
+              "run": "sequential",
+              "estDurationMs": 20,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              }
+            },
+            {
               "cuid": "cmd307hookgate04d5e6f7a8b9c0",
               "name": "Hook gate",
               "description": "The middle — self-gates the run on this automation's trigger phrase so several automations can share one chat without an N-way router.",

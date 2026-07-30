@@ -21,6 +21,7 @@ import { digitizeMoney } from "./digitize-money";
 import { recallFromMemory } from "./recall-from-memory";
 import { aiTransform } from "./ai-transform";
 import { parseDate } from "./parse-date";
+import { askAddress } from "./ask-address";
 import { hookGate } from "./hook-gate";
 import { ifSuccess } from "./if-success";
 import { ifFailure } from "./if-failure";
@@ -54,6 +55,7 @@ export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   recallFromMemory,
   aiTransform,
   parseDate,
+  askAddress,
   hookGate,
   ifSuccess,
   ifFailure,
