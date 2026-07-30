@@ -10,7 +10,7 @@ import type { NodeCtx } from "../executor";
 import { askModel } from "../ai";
 import { readCore } from "../core-io";
 import { assistantConfigOf } from "../components/conversation/config";
-import { loadChat, pushMessage } from "../components/conversation/state";
+import { loadChat, pushMessage, setLang } from "../components/conversation/state";
 import { composeReply } from "./compose-reply";
 
 /** Компактный «что сделал прогон» для модели — из структурного результата веток. */
@@ -63,11 +63,17 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   // дефолта: `NEXT_PUBLIC_DEFAULT_LOCALE` на сервере может быть не задан (=en), и русский текст получал бы
   // английский ответ — ровно этот баг поймал владелец. Полный флоу переговоров о языке — отдельный под-шаг.
   const detectLang = (s: string): string => (/[Ѐ-ӿ]/.test(s) ? "ru" : "");
-  const lang =
+  const fixed = cfg.languageMode === "fixed" && cfg.fixedLanguage ? cfg.fixedLanguage : "";
+  let lang =
     state.lang ||
-    (cfg.languageMode === "fixed" && cfg.fixedLanguage) ||
+    fixed ||
     detectLang(incoming) ||
     String(ctx.lang ?? process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? "en").toLowerCase().slice(0, 2);
+
+  // ПЕРСИСТ ЯЗЫКА ПЕРВОГО КОНТАКТА (309.3): язык в чате ещё не зафиксирован и режим не «фикс» → запоминаем
+  // определённый сейчас как выбор чата (дефолт — стартовая догадка, дальше живёт персистентно). Смену языка
+  // ниже разрешает сам пользователь через тег [[lang:xx]], который ставит МОДЕЛЬ (не список фраз в коде).
+  if (chatId && !state.lang && !fixed) { await setLang(chatId, lang); state.lang = lang; }
 
   // Представление возможностей (/start, «что ты умеешь») — детерминированный список надёжнее модели.
   if (ctx.showHelp === true && cfg.revealCapabilities) {
@@ -94,14 +100,23 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   const system =
     `${cfg.instruction}\n\nReply ONLY in language "${lang}". Keep it to one short, warm message. ` +
     (qaHit ? `For a message like "${qaHit.q}" answer in this style: "${qaHit.a}". ` : "") +
-    `${task} No preamble, no quotes around your reply.`;
+    // Смена языка — понимает МОДЕЛЬ (не список фраз): просит человек говорить на другом языке → модель
+    // ставит В НАЧАЛЕ ответа тег [[lang:<iso>]] и дальше отвечает уже на новом; мы парсим тег детерминированно
+    // и запоминаем язык навсегда (309.3). Дефолт/детект — лишь стартовая догадка, выбор человека главнее.
+    `If the user asks to switch to another language, begin your reply with the tag [[lang:<iso 2-letter code>]] ` +
+    `and then reply in that new language. Otherwise do not output the tag. ${task} No preamble, no quotes around your reply.`;
 
   let reply: string | null;
   try { reply = await askModel({ system, user: `${history ? history + "\n" : ""}User: ${incoming}`, maxTokens: 300 }); }
   catch { return fallback(); }
   if (!reply || !reply.trim()) return fallback();
 
-  const out = reply.trim();
+  // Детерминированный разбор тега смены языка: [[lang:xx]] → запомнить язык навсегда, снять тег из ответа.
+  let out = reply.trim();
+  const tag = out.match(/^\s*\[\[lang:([a-z]{2})\]\]\s*/i);
+  if (tag && chatId) { await setLang(chatId, tag[1].toLowerCase()); out = out.slice(tag[0].length).trim(); }
+  else out = out.replace(/\[\[lang:[a-z]{2}\]\]/gi, "").trim(); // страховка: тег без chatId не оставляем в тексте
+
   if (chatId) await pushMessage(chatId, { role: "assistant", text: out, at: new Date().toISOString() }, cfg.lastN, cfg.ttlMinutes);
   return { reply: out };
 }
