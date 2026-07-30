@@ -85,13 +85,27 @@ export function Dashboard({ lang, mode = "admin" }: { lang: string; mode?: Dashb
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tables.length]);
 
+  // Открытые id таблиц из состояния выбора → шлём админ-врезке «строить таблицу N» (310): она рисует заявку
+  // ТОЛЬКО для открытой таблицы. Связь без прямого пропа (public не импортит admin) — через событие.
+  const announce = useCallback((s: { left?: string; right?: string; split?: boolean }) => {
+    const ids = [s.left ?? left].concat((s.split ?? split) ? [s.right ?? right] : []).filter(Boolean) as string[];
+    try { window.dispatchEvent(new CustomEvent("dashboard-select", { detail: { ids } })); } catch { /* no-op */ }
+  }, [left, right, split]);
+
   const persist = useCallback((next: { left?: string; right?: string; split?: boolean }) => {
     const state = { left, right, split, ...next };
     if (next.left !== undefined) setLeft(next.left);
     if (next.right !== undefined) setRight(next.right);
     if (next.split !== undefined) setSplit(next.split);
     try { localStorage.setItem(STORAGE, JSON.stringify(state)); } catch { /* not persisted */ }
-  }, [left, right, split, STORAGE]);
+    announce(state);
+  }, [left, right, split, STORAGE, announce]);
+
+  // Начальный анонс, когда выбор загрузился (открыта первая таблица) — чтобы врезка сразу знала открытую.
+  useEffect(() => {
+    if (!left) return;
+    try { window.dispatchEvent(new CustomEvent("dashboard-select", { detail: { ids: [left].concat(split ? [right] : []).filter(Boolean) } })); } catch { /* no-op */ }
+  }, [left, right, split]);
 
   if (!tables.length) return <p className="text-sm text-muted-foreground">{L.empty}</p>;
 

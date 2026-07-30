@@ -2,6 +2,7 @@
   "passport": {
     "systemInstructionName": "passport",
     "uuid": "d9a48267-c81a-40be-83ce-f0c5a607ccb6",
+    "publicUrl": "https://aifa.dev/en/personal/telegram-notes-v3",
     "title": "Telegram Notes v3",
     "description": "One personal-chat assistant: notes, reminders, recall, receipts/finance, places and photo/document storage — a classifier routes each message (or a compound one) into the right branches, with the full v1 synergy (vector/SQL, reverse markers, many-to-many attachments).",
     "type": "stream",
