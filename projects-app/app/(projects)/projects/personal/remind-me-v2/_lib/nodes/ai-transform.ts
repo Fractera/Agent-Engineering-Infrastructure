@@ -28,7 +28,7 @@ const noText = {
 };
 
 const DEFAULT_INSTRUCTION =
-  "Produce a concise but complete summary of the message, preserving key facts, names and dates. Reply with the summary text only.";
+  "Produce a concise but complete summary of the message, preserving key facts, names and dates. Write the summary in the SAME LANGUAGE the message is written in — never translate. Reply with the summary text only.";
 
 export async function aiTransform(ctx: NodeCtx): Promise<NodeCtx> {
   const original = String(ctx.text ?? "").replace(/\s+/g, " ").trim();
