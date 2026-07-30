@@ -9,6 +9,7 @@
 import type { NodeCtx } from "../executor";
 import { messageOf, servesAnyIntent, servesIntent } from "../message";
 import { addRow } from "../rows";
+import { crossLink } from "../components/links/cross-link";
 
 const CONTENT_INTENTS = ["save", "finance", "place"] as const;
 
@@ -49,9 +50,15 @@ export async function deliverDatabase(ctx: NodeCtx): Promise<{ databaseRowId: st
 
   // ЗАМЕТКА: пишем, если есть намерение `save` (или нет классификатора — простой стартер). Для чистого
   // finance/place заметку-дубль не плодим; для составного save+finance — заметка идёт ВМЕСТЕ с финансом.
+  let databaseRowId = "";
   if (servesIntent(ctx, "save")) {
     const nrow = await addRow("database", { name: m.title, text: m.text, source: m.source, date: m.at, storageIds, vectorIds });
-    return { databaseRowId: nrow.id, ...(financeRowId ? { financeRowId } : {}) };
+    databaseRowId = nrow.id;
   }
-  return { databaseRowId: "", ...(financeRowId ? { financeRowId } : {}) };
+
+  // Связь всех-ко-всем (309): связать db и finance со всеми соседями прогона И взаимно друг с другом.
+  if (databaseRowId) await crossLink(ctx, "database", databaseRowId, financeRowId ? [{ table: "finance", id: financeRowId }] : []);
+  if (financeRowId) await crossLink(ctx, "finance", financeRowId, databaseRowId ? [{ table: "database", id: databaseRowId }] : []);
+
+  return { databaseRowId, ...(financeRowId ? { financeRowId } : {}) };
 }

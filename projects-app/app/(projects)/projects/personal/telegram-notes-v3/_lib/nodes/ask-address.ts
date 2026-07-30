@@ -38,15 +38,17 @@ export async function askAddress(ctx: NodeCtx): Promise<NodeCtx> {
 
   // `placeOutcome` — структурный исход ветки «место» для композитора ответа (308); `skipMap` — строку карты
   // уже создал/связал этот узел, выход её не задвоит.
+  // `mapRowId` возвращается в контекст (309): поздние выходы (память/база) свяжут ЭТУ гео-строку со своими
+  // записями через `crossLink` (связь всех-ко-всем читает `ctx.mapRowId`).
   if (hasCoords) {
     const desc = text || placeTitle;
-    await addRow("map", {
+    const row = await addRow("map", {
       lat: ctx.lat, lng: ctx.lng, title: desc, place: placeTitle,
       status: desc ? "linked" : "pending", source: String(ctx.source ?? "unknown"), date: String(ctx.at ?? new Date().toISOString()),
     });
     return desc
-      ? { skipMap: true, placeOutcome: { kind: "saved", desc } }
-      : { skipMap: true, needDescription: true, placeOutcome: { kind: "need-description", ask: `${gotPoint.ru}\n\n${gotPoint.en}` } };
+      ? { skipMap: true, mapRowId: row.id, placeOutcome: { kind: "saved", desc } }
+      : { skipMap: true, mapRowId: row.id, needDescription: true, placeOutcome: { kind: "need-description", ask: `${gotPoint.ru}\n\n${gotPoint.en}` } };
   }
 
   // Координат в этом сообщении нет. Если это описание — привязать к последней PENDING-метке (точка пришла
@@ -56,7 +58,7 @@ export async function askAddress(ctx: NodeCtx): Promise<NodeCtx> {
     const pending = rows.find((r) => r.status === "pending" && !String(r.title ?? "").trim());
     if (pending) {
       await updateRow("map", pending.id, { title: text, place: text, status: "linked" });
-      return { skipMap: true, placeOutcome: { kind: "saved", desc: text } };
+      return { skipMap: true, mapRowId: pending.id, placeOutcome: { kind: "saved", desc: text } };
     }
   }
 

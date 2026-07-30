@@ -13,8 +13,9 @@
 import type { NodeCtx } from "../executor";
 import { messageOf, servesIntent } from "../message";
 import { addRow } from "../rows";
+import { crossLink } from "../components/links/cross-link";
 
-export async function deliverMap(ctx: NodeCtx): Promise<{ mapDelivery: string }> {
+export async function deliverMap(ctx: NodeCtx): Promise<{ mapDelivery: string; mapRowId?: string }> {
   if (!servesIntent(ctx, "place")) return { mapDelivery: "skipped: not a place intent" };
   // Гео-строку уже создал/связал `askAddress` (геометка v1: создание и связывание в одном месте, любой
   // порядок) — тогда выход не задваивает строку. skipMap ставит askAddress.
@@ -24,5 +25,6 @@ export async function deliverMap(ctx: NodeCtx): Promise<{ mapDelivery: string }>
     return { mapDelivery: "skipped: the message carries no lat/lng — this channel captured no coordinates" };
   }
   const row = await addRow("map", { date: m.at, title: m.placeTitle || m.title, place: m.placeTitle ?? "", source: m.source, lat: m.lat, lng: m.lng });
-  return { mapDelivery: `marker ${row.id} at ${m.lat},${m.lng}` };
+  await crossLink(ctx, "map", row.id); // связь всех-ко-всем (309)
+  return { mapDelivery: `marker ${row.id} at ${m.lat},${m.lng}`, mapRowId: row.id };
 }

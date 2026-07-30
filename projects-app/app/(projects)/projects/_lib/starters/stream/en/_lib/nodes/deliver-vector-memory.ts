@@ -18,6 +18,7 @@ import type { NodeCtx } from "../executor";
 import { rememberFact } from "../memory";
 import { messageOf, servesAnyIntent } from "../message";
 import { addRow } from "../rows";
+import { crossLink } from "../components/links/cross-link";
 
 const CONTENT_INTENTS = ["save", "finance", "place"] as const;
 
@@ -47,5 +48,6 @@ export async function deliverVectorMemory(ctx: NodeCtx): Promise<{ vectorMemoryD
     return { vectorMemoryDelivery: "skipped: the vector-memory service (LightRAG) is unreachable on this server" };
   }
   const row = await addRow("vector-memory", { name: m.title, content: fullText, storageIds: fileKeys, source: m.source, trackId }, recordId);
+  await crossLink(ctx, "vector-memory", row.id); // связь всех-ко-всем (309): вектор ↔ объекты этого прогона
   return { vectorMemoryDelivery: `remembered ${trackId}`, vectorRowId: row.id };
 }
