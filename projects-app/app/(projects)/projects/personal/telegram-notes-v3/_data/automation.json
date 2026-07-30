@@ -4,7 +4,7 @@
     "uuid": "d9a48267-c81a-40be-83ce-f0c5a607ccb6",
     "publicUrl": "https://aifa.dev/en/personal/telegram-notes-v3",
     "title": "Telegram Notes v3",
-    "description": "One personal-chat assistant: notes, reminders, recall, receipts/finance, places and photo/document storage — a classifier routes each message (or a compound one) into the right branches, with the full v1 synergy (vector/SQL, reverse markers, many-to-many attachments).",
+    "description": "A personal-chat assistant that captures and organizes everything you tell it: notes, reminders, recall, receipts and finances, places, and photo/document storage. A classifier routes each message (or a compound one) into the right branches, with duplicate control, a personal glossary of aliases, custom expense dimensions, approximate spending summaries, and session-aware conversation — the full v1 synergy (vector/SQL memory, reverse markers, many-to-many attachments).",
     "type": "stream",
     "lifecycle": "real-project",
     "ai": {
@@ -21,11 +21,15 @@
       "aiSummary": "Telegram Notes v3 (step 308) — ONE automation doing everything v1 did, on the v2 linear engine. classifyIntent sets a multi-flag intent; every branch node self-gates (servesIntent) and passes through when not its intent, so save/remind/recall/finance/place coexist and a compound message fans into several. Synergy: vector memory gets the full text + reverse marker [mem#id] + attachment descriptions, DB gets the summary, finance goes to its own ledger, photos/places link many-to-many to the burst's records in any order."
     },
     "howItWorks": [
-      "A message arrives from the owner's personal Telegram chat (text, a voice transcript, a receipt photo, or a shared location).",
-      "classifyIntent labels it with one or more intents (save, remind, recall, finance, place); a compound message carries several.",
-      "Each branch acts only for its intent and passes through otherwise: aiTransform summarizes a note, parseDate reads a reminder date, digitizeMoney reads a receipt, askAddress handles a place, recallFromMemory answers a question.",
-      "storeAttachment registers any photo; linkAttachments bonds photos/places to every record of the burst in any order.",
-      "The full original text plus a reverse marker and the photo descriptions go to vector memory; the summary and finance record go to the tables; the answer or confirmation is sent back to the chat."
+      "Input arrives from the owner’s personal Telegram chat or the control panel — text, a voice transcript, a receipt photo, or a shared location.",
+      "classifyIntent labels the message with one or more intents (save, remind, recall, finance, place, glossary, dimension), reading the whole current session for context; a compound message carries several.",
+      "The owner’s glossary of aliases is injected into every model call, so personal shorthand — a store name, an abbreviation — is understood everywhere.",
+      "Each middle branch acts only for its intent and passes through otherwise: aiTransform summarizes a note, parseDate reads a reminder date, digitizeMoney reads a receipt, askAddress handles a place, defineGlossary records an alias, defineDimension adds a spending dimension, recallFromMemory answers a question.",
+      "Before anything is written, dedupeGuard checks for a likely duplicate and, if found, holds the record and asks the owner to confirm rather than double-writing.",
+      "dimensionTag tags a spend with the owner’s custom dimensions (for example home/work), inferring the value from the words or asking which one it is.",
+      "storeAttachment registers any photo and linkAttachments bonds photos and places to every record of the burst in any order; each store row carries links to its neighbours both ways.",
+      "Outputs fan out: the summary and finance record go to the dashboard tables, the full text and photo descriptions to vector memory, a reminder to the calendar, a place to the map, and the answer or confirmation back to the chat.",
+      "Money questions are answered with approximate, period-aware summaries computed from the records — never invented; strict bookkeeping is explicitly out of scope and stated honestly."
     ]
   },
   "graph": {
@@ -2394,72 +2398,188 @@
               "columns": [
                 {
                   "key": "date",
-                  "label": { "en": "Date", "es": "Fecha", "fr": "Date", "it": "Data", "ru": "Дата", "de": "Datum", "pt": "Data", "pl": "Data", "tr": "Tarih", "nl": "Datum" },
+                  "label": {
+                    "en": "Date",
+                    "es": "Fecha",
+                    "fr": "Date",
+                    "it": "Data",
+                    "ru": "Дата",
+                    "de": "Datum",
+                    "pt": "Data",
+                    "pl": "Data",
+                    "tr": "Tarih",
+                    "nl": "Datum"
+                  },
                   "type": "date",
                   "source": "date",
                   "defaultVisible": true
                 },
                 {
                   "key": "name",
-                  "label": { "en": "Item", "es": "Concepto", "fr": "Libellé", "it": "Voce", "ru": "Назначение", "de": "Posten", "pt": "Item", "pl": "Pozycja", "tr": "Kalem", "nl": "Post" },
+                  "label": {
+                    "en": "Item",
+                    "es": "Concepto",
+                    "fr": "Libellé",
+                    "it": "Voce",
+                    "ru": "Назначение",
+                    "de": "Posten",
+                    "pt": "Item",
+                    "pl": "Pozycja",
+                    "tr": "Kalem",
+                    "nl": "Post"
+                  },
                   "type": "text",
                   "source": "name",
                   "defaultVisible": true
                 },
                 {
                   "key": "amount",
-                  "label": { "en": "Amount", "es": "Importe", "fr": "Montant", "it": "Importo", "ru": "Сумма", "de": "Betrag", "pt": "Valor", "pl": "Kwota", "tr": "Tutar", "nl": "Bedrag" },
+                  "label": {
+                    "en": "Amount",
+                    "es": "Importe",
+                    "fr": "Montant",
+                    "it": "Importo",
+                    "ru": "Сумма",
+                    "de": "Betrag",
+                    "pt": "Valor",
+                    "pl": "Kwota",
+                    "tr": "Tutar",
+                    "nl": "Bedrag"
+                  },
                   "type": "number",
                   "source": "amount",
                   "defaultVisible": true
                 },
                 {
                   "key": "currency",
-                  "label": { "en": "Currency", "es": "Moneda", "fr": "Devise", "it": "Valuta", "ru": "Валюта", "de": "Währung", "pt": "Moeda", "pl": "Waluta", "tr": "Para birimi", "nl": "Valuta" },
+                  "label": {
+                    "en": "Currency",
+                    "es": "Moneda",
+                    "fr": "Devise",
+                    "it": "Valuta",
+                    "ru": "Валюта",
+                    "de": "Währung",
+                    "pt": "Moeda",
+                    "pl": "Waluta",
+                    "tr": "Para birimi",
+                    "nl": "Valuta"
+                  },
                   "type": "text",
                   "source": "currency",
                   "defaultVisible": true
                 },
                 {
                   "key": "store",
-                  "label": { "en": "Store", "es": "Tienda", "fr": "Magasin", "it": "Negozio", "ru": "Магазин", "de": "Geschäft", "pt": "Loja", "pl": "Sklep", "tr": "Mağaza", "nl": "Winkel" },
+                  "label": {
+                    "en": "Store",
+                    "es": "Tienda",
+                    "fr": "Magasin",
+                    "it": "Negozio",
+                    "ru": "Магазин",
+                    "de": "Geschäft",
+                    "pt": "Loja",
+                    "pl": "Sklep",
+                    "tr": "Mağaza",
+                    "nl": "Winkel"
+                  },
                   "type": "text",
                   "source": "store",
                   "defaultVisible": true
                 },
                 {
                   "key": "kind",
-                  "label": { "en": "Kind", "es": "Tipo", "fr": "Type", "it": "Tipo", "ru": "Тип", "de": "Art", "pt": "Tipo", "pl": "Rodzaj", "tr": "Tür", "nl": "Soort" },
+                  "label": {
+                    "en": "Kind",
+                    "es": "Tipo",
+                    "fr": "Type",
+                    "it": "Tipo",
+                    "ru": "Тип",
+                    "de": "Art",
+                    "pt": "Tipo",
+                    "pl": "Rodzaj",
+                    "tr": "Tür",
+                    "nl": "Soort"
+                  },
                   "type": "badge",
                   "source": "kind",
                   "defaultVisible": true,
-                  "options": { "colorFrom": "green" }
+                  "options": {
+                    "colorFrom": "green"
+                  }
                 },
                 {
                   "key": "receipt",
-                  "label": { "en": "Receipt", "es": "Recibo", "fr": "Reçu", "it": "Ricevuta", "ru": "Чек", "de": "Beleg", "pt": "Recibo", "pl": "Paragon", "tr": "Fiş", "nl": "Bon" },
+                  "label": {
+                    "en": "Receipt",
+                    "es": "Recibo",
+                    "fr": "Reçu",
+                    "it": "Ricevuta",
+                    "ru": "Чек",
+                    "de": "Beleg",
+                    "pt": "Recibo",
+                    "pl": "Paragon",
+                    "tr": "Fiş",
+                    "nl": "Bon"
+                  },
                   "type": "image",
                   "source": "storageIds",
                   "defaultVisible": true
                 },
                 {
                   "key": "row-actions",
-                  "label": { "en": "", "es": "", "fr": "", "it": "", "ru": "", "de": "", "pt": "", "pl": "", "tr": "", "nl": "" },
+                  "label": {
+                    "en": "",
+                    "es": "",
+                    "fr": "",
+                    "it": "",
+                    "ru": "",
+                    "de": "",
+                    "pt": "",
+                    "pl": "",
+                    "tr": "",
+                    "nl": ""
+                  },
                   "type": "actions",
                   "source": "id",
                   "defaultVisible": true,
-                  "options": { "action": "detail" }
+                  "options": {
+                    "action": "detail"
+                  }
                 },
                 {
                   "key": "row-delete",
-                  "label": { "en": "", "es": "", "fr": "", "it": "", "ru": "", "de": "", "pt": "", "pl": "", "tr": "", "nl": "" },
+                  "label": {
+                    "en": "",
+                    "es": "",
+                    "fr": "",
+                    "it": "",
+                    "ru": "",
+                    "de": "",
+                    "pt": "",
+                    "pl": "",
+                    "tr": "",
+                    "nl": ""
+                  },
                   "type": "actions",
                   "source": "id",
                   "defaultVisible": true,
-                  "options": { "action": "delete" }
+                  "options": {
+                    "action": "delete"
+                  }
                 }
               ],
-              "title": { "en": "Finance", "es": "Finanzas", "fr": "Finances", "it": "Finanze", "ru": "Финансы", "de": "Finanzen", "pt": "Finanças", "pl": "Finanse", "tr": "Finans", "nl": "Financiën" },
+              "title": {
+                "en": "Finance",
+                "es": "Finanzas",
+                "fr": "Finances",
+                "it": "Finanze",
+                "ru": "Финансы",
+                "de": "Finanzen",
+                "pt": "Finanças",
+                "pl": "Finanse",
+                "tr": "Finans",
+                "nl": "Financiën"
+              },
               "pageSize": 20
             }
           }
@@ -2792,43 +2912,99 @@
       {
         "cuid": "cms7irvhjd98776152ccbcdd4",
         "number": 1,
-        "title": "Сохранить заметку",
-        "text": "Пишу боту в личный чат факт («запомни …»/просто фразу) — ИИ делает краткую сводку, полный текст (в т.ч. расшифровка голоса) идёт в векторную память, сводка — в таблицу, подтверждение в чат.",
+        "title": "Save a note",
+        "text": "Send the bot any fact in your personal chat (\"remember I parked on level 3\", or just a phrase). It writes a short summary, keeps the full text — including a voice transcript — in searchable memory, adds the summary to the notes table, and confirms in the chat.",
         "status": "in-use"
       },
       {
         "cuid": "cms7irvhk3db0071432a3309d",
         "number": 2,
-        "title": "Напоминание с датой",
-        "text": "«напомни …» с датой/временем в свободной форме → дата разбирается, ставится в календарь, в назначенный момент сообщение приходит в мой личный чат; без даты — честный вопрос «когда?».",
+        "title": "Reminder with a date",
+        "text": "Write \"remind me tomorrow at 3pm to call mom\" in plain language. The date is parsed, the reminder is placed on the calendar, and at the appointed moment the message arrives back in your chat. No date? It honestly asks \"when?\".",
         "status": "in-use"
       },
       {
         "cuid": "cms7irvhk73f8b1993401e7e8",
         "number": 3,
-        "title": "Спросить память",
-        "text": "«что я сохранял про …»/«вспомни …»/«сколько потратил на …» → ответ по векторной памяти в чат; ответ разрешает и связанные картинки (чеки) за счёт обратных маркеров.",
+        "title": "Recall from memory",
+        "text": "Ask about anything you saved (\"what did I note about the light bulbs?\", \"show the receipt from Mercadona\"). It answers from memory and returns the text plus any linked photo.",
         "status": "in-use"
       },
       {
         "cuid": "cms7irvhk423e189d6cf1b08f",
         "number": 4,
-        "title": "Оцифровать чек/трату",
-        "text": "Фото чека или слова о трате/доходе → сумма (позиции складываются), категория из фикс-пресета, запись в реестр финансов + картинка чека сохранена и связана; трата находима в памяти.",
+        "title": "Record a spend / digitize a receipt",
+        "text": "Send a receipt photo or say \"spent 5€ on a taxi\". It reads the amount, currency, store and line items and writes a finance record — visible in the Finance table inside the dashboard.",
         "status": "in-use"
       },
       {
         "cuid": "cms7irvhk2f6c06c08e096986",
         "number": 5,
-        "title": "Запомнить место",
-        "text": "«запомни это место …»: пришлю точку/venue → метка на карте, привязана к заметке; координат нет → автоматизация честно просит адрес/поделиться точкой (у устройства нет авто-геолокации).",
+        "title": "Save a place",
+        "text": "Share a location (paperclip → Location) and say what is there, in any order. It marks the place on the map and links it to your note.",
         "status": "in-use"
       },
       {
         "cuid": "cms7irvhl43c40a5b5b70fb2c",
         "number": 6,
-        "title": "Составное сообщение",
-        "text": "Одно сообщение, что И заметка-впечатление, И покупка (кафе: интерьер-фото + чек + текст) → создаются и заметка, и финанс-запись, ОБЕ несут оба фото; общее место пинит обе — связь всех-ко-всем в любом порядке.",
+        "title": "Compound message",
+        "text": "One message can carry several things at once — a note AND a spend AND a place. The classifier fans it out to every relevant branch and answers with one coherent reply.",
+        "status": "in-use"
+      },
+      {
+        "cuid": "c310uc07prod461jaz",
+        "number": 7,
+        "title": "Photo & document storage",
+        "text": "Every photo or document you send is stored as a first-class object with a short visual description and linked to the records of that moment — so a receipt photo is findable later by what is on it.",
+        "status": "in-use"
+      },
+      {
+        "cuid": "c310uc08prodjqr8ls",
+        "number": 8,
+        "title": "Personal glossary of aliases",
+        "text": "Teach it your own shorthand: \"remember that receipts SODO ADEJE are Mercadona\". From then on \"how much did I spend at Mercadona\" finds receipts stored under SODO ADEJE. Manage aliases by hand in the Glossary tab.",
+        "status": "in-use"
+      },
+      {
+        "cuid": "c310uc09prodz5uh0a",
+        "number": 9,
+        "title": "Session-aware dialogue",
+        "text": "It remembers the whole current conversation (a one-hour session), so a follow-up like \"and the one before that?\" is understood in context. After an hour of silence the session resets cleanly.",
+        "status": "in-use"
+      },
+      {
+        "cuid": "c310uc10prodfvt0tw",
+        "number": 10,
+        "title": "Duplicate control",
+        "text": "Say \"Dima gave me 10€\" in the morning and, forgetting, \"by the way Dima gave 10€ today\" in the evening — it will not silently record it twice. It asks \"this looks already recorded — record again or skip?\". The same guard catches a re-photographed receipt.",
+        "status": "in-use"
+      },
+      {
+        "cuid": "c310uc11prodo51hxf",
+        "number": 11,
+        "title": "Approximate spending summaries",
+        "text": "Ask \"how much did I spend on cherries this month\". It adds up the matching records for the period and answers with an approximate figure. This is NOT full bookkeeping — ask for a strict balance and it says so honestly instead of inventing numbers.",
+        "status": "in-use"
+      },
+      {
+        "cuid": "c310uc12prodp69bzi",
+        "number": 12,
+        "title": "Custom expense dimensions",
+        "text": "Say \"let us track home and work expenses separately\" and a new column appears on the finance table. From then on it tags each spend — inferring \"home\" or \"work\" from your words, or asking when it cannot tell.",
+        "status": "in-use"
+      },
+      {
+        "cuid": "c310uc13prodesbbdy",
+        "number": 13,
+        "title": "Your public page",
+        "text": "The automation has its own public address; ask \"where can I see this?\" and it replies with the link to your page.",
+        "status": "in-use"
+      },
+      {
+        "cuid": "c310uc14prodvotq0u",
+        "number": 14,
+        "title": "Works from panel and Telegram",
+        "text": "The same capabilities work from the built-in control panel and from your personal Telegram chat — ask a question in the panel and get the answer right there.",
         "status": "in-use"
       }
     ]
