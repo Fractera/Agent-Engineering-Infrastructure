@@ -44,3 +44,9 @@ export function normalizeCategories(kind: FinanceKind, ids: unknown): string[] {
 export function categoryMenu(kind: FinanceKind): string {
   return FINANCE_CATEGORIES.filter((c) => c.kind === kind).map((c) => `${c.id} (${c.en})`).join(", ");
 }
+
+/** Человеческая метка категории по id (ru/en, иначе en-фолбэк); неизвестный id — как есть (для показа). */
+export function categoryLabel(id: string, lang: "ru" | "en" = "en"): string {
+  const c = FINANCE_CATEGORIES.find((x) => x.id === id);
+  return c ? (lang === "ru" ? c.ru : c.en) : id;
+}

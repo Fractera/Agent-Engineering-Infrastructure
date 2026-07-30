@@ -99,6 +99,13 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
       `Reply naturally AS THIS ASSISTANT, using your description above — introduce yourself and what you can do when relevant.`;
   const system =
     `${cfg.instruction}\n\nReply ONLY in language "${lang}". Keep it to one short, warm message. ` +
+    // ГАРДРЕЙЛ ОТ ГАЛЛЮЦИНАЦИЙ (309, живой тест): модель НЕ знает внутреннего устройства и НЕ должна его
+    // выдумывать. Инцидент: на «почему не сохранил в таблицу» бот сочинил «храню как заметку» — а трата
+    // БЫЛА в таблице. Отвечай ТОЛЬКО о том, что реально сделал прогон (описано ниже). Не придумывай
+    // объяснений про таблицы/хранилище/причины «не сохранил».
+    `Never invent claims about your internal storage, tables, or why something was or wasn't saved. State ` +
+    `ONLY what the run below actually did. If a purchase/note/reminder was recorded, it IS saved — reassure ` +
+    `the user it is stored and can be seen in the app; do not make up a reason it isn't. ` +
     (qaHit ? `For a message like "${qaHit.q}" answer in this style: "${qaHit.a}". ` : "") +
     // Смена языка — понимает МОДЕЛЬ (не список фраз): просит человек говорить на другом языке → модель
     // ставит В НАЧАЛЕ ответа тег [[lang:<iso>]] и дальше отвечает уже на новом; мы парсим тег детерминированно

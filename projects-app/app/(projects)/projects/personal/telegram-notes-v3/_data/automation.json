@@ -2400,6 +2400,45 @@
       },
       {
         "systemInstructionName": "tab",
+        "name": "finance",
+        "description": "",
+        "presence": "expanded",
+        "info": {
+          "aiSummary": "The money ledger: expenses and incomes recorded by digitizeMoney from receipt photos or words (kind, amount, categories, summary, receipt image), written to the separate finance table by deliverDatabase. Separate from notes (v1 parity). View-only here; populated by the flow."
+        },
+        "status": "materialized",
+        "warnings": [],
+        "envKeys": [],
+        "entities": [
+          {
+            "cuid": "cfinms7r7lurujqf4",
+            "name": "Finance",
+            "description": "",
+            "info": {
+              "aiSummary": "The single money ledger of this automation: rows of the finance table."
+            },
+            "status": "materialized",
+            "warnings": [],
+            "envKeys": [],
+            "data": {
+              "title": {
+                "en": "Finance",
+                "es": "Finance",
+                "fr": "Finance",
+                "it": "Finance",
+                "ru": "Финансы",
+                "de": "Finance",
+                "pt": "Finance",
+                "pl": "Finance",
+                "tr": "Finance",
+                "nl": "Finance"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "systemInstructionName": "tab",
         "name": "storage",
         "description": "If you activate this node, you can save and use media files and documents related to this automation in your own local storage.",
         "presence": "collapsed",
