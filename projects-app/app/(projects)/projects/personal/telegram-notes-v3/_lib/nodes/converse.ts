@@ -58,8 +58,16 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   let state = chatId ? await loadChat(chatId) : { id: "", messages: [], lang: "", pending: null as unknown };
   if (chatId && incoming) state = await pushMessage(chatId, { role: "user", text: incoming, at: new Date().toISOString() }, cfg.lastN, cfg.ttlMinutes);
 
-  // Язык ответа: зафиксированный в чате (выбор пользователя) → фикс из настроек → дефолт платформы.
-  const lang = state.lang || (cfg.languageMode === "fixed" && cfg.fixedLanguage) || String(ctx.lang ?? process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? "en").toLowerCase().slice(0, 2);
+  // Язык ответа. Приоритет: зафиксированный в чате (выбор пользователя, персист) → фикс из настроек →
+  // ЯЗЫК САМОГО СООБЩЕНИЯ (кириллица → ru, иначе en) → дефолт платформы. Детект по сообщению важнее
+  // дефолта: `NEXT_PUBLIC_DEFAULT_LOCALE` на сервере может быть не задан (=en), и русский текст получал бы
+  // английский ответ — ровно этот баг поймал владелец. Полный флоу переговоров о языке — отдельный под-шаг.
+  const detectLang = (s: string): string => (/[Ѐ-ӿ]/.test(s) ? "ru" : "");
+  const lang =
+    state.lang ||
+    (cfg.languageMode === "fixed" && cfg.fixedLanguage) ||
+    detectLang(incoming) ||
+    String(ctx.lang ?? process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? "en").toLowerCase().slice(0, 2);
 
   // Представление возможностей (/start, «что ты умеешь») — детерминированный список надёжнее модели.
   if (ctx.showHelp === true && cfg.revealCapabilities) {
