@@ -45,6 +45,8 @@ const T = {
   remindWhen: (l: Lang) =>
     l === "ru" ? "⏰ Когда напомнить? Ответь датой или временем." : "⏰ When should I remind you? Reply with a date or time.",
   recall: (l: Lang, a: string) => (l === "ru" ? `🔎 ${a}` : `🔎 ${a}`),
+  glossary: (l: Lang, term: string, meaning: string) =>
+    l === "ru" ? `✅ Запомнил: ${term} = ${meaning}` : `✅ Got it: ${term} = ${meaning}`,
   placeSaved: (l: Lang, d: string) => (l === "ru" ? `📍 Место записано: ${d}` : `📍 Place saved: ${d}`),
   unknown: (l: Lang) => (l === "ru" ? "🤔 Не понял сообщение.\n\n" : "🤔 I didn't understand.\n\n"),
 };
@@ -89,6 +91,12 @@ export function composeReply(ctx: NodeCtx): NodeCtx {
     const p = ctx.placeOutcome as { kind?: string; desc?: string; ask?: string };
     if (p.kind === "saved") lines.push(T.placeSaved(L, String(p.desc ?? "")));
     else if (p.ask) lines.push(String(p.ask)); // «точку записал, что здесь?» / «пришли точку» — уже локализовано askAddress
+  }
+
+  // glossary — defineGlossary записал алиас и оставил `glossaryAdded` (term/meaning).
+  if (ctx.glossaryAdded && typeof ctx.glossaryAdded === "object") {
+    const g = ctx.glossaryAdded as { term?: string; meaning?: string };
+    if (g.term && g.meaning) lines.push(T.glossary(L, String(g.term), String(g.meaning)));
   }
 
   // recall — recallFromMemory оставил ответ в `recallAnswer`.

@@ -111,7 +111,10 @@ export async function recallFromMemory(ctx: NodeCtx): Promise<NodeCtx> {
     }).join("\n");
   }
 
-  const answer = await recallFacts(financeFacts ? `${question}\n\nKnown receipts:\n${financeFacts}` : question);
+  // Глоссарий алиасов (309) — в запрос памяти: «в Меркадоне» матчится на store="SODO ADEJE".
+  const glossary = String(ctx.glossary ?? "").trim();
+  const enriched = [glossary, question, financeFacts ? `Known receipts:\n${financeFacts}` : ""].filter(Boolean).join("\n\n");
+  const answer = await recallFacts(enriched || question);
 
   // Недоступно / пусто — честные исходы без маркеров. Реальный ответ → разрешаем маркеры в строки+картинки.
   if (answer === null || answer === "") {

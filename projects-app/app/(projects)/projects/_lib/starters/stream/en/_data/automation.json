@@ -495,6 +495,46 @@
               }
             },
             {
+              "cuid": "cmd309defineglossary02b3c4e6",
+              "name": "Define glossary alias",
+              "description": "The middle — when the owner says \"remember that receipts SODO ADEJE are Mercadona\", turns that definition into a stored alias (term → meaning). Hidden until a builder reveals it.",
+              "state": "hidden",
+              "info": {
+                "aiSummary": "Glossary definer (step 309, node-skill of the middle library): self-gates on the 'glossary' intent; a definition message → one askModel call extracts the pair {term, meaning} in a strict JSON shape, deterministically parsed and validated; a clean pair → addRow('glossary', source:'auto') and ctx.glossaryAdded={term,meaning} so converse confirms it in chat. Garbage from the model (no clear pair) → written nothing (the dictionary is never polluted), honest pass-through. Not a note (law 309: an alias definition is not a fact). The stored glossary is injected as a system preamble into every model call."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "serves": [],
+              "lineage": "nsk-define-glossary-v1",
+              "function": {
+                "name": "defineGlossary",
+                "summary": "Turns an owner's definition message into a stored glossary alias.",
+                "accepts": "ctx.text, gated on the 'glossary' intent.",
+                "returns": "glossaryAdded: {term, meaning} after writing a glossary row — OR nothing when no clear pair is found."
+              },
+              "run": "sequential",
+              "estDurationMs": 1200,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              }
+            },
+            {
               "cuid": "cmd308storeattach04d5e6f7",
               "name": "Store attachment",
               "description": "The middle — registers every incoming photo/document as a first-class object: downloads it, stores the bytes, gets a short vision description, writes a pending storage row. Hidden until revealed.",
@@ -2267,6 +2307,45 @@
                 "pl": "Finance",
                 "tr": "Finance",
                 "nl": "Finance"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "systemInstructionName": "tab",
+        "name": "glossary",
+        "description": "User's own dictionary of aliases and abbreviations: say \"remember that receipts SODO ADEJE are Mercadona\" and the assistant expands it everywhere. Add or delete aliases by hand here.",
+        "presence": "collapsed",
+        "info": {
+          "aiSummary": "The user glossary (step 309): rows of the glossary table {term, meaning, source}. Injected as a system preamble into every model call so 'how much did I spend at Mercadona' matches receipts stored as store=SODO ADEJE. Filled by hand here and automatically by defineGlossary from definition messages."
+        },
+        "status": "materialized",
+        "warnings": [],
+        "envKeys": [],
+        "entities": [
+          {
+            "cuid": "cglosms7r7luj8mm5h",
+            "name": "Glossary",
+            "description": "",
+            "info": {
+              "aiSummary": "The single alias dictionary of this automation: rows of the glossary table."
+            },
+            "status": "materialized",
+            "warnings": [],
+            "envKeys": [],
+            "data": {
+              "title": {
+                "en": "Glossary",
+                "es": "Glosario",
+                "fr": "Glossaire",
+                "it": "Glossario",
+                "ru": "Глоссарий",
+                "de": "Glossar",
+                "pt": "Glossário",
+                "pl": "Słownik",
+                "tr": "Sözlük",
+                "nl": "Woordenlijst"
               }
             }
           }

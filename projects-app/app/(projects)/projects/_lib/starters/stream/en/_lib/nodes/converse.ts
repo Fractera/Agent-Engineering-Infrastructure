@@ -28,6 +28,8 @@ function recordedSummary(ctx: NodeCtx): string {
     else if (p.kind === "need-description") bits.push("a location point was received but has no description — ask what is there");
     else if (p.kind === "need-address") bits.push("a place was mentioned but no coordinates — ask for the location or address");
   }
+  const g = ctx.glossaryAdded as { term?: string; meaning?: string } | undefined;
+  if (g && typeof g === "object" && g.term) bits.push(`saved a glossary alias: ${g.term} = ${g.meaning}`);
   return bits.join("; ");
 }
 
@@ -105,7 +107,10 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
       : `The user is CONVERSING (a greeting, a question about who you are, small talk, or a question ABOUT THIS ` +
         `CONVERSATION — what they asked earlier, whether you remember). You CAN SEE the recent dialogue above: ` +
         `use it to answer such questions truthfully and specifically. Do NOT say anything was "saved". Reply naturally as this assistant.`;
+  // Глоссарий алиасов — СИСТЕМНОЙ ПРЕАМБУЛОЙ (309): модель раскрывает сокращения владельца в ответах.
+  const glossaryPreamble = String(ctx.glossary ?? "").trim();
   const system =
+    (glossaryPreamble ? `${glossaryPreamble}\n\n` : "") +
     `${cfg.instruction}\n\nReply ONLY in language "${lang}". Keep it to one short, warm message. ` +
     // ГАРДРЕЙЛ ОТ ГАЛЛЮЦИНАЦИЙ (309, живой тест): модель НЕ знает внутреннего устройства и НЕ должна его
     // выдумывать. Инцидент: на «почему не сохранил в таблицу» бот сочинил «храню как заметку» — а трата

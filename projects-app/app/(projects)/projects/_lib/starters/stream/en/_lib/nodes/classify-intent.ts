@@ -16,9 +16,12 @@
 // Имя `classifyIntent` — публичный контракт, не переименовывать.
 import type { NodeCtx } from "../executor";
 import { askModel } from "../ai";
+import { readCore } from "../core-io";
 import { loadChat, formatDialog } from "../components/conversation/state";
+import { assistantConfigOf } from "../components/conversation/config";
+import { loadGlossary } from "../components/conversation/glossary";
 
-export const INTENTS = ["save", "remind", "recall", "finance", "place"] as const;
+export const INTENTS = ["save", "remind", "recall", "finance", "place", "glossary"] as const;
 const ALLOWED = new Set<string>(INTENTS);
 
 // Признак ВОПРОСА/ЗАПРОСА (не список фраз-ответов — грамматический маркер вопроса, лингвистика, а не
@@ -51,17 +54,22 @@ export async function classifyIntent(ctx: NodeCtx): Promise<NodeCtx> {
   // не судят в вакууме. Так «на какую сумму купил вишню» после чека понимается как ВОПРОС ПРО ЧЕК.
   const chatId = String(ctx.telegramChatId ?? "").trim();
   const state = chatId ? await loadChat(chatId) : { messages: [], lang: "" };
-  const recentDialog = formatDialog(state.messages);
+  // Окно = ВСЯ сессия (cfg.lastN, дефолт 50), не жёсткие 8; глоссарий алиасов — преамбулой для всех узлов.
+  let lastN = 50, glossary = "";
+  try { const cfg = assistantConfigOf((await readCore()).components); lastN = cfg.lastN; glossary = await loadGlossary(); }
+  catch { /* ядро/словарь недоступны — работаем с дефолтами */ }
+  const recentDialog = formatDialog(state.messages, lastN);
   const chatLang = state.lang || (/[Ѐ-ӿ]/.test(text) ? "ru" : "");
 
   // Нет текста, но есть вложение → чистый детерминированный исход (модель не нужна).
-  if (!text) return { intent: hardFlags.size ? [...hardFlags] : ["save"], recentDialog, chatLang };
+  if (!text) return { intent: hardFlags.size ? [...hardFlags] : ["save"], recentDialog, chatLang, glossary };
 
   const system =
     `You label the user's message with the DATA intents it carries, from this exact set: save (states a ` +
     `FACT to remember), remind (wants a time-based reminder), recall (a QUESTION or REQUEST to FIND/SHOW/` +
     `ANSWER FROM something already saved), finance (RECORDS a NEW money movement — a statement that money ` +
-    `was just spent or received), place (marks a LOCATION). \n\n` +
+    `was just spent or received), place (marks a LOCATION), glossary (DEFINES an ALIAS/abbreviation — ` +
+    `"remember that receipts SODO ADEJE are Mercadona", "такие чеки это Меркадона", "X значит Y"). \n\n` +
     `🔑 THE HARDEST DISTINCTION — RECORD vs QUESTION. If the message ASKS or REQUESTS about already-saved ` +
     `data it is recall, NEVER a new record — even if it contains money/purchase words in past tense. The ` +
     `question form (сколько / на какую сумму / покажи / что / где / когда / how much / show) DOMINATES the ` +
@@ -88,9 +96,9 @@ export async function classifyIntent(ctx: NodeCtx): Promise<NodeCtx> {
     raw = await askModel({ system, user, maxTokens: 24 });
   } catch {
     // модель отвергла запрос — не теряем сообщение, сохраняем как заметку (+ жёсткие флаги вложений)
-    return { intent: [...new Set(["save", ...hardFlags])], recentDialog, chatLang };
+    return { intent: [...new Set(["save", ...hardFlags])], recentDialog, chatLang, glossary };
   }
-  if (raw === null) return { intent: [...new Set(["save", ...hardFlags])], recentDialog, chatLang };
+  if (raw === null) return { intent: [...new Set(["save", ...hardFlags])], recentDialog, chatLang, glossary };
 
   // ДЕТЕРМИНИРОВАННЫЙ парс: только валидные токены словаря, дубликаты убраны, порядок словаря.
   const found = new Set<string>(hardFlags);
@@ -98,9 +106,10 @@ export async function classifyIntent(ctx: NodeCtx): Promise<NodeCtx> {
 
   // СТРАХОВКА ВОПРОСА: явный вопрос без нового вложения → recall, и убрать ошибочный save/finance, если
   // модель поставила их по глаголу («купил» в «на какую сумму купил вишню»). Вопрос не создаёт запись.
-  if (isQuestion && !hasPhoto) { found.add("recall"); found.delete("finance"); found.delete("save"); }
+  // Определение алиаса (glossary) не считается вопросом — его не перебиваем.
+  if (isQuestion && !hasPhoto && !found.has("glossary")) { found.add("recall"); found.delete("finance"); found.delete("save"); }
 
   const intent = INTENTS.filter((i) => found.has(i));
   // Пустой intent = РАЗГОВОР: НЕ форсим `save`. На него ответит МОДЕЛЬ в `converse`, а не ветки-данные.
-  return { intent, recentDialog, chatLang };
+  return { intent, recentDialog, chatLang, glossary };
 }
