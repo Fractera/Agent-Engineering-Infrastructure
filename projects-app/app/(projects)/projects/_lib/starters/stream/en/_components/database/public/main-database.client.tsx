@@ -5,7 +5,7 @@ import { Check, Copy } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { databaseStrings } from "../i18n";
-import { onRunCompleted } from "../../shared/run-events";
+import { onRunCompleted, onExternalRefresh } from "../../shared/run-events";
 
 // ПУБЛИЧНАЯ ПОЛОВИНА ЛОКАЛЬНОЙ БАЗЫ — таблица записей + поиск. Продуктовая поверхность (закон владельца):
 // логика таблицы живёт здесь, где её развивает агент по заявке. Добавление строки (модалка с обрезкой) —
@@ -75,6 +75,7 @@ export default function MainDatabaseClient({ lang, mode }: { lang: string; mode:
   useEffect(() => { load(""); }, [load]);
 
   useEffect(() => onRunCompleted(() => load(applied)), [load, applied]);
+  useEffect(() => onExternalRefresh(() => load(applied)), [load, applied]); // прогон из Telegram (сервер) — 308
 
   const runSearch = () => { const q = query.trim(); setApplied(q); load(q); };
 

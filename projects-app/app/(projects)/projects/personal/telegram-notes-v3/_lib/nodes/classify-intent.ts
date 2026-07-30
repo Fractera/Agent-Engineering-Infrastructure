@@ -26,10 +26,19 @@ export async function classifyIntent(ctx: NodeCtx): Promise<NodeCtx> {
   // «Есть локация» = нормализованные координаты от входного узла (308.2), либо сырой `ctx.location`.
   const hasLocation = (ctx.lat != null && ctx.lng != null) || ctx.location != null;
 
-  // Сигнал вложения — детерминированный, БЕЗ модели: чек-фото без слов = расход; шаринг локации = место.
+  // Сигналы-подсказки — детерминированные, БЕЗ модели, ДОПОЛНЯЮТ ответ модели (объединение), а не заменяют:
+  //   вложения — чек-фото = расход, шаринг локации = место (308.2);
+  //   валюта/сумма в тексте = finance (€ $ ₽ £ или «евро/руб/потратил/заплатил/стоит/spent/paid»);
+  //   маркер места = place («это место», «здесь/тут продают…», «here», «this place», «локация», «адрес»).
+  // Так частые однозначные формулировки не зависят от того, угадала ли их модель (урок живого теста 308).
   const hardFlags = new Set<string>();
   if (hasPhoto) hardFlags.add("finance");
   if (hasLocation) hardFlags.add("place");
+  // ВНИМАНИЕ: `\b` (граница слова) в JS работает только для ASCII — с кириллицей ломается, поэтому
+  // finance/place-слова матчим ПОДСТРОКОЙ (без `\b`); валютные символы — отдельным классом.
+  const low = text.toLowerCase();
+  if (/[€$₽£]/.test(text) || /(евро|рубл|долл|заплат|потрат|купил за|потратил|spent| paid |paid |cost )/i.test(low)) hardFlags.add("finance");
+  if (/(это место|здесь прода|тут прода|здесь мож|запомни (это )?место|тут есть|here they|here you|this place|this spot|локац|коордонат|адрес)/i.test(low)) hardFlags.add("place");
 
   // Нет текста, но есть вложение → чистый детерминированный исход (модель не нужна).
   if (!text) return { intent: hardFlags.size ? [...hardFlags] : ["save"] };
@@ -38,9 +47,11 @@ export async function classifyIntent(ctx: NodeCtx): Promise<NodeCtx> {
     `You label the user's message with one or MORE intents from this exact set: save (states a fact to ` +
     `remember), remind (wants a time-based reminder), recall (asks a question to find something saved, ` +
     `including "how much did I spend on X"), finance (records money spent or received — a receipt or an ` +
-    `amount), place (marks a location/place). A single message may carry several intents (e.g. a note AND ` +
-    `a purchase). Reply with ONLY the matching intent words, lowercase, separated by commas, nothing else. ` +
-    `If none clearly applies, reply save.`;
+    `amount, any currency), place (marks a LOCATION or a physical spot — a shop, a cafe, "remember this ` +
+    `place", "they sell tasty pies HERE", "good coffee here"). A single message may carry several intents ` +
+    `(e.g. a note about a place AND a purchase there). Examples: "remember they sell tasty pies here" → ` +
+    `save,place. "spent 10 euro on coffee" → finance. "remind me tomorrow to call" → remind. Reply with ` +
+    `ONLY the matching intent words, lowercase, comma-separated, nothing else. If none clearly applies, reply save.`;
 
   let raw: string | null;
   try {

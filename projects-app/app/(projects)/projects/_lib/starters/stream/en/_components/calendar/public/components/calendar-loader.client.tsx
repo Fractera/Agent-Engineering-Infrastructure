@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { groupByDate, shiftMonth, toCalRows, ymd, type CalRow } from "../../../../_lib/components/calendar";
 import { useCron } from "../../../shared/cron-context.client";
+import { onRunCompleted, onExternalRefresh } from "../../../shared/run-events";
 import type { EntryType } from "../../entries";
 import type { Integration } from "../../integrations";
 import { calendarStrings } from "../../i18n";
@@ -43,21 +44,24 @@ export default function CalendarLoader({
   const [selected, setSelected] = useState<string>(ymd(now.getFullYear(), now.getMonth(), now.getDate()));
   const [filter, setFilter] = useState<string>("all");
 
-  useEffect(() => {
-    let alive = true;
-    void (async () => {
-      try {
-        const apiBase = location.pathname.replace(/\/+$/, "") + "/api";
-        const r = await fetch(`${apiBase}/rows?table=${encodeURIComponent(table)}`, { cache: "no-store" });
-        if (!r.ok) throw new Error(String(r.status));
-        const d = (await r.json()) as { rows: Record<string, unknown>[] };
-        if (alive) setRows(toCalRows(d.rows ?? []));
-      } catch {
-        if (alive) setFailed(true);
-      }
-    })();
-    return () => { alive = false; };
+  const loadRows = useCallback(async () => {
+    try {
+      const apiBase = location.pathname.replace(/\/+$/, "") + "/api";
+      const r = await fetch(`${apiBase}/rows?table=${encodeURIComponent(table)}`, { cache: "no-store" });
+      if (!r.ok) throw new Error(String(r.status));
+      const d = (await r.json()) as { rows: Record<string, unknown>[] };
+      setRows(toCalRows(d.rows ?? []));
+      setFailed(false);
+    } catch {
+      setFailed(true);
+    }
   }, [table]);
+
+  useEffect(() => { void loadRows(); }, [loadRows]);
+  // Прогон из браузера (пульт) и ИЗВНЕ (Telegram/сервер, 308): события календаря появляются без
+  // ручной перезагрузки — тем же общим механизмом, что у складов заметок и объектов.
+  useEffect(() => onRunCompleted(() => void loadRows()), [loadRows]);
+  useEffect(() => onExternalRefresh(() => void loadRows()), [loadRows]);
 
   // ПРИСУТСТВИЕ КЛЮЧЕЙ — один запрос на весь календарь, чтобы иконки строк знали, какой канал ГОТОВ
   // работать, а какой только объявлен (шаг 293). Не смогли спросить — считаем ключи незаданными:

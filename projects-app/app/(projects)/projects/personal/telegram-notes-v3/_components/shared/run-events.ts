@@ -21,3 +21,23 @@ export function onRunCompleted(onRefresh: () => void): () => void {
   window.addEventListener(EVENT, onRefresh);
   return () => window.removeEventListener(EVENT, onRefresh);
 }
+
+// ВНЕШНИЙ ПРОГОН (308, требование владельца): `onRunCompleted` ловит прогоны, запущенные В БРАУЗЕРЕ (пульт).
+// Но автоматизация чаще срабатывает ИЗВНЕ — из Telegram через слушателя, на сервере: браузер о таком
+// прогоне не знает, и его новые строки (заметка, чек, метка, событие) появлялись бы только после ручной
+// перезагрузки. Поэтому секции дополнительно обновляют серверные данные, когда прогон МОГ случиться вне
+// браузера: при возврате фокуса/видимости вкладки и мягким тиком (только пока вкладка видима — скрытая
+// вкладка сервер не дёргает). Это не «поллинг ради поллинга»: обновление привязано к моменту, когда
+// владелец смотрит на страницу.
+/** Подписка на «данные могли устареть от внешнего прогона»: фокус + видимость вкладки + мягкий тик. */
+export function onExternalRefresh(onRefresh: () => void, everyMs = 20000): () => void {
+  const whenVisible = () => { if (document.visibilityState === "visible") onRefresh(); };
+  window.addEventListener("focus", onRefresh);
+  document.addEventListener("visibilitychange", whenVisible);
+  const id = window.setInterval(whenVisible, Math.max(5000, everyMs));
+  return () => {
+    window.removeEventListener("focus", onRefresh);
+    document.removeEventListener("visibilitychange", whenVisible);
+    window.clearInterval(id);
+  };
+}

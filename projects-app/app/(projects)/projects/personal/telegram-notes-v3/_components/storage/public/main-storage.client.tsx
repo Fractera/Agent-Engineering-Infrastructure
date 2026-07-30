@@ -5,7 +5,7 @@ import { Check, Copy } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { storageStrings } from "../i18n";
-import { onRunCompleted } from "../../shared/run-events";
+import { onRunCompleted, onExternalRefresh } from "../../shared/run-events";
 
 // Ячейка идентификатора: длинный id ужимается до первых пяти символов + «…», рядом — иконка копирования
 // полного значения (буфер обмена). Полный id всегда доступен в `title` при наведении.
@@ -67,6 +67,7 @@ export default function MainStorageClient({ lang, mode }: { lang: string; mode: 
   useEffect(() => { load(""); }, [load]);
 
   useEffect(() => onRunCompleted(() => load(applied)), [load, applied]);
+  useEffect(() => onExternalRefresh(() => load(applied)), [load, applied]); // прогон из Telegram (сервер) — 308
 
   const runSearch = () => { const q = query.trim(); setApplied(q); load(q); };
 
