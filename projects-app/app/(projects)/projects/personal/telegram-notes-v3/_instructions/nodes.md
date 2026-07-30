@@ -89,3 +89,42 @@ router, decides whose run it is.
 
 Never add a middle "router" node or an N-way switch. Fundamentally different tasks in one chat → propose a
 group of automations (passport.md, the warning duty), one `hookGate` phrase each.
+
+## The conversational boundary is the MODEL's job, not code (step 309)
+
+There are TWO kinds of middle work, and they obey OPPOSITE laws:
+
+- **Data transforms** (parseDate, digitizeMoney, row work) — compute over data. Here the law "work
+  maximally WITHOUT AI" holds: deterministic, testable, cheap. The model is used only when the task is
+  inherently linguistic (reading a free-text date, itemizing a receipt), and its output is validated
+  deterministically.
+- **The conversational boundary** — talking to the human (greeting, "who are you", small talk, confirming
+  what a run did) — is BY NATURE the model's job. Comfortable dialogue can NOT be a function. This is the
+  `converse` helper (role `conversation`), driven by the behavior instruction of the **Assistant tab** plus
+  the per-chat dialogue buffer plus Q&A examples. `composeReply` is its deterministic FALLBACK when no model.
+
+**Never enumerate conversational phrases in a node** (a regex list of "кто ты"/"привет"/…) to decide the
+reply — that is writing a function where an instruction belongs. Such messages are CONVERSATION: the
+classifier returns an empty intent, and the model answers from its instruction (which carries the
+assistant's identity and capabilities). Only literal service commands (`/start`, `/help`) are matched in code.
+
+**DATA vs SPEECH when classifying.** A message that STATES data (a fact, an amount, a place, a reminder)
+carries a data intent. A QUESTION or request ABOUT already-saved data ("how much did I spend on X", "show
+the receipt") is `recall`, never a new record. Money words alone do not mean `finance` — the intent (record
+vs ask) does. The model makes this judgement; do not force it with word lists.
+
+## Every store links to every other, both ways (step 309 — crossLink)
+
+Each row of EVERY store (database, finance, vector-memory, storage, map) carries `links:[{table,id}]` to ALL
+related rows in the other stores, MUTUALLY. `crossLink` is called by each output after it creates its row: it
+writes its siblings into its own row and appends itself into theirs; a later output patches earlier ones, so
+the full bidirectional graph converges regardless of order. From any row any relation is retrievable — a
+receipt object resolves back to its finance row; a note to its vector doc and its file. "No link" is not a
+state that can exist.
+
+## Public access is a role list on the passport (step 309.A)
+
+`passport.access: Role[]` decides who sees the REAL automation on the PUBLIC app (3000): empty = fully public;
+a non-empty list means only holders of those roles get the real body, everyone else a teaser. The Projects
+layer (3003) stays architect-only — this gates the PUBLIC surface only. Edited from the Assistant tab
+("Public access"), written to `passport.access` via `api/patch`.

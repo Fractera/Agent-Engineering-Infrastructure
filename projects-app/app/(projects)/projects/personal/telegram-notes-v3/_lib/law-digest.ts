@@ -87,6 +87,10 @@ export function lawDigest(core?: Automation): LawDigest {
       `an object names its law in systemInstructionName; the text lives in _instructions/<name>.md (${SYSTEM_INSTRUCTION_NAMES.length} of them) — read it by name, never copy it into the core`,
       "a middle need is met one of THREE ways: (a) a skill from middleLibrary, (b) own code in `_lib/nodes/`, (c) capability:needed plus a warning to the owner — «cannot be done» does not exist as an outcome",
       "an incoming requirement (send-task box, rawRequest, any dev-request field) lands on the USE CASES first: append or rework the case(s) it implies via api/patch, THEN change the graph — nodes serve cases, never the other way around (_instructions/useCases.md)",
+      "the CONVERSATIONAL boundary (talking to the human) is the MODEL's job by the behavior instruction (the Assistant tab), NOT deterministic code: never enumerate phrases in a node to answer greetings/identity/small-talk — those are conversation (empty intent), the model replies. The «work without AI» law is for data-transforms, not for speech (step 309, _instructions/replies.md)",
+      "DATA vs SPEECH classify: a message that STATES data (a fact/amount/place/reminder) carries a data intent; a QUESTION or request ABOUT saved data (how much did I spend, show the receipt) is recall, never a new record; a greeting/identity/small-talk is empty intent (the model converses). Money words alone are not finance — the intent (record vs ask) is",
+      "EVERY database row of EVERY store carries `links:[{table,id}]` to ALL related rows in the other stores, BOTH ways (crossLink): from any row any relation is retrievable — a receipt object → its finance row, a note → its vector doc and file. «No link» is not a state that exists (step 309)",
+      "PUBLIC access is `passport.access: Role[]` (empty = fully public): on the public app the real automation shows to holders of those roles, a teaser otherwise. The Projects layer stays architect-only; this gates the PUBLIC surface only (step 309.A)",
     ],
   };
 }
