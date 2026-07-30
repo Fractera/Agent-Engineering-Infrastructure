@@ -31,15 +31,11 @@ export async function classifyIntent(ctx: NodeCtx): Promise<NodeCtx> {
   //   валюта/сумма в тексте = finance (€ $ ₽ £ или «евро/руб/потратил/заплатил/стоит/spent/paid»);
   //   маркер места = place («это место», «здесь/тут продают…», «here», «this place», «локация», «адрес»).
   // Так частые однозначные формулировки не зависят от того, угадала ли их модель (урок живого теста 308).
-  // ПРЕДСТАВЛЕНИЕ ВОЗМОЖНОСТЕЙ (308.C + 309): /start, /help, «что ты умеешь», а также вопросы об
-  // ИДЕНТИЧНОСТИ/НАЗНАЧЕНИИ («кто ты», «зачем ты нужен», «для чего ты») → список умений, НЕ «сохранено».
-  if (
-    /^\/(start|help)\b/i.test(text) ||
-    /(что ты умеешь|что умеешь|твои возможност|список команд|what can you do|help me)/i.test(text) ||
-    /(кто ты|кто ты такой|ты кто|зачем ты|зачем нужен|зачем ты нужен|для чего ты|что ты за|who are you|what are you|why do i need you|what do you do)/i.test(text)
-  ) {
-    return { intent: [], showHelp: true };
-  }
+  // Явные СЛУЖЕБНЫЕ КОМАНДЫ (это команды Telegram, а не естественная речь) — быстрый детерминированный
+  // показ возможностей. ВСЁ ОСТАЛЬНОЕ разговорное («кто ты», «зачем нужен», приветствие, болтовня) НЕ
+  // перечисляем регекспами — на него отвечает МОДЕЛЬ в узле `converse` по инструкции поведения (там
+  // записана идентичность и возможности). Перечислять фразы = писать функцию вместо инструкции ИИ.
+  if (/^\/(start|help)\b/i.test(text)) return { intent: [], showHelp: true };
 
   const hardFlags = new Set<string>();
   if (hasPhoto) hardFlags.add("finance");
@@ -54,14 +50,17 @@ export async function classifyIntent(ctx: NodeCtx): Promise<NodeCtx> {
   if (!text) return { intent: hardFlags.size ? [...hardFlags] : ["save"] };
 
   const system =
-    `You label the user's message with one or MORE intents from this exact set: save (states a fact to ` +
-    `remember), remind (wants a time-based reminder), recall (asks a question to find something saved, ` +
-    `including "how much did I spend on X"), finance (records money spent or received — a receipt or an ` +
-    `amount, any currency), place (marks a LOCATION or a physical spot — a shop, a cafe, "remember this ` +
-    `place", "they sell tasty pies HERE", "good coffee here"). A single message may carry several intents ` +
-    `(e.g. a note about a place AND a purchase there). Examples: "remember they sell tasty pies here" → ` +
-    `save,place. "spent 10 euro on coffee" → finance. "remind me tomorrow to call" → remind. Reply with ` +
-    `ONLY the matching intent words, lowercase, comma-separated, nothing else. If none clearly applies, reply save.`;
+    `You label the user's message with the DATA intents it carries, from this exact set: save (states a ` +
+    `FACT to remember), remind (wants a time-based reminder), recall (asks to FIND something saved, incl. ` +
+    `"how much did I spend on X"), finance (records money spent/received — a receipt or an amount, any ` +
+    `currency), place (marks a LOCATION or physical spot — a shop, a cafe, "remember this place", "they ` +
+    `sell tasty pies here"). A message may carry several (e.g. a note about a place AND a purchase). ` +
+    `\n\nBUT if the message is CONVERSATION with no data to store — a greeting, thanks, small talk, or a ` +
+    `QUESTION ABOUT YOU (the assistant): "who are you", "why do I need you", "what are you" — reply the ` +
+    `single word none. Do NOT label such messages save. Examples: "remember they sell tasty pies here" → ` +
+    `save,place. "spent 10 euro on coffee" → finance. "remind me tomorrow to call" → remind. "who are ` +
+    `you" → none. "hi" → none. "thanks" → none. Reply with ONLY the matching intent words lowercase ` +
+    `comma-separated, or none. Nothing else.`;
 
   let raw: string | null;
   try {
@@ -76,5 +75,7 @@ export async function classifyIntent(ctx: NodeCtx): Promise<NodeCtx> {
   const found = new Set<string>(hardFlags);
   for (const tok of raw.toLowerCase().split(/[^a-z]+/)) if (ALLOWED.has(tok)) found.add(tok);
   const intent = INTENTS.filter((i) => found.has(i));
-  return { intent: intent.length ? intent : ["save"] };
+  // Пустой intent = РАЗГОВОР (приветствие/вопрос о боте/болтовня): НЕ форсим `save`, чтобы такое сообщение
+  // не сохранялось заметкой. На него ответит МОДЕЛЬ в `converse` (по инструкции поведения), а не ветки-данные.
+  return { intent };
 }

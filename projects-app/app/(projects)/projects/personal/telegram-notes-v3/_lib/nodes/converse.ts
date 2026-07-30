@@ -82,13 +82,19 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   // Нет модели/ключа → детерминированный фолбэк (форма доказана 11/11).
   const fallback = () => composeReply({ ...ctx, lang });
 
-  // Собрать промпт: сценарий поведения + язык + недавний диалог + Q&A-образец + что сделал прогон.
+  // Собрать промпт: СЦЕНАРИЙ ПОВЕДЕНИЯ (в нём идентичность+возможности) + язык + недавний диалог + Q&A-
+  // образец + что сделал прогон. Модель отвечает КАК ЭТОТ АССИСТЕНТ: подтвердить действие, если оно было,
+  // ИЛИ вести разговор (приветствие, «кто ты», болтовня), опираясь на свою инструкцию. Никаких списков
+  // фраз в коде — поведение задаёт инструкция, а не функция.
   const history = state.messages.slice(-cfg.lastN).map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.text}`).join("\n");
+  const task = done
+    ? `You just performed this for the user: ${done}. Reply confirming it (or ask the follow-up it needs).`
+    : `The user is talking to you (a greeting, a question about who you are or why you exist, or small talk). ` +
+      `Reply naturally AS THIS ASSISTANT, using your description above — introduce yourself and what you can do when relevant.`;
   const system =
-    `${cfg.instruction}\n\nReply ONLY in language "${lang}". Be brief and warm, one short message. ` +
-    (qaHit ? `\nFor a message like "${qaHit.q}" the owner wants you to answer in this style: "${qaHit.a}".` : "") +
-    `\nThe automation just did: ${done || "nothing concrete — the message did not map to an action"}. ` +
-    `Write the reply to the user that confirms what happened (or asks the follow-up the run needs). No preamble.`;
+    `${cfg.instruction}\n\nReply ONLY in language "${lang}". Keep it to one short, warm message. ` +
+    (qaHit ? `For a message like "${qaHit.q}" answer in this style: "${qaHit.a}". ` : "") +
+    `${task} No preamble, no quotes around your reply.`;
 
   let reply: string | null;
   try { reply = await askModel({ system, user: `${history ? history + "\n" : ""}User: ${incoming}`, maxTokens: 300 }); }
