@@ -525,6 +525,13 @@ const nodeBase = {
   // still override via ctx.hookPhrases). Meaningful only on the hookGate node; additive `[]` default
   // so every core written before this field stays valid.
   hookPhrases: z.array(z.string().min(1)).default([]),
+  // ROLE — необязательная РОЛЬ узла сверх его вида (kind). Пусто (по умолчанию) — обычный узел вида kind.
+  // `"conversation"` (шаг 308, решение владельца) — РАЗГОВОРНАЯ ГРАНИЦА: узел, чья работа — говорить с
+  // человеком МОДЕЛЬЮ по сценарию поведения (данные вкладки «Ассистент»), а не считать над данными. Так
+  // «узел нового типа — разговорный агент» выражен РОЛЬЮ внутри `transform`, БЕЗ разморозки `KIND_PORTS`
+  // (порты и виды не меняются). Неотвратимость — через присутствие такого узла в замороженной середине
+  // шаблона. Аддитивное поле с дефолтом `""`, все прежние ядра валидны без правки.
+  role: z.enum(["", "conversation"]).default(""),
   run: z.enum(["sequential", "parallel"]),
   estDurationMs: z.number().int().positive(),
 };
