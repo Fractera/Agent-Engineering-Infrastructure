@@ -1730,7 +1730,7 @@
         "systemInstructionName": "tab",
         "name": "calendar",
         "description": "",
-        "presence": "collapsed",
+        "presence": "expanded",
         "info": {
           "aiSummary": "Automation calendar: a month grid and a day planner on half-hour slots, the view ported from v1. Entries are read from the output rows (the calendar table); nothing is created here by hand. The public half is the calendar itself (everyone sees it), the administrative half is the setup (owner only)."
         },
@@ -2307,7 +2307,7 @@
         "systemInstructionName": "tab",
         "name": "vector-memory",
         "description": "",
-        "presence": "absent",
+        "presence": "collapsed",
         "info": {
           "aiSummary": "The vector-memory tab is declared and empty: we will show what the automation has remembered once the owner says what exactly."
         },
@@ -2331,7 +2331,7 @@
         "systemInstructionName": "tab",
         "name": "database",
         "description": "",
-        "presence": "absent",
+        "presence": "expanded",
         "info": {
           "aiSummary": "The local-database tab is declared and empty: the owner decides which records to show."
         },
@@ -2357,7 +2357,7 @@
         "systemInstructionName": "tab",
         "name": "storage",
         "description": "If you activate this node, you can save and use media files and documents related to this automation in your own local storage.",
-        "presence": "absent",
+        "presence": "collapsed",
         "info": {
           "aiSummary": "The local-storage tab is declared and empty: this is where the automation's files will live, for example images."
         },
