@@ -19,6 +19,11 @@ export async function deliverUserTelegramChat(ctx: NodeCtx): Promise<{ userTeleg
     return { userTelegramDelivery: "skipped: no user chat — link it via api/telegram/link (TELEGRAM_USER_CHAT_ID)" };
   }
   const m = messageOf(ctx);
-  const id = await sendTelegram(`${m.title}\n\n${m.text}\n\n— captured from ${m.source}`, chatId);
+  // Заголовок выводится из ПЕРВОЙ СТРОКИ текста (deriveTitle) — у короткого сообщения он дословно
+  // равен тексту, и «title + text» удваивал сообщение (замечание владельца, 2026-07-30). Показываем
+  // заголовок только когда он добавляет что-то сверх текста.
+  const stem = m.title.replace(/…$/, "");
+  const titleAddsNothing = !stem || m.text.replace(/\s+/g, " ").trim().startsWith(stem.replace(/\s+/g, " ").trim());
+  const id = await sendTelegram(`${titleAddsNothing ? "" : `${m.title}\n\n`}${m.text}\n\n— captured from ${m.source}`, chatId);
   return { userTelegramDelivery: `sent ${id} to ${chatId}` };
 }
