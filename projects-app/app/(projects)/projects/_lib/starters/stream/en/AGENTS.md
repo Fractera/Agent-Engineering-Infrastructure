@@ -118,6 +118,15 @@ database or object storage, a hook gate). The law digest (`GET api/core`) lists 
 **"This automation cannot do it" is not an outcome.** A need that fits no skill and no code is a `needed`
 capability plus a warning — never a refusal, never a silent stub. The full law: `_instructions/nodes.md`.
 
+## 0e. AN INCOMING REQUIREMENT LANDS ON THE USE CASES FIRST
+
+The use cases architecturally define what must exist; the send-task box at the top of the page is where
+the owner most often drops a new requirement. So when a requirement arrives by ANY development channel —
+that box, a `rawRequest` on any object, any dev-request field — your FIRST act is to reconcile it with
+the case set (append a case, rework one, or warn about a contradiction — all via `api/patch`), and only
+THEN change nodes and edges. A graph changed without its case is unlawful drift. Full law:
+`_instructions/useCases.md`; it also rides in the `laws` of the `GET api/core` digest.
+
 ## 1. Where the truth is
 
 | What | Where |

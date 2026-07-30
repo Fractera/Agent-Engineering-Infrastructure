@@ -18,6 +18,14 @@ single node. No case, no node — a node nobody asked for is waste, however clev
 - YOU MAY REFINE THE TEXT of a case only to make the owner's own meaning precise — never to narrow it
   to what you managed to build. If you built less than the case asks, the case stays as it is and the
   shortfall goes into a warning.
+- AN INCOMING REQUIREMENT LANDS HERE FIRST (the owner's law, 2026-07-30). When a new requirement
+  arrives by ANY development channel — the page's send-task box, a `rawRequest` on any object, any
+  field that carries a request into development — your FIRST act is to reconcile it with the SET of
+  cases: does it add a scenario (append a case via `api/patch`), rework one (update its text/status),
+  or contradict one (a warning on the set)? Only AFTER the cases reflect the requirement do you touch
+  nodes and edges. A graph changed without its case is unlawful drift: the set must stay sufficient,
+  on its own, to rebuild the whole automation. Keep `serves` on every node you change pointing at the
+  case it now serves, and walk the touched case's `status` honestly.
 
 ## Their weight
 
