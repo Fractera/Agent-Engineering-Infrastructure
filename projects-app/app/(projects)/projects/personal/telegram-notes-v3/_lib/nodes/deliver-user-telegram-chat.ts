@@ -18,10 +18,15 @@ export async function deliverUserTelegramChat(ctx: NodeCtx): Promise<{ userTeleg
   if (!chatId) {
     return { userTelegramDelivery: "skipped: no user chat — link it via api/telegram/link (TELEGRAM_USER_CHAT_ID)" };
   }
+  // ЕДИНЫЙ ОТВЕТ (308, разговорный контракт): пользователю уходит `ctx.reply`, собранный композитором
+  // `composeReply` — связный, оформленный, с представлением возможностей. Без композитора (простой
+  // стартер) — падаем на прежний путь (сырой текст + пометка канала), чтобы стартер остался рабочим.
+  const reply = String((ctx as Record<string, unknown>).reply ?? "").trim();
+  if (reply) {
+    const id = await sendTelegram(reply, chatId);
+    return { userTelegramDelivery: `sent ${id} to ${chatId}` };
+  }
   const m = messageOf(ctx);
-  // Заголовок выводится из ПЕРВОЙ СТРОКИ текста (deriveTitle) — у короткого сообщения он дословно
-  // равен тексту, и «title + text» удваивал сообщение (замечание владельца, 2026-07-30). Показываем
-  // заголовок только когда он добавляет что-то сверх текста.
   const stem = m.title.replace(/…$/, "");
   const titleAddsNothing = !stem || m.text.replace(/\s+/g, " ").trim().startsWith(stem.replace(/\s+/g, " ").trim());
   const id = await sendTelegram(`${titleAddsNothing ? "" : `${m.title}\n\n`}${m.text}\n\n— captured from ${m.source}`, chatId);

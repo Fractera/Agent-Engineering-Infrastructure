@@ -36,16 +36,17 @@ export async function askAddress(ctx: NodeCtx): Promise<NodeCtx> {
   const placeTitle = String(ctx.placeTitle ?? "").trim();
   const hasCoords = ctx.lat != null && ctx.lng != null;
 
+  // `placeOutcome` — структурный исход ветки «место» для композитора ответа (308); `skipMap` — строку карты
+  // уже создал/связал этот узел, выход её не задвоит.
   if (hasCoords) {
     const desc = text || placeTitle;
     await addRow("map", {
       lat: ctx.lat, lng: ctx.lng, title: desc, place: placeTitle,
       status: desc ? "linked" : "pending", source: String(ctx.source ?? "unknown"), date: String(ctx.at ?? new Date().toISOString()),
     });
-    // Есть описание → метка полная; нет → PENDING, просим описание. skipMap: строку уже создали здесь.
     return desc
-      ? { skipMap: true, text: `${saved(desc).ru}\n${saved(desc).en}` }
-      : { skipMap: true, needDescription: true, text: `${gotPoint.ru}\n\n${gotPoint.en}` };
+      ? { skipMap: true, placeOutcome: { kind: "saved", desc } }
+      : { skipMap: true, needDescription: true, placeOutcome: { kind: "need-description", ask: `${gotPoint.ru}\n\n${gotPoint.en}` } };
   }
 
   // Координат в этом сообщении нет. Если это описание — привязать к последней PENDING-метке (точка пришла
@@ -55,10 +56,10 @@ export async function askAddress(ctx: NodeCtx): Promise<NodeCtx> {
     const pending = rows.find((r) => r.status === "pending" && !String(r.title ?? "").trim());
     if (pending) {
       await updateRow("map", pending.id, { title: text, place: text, status: "linked" });
-      return { skipMap: true, text: `${saved(text).ru}\n${saved(text).en}` };
+      return { skipMap: true, placeOutcome: { kind: "saved", desc: text } };
     }
   }
 
   // Ни координат, ни pending-метки → честно просим точку/адрес (точку не выдумываем).
-  return { needsAddress: true, skipMap: true, text: `${askText.ru}\n\n${askText.en}` };
+  return { needsAddress: true, skipMap: true, placeOutcome: { kind: "need-address", ask: `${askText.ru}\n\n${askText.en}` } };
 }

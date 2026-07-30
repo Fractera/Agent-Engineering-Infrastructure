@@ -21,6 +21,7 @@ import { digitizeMoney } from "./digitize-money";
 import { storeAttachment } from "./store-attachment";
 import { linkAttachments } from "./link-attachments";
 import { recallFromMemory } from "./recall-from-memory";
+import { composeReply } from "./compose-reply";
 import { aiTransform } from "./ai-transform";
 import { parseDate } from "./parse-date";
 import { askAddress } from "./ask-address";
@@ -61,6 +62,7 @@ export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   parseDate,
   askAddress,
   hookGate,
+  composeReply,
   ifSuccess,
   ifFailure,
   // выходная группа — 11 каналов + коннектор

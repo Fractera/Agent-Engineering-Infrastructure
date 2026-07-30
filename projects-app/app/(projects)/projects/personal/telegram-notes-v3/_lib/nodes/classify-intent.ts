@@ -31,6 +31,11 @@ export async function classifyIntent(ctx: NodeCtx): Promise<NodeCtx> {
   //   валюта/сумма в тексте = finance (€ $ ₽ £ или «евро/руб/потратил/заплатил/стоит/spent/paid»);
   //   маркер места = place («это место», «здесь/тут продают…», «here», «this place», «локация», «адрес»).
   // Так частые однозначные формулировки не зависят от того, угадала ли их модель (урок живого теста 308).
+  // ПРЕДСТАВЛЕНИЕ ВОЗМОЖНОСТЕЙ (308.C): /start, /help, «что ты умеешь» → композитор вернёт список умений.
+  if (/^\/(start|help)\b/i.test(text) || /(что ты умеешь|что умеешь|твои возможност|what can you do|help me|список команд)/i.test(text)) {
+    return { intent: [], showHelp: true };
+  }
+
   const hardFlags = new Set<string>();
   if (hasPhoto) hardFlags.add("finance");
   if (hasLocation) hardFlags.add("place");

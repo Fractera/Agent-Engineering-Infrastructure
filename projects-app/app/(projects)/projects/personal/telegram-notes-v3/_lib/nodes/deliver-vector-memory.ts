@@ -13,6 +13,7 @@
 // Сервиса памяти нет на сервере → честный ПРОПУСК с причиной (проект без LightRAG не теряет развозку);
 // сервис ответил отказом → бросок (`rememberFact` бросает сам).
 // Имя `deliverVectorMemory` — публичный контракт, не переименовывать.
+import { randomBytes } from "node:crypto";
 import type { NodeCtx } from "../executor";
 import { rememberFact } from "../memory";
 import { messageOf, servesAnyIntent } from "../message";

@@ -63,5 +63,6 @@ export async function parseDate(ctx: NodeCtx): Promise<NodeCtx> {
   const when = new Date(iso);
   if (!Number.isFinite(when.getTime())) return { needsWhen: true, dateError: `unparseable model answer: ${answer}` };
 
-  return { when: when.toISOString(), needsWhen: false };
+  // `remindText` — текст, О ЧЁМ напоминание (для композитора ответа, 308): «⏰ Напомню <когда>: <remindText>».
+  return { when: when.toISOString(), needsWhen: false, remindText: text };
 }

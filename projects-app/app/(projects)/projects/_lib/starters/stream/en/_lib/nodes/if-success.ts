@@ -11,6 +11,7 @@ import type { NodeCtx } from "../executor";
 // живой тест). Теперь ветка держит при тексте ИЛИ координатах ИЛИ finance ИЛИ вложениях.
 export function ifSuccess(ctx: NodeCtx): NodeCtx | null {
   const has =
+    String(ctx.reply ?? "").trim() !== "" || // композитор ответа собрал что доставить (308)
     String(ctx.text ?? "").trim() !== "" ||
     (ctx.lat != null && ctx.lng != null) ||
     ctx.finance != null ||

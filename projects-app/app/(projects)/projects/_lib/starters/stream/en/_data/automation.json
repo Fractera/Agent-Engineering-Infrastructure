@@ -847,6 +847,46 @@
                 "state": "prohibit",
                 "connections": null
               }
+            },
+            {
+              "cuid": "cmd308composereply06f7a8b9",
+              "name": "Compose reply",
+              "description": "The middle composes ONE coherent, formatted, localized reply to the user from the run structured result. Hidden until revealed.",
+              "state": "hidden",
+              "info": {
+                "aiSummary": "Reply composer (step 308, conversational contract _instructions/replies.md): instead of the user getting the raw ctx.text of whichever node acted last, this ONE node reads the structured result of the run (noteSummary, finance, when/needsWhen+remindText, placeOutcome, recallAnswer, showHelp) and builds a single coherent, emoji-formatted, localized reply into ctx.reply. A compound message becomes one reply about everything. An unrecognized message or /start or what-can-you-do returns the capability introduction. deliverUserTelegramChat sends ctx.reply. Not intent-gated. Node-skill of the middle library."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "serves": [],
+              "lineage": "nsk-compose-reply-v1",
+              "function": {
+                "name": "composeReply",
+                "summary": "Builds one coherent localized reply to the user from the run structured result.",
+                "accepts": "the run context (noteSummary, finance, when, placeOutcome, recallAnswer, showHelp, intent).",
+                "returns": "reply, one formatted message; the capability list for /start or an unrecognized message."
+              },
+              "run": "sequential",
+              "estDurationMs": 20,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              }
             }
           ]
         },

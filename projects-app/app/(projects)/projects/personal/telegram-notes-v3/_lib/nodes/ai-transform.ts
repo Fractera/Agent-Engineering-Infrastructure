@@ -48,15 +48,17 @@ export async function aiTransform(ctx: NodeCtx): Promise<NodeCtx> {
     const out = await askModel({ system: instruction, user: original });
     if (!out) {
       // модель нельзя позвать (нет ключа / сеть) — оставляем оригинал, прогон продолжается
-      return { ...base, text: original, title: deriveTitle(original), aiUsed: false, aiError: "model unavailable" };
+      return { ...base, text: original, title: deriveTitle(original), noteSummary: original, aiUsed: false, aiError: "model unavailable" };
     }
-    return { ...base, text: out, title: deriveTitle(out), aiUsed: true };
+    // `noteSummary` — структурный результат ветки «заметка» для композитора ответа (308): что именно записано.
+    return { ...base, text: out, title: deriveTitle(out), noteSummary: out, aiUsed: true };
   } catch (e) {
     // провайдер отверг запрос — тоже не крах прогона: развозим полный оригинал
     return {
       ...base,
       text: original,
       title: deriveTitle(original),
+      noteSummary: original,
       aiUsed: false,
       aiError: e instanceof Error ? e.message : String(e),
     };

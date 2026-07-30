@@ -110,6 +110,7 @@ export async function recallFromMemory(ctx: NodeCtx): Promise<NodeCtx> {
     text: resolved.text, // видимый текст без маркеров
     title: deriveTitle(resolved.text),
     question,
+    recallAnswer: resolved.text, // структурный результат ветки recall для композитора ответа (308)
     // Разрешённые вложения/записи — выходной узел может доставить сами картинки, а не только текст (308.7).
     ...(resolved.attachments.length ? { recalledAttachments: resolved.attachments } : {}),
     ...(resolved.records.length ? { recalledRecords: resolved.records } : {}),

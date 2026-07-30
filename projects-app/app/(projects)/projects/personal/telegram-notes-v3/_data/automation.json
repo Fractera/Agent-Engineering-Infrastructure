@@ -918,6 +918,53 @@
                 "state": "prohibit",
                 "connections": null
               }
+            },
+            {
+              "cuid": "cmd308composereply06f7a8b9",
+              "name": "Compose reply",
+              "description": "The middle composes ONE coherent, formatted, localized reply to the user from the run structured result. Hidden until revealed.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "Reply composer (step 308, conversational contract _instructions/replies.md): instead of the user getting the raw ctx.text of whichever node acted last, this ONE node reads the structured result of the run (noteSummary, finance, when/needsWhen+remindText, placeOutcome, recallAnswer, showHelp) and builds a single coherent, emoji-formatted, localized reply into ctx.reply. A compound message becomes one reply about everything. An unrecognized message or /start or what-can-you-do returns the capability introduction. deliverUserTelegramChat sends ctx.reply. Not intent-gated. Node-skill of the middle library."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "serves": [
+                "cms7irvhjd98776152ccbcdd4",
+                "cms7irvhk3db0071432a3309d",
+                "cms7irvhk73f8b1993401e7e8",
+                "cms7irvhk423e189d6cf1b08f",
+                "cms7irvhk2f6c06c08e096986",
+                "cms7irvhl43c40a5b5b70fb2c"
+              ],
+              "lineage": "nsk-compose-reply-v1",
+              "function": {
+                "name": "composeReply",
+                "summary": "Builds one coherent localized reply to the user from the run structured result.",
+                "accepts": "the run context (noteSummary, finance, when, placeOutcome, recallAnswer, showHelp, intent).",
+                "returns": "reply, one formatted message; the capability list for /start or an unrecognized message."
+              },
+              "run": "sequential",
+              "estDurationMs": 20,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              }
             }
           ]
         },
@@ -1602,6 +1649,18 @@
       {
         "cuid": "cms7irvhod712fb9e0d6e6f6f",
         "from": "cmd307recallmem01a2b3c4d5e6f7",
+        "to": "cmruddnrpho70e8af12589d1deaa",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceajoezqgzsel",
+        "from": "cmd307recallmem01a2b3c4d5e6f7",
+        "to": "cmd308composereply06f7a8b9",
+        "state": "visible"
+      },
+      {
+        "cuid": "cej24najzkqb7",
+        "from": "cmd308composereply06f7a8b9",
         "to": "cmruddnrpho70e8af12589d1deaa",
         "state": "visible"
       }
