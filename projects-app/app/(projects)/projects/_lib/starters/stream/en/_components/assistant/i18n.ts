@@ -7,6 +7,7 @@ type Dict = {
   language: string; langAuto: string; langFixed: string; langCode: string;
   qa: string; qaHint: string; qaQuestion: string; qaAnswer: string; qaAdd: string; qaEmpty: string;
   save: string; saving: string; remove: string;
+  access: string; accessHint: string; accessPublic: string;
 };
 
 const en: Dict = {
@@ -18,6 +19,9 @@ const en: Dict = {
   qa: "Example answers (Q → A)", qaHint: "The assistant answers similar questions in this style.",
   qaQuestion: "Question", qaAnswer: "Answer", qaAdd: "Add example", qaEmpty: "No examples yet.",
   save: "Save", saving: "Saving…", remove: "Remove",
+  access: "Public access — who may open the real automation",
+  accessHint: "On the public app, only holders of the selected roles see the real automation instead of a teaser. No role selected = fully public.",
+  accessPublic: "Public (everyone)",
 };
 
 const ru: Dict = {
@@ -29,6 +33,9 @@ const ru: Dict = {
   qa: "Примеры ответов (Вопрос → Ответ)", qaHint: "Ассистент отвечает на похожие вопросы в этом стиле.",
   qaQuestion: "Вопрос", qaAnswer: "Ответ", qaAdd: "Добавить пример", qaEmpty: "Примеров пока нет.",
   save: "Сохранить", saving: "Сохранение…", remove: "Удалить",
+  access: "Публичный доступ — кто откроет реальную автоматизацию",
+  accessHint: "В публичном приложении реальную автоматизацию (а не превью) видят только держатели выбранных ролей. Ни одна роль не выбрана = полностью публично.",
+  accessPublic: "Публично (все)",
 };
 
 const BY: Record<string, Dict> = { en, ru };

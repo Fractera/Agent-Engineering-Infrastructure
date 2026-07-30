@@ -136,7 +136,7 @@ export function locate(core: Automation, a: Address): { ok: true; target: Record
 export const WRITABLE: Record<Address["object"], string[]> = {
   // `ai` — какой моделью думает эта автоматизация; меняется в Настройках (шаг 295). Тип и адрес
   // по-прежнему не пишутся: тип — решение о природе автоматизации, адрес задаётся положением папки.
-  passport: ["title", "description", "author", "sharing", "info", "lifecycle", "howItWorks", "ai"],
+  passport: ["title", "description", "author", "sharing", "info", "lifecycle", "howItWorks", "ai", "access"],
   graph: [],
   components: [],
   history: [],

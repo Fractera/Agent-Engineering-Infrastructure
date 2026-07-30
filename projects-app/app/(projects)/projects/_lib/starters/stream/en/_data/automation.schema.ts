@@ -209,6 +209,12 @@ export const PassportSchema = z
     // it is the automation's public account of itself, not a changelog and not a duplicate of `info`
     // (which is the owner's brief). Empty while nothing has been built yet.
     howItWorks: z.array(z.string().min(1, "an empty line says nothing — remove it instead")),
+    // ACCESS — WHICH ROLES may reach the REAL automation on the PUBLIC surface (step 309, owner's request).
+    // The Projects layer (3003) is architect-only; the public app (3000) is different — it should serve the
+    // real automation (not a stub) to holders of the declared roles (e.g. subscribers). Roles from the
+    // shared vocabulary (RoleSchema). EMPTY = fully public (the pre-309 default, every existing automation
+    // stays valid): the body is open to everyone. Additive with a `[]` default so all prior cores validate.
+    access: z.array(RoleSchema).default([]),
   })
   .strict();
 

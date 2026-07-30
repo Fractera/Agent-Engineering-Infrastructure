@@ -26,27 +26,39 @@ export const dynamic = "force-dynamic";
 const ACCESS_TIERS = ["guest", "user", "architect"] as const;
 type AccessTier = (typeof ACCESS_TIERS)[number];
 
-// Per-automation access tier for the public BODY gate. Reused auth-layer vocabulary (owner's decision, step
-// 304): the automation may declare `passport.access` in its _data/automation.json; anything absent/unknown
-// (every v1 automation, every automation created before this step) defaults to the fully-public tier `guest`.
-// This never hides the automation from the catalog — the hero is always public; only the body is gated on 3000.
-async function readAccess(category: string, slug: string): Promise<AccessTier> {
+// Per-automation access for the public BODY gate. The automation declares `passport.access` in its
+// _data/automation.json (owner's decision, steps 304/309):
+//   • step 309 form — an ARRAY of ROLES (e.g. ["subscriber_standard"]); EMPTY array = fully public.
+//   • legacy step 304 form — a single tier STRING (guest|user|architect).
+// Anything absent/unknown (every v1 automation, every automation before this) is fully public. The catalog
+// never HIDES the automation — the hero is always public; only the body is gated on 3000.
+// Returns both `access` (a coarse tier, kept for the old public app) and `accessRoles` (the full role list,
+// the source of truth for the body gate): a visitor sees the real body if the role list is empty OR they
+// hold one of the listed roles.
+async function readAccess(category: string, slug: string): Promise<{ access: AccessTier; accessRoles: string[] }> {
   try {
     const raw = await readFile(join(projectsRoot(), category, slug, "_data", "automation.json"), "utf8");
-    const core = JSON.parse(raw) as { passport?: { access?: string } };
+    const core = JSON.parse(raw) as { passport?: { access?: unknown } };
     const a = core?.passport?.access;
-    if (a && (ACCESS_TIERS as readonly string[]).includes(a)) return a as AccessTier;
+    if (Array.isArray(a)) {
+      const roles = a.map(String).filter(Boolean);
+      // Coarse tier for the legacy field: empty = public (guest); role-gated → "user" (non-public marker).
+      return { access: roles.length ? "user" : "guest", accessRoles: roles };
+    }
+    if (typeof a === "string" && (ACCESS_TIERS as readonly string[]).includes(a)) {
+      return { access: a as AccessTier, accessRoles: a === "guest" ? [] : [a] };
+    }
   } catch {
     /* not a v2 automation, or no access declared — public by default */
   }
-  return "guest";
+  return { access: "guest", accessRoles: [] };
 }
 
-type AutomationEntry = { slug: string; title: string; description: string; access: AccessTier };
+type AutomationEntry = { slug: string; title: string; description: string; access: AccessTier; accessRoles: string[] };
 
 async function automationEntry(category: string, slug: string): Promise<AutomationEntry> {
-  const [card, access] = await Promise.all([getProjectCard(category as never, slug), readAccess(category, slug)]);
-  return { slug, title: card.title, description: card.description, access };
+  const [card, acc] = await Promise.all([getProjectCard(category as never, slug), readAccess(category, slug)]);
+  return { slug, title: card.title, description: card.description, access: acc.access, accessRoles: acc.accessRoles };
 }
 
 async function categoryEntry(c: (typeof PROJECT_CATEGORIES)[number]) {

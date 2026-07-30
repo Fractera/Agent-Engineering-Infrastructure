@@ -1,6 +1,8 @@
 import type { Entity } from "../../_data/automation.schema";
 import { DEFAULT_ASSISTANT } from "../../_lib/components/conversation/config";
+import { loadAutomation } from "../../_data/load";
 import AssistantForm, { type AssistantData } from "./public/assistant-form.client";
+import AccessRoles from "./public/access-roles.client";
 
 // ВКЛАДКА «АССИСТЕНТ» — интерфейс разговорного слоя (шаг 309). Одна сущность = один набор настроек речи
 // автоматизации; её `data` читает узел `converse` (`assistantConfigOf`), а правит форма ниже через
@@ -25,12 +27,18 @@ function toData(entity: Entity): AssistantData {
   };
 }
 
-export default function Assistant({ entities, lang }: { entities: Entity[]; lang: string }) {
+export default async function Assistant({ entities, lang }: { entities: Entity[]; lang: string }) {
   const entity = entities[0];
   if (!entity) return null;
+  // Роли доступа живут в ПАСПОРТЕ (не в entity вкладки) — читаем ядро; массив ролей (пусто = публично).
+  const core = await loadAutomation();
+  const access = Array.isArray(core.passport.access) ? core.passport.access.map(String) : [];
   return (
-    <div data-entity="assistant">
+    <div data-entity="assistant" className="space-y-6">
       <AssistantForm cuid={entity.cuid} data={toData(entity)} lang={lang} />
+      <div className="border-t pt-4">
+        <AccessRoles access={access} lang={lang} />
+      </div>
     </div>
   );
 }
