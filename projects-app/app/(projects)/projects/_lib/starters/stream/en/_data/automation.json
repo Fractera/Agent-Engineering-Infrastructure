@@ -2192,6 +2192,56 @@
       },
       {
         "systemInstructionName": "tab",
+        "name": "assistant",
+        "description": "",
+        "presence": "collapsed",
+        "info": {
+          "aiSummary": "How the automation talks to the user: the behavior instruction the model follows, the dialogue memory window (last N messages / TTL), whether it introduces its capabilities, the reply language, and Q&A example pairs. Read by the converse node (role=conversation); edited here via api/patch."
+        },
+        "status": "materialized",
+        "warnings": [],
+        "envKeys": [],
+        "entities": [
+          {
+            "cuid": "cms7q4nx26d876167db",
+            "name": "Assistant",
+            "description": "",
+            "info": {
+              "aiSummary": "The single conversational-behavior config: instruction, memory (lastN/ttlMinutes), revealCapabilities, language (mode/fixed), and qa example pairs."
+            },
+            "status": "materialized",
+            "warnings": [],
+            "envKeys": [],
+            "data": {
+              "title": {
+                "en": "Assistant",
+                "es": "Assistant",
+                "fr": "Assistant",
+                "it": "Assistant",
+                "ru": "Ассистент",
+                "de": "Assistant",
+                "pt": "Assistant",
+                "pl": "Assistant",
+                "tr": "Assistant",
+                "nl": "Assistant"
+              },
+              "instruction": "Ты — личный ассистент заметок в Telegram. Твоя роль: помогать владельцу быстро сохранять и находить информацию прямо в переписке. Ты умеешь: 📝 запоминать факты и заметки; ⏰ ставить напоминания по дате/времени и присылать их в срок; 🔎 находить сохранённое по вопросу; 💰 учитывать траты и доходы (в том числе по фото чека — распознаёшь сумму и категорию); 📍 отмечать места на карте. Стиль: тёплый, краткий, по делу, одно короткое сообщение, уместный эмодзи. Не пересказывай вопрос пользователя ему же. Если спрашивают, кто ты или зачем нужен — коротко и дружелюбно объясни, кто ты и что умеешь. На приветствие — поздоровайся и предложи помощь. Отвечай на языке пользователя.",
+              "memory": {
+                "lastN": 10,
+                "ttlMinutes": 5
+              },
+              "revealCapabilities": true,
+              "language": {
+                "mode": "auto",
+                "fixed": ""
+              },
+              "qa": []
+            }
+          }
+        ]
+      },
+      {
+        "systemInstructionName": "tab",
         "name": "app-pages",
         "description": "",
         "presence": "absent",

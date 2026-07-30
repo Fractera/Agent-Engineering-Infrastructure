@@ -10,6 +10,7 @@ import Analytics from "./analytics";
 import Storage from "./storage";
 import Database from "./database";
 import VectorMemory from "./vector-memory";
+import Assistant from "./assistant";
 import { cronOf } from "./shared/schedule";
 import GenericTab from "./generic";
 import UseCases from "./use-cases";
@@ -80,6 +81,8 @@ export default async function AutomationComponents({ lang, onboarding = false }:
       <Database entities={entitiesOf(tab)} lang={lang} />
     ) : tab.name === "vector-memory" ? (
       <VectorMemory entities={entitiesOf(tab)} lang={lang} />
+    ) : tab.name === "assistant" ? (
+      <Assistant entities={entitiesOf(tab)} lang={lang} />
     ) : (
       // У вкладки ещё нет своей папки — показываем её сущности общим видом: место на странице, якорь для
       // оглавления и обе ступени заявки «строить вместе с ИИ». Пропускать раздел нельзя: тогда заказать
