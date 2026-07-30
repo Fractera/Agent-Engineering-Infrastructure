@@ -131,9 +131,9 @@ is what draws the owner's Settings fields, feeds `passport.credentials`, and arm
 
 - **Google Calendar** — env `GOOGLE_OAUTH_CLIENT_ID` + `GOOGLE_OAUTH_CLIENT_SECRET` (the slot's
   `.env.local`, runtime setter of step 143); per-automation OAuth tokens in the `automation_calendar_tokens`
-  table; status probe `GET /calendar/status`; full OAuth cycle implemented in
-  `personal/telegram-notes/_calendar/google-calendar.ts` — a LOGIC reference only (§8: never copy its file
-  structure). So the right `expectedAnswer` for a calendar blocker is the client id/secret pair (+ a
+  table; status probe `GET /calendar/status`; the full OAuth cycle was implemented in v1 telegram-notes'
+  `_calendar/google-calendar.ts` — now a git-history LOGIC reference only (§8: the v1 tree is removed).
+  So the right `expectedAnswer` for a calendar blocker is the client id/secret pair (+ a
   refresh token when the owner completes consent), not a homemade JSON.
 - **Telegram** — per-automation bot token via the channels declaration (`_data/channels.ts`,
   `TELEGRAM_BOT_TOKEN`-style env keys, the step-143 runtime setter) + the automations-listener registry.
@@ -172,8 +172,9 @@ Every automation is a node on one canvas (`/projects` root); a `chained` automat
 Connecting two automations starts a link's own Development Step cycle, gated by node readiness.
 `GET /api/projects/global` derives off / in-development / on.
 
-## 8. The historical exception — telegram-notes
+## 8. The historical exception — telegram-notes (REMOVED, step 307.14R)
 
-Runs on an older execution model (`_workflow/definition.ts`); **forbidden as an architectural pattern**.
-Value: business logic reference only. Building a Telegram-style bot → use this document and the README,
-never its code.
+The v1 prototype ran on an older execution model (`_workflow/definition.ts`) and was **forbidden as an
+architectural pattern**. It has been REMOVED from the tree: its proven abilities live on as the v2 group
+`personal/save-note-v2` + `personal/remind-me-v2` + `personal/recall-v2` (one personal chat, each member
+self-gates its hook phrase — the group law). Its code survives only in git history; never resurrect it.

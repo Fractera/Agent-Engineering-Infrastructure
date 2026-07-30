@@ -48,9 +48,16 @@ const POLL_TIMEOUT_S = Number(env('POLL_TIMEOUT_S') ?? 25)
 const REGISTRY_PATH  = resolve(__dirname, 'registry.json')
 const REGISTRY_TTL_MS = Number(env('REGISTRY_TTL_MS') ?? 15000)
 
-// ── Registry: [{ category, project, token }] — the single source of truth for which bot serves which
-// automation. Written by the connect modal (205.7); read here on a short interval so a newly connected
-// bot begins polling without a restart. Malformed/missing → empty (inert).
+// ── Registry: [{ category, project, token, channel? }] — the single source of truth for which bot
+// serves which automation(s). Written by the connect modal (205.7); read here on a short interval so a
+// newly connected bot begins polling without a restart. Malformed/missing → empty (inert).
+//
+// GROUP FAN-OUT (step 307.14R): SEVERAL entries may share ONE token — a v2 GROUP of automations
+// listening to the same personal chat, each self-gating its own hook phrase (hookGate; v2 has no N-way
+// router by design). One poller per token; every update is forwarded to EVERY automation of that token —
+// a foreign phrase is a lawful `stopped` in the sibling, so fan-out is exactly the group law at work.
+// `channel` (optional) names the v2 input channel the bot feeds — e.g. "user-telegram-chat" — and is
+// stamped into the v3 envelope's `source` so the right receiver claims the run; absent → legacy "telegram".
 function loadRegistry() {
   try {
     if (!existsSync(REGISTRY_PATH)) return []
@@ -93,7 +100,9 @@ async function postRun(entry, envelope, rawUpdate) {
   const candidates = runUrlCache.has(key) ? [runUrlCache.get(key)] : [v3, legacy]
   for (const url of candidates) {
     const body = url.includes('/api/run')
-      ? { input: { ...envelope, update: rawUpdate } }
+      // v3 door: the registry's `channel` names the input channel this bot feeds, so the matching
+      // receiver claims the run (channelOf reads `source`); legacy keeps the original envelope verbatim.
+      ? { input: { ...envelope, ...(entry.channel ? { source: entry.channel } : {}), update: rawUpdate } }
       : { input: JSON.stringify(envelope) }
     const r = await fetch(url, {
       method: 'POST',
@@ -147,13 +156,14 @@ async function dispatchCallback(entry, cb) {
 }
 
 // ── One long-poll loop per bot token. In-memory offset per bot: once an update is acked (offset=last+1)
-// Telegram drops it, so a restart never reprocesses an acked update. `getEntry` returns the current
-// {category,project} (reconcile may update it); `isStopped` ends the loop when the bot leaves the registry.
-async function runPoller(token, getEntry, isStopped) {
+// Telegram drops it, so a restart never reprocesses an acked update. `getEntries` returns the current
+// [{category,project,channel}] list served by this bot (reconcile may update it — a GROUP shares one
+// token, step 307.14R); `isStopped` ends the loop when the bot leaves the registry.
+async function runPoller(token, getEntries, isStopped) {
   const API = `https://api.telegram.org/bot${token}`
   const tag = `${token.slice(0, 8)}…`
   let offset = 0
-  console.log(`[auto] poller up for ${getEntry().category}/${getEntry().project} (bot ${tag})`)
+  console.log(`[auto] poller up for ${getEntries().map(e => `${e.category}/${e.project}`).join(' + ')} (bot ${tag})`)
   while (!isStopped()) {
     try {
       const r = await fetch(`${API}/getUpdates?timeout=${POLL_TIMEOUT_S}&offset=${offset}&allowed_updates=["message","callback_query"]`, {
@@ -161,8 +171,8 @@ async function runPoller(token, getEntry, isStopped) {
       })
       const body = await r.json().catch(() => ({}))
       if (!body?.ok) {
-        // 409 = a second consumer polls this same bot (must not happen — each bot is dedicated to one
-        // automation). Surface it loudly; it is exactly the two-consumer collision this design prevents.
+        // 409 = a second consumer polls this same bot (must not happen — a bot is polled by exactly one
+        // loop here). Surface it loudly; it is exactly the two-consumer collision this design prevents.
         throw new Error(body?.description ?? `getUpdates HTTP ${r.status}`)
       }
       const updates = Array.isArray(body.result) ? body.result : []
@@ -170,7 +180,7 @@ async function runPoller(token, getEntry, isStopped) {
         offset = Math.max(offset, u.update_id + 1)
         const cb = u.callback_query
         if (cb && typeof cb.data === 'string') {
-          await dispatchCallback(getEntry(), cb)
+          for (const entry of getEntries()) await dispatchCallback(entry, cb)
           continue
         }
         const msg = u.message
@@ -179,7 +189,9 @@ async function runPoller(token, getEntry, isStopped) {
         // A shared location/venue is a first-class message too (step 207.20 geo-marks).
         const hasLocation = msg?.location && typeof msg.location.latitude === 'number'
         if (!hasText && !hasPhoto && !hasLocation) continue
-        await dispatch(getEntry(), msg)
+        // Fan-out (group law): EVERY automation of this token receives the update; each self-gates its
+        // own hook phrase, a foreign phrase is a lawful `stopped` in the sibling — never an error.
+        for (const entry of getEntries()) await dispatch(entry, msg)
       }
     } catch (e) {
       console.error(`[auto] poll error (bot ${tag}): ${e.message ?? e}`)
@@ -190,20 +202,24 @@ async function runPoller(token, getEntry, isStopped) {
 }
 
 // ── Reconcile the running pollers with the registry: start a poller for each new bot, stop one whose
-// token left the registry, and refresh the {category,project} of an existing one. Runs on an interval.
-const pollers = new Map() // token -> { stopped, entry }
+// token left the registry, and refresh the automation list of an existing one. Runs on an interval.
+const pollers = new Map() // token -> { stopped, entries }
 
 function reconcile() {
-  const wanted = new Map(loadRegistry().map(e => [e.token, e]))
+  const wanted = new Map() // token -> [entries] (a group shares one token)
+  for (const e of loadRegistry()) {
+    if (!wanted.has(e.token)) wanted.set(e.token, [])
+    wanted.get(e.token).push(e)
+  }
   for (const [token, p] of pollers) {
     if (!wanted.has(token)) { p.stopped = true; pollers.delete(token) }
-    else p.entry = wanted.get(token)
+    else p.entries = wanted.get(token)
   }
-  for (const [token, entry] of wanted) {
+  for (const [token, entries] of wanted) {
     if (pollers.has(token)) continue
-    const p = { stopped: false, entry }
+    const p = { stopped: false, entries }
     pollers.set(token, p)
-    runPoller(token, () => p.entry, () => p.stopped)
+    runPoller(token, () => p.entries, () => p.stopped)
   }
 }
 
