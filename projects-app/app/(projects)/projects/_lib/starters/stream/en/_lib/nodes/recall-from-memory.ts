@@ -18,6 +18,32 @@
 import type { NodeCtx } from "../executor";
 import { recallFacts } from "../memory";
 import { deriveTitle, refuse } from "../message";
+import { listRows } from "../rows";
+
+// 🔒 РАЗРЕШЕНИЕ ОБРАТНЫХ МАРКЕРОВ (шаг 308.7): в тексте ответа памяти могут стоять маркеры вида
+// `[mem#id]`/`[note#id]`/`[fin#id]`, вшитые при ингесте. Каждый указывает на локальную строку И её
+// картинки (`storageIds`) — разрешаем за O(1) (прямой доступ по id, без повторного семантического
+// поиска), собираем вложения, и СНИМАЕМ маркеры из видимого пользователю текста.
+const MARKER_RE = /\[(mem|note|fin)#([a-z0-9]+)\]/gi;
+const TABLE_OF: Record<string, string> = { mem: "vector-memory", note: "database", fin: "finance" };
+
+async function resolveMarkers(answer: string): Promise<{ text: string; attachments: string[]; records: { table: string; id: string }[] }> {
+  const hits = [...answer.matchAll(MARKER_RE)];
+  if (!hits.length) return { text: answer, attachments: [], records: [] };
+  const attachments = new Set<string>();
+  const records: { table: string; id: string }[] = [];
+  const cache = new Map<string, Awaited<ReturnType<typeof listRows>>>();
+  for (const [, kind, id] of hits) {
+    const table = TABLE_OF[kind.toLowerCase()];
+    if (!cache.has(table)) cache.set(table, await listRows(table, Infinity));
+    const row = cache.get(table)!.find((r) => r.id === id);
+    if (!row) continue;
+    records.push({ table, id });
+    for (const k of Array.isArray(row.storageIds) ? (row.storageIds as unknown[]) : []) attachments.add(String(k));
+  }
+  const clean = answer.replace(MARKER_RE, "").replace(/\s{2,}/g, " ").trim();
+  return { text: clean, attachments: [...attachments], records };
+}
 
 const noQuestion = {
   en: "No question was captured — there is nothing to recall from memory.",
@@ -69,13 +95,21 @@ export async function recallFromMemory(ctx: NodeCtx): Promise<NodeCtx> {
   if (!question) refuse(noQuestion);
 
   const answer = await recallFacts(question);
-  const text =
-    answer === null ? speak(unavailable) : answer === "" ? speak(nothingFound, `«${question}»`) : answer;
 
+  // Недоступно / пусто — честные исходы без маркеров. Реальный ответ → разрешаем маркеры в строки+картинки.
+  if (answer === null || answer === "") {
+    const text = answer === null ? speak(unavailable) : speak(nothingFound, `«${question}»`);
+    return { text, title: deriveTitle(text), question, at: String(ctx.at ?? new Date().toISOString()), source: String(ctx.source ?? "unknown") };
+  }
+
+  const resolved = await resolveMarkers(answer);
   return {
-    text,
-    title: deriveTitle(text),
+    text: resolved.text, // видимый текст без маркеров
+    title: deriveTitle(resolved.text),
     question,
+    // Разрешённые вложения/записи — выходной узел может доставить сами картинки, а не только текст (308.7).
+    ...(resolved.attachments.length ? { recalledAttachments: resolved.attachments } : {}),
+    ...(resolved.records.length ? { recalledRecords: resolved.records } : {}),
     at: String(ctx.at ?? new Date().toISOString()),
     source: String(ctx.source ?? "unknown"),
   };

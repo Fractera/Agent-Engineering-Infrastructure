@@ -22,12 +22,22 @@ export async function deliverVectorMemory(ctx: NodeCtx): Promise<{ vectorMemoryD
   const m = messageOf(ctx);
   // Полный текст для памяти: оригинал важнее summary; без оригинала — само сообщение (простой стартер).
   const fullText = String(ctx.original ?? ctx.text ?? "").trim() || m.text;
-  const trackId = await rememberFact(fullText, m.source, m.botId);
+  // Привязка вложений всплеска (308.6): факт памяти держит ссылки на объекты + их описания (308.7).
+  const atts = Array.isArray(ctx.attachments) ? (ctx.attachments as { fileKey: string; description?: string }[]) : [];
+  const fileKeys = atts.map((a) => a.fileKey).filter(Boolean);
+  const descLines = atts.map((a) => String(a.description ?? "").trim()).filter(Boolean);
+
+  // 🔒 ОБРАТНЫЙ МАРКЕР (шаг 308.7, паритет v1): id строки известен ДО ингеста, чтобы вложить `[mem#id]` в
+  // ТЕКСТ памяти. Ответ памяти, процитировавший маркер, разрешается в эту строку И её картинки за O(1)
+  // (recall снимает маркер из видимого текста). Описания вложений идут в тот же док → фото НАХОДИМО в памяти.
+  const recordId = `mem${Date.now().toString(36)}${randomBytes(4).toString("hex")}`;
+  const ingestText =
+    `[mem#${recordId}] ${fullText}` + (descLines.length ? ` — attachments: ${descLines.join("; ")}` : "");
+
+  const trackId = await rememberFact(ingestText, m.source, m.botId);
   if (trackId === null) {
     return { vectorMemoryDelivery: "skipped: the vector-memory service (LightRAG) is unreachable on this server" };
   }
-  // Привязка вложений всплеска (308.6): факт памяти держит ссылки на объекты этого прогона.
-  const atts = Array.isArray(ctx.attachments) ? (ctx.attachments as { fileKey: string }[]) : [];
-  const row = await addRow("vector-memory", { name: m.title, content: fullText, storageIds: atts.map((a) => a.fileKey).filter(Boolean), source: m.source, trackId });
+  const row = await addRow("vector-memory", { name: m.title, content: fullText, storageIds: fileKeys, source: m.source, trackId }, recordId);
   return { vectorMemoryDelivery: `remembered ${trackId}`, vectorRowId: row.id };
 }

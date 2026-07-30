@@ -16,8 +16,11 @@ const ROWS_FILE = join(RUNTIME_DIR, "rows.jsonl");
 
 export type Row = { id: string; table: string; createdAt: string; updatedAt?: string } & Record<string, unknown>;
 
-export async function addRow(table: string, data: Record<string, unknown>): Promise<Row> {
-  const row: Row = { id: `row${Date.now().toString(36)}${randomBytes(4).toString("hex")}`, table, createdAt: new Date().toISOString(), ...data };
+// `id` (необязательный, шаг 308.7): обычно строка сама выдаёт id, но памяти нужно ЗНАТЬ id ДО записи —
+// чтобы вложить обратный маркер `[mem#id]` в ингестируемый текст, а маркер указывал на эту же строку и её
+// картинки. Передан id → используется он; не передан → прежнее поведение.
+export async function addRow(table: string, data: Record<string, unknown>, id?: string): Promise<Row> {
+  const row: Row = { id: id || `row${Date.now().toString(36)}${randomBytes(4).toString("hex")}`, table, createdAt: new Date().toISOString(), ...data };
   await append(row);
   return row;
 }
