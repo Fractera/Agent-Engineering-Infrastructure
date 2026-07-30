@@ -88,7 +88,7 @@
               "cuid": "cmruca7r64n1jr7c4ca119ed7b7c4d",
               "name": "Control panel input",
               "description": "The default door: the owner's message typed into the control panel form.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
                 "aiSummary": "Captures the control-panel form message (the default channel when a run names no source) and normalizes it into the shared Message. An empty message is refused at the door in ten languages; a run of another channel is passed through untouched."
               },
@@ -114,7 +114,15 @@
                 "connections": [
                   "transform"
                 ]
-              }
+              },
+              "serves": [
+                "cms7irvhjd98776152ccbcdd4",
+                "cms7irvhk3db0071432a3309d",
+                "cms7irvhk73f8b1993401e7e8",
+                "cms7irvhk423e189d6cf1b08f",
+                "cms7irvhk2f6c06c08e096986",
+                "cms7irvhl43c40a5b5b70fb2c"
+              ]
             },
             {
               "cuid": "cmruqdpjl51eha9a65832422ad3a53",
@@ -1603,6 +1611,12 @@
         "cuid": "cms7irvhod712fb9e0d6e6f6f",
         "from": "cmd307recallmem01a2b3c4d5e6f7",
         "to": "cmruddnrpho70e8af12589d1deaa",
+        "state": "visible"
+      },
+      {
+        "cuid": "ceq83y32l8d1",
+        "from": "cmruca7r64n1jr7c4ca119ed7b7c4d",
+        "to": "cmd308classifyintent01a2b3c4",
         "state": "visible"
       }
     ]

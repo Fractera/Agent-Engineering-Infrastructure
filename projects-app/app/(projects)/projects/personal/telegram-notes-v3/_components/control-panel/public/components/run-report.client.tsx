@@ -34,9 +34,15 @@ export default function RunReport({ outcome, lang }: { outcome: Outcome; lang: s
     );
   }
 
+  // ОТВЕТ АССИСТЕНТА (309): тот же разговорный ответ, что ушёл бы в Telegram, приходит и в ПУЛЬТ —
+  // `api/run` достраивает `context.reply`. Спросил в пульте — ответ в пульте, а не только в мессенджере.
+  const reply = typeof outcome.context?.reply === "string" ? outcome.context.reply.trim() : "";
+
   return (
     <div className="space-y-2 rounded-md border bg-muted/30 p-3">
-      {outcome.error ? (
+      {reply ? (
+        <p className="whitespace-pre-wrap rounded-md bg-background p-2 text-sm">{reply}</p>
+      ) : outcome.error ? (
         <p className="text-sm text-rose-700 dark:text-rose-400">{readError(outcome.error, lang)}</p>
       ) : (
         <p className="text-sm text-emerald-700 dark:text-emerald-400">{L.done}</p>
