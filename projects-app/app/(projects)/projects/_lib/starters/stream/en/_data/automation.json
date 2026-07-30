@@ -2190,72 +2190,188 @@
               "columns": [
                 {
                   "key": "date",
-                  "label": { "en": "Date", "es": "Fecha", "fr": "Date", "it": "Data", "ru": "Дата", "de": "Datum", "pt": "Data", "pl": "Data", "tr": "Tarih", "nl": "Datum" },
+                  "label": {
+                    "en": "Date",
+                    "es": "Fecha",
+                    "fr": "Date",
+                    "it": "Data",
+                    "ru": "Дата",
+                    "de": "Datum",
+                    "pt": "Data",
+                    "pl": "Data",
+                    "tr": "Tarih",
+                    "nl": "Datum"
+                  },
                   "type": "date",
                   "source": "date",
                   "defaultVisible": true
                 },
                 {
                   "key": "name",
-                  "label": { "en": "Item", "es": "Concepto", "fr": "Libellé", "it": "Voce", "ru": "Назначение", "de": "Posten", "pt": "Item", "pl": "Pozycja", "tr": "Kalem", "nl": "Post" },
+                  "label": {
+                    "en": "Item",
+                    "es": "Concepto",
+                    "fr": "Libellé",
+                    "it": "Voce",
+                    "ru": "Назначение",
+                    "de": "Posten",
+                    "pt": "Item",
+                    "pl": "Pozycja",
+                    "tr": "Kalem",
+                    "nl": "Post"
+                  },
                   "type": "text",
                   "source": "name",
                   "defaultVisible": true
                 },
                 {
                   "key": "amount",
-                  "label": { "en": "Amount", "es": "Importe", "fr": "Montant", "it": "Importo", "ru": "Сумма", "de": "Betrag", "pt": "Valor", "pl": "Kwota", "tr": "Tutar", "nl": "Bedrag" },
+                  "label": {
+                    "en": "Amount",
+                    "es": "Importe",
+                    "fr": "Montant",
+                    "it": "Importo",
+                    "ru": "Сумма",
+                    "de": "Betrag",
+                    "pt": "Valor",
+                    "pl": "Kwota",
+                    "tr": "Tutar",
+                    "nl": "Bedrag"
+                  },
                   "type": "number",
                   "source": "amount",
                   "defaultVisible": true
                 },
                 {
                   "key": "currency",
-                  "label": { "en": "Currency", "es": "Moneda", "fr": "Devise", "it": "Valuta", "ru": "Валюта", "de": "Währung", "pt": "Moeda", "pl": "Waluta", "tr": "Para birimi", "nl": "Valuta" },
+                  "label": {
+                    "en": "Currency",
+                    "es": "Moneda",
+                    "fr": "Devise",
+                    "it": "Valuta",
+                    "ru": "Валюта",
+                    "de": "Währung",
+                    "pt": "Moeda",
+                    "pl": "Waluta",
+                    "tr": "Para birimi",
+                    "nl": "Valuta"
+                  },
                   "type": "text",
                   "source": "currency",
                   "defaultVisible": true
                 },
                 {
                   "key": "store",
-                  "label": { "en": "Store", "es": "Tienda", "fr": "Magasin", "it": "Negozio", "ru": "Магазин", "de": "Geschäft", "pt": "Loja", "pl": "Sklep", "tr": "Mağaza", "nl": "Winkel" },
+                  "label": {
+                    "en": "Store",
+                    "es": "Tienda",
+                    "fr": "Magasin",
+                    "it": "Negozio",
+                    "ru": "Магазин",
+                    "de": "Geschäft",
+                    "pt": "Loja",
+                    "pl": "Sklep",
+                    "tr": "Mağaza",
+                    "nl": "Winkel"
+                  },
                   "type": "text",
                   "source": "store",
                   "defaultVisible": true
                 },
                 {
                   "key": "kind",
-                  "label": { "en": "Kind", "es": "Tipo", "fr": "Type", "it": "Tipo", "ru": "Тип", "de": "Art", "pt": "Tipo", "pl": "Rodzaj", "tr": "Tür", "nl": "Soort" },
+                  "label": {
+                    "en": "Kind",
+                    "es": "Tipo",
+                    "fr": "Type",
+                    "it": "Tipo",
+                    "ru": "Тип",
+                    "de": "Art",
+                    "pt": "Tipo",
+                    "pl": "Rodzaj",
+                    "tr": "Tür",
+                    "nl": "Soort"
+                  },
                   "type": "badge",
                   "source": "kind",
                   "defaultVisible": true,
-                  "options": { "colorFrom": "green" }
+                  "options": {
+                    "colorFrom": "green"
+                  }
                 },
                 {
                   "key": "receipt",
-                  "label": { "en": "Receipt", "es": "Recibo", "fr": "Reçu", "it": "Ricevuta", "ru": "Чек", "de": "Beleg", "pt": "Recibo", "pl": "Paragon", "tr": "Fiş", "nl": "Bon" },
+                  "label": {
+                    "en": "Receipt",
+                    "es": "Recibo",
+                    "fr": "Reçu",
+                    "it": "Ricevuta",
+                    "ru": "Чек",
+                    "de": "Beleg",
+                    "pt": "Recibo",
+                    "pl": "Paragon",
+                    "tr": "Fiş",
+                    "nl": "Bon"
+                  },
                   "type": "image",
                   "source": "storageIds",
                   "defaultVisible": true
                 },
                 {
                   "key": "row-actions",
-                  "label": { "en": "", "es": "", "fr": "", "it": "", "ru": "", "de": "", "pt": "", "pl": "", "tr": "", "nl": "" },
+                  "label": {
+                    "en": "",
+                    "es": "",
+                    "fr": "",
+                    "it": "",
+                    "ru": "",
+                    "de": "",
+                    "pt": "",
+                    "pl": "",
+                    "tr": "",
+                    "nl": ""
+                  },
                   "type": "actions",
                   "source": "id",
                   "defaultVisible": true,
-                  "options": { "action": "detail" }
+                  "options": {
+                    "action": "detail"
+                  }
                 },
                 {
                   "key": "row-delete",
-                  "label": { "en": "", "es": "", "fr": "", "it": "", "ru": "", "de": "", "pt": "", "pl": "", "tr": "", "nl": "" },
+                  "label": {
+                    "en": "",
+                    "es": "",
+                    "fr": "",
+                    "it": "",
+                    "ru": "",
+                    "de": "",
+                    "pt": "",
+                    "pl": "",
+                    "tr": "",
+                    "nl": ""
+                  },
                   "type": "actions",
                   "source": "id",
                   "defaultVisible": true,
-                  "options": { "action": "delete" }
+                  "options": {
+                    "action": "delete"
+                  }
                 }
               ],
-              "title": { "en": "Finance", "es": "Finanzas", "fr": "Finances", "it": "Finanze", "ru": "Финансы", "de": "Finanzen", "pt": "Finanças", "pl": "Finanse", "tr": "Finans", "nl": "Financiën" },
+              "title": {
+                "en": "Finance",
+                "es": "Finanzas",
+                "fr": "Finances",
+                "it": "Finanze",
+                "ru": "Финансы",
+                "de": "Finanzen",
+                "pt": "Finanças",
+                "pl": "Finanse",
+                "tr": "Finans",
+                "nl": "Financiën"
+              },
               "pageSize": 20
             }
           }
@@ -2435,7 +2551,7 @@
         "info": {
           "aiSummary": "The vector-memory tab is declared and empty: we will show what the automation has remembered once the owner says what exactly."
         },
-        "status": "in-development",
+        "status": "materialized",
         "warnings": [],
         "envKeys": [],
         "entity": {
@@ -2445,7 +2561,7 @@
           "info": {
             "aiSummary": "Blank \"Main memory\": created together with the tab, no owner requirements yet."
           },
-          "status": "in-development",
+          "status": "materialized",
           "warnings": [],
           "envKeys": [],
           "data": {}
@@ -2459,7 +2575,7 @@
         "info": {
           "aiSummary": "The local-database tab is declared and empty: the owner decides which records to show."
         },
-        "status": "in-development",
+        "status": "materialized",
         "warnings": [],
         "envKeys": [],
         "entities": [
@@ -2470,7 +2586,7 @@
             "info": {
               "aiSummary": "Blank \"Main database\": created together with the tab, no owner requirements yet."
             },
-            "status": "in-development",
+            "status": "materialized",
             "warnings": [],
             "envKeys": [],
             "data": {}
@@ -2563,7 +2679,7 @@
         "info": {
           "aiSummary": "The local-storage tab is declared and empty: this is where the automation's files will live, for example images."
         },
-        "status": "in-development",
+        "status": "materialized",
         "warnings": [],
         "envKeys": [],
         "entity": {
@@ -2573,7 +2689,7 @@
           "info": {
             "aiSummary": "Blank \"Main storage\": created together with the tab, no owner requirements yet."
           },
-          "status": "in-development",
+          "status": "materialized",
           "warnings": [],
           "envKeys": [],
           "data": {}
