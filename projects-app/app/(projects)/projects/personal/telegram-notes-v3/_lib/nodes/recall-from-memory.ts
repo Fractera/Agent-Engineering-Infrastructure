@@ -97,7 +97,21 @@ export async function recallFromMemory(ctx: NodeCtx): Promise<NodeCtx> {
   const question = String(ctx.text ?? "").replace(/\s+/g, " ").trim();
   if (!question) refuse(noQuestion);
 
-  const answer = await recallFacts(question);
+  // 🔒 ДЕТЕРМИНИРОВАННЫЙ ФИНАНСОВЫЙ КОНТЕКСТ (309, живой тест «на какую сумму вишню»): вопрос про деньги/
+  // покупку → достаём ПОЛНЫЕ finance-строки (их позиции) НАПРЯМУЮ из таблицы, не полагаясь на векторный
+  // поиск (он не связал «вишня»↔«cereza» — разные языки/слова). Даём их модели памяти как факты — она сама
+  // найдёт нужную позицию через язык. Обходит и семантику языков, и связь.
+  let financeFacts = "";
+  if (/(сумм|потрат|купил|цена|стоил|деньг|расход|доход|финанс|чек|amount|spent|cost|paid|price|receipt|money)/i.test(question)) {
+    const fin = (await listRows("finance", Infinity)).filter((r) => Array.isArray(r.items) && (r.items as unknown[]).length);
+    financeFacts = fin.slice(0, 5).map((r) => {
+      const items = (r.items as { name?: unknown; qty?: unknown; price?: unknown }[])
+        .map((it) => `${it.name ?? ""} ×${it.qty ?? "?"} = ${it.price ?? "?"}`).join("; ");
+      return `Receipt from ${r.store ?? "?"} total ${r.amount ?? "?"}${r.currency ?? ""}: ${items}`;
+    }).join("\n");
+  }
+
+  const answer = await recallFacts(financeFacts ? `${question}\n\nKnown receipts:\n${financeFacts}` : question);
 
   // Недоступно / пусто — честные исходы без маркеров. Реальный ответ → разрешаем маркеры в строки+картинки.
   if (answer === null || answer === "") {
@@ -106,13 +120,23 @@ export async function recallFromMemory(ctx: NodeCtx): Promise<NodeCtx> {
   }
 
   const resolved = await resolveMarkers(answer);
+
+  // 🔒 ДЕТЕРМИНИРОВАННЫЙ ВОЗВРАТ КАРТИНКИ (309, живой тест «покажи чек»): если маркеры не дали вложений
+  // (LightRAG не процитировал маркер — вероятностно), но вопрос ПРОСИТ показать чек/фото — достаём картинку
+  // напрямую из хранилищ, не полагаясь на память: последняя finance-строка с картинкой (или её связи).
+  let attachments = resolved.attachments;
+  if (!attachments.length && /(чек|квитанц|фото|картинк|receipt|photo|покажи|show)/i.test(question)) {
+    const fin = (await listRows("finance", Infinity)).find((r) => Array.isArray(r.storageIds) && (r.storageIds as unknown[]).length);
+    if (fin) attachments = (fin.storageIds as unknown[]).map(String).filter(Boolean);
+  }
+
   return {
     text: resolved.text, // видимый текст без маркеров
     title: deriveTitle(resolved.text),
     question,
     recallAnswer: resolved.text, // структурный результат ветки recall для композитора ответа (308)
-    // Разрешённые вложения/записи — выходной узел может доставить сами картинки, а не только текст (308.7).
-    ...(resolved.attachments.length ? { recalledAttachments: resolved.attachments } : {}),
+    // Разрешённые/детерминированно найденные вложения — выходной узел доставит сами картинки (308.7/309).
+    ...(attachments.length ? { recalledAttachments: attachments } : {}),
     ...(resolved.records.length ? { recalledRecords: resolved.records } : {}),
     at: String(ctx.at ?? new Date().toISOString()),
     source: String(ctx.source ?? "unknown"),

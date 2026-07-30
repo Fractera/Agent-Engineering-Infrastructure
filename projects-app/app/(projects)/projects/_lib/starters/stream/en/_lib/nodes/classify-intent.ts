@@ -16,9 +16,18 @@
 // Имя `classifyIntent` — публичный контракт, не переименовывать.
 import type { NodeCtx } from "../executor";
 import { askModel } from "../ai";
+import { loadChat, formatDialog } from "../components/conversation/state";
 
 export const INTENTS = ["save", "remind", "recall", "finance", "place"] as const;
 const ALLOWED = new Set<string>(INTENTS);
+
+// Признак ВОПРОСА/ЗАПРОСА (не список фраз-ответов — грамматический маркер вопроса, лингвистика, а не
+// перечисление реплик): вопросительное начало/слово или знак «?». Живой тест 309: «на какую сумму купил
+// вишню» и «покажи чек» уходили в finance/save вместо recall из-за глагола «купил». Вопрос доминирует над
+// глаголом. Это СИЛЬНЫЙ сигнал recall, но НЕ финальный — модель всё равно решает; сигнал лишь страхует.
+// БЕЗ `\b` — он ломается на кириллице в JS (всегда false). Матч подстрокой; вопросительный знак — отдельно.
+const QUESTION_RE =
+  /(сколько|на какую|какая сумма|какой|какие|что я|где я|когда |покажи|найди|верни|вспомни|how much|show me|what did|where did|when is|find |recall)/i;
 
 export async function classifyIntent(ctx: NodeCtx): Promise<NodeCtx> {
   const text = String(ctx.text ?? "").trim();
@@ -29,47 +38,66 @@ export async function classifyIntent(ctx: NodeCtx): Promise<NodeCtx> {
   // Явные СЛУЖЕБНЫЕ КОМАНДЫ Telegram (не естественная речь) — быстрый детерминированный показ возможностей.
   if (/^\/(start|help)\b/i.test(text)) return { intent: [], showHelp: true };
 
-  // ЖЁСТКИЕ ФЛАГИ ВЛОЖЕНИЙ — единственная детерминированная подсказка (вложение однозначно): фото = чек к
-  // учёту (finance), шаринг локации = место (place). ТЕКСТОВЫХ хинтов больше НЕТ (урок живого теста 309):
-  // слово «потратил»/валюта в тексте форсили finance даже в ВОПРОСЕ («сколько я потратил на вишни» → бот
-  // «учёл покупку»). Запись-vs-вопрос — суждение, а не поиск слов: его выносит МОДЕЛЬ по промпту ниже.
+  // ЖЁСТКИЕ ФЛАГИ ВЛОЖЕНИЙ: фото = чек к учёту (finance), шаринг локации = место (place). НО фото вместе с
+  // ВОПРОСОМ (редко) не форсим — фото без вопроса это чек. Локация всегда place.
+  const isQuestion = QUESTION_RE.test(text) || /\?\s*$/.test(text);
   const hardFlags = new Set<string>();
-  if (hasPhoto) hardFlags.add("finance");
+  if (hasPhoto && !isQuestion) hardFlags.add("finance");
   if (hasLocation) hardFlags.add("place");
 
+  // 🔒 ЕДИНЫЙ КОНТЕКСТНЫЙ СЛОЙ (309, требование владельца). Классификатор — ПЕРВЫЙ модельный узел: он
+  // читает буфер чата ОДИН РАЗ, кладёт структурный `recentDialog` + `chatLang` в контекст, и все
+  // последующие модельные узлы (parseDate, digitizeMoney, converse) берут их отсюда, а не читают заново и
+  // не судят в вакууме. Так «на какую сумму купил вишню» после чека понимается как ВОПРОС ПРО ЧЕК.
+  const chatId = String(ctx.telegramChatId ?? "").trim();
+  const state = chatId ? await loadChat(chatId) : { messages: [], lang: "" };
+  const recentDialog = formatDialog(state.messages);
+  const chatLang = state.lang || (/[Ѐ-ӿ]/.test(text) ? "ru" : "");
+
   // Нет текста, но есть вложение → чистый детерминированный исход (модель не нужна).
-  if (!text) return { intent: hardFlags.size ? [...hardFlags] : ["save"] };
+  if (!text) return { intent: hardFlags.size ? [...hardFlags] : ["save"], recentDialog, chatLang };
 
   const system =
     `You label the user's message with the DATA intents it carries, from this exact set: save (states a ` +
-    `FACT to remember), remind (wants a time-based reminder), recall (a QUESTION or REQUEST to FIND/SHOW ` +
-    `something already saved — "how much did I spend on X", "show me the receipt", "what did I save about ` +
-    `Y", "when is my reminder"), finance (RECORDS a NEW money movement — a statement that money was spent ` +
-    `or received, e.g. "spent 10 euro on coffee", "got paid 500"), place (marks a LOCATION — "remember ` +
-    `this place", "they sell tasty pies here"). \n\n` +
-    `CRITICAL — RECORD vs QUESTION: a STATEMENT that records money is finance; a QUESTION or request ABOUT ` +
-    `money already spent is recall, NEVER finance. "потратил 500 на такси" → finance (records it). "сколько ` +
-    `я потратил на вишни" → recall (asks). "покажи чек на 31.34" → recall (requests to show). "изучи чек ` +
-    `повторно и скажи сумму за черешню" → recall (re-examine and answer). Money words alone do NOT mean ` +
-    `finance — the intent (record vs ask) does. \n\n` +
-    `If the message is CONVERSATION with nothing to store or find — a greeting, thanks, small talk, or a ` +
+    `FACT to remember), remind (wants a time-based reminder), recall (a QUESTION or REQUEST to FIND/SHOW/` +
+    `ANSWER FROM something already saved), finance (RECORDS a NEW money movement — a statement that money ` +
+    `was just spent or received), place (marks a LOCATION). \n\n` +
+    `🔑 THE HARDEST DISTINCTION — RECORD vs QUESTION. If the message ASKS or REQUESTS about already-saved ` +
+    `data it is recall, NEVER a new record — even if it contains money/purchase words in past tense. The ` +
+    `question form (сколько / на какую сумму / покажи / что / где / когда / how much / show) DOMINATES the ` +
+    `verb. Examples:\n` +
+    `  "потратил 500 на такси" → finance (records a new expense)\n` +
+    `  "на какую сумму купил вишню" → recall (ASKS the amount of an item on a saved receipt — NOT finance)\n` +
+    `  "сколько я потратил на вишни" → recall\n` +
+    `  "покажи чек" / "покажи чек на 31.34" → recall (REQUESTS to show a saved receipt)\n` +
+    `  "изучи чек повторно и скажи сумму за черешню" → recall\n` +
+    `  "вишня по-испански cereza" → save (states a fact)\n\n` +
+    `If the message is CONVERSATION with nothing to store or find — greeting, thanks, small talk, or a ` +
     `question ABOUT YOU (the assistant) — reply the single word none. A message may carry several data ` +
     `intents. Reply with ONLY the matching intent words lowercase comma-separated, or none. Nothing else.`;
 
+  const user = recentDialog
+    ? `Recent dialogue for context (do not classify these, only the last line):\n${recentDialog}\n\nClassify THIS message: ${text}`
+    : text;
+
   let raw: string | null;
   try {
-    raw = await askModel({ system, user: text, maxTokens: 24 });
+    raw = await askModel({ system, user, maxTokens: 24 });
   } catch {
     // модель отвергла запрос — не теряем сообщение, сохраняем как заметку (+ жёсткие флаги вложений)
-    return { intent: [...new Set(["save", ...hardFlags])] };
+    return { intent: [...new Set(["save", ...hardFlags])], recentDialog, chatLang };
   }
-  if (raw === null) return { intent: [...new Set(["save", ...hardFlags])] };
+  if (raw === null) return { intent: [...new Set(["save", ...hardFlags])], recentDialog, chatLang };
 
   // ДЕТЕРМИНИРОВАННЫЙ парс: только валидные токены словаря, дубликаты убраны, порядок словаря.
   const found = new Set<string>(hardFlags);
   for (const tok of raw.toLowerCase().split(/[^a-z]+/)) if (ALLOWED.has(tok)) found.add(tok);
+
+  // СТРАХОВКА ВОПРОСА: явный вопрос без нового вложения → recall, и убрать ошибочный save/finance, если
+  // модель поставила их по глаголу («купил» в «на какую сумму купил вишню»). Вопрос не создаёт запись.
+  if (isQuestion && !hasPhoto) { found.add("recall"); found.delete("finance"); found.delete("save"); }
+
   const intent = INTENTS.filter((i) => found.has(i));
-  // Пустой intent = РАЗГОВОР (приветствие/вопрос о боте/болтовня): НЕ форсим `save`, чтобы такое сообщение
-  // не сохранялось заметкой. На него ответит МОДЕЛЬ в `converse` (по инструкции поведения), а не ветки-данные.
-  return { intent };
+  // Пустой intent = РАЗГОВОР: НЕ форсим `save`. На него ответит МОДЕЛЬ в `converse`, а не ветки-данные.
+  return { intent, recentDialog, chatLang };
 }

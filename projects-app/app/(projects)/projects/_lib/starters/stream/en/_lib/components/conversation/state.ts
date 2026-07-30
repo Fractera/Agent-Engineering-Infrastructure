@@ -25,6 +25,20 @@ function normalize(row: Record<string, unknown> | undefined, chatId: string): Ch
   };
 }
 
+/**
+ * СТРУКТУРНЫЙ КОНТЕКСТ ДИАЛОГА (309, формат владельца) — последние сообщения одним блоком для модельных
+ * узлов: «[время] кто→кому: текст», повторяется. Так классификатор/digitizeMoney/parseDate/converse судят
+ * НЕ в вакууме (живой тест: «на какую сумму купил вишню» без контекста уходило в новую запись). Даётся
+ * ВСЕМ модельным узлам, а не только разговорному. Пустой буфер → пустая строка.
+ */
+export function formatDialog(messages: ChatMessage[], limit = 8): string {
+  const recent = messages.slice(-limit);
+  if (!recent.length) return "";
+  const who = (r: string) => (r === "user" ? "user→bot" : "bot→user");
+  const t = (iso: string) => { const d = new Date(iso); return Number.isFinite(d.getTime()) ? d.toISOString().slice(0, 16).replace("T", " ") : ""; };
+  return recent.map((m) => `[${t(m.at)}] ${who(m.role)}: ${m.text}`).join("\n");
+}
+
 /** Прочитать состояние чата (пустое, если чат новый). */
 export async function loadChat(chatId: string): Promise<ChatState> {
   const id = String(chatId).trim();

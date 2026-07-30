@@ -63,6 +63,12 @@ export async function deliverCalendar(ctx: NodeCtx): Promise<NodeCtx> {
     ? { [m.source]: { active: true, text: m.text, ...(chatId ? { chatId } : {}) } }
     : {};
 
+  // Язык чата в запись (309): отложенная развозка (`deliverDue`) возьмёт его для локализованной шапки
+  // напоминания — иначе бралась бы платформенная дефолт-локаль (жалоба владельца: intro на английском).
+  // Приоритет: явный `ctx.lang` → зафиксированный язык чата в состоянии не читаем здесь (закон 0 узла) →
+  // детект по тексту сообщения (кириллица → ru). Простой сигнал, покрывает главный кейс.
+  const explicit = String((ctx as Record<string, unknown>).lang ?? "").toLowerCase().slice(0, 2);
+  const lang = explicit || (/[Ѐ-ӿ]/.test(m.text) ? "ru" : "");
   const row = await addRow("calendar", {
     date: `${when.getFullYear()}-${pad(when.getMonth() + 1)}-${pad(when.getDate())}`,
     time: `${pad(when.getHours())}:${pad(when.getMinutes())}`,
@@ -71,6 +77,7 @@ export async function deliverCalendar(ctx: NodeCtx): Promise<NodeCtx> {
     notifyBefore: 0,
     integrations,
     source: m.source,
+    ...(lang ? { lang } : {}),
   });
   return { calendarRowId: row.id, calendarWhen: when.toISOString() };
 }

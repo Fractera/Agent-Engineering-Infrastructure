@@ -57,9 +57,13 @@ const REMINDER_INTRO: Record<string, (when: string) => string> = {
   nl: (w) => `🔔 Herinneringsmelding, gepland voor ${w}:`,
 };
 
-/** Сообщение напоминания с локализованной шапкой: «🔔 …запланировано на <дата время>:» + текст. */
+/** Сообщение напоминания с локализованной шапкой: «🔔 …запланировано на <дата время>:» + текст.
+ *  Язык — ЯЗЫК ЧАТА, сохранённый в записи при создании (`row.lang`, его кладёт `deliverCalendar` из
+ *  состояния чата); фолбэк — дефолт платформы. Живой тест 309: intro приходил на английском, потому что
+ *  брался `NEXT_PUBLIC_DEFAULT_LOCALE` (не задан =en), игнорируя язык переписки. */
 function withReminderIntro(row: CalRow, body: string): string {
-  const lang = (process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "en").toLowerCase().slice(0, 2);
+  const rowLang = String((row as unknown as { lang?: unknown }).lang ?? "").toLowerCase().slice(0, 2);
+  const lang = rowLang || (process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "en").toLowerCase().slice(0, 2);
   const intro = (REMINDER_INTRO[lang] ?? REMINDER_INTRO.en)(`${row.date} ${row.time}`.trim());
   return `${intro}\n\n${body}`;
 }

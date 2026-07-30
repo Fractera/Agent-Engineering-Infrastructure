@@ -59,14 +59,14 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   if (chatId && incoming) state = await pushMessage(chatId, { role: "user", text: incoming, at: new Date().toISOString() }, cfg.lastN, cfg.ttlMinutes);
 
   // Язык ответа. Приоритет: зафиксированный в чате (выбор пользователя, персист) → фикс из настроек →
-  // ЯЗЫК САМОГО СООБЩЕНИЯ (кириллица → ru, иначе en) → дефолт платформы. Детект по сообщению важнее
-  // дефолта: `NEXT_PUBLIC_DEFAULT_LOCALE` на сервере может быть не задан (=en), и русский текст получал бы
-  // английский ответ — ровно этот баг поймал владелец. Полный флоу переговоров о языке — отдельный под-шаг.
+  // `ctx.chatLang` от классификатора (единый контекстный слой 309) → ЯЗЫК СООБЩЕНИЯ (кириллица → ru) →
+  // дефолт платформы. Детект по сообщению важнее дефолта: `NEXT_PUBLIC_DEFAULT_LOCALE` может быть не задан.
   const detectLang = (s: string): string => (/[Ѐ-ӿ]/.test(s) ? "ru" : "");
   const fixed = cfg.languageMode === "fixed" && cfg.fixedLanguage ? cfg.fixedLanguage : "";
   let lang =
     state.lang ||
     fixed ||
+    String(ctx.chatLang ?? "").toLowerCase().slice(0, 2) ||
     detectLang(incoming) ||
     String(ctx.lang ?? process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? "en").toLowerCase().slice(0, 2);
 
@@ -92,7 +92,9 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   // образец + что сделал прогон. Модель отвечает КАК ЭТОТ АССИСТЕНТ: подтвердить действие, если оно было,
   // ИЛИ вести разговор (приветствие, «кто ты», болтовня), опираясь на свою инструкцию. Никаких списков
   // фраз в коде — поведение задаёт инструкция, а не функция.
-  const history = state.messages.slice(-cfg.lastN).map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.text}`).join("\n");
+  // Контекст диалога — из единого слоя (`ctx.recentDialog`, положил классификатор); фолбэк — свой буфер.
+  const history = String(ctx.recentDialog ?? "").trim()
+    || state.messages.slice(-cfg.lastN).map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.text}`).join("\n");
   const task = done
     ? `You just performed this for the user: ${done}. Reply confirming it (or ask the follow-up it needs).`
     : `The user is talking to you (a greeting, a question about who you are or why you exist, or small talk). ` +
