@@ -19,7 +19,9 @@ import { transformPayload } from "./transform-payload";
 import { classifyIntent } from "./classify-intent";
 import { digitizeMoney } from "./digitize-money";
 import { defineGlossary } from "./define-glossary";
+import { defineDimension } from "./define-dimension";
 import { dedupeGuard } from "./dedupe-guard";
+import { dimensionTag } from "./dimension-tag";
 import { storeAttachment } from "./store-attachment";
 import { linkAttachments } from "./link-attachments";
 import { recallFromMemory } from "./recall-from-memory";
@@ -59,7 +61,9 @@ export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   classifyIntent,
   digitizeMoney,
   defineGlossary,
+  defineDimension,
   dedupeGuard,
+  dimensionTag,
   storeAttachment,
   linkAttachments,
   recallFromMemory,

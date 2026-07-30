@@ -565,6 +565,46 @@
               }
             },
             {
+              "cuid": "cmd310definedimension03c4d5f7",
+              "name": "Define dimension",
+              "description": "The middle — when the owner says \"let's split expenses by home and work\", turns that into a new tracked attribute of the finance table (field + values + a question to ask).",
+              "state": "visible",
+              "info": {
+                "aiSummary": "Dimension definer (step 310, node-skill of the middle library): self-gates on the 'dimension' intent; a request to START SPLITTING expenses by a new attribute → one askModel call extracts {field,label,values[],question} in strict JSON, validated (needs a field and >=2 values) → addDimension writes a finance-dimensions row and ctx.dimensionAdded confirms in chat. From then on the dashboard finance table shows a column for it and dimensionTag asks its question for each spend. Garbage (no clear attribute) → nothing written."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "serves": [],
+              "lineage": "nsk-define-dimension-v1",
+              "function": {
+                "name": "defineDimension",
+                "summary": "Turns an owner's request to split expenses by a new attribute into a stored finance dimension.",
+                "accepts": "ctx.text, gated on the 'dimension' intent.",
+                "returns": "dimensionAdded: {field,label,values} after writing a finance-dimensions row — OR nothing when no clear attribute is found."
+              },
+              "run": "sequential",
+              "estDurationMs": 1200,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              }
+            },
+            {
               "cuid": "cmd308storeattach04d5e6f7",
               "name": "Store attachment",
               "description": "The middle — registers every incoming photo/document as a first-class object: downloads it, stores the bytes, gets a short vision description, writes a pending storage row. Hidden until revealed.",
@@ -732,6 +772,46 @@
               },
               "run": "sequential",
               "estDurationMs": 40,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              }
+            },
+            {
+              "cuid": "cmd310dimensiontag04d5e6f8",
+              "name": "Dimension tag",
+              "description": "The middle — after a spend is recognized, tags it with the owner's dimensions (e.g. home/work): infers the value from the message, or holds the record and asks which one it is.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "Dimension tagger (step 310, node-skill of the middle library): sits after dedupeGuard, before deliverDatabase, gated finance. TWO jobs like askAddress/dedupeGuard: (1) RESOLVE — a dim-survey question pending → THIS message answers it: match it to the asked dimension's values, write the value onto the HELD finance row; more dimensions unknown → ask the next; else write the row. skipDatabase in every outcome. (2) TAG at record time — active finance-dimensions exist and a spend is recorded → infer each dimension's value from the text deterministically; all known → put them in ctx.financeDims (the store writes them as columns) and pass; any unknown → HOLD the finance row and ASK the owner («home or work?»), skipDatabase, until they clarify. Hold-and-confirm; the owner's law «you must clarify»."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "serves": [],
+              "lineage": "nsk-dimension-tag-v1",
+              "function": {
+                "name": "dimensionTag",
+                "summary": "Tags a spend with the owner's dimensions, asking which value when it cannot be inferred.",
+                "accepts": "ctx.finance gated on 'finance'; and a pending dim-survey answer.",
+                "returns": "financeDims (inferred) OR skipDatabase+dimensionAsk (held) OR dimensionResolved (written) OR {}."
+              },
+              "run": "sequential",
+              "estDurationMs": 60,
               "kind": "transform",
               "ioType": null,
               "in": {
@@ -1673,6 +1753,12 @@
       {
         "cuid": "cms309defglossedge01a2b3c4d5",
         "from": "cmd309defineglossary02b3c4e6",
+        "to": "cmd310definedimension03c4d5f7",
+        "state": "visible"
+      },
+      {
+        "cuid": "cms310defdimedge01a2b3c4d5e6",
+        "from": "cmd310definedimension03c4d5f7",
         "to": "cmd307aitransform02b3c4d5e6f7",
         "state": "visible"
       },
@@ -1703,6 +1789,12 @@
       {
         "cuid": "cms310dedupeedge01a2b3c4d5e6",
         "from": "cmd310dedupeguard02b3c4e7",
+        "to": "cmd310dimensiontag04d5e6f8",
+        "state": "visible"
+      },
+      {
+        "cuid": "cms310dimtagedge01a2b3c4d5e6",
+        "from": "cmd310dimensiontag04d5e6f8",
         "to": "cmruddnrpho70e8af12589d1deaa",
         "state": "visible"
       },

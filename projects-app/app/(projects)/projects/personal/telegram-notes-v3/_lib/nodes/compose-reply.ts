@@ -54,6 +54,10 @@ const T = {
       : `🤔 This looks already recorded: ${m}. Record it again or skip? (yes / no)`,
   dupWritten: (l: Lang) => (l === "ru" ? "✅ Записал ещё раз." : "✅ Recorded again."),
   dupSkipped: (l: Lang) => (l === "ru" ? "👍 Пропустил — не стал дублировать." : "👍 Skipped — no duplicate created."),
+  dimAdded: (l: Lang, label: string, values: string) =>
+    l === "ru" ? `✅ Теперь развожу траты по «${label}»: ${values}. Буду уточнять у каждой траты.` : `✅ Now splitting expenses by "${label}": ${values}. I'll ask for each spend.`,
+  dimAsk: (l: Lang, q: string) => q || (l === "ru" ? "К чему отнести эту трату?" : "Which one is this spend?"),
+  dimWritten: (l: Lang) => (l === "ru" ? "✅ Записал с пометкой." : "✅ Recorded with the tag."),
   unknown: (l: Lang) => (l === "ru" ? "🤔 Не понял сообщение.\n\n" : "🤔 I didn't understand.\n\n"),
 };
 
@@ -79,6 +83,16 @@ export function composeReply(ctx: NodeCtx): NodeCtx {
   }
   if (ctx.duplicateResolved === "written") return { reply: T.dupWritten(L) };
   if (ctx.duplicateResolved === "skipped") return { reply: T.dupSkipped(L) };
+
+  // ИЗМЕРЕНИЯ (310) — тоже терминальные: вопрос об измерении / его запись отвечаются одной строкой.
+  if (ctx.dimensionAsk && typeof ctx.dimensionAsk === "object") {
+    return { reply: T.dimAsk(L, String((ctx.dimensionAsk as { question?: string }).question ?? "")) };
+  }
+  if (ctx.dimensionResolved === "written") return { reply: T.dimWritten(L) };
+  if (ctx.dimensionAdded && typeof ctx.dimensionAdded === "object") {
+    const d = ctx.dimensionAdded as { label?: string; values?: string[] };
+    return { reply: T.dimAdded(L, String(d.label ?? ""), (Array.isArray(d.values) ? d.values : []).join(" / ")) };
+  }
 
   const intents = Array.isArray(ctx.intent) ? (ctx.intent as unknown[]).map(String) : [];
   const has = (i: string) => intents.length === 0 || intents.includes(i);

@@ -32,6 +32,9 @@ export function financeRowFrom(ctx: NodeCtx): Record<string, unknown> | null {
   if (!finance) return null;
   const m = messageOf(ctx);
   const { storageIds, vectorIds } = attachmentsOf(ctx);
+  // Пользовательские ИЗМЕРЕНИЯ (310): dimensionTag определил/уточнил значения (напр. {scope:"дом"}) →
+  // ложатся в строку finance полями наравне с остальными, чтобы дашборд показал их колонкой.
+  const dims = (ctx.financeDims && typeof ctx.financeDims === "object" ? ctx.financeDims : {}) as Record<string, unknown>;
   return {
     kind: finance.kind ?? "expense",
     amount: finance.amount ?? null,
@@ -42,6 +45,7 @@ export function financeRowFrom(ctx: NodeCtx): Record<string, unknown> | null {
     currency: finance.currency ?? "",
     items: Array.isArray(finance.items) ? finance.items : [],
     source: m.source, date: finance.date || m.at, storageIds, vectorIds,
+    ...dims,
   };
 }
 

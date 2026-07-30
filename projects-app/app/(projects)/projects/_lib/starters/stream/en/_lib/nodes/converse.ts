@@ -93,7 +93,7 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   // ДУБ-КОНТРОЛЬ (310) — вопрос «записать ещё раз?» и его разрешение отдаём ДЕТЕРМИНИРОВАННО: чёткий
   // да/нет-промпт надёжнее модельного парафраза (модель может размыть вопрос и владелец не поймёт, что от
   // него хотят). Тот же приём, что с представлением возможностей.
-  if (ctx.duplicateAsk || ctx.duplicateResolved) {
+  if (ctx.duplicateAsk || ctx.duplicateResolved || ctx.dimensionAsk || ctx.dimensionResolved || ctx.dimensionAdded) {
     const reply = composeReply({ ...ctx, lang }).reply as string;
     if (chatId) await pushMessage(chatId, { role: "assistant", text: reply, at: new Date().toISOString() }, cfg.lastN, cfg.ttlMinutes);
     return { reply };

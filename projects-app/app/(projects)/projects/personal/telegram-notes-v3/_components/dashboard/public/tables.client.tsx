@@ -55,15 +55,37 @@ export function Dashboard({ lang, mode = "admin" }: { lang: string; mode?: Dashb
   const [right, setRight] = useState<string>("");
   const [split, setSplit] = useState(false);
 
-  // Конфиг таблиц — из ЯДРА автоматизации (объявление колонок живёт там).
+  // Конфиг таблиц — из ЯДРА автоматизации (объявление колонок живёт там). Плюс ЖИВЫЕ ИЗМЕРЕНИЯ (310):
+  // таблица `finance-dimensions` (рантайм) добавляет колонку-бейдж в таблицу finance — владелец завёл
+  // измерение «дом/работа» фразой боту, и оно тут же видно колонкой, без пересборки ядра.
   useEffect(() => {
     let alive = true;
-    fetch(`${apiBase()}/core?select=tab:dashboard`, { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d: { entities?: CoreDashboardEntity[] } | null) => {
-        if (alive && d?.entities) setTables(tablesFromCore(d.entities, lang));
-      })
-      .catch(() => { /* нет двери — таблиц не будет */ });
+    (async () => {
+      try {
+        const cr = await fetch(`${apiBase()}/core?select=tab:dashboard`, { cache: "no-store" });
+        const d = cr.ok ? ((await cr.json()) as { entities?: CoreDashboardEntity[] }) : null;
+        if (!alive || !d?.entities) return;
+        const built = tablesFromCore(d.entities, lang);
+        // дочитать активные измерения и приклеить колонки к таблице finance
+        try {
+          const dr = await fetch(`${apiBase()}/rows?table=finance-dimensions&limit=100`, { cache: "no-store" });
+          const dj = dr.ok ? ((await dr.json()) as { rows?: { values?: Record<string, unknown> }[] }) : null;
+          const dims = (dj?.rows ?? []).map((r) => r.values ?? r as Record<string, unknown>);
+          const fin = built.find((t) => t.id === "finance");
+          if (fin && dims.length) {
+            for (const dim of dims) {
+              const field = String((dim as Record<string, unknown>).field ?? "").trim();
+              if (!field || fin.columns.some((c) => c.id === field)) continue;
+              const label = String((dim as Record<string, unknown>).label ?? field);
+              const actionsIdx = fin.columns.findIndex((c) => c.type === "actions");
+              const col = { id: field, header: label, type: "badge" as const, source: field, defaultVisible: true, options: { colorFrom: "violet" } };
+              if (actionsIdx >= 0) fin.columns.splice(actionsIdx, 0, col); else fin.columns.push(col);
+            }
+          }
+        } catch { /* нет измерений — таблица как из ядра */ }
+        if (alive) setTables(built);
+      } catch { /* нет двери — таблиц не будет */ }
+    })();
     return () => { alive = false; };
   }, [lang]);
 

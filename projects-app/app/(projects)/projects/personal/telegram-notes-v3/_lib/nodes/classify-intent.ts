@@ -21,7 +21,7 @@ import { loadChat, formatDialog } from "../components/conversation/state";
 import { assistantConfigOf } from "../components/conversation/config";
 import { loadGlossary } from "../components/conversation/glossary";
 
-export const INTENTS = ["save", "remind", "recall", "finance", "place", "glossary"] as const;
+export const INTENTS = ["save", "remind", "recall", "finance", "place", "glossary", "dimension"] as const;
 const ALLOWED = new Set<string>(INTENTS);
 
 // Признак ВОПРОСА/ЗАПРОСА (не список фраз-ответов — грамматический маркер вопроса, лингвистика, а не
@@ -69,7 +69,9 @@ export async function classifyIntent(ctx: NodeCtx): Promise<NodeCtx> {
     `FACT to remember), remind (wants a time-based reminder), recall (a QUESTION or REQUEST to FIND/SHOW/` +
     `ANSWER FROM something already saved), finance (RECORDS a NEW money movement — a statement that money ` +
     `was just spent or received), place (marks a LOCATION), glossary (DEFINES an ALIAS/abbreviation — ` +
-    `"remember that receipts SODO ADEJE are Mercadona", "такие чеки это Меркадона", "X значит Y"). \n\n` +
+    `"remember that receipts SODO ADEJE are Mercadona", "такие чеки это Меркадона", "X значит Y"), ` +
+    `dimension (asks to START SPLITTING expenses by a NEW category/attribute — "давай собирать отдельно ` +
+    `расходы по дому и работе", "разделяй траты: дом и работа", "track home and work expenses separately"). \n\n` +
     `🔑 THE HARDEST DISTINCTION — RECORD vs QUESTION. If the message ASKS or REQUESTS about already-saved ` +
     `data it is recall, NEVER a new record — even if it contains money/purchase words in past tense. The ` +
     `question form (сколько / на какую сумму / покажи / что / где / когда / how much / show) DOMINATES the ` +
@@ -107,7 +109,7 @@ export async function classifyIntent(ctx: NodeCtx): Promise<NodeCtx> {
   // СТРАХОВКА ВОПРОСА: явный вопрос без нового вложения → recall, и убрать ошибочный save/finance, если
   // модель поставила их по глаголу («купил» в «на какую сумму купил вишню»). Вопрос не создаёт запись.
   // Определение алиаса (glossary) не считается вопросом — его не перебиваем.
-  if (isQuestion && !hasPhoto && !found.has("glossary")) { found.add("recall"); found.delete("finance"); found.delete("save"); }
+  if (isQuestion && !hasPhoto && !found.has("glossary") && !found.has("dimension")) { found.add("recall"); found.delete("finance"); found.delete("save"); }
 
   const intent = INTENTS.filter((i) => found.has(i));
   // Пустой intent = РАЗГОВОР: НЕ форсим `save`. На него ответит МОДЕЛЬ в `converse`, а не ветки-данные.
