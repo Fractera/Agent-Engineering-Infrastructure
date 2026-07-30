@@ -26,6 +26,8 @@ export async function deliverVectorMemory(ctx: NodeCtx): Promise<{ vectorMemoryD
   if (trackId === null) {
     return { vectorMemoryDelivery: "skipped: the vector-memory service (LightRAG) is unreachable on this server" };
   }
-  const row = await addRow("vector-memory", { name: m.title, content: fullText, storageIds: [], source: m.source, trackId });
+  // Привязка вложений всплеска (308.6): факт памяти держит ссылки на объекты этого прогона.
+  const atts = Array.isArray(ctx.attachments) ? (ctx.attachments as { fileKey: string }[]) : [];
+  const row = await addRow("vector-memory", { name: m.title, content: fullText, storageIds: atts.map((a) => a.fileKey).filter(Boolean), source: m.source, trackId });
   return { vectorMemoryDelivery: `remembered ${trackId}`, vectorRowId: row.id };
 }

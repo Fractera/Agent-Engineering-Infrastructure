@@ -46,5 +46,7 @@ export async function storeAttachment(ctx: NodeCtx): Promise<NodeCtx> {
     source: String(ctx.source ?? "unknown"),
   });
 
-  return { attachment: { fileKey: key, rowId: row.id, description: description.trim() } };
+  // Массив (308.6): к записям всплеска может цепляться несколько вложений (интерьер + чек); `linkAttachments`
+  // дольёт сюда «висящие» вложения прошлых прогонов. Пустой массив = «нет вложений» для узлов-записей.
+  return { attachments: [{ fileKey: key, rowId: row.id, description: description.trim() }] };
 }

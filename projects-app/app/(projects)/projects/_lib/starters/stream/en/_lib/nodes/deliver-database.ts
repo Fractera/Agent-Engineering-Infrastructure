@@ -13,12 +13,15 @@ import { addRow } from "../rows";
 export async function deliverDatabase(ctx: NodeCtx): Promise<{ databaseRowId: string }> {
   const m = messageOf(ctx);
   const vectorRowId = String(ctx.vectorRowId ?? "").trim();
+  // Привязка вложений всплеска (308.6): запись НЕСЁТ ссылки на все объекты, зарегистрированные
+  // `storeAttachment`/`linkAttachments` в этом прогоне (интерьер + чек → и заметка, и финанс их держат).
+  const atts = Array.isArray(ctx.attachments) ? (ctx.attachments as { fileKey: string }[]) : [];
   const row = await addRow("database", {
     name: m.title,
     text: m.text,
     source: m.source,
     date: m.at,
-    storageIds: [],
+    storageIds: atts.map((a) => a.fileKey).filter(Boolean),
     vectorIds: vectorRowId ? [vectorRowId] : [],
   });
   return { databaseRowId: row.id };

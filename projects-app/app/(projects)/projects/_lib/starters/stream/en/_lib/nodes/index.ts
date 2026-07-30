@@ -19,6 +19,7 @@ import { transformPayload } from "./transform-payload";
 import { classifyIntent } from "./classify-intent";
 import { digitizeMoney } from "./digitize-money";
 import { storeAttachment } from "./store-attachment";
+import { linkAttachments } from "./link-attachments";
 import { recallFromMemory } from "./recall-from-memory";
 import { aiTransform } from "./ai-transform";
 import { parseDate } from "./parse-date";
@@ -54,6 +55,7 @@ export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   classifyIntent,
   digitizeMoney,
   storeAttachment,
+  linkAttachments,
   recallFromMemory,
   aiTransform,
   parseDate,

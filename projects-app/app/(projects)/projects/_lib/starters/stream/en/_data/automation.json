@@ -546,6 +546,46 @@
               }
             },
             {
+              "cuid": "cmd308linkattach05e6f7a8",
+              "name": "Link attachments",
+              "description": "The middle — attaches photos/places to the records of a message burst in any order; picks up attachments left pending by earlier runs and late-attaches a lone photo to the latest bare record. Hidden until revealed.",
+              "state": "hidden",
+              "info": {
+                "aiSummary": "Attachment linker (step 308.6, v1 parity of link-images): the many-to-many bond between attachments and records, order-independent. Works with creation-time linking — deliverDatabase/deliverVectorMemory read ctx.attachments and already carry this run's objects, so a compound message (interior photo + receipt + text) makes BOTH the note and the finance record hold BOTH photos. This node closes two cross-run cases: (1) it merges attachments left PENDING by earlier runs into ctx.attachments so this run's records carry them too, marking those storage rows linked; (2) when this run creates no record (e.g. only recall) it LATE-ATTACHES the attachments to the latest BARE record (empty storageIds) and flags it reindexNeeded so the photo's description enters its vector doc (308.7). Nowhere to attach → stays pending (nothing lost). Sets ctx.reindex when anything linked. Node-skill of the middle library."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "serves": [],
+              "lineage": "nsk-link-attachments-v1",
+              "function": {
+                "name": "linkAttachments",
+                "summary": "Bonds attachments to the records of a burst in any order; picks up pending ones and late-attaches lone photos.",
+                "accepts": "ctx.attachments (this run) + ctx.intent; reads pending storage rows and record tables.",
+                "returns": "merged attachments + reindex flag, OR lateLinked target — OR {} when nothing to link."
+              },
+              "run": "sequential",
+              "estDurationMs": 80,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              }
+            },
+            {
               "cuid": "cmd307recallmem01a2b3c4d5e6f7",
               "name": "Recall from memory",
               "description": "The middle — asks the vector memory (LightRAG) with the captured text and passes the ANSWER onward instead of the question.",
