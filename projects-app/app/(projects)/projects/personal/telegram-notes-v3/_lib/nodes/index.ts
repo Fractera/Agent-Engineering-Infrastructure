@@ -22,6 +22,7 @@ import { storeAttachment } from "./store-attachment";
 import { linkAttachments } from "./link-attachments";
 import { recallFromMemory } from "./recall-from-memory";
 import { composeReply } from "./compose-reply";
+import { converse } from "./converse";
 import { aiTransform } from "./ai-transform";
 import { parseDate } from "./parse-date";
 import { askAddress } from "./ask-address";
@@ -63,6 +64,7 @@ export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   askAddress,
   hookGate,
   composeReply,
+  converse,
   ifSuccess,
   ifFailure,
   // выходная группа — 11 каналов + коннектор

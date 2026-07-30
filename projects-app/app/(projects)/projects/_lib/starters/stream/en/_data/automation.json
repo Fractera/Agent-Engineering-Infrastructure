@@ -887,6 +887,47 @@
                   "condition-failure"
                 ]
               }
+            },
+            {
+              "cuid": "cmd309converse07a8b9c0",
+              "name": "Converse",
+              "description": "The middle, role conversation, talks to the human with the model by the Assistant-tab behavior script, with dialogue memory. Hidden until revealed.",
+              "state": "hidden",
+              "info": {
+                "aiSummary": "Conversational boundary (step 309, role=conversation): a distinct KIND of work, not computing over data but COMFORTABLE DIALOGUE with the human, which is by nature the model's job. Builds ctx.reply by thinking with the model over the Assistant-tab behavior instruction + the per-chat dialogue buffer + Q&A few-shot examples + the run's structured result. No model/key -> deterministic fallback composeReply (proven). The role makes it first-class and unmissable in the frozen template. Node-skill of the middle library."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "serves": [],
+              "lineage": "nsk-converse-v1",
+              "role": "conversation",
+              "function": {
+                "name": "converse",
+                "summary": "Builds one comfortable localized reply to the user with the model, by the behavior script and dialogue memory.",
+                "accepts": "the run structured result + ctx.telegramChatId; reads the Assistant tab config and the chat buffer.",
+                "returns": "reply, one comfortable message; deterministic composeReply fallback when no model."
+              },
+              "run": "sequential",
+              "estDurationMs": 1200,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              }
             }
           ]
         },
