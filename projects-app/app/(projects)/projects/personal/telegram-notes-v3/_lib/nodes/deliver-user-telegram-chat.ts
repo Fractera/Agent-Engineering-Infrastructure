@@ -9,6 +9,7 @@
 import type { NodeCtx } from "../executor";
 import { messageOf } from "../message";
 import { sendTelegram } from "../transport";
+import { converse } from "./converse";
 
 export async function deliverUserTelegramChat(ctx: NodeCtx): Promise<{ userTelegramDelivery: string }> {
   if (!process.env.TELEGRAM_BOT_TOKEN) {
@@ -18,10 +19,13 @@ export async function deliverUserTelegramChat(ctx: NodeCtx): Promise<{ userTeleg
   if (!chatId) {
     return { userTelegramDelivery: "skipped: no user chat — link it via api/telegram/link (TELEGRAM_USER_CHAT_ID)" };
   }
-  // ЕДИНЫЙ ОТВЕТ (308, разговорный контракт): пользователю уходит `ctx.reply`, собранный композитором
-  // `composeReply` — связный, оформленный, с представлением возможностей. Без композитора (простой
-  // стартер) — падаем на прежний путь (сырой текст + пометка канала), чтобы стартер остался рабочим.
-  const reply = String((ctx as Record<string, unknown>).reply ?? "").trim();
+  // 🔒 РАЗГОВОРНЫЙ СЛОЙ ЖИВЁТ ЗДЕСЬ, В ВЫХОДНОМ УЗЛЕ (решение владельца 2026-07-30, вариант A): построение
+  // ответа — не отдельный узел на холсте, а внутренняя работа доставки в личный чат. `converse` читает
+  // сценарий вкладки «Ассистент» + буфер диалога + структурный результат прогона и думает моделью
+  // (фолбэк — детерминированный `composeReply`). Если разговор дал ответ (`reply`) — шлём его; иначе
+  // (нет chatId в контексте / простой стартер без диалога) — прежний сырой путь, чтобы стартер жил.
+  const built = await converse(ctx);
+  const reply = String((built as Record<string, unknown>).reply ?? "").trim();
   if (reply) {
     const id = await sendTelegram(reply, chatId);
     return { userTelegramDelivery: `sent ${id} to ${chatId}` };
