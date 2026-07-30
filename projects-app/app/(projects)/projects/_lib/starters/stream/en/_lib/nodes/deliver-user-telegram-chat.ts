@@ -8,7 +8,8 @@
 // Имя `deliverUserTelegramChat` — публичный контракт, не переименовывать.
 import type { NodeCtx } from "../executor";
 import { messageOf } from "../message";
-import { sendTelegram } from "../transport";
+import { sendTelegram, sendTelegramPhoto } from "../transport";
+import { readObject } from "../store";
 import { converse } from "./converse";
 
 export async function deliverUserTelegramChat(ctx: NodeCtx): Promise<{ userTelegramDelivery: string }> {
@@ -28,7 +29,17 @@ export async function deliverUserTelegramChat(ctx: NodeCtx): Promise<{ userTeleg
   const reply = String((built as Record<string, unknown>).reply ?? "").trim();
   if (reply) {
     const id = await sendTelegram(reply, chatId);
-    return { userTelegramDelivery: `sent ${id} to ${chatId}` };
+    // ВОЗВРАТ КАРТИНКИ ПО RECALL (309): если recall достал связанные вложения (напр. фото чека —
+    // `recallFromMemory` резолвит маркеры в `recalledAttachments`), шлём сами изображения вслед за текстом.
+    // «Покажи чек на 31.34» теперь возвращает картинку, а не только слова. Недоступный объект — тихо пропуск.
+    const atts = Array.isArray(ctx.recalledAttachments) ? (ctx.recalledAttachments as unknown[]).map(String).filter(Boolean) : [];
+    for (const key of atts.slice(0, 5)) {
+      try {
+        const obj = await readObject(key);
+        if (obj) await sendTelegramPhoto(obj.bytes, key, chatId);
+      } catch { /* картинку не смогли отдать — текст уже ушёл, не валим прогон */ }
+    }
+    return { userTelegramDelivery: `sent ${id} to ${chatId}${atts.length ? ` (+${atts.length} img)` : ""}` };
   }
   const m = messageOf(ctx);
   const stem = m.title.replace(/…$/, "");

@@ -7,50 +7,51 @@
 //
 // Имя `deliverDatabase` — публичный контракт, не переименовывать.
 import type { NodeCtx } from "../executor";
-import { messageOf, servesAnyIntent } from "../message";
+import { messageOf, servesAnyIntent, servesIntent } from "../message";
 import { addRow } from "../rows";
 
 const CONTENT_INTENTS = ["save", "finance", "place"] as const;
 
-export async function deliverDatabase(ctx: NodeCtx): Promise<{ databaseRowId: string }> {
-  // Склад БД (308.8): пишем запись для содержательных намерений (save|finance|place), НЕ для чистого recall
-  // (вопрос памяти в базу не кладём). Backward-compat: нет классификатора → пишем как раньше.
+export async function deliverDatabase(ctx: NodeCtx): Promise<{ databaseRowId: string; financeRowId?: string }> {
+  // Склад БД (308.8): пишем для содержательных намерений (save|finance|place), НЕ для чистого recall.
+  // Backward-compat: нет классификатора → пишем заметку как раньше.
   if (!servesAnyIntent(ctx, CONTENT_INTENTS)) return { databaseRowId: "" };
   const m = messageOf(ctx);
   const vectorRowId = String(ctx.vectorRowId ?? "").trim();
-  // Привязка вложений всплеска (308.6): запись НЕСЁТ ссылки на все объекты, зарегистрированные
-  // `storeAttachment`/`linkAttachments` в этом прогоне (интерьер + чек → и заметка, и финанс их держат).
+  // Привязка вложений всплеска (308.6): запись НЕСЁТ ссылки на объекты (интерьер + чек → и заметка, и финанс).
   const atts = Array.isArray(ctx.attachments) ? (ctx.attachments as { fileKey: string }[]) : [];
   const storageIds = atts.map((a) => a.fileKey).filter(Boolean);
+  const vectorIds = vectorRowId ? [vectorRowId] : [];
 
-  // ФИНАНС → ОТДЕЛЬНАЯ ТАБЛИЦА (308.8, паритет v1): если `digitizeMoney` оставил `ctx.finance`, запись
-  // денежного движения идёт в таблицу `finance` со своими полями (kind/amount/categories/summary), а не в
-  // общую `database`. Так реестр трат отделён от заметок, как и было в v1.
+  // ФИНАНС → ОТДЕЛЬНАЯ ТАБЛИЦА (паритет v1): `digitizeMoney` оставил `ctx.finance` → денежное движение в
+  // таблицу `finance` со своими полями. СОСТАВНОЕ сообщение (кафе: и впечатление, и покупка) создаёт ОБЕ
+  // записи — финанс здесь, заметку ниже, потому что оба намерения стоят в `ctx.intent`.
   const finance = (ctx.finance && typeof ctx.finance === "object" ? ctx.finance : null) as
-    | { kind?: string; amount?: number | null; categories?: string[]; summary?: string }
+    | { kind?: string; amount?: number | null; categories?: string[]; summary?: string; store?: string; currency?: string; items?: unknown[]; date?: string }
     | null;
+  let financeRowId: string | undefined;
   if (finance) {
-    const row = await addRow("finance", {
+    // Полная запись чека (309): помимо суммы/категорий — магазин, валюта, ВСЕ позиции, дата чека. Так
+    // строка finance несёт полную копию, а не только сводку.
+    const frow = await addRow("finance", {
       kind: finance.kind ?? "expense",
       amount: finance.amount ?? null,
       categories: Array.isArray(finance.categories) ? finance.categories : [],
       summary: finance.summary ?? m.text,
       name: finance.summary ?? m.title,
-      source: m.source,
-      date: m.at,
-      storageIds,
-      vectorIds: vectorRowId ? [vectorRowId] : [],
+      store: finance.store ?? "",
+      currency: finance.currency ?? "",
+      items: Array.isArray(finance.items) ? finance.items : [],
+      source: m.source, date: finance.date || m.at, storageIds, vectorIds,
     });
-    return { databaseRowId: row.id };
+    financeRowId = frow.id;
   }
 
-  const row = await addRow("database", {
-    name: m.title,
-    text: m.text,
-    source: m.source,
-    date: m.at,
-    storageIds,
-    vectorIds: vectorRowId ? [vectorRowId] : [],
-  });
-  return { databaseRowId: row.id };
+  // ЗАМЕТКА: пишем, если есть намерение `save` (или нет классификатора — простой стартер). Для чистого
+  // finance/place заметку-дубль не плодим; для составного save+finance — заметка идёт ВМЕСТЕ с финансом.
+  if (servesIntent(ctx, "save")) {
+    const nrow = await addRow("database", { name: m.title, text: m.text, source: m.source, date: m.at, storageIds, vectorIds });
+    return { databaseRowId: nrow.id, ...(financeRowId ? { financeRowId } : {}) };
+  }
+  return { databaseRowId: "", ...(financeRowId ? { financeRowId } : {}) };
 }

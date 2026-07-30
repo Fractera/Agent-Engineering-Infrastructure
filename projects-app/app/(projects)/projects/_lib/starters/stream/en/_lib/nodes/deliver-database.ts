@@ -27,17 +27,22 @@ export async function deliverDatabase(ctx: NodeCtx): Promise<{ databaseRowId: st
   // таблицу `finance` со своими полями. СОСТАВНОЕ сообщение (кафе: и впечатление, и покупка) создаёт ОБЕ
   // записи — финанс здесь, заметку ниже, потому что оба намерения стоят в `ctx.intent`.
   const finance = (ctx.finance && typeof ctx.finance === "object" ? ctx.finance : null) as
-    | { kind?: string; amount?: number | null; categories?: string[]; summary?: string }
+    | { kind?: string; amount?: number | null; categories?: string[]; summary?: string; store?: string; currency?: string; items?: unknown[]; date?: string }
     | null;
   let financeRowId: string | undefined;
   if (finance) {
+    // Полная запись чека (309): помимо суммы/категорий — магазин, валюта, ВСЕ позиции, дата чека. Так
+    // строка finance несёт полную копию, а не только сводку.
     const frow = await addRow("finance", {
       kind: finance.kind ?? "expense",
       amount: finance.amount ?? null,
       categories: Array.isArray(finance.categories) ? finance.categories : [],
       summary: finance.summary ?? m.text,
       name: finance.summary ?? m.title,
-      source: m.source, date: m.at, storageIds, vectorIds,
+      store: finance.store ?? "",
+      currency: finance.currency ?? "",
+      items: Array.isArray(finance.items) ? finance.items : [],
+      source: m.source, date: finance.date || m.at, storageIds, vectorIds,
     });
     financeRowId = frow.id;
   }

@@ -13,6 +13,7 @@
 // Сервиса памяти нет на сервере → честный ПРОПУСК с причиной (проект без LightRAG не теряет развозку);
 // сервис ответил отказом → бросок (`rememberFact` бросает сам).
 // Имя `deliverVectorMemory` — публичный контракт, не переименовывать.
+import { randomBytes } from "node:crypto";
 import type { NodeCtx } from "../executor";
 import { rememberFact } from "../memory";
 import { messageOf, servesAnyIntent } from "../message";
@@ -25,8 +26,10 @@ export async function deliverVectorMemory(ctx: NodeCtx): Promise<{ vectorMemoryD
   // чистый recall (вопрос не запоминаем). Backward-compat: нет классификатора → запоминаем как раньше.
   if (!servesAnyIntent(ctx, CONTENT_INTENTS)) return { vectorMemoryDelivery: "skipped: not a content intent" };
   const m = messageOf(ctx);
-  // Полный текст для памяти: оригинал важнее summary; без оригинала — само сообщение (простой стартер).
-  const fullText = String(ctx.original ?? ctx.text ?? "").trim() || m.text;
+  // Полный текст для памяти. Приоритет: ПОЛНАЯ КОПИЯ ЧЕКА (309, `financeMemory` от digitizeMoney — магазин,
+  // все позиции, кол-во, цены, итог) → оригинал сообщения → summary. Так recall отвечает по позициям чека
+  // («сколько на черешню»), а не только по краткой сводке.
+  const fullText = String(ctx.financeMemory ?? ctx.original ?? ctx.text ?? "").trim() || m.text;
   // Привязка вложений всплеска (308.6): факт памяти держит ссылки на объекты + их описания (308.7).
   const atts = Array.isArray(ctx.attachments) ? (ctx.attachments as { fileKey: string; description?: string }[]) : [];
   const fileKeys = atts.map((a) => a.fileKey).filter(Boolean);

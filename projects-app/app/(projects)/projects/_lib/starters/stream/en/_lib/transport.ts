@@ -88,6 +88,26 @@ export async function downloadTelegramFile(fileId: string): Promise<{ bytes: Buf
 }
 
 /**
+ * ФОТО в чат (шаг 309) — отправка изображения (напр. сохранённого чека при recall). Байты берём из
+ * объектного хранилища папки и грузим в Telegram `sendPhoto` multipart'ом. Токен/чат — как у `sendTelegram`.
+ * Бросает при отказе (транспорт не молчит). `caption` необязателен.
+ */
+export async function sendTelegramPhoto(bytes: Buffer, filename: string, toChatId?: string, caption?: string): Promise<string> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = toChatId?.trim() || process.env.TELEGRAM_ALLOWED_CHAT_ID;
+  if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not set");
+  if (!chatId) throw new Error("no chat to send the photo to");
+  const form = new FormData();
+  form.append("chat_id", chatId);
+  if (caption) form.append("caption", caption);
+  form.append("photo", new Blob([bytes]), filename || "photo.jpg");
+  const r = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method: "POST", body: form });
+  const answer = (await r.json().catch(() => null)) as { ok?: boolean; result?: { message_id?: number }; description?: string } | null;
+  if (!r.ok || !answer?.ok) throw new Error(`Telegram refused the photo (HTTP ${r.status}): ${answer?.description ?? "no details"}`);
+  return String(answer.result?.message_id ?? "");
+}
+
+/**
  * СОБЫТИЕ ДРУГОЙ АВТОМАТИЗАЦИИ — толчок в её дверь запуска, тем же путём, каким входит любой канал.
  * `origin` передаёт вызывающий: папка не имеет права знать ни порт, ни домен сервера (закон 0).
  * `gate` — секрет пропуска агента; без него в защищённом режиме дверь соседа ответит отказом.
