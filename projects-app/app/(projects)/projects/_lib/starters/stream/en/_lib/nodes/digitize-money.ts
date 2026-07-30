@@ -12,6 +12,7 @@
 import type { NodeCtx } from "../executor";
 import { askModel, askModelVision } from "../ai";
 import { servesIntent } from "../message";
+import { telegramFileUrl } from "../transport";
 import { normalizeCategories, categoryMenu, type FinanceKind } from "../../_data/finance-categories";
 
 export type MoneyRecord = { kind: FinanceKind; amount: number | null; categories: string[]; summary: string; items: string[] };
@@ -40,20 +41,6 @@ function toRecord(j: Record<string, unknown>, fallbackSummary: string): MoneyRec
   const summary = String(j.summary ?? "").trim() || fallbackSummary;
   const items = Array.isArray(j.items) ? j.items.map(String).map((s) => s.trim()).filter(Boolean) : [];
   return { kind, amount, categories, summary, items };
-}
-
-/** Временный file-URL картинки из Telegram getFile (для vision). Токен — общий ключ сервиса (как у доставки). */
-async function telegramFileUrl(fileId: string): Promise<string | null> {
-  const token = (process.env.TELEGRAM_BOT_TOKEN ?? "").trim();
-  if (!token) return null;
-  try {
-    const r = await fetch(`https://api.telegram.org/bot${token}/getFile?file_id=${encodeURIComponent(fileId)}`, { signal: AbortSignal.timeout(15_000) });
-    const d = (await r.json().catch(() => null)) as { ok?: boolean; result?: { file_path?: string } } | null;
-    const path = d?.ok ? d.result?.file_path : undefined;
-    return path ? `https://api.telegram.org/file/bot${token}/${path}` : null;
-  } catch {
-    return null;
-  }
 }
 
 export async function digitizeMoney(ctx: NodeCtx): Promise<NodeCtx> {

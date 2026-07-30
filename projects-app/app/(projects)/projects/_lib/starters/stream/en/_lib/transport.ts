@@ -55,6 +55,39 @@ export async function sendTelegram(text: string, toChatId?: string): Promise<str
 }
 
 /**
+ * ВРЕМЕННЫЙ file-URL картинки/документа из Telegram (шаг 308.3/308.5) — ОДИН источник для vision-вызова
+ * и для скачивания байтов (закон 2). `getFile` даёт `file_path`, из него строится URL. Токен — общий
+ * ключ сервиса. Нет токена / сервис отверг → `null` (мягкая деградация, решает вызывающий узел).
+ */
+export async function telegramFileUrl(fileId: string): Promise<string | null> {
+  const token = (process.env.TELEGRAM_BOT_TOKEN ?? "").trim();
+  if (!token || !fileId.trim()) return null;
+  try {
+    const r = await fetch(`https://api.telegram.org/bot${token}/getFile?file_id=${encodeURIComponent(fileId)}`, { signal: AbortSignal.timeout(15_000) });
+    const d = (await r.json().catch(() => null)) as { ok?: boolean; result?: { file_path?: string } } | null;
+    const path = d?.ok ? d.result?.file_path : undefined;
+    return path ? `https://api.telegram.org/file/bot${token}/${path}` : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Скачать байты файла Telegram (шаг 308.5): URL из `telegramFileUrl` → тело. Расширение — из пути. Нет/отказ → `null`. */
+export async function downloadTelegramFile(fileId: string): Promise<{ bytes: Buffer; ext: string } | null> {
+  const url = await telegramFileUrl(fileId);
+  if (!url) return null;
+  try {
+    const r = await fetch(url, { signal: AbortSignal.timeout(30_000) });
+    if (!r.ok) return null;
+    const buf = Buffer.from(await r.arrayBuffer());
+    const m = url.toLowerCase().match(/\.([a-z0-9]{1,5})(?:\?|$)/);
+    return { bytes: buf, ext: m ? m[1] : "jpg" };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * СОБЫТИЕ ДРУГОЙ АВТОМАТИЗАЦИИ — толчок в её дверь запуска, тем же путём, каким входит любой канал.
  * `origin` передаёт вызывающий: папка не имеет права знать ни порт, ни домен сервера (закон 0).
  * `gate` — секрет пропуска агента; без него в защищённом режиме дверь соседа ответит отказом.

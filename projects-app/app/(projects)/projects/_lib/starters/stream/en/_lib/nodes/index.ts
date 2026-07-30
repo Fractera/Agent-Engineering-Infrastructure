@@ -18,6 +18,7 @@ import { receiveFromExternal } from "./receive-from-external";
 import { transformPayload } from "./transform-payload";
 import { classifyIntent } from "./classify-intent";
 import { digitizeMoney } from "./digitize-money";
+import { storeAttachment } from "./store-attachment";
 import { recallFromMemory } from "./recall-from-memory";
 import { aiTransform } from "./ai-transform";
 import { parseDate } from "./parse-date";
@@ -52,6 +53,7 @@ export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   transformPayload,
   classifyIntent,
   digitizeMoney,
+  storeAttachment,
   recallFromMemory,
   aiTransform,
   parseDate,

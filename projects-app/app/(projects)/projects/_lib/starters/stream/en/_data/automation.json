@@ -500,6 +500,52 @@
               }
             },
             {
+              "cuid": "cmd308storeattach04d5e6f7",
+              "name": "Store attachment",
+              "description": "The middle — registers every incoming photo/document as a first-class object: downloads it, stores the bytes, gets a short vision description, writes a pending storage row. Hidden until revealed.",
+              "state": "hidden",
+              "info": {
+                "aiSummary": "Attachment registrar (step 308.5, v1 parity of every-photo-is-first-class): NOT intent-gated — any photo is stored so nothing is lost. Downloads the Telegram file (downloadTelegramFile), saves the bytes to the folder object store (store.ts), takes a best-effort one-sentence vision description (askModelVision), writes a storage row status:'pending' (until linkAttachments 308.6 attaches it to records; the description later rides into the record's vector doc, 308.7, making the photo findable in memory). No photo → {}. Download/key failure → honest attachmentError, run does not fall. Node-skill of the middle library."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [
+                {
+                  "name": "TELEGRAM_BOT_TOKEN",
+                  "status": "missing",
+                  "comment": "Needed to download the attachment via getFile."
+                }
+              ],
+              "serves": [],
+              "lineage": "nsk-store-attachment-v1",
+              "function": {
+                "name": "storeAttachment",
+                "summary": "Registers every incoming photo/document: stores the bytes and a vision description as a pending object.",
+                "accepts": "ctx.photoFileId (any intent).",
+                "returns": "attachment: {fileKey, rowId, description} — OR {} when no photo, or attachmentError on unreachable file."
+              },
+              "run": "sequential",
+              "estDurationMs": 1200,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              }
+            },
+            {
               "cuid": "cmd307recallmem01a2b3c4d5e6f7",
               "name": "Recall from memory",
               "description": "The middle — asks the vector memory (LightRAG) with the captured text and passes the ANSWER onward instead of the question.",
