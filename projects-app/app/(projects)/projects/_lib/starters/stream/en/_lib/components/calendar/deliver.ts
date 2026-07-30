@@ -39,6 +39,31 @@ function isDue(row: CalRow, nowMs: number): boolean {
 /** Текст, который уходит наружу, когда владелец не написал своего. */
 const fallbackText = (row: CalRow): string => `${row.date} ${row.time} — ${row.title}`.trim();
 
+// 🔔 ВВОДНАЯ СТРОКА НАПОМИНАНИЯ (308, требование владельца): пришедшее по времени напоминание НЕ приходит
+// голым текстом — оно начинается со стандартной локализованной шапки «уведомление о напоминании,
+// запланированном на <дата время>», и только потом сам текст. Язык — язык автоматизации
+// (`NEXT_PUBLIC_DEFAULT_LOCALE`, тот же, что у кокпита; фолбэк en). Применяется к telegram-каналам —
+// туда, где человек читает сообщение. Один компонент → работает и в v3, и в замороженном шаблоне.
+const REMINDER_INTRO: Record<string, (when: string) => string> = {
+  en: (w) => `🔔 Reminder notification, scheduled for ${w}:`,
+  es: (w) => `🔔 Notificación de recordatorio, programada para ${w}:`,
+  fr: (w) => `🔔 Notification de rappel, programmée pour le ${w} :`,
+  it: (w) => `🔔 Notifica di promemoria, programmata per il ${w}:`,
+  ru: (w) => `🔔 Уведомление о напоминании, запланированном на ${w}:`,
+  de: (w) => `🔔 Erinnerungsbenachrichtigung, geplant für ${w}:`,
+  pt: (w) => `🔔 Notificação de lembrete, agendada para ${w}:`,
+  pl: (w) => `🔔 Powiadomienie o przypomnieniu, zaplanowanym na ${w}:`,
+  tr: (w) => `🔔 Hatırlatma bildirimi, ${w} için planlandı:`,
+  nl: (w) => `🔔 Herinneringsmelding, gepland voor ${w}:`,
+};
+
+/** Сообщение напоминания с локализованной шапкой: «🔔 …запланировано на <дата время>:» + текст. */
+function withReminderIntro(row: CalRow, body: string): string {
+  const lang = (process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "en").toLowerCase().slice(0, 2);
+  const intro = (REMINDER_INTRO[lang] ?? REMINDER_INTRO.en)(`${row.date} ${row.time}`.trim());
+  return `${intro}\n\n${body}`;
+}
+
 export async function deliverDue(options: { table?: string; origin: string; gate?: string; now?: number }): Promise<DeliveryReport> {
   const table = options.table ?? "calendar";
   const nowMs = options.now ?? Date.now();
@@ -90,7 +115,7 @@ async function send(
 ): Promise<string> {
   switch (channel) {
     case "telegram-bot":
-      return sendTelegram(String(value.text ?? "").trim() || fallbackText(row));
+      return sendTelegram(withReminderIntro(row, String(value.text ?? "").trim() || fallbackText(row)));
     case "user-telegram-chat": {
       // Доставка по наступлению в ЛИЧНЫЙ чат человека (шаг 307.6): тот же бот, другой адресат.
       // ЧАТ БЕРЁТСЯ ИЗ САМОЙ ЗАПИСИ (308, авто-захват): `deliverCalendar` положил в интеграцию
@@ -99,7 +124,7 @@ async function send(
       // нет → «канал не подключён» честной ошибкой (а не тихий провал).
       const chatId = String(value.chatId ?? "").trim() || (process.env.TELEGRAM_USER_CHAT_ID ?? "").trim();
       if (!chatId) throw new Error("no chat to remind — write to the bot once so it learns your chat, or set TELEGRAM_USER_CHAT_ID in Settings");
-      return sendTelegram(String(value.text ?? "").trim() || fallbackText(row), chatId);
+      return sendTelegram(withReminderIntro(row, String(value.text ?? "").trim() || fallbackText(row)), chatId);
     }
     case "email":
       return sendEmail(
