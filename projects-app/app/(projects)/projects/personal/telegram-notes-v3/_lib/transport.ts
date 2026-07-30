@@ -100,7 +100,7 @@ export async function sendTelegramPhoto(bytes: Buffer, filename: string, toChatI
   const form = new FormData();
   form.append("chat_id", chatId);
   if (caption) form.append("caption", caption);
-  form.append("photo", new Blob([bytes]), filename || "photo.jpg");
+  form.append("photo", new Blob([new Uint8Array(bytes)]), filename || "photo.jpg");
   const r = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method: "POST", body: form });
   const answer = (await r.json().catch(() => null)) as { ok?: boolean; result?: { message_id?: number }; description?: string } | null;
   if (!r.ok || !answer?.ok) throw new Error(`Telegram refused the photo (HTTP ${r.status}): ${answer?.description ?? "no details"}`);
