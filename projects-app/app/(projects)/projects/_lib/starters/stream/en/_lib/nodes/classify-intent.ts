@@ -72,9 +72,12 @@ export async function classifyIntent(ctx: NodeCtx): Promise<NodeCtx> {
     `  "покажи чек" / "покажи чек на 31.34" → recall (REQUESTS to show a saved receipt)\n` +
     `  "изучи чек повторно и скажи сумму за черешню" → recall\n` +
     `  "вишня по-испански cereza" → save (states a fact)\n\n` +
-    `If the message is CONVERSATION with nothing to store or find — greeting, thanks, small talk, or a ` +
-    `question ABOUT YOU (the assistant) — reply the single word none. A message may carry several data ` +
-    `intents. Reply with ONLY the matching intent words lowercase comma-separated, or none. Nothing else.`;
+    `If the message is CONVERSATION with nothing NEW to store or find — a greeting, thanks, small talk, a ` +
+    `question ABOUT YOU (the assistant), or a META-QUESTION ABOUT THIS CHAT ITSELF ("do you see our ` +
+    `context", "what did I ask you earlier", "do you remember what I said") — reply the single word none. ` +
+    `Such messages are NOT facts to save. Only a genuine NEW fact the user wants remembered is save. ` +
+    `A message may carry several data intents. Reply with ONLY the matching intent words lowercase ` +
+    `comma-separated, or none. Nothing else.`;
 
   const user = recentDialog
     ? `Recent dialogue for context (do not classify these, only the last line):\n${recentDialog}\n\nClassify THIS message: ${text}`

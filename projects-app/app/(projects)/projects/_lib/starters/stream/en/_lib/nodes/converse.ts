@@ -13,8 +13,9 @@ import { assistantConfigOf } from "../components/conversation/config";
 import { loadChat, pushMessage, setLang } from "../components/conversation/state";
 import { composeReply } from "./compose-reply";
 
-/** Компактный «что сделал прогон» для модели — из структурного результата веток. */
-function runSummary(ctx: NodeCtx): string {
+// ЧТО СДЕЛАЛ ПРОГОН — РАЗДЕЛЬНО (309, живой тест): ЗАПИСИ (их подтверждаем) отдельно от RECALL-ОТВЕТА (на
+// него ОТВЕЧАЕМ, а не «сохранено»). Смешение делало бот'а «Готово ✅ …сохранено» даже на вопросы.
+function recordedSummary(ctx: NodeCtx): string {
   const bits: string[] = [];
   if (ctx.noteSummary) bits.push(`saved a note: ${ctx.noteSummary}`);
   const f = ctx.finance as { kind?: string; amount?: number | null; categories?: string[]; summary?: string } | undefined;
@@ -27,7 +28,6 @@ function runSummary(ctx: NodeCtx): string {
     else if (p.kind === "need-description") bits.push("a location point was received but has no description — ask what is there");
     else if (p.kind === "need-address") bits.push("a place was mentioned but no coordinates — ask for the location or address");
   }
-  if (ctx.recallAnswer) bits.push(`answered from memory: ${ctx.recallAnswer}`);
   return bits.join("; ");
 }
 
@@ -82,32 +82,38 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
     return { reply: help };
   }
 
-  const done = runSummary(ctx);
+  const recorded = recordedSummary(ctx);
+  const recallAnswer = String(ctx.recallAnswer ?? "").trim();
   const qaHit = matchQa(incoming, cfg.qa);
 
   // Нет модели/ключа → детерминированный фолбэк (форма доказана 11/11).
   const fallback = () => composeReply({ ...ctx, lang });
 
-  // Собрать промпт: СЦЕНАРИЙ ПОВЕДЕНИЯ (в нём идентичность+возможности) + язык + недавний диалог + Q&A-
-  // образец + что сделал прогон. Модель отвечает КАК ЭТОТ АССИСТЕНТ: подтвердить действие, если оно было,
-  // ИЛИ вести разговор (приветствие, «кто ты», болтовня), опираясь на свою инструкцию. Никаких списков
-  // фраз в коде — поведение задаёт инструкция, а не функция.
   // Контекст диалога — из единого слоя (`ctx.recentDialog`, положил классификатор); фолбэк — свой буфер.
   const history = String(ctx.recentDialog ?? "").trim()
     || state.messages.slice(-cfg.lastN).map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.text}`).join("\n");
-  const task = done
-    ? `You just performed this for the user: ${done}. Reply confirming it (or ask the follow-up it needs).`
-    : `The user is talking to you (a greeting, a question about who you are or why you exist, or small talk). ` +
-      `Reply naturally AS THIS ASSISTANT, using your description above — introduce yourself and what you can do when relevant.`;
+
+  // 🔒 ТРИ РЕЖИМА ОТВЕТА (309, живой тест — бот на всё говорил «Готово ✅ …сохранено»):
+  //   ЗАПИСЬ  — прогон что-то создал (заметка/трата/место/напоминание) → кратко ПОДТВЕРДИ.
+  //   RECALL  — прогон ОТВЕТИЛ из памяти, ничего не создав → ДАЙ ОТВЕТ на вопрос, НЕ говори «сохранено».
+  //   БЕСЕДА  — ничего не создано и не найдено (приветствие, «кто ты», мета-вопрос О ПЕРЕПИСКЕ) → веди
+  //             диалог, ИСПОЛЬЗУЯ недавний диалог выше, чтобы отвечать на вопросы о том, что было сказано.
+  const task = recorded
+    ? `You just performed this for the user: ${recorded}. Reply confirming it briefly (or ask the follow-up it needs).`
+    : recallAnswer
+      ? `The user asked a QUESTION. Answer it directly using this information: "${recallAnswer}". Do NOT say anything was "saved" — you are ANSWERING, not recording.`
+      : `The user is CONVERSING (a greeting, a question about who you are, small talk, or a question ABOUT THIS ` +
+        `CONVERSATION — what they asked earlier, whether you remember). You CAN SEE the recent dialogue above: ` +
+        `use it to answer such questions truthfully and specifically. Do NOT say anything was "saved". Reply naturally as this assistant.`;
   const system =
     `${cfg.instruction}\n\nReply ONLY in language "${lang}". Keep it to one short, warm message. ` +
     // ГАРДРЕЙЛ ОТ ГАЛЛЮЦИНАЦИЙ (309, живой тест): модель НЕ знает внутреннего устройства и НЕ должна его
     // выдумывать. Инцидент: на «почему не сохранил в таблицу» бот сочинил «храню как заметку» — а трата
     // БЫЛА в таблице. Отвечай ТОЛЬКО о том, что реально сделал прогон (описано ниже). Не придумывай
     // объяснений про таблицы/хранилище/причины «не сохранил».
-    `Never invent claims about your internal storage, tables, or why something was or wasn't saved. State ` +
-    `ONLY what the run below actually did. If a purchase/note/reminder was recorded, it IS saved — reassure ` +
-    `the user it is stored and can be seen in the app; do not make up a reason it isn't. ` +
+    `Never invent claims about your internal storage or tables. Only a RECORDING task confirms a save; a ` +
+    `QUESTION is answered, not "saved"; a CONVERSATION is just a reply. Do not tack "saved / can be seen in ` +
+    `the app" onto answers or chit-chat. ` +
     (qaHit ? `For a message like "${qaHit.q}" answer in this style: "${qaHit.a}". ` : "") +
     // Смена языка — понимает МОДЕЛЬ (не список фраз): просит человек говорить на другом языке → модель
     // ставит В НАЧАЛЕ ответа тег [[lang:<iso>]] и дальше отвечает уже на новом; мы парсим тег детерминированно
