@@ -19,12 +19,13 @@
 import { randomBytes } from "node:crypto";
 import type { NodeCtx } from "../executor";
 import { rememberFact } from "../memory";
-import { messageOf, servesAnyClass, RECORDING_CLASSES } from "../message";
+import { messageOf, servesAnyClass, storesSkipped, RECORDING_CLASSES } from "../message";
 import { addRow } from "../rows";
 import { crossLink } from "../components/links/cross-link";
 
 export async function deliverVectorMemory(ctx: NodeCtx): Promise<{ vectorMemoryDelivery: string; vectorRowId?: string }> {
   // ВОПРОС НЕ ЗАПОМИНАЕМ: память наполняют только те классы, после которых прогон оставляет данные.
+  if (storesSkipped(ctx)) return { vectorMemoryDelivery: "skipped: the middle found nothing to store" };
   if (!servesAnyClass(ctx, RECORDING_CLASSES)) return { vectorMemoryDelivery: "skipped: this request class leaves no record" };
   const m = messageOf(ctx);
   // Полный текст для памяти: оригинал (если середина делала сводку) → иначе текст сообщения.

@@ -27,6 +27,9 @@ import { intentSmallTalk } from "./intent-small-talk";
 import { intentRecordGiven } from "./intent-record-given";
 import { intentUnclaimed } from "./intent-unclaimed";
 import { transformPayload } from "./transform-payload";
+import { fetchExternal } from "./fetch-external";
+import { keepObject } from "./keep-object";
+import { resolveMoment } from "./resolve-moment";
 import { composeReply } from "./compose-reply";
 import { converse } from "./converse";
 import { ifSuccess } from "./if-success";
@@ -73,6 +76,11 @@ export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   // измерения, геометки, вложения) удалены при рождении v3 — они были осадком ОДНОЙ автоматизации, а не
   // инвариантом любой. Их знание сохранено паттернами в корпусе узловых навыков (шаг 310).
   transformPayload,
+  // СЕРЕДИНА ЭКСПОНАТА (311.7) — «карточка предмета»: добыть снаружи → сохранить файл → определить
+  // момент. Имена — глаголы ФОРМЫ; домена в них нет, предмет называет пользователь в рантайме.
+  fetchExternal,
+  keepObject,
+  resolveMoment,
   composeReply,
   converse,
   ifSuccess,

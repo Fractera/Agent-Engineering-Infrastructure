@@ -365,7 +365,7 @@
               "cuid": "cmruca7ra4n1jsdcdee0feb026f3a4",
               "name": "Logic",
               "description": "The middle — the deterministic work that turns the input into the output.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
                 "aiSummary": "Validates and normalizes the captured Message: non-empty text (an empty capture fails the run in ten languages), collapsed whitespace, a title derived from the first line, stamped at/source. Deterministic, no keys, no AI — this throw is the real success/failure gate of the flow."
               },
@@ -405,7 +405,7 @@
               "cuid": "cmruddnrpho70e8af12589d1deaa",
               "name": "If success",
               "description": "The branch taken when the middle produced a result — the flow continues to the output.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
                 "aiSummary": "The success branch: holds only when the normalized message carries non-empty text — then the flow fans out to every open output. When it does not hold, the node returns null and the run stops lawfully (the middle's throw is the loud failure; this is the quiet gate)."
               },
@@ -441,7 +441,7 @@
               "cuid": "cmruqdpjn51ehmdd7904ad3a6abaf6",
               "name": "If failure",
               "description": "The branch taken when the middle could not produce a result — the flow ends here.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
                 "aiSummary": "The failure branch: a named dead end on the canvas. The real failure has already stopped the run with the middle's throw (empty capture, refused input), so the function is an honest no-op — the node exists so the owner SEES where a failed run ends."
               },
@@ -468,6 +468,132 @@
                 "state": "prohibit",
                 "connections": null
               }
+            },
+            {
+              "cuid": "cfetchexternal3tyh65",
+              "name": "Fetch from outside",
+              "description": "Brings the named subject from an open encyclopedic source: description, image address, coordinates. The subject is named by the human at run time — this node does not know what it is.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "Brings the named subject from an open encyclopedic source: description, image address, coordinates. The subject is named by the human at run time — this node does not know what it is."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "fetchExternal",
+                "summary": "Fetches the named subject from an open, keyless encyclopedic source.",
+                "accepts": "The subject name the human wrote (ctx.text), for the classes fetch-external and composite.",
+                "returns": "subject (name · description · imageUrl · lat/lng · sourceUrl) plus text/title/coordinates in the message contract — or subjectMissing / subjectError, honestly."
+              },
+              "run": "sequential",
+              "estDurationMs": 1500,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "intent",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              },
+              "lineage": "",
+              "serves": [
+                "cusecaseselfdescribesgzf1n"
+              ]
+            },
+            {
+              "cuid": "ckeepobjectz371qw",
+              "name": "Keep the object",
+              "description": "Downloads the bytes of the subject's image and keeps them in the folder's object storage, so a record can point at an object of ours rather than at somebody else's link.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "Downloads the bytes of the subject's image and keeps them in the folder's object storage, so a record can point at an object of ours rather than at somebody else's link."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "keepObject",
+                "summary": "Downloads the subject image and keeps it in the folder object storage.",
+                "accepts": "ctx.subject with an imageUrl.",
+                "returns": "attachments[] with the stored fileKey — or objectError; a subject without an image is a lawful silence."
+              },
+              "run": "sequential",
+              "estDurationMs": 2500,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "intent",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              },
+              "lineage": "",
+              "serves": [
+                "cusecaseselfdescribesgzf1n"
+              ]
+            },
+            {
+              "cuid": "cresolvemomentp4xdf4",
+              "name": "Resolve the moment",
+              "description": "Finds the date bound to the subject in its own description and puts it into ctx.when, so the calendar can place an event by the ordinary path. Deterministic: a parsed year, never a guessed date.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "Finds the date bound to the subject in its own description and puts it into ctx.when, so the calendar can place an event by the ordinary path. Deterministic: a parsed year, never a guessed date."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "resolveMoment",
+                "summary": "Extracts the moment bound to the subject and puts it into ctx.when.",
+                "accepts": "ctx.subject with a description.",
+                "returns": "when (ISO) plus momentPrecision/momentSource — or nothing, when the description carries no date."
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "intent",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              },
+              "lineage": "",
+              "serves": [
+                "cusecaseselfdescribesgzf1n"
+              ]
             }
           ]
         },
@@ -598,7 +724,7 @@
               "cuid": "cmruqdpjm51ehgbc4cd8289c717fde",
               "name": "Calendar output",
               "description": "An event on the automation calendar.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
                 "aiSummary": "Places the captured message as a calendar event. The event time is ctx.when (parsed by parseDate) when present, else the capture moment; ctx.needsWhen (no date found) is an honest ten-language \"when?\" refusal — no row is created. To make an occurrence actually deliver, it sets an ACTIVE integration on the SOURCE telegram channel (asked in Telegram → reminded in Telegram); api/calendar-tick then delivers it (step 307.6)."
               },
@@ -668,7 +794,7 @@
               "cuid": "cmruqdpjm51ehi292f9cb0fc27987c",
               "name": "Map output",
               "description": "A marker on the automation map.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
                 "aiSummary": "Puts a marker on the automation map: a row in the map table (date · title · source · lat · lng). Coordinates are optional in the contract, so a message without lat/lng is delivered honestly-degraded — a skip with the reason in the run context, never an invented point."
               },
@@ -846,7 +972,7 @@
               "cuid": "cdelivervih3efrq9",
               "name": "Vector memory output",
               "description": "Output to the agent vector memory (LightRAG).",
-              "state": "hidden",
+              "state": "visible",
               "info": {
                 "aiSummary": "Remembers the captured message as a FACT: ingests it into LightRAG (folder-own call _lib/memory.ts, provenance projects/other/starter-v3?channel=<source>&record=<unique> — the unique tail is the uniqueness law) and writes a visible row into the vector-memory table (name · content · trackId). Service unreachable → honest skip; service refusal → throw."
               },
@@ -892,7 +1018,7 @@
               "cuid": "cdeliverdndd14qyz",
               "name": "Database output",
               "description": "If you activate this node, you can store and retrieve data in your own local database. If you also use object storage or a vector database, the local database keeps the links that locate those objects, too.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
                 "aiSummary": "Writes the captured message as a record of the automation's own local database: a database-table row (name · text · source · date · storageIds · vectorIds). By the stores law the record HOLDS LINKS to the neighbouring stores: the vector fact's row id lands in vectorIds when the memory output ran earlier in the same fan-out."
               },
@@ -927,7 +1053,7 @@
               "cuid": "cdelivers3oz5tpd6",
               "name": "Storage output",
               "description": "If you activate this node, you can save and use media files and documents related to this automation in your own local storage.",
-              "state": "hidden",
+              "state": "visible",
               "info": {
                 "aiSummary": "Saves the captured message as a .txt FILE in the folder's object storage (_lib/store.ts → _data/runtime/objects/) and writes the storage-table row holding the link (fileKey · name · kind \"text\" · size) — bytes live in the store, the row holds the reference: the database→storage link of the stores law."
               },
@@ -1432,19 +1558,19 @@
         "cuid": "cmrvy25f21pjaxf3222f069e86",
         "from": "cmruca7ra4n1jsdcdee0feb026f3a4",
         "to": "cmruddnrpho70e8af12589d1deaa",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cmrvy25f31pjay5b734893f76d",
         "from": "cmruca7ra4n1jsdcdee0feb026f3a4",
         "to": "cmruqdpjn51ehmdd7904ad3a6abaf6",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cmrvy25f31pjaz4dd95ea63fc4",
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cmruca7ra4n1jt639afc902fa70f5b",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cmrvwdp1v49a2h36b3a279f3de",
@@ -1456,7 +1582,7 @@
         "cuid": "cmrvwdp1v49a2i3c2d074f1cb4",
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cmruqdpjm51ehgbc4cd8289c717fde",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cmrvwdp1v49a2jd7be9889f242",
@@ -1468,7 +1594,7 @@
         "cuid": "cmrvwdp1v49a2k982bfd6ccd06",
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cmruqdpjm51ehi292f9cb0fc27987c",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cmrvwdp1v49a2l7d1ea7b4f179",
@@ -1498,19 +1624,19 @@
         "cuid": "cedgevectorout5m8kx1",
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cdelivervih3efrq9",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cedgedatabaseout3j7pw9",
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cdeliverdndd14qyz",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "cedgestorageout8r2ny4",
         "from": "cmruddnrpho70e8af12589d1deaa",
         "to": "cdelivers3oz5tpd6",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "ceincomingconnectorrefusalljgex5",
@@ -2050,7 +2176,7 @@
         "cuid": "ceintentcontinuationc2stnm",
         "from": "cintentcontinuationh6k7j7",
         "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "ceintentselfdescribejnkq0e",
@@ -2062,25 +2188,19 @@
         "cuid": "ceintentcontrolnblblo",
         "from": "cintentcontrolkx38vd",
         "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "ceintentcomposite32kqcp",
         "from": "cintentcomposite62fppr",
         "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
-      },
-      {
-        "cuid": "ceintentfetchexternaleq4wwt",
-        "from": "cintentfetchexternaliussrk",
-        "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "ceintentreadown6qzatk",
         "from": "cintentreadown10shd0",
         "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "ceintentincompletesgfro0",
@@ -2098,12 +2218,36 @@
         "cuid": "ceintentrecordgiventhyyxr",
         "from": "cintentrecordgivenef31ax",
         "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
-        "state": "hidden"
+        "state": "visible"
       },
       {
         "cuid": "ceintentunclaimed5qkpmm",
         "from": "cintentunclaimedmv2obt",
         "to": "cmruca7ra4n1jt639afc902fa70f5b",
+        "state": "visible"
+      },
+      {
+        "cuid": "cedgefkk32i5fz99b",
+        "from": "cintentfetchexternaliussrk",
+        "to": "cfetchexternal3tyh65",
+        "state": "visible"
+      },
+      {
+        "cuid": "cedgeq4tiuxmzuwet",
+        "from": "cfetchexternal3tyh65",
+        "to": "ckeepobjectz371qw",
+        "state": "visible"
+      },
+      {
+        "cuid": "cedgeonaur5bsdnp6",
+        "from": "ckeepobjectz371qw",
+        "to": "cresolvemomentp4xdf4",
+        "state": "visible"
+      },
+      {
+        "cuid": "cedgexg91wzkbxkgh",
+        "from": "cresolvemomentp4xdf4",
+        "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
         "state": "visible"
       }
     ]

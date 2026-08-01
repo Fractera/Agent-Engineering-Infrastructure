@@ -11,13 +11,14 @@
 // фронта (прямой вызов двери) — работает безусловно. Имя места (`placeTitle`,
 // venue из шаринга) кладётся в строку. Имя `deliverMap` — публичный контракт, не переименовывать.
 import type { NodeCtx } from "../executor";
-import { messageOf, servesAnyClass, RECORDING_CLASSES } from "../message";
+import { messageOf, servesAnyClass, storesSkipped, RECORDING_CLASSES } from "../message";
 import { addRow } from "../rows";
 import { crossLink } from "../components/links/cross-link";
 
 export async function deliverMap(ctx: NodeCtx): Promise<{ mapDelivery: string; mapRowId?: string }> {
   // Метку ставим для тех же классов, что оставляют запись: место — грань записи, а не отдельный домен
   // (шаг 311.6; прежний гейт по доменному намерению `place` удалён вместе со старой системой).
+  if (storesSkipped(ctx)) return { mapDelivery: "skipped: the middle found nothing to store" };
   if (!servesAnyClass(ctx, RECORDING_CLASSES)) return { mapDelivery: "skipped: this request class leaves no record" };
   // Середина уже создала и связала гео-строку сама (создание и связывание в одном месте, любой порядок
   // прибытия) — тогда выход не задваивает строку.

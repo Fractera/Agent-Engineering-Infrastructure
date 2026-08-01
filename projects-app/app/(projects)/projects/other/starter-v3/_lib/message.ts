@@ -148,6 +148,17 @@ export function servesAnyClass(ctx: Record<string, unknown>, mine: readonly stri
  */
 export const RECORDING_CLASSES = ["record-given", "fetch-external", "composite", "continuation"] as const;
 
+/**
+ * СЕРЕДИНА ПОГАСИЛА СКЛАДЫ — общий флаг для ВСЕХ складов (шаг 311.7, дефект пойман живым прогоном).
+ * Класс может оставлять запись «вообще», а конкретный прогон — не иметь ЧТО записать: добыча не нашла
+ * предмет, придержана запись до подтверждения человека и т.п. Тогда середина ставит `skipStores`, и ни
+ * один склад не пишет. Раньше такого общего флага не было, и при неудачной добыче в базу оседал сам
+ * текст вопроса.
+ */
+export function storesSkipped(ctx: Record<string, unknown>): boolean {
+  return ctx.skipStores === true;
+}
+
 export function matchHook(text: string, phrases: readonly string[]): { payload: string; phrase: string } | null {
   const clean = text.replace(/\s+/g, " ").trim();
   const folded = foldHook(clean);

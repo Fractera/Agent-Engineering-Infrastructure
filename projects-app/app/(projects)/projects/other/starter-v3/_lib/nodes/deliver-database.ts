@@ -12,7 +12,7 @@
 //
 // Имя `deliverDatabase` — публичный контракт, не переименовывать.
 import type { NodeCtx } from "../executor";
-import { messageOf, servesAnyClass, RECORDING_CLASSES } from "../message";
+import { messageOf, servesAnyClass, storesSkipped, RECORDING_CLASSES } from "../message";
 import { addRow } from "../rows";
 import { crossLink } from "../components/links/cross-link";
 
@@ -43,6 +43,8 @@ export function recordRowFrom(ctx: NodeCtx): Record<string, unknown> {
 export async function deliverDatabase(ctx: NodeCtx): Promise<{ databaseRowId: string }> {
   // ВОПРОС — НЕ ЗАПИСЬ. Пишем только для классов, после которых прогон оставляет данные; чтение своего,
   // самоописание, отказ и вежливость записи не создают (граница держится фронтом, склад её уважает).
+  // Середина сказала: записывать нечего (напр. предмет не найден) — молчим (311.7).
+  if (storesSkipped(ctx)) return { databaseRowId: "" };
   if (!servesAnyClass(ctx, RECORDING_CLASSES)) return { databaseRowId: "" };
   // Середина придержала запись (например ждёт подтверждения человека) → склад молчит, иначе задвоим.
   if (ctx.skipDatabase === true) return { databaseRowId: "" };
