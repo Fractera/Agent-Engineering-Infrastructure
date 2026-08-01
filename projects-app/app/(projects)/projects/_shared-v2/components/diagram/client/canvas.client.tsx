@@ -778,7 +778,7 @@ export function DiagramCanvasV2({
                 <span className="font-medium">{L.returns}:</span> {active.fn.returns}
               </p>
             </div>
-            <NodeAbilities cuid={active.id} />
+            <NodeAbilities cuid={active.id} lang={code} />
           </aside>
         )}
       </div>

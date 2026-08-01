@@ -3,6 +3,7 @@ import { authorize } from "@/lib/nodes";
 import { readCore } from "../../_lib/core-io";
 import { askModel } from "../../_lib/ai";
 import { allNodes } from "../../_data/automation.schema";
+import { defaultLanguage } from "@/app/(projects)/projects/_shared-v2/components/use-cases/server/quiz-brain";
 
 // ДВЕРЬ «УЗЕЛ, ЧТО ТЫ УМЕЕШЬ» (шаг 311.8d, постановка владельца).
 //
@@ -30,6 +31,22 @@ import { allNodes } from "../../_data/automation.schema";
 //   GET api/abilities?cuid=<cuid>&ask=1 → факты + вердикт ИИ
 export const runtime = "nodejs";
 
+// ЯЗЫК ОТВЕТА — язык сервера (правило 4г). Вердикт читает человек, а не машина, поэтому он обязан
+// говорить на том же языке, что и подписи кокпита; машинные поля (`verdict`, имена исходов) остаются
+// латиницей — их читает код. Имя языка передаём модели полным словом: код «pl» она трактует хуже.
+const LANGUAGE_NAMES: Record<string, string> = {
+  en: "English", es: "Spanish", fr: "French", it: "Italian", ru: "Russian",
+  de: "German", pt: "Portuguese", pl: "Polish", tr: "Turkish", nl: "Dutch",
+};
+// ИСТОЧНИК ЯЗЫКА — ТОТ ЖЕ, что у остального кокпита (`defaultLanguage`): переменная процесса, затем
+// `.env.local` этой службы, затем `.env.local` слота. Чтение одного лишь `process.env` давало `en` при
+// `NEXT_PUBLIC_DEFAULT_LOCALE=ru` в файле — доказано живьём, поэтому второй способ читать язык здесь
+// заводить нельзя: два источника разойдутся, и вердикт заговорит не на том языке, что подписи.
+const serverLanguage = (): { code: string; name: string } => {
+  const code = defaultLanguage().trim().slice(0, 2).toLowerCase();
+  return { code, name: LANGUAGE_NAMES[code] ?? "English" };
+};
+
 const VERDICT_SYSTEM =
   `You judge whether ONE node fits THIS automation. You are given only machine facts: the node's contract, ` +
   `its declared outcomes, and its neighbours in the live chain. Answer as STRICT JSON and nothing else: ` +
@@ -40,6 +57,11 @@ const VERDICT_SYSTEM =
   `(3) if the facts are too thin to judge, the verdict is "unfit" with the reason "nothing to judge by" — ` +
   `never "probably fits"; (4) never bend the automation's need to match the node: a node that almost fits ` +
   `is "unfit" or "better-exists", never "fits". JSON only.`;
+
+/** Системная подсказка + требование языка: подписи кокпита и вердикт обязаны говорить на одном языке. */
+const verdictSystemIn = (language: string): string =>
+  `${VERDICT_SYSTEM} Write the values of "checked", "why" and "alternative" in ${language}. ` +
+  `Leave "verdict" itself as one of the three latin keywords — it is read by code, not by a human.`;
 
 export async function GET(req: NextRequest) {
   if (!(await authorize(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
@@ -75,9 +97,9 @@ export async function GET(req: NextRequest) {
     outcomes: node.function.outcomes,
     chain: { upstream, downstream },
     lineage: node.lineage || null, // от какого паттерна корпуса происходит (шаг 310)
-    honesty: node.function.validator
-      ? "this node classifies its own result — a failure cannot look like a success here"
-      : "this node declares no validator: its result is never classified, so a failure would pass as success",
+    // МАШИННЫЙ КЛЮЧ, а не готовая фраза: текст для человека собирает панель на языке кокпита (10 языков),
+    // дверь же говорит фактом. Так одна и та же правда не живёт в двух переводах.
+    honesty: node.function.validator ? "classified" : "unclassified",
   };
 
   if (req.nextUrl.searchParams.get("ask") !== "1") return NextResponse.json(facts);
@@ -87,7 +109,8 @@ export async function GET(req: NextRequest) {
   let verdict: unknown = null;
   let verdictError = "";
   try {
-    const raw = await askModel({ system: VERDICT_SYSTEM, user: JSON.stringify(facts), maxTokens: 400 });
+    const lang = serverLanguage();
+    const raw = await askModel({ system: verdictSystemIn(lang.name), user: JSON.stringify(facts), maxTokens: 400 });
     if (raw === null) verdictError = "no model is available on this server (no key or no network) — the facts above are all there is";
     else {
       const s = raw.indexOf("{"), e = raw.lastIndexOf("}");
@@ -102,5 +125,5 @@ export async function GET(req: NextRequest) {
     verdictError = err instanceof Error ? err.message : String(err);
   }
 
-  return NextResponse.json({ ...facts, verdict, ...(verdictError ? { verdictError } : {}) });
+  return NextResponse.json({ ...facts, language: serverLanguage().code, verdict, ...(verdictError ? { verdictError } : {}) });
 }
