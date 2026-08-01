@@ -98,25 +98,37 @@ the one place that explains the field (`type`, `ref`, `tool`, `status: candidate
 why it never repeats the io-contract (`function`) or the credentials (`envKeys`), and how to prove a binding.
 A native node leaves `capability` as `null`.
 
-## 0d. THE MIDDLE LIBRARY — reveal a node skill before you write one
+## 0d. THE MIDDLE — the one INFINITE layer, and how a node is born there
 
-The middle of the graph is a LIBRARY of node skills: hidden `transform` nodes born with the automation,
-each carrying a real, proven function (recall from memory, an AI transform, date parsing, reading the
-database or object storage, a hook gate). The law digest (`GET api/core`) lists them under
-`middleLibrary` — read it before writing any new middle function.
+Four layers are finite and CLOSED, each by a vocabulary: the doors of arrival (`input`), the classes of
+request (`intent`), the kinds of place a result goes (`output`), the scopes of self-change (`evolution`).
+Their nodes are revealed, never invented, and their names are derived from the vocabulary.
+
+**The middle has no vocabulary and never will** — the logic of the world does not enumerate. It is BUILT,
+and it is built LAST: it receives an already-classified run (`ctx.intentClass`), and only six of the eleven
+request classes route into it at all. Designing middle work before the front is settled means designing for
+requests that never arrive.
 
 **A middle need is met one of THREE ways, in this order — and no fourth exists:**
 
-1. **A library skill** — an entry in `middleLibrary` already does it → reveal that node (or add one naming
-   its function). Never rebuild what the library carries.
-2. **Own code** — logic no skill covers → a new function in `_lib/nodes/` (one file, one function,
-   registered in `index.ts`), obeying the folder's law (zod + builtins only).
+1. **A pattern from the corpus** — ask the node-pattern corpus how this was solved. It returns a PATTERN
+   (the shape of the solution, its context contract, its honest outcomes), **never a file to paste**: a
+   foreign node's file drags its folder contract, its table names and its output-layer assumptions with it.
+   Write your own code from the pattern and record the pattern's id in the node's `lineage`.
+2. **Own code** — logic no pattern covers → a new function in `_lib/nodes/` (one file, one function,
+   registered in `index.ts`), obeying the folder's law (zod + builtins only). `lineage` stays empty; once
+   proven live, the node may be contributed back as a pattern.
 3. **A capability with a warning** — work reaching OUTSIDE our own code (an MCP server, an agent skill, a
    third-party API) → `capability: needed` plus a `warning` to the owner naming what the node must do; the
    owner supplies the tool (§0c), the build pauses there honestly.
 
-**"This automation cannot do it" is not an outcome.** A need that fits no skill and no code is a `needed`
-capability plus a warning — never a refusal, never a silent stub. The full law: `_instructions/nodes.md`.
+**"This automation cannot do it" is not an outcome.** A need that fits no pattern and no code is a `needed`
+capability plus a warning — never a refusal, never a silent stub.
+
+**The corpus is DEV-TIME only.** A running automation never contacts it — knowledge is federated, execution
+is local, and the only link between a node and the corpus is the `lineage` string. The digest's
+`middleNodes` lists what already stands in THIS folder (so you do not write the same node twice); it is not
+a menu to choose from. Full law: `_instructions/middle.custom.md`, `group.middle.md`, `nodes.md`.
 
 ## 0e. AN INCOMING REQUIREMENT LANDS ON THE USE CASES FIRST
 

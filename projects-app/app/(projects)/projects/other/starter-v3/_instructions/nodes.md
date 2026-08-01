@@ -58,37 +58,59 @@ file editing — there is no door for code, and none is needed. Contract through
 the connection table). Another kind means ANOTHER node: add it, hide this one. What a given kind is
 allowed to connect to, and which channel it may carry, is stated by its own instruction — `kind.<kind>`.
 
-## The three outcomes of a middle need (step 307 — the law of the node-skill library)
+## Why the layers are built in this ORDER (step 311 — read before touching the middle)
 
-The frozen middle group is a LIBRARY of node skills: hidden `transform` nodes born with the automation,
-each carrying a real, proven function (the law digest lists them as `middleLibrary`). When the build
-needs middle logic, it is met in exactly one of THREE ways, checked in this order:
+Four of the five layers are FINITE and CLOSED: the doors of arrival, the classes of request, the kinds of
+place a result goes, the scopes of self-change. Each is declared in a vocabulary, each node is derived from
+it, and each can therefore be frozen once and reused by every automation.
 
-1. **A library skill.** Read `middleLibrary` in the law digest first. If an existing skill does the job —
-   reveal that node (or add a node naming its function); never rebuild what the library already carries.
-2. **Own code.** Logic no library skill covers is written as a new function in `_lib/nodes/` — one file,
-   one function, registered in `_lib/nodes/index.ts` — obeying the folder's law (zod + node builtins only).
+**The middle is the only INFINITE layer.** The logic of the world does not enumerate, so the middle has no
+vocabulary, no quota and no closed inventory — it is BUILT, not revealed.
+
+That asymmetry fixes the order of work: **the middle is designed LAST**, because its shape follows from
+what reaches it. The front decides what kind of request arrived, and only six of the eleven classes route
+into the middle at all (`record-given`, `read-own`, `fetch-external`, `composite`, `control`,
+`continuation`); the other five are answered without it. Designing middle work before the front is settled
+means designing for requests that may never arrive there — and rewriting it when they do not.
+
+## The three outcomes of a middle need (step 307, revised by step 310)
+
+The middle is infinite, so it is closed by KNOWLEDGE rather than by inventory. When the build needs middle
+logic, the need is met in exactly one of THREE ways, checked in this order:
+
+1. **A pattern from the corpus.** Ask the node-pattern corpus how this was solved before. What comes back
+   is a PATTERN — the shape of the solution, its context contract, its honest outcomes — **not a file to
+   paste**. You write your own code from it, and record the pattern's `lineage` on your node so the fleet
+   can tell that this node descends from it. Copying a foreign node's file drags its folder contract, its
+   table names and its output-layer assumptions along with it, and that is why copying is not the first
+   outcome any more (step 310, owner's decision).
+2. **Own code.** Logic no pattern covers is written as a new function in `_lib/nodes/` — one file, one
+   function, registered in `_lib/nodes/index.ts` — obeying the folder's law (zod + node builtins only).
+   `lineage` stays empty; once the node is proven live it may be contributed to the corpus.
 3. **A capability with a warning.** Work that reaches OUTSIDE what our own code can do (an MCP server, an
    agent skill, a third-party API) is declared as `capability: needed` with a warning to the owner naming
    what the node must do. The owner supplies the tool; the build pauses there honestly.
 
-**«This automation cannot do it» does not exist as an outcome.** A need that fits no skill and no code is
+**«This automation cannot do it» does not exist as an outcome.** A need that fits no pattern and no code is
 a `needed` capability plus a warning — never a refusal, never a silent stub.
 
-## One chat, several scenarios = a GROUP of automations (step 307.7 — the hook-gate convention)
+**The corpus is DEV-TIME only.** It is consulted while the automation is being built, never while it runs:
+no node may call it at run time, or a client's automation would start depending on our service. The link
+between a node and the corpus is one field — `lineage` — and nothing else.
 
-v2 has NO N-way router by design: the executor runs every visible node in topological order, and the only
-branch is success/failure. So "if the message says A do X, if it says B do Y" is NOT one automation with a
-router — it is a GROUP of automations, each self-gating on its own trigger phrase.
+## No routers anywhere — the engine is LINEAR (step 311)
 
-The `hookGate` skill (in `middleLibrary`) is how each member gates: it reads the automation's trigger
-phrases from `ctx.hookPhrases`, and if the captured text starts with one, it passes the run on with the
-tail as the payload; a foreign phrase returns `null` — a lawful stop, so that run simply belongs to a
-sibling automation. All members listen to the same channel (one personal Telegram chat); the gate, not a
-router, decides whose run it is.
+There is no N-way router in this architecture, and adding one is not an improvement but a break. The engine
+runs every visible node in topological order; the only branch is success/failure.
 
-Never add a middle "router" node or an N-way switch. Fundamentally different tasks in one chat → propose a
-group of automations (passport.md, the warning duty), one `hookGate` phrase each.
+Deciding "what kind of request is this" is therefore NOT a router: it is the intent layer, where each class
+node judges only its own case, claims the run if it is its own, and otherwise **passes the flow on
+unchanged** (an empty patch — never `null`, which would stop the whole run). Precedence is the order of the
+class nodes in the core, not a switch statement.
+
+Never add a middle "router" node. Fundamentally different tasks arriving in one chat are a GROUP of
+automations, each gating on its own trigger phrase — see `passport.md` (the warning duty) before building
+one automation that tries to be several.
 
 ## The conversational boundary is the MODEL's job, not code (step 309)
 

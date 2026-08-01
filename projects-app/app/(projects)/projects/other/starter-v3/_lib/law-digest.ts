@@ -3,6 +3,8 @@ import {
   KIND_PORTS,
   InputChannelSchema,
   OutputChannelSchema,
+  IntentClassSchema,
+  EvolutionScopeSchema,
   SYSTEM_INSTRUCTION_NAMES,
   NodeKindSchema,
   type Automation,
@@ -32,7 +34,16 @@ export type LawDigest = {
   kinds: { kind: NodeKind; in: string; out: string }[];
   groups: { group: GroupName; minKinds: number; kinds: { kind: string; deletion: string; addition: string; minNodes: number }[] }[];
   channels: { input: readonly string[]; output: readonly string[]; note: string };
-  middleLibrary?: { skill: string; state: string; summary: string }[];
+  intentClasses: readonly string[];
+  evolutionScopes: readonly string[];
+  middle: {
+    vocabulary: null;
+    designedLast: string;
+    birth: string;
+    runtime: string;
+    naming: string;
+  };
+  middleNodes?: { fn: string; state: string; summary: string; lineage: string }[];
   neverWritable: string[];
   laws: string[];
 };
@@ -54,21 +65,39 @@ export function lawDigest(core?: Automation): LawDigest {
       })),
     })),
 
-    // THE CHANNEL VOCABULARIES — a node's `ioType` is one of these and nothing else.
+    // THE VOCABULARIES — a node's `ioType` is one of these and nothing else. FOUR layers are closed by a
+    // vocabulary; the middle deliberately has none, and that absence is the point (see `middle` below).
     channels: {
       input: InputChannelSchema.options,
       output: OutputChannelSchema.options,
       note: "an input kind takes an input channel, an output kind an output channel, a middle kind none (null)",
     },
+    intentClasses: IntentClassSchema.options,
+    evolutionScopes: EvolutionScopeSchema.options,
 
-    // THE MIDDLE LIBRARY — the node skills this automation was born with (step 307). DERIVED from the
-    // core's own middle group, never hand-written: the hidden middle nodes ARE the registry. Read this
-    // before writing a new transform function — reveal an existing skill instead of rebuilding it.
+    // THE MIDDLE — the one INFINITE layer: no vocabulary, no derived names, no quota. It is BUILT, and it
+    // is built LAST, because its shape follows from what the front decided. Closed by knowledge, not by
+    // inventory — see `_instructions/middle.custom.md` and `group.middle.md`.
+    middle: {
+      vocabulary: null,
+      designedLast: "the middle receives an already-classified run (ctx.intentClass); only 6 of the 11 request classes route into it — record-given, read-own, fetch-external, composite, control, continuation",
+      birth: "pattern from the corpus (dev-time, returns a PATTERN not a file, recorded as `lineage`) → own code → capability:needed + warning",
+      runtime: "a running automation NEVER contacts the corpus — knowledge is federated, execution is local",
+      naming: "a transform's name is chosen, not derived: a VERB OF FORM (fetchExternal, resolveMoment), never a business noun",
+    },
+
+    // ЧТО СЕЙЧАС СТОИТ В СЕРЕДИНЕ — инвентарь ЭТОЙ автоматизации, выведенный из её же ядра.
+    //
+    // 🔒 ЭТО НЕ КАТАЛОГ ДЛЯ ВЫБОРА (изменение шага 310 против прежнего `middleLibrary`). Раньше поле
+    // называлось «библиотекой», и перечень читался моделью как МЕНЮ: выбрать из готового всегда дешевле,
+    // чем написать своё, — и она выбирала, даже когда выбранное не подходило. Знание о том, КАК строят
+    // узлы, живёт в корпусе паттернов (dev-time), а здесь — только факт: вот что уже есть в этой папке,
+    // чтобы не написать второй такой же. `lineage` показывает, от какого паттерна узел происходит.
     ...(core
       ? {
-          middleLibrary: core.graph.nodes.groups.middle.nodes
+          middleNodes: core.graph.nodes.groups.middle.nodes
             .filter((n) => n.kind === "transform")
-            .map((n) => ({ skill: n.function.name, state: n.state, summary: n.function.summary })),
+            .map((n) => ({ fn: n.function.name, state: n.state, summary: n.function.summary, lineage: n.lineage ?? "" })),
         }
       : {}),
 
@@ -85,7 +114,10 @@ export function lawDigest(core?: Automation): LawDigest {
       "an edge is visible only when both its ends are visible",
       "frozen-template = every node hidden; real-project = at least one visible node, one use case and an author",
       `an object names its law in systemInstructionName; the text lives in _instructions/<name>.md (${SYSTEM_INSTRUCTION_NAMES.length} of them) — read it by name, never copy it into the core`,
-      "a middle need is met one of THREE ways: (a) a skill from middleLibrary, (b) own code in `_lib/nodes/`, (c) capability:needed plus a warning to the owner — «cannot be done» does not exist as an outcome",
+      "a middle need is met one of THREE ways: (a) a PATTERN from the node corpus — it returns the shape of a solution, never a file to paste; write your own code from it and record its id in `lineage`, (b) own code in `_lib/nodes/` with `lineage` empty, (c) capability:needed plus a warning to the owner — «cannot be done» does not exist as an outcome (step 310)",
+      "the node corpus is DEV-TIME ONLY: a RUNNING automation never contacts it — knowledge is federated, execution is local. The single link between a node and the corpus is the `lineage` string, and there is no import, no fetch and no client",
+      "the MIDDLE is the one INFINITE layer and therefore has NO vocabulary, no derived names and no closed inventory — it is BUILT, and built LAST: it receives an already-classified run (`ctx.intentClass`), and only 6 of the 11 request classes route into it. A middle node never re-classifies the request and never composes the reply",
+      "a transform's name is CHOSEN (unlike doors, classes and scopes, whose names are derived) — so choose a VERB OF FORM: fetchExternal, describeObject, resolveMoment. A business noun in a node name is how a domain leaks into a template (neutrality test: swap the subject noun; if the name stops making sense, it leaked)",
       "an incoming requirement (send-task box, rawRequest, any dev-request field) lands on the USE CASES first: append or rework the case(s) it implies via api/patch, THEN change the graph — nodes serve cases, never the other way around (_instructions/useCases.md)",
       "the CONVERSATIONAL boundary (talking to the human) is the MODEL's job by the behavior instruction (the Assistant tab), NOT deterministic code: never enumerate phrases in a node to answer greetings/identity/small-talk — those are conversation (empty intent), the model replies. The «work without AI» law is for data-transforms, not for speech (step 309, _instructions/replies.md)",
       // ─── ЗАКОН ФРОНТА (шаг 311) — четвёртый слой между входом и серединой ───────────────────────

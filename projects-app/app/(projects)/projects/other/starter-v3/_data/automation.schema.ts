@@ -64,6 +64,9 @@ export const SYSTEM_INSTRUCTION_NAMES = [
   "evolution.graph",
   "evolution.custom",
   "kind.transform",
+  // У СЕРЕДИНЫ НЕТ СЛОВАРЯ (она бесконечна), поэтому нет и значения `custom`. Её аналог открытой двери —
+  // закон РОЖДЕНИЯ узла и связи с внешним корпусом паттернов (шаг 310): `middle.custom`.
+  "middle.custom",
   "kind.condition-success",
   "kind.condition-failure",
   "kind.output",
@@ -719,9 +722,18 @@ const nodeBase = {
   // The federated skill corpus (step 307) reads it to build a node's passport. Additive with a `[]`
   // default so every core written before it stays valid; v1 precedent — a node's `actions` column.
   serves: z.array(CuidSchema).default([]),
-  // LINEAGE — the permanent id of the SKILL PATTERN this node is an instance of; it TRAVELS WITH A COPY.
-  // The local `cuid` is the identity of THIS instance; `lineage` is the identity of the pattern across
-  // the whole fleet, and telemetry aggregates by it. Empty = not (yet) a corpus skill. Additive default.
+  // LINEAGE — ЕДИНСТВЕННАЯ связь узла с ВНЕШНИМ КОРПУСОМ ПАТТЕРНОВ (шаг 310, уточнение доктрины 307).
+  // Постоянный id ПАТТЕРНА, по которому узел написан: локальный `cuid` — идентичность ЭТОГО узла,
+  // `lineage` — идентичность паттерна по всему флоту, по нему же агрегируется телеметрия.
+  //
+  // 🔒 ЧЕМ ЭТО ПОЛЕ НЕ ЯВЛЯЕТСЯ. Оно не импорт, не ссылка и не клиент: рантайм автоматизации к корпусу
+  // не обращается НИКОГДА (иначе автоматизация клиента начнёт зависеть от нашего сервиса). Корпус —
+  // dev-time: строитель спрашивает его, КОГДА ПИШЕТ узел, получает ПАТТЕРН (форму решения), пишет свой
+  // код и записывает сюда id паттерна. Копирования чужого файла в этом пути нет — оно тащит чужой
+  // контракт папки, чужие имена таблиц и чужие допущения о выходном слое.
+  //
+  // Пусто = узел написан с нуля; после живого пруфа он сам может стать паттерном корпуса.
+  // Закон целиком — `_instructions/middle.custom.md`. Аддитивное поле с дефолтом.
   lineage: z.string().default(""),
   // HOOK PHRASES — this automation's trigger phrases for the `hookGate` skill (step 307.7 group law:
   // several automations share one chat, each self-gates its own phrase). They live ON THE NODE in the
