@@ -112,28 +112,41 @@ export const emptyInput = (channel: string): Record<string, string> => ({
 const foldHook = (s: string): string => s.toLowerCase().replace(/ё/g, "е").replace(/\s+/g, " ").trim();
 
 /**
- * INTENT-САМО-ГЕЙТ (шаг 308.0) — «моё ли это намерение?». Так ОДНА автоматизация делает всё: узел
- * `classifyIntent` ставит `ctx.intent` (мульти-флаг), а каждый узел-действие в начале спрашивает
- * `servesIntent(ctx, 'save')` и, если не его флаг, пропускает поток без изменений (`return {}`), НЕ
- * останавливая цепочку (иначе линейный движок убил бы соседние ветки).
+ * САМО-ГЕЙТ ПО КЛАССУ ЗАПРОСА (шаг 311) — «мой ли это прогон?».
  *
- * 🔒 ОБРАТНАЯ СОВМЕСТИМОСТЬ: если `ctx.intent` не задан (простой стартер «захват→развозка» без
- * классификатора) — возвращает `true`, и узел работает КАК РАНЬШЕ. Классификатор — опция v3, не налог
- * на простой стартер.
+ * 🔒 ОДНА СИСТЕМА КЛАССИФИКАЦИИ, А НЕ ДВЕ. До слоя намерения в папке жил `ctx.intent` — мульти-флаг
+ * доменного словаря (`save|finance|place|recall`), который ставил срединный узел `classifyIntent`.
+ * Узел удалён вместе с остальным доменом v2, а фронт ставит `ctx.intentClass` — ОДНО значение из
+ * словаря `IntentClassSchema`. Две системы с почти одинаковыми именами в одной папке — гарантированная
+ * путаница для модели, поэтому старая удалена целиком, а не оставлена «на совместимость».
+ *
+ * Класс СТАВИТ ТОЛЬКО ФРОНТ; выходной узел его лишь читает. Нет класса (прогон без фронта — например
+ * прямой вызов двери) → возвращаем `true`: узел работает безусловно, как и до появления слоя.
  */
-export function servesIntent(ctx: Record<string, unknown>, mine: string): boolean {
-  const intent = ctx.intent;
-  if (!Array.isArray(intent)) return true; // нет классификатора — узел работает безусловно (простой стартер)
-  return intent.map(String).includes(mine);
+export function servesClass(ctx: Record<string, unknown>, mine: string): boolean {
+  const cls = String(ctx.intentClass ?? "").trim();
+  if (!cls) return true; // прогон без фронта — узел работает безусловно
+  return cls === mine;
 }
 
-/** Как `servesIntent`, но для узла, обслуживающего НЕСКОЛЬКО намерений (напр. склады: save|finance|place, но не recall). */
-export function servesAnyIntent(ctx: Record<string, unknown>, mine: readonly string[]): boolean {
-  const intent = ctx.intent;
-  if (!Array.isArray(intent)) return true; // нет классификатора — работает безусловно
-  const set = new Set(intent.map(String));
-  return mine.some((i) => set.has(i));
+/** Как `servesClass`, но для узла, обслуживающего НЕСКОЛЬКО классов (напр. склады пишут не для всякого). */
+export function servesAnyClass(ctx: Record<string, unknown>, mine: readonly string[]): boolean {
+  const cls = String(ctx.intentClass ?? "").trim();
+  if (!cls) return true;
+  return mine.includes(cls);
 }
+
+/**
+ * КЛАССЫ, ПОСЛЕ КОТОРЫХ ПРОГОН ОСТАВЛЯЕТ ЗАПИСЬ. Общий список для всех складов — иначе каждый склад
+ * заводил бы свой (в v2 их было два, с одинаковым содержимым и разной судьбой).
+ *   `record-given`   — данные принесены человеком, их надо сохранить;
+ *   `fetch-external` — данные добыты снаружи, сохраняем добытое;
+ *   `composite`      — составной запрос: часть его результата тоже оседает записью;
+ *   `continuation`   — ответ на висящий вопрос дополняет придержанную запись.
+ * Вопросы (`read-own`), самоописание, отказ, вежливость и неопознанное записи НЕ создают: спросить —
+ * не значит сохранить.
+ */
+export const RECORDING_CLASSES = ["record-given", "fetch-external", "composite", "continuation"] as const;
 
 export function matchHook(text: string, phrases: readonly string[]): { payload: string; phrase: string } | null {
   const clean = text.replace(/\s+/g, " ").trim();

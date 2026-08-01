@@ -1,92 +1,53 @@
-// ФУНКЦИЯ УЗЛА «OUTPUT» (канал database) — пишет захваченное сообщение записью в локальную базу
-// автоматизации: строка таблицы `database` в форме, которую читает вкладка (поля клиента: name ·
-// storageIds · vectorIds · createdAt). По закону складов запись базы ДЕРЖИТ ССЫЛКИ на соседние
-// склады: если в этом же прогоне выход памяти уже запомнил факт, его id ложится в `vectorIds`
-// (выход склада исполняется позже по порядку рождения — его ключ сюда попасть не может, и это
-// честно отражает порядок развозки, а не теряется молча).
+// ФУНКЦИЯ УЗЛА «OUTPUT» (канал database) — пишет результат прогона ЗАПИСЬЮ в локальную базу
+// автоматизации: строка таблицы `database` в форме, которую читает вкладка (name · text · source ·
+// date · storageIds · vectorIds). По закону складов запись ДЕРЖИТ ССЫЛКИ на соседние склады: объекты
+// этого прогона и его вектор-документ.
+//
+// 🔒 НЕЙТРАЛЬНОСТЬ (шаг 311.6). Здесь была вторая половина домена v2: таблица `finance`, поля
+// `kind: "expense"`, `store`, `currency`, `items`, словарь `save|finance|place`. Срединные доменные
+// узлы были удалены при рождении v3, а этот код остался — и любая новая автоматизация писала бы свой
+// «предмет» в таблицу расходов. Склад обязан знать ФОРМУ записи, а не предметную область: что именно
+// записывается, решает середина, а какой таблицей это назвать — уже домен. Тест нейтральности: замени
+// «предмет» на заявку, деталь, пациента, груз — этот файл не меняется ни строкой.
 //
 // Имя `deliverDatabase` — публичный контракт, не переименовывать.
 import type { NodeCtx } from "../executor";
-import { messageOf, servesAnyIntent, servesIntent } from "../message";
+import { messageOf, servesAnyClass, RECORDING_CLASSES } from "../message";
 import { addRow } from "../rows";
 import { crossLink } from "../components/links/cross-link";
 
-const CONTENT_INTENTS = ["save", "finance", "place"] as const;
-
-/** Вложения/векторы всплеска — общий кусок для строк finance и заметки. */
-function attachmentsOf(ctx: NodeCtx): { storageIds: string[]; vectorIds: string[] } {
-  const vectorRowId = String(ctx.vectorRowId ?? "").trim();
-  const atts = Array.isArray(ctx.attachments) ? (ctx.attachments as { fileKey: string }[]) : [];
-  return { storageIds: atts.map((a) => a.fileKey).filter(Boolean), vectorIds: vectorRowId ? [vectorRowId] : [] };
-}
-
 /**
- * СТРОКА ФИНАНСА из контекста (или null, если денег в прогоне нет). Единственный источник формы строки
- * `finance` — им пользуются И `deliverDatabase` (пишет сразу), И `dedupeGuard` (шаг 310: держит payload до
- * подтверждения владельца). Одна форма в одном месте — hold-and-confirm не разъедется с реальной записью.
+ * ФОРМА ЗАПИСИ — единственный источник (закон 2). Середина, которой нужно придержать запись до
+ * подтверждения человека, строит её ЭТИМ билдером и кладёт в контекст; склад тогда пишет придержанное
+ * вместо того, чтобы собирать вторую версию той же строки.
  */
-export function financeRowFrom(ctx: NodeCtx): Record<string, unknown> | null {
-  const finance = (ctx.finance && typeof ctx.finance === "object" ? ctx.finance : null) as
-    | { kind?: string; amount?: number | null; categories?: string[]; summary?: string; store?: string; currency?: string; items?: unknown[]; date?: string }
-    | null;
-  if (!finance) return null;
+export function recordRowFrom(ctx: NodeCtx): Record<string, unknown> {
   const m = messageOf(ctx);
-  const { storageIds, vectorIds } = attachmentsOf(ctx);
-  // Пользовательские ИЗМЕРЕНИЯ (310): dimensionTag определил/уточнил значения (напр. {scope:"дом"}) →
-  // ложатся в строку finance полями наравне с остальными, чтобы дашборд показал их колонкой.
-  const dims = (ctx.financeDims && typeof ctx.financeDims === "object" ? ctx.financeDims : {}) as Record<string, unknown>;
+  const atts = Array.isArray(ctx.attachments) ? (ctx.attachments as { fileKey: string }[]) : [];
+  const vectorRowId = String(ctx.vectorRowId ?? "").trim();
+  // ПОЛЯ, ДОБАВЛЕННЫЕ СЕРЕДИНОЙ. Склад не изобретает структуру записи: если срединный узел разобрал
+  // сообщение в поля (`ctx.record`), они ложатся в строку как есть. Их имена — забота той автоматизации,
+  // которая их завела, а не этого файла.
+  const fields = (ctx.record && typeof ctx.record === "object" ? ctx.record : {}) as Record<string, unknown>;
   return {
-    kind: finance.kind ?? "expense",
-    amount: finance.amount ?? null,
-    categories: Array.isArray(finance.categories) ? finance.categories : [],
-    summary: finance.summary ?? m.text,
-    name: finance.summary ?? m.title,
-    store: finance.store ?? "",
-    currency: finance.currency ?? "",
-    items: Array.isArray(finance.items) ? finance.items : [],
-    source: m.source, date: finance.date || m.at, storageIds, vectorIds,
-    ...dims,
+    name: m.title,
+    text: m.text,
+    source: m.source,
+    date: m.at,
+    storageIds: atts.map((a) => a.fileKey).filter(Boolean),
+    vectorIds: vectorRowId ? [vectorRowId] : [],
+    ...fields,
   };
 }
 
-/** СТРОКА ЗАМЕТКИ из контекста (или null, если нет намерения `save`). Тот же единый источник формы. */
-export function noteRowFrom(ctx: NodeCtx): Record<string, unknown> | null {
-  if (!servesIntent(ctx, "save")) return null;
-  const m = messageOf(ctx);
-  const { storageIds, vectorIds } = attachmentsOf(ctx);
-  return { name: m.title, text: m.text, source: m.source, date: m.at, storageIds, vectorIds };
-}
-
-export async function deliverDatabase(ctx: NodeCtx): Promise<{ databaseRowId: string; financeRowId?: string }> {
-  // Склад БД (308.8): пишем для содержательных намерений (save|finance|place), НЕ для чистого recall.
-  // Backward-compat: нет классификатора → пишем заметку как раньше.
-  if (!servesAnyIntent(ctx, CONTENT_INTENTS)) return { databaseRowId: "" };
-  // ДУБ-КОНТРОЛЬ (310): `dedupeGuard` придержал запись (нашёл вероятный дубль и спросил владельца, или уже
-  // разрешил её сам). Тогда склад молчит — писать нельзя, иначе задвоим то, что и так под вопросом.
+export async function deliverDatabase(ctx: NodeCtx): Promise<{ databaseRowId: string }> {
+  // ВОПРОС — НЕ ЗАПИСЬ. Пишем только для классов, после которых прогон оставляет данные; чтение своего,
+  // самоописание, отказ и вежливость записи не создают (граница держится фронтом, склад её уважает).
+  if (!servesAnyClass(ctx, RECORDING_CLASSES)) return { databaseRowId: "" };
+  // Середина придержала запись (например ждёт подтверждения человека) → склад молчит, иначе задвоим.
   if (ctx.skipDatabase === true) return { databaseRowId: "" };
 
-  // ФИНАНС → ОТДЕЛЬНАЯ ТАБЛИЦА (паритет v1): `digitizeMoney` оставил `ctx.finance` → денежное движение в
-  // таблицу `finance`. СОСТАВНОЕ сообщение (кафе: и впечатление, и покупка) создаёт ОБЕ записи. Форма строки
-  // берётся из общего билдера (`financeRowFrom`) — тот же, которым `dedupeGuard` держит payload.
-  let financeRowId: string | undefined;
-  const frowData = financeRowFrom(ctx);
-  if (frowData) {
-    const frow = await addRow("finance", frowData);
-    financeRowId = frow.id;
-  }
-
-  // ЗАМЕТКА: пишем, если есть намерение `save` (или нет классификатора — простой стартер). Для чистого
-  // finance/place заметку-дубль не плодим; для составного save+finance — заметка идёт ВМЕСТЕ с финансом.
-  let databaseRowId = "";
-  const nrowData = noteRowFrom(ctx);
-  if (nrowData) {
-    const nrow = await addRow("database", nrowData);
-    databaseRowId = nrow.id;
-  }
-
-  // Связь всех-ко-всем (309): связать db и finance со всеми соседями прогона И взаимно друг с другом.
-  if (databaseRowId) await crossLink(ctx, "database", databaseRowId, financeRowId ? [{ table: "finance", id: financeRowId }] : []);
-  if (financeRowId) await crossLink(ctx, "finance", financeRowId, databaseRowId ? [{ table: "database", id: databaseRowId }] : []);
-
-  return { databaseRowId, ...(financeRowId ? { financeRowId } : {}) };
+  const row = await addRow("database", recordRowFrom(ctx));
+  await crossLink(ctx, "database", row.id); // связь всех-ко-всем: запись ↔ объекты и вектор этого прогона
+  return { databaseRowId: row.id };
 }

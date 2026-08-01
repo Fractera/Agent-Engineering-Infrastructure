@@ -72,6 +72,13 @@ function fmtWhen(iso: string): string {
 export function composeReply(ctx: NodeCtx): NodeCtx {
   const L = pickLang(ctx);
 
+  // 🔒 ФРОНТ УЖЕ ОТВЕТИЛ (шаг 311.6). Классы, которым середина не нужна (самоописание, отказ,
+  // вежливость, уточняющий вопрос, неопознанное), собирают ответ САМИ и кладут его в `ctx.reply`.
+  // Тогда здесь нечего сочинять: перезаписать чужой ответ — значит вернуть тот самый дефект v2, где
+  // речь жила вне графа и доставка подменяла то, что решил маршрут.
+  const fromFront = String(ctx.reply ?? "").trim();
+  if (fromFront) return { reply: fromFront };
+
   // C: представление возможностей — /start, «что ты умеешь».
   if (ctx.showHelp === true) return { reply: CAPABILITIES[L] };
 
@@ -94,12 +101,15 @@ export function composeReply(ctx: NodeCtx): NodeCtx {
     return { reply: T.dimAdded(L, String(d.label ?? ""), (Array.isArray(d.values) ? d.values : []).join(" / ")) };
   }
 
-  const intents = Array.isArray(ctx.intent) ? (ctx.intent as unknown[]).map(String) : [];
-  const has = (i: string) => intents.length === 0 || intents.includes(i);
+  // КЛАСС ЗАПРОСА — из фронта (шаг 311.6). Старая система `ctx.intent` (мульти-флаг доменного словаря
+  // от удалённого `classifyIntent`) снесена целиком: две системы классификации с почти одинаковыми
+  // именами в одной папке — гарантированная путаница. Пусто (прогон без фронта) → отвечаем как раньше.
+  const cls = String(ctx.intentClass ?? "").trim();
+  const has = (c: string) => !cls || cls === c;
   const lines: string[] = [];
 
-  // save — узел aiTransform оставил краткую сводку в `noteSummary`.
-  if (has("save") && ctx.noteSummary) lines.push(T.save(L, String(ctx.noteSummary)));
+  // запись — середина оставила краткую сводку в `noteSummary`.
+  if (has("record-given") && ctx.noteSummary) lines.push(T.save(L, String(ctx.noteSummary)));
 
   // finance — digitizeMoney оставил структурную запись в `finance`.
   if (ctx.finance && typeof ctx.finance === "object") {
@@ -109,11 +119,9 @@ export function composeReply(ctx: NodeCtx): NodeCtx {
     lines.push((f.kind === "income" ? T.income : T.expense)(L, amt, cat, String(f.summary ?? "")));
   }
 
-  // remind — parseDate оставил `when`/`needsWhen`, текст напоминания — в `remindText`.
-  if (has("remind")) {
-    if (ctx.needsWhen === true) lines.push(T.remindWhen(L));
-    else if (ctx.when) lines.push(T.remind(L, fmtWhen(String(ctx.when)), String(ctx.remindText ?? "")));
-  }
+  // момент — середина оставила `when` (разобрала) или `needsWhen` (нужен, но не разобран).
+  if (ctx.needsWhen === true) lines.push(T.remindWhen(L));
+  else if (ctx.when) lines.push(T.remind(L, fmtWhen(String(ctx.when)), String(ctx.remindText ?? "")));
 
   // place — askAddress оставил структурный исход в `placeOutcome`.
   if (ctx.placeOutcome && typeof ctx.placeOutcome === "object") {
@@ -128,8 +136,8 @@ export function composeReply(ctx: NodeCtx): NodeCtx {
     if (g.term && g.meaning) lines.push(T.glossary(L, String(g.term), String(g.meaning)));
   }
 
-  // recall — recallFromMemory оставил ответ в `recallAnswer`.
-  if (has("recall") && ctx.recallAnswer) lines.push(T.recall(L, String(ctx.recallAnswer)));
+  // чтение своего — середина оставила найденный ответ в `recallAnswer`.
+  if (has("read-own") && ctx.recallAnswer) lines.push(T.recall(L, String(ctx.recallAnswer)));
 
   // Ничего не собрали (непонятое сообщение) → мягкий отказ + список возможностей.
   if (!lines.length) return { reply: T.unknown(L) + CAPABILITIES[L] };

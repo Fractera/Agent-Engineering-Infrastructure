@@ -4,11 +4,14 @@
 // content · storageIds · createdAt). Двойная запись — не дубль истины: LightRAG хранит СМЫСЛ (вектор),
 // строка — видимый ОТЧЁТ о факте с его track id.
 //
-// 🔒 СИНЕРГИЯ ВЕКТОР/SQL (шаг 308.1, паритет v1): в память идёт ПОЛНЫЙ исходный текст (включая полную
-// расшифровку голоса) — `ctx.original`, который оставляет `aiTransform`; а обычная БД (`deliverDatabase`)
-// пишет краткое `ctx.text` (summary). Так recall находит заметку по словам, которых в summary НЕТ.
-// Без `aiTransform` (простой стартер) `ctx.original` отсутствует → память берёт `ctx.text` как раньше
-// (backward-compat: смысл памяти не меняется, если summary не делался).
+// 🔒 СИНЕРГИЯ ВЕКТОР/SQL: в память идёт ПОЛНЫЙ исходный текст (`ctx.original`, если середина оставила
+// его, сделав краткую сводку), а обычная БД пишет то, что несёт сообщение. Так поиск находит запись по
+// словам, которых в сводке НЕТ. Середина сводку не делала → память берёт текст как есть.
+//
+// 🔒 НЕЙТРАЛЬНОСТЬ (шаг 311.6): отсюда убран домен v2 — словарь `save|finance|place` и `financeMemory`
+// («полная копия чека: магазин, позиции, количества, цены»). Склад хранит СМЫСЛ произвольной записи, а
+// что это за запись — знает середина. Тест: замени «предмет» на заявку, деталь, пациента — файл не
+// меняется.
 //
 // Сервиса памяти нет на сервере → честный ПРОПУСК с причиной (проект без LightRAG не теряет развозку);
 // сервис ответил отказом → бросок (`rememberFact` бросает сам).
@@ -16,21 +19,16 @@
 import { randomBytes } from "node:crypto";
 import type { NodeCtx } from "../executor";
 import { rememberFact } from "../memory";
-import { messageOf, servesAnyIntent } from "../message";
+import { messageOf, servesAnyClass, RECORDING_CLASSES } from "../message";
 import { addRow } from "../rows";
 import { crossLink } from "../components/links/cross-link";
 
-const CONTENT_INTENTS = ["save", "finance", "place"] as const;
-
 export async function deliverVectorMemory(ctx: NodeCtx): Promise<{ vectorMemoryDelivery: string; vectorRowId?: string }> {
-  // Память (308.8): запоминаем содержательные намерения (save|finance|place — заметки, траты, места), НЕ
-  // чистый recall (вопрос не запоминаем). Backward-compat: нет классификатора → запоминаем как раньше.
-  if (!servesAnyIntent(ctx, CONTENT_INTENTS)) return { vectorMemoryDelivery: "skipped: not a content intent" };
+  // ВОПРОС НЕ ЗАПОМИНАЕМ: память наполняют только те классы, после которых прогон оставляет данные.
+  if (!servesAnyClass(ctx, RECORDING_CLASSES)) return { vectorMemoryDelivery: "skipped: this request class leaves no record" };
   const m = messageOf(ctx);
-  // Полный текст для памяти. Приоритет: ПОЛНАЯ КОПИЯ ЧЕКА (309, `financeMemory` от digitizeMoney — магазин,
-  // все позиции, кол-во, цены, итог) → оригинал сообщения → summary. Так recall отвечает по позициям чека
-  // («сколько на черешню»), а не только по краткой сводке.
-  const fullText = String(ctx.financeMemory ?? ctx.original ?? ctx.text ?? "").trim() || m.text;
+  // Полный текст для памяти: оригинал (если середина делала сводку) → иначе текст сообщения.
+  const fullText = String(ctx.original ?? ctx.text ?? "").trim() || m.text;
   // Привязка вложений всплеска (308.6): факт памяти держит ссылки на объекты + их описания (308.7).
   const atts = Array.isArray(ctx.attachments) ? (ctx.attachments as { fileKey: string; description?: string }[]) : [];
   const fileKeys = atts.map((a) => a.fileKey).filter(Boolean);

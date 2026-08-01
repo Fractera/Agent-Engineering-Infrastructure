@@ -14,7 +14,7 @@
 // Развозку самой записи по наступлению делает `deliverDue` (`_lib/components/calendar/deliver.ts`).
 // Имя `deliverCalendar` — публичный контракт, не переименовывать.
 import type { NodeCtx } from "../executor";
-import { messageOf, servesIntent } from "../message";
+import { messageOf } from "../message";
 import { addRow } from "../rows";
 
 // Telegram-каналы, в которые развозка по наступлению умеет ответить текстом (адрес — из окружения, не из
@@ -35,9 +35,11 @@ const needWhen = {
 };
 
 export async function deliverCalendar(ctx: NodeCtx): Promise<NodeCtx> {
-  // Ветка НАПОМИНАНИЯ (308.8): событие ставим только для намерения `remind`; иначе молчим. Backward-compat.
-  if (!servesIntent(ctx, "remind")) return { calendarDelivery: "skipped: not a remind intent" };
-  // parseDate не нашёл даты — записи не создаём (её время неизвестно), а вопрос «когда?» кладём В
+  // Событие ставим, когда прогон принёс МОМЕНТ: середина положила `ctx.when` либо честно пометила
+  // `needsWhen` (момент нужен, но не разобран). Гейта по доменному намерению больше нет (311.6): «когда» —
+  // грань записи, а не отдельная предметная область.
+  if (!ctx.when && ctx.needsWhen !== true) return { calendarDelivery: "skipped: this run carries no moment" };
+  // Момент нужен, но не разобран — записи не создаём (её время неизвестно), а вопрос «когда?» кладём В
   // ПОЛЕЗНУЮ НАГРУЗКУ, чтобы следующий выходной узел ДОСТАВИЛ его человеку в канал-источник. Прежний
   // бросок (307.6) честен только у пульта: HTTP-ответ двери видит вызывающий, а человек в реальном
   // чате не видит ничего — вопрос обязан ехать тем же каналом, что и запрос (изменение 307.14R,

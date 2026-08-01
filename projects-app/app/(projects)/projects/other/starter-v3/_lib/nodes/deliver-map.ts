@@ -6,20 +6,22 @@
 // пропуск с причиной в контексте, никакой выдуманной точки (закон брифа §6/§10 — деградируй честно,
 // не подделывай результат).
 //
-// САМО-ГЕЙТ (308.0/308.4): в v3 метку ставим ТОЛЬКО когда `place` в `ctx.intent` — иначе координаты
+// САМО-ГЕЙТ (311.6): метку ставим для классов, оставляющих запись — иначе координаты
 // сообщения (например к фото места) не должны сами собой плодить метки чужих намерений. Без
-// классификатора (`ctx.intent` не задан, простой стартер) — работает как раньше. Имя места (`placeTitle`,
+// фронта (прямой вызов двери) — работает безусловно. Имя места (`placeTitle`,
 // venue из шаринга) кладётся в строку. Имя `deliverMap` — публичный контракт, не переименовывать.
 import type { NodeCtx } from "../executor";
-import { messageOf, servesIntent } from "../message";
+import { messageOf, servesAnyClass, RECORDING_CLASSES } from "../message";
 import { addRow } from "../rows";
 import { crossLink } from "../components/links/cross-link";
 
 export async function deliverMap(ctx: NodeCtx): Promise<{ mapDelivery: string; mapRowId?: string }> {
-  if (!servesIntent(ctx, "place")) return { mapDelivery: "skipped: not a place intent" };
-  // Гео-строку уже создал/связал `askAddress` (геометка v1: создание и связывание в одном месте, любой
-  // порядок) — тогда выход не задваивает строку. skipMap ставит askAddress.
-  if (ctx.skipMap) return { mapDelivery: "handled by askAddress (geo-mark created/linked)" };
+  // Метку ставим для тех же классов, что оставляют запись: место — грань записи, а не отдельный домен
+  // (шаг 311.6; прежний гейт по доменному намерению `place` удалён вместе со старой системой).
+  if (!servesAnyClass(ctx, RECORDING_CLASSES)) return { mapDelivery: "skipped: this request class leaves no record" };
+  // Середина уже создала и связала гео-строку сама (создание и связывание в одном месте, любой порядок
+  // прибытия) — тогда выход не задваивает строку.
+  if (ctx.skipMap) return { mapDelivery: "handled upstream (the marker was created and linked in the middle)" };
   const m = messageOf(ctx);
   if (m.lat === undefined || m.lng === undefined) {
     return { mapDelivery: "skipped: the message carries no lat/lng — this channel captured no coordinates" };
