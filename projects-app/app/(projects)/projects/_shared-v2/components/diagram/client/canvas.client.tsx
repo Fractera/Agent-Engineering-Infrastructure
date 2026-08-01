@@ -14,6 +14,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import type { DiagramVM, DiagramVMNode } from "./graph-to-flow";
+import { NodeAbilities } from "./node-abilities.client";
 // Иконки — lucide (правило владельца: во v2 самописные UI-элементы запрещены). Прежние самодельные SVG
 // из `chrome/icons` заменены один-к-одному по смыслу.
 import { Hammer as HammerIcon, Spline as SplineIcon, Eye as EyeIcon, EyeOff as EyeOffIcon } from "lucide-react";
@@ -777,6 +778,7 @@ export function DiagramCanvasV2({
                 <span className="font-medium">{L.returns}:</span> {active.fn.returns}
               </p>
             </div>
+            <NodeAbilities cuid={active.id} />
           </aside>
         )}
       </div>

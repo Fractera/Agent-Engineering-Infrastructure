@@ -377,8 +377,13 @@ export const NodeFunctionSchema = z
 /** Имя валидатора выводится из имени функции: `fetchExternal` → `fetchExternalValidate`. Закон, не выбор. */
 export const validatorName = (fn: string): string => `${fn}Validate`;
 
-/** Виды узлов, которым валидатор ОБЯЗАТЕЛЕН: те, что решают судьбу потока. */
-export const KINDS_NEEDING_VALIDATOR = ["transform", "condition-success", "condition-failure"] as const;
+// Виды узлов, которым валидатор ОБЯЗАТЕЛЕН: те, что РЕШАЮТ судьбу потока.
+//
+// `intent` попал сюда после живой проверки двери самоописания (311.8d): класс фронта решает не меньше
+// трансформа — он либо забирает прогон себе, либо пропускает дальше. Без валидатора «забрал» и
+// «пропустил» неразличимы в журнале, и понять, почему прогон ушёл не туда, можно только по коду. Двери
+// и доставщики валидатора не имеют: их исход определяет канал, а не логика.
+export const KINDS_NEEDING_VALIDATOR = ["intent", "transform", "condition-success", "condition-failure"] as const;
 
 // ─── CHANNELS (ioType) ──────────────────────────────────────────────────────────────────────────────
 // WHERE the automation's work arrives from, and WHERE its result is delivered. A CLOSED vocabulary: a

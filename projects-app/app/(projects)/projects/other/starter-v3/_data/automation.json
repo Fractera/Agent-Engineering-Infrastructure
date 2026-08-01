@@ -522,7 +522,7 @@
             },
             {
               "cuid": "cfetchexternal3tyh65",
-              "name": "Fetch from outside",
+              "name": "Fetch the subject",
               "description": "Brings the named subject from an open encyclopedic source: description, image address, coordinates. The subject is named by the human at run time — this node does not know what it is.",
               "state": "visible",
               "info": {
@@ -1268,7 +1268,20 @@
                 "name": "intentRefuse",
                 "summary": "Recognizes a request for a secret and refuses it outright, without touching a store or a tool.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentRefuseValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
               },
               "run": "sequential",
               "estDurationMs": 50,
@@ -1309,7 +1322,20 @@
                 "name": "intentContinuation",
                 "summary": "Detects that a question is outstanding and hands this message on as its answer.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentContinuationValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
               },
               "run": "sequential",
               "estDurationMs": 50,
@@ -1350,7 +1376,20 @@
                 "name": "intentSelfDescribe",
                 "summary": "Recognizes a question about the automation itself and answers it from the passport.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentSelfDescribeValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
               },
               "run": "sequential",
               "estDurationMs": 50,
@@ -1391,7 +1430,20 @@
                 "name": "intentControl",
                 "summary": "Recognizes a request that changes the automation itself rather than its data.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentControlValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
               },
               "run": "sequential",
               "estDurationMs": 50,
@@ -1432,7 +1484,20 @@
                 "name": "intentComposite",
                 "summary": "Recognizes a two-step request and hands the middle an explicit plan.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentCompositeValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
               },
               "run": "sequential",
               "estDurationMs": 50,
@@ -1473,7 +1538,20 @@
                 "name": "intentFetchExternal",
                 "summary": "Recognizes a request to fetch a named subject from outside and passes the subject on.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentFetchExternalValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
               },
               "run": "sequential",
               "estDurationMs": 50,
@@ -1514,7 +1592,20 @@
                 "name": "intentReadOwn",
                 "summary": "Recognizes a question about what is already stored and passes it to the middle to answer.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentReadOwnValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
               },
               "run": "sequential",
               "estDurationMs": 50,
@@ -1555,7 +1646,20 @@
                 "name": "intentIncomplete",
                 "summary": "Recognizes a task with no subject and asks what exactly to take down.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentIncompleteValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
               },
               "run": "sequential",
               "estDurationMs": 50,
@@ -1596,7 +1700,20 @@
                 "name": "intentSmallTalk",
                 "summary": "Recognizes social speech and answers it without any action.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentSmallTalkValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
               },
               "run": "sequential",
               "estDurationMs": 50,
@@ -1637,7 +1754,20 @@
                 "name": "intentRecordGiven",
                 "summary": "Recognizes a statement of fact to be kept and passes it to the middle.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentRecordGivenValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
               },
               "run": "sequential",
               "estDurationMs": 50,
@@ -1678,7 +1808,20 @@
                 "name": "intentUnclaimed",
                 "summary": "States honestly that the request was not recognized, instead of falling back to a default class.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentUnclaimedValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
               },
               "run": "sequential",
               "estDurationMs": 50,

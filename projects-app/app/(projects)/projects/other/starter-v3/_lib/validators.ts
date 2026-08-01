@@ -63,6 +63,27 @@ export const ifFailureValidate: NodeValidator = (_patch, ctx) => {
   return "not-holding";
 };
 
+
+// ─── ФРОНТ ЗАПРОСА ──────────────────────────────────────────────────────────────────────────────────
+// Класс фронта РЕШАЕТ судьбу прогона не меньше, чем трансформ: он либо забирает прогон себе, либо
+// пропускает дальше. Значит по тому же закону у него обязан быть валидатор — иначе «пропустил» и
+// «забрал» неразличимы в журнале, и разобраться, почему прогон ушёл не туда, можно только по коду.
+// Исход у всех классов один и тот же по форме, поэтому валидатор общий по смыслу, но объявляется
+// каждым классом отдельно (имя выводится из его функции — закон схемы).
+const classifyClaim: NodeValidator = (patch) => (has(patch, "intentClass") ? "claimed" : "passed");
+
+export const intentRefuseValidate = classifyClaim;
+export const intentContinuationValidate = classifyClaim;
+export const intentSelfDescribeValidate = classifyClaim;
+export const intentControlValidate = classifyClaim;
+export const intentCompositeValidate = classifyClaim;
+export const intentFetchExternalValidate = classifyClaim;
+export const intentReadOwnValidate = classifyClaim;
+export const intentIncompleteValidate = classifyClaim;
+export const intentSmallTalkValidate = classifyClaim;
+export const intentRecordGivenValidate = classifyClaim;
+export const intentUnclaimedValidate = classifyClaim;
+
 export const NODE_VALIDATORS: Record<string, NodeValidator> = {
   transformPayloadValidate,
   fetchExternalValidate,
@@ -70,6 +91,17 @@ export const NODE_VALIDATORS: Record<string, NodeValidator> = {
   resolveMomentValidate,
   ifSuccessValidate,
   ifFailureValidate,
+  intentRefuseValidate,
+  intentContinuationValidate,
+  intentSelfDescribeValidate,
+  intentControlValidate,
+  intentCompositeValidate,
+  intentFetchExternalValidate,
+  intentReadOwnValidate,
+  intentIncompleteValidate,
+  intentSmallTalkValidate,
+  intentRecordGivenValidate,
+  intentUnclaimedValidate,
 };
 
 // 🔒 ВТОРОЙ УРОВЕНЬ ПРИНУЖДЕНИЯ — падение на загрузке модуля. Каждая функция решающего узла обязана
@@ -85,6 +117,17 @@ const DECIDING_FUNCTIONS = [
   "resolveMoment",
   "ifSuccess",
   "ifFailure",
+  "intentRefuse",
+  "intentContinuation",
+  "intentSelfDescribe",
+  "intentControl",
+  "intentComposite",
+  "intentFetchExternal",
+  "intentReadOwn",
+  "intentIncomplete",
+  "intentSmallTalk",
+  "intentRecordGiven",
+  "intentUnclaimed",
 ] as const;
 
 const missingValidators = DECIDING_FUNCTIONS.map((fn) => `${fn}Validate`).filter((v) => !NODE_VALIDATORS[v]);
