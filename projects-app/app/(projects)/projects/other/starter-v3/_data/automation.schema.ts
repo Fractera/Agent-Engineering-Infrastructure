@@ -30,6 +30,21 @@ export const SYSTEM_INSTRUCTION_NAMES = [
   "kind.input",
   "kind.input-connector",
   "kind.intent",
+  // ЗАКОН КАЖДОГО КЛАССА ЗАПРОСА — по одной инструкции на класс (шаг 311). Имя не выбирается, а выводится
+  // из класса: `intent.<class>`, как `kind.<kind>` выводится из вида. Список обязан совпадать со словарём
+  // `IntentClassSchema` — расхождение ловится проверкой INTENT_INSTRUCTIONS_COMPLETE ниже.
+  "intent.refuse",
+  "intent.continuation",
+  "intent.self-describe",
+  "intent.control",
+  "intent.composite",
+  "intent.fetch-external",
+  "intent.read-own",
+  "intent.incomplete",
+  "intent.small-talk",
+  "intent.record-given",
+  "intent.unclaimed",
+  "intent.custom", // закон МАСШТАБИРОВАНИЯ: когда модель вправе завести новый класс
   "kind.transform",
   "kind.condition-success",
   "kind.condition-failure",
@@ -325,6 +340,53 @@ export const OutputChannelSchema = z.enum([
   "custom", // any other delivery destination the owner defines
 ]);
 
+// ─── СЛОВАРЬ КЛАССОВ ЗАПРОСА (шаг 311) — инвентарь фронта, объявленный ОДИН раз ─────────────────────
+// Устроен ровно как словари каналов: класс — это то, на что узел вида `intent` имеет право в своём
+// `ioType`. Отсюда же считается квота группы, отсюда же выводится имя инструкции класса
+// (`intent.<class>`) и имя его функции (`intent` + PascalCase). Один источник истины: добавить класс =
+// добавить значение сюда, и три производных встанут на место сами.
+//
+// ПОРЯДОК ЗНАЧИМ — это старшинство: первый заявивший побеждает, поэтому узкие классы стоят раньше
+// широких (`refuse` первым, `record-given` последним из содержательных, `unclaimed` замыкает).
+//
+// Разбиение выведено по двум осям, а не собрано списком (полностью — `_instructions/group.intent.md`):
+//   ГДЕ ЛЕЖИТ ОТВЕТ: в сообщении · снаружи · в наших складах · и там и там · в паспорте · нигде (запрет);
+//   ЧТО С ОБРАЩЕНИЕМ: про устройство автоматизации · продолжение прежнего · неполное · только вежливость.
+//
+// `custom` — ОТКРЫТАЯ ДВЕРЬ (как `custom` у каналов): в базовую квоту НЕ входит, узла в поставке нет,
+// он заводится, когда действительно понадобился. Когда это законно — `_instructions/intent.custom.md`.
+export const IntentClassSchema = z.enum([
+  "refuse", // ответа быть не должно (секреты сервера)
+  "continuation", // вторая половина прежнего запроса: висит вопрос, это ответ на него
+  "self-describe", // вопрос о самой автоматизации — ответ в паспорте
+  "control", // меняет УСТРОЙСТВО автоматизации, а не её данные
+  "composite", // два действия по порядку: добыть снаружи, затем сверить со своим
+  "fetch-external", // данных в сообщении нет — добыть из внешнего мира
+  "read-own", // вопрос о том, что уже хранится у нас
+  "incomplete", // намерение ясно, данных не хватает — задать один уточняющий вопрос
+  "small-talk", // вежливость: ответ нужен, действие — нет
+  "record-given", // данные уже в сообщении — сохранить (самый широкий содержательный класс)
+  "unclaimed", // никто не узнал своё — сказать правду, а не выбрать дефолт
+  "custom", // открытая дверь: класс, которого нет в этом списке (см. intent.custom.md)
+]);
+
+/** Имя функции класса выводится из самого класса: `self-describe` → `intentSelfDescribe`. Закон, не выбор. */
+export const intentFunctionName = (cls: string): string =>
+  "intent" + cls.split("-").map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join("");
+
+/** Имя инструкции класса — тоже производное: `self-describe` → `intent.self-describe`. */
+export const intentInstructionName = (cls: string): string => `intent.${cls}`;
+
+// СТРАХОВКА ОТ РАСХОЖДЕНИЯ: у каждого класса словаря обязана быть зарегистрированная инструкция. Список
+// имён инструкций объявлен выше литералом (он общий для всех уровней), поэтому сверяем их здесь — при
+// добавлении класса без инструкции модуль падает на загрузке, а не тихо отдаёт пустой закон.
+const missingIntentInstructions = IntentClassSchema.options
+  .map(intentInstructionName)
+  .filter((n) => !(SYSTEM_INSTRUCTION_NAMES as readonly string[]).includes(n));
+if (missingIntentInstructions.length) {
+  throw new Error(`intent classes without a registered instruction: ${missingIntentInstructions.join(", ")}`);
+}
+
 export const NodeKindSchema = z.enum([
   "input-connector",
   "output-connector",
@@ -589,8 +651,9 @@ export const NodeSchema = z.discriminatedUnion("kind", [
   nodeOf("output-connector", OutputChannelSchema),
   nodeOf("input", InputChannelSchema),
   nodeOf("output", OutputChannelSchema),
-  // Узел-класс фронта канала не имеет: он судит О запросе, а не переносит его через дверь.
-  nodeOf("intent", z.null()),
+  // Узел фронта объявляет СВОЙ КЛАСС в `ioType` — так же, как входной объявляет свой канал: `ioType` есть
+  // словарь, на который вид имеет право. Отсюда выводятся и его инструкция, и имя его функции.
+  nodeOf("intent", IntentClassSchema),
   nodeOf("transform", z.null()),
   nodeOf("condition-success", z.null()),
   nodeOf("condition-failure", z.null()),
@@ -653,9 +716,10 @@ export const OUTPUT_CHANNEL_QUOTA = channelCount(OutputChannelSchema.options);
 // число не растёт от автоматизации к автоматизации. Число здесь = сколько классов РЕАЛЬНО реализовано:
 // шаблон отгружается с работающими узлами, no-op-заглушки запрещены (глобальная цель шаблона), поэтому
 // класс появляется в ядре ТОЛЬКО вместе со своей рабочей функцией, и эта квота растёт вместе с ним.
-// Десять классов запроса (свод шага 309 §7) плюс замыкающий `unclaimed` — «ничей запрос», без которого
-// множество исходов не закрыто и непонятое обращение молча уходит в удобную ветку.
-export const INTENT_CLASS_QUOTA = 11;
+// Квота фронта СЧИТАЕТСЯ ИЗ СЛОВАРЯ, а не вписывается числом — иначе добавление класса требует правки в
+// двух местах, и они разъедутся (тот же приём, что у каналов). `custom` из счёта исключён: это открытая
+// дверь, узел для неё заводится по нужде, а не рождается вместе с автоматизацией.
+export const INTENT_CLASS_QUOTA = IntentClassSchema.options.filter((c) => c !== "custom").length;
 
 export const GROUP_POLICY: Record<z.infer<typeof GroupNameSchema>, GroupPolicy> = {
   input: {
@@ -834,6 +898,21 @@ export const GraphSchema = z
         return;
       }
       byCuid.set(node.cuid, node);
+
+      // A CLASS NODE'S FUNCTION IS NOT NAMED BY HAND. Its class (`ioType`) already says which law it
+      // serves, so the function name is DERIVED from it — `self-describe` → `intentSelfDescribe`. Without
+      // this the class would live in three places at once (the node name, the function name, the class)
+      // and they would drift; with it, the class is stated once and everything else follows (law 2).
+      if (node.kind === "intent" && typeof node.ioType === "string") {
+        const expected = intentFunctionName(node.ioType);
+        if (node.function.name !== expected) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["nodes"],
+            message: `the "${node.ioType}" class is served by the function "${expected}", not "${node.function.name}" — the name is derived from the class, not chosen`,
+          });
+        }
+      }
 
       // the node must declare its kind's row of the connection table, word for word
       (["in", "out"] as const).forEach((side) => {

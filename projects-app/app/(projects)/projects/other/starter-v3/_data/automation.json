@@ -970,7 +970,7 @@
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
-              "ioType": null,
+              "ioType": "refuse",
               "in": {
                 "state": "required",
                 "connections": [
@@ -1011,7 +1011,7 @@
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
-              "ioType": null,
+              "ioType": "continuation",
               "in": {
                 "state": "required",
                 "connections": [
@@ -1052,7 +1052,7 @@
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
-              "ioType": null,
+              "ioType": "self-describe",
               "in": {
                 "state": "required",
                 "connections": [
@@ -1093,7 +1093,7 @@
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
-              "ioType": null,
+              "ioType": "control",
               "in": {
                 "state": "required",
                 "connections": [
@@ -1134,7 +1134,7 @@
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
-              "ioType": null,
+              "ioType": "composite",
               "in": {
                 "state": "required",
                 "connections": [
@@ -1175,7 +1175,7 @@
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
-              "ioType": null,
+              "ioType": "fetch-external",
               "in": {
                 "state": "required",
                 "connections": [
@@ -1216,7 +1216,7 @@
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
-              "ioType": null,
+              "ioType": "read-own",
               "in": {
                 "state": "required",
                 "connections": [
@@ -1257,7 +1257,7 @@
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
-              "ioType": null,
+              "ioType": "incomplete",
               "in": {
                 "state": "required",
                 "connections": [
@@ -1298,7 +1298,7 @@
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
-              "ioType": null,
+              "ioType": "small-talk",
               "in": {
                 "state": "required",
                 "connections": [
@@ -1339,7 +1339,7 @@
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
-              "ioType": null,
+              "ioType": "record-given",
               "in": {
                 "state": "required",
                 "connections": [
@@ -1380,7 +1380,7 @@
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
-              "ioType": null,
+              "ioType": "unclaimed",
               "in": {
                 "state": "required",
                 "connections": [
