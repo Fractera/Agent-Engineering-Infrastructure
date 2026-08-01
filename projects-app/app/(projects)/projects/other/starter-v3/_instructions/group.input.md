@@ -3,6 +3,26 @@
 Two kinds live here and no others: `input` — one door per channel of the outside world; and
 `input-connector` — the single door to a node of ANOTHER automation.
 
+## The channels are DERIVED, not collected
+
+A channel is the SHAPE in which work arrives — not who sends it and not what it is about. Three systems
+posting HTTP are three senders on one door; invoices and job applications arriving by mail are one door.
+The shapes are finite, and that is why this inventory can be frozen:
+
+| How work arrives | Channel |
+|---|---|
+| a human types it on our own page | `control-panel` |
+| the owner writes from his private chat | `user-telegram-chat` |
+| anyone writes to the automation's bot | `telegram-bot` |
+| a stranger uses the public surface | `public-page` |
+| a machine pushes over HTTP | `webhook` |
+| a letter is delivered by a provider | `email` |
+| nobody sends anything — a moment arrives | `cron` |
+| a neighbouring automation hands work over | the single `input-connector` |
+
+Each channel has its own law: `input.<channel>.md`. The law for ADDING one — and the reasons the answer is
+usually no — is `input.custom.md`.
+
 ## The inventory is already complete
 
 This automation was born carrying one `input` node for EVERY channel of the vocabulary
@@ -36,6 +56,14 @@ none" is not an option you have.
 - IT NEVER CLASSIFIES AND NEVER ANSWERS. What kind of request arrived is decided by the intent layer;
   the reply is composed on the route. A door that answers was the v2 defect this law ended.
 - The event is PUSHED into the automation. Never write a polling loop to fetch your own input.
+
+## Reuse between automations
+
+Doors are forms of arrival, not features, so they carry over to any automation unchanged — which is why the
+inventory is part of the frozen template rather than something each project invents. What differs between
+projects is which doors are REVEALED and what happens after them. Copying a channel into another project
+means copying its law with it: the node and its instruction travel together, and its function name follows
+from the channel by derivation, never by choice.
 
 ## Revealing a second channel later
 

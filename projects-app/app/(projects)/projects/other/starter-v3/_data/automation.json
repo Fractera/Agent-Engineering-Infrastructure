@@ -90,7 +90,7 @@
               "warnings": [],
               "envKeys": [],
               "function": {
-                "name": "receiveRequest",
+                "name": "receiveControlPanel",
                 "summary": "Captures the control-panel form message and normalizes it into the shared Message shape.",
                 "accepts": "The form fields of a run started from the control panel: text (required), optional lat/lng.",
                 "returns": "Message fields merged into the context: text, source=\"control-panel\", at, and lat/lng when given."
@@ -501,7 +501,7 @@
               "warnings": [],
               "envKeys": [],
               "function": {
-                "name": "deliverResult",
+                "name": "deliverDashboard",
                 "summary": "Writes one history row per successful run: date, source channel, title and text of the message.",
                 "accepts": "The normalized message (text · title · at · source) carried by the success branch.",
                 "returns": "rowId — the id of the history row written to the dashboard."

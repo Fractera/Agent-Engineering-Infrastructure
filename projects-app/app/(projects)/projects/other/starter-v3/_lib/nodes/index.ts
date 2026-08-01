@@ -7,7 +7,7 @@
 // Шаг 300: КАЖДЫЙ узел инвентаря несёт реальную функцию — ни одно имя ядра больше не указывает на
 // несуществующий файл. Новый канал = новый файл + новая строка здесь (добавление аддитивно, закон 2).
 import type { NodeFn } from "../executor";
-import { receiveRequest } from "./receive-request";
+import { receiveControlPanel } from "./receive-control-panel";
 import { receiveWebhook } from "./receive-webhook";
 import { receiveCron } from "./receive-cron";
 import { receivePublicPage } from "./receive-public-page";
@@ -31,7 +31,7 @@ import { composeReply } from "./compose-reply";
 import { converse } from "./converse";
 import { ifSuccess } from "./if-success";
 import { ifFailure } from "./if-failure";
-import { deliverResult } from "./deliver-result";
+import { deliverDashboard } from "./deliver-dashboard";
 import { deliverPublicPage } from "./deliver-public-page";
 import { deliverCalendar } from "./deliver-calendar";
 import { deliverAnalytics } from "./deliver-analytics";
@@ -46,7 +46,7 @@ import { handToExternal } from "./hand-to-external";
 
 export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   // входная группа — 7 каналов + коннектор
-  receiveRequest,
+  receiveControlPanel,
   receiveWebhook,
   receiveCron,
   receivePublicPage,
@@ -78,7 +78,7 @@ export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   ifSuccess,
   ifFailure,
   // выходная группа — 11 каналов + коннектор
-  deliverResult,
+  deliverDashboard,
   deliverPublicPage,
   deliverCalendar,
   deliverAnalytics,

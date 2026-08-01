@@ -29,6 +29,15 @@ export const SYSTEM_INSTRUCTION_NAMES = [
   "group.output",
   "kind.input",
   "kind.input-connector",
+  // ЗАКОН КАЖДОГО КАНАЛА — по одной инструкции на элемент словаря (шаг 311.4), как у классов фронта.
+  "input.control-panel",
+  "input.webhook",
+  "input.cron",
+  "input.public-page",
+  "input.telegram-bot",
+  "input.user-telegram-chat",
+  "input.email",
+  "input.custom", // закон МАСШТАБИРОВАНИЯ входа: когда заводится новый канал
   "kind.intent",
   // ЗАКОН КАЖДОГО КЛАССА ЗАПРОСА — по одной инструкции на класс (шаг 311). Имя не выбирается, а выводится
   // из класса: `intent.<class>`, как `kind.<kind>` выводится из вида. Список обязан совпадать со словарём
@@ -59,6 +68,18 @@ export const SYSTEM_INSTRUCTION_NAMES = [
   "kind.condition-failure",
   "kind.output",
   "kind.output-connector",
+  "output.public-page",
+  "output.dashboard",
+  "output.calendar",
+  "output.analytics",
+  "output.map",
+  "output.email",
+  "output.telegram-bot",
+  "output.user-telegram-chat",
+  "output.vector-memory",
+  "output.database",
+  "output.storage",
+  "output.custom", // закон МАСШТАБИРОВАНИЯ выхода
   "components", // for ALL components
   "tab", // for every tab
   // A TAB WITH A LAW OF ITS OWN gets an ADDITIONAL instruction `tab.<name>`, and the general `tab` law
@@ -427,6 +448,34 @@ const missingEvolutionInstructions = EvolutionScopeSchema.options
   .filter((n) => !(SYSTEM_INSTRUCTION_NAMES as readonly string[]).includes(n));
 if (missingEvolutionInstructions.length) {
   throw new Error(`evolution scopes without a registered instruction: ${missingEvolutionInstructions.join(", ")}`);
+}
+
+// ─── ПРОИЗВОДНЫЕ ИМЕНА КАНАЛОВ (шаг 311.4) ──────────────────────────────────────────────────────────
+// Тот же закон, что у классов фронта и областей эволюции: канал объявлен ОДИН раз в своём словаре, а имя
+// функции и имя инструкции из него ВЫВОДЯТСЯ. До этого канал жил в трёх местах (имя узла, имя функции,
+// проза инструкции) — и уже разъехался: `control-panel` обслуживался функцией `receiveRequest`, а
+// `dashboard` — функцией `deliverResult`. Обе переименованы, потому что закон без исключений или его нет.
+//
+// КОННЕКТОРЫ ПОД ЭТОТ ЗАКОН НЕ ПОДПАДАЮТ: их `ioType` называет не свой канал, а язык соседней
+// автоматизации, и их работа — передача наружу (`receiveFromExternal` / `handToExternal`), а не приём
+// конкретного канала. Проверка ниже применяется только к видам `input` и `output`.
+export const inputFunctionName = (channel: string): string =>
+  "receive" + channel.split("-").map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join("");
+export const outputFunctionName = (channel: string): string =>
+  "deliver" + channel.split("-").map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join("");
+
+/** Имена инструкций каналов — тоже производные: `telegram-bot` → `input.telegram-bot` / `output.telegram-bot`. */
+export const inputInstructionName = (channel: string): string => `input.${channel}`;
+export const outputInstructionName = (channel: string): string => `output.${channel}`;
+
+// Та же страховка, что у классов и областей: канал без зарегистрированной инструкции роняет модуль на
+// загрузке, а не отдаёт молча пустой закон.
+const missingChannelInstructions = [
+  ...InputChannelSchema.options.map(inputInstructionName),
+  ...OutputChannelSchema.options.map(outputInstructionName),
+].filter((n) => !(SYSTEM_INSTRUCTION_NAMES as readonly string[]).includes(n));
+if (missingChannelInstructions.length) {
+  throw new Error(`channels without a registered instruction: ${missingChannelInstructions.join(", ")}`);
 }
 
 export const NodeKindSchema = z.enum([
@@ -987,6 +1036,18 @@ export const GraphSchema = z
             code: "custom",
             path: ["nodes"],
             message: `the "${node.ioType}" class is served by the function "${expected}", not "${node.function.name}" — the name is derived from the class, not chosen`,
+          });
+        }
+      }
+      // То же для каналов: `telegram-bot` → `receiveTelegramBot` / `deliverTelegramBot`. Коннекторы
+      // исключены — их функция передаёт наружу, а не принимает канал.
+      if ((node.kind === "input" || node.kind === "output") && typeof node.ioType === "string") {
+        const expected = node.kind === "input" ? inputFunctionName(node.ioType) : outputFunctionName(node.ioType);
+        if (node.function.name !== expected) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["nodes"],
+            message: `the "${node.ioType}" channel is served by the function "${expected}", not "${node.function.name}" — the name is derived from the channel, not chosen`,
           });
         }
       }

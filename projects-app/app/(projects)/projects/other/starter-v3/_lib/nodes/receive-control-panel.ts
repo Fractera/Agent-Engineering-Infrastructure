@@ -4,11 +4,11 @@
 //
 // Движок исполняет ВСЕ видимые узлы, поэтому чужой прогон (source другого канала) приёмник пропускает,
 // возвращая {} — он в нём не участвует. Пустое сообщение — честный отказ у двери (десять языков).
-// Имя функции `receiveRequest` — публичный контракт, менять нельзя; логику внутри — можно.
+// Имя функции `receiveControlPanel` — публичный контракт, менять нельзя; логику внутри — можно.
 import type { NodeCtx } from "../executor";
 import { captured, channelOf, emptyInput, refuse } from "../message";
 
-export function receiveRequest(ctx: NodeCtx): NodeCtx {
+export function receiveControlPanel(ctx: NodeCtx): NodeCtx {
   if (channelOf(ctx) !== "control-panel") return {};
   const text = String(ctx.text ?? ctx.query ?? ctx.message ?? "").trim();
   if (!text) refuse(emptyInput("control-panel"));
