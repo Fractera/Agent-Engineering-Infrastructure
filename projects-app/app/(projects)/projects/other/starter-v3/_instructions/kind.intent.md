@@ -17,16 +17,22 @@ ABOUT a request rather than carrying it through a door.
 ## The contract of its function
 
 ```
-intentSomething(ctx) → ctx-patch | null
+intentSomething(ctx) → ctx-patch
 ```
 
-- **`null` — «not my request».** The engine stops this branch, without an error. This is the normal, most
-  frequent outcome: nine classes out of ten return `null` on any given run.
+- **`PASS` (an empty patch, `{}`) — «not my request».** The flow goes on to the next class unchanged. This
+  is the normal, most frequent outcome: ten classes out of eleven pass on any given run.
 - **a ctx-patch — «mine».** It must contain at least `intentClass` (which class claimed the run) and
   `intentRoute` (where it is being sent). Whatever else it puts in — `reply`, `text`, a parsed field — is
-  what the rest of the route will work with.
-- **a throw — a real failure.** Reserve it for a broken environment, never for «I did not recognize it»:
-  not recognizing is `null`.
+  what the rest of the route will work with. A class claims only if nothing has claimed yet (`claimed(ctx)`),
+  so the FIRST claimer wins and the order of the class nodes in the core IS the precedence.
+- **a throw — a real failure.** Reserve it for a broken environment, never for «I did not recognize it».
+
+> 🔒 **Never return `null` from a class.** The engine is LINEAR: it runs every visible node in topological
+> order, and `null` stops the WHOLE run, not «this branch». Since the classes stand in a fan, one foreign
+> class returning `null` would kill the run before its real owner is reached — proven live on 2026-08-01,
+> when «what page do you have?» died on the refusal class. `null` is still lawful, but it means «stop the
+> run», never «not mine».
 
 ## How it decides
 

@@ -24,7 +24,15 @@ export type DiagramCoreNode = {
 export type DiagramCoreEdge = { cuid: string; from: string; to: string; state: string };
 
 export type DiagramGraph = {
-  nodes: { groups: { input: { nodes: DiagramCoreNode[] }; middle: { nodes: DiagramCoreNode[] }; output: { nodes: DiagramCoreNode[] } } };
+  // `intent` — четвёртый слой (шаг 311), НЕОБЯЗАТЕЛЬНЫЙ: ядра v2 его не объявляют, ядра v3 объявляют.
+  nodes: {
+    groups: {
+      input: { nodes: DiagramCoreNode[] };
+      intent?: { nodes: DiagramCoreNode[] };
+      middle: { nodes: DiagramCoreNode[] };
+      output: { nodes: DiagramCoreNode[] };
+    };
+  };
   edges: DiagramCoreEdge[];
 };
 

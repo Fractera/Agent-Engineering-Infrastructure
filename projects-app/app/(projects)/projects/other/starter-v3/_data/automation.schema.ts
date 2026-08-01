@@ -653,7 +653,9 @@ export const OUTPUT_CHANNEL_QUOTA = channelCount(OutputChannelSchema.options);
 // число не растёт от автоматизации к автоматизации. Число здесь = сколько классов РЕАЛЬНО реализовано:
 // шаблон отгружается с работающими узлами, no-op-заглушки запрещены (глобальная цель шаблона), поэтому
 // класс появляется в ядре ТОЛЬКО вместе со своей рабочей функцией, и эта квота растёт вместе с ним.
-export const INTENT_CLASS_QUOTA = 1;
+// Десять классов запроса (свод шага 309 §7) плюс замыкающий `unclaimed` — «ничей запрос», без которого
+// множество исходов не закрыто и непонятое обращение молча уходит в удобную ветку.
+export const INTENT_CLASS_QUOTA = 11;
 
 export const GROUP_POLICY: Record<z.infer<typeof GroupNameSchema>, GroupPolicy> = {
   input: {

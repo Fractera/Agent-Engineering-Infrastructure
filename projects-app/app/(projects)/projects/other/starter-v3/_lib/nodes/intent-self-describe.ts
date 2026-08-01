@@ -23,6 +23,7 @@
 // Имя `intentSelfDescribe` — публичный контракт, не переименовывать.
 import type { NodeCtx } from "../executor";
 import { readCore } from "../core-io";
+import { PASS, claimed } from "./intent-gate";
 
 // Формы вопроса о самой автоматизации. Список закрытый и короткий: класс отвечает за СЕБЯ, и чужой
 // запрос обязан уйти к своему классу, а не быть перехваченным здесь «на всякий случай».
@@ -36,10 +37,10 @@ const SELF_QUESTION: RegExp[] = [
   /\byour (public )?page\b/i,
 ];
 
-export async function intentSelfDescribe(ctx: NodeCtx): Promise<NodeCtx | null> {
+export async function intentSelfDescribe(ctx: NodeCtx): Promise<NodeCtx> {
   const text = String(ctx.text ?? "").trim();
-  if (!text) return null; // пустой захват судить нечего — не наш прогон
-  if (!SELF_QUESTION.some((re) => re.test(text))) return null; // чужой класс
+  if (claimed(ctx) || !text) return PASS; // занято другим классом или пустой захват — не наш прогон
+  if (!SELF_QUESTION.some((re) => re.test(text))) return PASS; // чужой класс
 
   const core = await readCore();
   const url = String((core.passport as { publicUrl?: unknown }).publicUrl ?? "").trim();

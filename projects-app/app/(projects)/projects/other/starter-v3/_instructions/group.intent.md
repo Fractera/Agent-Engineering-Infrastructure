@@ -36,8 +36,10 @@ They do not grow from automation to automation, so:
 1. **Every run enters here.** `input` and `input-connector` lead only into `intent`. An edge from a door
    into the middle does not exist; there is no bypass to build.
 2. **One node per class, never an N-way router.** Each class node self-gates: it looks at the request and
-   decides whether it is ITS request. Mine → answer and pass the flow on. Not mine → return `null`, an
-   orderly stop of that branch — not an error. Adding a class never touches its neighbours.
+   decides whether it is ITS request. Mine → it claims the run (`intentClass`) and passes the flow on. Not
+   mine → it returns an EMPTY patch and the flow reaches the next class untouched. Never `null`: the engine
+   is linear, and `null` stops the whole run (see `kind.intent.md`). The FIRST claimer wins, so the order of
+   the class nodes in the core is their precedence — narrow classes stand before wide ones.
 3. **A class may skip the middle.** `intent` leads into `transform` when work over data is needed, and
    straight into an `output` when it is not (self-description, refusal, small-talk). Skipping the middle
    is lawful — it is exactly why this layer was given its own row in the connection table.

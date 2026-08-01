@@ -946,26 +946,26 @@
               "systemInstructionName": "kind.intent",
               "deletion": "forbidden",
               "addition": "forbidden",
-              "minNodes": 1
+              "minNodes": 11
             }
           },
           "nodes": [
             {
-              "cuid": "cintentselfdescribevs5ni8q6",
-              "name": "Self-description",
-              "description": "The request class that needs no store and no tool: the answer already lives in the passport.",
+              "cuid": "cintentrefusezln99q",
+              "name": "Refusal",
+              "description": "A request that must not be answered at all — server secrets, keys, passwords. Stands first so a refusal happens before any store or tool is touched.",
               "state": "visible",
               "info": {
-                "aiSummary": "Front class «self-description»: deterministically recognizes a question about the automation itself (its public page) and answers from passport.publicUrl, bypassing the middle entirely. A foreign request returns null — this run is not mine. Never invents a link: an unassigned address is said out loud."
+                "aiSummary": "A request that must not be answered at all — server secrets, keys, passwords. Stands first so a refusal happens before any store or tool is touched. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
               },
               "status": "materialized",
               "warnings": [],
               "envKeys": [],
               "function": {
-                "name": "intentSelfDescribe",
-                "summary": "Recognizes a question about the automation itself and answers it from the passport.",
+                "name": "intentRefuse",
+                "summary": "Recognizes a request for a secret and refuses it outright, without touching a store or a tool.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute · reply · text · title — or null when the request belongs to another class."
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
               },
               "run": "sequential",
               "estDurationMs": 50,
@@ -987,7 +987,419 @@
                 ]
               },
               "lineage": "",
-              "serves": []
+              "serves": [
+                "cusecaseselfdescribesgzf1n"
+              ]
+            },
+            {
+              "cuid": "cintentcontinuationh6k7j7",
+              "name": "Continuation",
+              "description": "Not a new request but the second half of a previous one: a question is outstanding and this message answers it.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "Not a new request but the second half of a previous one: a question is outstanding and this message answers it. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentContinuation",
+                "summary": "Detects that a question is outstanding and hands this message on as its answer.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": [
+                "cusecaseselfdescribesgzf1n"
+              ]
+            },
+            {
+              "cuid": "cintentselfdescribevs5ni8q6",
+              "name": "Self-description",
+              "description": "A request about the automation itself — the answer is already in the passport, no store is involved.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "A request about the automation itself — the answer is already in the passport, no store is involved. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentSelfDescribe",
+                "summary": "Recognizes a question about the automation itself and answers it from the passport.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": [
+                "cusecaseselfdescribesgzf1n"
+              ]
+            },
+            {
+              "cuid": "cintentcontrolkx38vd",
+              "name": "Control",
+              "description": "The owner changes how the automation is BUILT — what it collects, what it asks, when it stays silent.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "The owner changes how the automation is BUILT — what it collects, what it asks, when it stays silent. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentControl",
+                "summary": "Recognizes a request that changes the automation itself rather than its data.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": [
+                "cusecaseselfdescribesgzf1n"
+              ]
+            },
+            {
+              "cuid": "cintentcomposite62fppr",
+              "name": "Composite",
+              "description": "A request that needs two ordered actions: fetch from outside, then compare with what is kept.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "A request that needs two ordered actions: fetch from outside, then compare with what is kept. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentComposite",
+                "summary": "Recognizes a two-step request and hands the middle an explicit plan.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": [
+                "cusecaseselfdescribesgzf1n"
+              ]
+            },
+            {
+              "cuid": "cintentfetchexternaliussrk",
+              "name": "Fetch from outside",
+              "description": "The data is NOT in the message — the named subject must be fetched from the outside world.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "The data is NOT in the message — the named subject must be fetched from the outside world. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentFetchExternal",
+                "summary": "Recognizes a request to fetch a named subject from outside and passes the subject on.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": [
+                "cusecaseselfdescribesgzf1n"
+              ]
+            },
+            {
+              "cuid": "cintentreadown10shd0",
+              "name": "Read own",
+              "description": "A question about what this automation already keeps. Never creates a record — a question about data is not data.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "A question about what this automation already keeps. Never creates a record — a question about data is not data. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentReadOwn",
+                "summary": "Recognizes a question about what is already stored and passes it to the middle to answer.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": [
+                "cusecaseselfdescribesgzf1n"
+              ]
+            },
+            {
+              "cuid": "cintentincompletextd8mp",
+              "name": "Incomplete",
+              "description": "The intent is clear but the data is missing — asks one clarifying question and leaves it outstanding.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "The intent is clear but the data is missing — asks one clarifying question and leaves it outstanding. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentIncomplete",
+                "summary": "Recognizes a task with no subject and asks what exactly to take down.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": [
+                "cusecaseselfdescribesgzf1n"
+              ]
+            },
+            {
+              "cuid": "cintentsmalltalkh2aosd",
+              "name": "Small talk",
+              "description": "A greeting or a thank-you: needs an answer, needs no action, and must never produce an empty record.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "A greeting or a thank-you: needs an answer, needs no action, and must never produce an empty record. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentSmallTalk",
+                "summary": "Recognizes social speech and answers it without any action.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": [
+                "cusecaseselfdescribesgzf1n"
+              ]
+            },
+            {
+              "cuid": "cintentrecordgivenef31ax",
+              "name": "Record given",
+              "description": "The data is already in the message and only needs keeping. The widest content class, therefore the last of them.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "The data is already in the message and only needs keeping. The widest content class, therefore the last of them. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentRecordGiven",
+                "summary": "Recognizes a statement of fact to be kept and passes it to the middle.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": [
+                "cusecaseselfdescribesgzf1n"
+              ]
+            },
+            {
+              "cuid": "cintentunclaimedmv2obt",
+              "name": "Unclaimed",
+              "description": "No class recognized the request. The automation says so honestly instead of guessing a default branch.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "No class recognized the request. The automation says so honestly instead of guessing a default branch. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentUnclaimed",
+                "summary": "States honestly that the request was not recognized, instead of falling back to a default class.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class."
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": [
+                "cusecaseselfdescribesgzf1n"
+              ]
             }
           ]
         }
@@ -1079,56 +1491,596 @@
         "state": "hidden"
       },
       {
-        "cuid": "cedgeincomingconnectorcjv7h39b",
+        "cuid": "ceincomingconnectorrefusalljgex5",
+        "from": "cmruewqs51sbelfc3dc9457a2a3fac",
+        "to": "cintentrefusezln99q",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceincomingconnectorcontinuationwxa4fi",
+        "from": "cmruewqs51sbelfc3dc9457a2a3fac",
+        "to": "cintentcontinuationh6k7j7",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceincomingconnectorselfdescription10idgi",
         "from": "cmruewqs51sbelfc3dc9457a2a3fac",
         "to": "cintentselfdescribevs5ni8q6",
         "state": "hidden"
       },
       {
-        "cuid": "cedgecontrolpanelinputgdej3yeq",
+        "cuid": "ceincomingconnectorcontroln9e1oy",
+        "from": "cmruewqs51sbelfc3dc9457a2a3fac",
+        "to": "cintentcontrolkx38vd",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceincomingconnectorcomposite49m6ox",
+        "from": "cmruewqs51sbelfc3dc9457a2a3fac",
+        "to": "cintentcomposite62fppr",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceincomingconnectorfetchfromoutsidek0pyc8",
+        "from": "cmruewqs51sbelfc3dc9457a2a3fac",
+        "to": "cintentfetchexternaliussrk",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceincomingconnectorreadownzb2rga",
+        "from": "cmruewqs51sbelfc3dc9457a2a3fac",
+        "to": "cintentreadown10shd0",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceincomingconnectorincompleteuy0ibg",
+        "from": "cmruewqs51sbelfc3dc9457a2a3fac",
+        "to": "cintentincompletextd8mp",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceincomingconnectorsmalltalkd7xdyy",
+        "from": "cmruewqs51sbelfc3dc9457a2a3fac",
+        "to": "cintentsmalltalkh2aosd",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceincomingconnectorrecordgivengl0x2z",
+        "from": "cmruewqs51sbelfc3dc9457a2a3fac",
+        "to": "cintentrecordgivenef31ax",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceincomingconnectorunclaimedgymzup",
+        "from": "cmruewqs51sbelfc3dc9457a2a3fac",
+        "to": "cintentunclaimedmv2obt",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cecontrolpanelinputrefusal3ngye2",
+        "from": "cmruca7r64n1jr7c4ca119ed7b7c4d",
+        "to": "cintentrefusezln99q",
+        "state": "visible"
+      },
+      {
+        "cuid": "cecontrolpanelinputcontinuationk4pb3s",
+        "from": "cmruca7r64n1jr7c4ca119ed7b7c4d",
+        "to": "cintentcontinuationh6k7j7",
+        "state": "visible"
+      },
+      {
+        "cuid": "cecontrolpanelinputselfdescriptionmijb86",
         "from": "cmruca7r64n1jr7c4ca119ed7b7c4d",
         "to": "cintentselfdescribevs5ni8q6",
         "state": "visible"
       },
       {
-        "cuid": "cedgewebhookinputl5yxxv70",
+        "cuid": "cecontrolpanelinputcontrolajfopm",
+        "from": "cmruca7r64n1jr7c4ca119ed7b7c4d",
+        "to": "cintentcontrolkx38vd",
+        "state": "visible"
+      },
+      {
+        "cuid": "cecontrolpanelinputcomposited93xcf",
+        "from": "cmruca7r64n1jr7c4ca119ed7b7c4d",
+        "to": "cintentcomposite62fppr",
+        "state": "visible"
+      },
+      {
+        "cuid": "cecontrolpanelinputfetchfromoutsideuyoqbr",
+        "from": "cmruca7r64n1jr7c4ca119ed7b7c4d",
+        "to": "cintentfetchexternaliussrk",
+        "state": "visible"
+      },
+      {
+        "cuid": "cecontrolpanelinputreadownygqu4j",
+        "from": "cmruca7r64n1jr7c4ca119ed7b7c4d",
+        "to": "cintentreadown10shd0",
+        "state": "visible"
+      },
+      {
+        "cuid": "cecontrolpanelinputincompletersijgs",
+        "from": "cmruca7r64n1jr7c4ca119ed7b7c4d",
+        "to": "cintentincompletextd8mp",
+        "state": "visible"
+      },
+      {
+        "cuid": "cecontrolpanelinputsmalltalkmbkdqb",
+        "from": "cmruca7r64n1jr7c4ca119ed7b7c4d",
+        "to": "cintentsmalltalkh2aosd",
+        "state": "visible"
+      },
+      {
+        "cuid": "cecontrolpanelinputrecordgivend33vmw",
+        "from": "cmruca7r64n1jr7c4ca119ed7b7c4d",
+        "to": "cintentrecordgivenef31ax",
+        "state": "visible"
+      },
+      {
+        "cuid": "cecontrolpanelinputunclaimedbarb33",
+        "from": "cmruca7r64n1jr7c4ca119ed7b7c4d",
+        "to": "cintentunclaimedmv2obt",
+        "state": "visible"
+      },
+      {
+        "cuid": "cewebhookinputrefusalrqq3mc",
+        "from": "cmruqdpjl51eha9a65832422ad3a53",
+        "to": "cintentrefusezln99q",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cewebhookinputcontinuationqs6n0c",
+        "from": "cmruqdpjl51eha9a65832422ad3a53",
+        "to": "cintentcontinuationh6k7j7",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cewebhookinputselfdescriptionzvfvn0",
         "from": "cmruqdpjl51eha9a65832422ad3a53",
         "to": "cintentselfdescribevs5ni8q6",
         "state": "hidden"
       },
       {
-        "cuid": "cedgecroninput5mqwx4x7",
+        "cuid": "cewebhookinputcontrolpzpecb",
+        "from": "cmruqdpjl51eha9a65832422ad3a53",
+        "to": "cintentcontrolkx38vd",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cewebhookinputcompositeklu0xc",
+        "from": "cmruqdpjl51eha9a65832422ad3a53",
+        "to": "cintentcomposite62fppr",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cewebhookinputfetchfromoutsideeqt6r4",
+        "from": "cmruqdpjl51eha9a65832422ad3a53",
+        "to": "cintentfetchexternaliussrk",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cewebhookinputreadown86knjc",
+        "from": "cmruqdpjl51eha9a65832422ad3a53",
+        "to": "cintentreadown10shd0",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cewebhookinputincompleteuq02zc",
+        "from": "cmruqdpjl51eha9a65832422ad3a53",
+        "to": "cintentincompletextd8mp",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cewebhookinputsmalltalk8mksyb",
+        "from": "cmruqdpjl51eha9a65832422ad3a53",
+        "to": "cintentsmalltalkh2aosd",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cewebhookinputrecordgivenld5wsp",
+        "from": "cmruqdpjl51eha9a65832422ad3a53",
+        "to": "cintentrecordgivenef31ax",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cewebhookinputunclaimed5w6b8t",
+        "from": "cmruqdpjl51eha9a65832422ad3a53",
+        "to": "cintentunclaimedmv2obt",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cecroninputrefusala7g5aw",
+        "from": "cmruqdpjm51ehb6c5e6bd9a8614a87",
+        "to": "cintentrefusezln99q",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cecroninputcontinuation8lpi6j",
+        "from": "cmruqdpjm51ehb6c5e6bd9a8614a87",
+        "to": "cintentcontinuationh6k7j7",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cecroninputselfdescriptionhhiw79",
         "from": "cmruqdpjm51ehb6c5e6bd9a8614a87",
         "to": "cintentselfdescribevs5ni8q6",
         "state": "hidden"
       },
       {
-        "cuid": "cedgepublicpageinput65sg43am",
+        "cuid": "cecroninputcontrol7n72r7",
+        "from": "cmruqdpjm51ehb6c5e6bd9a8614a87",
+        "to": "cintentcontrolkx38vd",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cecroninputcompositeldjbf1",
+        "from": "cmruqdpjm51ehb6c5e6bd9a8614a87",
+        "to": "cintentcomposite62fppr",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cecroninputfetchfromoutside3yacbo",
+        "from": "cmruqdpjm51ehb6c5e6bd9a8614a87",
+        "to": "cintentfetchexternaliussrk",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cecroninputreadownpcen4m",
+        "from": "cmruqdpjm51ehb6c5e6bd9a8614a87",
+        "to": "cintentreadown10shd0",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cecroninputincomplete8isys4",
+        "from": "cmruqdpjm51ehb6c5e6bd9a8614a87",
+        "to": "cintentincompletextd8mp",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cecroninputsmalltalkwzmcnm",
+        "from": "cmruqdpjm51ehb6c5e6bd9a8614a87",
+        "to": "cintentsmalltalkh2aosd",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cecroninputrecordgivenkllaux",
+        "from": "cmruqdpjm51ehb6c5e6bd9a8614a87",
+        "to": "cintentrecordgivenef31ax",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cecroninputunclaimeddudemg",
+        "from": "cmruqdpjm51ehb6c5e6bd9a8614a87",
+        "to": "cintentunclaimedmv2obt",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cepublicpageinputrefusalq6kuk0",
+        "from": "cmruqdpjm51ehc433ccaf2f7677d66",
+        "to": "cintentrefusezln99q",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cepublicpageinputcontinuationmt1ffk",
+        "from": "cmruqdpjm51ehc433ccaf2f7677d66",
+        "to": "cintentcontinuationh6k7j7",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cepublicpageinputselfdescriptionaimjpo",
         "from": "cmruqdpjm51ehc433ccaf2f7677d66",
         "to": "cintentselfdescribevs5ni8q6",
         "state": "hidden"
       },
       {
-        "cuid": "cedgetelegrambotinput10rf50af",
+        "cuid": "cepublicpageinputcontrolbqr3hu",
+        "from": "cmruqdpjm51ehc433ccaf2f7677d66",
+        "to": "cintentcontrolkx38vd",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cepublicpageinputcomposites1dnt8",
+        "from": "cmruqdpjm51ehc433ccaf2f7677d66",
+        "to": "cintentcomposite62fppr",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cepublicpageinputfetchfromoutsideg160n4",
+        "from": "cmruqdpjm51ehc433ccaf2f7677d66",
+        "to": "cintentfetchexternaliussrk",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cepublicpageinputreadownoca6pf",
+        "from": "cmruqdpjm51ehc433ccaf2f7677d66",
+        "to": "cintentreadown10shd0",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cepublicpageinputincomplete2ldi1s",
+        "from": "cmruqdpjm51ehc433ccaf2f7677d66",
+        "to": "cintentincompletextd8mp",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cepublicpageinputsmalltalkxogzyu",
+        "from": "cmruqdpjm51ehc433ccaf2f7677d66",
+        "to": "cintentsmalltalkh2aosd",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cepublicpageinputrecordgiveng78pni",
+        "from": "cmruqdpjm51ehc433ccaf2f7677d66",
+        "to": "cintentrecordgivenef31ax",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cepublicpageinputunclaimed8sgb3f",
+        "from": "cmruqdpjm51ehc433ccaf2f7677d66",
+        "to": "cintentunclaimedmv2obt",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cetelegrambotinputrefusala74382",
+        "from": "cmruqdpjm51ehd18d5a1f37ce38e1c",
+        "to": "cintentrefusezln99q",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cetelegrambotinputcontinuation0lgk9a",
+        "from": "cmruqdpjm51ehd18d5a1f37ce38e1c",
+        "to": "cintentcontinuationh6k7j7",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cetelegrambotinputselfdescriptiongibpl5",
         "from": "cmruqdpjm51ehd18d5a1f37ce38e1c",
         "to": "cintentselfdescribevs5ni8q6",
         "state": "hidden"
       },
       {
-        "cuid": "cedgeusertelegramchatinputi57kjuwp",
+        "cuid": "cetelegrambotinputcontrol0wq74r",
+        "from": "cmruqdpjm51ehd18d5a1f37ce38e1c",
+        "to": "cintentcontrolkx38vd",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cetelegrambotinputcompositessy0hc",
+        "from": "cmruqdpjm51ehd18d5a1f37ce38e1c",
+        "to": "cintentcomposite62fppr",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cetelegrambotinputfetchfromoutsidednpz3i",
+        "from": "cmruqdpjm51ehd18d5a1f37ce38e1c",
+        "to": "cintentfetchexternaliussrk",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cetelegrambotinputreadownbq15ht",
+        "from": "cmruqdpjm51ehd18d5a1f37ce38e1c",
+        "to": "cintentreadown10shd0",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cetelegrambotinputincompleteyf5mny",
+        "from": "cmruqdpjm51ehd18d5a1f37ce38e1c",
+        "to": "cintentincompletextd8mp",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cetelegrambotinputsmalltalkaanndw",
+        "from": "cmruqdpjm51ehd18d5a1f37ce38e1c",
+        "to": "cintentsmalltalkh2aosd",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cetelegrambotinputrecordgiventg8ro8",
+        "from": "cmruqdpjm51ehd18d5a1f37ce38e1c",
+        "to": "cintentrecordgivenef31ax",
+        "state": "hidden"
+      },
+      {
+        "cuid": "cetelegrambotinputunclaimed7mai9y",
+        "from": "cmruqdpjm51ehd18d5a1f37ce38e1c",
+        "to": "cintentunclaimedmv2obt",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceusertelegramchatinputrefusal872xau",
+        "from": "cmruqdpjm51ehe2f58b91a619fdc71",
+        "to": "cintentrefusezln99q",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceusertelegramchatinputcontinuationr7k37h",
+        "from": "cmruqdpjm51ehe2f58b91a619fdc71",
+        "to": "cintentcontinuationh6k7j7",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceusertelegramchatinputselfdescription8yi9kk",
         "from": "cmruqdpjm51ehe2f58b91a619fdc71",
         "to": "cintentselfdescribevs5ni8q6",
         "state": "hidden"
       },
       {
-        "cuid": "cedgeemailinputm1qj1qwg",
+        "cuid": "ceusertelegramchatinputcontroljs2vyg",
+        "from": "cmruqdpjm51ehe2f58b91a619fdc71",
+        "to": "cintentcontrolkx38vd",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceusertelegramchatinputcompositee4g7du",
+        "from": "cmruqdpjm51ehe2f58b91a619fdc71",
+        "to": "cintentcomposite62fppr",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceusertelegramchatinputfetchfromoutside09niai",
+        "from": "cmruqdpjm51ehe2f58b91a619fdc71",
+        "to": "cintentfetchexternaliussrk",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceusertelegramchatinputreadown1p3le6",
+        "from": "cmruqdpjm51ehe2f58b91a619fdc71",
+        "to": "cintentreadown10shd0",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceusertelegramchatinputincompletefncoy1",
+        "from": "cmruqdpjm51ehe2f58b91a619fdc71",
+        "to": "cintentincompletextd8mp",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceusertelegramchatinputsmalltalk5ju6yo",
+        "from": "cmruqdpjm51ehe2f58b91a619fdc71",
+        "to": "cintentsmalltalkh2aosd",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceusertelegramchatinputrecordgiventtew5t",
+        "from": "cmruqdpjm51ehe2f58b91a619fdc71",
+        "to": "cintentrecordgivenef31ax",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceusertelegramchatinputunclaimed1nbd3i",
+        "from": "cmruqdpjm51ehe2f58b91a619fdc71",
+        "to": "cintentunclaimedmv2obt",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceemailinputrefusalwtlg0j",
+        "from": "cemailinp7k2vq4x9",
+        "to": "cintentrefusezln99q",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceemailinputcontinuation17048q",
+        "from": "cemailinp7k2vq4x9",
+        "to": "cintentcontinuationh6k7j7",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceemailinputselfdescriptionsl7hut",
         "from": "cemailinp7k2vq4x9",
         "to": "cintentselfdescribevs5ni8q6",
         "state": "hidden"
       },
       {
-        "cuid": "cedgeselfdashxgl1d2b6",
+        "cuid": "ceemailinputcontrolser6li",
+        "from": "cemailinp7k2vq4x9",
+        "to": "cintentcontrolkx38vd",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceemailinputcompositeo10wkd",
+        "from": "cemailinp7k2vq4x9",
+        "to": "cintentcomposite62fppr",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceemailinputfetchfromoutsidecd3l22",
+        "from": "cemailinp7k2vq4x9",
+        "to": "cintentfetchexternaliussrk",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceemailinputreadownkakxzw",
+        "from": "cemailinp7k2vq4x9",
+        "to": "cintentreadown10shd0",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceemailinputincompletezqtqfn",
+        "from": "cemailinp7k2vq4x9",
+        "to": "cintentincompletextd8mp",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceemailinputsmalltalkro64v3",
+        "from": "cemailinp7k2vq4x9",
+        "to": "cintentsmalltalkh2aosd",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceemailinputrecordgivenkeqab6",
+        "from": "cemailinp7k2vq4x9",
+        "to": "cintentrecordgivenef31ax",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceemailinputunclaimed9vwcuc",
+        "from": "cemailinp7k2vq4x9",
+        "to": "cintentunclaimedmv2obt",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceintentrefusec2vs1i",
+        "from": "cintentrefusezln99q",
+        "to": "cmruca7ra4n1jt639afc902fa70f5b",
+        "state": "visible"
+      },
+      {
+        "cuid": "ceintentcontinuationc2stnm",
+        "from": "cintentcontinuationh6k7j7",
+        "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceintentselfdescribejnkq0e",
         "from": "cintentselfdescribevs5ni8q6",
+        "to": "cmruca7ra4n1jt639afc902fa70f5b",
+        "state": "visible"
+      },
+      {
+        "cuid": "ceintentcontrolnblblo",
+        "from": "cintentcontrolkx38vd",
+        "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceintentcomposite32kqcp",
+        "from": "cintentcomposite62fppr",
+        "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceintentfetchexternaleq4wwt",
+        "from": "cintentfetchexternaliussrk",
+        "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceintentreadown6qzatk",
+        "from": "cintentreadown10shd0",
+        "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceintentincompletesgfro0",
+        "from": "cintentincompletextd8mp",
+        "to": "cmruca7ra4n1jt639afc902fa70f5b",
+        "state": "visible"
+      },
+      {
+        "cuid": "ceintentsmalltalknnzjzu",
+        "from": "cintentsmalltalkh2aosd",
+        "to": "cmruca7ra4n1jt639afc902fa70f5b",
+        "state": "visible"
+      },
+      {
+        "cuid": "ceintentrecordgiventhyyxr",
+        "from": "cintentrecordgivenef31ax",
+        "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
+        "state": "hidden"
+      },
+      {
+        "cuid": "ceintentunclaimed5qkpmm",
+        "from": "cintentunclaimedmv2obt",
         "to": "cmruca7ra4n1jt639afc902fa70f5b",
         "state": "visible"
       }

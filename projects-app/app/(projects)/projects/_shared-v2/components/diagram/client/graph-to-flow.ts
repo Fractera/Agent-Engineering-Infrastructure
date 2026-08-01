@@ -22,8 +22,8 @@ export type DiagramVMNode = {
   description: string;
   kind: string; // input-connector | input | transform | condition-success | condition-failure | output | output-connector
   ioType: string | null;
-  group: "input" | "middle" | "output";
-  col: number; // столбец раскладки (0 вход · 1 середина · 2 выход)
+  group: "input" | "intent" | "middle" | "output";
+  col: number; // столбец раскладки (0 вход · 1 намерение · 2 transform · 3 условие · 4 выход)
   row: number; // строка внутри столбца
   isCondition: boolean; // condition-* → рисуется квадратом
   isConnector: boolean; // *-connector → дверь в соседнюю автоматизацию
@@ -40,13 +40,17 @@ export type DiagramVMEdge = { id: string; from: string; to: string; hidden: bool
 
 export type DiagramVM = { nodes: DiagramVMNode[]; edges: DiagramVMEdge[] };
 
-// Колонка = ранг по ПОТОКУ, а не просто группа: вход(0) → transform(1) → condition(2) → output(3).
-// Так рёбра `input → transform → condition → output` читаются строго слева направо, без петель. Условия
-// живут в группе «середина», но в потоке стоят ПОСЛЕ transform — поэтому им отдельная колонка справа от него.
-function colOf(group: "input" | "middle" | "output", kind: string): number {
+// Колонка = ранг по ПОТОКУ, а не просто группа: вход(0) → intent(1) → transform(2) → condition(3) →
+// output(4). Так рёбра читаются строго слева направо, без петель. Условия живут в группе «середина», но в
+// потоке стоят ПОСЛЕ transform — поэтому им отдельная колонка справа от него.
+//
+// СЛОЙ НАМЕРЕНИЯ (шаг 311) — четвёртая группа `intent` между входом и серединой. Ядра, у которых её нет
+// (все автоматизации v2), рисуются как прежде: колонка просто остаётся пустой, потому что группы нет.
+function colOf(group: "input" | "intent" | "middle" | "output", kind: string): number {
   if (group === "input") return 0;
-  if (group === "output") return 3;
-  return kind === "transform" ? 1 : 2;
+  if (group === "intent") return 1;
+  if (group === "output") return 4;
+  return kind === "transform" ? 2 : 3;
 }
 
 /**
@@ -78,7 +82,9 @@ export function graphToFlow(graph: Automation["graph"], components?: Automation[
   const rowByCol = new Map<number, number>();
   const byTab = integrationsByTab(components);
 
-  for (const group of ["input", "middle", "output"] as const) {
+  // Группа `intent` есть только у ядер четвёртого закона (шаг 311); у ядер v2 её нет — пропускаем молча.
+  for (const group of ["input", "intent", "middle", "output"] as const) {
+    if (!groups[group]) continue;
     for (const n of groups[group].nodes) {
       const col = colOf(group, n.kind);
       const row = rowByCol.get(col) ?? 0;

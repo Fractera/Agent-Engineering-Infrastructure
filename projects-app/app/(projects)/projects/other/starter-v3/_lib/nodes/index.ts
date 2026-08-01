@@ -15,7 +15,17 @@ import { receiveTelegramBot } from "./receive-telegram-bot";
 import { receiveUserTelegramChat } from "./receive-user-telegram-chat";
 import { receiveEmail } from "./receive-email";
 import { receiveFromExternal } from "./receive-from-external";
+import { intentRefuse } from "./intent-refuse";
+import { intentContinuation } from "./intent-continuation";
 import { intentSelfDescribe } from "./intent-self-describe";
+import { intentControl } from "./intent-control";
+import { intentComposite } from "./intent-composite";
+import { intentFetchExternal } from "./intent-fetch-external";
+import { intentReadOwn } from "./intent-read-own";
+import { intentIncomplete } from "./intent-incomplete";
+import { intentSmallTalk } from "./intent-small-talk";
+import { intentRecordGiven } from "./intent-record-given";
+import { intentUnclaimed } from "./intent-unclaimed";
 import { transformPayload } from "./transform-payload";
 import { composeReply } from "./compose-reply";
 import { converse } from "./converse";
@@ -44,9 +54,21 @@ export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   receiveUserTelegramChat,
   receiveEmail,
   receiveFromExternal,
-  // СЛОЙ НАМЕРЕНИЯ — узел на класс запроса (шаг 311). Инвентарь закрытый: класс появляется здесь только
-  // вместе со своей рабочей функцией, заглушек не бывает.
+  // СЛОЙ НАМЕРЕНИЯ — узел на класс запроса (шаг 311). Инвентарь закрытый; порядок здесь НЕ важен, а вот
+  // порядок узлов В ЯДРЕ и есть старшинство: первый заявивший побеждает (см. `intent-gate.ts`), поэтому
+  // узкие классы стоят раньше широких. Последним — `intentUnclaimed`: он не даёт непонятому запросу молча
+  // свалиться в удобную ветку.
+  intentRefuse,
+  intentContinuation,
   intentSelfDescribe,
+  intentControl,
+  intentComposite,
+  intentFetchExternal,
+  intentReadOwn,
+  intentIncomplete,
+  intentSmallTalk,
+  intentRecordGiven,
+  intentUnclaimed,
   // середина — форма узла, а не каталог кирпичей: 13 доменных трансформов v2 (деньги, чеки, глоссарий,
   // измерения, геометки, вложения) удалены при рождении v3 — они были осадком ОДНОЙ автоматизации, а не
   // инвариантом любой. Их знание сохранено паттернами в корпусе узловых навыков (шаг 310).
