@@ -34,6 +34,7 @@ import { composeReply } from "./compose-reply";
 import { converse } from "./converse";
 import { ifSuccess } from "./if-success";
 import { ifFailure } from "./if-failure";
+import { deliverToast } from "./deliver-toast";
 import { deliverDashboard } from "./deliver-dashboard";
 import { deliverPublicPage } from "./deliver-public-page";
 import { deliverCalendar } from "./deliver-calendar";
@@ -85,7 +86,8 @@ export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   converse,
   ifSuccess,
   ifFailure,
-  // выходная группа — 11 каналов + коннектор
+  // выходная группа — 12 каналов + коннектор. Тост первым: он неотключаем и принимает ОБЕ ветки (311.8).
+  deliverToast,
   deliverDashboard,
   deliverPublicPage,
   deliverCalendar,

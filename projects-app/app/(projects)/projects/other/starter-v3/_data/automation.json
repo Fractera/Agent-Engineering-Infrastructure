@@ -376,7 +376,20 @@
                 "name": "transformPayload",
                 "summary": "Validates the captured message and derives its title; an empty capture honestly fails the run.",
                 "accepts": "The Message fields put into the context by the input node of the run's channel.",
-                "returns": "text · title · at · source — the normalized message every output node consumes."
+                "returns": "text · title · at · source — the normalized message every output node consumes.",
+                "outcomes": [
+                  {
+                    "name": "normalized",
+                    "when": "the capture carried text",
+                    "puts": "text · title · at · source — the normalized message"
+                  },
+                  {
+                    "name": "empty",
+                    "when": "the capture carried no text",
+                    "puts": "nothing: the run fails honestly at this gate"
+                  }
+                ],
+                "validator": "transformPayloadValidate"
               },
               "run": "sequential",
               "estDurationMs": 200,
@@ -416,7 +429,25 @@
                 "name": "ifSuccess",
                 "summary": "Lets the flow through to the outputs only when a non-empty normalized message exists.",
                 "accepts": "The normalized message (text · title · at · source) produced by the middle.",
-                "returns": "The same context when the branch holds; null (a lawful stop) when it does not."
+                "returns": "The same context when the branch holds; null (a lawful stop) when it does not.",
+                "outcomes": [
+                  {
+                    "name": "holding",
+                    "when": "the run carries a payload and no node declared a refusal",
+                    "puts": "the flow continues to the delivery doors"
+                  },
+                  {
+                    "name": "not-holding",
+                    "when": "a node declared a refusal (an unreachable source, a failed download)",
+                    "puts": "the branch does not hold — the failure branch carries the reason"
+                  },
+                  {
+                    "name": "nothing-to-deliver",
+                    "when": "the middle found nothing to store",
+                    "puts": "the branch does not hold: there is no result to deliver"
+                  }
+                ],
+                "validator": "ifSuccessValidate"
               },
               "run": "sequential",
               "estDurationMs": 100,
@@ -452,7 +483,25 @@
                 "name": "ifFailure",
                 "summary": "Ends the flow when the middle produced no message; the canvas shows where a failed run stops.",
                 "accepts": "The failure reported by the middle of the flow.",
-                "returns": "Nothing — a failure branch ends the flow."
+                "returns": "Nothing — a failure branch ends the flow.",
+                "outcomes": [
+                  {
+                    "name": "failed",
+                    "when": "a node declared a refusal and named its reason",
+                    "puts": "the reason travels to the toast, so the human learns what happened"
+                  },
+                  {
+                    "name": "empty-handed",
+                    "when": "the run produced nothing to store",
+                    "puts": "the toast says so plainly"
+                  },
+                  {
+                    "name": "not-holding",
+                    "when": "the run succeeded — this branch is not its path",
+                    "puts": "nothing"
+                  }
+                ],
+                "validator": "ifFailureValidate"
               },
               "run": "sequential",
               "estDurationMs": 100,
@@ -465,8 +514,10 @@
                 ]
               },
               "out": {
-                "state": "prohibit",
-                "connections": null
+                "state": "required",
+                "connections": [
+                  "output"
+                ]
               }
             },
             {
@@ -484,7 +535,30 @@
                 "name": "fetchExternal",
                 "summary": "Fetches the named subject from an open, keyless encyclopedic source.",
                 "accepts": "The subject name the human wrote (ctx.text), for the classes fetch-external and composite.",
-                "returns": "subject (name · description · imageUrl · lat/lng · sourceUrl) plus text/title/coordinates in the message contract — or subjectMissing / subjectError, honestly."
+                "returns": "subject (name · description · imageUrl · lat/lng · sourceUrl) plus text/title/coordinates in the message contract — or subjectMissing / subjectError, honestly.",
+                "outcomes": [
+                  {
+                    "name": "found",
+                    "when": "the source answered and carried a description",
+                    "puts": "subject (name · description · image · coordinates) plus the message contract"
+                  },
+                  {
+                    "name": "missing",
+                    "when": "the source answered but knows nothing about the named subject",
+                    "puts": "subjectMissing plus skipStores — nothing is written"
+                  },
+                  {
+                    "name": "unreachable",
+                    "when": "the source refused or the network failed (e.g. HTTP 403)",
+                    "puts": "subjectError plus skipStores — the failure is named, never mistaken for “nothing found”"
+                  },
+                  {
+                    "name": "not-mine",
+                    "when": "the run belongs to another request class",
+                    "puts": "nothing: the flow passes through untouched"
+                  }
+                ],
+                "validator": "fetchExternalValidate"
               },
               "run": "sequential",
               "estDurationMs": 1500,
@@ -526,7 +600,25 @@
                 "name": "keepObject",
                 "summary": "Downloads the subject image and keeps it in the folder object storage.",
                 "accepts": "ctx.subject with an imageUrl.",
-                "returns": "attachments[] with the stored fileKey — or objectError; a subject without an image is a lawful silence."
+                "returns": "attachments[] with the stored fileKey — or objectError; a subject without an image is a lawful silence.",
+                "outcomes": [
+                  {
+                    "name": "kept",
+                    "when": "the image was downloaded into the folder object storage",
+                    "puts": "attachments[] with the stored fileKey"
+                  },
+                  {
+                    "name": "nothing-to-keep",
+                    "when": "the subject carries no image",
+                    "puts": "nothing: a subject without a picture is still a subject"
+                  },
+                  {
+                    "name": "unreachable",
+                    "when": "the image address refused or the file was too large",
+                    "puts": "objectError — named, not silent"
+                  }
+                ],
+                "validator": "keepObjectValidate"
               },
               "run": "sequential",
               "estDurationMs": 2500,
@@ -568,7 +660,20 @@
                 "name": "resolveMoment",
                 "summary": "Extracts the moment bound to the subject and puts it into ctx.when.",
                 "accepts": "ctx.subject with a description.",
-                "returns": "when (ISO) plus momentPrecision/momentSource — or nothing, when the description carries no date."
+                "returns": "when (ISO) plus momentPrecision/momentSource — or nothing, when the description carries no date.",
+                "outcomes": [
+                  {
+                    "name": "dated",
+                    "when": "a plausible year was found in the subject description",
+                    "puts": "when (ISO) plus momentPrecision"
+                  },
+                  {
+                    "name": "undated",
+                    "when": "the description carries no date",
+                    "puts": "nothing: the calendar simply does not fire"
+                  }
+                ],
+                "validator": "resolveMomentValidate"
               },
               "run": "sequential",
               "estDurationMs": 50,
@@ -605,7 +710,7 @@
               "systemInstructionName": "kind.output",
               "deletion": "forbidden",
               "addition": "allowed",
-              "minNodes": 11
+              "minNodes": 12
             },
             "output-connector": {
               "systemInstructionName": "kind.output-connector",
@@ -615,6 +720,44 @@
             }
           },
           "nodes": [
+            {
+              "cuid": "coutputtoast3sy3uzul",
+              "name": "Toast output",
+              "description": "The one channel that always carries the run outcome — success and failure alike. It cannot be hidden: an automation able to fail silently is exactly what this law removes.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "Writes the run outcome and its reason where the human can see it: a row of the toast table plus the run journal. Accepts BOTH branches. Never pretends to be a delivery into somebody else's channel — for a run that came from a bot the last word still belongs to that channel."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "deliverToast",
+                "summary": "Writes the run outcome and its reason where the human can see it.",
+                "accepts": "The outcome named by the last validator plus whatever reason the nodes left in the context.",
+                "returns": "toastRowId · toastOutcome.",
+                "outcomes": [],
+                "validator": ""
+              },
+              "run": "sequential",
+              "estDurationMs": 30,
+              "kind": "output",
+              "ioType": "toast",
+              "in": {
+                "state": "required",
+                "connections": [
+                  "condition-success",
+                  "condition-failure",
+                  "intent"
+                ]
+              },
+              "out": {
+                "state": "optional",
+                "connections": [
+                  "evolution"
+                ]
+              }
+            },
             {
               "cuid": "cmruca7ra4n1jt639afc902fa70f5b",
               "name": "Dashboard output",
@@ -640,6 +783,7 @@
                 "state": "required",
                 "connections": [
                   "condition-success",
+                  "condition-failure",
                   "intent"
                 ]
               },
@@ -675,6 +819,7 @@
                 "state": "required",
                 "connections": [
                   "condition-success",
+                  "condition-failure",
                   "intent"
                 ]
               },
@@ -710,6 +855,7 @@
                 "state": "required",
                 "connections": [
                   "condition-success",
+                  "condition-failure",
                   "intent"
                 ]
               },
@@ -745,6 +891,7 @@
                 "state": "required",
                 "connections": [
                   "condition-success",
+                  "condition-failure",
                   "intent"
                 ]
               },
@@ -780,6 +927,7 @@
                 "state": "required",
                 "connections": [
                   "condition-success",
+                  "condition-failure",
                   "intent"
                 ]
               },
@@ -815,6 +963,7 @@
                 "state": "required",
                 "connections": [
                   "condition-success",
+                  "condition-failure",
                   "intent"
                 ]
               },
@@ -866,6 +1015,7 @@
                 "state": "required",
                 "connections": [
                   "condition-success",
+                  "condition-failure",
                   "intent"
                 ]
               },
@@ -912,6 +1062,7 @@
                 "state": "required",
                 "connections": [
                   "condition-success",
+                  "condition-failure",
                   "intent"
                 ]
               },
@@ -958,6 +1109,7 @@
                 "state": "required",
                 "connections": [
                   "condition-success",
+                  "condition-failure",
                   "intent"
                 ]
               },
@@ -1004,6 +1156,7 @@
                 "state": "required",
                 "connections": [
                   "condition-success",
+                  "condition-failure",
                   "intent"
                 ]
               },
@@ -1039,6 +1192,7 @@
                 "state": "required",
                 "connections": [
                   "condition-success",
+                  "condition-failure",
                   "intent"
                 ]
               },
@@ -1074,6 +1228,7 @@
                 "state": "required",
                 "connections": [
                   "condition-success",
+                  "condition-failure",
                   "intent"
                 ]
               },
@@ -2248,6 +2403,18 @@
         "cuid": "cedgexg91wzkbxkgh",
         "from": "cresolvemomentp4xdf4",
         "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
+        "state": "visible"
+      },
+      {
+        "cuid": "cedgefailtoast20w2o6fy",
+        "from": "cmruqdpjn51ehmdd7904ad3a6abaf6",
+        "to": "coutputtoast3sy3uzul",
+        "state": "visible"
+      },
+      {
+        "cuid": "cedgeoktoastxsxgss6s",
+        "from": "cmruddnrpho70e8af12589d1deaa",
+        "to": "coutputtoast3sy3uzul",
         "state": "visible"
       }
     ]

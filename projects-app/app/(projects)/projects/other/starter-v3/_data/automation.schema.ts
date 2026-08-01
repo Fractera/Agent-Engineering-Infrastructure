@@ -71,6 +71,7 @@ export const SYSTEM_INSTRUCTION_NAMES = [
   "kind.condition-failure",
   "kind.output",
   "kind.output-connector",
+  "output.toast", // неотключаемый канал исхода (311.8)
   "output.public-page",
   "output.dashboard",
   "output.calendar",
@@ -330,14 +331,54 @@ const buildRecord = {
 const shortText = (what: string) =>
   z.string().min(1, `${what} is required`).max(TEXT_LIMIT, `${what} must be at most ${TEXT_LIMIT} characters`);
 
+// ─── ИСХОД И ВАЛИДАТОР (шаг 311.8 — требование владельца) ───────────────────────────────────────────
+//
+// ЗАЧЕМ. Живой прогон 311.7: `fetchExternal` получил от источника 403 и вернул «ничего не нашлось»
+// ОБЫЧНЫМ ctx-патчем. Для графа узел отработал успешно — тихое падение логики, невидимое ни сборке, ни
+// схеме. Корень назвал владелец: **без валидатора функция ВСЕГДА пропускает выход дальше**, и любой
+// провал превращается в успех.
+//
+// Поэтому у трансформа и у логического узла ДВА обязательных поля:
+//   `outcomes`  — перечень исходов, не менее ДВУХ. Исходов бывает много с обеих сторон (владелец:
+//                 «выше 80% — успех, остальное — провал»), поэтому это ПЕРЕЧЕНЬ, а не флаг «ок/не ок»;
+//   `validator` — имя функции, которая КЛАССИФИЦИРУЕТ результат по этому перечню. Имя ВЫВОДИТСЯ из
+//                 имени функции (`fetchExternal` → `fetchExternalValidate`), как имена каналов и
+//                 классов выводятся из своих словарей: одно объявление, остальное следует.
+//
+// Принуждение трёхуровневое, и каждый уровень ловит то, что пропускает предыдущий:
+//   1) СХЕМА (здесь) — узел без валидатора или менее чем с двумя исходами невалиден;
+//   2) ЗАГРУЗКА (`_lib/nodes/index.ts`) — объявленный, но не зарегистрированный валидатор роняет модуль;
+//   3) ДВИЖОК (`_lib/executor.ts`) — результат, который валидатор не отнёс ни к одному объявленному
+//      исходу, ВАЛИТ прогон с названной причиной. Тихого пропуска не существует.
+export const OutcomeSchema = z
+  .object({
+    // Имя исхода — машинное, короткое: его пишет движок в контекст и в журнал (`ctx.outcome`).
+    name: z.string().regex(/^[a-z][a-z0-9-]*$/, "an outcome name is lowercase latin with dashes"),
+    // ПРИ КАКИХ УСЛОВИЯХ этот исход наступает — фраза для человека и модели, а не код.
+    when: shortText("the condition of the outcome"),
+    // ЧТО исход кладёт в контекст: по этому полю читается самоописание узла (`api/abilities`).
+    puts: shortText("what the outcome puts into the context"),
+  })
+  .strict();
+
 export const NodeFunctionSchema = z
   .object({
     name: z.string().min(1),
     summary: shortText("the function summary"),
     accepts: shortText("what the function accepts"),
     returns: shortText("what the function returns"),
+    // Аддитивные поля с дефолтами: ядра, написанные до этого закона, остаются валидными, а требование
+    // «не менее двух исходов + валидатор» накладывается ПО ВИДУ узла (см. `nodeOf` ниже).
+    outcomes: z.array(OutcomeSchema).default([]),
+    validator: z.string().default(""),
   })
   .strict();
+
+/** Имя валидатора выводится из имени функции: `fetchExternal` → `fetchExternalValidate`. Закон, не выбор. */
+export const validatorName = (fn: string): string => `${fn}Validate`;
+
+/** Виды узлов, которым валидатор ОБЯЗАТЕЛЕН: те, что решают судьбу потока. */
+export const KINDS_NEEDING_VALIDATOR = ["transform", "condition-success", "condition-failure"] as const;
 
 // ─── CHANNELS (ioType) ──────────────────────────────────────────────────────────────────────────────
 // WHERE the automation's work arrives from, and WHERE its result is delivered. A CLOSED vocabulary: a
@@ -359,6 +400,12 @@ export const InputChannelSchema = z.enum([
 // must not exist at all is a different case from one that exists and is unused.
 
 export const OutputChannelSchema = z.enum([
+  // 🔒 ТОСТ — НЕОТКЛЮЧАЕМЫЙ КАНАЛ ИСХОДА (шаг 311.8, требование владельца). До него `condition-failure`
+  // имел запрещённый выход: упавший прогон не доходил НИ ДО ОДНОГО выхода, и человек не узнавал ничего.
+  // Тост принимает ОБЕ ветки — и успех, и провал — и всегда доступен: у реального проекта он обязан быть
+  // видимым (проверяется в законе запуска ниже). Честная граница записана в `output.toast.md`: тост —
+  // поверхность СВОЕЙ страницы и журнала; для внешних каналов последнее слово за каналом-источником.
+  "toast",
   "public-page", // a page on the automation's own website
   "dashboard", // a row or a table on the dashboard
   "calendar", // an event on the automation's calendar
@@ -536,11 +583,11 @@ export const PortSchema = z
 //   output-connector   required  condition-success | intent            optional  external
 //   input              prohibit  —                                     required  intent
 //   intent             required  input | input-connector               required  transform | output | output-connector
-//   output             required  condition-success | intent            optional  evolution
+//   output             required  condition-success | condition-failure | intent   optional  evolution
 //   evolution          required  output                                prohibit  —
 //   transform          required  intent | transform | condition-success required  transform | condition-success | condition-failure
 //   condition-success  required  transform                             required  transform | output | output-connector
-//   condition-failure  required  transform                             prohibit  —
+//   condition-failure  required  transform                             required  output   ← 311.8: провал не тупик
 //
 // 🔒 КОНЕЦ ПУТИ ОБЪЯВЛЕН ОКОНЧАТЕЛЬНО (шаг 314). `output.out` перестал быть запретом и ведёт в
 // `evolution` — пятый слой, работающий над САМОЙ автоматизацией после того, как ответ уже доставлен.
@@ -570,7 +617,8 @@ export const KIND_PORTS: Record<z.infer<typeof NodeKindSchema>, { in: Port; out:
     out: { state: "required", connections: ["intent"] },
   },
   "output-connector": {
-    in: { state: "required", connections: ["condition-success", "intent"] },
+    // Ветка провала ведёт и сюда (311.8): соседняя автоматизация вправе узнать, что у нас не вышло.
+    in: { state: "required", connections: ["condition-success", "condition-failure", "intent"] },
     out: { state: "optional", connections: ["external"] },
   },
   input: {
@@ -585,7 +633,7 @@ export const KIND_PORTS: Record<z.infer<typeof NodeKindSchema>, { in: Port; out:
     out: { state: "required", connections: ["transform", "output", "output-connector"] },
   },
   output: {
-    in: { state: "required", connections: ["condition-success", "intent"] },
+    in: { state: "required", connections: ["condition-success", "condition-failure", "intent"] },
     out: { state: "optional", connections: ["evolution"] },
   },
   // ПЯТЫЙ СЛОЙ. Вход обязателен (наблюдать нечего без завершённой доставки), выход запрещён — терминал.
@@ -607,9 +655,12 @@ export const KIND_PORTS: Record<z.infer<typeof NodeKindSchema>, { in: Port; out:
     in: { state: "required", connections: ["transform"] },
     out: { state: "required", connections: ["transform", "output", "output-connector"] },
   },
+  // ПРОВАЛ БОЛЬШЕ НЕ ТУПИК (шаг 311.8). Прежде выход был запрещён — и упавший прогон не доходил ни до
+  // одного выхода: человек не узнавал ни того, что было, ни почему. Теперь ветка провала ОБЯЗАНА вести в
+  // выход (на практике — в тост), и «провалились молча» перестало быть выразимым состоянием.
   "condition-failure": {
     in: { state: "required", connections: ["transform"] },
-    out: { state: "prohibit", connections: null },
+    out: { state: "required", connections: ["output"] },
   },
 };
 
@@ -1041,6 +1092,39 @@ export const GraphSchema = z
       // serves, so the function name is DERIVED from it — `self-describe` → `intentSelfDescribe`. Without
       // this the class would live in three places at once (the node name, the function name, the class)
       // and they would drift; with it, the class is stated once and everything else follows (law 2).
+      // ВАЛИДАТОР ОБЯЗАТЕЛЕН У ТЕХ, КТО РЕШАЕТ СУДЬБУ ПОТОКА (шаг 311.8). Узел без него всегда пропускает
+      // результат дальше — а значит его провал невыразим, и «403» становится успехом.
+      if ((KINDS_NEEDING_VALIDATOR as readonly string[]).includes(node.kind)) {
+        const expected = validatorName(node.function.name);
+        if (!node.function.validator) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["nodes"],
+            message: `node "${node.name}" of kind "${node.kind}" must name a validator ("${expected}") — without one its function always lets the result through, and a failure becomes a success`,
+          });
+        } else if (node.function.validator !== expected) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["nodes"],
+            message: `the function "${node.function.name}" is validated by "${expected}", not "${node.function.validator}" — the name is derived from the function, not chosen`,
+          });
+        }
+        if (node.function.outcomes.length < 2) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["nodes"],
+            message: `node "${node.name}" declares ${node.function.outcomes.length} outcome(s) — a node that decides has at least TWO, otherwise there is nothing for the validator to tell apart`,
+          });
+        }
+        const seen = new Set<string>();
+        for (const o of node.function.outcomes) {
+          if (seen.has(o.name)) {
+            ctx.addIssue({ code: "custom", path: ["nodes"], message: `node "${node.name}" declares the outcome "${o.name}" twice` });
+          }
+          seen.add(o.name);
+        }
+      }
+
       if (node.kind === "intent" && typeof node.ioType === "string") {
         const expected = intentFunctionName(node.ioType);
         if (node.function.name !== expected) {
@@ -1165,8 +1249,14 @@ export const GraphSchema = z
     // transparent pipe: its function does not run and it may stand unwired (that is how a frozen template
     // ships, with every node hidden). An OPTIONAL port may always stand unwired — that is exactly what a
     // connector's outward side is for: its counterpart lives in another automation, outside this graph.
+    //
+    // 🔒 ИСКЛЮЧЕНИЕ НЕ РАСПРОСТРАНЯЕТСЯ НА ЛОГИКУ (шаг 311.8, требование владельца). Скрытая ДВЕРЬ имеет
+    // право стоять несвязанной — это отгружаемая форма шаблона. Скрытый ЛОГИЧЕСКИЙ узел такого права не
+    // имеет: узел, который ничего не решает и никуда не ведёт, выглядит на холсте живым, а исполняться не
+    // будет никогда. Поэтому для `transform` и условий требование ребра действует В ЛЮБОМ СОСТОЯНИИ.
+    const decidesFlow = (kind: string) => (KINDS_NEEDING_VALIDATOR as readonly string[]).includes(kind);
     nodes.forEach((node) => {
-      if (node.state !== "visible") return;
+      if (node.state !== "visible" && !decidesFlow(node.kind)) return;
       const wiredIn = graph.edges.some((e) => e.to === node.cuid);
       const wiredOut = graph.edges.some((e) => e.from === node.cuid);
       if (node.in.state === "required" && !wiredIn) {
@@ -1395,6 +1485,18 @@ export const AutomationSchema = z
     //
     // A connector counts as a door: a chained automation legitimately receives from — or hands to — a
     // neighbour instead of a channel of its own.
+    // 🔒 ТОСТ ВСЕГДА ОТКРЫТ (шаг 311.8). Прочие выходы строитель прячет по своему усмотрению; тост —
+    // нет: он единственный, кто доносит до человека ИСХОД прогона, включая провал. Автоматизация, где
+    // тост спрятан, умеет молча падать — а именно это состояние закон и убирает.
+    if (lifecycle === "real-project" && nodes.length > 0) {
+      const toast = automation.graph.nodes.groups.output.nodes.find((n) => n.ioType === "toast");
+      if (!toast) {
+        ctx.addIssue({ code: "custom", path: ["graph", "nodes", "groups", "output"], message: "the toast output is missing — it is the one channel that always carries the run's outcome, including a failure" });
+      } else if (toast.state !== "visible") {
+        ctx.addIssue({ code: "custom", path: ["graph", "nodes", "groups", "output"], message: "the toast output cannot be hidden: an automation that can fail silently is exactly what this law removes" });
+      }
+    }
+
     if (lifecycle === "real-project" && nodes.length > 0) {
       for (const side of ["input", "output"] as const) {
         const open = automation.graph.nodes.groups[side].nodes.filter((n) => n.state === "visible");

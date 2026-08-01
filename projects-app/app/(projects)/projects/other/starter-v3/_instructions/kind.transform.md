@@ -8,6 +8,37 @@ only after the request has been understood; a door no longer connects here direc
 WHAT IT IS FOR: it consumes data and returns DIFFERENT data — parse, normalise, extract, enrich,
 deduplicate, calculate, format. Code lives in `_lib/nodes/<function-name>.ts`.
 
+## 🔒 THE VALIDATOR — without it the function always lets the result through
+
+**A transform may not exist without a validator.** This is not a style rule; it is the law that keeps a
+failure from becoming a success.
+
+What it fixes, in one real case: a fetching node received HTTP 403 from its source and returned «nothing
+found» as an ordinary context patch. The engine merged the patch and went on — for the graph the node had
+succeeded, and the run reported success while nothing had been fetched. No amount of type-checking or
+schema validation sees that, because the shape was perfectly valid.
+
+So the node declares two things in the core, and both are mandatory:
+
+- **`outcomes`** — the list of possible outcomes, **at least two**. Outcomes are not «ok / not ok»: there
+  are many on each side («above 80% is success, the rest is failure», «found», «missing», «unreachable»,
+  «not mine»). Each names its condition (`when`) and what it puts into the context (`puts`).
+- **`validator`** — the function that CLASSIFIES the result into one of those outcomes. Its name is DERIVED
+  from the function's name (`fetchExternal` → `fetchExternalValidate`), never chosen, and it lives in
+  `_lib/validators.ts`.
+
+Three levels enforce it, and each catches what the previous one lets past:
+
+| Level | Catches |
+|---|---|
+| the schema | a node with no validator, a foreign validator name, fewer than two outcomes |
+| module load (`_lib/validators.ts`) | a validator declared in the core but absent from the registry |
+| the engine (`_lib/executor.ts`) | a result the validator cannot name → the run **fails honestly**, with the reason |
+
+**«Unreachable» is not «missing».** The single most valuable thing a validator does is keep these apart: a
+source that refused and a source that answered «nothing» look identical in the payload and mean opposite
+things to the human.
+
 ## How a transform is BORN (step 310 — the procedure, not a preference)
 
 Unlike a door or a class, this node has no vocabulary to be derived from: nothing generates its name, its

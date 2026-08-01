@@ -13,13 +13,14 @@
 import { readCore } from "./core-io";
 import { allNodes, type Node } from "../_data/automation.schema";
 import { NODE_FUNCTIONS } from "./nodes";
+import { NODE_VALIDATORS } from "./validators";
 import { appendRun } from "./runs";
 
 export type NodeCtx = Record<string, unknown>;
 export type NodeResult = NodeCtx | null | void;
 export type NodeFn = (ctx: NodeCtx) => NodeResult | Promise<NodeResult>;
 
-export type RunNodeReport = { cuid: string; name: string; fn: string; status: "ok" | "stopped" | "fail"; error?: string };
+export type RunNodeReport = { cuid: string; name: string; fn: string; status: "ok" | "stopped" | "fail"; outcome?: string; error?: string };
 export type RunOutcome = { ok: boolean; runId: string; startedAt: string; nodes: RunNodeReport[]; context: NodeCtx; error?: string };
 export type RunRefusal = { refusal: string };
 
@@ -87,8 +88,29 @@ export async function executeAutomation(input: NodeCtx): Promise<RunOutcome | Ru
         reports.push({ cuid: node.cuid, name: node.name, fn: fnName, status: "stopped" });
         break;
       }
-      if (out && typeof out === "object") ctx = { ...ctx, ...out };
-      reports.push({ cuid: node.cuid, name: node.name, fn: fnName, status: "ok" });
+      const patch = (out && typeof out === "object" ? out : {}) as NodeCtx;
+
+      // 🔒 ВАЛИДАТОР — ТРЕТИЙ УРОВЕНЬ ПРИНУЖДЕНИЯ (шаг 311.8, требование владельца). Схема требует, чтобы
+      // решающий узел объявил валидатор и не менее двух исходов; загрузка модуля требует, чтобы валидатор
+      // существовал; здесь результат ОБЯЗАН получить имя одного из объявленных исходов. Без этого узла в
+      // цепочке любой провал выглядел бы успехом — ровно то, что случилось с 403 от источника в 311.7.
+      let outcomeName = "";
+      if (node.function.validator) {
+        const validate = NODE_VALIDATORS[node.function.validator];
+        if (!validate) {
+          reports.push({ cuid: node.cuid, name: node.name, fn: fnName, status: "fail", error: `no validator "${node.function.validator}" is registered in _lib/validators.ts — the node's result cannot be classified, and an unclassified result is never let through` });
+          break;
+        }
+        outcomeName = String(validate(patch, ctx) ?? "");
+        const declared = node.function.outcomes.map((o) => o.name);
+        if (!declared.includes(outcomeName)) {
+          reports.push({ cuid: node.cuid, name: node.name, fn: fnName, status: "fail", error: `the validator returned the outcome "${outcomeName}", which this node does not declare (${declared.join(" | ") || "none"}) — an unnamed outcome is a silent failure, so the run stops honestly here` });
+          break;
+        }
+      }
+
+      ctx = { ...ctx, ...patch, ...(outcomeName ? { outcome: outcomeName } : {}) };
+      reports.push({ cuid: node.cuid, name: node.name, fn: fnName, status: "ok", ...(outcomeName ? { outcome: outcomeName } : {}) });
     } catch (e) {
       reports.push({ cuid: node.cuid, name: node.name, fn: fnName, status: "fail", error: e instanceof Error ? e.message : String(e) });
       break;
