@@ -1,8 +1,9 @@
 # KIND `output-connector` — the outbound tail, left deliberately loose
 
-PORTS (law, not a choice): `in` — required, and ONLY from a `condition-success`, exactly like an
-ordinary door: what leaves this automation leaves on the success branch. `out` — OPTIONAL, and the
-only thing it may name is `external`: a node of ANOTHER automation.
+PORTS (law, not a choice): `in` — required, from a `condition-success` (what leaves this automation
+leaves on the success branch) or from the INTENT layer, exactly like an ordinary door — a request the
+front answered without the middle may still be handed to a neighbour. `out` — OPTIONAL, and the only
+thing it may name is `external`: a node of ANOTHER automation.
 
 WHY THE OUTWARD SIDE MAY HANG FREE: its far end lives outside this graph. Unwired is its normal state.
 

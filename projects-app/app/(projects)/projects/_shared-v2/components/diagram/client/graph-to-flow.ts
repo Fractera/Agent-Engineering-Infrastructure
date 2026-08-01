@@ -22,8 +22,8 @@ export type DiagramVMNode = {
   description: string;
   kind: string; // input-connector | input | transform | condition-success | condition-failure | output | output-connector
   ioType: string | null;
-  group: "input" | "intent" | "middle" | "output";
-  col: number; // столбец раскладки (0 вход · 1 намерение · 2 transform · 3 условие · 4 выход)
+  group: "input" | "intent" | "middle" | "output" | "evolution";
+  col: number; // столбец раскладки (0 вход · 1 намерение · 2 transform · 3 условие · 4 выход · 5 эволюция)
   row: number; // строка внутри столбца
   isCondition: boolean; // condition-* → рисуется квадратом
   isConnector: boolean; // *-connector → дверь в соседнюю автоматизацию
@@ -46,10 +46,11 @@ export type DiagramVM = { nodes: DiagramVMNode[]; edges: DiagramVMEdge[] };
 //
 // СЛОЙ НАМЕРЕНИЯ (шаг 311) — четвёртая группа `intent` между входом и серединой. Ядра, у которых её нет
 // (все автоматизации v2), рисуются как прежде: колонка просто остаётся пустой, потому что группы нет.
-function colOf(group: "input" | "intent" | "middle" | "output", kind: string): number {
+function colOf(group: "input" | "intent" | "middle" | "output" | "evolution", kind: string): number {
   if (group === "input") return 0;
   if (group === "intent") return 1;
   if (group === "output") return 4;
+  if (group === "evolution") return 5; // пятый слой — работа автоматизации над собой, после доставки
   return kind === "transform" ? 2 : 3;
 }
 
@@ -83,7 +84,7 @@ export function graphToFlow(graph: Automation["graph"], components?: Automation[
   const byTab = integrationsByTab(components);
 
   // Группа `intent` есть только у ядер четвёртого закона (шаг 311); у ядер v2 её нет — пропускаем молча.
-  for (const group of ["input", "intent", "middle", "output"] as const) {
+  for (const group of ["input", "intent", "middle", "output", "evolution"] as const) {
     if (!groups[group]) continue;
     for (const n of groups[group].nodes) {
       const col = colOf(group, n.kind);

@@ -1,7 +1,8 @@
 # KIND `transform` — the node that CHANGES data
 
-PORTS (law, not a choice): `in` — required, from an `input`, another `transform`, or a
-`condition-success`. `out` — required, into a `transform`, a `condition-success` or a
+PORTS (law, not a choice): `in` — required, from the INTENT layer (step 311 — work reaches the middle
+only after the request has been understood; a door no longer connects here directly), another
+`transform`, or a `condition-success`. `out` — required, into a `transform`, a `condition-success` or a
 `condition-failure`. It carries NO channel: `ioType` is `null`.
 
 WHAT IT IS FOR: it consumes data and returns DIFFERENT data — parse, normalise, extract, enrich,

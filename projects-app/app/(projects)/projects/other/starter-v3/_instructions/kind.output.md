@@ -1,7 +1,11 @@
 # KIND `output` — the door the result leaves through
 
-PORTS (law, not a choice): `in` — required, and ONLY from a `condition-success`: a result is delivered
-on the success branch and on no other. `out` — prohibited: nothing continues past a door.
+PORTS (law, not a choice): `in` — required, from a `condition-success` (a result is delivered on the
+success branch) **or from the INTENT layer** (step 311), when the request needed no work over data:
+self-description, refusal, small talk, a clarifying question. `out` — OPTIONAL, and the only thing it may
+name is `evolution` (step 314): the fifth layer looks at the finished cycle AFTER the result has already
+left, and refines the automation itself. Nothing else continues past a door — the flow's data path ends
+here.
 
 DESTINATION: `ioType` is one key of the output vocabulary — `public-page`, `dashboard`, `calendar`,
 `analytics`, `map`, `email`, `telegram-bot`, `user-telegram-chat`, `vector-memory`, `database`,

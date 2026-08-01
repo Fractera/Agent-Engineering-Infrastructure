@@ -81,7 +81,8 @@ export const addressText = (a: Address): string =>
 /** Which group a node sits in — needed by the quota laws on add/delete. */
 export const groupOfNode = (core: Automation, cuid: string): GroupName | null => {
   const groups = core.graph.nodes.groups;
-  for (const name of ["input", "intent", "middle", "output"] as GroupName[]) {
+  for (const name of ["input", "intent", "middle", "output", "evolution"] as GroupName[]) {
+    if (!groups[name]) continue; // пятый слой необязателен
     if (groups[name].nodes.some((n) => n.cuid === cuid)) return name;
   }
   return null;
@@ -191,7 +192,8 @@ export function checkDelete(core: Automation, group: GroupName, kind: Node["kind
   const law = GROUP_POLICY[group];
   const rule = law.kinds[kind];
   if (!rule) return `the "${group}" group has no "${kind}" to delete`;
-  const count = core.graph.nodes.groups[group].nodes.filter((n) => n.kind === kind).length;
+  // Пятый слой (`evolution`) объявлять НЕ обязательно, поэтому группы может не быть в ядре вовсе.
+  const count = (core.graph.nodes.groups[group]?.nodes ?? []).filter((n) => n.kind === kind).length;
   if (rule.deletion === "forbidden") {
     return `deleting a "${kind}" is forbidden — an unused one is HIDDEN (state: "hidden"), never removed`;
   }

@@ -45,6 +45,15 @@ export const SYSTEM_INSTRUCTION_NAMES = [
   "intent.record-given",
   "intent.unclaimed",
   "intent.custom", // закон МАСШТАБИРОВАНИЯ: когда модель вправе завести новый класс
+  // ПЯТЫЙ СЛОЙ (шаг 314) — закон группы, закон вида и закон каждой ОБЛАСТИ эволюции.
+  "group.evolution",
+  "kind.evolution",
+  "evolution.capability-gap",
+  "evolution.behavior",
+  "evolution.examples",
+  "evolution.voice",
+  "evolution.graph",
+  "evolution.custom",
   "kind.transform",
   "kind.condition-success",
   "kind.condition-failure",
@@ -387,6 +396,39 @@ if (missingIntentInstructions.length) {
   throw new Error(`intent classes without a registered instruction: ${missingIntentInstructions.join(", ")}`);
 }
 
+// ─── СЛОВАРЬ ОБЛАСТЕЙ ЭВОЛЮЦИИ (шаг 314) — что автоматизация вправе менять В СЕБЕ ────────────────────
+// Пятый слой стоит ПОСЛЕ выхода и работает над САМОЙ АВТОМАТИЗАЦИЕЙ, а не над данными прогона: по
+// завершении цикла взаимодействия он извлекает особенности диалога и уточняет конфигурацию — инструкцию
+// поведения, примеры, голос. Области отличаются не темой, а ПРАВОМ ЗАПИСИ: что именно узлу позволено
+// изменить. Разные права — разные предохранители и разные инструкции, поэтому узел на область.
+//
+// `graph` (вторая итерация) и `custom` (открытая дверь) в квоту НЕ входят: узел заводится, когда его
+// работа построена и доказана. Полное ТЗ — `/code/next-step/314-evolution-layer.spec.md`.
+export const EvolutionScopeSchema = z.enum([
+  "capability-gap", // ничего не меняет: фиксирует невозможный при нынешнем графе запрос → Warning владельцу
+  "behavior", // инструкция поведения ассистента (аккордеон вкладки «Ассистент»)
+  "examples", // пары вопрос-ответ (few-shot)
+  "voice", // тон, обращение, длина реплик
+  "graph", // предложение изменить холст — ТОЛЬКО с одобрения владельца (итерация 2)
+  "custom", // открытая дверь
+]);
+
+/** Имя функции области выводится из неё самой: `capability-gap` → `evolveCapabilityGap`. Закон, не выбор. */
+export const evolutionFunctionName = (scope: string): string =>
+  "evolve" + scope.split("-").map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join("");
+
+/** Имя инструкции области — тоже производное: `behavior` → `evolution.behavior`. */
+export const evolutionInstructionName = (scope: string): string => `evolution.${scope}`;
+
+// Та же страховка, что у классов фронта: область без зарегистрированной инструкции роняет модуль на
+// загрузке, а не отдаёт молча пустой закон.
+const missingEvolutionInstructions = EvolutionScopeSchema.options
+  .map(evolutionInstructionName)
+  .filter((n) => !(SYSTEM_INSTRUCTION_NAMES as readonly string[]).includes(n));
+if (missingEvolutionInstructions.length) {
+  throw new Error(`evolution scopes without a registered instruction: ${missingEvolutionInstructions.join(", ")}`);
+}
+
 export const NodeKindSchema = z.enum([
   "input-connector",
   "output-connector",
@@ -398,6 +440,9 @@ export const NodeKindSchema = z.enum([
   // инвентарь конечный и закрытый (как каналы входа/выхода), проход через слой ОБЯЗАТЕЛЕН.
   "intent",
   "output",
+  // ЭВОЛЮЦИЯ (шаг 314) — работа автоматизации над САМОЙ СОБОЙ, после доставки ответа. Терминальный слой:
+  // всё, что он производит, он записывает в конфигурацию, а не передаёт дальше.
+  "evolution",
   "transform",
   "condition-success",
   "condition-failure",
@@ -439,10 +484,19 @@ export const PortSchema = z
 //   output-connector   required  condition-success | intent            optional  external
 //   input              prohibit  —                                     required  intent
 //   intent             required  input | input-connector               required  transform | output | output-connector
-//   output             required  condition-success | intent            prohibit  —
+//   output             required  condition-success | intent            optional  evolution
+//   evolution          required  output                                prohibit  —
 //   transform          required  intent | transform | condition-success required  transform | condition-success | condition-failure
 //   condition-success  required  transform                             required  transform | output | output-connector
 //   condition-failure  required  transform                             prohibit  —
+//
+// 🔒 КОНЕЦ ПУТИ ОБЪЯВЛЕН ОКОНЧАТЕЛЬНО (шаг 314). `output.out` перестал быть запретом и ведёт в
+// `evolution` — пятый слой, работающий над САМОЙ автоматизацией после того, как ответ уже доставлен.
+// `evolution.out` — запрет: слой ТЕРМИНАЛЬНЫЙ, всё произведённое он ЗАПИСЫВАЕТ в конфигурацию, а не
+// передаёт дальше. Поэтому шестого слоя не будет: новая способность такого рода — это новая ОБЛАСТЬ
+// внутри `EvolutionScopeSchema`, а не новый ряд в этой таблице. Связь `optional`, потому что
+// автоматизация без эволюции остаётся законной: слой даёт способность, но не создаёт зависимости
+// от модели и ключа.
 //
 // 🔒 ДВА СЛЕДСТВИЯ ЧЕТВЁРТОГО СЛОЯ (шаг 311) — оба намеренные, оба ломают ядра v2:
 //   1. ПРОХОД ОБЯЗАТЕЛЕН. `input`.out и `input-connector`.out ведут ТОЛЬКО в `intent`; ребра
@@ -480,6 +534,11 @@ export const KIND_PORTS: Record<z.infer<typeof NodeKindSchema>, { in: Port; out:
   },
   output: {
     in: { state: "required", connections: ["condition-success", "intent"] },
+    out: { state: "optional", connections: ["evolution"] },
+  },
+  // ПЯТЫЙ СЛОЙ. Вход обязателен (наблюдать нечего без завершённой доставки), выход запрещён — терминал.
+  evolution: {
+    in: { state: "required", connections: ["output"] },
     out: { state: "prohibit", connections: null },
   },
   transform: {
@@ -654,6 +713,8 @@ export const NodeSchema = z.discriminatedUnion("kind", [
   // Узел фронта объявляет СВОЙ КЛАСС в `ioType` — так же, как входной объявляет свой канал: `ioType` есть
   // словарь, на который вид имеет право. Отсюда выводятся и его инструкция, и имя его функции.
   nodeOf("intent", IntentClassSchema),
+  // Узел эволюции объявляет свою ОБЛАСТЬ в `ioType` — тот же приём: словарь, на который вид имеет право.
+  nodeOf("evolution", EvolutionScopeSchema),
   nodeOf("transform", z.null()),
   nodeOf("condition-success", z.null()),
   nodeOf("condition-failure", z.null()),
@@ -677,7 +738,7 @@ export const NodeSchema = z.discriminatedUnion("kind", [
 //
 // The keys of `kinds` ARE the group's allowed kinds — no second list that could disagree with the first.
 export const PermissionSchema = z.enum(["allowed", "forbidden"]);
-export const GroupNameSchema = z.enum(["input", "intent", "middle", "output"]);
+export const GroupNameSchema = z.enum(["input", "intent", "middle", "output", "evolution"]);
 
 // A kind's own rules, plus the system instruction of that kind — the text a model reads before it touches
 // a node of this kind. The instruction is pinned per kind in the group check below (a record cannot vary
@@ -721,6 +782,10 @@ export const OUTPUT_CHANNEL_QUOTA = channelCount(OutputChannelSchema.options);
 // дверь, узел для неё заводится по нужде, а не рождается вместе с автоматизацией.
 export const INTENT_CLASS_QUOTA = IntentClassSchema.options.filter((c) => c !== "custom").length;
 
+// Квота эволюции — тоже из словаря. Исключены `custom` (открытая дверь) и `graph`: изменение самого холста
+// — вторая итерация, её узел заводится, когда работа построена и доказана, а не заранее (заглушек не бывает).
+export const EVOLUTION_SCOPE_QUOTA = EvolutionScopeSchema.options.filter((s) => s !== "custom" && s !== "graph").length;
+
 export const GROUP_POLICY: Record<z.infer<typeof GroupNameSchema>, GroupPolicy> = {
   input: {
     minKinds: 2,
@@ -750,6 +815,14 @@ export const GROUP_POLICY: Record<z.infer<typeof GroupNameSchema>, GroupPolicy> 
     kinds: {
       output: { deletion: "forbidden", addition: "allowed", minNodes: OUTPUT_CHANNEL_QUOTA },
       "output-connector": { deletion: "forbidden", addition: "forbidden", minNodes: 1 },
+    },
+  },
+  // ПЯТЫЙ СЛОЙ — группа НЕОБЯЗАТЕЛЬНА в ядре (см. NodesSchema ниже): автоматизация без эволюции законна.
+  // Но если группа объявлена, её инвентарь закрыт так же, как у фронта.
+  evolution: {
+    minKinds: 1,
+    kinds: {
+      evolution: { deletion: "forbidden", addition: "forbidden", minNodes: EVOLUTION_SCOPE_QUOTA },
     },
   },
 };
@@ -856,6 +929,9 @@ export const NodesSchema = z
         intent: groupOf("intent"),
         middle: groupOf("middle"),
         output: groupOf("output"),
+        // НЕОБЯЗАТЕЛЬНА: закон пятого слоя объявлен, но автоматизация без эволюции остаётся законной —
+        // группа появляется в ядре вместе с первым построенным и доказанным узлом области (шаг 314).
+        evolution: groupOf("evolution").optional(),
       })
       .strict(),
   })
@@ -867,6 +943,7 @@ export const allNodes = (nodes: z.infer<typeof NodesSchema>): z.infer<typeof Nod
   ...nodes.groups.intent.nodes,
   ...nodes.groups.middle.nodes,
   ...nodes.groups.output.nodes,
+  ...(nodes.groups.evolution?.nodes ?? []), // пятый слой необязателен — ядро без него законно
 ];
 
 // AN EDGE — a link between two nodes. It carries its own cuid (an edge is an entity like any other and
@@ -910,6 +987,17 @@ export const GraphSchema = z
             code: "custom",
             path: ["nodes"],
             message: `the "${node.ioType}" class is served by the function "${expected}", not "${node.function.name}" — the name is derived from the class, not chosen`,
+          });
+        }
+      }
+      // То же для областей эволюции: `behavior` → `evolveBehavior`.
+      if (node.kind === "evolution" && typeof node.ioType === "string") {
+        const expected = evolutionFunctionName(node.ioType);
+        if (node.function.name !== expected) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["nodes"],
+            message: `the "${node.ioType}" evolution scope is served by the function "${expected}", not "${node.function.name}" — the name is derived from the scope, not chosen`,
           });
         }
       }

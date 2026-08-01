@@ -90,11 +90,12 @@ export async function GET(req: NextRequest) {
   if (select === "all") return NextResponse.json({ systemInstruction: await readInstruction("passport"), ...core });
 
   if (select.startsWith("group:")) {
-    const name = select.slice("group:".length) as "input" | "middle" | "output";
+    // `evolution` объявлять не обязательно — тернар ниже честно отвечает «такой группы нет».
+    const name = select.slice("group:".length) as "input" | "intent" | "middle" | "output" | "evolution";
     const group = core.graph.nodes.groups[name];
     return group
       ? NextResponse.json({ systemInstruction: await readInstruction(`group.${name}`), group: name, ...group })
-      : NextResponse.json({ error: `no group named "${name}" — there are input, middle, output` }, { status: 400 });
+      : NextResponse.json({ error: `no group named "${name}" — there are input, intent, middle, output, evolution` }, { status: 400 });
   }
 
   const address = parseAddress(select);

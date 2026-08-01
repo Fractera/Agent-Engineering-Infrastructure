@@ -1,7 +1,8 @@
 # KIND `input-connector` — the inbound tail, left deliberately loose
 
 PORTS (law, not a choice): `in` — OPTIONAL, and the only thing it may name is `external`: a node of
-ANOTHER automation. `out` — required, into a `transform`.
+ANOTHER automation. `out` — required, into the INTENT layer (step 311): work from a neighbouring automation is understood by
+the same front as work from a human, with no side entrance into the middle.
 
 WHY IT IS OPTIONAL, AND WHY THAT IS NOT A DEFECT: its far end lives outside this graph. Standing
 unwired is its normal state, and the core accepts it — an optional port never has to carry an edge.
@@ -16,4 +17,4 @@ elsewhere. Do not build an integration, do not call another automation, do not g
 - There is exactly ONE of them: adding a second is refused, deleting this one is refused.
 - Its `ioType` names the channel the incoming work would speak, from the input vocabulary.
 - Its function is the same normalisation an ordinary input door performs: whatever arrives, hand the
-  middle the shape it already consumes. Code lives in `_lib/nodes/<function-name>.ts`.
+  FRONT the shape the automation already consumes. Code lives in `_lib/nodes/<function-name>.ts`.

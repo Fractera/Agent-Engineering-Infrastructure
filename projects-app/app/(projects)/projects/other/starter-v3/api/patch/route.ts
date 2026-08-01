@@ -174,7 +174,7 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    core.graph.nodes.groups[group].nodes.push(draft as never);
+    core.graph.nodes.groups[group]!.nodes.push(draft as never);
 
     const written = await writeCore(core);
     return written.ok ? NextResponse.json({ ok: true, cuid: draft.cuid }) : bad(written.errors, 422);
@@ -200,7 +200,7 @@ export async function POST(req: NextRequest) {
     const refusal = checkDelete(core, group, node.kind);
     if (refusal) return bad(refusal);
 
-    const groupNodes = core.graph.nodes.groups[group];
+    const groupNodes = core.graph.nodes.groups[group]!; // группа проверена выше
     groupNodes.nodes = groupNodes.nodes.filter((n) => n.cuid !== address.cuid);
     // an edge to a node that no longer exists is not an edge
     core.graph.edges = core.graph.edges.filter((e) => e.from !== address.cuid && e.to !== address.cuid);
@@ -303,7 +303,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (next === "hidden" && core.passport.lifecycle === "real-project" && (group === "input" || group === "output")) {
-      const stillVisible = core.graph.nodes.groups[group].nodes.filter((n) => n.state === "visible" && n.cuid !== node.cuid);
+      const stillVisible = core.graph.nodes.groups[group]!.nodes.filter((n) => n.state === "visible" && n.cuid !== node.cuid);
       if (stillVisible.length === 0) {
         return bad(
           `"${node.name}" is the last visible ${group} — hiding it would leave the automation with no ${group} ` +

@@ -6,7 +6,7 @@ Two kinds live here and no others: `input` — one door per channel of the outsi
 ## The inventory is already complete
 
 This automation was born carrying one `input` node for EVERY channel of the vocabulary
-(`control-panel`, `webhook`, `cron`, `public-page`, `telegram-bot`, `user-telegram-chat`), all hidden,
+(`control-panel`, `webhook`, `cron`, `public-page`, `telegram-bot`, `user-telegram-chat`, `email`), all hidden,
 plus exactly ONE `input-connector`. So:
 
 - You REVEAL a door (`state: "visible"`), you do not create it.
@@ -27,16 +27,19 @@ none" is not an option you have.
 ## What an input node owes you
 
 - It has NO incoming port. Nothing flows into it — the outside world is its source.
-- Exactly one thing leaves it, into a `transform`.
+- Exactly one thing leaves it, into the INTENT layer — and into nothing else (step 311). There is no edge from a door into the middle any more: every run is understood before it is worked on.
 - Its `ioType` is its channel key, and it is fixed for life: a `telegram-bot` door never becomes a
   `webhook` door. A different channel means a different node — reveal that one instead.
 - ITS ONE JOB IS NORMALISATION. It receives the raw envelope its channel pushes in, and returns the
-  SAME shape the middle already consumes — the same key names, whichever channel the work arrived
-  through. That is what lets a second channel join an existing chain without touching it.
+  SAME shape the rest of the automation already consumes — the same key names, whichever channel the
+  work arrived through. That is what lets a second channel join an existing chain without touching it.
+- IT NEVER CLASSIFIES AND NEVER ANSWERS. What kind of request arrived is decided by the intent layer;
+  the reply is composed on the route. A door that answers was the v2 defect this law ended.
 - The event is PUSHED into the automation. Never write a polling loop to fetch your own input.
 
 ## Revealing a second channel later
 
 Adding a channel never removes the one already working: reveal the new door, normalise its payload to
-the shape the middle speaks, connect it to the EXISTING middle node that does the work, and prove that
-every older channel still runs. Two doors feeding one transform is normal and lawful.
+the shape the automation already speaks, connect it to the INTENT layer like every other door, and prove
+that every older channel still runs. Many doors feeding one front is normal and lawful — that is exactly
+what the intent layer is for: the request is understood once, whichever door it came through.

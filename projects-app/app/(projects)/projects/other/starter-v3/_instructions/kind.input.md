@@ -1,7 +1,8 @@
 # KIND `input` — the door a channel of the outside world pushes work through
 
-PORTS (law, not a choice): `in` — prohibited, nothing flows into it. `out` — required, into a
-`transform`, and into nothing else.
+PORTS (law, not a choice): `in` — prohibited, nothing flows into it. `out` — required, into the INTENT
+layer, and into nothing else (step 311: a door never reaches the middle directly — every request is
+understood before it is worked on).
 
 CHANNEL: `ioType` is one key of the input vocabulary — `control-panel`, `webhook`, `cron`,
 `public-page`, `telegram-bot`, `user-telegram-chat`, `email`, or `custom`. It is fixed for life.
@@ -9,8 +10,9 @@ CHANNEL: `ioType` is one key of the input vocabulary — `control-panel`, `webho
 workspace's agent runtime. Do not put it back.)
 
 ITS FUNCTION does exactly one thing: take the envelope the channel pushed in and RETURN THE SHAPE THE
-MIDDLE ALREADY CONSUMES — the same key names every other door produces. Parsing belongs here;
-deciding does not, and neither does business work. Code lives in `_lib/nodes/<function-name>.ts`.
+AUTOMATION ALREADY CONSUMES — the same key names every other door produces. Parsing belongs here;
+deciding does not, and neither does business work, and neither does answering. Code lives in
+`_lib/nodes/<function-name>.ts`.
 
 - The event ARRIVES; you never fetch it. No polling loop, no scheduled fetch of your own input.
 - `cron` is the one channel that is a clock rather than a message: its envelope carries the tick time,

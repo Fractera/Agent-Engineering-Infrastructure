@@ -7,7 +7,8 @@ Two kinds live here: `output` — one door per destination of the outside world;
 
 This automation was born carrying one `output` node for EVERY destination of the vocabulary
 (`public-page`, `dashboard`, `calendar`, `analytics`, `map`, `email`, `telegram-bot`,
-`user-telegram-chat`), all hidden, plus exactly ONE `output-connector`.
+`user-telegram-chat`, and the three stores `vector-memory`, `database`, `storage`), all hidden, plus
+exactly ONE `output-connector`.
 
 - You REVEAL the destination you need; you never create or delete a door.
 - A second connector is refused: there is exactly one.
@@ -26,10 +27,15 @@ Opening the `dashboard` door has a second half: make its tab visible as well (`t
 
 ## What an output node owes you
 
-- NOTHING leaves it. An output has no outgoing edge, ever: it is where the flow ends.
-- It receives ONLY from a `condition-success`. A transform never delivers straight to a door — the
-  result is handed over on the success branch and nowhere else. The shortest lawful flow is therefore
-  `input → transform → condition-success → output`.
+- It receives from a `condition-success` — a transform never delivers straight to a door, the result is
+  handed over on the success branch — **or straight from the INTENT layer** (step 311), when the request
+  needed no work over data at all: a question about the automation itself, a refusal, small talk. The
+  shortest lawful flow is therefore `input → intent → output`, and the ordinary one is
+  `input → intent → transform → condition-success → output`.
+- What leaves it, leaves only INTO THE EVOLUTION LAYER (step 314), and that edge is OPTIONAL. The result
+  is already delivered by then: the fifth layer does not carry it anywhere, it looks at the finished
+  cycle and refines the automation itself. No evolution node → nothing leaves the door at all, and that
+  is a lawful automation.
 - Its `ioType` is its destination key and is fixed for life; a different destination is a different
   door — reveal that one.
 - ITS ONE JOB IS DELIVERY: take what the branch handed over, put it into the form that destination
