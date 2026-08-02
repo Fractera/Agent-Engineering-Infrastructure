@@ -91,6 +91,9 @@ export const SYSTEM_INSTRUCTION_NAMES = [
   // one exists for tabs whose behaviour cannot be derived from the general law: the calendar is the
   // first (it raises due notices on the schedule's beat and may declare outward integrations).
   "tab.calendar",
+  // Закон вкладки записей (шаг 324): минимальный набор полей, минимальный набор колонок и общий интерфейс
+  // таблиц — минимальная ширина колонки, страница в 10 строк, ячейка не выше четырёх строк.
+  "tab.database",
   "useCases",
   "history",
   // ЧТО ОСТАВЛЯЕТ ПРОГОН (шаг 311.9а.5): склад сущностей против журнала прогона, саммари против полного

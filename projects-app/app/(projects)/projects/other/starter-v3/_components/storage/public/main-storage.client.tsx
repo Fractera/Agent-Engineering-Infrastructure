@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { storageStrings } from "../i18n";
 import { onRunCompleted, onExternalRefresh } from "../../shared/run-events";
+import { DataTable } from "../../shared/data-table.client";
 
 // Ячейка идентификатора: длинный id ужимается до первых пяти символов + «…», рядом — иконка копирования
 // полного значения (буфер обмена). Полный id всегда доступен в `title` при наведении.
@@ -106,56 +107,36 @@ export default function MainStorageClient({ lang, mode }: { lang: string; mode: 
       {/* Результат явного поиска: сколько записей нашлось по применённому запросу. */}
       {applied ? <p className="text-xs text-muted-foreground">{t.found}: {rows.length}</p> : null}
 
-      {loaded && rows.length === 0 ? <p className="text-sm text-muted-foreground">{t.empty}</p> : null}
-
-      {rows.length > 0 ? (
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-sm">
-            <thead className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
-              <tr>
-                <th className="p-2 font-medium">{t.id}</th>
-                <th className="p-2 font-medium">{t.preview}</th>
-                <th className="p-2 font-medium">{t.name}</th>
-                <th className="p-2 font-medium">{t.kind}</th>
-                <th className="p-2 font-medium">{t.size}</th>
-                <th className="p-2 font-medium">{t.added}</th>
-                {mode === "admin" ? <th className="p-2" /> : null}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id} className="border-b last:border-0">
-                  <td className="p-2">
-                    <IdCell id={r.id} copyLabel={t.copy} />
-                  </td>
-                  <td className="p-2">
-                    {r.fileKey ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={`${apiBase()}/files?key=${encodeURIComponent(String(r.fileKey))}`}
-                        alt=""
-                        className="h-12 w-12 rounded border object-cover"
-                      />
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td className="p-2">{String(r.name ?? "—")}</td>
-                  <td className="p-2">{String(r.kind ?? "—")}</td>
-                  <td className="p-2 tabular-nums">{fmtSize(r.size)}</td>
-                  <td className="p-2 tabular-nums">{fmtDate(r.createdAt)}</td>
-                  {mode === "admin" ? (
-                    <td className="p-2 text-right">
-                      <Button variant="outline" size="xs" onClick={() => del(r.id)}>
-                        {t.del}
-                      </Button>
-                    </td>
-                  ) : null}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {/* Единый интерфейс таблиц (требование владельца): минимальная ширина колонки + горизонтальная
+          прокрутка, страница в 10 записей, ячейка не выше четырёх строк. Превью и размер — свои типы
+          ячеек этой вкладки, они передаются через `renderCell`, а не форкают таблицу. */}
+      {loaded ? (
+        <DataTable
+          columns={[
+            { key: "id", label: t.id, type: "chip", source: "id" },
+            { key: "preview", label: t.preview, type: "image", source: "fileKey" },
+            { key: "name", label: t.name, type: "text", source: "name" },
+            { key: "kind", label: t.kind, type: "badge", source: "kind" },
+            { key: "size", label: t.size, type: "text", source: "size", minWidth: 96 },
+            { key: "createdAt", label: t.added, type: "date", source: "createdAt" },
+          ]}
+          rows={rows}
+          lang={lang}
+          strings={{ copy: t.copy, empty: t.empty, page: t.page, of: t.of }}
+          renderCell={(r, c, v) => {
+            if (c.key === "preview") {
+              return v ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={`${apiBase()}/files?key=${encodeURIComponent(String(v))}`} alt="" className="h-12 w-12 rounded border object-cover" />
+              ) : <span className="text-muted-foreground">—</span>;
+            }
+            if (c.key === "size") return <span className="tabular-nums">{fmtSize(v)}</span>;
+            return undefined;
+          }}
+          rowActions={mode === "admin" ? (r) => (
+            <Button variant="outline" size="xs" onClick={() => del(r.id)}>{t.del}</Button>
+          ) : undefined}
+        />
       ) : null}
     </div>
   );

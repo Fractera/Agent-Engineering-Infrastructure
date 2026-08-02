@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { toast } from "sonner";
 import { ChevronDown, Columns3, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PAGE_SIZE, minWidthOf } from "../../../shared/data-table.client";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel,
@@ -62,7 +63,7 @@ export function DashboardTableView({
   const L = dashboardAdminStrings(lang);
   const seed = useMemo<TableRow[]>(() => table.rows ?? [], [table.rows]);
   const storageKey = tableStorageKey(automation, table);
-  const pageSize = table.pageSize ?? 20;
+  const pageSize = table.pageSize ?? PAGE_SIZE; // общий закон таблиц: страница — 10 записей
 
   const [rows, setRows] = useState<TableRow[]>(seed);
   const [isLive, setIsLive] = useState(false);
@@ -172,11 +173,11 @@ export function DashboardTableView({
 
       {/* Wide tables scroll horizontally (owner requirement) — never squash the columns. */}
       <div className="overflow-x-auto rounded-lg border">
-        <table className="w-full text-sm">
+        <table className="w-max min-w-full text-sm">
           <thead>
             <tr className="border-b bg-muted/50 text-left">
               {cols.map((c) => (
-                <th key={c.id} className="whitespace-nowrap px-3 py-2 font-medium">{resolveLocalized(c.header, lang)}</th>
+                <th key={c.id} className="whitespace-nowrap px-3 py-2 font-medium" style={{ minWidth: minWidthOf(c.type) }}>{resolveLocalized(c.header, lang)}</th>
               ))}
             </tr>
           </thead>
@@ -196,7 +197,7 @@ export function DashboardTableView({
                   title={rowClickable ? admin?.rowClickTitle : undefined}
                 >
                   {cols.map((c) => (
-                    <td key={c.id} className="px-3 py-2">
+                    <td key={c.id} className="px-3 py-2" style={{ minWidth: minWidthOf(c.type) }}>
                       <ConfigRecordCell
                         col={c}
                         lang={lang}

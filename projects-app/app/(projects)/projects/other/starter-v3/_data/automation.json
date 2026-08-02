@@ -3131,7 +3131,7 @@
                 "tr": "Yakalanan mesajlar",
                 "nl": "Vastgelegde berichten"
               },
-              "pageSize": 20
+              "pageSize": 10
             }
           }
         ]
@@ -3495,7 +3495,7 @@
                   "defaultVisible": true
                 }
               ],
-              "pageSize": 20
+              "pageSize": 10
             }
           }
         ]

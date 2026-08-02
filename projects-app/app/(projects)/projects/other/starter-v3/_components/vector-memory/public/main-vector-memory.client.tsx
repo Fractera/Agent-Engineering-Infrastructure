@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { vectorMemoryStrings } from "../i18n";
 import { onRunCompleted } from "../../shared/run-events";
+import { DataTable } from "../../shared/data-table.client";
 
 // ПУБЛИЧНАЯ ПОЛОВИНА ВЕКТОРНОЙ ПАМЯТИ — таблица записей-фактов + поиск. Продуктовая поверхность (закон
 // владельца): вся логика памяти живёт здесь, где её развивает агент по заявке. Добавление записи (модалка с
@@ -117,45 +118,28 @@ export default function MainVectorMemoryClient({ lang, mode }: { lang: string; m
       {/* Результат явного поиска: сколько записей нашлось по применённому запросу. */}
       {applied ? <p className="text-xs text-muted-foreground">{t.found}: {rows.length}</p> : null}
 
-      {loaded && rows.length === 0 ? <p className="text-sm text-muted-foreground">{t.empty}</p> : null}
-
-      {rows.length > 0 ? (
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-sm">
-            <thead className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
-              <tr>
-                <th className="p-2 font-medium">{t.id}</th>
-                <th className="p-2 font-medium">{t.name}</th>
-                <th className="p-2 font-medium">{t.content}</th>
-                <th className="p-2 font-medium">{t.storageLinks}</th>
-                <th className="p-2 font-medium">{t.added}</th>
-                {mode === "admin" ? <th className="p-2" /> : null}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id} className="border-b align-top last:border-0">
-                  <td className="p-2">
-                    <IdChip id={r.id} copyLabel={t.copy} />
-                  </td>
-                  <td className="p-2">{String(r.name ?? "—")}</td>
-                  <td className="p-2 max-w-xs" title={String(r.summary ?? r.content ?? "")}>{fmtContent(r.summary ?? r.content)}</td>
-                  <td className="p-2">
-                    <IdChipColumn ids={linksOf(r, "storage", r.storageIds)} copyLabel={t.copy} />
-                  </td>
-                  <td className="p-2 tabular-nums">{fmtDate(r.createdAt)}</td>
-                  {mode === "admin" ? (
-                    <td className="p-2 text-right">
-                      <Button variant="outline" size="xs" onClick={() => del(r.id)}>
-                        {t.del}
-                      </Button>
-                    </td>
-                  ) : null}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {/* Единый интерфейс таблиц: минимальная ширина колонки + горизонтальная прокрутка, страница в
+          10 записей, ячейка не выше четырёх строк. Связи — массивы (закон 324 §2). */}
+      {loaded ? (
+        <DataTable
+          columns={[
+            { key: "id", label: t.id, type: "chip", source: "id" },
+            { key: "name", label: t.name, type: "text", source: "name" },
+            { key: "summary", label: t.content, type: "text", source: "summary" },
+            { key: "storage", label: t.storageLinks, type: "ids", source: "links:storage" },
+            { key: "createdAt", label: t.added, type: "date", source: "createdAt" },
+          ]}
+          rows={rows}
+          lang={lang}
+          strings={{ copy: t.copy, empty: t.empty, page: t.page, of: t.of }}
+          // Строки, записанные до 311.9а.4, несут `content` вместо `summary` — показываем их честно.
+          renderCell={(r, c) => (c.key === "summary" && r.summary === undefined && r.content !== undefined
+            ? <span className="line-clamp-4 break-words" title={String(r.content)}>{String(r.content)}</span>
+            : undefined)}
+          rowActions={mode === "admin" ? (r) => (
+            <Button variant="outline" size="xs" onClick={() => del(r.id)}>{t.del}</Button>
+          ) : undefined}
+        />
       ) : null}
     </div>
   );
