@@ -14,7 +14,6 @@
 import type { NodeCtx } from "../executor";
 import { messageOf } from "../message";
 import { addEntityRow } from "../rows";
-import { crossLink } from "../components/links/cross-link";
 
 /**
  * ФОРМА ЗАПИСИ — единственный источник (закон 2). Середина, которой нужно придержать запись до
@@ -23,19 +22,18 @@ import { crossLink } from "../components/links/cross-link";
  */
 export function recordRowFrom(ctx: NodeCtx): Record<string, unknown> {
   const m = messageOf(ctx);
-  const atts = Array.isArray(ctx.attachments) ? (ctx.attachments as { fileKey: string }[]) : [];
-  const vectorRowId = String(ctx.vectorRowId ?? "").trim();
   // ПОЛЯ, ДОБАВЛЕННЫЕ СЕРЕДИНОЙ. Склад не изобретает структуру записи: если срединный узел разобрал
   // сообщение в поля (`ctx.record`), они ложатся в строку как есть. Их имена — забота той автоматизации,
   // которая их завела, а не этого файла.
   const fields = (ctx.record && typeof ctx.record === "object" ? ctx.record : {}) as Record<string, unknown>;
+  // 🔒 СВЯЗИ ЗДЕСЬ НЕ СОБИРАЮТСЯ (311.9а.2). Прежде строка несла `storageIds`/`vectorIds` — поле на
+  // каждого соседа, второй дом того же факта: календарь появился в `links` и в «массивах строк» так и не
+  // появился. Связи ставит сама запись (`addEntityRow` → `crossLink`), одним представлением `links`.
   return {
     name: m.title,
     text: m.text,
     source: m.source,
     date: m.at,
-    storageIds: atts.map((a) => a.fileKey).filter(Boolean),
-    vectorIds: vectorRowId ? [vectorRowId] : [],
     ...fields,
   };
 }
@@ -48,6 +46,5 @@ export async function deliverDatabase(ctx: NodeCtx): Promise<{ databaseRowId: st
 
   const row = await addEntityRow("database", recordRowFrom(ctx), ctx);
   if (!row) return { databaseRowId: "" };
-  await crossLink(ctx, "database", row.id); // связь всех-ко-всем: запись ↔ объекты и вектор этого прогона
   return { databaseRowId: row.id };
 }

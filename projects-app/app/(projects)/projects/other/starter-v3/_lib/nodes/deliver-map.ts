@@ -13,7 +13,6 @@
 import type { NodeCtx } from "../executor";
 import { messageOf } from "../message";
 import { addEntityRow } from "../rows";
-import { crossLink } from "../components/links/cross-link";
 
 export async function deliverMap(ctx: NodeCtx): Promise<{ mapDelivery: string; mapRowId?: string }> {
   // Метку ставим для тех же классов, что оставляют запись: место — грань записи, а не отдельный домен
@@ -28,6 +27,5 @@ export async function deliverMap(ctx: NodeCtx): Promise<{ mapDelivery: string; m
   }
   const row = await addEntityRow("map", { date: m.at, title: m.placeTitle || m.title, place: m.placeTitle ?? "", source: m.source, lat: m.lat, lng: m.lng }, ctx);
   if (!row) return { mapDelivery: "skipped: this request class leaves no record" };
-  await crossLink(ctx, "map", row.id); // связь всех-ко-всем (309)
   return { mapDelivery: `marker ${row.id} at ${m.lat},${m.lng}`, mapRowId: row.id };
 }

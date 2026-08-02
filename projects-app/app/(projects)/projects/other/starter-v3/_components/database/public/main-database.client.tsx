@@ -1,5 +1,6 @@
 "use client";
 
+import { linksOf } from "../../../_data/record.schema";
 import { useCallback, useEffect, useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -12,14 +13,15 @@ import { onRunCompleted, onExternalRefresh } from "../../shared/run-events";
 // Кокпит-инструмент из `_shared-v2`, открывается кнопкой «Добавить запись» из ряда поиска (DOM-событие,
 // закон 0 не даёт публичной таблице тянуть внешний слой).
 //
-// СВЯЗИ ВСЕХ-КО-ВСЕМ: каждая строка несёт `storageIds: string[]` (ссылки на записи объектного хранилища) и
-// `vectorIds: string[]` (ссылки на записи векторной базы). В таблице обе связи показываются СТОЛБИКОМ
-// СОКРАЩЁННЫХ ИДЕНТИФИКАТОРОВ С КОПИРОВАНИЕМ — тем же дизайном, что колонка ID. Самих изображений тут НЕ
-// показываем (решение владельца): у строки может быть массив картинок, поэтому вместо картинки — id.
+// СВЯЗИ ВСЕХ-КО-ВСЕМ читаются из ЕДИНСТВЕННОГО представления — `links: {table,id}[]` (311.9а.2), а вид
+// «ссылки на такой-то склад» выводится `linksOf`. Прежние поля-на-соседа `storageIds`/`vectorIds` были
+// вторым домом того же факта и требовали нового поля под каждый новый склад; они остались лишь как
+// фолбэк для строк, записанных до этого шага. Связи показываются СТОЛБИКОМ СОКРАЩЁННЫХ ИДЕНТИФИКАТОРОВ
+// С КОПИРОВАНИЕМ — тем же дизайном, что колонка ID. Самих изображений тут НЕ показываем (решение
+// владельца): у строки может быть массив картинок, поэтому вместо картинки — id.
 type Row = { id: string; createdAt: string; name?: unknown; storageIds?: unknown; vectorIds?: unknown } & Record<string, unknown>;
 const apiBase = () => location.pathname.replace(/\/+$/, "") + "/api";
 const TABLE = "database";
-const asIds = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
 
 // Один сокращённый id + иконка копирования (единый дизайн колонки ID).
 function IdChip({ id, copyLabel }: { id: string; copyLabel: string }) {
@@ -135,10 +137,10 @@ export default function MainDatabaseClient({ lang, mode }: { lang: string; mode:
                   </td>
                   <td className="p-2">{String(r.name ?? "—")}</td>
                   <td className="p-2">
-                    <IdChipColumn ids={asIds(r.storageIds)} copyLabel={t.copy} />
+                    <IdChipColumn ids={linksOf(r, "storage", r.storageIds)} copyLabel={t.copy} />
                   </td>
                   <td className="p-2">
-                    <IdChipColumn ids={asIds(r.vectorIds)} copyLabel={t.copy} />
+                    <IdChipColumn ids={linksOf(r, "vector-memory", r.vectorIds)} copyLabel={t.copy} />
                   </td>
                   <td className="p-2 tabular-nums">{fmtDate(r.createdAt)}</td>
                   {mode === "admin" ? (

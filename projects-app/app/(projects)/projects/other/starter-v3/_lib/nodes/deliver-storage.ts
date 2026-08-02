@@ -8,7 +8,6 @@ import type { NodeCtx } from "../executor";
 import { messageOf, mayWriteEntity } from "../message";
 import { addEntityRow } from "../rows";
 import { saveObject } from "../store";
-import { crossLink } from "../components/links/cross-link";
 
 export async function deliverStorage(ctx: NodeCtx): Promise<{ storageFileKey: string; storageRowId: string }> {
   // 🔒 ГЕЙТ СТОИТ ДО `saveObject` (шаг 311.9а): байты — тоже запись в склад, и прогон-вопрос не вправе
@@ -32,7 +31,6 @@ export async function deliverStorage(ctx: NodeCtx): Promise<{ storageFileKey: st
       source: m.source,
     }, ctx);
     if (!row) return { storageFileKey: "", storageRowId: "" };
-    await crossLink(ctx, "storage", row.id);
     return { storageFileKey: first.fileKey, storageRowId: row.id };
   }
 
@@ -40,6 +38,5 @@ export async function deliverStorage(ctx: NodeCtx): Promise<{ storageFileKey: st
   const { key, size } = await saveObject(Buffer.from(body, "utf8"), "txt");
   const row = await addEntityRow("storage", { fileKey: key, name: `${m.title || "message"}.txt`, kind: "text", size, source: m.source }, ctx);
   if (!row) return { storageFileKey: "", storageRowId: "" };
-  await crossLink(ctx, "storage", row.id); // связь всех-ко-всем (309)
   return { storageFileKey: key, storageRowId: row.id };
 }

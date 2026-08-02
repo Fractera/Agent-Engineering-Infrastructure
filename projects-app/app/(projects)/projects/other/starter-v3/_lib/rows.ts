@@ -12,6 +12,7 @@ import { join } from "node:path";
 import { randomBytes } from "node:crypto";
 import { RUNTIME_DIR } from "./paths";
 import { ENTITY_STORES, mayWriteEntity } from "./message";
+import { parseEnvelope, type Link } from "../_data/record.schema";
 
 const ROWS_FILE = join(RUNTIME_DIR, "rows.jsonl");
 
@@ -22,7 +23,9 @@ export type Row = { id: string; table: string; createdAt: string; updatedAt?: st
 // картинки. Передан id → используется он; не передан → прежнее поведение.
 export async function addRow(table: string, data: Record<string, unknown>, id?: string): Promise<Row> {
   const row: Row = { id: id || `row${Date.now().toString(36)}${randomBytes(4).toString("hex")}`, table, createdAt: new Date().toISOString(), ...data };
-  await append(row);
+  // Конверт проверяется ПЕРЕД записью (311.9а.2): незаконная строка не попадает в журнал, а вызывающий
+  // получает названную причину. `links` получает свой дефолт здесь же — поле есть у каждой строки.
+  await append(parseEnvelope(row) as Row);
   return row;
 }
 
@@ -36,6 +39,11 @@ export async function addRow(table: string, data: Record<string, unknown>, id?: 
  * `null` — законный исход, а не ошибка: «этот прогон записи не оставляет». Узел отвечает честным
  * пропуском с причиной. Журнал прогона (`history`/`analytics`/`toast`) пишется обычным `addRow`:
  * вопрос — тоже прогон, и он обязан быть виден.
+ *
+ * 🔒 СВЯЗЫВАНИЕ — СВОЙСТВО ЗАПИСИ, А НЕ ВЕЖЛИВОСТЬ УЗЛА (311.9а.2). Раньше `crossLink` звал каждый узел
+ * сам, и звали его четверо из девяти — поэтому закон «каждая строка несёт связи ко всем» был ложен.
+ * Теперь связывает САМА запись: строка склада сущностей не может родиться несвязанной. Журналы прогона
+ * в граф связей не входят (они хранят СОБЫТИЕ, а не сущность), поэтому `addRow` их не связывает.
  */
 export async function addEntityRow(
   table: (typeof ENTITY_STORES)[number],
@@ -47,7 +55,58 @@ export async function addEntityRow(
     throw new Error(`addEntityRow: "${table}" is not an entity store (${ENTITY_STORES.join(", ")}) — a run journal is written with addRow`);
   }
   if (!mayWriteEntity(ctx)) return null;
-  return addRow(table, data, id);
+  const row = await addRow(table, data, id);
+  await crossLink(ctx, table, row.id);
+  return row;
+}
+
+// ─── СВЯЗЬ ВСЕХ-КО-ВСЕМ ─────────────────────────────────────────────────────────────────────────────
+// Жила отдельным файлом `components/links/cross-link.ts` и звалась узлами вручную. Переехала СЮДА
+// (311.9а.2), потому что связывание — свойство ЗАПИСИ: строка склада сущностей не может родиться
+// несвязанной. Заодно ушёл цикл импортов `rows → cross-link → rows`.
+//
+// Форма ссылки одна — `links: {table,id}[]` на каждой строке (см. `_data/record.schema.ts`). Из любой
+// строки достаётся любая связь: из объекта хранилища — к записи, из записи — к вектору, метке и событию.
+
+/** Соседи этого прогона, известные из контекста: id, проставленные ранее выполнившимися выходами. */
+function knownSiblings(ctx: Record<string, unknown>): Link[] {
+  const out: Link[] = [];
+  const push = (table: string, id: unknown) => { const s = String(id ?? "").trim(); if (s) out.push({ table, id: s }); };
+  push("vector-memory", ctx.vectorRowId);
+  push("database", ctx.databaseRowId);
+  push("map", ctx.mapRowId);
+  push("calendar", ctx.calendarRowId);
+  const atts = Array.isArray(ctx.attachments) ? (ctx.attachments as { rowId?: unknown }[]) : [];
+  for (const a of atts) push("storage", a?.rowId);
+  return out;
+}
+
+const mergeLinks = (existing: unknown, add: Link[]): Link[] => {
+  const cur: Link[] = Array.isArray(existing) ? (existing as Link[]).filter((l) => l && l.table && l.id) : [];
+  const seen = new Set(cur.map((l) => `${l.table}/${l.id}`));
+  for (const l of add) { const k = `${l.table}/${l.id}`; if (!seen.has(k)) { seen.add(k); cur.push(l); } }
+  return cur;
+};
+
+/**
+ * Связать только что созданную строку со всеми соседями прогона ОБОЮДНО: её ссылки — в неё, её ссылку —
+ * в каждого соседа. Порядок выходов значения не имеет: поздняя строка латает ранние. Отсутствующего
+ * соседа переживает молча (`updateRow` вернёт `null`).
+ */
+async function crossLink(ctx: Record<string, unknown>, table: string, id: string): Promise<void> {
+  const me = String(id ?? "").trim();
+  if (!me) return;
+  const siblings = knownSiblings(ctx).filter((l) => !(l.table === table && l.id === me));
+  if (!siblings.length) return;
+
+  const mine = (await listRows(table, Infinity)).find((r) => r.id === me);
+  if (mine) await updateRow(table, me, { links: mergeLinks(mine.links, siblings) });
+
+  const back: Link = { table, id: me };
+  for (const s of siblings) {
+    const row = (await listRows(s.table, Infinity)).find((r) => r.id === s.id);
+    if (row) await updateRow(s.table, s.id, { links: mergeLinks(row.links, [back]) });
+  }
 }
 
 /**

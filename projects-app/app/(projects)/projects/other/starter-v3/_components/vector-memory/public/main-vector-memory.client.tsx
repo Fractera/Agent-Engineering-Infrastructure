@@ -1,5 +1,6 @@
 "use client";
 
+import { linksOf } from "../../../_data/record.schema";
 import { useCallback, useEffect, useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -12,13 +13,12 @@ import { onRunCompleted } from "../../shared/run-events";
 // обрезкой) — Кокпит-инструмент из `_shared-v2`, открывается кнопкой «Добавить запись» из ряда поиска
 // (DOM-событие `fractera:vector-add`, закон 0 не даёт публичной таблице тянуть внешний слой).
 //
-// СУТЬ записи — текст-факт (`content`). СВЯЗИ ВСЕХ-КО-ВСЕМ: запись несёт `storageIds: string[]` (ссылки на
-// записи объектного хранилища) — в таблице показываются СТОЛБИКОМ СОКРАЩЁННЫХ ИДЕНТИФИКАТОРОВ С КОПИРОВАНИЕМ,
-// тем же дизайном, что колонка ID.
+// СУТЬ записи — текст-факт (`content`). СВЯЗИ читаются из единственного представления `links` через
+// `linksOf` (311.9а.2); прежнее поле `storageIds` осталось лишь фолбэком для строк, записанных раньше.
+// Показываются СТОЛБИКОМ СОКРАЩЁННЫХ ИДЕНТИФИКАТОРОВ С КОПИРОВАНИЕМ, тем же дизайном, что колонка ID.
 type Row = { id: string; createdAt: string; name?: unknown; content?: unknown; storageIds?: unknown } & Record<string, unknown>;
 const apiBase = () => location.pathname.replace(/\/+$/, "") + "/api";
 const TABLE = "vector-memory";
-const asIds = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
 
 // Один сокращённый id + иконка копирования (единый дизайн колонки ID).
 function IdChip({ id, copyLabel }: { id: string; copyLabel: string }) {
@@ -139,7 +139,7 @@ export default function MainVectorMemoryClient({ lang, mode }: { lang: string; m
                   <td className="p-2">{String(r.name ?? "—")}</td>
                   <td className="p-2 max-w-xs" title={String(r.content ?? "")}>{fmtContent(r.content)}</td>
                   <td className="p-2">
-                    <IdChipColumn ids={asIds(r.storageIds)} copyLabel={t.copy} />
+                    <IdChipColumn ids={linksOf(r, "storage", r.storageIds)} copyLabel={t.copy} />
                   </td>
                   <td className="p-2 tabular-nums">{fmtDate(r.createdAt)}</td>
                   {mode === "admin" ? (

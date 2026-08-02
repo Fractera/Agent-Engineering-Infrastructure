@@ -21,7 +21,6 @@ import type { NodeCtx } from "../executor";
 import { rememberFact } from "../memory";
 import { messageOf, mayWriteEntity } from "../message";
 import { addEntityRow } from "../rows";
-import { crossLink } from "../components/links/cross-link";
 
 export async function deliverVectorMemory(ctx: NodeCtx): Promise<{ vectorMemoryDelivery: string; vectorRowId?: string }> {
   // ВОПРОС НЕ ЗАПОМИНАЕМ. Правило держит `addEntityRow` (311.9а), но проверка нужна и ЗДЕСЬ, до ингеста:
@@ -33,7 +32,6 @@ export async function deliverVectorMemory(ctx: NodeCtx): Promise<{ vectorMemoryD
   const fullText = String(ctx.original ?? ctx.text ?? "").trim() || m.text;
   // Привязка вложений всплеска (308.6): факт памяти держит ссылки на объекты + их описания (308.7).
   const atts = Array.isArray(ctx.attachments) ? (ctx.attachments as { fileKey: string; description?: string }[]) : [];
-  const fileKeys = atts.map((a) => a.fileKey).filter(Boolean);
   const descLines = atts.map((a) => String(a.description ?? "").trim()).filter(Boolean);
 
   // 🔒 ОБРАТНЫЙ МАРКЕР (шаг 308.7, паритет v1): id строки известен ДО ингеста, чтобы вложить `[mem#id]` в
@@ -47,8 +45,8 @@ export async function deliverVectorMemory(ctx: NodeCtx): Promise<{ vectorMemoryD
   if (trackId === null) {
     return { vectorMemoryDelivery: "skipped: the vector-memory service (LightRAG) is unreachable on this server" };
   }
-  const row = await addEntityRow("vector-memory", { name: m.title, content: fullText, storageIds: fileKeys, source: m.source, trackId }, ctx, recordId);
+  // Связи не собираются здесь: их ставит сама запись одним представлением `links` (311.9а.2).
+  const row = await addEntityRow("vector-memory", { name: m.title, content: fullText, source: m.source, trackId }, ctx, recordId);
   if (!row) return { vectorMemoryDelivery: "skipped: this request class leaves no record" };
-  await crossLink(ctx, "vector-memory", row.id); // связь всех-ко-всем (309): вектор ↔ объекты этого прогона
   return { vectorMemoryDelivery: `remembered ${trackId}`, vectorRowId: row.id };
 }
