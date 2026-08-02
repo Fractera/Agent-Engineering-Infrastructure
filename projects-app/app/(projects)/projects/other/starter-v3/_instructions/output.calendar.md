@@ -29,3 +29,9 @@ second addressee is a second node.
 ## When to reveal it
 
 Whenever the automation deals with anything that happens LATER.
+
+## An event is a FACET, not a record (step 311.9а)
+
+It describes WHEN, so it carries no summary — its content is the moment. Like every facet it is linked to
+its record by the write itself, in both directions. A run whose class leaves no record creates no event
+either, however clear its date. Full shape: `records.md`.

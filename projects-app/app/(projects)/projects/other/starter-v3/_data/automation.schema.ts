@@ -93,6 +93,10 @@ export const SYSTEM_INSTRUCTION_NAMES = [
   "tab.calendar",
   "useCases",
   "history",
+  // ЧТО ОСТАВЛЯЕТ ПРОГОН (шаг 311.9а.5): склад сущностей против журнала прогона, саммари против полного
+  // текста, единое представление связей. Закон не про объект ЯДРА, а про строки, которые ядро порождает,
+  // — поэтому имя есть, а `systemInstructionName` с ним не носит никто.
+  "records",
 ] as const;
 
 export const SystemInstructionNameSchema = z.enum(SYSTEM_INSTRUCTION_NAMES);

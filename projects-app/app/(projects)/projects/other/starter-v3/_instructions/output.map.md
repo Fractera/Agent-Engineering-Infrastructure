@@ -27,3 +27,8 @@ smaller version of the right one; it is a lie the owner will act on.
 
 When WHERE is part of the answer, not just part of the data. If nobody will ever look at a map, coordinates
 belong in a record store instead.
+
+## A marker is a FACET, not a record (step 311.9а)
+
+It describes WHERE the entity is, so it carries no summary — its content is the coordinates. It is linked
+to its record like every other facet, and the link is set by the write itself. Full shape: `records.md`.

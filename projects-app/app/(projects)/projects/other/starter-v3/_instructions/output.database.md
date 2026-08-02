@@ -28,3 +28,10 @@ row to the object, from the object back to the row. "No link" is not a state tha
 ## When to reveal it
 
 Whenever anything must survive the run. It is the store the owner searches first.
+
+## What it never holds (step 311.9а)
+
+The FULL text. A record carries `name` + `summary` (≤300 chars) + `links`; the whole text lives in the
+search index and nowhere else. The schema refuses a record without a summary or with one over the limit.
+
+A run whose class leaves no record writes nothing here — the write itself refuses. Full shape: `records.md`.

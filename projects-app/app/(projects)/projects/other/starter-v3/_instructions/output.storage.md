@@ -28,3 +28,11 @@ normal and is exactly why the reference lives on the row.
 ## When to reveal it
 
 Whenever the automation receives files at all. It costs nothing when unused.
+
+## Bytes here, reference in the row (step 311.9а)
+
+The object lives in the folder's storage; the row holds `fileKey` and the links. The row is not the file
+and never carries its contents.
+
+The class gate applies BEFORE the bytes are written, not only before the row: a question-class run must not
+leave a file either. Full shape: `records.md`.

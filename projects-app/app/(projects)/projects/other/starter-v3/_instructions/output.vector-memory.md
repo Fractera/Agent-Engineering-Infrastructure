@@ -32,3 +32,11 @@ everything else. The service refusing a write is a real failure and throws.
 ## When to reveal it
 
 When the owner will ask questions in his own words rather than by exact field.
+
+## Two different things happen here (step 311.9а)
+
+1. **The ingest** — the FULL text goes into the search index. This is the only place the full text exists.
+2. **The row** — a RECEIPT of that: `name` + `summary` + `trackId` + `links`. Never a copy of the text.
+
+The index is read by QUESTION (`readVectorMemory` → a synthesised answer), never by row id: it searches
+meaning, it does not store our data. Lose it and search is gone, the data is not. Full shape: `records.md`.
