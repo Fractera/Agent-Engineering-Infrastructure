@@ -141,8 +141,17 @@ session. Prune before you append; never restate what another instruction says �
 
 ## Reusable tools
 
-Before building a microphone, a cropper, a map or a terminal — read `tools-docs/`. If a tool covers the
-brief, wire the existing one; never copy it into this folder, never hand-roll a second one.
+Before building a microphone, a cropper, a map, a media player or a terminal — read `tools-docs/`. If a tool
+covers the brief, wire the existing one; never copy it into this folder, never hand-roll a second one.
+
+| Tool | Use it for |
+|---|---|
+| `media-viewer` | showing a stored object: preview cell + viewer (image · video · audio · PDF · text) |
+| `voice-input` | dictation into a text field |
+| `image-crop` | crop an image to a JPEG blob before storing it |
+| `map` | maps, routes, address search — through the `api/geo` door only |
+| `dev-console` | the terminal you already run inside |
+| `external-capabilities` | when a node's work must reach an MCP server / skill / third-party API |
 
 ## Before you say you are done
 

@@ -49,10 +49,15 @@ They live once in `_components/shared/data-table.client.tsx` and hold for every 
 Need a cell the shared set does not have (an image preview, a formatted size)? Pass `renderCell` — never
 fork the table.
 
-## Objects in a record
+## Objects in a record — of ANY type
 
-A record links to objects; it never renders them itself. Preview and viewing are the shared law of the
-object store — see `tab.storage.md` and the runtime tool `_components/tools/media-viewer`.
+A record links to objects through `links:storage`, and those objects are **not only pictures**: a video, an
+audio file, a PDF or a text file link to a record exactly the same way. Nothing here is image-specific.
+
+The record never renders an object itself: preview and viewing are the shared law of the object store —
+`tab.storage.md` and the runtime tool `_components/tools/media-viewer` (`tools-docs/media-viewer.md`).
+An object column of ANY table goes through it, so a video in a record shows its type and opens in a player
+instead of a broken square.
 
 ## Never here
 

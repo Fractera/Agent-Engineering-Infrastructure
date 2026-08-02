@@ -9,21 +9,17 @@ An automation is a **declaration, not a program**. It declares itself in one fil
 (the core) — and everything follows from it: what the canvas draws, what tabs the owner sees, what a run
 executes.
 
-The **runtime layer** (core, node functions, `_components/<tab>/public`, `_lib/`) is self-contained: it
-depends on `zod` and Node built-ins only, and ships as a ZIP. The **development layer** (`_shared-v2`:
-"Build with AI" buttons, admin settings) is soft and reached only through the fail-silent dev-slot files
-(`_components/shared/dev-slot*.tsx`). Production never depends on the dev layer's life. **You build the
-hard layer. Skip the dev-slot files — they teach nothing about this automation.**
+The **runtime layer** (core, node functions, `_components/<tab>/public`, `_lib/`) is self-contained: `zod`
+and Node built-ins only, and it ships as a ZIP. The **development layer** (`_shared-v2`: "Build with AI"
+buttons, admin settings) is soft and reached only through the fail-silent dev-slot files. Production never
+depends on its life. **You build the hard layer; skip the dev-slots — they teach nothing here.**
 
 ## Layout
 
 ```
-_data/          core + schema of the core + schema of a stored row
-_instructions/  the law, one file per object kind, read by name
-_lib/           engine, node functions (_lib/nodes/<function-name>.ts), stores, transport
-_components/    one folder per tab: index.tsx + public/ + admin/
-api/            doors: core · work · instruction · patch · run · rows · env
-tools-docs/     reference for shared tools you may wire
+_data/  core + its schema + the row schema   _instructions/  the law, one file per object kind
+_lib/   engine, nodes, stores, transport     _components/    one folder per tab (index+public+admin)
+api/    core·work·instruction·patch·run·rows·env   tools-docs/  reference for the shared tools
 _data/runtime/  rows written by runs (not in git)
 ```
 
@@ -66,13 +62,12 @@ The cost is real and it is paid on purpose: **core ≈ 37k tokens · schema ≈ 
 
 ## Reading everything else — by name, on demand
 
-- `GET api/core` — the law digest (~800 tokens): connection table, group quotas, vocabularies, and the
-  laws not expressible as a table. A fast index, **never a substitute** for the two files above.
+- `GET api/core` — the law digest (~800 tokens): connection table, quotas, vocabularies, and the laws not
+  expressible as a table. A fast index, **never a substitute** for the two files above.
 - `GET api/core?select=<address>` — one object with its law attached (a node gets its kind's law; a tab
   gets `tabInstruction` when it has one). `GET api/instruction?name=<name>` — one law by name.
-- On later iterations start at `GET api/work` — only the objects waiting for work. An empty list is a
-  lawful end: say so and stop.
-- The 60 instructions weigh ≈45k tokens in total — that is exactly why they are read by name.
+- Later iterations start at `GET api/work` — only what waits for work. Empty list is a lawful end: say so.
+- The 61 instructions weigh ≈45k tokens together — that is exactly why they are read by name.
 
 ## Writing to the core
 
@@ -113,10 +108,9 @@ run or returns an EMPTY patch; `null` stops the whole run.
 Applies to `transform`, `condition-success`, `condition-failure` and every `intent` class — anything whose
 result decides where the flow goes.
 
-**The failure it removes, observed live:** a fetching node received HTTP 403 and returned "nothing found"
-as an ordinary context patch. The engine merged it and went on — for the graph the node had SUCCEEDED, and
-the run reported success while nothing was fetched. No type check and no schema catches that: the shape was
-valid.
+**The failure it removes, observed live:** a fetching node got HTTP 403 and returned "nothing found" as an
+ordinary context patch. For the graph the node had SUCCEEDED — the run reported success while nothing was
+fetched. No type check and no schema sees that: the shape was valid.
 
 Such a node declares both of these in the core:
 
@@ -158,20 +152,19 @@ the `public/` half. The `admin/` half holds one thing only, the AI-request form.
 
 ## What a run leaves behind
 
-- **Full text goes to the vector store; the database record holds a SUMMARY plus links.** That is why the
-  project has two different stores.
-- **Links have ONE representation** — `links: [{table,id}]`, mutual, written by the write itself
-  (`addEntityRow` in `_lib/rows.ts`), never by the node. A row cannot be born unlinked.
-- **Entity store vs run journal.** Entity stores (`database`, `vector-memory`, `storage`, `map`,
-  `calendar`) write only when the run really creates something; journals (`history`, `analytics`, `toast`)
-  always write. **Asking is not saving** — a question-class run leaves no record.
+- **Full text goes to the vector store; the record holds a SUMMARY plus links** — that is why two stores.
+- **Links have ONE representation** — `links: [{table,id}]`, mutual, set by the write itself
+  (`addEntityRow`), never by the node. A row cannot be born unlinked.
+- **Entity store vs run journal.** Stores (`database`, `vector-memory`, `storage`, `map`, `calendar`) write
+  only when the run creates something; journals (`history`, `analytics`, `toast`) always write. **Asking is
+  not saving** — a question-class run leaves no record. Full shape: `records.md`.
 
 ## Use cases
 
 A case carries ONLY the distinctive: the subject area and this owner's scenario. Anything true of every
 automation is LAW, never a case — test it by removing the description: if the behaviour still cannot be
-violated, it is law. An incoming requirement lands on the cases first, then on the graph. A frozen template
-ships with no cases at all.
+violated, it is law. A requirement lands on the cases first, then on the graph; a frozen template ships
+with none.
 
 ## Four laws that are never bent
 
@@ -183,8 +176,19 @@ ships with no cases at all.
 
 ## Shared tools
 
-Before building a microphone, an image cropper, a map/route/geocoder or a terminal, read `tools-docs/`.
-Wire the existing primitive; never copy it into this folder and never hand-roll a second one.
+Before building a microphone, an image cropper, a map/route/geocoder, a media player or a terminal, read
+`tools-docs/`. Wire the existing primitive; never copy it into this folder and never hand-roll a second one.
+
+| Tool | Use it for |
+|---|---|
+| `media-viewer` | showing a stored object: the preview cell and the viewer (image · video · audio · PDF · text) |
+| `voice-input` | dictation into a text field |
+| `image-crop` | cropping an image to a JPEG blob before it is stored |
+| `map` | maps, routes, address search — only through the `api/geo` door |
+| `dev-console` | the terminal you are already running inside |
+| `external-capabilities` | a node whose work must reach an MCP server, an agent skill or a third-party API |
+
+Each file states what it is, where it lives, how to call it and its constraints. Read the one you need.
 
 ## Instructions you write
 

@@ -1,0 +1,36 @@
+# TAB `dashboard` — every data table of this automation, and the run journal
+
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
+**A data table belongs in the dashboard, not in a tab of its own** (owner's law). Add a table = add an
+ENTITY here, never a new tab. Its columns are declared in `entity.data.columns`; the component only renders
+them — the full column law is `tab.database.md`, do not restate it.
+
+## What it holds
+
+- **Run journals** — `history` (one row per run), `analytics` (per-channel counters). A journal writes
+  ALWAYS: a question is a run too and must stay visible (`records.md`).
+- **Any table the automation needs** beyond that. How many and what they hold is the automation's business;
+  the minimum a RECORD carries is `tab.database.md`.
+
+## 🔒 Any runtime tool may live inside a cell
+
+The dashboard is universal, so a cell may hold anything the folder's tools can render. Wire the existing
+primitive — never a second implementation (`tools-docs/`, and `AGENTS.md` says the same):
+
+| In a cell | Tool |
+|---|---|
+| a stored object of ANY type — image, video, audio, PDF, text | `media-viewer` (`MediaPreview`) |
+| dictation into an editable field | `voice-input` |
+| an image prepared before storing | `image-crop` |
+| a place or a route | the `api/geo` door, per `tools-docs/map.md` |
+
+**An `image` column is an OBJECT column.** It renders through `MediaPreview`: a picture becomes a
+thumbnail, any other type becomes a container of the same size with its type printed, and a click opens it.
+A bare `<img>` here was the defect — every non-image showed a broken square and could not be opened. An
+external `http(s)` address stays a plain picture: it is not an object of our store.
+
+## Never here
+
+Computing the result (a tab shows what an output node delivered) · a hard-coded column list · a second
+implementation of a tool that `tools-docs/` already describes.

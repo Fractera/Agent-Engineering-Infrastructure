@@ -1,5 +1,6 @@
 "use client";
 
+import { MediaPreview } from "../../../tools/media-viewer/client/media-viewer.client";
 import { RefreshCw, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -94,13 +95,18 @@ export function ConfigRecordCell({ col, row, ctx, lang }: { col: TableColumn; ro
         <span className="text-muted-foreground">—</span>
       );
     case "image": {
-      const src = imageSrc(v);
-      return src ? (
+      // 🔒 ЯЧЕЙКА ОБЪЕКТА — ЧЕРЕЗ ОБЩИЙ ИНСТРУМЕНТ (шаг 323). Раньше здесь стоял голый `<img>`, и любой
+      // объект, кроме картинки (видео, аудио, PDF), давал битый квадрат и не открывался. Дашборд держит
+      // ЛЮБЫЕ таблицы, значит в его ячейке может оказаться любой тип — рисует и открывает `media-viewer`.
+      // Внешняя ссылка (http/…) остаётся картинкой: это не объект нашего склада, а чужой адрес.
+      const first = Array.isArray(v) ? v[0] : v;
+      const s = first == null ? "" : String(first).trim();
+      if (!s) return <span className="text-muted-foreground">—</span>;
+      if (/^(https?:)?\/\//i.test(s) || s.startsWith("/")) {
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt="" className="size-10 rounded object-cover" />
-      ) : (
-        <span className="text-muted-foreground">—</span>
-      );
+        return <img src={imageSrc(v) ?? ""} alt="" className="size-10 rounded object-cover" />;
+      }
+      return <MediaPreview fileKey={s} />;
     }
     case "actions":
       if (col.options?.action === "delete") {
