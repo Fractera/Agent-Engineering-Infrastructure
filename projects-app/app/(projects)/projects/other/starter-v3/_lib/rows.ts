@@ -11,6 +11,7 @@ import { appendFile, mkdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { randomBytes } from "node:crypto";
 import { RUNTIME_DIR } from "./paths";
+import { ENTITY_STORES, mayWriteEntity } from "./message";
 
 const ROWS_FILE = join(RUNTIME_DIR, "rows.jsonl");
 
@@ -23,6 +24,30 @@ export async function addRow(table: string, data: Record<string, unknown>, id?: 
   const row: Row = { id: id || `row${Date.now().toString(36)}${randomBytes(4).toString("hex")}`, table, createdAt: new Date().toISOString(), ...data };
   await append(row);
   return row;
+}
+
+/**
+ * 🔒 ЕДИНСТВЕННАЯ ТОЧКА ЗАПИСИ В СКЛАД СУЩНОСТЕЙ (шаг 311.9а).
+ *
+ * До неё правило «класс-вопрос не оставляет записи» повторялось в теле каждого узла-склада — и стояло
+ * у трёх из пяти. Живой прогон `what did I save about …` это доказал: вопрос лёг файлом в хранилище.
+ * Правило переехало в САМУ ЗАПИСЬ: узел не может его обойти, потому что другого пути в склад нет.
+ *
+ * `null` — законный исход, а не ошибка: «этот прогон записи не оставляет». Узел отвечает честным
+ * пропуском с причиной. Журнал прогона (`history`/`analytics`/`toast`) пишется обычным `addRow`:
+ * вопрос — тоже прогон, и он обязан быть виден.
+ */
+export async function addEntityRow(
+  table: (typeof ENTITY_STORES)[number],
+  data: Record<string, unknown>,
+  ctx: Record<string, unknown>,
+  id?: string,
+): Promise<Row | null> {
+  if (!(ENTITY_STORES as readonly string[]).includes(table)) {
+    throw new Error(`addEntityRow: "${table}" is not an entity store (${ENTITY_STORES.join(", ")}) — a run journal is written with addRow`);
+  }
+  if (!mayWriteEntity(ctx)) return null;
+  return addRow(table, data, id);
 }
 
 /**

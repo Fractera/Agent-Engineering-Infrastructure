@@ -159,6 +159,32 @@ export function storesSkipped(ctx: Record<string, unknown>): boolean {
   return ctx.skipStores === true;
 }
 
+/**
+ * 🔒 ДВА РОДА ПОЛУЧАТЕЛЕЙ ЗАПИСИ (шаг 311.9а). Граница объявлена после живого дефекта: вопрос
+ * «what did I save about the Eiffel Tower» был классифицирован верно (`read-own`), но лёг ФАЙЛОМ в
+ * объектное хранилище — потому что запрет «класс-вопрос не пишет» стоял лишь у трёх складов из пяти.
+ *
+ *   СКЛАД СУЩНОСТЕЙ хранит то, ЧЕМ автоматизация владеет: `database`, `vector-memory`, `storage`,
+ *   `map`, `calendar`. Пишет ТОЛЬКО для `RECORDING_CLASSES` — спросить не значит сохранить.
+ *
+ *   ЖУРНАЛ ПРОГОНА хранит то, ЧТО ПРОИЗОШЛО: `history` (лента дашборда), `analytics` (счётчики
+ *   каналов), `toast` (исход). Пишет ВСЕГДА: вопрос — тоже прогон, и он обязан быть виден человеку.
+ *
+ * Каналы наружу (`public-page`, `email`, `telegram-bot`, `user-telegram-chat`, коннектор) складов не
+ * пишут вовсе — ими правят законы каналов, а не эта граница.
+ */
+export const ENTITY_STORES = ["database", "vector-memory", "storage", "map", "calendar"] as const;
+export const RUN_JOURNALS = ["history", "analytics", "toast"] as const;
+
+/**
+ * ВПРАВЕ ЛИ ЭТОТ ПРОГОН оставить запись в складе сущностей — ЕДИНСТВЕННАЯ формулировка правила.
+ * Зовётся из `addEntityRow` (`_lib/rows.ts`), то есть проверка стала свойством ЗАПИСИ, а не
+ * вежливостью автора узла: узел, «забывший» гейт, больше невозможен.
+ */
+export function mayWriteEntity(ctx: Record<string, unknown>): boolean {
+  return !storesSkipped(ctx) && servesAnyClass(ctx, RECORDING_CLASSES);
+}
+
 export function matchHook(text: string, phrases: readonly string[]): { payload: string; phrase: string } | null {
   const clean = text.replace(/\s+/g, " ").trim();
   const folded = foldHook(clean);

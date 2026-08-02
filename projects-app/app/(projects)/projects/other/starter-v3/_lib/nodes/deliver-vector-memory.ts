@@ -19,14 +19,15 @@
 import { randomBytes } from "node:crypto";
 import type { NodeCtx } from "../executor";
 import { rememberFact } from "../memory";
-import { messageOf, servesAnyClass, storesSkipped, RECORDING_CLASSES } from "../message";
-import { addRow } from "../rows";
+import { messageOf, mayWriteEntity } from "../message";
+import { addEntityRow } from "../rows";
 import { crossLink } from "../components/links/cross-link";
 
 export async function deliverVectorMemory(ctx: NodeCtx): Promise<{ vectorMemoryDelivery: string; vectorRowId?: string }> {
-  // ВОПРОС НЕ ЗАПОМИНАЕМ: память наполняют только те классы, после которых прогон оставляет данные.
-  if (storesSkipped(ctx)) return { vectorMemoryDelivery: "skipped: the middle found nothing to store" };
-  if (!servesAnyClass(ctx, RECORDING_CLASSES)) return { vectorMemoryDelivery: "skipped: this request class leaves no record" };
+  // ВОПРОС НЕ ЗАПОМИНАЕМ. Правило держит `addEntityRow` (311.9а), но проверка нужна и ЗДЕСЬ, до ингеста:
+  // отправить текст в LightRAG и лишь потом узнать, что записи не положено, — значит уже наследить в
+  // памяти. Одна формулировка правила на оба места — `mayWriteEntity`.
+  if (!mayWriteEntity(ctx)) return { vectorMemoryDelivery: "skipped: this request class leaves no record" };
   const m = messageOf(ctx);
   // Полный текст для памяти: оригинал (если середина делала сводку) → иначе текст сообщения.
   const fullText = String(ctx.original ?? ctx.text ?? "").trim() || m.text;
@@ -46,7 +47,8 @@ export async function deliverVectorMemory(ctx: NodeCtx): Promise<{ vectorMemoryD
   if (trackId === null) {
     return { vectorMemoryDelivery: "skipped: the vector-memory service (LightRAG) is unreachable on this server" };
   }
-  const row = await addRow("vector-memory", { name: m.title, content: fullText, storageIds: fileKeys, source: m.source, trackId }, recordId);
+  const row = await addEntityRow("vector-memory", { name: m.title, content: fullText, storageIds: fileKeys, source: m.source, trackId }, ctx, recordId);
+  if (!row) return { vectorMemoryDelivery: "skipped: this request class leaves no record" };
   await crossLink(ctx, "vector-memory", row.id); // связь всех-ко-всем (309): вектор ↔ объекты этого прогона
   return { vectorMemoryDelivery: `remembered ${trackId}`, vectorRowId: row.id };
 }

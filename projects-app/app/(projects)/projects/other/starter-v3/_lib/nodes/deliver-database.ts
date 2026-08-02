@@ -12,8 +12,8 @@
 //
 // Имя `deliverDatabase` — публичный контракт, не переименовывать.
 import type { NodeCtx } from "../executor";
-import { messageOf, servesAnyClass, storesSkipped, RECORDING_CLASSES } from "../message";
-import { addRow } from "../rows";
+import { messageOf } from "../message";
+import { addEntityRow } from "../rows";
 import { crossLink } from "../components/links/cross-link";
 
 /**
@@ -41,15 +41,13 @@ export function recordRowFrom(ctx: NodeCtx): Record<string, unknown> {
 }
 
 export async function deliverDatabase(ctx: NodeCtx): Promise<{ databaseRowId: string }> {
-  // ВОПРОС — НЕ ЗАПИСЬ. Пишем только для классов, после которых прогон оставляет данные; чтение своего,
-  // самоописание, отказ и вежливость записи не создают (граница держится фронтом, склад её уважает).
-  // Середина сказала: записывать нечего (напр. предмет не найден) — молчим (311.7).
-  if (storesSkipped(ctx)) return { databaseRowId: "" };
-  if (!servesAnyClass(ctx, RECORDING_CLASSES)) return { databaseRowId: "" };
+  // ВОПРОС — НЕ ЗАПИСЬ, и «середине нечего писать» — тоже: оба правила держит `addEntityRow`, единая
+  // точка записи в склад сущностей (311.9а). Здесь остаётся только частное правило этого склада.
   // Середина придержала запись (например ждёт подтверждения человека) → склад молчит, иначе задвоим.
   if (ctx.skipDatabase === true) return { databaseRowId: "" };
 
-  const row = await addRow("database", recordRowFrom(ctx));
+  const row = await addEntityRow("database", recordRowFrom(ctx), ctx);
+  if (!row) return { databaseRowId: "" };
   await crossLink(ctx, "database", row.id); // связь всех-ко-всем: запись ↔ объекты и вектор этого прогона
   return { databaseRowId: row.id };
 }

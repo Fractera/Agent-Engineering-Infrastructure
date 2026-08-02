@@ -15,7 +15,7 @@
 // Имя `deliverCalendar` — публичный контракт, не переименовывать.
 import type { NodeCtx } from "../executor";
 import { messageOf } from "../message";
-import { addRow } from "../rows";
+import { addEntityRow } from "../rows";
 
 // Telegram-каналы, в которые развозка по наступлению умеет ответить текстом (адрес — из окружения, не из
 // строки): личный чат и рабочий чат бота. Пришёл запрос одним из них → напоминание уходит назад туда же.
@@ -71,7 +71,9 @@ export async function deliverCalendar(ctx: NodeCtx): Promise<NodeCtx> {
   // детект по тексту сообщения (кириллица → ru). Простой сигнал, покрывает главный кейс.
   const explicit = String((ctx as Record<string, unknown>).lang ?? "").toLowerCase().slice(0, 2);
   const lang = explicit || (/[Ѐ-ӿ]/.test(m.text) ? "ru" : "");
-  const row = await addRow("calendar", {
+  // Событие — грань записи, а не отдельный домен: календарь пишет по тому же правилу, что остальные
+  // склады сущностей (311.9а). До этого шага гейта у него не было вовсе.
+  const row = await addEntityRow("calendar", {
     date: `${when.getFullYear()}-${pad(when.getMonth() + 1)}-${pad(when.getDate())}`,
     time: `${pad(when.getHours())}:${pad(when.getMinutes())}`,
     title: m.title,
@@ -80,6 +82,7 @@ export async function deliverCalendar(ctx: NodeCtx): Promise<NodeCtx> {
     integrations,
     source: m.source,
     ...(lang ? { lang } : {}),
-  });
+  }, ctx);
+  if (!row) return { calendarDelivery: "skipped: this request class leaves no record" };
   return { calendarRowId: row.id, calendarWhen: when.toISOString() };
 }
