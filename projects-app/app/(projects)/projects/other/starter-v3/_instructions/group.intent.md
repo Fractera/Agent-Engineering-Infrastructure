@@ -1,5 +1,7 @@
 # THE INTENT GROUP — how a request is UNDERSTOOD before anything is done with it
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 One kind lives here and no other: `intent` — one node per CLASS OF REQUEST. This group sits between the
 doors and the middle, and every run passes through it.
 

@@ -1,5 +1,7 @@
 # DESTINATION `custom` — the open door of the output side, and the law for adding a destination
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 Not a destination. The single lawful way to add one. `custom` sits in the output vocabulary but is EXCLUDED
 from the group's quota: no node is born with it, one is made when a destination is really needed. It is also
 the `ioType` the output connector carries — the tail this automation offers to a neighbour.

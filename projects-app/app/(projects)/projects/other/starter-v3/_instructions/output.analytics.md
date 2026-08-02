@@ -1,5 +1,7 @@
 # DESTINATION `analytics` — a number on a chart
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Function:** `deliverAnalytics` (derived). **Keys:** none.
 
 Not a record of an event but a measurement of it: what is counted, over what period, in what unit.

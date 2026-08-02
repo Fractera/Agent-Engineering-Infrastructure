@@ -1,5 +1,7 @@
 # THE MIDDLE'S OPEN DOOR — when a node may be born, and where its knowledge comes from
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 Every closed layer has a `custom` value in its vocabulary: an open door plus a law for adding to the
 inventory. **The middle has no vocabulary, so it has no `custom` value either** — and this file is its
 counterpart. Not "when may a value be added" but **when may a node be born at all**, and by what knowledge.

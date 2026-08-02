@@ -1,5 +1,7 @@
 # CHANNEL `control-panel` — the automation's own page
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Function:** `receiveControlPanel` (derived from the channel). **Keys:** none.
 
 The default door, and the only one that works the minute the automation is born: a form on its own page —

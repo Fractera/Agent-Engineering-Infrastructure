@@ -1,5 +1,7 @@
 # CLASS `custom` — the open door, and the law for GROWING the front
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 This is not a class of request. It is the single lawful way to add one, and the rules that make adding rare.
 
 `custom` sits in the class vocabulary but is EXCLUDED from the group's quota, exactly as `custom` sits in

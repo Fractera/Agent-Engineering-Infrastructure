@@ -1,5 +1,7 @@
 # DESTINATION `database` — the automation's own records
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Function:** `deliverDatabase` (derived). **Keys:** none — the store is local to the folder.
 
 A store, not a delivery: nothing is sent anywhere, a row is kept so it can be found later. One of three

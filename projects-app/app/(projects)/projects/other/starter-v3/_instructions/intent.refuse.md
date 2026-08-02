@@ -1,5 +1,7 @@
 # CLASS `refuse` — the request that must not be answered
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Where the answer lives:** nowhere it may lawfully come from. **Routes to:** an output, never the middle.
 
 A request for a secret of the server it runs on — a password, an API key, a connection string, the

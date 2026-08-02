@@ -1,72 +1,63 @@
-# replies — РАЗГОВОРНЫЙ КОНТРАКТ автоматизации (как она ОТВЕЧАЕТ пользователю)
+# replies — HOW THIS AUTOMATION SPEAKS TO A HUMAN
 
-> Это единственный источник правды о том, как автоматизация РАЗГОВАРИВАЕТ с человеком в рантайме.
-> Реализуют его два узла: `converse` (модель по сценарию поведения вкладки «Ассистент») и
-> `composeReply` — его детерминированный ФОЛБЭК, когда модели или ключа нет. Оба кладут `ctx.reply`, и
-> доставляющие узлы шлют именно его. Остальные инструкции (`passport.md`, `nodes.md`, `graph.md` …) — для
-> агента, который СТРОИТ автоматизацию; этот файл — про её РАНТАЙМ-РЕЧЬ.
->
-> Зачем он есть (шаг 308, требование владельца). Раньше пользователю уходил СЫРОЙ `ctx.text` того узла,
-> что сработал последним — обрывок без представления и оформления. Один контракт → один связный,
-> оформленный, локализованный ответ, и правки перестают «одно чинить — другое ломать».
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
 
-## 0. 🔒 ЧЕГО НЕТ В СБОРКЕ — О ТОМ НЕ ГОВОРИМ (шаг 311.11)
+The runtime speech contract. Two nodes implement it: `converse` (the model, driven by the behaviour
+instruction of the **Assistant** tab) and `composeReply`, its deterministic FALLBACK when no model or key
+is available. Both put `ctx.reply`; delivery nodes send that, never a node's raw text.
 
-Прежняя редакция этого файла описывала ответы про траты, чеки, категории, места, алиасы глоссария,
-измерения и контроль дублей. **Этих узлов в автоматизации нет** — они пришли из Telegram Notes и снесены
-вместе с доменом v2. Перечислять их в разговорном контракте — то же обещание сверх ядра, что и
-no-op-заглушка (`frozen-starter-global-goal`).
+## 0. 🔒 WHAT IS NOT IN THE BUILD IS NOT SPOKEN OF
 
-**Закон:** строка появляется в этом файле ТОЛЬКО вместе с узлом, который её сигнал производит. Ни раньше,
-ни «на будущее».
+A line exists here ONLY together with the node that produces its signal. Never earlier, never "for the
+future". Promising beyond the core is the same critical violation as a no-op stub.
 
-## 1. Кто автоматизация (голос)
+## 1. Voice
 
-Замороженный тестовый шаблон: своего назначения у него нет, его задаёт владелец. Голос — короткий, тёплый,
-по делу, с эмодзи-маркером исхода; вопрос пользователя ему же обратно не пересказывается. Голос, тон и
-язык настраиваются владельцем во вкладке «Ассистент» (данные живут в ядре); этот файл — форма, не персона.
+A frozen test template: it has no purpose of its own yet — the owner gives it one. Short, warm, to the
+point, one emoji marking the outcome; never echoes the user's question back at them. Voice, tone and
+language are set by the owner in the **Assistant** tab (data in the core). This file is the FORM, not the
+persona.
 
-## 2. Представление возможностей
+## 2. Capabilities
 
-На `/start`, «что ты умеешь» и на НЕПОНЯТОЕ сообщение — короткий перечень того, что автоматизация
-**реально умеет в этой сборке**: принять сообщение через любой открытый вход и развезти его по всем
-открытым выходам.
+On `/start`, "what can you do" and on an UNUNDERSTOOD message: a short list of what this build REALLY does
+— take a message through any open input, deliver it to every open output.
 
-🔒 Перечень зашит в коде (`composeReply`) и потому **гниёт по своей природе**: раскрыли канал — он в списке
-не появился, сняли узел — не исчез. Это временная затравка; выводить перечень из ядра на каждой итерации
-обязан узел `behavior` пятого слоя (ТЗ 314 §4а). До него — правило: **чего нет в списке, того нет в
-сборке; обещать сверх ядра запрещено**.
+🔒 That list is hard-coded in `composeReply` and therefore ROTS by nature: open a channel and it does not
+appear, remove a node and it does not leave. It is a seed, not the final text; deriving it from the core on
+every iteration is the duty of the `behavior` node of the evolution layer (spec 314 §4a). Until then:
+**what is not in the list is not in the build; promising beyond the core is forbidden.**
 
-## 3. Ответ на исход прогона (структурный сигнал → строка)
+## 3. One outcome → one line
 
-| Ветка | Структурный сигнал | Ответ | Кто сигнал производит сегодня |
+| Branch | Signal | Reply | Who produces the signal today |
 |---|---|---|---|
-| фронт ответил сам | `reply` | как есть, без переписывания | классы `refuse`, `self-describe`, `small-talk`, `incomplete`, `unclaimed` |
-| возможности | `showHelp` | перечень из §2 | дверь запуска (`/start`, «что ты умеешь») |
-| момент | `when` (+ `remindText`) | `⏰ Напомню <дата время>: <текст>` | `resolveMoment` |
-| момент не определён | `needsWhen` | `⏰ Когда напомнить? Ответь датой или временем.` | `deliverCalendar` |
-| запись | `noteSummary` | `✅ Записал: <суть>` | **никто — форма объявлена, узла-производителя пока нет** |
-| чтение своего | `recallAnswer` | `🔎 <ответ>` | **никто — форма объявлена, узла-производителя пока нет** |
-| непонятно | ничего не собрано | `🤔 Не понял.` + перечень возможностей | — |
+| the front already answered | `reply` | passed through untouched | classes `refuse`, `self-describe`, `small-talk`, `incomplete`, `unclaimed` |
+| capabilities | `showHelp` | the list of §2 | the run door (`/start`, "what can you do") |
+| a moment | `when` (+ `remindText`) | "I'll remind you on \<date time\>: \<text\>" | `resolveMoment` |
+| no moment | `needsWhen` | "When should I remind you?" | `deliverCalendar` |
+| recorded | `noteSummary` | "Saved: \<gist\>" | **nobody — the form is declared, its producer is not built** |
+| read own | `recallAnswer` | "\<answer\>" | **nobody — the form is declared, its producer is not built** |
+| not understood | nothing collected | "I didn't understand" + §2 | — |
 
-Две строки помечены честно: их форма в коде есть, а узла, который кладёт сигнал, в сборке нет. Это не
-«хвост на потом», а зафиксированное расхождение — оно закрывается в шаге 312 (разговорный слой) вместе
-с решением, каким узлом эти сигналы производятся.
+The last two are marked honestly: the shape exists in code, the node that fills it does not. That is a
+recorded discrepancy, not a deferral — step 312 closes it together with the decision of WHICH node produces
+those signals.
 
-## 4. Составное сообщение
+## 4. A composite run
 
-Один прогон может дать несколько строк. Тогда ответ — ОДИН, строки через пустую строку, в порядке
-объявления таблицы §3. Никаких отдельных кусков.
+One run may yield several lines. Then the reply is ONE message, lines separated by a blank line, in the
+order of the table above.
 
-## 5. Законы
+## 5. Laws
 
-- **Ответ собирается в ОДНОМ месте.** Узлы-ветки оставляют СТРУКТУРНЫЙ результат, а не готовую фразу
-  пользователю. Появилась новая ветка → её строка добавляется СЮДА и в композитор, а не лепится текстом
-  внутри узла.
-- **Фронт главнее композитора.** Класс, ответивший сам (`ctx.reply`), не переписывается: перезапись вернула
-  бы дефект v2, где речь жила вне графа и доставка подменяла решение маршрута.
-- **Пустой ответ невозможен:** на реальное сообщение всегда есть строка (в пределе — перечень возможностей).
-- **Разговор — работа МОДЕЛИ, а не списка фраз.** Закон «работать максимально без ИИ» относится к
-  трансформам над данными, НЕ к речи. Перечислять в узле фразы на приветствия и вопросы «кто ты» запрещено.
-- **Память диалога — отдельный механизм** (буфер разговора: последние N сообщений и TTL из вкладки
-  «Ассистент»), а не этот контракт; здесь только форма ответа на один прогон.
+- **The reply is assembled in ONE place.** Branch nodes leave a STRUCTURAL result, never a finished phrase.
+  A new branch adds its line HERE and in the composer — never as text glued inside its own node.
+- **The front outranks the composer.** A class that answered for itself (`ctx.reply`) is not rewritten:
+  overwriting it would restore the v2 defect where speech lived outside the graph and delivery replaced what
+  the route had decided.
+- **An empty reply is impossible:** a real message always yields a line (at worst, the capability list).
+- **Speech is the MODEL's work, not a phrase list.** The law "work without AI" governs data transforms, not
+  speech. Enumerating greetings or identity questions inside a node is forbidden.
+- **Dialogue memory is a separate mechanism** (last N messages + TTL from the Assistant tab), not this
+  contract; here lives only the shape of a reply to ONE run.

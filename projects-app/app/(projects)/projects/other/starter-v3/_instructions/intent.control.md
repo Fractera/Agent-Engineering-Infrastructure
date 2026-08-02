@@ -1,5 +1,7 @@
 # CLASS `control` — the owner changes the automation itself, not its data
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Where the answer lives:** in the automation's own configuration. **Routes to:** the middle, which applies
 the change.
 

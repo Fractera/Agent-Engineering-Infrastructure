@@ -1,5 +1,7 @@
 # KIND `transform` — the node that CHANGES data
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 PORTS (law, not a choice): `in` — required, from the INTENT layer (step 311 — work reaches the middle
 only after the request has been understood; a door no longer connects here directly), another
 `transform`, or a `condition-success`. `out` — required, into a `transform`, a `condition-success` or a

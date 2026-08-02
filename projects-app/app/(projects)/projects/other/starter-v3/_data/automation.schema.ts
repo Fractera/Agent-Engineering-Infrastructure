@@ -1520,6 +1520,18 @@ export const AutomationSchema = z
     if (lifecycle === "real-project" && automation.useCases.cases.length === 0) {
       ctx.addIssue({ code: "custom", path: ["useCases", "cases"], message: "a real project is defined by its use cases — there must be at least one" });
     }
+    // 🔒 У ЗАМОРОЖЕННОГО ШАБЛОНА КЕЙСОВ БЫТЬ НЕ МОЖЕТ (шаг 315, решение владельца 2026-08-02).
+    // Кейс несёт ОТЛИЧИТЕЛЬНОЕ — предметную область и сценарий КОНКРЕТНОГО владельца. У шаблона владельца
+    // ещё нет, назначения тоже: клон рождается с пустым набором, и именно пустота открывает Quiz. Кейс,
+    // уехавший в шаблон, приезжает к каждому клиенту как чужой сценарий — ровно так шаблон и оброс
+    // осадком Telegram Notes. Симметрично закону выше: реальному проекту кейс обязателен, шаблону запрещён.
+    if (lifecycle === "frozen-template" && automation.useCases.cases.length > 0) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["useCases", "cases"],
+        message: `a frozen template carries NO use cases: it has no owner and no purpose yet — ${automation.useCases.cases.length} case(s) declared. A case is the distinctive scenario of ONE owner; shipping it in the template hands every client somebody else's scenario`,
+      });
+    }
     // A real project was made by somebody; the untouched template was made by nobody yet.
     if (lifecycle === "real-project" && !automation.passport.author.trim()) {
       ctx.addIssue({ code: "custom", path: ["passport", "author"], message: "a real project must name its author — the id of the user who created it" });

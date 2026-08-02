@@ -1,5 +1,7 @@
 # HISTORY — one entry per round of work
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 A VERSION IS ONE ROUND: everything you did between opening `api/work` and closing the last object you
 were able to close. Not one per node, not one per day.
 

@@ -1,5 +1,7 @@
 # CHANNEL `user-telegram-chat` — the owner's own private chat
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Function:** `receiveUserTelegramChat` (derived). **Keys:** `TELEGRAM_BOT_TOKEN`, `TELEGRAM_USER_CHAT_ID`.
 
 The owner writing to his automation from his phone. Distinct from the bot channel because the counterparty

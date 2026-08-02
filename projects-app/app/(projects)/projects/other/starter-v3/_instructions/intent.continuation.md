@@ -1,5 +1,7 @@
 # CLASS `continuation` — not a new request, but the second half of the previous one
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Where the answer lives:** in work already begun. **Routes to:** the middle, carrying the answer.
 
 The automation asked something and left the question outstanding (`pendingQuestion`). The next message is

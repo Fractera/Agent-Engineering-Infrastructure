@@ -1,5 +1,7 @@
 # DESTINATION `map` — a marker on the automation's map
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Function:** `deliverMap` (derived). **Keys:** none (the geo service answers behind `api/geo`).
 
 A place, with a title, at coordinates. The map tab draws what this door writes.

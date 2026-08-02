@@ -1,5 +1,7 @@
 # A TAB — one surface the owner looks at
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 A tab is a KIND of surface (a calendar, an analytics, a dashboard, a public page). What it shows are
 its ENTITIES: one concrete calendar, one concrete chart. Many entities, one tab.
 

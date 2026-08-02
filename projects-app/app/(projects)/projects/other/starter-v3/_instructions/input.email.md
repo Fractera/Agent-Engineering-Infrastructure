@@ -1,5 +1,7 @@
 # CHANNEL `email` — a letter arrives
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Function:** `receiveEmail` (derived). **Keys:** the provider's inbound configuration.
 
 Mail pushed into a door of ours by the provider. The one channel whose authentication is deliberately

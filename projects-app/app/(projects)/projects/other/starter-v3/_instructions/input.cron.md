@@ -1,5 +1,7 @@
 # CHANNEL `cron` — a clock, not a message
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Function:** `receiveCron` (derived). **Keys:** none.
 
 The one input that carries no request from anybody. Its envelope is a tick: this moment happened.

@@ -1,5 +1,7 @@
 # DESTINATION `vector-memory` — meaning, so it can be found by words
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Function:** `deliverVectorMemory` (derived). **Keys:** `LIGHTRAG_URL` (optional, defaults to the local
 memory service), `LIGHTRAG_API_KEY` (optional).
 

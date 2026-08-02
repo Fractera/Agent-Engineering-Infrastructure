@@ -1,5 +1,7 @@
 # KIND `input-connector` — the inbound tail, left deliberately loose
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 PORTS (law, not a choice): `in` — OPTIONAL, and the only thing it may name is `external`: a node of
 ANOTHER automation. `out` — required, into the INTENT layer (step 311): work from a neighbouring automation is understood by
 the same front as work from a human, with no side entrance into the middle.

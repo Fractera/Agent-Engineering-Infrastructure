@@ -1,5 +1,7 @@
 # CHANNEL `public-page` — a stranger, from the public surface
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Function:** `receivePublicPage` (derived). **Keys:** none.
 
 Work sent from the automation's public page by someone who is NOT the owner. That single fact changes how

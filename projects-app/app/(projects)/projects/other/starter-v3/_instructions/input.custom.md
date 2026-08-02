@@ -1,5 +1,7 @@
 # CHANNEL `custom` — the open door of the input side, and the law for adding a channel
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 Not a channel. The single lawful way to add one, plus the rules that keep additions rare. `custom` sits in
 the input vocabulary but is EXCLUDED from the group's quota: no node is born with it, one is made when a
 channel is actually needed. It is also the `ioType` the input connector carries — the tail that speaks

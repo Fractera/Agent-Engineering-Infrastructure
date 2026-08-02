@@ -412,9 +412,7 @@
                 ]
               },
               "lineage": "nsk-transform-payload-v1",
-              "serves": [
-                "cusecasecapturefanout3"
-              ]
+              "serves": []
             },
             {
               "cuid": "cmruddnrpho70e8af12589d1deaa",
@@ -469,9 +467,7 @@
                   "output-connector"
                 ]
               },
-              "serves": [
-                "cusecasecapturefanout3"
-              ]
+              "serves": []
             },
             {
               "cuid": "cmruqdpjn51ehmdd7904ad3a6abaf6",
@@ -524,9 +520,7 @@
                   "output"
                 ]
               },
-              "serves": [
-                "cusecasehonestanswers4"
-              ]
+              "serves": []
             },
             {
               "cuid": "cfetchexternal3tyh65",
@@ -765,10 +759,7 @@
                   "evolution"
                 ]
               },
-              "serves": [
-                "cusecasehonestanswers4",
-                "cusecasecapturefanout3"
-              ]
+              "serves": []
             },
             {
               "cuid": "cmruca7ra4n1jt639afc902fa70f5b",
@@ -805,9 +796,7 @@
                   "evolution"
                 ]
               },
-              "serves": [
-                "cusecasecapturefanout3"
-              ]
+              "serves": []
             },
             {
               "cuid": "cmruewqs71sbem314de6797f24f39c",
@@ -917,8 +906,7 @@
                 ]
               },
               "serves": [
-                "cusecasesubjectfivefacets2",
-                "cusecasecapturefanout3"
+                "cusecasesubjectfivefacets2"
               ]
             },
             {
@@ -993,8 +981,7 @@
                 ]
               },
               "serves": [
-                "cusecasesubjectfivefacets2",
-                "cusecasecapturefanout3"
+                "cusecasesubjectfivefacets2"
               ]
             },
             {
@@ -1190,8 +1177,7 @@
                 ]
               },
               "serves": [
-                "cusecasesubjectfivefacets2",
-                "cusecasecapturefanout3"
+                "cusecasesubjectfivefacets2"
               ]
             },
             {
@@ -1230,8 +1216,7 @@
                 ]
               },
               "serves": [
-                "cusecasesubjectfivefacets2",
-                "cusecasecapturefanout3"
+                "cusecasesubjectfivefacets2"
               ]
             },
             {
@@ -1270,8 +1255,7 @@
                 ]
               },
               "serves": [
-                "cusecasesubjectfivefacets2",
-                "cusecasecapturefanout3"
+                "cusecasesubjectfivefacets2"
               ]
             }
           ]
@@ -1338,9 +1322,7 @@
                 ]
               },
               "lineage": "",
-              "serves": [
-                "cusecasehonestanswers4"
-              ]
+              "serves": []
             },
             {
               "cuid": "cintentcontinuationh6k7j7",
@@ -1444,9 +1426,7 @@
                 ]
               },
               "lineage": "",
-              "serves": [
-                "cusecaseselfdescribesgzf1n"
-              ]
+              "serves": []
             },
             {
               "cuid": "cintentcontrolkx38vd",
@@ -1708,9 +1688,7 @@
                 ]
               },
               "lineage": "",
-              "serves": [
-                "cusecasehonestanswers4"
-              ]
+              "serves": []
             },
             {
               "cuid": "cintentsmalltalkh2aosd",
@@ -1762,9 +1740,7 @@
                 ]
               },
               "lineage": "",
-              "serves": [
-                "cusecasehonestanswers4"
-              ]
+              "serves": []
             },
             {
               "cuid": "cintentrecordgivenef31ax",
@@ -1816,9 +1792,7 @@
                 ]
               },
               "lineage": "",
-              "serves": [
-                "cusecasecapturefanout3"
-              ]
+              "serves": []
             },
             {
               "cuid": "cintentunclaimedmv2obt",
@@ -1870,9 +1844,7 @@
                 ]
               },
               "lineage": "",
-              "serves": [
-                "cusecasehonestanswers4"
-              ]
+              "serves": []
             }
           ]
         }
@@ -3410,32 +3382,11 @@
     "warnings": [],
     "cases": [
       {
-        "cuid": "cusecaseselfdescribesgzf1n",
-        "number": 1,
-        "title": "Ask the automation where it is published",
-        "text": "The owner asks the automation about ITSELF — «what page do you have?» — and gets the address of its public page straight back, without any store, any external tool and any key. If no address has been assigned yet, the automation says so plainly instead of inventing a link.",
-        "status": "in-use"
-      },
-      {
         "cuid": "cusecasesubjectfivefacets2",
-        "number": 2,
+        "number": 1,
         "title": "Open up a named subject across all five stores",
         "text": "I name a subject — the Eiffel Tower, the Statue of Liberty, any named object that has a place and a date. The automation finds its photograph and downloads it into my own object storage; describes that picture and keeps the description in my vector memory; works out where the subject stands and puts a marker on my map; puts the date it was officially opened into my calendar; and writes ONE record in my database holding a short summary of 200-300 characters — not the long description, that lives in the vector memory — plus the links to all four other stores. Afterwards I can find the same subject again from ANY of the five sides. Whatever a store cannot give (no coordinates, no date, no memory service) is skipped honestly and named — never invented.",
         "status": "in-development"
-      },
-      {
-        "cuid": "cusecasecapturefanout3",
-        "number": 3,
-        "title": "Capture a message and fan it out to every open channel",
-        "text": "I send a message through whichever door is open — the control panel today, a bot or a letter tomorrow — and the automation captures it, normalises it and delivers it, as it is, to every output channel I have opened. An empty message is refused at the door instead of being stored as an empty row.",
-        "status": "in-use"
-      },
-      {
-        "cuid": "cusecasehonestanswers4",
-        "number": 4,
-        "title": "Answer honestly instead of guessing",
-        "text": "The automation never guesses what I meant. A request for a server secret is refused before any store or tool is touched. A greeting is answered without creating a record. A task with no subject gets one clarifying question. A request that no class recognises is reported as unrecognised — never swept into a default branch. And whatever happens, success or failure, the outcome and its reason reach me.",
-        "status": "in-use"
       }
     ],
     "reviewedSignature": ""

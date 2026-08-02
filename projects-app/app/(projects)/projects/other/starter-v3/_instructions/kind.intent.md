@@ -1,5 +1,7 @@
 # THE `intent` KIND — a node that judges a request and chooses its route
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 An `intent` node answers ONE question: «is this request mine?» It does not transform the payload, it does
 not write anything anywhere, and it never talks to a store. It decides.
 

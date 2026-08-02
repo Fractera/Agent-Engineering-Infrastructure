@@ -1,5 +1,7 @@
 # KIND `condition-failure` — the named end of a path
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 PORTS (law, not a choice): `in` — required, and only from a `transform`. `out` — REQUIRED, into an
 `output` (step 311.8). No channel: `ioType` is `null`.
 

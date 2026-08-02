@@ -1,5 +1,7 @@
 # CLASS `read-own` — a question about what this automation already keeps
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Where the answer lives:** in our own stores. **Routes to:** the middle, which searches them.
 
 «What did I save about X», «did I ever write that down», «when was that». The answer exists inside the

@@ -1,5 +1,7 @@
 # SCOPE `custom` — the open door of the evolution layer, and the law for growing it
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 Not a scope of self-change. The single lawful way to add one, and the rules that keep additions rare.
 
 `custom` is in the scope vocabulary but EXCLUDED from the quota, exactly like `custom` among the channels

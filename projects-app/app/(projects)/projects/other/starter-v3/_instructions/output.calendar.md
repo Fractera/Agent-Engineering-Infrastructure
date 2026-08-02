@@ -1,5 +1,7 @@
 # DESTINATION `calendar` — an event that waits for its moment
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Function:** `deliverCalendar` (derived). **Keys:** none.
 
 The one destination that does not deliver NOW: it records that something is due, and the moment announces

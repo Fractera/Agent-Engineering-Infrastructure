@@ -1,5 +1,7 @@
 # COMPONENTS — everything the owner SEES, tab by tab
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 The graph does the work; the components show it. A result the graph produces and no component shows
 has not been delivered. Node work and component work go hand in hand — finish a round with both.
 

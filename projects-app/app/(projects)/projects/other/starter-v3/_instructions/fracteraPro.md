@@ -1,5 +1,7 @@
 # FRACTERA PRO — not available yet
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 `config` IS ALWAYS `null`. Leave it that way.
 
 Placing an automation inside a page of the public site has no interface yet: there is nothing to

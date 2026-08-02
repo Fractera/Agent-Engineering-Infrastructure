@@ -1,5 +1,7 @@
 # THE EVOLUTION GROUP — the automation works on ITSELF, after the answer is already delivered
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 One kind lives here and no other: `evolution` — one node per SCOPE of self-change. This group stands after
 the output layer and is the last thing a run does.
 

@@ -151,13 +151,18 @@ THEN change nodes and edges. A graph changed without its case is unlawful drift.
 | Its data — rows written by runs | `_data/runtime/` |
 | Reusable shared tools you may wire (crop, voice, …) | `tools-docs/` (reference); code in `_shared-v2/tools/` |
 
-## 2. READ FILES FREELY. THAT IS NOT A WORKAROUND.
+## 2. READ FILES FREELY — BUT BUDGET, THE TEXT IS LARGE
 
 Open any file in this folder with your ordinary tools. Nothing here is hidden behind an API and nothing
 requires permission. The read doors below exist to hand a WEAK model one object instead of forty
-thousand tokens — they are an economy, not a gate. If you can afford to read, read.
+thousand tokens — they are an economy, not a gate.
 
-Rough weights, so you can choose: the core ≈ 17k tokens · the schema ≈ 12k · all instructions ≈ 16k.
+Measured weights, so you can choose: **the core ≈ 37k tokens · the schema ≈ 25k · all 60 instructions
+≈ 45k**. Reading everything is not an option — start from the LAW DIGEST (`GET api/core`, ~800 tokens),
+then read by name only what you are about to touch.
+
+This is also why every instruction carries the same first line: **English, compact, one fact one home.**
+Prose added to a law is paid by every agent on every session, forever — prune before you append.
 
 ## 3. WRITING IS DIFFERENT — and this is the part that matters
 
@@ -192,6 +197,17 @@ caught it before the build.
 - `GET api/instruction?name=<name>` — one law by name.
 - `POST api/patch` — the only door that changes the core. See `passport.md` §4 for every operation.
 - `POST api/run` — execute the automation. `GET/POST api/rows` — output rows. `GET/POST api/env` — keys.
+
+## 4a. 🔒 A TAB IS GOVERNED BY LAW EXACTLY AS A NODE IS — read it BEFORE you touch it
+
+The law of connection is read before you add a single node or edge (`passport.md` §5). **The same is
+required of a tab**: before you change a tab, its entity or its `data`, read `components.md` (the whole
+surface layer), `tab.md` (every tab) and `tab.<name>.md` when that tab has a law of its own — the core
+door attaches the last one as `tabInstruction`, and when the field is absent that tab simply has no
+private law yet.
+
+Changing a surface without having read its law is the same failure as wiring nodes at random: it merely
+fails later and quieter, because a component has no port table to refuse you. **Do not.**
 
 ## 5. Four things that get broken most often
 

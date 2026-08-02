@@ -1,5 +1,7 @@
 # TAB `calendar` — the automation's own schedule
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 This is the FULL law of the calendar tab. It rides with the object: ask the core door for this tab (or
 any entity inside it) and this text comes attached as `tabInstruction`, next to the general `tab` law.
 Everything an agent needs to build, extend or repair the calendar is here — no other document has to be

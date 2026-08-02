@@ -1,5 +1,7 @@
 # CLASS `composite` — one request, two ordered actions
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Where the answer lives:** partly outside, partly in our own stores — and only in that order. **Routes
 to:** the middle, carrying an explicit plan.
 

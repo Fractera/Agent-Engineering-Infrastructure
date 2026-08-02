@@ -1,5 +1,7 @@
 # DESTINATION `email` — a letter leaves
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Function:** `deliverEmail` (derived). **Keys:** `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, optionally `RESEND_TO_EMAIL`.
 
 The destination for people who are not sitting in a chat: a formal record, a document, someone outside the

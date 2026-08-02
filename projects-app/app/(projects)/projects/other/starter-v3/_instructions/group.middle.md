@@ -1,5 +1,7 @@
 # THE MIDDLE GROUP — where the work actually happens
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 Three kinds live here: `transform` (it changes data), `condition-success` (the path taken when the
 answer is yes) and `condition-failure` (the path taken when it is not — and the flow ends there).
 

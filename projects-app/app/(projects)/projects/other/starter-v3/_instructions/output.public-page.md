@@ -1,5 +1,7 @@
 # DESTINATION `public-page` — the result goes onto the public surface
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Function:** `deliverPublicPage` (derived). **Keys:** none.
 
 What this automation publishes for people who are not its owner. The page's address lives in

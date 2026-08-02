@@ -1,5 +1,7 @@
 # KIND `output` — the door the result leaves through
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 PORTS (law, not a choice): `in` — required, from a `condition-success` (a result is delivered on the
 success branch) **or from the INTENT layer** (step 311), when the request needed no work over data:
 self-description, refusal, small talk, a clarifying question. `out` — OPTIONAL, and the only thing it may

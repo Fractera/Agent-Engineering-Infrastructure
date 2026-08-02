@@ -24,8 +24,15 @@ The four things worth carrying before you get there:
    only their DATA in the core — `graph.nodes`/`graph.edges` and `useCases.cases`, through `api/patch` —
    and never reimplement the canvas, the cases panel or the Quiz inside this folder. Coding them is outside
    your competence and would break reuse of this automation between accounts (AGENTS.md §0a).
+3b. **A TAB IS GOVERNED BY LAW EXACTLY AS A NODE IS.** Before you change a tab, its entity or its `data`,
+   read `_instructions/components.md`, `tab.md` and `tab.<name>.md` if it exists (the core door attaches
+   it as `tabInstruction`). A component has no port table to refuse you, so an unread law here fails
+   later and quieter than a bad edge — not less badly (AGENTS.md §4a).
 4. **Green `check:core` is not proof that the automation works** — it proves the core is lawful. Proof
    is a real run with a real result.
+4a. **Every instruction is ENGLISH and COMPACT** — its reader is a model that must also read the core
+   (≈37k tokens) and the schema (≈25k). A paragraph added to a law is paid on every session, forever.
+   Prune before you append; never restate what another instruction already says — link to it by name.
 5. **Reusable tools already exist outside your folder — wire them, don't rebuild.** An image cropper, a
    voice-input mic and more live in `_shared-v2/tools/`. Before building such an affordance, read
    [`tools-docs/`](tools-docs/) (one short reference per tool: call, params, return, constraints). Wire the

@@ -1,5 +1,7 @@
 # CLASS `incomplete` — the intent is clear, the data is missing
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Where the answer lives:** with the human, who has not said it yet. **Routes to:** an output — one
 question back.
 

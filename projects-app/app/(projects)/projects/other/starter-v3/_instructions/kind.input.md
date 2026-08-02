@@ -1,5 +1,7 @@
 # KIND `input` — the door a channel of the outside world pushes work through
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 PORTS (law, not a choice): `in` — prohibited, nothing flows into it. `out` — required, into the INTENT
 layer, and into nothing else (step 311: a door never reaches the middle directly — every request is
 understood before it is worked on).

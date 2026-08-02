@@ -1,5 +1,7 @@
 # DESTINATION `storage` — the bytes themselves
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Function:** `deliverStorage` (derived). **Keys:** none — the store is a folder inside the automation.
 
 Files: images, documents, anything that is not text. The third store, and the only one that holds something

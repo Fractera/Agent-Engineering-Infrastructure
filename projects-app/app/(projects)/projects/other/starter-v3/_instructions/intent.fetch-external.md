@@ -1,5 +1,7 @@
 # CLASS `fetch-external` — the data is not in the message; it must be brought from outside
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Where the answer lives:** in the outside world. **Routes to:** the middle, carrying the subject.
 
 «Show me X», «how much is Y now», «who is Z». The message carries only the NAME of a subject — everything

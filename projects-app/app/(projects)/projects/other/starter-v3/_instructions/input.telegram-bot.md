@@ -1,5 +1,7 @@
 # CHANNEL `telegram-bot` — the automation's own bot
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Function:** `receiveTelegramBot` (derived). **Keys:** `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_CHAT_ID`.
 
 Messages arriving at the bot this automation owns. Anyone who finds the bot can write to it — which is why

@@ -1,5 +1,7 @@
 # THE OUTPUT GROUP — how the result LEAVES this automation
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 Two kinds live here: `output` — one door per destination of the outside world; and `output-connector`
 — the single door into a node of ANOTHER automation.
 

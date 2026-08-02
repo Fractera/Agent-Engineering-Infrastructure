@@ -1,5 +1,7 @@
 # CHANNEL `webhook` — an external system pushes work in over HTTP
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Function:** `receiveWebhook` (derived). **Keys:** none by default; a shared secret when the sender supports one.
 
 A door for machines. Someone else's system decides when work arrives; this automation only receives.

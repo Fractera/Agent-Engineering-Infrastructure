@@ -1,5 +1,7 @@
 # EVERY NODE, WHATEVER ITS KIND
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 ONE NODE = ONE FUNCTION = ONE LOGICAL STEP. A node that seems to need two functions is two nodes:
 complexity is carried by the NUMBER of nodes, never by the thickness of one.
 

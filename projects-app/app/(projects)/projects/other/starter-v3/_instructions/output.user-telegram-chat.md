@@ -1,5 +1,7 @@
 # DESTINATION `user-telegram-chat` — the answer in the owner's own chat
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Function:** `deliverUserTelegramChat` (derived). **Keys:** `TELEGRAM_BOT_TOKEN`, `TELEGRAM_USER_CHAT_ID`.
 
 Where the automation talks to its owner. The most-used destination of a personal automation, and the one

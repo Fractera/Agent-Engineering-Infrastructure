@@ -1,5 +1,7 @@
 # DESTINATION `dashboard` — the automation's own page
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Function:** `deliverDashboard` (derived from the channel). **Keys:** none.
 
 The default destination and the only one that works from the first minute: a row in the History table on the

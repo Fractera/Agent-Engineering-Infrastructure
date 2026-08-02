@@ -1,5 +1,7 @@
 # THE `evolution` KIND — a node that changes the automation, not the data
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 An `evolution` node reads a FINISHED run and, if it has grounds, refines one bounded part of the
 automation's own configuration. It produces nothing for the human: the human was answered before this node
 started.

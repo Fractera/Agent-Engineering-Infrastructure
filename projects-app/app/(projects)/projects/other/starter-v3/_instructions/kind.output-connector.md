@@ -1,5 +1,7 @@
 # KIND `output-connector` — the outbound tail, left deliberately loose
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 PORTS (law, not a choice): `in` — required, from a `condition-success` (what leaves this automation
 leaves on the success branch) or from the INTENT layer, exactly like an ordinary door — a request the
 front answered without the middle may still be handed to a neighbour. `out` — OPTIONAL, and the only

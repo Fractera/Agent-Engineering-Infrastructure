@@ -1,5 +1,7 @@
 # CLASS `small-talk` — politeness: an answer is owed, an action is not
 
+> **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
+
 **Where the answer lives:** in courtesy. **Routes to:** an output, touching nothing.
 
 «Hello», «thanks», «got it». No store is involved, no tool, no record.
