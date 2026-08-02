@@ -15,23 +15,20 @@ const pickLang = (ctx: NodeCtx): Lang => {
 };
 
 // ПРЕДСТАВЛЕНИЕ И ВОЗМОЖНОСТИ (C) — на /start, «что ты умеешь» и на непонятое сообщение.
+// 🔒 ВТОРОЙ ДОМ ТОГО ЖЕ ФАКТА — держать в согласии с `DEFAULT_INSTRUCTION` (conversation/config.ts).
+// Перечень зашит вручную и потому гниёт; вывод из ядра — обязанность слоя `evolution` (шаг 314 §4а).
+// До 314: чего нет в списке — того нет в сборке. Обещать сверх ядра запрещено.
 const CAPABILITIES: Record<Lang, string> = {
   ru:
-    "👋 Я — ассистент заметок в Telegram. Вот что я умею:\n\n" +
-    "📝 Запомнить — просто напиши факт («купил лампочки для кухни»)\n" +
-    "⏰ Напомнить — «напомни завтра в 15:00 позвонить маме»\n" +
-    "🔎 Найти — «что я сохранял про лампочки»\n" +
-    "💰 Учесть трату — пришли фото чека или «потратил 500 руб на такси»\n" +
-    "📍 Отметить место — пришли точку (скрепка → Геопозиция) и напиши, что там\n\n" +
-    "Можно всё в одном сообщении — я разберу.",
+    "👋 Я — ассистент замороженного тестового шаблона: своего назначения у меня пока нет, его задаёт владелец.\n\n" +
+    "📨 Принять — пришлите сообщение через любой открытый вход: эту панель, HTTP-вебхук, запуск по расписанию, публичную страницу, Telegram, почту\n" +
+    "📤 Развезти — доставлю его как есть во все открытые выходные каналы\n\n" +
+    "Это вся сборка. Заметок, напоминаний, трат, карты и поиска здесь пока нет — их добавляет владелец в кокпите.",
   en:
-    "👋 I'm your Telegram notes assistant. Here's what I can do:\n\n" +
-    "📝 Remember — just write a fact (\"bought kitchen light bulbs\")\n" +
-    "⏰ Remind — \"remind me tomorrow at 3pm to call mom\"\n" +
-    "🔎 Recall — \"what did I save about light bulbs\"\n" +
-    "💰 Track spending — send a receipt photo or \"spent 5€ on a taxi\"\n" +
-    "📍 Mark a place — share a location (paperclip → Location) and say what's there\n\n" +
-    "You can do it all in one message — I'll sort it out.",
+    "👋 I'm the assistant of a frozen test template — my purpose isn't set yet, the owner gives it to me.\n\n" +
+    "📨 Capture — send a message through any open input: this panel, an HTTP webhook, a scheduled tick, the public page, Telegram, email\n" +
+    "📤 Fan-out — I deliver it, as it is, to every open output channel\n\n" +
+    "That's the whole of this build. Notes, reminders, money, maps and search are not built yet — the owner adds them in the cockpit.",
 };
 
 const T = {
