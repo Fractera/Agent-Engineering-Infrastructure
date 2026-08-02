@@ -58,12 +58,35 @@ function IdChipColumn({ ids, copyLabel }: { ids: string[]; copyLabel: string }) 
   );
 }
 
+// 🔒 КОЛОНКА ОБЪЯВЛЕНА В ЯДРЕ, А НЕ ЗДЕСЬ (шаг 324). Пока список колонок был зашит в этом файле, закон
+// записи исполнялся полностью, а владелец видел устаревшую таблицу: связи с картой и календарём в строке
+// БЫЛИ, а колонок для них не существовало. Теперь состав приходит из `entity.data.columns`.
+type Column = { key: string; label: Record<string, string>; type: "chip" | "text" | "ids" | "date"; source: string };
+
+/** Значение ячейки по её источнику: `links:<склад>` — массив id, иначе поле строки. */
+const cellValue = (row: Row, source: string): unknown =>
+  source.startsWith("links:") ? linksOf(row, source.slice("links:".length), row[`${source.slice("links:".length)}Ids`]) : row[source];
+
 export default function MainDatabaseClient({ lang, mode }: { lang: string; mode: "view" | "admin" }) {
   const t = databaseStrings(lang);
   const [rows, setRows] = useState<Row[]>([]);
+  const [columns, setColumns] = useState<Column[]>([]);
   const [query, setQuery] = useState(""); // текст в поле
   const [applied, setApplied] = useState(""); // что реально искали (кнопкой/Enter)
   const [loaded, setLoaded] = useState(false);
+
+  // Состав колонок — из ядра. Двери нет / колонки не объявлены → таблица не рисуется, и это честно:
+  // молча показать «что получилось» значит вернуть тот самый дефект, ради которого объявление и заведено.
+  useEffect(() => {
+    let alive = true;
+    fetch(`${apiBase()}/core?select=tab:database`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { entities?: { data?: { columns?: Column[] } }[] } | null) => {
+        if (alive) setColumns(d?.entities?.[0]?.data?.columns ?? []);
+      })
+      .catch(() => { /* нет двери — колонок не будет */ });
+    return () => { alive = false; };
+  }, []);
 
   const load = useCallback((q: string) => {
     fetch(`${apiBase()}/rows?table=${TABLE}&limit=200&search=${encodeURIComponent(q)}`, { cache: "no-store" })
@@ -121,28 +144,24 @@ export default function MainDatabaseClient({ lang, mode }: { lang: string; mode:
           <table className="w-full text-sm">
             <thead className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
               <tr>
-                <th className="p-2 font-medium">{t.id}</th>
-                <th className="p-2 font-medium">{t.name}</th>
-                <th className="p-2 font-medium">{t.storageLinks}</th>
-                <th className="p-2 font-medium">{t.vectorLinks}</th>
-                <th className="p-2 font-medium">{t.added}</th>
+                {columns.map((c) => (
+                  <th key={c.key} className="p-2 font-medium">{c.label[lang] ?? c.label.en ?? c.key}</th>
+                ))}
                 {mode === "admin" ? <th className="p-2" /> : null}
               </tr>
             </thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id} className="border-b align-top last:border-0">
-                  <td className="p-2">
-                    <IdChip id={r.id} copyLabel={t.copy} />
-                  </td>
-                  <td className="p-2">{String(r.name ?? "—")}</td>
-                  <td className="p-2">
-                    <IdChipColumn ids={linksOf(r, "storage", r.storageIds)} copyLabel={t.copy} />
-                  </td>
-                  <td className="p-2">
-                    <IdChipColumn ids={linksOf(r, "vector-memory", r.vectorIds)} copyLabel={t.copy} />
-                  </td>
-                  <td className="p-2 tabular-nums">{fmtDate(r.createdAt)}</td>
+                  {columns.map((c) => {
+                    const v = cellValue(r, c.source);
+                    if (c.type === "chip") return <td key={c.key} className="p-2"><IdChip id={String(v ?? "")} copyLabel={t.copy} /></td>;
+                    // Связь — ВСЕГДА массив (закон 324 §2): у записи бывает несколько объектов, меток и событий.
+                    if (c.type === "ids") return <td key={c.key} className="p-2"><IdChipColumn ids={Array.isArray(v) ? v : []} copyLabel={t.copy} /></td>;
+                    if (c.type === "date") return <td key={c.key} className="p-2 tabular-nums">{fmtDate(String(v ?? ""))}</td>;
+                    const s = String(v ?? "");
+                    return <td key={c.key} className="p-2 max-w-xs" title={s}>{s ? (s.length > 80 ? `${s.slice(0, 80)}…` : s) : "—"}</td>;
+                  })}
                   {mode === "admin" ? (
                     <td className="p-2 text-right">
                       <Button variant="outline" size="xs" onClick={() => del(r.id)}>

@@ -9,24 +9,22 @@ export type DatabaseStrings = {
   found: string; // «Найдено» (рядом печатается число результатов)
   empty: string; // база пуста
   name: string; // колонка имени
-  storageLinks: string; // колонка ссылок в объектное хранилище (storageIds)
-  vectorLinks: string; // колонка ссылок в векторную базу (vectorIds)
   added: string; // колонка даты
   del: string; // удалить
   confirmDelete: string; // подтверждение удаления
 };
 
 export const DATABASE_I18N: Record<string, DatabaseStrings> = {
-  en: { id: "ID", copy: "Copy", addRecord: "Add record", search: "Search the database…", searchBtn: "Search", found: "Found", empty: "No records yet.", name: "Name", storageLinks: "Storage", vectorLinks: "Vectors", added: "Added", del: "Delete", confirmDelete: "Delete this record?" },
-  es: { id: "ID", copy: "Copiar", addRecord: "Añadir registro", search: "Buscar en la base de datos…", searchBtn: "Buscar", found: "Encontrados", empty: "Aún no hay registros.", name: "Nombre", storageLinks: "Almacenamiento", vectorLinks: "Vectores", added: "Añadido", del: "Eliminar", confirmDelete: "¿Eliminar este registro?" },
-  fr: { id: "ID", copy: "Copier", addRecord: "Ajouter un enregistrement", search: "Rechercher dans la base…", searchBtn: "Rechercher", found: "Trouvés", empty: "Aucun enregistrement.", name: "Nom", storageLinks: "Stockage", vectorLinks: "Vecteurs", added: "Ajouté", del: "Supprimer", confirmDelete: "Supprimer cet enregistrement ?" },
-  it: { id: "ID", copy: "Copia", addRecord: "Aggiungi record", search: "Cerca nel database…", searchBtn: "Cerca", found: "Trovati", empty: "Ancora nessun record.", name: "Nome", storageLinks: "Archivio", vectorLinks: "Vettori", added: "Aggiunto", del: "Elimina", confirmDelete: "Eliminare questo record?" },
-  ru: { id: "ID", copy: "Копировать", addRecord: "Добавить запись", search: "Поиск по базе…", searchBtn: "Искать", found: "Найдено", empty: "Пока нет записей.", name: "Имя", storageLinks: "Хранилище", vectorLinks: "Векторы", added: "Добавлено", del: "Удалить", confirmDelete: "Удалить эту запись?" },
-  de: { id: "ID", copy: "Kopieren", addRecord: "Eintrag hinzufügen", search: "Datenbank durchsuchen…", searchBtn: "Suchen", found: "Gefunden", empty: "Noch keine Einträge.", name: "Name", storageLinks: "Speicher", vectorLinks: "Vektoren", added: "Hinzugefügt", del: "Löschen", confirmDelete: "Diesen Eintrag löschen?" },
-  pt: { id: "ID", copy: "Copiar", addRecord: "Adicionar registo", search: "Pesquisar na base de dados…", searchBtn: "Pesquisar", found: "Encontrados", empty: "Ainda não há registos.", name: "Nome", storageLinks: "Armazenamento", vectorLinks: "Vetores", added: "Adicionado", del: "Eliminar", confirmDelete: "Eliminar este registo?" },
-  pl: { id: "ID", copy: "Kopiuj", addRecord: "Dodaj rekord", search: "Szukaj w bazie danych…", searchBtn: "Szukaj", found: "Znaleziono", empty: "Brak rekordów.", name: "Nazwa", storageLinks: "Magazyn", vectorLinks: "Wektory", added: "Dodano", del: "Usuń", confirmDelete: "Usunąć ten rekord?" },
-  tr: { id: "ID", copy: "Kopyala", addRecord: "Kayıt ekle", search: "Veritabanında ara…", searchBtn: "Ara", found: "Bulundu", empty: "Henüz kayıt yok.", name: "Ad", storageLinks: "Depo", vectorLinks: "Vektörler", added: "Eklendi", del: "Sil", confirmDelete: "Bu kayıt silinsin mi?" },
-  nl: { id: "ID", copy: "Kopiëren", addRecord: "Record toevoegen", search: "Zoek in de database…", searchBtn: "Zoeken", found: "Gevonden", empty: "Nog geen records.", name: "Naam", storageLinks: "Opslag", vectorLinks: "Vectoren", added: "Toegevoegd", del: "Verwijderen", confirmDelete: "Dit record verwijderen?" },
+  en: { id: "ID", copy: "Copy", addRecord: "Add record", search: "Search the database…", searchBtn: "Search", found: "Found", empty: "No records yet.", name: "Name", added: "Added", del: "Delete", confirmDelete: "Delete this record?" },
+  es: { id: "ID", copy: "Copiar", addRecord: "Añadir registro", search: "Buscar en la base de datos…", searchBtn: "Buscar", found: "Encontrados", empty: "Aún no hay registros.", name: "Nombre", added: "Añadido", del: "Eliminar", confirmDelete: "¿Eliminar este registro?" },
+  fr: { id: "ID", copy: "Copier", addRecord: "Ajouter un enregistrement", search: "Rechercher dans la base…", searchBtn: "Rechercher", found: "Trouvés", empty: "Aucun enregistrement.", name: "Nom", added: "Ajouté", del: "Supprimer", confirmDelete: "Supprimer cet enregistrement ?" },
+  it: { id: "ID", copy: "Copia", addRecord: "Aggiungi record", search: "Cerca nel database…", searchBtn: "Cerca", found: "Trovati", empty: "Ancora nessun record.", name: "Nome", added: "Aggiunto", del: "Elimina", confirmDelete: "Eliminare questo record?" },
+  ru: { id: "ID", copy: "Копировать", addRecord: "Добавить запись", search: "Поиск по базе…", searchBtn: "Искать", found: "Найдено", empty: "Пока нет записей.", name: "Имя", added: "Добавлено", del: "Удалить", confirmDelete: "Удалить эту запись?" },
+  de: { id: "ID", copy: "Kopieren", addRecord: "Eintrag hinzufügen", search: "Datenbank durchsuchen…", searchBtn: "Suchen", found: "Gefunden", empty: "Noch keine Einträge.", name: "Name", added: "Hinzugefügt", del: "Löschen", confirmDelete: "Diesen Eintrag löschen?" },
+  pt: { id: "ID", copy: "Copiar", addRecord: "Adicionar registo", search: "Pesquisar na base de dados…", searchBtn: "Pesquisar", found: "Encontrados", empty: "Ainda não há registos.", name: "Nome", added: "Adicionado", del: "Eliminar", confirmDelete: "Eliminar este registo?" },
+  pl: { id: "ID", copy: "Kopiuj", addRecord: "Dodaj rekord", search: "Szukaj w bazie danych…", searchBtn: "Szukaj", found: "Znaleziono", empty: "Brak rekordów.", name: "Nazwa", added: "Dodano", del: "Usuń", confirmDelete: "Usunąć ten rekord?" },
+  tr: { id: "ID", copy: "Kopyala", addRecord: "Kayıt ekle", search: "Veritabanında ara…", searchBtn: "Ara", found: "Bulundu", empty: "Henüz kayıt yok.", name: "Ad", added: "Eklendi", del: "Sil", confirmDelete: "Bu kayıt silinsin mi?" },
+  nl: { id: "ID", copy: "Kopiëren", addRecord: "Record toevoegen", search: "Zoek in de database…", searchBtn: "Zoeken", found: "Gevonden", empty: "Nog geen records.", name: "Naam", added: "Toegevoegd", del: "Verwijderen", confirmDelete: "Dit record verwijderen?" },
 };
 
 export function databaseStrings(lang: string): DatabaseStrings {

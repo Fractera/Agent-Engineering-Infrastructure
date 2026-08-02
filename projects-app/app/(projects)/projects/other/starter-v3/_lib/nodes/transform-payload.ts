@@ -24,9 +24,13 @@ const noMessage = {
 export function transformPayload(ctx: NodeCtx): { text: string; title: string; at: string; source: string } {
   const text = String(ctx.text ?? "").replace(/\s+/g, " ").trim();
   if (!text) refuse(noMessage);
+  // 🔒 ЗАГОЛОВОК, УЖЕ ДАННЫЙ ПОТОКОМ, НЕ ЗАТИРАЕТСЯ. Узел середины, добывший предмет, называет его по
+  // имени (`ctx.title`); вывод из первой строки — ФОЛБЭК для сообщений, у которых имени нет. Прежде
+  // деривация была безусловной, и в складах вместо «Stonehenge» оседало начало описания статьи.
+  const given = String(ctx.title ?? "").trim();
   return {
     text,
-    title: deriveTitle(String(ctx.text ?? "")),
+    title: given || deriveTitle(String(ctx.text ?? "")),
     at: String(ctx.at ?? new Date().toISOString()),
     source: String(ctx.source ?? "unknown"),
   };

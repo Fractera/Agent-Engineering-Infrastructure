@@ -3342,12 +3342,161 @@
             "name": "Main database",
             "description": "",
             "info": {
-              "aiSummary": "Blank \"Main database\": created together with the tab, no owner requirements yet."
+              "aiSummary": "The automation's own records — the CENTRE OF LINKS between the stores. A row carries name · summary (<=300 chars, never the full text — that lives in the search index) · links to storage, vector memory, map and calendar. The columns are DECLARED HERE in data.columns; the component only renders them (step 324)."
             },
             "status": "materialized",
             "warnings": [],
             "envKeys": [],
-            "data": {}
+            "data": {
+              "table": "database",
+              "columns": [
+                {
+                  "key": "id",
+                  "label": {
+                    "en": "ID",
+                    "es": "ID",
+                    "fr": "ID",
+                    "it": "ID",
+                    "ru": "ID",
+                    "de": "ID",
+                    "pt": "ID",
+                    "pl": "ID",
+                    "tr": "ID",
+                    "nl": "ID"
+                  },
+                  "type": "chip",
+                  "source": "id",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "name",
+                  "label": {
+                    "en": "Name",
+                    "es": "Nombre",
+                    "fr": "Nom",
+                    "it": "Nome",
+                    "ru": "Имя",
+                    "de": "Name",
+                    "pt": "Nome",
+                    "pl": "Nazwa",
+                    "tr": "Ad",
+                    "nl": "Naam"
+                  },
+                  "type": "text",
+                  "source": "name",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "summary",
+                  "label": {
+                    "en": "Summary",
+                    "es": "Resumen",
+                    "fr": "Résumé",
+                    "it": "Sintesi",
+                    "ru": "Сводка",
+                    "de": "Kurzfassung",
+                    "pt": "Resumo",
+                    "pl": "Podsumowanie",
+                    "tr": "Özet",
+                    "nl": "Samenvatting"
+                  },
+                  "type": "text",
+                  "source": "summary",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "storage",
+                  "label": {
+                    "en": "Storage",
+                    "es": "Almacenamiento",
+                    "fr": "Stockage",
+                    "it": "Archivio",
+                    "ru": "Хранилище",
+                    "de": "Speicher",
+                    "pt": "Armazenamento",
+                    "pl": "Magazyn",
+                    "tr": "Depo",
+                    "nl": "Opslag"
+                  },
+                  "type": "ids",
+                  "source": "links:storage",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "vector",
+                  "label": {
+                    "en": "Vectors",
+                    "es": "Vectores",
+                    "fr": "Vecteurs",
+                    "it": "Vettori",
+                    "ru": "Векторы",
+                    "de": "Vektoren",
+                    "pt": "Vetores",
+                    "pl": "Wektory",
+                    "tr": "Vektörler",
+                    "nl": "Vectoren"
+                  },
+                  "type": "ids",
+                  "source": "links:vector-memory",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "map",
+                  "label": {
+                    "en": "Map",
+                    "es": "Mapa",
+                    "fr": "Carte",
+                    "it": "Mappa",
+                    "ru": "Карта",
+                    "de": "Karte",
+                    "pt": "Mapa",
+                    "pl": "Mapa",
+                    "tr": "Harita",
+                    "nl": "Kaart"
+                  },
+                  "type": "ids",
+                  "source": "links:map",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "calendar",
+                  "label": {
+                    "en": "Calendar",
+                    "es": "Calendario",
+                    "fr": "Agenda",
+                    "it": "Calendario",
+                    "ru": "Календарь",
+                    "de": "Kalender",
+                    "pt": "Calendário",
+                    "pl": "Kalendarz",
+                    "tr": "Takvim",
+                    "nl": "Agenda"
+                  },
+                  "type": "ids",
+                  "source": "links:calendar",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "createdAt",
+                  "label": {
+                    "en": "Added",
+                    "es": "Añadido",
+                    "fr": "Ajouté",
+                    "it": "Aggiunto",
+                    "ru": "Добавлено",
+                    "de": "Hinzugefügt",
+                    "pt": "Adicionado",
+                    "pl": "Dodano",
+                    "tr": "Eklendi",
+                    "nl": "Toegevoegd"
+                  },
+                  "type": "date",
+                  "source": "createdAt",
+                  "defaultVisible": true
+                }
+              ],
+              "pageSize": 20
+            }
           }
         ]
       },
