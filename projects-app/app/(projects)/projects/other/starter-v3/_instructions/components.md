@@ -51,7 +51,7 @@ The contract that makes that possible:
 The SOFT layer — the "Build with AI" buttons and the admin settings — is not yours: it lives outside in
 `_shared-v2` and is wired in through the fail-silent dev-slot (`_components/shared/dev-slot*`). Production
 never depends on it: remove `_shared-v2` and those dev affordances simply stop appearing while every
-runtime component keeps working. You do not build or study that layer (AGENTS.md §0).
+runtime component keeps working. You do not build or study that layer (AGENTS.md, «Project»).
 
 Everything you cannot express under this contract is a signal, not an obstacle: say so in a warning
 rather than reaching outside the folder.
@@ -61,7 +61,7 @@ rather than reaching outside the folder.
 The DIAGRAM (the canvas) and the USE-CASES panel are **platform views derived from the core**, not features
 of this automation. Their single copy lives in the development layer (`_shared-v2/components/{diagram,
 use-cases}`) and is identical for every automation in every account. **Coding them is outside your
-competence and is forbidden** (AGENTS.md §0a).
+competence and is forbidden** (AGENTS.md, «Two surfaces are not yours to code»).
 
 You own their DATA and nothing else: `graph.nodes` / `graph.edges` and `useCases.cases`, changed through
 `api/patch`. Change the data — the view follows, everywhere, unchanged. Never reimplement the canvas, the

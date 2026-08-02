@@ -58,7 +58,7 @@ opens the Quiz. The schema enforces it: `lifecycle: "frozen-template"` carrying 
 - AN INCOMING REQUIREMENT LANDS HERE FIRST (any development channel: the send-task box, a `rawRequest`,
   any request field). Reconcile it with the SET — append, rework, or warn — and only THEN touch nodes and
   edges. A graph changed without its case is unlawful drift.
-- THE PANEL AND THE QUIZ ARE NOT YOURS TO CODE (AGENTS.md §0a). You change `useCases.cases` through
+- THE PANEL AND THE QUIZ ARE NOT YOURS TO CODE (AGENTS.md, «Two surfaces are not yours to code»). You change `useCases.cases` through
   `api/patch`; the view is platform-owned and identical in every account.
 - THE OWNER SIGNS THE SET. `reviewedSignature` records the set he last confirmed; any add/edit/delete
   changes the signature, and the gate asks him to read and confirm again.

@@ -8,9 +8,10 @@ A press-and-hold microphone button next to a text input: hold to record (a live 
 hears you), release to transcribe. The recognised text is inserted **at the cursor position**, not appended.
 
 ## Where it lives — TWO copies, one per layer (this is lawful, by design)
-- **Runtime copy, IN this folder:** `_components/shared/voice-input.client.tsx`. This is the one **public
-  input fields use** — it is law-0 self-contained (no `_shared-v2`, no shadcn), so it works in the production
-  layer. Wire this one into a public field.
+- **Runtime copy, IN this folder:** `_components/tools/voice-input/` — one folder holding the whole feature
+  (`client/voice-input.client.tsx` + its i18n · `server/transcribe.ts` · `types/`). Law-0 self-contained (no
+  `_shared-v2`, no shadcn), so it works in the production layer. Wire THIS one into a public field; today it
+  is used by the control-panel field, the send-task box and the how-it-works modal.
 - **Dev copy:** `_shared-v2/tools/voice-input/` — used by development-layer inputs (e.g. the "Build with AI"
   brief field). Same primitive, soft layer.
 

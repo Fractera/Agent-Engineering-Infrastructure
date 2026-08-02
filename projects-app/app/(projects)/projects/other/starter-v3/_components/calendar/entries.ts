@@ -5,7 +5,7 @@ import type { Entity } from "../../_data/automation.schema";
 // могут. Тот же закон, что у `dashboard/columns.ts` и `control-panel/params.ts`.
 //
 // Здесь ТОЛЬКО чтение ядра. Работа календаря — приведение строк, раскладка месяца, слоты дня — живёт в
-// `_lib/components/calendar/` (закон ARCHITECTURE.md: всё, что не разметка, уходит в `_lib`).
+// `_lib/components/calendar/` (закон раскладки: всё, что не разметка, уходит в `_lib`).
 
 /** ВИД ЗАПИСИ: ключ из строки, подпись на языках и цвет, которым вид рисуется. */
 export type Tone = "event" | "reminder";

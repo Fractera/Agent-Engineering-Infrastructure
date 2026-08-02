@@ -8,7 +8,7 @@ import DiagramCanvas from "./admin/canvas";
 // `graph.edges`, и своей логики у конкретной автоматизации в ней нет. Так вид одинаков в любом аккаунте, а
 // автоматизация остаётся переиспользуемой.
 //
-// Агент-кодер владеет только ДАННЫМИ графа; править код холста ему запрещено (AGENTS.md §0a).
+// Агент-кодер владеет только ДАННЫМИ графа; править код холста ему запрещено (AGENTS.md, «Two surfaces are not yours to code»).
 export default function Diagram({ lang }: { lang: string }) {
   return <DiagramCanvas lang={lang} readOnly={false} />;
 }

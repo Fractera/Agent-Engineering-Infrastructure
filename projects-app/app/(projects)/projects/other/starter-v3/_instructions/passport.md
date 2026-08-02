@@ -35,7 +35,7 @@ is over?
   settings, the code generator, service helpers — one copy for all automations. The folder reaches it
   through ONE fail-silent seam only: the dev-slots (`_components/shared/dev-slot.tsx` /
   `dev-slot.client.tsx`), a dynamic import behind an error boundary that renders nothing when the layer is
-  absent. **You do not study the dev-slots and you do not build the soft layer** — see AGENTS.md §0.
+  absent. **You do not study the dev-slots and you do not build the soft layer** — see AGENTS.md, «Project».
 
 🔒 The invariant: production NEVER depends on the dev layer's life. Remove `_shared-v2` and the dev buttons
 simply stop appearing; the automation keeps working for its end user. The public components import
@@ -285,7 +285,7 @@ at least one page. Everything else waits for a request.
 Build a surface's LOGIC in its STOREFRONT half — `_components/<tab>/public/`, what the end user actually
 sees and uses — never in the admin half (which holds only the AI-request form) and never by reaching into
 `_shared-v2` (the dev layer, §3). Stay in the storefront's field of view; leave the workshop alone. See
-AGENTS.md §0a.
+AGENTS.md, «Two surfaces are not yours to code».
 
 ## 14. FOUR LAWS THAT ARE NEVER BENT
 
