@@ -49,6 +49,11 @@ They live once in `_components/shared/data-table.client.tsx` and hold for every 
 Need a cell the shared set does not have (an image preview, a formatted size)? Pass `renderCell` — never
 fork the table.
 
+## Objects in a record
+
+A record links to objects; it never renders them itself. Preview and viewing are the shared law of the
+object store — see `tab.storage.md` and the runtime tool `_components/tools/media-viewer`.
+
 ## Never here
 
 The full text · links kept as per-neighbour fields · writes from the middle · a hard-coded column list.

@@ -34,9 +34,10 @@ export async function deliverStorage(ctx: NodeCtx): Promise<{ storageFileKey: st
     return { storageFileKey: first.fileKey, storageRowId: row.id };
   }
 
-  const body = `${m.title}\n${"=".repeat(Math.min(m.title.length, 80))}\ncaptured: ${m.at}\nsource: ${m.source}\n\n${m.text}\n`;
-  const { key, size } = await saveObject(Buffer.from(body, "utf8"), "txt");
-  const row = await addEntityRow("storage", { fileKey: key, name: `${m.title || "message"}.txt`, kind: "text", size, source: m.source }, ctx);
-  if (!row) return { storageFileKey: "", storageRowId: "" };
-  return { storageFileKey: key, storageRowId: row.id };
+  // 🔒 БЕЗ ОБЪЕКТОВ — НЕТ ЗАПИСИ СКЛАДА (шаг 323, разбор владельца). Прежде здесь сохранялось САМО
+  // СООБЩЕНИЕ файлом `.txt` — «чтобы у прогона всё равно остался объект» (решение шага 300). После закона
+  // записи (311.9а) это стало ТРЕТЬЕЙ копией одного текста: он уже лежит в поисковом индексе и саммари в
+  // записи базы. Склад объектов хранит то, что прогон ДОБЫЛ, а не пересериализацию его сообщения.
+  // Текст как ЗАГРУЖЕННЫЙ объект остаётся законным — его кладёт человек кнопкой, а не эта ветка.
+  return { storageFileKey: "", storageRowId: "" };
 }

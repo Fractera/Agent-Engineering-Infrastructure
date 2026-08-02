@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { storageStrings } from "../i18n";
 import { onRunCompleted, onExternalRefresh } from "../../shared/run-events";
 import { DataTable } from "../../shared/data-table.client";
+import { MediaPreview } from "../../tools/media-viewer/client/media-viewer.client";
 
 // Ячейка идентификатора: длинный id ужимается до первых пяти символов + «…», рядом — иконка копирования
 // полного значения (буфер обмена). Полный id всегда доступен в `title` при наведении.
@@ -124,13 +125,16 @@ export default function MainStorageClient({ lang, mode }: { lang: string; mode: 
           lang={lang}
           strings={{ copy: t.copy, empty: t.empty, page: t.page, of: t.of }}
           renderCell={(r, c, v) => {
-            if (c.key === "preview") {
-              return v ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={`${apiBase()}/files?key=${encodeURIComponent(String(v))}`} alt="" className="h-12 w-12 rounded border object-cover" />
-              ) : <span className="text-muted-foreground">—</span>;
-            }
+            // Превью и просмотр — общий рантайм-инструмент (`tools/media-viewer`): картинка показывается
+            // миниатюрой, всё прочее — контейнером того же размера с подписью типа; клик открывает объект
+            // в окне, размер которого выбирается по природе содержимого.
+            if (c.key === "preview") return <MediaPreview fileKey={v} name={String(r.name ?? "")} />;
             if (c.key === "size") return <span className="tabular-nums">{fmtSize(v)}</span>;
+            // Имя объекта бывает длинным (заголовок добытой статьи): показываем начало, полное — в подсказке.
+            if (c.key === "name") {
+              const s = String(v ?? "");
+              return <span className="block truncate" title={s}>{s.length > 50 ? `${s.slice(0, 50)}…` : s || "—"}</span>;
+            }
             return undefined;
           }}
           rowActions={mode === "admin" ? (r) => (

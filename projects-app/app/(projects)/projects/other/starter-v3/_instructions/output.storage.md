@@ -31,8 +31,14 @@ Whenever the automation receives files at all. It costs nothing when unused.
 
 ## Bytes here, reference in the row (step 311.9а)
 
-The object lives in the folder's storage; the row holds `fileKey` and the links. The row is not the file
+The object lives in the folder’s storage; the row holds `fileKey` and the links. The row is not the file
 and never carries its contents.
 
 The class gate applies BEFORE the bytes are written, not only before the row: a question-class run must not
 leave a file either. Full shape: `records.md`.
+
+## No objects, no row (step 323)
+
+A run that obtained nothing leaves NO row here. Until step 323 this door re-serialized the message into a
+`.txt` so that «the run would still have an object» — that made a third copy of a text that already lives in
+the search index and, condensed, in the database record. Text as an UPLOADED object stays lawful.

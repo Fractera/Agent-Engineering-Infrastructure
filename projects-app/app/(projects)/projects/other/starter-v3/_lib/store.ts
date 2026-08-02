@@ -15,12 +15,30 @@ import { OBJECTS_DIR } from "./paths";
 // Расширение → MIME. Только то, что кладём: картинки и текст (шаг 300 — выход склада сохраняет
 // сообщение файлом .txt). Неизвестное отдаём как поток байтов.
 const MIME: Record<string, string> = {
+  // изображения
   jpg: "image/jpeg",
   jpeg: "image/jpeg",
   png: "image/png",
   webp: "image/webp",
   gif: "image/gif",
+  svg: "image/svg+xml",
+  // видео и аудио (шаг 323): без этих типов браузер получал `application/octet-stream` и предлагал
+  // скачать файл вместо того, чтобы его проиграть
+  mp4: "video/mp4",
+  webm: "video/webm",
+  mov: "video/quicktime",
+  mp3: "audio/mpeg",
+  wav: "audio/wav",
+  ogg: "audio/ogg",
+  m4a: "audio/mp4",
+  // документы и текст
+  pdf: "application/pdf",
   txt: "text/plain; charset=utf-8",
+  md: "text/markdown; charset=utf-8",
+  html: "text/html; charset=utf-8",
+  xml: "application/xml; charset=utf-8",
+  json: "application/json; charset=utf-8",
+  csv: "text/csv; charset=utf-8",
 };
 
 /** Ключ вида `obj<time><rand>.<ext>` — без слэшей и точек в теле, поэтому обход каталога невозможен. */
