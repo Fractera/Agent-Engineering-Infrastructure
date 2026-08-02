@@ -192,6 +192,24 @@ function buildNginxConfig(domain: string, certSource: "auto" | "upload"): string
     // chat (:9120 /chat/) and auth-verify (:3001) keep $host and work as before.
     // → reports/errors/hermes-refuses-0.0.0.0-bind-and-host-check.md (step 136)
     const hostHeader = prefix === "hermes" ? "127.0.0.1:9119" : "$host";
+    // ORIGIN — вторая половина той же защиты, и без неё ЧАТ панели не получает событий.
+    // Гермес проверяет вебсокет-рукопожатие ОТДЕЛЬНО от HTTP (middleware FastAPI на WS-маршрутах
+    // не работает), и когда браузер прислал `Origin`, требует, чтобы тот указывал на ТОТ ЖЕ адрес
+    // привязки. Браузер шлёт `Origin: https://hermes.<domain>`, а привязан дашборд к 127.0.0.1:9119
+    // — совпасть не может никогда, потому что Host мы подменяем сами (строка выше, шаг 136).
+    // Итог: `origin_mismatch` → сокет закрывается кодом 4403 → рукопожатию отвечает HTTP 403 →
+    // вкладка «Чат» показывает «events feed disconnected — tool calls may not appear», и вызовы
+    // инструментов не приезжают в панель. Отказ МОЛЧАЛИВЫЙ: аудит WS у Гермеса включается только
+    // в режиме `gated`, а при петлевой привязке режим `loopback` — в логах пусто.
+    // Доказано опытом 2026-08-02 (рукопожатие к :9119 с одним и тем же токеном):
+    //   Origin: https://hermes.aifa.dev → 403 · Origin: http://127.0.0.1:9119 → 101 · без Origin → 101.
+    // Чем платим: Origin — это анти-rebinding-заслонка Гермеса, здесь мы её снимаем. Допустимо,
+    // потому что Host подменён уже сейчас (доверие к нашему прокси установлено раньше), а перед
+    // панелью стоят два более сильных рубежа: auth_request (сессия Fractera + роль architect) и
+    // собственный процессный токен Гермеса (с неверным токеном рукопожатие даёт 403 и с верным Origin).
+    const originLine = prefix === "hermes"
+      ? "        proxy_set_header Origin http://127.0.0.1:9119;\n"
+      : "";
     return `# fractera ${host} — managed by fractera
 server {
     listen 80;
@@ -221,7 +239,7 @@ ${gate}        proxy_pass http://127.0.0.1:${port};
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
         proxy_set_header Host ${hostHeader};
-        proxy_set_header X-Real-IP $remote_addr;
+${originLine}        proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_read_timeout 86400;
