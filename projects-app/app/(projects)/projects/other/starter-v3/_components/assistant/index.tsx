@@ -3,6 +3,7 @@ import { DEFAULT_ASSISTANT } from "../../_lib/components/conversation/config";
 import { loadAutomation } from "../../_data/load";
 import AssistantForm, { type AssistantData } from "./public/assistant-form.client";
 import AccessRoles from "./public/access-roles.client";
+import AssistantAiRequest from "./admin/ai-request";
 
 // ВКЛАДКА «АССИСТЕНТ» — интерфейс разговорного слоя (шаг 309). Одна сущность = один набор настроек речи
 // автоматизации; её `data` читает узел `converse` (`assistantConfigOf`), а правит форма ниже через
@@ -39,6 +40,7 @@ export default async function Assistant({ entities, lang }: { entities: Entity[]
       <div className="border-t pt-4">
         <AccessRoles access={access} lang={lang} />
       </div>
+      <AssistantAiRequest entities={entities} lang={lang} />
     </div>
   );
 }

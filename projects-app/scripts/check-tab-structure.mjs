@@ -21,7 +21,13 @@ import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 
 const PROJECTS = join(process.cwd(), "app", "(projects)", "projects");
-const V2_AUTOMATIONS = [join("_lib", "starters", "stream", "en")];
+// 🔒 КАЖДАЯ АВТОМАТИЗАЦИЯ ДВУСЛОЙНОЙ МОДЕЛИ ПЕРЕЧИСЛЯЕТСЯ ЗДЕСЬ (шаг 313.E). Гейт проверяет ровно этот
+// список, поэтому автоматизация, забытая в нём, живёт БЕЗ стандарта: `starter-v3` строился с 311.1 и всё
+// это время не проверялся — так у вкладки «Ассистент» пропала половина `admin/`, и возразить было некому.
+const V2_AUTOMATIONS = [
+  join("_lib", "starters", "stream", "en"), // замороженный стартер v2 — донор при рождении
+  join("other", "starter-v3"), // будущий замороженный шаблон v3
+];
 // Folders directly under `_components/` that are NOT tabs (shared plumbing / infra).
 const NOT_TABS = new Set(["shared", "diagram", "generic", "notifications", "chrome", "tools"]);
 const DEV_MARKERS = ["_shared-v2", "dev-slot", "DevSlot", "DevUseCasesPanel", "DevBuildWithAi"];
