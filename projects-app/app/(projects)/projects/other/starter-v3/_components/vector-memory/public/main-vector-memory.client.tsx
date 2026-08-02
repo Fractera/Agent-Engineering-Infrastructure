@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { vectorMemoryStrings } from "../i18n";
 import { onRunCompleted } from "../../shared/run-events";
-import { DataTable } from "../../shared/data-table.client";
+import { DataTable, type TableColumn } from "../../shared/data-table.client";
 
 // ПУБЛИЧНАЯ ПОЛОВИНА ВЕКТОРНОЙ ПАМЯТИ — таблица записей-фактов + поиск. Продуктовая поверхность (закон
 // владельца): вся логика памяти живёт здесь, где её развивает агент по заявке. Добавление записи (модалка с
@@ -64,6 +64,19 @@ export default function MainVectorMemoryClient({ lang, mode }: { lang: string; m
   const [query, setQuery] = useState(""); // текст в поле
   const [applied, setApplied] = useState(""); // что реально искали (кнопкой/Enter)
   const [loaded, setLoaded] = useState(false);
+  // Состав колонок — из ЯДРА (закон вкладки базы, шаг 324): пока список жил в компоненте, закон
+  // исполнялся, а владелец видел устаревшую таблицу. Колонок нет — таблица не рисуется, и это честно.
+  const [columns, setColumns] = useState<TableColumn[]>([]);
+  useEffect(() => {
+    let alive = true;
+    fetch(`${apiBase()}/core?select=tab:vector-memory`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { entities?: { data?: { columns?: TableColumn[] } }[]; entity?: { data?: { columns?: TableColumn[] } } } | null) => {
+        if (alive) setColumns(d?.entities?.[0]?.data?.columns ?? d?.entity?.data?.columns ?? []);
+      })
+      .catch(() => { /* нет двери — колонок не будет */ });
+    return () => { alive = false; };
+  }, []);
 
   const load = useCallback((q: string) => {
     fetch(`${apiBase()}/rows?table=${TABLE}&limit=200&search=${encodeURIComponent(q)}`, { cache: "no-store" })
@@ -122,13 +135,7 @@ export default function MainVectorMemoryClient({ lang, mode }: { lang: string; m
           10 записей, ячейка не выше четырёх строк. Связи — массивы (закон 324 §2). */}
       {loaded ? (
         <DataTable
-          columns={[
-            { key: "id", label: t.id, type: "chip", source: "id" },
-            { key: "name", label: t.name, type: "text", source: "name" },
-            { key: "summary", label: t.content, type: "text", source: "summary" },
-            { key: "storage", label: t.storageLinks, type: "ids", source: "links:storage" },
-            { key: "createdAt", label: t.added, type: "date", source: "createdAt" },
-          ]}
+          columns={columns}
           rows={rows}
           lang={lang}
           strings={{ copy: t.copy, empty: t.empty, page: t.page, of: t.of }}

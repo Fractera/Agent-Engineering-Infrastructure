@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { storageStrings } from "../i18n";
 import { onRunCompleted, onExternalRefresh } from "../../shared/run-events";
-import { DataTable } from "../../shared/data-table.client";
+import { DataTable, type TableColumn } from "../../shared/data-table.client";
 import { MediaPreview } from "../../tools/media-viewer/client/media-viewer.client";
 
 // Ячейка идентификатора: длинный id ужимается до первых пяти символов + «…», рядом — иконка копирования
@@ -56,6 +56,19 @@ export default function MainStorageClient({ lang, mode }: { lang: string; mode: 
   const [query, setQuery] = useState(""); // текст в поле
   const [applied, setApplied] = useState(""); // что реально искали (кнопкой/Enter)
   const [loaded, setLoaded] = useState(false);
+  // Состав колонок — из ЯДРА (закон вкладки базы, шаг 324): пока список жил в компоненте, закон
+  // исполнялся, а владелец видел устаревшую таблицу. Колонок нет — таблица не рисуется, и это честно.
+  const [columns, setColumns] = useState<TableColumn[]>([]);
+  useEffect(() => {
+    let alive = true;
+    fetch(`${apiBase()}/core?select=tab:storage`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { entities?: { data?: { columns?: TableColumn[] } }[]; entity?: { data?: { columns?: TableColumn[] } } } | null) => {
+        if (alive) setColumns(d?.entities?.[0]?.data?.columns ?? d?.entity?.data?.columns ?? []);
+      })
+      .catch(() => { /* нет двери — колонок не будет */ });
+    return () => { alive = false; };
+  }, []);
 
   const load = useCallback((q: string) => {
     fetch(`${apiBase()}/rows?table=${TABLE}&limit=200&search=${encodeURIComponent(q)}`, { cache: "no-store" })
@@ -113,14 +126,7 @@ export default function MainStorageClient({ lang, mode }: { lang: string; mode: 
           ячеек этой вкладки, они передаются через `renderCell`, а не форкают таблицу. */}
       {loaded ? (
         <DataTable
-          columns={[
-            { key: "id", label: t.id, type: "chip", source: "id" },
-            { key: "preview", label: t.preview, type: "image", source: "fileKey" },
-            { key: "name", label: t.name, type: "text", source: "name" },
-            { key: "kind", label: t.kind, type: "badge", source: "kind" },
-            { key: "size", label: t.size, type: "text", source: "size", minWidth: 96 },
-            { key: "createdAt", label: t.added, type: "date", source: "createdAt" },
-          ]}
+          columns={columns}
           rows={rows}
           lang={lang}
           strings={{ copy: t.copy, empty: t.empty, page: t.page, of: t.of }}
