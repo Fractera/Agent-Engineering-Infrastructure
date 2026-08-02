@@ -41,6 +41,42 @@ export const RowEnvelopeSchema = z
 export type Link = z.infer<typeof LinkSchema>;
 export type RowEnvelope = z.infer<typeof RowEnvelopeSchema>;
 
+/** Предел саммари — тот же, что применяет запись (`_lib/summary.ts`). Объявлен здесь, чтобы схема могла отказать. */
+export const SUMMARY_LIMIT = 300;
+
+/**
+ * СКЛАДЫ-ЗАПИСИ — те, чья строка описывает СУЩНОСТЬ и потому обязана нести короткую форму. Метка на карте
+ * и событие календаря сущность не описывают, они её ГРАНИ: у них своя форма (координаты, дата), и саммари
+ * им не нужно.
+ */
+export const RECORD_TABLES = ["database", "vector-memory"] as const;
+
+/**
+ * 🔒 ЗАПИСЬ ВСЕГДА НЕСЁТ САММАРИ И НИКОГДА — ПОЛНЫЙ ТЕКСТ (шаг 311.9а.4, решение владельца).
+ * Полный текст живёт в поисковом индексе, и только там. Проверка машинная: пока правило жило прозой,
+ * один и тот же текст лежал в трёх местах.
+ */
+export const RecordFieldsSchema = z
+  .object({
+    name: z.string().min(1, "a record must carry a name"),
+    summary: z
+      .string()
+      .min(1, "a record always carries a summary — for a short source it simply equals the source")
+      .max(SUMMARY_LIMIT, `a summary is at most ${SUMMARY_LIMIT} characters: the full text belongs to the search index, not to a store`),
+  })
+  .passthrough();
+
+export const isRecordTable = (table: string): boolean => (RECORD_TABLES as readonly string[]).includes(table);
+
+/** Проверка полей записи. Отказывает словами — как и конверт. */
+export function parseRecordFields(row: unknown): void {
+  const parsed = RecordFieldsSchema.safeParse(row);
+  if (!parsed.success) {
+    const why = parsed.error.issues.map((i) => `${i.path.join(".") || "row"}: ${i.message}`).join("; ");
+    throw new Error(`a record row must obey the record law before it may be stored — ${why}`);
+  }
+}
+
 /**
  * Проверка конверта перед записью. Отказывает СЛОВАМИ — тот же обучающий отказ, что у `api/patch`:
  * незаконная строка не ложится в склад, а вызывающий узнаёт, что именно не так.

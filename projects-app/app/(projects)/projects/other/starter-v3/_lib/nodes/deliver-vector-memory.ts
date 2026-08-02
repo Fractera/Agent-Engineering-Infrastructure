@@ -21,6 +21,7 @@ import type { NodeCtx } from "../executor";
 import { rememberFact } from "../memory";
 import { messageOf, mayWriteEntity } from "../message";
 import { addEntityRow } from "../rows";
+import { boundedSummary } from "../summary";
 
 export async function deliverVectorMemory(ctx: NodeCtx): Promise<{ vectorMemoryDelivery: string; vectorRowId?: string }> {
   // ВОПРОС НЕ ЗАПОМИНАЕМ. Правило держит `addEntityRow` (311.9а), но проверка нужна и ЗДЕСЬ, до ингеста:
@@ -45,8 +46,12 @@ export async function deliverVectorMemory(ctx: NodeCtx): Promise<{ vectorMemoryD
   if (trackId === null) {
     return { vectorMemoryDelivery: "skipped: the vector-memory service (LightRAG) is unreachable on this server" };
   }
-  // Связи не собираются здесь: их ставит сама запись одним представлением `links` (311.9а.2).
-  const row = await addEntityRow("vector-memory", { name: m.title, content: fullText, source: m.source, trackId }, ctx, recordId);
+  // 🔒 СТРОКА — КВИТАНЦИЯ, А НЕ КОПИЯ (311.9а.4, требование владельца). Полный текст ушёл в индекс выше и
+  // живёт ТОЛЬКО там: вектор ищет, склады хранят и связывают. Здесь остаётся то, ради чего строка и нужна
+  // человеку — что запомнили (саммари), под каким `trackId` и с чем связано. Прежде тут лежала полная
+  // копия `content`, которую даже интерфейс обрезал до 80 знаков, — мёртвый груз и третий дом одного текста.
+  const { summary, summarySource } = boundedSummary(ctx.summary, fullText);
+  const row = await addEntityRow("vector-memory", { name: m.title, summary, summarySource, source: m.source, trackId }, ctx, recordId);
   if (!row) return { vectorMemoryDelivery: "skipped: this request class leaves no record" };
   return { vectorMemoryDelivery: `remembered ${trackId}`, vectorRowId: row.id };
 }

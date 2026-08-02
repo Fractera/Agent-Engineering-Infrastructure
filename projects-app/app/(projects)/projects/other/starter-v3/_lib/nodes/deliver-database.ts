@@ -14,6 +14,7 @@
 import type { NodeCtx } from "../executor";
 import { messageOf } from "../message";
 import { addEntityRow } from "../rows";
+import { boundedSummary } from "../summary";
 
 /**
  * ФОРМА ЗАПИСИ — единственный источник (закон 2). Середина, которой нужно придержать запись до
@@ -29,9 +30,14 @@ export function recordRowFrom(ctx: NodeCtx): Record<string, unknown> {
   // 🔒 СВЯЗИ ЗДЕСЬ НЕ СОБИРАЮТСЯ (311.9а.2). Прежде строка несла `storageIds`/`vectorIds` — поле на
   // каждого соседа, второй дом того же факта: календарь появился в `links` и в «массивах строк» так и не
   // появился. Связи ставит сама запись (`addEntityRow` → `crossLink`), одним представлением `links`.
+  // 🔒 В ЗАПИСИ — САММАРИ, А НЕ ПОЛНЫЙ ТЕКСТ (311.9а.4). Полный текст живёт в поисковом индексе, и только
+  // там: склад хранит и связывает, индекс ищет. Поле заполнено ВСЕГДА — короткий источник даёт саммари,
+  // совпадающее с ним дословно, и читателю не приходится ветвиться «есть саммари или смотреть в текст».
+  const { summary, summarySource } = boundedSummary(ctx.summary, String(ctx.original ?? m.text ?? ""));
   return {
     name: m.title,
-    text: m.text,
+    summary,
+    summarySource,
     source: m.source,
     date: m.at,
     ...fields,

@@ -16,7 +16,9 @@ import { onRunCompleted } from "../../shared/run-events";
 // СУТЬ записи — текст-факт (`content`). СВЯЗИ читаются из единственного представления `links` через
 // `linksOf` (311.9а.2); прежнее поле `storageIds` осталось лишь фолбэком для строк, записанных раньше.
 // Показываются СТОЛБИКОМ СОКРАЩЁННЫХ ИДЕНТИФИКАТОРОВ С КОПИРОВАНИЕМ, тем же дизайном, что колонка ID.
-type Row = { id: string; createdAt: string; name?: unknown; content?: unknown; storageIds?: unknown } & Record<string, unknown>;
+// Строка памяти — КВИТАНЦИЯ, а не копия текста (311.9а.4): показываем `summary`. `content` остаётся
+// фолбэком для строк, записанных до этого шага, — полный текст теперь живёт только в поисковом индексе.
+type Row = { id: string; createdAt: string; name?: unknown; summary?: unknown; content?: unknown; storageIds?: unknown } & Record<string, unknown>;
 const apiBase = () => location.pathname.replace(/\/+$/, "") + "/api";
 const TABLE = "vector-memory";
 
@@ -137,7 +139,7 @@ export default function MainVectorMemoryClient({ lang, mode }: { lang: string; m
                     <IdChip id={r.id} copyLabel={t.copy} />
                   </td>
                   <td className="p-2">{String(r.name ?? "—")}</td>
-                  <td className="p-2 max-w-xs" title={String(r.content ?? "")}>{fmtContent(r.content)}</td>
+                  <td className="p-2 max-w-xs" title={String(r.summary ?? r.content ?? "")}>{fmtContent(r.summary ?? r.content)}</td>
                   <td className="p-2">
                     <IdChipColumn ids={linksOf(r, "storage", r.storageIds)} copyLabel={t.copy} />
                   </td>

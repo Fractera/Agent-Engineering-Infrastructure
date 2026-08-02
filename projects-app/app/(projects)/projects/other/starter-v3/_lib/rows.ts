@@ -12,7 +12,7 @@ import { join } from "node:path";
 import { randomBytes } from "node:crypto";
 import { RUNTIME_DIR } from "./paths";
 import { ENTITY_STORES, mayWriteEntity } from "./message";
-import { parseEnvelope, type Link } from "../_data/record.schema";
+import { parseEnvelope, parseRecordFields, isRecordTable, type Link } from "../_data/record.schema";
 
 const ROWS_FILE = join(RUNTIME_DIR, "rows.jsonl");
 
@@ -55,6 +55,10 @@ export async function addEntityRow(
     throw new Error(`addEntityRow: "${table}" is not an entity store (${ENTITY_STORES.join(", ")}) — a run journal is written with addRow`);
   }
   if (!mayWriteEntity(ctx)) return null;
+  // Склад-ЗАПИСЬ обязан нести имя и саммари (311.9а.4). Метка и событие — грани, а не описание сущности:
+  // им эта проверка не адресована. Ручное добавление строки владельцем идёт через `addRow` и под неё не
+  // подпадает: закон говорит о том, что оставляет ПРОГОН, а не о том, что вписывает человек.
+  if (isRecordTable(table)) parseRecordFields(data);
   const row = await addRow(table, data, id);
   await crossLink(ctx, table, row.id);
   return row;
