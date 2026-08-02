@@ -10,8 +10,6 @@ import Analytics from "./analytics";
 import Storage from "./storage";
 import Database from "./database";
 import VectorMemory from "./vector-memory";
-import Finance from "./finance";
-import Glossary from "./glossary";
 import Assistant from "./assistant";
 import { cronOf } from "./shared/schedule";
 import GenericTab from "./generic";
@@ -83,10 +81,6 @@ export default async function AutomationComponents({ lang, onboarding = false }:
       <Database entities={entitiesOf(tab)} lang={lang} />
     ) : tab.name === "vector-memory" ? (
       <VectorMemory entities={entitiesOf(tab)} lang={lang} />
-    ) : tab.name === "finance" ? (
-      <Finance entities={entitiesOf(tab)} lang={lang} />
-    ) : tab.name === "glossary" ? (
-      <Glossary entities={entitiesOf(tab)} lang={lang} />
     ) : tab.name === "assistant" ? (
       <Assistant entities={entitiesOf(tab)} lang={lang} />
     ) : (

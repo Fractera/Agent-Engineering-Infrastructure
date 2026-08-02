@@ -1,7 +1,7 @@
 // ПЕРЕКРЁСТНЫЕ ССЫЛКИ ВСЕХ-КО-ВСЕМ (шаг 309, требование владельца) — каждая строка ЛЮБОЙ базы несёт
 // ссылки на ВСЕ связанные строки в остальных базах, ОБОЮДНО. Из любой записи достаётся любая связь: из
-// storage-строки чека — назад к finance-записи и к вектор-памяти; из вектора — к записи и файлу; и т.д.
-// «Нет связи» как ситуация исчезает.
+// строки объектного хранилища — назад к записи базы и к вектор-памяти; из вектора — к записи и файлу; из
+// метки на карте — к тому же предмету. «Нет связи» как ситуация исчезает.
 //
 // ЗАЧЕМ ОТДЕЛЬНЫЙ ПОМОЩНИК. Узлы-выходы идут по очереди: кто записался раньше (vector, storage), не знает
 // id тех, кто создан позже (database, finance, map). Прямые ссылки были, обратных — нет. Этот помощник
@@ -21,8 +21,8 @@ function knownSiblings(ctx: Record<string, unknown>): Link[] {
   const push = (table: string, id: unknown) => { const s = String(id ?? "").trim(); if (s) out.push({ table, id: s }); };
   push("vector-memory", ctx.vectorRowId);
   push("database", ctx.databaseRowId);
-  push("finance", ctx.financeRowId);
   push("map", ctx.mapRowId);
+  push("calendar", ctx.calendarRowId);
   // Объекты хранилища этого всплеска — из привязанных вложений (fileKey — ключ объекта, rowId — строка storage).
   const atts = Array.isArray(ctx.attachments) ? (ctx.attachments as { rowId?: unknown }[]) : [];
   for (const a of atts) push("storage", a?.rowId);
@@ -38,8 +38,8 @@ const mergeLinks = (existing: unknown, add: Link[]): Link[] => {
 
 /**
  * Связать только что созданную строку (`table`/`id`) со всеми соседями прогона ОБОЮДНО.
- * `also` — дополнительные соседи, ещё не попавшие в контекст (напр. finance-строка, созданная в том же
- * узле, что и database). Тихо переживает отсутствие строки-соседа (updateRow вернёт null).
+ * `also` — дополнительные соседи, ещё не попавшие в контекст (строка, созданная в том же узле, что и
+ * вызывающий). Тихо переживает отсутствие строки-соседа (updateRow вернёт null).
  */
 export async function crossLink(ctx: Record<string, unknown>, table: string, id: string, also: Link[] = []): Promise<void> {
   const me = String(id ?? "").trim();

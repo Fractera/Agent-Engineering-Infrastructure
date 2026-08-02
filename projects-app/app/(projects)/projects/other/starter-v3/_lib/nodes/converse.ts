@@ -1,5 +1,5 @@
 // ФУНКЦИЯ УЗЛА «LOGIC» (transform, role=conversation) — РАЗГОВОРНАЯ ГРАНИЦА (шаг 309, решение владельца).
-// Отдельный ВИД работы: не счёт над данными (это делают transform-ы вроде parseDate/digitizeMoney по
+// Отдельный ВИД работы: не счёт над данными (это делают transform-ы вроде resolveMoment/fetchExternal по
 // закону «без ИИ»), а КОМФОРТНЫЙ ДИАЛОГ с человеком — по природе задача МОДЕЛИ. Узел собирает ОДИН
 // ответ пользователю (`ctx.reply`), думая моделью по СЦЕНАРИЮ ПОВЕДЕНИЯ (вкладка «Ассистент») с ПАМЯТЬЮ
 // диалога (буфер) и примерами (Q&A). Модели/ключа нет → детерминированный ФОЛБЭК `composeReply` (уже
@@ -15,21 +15,14 @@ import { composeReply } from "./compose-reply";
 
 // ЧТО СДЕЛАЛ ПРОГОН — РАЗДЕЛЬНО (309, живой тест): ЗАПИСИ (их подтверждаем) отдельно от RECALL-ОТВЕТА (на
 // него ОТВЕЧАЕМ, а не «сохранено»). Смешение делало бот'а «Готово ✅ …сохранено» даже на вопросы.
+// 🔒 ТОЛЬКО ТО, ЧТО РЕАЛЬНО ЕСТЬ В СБОРКЕ (шаг 311.11): траты, чеки, категории, места и алиасы глоссария
+// перечислялись здесь как исходы узлов, снесённых вместе с доменом v2. Перечислять несуществующее — то же
+// обещание сверх ядра, что и no-op-заглушка.
 function recordedSummary(ctx: NodeCtx): string {
   const bits: string[] = [];
   if (ctx.noteSummary) bits.push(`saved a note: ${ctx.noteSummary}`);
-  const f = ctx.finance as { kind?: string; amount?: number | null; categories?: string[]; summary?: string } | undefined;
-  if (f && typeof f === "object") bits.push(`recorded a ${f.kind ?? "expense"} of ${f.amount ?? "?"} (${(f.categories ?? []).join(", ")}): ${f.summary ?? ""}`);
   if (ctx.needsWhen === true) bits.push("a reminder was requested but no date was given — ask when");
   else if (ctx.when) bits.push(`set a reminder for ${ctx.when}: ${ctx.remindText ?? ""}`);
-  const p = ctx.placeOutcome as { kind?: string; desc?: string } | undefined;
-  if (p && typeof p === "object") {
-    if (p.kind === "saved") bits.push(`saved a place: ${p.desc ?? ""}`);
-    else if (p.kind === "need-description") bits.push("a location point was received but has no description — ask what is there");
-    else if (p.kind === "need-address") bits.push("a place was mentioned but no coordinates — ask for the location or address");
-  }
-  const g = ctx.glossaryAdded as { term?: string; meaning?: string } | undefined;
-  if (g && typeof g === "object" && g.term) bits.push(`saved a glossary alias: ${g.term} = ${g.meaning}`);
   return bits.join("; ");
 }
 
@@ -90,15 +83,6 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
     return { reply: help };
   }
 
-  // ДУБ-КОНТРОЛЬ (310) — вопрос «записать ещё раз?» и его разрешение отдаём ДЕТЕРМИНИРОВАННО: чёткий
-  // да/нет-промпт надёжнее модельного парафраза (модель может размыть вопрос и владелец не поймёт, что от
-  // него хотят). Тот же приём, что с представлением возможностей.
-  if (ctx.duplicateAsk || ctx.duplicateResolved || ctx.dimensionAsk || ctx.dimensionResolved || ctx.dimensionAdded) {
-    const reply = composeReply({ ...ctx, lang }).reply as string;
-    if (chatId) await pushMessage(chatId, { role: "assistant", text: reply, at: new Date().toISOString() }, cfg.lastN, cfg.ttlMinutes);
-    return { reply };
-  }
-
   const recorded = recordedSummary(ctx);
   const recallAnswer = String(ctx.recallAnswer ?? "").trim();
   const qaHit = matchQa(incoming, cfg.qa);
@@ -122,15 +106,12 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
       : `The user is CONVERSING (a greeting, a question about who you are, small talk, or a question ABOUT THIS ` +
         `CONVERSATION — what they asked earlier, whether you remember). You CAN SEE the recent dialogue above: ` +
         `use it to answer such questions truthfully and specifically. Do NOT say anything was "saved". Reply naturally as this assistant.`;
-  // Глоссарий алиасов — СИСТЕМНОЙ ПРЕАМБУЛОЙ (309): модель раскрывает сокращения владельца в ответах.
-  const glossaryPreamble = String(ctx.glossary ?? "").trim();
   // Публичный адрес (310): когда владелец спрашивает «где это посмотреть / покажи страницу» — отвечай
   // адресом; не назначен → честно скажи, что адреса пока нет (не выдумывай ссылку).
   const publicUrlLine = publicUrl
     ? `The automation's public page is: ${publicUrl}. When the owner asks where to see it, give this address.`
     : `The automation's public page address is not assigned yet — if asked where to see it, say so honestly, do not invent a link.`;
   const system =
-    (glossaryPreamble ? `${glossaryPreamble}\n\n` : "") +
     `${publicUrlLine}\n\n` +
     `${cfg.instruction}\n\nReply ONLY in language "${lang}". Keep it to one short, warm message. ` +
     // ГАРДРЕЙЛ ОТ ГАЛЛЮЦИНАЦИЙ (309, живой тест): модель НЕ знает внутреннего устройства и НЕ должна его

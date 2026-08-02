@@ -872,7 +872,7 @@
               "description": "An event on the automation calendar.",
               "state": "visible",
               "info": {
-                "aiSummary": "Places the captured message as a calendar event. The event time is ctx.when (parsed by parseDate) when present, else the capture moment; ctx.needsWhen (no date found) is an honest ten-language \"when?\" refusal — no row is created. To make an occurrence actually deliver, it sets an ACTIVE integration on the SOURCE telegram channel (asked in Telegram → reminded in Telegram); api/calendar-tick then delivers it (step 307.6)."
+                "aiSummary": "Places the captured message as a calendar event. The event time is ctx.when (resolved by resolveMoment) when present, else the capture moment; ctx.needsWhen (no date found) is an honest ten-language \"when?\" refusal — no row is created. To make an occurrence actually deliver, it sets an ACTIVE integration on the SOURCE telegram channel (asked in Telegram → reminded in Telegram); api/calendar-tick then delivers it (step 307.6)."
               },
               "status": "materialized",
               "warnings": [],
@@ -880,7 +880,7 @@
               "function": {
                 "name": "deliverCalendar",
                 "summary": "Creates a calendar event titled like the message at its capture moment.",
-                "accepts": "The captured message; optionally ctx.when (parsed date from parseDate) and ctx.needsWhen.",
+                "accepts": "The captured message; optionally ctx.when (the moment resolved by resolveMoment) and ctx.needsWhen.",
                 "returns": "calendarRowId and calendarWhen (ISO); refuses in ten languages when needsWhen is set."
               },
               "run": "sequential",
@@ -2983,7 +2983,7 @@
         "description": "",
         "presence": "collapsed",
         "info": {
-          "aiSummary": "The dashboard holds ALL data tables of this automation (step 310, owner: a data table belongs in the dashboard, not its own tab): (1) History — captured messages (date · source · title · text); (2) Finance — the money ledger (date · item · amount · currency · store · kind · receipt), written by deliverDatabase from digitizeMoney. Add a table = add an entity here, never a new tab."
+          "aiSummary": "The dashboard holds ALL data tables of this automation (owner's law: a data table belongs in the dashboard, not its own tab). Today: History — captured messages (date · source · title · text), written by deliverDashboard. Add a table = add an entity here, never a new tab."
         },
         "status": "materialized",
         "warnings": [],
@@ -3131,206 +3131,6 @@
                 "pl": "Przechwycone wiadomości",
                 "tr": "Yakalanan mesajlar",
                 "nl": "Vastgelegde berichten"
-              },
-              "pageSize": 20
-            }
-          },
-          {
-            "cuid": "cmrvy25f31pjb1finance0dashb01",
-            "name": "Finance",
-            "description": "",
-            "info": {
-              "aiSummary": "The money ledger INSIDE the dashboard (step 310, owner: a data table belongs in the dashboard, not its own tab): rows of the finance table — date, amount, store, categories, receipt image. Written by deliverDatabase from digitizeMoney; view/delete here."
-            },
-            "status": "materialized",
-            "warnings": [],
-            "envKeys": [],
-            "data": {
-              "table": "finance",
-              "columns": [
-                {
-                  "key": "date",
-                  "label": {
-                    "en": "Date",
-                    "es": "Fecha",
-                    "fr": "Date",
-                    "it": "Data",
-                    "ru": "Дата",
-                    "de": "Datum",
-                    "pt": "Data",
-                    "pl": "Data",
-                    "tr": "Tarih",
-                    "nl": "Datum"
-                  },
-                  "type": "date",
-                  "source": "date",
-                  "defaultVisible": true
-                },
-                {
-                  "key": "name",
-                  "label": {
-                    "en": "Item",
-                    "es": "Concepto",
-                    "fr": "Libellé",
-                    "it": "Voce",
-                    "ru": "Назначение",
-                    "de": "Posten",
-                    "pt": "Item",
-                    "pl": "Pozycja",
-                    "tr": "Kalem",
-                    "nl": "Post"
-                  },
-                  "type": "text",
-                  "source": "name",
-                  "defaultVisible": true
-                },
-                {
-                  "key": "amount",
-                  "label": {
-                    "en": "Amount",
-                    "es": "Importe",
-                    "fr": "Montant",
-                    "it": "Importo",
-                    "ru": "Сумма",
-                    "de": "Betrag",
-                    "pt": "Valor",
-                    "pl": "Kwota",
-                    "tr": "Tutar",
-                    "nl": "Bedrag"
-                  },
-                  "type": "number",
-                  "source": "amount",
-                  "defaultVisible": true
-                },
-                {
-                  "key": "currency",
-                  "label": {
-                    "en": "Currency",
-                    "es": "Moneda",
-                    "fr": "Devise",
-                    "it": "Valuta",
-                    "ru": "Валюта",
-                    "de": "Währung",
-                    "pt": "Moeda",
-                    "pl": "Waluta",
-                    "tr": "Para birimi",
-                    "nl": "Valuta"
-                  },
-                  "type": "text",
-                  "source": "currency",
-                  "defaultVisible": true
-                },
-                {
-                  "key": "store",
-                  "label": {
-                    "en": "Store",
-                    "es": "Tienda",
-                    "fr": "Magasin",
-                    "it": "Negozio",
-                    "ru": "Магазин",
-                    "de": "Geschäft",
-                    "pt": "Loja",
-                    "pl": "Sklep",
-                    "tr": "Mağaza",
-                    "nl": "Winkel"
-                  },
-                  "type": "text",
-                  "source": "store",
-                  "defaultVisible": true
-                },
-                {
-                  "key": "kind",
-                  "label": {
-                    "en": "Kind",
-                    "es": "Tipo",
-                    "fr": "Type",
-                    "it": "Tipo",
-                    "ru": "Тип",
-                    "de": "Art",
-                    "pt": "Tipo",
-                    "pl": "Rodzaj",
-                    "tr": "Tür",
-                    "nl": "Soort"
-                  },
-                  "type": "badge",
-                  "source": "kind",
-                  "defaultVisible": true,
-                  "options": {
-                    "colorFrom": "green"
-                  }
-                },
-                {
-                  "key": "receipt",
-                  "label": {
-                    "en": "Receipt",
-                    "es": "Recibo",
-                    "fr": "Reçu",
-                    "it": "Ricevuta",
-                    "ru": "Чек",
-                    "de": "Beleg",
-                    "pt": "Recibo",
-                    "pl": "Paragon",
-                    "tr": "Fiş",
-                    "nl": "Bon"
-                  },
-                  "type": "image",
-                  "source": "storageIds",
-                  "defaultVisible": true
-                },
-                {
-                  "key": "row-actions",
-                  "label": {
-                    "en": "",
-                    "es": "",
-                    "fr": "",
-                    "it": "",
-                    "ru": "",
-                    "de": "",
-                    "pt": "",
-                    "pl": "",
-                    "tr": "",
-                    "nl": ""
-                  },
-                  "type": "actions",
-                  "source": "id",
-                  "defaultVisible": true,
-                  "options": {
-                    "action": "detail"
-                  }
-                },
-                {
-                  "key": "row-delete",
-                  "label": {
-                    "en": "",
-                    "es": "",
-                    "fr": "",
-                    "it": "",
-                    "ru": "",
-                    "de": "",
-                    "pt": "",
-                    "pl": "",
-                    "tr": "",
-                    "nl": ""
-                  },
-                  "type": "actions",
-                  "source": "id",
-                  "defaultVisible": true,
-                  "options": {
-                    "action": "delete"
-                  }
-                }
-              ],
-              "title": {
-                "en": "Finance",
-                "es": "Finanzas",
-                "fr": "Finances",
-                "it": "Finanze",
-                "ru": "Финансы",
-                "de": "Finanzen",
-                "pt": "Finanças",
-                "pl": "Finanse",
-                "tr": "Finans",
-                "nl": "Financiën"
               },
               "pageSize": 20
             }
@@ -3549,84 +3349,6 @@
             "warnings": [],
             "envKeys": [],
             "data": {}
-          }
-        ]
-      },
-      {
-        "systemInstructionName": "tab",
-        "name": "finance",
-        "description": "",
-        "presence": "absent",
-        "info": {
-          "aiSummary": "The money ledger: expenses and incomes recorded by digitizeMoney from receipt photos or words (kind, amount, categories, summary, receipt image), written to the separate finance table by deliverDatabase. Separate from notes (v1 parity). View-only here; populated by the flow."
-        },
-        "status": "materialized",
-        "warnings": [],
-        "envKeys": [],
-        "entities": [
-          {
-            "cuid": "cfinms7r7luj8mm4g",
-            "name": "Finance",
-            "description": "",
-            "info": {
-              "aiSummary": "The single money ledger of this automation: rows of the finance table."
-            },
-            "status": "materialized",
-            "warnings": [],
-            "envKeys": [],
-            "data": {
-              "title": {
-                "en": "Finance",
-                "es": "Finance",
-                "fr": "Finance",
-                "it": "Finance",
-                "ru": "Финансы",
-                "de": "Finance",
-                "pt": "Finance",
-                "pl": "Finance",
-                "tr": "Finance",
-                "nl": "Finance"
-              }
-            }
-          }
-        ]
-      },
-      {
-        "systemInstructionName": "tab",
-        "name": "glossary",
-        "description": "User's own dictionary of aliases and abbreviations: say \"remember that receipts SODO ADEJE are Mercadona\" and the assistant expands it everywhere. Add or delete aliases by hand here.",
-        "presence": "collapsed",
-        "info": {
-          "aiSummary": "The user glossary (step 309): rows of the glossary table {term, meaning, source}. Injected as a system preamble into every model call so 'how much did I spend at Mercadona' matches receipts stored as store=SODO ADEJE. Filled by hand here and automatically by defineGlossary from definition messages."
-        },
-        "status": "materialized",
-        "warnings": [],
-        "envKeys": [],
-        "entities": [
-          {
-            "cuid": "cglosms7r7luj8mm5h",
-            "name": "Glossary",
-            "description": "",
-            "info": {
-              "aiSummary": "The single alias dictionary of this automation: rows of the glossary table."
-            },
-            "status": "materialized",
-            "warnings": [],
-            "envKeys": [],
-            "data": {
-              "title": {
-                "en": "Glossary",
-                "es": "Glosario",
-                "fr": "Glossaire",
-                "it": "Glossario",
-                "ru": "Глоссарий",
-                "de": "Glossar",
-                "pt": "Glossário",
-                "pl": "Słownik",
-                "tr": "Sözlük",
-                "nl": "Woordenlijst"
-              }
-            }
           }
         ]
       },

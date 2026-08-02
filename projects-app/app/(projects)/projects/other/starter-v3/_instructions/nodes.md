@@ -116,9 +116,9 @@ one automation that tries to be several.
 
 There are TWO kinds of middle work, and they obey OPPOSITE laws:
 
-- **Data transforms** (parseDate, digitizeMoney, row work) — compute over data. Here the law "work
+- **Data transforms** (`resolveMoment`, `fetchExternal`, row work) — compute over data. Here the law "work
   maximally WITHOUT AI" holds: deterministic, testable, cheap. The model is used only when the task is
-  inherently linguistic (reading a free-text date, itemizing a receipt), and its output is validated
+  inherently linguistic (reading a date out of free text, describing a picture), and its output is validated
   deterministically.
 - **The conversational boundary** — talking to the human (greeting, "who are you", small talk, confirming
   what a run did) — is BY NATURE the model's job. Comfortable dialogue can NOT be a function. This is the
@@ -130,19 +130,19 @@ reply — that is writing a function where an instruction belongs. Such messages
 classifier returns an empty intent, and the model answers from its instruction (which carries the
 assistant's identity and capabilities). Only literal service commands (`/start`, `/help`) are matched in code.
 
-**DATA vs SPEECH when classifying.** A message that STATES data (a fact, an amount, a place, a reminder)
-carries a data intent. A QUESTION or request ABOUT already-saved data ("how much did I spend on X", "show
-the receipt") is `recall`, never a new record. Money words alone do not mean `finance` — the intent (record
-vs ask) does. The model makes this judgement; do not force it with word lists.
+**DATA vs SPEECH when classifying.** A message that STATES data carries a data class (`record-given`). A
+QUESTION about data already kept is `read-own`, never a new record — asking about a thing is not the thing.
+The subject words alone decide nothing; the FORM of the address does. That judgement belongs to the front
+layer (`intent`), and the model makes it — do not force it with word lists.
 
 ## Every store links to every other, both ways (step 309 — crossLink)
 
-Each row of EVERY store (database, finance, vector-memory, storage, map) carries `links:[{table,id}]` to ALL
+Each row of EVERY store (database, vector-memory, storage, map, calendar) carries `links:[{table,id}]` to ALL
 related rows in the other stores, MUTUALLY. `crossLink` is called by each output after it creates its row: it
 writes its siblings into its own row and appends itself into theirs; a later output patches earlier ones, so
 the full bidirectional graph converges regardless of order. From any row any relation is retrievable — a
-receipt object resolves back to its finance row; a note to its vector doc and its file. "No link" is not a
-state that can exist.
+stored file resolves back to the record that owns it; a record to its vector document, its map marker and
+its calendar event. "No link" is not a state that can exist.
 
 ## Public access is a role list on the passport (step 309.A)
 

@@ -62,7 +62,8 @@ a client's automation depend on our service, and that dependency is forbidden.
 
 Doors and classes derive their names; a transform does not, which is exactly where a domain leaks in.
 Name it for the SHAPE of the work — `fetchExternal`, `describeObject`, `resolveLocation`, `resolveMoment` —
-never for a business noun (`digitizeMoney`, `defineGlossary` are the v2 mistake). Apply the neutrality test:
+never for a business noun (`digitizeInvoice`, `tagPatient` — a name like that carries ONE domain's
+vocabulary into a template meant for all of them; that was the v2 mistake). Apply the neutrality test:
 replace the subject with another noun — request, part, patient, shipment. If the name stops making sense,
 the node has taken a domain in with it.
 

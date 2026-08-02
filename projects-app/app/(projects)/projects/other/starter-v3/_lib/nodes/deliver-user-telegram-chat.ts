@@ -29,9 +29,10 @@ export async function deliverUserTelegramChat(ctx: NodeCtx): Promise<{ userTeleg
   const reply = String((built as Record<string, unknown>).reply ?? "").trim();
   if (reply) {
     const id = await sendTelegram(reply, chatId);
-    // ВОЗВРАТ КАРТИНКИ ПО RECALL (309): если recall достал связанные вложения (напр. фото чека —
-    // `recallFromMemory` резолвит маркеры в `recalledAttachments`), шлём сами изображения вслед за текстом.
-    // «Покажи чек на 31.34» теперь возвращает картинку, а не только слова. Недоступный объект — тихо пропуск.
+    // ВОЗВРАТ ИЗОБРАЖЕНИЙ ВСЛЕД ЗА ТЕКСТОМ (309): если прогон оставил ключи связанных объектов в
+    // `recalledAttachments`, шлём сами изображения — ответ на «покажи» возвращает картинку, а не только
+    // слова. Недоступный объект — тихо пропуск. Сегодня этот ключ не кладёт ни один узел: механизм ждёт
+    // узла чтения своего (шаг 312), кода-обещания пользователю здесь нет.
     const atts = Array.isArray(ctx.recalledAttachments) ? (ctx.recalledAttachments as unknown[]).map(String).filter(Boolean) : [];
     for (const key of atts.slice(0, 5)) {
       try {
