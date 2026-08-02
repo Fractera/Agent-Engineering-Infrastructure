@@ -299,7 +299,7 @@ export async function POST(req: NextRequest) {
   db.close();
 
   // Detached so the HTTP request doesn't time out (certbot can take 60-90s).
-  setTimeout(() => {
+  setTimeout(async () => {
     const db2 = getDb();
     try {
       // 1. HTTP-only stub config so certbot --nginx can find the server_name
@@ -327,10 +327,40 @@ export async function POST(req: NextRequest) {
       // "expand & replace?" prompt — which otherwise aborts under
       // --non-interactive. --keep-until-expiring still short-circuits when the
       // cert already covers everything and isn't near expiry (idempotent).
-      execSync(
-        `certbot certonly --nginx ${dFlags} --cert-name ${domain} --expand --non-interactive --agree-tos --keep-until-expiring -m admin@fractera.ai`,
-        { timeout: 180000 }
-      );
+      // certbot holds ONE global lock, so a renewal run started by the system
+      // certbot.timer blocks us with "Another instance of Certbot is already
+      // running" — and the activation then died here, leaving the HTTP stub in
+      // place: nothing listens on 443, and the wizard's end-to-end HTTPS check
+      // fails on EVERY hostname with no visible reason. Observed live 2026-08-02:
+      // the timer fired at 15:57 and spent 14 minutes failing 168 stale
+      // *.fractera.ai renewals (leftovers of months of test deploys — the
+      // /etc/letsencrypt tree deliberately survives wipe, so they accumulate);
+      // the owner's run at 16:03 landed inside that window and was refused.
+      // A busy lock is a WAIT, not a failure: retry for ~15 min, which covers a
+      // full renewal sweep, and keep the real cause in the stored error when we
+      // finally give up. The wait is awaited (not a blocking sleep) so the admin
+      // process keeps serving requests while we sit here.
+      const certbotCmd = `certbot certonly --nginx ${dFlags} --cert-name ${domain} --expand --non-interactive --agree-tos --keep-until-expiring -m admin@fractera.ai`;
+      const BUSY = /Another instance of Certbot is already running/i;
+      const ATTEMPTS = 10;
+      const WAIT_MS = 90_000;
+      for (let attempt = 1; ; attempt++) {
+        try {
+          execSync(certbotCmd, { timeout: 180000 });
+          break;
+        } catch (err) {
+          const text = `${(err as { stderr?: unknown })?.stderr ?? ""}${(err as Error)?.message ?? ""}`;
+          if (!BUSY.test(text)) throw err;
+          if (attempt >= ATTEMPTS) {
+            throw new Error(
+              `certbot is still busy after ${attempt} attempts (~${Math.round((ATTEMPTS * WAIT_MS) / 60000)} min): ` +
+              `a certificate renewal run is holding the lock. Wait for it to finish and start the wizard again.`
+            );
+          }
+          upsert(db2, domain, "pending", `certbot busy — waiting for the renewal run to finish (attempt ${attempt}/${ATTEMPTS})`, { certSource: "auto" });
+          await new Promise((resolve) => setTimeout(resolve, WAIT_MS));
+        }
+      }
 
       // 3. Write final HTTPS config and reload.
       writeFileSync("/etc/nginx/sites-enabled/fractera-custom", buildNginxConfig(domain, "auto"));
