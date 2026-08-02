@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ChevronDown, Columns3, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PAGE_SIZE, minWidthOf } from "../../../shared/data-table.client";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel,
@@ -70,6 +71,10 @@ export function DashboardTableView({
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadedCount, setLoadedCount] = useState(0);
+  // Общий интерфейс таблиц: страницы, а не «показать ещё». Дверь `api/rows` отдаёт `total`, поэтому
+  // навигация здесь такая же нумерованная, как у базы, хранилища и памяти.
+  const [page, setPage] = useState(0);
+  const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [visibleIds, setVisibleIds] = useState<string[]>(() => defaultVisibleColumnIds(table.columns));
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -83,17 +88,19 @@ export function DashboardTableView({
         { cache: "no-store" },
       );
       if (!r.ok) return;
-      const d = (await r.json()) as { rows: Record<string, unknown>[]; hasMore: boolean; source: "runtime" | "empty" };
+      const d = (await r.json()) as { rows: Record<string, unknown>[]; hasMore: boolean; total?: number; source: "runtime" | "empty" };
       if (d.source === "runtime") {
         const live = d.rows.map(toTableRow);
         setRows((prev) => (append ? [...prev, ...live] : live));
         setLoadedCount((prev) => (append ? prev + live.length : live.length));
         setIsLive(true);
         setHasMore(d.hasMore);
+        setTotal(d.total ?? live.length);
       } else {
         setIsLive(false);
         setHasMore(false);
         setLoadedCount(0);
+        setTotal(0);
         setRows(q.trim() ? seed.filter((row) => Object.values(row.values).some((v) => String(v ?? "").toLowerCase().includes(q.toLowerCase()))) : seed);
       }
     } catch { /* keep whatever is shown */ }
@@ -197,7 +204,13 @@ export function DashboardTableView({
                   title={rowClickable ? admin?.rowClickTitle : undefined}
                 >
                   {cols.map((c) => (
-                    <td key={c.id} className="px-3 py-2" style={{ minWidth: minWidthOf(c.type) }}>
+                    // Общий закон таблиц: ячейка не выше четырёх строк, дальше обрыв. Картинки, действия и
+                    // бейджи не обрезаются — у них своя высота, обрыв сломал бы их.
+                    <td
+                      key={c.id}
+                      className={"px-3 py-2 " + (["image", "actions", "badge"].includes(c.type) ? "" : "[&>*]:line-clamp-4 [&>*]:break-words")}
+                      style={{ minWidth: minWidthOf(c.type) }}
+                    >
                       <ConfigRecordCell
                         col={c}
                         lang={lang}
@@ -225,14 +238,44 @@ export function DashboardTableView({
         </table>
       </div>
 
-      {hasMore && (
-        <div className="flex justify-center">
-          <Button variant="outline" size="sm" onClick={() => void loadMore()} disabled={loadingMore}>
-            {loadingMore ? <Loader2 className="mr-1 size-4 animate-spin" /> : <ChevronDown className="mr-1 size-4" />}
-            {L.more}
-          </Button>
+      {/* Общий интерфейс таблиц: нумерованные страницы по 10 записей тем же примитивом shadcn, что у базы,
+          хранилища и памяти. «Показать ещё» убрано — две разные навигации это два разных интерфейса. */}
+      {isLive && total > pageSize ? (
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs text-muted-foreground">
+            {page * pageSize + 1}–{Math.min((page + 1) * pageSize, total)} / {total}
+          </span>
+          <Pagination className="mx-0 w-auto justify-end">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  disabled={page === 0 || loadingMore}
+                  onClick={() => { const p = page - 1; setPage(p); void loadLive(search, p * pageSize, false); }}
+                />
+              </PaginationItem>
+              {Array.from({ length: Math.ceil(total / pageSize) }, (_, i) => i)
+                .filter((i) => i === 0 || i === Math.ceil(total / pageSize) - 1 || Math.abs(i - page) <= 1)
+                .map((i, idx, arr) => (
+                  <PaginationItem key={i}>
+                    {idx > 0 && i - arr[idx - 1] > 1 ? <span className="px-1 text-muted-foreground">…</span> : null}
+                    <PaginationLink
+                      isActive={i === page}
+                      onClick={() => { setPage(i); void loadLive(search, i * pageSize, false); }}
+                    >
+                      {i + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+              <PaginationItem>
+                <PaginationNext
+                  disabled={(page + 1) * pageSize >= total || loadingMore}
+                  onClick={() => { const p = page + 1; setPage(p); void loadLive(search, p * pageSize, false); }}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
-      )}
+      ) : null}
 
       <LiveLookupDialog
         open={!!liveTarget}
