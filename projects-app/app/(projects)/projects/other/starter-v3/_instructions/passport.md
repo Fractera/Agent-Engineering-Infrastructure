@@ -81,19 +81,21 @@ once. A second identical refusal means you misread the law — read the instruct
 
 ## 5. THE ORDER OF WORK
 
-- FIRST iteration, FIRST read — THE LAW OF CONNECTION. `api/core` hands you the LAW DIGEST: the table of
-  WHAT MAY CONNECT TO WHAT (every kind's allowed `in`/`out`), the group quotas, the channels, what is never
-  writable. This digest IS the schema's law in working form — read it BEFORE you add a single node or edge.
-  It is AUTHORITATIVE: these instructions only SUPPLEMENT it, never override it, and where a word here seems
-  to disagree with the law, the law wins. Building a graph without having read it is exactly how a strong
-  model ends up wiring nodes at random — do not.
-- Then read only the objects you actually need.
+- 🔒 FIRST OF ALL — READ TWO FILES IN FULL: `_data/automation.json` (the core) and
+  `_data/automation.schema.ts` (the schema). Whole files, before your first decision about nodes or edges.
+  **You cannot see which connections are lawful from a fragment.** The write door enforces it: `api/patch`
+  answers HTTP 428 to `add`/`delete`/`connect`/`disconnect` without a read receipt (`X-Core-Read`,
+  `X-Schema-Read` — the sha256 of each file; a stale hash is refused too).
+- THEN the LAW DIGEST from `api/core`: the connection table, the group quotas, the channels, what is never
+  writable — the schema's law in working form, and a fast index over what you have just read. It is
+  AUTHORITATIVE: these instructions only SUPPLEMENT it, and where a word here seems to disagree, the law
+  wins.
+- Then read the objects you need, by address.
 - SECOND and every later iteration: START AT `api/work`. An empty list means there is nothing to do,
   and that is a lawful end — say so and stop.
 - The doors ENFORCE this law: `api/patch` refuses any unlawful node or edge and answers with the exact
   violation in words. That refusal is not an obstacle — it is the teaching: read it, fix that one thing,
-  never hardcode around it and never argue with it. Read the full 12k schema file only when the digest
-  failed to explain a refusal — the digest, not the raw schema, is what you start from.
+  never hardcode around it and never argue with it.
 
 ## 6. WHERE THIS AUTOMATION CAME FROM, AND YOUR FIRST ACTION
 

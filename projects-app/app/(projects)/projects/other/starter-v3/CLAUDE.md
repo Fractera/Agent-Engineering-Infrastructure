@@ -3,11 +3,30 @@
 You are in the folder of ONE automation. This file is self-contained: everything you need to start is
 here. Read it, then read only what you are about to touch.
 
-## Read budget — you cannot read everything
+## 🔒 TWO FILES ARE READ IN FULL — ALWAYS, BEFORE YOU TOUCH THE GRAPH
 
-- **Start with `GET api/core`** — the law digest, ~800 tokens. It is authoritative; prose only supplements it.
-- Weights, measured: **core ≈ 37k tokens · schema ≈ 25k · 60 instructions ≈ 45k**.
-- Read by name, on demand: `_instructions/<name>.md`, or `GET api/instruction?name=<name>`.
+**`_data/automation.json` (the core) and `_data/automation.schema.ts` (the schema). Whole files. Every
+session, before your first decision about nodes or edges.** Not by address, not "the part I need", not
+"when a refusal is unclear".
+
+**Why, from experience:** you cannot see which connections are LAWFUL from a fragment. A partial read is
+how an automation gets edges that compile, pass no law, and quietly do the wrong thing. This is the single
+most expensive mistake in the project.
+
+**It is enforced, not requested.** `POST api/patch` refuses `add` / `delete` / `connect` / `disconnect`
+with **HTTP 428** unless you send a read receipt:
+
+```
+X-Core-Read:   <sha256 of _data/automation.json>
+X-Schema-Read: <sha256 of _data/automation.schema.ts>
+```
+
+The door recomputes both hashes itself. A stale hash is also refused — if the file changed after you read
+it, you are writing against a picture that no longer exists. (`sha256sum <file>`.)
+
+Yes, this costs: **core ≈ 37k tokens · schema ≈ 25k**. Pay it. The 60 instructions (≈45k) are the opposite
+case — those you read by name, on demand: `_instructions/<name>.md` or `GET api/instruction?name=<name>`.
+`GET api/core` gives the law digest (~800 tokens) — a fast index, never a substitute for the two files.
 
 ## Where the truth is
 
@@ -44,6 +63,32 @@ Read any file here freely — nothing is hidden behind an API.
   a warning to the owner. **"This automation cannot do it" is not an outcome.**
 - No routers. The engine is linear; the only branch is success/failure. A class node claims a run or
   returns an EMPTY patch — never `null`, which stops the whole run.
+
+## 🔒 A node that DECIDES cannot exist without a validator
+
+Applies to `transform`, `condition-success`, `condition-failure` and every `intent` class — anything whose
+result changes where the flow goes.
+
+**What it prevents, from a real run:** a fetching node got HTTP 403 from its source and returned "nothing
+found" as an ordinary context patch. The engine merged it and moved on — for the graph the node had
+SUCCEEDED, and the run reported success while nothing had been fetched. No type check and no schema sees
+that: the shape was perfectly valid.
+
+So such a node declares two things in the core, both mandatory:
+
+- **`outcomes`** — at least TWO. Not "ok / not ok": `found` · `missing` · `unreachable` · `not-mine`.
+  Each names its condition (`when`) and what it puts into the context (`puts`).
+- **`validator`** — the function classifying the result into one of them. Its name is DERIVED from the
+  function name (`fetchExternal` → `fetchExternalValidate`) and lives in `_lib/validators.ts`.
+
+**«Unreachable» is not «missing».** A source that refused and a source that answered "nothing" look
+identical in the payload and mean opposite things to the human. Telling them apart is the validator's most
+valuable job.
+
+Three levels enforce this, each catching what the previous one lets past: the **schema** refuses a node
+with no validator or fewer than two outcomes → **module load** fails if the validator is not registered →
+the **engine** fails the run when a result matches no declared outcome. Do not try to route around any of
+them.
 
 ## Tabs are governed by law exactly as nodes are
 

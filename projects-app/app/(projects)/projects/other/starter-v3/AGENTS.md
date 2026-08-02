@@ -39,18 +39,40 @@ npm run check:entity-imports  # the public layer reaches nothing outside the fol
 
 Build and restart happen on the server, never on a developer's Windows box.
 
-## Read order and budget
+## 🔒 Mandatory full read — two files, no exceptions
 
-1. **`GET api/core` first** — the law digest, ~800 tokens: what may connect to what, group quotas,
-   vocabularies, the handful of laws that are not expressible as a table. It is AUTHORITATIVE; prose only
-   supplements it.
-2. Then only the objects you need: `GET api/core?select=<address>` (a node also gets its kind's law; a tab
-   also gets `tabInstruction` when it has one), or `GET api/instruction?name=<name>`.
-3. On later iterations start at `GET api/work` — only the objects waiting for work. Empty list is a lawful
-   end: say so and stop.
+**Before your first decision about nodes or edges, read IN FULL:**
 
-Measured weights: **core ≈ 37k tokens · schema ≈ 25k · 60 instructions ≈ 45k.** Reading everything is not
-an option.
+1. `_data/automation.json` — the core;
+2. `_data/automation.schema.ts` — the schema.
+
+Whole files. Not by address, not "the part I need", not "only when a refusal is unclear". **You cannot see
+which connections are LAWFUL from a fragment** — a partial read is how an automation ends up with edges
+that compile, satisfy no law, and quietly do the wrong thing.
+
+**Enforced by the write door, not merely requested.** `POST api/patch` answers **HTTP 428** to `add`,
+`delete`, `connect` and `disconnect` unless the request carries a read receipt:
+
+```
+X-Core-Read:   <sha256 of _data/automation.json>      # sha256sum _data/automation.json
+X-Schema-Read: <sha256 of _data/automation.schema.ts> # sha256sum _data/automation.schema.ts
+```
+
+The door recomputes both hashes from disk. A stale hash is refused too: if a file changed after you read
+it, your write is aimed at a picture that no longer exists. (`set` and `visibility` are exempt — the owner
+drives those from the interface.)
+
+The cost is real and it is paid on purpose: **core ≈ 37k tokens · schema ≈ 25k.**
+
+## Reading everything else — by name, on demand
+
+- `GET api/core` — the law digest (~800 tokens): connection table, group quotas, vocabularies, and the
+  laws not expressible as a table. A fast index, **never a substitute** for the two files above.
+- `GET api/core?select=<address>` — one object with its law attached (a node gets its kind's law; a tab
+  gets `tabInstruction` when it has one). `GET api/instruction?name=<name>` — one law by name.
+- On later iterations start at `GET api/work` — only the objects waiting for work. An empty list is a
+  lawful end: say so and stop.
+- The 60 instructions weigh ≈45k tokens in total — that is exactly why they are read by name.
 
 ## Writing to the core
 
@@ -85,6 +107,35 @@ never contacts it.
 
 No routers anywhere — the engine is linear and the only branch is success/failure. A class node claims a
 run or returns an EMPTY patch; `null` stops the whole run.
+
+## 🔒 A node that decides cannot exist without a validator
+
+Applies to `transform`, `condition-success`, `condition-failure` and every `intent` class — anything whose
+result decides where the flow goes.
+
+**The failure it removes, observed live:** a fetching node received HTTP 403 and returned "nothing found"
+as an ordinary context patch. The engine merged it and went on — for the graph the node had SUCCEEDED, and
+the run reported success while nothing was fetched. No type check and no schema catches that: the shape was
+valid.
+
+Such a node declares both of these in the core:
+
+- **`outcomes`** — at least TWO, and not "ok / not ok": `found` · `missing` · `unreachable` · `not-mine`.
+  Each names its condition (`when`) and what it puts into the context (`puts`).
+- **`validator`** — the function that classifies the result into one of them. Its name is DERIVED from the
+  function name (`fetchExternal` → `fetchExternalValidate`), never chosen, and it lives in
+  `_lib/validators.ts`.
+
+**"Unreachable" is not "missing".** A source that refused and a source that answered "nothing" are
+identical in the payload and opposite in meaning. Separating them is the validator's most valuable job.
+
+Enforcement is three-level, each catching what the previous one lets past:
+
+| Level | Catches |
+|---|---|
+| the schema | no validator, a foreign validator name, fewer than two outcomes |
+| module load (`_lib/validators.ts`) | a validator declared in the core but not registered |
+| the engine (`_lib/executor.ts`) | a result the validator cannot name → the run fails honestly, with the reason |
 
 ## Tabs are governed by law exactly as nodes are
 

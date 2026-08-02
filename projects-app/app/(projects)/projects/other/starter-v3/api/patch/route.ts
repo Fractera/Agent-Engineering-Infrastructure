@@ -13,6 +13,7 @@ import {
 } from "../../_lib/core-io";
 import { KIND_PORTS, allNodes, entitiesOf, type GroupName, type NodeKind } from "../../_data/automation.schema";
 import { readEnvPresence } from "@/lib/env-presence";
+import { checkReadReceipt, needsReceipt } from "../../_lib/read-receipt";
 
 // Ключи, пустое значение которых — законное умолчание, а не отсутствие. Список короткий и живёт рядом
 // с законом, который им пользуется; каталог `_components/channels.ts` знает то же самое для формы ввода.
@@ -84,6 +85,16 @@ export async function POST(req: NextRequest) {
 
   const body = (await req.json().catch(() => ({}))) as Body;
   const op = body.op ?? "set";
+
+  // 🔒 РАСПИСКА О ПРОЧТЕНИИ (требование владельца 2026-08-02). Состав узлов и связи нельзя менять,
+  // не прочитав ЦЕЛИКОМ ядро и схему: из фрагмента не видно, какие связи законны, и модель строит рёбра
+  // по догадке. Правка данных (`set`) и раскрытие узла (`visibility`) сюда НЕ подпадают — ими работает
+  // владелец из своего интерфейса. Границы и честные пределы этой гарантии — `_lib/read-receipt.ts`.
+  if (needsReceipt(op)) {
+    const receipt = await checkReadReceipt(req.headers);
+    if (!receipt.ok) return NextResponse.json({ error: receipt.why }, { status: 428 });
+  }
+
   const core = await readCore();
 
   // ─── ОТВЕТ НА ПРЕДУПРЕЖДЕНИЕ ──────────────────────────────────────────────────────────────────────
