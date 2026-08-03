@@ -25,6 +25,14 @@ the canvas had no source to read (step 319).
 - **Own geo code.** No second renderer, router or geocoder: everything geographic goes through the folder
   door `api/geo` — `tools-docs/map.md`. The active region is the owner's choice in Admin; the automation
   consumes whatever region is loaded and degrades honestly when it is not ready.
+- **Raising a neighbour's `z-index` to beat the map.** Leaflet hands its own layers 200–1000, so the map
+  container carries `isolate` and keeps them inside itself. Without it the map climbs over the zone header
+  and over every drawer and dialog. Fix the context, never the neighbours.
+
+## A marker opens the entity
+
+Clicking a marker opens the same entity drawer a table row does (`tab.md`) — a place is a facet, not a
+destination. Route stops the human drops are a different thing and open nothing.
 
 ## Several markers per record
 

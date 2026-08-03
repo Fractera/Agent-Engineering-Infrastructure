@@ -232,8 +232,15 @@ export default function CourierMapClient({
         </ul>
       ) : null}
 
-      {/* НАСТОЯЩАЯ карта Leaflet — видна всегда, тянется и зумится. */}
-      <div ref={mapEl} className="w-full overflow-hidden rounded-lg border" style={{ height: 420 }} />
+      {/* НАСТОЯЩАЯ карта Leaflet — видна всегда, тянется и зумится.
+          🔒 `isolate` (собственный контекст наложения) — НЕ украшение. Leaflet раздаёт своим слоям очень
+          высокие уровни (панели 200–700, контролы 800 и 1000), а у оболочки они обычные: хедер зоны
+          `z-40`, полоса пульса `z-30`, `Sheet`/`Dialog` `z-50`. `overflow-hidden` содержимое ОБРЕЗАЕТ, но
+          контекста НЕ создаёт — поэтому 400–1000 соревновались на уровне всей страницы: карта наезжала на
+          хедер при прокрутке, а ящик сущности открывался ПОД ней. С контекстом уровни Leaflet остаются
+          внутри карты, а она сама участвует в странице как обычный блок. Поднимать z-index соседей, чтобы
+          перебить карту, запрещено: это лечит симптом и оставляет хедер под ней. */}
+      <div ref={mapEl} className="relative isolate z-0 w-full overflow-hidden rounded-lg border" style={{ height: 420 }} />
 
       {result ? (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
