@@ -26,6 +26,15 @@ language — keyed by the interlocutor (`telegram:<id>`, `email:<from>`, `panel`
   which: `ctx.dialogueBudget` carries `used` · `budget` · `dropped` · `limitedBy`. Counting messages alone
   is a bad measure — one dictated voice message outweighs twenty typed ones.
   Eviction drops the OLDEST message whole; half a line is worse than none, because the model completes it.
+- **A turn is an ENVELOPE, not a line** (330.3, `TurnSchema` in `_data/record.schema.ts`): what the run was
+  (`class`), how it ended (`outcome`: ok · refused · missing · unreachable · failed), what it left behind
+  (`links`), which run it was (`runId`). Rendering shows the outcome only when it is not `ok` — success is
+  the norm and paying tokens for it is paying for silence, but a failure the model cannot see is a failure
+  it confidently talks over.
+- **Speech is still the only author — and the engine still seals.** Speech BIRTHS the turn (text, class,
+  time). The outcome and the created rows are stamped by the engine at the END of the run (`sealTurns`),
+  because speech stands BEFORE the outputs: when it speaks, no store has run yet, so those facts do not
+  exist for it. That is not a second author, it is `updatedAt` — the sealing never touches the text.
 - **Who gets what is decided once, by the engine.** `recentDialog` — the conversation, for speech.
   `recentDialogBrief` — the last exchange only, on a derived share of the budget, for reading the request
   class (it runs on EVERY run, so it must stay cheap). A node never assembles history for itself: that is

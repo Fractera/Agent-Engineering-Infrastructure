@@ -128,6 +128,18 @@ message WHOLE: half a line is worse than none, because the model completes it an
 reports the price in `ctx.dialogueBudget` (`used` · `budget` · `dropped` · `limitedBy`), so a memory cut
 short is never mistaken for a stupid model.
 
+**A turn is an ENVELOPE, not a line** (330.3, `TurnSchema` in `_data/record.schema.ts`). It carries what
+the run was (`class`), how it ended (`outcome`: `ok` · `refused` · `missing` · `unreachable` · `failed`),
+what it left in the stores (`links`) and which run it was (`runId`). Without it the model reread a smooth
+conversation where a run had actually failed, and carried on confidently on top of the failure. The
+rendering prints the outcome only when it is NOT `ok`: success is the norm, and a label on every line is
+tokens paid for silence.
+
+**Speech births the turn, the engine seals it.** Text, class and time are written by the speech node — the
+single author of the dialogue plane. The `outcome` and the created rows are stamped at the END of the run
+(`sealTurns`), because speech stands BEFORE the outputs: while it speaks, no store has run, so those facts
+do not exist yet for it. This is not a second author — it is `updatedAt`, and it never touches the text.
+
 The engine hands out **two slices, and it decides the sizes**: `recentDialog` — the conversation, for the
 speech layer; `recentDialogBrief` — the last exchange only, on a derived share of the budget, for reading
 the request class (that read happens on EVERY run, so it must stay cheap). **Never assemble history inside

@@ -71,7 +71,11 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   // Память диалога: положить входящее сообщение в буфер (окно N/TTL из настроек), прочитать состояние.
   const incoming = String(ctx.text ?? ctx.original ?? "").trim();
   let state = chatId ? await loadChat(chatId) : { id: "", messages: [], lang: "", pending: null as unknown };
-  if (chatId && incoming) state = await pushMessage(chatId, { role: "user", text: incoming, at: new Date().toISOString() }, cfg.lastN, cfg.ttlMinutes);
+  // 🔒 РЕПЛИКА РОЖДАЕТСЯ С КОНВЕРТОМ (330.3): прогон и класс — то, что речи известно СЕЙЧАС. Исход и
+  // созданные записи допишет движок в конце прогона (`sealTurns`): выходы ещё не отработали, и знать их
+  // отсюда невозможно. Разделение объявлено в `record.schema.ts` и в законе группы.
+  const turn = { runId: String(ctx.runId ?? "") || undefined, class: String(ctx.intentClass ?? "") || undefined };
+  if (chatId && incoming) state = await pushMessage(chatId, { role: "user", text: incoming, at: new Date().toISOString(), ...turn }, cfg.lastN, cfg.ttlMinutes);
 
   // Язык ответа. Приоритет: зафиксированный в чате (выбор пользователя, персист) → фикс из настроек →
   // `ctx.chatLang` от классификатора (единый контекстный слой 309) → ЯЗЫК СООБЩЕНИЯ (кириллица → ru) →
@@ -103,7 +107,7 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   // Представление возможностей (/start, «что ты умеешь») — детерминированный список надёжнее модели.
   if (ctx.showHelp === true && cfg.revealCapabilities) {
     const help = composeReply({ ...ctx, lang, abilitiesInputs: ab.inputs, abilitiesOutputs: ab.outputs, abilitiesSteps: ab.steps }).reply as string;
-    if (chatId) await pushMessage(chatId, { role: "assistant", text: help, at: new Date().toISOString() }, cfg.lastN, cfg.ttlMinutes);
+    if (chatId) await pushMessage(chatId, { role: "assistant", text: help, at: new Date().toISOString(), ...turn }, cfg.lastN, cfg.ttlMinutes);
     return { reply: help };
   }
 
@@ -189,7 +193,7 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   if (tag && chatId) { await setLang(chatId, tag[1].toLowerCase()); out = out.slice(tag[0].length).trim(); }
   else out = out.replace(/\[\[lang:[a-z]{2}\]\]/gi, "").trim(); // страховка: тег без chatId не оставляем в тексте
 
-  if (chatId) await pushMessage(chatId, { role: "assistant", text: out, at: new Date().toISOString() }, cfg.lastN, cfg.ttlMinutes);
+  if (chatId) await pushMessage(chatId, { role: "assistant", text: out, at: new Date().toISOString(), ...turn }, cfg.lastN, cfg.ttlMinutes);
   // 🔒 РЕЧЬ — ЕДИНСТВЕННЫЙ АВТОР СОСТОЯНИЯ ДИАЛОГА (шаг 312.3). Висящий вопрос кладут в контекст те, кто
   // его задал (класс «неполный», узлы середины), а СНИМАЕТ его класс «продолжение» (`pendingQuestion: null`).
   // Записывает же его сюда — только этот узел, ровно как строку тоста пишет только `deliverToast`.

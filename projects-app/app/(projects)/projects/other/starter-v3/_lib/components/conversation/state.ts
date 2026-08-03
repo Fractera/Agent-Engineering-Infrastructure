@@ -8,8 +8,13 @@
 // пользователь пишет «завтра» — это НОВЫЙ прогон, и без буфера он не знает, что «завтра» — ответ на его
 // же вопрос. Буфер + pending дают разговорному узлу контекст.
 import { addRow, listRows, updateRow } from "../../rows";
+import { parseTurn, type Turn, type TurnOutcome } from "../../../_data/record.schema";
 
-export type ChatMessage = { role: "user" | "assistant"; text: string; at: string };
+/**
+ * РЕПЛИКА — КОНВЕРТ, А НЕ СТРОКА (шаг 330.3). Форма и её закон живут в схеме (`TurnSchema`), здесь только
+ * псевдоним: у одной формы один дом. Что несёт конверт и почему исход проставляет движок — там же.
+ */
+export type ChatMessage = Turn;
 // напр. {kind:"remind-when"} / {kind:"place-desc"}; `payload` (310) держит отложенные данные между
 // сообщениями — hold-and-confirm дуб-контроля: строки, которые запишем, ЕСЛИ владелец подтвердит дубль.
 export type PendingAsk = { kind: string; at: string; payload?: Record<string, unknown> } | null;
@@ -66,7 +71,17 @@ export function formatDialog(messages: ChatMessage[], limit: number): string {
   if (!recent.length) return "";
   const who = (r: string) => (r === "user" ? "user→bot" : "bot→user");
   const t = (iso: string) => { const d = new Date(iso); return Number.isFinite(d.getTime()) ? d.toISOString().slice(0, 16).replace("T", " ") : ""; };
-  return recent.map((m) => `[${t(m.at)}] ${who(m.role)}: ${m.text}`).join("\n");
+  // 🔒 ИСХОД ВИДЕН, КОГДА ОН НЕ «ВСЁ ПОЛУЧИЛОСЬ» (330.3). Успех — норма разговора, и писать «ok» у каждой
+  // реплики значит платить токенами за тишину. А вот провал, отказ и «не нашлось» модель обязана видеть:
+  // без них она продолжает поверх неудачи так, будто её не было. Ссылки на созданные записи в текст НЕ
+  // идут — они машинный адрес для узлов, а не материал для разговора (и стоили бы дороже пользы).
+  const mark = (m: ChatMessage) => {
+    const bits: string[] = [];
+    if (m.outcome && m.outcome !== "ok") bits.push(m.outcome);
+    else if (m.links && m.links.length) bits.push(`saved ${m.links.length}`);
+    return bits.length ? ` (${bits.join(", ")})` : "";
+  };
+  return recent.map((m) => `[${t(m.at)}] ${who(m.role)}${mark(m)}: ${m.text}`).join("\n");
 }
 
 /** Прочитать состояние чата (пустое, если чат новый). */
@@ -100,9 +115,40 @@ function trim(messages: ChatMessage[], limitN: number, ttlMinutes: number): Chat
 export async function pushMessage(chatId: string, msg: ChatMessage, limitN: number, ttlMinutes: number): Promise<ChatState> {
   const state = await loadChat(chatId);
   if (!state.id) return state;
-  state.messages = trim([...state.messages, msg], limitN, ttlMinutes);
+  // Схема проверяет реплику ДО записи (330.3): незаконный конверт в память диалога не попадает, а
+  // вызывающий узнаёт словами, что именно не так. Тот же приём, что у строки склада.
+  state.messages = trim([...state.messages, parseTurn(msg)], limitN, ttlMinutes);
   await save(state);
   return state;
+}
+
+/**
+ * 🔒 ЗАПЕЧАТАТЬ РЕПЛИКИ ПРОГОНА (шаг 330.3) — проставить исход и созданные записи тем репликам, что
+ * родились в этом прогоне. Зовёт ДВИЖОК в конце прогона, и только он: в момент речи выходы ещё не
+ * отработали, поэтому автору речи эти факты неизвестны физически (обоснование — `record.schema.ts`).
+ *
+ * Идемпотентно и безопасно: чата нет, реплик этого прогона нет — тихо ничего не делаем. Запечатывание
+ * НИКОГДА не трогает текст: конверт дополняет реплику, а не переписывает сказанное.
+ */
+export async function sealTurns(
+  chatId: string,
+  runId: string,
+  seal: { outcome: TurnOutcome; links: { table: string; id: string }[] },
+): Promise<number> {
+  const id = String(chatId).trim();
+  const run = String(runId).trim();
+  if (!id || !run) return 0;
+  const state = await loadChat(id);
+  if (!state.id) return 0;
+  let sealed = 0;
+  state.messages = state.messages.map((m) => {
+    if (m.runId !== run) return m;
+    sealed++;
+    return { ...m, outcome: seal.outcome, ...(seal.links.length ? { links: seal.links } : {}) };
+  });
+  if (!sealed) return 0;
+  await save(state);
+  return sealed;
 }
 
 /** Зафиксировать язык чата на всю историю (выбор пользователя, не дефолт). */

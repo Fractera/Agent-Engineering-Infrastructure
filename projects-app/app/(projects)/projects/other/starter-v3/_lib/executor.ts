@@ -15,7 +15,8 @@ import { allNodes, type Node } from "../_data/automation.schema";
 import { NODE_FUNCTIONS } from "./nodes";
 import { NODE_VALIDATORS } from "./validators";
 import { appendRun } from "./runs";
-import { chatKeyOf, loadChat } from "./components/conversation/state";
+import { chatKeyOf, loadChat, sealTurns } from "./components/conversation/state";
+import type { TurnOutcome } from "../_data/record.schema";
 import { assistantConfigOf } from "./components/conversation/config";
 import { buildDialogue, classifyBudget, classifyWindow } from "./components/conversation/context";
 
@@ -57,6 +58,43 @@ function topoOrder(nodes: Node[], edges: { from: string; to: string }[]): Node[]
   // any node left out (a cycle) is appended in birth order so it still runs deterministically
   for (const n of nodes) if (!seen.has(n.cuid)) result.push(n);
   return result;
+}
+
+/**
+ * ЧЕМ КОНЧИЛСЯ ПРОГОН ДЛЯ РАЗГОВОРА (330.3) — исход в терминах человека, а не узлов. Порядок важен:
+ * отказ по секрету остаётся отказом, даже если технически прогон прошёл гладко; упавший узел — провал,
+ * что бы ни успел сказать валидатор до него; и только потом — исход последнего решавшего узла
+ * (`found` / `missing` / `unreachable`).
+ */
+function turnOutcomeOf(ctx: NodeCtx, failed: boolean): TurnOutcome {
+  if (String(ctx.intentClass ?? "") === "refuse") return "refused";
+  if (failed) return "failed";
+  const last = String(ctx.outcome ?? "");
+  if (last === "missing" || last === "unreachable") return last;
+  return "ok";
+}
+
+/**
+ * ЧТО ПРОГОН ОСТАВИЛ В СКЛАДАХ СУЩНОСТЕЙ (330.3). Карта явная, а не выведенная из имени склада: поле
+ * памяти зовётся `vectorRowId`, а склад — `vector-memory`, и молчаливая деривация здесь ошиблась бы.
+ * Журналы прогона (`history`, `analytics`, `toast`) сюда НЕ входят: они хранят, что произошло, а не что
+ * появилось, — та же граница, что у `ENTITY_STORES`.
+ */
+const ROW_FIELDS: Array<[field: string, table: string]> = [
+  ["databaseRowId", "database"],
+  ["vectorRowId", "vector-memory"],
+  ["storageRowId", "storage"],
+  ["mapRowId", "map"],
+  ["calendarRowId", "calendar"],
+];
+
+function createdRows(ctx: NodeCtx): { table: string; id: string }[] {
+  const out: { table: string; id: string }[] = [];
+  for (const [field, table] of ROW_FIELDS) {
+    const id = String(ctx[field] ?? "").trim();
+    if (id) out.push({ table, id });
+  }
+  return out;
 }
 
 export async function executeAutomation(input: NodeCtx): Promise<RunOutcome | RunRefusal> {
@@ -177,6 +215,20 @@ export async function executeAutomation(input: NodeCtx): Promise<RunOutcome | Ru
 
   const failed = reports.find((r) => r.status === "fail");
   const outcome: RunOutcome = { ok: !failed, runId, startedAt, nodes: reports, context: ctx, error: failed?.error };
+
+  // 🔒 ЗАПЕЧАТАТЬ РЕПЛИКИ ЭТОГО ПРОГОНА (шаг 330.3). Речь сказала своё ДО выходов и потому не знала, чем
+  // всё кончится; теперь известно — и реплики получают исход и созданные записи. Без этого модель,
+  // перечитывая переписку, видела ровный разговор там, где прогон падал или ничего не нашёл, и уверенно
+  // продолжала поверх неудачи.
+  //
+  // Лучший-случай-не-обязателен: запечатывание не вправе уронить прогон, ответ человеку уже отправлен.
+  const chatKey = String(ctx.chatKey ?? "").trim();
+  if (chatKey) {
+    try {
+      await sealTurns(chatKey, runId, { outcome: turnOutcomeOf(ctx, Boolean(failed)), links: createdRows(ctx) });
+    } catch { /* память диалога вторична по отношению к ответу — молча не мешаем */ }
+  }
+
   await appendRun({ runId, startedAt, finishedAt: new Date().toISOString(), ok: outcome.ok, nodes: reports });
   return outcome;
 }

@@ -72,6 +72,10 @@ Read any file here freely — nothing is hidden behind an API.
   Never hard-code a limit and never assemble the history a second time — a default inside `formatDialog`
   silently beat the owner's setting, and a second form meant the model read one dialogue two ways depending
   on the call path.
+- **A dialogue turn is an ENVELOPE** (330.3, `TurnSchema` in `_data/record.schema.ts`): class, outcome
+  (`ok` · `refused` · `missing` · `unreachable` · `failed`), links to what it created, `runId`. Speech
+  BIRTHS it; the engine SEALS the outcome at the end of the run, because speech runs before the outputs and
+  cannot know what the stores did. Sealing never rewrites the text.
 - **Context is assembled ONCE, under a token budget** (330.2, `_lib/components/conversation/context.ts`).
   `data.memory.tokenBudget` limits what the dialogue may COST, `lastN` how much is worth keeping; the run
   reports `ctx.dialogueBudget` (`used` · `budget` · `dropped` · `limitedBy`), so a shortened memory is never
