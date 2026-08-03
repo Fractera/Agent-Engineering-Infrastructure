@@ -21,6 +21,11 @@ A channel that exists and FAILED must retry on the next beat, never be replaced 
 Exactly-once is the same mark the outward channels use (`deliveredAt` in the entry), so a repeated beat
 never repeats the toast.
 
+**The CANVAS does not change, and that is correct.** A deferred announcement is not a graph run — it has
+its own door (`tab.calendar.md` §4), so it draws no node and no edge. What it does is CALL THIS NODE'S
+FUNCTION (`deliverToast`) with the moment as its context: one writer of the toast journal, two callers.
+Never write a toast row by hand from anywhere else — that is how one behaviour gets two homes.
+
 Proven live 2026-08-03: a due entry with no connected channel produced `due 1 · sent 0` — the moment came
 and no one was told. That silence is what this section removes.
 

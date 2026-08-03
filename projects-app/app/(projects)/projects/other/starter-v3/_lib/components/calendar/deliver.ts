@@ -15,7 +15,8 @@
 // повтор не имеет права отправить письмо второй раз. Отметка об отправке живёт В САМОЙ ЗАПИСИ —
 // `integrations[канал].deliveredAt` — и ставится тем же append-only способом, что и любая правка строки.
 // Отметка ставится ПОСЛЕ успешной отправки: упавшая отправка обязана повториться на следующем тике.
-import { addRow, listRows, updateRow } from "../../rows";
+import { listRows, updateRow } from "../../rows";
+import { deliverToast } from "../../nodes/deliver-toast";
 import { sendEmail, sendTelegram, sendToAutomation } from "../../transport";
 import { notifyAtMs, toCalRows, type CalRow, type RowIntegration } from "./index";
 
@@ -126,12 +127,20 @@ export async function deliverDue(options: { table?: string; origin: string; gate
     const toastMark = (row.integrations ?? {})[TOAST_CHANNEL] as (RowIntegration & { deliveredAt?: string }) | undefined;
     if (!outward.some(([, v]) => (v as RowIntegration)?.active) && !toastMark?.deliveredAt) {
       try {
-        const written = await addRow("toast", {
-          outcome: "due",
-          reason: "no outward channel connected — the default channel took it",
+        // 🔒 ПИШЕТ НЕ ЭТОТ ФАЙЛ, А УЗЕЛ. Строку тоста создаёт функция выходного узла `deliverToast` —
+        // единственный автор строк этого журнала. Иначе у одного действия было бы два дома: узел на
+        // холсте и копия здесь, и они разошлись бы так же тихо, как разъезжались колонки таблиц.
+        //
+        // Почему при этом ХОЛСТ НЕ МЕНЯЕТСЯ: доставка наступившего момента — не прогон графа (закон
+        // `tab.calendar.md` §4), у неё своя дверь `api/calendar-tick`. Здесь исполняется функция того же
+        // узла с синтетическим контекстом момента, а не рисуется второй узел.
+        const written = await deliverToast({
+          text: row.title,
           title: row.title,
           source: table,
-          date: `${row.date} ${row.time}`.trim(),
+          at: `${row.date} ${row.time}`.trim(),
+          outcome: "due",
+          refusal: "no outward channel connected — the default channel took it",
         });
         const next: Record<string, RowIntegration> = {
           ...row.integrations,
@@ -139,7 +148,7 @@ export async function deliverDue(options: { table?: string; origin: string; gate
         };
         await updateRow(table, row.id, { integrations: next });
         row.integrations = next;
-        report.sent.push({ row: row.id, channel: TOAST_CHANNEL, ref: written.id });
+        report.sent.push({ row: row.id, channel: TOAST_CHANNEL, ref: written.toastRowId });
       } catch (e) {
         report.failed.push({ row: row.id, channel: TOAST_CHANNEL, error: e instanceof Error ? e.message : String(e) });
       }
