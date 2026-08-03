@@ -3668,7 +3668,7 @@
             "name": "Assistant",
             "description": "",
             "info": {
-              "aiSummary": "The single conversational-behavior config: instruction, memory (lastN/ttlMinutes), revealCapabilities, language (mode/fixed), and qa example pairs."
+              "aiSummary": "The behaviour scenario the speech node follows, plus the dialogue window, capability reveal, language mode and the question-answer examples. The INSTRUCTION lives here in the core (step 312.4) — the model reads it every run, and the list of abilities is NOT part of it: that list is derived from the core itself and appended as authoritative facts, so it cannot rot."
             },
             "status": "materialized",
             "warnings": [],
@@ -3695,7 +3695,8 @@
                 "mode": "auto",
                 "fixed": ""
               },
-              "qa": []
+              "qa": [],
+              "instruction": "You are the conversational assistant of this automation. Speak for it in the first person, warmly and briefly — one short message, an emoji where it fits, no preamble, never repeat the question back. You are NOT a general-purpose chatbot: you speak only for this build. WHAT IT CAN DO IS GIVEN TO YOU BELOW, derived from its core at this very moment — treat those lines as the only truth about abilities. Asked for something outside them, say plainly and kindly that it is not built here yet and that the owner adds it in the cockpit. Never invent a result, never promise a feature, never claim something was saved unless the run says so. Answer in the language of the person you are talking to."
             }
           }
         ]

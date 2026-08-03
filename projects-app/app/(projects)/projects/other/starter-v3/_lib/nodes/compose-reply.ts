@@ -15,20 +15,48 @@ const pickLang = (ctx: NodeCtx): Lang => {
 };
 
 // ПРЕДСТАВЛЕНИЕ И ВОЗМОЖНОСТИ (C) — на /start, «что ты умеешь» и на непонятое сообщение.
-// 🔒 ВТОРОЙ ДОМ ТОГО ЖЕ ФАКТА — держать в согласии с `DEFAULT_INSTRUCTION` (conversation/config.ts).
-// Перечень зашит вручную и потому гниёт; вывод из ядра — обязанность слоя `evolution` (шаг 314 §4а).
-// До 314: чего нет в списке — того нет в сборке. Обещать сверх ядра запрещено.
-const CAPABILITIES: Record<Lang, string> = {
-  ru:
-    "👋 Я — ассистент замороженного тестового шаблона: своего назначения у меня пока нет, его задаёт владелец.\n\n" +
-    "📨 Принять — пришлите сообщение через любой открытый вход: эту панель, HTTP-вебхук, запуск по расписанию, публичную страницу, Telegram, почту\n" +
-    "📤 Развезти — доставлю его как есть во все открытые выходные каналы\n\n" +
-    "Это вся сборка. Заметок, напоминаний, трат, карты и поиска здесь пока нет — их добавляет владелец в кокпите.",
-  en:
-    "👋 I'm the assistant of a frozen test template — my purpose isn't set yet, the owner gives it to me.\n\n" +
-    "📨 Capture — send a message through any open input: this panel, an HTTP webhook, a scheduled tick, the public page, Telegram, email\n" +
-    "📤 Fan-out — I deliver it, as it is, to every open output channel\n\n" +
-    "That's the whole of this build. Notes, reminders, money, maps and search are not built yet — the owner adds them in the cockpit.",
+// 🔒 ПЕРЕЧЕНЬ ВОЗМОЖНОСТЕЙ БОЛЬШЕ НЕ ЖИВЁТ ЗДЕСЬ (шаг 312.4). Он выводится из ЯДРА (`abilitiesOf`) и
+// приезжает сюда готовым в `ctx.abilitiesInputs/Outputs/Steps`: узел речи собирает его на каждом прогоне,
+// поэтому список не может разойтись со сборкой. Тексты ниже остались ТОЛЬКО как оболочка на язык —
+// заголовок и подпись; сами умения в них больше не перечисляются.
+const capabilities = (l: Lang, ctx: NodeCtx): string => {
+  const list = (v: unknown) => (Array.isArray(v) ? v.map(String).filter(Boolean) : []);
+  const inputs = list(ctx.abilitiesInputs);
+  const outputs = list(ctx.abilitiesOutputs);
+  const steps = list(ctx.abilitiesSteps);
+  // Ядро не доехало (прямой вызов мимо речи) — честная строка без выдуманного списка.
+  if (!inputs.length && !outputs.length && !steps.length) return SHELL[l].unknownBuild;
+  const s = SHELL[l];
+  return [
+    s.head,
+    `${s.inputs}: ${inputs.join(", ") || s.none}`,
+    `${s.outputs}: ${outputs.join(", ") || s.none}`,
+    steps.length ? `${s.steps}: ${steps.join(" · ")}` : s.noSteps,
+    s.tail,
+  ].join("\n");
+};
+
+const SHELL: Record<Lang, { head: string; inputs: string; outputs: string; steps: string; noSteps: string; none: string; tail: string; unknownBuild: string }> = {
+  ru: {
+    head: "👋 Вот что умеет эта сборка прямо сейчас:",
+    inputs: "📨 Принимаю через",
+    outputs: "📤 Доставляю в",
+    steps: "⚙️ Делаю с данными",
+    noSteps: "⚙️ С данными ничего не делаю — передаю как есть",
+    none: "пока ничего",
+    tail: "Чего нет в этом списке — того в сборке нет; добавляет владелец в кокпите.",
+    unknownBuild: "👋 Я ассистент этой автоматизации. Состав сборки сейчас не читается — спросите ещё раз чуть позже.",
+  },
+  en: {
+    head: "👋 Here is what this build can do right now:",
+    inputs: "📨 I take messages through",
+    outputs: "📤 I deliver to",
+    steps: "⚙️ What I do with the data",
+    noSteps: "⚙️ I do nothing to the data — I pass it through as it is",
+    none: "nothing yet",
+    tail: "Anything not on this list is not built — the owner adds it in the cockpit.",
+    unknownBuild: "👋 I'm the assistant of this automation. Its build cannot be read right now — ask again in a moment.",
+  },
 };
 
 // 🔒 ТОЛЬКО ФОРМА, НИ ОДНОГО ДОМЕНА (шаг 311.11). Прежде здесь жили строки про траты, чеки, категории,
@@ -63,7 +91,7 @@ export function composeReply(ctx: NodeCtx): NodeCtx {
   if (fromFront) return { reply: fromFront };
 
   // C: представление возможностей — /start, «что ты умеешь».
-  if (ctx.showHelp === true) return { reply: CAPABILITIES[L] };
+  if (ctx.showHelp === true) return { reply: capabilities(L, ctx) };
 
   // КЛАСС ЗАПРОСА — из фронта (шаг 311.6). Старая система `ctx.intent` (мульти-флаг доменного словаря
   // от удалённого `classifyIntent`) снесена целиком: две системы классификации с почти одинаковыми
@@ -83,7 +111,7 @@ export function composeReply(ctx: NodeCtx): NodeCtx {
   if (has("read-own") && ctx.recallAnswer) lines.push(T.recall(L, String(ctx.recallAnswer)));
 
   // Ничего не собрали (непонятое сообщение) → мягкий отказ + список возможностей.
-  if (!lines.length) return { reply: T.unknown(L) + CAPABILITIES[L] };
+  if (!lines.length) return { reply: T.unknown(L) + capabilities(L, ctx) };
 
   return { reply: lines.join("\n\n") };
 }

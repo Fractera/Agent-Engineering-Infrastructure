@@ -11,6 +11,7 @@ import { askModel } from "../ai";
 import { readCore } from "../core-io";
 import { assistantConfigOf } from "../components/conversation/config";
 import { loadChat, pushMessage, setLang, setPending, type PendingAsk } from "../components/conversation/state";
+import { abilitiesBrief, abilitiesOf, type Abilities } from "../components/conversation/abilities";
 import { composeReply } from "./compose-reply";
 
 // ЧТО СДЕЛАЛ ПРОГОН — РАЗДЕЛЬНО (309, живой тест): ЗАПИСИ (их подтверждаем) отдельно от RECALL-ОТВЕТА (на
@@ -50,9 +51,17 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
 
   let cfg;
   let publicUrl = "";
+  let facts = "";
+  // Структурный перечень — тот же источник, что и `facts`: его получает детерминированный фолбэк, чтобы и
+  // он никогда не перечислял умения от себя.
+  let ab: Abilities = { inputs: [], outputs: [], steps: [], speaks: false };
   try {
     const core = await readCore();
     cfg = assistantConfigOf(core.components);
+    // ВОЗМОЖНОСТИ — ИЗ ЯДРА, НА КАЖДОМ ПРОГОНЕ (312.4). Инструкцию поведения пишет человек и она стареет;
+    // эти строки выведены из видимых узлов только что и потому не могут разойтись со сборкой.
+    ab = abilitiesOf(core);
+    facts = abilitiesBrief(ab);
     // Публичный адрес автоматизации (310) — из паспорта; ассистент даёт его на «где посмотреть».
     publicUrl = String((core.passport as { publicUrl?: unknown } | undefined)?.publicUrl ?? "").trim();
   }
@@ -82,7 +91,7 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
 
   // Представление возможностей (/start, «что ты умеешь») — детерминированный список надёжнее модели.
   if (ctx.showHelp === true && cfg.revealCapabilities) {
-    const help = composeReply({ ...ctx, lang }).reply as string;
+    const help = composeReply({ ...ctx, lang, abilitiesInputs: ab.inputs, abilitiesOutputs: ab.outputs, abilitiesSteps: ab.steps }).reply as string;
     if (chatId) await pushMessage(chatId, { role: "assistant", text: help, at: new Date().toISOString() }, cfg.lastN, cfg.ttlMinutes);
     return { reply: help };
   }
@@ -92,7 +101,7 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   const qaHit = matchQa(incoming, cfg.qa);
 
   // Нет модели/ключа → детерминированный фолбэк (форма доказана 11/11).
-  const fallback = () => composeReply({ ...ctx, lang });
+  const fallback = () => composeReply({ ...ctx, lang, abilitiesInputs: ab.inputs, abilitiesOutputs: ab.outputs, abilitiesSteps: ab.steps });
 
   // Контекст диалога — из единого слоя (`ctx.recentDialog`, положил классификатор); фолбэк — свой буфер.
   const history = String(ctx.recentDialog ?? "").trim()
@@ -117,7 +126,7 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
     : `The automation's public page address is not assigned yet — if asked where to see it, say so honestly, do not invent a link.`;
   const system =
     `${publicUrlLine}\n\n` +
-    `${cfg.instruction}\n\nReply ONLY in language "${lang}". Keep it to one short, warm message. ` +
+    `${cfg.instruction}\n\n${facts}\n\nReply ONLY in language "${lang}". Keep it to one short, warm message. ` +
     // ГАРДРЕЙЛ ОТ ГАЛЛЮЦИНАЦИЙ (309, живой тест): модель НЕ знает внутреннего устройства и НЕ должна его
     // выдумывать. Инцидент: на «почему не сохранил в таблицу» бот сочинил «храню как заметку» — а трата
     // БЫЛА в таблице. Отвечай ТОЛЬКО о том, что реально сделал прогон (описано ниже). Не придумывай
