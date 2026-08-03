@@ -96,9 +96,19 @@ export const recallConversationValidate: NodeValidator = (patch) => {
   return o === "found" || o === "unreachable" ? o : "empty";
 };
 
+/**
+ * `verifyRecall` (330.10): подтвердил ли кандидат своё право стать ответом.
+ *   `verified` — хоть одна выдержка разрешилась в живую запись и относится к вопросу;
+ *   `empty`    — не осталось ни одной: сироты и «не о том» отброшены, и это ЧЕСТНЫЙ исход.
+ * Третьего не бывает: «недоступна» — состояние ЧТЕНИЯ, проверять там уже нечего.
+ */
+export const verifyRecallValidate: NodeValidator = (patch) =>
+  String((patch as Record<string, unknown>).recallOutcome ?? "") === "found" ? "verified" : "empty";
+
 export const NODE_VALIDATORS: Record<string, NodeValidator> = {
   transformPayloadValidate,
   recallConversationValidate,
+  verifyRecallValidate,
   fetchExternalValidate,
   keepObjectValidate,
   resolveMomentValidate,
@@ -128,6 +138,8 @@ const DECIDING_FUNCTIONS = [
   "fetchExternal",
   "keepObject",
   "resolveMoment",
+  "recallConversation",
+  "verifyRecall",
   "ifSuccess",
   "ifFailure",
   "intentRefuse",

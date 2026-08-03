@@ -31,6 +31,7 @@ import { fetchExternal } from "./fetch-external";
 import { keepObject } from "./keep-object";
 import { resolveMoment } from "./resolve-moment";
 import { recallConversation } from "./recall-conversation";
+import { verifyRecall } from "./verify-recall";
 import { composeReply } from "./compose-reply";
 import { converse } from "./converse";
 import { ifSuccess } from "./if-success";
@@ -86,6 +87,8 @@ export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   // ЧТЕНИЕ ПАМЯТИ (330.7) — вторая половина складов: до него писать умели двенадцать узлов, читать — ни
   // один, и вопрос о прошлом разговоре упирался в пустоту.
   recallConversation,
+  // ПРОВЕРКА НАЙДЕННОГО (330.10): кандидат становится ответом, только разрешившись в локальную запись.
+  verifyRecall,
   composeReply,
   converse,
   ifSuccess,

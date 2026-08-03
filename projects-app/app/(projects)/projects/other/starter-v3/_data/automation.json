@@ -1474,6 +1474,62 @@
                   "condition-failure"
                 ]
               }
+            },
+            {
+              "cuid": "cverifyrecall8n4qz",
+              "name": "Verify what was recalled",
+              "description": "Turns candidates from the vector memory into an answer — or into an honest nothing. A similarity search never says 'not found': it always returns its nearest chunks. So each candidate must resolve to a live local record (that is also where its date comes from) and share a significant word with the question. Whatever fails is discarded.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "Checks each excerpt returned by the memory against the folder's own records: an orphaned marker or an off-topic match is dropped, and the surviving ones carry their true date."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "verifyRecall",
+                "summary": "Keeps only the recalled excerpts that resolve to a real record here and answer the question asked.",
+                "accepts": "ctx.recallCandidates from the reading node, plus the question.",
+                "returns": "recallAnswer, recallSources (time, channel, excerpt), recallOrphaned, recallOffTopicDropped.",
+                "outcomes": [
+                  {
+                    "name": "verified",
+                    "when": "at least one excerpt resolved to a live record and is on topic",
+                    "puts": "recallAnswer plus recallSources with their true dates"
+                  },
+                  {
+                    "name": "empty",
+                    "when": "every candidate was an orphan or off topic — similarity is not truth",
+                    "puts": "nothing: the reply says plainly it does not remember"
+                  }
+                ],
+                "validator": "verifyRecallValidate"
+              },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
+              "run": "sequential",
+              "estDurationMs": 60,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "intent",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              }
             }
           ]
         },
@@ -2958,8 +3014,14 @@
         "state": "visible"
       },
       {
-        "cuid": "cerecalltopayload3xz",
+        "cuid": "ceverifyfromrecall2m",
         "from": "crecallconversationk7t2",
+        "to": "cverifyrecall8n4qz",
+        "state": "visible"
+      },
+      {
+        "cuid": "ceverifytopayload7wq",
+        "from": "cverifyrecall8n4qz",
         "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
         "state": "visible"
       }

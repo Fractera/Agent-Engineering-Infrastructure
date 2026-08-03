@@ -17,51 +17,11 @@
 // Имя `recallConversation` — публичный контракт, не переименовывать.
 import type { NodeCtx } from "../executor";
 import { recallScoped, type Recalled } from "../memory";
-import { listRows } from "../rows";
 import { servesAnyClass } from "../message";
 
 /** Спрашивают ли о ПЕРЕПИСКЕ, а не о записях. Детерминированно, формы обращения конечны. */
 const ABOUT_TALK =
   /(помн|говорил|обсужд|беседов|разговор|вчера|remember|we (talked|discussed|were talking)|our (talk|conversation)|last time)/i;
-
-/** Сколько выдержек имеет смысл отдать речи: больше — дороже, а ответ всё равно один короткий. */
-const KEEP = 4;
-
-/**
- * 🔒 ПАМЯТЬ ВСЕГДА ЧТО-ТО ОТДАЁТ — ЗНАЧИТ РЕЛЕВАНТНОСТЬ ПРОВЕРЯЕМ САМИ (330.7, ложь поймана живьём).
- *
- * LightRAG в режиме `hybrid` возвращает top-k ближайших чанков ВСЕГДА и никогда не говорит «не нашёл».
- * На вопрос «помнишь, мы обсуждали ремонт крыши в гараже?» он отдал протёкший кран и старый запрос
- * пароля — и узел счёл это находкой, а речь вежливо согласилась: «Помню, был разговор про ремонт крыши».
- * Согласие без материала по теме — то же враньё, что и согласие вообще без материала.
- *
- * Проверка детерминированная и дешёвая: у вопроса и выдержки должно быть хотя бы одно общее ЗНАЧИМОЕ
- * слово. Значимое — длиной от четырёх букв (короткие в обоих языках служебные) и не из списка слов самого
- * обращения («помнишь», «говорили»), которые есть в КАЖДОМ таком вопросе и потому ничего не различают.
- */
-const ASKING_WORDS = new Set([
-  "помнишь", "помните", "говорили", "обсуждали", "беседовали", "разговор", "вчера", "тобой",
-  "remember", "talked", "discussed", "talking", "about", "conversation", "yesterday",
-]);
-
-const significant = (s: string): Set<string> =>
-  new Set(
-    s.toLowerCase()
-      .replace(/[^\p{L}\p{N}\s]/gu, " ")
-      .split(/\s+/)
-      .filter((w) => w.length >= 4 && !ASKING_WORDS.has(w))
-      // Русские окончания сильно расходятся («велосипеде» / «велосипед»), поэтому сравниваем по основе:
-      // первые пять букв различают предметы и переживают склонение.
-      .map((w) => w.slice(0, 5)),
-  );
-
-const relevant = (question: string, text: string): boolean => {
-  const q = significant(question);
-  if (!q.size) return true; // в вопросе нет ни одного значимого слова — судить нечем, не отбрасываем
-  const t = significant(text);
-  for (const w of q) if (t.has(w)) return true;
-  return false;
-};
 
 export async function recallConversation(ctx: NodeCtx): Promise<NodeCtx> {
   // Вопрос — не всякий прогон. Работаем только для классов, которые действительно спрашивают.
@@ -96,52 +56,12 @@ export async function recallConversation(ctx: NodeCtx): Promise<NodeCtx> {
 
   if (unreachable && !found.length) return { recallOutcome: "unreachable", recallAnswer: "", recallSources: [] };
 
-  // 🔒 ВРЕМЯ БЕРЁТСЯ ИЗ НАШЕЙ СТРОКИ, А НЕ ИЗ ПАМЯТИ. У чанка даты нет вовсе — только текст и провенанс.
-  // Поэтому маркер `[mem#id]`, положенный при записи, разрешается в строку разговора, и оттуда приходят
-  // точные «когда» и «в каком канале». Ради этого второй дом и заведён.
-  const rows = await listRows("conversation", Infinity);
-  const byMark = new Map(rows.map((r) => [String(r.memRecordId ?? ""), r]));
-
-  // Память отдала ближайшее, а не подходящее — оставляем только то, что действительно о предмете вопроса.
-  const offTopic = found.length;
-  found = found.filter((f) => relevant(question, f.text));
-  const offTopicDropped = offTopic - found.length;
-
-  const top = found.slice(0, KEEP);
-  const sources = top.map((f) => {
-    const row = byMark.get(f.memRecordId);
-    return {
-      at: String(row?.at ?? ""),
-      channel: f.channel || String(row?.channel ?? ""),
-      kind: f.kind,
-      excerpt: f.text.length > 200 ? `${f.text.slice(0, 199)}…` : f.text,
-    };
-  });
-
-  if (!top.length) {
-    // Ничего СВОЕГО и ПО ТЕМЕ не нашлось — честный пустой исход. Отдельно называем, сколько отброшено
-    // чужого и сколько не по теме: «пусто вообще», «пусто здесь» и «есть, но не об этом» — три разные
-    // вещи, и в журнале они обязаны различаться.
-    return {
-      recallOutcome: "empty",
-      recallAnswer: "",
-      recallSources: [],
-      recallForeignDropped: foreignDropped,
-      recallOffTopicDropped: offTopicDropped,
-    };
-  }
-
-  // Материал для речи: выдержки с датами. Формулирует ответ ОНА (закон 312 — один автор ответа), этот узел
-  // лишь приносит найденное.
-  const answer = sources
-    .map((s) => `${s.at ? `[${s.at.slice(0, 10)}] ` : ""}${s.excerpt}`)
-    .join("\n");
-
+  // 🔒 ЗДЕСЬ ЧТЕНИЕ ЗАКАНЧИВАЕТСЯ (330.10). Дальше кандидатов ПРОВЕРЯЕТ отдельный узел: разрешает их в
+  // локальные записи, берёт оттуда время и отсеивает не по теме. Разделение не косметика — оно делает
+  // проверку ВИДИМОЙ на холсте и даёт ей собственные исходы, а не прячет в комментарии внутри чтения.
   return {
     recallOutcome: "found",
-    recallAnswer: answer,
-    recallSources: sources,
+    recallCandidates: found,
     recallForeignDropped: foreignDropped,
-    recallOffTopicDropped: offTopicDropped,
   };
 }

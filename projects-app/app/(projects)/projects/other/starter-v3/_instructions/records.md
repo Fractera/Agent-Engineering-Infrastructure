@@ -41,6 +41,44 @@ born unlinked: `addEntityRow` links it — no node calls a linker, and no node c
   door `api/rows?table=<t>&id=<id>&linked=1` returns the row, its database record and the record's other
   facets, and that is what the entity drawer shows (`tab.md`). Links are written to be READ.
 
+## 🔒 What LEAVES the folder carries a way BACK — the anchor law
+
+An external store returns only what it stores, and it stores less than you assume. Proven the hard way: a
+vector-memory chunk carries **no date at all** — only text, its provenance and an id. Ask it "when did we
+talk about this?" and there is nothing to answer with.
+
+So the shape is an ANCHOR, not a web:
+
+- **one local row holds identity, time and `links`** — it is the only place where the full truth lives;
+- **every copy sent outside carries a marker back to it** (`[mem#<id>]` inside the indexed text, plus the
+  `trackId` kept on the row: one hop in each direction).
+
+Do NOT try to keep everything linked to everything. Cross-links between every pair grow with the square of
+the stores, rot silently when one is added, and were exactly the defect behind `storageIds`/`vectorIds`.
+One anchor, one way back.
+
+**The test before sending anything out:** *if this comes back to me a year from now, can I tell what it is,
+whose it is and when it happened?* If the answer needs a field the external store does not keep — the way
+back is the field.
+
+## 🔒 A retrieval is a CANDIDATE, not an answer
+
+A vector search NEVER says "nothing found": `hybrid` returns its nearest k chunks whatever you ask. Asked
+about a roof repair that had never been mentioned, it returned a leaking tap — and the assistant agreed it
+remembered the roof. **Similarity is not truth.**
+
+So an excerpt becomes an answer only after it RESOLVES:
+
+1. **whose** — its provenance names THIS automation (`recallScoped` drops the rest before anything is composed);
+2. **which row** — its marker resolves to a live local record; a marker pointing nowhere is an ORPHAN, and an
+   orphan is shown to nobody (it is also how a quotation lost its date);
+3. **about what** — it shares a significant word with the question, or it is off-topic no matter how near
+   the vectors were.
+
+Fails any of the three → the candidate is discarded, and if none survive the honest outcome is `empty`.
+**Never soften this into "probably related":** an unverified excerpt presented as memory is indistinguishable
+from truth until the person checks, which makes it the most expensive lie this automation can tell.
+
 ## Reading a store
 
 Writing has 12 frozen doors; reading has primitives in `_lib/stores/read.ts` — one per store, named from
