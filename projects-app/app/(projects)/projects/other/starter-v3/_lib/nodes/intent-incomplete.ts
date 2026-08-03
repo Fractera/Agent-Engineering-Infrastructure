@@ -13,10 +13,12 @@ export async function intentIncomplete(ctx: NodeCtx): Promise<NodeCtx> {
   const text = requestText(ctx);
   if (claimed(ctx) || !text) return PASS;
   if (!matches(text, BARE_TASK) || text.split(/\s+/).length > 3) return PASS;
-  const question = "I can do that — what exactly should I take down? Send it in one message and I will keep it.";
-  return claim("incomplete", "input → intent → output", {
-    reply: question,
-    text: question,
+  // 🔒 КЛАСС ГОВОРИТ, ЧЕГО НЕ ХВАТАЕТ, А НЕ КАК СПРОСИТЬ (шаг 312.5). Здесь стояла готовая английская
+  // фраза вопроса — и узел речи её ЗАТИРАЛ своим ответом, поэтому вопрос до человека не доходил вовсе.
+  // Теперь класс объявляет род ответа и предмет нехватки, а формулирует вопрос речь, на языке чата.
+  return claim("incomplete", "input → intent → speech → output", {
+    speechAct: "ask",
+    speechAbout: "what exactly to take down — the request names a task but no subject",
     title: "Clarification",
     pendingQuestion: { about: text, asked: new Date().toISOString() },
   });

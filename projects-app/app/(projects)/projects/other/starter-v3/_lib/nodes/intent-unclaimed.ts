@@ -11,7 +11,7 @@ import { PASS, claim, claimed, requestText } from "./intent-gate";
 export async function intentUnclaimed(ctx: NodeCtx): Promise<NodeCtx> {
   const text = requestText(ctx);
   if (claimed(ctx) || !text) return PASS;
-  const answer =
-    "I did not recognize what kind of request this is, so I am not guessing. Tell me whether to record it, look it up outside, or search what I already keep.";
-  return claim("unclaimed", "input → intent → output", { reply: answer, text: answer, title: "Not recognized" });
+  // Класс объявляет род ответа; формулирует речь узел речи на языке чата (шаг 312.5). Честность исхода от
+  // этого не страдает: «не понял» остаётся отдельным классом, а не тихим дефолтом.
+  return claim("unclaimed", "input → intent → speech → output", { speechAct: "not-understood", title: "Not recognized" });
 }

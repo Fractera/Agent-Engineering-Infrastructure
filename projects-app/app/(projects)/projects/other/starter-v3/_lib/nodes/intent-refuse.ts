@@ -20,7 +20,8 @@ const FORMS = [
 export async function intentRefuse(ctx: NodeCtx): Promise<NodeCtx> {
   const text = requestText(ctx);
   if (claimed(ctx) || !text || !matches(text, FORMS)) return PASS;
-  const answer =
-    "That is a secret of this server, and it is not something this automation hands out through a chat — not to anyone.";
-  return claim("refuse", "input → intent → output", { reply: answer, text: answer, title: "Refused" });
+  // 🔒 КЛАСС НЕ СОЧИНЯЕТ РЕЧЬ (шаг 312.5). Здесь стояла английская фраза отказа — то есть речь собиралась
+  // в слое намерения, мимо узла речи, и приходила на любом языке чата по-английски. Класс объявляет РОД
+  // ответа (`speechAct`), а формулирует речь — узел речи, на языке собеседника.
+  return claim("refuse", "input → intent → speech → output", { speechAct: "refuse", title: "Refused" });
 }

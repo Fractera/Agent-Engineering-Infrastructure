@@ -44,18 +44,20 @@ export async function intentSelfDescribe(ctx: NodeCtx): Promise<NodeCtx> {
 
   const core = await readCore();
   const url = String((core.passport as { publicUrl?: unknown }).publicUrl ?? "").trim();
-  const answer = url
-    ? `This automation is published at: ${url}`
-    : "This automation has no public page address assigned yet — so there is no link to give.";
+  // Класс добывает ФАКТ (адрес есть / его нет) и передаёт его речи; формулировка — работа речи на языке
+  // чата (шаг 312.5). Прежде здесь собиралась готовая английская фраза.
+  const fact = url
+    ? `this automation is published at ${url}`
+    : "this automation has no public page address assigned yet — do not invent one";
 
   return {
     // РЕШЕНИЕ ФРОНТА — часть контекста прогона, а значит и журнала (`runs.jsonl`): маршрут должен быть
     // проверяемым, иначе фронт станет вторым непрозрачным классификатором, о котором никто не знает,
     // почему он так решил.
     intentClass: "self-describe",
-    intentRoute: "input → intent → output",
-    reply: answer,
-    text: answer,
+    intentRoute: "input → intent → speech → output",
+    speechAct: "describe-self",
+    speechAbout: fact,
     title: "Self-description",
   };
 }

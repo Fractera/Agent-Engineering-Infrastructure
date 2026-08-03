@@ -59,6 +59,30 @@ const SHELL: Record<Lang, { head: string; inputs: string; outputs: string; steps
   },
 };
 
+/** Короткие честные фразы на род ответа — когда модели нет. Ни одного домена, ни одного обещания. */
+const ACT: Record<string, Record<Lang, string>> = {
+  refuse: {
+    ru: "🔒 Это секрет сервера — его я не выдаю в переписке никому.",
+    en: "🔒 That is a server secret — I don't hand it out in chat, to anyone.",
+  },
+  greet: {
+    ru: "👋 Здравствуйте! Скажите, что нужно сделать.",
+    en: "👋 Hello! Tell me what you need.",
+  },
+  "describe-self": {
+    ru: "Я ассистент этой автоматизации.",
+    en: "I'm the assistant of this automation.",
+  },
+  ask: {
+    ru: "❓ Что именно записать? Пришлите это одним сообщением.",
+    en: "❓ What exactly should I take down? Send it in one message.",
+  },
+  "not-understood": {
+    ru: "🤔 Не понял, что это за запрос, и не буду гадать.",
+    en: "🤔 I couldn't tell what kind of request this is, and I won't guess.",
+  },
+};
+
 // 🔒 ТОЛЬКО ФОРМА, НИ ОДНОГО ДОМЕНА (шаг 311.11). Прежде здесь жили строки про траты, чеки, категории,
 // глоссарий, места и дубли — ответы узлов, которых в этой автоматизации давно нет. Реплика допустима
 // только про то, что реально делает сборка: записали · назначили момент · ответили из своего.
@@ -89,6 +113,11 @@ export function composeReply(ctx: NodeCtx): NodeCtx {
   // речь жила вне графа и доставка подменяла то, что решил маршрут.
   const fromFront = String(ctx.reply ?? "").trim();
   if (fromFront) return { reply: fromFront };
+
+  // 🔒 РОД ОТВЕТА ОТ ФРОНТА (шаг 312.5) — детерминированная половина того же контракта, что у речи. Классы
+  // больше не сочиняют прозу сами; когда модели нет, короткую честную фразу на язык чата даёт этот набор.
+  const act = String(ctx.speechAct ?? "").trim();
+  if (act && ACT[act]) return { reply: ACT[act][L] };
 
   // C: представление возможностей — /start, «что ты умеешь».
   if (ctx.showHelp === true) return { reply: capabilities(L, ctx) };

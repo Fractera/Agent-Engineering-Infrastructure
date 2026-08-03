@@ -25,8 +25,14 @@ export const claimed = (ctx: NodeCtx): boolean => typeof ctx.intentClass === "st
 /** Текст запроса, приведённый к сравнению. Пустой захват судить нечем. */
 export const requestText = (ctx: NodeCtx): string => String(ctx.text ?? "").trim();
 
-/** Ответ класса: чем он себя объявил и куда ведёт поток. Пишется в контекст → виден в журнале прогона. */
-export const claim = (intentClass: string, route: "intent → middle" | "input → intent → output", patch: NodeCtx = {}): NodeCtx => ({
+/** Ответ класса: чем он себя объявил и куда ведёт поток. Пишется в контекст → виден в журнале прогона.
+ *  Третий маршрут добавлен в 312.5: классы, которым середина не нужна, идут через РЕЧЬ, а не прямо в выход —
+ *  формулировать ответ их работа больше не является. */
+export const claim = (
+  intentClass: string,
+  route: "intent → middle" | "input → intent → output" | "input → intent → speech → output",
+  patch: NodeCtx = {},
+): NodeCtx => ({
   intentClass,
   intentRoute: route === "intent → middle" ? "input → intent → middle → output" : route,
   ...patch,

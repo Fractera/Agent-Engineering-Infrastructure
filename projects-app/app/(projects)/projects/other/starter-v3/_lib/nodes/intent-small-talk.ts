@@ -15,6 +15,6 @@ const FORMS = [
 export async function intentSmallTalk(ctx: NodeCtx): Promise<NodeCtx> {
   const text = requestText(ctx);
   if (claimed(ctx) || !text || !matches(text, FORMS)) return PASS;
-  const answer = "Hello. Tell me what to do — record something, look something up outside, or ask what I already keep.";
-  return claim("small-talk", "input → intent → output", { reply: answer, text: answer, title: "Small talk" });
+  // Класс объявляет род ответа; формулирует речь узел речи на языке чата (шаг 312.5).
+  return claim("small-talk", "input → intent → speech → output", { speechAct: "greet", title: "Small talk" });
 }

@@ -112,13 +112,39 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   //   RECALL  — прогон ОТВЕТИЛ из памяти, ничего не создав → ДАЙ ОТВЕТ на вопрос, НЕ говори «сохранено».
   //   БЕСЕДА  — ничего не создано и не найдено (приветствие, «кто ты», мета-вопрос О ПЕРЕПИСКЕ) → веди
   //             диалог, ИСПОЛЬЗУЯ недавний диалог выше, чтобы отвечать на вопросы о том, что было сказано.
-  const task = recorded
-    ? `You just performed this for the user: ${recorded}. Reply confirming it briefly (or ask the follow-up it needs).`
-    : recallAnswer
-      ? `The user asked a QUESTION. Answer it directly using this information: "${recallAnswer}". Do NOT say anything was "saved" — you are ANSWERING, not recording.`
-      : `The user is CONVERSING (a greeting, a question about who you are, small talk, or a question ABOUT THIS ` +
-        `CONVERSATION — what they asked earlier, whether you remember). You CAN SEE the recent dialogue above: ` +
-        `use it to answer such questions truthfully and specifically. Do NOT say anything was "saved". Reply naturally as this assistant.`;
+  // 🔒 ТЕМУ ОТВЕТА НАЗЫВАЕТ ФРОНТ, А НЕ СЛЕДЫ ПРОГОНА (шаг 312.5). Раньше режим выбирался по побочным
+  // полям контекста (`needsWhen`, оставленный календарём), и на прямой вопрос речь могла ответить про
+  // напоминание. Теперь класс запроса объявляет РОД ответа (`speechAct`), а следы прогона учитываются
+  // только там, где класс действительно что-то создал.
+  const act = String(ctx.speechAct ?? "").trim();
+  const about = String(ctx.speechAbout ?? "").trim();
+  const ACTS: Record<string, string> = {
+    refuse:
+      "The user asked for a SECRET of this server (a password, a key, a token). Refuse warmly and firmly in one " +
+      "sentence. Do not explain how secrets are stored, do not repeat what they asked for, do not offer a workaround.",
+    greet:
+      "The user is being social (a greeting, thanks, goodbye). Answer warmly in one short line and, if it fits, " +
+      "invite them to say what they need. Nothing was saved and nothing is pending.",
+    "describe-self":
+      `The user asks about the automation itself. Answer from the facts above${about ? ` and from this: ${about}` : ""}. ` +
+      "Never invent an address or an ability.",
+    ask:
+      `The run cannot continue until the user says one missing thing: ${about || "the missing detail"}. ` +
+      "Ask exactly ONE short question for it. Do not apologise, do not explain the internals, do not offer alternatives.",
+    "not-understood":
+      "You could not tell what kind of request this is. Say so plainly in one line — no guessing — and name, from " +
+      "the facts above, what you CAN do, so the user can rephrase.",
+  };
+
+  const task = ACTS[act]
+    ? ACTS[act]
+    : recorded
+      ? `You just performed this for the user: ${recorded}. Reply confirming it briefly (or ask the follow-up it needs).`
+      : recallAnswer
+        ? `The user asked a QUESTION. Answer it directly using this information: "${recallAnswer}". Do NOT say anything was "saved" — you are ANSWERING, not recording.`
+        : `The user is CONVERSING (a greeting, a question about who you are, small talk, or a question ABOUT THIS ` +
+          `CONVERSATION — what they asked earlier, whether you remember). You CAN SEE the recent dialogue above: ` +
+          `use it to answer such questions truthfully and specifically. Do NOT say anything was "saved". Reply naturally as this assistant.`;
   // Публичный адрес (310): когда владелец спрашивает «где это посмотреть / покажи страницу» — отвечай
   // адресом; не назначен → честно скажи, что адреса пока нет (не выдумывай ссылку).
   const publicUrlLine = publicUrl
