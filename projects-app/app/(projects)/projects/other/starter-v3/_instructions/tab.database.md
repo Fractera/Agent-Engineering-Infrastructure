@@ -29,9 +29,9 @@ shape of a record: `records.md`.
 | Storage · Vectors · Map · Calendar | `links:<store>` | **`ids` — an ARRAY, never one string** |
 | Added | `createdAt` | `date` |
 
-**Columns are DECLARED IN THE CORE** (`entity.data.columns`: key · label ×10 languages · type · source),
-and the component only renders them. While the list lived in the component, the record law was obeyed and
-the owner still saw a stale table without map and calendar. Never hard-code a column list again.
+**Columns are declared in the core**, and the component only renders them — the general law of every tab
+(`tab.md`), first paid for right here: while the list lived in the component, the record law was obeyed and
+the owner still saw a stale table without map and calendar.
 
 **Every link column is an ARRAY.** One record legitimately owns several objects, several markers, several
 events. A per-neighbour single value is how the calendar link went missing for weeks. An empty array

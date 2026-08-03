@@ -99,6 +99,9 @@ no port table to refuse you, so an unread law here fails later and quieter — n
 - A tab shows what an OUTPUT NODE delivered. It never computes the result itself.
 - Add an ENTITY, not a second tab of the same kind.
 - Tab settings live in the core (`data`), never as prose in `info`.
+- **So do its SOURCE and its SHAPE — every tab, no exceptions:** `entity.data` names the store (`table`),
+  the columns/fields and the page size; the component only renders them. Hard-coding either inside a
+  component creates a second, private truth — it cost four tabs in one day, the map among them.
 
 ## 🔒 Two surfaces you must NOT code
 

@@ -15,12 +15,27 @@ The extra law is **derived from the tab's name, never declared**: the object kee
 as a node keeps naming `nodes` while its `kind.<kind>` instruction rides along. A second field naming
 the law would be a second source of truth about which law governs the object, and the two would drift.
 
-Today one tab has such a law: **`calendar`** (`tab.calendar` — the due-notice beat, the browser watcher,
-why delivery may not live in the browser, integrations and their keys). Read it before touching anything
-in that tab; it is authoritative over any prose about the calendar found elsewhere in the folder.
+Ask the door for the tab (`api/core?select=tab:<name>`) and read `tabInstruction` when it comes: it is
+authoritative over any prose about that tab found elsewhere in the folder. No list of which tabs have one
+is kept here — such a list rots the moment a law is written.
 
 When you give a tab a law of its own: write `_instructions/tab.<name>.md`, add `"tab.<name>"` to
 `SYSTEM_INSTRUCTION_NAMES` in the schema, and change nothing in the core — the door finds it by name.
+
+## 🔒 THE SOURCE AND THE SHAPE ARE DECLARED IN THE CORE — every tab, no exceptions
+
+`entity.data` names WHERE the tab's data lives and WHAT it shows: the store (`table`), the columns or
+fields (`key` · `label` ×10 languages · `type` · `source`, plus `minWidth` where the default is wrong), the
+page size, and any per-kind settings. **The component only reads that declaration and renders it. Hard-coding
+a source or a column list inside a component is a defect, not a shortcut.**
+
+It is paid for four times over, all on 2026-08-02: the database showed a stale table with no map and no
+calendar column; the object store and the vector memory rendered lists nobody had declared; the map drew
+nothing at all while the runs faithfully wrote and linked their markers — the owner simply had no way to
+see them. In every case the LAW was obeyed and the VIEW was a second, private truth.
+
+A tab whose data is a table also obeys the three shared table rules — they live once in
+`_components/shared/data-table.client.tsx` and are stated in `tab.database.md`. Link to them; never restate.
 
 ## Presence — one field, three honest answers
 

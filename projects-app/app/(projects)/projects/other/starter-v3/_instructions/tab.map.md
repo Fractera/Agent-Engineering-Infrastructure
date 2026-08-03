@@ -12,9 +12,9 @@ envelope and links are set by the write itself. No summary: a marker's content i
 
 ## Where the data comes from
 
-`entity.data` in the CORE declares `table: "map"`, `pageSize` and `columns`; the component only reads and
-draws them. While the source was undeclared, the run wrote the marker, linked it to the record — and the
-owner still saw an empty map (step 319). **Never hard-code the source or the column list in a component.**
+`entity.data` declares `table: "map"`, `pageSize` and `columns` — the general law of every tab (`tab.md`).
+Until it was declared, the run wrote the marker and linked it to the record while the map showed nothing:
+the canvas had no source to read (step 319).
 
 ## Never here
 

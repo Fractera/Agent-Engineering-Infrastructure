@@ -140,6 +140,11 @@ and quieter than a bad edge — not less badly.
 A tab shows what an output node DELIVERED; it never computes the result. Add an entity rather than a second
 tab of the same kind. Settings live in the core (`data`), not as prose in `info`.
 
+**Its SOURCE and its SHAPE live there too — every tab, no exceptions.** `entity.data` names the store
+(`table`), the columns/fields and the page size; the component only renders them. A source or a column list
+hard-coded in a component is a second, private truth: it cost four tabs in a single day — a stale table, two
+undeclared lists, and a map that drew nothing while the runs faithfully wrote and linked their markers.
+
 ## 🔒 Two surfaces are not yours to code
 
 The **diagram** and the **use-cases panel** are PLATFORM views — one copy, identical in every account. You
