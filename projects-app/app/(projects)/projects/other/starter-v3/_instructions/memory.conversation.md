@@ -40,6 +40,17 @@ At EVICTION, not at every message: a turn enters long memory exactly when the bu
 (`condense` in `converse.ts` — one author, one moment). While a conversation is live it is already in front
 of the model; only what has been forgotten needs searching for.
 
+## Forgetting happens in PAIRS
+
+Deleting a row while leaving its document in the index creates an ORPHANED excerpt: the memory still finds
+the text, but nothing resolves it back to a row — so the person is shown a quotation **with no date**, which
+is half of what was promised. Proven on the day this was built: cleaning up test rows left two such
+documents, and they were the first thing the next search surfaced.
+
+So whoever deletes a remembered turn deletes its document too (`DELETE /documents/delete_document` takes
+`doc_ids`; find the document by the `trackId` kept on the row). The code for it belongs WITH the interface
+that deletes — building it before there is a caller would be dead code, which this folder does not keep.
+
 ## What this is NOT
 
 `conversation` is **not an entity store**. `ENTITY_STORES` hold what the automation OWNS and write only for
