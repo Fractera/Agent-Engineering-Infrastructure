@@ -10,7 +10,8 @@ import type { NodeCtx } from "../executor";
 import { askModel } from "../ai";
 import { readCore } from "../core-io";
 import { assistantConfigOf } from "../components/conversation/config";
-import { formatDialog, loadChat, pushMessage, setLang, setPending, type ChatMessage, type PendingAsk } from "../components/conversation/state";
+import { loadChat, pushMessage, setLang, setPending, type ChatMessage, type PendingAsk } from "../components/conversation/state";
+import { buildDialogue } from "../components/conversation/context";
 import { abilitiesBrief, abilitiesOf, placesBrief, type Abilities } from "../components/conversation/abilities";
 import { composeReply } from "./compose-reply";
 
@@ -117,8 +118,10 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   // и что увидит модель, зависело от пути: через движок приезжала одна форма, при прямом вызове двери
   // другая. Две формы одного контекста означают два разных прочтения одного разговора.
   // Теперь форма ровно одна (`formatDialog`), а окно — то же, что у движка: настройка вкладки.
+  // Бюджет действует и на этом пути (330.2): прямой вызов двери мимо движка не должен быть лазейкой,
+  // через которую в модель уезжает неограниченный разговор.
   const history = String(ctx.recentDialog ?? "").trim()
-    || formatDialog(state.messages as ChatMessage[], cfg.lastN);
+    || buildDialogue(state.messages as ChatMessage[], { lastN: cfg.lastN, tokenBudget: cfg.tokenBudget }).text;
 
   // 🔒 ТРИ РЕЖИМА ОТВЕТА (309, живой тест — бот на всё говорил «Готово ✅ …сохранено»):
   //   ЗАПИСЬ  — прогон что-то создал (заметка/трата/место/напоминание) → кратко ПОДТВЕРДИ.

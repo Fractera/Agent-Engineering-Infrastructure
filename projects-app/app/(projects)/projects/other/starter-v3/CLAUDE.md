@@ -72,6 +72,12 @@ Read any file here freely — nothing is hidden behind an API.
   Never hard-code a limit and never assemble the history a second time — a default inside `formatDialog`
   silently beat the owner's setting, and a second form meant the model read one dialogue two ways depending
   on the call path.
+- **Context is assembled ONCE, under a token budget** (330.2, `_lib/components/conversation/context.ts`).
+  `data.memory.tokenBudget` limits what the dialogue may COST, `lastN` how much is worth keeping; the run
+  reports `ctx.dialogueBudget` (`used` · `budget` · `dropped` · `limitedBy`), so a shortened memory is never
+  mistaken for a stupid model. The engine hands out two slices: `recentDialog` for speech and
+  `recentDialogBrief` — the last exchange on a derived share — for reading the request class. **A node that
+  builds its own history breaks the budget**: assemble nothing, read the slice you are given.
 
 ## 🔒 A node that DECIDES cannot exist without a validator
 

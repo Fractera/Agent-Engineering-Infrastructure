@@ -120,6 +120,19 @@ never hard-code a limit — a default inside `formatDialog` silently beat the ow
 promised control it did not have; and never assemble the history a second time — one dialogue rendered in
 two forms is one conversation read two ways, and which one the model saw depended on the call path.
 
+**The context is assembled ONCE, under a TOKEN BUDGET** (330.2,
+`_lib/components/conversation/context.ts`). `data.memory.tokenBudget` caps what the dialogue may COST,
+`lastN` caps how much is worth keeping, and the one that binds first wins — counting messages alone is a
+bad measure, since one dictated voice message outweighs twenty typed ones. Eviction removes the OLDEST
+message WHOLE: half a line is worse than none, because the model completes it and sounds certain. The run
+reports the price in `ctx.dialogueBudget` (`used` · `budget` · `dropped` · `limitedBy`), so a memory cut
+short is never mistaken for a stupid model.
+
+The engine hands out **two slices, and it decides the sizes**: `recentDialog` — the conversation, for the
+speech layer; `recentDialogBrief` — the last exchange only, on a derived share of the budget, for reading
+the request class (that read happens on EVERY run, so it must stay cheap). **Never assemble history inside
+a node** — that is exactly how the budget stops being anyone's.
+
 ## 🔒 A node that decides cannot exist without a validator
 
 Applies to `transform`, `condition-success`, `condition-failure` and every `intent` class — anything whose

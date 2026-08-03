@@ -21,6 +21,15 @@ language — keyed by the interlocutor (`telegram:<id>`, `email:<from>`, `panel`
   before the buffer is a clean new session. The engine reads it and passes it to `formatDialog`, which has
   **no default**: a hard-coded limit there beat the owner's setting, and the setting promised control it did
   not have. **One form, one assembly** — never render the history a second way (330.1).
+- **TWO limits, and the second one counts price** (330.2). `data.memory.tokenBudget` caps what the dialogue
+  may COST; `lastN` caps how many messages are worth keeping. Whichever binds first wins, and the run says
+  which: `ctx.dialogueBudget` carries `used` · `budget` · `dropped` · `limitedBy`. Counting messages alone
+  is a bad measure — one dictated voice message outweighs twenty typed ones.
+  Eviction drops the OLDEST message whole; half a line is worse than none, because the model completes it.
+- **Who gets what is decided once, by the engine.** `recentDialog` — the conversation, for speech.
+  `recentDialogBrief` — the last exchange only, on a derived share of the budget, for reading the request
+  class (it runs on EVERY run, so it must stay cheap). A node never assembles history for itself: that is
+  how a budget becomes nobody's.
 - **Only this layer writes it.** One author per entity, exactly as only `deliverToast` writes a toast row.
 - No interlocutor (cron, webhook) → no plane, and the run works as before.
 

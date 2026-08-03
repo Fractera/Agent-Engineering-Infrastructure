@@ -3883,7 +3883,8 @@
               },
               "memory": {
                 "lastN": 20,
-                "ttlMinutes": 60
+                "ttlMinutes": 60,
+                "tokenBudget": 1200
               },
               "revealCapabilities": true,
               "language": {

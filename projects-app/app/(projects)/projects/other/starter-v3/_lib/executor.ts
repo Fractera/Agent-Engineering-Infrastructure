@@ -15,8 +15,9 @@ import { allNodes, type Node } from "../_data/automation.schema";
 import { NODE_FUNCTIONS } from "./nodes";
 import { NODE_VALIDATORS } from "./validators";
 import { appendRun } from "./runs";
-import { chatKeyOf, formatDialog, loadChat } from "./components/conversation/state";
+import { chatKeyOf, loadChat } from "./components/conversation/state";
 import { assistantConfigOf } from "./components/conversation/config";
+import { buildDialogue, classifyBudget, classifyWindow } from "./components/conversation/context";
 
 export type NodeCtx = Record<string, unknown>;
 export type NodeResult = NodeCtx | null | void;
@@ -97,13 +98,36 @@ export async function executeAutomation(input: NodeCtx): Promise<RunOutcome | Ru
     // 🔒 ОКНО ДИАЛОГА — ИЗ ВКЛАДКИ ВЛАДЕЛЬЦА (шаг 330.1). Ядро уже прочитано выше, поэтому настройка
     // достаётся без единого лишнего чтения. До этого движок звал `formatDialog` без окна и получал зашитые
     // восемь реплик: у владельца была настройка, у модели — своё число, и они не встречались.
-    const window = assistantConfigOf(core.components).lastN;
+    //
+    // 🔒 ДВА ПОТРЕБИТЕЛЯ КОНТЕКСТА, ОДИН СБОРЩИК (шаг 330.2). Речи нужен разговор, чтению класса — только
+    // завязка последнего обмена, и платит оно на КАЖДОМ прогоне. Поэтому собирается два среза одним
+    // модулем: полный под бюджет владельца и краткий под выведенную из него долю. Собирать историю самому
+    // узлу больше не нужно и нельзя — иначе бюджет опять станет ничьим.
+    const cfg = assistantConfigOf(core.components);
+    const dialogue = buildDialogue(state.messages, { lastN: cfg.lastN, tokenBudget: cfg.tokenBudget });
+    const brief = buildDialogue(state.messages, {
+      lastN: classifyWindow(cfg.lastN),
+      tokenBudget: classifyBudget(cfg.tokenBudget),
+    });
     ctx = {
       ...ctx,
       chatKey: key,
       chatLang: ctx.chatLang ?? state.lang,
       pendingQuestion: ctx.pendingQuestion ?? state.pending,
-      recentDialog: ctx.recentDialog ?? formatDialog(state.messages, window),
+      recentDialog: ctx.recentDialog ?? dialogue.text,
+      // Краткий срез для чтения класса — отдельным полем, чтобы классификатор не выбирал сам, сколько
+      // взять: сколько взять, решено здесь и один раз.
+      recentDialogBrief: ctx.recentDialogBrief ?? brief.text,
+      // 🔒 РАСХОД НАЗЫВАЕТСЯ ВСЛУХ. Сколько стоил контекст и что упёрлось первым — окно или бюджет —
+      // видно в исходе прогона. Молчаливое урезание контекста неотличимо от «модель тупая».
+      dialogueBudget: {
+        budget: dialogue.budget,
+        used: dialogue.used,
+        dropped: dialogue.dropped,
+        limitedBy: dialogue.limitedBy,
+        briefUsed: brief.used,
+        briefBudget: brief.budget,
+      },
     };
   };
 

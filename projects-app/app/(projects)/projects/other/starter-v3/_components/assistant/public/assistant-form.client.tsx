@@ -15,7 +15,7 @@ import { assistantStrings } from "../i18n";
 export type QaPair = { q: string; a: string };
 export type AssistantData = {
   instruction: string;
-  memory: { lastN: number; ttlMinutes: number };
+  memory: { lastN: number; ttlMinutes: number; tokenBudget: number };
   revealCapabilities: boolean;
   language: { mode: "auto" | "fixed"; fixed: string };
   qa: QaPair[];
@@ -93,7 +93,19 @@ export default function AssistantForm({ cuid, data, lang }: { cuid: string; data
             />
             <span className="text-muted-foreground">{L.minutes}</span>
           </label>
+          {/* Бюджет контекста (330.2) — второй ограничитель рядом с окном: считает цену, а не реплики. */}
+          <label className="flex items-center gap-2 text-sm">
+            <span>{L.budget}</span>
+            <Input
+              type="number" min={100} max={20000} step={100} disabled={busy} className="h-8 w-24"
+              value={d.memory.tokenBudget}
+              onChange={(e) => setD({ ...d, memory: { ...d.memory, tokenBudget: num(e.target.value, 100, 20000, 1200) } })}
+              onBlur={() => save(d)}
+            />
+            <span className="text-muted-foreground">{L.tokens}</span>
+          </label>
         </div>
+        <p className="text-xs text-muted-foreground">{L.budgetHint}</p>
       </div>
 
       {/* Раскрытие возможностей */}

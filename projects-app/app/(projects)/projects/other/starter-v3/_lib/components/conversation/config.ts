@@ -9,6 +9,9 @@ export type AssistantConfig = {
   instruction: string;
   lastN: number;
   ttlMinutes: number;
+  /** 🔒 БЮДЖЕТ КОНТЕКСТА В ТОКЕНАХ (330.2) — второй ограничитель рядом с окном. Окно говорит, сколько
+   *  реплик имеет смысл помнить; бюджет — сколько мы готовы за них платить. Упирается тот, кто раньше. */
+  tokenBudget: number;
   revealCapabilities: boolean;
   languageMode: "auto" | "fixed";
   fixedLanguage: string;
@@ -53,6 +56,10 @@ export const DEFAULT_ASSISTANT: AssistantConfig = {
   // обязан быть скромным; с приходом бюджета ограничивать станет он, а не это число.
   lastN: 20,
   ttlMinutes: 60,
+  // БЮДЖЕТ КОНТЕКСТА (330.2). 1200 токенов — это связная сессия из двух десятков обычных реплик и при
+  // этом потолок для случая, ради которого бюджет и введён: одна расшифровка голоса на несколько тысяч
+  // знаков больше не может занять контекст целиком. Число — не догма, владелец правит его во вкладке.
+  tokenBudget: 1200,
   revealCapabilities: true,
   languageMode: "auto",
   fixedLanguage: "",
@@ -78,6 +85,7 @@ export function assistantConfigOf(components: Automation["components"]): Assista
     instruction: typeof data.instruction === "string" && data.instruction.trim() ? data.instruction : DEFAULT_INSTRUCTION,
     lastN: num(mem.lastN, DEFAULT_ASSISTANT.lastN),
     ttlMinutes: num(mem.ttlMinutes, DEFAULT_ASSISTANT.ttlMinutes),
+    tokenBudget: num(mem.tokenBudget, DEFAULT_ASSISTANT.tokenBudget),
     revealCapabilities: data.revealCapabilities !== false,
     languageMode: lang.mode === "fixed" ? "fixed" : "auto",
     fixedLanguage: typeof lang.fixed === "string" ? lang.fixed : "",

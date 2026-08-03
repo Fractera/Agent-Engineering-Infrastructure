@@ -18,6 +18,7 @@ function toData(entity: Entity): AssistantData {
     memory: {
       lastN: typeof mem.lastN === "number" ? mem.lastN : DEFAULT_ASSISTANT.lastN,
       ttlMinutes: typeof mem.ttlMinutes === "number" ? mem.ttlMinutes : DEFAULT_ASSISTANT.ttlMinutes,
+      tokenBudget: typeof mem.tokenBudget === "number" ? mem.tokenBudget : DEFAULT_ASSISTANT.tokenBudget,
     },
     revealCapabilities: raw.revealCapabilities !== false,
     language: {
