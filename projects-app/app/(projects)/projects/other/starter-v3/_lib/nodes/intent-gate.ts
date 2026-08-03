@@ -100,7 +100,10 @@ export async function guessClass(ctx: NodeCtx): Promise<string> {
         `refuse — asks for a server secret (password, key, token, credentials).\n` +
         `continuation — answers a question the assistant asked before.\n` +
         `self-describe — asks about the automation itself (what it is, where its page is).\n` +
-        `control — asks to CHANGE how the automation is built or configured.\n` +
+        // Манера речи — это КОНФИГУРАЦИЯ, а не болтовня: «не нужно эмодзи», «отвечай подробнее» меняют
+        // саму автоматизацию, и без этой строки они уходили в `unclaimed`, а слой эволюции не срабатывал.
+        `control — asks to CHANGE how the automation is built, configured, or HOW IT TALKS (emoji, length ` +
+        `of answers, how to address them, what to stop doing). A request about manner is configuration.\n` +
         `composite — needs both an outside lookup and a check against what is already kept.\n` +
         `fetch-external — names a subject to bring in from the outside world.\n` +
         // «Помнишь, мы говорили о…» — это вопрос о хранимом, даже если человек уверен, что разговор был.

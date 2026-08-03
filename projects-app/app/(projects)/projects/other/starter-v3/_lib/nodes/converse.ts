@@ -221,9 +221,32 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
         : `The user is CONVERSING (a greeting, a question about who you are, small talk, or a question ABOUT THIS ` +
           `CONVERSATION — what they asked earlier, whether you remember). You CAN SEE the recent dialogue above: ` +
           `use it to answer such questions truthfully and specifically. Do NOT say anything was "saved". Reply naturally as this assistant.`;
+  // 🔒 ГОЛОС ГЛАВНЕЕ ИНСТРУКЦИИ (шаг 314). Инструкцию писал владелец однажды, а это человек попросил ПРЯМО
+  // и вот сейчас — и его просьба обязана пережить любой прогон, канал и перезапуск. Ставится последним,
+  // после всех прочих указаний о манере: последнее слово в промпте и есть то, которому модель следует.
+  const v = cfg.voice;
+  const voiceRules = [
+    v.emoji === false ? "Use NO emoji at all, not even one." : "",
+    v.emoji === true ? "A fitting emoji is welcome." : "",
+    v.length === "short" ? "Answer in one short line." : "",
+    v.length === "detailed" ? "Answer thoroughly: explain, give the details, do not cut it to one line." : "",
+    v.address ? `Address them like this: ${v.address}.` : "",
+  ].filter(Boolean).join(" ");
+
+  // 🔒 ПРОТИВОРЕЧИЕ СНИМАЕТСЯ ЯВНО, А НЕ ПОРЯДКОМ СЛОВ (314, дефект пойман живьём). Инструкция поведения
+  // говорит «эмодзи где уместно», голос — «без эмодзи»: я сначала просто поставил голос последним и в
+  // одном чате из трёх модель всё равно поставила эмодзи. Надеяться на «последнее слово побеждает» —
+  // не закон, а везение. Поэтому при заданном голосе противоречие ОБЪЯВЛЯЕТСЯ отменённым, сразу после
+  // текста инструкции, и повторяется в конце.
+  const voiceOverride = voiceRules
+    ? `\n\nTHE PERSON HAS SINCE ASKED YOU TO SPEAK DIFFERENTLY. This overrides the paragraph above wherever ` +
+      `they disagree — ignore its advice about emoji and length and follow this instead: ${voiceRules}`
+    : "";
+
   const system =
     `${places}\n\n` +
-    `${cfg.instruction}\n\n${facts}\n\nReply ONLY in language "${lang}". Keep it to one short, warm message. ` +
+    `${cfg.instruction}${voiceOverride}\n\n${facts}\n\nReply ONLY in language "${lang}". ` +
+    (v.length === "detailed" ? "" : "Keep it to one short, warm message. ") +
     // ГАРДРЕЙЛ ОТ ГАЛЛЮЦИНАЦИЙ (309, живой тест): модель НЕ знает внутреннего устройства и НЕ должна его
     // выдумывать. Инцидент: на «почему не сохранил в таблицу» бот сочинил «храню как заметку» — а трата
     // БЫЛА в таблице. Отвечай ТОЛЬКО о том, что реально сделал прогон (описано ниже). Не придумывай
@@ -245,7 +268,8 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
     // ставит В НАЧАЛЕ ответа тег [[lang:<iso>]] и дальше отвечает уже на новом; мы парсим тег детерминированно
     // и запоминаем язык навсегда (309.3). Дефолт/детект — лишь стартовая догадка, выбор человека главнее.
     `If the user asks to switch to another language, begin your reply with the tag [[lang:<iso 2-letter code>]] ` +
-    `and then reply in that new language. Otherwise do not output the tag. ${task} No preamble, no quotes around your reply.`;
+    `and then reply in that new language. Otherwise do not output the tag. ${task} No preamble, no quotes around your reply.` +
+    (voiceRules ? ` The person has asked you to speak this way, and it OVERRIDES anything above: ${voiceRules}` : "");
 
   let reply: string | null;
   try { reply = await askModel({ system, user: `${history ? history + "\n" : ""}User: ${incoming}`, maxTokens: 300 }); }

@@ -21,6 +21,13 @@ export type AssistantConfig = {
    *  Разница принципиальная: дефолт нужен ровно для первого слова, а не для всей переписки. */
   chatLanguage: string;
   qa: QaPair[];
+  /**
+   * 🔒 ГОЛОС (шаг 314) — СТРУКТУРНЫЕ предпочтения манеры, которые ставит слой эволюции по прямой просьбе
+   * человека («не нужно эмодзи», «отвечай подробнее»). Структура, а не проза: применяется речью
+   * детерминированно, не может быть «понята иначе» и не растёт со временем. `null` — человек не
+   * высказывался, и тогда манеру решает инструкция поведения.
+   */
+  voice: { emoji: boolean | null; length: "short" | "normal" | "detailed" | null; address: string };
 };
 
 // ИНСТРУКЦИЯ ПОВЕДЕНИЯ по умолчанию — сценарий, по которому МОДЕЛЬ ведёт разговор. Она СОДЕРЖИТ
@@ -37,9 +44,10 @@ const DEFAULT_INSTRUCTION =
   "You are the conversational assistant of this automation. Speak for it in the first person, warmly and " +
   "briefly — one short message, an emoji where it fits, no preamble, never repeat the question back. " +
   "What this build can do is given to you separately, derived from its core: treat those lines as the only " +
-  "truth about abilities. Asked for something outside them, say plainly and kindly that it is not built " +
-  "here yet and that the owner adds it in the cockpit. Never invent a result, never promise a feature, " +
-  "never claim something was saved unless the run says so.";
+  "truth about abilities. Asked for something outside them, say plainly and kindly that it is not part of " +
+  "you yet, name what you CAN do instead, and stop there — do not send them anywhere and do not promise it " +
+  "for later. Never invent a result, never promise a feature, never claim something was saved unless the " +
+  "run says so.";
 
 export const DEFAULT_ASSISTANT: AssistantConfig = {
   instruction: DEFAULT_INSTRUCTION,
@@ -65,6 +73,7 @@ export const DEFAULT_ASSISTANT: AssistantConfig = {
   fixedLanguage: "",
   chatLanguage: "",
   qa: [],
+  voice: { emoji: null, length: null, address: "" },
 };
 
 const num = (v: unknown, d: number): number => {
@@ -94,6 +103,15 @@ export function assistantConfigOf(components: Automation["components"]): Assista
     chatLanguage: (typeof lang.chat === "string" && lang.chat.trim())
       ? lang.chat.trim().toLowerCase().slice(0, 5)
       : (lang.mode === "fixed" && typeof lang.fixed === "string" ? lang.fixed.trim().toLowerCase().slice(0, 5) : ""),
+    voice: (() => {
+      const v = (data.voice ?? {}) as Record<string, unknown>;
+      const len = v.length;
+      return {
+        emoji: typeof v.emoji === "boolean" ? v.emoji : null,
+        length: len === "short" || len === "normal" || len === "detailed" ? len : null,
+        address: typeof v.address === "string" ? v.address : "",
+      };
+    })(),
     qa: qaRaw
       .map((p) => ({ q: String((p as QaPair)?.q ?? "").trim(), a: String((p as QaPair)?.a ?? "").trim() }))
       .filter((p) => p.q && p.a),

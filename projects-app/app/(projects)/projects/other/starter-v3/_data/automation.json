@@ -2247,6 +2247,240 @@
               }
             }
           ]
+        },
+        "evolution": {
+          "systemInstructionName": "group.evolution",
+          "minKinds": 1,
+          "kinds": {
+            "evolution": {
+              "systemInstructionName": "kind.evolution",
+              "deletion": "forbidden",
+              "addition": "forbidden",
+              "minNodes": 4
+            }
+          },
+          "nodes": [
+            {
+              "cuid": "cevocapgap4h2n",
+              "name": "Records what was asked for and cannot be done",
+              "description": "Writes down a request the current graph cannot serve, so the owner sees what people keep asking for. Changes nothing else and never promises the missing ability.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "Writes down a request the current graph cannot serve, so the owner sees what people keep asking for. Changes nothing else and never promises the missing ability."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "evolveCapabilityGap",
+                "summary": "Records a request this build cannot serve, so the owner can decide what to add.",
+                "accepts": "the run context after delivery.",
+                "returns": "capabilityGap plus capabilityNeeded when something was asked that is not built.",
+                "outcomes": [
+                  {
+                    "name": "recorded",
+                    "when": "the person asked for something this build cannot do",
+                    "puts": "a row in the capability-gap journal"
+                  },
+                  {
+                    "name": "no-signal",
+                    "when": "the person asked for no change — the overwhelming majority of runs",
+                    "puts": "nothing, and no model was called"
+                  }
+                ],
+                "validator": "evolveCapabilityGapValidate"
+              },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
+              "run": "sequential",
+              "estDurationMs": 40,
+              "kind": "evolution",
+              "ioType": "capability-gap",
+              "in": {
+                "state": "required",
+                "connections": [
+                  "output"
+                ]
+              },
+              "out": {
+                "state": "prohibit",
+                "connections": null
+              }
+            },
+            {
+              "cuid": "cevobehavior7k3p",
+              "name": "Adds a standing rule to its own behaviour instruction",
+              "description": "Appends one short rule the person asked for to the assistant behaviour instruction, and condenses the whole text when it reaches its ceiling — the instruction travels to the model on every run, so it cannot grow forever.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "Appends one short rule the person asked for to the assistant behaviour instruction, and condenses the whole text when it reaches its ceiling — the instruction travels to the model on every run, so it cannot grow forever."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "evolveBehavior",
+                "summary": "Adds what the person asked it to do or stop doing to its own behaviour instruction.",
+                "accepts": "the run context after delivery.",
+                "returns": "behaviorEvolution; the instruction in the core and a version in history when it changed.",
+                "outcomes": [
+                  {
+                    "name": "adjusted",
+                    "when": "a new standing rule was appended",
+                    "puts": "the instruction in the core plus a version in history"
+                  },
+                  {
+                    "name": "condensed",
+                    "when": "the instruction reached its ceiling and was compressed without losing a rule",
+                    "puts": "the shorter instruction plus a version"
+                  },
+                  {
+                    "name": "no-change",
+                    "when": "a change was asked for, but it is already set that way",
+                    "puts": "nothing: an unchanged core records no version"
+                  },
+                  {
+                    "name": "no-signal",
+                    "when": "the person asked for no change — the overwhelming majority of runs",
+                    "puts": "nothing, and no model was called"
+                  }
+                ],
+                "validator": "evolveBehaviorValidate"
+              },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
+              "run": "sequential",
+              "estDurationMs": 900,
+              "kind": "evolution",
+              "ioType": "behavior",
+              "in": {
+                "state": "required",
+                "connections": [
+                  "output"
+                ]
+              },
+              "out": {
+                "state": "prohibit",
+                "connections": null
+              }
+            },
+            {
+              "cuid": "cevoexamples9m5t",
+              "name": "Learns an example from a correction",
+              "description": "Turns 'no, I meant this' into a question-answer example, so the same question is answered that way next time. A correction is the strongest signal there is: the person has already said how it should have been.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "Turns 'no, I meant this' into a question-answer example, so the same question is answered that way next time. A correction is the strongest signal there is: the person has already said how it should have been."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "evolveExamples",
+                "summary": "Turns a correction into an example answer for next time.",
+                "accepts": "the run context after delivery.",
+                "returns": "examplesEvolution; a question-answer pair in the core when one was learned.",
+                "outcomes": [
+                  {
+                    "name": "learned",
+                    "when": "the person corrected an answer and the pair is worth imitating",
+                    "puts": "a Q&A pair in the core plus a version in history"
+                  },
+                  {
+                    "name": "no-change",
+                    "when": "a change was asked for, but it is already set that way",
+                    "puts": "nothing: an unchanged core records no version"
+                  },
+                  {
+                    "name": "no-signal",
+                    "when": "the person asked for no change — the overwhelming majority of runs",
+                    "puts": "nothing, and no model was called"
+                  }
+                ],
+                "validator": "evolveExamplesValidate"
+              },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
+              "run": "sequential",
+              "estDurationMs": 40,
+              "kind": "evolution",
+              "ioType": "examples",
+              "in": {
+                "state": "required",
+                "connections": [
+                  "output"
+                ]
+              },
+              "out": {
+                "state": "prohibit",
+                "connections": null
+              }
+            },
+            {
+              "cuid": "cevovoice2x8r",
+              "name": "Remembers how the person wants to be spoken to",
+              "description": "Keeps a direct request about manner — no emoji, answer in more detail, address me this way — as a structured preference that outlives the conversation, the channel and a restart.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "Keeps a direct request about manner — no emoji, answer in more detail, address me this way — as a structured preference that outlives the conversation, the channel and a restart."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "evolveVoice",
+                "summary": "Remembers a direct request about manner: emoji, how detailed, how to address them.",
+                "accepts": "the run context after delivery.",
+                "returns": "voiceEvolution; data.voice in the core when it changed.",
+                "outcomes": [
+                  {
+                    "name": "adjusted",
+                    "when": "the person asked for a manner of speaking and it was not set that way",
+                    "puts": "data.voice in the core plus a version in history"
+                  },
+                  {
+                    "name": "no-change",
+                    "when": "a change was asked for, but it is already set that way",
+                    "puts": "nothing: an unchanged core records no version"
+                  },
+                  {
+                    "name": "no-signal",
+                    "when": "the person asked for no change — the overwhelming majority of runs",
+                    "puts": "nothing, and no model was called"
+                  }
+                ],
+                "validator": "evolveVoiceValidate"
+              },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
+              "run": "sequential",
+              "estDurationMs": 40,
+              "kind": "evolution",
+              "ioType": "voice",
+              "in": {
+                "state": "required",
+                "connections": [
+                  "output"
+                ]
+              },
+              "out": {
+                "state": "prohibit",
+                "connections": null
+              }
+            }
+          ]
         }
       }
     },
@@ -3023,6 +3257,30 @@
         "cuid": "ceverifytopayload7wq",
         "from": "cverifyrecall8n4qz",
         "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
+        "state": "visible"
+      },
+      {
+        "cuid": "ceevo0k4t9x",
+        "from": "coutputtoast3sy3uzul",
+        "to": "cevocapgap4h2n",
+        "state": "visible"
+      },
+      {
+        "cuid": "ceevo1k4t9x",
+        "from": "coutputtoast3sy3uzul",
+        "to": "cevobehavior7k3p",
+        "state": "visible"
+      },
+      {
+        "cuid": "ceevo2k4t9x",
+        "from": "coutputtoast3sy3uzul",
+        "to": "cevoexamples9m5t",
+        "state": "visible"
+      },
+      {
+        "cuid": "ceevo3k4t9x",
+        "from": "coutputtoast3sy3uzul",
+        "to": "cevovoice2x8r",
         "state": "visible"
       }
     ]
@@ -4028,7 +4286,12 @@
                 "chat": ""
               },
               "qa": [],
-              "instruction": "You are the conversational assistant of this automation. Speak for it in the first person, warmly and briefly — one short message, an emoji where it fits, no preamble, never repeat the question back. You are NOT a general-purpose chatbot: you speak only for this build. WHAT IT CAN DO IS GIVEN TO YOU BELOW, derived from its core at this very moment — treat those lines as the only truth about abilities. You speak to a person who has never seen how you are built: tell them what they GET, never how you work inside, and never use a word that describes your machinery rather than their result. If they ask for something outside your abilities, say plainly and kindly that it is not part of you yet, name what you CAN do instead, and stop there — do not send them anywhere and do not promise it for later. Never invent a result, never promise a feature, never claim something was saved unless the run says so. Answer in the language of the person you are talking to."
+              "instruction": "You are the conversational assistant of this automation. Speak for it in the first person, warmly and briefly — one short message, an emoji where it fits, no preamble, never repeat the question back. You are NOT a general-purpose chatbot: you speak only for this build. WHAT IT CAN DO IS GIVEN TO YOU BELOW, derived from its core at this very moment — treat those lines as the only truth about abilities. You speak to a person who has never seen how you are built: tell them what they GET, never how you work inside, and never use a word that describes your machinery rather than their result. If they ask for something outside your abilities, say plainly and kindly that it is not part of you yet, name what you CAN do instead, and stop there — do not send them anywhere and do not promise it for later. Never invent a result, never promise a feature, never claim something was saved unless the run says so. Answer in the language of the person you are talking to.",
+              "voice": {
+                "emoji": false,
+                "length": "detailed",
+                "address": ""
+              }
             }
           }
         ]
@@ -4560,6 +4823,14 @@
   },
   "history": {
     "systemInstructionName": "history",
-    "versions": []
+    "versions": [
+      {
+        "cuid": "cevomsdtogx04zzvc0",
+        "number": 1,
+        "createdAt": "04-08-2026 00:50:26",
+        "objectsTouched": 1,
+        "summary": "voice adjusted at the person's request: no emoji; answers detailed"
+      }
+    ]
   }
 }

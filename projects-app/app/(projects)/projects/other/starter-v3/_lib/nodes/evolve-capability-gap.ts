@@ -1,0 +1,32 @@
+// ФУНКЦИЯ УЗЛА «EVOLUTION» (область capability-gap) — ЧЕГО У СБОРКИ НЕТ (шаг 314).
+//
+// 🔒 ЭТА ОБЛАСТЬ НЕ МЕНЯЕТ НИЧЕГО. Она фиксирует запрос, невозможный при нынешнем графе, и оставляет его
+// там, где владелец увидит. Именно поэтому ТЗ ставит её первой: доказывается безопаснее всех и сразу даёт
+// ценность — видно, чего людям не хватает.
+//
+// 🔴 ЭТО РАНТАЙМ-ПОЛОВИНА ЗАКОНА ТРЁХ ИСХОДОВ. Третий исход («нужна способность») перестаёт быть тупиком
+// с уведомлением: пробел записан, и дальше решает владелец — вектор 2 доводит цепочку до уточняющего
+// диалога, кейса и запуска разработки.
+//
+// 🔒 НИКАКОЙ ИМПРОВИЗАЦИИ. Узел не пытается «примерно» исполнить невозможное и не обещает его на будущее:
+// сочинённая возможность здесь — то же критическое нарушение, что no-op-заглушка.
+//
+// Пишет ЖУРНАЛОМ ПРОГОНА, а не складом сущностей: это запись о том, ЧТО ПРОИЗОШЛО (у нас попросили
+// невозможное), а не сущность предметной области. Поэтому обычный `addRow`, без гейта классов-записей.
+// Имя `evolveCapabilityGap` — производное от области, не переименовывать.
+import type { NodeCtx } from "../executor";
+import { readAdjustment } from "../components/conversation/adjustment";
+import { addRow } from "../rows";
+
+export async function evolveCapabilityGap(ctx: NodeCtx): Promise<NodeCtx> {
+  const adj = await readAdjustment(ctx);
+  if (!adj.gap) return { capabilityGap: "no-signal" };
+
+  await addRow("capability-gap", {
+    asked: adj.gap,
+    channel: String(ctx.source ?? "control-panel"),
+    at: new Date().toISOString(),
+    ...(ctx.runId ? { runId: String(ctx.runId) } : {}),
+  });
+  return { capabilityGap: "recorded", capabilityNeeded: adj.gap };
+}

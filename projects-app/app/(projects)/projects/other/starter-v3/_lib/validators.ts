@@ -105,10 +105,29 @@ export const recallConversationValidate: NodeValidator = (patch) => {
 export const verifyRecallValidate: NodeValidator = (patch) =>
   String((patch as Record<string, unknown>).recallOutcome ?? "") === "found" ? "verified" : "empty";
 
+
+// ─── ЭВОЛЮЦИЯ (шаг 314) ─────────────────────────────────────────────────────────────────────────────
+// Общий смысл исходов: `no-signal` — человек ничего не просил менять (подавляющее большинство прогонов);
+// `no-change` — просил, но это уже так и настроено; остальное — область действительно изменила своё.
+// Различать их обязательно: «не просили» и «просили, но не вышло» — разные вещи для владельца.
+const evolutionOutcome = (key: string, done: string): NodeValidator => (patch) => {
+  const o = String((patch as Record<string, unknown>)[key] ?? "no-signal");
+  return o === done || o === "no-change" || o === "condensed" ? o : "no-signal";
+};
+
+export const evolveCapabilityGapValidate = evolutionOutcome("capabilityGap", "recorded");
+export const evolveBehaviorValidate = evolutionOutcome("behaviorEvolution", "adjusted");
+export const evolveExamplesValidate = evolutionOutcome("examplesEvolution", "learned");
+export const evolveVoiceValidate = evolutionOutcome("voiceEvolution", "adjusted");
+
 export const NODE_VALIDATORS: Record<string, NodeValidator> = {
   transformPayloadValidate,
   recallConversationValidate,
   verifyRecallValidate,
+  evolveCapabilityGapValidate,
+  evolveBehaviorValidate,
+  evolveExamplesValidate,
+  evolveVoiceValidate,
   fetchExternalValidate,
   keepObjectValidate,
   resolveMomentValidate,
@@ -140,6 +159,10 @@ const DECIDING_FUNCTIONS = [
   "resolveMoment",
   "recallConversation",
   "verifyRecall",
+  "evolveCapabilityGap",
+  "evolveBehavior",
+  "evolveExamples",
+  "evolveVoice",
   "ifSuccess",
   "ifFailure",
   "intentRefuse",

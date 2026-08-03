@@ -49,6 +49,10 @@ import { deliverVectorMemory } from "./deliver-vector-memory";
 import { deliverDatabase } from "./deliver-database";
 import { deliverStorage } from "./deliver-storage";
 import { handToExternal } from "./hand-to-external";
+import { evolveCapabilityGap } from "./evolve-capability-gap";
+import { evolveBehavior } from "./evolve-behavior";
+import { evolveExamples } from "./evolve-examples";
+import { evolveVoice } from "./evolve-voice";
 
 export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   // входная группа — 7 каналов + коннектор
@@ -107,4 +111,11 @@ export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   deliverDatabase,
   deliverStorage,
   handToExternal,
+  // ПЯТЫЙ СЛОЙ — ЭВОЛЮЦИЯ (шаг 314). Работает ПОСЛЕ доставки: ответ уже у человека, поэтому её задержка
+  // ему не видна. Все четыре области ЧИТАЮТ общий разбор просьбы (один вызов модели на прогон, кэш по
+  // runId), а ПИШУТ каждая своё — правом записи они и различаются.
+  evolveCapabilityGap,
+  evolveBehavior,
+  evolveExamples,
+  evolveVoice,
 };
