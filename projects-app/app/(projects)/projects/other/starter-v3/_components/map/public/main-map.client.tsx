@@ -5,6 +5,7 @@ import CourierMapClient, { type StoreMarker } from "./components/courier-map.cli
 import { mapStrings } from "../i18n";
 import { onRunCompleted, onExternalRefresh } from "../../shared/run-events";
 import { DataTable, type TableColumn, type TableRow } from "../../shared/data-table.client";
+import { EntityDrawer, type DrawerTarget } from "../../shared/entity-drawer.client";
 
 // ПУБЛИЧНАЯ ПОЛОВИНА КАРТЫ — ОДИН источник данных на всю вкладку.
 //
@@ -30,6 +31,7 @@ export default function MainMapClient({ lang }: { lang: string }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [columns, setColumns] = useState<TableColumn[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [target, setTarget] = useState<DrawerTarget>(null);
 
   // Состав колонок — из ЯДРА. Двери нет / колонки не объявлены → таблица не рисуется, и это честно:
   // молча показать «что получилось» значит вернуть тот самый дефект, ради которого объявление и заведено.
@@ -70,7 +72,9 @@ export default function MainMapClient({ lang }: { lang: string }) {
 
   return (
     <div className="space-y-3">
-      <CourierMapClient lang={lang} markers={markers} />
+      {/* Метка и строка списка ведут в ОДИН ящик (328.4): у сущности одна дверь, а не две разные. */}
+      <CourierMapClient lang={lang} markers={markers} onMarkerOpen={(id) => setTarget({ table: TABLE, id })} />
+      <EntityDrawer target={target} onClose={() => setTarget(null)} lang={lang} />
       <section className="space-y-2">
         <h3 className="text-sm font-semibold">{t.markers}</h3>
         {loaded ? (

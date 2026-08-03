@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { drawerStrings } from "./entity-drawer-i18n";
 import { MediaPreview } from "../tools/media-viewer/client/media-viewer.client";
 
@@ -81,15 +82,28 @@ export function EntityDrawer({ target, onClose, lang }: { target: DrawerTarget; 
             </section>
           ) : null}
 
-          {/* ОБЪЕКТЫ — превью и просмотр общим инструментом; тип определяется по ключу, не по догадке. */}
+          {/* ОБЪЕКТЫ. Один — крупным превью; НЕСКОЛЬКО — карусель (требование владельца). Клик открывает
+              объект в центре тем же `media-viewer`: изображение · видео · аудио · PDF · текст и честная
+              ссылка для неизвестного типа. Второго просмотрщика в проекте нет. */}
           {linked.storage?.length ? (
             <section className="space-y-2">
               <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.storage}</h4>
-              <div className="flex flex-wrap gap-2">
-                {linked.storage.map((o) => (
-                  <MediaPreview key={o.id} fileKey={o.fileKey} name={String(o.name ?? "")} />
-                ))}
-              </div>
+              {linked.storage.length === 1 ? (
+                <MediaPreview fileKey={linked.storage[0].fileKey} name={String(linked.storage[0].name ?? "")} size="lg" />
+              ) : (
+                <Carousel className="px-4">
+                  <CarouselContent>
+                    {linked.storage.map((o) => (
+                      <CarouselItem key={o.id}>
+                        <MediaPreview fileKey={o.fileKey} name={String(o.name ?? "")} size="lg" />
+                        <p className="mt-1 truncate text-xs text-muted-foreground">{labelOf(o)}</p>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious />
+                  <CarouselNext />
+                </Carousel>
+              )}
             </section>
           ) : null}
 

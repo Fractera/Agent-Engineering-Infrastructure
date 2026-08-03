@@ -78,24 +78,29 @@ export function MediaViewer({
  * ЯЧЕЙКА ПРЕВЬЮ. Изображение — миниатюра; ВСЁ ОСТАЛЬНОЕ — контейнер ТОГО ЖЕ размера с подписью типа
  * в ОДНУ строку (без переноса, с обрезкой). Клик открывает просмотрщик; ключа нет — прочерк, не кнопка.
  */
-export function MediaPreview({ fileKey, name }: { fileKey: unknown; name?: string }) {
+export function MediaPreview({
+  fileKey, name, size = "sm",
+}: { fileKey: unknown; name?: string; size?: "sm" | "lg" }) {
   const key = String(fileKey ?? "").trim();
   const [open, setOpen] = useState(false);
   if (!key) return <span className="text-muted-foreground">—</span>;
   const kind = mediaKindOf(key);
+  // ДВА РАЗМЕРА ОДНОГО ПРЕВЬЮ (328.3): `sm` — ячейка таблицы, `lg` — ящик сущности, где объект и есть
+  // содержание. Второй компонент под тот же смысл не заводится: тип объекта определяется в одном месте.
+  const box = size === "lg" ? "block h-44 w-full overflow-hidden rounded border" : "block size-12 overflow-hidden rounded border";
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
         title={name || key}
-        className="block size-12 overflow-hidden rounded border transition-opacity hover:opacity-80"
+        className={`${box} transition-opacity hover:opacity-80`}
       >
         {kind === "image" ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={SRC(key)} alt="" className="size-full object-cover" />
+          <img src={SRC(key)} alt="" className={size === "lg" ? "size-full object-contain" : "size-full object-cover"} />
         ) : (
-          <span className="flex size-full items-center justify-center bg-muted px-1 text-[10px] font-medium tracking-wide text-muted-foreground">
+          <span className={`flex size-full items-center justify-center bg-muted px-1 font-medium tracking-wide text-muted-foreground ${size === "lg" ? "text-sm" : "text-[10px]"}`}>
             <span className="w-full truncate text-center">{previewLabelOf(key)}</span>
           </span>
         )}

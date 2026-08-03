@@ -31,7 +31,9 @@ type Fuel = { consumption: number; price: number; currency: string };
 const apiBase = () => location.pathname.replace(/\/+$/, "") + "/api";
 const PARIS: [number, number] = [48.8566, 2.3522];
 
-export default function CourierMapClient({ lang, markers = [] }: { lang: string; markers?: StoreMarker[] }) {
+export default function CourierMapClient({
+  lang, markers = [], onMarkerOpen,
+}: { lang: string; markers?: StoreMarker[]; onMarkerOpen?: (id: string) => void }) {
   const t = courierStrings(lang);
   const [points, setPoints] = useState<Pt[]>([]);
   const [result, setResult] = useState<Result | null>(null);
@@ -60,6 +62,10 @@ export default function CourierMapClient({ lang, markers = [] }: { lang: string;
   }, [t.point]);
   const addPointRef = useRef(addPoint);
   addPointRef.current = addPoint;
+  // Через ref, как и добавление точки: обработчик Leaflet живёт вне жизненного цикла React и обязан
+  // видеть свежую версию колбэка.
+  const openRef = useRef(onMarkerOpen);
+  openRef.current = onMarkerOpen;
 
   // Инициализация карты один раз (клиент-only: Leaflet грузится динамически). Начальный вид — АКТИВНЫЙ регион
   // гео-сервиса (config.center/bbox из `api/geo`), а не фиксированный Париж: при смене региона (напр. Канары)
@@ -135,7 +141,13 @@ export default function CourierMapClient({ lang, markers = [] }: { lang: string;
         html: `<div style="background:#7c3aed;width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.45)"></div>`,
         iconSize: [14, 14], iconAnchor: [7, 7],
       });
-      L.marker([m.lat, m.lng], { icon }).addTo(layer).bindTooltip(m.title || m.id);
+      // КЛИК ПО МЕТКЕ ОТКРЫВАЕТ ЯЩИК СУЩНОСТИ (328.4) — тот же, что открывает строка таблицы. Всплытие
+      // гасим явно: клик по карте ставит точку маршрута, и метка не имеет права её ставить.
+      L.marker([m.lat, m.lng], { icon })
+        .addTo(layer)
+        .bindTooltip(m.title || m.id)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .on("click", (e: any) => { L.DomEvent.stopPropagation(e); openRef.current?.(m.id); });
     });
     const key = markers.map((m) => m.id).join(",");
     if (markers.length && !points.length && fittedRef.current !== key) {
