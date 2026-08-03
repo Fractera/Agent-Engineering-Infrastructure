@@ -31,9 +31,11 @@ import { Hammer as HammerIcon, Spline as SplineIcon, Eye as EyeIcon, EyeOff as E
 // Скрытый узел — это дверь, которой владелец не пользуется. Поэтому:
 //   • В ОБЫЧНОМ режиме скрытых узлов на холсте НЕТ ВООБЩЕ, и рёбер к ним тоже нет. Автоматизация
 //     работает, игнорируя их присутствие: исполнитель и так ходит только по видимым узлам и рёбрам.
-//   • В режиме СТРОИТЕЛЬСТВА они появляются — бледно-фиолетовыми, с бейджем «Hidden», а их рёбра
-//     рисуются фиолетовым пунктиром (выбор из двух, предложенных владельцем: так граф остаётся
-//     читаемым — видно, КУДА дверь встанет, когда её откроют).
+//   • В режиме СТРОИТЕЛЬСТВА они появляются — СЕРЫМИ и пунктирными, с бейджем «Hidden» (цвет перевёрнут
+//     владельцем 2026-08-03: раньше цветными были скрытые, и глаз цеплялся за то, чего в сборке НЕТ).
+//     Их рёбра по-прежнему рисуются пунктиром — видно, КУДА дверь встанет, когда её откроют.
+//   • РАБОТАЮЩИЙ узел — ГОЛУБОЙ; условие — фиолетовый квадрат (вид, а не состояние); коннектор —
+//     оранжевый контур (дверь к соседней автоматизации); РЕЧЬ — зелёная заливка и крупнее (шаг 312).
 //   • Клик по узлу в режиме строительства открывает ящик справа с переключателем «скрыть / показать».
 // Законы, кого можно переключать, держит дверь `api/patch` (op: "visibility"), а не эта разметка:
 // середину — только пока автоматизация ещё стартовый шаблон; последний видимый вход и последний
@@ -111,7 +113,7 @@ const DICT: Record<Lang, Labels> = {
     function: "Function", accepts: "Accepts", returns: "Returns", close: "Close", hidden: "hidden",
     buildNodes: "Build nodes", closeBuildNodes: "Close node mode",
     buildEdges: "Build edges", closeBuildEdges: "Close edge mode",
-    nodesHint: "Node mode — click a node to show or hide it; hidden doors are pale violet",
+    nodesHint: "Node mode — click a node to show or hide it; open nodes are blue, hidden doors are grey",
     edgesHint: "Edge mode — drag from a node's edge to another node to wire them; click an edge, then Delete edge",
     viewHint: "View — only the channels you opened",
     hide: "Hide node", show: "Show node", deleteEdge: "Delete edge",
@@ -123,7 +125,7 @@ const DICT: Record<Lang, Labels> = {
     function: "Función", accepts: "Acepta", returns: "Devuelve", close: "Cerrar", hidden: "oculto",
     buildNodes: "Construir nodos", closeBuildNodes: "Cerrar modo nodos",
     buildEdges: "Construir aristas", closeBuildEdges: "Cerrar modo aristas",
-    nodesHint: "Modo nodos: haz clic en un nodo para mostrarlo u ocultarlo; las puertas ocultas son violeta pálido",
+    nodesHint: "Modo nodos: haz clic en un nodo para mostrarlo u ocultarlo; los nodos abiertos son azules, las puertas ocultas grises",
     edgesHint: "Modo aristas: arrastra desde el borde de un nodo hasta otro para conectarlos; haz clic en una arista y luego «Eliminar arista»",
     viewHint: "Vista: solo los canales que abriste",
     hide: "Ocultar nodo", show: "Mostrar nodo", deleteEdge: "Eliminar arista",
@@ -135,7 +137,7 @@ const DICT: Record<Lang, Labels> = {
     function: "Fonction", accepts: "Accepte", returns: "Renvoie", close: "Fermer", hidden: "caché",
     buildNodes: "Construire des nœuds", closeBuildNodes: "Fermer le mode nœuds",
     buildEdges: "Construire des liens", closeBuildEdges: "Fermer le mode liens",
-    nodesHint: "Mode nœuds — cliquez sur un nœud pour l'afficher ou le masquer ; les portes cachées sont violet pâle",
+    nodesHint: "Mode nœuds — cliquez sur un nœud pour l’afficher ou le masquer ; les nœuds ouverts sont bleus, les portes cachées grises",
     edgesHint: "Mode liens — tirez du bord d'un nœud vers un autre pour les relier ; cliquez sur un lien puis « Supprimer le lien »",
     viewHint: "Vue — seulement les canaux que vous avez ouverts",
     hide: "Masquer le nœud", show: "Afficher le nœud", deleteEdge: "Supprimer le lien",
@@ -147,7 +149,7 @@ const DICT: Record<Lang, Labels> = {
     function: "Funzione", accepts: "Accetta", returns: "Restituisce", close: "Chiudi", hidden: "nascosto",
     buildNodes: "Costruire nodi", closeBuildNodes: "Chiudi modalità nodi",
     buildEdges: "Costruire collegamenti", closeBuildEdges: "Chiudi modalità collegamenti",
-    nodesHint: "Modalità nodi — clicca un nodo per mostrarlo o nasconderlo; le porte nascoste sono viola pallido",
+    nodesHint: "Modalità nodi — clicca un nodo per mostrarlo o nasconderlo; i nodi aperti sono blu, le porte nascoste grigie",
     edgesHint: "Modalità collegamenti — trascina dal bordo di un nodo a un altro per collegarli; clicca un collegamento, poi «Elimina collegamento»",
     viewHint: "Vista — solo i canali che hai aperto",
     hide: "Nascondi nodo", show: "Mostra nodo", deleteEdge: "Elimina collegamento",
@@ -159,7 +161,7 @@ const DICT: Record<Lang, Labels> = {
     function: "Функция", accepts: "Принимает", returns: "Возвращает", close: "Закрыть", hidden: "скрыт",
     buildNodes: "Строить узлы", closeBuildNodes: "Закрыть режим узлов",
     buildEdges: "Строить рёбра", closeBuildEdges: "Закрыть режим рёбер",
-    nodesHint: "Режим узлов — кликните по узлу, чтобы показать или скрыть его; скрытые двери бледно-фиолетовые",
+    nodesHint: "Режим узлов — кликните по узлу, чтобы показать или скрыть его; работающие узлы голубые, скрытые двери серые",
     edgesHint: "Режим рёбер — потяните от края узла к другому узлу, чтобы связать; клик по ребру, затем «Удалить ребро»",
     viewHint: "Просмотр — только те каналы, которые вы открыли",
     hide: "Скрыть узел", show: "Показать узел", deleteEdge: "Удалить ребро",
@@ -171,7 +173,7 @@ const DICT: Record<Lang, Labels> = {
     function: "Funktion", accepts: "Nimmt an", returns: "Gibt zurück", close: "Schließen", hidden: "verborgen",
     buildNodes: "Knoten bauen", closeBuildNodes: "Knoten-Modus schließen",
     buildEdges: "Kanten bauen", closeBuildEdges: "Kanten-Modus schließen",
-    nodesHint: "Knoten-Modus — Knoten anklicken, um ihn zu zeigen oder zu verbergen; verborgene Türen sind blassviolett",
+    nodesHint: "Knoten-Modus — Knoten anklicken, um ihn zu zeigen oder zu verbergen; offene Knoten sind blau, verborgene Türen grau",
     edgesHint: "Kanten-Modus — vom Rand eines Knotens zu einem anderen ziehen, um sie zu verbinden; Kante anklicken, dann „Kante löschen“",
     viewHint: "Ansicht — nur die von Ihnen geöffneten Kanäle",
     hide: "Knoten verbergen", show: "Knoten zeigen", deleteEdge: "Kante löschen",
@@ -183,7 +185,7 @@ const DICT: Record<Lang, Labels> = {
     function: "Função", accepts: "Aceita", returns: "Retorna", close: "Fechar", hidden: "oculto",
     buildNodes: "Construir nós", closeBuildNodes: "Fechar modo nós",
     buildEdges: "Construir arestas", closeBuildEdges: "Fechar modo arestas",
-    nodesHint: "Modo nós — clique num nó para mostrá-lo ou ocultá-lo; as portas ocultas são violeta claro",
+    nodesHint: "Modo nós — clique num nó para mostrá-lo ou ocultá-lo; os nós abertos são azuis, as portas ocultas cinzentas",
     edgesHint: "Modo arestas — arraste da borda de um nó até outro para ligá-los; clique numa aresta e depois «Excluir aresta»",
     viewHint: "Visualização — apenas os canais que você abriu",
     hide: "Ocultar nó", show: "Mostrar nó", deleteEdge: "Excluir aresta",
@@ -195,7 +197,7 @@ const DICT: Record<Lang, Labels> = {
     function: "Funkcja", accepts: "Przyjmuje", returns: "Zwraca", close: "Zamknij", hidden: "ukryty",
     buildNodes: "Buduj węzły", closeBuildNodes: "Zamknij tryb węzłów",
     buildEdges: "Buduj krawędzie", closeBuildEdges: "Zamknij tryb krawędzi",
-    nodesHint: "Tryb węzłów — kliknij węzeł, aby go pokazać lub ukryć; ukryte drzwi są bladofioletowe",
+    nodesHint: "Tryb węzłów — kliknij węzeł, aby go pokazać lub ukryć; otwarte węzły są niebieskie, ukryte drzwi szare",
     edgesHint: "Tryb krawędzi — przeciągnij od brzegu węzła do innego, aby je połączyć; kliknij krawędź, potem «Usuń krawędź»",
     viewHint: "Widok — tylko kanały, które otworzyłeś",
     hide: "Ukryj węzeł", show: "Pokaż węzeł", deleteEdge: "Usuń krawędź",
@@ -207,7 +209,7 @@ const DICT: Record<Lang, Labels> = {
     function: "İşlev", accepts: "Alır", returns: "Döndürür", close: "Kapat", hidden: "gizli",
     buildNodes: "Düğüm kur", closeBuildNodes: "Düğüm modunu kapat",
     buildEdges: "Kenar kur", closeBuildEdges: "Kenar modunu kapat",
-    nodesHint: "Düğüm modu — göstermek veya gizlemek için bir düğüme tıklayın; gizli kapılar soluk mordur",
+    nodesHint: "Düğüm modu — göstermek veya gizlemek için bir düğüme tıklayın; açık düğümler mavi, gizli kapılar gridir",
     edgesHint: "Kenar modu — bağlamak için bir düğümün kenarından diğerine sürükleyin; bir kenara tıklayın, sonra «Kenarı sil»",
     viewHint: "Görünüm — yalnızca açtığınız kanallar",
     hide: "Düğümü gizle", show: "Düğümü göster", deleteEdge: "Kenarı sil",
@@ -219,7 +221,7 @@ const DICT: Record<Lang, Labels> = {
     function: "Functie", accepts: "Accepteert", returns: "Retourneert", close: "Sluiten", hidden: "verborgen",
     buildNodes: "Nodes bouwen", closeBuildNodes: "Node-modus sluiten",
     buildEdges: "Verbindingen bouwen", closeBuildEdges: "Verbindingsmodus sluiten",
-    nodesHint: "Node-modus — klik op een node om deze te tonen of te verbergen; verborgen deuren zijn lichtpaars",
+    nodesHint: "Node-modus — klik op een node om deze te tonen of te verbergen; open nodes zijn blauw, verborgen deuren grijs",
     edgesHint: "Verbindingsmodus — sleep van de rand van een node naar een andere om ze te verbinden; klik op een verbinding en dan «Verbinding verwijderen»",
     viewHint: "Weergave — alleen de kanalen die je hebt geopend",
     hide: "Node verbergen", show: "Node tonen", deleteEdge: "Verbinding verwijderen",
@@ -271,8 +273,9 @@ type CanvasNodeData = DiagramVMNode & { selected: boolean; build: boolean };
 type CanvasNode = Node<CanvasNodeData, "diagram">;
 
 function DiagramNode({ data }: NodeProps<CanvasNode>) {
-  // Скрытая дверь в режиме строительства — БЛЕДНО-ФИОЛЕТОВАЯ с бейджем «Hidden» (владелец 2026-07-22).
-  // В обычном режиме такой узел вообще не доезжает до рендера — он отфильтрован выше.
+  // 🔒 ЦВЕТОВОЕ ПРАВИЛО ПЕРЕВЁРНУТО (владелец 2026-08-03): РАБОТАЮЩИЙ узел — ГОЛУБОЙ, СКРЫТЫЙ — СЕРЫЙ.
+  // Было наоборот: активные рисовались нейтрально-серыми, а скрытые — цветными, и глаз в первую очередь
+  // цеплялся за то, чего в сборке НЕТ. Теперь внимание достаётся тому, что действительно работает.
   const pale = data.hidden && data.build;
 
   // CONDITION-узел (v1 2026-07-15) — рисуется КВАДРАТОМ в фиолетовом, чтобы с первого взгляда читался как
@@ -280,9 +283,13 @@ function DiagramNode({ data }: NodeProps<CanvasNode>) {
   if (data.isCondition) {
     return (
       <div
-        className={`relative flex aspect-square min-h-[5.5rem] min-w-[5.5rem] max-w-[10rem] items-center justify-center rounded-md border-2 bg-violet-500/5 p-2 text-center shadow-sm ${
-          data.selected ? "border-violet-500 ring-1 ring-violet-500" : "border-violet-500/60"
-        } ${pale ? "border-dashed border-violet-400/70 bg-violet-400/10 opacity-70" : ""}`}
+        className={`relative flex aspect-square min-h-[5.5rem] min-w-[5.5rem] max-w-[10rem] items-center justify-center rounded-md border-2 p-2 text-center shadow-sm ${
+          pale
+            ? "border-dashed border-muted-foreground/40 bg-muted/40 text-muted-foreground opacity-70"
+            : data.selected
+              ? "border-violet-500 bg-violet-500/10 ring-1 ring-violet-500"
+              : "border-violet-500/60 bg-violet-500/5"
+        }`}
         title={data.description}
       >
         <Handle type="target" position={Position.Left} />
@@ -297,29 +304,52 @@ function DiagramNode({ data }: NodeProps<CanvasNode>) {
   // обычных дверей (нейтральная рамка) и от условий (фиолетовый квадрат) — вид читается сразу.
   const connector = data.isConnector;
 
+  // РЕЧЬ (шаг 312, требование владельца) — КРУПНЕЕ И ЗАЛИТА ЗЕЛЁНЫМ. Разговорная граница одна на всю
+  // автоматизацию и стоит между работой и доставкой, поэтому её видно первой. Зелёный, а не оранжевый:
+  // оранжевым уже помечены КОННЕКТОРЫ (двери к соседней автоматизации), и один цвет для двух разных
+  // смыслов читался бы как один смысл.
+  const speech = data.kind === "speech";
+
   return (
     <div
-      className={`relative w-48 rounded-md border bg-background px-3 py-2 text-sm shadow-sm ${
-        connector
-          ? data.selected
-            ? "border-2 border-orange-500 ring-1 ring-orange-500"
-            : "border-2 border-orange-500/70"
-          : data.selected
-            ? "border-primary ring-1 ring-primary"
-            : "border-border"
-      } ${pale ? `border-dashed ${connector ? "border-orange-400/70 bg-orange-400/10 text-orange-700 dark:text-orange-300" : "border-violet-400/70 bg-violet-400/10 text-violet-700 dark:text-violet-300"} opacity-80` : ""}`}
+      className={`relative rounded-md border text-sm shadow-sm ${
+        speech ? "w-56 px-3.5 py-2.5" : "w-48 px-3 py-2"
+      } ${
+        // СКРЫТЫЙ — серый и пунктирный, независимо от вида: его в сборке нет, и цвет ему не положен.
+        pale
+          ? "border-dashed border-muted-foreground/40 bg-muted/40 text-muted-foreground opacity-70"
+          : speech
+            ? data.selected
+              ? "border-2 border-emerald-500 bg-emerald-500/15 ring-1 ring-emerald-500"
+              : "border-2 border-emerald-500/70 bg-emerald-500/10"
+            : connector
+              ? data.selected
+                ? "border-2 border-orange-500 bg-orange-500/10 ring-1 ring-orange-500"
+                : "border-2 border-orange-500/70 bg-orange-500/5"
+              : data.selected
+                ? "border-sky-500 bg-sky-500/15 ring-1 ring-sky-500"
+                : "border-sky-500/60 bg-sky-500/10"
+      }`}
       title={data.description}
     >
       <Handle type="target" position={Position.Left} />
       <div className="mb-1 flex flex-wrap items-center gap-1">
-        <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground">
+        {/* Бейдж вида. У РЕЧИ он зелёный и полужирный — тот же язык цвета, что у самой карточки. */}
+        <span
+          className={`rounded px-1.5 py-0.5 text-[9px] uppercase tracking-wide ${
+            speech
+              ? "bg-emerald-500/25 font-semibold text-emerald-800 dark:text-emerald-200"
+              : "bg-muted font-medium text-muted-foreground"
+          }`}
+        >
           {data.kind}
         </span>
         {data.ioType && (
           <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-medium text-primary">{data.ioType}</span>
         )}
+        {/* Бейдж скрытого — серый, как и сама карточка: цвет достаётся тому, что работает. */}
         {pale && (
-          <span className="rounded bg-violet-500/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+          <span className="rounded bg-muted-foreground/20 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
             Hidden
           </span>
         )}
