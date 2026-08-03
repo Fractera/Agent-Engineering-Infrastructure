@@ -294,5 +294,9 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
     const pending = ctx.pendingQuestion;
     await setPending(chatId, pending && typeof pending === "object" ? (pending as PendingAsk) : null);
   }
-  return { reply: out };
+  // 🔒 ВОЗМОЖНОСТИ ПЕРЕДАЮТСЯ ДАЛЬШЕ ПО ПРОГОНУ (314, дефект пойман живьём). Слой эволюции обязан
+  // отличать «просят изменить то, что есть» от «просят то, чего нет», а судить об этом можно только зная
+  // сборку. Речь их уже вывела из ядра — вычислять второй раз значит платить дважды за один факт.
+  // Без этой строки `gap` был пуст ВСЕГДА, и просьба о несуществующем ложилась правилом в инструкцию.
+  return { reply: out, abilitiesFacts: facts };
 }

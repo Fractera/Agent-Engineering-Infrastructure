@@ -4290,7 +4290,7 @@
               "voice": {
                 "emoji": false,
                 "length": "detailed",
-                "address": ""
+                "address": "Рамзес Великий"
               }
             }
           }
@@ -4830,6 +4830,13 @@
         "createdAt": "04-08-2026 00:50:26",
         "objectsTouched": 1,
         "summary": "voice adjusted at the person's request: no emoji; answers detailed"
+      },
+      {
+        "cuid": "cevomsdu11ry4w2y63",
+        "number": 2,
+        "createdAt": "04-08-2026 01:00:13",
+        "objectsTouched": 1,
+        "summary": "voice adjusted at the person's request: no emoji; answers normal; address: Рамзес Великий"
       }
     ]
   }
