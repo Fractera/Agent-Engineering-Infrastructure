@@ -56,6 +56,11 @@ runtime component keeps working. You do not build or study that layer (AGENTS.md
 Everything you cannot express under this contract is a signal, not an obstacle: say so in a warning
 rather than reaching outside the folder.
 
+**Two surfaces are already built for you and are shared by every tab: the TABLE
+(`shared/data-table.client.tsx`) and the ENTITY DRAWER (`shared/entity-drawer.client.tsx`), which the table
+opens itself.** Use them; a second table or a second "details" view inside a tab is a defect, not a
+feature. Their law is `tab.md`.
+
 ## 🔒 TWO SURFACES YOU DO NOT CODE — the diagram and the use cases
 
 The DIAGRAM (the canvas) and the USE-CASES panel are **platform views derived from the core**, not features

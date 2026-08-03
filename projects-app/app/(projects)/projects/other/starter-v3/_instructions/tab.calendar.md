@@ -78,16 +78,12 @@ watcher. The tempting branch — "if the tab happens to be open, send from there
 explicitly: it produces an automation that works for whoever is watching it and stays silent for whoever
 closed their laptop. That is the worst kind of unreliability, because it looks like it works.
 
-### How it is actually built (and a correction to what this page said first)
+### How it is built
 
-This page first said the server tick would push the automation through its own `api/run` door. **That
-was wrong, and it is corrected here rather than quietly changed.** `api/run` executes the automation's
-GRAPH — input, middle, output. Due-delivery is not a graph run: it is the calendar TAB's own work, the
-same work the browser watcher does, done on the server instead. Sending it through `api/run` would fire
-the automation's business flow every minute for no reason.
-
-So it has its OWN door, and the law "one point of entry" is not broken: **graph execution still lives
-only in `api/run`.**
+Due-delivery has its OWN door, `api/calendar-tick` — NOT `api/run`. `api/run` executes the GRAPH, and
+due-delivery is the calendar tab's own work done on the server instead of in the browser; pushing it
+through `api/run` would fire the whole business flow every minute for nothing. "One point of entry" still
+holds: graph execution lives only in `api/run`.
 
 - `cron.json` in this folder declares one job — the platform scheduler rescans folders every tick, so
   editing that file needs no restart of anything.
@@ -109,12 +105,8 @@ the other two.
 The server looks back at most 24 hours. A server that stood still for a day must not fire off a barrage
 of everything it missed.
 
-**State today (PROVEN LIVE 2026-07-23):** the delivery path is built, runs on the schedule, and has
-delivered end-to-end — a due entry left through Telegram to the owner's chat, and the EXACTLY-ONCE mark
-held: the scheduler fired every minute and the row was sent once, never again (one `deliveredAt` in the
-row store, no repeat). Whether a given channel leaves anything still depends on its keys: no
-`RESEND_API_KEY` and the report says "channel not connected", honestly, in the scheduler's journal. Do
-not "fix" a missing key by sending from the browser.
+Whether a channel leaves anything depends on its keys: without `RESEND_API_KEY` the scheduler's journal
+says "channel not connected", honestly. Never "fix" a missing key by sending from the browser.
 
 For Telegram, note the address nuance already encoded in `_lib/transport.ts`: on the INPUT side an empty
 `TELEGRAM_ALLOWED_CHAT_ID` means "accept any chat", but on the OUTPUT side it is the DESTINATION and

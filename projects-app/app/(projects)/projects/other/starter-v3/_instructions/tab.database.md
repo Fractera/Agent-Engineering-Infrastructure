@@ -59,6 +59,11 @@ The record never renders an object itself: preview and viewing are the shared la
 An object column of ANY table goes through it, so a video in a record shows its type and opens in a player
 instead of a broken square.
 
+## The record is the CENTRE the drawer opens
+
+A marker, an object, a memory receipt and an event are FACETS of this record, so clicking any of them —
+in any tab — opens this same entity (`tab.md`). That is what makes the links worth writing.
+
 ## Never here
 
 The full text · links kept as per-neighbour fields · writes from the middle · a hard-coded column list.

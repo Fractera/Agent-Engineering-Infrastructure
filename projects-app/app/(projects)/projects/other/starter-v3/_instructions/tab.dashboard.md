@@ -15,15 +15,8 @@ them — the full column law is `tab.database.md`, do not restate it.
 
 ## 🔒 Any runtime tool may live inside a cell
 
-The dashboard is universal, so a cell may hold anything the folder's tools can render. Wire the existing
-primitive — never a second implementation (`tools-docs/`, and `AGENTS.md` says the same):
-
-| In a cell | Tool |
-|---|---|
-| a stored object of ANY type — image, video, audio, PDF, text | `media-viewer` (`MediaPreview`) |
-| dictation into an editable field | `voice-input` |
-| an image prepared before storing | `image-crop` |
-| a place or a route | the `api/geo` door, per `tools-docs/map.md` |
+The dashboard is universal, so a cell may hold anything the folder's tools render. Which tool for which
+job is `tools-docs/` — wire the existing one, never a second implementation.
 
 **An `image` column is an OBJECT column.** It renders through `MediaPreview`: a picture becomes a
 thumbnail, any other type becomes a container of the same size with its type printed, and a click opens it.

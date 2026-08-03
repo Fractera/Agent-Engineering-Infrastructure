@@ -137,14 +137,11 @@ QUESTION about data already kept is `read-own`, never a new record — asking ab
 The subject words alone decide nothing; the FORM of the address does. That judgement belongs to the front
 layer (`intent`), and the model makes it — do not force it with word lists.
 
-## Every store links to every other, both ways (step 309 — crossLink)
+## Links are not your job (step 311.9а)
 
-Each row of EVERY store (database, vector-memory, storage, map, calendar) carries `links:[{table,id}]` to ALL
-related rows in the other stores, MUTUALLY. `crossLink` is called by each output after it creates its row: it
-writes its siblings into its own row and appends itself into theirs; a later output patches earlier ones, so
-the full bidirectional graph converges regardless of order. From any row any relation is retrievable — a
-stored file resolves back to the record that owns it; a record to its vector document, its map marker and
-its calendar event. "No link" is not a state that can exist.
+A row of an entity store is born linked to its siblings, both ways — but **the WRITE does it**
+(`addEntityRow`), not the node. Never call a linker and never invent per-neighbour fields. Full law:
+`records.md`.
 
 ## Public access is a role list on the passport (step 309.A)
 

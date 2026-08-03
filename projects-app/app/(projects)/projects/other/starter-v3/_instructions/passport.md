@@ -272,13 +272,8 @@ Nodes and edges are half of this automation. The other half is its COMPONENTS �
 sees. Node work and component work go hand in hand: a result the graph produces and no component
 shows is not delivered.
 
-Where components appear:
-- the OWNER'S COCKPIT — `projects.<domain>/projects/<category>/<slug>` (port 3003 without a domain):
-  the development surface, reachable after authorisation, by default architect and manager only;
-- the PUBLIC MIRROR of the project — `<domain>/projects/<category>/<slug>` (port 3000 without a
-  domain): visibility is decided by role and by the page component's own settings;
-- a PARALLEL ROUTE of the public site — the automation is placed on a host page according to the
-  Fractera Pro instruction.
+Where they appear — cockpit, public mirror, parallel route — is stated once in `components.md`; it is not
+repeated here.
 
 Build components ONLY when the owner asks for them. Two exceptions you build without being asked: the
 CONTROL PANEL, which is the default way input reaches the automation, and the DASHBOARD, which needs
@@ -351,7 +346,10 @@ updated or deleted, and up to 500 characters saying what changed. One version = 
 10. Reveal the input and output doors you need; delete nothing (§8.9, §9).
 11. Wire the edges, set `run` and `estDurationMs` honestly (§8.10).
 12. Build the functions, one node at a time; close each with `aiSummary` + `materialized` (§11).
-13. Build the components that were asked for, plus the control panel and the dashboard (§13).
+13. Build the components that were asked for, plus the control panel and the dashboard (§13). READ the
+    tab's law FIRST — `tab.md` and its own `tab.<name>.md` when the door attaches one: a tab has no port
+    table to refuse you, so an unread law here fails later and quieter. Its source and columns are declared
+    in the CORE, and its rows LEAD TO THE ENTITY through the shared drawer — neither is coded per tab.
 14. Run the ceremony: two independent verifiers, explicit evidence, no invention (§15).
 15. Refresh `howItWorks` if the behaviour changed (§11b), then append the version to `history` (§17).
 16. Print the report between `@@FRACTERA_REPORT_BEGIN@@` and `@@FRACTERA_REPORT_END@@` (§16).

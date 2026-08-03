@@ -34,7 +34,11 @@ import { MediaPreview, MediaViewer } from "../../tools/media-viewer/client/media
 |---|---|
 | `fileKey` | the object's key from a storage row (`obj….mp4`). Empty → the preview renders a dash |
 | `name` | shown as the window title and the cell tooltip |
+| `size` | `MediaPreview` only: `sm` (default, a table cell) or `lg` (the entity drawer, where the object IS the content) |
 | `open` / `onOpenChange` | only for `MediaViewer`; `MediaPreview` owns its own state |
+
+**Two consumers, one tool:** a table cell and the entity drawer (`tab.md`), where several objects of one
+record are paged through a carousel. Both show the same preview and open the same viewer.
 
 ## The type is DERIVED, never stored
 `mediaKindOf(fileKey)` → `image · video · audio · pdf · text · other`, from the key's extension

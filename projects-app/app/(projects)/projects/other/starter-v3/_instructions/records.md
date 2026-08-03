@@ -37,7 +37,9 @@ born unlinked: `addEntityRow` links it — no node calls a linker, and no node c
 
 - Do NOT invent per-neighbour fields (`storageIds`, `vectorIds`). Each new store would demand a new field,
   and the one added last would silently be missing everywhere. Derive the view with `linksOf(row, table)`.
-- From any row, any relation is retrievable in one hop (`readLinked`). "No link" is not a state.
+- From any row, any relation is retrievable in one hop (`readLinked`) — by a node AND by the owner: the
+  door `api/rows?table=<t>&id=<id>&linked=1` returns the row, its database record and the record's other
+  facets, and that is what the entity drawer shows (`tab.md`). Links are written to be READ.
 
 ## Reading a store
 

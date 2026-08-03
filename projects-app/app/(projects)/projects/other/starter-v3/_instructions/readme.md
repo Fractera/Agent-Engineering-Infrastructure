@@ -16,6 +16,7 @@ _instructions/
   middle.custom.md       ← the middle has no vocabulary: this is its law of BIRTH instead
   components.md · tab.md · tab.<name>.md     ← the surfaces the owner sees
   useCases.md · history.md · fracteraPro.md · replies.md
+  records.md             ← not a core object: what a RUN leaves in the stores (envelope, summary, links)
 ```
 
 **One source of truth.** The text lives only here. The schema knows only the LIST of lawful names and

@@ -102,6 +102,9 @@ no port table to refuse you, so an unread law here fails later and quieter — n
 - **So do its SOURCE and its SHAPE — every tab, no exceptions:** `entity.data` names the store (`table`),
   the columns/fields and the page size; the component only renders them. Hard-coding either inside a
   component creates a second, private truth — it cost four tabs in one day, the map among them.
+- **A ROW LEADS TO THE ENTITY:** a click on a row or a marker opens the ONE shared drawer
+  (`shared/entity-drawer.client.tsx`) with the record and every facet linked to it. A tab never builds its
+  own "details" view and never restyles the drawer.
 
 ## 🔒 Two surfaces you must NOT code
 

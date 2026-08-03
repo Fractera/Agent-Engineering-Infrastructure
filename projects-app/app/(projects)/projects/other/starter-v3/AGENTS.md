@@ -145,6 +145,10 @@ tab of the same kind. Settings live in the core (`data`), not as prose in `info`
 hard-coded in a component is a second, private truth: it cost four tabs in a single day — a stale table, two
 undeclared lists, and a map that drew nothing while the runs faithfully wrote and linked their markers.
 
+**And a ROW LEADS TO THE ENTITY.** Clicking a row or a marker opens the ONE shared drawer
+(`shared/entity-drawer.client.tsx`, opened by the shared table) with the record and every facet linked to
+it. Never build a second "details" view inside a tab; never restyle the drawer per tab.
+
 ## 🔒 Two surfaces are not yours to code
 
 The **diagram** and the **use-cases panel** are PLATFORM views — one copy, identical in every account. You

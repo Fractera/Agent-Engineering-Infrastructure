@@ -37,6 +37,21 @@ see them. In every case the LAW was obeyed and the VIEW was a second, private tr
 A tab whose data is a table also obeys the three shared table rules — they live once in
 `_components/shared/data-table.client.tsx` and are stated in `tab.database.md`. Link to them; never restate.
 
+## 🔒 A ROW LEADS TO THE ENTITY — every tab, no exceptions
+
+Clicking a row (or a marker, or any object the tab draws) opens the **entity drawer**: the record of the
+main database plus every facet linked to it — objects, memory, places, events. A row the owner cannot open
+is a dead end: the links were written and mutual all along, and he still could not reach them.
+
+- **One drawer for the whole automation** — `_components/shared/entity-drawer.client.tsx`, opened by the
+  shared table itself. A tab neither wires it nor copies it; a second "details" view of its own is the
+  defect this replaced (the dashboard carried one and knew nothing of a row's neighbours).
+- Its data comes from `api/rows?table=<t>&id=<id>&linked=1`; objects inside it are shown by
+  `media-viewer`, never by a second viewer.
+- Width, overlay, animation and the close button belong to the PRIMITIVE, not to the tab: do not restyle
+  them per tab.
+- A journal row (`history`, `analytics`, `toast`) has no entity — the drawer says so in words.
+
 ## Presence — one field, three honest answers
 
 - `absent` — not on the page at all;
