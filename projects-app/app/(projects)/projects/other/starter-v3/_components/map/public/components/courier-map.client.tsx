@@ -18,13 +18,20 @@ import { courierStrings } from "./courier-i18n";
 //   • по АДРЕСУ — через дверь `api/geo` → сервис fractera-geo (когда геокодер готов).
 // Первая точка = депо (старт). «Построить маршрут» зовёт optimize (TSP на дорожной матрице) → порядок +
 // геометрия + км; бензин = км×расход/100×цена (настройки топлива из конфига geo).
+//
+// 🔒 ВТОРОЙ СЛОЙ — МЕТКИ СКЛАДА (шаг 319.1). Метки, оставленные прогонами, приходят пропом `markers` и
+// рисуются ОТДЕЛЬНЫМ слоем со своей иконкой. Они НЕ становятся точками маршрута: маршрут строит человек,
+// метки оставляет прогон — смешать их значило бы молча менять арифметику маршрута. Пропа нет — карта
+// ведёт себя ровно как до шага 319.
 type Pt = { lat: number; lon: number; name: string };
+/** Метка склада `map`: строка прогона, у которой есть координаты. Без координат метки на карте нет. */
+export type StoreMarker = { id: string; lat: number; lng: number; title: string };
 type Result = { order: number[]; geometry: { coordinates: [number, number][] }; totalKm: number; totalMin: number };
 type Fuel = { consumption: number; price: number; currency: string };
 const apiBase = () => location.pathname.replace(/\/+$/, "") + "/api";
 const PARIS: [number, number] = [48.8566, 2.3522];
 
-export default function CourierMapClient({ lang }: { lang: string }) {
+export default function CourierMapClient({ lang, markers = [] }: { lang: string; markers?: StoreMarker[] }) {
   const t = courierStrings(lang);
   const [points, setPoints] = useState<Pt[]>([]);
   const [result, setResult] = useState<Result | null>(null);
@@ -32,6 +39,9 @@ export default function CourierMapClient({ lang }: { lang: string }) {
   const [address, setAddress] = useState("");
   const [busy, setBusy] = useState<"geo" | "route" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Карта готова: метки склада могут прийти РАНЬШЕ, чем доинициализируется Leaflet (инициализация
+  // асинхронная), и без этого флага их слой было бы нечем перерисовать после появления карты.
+  const [ready, setReady] = useState(false);
 
   const mapEl = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
@@ -39,6 +49,9 @@ export default function CourierMapClient({ lang }: { lang: string }) {
   const LRef = useRef<any>(null);
   const markersRef = useRef<LayerGroup | null>(null);
   const routeRef = useRef<LayerGroup | null>(null);
+  const storeRef = useRef<LayerGroup | null>(null);
+  /** По каким меткам вид уже подгонялся: чтобы не выдёргивать карту из-под руки владельца при обновлении. */
+  const fittedRef = useRef("");
 
   // Добавить точку. Стабильна через ref, чтобы обработчик клика Leaflet всегда видел свежую версию.
   const addPoint = useCallback((lat: number, lon: number, name?: string) => {
@@ -73,7 +86,9 @@ export default function CourierMapClient({ lang }: { lang: string }) {
       map.on("click", (e) => addPointRef.current(e.latlng.lat, e.latlng.lng));
       markersRef.current = L.layerGroup().addTo(map);
       routeRef.current = L.layerGroup().addTo(map);
+      storeRef.current = L.layerGroup().addTo(map);
       mapRef.current = map;
+      setReady(true);
     })();
     return () => { cancelled = true; if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; } };
   }, []);
@@ -105,6 +120,30 @@ export default function CourierMapClient({ lang }: { lang: string }) {
       map.fitBounds(b.pad(0.3), { maxZoom: 15 });
     }
   }, [points, result]);
+
+  // МЕТКИ СКЛАДА — отдельный слой и своя иконка (кружок без номера): их поставил ПРОГОН, а не человек, и
+  // спутать их с точками маршрута нельзя. Вид подгоняется под метки ТОЛЬКО когда точек маршрута нет и сам
+  // набор меток изменился: иначе карта дёргалась бы под рукой владельца при каждом обновлении списка.
+  // Без этого метка в Риме оставалась бы за экраном при парижском регионе гео-сервиса.
+  useEffect(() => {
+    const L = LRef.current, map = mapRef.current, layer = storeRef.current;
+    if (!ready || !L || !map || !layer) return;
+    layer.clearLayers();
+    markers.forEach((m) => {
+      const icon = L.divIcon({
+        className: "",
+        html: `<div style="background:#7c3aed;width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.45)"></div>`,
+        iconSize: [14, 14], iconAnchor: [7, 7],
+      });
+      L.marker([m.lat, m.lng], { icon }).addTo(layer).bindTooltip(m.title || m.id);
+    });
+    const key = markers.map((m) => m.id).join(",");
+    if (markers.length && !points.length && fittedRef.current !== key) {
+      fittedRef.current = key;
+      const b = L.latLngBounds(markers.map((m) => [m.lat, m.lng] as [number, number]));
+      map.fitBounds(b.pad(0.3), { maxZoom: 15 });
+    }
+  }, [markers, points.length, ready]);
 
   const geo = async (op: string, payload: object) => {
     const r = await fetch(`${apiBase()}/geo`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ op, ...payload }) });

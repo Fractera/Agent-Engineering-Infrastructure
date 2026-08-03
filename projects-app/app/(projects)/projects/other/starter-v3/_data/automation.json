@@ -3153,12 +3153,14 @@
             "name": "Main map",
             "description": "",
             "info": {
-              "aiSummary": "Blank \"Main map\": created together with the tab, no owner requirements yet."
+              "aiSummary": "The markers this automation put on the map: bytes of the place are the row itself — date · title · place · channel · lat · lng plus the links. The SOURCE and the columns are declared HERE in data (table \"map\", data.columns); the component only draws them on the working map and lists them below it (step 319)."
             },
             "status": "materialized",
             "warnings": [],
             "envKeys": [],
             "data": {
+              "table": "map",
+              "pageSize": 10,
               "title": {
                 "en": "Europe map",
                 "ru": "Карта Европы",
@@ -3170,7 +3172,173 @@
                 "pl": "Mapa Europy",
                 "tr": "Avrupa haritası",
                 "nl": "Kaart van Europa"
-              }
+              },
+              "columns": [
+                {
+                  "key": "id",
+                  "label": {
+                    "en": "ID",
+                    "es": "ID",
+                    "fr": "ID",
+                    "it": "ID",
+                    "ru": "ID",
+                    "de": "ID",
+                    "pt": "ID",
+                    "pl": "ID",
+                    "tr": "ID",
+                    "nl": "ID"
+                  },
+                  "type": "chip",
+                  "source": "id",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "date",
+                  "label": {
+                    "en": "Date",
+                    "es": "Fecha",
+                    "fr": "Date",
+                    "it": "Data",
+                    "ru": "Дата",
+                    "de": "Datum",
+                    "pt": "Data",
+                    "pl": "Data",
+                    "tr": "Tarih",
+                    "nl": "Datum"
+                  },
+                  "type": "date",
+                  "source": "date",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "title",
+                  "label": {
+                    "en": "Title",
+                    "es": "Título",
+                    "fr": "Titre",
+                    "it": "Titolo",
+                    "ru": "Заголовок",
+                    "de": "Titel",
+                    "pt": "Título",
+                    "pl": "Tytuł",
+                    "tr": "Başlık",
+                    "nl": "Titel"
+                  },
+                  "type": "text",
+                  "source": "title",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "place",
+                  "label": {
+                    "en": "Place",
+                    "es": "Lugar",
+                    "fr": "Lieu",
+                    "it": "Luogo",
+                    "ru": "Место",
+                    "de": "Ort",
+                    "pt": "Lugar",
+                    "pl": "Miejsce",
+                    "tr": "Yer",
+                    "nl": "Plaats"
+                  },
+                  "type": "text",
+                  "source": "place",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "source",
+                  "label": {
+                    "en": "Source",
+                    "es": "Origen",
+                    "fr": "Source",
+                    "it": "Origine",
+                    "ru": "Канал",
+                    "de": "Quelle",
+                    "pt": "Origem",
+                    "pl": "Źródło",
+                    "tr": "Kaynak",
+                    "nl": "Bron"
+                  },
+                  "type": "badge",
+                  "source": "source",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "lat",
+                  "label": {
+                    "en": "Latitude",
+                    "es": "Latitud",
+                    "fr": "Latitude",
+                    "it": "Latitudine",
+                    "ru": "Широта",
+                    "de": "Breite",
+                    "pt": "Latitude",
+                    "pl": "Szerokość",
+                    "tr": "Enlem",
+                    "nl": "Breedte"
+                  },
+                  "type": "text",
+                  "source": "lat",
+                  "minWidth": 96,
+                  "defaultVisible": true
+                },
+                {
+                  "key": "lng",
+                  "label": {
+                    "en": "Longitude",
+                    "es": "Longitud",
+                    "fr": "Longitude",
+                    "it": "Longitudine",
+                    "ru": "Долгота",
+                    "de": "Länge",
+                    "pt": "Longitude",
+                    "pl": "Długość",
+                    "tr": "Boylam",
+                    "nl": "Lengte"
+                  },
+                  "type": "text",
+                  "source": "lng",
+                  "minWidth": 96,
+                  "defaultVisible": true
+                },
+                {
+                  "key": "database",
+                  "label": {
+                    "en": "Record",
+                    "es": "Registro",
+                    "fr": "Enregistrement",
+                    "it": "Record",
+                    "ru": "Запись",
+                    "de": "Datensatz",
+                    "pt": "Registo",
+                    "pl": "Rekord",
+                    "tr": "Kayıt",
+                    "nl": "Record"
+                  },
+                  "type": "ids",
+                  "source": "links:database",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "createdAt",
+                  "label": {
+                    "en": "Added",
+                    "es": "Añadido",
+                    "fr": "Ajouté",
+                    "it": "Aggiunto",
+                    "ru": "Добавлено",
+                    "de": "Hinzugefügt",
+                    "pt": "Adicionado",
+                    "pl": "Dodano",
+                    "tr": "Eklendi",
+                    "nl": "Toegevoegd"
+                  },
+                  "type": "date",
+                  "source": "createdAt",
+                  "defaultVisible": true
+                }
+              ]
             }
           }
         ]
