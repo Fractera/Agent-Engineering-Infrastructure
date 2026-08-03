@@ -72,6 +72,9 @@ Read any file here freely — nothing is hidden behind an API.
   Never hard-code a limit and never assemble the history a second time — a default inside `formatDialog`
   silently beat the owner's setting, and a second form meant the model read one dialogue two ways depending
   on the call path.
+- **Evicted turns are CONDENSED, never lost** (330.4): they merge into `chat-state.summary`, one paragraph
+  under the folder's `SUMMARY_LIMIT`, tagged `[earlier in this session, condensed]` so the model does not
+  read the past as just-said. Its cost is reserved before turns compete for the budget.
 - **A dialogue turn is an ENVELOPE** (330.3, `TurnSchema` in `_data/record.schema.ts`): class, outcome
   (`ok` · `refused` · `missing` · `unreachable` · `failed`), links to what it created, `runId`. Speech
   BIRTHS it; the engine SEALS the outcome at the end of the run, because speech runs before the outputs and

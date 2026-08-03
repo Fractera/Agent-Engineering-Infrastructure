@@ -10,8 +10,9 @@ import type { NodeCtx } from "../executor";
 import { askModel } from "../ai";
 import { readCore } from "../core-io";
 import { assistantConfigOf } from "../components/conversation/config";
-import { loadChat, pushMessage, setLang, setPending, type ChatMessage, type PendingAsk } from "../components/conversation/state";
-import { buildDialogue } from "../components/conversation/context";
+import { loadChat, pushMessage, setLang, setPending, setSummary, type ChatMessage, type PendingAsk } from "../components/conversation/state";
+import { buildDialogue, outlineOf } from "../components/conversation/context";
+import { SUMMARY_LIMIT } from "../../_data/record.schema";
 import { abilitiesBrief, abilitiesOf, placesBrief, type Abilities } from "../components/conversation/abilities";
 import { composeReply } from "./compose-reply";
 
@@ -70,12 +71,45 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
 
   // Память диалога: положить входящее сообщение в буфер (окно N/TTL из настроек), прочитать состояние.
   const incoming = String(ctx.text ?? ctx.original ?? "").trim();
-  let state = chatId ? await loadChat(chatId) : { id: "", messages: [], lang: "", pending: null as unknown };
+  let state = chatId ? await loadChat(chatId) : { id: "", messages: [], lang: "", pending: null as unknown, summary: "" };
   // 🔒 РЕПЛИКА РОЖДАЕТСЯ С КОНВЕРТОМ (330.3): прогон и класс — то, что речи известно СЕЙЧАС. Исход и
   // созданные записи допишет движок в конце прогона (`sealTurns`): выходы ещё не отработали, и знать их
   // отсюда невозможно. Разделение объявлено в `record.schema.ts` и в законе группы.
   const turn = { runId: String(ctx.runId ?? "") || undefined, class: String(ctx.intentClass ?? "") || undefined };
-  if (chatId && incoming) state = await pushMessage(chatId, { role: "user", text: incoming, at: new Date().toISOString(), ...turn }, cfg.lastN, cfg.ttlMinutes);
+
+  /**
+   * 🔒 ВЫТЕСНЕННОЕ УПЛОТНЯЕТСЯ, А НЕ ПРОПАДАЕТ (330.4). Окно и TTL реплики УДАЛЯЮТ; до этого шага
+   * сказанное просто переставало существовать, и длинный разговор безвозвратно терял своё начало.
+   * Сжимает МОДЕЛЬ — это её работа, а не регулярок: важно, ЧТО обсуждали, а не какие слова звучали.
+   * Модели нет → честное оглавление (`outlineOf`): не пересказ, а перечень начал, и оно так и подписано.
+   * Предел — общий `SUMMARY_LIMIT` папки: у «короткой формы» один закон на всё, включая склады.
+   */
+  const condense = async (dropped: ChatMessage[]): Promise<void> => {
+    if (!chatId || !dropped.length) return;
+    const previous = String(state.summary ?? "").trim();
+    const outline = outlineOf(dropped, SUMMARY_LIMIT);
+    let next = "";
+    try {
+      next = (await askModel({
+        system:
+          `You keep a running summary of a conversation, at most ${SUMMARY_LIMIT} characters. You are given ` +
+          `the summary so far and the lines that just fell out of the short-term buffer. Merge them into ONE ` +
+          `compact paragraph in the same language as the conversation. Keep names, subjects, decisions, ` +
+          `questions still open and anything the person asked to be remembered. Drop greetings and small talk. ` +
+          `Never invent what was not said. Output the paragraph only.`,
+        user: `Summary so far: ${previous || "(none)"}\n\nLines that just fell out:\n${outline}`,
+        maxTokens: 220,
+      })) ?? "";
+    } catch { next = ""; }
+    const merged = next.trim() || [previous, outline].filter(Boolean).join(" · ");
+    await setSummary(chatId, merged.length > SUMMARY_LIMIT ? `${merged.slice(0, SUMMARY_LIMIT - 1)}…` : merged);
+  };
+
+  if (chatId && incoming) {
+    const pushed = await pushMessage(chatId, { role: "user", text: incoming, at: new Date().toISOString(), ...turn }, cfg.lastN, cfg.ttlMinutes);
+    state = pushed.state;
+    await condense(pushed.dropped);
+  }
 
   // Язык ответа. Приоритет: зафиксированный в чате (выбор пользователя, персист) → фикс из настроек →
   // `ctx.chatLang` от классификатора (единый контекстный слой 309) → ЯЗЫК СООБЩЕНИЯ (кириллица → ru) →
@@ -107,7 +141,7 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   // Представление возможностей (/start, «что ты умеешь») — детерминированный список надёжнее модели.
   if (ctx.showHelp === true && cfg.revealCapabilities) {
     const help = composeReply({ ...ctx, lang, abilitiesInputs: ab.inputs, abilitiesOutputs: ab.outputs, abilitiesSteps: ab.steps }).reply as string;
-    if (chatId) await pushMessage(chatId, { role: "assistant", text: help, at: new Date().toISOString(), ...turn }, cfg.lastN, cfg.ttlMinutes);
+    if (chatId) await condense((await pushMessage(chatId, { role: "assistant", text: help, at: new Date().toISOString(), ...turn }, cfg.lastN, cfg.ttlMinutes)).dropped);
     return { reply: help };
   }
 
@@ -125,7 +159,7 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   // Бюджет действует и на этом пути (330.2): прямой вызов двери мимо движка не должен быть лазейкой,
   // через которую в модель уезжает неограниченный разговор.
   const history = String(ctx.recentDialog ?? "").trim()
-    || buildDialogue(state.messages as ChatMessage[], { lastN: cfg.lastN, tokenBudget: cfg.tokenBudget }).text;
+    || buildDialogue(state.messages as ChatMessage[], { lastN: cfg.lastN, tokenBudget: cfg.tokenBudget, summary: String(state.summary ?? "") }).text;
 
   // 🔒 ТРИ РЕЖИМА ОТВЕТА (309, живой тест — бот на всё говорил «Готово ✅ …сохранено»):
   //   ЗАПИСЬ  — прогон что-то создал (заметка/трата/место/напоминание) → кратко ПОДТВЕРДИ.
@@ -154,6 +188,12 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
     "not-understood":
       "You could not tell what kind of request this is. Say so plainly in one line — no guessing — and name, from " +
       "the facts above, what you CAN do, so the user can rephrase.",
+    // ПРИЁМ ЗАПИСИ (330.2R). Речь говорит РАНЬШЕ складов и потому не знает, что именно они создадут — но
+    // класс уже объявил намерение записать, и этого достаточно, чтобы подтвердить приём, не обещая лишнего.
+    acknowledge:
+      `The user has just told you something to keep${about ? `: ${about}` : ""}. Confirm you have taken it, ` +
+      "in one short warm line, repeating the essence in a few words so they see you understood. Do NOT list " +
+      "where it is stored, do NOT promise anything beyond keeping it, and do NOT explain what you cannot do.",
   };
 
   const task = ACTS[act]
@@ -193,7 +233,7 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   if (tag && chatId) { await setLang(chatId, tag[1].toLowerCase()); out = out.slice(tag[0].length).trim(); }
   else out = out.replace(/\[\[lang:[a-z]{2}\]\]/gi, "").trim(); // страховка: тег без chatId не оставляем в тексте
 
-  if (chatId) await pushMessage(chatId, { role: "assistant", text: out, at: new Date().toISOString(), ...turn }, cfg.lastN, cfg.ttlMinutes);
+  if (chatId) await condense((await pushMessage(chatId, { role: "assistant", text: out, at: new Date().toISOString(), ...turn }, cfg.lastN, cfg.ttlMinutes)).dropped);
   // 🔒 РЕЧЬ — ЕДИНСТВЕННЫЙ АВТОР СОСТОЯНИЯ ДИАЛОГА (шаг 312.3). Висящий вопрос кладут в контекст те, кто
   // его задал (класс «неполный», узлы середины), а СНИМАЕТ его класс «продолжение» (`pendingQuestion: null`).
   // Записывает же его сюда — только этот узел, ровно как строку тоста пишет только `deliverToast`.

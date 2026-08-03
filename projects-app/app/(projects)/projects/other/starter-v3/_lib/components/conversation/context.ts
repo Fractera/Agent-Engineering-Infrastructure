@@ -36,8 +36,10 @@ export function estimateTokens(text: string): number {
 }
 
 export type DialogueContext = {
-  /** Готовый текст истории — ровно та форма, что и везде (`formatDialog`). */
+  /** Готовый текст: сводка сессии (если есть) + история в общей форме (`formatDialog`). */
   text: string;
+  /** Сколько стоила сводка сессии. Ноль — её не было. */
+  summaryUsed: number;
   /** Сколько токенов он стоит по нашей оценке. */
   used: number;
   /** Бюджет, с которым собирали. */
@@ -56,11 +58,28 @@ export type DialogueContext = {
  */
 export function buildDialogue(
   messages: ChatMessage[],
-  opts: { lastN: number; tokenBudget: number },
+  opts: { lastN: number; tokenBudget: number; summary?: string },
 ): DialogueContext {
   const budget = Math.max(1, Math.trunc(opts.tokenBudget));
   const windowN = Math.max(1, Math.trunc(opts.lastN));
-  if (!messages.length) return { text: "", used: 0, budget, dropped: 0, limitedBy: "none" };
+
+  // 🔒 СВОДКА СЕССИИ РЕЗЕРВИРУЕТСЯ, А НЕ КОНКУРИРУЕТ (330.4). Первоначальный набросок ставил её последней
+  // в очереди на вытеснение — и это оказалось неверно: сводка стоит около сотни токенов, а покрывает ВЕСЬ
+  // вытесненный разговор. Выбросить её ради двух лишних дословных реплик значит обменять память сессии на
+  // мелочь. Поэтому её цена снимается с бюджета ПЕРВОЙ, а конкурируют за остаток уже реплики.
+  //
+  // Ярлык обязателен: без пометки «это уплотнённое прошлое» модель читает сводку как только что сказанное
+  // и путает времена — самый уверенный род галлюцинаций.
+  const summaryText = String(opts.summary ?? "").trim();
+  const summaryBlock = summaryText ? `[earlier in this session, condensed] ${summaryText}` : "";
+  const summaryUsed = summaryBlock ? estimateTokens(summaryBlock) : 0;
+  const rest = Math.max(1, budget - summaryUsed);
+
+  const join = (history: string) => [summaryBlock, history].filter(Boolean).join("\n");
+
+  if (!messages.length) {
+    return { text: join(""), summaryUsed, used: summaryUsed, budget, dropped: 0, limitedBy: "none" };
+  }
 
   const windowed = messages.slice(-windowN);
   const droppedByWindow = messages.length - windowed.length;
@@ -71,20 +90,39 @@ export function buildDialogue(
 
   let kept = priced;
   let total = priced.reduce((s, p) => s + p.cost, 0);
-  while (kept.length > 1 && total > budget) {
+  while (kept.length > 1 && total > rest) {
     total -= kept[0].cost;
     kept = kept.slice(1);
   }
   const droppedByBudget = priced.length - kept.length;
 
-  const text = formatDialog(kept.map((p) => p.m), kept.length);
+  const text = join(formatDialog(kept.map((p) => p.m), kept.length));
   return {
     text,
+    summaryUsed,
     used: estimateTokens(text),
     budget,
     dropped: droppedByWindow + droppedByBudget,
     limitedBy: droppedByBudget > 0 ? "budget" : droppedByWindow > 0 ? "window" : "none",
   };
+}
+
+/**
+ * 🔒 СЖАТИЕ ВЫТЕСНЕННОГО БЕЗ МОДЕЛИ — ФОЛБЭК, КОТОРЫЙ НЕ ВРЁТ (330.4).
+ *
+ * Нет ключа или модель недоступна — сводка всё равно обязана появиться, иначе вытесненное пропадёт
+ * совсем. Но выдумывать «смысл» детерминированный код не вправе, поэтому он честно перечисляет НАЧАЛА
+ * реплик: это не пересказ, а оглавление, и модель прочтёт его именно так.
+ */
+export function outlineOf(dropped: ChatMessage[], limit: number): string {
+  const head = (s: string) => {
+    const one = s.replace(/\s+/g, " ").trim();
+    return one.length <= 60 ? one : `${one.slice(0, 59)}…`;
+  };
+  const parts = dropped.map((m) => `${m.role === "user" ? "they" : "we"}: ${head(m.text)}`);
+  let out = parts.join(" · ");
+  if (out.length > limit) out = `${out.slice(0, limit - 1)}…`;
+  return out;
 }
 
 /**
@@ -103,3 +141,30 @@ export const classifyBudget = (tokenBudget: number): number =>
 
 /** Окно классификатора — тоже производное: последний обмен, не вся сессия. */
 export const classifyWindow = (lastN: number): number => Math.min(6, Math.max(2, Math.trunc(lastN)));
+
+/**
+ * 🔒 КЛАССИФИКАТОРУ — ТОЛЬКО РЕПЛИКИ ЧЕЛОВЕКА (330.2R, регресс пойман живьём 2026-08-03).
+ *
+ * Дав чтению класса весь диалог, я дал ему ЗАРАЖАТЬСЯ. Живой прогон: бот однажды ответил «не могу понять,
+ * это вопрос или запись» — и следующее «привет, как дела?» тоже стало `unclaimed`, хотя в чистом чате та
+ * же фраза уверенно опознаётся как `small-talk`. Модель видела вердикт прошлого прогона и повторяла его:
+ * отказ в истории работал как инструкция отказывать дальше. Разговор залипал в «я не умею».
+ *
+ * Реплики ЧЕЛОВЕКА такого эффекта не дают: в них нет вердикта, только предмет разговора — ровно то, ради
+ * чего контекст и нужен («а второе?» разрешается предыдущим вопросом человека, а не ответом бота).
+ */
+export const userTurnsOnly = (messages: ChatMessage[]): ChatMessage[] => messages.filter((m) => m.role === "user");
+
+/**
+ * 🔒 КОНТЕКСТ КЛАССИФИКАТОРУ — ТОЛЬКО КОГДА СООБЩЕНИЕ НЕПОЛНО (330.2R).
+ *
+ * Полная фраза опознаётся сама и в контексте не нуждается — а лишний контекст ей только вредит (см. выше).
+ * Неполной же реплику делает ССЫЛКА НА СКАЗАННОЕ РАНЬШЕ: короткий ответ («да», «второе», «завтра») либо
+ * висящий вопрос, на который она отвечает. Оба признака объективны, поэтому решаем детерминированно, не
+ * спрашивая модель.
+ */
+export const needsContextToClassify = (text: string, hasPending: boolean): boolean => {
+  if (hasPending) return true; // висит вопрос — следующая реплика по определению его продолжение
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  return words.length <= 3; // «второе», «да, давай», «завтра в шесть» — сами по себе не значат ничего
+};

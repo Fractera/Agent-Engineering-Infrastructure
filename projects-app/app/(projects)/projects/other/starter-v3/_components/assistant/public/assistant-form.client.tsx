@@ -21,6 +21,13 @@ export type AssistantData = {
   qa: QaPair[];
 };
 
+/**
+ * ЧЕТЫРЕ ГЛУБИНЫ ПАМЯТИ — в токенах, но человеку они показаны словами. Шкала грубая намеренно: точное
+ * число здесь нечем осмысленно выбрать, а разницу между «немного» и «много» человек чувствует сразу.
+ * Правка сохраняет ЛЮБОЕ значение из ядра — селектор просто показывает ближайший уровень.
+ */
+const DEPTHS = [400, 1200, 3000, 8000] as const;
+
 export default function AssistantForm({ cuid, data, lang }: { cuid: string; data: AssistantData; lang: string }) {
   const L = assistantStrings(lang);
   const router = useRouter();
@@ -93,19 +100,25 @@ export default function AssistantForm({ cuid, data, lang }: { cuid: string; data
             />
             <span className="text-muted-foreground">{L.minutes}</span>
           </label>
-          {/* Бюджет контекста (330.2) — второй ограничитель рядом с окном: считает цену, а не реплики. */}
+          {/* 🔒 ЧЕЛОВЕЧЕСКИЙ ВЫБОР, А НЕ НАШ ТЕРМИН (правка 330.4 по требованию владельца). Здесь стояло
+              поле «бюджет контекста» в токенах — слово из слоя разработки, которого человек в кокпите не
+              знает. Он знает «сколько разговора помнить»; число живёт в ядре и остаётся его делом. */}
           <label className="flex items-center gap-2 text-sm">
-            <span>{L.budget}</span>
-            <Input
-              type="number" min={100} max={20000} step={100} disabled={busy} className="h-8 w-24"
-              value={d.memory.tokenBudget}
-              onChange={(e) => setD({ ...d, memory: { ...d.memory, tokenBudget: num(e.target.value, 100, 20000, 1200) } })}
-              onBlur={() => save(d)}
-            />
-            <span className="text-muted-foreground">{L.tokens}</span>
+            <span>{L.depth}</span>
+            <select
+              value={String(DEPTHS.reduce((best, v) => (Math.abs(v - d.memory.tokenBudget) < Math.abs(best - d.memory.tokenBudget) ? v : best), DEPTHS[1]))}
+              disabled={busy}
+              onChange={(e) => save({ ...d, memory: { ...d.memory, tokenBudget: Number(e.target.value) } })}
+              className="h-8 rounded-md border bg-transparent px-2 outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value={DEPTHS[0]}>{L.depthShort}</option>
+              <option value={DEPTHS[1]}>{L.depthNormal}</option>
+              <option value={DEPTHS[2]}>{L.depthLong}</option>
+              <option value={DEPTHS[3]}>{L.depthMax}</option>
+            </select>
           </label>
         </div>
-        <p className="text-xs text-muted-foreground">{L.budgetHint}</p>
+        <p className="text-xs text-muted-foreground">{L.depthHint}</p>
       </div>
 
       {/* Раскрытие возможностей */}

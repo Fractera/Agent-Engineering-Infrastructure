@@ -18,7 +18,13 @@ export type ChatMessage = Turn;
 // напр. {kind:"remind-when"} / {kind:"place-desc"}; `payload` (310) держит отложенные данные между
 // сообщениями — hold-and-confirm дуб-контроля: строки, которые запишем, ЕСЛИ владелец подтвердит дубль.
 export type PendingAsk = { kind: string; at: string; payload?: Record<string, unknown> } | null;
-export type ChatState = { id: string; messages: ChatMessage[]; lang: string; pending: PendingAsk };
+/**
+ * `summary` — СВОДКА СЕССИИ (шаг 330.4): сжатое изложение того, что уже вытеснено из буфера. Окно и TTL
+ * реплики УДАЛЯЮТ, и до этого шага сказанное просто переставало существовать: длинный разговор терял своё
+ * начало безвозвратно, и ассистент честно не знал, о чём была первая половина беседы. Теперь вытесненное
+ * не исчезает, а уплотняется в один абзац — дёшево и навсегда.
+ */
+export type ChatState = { id: string; messages: ChatMessage[]; lang: string; pending: PendingAsk; summary: string };
 
 const TABLE = "chat-state";
 
@@ -29,6 +35,7 @@ function normalize(row: Record<string, unknown> | undefined, chatId: string): Ch
     messages,
     lang: typeof row?.lang === "string" ? (row!.lang as string) : "",
     pending: (row?.pending as PendingAsk) ?? null,
+    summary: typeof row?.summary === "string" ? (row!.summary as string) : "",
   };
 }
 
@@ -87,7 +94,7 @@ export function formatDialog(messages: ChatMessage[], limit: number): string {
 /** Прочитать состояние чата (пустое, если чат новый). */
 export async function loadChat(chatId: string): Promise<ChatState> {
   const id = String(chatId).trim();
-  if (!id) return { id: "", messages: [], lang: "", pending: null };
+  if (!id) return { id: "", messages: [], lang: "", pending: null, summary: "" };
   const row = (await listRows(TABLE, Infinity)).find((r) => r.id === id);
   return normalize(row as Record<string, unknown> | undefined, id);
 }
@@ -95,31 +102,61 @@ export async function loadChat(chatId: string): Promise<ChatState> {
 /** Записать всю строку состояния (создаёт при первом обращении, id = chatId). */
 async function save(state: ChatState): Promise<void> {
   const existing = (await listRows(TABLE, Infinity)).find((r) => r.id === state.id);
-  const patch = { messages: state.messages, lang: state.lang, pending: state.pending };
+  const patch = { messages: state.messages, lang: state.lang, pending: state.pending, summary: state.summary };
   if (existing) await updateRow(TABLE, state.id, patch);
   else await addRow(TABLE, patch, state.id);
 }
 
-/** Отсечь сообщения старше TTL и оставить только последние N (окно из настроек вкладки «Ассистент»). */
-function trim(messages: ChatMessage[], limitN: number, ttlMinutes: number): ChatMessage[] {
+/**
+ * Отсечь сообщения старше TTL и оставить только последние N (окно из настроек вкладки «Ассистент»).
+ * Возвращает и ВЫТЕСНЕННЫЕ (330.4): раньше они молча пропадали, а теперь их содержание обязано уехать в
+ * сводку сессии — иначе длинный разговор безвозвратно теряет своё начало.
+ */
+function trim(
+  messages: ChatMessage[],
+  limitN: number,
+  ttlMinutes: number,
+): { kept: ChatMessage[]; dropped: ChatMessage[] } {
   const cutoff = Date.now() - Math.max(1, ttlMinutes) * 60_000;
+  const stale: ChatMessage[] = [];
   const fresh = messages.filter((m) => {
     const t = new Date(m.at).getTime();
-    return Number.isFinite(t) ? t >= cutoff : true;
+    const ok = Number.isFinite(t) ? t >= cutoff : true;
+    if (!ok) stale.push(m);
+    return ok;
   });
   const n = Math.max(1, limitN);
-  return fresh.length > n ? fresh.slice(fresh.length - n) : fresh;
+  if (fresh.length <= n) return { kept: fresh, dropped: stale };
+  return { kept: fresh.slice(fresh.length - n), dropped: [...stale, ...fresh.slice(0, fresh.length - n)] };
 }
 
-/** Добавить сообщение в буфер, подрезав по окну; возвращает обновлённое состояние. */
-export async function pushMessage(chatId: string, msg: ChatMessage, limitN: number, ttlMinutes: number): Promise<ChatState> {
+/**
+ * Добавить сообщение в буфер, подрезав по окну. Возвращает состояние И вытесненные реплики: сжать их в
+ * сводку обязан ВЫЗЫВАЮЩИЙ (узел речи), потому что сжатие — работа модели, а этот модуль — хранилище.
+ * Так и закон соблюдён: состояние диалога по-прежнему пишет только речь.
+ */
+export async function pushMessage(
+  chatId: string,
+  msg: ChatMessage,
+  limitN: number,
+  ttlMinutes: number,
+): Promise<{ state: ChatState; dropped: ChatMessage[] }> {
   const state = await loadChat(chatId);
-  if (!state.id) return state;
+  if (!state.id) return { state, dropped: [] };
   // Схема проверяет реплику ДО записи (330.3): незаконный конверт в память диалога не попадает, а
   // вызывающий узнаёт словами, что именно не так. Тот же приём, что у строки склада.
-  state.messages = trim([...state.messages, parseTurn(msg)], limitN, ttlMinutes);
+  const { kept, dropped } = trim([...state.messages, parseTurn(msg)], limitN, ttlMinutes);
+  state.messages = kept;
   await save(state);
-  return state;
+  return { state, dropped };
+}
+
+/** Записать сводку сессии (330.4). Пишет её, как и всё состояние диалога, только слой речи. */
+export async function setSummary(chatId: string, summary: string): Promise<void> {
+  const state = await loadChat(chatId);
+  if (!state.id) return;
+  state.summary = String(summary ?? "").trim();
+  await save(state);
 }
 
 /**

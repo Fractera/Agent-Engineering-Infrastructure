@@ -128,6 +128,15 @@ message WHOLE: half a line is worse than none, because the model completes it an
 reports the price in `ctx.dialogueBudget` (`used` · `budget` · `dropped` · `limitedBy`), so a memory cut
 short is never mistaken for a stupid model.
 
+**What falls out of the buffer is CONDENSED, not lost** (330.4). The window and the TTL DELETE turns — a
+long conversation used to lose its own beginning for good, and the assistant honestly did not know what the
+first half was about. Evicted lines now merge into `chat-state.summary`: one paragraph under the folder's
+single `SUMMARY_LIMIT`, written by a model (what was discussed, not which words were used) or, with no
+model available, a plain OUTLINE of the openings — labelled as an outline, never an invented recap. The
+summary's cost is RESERVED before turns compete for the budget: a hundred tokens that cover the entire
+evicted conversation beat two more verbatim lines. It always carries the tag
+`[earlier in this session, condensed]`, because unlabelled past reads as just-said.
+
 **A turn is an ENVELOPE, not a line** (330.3, `TurnSchema` in `_data/record.schema.ts`). It carries what
 the run was (`class`), how it ended (`outcome`: `ok` · `refused` · `missing` · `unreachable` · `failed`),
 what it left in the stores (`links`) and which run it was (`runId`). Without it the model reread a smooth

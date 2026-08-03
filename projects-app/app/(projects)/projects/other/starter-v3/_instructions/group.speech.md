@@ -35,6 +35,14 @@ language — keyed by the interlocutor (`telegram:<id>`, `email:<from>`, `panel`
   time). The outcome and the created rows are stamped by the engine at the END of the run (`sealTurns`),
   because speech stands BEFORE the outputs: when it speaks, no store has run yet, so those facts do not
   exist for it. That is not a second author, it is `updatedAt` — the sealing never touches the text.
+- **What falls out of the buffer is CONDENSED, not lost** (330.4). The window and the TTL DELETE turns, and
+  a long conversation used to lose its own beginning for good. Now the evicted lines are merged into
+  `chat-state.summary` — one paragraph, capped by the folder's single `SUMMARY_LIMIT`. A model condenses
+  (what was discussed, not which words); with no model, a plain OUTLINE of the openings is stored and
+  labelled as such — never an invented recap. The summary's cost is RESERVED before turns compete for the
+  budget: it covers the whole evicted conversation for about a hundred tokens, and trading it for two more
+  verbatim lines is a bad trade. It always carries the tag `[earlier in this session, condensed]` — without
+  it the model reads the past as just-said. The speech layer writes it, like everything here.
 - **Who gets what is decided once, by the engine.** `recentDialog` — the conversation, for speech.
   `recentDialogBrief` — the last exchange only, on a derived share of the budget, for reading the request
   class (it runs on EVERY run, so it must stay cheap). A node never assembles history for itself: that is

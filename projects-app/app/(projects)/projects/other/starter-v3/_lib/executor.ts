@@ -18,7 +18,7 @@ import { appendRun } from "./runs";
 import { chatKeyOf, loadChat, sealTurns } from "./components/conversation/state";
 import type { TurnOutcome } from "../_data/record.schema";
 import { assistantConfigOf } from "./components/conversation/config";
-import { buildDialogue, classifyBudget, classifyWindow } from "./components/conversation/context";
+import { buildDialogue, classifyBudget, classifyWindow, userTurnsOnly } from "./components/conversation/context";
 
 export type NodeCtx = Record<string, unknown>;
 export type NodeResult = NodeCtx | null | void;
@@ -142,8 +142,12 @@ export async function executeAutomation(input: NodeCtx): Promise<RunOutcome | Ru
     // модулем: полный под бюджет владельца и краткий под выведенную из него долю. Собирать историю самому
     // узлу больше не нужно и нельзя — иначе бюджет опять станет ничьим.
     const cfg = assistantConfigOf(core.components);
-    const dialogue = buildDialogue(state.messages, { lastN: cfg.lastN, tokenBudget: cfg.tokenBudget });
-    const brief = buildDialogue(state.messages, {
+    // Сводка сессии (330.4) едет полному срезу: она покрывает вытесненное и стоит около сотни токенов.
+    // Краткому срезу класса она НЕ нужна — класс решается по последнему обмену, а не по истории сессии.
+    const dialogue = buildDialogue(state.messages, { lastN: cfg.lastN, tokenBudget: cfg.tokenBudget, summary: state.summary });
+    // Краткий срез — ТОЛЬКО реплики человека (330.2R): ответы бота несут вердикт прошлого прогона, и
+    // классификатор начинал его повторять. Обоснование — `userTurnsOnly` в сборщике.
+    const brief = buildDialogue(userTurnsOnly(state.messages), {
       lastN: classifyWindow(cfg.lastN),
       tokenBudget: classifyBudget(cfg.tokenBudget),
     });
@@ -163,6 +167,7 @@ export async function executeAutomation(input: NodeCtx): Promise<RunOutcome | Ru
         used: dialogue.used,
         dropped: dialogue.dropped,
         limitedBy: dialogue.limitedBy,
+        summaryUsed: dialogue.summaryUsed,
         briefUsed: brief.used,
         briefBudget: brief.budget,
       },
