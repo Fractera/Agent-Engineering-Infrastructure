@@ -24,13 +24,15 @@ export type DiagramCoreNode = {
 export type DiagramCoreEdge = { cuid: string; from: string; to: string; state: string };
 
 export type DiagramGraph = {
-  // `intent` (шаг 311) и `evolution` (шаг 314) — четвёртый и пятый слои, ОБА НЕОБЯЗАТЕЛЬНЫЕ: ядра v2 их
-  // не объявляют, ядра v3 объявляют по мере построения. Адаптер молча пропускает отсутствующую группу.
+  // `intent` (шаг 311), `speech` (шаг 312) и `evolution` (шаг 314) — четвёртый, разговорный и последний
+  // слои, ВСЕ НЕОБЯЗАТЕЛЬНЫЕ: ядра v2 их не объявляют, ядра v3 объявляют по мере построения. Адаптер
+  // молча пропускает отсутствующую группу.
   nodes: {
     groups: {
       input: { nodes: DiagramCoreNode[] };
       intent?: { nodes: DiagramCoreNode[] };
       middle: { nodes: DiagramCoreNode[] };
+      speech?: { nodes: DiagramCoreNode[] };
       output: { nodes: DiagramCoreNode[] };
       evolution?: { nodes: DiagramCoreNode[] };
     };

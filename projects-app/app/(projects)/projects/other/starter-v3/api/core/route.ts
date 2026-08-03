@@ -91,11 +91,11 @@ export async function GET(req: NextRequest) {
 
   if (select.startsWith("group:")) {
     // `evolution` объявлять не обязательно — тернар ниже честно отвечает «такой группы нет».
-    const name = select.slice("group:".length) as "input" | "intent" | "middle" | "output" | "evolution";
+    const name = select.slice("group:".length) as "input" | "intent" | "middle" | "speech" | "output" | "evolution";
     const group = core.graph.nodes.groups[name];
     return group
       ? NextResponse.json({ systemInstruction: await readInstruction(`group.${name}`), group: name, ...group })
-      : NextResponse.json({ error: `no group named "${name}" — there are input, intent, middle, output, evolution` }, { status: 400 });
+      : NextResponse.json({ error: `no group named "${name}" — there are input, intent, middle, speech, output, evolution` }, { status: 400 });
   }
 
   const address = parseAddress(select);

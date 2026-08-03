@@ -25,7 +25,7 @@ const TARGETS = [
 ];
 
 // Все группы, какие может объявить ядро; считаем узлы по тем, что реально есть в этом ядре.
-const GROUPS = ["input", "intent", "middle", "output", "evolution"];
+const GROUPS = ["input", "intent", "middle", "speech", "output", "evolution"];
 
 let failed = false;
 

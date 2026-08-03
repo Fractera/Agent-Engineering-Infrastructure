@@ -63,6 +63,13 @@ export const SYSTEM_INSTRUCTION_NAMES = [
   "evolution.voice",
   "evolution.graph",
   "evolution.custom",
+  // РАЗГОВОРНЫЙ СЛОЙ (шаг 312, решение владельца — вариант B). Стоит МЕЖДУ маршрутизацией/серединой и
+  // выходом: ответ человеку — это СОДЕРЖАНИЕ, а не адрес, поэтому он обязан существовать до того, как хоть
+  // один канал что-то повезёт, и все каналы везут один и тот же ответ. Роль внутри `transform` (решение
+  // 308) отменена проверкой: пять классов из одиннадцати идут в выход МИМО середины, и это именно
+  // разговорные классы — узел речи в середине до них не достаёт никогда.
+  "group.speech",
+  "kind.speech",
   "kind.transform",
   // У СЕРЕДИНЫ НЕТ СЛОВАРЯ (она бесконечна), поэтому нет и значения `custom`. Её аналог открытой двери —
   // закон РОЖДЕНИЯ узла и связи с внешним корпусом паттернов (шаг 310): `middle.custom`.
@@ -562,6 +569,10 @@ export const NodeKindSchema = z.enum([
   // ни «понять, чего хотят», ни «сказать человеку». Теперь фронт — это МЕСТО: узел на класс запроса,
   // инвентарь конечный и закрытый (как каналы входа/выхода), проход через слой ОБЯЗАТЕЛЕН.
   "intent",
+  // РЕЧЬ (шаг 312) — разговорная граница: узел, чья работа — СКАЗАТЬ человеку, а не посчитать над данными.
+  // Отдельный вид, потому что до него обязаны доходить и те классы запроса, которым середина не нужна
+  // вовсе (вежливость, отказ, самоописание): в середине они не бывают по закону четвёртого слоя.
+  "speech",
   "output",
   // ЭВОЛЮЦИЯ (шаг 314) — работа автоматизации над САМОЙ СОБОЙ, после доставки ответа. Терминальный слой:
   // всё, что он производит, он записывает в конфигурацию, а не передаёт дальше.
@@ -604,14 +615,24 @@ export const PortSchema = z
 //
 //   kind               in                                              out
 //   input-connector    optional  external                              required  intent
-//   output-connector   required  condition-success | intent            optional  external
+//   output-connector   required  condition-success | condition-failure | intent | speech   optional  external
 //   input              prohibit  —                                     required  intent
-//   intent             required  input | input-connector               required  transform | output | output-connector
-//   output             required  condition-success | condition-failure | intent   optional  evolution
+//   intent             required  input | input-connector               required  transform | speech | output | output-connector
+//   speech             required  intent | condition-success | condition-failure   required  output | output-connector
+//   output             required  condition-success | condition-failure | intent | speech   optional  evolution
 //   evolution          required  output                                prohibit  —
 //   transform          required  intent | transform | condition-success required  transform | condition-success | condition-failure
-//   condition-success  required  transform                             required  transform | output | output-connector
-//   condition-failure  required  transform                             required  output   ← 311.8: провал не тупик
+//   condition-success  required  transform                             required  transform | speech | output | output-connector
+//   condition-failure  required  transform                             required  speech | output   ← 311.8: провал не тупик
+//
+// 🔒 РАЗГОВОРНАЯ ГРАНИЦА — ШЕСТОЙ ВИД, НО НЕ «ЕЩЁ ОДИН СЛОЙ ПОСЛЕ ЭВОЛЮЦИИ» (шаг 312, вариант B).
+// Речь стоит ДО доставки, между маршрутизацией/серединой и выходом: ответ человеку — это СОДЕРЖАНИЕ, а не
+// адрес, он обязан существовать раньше, чем какой-либо канал что-то повезёт, и все каналы везут ОДИН ответ.
+// Прежнее решение (роль `conversation` внутри `transform`, шаг 308) отменено проверкой: `intent.out` ведёт
+// и прямо в выход, и пять классов из одиннадцати — отказ, самоописание, вежливость, неполный, неопознанный —
+// идут МИМО середины. Это ровно те классы, что состоят из речи целиком, и узел речи внутри середины до них
+// не достаёт НИКОГДА. Обещание §3 ТЗ 314 («шестого слоя не будет») касалось ПОСТ-доставочных способностей —
+// они и остаются областями внутри `evolution`; речь к ним не относится.
 //
 // 🔒 КОНЕЦ ПУТИ ОБЪЯВЛЕН ОКОНЧАТЕЛЬНО (шаг 314). `output.out` перестал быть запретом и ведёт в
 // `evolution` — пятый слой, работающий над САМОЙ автоматизацией после того, как ответ уже доставлен.
@@ -642,7 +663,8 @@ export const KIND_PORTS: Record<z.infer<typeof NodeKindSchema>, { in: Port; out:
   },
   "output-connector": {
     // Ветка провала ведёт и сюда (311.8): соседняя автоматизация вправе узнать, что у нас не вышло.
-    in: { state: "required", connections: ["condition-success", "condition-failure", "intent"] },
+    // Речь — тоже (312): соседу передаётся тот же ответ, что и человеку.
+    in: { state: "required", connections: ["condition-success", "condition-failure", "intent", "speech"] },
     out: { state: "optional", connections: ["external"] },
   },
   input: {
@@ -654,10 +676,20 @@ export const KIND_PORTS: Record<z.infer<typeof NodeKindSchema>, { in: Port; out:
   // работа над данными) ИЛИ прямо в выход (классы, которым середина не нужна).
   intent: {
     in: { state: "required", connections: ["input", "input-connector"] },
-    out: { state: "required", connections: ["transform", "output", "output-connector"] },
+    out: { state: "required", connections: ["transform", "speech", "output", "output-connector"] },
+  },
+  // РАЗГОВОРНАЯ ГРАНИЦА (шаг 312). Принимает и от фронта (классы, которым середина не нужна), и от
+  // середины (обе ветки), потому что ответить надо и на «спасибо», и на результат, и на провал. Выход
+  // обязателен: речь, которую никто не доставил, — не речь.
+  speech: {
+    // Вход — от фронта (классы, которым середина не нужна) и от ОБЕИХ веток середины. Напрямую от
+    // трансформа речь НЕ принимает: середина по своему закону всегда заканчивается условием, и вторая
+    // дверь в обход условия сделала бы маршрут неоднозначным.
+    in: { state: "required", connections: ["intent", "condition-success", "condition-failure"] },
+    out: { state: "required", connections: ["output", "output-connector"] },
   },
   output: {
-    in: { state: "required", connections: ["condition-success", "condition-failure", "intent"] },
+    in: { state: "required", connections: ["condition-success", "condition-failure", "intent", "speech"] },
     out: { state: "optional", connections: ["evolution"] },
   },
   // ПЯТЫЙ СЛОЙ. Вход обязателен (наблюдать нечего без завершённой доставки), выход запрещён — терминал.
@@ -677,14 +709,14 @@ export const KIND_PORTS: Record<z.infer<typeof NodeKindSchema>, { in: Port; out:
     // это на диаграмме). Односторонняя запись была ошибкой, а не задумкой: коннектор доставляет
     // результат наружу ровно так же, как выходной узел доставляет его внутрь автоматизации.
     in: { state: "required", connections: ["transform"] },
-    out: { state: "required", connections: ["transform", "output", "output-connector"] },
+    out: { state: "required", connections: ["transform", "speech", "output", "output-connector"] },
   },
   // ПРОВАЛ БОЛЬШЕ НЕ ТУПИК (шаг 311.8). Прежде выход был запрещён — и упавший прогон не доходил ни до
   // одного выхода: человек не узнавал ни того, что было, ни почему. Теперь ветка провала ОБЯЗАНА вести в
   // выход (на практике — в тост), и «провалились молча» перестало быть выразимым состоянием.
   "condition-failure": {
     in: { state: "required", connections: ["transform"] },
-    out: { state: "required", connections: ["output"] },
+    out: { state: "required", connections: ["speech", "output"] },
   },
 };
 
@@ -851,6 +883,9 @@ export const NodeSchema = z.discriminatedUnion("kind", [
   nodeOf("intent", IntentClassSchema),
   // Узел эволюции объявляет свою ОБЛАСТЬ в `ioType` — тот же приём: словарь, на который вид имеет право.
   nodeOf("evolution", EvolutionScopeSchema),
+  // У РЕЧИ СЛОВАРЯ НЕТ: канал ей не принадлежит (её ответ развозят выходы), поэтому `ioType: null`, как у
+  // середины. Имя функции не выводится, а остаётся публичным контрактом `converse` (закон 2).
+  nodeOf("speech", z.null()),
   nodeOf("transform", z.null()),
   nodeOf("condition-success", z.null()),
   nodeOf("condition-failure", z.null()),
@@ -874,7 +909,7 @@ export const NodeSchema = z.discriminatedUnion("kind", [
 //
 // The keys of `kinds` ARE the group's allowed kinds — no second list that could disagree with the first.
 export const PermissionSchema = z.enum(["allowed", "forbidden"]);
-export const GroupNameSchema = z.enum(["input", "intent", "middle", "output", "evolution"]);
+export const GroupNameSchema = z.enum(["input", "intent", "middle", "speech", "output", "evolution"]);
 
 // A kind's own rules, plus the system instruction of that kind — the text a model reads before it touches
 // a node of this kind. The instruction is pinned per kind in the group check below (a record cannot vary
@@ -944,6 +979,15 @@ export const GROUP_POLICY: Record<z.infer<typeof GroupNameSchema>, GroupPolicy> 
       transform: { deletion: "allowed", addition: "allowed", minNodes: 1 },
       "condition-success": { deletion: "allowed", addition: "allowed", minNodes: 1 },
       "condition-failure": { deletion: "allowed", addition: "allowed", minNodes: 1 },
+    },
+  },
+  // РАЗГОВОРНЫЙ СЛОЙ — РОВНО ОДИН узел, ни удалить, ни добавить второй. Речь у автоматизации одна: два
+  // говорящих узла означали бы два голоса и два места, где собирается ответ, — ровно тот дефект «двух
+  // домов», ради устранения которого слой и заводится (шаг 312).
+  speech: {
+    minKinds: 1,
+    kinds: {
+      speech: { deletion: "forbidden", addition: "forbidden", minNodes: 1 },
     },
   },
   output: {
@@ -1064,6 +1108,9 @@ export const NodesSchema = z
         input: groupOf("input"),
         intent: groupOf("intent"),
         middle: groupOf("middle"),
+        // НЕОБЯЗАТЕЛЬНА, как и эволюция: автоматизация без разговорного узла остаётся законной (тик крона,
+        // который просто подшил запись, человеку не отвечает). Замороженный стартер v2 живёт без неё.
+        speech: groupOf("speech").optional(),
         output: groupOf("output"),
         // НЕОБЯЗАТЕЛЬНА: закон пятого слоя объявлен, но автоматизация без эволюции остаётся законной —
         // группа появляется в ядре вместе с первым построенным и доказанным узлом области (шаг 314).
@@ -1078,6 +1125,7 @@ export const allNodes = (nodes: z.infer<typeof NodesSchema>): z.infer<typeof Nod
   ...nodes.groups.input.nodes,
   ...nodes.groups.intent.nodes,
   ...nodes.groups.middle.nodes,
+  ...(nodes.groups.speech?.nodes ?? []), // разговорный слой необязателен — ядро без него законно
   ...nodes.groups.output.nodes,
   ...(nodes.groups.evolution?.nodes ?? []), // пятый слой необязателен — ядро без него законно
 ];

@@ -337,6 +337,605 @@
             }
           ]
         },
+        "intent": {
+          "systemInstructionName": "group.intent",
+          "minKinds": 1,
+          "kinds": {
+            "intent": {
+              "systemInstructionName": "kind.intent",
+              "deletion": "forbidden",
+              "addition": "forbidden",
+              "minNodes": 11
+            }
+          },
+          "nodes": [
+            {
+              "cuid": "cintentrefusezln99q",
+              "name": "Refusal",
+              "description": "A request that must not be answered at all — server secrets, keys, passwords. Stands first so a refusal happens before any store or tool is touched.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "A request that must not be answered at all — server secrets, keys, passwords. Stands first so a refusal happens before any store or tool is touched. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentRefuse",
+                "summary": "Recognizes a request for a secret and refuses it outright, without touching a store or a tool.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentRefuseValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": "refuse",
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "speech",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": []
+            },
+            {
+              "cuid": "cintentcontinuationh6k7j7",
+              "name": "Continuation",
+              "description": "Not a new request but the second half of a previous one: a question is outstanding and this message answers it.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "Not a new request but the second half of a previous one: a question is outstanding and this message answers it. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentContinuation",
+                "summary": "Detects that a question is outstanding and hands this message on as its answer.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentContinuationValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": "continuation",
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "speech",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": []
+            },
+            {
+              "cuid": "cintentselfdescribevs5ni8q6",
+              "name": "Self-description",
+              "description": "A request about the automation itself — the answer is already in the passport, no store is involved.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "A request about the automation itself — the answer is already in the passport, no store is involved. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentSelfDescribe",
+                "summary": "Recognizes a question about the automation itself and answers it from the passport.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentSelfDescribeValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": "self-describe",
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "speech",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": []
+            },
+            {
+              "cuid": "cintentcontrolkx38vd",
+              "name": "Control",
+              "description": "The owner changes how the automation is BUILT — what it collects, what it asks, when it stays silent.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "The owner changes how the automation is BUILT — what it collects, what it asks, when it stays silent. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentControl",
+                "summary": "Recognizes a request that changes the automation itself rather than its data.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentControlValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": "control",
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "speech",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": []
+            },
+            {
+              "cuid": "cintentcomposite62fppr",
+              "name": "Composite",
+              "description": "A request that needs two ordered actions: fetch from outside, then compare with what is kept.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "A request that needs two ordered actions: fetch from outside, then compare with what is kept. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentComposite",
+                "summary": "Recognizes a two-step request and hands the middle an explicit plan.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentCompositeValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": "composite",
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "speech",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": []
+            },
+            {
+              "cuid": "cintentfetchexternaliussrk",
+              "name": "Fetch from outside",
+              "description": "The data is NOT in the message — the named subject must be fetched from the outside world.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "The data is NOT in the message — the named subject must be fetched from the outside world. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentFetchExternal",
+                "summary": "Recognizes a request to fetch a named subject from outside and passes the subject on.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentFetchExternalValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": "fetch-external",
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "speech",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": [
+                "cusecasesubjectfivefacets2"
+              ]
+            },
+            {
+              "cuid": "cintentreadown10shd0",
+              "name": "Read own",
+              "description": "A question about what this automation already keeps. Never creates a record — a question about data is not data.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "A question about what this automation already keeps. Never creates a record — a question about data is not data. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentReadOwn",
+                "summary": "Recognizes a question about what is already stored and passes it to the middle to answer.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentReadOwnValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": "read-own",
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "speech",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": []
+            },
+            {
+              "cuid": "cintentincompletextd8mp",
+              "name": "Incomplete",
+              "description": "The intent is clear but the data is missing — asks one clarifying question and leaves it outstanding.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "The intent is clear but the data is missing — asks one clarifying question and leaves it outstanding. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentIncomplete",
+                "summary": "Recognizes a task with no subject and asks what exactly to take down.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentIncompleteValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": "incomplete",
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "speech",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": []
+            },
+            {
+              "cuid": "cintentsmalltalkh2aosd",
+              "name": "Small talk",
+              "description": "A greeting or a thank-you: needs an answer, needs no action, and must never produce an empty record.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "A greeting or a thank-you: needs an answer, needs no action, and must never produce an empty record. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentSmallTalk",
+                "summary": "Recognizes social speech and answers it without any action.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentSmallTalkValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": "small-talk",
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "speech",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": []
+            },
+            {
+              "cuid": "cintentrecordgivenef31ax",
+              "name": "Record given",
+              "description": "The data is already in the message and only needs keeping. The widest content class, therefore the last of them.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "The data is already in the message and only needs keeping. The widest content class, therefore the last of them. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentRecordGiven",
+                "summary": "Recognizes a statement of fact to be kept and passes it to the middle.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentRecordGivenValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": "record-given",
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "speech",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": []
+            },
+            {
+              "cuid": "cintentunclaimedmv2obt",
+              "name": "Unclaimed",
+              "description": "No class recognized the request. The automation says so honestly instead of guessing a default branch.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "No class recognized the request. The automation says so honestly instead of guessing a default branch. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "intentUnclaimed",
+                "summary": "States honestly that the request was not recognized, instead of falling back to a default class.",
+                "accepts": "The captured Message text put into the context by the input node of the run channel.",
+                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
+                "validator": "intentUnclaimedValidate",
+                "outcomes": [
+                  {
+                    "name": "claimed",
+                    "when": "this request belongs to this class",
+                    "puts": "intentClass · intentRoute plus whatever the route needs"
+                  },
+                  {
+                    "name": "passed",
+                    "when": "the request belongs to another class",
+                    "puts": "nothing: the flow reaches the next class untouched"
+                  }
+                ]
+              },
+              "run": "sequential",
+              "estDurationMs": 50,
+              "kind": "intent",
+              "ioType": "unclaimed",
+              "in": {
+                "state": "required",
+                "connections": [
+                  "input",
+                  "input-connector"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "speech",
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "lineage": "",
+              "serves": []
+            }
+          ]
+        },
         "middle": {
           "systemInstructionName": "group.middle",
           "minKinds": 3,
@@ -463,6 +1062,7 @@
                 "state": "required",
                 "connections": [
                   "transform",
+                  "speech",
                   "output",
                   "output-connector"
                 ]
@@ -517,6 +1117,7 @@
               "out": {
                 "state": "required",
                 "connections": [
+                  "speech",
                   "output"
                 ]
               },
@@ -704,6 +1305,68 @@
             }
           ]
         },
+        "speech": {
+          "systemInstructionName": "group.speech",
+          "minKinds": 1,
+          "kinds": {
+            "speech": {
+              "systemInstructionName": "kind.speech",
+              "deletion": "forbidden",
+              "addition": "forbidden",
+              "minNodes": 1
+            }
+          },
+          "nodes": [
+            {
+              "cuid": "cspeechconverse4m1x7q",
+              "name": "Speech",
+              "description": "The conversational boundary: the automation SPEAKS to the human — by the model, following the behaviour scenario declared in the Assistant tab.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "Turns the result of a run into a human answer: reads the behaviour scenario, the dialogue buffer, the chat language and the question-answer examples of the Assistant tab, and writes ctx.reply — the ONE answer every open channel then delivers. Reaches the classes that skip the middle (a refusal, a greeting, a self-description) because it stands after the front, not inside the middle. No model or no key — a deterministic fallback answers and the run does not fail."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [
+                {
+                  "name": "OPENAI_API_KEY",
+                  "status": "missing",
+                  "comment": "The model the passport names thinks with this key; without it the node falls back to a deterministic reply."
+                }
+              ],
+              "function": {
+                "name": "converse",
+                "summary": "Writes the human answer of the run by the model, following the behaviour scenario of the Assistant tab.",
+                "accepts": "The context of the run: the request class, what the middle produced, the chat id and the dialogue state.",
+                "returns": "reply — the one answer every open channel delivers; a deterministic fallback when no model is reachable."
+              },
+              "run": "sequential",
+              "estDurationMs": 4000,
+              "kind": "speech",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "intent",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "output",
+                  "output-connector"
+                ]
+              },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": ""
+            }
+          ]
+        },
         "output": {
           "systemInstructionName": "group.output",
           "minKinds": 2,
@@ -750,7 +1413,8 @@
                 "connections": [
                   "condition-success",
                   "condition-failure",
-                  "intent"
+                  "intent",
+                  "speech"
                 ]
               },
               "out": {
@@ -787,7 +1451,8 @@
                 "connections": [
                   "condition-success",
                   "condition-failure",
-                  "intent"
+                  "intent",
+                  "speech"
                 ]
               },
               "out": {
@@ -824,7 +1489,8 @@
                 "connections": [
                   "condition-success",
                   "condition-failure",
-                  "intent"
+                  "intent",
+                  "speech"
                 ]
               },
               "out": {
@@ -860,7 +1526,8 @@
                 "connections": [
                   "condition-success",
                   "condition-failure",
-                  "intent"
+                  "intent",
+                  "speech"
                 ]
               },
               "out": {
@@ -896,7 +1563,8 @@
                 "connections": [
                   "condition-success",
                   "condition-failure",
-                  "intent"
+                  "intent",
+                  "speech"
                 ]
               },
               "out": {
@@ -935,7 +1603,8 @@
                 "connections": [
                   "condition-success",
                   "condition-failure",
-                  "intent"
+                  "intent",
+                  "speech"
                 ]
               },
               "out": {
@@ -971,7 +1640,8 @@
                 "connections": [
                   "condition-success",
                   "condition-failure",
-                  "intent"
+                  "intent",
+                  "speech"
                 ]
               },
               "out": {
@@ -1026,7 +1696,8 @@
                 "connections": [
                   "condition-success",
                   "condition-failure",
-                  "intent"
+                  "intent",
+                  "speech"
                 ]
               },
               "out": {
@@ -1073,7 +1744,8 @@
                 "connections": [
                   "condition-success",
                   "condition-failure",
-                  "intent"
+                  "intent",
+                  "speech"
                 ]
               },
               "out": {
@@ -1120,7 +1792,8 @@
                 "connections": [
                   "condition-success",
                   "condition-failure",
-                  "intent"
+                  "intent",
+                  "speech"
                 ]
               },
               "out": {
@@ -1167,7 +1840,8 @@
                 "connections": [
                   "condition-success",
                   "condition-failure",
-                  "intent"
+                  "intent",
+                  "speech"
                 ]
               },
               "out": {
@@ -1206,7 +1880,8 @@
                 "connections": [
                   "condition-success",
                   "condition-failure",
-                  "intent"
+                  "intent",
+                  "speech"
                 ]
               },
               "out": {
@@ -1245,7 +1920,8 @@
                 "connections": [
                   "condition-success",
                   "condition-failure",
-                  "intent"
+                  "intent",
+                  "speech"
                 ]
               },
               "out": {
@@ -1257,594 +1933,6 @@
               "serves": [
                 "cusecasesubjectfivefacets2"
               ]
-            }
-          ]
-        },
-        "intent": {
-          "systemInstructionName": "group.intent",
-          "minKinds": 1,
-          "kinds": {
-            "intent": {
-              "systemInstructionName": "kind.intent",
-              "deletion": "forbidden",
-              "addition": "forbidden",
-              "minNodes": 11
-            }
-          },
-          "nodes": [
-            {
-              "cuid": "cintentrefusezln99q",
-              "name": "Refusal",
-              "description": "A request that must not be answered at all — server secrets, keys, passwords. Stands first so a refusal happens before any store or tool is touched.",
-              "state": "visible",
-              "info": {
-                "aiSummary": "A request that must not be answered at all — server secrets, keys, passwords. Stands first so a refusal happens before any store or tool is touched. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
-              },
-              "status": "materialized",
-              "warnings": [],
-              "envKeys": [],
-              "function": {
-                "name": "intentRefuse",
-                "summary": "Recognizes a request for a secret and refuses it outright, without touching a store or a tool.",
-                "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentRefuseValidate",
-                "outcomes": [
-                  {
-                    "name": "claimed",
-                    "when": "this request belongs to this class",
-                    "puts": "intentClass · intentRoute plus whatever the route needs"
-                  },
-                  {
-                    "name": "passed",
-                    "when": "the request belongs to another class",
-                    "puts": "nothing: the flow reaches the next class untouched"
-                  }
-                ]
-              },
-              "run": "sequential",
-              "estDurationMs": 50,
-              "kind": "intent",
-              "ioType": "refuse",
-              "in": {
-                "state": "required",
-                "connections": [
-                  "input",
-                  "input-connector"
-                ]
-              },
-              "out": {
-                "state": "required",
-                "connections": [
-                  "transform",
-                  "output",
-                  "output-connector"
-                ]
-              },
-              "lineage": "",
-              "serves": []
-            },
-            {
-              "cuid": "cintentcontinuationh6k7j7",
-              "name": "Continuation",
-              "description": "Not a new request but the second half of a previous one: a question is outstanding and this message answers it.",
-              "state": "visible",
-              "info": {
-                "aiSummary": "Not a new request but the second half of a previous one: a question is outstanding and this message answers it. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
-              },
-              "status": "materialized",
-              "warnings": [],
-              "envKeys": [],
-              "function": {
-                "name": "intentContinuation",
-                "summary": "Detects that a question is outstanding and hands this message on as its answer.",
-                "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentContinuationValidate",
-                "outcomes": [
-                  {
-                    "name": "claimed",
-                    "when": "this request belongs to this class",
-                    "puts": "intentClass · intentRoute plus whatever the route needs"
-                  },
-                  {
-                    "name": "passed",
-                    "when": "the request belongs to another class",
-                    "puts": "nothing: the flow reaches the next class untouched"
-                  }
-                ]
-              },
-              "run": "sequential",
-              "estDurationMs": 50,
-              "kind": "intent",
-              "ioType": "continuation",
-              "in": {
-                "state": "required",
-                "connections": [
-                  "input",
-                  "input-connector"
-                ]
-              },
-              "out": {
-                "state": "required",
-                "connections": [
-                  "transform",
-                  "output",
-                  "output-connector"
-                ]
-              },
-              "lineage": "",
-              "serves": []
-            },
-            {
-              "cuid": "cintentselfdescribevs5ni8q6",
-              "name": "Self-description",
-              "description": "A request about the automation itself — the answer is already in the passport, no store is involved.",
-              "state": "visible",
-              "info": {
-                "aiSummary": "A request about the automation itself — the answer is already in the passport, no store is involved. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
-              },
-              "status": "materialized",
-              "warnings": [],
-              "envKeys": [],
-              "function": {
-                "name": "intentSelfDescribe",
-                "summary": "Recognizes a question about the automation itself and answers it from the passport.",
-                "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentSelfDescribeValidate",
-                "outcomes": [
-                  {
-                    "name": "claimed",
-                    "when": "this request belongs to this class",
-                    "puts": "intentClass · intentRoute plus whatever the route needs"
-                  },
-                  {
-                    "name": "passed",
-                    "when": "the request belongs to another class",
-                    "puts": "nothing: the flow reaches the next class untouched"
-                  }
-                ]
-              },
-              "run": "sequential",
-              "estDurationMs": 50,
-              "kind": "intent",
-              "ioType": "self-describe",
-              "in": {
-                "state": "required",
-                "connections": [
-                  "input",
-                  "input-connector"
-                ]
-              },
-              "out": {
-                "state": "required",
-                "connections": [
-                  "transform",
-                  "output",
-                  "output-connector"
-                ]
-              },
-              "lineage": "",
-              "serves": []
-            },
-            {
-              "cuid": "cintentcontrolkx38vd",
-              "name": "Control",
-              "description": "The owner changes how the automation is BUILT — what it collects, what it asks, when it stays silent.",
-              "state": "visible",
-              "info": {
-                "aiSummary": "The owner changes how the automation is BUILT — what it collects, what it asks, when it stays silent. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
-              },
-              "status": "materialized",
-              "warnings": [],
-              "envKeys": [],
-              "function": {
-                "name": "intentControl",
-                "summary": "Recognizes a request that changes the automation itself rather than its data.",
-                "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentControlValidate",
-                "outcomes": [
-                  {
-                    "name": "claimed",
-                    "when": "this request belongs to this class",
-                    "puts": "intentClass · intentRoute plus whatever the route needs"
-                  },
-                  {
-                    "name": "passed",
-                    "when": "the request belongs to another class",
-                    "puts": "nothing: the flow reaches the next class untouched"
-                  }
-                ]
-              },
-              "run": "sequential",
-              "estDurationMs": 50,
-              "kind": "intent",
-              "ioType": "control",
-              "in": {
-                "state": "required",
-                "connections": [
-                  "input",
-                  "input-connector"
-                ]
-              },
-              "out": {
-                "state": "required",
-                "connections": [
-                  "transform",
-                  "output",
-                  "output-connector"
-                ]
-              },
-              "lineage": "",
-              "serves": []
-            },
-            {
-              "cuid": "cintentcomposite62fppr",
-              "name": "Composite",
-              "description": "A request that needs two ordered actions: fetch from outside, then compare with what is kept.",
-              "state": "visible",
-              "info": {
-                "aiSummary": "A request that needs two ordered actions: fetch from outside, then compare with what is kept. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
-              },
-              "status": "materialized",
-              "warnings": [],
-              "envKeys": [],
-              "function": {
-                "name": "intentComposite",
-                "summary": "Recognizes a two-step request and hands the middle an explicit plan.",
-                "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentCompositeValidate",
-                "outcomes": [
-                  {
-                    "name": "claimed",
-                    "when": "this request belongs to this class",
-                    "puts": "intentClass · intentRoute plus whatever the route needs"
-                  },
-                  {
-                    "name": "passed",
-                    "when": "the request belongs to another class",
-                    "puts": "nothing: the flow reaches the next class untouched"
-                  }
-                ]
-              },
-              "run": "sequential",
-              "estDurationMs": 50,
-              "kind": "intent",
-              "ioType": "composite",
-              "in": {
-                "state": "required",
-                "connections": [
-                  "input",
-                  "input-connector"
-                ]
-              },
-              "out": {
-                "state": "required",
-                "connections": [
-                  "transform",
-                  "output",
-                  "output-connector"
-                ]
-              },
-              "lineage": "",
-              "serves": []
-            },
-            {
-              "cuid": "cintentfetchexternaliussrk",
-              "name": "Fetch from outside",
-              "description": "The data is NOT in the message — the named subject must be fetched from the outside world.",
-              "state": "visible",
-              "info": {
-                "aiSummary": "The data is NOT in the message — the named subject must be fetched from the outside world. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
-              },
-              "status": "materialized",
-              "warnings": [],
-              "envKeys": [],
-              "function": {
-                "name": "intentFetchExternal",
-                "summary": "Recognizes a request to fetch a named subject from outside and passes the subject on.",
-                "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentFetchExternalValidate",
-                "outcomes": [
-                  {
-                    "name": "claimed",
-                    "when": "this request belongs to this class",
-                    "puts": "intentClass · intentRoute plus whatever the route needs"
-                  },
-                  {
-                    "name": "passed",
-                    "when": "the request belongs to another class",
-                    "puts": "nothing: the flow reaches the next class untouched"
-                  }
-                ]
-              },
-              "run": "sequential",
-              "estDurationMs": 50,
-              "kind": "intent",
-              "ioType": "fetch-external",
-              "in": {
-                "state": "required",
-                "connections": [
-                  "input",
-                  "input-connector"
-                ]
-              },
-              "out": {
-                "state": "required",
-                "connections": [
-                  "transform",
-                  "output",
-                  "output-connector"
-                ]
-              },
-              "lineage": "",
-              "serves": [
-                "cusecasesubjectfivefacets2"
-              ]
-            },
-            {
-              "cuid": "cintentreadown10shd0",
-              "name": "Read own",
-              "description": "A question about what this automation already keeps. Never creates a record — a question about data is not data.",
-              "state": "visible",
-              "info": {
-                "aiSummary": "A question about what this automation already keeps. Never creates a record — a question about data is not data. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
-              },
-              "status": "materialized",
-              "warnings": [],
-              "envKeys": [],
-              "function": {
-                "name": "intentReadOwn",
-                "summary": "Recognizes a question about what is already stored and passes it to the middle to answer.",
-                "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentReadOwnValidate",
-                "outcomes": [
-                  {
-                    "name": "claimed",
-                    "when": "this request belongs to this class",
-                    "puts": "intentClass · intentRoute plus whatever the route needs"
-                  },
-                  {
-                    "name": "passed",
-                    "when": "the request belongs to another class",
-                    "puts": "nothing: the flow reaches the next class untouched"
-                  }
-                ]
-              },
-              "run": "sequential",
-              "estDurationMs": 50,
-              "kind": "intent",
-              "ioType": "read-own",
-              "in": {
-                "state": "required",
-                "connections": [
-                  "input",
-                  "input-connector"
-                ]
-              },
-              "out": {
-                "state": "required",
-                "connections": [
-                  "transform",
-                  "output",
-                  "output-connector"
-                ]
-              },
-              "lineage": "",
-              "serves": []
-            },
-            {
-              "cuid": "cintentincompletextd8mp",
-              "name": "Incomplete",
-              "description": "The intent is clear but the data is missing — asks one clarifying question and leaves it outstanding.",
-              "state": "visible",
-              "info": {
-                "aiSummary": "The intent is clear but the data is missing — asks one clarifying question and leaves it outstanding. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
-              },
-              "status": "materialized",
-              "warnings": [],
-              "envKeys": [],
-              "function": {
-                "name": "intentIncomplete",
-                "summary": "Recognizes a task with no subject and asks what exactly to take down.",
-                "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentIncompleteValidate",
-                "outcomes": [
-                  {
-                    "name": "claimed",
-                    "when": "this request belongs to this class",
-                    "puts": "intentClass · intentRoute plus whatever the route needs"
-                  },
-                  {
-                    "name": "passed",
-                    "when": "the request belongs to another class",
-                    "puts": "nothing: the flow reaches the next class untouched"
-                  }
-                ]
-              },
-              "run": "sequential",
-              "estDurationMs": 50,
-              "kind": "intent",
-              "ioType": "incomplete",
-              "in": {
-                "state": "required",
-                "connections": [
-                  "input",
-                  "input-connector"
-                ]
-              },
-              "out": {
-                "state": "required",
-                "connections": [
-                  "transform",
-                  "output",
-                  "output-connector"
-                ]
-              },
-              "lineage": "",
-              "serves": []
-            },
-            {
-              "cuid": "cintentsmalltalkh2aosd",
-              "name": "Small talk",
-              "description": "A greeting or a thank-you: needs an answer, needs no action, and must never produce an empty record.",
-              "state": "visible",
-              "info": {
-                "aiSummary": "A greeting or a thank-you: needs an answer, needs no action, and must never produce an empty record. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
-              },
-              "status": "materialized",
-              "warnings": [],
-              "envKeys": [],
-              "function": {
-                "name": "intentSmallTalk",
-                "summary": "Recognizes social speech and answers it without any action.",
-                "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentSmallTalkValidate",
-                "outcomes": [
-                  {
-                    "name": "claimed",
-                    "when": "this request belongs to this class",
-                    "puts": "intentClass · intentRoute plus whatever the route needs"
-                  },
-                  {
-                    "name": "passed",
-                    "when": "the request belongs to another class",
-                    "puts": "nothing: the flow reaches the next class untouched"
-                  }
-                ]
-              },
-              "run": "sequential",
-              "estDurationMs": 50,
-              "kind": "intent",
-              "ioType": "small-talk",
-              "in": {
-                "state": "required",
-                "connections": [
-                  "input",
-                  "input-connector"
-                ]
-              },
-              "out": {
-                "state": "required",
-                "connections": [
-                  "transform",
-                  "output",
-                  "output-connector"
-                ]
-              },
-              "lineage": "",
-              "serves": []
-            },
-            {
-              "cuid": "cintentrecordgivenef31ax",
-              "name": "Record given",
-              "description": "The data is already in the message and only needs keeping. The widest content class, therefore the last of them.",
-              "state": "visible",
-              "info": {
-                "aiSummary": "The data is already in the message and only needs keeping. The widest content class, therefore the last of them. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
-              },
-              "status": "materialized",
-              "warnings": [],
-              "envKeys": [],
-              "function": {
-                "name": "intentRecordGiven",
-                "summary": "Recognizes a statement of fact to be kept and passes it to the middle.",
-                "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentRecordGivenValidate",
-                "outcomes": [
-                  {
-                    "name": "claimed",
-                    "when": "this request belongs to this class",
-                    "puts": "intentClass · intentRoute plus whatever the route needs"
-                  },
-                  {
-                    "name": "passed",
-                    "when": "the request belongs to another class",
-                    "puts": "nothing: the flow reaches the next class untouched"
-                  }
-                ]
-              },
-              "run": "sequential",
-              "estDurationMs": 50,
-              "kind": "intent",
-              "ioType": "record-given",
-              "in": {
-                "state": "required",
-                "connections": [
-                  "input",
-                  "input-connector"
-                ]
-              },
-              "out": {
-                "state": "required",
-                "connections": [
-                  "transform",
-                  "output",
-                  "output-connector"
-                ]
-              },
-              "lineage": "",
-              "serves": []
-            },
-            {
-              "cuid": "cintentunclaimedmv2obt",
-              "name": "Unclaimed",
-              "description": "No class recognized the request. The automation says so honestly instead of guessing a default branch.",
-              "state": "visible",
-              "info": {
-                "aiSummary": "No class recognized the request. The automation says so honestly instead of guessing a default branch. Self-gates: claims the run only when the request is its own, otherwise returns null — an orderly stop of this branch. Writes intentClass/intentRoute into the context so the run journal shows why the run went where it went."
-              },
-              "status": "materialized",
-              "warnings": [],
-              "envKeys": [],
-              "function": {
-                "name": "intentUnclaimed",
-                "summary": "States honestly that the request was not recognized, instead of falling back to a default class.",
-                "accepts": "The captured Message text put into the context by the input node of the run channel.",
-                "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentUnclaimedValidate",
-                "outcomes": [
-                  {
-                    "name": "claimed",
-                    "when": "this request belongs to this class",
-                    "puts": "intentClass · intentRoute plus whatever the route needs"
-                  },
-                  {
-                    "name": "passed",
-                    "when": "the request belongs to another class",
-                    "puts": "nothing: the flow reaches the next class untouched"
-                  }
-                ]
-              },
-              "run": "sequential",
-              "estDurationMs": 50,
-              "kind": "intent",
-              "ioType": "unclaimed",
-              "in": {
-                "state": "required",
-                "connections": [
-                  "input",
-                  "input-connector"
-                ]
-              },
-              "out": {
-                "state": "required",
-                "connections": [
-                  "transform",
-                  "output",
-                  "output-connector"
-                ]
-              },
-              "lineage": "",
-              "serves": []
             }
           ]
         }
@@ -2556,6 +2644,30 @@
       {
         "cuid": "cedgeoktoastxsxgss6s",
         "from": "cmruddnrpho70e8af12589d1deaa",
+        "to": "coutputtoast3sy3uzul",
+        "state": "visible"
+      },
+      {
+        "cuid": "cedgeokspeech71mq4v",
+        "from": "cmruddnrpho70e8af12589d1deaa",
+        "to": "cspeechconverse4m1x7q",
+        "state": "visible"
+      },
+      {
+        "cuid": "cedgefailspeech9wz3ta",
+        "from": "cmruqdpjn51ehmdd7904ad3a6abaf6",
+        "to": "cspeechconverse4m1x7q",
+        "state": "visible"
+      },
+      {
+        "cuid": "cedgespeechdash5tk8re",
+        "from": "cspeechconverse4m1x7q",
+        "to": "cmruca7ra4n1jt639afc902fa70f5b",
+        "state": "visible"
+      },
+      {
+        "cuid": "cedgespeechtoast2vp6ld",
+        "from": "cspeechconverse4m1x7q",
         "to": "coutputtoast3sy3uzul",
         "state": "visible"
       }
