@@ -38,13 +38,18 @@ intentSomething(ctx) → ctx-patch
 
 ## How it decides
 
-Deterministically where the forms of the request are finite (a question about the automation itself, a
-refusal-worthy request), by the model where they are genuinely unbounded. Deterministic first: a class
-that needs no key keeps working on a server where no key has been entered yet, and this template must run
-the moment it is deployed.
+A deterministic FAST PATH where the form is unmistakable, and otherwise the model READS the request and
+names a class from the closed vocabulary. The fast path first: it costs no key. But it may not be the ONLY
+path — regexes are written in one language, and a class that depends on the language the human wrote in is
+not a class. Proven live: a Russian request for a server password was not recognised as a refusal and was
+stored (step 312.6).
 
-When the model IS used, its answer is checked deterministically afterwards — a token outside the expected
-set is treated as «not recognized» (`null`), never guessed into the nearest class.
+One reading per run, shared by every class. The model NAMES; each class still claims itself, so no router
+node exists.
+
+The model's answer is checked deterministically — a token outside the closed vocabulary is «not recognized»,
+never guessed into the nearest class. No model or no key → the reading is empty, the WIDE class stays silent,
+and the run lands on `unclaimed`, which writes to no store.
 
 ## What must never happen here
 

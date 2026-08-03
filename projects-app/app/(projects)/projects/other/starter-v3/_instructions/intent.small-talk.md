@@ -2,7 +2,7 @@
 
 > **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
 
-**Where the answer lives:** in courtesy. **Routes to:** an output, touching nothing.
+**Where the answer lives:** in courtesy. **Routes to:** SPEECH, then an output, touching nothing. This class declares `speechAct: greet`; the warm sentence itself belongs to speech (step 312.5).
 
 «Hello», «thanks», «got it». No store is involved, no tool, no record.
 

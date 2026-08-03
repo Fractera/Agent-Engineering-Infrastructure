@@ -2,7 +2,7 @@
 
 > **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
 
-**Where the answer lives:** in the passport. **Routes to:** an output, bypassing the middle entirely.
+**Where the answer lives:** in the passport. **Routes to:** SPEECH, then an output, bypassing the middle entirely. The class supplies the FACT (the address, or that none is assigned); the wording belongs to speech (step 312.5).
 
 «What page do you have?», «where can I see this?» — the answer needs no store, no external tool and no
 key, because the automation already knows it about itself.

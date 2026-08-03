@@ -114,18 +114,18 @@ Never add a middle "router" node. Fundamentally different tasks arriving in one 
 automations, each gating on its own trigger phrase — see `passport.md` (the warning duty) before building
 one automation that tries to be several.
 
-## The conversational boundary is the MODEL's job, not code (step 309)
+## The conversational boundary is the MODEL's job, not code (step 309, moved out of the middle in 312)
 
-There are TWO kinds of middle work, and they obey OPPOSITE laws:
+There are TWO kinds of work, and they obey OPPOSITE laws:
 
 - **Data transforms** (`resolveMoment`, `fetchExternal`, row work) — compute over data. Here the law "work
   maximally WITHOUT AI" holds: deterministic, testable, cheap. The model is used only when the task is
   inherently linguistic (reading a date out of free text, describing a picture), and its output is validated
   deterministically.
-- **The conversational boundary** — talking to the human (greeting, "who are you", small talk, confirming
-  what a run did) — is BY NATURE the model's job. Comfortable dialogue can NOT be a function. This is the
-  `converse` helper (role `conversation`), driven by the behavior instruction of the **Assistant tab** plus
-  the per-chat dialogue buffer plus Q&A examples. `composeReply` is its deterministic FALLBACK when no model.
+- **Talking to the human** is BY NATURE the model's job — comfortable dialogue cannot be a function. It is
+  **NOT a middle node**: it is its own layer, `speech` (`kind.speech.md`). It stands between the front/middle
+  and the outputs, because the answer is CONTENT and must exist before any channel carries it — and because
+  five of the eleven request classes never reach the middle at all.
 
 **Never enumerate conversational phrases in a node** (a regex list of "кто ты"/"привет"/…) to decide the
 reply — that is writing a function where an instruction belongs. Such messages are CONVERSATION: the

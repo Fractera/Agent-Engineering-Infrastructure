@@ -50,9 +50,9 @@ Read any file here freely — nothing is hidden behind an API.
 - Editing without checking is the one habit that breaks this project quietly.
 - Never writable, by name: `cuid`, `kind`, `in`, `out`, `systemInstructionName`.
 
-## The five layers
+## The six layers
 
-`input → intent → middle → output → evolution`
+`input → intent → middle → speech → output → evolution`
 
 - **Four are finite and CLOSED** by a vocabulary — their nodes are REVEALED, never invented, and their
   function/instruction names are DERIVED from the vocabulary.
@@ -63,6 +63,10 @@ Read any file here freely — nothing is hidden behind an API.
   a warning to the owner. **"This automation cannot do it" is not an outcome.**
 - No routers. The engine is linear; the only branch is success/failure. A class node claims a run or
   returns an EMPTY patch — never `null`, which stops the whole run.
+- **SPEECH is its own layer** (`kind.speech.md`): one node writes `ctx.reply`, every channel delivers it,
+  no channel composes it. Abilities, addresses and roles are DERIVED from the core each run, never written
+  into the behaviour text. The **dialogue plane** (recent messages · outstanding question · chosen
+  language) is attached by the engine, readable by any layer, written only here (`group.speech.md`).
 
 ## 🔒 A node that DECIDES cannot exist without a validator
 

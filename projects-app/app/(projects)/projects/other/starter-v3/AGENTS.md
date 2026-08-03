@@ -81,9 +81,9 @@ Two lawful ways, in order of preference:
 Never edit and *not* check: a broken core fails later, elsewhere, with a cold trail. Derived fields are
 refused by name: `cuid`, `kind`, `in`, `out`, `systemInstructionName`.
 
-## Architecture — five layers
+## Architecture — six layers
 
-`input → intent → middle → output → evolution`
+`input → intent → middle → speech → output → evolution`
 
 Four layers are finite and CLOSED by a vocabulary: their nodes are revealed, never invented, and their
 function and instruction names are derived from that vocabulary. **The middle is the only infinite layer**
@@ -102,6 +102,16 @@ never contacts it.
 
 No routers anywhere — the engine is linear and the only branch is success/failure. A class node claims a
 run or returns an EMPTY patch; `null` stops the whole run.
+
+**SPEECH is a layer, not a middle node** (`kind.speech.md`). One node, `converse`, writes `ctx.reply` — the
+one answer every channel then delivers; a channel never composes speech. It sits after the front and the
+middle because the answer is CONTENT and five of the eleven request classes never reach the middle at all.
+Its abilities, addresses and access roles are DERIVED from the core each run — never written into the
+behaviour text, which is why the assistant cannot promise what the build does not have.
+
+**The dialogue plane** is the axis a single run does not have: the recent messages, the outstanding question
+and the chosen language live with the interlocutor and outlive runs. The engine attaches it once per run,
+any layer may read it, and **only the speech layer writes it** (`group.speech.md`).
 
 ## 🔒 A node that decides cannot exist without a validator
 

@@ -2,7 +2,7 @@
 
 > **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
 
-**Where the answer lives:** nowhere yet. **Routes to:** an output — an honest sentence.
+**Where the answer lives:** nowhere yet. **Routes to:** SPEECH, then an output. The class declares `speechAct: not-understood`; the honest sentence is worded by speech (step 312.5).
 
 The last node of the layer. If no class claimed the run, this one does, and the automation says it did not
 understand.

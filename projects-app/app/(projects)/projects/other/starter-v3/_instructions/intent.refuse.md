@@ -2,7 +2,7 @@
 
 > **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
 
-**Where the answer lives:** nowhere it may lawfully come from. **Routes to:** an output, never the middle.
+**Where the answer lives:** nowhere it may lawfully come from. **Routes to:** SPEECH, then an output — never the middle. The refusal is worded by the speech layer, in the language of the chat; this class only declares `speechAct: refuse` (step 312.5).
 
 A request for a secret of the server it runs on — a password, an API key, a connection string, the
 contents of an env file. The automation does not hold these to hand out, and «the owner asked» is not a

@@ -16,9 +16,11 @@ class nodes in the core — this class relies on it, and moving it up would quie
 
 ## How it recognizes
 
-Deterministically, by exclusion: not a question, more than one word, nothing else claimed it. Recognition
-here is thin ON PURPOSE — the intelligence belongs to the middle, which decides what kind of record it is
-and which stores it touches.
+🔒 By POSITIVE recognition, never by exclusion. Cheap negatives first (empty, one word, an obvious question),
+then the request must be READ as a record — no reading, no claim. Until step 312.6 this class took everything
+that was not an English question: it WAS the silent default the front law forbids, and a Russian request for a
+password landed in the database. Losing a record is safer than storing what nobody asked to store. The
+intelligence stays in the middle: it decides what kind of record it is and which stores it touches.
 
 ## What it must never do
 

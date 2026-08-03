@@ -55,10 +55,12 @@ Opening the `dashboard` door has a second half: make its tab visible as well (`t
 ## What an output node owes you
 
 - It receives from a `condition-success` — a transform never delivers straight to a door, the result is
-  handed over on the success branch — **or straight from the INTENT layer** (step 311), when the request
-  needed no work over data at all: a question about the automation itself, a refusal, small talk. The
-  shortest lawful flow is therefore `input → intent → output`, and the ordinary one is
-  `input → intent → transform → condition-success → output`.
+  handed over on the success branch — from the INTENT layer (step 311), when the request needed no work
+  over data at all, or **from the SPEECH layer** (step 312), which is where the human's answer is written.
+  The talking flow is `input → intent → speech → output`; the ordinary one is
+  `input → intent → transform → condition-success → speech → output`.
+- **A door delivers the answer, it does not compose it.** `ctx.reply` belongs to the speech node
+  (`kind.speech.md`); an output that writes speech inside itself is the defect step 312 removed.
 - What leaves it, leaves only INTO THE EVOLUTION LAYER (step 314), and that edge is OPTIONAL. The result
   is already delivered by then: the fifth layer does not carry it anywhere, it looks at the finished
   cycle and refines the automation itself. No evolution node → nothing leaves the door at all, and that

@@ -2,9 +2,9 @@
 
 > **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
 
-The runtime speech contract. Two nodes implement it: `converse` (the model, driven by the behaviour
-instruction of the **Assistant** tab) and `composeReply`, its deterministic FALLBACK when no model or key
-is available. Both put `ctx.reply`; delivery nodes send that, never a node's raw text.
+The PATTERN for authoring what the automation says. The layer itself is `kind.speech.md` — one node
+(`converse`, the model) with `composeReply` as its deterministic fallback; both put `ctx.reply`, and
+delivery nodes send that, never a node's raw text and never speech of their own.
 
 ## 0. 🔒 WHAT IS NOT IN THE BUILD IS NOT SPOKEN OF
 
