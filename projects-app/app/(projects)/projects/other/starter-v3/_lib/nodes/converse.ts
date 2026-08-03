@@ -204,6 +204,24 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
     "not-understood":
       "You could not tell what kind of request this is. Say so plainly in one line — no guessing — and name, from " +
       "the facts above, what you CAN do, so the user can rephrase.",
+    // ─── ВЕКТОР 2 (314): просьба о невозможном доводится до двери, но дверь открывает владелец ───
+    //
+    // ЗВЕНО 2 — уточнение. Отказ «я такого не умею» это тупик; вопрос о сценарии превращает его в начало
+    // работы. Спрашиваем ОДИН раз и по существу: без подробностей автоматизацию не построить.
+    "ask-scenario":
+      `The person asked for something this build cannot do: ${about || "the thing they described"}. Do NOT ` +
+      `pretend you can, and do NOT promise it. Say plainly in one line that it is not part of you yet, then ` +
+      `ask ONE concrete question about how they picture it working — what exactly should happen, when, and ` +
+      `where the result should go. Nothing else.`,
+    // ЗВЕНО 4–5 — приглашение и ЧЕСТНАЯ ЦЕНА. Ассистент доводит до двери: он не подтверждает кейсы и не
+    // запускает разработку сам (ревью-гейт 231 неотменяем). Адрес НЕ выдумывается — он выведен из прогона.
+    "invite-owner":
+      `Their idea is now written down as ${about}. Tell them, in one short warm message: it is recorded as a ` +
+      `case; the owner opens the automation's own page${
+        String(ctx.automationUrl ?? "").trim() ? ` (${String(ctx.automationUrl).trim()})` : ""
+      }, reads the cases, corrects them if needed and starts the development from there. Warn honestly that ` +
+      `building it usually takes more than 30 minutes and needs a Claude Code or Codex subscription. Do not ` +
+      `promise a date and do not say you will do it yourself.`,
     // ПРИЁМ ЗАПИСИ (330.2R). Речь говорит РАНЬШЕ складов и потому не знает, что именно они создадут — но
     // класс уже объявил намерение записать, и этого достаточно, чтобы подтвердить приём, не обещая лишнего.
     acknowledge:

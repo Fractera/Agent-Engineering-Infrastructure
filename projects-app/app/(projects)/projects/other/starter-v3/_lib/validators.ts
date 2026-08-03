@@ -120,10 +120,22 @@ export const evolveBehaviorValidate = evolutionOutcome("behaviorEvolution", "adj
 export const evolveExamplesValidate = evolutionOutcome("examplesEvolution", "learned");
 export const evolveVoiceValidate = evolutionOutcome("voiceEvolution", "adjusted");
 
+/**
+ * `checkCoverage` (314): покрывает ли сборка то, о чём просят.
+ *   `covered`   — просьба ложится на существующие возможности;
+ *   `gap`       — просят то, чего нет: придержан вопрос о сценарии;
+ *   `not-asked` — прогон не про изменение устройства, судить нечего (большинство прогонов).
+ */
+export const checkCoverageValidate: NodeValidator = (patch) => {
+  const o = String((patch as Record<string, unknown>).coverage ?? "not-asked");
+  return o === "covered" || o === "gap" || o === "case-written" ? o : "not-asked";
+};
+
 export const NODE_VALIDATORS: Record<string, NodeValidator> = {
   transformPayloadValidate,
   recallConversationValidate,
   verifyRecallValidate,
+  checkCoverageValidate,
   evolveCapabilityGapValidate,
   evolveBehaviorValidate,
   evolveExamplesValidate,
@@ -159,6 +171,7 @@ const DECIDING_FUNCTIONS = [
   "resolveMoment",
   "recallConversation",
   "verifyRecall",
+  "checkCoverage",
   "evolveCapabilityGap",
   "evolveBehavior",
   "evolveExamples",

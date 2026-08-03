@@ -166,6 +166,32 @@ speech layer; `recentDialogBrief` — the last exchange only, on a derived share
 the request class (that read happens on EVERY run, so it must stay cheap). **Never assemble history inside
 a node** — that is exactly how the budget stops being anyone's.
 
+## EVOLUTION — the automation edits ITSELF, after the answer is out
+
+The sixth layer runs **after delivery**: the reply is already with the person, so its work is invisible to
+them. Its four areas differ by **the right to write**, not by subject — `voice` writes
+`assistant.data.voice` (`{emoji, length, address}`), `behavior` appends one standing rule to
+`assistant.data.instruction`, `examples` adds a corrected exchange to `assistant.data.qa`, and
+`capability-gap` writes only to its own journal and **changes nothing in the automation**.
+
+**Read once, write separately.** All four call `readAdjustment` — one model call per run, cached by `runId`
+(the `guessClass` trick). On an ordinary run it costs nothing: the model is asked only on classes `control`
+and `unclaimed`.
+
+**The order of parsing is law.** `gap` is decided FIRST and takes the request; `behavior` is then forced to
+null in code. A rule the build cannot carry out is a promise it cannot keep — before this was enforced, the
+automation wrote "send me a weekly report" into its own instruction and thereby promised what it has no way
+to do. **Silence preserves:** a field not mentioned in THIS message stays as it was.
+
+**One door for every write** — `self-write.ts` — enforcing the safeguards mechanically instead of by an
+author's good intentions: append, never rewrite; a **version in `history`** so the owner sees what the
+automation did to itself; nothing personal in the instruction; and a silent skip when no model is available,
+because evolution is secondary to the answer and must never fail a run. The door reaches ONLY
+`assistant.data` and the history — nodes, edges and the passport are out of its reach.
+
+**A ceiling with a change of MODE:** the instruction is sent to the model on every run, so at its limit the
+node stops appending and starts condensing — the same rules in fewer words. Dropping a rule is a defect.
+
 ## 🔒 A node that decides cannot exist without a validator
 
 Applies to `transform`, `condition-success`, `condition-failure` and every `intent` class — anything whose

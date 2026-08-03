@@ -92,6 +92,38 @@ Read any file here freely — nothing is hidden behind an API.
   `recentDialogBrief` — the last exchange on a derived share — for reading the request class. **A node that
   builds its own history breaks the budget**: assemble nothing, read the slice you are given.
 
+## EVOLUTION — the automation edits ITSELF, after the answer is out
+
+The sixth layer runs **after delivery**: the reply is already with the person, so its work is invisible to
+them. Four areas, and they differ by **the right to write**, not by subject:
+
+| area | writes | never |
+|---|---|---|
+| `voice` | `assistant.data.voice` — `{emoji, length, address}` | content |
+| `behavior` | `assistant.data.instruction` — one standing rule, appended | style, or a rule the build cannot carry out |
+| `examples` | `assistant.data.qa` — a corrected exchange worth imitating | the instruction |
+| `capability-gap` | the `capability-gap` journal — what was asked and is not built | **anything at all in the automation** |
+
+**Read once, write separately.** All four call `readAdjustment` (`components/conversation/adjustment.ts`),
+one model call per run, cached by `runId` — the same trick as `guessClass`. It costs NOTHING on an ordinary
+run: the model is asked only on classes `control` and `unclaimed`.
+
+**The order of parsing is law, not a hint.** `gap` is decided FIRST and takes the request; `behavior` is then
+forced to null. A rule the build cannot carry out is a promise it cannot keep — and the automation was
+caught writing exactly that into its own instruction ("send me a weekly report") before this was enforced.
+
+**Silence preserves.** A field the person did not mention in THIS message stays as it was. Saying "call me X"
+says nothing about emoji.
+
+**Everything writes through ONE door** — `self-write.ts` — which enforces the safeguards mechanically rather
+than by an author's good intentions: an appended change (never a rewrite), a **version in `history`** so the
+owner sees what the automation did to itself, nothing personal in the instruction, and a silent skip when no
+model is available — evolution never fails a run, it is secondary to the answer. That door reaches ONLY
+`assistant.data` and the history: nodes, edges and the passport are not its business.
+
+**A ceiling with a change of MODE.** The instruction travels to the model on every run, so at its limit the
+node stops appending and starts **condensing** — the same rules in fewer words. Dropping a rule is a defect.
+
 ## 🔒 A node that DECIDES cannot exist without a validator
 
 Applies to `transform`, `condition-success`, `condition-failure` and every `intent` class — anything whose

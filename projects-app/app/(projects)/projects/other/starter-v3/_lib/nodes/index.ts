@@ -32,6 +32,7 @@ import { keepObject } from "./keep-object";
 import { resolveMoment } from "./resolve-moment";
 import { recallConversation } from "./recall-conversation";
 import { verifyRecall } from "./verify-recall";
+import { checkCoverage } from "./check-coverage";
 import { composeReply } from "./compose-reply";
 import { converse } from "./converse";
 import { ifSuccess } from "./if-success";
@@ -93,6 +94,9 @@ export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   recallConversation,
   // ПРОВЕРКА НАЙДЕННОГО (330.10): кандидат становится ответом, только разрешившись в локальную запись.
   verifyRecall,
+  // ПОКРЫТИЕ (314, вектор 2): просьбу о невозможном ловит СЕРЕДИНА, до речи — иначе уточняющий вопрос
+  // человеку не уйдёт: слой эволюции работает уже после того, как речь сказала своё.
+  checkCoverage,
   composeReply,
   converse,
   ifSuccess,

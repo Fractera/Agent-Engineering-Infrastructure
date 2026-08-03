@@ -19,6 +19,10 @@ import { readAdjustment } from "../components/conversation/adjustment";
 import { addRow } from "../rows";
 
 export async function evolveCapabilityGap(ctx: NodeCtx): Promise<NodeCtx> {
+  // Кейс уже записала середина (`checkCoverage`) — она стоит ДО речи, и только оттуда приглашение владельцу
+  // успевает уйти человеку. Здесь остаётся собственная работа слоя: журнал.
+  if (ctx.coverage === "case-written") return { capabilityGap: "case-written" };
+
   const adj = await readAdjustment(ctx);
   if (!adj.gap) return { capabilityGap: "no-signal" };
 
@@ -28,5 +32,8 @@ export async function evolveCapabilityGap(ctx: NodeCtx): Promise<NodeCtx> {
     at: new Date().toISOString(),
     ...(ctx.runId ? { runId: String(ctx.runId) } : {}),
   });
+
+  // Уточняющий вопрос и кейс — работа СЕРЕДИНЫ (`checkCoverage`): она стоит до речи, и только оттуда
+  // вопрос успевает уйти человеку. Здесь — журнал, и только он.
   return { capabilityGap: "recorded", capabilityNeeded: adj.gap };
 }

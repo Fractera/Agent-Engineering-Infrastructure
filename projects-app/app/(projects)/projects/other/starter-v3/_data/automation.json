@@ -1530,6 +1530,72 @@
                   "condition-failure"
                 ]
               }
+            },
+            {
+              "cuid": "ccheckcoverage5r7w",
+              "name": "Check what is asked against what is built",
+              "description": "Decides whether a request to change the automation lands on what it can already do. If it does not, it asks ONE question about the scenario and holds the request; when the person answers, the request becomes a use case and the owner is invited to confirm it and start the development. The assistant brings it to the door and never opens it.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "Compares a request against the abilities derived from the core; an uncovered request becomes a clarifying question and then a use case for the owner to confirm."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "checkCoverage",
+                "summary": "Tells a request the build can serve from one it cannot, and turns the second into a use case.",
+                "accepts": "a run of class control or unclaimed, or an answer to its own earlier question.",
+                "returns": "coverage, abilitiesFacts, and for a gap — a held question; for an answer — the new case number.",
+                "outcomes": [
+                  {
+                    "name": "covered",
+                    "when": "the request lands on abilities the build already has",
+                    "puts": "the derived abilities for the layers that follow"
+                  },
+                  {
+                    "name": "gap",
+                    "when": "the request needs something that is not built",
+                    "puts": "one held question about the scenario"
+                  },
+                  {
+                    "name": "case-written",
+                    "when": "the person answered that question and the scenario is now concrete",
+                    "puts": "a use case in the core with the review signature reset"
+                  },
+                  {
+                    "name": "not-asked",
+                    "when": "the run is not about changing the automation — most runs",
+                    "puts": "nothing"
+                  }
+                ],
+                "validator": "checkCoverageValidate"
+              },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
+              "run": "sequential",
+              "estDurationMs": 900,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "intent",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              }
             }
           ]
         },
@@ -3281,6 +3347,30 @@
         "cuid": "ceevo3k4t9x",
         "from": "coutputtoast3sy3uzul",
         "to": "cevovoice2x8r",
+        "state": "visible"
+      },
+      {
+        "cuid": "cecov0p3n8k",
+        "from": "cintentcontrolkx38vd",
+        "to": "ccheckcoverage5r7w",
+        "state": "visible"
+      },
+      {
+        "cuid": "cecov1p3n8k",
+        "from": "cintentunclaimedmv2obt",
+        "to": "ccheckcoverage5r7w",
+        "state": "visible"
+      },
+      {
+        "cuid": "cecov2p3n8k",
+        "from": "cintentcontinuationh6k7j7",
+        "to": "ccheckcoverage5r7w",
+        "state": "visible"
+      },
+      {
+        "cuid": "cecovtopayload6y",
+        "from": "ccheckcoverage5r7w",
+        "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
         "state": "visible"
       }
     ]
