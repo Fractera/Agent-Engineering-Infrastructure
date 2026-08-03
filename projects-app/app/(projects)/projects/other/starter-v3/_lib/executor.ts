@@ -72,7 +72,9 @@ export async function executeAutomation(input: NodeCtx): Promise<RunOutcome | Ru
 
   const runId = cuid();
   const startedAt = new Date().toISOString();
-  let ctx: NodeCtx = { ...input };
+  // `runId` в контексте — не украшение: по нему слой намерения кэширует ОДНО прочтение запроса моделью на
+  // весь прогон (`guessClass`), иначе одиннадцать классов спросили бы модель одиннадцать раз.
+  let ctx: NodeCtx = { ...input, runId };
   const reports: RunNodeReport[] = [];
 
   // 🔒 ПЛОСКОСТЬ ДИАЛОГА (шаг 312.3, решение владельца о «третьем измерении»). Разговор не помещается в

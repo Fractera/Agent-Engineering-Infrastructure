@@ -6,7 +6,7 @@
 // «молча пошло не туда» перестало существовать как поведение.
 // Маршрут — прямо в выход. Имя `intentUnclaimed` — публичный контракт.
 import type { NodeCtx } from "../executor";
-import { PASS, claim, claimed, requestText } from "./intent-gate";
+import { PASS, claim, claimed, guessClass, requestText } from "./intent-gate";
 
 export async function intentUnclaimed(ctx: NodeCtx): Promise<NodeCtx> {
   const text = requestText(ctx);
