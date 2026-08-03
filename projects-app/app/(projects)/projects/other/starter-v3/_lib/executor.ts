@@ -15,6 +15,7 @@ import { allNodes, type Node } from "../_data/automation.schema";
 import { NODE_FUNCTIONS } from "./nodes";
 import { NODE_VALIDATORS } from "./validators";
 import { appendRun } from "./runs";
+import { chatKeyOf, formatDialog, loadChat } from "./components/conversation/state";
 
 export type NodeCtx = Record<string, unknown>;
 export type NodeResult = NodeCtx | null | void;
@@ -74,7 +75,33 @@ export async function executeAutomation(input: NodeCtx): Promise<RunOutcome | Ru
   let ctx: NodeCtx = { ...input };
   const reports: RunNodeReport[] = [];
 
+  // 🔒 ПЛОСКОСТЬ ДИАЛОГА (шаг 312.3, решение владельца о «третьем измерении»). Разговор не помещается в
+  // одну плоскость конвейера: вопрос задан в одном прогоне, ответ приходит следующим сообщением. Ось, по
+  // которой это замыкается, — ВРЕМЯ, и её носитель — состояние чата.
+  //
+  // Прикрепляется РОВНО ОДИН РАЗ за прогон и ровно в тот момент, когда двери уже назвали собеседника: до
+  // первого узла НЕ входного вида. Раньше движок начинал с `ctx = { ...input }` и ничего больше, поэтому
+  // висящий вопрос жил только внутри прогона и умирал вместе с ним.
+  //
+  // Читать состояние может ЛЮБОЙ слой — это обычные поля контекста. ПИСАТЬ его вправе только узел речи
+  // (`converse`), как строку тоста пишет только `deliverToast`: один автор на одну сущность.
+  let chatAttached = false;
+  const attachChat = async () => {
+    chatAttached = true;
+    const key = chatKeyOf(ctx);
+    if (!key) return; // собеседника нет (крон, вебхук) — плоскости тоже нет, и это законно
+    const state = await loadChat(key);
+    ctx = {
+      ...ctx,
+      chatKey: key,
+      chatLang: ctx.chatLang ?? state.lang,
+      pendingQuestion: ctx.pendingQuestion ?? state.pending,
+      recentDialog: ctx.recentDialog ?? formatDialog(state.messages),
+    };
+  };
+
   for (const node of order) {
+    if (!chatAttached && node.kind !== "input" && node.kind !== "input-connector") await attachChat();
     const fnName = node.function.name;
     const fn = NODE_FUNCTIONS[fnName] as NodeFn | undefined;
     if (!fn) {

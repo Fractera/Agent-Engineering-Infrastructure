@@ -33,6 +33,24 @@ function normalize(row: Record<string, unknown> | undefined, chatId: string): Ch
  * (живой тест: короткий ответ на висящий вопрос без контекста уходил в новую запись). Даётся
  * ВСЕМ модельным узлам, а не только разговорному. Пустой буфер → пустая строка.
  */
+/**
+ * 🔒 КТО СОБЕСЕДНИК (шаг 312.3) — ключ ПЛОСКОСТИ ДИАЛОГА, выведенный из уже названного каналом адресата.
+ *
+ * Разговор — не свойство одного прогона: вопрос задан сегодня, ответ придёт следующим сообщением. Значит у
+ * диалога нужна своя ось, и её адрес — этот ключ. Раньше память была привязана к `telegramChatId`, поэтому
+ * у ПУЛЬТА её не было вовсе: каждое сообщение владельца было первым.
+ *
+ * Пусто = собеседника нет (вебхук, крон, публичная страница без личности) — плоскость не прикрепляется, и
+ * прогон работает как раньше. Это законное состояние, а не ошибка: машине нечего помнить о разговоре.
+ */
+export function chatKeyOf(ctx: Record<string, unknown>): string {
+  const tg = String(ctx.telegramChatId ?? "").trim();
+  if (tg) return `telegram:${tg}`;
+  const from = String(ctx.emailFrom ?? "").trim();
+  if (from) return `email:${from.toLowerCase()}`;
+  return String(ctx.source ?? "").trim() === "control-panel" ? "panel" : "";
+}
+
 export function formatDialog(messages: ChatMessage[], limit = 8): string {
   const recent = messages.slice(-limit);
   if (!recent.length) return "";

@@ -10,7 +10,7 @@ import type { NodeCtx } from "../executor";
 import { askModel } from "../ai";
 import { readCore } from "../core-io";
 import { assistantConfigOf } from "../components/conversation/config";
-import { loadChat, pushMessage, setLang } from "../components/conversation/state";
+import { loadChat, pushMessage, setLang, setPending, type PendingAsk } from "../components/conversation/state";
 import { composeReply } from "./compose-reply";
 
 // ЧТО СДЕЛАЛ ПРОГОН — РАЗДЕЛЬНО (309, живой тест): ЗАПИСИ (их подтверждаем) отдельно от RECALL-ОТВЕТА (на
@@ -42,7 +42,11 @@ function matchQa(text: string, qa: { q: string; a: string }[]): { q: string; a: 
 }
 
 export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
-  const chatId = String(ctx.telegramChatId ?? "").trim();
+  // 🔒 СОБЕСЕДНИК — НЕ ТОЛЬКО TELEGRAM (шаг 312.3). Ключ чата прикрепляет движок один раз за прогон
+  // (`chatKeyOf`), поэтому память диалога есть и у пульта, и у почты, а не только у бота. Прежняя строка
+  // читала `telegramChatId` — и для пульта каждое сообщение было первым: ни буфера, ни языка, ни висящего
+  // вопроса. Фолбэк на `telegramChatId` оставлен для прямых вызовов двери мимо движка.
+  const chatId = String(ctx.chatKey ?? (ctx.telegramChatId ? `telegram:${ctx.telegramChatId}` : "")).trim();
 
   let cfg;
   let publicUrl = "";
@@ -140,5 +144,16 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   else out = out.replace(/\[\[lang:[a-z]{2}\]\]/gi, "").trim(); // страховка: тег без chatId не оставляем в тексте
 
   if (chatId) await pushMessage(chatId, { role: "assistant", text: out, at: new Date().toISOString() }, cfg.lastN, cfg.ttlMinutes);
+  // 🔒 РЕЧЬ — ЕДИНСТВЕННЫЙ АВТОР СОСТОЯНИЯ ДИАЛОГА (шаг 312.3). Висящий вопрос кладут в контекст те, кто
+  // его задал (класс «неполный», узлы середины), а СНИМАЕТ его класс «продолжение» (`pendingQuestion: null`).
+  // Записывает же его сюда — только этот узел, ровно как строку тоста пишет только `deliverToast`.
+  //
+  // Что это чинит: до сих пор вопрос жил ТОЛЬКО внутри прогона и умирал вместе с ним — `setPending` не
+  // звал никто, поэтому класс «продолжение» не мог сработать никогда, и автоматизация умела спросить
+  // «что именно записать?», но структурно не могла узнать ответ.
+  if (chatId) {
+    const pending = ctx.pendingQuestion;
+    await setPending(chatId, pending && typeof pending === "object" ? (pending as PendingAsk) : null);
+  }
   return { reply: out };
 }
