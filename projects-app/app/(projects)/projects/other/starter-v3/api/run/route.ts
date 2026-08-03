@@ -15,7 +15,12 @@ export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const input = (body && typeof body.input === "object" && body.input !== null ? body.input : body) as Record<string, unknown>;
 
-  const outcome = await executeAutomation(input);
+  // АДРЕС САМОЙ АВТОМАТИЗАЦИИ (шаг 312.7) — дверь знает его точно: это её собственный путь без `/api/run`.
+  // Отсюда речь берёт адрес кокпита и отвечает «зайди сюда», не выдумывая ссылку и не требуя второго
+  // хранилища: хранить то, что и так известно из запроса, значит завести факту второй дом.
+  const automationUrl = `${req.nextUrl.origin}${req.nextUrl.pathname.replace(/\/api\/run\/?$/, "")}`;
+
+  const outcome = await executeAutomation({ ...input, automationUrl });
   if ("refusal" in outcome) return NextResponse.json({ error: outcome.refusal }, { status: 409 });
 
   // 🔒 ДВЕРЬ НЕ СОЧИНЯЕТ РЕЧЬ (шаг 312). Здесь стоял второй сборщик ответа: если прогон не принёс

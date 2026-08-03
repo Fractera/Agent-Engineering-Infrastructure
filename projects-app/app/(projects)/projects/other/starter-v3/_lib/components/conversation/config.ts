@@ -12,6 +12,11 @@ export type AssistantConfig = {
   revealCapabilities: boolean;
   languageMode: "auto" | "fixed";
   fixedLanguage: string;
+  /** 🔒 ЯЗЫК ДЛЯ ЧАТА (шаг 312.7, формулировка владельца) — НЕ «язык по умолчанию».
+   *  Задан и непуст → на нём говорим ВСЕГДА. Пуст → язык выбирает сам разговор: что человек написал, а
+   *  если он ещё ничего не писал (автоматизация заговорила первой) — язык платформы по умолчанию.
+   *  Разница принципиальная: дефолт нужен ровно для первого слова, а не для всей переписки. */
+  chatLanguage: string;
   qa: QaPair[];
 };
 
@@ -19,27 +24,19 @@ export type AssistantConfig = {
 // идентичность и возможности ассистента: так на любой разговорный вопрос («кто ты», «зачем нужен»,
 // приветствие) модель отвечает САМА из этого текста — без перечисления фраз в коде (это была бы функция
 // вместо инструкции ИИ). Владелец правит её во вкладке «Ассистент».
-// 🔒 ЗАТРАВКА, А НЕ ОКОНЧАТЕЛЬНЫЙ ТЕКСТ (2026-08-02). Перечень возможностей здесь ЗАШИТ — и по своей
-// природе гниёт: раскрыли канал — он в перечне не появился, сняли узел — не исчез. Именно так в стартер
-// вместе с папкой уехала персона telegram-notes v1 и обещала фото чека и карты в сборке `Capture &
-// fan-out`. Вывод перечня ИЗ ЯДРА — обязанность слоя `evolution` (шаг 314, §4а): он переписывает этот
-// фрагмент на каждой итерации по дверям самоописания. До 314 текст ведётся руками и обязан быть честен
-// на момент заморозки. ЗАКОН ТЕКСТА: чего нет в списке — того нет; сочинить возможность нельзя.
+// 🔒 НИ ОДНОГО УМЕНИЯ В ЭТОМ ТЕКСТЕ (шаг 312.4). Здесь стоял перечень возможностей — и он гнил по своей
+// природе: раскрыли канал, а в перечне его нет; сняли узел, а он остался. Именно так вместе с папкой
+// уехала персона telegram-notes v1 и обещала фото чека и карты в сборке «захват → развозка». Теперь
+// перечень ВЫВОДИТСЯ из ядра на каждом прогоне (`abilities.ts`) и приезжает модели отдельным блоком
+// фактов, который главнее этого текста. Здесь остаётся только ТОН и ГРАНИЦЫ — то, что действительно
+// принадлежит поведению. Это дефолт: настоящий сценарий живёт в ядре (вкладка «Ассистент»).
 const DEFAULT_INSTRUCTION =
-  "You are the conversational assistant of this automation. THIS BUILD IS A FROZEN TEST TEMPLATE: it has " +
-  "no domain of its own yet — the owner gives it one in the cockpit. Its whole skeleton is capture→fan-out: " +
-  "it takes a message from any OPEN input channel (the control panel, an HTTP webhook, a scheduled tick, " +
-  "the public page form, its own Telegram bot, the owner's Telegram chat, inbound email) and delivers that " +
-  "message, as it is, to every OPEN output channel. It does not interpret the message, does not file it " +
-  "anywhere and decides nothing about it. That is the entire list of what this build does. " +
-  "If you are asked for anything outside that list — notes, reminders, money or receipts, places on a map, " +
-  "search over what was said earlier, reports — say plainly and warmly that this ability is NOT BUILT into " +
-  "this template yet and that the owner adds it in the cockpit. Never invent a result, never promise a " +
-  "feature, never say that something was \"saved\". " +
-  "If asked who you are or what you are for — one short message: a test template waiting for its purpose, " +
-  "and what it can do today. " +
-  "Style: warm, brief, one short message, an emoji where it fits, no preamble. Do not repeat the user's " +
-  "question back at them. Answer in the user's language.";
+  "You are the conversational assistant of this automation. Speak for it in the first person, warmly and " +
+  "briefly — one short message, an emoji where it fits, no preamble, never repeat the question back. " +
+  "What this build can do is given to you separately, derived from its core: treat those lines as the only " +
+  "truth about abilities. Asked for something outside them, say plainly and kindly that it is not built " +
+  "here yet and that the owner adds it in the cockpit. Never invent a result, never promise a feature, " +
+  "never claim something was saved unless the run says so.";
 
 export const DEFAULT_ASSISTANT: AssistantConfig = {
   instruction: DEFAULT_INSTRUCTION,
@@ -51,6 +48,7 @@ export const DEFAULT_ASSISTANT: AssistantConfig = {
   revealCapabilities: true,
   languageMode: "auto",
   fixedLanguage: "",
+  chatLanguage: "",
   qa: [],
 };
 
@@ -75,6 +73,11 @@ export function assistantConfigOf(components: Automation["components"]): Assista
     revealCapabilities: data.revealCapabilities !== false,
     languageMode: lang.mode === "fixed" ? "fixed" : "auto",
     fixedLanguage: typeof lang.fixed === "string" ? lang.fixed : "",
+    // Совместимость: прежняя пара mode:"fixed" + fixed — это тот же самый смысл, что и новый «язык для
+    // чата». Читаем оба, чтобы старая настройка продолжала работать, а новая была понятной владельцу.
+    chatLanguage: (typeof lang.chat === "string" && lang.chat.trim())
+      ? lang.chat.trim().toLowerCase().slice(0, 5)
+      : (lang.mode === "fixed" && typeof lang.fixed === "string" ? lang.fixed.trim().toLowerCase().slice(0, 5) : ""),
     qa: qaRaw
       .map((p) => ({ q: String((p as QaPair)?.q ?? "").trim(), a: String((p as QaPair)?.a ?? "").trim() }))
       .filter((p) => p.q && p.a),

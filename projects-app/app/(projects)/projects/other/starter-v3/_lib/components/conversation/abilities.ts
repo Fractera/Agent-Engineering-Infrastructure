@@ -32,6 +32,30 @@ export function abilitiesOf(core: Automation): Abilities {
 }
 
 /**
+ * 🔒 ГДЕ ЭТО СМОТРЕТЬ И КТО ЭТО ВИДИТ (шаг 312.7, требование владельца) — тоже ВЫВОД ИЗ ЯДРА, не текст в
+ * инструкции. Модель должна уметь ответить «зайди сюда» и «твой коллега не видит автоматизацию, потому
+ * что страница открыта таким-то ролям» — фактами, а не догадкой.
+ *
+ * Публичный адрес живёт в паспорте; адрес кокпита не хранится нигде и не должен — он выводится из адреса,
+ * по которому пришёл прогон (`ctx.automationUrl`, кладёт дверь `api/run`): второе хранилище одного факта
+ * разъехалось бы с первым. Роли — `passport.access`: пусто = видно всем.
+ */
+export function placesBrief(core: Automation, cockpitUrl: string): string {
+  const publicUrl = String((core.passport as { publicUrl?: unknown }).publicUrl ?? "").trim();
+  const roles = (core.passport as { access?: unknown }).access;
+  const list = Array.isArray(roles) ? roles.map(String).filter(Boolean) : [];
+  return [
+    `WHERE THIS AUTOMATION LIVES (facts, never invent an address):`,
+    `· public page: ${publicUrl || "not assigned yet — say so plainly instead of giving a link"}`,
+    `· cockpit (the owner's development page): ${cockpitUrl || "unknown from this run"}`,
+    `· who sees the public page: ${list.length ? `only holders of the roles ${list.join(", ")}` : "everyone — access is not restricted"}`,
+    list.length
+      ? `If someone cannot see it, that is why: they lack one of those roles, and the owner grants them in the admin panel.`
+      : `If someone cannot see it, it is NOT a role restriction — say so and do not guess the reason.`,
+  ].join("\n");
+}
+
+/**
  * ФАКТЫ ДЛЯ МОДЕЛИ — приписываются к инструкции поведения и ГЛАВНЕЕ неё: инструкцию пишет человек и может
  * ошибиться или устареть, а это выведено из сборки только что. Формулировать красиво — работа модели;
  * знать правду — работа ядра.

@@ -11,7 +11,7 @@ import { askModel } from "../ai";
 import { readCore } from "../core-io";
 import { assistantConfigOf } from "../components/conversation/config";
 import { loadChat, pushMessage, setLang, setPending, type PendingAsk } from "../components/conversation/state";
-import { abilitiesBrief, abilitiesOf, type Abilities } from "../components/conversation/abilities";
+import { abilitiesBrief, abilitiesOf, placesBrief, type Abilities } from "../components/conversation/abilities";
 import { composeReply } from "./compose-reply";
 
 // ЧТО СДЕЛАЛ ПРОГОН — РАЗДЕЛЬНО (309, живой тест): ЗАПИСИ (их подтверждаем) отдельно от RECALL-ОТВЕТА (на
@@ -50,8 +50,8 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   const chatId = String(ctx.chatKey ?? (ctx.telegramChatId ? `telegram:${ctx.telegramChatId}` : "")).trim();
 
   let cfg;
-  let publicUrl = "";
   let facts = "";
+  let places = "";
   // Структурный перечень — тот же источник, что и `facts`: его получает детерминированный фолбэк, чтобы и
   // он никогда не перечислял умения от себя.
   let ab: Abilities = { inputs: [], outputs: [], steps: [], speaks: false };
@@ -62,8 +62,8 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
     // эти строки выведены из видимых узлов только что и потому не могут разойтись со сборкой.
     ab = abilitiesOf(core);
     facts = abilitiesBrief(ab);
-    // Публичный адрес автоматизации (310) — из паспорта; ассистент даёт его на «где посмотреть».
-    publicUrl = String((core.passport as { publicUrl?: unknown } | undefined)?.publicUrl ?? "").trim();
+    // Адреса и роли — тем же выводом из ядра (312.7): «где посмотреть» и «почему коллега не видит».
+    places = placesBrief(core, String(ctx.automationUrl ?? "").trim());
   }
   catch { return composeReply(ctx); } // ядро недоступно — детерминированный фолбэк
 
@@ -76,18 +76,28 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   // `ctx.chatLang` от классификатора (единый контекстный слой 309) → ЯЗЫК СООБЩЕНИЯ (кириллица → ru) →
   // дефолт платформы. Детект по сообщению важнее дефолта: `NEXT_PUBLIC_DEFAULT_LOCALE` может быть не задан.
   const detectLang = (s: string): string => (/[Ѐ-ӿ]/.test(s) ? "ru" : "");
-  const fixed = cfg.languageMode === "fixed" && cfg.fixedLanguage ? cfg.fixedLanguage : "";
+  const platformDefault = String(ctx.lang ?? process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? "en").toLowerCase().slice(0, 2);
   let lang =
+    // 1. ВЫБОР ЧЕЛОВЕКА В ЭТОМ ЧАТЕ — «давай общаться по-украински». Сильнее всех: он сказал прямо.
     state.lang ||
-    fixed ||
+    // 2. ЯЗЫК ДЛЯ ЧАТА — настройка автоматизации. Задан и непуст → говорим на нём всегда.
+    cfg.chatLanguage ||
     String(ctx.chatLang ?? "").toLowerCase().slice(0, 2) ||
+    // 3. ЧЕЛОВЕК УЖЕ НАПИСАЛ — отвечаем на языке его сообщения. Дефолт здесь неуместен: он назначен
+    //    «на всякий случай», а язык переписки человек только что показал делом.
     detectLang(incoming) ||
-    String(ctx.lang ?? process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? "en").toLowerCase().slice(0, 2);
+    // 4. ЧЕЛОВЕК ЕЩЁ НЕ ПИСАЛ (автоматизация заговорила первой) — вот ровно тот случай, ради которого
+    //    язык по умолчанию и существует: догадываться не о чем, берём назначенный платформой.
+    platformDefault;
 
-  // ПЕРСИСТ ЯЗЫКА ПЕРВОГО КОНТАКТА (309.3): язык в чате ещё не зафиксирован и режим не «фикс» → запоминаем
-  // определённый сейчас как выбор чата (дефолт — стартовая догадка, дальше живёт персистентно). Смену языка
-  // ниже разрешает сам пользователь через тег [[lang:xx]], который ставит МОДЕЛЬ (не список фраз в коде).
-  if (chatId && !state.lang && !fixed) { await setLang(chatId, lang); state.lang = lang; }
+  // ПЕРСИСТ ЯЗЫКА ПЕРВОГО КОНТАКТА (309.3, уточнён в 312.7): язык в чате ещё не зафиксирован и настройка
+  // «язык для чата» не задана → запоминаем определённый сейчас как выбор ЭТОГО чата. Дальше он живёт с
+  // чатом и переживает прогоны. Смену языка разрешает сам человек — модель ставит тег [[lang:xx]], а мы
+  // разбираем его детерминированно (ниже) и перезаписываем выбор.
+  //
+  // Настройка задана → в состояние чата НЕ пишем: иначе одна фраза человека «сделай по-английски» тихо
+  // переспорила бы настройку владельца навсегда. Настройка сильнее случайного языка сообщения.
+  if (chatId && !state.lang && !cfg.chatLanguage) { await setLang(chatId, lang); state.lang = lang; }
 
   // Представление возможностей (/start, «что ты умеешь») — детерминированный список надёжнее модели.
   if (ctx.showHelp === true && cfg.revealCapabilities) {
@@ -145,13 +155,8 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
         : `The user is CONVERSING (a greeting, a question about who you are, small talk, or a question ABOUT THIS ` +
           `CONVERSATION — what they asked earlier, whether you remember). You CAN SEE the recent dialogue above: ` +
           `use it to answer such questions truthfully and specifically. Do NOT say anything was "saved". Reply naturally as this assistant.`;
-  // Публичный адрес (310): когда владелец спрашивает «где это посмотреть / покажи страницу» — отвечай
-  // адресом; не назначен → честно скажи, что адреса пока нет (не выдумывай ссылку).
-  const publicUrlLine = publicUrl
-    ? `The automation's public page is: ${publicUrl}. When the owner asks where to see it, give this address.`
-    : `The automation's public page address is not assigned yet — if asked where to see it, say so honestly, do not invent a link.`;
   const system =
-    `${publicUrlLine}\n\n` +
+    `${places}\n\n` +
     `${cfg.instruction}\n\n${facts}\n\nReply ONLY in language "${lang}". Keep it to one short, warm message. ` +
     // ГАРДРЕЙЛ ОТ ГАЛЛЮЦИНАЦИЙ (309, живой тест): модель НЕ знает внутреннего устройства и НЕ должна его
     // выдумывать. Инцидент: на «почему не сохранил в таблицу» бот сочинил «храню как заметку» — а трата
