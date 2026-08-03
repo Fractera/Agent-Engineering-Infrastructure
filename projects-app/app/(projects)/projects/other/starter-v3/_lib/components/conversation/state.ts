@@ -51,8 +51,18 @@ export function chatKeyOf(ctx: Record<string, unknown>): string {
   return String(ctx.source ?? "").trim() === "control-panel" ? "panel" : "";
 }
 
-export function formatDialog(messages: ChatMessage[], limit = 8): string {
-  const recent = messages.slice(-limit);
+/**
+ * 🔒 ОКНО — ОБЯЗАТЕЛЬНЫЙ ПАРАМЕТР, БЕЗ ЗНАЧЕНИЯ ПО УМОЛЧАНИЮ (шаг 330.1).
+ *
+ * Здесь стоял `limit = 8`, и он молча побеждал настройку владельца: движок звал эту функцию без аргумента,
+ * поэтому вкладка «Ассистент» могла хранить любое окно — модель всё равно видела восемь реплик. Настройка,
+ * не влияющая на поведение, хуже отсутствующей: она обещает управление, которого нет.
+ *
+ * Дефолт удалён намеренно — окно обязан назвать вызывающий, и единственный его источник — вкладка
+ * «Ассистент» (`assistantConfigOf`). Компилятор теперь не даст «забыть» его снова.
+ */
+export function formatDialog(messages: ChatMessage[], limit: number): string {
+  const recent = messages.slice(-Math.max(1, limit));
   if (!recent.length) return "";
   const who = (r: string) => (r === "user" ? "user→bot" : "bot→user");
   const t = (iso: string) => { const d = new Date(iso); return Number.isFinite(d.getTime()) ? d.toISOString().slice(0, 16).replace("T", " ") : ""; };

@@ -67,6 +67,11 @@ Read any file here freely — nothing is hidden behind an API.
   no channel composes it. Abilities, addresses and roles are DERIVED from the core each run, never written
   into the behaviour text. The **dialogue plane** (recent messages · outstanding question · chosen
   language) is attached by the engine, readable by any layer, written only here (`group.speech.md`).
+- **The dialogue WINDOW is a setting, not a constant** (330.1): `assistant` tab → `data.memory.lastN` /
+  `ttlMinutes` decides how much conversation reaches the model, and the engine hands it to `formatDialog`.
+  Never hard-code a limit and never assemble the history a second time — a default inside `formatDialog`
+  silently beat the owner's setting, and a second form meant the model read one dialogue two ways depending
+  on the call path.
 
 ## 🔒 A node that DECIDES cannot exist without a validator
 

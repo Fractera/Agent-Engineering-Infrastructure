@@ -3882,8 +3882,8 @@
                 "nl": "Assistant"
               },
               "memory": {
-                "lastN": 10,
-                "ttlMinutes": 5
+                "lastN": 20,
+                "ttlMinutes": 60
               },
               "revealCapabilities": true,
               "language": {

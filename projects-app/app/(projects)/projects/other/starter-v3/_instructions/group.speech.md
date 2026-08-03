@@ -17,6 +17,10 @@ language — keyed by the interlocutor (`telegram:<id>`, `email:<from>`, `panel`
 
 - The ENGINE attaches it once per run, as soon as the doors have named the interlocutor; **any layer may
   read it** — it is ordinary context.
+- **Its window is a setting** — `assistant` tab `data.memory`: `lastN` messages, `ttlMinutes` of silence
+  before the buffer is a clean new session. The engine reads it and passes it to `formatDialog`, which has
+  **no default**: a hard-coded limit there beat the owner's setting, and the setting promised control it did
+  not have. **One form, one assembly** — never render the history a second way (330.1).
 - **Only this layer writes it.** One author per entity, exactly as only `deliverToast` writes a toast row.
 - No interlocutor (cron, webhook) → no plane, and the run works as before.
 

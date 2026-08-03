@@ -16,6 +16,7 @@ import { NODE_FUNCTIONS } from "./nodes";
 import { NODE_VALIDATORS } from "./validators";
 import { appendRun } from "./runs";
 import { chatKeyOf, formatDialog, loadChat } from "./components/conversation/state";
+import { assistantConfigOf } from "./components/conversation/config";
 
 export type NodeCtx = Record<string, unknown>;
 export type NodeResult = NodeCtx | null | void;
@@ -93,12 +94,16 @@ export async function executeAutomation(input: NodeCtx): Promise<RunOutcome | Ru
     const key = chatKeyOf(ctx);
     if (!key) return; // собеседника нет (крон, вебхук) — плоскости тоже нет, и это законно
     const state = await loadChat(key);
+    // 🔒 ОКНО ДИАЛОГА — ИЗ ВКЛАДКИ ВЛАДЕЛЬЦА (шаг 330.1). Ядро уже прочитано выше, поэтому настройка
+    // достаётся без единого лишнего чтения. До этого движок звал `formatDialog` без окна и получал зашитые
+    // восемь реплик: у владельца была настройка, у модели — своё число, и они не встречались.
+    const window = assistantConfigOf(core.components).lastN;
     ctx = {
       ...ctx,
       chatKey: key,
       chatLang: ctx.chatLang ?? state.lang,
       pendingQuestion: ctx.pendingQuestion ?? state.pending,
-      recentDialog: ctx.recentDialog ?? formatDialog(state.messages),
+      recentDialog: ctx.recentDialog ?? formatDialog(state.messages, window),
     };
   };
 

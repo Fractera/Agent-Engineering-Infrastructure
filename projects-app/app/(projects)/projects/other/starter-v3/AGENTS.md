@@ -113,6 +113,13 @@ behaviour text, which is why the assistant cannot promise what the build does no
 and the chosen language live with the interlocutor and outlive runs. The engine attaches it once per run,
 any layer may read it, and **only the speech layer writes it** (`group.speech.md`).
 
+**Its window is a SETTING, not a constant** (330.1). How much of the conversation reaches the model is
+`assistant` tab → `data.memory` (`lastN` messages, `ttlMinutes` of silence before the buffer is a clean new
+session); the engine reads it and hands it to `formatDialog`. Two rules follow, and both were paid for:
+never hard-code a limit — a default inside `formatDialog` silently beat the owner's setting, which then
+promised control it did not have; and never assemble the history a second time — one dialogue rendered in
+two forms is one conversation read two ways, and which one the model saw depended on the call path.
+
 ## 🔒 A node that decides cannot exist without a validator
 
 Applies to `transform`, `condition-success`, `condition-failure` and every `intent` class — anything whose

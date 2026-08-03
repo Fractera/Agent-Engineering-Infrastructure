@@ -10,7 +10,7 @@ import type { NodeCtx } from "../executor";
 import { askModel } from "../ai";
 import { readCore } from "../core-io";
 import { assistantConfigOf } from "../components/conversation/config";
-import { loadChat, pushMessage, setLang, setPending, type PendingAsk } from "../components/conversation/state";
+import { formatDialog, loadChat, pushMessage, setLang, setPending, type ChatMessage, type PendingAsk } from "../components/conversation/state";
 import { abilitiesBrief, abilitiesOf, placesBrief, type Abilities } from "../components/conversation/abilities";
 import { composeReply } from "./compose-reply";
 
@@ -113,9 +113,12 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   // Нет модели/ключа → детерминированный фолбэк (форма доказана 11/11).
   const fallback = () => composeReply({ ...ctx, lang, abilitiesInputs: ab.inputs, abilitiesOutputs: ab.outputs, abilitiesSteps: ab.steps });
 
-  // Контекст диалога — из единого слоя (`ctx.recentDialog`, положил классификатор); фолбэк — свой буфер.
+  // 🔒 ОДНА ФОРМА ИСТОРИИ (шаг 330.1). Здесь стояла ВТОРАЯ сборка — `User: … / Assistant: …` без времени, —
+  // и что увидит модель, зависело от пути: через движок приезжала одна форма, при прямом вызове двери
+  // другая. Две формы одного контекста означают два разных прочтения одного разговора.
+  // Теперь форма ровно одна (`formatDialog`), а окно — то же, что у движка: настройка вкладки.
   const history = String(ctx.recentDialog ?? "").trim()
-    || state.messages.slice(-cfg.lastN).map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.text}`).join("\n");
+    || formatDialog(state.messages as ChatMessage[], cfg.lastN);
 
   // 🔒 ТРИ РЕЖИМА ОТВЕТА (309, живой тест — бот на всё говорил «Готово ✅ …сохранено»):
   //   ЗАПИСЬ  — прогон что-то создал (заметка/трата/место/напоминание) → кратко ПОДТВЕРДИ.
