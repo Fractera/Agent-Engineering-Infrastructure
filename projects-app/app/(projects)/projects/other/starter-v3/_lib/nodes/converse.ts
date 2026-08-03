@@ -56,7 +56,11 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   let places = "";
   // Структурный перечень — тот же источник, что и `facts`: его получает детерминированный фолбэк, чтобы и
   // он никогда не перечислял умения от себя.
-  let ab: Abilities = { inputs: [], outputs: [], steps: [], speaks: false };
+  let ab: Abilities = {
+    title: "", howItWorks: [], useCases: [],
+    inputs: [], outputs: [], steps: [], speaks: false,
+    counts: { visible: 0, total: 0, hidden: 0 },
+  };
   try {
     const core = await readCore();
     cfg = assistantConfigOf(core.components);
