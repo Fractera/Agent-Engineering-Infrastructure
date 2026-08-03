@@ -19,7 +19,9 @@
     "info": {
       "crudUser": "Starter v3"
     },
-    "howItWorks": []
+    "howItWorks": [],
+    "access": [],
+    "publicUrl": ""
   },
   "graph": {
     "systemInstructionName": "graph",
@@ -59,8 +61,15 @@
                 "name": "receiveFromExternal",
                 "summary": "Takes the payload handed over by another automation and names it for this one.",
                 "accepts": "The payload as another automation handed it over.",
-                "returns": "payload — the same value, named for this automation."
+                "returns": "payload — the same value, named for this automation.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 1000,
               "kind": "input-connector",
@@ -93,8 +102,15 @@
                 "name": "receiveControlPanel",
                 "summary": "Captures the control-panel form message and normalizes it into the shared Message shape.",
                 "accepts": "The form fields of a run started from the control panel: text (required), optional lat/lng.",
-                "returns": "Message fields merged into the context: text, source=\"control-panel\", at, and lat/lng when given."
+                "returns": "Message fields merged into the context: text, source=\"control-panel\", at, and lat/lng when given.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 200,
               "kind": "input",
@@ -125,8 +141,15 @@
                 "name": "receiveWebhook",
                 "summary": "Normalizes an external HTTP push into the shared Message; a structured payload is serialized, never lost.",
                 "accepts": "The JSON body of POST api/run with source=\"webhook\": text, message or payload, optional lat/lng.",
-                "returns": "Message fields merged into the context: text, source=\"webhook\", at, and lat/lng when given."
+                "returns": "Message fields merged into the context: text, source=\"webhook\", at, and lat/lng when given.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 200,
               "kind": "input",
@@ -157,8 +180,15 @@
                 "name": "receiveCron",
                 "summary": "Turns a scheduled tick into a synthetic Message so downstream work is exercised on a timer.",
                 "accepts": "The tick pushed by the scheduler: optional text/message; nothing else is required.",
-                "returns": "Message fields merged into the context: text (given or synthetic), source=\"cron\", at."
+                "returns": "Message fields merged into the context: text (given or synthetic), source=\"cron\", at.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 200,
               "kind": "input",
@@ -189,8 +219,15 @@
                 "name": "receivePublicPage",
                 "summary": "Captures a visitor's message from the public page form and normalizes it into the shared Message.",
                 "accepts": "The form fields of a run with source=\"public-page\": text (required), optional lat/lng.",
-                "returns": "Message fields merged into the context: text, source=\"public-page\", at, and lat/lng when given."
+                "returns": "Message fields merged into the context: text, source=\"public-page\", at, and lat/lng when given.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 200,
               "kind": "input",
@@ -232,8 +269,15 @@
                 "name": "receiveTelegramBot",
                 "summary": "Normalizes a Telegram-bot update into the shared Message and keeps the sender's chat id for replies.",
                 "accepts": "A pushed update with source=\"telegram-bot\": raw {message:{text,chat:{id}}} or pre-parsed text.",
-                "returns": "Message fields (text, source=\"telegram-bot\", at) plus telegramChatId when the update names the chat."
+                "returns": "Message fields (text, source=\"telegram-bot\", at) plus telegramChatId when the update names the chat.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 300,
               "kind": "input",
@@ -270,8 +314,15 @@
                 "name": "receiveUserTelegramChat",
                 "summary": "Normalizes a message from the user's own linked Telegram chat into the shared Message.",
                 "accepts": "A pushed update with source=\"user-telegram-chat\": raw Telegram shape or pre-parsed text.",
-                "returns": "Message fields (text, source=\"user-telegram-chat\", at) plus telegramChatId when named."
+                "returns": "Message fields (text, source=\"user-telegram-chat\", at) plus telegramChatId when named.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 300,
               "kind": "input",
@@ -318,8 +369,15 @@
                 "name": "receiveEmail",
                 "summary": "Normalizes an inbound email into the shared Message; sender and subject stay available for a reply.",
                 "accepts": "The parsed letter pushed by api/inbound-email: from (required), subject, text.",
-                "returns": "Message fields (text, source=\"email\", at) plus emailFrom and emailSubject."
+                "returns": "Message fields (text, source=\"email\", at) plus emailFrom and emailSubject.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 300,
               "kind": "input",
@@ -365,7 +423,6 @@
                 "summary": "Recognizes a request for a secret and refuses it outright, without touching a store or a tool.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
                 "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentRefuseValidate",
                 "outcomes": [
                   {
                     "name": "claimed",
@@ -377,8 +434,14 @@
                     "when": "the request belongs to another class",
                     "puts": "nothing: the flow reaches the next class untouched"
                   }
-                ]
+                ],
+                "validator": "intentRefuseValidate"
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
@@ -398,9 +461,7 @@
                   "output",
                   "output-connector"
                 ]
-              },
-              "lineage": "",
-              "serves": []
+              }
             },
             {
               "cuid": "cintentcontinuationh6k7j7",
@@ -418,7 +479,6 @@
                 "summary": "Detects that a question is outstanding and hands this message on as its answer.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
                 "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentContinuationValidate",
                 "outcomes": [
                   {
                     "name": "claimed",
@@ -430,8 +490,14 @@
                     "when": "the request belongs to another class",
                     "puts": "nothing: the flow reaches the next class untouched"
                   }
-                ]
+                ],
+                "validator": "intentContinuationValidate"
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
@@ -451,9 +517,7 @@
                   "output",
                   "output-connector"
                 ]
-              },
-              "lineage": "",
-              "serves": []
+              }
             },
             {
               "cuid": "cintentselfdescribevs5ni8q6",
@@ -471,7 +535,6 @@
                 "summary": "Recognizes a question about the automation itself and answers it from the passport.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
                 "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentSelfDescribeValidate",
                 "outcomes": [
                   {
                     "name": "claimed",
@@ -483,8 +546,14 @@
                     "when": "the request belongs to another class",
                     "puts": "nothing: the flow reaches the next class untouched"
                   }
-                ]
+                ],
+                "validator": "intentSelfDescribeValidate"
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
@@ -504,9 +573,7 @@
                   "output",
                   "output-connector"
                 ]
-              },
-              "lineage": "",
-              "serves": []
+              }
             },
             {
               "cuid": "cintentcontrolkx38vd",
@@ -524,7 +591,6 @@
                 "summary": "Recognizes a request that changes the automation itself rather than its data.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
                 "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentControlValidate",
                 "outcomes": [
                   {
                     "name": "claimed",
@@ -536,8 +602,14 @@
                     "when": "the request belongs to another class",
                     "puts": "nothing: the flow reaches the next class untouched"
                   }
-                ]
+                ],
+                "validator": "intentControlValidate"
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
@@ -557,9 +629,7 @@
                   "output",
                   "output-connector"
                 ]
-              },
-              "lineage": "",
-              "serves": []
+              }
             },
             {
               "cuid": "cintentcomposite62fppr",
@@ -577,7 +647,6 @@
                 "summary": "Recognizes a two-step request and hands the middle an explicit plan.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
                 "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentCompositeValidate",
                 "outcomes": [
                   {
                     "name": "claimed",
@@ -589,8 +658,14 @@
                     "when": "the request belongs to another class",
                     "puts": "nothing: the flow reaches the next class untouched"
                   }
-                ]
+                ],
+                "validator": "intentCompositeValidate"
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
@@ -610,9 +685,7 @@
                   "output",
                   "output-connector"
                 ]
-              },
-              "lineage": "",
-              "serves": []
+              }
             },
             {
               "cuid": "cintentfetchexternaliussrk",
@@ -630,7 +703,6 @@
                 "summary": "Recognizes a request to fetch a named subject from outside and passes the subject on.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
                 "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentFetchExternalValidate",
                 "outcomes": [
                   {
                     "name": "claimed",
@@ -642,8 +714,16 @@
                     "when": "the request belongs to another class",
                     "puts": "nothing: the flow reaches the next class untouched"
                   }
-                ]
+                ],
+                "validator": "intentFetchExternalValidate"
               },
+              "capability": null,
+              "serves": [
+                "cusecasesubjectfivefacets2"
+              ],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
@@ -663,11 +743,7 @@
                   "output",
                   "output-connector"
                 ]
-              },
-              "lineage": "",
-              "serves": [
-                "cusecasesubjectfivefacets2"
-              ]
+              }
             },
             {
               "cuid": "cintentreadown10shd0",
@@ -685,7 +761,6 @@
                 "summary": "Recognizes a question about what is already stored and passes it to the middle to answer.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
                 "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentReadOwnValidate",
                 "outcomes": [
                   {
                     "name": "claimed",
@@ -697,8 +772,14 @@
                     "when": "the request belongs to another class",
                     "puts": "nothing: the flow reaches the next class untouched"
                   }
-                ]
+                ],
+                "validator": "intentReadOwnValidate"
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
@@ -718,9 +799,7 @@
                   "output",
                   "output-connector"
                 ]
-              },
-              "lineage": "",
-              "serves": []
+              }
             },
             {
               "cuid": "cintentincompletextd8mp",
@@ -738,7 +817,6 @@
                 "summary": "Recognizes a task with no subject and asks what exactly to take down.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
                 "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentIncompleteValidate",
                 "outcomes": [
                   {
                     "name": "claimed",
@@ -750,8 +828,14 @@
                     "when": "the request belongs to another class",
                     "puts": "nothing: the flow reaches the next class untouched"
                   }
-                ]
+                ],
+                "validator": "intentIncompleteValidate"
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
@@ -771,9 +855,7 @@
                   "output",
                   "output-connector"
                 ]
-              },
-              "lineage": "",
-              "serves": []
+              }
             },
             {
               "cuid": "cintentsmalltalkh2aosd",
@@ -791,7 +873,6 @@
                 "summary": "Recognizes social speech and answers it without any action.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
                 "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentSmallTalkValidate",
                 "outcomes": [
                   {
                     "name": "claimed",
@@ -803,8 +884,14 @@
                     "when": "the request belongs to another class",
                     "puts": "nothing: the flow reaches the next class untouched"
                   }
-                ]
+                ],
+                "validator": "intentSmallTalkValidate"
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
@@ -824,9 +911,7 @@
                   "output",
                   "output-connector"
                 ]
-              },
-              "lineage": "",
-              "serves": []
+              }
             },
             {
               "cuid": "cintentrecordgivenef31ax",
@@ -844,7 +929,6 @@
                 "summary": "Recognizes a statement of fact to be kept and passes it to the middle.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
                 "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentRecordGivenValidate",
                 "outcomes": [
                   {
                     "name": "claimed",
@@ -856,8 +940,14 @@
                     "when": "the request belongs to another class",
                     "puts": "nothing: the flow reaches the next class untouched"
                   }
-                ]
+                ],
+                "validator": "intentRecordGivenValidate"
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
@@ -877,9 +967,7 @@
                   "output",
                   "output-connector"
                 ]
-              },
-              "lineage": "",
-              "serves": []
+              }
             },
             {
               "cuid": "cintentunclaimedmv2obt",
@@ -897,7 +985,6 @@
                 "summary": "States honestly that the request was not recognized, instead of falling back to a default class.",
                 "accepts": "The captured Message text put into the context by the input node of the run channel.",
                 "returns": "intentClass · intentRoute (+ the fields its route needs) — or null when the request belongs to another class.",
-                "validator": "intentUnclaimedValidate",
                 "outcomes": [
                   {
                     "name": "claimed",
@@ -909,8 +996,14 @@
                     "when": "the request belongs to another class",
                     "puts": "nothing: the flow reaches the next class untouched"
                   }
-                ]
+                ],
+                "validator": "intentUnclaimedValidate"
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "intent",
@@ -930,9 +1023,7 @@
                   "output",
                   "output-connector"
                 ]
-              },
-              "lineage": "",
-              "serves": []
+              }
             }
           ]
         },
@@ -990,6 +1081,11 @@
                 ],
                 "validator": "transformPayloadValidate"
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "nsk-transform-payload-v1",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 200,
               "kind": "transform",
@@ -1009,9 +1105,7 @@
                   "condition-success",
                   "condition-failure"
                 ]
-              },
-              "lineage": "nsk-transform-payload-v1",
-              "serves": []
+              }
             },
             {
               "cuid": "cmruddnrpho70e8af12589d1deaa",
@@ -1048,6 +1142,11 @@
                 ],
                 "validator": "ifSuccessValidate"
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 100,
               "kind": "condition-success",
@@ -1066,8 +1165,7 @@
                   "output",
                   "output-connector"
                 ]
-              },
-              "serves": []
+              }
             },
             {
               "cuid": "cmruqdpjn51ehmdd7904ad3a6abaf6",
@@ -1104,6 +1202,11 @@
                 ],
                 "validator": "ifFailureValidate"
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 100,
               "kind": "condition-failure",
@@ -1120,8 +1223,7 @@
                   "speech",
                   "output"
                 ]
-              },
-              "serves": []
+              }
             },
             {
               "cuid": "cfetchexternal3tyh65",
@@ -1163,6 +1265,13 @@
                 ],
                 "validator": "fetchExternalValidate"
               },
+              "capability": null,
+              "serves": [
+                "cusecasesubjectfivefacets2"
+              ],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 1500,
               "kind": "transform",
@@ -1182,11 +1291,7 @@
                   "condition-success",
                   "condition-failure"
                 ]
-              },
-              "lineage": "",
-              "serves": [
-                "cusecasesubjectfivefacets2"
-              ]
+              }
             },
             {
               "cuid": "ckeepobjectz371qw",
@@ -1223,6 +1328,13 @@
                 ],
                 "validator": "keepObjectValidate"
               },
+              "capability": null,
+              "serves": [
+                "cusecasesubjectfivefacets2"
+              ],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 2500,
               "kind": "transform",
@@ -1242,11 +1354,7 @@
                   "condition-success",
                   "condition-failure"
                 ]
-              },
-              "lineage": "",
-              "serves": [
-                "cusecasesubjectfivefacets2"
-              ]
+              }
             },
             {
               "cuid": "cresolvemomentp4xdf4",
@@ -1278,6 +1386,13 @@
                 ],
                 "validator": "resolveMomentValidate"
               },
+              "capability": null,
+              "serves": [
+                "cusecasesubjectfivefacets2"
+              ],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 50,
               "kind": "transform",
@@ -1297,11 +1412,7 @@
                   "condition-success",
                   "condition-failure"
                 ]
-              },
-              "lineage": "",
-              "serves": [
-                "cusecasesubjectfivefacets2"
-              ]
+              }
             }
           ]
         },
@@ -1338,8 +1449,15 @@
                 "name": "converse",
                 "summary": "Writes the human answer of the run by the model, following the behaviour scenario of the Assistant tab.",
                 "accepts": "The context of the run: the request class, what the middle produced, the chat id and the dialogue state.",
-                "returns": "reply — the one answer every open channel delivers; a deterministic fallback when no model is reachable."
+                "returns": "reply — the one answer every open channel delivers; a deterministic fallback when no model is reachable.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 4000,
               "kind": "speech",
@@ -1358,12 +1476,7 @@
                   "output",
                   "output-connector"
                 ]
-              },
-              "capability": null,
-              "serves": [],
-              "lineage": "",
-              "hookPhrases": [],
-              "role": ""
+              }
             }
           ]
         },
@@ -1404,6 +1517,11 @@
                 "outcomes": [],
                 "validator": ""
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 30,
               "kind": "output",
@@ -1422,8 +1540,7 @@
                 "connections": [
                   "evolution"
                 ]
-              },
-              "serves": []
+              }
             },
             {
               "cuid": "cmruca7ra4n1jt639afc902fa70f5b",
@@ -1440,8 +1557,15 @@
                 "name": "deliverDashboard",
                 "summary": "Writes one history row per successful run: date, source channel, title and text of the message.",
                 "accepts": "The normalized message (text · title · at · source) carried by the success branch.",
-                "returns": "rowId — the id of the history row written to the dashboard."
+                "returns": "rowId — the id of the history row written to the dashboard.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 300,
               "kind": "output",
@@ -1460,8 +1584,7 @@
                 "connections": [
                   "evolution"
                 ]
-              },
-              "serves": []
+              }
             },
             {
               "cuid": "cmruewqs71sbem314de6797f24f39c",
@@ -1478,8 +1601,15 @@
                 "name": "handToExternal",
                 "summary": "Hands the whole shared Message over to the automation waiting on the other side.",
                 "accepts": "The normalized message (text · title · at · source, optional lat/lng) of the success branch.",
-                "returns": "handover — the Message object, handed to another automation."
+                "returns": "handover — the Message object, handed to another automation.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 1000,
               "kind": "output-connector",
@@ -1515,8 +1645,15 @@
                 "name": "deliverPublicPage",
                 "summary": "Appends the message to the public page feed table so the page can show it.",
                 "accepts": "The normalized message (text · title · at · source) carried by the success branch.",
-                "returns": "publicPageRowId — the id of the feed row written."
+                "returns": "publicPageRowId — the id of the feed row written.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 300,
               "kind": "output",
@@ -1552,8 +1689,17 @@
                 "name": "deliverCalendar",
                 "summary": "Creates a calendar event titled like the message at its capture moment.",
                 "accepts": "The captured message; optionally ctx.when (the moment resolved by resolveMoment) and ctx.needsWhen.",
-                "returns": "calendarRowId and calendarWhen (ISO); refuses in ten languages when needsWhen is set."
+                "returns": "calendarRowId and calendarWhen (ISO); refuses in ten languages when needsWhen is set.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [
+                "cusecasesubjectfivefacets2"
+              ],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 300,
               "kind": "output",
@@ -1572,10 +1718,7 @@
                 "connections": [
                   "evolution"
                 ]
-              },
-              "serves": [
-                "cusecasesubjectfivefacets2"
-              ]
+              }
             },
             {
               "cuid": "cmruqdpjm51ehh558398f6e19c27c3",
@@ -1592,8 +1735,15 @@
                 "name": "deliverAnalytics",
                 "summary": "Increments the captured-messages counter of the run's input channel in the analytics table.",
                 "accepts": "The normalized message (text · title · at · source) carried by the success branch.",
-                "returns": "analyticsCount — the channel's counter value after this run."
+                "returns": "analyticsCount — the channel's counter value after this run.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 300,
               "kind": "output",
@@ -1629,8 +1779,17 @@
                 "name": "deliverMap",
                 "summary": "Writes a map marker at the message's lat/lng; without coordinates it skips honestly with a reason.",
                 "accepts": "The normalized message; lat/lng when the input channel captured them.",
-                "returns": "mapDelivery — \"marker <id> at lat,lng\" or \"skipped: …\" naming the missing coordinates."
+                "returns": "mapDelivery — \"marker <id> at lat,lng\" or \"skipped: …\" naming the missing coordinates.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [
+                "cusecasesubjectfivefacets2"
+              ],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 300,
               "kind": "output",
@@ -1649,10 +1808,7 @@
                 "connections": [
                   "evolution"
                 ]
-              },
-              "serves": [
-                "cusecasesubjectfivefacets2"
-              ]
+              }
             },
             {
               "cuid": "cmruqdpjn51ehjeb00a0bb1dcde063",
@@ -1685,8 +1841,15 @@
                 "name": "deliverEmail",
                 "summary": "Emails the message via Resend; unconfigured channel skips honestly, a service refusal throws.",
                 "accepts": "The normalized message plus an optional recipient (emailTo, or emailFrom of an inbound letter).",
-                "returns": "emailDelivery — \"sent <id> to <address>\" or \"skipped: …\" naming what is not configured."
+                "returns": "emailDelivery — \"sent <id> to <address>\" or \"skipped: …\" naming what is not configured.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 3000,
               "kind": "output",
@@ -1733,8 +1896,15 @@
                 "name": "deliverTelegramBot",
                 "summary": "Sends the message through the automation's bot; unconfigured channel skips honestly, a refusal throws.",
                 "accepts": "The normalized message (text · title · at · source) carried by the success branch.",
-                "returns": "telegramBotDelivery — \"sent <message id>\" or \"skipped: …\" naming the missing key."
+                "returns": "telegramBotDelivery — \"sent <message id>\" or \"skipped: …\" naming the missing key.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 3000,
               "kind": "output",
@@ -1781,8 +1951,15 @@
                 "name": "deliverUserTelegramChat",
                 "summary": "Writes the message into the user's linked personal chat; unconfigured channel skips honestly.",
                 "accepts": "The normalized message plus an optional telegramChatId carried by the run.",
-                "returns": "userTelegramDelivery — \"sent <id> to <chat>\" or \"skipped: …\" naming what is missing."
+                "returns": "userTelegramDelivery — \"sent <id> to <chat>\" or \"skipped: …\" naming what is missing.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 3000,
               "kind": "output",
@@ -1829,8 +2006,17 @@
                 "name": "deliverVectorMemory",
                 "summary": "Ingests the message into LightRAG with unique provenance and records the fact row; unreachable service skips honestly.",
                 "accepts": "The normalized message (text · title · at · source) carried by the success branch.",
-                "returns": "vectorMemoryDelivery (\"remembered <track id>\" or \"skipped: …\") and vectorRowId of the fact row."
+                "returns": "vectorMemoryDelivery (\"remembered <track id>\" or \"skipped: …\") and vectorRowId of the fact row.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [
+                "cusecasesubjectfivefacets2"
+              ],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 5000,
               "kind": "output",
@@ -1849,10 +2035,7 @@
                 "connections": [
                   "evolution"
                 ]
-              },
-              "serves": [
-                "cusecasesubjectfivefacets2"
-              ]
+              }
             },
             {
               "cuid": "cdeliverdndd14qyz",
@@ -1869,8 +2052,17 @@
                 "name": "deliverDatabase",
                 "summary": "Writes a database record of the message, linking the vector fact written earlier in the same run.",
                 "accepts": "The normalized message plus vectorRowId when the vector-memory output already ran.",
-                "returns": "databaseRowId — the id of the database record written."
+                "returns": "databaseRowId — the id of the database record written.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [
+                "cusecasesubjectfivefacets2"
+              ],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 300,
               "kind": "output",
@@ -1889,10 +2081,7 @@
                 "connections": [
                   "evolution"
                 ]
-              },
-              "serves": [
-                "cusecasesubjectfivefacets2"
-              ]
+              }
             },
             {
               "cuid": "cdelivers3oz5tpd6",
@@ -1909,8 +2098,17 @@
                 "name": "deliverStorage",
                 "summary": "Saves the message as a .txt object and records the storage row holding its fileKey link.",
                 "accepts": "The normalized message (text · title · at · source) carried by the success branch.",
-                "returns": "storageFileKey and storageRowId — the object's key and the row that links to it."
+                "returns": "storageFileKey and storageRowId — the object's key and the row that links to it.",
+                "outcomes": [],
+                "validator": ""
               },
+              "capability": null,
+              "serves": [
+                "cusecasesubjectfivefacets2"
+              ],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
               "run": "sequential",
               "estDurationMs": 500,
               "kind": "output",
@@ -1929,10 +2127,7 @@
                 "connections": [
                   "evolution"
                 ]
-              },
-              "serves": [
-                "cusecasesubjectfivefacets2"
-              ]
+              }
             }
           ]
         }
