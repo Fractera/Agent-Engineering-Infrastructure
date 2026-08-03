@@ -11,7 +11,7 @@ import {
   DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { EntityDrawer, type DrawerTarget } from "../../../shared/entity-drawer.client";
 import { defaultVisibleColumnIds, tableStorageKey, type DashboardTable, type TableColumn, type TableRow } from "../../table-config";
 import { ConfigRecordCell } from "./config-record-cell.client";
 import { LiveLookupDialog } from "./live-lookup-dialog.client";
@@ -78,7 +78,10 @@ export function DashboardTableView({
   const [search, setSearch] = useState("");
   const [visibleIds, setVisibleIds] = useState<string[]>(() => defaultVisibleColumnIds(table.columns));
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [detail, setDetail] = useState<{ open: boolean; row: TableRow | null }>({ open: false, row: null });
+  // ЯЩИК СУЩНОСТИ — ОБЩИЙ (шаг 328.5). Свой диалог деталей у дашборда был вторым домом одного факта: он
+  // показывал колонки ТОЙ ЖЕ строки и ничего не знал о её соседях, тогда как владелец от строки ждёт всю
+  // сущность. Диалог удалён, строка и кнопка «подробнее» ведут в тот же ящик, что и в остальных вкладках.
+  const [target, setTarget] = useState<DrawerTarget>(null);
   const [liveTarget, setLiveTarget] = useState<{ url: string; title: string } | null>(null);
 
   const loadLive = useCallback(async (q: string, offset: number, append: boolean) => {
@@ -199,8 +202,15 @@ export function DashboardTableView({
               rows.map((r) => (
                 <tr
                   key={r.id}
-                  className={"border-b align-top last:border-0 " + (rowClickable ? "cursor-pointer hover:bg-muted/40" : "")}
-                  onClick={rowClickable ? () => admin!.onRowClick!(r) : undefined}
+                  className="cursor-pointer border-b align-top transition-colors last:border-0 hover:bg-muted/40"
+                  // Кокпит может занять клик своей работой (выбор строки); во всех прочих случаях строка
+                  // открывает ЯЩИК СУЩНОСТИ — то же, что в базе, хранилище, памяти и на карте. Клик по
+                  // кнопке внутри ячейки ящик не открывает: у них своя работа.
+                  onClick={(e) => {
+                    if (rowClickable) { admin!.onRowClick!(r); return; }
+                    if ((e.target as HTMLElement).closest("button,a,input,select,textarea")) return;
+                    setTarget({ table: table.id, id: r.id });
+                  }}
                   title={rowClickable ? admin?.rowClickTitle : undefined}
                 >
                   {cols.map((c) => (
@@ -218,7 +228,7 @@ export function DashboardTableView({
                         ctx={{
                           expanded: expanded === r.id,
                           onToggleExpand: () => setExpanded(expanded === r.id ? null : r.id),
-                          onDetail: (row) => setDetail({ open: true, row }),
+                          onDetail: (row) => setTarget({ table: table.id, id: row.id }),
                           onDelete: (row) => {
                             if (admin?.onDeleteRow) admin.onDeleteRow(row, isLive);
                             else toast.info(L.readOnlyView);
@@ -284,20 +294,7 @@ export function DashboardTableView({
         onClose={() => setLiveTarget(null)}
       />
 
-      <Dialog open={detail.open} onOpenChange={(o) => setDetail((d) => ({ ...d, open: o }))}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>{L.rowDetail}</DialogTitle></DialogHeader>
-          <div className="max-h-96 space-y-1 overflow-y-auto text-sm">
-            {detail.row &&
-              table.columns.map((c) => (
-                <div key={c.id} className="flex gap-2">
-                  <span className="w-32 shrink-0 text-muted-foreground">{resolveLocalized(c.header, lang)}</span>
-                  <span className="whitespace-pre-wrap">{String(detail.row!.values[c.source] ?? "—")}</span>
-                </div>
-              ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <EntityDrawer target={target} onClose={() => setTarget(null)} lang={lang} />
     </div>
   );
 }
