@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { EntityDrawer, type DrawerTarget } from "../../../shared/entity-drawer.client";
 import { daySlots, type CalRow } from "../../../../_lib/components/calendar";
 import { INTEGRATION_ICONS } from "../../../chrome/integration-icons";
 import { pick } from "../../../shared/localized";
@@ -53,6 +55,9 @@ export default function DayPlanner({
   const L = calendarStrings(lang);
   const channels = enabledOf(integrations);
   const [open, setOpen] = useState<{ row: CalRow; only: string | null } | null>(null);
+  // Ящик СУЩНОСТИ — общий для всей автоматизации; ящик ИНТЕГРАЦИЙ (`open`) остаётся своим, календарным:
+  // первый показывает, ЧТО это за запись, второй настраивает, КУДА она уйдёт.
+  const [entity, setEntity] = useState<DrawerTarget>(null);
 
   // ПОДПИСЬ ВНУТРИ ЗАПИСИ — как её назвало ядро («событие»), иначе словарь, иначе сам ключ:
   // безымянный вид лучше показать ключом, чем пустотой.
@@ -111,20 +116,19 @@ export default function DayPlanner({
                         <span className="font-mono text-[11px] opacity-70">{e.time}</span>
                         <span className="text-[10px] uppercase opacity-60">{type ? labelOf(type) : e.type}</span>
                         <span aria-hidden>—</span>
-                        {/* Заголовок СОБЫТИЯ — вход в ящик со всеми каналами сразу. У памятки заголовок
-                            остаётся обычным текстом: открывать ей нечего. */}
-                        {isEvent && channels.length > 0 ? (
-                          <Button
-                            type="button"
-                            variant="link"
-                            onClick={() => setOpen({ row: e, only: null })}
-                            className="h-auto min-w-0 flex-1 justify-start truncate p-0 font-normal text-inherit underline-offset-2 hover:underline"
-                          >
-                            {e.title}
-                          </Button>
-                        ) : (
-                          <span className="min-w-0 flex-1 truncate">{e.title}</span>
-                        )}
+                        {/* 🔒 ЗАГОЛОВОК ЗАПИСИ ВЕДЁТ К СУЩНОСТИ (шаг 328): событие — такая же ГРАНЬ записи,
+                            как метка на карте и объект в хранилище, и клик по нему открывает тот же ящик
+                            сущности, что строка любой таблицы. Прежде заголовок открывал ящик ИНТЕГРАЦИЙ;
+                            эта дверь не потеряна — она переехала на свою кнопку справа (ниже), потому что
+                            один жест не может значить два разных дела. */}
+                        <Button
+                          type="button"
+                          variant="link"
+                          onClick={() => setEntity({ table, id: e.id })}
+                          className="h-auto min-w-0 flex-1 justify-start truncate p-0 font-normal text-inherit underline-offset-2 hover:underline"
+                        >
+                          {e.title}
+                        </Button>
 
                         {isEvent
                           ? channels.map((i) => {
@@ -155,6 +159,23 @@ export default function DayPlanner({
                               );
                             })
                           : null}
+
+                        {/* ВСЕ КАНАЛЫ СРАЗУ — прежний вход по заголовку, переехавший на свою кнопку.
+                            Иконка канала по-прежнему открывает ОДИН канал. */}
+                        {isEvent && channels.length > 0 ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-xs"
+                            title={L.integrations}
+                            aria-label={L.integrations}
+                            onClick={() => setOpen({ row: e, only: null })}
+                            className="size-6 shrink-0 opacity-60"
+                            data-integration-all="yes"
+                          >
+                            <SlidersHorizontal className="size-3.5" />
+                          </Button>
+                        ) : null}
                       </div>
                     </div>
                   );
@@ -164,6 +185,8 @@ export default function DayPlanner({
           ))}
         </div>
       )}
+
+      <EntityDrawer target={entity} onClose={() => setEntity(null)} lang={lang} />
 
       <IntegrationDrawer
         row={open?.row ?? null}

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { ChevronDown, Columns3, Loader2 } from "lucide-react";
+import { ChevronDown, Columns3, Loader2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PAGE_SIZE, minWidthOf } from "../../../shared/data-table.client";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
@@ -189,6 +189,7 @@ export function DashboardTableView({
               {cols.map((c) => (
                 <th key={c.id} className="whitespace-nowrap px-3 py-2 font-medium" style={{ minWidth: minWidthOf(c.type) }}>{resolveLocalized(c.header, lang)}</th>
               ))}
+              {rowClickable ? <th className="px-3 py-2" style={{ minWidth: 56 }} /> : null}
             </tr>
           </thead>
           <tbody>
@@ -203,15 +204,14 @@ export function DashboardTableView({
                 <tr
                   key={r.id}
                   className="cursor-pointer border-b align-top transition-colors last:border-0 hover:bg-muted/40"
-                  // Кокпит может занять клик своей работой (выбор строки); во всех прочих случаях строка
-                  // открывает ЯЩИК СУЩНОСТИ — то же, что в базе, хранилище, памяти и на карте. Клик по
-                  // кнопке внутри ячейки ящик не открывает: у них своя работа.
+                  // 🔒 КЛИК ПО СТРОКЕ — ВСЕГДА ЯЩИК СУЩНОСТИ, как в базе, хранилище, памяти и на карте.
+                  // Раньше в кокпите его занимало РЕДАКТИРОВАНИЕ, и закон «строка ведёт к сущности» на
+                  // дашборде не работал вовсе. Правка никуда не делась — она переехала на явную кнопку в
+                  // строке (ниже): невидимых значений у одного жеста быть не должно.
                   onClick={(e) => {
-                    if (rowClickable) { admin!.onRowClick!(r); return; }
                     if ((e.target as HTMLElement).closest("button,a,input,select,textarea")) return;
                     setTarget({ table: table.id, id: r.id });
                   }}
-                  title={rowClickable ? admin?.rowClickTitle : undefined}
                 >
                   {cols.map((c) => (
                     // Общий закон таблиц: ячейка не выше четырёх строк, дальше обрыв. Картинки, действия и
@@ -241,6 +241,20 @@ export function DashboardTableView({
                       />
                     </td>
                   ))}
+                  {/* ПРАВКА СТРОКИ — явной кнопкой, а не кликом по строке: клик принадлежит ящику
+                      сущности (закон `tab.md`), и один жест не может значить два разных дела. */}
+                  {rowClickable ? (
+                    <td className="px-3 py-2 text-right">
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        title={admin?.rowClickTitle}
+                        onClick={() => admin!.onRowClick!(r)}
+                      >
+                        <Pencil className="size-3.5" />
+                      </Button>
+                    </td>
+                  ) : null}
                 </tr>
               ))
             )}
