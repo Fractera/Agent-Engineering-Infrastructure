@@ -129,6 +129,7 @@ export default function MainStorageClient({ lang, mode }: { lang: string; mode: 
           columns={columns}
           rows={rows}
           lang={lang}
+          table={TABLE}
           strings={{ copy: t.copy, empty: t.empty, page: t.page, of: t.of }}
           renderCell={(r, c, v) => {
             // Превью и просмотр — общий рантайм-инструмент (`tools/media-viewer`): картинка показывается

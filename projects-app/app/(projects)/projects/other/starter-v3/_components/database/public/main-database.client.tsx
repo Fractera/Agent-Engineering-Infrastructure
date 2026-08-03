@@ -87,6 +87,7 @@ export default function MainDatabaseClient({ lang, mode }: { lang: string; mode:
           columns={columns}
           rows={rows}
           lang={lang}
+          table={TABLE}
           strings={{ copy: t.copy, empty: t.empty, page: t.page, of: t.of }}
           rowActions={mode === "admin" ? (r) => (
             <Button variant="outline" size="xs" onClick={() => del(r.id)}>{t.del}</Button>

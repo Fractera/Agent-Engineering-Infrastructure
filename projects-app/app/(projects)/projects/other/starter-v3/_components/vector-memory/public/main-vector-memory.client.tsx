@@ -138,6 +138,7 @@ export default function MainVectorMemoryClient({ lang, mode }: { lang: string; m
           columns={columns}
           rows={rows}
           lang={lang}
+          table={TABLE}
           strings={{ copy: t.copy, empty: t.empty, page: t.page, of: t.of }}
           // Строки, записанные до 311.9а.4, несут `content` вместо `summary` — показываем их честно.
           renderCell={(r, c) => (c.key === "summary" && r.summary === undefined && r.content !== undefined

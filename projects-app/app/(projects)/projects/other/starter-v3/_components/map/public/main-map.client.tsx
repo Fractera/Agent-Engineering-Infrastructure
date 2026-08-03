@@ -78,6 +78,7 @@ export default function MainMapClient({ lang }: { lang: string }) {
             columns={columns}
             rows={rows}
             lang={lang}
+            table={TABLE}
             strings={{ copy: t.copy, empty: t.empty, page: t.page, of: t.of }}
           />
         ) : null}

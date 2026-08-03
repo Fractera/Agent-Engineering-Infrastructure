@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type MouseEvent, type ReactNode } from "react";
 import { Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { linksOf } from "../../_data/record.schema";
+import { EntityDrawer, type DrawerTarget } from "./entity-drawer.client";
 
 // ЕДИНАЯ ТАБЛИЦА АВТОМАТИЗАЦИИ (требование владельца 2026-08-02: «везде должен быть одинаковый интерфейс
 // таблиц»). Три закона живут ЗДЕСЬ ОДИН РАЗ, а не повторяются в каждой вкладке — иначе они разъедутся так
@@ -101,6 +102,7 @@ export function DataTable({
   rows,
   lang,
   strings,
+  table,
   rowActions,
   renderCell,
 }: {
@@ -108,12 +110,22 @@ export function DataTable({
   rows: TableRow[];
   lang: string;
   strings: DataTableStrings;
+  /** Имя склада этих строк. Задано — строка КЛИКАБЕЛЬНА и открывает ящик сущности (шаг 328). */
+  table?: string;
   /** Кнопки строки (кокпит): удалить, открыть. Отсутствуют — колонка действий не рисуется. */
   rowActions?: (row: TableRow) => ReactNode;
   /** Своя отрисовка для типов, которых нет в общем наборе (например превью изображения). */
   renderCell?: (row: TableRow, column: TableColumn, value: unknown) => ReactNode | undefined;
 }) {
   const [page, setPage] = useState(0);
+  // ЯЩИК СУЩНОСТИ ЖИВЁТ В САМОЙ ТАБЛИЦЕ (шаг 328): так его получают ВСЕ вкладки разом и ни одна не может
+  // забыть подключить. Клик по кнопке/ссылке внутри ячейки ящик НЕ открывает — у них своя работа.
+  const [target, setTarget] = useState<DrawerTarget>(null);
+  const openRow = (e: MouseEvent<HTMLTableRowElement>, row: TableRow) => {
+    if (!table) return;
+    if ((e.target as HTMLElement).closest("button,a,input,select,textarea")) return;
+    setTarget({ table, id: row.id });
+  };
   const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const current = Math.min(page, pages - 1);
   const slice = useMemo(() => rows.slice(current * PAGE_SIZE, current * PAGE_SIZE + PAGE_SIZE), [rows, current]);
@@ -139,7 +151,11 @@ export function DataTable({
           </thead>
           <tbody>
             {slice.map((r) => (
-              <tr key={r.id} className="border-b align-top last:border-0">
+              <tr
+                key={r.id}
+                onClick={(e) => openRow(e, r)}
+                className={`border-b align-top last:border-0${table ? " cursor-pointer transition-colors hover:bg-muted/40" : ""}`}
+              >
                 {columns.map((c) => {
                   const v = cellValue(r, c.source);
                   const custom = renderCell?.(r, c, v);
@@ -186,6 +202,8 @@ export function DataTable({
           </Pagination>
         </div>
       ) : null}
+
+      <EntityDrawer target={target} onClose={() => setTarget(null)} lang={lang} />
     </div>
   );
 }
