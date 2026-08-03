@@ -131,6 +131,11 @@ else; giving it outward channels would blur the only difference between the two 
 Integrations are edited by the OWNER. On the public storefront they are visible and readable and nothing
 more: a visitor must not rewrite the text that leaves for someone else's inbox.
 
+**Three controls on an entry, three meanings — do not merge them.** The TITLE opens the ENTITY (an event
+is a facet of a record exactly as a marker is — `tab.md`); a CHANNEL ICON opens that one channel; the
+SLIDERS button opens all channels at once. The title used to open the integrations panel: that was the
+row click doing two jobs, and the entity always loses such an argument.
+
 ## 6. Keys
 
 A channel that needs credentials declares them, and the declaration is the whole contract:

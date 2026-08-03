@@ -51,6 +51,10 @@ is a dead end: the links were written and mutual all along, and he still could n
 - Width, overlay, animation and the close button belong to the PRIMITIVE, not to the tab: do not restyle
   them per tab.
 - A journal row (`history`, `analytics`, `toast`) has no entity — the drawer says so in words.
+- 🔒 **The row click BELONGS to the entity.** Any other per-row action — editing, settings, a channel —
+  gets its OWN visible control in the row. Taking the click for something else is how the dashboard spent
+  a whole step with no drawer at all: the cockpit had quietly bound row-click to "edit", and one gesture
+  cannot mean two things.
 
 ## Presence — one field, three honest answers
 

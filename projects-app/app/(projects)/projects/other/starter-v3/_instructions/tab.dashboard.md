@@ -23,6 +23,12 @@ thumbnail, any other type becomes a container of the same size with its type pri
 A bare `<img>` here was the defect — every non-image showed a broken square and could not be opened. An
 external `http(s)` address stays a plain picture: it is not an object of our store.
 
+## The row click, and where editing went
+
+A click on a row opens the ENTITY (`tab.md`) — here as everywhere. The cockpit's row EDITING therefore has
+its own pencil button in the row; it is never bound to the row click again, and it appears only for live
+rows of an owner who may write.
+
 ## Never here
 
 Computing the result (a tab shows what an output node delivered) · a hard-coded column list · a second
