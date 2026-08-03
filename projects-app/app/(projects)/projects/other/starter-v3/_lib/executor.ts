@@ -144,12 +144,18 @@ export async function executeAutomation(input: NodeCtx): Promise<RunOutcome | Ru
     const cfg = assistantConfigOf(core.components);
     // Сводка сессии (330.4) едет полному срезу: она покрывает вытесненное и стоит около сотни токенов.
     // Краткому срезу класса она НЕ нужна — класс решается по последнему обмену, а не по истории сессии.
-    const dialogue = buildDialogue(state.messages, { lastN: cfg.lastN, tokenBudget: cfg.tokenBudget, summary: state.summary });
+    const dialogue = buildDialogue(state.messages, {
+      lastN: cfg.lastN,
+      tokenBudget: cfg.tokenBudget,
+      summary: state.summary,
+      ttlMinutes: cfg.ttlMinutes,
+    });
     // Краткий срез — ТОЛЬКО реплики человека (330.2R): ответы бота несут вердикт прошлого прогона, и
     // классификатор начинал его повторять. Обоснование — `userTurnsOnly` в сборщике.
     const brief = buildDialogue(userTurnsOnly(state.messages), {
       lastN: classifyWindow(cfg.lastN),
       tokenBudget: classifyBudget(cfg.tokenBudget),
+      ttlMinutes: cfg.ttlMinutes,
     });
     ctx = {
       ...ctx,

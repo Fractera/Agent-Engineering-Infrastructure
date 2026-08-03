@@ -58,10 +58,24 @@ export type DialogueContext = {
  */
 export function buildDialogue(
   messages: ChatMessage[],
-  opts: { lastN: number; tokenBudget: number; summary?: string },
+  opts: { lastN: number; tokenBudget: number; summary?: string; ttlMinutes?: number },
 ): DialogueContext {
   const budget = Math.max(1, Math.trunc(opts.tokenBudget));
   const windowN = Math.max(1, Math.trunc(opts.lastN));
+
+  // 🔒 СРОК ДЕЙСТВУЕТ И ПРИ ЧТЕНИИ (330.4R, дефект пойман замером «переживает ли просьба паузу»).
+  // TTL применялся только при ЗАПИСИ (`trim` внутри `pushMessage`), а движок отдавал буфер модели как
+  // есть — до того, как запись случится. Поэтому после паузы протухшие реплики уезжали в модель ЕЩЁ ОДИН
+  // раз, и «час тишины = чистая сессия» было неправдой ровно на один прогон. Срок обязан значить одно и
+  // то же с обеих сторон.
+  const ttl = Math.trunc(opts.ttlMinutes ?? 0);
+  if (ttl > 0) {
+    const cutoff = Date.now() - ttl * 60_000;
+    messages = messages.filter((m) => {
+      const t = new Date(m.at).getTime();
+      return Number.isFinite(t) ? t >= cutoff : true;
+    });
+  }
 
   // 🔒 СВОДКА СЕССИИ РЕЗЕРВИРУЕТСЯ, А НЕ КОНКУРИРУЕТ (330.4). Первоначальный набросок ставил её последней
   // в очереди на вытеснение — и это оказалось неверно: сводка стоит около сотни токенов, а покрывает ВЕСЬ

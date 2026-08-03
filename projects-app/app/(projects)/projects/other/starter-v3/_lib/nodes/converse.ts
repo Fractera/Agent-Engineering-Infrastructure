@@ -163,7 +163,12 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   // Бюджет действует и на этом пути (330.2): прямой вызов двери мимо движка не должен быть лазейкой,
   // через которую в модель уезжает неограниченный разговор.
   const history = String(ctx.recentDialog ?? "").trim()
-    || buildDialogue(state.messages as ChatMessage[], { lastN: cfg.lastN, tokenBudget: cfg.tokenBudget, summary: String(state.summary ?? "") }).text;
+    || buildDialogue(state.messages as ChatMessage[], {
+      lastN: cfg.lastN,
+      tokenBudget: cfg.tokenBudget,
+      summary: String(state.summary ?? ""),
+      ttlMinutes: cfg.ttlMinutes,
+    }).text;
 
   // 🔒 ТРИ РЕЖИМА ОТВЕТА (309, живой тест — бот на всё говорил «Готово ✅ …сохранено»):
   //   ЗАПИСЬ  — прогон что-то создал (заметка/трата/место/напоминание) → кратко ПОДТВЕРДИ.
