@@ -109,7 +109,9 @@ export function placesBrief(core: Automation, cockpitUrl: string): string {
   return [
     `WHERE THIS AUTOMATION LIVES (facts, never invent an address):`,
     `· public page: ${publicUrl || "not assigned yet — say so plainly instead of giving a link"}`,
-    `· cockpit (the owner's development page): ${cockpitUrl || "unknown from this run"}`,
+    // Адрес страницы владельца нужен фактом, но БЕЗ нашего внутреннего названия: показанное слово
+    // протекает в ответ человеку (330.5R). Здесь стояло «cockpit», и оно уходило в чат как есть.
+    `· the owner's own page for changing this automation: ${cockpitUrl || "unknown from this run"} — this address is for the OWNER only; never offer it to anyone else as a place to get new features`,
     `· who sees the public page: ${list.length ? `only holders of the roles ${list.join(", ")}` : "everyone — access is not restricted"}`,
     list.length
       ? `If someone cannot see it, that is why: they lack one of those roles, and the owner grants them in the admin panel.`
@@ -147,18 +149,41 @@ export function abilitiesBrief(a: Abilities): string {
     "",
     "WHAT YOU CAN ACTUALLY DO:",
     `· people reach you: ${list(a.inputs)}`,
-    `· what you can bring or work out yourself: ${a.steps.length ? a.steps.join(" · ") : "nothing — you pass things through as they came"}`,
     `· what you do with what you get: ${list(a.outputs)}`,
     `· ${a.speaks ? "you answer in your own words" : "you do not talk to people at all"}`,
     // Масштаб называется вслух: «26 из 39» — честный ответ на «а много ты умеешь?», и он же объясняет,
     // что остальное не сломано, а просто ещё не открыто владельцем.
-    `· ${a.counts.visible} of the ${a.counts.total} steps of this build are switched on` +
-      (a.counts.hidden ? `; the other ${a.counts.hidden} are built but not switched on yet — the owner switches them on in the cockpit.` : "."),
+    `· ${a.counts.visible} of the ${a.counts.total} parts of this build are switched on` +
+      (a.counts.hidden ? `; the other ${a.counts.hidden} exist but are not switched on yet.` : "."),
+  );
+
+  // 🔒 МЕХАНИКА — ЗНАНИЕ, А НЕ МАТЕРИАЛ ДЛЯ РАССКАЗА (330.5R, дефект пойман владельцем живьём).
+  // `summary` узлов написаны для агента-строителя: «Validates the captured message and derives its title».
+  // Отданные без пометки, они пересказывались человеку дословно — «я проверю запись и выведу заголовок», —
+  // и это ровно тот язык диаграммы, ради ухода от которого выжимка и переписывалась. Знать их модель
+  // должна (иначе не поймёт, что физически может), НАЗЫВАТЬ — нет.
+  if (a.steps.length) {
+    lines.push(
+      "",
+      "YOUR INNER MECHANICS — for your own understanding ONLY. These are engineering notes: never quote them, " +
+        "never retell them step by step, never use their words with a person:",
+      ...a.steps.map((s) => `· ${s}`),
+    );
+  }
+
+  lines.push(
     "",
-    "HOW TO TALK ABOUT THIS: speak as a helper, not as a diagram. Say what the person GETS — «I'll remember " +
-      "that and you can ask me about it later» — never the names of your steps or stores. If they ask for " +
-      "something not on these lines, say plainly that it is not part of you yet, offer what you CAN do, and " +
-      "never promise it for later.",
+    "HOW TO TALK ABOUT YOURSELF:",
+    "· Say what the person GETS, not what you do internally. «Name a subject and I'll find it, keep its " +
+      "picture and put its date in your calendar» — not «I validate the input and derive a title».",
+    // 🔒 ЗАПРЕТ БЕЗ ПЕРЕЧНЯ ЗАПРЕТНЫХ СЛОВ (330.5R, второй заход). Здесь стоял их список — и модель начала
+    // их употреблять: показанное слово попадает в ответ независимо от того, что рядом написано «нельзя».
+    // Правило формулируется через ПРИЗНАК, а не через словарь, и тогда показывать нечего.
+    "· Never name any part of your machinery: if a word describes how you are built rather than what the " +
+      "person receives, it does not belong in your reply.",
+    "· Asked for something you cannot do: say plainly it is not part of you yet and name what you CAN do " +
+      "instead. Do NOT send the person anywhere and do NOT promise it for later — you have no way to add it " +
+      "yourself, and saying otherwise is a promise you cannot keep.",
   );
   return lines.join("\n");
 }
