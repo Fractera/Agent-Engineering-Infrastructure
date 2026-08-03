@@ -3133,6 +3133,125 @@
               },
               "pageSize": 10
             }
+          },
+          {
+            "cuid": "ctoastjournal7ks20d",
+            "name": "Notices",
+            "description": "",
+            "info": {
+              "aiSummary": "The toast journal — what the automation told the human: the outcome of every run AND every announcement that had no outward channel connected (a due calendar moment lands here by the default-destination law, output.toast.md). A journal writes always; the table is declared here in data.columns."
+            },
+            "status": "materialized",
+            "warnings": [],
+            "envKeys": [],
+            "data": {
+              "table": "toast",
+              "pageSize": 10,
+              "title": {
+                "en": "Notices",
+                "es": "Avisos",
+                "fr": "Notifications",
+                "it": "Avvisi",
+                "ru": "Уведомления",
+                "de": "Hinweise",
+                "pt": "Avisos",
+                "pl": "Powiadomienia",
+                "tr": "Bildirimler",
+                "nl": "Meldingen"
+              },
+              "columns": [
+                {
+                  "key": "date",
+                  "label": {
+                    "en": "Date",
+                    "es": "Fecha",
+                    "fr": "Date",
+                    "it": "Data",
+                    "ru": "Дата",
+                    "de": "Datum",
+                    "pt": "Data",
+                    "pl": "Data",
+                    "tr": "Tarih",
+                    "nl": "Datum"
+                  },
+                  "type": "text",
+                  "source": "date",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "outcome",
+                  "label": {
+                    "en": "Outcome",
+                    "es": "Resultado",
+                    "fr": "Issue",
+                    "it": "Esito",
+                    "ru": "Исход",
+                    "de": "Ergebnis",
+                    "pt": "Resultado",
+                    "pl": "Wynik",
+                    "tr": "Sonuç",
+                    "nl": "Uitkomst"
+                  },
+                  "type": "badge",
+                  "source": "outcome",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "title",
+                  "label": {
+                    "en": "Title",
+                    "es": "Título",
+                    "fr": "Titre",
+                    "it": "Titolo",
+                    "ru": "Заголовок",
+                    "de": "Titel",
+                    "pt": "Título",
+                    "pl": "Tytuł",
+                    "tr": "Başlık",
+                    "nl": "Titel"
+                  },
+                  "type": "text",
+                  "source": "title",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "source",
+                  "label": {
+                    "en": "Source",
+                    "es": "Origen",
+                    "fr": "Source",
+                    "it": "Origine",
+                    "ru": "Канал",
+                    "de": "Quelle",
+                    "pt": "Origem",
+                    "pl": "Źródło",
+                    "tr": "Kaynak",
+                    "nl": "Bron"
+                  },
+                  "type": "badge",
+                  "source": "source",
+                  "defaultVisible": true
+                },
+                {
+                  "key": "reason",
+                  "label": {
+                    "en": "Reason",
+                    "es": "Motivo",
+                    "fr": "Raison",
+                    "it": "Motivo",
+                    "ru": "Причина",
+                    "de": "Grund",
+                    "pt": "Motivo",
+                    "pl": "Powód",
+                    "tr": "Neden",
+                    "nl": "Reden"
+                  },
+                  "type": "text",
+                  "source": "reason",
+                  "defaultVisible": true
+                }
+              ]
+            }
           }
         ]
       },

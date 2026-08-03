@@ -165,7 +165,10 @@ the `public/` half. The `admin/` half holds one thing only, the AI-request form.
 - **Links have ONE representation** — `links: [{table,id}]`, mutual, set by the write itself
   (`addEntityRow`), never by the node. A row cannot be born unlinked.
 - **Entity store vs run journal.** Stores (`database`, `vector-memory`, `storage`, `map`, `calendar`) write
-  only when the run creates something; journals (`history`, `analytics`, `toast`) always write. **Asking is
+  only when the run creates something; journals (`history`, `analytics`, `toast`) always write. **The toast
+  is also the DEFAULT DESTINATION:** anything the automation must tell the human goes out through a
+  connected channel, and with no channel connected it goes to the toast — including a deferred announcement
+  such as a due calendar moment. "Nobody was told" is not an expressible state (`output.toast.md`). **Asking is
   not saving** — a question-class run leaves no record. Full shape: `records.md`.
 
 ## Use cases

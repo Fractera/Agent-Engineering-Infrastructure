@@ -1,4 +1,4 @@
-# DESTINATION `toast` — the outcome of the run, and the one door that cannot be shut
+# DESTINATION `toast` — the DEFAULT destination, and the one door that cannot be shut
 
 > **Law of instructions: ENGLISH, COMPACT, one fact one home.** Its reader is a model that must read the core too, so every line here is paid on every session. Prune before you append; never restate what another instruction already says — link to it by name.
 
@@ -7,6 +7,22 @@
 Every other destination is optional: the builder reveals the ones his automation needs. This one is not.
 It carries the OUTCOME of a run — success and failure alike — to the one place that always exists: the
 automation's own page and its run journal.
+
+## 🔒 THE DEFAULT DESTINATION — every notification, not only a run outcome
+
+**Anything this automation has to tell the human goes out through a connected channel; when NO channel is
+connected or active, it goes to the toast. "Nobody was told" is not an expressible state.**
+
+That covers more than a run: a due calendar moment, and every future path that notifies. Whoever builds
+such a path declares its fallback here — a notification whose only channel is missing is a DEFECT, not a
+configuration. The rule is narrow on purpose: the fallback fires when there is NO active channel at all.
+A channel that exists and FAILED must retry on the next beat, never be replaced by "well, we toasted it".
+
+Exactly-once is the same mark the outward channels use (`deliveredAt` in the entry), so a repeated beat
+never repeats the toast.
+
+Proven live 2026-08-03: a due entry with no connected channel produced `due 1 · sent 0` — the moment came
+and no one was told. That silence is what this section removes.
 
 ## Why it exists
 

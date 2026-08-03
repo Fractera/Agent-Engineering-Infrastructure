@@ -42,3 +42,9 @@ The limits of the exception, so it does not spread:
 
 For every other destination the law above stands unchanged: a second addressee means a second node.
 Do not "unify" the calendar with it — that would delete a capability the owner asked for.
+
+## One destination is not optional
+
+Every output here is revealed by choice — except `toast`, which is revealed by law AND is the DEFAULT
+destination for anything the automation must tell the human when no other channel is connected, including
+a deferred announcement like a due calendar moment. Full law: `output.toast.md`.

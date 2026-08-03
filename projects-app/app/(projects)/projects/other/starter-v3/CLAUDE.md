@@ -121,6 +121,9 @@ Reimplementing either inside this folder breaks reuse between accounts. If one l
   (`addEntityRow`), never by the node. A row cannot be born unlinked.
 - **Entity store vs run journal.** Stores (`database`, `vector-memory`, `storage`, `map`, `calendar`) write
   only when the run actually creates something. Journals (`history`, `analytics`, `toast`) always write.
+  **The toast is the DEFAULT DESTINATION:** whatever the automation must tell the human goes out through a
+  connected channel, and with none connected it goes to the toast — a due calendar moment included.
+  "Nobody was told" is not an expressible state (`output.toast.md`).
   **Asking is not saving:** a question-class run leaves no record.
 
 ## Use cases

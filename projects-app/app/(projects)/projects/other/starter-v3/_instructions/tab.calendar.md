@@ -128,6 +128,11 @@ Two places, and neither duplicates the other.
 Only an `event` carries integrations. A `reminder` is a note to the owner, not a message to someone
 else; giving it outward channels would blur the only difference between the two kinds.
 
+**A due entry with NO active channel goes to the TOAST** — the default destination (`output.toast.md`),
+marked `integrations.toast.deliveredAt` so a repeated beat never repeats it. Before this the moment came
+and nothing happened at all: `due 1 · sent 0`. A channel that exists and failed is NOT replaced by the
+toast — it retries.
+
 Integrations are edited by the OWNER. On the public storefront they are visible and readable and nothing
 more: a visitor must not rewrite the text that leaves for someone else's inbox.
 

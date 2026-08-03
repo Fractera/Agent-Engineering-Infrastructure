@@ -15,12 +15,15 @@
 // повтор не имеет права отправить письмо второй раз. Отметка об отправке живёт В САМОЙ ЗАПИСИ —
 // `integrations[канал].deliveredAt` — и ставится тем же append-only способом, что и любая правка строки.
 // Отметка ставится ПОСЛЕ успешной отправки: упавшая отправка обязана повториться на следующем тике.
-import { listRows, updateRow } from "../../rows";
+import { addRow, listRows, updateRow } from "../../rows";
 import { sendEmail, sendTelegram, sendToAutomation } from "../../transport";
 import { notifyAtMs, toCalRows, type CalRow, type RowIntegration } from "./index";
 
 /** Дальше этого в прошлое не заглядываем: сервер, простоявший сутки, не рассылает залпом всё пропущенное. */
 const BACKSTOP_MS = 24 * 60 * 60 * 1000;
+
+/** Канал по умолчанию. Не объявляется во вкладке как интеграция — он не выбирается, он остаётся. */
+const TOAST_CHANNEL = "toast";
 
 export type DeliveryReport = {
   checked: number;
@@ -104,6 +107,41 @@ export async function deliverDue(options: { table?: string; origin: string; gate
         // Провал одного канала не отменяет остальные: у события три адресата, и молчание одного из них
         // не повод лишить сообщения двух других. Ошибка уходит в отчёт целиком.
         report.failed.push({ row: row.id, channel, error: e instanceof Error ? e.message : String(e) });
+      }
+    }
+
+    // 🔒 ТОСТ — КАНАЛ ПО УМОЛЧАНИЮ (требование владельца 2026-08-03). Наступившее событие, у которого не
+    // подключён НИ ОДИН внешний канал, до сих пор не оставляло ничего: `due 1 · sent 0` и тишина. Это
+    // ровно то состояние, ради устранения которого тост объявлен неотключаемым исходом (311.8) — только
+    // раньше он закрывал исход ПРОГОНА, а наступивший момент оставался без него.
+    //
+    // Условие узкое и намеренно такое: тост срабатывает, когда активных каналов у записи НЕТ вовсе. Если
+    // канал есть, но отправка упала, тоста не будет — провал обязан повториться на следующем тике, а не
+    // подмениться записью «ну хоть тост поставили».
+    //
+    // ГРАНИЦА ЧЕСТНОСТИ (`output.toast.md`): тост — поверхность СВОЕЙ страницы и журнала. Он не
+    // притворяется доставкой в чужой канал: телефон от него не зазвонит, но момент зафиксирован и виден.
+    // «Ровно один раз» — та же отметка, что у прочих каналов: `integrations.toast.deliveredAt`.
+    const outward = Object.entries(row.integrations ?? {}).filter(([channel]) => channel !== TOAST_CHANNEL);
+    const toastMark = (row.integrations ?? {})[TOAST_CHANNEL] as (RowIntegration & { deliveredAt?: string }) | undefined;
+    if (!outward.some(([, v]) => (v as RowIntegration)?.active) && !toastMark?.deliveredAt) {
+      try {
+        const written = await addRow("toast", {
+          outcome: "due",
+          reason: "no outward channel connected — the default channel took it",
+          title: row.title,
+          source: table,
+          date: `${row.date} ${row.time}`.trim(),
+        });
+        const next: Record<string, RowIntegration> = {
+          ...row.integrations,
+          [TOAST_CHANNEL]: { active: true, deliveredAt: new Date(nowMs).toISOString() } as RowIntegration,
+        };
+        await updateRow(table, row.id, { integrations: next });
+        row.integrations = next;
+        report.sent.push({ row: row.id, channel: TOAST_CHANNEL, ref: written.id });
+      } catch (e) {
+        report.failed.push({ row: row.id, channel: TOAST_CHANNEL, error: e instanceof Error ? e.message : String(e) });
       }
     }
   }
