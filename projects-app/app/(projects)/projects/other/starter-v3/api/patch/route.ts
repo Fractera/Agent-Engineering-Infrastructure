@@ -376,7 +376,26 @@ export async function POST(req: NextRequest) {
 
   const found = locate(core, address);
   if (!found.ok) return bad(found.error, 404);
-  Object.assign(found.target, set);
+
+  // 🔒 `data` СЛИВАЕТСЯ ПО ПОЛЯМ, А НЕ ЗАМЕНЯЕТСЯ ЦЕЛИКОМ (шаг 312.7, найдено собственной ошибкой).
+  //
+  // Что случилось: правка ОДНОГО поля вкладки «Ассистент» (`set: { data: { qa: [...] } }`) снесла всё
+  // остальное — инструкцию поведения, язык, окно памяти. Дверь честно исполнила `Object.assign`: `data`
+  // для неё обычное поле, и новое значение заменило старое. Владелец, меняющий одну настройку из
+  // интерфейса, теряет соседние и узнаёт об этом, когда автоматизация уже отвечает по умолчанию.
+  //
+  // `data` — единственное поле, которое является СЛОВАРЁМ НАСТРОЕК, а не значением. Поэтому именно у
+  // него слияние верхнего уровня: пришедшие ключи побеждают, непришедшие остаются. Убрать настройку
+  // по-прежнему можно — прислав её пустой (`""`, `[]`, `null`), то есть намеренно, а не по забывчивости.
+  const patch = { ...set } as Record<string, unknown>;
+  const incoming = patch.data;
+  if (incoming && typeof incoming === "object" && !Array.isArray(incoming)) {
+    const current = (found.target as Record<string, unknown>).data;
+    if (current && typeof current === "object" && !Array.isArray(current)) {
+      patch.data = { ...(current as Record<string, unknown>), ...(incoming as Record<string, unknown>) };
+    }
+  }
+  Object.assign(found.target, patch);
 
   const written = await writeCore(core);
   return written.ok ? NextResponse.json({ ok: true }) : bad(written.errors, 422);
