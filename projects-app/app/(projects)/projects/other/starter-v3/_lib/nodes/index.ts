@@ -30,6 +30,7 @@ import { transformPayload } from "./transform-payload";
 import { fetchExternal } from "./fetch-external";
 import { keepObject } from "./keep-object";
 import { resolveMoment } from "./resolve-moment";
+import { recallConversation } from "./recall-conversation";
 import { composeReply } from "./compose-reply";
 import { converse } from "./converse";
 import { ifSuccess } from "./if-success";
@@ -82,6 +83,9 @@ export const NODE_FUNCTIONS: Record<string, NodeFn> = {
   fetchExternal,
   keepObject,
   resolveMoment,
+  // ЧТЕНИЕ ПАМЯТИ (330.7) — вторая половина складов: до него писать умели двенадцать узлов, читать — ни
+  // один, и вопрос о прошлом разговоре упирался в пустоту.
+  recallConversation,
   composeReply,
   converse,
   ifSuccess,

@@ -84,8 +84,21 @@ export const intentSmallTalkValidate = classifyClaim;
 export const intentRecordGivenValidate = classifyClaim;
 export const intentUnclaimedValidate = classifyClaim;
 
+/**
+ * `recallConversation` (330.7): три исхода, и разница между ними — весь смысл валидатора здесь.
+ *   `found`       — своё нашлось;
+ *   `empty`       — память ответила, но в ЭТОЙ автоматизации об этом не говорили (чужое отброшено);
+ *   `unreachable` — памяти на сервере нет или она отказала.
+ * «Не нашлось» и «спросить не у кого» выглядят в данных одинаково и означают противоположное человеку.
+ */
+export const recallConversationValidate: NodeValidator = (patch) => {
+  const o = String((patch as Record<string, unknown>).recallOutcome ?? "");
+  return o === "found" || o === "unreachable" ? o : "empty";
+};
+
 export const NODE_VALIDATORS: Record<string, NodeValidator> = {
   transformPayloadValidate,
+  recallConversationValidate,
   fetchExternalValidate,
   keepObjectValidate,
   resolveMomentValidate,

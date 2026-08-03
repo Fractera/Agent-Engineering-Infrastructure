@@ -103,7 +103,12 @@ export async function guessClass(ctx: NodeCtx): Promise<string> {
         `control — asks to CHANGE how the automation is built or configured.\n` +
         `composite — needs both an outside lookup and a check against what is already kept.\n` +
         `fetch-external — names a subject to bring in from the outside world.\n` +
-        `read-own — asks about what is already stored here.\n` +
+        // «Помнишь, мы говорили о…» — это вопрос о хранимом, даже если человек уверен, что разговор был.
+        // Без этой строки такой вопрос уходил в `unclaimed`, узел памяти не срабатывал, и речь отвечала
+        // «да, помню» вообще без материала (поймано живьём 330.7).
+        `read-own — asks about what is already stored here, INCLUDING asking whether you remember an ` +
+        `earlier conversation ("do you remember we talked about X", "помнишь, мы обсуждали X"). Judge by the ` +
+        `FORM of the question; whether the thing is actually in memory is not yours to decide here.\n` +
         `incomplete — names a task but leaves out the thing it applies to.\n` +
         `small-talk — a greeting, thanks or goodbye; no action needed.\n` +
         `record-given — states a fact that is meant to be kept, and needs nothing fetched.\n` +

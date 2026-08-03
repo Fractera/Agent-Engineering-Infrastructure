@@ -1413,6 +1413,67 @@
                   "condition-failure"
                 ]
               }
+            },
+            {
+              "cuid": "crecallconversationk7t2",
+              "name": "Recall the conversation",
+              "description": "Answers a question about the past by asking the vector memory and keeping ONLY what belongs to this automation. The memory index is shared by every automation on the server, so the provenance of each excerpt is checked before it is used; the exact time comes from this folder's own conversation table.",
+              "state": "visible",
+              "info": {
+                "aiSummary": "Searches the shared vector memory for what was said or stored here, discards excerpts belonging to other automations, and hands the surviving ones with their dates to the speech layer."
+              },
+              "status": "materialized",
+              "warnings": [],
+              "envKeys": [],
+              "function": {
+                "name": "recallConversation",
+                "summary": "Finds what was said or kept here before and hands the excerpts, with their dates, to the reply.",
+                "accepts": "ctx.question (or ctx.text) on a question-class run.",
+                "returns": "recallAnswer (excerpts with dates), recallSources (time, channel, excerpt) and recallForeignDropped.",
+                "outcomes": [
+                  {
+                    "name": "found",
+                    "when": "the memory returned excerpts that belong to THIS automation",
+                    "puts": "recallAnswer plus recallSources"
+                  },
+                  {
+                    "name": "empty",
+                    "when": "the memory answered, but nothing of it was said here — foreign excerpts are discarded",
+                    "puts": "nothing: the reply says plainly that it does not remember"
+                  },
+                  {
+                    "name": "unreachable",
+                    "when": "the vector memory is absent on this server or refused the question",
+                    "puts": "nothing: the reply says it cannot look it up, instead of inventing"
+                  }
+                ],
+                "validator": "recallConversationValidate"
+              },
+              "capability": null,
+              "serves": [],
+              "lineage": "",
+              "hookPhrases": [],
+              "role": "",
+              "run": "sequential",
+              "estDurationMs": 800,
+              "kind": "transform",
+              "ioType": null,
+              "in": {
+                "state": "required",
+                "connections": [
+                  "intent",
+                  "transform",
+                  "condition-success"
+                ]
+              },
+              "out": {
+                "state": "required",
+                "connections": [
+                  "transform",
+                  "condition-success",
+                  "condition-failure"
+                ]
+              }
             }
           ]
         },
@@ -2889,6 +2950,18 @@
         "from": "cspeechconverse4m1x7q",
         "to": "cmruqdpjm51ehf50515a4931dd04d7",
         "state": "hidden"
+      },
+      {
+        "cuid": "cerecallfromreadown9k",
+        "from": "cintentreadown10shd0",
+        "to": "crecallconversationk7t2",
+        "state": "visible"
+      },
+      {
+        "cuid": "cerecalltopayload3xz",
+        "from": "crecallconversationk7t2",
+        "to": "cmruca7ra4n1jsdcdee0feb026f3a4",
+        "state": "visible"
       }
     ]
   },
@@ -3893,7 +3966,7 @@
                 "chat": ""
               },
               "qa": [],
-              "instruction": "You are the conversational assistant of this automation. Speak for it in the first person, warmly and briefly — one short message, an emoji where it fits, no preamble, never repeat the question back. You are NOT a general-purpose chatbot: you speak only for this build. WHAT IT CAN DO IS GIVEN TO YOU BELOW, derived from its core at this very moment — treat those lines as the only truth about abilities. Asked for something outside them, say plainly and kindly that it is not built here yet and that the owner adds it in the cockpit. Never invent a result, never promise a feature, never claim something was saved unless the run says so. Answer in the language of the person you are talking to."
+              "instruction": "You are the conversational assistant of this automation. Speak for it in the first person, warmly and briefly — one short message, an emoji where it fits, no preamble, never repeat the question back. You are NOT a general-purpose chatbot: you speak only for this build. WHAT IT CAN DO IS GIVEN TO YOU BELOW, derived from its core at this very moment — treat those lines as the only truth about abilities. You speak to a person who has never seen how you are built: tell them what they GET, never how you work inside, and never use a word that describes your machinery rather than their result. If they ask for something outside your abilities, say plainly and kindly that it is not part of you yet, name what you CAN do instead, and stop there — do not send them anywhere and do not promise it for later. Never invent a result, never promise a feature, never claim something was saved unless the run says so. Answer in the language of the person you are talking to."
             }
           }
         ]

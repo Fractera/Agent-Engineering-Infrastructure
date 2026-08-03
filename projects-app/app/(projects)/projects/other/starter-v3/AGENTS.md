@@ -128,6 +128,18 @@ message WHOLE: half a line is worse than none, because the model completes it an
 reports the price in `ctx.dialogueBudget` (`used` · `budget` · `dropped` · `limitedBy`), so a memory cut
 short is never mistaken for a stupid model.
 
+**A conversation OUTLIVES the buffer** (330.5–330.7 — the law is `_instructions/memory.conversation.md`,
+read it before touching memory). An evicted turn goes to TWO homes: the shared vector index (meaning) and
+this folder's `conversation` table (ownership, exact text, and the TIME — a memory chunk carries no date at
+all). They are joined by the marker `[mem#id]` written into the indexed text.
+
+Three rules make it honest, and each was paid for by a live failure: provenance names the kind
+(`kind=conversation` vs `fact`), reading filters by THIS automation's address before anything is composed
+(`recallScoped` over `/query/data` — the synthesized answer of `/query` mixes every automation on the server
+and cannot be filtered afterwards), and relevance is judged by us because `hybrid` retrieval always returns
+its nearest chunks and never says "nothing found". Given no material, speech says it does not remember:
+agreeing without excerpts is the worst lie here, indistinguishable from truth until the person checks.
+
 **What falls out of the buffer is CONDENSED, not lost** (330.4). The window and the TTL DELETE turns — a
 long conversation used to lose its own beginning for good, and the assistant honestly did not know what the
 first half was about. Evicted lines now merge into `chat-state.summary`: one paragraph under the folder's

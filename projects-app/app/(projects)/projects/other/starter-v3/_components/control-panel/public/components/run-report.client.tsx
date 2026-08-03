@@ -38,6 +38,14 @@ export default function RunReport({ outcome, lang }: { outcome: Outcome; lang: s
   // `api/run` достраивает `context.reply`. Спросил в пульте — ответ в пульте, а не только в мессенджере.
   const reply = typeof outcome.context?.reply === "string" ? outcome.context.reply.trim() : "";
 
+  // 🔒 ОТКУДА ЭТО ВСПОМНИЛОСЬ (330.8, требование владельца). Когда ответ опирается на долгую память, под
+  // ним показываются ИСТОЧНИКИ — дата разговора и выдержка, выделенные цветом. Человек видит, что фраза
+  // пришла из беседы двухнедельной давности, а не выдумана сейчас. Всё хранилище НЕ показываем: только
+  // источник конкретного ответа.
+  const sources = Array.isArray(outcome.context?.recallSources)
+    ? (outcome.context!.recallSources as { at?: string; channel?: string; excerpt?: string }[])
+    : [];
+
   return (
     <div className="space-y-2 rounded-md border bg-muted/30 p-3">
       {reply ? (
@@ -47,6 +55,17 @@ export default function RunReport({ outcome, lang }: { outcome: Outcome; lang: s
       ) : (
         <p className="text-sm text-emerald-700 dark:text-emerald-400">{L.done}</p>
       )}
+      {sources.length ? (
+        <div className="space-y-1 rounded-md border border-rose-300/60 bg-rose-50/60 p-2 dark:border-rose-900/60 dark:bg-rose-950/30">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-rose-700 dark:text-rose-300">{L.recalledFrom}</p>
+          {sources.map((s, i) => (
+            <p key={i} className="text-xs text-rose-800 dark:text-rose-200">
+              {s.at ? <span className="font-semibold">{String(s.at).slice(0, 10)} · </span> : null}
+              {s.excerpt}
+            </p>
+          ))}
+        </div>
+      ) : null}
       <div className="flex flex-wrap gap-2">
         {outcome.nodes.map((n) => (
           <Badge

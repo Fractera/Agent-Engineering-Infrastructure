@@ -12,6 +12,7 @@ import { readCore } from "../core-io";
 import { assistantConfigOf } from "../components/conversation/config";
 import { loadChat, pushMessage, setLang, setPending, setSummary, type ChatMessage, type PendingAsk } from "../components/conversation/state";
 import { buildDialogue, outlineOf } from "../components/conversation/context";
+import { rememberConversation } from "../components/conversation/remember";
 import { SUMMARY_LIMIT } from "../../_data/record.schema";
 import { abilitiesBrief, abilitiesOf, placesBrief, type Abilities } from "../components/conversation/abilities";
 import { composeReply } from "./compose-reply";
@@ -90,6 +91,12 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
    */
   const condense = async (dropped: ChatMessage[]): Promise<void> => {
     if (!chatId || !dropped.length) return;
+    // 🔒 ВЫТЕСНЕННОЕ УХОДИТ В ДОЛГУЮ ПАМЯТЬ (330.5) — здесь же, где строится сводка: один автор, один
+    // момент. Сводка отвечает на «о чём была сессия», долгая память — на «помнишь, мы говорили о…».
+    // Не роняем прогон: ответ человеку уже важнее, чем архив.
+    try {
+      await rememberConversation(dropped, { channel: String(ctx.source ?? "control-panel"), chatKey: chatId });
+    } catch { /* архив вторичен по отношению к ответу */ }
     const previous = String(state.summary ?? "").trim();
     const outline = outlineOf(dropped, SUMMARY_LIMIT);
     let next = "";
@@ -224,6 +231,15 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
     `Never invent claims about your internal storage or tables. Only a RECORDING task confirms a save; a ` +
     `QUESTION is answered, not "saved"; a CONVERSATION is just a reply. Do not tack "saved / can be seen in ` +
     `the app" onto answers or chit-chat. ` +
+    // 🔒 «ПОМНЮ» — ТОЛЬКО ПРИ ПРЕДЪЯВЛЕННОМ МАТЕРИАЛЕ (330.7, ложь поймана живьём). На «помнишь, мы
+    // обсуждали ремонт крыши?» — тему, которой здесь не было, — ассистент ответил «Да, помню: мы это
+    // обсуждали». Память ничего не вернула, и подтверждать было нечем: модель просто поддержала форму
+    // вопроса. Это худший род вранья в разговоре — он неотличим от правды, пока человек не проверит.
+    (recallAnswer
+      ? ""
+      : `You were given NOTHING from memory for this run. Therefore you do NOT remember any past conversation: ` +
+        `if the person asks whether you remember something, say honestly that you do not find it, and never ` +
+        `agree that you discussed it. Agreeing without material is a lie. `) +
     (qaHit ? `For a message like "${qaHit.q}" answer in this style: "${qaHit.a}". ` : "") +
     // Смена языка — понимает МОДЕЛЬ (не список фраз): просит человек говорить на другом языке → модель
     // ставит В НАЧАЛЕ ответа тег [[lang:<iso>]] и дальше отвечает уже на новом; мы парсим тег детерминированно

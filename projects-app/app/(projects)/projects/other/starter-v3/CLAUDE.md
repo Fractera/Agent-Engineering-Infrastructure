@@ -72,6 +72,12 @@ Read any file here freely — nothing is hidden behind an API.
   Never hard-code a limit and never assemble the history a second time — a default inside `formatDialog`
   silently beat the owner's setting, and a second form meant the model read one dialogue two ways depending
   on the call path.
+- **A conversation OUTLIVES the buffer** (330.5–330.7, `_instructions/memory.conversation.md`): evicted
+  turns go to the shared vector index AND to this folder's `conversation` table, joined by `[mem#id]`.
+  Reading uses `recallScoped` over `/query/data` and **filters by this automation's address before anything
+  is composed** — the index is shared, and citing someone else's conversation is the failure this design
+  exists to prevent. The memory always returns its nearest chunks, so off-topic ones are dropped too; given
+  no material, speech says it does not remember rather than agreeing.
 - **Evicted turns are CONDENSED, never lost** (330.4): they merge into `chat-state.summary`, one paragraph
   under the folder's `SUMMARY_LIMIT`, tagged `[earlier in this session, condensed]` so the model does not
   read the past as just-said. Its cost is reserved before turns compete for the budget.

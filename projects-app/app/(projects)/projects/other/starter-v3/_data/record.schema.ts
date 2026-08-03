@@ -80,6 +80,44 @@ export const TurnSchema = z
 
 export type Turn = z.infer<typeof TurnSchema>;
 
+// ─── СТРОКА ДОЛГОЙ ПАМЯТИ РАЗГОВОРА (шаг 330.5) ─────────────────────────────────────────────────────
+//
+// 🔴 ЗАЧЕМ ВТОРОЙ ДОМ У ОДНОЙ РЕПЛИКИ. Векторная память общая на весь сервер: туда пишут ВСЕ автоматизации,
+// и по ответу «да, мы это обсуждали» невозможно понять, обсуждали ли это ЗДЕСЬ. Локальная таблица решает
+// именно это — она лежит внутри папки автоматизации, поэтому принадлежность в ней не может соврать.
+// Вектор отвечает за СМЫСЛ («о чём был разговор»), таблица — за ПРИНАДЛЕЖНОСТЬ и точный текст.
+//
+// 🔒 ЭТО НЕ СКЛАД СУЩНОСТЕЙ. `ENTITY_STORES` хранят то, ЧЕМ автоматизация владеет, и пишут только для
+// классов-записей: спросить — не значит сохранить. Разговор ведётся ВСЕГДА, независимо от класса, поэтому
+// он третий род — не сущность и не журнал прогона. `mayWriteEntity` к нему не применяется, и это не
+// послабление закона, а признание, что закон про другое.
+export const ConversationTurnSchema = z
+  .object({
+    text: z.string().min(1, "an empty line is not a conversation turn"),
+    role: z.enum(["user", "assistant"]),
+    /** Канал, в котором это было сказано, и собеседник — по ним же фасетируется поиск. */
+    channel: z.string().min(1, "a remembered turn names the channel it was said in"),
+    chatKey: z.string().min(1, "a remembered turn names whose conversation it belongs to"),
+    at: z.string().min(1, "a remembered turn carries the moment it was said"),
+    runId: z.string().optional(),
+    /** Что ответила векторная память на ингест. Пусто — памяти на этом сервере нет, строка всё равно жива. */
+    trackId: z.string().optional(),
+    /** Наш маркер `[mem#id]` внутри текста документа: по нему выдержка разрешается обратно в эту строку. */
+    memRecordId: z.string().optional(),
+  })
+  .passthrough();
+
+export type ConversationTurn = z.infer<typeof ConversationTurnSchema>;
+
+/** Проверка строки разговора перед записью. Отказывает словами — как конверт строки и реплика диалога. */
+export function parseConversationTurn(row: unknown): void {
+  const parsed = ConversationTurnSchema.safeParse(row);
+  if (!parsed.success) {
+    const why = parsed.error.issues.map((i) => `${i.path.join(".") || "row"}: ${i.message}`).join("; ");
+    throw new Error(`a remembered conversation turn must obey its law before it may be stored — ${why}`);
+  }
+}
+
 /**
  * Проверка реплики перед записью в состояние чата. Отказывает СЛОВАМИ — тот же обучающий отказ, что у
  * конверта строки: незаконная реплика не ложится в память диалога.
