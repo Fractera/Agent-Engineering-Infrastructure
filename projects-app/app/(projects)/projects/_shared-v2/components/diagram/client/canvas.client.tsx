@@ -478,18 +478,30 @@ export function DiagramCanvasV2({
     [placed, rowsPerCol, tallest, activeId, build, mode],
   );
 
+  // 🔒 ВЫДЕЛИЛ УЗЕЛ — ВИДНЫ ВСЕ ЕГО СВЯЗИ (владелец 2026-08-03). Рёбра выбранного узла рисуются ЖИРНОЙ
+  // ЧЁРНОЙ СПЛОШНОЙ линией, без пунктира и без анимации, — даже если это ребро скрытой двери: пока узел
+  // выбран, важно не «какое оно», а «куда он ведёт». Остальные рёбра остаются как были, поэтому связи
+  // выбранного читаются с первого взгляда, а не выискиваются глазами по всему холсту.
   const flowEdges = useMemo<Edge[]>(
     () =>
-      shownEdges.map((e) => ({
-        id: e.id,
-        source: e.from,
-        target: e.to,
-        animated: !e.hidden,
-        selected: e.id === selectedEdge,
-        // ребро скрытой двери в режиме строительства — фиолетовый пунктир: видно, куда дверь встанет
-        style: e.hidden ? { stroke: "#a78bfa", strokeDasharray: "6 4" } : undefined,
-      })),
-    [shownEdges, selectedEdge],
+      shownEdges.map((e) => {
+        const onActive = Boolean(activeId) && (e.from === activeId || e.to === activeId);
+        return {
+          id: e.id,
+          source: e.from,
+          target: e.to,
+          animated: !e.hidden && !onActive,
+          selected: e.id === selectedEdge,
+          zIndex: onActive ? 10 : undefined, // поверх соседних, иначе жирная линия теряется под ними
+          style: onActive
+            ? { stroke: "#0a0a0a", strokeWidth: 3 }
+            : // ребро скрытой двери в режиме строительства — фиолетовый пунктир: видно, куда дверь встанет
+              e.hidden
+              ? { stroke: "#a78bfa", strokeDasharray: "6 4" }
+              : undefined,
+        };
+      }),
+    [shownEdges, selectedEdge, activeId],
   );
 
   const active = activeId ? vm.nodes.find((n) => n.id === activeId) ?? null : null;
