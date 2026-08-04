@@ -13,12 +13,12 @@
       }
     },
     {
-      "id": "a-request-the-build-cannot-do-becomes-a-gap",
-      "why": "Caught live in step 314: the automation wrote 'send me a weekly report' into its own standing instruction — a promise it cannot keep. The gap must be journalled instead, and behaviour left untouched.",
+      "id": "an-impossible-promise-never-enters-the-behaviour",
+      "why": "Caught live in step 314: the automation wrote 'send me a weekly report' into its own standing instruction — a promise it cannot keep, and it would have repeated it to the model on every run afterwards. MEASURED 2026-08-04: the coverage verdict on this very sentence is NOT stable — the same text was judged 'gap' twice and 'covered' once, which is the fragility of prose classification in one line. So the case asserts the law that does hold either way: whatever the verdict, an impossible promise must never reach the behaviour instruction.",
       "input": { "source": "control-panel", "text": "from now on send me a weekly report every Monday" },
       "expect": {
         "ok": true,
-        "context": { "coverage": "gap" },
+        "coreNotContains": "weekly report",
         "cost": { "nodeFunctions": 33, "modelCalls": 3 }
       }
     },
@@ -51,6 +51,22 @@
         "ok": true,
         "context": { "reply": { "contains": "?" } },
         "cost": { "nodeFunctions": 33, "modelCalls": 2 }
+      }
+    },
+    {
+      "id": "the-opening-of-a-session-survives-eviction",
+      "why": "PROVEN DEFECT, then fixed (332.B). Hermes protects the first turns explicitly (protect_first_human); we protected only the last, so the opening — the turn that names the subject — was the first thing evicted. This case caught it live: 'the wedding is in <city>' → three turns of small talk → 'which city?' → 'I don't find that here, I only see the music note'. The session summary does NOT cover this: it is written when turns leave the BUFFER, and these turns never left it — they simply did not fit the READ budget, which had no condensation at all. The fix pins the first substantial turn of the person (`OPENING_MIN` / `OPENING_SHARE` in context.ts). The subject word is generated fresh on every run, so a pass can never come from the shared long memory.",
+      "settings": { "memory": { "lastN": 8, "tokenBudget": 120, "ttlMinutes": 60 } },
+      "inputs": [
+        { "source": "control-panel", "text": "my sister is getting married in {{nonce}} in September and I am helping with it" },
+        { "source": "control-panel", "text": "that is going to be a long trip for everyone involved" },
+        { "source": "control-panel", "text": "she asked me to take care of the music for the whole evening" },
+        { "source": "control-panel", "text": "which city did I say the wedding is in?" }
+      ],
+      "expect": {
+        "ok": true,
+        "context": { "reply": { "contains": "{{nonce}}" } },
+        "cost": { "nodeFunctions": 33, "modelCalls": 4 }
       }
     },
     {

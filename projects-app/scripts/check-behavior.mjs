@@ -72,27 +72,60 @@ for (const rel of TARGETS) {
   try {
     for (const c of suite.cases) {
       restore(rowsPath, rowsSnap); // каждый случай начинает с одного и того же состояния
+      restore(corePath, coreSnap); // ...и с нетронутого ядра: эволюция предыдущего случая ему не наследство
 
-      const input = { ...c.input };
-      if (c.useTask) {
-        if (!firstCase) { console.error(`  FAIL ${c.id} :: useTask, but the core has no use case to choose`); localFail++; continue; }
-        input.taskCase = firstCase;
+      // 🔒 НАСТРОЙКИ ПОД СЛУЧАЙ. Вытеснение из памяти нельзя честно проверить на боевом бюджете: пришлось
+      // бы гнать десятки реплик, платя за каждую. Поведение вытеснения от масштаба не зависит, поэтому
+      // случай вправе назвать СВОЙ бюджет — а снимок вернёт настройки владельца сразу после.
+      //
+      // Настройки живут на ENTITY вкладки, а не на самой вкладке: схема компонента `.strict()`, и лишнее
+      // поле `data` у неё делает ядро незаконным — дверь честно отвечает 500 (поймано этим же набором).
+      if (c.settings) {
+        const core2 = JSON.parse(readFileSync(corePath, "utf8"));
+        const tab = core2.components.tabs.find((t) => t.name === "assistant");
+        const entity = tab && (Array.isArray(tab.entities) ? tab.entities[0] : tab.entity);
+        if (!entity) { console.error(`  FAIL ${c.id} :: settings, but the assistant tab has no entity to configure`); localFail++; continue; }
+        entity.data = { ...(entity.data ?? {}), ...c.settings };
+        writeFileSync(corePath, JSON.stringify(core2, null, 2));
       }
 
+      // Диалог — вещь МНОГОХОДОВАЯ: вопрос задан в одном прогоне, ответ приходит следующим. Поэтому случай
+      // может назвать последовательность реплик одного чата; ожидания судят ПОСЛЕДНИЙ прогон, остальные —
+      // подготовка сцены.
+      // 🔒 РАЗОВОЕ СЛОВО (`{{nonce}}`). Проверка памяти обязана мерить ТО, что заявляет. Долгая память
+      // общая и снимком не возвращается: одно и то же слово, прогнанное вчера, всплывёт из индекса и
+      // случай пройдёт по чужой причине — ложный зелёный, худший род проверки. Свежее слово на каждый
+      // прогон брать неоткуда, кроме контекста этой сессии.
+      const nonce = "Zel" + Math.random().toString(36).slice(2, 7);
+      const sub = (o) => JSON.parse(JSON.stringify(o).replaceAll("{{nonce}}", nonce));
+
+      const steps = (c.inputs ?? [c.input]).map(sub).map((i) => {
+        const one = { ...i };
+        if (c.useTask) one.taskCase = firstCase;
+        return one;
+      });
+      if (c.useTask && !firstCase) { console.error(`  FAIL ${c.id} :: useTask, but the core has no use case to choose`); localFail++; continue; }
+
       const started = Date.now();
-      let res, body;
-      try {
-        res = await fetch(url, { method: "POST", headers, body: JSON.stringify({ input }) });
-        body = await res.json();
-      } catch (e) {
-        console.error(`  FAIL ${c.id} :: the door is unreachable at ${url} — ${e instanceof Error ? e.message : String(e)}`);
+      let res, body, unreachable = "";
+      for (const input of steps) {
+        try {
+          res = await fetch(url, { method: "POST", headers, body: JSON.stringify({ input }) });
+          body = await res.json();
+        } catch (e) {
+          unreachable = e instanceof Error ? e.message : String(e);
+          break;
+        }
+      }
+      if (unreachable) {
+        console.error(`  FAIL ${c.id} :: the door is unreachable at ${url} — ${unreachable}`);
         localFail++;
         continue;
       }
       const ms = Date.now() - started;
 
       const problems = [];
-      const exp = c.expect ?? {};
+      const exp = sub(c.expect ?? {});
       const ctx = body?.context ?? {};
       const cost = body?.cost ?? { nodeFunctions: 0, modelCalls: 0 };
       costs.set(c.id, cost);
@@ -104,6 +137,9 @@ for (const rel of TARGETS) {
       }
       if (exp.coreContains && !readFileSync(corePath, "utf8").includes(exp.coreContains)) {
         problems.push(`the core does not contain "${exp.coreContains}" — the automation did not edit itself`);
+      }
+      if (exp.coreNotContains && readFileSync(corePath, "utf8").includes(exp.coreNotContains)) {
+        problems.push(`the core CONTAINS "${exp.coreNotContains}" — the automation wrote into itself something it must not`);
       }
       if (exp.cheaperThan) {
         const other = costs.get(exp.cheaperThan);
@@ -121,6 +157,13 @@ for (const rel of TARGETS) {
         console.error(`  FAIL ${c.id}  [${price}]`);
         for (const p of problems) console.error(`       ${p}`);
         if (String(ctx.reply ?? "").trim()) console.error(`       reply: ${String(ctx.reply).slice(0, 200)}`);
+        // Провал в разговоре почти всегда объясняется тем, ЧТО модель прочла. Показываем это сразу: без
+        // расхода и текста контекста отладка превращается в перебор догадок (и превратилась однажды).
+        if (ctx.dialogueBudget) console.error(`       budget: ${JSON.stringify(ctx.dialogueBudget)}`);
+        if (String(ctx.recentDialog ?? "").trim()) {
+          console.error("       recentDialog:");
+          for (const line of String(ctx.recentDialog).split("\n")) console.error(`         ${line.slice(0, 160)}`);
+        }
       } else {
         console.log(`  PASS ${c.id}  [${price}]`);
       }

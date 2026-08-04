@@ -149,6 +149,16 @@ summary's cost is RESERVED before turns compete for the budget: a hundred tokens
 evicted conversation beat two more verbatim lines. It always carries the tag
 `[earlier in this session, condensed]`, because unlabelled past reads as just-said.
 
+**The OPENING is pinned, and the summary does NOT cover it** (332.B, caught by a live check). Eviction ran
+strictly from the bottom, so the turn that NAMES the subject went first: 'the wedding is in X' → three
+turns of small talk → 'which city?' → 'I don't find that here.' The distinction that made this invisible:
+the summary is written when turns leave the BUFFER, while the budget evicts at READ time — nothing was
+condensed there, the lines were simply not sent. Now the first SUBSTANTIAL turn of the PERSON is reserved
+(a greeting anchors nothing; a bot turn never anchors, it carries a verdict — same contamination lesson as
+`userTurnsOnly`), capped at a share of the budget so a huge opening cannot crowd out the present, and if
+anything is dropped between it and the recent turns the gap is stated in words — two distant lines printed
+as neighbours make the model confident about an order of events that never happened.
+
 **A turn is an ENVELOPE, not a line** (330.3, `TurnSchema` in `_data/record.schema.ts`). It carries what
 the run was (`class`), how it ended (`outcome`: `ok` · `refused` · `missing` · `unreachable` · `failed`),
 what it left in the stores (`links`) and which run it was (`runId`). Without it the model reread a smooth

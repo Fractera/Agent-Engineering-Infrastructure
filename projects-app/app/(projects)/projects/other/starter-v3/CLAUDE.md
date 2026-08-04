@@ -78,6 +78,14 @@ Read any file here freely — nothing is hidden behind an API.
   is composed** — the index is shared, and citing someone else's conversation is the failure this design
   exists to prevent. The memory always returns its nearest chunks, so off-topic ones are dropped too; given
   no material, speech says it does not remember rather than agreeing.
+- **The OPENING of the conversation is pinned** (332.B, proven by a live check): eviction ran strictly from
+  the bottom, so the turn that NAMES the subject was the first to go — 'the wedding is in X' → three turns
+  of small talk → 'which city?' → 'I don't find that here'. The session summary does not cover this case:
+  it is written when turns leave the BUFFER, and budget eviction happens at READ time, where nothing was
+  condensed at all. So the first SUBSTANTIAL turn of the person is reserved (a greeting is not an anchor,
+  and a bot turn is never one — it carries a verdict), capped at a share of the budget, and when something
+  is dropped between it and the recent turns the gap is stated in words. Held by
+  `_checks/cases.json → the-opening-of-a-session-survives-eviction`.
 - **Evicted turns are CONDENSED, never lost** (330.4): they merge into `chat-state.summary`, one paragraph
   under the folder's `SUMMARY_LIMIT`, tagged `[earlier in this session, condensed]` so the model does not
   read the past as just-said. Its cost is reserved before turns compete for the budget.

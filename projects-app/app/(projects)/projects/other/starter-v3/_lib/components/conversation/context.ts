@@ -48,7 +48,43 @@ export type DialogueContext = {
   dropped: number;
   /** Что упёрлось первым: окно владельца, бюджет или ничего (влезло всё). */
   limitedBy: "window" | "budget" | "none";
+  /** Удержана ли ЗАВЯЗКА разговора — первая реплика окна (см. закон закрепления ниже). */
+  openingKept: boolean;
 };
+
+/**
+ * 🔒 ЗАВЯЗКА РАЗГОВОРА ЗАКРЕПЛЯЕТСЯ (шаг 332.B, дефект доказан набором проверок 2026-08-04).
+ *
+ * Вытеснение шло строго снизу — значит первой уезжала ПЕРВАЯ реплика, а она называет предмет разговора.
+ * Живой замер: «свадьба сестры в <городе>» → три реплики болтовни → «в каком городе свадьба?» → «не вижу,
+ * у меня тут только про музыку». Предмет потерян, хотя человек его назвал.
+ *
+ * Сводка сессии здесь НЕ помогает и это важно понимать: она собирается при вытеснении из БУФЕРА
+ * (`pushMessage`), а тут реплики из буфера не уходили — они просто не влезли в бюджет ПРИ ЧТЕНИИ. То есть
+ * у бюджетного вытеснения не было никакого уплотнения вообще.
+ *
+ * Поэтому первая реплика окна получает бронь — тот же приём, что защищает последнюю, и та же логика, что
+ * у зрелых оркестраторов (в Hermes это `protect_first_human`). Две оговорки, обе обязательные:
+ *   1. бронь ограничена долей бюджета — гигантская первая реплика не имеет права вытеснить настоящее;
+ *   2. если между закреплённой завязкой и остатком что-то выброшено, разрыв НАЗЫВАЕТСЯ вслух: иначе
+ *      модель читает две далёкие реплики как соседние и уверенно врёт про порядок событий.
+ */
+const OPENING_SHARE = 0.25;
+const OPENING_GAP = "[…earlier turns omitted…]";
+/**
+ * 🔒 «ПРИВЕТ» — НЕ ЗАВЯЗКА (поймано замером сразу после первой версии закрепления). Первой репликой сессии
+ * очень часто оказывается приветствие или короткое «ок»: закрепив его, мы платим бюджетом за реплику,
+ * которая ничего не называет, и ЗАМЕЩАЕМ ею настоящий предмет разговора. Поэтому якорем берётся первая
+ * реплика ЧЕЛОВЕКА, которая что-то говорит: не короче этого порога и не дороже доли бюджета.
+ *
+ * Почему именно человека: ответы бота несут вердикт прошлого прогона, и закреплять их — тот же дефект
+ * заражения, что уже пойман у классификатора (`userTurnsOnly`).
+ *
+ * Порог считается по ТЕКСТУ реплики, а не по её готовой строке: метка времени и роль добавляют около
+ * восьми токенов каждой строке, поэтому «hello» по строке выглядит содержательным — на этом первая версия
+ * порога и промахнулась, закрепив приветствие вместо предмета разговора.
+ */
+const OPENING_MIN = 6;
 
 /**
  * СОБРАТЬ ИСТОРИЮ ПОД БЮДЖЕТ. Порядок ровно такой:
@@ -92,7 +128,7 @@ export function buildDialogue(
   const join = (history: string) => [summaryBlock, history].filter(Boolean).join("\n");
 
   if (!messages.length) {
-    return { text: join(""), summaryUsed, used: summaryUsed, budget, dropped: 0, limitedBy: "none" };
+    return { text: join(""), summaryUsed, used: summaryUsed, budget, dropped: 0, limitedBy: "none", openingKept: false };
   }
 
   const windowed = messages.slice(-windowN);
@@ -102,15 +138,30 @@ export function buildDialogue(
   // в модель и тоже стоят денег. Считать иначе значит обманывать себя на четверть контекста.
   const priced = windowed.map((m) => ({ m, cost: estimateTokens(formatDialog([m], 1)) }));
 
-  let kept = priced;
+  // Завязка бронируется ДО торга за бюджет — иначе её судьба решалась бы порядком, а не важностью.
+  // Условия брони: разговор длиннее двух реплик (в короткой беседе завязка и так на месте) и сама она
+  // умещается в отведённую долю.
+  const openingCap = Math.max(1, Math.floor(rest * OPENING_SHARE));
+  const openingAt = priced.length >= 3
+    ? priced.findIndex((p) => p.m.role === "user" && estimateTokens(p.m.text) >= OPENING_MIN && p.cost <= openingCap)
+    : -1;
+  const opening = openingAt >= 0 ? priced[openingAt] : null;
+  const pool = opening ? priced.filter((_, i) => i !== openingAt) : priced;
+
+  let kept = pool;
   let total = priced.reduce((s, p) => s + p.cost, 0);
   while (kept.length > 1 && total > rest) {
     total -= kept[0].cost;
     kept = kept.slice(1);
   }
-  const droppedByBudget = priced.length - kept.length;
+  const droppedByBudget = pool.length - kept.length;
 
-  const text = join(formatDialog(kept.map((p) => p.m), kept.length));
+  // Разрыв называется вслух ровно тогда, когда он есть: закреплённая завязка + выброшенная середина.
+  const body = opening && droppedByBudget > 0
+    ? [formatDialog([opening.m], 1), OPENING_GAP, formatDialog(kept.map((p) => p.m), kept.length)].join("\n")
+    : formatDialog((opening ? [opening, ...kept] : kept).map((p) => p.m), kept.length + (opening ? 1 : 0));
+
+  const text = join(body);
   return {
     text,
     summaryUsed,
@@ -118,6 +169,7 @@ export function buildDialogue(
     budget,
     dropped: droppedByWindow + droppedByBudget,
     limitedBy: droppedByBudget > 0 ? "budget" : droppedByWindow > 0 ? "window" : "none",
+    openingKept: Boolean(opening),
   };
 }
 

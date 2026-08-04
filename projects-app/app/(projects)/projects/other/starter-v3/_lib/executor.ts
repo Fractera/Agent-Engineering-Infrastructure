@@ -190,6 +190,9 @@ async function runAutomation(input: NodeCtx): Promise<RunOutcome | RunRefusal> {
         dropped: dialogue.dropped,
         limitedBy: dialogue.limitedBy,
         summaryUsed: dialogue.summaryUsed,
+        // Удержана ли завязка разговора — видно рядом с расходом, потому что это про ТО ЖЕ: что модель
+        // прочла и чего не прочла. Молчаливо потерянный предмет разговора неотличим от «модель тупая».
+        openingKept: dialogue.openingKept,
         briefUsed: brief.used,
         briefBudget: brief.budget,
       },
