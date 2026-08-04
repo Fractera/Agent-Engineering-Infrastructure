@@ -29,9 +29,19 @@ Run from `projects-app/`:
 
 ```bash
 npm run check:core            # the core obeys its schema and cross-object laws
+npm run check:behavior        # the FIXED set of live runs — what the automation actually DOES, and what it costs
+npm run check:instructions    # the promises this folder makes to a cold session still hold
 npm run check:tab-structure   # every tab folder is index.tsx + public/ + admin/
 npm run check:entity-imports  # the public layer reaches nothing outside the folder
 ```
+
+**The three that matter, and what each cannot see.** `check:core` proves the core is LAWFUL — it cannot see
+that the automation lies. `check:behavior` runs it for real and compares the answer AND the price
+(`_checks/cases.json`, `_checks/readme.md`) — it cannot see that the map is rotten. `check:instructions`
+walks the promises: every law named by name exists, every law is reachable BOTH as a file and through
+`api/instruction?name=` (the schema vocabulary and the files must match in both directions), the `api/core`
+cover stays inside its measured budget, and the read receipt still refuses without hashes and accepts with
+them. It found four rotted promises the day it was written, with the code in perfect health.
 
 Build and restart happen on the server, never on a developer's Windows box.
 
@@ -62,8 +72,12 @@ The cost is real and it is paid on purpose: **core ≈ 37k tokens · schema ≈ 
 
 ## Reading everything else — by name, on demand
 
-- `GET api/core` — the law digest (~800 tokens): connection table, quotas, vocabularies, and the laws not
-  expressible as a table. A fast index, **never a substitute** for the two files above.
+- `GET api/core` — the cover: passport instruction, counts, the law digest (connection table, quotas,
+  vocabularies, and the laws not expressible as a table) and the doors. **≈11 400 tokens measured
+  2026-08-04** — passport ≈6 400, digest ≈4 800. This line used to promise "~800 tokens"; it was six times
+  off, and telling a cold session that an expensive door is cheap is the same defect as any other stale
+  fact. Still the right FIRST call, still **never a substitute** for the two files above. `npm run
+  check:instructions` fails if the cover grows further.
 - `GET api/core?select=<address>` — one object with its law attached (a node gets its kind's law; a tab
   gets `tabInstruction` when it has one). `GET api/instruction?name=<name>` — one law by name.
 - Later iterations start at `GET api/work` — only what waits for work. Empty list is a lawful end: say so.

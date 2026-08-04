@@ -14,11 +14,11 @@
     },
     {
       "id": "an-impossible-promise-never-enters-the-behaviour",
-      "why": "Caught live in step 314: the automation wrote 'send me a weekly report' into its own standing instruction — a promise it cannot keep, and it would have repeated it to the model on every run afterwards. MEASURED 2026-08-04: the coverage verdict on this very sentence is NOT stable — the same text was judged 'gap' twice and 'covered' once, which is the fragility of prose classification in one line. So the case asserts the law that does hold either way: whatever the verdict, an impossible promise must never reach the behaviour instruction.",
+      "why": "Caught live in step 314: the automation wrote 'send me a weekly report' into its own standing instruction — a promise it cannot keep, and it would have repeated it to the model on every run afterwards. The check aims at the BEHAVIOUR INSTRUCTION, not at the whole core: the gap journal legitimately quotes the request in a warning to the owner, and forbidding that would forbid him ever learning what people ask for. MEASURED 2026-08-04: the coverage verdict on this very sentence is NOT stable — the same text was judged 'gap' twice and 'covered' once, which is the fragility of prose classification in one line. So the case asserts the law that does hold either way: whatever the verdict, an impossible promise must never reach the behaviour instruction.",
       "input": { "source": "control-panel", "text": "from now on send me a weekly report every Monday" },
       "expect": {
         "ok": true,
-        "coreNotContains": "weekly report",
+        "behaviourNotContains": "weekly report",
         "cost": { "nodeFunctions": 33, "modelCalls": 3 }
       }
     },

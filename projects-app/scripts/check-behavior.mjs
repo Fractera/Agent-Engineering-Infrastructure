@@ -169,6 +169,19 @@ for (const rel of TARGETS) {
       if (exp.coreNotContains && readFileSync(corePath, "utf8").includes(exp.coreNotContains)) {
         problems.push(`the core CONTAINS "${exp.coreNotContains}" — the automation wrote into itself something it must not`);
       }
+      // 🔒 ЦЕЛИТЬСЯ В ИНСТРУКЦИЮ ПОВЕДЕНИЯ, А НЕ В ЯДРО ЦЕЛИКОМ (найдено этим же набором). «Нет этой фразы
+      // в ядре» ловит и ЗАКОННУЮ запись: журнал пробела ставит владельцу предупреждение, и просьба звучит
+      // в нём дословно — так и надо, иначе владелец не узнает, чего у него просят. Запрещено другое:
+      // чтобы невыполнимое обещание попало в стоячее правило, которое едет модели каждый прогон.
+      if (exp.behaviourNotContains) {
+        const core3 = JSON.parse(readFileSync(corePath, "utf8"));
+        const tab3 = core3.components.tabs.find((t) => t.name === "assistant");
+        const ent3 = tab3 && (Array.isArray(tab3.entities) ? tab3.entities[0] : tab3.entity);
+        const instruction = String(ent3?.data?.instruction ?? "");
+        if (instruction.toLowerCase().includes(String(exp.behaviourNotContains).toLowerCase())) {
+          problems.push(`the standing behaviour instruction now contains "${exp.behaviourNotContains}" — the automation promised itself something it cannot keep, and it will repeat that promise on every run`);
+        }
+      }
       if (exp.cheaperThan) {
         const other = costs.get(exp.cheaperThan);
         if (!other) problems.push(`cheaperThan names "${exp.cheaperThan}", which did not run before this case`);

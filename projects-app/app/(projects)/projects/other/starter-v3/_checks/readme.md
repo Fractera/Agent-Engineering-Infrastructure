@@ -51,6 +51,25 @@ cases cannot contaminate each other through the shared dialogue.
 Two consequences worth knowing: run the checks when no one is using the automation, and never treat a
 restored snapshot as a way to author the core — writing is the door's job (`api/patch`), always.
 
+## Two things this set does NOT restore
+
+**The shared long memory.** Evicted turns reach the vector index, and the index is not a file this runner
+can snapshot. That is why every case that tests remembering generates its subject word fresh (`{{nonce}}`):
+a pass must come from THIS session, never from something a previous run left in the index.
+
+**The panel conversation is cleared before each case, then given back.** The control panel is ONE chat for
+the whole automation, so without this the set would sit down in the middle of the owner's conversation — and
+it did: a stray "hello" became the pinned opening of a case, and other turns pushed the case's own first
+turn out of the buffer. The full snapshot is restored at the end, so the owner's chat survives; run the
+checks when nobody is using the automation.
+
+## Its two siblings
+
+`npm run check:core` proves the core is LAWFUL and cannot see that the automation lies.
+`npm run check:instructions` walks the promises this folder makes to a cold session — names that resolve,
+laws reachable both ways, the `api/core` cover inside its budget, the read receipt still refusing. Behaviour
+green with a rotten map is a trap, and the map rots silently.
+
 ## Adding a case
 
 Add one when a defect is found in BEHAVIOUR — that is the moment its cost is proven. Write down in `why`

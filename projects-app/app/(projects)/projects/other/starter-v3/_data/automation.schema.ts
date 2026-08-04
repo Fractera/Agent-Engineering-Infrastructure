@@ -61,6 +61,9 @@ export const SYSTEM_INSTRUCTION_NAMES = [
   "evolution.behavior",
   "evolution.examples",
   "evolution.voice",
+  // `evolution.graph` — ОБЪЯВЛЕННАЯ область (её требует `EvolutionScopeSchema`), и до 332.D она стояла
+  // здесь БЕЗ файла: дверь `api/instruction?name=` отдавала бы пустоту. Закон дописан — он и есть граница
+  // области, а не её отмена (см. `_instructions/evolution.graph.md` и доктрину масштаба).
   "evolution.graph",
   "evolution.custom",
   // РАЗГОВОРНЫЙ СЛОЙ (шаг 312, решение владельца — вариант B). Стоит МЕЖДУ маршрутизацией/серединой и
@@ -119,6 +122,14 @@ export const SYSTEM_INSTRUCTION_NAMES = [
   // текста, единое представление связей. Закон не про объект ЯДРА, а про строки, которые ядро порождает,
   // — поэтому имя есть, а `systemInstructionName` с ним не носит никто.
   "records",
+  // 🔒 ЗАКОНЫ, КОТОРЫЕ БЫЛИ ФАЙЛОМ, НО НЕ ИМЕНЕМ (332.D, найдено гейтом `check:instructions`). У папки два
+  // читателя: агент с файловой системой берёт `_instructions/<имя>.md` напрямую, агент без неё — дверью
+  // `api/instruction?name=`. Дверь пускает ТОЛЬКО имена этого словаря, поэтому файл, которого здесь нет,
+  // для второго читателя не существует вовсе — а `memory.conversation` при этом назван законом прямо в
+  // `CLAUDE.md`. Файл и имя обязаны появляться и исчезать вместе; гейт теперь следит за обеими сторонами.
+  "memory.conversation",
+  "replies",
+  "readme",
 ] as const;
 
 export const SystemInstructionNameSchema = z.enum(SYSTEM_INSTRUCTION_NAMES);

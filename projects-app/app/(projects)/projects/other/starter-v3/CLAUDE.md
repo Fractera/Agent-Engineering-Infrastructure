@@ -26,7 +26,13 @@ it, you are writing against a picture that no longer exists. (`sha256sum <file>`
 
 Yes, this costs: **core ≈ 37k tokens · schema ≈ 25k**. Pay it. The 60 instructions (≈45k) are the opposite
 case — those you read by name, on demand: `_instructions/<name>.md` or `GET api/instruction?name=<name>`.
-`GET api/core` gives the law digest (~800 tokens) — a fast index, never a substitute for the two files.
+
+`GET api/core` gives the cover: the passport instruction, the counts, the law digest and the doors —
+**≈11 400 tokens measured (2026-08-04), of which the passport instruction is ≈6 400 and the digest ≈4 800.**
+It used to be described here as "~800 tokens, a fast index"; that was six times off, and a cold session was
+being told a cheap door is cheap when it is not. It is still the right FIRST call — you get the passport,
+the vocabularies and the counts in one — but it is not pocket change, and it is never a substitute for the
+two files. Held honest by `npm run check:instructions`, which fails when the cover grows past its budget.
 
 ## Where the truth is
 
@@ -280,8 +286,17 @@ covers the brief, wire the existing one; never copy it into this folder, never h
 
 `npm run check:core` green proves the core is LAWFUL — not that the automation WORKS.
 
-`npm run check:behavior` is the other half: a FIXED set of live runs through `api/run` with expectations
+`npm run check:behavior` is the second half: a FIXED set of live runs through `api/run` with expectations
 (`_checks/cases.json`), which is the only thing that catches the defects of the last three steps — they all
 compiled, passed the schema, and lied anyway. Each case records its PRICE (node functions · model calls)
 and fails when the price grows, so the doctrine of scale stops being a belief. Read `_checks/readme.md`
-before adding a case. Both green plus a real run you can show is what "done" means.
+before adding a case.
+
+`npm run check:instructions` is the third: it holds the promises this folder makes to a COLD session. Every
+law named by name exists; every law is reachable BOTH ways (file on disk and `api/instruction?name=` — the
+schema vocabulary and the files must match in both directions, or an agent without a filesystem hits a
+404); the `api/core` cover stays inside its measured budget; and the read receipt still refuses a structural
+patch without hashes and accepts one with them. It found four rotted promises the day it was written — the
+map can lie while the code is perfectly healthy.
+
+All three green, plus a real run you can show, is what "done" means.
