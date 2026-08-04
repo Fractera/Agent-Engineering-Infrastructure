@@ -7,8 +7,9 @@ import { cn } from "@/lib/utils";
 // ОТЧЁТ ПРОГОНА — что вернула дверь api/run: цепочка узлов чипами (образец v1) и одна строка исхода.
 // Общий компонент публичной половины: так отчитывается любой пульт вкладки.
 export type NodeReport = { cuid: string; name: string; fn: string; status: "ok" | "stopped" | "fail"; error?: string };
+export type RunCost = { nodeFunctions: number; modelCalls: number };
 export type Outcome =
-  | { ok: boolean; nodes: NodeReport[]; error?: string; context?: Record<string, unknown> }
+  | { ok: boolean; nodes: NodeReport[]; cost?: RunCost; error?: string; context?: Record<string, unknown> }
   | { refusal: string };
 
 /** Ошибка узла приходит либо строкой, либо JSON-картой десяти языков (так бросает `receiveRequest`). */
@@ -65,6 +66,14 @@ export default function RunReport({ outcome, lang }: { outcome: Outcome; lang: s
             </p>
           ))}
         </div>
+      ) : null}
+      {/* 🔒 ЦЕНА ПРОГОНА НАЗЫВАЕТСЯ ВСЛУХ (доктрина масштаба, 2026-08-04). Движок исполняет КАЖДЫЙ видимый
+          узел на КАЖДОМ прогоне, и это платится на каждом сообщении, включая «привет». Пока число не видно,
+          «много узлов» звучит как аккуратность, а не как счёт; здесь оно рядом с ответом. */}
+      {outcome.cost ? (
+        <p className="text-xs text-muted-foreground">
+          {L.price.replace("{f}", String(outcome.cost.nodeFunctions)).replace("{m}", String(outcome.cost.modelCalls))}
+        </p>
       ) : null}
       <div className="flex flex-wrap gap-2">
         {outcome.nodes.map((n) => (
