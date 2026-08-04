@@ -124,6 +124,57 @@ export function placesBrief(core: Automation, cockpitUrl: string): string {
  * ошибиться или устареть, а это выведено из сборки только что. Формулировать красиво — работа модели;
  * знать правду — работа ядра.
  */
+/**
+ * 🔒 ПЕРЕЧЕНЬ ВЫДАЁТСЯ ПО МЕРЕ НАДОБНОСТИ (шаг 332.C, приём подтверждён у Hermes).
+ *
+ * Замер: полный перечень стоит ~750 токенов и уезжал НА КАЖДОМ прогоне — включая «привет», где ни один
+ * из этих фактов в ответе не участвует. Зрелые оркестраторы решают это раскрытием по требованию: в
+ * контекст едет имя и одна строка, тело читается, когда оно понадобилось (у Hermes 79 навыков живут
+ * frontmatter'ом).
+ *
+ * Нам решать это ПРОЩЕ и надёжнее, чем поиском: класс запроса уже прочитан слоем намерения и взят из
+ * ЗАКРЫТОГО словаря. Значит полный перечень нужен ровно там, где разговор идёт О САМОЙ СБОРКЕ:
+ *   · `self-describe` — «что ты умеешь», прямой вопрос о возможностях;
+ *   · `unclaimed` — никто не взял запрос: решается, есть ли пробел, и цена ошибки высока;
+ *   · `control` — просьба-правило: судится, выполнима ли она этой сборкой.
+ * На остальных классах едет короткий вид: кто ты, зачем сборка (ЗАГОЛОВКИ кейсов), что человек получает
+ * и как честно отказывать. Механика и правила стиля там не нужны — им нечего описывать в ответе, где о
+ * возможностях речь не идёт.
+ *
+ * Кейсы целиком остаются требованием владельца — оно и соблюдается ровно там, где о сборке спрашивают.
+ *
+ * Замер (2026-08-04): полный вид ~753 токена, короткий ~206 — экономия около 550 токенов на КАЖДОМ обычном
+ * прогоне. И отдельно проверено, что выбор устойчив: «что ты умеешь» читается то как `self-describe`, то
+ * как `unclaimed`, но ОБА класса в полном списке — колебание классификатора здесь ничего не решает.
+ */
+const FULL_BRIEF_CLASSES = new Set(["self-describe", "unclaimed", "control"]);
+
+export const needsFullBrief = (intentClass: unknown): boolean => FULL_BRIEF_CLASSES.has(String(intentClass ?? ""));
+
+/** Короткий вид перечня — что человек получает, без механики и без правил стиля. */
+export function abilitiesShort(a: Abilities): string {
+  const list = (xs: string[]) => (xs.length ? xs.join("; ") : "none");
+  const lines: string[] = [
+    `WHO YOU ARE, derived from this build's core right now. These facts OUTRANK the instruction above.`,
+    "",
+    `You are the assistant of ${a.title || "this automation"}.`,
+  ];
+  if (a.useCases.length) {
+    lines.push("", "WHAT THE OWNER BUILT THIS FOR:", ...a.useCases.map((c) => `· ${c.title || c.text.slice(0, 80)}`));
+  }
+  lines.push(
+    "",
+    "WHAT YOU CAN ACTUALLY DO:",
+    `· people reach you: ${list(a.inputs)}`,
+    `· what you do with what you get: ${list(a.outputs)}`,
+    `· ${a.speaks ? "you answer in your own words" : "you do not talk to people at all"}`,
+    "",
+    "· Asked for something you cannot do: say plainly it is not part of you yet and name what you CAN do " +
+      "instead. Do NOT send the person anywhere and do NOT promise it for later.",
+  );
+  return lines.join("\n");
+}
+
 export function abilitiesBrief(a: Abilities): string {
   const list = (xs: string[]) => (xs.length ? xs.join("; ") : "none");
   const lines: string[] = [

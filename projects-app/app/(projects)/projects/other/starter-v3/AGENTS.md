@@ -149,6 +149,19 @@ summary's cost is RESERVED before turns compete for the budget: a hundred tokens
 evicted conversation beat two more verbatim lines. It always carries the tag
 `[earlier in this session, condensed]`, because unlabelled past reads as just-said.
 
+**The abilities brief is SIZED BY THE CLASS** (332.C). Measured: the full brief costs 753 tokens and used to
+ride on every single run, greetings included; the short one costs 206. The full list — the owner's use cases
+in full, the inner mechanics, the rules for speaking about yourself — now goes only to the classes that are
+ABOUT the build (`self-describe` · `unclaimed` · `control`); every other run gets identity, use-case titles,
+what the person gets, and the honest-refusal rule. Progressive disclosure, bought for nothing: the class
+comes from a CLOSED vocabulary and is already read, so there is no search and no extra model call.
+
+**A guard against lying must never forbid what the model can SEE** (332.C, caught by a check). The
+anti-fabrication rule fired whenever long memory was empty and said "you do NOT remember any past
+conversation" — including when the answer stood verbatim in the dialogue attached to the same prompt. The
+person named the wedding city, asked three turns later, and got "I don't find that here." Nothing from long
+memory is NOT the same as nothing to read; the rule now says exactly that.
+
 **The OPENING is pinned, and the summary does NOT cover it** (332.B, caught by a live check). Eviction ran
 strictly from the bottom, so the turn that NAMES the subject went first: 'the wedding is in X' → three
 turns of small talk → 'which city?' → 'I don't find that here.' The distinction that made this invisible:

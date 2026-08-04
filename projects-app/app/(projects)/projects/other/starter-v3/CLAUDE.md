@@ -63,6 +63,17 @@ Read any file here freely — nothing is hidden behind an API.
   a warning to the owner. **"This automation cannot do it" is not an outcome.**
 - No routers. The engine is linear; the only branch is success/failure. A class node claims a run or
   returns an EMPTY patch — never `null`, which stops the whole run.
+- **The abilities brief is sized by the CLASS** (332.C, measured: 753 tokens full · 206 short). The full
+  list — use cases in the owner's own words, inner mechanics, the rules for talking about yourself — rides
+  only on the classes that discuss the build itself (`self-describe` · `unclaimed` · `control`). Every other
+  run gets identity, use-case titles, what the person gets, and the honest-refusal rule. This is progressive
+  disclosure done the cheap way: the class was already read from a CLOSED vocabulary, so the decision costs
+  nothing — no search, no second model call.
+- **A guard against lying must not forbid what the model can SEE** (332.C, caught by a check). The
+  anti-fabrication rule (330.7) said "you do NOT remember any past conversation" whenever long memory came
+  back empty — and it fired while the answer stood verbatim in the dialogue attached to the same prompt.
+  The person named the wedding city, asked three turns later, and was told "I don't find that here". The
+  rule now separates the two: nothing from long memory ≠ nothing to read.
 - **SPEECH is its own layer** (`kind.speech.md`): one node writes `ctx.reply`, every channel delivers it,
   no channel composes it. Abilities, addresses and roles are DERIVED from the core each run, never written
   into the behaviour text. The **dialogue plane** (recent messages · outstanding question · chosen

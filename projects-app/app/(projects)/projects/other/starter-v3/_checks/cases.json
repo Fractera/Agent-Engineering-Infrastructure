@@ -34,6 +34,18 @@
       }
     },
     {
+      "id": "self-description-speaks-outcomes-not-machinery",
+      "why": "The abilities brief costs ~750 tokens, so 332.C sends it in full ONLY on the classes that talk about the build itself. This case guards the half that must not degrade: asked point blank, the automation still describes itself, in terms of what the person GETS. The forbidden words are the ones the node summaries are written in — the owner caught them being retold verbatim once (330.5R), and a shorter brief must not bring that back. MEASURED: the CLASS of 'what can you do?' is not stable — it comes back `self-describe` or `unclaimed` on the same text (second sighting of unstable prose classification today). Harmless here, because both classes receive the full brief, and the case therefore asserts the reply, not the verdict.",
+      "input": { "source": "control-panel", "text": "what can you do?" },
+      "expect": {
+        "ok": true,
+        "context": {
+          "reply": { "nonempty": true, "notContainsAny": ["validate", "derives", "ctx.", "node "] }
+        },
+        "cost": { "nodeFunctions": 33, "modelCalls": 3 }
+      }
+    },
+    {
       "id": "an-outside-lookup-reaches-the-middle",
       "why": "The only class that proves the whole chain end to end: input → intent → middle work → speech. If the middle stops being reached, everything else still looks green.",
       "input": { "source": "control-panel", "text": "what is the Eiffel Tower?" },

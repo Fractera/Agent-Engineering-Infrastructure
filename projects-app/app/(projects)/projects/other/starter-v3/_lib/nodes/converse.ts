@@ -14,7 +14,7 @@ import { loadChat, pushMessage, setLang, setPending, setSummary, type ChatMessag
 import { buildDialogue, outlineOf } from "../components/conversation/context";
 import { rememberConversation } from "../components/conversation/remember";
 import { SUMMARY_LIMIT } from "../../_data/record.schema";
-import { abilitiesBrief, abilitiesOf, placesBrief, type Abilities } from "../components/conversation/abilities";
+import { abilitiesBrief, abilitiesOf, abilitiesShort, needsFullBrief, placesBrief, type Abilities } from "../components/conversation/abilities";
 import { composeReply } from "./compose-reply";
 
 // ЧТО СДЕЛАЛ ПРОГОН — РАЗДЕЛЬНО (309, живой тест): ЗАПИСИ (их подтверждаем) отдельно от RECALL-ОТВЕТА (на
@@ -68,7 +68,9 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
     // ВОЗМОЖНОСТИ — ИЗ ЯДРА, НА КАЖДОМ ПРОГОНЕ (312.4). Инструкцию поведения пишет человек и она стареет;
     // эти строки выведены из видимых узлов только что и потому не могут разойтись со сборкой.
     ab = abilitiesOf(core);
-    facts = abilitiesBrief(ab);
+    // Полный перечень — только когда разговор о самой сборке (332.C); иначе короткий вид. Класс уже
+    // прочитан слоем намерения, поэтому решение стоит ноль и не требует ни поиска, ни второго вызова.
+    facts = needsFullBrief(ctx.intentClass) ? abilitiesBrief(ab) : abilitiesShort(ab);
     // Адреса и роли — тем же выводом из ядра (312.7): «где посмотреть» и «почему коллега не видит».
     places = placesBrief(core, String(ctx.automationUrl ?? "").trim());
   }
@@ -276,11 +278,23 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
     // обсуждали ремонт крыши?» — тему, которой здесь не было, — ассистент ответил «Да, помню: мы это
     // обсуждали». Память ничего не вернула, и подтверждать было нечем: модель просто поддержала форму
     // вопроса. Это худший род вранья в разговоре — он неотличим от правды, пока человек не проверит.
+    // 🔒 …НО РАЗГОВОР ПЕРЕД ГЛАЗАМИ — ЭТО ТОЖЕ МАТЕРИАЛ (332.C, дефект пойман набором проверок). Запрет
+    // выше был сформулирован как «ты НЕ помнишь никакого прошлого разговора» и срабатывал всякий раз,
+    // когда долгая память пуста, — то есть и тогда, когда ответ дословно стоял в диалоге, приложенном к
+    // этому же промпту. Живой случай: человек назвал город свадьбы, тремя репликами позже спросил «в
+    // каком городе?» — и получил «не нахожу», хотя строка была прямо над вопросом. Страж обязан отделять
+    // «нечего вспомнить» от «не смотри на то, что тебе дали»: первое защищает от вранья, второе само есть
+    // враньё.
     (recallAnswer
       ? ""
-      : `You were given NOTHING from memory for this run. Therefore you do NOT remember any past conversation: ` +
-        `if the person asks whether you remember something, say honestly that you do not find it, and never ` +
-        `agree that you discussed it. Agreeing without material is a lie. `) +
+      : history
+        ? `Long-term memory returned NOTHING for this run, so the conversation above is the ONLY thing you ` +
+          `remember. Answer from it whenever it holds the answer, quoting the detail the person gave. If ` +
+          `something is NOT in the conversation above, say plainly you do not find it and never agree that ` +
+          `you discussed it — agreeing without material is a lie. `
+        : `You were given NOTHING from memory for this run and there is no conversation to look at. Therefore ` +
+          `you do NOT remember any past conversation: if the person asks whether you remember something, say ` +
+          `honestly that you do not find it, and never agree that you discussed it. `) +
     (qaHit ? `For a message like "${qaHit.q}" answer in this style: "${qaHit.a}". ` : "") +
     // Смена языка — понимает МОДЕЛЬ (не список фраз): просит человек говорить на другом языке → модель
     // ставит В НАЧАЛЕ ответа тег [[lang:<iso>]] и дальше отвечает уже на новом; мы парсим тег детерминированно

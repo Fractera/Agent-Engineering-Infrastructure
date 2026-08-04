@@ -31,13 +31,41 @@ function restore(path, snap) {
   writeFileSync(path, snap);
 }
 
+/**
+ * 🔒 ПРОВЕРКА НАЧИНАЕТ С ЧИСТОГО РАЗГОВОРА (найдено дважды подряд, оба раза случай врал не о том).
+ *
+ * Пульт — ОДИН чат на всю автоматизацию (`chatKeyOf` → «panel»), поэтому набор садится в ту же беседу, где
+ * до него говорили владелец и мои ручные пробы. Последствия не косметические: чужое «привет» становилось
+ * закреплённой завязкой, а чужие реплики выдавливали первую реплику случая из БУФЕРА — то есть случай
+ * измерял загрязнение, а не механизм. Ложный результат хуже отсутствующей проверки.
+ *
+ * Поэтому перед каждым случаем разговор пульта убирается, а полный снимок возвращается в конце: беседа
+ * владельца остаётся при нём. Остальные склады (записи, журналы, календарь) не трогаем — их случаи и
+ * проверяют.
+ */
+function withoutPanelChat(snap) {
+  if (snap === null) return null;
+  const kept = snap.toString("utf8").split("\n").filter((line) => {
+    if (!line.trim()) return false;
+    try {
+      const row = JSON.parse(line);
+      return !(row.table === "chat-state" && row.id === "panel");
+    } catch { return true; }
+  });
+  return Buffer.from(kept.length ? kept.join("\n") + "\n" : "", "utf8");
+}
+
 /** Значение поля контекста против ожидания. Словарь намеренно крошечный — см. `_checks/readme.md`. */
 function matches(actual, expected) {
   if (expected && typeof expected === "object") {
-    if (expected.nonempty) return String(actual ?? "").trim().length > 0;
-    if (expected.absent) return String(actual ?? "").trim().length === 0;
-    if (typeof expected.contains === "string") return String(actual ?? "").includes(expected.contains);
-    return false;
+    const s = String(actual ?? "");
+    // Проверяются ВСЕ названные условия, а не первое подошедшее: «непусто И без слов механики» — одно
+    // требование к одной строке, и разбивать его на два поля значило бы описывать её дважды.
+    if (expected.nonempty && !s.trim()) return false;
+    if (expected.absent && s.trim()) return false;
+    if (typeof expected.contains === "string" && !s.includes(expected.contains)) return false;
+    if (Array.isArray(expected.notContainsAny) && expected.notContainsAny.some((w) => s.toLowerCase().includes(String(w).toLowerCase()))) return false;
+    return true;
   }
   return String(actual ?? "") === String(expected);
 }
@@ -71,7 +99,7 @@ for (const rel of TARGETS) {
 
   try {
     for (const c of suite.cases) {
-      restore(rowsPath, rowsSnap); // каждый случай начинает с одного и того же состояния
+      restore(rowsPath, withoutPanelChat(rowsSnap)); // каждый случай — с ЧИСТОГО разговора, см. ниже
       restore(corePath, coreSnap); // ...и с нетронутого ядра: эволюция предыдущего случая ему не наследство
 
       // 🔒 НАСТРОЙКИ ПОД СЛУЧАЙ. Вытеснение из памяти нельзя честно проверить на боевом бюджете: пришлось
