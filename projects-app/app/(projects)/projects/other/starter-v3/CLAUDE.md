@@ -92,6 +92,29 @@ Read any file here freely — nothing is hidden behind an API.
   `recentDialogBrief` — the last exchange on a derived share — for reading the request class. **A node that
   builds its own history breaks the budget**: assemble nothing, read the slice you are given.
 
+## 💸 SCALE — this automation carries 2–5 TASKS, and growth goes SIDEWAYS
+
+**The engine runs EVERY VISIBLE node on EVERY run.** Measured: a bare "hello" executed **33 node
+functions**. Cost grows linearly with visible nodes and is paid on every message — so node count is not
+tidiness, it is the price of every answer. (This corrects the older law, which claimed runtime does not
+degrade with node count. It does.)
+
+- **Count WORK nodes — the middle only.** Inputs, intent classes, speech, outputs and evolution are fixed
+  by their vocabularies; their number follows the channels that are open, not the tasks. 46 nodes of which
+  9 are middle is SMALL.
+- **A channel this build does not use stays HIDDEN.** A hidden node does not run: closing an unused door is
+  a measurable saving on every run.
+- **Asked for something not built? The default answer is ANOTHER AUTOMATION, not another node here.**
+  Same job and under budget → build it here. Different job, same channels and stores → a new automation by
+  cloning (birth IS a clone of the frozen starter, and it ships with every node hidden — so "clone and
+  switch off" is simply "clone and reveal"). Nothing in common → a new one from scratch.
+- **Choosing from a LIST beats classifying prose.** With 2–5 tasks the list is exact and costs nothing; the
+  intent layer stays as the FALLBACK for text channels (Telegram, email, webhook) where no list can be
+  shown. Open-ended conversation about everything is Hermes's job and it pays in tokens — do not turn this
+  into that.
+
+Full law with the numbers and the decomposition contract: `_lib/scale-rules.ts` (`SCALE-RULES.md`).
+
 ## EVOLUTION — the automation edits ITSELF, after the answer is out
 
 The sixth layer runs **after delivery**: the reply is already with the person, so its work is invisible to

@@ -6,14 +6,55 @@
 
 export const SCALE_RULES = `# The scale rules (the decomposition law)
 
-## 1. The node budget (hard numbers)
+## 1. The budget (hard numbers) — COUNT TASKS, AND COUNT WORK NODES
 
-- **≤24 nodes** — grow freely (but: no use case → no node).
-- **25 nodes** — you MUST propose a decomposition seam into a chained group in the same step.
-- **30 nodes** — the absolute cap: no new node under any phrasing; growth continues ONLY by decomposition.
+**An automation carries 2 to 5 TASKS. Four is comfortable, five is the ceiling, six is a decomposition.**
+A task is one thing the owner wants done, i.e. one use case — not one node.
 
-Why: runtime never degrades with node count, but a coding agent's comprehension of ONE automation is
-bounded — big processes scale only as GROUPS of small, independently fixable members.
+- **≤5 use cases AND ≤12 work nodes** — grow freely (but: no use case → no node).
+- **6th use case, or 13 work nodes** — you MUST propose a decomposition seam into a chained group in the
+  same step.
+- **8 use cases or 16 work nodes** — the absolute cap: no new node under any phrasing.
+
+**Count WORK nodes — the middle layer only.** Inputs, intent classes, speech, outputs and evolution are
+fixed by their vocabularies: their number follows the channels the owner opened, not the tasks. A build
+with 46 nodes of which 9 are middle is SMALL, not oversized.
+
+## 1a. Why — two independent reasons, and the first one was measured wrong before
+
+**Runtime cost (measured 2026-08-04, and it corrects the previous version of this law).** The engine runs
+EVERY VISIBLE node on EVERY run: a bare "hello" executed **33 node functions**, nine of which returned
+empty ("not my run"). So the earlier claim here — *"runtime never degrades with node count"* — was FALSE.
+Cost grows linearly with visible nodes and is paid on every message, including greetings. Fewer nodes is
+not tidiness, it is the price of every answer.
+
+**Agent comprehension.** A coding agent's grasp of ONE automation is bounded; big processes scale only as
+GROUPS of small, independently fixable members. This reason was always true and stays.
+
+**Practical corollary, immediately actionable:** an automation that does not use a channel must keep that
+channel's nodes HIDDEN. A hidden node does not run, so closing unused doors is a direct, measurable saving
+on every run — not housekeeping.
+
+## 1b. Growth goes SIDEWAYS, not upward (owner's doctrine 2026-08-04)
+
+When a person asks for something this build does not do, the default answer is **another automation**, not
+another node here. Three outcomes, decided by checkable facts:
+
+| The request… | Recommend |
+|---|---|
+| is the SAME job, and this build is under budget | build it HERE — a Development Step, as usual |
+| is a different job, but shares the channels and stores (same bot, same base) | a NEW automation **by cloning**: it inherits the doors, and the other nodes are revealed in it |
+| shares nothing — different input, different output, different rhythm | a NEW automation **from scratch** |
+
+"A different job" is already defined in §2: different inputs, different outputs, different rhythms of life.
+
+**Cloning is what birth already is** (\`_lib/v2-birth.ts\`, step 301): a new automation is a COPY of the
+frozen starter, which ships with every node hidden. So "clone it and switch off what I do not need" is
+simply "clone it and reveal what I do need" — the capability exists, only the direction of speech differs.
+
+**Say the reason out loud to the person.** Every extra ability is not paid once: it is paid on EVERY run of
+that automation, including "hello". Many small automations are cheaper AND more reliable than one large
+one — the choice among 4 tasks is exact, the choice among 40 is a guess.
 
 ## 2. Scale assessment is the FIRST decision
 

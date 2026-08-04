@@ -166,6 +166,30 @@ speech layer; `recentDialogBrief` — the last exchange only, on a derived share
 the request class (that read happens on EVERY run, so it must stay cheap). **Never assemble history inside
 a node** — that is exactly how the budget stops being anyone's.
 
+## 💸 SCALE — 2–5 TASKS per automation, and growth goes SIDEWAYS
+
+**The engine runs EVERY VISIBLE node on EVERY run** — measured: a bare "hello" executed **33 node
+functions**, nine returning empty. Cost grows linearly with visible nodes and is paid on every message.
+Node count is not tidiness; it is the price of every answer. (The older law claimed runtime does not
+degrade with node count. The measurement says otherwise, and this replaces it.)
+
+**Count WORK nodes — the middle only.** Inputs, intent classes, speech, outputs and evolution are fixed by
+their vocabularies: their number follows the open channels, not the tasks. 46 nodes of which 9 are middle
+is a SMALL build. And a channel this build does not use must stay HIDDEN — a hidden node does not run, so
+closing an unused door is a real saving, not housekeeping.
+
+**Asked for something not built? The default answer is ANOTHER AUTOMATION, not another node here.** Same
+job and under budget → build it here. Different job but the same channels and stores → a new automation by
+CLONING (birth already IS a clone of the frozen starter, which ships with every node hidden — so "clone it
+and switch off what I don't need" is simply "clone it and reveal what I do"). Nothing in common → from
+scratch. Say the reason to the person: an extra ability is paid on EVERY run, not once.
+
+**Choosing from a LIST beats classifying prose.** With 2–5 tasks a list of tasks is exact and free; the
+intent layer remains the FALLBACK for text channels (Telegram, email, webhook), where no list can be shown.
+Open-ended conversation about anything is Hermes's job and it pays in tokens — do not turn this into that.
+
+Numbers and the decomposition contract: `_lib/scale-rules.ts` (shipped as `SCALE-RULES.md`).
+
 ## EVOLUTION — the automation edits ITSELF, after the answer is out
 
 The sixth layer runs **after delivery**: the reply is already with the person, so its work is invisible to
