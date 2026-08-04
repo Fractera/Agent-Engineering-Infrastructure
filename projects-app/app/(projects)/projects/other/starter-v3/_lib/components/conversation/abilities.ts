@@ -171,6 +171,8 @@ export function abilitiesShort(a: Abilities): string {
     "",
     "· Asked for something you cannot do: say plainly it is not part of you yet and name what you CAN do " +
       "instead. Do NOT send the person anywhere and do NOT promise it for later.",
+    "· This NEVER applies to LANGUAGE. You speak every language: being asked to answer in another one is " +
+      "not a missing capability — switch and answer, and never say you do not do that language.",
   );
   return lines.join("\n");
 }
@@ -232,6 +234,8 @@ export function abilitiesBrief(a: Abilities): string {
     // Правило формулируется через ПРИЗНАК, а не через словарь, и тогда показывать нечего.
     "· Never name any part of your machinery: if a word describes how you are built rather than what the " +
       "person receives, it does not belong in your reply.",
+    "· This NEVER applies to LANGUAGE. You speak every language: being asked to answer in another one is " +
+      "not a missing capability — switch and answer, and never say you do not do that language.",
     "· Asked for something you cannot do: say plainly it is not part of you yet and name what you CAN do " +
       "instead. Do NOT send the person anywhere and do NOT promise it for later — you have no way to add it " +
       "yourself, and saying otherwise is a promise you cannot keep.",

@@ -17,7 +17,19 @@
 import type { NodeCtx } from "../executor";
 import { servesAnyClass } from "../message";
 
-const API = "https://en.wikipedia.org/w/api.php";
+/**
+ * 🔒 ИСКАТЬ НА ЯЗЫКЕ ЧЕЛОВЕКА И СНАЧАЛА ТОЧНОЕ НАЗВАНИЕ (332.E, дефект найден владельцем живьём).
+ *
+ * Было: всегда английская вики и всегда нечёткий поиск с первым попавшимся результатом. Человек написал
+ * «Эйфелева башня» — источник вернул статью «Eiffel Tower replicas and derivatives», то есть НЕ тот
+ * предмет, и дальше по складам поехала чужая картинка с чужой датой. Тихая подмена предмета хуже
+ * ненайденного: человек получает уверенный ответ не о том.
+ *
+ * Лечение в два шага, оба дешёвые: (1) спрашиваем вики ТОГО ЯЗЫКА, на котором человек говорит — там его
+ * название точное; (2) сначала пробуем ТОЧНОЕ НАЗВАНИЕ (с редиректами), и только если такой статьи нет,
+ * переходим к нечёткому поиску. Не нашли на своём языке — пробуем английскую как самую полную.
+ */
+const apiOf = (lang: string) => `https://${/^[a-z]{2}$/.test(lang) ? lang : "en"}.wikipedia.org/w/api.php`;
 // 🔒 КОНТАКТ В USER-AGENT ОБЯЗАТЕЛЕН (доказано живьём 311.7): Wikimedia отвечает 403 на обращение без
 // адреса в UA — это их политика, а не наш баг. Без контакта узел молча деградировал бы в «не нашлось».
 const UA = "Fractera-Automation/1.0 (+https://fractera.ai; open encyclopedic lookup)";
@@ -40,15 +52,37 @@ type Subject = {
   sourceUrl: string;
 };
 
-async function lookup(name: string): Promise<Subject | null> {
-  const url =
-    `${API}?action=query&generator=search&gsrsearch=${encodeURIComponent(name)}&gsrlimit=1` +
-    `&prop=extracts|pageimages|coordinates&exintro=1&explaintext=1&piprop=original&format=json&origin=*`;
-  const r = await fetch(url, { headers: { "user-agent": UA } });
+const FIELDS = "&prop=extracts|pageimages|coordinates&exintro=1&explaintext=1&piprop=original&format=json&origin=*";
+
+/** Одно обращение к вики: либо по точному названию, либо поиском. `null` — статьи нет. */
+async function askWiki(api: string, name: string, exact: boolean): Promise<Record<string, unknown> | null> {
+  const query = exact
+    ? `action=query&titles=${encodeURIComponent(name)}&redirects=1`
+    : `action=query&generator=search&gsrsearch=${encodeURIComponent(name)}&gsrlimit=1`;
+  const r = await fetch(`${api}?${query}${FIELDS}`, { headers: { "user-agent": UA } });
   if (!r.ok) throw new Error(`the encyclopedic source answered ${r.status}`);
   const data = (await r.json()) as { query?: { pages?: Record<string, Record<string, unknown>> } };
-  const pages = data.query?.pages ? Object.values(data.query.pages) : [];
-  const page = pages[0];
+  const page = data.query?.pages ? Object.values(data.query.pages)[0] : undefined;
+  // Точный запрос на несуществующее название возвращает страницу с пометкой `missing` — это НЕ находка.
+  if (!page || "missing" in page || !String(page.extract ?? "").trim()) return null;
+  return page;
+}
+
+async function lookup(name: string, lang: string): Promise<Subject | null> {
+  const own = apiOf(lang);
+  // Порядок — от самого точного к самому терпимому: своё название на своём языке → поиск на своём языке →
+  // то же на английском (самая полная вики). Первый непустой ответ побеждает.
+  const attempts: { api: string; exact: boolean }[] = [
+    { api: own, exact: true },
+    { api: own, exact: false },
+    ...(own === apiOf("en") ? [] : [{ api: apiOf("en"), exact: true }, { api: apiOf("en"), exact: false }]),
+  ];
+  let page: Record<string, unknown> | null = null;
+  let api = own;
+  for (const a of attempts) {
+    page = await askWiki(a.api, name, a.exact);
+    if (page) { api = a.api; break; }
+  }
   if (!page) return null;
   const coords = Array.isArray(page.coordinates) ? (page.coordinates[0] as { lat?: number; lon?: number }) : null;
   const original = (page.original ?? null) as { source?: string } | null;
@@ -59,7 +93,9 @@ async function lookup(name: string): Promise<Subject | null> {
     imageUrl: String(original?.source ?? "").trim(),
     lat: typeof coords?.lat === "number" ? coords.lat : null,
     lng: typeof coords?.lon === "number" ? coords.lon : null,
-    sourceUrl: `https://en.wikipedia.org/?curid=${String(page.pageid ?? "")}`,
+    // Адрес — ТОЙ вики, что реально ответила: ссылка на английскую статью под русским текстом была бы
+    // ещё одной мелкой ложью в ответе.
+    sourceUrl: `${api.replace("/w/api.php", "")}/?curid=${String(page.pageid ?? "")}`,
   };
 }
 
@@ -77,7 +113,10 @@ export async function fetchExternal(ctx: NodeCtx): Promise<NodeCtx> {
   const nothingToStore = { skipStores: true, subjectQuery: name };
   let found: Subject | null = null;
   try {
-    found = await lookup(name);
+    // Язык человека приходит из канала (`lang` пульта) или определяется слоем намерения; вики берётся его.
+    // `||`, а НЕ `??`: движок кладёт `chatLang: ""` для нового чата, и `??` его не пропускает — язык
+    // терялся, вики оставалась английской, а человек получал «Eiffel Tower replicas» на русский запрос.
+    found = await lookup(name, String(ctx.chatLang || ctx.lang || "").toLowerCase().slice(0, 2));
   } catch (e) {
     const why = e instanceof Error ? e.message : String(e);
     return { ...nothingToStore, subjectError: why, reply: `I could not reach the source to look up “${name}” — ${why}.` };

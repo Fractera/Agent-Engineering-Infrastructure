@@ -14,16 +14,47 @@
 // Имя `evolveBehavior` — производное от области, не переименовывать.
 import type { NodeCtx } from "../executor";
 import { askModel } from "../ai";
+import { readCore } from "../core-io";
+import { allNodes } from "../../_data/automation.schema";
 import { readAdjustment } from "../components/conversation/adjustment";
 import { evolveAssistantData } from "../components/conversation/self-write";
 
 /** Потолок инструкции: дальше не дописываем, а уплотняем. Цена каждого знака платится на каждом прогоне. */
 const INSTRUCTION_LIMIT = 1800;
 
+/**
+ * 🔒 ОБЕЩАНИЕ ПО РАСПИСАНИЮ БЕЗ ЧАСОВ — НЕВОЗМОЖНО, И ЭТО РЕШАЕТСЯ БЕЗ МОДЕЛИ (332.E).
+ *
+ * Порядок разбора (сначала пробел, потом поведение) опирается на ВЕРДИКТ МОДЕЛИ, а он неустойчив: «присылай
+ * еженедельный отчёт» изредка проходит как «сборка это умеет», и правило садится в стоячую инструкцию —
+ * ровно дефект 314, который считался закрытым. Здесь нужна опора твёрже вердикта.
+ *
+ * Она есть: САМА СЕБЯ автоматизация запускает только через вход по расписанию. Он скрыт — значит никакое
+ * «каждый понедельник» физически неисполнимо, и это видно из ядра, а не из суждения. Признак повторяемости
+ * — закрытый список слов на языках кокпита; ошибиться он может только в сторону ОТКАЗА записать правило,
+ * а отказ безопасен: просьба уходит в журнал пробелов, где её увидит владелец.
+ */
+const RECURRENCE = /\b(every|each|weekly|daily|monthly|hourly)\b|каждый|каждую|каждое|еженевно|ежедневн|еженедельн|ежемесячн|по понедельник|по вторник|по средам|по четверг|по пятниц|раз в (день|неделю|месяц)/i;
+
+async function hasScheduleInput(): Promise<boolean> {
+  try {
+    const core = await readCore();
+    return allNodes(core.graph.nodes).some((n) => n.kind === "input" && n.state === "visible" && n.ioType === "cron");
+  } catch {
+    return true; // ядро недоступно — не берёмся судить и ничего не запрещаем
+  }
+}
+
 export async function evolveBehavior(ctx: NodeCtx): Promise<NodeCtx> {
   const adj = await readAdjustment(ctx);
   if (!adj.behavior) return { behaviorEvolution: "no-signal" };
   const rule = adj.behavior;
+
+  if (RECURRENCE.test(rule) && !(await hasScheduleInput())) {
+    // Исход `no-change` — из объявленных: правило не записано. Причина отказа едет отдельным полем, чтобы
+    // её было видно в прогоне и не пришлось гадать, почему инструкция не изменилась.
+    return { behaviorEvolution: "no-change", behaviorRefused: rule };
+  }
 
   let overflowed = "";
   const changed = await evolveAssistantData(

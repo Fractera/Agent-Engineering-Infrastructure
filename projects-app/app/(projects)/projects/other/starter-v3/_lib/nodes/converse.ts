@@ -22,11 +22,33 @@ import { composeReply } from "./compose-reply";
 // 🔒 ТОЛЬКО ТО, ЧТО РЕАЛЬНО ЕСТЬ В СБОРКЕ (шаг 311.11): траты, чеки, категории, места и алиасы глоссария
 // перечислялись здесь как исходы узлов, снесённых вместе с доменом v2. Перечислять несуществующее — то же
 // обещание сверх ядра, что и no-op-заглушка.
+/**
+ * 🔒 ЧТО ПРОГОН СДЕЛАЛ НА САМОМ ДЕЛЕ (332.E, ложь поймана владельцем живьём).
+ *
+ * Здесь стояло `ctx.when → «set a reminder for …»`, то есть ЛЮБАЯ дата в контексте объявлялась
+ * напоминанием. А дату кладёт не только просьба напомнить: узел `resolveMoment` достаёт дату САМОГО
+ * ПРЕДМЕТА (год открытия Эйфелевой башни). Живой прогон: человек написал «Эйфелева башня», машина нашла
+ * её, забрала картинку и дату — и ответила «Понял: это напоминание на 01.01.1889». Главный сценарий
+ * сборки отчитался чужими словами о том, чего человек не просил.
+ *
+ * Правило: напоминание — только когда его ПРОСИЛИ (есть текст напоминания), а найденный предмет
+ * описывается как найденный предмет. Речь идёт ДО выходов, поэтому здесь перечисляется добытый материал,
+ * а не записи складов: их ещё не существует, и обещать их как сделанные было бы той же ложью.
+ */
 function recordedSummary(ctx: NodeCtx): string {
   const bits: string[] = [];
+  const subject = ctx.subject as { name?: unknown } | undefined;
+  const name = String(subject?.name ?? "").trim();
+  if (name) {
+    const has: string[] = [];
+    if (String(ctx.imageUrl ?? "").trim()) has.push("its picture");
+    if (String(ctx.when ?? "").trim()) has.push(`its date (${ctx.when})`);
+    bits.push(`looked up "${name}"${has.length ? `, and you now have ${has.join(" and ")}` : ""}`);
+  }
   if (ctx.noteSummary) bits.push(`saved a note: ${ctx.noteSummary}`);
   if (ctx.needsWhen === true) bits.push("a reminder was requested but no date was given — ask when");
-  else if (ctx.when) bits.push(`set a reminder for ${ctx.when}: ${ctx.remindText ?? ""}`);
+  // Напоминание — ТОЛЬКО по просьбе: признак просьбы это её текст, а не наличие даты в контексте.
+  else if (String(ctx.remindText ?? "").trim()) bits.push(`set a reminder for ${ctx.when}: ${ctx.remindText}`);
   return bits.join("; ");
 }
 
@@ -128,17 +150,27 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   // `ctx.chatLang` от классификатора (единый контекстный слой 309) → ЯЗЫК СООБЩЕНИЯ (кириллица → ru) →
   // дефолт платформы. Детект по сообщению важнее дефолта: `NEXT_PUBLIC_DEFAULT_LOCALE` может быть не задан.
   const detectLang = (s: string): string => (/[Ѐ-ӿ]/.test(s) ? "ru" : "");
-  const platformDefault = String(ctx.lang ?? process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? "en").toLowerCase().slice(0, 2);
+  // 🔒 ЯЗЫК СТРАНИЦЫ — ФАКТ, А НЕ ДОГАДКА (332.E, найдено владельцем живьём). Канал, у которого есть
+  // интерфейс, присылает его язык (`lang` в теле прогона). Он сильнее определения по алфавиту: человек,
+  // читающий русскую страницу, написал «hello» — и получал английский чат навсегда, потому что одно
+  // латинское слово перевесило весь интерфейс, который он видит. У каналов без интерфейса (Telegram,
+  // почта, вебхук) поля нет, и там по-прежнему работает определение по сообщению.
+  const uiLang = String(ctx.lang ?? "").toLowerCase().slice(0, 2);
+  const platformDefault = String(process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? "en").toLowerCase().slice(0, 2);
   let lang =
     // 1. ВЫБОР ЧЕЛОВЕКА В ЭТОМ ЧАТЕ — «давай общаться по-украински». Сильнее всех: он сказал прямо.
     state.lang ||
     // 2. ЯЗЫК ДЛЯ ЧАТА — настройка автоматизации. Задан и непуст → говорим на нём всегда.
     cfg.chatLanguage ||
     String(ctx.chatLang ?? "").toLowerCase().slice(0, 2) ||
-    // 3. ЧЕЛОВЕК УЖЕ НАПИСАЛ — отвечаем на языке его сообщения. Дефолт здесь неуместен: он назначен
-    //    «на всякий случай», а язык переписки человек только что показал делом.
+    // 3. ЧЕЛОВЕК НАПИСАЛ КИРИЛЛИЦЕЙ — это прямое свидетельство, и оно сильнее страницы: пишущий
+    //    по-русски на английской странице ждёт русского ответа. Определение молчит на латинице (возвращает
+    //    пусто), поэтому оно НЕ перебивает пункт ниже — оно только добавляет уверенности, когда она есть.
     detectLang(incoming) ||
-    // 4. ЧЕЛОВЕК ЕЩЁ НЕ ПИСАЛ (автоматизация заговорила первой) — вот ровно тот случай, ради которого
+    // 4. ЯЗЫК СТРАНИЦЫ, КОТОРУЮ ЧЕЛОВЕК ЧИТАЕТ. Ровно случай владельца: русский интерфейс, «hello» по
+    //    привычке — раньше здесь стоял дефолт платформы, и разговор навсегда становился английским.
+    uiLang ||
+    // 5. ЧЕЛОВЕК ЕЩЁ НЕ ПИСАЛ (автоматизация заговорила первой) — вот ровно тот случай, ради которого
     //    язык по умолчанию и существует: догадываться не о чем, берём назначенный платформой.
     platformDefault;
 
@@ -235,7 +267,10 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   const task = ACTS[act]
     ? ACTS[act]
     : recorded
-      ? `You just performed this for the user: ${recorded}. Reply confirming it briefly (or ask the follow-up it needs).`
+      // NAME IT BACK (332.E): подтверждение без имени предмета — «дата зафиксирована» вместо «нашёл
+      // Эйфелеву башню» — человек не понимает, о чём речь, и не может проверить, то ли нашли.
+      ? `You just performed this for the user: ${recorded}. Reply confirming it briefly and NAME the subject ` +
+        `you handled, so the person can see WHAT you found (or ask the follow-up it needs).`
       : recallAnswer
         ? `The user asked a QUESTION. Answer it directly using this information: "${recallAnswer}". Do NOT say anything was "saved" — you are ANSWERING, not recording.`
         : `The user is CONVERSING (a greeting, a question about who you are, small talk, or a question ABOUT THIS ` +
@@ -299,6 +334,18 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
     // Смена языка — понимает МОДЕЛЬ (не список фраз): просит человек говорить на другом языке → модель
     // ставит В НАЧАЛЕ ответа тег [[lang:<iso>]] и дальше отвечает уже на новом; мы парсим тег детерминированно
     // и запоминаем язык навсегда (309.3). Дефолт/детект — лишь стартовая догадка, выбор человека главнее.
+    // 🔒 ЯЗЫК — НИКОГДА НЕ «ВОЗМОЖНОСТЬ, КОТОРОЙ НЕТ» (332.E, поймано владельцем живьём). На «i need only
+    // russian» ассистент ответил «I don't do Russian yet» — то есть применил правило честного отказа к
+    // языку. Это худший вид отказа: способность ЕСТЬ (тег ниже её и включает), а человек уходит с
+    // уверенностью, что машина не умеет его языка. Правило отказа обязано иметь границу, и вот она.
+    `You speak EVERY language. Being asked to switch languages is NEVER a missing capability: never say you ` +
+    `cannot, never treat it as something to add later — simply switch. ` +
+    // 🔒 ПЕРЕВОДИТЬ СМЫСЛ, А НЕ НАШИ СЛОВА (332.E). Ответ по-русски вышел как «разложу по пяти МАГАЗИНАМ»:
+    // модель дословно перевела наше внутреннее «stores». Для человека это бессмыслица — и ровно тот же
+    // дефект, что «пересказ механики»: наружу протекло наше слово, а не его польза.
+    `When you answer in another language, translate the MEANING, never our words: say what the person gets — ` +
+    `a picture kept, a date in the calendar, a marker on the map, a record to find later — and never a ` +
+    `literal rendering of internal terms like "stores", "nodes" or "runs". ` +
     `If the user asks to switch to another language, begin your reply with the tag [[lang:<iso 2-letter code>]] ` +
     `and then reply in that new language. Otherwise do not output the tag. ${task} No preamble, no quotes around your reply.` +
     (voiceRules ? ` The person has asked you to speak this way, and it OVERRIDES anything above: ${voiceRules}` : "");
@@ -310,9 +357,13 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
 
   // Детерминированный разбор тега смены языка: [[lang:xx]] → запомнить язык навсегда, снять тег из ответа.
   let out = reply.trim();
-  const tag = out.match(/^\s*\[\[lang:([a-z]{2})\]\]\s*/i);
+  // 🔒 ТЕГ РАЗБИРАЕТСЯ ТЕРПИМО, А ЧИСТИТСЯ СТРОГО (332.E, протекло в ответ владельцу). Модель написала
+  // `[[en]]` вместо `[[lang:en]]` — форма не совпала с шаблоном, и скобки уехали человеку в чат как текст.
+  // Речь не вправе показывать НАШУ разметку ни в каком виде: понимаем обе формы, а любую оставшуюся
+  // конструкцию `[[…]]` вырезаем — она наша, а не его.
+  const tag = out.match(/^\s*\[\[(?:lang:)?([a-z]{2})\]\]\s*/i);
   if (tag && chatId) { await setLang(chatId, tag[1].toLowerCase()); out = out.slice(tag[0].length).trim(); }
-  else out = out.replace(/\[\[lang:[a-z]{2}\]\]/gi, "").trim(); // страховка: тег без chatId не оставляем в тексте
+  out = out.replace(/\[\[[^\]]*\]\]/g, "").trim();
 
   if (chatId) await condense((await pushMessage(chatId, { role: "assistant", text: out, at: new Date().toISOString(), ...turn }, cfg.lastN, cfg.ttlMinutes)).dropped);
   // 🔒 РЕЧЬ — ЕДИНСТВЕННЫЙ АВТОР СОСТОЯНИЯ ДИАЛОГА (шаг 312.3). Висящий вопрос кладут в контекст те, кто

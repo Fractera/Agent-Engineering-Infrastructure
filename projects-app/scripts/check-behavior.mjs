@@ -65,6 +65,9 @@ function matches(actual, expected) {
     if (expected.absent && s.trim()) return false;
     if (typeof expected.contains === "string" && !s.includes(expected.contains)) return false;
     if (Array.isArray(expected.notContainsAny) && expected.notContainsAny.some((w) => s.toLowerCase().includes(String(w).toLowerCase()))) return false;
+    // `matches` — для того, что нельзя назвать одним словом: «ответ по-русски» есть НАЛИЧИЕ КИРИЛЛИЦЫ, а
+    // не конкретная фраза; требовать конкретную значило бы проверять формулировку модели, а не язык.
+    if (typeof expected.matches === "string" && !new RegExp(expected.matches).test(s)) return false;
     return true;
   }
   return String(actual ?? "") === String(expected);

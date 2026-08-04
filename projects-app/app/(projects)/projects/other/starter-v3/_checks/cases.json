@@ -34,6 +34,29 @@
       }
     },
     {
+      "id": "the-page-language-decides-the-reply",
+      "why": "THE OWNER'S OWN SESSION, 2026-08-04, and the reason this case exists. He opened the page with the interface in Russian, typed 'hello' out of habit, and the automation locked the conversation to English forever — because the panel never told the run what language the page was in, and the run guessed from the alphabet of one word. A person reading a Russian page must be answered in Russian. Every case before this one was written in English through an English panel, which is exactly why eight green checks proved nothing about this.",
+      "input": { "source": "control-panel", "lang": "ru", "text": "hello" },
+      "expect": {
+        "ok": true,
+        "context": { "reply": { "nonempty": true, "matches": "[а-яА-ЯёЁ]" } },
+        "cost": { "nodeFunctions": 33, "modelCalls": 2 }
+      }
+    },
+    {
+      "id": "asking-for-another-language-is-never-refused",
+      "why": "THE OWNER'S OWN SESSION: he wrote 'i need only russian' and was told 'I don't do Russian yet, but I can help ... in English'. The honest-refusal rule — say plainly when something is not part of this build — was applied to LANGUAGE, which the build does have. That is the worst kind of refusal: the person leaves believing the machine cannot speak his language. Reproduced three times afterwards and it answered correctly each time, so the path is UNSTABLE, not dead — and unstable is worse for a user than broken, because it cannot be predicted. Hence a permanent case.",
+      "inputs": [
+        { "source": "control-panel", "text": "hello" },
+        { "source": "control-panel", "text": "i need only russian" }
+      ],
+      "expect": {
+        "ok": true,
+        "context": { "reply": { "nonempty": true, "matches": "[а-яА-ЯёЁ]" } },
+        "cost": { "nodeFunctions": 33, "modelCalls": 3 }
+      }
+    },
+    {
       "id": "self-description-speaks-outcomes-not-machinery",
       "why": "The abilities brief costs ~750 tokens, so 332.C sends it in full ONLY on the classes that talk about the build itself. This case guards the half that must not degrade: asked point blank, the automation still describes itself, in terms of what the person GETS. The forbidden words are the ones the node summaries are written in — the owner caught them being retold verbatim once (330.5R), and a shorter brief must not bring that back. MEASURED: the CLASS of 'what can you do?' is not stable — it comes back `self-describe` or `unclaimed` on the same text (second sighting of unstable prose classification today). Harmless here, because both classes receive the full brief, and the case therefore asserts the reply, not the verdict.",
       "input": { "source": "control-panel", "text": "what can you do?" },
@@ -52,6 +75,19 @@
       "expect": {
         "ok": true,
         "context": { "intentClass": "fetch-external", "reply": { "nonempty": true } },
+        "cost": { "nodeFunctions": 33, "modelCalls": 2 }
+      }
+    },
+    {
+      "id": "a-bare-subject-name-runs-the-main-scenario",
+      "why": "THE OWNER'S OWN SESSION: the flagship use case is 'I name a subject' — so a bare name, with no question mark and no polite framing, must run it. It did fetch, keep the picture and resolve the date, and then SPEECH lied: 'Понял: это напоминание на 01.01.1889' — because the summary called any date in the context a reminder, while the date belonged to the subject itself. The person asked for a landmark and was told about a reminder he never requested. The case asserts what he must see: the subject named back to him, and no reminder invented.",
+      "input": { "source": "control-panel", "lang": "ru", "text": "Эйфелева башня" },
+      "expect": {
+        "ok": true,
+        "context": {
+          "intentClass": "fetch-external",
+          "reply": { "nonempty": true, "notContainsAny": ["напоминание", "reminder"] }
+        },
         "cost": { "nodeFunctions": 33, "modelCalls": 2 }
       }
     },

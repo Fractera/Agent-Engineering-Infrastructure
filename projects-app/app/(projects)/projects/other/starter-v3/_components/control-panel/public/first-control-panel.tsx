@@ -53,7 +53,13 @@ export default function FirstControlPanel({
         headers: { "content-type": "application/json" },
         // `taskCase` — какой кейс человек выбрал. Прогон получает это ЗНАНИЕМ, а не догадкой: проверять
         // покрытие больше нечего, человек выбрал из того, что автоматизация умеет.
-        body: JSON.stringify({ input: task ? { ...values, taskCase: task.cuid } : values }),
+        //
+        // 🔒 `lang` — ЯЗЫК СТРАНИЦЫ, НА КОТОРУЮ ЧЕЛОВЕК СМОТРИТ (332.E, дефект найден владельцем живьём).
+        // Панель не сообщала его вовсе, и прогон угадывал язык ответа по АЛФАВИТУ первого сообщения:
+        // владелец открыл русскую страницу, написал «hello» — и машина записала себе «этот чат
+        // английский», после чего отвечала по-английски человеку, читающему русский интерфейс. Язык, на
+        // котором человек читает страницу, — это факт, а не догадка, и его надо передавать, а не выводить.
+        body: JSON.stringify({ input: { ...values, lang, ...(task ? { taskCase: task.cuid } : {}) } }),
       });
       const result = (await r.json()) as Outcome;
       setOutcome(result);
@@ -85,6 +91,13 @@ export default function FirstControlPanel({
       {tasks.length ? (
         <div className="space-y-1.5">
           <p className="text-xs font-medium text-muted-foreground">{L.tasks}</p>
+          {/* 🔒 КНОПКА ОБЯЗАНА БЫТЬ ПОНЯТНОЙ БЕЗ ПОЯСНЕНИЙ (332.E, найдено владельцем живьём). Здесь подпись
+              резалась в одну строку, и владелец увидел «Open up a named…» — обрубок чужого предложения на
+              русском экране, «не понимаю, что это за кнопка и зачем». Подпись — ДАННЫЕ владельца (заголовок
+              кейса) и переводу не подлежит, поэтому лечится два раза: заголовок показывается ЦЕЛИКОМ (перенос
+              по словам, а не многоточие), а НАД рядом стоит фраза на языке интерфейса, объясняющая, что это
+              вообще такое. Данные могут быть на любом языке — объяснение обязано быть на языке читателя. */}
+          <p className="text-xs text-muted-foreground">{L.tasksHint}</p>
           <div className="flex flex-wrap gap-1.5">
             {tasks.map((t) => (
               <Button
@@ -94,8 +107,9 @@ export default function FirstControlPanel({
                 variant={task?.cuid === t.cuid ? "default" : "outline"}
                 disabled={busy}
                 onClick={() => setTask(task?.cuid === t.cuid ? null : t)}
+                className="h-auto max-w-full whitespace-normal text-left leading-snug py-1.5"
               >
-                {t.title}
+                {t.number}. {t.title}
               </Button>
             ))}
           </div>
