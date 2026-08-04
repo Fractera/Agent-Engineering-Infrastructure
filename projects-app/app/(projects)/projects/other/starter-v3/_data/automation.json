@@ -3414,16 +3414,16 @@
                 "nl": "Bericht versturen"
               },
               "description": {
-                "en": "Write anything — the automation captures it and fans it out to every open output channel.",
-                "es": "Escribe lo que quieras: la automatización lo captura y lo reparte a todos los canales de salida abiertos.",
-                "fr": "Écrivez ce que vous voulez : l'automatisation le capture et le distribue à tous les canaux de sortie ouverts.",
-                "it": "Scrivi qualsiasi cosa: l'automazione la cattura e la distribuisce a tutti i canali di uscita aperti.",
-                "ru": "Напишите что угодно — автоматизация захватит сообщение и развезёт его по всем открытым выходным каналам.",
-                "de": "Schreibe irgendetwas — die Automatisierung erfasst es und verteilt es an alle offenen Ausgabekanäle.",
-                "pt": "Escreva qualquer coisa — a automação captura a mensagem e distribui-a por todos os canais de saída abertos.",
-                "pl": "Napisz cokolwiek — automatyzacja przechwyci wiadomość i roześle ją do wszystkich otwartych kanałów wyjściowych.",
-                "tr": "Herhangi bir şey yazın — otomasyon mesajı yakalar ve tüm açık çıkış kanallarına dağıtır.",
-                "nl": "Schrijf wat dan ook — de automatisering legt het vast en verspreidt het naar alle open uitvoerkanalen."
+                "en": "Name a subject — a place, a landmark, a thing. It is found, its picture kept, its date put in the calendar, its spot marked on the map, and one record written that links them all.",
+                "es": "Nombre un tema — un lugar, un monumento, un objeto. Se busca, se guarda su imagen, su fecha va al calendario, su punto al mapa y se escribe un registro que lo enlaza todo.",
+                "fr": "Nommez un sujet — un lieu, un monument, un objet. Il est trouvé, son image conservée, sa date mise au calendrier, son point marqué sur la carte, et une fiche relie le tout.",
+                "it": "Indica un soggetto — un luogo, un monumento, un oggetto. Viene trovato, la sua immagine conservata, la data messa in calendario, il punto sulla mappa e una scheda collega tutto.",
+                "ru": "Назовите предмет — место, достопримечательность, вещь. Она будет найдена: картинка сохранится, дата попадёт в календарь, точка — на карту, и одна запись свяжет всё вместе.",
+                "de": "Nennen Sie ein Thema — einen Ort, ein Wahrzeichen, ein Ding. Es wird gefunden, sein Bild gespeichert, sein Datum in den Kalender gelegt, sein Punkt auf der Karte markiert, und ein Eintrag verbindet alles.",
+                "pt": "Indique um assunto — um lugar, um monumento, uma coisa. Ele é encontrado, a imagem guardada, a data vai para o calendário, o ponto para o mapa, e um registo liga tudo.",
+                "pl": "Podaj temat — miejsce, zabytek, rzecz. Zostanie znaleziony, zdjęcie zapisane, data trafi do kalendarza, punkt na mapę, a jeden wpis połączy wszystko.",
+                "tr": "Bir konu söyleyin — bir yer, bir simge yapı, bir nesne. Bulunur, resmi saklanır, tarihi takvime, noktası haritaya işlenir ve tümünü bağlayan bir kayıt yazılır.",
+                "nl": "Noem een onderwerp — een plek, een monument, een ding. Het wordt gevonden, de afbeelding bewaard, de datum in de agenda gezet, de plek op de kaart gemarkeerd, en één record verbindt alles."
               },
               "params": [
                 {

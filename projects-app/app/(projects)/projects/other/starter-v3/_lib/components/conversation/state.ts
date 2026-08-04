@@ -24,7 +24,18 @@ export type PendingAsk = { kind: string; at: string; payload?: Record<string, un
  * начало безвозвратно, и ассистент честно не знал, о чём была первая половина беседы. Теперь вытесненное
  * не исчезает, а уплотняется в один абзац — дёшево и навсегда.
  */
-export type ChatState = { id: string; messages: ChatMessage[]; lang: string; pending: PendingAsk; summary: string };
+/**
+ * 🔒 `langChosen` — ВЫБРАЛ ЧЕЛОВЕК ИЛИ ДОГАДАЛИСЬ МЫ (332.F, дефект найден владельцем на живом экране).
+ *
+ * Язык чата записывался ОДИНАКОВО в двух совершенно разных случаях: когда человек прямо попросил другой
+ * язык и когда мы просто угадали его по алфавиту первого сообщения. Дальше оба одинаково побеждали всё
+ * остальное — и владелец, открывший РУССКУЮ страницу и написавший «hello», получил чат, навсегда
+ * закреплённый за английским; смена языка интерфейса на него уже не влияла.
+ *
+ * Догадка не имеет права весить столько же, сколько просьба. Поэтому выбор помечается, и только
+ * помеченный сильнее языка страницы.
+ */
+export type ChatState = { id: string; messages: ChatMessage[]; lang: string; langChosen: boolean; pending: PendingAsk; summary: string };
 
 const TABLE = "chat-state";
 
@@ -34,6 +45,8 @@ function normalize(row: Record<string, unknown> | undefined, chatId: string): Ch
     id: chatId,
     messages,
     lang: typeof row?.lang === "string" ? (row!.lang as string) : "",
+    // Старые записи флага не имеют — и это верно: их язык был УГАДАН, а не выбран.
+    langChosen: row?.langChosen === true,
     pending: (row?.pending as PendingAsk) ?? null,
     summary: typeof row?.summary === "string" ? (row!.summary as string) : "",
   };
@@ -94,7 +107,7 @@ export function formatDialog(messages: ChatMessage[], limit: number): string {
 /** Прочитать состояние чата (пустое, если чат новый). */
 export async function loadChat(chatId: string): Promise<ChatState> {
   const id = String(chatId).trim();
-  if (!id) return { id: "", messages: [], lang: "", pending: null, summary: "" };
+  if (!id) return { id: "", messages: [], lang: "", langChosen: false, pending: null, summary: "" };
   const row = (await listRows(TABLE, Infinity)).find((r) => r.id === id);
   return normalize(row as Record<string, unknown> | undefined, id);
 }
@@ -189,10 +202,12 @@ export async function sealTurns(
 }
 
 /** Зафиксировать язык чата на всю историю (выбор пользователя, не дефолт). */
-export async function setLang(chatId: string, lang: string): Promise<void> {
+export async function setLang(chatId: string, lang: string, chosen = false): Promise<void> {
   const state = await loadChat(chatId);
   if (!state.id) return;
   state.lang = String(lang).trim().toLowerCase().slice(0, 5);
+  // Пометка ставится ТОЛЬКО просьбой человека и никогда не снимается догадкой: один раз попросил — держим.
+  if (chosen) state.langChosen = true;
   await save(state);
 }
 

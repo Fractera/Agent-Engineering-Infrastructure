@@ -100,7 +100,7 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
 
   // Память диалога: положить входящее сообщение в буфер (окно N/TTL из настроек), прочитать состояние.
   const incoming = String(ctx.text ?? ctx.original ?? "").trim();
-  let state = chatId ? await loadChat(chatId) : { id: "", messages: [], lang: "", pending: null as unknown, summary: "" };
+  let state = chatId ? await loadChat(chatId) : { id: "", messages: [], lang: "", langChosen: false, pending: null as unknown, summary: "" };
   // 🔒 РЕПЛИКА РОЖДАЕТСЯ С КОНВЕРТОМ (330.3): прогон и класс — то, что речи известно СЕЙЧАС. Исход и
   // созданные записи допишет движок в конце прогона (`sealTurns`): выходы ещё не отработали, и знать их
   // отсюда невозможно. Разделение объявлено в `record.schema.ts` и в законе группы.
@@ -158,8 +158,9 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   const uiLang = String(ctx.lang ?? "").toLowerCase().slice(0, 2);
   const platformDefault = String(process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? "en").toLowerCase().slice(0, 2);
   let lang =
-    // 1. ВЫБОР ЧЕЛОВЕКА В ЭТОМ ЧАТЕ — «давай общаться по-украински». Сильнее всех: он сказал прямо.
-    state.lang ||
+    // 1. ВЫБОР ЧЕЛОВЕКА В ЭТОМ ЧАТЕ — «давай общаться по-украински». Сильнее всех: он сказал ПРЯМО.
+    //    Именно прямо: угаданный когда-то язык стоит ниже страницы (`state.langChosen`, 332.F).
+    (state.langChosen ? state.lang : "") ||
     // 2. ЯЗЫК ДЛЯ ЧАТА — настройка автоматизации. Задан и непуст → говорим на нём всегда.
     cfg.chatLanguage ||
     String(ctx.chatLang ?? "").toLowerCase().slice(0, 2) ||
@@ -170,7 +171,10 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
     // 4. ЯЗЫК СТРАНИЦЫ, КОТОРУЮ ЧЕЛОВЕК ЧИТАЕТ. Ровно случай владельца: русский интерфейс, «hello» по
     //    привычке — раньше здесь стоял дефолт платформы, и разговор навсегда становился английским.
     uiLang ||
-    // 5. ЧЕЛОВЕК ЕЩЁ НЕ ПИСАЛ (автоматизация заговорила первой) — вот ровно тот случай, ради которого
+    // 5. УГАДАННЫЙ КОГДА-ТО ЯЗЫК ЭТОГО ЧАТА — слабый: он ниже и страницы, и алфавита сообщения. Нужен
+    //    только каналам без интерфейса, чтобы разговор не прыгал между сообщениями.
+    state.lang ||
+    // 6. ЧЕЛОВЕК ЕЩЁ НЕ ПИСАЛ (автоматизация заговорила первой) — вот ровно тот случай, ради которого
     //    язык по умолчанию и существует: догадываться не о чем, берём назначенный платформой.
     platformDefault;
 
@@ -181,7 +185,10 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   //
   // Настройка задана → в состояние чата НЕ пишем: иначе одна фраза человека «сделай по-английски» тихо
   // переспорила бы настройку владельца навсегда. Настройка сильнее случайного языка сообщения.
-  if (chatId && !state.lang && !cfg.chatLanguage) { await setLang(chatId, lang); state.lang = lang; }
+  // Догадку запоминаем ТОЛЬКО там, где интерфейса нет (Telegram, почта): иначе она начнёт спорить со
+  // страницей, на которую человек смотрит прямо сейчас, — ровно то, из-за чего чат владельца залип на
+  // английском. Пометки «выбрал» такая запись не получает.
+  if (chatId && !state.lang && !cfg.chatLanguage && !uiLang) { await setLang(chatId, lang); state.lang = lang; }
 
   // Представление возможностей (/start, «что ты умеешь») — детерминированный список надёжнее модели.
   if (ctx.showHelp === true && cfg.revealCapabilities) {
@@ -346,6 +353,10 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
     `When you answer in another language, translate the MEANING, never our words: say what the person gets — ` +
     `a picture kept, a date in the calendar, a marker on the map, a record to find later — and never a ` +
     `literal rendering of internal terms like "stores", "nodes" or "runs". ` +
+    // Второй заход того же дефекта: в русский ответ уехало «как named subject» — английский оборот из
+    // кейса владельца. Facts и кейсы написаны по-английски; ОТВЕТ обязан быть целиком на языке человека.
+    `The facts and use cases above are written in English: never copy their wording into your reply. Your ` +
+    `whole answer, every term in it, must be in the language you are answering in — no English fragments. ` +
     `If the user asks to switch to another language, begin your reply with the tag [[lang:<iso 2-letter code>]] ` +
     `and then reply in that new language. Otherwise do not output the tag. ${task} No preamble, no quotes around your reply.` +
     (voiceRules ? ` The person has asked you to speak this way, and it OVERRIDES anything above: ${voiceRules}` : "");
@@ -362,7 +373,9 @@ export async function converse(ctx: NodeCtx): Promise<NodeCtx> {
   // Речь не вправе показывать НАШУ разметку ни в каком виде: понимаем обе формы, а любую оставшуюся
   // конструкцию `[[…]]` вырезаем — она наша, а не его.
   const tag = out.match(/^\s*\[\[(?:lang:)?([a-z]{2})\]\]\s*/i);
-  if (tag && chatId) { await setLang(chatId, tag[1].toLowerCase()); out = out.slice(tag[0].length).trim(); }
+  // Тег ставится, когда человек ПОПРОСИЛ другой язык — это и есть выбор, поэтому он помечается как выбор
+  // и с этого момента сильнее языка страницы.
+  if (tag && chatId) { await setLang(chatId, tag[1].toLowerCase(), true); out = out.slice(tag[0].length).trim(); }
   out = out.replace(/\[\[[^\]]*\]\]/g, "").trim();
 
   if (chatId) await condense((await pushMessage(chatId, { role: "assistant", text: out, at: new Date().toISOString(), ...turn }, cfg.lastN, cfg.ttlMinutes)).dropped);

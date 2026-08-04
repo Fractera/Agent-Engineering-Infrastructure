@@ -176,7 +176,11 @@ async function runAutomation(input: NodeCtx): Promise<RunOutcome | RunRefusal> {
     ctx = {
       ...ctx,
       chatKey: key,
-      chatLang: ctx.chatLang ?? state.lang,
+      // 🔒 УГАДАННЫЙ ЯЗЫК НЕ ПРОТАСКИВАЕТСЯ ДАЛЬШЕ (332.F). Здесь стояло `state.lang`, и слабая догадка
+      // прошлого прогона приезжала слоям как факт — сильнее языка страницы. Из-за этого чат владельца,
+      // однажды угадавший «английский», оставался английским даже после починки: лок ехал в обход.
+      // Дальше едет только ВЫБОР человека.
+      chatLang: ctx.chatLang ?? (state.langChosen ? state.lang : ""),
       pendingQuestion: ctx.pendingQuestion ?? state.pending,
       recentDialog: ctx.recentDialog ?? dialogue.text,
       // Краткий срез для чтения класса — отдельным полем, чтобы классификатор не выбирал сам, сколько
