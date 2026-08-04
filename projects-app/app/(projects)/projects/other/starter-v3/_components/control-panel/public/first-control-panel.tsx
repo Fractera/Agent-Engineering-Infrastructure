@@ -113,7 +113,15 @@ export default function FirstControlPanel({
               </Button>
             ))}
           </div>
-          {task ? <p className="text-xs text-muted-foreground">{task.text}</p> : null}
+          {/* 🔒 ПОЛНЫЙ ТЕКСТ КЕЙСА СЮДА НЕ ИДЁТ (332.G, замечание владельца на живом экране). Он писан для
+              СТРОИТЕЛЯ — 900 знаков спецификации со складами и связями, — а в пульте стоит человек, который
+              жмёт кнопку. Свой дом у этого текста есть: секция кейсов внизу страницы. Здесь — одна строка,
+              чтобы было понятно, что выбрано, и не больше. */}
+          {task ? (
+            <p className="text-xs text-muted-foreground">
+              {task.text.length > 130 ? `${task.text.slice(0, 129).trimEnd()}…` : task.text}
+            </p>
+          ) : null}
         </div>
       ) : null}
 
