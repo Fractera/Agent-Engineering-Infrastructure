@@ -117,8 +117,13 @@ degrade with node count. It does.)
 **How the list is built and what it buys.** Tasks come from `useCases.cases` — a task IS a use case, so
 there is no second list to keep in step (`_components/control-panel/tasks.ts`). The chosen task travels with
 the run as `taskCase`, and that is not decoration: the person picked from what this build CAN do, so
-`checkCoverage` skips its model call entirely. Choosing from the list makes a run both more exact AND
-cheaper — that is why the list is the main path and prose the fallback.
+`checkCoverage` KNOWS the coverage instead of judging it.
+
+**What it buys is EXACTNESS, not a cheaper run** — measured, and it corrects the first version of this
+paragraph. `checkCoverage` shares ONE cached adjustment read with the evolution layer, which pays for it on
+these classes anyway: choosing from the list removes a guess, not a model call (`_checks/cases.json`,
+`choosing-from-the-list-decides-coverage-without-guessing`). The saving the doctrine promises comes from
+FEWER NODES, not from the list.
 
 Full law with the numbers and the decomposition contract: `_lib/scale-rules.ts` (`SCALE-RULES.md`).
 
@@ -254,5 +259,10 @@ covers the brief, wire the existing one; never copy it into this folder, never h
 
 ## Before you say you are done
 
-`npm run check:core` green proves the core is LAWFUL — not that the automation WORKS. Proof of working is a
-real run with a real result you can show.
+`npm run check:core` green proves the core is LAWFUL — not that the automation WORKS.
+
+`npm run check:behavior` is the other half: a FIXED set of live runs through `api/run` with expectations
+(`_checks/cases.json`), which is the only thing that catches the defects of the last three steps — they all
+compiled, passed the schema, and lied anyway. Each case records its PRICE (node functions · model calls)
+and fails when the price grows, so the doctrine of scale stops being a belief. Read `_checks/readme.md`
+before adding a case. Both green plus a real run you can show is what "done" means.

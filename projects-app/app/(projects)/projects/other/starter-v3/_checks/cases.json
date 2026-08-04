@@ -8,7 +8,8 @@
       "input": { "source": "control-panel", "text": "hello" },
       "expect": {
         "ok": true,
-        "context": { "intentClass": "small-talk", "reply": { "nonempty": true } }
+        "context": { "intentClass": "small-talk", "reply": { "nonempty": true } },
+        "cost": { "nodeFunctions": 33, "modelCalls": 2 }
       }
     },
     {
@@ -17,18 +18,19 @@
       "input": { "source": "control-panel", "text": "from now on send me a weekly report every Monday" },
       "expect": {
         "ok": true,
-        "context": { "coverage": "gap" }
+        "context": { "coverage": "gap" },
+        "cost": { "nodeFunctions": 33, "modelCalls": 3 }
       }
     },
     {
-      "id": "choosing-from-the-list-skips-the-coverage-call",
-      "why": "The scale doctrine (2026-08-04) claims a chosen task is cheaper AND more exact than classified prose. Same text as the case above, but picked from the list: coverage is known without asking the model, so the run must cost strictly fewer model calls.",
+      "id": "choosing-from-the-list-decides-coverage-without-guessing",
+      "why": "Same text as the case above, but picked from the list: coverage is KNOWN, not judged. Measured 2026-08-04, and it corrected the claim written the same morning — the run is not CHEAPER. `checkCoverage` shares one cached adjustment read with the evolution layer, which pays for it on these classes anyway, so the list buys exactness, not a saved call. Recorded here so the claim can never drift back.",
       "input": { "source": "control-panel", "text": "from now on send me a weekly report every Monday" },
       "useTask": true,
       "expect": {
         "ok": true,
         "context": { "coverage": "covered" },
-        "cheaperThan": "a-request-the-build-cannot-do-becomes-a-gap"
+        "cost": { "nodeFunctions": 33, "modelCalls": 3 }
       }
     },
     {
@@ -37,7 +39,8 @@
       "input": { "source": "control-panel", "text": "what is the Eiffel Tower?" },
       "expect": {
         "ok": true,
-        "context": { "intentClass": "fetch-external", "reply": { "nonempty": true } }
+        "context": { "intentClass": "fetch-external", "reply": { "nonempty": true } },
+        "cost": { "nodeFunctions": 33, "modelCalls": 2 }
       }
     },
     {
@@ -46,7 +49,8 @@
       "input": { "source": "control-panel", "text": "remind me" },
       "expect": {
         "ok": true,
-        "context": { "reply": { "contains": "?" } }
+        "context": { "reply": { "contains": "?" } },
+        "cost": { "nodeFunctions": 33, "modelCalls": 2 }
       }
     },
     {
@@ -55,7 +59,8 @@
       "input": { "source": "control-panel", "text": "please call me Ramesses the Great from now on" },
       "expect": {
         "ok": true,
-        "coreContains": "Ramesses the Great"
+        "coreContains": "Ramesses the Great",
+        "cost": { "nodeFunctions": 33, "modelCalls": 3 }
       }
     }
   ]

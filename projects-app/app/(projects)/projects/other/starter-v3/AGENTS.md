@@ -192,8 +192,22 @@ Open-ended conversation about anything is Hermes's job and it pays in tokens —
 **How the list is built and what it buys.** Tasks come from `useCases.cases` — a task IS a use case, so
 there is no second list to keep in step (`_components/control-panel/tasks.ts`). The chosen task travels with
 the run as `taskCase`, and that is not decoration: the person picked from what this build CAN do, so
-`checkCoverage` skips its model call entirely. Choosing from the list makes a run both more exact AND
-cheaper — that is why the list is the main path and prose the fallback.
+`checkCoverage` KNOWS the coverage instead of judging it.
+
+**What it buys is EXACTNESS, not a cheaper run** — measured 2026-08-04, correcting the first version of this
+paragraph. `checkCoverage` shares ONE cached adjustment read with the evolution layer, which pays for it on
+these classes anyway: the list removes a guess, not a model call. The saving the doctrine promises comes
+from FEWER NODES. The check that holds this honest is
+`_checks/cases.json → choosing-from-the-list-decides-coverage-without-guessing`.
+
+## 🔒 BEHAVIOUR IS PROVED BY RUNNING IT — `npm run check:behavior`
+
+`check:core` proves the core is LAWFUL and cannot prove the automation WORKS: every defect of the last
+three steps compiled, passed the schema, and still lied. `_checks/cases.json` is the fixed set of live runs
+that catches that class — six cases today, each recording what it COST (`fn` = node functions, `model` =
+model calls), and a case fails when its price grows. Run it after every change to nodes, speech or
+evolution, and read `_checks/readme.md` before adding a case: a case is born from a defect, not from a
+feature.
 
 Numbers and the decomposition contract: `_lib/scale-rules.ts` (shipped as `SCALE-RULES.md`).
 
