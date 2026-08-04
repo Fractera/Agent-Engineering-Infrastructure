@@ -8,12 +8,40 @@
 //   нельзя даже позвать (ключ не введён / сеть недоступна) → `null`: узел мягко деградирует, не падает;
 //   провайдер ОТВЕТИЛ ОТКАЗОМ (HTTP-ошибка) → бросок: ключ есть, но запрос отвергнут — молчать нельзя.
 // Пустой ответ модели → `null` (нечего вернуть), решает вызывающий узел.
+import { AsyncLocalStorage } from "node:async_hooks";
 import { readCore } from "./core-io";
 import { providerOf } from "../_components/ai";
 
 // Бережливость токенов (тезис v1): вход и выход ограничены — узлам-навыкам не нужен роман в ответ.
 const MAX_INPUT_CHARS = 12_000;
 const DEFAULT_MAX_TOKENS = 512;
+
+// 🔒 СЧЁТЧИК МОДЕЛЬНЫХ ВЫЗОВОВ ЗА ПРОГОН (доктрина масштаба, 2026-08-04). Главное утверждение доктрины —
+// «цена платится на КАЖДОМ прогоне» — до сих пор нечем было проверить: мы знали число исполненных функций
+// узлов, но не число обращений к модели, а платит именно оно. Незамеряемое утверждение недоказуемо, и
+// набор проверок (`_checks/`) существует ровно затем, чтобы такие числа были видны и не уползали молча.
+//
+// Считается ЗДЕСЬ, потому что здесь единственная воронка: два входа (`askModel`, `askModelVision`) и ни
+// одного обхода — узлам запрещено звать провайдера мимо этого файла (закон 0). Носитель счёта —
+// AsyncLocalStorage, а не модульная переменная: сервер обслуживает прогоны параллельно, и глобальный
+// счётчик приписал бы чужие вызовы. Вне прогона (скрипт, тест) хранилища нет — счёт просто не ведётся.
+const tally = new AsyncLocalStorage<{ calls: number }>();
+
+/** Выполнить прогон со своим счётом модельных вызовов. Зовёт движок, один раз на прогон. */
+export function withModelTally<T>(fn: () => Promise<T>): Promise<T> {
+  return tally.run({ calls: 0 }, fn);
+}
+
+/** Сколько раз этот прогон обратился к модели. Вне прогона — 0. */
+export function modelCalls(): number {
+  return tally.getStore()?.calls ?? 0;
+}
+
+/** Считаем только СОСТОЯВШИЕСЯ обращения: нет ключа или нечего спросить — денег не потрачено. */
+function countCall(): void {
+  const store = tally.getStore();
+  if (store) store.calls += 1;
+}
 
 export type AskOptions = { system: string; user: string; maxTokens?: number };
 
@@ -34,6 +62,7 @@ export async function askModel(opts: AskOptions): Promise<string | null> {
   if (!key) return null; // ключ не введён — узел мягко деградирует, а не падает
 
   const maxTokens = opts.maxTokens ?? DEFAULT_MAX_TOKENS;
+  countCall();
   return provider.key === "anthropic"
     ? askAnthropic(key, model, opts.system, user, maxTokens)
     : askOpenAI(key, model, opts.system, user, maxTokens);
@@ -60,6 +89,7 @@ export async function askModelVision(opts: AskVisionOptions): Promise<string | n
 
   const maxTokens = opts.maxTokens ?? DEFAULT_MAX_TOKENS;
   const user = opts.user.slice(0, MAX_INPUT_CHARS);
+  countCall();
   return provider.key === "anthropic"
     ? askAnthropicVision(key, model, opts.system, user, url, maxTokens)
     : askOpenAIVision(key, model, opts.system, user, url, maxTokens);

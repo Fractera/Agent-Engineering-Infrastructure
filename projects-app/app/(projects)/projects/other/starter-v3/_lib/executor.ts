@@ -11,6 +11,7 @@
 //
 // Контракт функции узла (общий для _lib/nodes/*.ts): NodeFn ниже.
 import { readCore } from "./core-io";
+import { modelCalls, withModelTally } from "./ai";
 import { allNodes, type Node } from "../_data/automation.schema";
 import { NODE_FUNCTIONS } from "./nodes";
 import { NODE_VALIDATORS } from "./validators";
@@ -25,7 +26,13 @@ export type NodeResult = NodeCtx | null | void;
 export type NodeFn = (ctx: NodeCtx) => NodeResult | Promise<NodeResult>;
 
 export type RunNodeReport = { cuid: string; name: string; fn: string; status: "ok" | "stopped" | "fail"; outcome?: string; error?: string };
-export type RunOutcome = { ok: boolean; runId: string; startedAt: string; nodes: RunNodeReport[]; context: NodeCtx; error?: string };
+/**
+ * ЧТО ПРОГОН СТОИЛ (доктрина масштаба, 2026-08-04) — два числа, оба замеренные, а не оценённые:
+ * сколько функций узлов исполнилось и сколько раз спросили модель. Цена платится на КАЖДОМ прогоне,
+ * включая «привет», поэтому она обязана быть видна рядом с результатом, как виден `dialogueBudget`.
+ */
+export type RunCost = { nodeFunctions: number; modelCalls: number };
+export type RunOutcome = { ok: boolean; runId: string; startedAt: string; nodes: RunNodeReport[]; cost: RunCost; context: NodeCtx; error?: string };
 export type RunRefusal = { refusal: string };
 
 const cuid = () => `crun${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
@@ -97,7 +104,16 @@ function createdRows(ctx: NodeCtx): { table: string; id: string }[] {
   return out;
 }
 
+/**
+ * ЕДИНСТВЕННАЯ ДВЕРЬ ИСПОЛНЕНИЯ. Оборачивает прогон СВОИМ счётом модельных вызовов: счёт нужен ровно на
+ * границе прогона, а сервер обслуживает прогоны параллельно — снаружи этой границы число было бы общим на
+ * всех и потому ложным (`withModelTally` в `_lib/ai.ts`).
+ */
 export async function executeAutomation(input: NodeCtx): Promise<RunOutcome | RunRefusal> {
+  return withModelTally(() => runAutomation(input));
+}
+
+async function runAutomation(input: NodeCtx): Promise<RunOutcome | RunRefusal> {
   const core = await readCore();
   if (core.passport.lifecycle !== "real-project") {
     return { refusal: "a frozen template does not run — set lifecycle to real-project and reveal the nodes first" };
@@ -225,7 +241,8 @@ export async function executeAutomation(input: NodeCtx): Promise<RunOutcome | Ru
   }
 
   const failed = reports.find((r) => r.status === "fail");
-  const outcome: RunOutcome = { ok: !failed, runId, startedAt, nodes: reports, context: ctx, error: failed?.error };
+  const cost: RunCost = { nodeFunctions: reports.length, modelCalls: modelCalls() };
+  const outcome: RunOutcome = { ok: !failed, runId, startedAt, nodes: reports, cost, context: ctx, error: failed?.error };
 
   // 🔒 ЗАПЕЧАТАТЬ РЕПЛИКИ ЭТОГО ПРОГОНА (шаг 330.3). Речь сказала своё ДО выходов и потому не знала, чем
   // всё кончится; теперь известно — и реплики получают исход и созданные записи. Без этого модель,

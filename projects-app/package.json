@@ -10,7 +10,8 @@
     "check:entity-imports": "node scripts/check-entity-imports.mjs",
     "check:tab-structure": "node scripts/check-tab-structure.mjs",
     "check:route": "node scripts/check-route-self-sufficiency.mjs",
-    "check:core": "node scripts/check-core.mjs"
+    "check:core": "node scripts/check-core.mjs",
+    "check:behavior": "node scripts/check-behavior.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1030.0",

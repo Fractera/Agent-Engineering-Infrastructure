@@ -1,0 +1,62 @@
+{
+  "automation": "other/starter-v3",
+  "note": "The fixed set of BEHAVIOUR checks. Read _checks/readme.md before adding one. Run: npm run check:behavior (from projects-app/).",
+  "cases": [
+    {
+      "id": "greeting-stays-a-conversation",
+      "why": "A greeting must not become work. It is the cheapest run there is, and it is also the run that proves the intent layer keeps small talk out of the middle.",
+      "input": { "source": "control-panel", "text": "hello" },
+      "expect": {
+        "ok": true,
+        "context": { "intentClass": "small-talk", "reply": { "nonempty": true } }
+      }
+    },
+    {
+      "id": "a-request-the-build-cannot-do-becomes-a-gap",
+      "why": "Caught live in step 314: the automation wrote 'send me a weekly report' into its own standing instruction — a promise it cannot keep. The gap must be journalled instead, and behaviour left untouched.",
+      "input": { "source": "control-panel", "text": "from now on send me a weekly report every Monday" },
+      "expect": {
+        "ok": true,
+        "context": { "coverage": "gap" }
+      }
+    },
+    {
+      "id": "choosing-from-the-list-skips-the-coverage-call",
+      "why": "The scale doctrine (2026-08-04) claims a chosen task is cheaper AND more exact than classified prose. Same text as the case above, but picked from the list: coverage is known without asking the model, so the run must cost strictly fewer model calls.",
+      "input": { "source": "control-panel", "text": "from now on send me a weekly report every Monday" },
+      "useTask": true,
+      "expect": {
+        "ok": true,
+        "context": { "coverage": "covered" },
+        "cheaperThan": "a-request-the-build-cannot-do-becomes-a-gap"
+      }
+    },
+    {
+      "id": "an-outside-lookup-reaches-the-middle",
+      "why": "The only class that proves the whole chain end to end: input → intent → middle work → speech. If the middle stops being reached, everything else still looks green.",
+      "input": { "source": "control-panel", "text": "what is the Eiffel Tower?" },
+      "expect": {
+        "ok": true,
+        "context": { "intentClass": "fetch-external", "reply": { "nonempty": true } }
+      }
+    },
+    {
+      "id": "a-clarifying-question-reaches-the-person",
+      "why": "The order of layers, learned the hard way: anything that must be SAID has to happen before speech. A question raised after it is never delivered, and the person is left waiting for an answer that was never sent.",
+      "input": { "source": "control-panel", "text": "remind me" },
+      "expect": {
+        "ok": true,
+        "context": { "reply": { "contains": "?" } }
+      }
+    },
+    {
+      "id": "the-automation-edits-its-own-voice",
+      "why": "Evolution vector 1, proven live by the owner: 'call me X' changes assistant.data.voice.address and survives. The check restores the core afterwards, so the proof costs nothing permanent.",
+      "input": { "source": "control-panel", "text": "please call me Ramesses the Great from now on" },
+      "expect": {
+        "ok": true,
+        "coreContains": "Ramesses the Great"
+      }
+    }
+  ]
+}
