@@ -113,6 +113,13 @@ degrade with node count. It does.)
   shown. Open-ended conversation about everything is Hermes's job and it pays in tokens — do not turn this
   into that.
 
+
+**How the list is built and what it buys.** Tasks come from `useCases.cases` — a task IS a use case, so
+there is no second list to keep in step (`_components/control-panel/tasks.ts`). The chosen task travels with
+the run as `taskCase`, and that is not decoration: the person picked from what this build CAN do, so
+`checkCoverage` skips its model call entirely. Choosing from the list makes a run both more exact AND
+cheaper — that is why the list is the main path and prose the fallback.
+
 Full law with the numbers and the decomposition contract: `_lib/scale-rules.ts` (`SCALE-RULES.md`).
 
 ## EVOLUTION — the automation edits ITSELF, after the answer is out

@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { Entity } from "../../../_data/automation.schema";
 import { controlPanelStrings, pick } from "../i18n";
 import { paramsOf, dataText } from "../params";
+import type { Task } from "../tasks";
 import ParamField from "./components/param-field.client";
 import RunReport, { type Outcome } from "./components/run-report.client";
 import { notifyRunCompleted } from "../../shared/run-events";
@@ -22,17 +23,22 @@ export default function FirstControlPanel({
   entity,
   lang,
   heading = true,
+  tasks = [],
 }: {
   entity: Entity;
   lang: string;
   /** Рисовать ли имя пульта: во вложенном аккордеоне оно уже стоит в шапке, второй раз не нужно. */
   heading?: boolean;
+  /** Задачи автоматизации — выведены из кейсов ядра сервером (`tasks.ts`). Пусто → кнопок нет. */
+  tasks?: Task[];
 }) {
   const L = controlPanelStrings(lang);
   const params = paramsOf(entity);
   const [values, setValues] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  // ВЫБРАННАЯ ЗАДАЧА — не украшение: она уезжает в прогон и говорит слоям, какой кейс исполняется.
+  const [task, setTask] = useState<Task | null>(null);
 
   const missing = params.filter((p) => p.required && !String(values[p.key] ?? "").trim()).map((p) => p.key);
 
@@ -45,7 +51,9 @@ export default function FirstControlPanel({
       const r = await fetch(`${apiBase}/run`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ input: values }),
+        // `taskCase` — какой кейс человек выбрал. Прогон получает это ЗНАНИЕМ, а не догадкой: проверять
+        // покрытие больше нечего, человек выбрал из того, что автоматизация умеет.
+        body: JSON.stringify({ input: task ? { ...values, taskCase: task.cuid } : values }),
       });
       const result = (await r.json()) as Outcome;
       setOutcome(result);
@@ -68,6 +76,30 @@ export default function FirstControlPanel({
         <div className="space-y-1">
           <h3 className="text-base font-semibold text-foreground">{title}</h3>
           {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
+        </div>
+      ) : null}
+
+      {/* 🔒 СПИСОК ЗАДАЧ — ГЛАВНЫЙ ПУТЬ (доктрина масштаба). Стоит НАД полем: человек видит, на что
+          автоматизация способна, ещё до первого слова. Прятать 2–5 пунктов за кнопкой не надо — это
+          лишний клик без выигрыша; кнопка-раскрытие оправдана от семи-восьми пунктов, а их не будет. */}
+      {tasks.length ? (
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium text-muted-foreground">{L.tasks}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {tasks.map((t) => (
+              <Button
+                key={t.cuid}
+                type="button"
+                size="sm"
+                variant={task?.cuid === t.cuid ? "default" : "outline"}
+                disabled={busy}
+                onClick={() => setTask(task?.cuid === t.cuid ? null : t)}
+              >
+                {t.title}
+              </Button>
+            ))}
+          </div>
+          {task ? <p className="text-xs text-muted-foreground">{task.text}</p> : null}
         </div>
       ) : null}
 

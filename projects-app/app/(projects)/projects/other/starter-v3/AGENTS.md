@@ -188,6 +188,13 @@ scratch. Say the reason to the person: an extra ability is paid on EVERY run, no
 intent layer remains the FALLBACK for text channels (Telegram, email, webhook), where no list can be shown.
 Open-ended conversation about anything is Hermes's job and it pays in tokens — do not turn this into that.
 
+
+**How the list is built and what it buys.** Tasks come from `useCases.cases` — a task IS a use case, so
+there is no second list to keep in step (`_components/control-panel/tasks.ts`). The chosen task travels with
+the run as `taskCase`, and that is not decoration: the person picked from what this build CAN do, so
+`checkCoverage` skips its model call entirely. Choosing from the list makes a run both more exact AND
+cheaper — that is why the list is the main path and prose the fallback.
+
 Numbers and the decomposition contract: `_lib/scale-rules.ts` (shipped as `SCALE-RULES.md`).
 
 ## EVOLUTION — the automation edits ITSELF, after the answer is out

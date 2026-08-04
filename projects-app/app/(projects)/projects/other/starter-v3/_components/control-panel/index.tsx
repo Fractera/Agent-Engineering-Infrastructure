@@ -6,6 +6,8 @@ import { DevSlot } from "../shared/dev-slot";
 import { DevBuildWithAi } from "../shared/dev-slot.client";
 import { controlPanelStrings, pick } from "./i18n";
 import { dataText } from "./params";
+import { tasksOf, type Task } from "./tasks";
+import { loadAutomation } from "../../_data/load";
 
 // МАРШРУТИЗАТОР ПУЛЬТА ЗАПУСКА — не переключатель, а композиция: рисует две половины друг под другом.
 // Публичная половина сверху — её видят все. Административная под ней — её берёт только админ-слой.
@@ -26,13 +28,15 @@ import { dataText } from "./params";
 // ДВА ПУЛЬТА — ДВА ВЛОЖЕННЫХ АККОРДЕОНА (правило владельца 2026-07-22): начиная со второго каждый пульт
 // получает свой аккордеон внутри главного; первый раскрыт, остальные свёрнуты, состояние каждого
 // запоминается в браузере. НА ВИТРИНЕ аккордеонов нет: там все пульты раскрыты всегда.
-const PANELS: Record<string, React.ComponentType<{ entity: Entity; lang: string; heading?: boolean }>> = {
+const PANELS: Record<string, React.ComponentType<{ entity: Entity; lang: string; heading?: boolean; tasks?: Task[] }>> = {
   "first-control-panel": FirstControlPanel,
 };
 
 const fileOf = (name: string) => name.trim().toLowerCase().replace(/\s+/g, "-");
 
-export default function ControlPanel({ entities, lang }: { entities: Entity[]; lang: string }) {
+export default async function ControlPanel({ entities, lang }: { entities: Entity[]; lang: string }) {
+  // ЗАДАЧИ — из кейсов ядра, на сервере: клиенту не нужен второй запрос, а перечню — второй источник.
+  const tasks = tasksOf(await loadAutomation());
   const L = controlPanelStrings(lang);
   const many = entities.length > 1;
   const tabTitle = "control panel";
@@ -48,7 +52,7 @@ export default function ControlPanel({ entities, lang }: { entities: Entity[]; l
         // именем этого пульта. В кокпите она идёт сразу под ним; посетителю не показывается.
         const body = Panel ? (
           <div className="space-y-3">
-            <Panel entity={entity} lang={lang} heading={!nested} />
+            <Panel entity={entity} lang={lang} heading={!nested} tasks={tasks} />
             {/* Заявка на ОДИН пульт — только когда пультов БОЛЬШЕ ОДНОГО (закон владельца 2026-07-25):
                 при единственном пульте «строить этот пульт» и «строить весь раздел» (внизу) — одно и то же,
                 поэтому per-entity кнопку не показываем. */}
