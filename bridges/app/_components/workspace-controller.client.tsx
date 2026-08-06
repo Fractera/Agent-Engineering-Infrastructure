@@ -1,16 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import type { ComponentType } from "react";
-import { BrainCircuit, CircleUserRound, Globe, AlertTriangle } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { CircleUserRound, Globe, AlertTriangle } from "lucide-react";
 import { CodingWindowShell, type SettingsPanelId } from "./coding-workspace/coding-window-shell.client";
 import { AuthLoginModal } from "./auth-login-modal.client";
 import { SitePreviewWindow } from "./site-preview-window.client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { useRuntimeUrls } from "@/lib/runtime-urls";
-import type { Platform } from "./coding-workspace/platforms";
-import type { EmbedCard, EmbedCardId, EmbedTarget } from "./coding-workspace/platforms";
 
 type SessionData = {
   userId: string;
@@ -27,21 +24,8 @@ export function WorkspaceController() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [shellHeight, setShellHeight]   = useState(0);
   const [windowWidth, setWindowWidth]   = useState(0);
-  const [terminalPlatform, setTerminalPlatform] = useState<Platform | null>(null); // step 500: no coding agents
-  const [terminalSessions, setTerminalSessions] = useState<Set<Platform>>(new Set());
   const [siteOpen, setSiteOpen]                 = useState(false);
-  const [activeEmbed, setActiveEmbed]           = useState<EmbedTarget | null>(null);
-  // Embed sessions (Brain / Memory / Hermes dashboard) — mirror of
-  // `terminalSessions` for the CLI agents. Every opened embed iframe stays
-  // mounted here so switching cards only toggles visibility (display) instead
-  // of unmounting the iframe and losing the chat. An iframe is torn down only
-  // by the explicit animated "End session" → handleEmbedClose. (step 96)
-  const [embedSessions, setEmbedSessions]       = useState<Set<EmbedTarget>>(new Set());
-  // Auto-open the Brain chat (the built-in Hermes Web UI) as the default surface
-  // on first load, once we know the user is signed in and Brain is installed.
-  // Runs once (guarded by the ref) and only sets the embed if the user hasn't
   // already opened something themselves.
-  const autoOpenedRef = useRef(false);
   // Secure mode — true once the Personal Domain wizard has switched the
   // project to strict/HTTPS mode (FRACTERA_IP_NODOMAIN_MODE=false). While the
   // project is still served over plain HTTP on its IP this is false and we
@@ -67,48 +51,6 @@ export function WorkspaceController() {
     return () => clearInterval(id);
   }, [refreshSecure]);
 
-  // Mount an embed session once (if new) and make it the active surface.
-  // Used by carousel cards, the auto-open default, and the Hermes dashboard
-  // menu item — so every path goes through the same mount-once bookkeeping.
-  const openEmbed = useCallback((id: EmbedTarget) => {
-    setEmbedSessions((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
-    setActiveEmbed(id);
-    setSiteOpen(false);
-  }, []);
-
-  // Tear down one embed session — the ONLY way to kill a chat iframe. Wired to
-  // the animated "End session" countdown in the carousel (mirrors the CLI
-  // terminal close). Switching cards never calls this. (step 96)
-  const handleEmbedClose = useCallback((id: EmbedTarget) => {
-    setEmbedSessions((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-    // If we closed the visible one, fall back to nothing (idle canvas).
-    setActiveEmbed((cur) => (cur === id ? null : cur));
-  }, []);
-
-  // Clicking a Brain/Memory card in the carousel always opens the iframe
-  // (the embedded service runs regardless of whether a key is configured).
-  // If no key is configured we ALSO surface the matching settings drawer
-  // alongside the iframe so the user can paste a key without losing context.
-  const handleEmbedCardClick = useCallback(async (card: EmbedCard) => {
-    openEmbed(card.id);
-    // (step 500) The Brain card (Hermes chat) is gone — only Memory remains.
-    try {
-      const res = await fetch(card.configCheckEndpoint, { credentials: "include" });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.configured !== true) {
-          setPanelRequest({ id: card.settingsPanelId, nonce: Date.now() });
-        }
-      }
-    } catch {
-      // If the config check itself failed, still show the embed; settings
-      // can be opened manually from the Data menu.
-    }
-  }, [openEmbed]);
 
   const isMobile = windowWidth > 0 && windowWidth < 768;
 
@@ -140,27 +82,6 @@ export function WorkspaceController() {
     return () => window.removeEventListener("resize", updateSize);
   }, []);
 
-  function handlePlatformClick(platformId: Platform) {
-    if (terminalSessions.has(platformId)) {
-      setTerminalPlatform(platformId);
-    } else {
-      setTerminalSessions((prev) => new Set(prev).add(platformId));
-      setTerminalPlatform(platformId);
-    }
-    setActiveEmbed(null);
-  }
-
-  function handleTerminalClose(platformId: Platform) {
-    setTerminalSessions((prev) => {
-      const next = new Set(prev);
-      next.delete(platformId);
-      if (platformId === terminalPlatform && next.size > 0) {
-        setTerminalPlatform([...next][0]);
-      }
-      return next;
-    });
-  }
-
   function handleSignOut() {
     window.location.href = `${urls.authUrl}/api/auth/signout`;
   }
@@ -179,12 +100,6 @@ export function WorkspaceController() {
   const isVirtualArchitect = session?.userId === "virtual-admin";
   const isAuthenticated = session !== null;
 
-  type EmbedSpec = { id: EmbedTarget; url: string; title: string; Icon: ComponentType<{ size?: number; className?: string }> };
-  const embedSpecFor = (id: EmbedTarget): EmbedSpec =>
-    ({ id, url: "", title: "", Icon: BrainCircuit }); // step 500: no embeds left (EmbedCardId = never)
-  // One spec per mounted session — the shell renders them all and toggles
-  // visibility, so an inactive chat stays alive in the background. (step 96)
-  const embedSpecs: EmbedSpec[] = [...embedSessions].map(embedSpecFor);
 
   const insecure = secure === false;
 
@@ -271,19 +186,11 @@ export function WorkspaceController() {
       {shellHeight > 0 && (
         <CodingWindowShell
           height={shellHeight}
-          terminalPlatform={terminalPlatform}
-          terminalSessions={terminalSessions}
-          onPlatformClick={handlePlatformClick}
-          onTerminalClose={handleTerminalClose}
           windowWidth={windowWidth}
           isMobile={isMobile}
           isAuthenticated={isAuthenticated && !loading}
           isPreviewOpen={siteOpen}
           onPreviewClose={() => setSiteOpen(false)}
-          embeds={embedSpecs}
-          activeEmbedId={activeEmbed}
-          onEmbedCardClick={handleEmbedCardClick}
-          onEmbedClose={handleEmbedClose}
           secure={secure === true}
           insecure={secure === false}
           requestedSettingsPanel={panelRequest}

@@ -6,12 +6,11 @@ import { getRuntimeUrls } from "@/lib/runtime-urls";
 import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LayoutGrid } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
-import { PLATFORMS, COMING_SOON, EMBED_CARDS, type Platform, type TerminalStatus, type EmbedCard, type EmbedCardId, type EmbedTarget } from "./platforms";
+import { COMING_SOON, type TerminalStatus } from "./platforms";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { EnvEditorPanel } from "./env-editor-panel.client";
 import { MediaLibraryPanel } from "./media-library-panel.client";
 import { DbBrowserPanel } from "./db-browser-panel.client";
-import { AUTH_FLOW_DESCRIPTORS, type AuthFlowDescriptor } from "./auth-flow-descriptors";
 import { UsersPanel } from "./users-panel.client";
 import { DomainPanel } from "./domain-panel.client";
 import { LoginMethodsPanel } from "./login-methods-panel.client";
@@ -19,7 +18,6 @@ import { OpenAiPanel } from "./openai-panel.client";
 import { DeploymentsPanel } from "./deployments-panel.client";
 import { SiteSettingsPanel } from "./site-settings-panel.client";
 import { PlatformSettingsPanel } from "./platform-settings-panel.client";
-import { EmbedCanvas } from "./embed-canvas.client";
 import { IdleCanvas } from "./idle-canvas.client";
 import type { ComponentType } from "react";
 
@@ -53,76 +51,24 @@ function TerminalDot({ status }: { status: TerminalStatus }) {
   return null;
 }
 
-function InstallPromptTooltip({ label, prompt, docsUrl }: { label: string; prompt: string; docsUrl: string }) {
-  const [copied, setCopied] = useState(false);
-  function handleCopy() {
-    navigator.clipboard.writeText(prompt);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-  return (
-    <div className="px-3 py-2.5 flex flex-col gap-2.5">
-      <div className="flex flex-col gap-1">
-        <span className="font-semibold text-white text-[12px]">{label} — not installed</span>
-        <span className="text-white/70 text-[11px] leading-relaxed">
-          Copy the prompt below and paste it into Claude Code — it will install the platform automatically using the project docs.
-        </span>
-      </div>
-      <button
-        type="button"
-        onClick={handleCopy}
-        className="flex items-center gap-1.5 h-7 px-3 rounded bg-white/10 hover:bg-white/20 text-[11px] text-white transition-colors w-full justify-center"
-      >
-        {copied ? <><Check size={11} className="text-green-400" />Copied!</> : <><Copy size={11} />Copy install prompt</>}
-      </button>
-      <a
-        href={docsUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-1.5 h-7 px-3 rounded bg-white/5 hover:bg-white/10 text-[11px] text-white/60 hover:text-white/90 transition-colors w-full justify-center"
-      >
-        Official docs ↗
-      </a>
-    </div>
-  );
-}
-
 type Props = {
   height: number;
-  terminalPlatform: Platform;
-  terminalSessions: Set<Platform>;
-  onPlatformClick: (p: Platform) => void;
-  onTerminalClose: (p: Platform) => void;
   windowWidth: number;
   isMobile?: boolean;
   isAuthenticated?: boolean;
   isPreviewOpen?: boolean;
   onPreviewClose?: () => void;
-  // Every mounted embed session (Memory). The shell
-  // renders one EmbedCanvas per entry and toggles visibility via `activeEmbedId`
-  // so switching cards never unmounts an iframe and loses the chat. (step 96)
-  embeds?: { id: EmbedTarget; url: string; title: string; Icon: ComponentType<{ size?: number; className?: string }> }[];
-  activeEmbedId?: EmbedTarget | null;
-  onEmbedCardClick?: (card: EmbedCard) => void;
-  // Explicit animated "End session" on an embed card — the only path that tears
-  // down a chat iframe (switching cards never does). (step 96)
-  onEmbedClose?: (id: EmbedTarget) => void;
+  // (step 500) Embed sessions are gone with Hermes and LightRAG — nothing is
+  // embedded in the workspace any more.
   secure?: boolean;
-  // True only when the project is explicitly in insecure (IP) mode. Hides the
-  // built-in Hermes Web UI (Brain) carousel card — step 100 (chat via Telegram).
   insecure?: boolean;
   // Parent (workspace-controller) can request a specific settings panel to open
   // — used when clicking an unconfigured embed card to kick off onboarding.
   requestedSettingsPanel?: { id: SettingsPanelId; nonce: number } | null;
 };
 
-export function CodingWindowShell({ height, terminalPlatform, terminalSessions, onPlatformClick, onTerminalClose, windowWidth, isMobile = false, isAuthenticated = true, isPreviewOpen = false, onPreviewClose, embeds = [], activeEmbedId = null, onEmbedCardClick, onEmbedClose, secure = false, insecure = false, requestedSettingsPanel = null }: Props) {
+export function CodingWindowShell({ height, windowWidth, isMobile = false, isAuthenticated = true, isPreviewOpen = false, onPreviewClose, secure = false, insecure = false, requestedSettingsPanel = null }: Props) {
   const urls = useMemo(() => getRuntimeUrls(), []);
-  const [terminalStatuses] = useState<Record<Platform, TerminalStatus>>({
-    "claude-code": "unavailable", "codex": "unavailable", "gemini-cli": "unavailable",
-    "qwen-code": "unavailable", "kimi-code": "unavailable",
-  });
-  const [bridgeStatus, setBridgeStatus]     = useState<"unknown" | "online" | "offline">("unknown");
   const [carouselIdx, setCarouselIdx]       = useState(0);
   // Selective install (S5): which components this server actually installed.
   // null = unknown/loading or fetch failed → show everything (back-compat with
@@ -137,8 +83,6 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const [sysTermStarted, setSysTermStarted] = useState(false);
   const [sysTermActive, setSysTermActive]   = useState(false);
   const sysTermRef = useRef<XtermTerminalHandle | null>(null);
-  // Brain/Memory carousel cards (step 96). Second click on the active embed card
-  // arms a 2s animated countdown that calls onEmbedClose.
   const [dataMenuOpen, setDataMenuOpen]             = useState(false);
   const [importing, setImporting]                   = useState(false);
   const [updateAvailable, setUpdateAvailable]       = useState(false);
