@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Loader2, Trash2, Copy, ImagePlus, X, Check, Search, Pencil, MoreHorizontal, Eye, Clapperboard, FileText, Scissors } from "lucide-react";
+import { Loader2, Trash2, Copy, ImagePlus, X, Check, Search, Pencil, MoreHorizontal, Eye, Clapperboard, FileText, Scissors, FileType2 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { VideoTrimmer } from "./video-trimmer.client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -144,10 +145,31 @@ function ImageCropper({ src, onDone, onCancel }: {
 
 // ── Preview popup ─────────────────────────────────────────────────────────────
 
+// Preview for every kind the library accepts. Each kind is shown the way it is
+// actually meant to be read: a picture as a picture, a video in a player, a PDF in
+// the browser's own viewer, and Markdown RENDERED — not as raw text, because the
+// point of storing Markdown is the document it becomes.
 function PreviewPopup({ item, onClose }: { item: MediaItem; onClose: () => void }) {
   const MEDIA_URL = useMemo(() => getRuntimeUrls().mediaUrl, []);
   const isImage = item.mime_type.startsWith("image/");
   const isVideo = item.mime_type.startsWith("video/");
+  const isPdf   = item.mime_type === "application/pdf";
+  const isMd    = item.extension === "md" || item.mime_type === "text/markdown";
+  const fileUrl = `${MEDIA_URL}/media/${item.id}/file?v=${item.size}`;
+
+  const [mdText, setMdText] = useState<string | null>(null);
+  const [mdError, setMdError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isMd) return;
+    fetch(fileUrl, { credentials: "include" })
+      .then((r) => (r.ok ? r.text() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then(setMdText)
+      .catch((e) => setMdError(String(e)));
+  }, [isMd, fileUrl]);
+
+  const kind = isImage ? "Image" : isVideo ? "Video" : isPdf ? "PDF" : isMd ? "Markdown" : "File";
+
   return (
     <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-30" onClick={onClose}>
       <div className="bg-background rounded-xl p-4 flex flex-col gap-3 shadow-xl max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
@@ -157,17 +179,34 @@ function PreviewPopup({ item, onClose }: { item: MediaItem; onClose: () => void 
             <X size={13} />
           </Button>
         </div>
+        {/* ?v=size — the URL is stable but a trim replaces the bytes behind it */}
         {isImage && (
-          <img src={`${MEDIA_URL}/media/${item.id}/file?v=${item.size}`} alt={item.name}
+          <img src={fileUrl} alt={item.name}
             className="w-full rounded-lg border border-border object-contain max-h-[60vh]" />
         )}
-        {/* ?v=size — the URL is stable but a trim replaces the bytes behind it */}
         {isVideo && (
-          <video src={`${MEDIA_URL}/media/${item.id}/file?v=${item.size}`} controls
+          <video src={fileUrl} controls
             className="w-full rounded-lg border border-border max-h-[60vh] bg-black" />
         )}
+        {isPdf && (
+          <iframe src={fileUrl} title={item.name}
+            className="w-full rounded-lg border border-border bg-white" style={{ height: "60vh" }} />
+        )}
+        {isMd && (
+          <div className="w-full rounded-lg border border-border bg-muted/20 p-4 overflow-y-auto" style={{ maxHeight: "60vh" }}>
+            {mdError ? (
+              <p className="text-[11px] text-destructive">Could not read the file: {mdError}</p>
+            ) : mdText === null ? (
+              <p className="text-[11px] text-muted-foreground">Reading…</p>
+            ) : (
+              <div className="prose prose-sm dark:prose-invert max-w-none text-[12px]">
+                <ReactMarkdown>{mdText}</ReactMarkdown>
+              </div>
+            )}
+          </div>
+        )}
         <div className="flex flex-col gap-0.5 text-[10px] text-muted-foreground">
-          <span><strong className="text-foreground">{isImage ? "Image" : isVideo ? "Video" : "File"}</strong> · .{item.extension}</span>
+          <span><strong className="text-foreground">{kind}</strong> · .{item.extension}</span>
           {item.width && item.height && <span>{item.width} × {item.height} px</span>}
           {item.duration && <span>{item.duration.toFixed(1)}s</span>}
           <span>{(item.size / 1024).toFixed(1)} KB</span>
@@ -198,7 +237,8 @@ export function MediaLibraryPanel({ onClose }: Props) {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const docInputRef   = useRef<HTMLInputElement>(null);
+  const pdfInputRef   = useRef<HTMLInputElement>(null);
+  const mdInputRef    = useRef<HTMLInputElement>(null);
   // The video whose trimmer is open — set right after an upload, or from the row menu.
   const [trimItem, setTrimItem] = useState<MediaItem | null>(null);
 
@@ -271,7 +311,7 @@ export function MediaLibraryPanel({ onClose }: Props) {
   // One entry per kind. An image goes through the cropper before it is stored; a
   // video is stored first and then offered to the trimmer (so the owner trims what
   // really lies in storage); a document goes straight in.
-  function handlePick(e: React.ChangeEvent<HTMLInputElement>, kind: "image" | "video" | "document") {
+  function handlePick(e: React.ChangeEvent<HTMLInputElement>, kind: "image" | "video" | "pdf" | "markdown") {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
@@ -553,21 +593,30 @@ export function MediaLibraryPanel({ onClose }: Props) {
       )}
 
       {/* Footer — one button per kind of object. They are separate on purpose: each
-          kind has its own path (an image goes through the cropper, a video through
-          the trimmer, a document straight to storage), and a single "Upload" button
-          could not tell the owner which of the three they are about to get. */}
-      <div className="px-4 py-2.5 border-t border-border flex items-center gap-2 shrink-0">
+          kind has its own path (an image goes through the cropper, a video through the
+          trimmer, a PDF and Markdown straight to storage), and a single "Upload" button
+          could not tell the owner which of the four they are about to get.
+          On narrow screens the VERB is dropped and only the noun stays — four buttons
+          reading "Upload …" do not fit a phone, four nouns do. */}
+      <div className="px-4 py-2.5 border-t border-border flex flex-wrap items-center gap-2 shrink-0">
         <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handlePick(e, "image")} />
         <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={(e) => handlePick(e, "video")} />
-        <input ref={docInputRef} type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.md,.rtf,.odt,.ods,.zip" className="hidden" onChange={(e) => handlePick(e, "document")} />
+        <input ref={pdfInputRef} type="file" accept="application/pdf,.pdf" className="hidden" onChange={(e) => handlePick(e, "pdf")} />
+        <input ref={mdInputRef} type="file" accept=".md,.markdown,text/markdown" className="hidden" onChange={(e) => handlePick(e, "markdown")} />
+
         <Button onClick={() => imageInputRef.current?.click()} disabled={uploading}>
-          {uploading ? <><Loader2 size={11} className="animate-spin" />Uploading…</> : <><ImagePlus size={11} />Upload image</>}
+          {uploading
+            ? <><Loader2 size={11} className="animate-spin" />Uploading…</>
+            : <><ImagePlus size={11} /><span className="hidden sm:inline">Upload&nbsp;</span>Image</>}
         </Button>
         <Button variant="outline" onClick={() => videoInputRef.current?.click()} disabled={uploading}>
-          <Clapperboard size={11} />Upload video
+          <Clapperboard size={11} /><span className="hidden sm:inline">Upload&nbsp;</span>Video
         </Button>
-        <Button variant="outline" onClick={() => docInputRef.current?.click()} disabled={uploading}>
-          <FileText size={11} />Upload document
+        <Button variant="outline" onClick={() => pdfInputRef.current?.click()} disabled={uploading}>
+          <FileText size={11} /><span className="hidden sm:inline">Upload&nbsp;</span>PDF
+        </Button>
+        <Button variant="outline" onClick={() => mdInputRef.current?.click()} disabled={uploading}>
+          <FileType2 size={11} /><span className="hidden sm:inline">Upload&nbsp;</span>Markdown
         </Button>
       </div>
     </div>
