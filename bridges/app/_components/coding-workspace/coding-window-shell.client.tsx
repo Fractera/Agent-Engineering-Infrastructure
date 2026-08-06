@@ -531,7 +531,6 @@ showOpenAiPanel, showEnvEditor, showDeployments,
                     setShowUsers(false); setShowInfo(false); setShowHelp(false);
                     setShowGitConnect(false); setShowDomainPanel(false);
                     
-                    cancelEmbedConfirm();
                     setSysTermStarted(true);
                     setSysTermActive(true);
                   }}
@@ -542,7 +541,7 @@ showOpenAiPanel, showEnvEditor, showDeployments,
                     : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
                 >
-                  {/* Same dot indicator as agents/Brain/Memory. The system
+                  {/* The system
                       terminal can never be turned off (step 85), so it has no
                       "End session" close — only grey(idle)/green(alive)/yellow(active). */}
                   <TerminalDot status={sysTermStarted ? "connected" : "unavailable"} />
