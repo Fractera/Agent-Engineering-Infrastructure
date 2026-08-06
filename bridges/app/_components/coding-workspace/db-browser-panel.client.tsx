@@ -128,8 +128,12 @@ export function DbBrowserPanel({ onClose }: Props) {
   }
 
   return (
-    <div style={{ position: "absolute", top: 52, left: 0, right: 0, bottom: 36, zIndex: 20 }}
-      className="bg-background flex flex-col">
+    /* REFERENCE LAYOUT (step 500), identical to users-panel + its shell wrapper:
+       height comes from the two anchors (top of the workspace, footer), width from
+       the left/right stretch — never from a fixed number. The carousel strip is gone,
+       so the top anchor is 0. */
+    <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 36, zIndex: 20 }}>
+    <div className="flex flex-col h-full w-full bg-background relative">
 
       {/* ── Edit cell overlay ── */}
       {editCell && selectedTable && (
@@ -239,21 +243,26 @@ export function DbBrowserPanel({ onClose }: Props) {
 
           <div
             style={{ width: sidebarCollapsed ? 40 : SIDEBAR_W, minWidth: sidebarCollapsed ? 40 : SIDEBAR_W, transition: "width 0.2s ease, min-width 0.2s ease" }}
-            className="order-2 border-l border-border flex flex-col overflow-y-auto shrink-0 sticky right-0 bg-background z-10 relative">
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => setSidebarCollapsed((v) => !v)}
-              className="absolute top-1.5 left-1.5 z-10"
-              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              {sidebarCollapsed ? <PanelRightOpen size={12} /> : <PanelRightClose size={12} />}
-            </Button>
+            className="order-2 border-l border-border flex flex-col min-h-0 overflow-hidden shrink-0 sticky right-0 bg-background z-10">
+
+            {/* ── Collapse toggle: its own 40px area, separator below, button right-aligned ── */}
+            <div className="h-10 shrink-0 flex items-center justify-end px-1.5 border-b border-border">
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => setSidebarCollapsed((v) => !v)}
+                title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                {sidebarCollapsed ? <PanelRightOpen size={12} /> : <PanelRightClose size={12} />}
+              </Button>
+            </div>
+
+            {/* ── Table names: everything below the 40px header, own vertical scroll ── */}
             {!sidebarCollapsed && (
-              <div className="flex flex-col pt-2 overflow-hidden">
+              <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
                 {tables.map((t) => (
                   <button key={t} type="button" onClick={() => selectTable(t)}
-                    className={`text-left px-4 py-2 text-[11px] font-mono transition-colors whitespace-nowrap overflow-hidden text-ellipsis ${
+                    className={`shrink-0 text-left px-4 py-2 text-[11px] font-mono transition-colors whitespace-nowrap overflow-hidden text-ellipsis ${
                       selectedTable === t
                         ? "bg-primary/10 text-primary border-l-2 border-primary"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -331,6 +340,7 @@ export function DbBrowserPanel({ onClose }: Props) {
         </div>
       )}
 
+    </div>
     </div>
   );
 }
