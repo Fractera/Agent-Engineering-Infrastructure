@@ -158,11 +158,12 @@ function PreviewPopup({ item, onClose }: { item: MediaItem; onClose: () => void 
           </Button>
         </div>
         {isImage && (
-          <img src={`${MEDIA_URL}/media/${item.id}/file`} alt={item.name}
+          <img src={`${MEDIA_URL}/media/${item.id}/file?v=${item.size}`} alt={item.name}
             className="w-full rounded-lg border border-border object-contain max-h-[60vh]" />
         )}
         {isVideo && (
-          <video src={`${MEDIA_URL}/media/${item.id}/file`} controls
+          {/* ?v=size — the URL is stable but a trim replaces the bytes behind it */}
+          <video src={`${MEDIA_URL}/media/${item.id}/file?v=${item.size}`} controls
             className="w-full rounded-lg border border-border max-h-[60vh] bg-black" />
         )}
         <div className="flex flex-col gap-0.5 text-[10px] text-muted-foreground">
@@ -345,6 +346,7 @@ export function MediaLibraryPanel({ onClose }: Props) {
           mediaUrl={MEDIA_URL}
           itemId={trimItem.id}
           name={trimItem.name}
+          serverDuration={trimItem.duration}
           onDone={(updated) => {
             const item = updated as MediaItem;
             setItems((prev) => prev.map((i) => (i.id === item.id ? item : i)));

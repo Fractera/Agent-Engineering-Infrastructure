@@ -5,7 +5,7 @@ import Database from 'better-sqlite3'
 import { v4 as uuidv4 } from 'uuid'
 import sharp from 'sharp'
 import pngToIco from 'png-to-ico'
-import { createReadStream, existsSync, mkdirSync, unlinkSync, writeFileSync, readFileSync } from 'fs'
+import { createReadStream, existsSync, mkdirSync, unlinkSync, writeFileSync, readFileSync, statSync } from 'fs'
 import { resolve, dirname, extname } from 'path'
 import { fileURLToPath } from 'url'
 import { config } from 'dotenv'
@@ -258,6 +258,12 @@ app.post('/media/upload', upload.single('file'), async (req, res) => {
 
     let width = null, height = null, duration = null, buffer = file.buffer
 
+    // The TRUE duration of a video is measured HERE, by ffprobe, and never taken from
+    // the browser. A screen recording often carries no usable duration in its
+    // container, and the browser then reports a bogus one — the trimmer trusted it and
+    // cut a 90-second clip down to two seconds. The server measures the file it just
+    // received, so the trimmer gets a number that is actually true.
+
     if (isImage) {
       const meta = await sharp(buffer).metadata()
       width  = meta.width  ?? null
@@ -274,6 +280,10 @@ app.post('/media/upload', upload.single('file'), async (req, res) => {
     }
 
     await import('fs/promises').then(fs => fs.writeFile(destPath, buffer))
+
+    // Video: measure the file we just stored. probeDuration() is defined next to the
+    // trim route below (function declaration, hoisted).
+    if (file.mimetype.startsWith('video/')) duration = probeDuration(destPath)
 
     const baseUrl = process.env.DATA_PUBLIC_URL ?? `http://localhost:${PORT}`
     const row = {
@@ -422,7 +432,16 @@ app.get('/media/:id/file', (req, res) => {
   if (!existsSync(filePath)) return res.status(404).end()
 
   res.setHeader('Content-Type', item.mime_type)
-  res.setHeader('Cache-Control', 'public, max-age=31536000')
+  // The URL of a stored object is STABLE, but its CONTENT is not: trimming a video
+  // replaces the file in place. With the old `max-age=31536000` the browser kept
+  // showing the original for a year — the owner trimmed a clip and Preview still
+  // played the full one. So the response revalidates, and an ETag built from the
+  // file's own size+mtime makes that revalidation a cheap 304 in the normal case.
+  try {
+    const st = statSync(filePath)
+    res.setHeader('ETag', `"${st.size}-${Math.floor(st.mtimeMs)}"`)
+  } catch { /* no ETag — the revalidation just re-sends the body */ }
+  res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate')
   createReadStream(filePath).pipe(res)
 })
 

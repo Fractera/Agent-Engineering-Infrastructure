@@ -18,12 +18,18 @@ export function VideoTrimmer({
   mediaUrl,
   itemId,
   name,
+  serverDuration,
   onDone,
   onClose,
 }: {
   mediaUrl: string;
   itemId: string;
   name: string;
+  // Measured by ffprobe on the server at upload time. This is the AUTHORITY.
+  // A screen recording often carries no usable duration in its container, and the
+  // browser then reports a bogus one — trusting it cut a 90-second clip down to two
+  // seconds. The browser value is used only when the server has none (older rows).
+  serverDuration?: number | null;
   onDone: (updated: unknown) => void;
   onClose: () => void;
 }) {
@@ -33,12 +39,24 @@ export function VideoTrimmer({
   const [end, setEnd] = useState(0);
   const [applying, setApplying] = useState(false);
 
-  const src = `${mediaUrl}/media/${itemId}/file`;
+  // Cache-buster: the URL is stable but the bytes behind it change on every trim.
+  const src = `${mediaUrl}/media/${itemId}/file?v=${Date.now()}`;
+
+  // The server's measurement wins outright when it exists — the trimmer is usable
+  // the moment it opens, without waiting for the browser to decode metadata.
+  useEffect(() => {
+    if (typeof serverDuration === "number" && serverDuration > 0) {
+      setDuration(serverDuration);
+      setStart(0);
+      setEnd(serverDuration);
+    }
+  }, [serverDuration]);
 
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
     function onMeta() {
+      if (typeof serverDuration === "number" && serverDuration > 0) return; // server already told us
       const d = v!.duration;
       if (Number.isFinite(d) && d > 0) {
         setDuration(d);
@@ -48,7 +66,7 @@ export function VideoTrimmer({
     }
     v.addEventListener("loadedmetadata", onMeta);
     return () => v.removeEventListener("loadedmetadata", onMeta);
-  }, []);
+  }, [serverDuration]);
 
   // Playing the kept part is the only honest preview: the owner sees exactly the
   // middle that will survive, with the same boundaries the server will use.
