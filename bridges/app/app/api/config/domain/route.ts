@@ -200,6 +200,14 @@ server {
     ssl_certificate     ${certPath};
     ssl_certificate_key ${keyPath};
 
+    # Upload ceiling. nginx defaults to 1 MB, and in domain (Secure) mode EVERY
+    # browser upload goes through here — so a 17 MB screen recording was killed
+    # with 413 before it ever reached the data service, and the browser reported
+    # only "TypeError: Failed to fetch". Images survived because a cropped JPEG is
+    # a few hundred KB. 200m matches the multer limit in services/data/server.js —
+    # keep the two numbers equal, otherwise one layer lies about what fits.
+    client_max_body_size 200m;
+
     # OCSP stapling — server fetches the OCSP response itself and attaches
     # it to the TLS handshake. Without this, browsers ask Let's Encrypt's
     # OCSP responder directly (hosted on Cloudflare). In Russia / restricted
