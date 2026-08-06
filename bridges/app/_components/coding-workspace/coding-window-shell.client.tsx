@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
-import { Wifi, WifiOff, Loader2, ChevronLeft, ChevronRight, Store, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LayoutGrid } from "lucide-react";
+import { Menu, X as XIcon, Loader2, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LayoutGrid } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
 import { COMING_SOON, type TerminalStatus } from "./platforms";
@@ -23,7 +23,7 @@ import type { ComponentType } from "react";
 
 export type SettingsPanelId = "openai"; // step 500: hermes + lightrag removed
 
-const CAROUSEL_H = 52;
+const CAROUSEL_H = 0; // step 500: the carousel strip is gone; panels start at the top
 const FOOTER_H   = 36;
 // APP_URL and isLight removed — resolved at runtime via useRuntimeUrls()
 const CARD_W     = 112;
@@ -37,7 +37,6 @@ function stripAnsi(s: string): string {
   return s.replace(ANSI_OSC_RE, "").replace(ANSI_CSI_RE, "").replace(ANSI_OTHER_RE, "");
 }
 
-const BRIDGE_TOOLTIP = "Bridge — all platform servers status\n\nOne process runs all platforms:\nClaude Code :3200 · PTY :3201\nCodex :3202 · Gemini :3203\nQwen :3204 · Kimi :3205\n\n🟢 Online — all platforms available\n🔴 Offline — bridge server not running\n\nTo start: cd bridges/platforms && node server.js";
 
 
 // PTY_URL and BRIDGE_URL removed — resolved at runtime via getRuntimeUrls()
@@ -106,7 +105,6 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   const [readmeContent, setReadmeContent]           = useState<string | null>(null);
   const [showEnvEditor, setShowEnvEditor]           = useState(false);
   const [showMediaLibrary, setShowMediaLibrary]     = useState(false);
-  const [bridgeStatus, setBridgeStatus]     = useState<"unknown" | "online" | "offline">("unknown");
   const [showDbBrowser, setShowDbBrowser]           = useState(false);
   const [showUsers, setShowUsers]                   = useState(false);
   const [showDeployments, setShowDeployments]       = useState(false);
@@ -166,8 +164,6 @@ showOpenAiPanel, showEnvEditor, showDeployments,
   const SERVER_ID   = process.env.NEXT_PUBLIC_SERVER_ID || "";
   const MARKET_BASE = "https://fractera.ai";
   const idQuery     = SERVER_ID ? `?id=${encodeURIComponent(SERVER_ID)}` : "";
-  const SKILLS_HREF       = `${MARKET_BASE}/skills${idQuery}`;
-  const PRODUCT_LOOP_HREF = `${MARKET_BASE}/product-loop${idQuery}`;
   const APP_VERSION = process.env.NEXT_PUBLIC_GIT_COMMIT ?? "dev";
 
   async function handleExport() {
@@ -197,13 +193,6 @@ showOpenAiPanel, showEnvEditor, showDeployments,
     else toast.error("Import failed: " + (result.error ?? "unknown error"));
   }
 
-  useEffect(() => {
-    const ws = new WebSocket(urls.ptyUrl); // step 500: agents gone — the PTY bridge is the liveness probe
-    const timer = setTimeout(() => { ws.close(); setBridgeStatus("offline"); }, 3000);
-    ws.onopen  = () => { clearTimeout(timer); ws.close(); setBridgeStatus("online"); };
-    ws.onerror = () => { clearTimeout(timer); setBridgeStatus("offline"); };
-    return () => { clearTimeout(timer); try { ws.close(); } catch {} };
-  }, []);
 
 
   async function handleUpdate() {
@@ -383,38 +372,42 @@ showOpenAiPanel, showEnvEditor, showDeployments,
         @keyframes countdown-color { 0% { background-color: rgb(34 197 94); } 60% { background-color: rgb(251 146 60); } 100% { background-color: rgb(239 68 68); } }
       `}</style>
 
-      {/* ── Carousel ── */}
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: CAROUSEL_H }} className="border-b border-border bg-background flex items-center gap-2 px-2">
-        {(
-          <TooltipProvider delayDuration={0}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className={`shrink-0 flex items-center justify-center gap-1.5 rounded-md border border-border h-9 text-[11px] text-muted-foreground select-none px-2 cursor-help${!isAuthenticated ? " opacity-40 pointer-events-none" : ""}`}>
-                  {bridgeStatus === "online"  && <><Wifi size={12} className="text-green-500" />{!isMobile && <span className="text-green-500 font-medium">Bridge</span>}</>}
-                  {bridgeStatus === "offline" && <><WifiOff size={12} className="text-destructive" />{!isMobile && <span className="text-destructive">Offline</span>}</>}
-                  {bridgeStatus === "unknown" && <><Loader2 size={12} className="animate-spin" />{!isMobile && <span>Bridge…</span>}</>}
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="max-w-[220px] whitespace-pre-line text-[11px] leading-relaxed" style={{ zIndex: 99999 }}>
-                {BRIDGE_TOOLTIP}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
+      {/* ── Hamburger (top-right) — the single entry to everything the old
+            carousel strip used to hold. The strip itself (Bridge indicator,
+            Settings button, Terminal card) was removed in step 500. ── */}
+      <button
+        type="button"
+        aria-label="Menu"
+        onClick={() => isAuthenticated && setDataMenuOpen((v) => !v)}
+        disabled={!isAuthenticated}
+        style={{ position: "absolute", top: 8, right: 12, zIndex: 60 }}
+        className="flex items-center justify-center h-9 w-9 rounded-md border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+      >
+        {importing ? <Loader2 size={15} className="animate-spin" /> : <Menu size={15} />}
+      </button>
 
-        {/* Settings button */}
-        <div className="relative shrink-0">
-          <button
-            type="button"
-            onClick={() => isAuthenticated && setDataMenuOpen((v) => !v)}
-            className={`flex items-center justify-center gap-1.5 rounded-md border border-border h-9 text-[11px] text-muted-foreground select-none px-2 transition-colors${isAuthenticated ? " hover:text-foreground hover:bg-muted" : " opacity-40 cursor-not-allowed"}`}
-          >
-            {importing ? <Loader2 size={12} className="animate-spin" /> : <Settings size={12} />}
-            {!isMobile && <span className="font-medium">Settings</span>}
+      {/* Click-away layer for the drawer */}
+      {dataMenuOpen && (
+        <div style={{ position: "absolute", inset: 0, zIndex: 55 }} onClick={() => setDataMenuOpen(false)} />
+      )}
+
+      {/* ── Settings drawer — slides in from the right ── */}
+      <div
+        id="data-dropdown"
+        style={{
+          position: "absolute", top: 0, right: 0, bottom: 0, width: "min(320px, 88vw)", zIndex: 58,
+          transform: dataMenuOpen ? "translateX(0)" : "translateX(100%)",
+          transition: "transform 180ms ease-out",
+          visibility: dataMenuOpen ? "visible" : "hidden",
+        }}
+        className="bg-background border-l border-border shadow-2xl overflow-y-auto py-2"
+      >
+        <div className="flex items-center justify-between px-3 pb-2 mb-1 border-b border-border">
+          <span className="text-[12px] font-medium text-foreground">Settings</span>
+          <button type="button" onClick={() => setDataMenuOpen(false)} className="text-muted-foreground hover:text-foreground">
+            <XIcon size={14} />
           </button>
-          {dataMenuOpen && (
-            <div id="data-dropdown" style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 99999 }}
-              className="bg-background border border-border rounded-md shadow-lg overflow-y-auto max-h-[500px] min-w-[208px]">
+        </div>
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowUsers((v) => !v); setShowMediaLibrary(false); setShowEnvEditor(false); setShowDbBrowser(false); setShowInfo(false); setShowDomainPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Users size={11} />Users
@@ -426,6 +419,10 @@ showOpenAiPanel, showEnvEditor, showDeployments,
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowDbBrowser((v) => !v); setShowEnvEditor(false); setShowMediaLibrary(false); setShowInfo(false); setShowUsers(false); setShowHelp(false); setShowDomainPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Database size={11} />Database
+              </button>
+              <button type="button" onClick={() => { setDataMenuOpen(false); onPreviewClose?.(); setShowEnvEditor(false); setShowMediaLibrary(false); setShowDbBrowser(false); setShowUsers(false); setShowInfo(false); setShowHelp(false); setShowGitConnect(false); setShowDomainPanel(false); setSysTermStarted(true); setSysTermActive(true); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                <TerminalDot status={sysTermStarted ? "connected" : "unavailable"} />Terminal
               </button>
               {(
                 <button type="button" onClick={() => { setDataMenuOpen(false); setShowOpenAiPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
@@ -493,103 +490,8 @@ showOpenAiPanel, showEnvEditor, showDeployments,
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            </div>
-          )}
-          <input ref={fileInputRef} type="file" accept=".zip" className="hidden" onChange={handleImport} />
-        </div>
-
-
-        {(
-          <button type="button" aria-label="Previous" onClick={() => setCarouselIdx(safeIdx - 1)} disabled={!canPrev}
-            className="shrink-0 flex items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shadow-sm disabled:opacity-30 disabled:pointer-events-none"
-            style={{ width: 20, height: 20 }}>
-            <ChevronLeft className="h-3 w-3" />
-          </button>
-        )}
-
-        {(<>
-        <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
-          <div className="flex" style={{ gap: GAP, transform: `translateX(-${safeIdx * (CARD_W + GAP)}px)`, transition: "transform 0.25s ease" }}>
-
-
-
-            {/* System terminal — ALWAYS the last card, never filtered by the
-                installed-component set. A plain project-level shell for installing
-                tools, linking Telegram↔Hermes, etc. Unlike the AI platforms it
-                can never be disabled. */}
-            {(() => {
-              const notAuthed = !isAuthenticated;
-              const btn = (
-                <button
-                  type="button"
-                  style={{ width: CARD_W, flexShrink: 0 }}
-                  disabled={notAuthed}
-                  onClick={() => {
-                    if (notAuthed) return;
-                    onPreviewClose?.();
-                    setShowEnvEditor(false); setShowMediaLibrary(false); setShowDbBrowser(false);
-                    setShowUsers(false); setShowInfo(false); setShowHelp(false);
-                    setShowGitConnect(false); setShowDomainPanel(false);
-                    
-                    setSysTermStarted(true);
-                    setSysTermActive(true);
-                  }}
-                  className={`flex items-center justify-center gap-1.5 rounded-md border h-9 text-[11px] transition-all px-2 ${
-                    notAuthed        ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-40"
-                    : sysTermActive  ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300 font-medium"
-                    : sysTermStarted ? "border-green-500/50 bg-green-500/5 text-green-600 dark:text-green-400"
-                    : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
-                >
-                  {/* The system
-                      terminal can never be turned off (step 85), so it has no
-                      "End session" close — only grey(idle)/green(alive)/yellow(active). */}
-                  <TerminalDot status={sysTermStarted ? "connected" : "unavailable"} />
-                  <span>Terminal</span>
-                </button>
-              );
-              return notAuthed ? (
-                <TooltipProvider delayDuration={0}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>{btn}</TooltipTrigger>
-                    <TooltipContent side="bottom" className="bg-zinc-800 text-white text-[11px] leading-relaxed" style={{ zIndex: 99999, maxWidth: 260 }}>
-                      <div className="px-1 py-0.5">Sign in to access the terminal</div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ) : btn;
-            })()}
-
-            {/* Coming soon cards */}
-            {COMING_SOON.map((item) => (
-              <TooltipProvider key={item.id} delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div
-                      style={{ width: CARD_W, flexShrink: 0 }}
-                      className="flex flex-col items-center justify-center gap-0.5 rounded-md border border-dashed border-border h-9 text-[11px] text-muted-foreground/40 select-none px-2 cursor-help"
-                    >
-                      <span className="text-[9px] font-mono text-muted-foreground/30">{item.version}</span>
-                      <span>{item.label}</span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-[240px] whitespace-pre-line text-[11px] leading-relaxed" style={{ zIndex: 99999 }}>
-                    {item.tooltip}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ))}
-          </div>
-        </div>
-
-        <button type="button" aria-label="Next" onClick={() => setCarouselIdx(safeIdx + 1)} disabled={!canNext}
-          className="shrink-0 flex items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shadow-sm disabled:opacity-30 disabled:pointer-events-none"
-          style={{ width: 20, height: 20 }}>
-          <ChevronRight className="h-3 w-3" />
-        </button>
-        </>)}
       </div>
-
+      <input ref={fileInputRef} type="file" accept=".zip" className="hidden" onChange={handleImport} />
       {/* Light preview canvas removed — Light product retired */}
 
       {/* ── Users panel ── */}
@@ -925,18 +827,6 @@ showOpenAiPanel, showEnvEditor, showDeployments,
             <Zap size={10} />Pro
           </a>
         )}
-
-        {/* Skills */}
-        <a href={SKILLS_HREF} target="_blank" rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-          <Store size={10} />Skills
-        </a>
-
-        {/* Product Loop — distinct from Skills: the digitized end-to-end business journey */}
-        <a href={PRODUCT_LOOP_HREF} target="_blank" rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-          <Repeat size={10} />Product Loop
-        </a>
 
         {/* GitHub */}
         {GITHUB_URL ? (
