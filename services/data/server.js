@@ -330,16 +330,29 @@ app.post('/media/:id/trim', (req, res) => {
   if (!existsSync(src)) return res.status(404).json({ ok: false, error: 'File missing in storage' })
   const tmp = `${src}.trim${extname(item.storage_key) || '.mp4'}`
 
+  const wanted = end - start
   try {
-    // -ss before -i seeks fast to the start. The tail is cut with -t (OUTPUT
-    // DURATION), not -to: with input seeking, -to is measured against the ORIGINAL
-    // timeline in some ffmpeg builds, so it silently left the tail in place — a
-    // 3→7 request returned 7.1s instead of 4s until this was fixed. -t is
-    // unambiguous: it always means "this many seconds of output".
+    // FAST PATH — copy the streams (`-c copy`): instant and lossless. `-t` is the
+    // OUTPUT duration; `-to` must NOT be used here, because with input seeking it is
+    // measured against the original timeline in some ffmpeg builds.
     execSync(
-      `ffmpeg -y -ss ${start} -i ${JSON.stringify(src)} -t ${end - start} -c copy -avoid_negative_ts make_zero ${JSON.stringify(tmp)}`,
+      `ffmpeg -y -ss ${start} -i ${JSON.stringify(src)} -t ${wanted} -c copy -avoid_negative_ts make_zero ${JSON.stringify(tmp)}`,
       { timeout: 120000, stdio: 'ignore' },
     )
+
+    // …but a stream copy can only cut at KEYFRAMES. When the requested boundary
+    // falls between them, ffmpeg still exits 0 and quietly returns a longer clip —
+    // measured live: a 3→7 request on a keyframe-poor file gave 7.1s, not 4s. So we
+    // MEASURE the result and, if it missed by more than half a second, redo the cut
+    // with a re-encode, which is frame-accurate. Slower, but correct; and real-world
+    // recordings carry keyframes every few seconds, so this path is rarely taken.
+    const got = probeDuration(tmp)
+    if (got === null || Math.abs(got - wanted) > 0.5) {
+      execSync(
+        `ffmpeg -y -ss ${start} -i ${JSON.stringify(src)} -t ${wanted} -c:v libx264 -preset veryfast -c:a aac -movflags +faststart ${JSON.stringify(tmp)}`,
+        { timeout: 600000, stdio: 'ignore' },
+      )
+    }
   } catch (e) {
     if (existsSync(tmp)) { try { unlinkSync(tmp) } catch {} }
     return res.status(500).json({ ok: false, error: `ffmpeg failed: ${String(e.message ?? e)}` })
