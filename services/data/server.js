@@ -5,10 +5,11 @@ import Database from 'better-sqlite3'
 import { v4 as uuidv4 } from 'uuid'
 import sharp from 'sharp'
 import pngToIco from 'png-to-ico'
-import { createReadStream, existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs'
+import { createReadStream, existsSync, mkdirSync, unlinkSync, writeFileSync, readFileSync } from 'fs'
 import { resolve, dirname, extname } from 'path'
 import { fileURLToPath } from 'url'
 import { config } from 'dotenv'
+import { execSync } from 'child_process'
 import { shouldBypassAuth } from './auth-bypass.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -285,6 +286,73 @@ app.delete('/media/:id', (req, res) => {
 
   mediaDb.prepare('DELETE FROM media WHERE id = ?').run(req.params.id)
   res.json({ ok: true })
+})
+
+// ── POST /media/:id/trim — keep the middle of a video ─────────────────────────
+// Body: { start, end } in seconds. Cuts everything before `start` and after `end`.
+//
+// Done with ffmpeg on the server, not in the browser, and deliberately so: with
+// `-c copy` the streams are copied, not re-encoded, so the cut is instant, lossless
+// and costs no CPU worth mentioning — while a browser-side editor would ship ~30 MB
+// of wasm to every visitor and re-encode on their machine. ffmpeg is the industry
+// standard tool for exactly this and is installed by bootstrap.
+//
+// The trim REPLACES the stored object (the owner asked to keep the middle, not to
+// keep two files). Duration and size are refreshed in the row afterwards.
+
+function probeDuration(path) {
+  try {
+    const out = execSync(
+      `ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 ${JSON.stringify(path)}`,
+      { encoding: 'utf8', timeout: 20000 },
+    ).trim()
+    const n = Number(out)
+    return Number.isFinite(n) ? n : null
+  } catch {
+    return null
+  }
+}
+
+app.post('/media/:id/trim', (req, res) => {
+  const item = mediaDb.prepare('SELECT * FROM media WHERE id = ?').get(req.params.id)
+  if (!item) return res.status(404).json({ ok: false, error: 'Not found' })
+  if (!String(item.mime_type).startsWith('video/')) {
+    return res.status(400).json({ ok: false, error: 'Not a video' })
+  }
+
+  const start = Number(req.body?.start)
+  const end   = Number(req.body?.end)
+  if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end <= start) {
+    return res.status(400).json({ ok: false, error: 'Expected { start, end } with end > start >= 0' })
+  }
+
+  const src = resolve(STORAGE_DIR, item.storage_key)
+  if (!existsSync(src)) return res.status(404).json({ ok: false, error: 'File missing in storage' })
+  const tmp = `${src}.trim${extname(item.storage_key) || '.mp4'}`
+
+  try {
+    // -ss before -i seeks fast; -to is absolute, so it is passed after -i to stay
+    // relative to the same timeline the UI showed the owner.
+    execSync(
+      `ffmpeg -y -ss ${start} -i ${JSON.stringify(src)} -to ${end - start} -c copy -avoid_negative_ts make_zero ${JSON.stringify(tmp)}`,
+      { timeout: 120000, stdio: 'ignore' },
+    )
+  } catch (e) {
+    if (existsSync(tmp)) { try { unlinkSync(tmp) } catch {} }
+    return res.status(500).json({ ok: false, error: `ffmpeg failed: ${String(e.message ?? e)}` })
+  }
+
+  try {
+    const trimmed = readFileSync(tmp)
+    writeFileSync(src, trimmed)
+    unlinkSync(tmp)
+    const duration = probeDuration(src)
+    mediaDb.prepare('UPDATE media SET size = ?, duration = ? WHERE id = ?').run(trimmed.length, duration, item.id)
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: `Could not replace the stored file: ${String(e)}` })
+  }
+
+  res.json({ ok: true, item: mediaDb.prepare('SELECT * FROM media WHERE id = ?').get(item.id) })
 })
 
 // ── GET /media/:id/file ───────────────────────────────────────────────────────

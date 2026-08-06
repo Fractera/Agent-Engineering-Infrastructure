@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Loader2, Trash2, Copy, ImagePlus, X, Check, Search, Pencil, MoreHorizontal, Eye } from "lucide-react";
+import { Loader2, Trash2, Copy, ImagePlus, X, Check, Search, Pencil, MoreHorizontal, Eye, Clapperboard, FileText, Scissors } from "lucide-react";
+import { VideoTrimmer } from "./video-trimmer.client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -149,7 +150,7 @@ function PreviewPopup({ item, onClose }: { item: MediaItem; onClose: () => void 
   const isVideo = item.mime_type.startsWith("video/");
   return (
     <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-30" onClick={onClose}>
-      <div className="bg-background rounded-xl p-4 flex flex-col gap-3 shadow-xl max-w-xs w-full mx-4" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-background rounded-xl p-4 flex flex-col gap-3 shadow-xl max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold truncate text-foreground">{item.name}</span>
           <Button variant="ghost" size="icon-xs" onClick={onClose}>
@@ -158,11 +159,11 @@ function PreviewPopup({ item, onClose }: { item: MediaItem; onClose: () => void 
         </div>
         {isImage && (
           <img src={`${MEDIA_URL}/media/${item.id}/file`} alt={item.name}
-            className="w-full rounded-lg border border-border object-contain max-h-48" />
+            className="w-full rounded-lg border border-border object-contain max-h-[60vh]" />
         )}
         {isVideo && (
           <video src={`${MEDIA_URL}/media/${item.id}/file`} controls
-            className="w-full rounded-lg border border-border max-h-48" />
+            className="w-full rounded-lg border border-border max-h-[60vh] bg-black" />
         )}
         <div className="flex flex-col gap-0.5 text-[10px] text-muted-foreground">
           <span><strong className="text-foreground">{isImage ? "Image" : isVideo ? "Video" : "File"}</strong> · .{item.extension}</span>
@@ -194,7 +195,11 @@ export function MediaLibraryPanel({ onClose }: Props) {
   const [editDesc, setEditDesc]     = useState("");
   const [editSaving, setEditSaving] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const docInputRef   = useRef<HTMLInputElement>(null);
+  // The video whose trimmer is open — set right after an upload, or from the row menu.
+  const [trimItem, setTrimItem] = useState<MediaItem | null>(null);
 
   function openEdit(item: MediaItem) {
     setEditItem(item);
@@ -262,19 +267,22 @@ export function MediaLibraryPanel({ onClose }: Props) {
     }
   }
 
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+  // One entry per kind. An image goes through the cropper before it is stored; a
+  // video is stored first and then offered to the trimmer (so the owner trims what
+  // really lies in storage); a document goes straight in.
+  function handlePick(e: React.ChangeEvent<HTMLInputElement>, kind: "image" | "video" | "document") {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
-    if (file.type.startsWith("image/")) {
+    if (kind === "image") {
       setPendingFile(file);
       setCropSrc(URL.createObjectURL(file));
-    } else {
-      uploadFile(file, null);
+      return;
     }
-    e.target.value = "";
+    uploadFile(file, null, undefined, kind === "video");
   }
 
-  async function uploadFile(file: File, croppedBlob: Blob | null, cropMode?: string) {
+  async function uploadFile(file: File, croppedBlob: Blob | null, cropMode?: string, offerTrim = false) {
     setUploading(true);
     setError(null);
     try {
@@ -287,6 +295,7 @@ export function MediaLibraryPanel({ onClose }: Props) {
       if (!data.ok) throw new Error(data.error);
       setItems((prev) => [data.item, ...prev]);
       toast.success(`"${data.item.name}" uploaded`);
+      if (offerTrim) setTrimItem(data.item);
     } catch (e) {
       toast.error(String(e));
       setError(String(e));
@@ -316,7 +325,9 @@ export function MediaLibraryPanel({ onClose }: Props) {
   }
 
   return (
-    <div style={{ position: "absolute", top: 52, left: 0, right: 0, bottom: 36, zIndex: 20 }}
+    // REFERENCE LAYOUT (Users): anchored to the top of the workspace and to the footer,
+    // full width — no fixed height, no fixed width.
+    <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 36, zIndex: 20 }}
       className="bg-background flex flex-col">
 
       {cropSrc && pendingFile && (
@@ -328,6 +339,20 @@ export function MediaLibraryPanel({ onClose }: Props) {
       )}
 
       {previewItem && <PreviewPopup item={previewItem} onClose={() => setPreviewItem(null)} />}
+
+      {trimItem && (
+        <VideoTrimmer
+          mediaUrl={MEDIA_URL}
+          itemId={trimItem.id}
+          name={trimItem.name}
+          onDone={(updated) => {
+            const item = updated as MediaItem;
+            setItems((prev) => prev.map((i) => (i.id === item.id ? item : i)));
+            setTrimItem(null);
+          }}
+          onClose={() => setTrimItem(null)}
+        />
+      )}
 
       {/* Edit overlay */}
       {editItem && (
@@ -476,6 +501,12 @@ export function MediaLibraryPanel({ onClose }: Props) {
                               className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-foreground hover:bg-muted transition-colors">
                               <Eye size={10} />Preview
                             </button>
+                            {item.mime_type.startsWith("video/") && (
+                              <button type="button" onClick={() => { setTrimItem(item); setOpenMenuId(null); }}
+                                className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-foreground hover:bg-muted transition-colors">
+                                <Scissors size={10} />Trim video
+                              </button>
+                            )}
                             <button type="button" onClick={() => { openEdit(item); setOpenMenuId(null); }}
                               className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-foreground hover:bg-muted transition-colors">
                               <Pencil size={10} />Edit
@@ -519,11 +550,22 @@ export function MediaLibraryPanel({ onClose }: Props) {
         </div>
       )}
 
-      {/* Footer */}
-      <div className="px-4 py-2.5 border-t border-border flex items-center shrink-0">
-        <input ref={fileInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleFileSelect} />
-        <Button onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-          {uploading ? <><Loader2 size={11} className="animate-spin" />Uploading…</> : <><ImagePlus size={11} />Upload media</>}
+      {/* Footer — one button per kind of object. They are separate on purpose: each
+          kind has its own path (an image goes through the cropper, a video through
+          the trimmer, a document straight to storage), and a single "Upload" button
+          could not tell the owner which of the three they are about to get. */}
+      <div className="px-4 py-2.5 border-t border-border flex items-center gap-2 shrink-0">
+        <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handlePick(e, "image")} />
+        <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={(e) => handlePick(e, "video")} />
+        <input ref={docInputRef} type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.md,.rtf,.odt,.ods,.zip" className="hidden" onChange={(e) => handlePick(e, "document")} />
+        <Button onClick={() => imageInputRef.current?.click()} disabled={uploading}>
+          {uploading ? <><Loader2 size={11} className="animate-spin" />Uploading…</> : <><ImagePlus size={11} />Upload image</>}
+        </Button>
+        <Button variant="outline" onClick={() => videoInputRef.current?.click()} disabled={uploading}>
+          <Clapperboard size={11} />Upload video
+        </Button>
+        <Button variant="outline" onClick={() => docInputRef.current?.click()} disabled={uploading}>
+          <FileText size={11} />Upload document
         </Button>
       </div>
     </div>
