@@ -181,7 +181,7 @@ export function WorkspaceController() {
 
   type EmbedSpec = { id: EmbedTarget; url: string; title: string; Icon: ComponentType<{ size?: number; className?: string }> };
   const embedSpecFor = (id: EmbedTarget): EmbedSpec =>
-    ({ id, url: urls.brainUrl, title: "Company Memory", Icon: BrainCircuit });
+    ({ id, url: "", title: "", Icon: BrainCircuit }); // step 500: no embeds left (EmbedCardId = never)
   // One spec per mounted session — the shell renders them all and toggles
   // visibility, so an inactive chat stays alive in the background. (step 96)
   const embedSpecs: EmbedSpec[] = [...embedSessions].map(embedSpecFor);

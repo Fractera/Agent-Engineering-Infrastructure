@@ -12,8 +12,6 @@ import { EnvEditorPanel } from "./env-editor-panel.client";
 import { MediaLibraryPanel } from "./media-library-panel.client";
 import { DbBrowserPanel } from "./db-browser-panel.client";
 import { AUTH_FLOW_DESCRIPTORS, type AuthFlowDescriptor } from "./auth-flow-descriptors";
-import { AuthFlowModal } from "./auth-flow-modal.client";
-import { PasteTextModal } from "./paste-text-modal.client";
 import { UsersPanel } from "./users-panel.client";
 import { DomainPanel } from "./domain-panel.client";
 import { LoginMethodsPanel } from "./login-methods-panel.client";
@@ -130,25 +128,17 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   // null = unknown/loading or fetch failed → show everything (back-compat with
   // servers deployed before selective install, and never hide on a transient error).
   const [installed, setInstalled]           = useState<string[] | null>(null);
-  // Auth state for the red indicator (step 98). `agentReadiness` mirrors the
-  // readiness probe (logged_in/installed per code platform); `embedConfigured`
   // mirrors whether Brain/Memory have an API key. Unknown (key missing in map)
   // = never red — we only flag red on a definitive not-authed signal so a probe
   // failure never raises a false alarm.
-  const [agentReadiness, setAgentReadiness] = useState<Record<string, { installed: boolean; logged_in: boolean }>>({});
-  const [embedConfigured, setEmbedConfigured] = useState<Partial<Record<EmbedCardId, boolean>>>({});
   // System terminal (S6): a plain project-level shell, always available as the
   // last carousel card. Started once, then kept mounted; `active` toggles its
   // visibility over the agent terminals / idle canvas.
   const [sysTermStarted, setSysTermStarted] = useState(false);
   const [sysTermActive, setSysTermActive]   = useState(false);
   const sysTermRef = useRef<XtermTerminalHandle | null>(null);
-  const [confirmingPlatform, setConfirmingPlatform] = useState<Platform | null>(null);
-  // Embed "End session" confirm state — mirror of confirmingPlatform for the
   // Brain/Memory carousel cards (step 96). Second click on the active embed card
   // arms a 2s animated countdown that calls onEmbedClose.
-  const [confirmingEmbed, setConfirmingEmbed]       = useState<EmbedTarget | null>(null);
-  const embedCountdownRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [dataMenuOpen, setDataMenuOpen]             = useState(false);
   const [importing, setImporting]                   = useState(false);
   const [updateAvailable, setUpdateAvailable]       = useState(false);
@@ -219,11 +209,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   }, [showInfo, showDbBrowser, showUsers, showMediaLibrary, showHelp, showDomainPanel,
 showOpenAiPanel, showEnvEditor, showDeployments,
       showSiteSettings, showPlatform]);
-  const [activeAuth, setActiveAuth]                 = useState<{ descriptor: AuthFlowDescriptor; url: string; code?: string } | null>(null);
-  const [pasteModalOpen, setPasteModalOpen]         = useState(false);
   const fileInputRef    = useRef<HTMLInputElement>(null);
-  const rawBufRef       = useRef<string>("");
-  const xtermRefs       = useRef<Partial<Record<Platform, XtermTerminalHandle | null>>>({});
   const deployLogRef    = useRef<HTMLDivElement>(null);
   const updateLogRef    = useRef<HTMLDivElement>(null);
 
@@ -238,43 +224,6 @@ showOpenAiPanel, showEnvEditor, showDeployments,
   const SKILLS_HREF       = `${MARKET_BASE}/skills${idQuery}`;
   const PRODUCT_LOOP_HREF = `${MARKET_BASE}/product-loop${idQuery}`;
   const APP_VERSION = process.env.NEXT_PUBLIC_GIT_COMMIT ?? "dev";
-  const countdownRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const urlDetectTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const activeAuthRef   = useRef<typeof activeAuth>(null);
-
-  function handleTerminalData(chunk: string) {
-    const clean = stripAnsi(chunk).replace(/\r\n|\r|\n/g, " ");
-    rawBufRef.current = (rawBufRef.current + clean).slice(-4000);
-    if (activeAuthRef.current) return;
-    if (urlDetectTimer.current) clearTimeout(urlDetectTimer.current);
-    urlDetectTimer.current = setTimeout(() => {
-      if (activeAuthRef.current) return;
-      const bufForSearch = rawBufRef.current.replace(/ /g, "");
-      for (const descriptor of AUTH_FLOW_DESCRIPTORS) {
-        const match = bufForSearch.match(descriptor.detectUrl);
-        if (match) {
-          // bufForSearch has all spaces removed — PTY line-wrap artifacts are gone,
-          // URL is reconstructed whole. detectUrl patterns end at &state=<value>
-          // so the match stops precisely at the URL boundary.
-          let extractedUrl = match[0];
-          // Guard against duplicate URLs if PTY reprints via \r.
-          const dupeIdx = extractedUrl.indexOf("https://", 8);
-          if (dupeIdx !== -1) extractedUrl = extractedUrl.slice(0, dupeIdx);
-          // For device-code flow, extract the one-time code from the raw buffer (spaces
-          // preserved so the match stops at whitespace and doesn't bleed into the next word)
-          let extractedCode: string | undefined;
-          if (descriptor.detectCode) {
-            const codeMatch = rawBufRef.current.match(descriptor.detectCode);
-            if (codeMatch) extractedCode = codeMatch[0];
-          }
-          const next = { descriptor, url: extractedUrl, code: extractedCode };
-          activeAuthRef.current = next;
-          setActiveAuth(next);
-          break;
-        }
-      }
-    }, 300);
-  }
 
   async function handleExport() {
     setDataMenuOpen(false);
@@ -304,114 +253,13 @@ showOpenAiPanel, showEnvEditor, showDeployments,
   }
 
   useEffect(() => {
-    const ws = new WebSocket(urls.claudeUrl);
+    const ws = new WebSocket(urls.ptyUrl); // step 500: agents gone — the PTY bridge is the liveness probe
     const timer = setTimeout(() => { ws.close(); setBridgeStatus("offline"); }, 3000);
     ws.onopen  = () => { clearTimeout(timer); ws.close(); setBridgeStatus("online"); };
     ws.onerror = () => { clearTimeout(timer); setBridgeStatus("offline"); };
     return () => { clearTimeout(timer); try { ws.close(); } catch {} };
   }, []);
 
-  function handleCardClick(platformId: Platform) {
-    onPreviewClose?.();
-    setSysTermActive(false);
-    cancelEmbedConfirm();
-    setShowEnvEditor(false);
-    setShowMediaLibrary(false);
-    setShowDbBrowser(false);
-    setShowUsers(false);
-    setShowInfo(false);
-    setShowHelp(false);
-    setShowGitConnect(false);
-    const isRunning = terminalSessions.has(platformId);
-    if (isRunning && terminalPlatform === platformId) {
-      if (confirmingPlatform === platformId) {
-        if (countdownRef.current) clearTimeout(countdownRef.current);
-        countdownRef.current = null;
-        setConfirmingPlatform(null);
-      } else {
-        if (countdownRef.current) clearTimeout(countdownRef.current);
-        setConfirmingPlatform(platformId);
-        countdownRef.current = setTimeout(() => {
-          onTerminalClose(platformId);
-          setConfirmingPlatform(null);
-          countdownRef.current = null;
-        }, 2000);
-      }
-    } else if (isRunning) {
-      if (confirmingPlatform === platformId) {
-        if (countdownRef.current) clearTimeout(countdownRef.current);
-        countdownRef.current = null;
-        setConfirmingPlatform(null);
-      }
-      onPlatformClick(platformId);
-    } else {
-      onPlatformClick(platformId);
-    }
-  }
-
-  // Cancel any pending embed "End session" countdown (called when the user
-  // navigates to another surface instead of confirming the close).
-  function cancelEmbedConfirm() {
-    if (embedCountdownRef.current) clearTimeout(embedCountdownRef.current);
-    embedCountdownRef.current = null;
-    setConfirmingEmbed(null);
-  }
-
-  // Carousel Brain/Memory card click. Mirrors handleCardClick for CLI agents:
-  // a click on a card that isn't the visible surface just switches to it (the
-  // iframe is already mounted, so the chat is preserved); a second click on the
-  // already-active card arms a 2s animated "End session" countdown that closes
-  // the iframe via onEmbedClose. Switching never tears the session down. (step 96)
-  function handleEmbedClick(card: EmbedCard) {
-    const isActive = activeEmbedId === card.id && !sysTermActive;
-    if (isActive) {
-      if (confirmingEmbed === card.id) {
-        cancelEmbedConfirm();
-      } else {
-        if (embedCountdownRef.current) clearTimeout(embedCountdownRef.current);
-        setConfirmingEmbed(card.id);
-        embedCountdownRef.current = setTimeout(() => {
-          onEmbedClose?.(card.id);
-          setConfirmingEmbed(null);
-          embedCountdownRef.current = null;
-        }, 2000);
-      }
-    } else {
-      cancelEmbedConfirm();
-      setSysTermActive(false);
-      onEmbedCardClick?.(card);
-    }
-  }
-
-  useEffect(() => {
-    fetch("/api/bridges/update/status")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.available) { setUpdateAvailable(true); setUpdateCount(data.count); }
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    fetch("/api/config/git-status")
-      .then((r) => r.json())
-      .then((data) => { setGitConnected(!!data.connected); setGitRepo(data.repo ?? null); })
-      .catch(() => {});
-  }, []);
-
-  // Load the installed-component manifest (S5). On any failure we leave
-  // `installed` null → everything shows (safe default; never hide on error).
-  useEffect(() => {
-    fetch("/api/config/components")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => { if (data && Array.isArray(data.components)) setInstalled(data.components); })
-      .catch(() => {});
-  }, []);
-
-  // Auth state for the red indicator (step 98). One readiness snapshot covers
-  // all 5 code platforms (logged_in/installed via the readiness probe); the two
-  // config checks tell whether Brain/Memory have a key. Cheap, no tokens. We
-  // only ever ADD definitive signals to the maps — a failed probe leaves the
   // entry unknown, which the buttons treat as "not red" (no false alarm).
   const refreshAuthState = useCallback(() => {
     if (!isAuthenticated) return;
@@ -581,35 +429,6 @@ showOpenAiPanel, showEnvEditor, showDeployments,
     }
   }
 
-  function handleSendAuthCode(code: string) {
-    xtermRefs.current[terminalPlatform]?.sendStdin(code + "\n");
-    // xterm canvas freezes until it receives a DOM event — focus it so the
-    // PTY response renders immediately without requiring a mouse move.
-    setTimeout(() => { xtermRefs.current[terminalPlatform]?.focus(); }, 80);
-  }
-
-  function handleSendPasteText(text: string) {
-    // The system terminal (S6) is tracked separately from terminalPlatform —
-    // when it's the active card, paste must target its ref, not a CLI terminal
-    // (otherwise paste silently goes nowhere). → step 95.
-    const target = sysTermActive ? sysTermRef.current : xtermRefs.current[terminalPlatform];
-    target?.sendStdin(text);
-    setTimeout(() => { target?.focus(); }, 80);
-  }
-
-  function handleCloseAuthModal() {
-    activeAuthRef.current = null;
-    setActiveAuth(null);
-    rawBufRef.current = "";
-    // The user likely just finished signing a platform in — re-probe so a red
-    // indicator flips to green promptly instead of waiting for the next poll.
-    refreshAuthState();
-  }
-
-  useEffect(() => () => {
-    if (countdownRef.current) clearTimeout(countdownRef.current);
-    if (embedCountdownRef.current) clearTimeout(embedCountdownRef.current);
-  }, []);
   useEffect(() => { if (deployLogRef.current) deployLogRef.current.scrollTop = deployLogRef.current.scrollHeight; }, [deployLog]);
   useEffect(() => { if (updateLogRef.current) updateLogRef.current.scrollTop = updateLogRef.current.scrollHeight; }, [updateLog]);
   useEffect(() => {
@@ -634,12 +453,12 @@ showOpenAiPanel, showEnvEditor, showDeployments,
   // Selective install (S5): only show the components this server installed.
   // The system terminal (S6) is NOT in this filter — it is always present.
   const isInstalled = (id: string) => installed === null || installed.includes(id);
-  const visiblePlatforms  = PLATFORMS.filter((p) => isInstalled(p.id));
+
   // (step 500) Hermes and its Brain card are gone; only Memory remains.
-  const visibleEmbedCards = EMBED_CARDS.filter((c) => isInstalled(c.id));
+
 
   const termH   = height - CAROUSEL_H - FOOTER_H;
-  const total   = visiblePlatforms.length + 1; // +1 for the always-present Terminal card
+  const total   = 1; // step 500: only the always-present system Terminal card
   const safeIdx = Math.min(carouselIdx, Math.max(total - 1, 0));
   const canPrev = safeIdx > 0;
   const canNext = safeIdx < total - 1;
@@ -650,24 +469,6 @@ showOpenAiPanel, showEnvEditor, showDeployments,
         @keyframes countdown-shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }
         @keyframes countdown-color { 0% { background-color: rgb(34 197 94); } 60% { background-color: rgb(251 146 60); } 100% { background-color: rgb(239 68 68); } }
       `}</style>
-
-      {/* ── Auth Flow Modal ── */}
-      {activeAuth && (
-        <AuthFlowModal
-          descriptor={activeAuth.descriptor}
-          url={activeAuth.url}
-          code={activeAuth.code}
-          onClose={handleCloseAuthModal}
-          onSendCode={handleSendAuthCode}
-        />
-      )}
-
-      {/* ── Paste Text Modal ── */}
-      <PasteTextModal
-        open={pasteModalOpen}
-        onClose={() => setPasteModalOpen(false)}
-        onSend={handleSendPasteText}
-      />
 
       {/* ── Carousel ── */}
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: CAROUSEL_H }} className="border-b border-border bg-background flex items-center gap-2 px-2">
@@ -817,121 +618,7 @@ showOpenAiPanel, showEnvEditor, showDeployments,
         <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
           <div className="flex" style={{ gap: GAP, transform: `translateX(-${safeIdx * (CARD_W + GAP)}px)`, transition: "transform 0.25s ease" }}>
 
-            {visibleEmbedCards.map((card) => {
-              // Unified carousel-button standard (step 96): same states/colors as
-              // the CLI agent cards. A mounted session (in `embeds`) is alive in
-              // the background → green; the visible one → yellow; no session →
-              // grey; closing → orange + countdown slider. Dot indicator, no icon.
-              const hasSession   = embeds.some((e) => e.id === card.id);
-              const isActive     = activeEmbedId === card.id && !sysTermActive;
-              const isConfirming = confirmingEmbed === card.id;
-              const notAuthed    = !isAuthenticated;
-              // Red (step 98): the chat is open but no API key is configured yet,
-              // so it can't actually answer. Unknown (undefined) → not red.
-              const isUnauth     = hasSession && embedConfigured[card.id] === false;
-              return (
-                <button
-                  key={card.id}
-                  type="button"
-                  onClick={() => { if (!notAuthed) handleEmbedClick(card); }}
-                  disabled={notAuthed}
-                  style={{ width: CARD_W, flexShrink: 0, position: "relative" }}
-                  className={`flex items-center justify-center gap-1.5 rounded-md border h-9 text-[11px] transition-all px-2 ${
-                    notAuthed       ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-40"
-                    : isConfirming  ? "border-orange-400 bg-orange-400/10 text-orange-400 font-medium"
-                    : isUnauth      ? "border-red-500/50 bg-red-500/5 text-red-600 dark:text-red-400 font-medium"
-                    : isActive      ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300 font-medium"
-                    : hasSession    ? "border-green-500/50 bg-green-500/5 text-green-600 dark:text-green-400"
-                    : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
-                >
-                  {isConfirming ? (
-                    <>
-                      <span className="size-1.5 rounded-full bg-orange-400 animate-pulse shrink-0" />
-                      <span>End session</span>
-                      <span key={confirmingEmbed} style={{ position: "absolute", bottom: 4, left: 4, right: 4, height: 2, borderRadius: 1, transformOrigin: "left", animation: "countdown-shrink 2s linear forwards, countdown-color 2s linear forwards" }} />
-                    </>
-                  ) : (
-                    <>
-                      <TerminalDot status={hasSession ? (isUnauth ? "unauthorized" : "connected") : "unavailable"} />
-                      <span>{card.label}</span>
-                    </>
-                  )}
-                </button>
-              );
-            })}
 
-            {visiblePlatforms.map((p) => {
-              const isRunning      = terminalSessions.has(p.id);
-              const isCurrent      = terminalPlatform === p.id && isRunning;
-              const isConfirming   = confirmingPlatform === p.id;
-              const notInstalled   = !p.active && p.agentPrompt !== '';
-              const bridgeOffline  = bridgeStatus === "offline" && !isRunning;
-              const notAuthed      = !isAuthenticated;
-              // Red (step 98): session running but the agent is NOT signed into
-              // its subscription. Gated on installed===true so a probe miss
-              // (bad bin path → false logged_in) never shows a false red.
-              const rd             = agentReadiness[p.id];
-              const isUnauth       = isRunning && rd?.installed === true && rd?.logged_in === false;
-
-              const btn = (
-                <button
-                  type="button"
-                  style={{ width: CARD_W, flexShrink: 0, position: "relative" }}
-                  onClick={() => {
-                    if (bridgeOffline || notInstalled || notAuthed) return;
-                    handleCardClick(p.id);
-                  }}
-                  disabled={notInstalled || notAuthed}
-                  className={`flex items-center justify-center gap-1.5 rounded-md border h-9 text-[11px] transition-all px-2 ${
-                    notAuthed       ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-40"
-                    : bridgeOffline ? "border-border text-muted-foreground/30 cursor-not-allowed opacity-40"
-                    : notInstalled  ? "border-dashed border-border text-muted-foreground/40 cursor-not-allowed opacity-60"
-                    : isConfirming  ? "border-orange-400 bg-orange-400/10 text-orange-400 font-medium"
-                    : isUnauth      ? "border-red-500/50 bg-red-500/5 text-red-600 dark:text-red-400 font-medium"
-                    : isCurrent     ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300 font-medium"
-                    : isRunning     ? "border-green-500/50 bg-green-500/5 text-green-600 dark:text-green-400"
-                    : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
-                >
-                  {isConfirming ? (
-                    <>
-                      <span className="size-1.5 rounded-full bg-orange-400 animate-pulse shrink-0" />
-                      <span>End session</span>
-                      <span key={confirmingPlatform} style={{ position: "absolute", bottom: 4, left: 4, right: 4, height: 2, borderRadius: 1, transformOrigin: "left", animation: "countdown-shrink 2s linear forwards, countdown-color 2s linear forwards" }} />
-                    </>
-                  ) : notInstalled ? (
-                    <><Download size={10} className="shrink-0 opacity-50" /><span>{p.label}</span></>
-                  ) : (
-                    <><TerminalDot status={isRunning ? (isUnauth ? "unauthorized" : "connected") : terminalStatuses[p.id]} /><span>{p.label}</span></>
-                  )}
-                </button>
-              );
-
-              return (
-                <React.Fragment key={p.id}>
-                  {(bridgeOffline || notInstalled || notAuthed) ? (
-                    <TooltipProvider delayDuration={0}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>{btn}</TooltipTrigger>
-                        <TooltipContent side="bottom" className="bg-zinc-800 text-white text-[11px] leading-relaxed p-0 [&>svg]:fill-zinc-800 [&>svg]:bg-zinc-800" style={{ zIndex: 99999, maxWidth: 260 }}>
-                          {notAuthed ? (
-                            <div className="px-3 py-2.5">Sign in to access platforms</div>
-                          ) : bridgeOffline ? (
-                            <div className="px-3 py-2.5">
-                              Bridge is offline. Start the bridge server:<br />
-                              <span className="font-mono text-white/80">node bridges/platforms/server.js</span>
-                            </div>
-                          ) : (
-                            <InstallPromptTooltip label={p.label} prompt={p.agentPrompt} docsUrl={p.docsUrl} />
-                          )}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ) : btn}
-                </React.Fragment>
-              );
-            })}
 
             {/* System terminal — ALWAYS the last card, never filtered by the
                 installed-component set. A plain project-level shell for installing
@@ -1237,48 +924,7 @@ showOpenAiPanel, showEnvEditor, showDeployments,
         <IdleCanvas />
       </div>
 
-      {/* ── Embed canvases (Company Memory) ──
-            One iframe per opened session, kept mounted once created; visibility
-            toggles via `display` so switching cards (or to a terminal) never
-            tears the iframe down and loses the chat. Only the animated
-            "End session" on a card removes one (handleEmbedClose). (step 96) */}
-      {isAuthenticated && embeds.map((spec) => {
-        const isActive = activeEmbedId === spec.id && !sysTermActive;
-        return (
-          <div
-            key={`embed-${spec.id}`}
-            style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, height: termH, zIndex: 5, display: isActive ? "block" : "none" }}
-          >
-            <EmbedCanvas url={spec.url} title={spec.title} Icon={spec.Icon} />
-          </div>
-        );
-      })}
 
-      {/* ── Terminal panels (xterm) ── */}
-      {[...terminalSessions].map((platform) => {
-        const isCurrent = platform === terminalPlatform;
-        return (
-          <div
-            key={`xterm-${platform}`}
-            style={{
-              position: "absolute",
-              top: CAROUSEL_H,
-              left: 0,
-              right: 0,
-              height: termH,
-              display: isCurrent ? "block" : "none",
-            }}
-            className="bg-zinc-950"
-          >
-            <XtermTerminal
-              ref={(h) => { xtermRefs.current[platform] = h; }}
-              wsUrl={urls.ptyUrl}
-              platform={platform}
-              onData={handleTerminalData}
-            />
-          </div>
-        );
-      })}
 
       {/* ── System terminal panel (S6) — plain project-level shell, no CLI.
             Mounted once started, then kept alive; visibility toggles so the
@@ -1341,7 +987,7 @@ showOpenAiPanel, showEnvEditor, showDeployments,
         <button
           type="button"
           className="md:hidden inline-flex items-center gap-1 h-5 px-2 rounded border border-primary bg-primary/10 text-primary text-[10px] transition-colors active:bg-primary/20"
-          onClick={() => xtermRefs.current[terminalPlatform]?.sendStdin("\r")}
+          onClick={() => sysTermRef.current?.sendStdin("\r")}
         >
           <CornerDownLeft size={10} />Enter
         </button>
