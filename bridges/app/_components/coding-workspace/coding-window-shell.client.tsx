@@ -205,31 +205,6 @@ showOpenAiPanel, showEnvEditor, showDeployments,
     return () => { clearTimeout(timer); try { ws.close(); } catch {} };
   }, []);
 
-  // entry unknown, which the buttons treat as "not red" (no false alarm).
-  const refreshAuthState = useCallback(() => {
-    if (!isAuthenticated) return;
-    fetch("/api/agents/readiness")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (!data || !Array.isArray(data.agents)) return;
-        const map: Record<string, { installed: boolean; logged_in: boolean }> = {};
-        for (const a of data.agents) {
-          if (a && typeof a.platform === "string") {
-            map[a.platform] = { installed: !!a.installed, logged_in: !!a.logged_in };
-          }
-        }
-        setAgentReadiness(map);
-      })
-      .catch(() => {});
-    // installed===null = unknown manifest → still probe (back-compat).
-    const has = (id: string) => installed === null || installed.includes(id);
-  }, [isAuthenticated, installed]);
-
-  useEffect(() => {
-    refreshAuthState();
-    const id = setInterval(refreshAuthState, 15_000);
-    return () => clearInterval(id);
-  }, [refreshAuthState]);
 
   async function handleUpdate() {
     setUpdating(true);
