@@ -161,8 +161,8 @@ function PreviewPopup({ item, onClose }: { item: MediaItem; onClose: () => void 
           <img src={`${MEDIA_URL}/media/${item.id}/file?v=${item.size}`} alt={item.name}
             className="w-full rounded-lg border border-border object-contain max-h-[60vh]" />
         )}
+        {/* ?v=size — the URL is stable but a trim replaces the bytes behind it */}
         {isVideo && (
-          {/* ?v=size — the URL is stable but a trim replaces the bytes behind it */}
           <video src={`${MEDIA_URL}/media/${item.id}/file?v=${item.size}`} controls
             className="w-full rounded-lg border border-border max-h-[60vh] bg-black" />
         )}
