@@ -362,19 +362,12 @@ showOpenAiPanel, showEnvEditor, showDeployments,
     return () => document.removeEventListener("mousedown", close);
   }, [dataMenuOpen]);
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === "V") { e.preventDefault(); setPasteModalOpen(true); }
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, []);
 
   // Selective install (S5): only show the components this server installed.
   // The system terminal (S6) is NOT in this filter — it is always present.
   const isInstalled = (id: string) => installed === null || installed.includes(id);
 
-  // (step 500) Hermes and its Brain card are gone; only Memory remains.
+
 
 
   const termH   = height - CAROUSEL_H - FOOTER_H;
