@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { X, KeyRound, Loader2, CheckCircle, AlertCircle, RefreshCw, BrainCircuit } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type Props = {
   onClose: () => void;
@@ -89,39 +90,42 @@ export function OpenAiPanel({ onClose }: Props) {
     );
 
   return (
-    <div className="flex flex-col w-full h-full bg-background border-r border-border shadow-xl">
-      <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border">
-        <div className="flex items-center gap-2 text-[12px] font-medium text-foreground">
+    // REFERENCE LAYOUT (Users): the panel fills its anchored box — height from the
+    // wrapper's two anchors, width from the stretch. The FORM inside is capped at a
+    // readable column, because a single key field stretched across a wide screen is
+    // harder to use, not easier.
+    <div className="flex flex-col h-full w-full bg-background border-t border-border">
+      {/* Header — same shape as the Users panel: title left, status, close right. */}
+      <div className="shrink-0 flex items-center gap-2 px-4 py-3 border-b border-border">
+        <span className="text-sm font-semibold text-foreground flex items-center gap-2">
           <KeyRound size={13} />
           OpenAI settings
-        </div>
-        <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
-          <X size={14} />
-        </button>
+        </span>
+        <span className="text-[10px] font-mono text-muted-foreground">embeddings · data service</span>
+        <span className="ml-auto">{!loading && memory && statusChip(memory.configured)}</span>
+        <Button variant="ghost" size="icon-xs" onClick={onClose}>
+          <X size={13} />
+        </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 py-5">
         {loading ? (
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-            <Loader2 size={12} className="animate-spin" /> Loading...
+            <Loader2 size={12} className="animate-spin" /> Loading…
           </div>
         ) : (
-          <>
-            <div className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
-              <p>
-                Paste an OpenAI API key so the data layer can turn text into vectors. Embeddings run on the cheap
-                <strong> text-embedding-3-small</strong> — top up a balance from $5 at{" "}
-                <a href="https://platform.openai.com/login" target="_blank" rel="noopener noreferrer" className="underline">platform.openai.com</a>.
-
-
-              </p>
+          <div className="w-full max-w-xl space-y-4">
+            <div className="rounded-md border border-blue-500/30 bg-blue-500/5 p-3 text-[11px] leading-relaxed text-blue-700 dark:text-blue-300">
+              Paste an OpenAI API key so the data layer can turn text into vectors. Embeddings run on the cheap
+              <strong> text-embedding-3-small</strong> — top up a balance from $5 at{" "}
+              <a href="https://platform.openai.com/login" target="_blank" rel="noopener noreferrer" className="underline">platform.openai.com</a>.
             </div>
 
-
-            {/* Memory key */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <p className="text-[11px] font-medium text-foreground flex items-center gap-1.5"><BrainCircuit size={12} /> Vector memory key</p>
+                <p className="text-[11px] font-medium text-foreground flex items-center gap-1.5">
+                  <BrainCircuit size={12} /> Vector memory key
+                </p>
                 {memory && statusChip(memory.configured)}
               </div>
               <input
@@ -131,46 +135,37 @@ export function OpenAiPanel({ onClose }: Props) {
                 placeholder={memory?.configured ? "Paste new key to replace" : "sk-…"}
                 className="w-full h-8 px-2.5 text-[11px] rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring font-mono"
               />
+              {memory?.model && (
+                <p className="text-[10px] font-mono text-muted-foreground">model: {memory.model}</p>
+              )}
             </div>
 
-            <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2.5 text-[10px] leading-relaxed text-amber-700 dark:text-amber-300">
-              <p className="flex items-start gap-1.5">
-                <AlertCircle size={11} className="shrink-0 mt-0.5" />
-                <span>
-                  <span>Keys are stored only on your own server.</span>
-                </span>
-              </p>
-            </div>
+            <p className="flex items-start gap-1.5 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-[11px] leading-relaxed text-amber-700 dark:text-amber-300">
+              <AlertCircle size={12} className="shrink-0 mt-0.5" />
+              <span>The key is stored only on your own server, in the data service env.</span>
+            </p>
 
             {savedAt && (
-              <div className="rounded-md border border-emerald-500/40 bg-emerald-500/5 p-2.5 space-y-1.5">
+              <div className="rounded-md border border-emerald-500/40 bg-emerald-500/5 p-3 space-y-1.5">
                 <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                   <CheckCircle size={12} /> Key saved
                 </p>
                 <p className="text-[10px] text-muted-foreground leading-relaxed">
                   The data service restarts for about 10 seconds to pick up the key.
-
                 </p>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="flex items-center gap-1.5 h-7 px-2.5 rounded-md border border-emerald-500/50 text-[10px] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
-                >
+                <Button variant="outline" size="xs" onClick={() => window.location.reload()}>
                   <RefreshCw size={10} /> Reload project
-                </button>
+                </Button>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
 
       <div className="shrink-0 border-t border-border px-4 py-3 flex items-center justify-end">
-        <button
-          onClick={handleSave}
-          disabled={saving || !memoryKey.trim()}
-          className="h-8 px-4 rounded-md bg-primary text-primary-foreground text-[11px] font-medium disabled:opacity-40 hover:opacity-90 transition-opacity"
-        >
-          {saving ? <span className="flex items-center gap-1.5"><Loader2 size={11} className="animate-spin" />Saving…</span> : "Save"}
-        </button>
+        <Button onClick={handleSave} disabled={saving || !memoryKey.trim()}>
+          {saving ? <><Loader2 size={11} className="animate-spin" />Saving…</> : "Save"}
+        </Button>
       </div>
     </div>
   );

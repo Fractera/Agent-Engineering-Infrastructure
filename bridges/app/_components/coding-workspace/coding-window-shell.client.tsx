@@ -532,17 +532,9 @@ showOpenAiPanel, showEnvEditor,
         </div>
       )}
 
+      {/* REFERENCE LAYOUT (Users) — anchors for the height, stretch for the width. */}
       {showOpenAiPanel && (
-        <div
-          style={{
-            position: "absolute",
-            top: CAROUSEL_H,
-            right: 0,
-            bottom: FOOTER_H,
-            width: "min(480px, 90vw)",
-            zIndex: 20,
-          }}
-        >
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 20 }}>
           <OpenAiPanel onClose={() => setShowOpenAiPanel(false)} />
         </div>
       )}
