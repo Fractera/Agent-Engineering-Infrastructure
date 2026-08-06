@@ -106,6 +106,7 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   const [readmeContent, setReadmeContent]           = useState<string | null>(null);
   const [showEnvEditor, setShowEnvEditor]           = useState(false);
   const [showMediaLibrary, setShowMediaLibrary]     = useState(false);
+  const [bridgeStatus, setBridgeStatus]     = useState<"unknown" | "online" | "offline">("unknown");
   const [showDbBrowser, setShowDbBrowser]           = useState(false);
   const [showUsers, setShowUsers]                   = useState(false);
   const [showDeployments, setShowDeployments]       = useState(false);
