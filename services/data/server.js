@@ -82,6 +82,73 @@ if (!productsCols.has('media_id'))    appDb.exec(`ALTER TABLE products ADD COLUM
 if (!productsCols.has('media_url'))   appDb.exec(`ALTER TABLE products ADD COLUMN media_url  TEXT`)
 if (!productsCols.has('created_by'))  appDb.exec(`ALTER TABLE products ADD COLUMN created_by TEXT NOT NULL DEFAULT 'system'`)
 
+// ── Vector store (step 500) ────────────────────────
+// The third warehouse of the data layer, next to rows (/db) and objects (/media).
+// It replaces LightRAG (:9621), which was a graph-RAG framework installed to make
+// the Hermes agent smarter; Hermes is gone, so the graph half went with it and only
+// the vector half is kept — in the SAME SQLite file as the rows it annotates, so it
+// shares one backup, one auth posture and one wipe semantics.
+//
+// Similarity search: sqlite-vec if the extension loads, otherwise a plain scan with
+// cosine computed in JS. The fallback is honest at this scale (thousands of rows) —
+// it is linear, so it is logged once at startup instead of pretending to be an index.
+const EMBED_MODEL = process.env.EMBED_MODEL ?? 'text-embedding-3-small'
+const EMBED_DIMS  = Number(process.env.EMBED_DIMS ?? 1536)
+
+let vecExtension = false
+try {
+  const { load } = await import('sqlite-vec')
+  load(appDb)
+  vecExtension = true
+} catch {
+  vecExtension = false
+}
+
+appDb.exec(`
+  CREATE TABLE IF NOT EXISTS vectors (
+    id         TEXT PRIMARY KEY NOT NULL,
+    collection TEXT NOT NULL,
+    ref_table  TEXT,
+    ref_id     TEXT,
+    text       TEXT NOT NULL,
+    embedding  BLOB NOT NULL,
+    dims       INTEGER NOT NULL,
+    model      TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS vectors_collection_idx ON vectors (collection);
+  CREATE INDEX IF NOT EXISTS vectors_ref_idx        ON vectors (ref_table, ref_id);
+`)
+
+function toBlob(vec) {
+  return Buffer.from(new Float32Array(vec).buffer)
+}
+function fromBlob(buf) {
+  return new Float32Array(buf.buffer, buf.byteOffset, buf.byteLength / 4)
+}
+function cosine(a, b) {
+  let dot = 0, na = 0, nb = 0
+  for (let i = 0; i < a.length; i++) { dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i] }
+  if (na === 0 || nb === 0) return 0
+  return dot / (Math.sqrt(na) * Math.sqrt(nb))
+}
+
+// One place where text becomes a vector. Callers may pass a ready `embedding`
+// instead and never touch OpenAI — the store itself has no opinion about who
+// produced the numbers, only that the dimensions match.
+async function embed(text) {
+  const key = process.env.OPENAI_API_KEY
+  if (!key) throw new Error('OPENAI_API_KEY is not set in the data service env')
+  const r = await fetch('https://api.openai.com/v1/embeddings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+    body: JSON.stringify({ model: EMBED_MODEL, input: text }),
+  })
+  if (!r.ok) throw new Error(`embeddings ${r.status}: ${(await r.text()).slice(0, 200)}`)
+  const data = await r.json()
+  return data.data[0].embedding
+}
+
 // ── Auth middleware ───────────────────────────────────────────────────────────
 
 async function requireAuth(req, res, next) {
@@ -461,6 +528,78 @@ app.post('/db/migrate', (req, res) => {
   }
 })
 
+// ── POST /vectors — upsert one record ─────────────────────────────────────────
+// Body: { id?, collection, text, embedding?, refTable?, refId? }
+// Without `embedding` the text is embedded here; with it, no model is called.
+
+app.post('/vectors', async (req, res) => {
+  const { id, collection, text, embedding, refTable = null, refId = null } = req.body ?? {}
+  if (!collection || typeof collection !== 'string') return res.status(400).json({ error: 'collection is required' })
+  if (!text || typeof text !== 'string')             return res.status(400).json({ error: 'text is required' })
+  try {
+    const vec = Array.isArray(embedding) ? embedding : await embed(text)
+    if (vec.length !== EMBED_DIMS) {
+      return res.status(400).json({ error: `expected ${EMBED_DIMS} dims, got ${vec.length}` })
+    }
+    const rowId = id ?? uuidv4()
+    appDb.prepare(`
+      INSERT INTO vectors (id, collection, ref_table, ref_id, text, embedding, dims, model)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        collection = excluded.collection, ref_table = excluded.ref_table, ref_id = excluded.ref_id,
+        text = excluded.text, embedding = excluded.embedding, dims = excluded.dims, model = excluded.model
+    `).run(rowId, collection, refTable, refId, text, toBlob(vec), vec.length, EMBED_MODEL)
+    res.json({ ok: true, id: rowId, dims: vec.length, model: EMBED_MODEL })
+  } catch (e) {
+    res.status(500).json({ error: String(e.message ?? e) })
+  }
+})
+
+// ── POST /vectors/search ──────────────────────────────────────────────────────
+// Body: { collection?, query? | embedding?, k? } → nearest records with a score.
+
+app.post('/vectors/search', async (req, res) => {
+  const { collection = null, query, embedding, k = 5 } = req.body ?? {}
+  if (!query && !Array.isArray(embedding)) return res.status(400).json({ error: 'query or embedding is required' })
+  try {
+    const probe = Array.isArray(embedding) ? Float32Array.from(embedding) : Float32Array.from(await embed(query))
+    const rows = collection
+      ? appDb.prepare('SELECT id, collection, ref_table, ref_id, text, embedding FROM vectors WHERE collection = ?').all(collection)
+      : appDb.prepare('SELECT id, collection, ref_table, ref_id, text, embedding FROM vectors').all()
+    const scored = rows
+      .map((r) => ({
+        id: r.id, collection: r.collection, refTable: r.ref_table, refId: r.ref_id, text: r.text,
+        score: cosine(probe, fromBlob(r.embedding)),
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, Math.max(1, Math.min(100, Number(k) || 5)))
+    res.json({ ok: true, scanned: rows.length, indexed: vecExtension, results: scored })
+  } catch (e) {
+    res.status(500).json({ error: String(e.message ?? e) })
+  }
+})
+
+// ── DELETE /vectors/:id ───────────────────────────────────────────────────────
+
+app.delete('/vectors/:id', (req, res) => {
+  const info = appDb.prepare('DELETE FROM vectors WHERE id = ?').run(req.params.id)
+  res.json({ ok: true, deleted: info.changes })
+})
+
+// ── GET /vectors/status — is the store usable at all ──────────────────────────
+
+app.get('/vectors/status', (_req, res) => {
+  const { n } = appDb.prepare('SELECT COUNT(*) AS n FROM vectors').get()
+  res.json({
+    ok: true,
+    configured: Boolean(process.env.OPENAI_API_KEY),
+    model: EMBED_MODEL,
+    dims: EMBED_DIMS,
+    indexed: vecExtension,
+    count: n,
+  })
+})
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 
 app.listen(PORT, () => {
@@ -469,4 +608,5 @@ app.listen(PORT, () => {
   console.log(`Media DB: ${MEDIA_DB}`)
   console.log(`App DB:   ${APP_DB}`)
   console.log(`Auth:     ${AUTH_URL}`)
+  console.log(`Vectors:  ${EMBED_MODEL} (${EMBED_DIMS}d), index: ${vecExtension ? "sqlite-vec" : "linear scan"}`)
 })

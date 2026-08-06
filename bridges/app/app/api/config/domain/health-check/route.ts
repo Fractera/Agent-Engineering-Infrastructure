@@ -15,7 +15,7 @@ type HostResult = {
 };
 
 // Core hosts that MUST be healthy before Secure mode can activate. The optional
-// services (Brain/Hermes :9119, Memory/LightRAG :9621, the Hermes chat web UI) are
+// services are
 // add-ons: a deployment may not install them, and a temporarily-down add-on must NEVER
 // trap the user on the wizard. The TLS certificate is issued by ACME against domain
 // ownership, not app health — so a down add-on does not affect the cert, only that one
@@ -28,7 +28,7 @@ const REQUIRED_PREFIXES = new Set<string>(["", "www", "auth", "admin", "data"]);
 // rejectUnauthorized: true). 5-second timeout per host so the whole sweep
 // finishes in ~5s even if one host hangs.
 //
-// GET (not HEAD): several services we proxy (Hermes :9119, LightRAG :9621)
+// GET (not HEAD): some services we proxy
 // reject HEAD with 405 even though they serve a page on GET. What we actually
 // need to verify is "TLS handshake succeeds with a trusted cert and the
 // service responds" — GET reflects that for every service type. We tear the

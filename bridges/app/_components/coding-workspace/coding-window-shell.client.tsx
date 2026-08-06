@@ -16,7 +16,6 @@ import { AuthFlowModal } from "./auth-flow-modal.client";
 import { PasteTextModal } from "./paste-text-modal.client";
 import { UsersPanel } from "./users-panel.client";
 import { DomainPanel } from "./domain-panel.client";
-import { LightRagPanel } from "./lightrag-panel.client";
 import { LoginMethodsPanel } from "./login-methods-panel.client";
 import { OpenAiPanel } from "./openai-panel.client";
 import { DeploymentsPanel } from "./deployments-panel.client";
@@ -26,7 +25,7 @@ import { EmbedCanvas } from "./embed-canvas.client";
 import { IdleCanvas } from "./idle-canvas.client";
 import type { ComponentType } from "react";
 
-export type SettingsPanelId = "lightrag" | "openai"; // step 500: hermes removed
+export type SettingsPanelId = "openai"; // step 500: hermes + lightrag removed
 
 const CAROUSEL_H = 52;
 const FOOTER_H   = 36;
@@ -179,7 +178,6 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const [showSiteSettings, setShowSiteSettings]     = useState(false);
   const [showPlatform, setShowPlatform]             = useState(false);
   const [showDomainPanel, setShowDomainPanel]       = useState(false);
-  const [showLightRag, setShowLightRag]             = useState(false);
   const [showOpenAiPanel, setShowOpenAiPanel]       = useState(false);
   const [showAuthMethods, setShowAuthMethods]       = useState(false);
   // Security tab is hidden from the UI until cert provisioning for all 6
@@ -194,11 +192,10 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
     if (!requestedSettingsPanel) return;
     const id = requestedSettingsPanel.id;
     
-    setShowLightRag(false);
+    
     setShowOpenAiPanel(false);
     
-    else if (id === "openai") setShowOpenAiPanel(true);
-    else setShowLightRag(true);
+    if (id === "openai") setShowOpenAiPanel(true);
     setShowEnvEditor(false);
     setShowDbBrowser(false);
     setShowUsers(false);
@@ -215,12 +212,12 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   // it whenever any other panel opens — keeps the drawers mutually exclusive.
   useEffect(() => {
     if (showInfo || showDbBrowser || showUsers || showMediaLibrary || showHelp || showDomainPanel ||
-        showLightRag || showOpenAiPanel || showEnvEditor || showDeployments ||
+        showOpenAiPanel || showEnvEditor || showDeployments ||
         showSiteSettings || showPlatform) {
       setShowAuthMethods(false);
     }
   }, [showInfo, showDbBrowser, showUsers, showMediaLibrary, showHelp, showDomainPanel,
-showLightRag, showOpenAiPanel, showEnvEditor, showDeployments,
+showOpenAiPanel, showEnvEditor, showDeployments,
       showSiteSettings, showPlatform]);
   const [activeAuth, setActiveAuth]                 = useState<{ descriptor: AuthFlowDescriptor; url: string; code?: string } | null>(null);
   const [pasteModalOpen, setPasteModalOpen]         = useState(false);
@@ -433,12 +430,6 @@ showLightRag, showOpenAiPanel, showEnvEditor, showDeployments,
       .catch(() => {});
     // installed===null = unknown manifest → still probe (back-compat).
     const has = (id: string) => installed === null || installed.includes(id);
-    if (has("memory")) {
-      fetch("/api/config/rag")
-        .then((r) => (r.ok ? r.json() : null))
-        .then((d) => { if (d) setEmbedConfigured((c) => ({ ...c, memory: d.configured === true })); })
-        .catch(() => {});
-    }
   }, [isAuthenticated, installed]);
 
   useEffect(() => {
@@ -722,20 +713,14 @@ showLightRag, showOpenAiPanel, showEnvEditor, showDeployments,
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Database size={11} />Database
               </button>
-              {isInstalled("memory") && (
-                <button type="button" onClick={() => { setDataMenuOpen(false); setShowOpenAiPanel((v) => !v); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
+              {(
+                <button type="button" onClick={() => { setDataMenuOpen(false); setShowOpenAiPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                   <KeyRound size={11} />OpenAI settings
                 </button>
               )}
-              {isInstalled("memory") && (
-                <button type="button" onClick={() => { setDataMenuOpen(false); setShowLightRag((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                  <BrainCircuit size={11} />Company Memory settings
-                </button>
-              )}
               <div className="h-px bg-border mx-2" />
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDomainPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowLightRag(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDomainPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] transition-colors hover:bg-muted">
                 {secure
                   ? <Globe size={11} className="text-foreground" />
@@ -747,7 +732,7 @@ showLightRag, showOpenAiPanel, showEnvEditor, showDeployments,
                   sign-in methods need a domain + HTTPS, so the entry is hidden
                   entirely in IP/insecure mode. */}
               {secure && (
-                <button type="button" onClick={() => { setDataMenuOpen(false); setShowAuthMethods((v) => !v); setShowDomainPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowLightRag(false); setShowOpenAiPanel(false); setShowDeployments(false); setShowSiteSettings(false); setShowPlatform(false); }}
+                <button type="button" onClick={() => { setDataMenuOpen(false); setShowAuthMethods((v) => !v); setShowDomainPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowOpenAiPanel(false); setShowDeployments(false); setShowSiteSettings(false); setShowPlatform(false); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                   <KeyRound size={11} />Login methods
                 </button>
@@ -763,19 +748,19 @@ showLightRag, showOpenAiPanel, showEnvEditor, showDeployments,
               </button>
               {/* Bottom section: App Settings + Platform + Env Variables + Deployments grouped together… */}
               <div className="h-px bg-border mx-2" />
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowSiteSettings((v) => !v); setShowPlatform(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowLightRag(false); setShowOpenAiPanel(false); setShowDeployments(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowSiteSettings((v) => !v); setShowPlatform(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); setShowDeployments(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Palette size={11} />App Settings
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowPlatform((v) => !v); setShowSiteSettings(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowLightRag(false); setShowOpenAiPanel(false); setShowDeployments(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowPlatform((v) => !v); setShowSiteSettings(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); setShowDeployments(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <LayoutGrid size={11} />Platform
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowLightRag(false); setShowDeployments(false); setShowSiteSettings(false); setShowPlatform(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowDeployments(false); setShowSiteSettings(false); setShowPlatform(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Settings size={11} />Env Variables
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDeployments((v) => !v); setShowHelp(false); setShowInfo(false); setShowEnvEditor(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowDomainPanel(false); setShowLightRag(false); setShowOpenAiPanel(false); setShowSiteSettings(false); setShowPlatform(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDeployments((v) => !v); setShowHelp(false); setShowInfo(false); setShowEnvEditor(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowDomainPanel(false); setShowOpenAiPanel(false); setShowSiteSettings(false); setShowPlatform(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Rocket size={11} />Deployments
               </button>
@@ -965,7 +950,7 @@ showLightRag, showOpenAiPanel, showEnvEditor, showDeployments,
                     setShowEnvEditor(false); setShowMediaLibrary(false); setShowDbBrowser(false);
                     setShowUsers(false); setShowInfo(false); setShowHelp(false);
                     setShowGitConnect(false); setShowDomainPanel(false);
-                    setShowLightRag(false);
+                    
                     cancelEmbedConfirm();
                     setSysTermStarted(true);
                     setSysTermActive(true);
@@ -1066,20 +1051,6 @@ showLightRag, showOpenAiPanel, showEnvEditor, showDeployments,
 
       {/* ── Settings drawers — slide in from the right, never full-screen so the
             embed iframe behind stays visible. Mobile: cap at 90% viewport width. ── */}
-      {showLightRag && (
-        <div
-          style={{
-            position: "absolute",
-            top: CAROUSEL_H,
-            right: 0,
-            bottom: FOOTER_H,
-            width: "min(480px, 90vw)",
-            zIndex: 20,
-          }}
-        >
-          <LightRagPanel onClose={() => setShowLightRag(false)} />
-        </div>
-      )}
 
 
       {showAuthMethods && (
@@ -1178,7 +1149,7 @@ showLightRag, showOpenAiPanel, showEnvEditor, showDeployments,
               { title: "Upload media", desc: "Upload images, videos, and files to local S3 storage. Images can be cropped before saving." },
               { title: "Configure", desc: "Edit environment variables for the application. Changes take effect after the next deploy." },
               { title: "Database", desc: "Browse and edit database tables directly. Supports editing cells, deleting rows, and managing users." },
-              { title: "LightRAG", desc: "Company Brain — a shared knowledge graph for all agents. Coming in v1.1." },
+              { title: "Vector memory", desc: "Stores text as vectors next to your rows and finds the closest matches. Lives in the data service — one database, one backup." },
               { title: "Export", desc: "Downloads a zip archive containing your database and all storage files." },
               { title: "Import", desc: "Merges a backup zip into existing data. Existing records are not overwritten." },
             ].map(({ title, desc }) => (

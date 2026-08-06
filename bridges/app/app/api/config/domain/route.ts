@@ -15,14 +15,13 @@ const APP_DB = process.env.APP_DB_PATH ?? "/opt/fractera/app/data/app.db";
 // It gets its own A-record, its own cert SAN (certbot --expand picks it up from
 // this list), and an auth_request-gated nginx block. The legacy hermes/<domain>
 // /chat/ path stays working too (back-compat).
-const SUBDOMAINS = ["", "www", "auth", "admin", "data", "lightrag"] as const; // step 500: hermes + chat removed
+const SUBDOMAINS = ["", "www", "auth", "admin", "data"] as const; // step 500: hermes, chat, lightrag removed
 const PROXY_PORTS: Record<string, number> = {
   "":         3000,
   "www":      3000,
   "auth":     3001,
   "admin":    3002,
   "data":     3300,
-  "lightrag": 9621,
 };
 
 // Where uploaded (non Let's Encrypt) certificates land. The same pair lives
@@ -165,7 +164,7 @@ function buildNginxConfig(domain: string, certSource: "auto" | "upload"): string
     // *.${domain} (COOKIE_DOMAIN=.${domain}), so the admin iframes pass; a cold
     // visitor is sent to the login flow and bounced back after signing in (admin
     // role required). → reports/errors/hermes-lightrag-auth-gating-regression.md
-    const gated = prefix === "lightrag";
+    const gated = false; // step 500: no internal-service hosts left to gate
     const authVerify = gated ? `    location = /auth-verify {
         internal;
         proxy_pass http://127.0.0.1:3001/api/session/verify;

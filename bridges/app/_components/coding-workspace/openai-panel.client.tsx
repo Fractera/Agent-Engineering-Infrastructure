@@ -10,12 +10,8 @@ type Props = {
 
 type MemoryStatus = { configured: boolean; model: string | null };
 
-// OpenAI settings — the OpenAI API key that powers Memory (LightRAG). (step 500:
+// OpenAI settings — the OpenAI API key that powers Vector memory. (step 500:
 // the Brain/Hermes half was removed together with Hermes.)
-// Memory → LightRAG .env) mean a user can use ONE key for both, or TWO keys to
-// track spend separately. Entering the first key auto-mirrors into the other
-// field (until edited), so the common "one key" case is one paste + Save.
-// → reports/errors/hermes-key-pool-and-model-default.md (step 89)
 export function OpenAiPanel({ onClose }: Props) {
   const [memory, setMemory] = useState<MemoryStatus | null>(null);
   const [memoryKey, setMemoryKey] = useState("");
@@ -26,7 +22,7 @@ export function OpenAiPanel({ onClose }: Props) {
   async function refresh() {
     try {
       const [m] = await Promise.all([
-        fetch("/api/rag/config").then((r) => r.json()).catch(() => null),
+        fetch("/api/config/embeddings").then((r) => r.json()).catch(() => null),
       ]);
       if (m) setMemory({ configured: !!m.configured, model: m.model ?? null });
     } catch { /* keep prior state */ }
@@ -45,15 +41,15 @@ export function OpenAiPanel({ onClose }: Props) {
     const mKey = memoryKey.trim();
     if (!mKey) { toast.error("Paste an OpenAI key first"); return; }
 
-    if (mKey && !mKey.startsWith("sk-")) { toast.error("Memory key looks invalid (expected sk-…)"); return; }
+    if (mKey && !mKey.startsWith("sk-")) { toast.error("Key looks invalid (expected sk-…)"); return; }
 
     setSaving(true);
     try {
       const ops: Promise<Response>[] = [];
       if (mKey) {
-        ops.push(fetch("/api/rag/config", {
+        ops.push(fetch("/api/config/embeddings", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ vars: { LLM_BINDING_API_KEY: mKey } }),
+          body: JSON.stringify({ apiKey: mKey }),
         }));
       }
       const results = await Promise.all(ops);
@@ -66,7 +62,7 @@ export function OpenAiPanel({ onClose }: Props) {
         return;
       }
       // Any other non-2xx is almost always the fresh-server restart race: the key
-      // IS written (the routes persist it best-effort), the Brain/Memory service is
+      // IS written (the route persists it best-effort), the data service is
       // just still (re)starting when the second concurrent call hits it. Do NOT
       // scare the user with "failed" — the keys are saved; the chat only needs a
       // reload once the restart settles. Show the Saved panel (with its reload
@@ -74,7 +70,7 @@ export function OpenAiPanel({ onClose }: Props) {
       setSavedAt(Date.now());
       setMemoryKey("");
       await refresh();
-      toast.success("Keys saved — reload the project to start the chat");
+      toast.success("Key saved — the data service restarts to pick it up");
     } catch {
       toast.error("Save failed");
     } finally {
@@ -113,8 +109,8 @@ export function OpenAiPanel({ onClose }: Props) {
           <>
             <div className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
               <p>
-                Paste an OpenAI API key to power Memory. We start on the cheap
-                <strong> gpt-5-mini</strong> (about a cent per hour) — top up a balance from $5 at{" "}
+                Paste an OpenAI API key so the data layer can turn text into vectors. Embeddings run on the cheap
+                <strong> text-embedding-3-small</strong> — top up a balance from $5 at{" "}
                 <a href="https://platform.openai.com/login" target="_blank" rel="noopener noreferrer" className="underline">platform.openai.com</a>.
 
 
@@ -125,7 +121,7 @@ export function OpenAiPanel({ onClose }: Props) {
             {/* Memory key */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <p className="text-[11px] font-medium text-foreground flex items-center gap-1.5"><BrainCircuit size={12} /> Memory key (LightRAG)</p>
+                <p className="text-[11px] font-medium text-foreground flex items-center gap-1.5"><BrainCircuit size={12} /> Vector memory key</p>
                 {memory && statusChip(memory.configured)}
               </div>
               <input
@@ -149,10 +145,10 @@ export function OpenAiPanel({ onClose }: Props) {
             {savedAt && (
               <div className="rounded-md border border-emerald-500/40 bg-emerald-500/5 p-2.5 space-y-1.5">
                 <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                  <CheckCircle size={12} /> Keys saved
+                  <CheckCircle size={12} /> Key saved
                 </p>
                 <p className="text-[10px] text-muted-foreground leading-relaxed">
-                  Memory restarts for about 10 seconds to pick up the key.
+                  The data service restarts for about 10 seconds to pick up the key.
 
                 </p>
                 <button

@@ -2,14 +2,14 @@ import { execSync } from "child_process";
 
 // Host firewall (ufw) management, tied to the insecure/secure mode switch.
 //
-// INSECURE / IP mode: every service port (3000-3006, 3300, 9119, 9621) must
+// INSECURE / IP mode: every service port (3000-3006, 3300) must
 // stay reachable on the public IP — that's how zero-DNS onboarding works.
 //
 // SECURE mode (custom domain): the only intended public entrypoint is nginx on
 // 443 (+ 80 for the HTTP->HTTPS redirect and ACME/Let's Encrypt renewals).
 // Every other port should be reachable ONLY via nginx, over loopback. Without
-// this, a raw request to http://<IP>:9119 (Brain/Hermes), :9621 (Memory/
-// LightRAG) or :3300 (data) bypasses nginx's `auth_request` gate entirely —
+// this, a raw request to http://<IP>:3300 (data) bypasses nginx's `auth_request`
+// gate entirely —
 // those services are gated by nginx, not by themselves (Hermes runs
 // `--insecure`). The Next.js apps (3000/3001/3002) still enforce auth via
 // proxy.ts, but locking the ports closes the gap uniformly and drops the

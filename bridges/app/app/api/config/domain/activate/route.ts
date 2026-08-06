@@ -75,7 +75,7 @@ function restoreFromBackup(backupDir: string): void {
 }
 
 function writeStrictEnvs(domain: string): void {
-  const subs = ["www", "auth", "admin", "data", "lightrag"]; // step 500: hermes removed
+  const subs = ["www", "auth", "admin", "data"]; // step 500: hermes + lightrag removed
   const allowedOrigins = [domain, ...subs.map((s) => `${s}.${domain}`)]
     .map((h) => `https://${h}`)
     .join(",");

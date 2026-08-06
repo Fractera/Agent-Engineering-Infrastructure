@@ -389,7 +389,6 @@ export function DomainWizard({ domain, onClose, onChangeDomain }: { domain: stri
               { name: "admin",    note: "this panel" },
               { name: "data",     note: "media + db" },
               { name: "hermes",   note: "Brain" },
-              { name: "lightrag", note: "Memory" },
               { name: "chat",     note: "Remote Command Post (chat)" },
             ].map(({ name, note }) => (
               <div key={name} className="grid gap-x-3 text-foreground" style={{ gridTemplateColumns: "3rem 5rem 1fr" }}>

@@ -49,7 +49,7 @@ export function readServerIp(): string | null {
 // All hostnames Fractera serves over HTTPS once a custom domain is attached.
 // Single source of truth — wizard-state, health-check, dns-check, certbot
 // SAN list, and nginx server blocks all derive from this.
-export const SUBDOMAINS = ["", "www", "auth", "admin", "data", "lightrag"] as const; // step 500: hermes + chat removed
+export const SUBDOMAINS = ["", "www", "auth", "admin", "data"] as const; // step 500: hermes, chat, lightrag removed
 
 export function hostFor(prefix: string, domain: string): string {
   return prefix ? `${prefix}.${domain}` : domain;

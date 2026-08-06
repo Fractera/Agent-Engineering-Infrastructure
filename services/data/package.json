@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "better-sqlite3": "^9.4.3",
+    "sqlite-vec": "^0.1.6",
     "cors": "^2.8.5",
     "dotenv": "^17.4.2",
     "express": "^4.18.3",
