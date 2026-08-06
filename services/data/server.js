@@ -331,10 +331,13 @@ app.post('/media/:id/trim', (req, res) => {
   const tmp = `${src}.trim${extname(item.storage_key) || '.mp4'}`
 
   try {
-    // -ss before -i seeks fast; -to is absolute, so it is passed after -i to stay
-    // relative to the same timeline the UI showed the owner.
+    // -ss before -i seeks fast to the start. The tail is cut with -t (OUTPUT
+    // DURATION), not -to: with input seeking, -to is measured against the ORIGINAL
+    // timeline in some ffmpeg builds, so it silently left the tail in place — a
+    // 3→7 request returned 7.1s instead of 4s until this was fixed. -t is
+    // unambiguous: it always means "this many seconds of output".
     execSync(
-      `ffmpeg -y -ss ${start} -i ${JSON.stringify(src)} -to ${end - start} -c copy -avoid_negative_ts make_zero ${JSON.stringify(tmp)}`,
+      `ffmpeg -y -ss ${start} -i ${JSON.stringify(src)} -t ${end - start} -c copy -avoid_negative_ts make_zero ${JSON.stringify(tmp)}`,
       { timeout: 120000, stdio: 'ignore' },
     )
   } catch (e) {
