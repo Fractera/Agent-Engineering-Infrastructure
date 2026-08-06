@@ -44,8 +44,6 @@ export function SitePreviewWindow({ open, onClose, siteUrl }: Props) {
       iframeRef.current.src = iframeRef.current.src;
     }
   }
-    setMenuOpen(false);
-  }
 
   return createPortal(
     <div style={{ display: open ? undefined : "none", position: "fixed", inset: 0, zIndex: 9999, pointerEvents: "none" }}>
