@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Loader2, Trash2, Copy, ImagePlus, X, Check, Search, Pencil, MoreHorizontal, Eye, Clapperboard, FileText, Scissors, FileType2, Code2 } from "lucide-react";
+import { Loader2, Trash2, Copy, ImagePlus, X, Check, Search, Pencil, MoreHorizontal, Eye, Clapperboard, FileText, Scissors, FileType2, Code2, ExternalLink } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { VideoTrimmer } from "./video-trimmer.client";
 import { toast } from "sonner";
@@ -161,6 +161,13 @@ function PreviewPopup({ item, onClose }: { item: MediaItem; onClose: () => void 
   const [mdText, setMdText] = useState<string | null>(null);
   const [mdError, setMdError] = useState<string | null>(null);
 
+  // Source view for the text kinds. HTML has two faces — the page it renders and
+  // the code it is made of — and the owner needs both, so the preview toggles
+  // between them instead of picking one.
+  const [showCode, setShowCode] = useState(false);
+  const [codeHtml, setCodeHtml] = useState<string | null>(null);
+  const isTextual = isMd || isHtml;
+
   useEffect(() => {
     if (!isMd) return;
     fetch(fileUrl, { credentials: "include" })
@@ -169,16 +176,52 @@ function PreviewPopup({ item, onClose }: { item: MediaItem; onClose: () => void 
       .catch((e) => setMdError(String(e)));
   }, [isMd, fileUrl]);
 
+  // Highlighting is done by Shiki — the same engine the slot already uses through
+  // streamdown, so the product keeps ONE highlighter rather than two. Loaded lazily
+  // and only when the owner actually asks for the code: it carries grammars, and an
+  // admin panel should not pay for them just by opening a picture.
+  useEffect(() => {
+    if (!showCode || !isTextual) return;
+    let alive = true;
+    (async () => {
+      try {
+        const source = await fetch(fileUrl, { credentials: "include" }).then((r) => r.text());
+        const { codeToHtml } = await import("shiki");
+        const out = await codeToHtml(source, {
+          lang: isHtml ? "html" : "markdown",
+          themes: { light: "github-light", dark: "github-dark" },
+          defaultColor: false,
+        });
+        if (alive) setCodeHtml(out);
+      } catch (e) {
+        if (alive) setCodeHtml(`<pre>Could not read the source: ${String(e)}</pre>`);
+      }
+    })();
+    return () => { alive = false; };
+  }, [showCode, isTextual, isHtml, fileUrl]);
+
   const kind = isImage ? "Image" : isVideo ? "Video" : isPdf ? "PDF" : isMd ? "Markdown" : isHtml ? "HTML" : "File";
 
   return (
     <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-30" onClick={onClose}>
       <div className="bg-background rounded-xl p-4 flex flex-col gap-3 shadow-xl max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
           <span className="text-xs font-semibold truncate text-foreground">{item.name}</span>
-          <Button variant="ghost" size="icon-xs" onClick={onClose}>
-            <X size={13} />
-          </Button>
+          <div className="ml-auto flex items-center gap-1.5">
+            {isTextual && (
+              <Button variant="outline" size="xs" onClick={() => setShowCode((v) => !v)}>
+                <Code2 size={11} />{showCode ? "Preview" : "Code"}
+              </Button>
+            )}
+            {/* Full width belongs to the browser, not to a popup: the file opens in
+                its own tab, at whatever size the owner's screen really is. */}
+            <Button variant="outline" size="xs" onClick={() => window.open(fileUrl, "_blank", "noopener")}>
+              <ExternalLink size={11} />Open
+            </Button>
+            <Button variant="ghost" size="icon-xs" onClick={onClose}>
+              <X size={13} />
+            </Button>
+          </div>
         </div>
         {/* ?v=size — the URL is stable but a trim replaces the bytes behind it */}
         {isImage && (
@@ -198,11 +241,11 @@ function PreviewPopup({ item, onClose }: { item: MediaItem; onClose: () => void 
             scripts run, yet the frame gets a null origin, so a stored file cannot
             read the data service's cookies or reach back into the admin. Granting
             both flags together would undo the sandbox entirely. */}
-        {isHtml && (
+        {isHtml && !showCode && (
           <iframe src={fileUrl} title={item.name} sandbox="allow-scripts"
             className="w-full rounded-lg border border-border bg-white" style={{ height: "60vh" }} />
         )}
-        {isMd && (
+        {isMd && !showCode && (
           <div className="w-full rounded-lg border border-border bg-muted/20 p-4 overflow-y-auto" style={{ maxHeight: "60vh" }}>
             {mdError ? (
               <p className="text-[11px] text-destructive">Could not read the file: {mdError}</p>
@@ -214,6 +257,13 @@ function PreviewPopup({ item, onClose }: { item: MediaItem; onClose: () => void 
               </div>
             )}
           </div>
+        )}
+        {isTextual && showCode && (
+          <div
+            className="w-full rounded-lg border border-border overflow-auto text-[11px] [&_pre]:p-3 [&_pre]:m-0"
+            style={{ maxHeight: "60vh" }}
+            dangerouslySetInnerHTML={{ __html: codeHtml ?? "<pre>Reading…</pre>" }}
+          />
         )}
         <div className="flex flex-col gap-0.5 text-[10px] text-muted-foreground">
           <span><strong className="text-foreground">{kind}</strong> · .{item.extension}</span>
