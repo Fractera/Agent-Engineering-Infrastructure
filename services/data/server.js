@@ -179,7 +179,48 @@ async function requireAuth(req, res, next) {
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 200 * 1024 * 1024 },
+  // busboy (under multer) decodes multipart field values and filenames as LATIN1 by
+  // default. A browser sends them as UTF-8, so every non-ASCII name arrived as
+  // mojibake: "Фотки со старого…" was stored as "Ð¤Ð¾ÑÐºÐ¸ ÑÐ¾ ÑÑÐ°Ñ…".
+  // Older multer builds ignore this option, which is why fixMojibake() below is the
+  // real guarantee — this line only stops the damage one layer earlier where it works.
+  defParamCharset: 'utf8',
 })
+
+// Repair a string that is UTF-8 bytes mis-decoded as latin1.
+//
+// The check is deliberately conservative: a genuinely latin1 name ("Café") turns into
+// invalid UTF-8 when re-decoded and yields U+FFFD, so we keep the original. Only a
+// string that was really mojibake round-trips cleanly.
+function fixMojibake(s) {
+  if (typeof s !== 'string' || !s) return s
+  if (!/[À-ÿ]/.test(s)) return s // no suspicious high-latin1 letters at all
+  try {
+    const repaired = Buffer.from(s, 'latin1').toString('utf8')
+    if (repaired && !repaired.includes('�')) return repaired
+  } catch { /* keep the original */ }
+  return s
+}
+
+// One-time self-healing for rows written before the fix. Idempotent: a name that is
+// already correct does not match the mojibake test and is left alone.
+try {
+  const rows = mediaDb.prepare('SELECT id, name, title, description FROM media').all()
+  const upd = mediaDb.prepare('UPDATE media SET name = ?, title = ?, description = ? WHERE id = ?')
+  let healed = 0
+  for (const r of rows) {
+    const name = fixMojibake(r.name)
+    const title = fixMojibake(r.title)
+    const description = fixMojibake(r.description)
+    if (name !== r.name || title !== r.title || description !== r.description) {
+      upd.run(name, title, description, r.id)
+      healed++
+    }
+  }
+  if (healed) console.log(`[media] repaired ${healed} mis-encoded name(s)`)
+} catch (e) {
+  console.log(`[media] name repair skipped: ${e.message}`)
+}
 
 // ── App ───────────────────────────────────────────────────────────────────────
 
@@ -237,9 +278,9 @@ app.post('/media/upload', upload.single('file'), async (req, res) => {
     const baseUrl = process.env.DATA_PUBLIC_URL ?? `http://localhost:${PORT}`
     const row = {
       id,
-      name:        file.originalname,
-      title:       req.body.title || '',
-      description: req.body.description || '',
+      name:        fixMojibake(file.originalname),
+      title:       fixMojibake(req.body.title) || "",
+      description: fixMojibake(req.body.description) || "",
       url:         `${baseUrl}/media/${id}/file`,
       mime_type:   file.mimetype,
       extension:   ext,
