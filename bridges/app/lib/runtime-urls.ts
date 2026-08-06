@@ -9,13 +9,6 @@ type RuntimeUrls = {
   adminUrl: string;
   bridgeUrl: string;
   ptyUrl: string;
-  claudeUrl: string;
-  codexUrl: string;
-  geminiUrl: string;
-  qwenUrl: string;
-  kimiUrl: string;
-  hermesUrl: string;
-  hermesChatUrl: string;
   brainUrl: string;
 };
 
@@ -26,19 +19,12 @@ const DEFAULTS: RuntimeUrls = {
   adminUrl: "http://localhost:3002",
   bridgeUrl: "ws://localhost:3201/bridge/",
   ptyUrl: "ws://localhost:3201/bridge/",
-  claudeUrl: "ws://localhost:3200/",
-  codexUrl: "ws://localhost:3202/",
-  geminiUrl: "ws://localhost:3203/",
-  qwenUrl: "ws://localhost:3204/",
-  kimiUrl: "ws://localhost:3205/",
-  hermesUrl: "http://localhost:9119",
-  hermesChatUrl: "http://localhost:9120",
   brainUrl: "http://localhost:9621",
 };
 
 // Service subdomain prefixes — used to recover the apex from any service host
 // (e.g. admin.aifa.dev → aifa.dev) in domain/Secure mode.
-const KNOWN_PREFIXES = ["www", "auth", "admin", "data", "hermes", "lightrag", "chat"];
+const KNOWN_PREFIXES = ["www", "auth", "admin", "data", "lightrag"]; // step 500: hermes/chat removed
 
 function compute(): RuntimeUrls {
   if (typeof window === "undefined") return DEFAULTS;
@@ -55,13 +41,6 @@ function compute(): RuntimeUrls {
       adminUrl: `${protocol}//${hostname}:3002`,
       bridgeUrl: `${ws}//${hostname}:3201/bridge/`,
       ptyUrl: `${ws}//${hostname}:3201/bridge/`,
-      claudeUrl: `${ws}//${hostname}:3200/`,
-      codexUrl: `${ws}//${hostname}:3202/`,
-      geminiUrl: `${ws}//${hostname}:3203/`,
-      qwenUrl: `${ws}//${hostname}:3204/`,
-      kimiUrl: `${ws}//${hostname}:3205/`,
-      hermesUrl: `${protocol}//${hostname}:9119`,
-      hermesChatUrl: `${protocol}//${hostname}:9120`,
       brainUrl: `${protocol}//${hostname}:9621`,
     };
   }
@@ -80,13 +59,6 @@ function compute(): RuntimeUrls {
     adminUrl: `${protocol}//${admin}`,
     bridgeUrl: `${ws}//${admin}/ws/pty/bridge/`,
     ptyUrl: `${ws}//${admin}/ws/pty/bridge/`,
-    claudeUrl: `${ws}//${admin}/ws/claude/`,
-    codexUrl: `${ws}//${admin}/ws/codex/`,
-    geminiUrl: `${ws}//${admin}/ws/gemini/`,
-    qwenUrl: `${ws}//${admin}/ws/qwen/`,
-    kimiUrl: `${ws}//${admin}/ws/kimi/`,
-    hermesUrl: `${protocol}//hermes.${apex}`,
-    hermesChatUrl: `${protocol}//chat.${apex}`,
     brainUrl: `${protocol}//lightrag.${apex}`,
   };
 }

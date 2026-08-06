@@ -17,7 +17,6 @@ import { PasteTextModal } from "./paste-text-modal.client";
 import { UsersPanel } from "./users-panel.client";
 import { DomainPanel } from "./domain-panel.client";
 import { LightRagPanel } from "./lightrag-panel.client";
-import { HermesPanel } from "./hermes-panel.client";
 import { LoginMethodsPanel } from "./login-methods-panel.client";
 import { OpenAiPanel } from "./openai-panel.client";
 import { DeploymentsPanel } from "./deployments-panel.client";
@@ -27,7 +26,7 @@ import { EmbedCanvas } from "./embed-canvas.client";
 import { IdleCanvas } from "./idle-canvas.client";
 import type { ComponentType } from "react";
 
-export type SettingsPanelId = "hermes" | "lightrag" | "openai";
+export type SettingsPanelId = "lightrag" | "openai"; // step 500: hermes removed
 
 const CAROUSEL_H = 52;
 const FOOTER_H   = 36;
@@ -102,7 +101,7 @@ type Props = {
   isAuthenticated?: boolean;
   isPreviewOpen?: boolean;
   onPreviewClose?: () => void;
-  // Every mounted embed session (Brain / Memory / Hermes dashboard). The shell
+  // Every mounted embed session (Memory). The shell
   // renders one EmbedCanvas per entry and toggles visibility via `activeEmbedId`
   // so switching cards never unmounts an iframe and loses the chat. (step 96)
   embeds?: { id: EmbedTarget; url: string; title: string; Icon: ComponentType<{ size?: number; className?: string }> }[];
@@ -111,9 +110,6 @@ type Props = {
   // Explicit animated "End session" on an embed card — the only path that tears
   // down a chat iframe (switching cards never does). (step 96)
   onEmbedClose?: (id: EmbedTarget) => void;
-  // Open the native Hermes agent dashboard (:9119) in the embed canvas — wired
-  // to the "Hermes Agent" item in the Settings menu.
-  onOpenHermesDashboard?: () => void;
   secure?: boolean;
   // True only when the project is explicitly in insecure (IP) mode. Hides the
   // built-in Hermes Web UI (Brain) carousel card — step 100 (chat via Telegram).
@@ -123,7 +119,7 @@ type Props = {
   requestedSettingsPanel?: { id: SettingsPanelId; nonce: number } | null;
 };
 
-export function CodingWindowShell({ height, terminalPlatform, terminalSessions, onPlatformClick, onTerminalClose, windowWidth, isMobile = false, isAuthenticated = true, isPreviewOpen = false, onPreviewClose, embeds = [], activeEmbedId = null, onEmbedCardClick, onEmbedClose, onOpenHermesDashboard, secure = false, insecure = false, requestedSettingsPanel = null }: Props) {
+export function CodingWindowShell({ height, terminalPlatform, terminalSessions, onPlatformClick, onTerminalClose, windowWidth, isMobile = false, isAuthenticated = true, isPreviewOpen = false, onPreviewClose, embeds = [], activeEmbedId = null, onEmbedCardClick, onEmbedClose, secure = false, insecure = false, requestedSettingsPanel = null }: Props) {
   const urls = useMemo(() => getRuntimeUrls(), []);
   const [terminalStatuses] = useState<Record<Platform, TerminalStatus>>({
     "claude-code": "unavailable", "codex": "unavailable", "gemini-cli": "unavailable",
@@ -184,7 +180,6 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   const [showPlatform, setShowPlatform]             = useState(false);
   const [showDomainPanel, setShowDomainPanel]       = useState(false);
   const [showLightRag, setShowLightRag]             = useState(false);
-  const [showHermesPanel, setShowHermesPanel]       = useState(false);
   const [showOpenAiPanel, setShowOpenAiPanel]       = useState(false);
   const [showAuthMethods, setShowAuthMethods]       = useState(false);
   // Security tab is hidden from the UI until cert provisioning for all 6
@@ -198,10 +193,10 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   useEffect(() => {
     if (!requestedSettingsPanel) return;
     const id = requestedSettingsPanel.id;
-    setShowHermesPanel(false);
+    
     setShowLightRag(false);
     setShowOpenAiPanel(false);
-    if (id === "hermes") setShowHermesPanel(true);
+    
     else if (id === "openai") setShowOpenAiPanel(true);
     else setShowLightRag(true);
     setShowEnvEditor(false);
@@ -220,12 +215,12 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   // it whenever any other panel opens — keeps the drawers mutually exclusive.
   useEffect(() => {
     if (showInfo || showDbBrowser || showUsers || showMediaLibrary || showHelp || showDomainPanel ||
-        showHermesPanel || showLightRag || showOpenAiPanel || showEnvEditor || showDeployments ||
+        showLightRag || showOpenAiPanel || showEnvEditor || showDeployments ||
         showSiteSettings || showPlatform) {
       setShowAuthMethods(false);
     }
   }, [showInfo, showDbBrowser, showUsers, showMediaLibrary, showHelp, showDomainPanel,
-      showHermesPanel, showLightRag, showOpenAiPanel, showEnvEditor, showDeployments,
+showLightRag, showOpenAiPanel, showEnvEditor, showDeployments,
       showSiteSettings, showPlatform]);
   const [activeAuth, setActiveAuth]                 = useState<{ descriptor: AuthFlowDescriptor; url: string; code?: string } | null>(null);
   const [pasteModalOpen, setPasteModalOpen]         = useState(false);
@@ -438,12 +433,6 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
       .catch(() => {});
     // installed===null = unknown manifest → still probe (back-compat).
     const has = (id: string) => installed === null || installed.includes(id);
-    if (has("brain")) {
-      fetch("/api/config/hermes")
-        .then((r) => (r.ok ? r.json() : null))
-        .then((d) => { if (d) setEmbedConfigured((c) => ({ ...c, brain: d.configured === true })); })
-        .catch(() => {});
-    }
     if (has("memory")) {
       fetch("/api/config/rag")
         .then((r) => (r.ok ? r.json() : null))
@@ -655,8 +644,8 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
   // The system terminal (S6) is NOT in this filter — it is always present.
   const isInstalled = (id: string) => installed === null || installed.includes(id);
   const visiblePlatforms  = PLATFORMS.filter((p) => isInstalled(p.id));
-  // Insecure (IP) mode hides the Brain card (built-in Hermes Web UI) — step 100.
-  const visibleEmbedCards = EMBED_CARDS.filter((c) => isInstalled(c.id) && !(insecure && c.id === "brain"));
+  // (step 500) Hermes and its Brain card are gone; only Memory remains.
+  const visibleEmbedCards = EMBED_CARDS.filter((c) => isInstalled(c.id));
 
   const termH   = height - CAROUSEL_H - FOOTER_H;
   const total   = visiblePlatforms.length + 1; // +1 for the always-present Terminal card
@@ -733,34 +722,20 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Database size={11} />Database
               </button>
-              {/* Hermes Agent — opens the native :9119 dashboard in the embed
-                  canvas (providers / keys / OAuth). Brain card = the friendly chat. */}
-              {isInstalled("brain") && (
-                <button type="button" onClick={() => { setDataMenuOpen(false); onOpenHermesDashboard?.(); setSysTermActive(false); setShowHermesPanel(false); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                  <Bot size={11} />Hermes Agent
-                </button>
-              )}
-              {isInstalled("brain") && (
-                <button type="button" onClick={() => { setDataMenuOpen(false); setShowOpenAiPanel((v) => !v); setShowHermesPanel(false); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
+              {isInstalled("memory") && (
+                <button type="button" onClick={() => { setDataMenuOpen(false); setShowOpenAiPanel((v) => !v); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                   <KeyRound size={11} />OpenAI settings
                 </button>
               )}
-              {isInstalled("brain") && (
-                <button type="button" onClick={() => { setDataMenuOpen(false); setShowHermesPanel((v) => !v); setShowOpenAiPanel(false); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                  <Send size={11} />Telegram settings
-                </button>
-              )}
               {isInstalled("memory") && (
-                <button type="button" onClick={() => { setDataMenuOpen(false); setShowLightRag((v) => !v); setShowHermesPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
+                <button type="button" onClick={() => { setDataMenuOpen(false); setShowLightRag((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                   <BrainCircuit size={11} />Company Memory settings
                 </button>
               )}
               <div className="h-px bg-border mx-2" />
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDomainPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowHermesPanel(false); setShowLightRag(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDomainPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowLightRag(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] transition-colors hover:bg-muted">
                 {secure
                   ? <Globe size={11} className="text-foreground" />
@@ -772,7 +747,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                   sign-in methods need a domain + HTTPS, so the entry is hidden
                   entirely in IP/insecure mode. */}
               {secure && (
-                <button type="button" onClick={() => { setDataMenuOpen(false); setShowAuthMethods((v) => !v); setShowDomainPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowHermesPanel(false); setShowLightRag(false); setShowOpenAiPanel(false); setShowDeployments(false); setShowSiteSettings(false); setShowPlatform(false); }}
+                <button type="button" onClick={() => { setDataMenuOpen(false); setShowAuthMethods((v) => !v); setShowDomainPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowLightRag(false); setShowOpenAiPanel(false); setShowDeployments(false); setShowSiteSettings(false); setShowPlatform(false); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                   <KeyRound size={11} />Login methods
                 </button>
@@ -788,19 +763,19 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
               </button>
               {/* Bottom section: App Settings + Platform + Env Variables + Deployments grouped together… */}
               <div className="h-px bg-border mx-2" />
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowSiteSettings((v) => !v); setShowPlatform(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowHermesPanel(false); setShowLightRag(false); setShowOpenAiPanel(false); setShowDeployments(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowSiteSettings((v) => !v); setShowPlatform(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowLightRag(false); setShowOpenAiPanel(false); setShowDeployments(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Palette size={11} />App Settings
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowPlatform((v) => !v); setShowSiteSettings(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowHermesPanel(false); setShowLightRag(false); setShowOpenAiPanel(false); setShowDeployments(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowPlatform((v) => !v); setShowSiteSettings(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowLightRag(false); setShowOpenAiPanel(false); setShowDeployments(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <LayoutGrid size={11} />Platform
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowHermesPanel(false); setShowLightRag(false); setShowDeployments(false); setShowSiteSettings(false); setShowPlatform(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowLightRag(false); setShowDeployments(false); setShowSiteSettings(false); setShowPlatform(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Settings size={11} />Env Variables
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDeployments((v) => !v); setShowHelp(false); setShowInfo(false); setShowEnvEditor(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowDomainPanel(false); setShowHermesPanel(false); setShowLightRag(false); setShowOpenAiPanel(false); setShowSiteSettings(false); setShowPlatform(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDeployments((v) => !v); setShowHelp(false); setShowInfo(false); setShowEnvEditor(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowDomainPanel(false); setShowLightRag(false); setShowOpenAiPanel(false); setShowSiteSettings(false); setShowPlatform(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Rocket size={11} />Deployments
               </button>
@@ -990,7 +965,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
                     setShowEnvEditor(false); setShowMediaLibrary(false); setShowDbBrowser(false);
                     setShowUsers(false); setShowInfo(false); setShowHelp(false);
                     setShowGitConnect(false); setShowDomainPanel(false);
-                    setShowHermesPanel(false); setShowLightRag(false);
+                    setShowLightRag(false);
                     cancelEmbedConfirm();
                     setSysTermStarted(true);
                     setSysTermActive(true);
@@ -1106,20 +1081,6 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
         </div>
       )}
 
-      {showHermesPanel && (
-        <div
-          style={{
-            position: "absolute",
-            top: CAROUSEL_H,
-            right: 0,
-            bottom: FOOTER_H,
-            width: "min(480px, 90vw)",
-            zIndex: 20,
-          }}
-        >
-          <HermesPanel onClose={() => setShowHermesPanel(false)} />
-        </div>
-      )}
 
       {showAuthMethods && (
         <div
@@ -1305,7 +1266,7 @@ export function CodingWindowShell({ height, terminalPlatform, terminalSessions, 
         <IdleCanvas />
       </div>
 
-      {/* ── Embed canvases (Company Brain / Company Memory / Hermes dashboard) ──
+      {/* ── Embed canvases (Company Memory) ──
             One iframe per opened session, kept mounted once created; visibility
             toggles via `display` so switching cards (or to a terminal) never
             tears the iframe down and loses the chat. Only the animated

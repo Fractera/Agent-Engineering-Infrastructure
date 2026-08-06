@@ -1,19 +1,13 @@
-export type Platform =
-  | 'claude-code'
-  | 'codex'
-  | 'gemini-cli'
-  | 'qwen-code'
-  | 'kimi-code';
+// Step 500 — the five coding agents (Claude Code, Codex, Gemini CLI, Qwen Code,
+// Kimi Code) were removed from the product. The `Platform` type is kept as an
+// empty union so the terminal machinery below still type-checks, but no agent
+// card is ever rendered and no agent terminal can be opened. The always-on
+// system terminal (a plain project shell, CORE) is unaffected.
+export type Platform = never;
 
 export type TerminalStatus = 'unavailable' | 'connecting' | 'connected' | 'disconnected' | 'unauthorized';
 
-export const PLATFORMS: { id: Platform; label: string; active: boolean; docsUrl: string; agentPrompt: string }[] = [
-  { id: 'claude-code', label: 'Claude Code', active: true,  docsUrl: 'https://code.claude.com/docs/en/quickstart', agentPrompt: '' },
-  { id: 'codex',       label: 'Codex',       active: true,  docsUrl: 'https://developers.openai.com/codex/cli', agentPrompt: 'Install Codex CLI: read the documentation in ../docs/platforms/codex/ (start with AGENTS.md), then follow the install instructions exactly as written there. After successful install, verify with `codex --version` and set active: true for codex in app/@codeWorkspaceSlot/_components/coding-workspace/platforms.ts' },
-  { id: 'gemini-cli',  label: 'Gemini CLI',  active: true,  docsUrl: 'https://geminicli.com/docs/get-started/installation/', agentPrompt: '' },
-  { id: 'qwen-code',   label: 'Qwen Code',   active: true,  docsUrl: 'https://qwen.ai/qwencode', agentPrompt: '' },
-  { id: 'kimi-code',   label: 'Kimi Code',   active: true,  docsUrl: 'https://moonshotai.github.io/kimi-cli/en/guides/getting-started.html', agentPrompt: '' },
-];
+export const PLATFORMS: { id: Platform; label: string; active: boolean; docsUrl: string; agentPrompt: string }[] = [];
 
 export const COMING_SOON: { id: string; label: string; version: string; tooltip: string }[] = [];
 
@@ -22,12 +16,11 @@ export const COMING_SOON: { id: string; label: string; version: string; tooltip:
 // but instead of starting a terminal session they activate an iframe
 // canvas (Hermes / LightRAG). Selecting one with no config triggers
 // the onboarding flow (opens the matching Settings panel).
-export type EmbedCardId = 'brain' | 'memory';
+// Step 500 — the 'brain' card (Hermes chat) and the 'hermes-dashboard' target
+// are gone together with Hermes. Only Memory (LightRAG) remains.
+export type EmbedCardId = 'memory';
 
-// What the embed canvas can show. Carousel cards use EmbedCardId; the Hermes
-// agent dashboard (:9119) is opened from the Settings menu ("Hermes Agent"),
-// not from a carousel card, so it gets its own target id.
-export type EmbedTarget = EmbedCardId | 'hermes-dashboard';
+export type EmbedTarget = EmbedCardId;
 
 export type EmbedCard = {
   id: EmbedCardId;
@@ -36,10 +29,9 @@ export type EmbedCard = {
   // Endpoint that returns { configured: boolean, ... } — we only need the flag.
   configCheckEndpoint: string;
   // Footer panel ID to surface when the user clicks the card and config is missing.
-  settingsPanelId: 'hermes' | 'lightrag';
+  settingsPanelId: 'lightrag';
 };
 
 export const EMBED_CARDS: EmbedCard[] = [
-  { id: 'brain',  label: 'Brain',  iconKey: 'Brain',        configCheckEndpoint: '/api/config/hermes', settingsPanelId: 'hermes'   },
   { id: 'memory', label: 'Memory', iconKey: 'BrainCircuit', configCheckEndpoint: '/api/config/rag',    settingsPanelId: 'lightrag' },
 ];

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { ComponentType } from "react";
-import { Brain, BrainCircuit, Bot, CircleUserRound, Globe, AlertTriangle } from "lucide-react";
+import { BrainCircuit, CircleUserRound, Globe, AlertTriangle } from "lucide-react";
 import { CodingWindowShell, type SettingsPanelId } from "./coding-workspace/coding-window-shell.client";
 import { AuthLoginModal } from "./auth-login-modal.client";
 import { SitePreviewWindow } from "./site-preview-window.client";
@@ -27,7 +27,7 @@ export function WorkspaceController() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [shellHeight, setShellHeight]   = useState(0);
   const [windowWidth, setWindowWidth]   = useState(0);
-  const [terminalPlatform, setTerminalPlatform] = useState<Platform>("claude-code");
+  const [terminalPlatform, setTerminalPlatform] = useState<Platform | null>(null); // step 500: no coding agents
   const [terminalSessions, setTerminalSessions] = useState<Set<Platform>>(new Set());
   const [siteOpen, setSiteOpen]                 = useState(false);
   const [activeEmbed, setActiveEmbed]           = useState<EmbedTarget | null>(null);
@@ -95,22 +95,7 @@ export function WorkspaceController() {
   // alongside the iframe so the user can paste a key without losing context.
   const handleEmbedCardClick = useCallback(async (card: EmbedCard) => {
     openEmbed(card.id);
-    // Brain card is the built-in chat (Hermes Web UI). The chat can't answer
-    // without an OpenAI key in the agent's credential pool, so if none is set
-    // yet we surface the OpenAI key drawer alongside the chat — the user sees
-    // exactly where to paste it. Once a key exists we leave the chat alone.
-    if (card.id === "brain") {
-      try {
-        const res = await fetch("/api/config/hermes", { credentials: "include" });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.configured !== true) {
-            setPanelRequest({ id: "openai", nonce: Date.now() });
-          }
-        }
-      } catch { /* show the chat regardless */ }
-      return;
-    }
+    // (step 500) The Brain card (Hermes chat) is gone — only Memory remains.
     try {
       const res = await fetch(card.configCheckEndpoint, { credentials: "include" });
       if (res.ok) {
@@ -123,13 +108,6 @@ export function WorkspaceController() {
       // If the config check itself failed, still show the embed; settings
       // can be opened manually from the Data menu.
     }
-  }, [openEmbed]);
-
-  // "Hermes Agent" (Settings menu) opens the native Hermes agent dashboard
-  // (:9119) in the main embed canvas — the technical panel where providers /
-  // keys / OAuth are configured. Brain card stays the friendly chat (:9120).
-  const handleOpenHermesDashboard = useCallback(() => {
-    openEmbed("hermes-dashboard");
   }, [openEmbed]);
 
   const isMobile = windowWidth > 0 && windowWidth < 768;
@@ -148,31 +126,9 @@ export function WorkspaceController() {
 
   useEffect(() => { fetchSession(); }, [fetchSession]);
 
-  // Open the Brain chat by default on first load — SECURE MODE ONLY. We wait
-  // until the session AND the mode are resolved (so we neither flash it to
-  // logged-out visitors nor open it before we know the mode), then only auto-open
-  // when Brain is installed. In insecure (IP) mode the built-in Hermes Web UI is
-  // hidden (step 100) — chat is reachable via Telegram instead. installed
-  // manifest: null / fetch failure = unknown → still default to the chat
-  // (back-compat). Never override a card the user clicked.
-  useEffect(() => {
-    if (autoOpenedRef.current) return;
-    if (loading || !session) return;
-    if (secure === null) return; // wait until the mode is known
-    autoOpenedRef.current = true;
-    if (secure !== true) return; // insecure: no built-in chat (step 100)
-    fetch("/api/config/components")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        const comps = data && Array.isArray(data.components) ? data.components : null;
-        const brainInstalled = comps === null || comps.includes("brain");
-        if (brainInstalled) {
-          setEmbedSessions((s) => (s.has("brain") ? s : new Set(s).add("brain")));
-          setActiveEmbed((prev) => prev ?? "brain");
-        }
-      })
-      .catch(() => {});
-  }, [loading, session, secure]);
+  // (step 500) The "auto-open the Brain chat on first load" effect is gone with
+  // Hermes. The workspace now opens on the idle canvas; Memory is opened by the
+  // user from the carousel.
 
   useEffect(() => {
     function updateSize() {
@@ -225,9 +181,7 @@ export function WorkspaceController() {
 
   type EmbedSpec = { id: EmbedTarget; url: string; title: string; Icon: ComponentType<{ size?: number; className?: string }> };
   const embedSpecFor = (id: EmbedTarget): EmbedSpec =>
-    id === "brain"  ? { id, url: urls.hermesChatUrl, title: "Brain Chat",  Icon: Brain } :
-    id === "memory" ? { id, url: urls.brainUrl,  title: "Company Memory", Icon: BrainCircuit } :
-                      { id, url: urls.hermesUrl, title: "Hermes Agent", Icon: Bot };
+    ({ id, url: urls.brainUrl, title: "Company Memory", Icon: BrainCircuit });
   // One spec per mounted session — the shell renders them all and toggles
   // visibility, so an inactive chat stays alive in the background. (step 96)
   const embedSpecs: EmbedSpec[] = [...embedSessions].map(embedSpecFor);
@@ -330,7 +284,6 @@ export function WorkspaceController() {
           activeEmbedId={activeEmbed}
           onEmbedCardClick={handleEmbedCardClick}
           onEmbedClose={handleEmbedClose}
-          onOpenHermesDashboard={handleOpenHermesDashboard}
           secure={secure === true}
           insecure={secure === false}
           requestedSettingsPanel={panelRequest}
