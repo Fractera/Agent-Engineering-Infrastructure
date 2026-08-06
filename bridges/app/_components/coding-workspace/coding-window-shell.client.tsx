@@ -498,26 +498,6 @@ showOpenAiPanel, showEnvEditor, showDeployments,
           <input ref={fileInputRef} type="file" accept=".zip" className="hidden" onChange={handleImport} />
         </div>
 
-        {/* Paste button — right of Settings (hidden in Light) */}
-        {(
-          <TooltipProvider delayDuration={0}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={() => isAuthenticated && setPasteModalOpen(true)}
-                  className={`shrink-0 flex items-center justify-center gap-1.5 rounded-md border border-border h-9 text-[11px] text-muted-foreground select-none px-2 transition-colors${isAuthenticated ? " hover:text-foreground hover:bg-muted" : " opacity-40 cursor-not-allowed"}`}
-                >
-                  <ClipboardPaste size={12} />
-                  {!isMobile && <span className="font-medium">Paste</span>}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-[11px]" style={{ zIndex: 99999 }}>
-                Paste text to active terminal (Ctrl+Shift+V)
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
 
         {(
           <button type="button" aria-label="Previous" onClick={() => setCarouselIdx(safeIdx - 1)} disabled={!canPrev}
