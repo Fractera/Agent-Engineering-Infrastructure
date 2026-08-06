@@ -15,7 +15,6 @@ import { DomainPanel } from "./domain-panel.client";
 import { LoginMethodsPanel } from "./login-methods-panel.client";
 import { OpenAiPanel } from "./openai-panel.client";
 import { VectorPanel } from "./vector-panel.client";
-import { DeploymentsPanel } from "./deployments-panel.client";
 import { SiteSettingsPanel } from "./site-settings-panel.client";
 import { PlatformSettingsPanel } from "./platform-settings-panel.client";
 import { IdleCanvas } from "./idle-canvas.client";
@@ -102,7 +101,6 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   const [showMediaLibrary, setShowMediaLibrary]     = useState(false);
   const [showDbBrowser, setShowDbBrowser]           = useState(false);
   const [showUsers, setShowUsers]                   = useState(false);
-  const [showDeployments, setShowDeployments]       = useState(false);
   const [showSiteSettings, setShowSiteSettings]     = useState(false);
   const [showPlatform, setShowPlatform]             = useState(false);
   const [showDomainPanel, setShowDomainPanel]       = useState(false);
@@ -132,7 +130,7 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
     setShowInfo(false);
     setShowHelp(false);
     setShowDomainPanel(false);
-    setShowDeployments(false);
+
     setShowSiteSettings(false);
     setShowPlatform(false);
   }, [requestedSettingsPanel]);
@@ -141,12 +139,12 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   // it whenever any other panel opens — keeps the drawers mutually exclusive.
   useEffect(() => {
     if (showInfo || showDbBrowser || showUsers || showMediaLibrary || showHelp || showDomainPanel ||
-        showOpenAiPanel || showEnvEditor || showDeployments ||
+        showOpenAiPanel || showEnvEditor ||
         showSiteSettings || showPlatform) {
       setShowAuthMethods(false);
     }
   }, [showInfo, showDbBrowser, showUsers, showMediaLibrary, showHelp, showDomainPanel,
-showOpenAiPanel, showEnvEditor, showDeployments,
+showOpenAiPanel, showEnvEditor,
       showSiteSettings, showPlatform]);
   const fileInputRef    = useRef<HTMLInputElement>(null);
   const deployLogRef    = useRef<HTMLDivElement>(null);
@@ -425,7 +423,7 @@ showOpenAiPanel, showEnvEditor, showDeployments,
                   sign-in methods need a domain + HTTPS, so the entry is hidden
                   entirely in IP/insecure mode. */}
               {secure && (
-                <button type="button" onClick={() => { setDataMenuOpen(false); setShowAuthMethods((v) => !v); setShowDomainPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowOpenAiPanel(false); setShowDeployments(false); setShowSiteSettings(false); setShowPlatform(false); }}
+                <button type="button" onClick={() => { setDataMenuOpen(false); setShowAuthMethods((v) => !v); setShowDomainPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowOpenAiPanel(false); setShowSiteSettings(false); setShowPlatform(false); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                   <KeyRound size={11} />Login methods
                 </button>
@@ -439,23 +437,19 @@ showOpenAiPanel, showEnvEditor, showDeployments,
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Upload size={11} />Import data
               </button>
-              {/* Bottom section: App Settings + Platform + Env Variables + Deployments grouped together… */}
+              {/* Bottom section: App Settings + Platform + Env Variables. */}
               <div className="h-px bg-border mx-2" />
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowSiteSettings((v) => !v); setShowPlatform(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); setShowDeployments(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowSiteSettings((v) => !v); setShowPlatform(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Palette size={11} />App Settings
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowPlatform((v) => !v); setShowSiteSettings(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); setShowDeployments(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowPlatform((v) => !v); setShowSiteSettings(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <LayoutGrid size={11} />Platform
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowDeployments(false); setShowSiteSettings(false); setShowPlatform(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowSiteSettings(false); setShowPlatform(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Settings size={11} />Env Variables
-              </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDeployments((v) => !v); setShowHelp(false); setShowInfo(false); setShowEnvEditor(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowDomainPanel(false); setShowOpenAiPanel(false); setShowSiteSettings(false); setShowPlatform(false); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                <Rocket size={11} />Deployments
               </button>
               {/* …and Help below it as the very last item — opens only a tooltip, no panel. */}
               <div className="h-px bg-border mx-2" />
@@ -483,12 +477,6 @@ showOpenAiPanel, showEnvEditor, showDeployments,
         </div>
       )}
 
-      {/* ── Deployments panel (Product Loop) — wide drawer for the Vercel-style table ── */}
-      {showDeployments && (
-        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, bottom: FOOTER_H, width: "min(1100px, 96vw)", zIndex: 20 }}>
-          <DeploymentsPanel onClose={() => setShowDeployments(false)} />
-        </div>
-      )}
 
       {/* ── Site Settings panel (branding / SEO / PWA / images) ── */}
       {showSiteSettings && <SiteSettingsPanel onClose={() => setShowSiteSettings(false)} />}
