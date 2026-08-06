@@ -655,10 +655,14 @@ export function MediaLibraryPanel({ onClose }: Props) {
 
       {/* Footer — one button per kind of object. They are separate on purpose: each
           kind has its own path (an image goes through the cropper, a video through the
-          trimmer, a PDF and Markdown straight to storage), and a single "Upload" button
-          could not tell the owner which of the four they are about to get.
-          On narrow screens the VERB is dropped and only the noun stays — four buttons
-          reading "Upload …" do not fit a phone, four nouns do. */}
+          trimmer, a PDF / Markdown / HTML straight to storage), and a single "Upload"
+          button could not tell the owner which of the five they are about to get.
+          THREE WIDTHS, dropping one layer of meaning at a time — never the icon:
+            phone   (< 640px)   icon only        — five nouns do not fit either
+            tablet  (640–1023)  icon + noun      — "Upload …" five times does not fit
+            desktop (≥ 1024)    icon + verb+noun
+          The dropped words survive as `title`, so an icon-only button still says what
+          it is on hover and to a screen reader. */}
       <div className="px-4 py-2.5 border-t border-border flex flex-wrap items-center gap-2 shrink-0">
         <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handlePick(e, "image")} />
         <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={(e) => handlePick(e, "video")} />
@@ -666,22 +670,27 @@ export function MediaLibraryPanel({ onClose }: Props) {
         <input ref={mdInputRef} type="file" accept=".md,.markdown,text/markdown" className="hidden" onChange={(e) => handlePick(e, "markdown")} />
         <input ref={htmlInputRef} type="file" accept=".html,.htm,text/html" className="hidden" onChange={(e) => handlePick(e, "html")} />
 
-        <Button onClick={() => imageInputRef.current?.click()} disabled={uploading}>
-          {uploading
-            ? <><Loader2 size={11} className="animate-spin" />Uploading…</>
-            : <><ImagePlus size={11} /><span className="hidden sm:inline">Upload&nbsp;</span>Image</>}
+        <Button onClick={() => imageInputRef.current?.click()} disabled={uploading} title="Upload image" aria-label="Upload image">
+          {uploading ? <Loader2 size={11} className="animate-spin" /> : <ImagePlus size={11} />}
+          <span className="hidden sm:inline">
+            <span className="hidden lg:inline">Upload&nbsp;</span>{uploading ? "Uploading…" : "Image"}
+          </span>
         </Button>
-        <Button variant="outline" onClick={() => videoInputRef.current?.click()} disabled={uploading}>
-          <Clapperboard size={11} /><span className="hidden sm:inline">Upload&nbsp;</span>Video
+        <Button variant="outline" onClick={() => videoInputRef.current?.click()} disabled={uploading} title="Upload video" aria-label="Upload video">
+          <Clapperboard size={11} />
+          <span className="hidden sm:inline"><span className="hidden lg:inline">Upload&nbsp;</span>Video</span>
         </Button>
-        <Button variant="outline" onClick={() => pdfInputRef.current?.click()} disabled={uploading}>
-          <FileText size={11} /><span className="hidden sm:inline">Upload&nbsp;</span>PDF
+        <Button variant="outline" onClick={() => pdfInputRef.current?.click()} disabled={uploading} title="Upload PDF" aria-label="Upload PDF">
+          <FileText size={11} />
+          <span className="hidden sm:inline"><span className="hidden lg:inline">Upload&nbsp;</span>PDF</span>
         </Button>
-        <Button variant="outline" onClick={() => mdInputRef.current?.click()} disabled={uploading}>
-          <FileType2 size={11} /><span className="hidden sm:inline">Upload&nbsp;</span>Markdown
+        <Button variant="outline" onClick={() => mdInputRef.current?.click()} disabled={uploading} title="Upload Markdown" aria-label="Upload Markdown">
+          <FileType2 size={11} />
+          <span className="hidden sm:inline"><span className="hidden lg:inline">Upload&nbsp;</span>Markdown</span>
         </Button>
-        <Button variant="outline" onClick={() => htmlInputRef.current?.click()} disabled={uploading}>
-          <Code2 size={11} /><span className="hidden sm:inline">Upload&nbsp;</span>HTML
+        <Button variant="outline" onClick={() => htmlInputRef.current?.click()} disabled={uploading} title="Upload HTML" aria-label="Upload HTML">
+          <Code2 size={11} />
+          <span className="hidden sm:inline"><span className="hidden lg:inline">Upload&nbsp;</span>HTML</span>
         </Button>
       </div>
     </div>
