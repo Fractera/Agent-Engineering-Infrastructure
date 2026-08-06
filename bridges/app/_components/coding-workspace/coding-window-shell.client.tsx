@@ -471,8 +471,12 @@ showOpenAiPanel, showEnvEditor,
       {/* Light preview canvas removed — Light product retired */}
 
       {/* ── Users panel ── */}
+      {/* REFERENCE LAYOUT for every page opened from the menu drawer (step 500):
+          pinned to the top of the workspace and to the footer, spanning the full
+          width. Height comes from the two anchors, never from a fixed number, so
+          the page cannot overflow the footer or leave a gap under the header. */}
       {showUsers && (
-        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, bottom: FOOTER_H, width: 480, zIndex: 10 }}>
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 10 }}>
           <UsersPanel onClose={() => setShowUsers(false)} />
         </div>
       )}
