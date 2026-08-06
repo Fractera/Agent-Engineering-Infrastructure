@@ -56,9 +56,13 @@ type Props = {
   // Parent (workspace-controller) can request a specific settings panel to open
   // — used when clicking an unconfigured embed card to kick off onboarding.
   requestedSettingsPanel?: { id: SettingsPanelId; nonce: number } | null;
+  // (step 500) The Menu button lives in the HEADER, so the drawer state is owned there
+  // and handed down. The shell only renders the drawer.
+  menuOpen?: boolean;
+  onMenuOpenChange?: (open: boolean) => void;
 };
 
-export function CodingWindowShell({ height, windowWidth, isMobile = false, isAuthenticated = true, isPreviewOpen = false, onPreviewClose, secure = false, insecure = false, requestedSettingsPanel = null }: Props) {
+export function CodingWindowShell({ height, windowWidth, isMobile = false, isAuthenticated = true, isPreviewOpen = false, onPreviewClose, secure = false, insecure = false, requestedSettingsPanel = null, menuOpen = false, onMenuOpenChange }: Props) {
   const urls = useMemo(() => getRuntimeUrls(), []);
   const [carouselIdx, setCarouselIdx]       = useState(0);
   // Selective install (S5): which components this server actually installed.
@@ -71,7 +75,9 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   // System terminal (S6): a plain project-level shell, always available as the
   // last carousel card. Started once, then kept mounted; `active` toggles its
   // visibility over the agent terminals / idle canvas.
-  const [dataMenuOpen, setDataMenuOpen]             = useState(false);
+  const dataMenuOpen = menuOpen;
+  const setDataMenuOpen = (v: boolean | ((p: boolean) => boolean)) =>
+    onMenuOpenChange?.(typeof v === "function" ? v(menuOpen) : v);
   const [importing, setImporting]                   = useState(false);
   const [updateAvailable, setUpdateAvailable]       = useState(false);
   const [updateCount, setUpdateCount]               = useState(0);
@@ -361,35 +367,22 @@ showOpenAiPanel, showEnvEditor, showDeployments,
         @keyframes countdown-color { 0% { background-color: rgb(34 197 94); } 60% { background-color: rgb(251 146 60); } 100% { background-color: rgb(239 68 68); } }
       `}</style>
 
-      {/* ── Hamburger (top-right) — the single entry to everything the old
-            carousel strip used to hold. The strip itself (Bridge indicator,
-            Settings button, Terminal card) was removed in step 500. ── */}
-      <button
-        type="button"
-        aria-label="Menu"
-        onClick={() => isAuthenticated && setDataMenuOpen((v) => !v)}
-        disabled={!isAuthenticated}
-        style={{ position: "absolute", top: 8, right: 12, zIndex: 60 }}
-        className="flex items-center justify-center h-9 w-9 rounded-md border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-      >
-        {importing ? <Loader2 size={15} className="animate-spin" /> : <Menu size={15} />}
-      </button>
 
       {/* Click-away layer for the drawer */}
       {dataMenuOpen && (
         <div style={{ position: "absolute", inset: 0, zIndex: 55 }} onClick={() => setDataMenuOpen(false)} />
       )}
 
-      {/* ── Settings drawer — slides in from the right ── */}
+      {/* ── Settings drawer — slides in from the LEFT edge, rightwards ── */}
       <div
         id="data-dropdown"
         style={{
-          position: "absolute", top: 0, right: 0, bottom: 0, width: "min(320px, 88vw)", zIndex: 58,
-          transform: dataMenuOpen ? "translateX(0)" : "translateX(100%)",
+          position: "absolute", top: 0, left: 0, bottom: 0, width: "min(320px, 88vw)", zIndex: 58,
+          transform: dataMenuOpen ? "translateX(0)" : "translateX(-100%)",
           transition: "transform 180ms ease-out",
           visibility: dataMenuOpen ? "visible" : "hidden",
         }}
-        className="bg-background border-l border-border shadow-2xl overflow-y-auto py-2"
+        className="bg-background border-r border-border shadow-2xl overflow-y-auto py-2"
       >
         <div className="flex items-center justify-between px-3 pb-2 mb-1 border-b border-border">
           <span className="text-[12px] font-medium text-foreground">Settings</span>
@@ -485,14 +478,14 @@ showOpenAiPanel, showEnvEditor, showDeployments,
 
       {/* ── Users panel ── */}
       {showUsers && (
-        <div style={{ position: "absolute", top: CAROUSEL_H, right: 0, bottom: FOOTER_H, width: 480, zIndex: 10 }}>
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, bottom: FOOTER_H, width: 480, zIndex: 10 }}>
           <UsersPanel onClose={() => setShowUsers(false)} />
         </div>
       )}
 
       {/* ── Deployments panel (Product Loop) — wide drawer for the Vercel-style table ── */}
       {showDeployments && (
-        <div style={{ position: "absolute", top: CAROUSEL_H, right: 0, bottom: FOOTER_H, width: "min(1100px, 96vw)", zIndex: 20 }}>
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, bottom: FOOTER_H, width: "min(1100px, 96vw)", zIndex: 20 }}>
           <DeploymentsPanel onClose={() => setShowDeployments(false)} />
         </div>
       )}
@@ -514,14 +507,14 @@ showOpenAiPanel, showEnvEditor, showDeployments,
 
       {/* ── Vector memory panel ── */}
       {showVectorPanel && (
-        <div style={{ position: "absolute", top: CAROUSEL_H, right: 0, bottom: FOOTER_H, width: "min(480px, 90vw)", zIndex: 20 }}>
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, bottom: FOOTER_H, width: "min(480px, 90vw)", zIndex: 20 }}>
           <VectorPanel onClose={() => setShowVectorPanel(false)} />
         </div>
       )}
 
       {/* ── Domain panel ── */}
       {showDomainPanel && (
-        <div style={{ position: "absolute", top: CAROUSEL_H, right: 0, bottom: FOOTER_H, width: "min(480px, 90vw)", zIndex: 20 }}>
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, bottom: FOOTER_H, width: "min(480px, 90vw)", zIndex: 20 }}>
           <DomainPanel onClose={() => setShowDomainPanel(false)} />
         </div>
       )}

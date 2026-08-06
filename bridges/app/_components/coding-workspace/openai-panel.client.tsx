@@ -89,7 +89,7 @@ export function OpenAiPanel({ onClose }: Props) {
     );
 
   return (
-    <div className="flex flex-col w-full h-full bg-background border-l border-border shadow-xl">
+    <div className="flex flex-col w-full h-full bg-background border-r border-border shadow-xl">
       <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2 text-[12px] font-medium text-foreground">
           <KeyRound size={13} />

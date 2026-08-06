@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { CircleUserRound, Globe, AlertTriangle } from "lucide-react";
+import { CircleUserRound, Globe, AlertTriangle, Menu } from "lucide-react";
 import { CodingWindowShell, type SettingsPanelId } from "./coding-workspace/coding-window-shell.client";
 import { AuthLoginModal } from "./auth-login-modal.client";
 import { SitePreviewWindow } from "./site-preview-window.client";
@@ -35,6 +35,10 @@ export function WorkspaceController() {
   // Bump nonce each time we re-request a panel so children re-trigger their effect
   // even if the requested id stayed the same.
   const [panelRequest, setPanelRequest]         = useState<{ id: SettingsPanelId; nonce: number } | null>(null);
+  // Settings drawer open state — owned by the header (the Menu button lives there),
+  // rendered by the shell. Lifting it here is what puts the button IN the header row
+  // instead of floating over the workspace.
+  const [menuOpen, setMenuOpen]                 = useState(false);
 
   // Read secure mode on mount + poll every 60s so the indicator clears on its
   // own a few seconds after the user activates Secure mode in the wizard.
@@ -179,6 +183,20 @@ export function WorkspaceController() {
               <span className="hidden sm:inline">Sign in</span>
             </Button>
           )}
+          {/* Menu — the last control of the header row, a sibling of Preview and the
+              account button. It opens the settings drawer that lives in the shell;
+              the open state is owned here so the button and the drawer stay in sync. */}
+          <Button
+            variant="outline"
+            size="default"
+            aria-label="Menu"
+            className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
+            disabled={!isAuthenticated}
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            <Menu className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Menu</span>
+          </Button>
         </div>
       </header>
 
@@ -194,6 +212,8 @@ export function WorkspaceController() {
           secure={secure === true}
           insecure={secure === false}
           requestedSettingsPanel={panelRequest}
+          menuOpen={menuOpen}
+          onMenuOpenChange={setMenuOpen}
         />
       )}
 
