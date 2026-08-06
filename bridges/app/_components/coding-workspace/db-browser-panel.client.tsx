@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Pencil, Trash2, X, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Loader2, Pencil, Trash2, X, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ALL_ROLES } from "@/lib/roles";
@@ -239,15 +239,15 @@ export function DbBrowserPanel({ onClose }: Props) {
 
           <div
             style={{ width: sidebarCollapsed ? 40 : SIDEBAR_W, minWidth: sidebarCollapsed ? 40 : SIDEBAR_W, transition: "width 0.2s ease, min-width 0.2s ease" }}
-            className="border-r border-border flex flex-col overflow-y-auto shrink-0 sticky left-0 bg-background z-10 relative">
+            className="order-2 border-l border-border flex flex-col overflow-y-auto shrink-0 sticky right-0 bg-background z-10 relative">
             <Button
               variant="ghost"
               size="icon-xs"
               onClick={() => setSidebarCollapsed((v) => !v)}
-              className="absolute top-1.5 right-1.5 z-10"
+              className="absolute top-1.5 left-1.5 z-10"
               title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              {sidebarCollapsed ? <PanelLeftOpen size={12} /> : <PanelLeftClose size={12} />}
+              {sidebarCollapsed ? <PanelRightOpen size={12} /> : <PanelRightClose size={12} />}
             </Button>
             {!sidebarCollapsed && (
               <div className="flex flex-col pt-2 overflow-hidden">
@@ -255,7 +255,7 @@ export function DbBrowserPanel({ onClose }: Props) {
                   <button key={t} type="button" onClick={() => selectTable(t)}
                     className={`text-left px-4 py-2 text-[11px] font-mono transition-colors whitespace-nowrap overflow-hidden text-ellipsis ${
                       selectedTable === t
-                        ? "bg-primary/10 text-primary border-r-2 border-primary"
+                        ? "bg-primary/10 text-primary border-l-2 border-primary"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     }`}>
                     {t}
@@ -265,7 +265,7 @@ export function DbBrowserPanel({ onClose }: Props) {
             )}
           </div>
 
-          <div className="flex-1 min-w-0 overflow-x-auto">
+          <div className="order-1 flex-1 min-w-0 overflow-x-auto">
             {loadingRows ? (
               <div className="flex items-center justify-center h-full gap-2 text-muted-foreground text-xs">
                 <Loader2 size={13} className="animate-spin" />Loading rows…

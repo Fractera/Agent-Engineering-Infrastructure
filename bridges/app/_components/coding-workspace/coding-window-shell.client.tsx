@@ -5,8 +5,7 @@ import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
 import { Menu, X as XIcon, Loader2, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LayoutGrid } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { XtermTerminal, type XtermTerminalHandle } from "@/components/ai-elements/xterm-terminal.client";
-import { COMING_SOON, type TerminalStatus } from "./platforms";
+import { COMING_SOON } from "./platforms";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { EnvEditorPanel } from "./env-editor-panel.client";
 import { MediaLibraryPanel } from "./media-library-panel.client";
@@ -15,6 +14,7 @@ import { UsersPanel } from "./users-panel.client";
 import { DomainPanel } from "./domain-panel.client";
 import { LoginMethodsPanel } from "./login-methods-panel.client";
 import { OpenAiPanel } from "./openai-panel.client";
+import { VectorPanel } from "./vector-panel.client";
 import { DeploymentsPanel } from "./deployments-panel.client";
 import { SiteSettingsPanel } from "./site-settings-panel.client";
 import { PlatformSettingsPanel } from "./platform-settings-panel.client";
@@ -41,14 +41,6 @@ function stripAnsi(s: string): string {
 
 // PTY_URL and BRIDGE_URL removed — resolved at runtime via getRuntimeUrls()
 
-function TerminalDot({ status }: { status: TerminalStatus }) {
-  if (status === "unavailable")  return <span className="size-1.5 rounded-full bg-muted-foreground/40 shrink-0" />;
-  if (status === "connecting")   return <span className="size-1.5 rounded-full bg-orange-400 animate-pulse shrink-0" />;
-  if (status === "connected")    return <span className="size-1.5 rounded-full bg-green-500 shrink-0" />;
-  // unauthorized — session running but the platform/key isn't signed in (step 98).
-  if (status === "unauthorized") return <span className="size-1.5 rounded-full bg-red-500 shrink-0" />;
-  return null;
-}
 
 type Props = {
   height: number;
@@ -79,9 +71,6 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   // System terminal (S6): a plain project-level shell, always available as the
   // last carousel card. Started once, then kept mounted; `active` toggles its
   // visibility over the agent terminals / idle canvas.
-  const [sysTermStarted, setSysTermStarted] = useState(false);
-  const [sysTermActive, setSysTermActive]   = useState(false);
-  const sysTermRef = useRef<XtermTerminalHandle | null>(null);
   const [dataMenuOpen, setDataMenuOpen]             = useState(false);
   const [importing, setImporting]                   = useState(false);
   const [updateAvailable, setUpdateAvailable]       = useState(false);
@@ -112,6 +101,7 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   const [showPlatform, setShowPlatform]             = useState(false);
   const [showDomainPanel, setShowDomainPanel]       = useState(false);
   const [showOpenAiPanel, setShowOpenAiPanel]       = useState(false);
+  const [showVectorPanel, setShowVectorPanel]       = useState(false);
   const [showAuthMethods, setShowAuthMethods]       = useState(false);
   // Security tab is hidden from the UI until cert provisioning for all 6
   // subdomains ships (work in progress). The env var FRACTERA_IP_NODOMAIN_MODE
@@ -359,8 +349,7 @@ showOpenAiPanel, showEnvEditor, showDeployments,
 
 
 
-  const termH   = height - CAROUSEL_H - FOOTER_H;
-  const total   = 1; // step 500: only the always-present system Terminal card
+  const total   = 1;
   const safeIdx = Math.min(carouselIdx, Math.max(total - 1, 0));
   const canPrev = safeIdx > 0;
   const canNext = safeIdx < total - 1;
@@ -414,15 +403,15 @@ showOpenAiPanel, showEnvEditor, showDeployments,
               </button>
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowMediaLibrary((v) => !v); setShowEnvEditor(false); setShowDbBrowser(false); setShowInfo(false); setShowUsers(false); setShowDomainPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                <ImagePlus size={11} />Upload media
+                <ImagePlus size={11} />Upload object
               </button>
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowDbBrowser((v) => !v); setShowEnvEditor(false); setShowMediaLibrary(false); setShowInfo(false); setShowUsers(false); setShowHelp(false); setShowDomainPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Database size={11} />Database
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); onPreviewClose?.(); setShowEnvEditor(false); setShowMediaLibrary(false); setShowDbBrowser(false); setShowUsers(false); setShowInfo(false); setShowHelp(false); setShowGitConnect(false); setShowDomainPanel(false); setSysTermStarted(true); setSysTermActive(true); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowVectorPanel((v) => !v); setShowOpenAiPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                <TerminalDot status={sysTermStarted ? "connected" : "unavailable"} />Terminal
+                <BrainCircuit size={11} />Vector memory
               </button>
               {(
                 <button type="button" onClick={() => { setDataMenuOpen(false); setShowOpenAiPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
@@ -522,6 +511,13 @@ showOpenAiPanel, showEnvEditor, showDeployments,
 
       {/* ── DB browser panel ── */}
       {showDbBrowser && <DbBrowserPanel onClose={() => setShowDbBrowser(false)} />}
+
+      {/* ── Vector memory panel ── */}
+      {showVectorPanel && (
+        <div style={{ position: "absolute", top: CAROUSEL_H, right: 0, bottom: FOOTER_H, width: "min(480px, 90vw)", zIndex: 20 }}>
+          <VectorPanel onClose={() => setShowVectorPanel(false)} />
+        </div>
+      )}
 
       {/* ── Domain panel ── */}
       {showDomainPanel && (
@@ -627,7 +623,7 @@ showOpenAiPanel, showEnvEditor, showDeployments,
           </div>
           <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
             {[
-              { title: "Upload media", desc: "Upload images, videos, and files to local S3 storage. Images can be cropped before saving." },
+              { title: "Upload object", desc: "Upload images, videos, and files to local S3 storage. Images can be cropped before saving." },
               { title: "Configure", desc: "Edit environment variables for the application. Changes take effect after the next deploy." },
               { title: "Database", desc: "Browse and edit database tables directly. Supports editing cells, deleting rows, and managing users." },
               { title: "Vector memory", desc: "Stores text as vectors next to your rows and finds the closest matches. Lives in the data service — one database, one backup." },
@@ -720,31 +716,6 @@ showOpenAiPanel, showEnvEditor, showDeployments,
 
 
 
-      {/* ── System terminal panel (S6) — plain project-level shell, no CLI.
-            Mounted once started, then kept alive; visibility toggles so the
-            session persists when switching to an agent/embed and back. Higher
-            zIndex so it sits above the agent terminals when active. ── */}
-      {sysTermStarted && (
-        <div
-          style={{
-            position: "absolute",
-            top: CAROUSEL_H,
-            left: 0,
-            right: 0,
-            height: termH,
-            display: sysTermActive ? "block" : "none",
-            zIndex: 8,
-          }}
-          className="bg-zinc-950"
-        >
-          <XtermTerminal
-            ref={(h) => { sysTermRef.current = h; }}
-            wsUrl={urls.ptyUrl}
-            platform="system"
-          />
-        </div>
-      )}
-
       {/* ── Footer ── */}
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: FOOTER_H }} className="border-t border-border bg-background flex items-center gap-2 px-3">
 
@@ -777,14 +748,6 @@ showOpenAiPanel, showEnvEditor, showDeployments,
           )}
         </span>
 
-        {/* Enter button — mobile only */}
-        <button
-          type="button"
-          className="md:hidden inline-flex items-center gap-1 h-5 px-2 rounded border border-primary bg-primary/10 text-primary text-[10px] transition-colors active:bg-primary/20"
-          onClick={() => sysTermRef.current?.sendStdin("\r")}
-        >
-          <CornerDownLeft size={10} />Enter
-        </button>
 
         {/* Deploy button */}
         <button type="button" onClick={handleDeploy} disabled={deploying}
