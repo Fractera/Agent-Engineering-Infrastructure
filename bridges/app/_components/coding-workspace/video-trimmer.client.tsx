@@ -73,10 +73,15 @@ export function VideoTrimmer({
     }
     setApplying(true);
     try {
-      const r = await fetch(`/api/media/${itemId}/trim`, {
+      // Straight to the data service, exactly like every other media operation in
+      // this panel (upload / patch / delete): same origin for the cookie, same
+      // `credentials: "include"`. Routing this one call through the admin API
+      // instead was the odd one out and answered 401 Unauthorized.
+      const r = await fetch(`${mediaUrl}/media/${itemId}/trim`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ start, end }),
+        credentials: "include",
       });
       const d = await r.json();
       if (!d.ok) throw new Error(d.error ?? "trim failed");
