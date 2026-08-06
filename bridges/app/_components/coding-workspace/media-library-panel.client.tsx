@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Loader2, Trash2, Copy, ImagePlus, X, Check, Search, Pencil, MoreHorizontal, Eye, Clapperboard, FileText, Scissors, FileType2 } from "lucide-react";
+import { Loader2, Trash2, Copy, ImagePlus, X, Check, Search, Pencil, MoreHorizontal, Eye, Clapperboard, FileText, Scissors, FileType2, Code2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { VideoTrimmer } from "./video-trimmer.client";
 import { toast } from "sonner";
@@ -155,6 +155,7 @@ function PreviewPopup({ item, onClose }: { item: MediaItem; onClose: () => void 
   const isVideo = item.mime_type.startsWith("video/");
   const isPdf   = item.mime_type === "application/pdf";
   const isMd    = item.extension === "md" || item.mime_type === "text/markdown";
+  const isHtml  = item.mime_type === "text/html" || item.extension === "html" || item.extension === "htm";
   const fileUrl = `${MEDIA_URL}/media/${item.id}/file?v=${item.size}`;
 
   const [mdText, setMdText] = useState<string | null>(null);
@@ -168,7 +169,7 @@ function PreviewPopup({ item, onClose }: { item: MediaItem; onClose: () => void 
       .catch((e) => setMdError(String(e)));
   }, [isMd, fileUrl]);
 
-  const kind = isImage ? "Image" : isVideo ? "Video" : isPdf ? "PDF" : isMd ? "Markdown" : "File";
+  const kind = isImage ? "Image" : isVideo ? "Video" : isPdf ? "PDF" : isMd ? "Markdown" : isHtml ? "HTML" : "File";
 
   return (
     <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-30" onClick={onClose}>
@@ -190,6 +191,15 @@ function PreviewPopup({ item, onClose }: { item: MediaItem; onClose: () => void 
         )}
         {isPdf && (
           <iframe src={fileUrl} title={item.name}
+            className="w-full rounded-lg border border-border bg-white" style={{ height: "60vh" }} />
+        )}
+        {/* HTML is shown as the PAGE it is, but SANDBOXED. `allow-scripts` without
+            `allow-same-origin` is the deliberate pair: the page renders and its
+            scripts run, yet the frame gets a null origin, so a stored file cannot
+            read the data service's cookies or reach back into the admin. Granting
+            both flags together would undo the sandbox entirely. */}
+        {isHtml && (
+          <iframe src={fileUrl} title={item.name} sandbox="allow-scripts"
             className="w-full rounded-lg border border-border bg-white" style={{ height: "60vh" }} />
         )}
         {isMd && (
@@ -239,6 +249,7 @@ export function MediaLibraryPanel({ onClose }: Props) {
   const videoInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef   = useRef<HTMLInputElement>(null);
   const mdInputRef    = useRef<HTMLInputElement>(null);
+  const htmlInputRef  = useRef<HTMLInputElement>(null);
   // The video whose trimmer is open — set right after an upload, or from the row menu.
   const [trimItem, setTrimItem] = useState<MediaItem | null>(null);
 
@@ -311,7 +322,7 @@ export function MediaLibraryPanel({ onClose }: Props) {
   // One entry per kind. An image goes through the cropper before it is stored; a
   // video is stored first and then offered to the trimmer (so the owner trims what
   // really lies in storage); a document goes straight in.
-  function handlePick(e: React.ChangeEvent<HTMLInputElement>, kind: "image" | "video" | "pdf" | "markdown") {
+  function handlePick(e: React.ChangeEvent<HTMLInputElement>, kind: "image" | "video" | "pdf" | "markdown" | "html") {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
@@ -603,6 +614,7 @@ export function MediaLibraryPanel({ onClose }: Props) {
         <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={(e) => handlePick(e, "video")} />
         <input ref={pdfInputRef} type="file" accept="application/pdf,.pdf" className="hidden" onChange={(e) => handlePick(e, "pdf")} />
         <input ref={mdInputRef} type="file" accept=".md,.markdown,text/markdown" className="hidden" onChange={(e) => handlePick(e, "markdown")} />
+        <input ref={htmlInputRef} type="file" accept=".html,.htm,text/html" className="hidden" onChange={(e) => handlePick(e, "html")} />
 
         <Button onClick={() => imageInputRef.current?.click()} disabled={uploading}>
           {uploading
@@ -617,6 +629,9 @@ export function MediaLibraryPanel({ onClose }: Props) {
         </Button>
         <Button variant="outline" onClick={() => mdInputRef.current?.click()} disabled={uploading}>
           <FileType2 size={11} /><span className="hidden sm:inline">Upload&nbsp;</span>Markdown
+        </Button>
+        <Button variant="outline" onClick={() => htmlInputRef.current?.click()} disabled={uploading}>
+          <Code2 size={11} /><span className="hidden sm:inline">Upload&nbsp;</span>HTML
         </Button>
       </div>
     </div>
