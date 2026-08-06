@@ -498,8 +498,10 @@ showOpenAiPanel, showEnvEditor,
       {showDbBrowser && <DbBrowserPanel onClose={() => setShowDbBrowser(false)} />}
 
       {/* ── Vector memory panel ── */}
+      {/* REFERENCE LAYOUT (see Users above): the two anchors give the height, the
+          left/right stretch gives the width — no fixed number for either. */}
       {showVectorPanel && (
-        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, bottom: FOOTER_H, width: "min(480px, 90vw)", zIndex: 20 }}>
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 10 }}>
           <VectorPanel onClose={() => setShowVectorPanel(false)} />
         </div>
       )}
