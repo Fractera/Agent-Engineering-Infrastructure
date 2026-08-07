@@ -325,3 +325,45 @@ export function ImportHelp() {
     </HelpNote>
   );
 }
+
+export function EnvHelp() {
+  return (
+    <HelpNote title="Environment variables — the settings a running service reads once">
+      <p>
+        <strong>What they are.</strong> A short list of name-and-value lines that the application reads
+        when it starts: where the database is, which secret proves one service to another, which languages
+        the site is built with. Not content, not data — the wiring that tells the code where it is running
+        and what it is allowed to reach.
+      </p>
+      <p>
+        <strong>Why they sit next to export and import.</strong> All three are about what this server
+        carries in and out of itself. An archive moves the data; this file moves the configuration. Take a
+        project to a new machine and you need both — which is also why the same file appears as a ticked
+        box in Export, marked as a secret.
+      </p>
+      <p>
+        <strong>The rule that surprises people.</strong> A service reads its environment ONCE, at start.
+        Changing a value here does not reach a process that is already running, and some values are baked
+        into the built application rather than read at all — those need a rebuild, not a restart. That is
+        why saving here can be followed by a rebuild: it is not caution, it is the only way the new value
+        becomes real.
+      </p>
+      <p>
+        <strong>Locked entries.</strong> Some variables are shown but cannot be edited. They are the ones
+        the platform itself depends on — service addresses and the secrets that let the parts trust each
+        other. Changing them by hand would not customise the server, it would disconnect it from itself.
+      </p>
+      <p>
+        <strong>Treat this file as a credential.</strong> It holds the secrets services use between
+        themselves. The download button is there for local development, where the same values let your
+        machine talk to this server. Anywhere else, an exported copy is a key to the project.
+      </p>
+      <p>
+        <strong>When you actually need it.</strong> Rarely. Almost everything worth changing has a proper
+        screen — languages and theme in Platform, branding in App Settings, the OpenAI key in its own
+        panel. Come here when a value has no screen yet, or when a developer asks you to add one for
+        something new.
+      </p>
+    </HelpNote>
+  );
+}

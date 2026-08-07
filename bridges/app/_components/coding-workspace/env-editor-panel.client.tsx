@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Loader2, Plus, Trash2, AlertTriangle, X, Lock, Info, Download } from "lucide-react";
+import { EnvHelp } from "./help-note.client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -124,12 +125,15 @@ export function EnvEditorPanel({ onClose }: Props) {
   const weakSecret = authSecret.length > 0 && authSecret.length < WEAK_SECRET_MAX_LEN;
 
   return (
-    <div style={{ position: "absolute", top: 52, left: 0, right: 0, bottom: 36, zIndex: 20 }}
-      className="bg-background flex flex-col">
+    <div className="bg-background flex flex-col h-full w-full">
 
       {/* Header */}
       <div className="flex items-center px-4 py-2.5 border-b border-border shrink-0">
-        <span className="text-xs font-semibold text-foreground flex-1">Environment Variables</span>
+        <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+          Environment Variables
+          <EnvHelp />
+        </span>
+        <span className="flex-1" />
         <a
           href="/api/config/env-export"
           download=".env.local"

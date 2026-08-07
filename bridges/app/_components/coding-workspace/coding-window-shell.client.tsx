@@ -466,7 +466,14 @@ showOpenAiPanel, showEnvEditor,
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Upload size={11} />Import data
               </button>
-              {/* Bottom section: App Settings + Platform + Env Variables. */}
+              {/* Env Variables belongs with export and import (owner, 2026-08-08):
+                  all three are about what the server carries in and out of itself —
+                  data in an archive, configuration in a file. */}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowSiteSettings(false); setShowPlatform(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                <Settings size={11} />Env Variables
+              </button>
+              {/* Bottom section: App Settings + Platform. */}
               <div className="h-px bg-border mx-2" />
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowSiteSettings((v) => !v); setShowPlatform(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
@@ -475,10 +482,6 @@ showOpenAiPanel, showEnvEditor,
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowPlatform((v) => !v); setShowSiteSettings(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <LayoutGrid size={11} />Platform
-              </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowSiteSettings(false); setShowPlatform(false); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                <Settings size={11} />Env Variables
               </button>
               {/* …and Help below it as the very last item — opens only a tooltip, no panel. */}
               <div className="h-px bg-border mx-2" />
@@ -546,7 +549,12 @@ showOpenAiPanel, showEnvEditor,
       {showPlatform && <PlatformSettingsPanel onClose={() => setShowPlatform(false)} />}
 
       {/* ── Env editor panel ── */}
-      {showEnvEditor && <EnvEditorPanel onClose={() => setShowEnvEditor(false)} />}
+      {/* REFERENCE LAYOUT (Users) — anchors for the height, stretch for the width. */}
+      {showEnvEditor && (
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 20 }}>
+          <EnvEditorPanel onClose={() => setShowEnvEditor(false)} />
+        </div>
+      )}
 
       {/* ── Media library panel ── */}
       {showMediaLibrary && <MediaLibraryPanel onClose={() => setShowMediaLibrary(false)} />}
