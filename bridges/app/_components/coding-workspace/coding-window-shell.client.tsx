@@ -108,7 +108,6 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   const [showInfo, setShowInfo]                     = useState(false);
   const [showHelp, setShowHelp]                     = useState(false);
   const [helpTipOpen, setHelpTipOpen]               = useState(false);
-  const [gitConnected, setGitConnected]             = useState(false);
   const [gitRepo, setGitRepo]                       = useState<string | null>(null);
   const [gitPulling, setGitPulling]                 = useState(false);
   const [gitPushing, setGitPushing]                 = useState(false);
@@ -133,9 +132,18 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   const loadGitState = useCallback(() => {
     fetch("/api/config/git-connect", { cache: "no-store" })
       .then((r) => r.json())
-      .then((d) => setGitState(d.state ?? "unconfigured"))
+      .then((d) => {
+        setGitState(d.state ?? "unconfigured");
+        // The repository name in the footer comes from the same answer, so the
+        // footer and the menu can never disagree about whether git is set up.
+        const url = String(d.repoUrl ?? "").replace(/.git$/, "");
+        const parts = url.split("/").filter(Boolean);
+        setGitRepo(parts.length >= 2 ? `${parts[parts.length - 2]}/${parts[parts.length - 1]}` : null);
+      })
       .catch(() => setGitState(null));
   }, []);
+  // Derived, never stored twice: a verified connection IS a connection.
+  const gitConnected = gitState === "working";
   useEffect(() => { loadGitState(); }, [loadGitState]);
   const [showExport, setShowExport]                 = useState(false);
   const [showImport, setShowImport]                 = useState(false);

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { X, GitBranch, Loader2, CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
+import { X, GitBranch, Loader2, CheckCircle, AlertCircle, ExternalLink, ArrowUpFromLine } from "lucide-react";
 import { GitHubHelp } from "./help-note.client";
 
 type State = "unconfigured" | "unverified" | "working";
@@ -27,6 +27,8 @@ export function GitHubPanel({ onClose, onChanged }: { onClose: () => void; onCha
   const [token, setToken] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pushing, setPushing] = useState(false);
+  const [pushLog, setPushLog] = useState<{ ok: boolean; text: string } | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -69,7 +71,34 @@ export function GitHubPanel({ onClose, onChanged }: { onClose: () => void; onCha
     }
   }
 
+  // Sending the project. This is the step the whole page exists for — connecting
+  // credentials changes nothing by itself, and until this runs the repository on
+  // GitHub stays empty, which reads as "it did not work".
+  async function push() {
+    setPushing(true);
+    setPushLog(null);
+    try {
+      const r = await fetch("/api/config/git-push", { method: "POST" });
+      const d = await r.json().catch(() => ({}));
+      const text = String(d.output ?? d.error ?? (r.ok ? "Done." : `Failed (${r.status})`));
+      setPushLog({ ok: Boolean(d.success), text });
+      if (d.success) {
+        toast.success("Project sent to GitHub");
+        await load();
+        onChanged?.();
+      } else {
+        toast.error("Push failed");
+      }
+    } catch (e) {
+      setPushLog({ ok: false, text: String((e as Error).message ?? e) });
+      toast.error("Push failed");
+    } finally {
+      setPushing(false);
+    }
+  }
+
   const s = status?.state ?? "unconfigured";
+  const repoWebUrl = (status?.repoUrl ?? "").replace(/.git$/, "");
 
   return (
     <div className="flex flex-col w-full h-full bg-background border-t border-border">
@@ -214,6 +243,66 @@ export function GitHubPanel({ onClose, onChanged }: { onClose: () => void; onCha
             </div>
           )}
         </div>
+
+        {/* Step four: the point of the whole page. Saving credentials changes nothing
+            on GitHub — until this runs, the repository is empty and the setup looks
+            like it failed. */}
+        {s === "working" && (
+          <div className="flex flex-col gap-2 rounded-md border border-border p-3">
+            <span className="text-[11px] font-semibold text-foreground">4. Send the project to GitHub</span>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              Connecting the credentials does not move a single file. This does: it packages what is on
+              the server right now and sends it to your repository.
+            </p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button type="button" onClick={push} disabled={pushing}
+                className="px-3 py-1.5 text-[11px] rounded-md border border-border bg-primary text-primary-foreground hover:bg-primary/85 transition-colors disabled:opacity-40 flex items-center gap-1.5">
+                {pushing ? <Loader2 size={11} className="animate-spin" /> : <ArrowUpFromLine size={11} />}
+                {pushing ? "Sending…" : "Send project to GitHub"}
+              </button>
+              {repoWebUrl && (
+                <a href={repoWebUrl} target="_blank" rel="noopener noreferrer"
+                  className="text-[10px] text-primary underline underline-offset-2 inline-flex items-center gap-1">
+                  open the repository to check <ExternalLink size={9} />
+                </a>
+              )}
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              <strong>How to tell it worked:</strong> open the repository in a browser and refresh. Files
+              appear, and the commit list shows one entry from this server. If the page is still empty,
+              the message below says why.
+            </p>
+            {pushLog && (
+              <pre className={`text-[10px] font-mono leading-relaxed whitespace-pre-wrap rounded-md border p-2.5 max-h-40 overflow-y-auto
+                ${pushLog.ok ? "border-border text-muted-foreground" : "border-destructive/30 bg-destructive/10 text-destructive"}`}>
+                {pushLog.text}
+              </pre>
+            )}
+          </div>
+        )}
+
+        {/* The questions that arrive right after the first push. */}
+        {s === "working" && (
+          <div className="flex flex-col gap-2 rounded-md border border-border p-3">
+            <span className="text-[11px] font-semibold text-foreground">What happens after this</span>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              <strong>Do I press it again?</strong> Yes — every time something changes on the SERVER that
+              you want kept: a page edited here, a setting a developer added. Pushing twice with nothing
+              changed is harmless; it simply reports that there was nothing to send.
+            </p>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              <strong>Will it clash with work done on a laptop?</strong> It can, and the rule that avoids
+              it is simple: at any moment, one side is the source of truth. If your developers work in the
+              repository, the server should PULL and not push — otherwise two histories grow apart and git
+              refuses to merge them. If the work happens here, on the server, push from here and let the
+              laptops pull.
+            </p>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              <strong>What if a push is refused?</strong> The usual cause is exactly that: the repository
+              moved ahead of the server. Pull first, then push. The message above names it.
+            </p>
+          </div>
+        )}
 
         {/* What the first push would carry. Sending blind is why people hesitate. */}
         {status && status.pendingFiles > 0 && (
