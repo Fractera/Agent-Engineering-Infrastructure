@@ -65,7 +65,7 @@ export function DomainPanel({ onClose }: { onClose: () => void }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col w-full h-full bg-background border-r border-border shadow-xl">
+      <div className="flex flex-col w-full h-full bg-background border-t border-border">
         <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border">
           <span className="text-[12px] font-medium text-foreground flex items-center gap-2">
             <Globe size={13} /> Personal Domain <DomainHelp />
@@ -96,7 +96,7 @@ export function DomainPanel({ onClose }: { onClose: () => void }) {
 
   // Initial state — ask for the domain name.
   return (
-    <div className="flex flex-col w-full h-full bg-background border-r border-border shadow-xl">
+    <div className="flex flex-col w-full h-full bg-background border-t border-border">
       <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border">
         <span className="text-[12px] font-medium text-foreground flex items-center gap-2">
           <Globe size={13} /> Personal Domain <DomainHelp />

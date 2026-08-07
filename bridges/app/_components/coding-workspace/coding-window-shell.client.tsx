@@ -591,7 +591,7 @@ showOpenAiPanel, showEnvEditor,
 
       {/* ── Domain panel ── */}
       {showDomainPanel && (
-        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, bottom: FOOTER_H, width: "min(480px, 90vw)", zIndex: 20 }}>
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 20 }}>
           <DomainPanel onClose={() => setShowDomainPanel(false)} />
         </div>
       )}
@@ -601,16 +601,7 @@ showOpenAiPanel, showEnvEditor,
 
 
       {showAuthMethods && (
-        <div
-          style={{
-            position: "absolute",
-            top: CAROUSEL_H,
-            right: 0,
-            bottom: FOOTER_H,
-            width: "min(480px, 90vw)",
-            zIndex: 20,
-          }}
-        >
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 20 }}>
           <LoginMethodsPanel onClose={() => setShowAuthMethods(false)} />
         </div>
       )}

@@ -236,7 +236,7 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="relative w-full h-full bg-background border-l border-border shadow-xl flex flex-col">
+    <div className="relative w-full h-full bg-background border-t border-border flex flex-col">
       {/* Confirmation. Deleting knowledge is cheap to click and expensive to undo:
           the entities and relations built from a document go with it, and getting
           them back means paying for the whole extraction pass again. So the dialog
