@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { X, KeyRound, Loader2, CheckCircle, AlertCircle, Copy, Trash2 } from "lucide-react";
+import { LoginMethodsHelp } from "./help-note.client";
 
 type Props = {
   onClose: () => void;
@@ -78,6 +79,7 @@ export function LoginMethodsPanel({ onClose }: Props) {
         <div className="flex items-center gap-2 text-[12px] font-medium text-foreground">
           <KeyRound size={13} />
           Login methods
+          <LoginMethodsHelp />
         </div>
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
           <X size={14} />
