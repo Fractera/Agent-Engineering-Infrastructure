@@ -81,6 +81,32 @@ export async function POST(req: NextRequest) {
       opts
     ).catch(() => null);
 
+    // A shallow repository cannot be pushed. The slot arrives from bootstrap as
+    // `git clone --depth 1`, so its only commit has a truncated parent; git then sends a
+    // thin pack based on that missing object and the remote answers "did not receive
+    // expected object ... index-pack failed". The starter history is of no use in the
+    // user's own repository anyway, so detach from it once: a single root commit holding
+    // the current tree. Order matters — .git/shallow must go before gc, otherwise gc
+    // trips over entries whose commits it is about to prune.
+    const isShallow = await execAsync(`git -C ${PROJECT_DIR} rev-parse --is-shallow-repository`, opts)
+      .then(r => r.stdout.trim() === "true")
+      .catch(() => false);
+    if (isShallow) {
+      const ident = `-c user.email="admin@fractera.ai" -c user.name="Fractera Admin"`;
+      const heal = await execAsync(
+        `git -C ${PROJECT_DIR} checkout --orphan fractera-detached && ` +
+        `git -C ${PROJECT_DIR} add -A && ` +
+        `git -C ${PROJECT_DIR} ${ident} commit -m "Fractera slot: project baseline" && ` +
+        `git -C ${PROJECT_DIR} branch -M main && ` +
+        `rm -f ${PROJECT_DIR}/.git/shallow && ` +
+        `git -C ${PROJECT_DIR} reflog expire --expire=now --all && ` +
+        `git -C ${PROJECT_DIR} gc --prune=now --quiet`,
+        { timeout: 120000 }
+      ).catch(e => ({ stdout: e.stdout ?? "", stderr: (e.stderr ?? e.message) + "\nDetach from truncated history failed." }));
+      lines.push("Truncated starter history detached: rebuilt as a single root commit.");
+      lines.push((heal.stdout + heal.stderr).trim());
+    }
+
     // Stage all changes
     const { stdout: s1, stderr: e1 } = await execAsync(`git -C ${PROJECT_DIR} add -A`, opts);
     lines.push((s1 + e1).trim());
