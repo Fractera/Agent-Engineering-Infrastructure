@@ -5,9 +5,9 @@ import { Loader2, X, Save } from "lucide-react";
 import { AppSettingsHelp } from "./help-note.client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { SECTIONS, getAt, setAt } from "./site-settings/fields";
+import { SECTIONS, DOMAIN_DERIVED, getAt, setAt } from "./site-settings/fields";
 import { FieldRow } from "./site-settings/field-row.client";
-import { LanguagesView } from "./platform/languages-view.client";
+import { useRuntimeUrls } from "@/lib/runtime-urls";
 
 // Site Settings — branding / SEO / PWA / images for the deployed Shell app. Reads and writes
 // the Shell's app-config.json (server route /api/config/site, same cross-process pattern as the
@@ -23,9 +23,9 @@ export function SiteSettingsPanel({ onClose }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Languages selector now lives here (moved from the Platform tab). It opens as an
-  // overlay sub-view; the build-time language SET + default are managed inside it.
-  const [view, setView] = useState<null | "languages">(null);
+  // The address this admin panel is being read on IS the deployment's address — the apex is
+  // recovered from the hostname. Nothing is typed, so nothing can drift.
+  const { appUrl } = useRuntimeUrls();
 
   useEffect(() => {
     (async () => {
@@ -33,14 +33,20 @@ export function SiteSettingsPanel({ onClose }: Props) {
         const res = await fetch("/api/config/site", { credentials: "include" });
         if (!res.ok) throw new Error(`${res.status}`);
         const data = await res.json();
-        setConfig((data.config ?? {}) as Cfg);
+        // Overwrite the derived addresses on load: what the file carries may be the starter's
+        // inherited default (www.fractera.ai on every server), and showing that as if it were
+        // this site's address is exactly the confusion this replaces. Save writes them back.
+        let next = (data.config ?? {}) as Cfg;
+        for (const [path, derive] of Object.entries(DOMAIN_DERIVED)) next = setAt(next, path, derive(appUrl));
+        setConfig(next);
       } catch (e) {
         setError(`Could not load site settings: ${String(e)}`);
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+    // appUrl is a string, so a re-computed but identical address does not refetch.
+  }, [appUrl]);
 
   function update(path: string, value: unknown) {
     setConfig((prev) => setAt(prev, path, value));
@@ -114,17 +120,6 @@ export function SiteSettingsPanel({ onClose }: Props) {
                 ))}
               </div>
             ))}
-
-            {/* Languages — moved here from the Platform tab. Opens the language SET selector. */}
-            <div className="flex flex-col gap-2.5">
-              <div className="flex flex-col gap-0.5 border-b border-border pb-1">
-                <span className="text-[11px] font-semibold text-foreground">Languages</span>
-                <span className="text-[9px] text-muted-foreground">The languages the app is built with (build-time set + default).</span>
-              </div>
-              <Button variant="outline" size="sm" className="w-fit" onClick={() => setView("languages")}>
-                Manage languages →
-              </Button>
-            </div>
           </div>
         </div>
       )}
@@ -135,8 +130,6 @@ export function SiteSettingsPanel({ onClose }: Props) {
         </Button>
         <span className="text-[10px] text-muted-foreground">Stored on the server · no rebuild required</span>
       </div>
-
-      {view === "languages" && <LanguagesView onBack={() => setView(null)} />}
     </div>
   );
 }

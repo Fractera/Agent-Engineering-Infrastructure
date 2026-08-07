@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2, Save, Search } from "lucide-react";
+import { Loader2, Save, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -129,11 +129,16 @@ export function LanguagesView({ onBack }: { onBack: () => void }) {
   return (
     <div className="absolute inset-0 bg-background flex flex-col z-30">
       <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border shrink-0">
-        <button type="button" onClick={onBack} className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">
-          ← Back
-        </button>
         <span className="text-xs font-semibold text-foreground">Languages</span>
         <span className="text-[10px] text-muted-foreground">{selected.size} selected</span>
+        <span className="flex-1" />
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex items-center justify-center size-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <X size={13} />
+        </button>
       </div>
 
       {loading ? (

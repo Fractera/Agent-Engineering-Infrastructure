@@ -1,5 +1,6 @@
 "use client";
 
+import { Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import type { Field } from "./fields";
 import { ImageField } from "./image-field.client";
@@ -90,6 +91,27 @@ export function FieldRow({
           rows={2}
           className="rounded-md border border-border bg-muted px-2 py-1.5 text-[11px] text-foreground placeholder:text-muted-foreground focus:outline-none font-mono resize-y"
         />
+      </div>
+    );
+  }
+
+  // A locked field shows what the server resolved and refuses edits: typing an address that
+  // the deployment does not answer on produces broken canonical tags with no error anywhere.
+  if (field.locked) {
+    return (
+      <div className="flex flex-col gap-1">
+        {labelEl}
+        <div className="relative">
+          <Input
+            type="text"
+            value={value === undefined || value === null ? "" : String(value)}
+            readOnly
+            tabIndex={-1}
+            aria-readonly="true"
+            className="text-[11px] font-mono pr-7 bg-muted text-muted-foreground cursor-default focus-visible:ring-0"
+          />
+          <Lock size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        </div>
       </div>
     );
   }

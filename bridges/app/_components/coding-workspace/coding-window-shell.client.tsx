@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
 import { getAdminStrings, detectBrowserLang, DEFAULT_ADMIN_LANG } from "@/lib/i18n/admin-strings";
-import { Menu, X as XIcon, Loader2, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LayoutGrid, LogOut, CircleUserRound, Map as MapIcon, Brain, MessagesSquare } from "lucide-react";
+import { Menu, X as XIcon, Loader2, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LayoutGrid, LogOut, CircleUserRound, Map as MapIcon, Brain, MessagesSquare, Languages } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { COMING_SOON } from "./platforms";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -23,6 +23,7 @@ import { ExportPanel, ImportPanel } from "./backup-panels.client";
 import { GitHubPanel } from "./github-panel.client";
 import { SiteSettingsPanel } from "./site-settings-panel.client";
 import { PlatformSettingsPanel } from "./platform-settings-panel.client";
+import { LanguagesView } from "./platform/languages-view.client";
 import { IdleCanvas } from "./idle-canvas.client";
 import type { ComponentType } from "react";
 
@@ -118,6 +119,7 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   const [showUsers, setShowUsers]                   = useState(false);
   const [showSiteSettings, setShowSiteSettings]     = useState(false);
   const [showPlatform, setShowPlatform]             = useState(false);
+  const [showLanguages, setShowLanguages]           = useState(false);
   const [showDomainPanel, setShowDomainPanel]       = useState(false);
   const [showOpenAiPanel, setShowOpenAiPanel]       = useState(false);
   const [showVectorPanel, setShowVectorPanel]       = useState(false);
@@ -180,12 +182,12 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   useEffect(() => {
     if (showInfo || showDbBrowser || showUsers || showMediaLibrary || showHelp || showDomainPanel ||
         showOpenAiPanel || showEnvEditor ||
-        showSiteSettings || showPlatform) {
+        showSiteSettings || showPlatform || showLanguages) {
       setShowAuthMethods(false);
     }
   }, [showInfo, showDbBrowser, showUsers, showMediaLibrary, showHelp, showDomainPanel,
 showOpenAiPanel, showEnvEditor,
-      showSiteSettings, showPlatform]);
+      showSiteSettings, showPlatform, showLanguages]);
   const deployLogRef    = useRef<HTMLDivElement>(null);
   const updateLogRef    = useRef<HTMLDivElement>(null);
 
@@ -430,6 +432,20 @@ showOpenAiPanel, showEnvEditor,
                   <div className="h-px bg-border mx-2" />
                 </>
               )}
+              {/* App Settings opens the menu (owner, 2026-08-08): it is what the project IS —
+                  its name, its face, its address — so it stands before the warehouses that
+                  hold what the project accumulates. Languages follow it as their own page:
+                  the built language set is a decision of the same rank, and it was buried
+                  inside App Settings where nobody would look for it. */}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowSiteSettings((v) => !v); setShowLanguages(false); setShowPlatform(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                <Palette size={11} />App Settings
+              </button>
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowLanguages((v) => !v); setShowSiteSettings(false); setShowPlatform(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                <Languages size={11} />Languages
+              </button>
+              <div className="h-px bg-border mx-2" />
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowUsers((v) => !v); setShowMediaLibrary(false); setShowEnvEditor(false); setShowDbBrowser(false); setShowInfo(false); setShowDomainPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Users size={11} />Users
@@ -508,13 +524,9 @@ showOpenAiPanel, showEnvEditor,
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Settings size={11} />Env Variables
               </button>
-              {/* Bottom section: App Settings + Platform. */}
+              {/* Bottom section: Platform (App Settings and Languages moved to the top). */}
               <div className="h-px bg-border mx-2" />
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowSiteSettings((v) => !v); setShowPlatform(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                <Palette size={11} />App Settings
-              </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowPlatform((v) => !v); setShowSiteSettings(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowPlatform((v) => !v); setShowSiteSettings(false); setShowLanguages(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <LayoutGrid size={11} />Platform
               </button>
@@ -591,7 +603,15 @@ showOpenAiPanel, showEnvEditor,
         </div>
       )}
 
-      {/* ── Platform panel (parallel routing / languages / theme) ── */}
+      {/* ── Languages panel (build-time language set + default) ── */}
+      {/* REFERENCE LAYOUT (Users) — anchors for the height, stretch for the width. */}
+      {showLanguages && (
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 20 }}>
+          <LanguagesView onBack={() => setShowLanguages(false)} />
+        </div>
+      )}
+
+      {/* ── Platform panel (parallel routing / theme) ── */}
       {showPlatform && (
         <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 20 }}>
           <PlatformSettingsPanel onClose={() => setShowPlatform(false)} />

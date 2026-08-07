@@ -21,6 +21,11 @@ export type Field = {
   options?: { value: string; label: string }[];
   // image cropper aspect: square for icons/logos, horizontal (16:9) for OG/illustrations.
   crop?: "square" | "horizontal";
+  // Read-only field whose value is DERIVED from the address this server actually answers on
+  // (see DOMAIN_DERIVED). Typing an address here was the older behaviour and it is what let
+  // the starter's default www.fractera.ai survive on every deployed server: two separate
+  // fields carried the same stale address and neither followed the real domain.
+  locked?: boolean;
 };
 
 export type Section = { title: string; description?: string; fields: Field[] };
@@ -54,7 +59,7 @@ export const SECTIONS: Section[] = [
       { path: "name", label: "App name", type: "text", placeholder: "Fractera" },
       { path: "short_name", label: "Short name", type: "text", placeholder: "Fractera", hint: "Used by the PWA icon label." },
       { path: "description", label: "Description", type: "textarea", placeholder: "What this app is…" },
-      { path: "url", label: "Site URL", type: "text", placeholder: "https://example.com" },
+      { path: "url", label: "Site URL", type: "text", locked: true, hint: "Follows this server's domain. Change it in Settings → Personal Domain." },
       { path: "mailSupport", label: "Support email", type: "text", placeholder: "admin@example.com" },
       { path: "chatBrand", label: "Chat brand", type: "text", placeholder: "Hermes" },
     ],
@@ -125,8 +130,8 @@ export const SECTIONS: Section[] = [
       { path: "seo.robotsIndex", label: "Robots: index", type: "switch" },
       { path: "seo.robotsFollow", label: "Robots: follow", type: "switch" },
       { path: "seo.keywords", label: "Keywords", type: "textarea", placeholder: "comma, separated" },
-      { path: "seo.canonicalBase", label: "Canonical base URL", type: "text" },
-      { path: "seo.sitemapUrl", label: "Sitemap URL", type: "text" },
+      { path: "seo.canonicalBase", label: "Canonical base URL", type: "text", locked: true, hint: "Same address as Site URL — search engines use it to name the one true copy of a page." },
+      { path: "seo.sitemapUrl", label: "Sitemap URL", type: "text", locked: true, hint: "The site map the app generates at that address." },
       { path: "seo.googleVerification", label: "Google verification", type: "text" },
       { path: "seo.yandexVerification", label: "Yandex verification", type: "text" },
     ],
@@ -171,6 +176,19 @@ export const SECTIONS: Section[] = [
     ],
   },
 ];
+
+// ---- addresses that follow the server, not the typist --------------------------------
+// The address of the app is a FACT of this deployment, not an opinion: it is whatever the
+// domain panel has set up (or the IP, before a domain exists). Every field below is computed
+// from that one base, so they cannot disagree with each other or go stale after a domain
+// change. The panel writes them on save, which is also how the starter's inherited
+// www.fractera.ai finally leaves the config of a deployed server.
+
+export const DOMAIN_DERIVED: Record<string, (base: string) => string> = {
+  url: (base) => base,
+  "seo.canonicalBase": (base) => base,
+  "seo.sitemapUrl": (base) => `${base}/sitemap.xml`,
+};
 
 // ---- nested get/set on a plain config object (immutable set) -------------------------
 

@@ -24,7 +24,7 @@ import { ParallelRoutesSelector } from "./parallel-routes/parallel-routes-select
 //   • Footer settings  → submenu: 4 switches (Footer pages / Screen width / Theme / Multilingual)
 //     + an "Apply settings" button (batch-persist the runtime footerPlugins flags, no rebuild)
 //   • Parallel routes · setup → slot selector view (when parallel routing is on)
-// (The language SET selector moved to App Settings → "Manage languages".)
+// (The language SET selector is its own page — Settings → Languages, right under App Settings.)
 // Everything but the language SET is a runtime flag in platform-config.json (applies on next load).
 // The reference marketplace is replaced by these flags; every footer feature defaults ON.
 
@@ -191,7 +191,7 @@ export function PlatformSettingsPanel({ onClose }: Props) {
         <div className="flex-1 overflow-auto px-4 py-3">
           <p className="text-[11px] text-muted-foreground mb-3 max-w-md">
             Open <span className="font-semibold text-foreground">Settings</span> above to toggle parallel routing
-            or configure footer features. Every footer feature is on by default. (Languages moved to App Settings.)
+            or configure footer features. Every footer feature is on by default. (Languages are their own menu item.)
           </p>
           <div className="max-w-md rounded-md border border-border px-3 py-2.5 text-[11px] text-foreground">
             Parallel routing is <span className={`font-semibold ${parallelRouting ? "text-green-600" : "text-muted-foreground"}`}>{parallelRouting ? "ON" : "OFF"}</span>.
