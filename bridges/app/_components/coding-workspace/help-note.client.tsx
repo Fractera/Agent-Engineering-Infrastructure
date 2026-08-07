@@ -354,9 +354,21 @@ export function EnvHelp() {
         other. Changing them by hand would not customise the server, it would disconnect it from itself.
       </p>
       <p>
+        <strong>The download button is the missing half of GitHub.</strong> A repository carries code and
+        never this file — that is deliberate, secrets do not belong in a repository. So a freshly cloned
+        project on a laptop has no configuration at all and cannot start. Downloading this file and
+        dropping it into the project root is what completes the clone.
+      </p>
+      <p>
+        <strong>And it does more than unlock the app.</strong> The downloaded copy is not the server&apos;s
+        file verbatim: the data address in it is rewritten to one your machine can actually reach, so the
+        local application reads THIS server&apos;s rows, files, vector memory and knowledge base instead of
+        an empty database of its own. No copying data down, no two versions drifting apart.
+      </p>
+      <p>
         <strong>Treat this file as a credential.</strong> It holds the secrets services use between
-        themselves. The download button is there for local development, where the same values let your
-        machine talk to this server. Anywhere else, an exported copy is a key to the project.
+        themselves, and one key that opens the data layer from anywhere. Useful on your own machine; an
+        exported copy left anywhere else is a key to the project.
       </p>
       <p>
         <strong>When you actually need it.</strong> Rarely. Almost everything worth changing has a proper
@@ -370,39 +382,47 @@ export function EnvHelp() {
 
 export function GitHubHelp() {
   return (
-    <HelpNote title="GitHub — the only road your work takes off this server">
+    <HelpNote title="GitHub — how development actually happens on this project">
       <p>
-        <strong>Why this one matters more than it looks.</strong> Everything else on this server can be
-        recreated: rows can be re-entered, documents re-loaded, a region re-downloaded. Your application
-        cannot. And the backup archive deliberately does not carry source code — code belongs in a
-        repository, not in a zip. So until this is connected, the server is the only copy of the one thing
-        that is genuinely yours.
+        <strong>What this is really for.</strong> Not a backup. Pushing to a repository is how you or your
+        developers continue building this project <em>on your own computers</em> — with a proper editor, a
+        debugger, and as many people as you like working at once. A copy on GitHub is a welcome side
+        effect; the purpose is that the work is no longer trapped on the machine that serves it.
       </p>
       <p>
-        <strong>What it gives you beyond safety.</strong> A repository is where your development actually
-        happens: you or your developer work on the code anywhere, push, and pull it onto the server.
-        Without it the project can only ever be edited in place, on the machine that serves it.
+        <strong>The loop, in three moves.</strong> Push the project here. Clone it on a laptop. Take the
+        environment file from <strong>Env Variables</strong> — the download button there — and put it in
+        the project root. From that moment the local application is talking to <em>this server</em>.
       </p>
       <p>
-        <strong>Public or private.</strong> A public repository can be read by anyone and needs no token to
-        pull. Writing to any repository — public or private — needs a token. Private is the normal choice
-        for a business project.
+        <strong>The part people expect to be hard, and is not.</strong> A clone has no data: the repository
+        carries code, never rows, files or secrets. So instead of copying data down, the local application
+        reads it up — the environment file points it at this server&apos;s data layer. Your rows, your
+        uploaded files, your vector memory and your knowledge base are the same ones production uses.
+        There are no two versions to drift apart, and nothing to re-import after every change.
       </p>
       <p>
-        <strong>What never leaves.</strong> Secrets and build output are excluded before anything is sent:
-        the environment file, installed packages, the compiled application and uploaded storage. What
-        travels is source code and configuration you wrote.
+        <strong>What a laptop can reach.</strong> Everything goes through one address and one key, both in
+        that file: the database, files and media, vector memory, and the knowledge graph. The map and the
+        channel services answer through the same door. Nothing else on the server is exposed, and without
+        the key nothing answers at all.
       </p>
       <p>
-        <strong>Why the screen insists on verifying.</strong> Filled-in fields are not a connection. A token
-        can be expired, scoped to the wrong account, or able to read a repository but not write to it — and
-        every one of those used to look like success until a push failed later, at the worst moment.
-        Saving here asks GitHub over the network and reports what it actually said.
+        <strong>Public or private repository.</strong> A public one can be read by anyone and needs no
+        token to pull; writing to any repository needs one. Private is the normal choice for a business
+        project. Either way, secrets never travel: the environment file, installed packages, the compiled
+        application and uploaded storage are excluded before anything is sent.
       </p>
       <p>
-        <strong>If the token is refused.</strong> The three usual causes, in order of likelihood: the token
-        expired; it was created without the <code>repo</code> scope; or it belongs to an account that is
-        not a collaborator on that repository. The message on this page names which one it was.
+        <strong>Why this screen insists on verifying.</strong> Filled-in fields are not a connection. A
+        token can be expired, scoped to the wrong account, or able to read a repository but not write to
+        it — each of those used to look like success until a push failed later, at the worst moment.
+        Saving here asks GitHub over the network and repeats what it actually said.
+      </p>
+      <p>
+        <strong>If the token is refused</strong>, three causes in order of likelihood: it expired; it was
+        created without the <code>repo</code> scope; or it belongs to an account that is not a
+        collaborator on that repository. The message on this page names which one it was.
       </p>
     </HelpNote>
   );
