@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { X, Globe, Loader2 } from "lucide-react";
 import { DomainWizard } from "./domain-wizard.client";
+import { DomainHelp } from "./help-note.client";
 
 interface DomainConfig {
   custom_domain: string | null;
@@ -67,7 +68,7 @@ export function DomainPanel({ onClose }: { onClose: () => void }) {
       <div className="flex flex-col w-full h-full bg-background border-r border-border shadow-xl">
         <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border">
           <span className="text-[12px] font-medium text-foreground flex items-center gap-2">
-            <Globe size={13} /> Personal Domain
+            <Globe size={13} /> Personal Domain <DomainHelp />
           </span>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
             <X size={14} />
@@ -98,7 +99,7 @@ export function DomainPanel({ onClose }: { onClose: () => void }) {
     <div className="flex flex-col w-full h-full bg-background border-r border-border shadow-xl">
       <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border">
         <span className="text-[12px] font-medium text-foreground flex items-center gap-2">
-          <Globe size={13} /> Personal Domain
+          <Globe size={13} /> Personal Domain <DomainHelp />
         </span>
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
           <X size={14} />

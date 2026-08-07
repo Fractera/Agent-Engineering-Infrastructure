@@ -76,3 +76,61 @@ export function SeparateStorageNote() {
     </p>
   );
 }
+
+// The domain explanation lives here because it is shown from two places — the
+// panel and the wizard — and two copies of a safety warning would drift apart.
+export function DomainHelp() {
+  return (
+    <HelpNote title="Your own domain — why it matters, and how to buy one well">
+      <p>
+        <strong>The two modes.</strong> Right now the project answers on its IP address over plain HTTP.
+        Everything works — the app, the admin panel, the data — and that is exactly the danger: it works
+        for you and for anyone else who knows the address. Nothing can be locked down, because without a
+        certificate there is no secure session to lock it with. Whoever has the IP can open the admin
+        panel, change anything, and delete the project with no way back.
+      </p>
+      <p>
+        <strong>Why a domain is the fix.</strong> A domain lets the server obtain a certificate; the
+        certificate makes HTTPS possible; and HTTPS is what gives roles and sessions any meaning at all.
+        Until then, &ldquo;secure mode&rdquo; has nothing to stand on. This is why attaching a domain is
+        the first thing to do after deployment, not a finishing touch.
+      </p>
+      <p>
+        <strong>Choosing one: price.</strong> Cost depends on the zone — <code>.com</code>,{" "}
+        <code>.io</code>, <code>.shop</code> — and on the seller. The same name can differ several times
+        over between registrars, so it is worth comparing before you buy.
+      </p>
+      <p>
+        <strong>Choosing one: the renewal trap.</strong> Most people learn this one the hard way. A domain
+        advertised at $1 is a <em>first-year</em> price. Sellers rarely show what year two costs, and it
+        can be $50 a year. If you only want to try the service, take the $1 offer — but switch off
+        auto-renewal the moment you have paid, or the charge arrives a year later without a word. The
+        safer habit is to buy from registrars that publish one price for registration and renewal: a
+        normal <code>.com</code> is about $10 to register and about $10 every year after.
+      </p>
+      <p>
+        <strong>Choosing one: the name itself.</strong> Before congratulating yourself on a beautiful name,
+        check two things — that it is not somebody&apos;s trademark, and that it has no past. A name once
+        used for prohibited topics may already be blacklisted by search engines, and you inherit that
+        history along with the name.
+      </p>
+      <p>
+        <strong>Where the setup happens.</strong> The records shown here are entered in your
+        registrar&apos;s own control panel. Nothing else is needed. You do not need Cloudflare — not unless
+        you already know exactly why you want it.
+      </p>
+      <p>
+        <strong>One server, one domain.</strong> The platform holds a hard limit: one IP address, one
+        domain name. You cannot carve third-level names out of it to run several projects on one server,
+        because the platform already uses third-level names for its own services — auth, admin, data. That
+        space is taken by design.
+      </p>
+      <p>
+        <strong>How long it takes.</strong> A fresh domain usually connects within minutes. If it
+        previously served another server, the main names — <code>&lt;domain&gt;</code> and{" "}
+        <code>www.&lt;domain&gt;</code> — can take several hours to move, occasionally up to a day. That is
+        DNS caching across the internet, not something this server can hurry.
+      </p>
+    </HelpNote>
+  );
+}

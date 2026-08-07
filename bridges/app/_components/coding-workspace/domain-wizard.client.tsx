@@ -6,6 +6,7 @@ import {
   CheckCircle, XCircle, Loader2, ChevronDown, ChevronRight, AlertTriangle,
   Globe, Shield, Upload, Sparkles, Rocket, ExternalLink, RefreshCw, HelpCircle, ShieldCheck,
 } from "lucide-react";
+import { DomainHelp } from "./help-note.client";
 
 type WizardState = {
   domain: string;
@@ -320,7 +321,7 @@ export function DomainWizard({ domain, onClose, onChangeDomain }: { domain: stri
       <div className="flex flex-col w-full h-full bg-background border-r border-border shadow-xl">
         <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border">
           <span className="text-[12px] font-medium text-foreground flex items-center gap-2">
-            <Globe size={13} /> Personal Domain
+            <Globe size={13} /> Personal Domain <DomainHelp />
           </span>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">×</button>
         </div>
@@ -365,7 +366,7 @@ export function DomainWizard({ domain, onClose, onChangeDomain }: { domain: stri
     <div className="flex flex-col w-full h-full bg-background border-r border-border shadow-xl">
       <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border">
         <span className="text-[12px] font-medium text-foreground flex items-center gap-2">
-          <Globe size={13} /> Personal Domain — <span className="font-mono">{domain}</span>
+          <Globe size={13} /> Personal Domain <DomainHelp /> — <span className="font-mono">{domain}</span>
         </span>
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">×</button>
       </div>
