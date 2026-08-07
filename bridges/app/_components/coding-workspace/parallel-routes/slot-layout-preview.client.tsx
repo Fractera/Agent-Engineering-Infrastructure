@@ -48,9 +48,14 @@ const CF_H = 15;
 export function SlotLayoutPreview({
   active,
   hovered,
+  centerLabel = "Center",
 }: {
   active: Set<SlotName>;
   hovered: SlotName | null;
+  // With parallel routing off there are no named slots at all — the page is the plain tree, and
+  // what fills the middle is Next's `children`. Calling it "Center" then would name a mechanism
+  // that is not running.
+  centerLabel?: string;
 }) {
   const on = (s: SlotName) => active.has(s);
   const h = (s: SlotName) => hovered === s;
@@ -85,7 +90,7 @@ export function SlotLayoutPreview({
         {on("center") && (
           <div className="absolute bottom-0 flex flex-col gap-1" style={{ left: "20%", right: "20%", top: on("promoScreen") ? `calc(${PROMO_H}% + 4px)` : 0 }}>
             {on("centerHeader") && <Block label="Center Header" active={on("centerHeader")} hovered={h("centerHeader")} style={{ flex: `0 0 ${CH_H}%` }} />}
-            <Block label="Center" active={on("center")} hovered={h("center")} style={{ flex: 1 }} />
+            <Block label={centerLabel} active={on("center")} hovered={h("center")} style={{ flex: 1 }} />
             {on("centerFooter") && <Block label="Center Footer" active={on("centerFooter")} hovered={h("centerFooter")} style={{ flex: `0 0 ${CF_H}%` }} />}
           </div>
         )}

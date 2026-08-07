@@ -154,10 +154,24 @@ export function ParallelRoutesSelector({ onBack }: { onBack: () => void }) {
           <Loader2 size={18} className="animate-spin text-muted-foreground" />
         </div>
       ) : (
-        <div className="flex flex-1 min-h-0">
-          <SlotLayoutPreview active={active} hovered={hovered} />
+        <div className="flex flex-1 min-h-0 overflow-hidden">
+          {/* Off → the middle is Next's own `children`; on → it is the named centre slot. */}
+          <SlotLayoutPreview active={active} hovered={hovered} centerLabel={routing ? "Center" : "children"} />
 
-          <div className="flex-1 px-4 py-4 flex flex-col min-h-0">
+          {/* The slot list belongs to parallel routing, so it is only on screen while parallel
+              routing is on: it leaves to the right instead of greying out, and the preview takes
+              the width it frees. Width and transform move together — without the width the panel
+              would slide out and leave a hole where it used to be. */}
+          <div
+            className="px-4 py-4 flex flex-col min-h-0 overflow-hidden"
+            style={{
+              flex: routing ? "1 1 0%" : "0 0 0%",
+              transform: routing ? "translateX(0)" : "translateX(100%)",
+              opacity: routing ? 1 : 0,
+              transition: "flex-basis 300ms ease-in-out, flex-grow 300ms ease-in-out, transform 300ms ease-in-out, opacity 200ms ease-in-out",
+            }}
+            aria-hidden={!routing}
+          >
             <p className="text-[11px] font-semibold uppercase tracking-wide text-foreground mb-2">Active slots</p>
             <div className="border-b border-border mb-3" />
             <div className="flex flex-col gap-1 flex-1 overflow-y-auto">
@@ -186,14 +200,20 @@ export function ParallelRoutesSelector({ onBack }: { onBack: () => void }) {
                 );
               })}
             </div>
-            <div className="pt-3 mt-auto shrink-0">
-              <Button className="w-full" disabled={!isDirty || saving || loading} onClick={save}>
-                {saving ? <Loader2 size={14} className="animate-spin mr-2" /> : null}Save changes
-              </Button>
-            </div>
           </div>
         </div>
       )}
+
+      {/* Save stands in the page footer, not inside the slot list: turning parallel routing OFF is
+          itself a decision to save, and the list is gone from the screen at exactly that moment. */}
+      <div className="px-4 py-2.5 border-t border-border flex items-center gap-3 shrink-0">
+        <Button disabled={!isDirty || saving || loading} onClick={save}>
+          {saving ? <Loader2 size={14} className="animate-spin mr-2" /> : null}Save changes
+        </Button>
+        <span className="text-[10px] text-muted-foreground">
+          {routing ? "Slots apply on the app's next load" : "Parallel routing is off — the app renders the flat page tree"}
+        </span>
+      </div>
     </div>
   );
 }
