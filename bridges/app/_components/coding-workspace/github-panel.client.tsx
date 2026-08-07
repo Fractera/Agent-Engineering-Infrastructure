@@ -286,9 +286,21 @@ export function GitHubPanel({ onClose, onChanged }: { onClose: () => void; onCha
           <div className="flex flex-col gap-2 rounded-md border border-border p-3">
             <span className="text-[11px] font-semibold text-foreground">What happens after this</span>
             <p className="text-[10px] text-muted-foreground leading-relaxed">
-              <strong>Do I press it again?</strong> Yes — every time something changes on the SERVER that
-              you want kept: a page edited here, a setting a developer added. Pushing twice with nothing
-              changed is harmless; it simply reports that there was nothing to send.
+              <strong>This button&apos;s real job is the FIRST transfer.</strong> Nothing in this admin
+              panel writes code: you work here with data and settings, and those are excluded from the
+              repository on purpose — the database, uploaded files, the environment file and the
+              application settings all stay on the server. So sending the project is how your repository
+              gets its starting point, once.
+            </p>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              <strong>After that the direction reverses.</strong> Developers write code on their machines
+              and push it to the repository; this server PULLS it. That is the normal rhythm, and it is
+              why the footer offers Pull as well as Push.
+            </p>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              <strong>Do I press it again?</strong> Rarely — only if something genuinely changed the code
+              on the server. Pressing it with nothing changed is harmless: git reports there was nothing
+              to send.
             </p>
             <p className="text-[10px] text-muted-foreground leading-relaxed">
               <strong>Will it clash with work done on a laptop?</strong> It can, and the rule that avoids
