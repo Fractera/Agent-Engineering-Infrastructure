@@ -134,11 +134,50 @@ export function GitHubPanel({ onClose, onChanged }: { onClose: () => void; onCha
               open the token page <ExternalLink size={9} />
             </a>
           </div>
+          {/* The token page shows about fifty checkboxes and no guidance. Naming the
+              exact GitHub controls — and wrapping them in <code> so a browser's
+              auto-translate leaves them alone, since GitHub's own page stays in
+              English — is the difference between two minutes and giving up. */}
+          <ol className="text-[10px] text-muted-foreground leading-relaxed flex flex-col gap-1.5 list-none">
+            <li>
+              <strong>2.1</strong> Open the link above. It lands on{" "}
+              <code className="font-mono">Tokens (classic)</code>. Press{" "}
+              <code className="font-mono">Generate new token</code> and choose{" "}
+              <code className="font-mono">Generate new token (classic)</code>.
+            </li>
+            <li>
+              <strong>2.2</strong> <code className="font-mono">Note</code> — a name for yourself, so you
+              recognise it in a year. Something like <em>Fractera server</em>. GitHub does not use it.
+            </li>
+            <li>
+              <strong>2.3</strong> <code className="font-mono">Expiration</code> — pick a date. When it
+              passes, pushing simply stops working and you come back here with a new token. A long
+              expiry is convenient; a short one is safer. <code className="font-mono">No expiration</code>{" "}
+              works but means a leaked token stays useful forever.
+            </li>
+            <li>
+              <strong>2.4</strong> <code className="font-mono">Select scopes</code> — the long list. Tick
+              exactly ONE: <code className="font-mono">repo</code>, the first line, described as{" "}
+              <em>Full control of private repositories</em>. Its five indented children tick themselves —
+              that is expected. Touch nothing else: packages, workflows, org and admin scopes are not
+              needed here, and every extra tick widens what a stolen token could do.
+            </li>
+            <li>
+              <strong>2.5</strong> Scroll to the bottom and press{" "}
+              <code className="font-mono">Generate token</code>.
+            </li>
+            <li>
+              <strong>2.6</strong> Copy it at once. GitHub shows the value <strong>one time only</strong>;
+              leave the page and it cannot be read again — only replaced.
+            </li>
+            <li>
+              <strong>2.7</strong> Paste it below and press <strong>Save and verify</strong>. If GitHub
+              refuses it, the reason appears here rather than later during a push.
+            </li>
+          </ol>
           <p className="text-[10px] text-muted-foreground leading-relaxed">
-            On GitHub: <strong>Settings → Developer Settings → Personal Access Tokens → Tokens (classic) →
-            Generate new token</strong>, with the <code className="font-mono">repo</code> scope. A public
-            repository can be read without a token, but writing to any repository needs one.
-            {status?.hasToken && <> A token is already saved — leave this empty to keep it.</>}
+            A public repository can be read without a token, but writing to any repository needs one.
+            {status?.hasToken && <> A token is already saved — leave the field empty to keep it.</>}
           </p>
           <input
             type="password"
