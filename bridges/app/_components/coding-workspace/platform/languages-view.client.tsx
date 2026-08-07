@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ALL_LANGUAGE_METADATA } from "@/config/translations/language-metadata";
+import { LanguagesHelp } from "../help-note.client";
 
 // Languages view — the language SET only (available + default). This is the BUILD-TIME source of
 // truth (env NEXT_PUBLIC_SUPPORTED_LANGUAGES / NEXT_PUBLIC_DEFAULT_LOCALE — it feeds
@@ -129,7 +130,10 @@ export function LanguagesView({ onBack }: { onBack: () => void }) {
   return (
     <div className="absolute inset-0 bg-background flex flex-col z-30">
       <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border shrink-0">
-        <span className="text-xs font-semibold text-foreground">Languages</span>
+        <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+          Languages
+          <LanguagesHelp />
+        </span>
         <span className="text-[10px] text-muted-foreground">{selected.size} selected</span>
         <span className="flex-1" />
         <button

@@ -461,6 +461,34 @@ export function AppSettingsHelp() {
   );
 }
 
+// Languages. Wording from the owner (2026-08-08); the routing claims are the ones proxy.ts actually
+// implements — single-language mode 301-redirects /en/about to /about and rewrites it back inside.
+export function LanguagesHelp() {
+  return (
+    <HelpNote title="Languages — one set, two shapes of address">
+      <p>
+        <strong>The pages are already built for this.</strong> Every page is prepared for multilingual
+        work with the strongest search optimisation each locale can carry — the language set you choose
+        here is what those pages are generated for.
+      </p>
+      <p>
+        <strong>One language.</strong> The root of your project is your domain itself:
+        <code> &lt;domain&gt;</code>. No language appears in the address, and an address that carries one
+        anyway is redirected to the clean form.
+      </p>
+      <p>
+        <strong>More than one.</strong> Your pages live under the language:
+        <code> &lt;domain&gt;/&#123;lang&#125;</code>.
+      </p>
+      <p>
+        <strong>Choose a default language.</strong> It is worth doing in every case: until translations
+        into all the chosen languages have been added to your project, it is the texts in that language
+        that stand on all pages.
+      </p>
+    </HelpNote>
+  );
+}
+
 // Parallel routing. The owner will supply the final wording for this note; what stands here now is
 // the mechanism as it actually is, including the part that is not built yet — a "?" that promises
 // more than the product does is worse than no "?" at all.
