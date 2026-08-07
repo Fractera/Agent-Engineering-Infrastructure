@@ -26,6 +26,7 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
   const [configured, setConfigured]   = useState(false);
   const [powering, setPowering]       = useState(false);
   const [powerError, setPowerError]   = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [model, setModel]             = useState("gpt-5.4-mini");
   const [saving, setSaving]           = useState(false);
   const [query, setQuery]             = useState("");
@@ -152,25 +153,39 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
     }
   }
 
-  async function handleIngest() {
+  // (step 500) The knowledge base takes the OWNER'S documents. The old button
+  // posted an empty body, which made the server index the slot's source code —
+  // 285 .ts/.tsx/.json files, each costing an entity-extraction pass. It also
+  // crashed here before it could say so: the server returns `inserted` as a
+  // NUMBER, and this code called .filter() on it, so every run ended in the
+  // catch below reporting a bare "Ingest failed" whatever actually happened.
+  async function handleUpload(files: FileList | null) {
+    if (!files || files.length === 0) return;
     setIngesting(true);
+    let ok = 0;
+    const failed: string[] = [];
     try {
-      const res = await fetch("/api/rag/ingest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      const data = await res.json();
-      if (data.available === false) {
-        toast.error("LightRAG not available");
-      } else {
-        const count = data.inserted?.filter((r: { ok: boolean }) => r.ok).length ?? 0;
-        toast.success(`Ingesting ${count} documents — this may take several minutes`);
+      for (const file of Array.from(files)) {
+        try {
+          const text = await file.text();
+          if (text.trim().length < 20) { failed.push(`${file.name} (empty)`); continue; }
+          const res = await fetch("/api/rag/ingest", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text, description: file.name }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data.ok) ok++;
+          else failed.push(`${file.name}: ${data.error ?? res.status}`);
+        } catch (e) {
+          failed.push(`${file.name}: ${String((e as Error).message ?? e)}`);
+        }
       }
-    } catch {
-      toast.error("Ingest failed");
+      if (ok > 0) toast.success(`${ok} document(s) accepted — the graph is built in the background, ask a question in a minute`);
+      if (failed.length) toast.error(failed.slice(0, 3).join("; "));
     } finally {
       setIngesting(false);
+      if (fileRef.current) fileRef.current.value = "";
     }
   }
 
@@ -274,13 +289,28 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
               {saving ? <Loader2 size={11} className="animate-spin" /> : "Save model"}
             </button>
 
-            {/* Ingest docs button */}
+            {/* Add documents to the knowledge base */}
             {configured && (
-              <button type="button" onClick={handleIngest} disabled={ingesting}
-                className="flex items-center gap-2 px-3 py-1.5 text-[11px] border border-border rounded-md hover:bg-muted transition-colors text-foreground disabled:opacity-40">
-                {ingesting ? <Loader2 size={11} className="animate-spin" /> : <BookOpen size={11} />}
-                {ingesting ? "Loading docs…" : "Load project docs"}
-              </button>
+              <div className="flex flex-col gap-1.5">
+                <input
+                  ref={fileRef}
+                  type="file"
+                  multiple
+                  accept=".md,.txt,.json,.csv,.html,.htm,.yml,.yaml"
+                  className="hidden"
+                  onChange={(e) => handleUpload(e.target.files)}
+                />
+                <button type="button" onClick={() => fileRef.current?.click()} disabled={ingesting}
+                  className="flex items-center gap-2 px-3 py-1.5 text-[11px] border border-border rounded-md hover:bg-muted transition-colors text-foreground disabled:opacity-40 self-start">
+                  {ingesting ? <Loader2 size={11} className="animate-spin" /> : <BookOpen size={11} />}
+                  {ingesting ? "Adding…" : "Add documents"}
+                </button>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                  Text formats for now: md, txt, json, csv, html, yaml. PDF and DOCX need text
+                  extraction, which this build does not do — converting them outside and uploading
+                  the text works today.
+                </p>
+              </div>
             )}
 
             {/* Post-save banner */}

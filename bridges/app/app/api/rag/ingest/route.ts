@@ -43,11 +43,24 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null);
 
-    // Direct text insert
+    // Direct text insert — one document, the normal path.
     if (body?.text) {
       const ok = await ingestText(body.text, body.description ?? "");
       if (!ok) return NextResponse.json({ available: false, error: "LightRAG unreachable" }, { status: 502 });
       return NextResponse.json({ ok: true });
+    }
+
+    // (step 500) Indexing the SLOT'S SOURCE CODE now needs an explicit flag.
+    // It used to be what an empty POST did, and an empty POST is easy to send by
+    // accident — it queued 285 source files into the graph, each costing an LLM
+    // entity-extraction pass. That behaviour made sense when LightRAG existed to
+    // make the Hermes agent smarter about the codebase; Hermes is gone, and a
+    // knowledge base is for the owner's DOCUMENTS, not for .tsx files.
+    if (body?.scanApp !== true) {
+      return NextResponse.json(
+        { error: "Nothing to ingest: send { text } for a document, or { scanApp: true } to index the app source." },
+        { status: 400 },
+      );
     }
 
     // Scan app/ directory
