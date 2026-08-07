@@ -19,6 +19,7 @@ import { VectorPanel } from "./vector-panel.client";
 import { MapPanel } from "./map-panel.client";
 import { LightRagPanel } from "./lightrag-panel.client";
 import { ChannelsPanel } from "./channels-panel.client";
+import { ExportDialog, ImportDialog } from "./backup-dialog.client";
 import { SiteSettingsPanel } from "./site-settings-panel.client";
 import { PlatformSettingsPanel } from "./platform-settings-panel.client";
 import { IdleCanvas } from "./idle-canvas.client";
@@ -93,7 +94,6 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   const dataMenuOpen = menuOpen;
   const setDataMenuOpen = (v: boolean | ((p: boolean) => boolean)) =>
     onMenuOpenChange?.(typeof v === "function" ? v(menuOpen) : v);
-  const [importing, setImporting]                   = useState(false);
   const [updateAvailable, setUpdateAvailable]       = useState(false);
   const [updateCount, setUpdateCount]               = useState(0);
   const [updating, setUpdating]                     = useState(false);
@@ -126,6 +126,8 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   const [showMapPanel, setShowMapPanel]             = useState(false);
   const [showLightRag, setShowLightRag]             = useState(false);
   const [showChannels, setShowChannels]             = useState(false);
+  const [showExport, setShowExport]                 = useState(false);
+  const [importFile, setImportFile]                 = useState<File | null>(null);
   // Security tab is hidden from the UI until cert provisioning for all 6
   // subdomains ships (work in progress). The env var FRACTERA_IP_NODOMAIN_MODE
   // is still readable / settable from the terminal — this just removes the
@@ -179,31 +181,18 @@ showOpenAiPanel, showEnvEditor,
   const idQuery     = SERVER_ID ? `?id=${encodeURIComponent(SERVER_ID)}` : "";
   const APP_VERSION = process.env.NEXT_PUBLIC_GIT_COMMIT ?? "dev";
 
-  async function handleExport() {
+  function handleExport() {
     setDataMenuOpen(false);
-    const res = await fetch("/api/data/export");
-    if (!res.ok) { toast.error("Export failed"); return; }
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = res.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] ?? "fractera-backup.zip";
-    a.click();
-    URL.revokeObjectURL(url);
+    setShowExport(true);
   }
 
-  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file) return;
-    setImporting(true);
-    setDataMenuOpen(false);
-    const form = new FormData();
-    form.append("file", file);
-    const result = await fetch("/api/data/import", { method: "POST", body: form }).then((r) => r.json()).catch(() => ({ error: "Network error" }));
-    setImporting(false);
     e.target.value = "";
-    if (result.ok) toast.success(`Imported: ${result.stats.dbRows} DB rows, ${result.stats.mediaFiles} media files`);
-    else toast.error("Import failed: " + (result.error ?? "unknown error"));
+    if (!file) return;
+    setDataMenuOpen(false);
+    // Nothing is written yet: the dialog inspects the archive first and asks.
+    setImportFile(file);
   }
 
 
@@ -581,6 +570,9 @@ showOpenAiPanel, showEnvEditor,
           <VectorPanel onClose={() => setShowVectorPanel(false)} />
         </div>
       )}
+
+      {showExport && <ExportDialog onClose={() => setShowExport(false)} />}
+      {importFile && <ImportDialog file={importFile} onClose={() => setImportFile(null)} />}
 
       {/* ── Communication channels panel ── */}
       {/* REFERENCE LAYOUT (Users) — anchors for the height, stretch for the width. */}
