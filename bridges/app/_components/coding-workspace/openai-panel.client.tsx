@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { X, KeyRound, Loader2, CheckCircle, AlertCircle, RefreshCw, BrainCircuit } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { HelpNote } from "./help-note.client";
 
 type Props = {
   onClose: () => void;
@@ -100,6 +101,49 @@ export function OpenAiPanel({ onClose }: Props) {
         <span className="text-sm font-semibold text-foreground flex items-center gap-2">
           <KeyRound size={13} />
           OpenAI settings
+          <HelpNote title="One key — what spends it, and why this is not a subscription">
+            <p>
+              <strong>What you get.</strong> One key, entered once, that every part of the platform draws
+              on. It is not a plan with a monthly fee — it is a balance you top up, and you are charged for
+              what was actually used, down to the request.
+            </p>
+            <p>
+              <strong>What spends it.</strong> Vector memory turns each chunk of text into a vector, once
+              at ingest and once per search. Agentic RAG spends far more: it reads every chunk to extract
+              entities and relations, then writes an answer for each question. Voice input pays for
+              transcription, by the minute of audio. Images and video pay a vision model, by the picture.
+              Different jobs, different models, different prices — a search costs a fraction of a cent, a
+              graph pass over a long document costs minutes of compute.
+            </p>
+            <p>
+              <strong>Why a subscription cannot replace it.</strong> A single flat plan does not exist for
+              this shape of work. Embeddings, transcription, vision and reasoning are separate services
+              priced separately, and a consumer plan that covers one covers none of the others. More to the
+              point, most consumer plans restrict commercial use, and many forbid automated or agent-driven
+              access outright — which is exactly what a platform like this does all day. A key on a
+              pay-as-you-go balance is not a workaround; it is the only arrangement that is both permitted
+              and predictable.
+            </p>
+            <p>
+              <strong>What we do about the cost.</strong> Fractera treats tokens as money, because they are.
+              Embeddings run on the cheap <strong>text-embedding-3-small</strong>, not the large model — the
+              quality difference is imperceptible for this work and the price is about seven times lower.
+              The vector store answers from a real index, so a search reads a handful of rows instead of the
+              whole base. The graph pays its expensive pass once at ingest and stays cheap per question
+              afterwards. Nothing here calls a model that a cheaper path could have answered.
+            </p>
+            <p>
+              <strong>Where you should watch it.</strong> Ingesting a large corpus into the knowledge base
+              is the one operation that costs real money in one go. Load what you will actually ask about,
+              and remember that re-loading a document pays for that pass again.
+            </p>
+            <p>
+              <strong>Changing the provider.</strong> OpenAI is the default we chose for the balance of
+              price, quality and availability. If your project needs a different provider or model, write to{" "}
+              <a href="mailto:admin@fractera.ai" className="text-primary underline underline-offset-2">admin@fractera.ai</a>{" "}
+              and the developer will arrange it.
+            </p>
+          </HelpNote>
         </span>
         <span className="text-[10px] font-mono text-muted-foreground">embeddings · data service</span>
         <span className="ml-auto">{!loading && memory && statusChip(memory.configured)}</span>
@@ -114,7 +158,7 @@ export function OpenAiPanel({ onClose }: Props) {
             <Loader2 size={12} className="animate-spin" /> Loading…
           </div>
         ) : (
-          <div className="w-full max-w-xl space-y-4">
+          <div className="w-full space-y-4">
             <div className="rounded-md border border-blue-500/30 bg-blue-500/5 p-3 text-[11px] leading-relaxed text-blue-700 dark:text-blue-300">
               Paste an OpenAI API key so the data layer can turn text into vectors. Embeddings run on the cheap
               <strong> text-embedding-3-small</strong> — top up a balance from $5 at{" "}

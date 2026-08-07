@@ -713,7 +713,7 @@ showOpenAiPanel, showEnvEditor,
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-6 max-w-2xl">
+          <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-6 w-full">
             <p className="text-[12px] text-muted-foreground leading-relaxed">
               Connect your GitHub repository to enable Git Pull and Git Push directly from the admin panel.
               The repository will be synced with the <span className="font-mono text-foreground">app</span> layer of your Fractera instance.

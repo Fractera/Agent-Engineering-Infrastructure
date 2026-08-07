@@ -179,7 +179,7 @@ export function MapPanel({ onClose }: { onClose: () => void }) {
         <button type="button" onClick={onClose} className="flex items-center justify-center size-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X size={13} /></button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 max-w-3xl">
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 w-full">
         <p className="text-[12px] text-muted-foreground leading-relaxed">{t.intro}</p>
         {error ? <p className="text-[12px] text-rose-600">{error}</p> : null}
 
