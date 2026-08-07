@@ -153,17 +153,33 @@ if (!hasSeq) {
 // Index mode. Partition keys arrived in sqlite-vec 0.1.6; an older extension throws
 // on the CREATE, so we step down instead of failing. Nothing here is fatal: a store
 // with no index still answers, just linearly.
+// The key column is declared EXPLICITLY. Naming `rowid` in the column list instead
+// makes vec0 shift the bindings and drop the TEXT collection into the primary-key
+// slot — it then refuses the row with "Only integers are allowed for primary key
+// values", which is how this arrived broken the first time.
 let annMode = 'scan'
 if (vecExtension) {
+  // The index is derived data, so a table of the wrong shape (an older layout, a
+  // changed dimension) is dropped rather than migrated — the rebuild below refills it.
+  const cols = (() => {
+    try { return appDb.prepare('PRAGMA table_info(vectors_ann)').all().map((c) => c.name) } catch { return [] }
+  })()
+  if (cols.length && !cols.includes('seq')) {
+    try { appDb.exec('DROP TABLE vectors_ann') } catch { /* recreated below */ }
+  }
   try {
     appDb.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS vectors_ann USING vec0(
+      seq INTEGER PRIMARY KEY,
       collection TEXT PARTITION KEY,
       embedding FLOAT[${EMBED_DIMS}]
     )`)
     annMode = 'partitioned'
   } catch {
     try {
-      appDb.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS vectors_ann USING vec0(embedding FLOAT[${EMBED_DIMS}])`)
+      appDb.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS vectors_ann USING vec0(
+        seq INTEGER PRIMARY KEY,
+        embedding FLOAT[${EMBED_DIMS}]
+      )`)
       annMode = 'flat'
     } catch {
       annMode = 'scan'
@@ -171,19 +187,28 @@ if (vecExtension) {
   }
 }
 
+// A failing index must never pass for a working one. The first failure is logged
+// with its real message and the store DROPS to 'scan': slow and correct beats fast
+// and empty. Swallowing these errors is exactly how the broken layout above shipped
+// looking healthy — writes returned ok, searches returned nothing.
+function annDegrade(where, e) {
+  if (annMode === 'scan') return
+  annMode = 'scan'
+  console.error(`Vectors: index disabled after ${where} failed — ${String(e.message ?? e)}. Falling back to linear scan.`)
+}
 function annDelete(seq) {
   if (annMode === 'scan' || seq == null) return
-  try { appDb.prepare('DELETE FROM vectors_ann WHERE rowid = ?').run(seq) } catch { /* index is best-effort */ }
+  try { appDb.prepare('DELETE FROM vectors_ann WHERE seq = ?').run(seq) } catch (e) { annDegrade('index delete', e) }
 }
 function annInsert(seq, collection, blob) {
   if (annMode === 'scan' || seq == null) return
   try {
     if (annMode === 'partitioned') {
-      appDb.prepare('INSERT INTO vectors_ann (rowid, collection, embedding) VALUES (?, ?, ?)').run(seq, collection, blob)
+      appDb.prepare('INSERT INTO vectors_ann (seq, collection, embedding) VALUES (?, ?, ?)').run(seq, collection, blob)
     } else {
-      appDb.prepare('INSERT INTO vectors_ann (rowid, embedding) VALUES (?, ?)').run(seq, blob)
+      appDb.prepare('INSERT INTO vectors_ann (seq, embedding) VALUES (?, ?)').run(seq, blob)
     }
-  } catch { /* index is best-effort: a failed write must never lose the record itself */ }
+  } catch (e) { annDegrade('index write', e) }
 }
 
 // Backfill: the index is derived data, so it is rebuilt whenever it is emptier than
@@ -198,10 +223,10 @@ if (annMode !== 'scan') {
       for (const r of appDb.prepare('SELECT seq, collection, embedding FROM vectors WHERE seq IS NOT NULL').all()) {
         annInsert(r.seq, r.collection, r.embedding)
       }
-      console.log(`Vectors: rebuilt index for ${stored} record(s)`)
+      if (annMode !== 'scan') console.log(`Vectors: rebuilt index for ${stored} record(s)`)
     }
   } catch (e) {
-    console.log('Vectors: index rebuild skipped —', String(e.message ?? e))
+    annDegrade('index rebuild', e)
   }
 }
 
@@ -808,13 +833,13 @@ app.post('/vectors/search', async (req, res) => {
     if (annMode === 'partitioned' && collection) {
       rows = appDb.prepare(`
         SELECT v.id, v.collection, v.ref_table, v.ref_id, v.text, v.embedding
-        FROM vectors_ann a JOIN vectors v ON v.seq = a.rowid
+        FROM vectors_ann a JOIN vectors v ON v.seq = a.seq
         WHERE a.embedding MATCH ? AND a.collection = ? AND k = ?
       `).all(toBlob(probe), collection, want)
     } else if (annMode !== 'scan' && !collection) {
       rows = appDb.prepare(`
         SELECT v.id, v.collection, v.ref_table, v.ref_id, v.text, v.embedding
-        FROM vectors_ann a JOIN vectors v ON v.seq = a.rowid
+        FROM vectors_ann a JOIN vectors v ON v.seq = a.seq
         WHERE a.embedding MATCH ? AND k = ?
       `).all(toBlob(probe), want)
     } else if (annMode === 'flat' && collection) {
@@ -823,7 +848,7 @@ app.post('/vectors/search', async (req, res) => {
       // that is why 'partitioned' is the mode we want.
       rows = appDb.prepare(`
         SELECT v.id, v.collection, v.ref_table, v.ref_id, v.text, v.embedding
-        FROM vectors_ann a JOIN vectors v ON v.seq = a.rowid
+        FROM vectors_ann a JOIN vectors v ON v.seq = a.seq
         WHERE a.embedding MATCH ? AND k = ?
       `).all(toBlob(probe), Math.min(500, want * 20)).filter((r) => r.collection === collection)
     } else {
@@ -831,6 +856,20 @@ app.post('/vectors/search', async (req, res) => {
       rows = collection
         ? appDb.prepare('SELECT id, collection, ref_table, ref_id, text, embedding FROM vectors WHERE collection = ?').all(collection)
         : appDb.prepare('SELECT id, collection, ref_table, ref_id, text, embedding FROM vectors').all()
+    }
+
+    // An index that returns nothing while the store holds rows is broken, not empty.
+    // Rather than hand the caller a confident "no results", drop to the scan and say so.
+    if (annMode !== 'scan' && rows.length === 0) {
+      const { n } = collection
+        ? appDb.prepare('SELECT COUNT(*) AS n FROM vectors WHERE collection = ?').get(collection)
+        : appDb.prepare('SELECT COUNT(*) AS n FROM vectors').get()
+      if (n > 0) {
+        annDegrade('index search', new Error(`returned 0 of ${n} candidate row(s)`))
+        rows = collection
+          ? appDb.prepare('SELECT id, collection, ref_table, ref_id, text, embedding FROM vectors WHERE collection = ?').all(collection)
+          : appDb.prepare('SELECT id, collection, ref_table, ref_id, text, embedding FROM vectors').all()
+      }
     }
 
     // Exact cosine on the candidates only — same score the caller always got.
