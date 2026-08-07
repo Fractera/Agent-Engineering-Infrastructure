@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Loader2, Trash2, Copy, ImagePlus, X, Check, Search, Pencil, MoreHorizontal, Eye, Clapperboard, FileText, Scissors, FileType2, Code2, ExternalLink } from "lucide-react";
+import { HelpNote } from "./help-note.client";
 import ReactMarkdown from "react-markdown";
 import { VideoTrimmer } from "./video-trimmer.client";
 import { toast } from "sonner";
@@ -511,6 +512,29 @@ export function MediaLibraryPanel({ onClose }: Props) {
       <div className="flex items-center px-4 py-2.5 border-b border-border shrink-0">
         <span className="text-xs font-semibold text-foreground flex-1">
           Media Library
+          <HelpNote title="Object storage — files, compared with the database">
+            <p>
+              <strong>What it holds.</strong> The files themselves: images, video, audio, documents. Bytes,
+              not rows. It streams them, serves them with cache headers, crops images and trims video.
+            </p>
+            <p>
+              <strong>How it differs from the database.</strong> The database holds facts <em>about</em> a
+              file — its name, size, type, duration, who uploaded it and when. This holds the file. The
+              split is not bureaucracy: files inside a database bloat it and make every backup slow, while
+              facts kept only in a filesystem cannot be searched, filtered or joined. Each keeps what it is
+              good at, and they point at each other.
+            </p>
+            <p>
+              <strong>What it costs.</strong> Disk, and nothing else. No model, no per-request billing —
+              the storage lives on your server, so a file served a million times costs the same as one
+              served once.
+            </p>
+            <p>
+              <strong>Where it is weak.</strong> It knows nothing about content. A PDF is a sequence of
+              bytes to it; until something extracts the text and puts it in vector memory or the knowledge
+              base, nobody can ask a question about what is inside.
+            </p>
+          </HelpNote>
           <span className="ml-2 text-[10px] font-normal text-muted-foreground font-mono">local S3 storage</span>
         </span>
         <span className="text-[10px] text-muted-foreground mr-3">

@@ -435,19 +435,18 @@ showOpenAiPanel, showEnvEditor,
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Brain size={11} />Agentic RAG
               </button>
-              {(
-                <button type="button" onClick={() => { setDataMenuOpen(false); setShowOpenAiPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                  <KeyRound size={11} />OpenAI settings
-                </button>
-              )}
-              {/* Map settings — the owner's law of 2026-07-25, restored in step 500:
-                  it belongs in the SAME group as the database, the vector store and
-                  the OpenAI key, with no separator between them. Region of work
-                  (OpenStreetMap data), engine health, default fuel. */}
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowMapPanel((v) => !v); setShowOpenAiPanel(false); setShowVectorPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
+              {/* Map settings closes the WAREHOUSE group (owner, 2026-08-08): users,
+                  files, rows, vectors, the graph and the map are all places where the
+                  project keeps something. The OpenAI key is not a warehouse — it is what
+                  several of them consume — so it stands alone below, before the domain. */}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowMapPanel((v) => !v); setShowOpenAiPanel(false); setShowVectorPanel(false); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <MapIcon size={11} />Map settings
+              </button>
+              <div className="h-px bg-border mx-2" />
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowOpenAiPanel((v) => !v); setShowMapPanel(false); setShowVectorPanel(false); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                <KeyRound size={11} />OpenAI settings
               </button>
               <div className="h-px bg-border mx-2" />
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowDomainPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); }}

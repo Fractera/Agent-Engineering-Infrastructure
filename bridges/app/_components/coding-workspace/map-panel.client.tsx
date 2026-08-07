@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import type { GeoJSON as GeoJSONLayer, Map as LeafletMap } from "leaflet"
 import "leaflet/dist/leaflet.css"
 import { Loader2, X, MapPin, Download, Send, MessagesSquare } from "lucide-react"
+import { HelpNote } from "./help-note.client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { mapPanelStrings } from "./map-panel-i18n"
@@ -136,7 +137,45 @@ export function MapPanel({ onClose }: { onClose: () => void }) {
     <div className="bg-background flex flex-col h-full w-full">
       <div className="flex items-center px-4 py-2.5 border-b border-border shrink-0">
         <MapPin size={13} className="text-muted-foreground mr-2" />
-        <span className="text-xs font-semibold text-foreground flex-1">{t.title}</span>
+        <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+          {t.title}
+          <HelpNote title="Maps — your own routing engine, and what it is for">
+            <p>
+              <strong>What it is.</strong> A map engine running on your server, built from OpenStreetMap
+              data: routing and geocoding, behind one address your automations call. No third-party map
+              key, no per-request billing, no quota that stops your business on a busy day.
+            </p>
+            <p>
+              <strong>What it can answer.</strong> An address into coordinates. A route from A to B with
+              its distance and driving time. A matrix of distances and times between many points at once.
+              And the best order to visit a set of stops — the classic travelling-salesman solve.
+            </p>
+            <p>
+              <strong>What that is worth in practice.</strong> A courier with twelve deliveries: the matrix
+              gives every pair of times, the tour solve gives the order that spends the least time driving.
+              Fuel follows from the same numbers — total distance times your consumption — so &ldquo;which
+              route is cheapest today&rdquo; stops being a guess. The same answers give an honest delivery
+              window to a customer, tell you whether an address falls inside your service area, and let a
+              dispatcher compare two plans before anyone leaves the depot.
+            </p>
+            <p>
+              <strong>Why it is here and not bought.</strong> Commercial map APIs charge per request, and
+              routing is the kind of thing an automation does thousands of times. Self-hosting turns a
+              growing bill into fixed disk and CPU that you already pay for.
+            </p>
+            <p>
+              <strong>What it costs.</strong> One region at a time. The engine holds an extract — a country
+              or an area — and importing a new one takes minutes and disk. Choose the region you actually
+              work in, not the largest one available.
+            </p>
+            <p>
+              <strong>Where it is weak.</strong> It knows roads, not traffic: times come from speed limits
+              and road classes, not from what is happening right now. Treat them as reliable planning
+              numbers rather than live estimates.
+            </p>
+          </HelpNote>
+        </span>
+        <span className="flex-1" />
         <button type="button" onClick={onClose} className="flex items-center justify-center size-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X size={13} /></button>
       </div>
 

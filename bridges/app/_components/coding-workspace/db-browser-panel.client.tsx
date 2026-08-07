@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Loader2, Pencil, Trash2, X, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { HelpNote } from "./help-note.client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ALL_ROLES } from "@/lib/roles";
@@ -218,7 +219,36 @@ export function DbBrowserPanel({ onClose }: Props) {
 
       {/* ── Header ── */}
       <div className="flex items-center px-4 py-2.5 border-b border-border shrink-0">
-        <span className="text-xs font-semibold text-foreground">Database</span>
+        <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+          Database
+          <HelpNote title="The database — exact facts, compared with vector memory">
+            <p>
+              <strong>What it holds.</strong> Rows. Orders, customers, settings, prices — facts with a
+              shape, where every value is exactly itself and nothing is approximate.
+            </p>
+            <p>
+              <strong>How it differs from vector memory.</strong> A database answers questions you can
+              state precisely: which orders shipped last week, how many are unpaid, what this customer
+              spent. Vector memory answers questions you can only state loosely, by meaning. One is
+              exactness over facts; the other is similarity over language. Asking the database
+              &ldquo;something about returns&rdquo; gets you nothing; asking vector memory &ldquo;sum of
+              March invoices&rdquo; gets you a paragraph that mentions March.
+            </p>
+            <p>
+              <strong>What it costs.</strong> Nothing per query, and no model is involved. Filtering,
+              counting and sorting happen in milliseconds and stay exact however large the table grows.
+            </p>
+            <p>
+              <strong>Where it is weak.</strong> It only answers what can be written as a query. It cannot
+              find the passage that <em>sounds like</em> your question, and it has no opinion about meaning.
+            </p>
+            <p>
+              <strong>They work together.</strong> A vector record can point back at a row — its table and
+              id travel with it. So a meaning-search over descriptions can end at the exact row, and the
+              exact row can carry the text that made it findable. Same SQLite file, one backup, one wipe.
+            </p>
+          </HelpNote>
+        </span>
         {selectedTable && (
           <>
             <span className="mx-2 text-muted-foreground/40 text-xs">/</span>

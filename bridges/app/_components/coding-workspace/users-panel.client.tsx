@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Loader2, X, Pencil, Trash2, Ban, CheckCircle, MoreVertical, ChevronLeft, ChevronRight } from "lucide-react";
+import { HelpNote } from "./help-note.client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -144,7 +145,26 @@ export function UsersPanel({ onClose }: Props) {
     <div className="flex flex-col h-full w-full bg-background border-t border-border">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
-        <span className="text-sm font-semibold">Users</span>
+        <span className="text-sm font-semibold flex items-center gap-1.5">
+          Users
+          <HelpNote title="Users — a table that earned its own screen">
+            <p>
+              <strong>What it is.</strong> Accounts, roles and access. Technically these are rows like any
+              other, and you can read them in the database browser.
+            </p>
+            <p>
+              <strong>Why it is not just a table here.</strong> This is the one table where a careless edit
+              locks you out of your own server. Granting the architect role, or taking access away, should
+              be one obvious action with a visible consequence — not an UPDATE typed into a grid next to
+              forty other tables. The auth service owns these rows and keeps sessions in step with them;
+              editing them by hand can leave a session alive for an account that no longer has the right.
+            </p>
+            <p>
+              <strong>How to think about it.</strong> Read users in the database browser when you want to
+              understand. Change them here, where every action is named and confirmed.
+            </p>
+          </HelpNote>
+        </span>
         <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
           <X size={14} />
         </button>
