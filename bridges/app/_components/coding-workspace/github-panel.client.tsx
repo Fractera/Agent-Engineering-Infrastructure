@@ -134,29 +134,28 @@ export function GitHubPanel({ onClose, onChanged }: { onClose: () => void; onCha
               open the token page <ExternalLink size={9} />
             </a>
           </div>
-          {/* The token page shows about fifty checkboxes and no guidance. Naming the
-              exact GitHub controls — and wrapping them in <code> so a browser's
-              auto-translate leaves them alone, since GitHub's own page stays in
-              English — is the difference between two minutes and giving up. */}
+          {/* The token page shows about fifty checkboxes and no guidance at all.
+              Naming the exact controls, in order, is the difference between two
+              minutes and giving up. */}
           <ol className="text-[10px] text-muted-foreground leading-relaxed flex flex-col gap-1.5 list-none">
             <li>
               <strong>2.1</strong> Open the link above. It lands on{" "}
-              <code className="font-mono">Tokens (classic)</code>. Press{" "}
-              <code className="font-mono">Generate new token</code> and choose{" "}
-              <code className="font-mono">Generate new token (classic)</code>.
+              <strong>Tokens (classic)</strong>. Press{" "}
+              <strong>Generate new token</strong> and choose{" "}
+              <strong>Generate new token (classic)</strong>.
             </li>
             <li>
-              <strong>2.2</strong> <code className="font-mono">Note</code> — a name for yourself, so you
+              <strong>2.2</strong> <strong>Note</strong> — a name for yourself, so you
               recognise it in a year. Something like <em>Fractera server</em>. GitHub does not use it.
             </li>
             <li>
-              <strong>2.3</strong> <code className="font-mono">Expiration</code> — pick a date. When it
+              <strong>2.3</strong> <strong>Expiration</strong> — pick a date. When it
               passes, pushing simply stops working and you come back here with a new token. A long
-              expiry is convenient; a short one is safer. <code className="font-mono">No expiration</code>{" "}
+              expiry is convenient; a short one is safer. <strong>No expiration</strong>{" "}
               works but means a leaked token stays useful forever.
             </li>
             <li>
-              <strong>2.4</strong> <code className="font-mono">Select scopes</code> — the long list. Tick
+              <strong>2.4</strong> <strong>Select scopes</strong> — the long list. Tick
               exactly ONE: <code className="font-mono">repo</code>, the first line, described as{" "}
               <em>Full control of private repositories</em>. Its five indented children tick themselves —
               that is expected. Touch nothing else: packages, workflows, org and admin scopes are not
@@ -164,7 +163,7 @@ export function GitHubPanel({ onClose, onChanged }: { onClose: () => void; onCha
             </li>
             <li>
               <strong>2.5</strong> Scroll to the bottom and press{" "}
-              <code className="font-mono">Generate token</code>.
+              <strong>Generate token</strong>.
             </li>
             <li>
               <strong>2.6</strong> Copy it at once. GitHub shows the value <strong>one time only</strong>;
