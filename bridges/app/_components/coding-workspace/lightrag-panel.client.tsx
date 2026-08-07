@@ -27,6 +27,7 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
   const [powering, setPowering]       = useState(false);
   const [powerError, setPowerError]   = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [docs, setDocs] = useState<{ id: string; status: string; source: string | null; summary: string; chunks: number }[] | null>(null);
   const [model, setModel]             = useState("gpt-5.4-mini");
   const [saving, setSaving]           = useState(false);
   const [query, setQuery]             = useState("");
@@ -43,6 +44,7 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
     checkStatus();
     loadConfig();
     loadModels();
+    loadDocs();
   }, []);
 
   async function loadModels() {
@@ -84,6 +86,14 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
     } finally {
       setPowering(false);
     }
+  }
+
+  async function loadDocs() {
+    try {
+      const r = await fetch("/api/rag/documents");
+      const d = await r.json();
+      setDocs(d.available ? d.documents : []);
+    } catch { setDocs([]); }
   }
 
   async function checkStatus() {
@@ -181,7 +191,10 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
           failed.push(`${file.name}: ${String((e as Error).message ?? e)}`);
         }
       }
-      if (ok > 0) toast.success(`${ok} document(s) accepted — the graph is built in the background, ask a question in a minute`);
+      if (ok > 0) {
+        toast.success(`${ok} document(s) accepted — the graph is built in the background, ask a question in a minute`);
+        setTimeout(loadDocs, 3000);
+      }
       if (failed.length) toast.error(failed.slice(0, 3).join("; "));
     } finally {
       setIngesting(false);
@@ -288,6 +301,36 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
               className="self-start px-3 py-1.5 text-[11px] bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-medium">
               {saving ? <Loader2 size={11} className="animate-spin" /> : "Save model"}
             </button>
+
+            {/* What the base actually holds. The model cannot answer "how many
+                documents do you have" — that fact is not in any passage — so it
+                is shown here instead of being asked of the graph. */}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-medium text-foreground">
+                  Knowledge base{docs ? ` — ${docs.length} document(s)` : ""}
+                </span>
+                <button type="button" onClick={loadDocs}
+                  className="text-[10px] text-muted-foreground hover:text-foreground underline">refresh</button>
+              </div>
+              {docs === null && <span className="text-[10px] text-muted-foreground">not loaded yet</span>}
+              {docs?.length === 0 && (
+                <span className="text-[10px] text-muted-foreground">Empty — add documents below, then ask about what is in them.</span>
+              )}
+              {docs && docs.length > 0 && (
+                <div className="rounded-md border border-border divide-y divide-border max-h-40 overflow-y-auto">
+                  {docs.map((d) => (
+                    <div key={d.id} className="px-2.5 py-1.5 flex items-start gap-2">
+                      <span className={`mt-1 size-1.5 shrink-0 rounded-full ${d.status === "processed" ? "bg-green-500" : d.status === "failed" ? "bg-destructive" : "bg-amber-500"}`} />
+                      <div className="min-w-0">
+                        <div className="text-[11px] text-foreground truncate">{d.source ?? d.summary ?? d.id}</div>
+                        <div className="text-[9px] text-muted-foreground">{d.status} · {d.chunks} chunk(s)</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Add documents to the knowledge base */}
             {configured && (

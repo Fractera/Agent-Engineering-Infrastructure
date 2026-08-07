@@ -30,7 +30,9 @@ async function ingestText(text: string, description: string): Promise<boolean> {
     const res = await fetch(`${RAG_URL}/documents/text`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-API-Key": RAG_KEY },
-      body: JSON.stringify({ text, description }),
+      // LightRAG stores the origin under `file_source`; `description` is ignored
+      // by its API, which is why every document showed up as "unknown_source".
+      body: JSON.stringify({ text, file_source: description || "document" }),
       signal: AbortSignal.timeout(120000),
     });
     return res.ok;
