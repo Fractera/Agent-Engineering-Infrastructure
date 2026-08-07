@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { getAuthStrings, detectBrowserLang, DEFAULT_AUTH_LANG } from "@/lib/i18n/auth-strings";
 
 type Props = {
   email: string;
@@ -14,6 +16,13 @@ type Props = {
 export function LoggedInView({ email, appUrl, adminUrl, roles }: Props) {
   const isAdmin = roles.includes("architect");
 
+  // Same language mechanic as the login / register forms: every language is
+  // baked into the bundle, the browser language is read once on mount, no
+  // request and no runtime translation.
+  const [lang, setLang] = useState(DEFAULT_AUTH_LANG);
+  useEffect(() => { setLang(detectBrowserLang()); }, []);
+  const s = getAuthStrings(lang);
+
   useEffect(() => {
     if (window.parent !== window) {
       window.parent.postMessage({ type: "AUTH_SUCCESS" }, "*");
@@ -24,28 +33,25 @@ export function LoggedInView({ email, appUrl, adminUrl, roles }: Props) {
     <div className="min-h-screen flex items-center justify-center p-8">
       <div className="w-full max-w-sm flex flex-col gap-6 p-8 bg-background rounded-xl border shadow-sm">
         <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-semibold">Signed in</h1>
+          <h1 className="text-xl font-semibold">{s.signedInTitle}</h1>
           <p className="text-sm text-muted-foreground">{email}</p>
         </div>
         <Button variant="outline" onClick={() => signOut({ callbackUrl: "/login" })}>
-          Sign out
+          {s.signOut}
         </Button>
+        {/* Destinations: stacked vertically under a separator, carrying the same
+            weight as the sign-in button on the login form. Base UI's Button has
+            no asChild, so the anchors wear buttonVariants() directly. */}
         {(appUrl || (isAdmin && adminUrl)) && (
-          <div className="flex flex-row gap-4 pt-1 border-t border-border justify-center">
+          <div className="flex flex-col gap-3 pt-6 border-t border-border">
             {appUrl && (
-              <a
-                href={appUrl}
-                className="text-sm text-center text-primary hover:underline"
-              >
-                Go to App
+              <a href={appUrl} className={cn(buttonVariants(), "w-full")}>
+                {s.goToApp}
               </a>
             )}
             {isAdmin && adminUrl && (
-              <a
-                href={adminUrl}
-                className="text-sm text-center text-primary hover:underline"
-              >
-                Go to Admin Panel
+              <a href={adminUrl} className={cn(buttonVariants(), "w-full")}>
+                {s.goToAdmin}
               </a>
             )}
           </div>
