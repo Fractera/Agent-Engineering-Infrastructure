@@ -251,3 +251,77 @@ export function ChannelsHelp() {
     </HelpNote>
   );
 }
+
+export function ExportHelp() {
+  return (
+    <HelpNote title="Export — why you would take a copy, and what a copy really is">
+      <p>
+        <strong>What it is for.</strong> Everything on this server lives on this server. That is the whole
+        point of the product — and it means nobody else is keeping a copy for you. A VPS can be deleted by
+        a billing mistake, a wrong command or a provider incident, and there is no support desk holding a
+        spare. An archive is the only thing standing between that and starting over.
+      </p>
+      <p>
+        <strong>Three moments worth taking one.</strong> Before attaching a domain or changing anything
+        structural. Before loading a large corpus into the knowledge base, so a bad load can be undone.
+        And on a rhythm you can keep — a copy taken monthly is worth more than a perfect one you never take.
+      </p>
+      <p>
+        <strong>Moving, not just insurance.</strong> The same archive carries this server to another
+        machine. Deploy a fresh one, restore, enter the OpenAI key, and it is the same project — same rows,
+        same files, same knowledge, same branding.
+      </p>
+      <p>
+        <strong>What is actually inside.</strong> Each part is listed with its real size, because the sizes
+        differ by orders of magnitude and the expensive one is not the obvious one. The knowledge graph is
+        small on disk and costly to rebuild: it was written by the model reading every document, and
+        restoring it from an archive is free while rebuilding it is not.
+      </p>
+      <p>
+        <strong>What is never inside.</strong> The OpenAI key — you enter it again after restoring. And the
+        map region: over a gigabyte of OpenStreetMap data that the map panel re-downloads on demand, which
+        would make every backup a hundred times larger to save a step that takes minutes.
+      </p>
+      <p>
+        <strong>Handle the secret parts carefully.</strong> Channels and the environment file carry
+        credentials. They are unticked by default on purpose: with them included, the archive is no longer
+        just data — anyone holding it can speak as your bot or reach your services. Take them when you are
+        moving servers; leave them out of copies you keep in ordinary places.
+      </p>
+    </HelpNote>
+  );
+}
+
+export function ImportHelp() {
+  return (
+    <HelpNote title="Import — what restoring changes, and what it cannot undo">
+      <p>
+        <strong>What it is for.</strong> Putting an archive back: after a mistake, onto a fresh server, or
+        to move a project between machines. Choose the file and its contents are read and listed before
+        anything at all is written.
+      </p>
+      <p>
+        <strong>Two different behaviours, and the difference matters.</strong> Databases and files are
+        ADDED to: existing rows keep their values, and a file you already have is left alone — so restoring
+        twice is harmless. The knowledge graph and the application settings are REPLACED whole. That is not
+        a shortcut: two graphs built from different documents contradict each other, and two settings files
+        cannot both be the truth. One of them has to win, and the archive does.
+      </p>
+      <p>
+        <strong>What that means in practice.</strong> Restoring the graph discards the graph you have now.
+        If the current one holds documents the archive does not, export first and keep both copies.
+      </p>
+      <p>
+        <strong>Secrets are unticked by default.</strong> The environment file and the channel credentials
+        replace what this server uses right now. On a fresh machine that is exactly what you want; on a
+        running one it can point services at the wrong place or hand your bot to an older token. Tick them
+        deliberately, not by habit.
+      </p>
+      <p>
+        <strong>After restoring.</strong> The knowledge service is restarted so it reads the graph from
+        disk again — it holds one in memory otherwise. The OpenAI key is not in the archive, so enter it in
+        OpenAI settings before asking anything.
+      </p>
+    </HelpNote>
+  );
+}

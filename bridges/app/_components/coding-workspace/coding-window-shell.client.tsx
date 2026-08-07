@@ -19,7 +19,7 @@ import { VectorPanel } from "./vector-panel.client";
 import { MapPanel } from "./map-panel.client";
 import { LightRagPanel } from "./lightrag-panel.client";
 import { ChannelsPanel } from "./channels-panel.client";
-import { ExportDialog, ImportDialog } from "./backup-dialog.client";
+import { ExportPanel, ImportPanel } from "./backup-panels.client";
 import { SiteSettingsPanel } from "./site-settings-panel.client";
 import { PlatformSettingsPanel } from "./platform-settings-panel.client";
 import { IdleCanvas } from "./idle-canvas.client";
@@ -127,7 +127,7 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   const [showLightRag, setShowLightRag]             = useState(false);
   const [showChannels, setShowChannels]             = useState(false);
   const [showExport, setShowExport]                 = useState(false);
-  const [importFile, setImportFile]                 = useState<File | null>(null);
+  const [showImport, setShowImport]                 = useState(false);
   // Security tab is hidden from the UI until cert provisioning for all 6
   // subdomains ships (work in progress). The env var FRACTERA_IP_NODOMAIN_MODE
   // is still readable / settable from the terminal — this just removes the
@@ -167,7 +167,6 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   }, [showInfo, showDbBrowser, showUsers, showMediaLibrary, showHelp, showDomainPanel,
 showOpenAiPanel, showEnvEditor,
       showSiteSettings, showPlatform]);
-  const fileInputRef    = useRef<HTMLInputElement>(null);
   const deployLogRef    = useRef<HTMLDivElement>(null);
   const updateLogRef    = useRef<HTMLDivElement>(null);
 
@@ -184,16 +183,10 @@ showOpenAiPanel, showEnvEditor,
   function handleExport() {
     setDataMenuOpen(false);
     setShowExport(true);
+    setShowImport(false);
   }
 
-  function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-    setDataMenuOpen(false);
-    // Nothing is written yet: the dialog inspects the archive first and asks.
-    setImportFile(file);
-  }
+
 
 
 
@@ -469,7 +462,7 @@ showOpenAiPanel, showEnvEditor,
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Download size={11} />Export data
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); fileInputRef.current?.click(); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowImport(true); setShowExport(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Upload size={11} />Import data
               </button>
@@ -532,7 +525,6 @@ showOpenAiPanel, showEnvEditor,
           </div>
         )}
       </div>
-      <input ref={fileInputRef} type="file" accept=".zip" className="hidden" onChange={handleImport} />
       {/* Light preview canvas removed — Light product retired */}
 
       {/* ── Users panel ── */}
@@ -571,8 +563,18 @@ showOpenAiPanel, showEnvEditor,
         </div>
       )}
 
-      {showExport && <ExportDialog onClose={() => setShowExport(false)} />}
-      {importFile && <ImportDialog file={importFile} onClose={() => setImportFile(null)} />}
+      {/* ── Export / Import pages ── */}
+      {/* REFERENCE LAYOUT (Users) — anchors for the height, stretch for the width. */}
+      {showExport && (
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 20 }}>
+          <ExportPanel onClose={() => setShowExport(false)} />
+        </div>
+      )}
+      {showImport && (
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 20 }}>
+          <ImportPanel onClose={() => setShowImport(false)} />
+        </div>
+      )}
 
       {/* ── Communication channels panel ── */}
       {/* REFERENCE LAYOUT (Users) — anchors for the height, stretch for the width. */}
