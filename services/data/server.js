@@ -153,10 +153,15 @@ if (!hasSeq) {
 // Index mode. Partition keys arrived in sqlite-vec 0.1.6; an older extension throws
 // on the CREATE, so we step down instead of failing. Nothing here is fatal: a store
 // with no index still answers, just linearly.
-// The key column is declared EXPLICITLY. Naming `rowid` in the column list instead
-// makes vec0 shift the bindings and drop the TEXT collection into the primary-key
-// slot — it then refuses the row with "Only integers are allowed for primary key
-// values", which is how this arrived broken the first time.
+// Two traps live here, both found by running it rather than reading it:
+//
+//   1. The key column is declared EXPLICITLY. Naming `rowid` in the column list
+//      makes vec0 shift the bindings and drop the TEXT collection into the
+//      primary-key slot.
+//   2. The key must be bound as a BigInt. better-sqlite3 binds a plain JS number
+//      as REAL, and vec0 accepts only SQLITE_INTEGER for a primary key — so
+//      `run(1, ...)` is rejected while `run(1n, ...)` is accepted. Both failures
+//      raise the same message: "Only integers are allowed for primary key values".
 let annMode = 'scan'
 if (vecExtension) {
   // The index is derived data, so a table of the wrong shape (an older layout, a
@@ -198,15 +203,15 @@ function annDegrade(where, e) {
 }
 function annDelete(seq) {
   if (annMode === 'scan' || seq == null) return
-  try { appDb.prepare('DELETE FROM vectors_ann WHERE seq = ?').run(seq) } catch (e) { annDegrade('index delete', e) }
+  try { appDb.prepare('DELETE FROM vectors_ann WHERE seq = ?').run(BigInt(seq)) } catch (e) { annDegrade('index delete', e) }
 }
 function annInsert(seq, collection, blob) {
   if (annMode === 'scan' || seq == null) return
   try {
     if (annMode === 'partitioned') {
-      appDb.prepare('INSERT INTO vectors_ann (seq, collection, embedding) VALUES (?, ?, ?)').run(seq, collection, blob)
+      appDb.prepare('INSERT INTO vectors_ann (seq, collection, embedding) VALUES (?, ?, ?)').run(BigInt(seq), collection, blob)
     } else {
-      appDb.prepare('INSERT INTO vectors_ann (seq, embedding) VALUES (?, ?)').run(seq, blob)
+      appDb.prepare('INSERT INTO vectors_ann (seq, embedding) VALUES (?, ?)').run(BigInt(seq), blob)
     }
   } catch (e) { annDegrade('index write', e) }
 }
