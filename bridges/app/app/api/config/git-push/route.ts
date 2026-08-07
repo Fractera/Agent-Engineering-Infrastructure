@@ -75,6 +75,19 @@ export async function POST(req: NextRequest) {
       ].join("\n") + "\n", "utf-8");
     }
 
+    // `app/.gitkeep` belongs to the substrate: it is how ai-workspace keeps the empty slot
+    // directory in its own history, and any checkout there puts it back. It is not part of
+    // the user's project and must not travel to the user's repository. Exclude it locally
+    // rather than editing the guest's .gitignore — that file belongs to the guest repo.
+    const excludePath = `${PROJECT_DIR}/.git/info/exclude`;
+    if (fs.existsSync(`${PROJECT_DIR}/.git/info`)) {
+      const current = fs.existsSync(excludePath) ? fs.readFileSync(excludePath, "utf-8") : "";
+      if (!current.split("\n").some(l => l.trim() === "/.gitkeep")) {
+        fs.appendFileSync(excludePath, `${current.endsWith("\n") || !current ? "" : "\n"}/.gitkeep\n`, "utf-8");
+      }
+    }
+    await execAsync(`git -C ${PROJECT_DIR} rm --cached -q --ignore-unmatch .gitkeep`, opts).catch(() => null);
+
     // Ensure remote points to user's repo
     await execAsync(
       `git -C ${PROJECT_DIR} remote set-url origin "${url}" 2>/dev/null || git -C ${PROJECT_DIR} remote add origin "${url}"`,
