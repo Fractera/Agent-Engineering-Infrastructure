@@ -367,3 +367,43 @@ export function EnvHelp() {
     </HelpNote>
   );
 }
+
+export function GitHubHelp() {
+  return (
+    <HelpNote title="GitHub — the only road your work takes off this server">
+      <p>
+        <strong>Why this one matters more than it looks.</strong> Everything else on this server can be
+        recreated: rows can be re-entered, documents re-loaded, a region re-downloaded. Your application
+        cannot. And the backup archive deliberately does not carry source code — code belongs in a
+        repository, not in a zip. So until this is connected, the server is the only copy of the one thing
+        that is genuinely yours.
+      </p>
+      <p>
+        <strong>What it gives you beyond safety.</strong> A repository is where your development actually
+        happens: you or your developer work on the code anywhere, push, and pull it onto the server.
+        Without it the project can only ever be edited in place, on the machine that serves it.
+      </p>
+      <p>
+        <strong>Public or private.</strong> A public repository can be read by anyone and needs no token to
+        pull. Writing to any repository — public or private — needs a token. Private is the normal choice
+        for a business project.
+      </p>
+      <p>
+        <strong>What never leaves.</strong> Secrets and build output are excluded before anything is sent:
+        the environment file, installed packages, the compiled application and uploaded storage. What
+        travels is source code and configuration you wrote.
+      </p>
+      <p>
+        <strong>Why the screen insists on verifying.</strong> Filled-in fields are not a connection. A token
+        can be expired, scoped to the wrong account, or able to read a repository but not write to it — and
+        every one of those used to look like success until a push failed later, at the worst moment.
+        Saving here asks GitHub over the network and reports what it actually said.
+      </p>
+      <p>
+        <strong>If the token is refused.</strong> The three usual causes, in order of likelihood: the token
+        expired; it was created without the <code>repo</code> scope; or it belongs to an account that is
+        not a collaborator on that repository. The message on this page names which one it was.
+      </p>
+    </HelpNote>
+  );
+}
