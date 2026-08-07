@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import fs from "fs"
 import { requireAuth } from "@/lib/require-auth"
+import { publicDataUrl } from "@/lib/public-data-url"
 
 const APP_ENV  = process.env.APP_ENV_PATH  ?? "/opt/fractera/app/.env.local"
 const DATA_ENV = process.env.DATA_ENV_PATH ?? "/opt/fractera/services/data/.env"
@@ -36,12 +37,20 @@ export async function GET(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "")
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const appVars   = readAllVars(APP_ENV)
-  const mediaUrl  = appVars["NEXT_PUBLIC_MEDIA_URL"] ?? ""
+  const appVars    = readAllVars(APP_ENV)
   const dataSecret = readVar(DATA_ENV, "DATA_SECRET")
 
-  if (!mediaUrl || !dataSecret) {
-    return NextResponse.json({ error: "Could not read server env vars" }, { status: 500 })
+  // (step 500) The address is RESOLVED for the receiving machine, not copied from
+  // this server's own env. NEXT_PUBLIC_MEDIA_URL is "http://localhost:3300" here —
+  // correct on the server, and on a developer's laptop it points at the laptop.
+  // That one line is why the local-development loop silently did nothing.
+  const data = publicDataUrl()
+
+  if (!dataSecret) {
+    return NextResponse.json({ error: "Could not read the data secret" }, { status: 500 })
+  }
+  if (!data.url) {
+    return NextResponse.json({ error: data.reason ?? "Could not resolve the public data address" }, { status: 409 })
   }
 
   const lines: string[] = [
@@ -50,7 +59,10 @@ export async function GET(req: NextRequest) {
     `# Rename this file to .env.local and place it in your project root`,
     ``,
     `# --- Remote data & media (required for local dev) ---`,
-    `REMOTE_DATA_URL=${mediaUrl}`,
+    `# Your local app reads and writes the SERVER's rows, files and vector memory`,
+    `# through this address. Nothing is copied to your machine, so there are no`,
+    `# two versions of the data to drift apart.`,
+    `REMOTE_DATA_URL=${data.url}`,
     `DATA_API_KEY=${dataSecret}`,
     ``,
   ]

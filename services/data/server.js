@@ -919,6 +919,63 @@ app.get('/vectors/status', (_req, res) => {
   })
 })
 
+// ── ONE DOOR: the loopback services, reachable through this one ───────────────
+//
+// (step 500) A developer working on their own machine gets the project's data
+// from this service — that is what REMOTE_DATA_URL points at. But agentic RAG
+// (:9621), the map (:3400) and the channels (:3500) bind to 127.0.0.1, so a
+// laptop cannot reach them at all, and a locally-run app behaved differently
+// from the deployed one.
+//
+// The choice was to publish three more ports or to route them through the one
+// that is already published and already checks a secret. Three open ports means
+// three things to secure, three URLs in the exported env and three ways to get
+// it wrong. So: one door.
+//
+// These proxies inherit this service's authentication — the same x-data-secret
+// that guards rows and files. Nothing new is exposed to the internet beyond what
+// the secret already unlocks.
+
+const INTERNAL = {
+  rag:      process.env.LIGHTRAG_URL ?? 'http://127.0.0.1:9621',
+  geo:      process.env.GEO_URL      ?? 'http://127.0.0.1:3400',
+  channels: process.env.CHANNELS_URL ?? 'http://127.0.0.1:3500',
+}
+const RAG_KEY = process.env.LIGHTRAG_API_KEY ?? ''
+
+async function proxy(target, extraHeaders, req, res) {
+  const tail = req.originalUrl.replace(new RegExp('^\\/service\\/[a-z]+'), '') || '/'
+  try {
+    const upstream = await fetch(target + tail, {
+      method: req.method,
+      headers: {
+        'Content-Type': 'application/json',
+        ...extraHeaders,
+      },
+      body: ['GET', 'HEAD'].includes(req.method) ? undefined : JSON.stringify(req.body ?? {}),
+      signal: AbortSignal.timeout(120000),
+    })
+    const text = await upstream.text()
+    res.status(upstream.status)
+    res.set('Content-Type', upstream.headers.get('content-type') ?? 'application/json')
+    res.set('Cache-Control', 'no-store')
+    res.send(text)
+  } catch (e) {
+    // A loopback service that is switched off is a normal state, not a fault of
+    // this one — say which one is silent instead of returning a bare 500.
+    res.status(503).json({ error: `${target} did not answer: ${String(e.message ?? e)}` })
+  }
+}
+
+app.all(new RegExp('^\\/service\\/rag(\\/.*)?$'), requireAuth, (req, res) =>
+  proxy(INTERNAL.rag, { 'X-API-Key': RAG_KEY }, req, res))
+
+app.all(new RegExp('^\\/service\\/geo(\\/.*)?$'), requireAuth, (req, res) =>
+  proxy(INTERNAL.geo, {}, req, res))
+
+app.all(new RegExp('^\\/service\\/channels(\\/.*)?$'), requireAuth, (req, res) =>
+  proxy(INTERNAL.channels, {}, req, res))
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 
 app.listen(PORT, () => {
