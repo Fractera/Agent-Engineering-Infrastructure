@@ -461,6 +461,31 @@ export function AppSettingsHelp() {
   );
 }
 
+// Parallel routing. The owner will supply the final wording for this note; what stands here now is
+// the mechanism as it actually is, including the part that is not built yet — a "?" that promises
+// more than the product does is worse than no "?" at all.
+export function ParallelRoutingHelp() {
+  return (
+    <HelpNote title="Parallel routing — how a page is assembled from slots">
+      <p>
+        <strong>What it is.</strong> A page can be put together from several named areas — a header, a
+        centre column, a left or right side, a promo screen — each rendered on its own. Changing what
+        fills one area does not force the rest of the page to be rebuilt.
+      </p>
+      <p>
+        <strong>Where a project starts.</strong> With the centre only. Header and footer are always
+        present; everything else stays off until you ask for it. One column is the layout that is right
+        before anything is known about the content.
+      </p>
+      <p>
+        <strong>Not yet connected.</strong> The app in the slot does not read this setting today: it has
+        no parallel-route folders, so switching areas on here changes the saved configuration and
+        nothing on screen. This note will say otherwise once the app supports it.
+      </p>
+    </HelpNote>
+  );
+}
+
 export function PlatformHelp() {
   return (
     <HelpNote title="Platform — languages, theme and how pages are assembled">

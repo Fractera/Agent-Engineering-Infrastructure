@@ -8,28 +8,24 @@ import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { ParallelRoutesSelector } from "./parallel-routes/parallel-routes-selector.client";
 
 // Platform — structural settings for the deployed Shell. Header carries one dropdown ("Settings"):
-//   • Use parallel routing — master runtime flag (instant)
 //   • Footer settings  → submenu: 4 switches (Footer pages / Screen width / Theme / Multilingual)
 //     + an "Apply settings" button (batch-persist the runtime footerPlugins flags, no rebuild)
-//   • Parallel routes · setup → slot selector view (when parallel routing is on)
-// (The language SET selector is its own page — Settings → Languages, right under App Settings.)
+// The language SET and parallel routing are their OWN pages in the first section of the menu
+// (owner, 2026-08-08) — the master switch and the slot selector left this dropdown with them,
+// so a subject is configured in one place instead of two.
 // Everything but the language SET is a runtime flag in platform-config.json (applies on next load).
 // The reference marketplace is replaced by these flags; every footer feature defaults ON.
 
 type Cfg = Record<string, unknown>;
-type View = null | "slots";
 type Props = { onClose: () => void };
 
 const FOOTER_KEYS = ["footerPages", "widthToggle", "themeToggle", "languageSwitcher"] as const;
@@ -46,7 +42,6 @@ export function PlatformSettingsPanel({ onClose }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [view, setView] = useState<View>(null);
   const [staged, setStaged] = useState<Record<string, boolean>>({});
 
   const load = useCallback(async () => {
@@ -101,13 +96,10 @@ export function PlatformSettingsPanel({ onClose }: Props) {
     }
   }
 
-  const toggleParallel = () => saveConfig({ ...config, parallelRouting: !parallelRouting });
   const applyFooter = () => {
     saveConfig({ ...config, footerPlugins: { ...footerPlugins, ...staged } });
     setMenuOpen(false);
   };
-  const openView = (v: View) => { setMenuOpen(false); setView(v); };
-  const goBack = () => { setView(null); load(); };
 
   return (
     <div className="bg-background flex flex-col h-full w-full">
@@ -125,14 +117,6 @@ export function PlatformSettingsPanel({ onClose }: Props) {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-60">
-            {/* master mode flag — instant */}
-            <div className="flex items-center gap-2 px-2 py-1.5 text-[12px]">
-              <span className="flex-1">Use parallel routing</span>
-              <Switch checked={parallelRouting} onCheckedChange={toggleParallel} disabled={saving} />
-            </div>
-
-            <DropdownMenuSeparator />
-
             <DropdownMenuSub>
               <DropdownMenuSubTrigger className="text-[12px]">Footer settings</DropdownMenuSubTrigger>
               <DropdownMenuSubContent className="w-56 p-2">
@@ -155,14 +139,6 @@ export function PlatformSettingsPanel({ onClose }: Props) {
               </DropdownMenuSubContent>
             </DropdownMenuSub>
 
-            {parallelRouting && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => openView("slots")} className="text-[12px] text-orange-500 focus:text-orange-600">
-                  Parallel routes · setup
-                </DropdownMenuItem>
-              </>
-            )}
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -177,8 +153,6 @@ export function PlatformSettingsPanel({ onClose }: Props) {
         </button>
       </div>
 
-      {view === "slots" && <ParallelRoutesSelector onBack={goBack} />}
-
       {loading ? (
         <div className="flex-1 flex items-center justify-center text-muted-foreground text-xs gap-2">
           <Loader2 size={13} className="animate-spin" />Loading…
@@ -190,14 +164,13 @@ export function PlatformSettingsPanel({ onClose }: Props) {
       ) : (
         <div className="flex-1 overflow-auto px-4 py-3">
           <p className="text-[11px] text-muted-foreground mb-3 max-w-md">
-            Open <span className="font-semibold text-foreground">Settings</span> above to toggle parallel routing
-            or configure footer features. Every footer feature is on by default. (Languages are their own menu item.)
+            Open <span className="font-semibold text-foreground">Settings</span> above to configure footer
+            features. Every footer feature is on by default. Languages and parallel routing are their own
+            pages at the top of the menu.
           </p>
           <div className="max-w-md rounded-md border border-border px-3 py-2.5 text-[11px] text-foreground">
-            Parallel routing is <span className={`font-semibold ${parallelRouting ? "text-green-600" : "text-muted-foreground"}`}>{parallelRouting ? "ON" : "OFF"}</span>.
-            {parallelRouting
-              ? " The layout arranges the named parallel-route slots."
-              : " The app renders the flat page tree (today's behaviour)."}
+            Parallel routing is <span className={`font-semibold ${parallelRouting ? "text-green-600" : "text-muted-foreground"}`}>{parallelRouting ? "ON" : "OFF"}</span> —
+            set on the Parallel routing page.
           </div>
         </div>
       )}

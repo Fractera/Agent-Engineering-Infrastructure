@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
 import { getAdminStrings, detectBrowserLang, DEFAULT_ADMIN_LANG } from "@/lib/i18n/admin-strings";
-import { Menu, X as XIcon, Loader2, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LayoutGrid, LogOut, CircleUserRound, Map as MapIcon, Brain, MessagesSquare, Languages } from "lucide-react";
+import { Menu, X as XIcon, Loader2, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LayoutGrid, LogOut, CircleUserRound, Map as MapIcon, Brain, MessagesSquare, Languages, Columns3 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { COMING_SOON } from "./platforms";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -24,6 +24,7 @@ import { GitHubPanel } from "./github-panel.client";
 import { SiteSettingsPanel } from "./site-settings-panel.client";
 import { PlatformSettingsPanel } from "./platform-settings-panel.client";
 import { LanguagesView } from "./platform/languages-view.client";
+import { ParallelRoutesSelector } from "./parallel-routes/parallel-routes-selector.client";
 import { IdleCanvas } from "./idle-canvas.client";
 import type { ComponentType } from "react";
 
@@ -120,6 +121,7 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   const [showSiteSettings, setShowSiteSettings]     = useState(false);
   const [showPlatform, setShowPlatform]             = useState(false);
   const [showLanguages, setShowLanguages]           = useState(false);
+  const [showParallelRoutes, setShowParallelRoutes] = useState(false);
   const [showDomainPanel, setShowDomainPanel]       = useState(false);
   const [showOpenAiPanel, setShowOpenAiPanel]       = useState(false);
   const [showVectorPanel, setShowVectorPanel]       = useState(false);
@@ -182,12 +184,12 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   useEffect(() => {
     if (showInfo || showDbBrowser || showUsers || showMediaLibrary || showHelp || showDomainPanel ||
         showOpenAiPanel || showEnvEditor ||
-        showSiteSettings || showPlatform || showLanguages) {
+        showSiteSettings || showPlatform || showLanguages || showParallelRoutes) {
       setShowAuthMethods(false);
     }
   }, [showInfo, showDbBrowser, showUsers, showMediaLibrary, showHelp, showDomainPanel,
 showOpenAiPanel, showEnvEditor,
-      showSiteSettings, showPlatform, showLanguages]);
+      showSiteSettings, showPlatform, showLanguages, showParallelRoutes]);
   const deployLogRef    = useRef<HTMLDivElement>(null);
   const updateLogRef    = useRef<HTMLDivElement>(null);
 
@@ -445,6 +447,10 @@ showOpenAiPanel, showEnvEditor,
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Languages size={11} />Languages
               </button>
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowParallelRoutes((v) => !v); setShowLanguages(false); setShowSiteSettings(false); setShowPlatform(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                <Columns3 size={11} />Parallel routing
+              </button>
               <div className="h-px bg-border mx-2" />
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowUsers((v) => !v); setShowMediaLibrary(false); setShowEnvEditor(false); setShowDbBrowser(false); setShowInfo(false); setShowDomainPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
@@ -611,7 +617,15 @@ showOpenAiPanel, showEnvEditor,
         </div>
       )}
 
-      {/* ── Platform panel (parallel routing / theme) ── */}
+      {/* ── Parallel routing panel (master switch + slot selector, shown open) ── */}
+      {/* REFERENCE LAYOUT (Users) — anchors for the height, stretch for the width. */}
+      {showParallelRoutes && (
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 20 }}>
+          <ParallelRoutesSelector onBack={() => setShowParallelRoutes(false)} />
+        </div>
+      )}
+
+      {/* ── Platform panel (footer features) ── */}
       {showPlatform && (
         <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 20 }}>
           <PlatformSettingsPanel onClose={() => setShowPlatform(false)} />
