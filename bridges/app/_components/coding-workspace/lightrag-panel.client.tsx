@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { X, Brain, Loader2, Send, CheckCircle, AlertCircle, BookOpen, ChevronDown, RefreshCw, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { HelpNote, SeparateStorageNote } from "./help-note.client";
 
 // Fallback used only when /api/config/openai-models can't reach OpenAI
 // (no key set yet, or upstream blocked). Source of truth for the canonical
@@ -278,7 +279,39 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
       {/* Header */}
       <div className="flex items-center px-4 py-2.5 border-b border-border shrink-0">
         <Brain size={13} className="mr-2 text-muted-foreground" />
-        <span className="text-xs font-semibold text-foreground flex-1">Knowledge Base</span>
+        <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+          Knowledge Base
+          <HelpNote title="Graph RAG — what it does differently">
+            <p>
+              <strong>What you get.</strong> A finished answer with references, not a list of matching
+              paragraphs. Ask &ldquo;which PM2 processes run and on which ports&rdquo; and it replies with a
+              table — one that appears nowhere in the source document. It assembled that table.
+            </p>
+            <p>
+              <strong>Why it can.</strong> Two phases. At ingest, the model reads every chunk and writes down
+              the entities it finds and the relations between them, building a graph. At query time it pulls
+              the relevant part of that graph and composes an answer from it. The thinking about how facts
+              connect happened <em>before</em> you asked.
+            </p>
+            <p>
+              <strong>Where it wins.</strong> Questions whose answer is spread across many sections or
+              documents: how terms changed across forty contracts, who is connected to what, which themes
+              repeat. Plain vector search hands you five similar paragraphs and leaves the synthesis to you.
+            </p>
+            <p>
+              <strong>What it costs.</strong> Ingest is the expensive half — one model pass per chunk. A
+              1,442-line document became 30 chunks, roughly 350 entities and 240 relations, in about three
+              and a half minutes. You pay that once; a question then takes about twenty seconds.
+            </p>
+            <p>
+              <strong>Where it is weak.</strong> One retrieval pass, no second thoughts: it will not notice
+              that it lacks data and search again. And it knows only what you loaded — a stale document
+              yields a confident stale answer, and refreshing it means paying for the extraction again.
+            </p>
+            <SeparateStorageNote />
+          </HelpNote>
+        </span>
+        <span className="flex-1" />
         <div className="flex items-center gap-2 mr-3">
           {available === null && <Loader2 size={11} className="animate-spin text-muted-foreground" />}
           {available === true  && <><span className="size-1.5 rounded-full bg-green-500" /><span className="text-[11px] text-green-500">Online</span></>}

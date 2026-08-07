@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X, BrainCircuit, Loader2, Search } from "lucide-react";
+import { HelpNote, SeparateStorageNote } from "./help-note.client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -93,6 +94,35 @@ export function VectorPanel({ onClose }: { onClose: () => void }) {
         <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
           <BrainCircuit size={13} />
           Vector memory
+          <HelpNote title="Vector search — what it does differently">
+            <p>
+              <strong>What you get.</strong> The passages closest in meaning to your question, each with a
+              score. Not an answer — the raw material for one. Nothing is written for you.
+            </p>
+            <p>
+              <strong>Why that is.</strong> One phase. Text is split into chunks, each chunk becomes a
+              vector, and a search compares your question&apos;s vector against them. Nothing is precomputed
+              about how facts relate, so nothing has to be paid for in advance.
+            </p>
+            <p>
+              <strong>Where it wins.</strong> When the answer sits in one passage: prices, policies, product
+              facts, &ldquo;how do I connect X&rdquo;. It is also the right home for data that keeps changing — a
+              changed row costs one embedding call to re-index, while a graph would have to extract its
+              relations again.
+            </p>
+            <p>
+              <strong>What it costs.</strong> Almost nothing. Ingest is one embedding call per chunk; a
+              search is milliseconds against a real index, and its cost does not grow with the size of the
+              store.
+            </p>
+            <p>
+              <strong>Where it is weak.</strong> It knows no relations. A question that needs forty documents
+              makes something read all forty. And it never composes an answer — you, or an agent, must do
+              that. An agent looping over this store can beat the graph on flexibility, because it can
+              rephrase and search again; it pays per question instead of paying once at ingest.
+            </p>
+            <SeparateStorageNote />
+          </HelpNote>
           <span className="ml-1 text-[10px] font-normal text-muted-foreground font-mono">data service · :3300</span>
         </span>
         <span className="flex-1" />
