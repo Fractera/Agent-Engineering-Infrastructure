@@ -123,6 +123,7 @@ function buildProviders(): NextAuthConfig["providers"] {
 export const authConfig: NextAuthConfig = {
   pages: {
     signIn: "/login",
+    signOut: "/signout",
   },
   providers: buildProviders(),
   cookies: {

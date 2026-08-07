@@ -57,6 +57,8 @@ export type AuthStrings = {
   // signed-in view (the screen shown when a session already exists)
   signedInTitle: string;
   signOut: string;
+  signOutQuestion: string;
+  signingOut: string;
   goToApp: string;
   goToAdmin: string;
 };
@@ -107,6 +109,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Sign out",
     goToApp: "Go to App",
     goToAdmin: "Go to Admin Panel",
+    signOutQuestion: "Are you sure you want to sign out?",
+    signingOut: "Signing out…",
   },
   fr: {
     email: "E-mail",
@@ -151,6 +155,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Se déconnecter",
     goToApp: "Ouvrir l'application",
     goToAdmin: "Ouvrir le panneau d'administration",
+    signOutQuestion: "Voulez-vous vraiment vous déconnecter ?",
+    signingOut: "Déconnexion…",
   },
   es: {
     email: "Correo electrónico",
@@ -195,6 +201,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Cerrar sesión",
     goToApp: "Ir a la aplicación",
     goToAdmin: "Ir al panel de administración",
+    signOutQuestion: "¿Seguro que quieres cerrar sesión?",
+    signingOut: "Cerrando sesión…",
   },
   pt: {
     email: "E-mail",
@@ -239,6 +247,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Terminar sessão",
     goToApp: "Ir para a aplicação",
     goToAdmin: "Ir para o painel de administração",
+    signOutQuestion: "Tem a certeza de que quer terminar sessão?",
+    signingOut: "A terminar sessão…",
   },
   de: {
     email: "E-Mail",
@@ -283,6 +293,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Abmelden",
     goToApp: "Zur App",
     goToAdmin: "Zum Administrationsbereich",
+    signOutQuestion: "Möchten Sie sich wirklich abmelden?",
+    signingOut: "Abmeldung…",
   },
   it: {
     email: "E-mail",
@@ -327,6 +339,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Esci",
     goToApp: "Vai all'applicazione",
     goToAdmin: "Vai al pannello di amministrazione",
+    signOutQuestion: "Vuoi davvero uscire?",
+    signingOut: "Disconnessione…",
   },
   nl: {
     email: "E-mail",
@@ -371,6 +385,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Uitloggen",
     goToApp: "Naar de app",
     goToAdmin: "Naar het beheerpaneel",
+    signOutQuestion: "Weet u zeker dat u wilt uitloggen?",
+    signingOut: "Bezig met uitloggen…",
   },
   sv: {
     email: "E-post",
@@ -415,6 +431,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Logga ut",
     goToApp: "Gå till appen",
     goToAdmin: "Gå till administrationspanelen",
+    signOutQuestion: "Vill du verkligen logga ut?",
+    signingOut: "Loggar ut…",
   },
   no: {
     email: "E-post",
@@ -459,6 +477,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Logg ut",
     goToApp: "Gå til appen",
     goToAdmin: "Gå til administrasjonspanelet",
+    signOutQuestion: "Vil du logge ut?",
+    signingOut: "Logger ut…",
   },
   da: {
     email: "E-mail",
@@ -503,6 +523,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Log ud",
     goToApp: "Gå til appen",
     goToAdmin: "Gå til administrationspanelet",
+    signOutQuestion: "Er du sikker på, at du vil logge ud?",
+    signingOut: "Logger ud…",
   },
   fi: {
     email: "Sähköposti",
@@ -547,6 +569,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Kirjaudu ulos",
     goToApp: "Siirry sovellukseen",
     goToAdmin: "Siirry hallintapaneeliin",
+    signOutQuestion: "Haluatko varmasti kirjautua ulos?",
+    signingOut: "Kirjaudutaan ulos…",
   },
   is: {
     email: "Netfang",
@@ -591,6 +615,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Skrá út",
     goToApp: "Fara í forritið",
     goToAdmin: "Fara í stjórnborðið",
+    signOutQuestion: "Viltu örugglega skrá þig út?",
+    signingOut: "Skrái út…",
   },
   el: {
     email: "Email",
@@ -635,6 +661,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Αποσύνδεση",
     goToApp: "Μετάβαση στην εφαρμογή",
     goToAdmin: "Μετάβαση στον πίνακα διαχείρισης",
+    signOutQuestion: "Θέλετε σίγουρα να αποσυνδεθείτε;",
+    signingOut: "Αποσύνδεση…",
   },
   pl: {
     email: "E-mail",
@@ -679,6 +707,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Wyloguj się",
     goToApp: "Przejdź do aplikacji",
     goToAdmin: "Przejdź do panelu administracyjnego",
+    signOutQuestion: "Czy na pewno chcesz się wylogować?",
+    signingOut: "Wylogowywanie…",
   },
   cs: {
     email: "E-mail",
@@ -723,6 +753,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Odhlásit se",
     goToApp: "Přejít do aplikace",
     goToAdmin: "Přejít do administrace",
+    signOutQuestion: "Opravdu se chcete odhlásit?",
+    signingOut: "Odhlašování…",
   },
   sk: {
     email: "E-mail",
@@ -767,6 +799,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Odhlásiť sa",
     goToApp: "Prejsť do aplikácie",
     goToAdmin: "Prejsť do administrácie",
+    signOutQuestion: "Naozaj sa chcete odhlásiť?",
+    signingOut: "Odhlasovanie…",
   },
   hu: {
     email: "E-mail",
@@ -811,6 +845,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Kijelentkezés",
     goToApp: "Ugrás az alkalmazáshoz",
     goToAdmin: "Ugrás az adminisztrációs panelhez",
+    signOutQuestion: "Biztosan ki szeretne jelentkezni?",
+    signingOut: "Kijelentkezés…",
   },
   ro: {
     email: "E-mail",
@@ -855,6 +891,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Deconectare",
     goToApp: "Mergi la aplicație",
     goToAdmin: "Mergi la panoul de administrare",
+    signOutQuestion: "Sigur vrei să te deconectezi?",
+    signingOut: "Se deconectează…",
   },
   hr: {
     email: "E-pošta",
@@ -899,6 +937,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Odjava",
     goToApp: "Idi u aplikaciju",
     goToAdmin: "Idi na administracijsku ploču",
+    signOutQuestion: "Jeste li sigurni da se želite odjaviti?",
+    signingOut: "Odjava u tijeku…",
   },
   sl: {
     email: "E-pošta",
@@ -943,6 +983,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Odjava",
     goToApp: "Pojdi v aplikacijo",
     goToAdmin: "Pojdi na skrbniško ploščo",
+    signOutQuestion: "Ste prepričani, da se želite odjaviti?",
+    signingOut: "Odjavljanje…",
   },
   et: {
     email: "E-post",
@@ -987,6 +1029,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Logi välja",
     goToApp: "Ava rakendus",
     goToAdmin: "Ava halduspaneel",
+    signOutQuestion: "Kas soovite kindlasti välja logida?",
+    signingOut: "Väljalogimine…",
   },
   lv: {
     email: "E-pasts",
@@ -1031,6 +1075,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Izrakstīties",
     goToApp: "Doties uz lietotni",
     goToAdmin: "Doties uz administrācijas paneli",
+    signOutQuestion: "Vai tiešām vēlaties izrakstīties?",
+    signingOut: "Notiek izrakstīšanās…",
   },
   lt: {
     email: "El. paštas",
@@ -1075,6 +1121,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Atsijungti",
     goToApp: "Eiti į programėlę",
     goToAdmin: "Eiti į administravimo skydelį",
+    signOutQuestion: "Ar tikrai norite atsijungti?",
+    signingOut: "Atsijungiama…",
   },
   mt: {
     email: "Email",
@@ -1119,6 +1167,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Oħroġ",
     goToApp: "Mur fl-applikazzjoni",
     goToAdmin: "Mur fil-pannell tal-amministrazzjoni",
+    signOutQuestion: "Żgur li trid toħroġ?",
+    signingOut: "Ħiereġ…",
   },
   ca: {
     email: "Correu electrònic",
@@ -1163,6 +1213,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Tanca la sessió",
     goToApp: "Ves a l'aplicació",
     goToAdmin: "Ves al tauler d'administració",
+    signOutQuestion: "Segur que vols tancar la sessió?",
+    signingOut: "Tancant la sessió…",
   },
   gl: {
     email: "Correo electrónico",
@@ -1207,6 +1259,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Pechar sesión",
     goToApp: "Ir á aplicación",
     goToAdmin: "Ir ao panel de administración",
+    signOutQuestion: "Seguro que queres pechar sesión?",
+    signingOut: "Pechando sesión…",
   },
   cy: {
     email: "E-bost",
@@ -1251,6 +1305,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Allgofnodi",
     goToApp: "Mynd i'r ap",
     goToAdmin: "Mynd i'r panel gweinyddu",
+    signOutQuestion: "Ydych chi'n siŵr eich bod am allgofnodi?",
+    signingOut: "Yn allgofnodi…",
   },
   ga: {
     email: "Ríomhphost",
@@ -1295,6 +1351,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Sínigh amach",
     goToApp: "Téigh chuig an aip",
     goToAdmin: "Téigh chuig an bpainéal riaracháin",
+    signOutQuestion: "An bhfuil tú cinnte gur mian leat sínigh amach?",
+    signingOut: "Ag síniú amach…",
   },
   eu: {
     email: "Helbide elektronikoa",
@@ -1339,6 +1397,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Amaitu saioa",
     goToApp: "Joan aplikaziora",
     goToAdmin: "Joan administrazio-panelera",
+    signOutQuestion: "Ziur zaude saioa amaitu nahi duzula?",
+    signingOut: "Saioa amaitzen…",
   },
   ru: {
     email: "Электронная почта",
@@ -1383,6 +1443,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Выйти",
     goToApp: "Перейти в приложение",
     goToAdmin: "Перейти в панель управления",
+    signOutQuestion: "Вы действительно хотите выйти?",
+    signingOut: "Выходим…",
   },
   uk: {
     email: "Електронна пошта",
@@ -1427,6 +1489,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Вийти",
     goToApp: "Перейти до застосунку",
     goToAdmin: "Перейти до панелі керування",
+    signOutQuestion: "Ви справді хочете вийти?",
+    signingOut: "Виходимо…",
   },
   be: {
     email: "Электронная пошта",
@@ -1471,6 +1535,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Выйсці",
     goToApp: "Перайсці ў дадатак",
     goToAdmin: "Перайсці ў панэль кіравання",
+    signOutQuestion: "Вы сапраўды хочаце выйсці?",
+    signingOut: "Выходзім…",
   },
   bg: {
     email: "Имейл",
@@ -1515,6 +1581,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Изход",
     goToApp: "Към приложението",
     goToAdmin: "Към административния панел",
+    signOutQuestion: "Наистина ли искате да излезете?",
+    signingOut: "Излизане…",
   },
   sr: {
     email: "Имејл",
@@ -1559,6 +1627,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Одјава",
     goToApp: "Иди на апликацију",
     goToAdmin: "Иди на административни панел",
+    signOutQuestion: "Да ли сте сигурни да желите да се одјавите?",
+    signingOut: "Одјављивање…",
   },
   bs: {
     email: "E-mail",
@@ -1603,6 +1673,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Odjava",
     goToApp: "Idi na aplikaciju",
     goToAdmin: "Idi na administratorski panel",
+    signOutQuestion: "Jeste li sigurni da se želite odjaviti?",
+    signingOut: "Odjavljivanje…",
   },
   mk: {
     email: "Е-пошта",
@@ -1647,6 +1719,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Одјава",
     goToApp: "Оди на апликацијата",
     goToAdmin: "Оди на административниот панел",
+    signOutQuestion: "Дали сте сигурни дека сакате да се одјавите?",
+    signingOut: "Одјавување…",
   },
   sq: {
     email: "Email",
@@ -1691,6 +1765,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Dilni",
     goToApp: "Shko te aplikacioni",
     goToAdmin: "Shko te paneli i administrimit",
+    signOutQuestion: "Jeni i sigurt që doni të dilni?",
+    signingOut: "Po dilet…",
   },
   kk: {
     email: "Электрондық пошта",
@@ -1735,6 +1811,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Шығу",
     goToApp: "Қолданбаға өту",
     goToAdmin: "Басқару панеліне өту",
+    signOutQuestion: "Шығуды растайсыз ба?",
+    signingOut: "Шығу орындалуда…",
   },
   uz: {
     email: "Email",
@@ -1779,6 +1857,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Chiqish",
     goToApp: "Ilovaga o'tish",
     goToAdmin: "Boshqaruv paneliga o'tish",
+    signOutQuestion: "Rostdan ham chiqmoqchimisiz?",
+    signingOut: "Chiqilmoqda…",
   },
   ky: {
     email: "Электрондук почта",
@@ -1823,6 +1903,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Чыгуу",
     goToApp: "Колдонмого өтүү",
     goToAdmin: "Башкаруу панелине өтүү",
+    signOutQuestion: "Чын эле чыккыңыз келеби?",
+    signingOut: "Чыгуу жүрүүдө…",
   },
   tg: {
     email: "Почтаи электронӣ",
@@ -1867,6 +1949,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Баромад",
     goToApp: "Ба барнома гузаштан",
     goToAdmin: "Ба лавҳаи идора гузаштан",
+    signOutQuestion: "Шумо дар ҳақиқат баромадан мехоҳед?",
+    signingOut: "Баромада истодааст…",
   },
   tk: {
     email: "E-poçta",
@@ -1911,6 +1995,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Çykmak",
     goToApp: "Programma geçmek",
     goToAdmin: "Dolandyryş paneline geçmek",
+    signOutQuestion: "Hakykatdan-da çykmak isleýärsiňizmi?",
+    signingOut: "Çykylýar…",
   },
   az: {
     email: "E-poçt",
@@ -1955,6 +2041,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Çıxış",
     goToApp: "Tətbiqə keç",
     goToAdmin: "İdarəetmə panelinə keç",
+    signOutQuestion: "Çıxmaq istədiyinizə əminsiniz?",
+    signingOut: "Çıxılır…",
   },
   hy: {
     email: "Էլ. փոստ",
@@ -1999,6 +2087,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Ելք",
     goToApp: "Անցնել հավելված",
     goToAdmin: "Անցնել կառավարման վահանակ",
+    signOutQuestion: "Իսկապե՞ս ուզում եք դուրս գալ։",
+    signingOut: "Դուրս է գալիս…",
   },
   ka: {
     email: "ელ. ფოსტა",
@@ -2043,6 +2133,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "გასვლა",
     goToApp: "აპლიკაციაზე გადასვლა",
     goToAdmin: "ადმინისტრირების პანელზე გადასვლა",
+    signOutQuestion: "ნამდვილად გსურთ გასვლა?",
+    signingOut: "მიმდინარეობს გასვლა…",
   },
   mn: {
     email: "И-мэйл",
@@ -2087,6 +2179,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Гарах",
     goToApp: "Апп руу очих",
     goToAdmin: "Удирдлагын самбар руу очих",
+    signOutQuestion: "Та гарахдаа итгэлтэй байна уу?",
+    signingOut: "Гарч байна…",
   },
   ar: {
     email: "البريد الإلكتروني",
@@ -2131,6 +2225,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "تسجيل الخروج",
     goToApp: "الانتقال إلى التطبيق",
     goToAdmin: "الانتقال إلى لوحة الإدارة",
+    signOutQuestion: "هل تريد بالتأكيد تسجيل الخروج؟",
+    signingOut: "جارٍ تسجيل الخروج…",
   },
   tr: {
     email: "E-posta",
@@ -2175,6 +2271,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Çıkış yap",
     goToApp: "Uygulamaya git",
     goToAdmin: "Yönetim paneline git",
+    signOutQuestion: "Çıkış yapmak istediğinizden emin misiniz?",
+    signingOut: "Çıkış yapılıyor…",
   },
   he: {
     email: "אימייל",
@@ -2219,6 +2317,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "התנתקות",
     goToApp: "מעבר לאפליקציה",
     goToAdmin: "מעבר ללוח הניהול",
+    signOutQuestion: "האם אתה בטוח שברצונך להתנתק?",
+    signingOut: "מתנתק…",
   },
   fa: {
     email: "ایمیل",
@@ -2263,6 +2363,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "خروج",
     goToApp: "رفتن به برنامه",
     goToAdmin: "رفتن به پنل مدیریت",
+    signOutQuestion: "آیا مطمئن هستید که می‌خواهید خارج شوید؟",
+    signingOut: "در حال خروج…",
   },
   ku: {
     email: "E-name",
@@ -2307,6 +2409,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Derkeve",
     goToApp: "Biçe sepanê",
     goToAdmin: "Biçe panela rêveberiyê",
+    signOutQuestion: "Tu bawer î ku dixwazî derkevî?",
+    signingOut: "Derdikeve…",
   },
   af: {
     email: "E-pos",
@@ -2351,6 +2455,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Meld af",
     goToApp: "Gaan na die toepassing",
     goToAdmin: "Gaan na die adminpaneel",
+    signOutQuestion: "Is jy seker jy wil afmeld?",
+    signingOut: "Besig om af te meld…",
   },
   sw: {
     email: "Barua pepe",
@@ -2395,6 +2501,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Ondoka",
     goToApp: "Nenda kwenye programu",
     goToAdmin: "Nenda kwenye paneli ya usimamizi",
+    signOutQuestion: "Una uhakika unataka kuondoka?",
+    signingOut: "Inaondoka…",
   },
   ha: {
     email: "Imel",
@@ -2439,6 +2547,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Fita",
     goToApp: "Je zuwa manhaja",
     goToAdmin: "Je zuwa allon gudanarwa",
+    signOutQuestion: "Ka tabbata kana son fita?",
+    signingOut: "Ana fita…",
   },
   yo: {
     email: "Ímeèlì",
@@ -2483,6 +2593,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Jáde",
     goToApp: "Lọ sí ohun elo",
     goToAdmin: "Lọ sí pánẹ́ẹ̀lì àkóso",
+    signOutQuestion: "Ṣé o dá ọ lójú pé o fẹ́ jáde?",
+    signingOut: "Ń jáde…",
   },
   ig: {
     email: "Ozi-e",
@@ -2527,6 +2639,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Pụọ",
     goToApp: "Gaa na ngwa",
     goToAdmin: "Gaa na ogwe njikwa",
+    signOutQuestion: "Ị ji n'aka na ị chọrọ ịpụ?",
+    signingOut: "Na-apụ…",
   },
   am: {
     email: "ኢሜይል",
@@ -2571,6 +2685,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "ውጣ",
     goToApp: "ወደ መተግበሪያው ሂድ",
     goToAdmin: "ወደ አስተዳደር ፓነል ሂድ",
+    signOutQuestion: "በእርግጥ መውጣት ይፈልጋሉ?",
+    signingOut: "በመውጣት ላይ…",
   },
   zu: {
     email: "I-imeyili",
@@ -2615,6 +2731,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Phuma",
     goToApp: "Iya kuhlelo",
     goToAdmin: "Iya kuphaneli yokuphatha",
+    signOutQuestion: "Uqinisekile ufuna ukuphuma?",
+    signingOut: "Iyaphuma…",
   },
   xh: {
     email: "I-imeyile",
@@ -2659,6 +2777,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Phuma",
     goToApp: "Yiya kusicelo",
     goToAdmin: "Yiya kwiphaneli yolawulo",
+    signOutQuestion: "Uqinisekile ufuna ukuphuma?",
+    signingOut: "Iyaphuma…",
   },
   rw: {
     email: "Imeyili",
@@ -2703,6 +2823,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Sohoka",
     goToApp: "Jya kuri porogaramu",
     goToAdmin: "Jya ku rubuga rw'ubuyobozi",
+    signOutQuestion: "Uremeza ko ushaka gusohoka?",
+    signingOut: "Irasohoka…",
   },
   so: {
     email: "Iimaylka",
@@ -2747,6 +2869,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Ka bax",
     goToApp: "Aad barnaamijka",
     goToAdmin: "Aad guddiga maamulka",
+    signOutQuestion: "Ma hubtaa inaad rabto inaad ka baxdo?",
+    signingOut: "Waa laga baxayaa…",
   },
   zh: {
     email: "电子邮箱",
@@ -2791,6 +2915,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "退出登录",
     goToApp: "前往应用",
     goToAdmin: "前往管理面板",
+    signOutQuestion: "确定要退出登录吗？",
+    signingOut: "正在退出…",
   },
   ja: {
     email: "メールアドレス",
@@ -2835,6 +2961,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "ログアウト",
     goToApp: "アプリへ移動",
     goToAdmin: "管理パネルへ移動",
+    signOutQuestion: "ログアウトしてもよろしいですか？",
+    signingOut: "ログアウトしています…",
   },
   ko: {
     email: "이메일",
@@ -2879,6 +3007,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "로그아웃",
     goToApp: "앱으로 이동",
     goToAdmin: "관리 패널로 이동",
+    signOutQuestion: "로그아웃하시겠습니까?",
+    signingOut: "로그아웃 중…",
   },
   hi: {
     email: "ईमेल",
@@ -2923,6 +3053,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "साइन आउट करें",
     goToApp: "ऐप पर जाएँ",
     goToAdmin: "एडमिन पैनल पर जाएँ",
+    signOutQuestion: "क्या आप वाकई साइन आउट करना चाहते हैं?",
+    signingOut: "साइन आउट हो रहा है…",
   },
   ur: {
     email: "ای میل",
@@ -2967,6 +3099,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "سائن آؤٹ",
     goToApp: "ایپ پر جائیں",
     goToAdmin: "ایڈمن پینل پر جائیں",
+    signOutQuestion: "کیا آپ واقعی سائن آؤٹ کرنا چاہتے ہیں؟",
+    signingOut: "سائن آؤٹ ہو رہا ہے…",
   },
   bn: {
     email: "ইমেল",
@@ -3011,6 +3145,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "সাইন আউট",
     goToApp: "অ্যাপে যান",
     goToAdmin: "অ্যাডমিন প্যানেলে যান",
+    signOutQuestion: "আপনি কি নিশ্চিতভাবে সাইন আউট করতে চান?",
+    signingOut: "সাইন আউট করা হচ্ছে…",
   },
   te: {
     email: "ఇమెయిల్",
@@ -3055,6 +3191,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "సైన్ అవుట్",
     goToApp: "యాప్‌కు వెళ్లండి",
     goToAdmin: "అడ్మిన్ ప్యానెల్‌కు వెళ్లండి",
+    signOutQuestion: "మీరు నిజంగా సైన్ అవుట్ చేయాలనుకుంటున్నారా?",
+    signingOut: "సైన్ అవుట్ అవుతోంది…",
   },
   mr: {
     email: "ईमेल",
@@ -3099,6 +3237,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "साइन आउट",
     goToApp: "अॅपवर जा",
     goToAdmin: "अॅडमिन पॅनेलवर जा",
+    signOutQuestion: "तुम्हाला खरोखर साइन आउट करायचे आहे का?",
+    signingOut: "साइन आउट होत आहे…",
   },
   kn: {
     email: "ಇಮೇಲ್",
@@ -3143,6 +3283,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "ಸೈನ್ ಔಟ್",
     goToApp: "ಆ್ಯಪ್‌ಗೆ ಹೋಗಿ",
     goToAdmin: "ಆಡಳಿತ ಫಲಕಕ್ಕೆ ಹೋಗಿ",
+    signOutQuestion: "ನೀವು ನಿಜವಾಗಿಯೂ ಸೈನ್ ಔಟ್ ಮಾಡಲು ಬಯಸುವಿರಾ?",
+    signingOut: "ಸೈನ್ ಔಟ್ ಆಗುತ್ತಿದೆ…",
   },
   gu: {
     email: "ઇમેઇલ",
@@ -3187,6 +3329,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "સાઇન આઉટ",
     goToApp: "એપ પર જાઓ",
     goToAdmin: "એડમિન પેનલ પર જાઓ",
+    signOutQuestion: "શું તમે ખરેખર સાઇન આઉટ કરવા માંગો છો?",
+    signingOut: "સાઇન આઉટ થઈ રહ્યું છે…",
   },
   ml: {
     email: "ഇമെയിൽ",
@@ -3231,6 +3375,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "സൈൻ ഔട്ട്",
     goToApp: "ആപ്പിലേക്ക് പോകുക",
     goToAdmin: "അഡ്മിൻ പാനലിലേക്ക് പോകുക",
+    signOutQuestion: "നിങ്ങൾക്ക് ശരിക്കും സൈൻ ഔട്ട് ചെയ്യണോ?",
+    signingOut: "സൈൻ ഔട്ട് ചെയ്യുന്നു…",
   },
   ta: {
     email: "மின்னஞ்சல்",
@@ -3275,6 +3421,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "வெளியேறு",
     goToApp: "பயன்பாட்டிற்குச் செல்",
     goToAdmin: "நிர்வாகப் பலகைக்குச் செல்",
+    signOutQuestion: "நிச்சயமாக வெளியேற விரும்புகிறீர்களா?",
+    signingOut: "வெளியேறுகிறது…",
   },
   ne: {
     email: "इमेल",
@@ -3319,6 +3467,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "साइन आउट",
     goToApp: "एपमा जानुहोस्",
     goToAdmin: "एडमिन प्यानलमा जानुहोस्",
+    signOutQuestion: "के तपाईं साँच्चै साइन आउट गर्न चाहनुहुन्छ?",
+    signingOut: "साइन आउट हुँदैछ…",
   },
   vi: {
     email: "Email",
@@ -3363,6 +3513,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Đăng xuất",
     goToApp: "Đi tới ứng dụng",
     goToAdmin: "Đi tới bảng quản trị",
+    signOutQuestion: "Bạn có chắc muốn đăng xuất không?",
+    signingOut: "Đang đăng xuất…",
   },
   th: {
     email: "อีเมล",
@@ -3407,6 +3559,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "ออกจากระบบ",
     goToApp: "ไปที่แอป",
     goToAdmin: "ไปที่แผงผู้ดูแลระบบ",
+    signOutQuestion: "คุณแน่ใจหรือไม่ว่าต้องการออกจากระบบ?",
+    signingOut: "กำลังออกจากระบบ…",
   },
   id: {
     email: "Email",
@@ -3451,6 +3605,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Keluar",
     goToApp: "Buka aplikasi",
     goToAdmin: "Buka panel admin",
+    signOutQuestion: "Yakin ingin keluar?",
+    signingOut: "Sedang keluar…",
   },
   ms: {
     email: "E-mel",
@@ -3495,6 +3651,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Log keluar",
     goToApp: "Pergi ke aplikasi",
     goToAdmin: "Pergi ke panel pentadbir",
+    signOutQuestion: "Adakah anda pasti mahu log keluar?",
+    signingOut: "Sedang log keluar…",
   },
   tl: {
     email: "Email",
@@ -3539,6 +3697,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "Mag-sign out",
     goToApp: "Pumunta sa app",
     goToAdmin: "Pumunta sa admin panel",
+    signOutQuestion: "Sigurado ka bang gusto mong mag-sign out?",
+    signingOut: "Nag-si-sign out…",
   },
   my: {
     email: "အီးမေးလ်",
@@ -3583,6 +3743,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "ထွက်ရန်",
     goToApp: "အက်ပ်သို့သွားရန်",
     goToAdmin: "စီမံခန့်ခွဲမှုပန်နယ်သို့သွားရန်",
+    signOutQuestion: "ထွက်ရန် သေချာပါသလား?",
+    signingOut: "ထွက်နေသည်…",
   },
   km: {
     email: "អ៊ីមែល",
@@ -3627,6 +3789,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "ចាកចេញ",
     goToApp: "ទៅកាន់កម្មវិធី",
     goToAdmin: "ទៅកាន់ផ្ទាំងគ្រប់គ្រង",
+    signOutQuestion: "តើអ្នកប្រាកដថាចង់ចាកចេញមែនទេ?",
+    signingOut: "កំពុងចាកចេញ…",
   },
   lo: {
     email: "ອີເມວ",
@@ -3671,6 +3835,8 @@ export const STRINGS: Record<string, AuthStrings> = {
     signOut: "ອອກຈາກລະບົບ",
     goToApp: "ໄປທີ່ແອັບ",
     goToAdmin: "ໄປທີ່ແຜງຄວບຄຸມ",
+    signOutQuestion: "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການອອກຈາກລະບົບ?",
+    signingOut: "ກຳລັງອອກຈາກລະບົບ…",
   },
 };
 
