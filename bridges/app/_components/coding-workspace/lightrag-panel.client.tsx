@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { X, Brain, Loader2, Send, CheckCircle, AlertCircle, BookOpen, ChevronDown, RefreshCw } from "lucide-react";
+import { X, Brain, Loader2, Send, CheckCircle, AlertCircle, BookOpen, ChevronDown, RefreshCw, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
 // Fallback used only when /api/config/openai-models can't reach OpenAI
@@ -28,6 +28,9 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
   const [powerError, setPowerError]   = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [docs, setDocs] = useState<{ id: string; status: string; source: string | null; summary: string; chunks: number }[] | null>(null);
+  // What the confirmation dialog is about: one document, or the whole base.
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; label: string } | { all: true } | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [model, setModel]             = useState("gpt-5.4-mini");
   const [saving, setSaving]           = useState(false);
   const [query, setQuery]             = useState("");
@@ -85,6 +88,31 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
       setPowerError(String((e as Error).message ?? e));
     } finally {
       setPowering(false);
+    }
+  }
+
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    try {
+      const payload = "all" in pendingDelete ? { all: true } : { ids: [pendingDelete.id] };
+      const r = await fetch("/api/rag/documents/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok && d.ok) {
+        toast.success("all" in pendingDelete ? "Knowledge base emptied" : "Document removed");
+        setPendingDelete(null);
+        setTimeout(loadDocs, 1500);
+      } else {
+        toast.error(String(d.error ?? `Delete failed (${r.status})`));
+      }
+    } catch (e) {
+      toast.error(String((e as Error).message ?? e));
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -150,14 +178,18 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: query.trim() }),
       });
-      const data = await res.json();
-      if (data.available === false) {
-        setAnswer("LightRAG is not available or not configured.");
+      const data = await res.json().catch(() => null);
+      if (!res.ok || data?.available === false) {
+        setAnswer(`The service answered ${res.status}${data?.error ? `: ${data.error}` : ""}.`);
       } else {
         setAnswer(data.response ?? data.result ?? JSON.stringify(data));
       }
-    } catch {
-      setAnswer("Query failed — check that LightRAG is running.");
+    } catch (e) {
+      // A thrown fetch means the REQUEST never completed — a dropped connection,
+      // not a service that is down. Saying "check that LightRAG is running" sent
+      // the owner looking in the wrong place while the service was healthy: a
+      // graph query takes ~20s, and an admin restart in that window kills it.
+      setAnswer(`The request did not complete: ${String((e as Error).message ?? e)}. A graph query takes about 20 seconds — if the admin service was restarting, just ask again.`);
     } finally {
       setQuerying(false);
     }
@@ -203,7 +235,46 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="w-full h-full bg-background border-l border-border shadow-xl flex flex-col">
+    <div className="relative w-full h-full bg-background border-l border-border shadow-xl flex flex-col">
+      {/* Confirmation. Deleting knowledge is cheap to click and expensive to undo:
+          the entities and relations built from a document go with it, and getting
+          them back means paying for the whole extraction pass again. So the dialog
+          names WHAT is going and says what it costs. */}
+      {pendingDelete && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => !deleting && setPendingDelete(null)}>
+          <div className="w-full max-w-sm rounded-xl border border-border bg-background p-4 flex flex-col gap-3 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start gap-2">
+              <AlertCircle size={15} className="text-destructive mt-0.5 shrink-0" />
+              <div className="flex flex-col gap-1">
+                <span className="text-[13px] font-semibold text-foreground">
+                  {"all" in pendingDelete ? "Empty the knowledge base?" : "Remove this document?"}
+                </span>
+                <span className="text-[11px] text-muted-foreground leading-relaxed break-words">
+                  {"all" in pendingDelete
+                    ? `All ${docs?.length ?? 0} document(s) will be removed, together with every entity and relation built from them.`
+                    : pendingDelete.label}
+                </span>
+                <span className="text-[11px] text-muted-foreground leading-relaxed">
+                  Loading it again means paying for the extraction pass a second time.
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2">
+              <button type="button" disabled={deleting} onClick={() => setPendingDelete(null)}
+                className="px-3 py-1.5 text-[11px] rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-40">
+                Cancel
+              </button>
+              <button type="button" disabled={deleting} onClick={confirmDelete}
+                className="px-3 py-1.5 text-[11px] rounded-md bg-destructive/90 text-white hover:bg-destructive transition-colors disabled:opacity-40 flex items-center gap-1.5">
+                {deleting && <Loader2 size={11} className="animate-spin" />}
+                {deleting ? "Removing…" : "Remove"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center px-4 py-2.5 border-b border-border shrink-0">
         <Brain size={13} className="mr-2 text-muted-foreground" />
@@ -312,6 +383,10 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
                 </span>
                 <button type="button" onClick={loadDocs}
                   className="text-[10px] text-muted-foreground hover:text-foreground underline">refresh</button>
+                {docs && docs.length > 0 && (
+                  <button type="button" onClick={() => setPendingDelete({ all: true })}
+                    className="ml-auto text-[10px] text-destructive hover:underline">empty the base</button>
+                )}
               </div>
               {docs === null && <span className="text-[10px] text-muted-foreground">not loaded yet</span>}
               {docs?.length === 0 && (
@@ -322,10 +397,15 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
                   {docs.map((d) => (
                     <div key={d.id} className="px-2.5 py-1.5 flex items-start gap-2">
                       <span className={`mt-1 size-1.5 shrink-0 rounded-full ${d.status === "processed" ? "bg-green-500" : d.status === "failed" ? "bg-destructive" : "bg-amber-500"}`} />
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="text-[11px] text-foreground truncate">{d.source ?? d.summary ?? d.id}</div>
                         <div className="text-[9px] text-muted-foreground">{d.status} · {d.chunks} chunk(s)</div>
                       </div>
+                      <button type="button" aria-label="Remove document"
+                        onClick={() => setPendingDelete({ id: d.id, label: d.source ?? d.summary ?? d.id })}
+                        className="shrink-0 text-muted-foreground hover:text-destructive transition-colors">
+                        <Trash2 size={12} />
+                      </button>
                     </div>
                   ))}
                 </div>
