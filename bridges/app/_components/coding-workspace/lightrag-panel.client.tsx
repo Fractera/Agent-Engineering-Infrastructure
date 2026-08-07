@@ -90,7 +90,7 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
 
   async function loadDocs() {
     try {
-      const r = await fetch("/api/rag/documents");
+      const r = await fetch("/api/rag/documents", { cache: "no-store" });
       const d = await r.json();
       setDocs(d.available ? d.documents : []);
     } catch { setDocs([]); }
@@ -98,7 +98,7 @@ export function LightRagPanel({ onClose }: { onClose: () => void }) {
 
   async function checkStatus() {
     try {
-      const res = await fetch("/api/rag/status");
+      const res = await fetch("/api/rag/status", { cache: "no-store" });
       const data = await res.json();
       setAvailable(data.available === true);
     } catch {

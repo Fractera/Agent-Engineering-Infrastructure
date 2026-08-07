@@ -10,7 +10,7 @@ export async function GET(_req: NextRequest) {
       signal: AbortSignal.timeout(3000),
     });
     const data = await res.json();
-    return NextResponse.json({ available: true, ...data });
+    return NextResponse.json({ available: true, ...data }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ available: false });
   }

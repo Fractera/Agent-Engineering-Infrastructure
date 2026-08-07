@@ -28,7 +28,7 @@ export async function GET(_req: NextRequest) {
         chunks: d.chunks_count ?? 0,
       })),
     );
-    return NextResponse.json({ available: true, total: documents.length, documents });
+    return NextResponse.json({ available: true, total: documents.length, documents }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ available: false });
   }
