@@ -99,6 +99,11 @@ export async function POST(req: NextRequest) {
         `git -C ${PROJECT_DIR} ${ident} commit -m "Fractera slot: project baseline" && ` +
         `git -C ${PROJECT_DIR} branch -M main && ` +
         `rm -f ${PROJECT_DIR}/.git/shallow && ` +
+        // Remote-tracking refs still describe the STARTER, not the user's repository, and
+        // they keep the truncated commit alive — repack then dies on its missing parent.
+        `for r in $(git -C ${PROJECT_DIR} for-each-ref --format='%(refname)' refs/remotes); do ` +
+        `git -C ${PROJECT_DIR} update-ref -d "$r"; done; ` +
+        `rm -rf ${PROJECT_DIR}/.git/refs/remotes && ` +
         `git -C ${PROJECT_DIR} reflog expire --expire=now --all && ` +
         `git -C ${PROJECT_DIR} gc --prune=now --quiet`,
         { timeout: 120000 }
