@@ -1,0 +1,20 @@
+{
+  "en": {
+    "notSecure": "Not secure",
+    "notSecureTooltip": "This project is served over plain HTTP on its IP address. Open Settings → Personal Domain to attach a domain and switch to HTTPS / Secure mode.",
+    "preview": "Preview",
+    "signIn": "Sign in",
+    "menu": "Menu",
+    "signOut": "Sign out",
+    "registerAccount": "Register account"
+  },
+  "ru": {
+    "notSecure": "Не защищено",
+    "notSecureTooltip": "Проект отдаётся по обычному HTTP на своём IP-адресе. Откройте Settings → Personal Domain, чтобы подключить домен и перейти на HTTPS / защищённый режим.",
+    "preview": "Просмотр",
+    "signIn": "Войти",
+    "menu": "Меню",
+    "signOut": "Выйти",
+    "registerAccount": "Зарегистрировать аккаунт"
+  }
+}

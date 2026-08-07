@@ -4,9 +4,9 @@
   "private": true,
   "description": "Self-hosted AI development workspace",
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix app\" \"npm run dev --prefix services/auth\" \"node bridges/platforms/server.js\" \"npm run dev --prefix bridges/app\" \"node services/data/server.src.js\"",
-    "start": "concurrently \"npm run start --prefix app\" \"npm run start --prefix services/auth\" \"node bridges/platforms/server.js\" \"npm run start --prefix bridges/app\" \"node services/data/server.js\"",
-    "install:all": "npm install --prefix app && npm install --prefix services/auth && npm install --prefix bridges/platforms && npm install --prefix bridges/app && npm install --prefix services/data"
+    "dev": "concurrently \"npm run dev --prefix app\" \"npm run dev --prefix services/auth\" \"npm run dev --prefix bridges/app\" \"node services/data/server.src.js\"",
+    "start": "concurrently \"npm run start --prefix app\" \"npm run start --prefix services/auth\" \"npm run start --prefix bridges/app\" \"node services/data/server.js\"",
+    "install:all": "npm install --prefix app && npm install --prefix services/auth && npm install --prefix bridges/app && npm install --prefix services/data"
   },
   "devDependencies": {
     "concurrently": "^9.0.0"

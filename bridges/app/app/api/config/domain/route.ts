@@ -30,25 +30,9 @@ const PROXY_PORTS: Record<string, number> = {
 // depending on `cert_source`.
 const CUSTOM_CERT_DIR = "/etc/fractera/certs";
 
-// Bridge WebSocket servers (bridges/platforms/server.js) listen on these loopback
-// ports. In domain/Secure mode the browser can't reach them directly (mixed
-// content on HTTPS), so nginx proxies them as wss under the cert-covered admin
-// host: wss://admin.<domain>/ws/<name>/ → 127.0.0.1:<port>/. The PTY bridge
-// (/ws/pty/bridge/ → :3201/bridge/) drives every terminal; the rest mirror the
-// IP-mode ports so the online-check and any per-platform bridge keep working.
-const BRIDGE_WS_PORTS: Record<string, number> = {
-  pty: 3201, claude: 3200, codex: 3202, gemini: 3203, qwen: 3204, kimi: 3205,
-};
-const ADMIN_WS_LOCATIONS = Object.entries(BRIDGE_WS_PORTS).map(([name, p]) =>
-`    location /ws/${name}/ {
-        proxy_pass http://127.0.0.1:${p}/;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_read_timeout 86400;
-    }
-`).join("");
+// (step 500) The bridge WebSocket servers are gone with the terminal, so the
+// admin host no longer proxies any /ws/<name>/ location.
+const ADMIN_WS_LOCATIONS = "";
 
 // "Powered by Fractera" footer injected at the nginx layer (no trace in app code,
 // so the customer can't strip it from the app source). It is a PLAIN crawlable

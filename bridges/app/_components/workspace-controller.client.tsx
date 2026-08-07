@@ -5,9 +5,9 @@ import { CircleUserRound, Globe, AlertTriangle, Menu } from "lucide-react";
 import { CodingWindowShell, type SettingsPanelId } from "./coding-workspace/coding-window-shell.client";
 import { AuthLoginModal } from "./auth-login-modal.client";
 import { SitePreviewWindow } from "./site-preview-window.client";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { useRuntimeUrls } from "@/lib/runtime-urls";
+import { getAdminStrings, detectBrowserLang, DEFAULT_ADMIN_LANG } from "@/lib/i18n/admin-strings";
 
 type SessionData = {
   userId: string;
@@ -39,6 +39,12 @@ export function WorkspaceController() {
   // rendered by the shell. Lifting it here is what puts the button IN the header row
   // instead of floating over the workspace.
   const [menuOpen, setMenuOpen]                 = useState(false);
+
+  // Language: bundled dictionary, browser language read once on mount. Keeps
+  // the page statically renderable (see lib/i18n/admin-strings.ts).
+  const [lang, setLang] = useState(DEFAULT_ADMIN_LANG);
+  useEffect(() => { setLang(detectBrowserLang()); }, []);
+  const s = getAdminStrings(lang);
 
   // Read secure mode on mount + poll every 60s so the indicator clears on its
   // own a few seconds after the user activates Secure mode in the wizard.
@@ -117,11 +123,11 @@ export function WorkspaceController() {
         <div className="flex items-center gap-2">
           {insecure && (
             <span
-              title="This project is served over plain HTTP on its IP address. Open Settings → Personal Domain to attach a domain and switch to HTTPS / Secure mode."
+              title={s.notSecureTooltip}
               className="flex items-center gap-1 px-1.5 py-0.5 rounded text-amber-600 dark:text-amber-400 border border-amber-500/40 bg-amber-500/10"
             >
               <AlertTriangle size={13} />
-              <span className="text-[11px] font-medium hidden sm:inline">Not secure</span>
+              <span className="text-[11px] font-medium hidden sm:inline">{s.notSecure}</span>
             </span>
           )}
           <span className={`text-sm font-semibold tracking-wide select-none ${insecure ? "text-amber-600 dark:text-amber-400" : "text-foreground"}`}>
@@ -137,42 +143,14 @@ export function WorkspaceController() {
             onClick={() => { setSiteOpen((v) => !v); }}
           >
             <Globe className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Preview</span>
+            <span className="hidden sm:inline">{s.preview}</span>
           </Button>
-          {session ? (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="default"
-                  className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
-                >
-                  <CircleUserRound className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Account</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-56 p-3 flex flex-col gap-2" style={{ zIndex: 100000 }}>
-                <p className="text-xs font-medium text-foreground truncate">{session.email}</p>
-                <div className="h-px bg-border" />
-                <div className="flex flex-col gap-0.5">
-                  <p className="text-[10px] text-muted-foreground px-1 mb-0.5">Roles</p>
-                  {roles.map((role) => (
-                    <span key={role} className="text-xs text-foreground font-mono px-1">{role}</span>
-                  ))}
-                </div>
-                <div className="h-px bg-border" />
-                {isVirtualArchitect ? (
-                  <Button variant="default" size="sm" className="w-full h-8 text-xs" onClick={handleRegister}>
-                    Register account
-                  </Button>
-                ) : (
-                  <Button variant="outline" size="sm" className="w-full h-8 text-xs" onClick={handleSignOut}>
-                    Sign out
-                  </Button>
-                )}
-              </PopoverContent>
-            </Popover>
-          ) : (
+          {/* (step 500) The Account button and its popover are gone — the email,
+              the roles and the sign-out action now live in the pinned footer of
+              the settings drawer, one control instead of two. Sign in stays:
+              without a session the Menu button is disabled, so this is the only
+              way in. */}
+          {!session && (
             <Button
               variant="outline"
               size="default"
@@ -180,7 +158,7 @@ export function WorkspaceController() {
               onClick={() => setAuthModalOpen(true)}
             >
               <CircleUserRound className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Sign in</span>
+              <span className="hidden sm:inline">{s.signIn}</span>
             </Button>
           )}
           {/* Menu — the last control of the header row, a sibling of Preview and the
@@ -189,13 +167,13 @@ export function WorkspaceController() {
           <Button
             variant="outline"
             size="default"
-            aria-label="Menu"
+            aria-label={s.menu}
             className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
             disabled={!isAuthenticated}
             onClick={() => setMenuOpen((v) => !v)}
           >
             <Menu className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Menu</span>
+            <span className="hidden sm:inline">{s.menu}</span>
           </Button>
         </div>
       </header>
@@ -214,6 +192,11 @@ export function WorkspaceController() {
           requestedSettingsPanel={panelRequest}
           menuOpen={menuOpen}
           onMenuOpenChange={setMenuOpen}
+          accountEmail={session?.email ?? null}
+          accountRoles={roles}
+          isVirtualArchitect={isVirtualArchitect}
+          onSignOut={handleSignOut}
+          onRegister={handleRegister}
         />
       )}
 

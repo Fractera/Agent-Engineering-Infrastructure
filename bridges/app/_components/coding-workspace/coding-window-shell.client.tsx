@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
-import { Menu, X as XIcon, Loader2, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LayoutGrid } from "lucide-react";
+import { getAdminStrings, detectBrowserLang, DEFAULT_ADMIN_LANG } from "@/lib/i18n/admin-strings";
+import { Menu, X as XIcon, Loader2, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LayoutGrid, LogOut, CircleUserRound } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { COMING_SOON } from "./platforms";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -59,10 +60,22 @@ type Props = {
   // and handed down. The shell only renders the drawer.
   menuOpen?: boolean;
   onMenuOpenChange?: (open: boolean) => void;
+  // (step 500) The account popover moved out of the header and into the pinned
+  // footer of this drawer. The session still lives in the parent, so the pieces
+  // the footer shows — and the two actions it can fire — are handed down.
+  accountEmail?: string | null;
+  accountRoles?: string[];
+  isVirtualArchitect?: boolean;
+  onSignOut?: () => void;
+  onRegister?: () => void;
 };
 
-export function CodingWindowShell({ height, windowWidth, isMobile = false, isAuthenticated = true, isPreviewOpen = false, onPreviewClose, secure = false, insecure = false, requestedSettingsPanel = null, menuOpen = false, onMenuOpenChange }: Props) {
+export function CodingWindowShell({ height, windowWidth, isMobile = false, isAuthenticated = true, isPreviewOpen = false, onPreviewClose, secure = false, insecure = false, requestedSettingsPanel = null, menuOpen = false, onMenuOpenChange, accountEmail = null, accountRoles = [], isVirtualArchitect = false, onSignOut, onRegister }: Props) {
   const urls = useMemo(() => getRuntimeUrls(), []);
+  // Bundled dictionary, browser language read once on mount — see admin-strings.
+  const [lang, setLang] = useState(DEFAULT_ADMIN_LANG);
+  useEffect(() => { setLang(detectBrowserLang()); }, []);
+  const t = getAdminStrings(lang);
   const [carouselIdx, setCarouselIdx]       = useState(0);
   // Selective install (S5): which components this server actually installed.
   // null = unknown/loading or fetch failed → show everything (back-compat with
@@ -380,14 +393,20 @@ showOpenAiPanel, showEnvEditor,
           transition: "transform 180ms ease-out",
           visibility: dataMenuOpen ? "visible" : "hidden",
         }}
-        className="bg-background border-r border-border shadow-2xl overflow-y-auto py-2"
+        className="bg-background border-r border-border shadow-2xl flex flex-col"
       >
-        <div className="flex items-center justify-between px-3 pb-2 mb-1 border-b border-border">
+        {/* Drawer head — fixed, never scrolls. */}
+        <div className="shrink-0 flex items-center justify-between px-3 py-2 border-b border-border">
           <span className="text-[12px] font-medium text-foreground">Settings</span>
           <button type="button" onClick={() => setDataMenuOpen(false)} className="text-muted-foreground hover:text-foreground">
             <XIcon size={14} />
           </button>
         </div>
+
+        {/* Scrolling body. `min-h-0` is what actually lets a flex child shrink
+            below its content height — without it the list pushes the pinned
+            account footer out of view instead of scrolling. */}
+        <div className="flex-1 min-h-0 overflow-y-auto py-1">
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowUsers((v) => !v); setShowMediaLibrary(false); setShowEnvEditor(false); setShowDbBrowser(false); setShowInfo(false); setShowDomainPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Users size={11} />Users
@@ -466,6 +485,35 @@ showOpenAiPanel, showEnvEditor,
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
+        </div>
+
+        {/* Pinned account footer (step 500) — replaces the header's Account
+            popover. Sits outside the scrolling body, so it stays on screen no
+            matter how long the menu grows. */}
+        {accountEmail && (
+          <div className="shrink-0 border-t border-border px-3 py-2.5 flex flex-col gap-2">
+            <p className="text-[11px] font-medium text-foreground truncate" title={accountEmail}>
+              {accountEmail}
+            </p>
+            {accountRoles.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {accountRoles.map((role) => (
+                  <span key={role} className="text-[10px] font-mono text-muted-foreground bg-muted rounded px-1.5 py-0.5">
+                    {role}
+                  </span>
+                ))}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={isVirtualArchitect ? onRegister : onSignOut}
+              className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-[11px] text-foreground hover:bg-muted transition-colors"
+            >
+              {isVirtualArchitect ? <CircleUserRound size={11} /> : <LogOut size={11} />}
+              {isVirtualArchitect ? t.registerAccount : t.signOut}
+            </button>
+          </div>
+        )}
       </div>
       <input ref={fileInputRef} type="file" accept=".zip" className="hidden" onChange={handleImport} />
       {/* Light preview canvas removed — Light product retired */}
