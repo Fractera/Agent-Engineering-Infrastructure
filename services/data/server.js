@@ -90,9 +90,25 @@ if (!productsCols.has('created_by'))  appDb.exec(`ALTER TABLE products ADD COLUM
 // the vector half is kept — in the SAME SQLite file as the rows it annotates, so it
 // shares one backup, one auth posture and one wipe semantics.
 //
-// Similarity search: sqlite-vec if the extension loads, otherwise a plain scan with
-// cosine computed in JS. The fallback is honest at this scale (thousands of rows) —
-// it is linear, so it is logged once at startup instead of pretending to be an index.
+// Similarity search runs on a REAL index: an sqlite-vec `vec0` virtual table that
+// returns only the k nearest rows, so the cost of a query stops growing with the
+// size of the store. Until step 500 the extension was loaded but never used — every
+// search read the whole collection into JS. That was invisible at one search per
+// question and ruinous under agentic retrieval, which issues five to ten searches
+// per question.
+//
+// Three modes, decided once at startup and reported honestly by /vectors/status:
+//   'partitioned' — vec0 with `collection` as a partition key: a filtered search
+//                   touches only its own collection. The correct mode.
+//   'flat'        — vec0 without partitions (older extension): the KNN is global,
+//                   so a filtered search over-fetches and then filters.
+//   'scan'        — no extension at all: the old linear scan, kept so the store
+//                   still WORKS rather than failing. Logged at startup, never
+//                   dressed up as an index.
+//
+// Ranking note: vec0 selects candidates by its own distance; the exact cosine score
+// is then computed for those k rows only. The response keeps the same meaning it
+// always had, at k-sized cost instead of table-sized.
 const EMBED_MODEL = process.env.EMBED_MODEL ?? 'text-embedding-3-small'
 const EMBED_DIMS  = Number(process.env.EMBED_DIMS ?? 1536)
 
@@ -120,6 +136,74 @@ appDb.exec(`
   CREATE INDEX IF NOT EXISTS vectors_collection_idx ON vectors (collection);
   CREATE INDEX IF NOT EXISTS vectors_ref_idx        ON vectors (ref_table, ref_id);
 `)
+
+// vec0 addresses rows by an INTEGER rowid, while `vectors.id` is a TEXT uuid. The
+// implicit SQLite rowid is NOT safe to use as that link: VACUUM may renumber it on
+// a table whose primary key is not an INTEGER, which would silently point every
+// index entry at the wrong text. So the link is an explicit column we own.
+const hasSeq = appDb.prepare('PRAGMA table_info(vectors)').all().some((c) => c.name === 'seq')
+if (!hasSeq) {
+  appDb.exec('ALTER TABLE vectors ADD COLUMN seq INTEGER')
+  appDb.exec('CREATE UNIQUE INDEX IF NOT EXISTS vectors_seq_idx ON vectors (seq)')
+  let n = 0
+  const stmt = appDb.prepare('UPDATE vectors SET seq = ? WHERE id = ?')
+  for (const r of appDb.prepare('SELECT id FROM vectors ORDER BY created_at').all()) stmt.run(++n, r.id)
+}
+
+// Index mode. Partition keys arrived in sqlite-vec 0.1.6; an older extension throws
+// on the CREATE, so we step down instead of failing. Nothing here is fatal: a store
+// with no index still answers, just linearly.
+let annMode = 'scan'
+if (vecExtension) {
+  try {
+    appDb.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS vectors_ann USING vec0(
+      collection TEXT PARTITION KEY,
+      embedding FLOAT[${EMBED_DIMS}]
+    )`)
+    annMode = 'partitioned'
+  } catch {
+    try {
+      appDb.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS vectors_ann USING vec0(embedding FLOAT[${EMBED_DIMS}])`)
+      annMode = 'flat'
+    } catch {
+      annMode = 'scan'
+    }
+  }
+}
+
+function annDelete(seq) {
+  if (annMode === 'scan' || seq == null) return
+  try { appDb.prepare('DELETE FROM vectors_ann WHERE rowid = ?').run(seq) } catch { /* index is best-effort */ }
+}
+function annInsert(seq, collection, blob) {
+  if (annMode === 'scan' || seq == null) return
+  try {
+    if (annMode === 'partitioned') {
+      appDb.prepare('INSERT INTO vectors_ann (rowid, collection, embedding) VALUES (?, ?, ?)').run(seq, collection, blob)
+    } else {
+      appDb.prepare('INSERT INTO vectors_ann (rowid, embedding) VALUES (?, ?)').run(seq, blob)
+    }
+  } catch { /* index is best-effort: a failed write must never lose the record itself */ }
+}
+
+// Backfill: the index is derived data, so it is rebuilt whenever it is emptier than
+// the table. Covers the first start after this upgrade, a wiped index file and the
+// case where the extension only became available later.
+if (annMode !== 'scan') {
+  try {
+    const { n: indexed } = appDb.prepare('SELECT COUNT(*) AS n FROM vectors_ann').get()
+    const { n: stored }  = appDb.prepare('SELECT COUNT(*) AS n FROM vectors').get()
+    if (indexed < stored) {
+      appDb.exec('DELETE FROM vectors_ann')
+      for (const r of appDb.prepare('SELECT seq, collection, embedding FROM vectors WHERE seq IS NOT NULL').all()) {
+        annInsert(r.seq, r.collection, r.embedding)
+      }
+      console.log(`Vectors: rebuilt index for ${stored} record(s)`)
+    }
+  } catch (e) {
+    console.log('Vectors: index rebuild skipped —', String(e.message ?? e))
+  }
+}
 
 function toBlob(vec) {
   return Buffer.from(new Float32Array(vec).buffer)
@@ -686,14 +770,25 @@ app.post('/vectors', async (req, res) => {
       return res.status(400).json({ error: `expected ${EMBED_DIMS} dims, got ${vec.length}` })
     }
     const rowId = id ?? uuidv4()
-    appDb.prepare(`
-      INSERT INTO vectors (id, collection, ref_table, ref_id, text, embedding, dims, model)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        collection = excluded.collection, ref_table = excluded.ref_table, ref_id = excluded.ref_id,
-        text = excluded.text, embedding = excluded.embedding, dims = excluded.dims, model = excluded.model
-    `).run(rowId, collection, refTable, refId, text, toBlob(vec), vec.length, EMBED_MODEL)
-    res.json({ ok: true, id: rowId, dims: vec.length, model: EMBED_MODEL })
+    const blob  = toBlob(vec)
+    // Table and index move together or not at all: a half-written pair would make
+    // a record findable that no longer exists, or hide one that does.
+    const write = appDb.transaction(() => {
+      const prev = appDb.prepare('SELECT seq FROM vectors WHERE id = ?').get(rowId)
+      const seq = prev?.seq ?? ((appDb.prepare('SELECT MAX(seq) AS m FROM vectors').get().m ?? 0) + 1)
+      appDb.prepare(`
+        INSERT INTO vectors (id, collection, ref_table, ref_id, text, embedding, dims, model, seq)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          collection = excluded.collection, ref_table = excluded.ref_table, ref_id = excluded.ref_id,
+          text = excluded.text, embedding = excluded.embedding, dims = excluded.dims, model = excluded.model
+      `).run(rowId, collection, refTable, refId, text, blob, vec.length, EMBED_MODEL, seq)
+      annDelete(seq)                       // upsert = replace, so the old vector goes first
+      annInsert(seq, collection, blob)
+      return seq
+    })
+    write()
+    res.json({ ok: true, id: rowId, dims: vec.length, model: EMBED_MODEL, index: annMode })
   } catch (e) {
     res.status(500).json({ error: String(e.message ?? e) })
   }
@@ -707,17 +802,46 @@ app.post('/vectors/search', async (req, res) => {
   if (!query && !Array.isArray(embedding)) return res.status(400).json({ error: 'query or embedding is required' })
   try {
     const probe = Array.isArray(embedding) ? Float32Array.from(embedding) : Float32Array.from(await embed(query))
-    const rows = collection
-      ? appDb.prepare('SELECT id, collection, ref_table, ref_id, text, embedding FROM vectors WHERE collection = ?').all(collection)
-      : appDb.prepare('SELECT id, collection, ref_table, ref_id, text, embedding FROM vectors').all()
+    const want  = Math.max(1, Math.min(100, Number(k) || 5))
+    let rows
+
+    if (annMode === 'partitioned' && collection) {
+      rows = appDb.prepare(`
+        SELECT v.id, v.collection, v.ref_table, v.ref_id, v.text, v.embedding
+        FROM vectors_ann a JOIN vectors v ON v.seq = a.rowid
+        WHERE a.embedding MATCH ? AND a.collection = ? AND k = ?
+      `).all(toBlob(probe), collection, want)
+    } else if (annMode !== 'scan' && !collection) {
+      rows = appDb.prepare(`
+        SELECT v.id, v.collection, v.ref_table, v.ref_id, v.text, v.embedding
+        FROM vectors_ann a JOIN vectors v ON v.seq = a.rowid
+        WHERE a.embedding MATCH ? AND k = ?
+      `).all(toBlob(probe), want)
+    } else if (annMode === 'flat' && collection) {
+      // No partitions: the KNN is global, so ask for a wider slice and keep the
+      // rows that belong to the requested collection. Honest but approximate —
+      // that is why 'partitioned' is the mode we want.
+      rows = appDb.prepare(`
+        SELECT v.id, v.collection, v.ref_table, v.ref_id, v.text, v.embedding
+        FROM vectors_ann a JOIN vectors v ON v.seq = a.rowid
+        WHERE a.embedding MATCH ? AND k = ?
+      `).all(toBlob(probe), Math.min(500, want * 20)).filter((r) => r.collection === collection)
+    } else {
+      // No index: the old linear scan. Still correct, just proportional to the store.
+      rows = collection
+        ? appDb.prepare('SELECT id, collection, ref_table, ref_id, text, embedding FROM vectors WHERE collection = ?').all(collection)
+        : appDb.prepare('SELECT id, collection, ref_table, ref_id, text, embedding FROM vectors').all()
+    }
+
+    // Exact cosine on the candidates only — same score the caller always got.
     const scored = rows
       .map((r) => ({
         id: r.id, collection: r.collection, refTable: r.ref_table, refId: r.ref_id, text: r.text,
         score: cosine(probe, fromBlob(r.embedding)),
       }))
       .sort((a, b) => b.score - a.score)
-      .slice(0, Math.max(1, Math.min(100, Number(k) || 5)))
-    res.json({ ok: true, scanned: rows.length, indexed: vecExtension, results: scored })
+      .slice(0, want)
+    res.json({ ok: true, scanned: rows.length, index: annMode, indexed: annMode !== 'scan', results: scored })
   } catch (e) {
     res.status(500).json({ error: String(e.message ?? e) })
   }
@@ -726,8 +850,13 @@ app.post('/vectors/search', async (req, res) => {
 // ── DELETE /vectors/:id ───────────────────────────────────────────────────────
 
 app.delete('/vectors/:id', (req, res) => {
-  const info = appDb.prepare('DELETE FROM vectors WHERE id = ?').run(req.params.id)
-  res.json({ ok: true, deleted: info.changes })
+  const drop = appDb.transaction((id) => {
+    const row = appDb.prepare('SELECT seq FROM vectors WHERE id = ?').get(id)
+    const info = appDb.prepare('DELETE FROM vectors WHERE id = ?').run(id)
+    if (row) annDelete(row.seq)
+    return info.changes
+  })
+  res.json({ ok: true, deleted: drop(req.params.id) })
 })
 
 // ── GET /vectors/status — is the store usable at all ──────────────────────────
@@ -739,7 +868,9 @@ app.get('/vectors/status', (_req, res) => {
     configured: Boolean(process.env.OPENAI_API_KEY),
     model: EMBED_MODEL,
     dims: EMBED_DIMS,
-    indexed: vecExtension,
+    index: annMode,          // 'partitioned' | 'flat' | 'scan'
+    indexed: annMode !== 'scan',
+    extension: vecExtension, // loaded, which is not the same as used
     count: n,
   })
 })
@@ -752,5 +883,5 @@ app.listen(PORT, () => {
   console.log(`Media DB: ${MEDIA_DB}`)
   console.log(`App DB:   ${APP_DB}`)
   console.log(`Auth:     ${AUTH_URL}`)
-  console.log(`Vectors:  ${EMBED_MODEL} (${EMBED_DIMS}d), index: ${vecExtension ? "sqlite-vec" : "linear scan"}`)
+  console.log(`Vectors:  ${EMBED_MODEL} (${EMBED_DIMS}d), index: ${annMode === 'scan' ? 'LINEAR SCAN (no sqlite-vec)' : `sqlite-vec ${annMode}`}`)
 })
