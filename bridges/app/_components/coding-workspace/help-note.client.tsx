@@ -427,3 +427,69 @@ export function GitHubHelp() {
     </HelpNote>
   );
 }
+
+export function AppSettingsHelp() {
+  return (
+    <HelpNote title="App Settings — what your visitors and search engines see">
+      <p>
+        <strong>What it controls.</strong> The face of the public site: its name and description, the
+        social preview card, the icons a browser tab and a phone home screen show, and the details that
+        make it installable as an app. Not layout, not content — identity.
+      </p>
+      <p>
+        <strong>Why it is a screen and not code.</strong> These values used to live inside the application,
+        which meant changing a title required a developer and a rebuild. They are read from a
+        configuration file now, so you change them here and the site follows. It is also why they survive
+        a redeploy: the file is part of what Export carries as &ldquo;application settings&rdquo;.
+      </p>
+      <p>
+        <strong>Where search engines are concerned.</strong> The title and description are what appears in
+        search results and in a link preview when somebody shares your address. Write them for a person
+        reading a list of results, not for a machine counting keywords.
+      </p>
+      <p>
+        <strong>Images have two jobs.</strong> An icon is small and must stay recognisable at sixteen
+        pixels; a social preview is wide and is seen once, at full size, next to a link. The same picture
+        rarely does both well.
+      </p>
+      <p>
+        <strong>What this does not do.</strong> It will not change the language set or the theme — those
+        live in Platform — and it will not touch your content. Nothing here can break the site: the worst
+        outcome is a wrong name until you change it back.
+      </p>
+    </HelpNote>
+  );
+}
+
+export function PlatformHelp() {
+  return (
+    <HelpNote title="Platform — languages, theme and how pages are assembled">
+      <p>
+        <strong>What it controls.</strong> Three things that shape every page at once: which languages the
+        site is built in, how it looks, and how its parts are composed. Change them here and they apply
+        everywhere, rather than page by page.
+      </p>
+      <p>
+        <strong>Languages are a build-time decision.</strong> This is the part that surprises people. The
+        set of languages is baked into the compiled site, not read on each request — that is what lets
+        pages be served as ready HTML instead of being assembled per visitor. So adding a language means a
+        rebuild, and the change appears when the rebuild finishes, not the moment you save.
+      </p>
+      <p>
+        <strong>Routing, in plain terms.</strong> A page is put together from slots — a header, a footer,
+        a body — that are rendered independently. It sounds abstract and has a very practical effect:
+        changing what fills one slot does not force the rest of the page to be rebuilt or re-fetched.
+      </p>
+      <p>
+        <strong>The theme is not decoration alone.</strong> It sets the colours the whole interface derives
+        from, including contrast in light and dark. A theme chosen for looks and not for legibility is
+        felt by every visitor on every page.
+      </p>
+      <p>
+        <strong>These settings travel.</strong> They live in the same configuration Export carries as
+        &ldquo;application settings&rdquo;, so a restored server looks like the one you configured — not
+        like a fresh install.
+      </p>
+    </HelpNote>
+  );
+}

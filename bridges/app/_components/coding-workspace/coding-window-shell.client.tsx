@@ -576,10 +576,19 @@ showOpenAiPanel, showEnvEditor,
 
 
       {/* ── Site Settings panel (branding / SEO / PWA / images) ── */}
-      {showSiteSettings && <SiteSettingsPanel onClose={() => setShowSiteSettings(false)} />}
+      {/* REFERENCE LAYOUT (Users) — anchors for the height, stretch for the width. */}
+      {showSiteSettings && (
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 20 }}>
+          <SiteSettingsPanel onClose={() => setShowSiteSettings(false)} />
+        </div>
+      )}
 
       {/* ── Platform panel (parallel routing / languages / theme) ── */}
-      {showPlatform && <PlatformSettingsPanel onClose={() => setShowPlatform(false)} />}
+      {showPlatform && (
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 20 }}>
+          <PlatformSettingsPanel onClose={() => setShowPlatform(false)} />
+        </div>
+      )}
 
       {/* ── Env editor panel ── */}
       {/* REFERENCE LAYOUT (Users) — anchors for the height, stretch for the width. */}

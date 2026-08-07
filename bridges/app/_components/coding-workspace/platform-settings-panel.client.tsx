@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Loader2, X, ChevronDown } from "lucide-react";
+import { PlatformHelp } from "./help-note.client";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -109,10 +110,11 @@ export function PlatformSettingsPanel({ onClose }: Props) {
   const goBack = () => { setView(null); load(); };
 
   return (
-    <div style={{ position: "absolute", top: 52, left: 0, right: 0, bottom: 36, zIndex: 20 }} className="bg-background flex flex-col">
+    <div className="bg-background flex flex-col h-full w-full">
       <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border shrink-0">
-        <span className="text-xs font-semibold text-foreground">
+        <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
           Platform <span className="font-normal text-muted-foreground">routing</span>
+          <PlatformHelp />
         </span>
         <span className="text-muted-foreground text-[11px]">·</span>
 

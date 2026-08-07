@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, X, Save } from "lucide-react";
+import { AppSettingsHelp } from "./help-note.client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SECTIONS, getAt, setAt } from "./site-settings/fields";
@@ -65,10 +66,11 @@ export function SiteSettingsPanel({ onClose }: Props) {
   }
 
   return (
-    <div style={{ position: "absolute", top: 52, left: 0, right: 0, bottom: 36, zIndex: 20 }} className="bg-background flex flex-col">
+    <div className="bg-background flex flex-col h-full w-full">
       <div className="flex items-center px-4 py-2.5 border-b border-border shrink-0">
-        <span className="text-xs font-semibold text-foreground flex-1">
+        <span className="text-xs font-semibold text-foreground flex-1 flex items-center gap-1.5">
           App Settings
+          <AppSettingsHelp />
           <span className="ml-2 text-[10px] font-normal text-muted-foreground font-mono">branding · SEO · PWA</span>
         </span>
         <button
