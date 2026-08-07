@@ -200,3 +200,54 @@ export function LoginMethodsHelp() {
     </HelpNote>
   );
 }
+
+// Communication channels. Deliberately about the TAB, not about Telegram: the
+// next channel should slot in without this text needing a rewrite.
+export function ChannelsHelp() {
+  return (
+    <HelpNote title="Communication channels — letting people reach your project where they already are">
+      <p>
+        <strong>What this is.</strong> A channel is a place your customers already sit — a messenger, a
+        mailbox, a widget — connected to your project so they can ask it something without ever opening
+        your site. Telegram is the first one. More will appear here as they are needed; the tab is named
+        for the idea, not for the messenger.
+      </p>
+      <p>
+        <strong>What you have to do.</strong> Three steps, and only the first involves anyone else. Create
+        a bot in Telegram by writing to <strong>@BotFather</strong> — it takes under a minute and gives you
+        a token. Paste that token here and save. Then press <strong>Connect</strong>: Telegram opens on the
+        bot with a START button, you press it, and the connection is done.
+      </p>
+      <p>
+        <strong>Why the START press is unavoidable.</strong> Telegram forbids a bot from writing to someone
+        who has never written to it first. So one contact must happen — the design here reduces it to a
+        single tap. The button carries a one-time code, and the message that code arrives in also carries
+        your chat id, so the system reads the id from the same message. No copying numbers, no third-party
+        bots to look them up, nothing to get wrong.
+      </p>
+      <p>
+        <strong>What the bot can do.</strong> Out of the box it answers questions from your knowledge base —
+        the one Agentic RAG builds from the documents you loaded. That is the bonus for connecting the
+        channel: no code to write, no configuration beyond the token. Anything asked in the chat is put to
+        the graph, and the answer comes back in the chat. If the base is empty or the service is switched
+        off, the bot says exactly that rather than making something up. Developers can extend what it does
+        later; this is the floor, not the ceiling.
+      </p>
+      <p>
+        <strong>What it costs.</strong> The channel itself is free: Telegram charges nothing for bots, and
+        the connection runs on your own server. Money only appears where the model does. Loading documents
+        into the knowledge base costs a model pass over every chunk — that is the real expense, paid once.
+        Answering costs too, but far less: each question is one short call to compose a reply from the
+        pieces already retrieved. A chat that asks a hundred questions costs a fraction of what building
+        the base cost. Nothing is charged for messages that never reach the model — a <code>/start</code>,
+        a greeting, an unreachable base.
+      </p>
+      <p>
+        <strong>A channel you do not see here.</strong> If the tool your business actually lives in is
+        missing — WhatsApp, a web widget, a mailbox, something internal — write to{" "}
+        <a href="mailto:admin@fractera.ai" className="text-primary underline underline-offset-2">admin@fractera.ai</a>{" "}
+        and the developer will add it for your project.
+      </p>
+    </HelpNote>
+  );
+}

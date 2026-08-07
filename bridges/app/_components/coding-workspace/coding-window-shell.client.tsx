@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
 import { getAdminStrings, detectBrowserLang, DEFAULT_ADMIN_LANG } from "@/lib/i18n/admin-strings";
-import { Menu, X as XIcon, Loader2, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LayoutGrid, LogOut, CircleUserRound, Map as MapIcon, Brain } from "lucide-react";
+import { Menu, X as XIcon, Loader2, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LayoutGrid, LogOut, CircleUserRound, Map as MapIcon, Brain, MessagesSquare } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { COMING_SOON } from "./platforms";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -18,6 +18,7 @@ import { OpenAiPanel } from "./openai-panel.client";
 import { VectorPanel } from "./vector-panel.client";
 import { MapPanel } from "./map-panel.client";
 import { LightRagPanel } from "./lightrag-panel.client";
+import { ChannelsPanel } from "./channels-panel.client";
 import { SiteSettingsPanel } from "./site-settings-panel.client";
 import { PlatformSettingsPanel } from "./platform-settings-panel.client";
 import { IdleCanvas } from "./idle-canvas.client";
@@ -124,6 +125,7 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   const [showAuthMethods, setShowAuthMethods]       = useState(false);
   const [showMapPanel, setShowMapPanel]             = useState(false);
   const [showLightRag, setShowLightRag]             = useState(false);
+  const [showChannels, setShowChannels]             = useState(false);
   // Security tab is hidden from the UI until cert provisioning for all 6
   // subdomains ships (work in progress). The env var FRACTERA_IP_NODOMAIN_MODE
   // is still readable / settable from the terminal — this just removes the
@@ -466,6 +468,13 @@ showOpenAiPanel, showEnvEditor,
                   <KeyRound size={11} />Login methods
                 </button>
               )}
+              {/* Communication channels — how people outside reach the project.
+                  Sits next to the ways in, because that is what it is: another door,
+                  opened from a messenger instead of a browser. */}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowChannels((v) => !v); setShowAuthMethods(false); setShowDomainPanel(false); setShowOpenAiPanel(false); setShowMapPanel(false); setShowVectorPanel(false); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                <MessagesSquare size={11} />Communication channels
+              </button>
               <div className="h-px bg-border mx-2" />
               <button type="button" onClick={handleExport}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
@@ -570,6 +579,14 @@ showOpenAiPanel, showEnvEditor,
       {showVectorPanel && (
         <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 10 }}>
           <VectorPanel onClose={() => setShowVectorPanel(false)} />
+        </div>
+      )}
+
+      {/* ── Communication channels panel ── */}
+      {/* REFERENCE LAYOUT (Users) — anchors for the height, stretch for the width. */}
+      {showChannels && (
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 20 }}>
+          <ChannelsPanel onClose={() => setShowChannels(false)} />
         </div>
       )}
 
