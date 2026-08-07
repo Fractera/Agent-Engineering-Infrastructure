@@ -12,6 +12,7 @@ import { requireAuth } from "@/lib/require-auth";
 // data service's own OPENAI_API_KEY — nothing else changes.
 
 const DATA_ENV = process.env.DATA_ENV_PATH ?? "/opt/fractera/services/data/.env";
+const RAG_ENV  = process.env.RAG_ENV_PATH  ?? "/opt/fractera/services/rag/.env";
 const DATA_URL = process.env.DATA_INTERNAL_URL ?? "http://127.0.0.1:3300";
 
 function parseEnv(content: string): Record<string, string> {
@@ -69,6 +70,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Could not write ${DATA_ENV}: ${String(e)}` }, { status: 500 });
   }
 
+  // Fan out to the OTHER knowledge store. (step 500) There is ONE OpenAI key in
+  // the product; agentic RAG needs it under three names, and its failure without
+  // them is silent — ingest answers 200 and then embeds nothing (the exact defect
+  // that cost a day the first time round). Writing them here keeps a single entry
+  // point instead of asking the architect to type the key twice.
+  let ragUpdated = false;
+  try {
+    if (fs.existsSync(RAG_ENV)) {
+      const rag = parseEnv(fs.readFileSync(RAG_ENV, "utf-8"));
+      rag.LLM_BINDING_API_KEY = apiKey;
+      rag.EMBEDDING_BINDING_API_KEY = apiKey;
+      rag.OPENAI_API_KEY = apiKey; // LightRAG's OpenAI client reads this exact name
+      const body = Object.entries(rag).map(([k, v]) => `${k}=${v}`).join("\n") + "\n";
+      fs.writeFileSync(RAG_ENV, body, { mode: 0o600 });
+      ragUpdated = true;
+    }
+  } catch {
+    ragUpdated = false; // reported, never fatal — the key is already saved
+  }
+
   // Best-effort: a failed restart must not lose the key that is already saved.
   let restarted = true;
   try {
@@ -76,6 +97,11 @@ export async function POST(req: NextRequest) {
   } catch {
     restarted = false;
   }
+  // Only restart RAG if it actually received the key, and only if it is running —
+  // a stopped service is the architect's choice, not something to undo here.
+  if (ragUpdated) {
+    try { execSync("pm2 restart fractera-rag", { timeout: 20_000, stdio: "ignore" }); } catch { /* stopped or absent */ }
+  }
 
-  return NextResponse.json({ ok: true, restarted });
+  return NextResponse.json({ ok: true, restarted, ragUpdated });
 }
