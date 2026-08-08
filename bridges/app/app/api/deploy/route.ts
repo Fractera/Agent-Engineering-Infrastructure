@@ -131,7 +131,10 @@ async function isAuthorized(req: NextRequest): Promise<boolean> {
 // On finish, if a coalescing marker is present (a request arrived mid-build), consume it and
 // run ONE more build for the latest state. Bounded: the marker is cleared before the rerun,
 // so each pending request yields exactly one extra build (no infinite loop on repeated failures).
-function runBuild(description: string): string {
+// Exported so the automatic watch runs the SAME build as the button — with its lock, its coalescing,
+// its journal entry and its fallback to the last working artifact. A second implementation would be a
+// second set of those guarantees to keep in step.
+export function runBuild(description: string): string {
   const jobId = Date.now().toString();
   const logFile = `/tmp/fractera-deploy-${jobId}.log`;
   writeFileSync(LOCK_FILE, jobId);

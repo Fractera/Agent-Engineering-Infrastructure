@@ -992,6 +992,42 @@ app.get('/deploy-runs/:id', (req, res) => {
   res.json({ run: row })
 })
 
+// ── PANEL SETTINGS ────────────────────────────────────────────────────────────
+//
+// Settings that belong to the SERVER rather than to the guest application — today the automatic
+// deployment mode. They live here and not in the slot's PLATFORM-CONFIG, because that file is the
+// guest's own configuration, and not in a file inside a repository, because a deploy checkout
+// overwrites those. Here they survive rebuilds and redeploys, and an agent can read them through the
+// same door and the same key as the deploy history.
+appDb.exec(`
+  CREATE TABLE IF NOT EXISTS panel_settings (
+    key        TEXT PRIMARY KEY NOT NULL,
+    value      TEXT NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+`)
+
+app.get('/panel-settings/:key', (req, res) => {
+  const row = appDb.prepare('SELECT value FROM panel_settings WHERE key = ?').get(req.params.key)
+  if (!row) return res.json({ value: null })
+  try {
+    res.json({ value: JSON.parse(row.value) })
+  } catch {
+    // A value that stopped being JSON is a fault worth seeing, not one to paper over with null.
+    res.status(500).json({ error: 'stored value is not valid JSON' })
+  }
+})
+
+app.put('/panel-settings/:key', (req, res) => {
+  const value = req.body?.value
+  if (value === undefined) return res.status(400).json({ error: 'value is required' })
+  appDb.prepare(
+    `INSERT INTO panel_settings (key, value, updated_at) VALUES (?, ?, datetime('now'))
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')`
+  ).run(req.params.key, JSON.stringify(value))
+  res.json({ ok: true })
+})
+
 // ── ONE DOOR: the loopback services, reachable through this one ───────────────
 //
 // (step 500) A developer working on their own machine gets the project's data

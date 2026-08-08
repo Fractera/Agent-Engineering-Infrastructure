@@ -461,6 +461,56 @@ export function AppSettingsHelp() {
   );
 }
 
+// Automatic deployment. Every mode gets its plus AND its minus, by the owner's requirement — a choice
+// presented with only its upside is a recommendation in disguise.
+export function AutoDeployHelp() {
+  return (
+    <HelpNote title="Automatic deployment — three modes, and what each costs">
+      <p>
+        <strong>How it works.</strong> Every minute this server asks your repository whether it has
+        moved. Nothing is configured on GitHub — no webhook, no public address — and it works the same
+        on a domain or on a bare IP. When the repository has been still for two minutes, the server
+        acts: ten pushes in a row become one build, not ten.
+      </p>
+      <p>
+        <strong>It never overwrites your work.</strong> If this server holds uncommitted changes, or the
+        two histories have diverged, or a build is already running, the turn is skipped and the reason
+        is written in the history below. Only a clean fast-forward is ever taken automatically.
+      </p>
+
+      <p><strong>Manual</strong> — nothing happens on its own.</p>
+      <p>
+        + You decide the moment. A build never starts in your busiest hour, and nothing reaches
+        visitors that you did not send yourself.<br />
+        − Three buttons to remember, in the right order. It is the mode in which people forget to
+        deploy and then wonder why the site is unchanged.
+      </p>
+
+      <p><strong>Pull only</strong> — the files arrive, the build does not.</p>
+      <p>
+        + The server always holds the newest files, and content and pages apply immediately, with no
+        build at all. Nothing is compiled behind your back.<br />
+        − Code changes sit there waiting for you to press Deploy. The project can be "up to date" and
+        still not show your work.
+      </p>
+
+      <p><strong>Pull and deploy</strong> — what a hosting platform does.</p>
+      <p>
+        + Push and forget: within a few minutes the change is live, with no buttons at all.<br />
+        − This server builds on the same machine that serves your visitors — a hosting platform builds
+        on its own. Frequent pushes cost responsiveness, not just restarts. And a mistake reaches
+        production by itself: nobody is standing between the push and the visitors. A failed build
+        cannot take the site down (see <em>When a deploy fails</em>), but a build that succeeds and is
+        simply wrong will go live.
+      </p>
+      <p>
+        <strong>Everything the automation does is in the list below</strong> — pulls, deploys and
+        skipped turns alike, each with its reason and its log.
+      </p>
+    </HelpNote>
+  );
+}
+
 // Preview. The one thing that must be said here: what you are looking at is the DEPLOYED version, which
 // is not necessarily the version you are editing. Someone who assumes otherwise concludes their change
 // did nothing and starts undoing work that was never wrong.

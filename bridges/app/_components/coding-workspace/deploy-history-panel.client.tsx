@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, X, RefreshCw, Download, CheckCircle2, XCircle, AlertTriangle, Clock, PanelRightOpen, ChevronRight } from "lucide-react";
+import { Loader2, X, RefreshCw, Download, CheckCircle2, XCircle, AlertTriangle, Clock, PanelRightOpen, ChevronRight, Undo2, MinusCircle, ArrowDownToLine } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { AutoDeployHelp } from "./help-note.client";
 
 // Deployment history — every press of Deploy, kept in the data layer.
 //
@@ -27,7 +28,19 @@ const STATUS_ICON: Record<string, React.ReactNode> = {
   COMPLETED:     <CheckCircle2 size={12} className="text-emerald-500" />,
   FAILED:        <XCircle size={12} className="text-destructive" />,
   HEALTH_FAILED: <AlertTriangle size={12} className="text-amber-500" />,
+  ROLLED_BACK:   <Undo2 size={12} className="text-amber-500" />,
   RUNNING:       <Clock size={12} className="text-sky-500" />,
+  PULLED:        <ArrowDownToLine size={12} className="text-sky-500" />,
+  SKIPPED:       <MinusCircle size={12} className="text-muted-foreground" />,
+};
+
+type AutoMode = "off" | "pull" | "pull+deploy";
+type AutoState = { mode: AutoMode; lastCheckAt?: string | null; lastResult?: string | null; lastReason?: string | null };
+
+const MODE_LABEL: Record<AutoMode, string> = {
+  "off":          "Manual",
+  "pull":         "Pull only",
+  "pull+deploy":  "Pull and deploy",
 };
 
 function when(iso: string): string {
@@ -78,6 +91,39 @@ export function DeployHistoryPanel({ onClose }: { onClose: () => void }) {
 
   useEffect(() => { load(); }, [load]);
 
+  // Automatic deployment: the mode and the watch's own verdict. Re-read with the list, so pressing
+  // refresh answers both questions at once.
+  const [auto, setAuto] = useState<AutoState | null>(null);
+  const [savingMode, setSavingMode] = useState(false);
+  const loadAuto = useCallback(async () => {
+    try {
+      const res = await fetch("/api/config/auto-deploy", { cache: "no-store", credentials: "include" });
+      const data = await res.json();
+      if (res.ok) setAuto(data);
+    } catch { /* the mode simply stays unknown; the selector shows nothing selected */ }
+  }, []);
+  useEffect(() => { loadAuto(); }, [loadAuto]);
+
+  async function setMode(mode: AutoMode) {
+    setSavingMode(true);
+    try {
+      const res = await fetch("/api/config/auto-deploy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ mode }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? `${res.status}`);
+      await loadAuto();
+      toast.success(mode === "off" ? "Automatic deployment is off" : `Automatic deployment: ${MODE_LABEL[mode]}`);
+    } catch (e) {
+      toast.error(String(e));
+    } finally {
+      setSavingMode(false);
+    }
+  }
+
   async function openLog(run: Run) {
     setLoadingLog(true);
     try {
@@ -108,9 +154,9 @@ export function DeployHistoryPanel({ onClose }: { onClose: () => void }) {
     <div className="bg-background flex flex-col h-full w-full">
       <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border shrink-0">
         <span className="text-xs font-semibold text-foreground">Deployment history</span>
-        <span className="text-[10px] text-muted-foreground">every build, with its log</span>
+        <span className="text-[10px] text-muted-foreground hidden sm:inline">every build, with its log</span>
         <span className="flex-1" />
-        <button type="button" onClick={load}
+        <button type="button" onClick={() => { load(); loadAuto(); }}
           className="flex items-center justify-center size-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
           <RefreshCw size={12} />
         </button>
@@ -118,6 +164,44 @@ export function DeployHistoryPanel({ onClose }: { onClose: () => void }) {
           className="flex items-center justify-center size-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
           <X size={13} />
         </button>
+      </div>
+
+      {/* Automatic deployment — the selector belongs on this page because its every consequence is
+          recorded below it: a mode is only as trustworthy as the record of what it did. */}
+      <div className="shrink-0 px-4 py-2.5 border-b border-border flex flex-col gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[11px] font-medium text-foreground flex items-center gap-1.5">
+            Automatic deployment
+            <AutoDeployHelp />
+          </span>
+          <div className="flex rounded-md border border-border overflow-hidden">
+            {(["off", "pull", "pull+deploy"] as AutoMode[]).map((m) => (
+              <button
+                key={m}
+                type="button"
+                disabled={savingMode}
+                onClick={() => setMode(m)}
+                className={`px-2.5 py-1 text-[10px] transition-colors border-r border-border last:border-r-0 ${
+                  auto?.mode === m
+                    ? "bg-primary text-primary-foreground font-medium"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                {MODE_LABEL[m]}
+              </button>
+            ))}
+          </div>
+          {savingMode && <Loader2 size={12} className="animate-spin text-muted-foreground" />}
+        </div>
+
+        {/* The watch's own last word. Silent until it has actually run once. */}
+        {auto && auto.mode !== "off" && (
+          <span className="text-[10px] text-muted-foreground leading-relaxed">
+            {auto.lastCheckAt ? `Checked ${when(auto.lastCheckAt)}` : "Waiting for the first check"}
+            {auto.lastResult ? ` · ${auto.lastResult}` : ""}
+            {auto.lastReason ? ` — ${auto.lastReason}` : ""}
+          </span>
+        )}
       </div>
 
       <div className="flex-1 min-h-0 flex relative overflow-hidden">

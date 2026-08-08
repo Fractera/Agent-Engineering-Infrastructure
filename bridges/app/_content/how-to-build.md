@@ -203,6 +203,27 @@ database. Open **Settings → Deployment history** in the menu, beside the GitHu
 Each row carries what was built, when it started, how long it took, whether it finished, and **the whole
 build log**. Pick a run to read its log; press **Download** to take it away as a file.
 
+### Doing it automatically
+
+At the top of that page there is a three-position selector.
+
+- **Manual** — the default. Nothing happens without your button.
+- **Pull only** — the server notices when the repository moves and fast-forwards to it. Content and
+  pages apply at once; code waits for your Deploy.
+- **Pull and deploy** — the server pulls and builds, the way a hosting platform does.
+
+The server asks the repository once a minute and acts only after it has been still for two minutes, so
+a burst of pushes becomes one build. Nothing is configured on GitHub for this.
+
+**It refuses rather than improvises.** If this server holds uncommitted changes, if the histories have
+diverged, or if a build is already running, the turn is skipped and the reason appears in the list.
+Only a clean fast-forward is taken automatically — your work is never buried to make room.
+
+**Why it is off by default.** This server builds on the same machine that serves your visitors. A
+hosting platform builds elsewhere and only swaps the result; here, a build competes with the site for
+the same processor. On a project serving real customers, that is a decision to make deliberately —
+which is why it is a choice and not a default. The "?" beside the selector lists what each mode costs.
+
 Three reasons this is worth having:
 
 - **A failed build stops being a moment.** The log is still there tomorrow, after a reload, after a
