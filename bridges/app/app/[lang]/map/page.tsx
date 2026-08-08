@@ -23,6 +23,8 @@ export default async function MapPage({ params }: { params: Promise<{ lang: stri
 
   const state = await readGeoState();
   const busy = state.provision.state === "downloading" || state.provision.state === "processing";
+  // Пустая строка региона = «ещё не выбран» (дефолт службы с шага 501).
+  const hasRegion = Boolean(state.config?.region?.trim());
 
   const Dot = ({ up }: { up: boolean }) => (
     <span className={`inline-block size-2 rounded-full ${up ? "bg-emerald-500" : "bg-rose-500"}`} />
@@ -39,13 +41,24 @@ export default async function MapPage({ params }: { params: Promise<{ lang: stri
           <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 rounded-lg border border-border px-3 py-2 text-[12px]">
             <span className="flex items-center gap-1.5"><Dot up={state.health.osrm} /> {g.osrm}</span>
             <span className="flex items-center gap-1.5"><Dot up={state.health.geocoder} /> {g.geocoder}</span>
-            {state.config && (
-              <span className="text-muted-foreground">
-                {g.currentRegion}: <span className="font-mono text-foreground">{state.config.region}</span>
-              </span>
-            )}
+            <span className="text-muted-foreground">
+              {g.currentRegion}:{" "}
+              {hasRegion
+                ? <span className="font-mono text-foreground">{state.config!.region}</span>
+                : <span className="text-orange-500">{g.noRegion}</span>}
+            </span>
             <span className="ml-auto font-mono text-[10px] text-muted-foreground/60">{g.serviceNote}</span>
           </div>
+
+          {/* Пустой регион — НОРМАЛЬНОЕ начальное состояние нового сервера, а не
+              поломка: установщик ставит движки без данных, потому что предугадать
+              чужую географию нельзя, а планету не поставить. Поэтому здесь
+              приглашение выбрать регион, а не сообщение об ошибке. */}
+          {!hasRegion && !busy && (
+            <p className="mt-2 rounded-md border border-dashed border-border px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
+              {g.noRegionHint}
+            </p>
+          )}
 
           {busy && (
             <div className="mt-2 flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-[12px] text-amber-700 dark:bg-amber-950/30 dark:text-amber-400">

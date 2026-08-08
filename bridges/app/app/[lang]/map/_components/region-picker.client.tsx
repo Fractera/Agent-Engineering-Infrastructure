@@ -231,7 +231,21 @@ export function RegionPicker(
         </div>
       )}
 
-      <div ref={mapEl} className="mt-3 w-full overflow-hidden rounded-lg border border-border" style={{ height: 300 }} />
+      {/* 🔒 `relative isolate z-0` — НЕ косметика, а лечение перекрытия (владелец,
+          2026-08-08). Leaflet раздаёт своим слоям собственные `z-index`: панели
+          200–600, элементы управления 800, всплывающие окна 1000. Без обёртки эти
+          числа соревнуются в КОРНЕВОМ контексте наложения и побеждают выдвижной
+          ящик меню (`z-[58]`) — карта оказывалась поверх него.
+          `isolation: isolate` создаёт собственный контекст наложения: внутренние
+          числа Leaflet остаются запертыми внутри этого блока, а сам блок стоит на
+          `z-0`, то есть ниже ящика, подложки и диалогов. Тот же приём был в старой
+          панели, там роль обёртки играл `zIndex: 20` у контейнера панели.
+          Убрать эти классы = вернуть дефект. */}
+      <div
+        ref={mapEl}
+        className="relative isolate z-0 mt-3 w-full overflow-hidden rounded-lg border border-border"
+        style={{ height: 300 }}
+      />
     </>
   );
 }

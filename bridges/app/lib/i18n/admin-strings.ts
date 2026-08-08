@@ -141,6 +141,7 @@ export type AdminStrings = {
   map: {
     intro: string; serviceNote: string; loadError: string;
     osrm: string; geocoder: string; currentRegion: string; downloading: string;
+    noRegion: string; noRegionHint: string;
     assistant: string; quizGreeting: string; askPh: string; thinking: string; noKey: string;
     checkLabel: string; noneFound: string; download: string; provisioningNote: string;
     sizeGb: string; sizeMb: string; hours: string; minutes: string;
