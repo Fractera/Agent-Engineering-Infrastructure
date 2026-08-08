@@ -143,7 +143,14 @@ The log appears at the bottom of the screen while the build runs, and stays ther
    message, which is exactly what an agent needs to fix the cause.
 3. Push the fix, **Pull** here, **Deploy** again.
 
-A failed deploy leaves the previous version running. Visitors keep seeing the working site while you fix it.
+**A failed deploy does not take your site down.** Two things protect it. The running application is never
+restarted onto a build that did not compile, so visitors keep seeing the working version throughout. And
+the last build that both compiled and answered is kept aside: when a build fails, that copy is put back,
+so the application can also be *restarted* safely — after a reboot, after an out-of-memory kill, at any
+time — rather than only surviving until something restarts it.
+
+If a build compiles but the application then refuses to answer, the previous version is restored and
+brought back automatically. That run appears in the history as **rolled back**.
 
 ---
 

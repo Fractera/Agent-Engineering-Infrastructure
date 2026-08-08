@@ -82,8 +82,13 @@ export async function POST(req: NextRequest) {
     const excludePath = `${PROJECT_DIR}/.git/info/exclude`;
     if (fs.existsSync(`${PROJECT_DIR}/.git/info`)) {
       const current = fs.existsSync(excludePath) ? fs.readFileSync(excludePath, "utf-8") : "";
-      if (!current.split("\n").some(l => l.trim() === "/.gitkeep")) {
-        fs.appendFileSync(excludePath, `${current.endsWith("\n") || !current ? "" : "\n"}/.gitkeep\n`, "utf-8");
+      // Same reasoning for `.next.last-good`: it is the deploy fallback copy of the build output, a
+      // machine artifact of THIS server. `.gitignore` covers `.next/` but not this sibling name.
+      const wanted = ["/.gitkeep", "/.next.last-good/"];
+      const present = current.split("\n").map(l => l.trim());
+      const missing = wanted.filter(w => !present.includes(w));
+      if (missing.length) {
+        fs.appendFileSync(excludePath, `${current.endsWith("\n") || !current ? "" : "\n"}${missing.join("\n")}\n`, "utf-8");
       }
     }
     await execAsync(`git -C ${PROJECT_DIR} rm --cached -q --ignore-unmatch .gitkeep`, opts).catch(() => null);

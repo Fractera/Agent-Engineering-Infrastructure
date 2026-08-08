@@ -20,6 +20,54 @@ function writeWAL(data: object) {
   try { writeFileSync(WAL_FILE, JSON.stringify(data, null, 2)); } catch {}
 }
 
+// ── The last known good build ─────────────────────────────────────────────────
+//
+// Measured, not assumed (2026-08-08). A failing `next build` does NOT leave the previous build alone:
+// it removes `.next/BUILD_ID` on its way through. The running process keeps serving, because it holds
+// the compiled app in memory — the site answered 200 all through a deliberately broken build. But a
+// second process started from the same directory refused outright:
+//
+//   Error: Could not find a production build in the '.next' directory
+//
+// So until now the promise "a failed deploy leaves the previous version running" was true only until
+// something restarted the app — a reboot, an out-of-memory kill, a pm2 restart — and then the site was
+// gone with no way back except a successful build.
+//
+// The fix is a copy of the artifact taken after each build that WORKS, and put back when one fails.
+// The whole artifact is 33 MB, so this is cheap; and the copy is never touched while a build runs, so
+// the live process keeps reading the directory it already has.
+const NEXT_DIR      = resolve(APP_DIR, ".next");
+const LAST_GOOD_DIR = resolve(APP_DIR, ".next.last-good");
+
+function saveGoodBuild(logFile: string) {
+  const { execSync } = require("child_process");
+  try {
+    execSync(`rm -rf ${LAST_GOOD_DIR}.tmp && cp -a ${NEXT_DIR} ${LAST_GOOD_DIR}.tmp && rm -rf ${LAST_GOOD_DIR} && mv ${LAST_GOOD_DIR}.tmp ${LAST_GOOD_DIR}`, { timeout: 120000 });
+  } catch (e) {
+    // Loud: without this copy the next failure has nothing to fall back to.
+    try { require("fs").appendFileSync(logFile, `\n[deploy] could not snapshot the good build: ${e}\n`); } catch {}
+  }
+}
+
+// Restores the artifact so the app can START again. The live process is untouched — it is already
+// serving the old code from memory, and copying files under it changes nothing for it.
+function restoreGoodBuild(logFile: string): boolean {
+  const { execSync } = require("child_process");
+  const { existsSync, appendFileSync } = require("fs");
+  if (!existsSync(LAST_GOOD_DIR)) {
+    try { appendFileSync(logFile, "\n[deploy] no previous good build stored — the artifact stays broken until the next successful build\n"); } catch {}
+    return false;
+  }
+  try {
+    execSync(`rm -rf ${NEXT_DIR} && cp -a ${LAST_GOOD_DIR} ${NEXT_DIR}`, { timeout: 120000 });
+    appendFileSync(logFile, "\n[deploy] the previous working build has been restored on disk — a restart is safe again\n");
+    return true;
+  } catch (e) {
+    try { appendFileSync(logFile, `\n[deploy] RESTORE FAILED: ${e}\n`); } catch {}
+    return false;
+  }
+}
+
 // ── Deploy history ────────────────────────────────────────────────────────────
 // Every run is recorded in the data layer: what was built, when, for how long, whether it worked and
 // the whole log. It survives restarts of this panel, it is readable by an agent through the same door
@@ -113,6 +161,9 @@ function runBuild(description: string): string {
       };
 
       if (code !== 0) {
+        // A failed build leaves .next without a BUILD_ID — put the last working artifact back so the
+        // app can still START, not merely keep running until something restarts it.
+        restoreGoodBuild(logFile);
         writeWAL({ status: "FAILED", jobId, failedAt: new Date().toISOString(), description });
         writeFileSync(LOCK_FILE + ".failed", jobId);
         finish("FAILED");
@@ -138,11 +189,21 @@ function runBuild(description: string): string {
         }
 
         if (!healthy) {
+          // It compiled and then would not answer. Put the previous build back and reload onto it —
+          // a rollback, so visitors get the version that worked instead of the one that does not.
+          const restored = restoreGoodBuild(logFile);
+          if (restored) {
+            try { execSync("pm2 reload fractera-app", { timeout: 30000 }); } catch (e) {
+              appendFileSync(logFile, `\n[deploy] rollback reload error: ${e}\n`);
+            }
+          }
           writeWAL({ status: "HEALTH_FAILED", jobId, failedAt: new Date().toISOString(), description });
-          finish("HEALTH_FAILED");
+          finish(restored ? "ROLLED_BACK" : "HEALTH_FAILED");
         } else {
           // A successful deploy used to be recorded as a git commit in the platform repository here.
           // It is a row in deploy_runs now — see recordRun above for why the commit had to go.
+          // Only a build that compiled AND answered becomes the fallback for the next failure.
+          saveGoodBuild(logFile);
           writeWAL({ status: "COMPLETED", jobId, completedAt: new Date().toISOString(), description });
           appendFileSync(logFile, "\n[deploy] COMPLETED\n");
           finish("COMPLETED");
