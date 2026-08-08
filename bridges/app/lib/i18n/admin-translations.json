@@ -366,7 +366,7 @@
       "modeSecure": "secure, HTTPS",
       "modeIp": "IP, plain HTTP",
       "certLabel": "certificate until",
-      "dnsIntro": "Add all seven A-records below at your DNS provider — your registrar's own panel, not Cloudflare. Each one points to the same address:",
+      "dnsIntro": "Add all five A-records below at your DNS provider — your registrar's own panel, not Cloudflare. Each one points to the same address:",
       "dnsType": "Type",
       "dnsName": "Name",
       "dnsValue": "Value",
@@ -375,9 +375,7 @@
         "www": "site (www alias)",
         "auth": "sign-in",
         "admin": "this panel",
-        "data": "media and database",
-        "hermes": "reserved",
-        "chat": "reserved"
+        "data": "media and database"
       },
       "step": "Step {n}",
       "done": "done",
@@ -994,7 +992,7 @@
       "modeSecure": "защищённый, HTTPS",
       "modeIp": "IP, обычный HTTP",
       "certLabel": "сертификат до",
-      "dnsIntro": "Добавьте у своего поставщика DNS все семь A-записей ниже — в панели регистратора, не в Cloudflare. Каждая указывает на один и тот же адрес:",
+      "dnsIntro": "Добавьте у своего поставщика DNS все пять A-записей ниже — в панели регистратора, не в Cloudflare. Каждая указывает на один и тот же адрес:",
       "dnsType": "Тип",
       "dnsName": "Имя",
       "dnsValue": "Значение",
@@ -1003,9 +1001,7 @@
         "www": "сайт (псевдоним www)",
         "auth": "вход",
         "admin": "эта панель",
-        "data": "медиа и база",
-        "hermes": "зарезервировано",
-        "chat": "зарезервировано"
+        "data": "медиа и база"
       },
       "step": "Шаг {n}",
       "done": "готово",
