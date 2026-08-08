@@ -23,6 +23,7 @@
 // ids, env var names, slugs and enum values.
 
 import translations from "./admin-translations.json";
+import { ADMIN_LANGUAGES } from "@/config/translations/admin-languages";
 import type { AdminPageSlug, NavGroup } from "@/lib/admin-nav";
 
 export type AdminStrings = {
@@ -95,14 +96,31 @@ export function getAdminStrings(lang: string): AdminStrings {
   return entry ? mergeTwoLevels(BASE, entry) : BASE;
 }
 
-// Every language the bundled corpus covers. Used by generateStaticParams and by
-// the language picker.
+// Языки панели. ЕДИНСТВЕННЫЙ источник — `config/translations/admin-languages.ts`,
+// который редактирует владелец. Не ключи корпуса: корпус может уже содержать
+// язык, который владелец ещё не включил, и наоборот — включённый язык с неполным
+// переводом честно деградирует до английского ключ за ключом.
+//
+// Целевое состояние продукта — все 82 языка (панель обязана открыться на языке
+// покупателя сразу, набор из env здесь невозможен). Список в конфиге — тормоз
+// периода разработки, чтобы каждая итерация не собирала 2 132 страницы.
 export function adminLanguages(): string[] {
-  return Object.keys(STRINGS);
+  return [...ADMIN_LANGUAGES];
 }
 
 export function isAdminLanguage(lang: string): boolean {
-  return Object.prototype.hasOwnProperty.call(STRINGS, lang);
+  return ADMIN_LANGUAGES.includes(lang);
+}
+
+// Включённый язык без слов — не поломка (английский подставится), но и не
+// норма: это видно только в консоли сборки, поэтому там и говорим.
+if (process.env.NODE_ENV !== "production") {
+  const missing = ADMIN_LANGUAGES.filter((code) => !STRINGS[code]);
+  if (missing.length) {
+    console.warn(
+      `[admin i18n] языки включены в admin-languages.ts, но слов для них в admin-translations.json нет: ${missing.join(", ")} — страницы будут на английском`,
+    );
+  }
 }
 
 // Placeholder substitution: fill("Hello {name}", { name: "Roma" }).
@@ -119,7 +137,7 @@ export function detectBrowserLang(): string {
   for (const c of candidates) {
     if (!c) continue;
     const primary = c.toLowerCase().split("-")[0];
-    if (STRINGS[primary]) return primary;
+    if (isAdminLanguage(primary)) return primary;
   }
   return DEFAULT_ADMIN_LANG;
 }
