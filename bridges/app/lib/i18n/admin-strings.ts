@@ -138,6 +138,20 @@ export type AdminStrings = {
     helpWeakTitle: string; helpWeak: string;
     helpSeparateTitle: string; helpSeparate: string;
   };
+  map: {
+    intro: string; serviceNote: string; loadError: string;
+    osrm: string; geocoder: string; currentRegion: string; downloading: string;
+    assistant: string; quizGreeting: string; askPh: string; thinking: string; noKey: string;
+    checkLabel: string; noneFound: string; download: string; provisioningNote: string;
+    sizeGb: string; sizeMb: string; hours: string; minutes: string;
+    helpLabel: string;
+    helpWhatTitle: string; helpWhat: string;
+    helpAnswersTitle: string; helpAnswers: string;
+    helpWorthTitle: string; helpWorth: string;
+    helpWhyOwnTitle: string; helpWhyOwn: string;
+    helpCostTitle: string; helpCost: string;
+    helpWeakTitle: string; helpWeak: string;
+  };
   database: {
     noTables: string; empty: string; unavailable: string; rowsShown: string; noIdColumn: string;
     editTitle: string; valueLabel: string; cancel: string; save: string; delete: string;
