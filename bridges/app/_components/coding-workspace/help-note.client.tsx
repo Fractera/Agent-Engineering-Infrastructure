@@ -489,26 +489,51 @@ export function LanguagesHelp() {
   );
 }
 
-// Parallel routing. The owner will supply the final wording for this note; what stands here now is
-// the mechanism as it actually is, including the part that is not built yet — a "?" that promises
-// more than the product does is worse than no "?" at all.
+// Parallel routing. Content from the owner (2026-08-08), structured here and checked against the
+// working prototype at fractera/22slots-main: thirteen slots, each with its own error.tsx,
+// default.tsx, layout.tsx, not-found.tsx and its own [slug] subtree, under a root layout that still
+// uses generateStaticParams. Every claim below is one of those facts, not a promise.
 export function ParallelRoutingHelp() {
   return (
-    <HelpNote title="Parallel routing — how a page is assembled from slots">
+    <HelpNote title="Parallel routing — a page built from independent areas">
       <p>
-        <strong>What it is.</strong> A page can be put together from several named areas — a header, a
-        centre column, a left or right side, a promo screen — each rendered on its own. Changing what
-        fills one area does not force the rest of the page to be rebuilt.
+        <strong>What it is.</strong> Instead of one page rendering everything, the screen is assembled
+        from several named areas that render independently — a centre, a left and a right side, a promo
+        screen above, a header and footer inside the centre. Each area has its own address, its own
+        state and its own error boundary.
       </p>
       <p>
-        <strong>Where a project starts.</strong> With the centre only. Header and footer are always
-        present; everything else stays off until you ask for it. One column is the layout that is right
-        before anything is known about the content.
+        <strong>Picture a shop.</strong> The centre carries the main subject — a catalogue, a product,
+        or an AI chat. The right side shows the basket. The promo screen on top runs a campaign or a
+        splash. The centre header recommends what sells best; the centre footer offers what goes with
+        the item being viewed. Combining areas like this is where unusual applications come from —
+        the same set of parts arranged differently is a different product.
       </p>
       <p>
-        <strong>Not yet connected.</strong> The app in the slot does not read this setting today: it has
-        no parallel-route folders, so switching areas on here changes the saved configuration and
-        nothing on screen. This note will say otherwise once the app supports it.
+        <strong>Why not ordinary components.</strong> Components share the fate of the page they live
+        on: one failure takes the whole screen, and one navigation re-renders everything. Areas do not.
+        A failing area shows its own error and the rest of the page keeps working; each area navigates
+        and keeps state on its own. The difference grows with size — it is decisive when an area has
+        dozens or hundreds of pages of its own.
+      </p>
+      <p>
+        <strong>And the pages stay static.</strong> That is the part people expect to lose. They do
+        not: pages are still generated ahead of time, so delivery stays fast, cheap to serve and fully
+        readable by search engines. Complex architecture, ordinary static output.
+      </p>
+      <p>
+        <strong>This is hard to build and rarely written down.</strong> Which is why it comes
+        configured rather than described — you continue from a working arrangement, developing it with
+        AI, and your pages stay fast, resource-efficient and search-friendly as they grow.
+      </p>
+      <p>
+        <strong>Prefer the familiar?</strong> Turn parallel routing off and work with a single-layer
+        layout exactly as you are used to. Nothing else in the project depends on this choice.
+      </p>
+      <p>
+        <strong>Where it stands here.</strong> The app currently in the slot has no area folders yet,
+        so the switch and the selection are saved but nothing on its pages changes. This paragraph
+        goes away when the app carries them.
       </p>
     </HelpNote>
   );
