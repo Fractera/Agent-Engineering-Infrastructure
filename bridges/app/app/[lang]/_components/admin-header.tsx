@@ -65,11 +65,17 @@ export function AdminHeader({ lang, s }: { lang: string; s: AdminStrings }) {
           `peer-checked:` — селектор смотрит только на следующих сестёр. */}
       <input id={MENU_ID} type="checkbox" className="peer sr-only" aria-label={s.menu} />
 
-      {/* Подложка: гасит фон и закрывает ящик по нажатию мимо него. */}
+      {/* Подложка: гасит фон и закрывает ящик по нажатию мимо него.
+          Границы у неё РОВНО те же, что у ящика — `top-12 bottom-8`, то есть
+          между шапкой и подвалом. Было `inset-0`, и она накрывала обе полосы:
+          ящик выезжает внутри контейнера, значит и затемнять он вправе только
+          этот контейнер. Побочная польза той же правки: кнопка-гамбургер в шапке
+          остаётся доступной при открытом ящике, поэтому закрыть его можно тем же
+          движением, каким открыл. */}
       <label
         htmlFor={MENU_ID}
         aria-hidden="true"
-        className="invisible fixed inset-0 z-[55] bg-black/20 opacity-0 transition-opacity duration-200 peer-checked:visible peer-checked:opacity-100"
+        className="invisible fixed inset-x-0 bottom-8 top-12 z-[55] bg-black/20 opacity-0 transition-opacity duration-200 peer-checked:visible peer-checked:opacity-100"
       />
 
       {/* Ящик: от левого края, между шапкой и подвалом, как в старой оболочке. */}
