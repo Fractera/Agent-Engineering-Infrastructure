@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
 import { getAdminStrings, detectBrowserLang, DEFAULT_ADMIN_LANG } from "@/lib/i18n/admin-strings";
-import { Menu, X as XIcon, Loader2, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LogOut, CircleUserRound, Map as MapIcon, Brain, MessagesSquare, Languages, Columns3, SlidersHorizontal } from "lucide-react";
+import { Menu, X as XIcon, Loader2, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LogOut, CircleUserRound, Map as MapIcon, Brain, MessagesSquare, Languages, Columns3, SlidersHorizontal, BookOpen } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { COMING_SOON } from "./platforms";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -25,6 +25,7 @@ import { SiteSettingsPanel } from "./site-settings-panel.client";
 import { LanguagesView } from "./platform/languages-view.client";
 import { ParallelRoutesSelector } from "./parallel-routes/parallel-routes-selector.client";
 import { AppFeaturesPanel } from "./app-features-panel.client";
+import { HowToBuildPanel, hasSeenHowToBuild } from "./how-to-build-panel.client";
 import { IdleCanvas } from "./idle-canvas.client";
 import type { ComponentType } from "react";
 
@@ -105,6 +106,7 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   const [deploying, setDeploying]                   = useState(false);
   const [deployLog, setDeployLog]                   = useState<string[]>([]);
   const [showDeployLog, setShowDeployLog]           = useState(false);
+  const [deployLogCopied, setDeployLogCopied]       = useState(false);
   const [deploySeconds, setDeploySeconds]           = useState(0);
   const deployTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [showInfo, setShowInfo]                     = useState(false);
@@ -122,6 +124,8 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   const [showLanguages, setShowLanguages]           = useState(false);
   const [showParallelRoutes, setShowParallelRoutes] = useState(false);
   const [showAppFeatures, setShowAppFeatures]       = useState(false);
+  const [showHowToBuild, setShowHowToBuild]         = useState(false);
+  const [howToBuildFirstRun, setHowToBuildFirstRun] = useState(false);
   const [showDomainPanel, setShowDomainPanel]       = useState(false);
   const [showOpenAiPanel, setShowOpenAiPanel]       = useState(false);
   const [showVectorPanel, setShowVectorPanel]       = useState(false);
@@ -149,6 +153,20 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   // Derived, never stored twice: a verified connection IS a connection.
   const gitConnected = gitState === "working";
   useEffect(() => { loadGitState(); }, [loadGitState]);
+  // Project state is re-read after every action that can change it — pull, push, deploy — so the corner
+  // never shows a truth that stopped being true one click ago.
+  const loadProjectState = useCallback(() => {
+    fetch("/api/config/project-state", { cache: "no-store", credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setProjectState(d?.error ? null : d))
+      .catch(() => setProjectState(null));
+  }, []);
+  useEffect(() => { loadProjectState(); }, [loadProjectState]);
+  // First visit ever: the guide opens itself once, carrying a welcome block. Checked on the client only,
+  // after mount — localStorage does not exist while the page is being rendered on the server.
+  useEffect(() => {
+    if (!hasSeenHowToBuild()) { setHowToBuildFirstRun(true); setShowHowToBuild(true); }
+  }, []);
   const [showExport, setShowExport]                 = useState(false);
   const [showImport, setShowImport]                 = useState(false);
   // Security tab is hidden from the UI until cert provisioning for all 6
@@ -201,7 +219,16 @@ showOpenAiPanel, showEnvEditor,
   const SERVER_ID   = process.env.NEXT_PUBLIC_SERVER_ID || "";
   const MARKET_BASE = "https://fractera.ai";
   const idQuery     = SERVER_ID ? `?id=${encodeURIComponent(SERVER_ID)}` : "";
-  const APP_VERSION = process.env.NEXT_PUBLIC_GIT_COMMIT ?? "dev";
+  // The old value here was `process.env.NEXT_PUBLIC_GIT_COMMIT ?? "dev"`, and since the installer builds
+  // this panel without that variable, every deployed server called itself "dev" — a word that claimed the
+  // panel was running in a developer's environment it can never be in. The footer now shows the state of
+  // the OWNER's project, fetched from /api/config/project-state, and falls back to the platform version.
+  const [projectState, setProjectState] = useState<{
+    connected: boolean; repo?: string | null; branch?: string | null; commit?: string | null;
+    subject?: string | null; uncommitted?: number; ahead?: number | null; behind?: number | null;
+    platform?: string | null;
+  } | null>(null);
+  const [stateCardOpen, setStateCardOpen] = useState(false);
 
   function handleExport() {
     setDataMenuOpen(false);
@@ -226,6 +253,29 @@ showOpenAiPanel, showEnvEditor,
       setUpdateLog(["Update failed — check server logs."]);
     }
     setUpdating(false);
+  }
+
+  // Taking the log away: clipboard first, file as the fallback that always works — some browsers refuse
+  // the clipboard outside a secure context, and an IP-mode server is exactly that case.
+  async function copyDeployLog() {
+    const text = deployLog.join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      setDeployLogCopied(true);
+      setTimeout(() => setDeployLogCopied(false), 2000);
+    } catch {
+      toast.error("The browser refused clipboard access — use download instead.");
+    }
+  }
+
+  function downloadDeployLog() {
+    const blob = new Blob([deployLog.join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `deploy-log-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   function stopDeployTimer() {
@@ -265,7 +315,7 @@ showOpenAiPanel, showEnvEditor,
             stopDeployTimer();
             if (s.status === "FAILED" || s.status === "HEALTH_FAILED") {
               toast.error("Deploy failed", {
-                description: "Use AI agents in the terminal to fix the error and run deploy again.",
+                description: "Open the deploy log below, copy or download it, and give that text to your AI agent on your machine — it is the compiler's own message. The previous version keeps running meanwhile.",
                 duration: Infinity,
                 closeButton: true,
               });
@@ -278,7 +328,7 @@ showOpenAiPanel, showEnvEditor,
       setDeploying(false);
       stopDeployTimer();
       toast.error("Deploy failed", {
-        description: "Use AI agents in the terminal to fix the error and run deploy again.",
+        description: "Open the deploy log below, copy or download it, and give that text to your AI agent on your machine — it is the compiler's own message. The previous version keeps running meanwhile.",
         duration: Infinity,
         closeButton: true,
       });
@@ -315,6 +365,7 @@ showOpenAiPanel, showEnvEditor,
       toast.error("Git Pull — error", { description: gitToastDesc(e.message), duration: Infinity, closeButton: true });
     } finally {
       setGitPulling(false);
+      loadProjectState();
     }
   }
 
@@ -340,6 +391,7 @@ showOpenAiPanel, showEnvEditor,
       toast.error("Git Push — error", { description: gitToastDesc(e.message), duration: Infinity, closeButton: true });
     } finally {
       setGitPushing(false);
+      loadProjectState();
     }
   }
 
@@ -627,6 +679,14 @@ showOpenAiPanel, showEnvEditor,
         </div>
       )}
 
+      {/* ── How to build this project — the first page a new owner should read ── */}
+      {/* REFERENCE LAYOUT (Users) — anchors for the height, stretch for the width. */}
+      {showHowToBuild && (
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 30 }}>
+          <HowToBuildPanel firstRun={howToBuildFirstRun} onClose={() => { setShowHowToBuild(false); setHowToBuildFirstRun(false); }} />
+        </div>
+      )}
+
       {/* ── App features panel (what every page carries) ── */}
       {/* REFERENCE LAYOUT (Users) — anchors for the height, stretch for the width. */}
       {showAppFeatures && (
@@ -820,16 +880,76 @@ showOpenAiPanel, showEnvEditor,
       {/* ── Footer ── */}
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: FOOTER_H }} className="border-t border-border bg-background flex items-center gap-2 px-3">
 
-        {/* Left: repo name (when connected) or version */}
-        <span className="flex-1 flex items-center gap-2 min-w-0">
-          {gitConnected && gitRepo ? (
-            <span className="text-[10px] text-muted-foreground/70 font-mono select-none shrink-0 flex items-center gap-1">
-              <GitBranch size={9} className="shrink-0" />{gitRepo}
-            </span>
-          ) : (
-            <span className="text-[10px] text-muted-foreground/50 select-none tracking-wide shrink-0">
-              {APP_VERSION}
-            </span>
+        {/* Left: the state of the owner's project — repository, commit, and whether anything is pending.
+            Clicking opens the details and says which button that state calls for. */}
+        <span className="flex-1 flex items-center gap-2 min-w-0 relative">
+          <button
+            type="button"
+            onClick={() => { setStateCardOpen((v) => !v); loadProjectState(); }}
+            className="text-[10px] text-muted-foreground/70 font-mono select-none shrink-0 flex items-center gap-1 hover:text-foreground transition-colors"
+          >
+            {projectState?.connected ? (
+              <>
+                <GitBranch size={9} className="shrink-0" />
+                {projectState.repo ?? gitRepo ?? "repository"}
+                {projectState.commit && <span className="text-muted-foreground/50">· {projectState.commit}</span>}
+                {/* One dot, three meanings — amber for work that exists only here, blue for work that
+                    exists only in the repository, green when the two agree. */}
+                <span
+                  className={`size-1.5 rounded-full shrink-0 ${
+                    (projectState.uncommitted ?? 0) > 0 ? "bg-amber-500"
+                    : (projectState.behind ?? 0) > 0 ? "bg-sky-500"
+                    : "bg-emerald-500"
+                  }`}
+                />
+              </>
+            ) : (
+              <span className="tracking-wide">
+                {projectState?.platform ? `Fractera ${projectState.platform}` : "…"}
+              </span>
+            )}
+          </button>
+
+          {stateCardOpen && (
+            <>
+              <div className="fixed inset-0 z-[60]" onClick={() => setStateCardOpen(false)} />
+              <div
+                className="absolute bottom-6 left-0 z-[61] w-[min(24rem,calc(100vw-2rem))] rounded-xl border border-border
+                           bg-background p-3 shadow-2xl text-left"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[11px] font-semibold text-foreground flex-1">Project state</span>
+                  <button type="button" onClick={() => setStateCardOpen(false)}
+                    className="text-muted-foreground hover:text-foreground"><XIcon size={11} /></button>
+                </div>
+                {projectState?.connected ? (
+                  <div className="flex flex-col gap-1 text-[10px] text-muted-foreground font-mono">
+                    <div><span className="text-foreground">{projectState.repo}</span> · {projectState.branch}</div>
+                    <div>commit <span className="text-foreground">{projectState.commit}</span>{projectState.subject ? ` — ${projectState.subject}` : ""}</div>
+                    <div>uncommitted files: <span className="text-foreground">{projectState.uncommitted ?? 0}</span></div>
+                    <div>
+                      behind <span className="text-foreground">{projectState.behind ?? "?"}</span> ·
+                      ahead <span className="text-foreground">{projectState.ahead ?? "?"}</span>
+                    </div>
+                    <div>platform <span className="text-foreground">{projectState.platform ?? "unknown"}</span></div>
+                    <div className="mt-1.5 pt-1.5 border-t border-border font-sans leading-relaxed">
+                      {(projectState.uncommitted ?? 0) > 0
+                        ? "This server holds work that exists nowhere else — press Push before touching the project locally."
+                        : (projectState.behind ?? 0) > 0
+                        ? "The repository has newer commits — press Pull, then Deploy if code changed."
+                        : "The server matches the repository. Nothing to send or fetch."}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-[10px] text-muted-foreground font-sans leading-relaxed">
+                    No repository is connected yet, so there is no project version to show. This server runs
+                    Fractera <span className="font-mono text-foreground">{projectState?.platform ?? "unknown"}</span>.
+                    Connect one in Settings → Connect GitHub.
+                  </div>
+                )}
+              </div>
+            </>
           )}
           {updateAvailable && (
             <TooltipProvider delayDuration={0}>
@@ -849,6 +969,12 @@ showOpenAiPanel, showEnvEditor,
           )}
         </span>
 
+
+        {/* The guide sits immediately left of Deploy: it is the page that explains what Deploy is for. */}
+        <button type="button" onClick={() => { setHowToBuildFirstRun(false); setShowHowToBuild((v) => !v); }}
+          className={`inline-flex items-center gap-1 h-5 px-2 rounded border text-[10px] transition-colors ${showHowToBuild ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
+          <BookOpen size={10} />How to build this project
+        </button>
 
         {/* Deploy button */}
         <button type="button" onClick={handleDeploy} disabled={deploying}
@@ -909,6 +1035,14 @@ showOpenAiPanel, showEnvEditor,
             <span className="text-[11px] font-mono text-muted-foreground/60 tabular-nums">
               {Math.floor(deploySeconds / 60)}:{String(deploySeconds % 60).padStart(2, "0")}
             </span>
+            {/* The log is only useful somewhere else — in an editor, in an agent's prompt — so it has to
+                be takeable. Selecting text out of a scrolling box is not a way to hand over an error. */}
+            <button type="button" onClick={copyDeployLog}
+              className="text-[10px] px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+              {deployLogCopied ? "copied" : "copy"}
+            </button>
+            <button type="button" onClick={downloadDeployLog}
+              className="text-[10px] px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">download</button>
             <button type="button" onClick={() => setShowDeployLog(false)}
               className="text-[10px] px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">close</button>
           </div>
