@@ -118,6 +118,26 @@ export type AdminStrings = {
     helpWeakTitle: string; helpWeak: string;
     helpSeparateTitle: string; helpSeparate: string;
   };
+  rag: {
+    serviceLabel: string; running: string; stopped: string; serviceNote: string; serviceOff: string;
+    keyLabel: string; keySet: string; keyNotSet: string; noKey: string;
+    llmLabel: string; embeddingLabel: string; documentsLabel: string;
+    turnOn: string; turnOff: string; ingestText: string; wipe: string;
+    ingestTitle: string; ingestHint: string; ingestPlaceholder: string; cancel: string; send: string;
+    wipeTitle: string; wipeBody: string; wipeConfirm: string;
+    started: string; stoppedToast: string; ingested: string; wiped: string; failed: string;
+    askLabel: string; ask: string; askPlaceholder: string; askWarning: string;
+    askFailed: string; emptyAnswer: string;
+    documentsCount: string; noDocuments: string;
+    colStatus: string; colSource: string; colChunks: string; colSummary: string;
+    helpLabel: string;
+    helpGetTitle: string; helpGet: string;
+    helpWhyTitle: string; helpWhy: string;
+    helpWinsTitle: string; helpWins: string;
+    helpCostTitle: string; helpCost: string;
+    helpWeakTitle: string; helpWeak: string;
+    helpSeparateTitle: string; helpSeparate: string;
+  };
   database: {
     noTables: string; empty: string; unavailable: string; rowsShown: string; noIdColumn: string;
     editTitle: string; valueLabel: string; cancel: string; save: string; delete: string;
