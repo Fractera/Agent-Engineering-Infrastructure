@@ -241,22 +241,40 @@ const BASE = STRINGS[DEFAULT_ADMIN_LANG] as AdminStrings;
 // Two-level merge — a shallow spread would let a partial `pages` object from an
 // incomplete language REPLACE the English one wholesale, blanking every title it
 // happened to omit. Degrading key by key is the whole promise of this file.
+//
+// 🔴 МАССИВЫ ЗАМЕНЯЮТСЯ ЦЕЛИКОМ, а не сливаются. Это не тонкость, а лечение
+// белого экрана (найден владельцем 2026-08-09): вложенный массив
+// `domain.activateBullets` попадал во внутреннюю ветку слияния, где
+// `{ ...base, ...entry }` превращал `["a","b"]` в `{0:"a",1:"b"}` — объект без
+// `.map`, и страница падала с `activateBullets.map is not a function`. Наружная
+// ветка от этого защищалась (`!Array.isArray`), внутренняя — нет.
+//
+// Замена целиком верна и по смыслу: слияние двух списков по индексу смешало бы
+// языки в одном перечислении, если в них разное число пунктов. Список — единое
+// целое, он либо переведён, либо берётся английским.
+const isPlainObject = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
+
 function mergeTwoLevels(base: AdminStrings, entry: DeepPartial<AdminStrings>): AdminStrings {
   const out: Record<string, unknown> = { ...base };
   for (const [key, value] of Object.entries(entry)) {
     const baseValue = (base as unknown as Record<string, unknown>)[key];
-    if (value && typeof value === "object" && !Array.isArray(value) &&
-        baseValue && typeof baseValue === "object") {
-      const merged: Record<string, unknown> = { ...(baseValue as Record<string, unknown>) };
-      for (const [k2, v2] of Object.entries(value as Record<string, unknown>)) {
+    if (isPlainObject(value) && isPlainObject(baseValue)) {
+      const merged: Record<string, unknown> = { ...baseValue };
+      for (const [k2, v2] of Object.entries(value)) {
         const b2 = merged[k2];
-        if (v2 && typeof v2 === "object" && b2 && typeof b2 === "object") {
-          merged[k2] = { ...(b2 as object), ...(v2 as object) };
+        if (isPlainObject(v2) && isPlainObject(b2)) {
+          merged[k2] = { ...b2, ...v2 };
+        } else if (Array.isArray(v2)) {
+          // Пустой список — не перевод, а потеря: оставляем английский.
+          if (v2.length) merged[k2] = v2;
         } else if (v2 !== undefined && v2 !== "") {
           merged[k2] = v2;
         }
       }
       out[key] = merged;
+    } else if (Array.isArray(value)) {
+      if (value.length) out[key] = value;
     } else if (value !== undefined && value !== "") {
       out[key] = value;
     }
