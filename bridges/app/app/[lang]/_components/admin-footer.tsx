@@ -12,6 +12,7 @@ import Link from "next/link";
 import { GitBranch, Rocket, ArrowDownToLine, ArrowUpFromLine, BookOpen } from "lucide-react";
 import { adminHref } from "@/lib/admin-nav";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
+import { LanguageSwitch } from "./language-switch";
 
 export function AdminFooter({ s, lang }: { s: AdminStrings; lang: string }) {
   return (
@@ -44,6 +45,11 @@ export function AdminFooter({ s, lang }: { s: AdminStrings; lang: string }) {
           <span className="hidden sm:inline">{label}</span>
         </span>
       ))}
+
+      {/* Правый нижний угол — переключатель языка. Последним в строке
+          намеренно: это не действие над проектом, а настройка самого взгляда
+          на него. */}
+      <LanguageSwitch lang={lang} />
     </div>
   );
 }
