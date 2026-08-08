@@ -74,6 +74,34 @@ export type AdminStrings = {
     helpWhyTitle: string; helpWhy: string;
     helpHowTitle: string; helpHow: string;
   };
+  media: {
+    uploadVerb: string; image: string; video: string; pdf: string; markdown: string; html: string;
+    uploading: string; uploaded: string; failed: string;
+    search: string; searchPlaceholder: string; storageNote: string;
+    count: string; countFiltered: string; empty: string; noMatch: string; unavailable: string;
+    colTitle: string; colName: string; colDescription: string; colUrl: string; colExt: string;
+    colType: string; colCrop: string; colSize: string; colDimensions: string; colCreated: string;
+    actions: string; preview: string; trim: string; edit: string; copyUrl: string; delete: string;
+    copied: string; editTitle: string; titleField: string; descriptionField: string;
+    cancel: string; save: string; saved: string;
+    deleteTitle: string; deleteBody: string; deleted: string;
+    cropper: { title: string; scale: string; cancel: string; apply: string };
+    trimmer: {
+      title: string; start: string; end: string; keeping: string; lossless: string;
+      previewMiddle: string; keepWhole: string; apply: string; reading: string;
+      tooShort: string; done: string;
+    };
+    previewLabels: {
+      code: string; preview: string; open: string; close: string;
+      reading: string; unreadable: string;
+      kindImage: string; kindVideo: string; kindPdf: string; kindMarkdown: string; kindHtml: string; kindFile: string;
+    };
+    helpLabel: string;
+    helpHoldsTitle: string; helpHolds: string;
+    helpVsDbTitle: string; helpVsDb: string;
+    helpCostTitle: string; helpCost: string;
+    helpWeakTitle: string; helpWeak: string;
+  };
   database: {
     noTables: string; empty: string; unavailable: string; rowsShown: string; noIdColumn: string;
     editTitle: string; valueLabel: string; cancel: string; save: string; delete: string;
