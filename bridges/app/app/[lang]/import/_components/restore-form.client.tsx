@@ -14,7 +14,7 @@ import { useRef, useState } from "react";
 import { Loader2, Upload, AlertTriangle, FileArchive } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { REPLACES_ON_IMPORT } from "@/lib/backup-parts";
+import { REPLACES_ON_IMPORT } from "../_lib/replaces";
 
 export type RestoreLabels = {
   choose: string; chooseAnother: string; reading: string; nothingYet: string;
