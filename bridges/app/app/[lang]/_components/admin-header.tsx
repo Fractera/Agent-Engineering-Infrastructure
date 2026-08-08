@@ -1,10 +1,23 @@
 // Шапка нового слоя панели (шаг 501). Серверный компонент: ни одной строки JS
-// в браузер. Гамбургер — родной `<details>`, поэтому меню раскрывается и при
-// выключенном JS, а навигация идёт настоящими ссылками.
+// в браузер.
+//
+// МЕНЮ — ЯЩИК, а не выпадашка. Как в старой оболочке: выезжает от ЛЕВОГО края
+// слева направо, ширина `min(320px, 88vw)`, сдвиг 180 мс, шапка с названием и
+// крестиком, тело прокручивается, категории разделены линиями `h-px bg-border`.
+// Кнопка при этом остаётся справа в шапке — открывающий и открываемое намеренно
+// в разных углах, ровно как было.
+//
+// КАК ЭТО РАБОТАЕТ БЕЗ JS. Состояние держит скрытый `<input type="checkbox">`, а
+// кнопка-гамбургер и подложка — это `<label>`, привязанные к нему. Поэтому:
+// открыть — нажать гамбургер, закрыть — нажать подложку, крестик или гамбургер
+// снова; плавный выезд делает CSS-переход. `sr-only` вместо `hidden` оставляет
+// чекбокс в дереве доступности, так что ящик открывается и с клавиатуры.
+// Состояние сбрасывается при переходе на страницу — это и нужно: щёлкнул раздел,
+// ящик закрылся сам.
 
 import Link from "next/link";
 import {
-  Menu, Globe, Palette, Languages, Columns3, SlidersHorizontal, PanelTop, PanelBottom,
+  Menu, Globe, X as XIcon, Palette, Languages, Columns3, SlidersHorizontal, PanelTop, PanelBottom,
   Cookie, Users, ImagePlus, Database, BrainCircuit, Brain, Map as MapIcon, Download, Upload,
   Link2, KeyRound, MessagesSquare, Sparkles, GitBranch, Info, History, Settings, BookOpen,
   HelpCircle, type LucideIcon,
@@ -43,56 +56,88 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   help: HelpCircle,
 };
 
+const MENU_ID = "admin-menu-toggle";
+
 export function AdminHeader({ lang, s }: { lang: string; s: AdminStrings }) {
   return (
-    <header className="flex h-12 shrink-0 items-center justify-between border-b border-border bg-background px-4">
-      <Link href={adminHref(lang)} className="text-sm font-semibold tracking-wide text-foreground">
-        Fractera Admin
-      </Link>
+    <>
+      {/* Состояние ящика. Должен идти ПЕРЕД теми, кто на него смотрит через
+          `peer-checked:` — селектор смотрит только на следующих сестёр. */}
+      <input id={MENU_ID} type="checkbox" className="peer sr-only" aria-label={s.menu} />
 
-      <div className="flex items-center gap-2">
-        {/* Заготовка: предпросмотр появится вместе со своей логикой (фаза Ф2). */}
-        <span
-          title={s.skeletonNotice}
-          className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-3 text-xs text-muted-foreground/60"
-        >
-          <Globe className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">{s.preview}</span>
-        </span>
+      {/* Подложка: гасит фон и закрывает ящик по нажатию мимо него. */}
+      <label
+        htmlFor={MENU_ID}
+        aria-hidden="true"
+        className="invisible fixed inset-0 z-[55] bg-black/20 opacity-0 transition-opacity duration-200 peer-checked:visible peer-checked:opacity-100"
+      />
 
-        <details className="relative">
-          <summary
-            className="inline-flex h-8 cursor-pointer list-none items-center gap-1.5 rounded-md border border-border px-3 text-xs text-foreground hover:bg-muted [&::-webkit-details-marker]:hidden"
-            aria-label={s.menu}
+      {/* Ящик: от левого края, между шапкой и подвалом, как в старой оболочке. */}
+      <nav
+        className="invisible fixed bottom-8 left-0 top-12 z-[58] flex w-[min(320px,88vw)] -translate-x-full flex-col border-r border-border bg-background shadow-2xl transition-transform duration-200 ease-out peer-checked:visible peer-checked:translate-x-0"
+      >
+        {/* Шапка ящика — не прокручивается никогда. */}
+        <div className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2">
+          <span className="text-[12px] font-medium text-foreground">{s.menu}</span>
+          <label htmlFor={MENU_ID} className="cursor-pointer text-muted-foreground hover:text-foreground">
+            <XIcon size={14} />
+          </label>
+        </div>
+
+        {/* Прокручиваемое тело. `min-h-0` — то, что физически разрешает
+            флекс-ребёнку сжаться ниже высоты содержимого; без него список
+            выдавливает шапку ящика вместо прокрутки. */}
+        <div className="min-h-0 flex-1 overflow-y-auto py-1">
+          {NAV_GROUPS.map((group, groupIdx) => (
+            <div key={group}>
+              {/* Разделитель между категориями — тот же, что в оригинале.
+                  Перед первой категорией его нет: линия под шапкой уже есть. */}
+              {groupIdx > 0 && <div className="mx-2 my-1 h-px bg-border" />}
+              <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+                {s.navGroups[group]}
+              </div>
+              {NAV_BY_GROUP[group].map((slug) => {
+                const Icon = ICONS[slug];
+                return (
+                  <Link
+                    key={slug}
+                    href={adminHref(lang, slug)}
+                    className="flex items-center gap-2 px-3 py-1.5 text-[12px] text-foreground hover:bg-muted"
+                  >
+                    <Icon size={11} className="shrink-0 text-muted-foreground" />
+                    {s.pages[slug].title}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </nav>
+
+      <header className="flex h-12 shrink-0 items-center justify-between border-b border-border bg-background px-4">
+        <Link href={adminHref(lang)} className="text-sm font-semibold tracking-wide text-foreground">
+          Fractera Admin
+        </Link>
+
+        <div className="flex items-center gap-2">
+          {/* Заготовка: предпросмотр появится вместе со своей логикой (фаза Ф2). */}
+          <span
+            title={s.skeletonNotice}
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-3 text-xs text-muted-foreground/60"
+          >
+            <Globe className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{s.preview}</span>
+          </span>
+
+          <label
+            htmlFor={MENU_ID}
+            className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-border px-3 text-xs text-foreground transition-colors hover:bg-muted"
           >
             <Menu className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">{s.menu}</span>
-          </summary>
-
-          <nav className="absolute right-0 top-full z-50 mt-1 max-h-[75vh] w-[17rem] overflow-y-auto rounded-xl border border-border bg-background p-2 shadow-2xl">
-            {NAV_GROUPS.map((group) => (
-              <div key={group} className="mb-1.5 last:mb-0">
-                <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70">
-                  {s.navGroups[group]}
-                </div>
-                {NAV_BY_GROUP[group].map((slug) => {
-                  const Icon = ICONS[slug];
-                  return (
-                    <Link
-                      key={slug}
-                      href={adminHref(lang, slug)}
-                      className="flex items-center gap-2 rounded-md px-2 py-1.5 text-[12px] text-foreground hover:bg-muted"
-                    >
-                      <Icon size={11} className="shrink-0 text-muted-foreground" />
-                      {s.pages[slug].title}
-                    </Link>
-                  );
-                })}
-              </div>
-            ))}
-          </nav>
-        </details>
-      </div>
-    </header>
+          </label>
+        </div>
+      </header>
+    </>
   );
 }
