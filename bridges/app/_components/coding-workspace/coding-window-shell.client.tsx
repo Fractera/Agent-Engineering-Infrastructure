@@ -997,8 +997,15 @@ showOpenAiPanel, showEnvEditor,
             {projectState?.connected ? (
               <>
                 <GitBranch size={9} className="shrink-0" />
-                {projectState.repo ?? gitRepo ?? "repository"}
-                {projectState.commit && <span className="text-muted-foreground/50">· {projectState.commit}</span>}
+                {/* Below sm only the commit and the dot survive (owner, 2026-08-08): the repository name is
+                    the longest word in the strip and pushed the version off a phone screen. It stays in the
+                    state card, one tap away, so nothing is lost — the footer just stops repeating it. */}
+                <span className="hidden sm:inline truncate">{projectState.repo ?? gitRepo ?? "repository"}</span>
+                {projectState.commit && (
+                  <span className="text-muted-foreground/50">
+                    <span className="hidden sm:inline">· </span>{projectState.commit}
+                  </span>
+                )}
                 {/* One dot, three meanings — amber for work that exists only here, blue for work that
                     exists only in the repository, green when the two agree. */}
                 <span
