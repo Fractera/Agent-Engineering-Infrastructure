@@ -46,8 +46,17 @@ export async function GET(req: NextRequest) {
   // whether they forgot a file or changed half the project.
   const uncommitted = status ? status.split("\n").filter(Boolean).length : 0;
 
-  // Ahead/behind is only meaningful once the remote-tracking ref exists locally; a repository that
-  // has never fetched reports nulls rather than a confident zero.
+  // Ahead/behind can only be computed against a remote-tracking ref, and that ref is a local cache: it
+  // is as old as the last fetch. Measured live on this server, it did not exist at all — so the footer
+  // would have reported "nothing to pull" forever while the repository moved ahead.
+  //
+  // Fetching on every footer render would put a network call behind an idle screen, so the refresh is
+  // explicit: ?fetch=1, sent when the owner OPENS the card. A failed fetch is not fatal — the answer
+  // then carries nulls and the card says the comparison is unavailable, instead of a confident zero.
+  if (req.nextUrl.searchParams.get("fetch") === "1") {
+    await execAsync(`git -C ${PROJECT_DIR} fetch origin main --quiet`, { timeout: 25000 }).catch(() => null);
+  }
+
   let ahead: number | null = null;
   let behind: number | null = null;
   const counts = await git("rev-list --left-right --count origin/main...HEAD");

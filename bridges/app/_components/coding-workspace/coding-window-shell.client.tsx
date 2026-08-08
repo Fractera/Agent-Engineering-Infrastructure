@@ -155,8 +155,10 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   useEffect(() => { loadGitState(); }, [loadGitState]);
   // Project state is re-read after every action that can change it — pull, push, deploy — so the corner
   // never shows a truth that stopped being true one click ago.
-  const loadProjectState = useCallback(() => {
-    fetch("/api/config/project-state", { cache: "no-store", credentials: "include" })
+  // `withFetch` asks the server to refresh its copy of the repository first — used when the card is
+  // opened, never on an idle footer, so a screen nobody is looking at costs no network call.
+  const loadProjectState = useCallback((withFetch = false) => {
+    fetch(`/api/config/project-state${withFetch ? "?fetch=1" : ""}`, { cache: "no-store", credentials: "include" })
       .then((r) => r.json())
       .then((d) => setProjectState(d?.error ? null : d))
       .catch(() => setProjectState(null));
@@ -885,7 +887,7 @@ showOpenAiPanel, showEnvEditor,
         <span className="flex-1 flex items-center gap-2 min-w-0 relative">
           <button
             type="button"
-            onClick={() => { setStateCardOpen((v) => !v); loadProjectState(); }}
+            onClick={() => { setStateCardOpen((v) => !v); loadProjectState(true); }}
             className="text-[10px] text-muted-foreground/70 font-mono select-none shrink-0 flex items-center gap-1 hover:text-foreground transition-colors"
           >
             {projectState?.connected ? (
@@ -929,8 +931,9 @@ showOpenAiPanel, showEnvEditor,
                     <div>commit <span className="text-foreground">{projectState.commit}</span>{projectState.subject ? ` — ${projectState.subject}` : ""}</div>
                     <div>uncommitted files: <span className="text-foreground">{projectState.uncommitted ?? 0}</span></div>
                     <div>
-                      behind <span className="text-foreground">{projectState.behind ?? "?"}</span> ·
-                      ahead <span className="text-foreground">{projectState.ahead ?? "?"}</span>
+                      {projectState.behind === null || projectState.behind === undefined
+                        ? "not compared with the repository yet"
+                        : <>behind <span className="text-foreground">{projectState.behind}</span> · ahead <span className="text-foreground">{projectState.ahead}</span></>}
                     </div>
                     <div>platform <span className="text-foreground">{projectState.platform ?? "unknown"}</span></div>
                     <div className="mt-1.5 pt-1.5 border-t border-border font-sans leading-relaxed">
