@@ -16,9 +16,18 @@ Your server runs several processes at once. Four of them answer from the outside
 - **3300 — the data layer.** Rows, uploaded files, vectors — and the single door through which everything
   else is reached. Your application talks to it.
 
-The rest — the knowledge graph, the map service, the communication channels — sit behind the data layer
-rather than opening ports of their own. That is deliberate: your project keeps **one address and one key**
-instead of a list of them.
+Three more services run alongside them, and none of them is a door of its own:
+
+- **the map** — routes, distance matrices and address lookup, on port 3400;
+- **communication channels** — Telegram and what follows it, on port 3500;
+- **the knowledge graph** — the agentic RAG store, on port 9621.
+
+None of these ports is reachable from the internet — the firewall passes only the web ports, and everything
+public arrives through them. Your application reaches the three services **through the data layer**:
+`/service/geo`, `/service/channels`, `/service/rag`, with the same key that opens the data layer itself.
+
+That is why your environment file carries **one address and one key** rather than a list of them, and why a
+service added later does not become another port to remember.
 
 **Development happens against port 3000 only.** That application is the part that lands on your computer
 and the part you are meant to grow. Authorization, this panel and the platform architecture are not editable
