@@ -282,6 +282,16 @@
       "helpWeakTitle": "Where it is weak.",
       "helpWeak": "It knows roads, not traffic: times come from speed limits and road classes, not from what is happening right now. Treat them as reliable planning numbers rather than live estimates."
     },
+    "addTool": {
+      "body": "The tools above are not the full list of what can run on your server. More can be added as part of the project — running on your machine, behind your own address, with no third-party key and no per-request bill:",
+      "exampleImages": "an image generator",
+      "exampleVideo": "a video generator",
+      "exampleFlow": "a flow and diagram builder (React Flow)",
+      "exampleOther": "anything else your automations need",
+      "how": "Write to us with what you need and what it is for. By agreement the developer connects to your server and sets the tool up in place — you get it as a native part of the project, not as another subscription.",
+      "mailSubject": "New tool for my Fractera project",
+      "note": "Say what the tool should do and where it fits in your work. That is enough for a first reply — a precise specification is not expected of you."
+    },
     "database": {
       "noTables": "This database has no tables yet.",
       "empty": "This table is empty",
@@ -384,6 +394,10 @@
       "map": {
         "title": "Map settings",
         "hint": "Regions and geodata of the map service."
+      },
+      "add-tool": {
+        "title": "Add a tool",
+        "hint": "Request a tool that is not here yet — it is set up on your server by agreement."
       },
       "export": {
         "title": "Export data",
@@ -718,6 +732,16 @@
       "helpWeakTitle": "В чём слаб.",
       "helpWeak": "Он знает дороги, а не пробки: время выводится из ограничений скорости и классов дорог, а не из того, что происходит сейчас. Считайте его надёжным числом для планирования, а не оценкой в реальном времени."
     },
+    "addTool": {
+      "body": "Инструменты выше — не полный список того, что может работать на вашем сервере. Другие добавляются как часть проекта: на вашей машине, за вашим адресом, без чужого ключа и без оплаты за запрос:",
+      "exampleImages": "генератор изображений",
+      "exampleVideo": "генератор видео",
+      "exampleFlow": "конструктор схем и потоков (React Flow)",
+      "exampleOther": "любой другой, который нужен вашим автоматизациям",
+      "how": "Напишите нам, что вам нужно и для чего. По договорённости разработчик подключится к вашему серверу и настроит инструмент на месте — вы получите его родной частью проекта, а не очередной подпиской.",
+      "mailSubject": "Новый инструмент для моего проекта Fractera",
+      "note": "Достаточно сказать, что инструмент должен делать и где он встанет в вашей работе. Точного технического задания от вас не ждут."
+    },
     "database": {
       "noTables": "В этой базе пока нет таблиц.",
       "empty": "Таблица пуста",
@@ -820,6 +844,10 @@
       "map": {
         "title": "Настройки карты",
         "hint": "Регионы и геоданные картографической службы."
+      },
+      "add-tool": {
+        "title": "Добавить инструмент",
+        "hint": "Заявка на инструмент, которого здесь пока нет — его настроят на вашем сервере по договорённости."
       },
       "export": {
         "title": "Выгрузка данных",

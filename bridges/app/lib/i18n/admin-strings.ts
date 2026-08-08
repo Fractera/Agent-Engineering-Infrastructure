@@ -153,6 +153,11 @@ export type AdminStrings = {
     helpCostTitle: string; helpCost: string;
     helpWeakTitle: string; helpWeak: string;
   };
+  addTool: {
+    body: string;
+    exampleImages: string; exampleVideo: string; exampleFlow: string; exampleOther: string;
+    how: string; mailSubject: string; note: string;
+  };
   database: {
     noTables: string; empty: string; unavailable: string; rowsShown: string; noIdColumn: string;
     editTitle: string; valueLabel: string; cancel: string; save: string; delete: string;

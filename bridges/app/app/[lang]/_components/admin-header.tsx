@@ -20,7 +20,7 @@ import {
   Menu, Globe, X as XIcon, Palette, Languages, Columns3, SlidersHorizontal, PanelTop, PanelBottom,
   Cookie, Users, ImagePlus, Database, BrainCircuit, Brain, Map as MapIcon, Download, Upload,
   Link2, KeyRound, MessagesSquare, Sparkles, GitBranch, Info, History, Settings, BookOpen,
-  HelpCircle, type LucideIcon,
+  HelpCircle, PackagePlus, type LucideIcon,
 } from "lucide-react";
 import { NAV_GROUPS, NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
@@ -42,6 +42,7 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   "vector-memory": BrainCircuit,
   "agentic-rag": Brain,
   map: MapIcon,
+  "add-tool": PackagePlus,
   export: Download,
   import: Upload,
   domain: Link2,

@@ -28,6 +28,11 @@ export const NAV = [
   { slug: "vector-memory",   group: "data" },
   { slug: "agentic-rag",     group: "data" },
   { slug: "map",             group: "data" },
+  // Завершает перечень инструментов (решение владельца 2026-08-08): после того,
+  // как названы все склады и движки проекта, естественный следующий вопрос —
+  // «а если нужен ещё один». Стоит здесь, а не в справке, потому что это
+  // действие, а не пояснение.
+  { slug: "add-tool",        group: "data" },
   { slug: "export",          group: "data" },
   { slug: "import",          group: "data" },
 
