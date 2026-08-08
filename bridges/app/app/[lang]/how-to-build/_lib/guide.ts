@@ -6,27 +6,23 @@
 // страницы. Поэтому HTTP-запроса нет, состояния «загружается» нет, и текст
 // приезжает уже внутри HTML: он виден и при выключенном JS.
 //
+// Язык выбирает общий механизм `readLocalizedContent`: `how-to-build.<lang>.md`,
+// иначе английский. Перевод руководства = один новый файл в `_content/`, без
+// правки кода.
+//
 // Маршрут `/api/config/how-to-build` НЕ удаляем — им пользуется замороженная
 // старая панель. Он умрёт вместе с ней на переключении (Ф3).
 
-import fs from "node:fs";
-import path from "node:path";
+import { readLocalizedContent } from "@/lib/content/localized-content";
 
-// `bridges/app` — рабочий каталог процесса, `_content` лежит внутри, поэтому
-// файл путешествует вместе с репозиторием, как любой исходник.
-const GUIDE_PATH = path.join(process.cwd(), "_content", "how-to-build.md");
+const GUIDE_NAME = "how-to-build";
 
 export type GuideResult =
-  | { ok: true; markdown: string }
-  | { ok: false; path: string; reason: string };
+  | { ok: true; markdown: string; isFallback: boolean }
+  | { ok: false; tried: string[] };
 
-export function readGuide(): GuideResult {
-  try {
-    return { ok: true, markdown: fs.readFileSync(GUIDE_PATH, "utf-8") };
-  } catch (e) {
-    // Громко, а не пусто: пропавшее руководство — дефект развёртывания, и
-    // чистая страница спрятала бы его. Путь показываем: без него непонятно,
-    // где искать.
-    return { ok: false, path: GUIDE_PATH, reason: String(e) };
-  }
+export function readGuide(lang: string): GuideResult {
+  const found = readLocalizedContent(GUIDE_NAME, lang);
+  if (!found.ok) return { ok: false, tried: found.tried };
+  return { ok: true, markdown: found.text, isFallback: found.isFallback };
 }

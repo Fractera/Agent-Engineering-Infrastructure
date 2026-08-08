@@ -56,6 +56,9 @@ export type AdminStrings = {
   // page needs beyond that lives in its own section, so the shape of `pages`
   // never has to bend for one surface (step 501, Ф2).
   howToBuild: { welcomeTitle: string; welcomeBody: string; missing: string };
+  // Long-form content read from `_content/` per language (see
+  // lib/content/localized-content.ts). Shared by every page that shows a document.
+  content: { englishFallback: string };
   // shown on a page whose interface exists but whose logic has not moved yet
   skeletonNotice: string;
   home: { title: string; hint: string };

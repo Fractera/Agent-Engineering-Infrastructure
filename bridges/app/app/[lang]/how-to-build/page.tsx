@@ -10,7 +10,8 @@
 // пересборки. Запекание на сборке отняло бы это свойство. `revalidate` сохраняет
 // его, оставаясь статикой: страница отдаётся из кеша, а не рендерится на каждый
 // запрос. Пять минут — компромисс: правку видно почти сразу, работы на запрос
-// по-прежнему ноль.
+// по-прежнему ноль. То же касается ПЕРЕВОДА руководства: положить
+// `_content/how-to-build.<lang>.md` — и он появится сам, без пересборки.
 
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
@@ -24,18 +25,30 @@ export default async function HowToBuildPage({ params }: { params: Promise<{ lan
   const { lang } = await params;
   const s = getAdminStrings(lang);
   const page = s.pages["how-to-build"];
-  const guide = readGuide();
+  const guide = readGuide(lang);
 
   return (
     <PageShell title={page.title} hint={page.hint}>
       <FirstRunNote title={s.howToBuild.welcomeTitle} body={s.howToBuild.welcomeBody} />
 
       {guide.ok ? (
-        <GuideProse markdown={guide.markdown} />
+        <>
+          {/* Честность вместо вида, будто всё переведено: текст на другом языке
+              называет себя сам. Полоса исчезает в тот момент, когда в `_content/`
+              появляется файл на языке страницы. */}
+          {guide.isFallback && (
+            <p className="mb-4 rounded-md border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground/80">
+              {s.content.englishFallback}
+            </p>
+          )}
+          <GuideProse markdown={guide.markdown} />
+        </>
       ) : (
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3">
           <p className="text-[12px] font-medium text-destructive">{s.howToBuild.missing}</p>
-          <p className="mt-1 break-all font-mono text-[10px] text-muted-foreground">{guide.path}</p>
+          <ul className="mt-1 space-y-0.5 font-mono text-[10px] text-muted-foreground">
+            {guide.tried.map((p) => <li key={p} className="break-all">{p}</li>)}
+          </ul>
         </div>
       )}
     </PageShell>
