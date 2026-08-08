@@ -51,6 +51,11 @@ export type AdminStrings = {
   };
   // theme switch in the footer — the icon names the CURRENT mode
   theme: { system: string; light: string; dark: string };
+  // Per-page sections. One section per migrated surface, named after its slug.
+  // `pages[slug]` keeps the uniform title/hint of EVERY page; anything a single
+  // page needs beyond that lives in its own section, so the shape of `pages`
+  // never has to bend for one surface (step 501, Ф2).
+  howToBuild: { welcomeTitle: string; welcomeBody: string; missing: string };
   // shown on a page whose interface exists but whose logic has not moved yet
   skeletonNotice: string;
   home: { title: string; hint: string };

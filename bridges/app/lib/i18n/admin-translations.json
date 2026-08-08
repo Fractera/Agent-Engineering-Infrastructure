@@ -12,6 +12,11 @@
       "light": "Theme: light",
       "dark": "Theme: dark"
     },
+    "howToBuild": {
+      "welcomeTitle": "Your server is up. Welcome.",
+      "welcomeBody": "Everything below is already running — the application, the accounts, the data. What is left is to connect a repository and start building. This welcome is shown once; the guide itself stays behind the button in the footer.",
+      "missing": "The guide file is missing on the server. This is a deployment problem, not a wording one."
+    },
     "skeletonNotice": "Interface only — the logic of this page has not moved here yet.",
     "home": {
       "title": "Workspace",
@@ -146,6 +151,11 @@
       "system": "Тема: системная",
       "light": "Тема: светлая",
       "dark": "Тема: тёмная"
+    },
+    "howToBuild": {
+      "welcomeTitle": "Сервер поднят. Добро пожаловать.",
+      "welcomeBody": "Всё, что ниже, уже работает — приложение, учётные записи, данные. Осталось подключить репозиторий и начать строить. Это приветствие показывается один раз; само руководство остаётся за кнопкой в подвале.",
+      "missing": "Файла руководства нет на сервере. Это дефект развёртывания, а не формулировки."
     },
     "skeletonNotice": "Только интерфейс — логика этой страницы сюда ещё не переехала.",
     "home": {
