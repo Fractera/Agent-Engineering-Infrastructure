@@ -29,8 +29,16 @@ export async function GET(req: NextRequest) {
     platform = fs.readFileSync(PLATFORM_COMMIT_FILE, "utf-8").trim().slice(0, 7) || null;
   } catch { platform = null; }
 
+  // A repository directory is not a connection. A freshly bootstrapped server has its own .git — the
+  // installer creates one so the slot can be pushed — but no remote until the owner connects GitHub.
+  // Measured live: reporting that state as "connected" produced a footer with a commit nobody could
+  // act on, and an ahead/behind comparison against a repository that did not exist.
   const hasGit = fs.existsSync(`${PROJECT_DIR}/.git`);
-  if (!hasGit) {
+  const remoteUrl = hasGit
+    ? await execAsync(`git -C ${PROJECT_DIR} config --get remote.origin.url`, opts)
+        .then(r => r.stdout.trim()).catch(() => "")
+    : "";
+  if (!hasGit || !remoteUrl) {
     return NextResponse.json({ connected: false, platform });
   }
 
