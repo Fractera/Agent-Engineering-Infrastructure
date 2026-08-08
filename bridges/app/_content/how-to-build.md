@@ -147,7 +147,26 @@ A failed deploy leaves the previous version running. Visitors keep seeing the wo
 
 ---
 
-## 10. Version conflicts — why they happen and how to avoid them
+## 10. The deployment history
+
+Every press of Deploy is recorded — not in a file that the next restart forgets, but in your project's
+database. Open **Settings → Deployment history** in the menu, beside the GitHub entry.
+
+Each row carries what was built, when it started, how long it took, whether it finished, and **the whole
+build log**. Pick a run to read its log; press **Download** to take it away as a file.
+
+Three reasons this is worth having:
+
+- **A failed build stops being a moment.** The log is still there tomorrow, after a reload, after a
+  restart of the panel — you do not have to reproduce the failure to read its cause again.
+- **Your AI agent can read it.** The history lives in the same storage, behind the same key, as the rest
+  of your data. "What happened on the last five deploys" is a query, not an investigation — and a record
+  of past errors is what lets an agent learn the mistakes this project actually makes.
+- **It answers "did my change ship?"** — with a time, a duration and an outcome rather than a memory.
+
+---
+
+## 11. Version conflicts — why they happen and how to avoid them
 
 A conflict means the repository and your copy changed the same thing in different ways. On this arrangement
 it has one common cause: **working in the panel and on your machine at the same time.**
@@ -161,7 +180,7 @@ it there with your agent's help, then push and pull as usual.
 
 ---
 
-## 11. The commit indicator in the bottom left corner
+## 12. The commit indicator in the bottom left corner
 
 The corner shows the state of **your project**, not of the platform:
 
@@ -183,7 +202,7 @@ when the server itself is updated.
 
 ---
 
-## 12. How this differs from Vercel and similar services
+## 13. How this differs from Vercel and similar services
 
 Most projects start on a laptop: you build for weeks, gradually attach a database, storage and services, and
 only then synchronise it all with a server. Here it is the other way round — **the project is in production

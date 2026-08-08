@@ -919,6 +919,79 @@ app.get('/vectors/status', (_req, res) => {
   })
 })
 
+// ── DEPLOY HISTORY ────────────────────────────────────────────────────────────
+//
+// Every press of Deploy leaves a row here: what was built, when, how long it took, whether it
+// succeeded, and the full build log. It lives in the data layer rather than in the admin panel's
+// memory for two reasons. It survives restarts and rebuilds of the panel itself, and it is readable
+// by an agent through the same door and the same key as everything else — so "what happened on the
+// last five deploys" is a query, not an investigation.
+//
+// It also replaces a worse mechanism: the deploy route used to record success by making a git commit
+// in the platform repository ON the server. Every press moved the server's history away from the
+// remote, and the next update refused to fast-forward. A log belongs in a log, not in version control.
+//
+// The name is deliberately not `deployment_records` — that table was removed in task 9 and meant
+// something else entirely (servers provisioned by the billing layer). Reusing the name would make two
+// unrelated things look like one.
+appDb.exec(`
+  CREATE TABLE IF NOT EXISTS deploy_runs (
+    id           TEXT PRIMARY KEY NOT NULL,
+    started_at   TEXT NOT NULL DEFAULT (datetime('now')),
+    finished_at  TEXT,
+    status       TEXT NOT NULL,
+    description  TEXT DEFAULT '',
+    duration_ms  INTEGER,
+    commit_hash  TEXT,
+    log          TEXT DEFAULT ''
+  );
+  CREATE INDEX IF NOT EXISTS deploy_runs_started_idx ON deploy_runs (started_at DESC);
+`)
+
+// Insert on start, update on finish — the caller owns the id, so a run that never reports a finish
+// stays visible as "running" instead of vanishing. That is the honest record of a build that hung.
+app.post('/deploy-runs', (req, res) => {
+  const { id, status, description, commit } = req.body ?? {}
+  if (!id || !status) return res.status(400).json({ error: 'id and status are required' })
+  appDb.prepare(
+    'INSERT OR IGNORE INTO deploy_runs (id, status, description, commit_hash) VALUES (?, ?, ?, ?)'
+  ).run(String(id), String(status), String(description ?? ''), commit ? String(commit) : null)
+  res.json({ ok: true, id })
+})
+
+app.patch('/deploy-runs/:id', (req, res) => {
+  const { status, log, durationMs } = req.body ?? {}
+  const row = appDb.prepare('SELECT id FROM deploy_runs WHERE id = ?').get(req.params.id)
+  if (!row) return res.status(404).json({ error: 'unknown run' })
+  appDb.prepare(
+    `UPDATE deploy_runs
+        SET status      = COALESCE(?, status),
+            log         = COALESCE(?, log),
+            duration_ms = COALESCE(?, duration_ms),
+            finished_at = datetime('now')
+      WHERE id = ?`
+  ).run(status ?? null, typeof log === 'string' ? log : null, Number.isFinite(durationMs) ? durationMs : null, req.params.id)
+  res.json({ ok: true })
+})
+
+// The list never carries the logs: a hundred builds of log text is megabytes nobody asked for. The
+// log is fetched for the one run being opened.
+app.get('/deploy-runs', (req, res) => {
+  const limit = Math.min(Number(req.query.limit) || 50, 200)
+  const rows = appDb.prepare(
+    `SELECT id, started_at, finished_at, status, description, duration_ms, commit_hash,
+            length(log) AS log_size
+       FROM deploy_runs ORDER BY started_at DESC LIMIT ?`
+  ).all(limit)
+  res.json({ runs: rows })
+})
+
+app.get('/deploy-runs/:id', (req, res) => {
+  const row = appDb.prepare('SELECT * FROM deploy_runs WHERE id = ?').get(req.params.id)
+  if (!row) return res.status(404).json({ error: 'unknown run' })
+  res.json({ run: row })
+})
+
 // ── ONE DOOR: the loopback services, reachable through this one ───────────────
 //
 // (step 500) A developer working on their own machine gets the project's data

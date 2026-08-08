@@ -20,6 +20,30 @@ function writeWAL(data: object) {
   try { writeFileSync(WAL_FILE, JSON.stringify(data, null, 2)); } catch {}
 }
 
+// ── Deploy history ────────────────────────────────────────────────────────────
+// Every run is recorded in the data layer: what was built, when, for how long, whether it worked and
+// the whole log. It survives restarts of this panel, it is readable by an agent through the same door
+// as the rest of the data, and it replaces the mechanism it grew out of — this route used to record
+// success by committing to the platform repository ON the server, which moved the server's history
+// away from the remote on every press and made the next update refuse to fast-forward.
+const DATA_URL    = process.env.NEXT_PUBLIC_MEDIA_URL ?? "http://localhost:3300";
+const DATA_SECRET = process.env.DATA_SECRET ?? "";
+
+async function recordRun(path: string, method: "POST" | "PATCH", body: object) {
+  try {
+    const res = await fetch(`${DATA_URL}${path}`, {
+      method,
+      headers: { "Content-Type": "application/json", "x-data-secret": DATA_SECRET },
+      body: JSON.stringify(body),
+    });
+    // Loud on failure, and only in the server log: a deploy must not fail because its diary did, but a
+    // diary that quietly stops writing is worse than none — the history would look like nothing happened.
+    if (!res.ok) console.error(`[deploy] history write failed: ${res.status} ${await res.text()}`);
+  } catch (e) {
+    console.error(`[deploy] history write failed: ${e}`);
+  }
+}
+
 // Build a SLOT-SCOPED environment for the spawned `next build`.
 //
 // WHY (root cause, step 143): this Admin route runs inside its OWN Next process, which at
@@ -63,7 +87,9 @@ function runBuild(description: string): string {
   const jobId = Date.now().toString();
   const logFile = `/tmp/fractera-deploy-${jobId}.log`;
   writeFileSync(LOCK_FILE, jobId);
+  const startedAtMs = Date.now();
   writeWAL({ status: "STARTED", jobId, startedAt: new Date().toISOString(), description });
+  void recordRun("/deploy-runs", "POST", { id: jobId, status: "RUNNING", description });
 
   const logFd = openSync(logFile, "w");
   // Spawn the slot build with a SLOT-SCOPED env so the slot's own app/.env.local fully governs
@@ -78,9 +104,18 @@ function runBuild(description: string): string {
       const { closeSync, appendFileSync } = require("fs");
       closeSync(logFd);
 
+      // The log is read from the file the build wrote, so the history carries the compiler's own words
+      // rather than a summary of them.
+      const finish = (status: string) => {
+        let log = "";
+        try { log = readFileSync(logFile, "utf8"); } catch { log = "(log file unavailable)"; }
+        void recordRun(`/deploy-runs/${jobId}`, "PATCH", { status, log, durationMs: Date.now() - startedAtMs });
+      };
+
       if (code !== 0) {
         writeWAL({ status: "FAILED", jobId, failedAt: new Date().toISOString(), description });
         writeFileSync(LOCK_FILE + ".failed", jobId);
+        finish("FAILED");
       } else {
         // pm2 reload (graceful)
         const { execSync } = require("child_process");
@@ -104,13 +139,13 @@ function runBuild(description: string): string {
 
         if (!healthy) {
           writeWAL({ status: "HEALTH_FAILED", jobId, failedAt: new Date().toISOString(), description });
+          finish("HEALTH_FAILED");
         } else {
-          // Commit deploy success
-          try {
-            execSync(`git -C ${APP_DIR}/.. add -A && git -C ${APP_DIR}/.. commit -m "DEPLOY_SUCCESS: ${description}" --allow-empty`, { timeout: 15000 });
-          } catch {}
+          // A successful deploy used to be recorded as a git commit in the platform repository here.
+          // It is a row in deploy_runs now — see recordRun above for why the commit had to go.
           writeWAL({ status: "COMPLETED", jobId, completedAt: new Date().toISOString(), description });
           appendFileSync(logFile, "\n[deploy] COMPLETED\n");
+          finish("COMPLETED");
         }
       }
 

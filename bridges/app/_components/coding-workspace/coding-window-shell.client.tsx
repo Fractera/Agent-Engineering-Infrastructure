@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
 import { getAdminStrings, detectBrowserLang, DEFAULT_ADMIN_LANG } from "@/lib/i18n/admin-strings";
-import { Menu, X as XIcon, Loader2, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LogOut, CircleUserRound, Map as MapIcon, Brain, MessagesSquare, Languages, Columns3, SlidersHorizontal, BookOpen } from "lucide-react";
+import { Menu, X as XIcon, Loader2, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LogOut, CircleUserRound, Map as MapIcon, Brain, MessagesSquare, Languages, Columns3, SlidersHorizontal, BookOpen, History } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { COMING_SOON } from "./platforms";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -27,6 +27,7 @@ import { ParallelRoutesSelector } from "./parallel-routes/parallel-routes-select
 import { AppFeaturesPanel } from "./app-features-panel.client";
 import { HowToBuildPanel, hasSeenHowToBuild } from "./how-to-build-panel.client";
 import { SitePreviewWindow } from "../site-preview-window.client";
+import { DeployHistoryPanel } from "./deploy-history-panel.client";
 import { IdleCanvas } from "./idle-canvas.client";
 import type { ComponentType } from "react";
 
@@ -125,6 +126,7 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   const [showLanguages, setShowLanguages]           = useState(false);
   const [showParallelRoutes, setShowParallelRoutes] = useState(false);
   const [showAppFeatures, setShowAppFeatures]       = useState(false);
+  const [showDeployHistory, setShowDeployHistory]   = useState(false);
   const [showHowToBuild, setShowHowToBuild]         = useState(false);
   const [howToBuildFirstRun, setHowToBuildFirstRun] = useState(false);
   const [showDomainPanel, setShowDomainPanel]       = useState(false);
@@ -205,7 +207,7 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
     showInfo || showDbBrowser || showUsers || showMediaLibrary || showHelp || showDomainPanel ||
     showOpenAiPanel || showEnvEditor || showSiteSettings || showLanguages || showParallelRoutes ||
     showAppFeatures || showHowToBuild || showVectorPanel || showMapPanel || showLightRag ||
-    showChannels || showAuthMethods || showGitHub || showExport || showImport;
+    showChannels || showAuthMethods || showGitHub || showExport || showImport || showDeployHistory;
 
   // The preview is a page like the others, so it obeys the same rule: opening anything from the menu
   // closes it. Without this the floating window stayed on top of whatever was just opened, and on a
@@ -617,6 +619,12 @@ showOpenAiPanel, showEnvEditor,
                   <GitBranch size={11} />About GitHub
                 </button>
               )}
+              {/* Deployment history sits beside the GitHub entry: both answer "what happened to my code",
+                  one for what was sent, one for what was built. */}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowDeployHistory((v) => !v); setShowGitHub(false); setShowUsers(false); setShowMediaLibrary(false); setShowDbBrowser(false); setShowVectorPanel(false); setShowLightRag(false); setShowMapPanel(false); setShowOpenAiPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowHelp(false); setShowDomainPanel(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                <History size={11} />Deployment history
+              </button>
               {/* …and Help below it as the very last item — opens only a tooltip, no panel. */}
               <div className="h-px bg-border mx-2" />
               <TooltipProvider delayDuration={0}>
@@ -697,6 +705,14 @@ showOpenAiPanel, showEnvEditor,
       {showParallelRoutes && (
         <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 20 }}>
           <ParallelRoutesSelector onBack={() => setShowParallelRoutes(false)} />
+        </div>
+      )}
+
+      {/* ── Deployment history ── */}
+      {/* REFERENCE LAYOUT (Users) — anchors for the height, stretch for the width. */}
+      {showDeployHistory && (
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 20 }}>
+          <DeployHistoryPanel onClose={() => setShowDeployHistory(false)} />
         </div>
       )}
 
