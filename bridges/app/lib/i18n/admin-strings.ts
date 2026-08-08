@@ -72,6 +72,18 @@ export type AdminStrings = {
     helpWhyTitle: string; helpWhy: string;
     helpHowTitle: string; helpHow: string;
   };
+  database: {
+    noTables: string; empty: string; unavailable: string; rowsShown: string; noIdColumn: string;
+    editTitle: string; valueLabel: string; cancel: string; save: string; delete: string;
+    deleteTitle: string; deleteBody: string;
+    updated: string; deletedRow: string; failed: string;
+    helpLabel: string;
+    helpHoldsTitle: string; helpHolds: string;
+    helpVsVectorTitle: string; helpVsVector: string;
+    helpCostTitle: string; helpCost: string;
+    helpWeakTitle: string; helpWeak: string;
+    helpTogetherTitle: string; helpTogether: string;
+  };
   // Long-form content read from `_content/` per language (see
   // lib/content/localized-content.ts). Shared by every page that shows a document.
   content: { englishFallback: string };
