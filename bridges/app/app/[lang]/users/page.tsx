@@ -19,7 +19,8 @@ import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
 import { fetchUsersPage } from "./_lib/users";
 import { UsersTable } from "./_components/users-table";
-import { UsersSearch, UsersPagination } from "./_components/users-toolbar";
+import { SearchForm } from "../_components/search-form";
+import { UsersPagination } from "./_components/users-toolbar";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,7 @@ export default async function UsersPage(
 
   return (
     <PageShell title={s.pages.users.title} hint={s.pages.users.hint}>
-      <UsersSearch q={q} placeholder={u.searchPlaceholder} submit={u.search} />
+      <SearchForm value={q} placeholder={u.searchPlaceholder} submit={u.search} resetPage />
 
       <div className="mt-3">
         {result.ok ? (

@@ -102,6 +102,22 @@ export type AdminStrings = {
     helpCostTitle: string; helpCost: string;
     helpWeakTitle: string; helpWeak: string;
   };
+  vector: {
+    unavailable: string; serviceNote: string;
+    keyLabel: string; keySet: string; keyNotSet: string;
+    modelLabel: string; dimsLabel: string; searchLabel: string; indexed: string; linearScan: string;
+    recordsLabel: string; noKey: string;
+    searchByMeaning: string; search: string; searchPlaceholder: string; matches: string;
+    askSomething: string; nothingFound: string; searchFailed: string;
+    colScore: string; colCollection: string; colRow: string; colText: string;
+    helpLabel: string;
+    helpGetTitle: string; helpGet: string;
+    helpWhyTitle: string; helpWhy: string;
+    helpWinsTitle: string; helpWins: string;
+    helpCostTitle: string; helpCost: string;
+    helpWeakTitle: string; helpWeak: string;
+    helpSeparateTitle: string; helpSeparate: string;
+  };
   database: {
     noTables: string; empty: string; unavailable: string; rowsShown: string; noIdColumn: string;
     editTitle: string; valueLabel: string; cancel: string; save: string; delete: string;

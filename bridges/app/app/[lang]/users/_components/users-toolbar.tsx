@@ -1,32 +1,12 @@
-// Поиск и постраничность (шаг 501, Ф2). СЕРВЕРНЫЕ компоненты.
+// Постраничность (шаг 501, Ф2). СЕРВЕРНЫЙ компонент.
 //
-// Главное отличие от старой панели: и то и другое живёт в АДРЕСЕ, а не в
-// состоянии браузера. Поиск — обычная форма `method="get"`, страницы — обычные
-// ссылки. Следствия:
-//   • работает при выключенном JS;
-//   • результат поиска можно сохранить в закладки и переслать;
-//   • «назад» в браузере возвращает предыдущий запрос, а не пустую таблицу.
-// Прежний вариант с задержкой 300 мс на каждой букве этих свойств не давал.
+// Страницы живут в АДРЕСЕ и переключаются обычными ссылками — работает без JS, и
+// любую страницу можно сохранить в закладки. Поиск переехал в общий
+// `[lang]/_components/search-form.tsx`, как только у него появился второй
+// потребитель.
 
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-
-export function UsersSearch({ q, placeholder, submit }: { q: string; placeholder: string; submit: string }) {
-  return (
-    <form method="get" className="flex items-center gap-2">
-      {/* Новый поиск обязан начинаться с первой страницы: искать на пятой
-          странице прежнего запроса — способ увидеть пусто и не понять почему. */}
-      <input type="hidden" name="page" value="1" />
-      <Input name="q" defaultValue={q} placeholder={placeholder} className="h-7 text-[11px]" />
-      <Button type="submit" variant="outline" size="sm" className="h-7 shrink-0 text-[11px]">
-        <Search size={11} />
-        <span className="hidden sm:inline">{submit}</span>
-      </Button>
-    </form>
-  );
-}
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export function UsersPagination(
   { q, page, pages, total, totalLabel, pageLabel }:

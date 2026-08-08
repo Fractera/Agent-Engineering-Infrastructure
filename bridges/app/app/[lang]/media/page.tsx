@@ -17,7 +17,7 @@
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
-import { UsersSearch } from "../users/_components/users-toolbar";
+import { SearchForm } from "../_components/search-form";
 import { listMedia, filterMedia } from "./_lib/media";
 import { MediaTable } from "./_components/media-table";
 import { UploadBar } from "./_components/upload-bar.client";
@@ -80,7 +80,7 @@ export default async function MediaPage(
           />
 
           <div className="mt-3">
-            <UsersSearch q={q} placeholder={m.searchPlaceholder} submit={m.search} />
+            <SearchForm value={q} placeholder={m.searchPlaceholder} submit={m.search} />
           </div>
 
           <p className="mt-2 text-[10px] text-muted-foreground">
