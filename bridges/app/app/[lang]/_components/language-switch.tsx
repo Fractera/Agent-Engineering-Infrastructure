@@ -67,12 +67,11 @@ export function LanguageSwitch({ lang }: { lang: string }) {
                 {region}
               </p>
               {list.map((meta) => (
-                <LangRow
-                  key={`${region}-${meta.code}`}
-                  meta={meta}
-                  flag={meta.regionFlags?.[region] ?? meta.flag}
-                  active={meta.code === lang}
-                />
+                // Флаг один на язык: у вендоренной в панель копии каталога нет
+                // поля `regionFlags` (оно есть только в копии FNS). Дублировать
+                // его сюда ради одной эмодзи на регион не стоит — расхождение
+                // двух копий дороже, чем 🇺🇸 у английского во всех регионах.
+                <LangRow key={`${region}-${meta.code}`} meta={meta} active={meta.code === lang} />
               ))}
             </div>
           ))}
@@ -82,9 +81,7 @@ export function LanguageSwitch({ lang }: { lang: string }) {
   );
 }
 
-function LangRow(
-  { meta, flag, active }: { meta: LanguageMetadata; flag: string; active: boolean },
-) {
+function LangRow({ meta, active }: { meta: LanguageMetadata; active: boolean }) {
   return (
     <a
       href={`/api/lang/${meta.code}`}
@@ -93,7 +90,7 @@ function LangRow(
         active ? "bg-primary/15 text-primary" : "text-foreground/80 hover:bg-muted hover:text-foreground"
       }`}
     >
-      <span className="text-base leading-none">{flag}</span>
+      <span className="text-base leading-none">{meta.flag}</span>
       <span>{meta.nativeName}</span>
       <span className="ml-auto text-xs uppercase text-muted-foreground">{meta.code}</span>
     </a>
