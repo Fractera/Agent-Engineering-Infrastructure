@@ -143,14 +143,55 @@ The log appears at the bottom of the screen while the build runs, and stays ther
    message, which is exactly what an agent needs to fix the cause.
 3. Push the fix, **Pull** here, **Deploy** again.
 
-**A failed deploy does not take your site down.** Two things protect it. The running application is never
-restarted onto a build that did not compile, so visitors keep seeing the working version throughout. And
-the last build that both compiled and answered is kept aside: when a build fails, that copy is put back,
-so the application can also be *restarted* safely — after a reboot, after an out-of-memory kill, at any
-time — rather than only surviving until something restarts it.
+### What actually happens when you press Deploy
 
-If a build compiles but the application then refuses to answer, the previous version is restored and
-brought back automatically. That run appears in the history as **rolled back**.
+It is worth knowing in detail, because the answer to "can a bad build take my site down" lives in these
+five steps.
+
+1. **Compile.** Your application is built into a folder of compiled output. The running application is
+   not touched: it is already in memory, serving visitors, and it does not read the new files.
+2. **Check the exit.** If the compiler failed, the deploy stops here. Nothing is restarted.
+3. **Reload.** Only a build that compiled gets loaded — the process is restarted gracefully onto the new
+   output.
+4. **Health check.** The reloaded application is asked to answer, three times, ten seconds apart.
+5. **Keep it as the fallback.** A build that both compiled *and* answered is copied aside as the last
+   known good version. Only such a build earns that place.
+
+### The two protections, and what each one covers
+
+**Nothing is ever restarted onto code that did not compile.** That is step 2, and it is what keeps
+visitors on the working version while you fix the error. Your site does not blink.
+
+**The last working build is kept as a copy, and put back when a build fails.** This one is less obvious
+and it is the important one. A failing build does not politely leave the previous output alone — it
+removes the marker that makes that output startable. Measured on this platform: after a deliberately
+broken build, the site still answered, but a second copy of the application refused to start at all,
+with *"Could not find a production build"*.
+
+So without the copy, the situation after a failed deploy would be: **running, but unable to be started
+again.** The application would survive until the next restart — a reboot, an out-of-memory kill, a
+routine restart — and then be gone until some build succeeded. With the copy, a failed build restores the
+previous output, and the application can be restarted at any moment, safely.
+
+**If a build compiles but the application then will not answer**, step 4 catches it: the previous output
+is restored and the process is reloaded back onto it. Your visitors get the version that worked. That run
+is recorded as **rolled back** in the deployment history.
+
+### What this does not protect you from
+
+Being precise about the edges is what makes the guarantee usable:
+
+- **It restores code, not data.** Rows, files and vectors are not versioned by a deploy and are not
+  rolled back with it. A change that deletes data is not undone by restoring the previous build.
+- **A build that compiles and answers is considered good** — even if a page is wrong, a price is wrong or
+  a link is broken. Correctness is not something a health check can see; it will happily accept a working
+  application that does the wrong thing.
+- **Runtime settings are not part of it.** Configuration changed in this panel applies without a build,
+  so restoring a build does not restore configuration.
+- **The fallback is only as new as your last successful deploy.** If nothing has succeeded yet on a fresh
+  server, the installer seeds the copy from the very first build, so there is always something to fall
+  back to — but on a project where every recent deploy failed, "the last good version" means exactly
+  that, and may be older than you expect. The deployment history tells you which one it is.
 
 ---
 
