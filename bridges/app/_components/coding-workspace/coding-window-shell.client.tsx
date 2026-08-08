@@ -1017,44 +1017,52 @@ showOpenAiPanel, showEnvEditor,
         </span>
 
 
-        {/* The guide sits immediately left of Deploy: it is the page that explains what Deploy is for. */}
+        {/* Below sm the footer keeps the icons and drops the words (owner, 2026-08-08): the row already
+            carries four to six controls, and on a phone their labels push each other off the strip.
+            Every label survives in `title` and `aria-label`, so an icon-only button still names itself
+            on hover and to a screen reader — an unlabelled icon is a puzzle, not a compact design.
+            The guide's label is the longest, so it needs more room than the rest: it returns at lg. */}
         <button type="button" onClick={() => { setHowToBuildFirstRun(false); setShowHowToBuild((v) => !v); }}
+          title="How to build this project" aria-label="How to build this project"
           className={`inline-flex items-center gap-1 h-5 px-2 rounded border text-[10px] transition-colors ${showHowToBuild ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
-          <BookOpen size={10} />How to build this project
+          <BookOpen size={10} /><span className="hidden lg:inline">How to build this project</span>
         </button>
 
         {/* Deploy button */}
-        <button type="button" onClick={handleDeploy} disabled={deploying}
+        <button type="button" onClick={handleDeploy} disabled={deploying} title="Deploy" aria-label="Deploy"
           className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 disabled:pointer-events-none">
-          {deploying ? <Loader2 size={10} className="animate-spin" /> : <Rocket size={10} />}Deploy
+          {deploying ? <Loader2 size={10} className="animate-spin" /> : <Rocket size={10} />}
+          <span className="hidden sm:inline">Deploy</span>
         </button>
 
 
         {/* Git Pull + Push (real, only when connected) */}
         {gitConnected && (
           <>
-            <button type="button" onClick={handleGitPull} disabled={gitPulling || gitPushing}
+            <button type="button" onClick={handleGitPull} disabled={gitPulling || gitPushing} title="Pull" aria-label="Pull"
               className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-              {gitPulling ? <Loader2 size={10} className="animate-spin" /> : <ArrowDownToLine size={10} />}Pull
+              {gitPulling ? <Loader2 size={10} className="animate-spin" /> : <ArrowDownToLine size={10} />}
+              <span className="hidden sm:inline">Pull</span>
             </button>
-            <button type="button" onClick={handleGitPush} disabled={gitPulling || gitPushing}
+            <button type="button" onClick={handleGitPush} disabled={gitPulling || gitPushing} title="Push" aria-label="Push"
               className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-              {gitPushing ? <Loader2 size={10} className="animate-spin" /> : <ArrowUpFromLine size={10} />}Push
+              {gitPushing ? <Loader2 size={10} className="animate-spin" /> : <ArrowUpFromLine size={10} />}
+              <span className="hidden sm:inline">Push</span>
             </button>
           </>
         )}
 
         {/* Info button */}
-        <button type="button" onClick={handleInfo}
+        <button type="button" onClick={handleInfo} title="Info" aria-label="Info"
           className={`inline-flex items-center gap-1 h-5 px-2 rounded border text-[10px] transition-colors ${showInfo ? "border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:text-yellow-300" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
-          <Info size={10} />Info
+          <Info size={10} /><span className="hidden sm:inline">Info</span>
         </button>
 
         {/* Go to Pro */}
         {PRO_URL && (
-          <a href={PRO_URL} target="_blank" rel="noopener noreferrer"
+          <a href={PRO_URL} target="_blank" rel="noopener noreferrer" title="Pro" aria-label="Pro"
             className="inline-flex items-center gap-1 h-5 px-2 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-            <Zap size={10} />Pro
+            <Zap size={10} /><span className="hidden sm:inline">Pro</span>
           </a>
         )}
 
