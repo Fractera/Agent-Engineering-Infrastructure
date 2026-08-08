@@ -63,6 +63,9 @@ export function WorkspaceController() {
 
 
   const isMobile = windowWidth > 0 && windowWidth < 768;
+  // Dragging a window is worth having only where there is canvas to drag it across. Below Tailwind's
+  // xl (1280px) the preview opens inline, between the header and the footer, like any other page.
+  const wideEnoughToFloat = windowWidth >= 1280;
 
   const fetchSession = useCallback(async () => {
     try {
@@ -200,8 +203,11 @@ export function WorkspaceController() {
         />
       )}
 
-      {/* ── Site preview window ── */}
-      <SitePreviewWindow open={siteOpen} onClose={() => setSiteOpen(false)} siteUrl={urls.appUrl} />
+      {/* ── Site preview — floating only on a wide screen. Narrower than xl it is rendered INSIDE the
+             workspace shell instead, so it obeys the same top and bottom anchors as every other page. ── */}
+      {wideEnoughToFloat && (
+        <SitePreviewWindow open={siteOpen} onClose={() => setSiteOpen(false)} siteUrl={urls.appUrl} />
+      )}
 
       {/* ── Auth modal ── */}
       <AuthLoginModal

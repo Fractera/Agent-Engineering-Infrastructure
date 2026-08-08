@@ -461,6 +461,29 @@ export function AppSettingsHelp() {
   );
 }
 
+// Preview. The one thing that must be said here: what you are looking at is the DEPLOYED version, which
+// is not necessarily the version you are editing. Someone who assumes otherwise concludes their change
+// did nothing and starts undoing work that was never wrong.
+export function PreviewHelp() {
+  return (
+    <HelpNote title="App Preview — what exactly you are looking at">
+      <p>
+        <strong>This is the version running on the server.</strong> It is what your visitors see right now:
+        the build that was deployed, not the files as they stand this second.
+      </p>
+      <p>
+        <strong>It can differ from your local copy.</strong> Work in progress on your own machine appears
+        here only after you push it, pull it on the server and deploy. Until then the two versions are
+        allowed to disagree — and this window always shows the deployed one.
+      </p>
+      <p>
+        To see how the local copy, the repository and this server fit together, open{" "}
+        <strong>How to build this project</strong> in the footer.
+      </p>
+    </HelpNote>
+  );
+}
+
 // Languages. Wording from the owner (2026-08-08); the routing claims are the ones proxy.ts actually
 // implements — single-language mode 301-redirects /en/about to /about and rewrites it back inside.
 export function LanguagesHelp() {

@@ -26,6 +26,7 @@ import { LanguagesView } from "./platform/languages-view.client";
 import { ParallelRoutesSelector } from "./parallel-routes/parallel-routes-selector.client";
 import { AppFeaturesPanel } from "./app-features-panel.client";
 import { HowToBuildPanel, hasSeenHowToBuild } from "./how-to-build-panel.client";
+import { SitePreviewWindow } from "../site-preview-window.client";
 import { IdleCanvas } from "./idle-canvas.client";
 import type { ComponentType } from "react";
 
@@ -198,6 +199,24 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
     setShowSiteSettings(false);
    
   }, [requestedSettingsPanel]);
+  // Every page that can occupy the workspace. Written once so the two rules below — close the login
+  // drawer, close the preview — cannot drift apart as pages are added.
+  const anyPanelOpen =
+    showInfo || showDbBrowser || showUsers || showMediaLibrary || showHelp || showDomainPanel ||
+    showOpenAiPanel || showEnvEditor || showSiteSettings || showLanguages || showParallelRoutes ||
+    showAppFeatures || showHowToBuild || showVectorPanel || showMapPanel || showLightRag ||
+    showChannels || showAuthMethods || showGitHub || showExport || showImport;
+
+  // The preview is a page like the others, so it obeys the same rule: opening anything from the menu
+  // closes it. Without this the floating window stayed on top of whatever was just opened, and on a
+  // narrow screen two pages fought for the same area.
+  useEffect(() => {
+    if (anyPanelOpen && isPreviewOpen) onPreviewClose?.();
+    // onPreviewClose is a parent callback recreated on each render — depending on it would fire this
+    // effect on every render instead of on a real change of state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [anyPanelOpen, isPreviewOpen]);
+
   // Login methods is a sibling slide-out drawer (same slot/zIndex as the others).
   // Rather than add setShowAuthMethods(false) to every other menu handler, close
   // it whenever any other panel opens — keeps the drawers mutually exclusive.
@@ -678,6 +697,15 @@ showOpenAiPanel, showEnvEditor,
       {showParallelRoutes && (
         <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 20 }}>
           <ParallelRoutesSelector onBack={() => setShowParallelRoutes(false)} />
+        </div>
+      )}
+
+      {/* ── App preview, inline (narrower than xl) ── */}
+      {/* REFERENCE LAYOUT (Users) — anchors for the height, stretch for the width. Same treatment as any
+          page from the menu, which is the point: on a narrow screen the preview IS a page. */}
+      {isPreviewOpen && windowWidth > 0 && windowWidth < 1280 && (
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 25 }}>
+          <SitePreviewWindow open mode="inline" onClose={() => onPreviewClose?.()} siteUrl={urls.appUrl} />
         </div>
       )}
 
