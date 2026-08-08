@@ -1,6 +1,6 @@
 import express from 'express'
 import cors from 'cors'
-import { readFileSync, writeFileSync } from 'fs'
+import { readFileSync, writeFileSync, readdirSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { spawn } from 'child_process'
@@ -51,9 +51,30 @@ const DEFAULT_CONFIG = {
   center: [48.8566, 2.3522],                               // [lat,lon] — стартовый вид до провижининга
   bbox: [48.12, 1.44, 49.24, 3.56],                        // [minLat,minLon,maxLat,maxLon]
 }
+// Регион, который РЕАЛЬНО загружен в движок, — по файлу выгрузки на диске.
+//
+// Зачем: конфиг может о регионе не знать (свежий сервер; провижин, дошедший до
+// запуска движка, но не до записи конфига), и тогда пустая строка врала бы в
+// обратную сторону — «регион не выбран» при работающих маршрутах. Проверено
+// живьём на этом сервере: файла конфига нет, а `ile-de-france-latest.osrm`
+// загружен и отвечает. Диск — единственный источник правды о том, что загружено:
+// движок запущен ровно одной командой на ровно один `.osrm`.
+const OSRM_DATA_DIR = process.env.GEO_OSRM_DIR ?? '/opt/fractera-geo/osrm'
+const regionOnDisk = () => {
+  try {
+    const f = readdirSync(OSRM_DATA_DIR).find((n) => n.endsWith('.osrm'))
+    return f ? f.replace(/\.osrm$/, '') : ''
+  } catch { return '' }
+}
+
 const readConfig = () => {
-  try { return { ...DEFAULT_CONFIG, ...JSON.parse(readFileSync(CONFIG_PATH, 'utf8')) } }
-  catch { return DEFAULT_CONFIG }
+  let cfg
+  try { cfg = { ...DEFAULT_CONFIG, ...JSON.parse(readFileSync(CONFIG_PATH, 'utf8')) } }
+  catch { cfg = { ...DEFAULT_CONFIG } }
+  // Имя из конфига авторитетнее (провижин пишет туда же центр и рамку), но если
+  // его нет — берём то, что действительно лежит на диске, и только затем пусто.
+  if (!String(cfg.region ?? '').trim()) cfg.region = regionOnDisk()
+  return cfg
 }
 // Санитизация правки конфига — принимаем только известные поля, чужого не пишем (единственный источник — этот файл).
 const sanitizeConfig = (body, cur) => ({
