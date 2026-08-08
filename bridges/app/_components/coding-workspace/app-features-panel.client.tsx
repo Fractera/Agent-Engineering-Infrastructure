@@ -218,25 +218,6 @@ export function AppFeaturesPanel({ onClose }: Props) {
             })}
           </div>
 
-          {/* Two pages that open tomorrow (owner, 2026-08-08). They are placed now so the section
-              has its final shape; they are DISABLED rather than silently inert, because a button
-              that looks alive and does nothing reads as a broken product, not as an unfinished one. */}
-          <div className="flex flex-col gap-2 max-w-xl mt-6 pt-4 border-t border-border">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Navigation
-            </span>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" disabled title="Opens tomorrow">
-                Top menu buttons
-              </Button>
-              <Button variant="outline" size="sm" disabled title="Opens tomorrow">
-                Footer pages
-              </Button>
-            </div>
-            <span className="text-[10px] text-muted-foreground">
-              Both open their own page — coming next.
-            </span>
-          </div>
         </div>
       )}
 

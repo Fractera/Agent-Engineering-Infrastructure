@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
 import { getAdminStrings, detectBrowserLang, DEFAULT_ADMIN_LANG } from "@/lib/i18n/admin-strings";
-import { Menu, X as XIcon, Loader2, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LogOut, CircleUserRound, Map as MapIcon, Brain, MessagesSquare, Languages, Columns3, SlidersHorizontal, BookOpen, History } from "lucide-react";
+import { Menu, X as XIcon, Loader2, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LogOut, CircleUserRound, Map as MapIcon, Brain, MessagesSquare, Languages, Columns3, SlidersHorizontal, BookOpen, History, PanelTop, PanelBottom, Cookie } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { COMING_SOON } from "./platforms";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -28,6 +28,7 @@ import { AppFeaturesPanel } from "./app-features-panel.client";
 import { HowToBuildPanel, hasSeenHowToBuild } from "./how-to-build-panel.client";
 import { SitePreviewWindow } from "../site-preview-window.client";
 import { DeployHistoryPanel } from "./deploy-history-panel.client";
+import { PlaceholderPanel } from "./placeholder-panel.client";
 import { IdleCanvas } from "./idle-canvas.client";
 import type { ComponentType } from "react";
 
@@ -127,6 +128,8 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   const [showParallelRoutes, setShowParallelRoutes] = useState(false);
   const [showAppFeatures, setShowAppFeatures]       = useState(false);
   const [showDeployHistory, setShowDeployHistory]   = useState(false);
+  // Pages whose settings are built later: one state holding the open one's title, not three booleans.
+  const [placeholder, setPlaceholder]               = useState<string | null>(null);
   const [showHowToBuild, setShowHowToBuild]         = useState(false);
   const [howToBuildFirstRun, setHowToBuildFirstRun] = useState(false);
   const [showDomainPanel, setShowDomainPanel]       = useState(false);
@@ -167,6 +170,17 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
       .catch(() => setProjectState(null));
   }, []);
   useEffect(() => { loadProjectState(); }, [loadProjectState]);
+  // null while unknown — an entry is never painted orange on a failed probe, only on a definite "no key".
+  const [openAiKeySet, setOpenAiKeySet] = useState<boolean | null>(null);
+  const loadOpenAiKeyState = useCallback(() => {
+    fetch("/api/config/embeddings", { cache: "no-store", credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setOpenAiKeySet(typeof d?.configured === "boolean" ? d.configured : null))
+      .catch(() => setOpenAiKeySet(null));
+  }, []);
+  useEffect(() => { loadOpenAiKeyState(); }, [loadOpenAiKeyState]);
+  // Re-checked when the key panel closes, so the warning disappears the moment a key is saved.
+  useEffect(() => { if (!showOpenAiPanel) loadOpenAiKeyState(); }, [showOpenAiPanel, loadOpenAiKeyState]);
   // First visit ever: the guide opens itself once, carrying a welcome block. Checked on the client only,
   // after mount — localStorage does not exist while the page is being rendered on the server.
   useEffect(() => {
@@ -201,13 +215,28 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
     setShowSiteSettings(false);
    
   }, [requestedSettingsPanel]);
-  // Every page that can occupy the workspace. Written once so the two rules below — close the login
-  // drawer, close the preview — cannot drift apart as pages are added.
-  const anyPanelOpen =
+  // Every page that can occupy the workspace. Written once so the rules below — close the login
+  // drawer, close the preview, close a placeholder — cannot drift apart as pages are added.
+  const otherPanelsOpen =
     showInfo || showDbBrowser || showUsers || showMediaLibrary || showHelp || showDomainPanel ||
     showOpenAiPanel || showEnvEditor || showSiteSettings || showLanguages || showParallelRoutes ||
     showAppFeatures || showHowToBuild || showVectorPanel || showMapPanel || showLightRag ||
     showChannels || showAuthMethods || showGitHub || showExport || showImport || showDeployHistory;
+  const anyPanelOpen = otherPanelsOpen || placeholder !== null;
+
+  // A placeholder is a page like any other, so opening a real one closes it. Handled here rather than
+  // in twenty click handlers, which is where such a rule goes to die.
+  useEffect(() => { if (otherPanelsOpen) setPlaceholder(null); }, [otherPanelsOpen]);
+
+  // Opening a placeholder must clear whatever page was already up — the same courtesy every other menu
+  // entry does by hand in its own handler.
+  function closeOthers() {
+    setShowSiteSettings(false); setShowLanguages(false); setShowParallelRoutes(false); setShowAppFeatures(false);
+    setShowUsers(false); setShowMediaLibrary(false); setShowDbBrowser(false); setShowVectorPanel(false);
+    setShowLightRag(false); setShowMapPanel(false); setShowOpenAiPanel(false); setShowDomainPanel(false);
+    setShowAuthMethods(false); setShowChannels(false); setShowEnvEditor(false); setShowInfo(false);
+    setShowHelp(false); setShowGitHub(false); setShowDeployHistory(false); setShowHowToBuild(false);
+  }
 
   // The preview is a page like the others, so it obeys the same rule: opening anything from the menu
   // closes it. Without this the floating window stayed on top of whatever was just opened, and on a
@@ -530,6 +559,22 @@ showOpenAiPanel, showEnvEditor,
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <SlidersHorizontal size={11} />App features
               </button>
+              {/* The three pages below belong to the same subject as App features — what the app shows
+                  and where it takes you — so they stand under it in the MENU rather than as buttons
+                  inside another page (owner, 2026-08-08). Their settings are built later; the entries
+                  exist now so their place is settled and does not move under the user's hand. */}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setPlaceholder(p => p === "Top menu buttons" ? null : "Top menu buttons"); closeOthers(); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                <PanelTop size={11} />Top menu buttons
+              </button>
+              <button type="button" onClick={() => { setDataMenuOpen(false); setPlaceholder(p => p === "Footer pages" ? null : "Footer pages"); closeOthers(); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                <PanelBottom size={11} />Footer pages
+              </button>
+              <button type="button" onClick={() => { setDataMenuOpen(false); setPlaceholder(p => p === "Cookie banner settings" ? null : "Cookie banner settings"); closeOthers(); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
+                <Cookie size={11} />Cookie banner settings
+              </button>
               <div className="h-px bg-border mx-2" />
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowUsers((v) => !v); setShowMediaLibrary(false); setShowEnvEditor(false); setShowDbBrowser(false); setShowInfo(false); setShowDomainPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
@@ -564,9 +609,17 @@ showOpenAiPanel, showEnvEditor,
                 <MapIcon size={11} />Map settings
               </button>
               <div className="h-px bg-border mx-2" />
+              {/* Same treatment as the domain entry (owner, 2026-08-08): a missing key is not a preference,
+                  it is a part of the project that does not work yet — the vector store, the knowledge
+                  graph and everything that thinks all wait on it. So the entry says so in orange until
+                  the key exists, instead of looking exactly like the settings that are already done. */}
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowOpenAiPanel((v) => !v); setShowMapPanel(false); setShowVectorPanel(false); setShowLightRag(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                <KeyRound size={11} />OpenAI settings
+                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] transition-colors hover:bg-muted">
+                {openAiKeySet === false
+                  ? <AlertTriangle size={11} className="text-orange-500" />
+                  : <KeyRound size={11} className="text-foreground" />}
+                <span className={openAiKeySet === false ? "text-orange-500 font-medium" : "text-foreground"}>OpenAI settings</span>
+                {openAiKeySet === false && <span className="ml-auto text-[10px] text-orange-500/80">no key</span>}
               </button>
               <div className="h-px bg-border mx-2" />
               <button type="button" onClick={() => { setDataMenuOpen(false); setShowDomainPanel((v) => !v); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); }}
@@ -705,6 +758,14 @@ showOpenAiPanel, showEnvEditor,
       {showParallelRoutes && (
         <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 20 }}>
           <ParallelRoutesSelector onBack={() => setShowParallelRoutes(false)} />
+        </div>
+      )}
+
+      {/* ── Pages whose settings are built later ── */}
+      {/* REFERENCE LAYOUT (Users) — anchors for the height, stretch for the width. */}
+      {placeholder && (
+        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 20 }}>
+          <PlaceholderPanel title={placeholder} onClose={() => setPlaceholder(null)} />
         </div>
       )}
 
