@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { toast } from "sonner";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
 import { getAdminStrings, detectBrowserLang, DEFAULT_ADMIN_LANG } from "@/lib/i18n/admin-strings";
-import { Menu, X as XIcon, Loader2, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LayoutGrid, LogOut, CircleUserRound, Map as MapIcon, Brain, MessagesSquare, Languages, Columns3, SlidersHorizontal } from "lucide-react";
+import { Menu, X as XIcon, Loader2, Settings, Download, Upload, RefreshCw, Info, Zap, ImagePlus, Database, Copy, Check, CornerDownLeft, Users, Rocket, BrainCircuit, Bot, HelpCircle, GitBranch, ArrowDownToLine, ArrowUpFromLine, Globe, ClipboardPaste, AlertTriangle, Repeat, Send, KeyRound, Palette, LogOut, CircleUserRound, Map as MapIcon, Brain, MessagesSquare, Languages, Columns3, SlidersHorizontal } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { COMING_SOON } from "./platforms";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -22,7 +22,6 @@ import { ChannelsPanel } from "./channels-panel.client";
 import { ExportPanel, ImportPanel } from "./backup-panels.client";
 import { GitHubPanel } from "./github-panel.client";
 import { SiteSettingsPanel } from "./site-settings-panel.client";
-import { PlatformSettingsPanel } from "./platform-settings-panel.client";
 import { LanguagesView } from "./platform/languages-view.client";
 import { ParallelRoutesSelector } from "./parallel-routes/parallel-routes-selector.client";
 import { AppFeaturesPanel } from "./app-features-panel.client";
@@ -120,7 +119,6 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   const [showDbBrowser, setShowDbBrowser]           = useState(false);
   const [showUsers, setShowUsers]                   = useState(false);
   const [showSiteSettings, setShowSiteSettings]     = useState(false);
-  const [showPlatform, setShowPlatform]             = useState(false);
   const [showLanguages, setShowLanguages]           = useState(false);
   const [showParallelRoutes, setShowParallelRoutes] = useState(false);
   const [showAppFeatures, setShowAppFeatures]       = useState(false);
@@ -178,7 +176,7 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
     setShowDomainPanel(false);
 
     setShowSiteSettings(false);
-    setShowPlatform(false);
+   
   }, [requestedSettingsPanel]);
   // Login methods is a sibling slide-out drawer (same slot/zIndex as the others).
   // Rather than add setShowAuthMethods(false) to every other menu handler, close
@@ -186,12 +184,12 @@ export function CodingWindowShell({ height, windowWidth, isMobile = false, isAut
   useEffect(() => {
     if (showInfo || showDbBrowser || showUsers || showMediaLibrary || showHelp || showDomainPanel ||
         showOpenAiPanel || showEnvEditor ||
-        showSiteSettings || showPlatform || showLanguages || showParallelRoutes || showAppFeatures) {
+        showSiteSettings || showLanguages || showParallelRoutes || showAppFeatures) {
       setShowAuthMethods(false);
     }
   }, [showInfo, showDbBrowser, showUsers, showMediaLibrary, showHelp, showDomainPanel,
 showOpenAiPanel, showEnvEditor,
-      showSiteSettings, showPlatform, showLanguages, showParallelRoutes, showAppFeatures]);
+      showSiteSettings, showLanguages, showParallelRoutes, showAppFeatures]);
   const deployLogRef    = useRef<HTMLDivElement>(null);
   const updateLogRef    = useRef<HTMLDivElement>(null);
 
@@ -441,19 +439,19 @@ showOpenAiPanel, showEnvEditor,
                   hold what the project accumulates. Languages follow it as their own page:
                   the built language set is a decision of the same rank, and it was buried
                   inside App Settings where nobody would look for it. */}
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowSiteSettings((v) => !v); setShowLanguages(false); setShowPlatform(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowSiteSettings((v) => !v); setShowLanguages(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Palette size={11} />App Settings
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowLanguages((v) => !v); setShowSiteSettings(false); setShowPlatform(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowLanguages((v) => !v); setShowSiteSettings(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Languages size={11} />Languages
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowParallelRoutes((v) => !v); setShowLanguages(false); setShowSiteSettings(false); setShowPlatform(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowParallelRoutes((v) => !v); setShowLanguages(false); setShowSiteSettings(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Columns3 size={11} />Parallel routing
               </button>
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowAppFeatures((v) => !v); setShowParallelRoutes(false); setShowLanguages(false); setShowSiteSettings(false); setShowPlatform(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowAppFeatures((v) => !v); setShowParallelRoutes(false); setShowLanguages(false); setShowSiteSettings(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <SlidersHorizontal size={11} />App features
               </button>
@@ -508,7 +506,7 @@ showOpenAiPanel, showEnvEditor,
                   sign-in methods need a domain + HTTPS, so the entry is hidden
                   entirely in IP/insecure mode. */}
               {secure && (
-                <button type="button" onClick={() => { setDataMenuOpen(false); setShowAuthMethods((v) => !v); setShowDomainPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowOpenAiPanel(false); setShowSiteSettings(false); setShowPlatform(false); }}
+                <button type="button" onClick={() => { setDataMenuOpen(false); setShowAuthMethods((v) => !v); setShowDomainPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowOpenAiPanel(false); setShowSiteSettings(false); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                   <KeyRound size={11} />Login methods
                 </button>
@@ -532,16 +530,14 @@ showOpenAiPanel, showEnvEditor,
               {/* Env Variables belongs with export and import (owner, 2026-08-08):
                   all three are about what the server carries in and out of itself —
                   data in an archive, configuration in a file. */}
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowSiteSettings(false); setShowPlatform(false); }}
+              <button type="button" onClick={() => { setDataMenuOpen(false); setShowEnvEditor((v) => !v); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowSiteSettings(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
                 <Settings size={11} />Env Variables
               </button>
-              {/* Bottom section: Platform (App Settings and Languages moved to the top). */}
+              {/* Platform is gone (owner, 2026-08-08): parallel routing and languages became their
+                  own pages, its last switch moved to App features, and what remained was a panel
+                  that named a subject nobody configures in one place. */}
               <div className="h-px bg-border mx-2" />
-              <button type="button" onClick={() => { setDataMenuOpen(false); setShowPlatform((v) => !v); setShowSiteSettings(false); setShowLanguages(false); setShowEnvEditor(false); setShowInfo(false); setShowDbBrowser(false); setShowUsers(false); setShowMediaLibrary(false); setShowHelp(false); setShowDomainPanel(false); setShowOpenAiPanel(false); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
-                <LayoutGrid size={11} />Platform
-              </button>
               {gitState === "working" && (
                 <button type="button" onClick={() => { setDataMenuOpen(false); setShowGitHub(true); setShowUsers(false); setShowMediaLibrary(false); setShowDbBrowser(false); setShowVectorPanel(false); setShowLightRag(false); setShowMapPanel(false); setShowOpenAiPanel(false); setShowEnvEditor(false); setShowInfo(false); setShowHelp(false); setShowDomainPanel(false); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-[11px] text-foreground hover:bg-muted transition-colors">
@@ -639,12 +635,7 @@ showOpenAiPanel, showEnvEditor,
         </div>
       )}
 
-      {/* ── Platform panel (footer features) ── */}
-      {showPlatform && (
-        <div style={{ position: "absolute", top: CAROUSEL_H, left: 0, right: 0, bottom: FOOTER_H, zIndex: 20 }}>
-          <PlatformSettingsPanel onClose={() => setShowPlatform(false)} />
-        </div>
-      )}
+
 
       {/* ── Env editor panel ── */}
       {/* REFERENCE LAYOUT (Users) — anchors for the height, stretch for the width. */}

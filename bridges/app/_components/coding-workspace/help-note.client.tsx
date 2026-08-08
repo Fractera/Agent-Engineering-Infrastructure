@@ -534,35 +534,3 @@ export function ParallelRoutingHelp() {
   );
 }
 
-export function PlatformHelp() {
-  return (
-    <HelpNote title="Platform — languages, theme and how pages are assembled">
-      <p>
-        <strong>What it controls.</strong> Three things that shape every page at once: which languages the
-        site is built in, how it looks, and how its parts are composed. Change them here and they apply
-        everywhere, rather than page by page.
-      </p>
-      <p>
-        <strong>Languages are a build-time decision.</strong> This is the part that surprises people. The
-        set of languages is baked into the compiled site, not read on each request — that is what lets
-        pages be served as ready HTML instead of being assembled per visitor. So adding a language means a
-        rebuild, and the change appears when the rebuild finishes, not the moment you save.
-      </p>
-      <p>
-        <strong>Routing, in plain terms.</strong> A page is put together from slots — a header, a footer,
-        a body — that are rendered independently. It sounds abstract and has a very practical effect:
-        changing what fills one slot does not force the rest of the page to be rebuilt or re-fetched.
-      </p>
-      <p>
-        <strong>The theme is not decoration alone.</strong> It sets the colours the whole interface derives
-        from, including contrast in light and dark. A theme chosen for looks and not for legibility is
-        felt by every visitor on every page.
-      </p>
-      <p>
-        <strong>These settings travel.</strong> They live in the same configuration Export carries as
-        &ldquo;application settings&rdquo;, so a restored server looks like the one you configured — not
-        like a fresh install.
-      </p>
-    </HelpNote>
-  );
-}

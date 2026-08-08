@@ -16,7 +16,7 @@ import { Switch } from "@/components/ui/switch";
 type Cfg = Record<string, unknown>;
 type Props = { onClose: () => void };
 
-type FeatureKey = "auth" | "breadcrumbs" | "faq" | "themeToggle" | "widthToggle" | "languageSwitcher";
+type FeatureKey = "auth" | "breadcrumbs" | "faq" | "themeToggle" | "widthToggle" | "languageSwitcher" | "footerPages";
 
 type Feature = {
   key: FeatureKey;
@@ -72,6 +72,16 @@ const FEATURES: Feature[] = [
       "Unavailable while parallel routing is on: there the page layout is decided by its own structure.",
     on: true,
     offWhenParallel: true,
+  },
+  {
+    // Arrived here when the Platform panel was removed (owner, 2026-08-08) — it was the last switch
+    // living there, and a panel is not a home for a setting nobody would look for in it.
+    key: "footerPages",
+    label: "Footer navigation links",
+    description:
+      "Shows the links to your project's pages in the footer. Turn it off for a single-page site that has " +
+      "nowhere else to go.",
+    on: true,
   },
   {
     key: "languageSwitcher",
@@ -136,6 +146,7 @@ export function AppFeaturesPanel({ onClose }: Props) {
       const legacy = (config.footerPlugins ?? {}) as Record<string, boolean>;
       const footerPlugins = {
         ...legacy,
+        footerPages: features.footerPages,
         themeToggle: features.themeToggle,
         widthToggle: features.widthToggle,
         languageSwitcher: features.languageSwitcher,
