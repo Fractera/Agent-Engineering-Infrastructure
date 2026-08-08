@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, X, RefreshCw, Download, CheckCircle2, XCircle, AlertTriangle, Clock } from "lucide-react";
+import { Loader2, X, RefreshCw, Download, CheckCircle2, XCircle, AlertTriangle, Clock, PanelRightOpen, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -48,6 +48,20 @@ export function DeployHistoryPanel({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [openRun, setOpenRun] = useState<Run | null>(null);
   const [loadingLog, setLoadingLog] = useState(false);
+  // Two columns need width. Below 768px the log column would be about a finger wide, so the page
+  // becomes one column — the list — and the log arrives as a drawer over it. Measured with matchMedia
+  // rather than a prop: the panel is the only thing that cares, and it should not depend on a parent
+  // remembering to pass a width down.
+  const [wide, setWide] = useState(true);
+  const [logOpen, setLogOpen] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const apply = () => setWide(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -71,6 +85,8 @@ export function DeployHistoryPanel({ onClose }: { onClose: () => void }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? `${res.status}`);
       setOpenRun(data.run ?? run);
+      // On a narrow screen picking a run is also the request to see it — the drawer comes with it.
+      if (!wide) setLogOpen(true);
     } catch (e) {
       toast.error(String(e));
     } finally {
@@ -104,9 +120,21 @@ export function DeployHistoryPanel({ onClose }: { onClose: () => void }) {
         </button>
       </div>
 
-      <div className="flex-1 min-h-0 flex">
-        {/* Runs */}
-        <div className="w-1/2 min-w-0 border-r border-border overflow-y-auto">
+      <div className="flex-1 min-h-0 flex relative overflow-hidden">
+        {/* Runs — half the page when there is room, the whole of it when there is not. */}
+        <div className={`${wide ? "w-1/2 border-r border-border" : "w-full"} min-w-0 overflow-y-auto`}>
+          {/* The way back to the log after the drawer was closed: without it a narrow screen could
+              show a selected run with no visible way to look at it again. */}
+          {!wide && openRun && (
+            <button
+              type="button"
+              onClick={() => setLogOpen(true)}
+              className="w-full flex items-center gap-2 px-3 py-2 border-b border-border bg-muted/50 text-[11px] text-foreground hover:bg-muted transition-colors"
+            >
+              <PanelRightOpen size={12} />
+              Show the log of the selected deployment
+            </button>
+          )}
           {runs === null ? (
             <div className="flex items-center justify-center gap-2 text-muted-foreground text-xs py-10">
               <Loader2 size={13} className="animate-spin" />Loading…
@@ -138,8 +166,34 @@ export function DeployHistoryPanel({ onClose }: { onClose: () => void }) {
           )}
         </div>
 
-        {/* Log of the selected run */}
-        <div className="w-1/2 min-w-0 flex flex-col">
+        {/* Click-away for the drawer. Only on a narrow screen, and only while it is out. */}
+        {!wide && logOpen && (
+          <div className="absolute inset-0 bg-black/40 z-10" onClick={() => setLogOpen(false)} />
+        )}
+
+        {/* Log of the selected run. Wide: the right half of the page. Narrow: a drawer that slides in
+            from the right across 90% of the width, leaving a strip of the list visible so it stays
+            obvious what is underneath. */}
+        <div
+          className={wide
+            ? "w-1/2 min-w-0 flex flex-col"
+            : "absolute inset-y-0 right-0 z-20 flex flex-col bg-background border-l border-border shadow-2xl"}
+          style={wide ? undefined : {
+            width: "90%",
+            transform: logOpen ? "translateX(0)" : "translateX(100%)",
+            transition: "transform 260ms ease-in-out",
+            visibility: logOpen ? "visible" : "hidden",
+          }}
+        >
+          {!wide && (
+            <button
+              type="button"
+              onClick={() => setLogOpen(false)}
+              className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            >
+              <ChevronRight size={12} />Back to the list
+            </button>
+          )}
           {loadingLog ? (
             <div className="flex-1 flex items-center justify-center text-muted-foreground text-xs gap-2">
               <Loader2 size={13} className="animate-spin" />Loading log…
