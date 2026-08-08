@@ -292,6 +292,66 @@
       "mailSubject": "New tool for my Fractera project",
       "note": "Say what the tool should do and where it fits in your work. That is enough for a first reply — a precise specification is not expected of you."
     },
+    "backup": {
+      "empty": "empty",
+      "secretTag": "secret",
+      "secretWarning": "The two parts marked “secret” contain credentials: with them, anyone who opens the archive can act as your bot or reach your services. They are unchecked by default. If you tick them, keep the file off shared drives and out of chats.",
+      "neverExported": "The OpenAI key is never exported — you enter it again after restoring. Map data is never exported either: it is over a gigabyte, and the map page re-downloads its region on demand.",
+      "defaultTotal": "≈ {size} with the default selection, before compression",
+      "download": "Download archive",
+      "choose": "Choose an archive",
+      "chooseAnother": "Choose another archive",
+      "reading": "Reading…",
+      "nothingYet": "Nothing is written until you choose what to restore. The archive is read first and its contents are listed here.",
+      "unrecognised": "Nothing recognisable inside. This does not look like a Fractera backup.",
+      "createdAt": "Archive created {when}.",
+      "selected": "{picked} of {total} selected",
+      "restore": "Restore selected",
+      "restoring": "Restoring…",
+      "restored": "Restored: {summary}",
+      "nothingNeeded": "Nothing needed changing",
+      "failed": "Import failed",
+      "effects": {
+        "db": {
+          "label": "Database and vector memory",
+          "effect": "rows are ADDED; anything already here keeps its value"
+        },
+        "files": {
+          "label": "Files and their details",
+          "effect": "only files you do not already have are written"
+        },
+        "knowledge": {
+          "label": "Knowledge base (graph)",
+          "effect": "REPLACES the current graph entirely"
+        },
+        "config": {
+          "label": "Application settings",
+          "effect": "REPLACES branding, languages, theme and routing"
+        },
+        "channels": {
+          "label": "Communication channels",
+          "effect": "REPLACES the bot token and the linked account"
+        },
+        "env": {
+          "label": "Environment file",
+          "effect": "REPLACES this server's environment file"
+        }
+      },
+      "helpExportLabel": "What a backup is made of",
+      "helpWhatTitle": "What goes in.",
+      "helpWhat": "Your rows and the meaning-search over them travel together — they share one SQLite file. Files come with the record of what each one is. The knowledge graph is the most expensive part here: rebuilding it means paying for a model to read every document again.",
+      "helpWhenTitle": "When to take one.",
+      "helpWhen": "Before anything that rewrites data — a restore, a migration to another machine, a risky experiment. A deploy does not need one: it restores code, and code lives in your repository.",
+      "helpNotTitle": "What a backup does not cover.",
+      "helpNot": "It is code-blind. Restoring an archive does not bring back the version of your application that produced the data, and a build rolled back does not roll back rows. Those are two different histories, kept in two different places on purpose.",
+      "helpImportLabel": "How restoring behaves",
+      "helpAddsTitle": "Parts that add.",
+      "helpAdds": "Rows and files are merged: what you already have keeps its value, and only what is missing is written. Running an import twice changes nothing the second time.",
+      "helpReplacesTitle": "Parts that replace.",
+      "helpReplaces": "The graph, application settings, channels and the environment file are written over what is here now. Those rows are marked in amber above, and the secret ones are left unchecked — a token or an environment must never be swapped by silent agreement.",
+      "helpOrderTitle": "Looking is separate from writing.",
+      "helpOrder": "The archive is inspected on the server first and its contents are listed. Nothing is touched until you confirm the parts — this is the one page where a mistake is not undone by pressing the other button."
+    },
     "database": {
       "noTables": "This database has no tables yet.",
       "empty": "This table is empty",
@@ -741,6 +801,66 @@
       "how": "Напишите нам, что вам нужно и для чего. По договорённости разработчик подключится к вашему серверу и настроит инструмент на месте — вы получите его родной частью проекта, а не очередной подпиской.",
       "mailSubject": "Новый инструмент для моего проекта Fractera",
       "note": "Достаточно сказать, что инструмент должен делать и где он встанет в вашей работе. Точного технического задания от вас не ждут."
+    },
+    "backup": {
+      "empty": "пусто",
+      "secretTag": "секрет",
+      "secretWarning": "Две части с пометкой «секрет» содержат учётные данные: с ними любой, кто откроет архив, сможет говорить от имени вашего бота и дотянуться до ваших служб. По умолчанию они не отмечены. Отметите — держите файл вне общих диcков и переписок.",
+      "neverExported": "Ключ OpenAI не выгружается никогда — после восстановления вы вводите его заново. Данные карты тоже не выгружаются: это больше гигабайта, а страница карты скачивает свой регион по требованию.",
+      "defaultTotal": "≈ {size} при выборе по умолчанию, до сжатия",
+      "download": "Скачать архив",
+      "choose": "Выбрать архив",
+      "chooseAnother": "Выбрать другой архив",
+      "reading": "Читаю…",
+      "nothingYet": "Пока вы не выберете, что восстанавливать, ничего не записывается. Архив сначала читается, и его содержимое перечисляется здесь.",
+      "unrecognised": "Внутри нет ничего узнаваемого. Это не похоже на резервную копию Fractera.",
+      "createdAt": "Архив создан {when}.",
+      "selected": "выбрано {picked} из {total}",
+      "restore": "Восстановить выбранное",
+      "restoring": "Восстанавливаю…",
+      "restored": "Восстановлено: {summary}",
+      "nothingNeeded": "Менять ничего не потребовалось",
+      "failed": "Загрузка не выполнена",
+      "effects": {
+        "db": {
+          "label": "База данных и векторная память",
+          "effect": "строки ДОБАВЛЯЮТСЯ; то, что здесь уже есть, сохраняет своё значение"
+        },
+        "files": {
+          "label": "Файлы и сведения о них",
+          "effect": "записываются только те файлы, которых у вас ещё нет"
+        },
+        "knowledge": {
+          "label": "База знаний (граф)",
+          "effect": "ЗАМЕНЯЕТ текущий граф целиком"
+        },
+        "config": {
+          "label": "Настройки приложения",
+          "effect": "ЗАМЕНЯЕТ брендинг, языки, тему и маршрутизацию"
+        },
+        "channels": {
+          "label": "Каналы связи",
+          "effect": "ЗАМЕНЯЕТ токен бота и связанную учётную запись"
+        },
+        "env": {
+          "label": "Файл окружения",
+          "effect": "ЗАМЕНЯЕТ файл окружения этого сервера"
+        }
+      },
+      "helpExportLabel": "Из чего состоит резервная копия",
+      "helpWhatTitle": "Что входит.",
+      "helpWhat": "Ваши строки и поиск по смыслу над ними едут вместе — у них один файл SQLite. Файлы едут вместе с записью о том, что каждый из них такое. Граф знаний здесь самая дорогая часть: собрать его заново значит снова оплатить чтение каждого документа моделью.",
+      "helpWhenTitle": "Когда её делать.",
+      "helpWhen": "Перед всем, что перезаписывает данные, — восстановлением, переездом на другую машину, рискованным опытом. Развёртыванию она не нужна: оно возвращает код, а код живёт в вашем репозитории.",
+      "helpNotTitle": "Чего копия не покрывает.",
+      "helpNot": "Она не знает о коде. Восстановление архива не вернёт ту версию приложения, которая эти данные породила, а откат сборки не откатит строки. Это две разные истории, и они намеренно хранятся в разных местах.",
+      "helpImportLabel": "Как ведёт себя восстановление",
+      "helpAddsTitle": "Части, которые добавляют.",
+      "helpAdds": "Строки и файлы сливаются: то, что у вас есть, сохраняет своё значение, записывается только недостающее. Повторная загрузка того же архива во второй раз ничего не меняет.",
+      "helpReplacesTitle": "Части, которые заменяют.",
+      "helpReplaces": "Граф, настройки приложения, каналы и файл окружения записываются поверх того, что здесь сейчас. Такие строки выше помечены оранжевым, а секретные оставлены неотмеченными — токен или окружение нельзя подменять молчаливым согласием.",
+      "helpOrderTitle": "Посмотреть и записать — разные вещи.",
+      "helpOrder": "Архив сначала осматривается на сервере, и его содержимое перечисляется. Пока вы не подтвердите части, ничего не затрагивается — это единственная страница, где ошибка не отменяется нажатием другой кнопки."
     },
     "database": {
       "noTables": "В этой базе пока нет таблиц.",

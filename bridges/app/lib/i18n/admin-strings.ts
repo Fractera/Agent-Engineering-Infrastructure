@@ -158,6 +158,22 @@ export type AdminStrings = {
     exampleImages: string; exampleVideo: string; exampleFlow: string; exampleOther: string;
     how: string; mailSubject: string; note: string;
   };
+  backup: {
+    empty: string; secretTag: string; secretWarning: string; neverExported: string;
+    defaultTotal: string; download: string;
+    choose: string; chooseAnother: string; reading: string; nothingYet: string;
+    unrecognised: string; createdAt: string; selected: string;
+    restore: string; restoring: string; restored: string; nothingNeeded: string; failed: string;
+    effects: Record<string, { label: string; effect: string }>;
+    helpExportLabel: string;
+    helpWhatTitle: string; helpWhat: string;
+    helpWhenTitle: string; helpWhen: string;
+    helpNotTitle: string; helpNot: string;
+    helpImportLabel: string;
+    helpAddsTitle: string; helpAdds: string;
+    helpReplacesTitle: string; helpReplaces: string;
+    helpOrderTitle: string; helpOrder: string;
+  };
   database: {
     noTables: string; empty: string; unavailable: string; rowsShown: string; noIdColumn: string;
     editTitle: string; valueLabel: string; cancel: string; save: string; delete: string;

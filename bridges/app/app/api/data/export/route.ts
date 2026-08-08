@@ -11,9 +11,18 @@ export async function GET(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const raw = req.nextUrl.searchParams.get("parts");
-  const wanted = raw
-    ? new Set(raw.split(",").map((s) => s.trim()).filter(Boolean))
+  // Две записи выбора, обе законные: `parts=db,files` — так их склеивает старая
+  // панель; `parts=db&parts=files` — так их отправляет ОБЫЧНАЯ HTML-форма с
+  // чекбоксами. Принимать надо обе, иначе форма без JavaScript отдала бы только
+  // первую часть и сделала это МОЛЧА — архив выглядел бы нормальным и оказался
+  // неполным. `getAll` вместо `get` — это и есть та страховка (шаг 501).
+  const raw = req.nextUrl.searchParams
+    .getAll("parts")
+    .flatMap((s) => s.split(","))
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const wanted = raw.length
+    ? new Set(raw)
     : new Set(BACKUP_PARTS.filter((p) => p.defaultOn).map((p) => p.id));
 
   try {
