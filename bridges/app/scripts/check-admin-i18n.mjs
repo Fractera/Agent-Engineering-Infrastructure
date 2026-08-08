@@ -48,11 +48,20 @@ if (!buildLangs.length) errors.push("не удалось прочитать ADMI
 
 // Плоские пути вида "pages.users.title" — так наборы ключей сравнимы независимо
 // от глубины вложенности.
+//
+// Массивы разворачиваются ПО ИНДЕКСУ ("activateBullets.0"), а не считаются одним
+// значением. Это не мелочь: список пунктов — законная структура, и разворот по
+// индексу заодно ловит РАЗНОЕ ЧИСЛО пунктов в языках. Проверка была слепа к
+// массивам и падала на них ложной ошибкой «пустое значение» (шаг 501).
 function flatten(obj, prefix = "") {
   const out = {};
   for (const [k, v] of Object.entries(obj)) {
     const key = prefix ? `${prefix}.${k}` : k;
-    if (v && typeof v === "object" && !Array.isArray(v)) Object.assign(out, flatten(v, key));
+    if (Array.isArray(v)) v.forEach((item, i) => {
+      if (item && typeof item === "object") Object.assign(out, flatten(item, `${key}.${i}`));
+      else out[`${key}.${i}`] = item;
+    });
+    else if (v && typeof v === "object") Object.assign(out, flatten(v, key));
     else out[key] = v;
   }
   return out;
