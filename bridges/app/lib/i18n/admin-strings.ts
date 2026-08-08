@@ -56,6 +56,22 @@ export type AdminStrings = {
   // page needs beyond that lives in its own section, so the shape of `pages`
   // never has to bend for one surface (step 501, Ф2).
   howToBuild: { welcomeTitle: string; welcomeBody: string; missing: string };
+  users: {
+    search: string; searchPlaceholder: string;
+    name: string; email: string; role: string; status: string;
+    active: string; blocked: string; empty: string;
+    total: string; pageOf: string; unavailable: string;
+    actions: string; edit: string; block: string; unblock: string; delete: string;
+    editTitle: string; nickname: string; roles: string; rolesHint: string;
+    cancel: string; save: string;
+    blockTitle: string; unblockTitle: string; deleteTitle: string;
+    blockBody: string; unblockBody: string; deleteBody: string;
+    updated: string; deleted: string; blockedToast: string; unblockedToast: string; failed: string;
+    helpLabel: string;
+    helpWhatTitle: string; helpWhat: string;
+    helpWhyTitle: string; helpWhy: string;
+    helpHowTitle: string; helpHow: string;
+  };
   // Long-form content read from `_content/` per language (see
   // lib/content/localized-content.ts). Shared by every page that shows a document.
   content: { englishFallback: string };
