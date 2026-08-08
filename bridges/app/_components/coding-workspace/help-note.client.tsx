@@ -530,11 +530,6 @@ export function ParallelRoutingHelp() {
         <strong>Prefer the familiar?</strong> Turn parallel routing off and work with a single-layer
         layout exactly as you are used to. Nothing else in the project depends on this choice.
       </p>
-      <p>
-        <strong>Where it stands here.</strong> The app currently in the slot has no area folders yet,
-        so the switch and the selection are saved but nothing on its pages changes. This paragraph
-        goes away when the app carries them.
-      </p>
     </HelpNote>
   );
 }
