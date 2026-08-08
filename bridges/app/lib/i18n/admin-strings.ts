@@ -223,6 +223,20 @@ export type AdminStrings = {
     helpEmptyTitle: string; helpEmpty: string;
     helpSecretsTitle: string; helpSecrets: string;
   };
+  channels: {
+    serviceDown: string; noToken: string; notLinked: string; linkedTo: string;
+    tokenRejected: string; currentBot: string;
+    tokenLabel: string; tokenPlaceholder: string; tokenReplace: string;
+    save: string; saving: string; saved: string; failed: string;
+    connect: string; relink: string; waiting: string; openTelegram: string;
+    linkedToast: string; linkTimeout: string; linkExpired: string; linkFailed: string;
+    channelOn: string; answersFrom: string; neverInvents: string;
+    helpLabel: string;
+    helpWhatTitle: string; helpWhat: string;
+    helpWhyTitle: string; helpWhy: string;
+    helpLinkTitle: string; helpLink: string;
+    helpOffTitle: string; helpOff: string;
+  };
   database: {
     noTables: string; empty: string; unavailable: string; rowsShown: string; noIdColumn: string;
     editTitle: string; valueLabel: string; cancel: string; save: string; delete: string;
