@@ -57,7 +57,6 @@ type Props = {
   height: number;
   windowWidth: number;
   isMobile?: boolean;
-  isAuthenticated?: boolean;
   isPreviewOpen?: boolean;
   onPreviewClose?: () => void;
   // (step 500) Embed sessions are gone with Hermes and LightRAG — nothing is
@@ -81,7 +80,7 @@ type Props = {
   onRegister?: () => void;
 };
 
-export function CodingWindowShell({ height, windowWidth, isMobile = false, isAuthenticated = true, isPreviewOpen = false, onPreviewClose, secure = false, insecure = false, requestedSettingsPanel = null, menuOpen = false, onMenuOpenChange, accountEmail = null, accountRoles = [], isVirtualArchitect = false, onSignOut, onRegister }: Props) {
+export function CodingWindowShell({ height, windowWidth, isMobile = false, isPreviewOpen = false, onPreviewClose, secure = false, insecure = false, requestedSettingsPanel = null, menuOpen = false, onMenuOpenChange, accountEmail = null, accountRoles = [], isVirtualArchitect = false, onSignOut, onRegister }: Props) {
   const urls = useMemo(() => getRuntimeUrls(), []);
   // Bundled dictionary, browser language read once on mount — see admin-strings.
   const [lang, setLang] = useState(DEFAULT_ADMIN_LANG);

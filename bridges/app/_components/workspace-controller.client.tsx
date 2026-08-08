@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { CircleUserRound, Globe, AlertTriangle, Menu } from "lucide-react";
+import { Globe, AlertTriangle, Menu } from "lucide-react";
 import { CodingWindowShell, type SettingsPanelId } from "./coding-workspace/coding-window-shell.client";
-import { AuthLoginModal } from "./auth-login-modal.client";
 import { SitePreviewWindow } from "./site-preview-window.client";
 import { Button } from "@/components/ui/button";
 import { useRuntimeUrls } from "@/lib/runtime-urls";
@@ -20,8 +19,9 @@ const HEADER_H = 48;
 export function WorkspaceController() {
   const urls = useRuntimeUrls();
   const [session, setSession]           = useState<SessionData | null>(null);
-  const [loading, setLoading]           = useState(true);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
+  // Kept only to end the session request; nothing renders differently while it is in flight — that is
+  // what used to make the header blink.
+  const [, setLoading]                  = useState(true);
   const [shellHeight, setShellHeight]   = useState(0);
   const [windowWidth, setWindowWidth]   = useState(0);
   const [siteOpen, setSiteOpen]                 = useState(false);
@@ -103,15 +103,14 @@ export function WorkspaceController() {
     window.location.href = `${urls.authUrl}/register`;
   }
 
-  function handleAuthSuccess() {
-    setAuthModalOpen(false);
-    setLoading(true);
-    fetchSession();
-  }
-
   const roles = session?.roles ?? [];
   const isVirtualArchitect = session?.userId === "virtual-admin";
-  const isAuthenticated = session !== null;
+  // Reaching this page IS the proof of access: proxy.ts checks the session on the server and redirects
+  // anyone who is not an architect to the auth service before a single pixel is rendered — and in
+  // bypass mode there is no session to have. So the panel does not re-decide the question in the
+  // browser; it only waits for the session's DETAILS (email, roles). Treating the in-flight moment as
+  // "not signed in" is what made a Sign in button flash on every load, offering a door to someone who
+  // is already inside.
 
 
   const insecure = secure === false;
@@ -148,22 +147,11 @@ export function WorkspaceController() {
             <Globe className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">{s.preview}</span>
           </Button>
-          {/* (step 500) The Account button and its popover are gone — the email,
-              the roles and the sign-out action now live in the pinned footer of
-              the settings drawer, one control instead of two. Sign in stays:
-              without a session the Menu button is disabled, so this is the only
-              way in. */}
-          {!session && (
-            <Button
-              variant="outline"
-              size="default"
-              className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
-              onClick={() => setAuthModalOpen(true)}
-            >
-              <CircleUserRound className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{s.signIn}</span>
-            </Button>
-          )}
+          {/* (step 500) The Account button and its popover are gone — the email, the roles and the
+              sign-out action live in the pinned footer of the settings drawer. Sign in is gone too
+              (owner, 2026-08-08): the panel is behind proxy.ts, so nobody unauthenticated is ever here
+              to press it, and rendering it while the session request was still in flight made it blink
+              on every load. A control that cannot be needed should not exist. */}
           {/* Menu — the last control of the header row, a sibling of Preview and the
               account button. It opens the settings drawer that lives in the shell;
               the open state is owned here so the button and the drawer stay in sync. */}
@@ -172,7 +160,6 @@ export function WorkspaceController() {
             size="default"
             aria-label={s.menu}
             className="text-xs shadow-sm dark:border-white/20 dark:shadow-none"
-            disabled={!isAuthenticated}
             onClick={() => setMenuOpen((v) => !v)}
           >
             <Menu className="h-3.5 w-3.5" />
@@ -187,7 +174,6 @@ export function WorkspaceController() {
           height={shellHeight}
           windowWidth={windowWidth}
           isMobile={isMobile}
-          isAuthenticated={isAuthenticated && !loading}
           isPreviewOpen={siteOpen}
           onPreviewClose={() => setSiteOpen(false)}
           secure={secure === true}
@@ -209,13 +195,9 @@ export function WorkspaceController() {
         <SitePreviewWindow open={siteOpen} onClose={() => setSiteOpen(false)} siteUrl={urls.appUrl} />
       )}
 
-      {/* ── Auth modal ── */}
-      <AuthLoginModal
-        open={authModalOpen}
-        onOpenChange={setAuthModalOpen}
-        authUrl={urls.authUrl}
-        onSuccess={handleAuthSuccess}
-      />
+      {/* The sign-in modal was mounted here for the button that has just gone. Nothing could open it
+          any more, so it is removed rather than left as a component waiting for a caller that cannot
+          exist. Signing in happens at the auth service, which is where proxy.ts sends people. */}
     </div>
   );
 }
