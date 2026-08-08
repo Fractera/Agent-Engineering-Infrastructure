@@ -14,6 +14,7 @@ import { adminHref } from "@/lib/admin-nav";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
 import { LanguageSwitch } from "./language-switch";
 import { ThemeSwitch } from "./theme-switch.client";
+import { WidthSwitch } from "./width-switch.client";
 
 export function AdminFooter({ s, lang }: { s: AdminStrings; lang: string }) {
   return (
@@ -47,11 +48,13 @@ export function AdminFooter({ s, lang }: { s: AdminStrings; lang: string }) {
         </span>
       ))}
 
-      {/* Правый нижний угол — две настройки взгляда на панель, а не действия над
-          проектом: тема и язык. Стоят последними и рядом намеренно.
-          Подписи темы приезжают сюда пропсами: островок темы клиентский, и
-          словарь ему передаётся уже разрешённым, чтобы 82 языка не уехали в
-          браузер. */}
+      {/* Правый нижний угол — три настройки взгляда на панель, а не действия над
+          проектом: ширина, тема и язык. Стоят последними и рядом намеренно, в
+          порядке от общего к частному: сколько места, каким цветом, на каком
+          языке.
+          Подписи приезжают сюда пропсами: островки клиентские, и словарь им
+          передаётся уже разрешённым, чтобы 82 языка не уехали в браузер. */}
+      <WidthSwitch labels={s.width} />
       <ThemeSwitch labels={s.theme} />
       <LanguageSwitch lang={lang} />
     </div>

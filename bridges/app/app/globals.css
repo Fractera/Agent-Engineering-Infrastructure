@@ -85,3 +85,20 @@
 
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Ширина рабочей области панели (шаг 501). Перенос механизма с главной
+   приложения :3000 (styles/globals.css там же три правила).
+   Одна переменная --app-w управляет шириной ВСЕХ контейнеров с атрибутом
+   data-app-column: содержимого страницы и всего, что решит следовать за ним.
+   Обычная ширина = 48rem (та, что была у страниц панели); широкая = весь экран
+   минус мостик 32px с каждой стороны.
+   --app-sbw — измеренная ширина полосы прокрутки: 100vw включает её, и без
+   поправки широкий режим давал бы горизонтальную прокрутку.
+   Старая панель этих атрибутов не носит, поэтому правила её не касаются. */
+:root { --app-w: 48rem; }
+html[data-app-width="wide"] { --app-w: calc(100vw - 64px - var(--app-sbw, 0px)); }
+[data-app-column] { width: 100%; max-width: var(--app-w); margin-left: auto; margin-right: auto; }
+@media (max-width: 767px) {
+  /* На узком экране раскладка и так в одну колонку на всю ширину — переключать нечего. */
+  :root, html[data-app-width="wide"] { --app-w: 100%; }
+}

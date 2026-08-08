@@ -78,6 +78,23 @@ export default async function AdminLangLayout(
             "document.documentElement.classList.toggle('dark',d);}catch(e){}})();",
         }}
       />
+
+      {/* Выбранная ШИРИНА поднимается тем же приёмом и по той же причине: иначе
+          широкая раскладка дёрнется после оживления страницы.
+          Второе дело этого скрипта — измерить полосу прокрутки в `--app-sbw`:
+          `100vw` включает её, и без поправки широкий режим давал бы
+          горизонтальную прокрутку. Пересчитывается на resize и load.
+          Перенос с :3000 (`components/app-width-init.tsx`), там `next/script`
+          со `beforeInteractive` — здесь он недоступен вне корневого layout. */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html:
+            "(function(){var el=document.documentElement;" +
+            "try{if(localStorage.getItem('fractera-app-width')==='wide')el.setAttribute('data-app-width','wide');}catch(e){}" +
+            "function sbw(){var v=window.innerWidth-el.clientWidth;el.style.setProperty('--app-sbw',(v>0?v:0)+'px');}" +
+            "sbw();window.addEventListener('resize',sbw);window.addEventListener('load',sbw);})();",
+        }}
+      />
       <AdminHeader lang={lang} s={s} />
       {/* Прокручивается содержимое, а не страница: тело документа держит
           h-screen overflow-hidden, поэтому подвал остаётся на месте. */}

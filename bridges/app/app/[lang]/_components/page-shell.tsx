@@ -11,7 +11,11 @@ export function PageShell(
   { title: string; hint: string; notice?: string; children?: ReactNode },
 ) {
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-6">
+    // `data-app-column` вместо `max-w-3xl`: ширину задаёт переменная `--app-w`,
+    // которой управляет переключатель в подвале. Обычная ширина осталась той же
+    // (48rem = прежний max-w-3xl), но теперь её можно расширить на весь экран —
+    // разделам-таблицам колонка для чтения абзацем слишком узка.
+    <div data-app-column className="px-4 py-6">
       <h1 className="text-base font-semibold text-foreground">{title}</h1>
       <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">{hint}</p>
 

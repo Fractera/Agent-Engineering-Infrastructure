@@ -7,6 +7,10 @@
     "menu": "Menu",
     "signOut": "Sign out",
     "registerAccount": "Register account",
+    "width": {
+      "wide": "Use the full screen width",
+      "normal": "Back to the reading column"
+    },
     "theme": {
       "system": "Theme: system",
       "light": "Theme: light",
@@ -221,6 +225,10 @@
     "menu": "Меню",
     "signOut": "Выйти",
     "registerAccount": "Зарегистрировать аккаунт",
+    "width": {
+      "wide": "Развернуть на всю ширину экрана",
+      "normal": "Вернуть колонку для чтения"
+    },
     "theme": {
       "system": "Тема: системная",
       "light": "Тема: светлая",

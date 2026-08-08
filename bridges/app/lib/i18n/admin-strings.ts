@@ -49,6 +49,8 @@ export type AdminStrings = {
     howToBuild: string;
     stateUnknown: string;
   };
+  // width switch in the footer — the label names what the click WILL do
+  width: { wide: string; normal: string };
   // theme switch in the footer — the icon names the CURRENT mode
   theme: { system: string; light: string; dark: string };
   // Per-page sections. One section per migrated surface, named after its slug.
