@@ -208,6 +208,21 @@ export type AdminStrings = {
     helpSafetyTitle: string; helpSafety: string;
     helpBackTitle: string; helpBack: string;
   };
+  loginMethods: {
+    unavailable: string; notSet: string; intro: string; needsSecure: string;
+    googleTitle: string; googleHint: string; redirectUriLabel: string;
+    uriCopied: string; uriCopyFailed: string;
+    googleId: string; googleIdReplace: string; googleSecret: string; googleSecretReplace: string;
+    emailTitle: string; emailHint: string;
+    resendKey: string; resendKeyReplace: string; resendFrom: string;
+    save: string; saving: string; remove: string; removeConfirm: string;
+    saved: string; removed: string; failed: string; restartNote: string;
+    helpLabel: string;
+    helpWhatTitle: string; helpWhat: string;
+    helpWhySecureTitle: string; helpWhySecure: string;
+    helpEmptyTitle: string; helpEmpty: string;
+    helpSecretsTitle: string; helpSecrets: string;
+  };
   database: {
     noTables: string; empty: string; unavailable: string; rowsShown: string; noIdColumn: string;
     editTitle: string; valueLabel: string; cancel: string; save: string; delete: string;
