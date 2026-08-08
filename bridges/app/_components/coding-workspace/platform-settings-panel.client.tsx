@@ -28,12 +28,12 @@ import { Button } from "@/components/ui/button";
 type Cfg = Record<string, unknown>;
 type Props = { onClose: () => void };
 
-const FOOTER_KEYS = ["footerPages", "widthToggle", "themeToggle", "languageSwitcher"] as const;
+// Theme, screen width and the language switcher moved to App features (owner, 2026-08-08) — a
+// feature is configured where it is explained, and two switches for one flag is how a setting starts
+// disagreeing with itself. Footer pages stayed: it is about the footer, not about the page.
+const FOOTER_KEYS = ["footerPages"] as const;
 const FOOTER_LABELS: Record<(typeof FOOTER_KEYS)[number], string> = {
   footerPages: "Footer pages",
-  widthToggle: "Screen width",
-  themeToggle: "Theme",
-  languageSwitcher: "Multilingual",
 };
 
 export function PlatformSettingsPanel({ onClose }: Props) {
