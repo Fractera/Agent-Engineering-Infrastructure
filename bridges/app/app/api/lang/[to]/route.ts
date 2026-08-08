@@ -49,30 +49,51 @@ function fromAcceptLanguage(header: string | null): string | null {
   return null;
 }
 
-// Тот же путь, но в другом языке. Referer даёт полный адрес страницы, с которой
-// нажали; первый сегмент — язык, его и подменяем. Referer могут отрезать —
-// тогда честный откат на корень языка, а не выдуманный путь.
-function samePathInLang(referer: string | null, lang: string, origin: string): string {
-  if (!referer) return `${origin}/${lang}`;
-  let url: URL;
+// Тот же путь, но в другом языке — ОТНОСИТЕЛЬНЫМ адресом.
+//
+// 🔴 ЗДЕСЬ БЫЛ БАГ (2026-08-08). Раньше функция собирала абсолютный адрес из
+// `new URL(req.url).origin` — из того, каким запрос видит СЕРВЕР. Панель всегда
+// стоит за nginx, и там это `127.0.0.1:3002`; схему Next подставлял из
+// `x-forwarded-proto`, а хост оставлял внутренний, и получалась химера
+// `https://localhost:3002/en`. Хуже: проверка «Referer того же origin»
+// сравнивала настоящий `https://admin.aifa.dev` с этой химерой, не совпадало —
+// и путь молча отбрасывался, так что человек попадал на корень языка вместо
+// своей страницы.
+//
+// Лечение — не угадывать хост, а не иметь с ним дела: HTTP разрешает
+// относительный `Location`, браузер разрешает его относительно адреса, по
+// которому пришёл. Код становится верным в любом режиме (IP, домен, HTTPS) без
+// единой ветки. Из `Referer` берётся ТОЛЬКО путь, его origin не используется
+// никогда — поэтому подделать чужой хост через этот заголовок невозможно, а
+// мусор в пути превращается в наш же 404, а не в переход на чужой сайт.
+function samePathInLang(referer: string | null, lang: string): string {
+  if (!referer) return `/${lang}`;
+  let pathname = "";
+  let search = "";
   try {
-    url = new URL(referer);
+    const url = new URL(referer);
+    pathname = url.pathname;
+    search = url.search;
   } catch {
-    return `${origin}/${lang}`;
+    return `/${lang}`;
   }
-  if (url.origin !== origin) return `${origin}/${lang}`;
 
-  const segments = url.pathname.split("/").filter(Boolean);
+  const segments = pathname.split("/").filter(Boolean);
   // Со старой панели (`/`) уводим на корень нового языка: соответствующей
   // страницы там просто нет.
-  if (segments.length === 0) return `${origin}/${lang}`;
+  if (segments.length === 0) return `/${lang}`;
   const rest = isAdminLanguage(segments[0]) ? segments.slice(1) : segments;
-  return `${origin}/${[lang, ...rest].join("/")}${url.search}`;
+  return `/${[lang, ...rest].join("/")}${search}`;
+}
+
+// Относительный редирект. `NextResponse.redirect` требует абсолютный адрес, а он
+// нам как раз и не нужен — поэтому ответ собирается вручную.
+function redirectTo(path: string): NextResponse {
+  return new NextResponse(null, { status: 302, headers: { Location: path } });
 }
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ to: string }> }) {
   const { to } = await ctx.params;
-  const origin = new URL(req.url).origin;
   const referer = req.headers.get("referer");
 
   if (to === "auto") {
@@ -81,11 +102,11 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ to: string 
       (cookie && isAdminLanguage(cookie) && cookie) ||
       fromAcceptLanguage(req.headers.get("accept-language")) ||
       DEFAULT_ADMIN_LANG;
-    return NextResponse.redirect(samePathInLang(referer, lang, origin), 302);
+    return redirectTo(samePathInLang(referer, lang));
   }
 
   const lang = isAdminLanguage(to) ? to : DEFAULT_ADMIN_LANG;
-  const res = NextResponse.redirect(samePathInLang(referer, lang, origin), 302);
+  const res = redirectTo(samePathInLang(referer, lang));
   // Явный выбор человека сильнее его браузера — и обязан пережить перезагрузку.
   res.cookies.set(LANG_COOKIE, lang, {
     path: "/",
