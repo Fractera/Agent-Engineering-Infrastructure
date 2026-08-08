@@ -137,7 +137,7 @@ async function tick() {
   const dirty = await git("status --porcelain");
   if (dirty) {
     const n = dirty.split("\n").filter(Boolean).length;
-    await skip("dirty", `This server holds ${n} uncommitted file${n === 1 ? "" : "s"} — pulling would bury them, so the turn is skipped.`, stamp);
+    await skip("dirty", `This server holds ${n} uncommitted file${n === 1 ? "" : "s"} — pulling would bury that work, so the turn is skipped.`, stamp);
     return;
   }
 
