@@ -60,6 +60,24 @@ export default async function AdminLangLayout(
 
   return (
     <div className="flex h-full flex-col bg-background text-foreground">
+      {/* Тема ставится ДО первой отрисовки, иначе тёмная панель мигнёт белым на
+          каждой загрузке. Скрипт крошечный и синхронный: браузер выполняет его
+          при разборе, то есть класс `dark` оказывается на `<html>` раньше, чем
+          отрисуется шапка.
+          Почему здесь, а не в корневом `app/layout.tsx`: корневой layout общий с
+          замороженной старой панелью, и тема прилетела бы и ей — а её на время
+          стройки не трогаем. На переключении (Ф3) этот файл станет корневым, и
+          скрипт естественно окажется в `<head>`.
+          `next/script` со `beforeInteractive` тут не годится: он поддерживается
+          только в КОРНЕВОМ layout. */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html:
+            "(function(){try{var m=localStorage.getItem('fractera-theme')||'system';" +
+            "var d=m==='dark'||(m==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);" +
+            "document.documentElement.classList.toggle('dark',d);}catch(e){}})();",
+        }}
+      />
       <AdminHeader lang={lang} s={s} />
       {/* Прокручивается содержимое, а не страница: тело документа держит
           h-screen overflow-hidden, поэтому подвал остаётся на месте. */}

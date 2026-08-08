@@ -49,6 +49,8 @@ export type AdminStrings = {
     howToBuild: string;
     stateUnknown: string;
   };
+  // theme switch in the footer — the icon names the CURRENT mode
+  theme: { system: string; light: string; dark: string };
   // shown on a page whose interface exists but whose logic has not moved yet
   skeletonNotice: string;
   home: { title: string; hint: string };

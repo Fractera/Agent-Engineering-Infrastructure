@@ -7,6 +7,11 @@
     "menu": "Menu",
     "signOut": "Sign out",
     "registerAccount": "Register account",
+    "theme": {
+      "system": "Theme: system",
+      "light": "Theme: light",
+      "dark": "Theme: dark"
+    },
     "skeletonNotice": "Interface only — the logic of this page has not moved here yet.",
     "home": {
       "title": "Workspace",
@@ -27,31 +32,106 @@
       "stateUnknown": "project state"
     },
     "pages": {
-      "app-settings": { "title": "App settings", "hint": "Name, logo, colours and the other site-wide settings of the application in the slot." },
-      "languages": { "title": "Languages", "hint": "Which languages the application is built with. Saving rebuilds the slot." },
-      "parallel-routing": { "title": "Parallel routing", "hint": "Layout variants served side by side from one build." },
-      "app-features": { "title": "App features", "hint": "Features the application offers its own visitors." },
-      "top-menu": { "title": "Top menu buttons", "hint": "The buttons of the application's own header." },
-      "footer-pages": { "title": "Footer pages", "hint": "Pages linked from the application's footer." },
-      "cookie-banner": { "title": "Cookie banner", "hint": "Consent banner shown to the application's visitors." },
-      "users": { "title": "Users", "hint": "Accounts, roles and access to this workspace." },
-      "media": { "title": "Media library", "hint": "Images, video and files in local S3 storage." },
-      "database": { "title": "Database", "hint": "Browse and edit tables of the data layer directly." },
-      "vector-memory": { "title": "Vector memory", "hint": "Text stored as vectors next to your rows, searched by meaning." },
-      "agentic-rag": { "title": "Agentic RAG", "hint": "The knowledge base the agent reads before it answers." },
-      "map": { "title": "Map settings", "hint": "Regions and geodata of the map service." },
-      "export": { "title": "Export data", "hint": "Download a zip archive with the database and every stored file." },
-      "import": { "title": "Import data", "hint": "Merge a backup archive into the existing data." },
-      "domain": { "title": "Personal domain", "hint": "Attach your own domain and switch the project to HTTPS." },
-      "login-methods": { "title": "Login methods", "hint": "Which ways of signing in the project offers." },
-      "channels": { "title": "Communication channels", "hint": "Telegram, email and the other channels the project speaks through." },
-      "openai": { "title": "OpenAI settings", "hint": "The key and the models the project uses." },
-      "github": { "title": "Connect GitHub", "hint": "Connect the repository this server pushes to and pulls from." },
-      "github-about": { "title": "About GitHub", "hint": "What the connection gives you and what each button does." },
-      "deployments": { "title": "Deployment history", "hint": "Every build of this server, with its result and duration." },
-      "env": { "title": "Env variables", "hint": "Raw environment of the application. Changes apply on the next deploy." },
-      "how-to-build": { "title": "How to build this project", "hint": "The path from an idea to a working page, in order." },
-      "help": { "title": "Help", "hint": "What each part of the panel is for." }
+      "app-settings": {
+        "title": "App settings",
+        "hint": "Name, logo, colours and the other site-wide settings of the application in the slot."
+      },
+      "languages": {
+        "title": "Languages",
+        "hint": "Which languages the application is built with. Saving rebuilds the slot."
+      },
+      "parallel-routing": {
+        "title": "Parallel routing",
+        "hint": "Layout variants served side by side from one build."
+      },
+      "app-features": {
+        "title": "App features",
+        "hint": "Features the application offers its own visitors."
+      },
+      "top-menu": {
+        "title": "Top menu buttons",
+        "hint": "The buttons of the application's own header."
+      },
+      "footer-pages": {
+        "title": "Footer pages",
+        "hint": "Pages linked from the application's footer."
+      },
+      "cookie-banner": {
+        "title": "Cookie banner",
+        "hint": "Consent banner shown to the application's visitors."
+      },
+      "users": {
+        "title": "Users",
+        "hint": "Accounts, roles and access to this workspace."
+      },
+      "media": {
+        "title": "Media library",
+        "hint": "Images, video and files in local S3 storage."
+      },
+      "database": {
+        "title": "Database",
+        "hint": "Browse and edit tables of the data layer directly."
+      },
+      "vector-memory": {
+        "title": "Vector memory",
+        "hint": "Text stored as vectors next to your rows, searched by meaning."
+      },
+      "agentic-rag": {
+        "title": "Agentic RAG",
+        "hint": "The knowledge base the agent reads before it answers."
+      },
+      "map": {
+        "title": "Map settings",
+        "hint": "Regions and geodata of the map service."
+      },
+      "export": {
+        "title": "Export data",
+        "hint": "Download a zip archive with the database and every stored file."
+      },
+      "import": {
+        "title": "Import data",
+        "hint": "Merge a backup archive into the existing data."
+      },
+      "domain": {
+        "title": "Personal domain",
+        "hint": "Attach your own domain and switch the project to HTTPS."
+      },
+      "login-methods": {
+        "title": "Login methods",
+        "hint": "Which ways of signing in the project offers."
+      },
+      "channels": {
+        "title": "Communication channels",
+        "hint": "Telegram, email and the other channels the project speaks through."
+      },
+      "openai": {
+        "title": "OpenAI settings",
+        "hint": "The key and the models the project uses."
+      },
+      "github": {
+        "title": "Connect GitHub",
+        "hint": "Connect the repository this server pushes to and pulls from."
+      },
+      "github-about": {
+        "title": "About GitHub",
+        "hint": "What the connection gives you and what each button does."
+      },
+      "deployments": {
+        "title": "Deployment history",
+        "hint": "Every build of this server, with its result and duration."
+      },
+      "env": {
+        "title": "Env variables",
+        "hint": "Raw environment of the application. Changes apply on the next deploy."
+      },
+      "how-to-build": {
+        "title": "How to build this project",
+        "hint": "The path from an idea to a working page, in order."
+      },
+      "help": {
+        "title": "Help",
+        "hint": "What each part of the panel is for."
+      }
     }
   },
   "ru": {
@@ -62,6 +142,11 @@
     "menu": "Меню",
     "signOut": "Выйти",
     "registerAccount": "Зарегистрировать аккаунт",
+    "theme": {
+      "system": "Тема: системная",
+      "light": "Тема: светлая",
+      "dark": "Тема: тёмная"
+    },
     "skeletonNotice": "Только интерфейс — логика этой страницы сюда ещё не переехала.",
     "home": {
       "title": "Рабочее место",
@@ -82,31 +167,106 @@
       "stateUnknown": "состояние проекта"
     },
     "pages": {
-      "app-settings": { "title": "Настройки приложения", "hint": "Название, логотип, цвета и остальные общие настройки приложения в слоте." },
-      "languages": { "title": "Языки", "hint": "С какими языками собирается приложение. Сохранение пересобирает слот." },
-      "parallel-routing": { "title": "Параллельная маршрутизация", "hint": "Варианты раскладки, отдаваемые из одной сборки." },
-      "app-features": { "title": "Возможности приложения", "hint": "Что приложение предлагает своим посетителям." },
-      "top-menu": { "title": "Кнопки верхнего меню", "hint": "Кнопки собственной шапки приложения." },
-      "footer-pages": { "title": "Страницы подвала", "hint": "Страницы, на которые ссылается подвал приложения." },
-      "cookie-banner": { "title": "Баннер cookie", "hint": "Баннер согласия, который видят посетители приложения." },
-      "users": { "title": "Пользователи", "hint": "Учётные записи, роли и доступ к этому рабочему месту." },
-      "media": { "title": "Медиатека", "hint": "Изображения, видео и файлы в локальном хранилище S3." },
-      "database": { "title": "База данных", "hint": "Просмотр и правка таблиц слоя данных напрямую." },
-      "vector-memory": { "title": "Векторная память", "hint": "Текст, сохранённый векторами рядом со строками, и поиск по смыслу." },
-      "agentic-rag": { "title": "Агентный RAG", "hint": "База знаний, которую агент читает перед ответом." },
-      "map": { "title": "Настройки карты", "hint": "Регионы и геоданные картографической службы." },
-      "export": { "title": "Выгрузка данных", "hint": "Скачать архив с базой и всеми сохранёнными файлами." },
-      "import": { "title": "Загрузка данных", "hint": "Влить архив резервной копии в существующие данные." },
-      "domain": { "title": "Личный домен", "hint": "Подключить свой домен и перевести проект на HTTPS." },
-      "login-methods": { "title": "Способы входа", "hint": "Какими способами можно войти в проект." },
-      "channels": { "title": "Каналы связи", "hint": "Telegram, почта и остальные каналы, которыми говорит проект." },
-      "openai": { "title": "Настройки OpenAI", "hint": "Ключ и модели, которыми пользуется проект." },
-      "github": { "title": "Подключить GitHub", "hint": "Репозиторий, куда сервер отправляет и откуда забирает код." },
-      "github-about": { "title": "О GitHub", "hint": "Что даёт подключение и что делает каждая кнопка." },
-      "deployments": { "title": "История развёртываний", "hint": "Каждая сборка этого сервера с результатом и длительностью." },
-      "env": { "title": "Переменные окружения", "hint": "Сырое окружение приложения. Правки вступают в силу на следующем развёртывании." },
-      "how-to-build": { "title": "Как построить этот проект", "hint": "Путь от замысла до работающей страницы, по порядку." },
-      "help": { "title": "Справка", "hint": "Для чего нужна каждая часть панели." }
+      "app-settings": {
+        "title": "Настройки приложения",
+        "hint": "Название, логотип, цвета и остальные общие настройки приложения в слоте."
+      },
+      "languages": {
+        "title": "Языки",
+        "hint": "С какими языками собирается приложение. Сохранение пересобирает слот."
+      },
+      "parallel-routing": {
+        "title": "Параллельная маршрутизация",
+        "hint": "Варианты раскладки, отдаваемые из одной сборки."
+      },
+      "app-features": {
+        "title": "Возможности приложения",
+        "hint": "Что приложение предлагает своим посетителям."
+      },
+      "top-menu": {
+        "title": "Кнопки верхнего меню",
+        "hint": "Кнопки собственной шапки приложения."
+      },
+      "footer-pages": {
+        "title": "Страницы подвала",
+        "hint": "Страницы, на которые ссылается подвал приложения."
+      },
+      "cookie-banner": {
+        "title": "Баннер cookie",
+        "hint": "Баннер согласия, который видят посетители приложения."
+      },
+      "users": {
+        "title": "Пользователи",
+        "hint": "Учётные записи, роли и доступ к этому рабочему месту."
+      },
+      "media": {
+        "title": "Медиатека",
+        "hint": "Изображения, видео и файлы в локальном хранилище S3."
+      },
+      "database": {
+        "title": "База данных",
+        "hint": "Просмотр и правка таблиц слоя данных напрямую."
+      },
+      "vector-memory": {
+        "title": "Векторная память",
+        "hint": "Текст, сохранённый векторами рядом со строками, и поиск по смыслу."
+      },
+      "agentic-rag": {
+        "title": "Агентный RAG",
+        "hint": "База знаний, которую агент читает перед ответом."
+      },
+      "map": {
+        "title": "Настройки карты",
+        "hint": "Регионы и геоданные картографической службы."
+      },
+      "export": {
+        "title": "Выгрузка данных",
+        "hint": "Скачать архив с базой и всеми сохранёнными файлами."
+      },
+      "import": {
+        "title": "Загрузка данных",
+        "hint": "Влить архив резервной копии в существующие данные."
+      },
+      "domain": {
+        "title": "Личный домен",
+        "hint": "Подключить свой домен и перевести проект на HTTPS."
+      },
+      "login-methods": {
+        "title": "Способы входа",
+        "hint": "Какими способами можно войти в проект."
+      },
+      "channels": {
+        "title": "Каналы связи",
+        "hint": "Telegram, почта и остальные каналы, которыми говорит проект."
+      },
+      "openai": {
+        "title": "Настройки OpenAI",
+        "hint": "Ключ и модели, которыми пользуется проект."
+      },
+      "github": {
+        "title": "Подключить GitHub",
+        "hint": "Репозиторий, куда сервер отправляет и откуда забирает код."
+      },
+      "github-about": {
+        "title": "О GitHub",
+        "hint": "Что даёт подключение и что делает каждая кнопка."
+      },
+      "deployments": {
+        "title": "История развёртываний",
+        "hint": "Каждая сборка этого сервера с результатом и длительностью."
+      },
+      "env": {
+        "title": "Переменные окружения",
+        "hint": "Сырое окружение приложения. Правки вступают в силу на следующем развёртывании."
+      },
+      "how-to-build": {
+        "title": "Как построить этот проект",
+        "hint": "Путь от замысла до работающей страницы, по порядку."
+      },
+      "help": {
+        "title": "Справка",
+        "hint": "Для чего нужна каждая часть панели."
+      }
     }
   }
 }
