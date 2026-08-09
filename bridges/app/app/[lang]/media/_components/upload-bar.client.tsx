@@ -23,8 +23,8 @@ import { useRouter } from "next/navigation";
 import { Loader2, ImagePlus, Clapperboard, FileText, FileType2, Code2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { ImageCropper, type CropperLabels } from "./image-cropper.client";
-import { VideoTrimmer, type TrimmerLabels } from "./video-trimmer.client";
+import { ImageCropper, type CropperLabels } from "@/_tools/image-crop/client/image-cropper.client";
+import { VideoTrimmer, type TrimmerLabels } from "@/_tools/video-trim/client/video-trimmer.client";
 import type { MediaItem } from "../_lib/media";
 
 export type UploadLabels = {

@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { PreviewPopup, type PreviewLabels } from "./preview-popup.client";
-import { VideoTrimmer, type TrimmerLabels } from "./video-trimmer.client";
+import { VideoTrimmer, type TrimmerLabels } from "@/_tools/video-trim/client/video-trimmer.client";
 import type { MediaItem } from "../_lib/media";
 
 export type ItemActionLabels = {

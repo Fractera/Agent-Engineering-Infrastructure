@@ -8,7 +8,7 @@
 // `slug` — машинная строка, НЕ переводится (правило 4г). Человеческие слова
 // живут в словаре под тем же slug: `s.pages[slug].title` / `.hint`.
 
-export const NAV_GROUPS = ["application", "data", "backup", "access", "project", "documents", "help"] as const;
+export const NAV_GROUPS = ["application", "data", "tools", "backup", "access", "project", "documents", "help"] as const;
 export type NavGroup = (typeof NAV_GROUPS)[number];
 
 // Порядок внутри группы = порядок в меню. Он повторяет порядок сегодняшнего
@@ -28,11 +28,14 @@ export const NAV = [
   { slug: "vector-memory",   group: "data" },
   { slug: "agentic-rag",     group: "data" },
   { slug: "map",             group: "data" },
-  // Завершает перечень инструментов (решение владельца 2026-08-08): после того,
-  // как названы все склады и движки проекта, естественный следующий вопрос —
-  // «а если нужен ещё один». Стоит здесь, а не в справке, потому что это
-  // действие, а не пояснение.
-  { slug: "add-tool",        group: "data" },
+
+  // Микро-инструменты: маленькие переиспользуемые куски, которые панель
+  // применяет для себя и отдаёт продуктовому слою. Заканчивается «Добавить
+  // инструмент» — она переехала сюда из данных, где оказалась лишь потому, что
+  // раздела инструментов не существовало.
+  { slug: "tools",           group: "tools" },
+  { slug: "add-tool",        group: "tools" },
+
   { slug: "export",          group: "backup" },
   { slug: "import",          group: "backup" },
 

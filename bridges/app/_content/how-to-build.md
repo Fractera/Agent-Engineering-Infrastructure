@@ -108,6 +108,20 @@ The trap: **settings you change in this panel are files.** Turning a feature on 
 configuration, and your local copy will not know about it until you **Pull**. Data behaves one way and
 configuration behaves the other, even though both are changed from the same panel.
 
+**One file behaves differently again, and it is worth knowing by name.** Everything under **App Settings** —
+your app's name, description, images, icons, SEO, analytics — is stored in `APP-CONFIG/app-config.json` on
+the server, and that file is **deliberately outside the repository**. It never travels with a push or a
+pull, it is not in your local clone, and a fresh server starts without it, on the defaults committed in the
+code, until you save your settings here once.
+
+Two consequences, both practical:
+
+- **Changing these settings needs no deploy.** The app reads the file on each request; a save shows up on
+  the next page load.
+- **Your AI agent cannot change them from your machine** — there is nothing there to change. If an agent
+  offers to edit branding or SEO in code, the answer is that those live in this panel. Only a genuinely
+  missing *field* is a code matter, and that is a change to the platform, not to your project.
+
 ---
 
 ## 7. Sending your work back

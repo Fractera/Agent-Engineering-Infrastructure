@@ -322,6 +322,19 @@ export type AdminStrings = {
   };
   // Карта документов: единственная описательная страница группы. Отвечает не
   // «что в файле», а «зачем документов столько».
+  tools: {
+    intro: string;
+    install: string; installing: string; installedToast: string;
+    update: string; updateConfirm: string; cancel: string;
+    failed: string; alreadyInstalled: string; outdated: string;
+    needs: Record<"browser" | "openai-key" | "https" | "ffmpeg", string>;
+    items: Record<"image-crop" | "video-trim" | "voice-input", { title: string; body: string }>;
+    helpLabel: string;
+    helpCopyTitle: string; helpCopy: string;
+    helpWhereTitle: string; helpWhere: string;
+    helpAgentTitle: string; helpAgent: string;
+    helpUpdateTitle: string; helpUpdate: string;
+  };
   codeSamples: {
     intro: string; askExplicitly: string; empty: string; pickSample: string; backToList: string;
     newTitle: string; namePlaceholder: string; create: string; creating: string; created: string;

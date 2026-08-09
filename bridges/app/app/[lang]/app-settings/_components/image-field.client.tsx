@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { Loader2, Upload, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { ImageCropper } from "./image-cropper.client";
+import { ImageCropper } from "@/_tools/image-crop/client/image-cropper.client";
 import { uploadImage, previewUrl } from "./upload";
 
 // One image config field: shows the current image (if any) and an Upload/Replace + Clear pair.

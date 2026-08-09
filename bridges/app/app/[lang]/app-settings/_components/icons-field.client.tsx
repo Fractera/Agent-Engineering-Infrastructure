@@ -5,7 +5,7 @@ import { Loader2, Upload, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { getRuntimeUrls } from "@/lib/runtime-urls";
-import { ImageCropper } from "./image-cropper.client";
+import { ImageCropper } from "@/_tools/image-crop/client/image-cropper.client";
 import { uploadImage, generateIcons, type IconSet } from "./upload";
 
 // The PWA/favicon field: upload ONE square logo, crop to 1:1, and the Data service generates

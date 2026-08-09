@@ -46,6 +46,7 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   "vector-memory": BrainCircuit,
   "agentic-rag": Brain,
   map: MapIcon,
+  tools: Wrench,
   "add-tool": PackagePlus,
   export: Download,
   import: Upload,

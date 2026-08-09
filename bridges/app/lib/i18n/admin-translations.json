@@ -741,6 +741,47 @@
         "domain": "No custom domain — HTTPS-only features stay unavailable"
       }
     },
+    "tools": {
+      "intro": "Small reusable pieces the panel uses for itself and hands to your project. Installing copies the files into your project — after that they are your code: edit them, rename them, throw them away.",
+      "install": "Install into project",
+      "installing": "Installing…",
+      "installedToast": "Installed",
+      "update": "Update",
+      "updateConfirm": "This overwrites your copy and loses local edits.",
+      "cancel": "Cancel",
+      "failed": "Install failed",
+      "alreadyInstalled": "installed",
+      "outdated": "the panel's version has changed since",
+      "needs": {
+        "browser": "browser only",
+        "openai-key": "needs the OpenAI key",
+        "https": "needs HTTPS",
+        "ffmpeg": "cuts on the server"
+      },
+      "items": {
+        "image-crop": {
+          "title": "Image crop",
+          "body": "Pick the visible part of a picture before it is saved: pan, zoom, fixed 16:9 / 1:1 / 9:16. Everything happens in the browser and the server receives a finished JPEG. The aspect can be locked where the shape is decided by purpose — a logo has to be square."
+        },
+        "video-trim": {
+          "title": "Video trim",
+          "body": "Keep the middle of a clip and drop the rest. The browser picks the boundaries, the cut is made on the server, and the result replaces the stored object. Duration is measured after the fast pass rather than trusted, because a copy-cut lands on keyframes and silently returns a longer clip."
+        },
+        "voice-input": {
+          "title": "Voice input",
+          "body": "A microphone button next to any text field: speech is transcribed and inserted at the cursor, so a long description is spoken instead of typed. Ships with its own interface strings in ten languages. Needs the OpenAI key, and a microphone is only offered by the browser over HTTPS."
+        }
+      },
+      "helpLabel": "How tools reach your project",
+      "helpCopyTitle": "By copy, not by call.",
+      "helpCopy": "Installing writes the tool's files into your project. Nothing is fetched from the panel at runtime, so the app keeps working whether the panel is there or not — and you are free to change the tool, which is what almost always happens.",
+      "helpWhereTitle": "Where they land.",
+      "helpWhere": "`tools/<name>/` in the project root, next to an INSTALLED.json recording the version and date. That file is how the panel later notices your copy has fallen behind.",
+      "helpAgentTitle": "What the agent does with them.",
+      "helpAgent": "The agent reads `tools/` and reuses what is there instead of writing the same thing again. `PLATFORM-TOOLS.md` tells it these tools exist, where they land and how to import them.",
+      "helpUpdateTitle": "Updating overwrites.",
+      "helpUpdate": "Installing a second time replaces the files with the panel's current version and loses local edits — which is why an update asks first and a first install does not."
+    },
     "codeSamples": {
       "intro": "Your own earlier work, kept where the project can reach it. Files live in the project folder:",
       "askExplicitly": "The agent does not read this on its own. When you want it to build from something here, say so and name the sample — otherwise it would carry a library it may not need through the whole session.",
@@ -956,7 +997,8 @@
       "project": "Project",
       "help": "Help",
       "documents": "Development documents",
-      "backup": "Backup & restore"
+      "backup": "Backup & restore",
+      "tools": "Tools"
     },
     "footer": {
       "deploy": "Deploy",
@@ -1125,6 +1167,10 @@
       "doc-code-samples": {
         "title": "Code samples",
         "hint": "Work you have already done, so it does not have to be built a second time."
+      },
+      "tools": {
+        "title": "Tools",
+        "hint": "Finished pieces you can take into the project instead of building them again."
       }
     }
   },
@@ -1870,6 +1916,47 @@
         "domain": "Нет своего домена — возможности, требующие HTTPS, недоступны"
       }
     },
+    "tools": {
+      "intro": "Маленькие переиспользуемые куски, которые панель применяет для себя и отдаёт вашему проекту. Установка копирует файлы к вам — дальше это ваш код: правьте, переименовывайте, выбрасывайте.",
+      "install": "Установить в проект",
+      "installing": "Устанавливаю…",
+      "installedToast": "Установлено",
+      "update": "Обновить",
+      "updateConfirm": "Перезапишет вашу копию и потеряет местные правки.",
+      "cancel": "Отмена",
+      "failed": "Установить не удалось",
+      "alreadyInstalled": "установлен",
+      "outdated": "в панели версия с тех пор изменилась",
+      "needs": {
+        "browser": "только браузер",
+        "openai-key": "нужен ключ OpenAI",
+        "https": "нужен HTTPS",
+        "ffmpeg": "режет сервер"
+      },
+      "items": {
+        "image-crop": {
+          "title": "Обрезка изображения",
+          "body": "Выбрать видимую часть картинки до сохранения: перетаскивание, масштаб, пропорции 16:9 / 1:1 / 9:16. Всё происходит в браузере, сервер получает готовый JPEG. Пропорцию можно запереть там, где форму кадра решает назначение: логотип обязан быть квадратным."
+        },
+        "video-trim": {
+          "title": "Подрезка видео",
+          "body": "Оставить середину ролика и отбросить остальное. Границы выбирает браузер, режет сервер, результат заменяет сохранённый объект. Длительность после быстрого прохода измеряется, а не принимается на веру: копирующая резка попадает по ключевым кадрам и молча отдаёт ролик длиннее."
+        },
+        "voice-input": {
+          "title": "Голосовой ввод",
+          "body": "Кнопка микрофона рядом с текстовым полем: речь расшифровывается и вставляется по курсору, поэтому длинное описание проговаривают, а не печатают. Несёт собственные подписи на десяти языках. Нужен ключ OpenAI, а микрофон браузер отдаёт только по HTTPS."
+        }
+      },
+      "helpLabel": "Как инструменты попадают в ваш проект",
+      "helpCopyTitle": "Копией, а не вызовом.",
+      "helpCopy": "Установка записывает файлы инструмента в ваш проект. В рантайме из панели ничего не запрашивается, поэтому приложение работает независимо от того, жива ли панель, — и вы вправе менять инструмент, что и происходит почти всегда.",
+      "helpWhereTitle": "Куда они ложатся.",
+      "helpWhere": "В `tools/<имя>/` в корне проекта, рядом с INSTALLED.json, где записаны версия и дата. По этому файлу панель потом замечает, что ваша копия отстала.",
+      "helpAgentTitle": "Что с ними делает агент.",
+      "helpAgent": "Агент читает `tools/` и переиспользует то, что там лежит, вместо того чтобы писать то же самое заново. О существовании инструментов, месте установки и способе подключения ему сообщает `PLATFORM-TOOLS.md`.",
+      "helpUpdateTitle": "Обновление перезаписывает.",
+      "helpUpdate": "Повторная установка заменяет файлы текущей версией панели и теряет местные правки — поэтому обновление спрашивает, а первая установка нет."
+    },
     "codeSamples": {
       "intro": "Ваши прежние наработки, сложенные там, где проект до них дотянется. Файлы лежат в папке проекта:",
       "askExplicitly": "Агент не читает это по своей воле. Когда хотите, чтобы он строил по чему-то отсюда, скажите об этом и назовите образец — иначе он тащил бы через всю сессию библиотеку, которая может не понадобиться.",
@@ -2085,7 +2172,8 @@
       "project": "Проект",
       "help": "Справка",
       "documents": "Документы разработки",
-      "backup": "Резервное копирование"
+      "backup": "Резервное копирование",
+      "tools": "Инструменты"
     },
     "footer": {
       "deploy": "Развернуть",
@@ -2254,6 +2342,10 @@
       "doc-code-samples": {
         "title": "Образцы кода",
         "hint": "Ваши прежние наработки, чтобы не разрабатывать заново то, что уже сделано."
+      },
+      "tools": {
+        "title": "Инструменты",
+        "hint": "Готовые куски, которые можно взять в проект вместо того, чтобы делать их заново."
       }
     }
   }

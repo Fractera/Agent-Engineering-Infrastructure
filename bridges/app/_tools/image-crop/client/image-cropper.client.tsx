@@ -27,16 +27,32 @@ const CROP_RATIOS: Record<CropMode, { w: number; h: number }> = {
 
 export type CropperLabels = { title: string; scale: string; cancel: string; apply: string };
 
+// 🔒 ЗАКОН ПЕРЕНОСИМОГО ИНСТРУМЕНТА: подписи НЕОБЯЗАТЕЛЬНЫ.
+//
+// Инструмент устанавливается копией в чужие проекты, где нашего словаря панели
+// не существует. Инструмент, который без словаря не собирается, невозможно
+// установить никуда — поэтому у него есть собственные английские значения по
+// умолчанию, а переводы он принимает, если они есть у принимающей стороны.
+const FALLBACK: CropperLabels = { title: "Crop image", scale: "Scale", cancel: "Cancel", apply: "Apply" };
+
 export function ImageCropper(
-  { src, labels, onDone, onCancel }: {
+  { src, labels, onDone, onCancel, force }: {
     src: string;
-    labels: CropperLabels;
+    labels?: CropperLabels;
     onDone: (blob: Blob, cropMode: string) => void;
     onCancel: () => void;
+    /**
+     * Запереть пропорцию. Нужно там, где форма кадра задана назначением, а не
+     * вкусом: логотип и иконка обязаны быть квадратными, картинка соцсети —
+     * горизонтальной. Без этого владелец выбирает пропорцию, которую платформа
+     * всё равно не примет.
+     */
+    force?: "square" | "horizontal";
   },
 ) {
+  const t = labels ?? FALLBACK;
   const MAX = 280;
-  const [cropMode, setCropMode] = useState<CropMode>("horizontal");
+  const [cropMode, setCropMode] = useState<CropMode>(force ?? "horizontal");
   const ratio = CROP_RATIOS[cropMode];
   const r = ratio.w / ratio.h;
   const W = r >= 1 ? MAX : Math.round(MAX * r);
@@ -117,14 +133,18 @@ export function ImageCropper(
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 px-4">
       <div className="flex flex-col gap-3 rounded-xl bg-background p-4 shadow-xl" style={{ width: Math.max(W + 48, 320) }}>
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-foreground">{labels.title}</span>
-          <div className="flex gap-1">
-            {(["horizontal", "square", "vertical"] as CropMode[]).map((m) => (
-              <Button key={m} variant={cropMode === m ? "default" : "outline"} size="xs" onClick={() => setCropMode(m)}>
-                {m === "horizontal" ? "16:9" : m === "square" ? "1:1" : "9:16"}
-              </Button>
-            ))}
-          </div>
+          <span className="text-xs font-semibold text-foreground">{t.title}</span>
+          {/* Пропорция заперта — выбора нет и показывать его незачем: кнопки,
+              которые ничего не меняют, хуже их отсутствия. */}
+          {!force && (
+            <div className="flex gap-1">
+              {(["horizontal", "square", "vertical"] as CropMode[]).map((m) => (
+                <Button key={m} variant={cropMode === m ? "default" : "outline"} size="xs" onClick={() => setCropMode(m)}>
+                  {m === "horizontal" ? "16:9" : m === "square" ? "1:1" : "9:16"}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
         <canvas
           ref={canvasRef}
@@ -135,17 +155,17 @@ export function ImageCropper(
           onMouseDown={onMouseDown}
         />
         <div className="flex flex-col gap-1">
-          <span className="text-[10px] text-muted-foreground">{labels.scale}</span>
+          <span className="text-[10px] text-muted-foreground">{t.scale}</span>
           <input
             type="range" min={0.05} max={4} step={0.01} value={scale}
             onChange={(e) => setScale(parseFloat(e.target.value))}
             className="w-full accent-primary"
-            aria-label={labels.scale}
+            aria-label={t.scale}
           />
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={onCancel}>{labels.cancel}</Button>
-          <Button size="sm" onClick={handleDone}>{labels.apply}</Button>
+          <Button variant="outline" size="sm" onClick={onCancel}>{t.cancel}</Button>
+          <Button size="sm" onClick={handleDone}>{t.apply}</Button>
         </div>
       </div>
     </div>
