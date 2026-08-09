@@ -1,65 +1,25 @@
-// Возможности приложения (шаг 501, партия 20).
+// Возможности приложения — СЕРВЕРНОЕ чтение (шаг 501, партия 20).
 //
-// Хранилище — тот же `PLATFORM-CONFIG/platform-config.json`, ветка `features`.
+// Хранилище — `PLATFORM-CONFIG/platform-config.json`, ветка `features`.
 // Применяются БЕЗ пересборки: приложение читает файл в рантайме.
 //
-// 🔒 ГЛАВНОЕ СВОЙСТВО ЭТОГО РАЗДЕЛА (решение владельца 2026-08-09): три
-// возможности — верхнее меню, страницы подвала и cookie — управляют ВИДИМОСТЬЮ
-// своих разделов в меню панели. Выключено — раздела ниже нет. Причина простая:
-// настраивать баннер, которого в приложении не будет, значит тратить время
-// владельца на то, что никогда не покажется.
+// 🔒 ГЛАВНОЕ СВОЙСТВО РАЗДЕЛА (владелец, 2026-08-09): три возможности — верхнее
+// меню, страницы подвала и cookie — управляют ВИДИМОСТЬЮ своих разделов в меню
+// панели. Выключено — раздела ниже нет: настраивать баннер, которого в
+// приложении не будет, значит тратить время владельца на то, что не покажется.
+//
+// 🔒 ЗДЕСЬ `fs` — файл только серверный. Данные, нужные ещё и островку, лежат в
+// `platform-features.shared.ts` без зависимостей.
 
 import fs from "fs";
 import type { AdminPageSlug } from "@/lib/admin-nav";
+import {
+  FEATURE_ORDER, FEATURE_DEFAULTS, FEATURE_SECTION, type FeatureKey,
+} from "@/lib/platform-features.shared";
 
 const CONFIG_PATH =
   process.env.PLATFORM_CONFIG_PATH ??
   "/opt/fractera/app/PLATFORM-CONFIG/platform-config.json";
-
-export type FeatureKey =
-  | "auth"
-  | "breadcrumbs"
-  | "faq"
-  | "themeToggle"
-  | "widthToggle"
-  | "languageSwitcher"
-  | "topMenu"
-  | "footerPages"
-  | "cookieBanner";
-
-/** Порядок = порядок на странице. Управляющие возможности идут первыми. */
-export const FEATURE_ORDER: FeatureKey[] = [
-  "topMenu", "footerPages", "cookieBanner",
-  "auth", "breadcrumbs", "faq", "themeToggle", "widthToggle", "languageSwitcher",
-];
-
-/** Состояние проекта, который ещё ни разу не настраивали. */
-export const FEATURE_DEFAULTS: Record<FeatureKey, boolean> = {
-  topMenu: true,
-  footerPages: true,
-  cookieBanner: false,
-  auth: false,
-  breadcrumbs: false,
-  faq: false,
-  themeToggle: true,
-  widthToggle: true,
-  languageSwitcher: true,
-};
-
-/**
- * Возможность → раздел панели, который она открывает.
- *
- * Только у трёх есть свой раздел; остальные шесть — сами по себе флаги, и
- * настраивать в них нечего.
- */
-export const FEATURE_SECTION: Partial<Record<FeatureKey, AdminPageSlug>> = {
-  topMenu: "top-menu",
-  footerPages: "footer-pages",
-  cookieBanner: "cookie-banner",
-};
-
-/** Ширину экрана решает раскладка, когда она включена, — переключатель тогда лишний. */
-export const OFF_WHEN_PARALLEL: FeatureKey[] = ["widthToggle"];
 
 export type FeaturesState = {
   ok: boolean;

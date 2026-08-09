@@ -6,7 +6,7 @@ import { Loader2, Save, ArrowDownRight } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { FEATURE_ORDER, OFF_WHEN_PARALLEL, type FeatureKey } from "@/lib/platform-features";
+import { FEATURE_ORDER, OFF_WHEN_PARALLEL, type FeatureKey } from "@/lib/platform-features.shared";
 
 // Возможности приложения (шаг 501, партия 20).
 //

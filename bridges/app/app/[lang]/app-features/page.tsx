@@ -9,7 +9,8 @@
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
-import { readFeatures, FEATURE_SECTION, type FeatureKey } from "@/lib/platform-features";
+import { readFeatures } from "@/lib/platform-features";
+import { FEATURE_SECTION, type FeatureKey } from "@/lib/platform-features.shared";
 import { FeaturesEditor } from "./_components/features-editor.client";
 
 export const dynamic = "force-dynamic";
