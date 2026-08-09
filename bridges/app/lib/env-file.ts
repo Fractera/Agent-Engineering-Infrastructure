@@ -30,6 +30,29 @@ export function readEnvFile(file: string): Record<string, string> {
 export function writeEnvFile(file: string, vars: Record<string, string>): void {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, serializeEnv(vars), "utf-8");
+  hardenSecretFile(file);
+}
+
+// 🔒 Права 600 ставятся ОТДЕЛЬНЫМ вызовом, а не параметром записи (шаг 501,
+// дефект найден замером 2026-08-09).
+//
+// Почему это не тонкость: маршруты по всему проекту писали секреты с
+// `{ mode: 0o600 }` и выглядели правильными, но параметр `mode` у
+// `writeFileSync` действует ТОЛЬКО при СОЗДАНИИ файла. Все эти файлы создал
+// установщик с обычной маской, поэтому каждая последующая запись оставляла 644 —
+// замысел был, а действия не произошло ни разу. Замер на живом сервере: ключ
+// OpenAI, ключ Resend, секрет Google, DATA_SECRET и DEPLOY_SECRET лежали в файлах,
+// читаемых любым пользователем системы.
+//
+// `chmodSync` действует всегда, независимо от того, существовал файл или нет.
+// Ошибку глотаем: файл уже записан, и потеря прав не должна отменять сохранение —
+// но и молчать нельзя, поэтому пишем в журнал процесса.
+export function hardenSecretFile(file: string): void {
+  try {
+    fs.chmodSync(file, 0o600);
+  } catch (e) {
+    console.warn(`[env-file] не удалось ограничить права ${file}: ${String(e)}`);
+  }
 }
 
 // Detached pm2 restart so the admin route can return BEFORE pm2 kills

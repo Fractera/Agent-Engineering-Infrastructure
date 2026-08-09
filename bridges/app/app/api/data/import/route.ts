@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { hardenSecretFile } from "@/lib/env-file";
 import { existsSync, writeFileSync, mkdtempSync, mkdirSync, rmSync } from "fs";
 import { join, dirname } from "path";
 import { execSync } from "child_process";
@@ -151,6 +152,7 @@ export async function POST(req: NextRequest) {
       if (e) {
         mkdirSync(dirname(CHANNELS_CONFIG), { recursive: true });
         writeFileSync(CHANNELS_CONFIG, e.getData(), { mode: 0o600 });
+        hardenSecretFile(CHANNELS_CONFIG);
         stats.channels = 1;
       }
     }
@@ -159,6 +161,7 @@ export async function POST(req: NextRequest) {
       const e = zip.getEntry("env.local");
       if (e) {
         writeFileSync(join(APP_DIR, ".env.local"), e.getData(), { mode: 0o600 });
+        hardenSecretFile(join(APP_DIR, ".env.local"));
         stats.env = 1;
       }
     }

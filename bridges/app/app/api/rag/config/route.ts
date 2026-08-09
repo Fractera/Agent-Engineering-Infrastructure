@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { hardenSecretFile } from "@/lib/env-file";
 import fs from "fs";
 import { execSync } from "child_process";
 import { requireAuth } from "@/lib/require-auth";
@@ -69,6 +70,7 @@ export async function POST(req: NextRequest) {
     const vars = fs.existsSync(RAG_ENV) ? parseEnv(fs.readFileSync(RAG_ENV, "utf-8")) : {};
     vars.LLM_MODEL = model;
     fs.writeFileSync(RAG_ENV, serializeEnv(vars), { mode: 0o600 });
+    hardenSecretFile(RAG_ENV);
   } catch (e) {
     return NextResponse.json({ error: `Could not write ${RAG_ENV}: ${String(e)}` }, { status: 500 });
   }

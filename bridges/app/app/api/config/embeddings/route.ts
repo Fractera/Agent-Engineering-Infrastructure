@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { hardenSecretFile } from "@/lib/env-file";
 import fs from "fs";
 import { execSync } from "child_process";
 import { requireAuth } from "@/lib/require-auth";
@@ -66,6 +67,9 @@ export async function POST(req: NextRequest) {
       Object.entries(current).map(([k, v]) => `${k}=${v}`).join("\n") + "\n",
       { mode: 0o600 },
     );
+    // Права ставим ОТДЕЛЬНО: mode у writeFileSync действует только при создании
+    // файла, а этот файл создал установщик — см. hardenSecretFile (шаг 501).
+    hardenSecretFile(DATA_ENV);
   } catch (e) {
     return NextResponse.json({ error: `Could not write ${DATA_ENV}: ${String(e)}` }, { status: 500 });
   }
@@ -84,6 +88,7 @@ export async function POST(req: NextRequest) {
       rag.OPENAI_API_KEY = apiKey; // LightRAG's OpenAI client reads this exact name
       const body = Object.entries(rag).map(([k, v]) => `${k}=${v}`).join("\n") + "\n";
       fs.writeFileSync(RAG_ENV, body, { mode: 0o600 });
+      hardenSecretFile(RAG_ENV);
       ragUpdated = true;
     }
   } catch {

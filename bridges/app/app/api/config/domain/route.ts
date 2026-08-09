@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { hardenSecretFile } from "@/lib/env-file";
 import { execSync, exec } from "child_process";
 import { writeFileSync, mkdirSync, existsSync, rmSync } from "fs";
 import Database from "better-sqlite3";
@@ -403,6 +404,9 @@ export async function PUT(req: NextRequest) {
       mkdirSync(dir, { recursive: true, mode: 0o700 });
       writeFileSync(`${dir}/fullchain.pem`, fullchainPem, { mode: 0o600 });
       writeFileSync(`${dir}/privkey.pem`,   privateKeyPem, { mode: 0o600 });
+      // Закрытый ключ сертификата — тот же класс секрета, та же причина.
+      hardenSecretFile(`${dir}/fullchain.pem`);
+      hardenSecretFile(`${dir}/privkey.pem`);
 
       // Validate by asking openssl to parse the chain — fail early if garbage.
       execSync(`openssl x509 -in ${dir}/fullchain.pem -noout -subject`, { timeout: 3000 });

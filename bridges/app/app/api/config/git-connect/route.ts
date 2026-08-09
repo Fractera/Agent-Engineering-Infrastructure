@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { hardenSecretFile } from "@/lib/env-file";
 import fs from "fs";
 import { exec } from "child_process";
 import { promisify } from "util";
@@ -40,6 +41,7 @@ function parseEnv(content: string): Record<string, string> {
 function writeEnv(vars: Record<string, string>) {
   const body = Object.entries(vars).map(([k, v]) => `${k}=${v}`).join("\n") + "\n";
   fs.writeFileSync(APP_ENV, body, { mode: 0o600 });
+  hardenSecretFile(APP_ENV);
 }
 
 function authUrl(repoUrl: string, token: string): string {
