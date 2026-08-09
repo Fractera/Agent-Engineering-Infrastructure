@@ -594,7 +594,9 @@
       "helpRefusesTitle": "It refuses rather than improvises.",
       "helpRefuses": "If this server holds uncommitted changes, if the histories have diverged, or if a build is already running, the turn is skipped and the reason appears above. Only a clean fast-forward is taken automatically — your work is never buried to make room.",
       "helpOffTitle": "Why it is off by default.",
-      "helpOff": "On a project serving real customers, letting a build start by itself is a decision to make deliberately rather than inherit. So the default is Manual, and turning it on is one press with the cost stated."
+      "helpOff": "On a project serving real customers, letting a build start by itself is a decision to make deliberately rather than inherit. So the default is Manual, and turning it on is one press with the cost stated.",
+      "backToList": "All deployments",
+      "pickRun": "Pick a deployment on the left to read its log."
     },
     "github": {
       "unavailable": "The connection status could not be read.",
@@ -758,7 +760,10 @@
       "kindEvolving": "self-evolving",
       "kindStatic": "fixed",
       "kindEvolvingHint": "The agent adds to this one as the project grows — a new term, a lesson, a step, a dead end. Its growth is a sign of health, not mess.",
-      "kindStaticHint": "You or the platform write this one; the agent obeys it and edits it only when asked. Otherwise it would be rewriting the rules it works by."
+      "kindStaticHint": "You or the platform write this one; the agent obeys it and edits it only when asked. Otherwise it would be rewriting the rules it works by.",
+      "backToList": "All steps",
+      "pickStep": "Pick a step on the left to read it.",
+      "closeStep": "Close"
     },
     "parallelRouting": {
       "intro": "These settings live in a file on your server and apply WITHOUT a rebuild — a save shows up on the app's next page load.",
@@ -1652,7 +1657,9 @@
       "helpRefusesTitle": "Он отказывается, а не импровизирует.",
       "helpRefuses": "Если на сервере есть незакоммиченные изменения, если истории разошлись или если сборка уже идёт, ход пропускается, а причина появляется выше. Автоматически берётся только чистое ускоренное слияние — вашу работу никогда не похоронят, чтобы освободить место.",
       "helpOffTitle": "Почему выключено по умолчанию.",
-      "helpOff": "На проекте с настоящими клиентами позволить сборке начинаться самой — решение, которое принимают осознанно, а не получают по наследству. Поэтому по умолчанию «вручную», а включение — одно нажатие с названной ценой."
+      "helpOff": "На проекте с настоящими клиентами позволить сборке начинаться самой — решение, которое принимают осознанно, а не получают по наследству. Поэтому по умолчанию «вручную», а включение — одно нажатие с названной ценой.",
+      "backToList": "Все развёртывания",
+      "pickRun": "Выберите развёртывание слева, чтобы прочитать его журнал."
     },
     "github": {
       "unavailable": "Состояние связи прочитать не удалось.",
@@ -1816,7 +1823,10 @@
       "kindEvolving": "саморазвивающийся",
       "kindStatic": "заданный",
       "kindEvolvingHint": "Агент дополняет его по ходу проекта — новый термин, урок, шаг, тупик. Его рост это признак здоровья, а не беспорядка.",
-      "kindStaticHint": "Его пишете вы или платформа; агент ему подчиняется и правит только по просьбе. Иначе он переписывал бы правила, по которым сам работает."
+      "kindStaticHint": "Его пишете вы или платформа; агент ему подчиняется и правит только по просьбе. Иначе он переписывал бы правила, по которым сам работает.",
+      "backToList": "Все шаги",
+      "pickStep": "Выберите шаг слева, чтобы прочитать его.",
+      "closeStep": "Закрыть"
     },
     "parallelRouting": {
       "intro": "Эти настройки лежат в файле на вашем сервере и применяются БЕЗ пересборки — сохранение видно на следующей загрузке страницы приложения.",

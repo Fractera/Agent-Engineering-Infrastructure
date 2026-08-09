@@ -18,6 +18,7 @@ import { Download } from "lucide-react";
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
+import { TwoPane } from "../_components/two-pane";
 import { readRuns, readRun, readAuto, whenLabel, howLong } from "./_lib/runs";
 import { RunsList } from "./_components/runs-list";
 import { AutoModeSwitch } from "./_components/auto-mode.client";
@@ -81,41 +82,54 @@ export default async function DeploymentsPage(
           <p className="mt-3 mb-1.5 text-[10px] text-muted-foreground">
             {fill(d.count, { count: String(runs.length) })}
           </p>
-          <RunsList
-            runs={runs}
-            activeId={opened?.id ?? null}
-            hrefFor={(id) => (id === opened?.id ? base : `${base}?run=${encodeURIComponent(id)}`)}
-            labels={{ empty: d.empty, noCommit: d.noCommit }}
-          />
 
-          {opened && (
-            <div className="mt-3 rounded-lg border border-border">
-              <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
-                <span className="font-mono text-[10px] text-muted-foreground">
-                  {opened.status} · {whenLabel(opened.started_at)} · {howLong(opened.duration_ms)}
-                </span>
-                <span className="ml-auto flex items-center gap-2">
-                  {/* Скачивание журнала — ОБЫЧНАЯ ссылка на тот же маршрут: браузер
-                      сохраняет ответ сам. В панели это был Blob, собранный в
-                      памяти; ссылка работает и без JS, и с правым щелчком. */}
-                  <a
-                    href={`/api/deploy/history?id=${encodeURIComponent(opened.id)}&download=1`}
-                    className="inline-flex items-center gap-1 rounded border border-border px-2 py-0.5 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground"
-                  >
-                    <Download size={10} />{d.download}
-                  </a>
-                  <Link href={base} className="text-[10px] text-muted-foreground underline hover:text-foreground">
-                    {d.closeLog}
-                  </Link>
-                </span>
-              </div>
-              {/* Журнал компилятора — моноширинный текст, прокручивается внутри себя:
-                  длинная строка не имеет права растягивать страницу. */}
-              <pre className="max-h-[60vh] overflow-auto p-3 font-mono text-[10px] leading-relaxed whitespace-pre-wrap text-foreground">
-                {opened.log?.trim() ? opened.log : d.noLog}
-              </pre>
-            </div>
-          )}
+          {/* Две колонки: список слева, журнал справа — схема старой панели,
+              возвращённая по просьбе владельца. Здесь она серверная, потому что
+              выбранный прогон стоит в адресе. */}
+          <TwoPane
+            selected={Boolean(opened)}
+            backHref={base}
+            backLabel={d.backToList}
+            emptyHint={d.pickRun}
+            list={
+              <RunsList
+                runs={runs}
+                activeId={opened?.id ?? null}
+                hrefFor={(id) => (id === opened?.id ? base : `${base}?run=${encodeURIComponent(id)}`)}
+                labels={{ empty: d.empty, noCommit: d.noCommit }}
+              />
+            }
+            detail={
+              opened && (
+                <div className="rounded-lg border border-border">
+                  <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
+                    <span className="font-mono text-[10px] text-muted-foreground">
+                      {opened.status} · {whenLabel(opened.started_at)} · {howLong(opened.duration_ms)}
+                    </span>
+                    <span className="ml-auto flex items-center gap-2">
+                      {/* Скачивание журнала — ОБЫЧНАЯ ссылка на тот же маршрут: браузер
+                          сохраняет ответ сам. В панели это был Blob, собранный в
+                          памяти; ссылка работает и без JS, и с правым щелчком. */}
+                      <a
+                        href={`/api/deploy/history?id=${encodeURIComponent(opened.id)}&download=1`}
+                        className="inline-flex items-center gap-1 rounded border border-border px-2 py-0.5 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground"
+                      >
+                        <Download size={10} />{d.download}
+                      </a>
+                      <Link href={base} className="text-[10px] text-muted-foreground underline hover:text-foreground">
+                        {d.closeLog}
+                      </Link>
+                    </span>
+                  </div>
+                  {/* Журнал компилятора — моноширинный текст, прокручивается внутри себя:
+                      длинная строка не имеет права растягивать страницу. */}
+                  <pre className="max-h-[60vh] overflow-auto p-3 font-mono text-[10px] leading-relaxed whitespace-pre-wrap text-foreground">
+                    {opened.log?.trim() ? opened.log : d.noLog}
+                  </pre>
+                </div>
+              )
+            }
+          />
         </>
       )}
 

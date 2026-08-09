@@ -250,6 +250,7 @@ export type AdminStrings = {
     helpProviderTitle: string; helpProvider: string;
   };
   deployments: {
+    backToList: string; pickRun: string;
     unavailable: string; count: string; empty: string; noCommit: string; noLog: string;
     download: string; closeLog: string;
     autoLabel: string; autoHint: string; lastCheck: string;
@@ -324,6 +325,7 @@ export type AdminStrings = {
     edit: string; cancel: string;
     save: string; saving: string; saved: string; failed: string; nothingToSave: string;
     notCreated: string; createHint: string; chars: string; lines: string;
+    backToList: string; pickStep: string; closeStep: string;
     kindEvolving: string; kindStatic: string;
     kindEvolvingHint: string; kindStaticHint: string;
     useCasesRequired: string;

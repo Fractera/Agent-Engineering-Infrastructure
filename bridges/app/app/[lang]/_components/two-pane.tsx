@@ -1,0 +1,68 @@
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
+
+// Две колонки: список слева, содержимое справа (шаг 501, возврат схемы старой
+// панели по просьбе владельца 2026-08-09).
+//
+// СЕРВЕРНЫЙ и без единой строки JS — и это возможно только потому, что выбор
+// стоит В АДРЕСЕ (`?run=…`, `?file=…`). Сервер знает, что открыто, поэтому:
+// ссылку на конкретный журнал можно переслать, «назад» — обычная ссылка, а с
+// выключенным JS всё работает как обычно. В старой панели выбор был состоянием
+// браузера, и ни одно из трёх свойств не выполнялось.
+//
+// МОБИЛЬНЫЙ ВАРИАНТ. Две колонки требуют ширины, которой на телефоне нет.
+// Поэтому ниже `lg` показывается ОДНА панель: пока ничего не выбрано — список;
+// выбрали — содержимое и ссылка «назад». Это не деградация, а тот же master-detail:
+// на узком экране человек всё равно смотрит одно за раз.
+//
+// Пропорция 1 : 1.6 — список это строки-заголовки, содержимое это журнал или
+// документ. Равные половины отдали бы половину экрана под то, что в ней не
+// нуждается.
+
+export function TwoPane({
+  list,
+  detail,
+  selected,
+  backHref,
+  backLabel,
+  emptyHint,
+}: {
+  list: React.ReactNode;
+  detail: React.ReactNode;
+  /** Выбран ли элемент. Решает и раскладку, и что показать на узком экране. */
+  selected: boolean;
+  /** Куда ведёт «назад» — тот же адрес без параметра выбора. */
+  backHref: string;
+  backLabel: string;
+  /** Что стоит в правой колонке, пока ничего не выбрано (только на широком экране). */
+  emptyHint: string;
+}) {
+  return (
+    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
+      {/* Список: на узком экране прячется, когда что-то открыто. */}
+      <div className={`${selected ? "hidden lg:block" : "block"} min-w-0`}>{list}</div>
+
+      {/* Содержимое: на узком экране появляется только при выборе. */}
+      <div className={`${selected ? "block" : "hidden lg:block"} min-w-0`}>
+        {selected ? (
+          <div className="min-w-0">
+            {/* «Назад» — только там, где список спрятан. На широком экране он
+                стоит рядом, и уводить с него некуда. */}
+            <Link
+              href={backHref}
+              className="mb-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground lg:hidden"
+            >
+              <ChevronLeft size={12} />
+              {backLabel}
+            </Link>
+            {detail}
+          </div>
+        ) : (
+          <div className="flex h-full min-h-[160px] items-center justify-center rounded-lg border border-dashed border-border px-4 py-8">
+            <p className="text-center text-[11px] text-muted-foreground">{emptyHint}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

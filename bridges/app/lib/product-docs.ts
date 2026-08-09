@@ -178,6 +178,23 @@ export function listSteps(): { exists: boolean; dir: string; files: StepFile[] }
   }
 }
 
+/**
+ * Содержимое ОДНОГО шага.
+ *
+ * Имя проверяется по фактическому списку папки, а не разбором строки: любой
+ * самодельный фильтр `..` рано или поздно обходят, а сверка со списком не
+ * оставляет такой возможности вовсе — чего в папке нет, того не прочитать.
+ */
+export function readStep(name: string): { name: string; exists: boolean; text: string } {
+  const known = listSteps().files.some((f) => f.name === name);
+  if (!known) return { name, exists: false, text: "" };
+  try {
+    return { name, exists: true, text: fs.readFileSync(path.join(APP_DIR, STEPS_DIR, name), "utf-8") };
+  } catch {
+    return { name, exists: false, text: "" };
+  }
+}
+
 function safeStat(p: string): { size: number; modified: string | null } {
   try {
     const s = fs.statSync(p);
