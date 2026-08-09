@@ -86,7 +86,13 @@ export function EnvEditor({ entries, labels }: { entries: EnvEntry[]; labels: En
                 <tr key={e.key} className={`border-b border-border/50 ${gone ? "opacity-40" : ""}`}>
                   <td className="px-3 py-1.5 align-middle">
                     <span className="flex items-center gap-1.5 font-mono text-foreground">
-                      {e.locked && <Lock size={10} className="shrink-0 text-muted-foreground" title={labels.lockedHint} />}
+                      {/* Подсказка висит на ОБЁРТКЕ, а не на иконке: у иконок
+                          lucide нет пропса `title` — сборка это поймала. */}
+                      {e.locked && (
+                        <span title={labels.lockedHint} className="flex shrink-0 items-center">
+                          <Lock size={10} className="text-muted-foreground" />
+                        </span>
+                      )}
                       {e.key}
                     </span>
                   </td>
