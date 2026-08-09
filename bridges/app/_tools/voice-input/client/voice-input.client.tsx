@@ -84,6 +84,11 @@ export default function VoiceInput({
   const [seconds, setSeconds] = useState(0);
   const [supported, setSupported] = useState(true);
   const [note, setNote] = useState("");
+  // Расшифровка НЕ вставляется сама: она ждёт решения владельца. Причина в цене
+  // ошибки — распознавание иногда слышит не то, а текст встаёт в СЕРЕДИНУ
+  // документа, и вылавливать чужую фразу в готовой инструкции дороже, чем один
+  // раз её прочитать.
+  const [draft, setDraft] = useState<string | null>(null);
 
   const recorder = useRef<MediaRecorder | null>(null);
   const chunks = useRef<BlobPart[]>([]);
@@ -153,14 +158,14 @@ export default function VoiceInput({
         if (!r.ok) { setNote(d.reason === "no-key" ? L.noKey : L.failed); return; }
         if (!d.text) { setNote(L.nothing); return; }
         setNote("");
-        insert(d.text);
+        setDraft(d.text);
       } catch {
         setNote(L.failed);
       } finally {
         setBusy(false);
       }
     },
-    [insert, L, apiUrl],
+    [L, apiUrl],
   );
 
   const startRecording = useCallback(async () => {
@@ -236,8 +241,8 @@ export default function VoiceInput({
   const ss = String(seconds % 60).padStart(2, "0");
 
   return (
-    <div className="space-y-1">
-      <div className="flex items-center gap-2">
+    <div className="w-full space-y-1.5">
+      <div className="flex w-full items-center gap-2">
         <button
           type="button"
           disabled={disabled || busy || !supported}
@@ -259,7 +264,7 @@ export default function VoiceInput({
         {recording ? (
           <div
             ref={(el) => { if (el) maxBars.current = Math.max(16, Math.floor(el.clientWidth / (BAR_WIDTH + BAR_GAP))); }}
-            className="relative h-10 flex-1 overflow-hidden rounded-md border bg-muted/40"
+            className="relative h-10 min-w-[120px] flex-1 overflow-hidden rounded-md border border-border bg-muted/40"
           >
             <div className="absolute inset-0 flex items-center" style={{ gap: `${BAR_GAP}px`, paddingInline: 2 }}>
               {bars.map((h, i) => (
@@ -272,6 +277,42 @@ export default function VoiceInput({
           </div>
         ) : null}
       </div>
+
+      {/* РАСШИФРОВКА ЖДЁТ РЕШЕНИЯ — под кнопкой, до вставки.
+          Показать сказанное и спросить дороже на одно нажатие, но дешевле любой
+          ошибки распознавания: текст встаёт в СЕРЕДИНУ документа, и выловить там
+          чужую фразу тяжелее, чем один раз её прочитать. Заодно видно, что
+          услышала модель, а не что вы сказали. */}
+      {draft !== null ? (
+        <div className="w-full rounded-md border border-border bg-muted/30 p-2">
+          <p className="mb-1 text-[10px] font-medium text-muted-foreground">{L.draftTitle}</p>
+          {/* Текст ПРАВИТСЯ прямо здесь: одно неверно услышанное слово не должно
+              стоить повторной диктовки всего абзаца. */}
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            rows={Math.min(8, Math.max(2, draft.split("\n").length + 1))}
+            className="w-full resize-y rounded border border-border bg-background p-2 text-xs leading-relaxed text-foreground outline-none"
+          />
+          <div className="mt-1.5 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => { insert(draft); setDraft(null); }}
+              disabled={!draft.trim()}
+              className="rounded-md border border-primary bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground transition-colors disabled:opacity-50"
+            >
+              {L.accept}
+            </button>
+            <button
+              type="button"
+              onClick={() => setDraft(null)}
+              className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent"
+            >
+              {L.discard}
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {/* Причина отказа — строкой рядом с кнопкой: тостов у автоматизации нет, а тупика быть не должно. */}
       {!supported ? <p className="text-xs text-muted-foreground">{L.tipInsecure}</p> : null}
