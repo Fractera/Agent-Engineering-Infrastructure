@@ -320,6 +320,15 @@ export type AdminStrings = {
     title: string;
     items: { github: string; "use-cases": string; openai: string; domain: string };
   };
+  // Карта документов: единственная описательная страница группы. Отвечает не
+  // «что в файле», а «зачем документов столько».
+  docsOverview: {
+    whyTitle: string;
+    whyLead: string; whyOneEdit: string; whyWhole: string; whyModels: string; whyExperience: string;
+    evolvingExplained: string; staticExplained: string;
+    notCreatedYet: string; closing: string;
+    purposes: Record<string, string>;
+  };
   docs: {
     intro: string;
     edit: string; cancel: string;

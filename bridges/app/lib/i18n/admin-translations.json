@@ -741,6 +741,32 @@
         "domain": "No custom domain — HTTPS-only features stay unavailable"
       }
     },
+    "docsOverview": {
+      "whyTitle": "Why a project needs this many documents",
+      "whyLead": "At first glance it looks like a lot of reading for a starter, and loading it into a model's context looks like a cost. That impression is worth taking seriously — and it holds in exactly one case.",
+      "whyOneEdit": "It holds when you want a single small change. Then the context spent on the whole picture really is paid for nothing.",
+      "whyWhole": "Most work is not that. Development means finding and changing a meaningful part of the code — and the larger an application grows, the higher the chance that a change in one place quietly breaks another. In that situation it is far more useful to hand the model a coherent picture: what already exists, how the parts are connected, how they work, and why they came to be this way. That picture is what these documents are.",
+      "whyModels": "This also became true only recently. A year ago instructions of this kind could not carry their own weight. By mid-2026 models respond to a documented architecture very differently — they use it, and the work becomes both faster and cheaper by a wide margin.",
+      "whyExperience": "Most of this documentation grows on its own as the project moves. The structure is not invented here: it comes from building projects well past a million lines of code, and it earned its place by keeping token spend low rather than by looking thorough.",
+      "evolvingExplained": "The agent adds to these as the work goes on: a term that caused confusion, a lesson from a mistake, a step that was completed, a dead end not to repeat. You are not expected to maintain them — their growth is the record of the project thinking about itself.",
+      "staticExplained": "These you or the platform write, and the agent obeys them. It edits them only when asked — otherwise it would be rewriting the rules it works by, which is exactly how an agent talks itself into the wrong build.",
+      "notCreatedYet": "not created yet",
+      "closing": "A document that does not exist yet is not a mistake — it is simply work that has not been needed so far. Open one and it will tell you what belongs in it.",
+      "purposes": {
+        "doc-instruction": "The rules of the work itself: how the agent talks to you, what it must read before building, what it may never touch. Everything else is read through this one.",
+        "doc-use-cases": "What the product is for, in your words — who uses it, what they came to do, what has to be true when they are done. Development does not start before this exists: an agent that knows how to build but not what for will build carefully and build the wrong thing.",
+        "doc-platform-tools": "What the platform already gives you: stores, vector search, the knowledge graph, the map, channels. The agent has no external tools, so this file is the only way it learns these exist — and not knowing is how a second database gets built next to the first.",
+        "doc-architecture": "How this particular app is put together and which layer owns what. It grows with the project, so a later session can pick up a structure instead of re-deriving it from the code.",
+        "doc-glossary": "The terms of this project, so one word keeps one meaning. Cheap to maintain and it removes a whole class of misunderstandings that otherwise cost a session each.",
+        "doc-lessons": "Your preferences and the habits earned from earlier mistakes. A session ends and takes its context with it; this is the part that survives — say “remember this” and it goes here.",
+        "doc-steps": "One file per piece of work, written by whoever did it. It is the project's history in the form the next session can actually use: what was tried, what was decided, what is already solved.",
+        "doc-antipatterns": "Approaches that cost time here and must not be tried again. The value is in the second half of each entry — not what failed, but why, so a similar idea can be recognised before it is built.",
+        "doc-design": "How the pages should look. You describe it once; the agent builds to that description instead of inventing a look per page and leaving you to correct it afterwards.",
+        "doc-parallel-routing": "How a page assembled from independent areas works in this project, and what changes when it is turned on. Read before touching layout, not after.",
+        "doc-coding-standards": "The limits the code must respect: size before decomposition, static public pages, text through translations, settings read rather than hardcoded. They are limits, not style advice — reaching one is a signal to restructure.",
+        "doc-troubleshooting": "Problems that appear only in production and their real causes. Loaded on demand rather than at session start: a diagnostic manual held in every session is paid for in every session, including the ones where nothing is broken."
+      }
+    },
     "docs": {
       "intro": "This document is a file in your project, edited here or in your editor. It travels with a push and a pull like any other file:",
       "edit": "Edit",
@@ -1059,6 +1085,10 @@
       "doc-troubleshooting": {
         "title": "Troubleshooting",
         "hint": "Problems users hit in production, and what actually causes them."
+      },
+      "doc-overview": {
+        "title": "Map of the documents",
+        "hint": "Why there are this many, how they differ, and which one to open first."
       }
     }
   },
@@ -1804,6 +1834,32 @@
         "domain": "Нет своего домена — возможности, требующие HTTPS, недоступны"
       }
     },
+    "docsOverview": {
+      "whyTitle": "Зачем проекту столько документов",
+      "whyLead": "На первый взгляд это много чтения для стартера, а загрузка всего этого в контекст модели выглядит как расход. Возражение справедливое — и верно оно ровно в одном случае.",
+      "whyOneEdit": "Оно верно, когда вам нужна одна небольшая правка. Тогда контекст, потраченный на общую картину, действительно оплачен впустую.",
+      "whyWhole": "Но большая часть работы устроена иначе. Разработка — это найти и изменить значимую часть кода, и чем больше становится приложение, тем выше вероятность, что правка в одном месте тихо ломает другое. В такой ситуации гораздо полезнее передать модели целостную картину: что уже существует, как части связаны, как это работает и почему сложилось именно так. Эти документы и есть такая картина.",
+      "whyModels": "Верно это стало недавно. Год назад инструкции подобного рода не окупали себя. К середине 2026 года модели реагируют на архитектуру документации совсем иначе — они ею пользуются, и работа становится и быстрее, и дешевле, причём с большим отрывом.",
+      "whyExperience": "Большая часть этой документации развивается сама по мере движения проекта. Структура здесь не придумана: она выросла из проектов размером далеко за миллион строк кода и заслужила место не основательным видом, а низким расходом токенов.",
+      "evolvingExplained": "Их агент дополняет по ходу работы: термин, вызвавший разночтение, урок из ошибки, завершённый шаг, тупик, который не стоит повторять. Вести их вручную от вас не требуется — их рост и есть след того, как проект думает о себе.",
+      "staticExplained": "Их пишете вы или платформа, а агент им подчиняется. Правит только по просьбе — иначе он переписывал бы правила, по которым сам работает, а это ровно тот способ, которым агент уговаривает себя строить не то.",
+      "notCreatedYet": "ещё не создан",
+      "closing": "Отсутствующий документ — не ошибка, а работа, которая пока не понадобилась. Откройте его, и он сам скажет, что в нём должно быть.",
+      "purposes": {
+        "doc-instruction": "Правила самой работы: как агент разговаривает с вами, что обязан прочитать до стройки, чего не имеет права касаться. Всё остальное читается уже через неё.",
+        "doc-use-cases": "Зачем нужен продукт, вашими словами: кто им пользуется, зачем пришёл, что должно быть верно, когда он закончил. До появления этого документа разработка не начинается: агент, который знает чем строить, но не знает зачем, построит аккуратно и не то.",
+        "doc-platform-tools": "Что платформа уже даёт: склады, векторный поиск, граф знаний, карту, каналы. Внешних инструментов у агента нет, и это единственный способ узнать об их существовании — а не зная, он строит вторую базу рядом с первой.",
+        "doc-architecture": "Как устроено именно это приложение и какой слой чем владеет. Растёт вместе с проектом, поэтому следующая сессия получает готовую структуру, а не выводит её заново из кода.",
+        "doc-glossary": "Термины проекта, чтобы одно слово сохраняло одно значение. Стоит дёшево и снимает целый класс недопониманий, каждое из которых иначе обходится в сессию.",
+        "doc-lessons": "Ваши предпочтения и привычки, добытые прошлыми ошибками. Сессия заканчивается и уносит контекст с собой; это та часть, которая остаётся — скажите «запомни», и запись появится здесь.",
+        "doc-steps": "По файлу на каждую работу, написанному тем, кто её выполнял. Это история проекта в том виде, которым следующая сессия может пользоваться: что пробовали, что решили, что уже закрыто.",
+        "doc-antipatterns": "Подходы, которые здесь стоили времени и повторять их нельзя. Ценность во второй половине каждой записи — не что не получилось, а почему, чтобы похожую идею можно было узнать до того, как её построят.",
+        "doc-design": "Как должны выглядеть страницы. Вы описываете это один раз, и агент строит по описанию, вместо того чтобы придумывать вид каждой страницы заново и оставлять вам правку постфактум.",
+        "doc-parallel-routing": "Как в этом проекте работает страница, собранная из независимых областей, и что меняется при её включении. Читается до работы с раскладкой, а не после.",
+        "doc-coding-standards": "Границы, которые обязан соблюдать код: размер до декомпозиции, статические публичные страницы, тексты через переводы, настройки читаются, а не зашиваются. Это именно границы, а не советы по стилю: достигнутая — сигнал перестраивать.",
+        "doc-troubleshooting": "Проблемы, которые появляются только на продакшне, и их настоящие причины. Читается по требованию, а не на старте: диагностический справочник, который держат в каждой сессии, в каждой же и оплачивается — включая те, где ничего не сломано."
+      }
+    },
     "docs": {
       "intro": "Этот документ — файл вашего проекта; его правят здесь или в редакторе. Он едет с отправкой и получением, как любой другой файл:",
       "edit": "Править",
@@ -2122,6 +2178,10 @@
       "doc-troubleshooting": {
         "title": "Разбор затруднений",
         "hint": "Проблемы, с которыми пользователи сталкиваются на продакшне, и их настоящие причины."
+      },
+      "doc-overview": {
+        "title": "Карта документов",
+        "hint": "Зачем документов столько, чем они друг от друга отличаются и что открывать первым."
       }
     }
   }
