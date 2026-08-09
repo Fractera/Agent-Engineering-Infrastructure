@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { SlotLayoutPreview } from "./slot-layout-preview.client";
-import { LIST_ORDER, LOCKED, type SlotName } from "../_lib/platform";
+import { LIST_ORDER, LOCKED, type SlotName } from "../_lib/slots";
 
 // Выбор областей раскладки (шаг 501, Ф2, партия 18 — перенос один-в-один).
 //

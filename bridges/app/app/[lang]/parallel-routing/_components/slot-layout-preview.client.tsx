@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import type { SlotName } from "../_lib/platform";
+import type { SlotName } from "../_lib/slots";
 
 // Живой чертёж раскладки (шаг 501, партия 18 — перенос без изменения поведения).
 // Блоки двигаются и меняют размер за 300 мс, пока области включают и выключают:

@@ -9,35 +9,16 @@
 // Читаем файл напрямую, а не через собственный маршрут `api/config/platform`:
 // маршрут делает ровно это же чтение, но требует круга по сети и куки
 // авторизации, тогда как страница уже прошла гейт `proxy.ts`.
+//
+// 🔒 ЭТОТ ФАЙЛ — ТОЛЬКО СЕРВЕРНЫЙ (здесь `fs`). Всё, что нужно ещё и островку,
+// лежит в соседнем `slots.ts` без зависимостей.
 
 import fs from "fs";
+import { LIST_ORDER, DEFAULT_SLOTS, type SlotName } from "./slots";
 
 const CONFIG_PATH =
   process.env.PLATFORM_CONFIG_PATH ??
   "/opt/fractera/app/PLATFORM-CONFIG/platform-config.json";
-
-export type SlotName =
-  | "header"
-  | "footer"
-  | "promoScreen"
-  | "left"
-  | "right"
-  | "centerHeader"
-  | "center"
-  | "centerFooter";
-
-/** Порядок показа: сверху вниз, как области лежат на экране. */
-export const LIST_ORDER: SlotName[] = [
-  "header", "promoScreen", "left", "right", "centerHeader", "center", "centerFooter", "footer",
-];
-
-/** Шапку и подвал снять нельзя — без них страница не собирается. */
-export const LOCKED: SlotName[] = ["header", "footer"];
-
-// Новый проект начинается ОДНОЙ колонкой (решение владельца 2026-08-08). Прежде
-// отсутствующий ключ считался включённым, и свежий сервер стартовал со всеми
-// восемью областями — самая нагруженная раскладка тому, кто ещё ничего не выбрал.
-export const DEFAULT_SLOTS: SlotName[] = ["header", "center", "footer"];
 
 export type PlatformState = {
   ok: boolean;
