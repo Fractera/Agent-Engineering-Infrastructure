@@ -770,6 +770,10 @@
         "voice-input": {
           "title": "Voice input",
           "body": "A microphone button next to any text field: speech is transcribed and inserted at the cursor, so a long description is spoken instead of typed. Ships with its own interface strings in ten languages. Needs the OpenAI key, and a microphone is only offered by the browser over HTTPS."
+        },
+        "code-view": {
+          "title": "Code view",
+          "body": "Source code with real syntax colouring — the kind that understands the language rather than guessing at it: nested CSS inside HTML, generics in TypeScript, keys and strings in JSON all come out right. Detects the language from the file extension and covers what a front end is written in: html, css, scss, ts, tsx, js, jsx, json, md, yaml, sql, bash and more. Carries light and dark colours in the same markup, so switching theme recolours instantly instead of re-parsing."
         }
       },
       "helpLabel": "How tools reach your project",
@@ -780,7 +784,10 @@
       "helpAgentTitle": "What the agent does with them.",
       "helpAgent": "The agent reads `tools/` and reuses what is there instead of writing the same thing again. `PLATFORM-TOOLS.md` tells it these tools exist, where they land and how to import them.",
       "helpUpdateTitle": "Updating overwrites.",
-      "helpUpdate": "Installing a second time replaces the files with the panel's current version and loses local edits — which is why an update asks first and a first install does not."
+      "helpUpdate": "Installing a second time replaces the files with the panel's current version and loses local edits — which is why an update asks first and a first install does not.",
+      "npmNeeded": "This tool needs a package your project does not have yet. After installing the files, run {cmd} in the project — the tool will not build without it.",
+      "helpDepsTitle": "Do you need npm install?",
+      "helpDeps": "Usually not. Three of the four tools use only what the starter already has — React, Next, lucide-react, sonner and the shadcn button — so installing the files is the whole job. Code view is the exception: syntax colouring needs the Shiki grammars, so it asks for one package, and its page says so before you install."
     },
     "codeSamples": {
       "intro": "Your own earlier work, kept where the project can reach it. Files live in the project folder:",
@@ -810,7 +817,9 @@
       "helpSilentTitle": "Why the agent stays out of here.",
       "helpSilent": "A library of past work can be any size, and reading it just in case means paying context for material the current task may not need at all. Silence by default, use on request — that is what keeps it cheap.",
       "helpFormatsTitle": "What you can put here.",
-      "helpFormats": "The formats a front end actually lives in: html, css, scss, js, jsx, ts, tsx, json, md, txt, svg. Nothing here is executed — these are samples to read and copy from."
+      "helpFormats": "The formats a front end actually lives in: html, css, scss, js, jsx, ts, tsx, json, md, txt, svg. Nothing here is executed — these are samples to read and copy from.",
+      "editMode": "Edit",
+      "viewMode": "View"
     },
     "docsOverview": {
       "whyTitle": "Why a project needs this many documents",
@@ -1171,6 +1180,22 @@
       "tools": {
         "title": "Tools",
         "hint": "Finished pieces you can take into the project instead of building them again."
+      },
+      "tool-image-crop": {
+        "title": "Image crop",
+        "hint": "Pick the visible part of a picture before it is saved."
+      },
+      "tool-video-trim": {
+        "title": "Video trim",
+        "hint": "Keep the middle of a clip and drop the rest."
+      },
+      "tool-voice-input": {
+        "title": "Voice input",
+        "hint": "Speak into a text field instead of typing."
+      },
+      "tool-code-view": {
+        "title": "Code view",
+        "hint": "Show source code with real syntax colouring."
       }
     }
   },
@@ -1945,6 +1970,10 @@
         "voice-input": {
           "title": "Голосовой ввод",
           "body": "Кнопка микрофона рядом с текстовым полем: речь расшифровывается и вставляется по курсору, поэтому длинное описание проговаривают, а не печатают. Несёт собственные подписи на десяти языках. Нужен ключ OpenAI, а микрофон браузер отдаёт только по HTTPS."
+        },
+        "code-view": {
+          "title": "Просмотр кода",
+          "body": "Исходный код с настоящей подсветкой синтаксиса — той, что понимает язык, а не угадывает его: вложенный CSS внутри HTML, дженерики в TypeScript, ключи и строки в JSON окрашиваются верно. Язык определяется по расширению файла и покрывает то, на чём пишут фронтенд: html, css, scss, ts, tsx, js, jsx, json, md, yaml, sql, bash и другие. Светлые и тёмные цвета лежат в одной разметке, поэтому смена темы перекрашивает мгновенно, без повторного разбора."
         }
       },
       "helpLabel": "Как инструменты попадают в ваш проект",
@@ -1955,7 +1984,10 @@
       "helpAgentTitle": "Что с ними делает агент.",
       "helpAgent": "Агент читает `tools/` и переиспользует то, что там лежит, вместо того чтобы писать то же самое заново. О существовании инструментов, месте установки и способе подключения ему сообщает `PLATFORM-TOOLS.md`.",
       "helpUpdateTitle": "Обновление перезаписывает.",
-      "helpUpdate": "Повторная установка заменяет файлы текущей версией панели и теряет местные правки — поэтому обновление спрашивает, а первая установка нет."
+      "helpUpdate": "Повторная установка заменяет файлы текущей версией панели и теряет местные правки — поэтому обновление спрашивает, а первая установка нет.",
+      "npmNeeded": "Этому инструменту нужен пакет, которого в вашем проекте пока нет. После установки файлов выполните {cmd} в проекте — без него инструмент не соберётся.",
+      "helpDepsTitle": "Нужен ли npm install?",
+      "helpDeps": "Обычно нет. Три инструмента из четырёх обходятся тем, что в стартере уже стоит — React, Next, lucide-react, sonner и кнопка shadcn, — поэтому установка файлов и есть вся работа. Исключение — просмотр кода: подсветке нужны грамматики Shiki, ему требуется один пакет, и его страница говорит об этом до установки."
     },
     "codeSamples": {
       "intro": "Ваши прежние наработки, сложенные там, где проект до них дотянется. Файлы лежат в папке проекта:",
@@ -1985,7 +2017,9 @@
       "helpSilentTitle": "Почему агент сюда не заглядывает.",
       "helpSilent": "Библиотека прежних работ может весить сколько угодно, и читать её на всякий случай значит платить контекстом за материал, который текущей задаче может быть не нужен вовсе. Молчание по умолчанию, использование по просьбе — именно это держит цену низкой.",
       "helpFormatsTitle": "Что сюда можно класть.",
-      "helpFormats": "Форматы, в которых живёт настоящий фронтенд: html, css, scss, js, jsx, ts, tsx, json, md, txt, svg. Ничего отсюда не исполняется — это образцы, их читают и копируют."
+      "helpFormats": "Форматы, в которых живёт настоящий фронтенд: html, css, scss, js, jsx, ts, tsx, json, md, txt, svg. Ничего отсюда не исполняется — это образцы, их читают и копируют.",
+      "editMode": "Править",
+      "viewMode": "Смотреть"
     },
     "docsOverview": {
       "whyTitle": "Зачем проекту столько документов",
@@ -2346,6 +2380,22 @@
       "tools": {
         "title": "Инструменты",
         "hint": "Готовые куски, которые можно взять в проект вместо того, чтобы делать их заново."
+      },
+      "tool-image-crop": {
+        "title": "Обрезка изображения",
+        "hint": "Выбрать видимую часть картинки до сохранения."
+      },
+      "tool-video-trim": {
+        "title": "Подрезка видео",
+        "hint": "Оставить середину ролика и отбросить остальное."
+      },
+      "tool-voice-input": {
+        "title": "Голосовой ввод",
+        "hint": "Наговорить текст в поле вместо того, чтобы печатать."
+      },
+      "tool-code-view": {
+        "title": "Просмотр кода",
+        "hint": "Показать исходный код с настоящей подсветкой синтаксиса."
       }
     }
   }

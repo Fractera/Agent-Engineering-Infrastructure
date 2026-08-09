@@ -6,6 +6,7 @@ import { Loader2, Save, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ALLOWED_EXT, isValidName } from "@/lib/code-samples.shared";
+import { CodeView } from "@/_tools/code-view/client/code-view.client";
 
 // Образцы кода: создание, правка, удаление (шаг 501, 2026-08-09).
 //
@@ -20,6 +21,7 @@ export type SampleLabels = {
   created: string; badName: string; failed: string;
   save: string; saving: string; saved: string; nothingToSave: string;
   remove: string; removeConfirm: string; removed: string;
+  editMode: string; viewMode: string;
 };
 
 export function NewSample({ base, labels }: { base: string; labels: SampleLabels }) {
@@ -87,6 +89,7 @@ export function SampleBody(
   const [text, setText] = useState(initialText);
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   const dirty = text !== initialText;
 
@@ -151,6 +154,9 @@ export function SampleBody(
               <Trash2 size={11} />
             </Button>
           )}
+          <Button size="sm" variant="outline" className="text-[11px]" onClick={() => setEditing((v) => !v)} disabled={busy}>
+            {editing ? labels.viewMode : labels.editMode}
+          </Button>
           <Button size="sm" className="text-[11px]" onClick={save} disabled={busy || !dirty}>
             {busy ? <Loader2 size={11} className="animate-spin" /> : <Save size={11} />}
             {busy ? labels.saving : labels.save}
@@ -158,16 +164,22 @@ export function SampleBody(
         </span>
       </div>
 
-      {/* Моноширинное поле без подсветки: это склад ОБРАЗЦОВ, их читают и
-          копируют, а не редактируют здесь помногу. Подсветка синтаксиса стоила
-          бы клиентской библиотеки на каждой загрузке страницы ради удобства,
-          которым пользуются минуту. */}
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        spellCheck={false}
-        className="h-[60vh] w-full resize-y bg-background p-3 font-mono text-[11px] leading-relaxed text-foreground outline-none"
-      />
+      {/* ЧИТАЮТ с подсветкой, ПРАВЯТ в обычном поле.
+          Образец открывают, чтобы разобраться и скопировать, — поэтому по
+          умолчанию он показан инструментом просмотра кода. Правка — отдельное
+          намерение и отдельная кнопка: подсвеченная разметка не редактируется,
+          а держать в поле ввода раскрашенный текст значит писать свой редактор
+          там, где хватает `<textarea>`. */}
+      {editing ? (
+        <textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          spellCheck={false}
+          className="h-[60vh] w-full resize-y bg-background p-3 font-mono text-[11px] leading-relaxed text-foreground outline-none"
+        />
+      ) : (
+        <CodeView code={text} filename={file} className="max-h-[60vh] rounded-none border-0" />
+      )}
     </div>
   );
 }

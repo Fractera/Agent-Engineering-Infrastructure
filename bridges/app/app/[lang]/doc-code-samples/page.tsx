@@ -48,6 +48,7 @@ export default async function CodeSamplesPage(
     badName: c.badName, failed: c.failed,
     save: c.save, saving: c.saving, saved: c.saved, nothingToSave: c.nothingToSave,
     remove: c.remove, removeConfirm: c.removeConfirm, removed: c.removed,
+    editMode: c.editMode, viewMode: c.viewMode,
   };
 
   return (

@@ -18,7 +18,7 @@
 // рантайме. Панель можно выключить — установленный инструмент продолжит
 // работать.
 
-export type ToolId = "image-crop" | "video-trim" | "voice-input";
+export type ToolId = "image-crop" | "video-trim" | "voice-input" | "code-view";
 
 export type ToolNeed = "browser" | "openai-key" | "https" | "ffmpeg";
 
@@ -32,6 +32,15 @@ export type Tool = {
   needs: ToolNeed[];
   /** Где он уже применяется в самой панели — доказательство, что он живой. */
   usedBy: string[];
+  /**
+   * Пакеты npm, которых у стартера НЕТ и которые придётся поставить.
+   *
+   * Список честный и проверенный, а не «на всякий случай»: три инструмента из
+   * четырёх обходятся тем, что в стартере уже стоит (React, Next, lucide-react,
+   * sonner, shadcn Button), и требовать для них установку значило бы посылать
+   * владельца делать лишнюю работу. Пустой список = ничего ставить не нужно.
+   */
+  npmDeps: string[];
 };
 
 export const TOOLS: Tool[] = [
@@ -43,6 +52,7 @@ export const TOOLS: Tool[] = [
     // только результат — готовый JPEG.
     needs: ["browser"],
     usedBy: ["media", "app-settings"],
+    npmDeps: [],
   },
   {
     id: "video-trim",
@@ -52,6 +62,7 @@ export const TOOLS: Tool[] = [
     // переносить его в браузер незачем.
     needs: ["browser", "ffmpeg"],
     usedBy: ["media"],
+    npmDeps: [],
   },
   {
     id: "voice-input",
@@ -65,6 +76,18 @@ export const TOOLS: Tool[] = [
     // Микрофон браузер отдаёт только по HTTPS, расшифровку делает OpenAI.
     needs: ["browser", "https", "openai-key"],
     usedBy: [],
+    npmDeps: [],
+  },
+  {
+    id: "code-view",
+    dir: "_tools/code-view",
+    files: ["client/code-view.client.tsx", "types/code-view.ts"],
+    needs: ["browser"],
+    usedBy: ["doc-code-samples", "media"],
+    // ЕДИНСТВЕННЫЙ инструмент, которому нужен пакет: Shiki несёт грамматики
+    // языков, и подсветку без них не сделать. В панели он уже стоит; в проекте
+    // владельца его придётся поставить, и страница говорит об этом до установки.
+    npmDeps: ["shiki"],
   },
 ];
 

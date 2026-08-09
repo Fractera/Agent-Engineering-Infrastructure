@@ -14,14 +14,12 @@
 // Динамическая: состояние установки живое.
 
 import Link from "next/link";
-import { Crop, Scissors, Mic, PackagePlus, ChevronRight, type LucideIcon } from "lucide-react";
+import { Crop, Scissors, Mic, Code2, PackagePlus, ChevronRight, type LucideIcon } from "lucide-react";
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
 import { TOOLS, type ToolId } from "@/lib/tools-registry";
-import { toolState } from "@/lib/tools-install";
 import { adminHref } from "@/lib/admin-nav";
-import { InstallButton } from "./_components/install-button.client";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +27,7 @@ const ICONS: Record<ToolId, LucideIcon> = {
   "image-crop": Crop,
   "video-trim": Scissors,
   "voice-input": Mic,
+  "code-view": Code2,
 };
 
 export default async function ToolsPage({ params }: { params: Promise<{ lang: string }> }) {
@@ -37,7 +36,7 @@ export default async function ToolsPage({ params }: { params: Promise<{ lang: st
   const t = s.tools;
   const page = s.pages.tools;
 
-  const rows = TOOLS.map((tool) => ({ tool, state: toolState(tool.id) }));
+  const rows = TOOLS;
 
   return (
     <PageShell title={page.title} hint={page.hint}>
@@ -46,46 +45,31 @@ export default async function ToolsPage({ params }: { params: Promise<{ lang: st
       </p>
 
       <ul className="mt-3 divide-y divide-border rounded-lg border border-border">
-        {rows.map(({ tool, state }) => {
+        {rows.map((tool) => {
           const Icon = ICONS[tool.id];
           const item = t.items[tool.id];
           return (
-            <li key={tool.id} className="flex gap-3 px-3 py-3">
-              <Icon size={14} className="mt-0.5 shrink-0 text-muted-foreground" />
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
+            <li key={tool.id}>
+              <Link href={adminHref(lang, `tool-${tool.id}` as never)} className="flex gap-3 px-3 py-3 hover:bg-muted">
+                <Icon size={14} className="mt-0.5 shrink-0 text-muted-foreground" />
+                <div className="min-w-0 flex-1">
                   <span className="text-[12px] font-medium text-foreground">{item.title}</span>
-                  <span className="font-mono text-[10px] text-muted-foreground">{tool.dir}/</span>
+                  <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">{item.body}</p>
+                  <p className="mt-1 flex flex-wrap gap-1.5">
+                    {tool.needs.map((n) => (
+                      <span key={n} className="rounded-full border border-border px-1.5 py-0.5 text-[9px] text-muted-foreground">
+                        {t.needs[n]}
+                      </span>
+                    ))}
+                    {tool.npmDeps.length > 0 && (
+                      <span className="rounded-full border border-amber-500/40 px-1.5 py-0.5 font-mono text-[9px] text-amber-700 dark:text-amber-300">
+                        npm i {tool.npmDeps.join(" ")}
+                      </span>
+                    )}
+                  </p>
                 </div>
-                <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">{item.body}</p>
-
-                {/* Требования названы прямо: инструмент, который не заработает
-                    без ключа или HTTPS, обязан сказать это ДО установки. */}
-                <p className="mt-1 flex flex-wrap gap-1.5">
-                  {tool.needs.map((n) => (
-                    <span key={n} className="rounded-full border border-border px-1.5 py-0.5 text-[9px] text-muted-foreground">
-                      {t.needs[n]}
-                    </span>
-                  ))}
-                </p>
-
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <InstallButton
-                    id={tool.id}
-                    installed={state.installed}
-                    outdated={state.outdated}
-                    labels={{
-                      install: t.install, installing: t.installing, installed: t.installedToast,
-                      update: t.update, updateConfirm: t.updateConfirm, cancel: t.cancel,
-                      failed: t.failed, alreadyInstalled: t.alreadyInstalled,
-                    }}
-                  />
-                  <span className="font-mono text-[10px] text-muted-foreground">→ {state.target}</span>
-                  {state.outdated && (
-                    <span className="text-[10px] text-amber-600 dark:text-amber-400">{t.outdated}</span>
-                  )}
-                </div>
-              </div>
+                <ChevronRight size={13} className="mt-1 shrink-0 text-muted-foreground" />
+              </Link>
             </li>
           );
         })}
@@ -106,6 +90,7 @@ export default async function ToolsPage({ params }: { params: Promise<{ lang: st
         <p><strong>{t.helpCopyTitle}</strong> {t.helpCopy}</p>
         <p><strong>{t.helpWhereTitle}</strong> {t.helpWhere}</p>
         <p><strong>{t.helpAgentTitle}</strong> {t.helpAgent}</p>
+        <p><strong>{t.helpDepsTitle}</strong> {t.helpDeps}</p>
         <p><strong>{t.helpUpdateTitle}</strong> {t.helpUpdate}</p>
       </HelpDetails>
     </PageShell>

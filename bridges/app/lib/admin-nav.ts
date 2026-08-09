@@ -34,6 +34,10 @@ export const NAV = [
   // инструмент» — она переехала сюда из данных, где оказалась лишь потому, что
   // раздела инструментов не существовало.
   { slug: "tools",           group: "tools" },
+  { slug: "tool-image-crop", group: "tools" },
+  { slug: "tool-video-trim", group: "tools" },
+  { slug: "tool-voice-input", group: "tools" },
+  { slug: "tool-code-view",  group: "tools" },
   { slug: "add-tool",        group: "tools" },
 
   { slug: "export",          group: "backup" },

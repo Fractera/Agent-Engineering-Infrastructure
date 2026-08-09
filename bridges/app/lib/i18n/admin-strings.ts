@@ -327,12 +327,14 @@ export type AdminStrings = {
     install: string; installing: string; installedToast: string;
     update: string; updateConfirm: string; cancel: string;
     failed: string; alreadyInstalled: string; outdated: string;
+    npmNeeded: string;
     needs: Record<"browser" | "openai-key" | "https" | "ffmpeg", string>;
-    items: Record<"image-crop" | "video-trim" | "voice-input", { title: string; body: string }>;
+    items: Record<"image-crop" | "video-trim" | "voice-input" | "code-view", { title: string; body: string }>;
     helpLabel: string;
     helpCopyTitle: string; helpCopy: string;
     helpWhereTitle: string; helpWhere: string;
     helpAgentTitle: string; helpAgent: string;
+    helpDepsTitle: string; helpDeps: string;
     helpUpdateTitle: string; helpUpdate: string;
   };
   codeSamples: {
@@ -341,6 +343,7 @@ export type AdminStrings = {
     badName: string; failed: string;
     save: string; saving: string; saved: string; nothingToSave: string;
     remove: string; removeConfirm: string; removed: string;
+    editMode: string; viewMode: string;
     helpLabel: string;
     helpWhatTitle: string; helpWhat: string;
     helpHowTitle: string; helpHow: string;
