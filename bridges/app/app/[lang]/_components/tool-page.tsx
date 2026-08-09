@@ -3,6 +3,8 @@ import { ChevronRight, PackagePlus, type LucideIcon } from "lucide-react";
 import { PageShell } from "./page-shell";
 import { HelpDetails } from "./help-details";
 import { toolById, type ToolId } from "@/lib/tools-registry";
+import { TOOL_DOCS } from "@/lib/tools-doc";
+import { CodeView } from "@/_tools/code-view/client/code-view.client";
 import { toolState } from "@/lib/tools-install";
 import { adminHref } from "@/lib/admin-nav";
 import { InstallButton } from "../tools/_components/install-button.client";
@@ -29,6 +31,7 @@ export function ToolPage({
   children?: React.ReactNode;
 }) {
   const tool = toolById(id);
+  const doc = TOOL_DOCS[id];
   const state = toolState(id);
   const t = s.tools;
   const item = t.items[id];
@@ -39,7 +42,8 @@ export function ToolPage({
       <div className="flex gap-3 rounded-lg border border-border p-3">
         <Icon size={16} className="mt-0.5 shrink-0 text-muted-foreground" />
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] leading-relaxed text-foreground">{item.body}</p>
+          <p className="text-[11px] leading-relaxed text-foreground">{doc.purpose}</p>
+          <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">{item.body}</p>
 
           {/* Требования названы ДО установки: инструмент, который не заработает
               без ключа или HTTPS, обязан сказать это заранее. */}
@@ -82,6 +86,75 @@ export function ToolPage({
           )}
         </div>
       </div>
+
+      {/* ПОДРОБНОЕ ОПИСАНИЕ — то самое, что уезжает в `PLATFORM-TOOLS.md`.
+          Источник один (`TOOL_DOCS`), поэтому страница и документ не могут
+          разойтись: расходятся всегда два текста, а не один. */}
+      <section className="mt-3 space-y-3">
+        <div>
+          <h2 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t.docMechanics}</h2>
+          <ul className="mt-1.5 space-y-1.5">
+            {doc.mechanics.map((m, i) => (
+              <li key={i} className="flex gap-2 text-[11px] leading-relaxed text-muted-foreground">
+                <span className="mt-1.5 size-1 shrink-0 rounded-full bg-muted-foreground/50" />
+                {m}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <h2 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t.docApi}</h2>
+          <p className="mt-1.5 font-mono text-[10px] text-foreground">{doc.importLine}</p>
+          <p className="mt-1 font-mono text-[10px] text-muted-foreground">{doc.signature}</p>
+
+          <div className="mt-2 overflow-x-auto rounded-lg border border-border">
+            <table className="w-full min-w-[440px] text-left">
+              <thead>
+                <tr className="border-b border-border text-[9px] uppercase tracking-wide text-muted-foreground">
+                  <th className="px-2 py-1.5 font-medium">{t.docParam}</th>
+                  <th className="px-2 py-1.5 font-medium">{t.docType}</th>
+                  <th className="px-2 py-1.5 font-medium">{t.docRequired}</th>
+                  <th className="px-2 py-1.5 font-medium">{t.docAbout}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {doc.params.map((p) => (
+                  <tr key={p.name} className="align-top">
+                    <td className="px-2 py-1.5 font-mono text-[10px] text-foreground">{p.name}</td>
+                    <td className="px-2 py-1.5 font-mono text-[10px] text-muted-foreground">{p.type}</td>
+                    <td className="px-2 py-1.5 text-[10px] text-muted-foreground">{p.required ? t.docYes : t.docNo}</td>
+                    <td className="px-2 py-1.5 text-[10px] leading-relaxed text-muted-foreground">{p.about}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
+            <strong className="text-foreground">{t.docReturns}</strong> {doc.returns}
+          </p>
+        </div>
+
+        <div>
+          <h2 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t.docExample}</h2>
+          <div className="mt-1.5">
+            <CodeView code={doc.example} lang="tsx" className="max-h-[40vh]" />
+          </div>
+        </div>
+
+        <div>
+          <h2 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t.docLimits}</h2>
+          <ul className="mt-1.5 space-y-1.5">
+            {doc.limits.map((l, i) => (
+              <li key={i} className="flex gap-2 text-[11px] leading-relaxed text-muted-foreground">
+                <span className="mt-1.5 size-1 shrink-0 rounded-full bg-amber-500/70" />
+                {l}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
 
       {children && <div className="mt-3">{children}</div>}
 

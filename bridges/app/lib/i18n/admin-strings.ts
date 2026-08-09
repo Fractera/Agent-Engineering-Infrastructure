@@ -328,6 +328,9 @@ export type AdminStrings = {
     update: string; updateConfirm: string; cancel: string;
     failed: string; alreadyInstalled: string; outdated: string;
     npmNeeded: string;
+    docMechanics: string; docApi: string; docExample: string; docLimits: string;
+    docParam: string; docType: string; docRequired: string; docAbout: string;
+    docYes: string; docNo: string; docReturns: string;
     needs: Record<"browser" | "openai-key" | "https" | "ffmpeg", string>;
     items: Record<"image-crop" | "video-trim" | "voice-input" | "code-view", { title: string; body: string }>;
     helpLabel: string;
@@ -363,6 +366,8 @@ export type AdminStrings = {
     save: string; saving: string; saved: string; failed: string; nothingToSave: string;
     notCreated: string; createHint: string; chars: string; lines: string;
     backToList: string; pickStep: string; closeStep: string;
+    generatedNotice: string; generatedMissing: string;
+    rebuild: string; rebuilding: string; rebuilt: string;
     kindEvolving: string; kindStatic: string;
     kindEvolvingHint: string; kindStaticHint: string;
     useCasesRequired: string;

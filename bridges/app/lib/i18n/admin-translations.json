@@ -787,7 +787,18 @@
       "helpUpdate": "Installing a second time replaces the files with the panel's current version and loses local edits — which is why an update asks first and a first install does not.",
       "npmNeeded": "This tool needs a package your project does not have yet. After installing the files, run {cmd} in the project — the tool will not build without it.",
       "helpDepsTitle": "Do you need npm install?",
-      "helpDeps": "Usually not. Three of the four tools use only what the starter already has — React, Next, lucide-react, sonner and the shadcn button — so installing the files is the whole job. Code view is the exception: syntax colouring needs the Shiki grammars, so it asks for one package, and its page says so before you install."
+      "helpDeps": "Usually not. Three of the four tools use only what the starter already has — React, Next, lucide-react, sonner and the shadcn button — so installing the files is the whole job. Code view is the exception: syntax colouring needs the Shiki grammars, so it asks for one package, and its page says so before you install.",
+      "docMechanics": "How it works",
+      "docApi": "Import and signature",
+      "docExample": "Example",
+      "docLimits": "Limits",
+      "docParam": "Prop",
+      "docType": "Type",
+      "docRequired": "Required",
+      "docAbout": "What it is",
+      "docYes": "yes",
+      "docNo": "no",
+      "docReturns": "Returns."
     },
     "codeSamples": {
       "intro": "Your own earlier work, kept where the project can reach it. Files live in the project folder:",
@@ -870,7 +881,12 @@
       "kindStaticHint": "You or the platform write this one; the agent obeys it and edits it only when asked. Otherwise it would be rewriting the rules it works by.",
       "backToList": "All steps",
       "pickStep": "Pick a step on the left to read it.",
-      "closeStep": "Close"
+      "closeStep": "Close",
+      "generatedNotice": "This document is assembled, not written. It is rebuilt every time a tool is installed, so anything typed here by hand disappears at the next install — which is why there is no editor. Its content comes from the tool descriptions, the same source the tool pages read.",
+      "generatedMissing": "Not built yet — no tool has been installed on this server. Press Rebuild to create it from what the platform offers.",
+      "rebuild": "Rebuild",
+      "rebuilding": "Rebuilding…",
+      "rebuilt": "Rebuilt"
     },
     "parallelRouting": {
       "intro": "These settings live in a file on your server and apply WITHOUT a rebuild — a save shows up on the app's next page load.",
@@ -1987,7 +2003,18 @@
       "helpUpdate": "Повторная установка заменяет файлы текущей версией панели и теряет местные правки — поэтому обновление спрашивает, а первая установка нет.",
       "npmNeeded": "Этому инструменту нужен пакет, которого в вашем проекте пока нет. После установки файлов выполните {cmd} в проекте — без него инструмент не соберётся.",
       "helpDepsTitle": "Нужен ли npm install?",
-      "helpDeps": "Обычно нет. Три инструмента из четырёх обходятся тем, что в стартере уже стоит — React, Next, lucide-react, sonner и кнопка shadcn, — поэтому установка файлов и есть вся работа. Исключение — просмотр кода: подсветке нужны грамматики Shiki, ему требуется один пакет, и его страница говорит об этом до установки."
+      "helpDeps": "Обычно нет. Три инструмента из четырёх обходятся тем, что в стартере уже стоит — React, Next, lucide-react, sonner и кнопка shadcn, — поэтому установка файлов и есть вся работа. Исключение — просмотр кода: подсветке нужны грамматики Shiki, ему требуется один пакет, и его страница говорит об этом до установки.",
+      "docMechanics": "Как это работает",
+      "docApi": "Импорт и сигнатура",
+      "docExample": "Пример",
+      "docLimits": "Границы",
+      "docParam": "Свойство",
+      "docType": "Тип",
+      "docRequired": "Обязательно",
+      "docAbout": "Что это",
+      "docYes": "да",
+      "docNo": "нет",
+      "docReturns": "Возвращает."
     },
     "codeSamples": {
       "intro": "Ваши прежние наработки, сложенные там, где проект до них дотянется. Файлы лежат в папке проекта:",
@@ -2070,7 +2097,12 @@
       "kindStaticHint": "Его пишете вы или платформа; агент ему подчиняется и правит только по просьбе. Иначе он переписывал бы правила, по которым сам работает.",
       "backToList": "Все шаги",
       "pickStep": "Выберите шаг слева, чтобы прочитать его.",
-      "closeStep": "Закрыть"
+      "closeStep": "Закрыть",
+      "generatedNotice": "Этот документ собирается, а не пишется. Он пересобирается при каждой установке инструмента, поэтому набранное здесь руками исчезнет при следующей установке — потому редактора и нет. Содержимое берётся из описаний инструментов, из того же источника, что читают их страницы.",
+      "generatedMissing": "Ещё не собран — на этом сервере не установлено ни одного инструмента. Нажмите «Пересобрать», и он появится из того, что предлагает платформа.",
+      "rebuild": "Пересобрать",
+      "rebuilding": "Пересобираю…",
+      "rebuilt": "Пересобран"
     },
     "parallelRouting": {
       "intro": "Эти настройки лежат в файле на вашем сервере и применяются БЕЗ пересборки — сохранение видно на следующей загрузке страницы приложения.",

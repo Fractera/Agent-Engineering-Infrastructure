@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/require-auth";
 import { isToolId } from "@/lib/tools-registry";
-import { installTool, toolState } from "@/lib/tools-install";
+import { installTool, toolState, writePlatformToolsDoc } from "@/lib/tools-install";
 
 // Установка инструмента в продуктовый слой (шаг 501, 2026-08-09).
 //
@@ -25,6 +25,11 @@ export async function POST(req: NextRequest) {
   const res = installTool(body.id);
   if (!res.ok) return NextResponse.json({ error: res.error }, { status: 500 });
 
+  // Документ пересобирается СРАЗУ ПОСЛЕ установки: между «инструмент стоит» и
+  // «документ об этом говорит» не должно быть окна, в котором агент читает
+  // неправду. Отказ записи не отменяет установку — файлы уже на месте.
+  const docWritten = writePlatformToolsDoc();
+
   // Поля перечислены явно, а не распылением `...res`: у результата уже есть `ok`,
   // и распыление после него перезаписывало бы то, что мы только что объявили.
   return NextResponse.json({
@@ -32,5 +37,6 @@ export async function POST(req: NextRequest) {
     files: res.files,
     target: res.target,
     state: toolState(body.id),
+    docWritten,
   });
 }

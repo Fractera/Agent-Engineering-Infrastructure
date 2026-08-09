@@ -1,62 +1,69 @@
-// Документ разработки «doc-platform-tools» (шаг 501, слой «Документы»).
+// Документ «Инструменты платформы» — СОБИРАЕМЫЙ (шаг 501, владелец 2026-08-09).
 //
-// Страница знает только свой ключ: файл читает `lib/product-docs.ts`, правит общий
-// островок `_components/doc-editor.client.tsx`. Десять копий одной логики
-// разошлись бы через месяц — здесь их нет.
+// Единственный документ группы без редактора, и это не упущение. Он описывает
+// СОСТОЯНИЕ проекта: какие инструменты в нём действительно стоят и каков их
+// контракт. Состояние меняется установкой, а не набором текста, поэтому документ
+// пересобирается при каждой установке из `TOOL_DOCS` — того же источника, из
+// которого страницы инструментов берут свои описания.
 //
-// Динамическая: файл живой, его правит и владелец, и агент в слоте.
+// Оставить здесь редактор значило бы позволить написать текст, который исчезнет
+// при следующей установке. Человек узнал бы об этом, только заметив пропажу, —
+// худший способ сообщить о правиле.
+//
+// Кнопка пересборки всё же есть: файл мог не появиться, если проект развернули
+// раньше, чем инструмент установили хоть раз.
+//
+// Динамическая: файл живой.
 
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
-import { DocEditor } from "../_components/doc-editor.client";
 import { DocKindBadge } from "../_components/doc-kind-badge";
-import { readDoc, DOC_KIND } from "@/lib/product-docs";
+import { CodeView } from "@/_tools/code-view/client/code-view.client";
+import { readDoc } from "@/lib/product-docs";
+import { RebuildDocButton } from "./_components/rebuild.client";
 
 export const dynamic = "force-dynamic";
 
-const DOC_KEY = "doc-platform-tools" as const;
-
-export default async function DocPage({ params }: { params: Promise<{ lang: string }> }) {
+export default async function PlatformToolsDocPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
   const s = getAdminStrings(lang);
   const d = s.docs;
   const page = s.pages["doc-platform-tools"];
-  const state = readDoc(DOC_KEY);
-  const kind = DOC_KIND[DOC_KEY];
+  const state = readDoc("doc-platform-tools");
 
   return (
     <PageShell title={page.title} hint={page.hint}>
-      <div className="mb-2">
+      <div className="mb-2 flex flex-wrap items-center gap-2">
         <DocKindBadge
-          kind={kind}
+          kind="evolving"
           evolvingLabel={d.kindEvolving}
           staticLabel={d.kindStatic}
           evolvingHint={d.kindEvolvingHint}
           staticHint={d.kindStaticHint}
         />
+        <RebuildDocButton
+          labels={{ rebuild: d.rebuild, rebuilding: d.rebuilding, rebuilt: d.rebuilt, failed: d.failed }}
+        />
       </div>
 
-      <p className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
+      {/* Почему тут нельзя править — сказано на месте, а не в справке: человек
+          ищет кнопку «Править» именно здесь и должен сразу узнать, почему её нет. */}
+      <p className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2.5 text-[10px] leading-relaxed text-amber-800 dark:text-amber-200">
+        {d.generatedNotice}
+      </p>
+
+      <p className="mt-2 text-[10px] text-muted-foreground">
         {d.intro} <span className="font-mono text-foreground">{state.file}</span>
       </p>
 
-      <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
-        {kind === "evolving" ? d.kindEvolvingHint : d.kindStaticHint}
-      </p>
-
       <div className="mt-3">
-        <DocEditor
-          docKey={DOC_KEY}
-          initialText={state.text}
-          exists={state.exists}
-          labels={{
-            edit: d.edit, cancel: d.cancel,
-            save: d.save, saving: d.saving, saved: d.saved,
-            failed: d.failed, nothingToSave: d.nothingToSave,
-            notCreated: d.notCreated, createHint: d.createHint,
-            chars: d.chars, lines: d.lines,
-          }}
-        />
+        {state.exists ? (
+          <CodeView code={state.text} filename={state.file} className="max-h-[70vh]" />
+        ) : (
+          <p className="rounded-lg border border-border bg-muted/40 px-3 py-3 text-[11px] text-muted-foreground">
+            {d.generatedMissing}
+          </p>
+        )}
       </div>
     </PageShell>
   );

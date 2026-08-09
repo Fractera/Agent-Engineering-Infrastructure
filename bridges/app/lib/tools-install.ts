@@ -110,3 +110,28 @@ export function toolState(id: ToolId): ToolState {
     target: `${SLOT_TOOLS_DIR}/${id}/`,
   };
 }
+
+/**
+ * Записать пересобранный `PLATFORM-TOOLS.md` в корень слота.
+ *
+ * Импорт генератора ЛЕНИВЫЙ: он тянет реестр и описания, а функция зовётся
+ * только при установке — держать их в модуле, который читает каждая страница
+ * инструмента, незачем.
+ *
+ * Отказ записи возвращается флагом, а не исключением: инструмент уже установлен,
+ * и ронять запрос из-за документа значило бы сказать «не установилось» о том,
+ * что установилось.
+ */
+export function writePlatformToolsDoc(): boolean {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { renderPlatformToolsDoc } = require("@/lib/platform-tools-doc") as {
+      renderPlatformToolsDoc: () => string;
+    };
+    fs.mkdirSync(APP_DIR, { recursive: true });
+    fs.writeFileSync(path.join(APP_DIR, "PLATFORM-TOOLS.md"), renderPlatformToolsDoc(), "utf-8");
+    return true;
+  } catch {
+    return false;
+  }
+}

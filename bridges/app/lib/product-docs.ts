@@ -60,6 +60,20 @@ export const DOC_FILES: Record<DocKey, string> = {
   "doc-troubleshooting": "TROUBLESHOOTING.md",
 };
 
+/**
+ * 🔒 СОБИРАЕМЫЕ ДОКУМЕНТЫ — правка руками у них ОТКЛЮЧЕНА (владелец 2026-08-09).
+ *
+ * Такой документ описывает состояние проекта, а не мнение о нём: перечень
+ * установленных инструментов пересобирается при каждой установке. Оставить у
+ * него редактор значило бы позволить написать текст, который исчезнет при
+ * следующей установке, — и человек узнал бы об этом, только заметив пропажу.
+ */
+export const GENERATED_DOCS = new Set<DocKey>(["doc-platform-tools"]);
+
+export function isGenerated(key: DocKey): boolean {
+  return GENERATED_DOCS.has(key);
+}
+
 export function isDocKey(v: string): v is DocKey {
   return Object.prototype.hasOwnProperty.call(DOC_FILES, v);
 }
@@ -80,7 +94,7 @@ export function isDocKey(v: string): v is DocKey {
 export const DOC_KIND: Record<string, "evolving" | "static"> = {
   "doc-instruction": "static",
   "doc-use-cases": "static",
-  "doc-platform-tools": "static",
+  "doc-platform-tools": "evolving",
   "doc-coding-standards": "static",
   "doc-design": "static",
   "doc-code-samples": "static",
