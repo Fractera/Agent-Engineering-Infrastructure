@@ -25,5 +25,12 @@ export async function POST(req: NextRequest) {
   const res = installTool(body.id);
   if (!res.ok) return NextResponse.json({ error: res.error }, { status: 500 });
 
-  return NextResponse.json({ ok: true, ...res, state: toolState(body.id) });
+  // Поля перечислены явно, а не распылением `...res`: у результата уже есть `ok`,
+  // и распыление после него перезаписывало бы то, что мы только что объявили.
+  return NextResponse.json({
+    ok: true,
+    files: res.files,
+    target: res.target,
+    state: toolState(body.id),
+  });
 }
