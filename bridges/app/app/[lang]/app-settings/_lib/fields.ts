@@ -230,3 +230,40 @@ export function setAt<T extends Record<string, unknown>>(obj: T, path: string, v
   cur[keys[keys.length - 1]] = value;
   return root as T;
 }
+
+// Поля, снесённые вместе со своими подсистемами (шаг 501).
+//
+// Убрать поле из формы — половина работы: в уже сохранённом
+// `app-config.json` оно осталось, а редактор отправляет конфиг ЦЕЛИКОМ, поэтому
+// при первом же сохранении мёртвое значение уехало бы обратно в файл. Проверено на
+// живом сервере: там лежат `chatBrand: "Hermes"` и две картинки чата.
+//
+// Поэтому список чистится при сохранении. Это не косметика: конфиг читают агенты и
+// будущие сессии, и поле с именем работающей подсистемы вводит в заблуждение
+// сильнее, чем его отсутствие.
+export const REMOVED_FIELDS = ["chatBrand", "images.chatbot-light", "images.chatbot-dark"];
+
+/** Убрать снесённые поля из конфига перед сохранением. */
+export function dropRemovedFields<T extends Record<string, unknown>>(config: T): T {
+  const out: Record<string, unknown> = { ...config };
+  for (const path of REMOVED_FIELDS) {
+    const parts = path.split(".");
+    if (parts.length === 1) { delete out[parts[0]]; continue; }
+    // Вложенный путь: копируем ветку, чтобы не править исходный объект.
+    const [head, ...rest] = parts;
+    const branch = out[head];
+    if (branch && typeof branch === "object" && !Array.isArray(branch)) {
+      const copy = { ...(branch as Record<string, unknown>) };
+      let cursor = copy;
+      for (let i = 0; i < rest.length - 1; i++) {
+        const next = cursor[rest[i]];
+        if (!next || typeof next !== "object") { cursor = {}; break; }
+        cursor[rest[i]] = { ...(next as Record<string, unknown>) };
+        cursor = cursor[rest[i]] as Record<string, unknown>;
+      }
+      delete cursor[rest[rest.length - 1]];
+      out[head] = copy;
+    }
+  }
+  return out as T;
+}

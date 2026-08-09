@@ -20,7 +20,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, Save, Languages } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { SECTIONS, getAt, setAt, type Field } from "../_lib/fields";
+import { SECTIONS, getAt, setAt, dropRemovedFields, type Field } from "../_lib/fields";
 import { valueForLang, hasTranslation, setTranslation, type I18nMap } from "../_lib/per-lang";
 import { FieldRow } from "./field-row.client";
 import type { AppConfig } from "../_lib/settings";
@@ -74,7 +74,10 @@ export function SettingsEditor(
       const r = await fetch("/api/config/site", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ config }),
+        // Снесённые поля вычищаются ПРИ СОХРАНЕНИИ: они остались в уже
+        // записанном файле, а редактор отправляет конфиг целиком — без этого
+        // мёртвое значение уехало бы обратно.
+        body: JSON.stringify({ config: dropRemovedFields(config) }),
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(String(d?.error ?? r.status));
