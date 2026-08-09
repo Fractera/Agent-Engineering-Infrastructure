@@ -300,6 +300,21 @@ export type AdminStrings = {
   };
   // Верхняя область меню: всё красное и оранжевое в одном месте. Ключи предметные
   // (github / use-cases / …), а не «warning1» — запись обязана называть причину.
+  appFeatures: {
+    intro: string; unavailable: string;
+    save: string; saving: string; saved: string; failed: string; nothingToSave: string;
+    opensSection: string; parallelOff: string;
+    items: Record<
+      "auth" | "breadcrumbs" | "faq" | "themeToggle" | "widthToggle" | "languageSwitcher"
+      | "topMenu" | "footerPages" | "cookieBanner",
+      { label: string; description: string }
+    >;
+    helpLabel: string;
+    helpDefaultTitle: string; helpDefault: string;
+    helpFreedomTitle: string; helpFreedom: string;
+    helpWhyTitle: string; helpWhy: string;
+    helpSectionsTitle: string; helpSections: string;
+  };
   warnings: {
     title: string;
     items: { github: string; "use-cases": string; openai: string; domain: string };

@@ -26,6 +26,7 @@ import {
 import { NAV_GROUPS, NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 import { useCasesMissing } from "@/lib/product-docs";
 import { collectWarnings } from "@/lib/admin-warnings";
+import { hiddenSlugs } from "@/lib/platform-features";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
 
 // Иконки живут ЗДЕСЬ, а не в `lib/admin-nav.ts`: список маршрутов должен
@@ -86,6 +87,10 @@ export function AdminHeader({ lang, s }: { lang: string; s: AdminStrings }) {
   // заполнено всё — предупреждение, которое висит вечно, перестают читать.
   const warnings = collectWarnings();
   const blocking = warnings.some((w) => w.level === "blocking");
+
+  // Разделы, чья возможность выключена в «Возможностях приложения», из меню
+  // убираются: настраивать баннер, которого в приложении не будет, незачем.
+  const hidden = hiddenSlugs();
 
   return (
     <>
@@ -158,7 +163,7 @@ export function AdminHeader({ lang, s }: { lang: string; s: AdminStrings }) {
               <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70">
                 {s.navGroups[group]}
               </div>
-              {NAV_BY_GROUP[group].map((slug) => {
+              {NAV_BY_GROUP[group].filter((slug) => !hidden.has(slug)).map((slug) => {
                 const Icon = ICONS[slug];
                 const alarm = slug === "doc-use-cases" && needsUseCases;
                 return (

@@ -672,6 +672,64 @@
       "helpLockedTitle": "Why some names cannot be edited.",
       "helpLocked": "Their values follow from decisions made elsewhere — the mode the server runs in, the domain, the language set. A hand-edit here would rewrite one half of a pair and leave the other, and the failure would show up as “I cannot sign in” rather than “I mistyped a variable”."
     },
+    "appFeatures": {
+      "intro": "These switches apply without a rebuild — the app reads them on the next page load. The three at the top also open and close their own sections in this menu.",
+      "unavailable": "The platform settings could not be read.",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "failed": "Save failed",
+      "nothingToSave": "Nothing was changed",
+      "opensSection": "Opens the “{section}” section in this menu",
+      "parallelOff": "Unavailable while parallel routing is on — there the layout decides the width.",
+      "items": {
+        "topMenu": {
+          "label": "Top menu",
+          "description": "A navigation bar across the top of your app. Turn it off for a single screen that has nowhere to navigate to."
+        },
+        "footerPages": {
+          "label": "Footer navigation links",
+          "description": "Links to your project's pages in the footer. Turn it off for a one-page site."
+        },
+        "cookieBanner": {
+          "label": "Cookie notice",
+          "description": "The consent notice shown on a first visit. Required in the EU and the UK whenever you use analytics or any non-essential cookie — and pointless when you use none."
+        },
+        "auth": {
+          "label": "Authorization in the main app",
+          "description": "Puts a sign-in button in the top right corner. Turn it on when the project has accounts or personal data; an ordinary landing page does not need it."
+        },
+        "breadcrumbs": {
+          "label": "Breadcrumbs",
+          "description": "A navigation trail on every page — it tells a visitor where in the project they are, and emits the structured markup search engines read for it."
+        },
+        "faq": {
+          "label": "Question & answer section",
+          "description": "Reserves an area for questions and answers on every page. Close to mandatory on pages built from text content, and read by search engines."
+        },
+        "themeToggle": {
+          "label": "Day / night theme switch",
+          "description": "Lets the visitor choose light or dark instead of inheriting whatever their system decided."
+        },
+        "widthToggle": {
+          "label": "Full screen width switch",
+          "description": "Lets the visitor widen the central content to the full width of the screen."
+        },
+        "languageSwitcher": {
+          "label": "Language switcher in the footer",
+          "description": "Lets a visitor pick the language themselves instead of taking the browser's guess — and keeps it on every page that follows."
+        }
+      },
+      "helpLabel": "Why configure from here at all",
+      "helpDefaultTitle": "By default the project is built from this panel.",
+      "helpDefault": "A capability switched on here appears in the app on its own — you write no code for it, and the attributes of your project come together by choosing rather than by building.",
+      "helpFreedomTitle": "You are not obliged to use it.",
+      "helpFreedom": "Inside your own project you may ignore this layer entirely and implement everything yourself, from the top menu to the cookie notice. Nothing here forbids that, and nothing breaks if you do.",
+      "helpWhyTitle": "But it is not what we would advise.",
+      "helpWhy": "These settings are built so that the public layer stays static: pages are generated ahead of time, a search engine receives finished markup, and the server answers the minimum number of requests. A hand-written version of the same capability usually pulls the page into dynamic rendering — and that is exactly the advantage it costs you.",
+      "helpSectionsTitle": "Why sections appear and disappear.",
+      "helpSections": "The first three switches own their own settings pages. Turned off, that page leaves the menu: configuring a banner the app will never show is time spent on nothing."
+    },
     "warnings": {
       "title": "Before you start",
       "items": {
@@ -1667,6 +1725,64 @@
       "helpMask": "Значение, в имени которого есть KEY, SECRET, TOKEN или PASSWORD, маскируется на сервере и в браузер не отправляется вовсе. Заменить его можно, прочитать обратно — нет. Смотреть на ключ, которым вы и так владеете, нечего, а держать его в странице — есть что терять.",
       "helpLockedTitle": "Почему некоторые имена нельзя править.",
       "helpLocked": "Их значения следуют из решений, принятых в других местах: режим работы сервера, домен, набор языков. Правка руками перепишет одну половину пары и оставит другую, а проявится это как «не могу войти», а не как «я опечатался в переменной»."
+    },
+    "appFeatures": {
+      "intro": "Эти переключатели применяются без пересборки — приложение читает их на следующей загрузке страницы. Три верхних вдобавок открывают и закрывают свои разделы в этом меню.",
+      "unavailable": "Платформенные настройки прочитать не удалось.",
+      "save": "Сохранить изменения",
+      "saving": "Сохраняю…",
+      "saved": "Сохранено",
+      "failed": "Сохранить не удалось",
+      "nothingToSave": "Ничего не изменено",
+      "opensSection": "Открывает раздел «{section}» в этом меню",
+      "parallelOff": "Недоступно при включённой параллельной маршрутизации — там ширину решает раскладка.",
+      "items": {
+        "topMenu": {
+          "label": "Верхнее меню",
+          "description": "Полоса навигации вверху приложения. Выключите для одного экрана, с которого некуда переходить."
+        },
+        "footerPages": {
+          "label": "Ссылки на страницы в подвале",
+          "description": "Ссылки на страницы вашего проекта внизу. Выключите для одностраничного сайта."
+        },
+        "cookieBanner": {
+          "label": "Уведомление о cookie",
+          "description": "Согласие, которое показывается при первом визите. Обязательно в ЕС и Великобритании, если вы используете аналитику или любые необязательные cookie, — и бессмысленно, если не используете."
+        },
+        "auth": {
+          "label": "Авторизация в основном приложении",
+          "description": "Ставит кнопку входа в правом верхнем углу. Включайте, когда в проекте есть учётные записи или личные данные; обычной посадочной странице она не нужна."
+        },
+        "breadcrumbs": {
+          "label": "Хлебные крошки",
+          "description": "Навигационная цепочка на каждой странице: она говорит посетителю, где в проекте он находится, и отдаёт структурную разметку, которую читают поисковики."
+        },
+        "faq": {
+          "label": "Раздел вопросов и ответов",
+          "description": "Отводит на каждой странице место под вопросы и ответы. Почти обязателен для страниц из текста и читается поисковиками."
+        },
+        "themeToggle": {
+          "label": "Переключатель светлой и тёмной темы",
+          "description": "Позволяет посетителю выбрать тему самому, а не наследовать решение его системы."
+        },
+        "widthToggle": {
+          "label": "Переключатель полной ширины",
+          "description": "Позволяет посетителю раздвинуть центральное содержимое на всю ширину экрана."
+        },
+        "languageSwitcher": {
+          "label": "Переключатель языка в подвале",
+          "description": "Позволяет посетителю выбрать язык самому, а не принимать догадку браузера, и сохраняет выбор на всех следующих страницах."
+        }
+      },
+      "helpLabel": "Зачем вообще настраивать отсюда",
+      "helpDefaultTitle": "По умолчанию проект собирается из этой панели.",
+      "helpDefault": "Включённая здесь возможность появляется в приложении сама — кода вы для неё не пишете, и свойства вашего проекта складываются выбором, а не стройкой.",
+      "helpFreedomTitle": "Пользоваться этим вы не обязаны.",
+      "helpFreedom": "Внутри своего проекта вы вправе не заметить этот слой вовсе и реализовать всё самостоятельно — от верхнего меню до уведомления о cookie. Здесь ничто этого не запрещает, и ничего не сломается, если вы так поступите.",
+      "helpWhyTitle": "Но мы бы не советовали.",
+      "helpWhy": "Эти настройки устроены так, чтобы публичный слой оставался статическим: страницы создаются заранее, поисковик получает готовую разметку, а сервер отвечает на минимум запросов. Своя реализация той же возможности обычно уводит страницу в динамику — и отнимает ровно то преимущество, ради которого всё это сделано.",
+      "helpSectionsTitle": "Почему разделы появляются и исчезают.",
+      "helpSections": "У первых трёх переключателей есть собственные страницы настроек. Выключенный убирает свою страницу из меню: настраивать баннер, который приложение никогда не покажет, — время, потраченное впустую."
     },
     "warnings": {
       "title": "Прежде чем начинать",
