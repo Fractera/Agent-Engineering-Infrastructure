@@ -285,6 +285,19 @@ export type AdminStrings = {
     conflictTitle: string; conflict: string;
     seeAlso: string;
   };
+  env: {
+    warning: string; unavailable: string;
+    keyHeader: string; valueHeader: string;
+    lockedHint: string; secretHint: string; emptyValue: string; unchanged: string;
+    add: string; newKey: string; newValue: string;
+    remove: string; removeConfirm: string;
+    save: string; saving: string; saved: string; nothingToSave: string; failed: string;
+    helpLabel: string;
+    helpWhenTitle: string; helpWhen: string;
+    helpBuildTitle: string; helpBuild: string;
+    helpMaskTitle: string; helpMask: string;
+    helpLockedTitle: string; helpLocked: string;
+  };
   database: {
     noTables: string; empty: string; unavailable: string; rowsShown: string; noIdColumn: string;
     editTitle: string; valueLabel: string; cancel: string; save: string; delete: string;

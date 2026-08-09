@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { requireAuth } from "@/lib/require-auth";
+import { hardenSecretFile } from "@/lib/env-file";
+import { LOCKED_ENV_KEYS } from "@/lib/env-locked";
 
 const APP_ENV  = process.env.APP_ENV_PATH  ?? "/opt/fractera/app/.env.local";
 const AUTH_ENV = process.env.AUTH_ENV_PATH ?? "/opt/fractera/services/auth/.env.local";
@@ -12,7 +14,9 @@ const AUTH_KEYS = new Set(["AUTH_SECRET", "NEXTAUTH_URL", "COOKIE_DOMAIN", "COOK
 // Языковые ключи залочены здесь намеренно: их безопасный путь правки — панель
 // настроек Languages (чеклист с валидацией), а сырой env-редактор показывает их
 // read-only, чтобы нельзя было вписать невалидный код в обход валидации.
-const LOCKED_KEYS = new Set(["DATABASE_URL", "COOKIE_DOMAIN", "AUTH_TRUST_HOST", "NEXTAUTH_URL", "NEXT_PUBLIC_ADMIN_URL", "NEXT_PUBLIC_AUTH_URL", "ALLOWED_ORIGINS", "NEXT_PUBLIC_SUPPORTED_LANGUAGES", "NEXT_PUBLIC_DEFAULT_LOCALE"]);
+// Список запертых ключей — ОБЩИЙ со страницей (шаг 501): две копии рассогласуются,
+// и тогда страница обещает правку, которую этот маршрут молча отвергает.
+const LOCKED_KEYS = LOCKED_ENV_KEYS;
 
 function parseEnv(content: string): Record<string, string> {
   const result: Record<string, string> = {};
@@ -57,7 +61,47 @@ export async function POST(req: NextRequest) {
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const { vars } = await req.json() as { vars: Record<string, string> };
+    const body = await req.json() as {
+      vars?: Record<string, string>;
+      // Новая форма (шаг 501): только ИЗМЕНЁННЫЕ ключи и список удаляемых.
+      // Понадобилась, потому что страница больше не отправляет значения секретов в
+      // браузер — она показывает маску. Прислать «все переменные», как делала
+      // старая панель, теперь физически нельзя: маска затёрла бы настоящий ключ.
+      patch?: Record<string, string>;
+      remove?: string[];
+    };
+
+    // Частичная правка: применяем к тому, что уже лежит на диске.
+    if (body.patch || body.remove) {
+      const existingApp = readFile(APP_ENV);
+      const existingAuth = readFile(AUTH_ENV);
+      const nextApp = { ...existingApp };
+      const nextAuth = { ...existingAuth };
+
+      for (const [k, v] of Object.entries(body.patch ?? {})) {
+        const key = k.trim();
+        if (!key || LOCKED_KEYS.has(key)) continue;
+        if (AUTH_KEYS.has(key)) nextAuth[key] = v; else nextApp[key] = v;
+      }
+      for (const k of body.remove ?? []) {
+        const key = k.trim();
+        if (!key || LOCKED_KEYS.has(key)) continue;
+        delete nextApp[key];
+        delete nextAuth[key];
+      }
+
+      fs.mkdirSync(path.dirname(APP_ENV), { recursive: true });
+      fs.mkdirSync(path.dirname(AUTH_ENV), { recursive: true });
+      fs.writeFileSync(APP_ENV, serializeEnv(nextApp), "utf-8");
+      fs.writeFileSync(AUTH_ENV, serializeEnv(nextAuth), "utf-8");
+      hardenSecretFile(APP_ENV);
+      hardenSecretFile(AUTH_ENV);
+      return NextResponse.json({ ok: true });
+    }
+
+    // Старая форма «прислать всё» — её использует замороженная старая панель.
+    // Оставлена без изменений: она работает, и до переключения ею пользуются.
+    const { vars } = body;
     if (!vars || typeof vars !== "object") {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
@@ -90,6 +134,11 @@ export async function POST(req: NextRequest) {
     const mergedAuth = { ...existingAuth, ...authVars };
     fs.writeFileSync(APP_ENV,  serializeEnv(appVars),   "utf-8");
     fs.writeFileSync(AUTH_ENV, serializeEnv(mergedAuth), "utf-8");
+    // Права 600 после КАЖДОЙ записи (шаг 501). Это седьмое место, найденное при
+    // переносе редактора: в оба файла попадают секреты — AUTH_SECRET, ключи
+    // GitHub, — а обычная запись оставила бы их с маской, то есть 644.
+    hardenSecretFile(APP_ENV);
+    hardenSecretFile(AUTH_ENV);
 
     return NextResponse.json({ ok: true });
   } catch (e) {
