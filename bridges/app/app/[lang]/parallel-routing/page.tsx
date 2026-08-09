@@ -39,14 +39,21 @@ export default async function ParallelRoutingPage({ params }: { params: Promise<
 
   return (
     <PageShell title={page.title} hint={page.hint}>
-      <p className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
+      {/* Правда о состоянии стоит ВЫШЕ управления, а не в справке под ним:
+          человек должен узнать, что экран не изменится, до того как нажмёт
+          «Сохранить», а не после. */}
+      <p className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2.5 text-[10px] leading-relaxed text-amber-800 dark:text-amber-200">
+        {t.notConsumed}
+      </p>
+
+      <p className="mt-2 rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
         {t.intro}
       </p>
 
       <div className="mt-3">
         <SlotPicker
           config={state.config}
-          initialRouting={state.parallelRouting}
+          initialRouting={state.mode === "parallel"}
           initialActive={state.active}
           labels={{
             useParallel: t.useParallel, activeSlots: t.activeSlots, required: t.required,
@@ -59,6 +66,7 @@ export default async function ParallelRoutingPage({ params }: { params: Promise<
       </div>
 
       <HelpDetails label={t.helpLabel}>
+        <p><strong>{t.helpFormatTitle}</strong> {t.helpFormat}</p>
         <p><strong>{t.helpWhatTitle}</strong> {t.helpWhat}</p>
         <p><strong>{t.helpShopTitle}</strong> {t.helpShop}</p>
         <p><strong>{t.helpVsComponentsTitle}</strong> {t.helpVsComponents}</p>

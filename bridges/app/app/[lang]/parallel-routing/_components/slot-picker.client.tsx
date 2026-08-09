@@ -78,12 +78,27 @@ export function SlotPicker(
     if (!dirty) { toast.error(labels.nothingToSave); return; }
     setSaving(true);
     try {
-      const slots: Record<string, boolean> = {};
-      for (const s of LIST_ORDER) slots[s] = active.has(s);
+      // Стандарт формата — `ARCHITECTURE-PARALLEL-ROUTING.md` §0.1. Две формы,
+      // третьей нет: стандартный режим пишется БЕЗ `slots` (описывать раскладку,
+      // которую никто не раскладывает, значит хранить неправду), параллельный —
+      // со ВСЕМИ восемью именами. Прежний ключ `parallelRouting` удаляется.
+      const next: Record<string, unknown> = { ...config };
+      delete next.parallelRouting;
+
+      if (routing) {
+        const slots: Record<string, boolean> = {};
+        for (const s of LIST_ORDER) slots[s] = active.has(s);
+        next.routingMode = "parallel";
+        next.slots = slots;
+      } else {
+        next.routingMode = "standard";
+        delete next.slots;
+      }
+
       const res = await fetch("/api/config/platform", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ config: { ...config, parallelRouting: routing, slots } }),
+        body: JSON.stringify({ config: next }),
         credentials: "include",
       });
       const data = await res.json().catch(() => ({}));

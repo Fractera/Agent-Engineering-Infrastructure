@@ -675,6 +675,9 @@
     "parallelRouting": {
       "intro": "These settings live in a file on your server and apply WITHOUT a rebuild — a save shows up on the app's next page load.",
       "unavailable": "The platform settings could not be read.",
+      "notConsumed": "Nothing reads this setting yet. The application does not implement parallel routing at the moment, so your choice is recorded in the platform config and applies once the application learns to read it. Saving here changes the file, not the screen.",
+      "helpFormatTitle": "What exactly gets written.",
+      "helpFormat": "One of two shapes, never a third. Standard mode writes { \"routingMode\": \"standard\" } and no area map at all — describing a layout nobody lays out would be storing an untruth. Parallel mode writes { \"routingMode\": \"parallel\" } together with all eight areas, each explicitly true or false. A consequence worth knowing: turning parallel routing off drops the ticked set, so switching it back on starts from the default areas.",
       "useParallel": "Use parallel routing",
       "activeSlots": "Active areas",
       "required": "required",
@@ -1591,6 +1594,9 @@
     "parallelRouting": {
       "intro": "Эти настройки лежат в файле на вашем сервере и применяются БЕЗ пересборки — сохранение видно на следующей загрузке страницы приложения.",
       "unavailable": "Платформенные настройки прочитать не удалось.",
+      "notConsumed": "Эту настройку пока никто не читает. Приложение сейчас не умеет параллельную маршрутизацию, поэтому ваш выбор записывается в платформенный конфиг и применится, когда приложение научится его читать. Сохранение здесь меняет файл, а не экран.",
+      "helpFormatTitle": "Что именно записывается.",
+      "helpFormat": "Одна из двух форм, третьей не бывает. Стандартный режим пишет { \"routingMode\": \"standard\" } и никакой карты областей — описывать раскладку, которую никто не раскладывает, значит хранить неправду. Параллельный режим пишет { \"routingMode\": \"parallel\" } вместе со всеми восемью областями, у каждой явное «да» или «нет». Следствие, о котором стоит знать: выключение параллельной маршрутизации отбрасывает отмеченный набор, поэтому при следующем включении вы начнёте с областей по умолчанию.",
       "useParallel": "Использовать параллельную маршрутизацию",
       "activeSlots": "Активные области",
       "required": "обязательна",

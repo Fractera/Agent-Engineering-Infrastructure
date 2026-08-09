@@ -300,6 +300,8 @@ export type AdminStrings = {
   };
   parallelRouting: {
     intro: string; unavailable: string;
+    notConsumed: string;
+    helpFormatTitle: string; helpFormat: string;
     useParallel: string; activeSlots: string; required: string;
     save: string; saving: string; saved: string; failed: string; nothingToSave: string;
     appliesOnLoad: string; routingOff: string; childrenLabel: string;
