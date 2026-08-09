@@ -298,6 +298,22 @@ export type AdminStrings = {
     helpMaskTitle: string; helpMask: string;
     helpLockedTitle: string; helpLocked: string;
   };
+  parallelRouting: {
+    intro: string; unavailable: string;
+    useParallel: string; activeSlots: string; required: string;
+    save: string; saving: string; saved: string; failed: string; nothingToSave: string;
+    appliesOnLoad: string; routingOff: string; childrenLabel: string;
+    slots: {
+      header: string; footer: string; promoScreen: string; left: string; right: string;
+      centerHeader: string; center: string; centerFooter: string;
+    };
+    helpLabel: string;
+    helpWhatTitle: string; helpWhat: string;
+    helpShopTitle: string; helpShop: string;
+    helpVsComponentsTitle: string; helpVsComponents: string;
+    helpStaticTitle: string; helpStatic: string;
+    helpFamiliarTitle: string; helpFamiliar: string;
+  };
   languages: {
     intro: string; unavailable: string;
     save: string; saving: string; rebuilding: string; saved: string;
