@@ -895,7 +895,13 @@
       "generatedFlowTitle": "How a tool gets in here.",
       "generatedFlow": "You install it from the Tools section; the files are copied into the project, and the panel immediately rebuilds this document from the same descriptions its tool pages show. One source, so the page and the document cannot drift apart.",
       "generatedOnlyInstalledTitle": "Only what is installed.",
-      "generatedOnlyInstalled": "A tool that is not in the project is not described here — a contract for something absent would send the agent importing a file that does not exist."
+      "generatedOnlyInstalled": "A tool that is not in the project is not described here — a contract for something absent would send the agent importing a file that does not exist.",
+      "pull": "Pull latest",
+      "pulling": "Reading…",
+      "pulled": "Updated from disk",
+      "pullSame": "Already the latest version",
+      "pullDiffers": "You have unsaved changes. Reading the file again will discard them. Continue?",
+      "voiceHint": "Hold the microphone and speak — the text appears where the cursor is. The tool speaks English."
     },
     "parallelRouting": {
       "intro": "These settings live in a file on your server and apply WITHOUT a rebuild — a save shows up on the app's next page load.",
@@ -2120,7 +2126,13 @@
       "generatedFlowTitle": "Как инструмент сюда попадает.",
       "generatedFlow": "Вы устанавливаете его в разделе «Инструменты»; файлы копируются в проект, и панель сразу пересобирает этот документ из тех же описаний, что показывают страницы инструментов. Источник один, поэтому страница и документ не могут разойтись.",
       "generatedOnlyInstalledTitle": "Только установленное.",
-      "generatedOnlyInstalled": "Инструмента, которого в проекте нет, здесь нет и в описании: контракт на отсутствующее послал бы агента импортировать несуществующий файл."
+      "generatedOnlyInstalled": "Инструмента, которого в проекте нет, здесь нет и в описании: контракт на отсутствующее послал бы агента импортировать несуществующий файл.",
+      "pull": "Извлечь последнюю",
+      "pulling": "Читаю…",
+      "pulled": "Обновлено с диска",
+      "pullSame": "Это и есть последняя версия",
+      "pullDiffers": "Есть несохранённые изменения. Повторное чтение файла их отбросит. Продолжить?",
+      "voiceHint": "Удерживайте микрофон и говорите — текст появится там, где стоит курсор. Интерфейс инструмента английский."
     },
     "parallelRouting": {
       "intro": "Эти настройки лежат в файле на вашем сервере и применяются БЕЗ пересборки — сохранение видно на следующей загрузке страницы приложения.",

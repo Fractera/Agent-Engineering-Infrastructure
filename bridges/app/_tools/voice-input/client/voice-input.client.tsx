@@ -56,6 +56,7 @@ export default function VoiceInput({
   onChange,
   lang,
   disabled,
+  apiUrl,
 }: {
   /** Поле, которое принимает речь (его курсор решает КУДА). */
   targetRef: TargetRef;
@@ -64,6 +65,17 @@ export default function VoiceInput({
   onChange: (next: string) => void;
   lang: string;
   disabled?: boolean;
+  /**
+   * Адрес двери расшифровки. Не задан — берётся соседняя `api/transcribe`
+   * относительно текущего пути.
+   *
+   * Пропс появился, когда инструмент понадобился в панели: там страница живёт по
+   * адресу вида `/ru/doc-instruction`, и относительный путь дал бы
+   * `/ru/doc-instruction/api/transcribe` — двери, которой нет. Инструмент,
+   * умеющий стучаться только к соседу, переносим лишь туда, где сосед устроен
+   * так же.
+   */
+  apiUrl?: string;
 }) {
   const L = voiceStrings(lang);
   const [recording, setRecording] = useState(false);
@@ -134,9 +146,9 @@ export default function VoiceInput({
       try {
         const fd = new FormData();
         fd.append("audio", new File([blob], "speech.webm", { type: blob.type || "audio/webm" }));
-        // СВОЯ дверь расшифровки, адресуется ОТНОСИТЕЛЬНО текущего пути — без хардкода слага (закон 0).
-        const apiBase = location.pathname.replace(/\/+$/, "") + "/api";
-        const r = await fetch(`${apiBase}/transcribe`, { method: "POST", body: fd });
+        // Дверь расшифровки: заданная пропсом либо соседняя по текущему пути.
+        const url = apiUrl ?? `${location.pathname.replace(/\/+$/, "")}/api/transcribe`;
+        const r = await fetch(url, { method: "POST", body: fd, credentials: "include" });
         const d = (await r.json()) as { text?: string; reason?: string };
         if (!r.ok) { setNote(d.reason === "no-key" ? L.noKey : L.failed); return; }
         if (!d.text) { setNote(L.nothing); return; }
@@ -148,7 +160,7 @@ export default function VoiceInput({
         setBusy(false);
       }
     },
-    [insert, L],
+    [insert, L, apiUrl],
   );
 
   const startRecording = useCallback(async () => {

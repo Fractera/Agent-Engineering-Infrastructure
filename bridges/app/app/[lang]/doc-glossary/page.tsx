@@ -55,6 +55,9 @@ export default async function DocPage({ params }: { params: Promise<{ lang: stri
             failed: d.failed, nothingToSave: d.nothingToSave,
             notCreated: d.notCreated, createHint: d.createHint,
             chars: d.chars, lines: d.lines,
+            pull: d.pull, pulling: d.pulling, pulled: d.pulled,
+            pullDiffers: d.pullDiffers, pullSame: d.pullSame,
+            voiceHint: d.voiceHint,
           }}
         />
       </div>

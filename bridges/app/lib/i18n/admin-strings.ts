@@ -366,6 +366,8 @@ export type AdminStrings = {
     save: string; saving: string; saved: string; failed: string; nothingToSave: string;
     notCreated: string; createHint: string; chars: string; lines: string;
     backToList: string; pickStep: string; closeStep: string;
+    pull: string; pulling: string; pulled: string; pullDiffers: string; pullSame: string;
+    voiceHint: string;
     generatedNotice: string; generatedMissing: string;
     generatedHowLabel: string;
     generatedWhyTitle: string; generatedWhy: string;
