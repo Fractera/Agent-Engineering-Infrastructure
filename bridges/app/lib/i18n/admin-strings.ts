@@ -309,6 +309,8 @@ export type AdminStrings = {
     edit: string; cancel: string;
     save: string; saving: string; saved: string; failed: string; nothingToSave: string;
     notCreated: string; createHint: string; chars: string; lines: string;
+    kindEvolving: string; kindStatic: string;
+    kindEvolvingHint: string; kindStaticHint: string;
     useCasesRequired: string;
     stepsEmpty: string; stepsCount: string;
   };

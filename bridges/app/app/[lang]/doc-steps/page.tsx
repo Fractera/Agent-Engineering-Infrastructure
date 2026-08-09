@@ -8,6 +8,7 @@
 
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
+import { DocKindBadge } from "../_components/doc-kind-badge";
 import { listSteps } from "@/lib/product-docs";
 
 export const dynamic = "force-dynamic";
@@ -21,9 +22,21 @@ export default async function DocStepsPage({ params }: { params: Promise<{ lang:
 
   return (
     <PageShell title={page.title} hint={page.hint}>
+      <div className="mb-2">
+        <DocKindBadge
+          kind="evolving"
+          evolvingLabel={d.kindEvolving}
+          staticLabel={d.kindStatic}
+          evolvingHint={d.kindEvolvingHint}
+          staticHint={d.kindStaticHint}
+        />
+      </div>
+
       <p className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
         {d.intro} <span className="font-mono text-foreground">{state.dir}/</span>
       </p>
+
+      <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">{d.kindEvolvingHint}</p>
 
       {state.files.length === 0 ? (
         <p className="mt-3 rounded-lg border border-border bg-muted/40 px-3 py-3 text-[11px] text-muted-foreground">

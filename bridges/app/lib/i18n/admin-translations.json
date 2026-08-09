@@ -696,7 +696,11 @@
       "lines": "lines",
       "useCasesRequired": "User cases are not described yet — development has nothing to start from",
       "stepsEmpty": "No steps yet. The agent creates one file per piece of work.",
-      "stepsCount": "{count} file(s)"
+      "stepsCount": "{count} file(s)",
+      "kindEvolving": "self-evolving",
+      "kindStatic": "fixed",
+      "kindEvolvingHint": "The agent adds to this one as the project grows — a new term, a lesson, a step, a dead end. Its growth is a sign of health, not mess.",
+      "kindStaticHint": "You or the platform write this one; the agent obeys it and edits it only when asked. Otherwise it would be rewriting the rules it works by."
     },
     "parallelRouting": {
       "intro": "These settings live in a file on your server and apply WITHOUT a rebuild — a save shows up on the app's next page load.",
@@ -1688,7 +1692,11 @@
       "lines": "строк",
       "useCasesRequired": "Пользовательские кейсы не описаны — разработке не от чего отталкиваться",
       "stepsEmpty": "Шагов пока нет. Агент заводит по файлу на каждую работу.",
-      "stepsCount": "файлов: {count}"
+      "stepsCount": "файлов: {count}",
+      "kindEvolving": "саморазвивающийся",
+      "kindStatic": "заданный",
+      "kindEvolvingHint": "Агент дополняет его по ходу проекта — новый термин, урок, шаг, тупик. Его рост это признак здоровья, а не беспорядка.",
+      "kindStaticHint": "Его пишете вы или платформа; агент ему подчиняется и правит только по просьбе. Иначе он переписывал бы правила, по которым сам работает."
     },
     "parallelRouting": {
       "intro": "Эти настройки лежат в файле на вашем сервере и применяются БЕЗ пересборки — сохранение видно на следующей загрузке страницы приложения.",
