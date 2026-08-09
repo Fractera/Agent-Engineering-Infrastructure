@@ -237,6 +237,18 @@ export type AdminStrings = {
     helpLinkTitle: string; helpLink: string;
     helpOffTitle: string; helpOff: string;
   };
+  openai: {
+    intro: string; keyLabel: string; replace: string;
+    save: string; saving: string; restarting: string; saved: string; invalid: string; failed: string;
+    consumersLabel: string; set: string; notSet: string; mismatch: string; storedLocally: string;
+    helpLabel: string;
+    helpWhatTitle: string; helpWhat: string;
+    helpSpendsTitle: string; helpSpends: string;
+    helpNoSubTitle: string; helpNoSub: string;
+    helpSavingTitle: string; helpSaving: string;
+    helpWatchTitle: string; helpWatch: string;
+    helpProviderTitle: string; helpProvider: string;
+  };
   database: {
     noTables: string; empty: string; unavailable: string; rowsShown: string; noIdColumn: string;
     editTitle: string; valueLabel: string; cancel: string; save: string; delete: string;
