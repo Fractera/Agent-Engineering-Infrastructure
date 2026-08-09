@@ -301,6 +301,7 @@ export type AdminStrings = {
   parallelRouting: {
     intro: string; unavailable: string;
     notConsumed: string;
+    movesChildren: string; comingSoon: string;
     helpFormatTitle: string; helpFormat: string;
     useParallel: string; activeSlots: string; required: string;
     save: string; saving: string; saved: string; failed: string; nothingToSave: string;

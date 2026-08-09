@@ -46,7 +46,14 @@ export default async function ParallelRoutingPage({ params }: { params: Promise<
         {t.notConsumed}
       </p>
 
+      {/* Последствие включения — не деталь справки, а то, что человек обязан
+          знать ДО выбора: содержимое обычной маршрутизации переезжает в центр, и
+          элементы поверх страницы могут потребовать настройки. */}
       <p className="mt-2 rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
+        {t.movesChildren}
+      </p>
+
+      <p className="mt-2 rounded-md border border-border bg-muted/40 p-2.5 text-[10px] leading-relaxed text-muted-foreground">
         {t.intro}
       </p>
 
@@ -56,7 +63,8 @@ export default async function ParallelRoutingPage({ params }: { params: Promise<
           initialRouting={state.mode === "parallel"}
           initialActive={state.active}
           labels={{
-            useParallel: t.useParallel, activeSlots: t.activeSlots, required: t.required,
+            useParallel: t.useParallel, comingSoon: t.comingSoon,
+            activeSlots: t.activeSlots, required: t.required,
             save: t.save, saving: t.saving, saved: t.saved,
             failed: t.failed, nothingToSave: t.nothingToSave,
             appliesOnLoad: t.appliesOnLoad, routingOff: t.routingOff,

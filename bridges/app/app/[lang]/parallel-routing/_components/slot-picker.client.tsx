@@ -21,8 +21,24 @@ import { LIST_ORDER, LOCKED, type SlotName } from "../_lib/slots";
 // Сохранение отправляет конфиг ЦЕЛИКОМ (`config` из пропсов + наши два ключа):
 // в файле лежат и чужие настройки, и запись только своих полей стёрла бы их.
 
+// 🔒 ЗАПИСЬ ВЫКЛЮЧЕНА (решение владельца 2026-08-09).
+//
+// Приложение параллельную маршрутизацию не умеет, поэтому применить сохранённый
+// режим некому. Записать его в файл — значит развести систему с реальностью:
+// конфиг сказал бы «параллельный», экран остался бы плоским, и следующий разбор
+// начался бы с вопроса «почему не работает».
+//
+// Пока фичи нет, «Сохранить» отвечает «будет доступно в ближайшем обновлении» и
+// ВОЗВРАЩАЕТ выбор к текущему состоянию — плоскому режиму.
+//
+// Как включить запись, когда приложение научится читать конфиг: поставить здесь
+// `true`. Код записи ниже сохранён целиком и соответствует стандарту формата
+// (`ARCHITECTURE-PARALLEL-ROUTING.md` §0.1) — писать его заново не придётся.
+const WRITE_ENABLED = false;
+
 export type PickerLabels = {
   useParallel: string;
+  comingSoon: string;
   activeSlots: string;
   required: string;
   save: string; saving: string; saved: string; failed: string; nothingToSave: string;
@@ -75,6 +91,17 @@ export function SlotPicker(
   }
 
   async function save() {
+    // Записи пока нет — см. `WRITE_ENABLED` над компонентом. «Сохранить» честно
+    // отвечает, что фичи ещё нет, и возвращает выбор к текущему состоянию, чтобы
+    // экран не показывал режим, которого в файле не будет.
+    if (!WRITE_ENABLED) {
+      toast.message(labels.comingSoon);
+      setRouting(initialRouting);
+      setActive(new Set(initialActive));
+      setHovered(null);
+      return;
+    }
+
     if (!dirty) { toast.error(labels.nothingToSave); return; }
     setSaving(true);
     try {
@@ -184,8 +211,11 @@ export function SlotPicker(
       </div>
 
       <div className="border-t border-border px-3 py-2">
+        {/* Пока запись выключена, «области применятся при следующей загрузке»
+            было бы неправдой при поднятом переключателе: применяться нечему,
+            приложение всегда отдаёт плоское дерево. */}
         <span className="text-[10px] text-muted-foreground">
-          {routing ? labels.appliesOnLoad : labels.routingOff}
+          {WRITE_ENABLED && routing ? labels.appliesOnLoad : labels.routingOff}
         </span>
       </div>
     </div>
