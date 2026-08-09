@@ -40,6 +40,8 @@ export type AdminStrings = {
   registerAccount: string;
   // navigation (step 501)
   navGroups: Record<NavGroup, string>;
+  /** Пояснение к карте группы — почему эти разделы стоят вместе. */
+  groupMaps: Record<NavGroup, string>;
   // one entry per page of the panel — keys come from lib/admin-nav.ts, so a new
   // page without words does not compile
   pages: Record<AdminPageSlug, { title: string; hint: string }>;

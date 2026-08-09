@@ -14,6 +14,11 @@ export type NavGroup = (typeof NAV_GROUPS)[number];
 // Порядок внутри группы = порядок в меню. Он повторяет порядок сегодняшнего
 // ящика настроек, чтобы владелец узнавал панель, а не изучал её заново.
 export const NAV = [
+  // Карты групп — страницы-маршрутизаторы. Каждая стоит ПЕРВОЙ в своей группе:
+  // человек, открывший категорию впервые, должен увидеть оглавление, а не
+  // случайный раздел. На них же ведёт серединный сегмент хлебных крошек — без
+  // них с уровня раздела некуда было вернуться.
+  { slug: "map-application",  group: "application" },
   { slug: "app-settings",    group: "application" },
   { slug: "languages",       group: "application" },
   { slug: "parallel-routing", group: "application" },
@@ -22,6 +27,7 @@ export const NAV = [
   { slug: "footer-pages",    group: "application" },
   { slug: "cookie-banner",   group: "application" },
 
+  { slug: "map-data",         group: "data" },
   { slug: "users",           group: "data" },
   { slug: "media",           group: "data" },
   { slug: "database",        group: "data" },
@@ -40,14 +46,17 @@ export const NAV = [
   { slug: "tool-code-view",  group: "tools" },
   { slug: "add-tool",        group: "tools" },
 
+  { slug: "map-backup",       group: "backup" },
   { slug: "export",          group: "backup" },
   { slug: "import",          group: "backup" },
 
+  { slug: "map-access",       group: "access" },
   { slug: "domain",          group: "access" },
   { slug: "login-methods",   group: "access" },
   { slug: "channels",        group: "access" },
   { slug: "openai",          group: "access" },
 
+  { slug: "map-project",      group: "project" },
   { slug: "github",          group: "project" },
   { slug: "github-about",    group: "project" },
   { slug: "deployments",     group: "project" },
@@ -76,6 +85,7 @@ export const NAV = [
   { slug: "doc-coding-standards", group: "documents" },
   { slug: "doc-troubleshooting",  group: "documents" },
 
+  { slug: "map-help",         group: "help" },
   { slug: "how-to-build",    group: "help" },
   { slug: "help",            group: "help" },
 ] as const satisfies readonly { slug: string; group: NavGroup }[];
@@ -93,6 +103,24 @@ export const NAV_BY_GROUP: Record<NavGroup, readonly AdminPageSlug[]> = NAV_GROU
 // Адрес страницы. Префикс языка ВИДИМЫЙ ВСЕГДА (решение владельца 2026-08-08):
 // у панели нет SEO, ради которого FES прячет язык по умолчанию на голом корне,
 // а предсказуемый адрес дороже короткого.
+/**
+ * Карта группы — куда ведёт её серединный сегмент в хлебных крошках.
+ *
+ * У двух групп карта уже была под своим именем: у документов это «Карта
+ * документов», у инструментов — витрина. Переименовывать их ради единообразия
+ * значило бы сломать адреса, которые уже существуют.
+ */
+export const GROUP_INDEX: Record<NavGroup, AdminPageSlug> = {
+  application: "map-application",
+  data: "map-data",
+  tools: "tools",
+  backup: "map-backup",
+  access: "map-access",
+  project: "map-project",
+  documents: "doc-overview",
+  help: "map-help",
+};
+
 export function adminHref(lang: string, slug?: AdminPageSlug): string {
   return slug ? `/${lang}/${slug}` : `/${lang}`;
 }

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { NAV, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
+import { NAV, GROUP_INDEX, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
 
 // Хлебные крошки панели (шаг 501, решение владельца 2026-08-09).
@@ -43,6 +43,7 @@ export function Breadcrumbs(
   if (!slug) return null;
 
   const group = NAV.find((n) => n.slug === slug)?.group;
+  const mapSlug = group ? GROUP_INDEX[group] : undefined;
 
   // Хвост из параметров: значение показывается как есть — это имя файла или
   // идентификатора, и переводить его нельзя (правило 4г, машинные строки).
@@ -61,13 +62,18 @@ export function Breadcrumbs(
         {s.breadcrumbHome}
       </Link>
 
-      {group && (
+      {/* Серединный сегмент ведёт на КАРТУ ГРУППЫ и называется её именем.
+          Раньше здесь стояло название категории простым текстом — то есть
+          вернуться на уровень выше было некуда, а ради этого крошки и заводились.
+          Теперь у каждой группы есть страница-маршрутизатор, и сегмент на неё
+          указывает. На самой карте он не показывается: ссылка на страницу, где
+          стоишь, ничего не открывает. */}
+      {group && mapSlug && mapSlug !== slug && (
         <>
           <span className="shrink-0 text-muted-foreground/50">/</span>
-          {/* Группа — не ссылка: у категории нет своей страницы, она живёт
-              разделом меню. Изобразить её ссылкой значило бы обещать переход,
-              которого нет. */}
-          <span className="shrink-0">{s.navGroups[group]}</span>
+          <Link href={adminHref(lang, mapSlug)} className="shrink-0 truncate hover:text-foreground">
+            {s.pages[mapSlug].title}
+          </Link>
         </>
       )}
 
