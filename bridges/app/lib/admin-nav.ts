@@ -8,7 +8,7 @@
 // `slug` — машинная строка, НЕ переводится (правило 4г). Человеческие слова
 // живут в словаре под тем же slug: `s.pages[slug].title` / `.hint`.
 
-export const NAV_GROUPS = ["application", "data", "access", "project", "documents", "help"] as const;
+export const NAV_GROUPS = ["application", "data", "backup", "access", "project", "documents", "help"] as const;
 export type NavGroup = (typeof NAV_GROUPS)[number];
 
 // Порядок внутри группы = порядок в меню. Он повторяет порядок сегодняшнего
@@ -33,8 +33,8 @@ export const NAV = [
   // «а если нужен ещё один». Стоит здесь, а не в справке, потому что это
   // действие, а не пояснение.
   { slug: "add-tool",        group: "data" },
-  { slug: "export",          group: "data" },
-  { slug: "import",          group: "data" },
+  { slug: "export",          group: "backup" },
+  { slug: "import",          group: "backup" },
 
   { slug: "domain",          group: "access" },
   { slug: "login-methods",   group: "access" },
@@ -64,6 +64,7 @@ export const NAV = [
   { slug: "doc-steps",            group: "documents" },
   { slug: "doc-antipatterns",     group: "documents" },
   { slug: "doc-design",           group: "documents" },
+  { slug: "doc-code-samples",     group: "documents" },
   { slug: "doc-parallel-routing", group: "documents" },
   { slug: "doc-coding-standards", group: "documents" },
   { slug: "doc-troubleshooting",  group: "documents" },

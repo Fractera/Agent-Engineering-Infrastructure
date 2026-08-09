@@ -83,6 +83,7 @@ export const DOC_KIND: Record<string, "evolving" | "static"> = {
   "doc-platform-tools": "static",
   "doc-coding-standards": "static",
   "doc-design": "static",
+  "doc-code-samples": "static",
   "doc-parallel-routing": "static",
 
   "doc-architecture": "evolving",

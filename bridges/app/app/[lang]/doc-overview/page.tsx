@@ -17,6 +17,7 @@ import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
 import { DocKindBadge } from "../_components/doc-kind-badge";
 import { DOC_FILES, DOC_KIND, readDoc, listSteps, isDocKey } from "@/lib/product-docs";
+import { listSamples } from "@/lib/code-samples";
 import { NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 
 export const dynamic = "force-dynamic";
@@ -32,12 +33,24 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
   const slugs = NAV_BY_GROUP.documents.filter((x) => x !== "doc-overview") as AdminPageSlug[];
 
   const rows = slugs.map((slug) => {
+    // Два документа группы — ПАПКИ, а не файлы: шаги заводит агент по одному на
+    // работу, образцы складывает владелец. «Заведён» для них значит «есть хотя
+    // бы одна запись».
     if (slug === "doc-steps") {
       const steps = listSteps();
       return {
         slug,
         file: `${steps.dir}/`,
         exists: steps.exists && steps.files.length > 0,
+        kind: DOC_KIND[slug] ?? "static",
+      };
+    }
+    if (slug === "doc-code-samples") {
+      const samples = listSamples();
+      return {
+        slug,
+        file: `${samples.dir}/`,
+        exists: samples.files.length > 0,
         kind: DOC_KIND[slug] ?? "static",
       };
     }
