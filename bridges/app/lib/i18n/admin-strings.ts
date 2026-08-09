@@ -249,6 +249,18 @@ export type AdminStrings = {
     helpWatchTitle: string; helpWatch: string;
     helpProviderTitle: string; helpProvider: string;
   };
+  deployments: {
+    unavailable: string; count: string; empty: string; noCommit: string; noLog: string;
+    download: string; closeLog: string;
+    autoLabel: string; autoHint: string; lastCheck: string;
+    modeManual: string; modePull: string; modePullDeploy: string;
+    savedOff: string; savedTo: string; failed: string;
+    helpLabel: string;
+    helpWhyTitle: string; helpWhy: string;
+    helpModesTitle: string; helpModes: string;
+    helpRefusesTitle: string; helpRefuses: string;
+    helpOffTitle: string; helpOff: string;
+  };
   database: {
     noTables: string; empty: string; unavailable: string; rowsShown: string; noIdColumn: string;
     editTitle: string; valueLabel: string; cancel: string; save: string; delete: string;

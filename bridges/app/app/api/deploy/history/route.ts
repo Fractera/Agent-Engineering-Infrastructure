@@ -17,6 +17,28 @@ export async function GET(req: NextRequest) {
   try {
     const res  = await fetch(`${DATA_URL}${path}`, { headers: { "x-data-secret": DATA_SECRET } });
     const body = await res.json();
+
+    // ?download=1 — отдать журнал ФАЙЛОМ (шаг 501). Так кнопка «скачать» на
+    // странице становится обычной ссылкой: браузер сохраняет ответ сам, работает
+    // правый щелчок и работает без JS. Прежде страница собирала Blob в памяти —
+    // это требовало клиентского кода ради того, что умеет заголовок ответа.
+    if (id && req.nextUrl.searchParams.get("download") === "1") {
+      const run = (body as { run?: { id: string; status?: string; log?: string } }).run;
+      if (!run) return NextResponse.json({ error: "run not found" }, { status: 404 });
+      const name = `deploy-${run.id}-${String(run.status ?? "unknown").toLowerCase()}.txt`;
+      return new NextResponse(run.log ?? "", {
+        status: 200,
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          // Имя файла собирается из id и состояния — оба наши, посторонних
+          // символов в них быть не может, но кавычки в заголовке всё равно
+          // недопустимы, поэтому имя проходит через фильтр.
+          "Content-Disposition": `attachment; filename="${name.replace(/[^a-zA-Z0-9._-]/g, "-")}"`,
+          "Cache-Control": "no-store",
+        },
+      });
+    }
+
     return NextResponse.json(body, { status: res.status });
   } catch (e) {
     // Loud: an unreachable data layer is a real fault, and an empty list would read as "no deploys yet".
