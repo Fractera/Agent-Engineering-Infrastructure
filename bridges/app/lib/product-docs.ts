@@ -1,0 +1,154 @@
+// Документы разработки продуктового слоя (шаг 501, слой «Документы»).
+//
+// ЗАЧЕМ ЭТО СУЩЕСТВУЕТ. Инструкции, по которым работает агент в приложении
+// клиента, лежат файлами в КОРНЕ СЛОТА (`/opt/fractera/app/*.md`). До этого слоя
+// их можно было прочитать только через терминал или локальный клон: владелец,
+// сидящий в панели, свои же правила не видел. Здесь они получают страницы.
+//
+// 🔒 ГРАНИЦА, КОТОРУЮ НЕЛЬЗЯ РАЗМЫВАТЬ. Панель — источник истины для НАСТРОЕК
+// (`APP-CONFIG`, `PLATFORM-CONFIG`). Документы — другая сущность: это файлы
+// РЕПОЗИТОРИЯ пользователя, они едут с `git push`/`pull` и принадлежат проекту.
+// Панель даёт к ним доступ, но не становится их владельцем: правка здесь
+// изменяет файл в рабочем дереве слота ровно так же, как правка в редакторе на
+// машине владельца. Поэтому — никаких копий в базе панели.
+//
+// Белый список нужен не для красоты: без него параметр адреса стал бы дырой
+// «прочитай мне /etc/passwd». Ключ приходит из навигации, путь берётся отсюда.
+
+import fs from "fs";
+import path from "path";
+
+const APP_DIR = process.env.APP_DIR ?? "/opt/fractera/app";
+
+export type DocKey =
+  | "doc-instruction"
+  | "doc-use-cases"
+  | "doc-platform-tools"
+  | "doc-architecture"
+  | "doc-glossary"
+  | "doc-lessons"
+  | "doc-antipatterns"
+  | "doc-design"
+  | "doc-parallel-routing"
+  | "doc-coding-standards";
+
+/** Ключ страницы → файл в корне слота. Единственное место этого соответствия. */
+export const DOC_FILES: Record<DocKey, string> = {
+  "doc-instruction": "CLAUDE.md",
+  // ЗАЧЕМ существует продукт: итог мозгового штурма о назначении, с
+  // пользовательскими кейсами. Стоит вторым сознательно — агент, знающий чем
+  // строить, но не знающий зачем, строит аккуратно и не то. Позже документ будет
+  // рождаться инструментом штурма, но живёт он всегда здесь, файлом, и главная
+  // инструкция подтягивает его на старте.
+  "doc-use-cases": "USE-CASES.md",
+  // Перечень того, что платформа УЖЕ даёт: склады, движки, службы. Без этого
+  // файла агент не знает о них ничего — у него нет доступа к внешним
+  // инструментам, и единственный способ узнать про векторный склад, граф знаний,
+  // базу, карту и каналы — прочитать этот документ. Не зная, он строит второе.
+  "doc-platform-tools": "PLATFORM-TOOLS.md",
+  "doc-architecture": "ARCHITECTURE.md",
+  "doc-glossary": "GLOSSARY.md",
+  "doc-lessons": "LESSONS.md",
+  "doc-antipatterns": "ANTI-PATTERNS.md",
+  "doc-design": "DESIGN.md",
+  "doc-parallel-routing": "PARALLEL-ROUTING.md",
+  "doc-coding-standards": "CODING-STANDARDS.md",
+};
+
+export function isDocKey(v: string): v is DocKey {
+  return Object.prototype.hasOwnProperty.call(DOC_FILES, v);
+}
+
+/**
+ * 🔴 ГЕЙТ РАЗРАБОТКИ (решение владельца 2026-08-09).
+ *
+ * Пока пользовательские кейсы не описаны, начинать разработку бессмысленно:
+ * агент построит аккуратно и не то. Поэтому пункт меню горит красным, пока файла
+ * нет, — тем же способом, каким панель кричит о неподключённом GitHub.
+ *
+ * Проверка НАМЕРЕННО дешёвая (`statSync`, без чтения): её делает шапка на каждой
+ * странице панели, и читать ради этого весь документ было бы расточительством.
+ */
+export function useCasesMissing(): boolean {
+  try {
+    return !fs.statSync(path.join(APP_DIR, DOC_FILES["doc-use-cases"])).isFile();
+  } catch {
+    return true;
+  }
+}
+
+export type DocState = {
+  /** Имя файла — владелец должен видеть, что именно он правит. */
+  file: string;
+  /** Файла может не быть: документ ещё не заведён. Это состояние, а не ошибка. */
+  exists: boolean;
+  text: string;
+  bytes: number;
+  /** Когда правили в последний раз — по диску, а не по нашей памяти. */
+  modified: string | null;
+};
+
+export function readDoc(key: DocKey): DocState {
+  const file = DOC_FILES[key];
+  const full = path.join(APP_DIR, file);
+  try {
+    const stat = fs.statSync(full);
+    return {
+      file,
+      exists: true,
+      text: fs.readFileSync(full, "utf-8"),
+      bytes: stat.size,
+      modified: stat.mtime.toISOString(),
+    };
+  } catch {
+    return { file, exists: false, text: "", bytes: 0, modified: null };
+  }
+}
+
+export function writeDoc(key: DocKey, text: string): void {
+  const full = path.join(APP_DIR, DOC_FILES[key]);
+  fs.mkdirSync(path.dirname(full), { recursive: true });
+  // Пишем как есть, без нормализации переводов строк: документ принадлежит
+  // репозиторию пользователя, и молча менять его байты — значит порождать
+  // разницу в `git diff`, которой владелец не делал.
+  fs.writeFileSync(full, text, "utf-8");
+}
+
+/** Шаги разработки — не файл, а ПАПКА: их материализует агент по одному на шаг. */
+export const STEPS_DIR = "DEVELOPMENT-STEPS";
+
+export type StepFile = { name: string; bytes: number; modified: string | null };
+
+export function listSteps(): { exists: boolean; dir: string; files: StepFile[] } {
+  const dir = path.join(APP_DIR, STEPS_DIR);
+  try {
+    const names = fs.readdirSync(dir, { withFileTypes: true });
+    const files: StepFile[] = [];
+    for (const e of names) {
+      if (e.isDirectory()) {
+        // Вложенные папки конвейера (NEW-STEPS / COMPLETED-STEPS) — показываем их
+        // содержимое с префиксом, чтобы владелец видел стадию, а не только имя.
+        for (const inner of fs.readdirSync(path.join(dir, e.name))) {
+          const st = safeStat(path.join(dir, e.name, inner));
+          files.push({ name: `${e.name}/${inner}`, bytes: st.size, modified: st.modified });
+        }
+      } else if (e.name.endsWith(".md")) {
+        const st = safeStat(path.join(dir, e.name));
+        files.push({ name: e.name, bytes: st.size, modified: st.modified });
+      }
+    }
+    files.sort((a, b) => a.name.localeCompare(b.name));
+    return { exists: true, dir: STEPS_DIR, files };
+  } catch {
+    return { exists: false, dir: STEPS_DIR, files: [] };
+  }
+}
+
+function safeStat(p: string): { size: number; modified: string | null } {
+  try {
+    const s = fs.statSync(p);
+    return { size: s.size, modified: s.mtime.toISOString() };
+  } catch {
+    return { size: 0, modified: null };
+  }
+}

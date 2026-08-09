@@ -298,6 +298,20 @@ export type AdminStrings = {
     helpMaskTitle: string; helpMask: string;
     helpLockedTitle: string; helpLocked: string;
   };
+  // Верхняя область меню: всё красное и оранжевое в одном месте. Ключи предметные
+  // (github / use-cases / …), а не «warning1» — запись обязана называть причину.
+  warnings: {
+    title: string;
+    items: { github: string; "use-cases": string; openai: string; domain: string };
+  };
+  docs: {
+    intro: string;
+    edit: string; cancel: string;
+    save: string; saving: string; saved: string; failed: string; nothingToSave: string;
+    notCreated: string; createHint: string; chars: string; lines: string;
+    useCasesRequired: string;
+    stepsEmpty: string; stepsCount: string;
+  };
   parallelRouting: {
     intro: string; unavailable: string;
     notConsumed: string;

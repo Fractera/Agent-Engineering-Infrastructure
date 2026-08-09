@@ -8,7 +8,7 @@
 // `slug` — машинная строка, НЕ переводится (правило 4г). Человеческие слова
 // живут в словаре под тем же slug: `s.pages[slug].title` / `.hint`.
 
-export const NAV_GROUPS = ["application", "data", "access", "project", "help"] as const;
+export const NAV_GROUPS = ["application", "data", "access", "project", "documents", "help"] as const;
 export type NavGroup = (typeof NAV_GROUPS)[number];
 
 // Порядок внутри группы = порядок в меню. Он повторяет порядок сегодняшнего
@@ -45,6 +45,23 @@ export const NAV = [
   { slug: "github-about",    group: "project" },
   { slug: "deployments",     group: "project" },
   { slug: "env",             group: "project" },
+
+  // Документы разработки — файлы в КОРНЕ СЛОТА, по которым работает агент в
+  // приложении клиента. До этого слоя владелец мог прочитать свои же правила
+  // только через терминал или локальный клон. Порядок — как их читает агент на
+  // старте сессии: сначала главная инструкция, сразу за ней перечень того, что
+  // платформа уже даёт (без него агент строит второе), потом остальное.
+  { slug: "doc-instruction",      group: "documents" },
+  { slug: "doc-use-cases",        group: "documents" },
+  { slug: "doc-platform-tools",   group: "documents" },
+  { slug: "doc-architecture",     group: "documents" },
+  { slug: "doc-glossary",         group: "documents" },
+  { slug: "doc-lessons",          group: "documents" },
+  { slug: "doc-steps",            group: "documents" },
+  { slug: "doc-antipatterns",     group: "documents" },
+  { slug: "doc-design",           group: "documents" },
+  { slug: "doc-parallel-routing", group: "documents" },
+  { slug: "doc-coding-standards", group: "documents" },
 
   { slug: "how-to-build",    group: "help" },
   { slug: "help",            group: "help" },

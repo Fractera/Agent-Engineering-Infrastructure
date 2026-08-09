@@ -20,9 +20,12 @@ import {
   Menu, Globe, X as XIcon, Palette, Languages, Columns3, SlidersHorizontal, PanelTop, PanelBottom,
   Cookie, Users, ImagePlus, Database, BrainCircuit, Brain, Map as MapIcon, Download, Upload,
   Link2, KeyRound, MessagesSquare, Sparkles, GitBranch, Info, History, Settings, BookOpen,
-  HelpCircle, PackagePlus, type LucideIcon,
+  HelpCircle, PackagePlus, FileText, Target, Wrench, Network, BookMarked, GraduationCap,
+  ListChecks, AlertTriangle, Paintbrush, LayoutTemplate, Ruler, type LucideIcon,
 } from "lucide-react";
 import { NAV_GROUPS, NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
+import { useCasesMissing } from "@/lib/product-docs";
+import { collectWarnings } from "@/lib/admin-warnings";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
 
 // Иконки живут ЗДЕСЬ, а не в `lib/admin-nav.ts`: список маршрутов должен
@@ -55,11 +58,35 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   env: Settings,
   "how-to-build": BookOpen,
   help: HelpCircle,
+  "doc-instruction": FileText,
+  "doc-use-cases": Target,
+  "doc-platform-tools": Wrench,
+  "doc-architecture": Network,
+  "doc-glossary": BookMarked,
+  "doc-lessons": GraduationCap,
+  "doc-steps": ListChecks,
+  "doc-antipatterns": AlertTriangle,
+  "doc-design": Paintbrush,
+  "doc-parallel-routing": LayoutTemplate,
+  "doc-coding-standards": Ruler,
 };
 
 const MENU_ID = "admin-menu-toggle";
 
 export function AdminHeader({ lang, s }: { lang: string; s: AdminStrings }) {
+  // 🔴 Пока пользовательские кейсы не описаны, разработка бессмысленна: агент
+  // построит аккуратно и не то. Пункт горит красным, а на гамбургере появляется
+  // точка — иначе предупреждение живёт внутри закрытого ящика и его никто не
+  // видит. Проверка дешёвая (`statSync`), поэтому её можно делать на каждой
+  // странице панели.
+  const needsUseCases = useCasesMissing();
+
+  // Верхняя область меню: всё красное и оранжевое, собранное в одном месте.
+  // Список сам укорачивается по мере заполнения и исчезает целиком, когда
+  // заполнено всё — предупреждение, которое висит вечно, перестают читать.
+  const warnings = collectWarnings();
+  const blocking = warnings.some((w) => w.level === "blocking");
+
   return (
     <>
       {/* Состояние ящика. Должен идти ПЕРЕД теми, кто на него смотрит через
@@ -95,6 +122,34 @@ export function AdminHeader({ lang, s }: { lang: string; s: AdminStrings }) {
             флекс-ребёнку сжаться ниже высоты содержимого; без него список
             выдавливает шапку ящика вместо прокрутки. */}
         <div className="min-h-0 flex-1 overflow-y-auto py-1">
+          {/* Предупреждения — первыми, потому что это ответ на вопрос «с чего
+              начать». Каждая запись ДУБЛИРУЕТ метку своего раздела и ведёт
+              туда же: у настройки есть законное место, область лишь собирает
+              их вместе, пока они есть. */}
+          {warnings.length > 0 && (
+            <div>
+              <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-red-600/80 dark:text-red-400/80">
+                {s.warnings.title}
+              </div>
+              {warnings.map((w) => {
+                const red = w.level === "blocking";
+                return (
+                  <Link
+                    key={w.id}
+                    href={adminHref(lang, w.slug)}
+                    className={`flex items-start gap-2 px-3 py-1.5 text-[12px] hover:bg-muted ${
+                      red ? "text-red-600 dark:text-red-400" : "text-amber-600 dark:text-amber-400"
+                    }`}
+                  >
+                    <span className={`mt-1.5 size-1.5 shrink-0 rounded-full ${red ? "bg-red-600 dark:bg-red-400" : "bg-amber-600 dark:bg-amber-400"}`} />
+                    <span className="leading-tight">{s.warnings.items[w.id]}</span>
+                  </Link>
+                );
+              })}
+              <div className="mx-2 my-1 h-px bg-border" />
+            </div>
+          )}
+
           {NAV_GROUPS.map((group, groupIdx) => (
             <div key={group}>
               {/* Разделитель между категориями — тот же, что в оригинале.
@@ -105,14 +160,19 @@ export function AdminHeader({ lang, s }: { lang: string; s: AdminStrings }) {
               </div>
               {NAV_BY_GROUP[group].map((slug) => {
                 const Icon = ICONS[slug];
+                const alarm = slug === "doc-use-cases" && needsUseCases;
                 return (
                   <Link
                     key={slug}
                     href={adminHref(lang, slug)}
-                    className="flex items-center gap-2 px-3 py-1.5 text-[12px] text-foreground hover:bg-muted"
+                    title={alarm ? s.docs.useCasesRequired : undefined}
+                    className={`flex items-center gap-2 px-3 py-1.5 text-[12px] hover:bg-muted ${
+                      alarm ? "font-medium text-red-600 dark:text-red-400" : "text-foreground"
+                    }`}
                   >
-                    <Icon size={11} className="shrink-0 text-muted-foreground" />
+                    <Icon size={11} className={`shrink-0 ${alarm ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`} />
                     {s.pages[slug].title}
+                    {alarm && <span className="ml-auto size-1.5 rounded-full bg-red-600 dark:bg-red-400" />}
                   </Link>
                 );
               })}
@@ -142,6 +202,17 @@ export function AdminHeader({ lang, s }: { lang: string; s: AdminStrings }) {
           >
             <Menu className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">{s.menu}</span>
+            {/* Точка на кнопке: предупреждения живут внутри закрытого ящика, а
+                увидеть их нужно до того, как он открыт. Красная, если что-то
+                блокирует старт; оранжевая, если всё лишь нежелательно. */}
+            {warnings.length > 0 && (
+              <span
+                title={s.warnings.title}
+                className={`size-1.5 shrink-0 rounded-full ${
+                  blocking ? "bg-red-600 dark:bg-red-400" : "bg-amber-600 dark:bg-amber-400"
+                }`}
+              />
+            )}
           </label>
         </div>
       </header>

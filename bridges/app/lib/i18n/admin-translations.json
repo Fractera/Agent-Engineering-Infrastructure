@@ -672,6 +672,32 @@
       "helpLockedTitle": "Why some names cannot be edited.",
       "helpLocked": "Their values follow from decisions made elsewhere — the mode the server runs in, the domain, the language set. A hand-edit here would rewrite one half of a pair and leave the other, and the failure would show up as “I cannot sign in” rather than “I mistyped a variable”."
     },
+    "warnings": {
+      "title": "Before you start",
+      "items": {
+        "github": "GitHub is not connected — the project has nowhere to live",
+        "use-cases": "User cases are not described — development has nothing to build towards",
+        "openai": "No OpenAI key — the knowledge graph and embeddings stay off",
+        "domain": "No custom domain — HTTPS-only features stay unavailable"
+      }
+    },
+    "docs": {
+      "intro": "This document is a file in your project, edited here or in your editor. It travels with a push and a pull like any other file:",
+      "edit": "Edit",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "failed": "Save failed",
+      "nothingToSave": "Nothing was changed",
+      "notCreated": "Not created yet.",
+      "createHint": "Press Edit and save — the file will be created in the project root.",
+      "chars": "characters",
+      "lines": "lines",
+      "useCasesRequired": "User cases are not described yet — development has nothing to start from",
+      "stepsEmpty": "No steps yet. The agent creates one file per piece of work.",
+      "stepsCount": "{count} file(s)"
+    },
     "parallelRouting": {
       "intro": "These settings live in a file on your server and apply WITHOUT a rebuild — a save shows up on the app's next page load.",
       "unavailable": "The platform settings could not be read.",
@@ -804,7 +830,8 @@
       "data": "Data",
       "access": "Access and services",
       "project": "Project",
-      "help": "Help"
+      "help": "Help",
+      "documents": "Development documents"
     },
     "footer": {
       "deploy": "Deploy",
@@ -917,6 +944,50 @@
       "help": {
         "title": "Help",
         "hint": "What each part of the panel is for."
+      },
+      "doc-instruction": {
+        "title": "Main instruction",
+        "hint": "The rules the agent works by, read at the start of every session."
+      },
+      "doc-use-cases": {
+        "title": "User cases",
+        "hint": "What this product is for. Development is pointless before this exists."
+      },
+      "doc-platform-tools": {
+        "title": "Platform tools",
+        "hint": "What the platform already gives you: stores, engines, services."
+      },
+      "doc-architecture": {
+        "title": "Architecture",
+        "hint": "How the app is put together and which layer owns what."
+      },
+      "doc-glossary": {
+        "title": "Glossary",
+        "hint": "Terms of this project, so the same word means the same thing."
+      },
+      "doc-lessons": {
+        "title": "Lessons",
+        "hint": "Preferences and habits earned from earlier mistakes."
+      },
+      "doc-steps": {
+        "title": "Development steps",
+        "hint": "The step files the agent materializes, one per piece of work."
+      },
+      "doc-antipatterns": {
+        "title": "Anti-patterns",
+        "hint": "Approaches that cost time here and must not be tried again."
+      },
+      "doc-design": {
+        "title": "Design",
+        "hint": "How the pages should look. You describe it; the agent builds to it."
+      },
+      "doc-parallel-routing": {
+        "title": "Parallel routing",
+        "hint": "How the layout of independent areas works in this project."
+      },
+      "doc-coding-standards": {
+        "title": "Coding standards",
+        "hint": "Limits the code must respect: size, static pages, translations."
       }
     }
   },
@@ -1593,6 +1664,32 @@
       "helpLockedTitle": "Почему некоторые имена нельзя править.",
       "helpLocked": "Их значения следуют из решений, принятых в других местах: режим работы сервера, домен, набор языков. Правка руками перепишет одну половину пары и оставит другую, а проявится это как «не могу войти», а не как «я опечатался в переменной»."
     },
+    "warnings": {
+      "title": "Прежде чем начинать",
+      "items": {
+        "github": "GitHub не подключён — проекту негде жить",
+        "use-cases": "Пользовательские кейсы не описаны — разработке не к чему стремиться",
+        "openai": "Нет ключа OpenAI — граф знаний и векторы останутся выключенными",
+        "domain": "Нет своего домена — возможности, требующие HTTPS, недоступны"
+      }
+    },
+    "docs": {
+      "intro": "Этот документ — файл вашего проекта; его правят здесь или в редакторе. Он едет с отправкой и получением, как любой другой файл:",
+      "edit": "Править",
+      "cancel": "Отмена",
+      "save": "Сохранить",
+      "saving": "Сохраняю…",
+      "saved": "Сохранено",
+      "failed": "Сохранить не удалось",
+      "nothingToSave": "Ничего не изменено",
+      "notCreated": "Ещё не создан.",
+      "createHint": "Нажмите «Править» и сохраните — файл появится в корне проекта.",
+      "chars": "символов",
+      "lines": "строк",
+      "useCasesRequired": "Пользовательские кейсы не описаны — разработке не от чего отталкиваться",
+      "stepsEmpty": "Шагов пока нет. Агент заводит по файлу на каждую работу.",
+      "stepsCount": "файлов: {count}"
+    },
     "parallelRouting": {
       "intro": "Эти настройки лежат в файле на вашем сервере и применяются БЕЗ пересборки — сохранение видно на следующей загрузке страницы приложения.",
       "unavailable": "Платформенные настройки прочитать не удалось.",
@@ -1725,7 +1822,8 @@
       "data": "Данные",
       "access": "Доступ и службы",
       "project": "Проект",
-      "help": "Справка"
+      "help": "Справка",
+      "documents": "Документы разработки"
     },
     "footer": {
       "deploy": "Развернуть",
@@ -1838,6 +1936,50 @@
       "help": {
         "title": "Справка",
         "hint": "Для чего нужна каждая часть панели."
+      },
+      "doc-instruction": {
+        "title": "Главная инструкция",
+        "hint": "Правила, по которым работает агент; читаются в начале каждой сессии."
+      },
+      "doc-use-cases": {
+        "title": "Пользовательские кейсы",
+        "hint": "Зачем нужен продукт. Пока их нет, разработку начинать не с чего."
+      },
+      "doc-platform-tools": {
+        "title": "Инструменты платформы",
+        "hint": "Что платформа уже даёт: склады, движки, службы."
+      },
+      "doc-architecture": {
+        "title": "Архитектура",
+        "hint": "Как устроено приложение и какой слой чем владеет."
+      },
+      "doc-glossary": {
+        "title": "Глоссарий",
+        "hint": "Термины проекта, чтобы одно слово значило одно и то же."
+      },
+      "doc-lessons": {
+        "title": "Уроки",
+        "hint": "Предпочтения и привычки, добытые собственными ошибками."
+      },
+      "doc-steps": {
+        "title": "Шаги разработки",
+        "hint": "Файлы шагов, которые заводит агент — по одному на работу."
+      },
+      "doc-antipatterns": {
+        "title": "Антипаттерны",
+        "hint": "Подходы, которые здесь стоили времени и повторять их нельзя."
+      },
+      "doc-design": {
+        "title": "Дизайн",
+        "hint": "Как должны выглядеть страницы. Вы описываете — агент строит по описанию."
+      },
+      "doc-parallel-routing": {
+        "title": "Параллельная маршрутизация",
+        "hint": "Как устроена раскладка из независимых областей."
+      },
+      "doc-coding-standards": {
+        "title": "Стандарты кода",
+        "hint": "Ограничения кода: размер, статические страницы, переводы."
       }
     }
   }
