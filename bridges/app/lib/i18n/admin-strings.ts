@@ -298,6 +298,18 @@ export type AdminStrings = {
     helpMaskTitle: string; helpMask: string;
     helpLockedTitle: string; helpLocked: string;
   };
+  languages: {
+    intro: string; unavailable: string;
+    save: string; saving: string; rebuilding: string; saved: string;
+    rebuildStarted: string; rebuildDone: string; rebuildFailed: string;
+    busyBuild: string; failed: string; nothingToSave: string; atLeastOne: string;
+    defaultLabel: string; makeDefault: string; selectedCount: string; tierHint: string;
+    helpLabel: string;
+    helpBuildTitle: string; helpBuild: string;
+    helpDefaultTitle: string; helpDefault: string;
+    helpEnglishTitle: string; helpEnglish: string;
+    helpCostTitle: string; helpCost: string;
+  };
   appSettings: {
     intro: string; unavailable: string;
     save: string; saving: string; saved: string; failed: string; nothingToSave: string;
