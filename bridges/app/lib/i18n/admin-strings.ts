@@ -261,6 +261,30 @@ export type AdminStrings = {
     helpRefusesTitle: string; helpRefuses: string;
     helpOffTitle: string; helpOff: string;
   };
+  github: {
+    unavailable: string; noRepo: string;
+    stateWorking: string; stateUnverified: string; stateUnconfigured: string;
+    verifiedAt: string; unverifiedHint: string; pending: string;
+    repoLabel: string; tokenLabel: string; tokenReplace: string;
+    connect: string; connecting: string; connected: string;
+    push: string; pushing: string; pushed: string;
+    failed: string; outputLabel: string; seeAlso: string;
+    helpLabel: string;
+    helpWhyTitle: string; helpWhy: string;
+    helpFirstTitle: string; helpFirst: string;
+    helpTokenTitle: string; helpToken: string;
+    helpDataTitle: string; helpData: string;
+  };
+  githubAbout: {
+    intro: string;
+    pushTitle: string; pushBody: string;
+    pullTitle: string; pullBody: string;
+    deployTitle: string; deployBody: string;
+    filesVsDataTitle: string; filesVsData: string;
+    ruleTitle: string; rule: string;
+    conflictTitle: string; conflict: string;
+    seeAlso: string;
+  };
   database: {
     noTables: string; empty: string; unavailable: string; rowsShown: string; noIdColumn: string;
     editTitle: string; valueLabel: string; cancel: string; save: string; delete: string;
