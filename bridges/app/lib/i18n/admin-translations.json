@@ -886,7 +886,16 @@
       "generatedMissing": "Not built yet — no tool has been installed on this server. Press Rebuild to create it from what the platform offers.",
       "rebuild": "Rebuild",
       "rebuilding": "Rebuilding…",
-      "rebuilt": "Rebuilt"
+      "rebuilt": "Rebuilt",
+      "generatedHowLabel": "How this document works and why it exists",
+      "generatedWhyTitle": "Why not just look in the tools folder?",
+      "generatedWhy": "Because there will not be one cropper. There will be several — one returning JPEG and losing transparency, one keeping PNG, one cropping on the server for large files, one locked to a square for avatars. From the folder they are four similar names, and nothing there says which fits the case at hand. The difference lives in the contract, and choosing between near-identical tools is the whole problem this file solves.",
+      "generatedSectionsTitle": "The four sections of every entry.",
+      "generatedSections": "How it works — the mechanics and what is authoritative. Import and signature — the exact import line and every prop with its type. Returns — what comes back and when. Example — code that compiles as written. Limits — what the tool does NOT do, and usually the deciding part: two tools differ in their limits far more often than in their purpose.",
+      "generatedFlowTitle": "How a tool gets in here.",
+      "generatedFlow": "You install it from the Tools section; the files are copied into the project, and the panel immediately rebuilds this document from the same descriptions its tool pages show. One source, so the page and the document cannot drift apart.",
+      "generatedOnlyInstalledTitle": "Only what is installed.",
+      "generatedOnlyInstalled": "A tool that is not in the project is not described here — a contract for something absent would send the agent importing a file that does not exist."
     },
     "parallelRouting": {
       "intro": "These settings live in a file on your server and apply WITHOUT a rebuild — a save shows up on the app's next page load.",
@@ -2102,7 +2111,16 @@
       "generatedMissing": "Ещё не собран — на этом сервере не установлено ни одного инструмента. Нажмите «Пересобрать», и он появится из того, что предлагает платформа.",
       "rebuild": "Пересобрать",
       "rebuilding": "Пересобираю…",
-      "rebuilt": "Пересобран"
+      "rebuilt": "Пересобран",
+      "generatedHowLabel": "Как устроен этот документ и зачем он нужен",
+      "generatedWhyTitle": "Почему нельзя просто посмотреть в папку инструментов?",
+      "generatedWhy": "Потому что обрезчик будет не один. Их будет несколько — отдающий JPEG и теряющий прозрачность, сохраняющий PNG, режущий на сервере для больших файлов, запертый на квадрат для аватаров. Из папки это четыре похожих имени, и ничто в ней не говорит, какой подходит к вашему случаю. Разница живёт в контракте, а выбор между почти одинаковыми инструментами и есть та задача, которую решает этот файл.",
+      "generatedSectionsTitle": "Четыре раздела каждой записи.",
+      "generatedSections": "Как это работает — механика и что здесь авторитет. Импорт и сигнатура — точная строка импорта и каждое свойство с типом. Возвращает — что приходит обратно и когда. Пример — код, который собирается как написан. Границы — чего инструмент НЕ делает, и обычно именно они решают: два инструмента расходятся границами гораздо чаще, чем назначением.",
+      "generatedFlowTitle": "Как инструмент сюда попадает.",
+      "generatedFlow": "Вы устанавливаете его в разделе «Инструменты»; файлы копируются в проект, и панель сразу пересобирает этот документ из тех же описаний, что показывают страницы инструментов. Источник один, поэтому страница и документ не могут разойтись.",
+      "generatedOnlyInstalledTitle": "Только установленное.",
+      "generatedOnlyInstalled": "Инструмента, которого в проекте нет, здесь нет и в описании: контракт на отсутствующее послал бы агента импортировать несуществующий файл."
     },
     "parallelRouting": {
       "intro": "Эти настройки лежат в файле на вашем сервере и применяются БЕЗ пересборки — сохранение видно на следующей загрузке страницы приложения.",

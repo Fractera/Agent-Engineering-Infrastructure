@@ -62,6 +62,40 @@ it connects facts across documents, costs more per question and needs an OpenAI 
 
 Reach for the vector store first. Move to the graph when the answer genuinely lives in the links between
 documents rather than in any single one.
+
+---
+
+## Why this file exists when you could just look in \`tools/\`
+
+You could. You would see the folder names and nothing else — and that is exactly where the difficulty
+starts, because there will not be one cropper. There will be several: one that returns a JPEG and loses
+transparency, one that keeps PNG, one that crops on the server for large files, one built for avatars with
+a locked square. From the folder they are four similar names.
+
+**Choosing between near-identical tools is the whole problem, and only a contract solves it.** What each
+one accepts, what it gives back, what it refuses to do — that is the difference between picking the right
+one and discovering the wrong one three hours later, when the logo has lost its transparent background.
+
+So every entry below carries the same four sections, in the same order:
+
+| Section | Answers |
+|---|---|
+| **How it works** | The mechanics — where the work happens, what is authoritative, what the tool protects you from. Read it to know the tool's *shape*. |
+| **Import and signature** | The exact import line and every prop with its type and whether it is required. Copy from here; do not infer it. |
+| **Returns** | What comes back and when — a value, a callback, or a side effect on the server. |
+| **Example** | Code that compiles as written. |
+| **Limits** | What the tool does **not** do. Usually the deciding section: two tools differ in their limits far more often than in their purpose. |
+
+### How a tool gets into this file
+
+1. The owner installs it from the panel's *Tools* section. Files are copied into \`${SLOT_TOOLS_DIR}/<id>/\`.
+2. The panel immediately regenerates this document from the tool descriptions it holds.
+3. The entry appears below, with the same contract the panel's own page shows — one source, so the two
+   cannot drift apart.
+
+**Tools that are not installed are not described here.** A contract for something absent would send you
+importing a file that does not exist. If you need a capability and find nothing for it below, say so —
+the panel's *Add a tool* page is where a new one is requested.
 `;
 
 function renderTool(id: ToolId): string {

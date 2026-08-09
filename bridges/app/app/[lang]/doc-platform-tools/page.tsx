@@ -18,6 +18,7 @@
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
 import { DocKindBadge } from "../_components/doc-kind-badge";
+import { HelpDetails } from "../_components/help-details";
 import { CodeView } from "@/_tools/code-view/client/code-view.client";
 import { readDoc } from "@/lib/product-docs";
 import { RebuildDocButton } from "./_components/rebuild.client";
@@ -55,6 +56,16 @@ export default async function PlatformToolsDocPage({ params }: { params: Promise
       <p className="mt-2 text-[10px] text-muted-foreground">
         {d.intro} <span className="font-mono text-foreground">{state.file}</span>
       </p>
+
+      {/* Зачем документ нужен, если агент и так видит папку `tools/`. Довод
+          не в существовании инструментов, а в ВЫБОРЕ между похожими: обрезчиков
+          будет несколько, и различает их только контракт. */}
+      <HelpDetails label={d.generatedHowLabel}>
+        <p><strong>{d.generatedWhyTitle}</strong> {d.generatedWhy}</p>
+        <p><strong>{d.generatedSectionsTitle}</strong> {d.generatedSections}</p>
+        <p><strong>{d.generatedFlowTitle}</strong> {d.generatedFlow}</p>
+        <p><strong>{d.generatedOnlyInstalledTitle}</strong> {d.generatedOnlyInstalled}</p>
+      </HelpDetails>
 
       <div className="mt-3">
         {state.exists ? (

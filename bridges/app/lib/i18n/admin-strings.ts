@@ -367,6 +367,11 @@ export type AdminStrings = {
     notCreated: string; createHint: string; chars: string; lines: string;
     backToList: string; pickStep: string; closeStep: string;
     generatedNotice: string; generatedMissing: string;
+    generatedHowLabel: string;
+    generatedWhyTitle: string; generatedWhy: string;
+    generatedSectionsTitle: string; generatedSections: string;
+    generatedFlowTitle: string; generatedFlow: string;
+    generatedOnlyInstalledTitle: string; generatedOnlyInstalled: string;
     rebuild: string; rebuilding: string; rebuilt: string;
     kindEvolving: string; kindStatic: string;
     kindEvolvingHint: string; kindStaticHint: string;
