@@ -17,7 +17,7 @@ export default async function HelpPage({ params }: { params: Promise<{ lang: str
   const page = s.pages["help"];
 
   return (
-    <PageShell title={page.title} hint={page.hint} notice={s.skeletonNotice}>
+    <PageShell lang={lang} slug="help" s={s} title={page.title} hint={page.hint} notice={s.skeletonNotice}>
       <HelpPanel />
     </PageShell>
   );

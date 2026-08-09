@@ -33,6 +33,8 @@ export type AdminStrings = {
   preview: string;
   signIn: string;
   menu: string;
+  /** Корень пути в хлебных крошках. */
+  breadcrumbHome: string;
   // account footer of the settings drawer
   signOut: string;
   registerAccount: string;

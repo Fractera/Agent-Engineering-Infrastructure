@@ -36,7 +36,7 @@ export default async function DocStepsPage(
   const base = `/${lang}/doc-steps`;
 
   return (
-    <PageShell title={page.title} hint={page.hint}>
+    <PageShell lang={lang} slug="doc-steps" s={s} params={{ file }} title={page.title} hint={page.hint}>
       <div className="mb-2">
         <DocKindBadge
           kind="evolving"

@@ -31,7 +31,7 @@ export default async function LoginMethodsPage({ params }: { params: Promise<{ l
 
   if (!result.ok) {
     return (
-      <PageShell title={s.pages["login-methods"].title} hint={s.pages["login-methods"].hint}>
+      <PageShell lang={lang} slug="login-methods" s={s} title={s.pages["login-methods"].title} hint={s.pages["login-methods"].hint}>
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3">
           <p className="text-[12px] font-medium text-destructive">{m.unavailable}</p>
           <p className="mt-1 font-mono text-[10px] text-muted-foreground">{result.reason}</p>
@@ -58,7 +58,7 @@ export default async function LoginMethodsPage({ params }: { params: Promise<{ l
     );
 
   return (
-    <PageShell title={s.pages["login-methods"].title} hint={s.pages["login-methods"].hint}>
+    <PageShell lang={lang} slug="login-methods" s={s} title={s.pages["login-methods"].title} hint={s.pages["login-methods"].hint}>
       {!secure ? (
         // Не отказ, а объяснимое условие: вход через Google требует адреса
         // возврата по HTTPS, а письмо — настоящего домена отправителя. Ссылка

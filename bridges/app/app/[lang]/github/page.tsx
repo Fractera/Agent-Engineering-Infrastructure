@@ -32,7 +32,7 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
 
   if (!result.ok) {
     return (
-      <PageShell title={s.pages.github.title} hint={s.pages.github.hint}>
+      <PageShell lang={lang} slug="github" s={s} title={s.pages.github.title} hint={s.pages.github.hint}>
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3">
           <p className="text-[12px] font-medium text-destructive">{g.unavailable}</p>
           <p className="mt-1 font-mono text-[10px] text-muted-foreground">{result.reason}</p>
@@ -44,7 +44,7 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
   const st = result.status;
 
   return (
-    <PageShell title={s.pages.github.title} hint={s.pages.github.hint}>
+    <PageShell lang={lang} slug="github" s={s} title={s.pages.github.title} hint={s.pages.github.hint}>
       {/* Полоса состояния — серверная: правда видна и без JS. */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-lg border border-border px-3 py-2 text-[11px]">
         <span className="flex items-center gap-1.5">

@@ -17,7 +17,7 @@ export default async function FooterPagesPage({ params }: { params: Promise<{ la
   const page = s.pages["footer-pages"];
 
   return (
-    <PageShell title={page.title} hint={page.hint} notice={s.skeletonNotice}>
+    <PageShell lang={lang} slug="footer-pages" s={s} title={page.title} hint={page.hint} notice={s.skeletonNotice}>
       <FooterPagesPanel />
     </PageShell>
   );

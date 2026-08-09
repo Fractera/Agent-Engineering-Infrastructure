@@ -29,7 +29,7 @@ export default async function ParallelRoutingPage({ params }: { params: Promise<
 
   if (!state.ok) {
     return (
-      <PageShell title={page.title} hint={page.hint}>
+      <PageShell lang={lang} slug="parallel-routing" s={s} title={page.title} hint={page.hint}>
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3">
           <p className="text-[12px] font-medium text-destructive">{t.unavailable}</p>
         </div>
@@ -38,7 +38,7 @@ export default async function ParallelRoutingPage({ params }: { params: Promise<
   }
 
   return (
-    <PageShell title={page.title} hint={page.hint}>
+    <PageShell lang={lang} slug="parallel-routing" s={s} title={page.title} hint={page.hint}>
       {/* Правда о состоянии стоит ВЫШЕ управления, а не в справке под ним:
           человек должен узнать, что экран не изменится, до того как нажмёт
           «Сохранить», а не после. */}

@@ -21,7 +21,7 @@ export default async function AddToolPage({ params }: { params: Promise<{ lang: 
   const t = s.addTool;
 
   return (
-    <PageShell title={s.pages["add-tool"].title} hint={s.pages["add-tool"].hint}>
+    <PageShell lang={lang} slug="add-tool" s={s} title={s.pages["add-tool"].title} hint={s.pages["add-tool"].hint}>
       <p className="text-[12px] leading-relaxed text-muted-foreground">{t.body}</p>
 
       <ul className="mt-2 list-disc space-y-1 pl-5 text-[12px] text-muted-foreground">

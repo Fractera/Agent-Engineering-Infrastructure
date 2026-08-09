@@ -37,7 +37,7 @@ export default async function DomainPage({ params }: { params: Promise<{ lang: s
 
   if (!result.ok) {
     return (
-      <PageShell title={s.pages.domain.title} hint={s.pages.domain.hint}>
+      <PageShell lang={lang} slug="domain" s={s} title={s.pages.domain.title} hint={s.pages.domain.hint}>
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3">
           <p className="text-[12px] font-medium text-destructive">{t.unavailable}</p>
           <p className="mt-1 font-mono text-[10px] text-muted-foreground">{result.reason}</p>
@@ -53,7 +53,7 @@ export default async function DomainPage({ params }: { params: Promise<{ lang: s
     : null;
 
   return (
-    <PageShell title={s.pages.domain.title} hint={s.pages.domain.hint}>
+    <PageShell lang={lang} slug="domain" s={s} title={s.pages.domain.title} hint={s.pages.domain.hint}>
       {!state.domain ? (
         <DomainEntry
           labels={{

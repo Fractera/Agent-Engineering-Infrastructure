@@ -25,7 +25,7 @@ export default async function AppFeaturesPage({ params }: { params: Promise<{ la
 
   if (!state.ok) {
     return (
-      <PageShell title={page.title} hint={page.hint}>
+      <PageShell lang={lang} slug="app-features" s={s} title={page.title} hint={page.hint}>
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3">
           <p className="text-[12px] font-medium text-destructive">{f.unavailable}</p>
         </div>
@@ -41,7 +41,7 @@ export default async function AppFeaturesPage({ params }: { params: Promise<{ la
   }
 
   return (
-    <PageShell title={page.title} hint={page.hint}>
+    <PageShell lang={lang} slug="app-features" s={s} title={page.title} hint={page.hint}>
       <p className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
         {f.intro}
       </p>

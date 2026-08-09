@@ -27,7 +27,7 @@ export default async function OpenAiPage({ params }: { params: Promise<{ lang: s
   const bothSet = state.vectors.configured && state.graph.configured;
 
   return (
-    <PageShell title={s.pages.openai.title} hint={s.pages.openai.hint}>
+    <PageShell lang={lang} slug="openai" s={s} title={s.pages.openai.title} hint={s.pages.openai.hint}>
       <div className="rounded-md border border-blue-500/30 bg-blue-500/5 p-3 text-[11px] leading-relaxed text-blue-700 dark:text-blue-300">
         {o.intro}{" "}
         <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="underline">

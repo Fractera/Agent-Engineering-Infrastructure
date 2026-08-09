@@ -33,7 +33,7 @@ export default async function ChannelsPage({ params }: { params: Promise<{ lang:
   const { available, telegram } = await readChannels();
 
   return (
-    <PageShell title={s.pages.channels.title} hint={s.pages.channels.hint}>
+    <PageShell lang={lang} slug="channels" s={s} title={s.pages.channels.title} hint={s.pages.channels.hint}>
       {!available ? (
         <div className="flex items-start gap-2 rounded-md border border-destructive/20 bg-destructive/10 p-3">
           <AlertCircle size={13} className="mt-0.5 shrink-0 text-destructive" />

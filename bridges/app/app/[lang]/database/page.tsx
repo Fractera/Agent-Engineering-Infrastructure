@@ -59,7 +59,7 @@ export default async function DatabasePage(
     : undefined;
 
   return (
-    <PageShell title={s.pages.database.title} hint={s.pages.database.hint}>
+    <PageShell lang={lang} slug="database" s={s} params={{ table, edit, col, delete }} title={s.pages.database.title} hint={s.pages.database.hint}>
       {!list.ok ? (
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3">
           <p className="text-[12px] font-medium text-destructive">{d.unavailable}</p>

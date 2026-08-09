@@ -28,7 +28,7 @@ export default async function HowToBuildPage({ params }: { params: Promise<{ lan
   const guide = readGuide(lang);
 
   return (
-    <PageShell title={page.title} hint={page.hint}>
+    <PageShell lang={lang} slug="how-to-build" s={s} title={page.title} hint={page.hint}>
       <FirstRunNote title={s.howToBuild.welcomeTitle} body={s.howToBuild.welcomeBody} />
 
       {guide.ok ? (

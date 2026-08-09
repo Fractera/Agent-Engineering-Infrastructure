@@ -1228,7 +1228,8 @@
         "title": "Code view",
         "hint": "Show source code with real syntax colouring."
       }
-    }
+    },
+    "breadcrumbHome": "Panel"
   },
   "ru": {
     "notSecure": "Не защищено",
@@ -2459,6 +2460,7 @@
         "title": "Просмотр кода",
         "hint": "Показать исходный код с настоящей подсветкой синтаксиса."
       }
-    }
+    },
+    "breadcrumbHome": "Панель"
   }
 }

@@ -25,7 +25,7 @@ export default async function DocPage({ params }: { params: Promise<{ lang: stri
   const kind = DOC_KIND[DOC_KEY];
 
   return (
-    <PageShell title={page.title} hint={page.hint}>
+    <PageShell lang={lang} slug="doc-coding-standards" s={s} title={page.title} hint={page.hint}>
       <div className="mb-2">
         <DocKindBadge
           kind={kind}

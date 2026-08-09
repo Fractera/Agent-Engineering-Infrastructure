@@ -38,7 +38,7 @@ export default async function VectorMemoryPage(
   const found = q.trim() ? await searchVectors(q.trim(), 5) : null;
 
   return (
-    <PageShell title={s.pages["vector-memory"].title} hint={s.pages["vector-memory"].hint}>
+    <PageShell lang={lang} slug="vector-memory" s={s} title={s.pages["vector-memory"].title} hint={s.pages["vector-memory"].hint}>
       {!status.ok ? (
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3">
           <p className="text-[12px] font-medium text-destructive">{v.unavailable}</p>

@@ -31,7 +31,7 @@ export default async function MapPage({ params }: { params: Promise<{ lang: stri
   );
 
   return (
-    <PageShell title={s.pages.map.title} hint={g.intro}>
+    <PageShell lang={lang} slug="map" s={s} title={s.pages.map.title} hint={g.intro}>
       {!state.reachable ? (
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3">
           <p className="text-[12px] font-medium text-destructive">{g.loadError}</p>

@@ -39,7 +39,7 @@ export default async function UsersPage(
   const u = s.users;
 
   return (
-    <PageShell title={s.pages.users.title} hint={s.pages.users.hint}>
+    <PageShell lang={lang} slug="users" s={s} title={s.pages.users.title} hint={s.pages.users.hint}>
       <SearchForm value={q} placeholder={u.searchPlaceholder} submit={u.search} resetPage />
 
       <div className="mt-3">

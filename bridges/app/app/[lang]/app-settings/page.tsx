@@ -28,7 +28,7 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ la
 
   if (!state.ok) {
     return (
-      <PageShell title={s.pages["app-settings"].title} hint={s.pages["app-settings"].hint}>
+      <PageShell lang={lang} slug="app-settings" s={s} title={s.pages["app-settings"].title} hint={s.pages["app-settings"].hint}>
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3">
           <p className="text-[12px] font-medium text-destructive">{a.unavailable}</p>
         </div>
@@ -37,7 +37,7 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ la
   }
 
   return (
-    <PageShell title={s.pages["app-settings"].title} hint={s.pages["app-settings"].hint}>
+    <PageShell lang={lang} slug="app-settings" s={s} title={s.pages["app-settings"].title} hint={s.pages["app-settings"].hint}>
       <p className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
         {a.intro}
       </p>

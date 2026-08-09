@@ -29,7 +29,7 @@ export default async function LanguagesPage({ params }: { params: Promise<{ lang
 
   if (!state.ok) {
     return (
-      <PageShell title={page.title} hint={page.hint}>
+      <PageShell lang={lang} slug="languages" s={s} title={page.title} hint={page.hint}>
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3">
           <p className="text-[12px] font-medium text-destructive">{t.unavailable}</p>
         </div>
@@ -38,7 +38,7 @@ export default async function LanguagesPage({ params }: { params: Promise<{ lang
   }
 
   return (
-    <PageShell title={page.title} hint={page.hint}>
+    <PageShell lang={lang} slug="languages" s={s} title={page.title} hint={page.hint}>
       <p className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
         {t.intro}
       </p>

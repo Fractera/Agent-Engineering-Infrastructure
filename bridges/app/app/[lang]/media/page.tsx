@@ -52,7 +52,7 @@ export default async function MediaPage(
   };
 
   return (
-    <PageShell title={s.pages.media.title} hint={s.pages.media.hint}>
+    <PageShell lang={lang} slug="media" s={s} title={s.pages.media.title} hint={s.pages.media.hint}>
       {!list.ok ? (
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3">
           <p className="text-[12px] font-medium text-destructive">{m.unavailable}</p>

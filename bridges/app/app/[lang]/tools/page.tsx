@@ -39,7 +39,7 @@ export default async function ToolsPage({ params }: { params: Promise<{ lang: st
   const rows = TOOLS;
 
   return (
-    <PageShell title={page.title} hint={page.hint}>
+    <PageShell lang={lang} slug="tools" s={s} title={page.title} hint={page.hint}>
       <p className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
         {t.intro}
       </p>

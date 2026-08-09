@@ -46,7 +46,7 @@ export default async function DeploymentsPage(
   const base = `/${lang}/deployments`;
 
   return (
-    <PageShell title={s.pages.deployments.title} hint={s.pages.deployments.hint}>
+    <PageShell lang={lang} slug="deployments" s={s} params={{ run: runId }} title={s.pages.deployments.title} hint={s.pages.deployments.hint}>
       {/* Режим автоматического развёртывания */}
       <div className="rounded-lg border border-border px-3 py-2.5">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">

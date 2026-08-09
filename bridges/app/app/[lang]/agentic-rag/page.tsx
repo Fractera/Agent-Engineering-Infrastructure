@@ -44,7 +44,7 @@ export default async function AgenticRagPage(
   const documents = docs.ok ? docs.documents : [];
 
   return (
-    <PageShell title={s.pages["agentic-rag"].title} hint={s.pages["agentic-rag"].hint}>
+    <PageShell lang={lang} slug="agentic-rag" s={s} title={s.pages["agentic-rag"].title} hint={s.pages["agentic-rag"].hint}>
       {/* Полоса показаний: одна строка вместо вертикального списка — та же форма,
           что у векторной памяти, чтобы два склада знания читались одинаково. */}
       <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 rounded-lg border border-border px-3 py-2 font-mono text-[11px]">

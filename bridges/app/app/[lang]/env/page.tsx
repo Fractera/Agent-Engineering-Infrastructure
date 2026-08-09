@@ -24,7 +24,7 @@ export default async function EnvPage({ params }: { params: Promise<{ lang: stri
   const result = await readEnv();
 
   return (
-    <PageShell title={s.pages.env.title} hint={s.pages.env.hint}>
+    <PageShell lang={lang} slug="env" s={s} title={s.pages.env.title} hint={s.pages.env.hint}>
       <p className="flex items-start gap-1.5 rounded-md border border-amber-500/30 bg-amber-500/5 p-2.5 text-[11px] leading-relaxed text-amber-700 dark:text-amber-300">
         <AlertCircle size={12} className="mt-0.5 shrink-0" />
         <span>{e.warning}</span>

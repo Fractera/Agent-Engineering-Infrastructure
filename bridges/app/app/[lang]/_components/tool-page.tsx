@@ -38,7 +38,7 @@ export function ToolPage({
   const page = s.pages[`tool-${id}` as keyof typeof s.pages];
 
   return (
-    <PageShell title={page.title} hint={page.hint}>
+    <PageShell lang={lang} slug={`tool-${id}` as never} s={s} title={page.title} hint={page.hint}>
       <div className="flex gap-3 rounded-lg border border-border p-3">
         <Icon size={16} className="mt-0.5 shrink-0 text-muted-foreground" />
         <div className="min-w-0 flex-1">

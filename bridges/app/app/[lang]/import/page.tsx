@@ -17,7 +17,7 @@ export default async function ImportPage({ params }: { params: Promise<{ lang: s
   const b = s.backup;
 
   return (
-    <PageShell title={s.pages.import.title} hint={s.pages.import.hint}>
+    <PageShell lang={lang} slug="import" s={s} title={s.pages.import.title} hint={s.pages.import.hint}>
       <RestoreForm
         labels={{
           choose: b.choose, chooseAnother: b.chooseAnother, reading: b.reading,

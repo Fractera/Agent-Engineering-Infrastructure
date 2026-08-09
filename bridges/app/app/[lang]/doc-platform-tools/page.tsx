@@ -33,7 +33,7 @@ export default async function PlatformToolsDocPage({ params }: { params: Promise
   const state = readDoc("doc-platform-tools");
 
   return (
-    <PageShell title={page.title} hint={page.hint}>
+    <PageShell lang={lang} slug="doc-platform-tools" s={s} title={page.title} hint={page.hint}>
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <DocKindBadge
           kind="evolving"

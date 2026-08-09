@@ -60,7 +60,7 @@ export default async function ExportPage({ params }: { params: Promise<{ lang: s
     .reduce((sum, p) => sum + p.bytes, 0);
 
   return (
-    <PageShell title={s.pages.export.title} hint={s.pages.export.hint}>
+    <PageShell lang={lang} slug="export" s={s} title={s.pages.export.title} hint={s.pages.export.hint}>
       <form method="get" action="/api/data/export" className="flex flex-col gap-2">
         {parts.map((p) => {
           const empty = p.bytes === 0;

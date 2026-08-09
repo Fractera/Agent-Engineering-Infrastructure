@@ -17,7 +17,7 @@ export default async function CookieBannerPage({ params }: { params: Promise<{ l
   const page = s.pages["cookie-banner"];
 
   return (
-    <PageShell title={page.title} hint={page.hint} notice={s.skeletonNotice}>
+    <PageShell lang={lang} slug="cookie-banner" s={s} title={page.title} hint={page.hint} notice={s.skeletonNotice}>
       <CookieBannerPanel />
     </PageShell>
   );

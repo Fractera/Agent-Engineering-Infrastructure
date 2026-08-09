@@ -17,7 +17,7 @@ export default async function TopMenuPage({ params }: { params: Promise<{ lang: 
   const page = s.pages["top-menu"];
 
   return (
-    <PageShell title={page.title} hint={page.hint} notice={s.skeletonNotice}>
+    <PageShell lang={lang} slug="top-menu" s={s} title={page.title} hint={page.hint} notice={s.skeletonNotice}>
       <TopMenuPanel />
     </PageShell>
   );

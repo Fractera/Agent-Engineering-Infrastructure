@@ -65,7 +65,7 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
   });
 
   return (
-    <PageShell title={page.title} hint={page.hint}>
+    <PageShell lang={lang} slug="doc-overview" s={s} title={page.title} hint={page.hint}>
       {/* Вводная часть: почему документации столько. Стоит выше списка —
           возражение «это дорого по токенам» возникает раньше, чем интерес к
           конкретному файлу. */}

@@ -52,7 +52,7 @@ export default async function CodeSamplesPage(
   };
 
   return (
-    <PageShell title={page.title} hint={page.hint}>
+    <PageShell lang={lang} slug="doc-code-samples" s={s} params={{ file }} title={page.title} hint={page.hint}>
       <div className="mb-2">
         <DocKindBadge
           kind="static"

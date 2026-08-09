@@ -26,7 +26,7 @@ export default async function GitHubAboutPage({ params }: { params: Promise<{ la
   ];
 
   return (
-    <PageShell title={s.pages["github-about"].title} hint={s.pages["github-about"].hint}>
+    <PageShell lang={lang} slug="github-about" s={s} title={s.pages["github-about"].title} hint={s.pages["github-about"].hint}>
       <p className="text-[12px] leading-relaxed text-muted-foreground">{a.intro}</p>
 
       <div className="mt-3 space-y-2">
