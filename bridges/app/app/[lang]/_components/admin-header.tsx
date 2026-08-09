@@ -21,7 +21,7 @@ import {
   Cookie, Users, ImagePlus, Database, BrainCircuit, Brain, Map as MapIcon, Download, Upload,
   Link2, KeyRound, MessagesSquare, Sparkles, GitBranch, Info, History, Settings, BookOpen,
   HelpCircle, PackagePlus, FileText, Target, Wrench, Network, BookMarked, GraduationCap,
-  ListChecks, AlertTriangle, Paintbrush, LayoutTemplate, Ruler, LifeBuoy, Compass, Code2, type LucideIcon,
+  ListChecks, AlertTriangle, Paintbrush, LayoutTemplate, Ruler, LifeBuoy, Compass, Code2, ChevronRight, type LucideIcon,
 } from "lucide-react";
 import { NAV_GROUPS, NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 import { useCasesMissing } from "@/lib/product-docs";
@@ -158,32 +158,59 @@ export function AdminHeader({ lang, s }: { lang: string; s: AdminStrings }) {
             </div>
           )}
 
+          {/* АККОРДЕОН КАТЕГОРИЙ (владелец, 2026-08-09). Пунктов стало сорок, и
+              сплошным списком меню перестало читаться.
+
+              Открыт РОВНО ОДИН раздел, и это не поведение, которое надо
+              программировать: категории — радиокнопки одного имени, а радио по
+              своей природе не позволяет отметить две. Ни строчки JS, работает с
+              клавиатуры, переживает выключенный JavaScript.
+
+              `peer-checked:` смотрит только на СЛЕДУЮЩИХ сестёр, поэтому порядок
+              внутри блока обязателен: input → label → список. */}
           {NAV_GROUPS.map((group, groupIdx) => (
-            <div key={group}>
-              {/* Разделитель между категориями — тот же, что в оригинале.
-                  Перед первой категорией его нет: линия под шапкой уже есть. */}
-              {groupIdx > 0 && <div className="mx-2 my-1 h-px bg-border" />}
-              <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+            <div key={group} className="px-1">
+              {groupIdx > 0 && <div className="mx-1 my-1 h-px bg-border" />}
+
+              <input
+                type="radio"
+                name="admin-nav-group"
+                id={`nav-group-${group}`}
+                className="peer sr-only"
+                // Первая категория открыта на входе: пустой ящик, где всё
+                // свёрнуто, заставляет сделать лишний клик прежде, чем стало
+                // видно хоть что-то.
+                defaultChecked={groupIdx === 0}
+              />
+
+              <label
+                htmlFor={`nav-group-${group}`}
+                className="flex cursor-pointer items-center gap-1.5 rounded px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70 hover:bg-muted peer-checked:text-foreground"
+              >
+                <ChevronRight size={11} className="shrink-0 transition-transform duration-150 peer-checked:rotate-90" />
                 {s.navGroups[group]}
+              </label>
+
+              <div className="hidden peer-checked:block">
+                {NAV_BY_GROUP[group].filter((slug) => !hidden.has(slug)).map((slug) => {
+                  const Icon = ICONS[slug];
+                  const alarm = slug === "doc-use-cases" && needsUseCases;
+                  return (
+                    <Link
+                      key={slug}
+                      href={adminHref(lang, slug)}
+                      title={alarm ? s.docs.useCasesRequired : undefined}
+                      className={`flex items-center gap-2 rounded px-2 py-1.5 pl-6 text-[12px] hover:bg-muted ${
+                        alarm ? "font-medium text-red-600 dark:text-red-400" : "text-foreground"
+                      }`}
+                    >
+                      <Icon size={11} className={`shrink-0 ${alarm ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`} />
+                      {s.pages[slug].title}
+                      {alarm && <span className="ml-auto size-1.5 rounded-full bg-red-600 dark:bg-red-400" />}
+                    </Link>
+                  );
+                })}
               </div>
-              {NAV_BY_GROUP[group].filter((slug) => !hidden.has(slug)).map((slug) => {
-                const Icon = ICONS[slug];
-                const alarm = slug === "doc-use-cases" && needsUseCases;
-                return (
-                  <Link
-                    key={slug}
-                    href={adminHref(lang, slug)}
-                    title={alarm ? s.docs.useCasesRequired : undefined}
-                    className={`flex items-center gap-2 px-3 py-1.5 text-[12px] hover:bg-muted ${
-                      alarm ? "font-medium text-red-600 dark:text-red-400" : "text-foreground"
-                    }`}
-                  >
-                    <Icon size={11} className={`shrink-0 ${alarm ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`} />
-                    {s.pages[slug].title}
-                    {alarm && <span className="ml-auto size-1.5 rounded-full bg-red-600 dark:bg-red-400" />}
-                  </Link>
-                );
-              })}
             </div>
           ))}
         </div>
