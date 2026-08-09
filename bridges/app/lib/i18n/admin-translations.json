@@ -1050,6 +1050,10 @@
       "doc-coding-standards": {
         "title": "Coding standards",
         "hint": "Limits the code must respect: size, static pages, translations."
+      },
+      "doc-troubleshooting": {
+        "title": "Troubleshooting",
+        "hint": "Problems users hit in production, and what actually causes them."
       }
     }
   },
@@ -2104,6 +2108,10 @@
       "doc-coding-standards": {
         "title": "Стандарты кода",
         "hint": "Ограничения кода: размер, статические страницы, переводы."
+      },
+      "doc-troubleshooting": {
+        "title": "Разбор затруднений",
+        "hint": "Проблемы, с которыми пользователи сталкиваются на продакшне, и их настоящие причины."
       }
     }
   }

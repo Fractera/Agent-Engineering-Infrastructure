@@ -30,7 +30,8 @@ export type DocKey =
   | "doc-antipatterns"
   | "doc-design"
   | "doc-parallel-routing"
-  | "doc-coding-standards";
+  | "doc-coding-standards"
+  | "doc-troubleshooting";
 
 /** Ключ страницы → файл в корне слота. Единственное место этого соответствия. */
 export const DOC_FILES: Record<DocKey, string> = {
@@ -53,6 +54,10 @@ export const DOC_FILES: Record<DocKey, string> = {
   "doc-design": "DESIGN.md",
   "doc-parallel-routing": "PARALLEL-ROUTING.md",
   "doc-coding-standards": "CODING-STANDARDS.md",
+  // Разбор затруднений, с которыми пользователи сталкиваются НА ПРОДАКШНЕ.
+  // Читается ПО ТРЕБОВАНИЮ, а не на старте: держать его в контексте каждой
+  // сессии — платить за диагностику, которая может не понадобиться.
+  "doc-troubleshooting": "TROUBLESHOOTING.md",
 };
 
 export function isDocKey(v: string): v is DocKey {
@@ -85,6 +90,7 @@ export const DOC_KIND: Record<string, "evolving" | "static"> = {
   "doc-lessons": "evolving",
   "doc-steps": "evolving",
   "doc-antipatterns": "evolving",
+  "doc-troubleshooting": "evolving",
 };
 
 /**

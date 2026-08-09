@@ -21,7 +21,7 @@ import {
   Cookie, Users, ImagePlus, Database, BrainCircuit, Brain, Map as MapIcon, Download, Upload,
   Link2, KeyRound, MessagesSquare, Sparkles, GitBranch, Info, History, Settings, BookOpen,
   HelpCircle, PackagePlus, FileText, Target, Wrench, Network, BookMarked, GraduationCap,
-  ListChecks, AlertTriangle, Paintbrush, LayoutTemplate, Ruler, type LucideIcon,
+  ListChecks, AlertTriangle, Paintbrush, LayoutTemplate, Ruler, LifeBuoy, type LucideIcon,
 } from "lucide-react";
 import { NAV_GROUPS, NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 import { useCasesMissing } from "@/lib/product-docs";
@@ -70,6 +70,7 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   "doc-design": Paintbrush,
   "doc-parallel-routing": LayoutTemplate,
   "doc-coding-standards": Ruler,
+  "doc-troubleshooting": LifeBuoy,
 };
 
 const MENU_ID = "admin-menu-toggle";
