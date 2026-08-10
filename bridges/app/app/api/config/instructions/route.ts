@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/require-auth";
 import {
   readInstructionSet, writeInstructionSet, syncInstructionSection, ensureDoc,
-  TOGGLEABLE, defaultEnabled,
+  TOGGLEABLE, defaultEnabled, readCommands, type CommandMap,
 } from "@/lib/instruction-set";
 
 // Выключатели инструкций проекта.
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = (await req.json().catch(() => null)) as
-    | { doc?: string; enabled?: boolean; allOff?: boolean }
+    | { doc?: string; enabled?: boolean; allOff?: boolean; command?: { doc: string; lang: string; phrase: string } }
     | null;
   if (!body) return NextResponse.json({ error: "bad_payload" }, { status: 400 });
 
@@ -26,6 +26,21 @@ export async function POST(req: NextRequest) {
   const enabled = { ...state.enabled };
   let snapshot = state.snapshot;
   const created: string[] = [];
+  let commands: CommandMap | undefined;
+
+  // Правка фразы активации. Пустая фраза возвращает документ к поставленной по
+  // умолчанию — стереть команду насовсем нельзя: документ-запрет без способа
+  // его снять превращается в стену.
+  if (body.command) {
+    const { doc, lang, phrase } = body.command;
+    if (!TOGGLEABLE.includes(doc)) return NextResponse.json({ error: "not_toggleable" }, { status: 400 });
+    const next = readCommands(state.config);
+    const own = { ...(next[doc] ?? {}) };
+    if (phrase.trim()) own[lang] = phrase.trim();
+    else delete own[lang];
+    next[doc] = own;
+    commands = next;
+  }
 
   if (typeof body.allOff === "boolean") {
     // Мастер-выключатель. Выключая — запоминаем набор целиком, чтобы возврат
@@ -52,7 +67,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    writeInstructionSet(state.config, enabled, snapshot);
+    writeInstructionSet(state.config, enabled, snapshot, commands);
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }
@@ -63,7 +78,7 @@ export async function POST(req: NextRequest) {
     if (r.created) created.push(key);
   }
 
-  const section = syncInstructionSection(enabled);
+  const section = syncInstructionSection(enabled, commands ?? state.commands);
 
   return NextResponse.json({ ok: true, enabled, snapshot, instruction: section, created });
 }

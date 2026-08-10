@@ -17,7 +17,8 @@ import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
 import { DocKindBadge } from "../_components/doc-kind-badge";
 import { DOC_FILES, DOC_KIND, readDoc, listSteps, isDocKey } from "@/lib/product-docs";
-import { readInstructionSet, TOGGLEABLE, ALWAYS_ON } from "@/lib/instruction-set";
+import { readInstructionSet, TOGGLEABLE, ALWAYS_ON, COMMAND_ANCHOR } from "@/lib/instruction-set";
+import { CommandEditor } from "../_components/command-editor.client";
 import { InstructionSwitch } from "../_components/instruction-switch.client";
 import { MasterSwitch } from "../_components/master-switch.client";
 import { listSamples } from "@/lib/code-samples";
@@ -129,6 +130,8 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
           // Главная инструкция несёт сам механизм — выключить её нельзя ни
           // строкой, ни мастер-выключателем. Она всегда зелёная и без тумблера.
           const managed = (TOGGLEABLE as string[]).includes(r.slug);
+          const phrases = set.commands[r.slug];
+          const phrase = phrases ? (phrases[lang] ?? phrases.en ?? Object.values(phrases)[0]) : null;
           const switched = managed ? Boolean(set.enabled[r.slug]) : r.slug === ALWAYS_ON ? true : null;
           return (
           <li
@@ -185,6 +188,24 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
                     </span>
                   )}
                 </div>
+                {/* Команда активации — ВТОРОЙ строкой под заголовком (владелец
+                    2026-08-10): её читают чаще, чем описание, и искать её внутри
+                    документа значит не пользоваться ею вовсе. */}
+                {phrase && (
+                  <CommandEditor
+                    docKey={r.slug}
+                    lang={lang}
+                    anchor={COMMAND_ANCHOR}
+                    phrase={phrase}
+                    labels={{
+                      caption: o.commandCaption, helpTitle: o.commandHelp,
+                      edit: o.commandEdit, save: o.commandSave, saving: o.commandSaving,
+                      cancel: o.commandCancel, saved: o.commandSaved, failed: s.docs.failed,
+                      phrasePlaceholder: o.commandPlaceholder, anchorNote: o.commandAnchorNote,
+                    }}
+                  />
+                )}
+
                 <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">
                   {o.purposes[r.slug]}
                 </p>

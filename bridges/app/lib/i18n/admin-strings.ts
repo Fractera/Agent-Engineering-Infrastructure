@@ -356,6 +356,13 @@ export type AdminStrings = {
     switchTitle: string; switchWhere: string;
     createDoc: string; creating: string; createdDoc: string; createHint: string; failed: string;
   };
+  // Документ-запрет: почему мультиагентность закрыта и где её команда.
+  singleAgent: {
+    whyTitle: string; why: string;
+    planesTitle: string; planes: string;
+    switchTitle: string; switchWhere: string;
+    createDoc: string; creating: string; createdDoc: string; createHint: string; failed: string;
+  };
   // Файл передачи между контекстными окнами. Отдельной секцией, потому что вся
   // страница объясняет ОДНУ вещь: запись здесь — не поломка, а след прерванной
   // сессии, и устаревшую можно просто стереть.
@@ -418,6 +425,10 @@ export type AdminStrings = {
     effectNextSession: string; deliveryPushPull: string;
     instructionAdded: string; instructionMissing: string; docCreated: string;
     masterLabel: string; masterAllOff: string; masterRestored: string;
+    // Команда активации: якорь общий, фраза настраивается владельцем.
+    commandCaption: string; commandHelp: string;
+    commandEdit: string; commandSave: string; commandSaving: string; commandCancel: string;
+    commandSaved: string; commandPlaceholder: string; commandAnchorNote: string;
     masterHelpLabel: string; masterHelpWhy: string; masterHelpRestore: string; masterHelpMain: string; closing: string;
     purposes: Record<string, string>;
   };

@@ -903,7 +903,8 @@
         "doc-coding-standards": "The limits the code must respect: size before decomposition, static public pages, text through translations, settings read rather than hardcoded. They are limits, not style advice — reaching one is a signal to restructure.",
         "doc-troubleshooting": "Problems that appear only in production and their real causes. Loaded on demand rather than at session start: a diagnostic manual held in every session is paid for in every session, including the ones where nothing is broken.",
         "doc-code-samples": "Finished pieces of code and styles from your earlier projects. The agent does not look here on its own: ask it to use the samples and name the document — that is how your accumulated work becomes a starting point rather than a forgotten folder.",
-        "doc-testing": "How a step is proven finished. Two independent proofs from two different planes, in a fixed shape — because the rule existed for a long time as a goal and kept losing to the cheapest available answer: a build log. Switched off, nobody is asked for proofs."
+        "doc-testing": "How a step is proven finished. Two independent proofs from two different planes, in a fixed shape — because the rule existed for a long time as a goal and kept losing to the cheapest available answer: a build log. Switched off, nobody is asked for proofs.",
+        "doc-single-agent": "Multi-agent development is forbidden unless you activate it by voice or in writing with the command. A sub-agent starts cold: it does not have this conversation, your corrections or the reason the previous approach was dropped, so it re-derives them wrongly and you pay twice — for the tokens and for the review that finds the divergence."
       },
       "switchOn": "Instruction switched on",
       "switchOff": "Instruction switched off",
@@ -918,7 +919,16 @@
       "masterHelpLabel": "? what this switch is for",
       "masterHelpWhy": "Sometimes the task does not deserve a full development cycle — fixing one typo, for instance. Loading the whole corpus for that is paying context for what will not be used. One click leaves the agent with this instruction and your task.",
       "masterHelpRestore": "Switching back restores exactly the set that was active before, not \"everything on\": documents you had switched off earlier stay off. The set is remembered on the server, so it survives another browser and another machine.",
-      "masterHelpMain": "The main instruction itself can never be switched off — it carries the mechanism, including this switch."
+      "masterHelpMain": "The main instruction itself can never be switched off — it carries the mechanism, including this switch.",
+      "commandCaption": "activation command",
+      "commandHelp": "Say or type this in the conversation to invoke this instruction for ONE task. The anchor word is fixed; the phrase after it is yours — click to change it. It is deliberately a spoken phrase, not a slash command: most requests here are dictated, and a slash cannot be dictated.",
+      "commandEdit": "change the phrase",
+      "commandSave": "Save",
+      "commandSaving": "Saving…",
+      "commandCancel": "cancel",
+      "commandSaved": "Command saved — it is in the main instruction now",
+      "commandPlaceholder": "also",
+      "commandAnchorNote": "The anchor word is not editable: it is what keeps the command from firing by accident in ordinary speech."
     },
     "docs": {
       "intro": "This document is a file in your project, edited here or in your editor. It travels with a push and a pull like any other file:",
@@ -1342,6 +1352,10 @@
       "doc-testing": {
         "title": "Testing",
         "hint": "How a step is proven finished: two independent proofs, from two different planes."
+      },
+      "doc-single-agent": {
+        "title": "Single agent",
+        "hint": "One context window by default; a second agent needs the owner's command."
       }
     },
     "breadcrumbHome": "Panel",
@@ -1366,6 +1380,19 @@
       "creating": "Creating…",
       "createdDoc": "Document created — it is now a file in your repository",
       "createHint": "This project has no TESTING.md yet: it was started before this document existed. Create it from the template.",
+      "failed": "Could not save"
+    },
+    "singleAgent": {
+      "whyTitle": "Why the restriction exists.",
+      "why": "A sub-agent starts cold. It does not have this conversation, your corrections, or the reason the previous approach was abandoned — so it re-derives them, and re-derives them wrong. What comes back reads like finished work resting on assumptions nobody agreed to.",
+      "planesTitle": "What does NOT authorise a second agent.",
+      "planes": "Not the size of the task, not \"several independent parts\", not \"it would be faster in parallel\". If the agent believes a second one is warranted, it says so in one sentence and keeps working alone.",
+      "switchTitle": "Switching this document off.",
+      "switchWhere": "Off means the guard is REMOVED, not forgotten: multi-agent work stops needing a command. The switch and the activation command both live on the documents map.",
+      "createDoc": "Create the document",
+      "creating": "Creating…",
+      "createdDoc": "Document created — it is now a file in your repository",
+      "createHint": "This project has no SINGLE-AGENT.md yet. Create it from the template.",
       "failed": "Could not save"
     }
   },
@@ -2273,7 +2300,8 @@
         "doc-coding-standards": "Границы, которые обязан соблюдать код: размер до декомпозиции, статические публичные страницы, тексты через переводы, настройки читаются, а не зашиваются. Это именно границы, а не советы по стилю: достигнутая — сигнал перестраивать.",
         "doc-troubleshooting": "Проблемы, которые появляются только на продакшне, и их настоящие причины. Читается по требованию, а не на старте: диагностический справочник, который держат в каждой сессии, в каждой же и оплачивается — включая те, где ничего не сломано.",
         "doc-code-samples": "Готовые куски кода и стилей из ваших прошлых проектов. Агент сюда не заглядывает сам: попросите использовать образцы и назовите документ — так накопленное вами становится отправной точкой, а не забытой папкой.",
-        "doc-testing": "Как шаг доказывается законченным. Два независимых доказательства из разных плоскостей, в жёсткой форме — потому что требование давно существовало как цель и раз за разом проигрывало самому дешёвому ответу: отчёту о сборке. Выключено — доказательств никто не спрашивает."
+        "doc-testing": "Как шаг доказывается законченным. Два независимых доказательства из разных плоскостей, в жёсткой форме — потому что требование давно существовало как цель и раз за разом проигрывало самому дешёвому ответу: отчёту о сборке. Выключено — доказательств никто не спрашивает.",
+        "doc-single-agent": "Мультиагентная разработка запрещена, пока вы не активируете её голосом или письменно командой. Суб-агент стартует холодным: у него нет этого разговора, ваших поправок и причины, по которой прошлый подход бросили, — он выводит их заново и неверно, а платите вы дважды: за токены и за разбор расхождения."
       },
       "switchOn": "Инструкция включена",
       "switchOff": "Инструкция отключена",
@@ -2288,7 +2316,16 @@
       "masterHelpLabel": "? зачем этот переключатель",
       "masterHelpWhy": "Иногда задача не стоит полного цикла разработки — например, исправить одну опечатку. Поднимать ради этого весь корпус значит платить контекстом за то, что не понадобится. Один щелчок оставляет агента с главной инструкцией и вашей задачей.",
       "masterHelpRestore": "Возврат восстанавливает ровно тот набор, который действовал раньше, а не «включает всё»: документы, выключенные вами прежде, останутся выключенными. Набор помнит сервер, поэтому он переживает другой браузер и другую машину.",
-      "masterHelpMain": "Саму главную инструкцию выключить нельзя никогда — она несёт механизм, включая этот переключатель."
+      "masterHelpMain": "Саму главную инструкцию выключить нельзя никогда — она несёт механизм, включая этот переключатель.",
+      "commandCaption": "команда активации",
+      "commandHelp": "Скажите или напишите это в разговоре, чтобы вызвать эту инструкцию на ОДНУ задачу. Слово-якорь неизменно, фраза после него ваша — нажмите, чтобы поменять. Это намеренно произносимая фраза, а не слэш-команда: большая часть просьб здесь диктуется голосом, а слэш голосом не произносится.",
+      "commandEdit": "изменить фразу",
+      "commandSave": "Сохранить",
+      "commandSaving": "Сохраняю…",
+      "commandCancel": "отмена",
+      "commandSaved": "Команда сохранена — она уже в главной инструкции",
+      "commandPlaceholder": "кстати говоря",
+      "commandAnchorNote": "Слово-якорь не редактируется: именно оно не даёт команде сработать случайно в обычной речи."
     },
     "docs": {
       "intro": "Этот документ — файл вашего проекта; его правят здесь или в редакторе. Он едет с отправкой и получением, как любой другой файл:",
@@ -2712,6 +2749,10 @@
       "doc-testing": {
         "title": "Тестирование",
         "hint": "Как шаг доказывается законченным: два независимых доказательства из разных плоскостей."
+      },
+      "doc-single-agent": {
+        "title": "Единственный агент",
+        "hint": "По умолчанию одно контекстное окно; второй агент — только по команде владельца."
       }
     },
     "breadcrumbHome": "Панель",
@@ -2736,6 +2777,19 @@
       "creating": "Создаю…",
       "createdDoc": "Документ создан — теперь это файл в вашем репозитории",
       "createHint": "В этом проекте ещё нет файла TESTING.md: проект начат раньше, чем появился документ. Создайте его из шаблона.",
+      "failed": "Сохранить не удалось"
+    },
+    "singleAgent": {
+      "whyTitle": "Зачем запрет.",
+      "why": "Суб-агент стартует холодным. У него нет этого разговора, ваших поправок и причины, по которой прошлый подход бросили, — он выводит их заново и выводит неверно. Возвращается то, что выглядит готовой работой, но стоит на договорённостях, которых никто не заключал.",
+      "planesTitle": "Что НЕ даёт права запустить второго.",
+      "planes": "Ни размер задачи, ни «несколько независимых частей», ни «параллельно будет быстрее». Считает агент, что второй нужен, — говорит одной фразой и продолжает работать один.",
+      "switchTitle": "Если выключить этот документ.",
+      "switchWhere": "Выключено — значит запрет СНЯТ, а не забыт: мультиагентность перестаёт требовать команды. И выключатель, и команда активации живут на карте документов.",
+      "createDoc": "Создать документ",
+      "creating": "Создаю…",
+      "createdDoc": "Документ создан — теперь это файл в вашем репозитории",
+      "createHint": "В этом проекте ещё нет файла SINGLE-AGENT.md. Создайте его из шаблона.",
       "failed": "Сохранить не удалось"
     }
   }

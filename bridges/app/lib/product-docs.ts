@@ -33,7 +33,8 @@ export type DocKey =
   | "doc-coding-standards"
   | "doc-troubleshooting"
   | "doc-context-state"
-  | "doc-testing";
+  | "doc-testing"
+  | "doc-single-agent";
 
 /** Ключ страницы → файл в корне слота. Единственное место этого соответствия. */
 export const DOC_FILES: Record<DocKey, string> = {
@@ -70,6 +71,9 @@ export const DOC_FILES: Record<DocKey, string> = {
   // плоскостей. Документ ЗАДАННЫЙ — это требование к работе, а не наблюдение о
   // ней, и агент правит его только по прямой просьбе.
   "doc-testing": "TESTING.md",
+  // Запрет мультиагентной разработки и команда, которая его снимает. ЗАДАННЫЙ:
+  // это закон работы, а не наблюдение о ней.
+  "doc-single-agent": "SINGLE-AGENT.md",
 };
 
 /**
@@ -120,6 +124,7 @@ export const DOC_KIND: Record<string, "evolving" | "static"> = {
   "doc-troubleshooting": "evolving",
   "doc-context-state": "evolving",
   "doc-testing": "static",
+  "doc-single-agent": "static",
 };
 
 /**
