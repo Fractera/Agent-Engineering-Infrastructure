@@ -56,7 +56,7 @@ export type AdminStrings = {
     // агенту-программисту дословно, поэтому у ошибки есть и полный текст, и
     // кнопка копирования, и подпись, объясняющая, куда этот текст нести.
     deploying: string; pulling: string; pushing: string;
-    deployStarted: string; deployOk: string; deployFailed: string;
+    deployStarted: string; deployOk: string; deployFailed: string; deployTimeout: string;
     pullOk: string; pullFailed: string;
     pushOk: string; pushFailed: string;
     notConnected: string;
@@ -269,6 +269,7 @@ export type AdminStrings = {
     backToList: string; pickRun: string;
     unavailable: string; count: string; empty: string; noCommit: string; noLog: string;
     download: string; closeLog: string;
+    copyLog: string; copied: string; copyFailed: string;
     autoLabel: string; autoHint: string; lastCheck: string;
     modeManual: string; modePull: string; modePullDeploy: string;
     savedOff: string; savedTo: string; failed: string;

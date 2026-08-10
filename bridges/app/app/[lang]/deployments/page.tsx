@@ -22,6 +22,7 @@ import { TwoPane } from "../_components/two-pane";
 import { readRuns, readRun, readAuto, whenLabel, howLong } from "./_lib/runs";
 import { RunsList } from "./_components/runs-list";
 import { AutoModeSwitch } from "./_components/auto-mode.client";
+import { CopyLog } from "./_components/copy-log.client";
 
 export const dynamic = "force-dynamic";
 
@@ -107,6 +108,16 @@ export default async function DeploymentsPage(
                       {opened.status} · {whenLabel(opened.started_at)} · {howLong(opened.duration_ms)}
                     </span>
                     <span className="ml-auto flex items-center gap-2">
+                      {/* Копирование — самый короткий путь к тому, ради чего журнал
+                          и читают: отказ сборки уносят агенту-программисту дословно. */}
+                      {opened.log?.trim() && (
+                        <CopyLog
+                          text={opened.log}
+                          label={d.copyLog}
+                          copied={d.copied}
+                          failed={d.copyFailed}
+                        />
+                      )}
                       {/* Скачивание журнала — ОБЫЧНАЯ ссылка на тот же маршрут: браузер
                           сохраняет ответ сам. В панели это был Blob, собранный в
                           памяти; ссылка работает и без JS, и с правым щелчком. */}

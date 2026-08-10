@@ -29,7 +29,8 @@ export function AdminFooter({ s, lang }: { s: AdminStrings; lang: string }) {
         labels={{
           deploy: f.deploy, pull: f.pull, push: f.push,
           deploying: f.deploying, pulling: f.pulling, pushing: f.pushing,
-          deployStarted: f.deployStarted, deployOk: f.deployOk, deployFailed: f.deployFailed,
+          deployStarted: f.deployStarted, deployOk: f.deployOk,
+          deployFailed: f.deployFailed, deployTimeout: f.deployTimeout,
           pullOk: f.pullOk, pullFailed: f.pullFailed,
           pushOk: f.pushOk, pushFailed: f.pushFailed,
           notConnected: f.notConnected, stateUnknown: f.stateUnknown,

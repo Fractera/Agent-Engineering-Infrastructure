@@ -24,7 +24,7 @@ import { toast } from "sonner";
 export type FooterActionLabels = {
   deploy: string; pull: string; push: string;
   deploying: string; pulling: string; pushing: string;
-  deployStarted: string; deployOk: string; deployFailed: string;
+  deployStarted: string; deployOk: string; deployFailed: string; deployTimeout: string;
   pullOk: string; pullFailed: string;
   pushOk: string; pushFailed: string;
   notConnected: string; stateUnknown: string;
@@ -120,12 +120,26 @@ export function FooterActions({ labels, children }: { labels: FooterActionLabels
         return;
       }
       const jobId = String(d.jobId);
+      const startedAt = Date.now();
       const poll = setInterval(async () => {
         try {
           const s = await fetch(`/api/deploy/status?jobId=${encodeURIComponent(jobId)}`, { cache: "no-store" })
             .then((x) => x.json());
-          const done = s.status === "COMPLETED" || s.status === "FAILED" || s.status === "HEALTH_FAILED";
-          if (!done) return;
+          // Состояние читается из журнала опережающей записи, который ОДИН на все
+          // прогоны: пока в нём стоит чужой `jobId`, это итог ПРОШЛОГО
+          // развёртывания, и принять его за свой значит объявить успех чужой
+          // сборки. Ждём, пока запись станет нашей.
+          const mine = !s.wal?.jobId || String(s.wal.jobId) === jobId;
+          const done = mine && (s.status === "COMPLETED" || s.status === "FAILED" || s.status === "HEALTH_FAILED");
+          if (!done) {
+            // Страховка от вечного опроса, если запись так и не обновится.
+            if (Date.now() - startedAt > 20 * 60 * 1000) {
+              clearInterval(poll);
+              setBusy(null);
+              report(false, labels.deployFailed, labels.deployTimeout);
+            }
+            return;
+          }
           clearInterval(poll);
           setBusy(null);
           const log = Array.isArray(s.log) ? s.log.join("\n") : String(s.log ?? "");
