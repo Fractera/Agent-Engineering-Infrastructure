@@ -630,16 +630,10 @@ export function fill(template: string, vars: Record<string, string>): string {
   return template.replace(/\{(\w+)\}/g, (m, k) => vars[k] ?? m);
 }
 
-// Browser-language detector kept for the OLD single-page shell at `/`, which is
-// frozen until the cutover. New pages take the language from the URL and must
-// NOT call this.
-export function detectBrowserLang(): string {
-  if (typeof navigator === "undefined") return DEFAULT_ADMIN_LANG;
-  const candidates = [navigator.language, ...(navigator.languages ?? [])];
-  for (const c of candidates) {
-    if (!c) continue;
-    const primary = c.toLowerCase().split("-")[0];
-    if (isAdminLanguage(primary)) return primary;
-  }
-  return DEFAULT_ADMIN_LANG;
-}
+// 🪦 `detectBrowserLang()` УДАЛЁН на переключении (Ф3). Он читал `navigator` в
+// браузере и существовал ради старой одностраничной оболочки на `/`: у неё не
+// было языка в адресе, и язык приходилось угадывать уже после загрузки.
+// Оболочки нет. Язык теперь берётся из адреса, а на входе его определяет сервер
+// — `lib/i18n/detect-lang.ts` (cookie → `Accept-Language` → английский). Не
+// воскрешать: клиентское определение вернуло бы мигание английским до
+// оживления страницы и второй источник правды о языке.

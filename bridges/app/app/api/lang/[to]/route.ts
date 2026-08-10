@@ -11,10 +11,15 @@
 // Два режима:
 //   /api/lang/ru   — явный выбор: запоминается в cookie
 //   /api/lang/auto — определить язык брошенного к нам браузера (cookie →
-//                    Accept-Language → английский). Это будущая точка входа
-//                    после авторизации (фаза Ф3); cookie здесь НЕ ставится,
+//                    Accept-Language → английский); cookie здесь НЕ ставится,
 //                    иначе автоопределение навсегда закрепило бы случайный
 //                    первый ответ браузера.
+//
+// САМО ОПРЕДЕЛЕНИЕ ЯЗЫКА ЖИВЁТ НЕ ЗДЕСЬ, а в `lib/i18n/detect-lang.ts`. С
+// переключением (Ф3) у него появился второй потребитель — корневая страница `/`,
+// и разбор `Accept-Language` обязан остаться в одном экземпляре: две копии
+// расходятся молча и дают «панель открылась не на том языке, на котором работает
+// переключатель».
 //
 // Маршрут НЕ за гейтом архитектора: `proxy.ts` исключает `/api/*`. Это уместно —
 // он не отдаёт ни байта данных, только вычисляет адрес. Сама страница, на
@@ -22,32 +27,9 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminLanguage, adminLanguages, DEFAULT_ADMIN_LANG } from "@/lib/i18n/admin-strings";
+import { LANG_COOKIE, detectAdminLang } from "@/lib/i18n/detect-lang";
 
-export const LANG_COOKIE = "FRACTERA_ADMIN_LANG";
 const COOKIE_MAX_AGE = 365 * 24 * 60 * 60;
-
-// Разбор Accept-Language с учётом веса: "ru-RU,ru;q=0.9,en;q=0.8" → ru, en.
-// Берётся первый язык, который есть в словаре; региональный хвост отбрасывается
-// ("pt-BR" → "pt"), потому что словарь панели ведётся по языкам, не по регионам.
-function fromAcceptLanguage(header: string | null): string | null {
-  if (!header) return null;
-  const ranked = header
-    .split(",")
-    .map((part) => {
-      const [tag, ...params] = part.trim().split(";");
-      const q = params.find((p) => p.trim().startsWith("q="));
-      return { tag: tag.trim().toLowerCase(), q: q ? Number(q.split("=")[1]) || 0 : 1 };
-    })
-    .filter((e) => e.tag)
-    .sort((a, b) => b.q - a.q);
-
-  for (const { tag } of ranked) {
-    if (isAdminLanguage(tag)) return tag;
-    const primary = tag.split("-")[0];
-    if (isAdminLanguage(primary)) return primary;
-  }
-  return null;
-}
 
 // Тот же путь, но в другом языке — ОТНОСИТЕЛЬНЫМ адресом.
 //
@@ -79,8 +61,8 @@ function samePathInLang(referer: string | null, lang: string): string {
   }
 
   const segments = pathname.split("/").filter(Boolean);
-  // Со старой панели (`/`) уводим на корень нового языка: соответствующей
-  // страницы там просто нет.
+  // Пришли с корня (`/`) — уводим на корень языка: раздела в пути нет, сохранять
+  // нечего.
   if (segments.length === 0) return `/${lang}`;
   const rest = isAdminLanguage(segments[0]) ? segments.slice(1) : segments;
   return `/${[lang, ...rest].join("/")}${search}`;
@@ -97,11 +79,10 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ to: string 
   const referer = req.headers.get("referer");
 
   if (to === "auto") {
-    const cookie = req.cookies.get(LANG_COOKIE)?.value;
-    const lang =
-      (cookie && isAdminLanguage(cookie) && cookie) ||
-      fromAcceptLanguage(req.headers.get("accept-language")) ||
-      DEFAULT_ADMIN_LANG;
+    const lang = detectAdminLang(
+      req.cookies.get(LANG_COOKIE)?.value,
+      req.headers.get("accept-language"),
+    );
     return redirectTo(samePathInLang(referer, lang));
   }
 

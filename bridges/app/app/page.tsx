@@ -1,5 +1,36 @@
-import { WorkspaceController } from "@/_components/workspace-controller.client";
+// Точка входа в панель управления (шаг 501, фаза Ф3 — переключение).
+//
+// ЧТО ЗДЕСЬ БЫЛО. До переключения этот файл рендерил `WorkspaceController` —
+// одностраничную оболочку старой панели: 38 файлов, 580 КБ клиентского кода,
+// среди них клиентские компоненты, тянувшие в браузер словарь всех языков.
+// Оболочка удалена целиком; её поверхности живут страницами в `app/[lang]/`.
+//
+// ЧТО ЗДЕСЬ ТЕПЕРЬ. Корень не показывает ничего — он уводит человека на адрес с
+// языком. Языкового сегмента в `/` нет, а весь новый слой живёт под `[lang]`,
+// поэтому корень обязан выбрать язык за посетителя и отойти.
+//
+// ПОЧЕМУ НЕ РЕДИРЕКТ НА `/api/lang/auto`. Соблазнительно и неверно: тот
+// обработчик восстанавливает путь из заголовка `Referer`, чтобы переключатель
+// языка возвращал человека на ТУ ЖЕ страницу. В корень же чаще всего попадают
+// со страницы входа слоя авторизации — и `Referer` принёс бы её путь, отправив
+// посетителя на несуществующий `/<язык>/register`. Поэтому переиспользуется
+// ЛОГИКА (`detectAdminLang`), а не HTTP-маршрут: одна реализация разбора
+// `Accept-Language`, ноль лишних прыжков, ноль зависимости от `Referer`.
+//
+// СТАТИКА. Страница читает cookie и заголовок, то есть динамическая — но она
+// единственная в слое и не отдаёт ни байта разметки, только заголовок
+// `Location`. Канон статики связывает публичную поверхность и страницы с
+// содержимым; здесь содержимого нет, а язык невозможно узнать на сборке.
 
-export default function CodeWorkspacePage() {
-  return <WorkspaceController />;
+import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { LANG_COOKIE, detectAdminLang } from "@/lib/i18n/detect-lang";
+
+export default async function AdminEntryPage() {
+  const [cookieStore, headerStore] = await Promise.all([cookies(), headers()]);
+  const lang = detectAdminLang(
+    cookieStore.get(LANG_COOKIE)?.value,
+    headerStore.get("accept-language"),
+  );
+  redirect(`/${lang}`);
 }
