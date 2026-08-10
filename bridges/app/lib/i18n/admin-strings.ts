@@ -544,7 +544,14 @@ export type AdminStrings = {
   content: { englishFallback: string };
   // shown on a page whose interface exists but whose logic has not moved yet
   skeletonNotice: string;
-  home: { title: string; hint: string };
+  home: {
+    title: string; hint: string;
+    // Успокаивающий абзац первого экрана (владелец 2026-08-10). Человек попадает
+    // сюда и видит десятки разделов; без этих строк он решает, что продукт
+    // требует настроить всё это до начала работы, — и уходит.
+    calmLead: string; calmOnly: string; calmRest: string; calmOptional: string;
+    calmAction: string;
+  };
 };
 
 export const DEFAULT_ADMIN_LANG = "en";

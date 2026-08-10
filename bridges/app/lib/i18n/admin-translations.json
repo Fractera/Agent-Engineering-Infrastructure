@@ -1104,7 +1104,12 @@
     "skeletonNotice": "Interface only — the logic of this page has not moved here yet.",
     "home": {
       "title": "Workspace",
-      "hint": "Pick a section from the menu. Every section is its own page now, so it has its own address you can bookmark."
+      "hint": "Pick a section from the menu. Every section is its own page now, so it has its own address you can bookmark.",
+      "calmLead": "It may look like a lot from here. It is not: almost nothing on this page has to be touched before you start.",
+      "calmOnly": "There is exactly one thing you really need to do — connect your GitHub repository and sync it with your own machine, where a coding agent is installed (we recommend Claude Code).",
+      "calmRest": "Nothing else is required at the start. Authorization, the database, storage and everything else behind these sections is already set up and running.",
+      "calmOptional": "The rest — dictating your instructions by voice with an OpenAI key, the knowledge graph, the map, the channels — are tools. In our experience they get you to a result faster, but nothing here obliges you to use them.",
+      "calmAction": "Connect GitHub"
     },
     "navGroups": {
       "application": "Application",
@@ -2605,7 +2610,12 @@
     "skeletonNotice": "Только интерфейс — логика этой страницы сюда ещё не переехала.",
     "home": {
       "title": "Рабочее место",
-      "hint": "Выберите раздел в меню. Каждый раздел теперь отдельная страница со своим адресом, который можно сохранить в закладки."
+      "hint": "Выберите раздел в меню. Каждый раздел теперь отдельная страница со своим адресом, который можно сохранить в закладки.",
+      "calmLead": "Отсюда это может выглядеть внушительно. На самом деле почти ничего на этой странице трогать перед стартом не нужно.",
+      "calmOnly": "По-настоящему нужно сделать ровно одно — подключить ваш репозиторий GitHub и синхронизировать его со своей машиной, на которой установлен агент-программист (рекомендуем Claude Code).",
+      "calmRest": "Больше никаких критически важных настроек на старте нет. Авторизация, база данных, хранилище и всё остальное за этими разделами уже настроено и работает.",
+      "calmOptional": "Всё прочее — голосовой набор ваших инструкций с ключом OpenAI, граф знаний, карта, каналы — это инструменты. По нашему опыту с ними результат приходит быстрее, но пользоваться ими вас никто не обязывает.",
+      "calmAction": "Подключить GitHub"
     },
     "navGroups": {
       "application": "Приложение",
