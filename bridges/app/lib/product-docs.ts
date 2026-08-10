@@ -32,7 +32,8 @@ export type DocKey =
   | "doc-parallel-routing"
   | "doc-coding-standards"
   | "doc-troubleshooting"
-  | "doc-context-state";
+  | "doc-context-state"
+  | "doc-testing";
 
 /** Ключ страницы → файл в корне слота. Единственное место этого соответствия. */
 export const DOC_FILES: Record<DocKey, string> = {
@@ -65,6 +66,10 @@ export const DOC_FILES: Record<DocKey, string> = {
   // отсутствующей, а очистка — единственное действие, которое человек обязан
   // мочь выполнить сам.
   "doc-context-state": "CONTEXT-STATE.md",
+  // Как шаг доказывается законченным: два независимых доказательства из разных
+  // плоскостей. Документ ЗАДАННЫЙ — это требование к работе, а не наблюдение о
+  // ней, и агент правит его только по прямой просьбе.
+  "doc-testing": "TESTING.md",
 };
 
 /**
@@ -114,6 +119,7 @@ export const DOC_KIND: Record<string, "evolving" | "static"> = {
   "doc-antipatterns": "evolving",
   "doc-troubleshooting": "evolving",
   "doc-context-state": "evolving",
+  "doc-testing": "static",
 };
 
 /**

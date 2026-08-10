@@ -17,7 +17,9 @@ import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
 import { DocKindBadge } from "../_components/doc-kind-badge";
 import { DOC_FILES, DOC_KIND, readDoc, listSteps, isDocKey } from "@/lib/product-docs";
-import { readContextHandoff } from "@/lib/context-handoff";
+import { readInstructionSet, TOGGLEABLE, ALWAYS_ON } from "@/lib/instruction-set";
+import { InstructionSwitch } from "../_components/instruction-switch.client";
+import { MasterSwitch } from "../_components/master-switch.client";
 import { listSamples } from "@/lib/code-samples";
 import { NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 
@@ -33,9 +35,19 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
   // тех же документов разошлись бы при первой же правке.
   const slugs = NAV_BY_GROUP.documents.filter((x) => x !== "doc-overview") as AdminPageSlug[];
 
-  // Положение выключателя «Передачи сессии»: единственный документ группы, у
-  // которого он есть.
-  const handoffOn = readContextHandoff().enabled;
+  // Состояние корпуса. Оно обязано читаться С ОДНОГО ЭКРАНА: выключенная
+  // инструкция не должна выглядеть как несуществующая, иначе через неделю
+  // «агент перестал соблюдать стандарты» превращается в загадку.
+  const set = readInstructionSet();
+  const allOff = TOGGLEABLE.every((k) => !set.enabled[k]);
+
+  const switchLabels = {
+    on: o.switchOn, off: o.switchOff,
+    effect: o.effectNextSession, delivery: o.deliveryPushPull,
+    failed: s.docs.failed,
+    instructionAdded: o.instructionAdded, instructionMissing: o.instructionMissing,
+    docCreated: o.docCreated,
+  };
 
   const rows = slugs.map((slug) => {
     // Два документа группы — ПАПКИ, а не файлы: шаги заводит агент по одному на
@@ -114,7 +126,10 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
           // ЗДЕСЬ. Иначе выключенная возможность выглядит как работающая: файл в
           // списке есть, а хуки молчат и правило в инструкции отключено — и понять
           // это можно только зайдя внутрь.
-          const switched = r.slug === "doc-context-state" ? handoffOn : null;
+          // Главная инструкция несёт сам механизм — выключить её нельзя ни
+          // строкой, ни мастер-выключателем. Она всегда зелёная и без тумблера.
+          const managed = (TOGGLEABLE as string[]).includes(r.slug);
+          const switched = managed ? Boolean(set.enabled[r.slug]) : r.slug === ALWAYS_ON ? true : null;
           return (
           <li
             key={r.slug}
@@ -124,7 +139,8 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
               : ""
             }
           >
-            <Link href={adminHref(lang, r.slug)} className="flex gap-3 px-3 py-2.5 hover:bg-muted">
+            <div className="flex items-start gap-3 px-3 py-2.5">
+            <Link href={adminHref(lang, r.slug)} className="flex min-w-0 flex-1 gap-3 hover:bg-muted">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-[12px] font-medium text-foreground">{s.pages[r.slug].title}</span>
@@ -161,12 +177,56 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
               </div>
               <ChevronRight size={13} className="mt-1 shrink-0 text-muted-foreground" />
             </Link>
+
+            {/* Тумблер стоит ВНЕ ссылки: иначе щелчок по нему открывал бы
+                страницу вместо переключения. */}
+            <span className="mt-0.5 flex shrink-0 flex-col items-end gap-1">
+              {managed && (
+                <InstructionSwitch
+                  docKey={r.slug}
+                  enabled={Boolean(set.enabled[r.slug])}
+                  labels={switchLabels}
+                  srLabel={s.pages[r.slug].title}
+                />
+              )}
+              {r.slug === ALWAYS_ON && (
+                <MasterSwitch
+                  allOff={allOff}
+                  labels={{
+                    label: o.masterLabel,
+                    allOff: o.masterAllOff, restored: o.masterRestored,
+                    effect: o.effectNextSession, delivery: o.deliveryPushPull,
+                    failed: s.docs.failed, instructionMissing: o.instructionMissing,
+                  }}
+                />
+              )}
+            </span>
+            </div>
+
+            {/* Пояснение к мастер-выключателю — родной <details>, раскрывается
+                без JS и печатается вместе со страницей. */}
+            {r.slug === ALWAYS_ON && (
+              <details className="border-t border-border px-3 py-1.5">
+                <summary className="cursor-pointer list-none text-[10px] text-muted-foreground hover:text-foreground">
+                  {o.masterHelpLabel}
+                </summary>
+                <div className="mt-1 space-y-1.5 text-[10px] leading-relaxed text-muted-foreground">
+                  <p>{o.masterHelpWhy}</p>
+                  <p>{o.masterHelpRestore}</p>
+                  <p>{o.masterHelpMain}</p>
+                </div>
+              </details>
+            )}
           </li>
           );
         })}
       </ul>
 
-      <p className="mt-3 text-[10px] leading-relaxed text-muted-foreground">{o.closing}</p>
+      <p className="mt-3 rounded-md border border-border bg-muted/30 p-2.5 text-[10px] leading-relaxed text-muted-foreground">
+        {o.effectNextSession} {o.deliveryPushPull}
+      </p>
+
+      <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">{o.closing}</p>
     </PageShell>
   );
 }

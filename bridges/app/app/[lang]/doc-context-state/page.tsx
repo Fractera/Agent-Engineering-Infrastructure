@@ -17,10 +17,8 @@ import { PageShell } from "../_components/page-shell";
 import { DocEditor } from "../_components/doc-editor.client";
 import { DocKindBadge } from "../_components/doc-kind-badge";
 import { readDoc, DOC_KIND } from "@/lib/product-docs";
-import { readContextHandoff } from "@/lib/context-handoff";
-import { readHandoffTemplate } from "@/lib/context-state-block";
+import { readTemplate } from "@/lib/instruction-set";
 import { CreateDoc } from "./_components/create-doc.client";
-import { HandoffSwitch } from "./_components/handoff-switch.client";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +31,6 @@ export default async function DocPage({ params }: { params: Promise<{ lang: stri
   const c = s.contextState;
   const page = s.pages["doc-context-state"];
   const state = readDoc(DOC_KEY);
-  const handoff = readContextHandoff();
 
   return (
     <PageShell lang={lang} slug="doc-context-state" s={s} title={page.title} hint={page.hint}>
@@ -45,27 +42,6 @@ export default async function DocPage({ params }: { params: Promise<{ lang: stri
           evolvingHint={d.kindEvolvingHint}
           staticHint={d.kindStaticHint}
         />
-      </div>
-
-      {/* Выключатель СТОИТ ЗДЕСЬ, а не в «Возможностях приложения»: там речь о
-          том, что приложение даёт посетителю, а это — про работу агента над
-          проектом. Раздел виден в меню всегда, независимо от положения
-          переключателя: иначе включить возможность было бы негде. */}
-      <div className="mb-3">
-        <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-          {c.experimentalTitle}
-        </p>
-        <HandoffSwitch
-          enabled={handoff.enabled}
-          config={handoff.config}
-          labels={{
-            label: c.switchLabel, description: c.switchDescription,
-            saving: c.switchSaving, savedOn: c.switchOn, savedOff: c.switchOff, failed: c.switchFailed,
-            instructionAdded: c.instructionAdded, instructionMissing: c.instructionMissing,
-            docCreated: c.docCreated,
-          }}
-        />
-        <p className="mt-1.5 text-[10px] leading-relaxed text-muted-foreground">{c.experimentalHint}</p>
       </div>
 
       {/* Первым делом — снять тревогу, с которой сюда приходят по оранжевой
@@ -86,7 +62,8 @@ export default async function DocPage({ params }: { params: Promise<{ lang: stri
       {!state.exists && (
         <div className="mt-2">
           <CreateDoc
-            template={readHandoffTemplate()}
+            docKey={DOC_KEY}
+            template={readTemplate(DOC_KEY)}
             labels={{ create: c.createDoc, creating: c.creating, created: c.createdDoc, failed: c.switchFailed, hint: c.createHint }}
           />
         </div>

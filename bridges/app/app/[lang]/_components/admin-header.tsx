@@ -21,7 +21,7 @@ import {
   Cookie, Users, ImagePlus, Database, BrainCircuit, Brain, Map as MapIcon, Download, Upload,
   Link2, KeyRound, MessagesSquare, Sparkles, GitBranch, Info, History, Settings, BookOpen,
   HelpCircle, PackagePlus, FileText, Target, Wrench, Network, BookMarked, GraduationCap,
-  ListChecks, AlertTriangle, Paintbrush, LayoutTemplate, Ruler, LifeBuoy, Compass, Code2, ChevronRight, Crop, Scissors, Mic, Hourglass, type LucideIcon,
+  ListChecks, AlertTriangle, Paintbrush, LayoutTemplate, Ruler, LifeBuoy, Compass, Code2, ChevronRight, Crop, Scissors, Mic, Hourglass, FlaskConical, type LucideIcon,
 } from "lucide-react";
 import { NAV_GROUPS, NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 import { useCasesMissing } from "@/lib/product-docs";
@@ -85,6 +85,7 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   "doc-coding-standards": Ruler,
   "doc-troubleshooting": LifeBuoy,
   "doc-context-state": Hourglass,
+  "doc-testing": FlaskConical,
 };
 
 const MENU_ID = "admin-menu-toggle";

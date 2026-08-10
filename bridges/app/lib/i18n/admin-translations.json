@@ -772,19 +772,11 @@
     "contextState": {
       "experimentalTitle": "Experimental capability",
       "experimentalHint": "Off by default and worth switching on deliberately: it is still finding its shape and may change. Switching it on also switches the rule on in the project's main instruction; switching it off disables the rule there.",
-      "switchLabel": "Context handoff",
-      "switchDescription": "When the coding agent's context window fills up it writes down what it was doing, where it stopped and what comes next — so a lost session is resumed instead of restarted.",
-      "switchSaving": "Saving…",
-      "switchOn": "Switched on — the rule is now in the main instruction",
-      "switchOff": "Switched off — the rule is disabled in the main instruction",
       "switchFailed": "Could not save",
       "createDoc": "Create the document",
       "creating": "Creating…",
       "createdDoc": "Document created — it is now a file in your repository",
       "createHint": "This project has no CONTEXT-STATE.md yet: it was started before this capability existed. Create it from the template — the model fills it in by itself from then on.",
-      "docCreated": "CONTEXT-STATE.md did not exist in the project and was created from the template.",
-      "instructionAdded": "The rule was added to CLAUDE.md as a new section — the markers were not there. Review it in Documents → Main instruction.",
-      "instructionMissing": "Saved, but CLAUDE.md could not be updated — the agent will not learn about this switch until it is.",
       "noticeTitle": "This is a notice, not a fault.",
       "notice": "A record here means the previous session ran out of room mid-work and left a note for the next one. That is often completely normal — it is how work survives a window ending.",
       "howTitle": "Where it comes from.",
@@ -910,8 +902,23 @@
         "doc-parallel-routing": "How a page assembled from independent areas works in this project, and what changes when it is turned on. Read before touching layout, not after.",
         "doc-coding-standards": "The limits the code must respect: size before decomposition, static public pages, text through translations, settings read rather than hardcoded. They are limits, not style advice — reaching one is a signal to restructure.",
         "doc-troubleshooting": "Problems that appear only in production and their real causes. Loaded on demand rather than at session start: a diagnostic manual held in every session is paid for in every session, including the ones where nothing is broken.",
-        "doc-code-samples": "Finished pieces of code and styles from your earlier projects. The agent does not look here on its own: ask it to use the samples and name the document — that is how your accumulated work becomes a starting point rather than a forgotten folder."
-      }
+        "doc-code-samples": "Finished pieces of code and styles from your earlier projects. The agent does not look here on its own: ask it to use the samples and name the document — that is how your accumulated work becomes a starting point rather than a forgotten folder.",
+        "doc-testing": "How a step is proven finished. Two independent proofs from two different planes, in a fixed shape — because the rule existed for a long time as a goal and kept losing to the cheapest available answer: a build log. Switched off, nobody is asked for proofs."
+      },
+      "switchOn": "Instruction switched on",
+      "switchOff": "Instruction switched off",
+      "effectNextSession": "It takes full effect in a NEW session: an agent already working has this instruction in its context and may keep following it.",
+      "deliveryPushPull": "The change was written on the server. To get it onto your machine: Push in the footer, then pull in your clone.",
+      "instructionAdded": "The block was added to CLAUDE.md as a new section — the markers were not there.",
+      "instructionMissing": "Saved, but CLAUDE.md could not be updated — until it is, the agent will not know about this switch.",
+      "docCreated": "The document did not exist in this project and was created from the template.",
+      "masterLabel": "switch off all nested instructions",
+      "masterAllOff": "All nested instructions switched off — the agent starts with this instruction alone",
+      "masterRestored": "The previous set of instructions is back",
+      "masterHelpLabel": "? what this switch is for",
+      "masterHelpWhy": "Sometimes the task does not deserve a full development cycle — fixing one typo, for instance. Loading the whole corpus for that is paying context for what will not be used. One click leaves the agent with this instruction and your task.",
+      "masterHelpRestore": "Switching back restores exactly the set that was active before, not \"everything on\": documents you had switched off earlier stay off. The set is remembered on the server, so it survives another browser and another machine.",
+      "masterHelpMain": "The main instruction itself can never be switched off — it carries the mechanism, including this switch."
     },
     "docs": {
       "intro": "This document is a file in your project, edited here or in your editor. It travels with a push and a pull like any other file:",
@@ -1331,6 +1338,10 @@
       "map-help": {
         "title": "Help",
         "hint": "How to build with this panel, and where to ask when something is unclear."
+      },
+      "doc-testing": {
+        "title": "Testing",
+        "hint": "How a step is proven finished: two independent proofs, from two different planes."
       }
     },
     "breadcrumbHome": "Panel",
@@ -1343,6 +1354,19 @@
       "project": "The repository behind the app, the history of its deployments and the environment they run with.",
       "documents": "",
       "help": "How to build with this panel and where to ask when something is unclear."
+    },
+    "testing": {
+      "whyTitle": "Why this document exists.",
+      "why": "The two-proof requirement lived in the pipeline as two lines for a long time and kept losing. Not because anyone disagreed — because it named the goal and left the form of the answer free, and a free form is always filled with the cheapest available proof: a build log, a 200, a commit hash. This document fixes the shape instead, so a missing proof is visibly missing.",
+      "planesTitle": "Two planes, never one.",
+      "planes": "A build and a type check are the same plane and count as one proof. Compilation is never one of the two: a build log looks identical whether or not the feature works. One of the proofs carries a negative control — a case whose answer is required to differ.",
+      "switchTitle": "Where the switch is.",
+      "switchWhere": "On the documents map, together with the switches of every other instruction — the state of the whole corpus has to be readable from one screen.",
+      "createDoc": "Create the document",
+      "creating": "Creating…",
+      "createdDoc": "Document created — it is now a file in your repository",
+      "createHint": "This project has no TESTING.md yet: it was started before this document existed. Create it from the template.",
+      "failed": "Could not save"
     }
   },
   "ru": {
@@ -2118,19 +2142,11 @@
     "contextState": {
       "experimentalTitle": "Экспериментальная возможность",
       "experimentalHint": "Выключена по умолчанию, включать стоит осознанно: она ещё ищет форму и может измениться. Включение ставит это правило и в главную инструкцию проекта, выключение — отключает его там же.",
-      "switchLabel": "Передача сессии",
-      "switchDescription": "Когда контекстное окно агента заполняется, он записывает, что делал, где остановился и что дальше, — потерянная сессия продолжается, а не начинается заново.",
-      "switchSaving": "Сохраняю…",
-      "switchOn": "Включено — правило встало в главную инструкцию",
-      "switchOff": "Выключено — правило в главной инструкции отключено",
       "switchFailed": "Сохранить не удалось",
       "createDoc": "Создать документ",
       "creating": "Создаю…",
       "createdDoc": "Документ создан — теперь это файл в вашем репозитории",
       "createHint": "В этом проекте ещё нет файла CONTEXT-STATE.md: проект начат раньше, чем появилась возможность. Создайте его из шаблона — дальше модель заполняет его сама.",
-      "docCreated": "Файла CONTEXT-STATE.md в проекте не было — создан из шаблона.",
-      "instructionAdded": "Правило добавлено в CLAUDE.md новым разделом — маркеров в файле не было. Посмотрите его в «Документы → Главная инструкция».",
-      "instructionMissing": "Сохранено, но обновить CLAUDE.md не удалось — пока это не исправлено, агент о переключателе не узнает.",
       "noticeTitle": "Это предупреждение, а не ошибка.",
       "notice": "Запись здесь означает, что предыдущей сессии не хватило места посреди работы и она оставила заметку следующей. Часто это совершенно нормальная ситуация — именно так работа переживает конец окна.",
       "howTitle": "Откуда она берётся.",
@@ -2256,8 +2272,23 @@
         "doc-parallel-routing": "Как в этом проекте работает страница, собранная из независимых областей, и что меняется при её включении. Читается до работы с раскладкой, а не после.",
         "doc-coding-standards": "Границы, которые обязан соблюдать код: размер до декомпозиции, статические публичные страницы, тексты через переводы, настройки читаются, а не зашиваются. Это именно границы, а не советы по стилю: достигнутая — сигнал перестраивать.",
         "doc-troubleshooting": "Проблемы, которые появляются только на продакшне, и их настоящие причины. Читается по требованию, а не на старте: диагностический справочник, который держат в каждой сессии, в каждой же и оплачивается — включая те, где ничего не сломано.",
-        "doc-code-samples": "Готовые куски кода и стилей из ваших прошлых проектов. Агент сюда не заглядывает сам: попросите использовать образцы и назовите документ — так накопленное вами становится отправной точкой, а не забытой папкой."
-      }
+        "doc-code-samples": "Готовые куски кода и стилей из ваших прошлых проектов. Агент сюда не заглядывает сам: попросите использовать образцы и назовите документ — так накопленное вами становится отправной точкой, а не забытой папкой.",
+        "doc-testing": "Как шаг доказывается законченным. Два независимых доказательства из разных плоскостей, в жёсткой форме — потому что требование давно существовало как цель и раз за разом проигрывало самому дешёвому ответу: отчёту о сборке. Выключено — доказательств никто не спрашивает."
+      },
+      "switchOn": "Инструкция включена",
+      "switchOff": "Инструкция отключена",
+      "effectNextSession": "В полной мере это подействует с НОВОЙ сессии: у агента, который уже работает, эта инструкция лежит в контексте, и он может продолжать ей следовать.",
+      "deliveryPushPull": "Правка сделана на сервере. Чтобы она попала на вашу машину: «Отправить» в подвале, затем `git pull` в вашем клоне.",
+      "instructionAdded": "Блок добавлен в CLAUDE.md новым разделом — маркеров в файле не было.",
+      "instructionMissing": "Сохранено, но обновить CLAUDE.md не удалось — пока это не исправлено, агент о переключателе не узнает.",
+      "docCreated": "Документа в этом проекте не было — создан из шаблона.",
+      "masterLabel": "отключить все вложенные инструкции",
+      "masterAllOff": "Все вложенные инструкции отключены — агент стартует с одной главной",
+      "masterRestored": "Прежний набор инструкций возвращён",
+      "masterHelpLabel": "? зачем этот переключатель",
+      "masterHelpWhy": "Иногда задача не стоит полного цикла разработки — например, исправить одну опечатку. Поднимать ради этого весь корпус значит платить контекстом за то, что не понадобится. Один щелчок оставляет агента с главной инструкцией и вашей задачей.",
+      "masterHelpRestore": "Возврат восстанавливает ровно тот набор, который действовал раньше, а не «включает всё»: документы, выключенные вами прежде, останутся выключенными. Набор помнит сервер, поэтому он переживает другой браузер и другую машину.",
+      "masterHelpMain": "Саму главную инструкцию выключить нельзя никогда — она несёт механизм, включая этот переключатель."
     },
     "docs": {
       "intro": "Этот документ — файл вашего проекта; его правят здесь или в редакторе. Он едет с отправкой и получением, как любой другой файл:",
@@ -2677,6 +2708,10 @@
       "map-help": {
         "title": "Справка",
         "hint": "Как строить в этой панели и куда спросить, если что-то непонятно."
+      },
+      "doc-testing": {
+        "title": "Тестирование",
+        "hint": "Как шаг доказывается законченным: два независимых доказательства из разных плоскостей."
       }
     },
     "breadcrumbHome": "Панель",
@@ -2689,6 +2724,19 @@
       "project": "Репозиторий, из которого живёт приложение, история его развёртываний и окружение, с которым они идут.",
       "documents": "",
       "help": "Как строить в этой панели и куда спросить, если что-то непонятно."
+    },
+    "testing": {
+      "whyTitle": "Зачем этот документ.",
+      "why": "Требование двух доказательств давно жило в конвейере двумя строками и раз за разом проигрывало. Не потому, что с ним спорили, — потому что оно называло цель и оставляло форму ответа свободной, а свободная форма всегда заполняется самым дешёвым доказательством: отчётом о сборке, кодом 200, хэшем коммита. Этот документ задаёт форму, и тогда недостающее доказательство видно как недостающее.",
+      "planesTitle": "Две плоскости, а не одна.",
+      "planes": "Сборка и проверка типов — одна плоскость и одно доказательство, посчитанное дважды. Сборка не может быть одним из двух: её вывод выглядит одинаково, работает функция или нет. Одно из доказательств несёт отрицательный контроль — случай, ответ на который ОБЯЗАН отличаться.",
+      "switchTitle": "Где выключатель.",
+      "switchWhere": "На карте документов, вместе с выключателями всех остальных инструкций: состояние корпуса обязано читаться с одного экрана.",
+      "createDoc": "Создать документ",
+      "creating": "Создаю…",
+      "createdDoc": "Документ создан — теперь это файл в вашем репозитории",
+      "createHint": "В этом проекте ещё нет файла TESTING.md: проект начат раньше, чем появился документ. Создайте его из шаблона.",
+      "failed": "Сохранить не удалось"
     }
   }
 }

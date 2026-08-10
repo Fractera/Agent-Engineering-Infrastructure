@@ -349,6 +349,13 @@ export type AdminStrings = {
       "context-state": string;
     };
   };
+  // Документ «Тестирование»: почему он существует и где его выключатель.
+  testing: {
+    whyTitle: string; why: string;
+    planesTitle: string; planes: string;
+    switchTitle: string; switchWhere: string;
+    createDoc: string; creating: string; createdDoc: string; createHint: string; failed: string;
+  };
   // Файл передачи между контекстными окнами. Отдельной секцией, потому что вся
   // страница объясняет ОДНУ вещь: запись здесь — не поломка, а след прерванной
   // сессии, и устаревшую можно просто стереть.
@@ -404,8 +411,14 @@ export type AdminStrings = {
     whyLead: string; whyOneEdit: string; whyWhole: string; whyModels: string; whyExperience: string;
     evolvingExplained: string; staticExplained: string;
     notCreatedYet: string;
-    /** Метки документа, у которого есть собственный выключатель. */
-    inUse: string; switchedOff: string; closing: string;
+    /** Состояние инструкции в корпусе. */
+    inUse: string; switchedOff: string;
+    // Переключатели корпуса: что сказал щелчок и когда он подействует.
+    switchOn: string; switchOff: string;
+    effectNextSession: string; deliveryPushPull: string;
+    instructionAdded: string; instructionMissing: string; docCreated: string;
+    masterLabel: string; masterAllOff: string; masterRestored: string;
+    masterHelpLabel: string; masterHelpWhy: string; masterHelpRestore: string; masterHelpMain: string; closing: string;
     purposes: Record<string, string>;
   };
   docs: {

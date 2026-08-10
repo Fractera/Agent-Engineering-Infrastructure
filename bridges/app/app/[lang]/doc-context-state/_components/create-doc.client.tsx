@@ -21,8 +21,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 export function CreateDoc(
-  { template, labels }:
+  { docKey, template, labels }:
   {
+    docKey: string;
     template: string;
     labels: { create: string; creating: string; created: string; failed: string; hint: string };
   },
@@ -34,7 +35,7 @@ export function CreateDoc(
   async function create() {
     setBusy(true);
     try {
-      const res = await fetch("/api/product-docs/doc-context-state", {
+      const res = await fetch(`/api/product-docs/${docKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: template }),

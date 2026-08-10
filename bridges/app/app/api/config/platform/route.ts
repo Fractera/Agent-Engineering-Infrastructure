@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { requireAuth } from "@/lib/require-auth";
-import { syncContextStateBlock, ensureHandoffDoc } from "@/lib/context-state-block";
 
 // Read/write the Shell's live PLATFORM config (parallel routing / languages / theme). The
 // config is a JSON file on disk in the Shell's working dir
@@ -41,19 +40,11 @@ export async function POST(req: NextRequest) {
     fs.mkdirSync(path.dirname(CONFIG_PATH), { recursive: true });
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), "utf-8");
 
-    // Выключатель обязан менять ПОВЕДЕНИЕ агента, а оно задаётся инструкцией в
-    // корне слота, а не этим JSON: агент читает CLAUDE.md, а не наш конфиг.
-    // Поэтому сохранение сразу приводит блок в инструкции в соответствие с
-    // флагом. Побочное действие — best-effort: его отказ не имеет права уронить
-    // сохранение настроек, поэтому результат уезжает в ответ, а не в исключение.
-    const features = (config as { features?: Record<string, unknown> }).features ?? {};
-    const enabled = features.contextHandoff === true;
-    const block = syncContextStateBlock(enabled);
-    // Включение обязано оставить рабочую пару: правило в инструкции И документ,
-    // в который его исполнять. Одно без другого — пустая страница.
-    const doc = enabled ? ensureHandoffDoc() : { ok: true, created: false };
-
-    return NextResponse.json({ ok: true, instruction: block, document: doc });
+    // Выключатели ИНСТРУКЦИЙ живут в своём маршруте (`/api/config/instructions`):
+    // одно их переключение делает три вещи разом — флаг, управляемая область в
+    // `CLAUDE.md` слота и создание документа. Здесь остаются настройки самого
+    // приложения.
+    return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }
