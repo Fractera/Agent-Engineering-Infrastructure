@@ -20,6 +20,7 @@
 import fs from "fs";
 import path from "path";
 import { DOC_FILES, STEPS_DIR, type DocKey } from "@/lib/product-docs";
+import { USE_CASES_DIR } from "@/lib/use-cases-store";
 import { SAMPLES_DIR } from "@/lib/code-samples";
 
 const APP_DIR = process.env.APP_DIR ?? "/opt/fractera/app";
@@ -48,6 +49,9 @@ export const ALWAYS_ON: DocKey = "doc-instruction";
  * читать ради мелкой задачи.
  */
 export const FOLDER_DOCS: Record<string, string> = {
+  // Кейсы — тоже папка (решение владельца 2026-08-10): в `CASES/` сами кейсы,
+  // в `RAW/` сырьё Quiz, которое агент в обычной работе не читает.
+  "doc-use-cases": `${USE_CASES_DIR}/`,
   "doc-steps": `${STEPS_DIR}/`,
   "doc-code-samples": `${SAMPLES_DIR}/`,
 };

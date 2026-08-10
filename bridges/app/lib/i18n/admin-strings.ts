@@ -356,6 +356,30 @@ export type AdminStrings = {
     switchTitle: string; switchWhere: string;
     createDoc: string; creating: string; createdDoc: string; createHint: string; failed: string;
   };
+  // Пользовательские кейсы: гейт, вводные вопросы и Quiz.
+  useCases: {
+    gateMissing: string; gateUnconfirmed: string; gateReady: string;
+    introLead: string; introQuestions: string[]; introProgress: string; introPlaceholder: string;
+    introFinish: string; introSaved: string; introTooShort: string;
+    next: string; back: string; saving: string; voiceHint: string;
+    quizStart: string; quizStartHint: string; quizMore: string; quizMoreHint: string;
+    quizTitle: string; quizPlaceholder: string; quizHint: string; close: string;
+    modelBanner: string; designer: string; answer: string;
+    auto: string; autoWriting: string; autoPaused: string; pause: string; keepText: string;
+    create: string; creating: string; ready: string; added: string;
+    draft: string; confirmed: string; confirm: string; unconfirm: string;
+    confirmAll: string; confirmedAll: string;
+    edit: string; save: string; cancel: string; remove: string; removeConfirm: string;
+    titleLabel: string; summaryLabel: string; savedCase: string;
+    remarkTitle: string; remarkPlaceholder: string; rewrite: string; rewriting: string;
+    failed: string; noKey: string; noSeed: string;
+    legacyHint: string; legacyAction: string; legacyDone: string;
+    helpLabel: string;
+    helpWhyTitle: string; helpWhy: string;
+    helpRawTitle: string; helpRaw: string;
+    helpConfirmTitle: string; helpConfirm: string;
+    helpModelTitle: string; helpModel: string;
+  };
   // Документ-запрет: почему мультиагентность закрыта и где её команда.
   singleAgent: {
     whyTitle: string; why: string;

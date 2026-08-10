@@ -22,6 +22,7 @@ import { CommandEditor } from "../_components/command-editor.client";
 import { InstructionSwitch } from "../_components/instruction-switch.client";
 import { MasterSwitch } from "../_components/master-switch.client";
 import { listSamples } from "@/lib/code-samples";
+import { listCases, USE_CASES_DIR } from "@/lib/use-cases-store";
 import { NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 
 export const dynamic = "force-dynamic";
@@ -54,6 +55,16 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
     // Два документа группы — ПАПКИ, а не файлы: шаги заводит агент по одному на
     // работу, образцы складывает владелец. «Заведён» для них значит «есть хотя
     // бы одна запись».
+    // Кейсы — тоже папка, и «заведён» для них значит «есть хотя бы один кейс».
+    if (slug === "doc-use-cases") {
+      const cs = listCases();
+      return {
+        slug,
+        file: `${USE_CASES_DIR}/`,
+        exists: cs.cases.length > 0,
+        kind: DOC_KIND[slug] ?? "static",
+      };
+    }
     if (slug === "doc-steps") {
       const steps = listSteps();
       return {

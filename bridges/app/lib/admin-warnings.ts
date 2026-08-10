@@ -19,7 +19,8 @@
 import fs from "fs";
 import path from "path";
 import Database from "better-sqlite3";
-import { useCasesMissing, contextStateHandoff } from "@/lib/product-docs";
+import { contextStateHandoff } from "@/lib/product-docs";
+import { useCasesGate } from "@/lib/use-cases-store";
 import { readInstructionSet } from "@/lib/instruction-set";
 import type { AdminPageSlug } from "@/lib/admin-nav";
 
@@ -68,7 +69,10 @@ export function collectWarnings(): AdminWarning[] {
   if (!envHas(APP_ENV, "USER_GITHUB_REPO_URL")) {
     out.push({ id: "github", level: "blocking", slug: "github" });
   }
-  if (useCasesMissing()) {
+  // Тревога держится, ПОКА НЕ ПОДТВЕРЖДЕНЫ ВСЕ кейсы (владелец 2026-08-10):
+  // написанный моделью кейс — догадка, и строить по непрочитанной догадке хуже,
+  // чем не строить вовсе. Половина подтверждённых лучше нуля, но гейт не снимает.
+  if (useCasesGate().kind !== "ready") {
     out.push({ id: "use-cases", level: "blocking", slug: "doc-use-cases" });
   }
 

@@ -24,7 +24,7 @@ import {
   ListChecks, AlertTriangle, Paintbrush, LayoutTemplate, Ruler, LifeBuoy, Compass, Code2, ChevronRight, Crop, Scissors, Mic, Hourglass, FlaskConical, UserRound, type LucideIcon,
 } from "lucide-react";
 import { NAV_GROUPS, NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
-import { useCasesMissing } from "@/lib/product-docs";
+import { useCasesGate } from "@/lib/use-cases-store";
 import { collectWarnings } from "@/lib/admin-warnings";
 import { hiddenSlugs } from "@/lib/platform-features";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
@@ -97,7 +97,7 @@ export function AdminHeader({ lang, s }: { lang: string; s: AdminStrings }) {
   // точка — иначе предупреждение живёт внутри закрытого ящика и его никто не
   // видит. Проверка дешёвая (`statSync`), поэтому её можно делать на каждой
   // странице панели.
-  const needsUseCases = useCasesMissing();
+  const needsUseCases = useCasesGate().kind !== "ready";
 
   // Верхняя область меню: всё красное и оранжевое, собранное в одном месте.
   // Список сам укорачивается по мере заполнения и исчезает целиком, когда
