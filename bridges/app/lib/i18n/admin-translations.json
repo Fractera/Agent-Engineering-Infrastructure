@@ -1470,7 +1470,8 @@
       "helpConfirmTitle": "Why confirmation matters.",
       "helpConfirm": "A case written by the model is a guess until a human reads it. Editing a confirmed case returns it to unconfirmed on purpose: confirmation must mean «I agree with this text», not «I looked at it once».",
       "helpModelTitle": "The model.",
-      "helpModel": "The Quiz uses the model configured for this server:"
+      "helpModel": "The Quiz uses the model configured for this server:",
+      "scrollDown": "To the newest message"
     }
   },
   "ru": {
@@ -2944,7 +2945,8 @@
       "helpConfirmTitle": "Зачем подтверждение.",
       "helpConfirm": "Написанный моделью кейс остаётся догадкой, пока его не прочитал человек. Правка подтверждённого кейса намеренно возвращает его в оранжевое: подтверждение обязано означать «согласен вот с этим текстом», а не «когда-то смотрел».",
       "helpModelTitle": "Модель.",
-      "helpModel": "Quiz работает моделью, выбранной для этого сервера:"
+      "helpModel": "Quiz работает моделью, выбранной для этого сервера:",
+      "scrollDown": "К последнему сообщению"
     }
   }
 }

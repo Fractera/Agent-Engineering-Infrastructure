@@ -18,7 +18,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Send, Sparkles, Pause, Check, X } from "lucide-react";
+import { Loader2, Send, Sparkles, Pause, Check, X, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import VoiceInput from "@/_tools/voice-input/client/voice-input.client";
@@ -33,6 +33,7 @@ export type QuizLabels = {
   create: string; creating: string;
   ready: string; hint: string;
   added: string; failed: string; noKey: string; noSeed: string;
+  scrollDown: string;
 };
 
 export function QuizDialog(
@@ -50,6 +51,28 @@ export function QuizDialog(
   const booted = useRef(false);
   const field = useRef<HTMLTextAreaElement | null>(null);
   const draftField = useRef<HTMLTextAreaElement | null>(null);
+
+  // «К последнему сообщению» — перенос из старого Quiz (коммит `8e04170`).
+  //
+  // ЗАЧЕМ. Новый вопрос приходит НИЖЕ видимой части, лента визуально не двигается,
+  // и человек его просто не замечает: смотрит на пустое поле ответа и думает, что
+  // ничего не произошло. Поэтому: был внизу — держим внизу; ушёл читать выше —
+  // показываем подпрыгивающую стрелку, а не дёргаем ленту у него из-под курсора.
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [showScrollDown, setShowScrollDown] = useState(false);
+  const nearBottom = () => {
+    const el = scrollRef.current;
+    return !el || el.scrollHeight - el.scrollTop - el.clientHeight < 48;
+  };
+  const scrollToBottom = () => {
+    const el = scrollRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  };
+  useEffect(() => {
+    if (nearBottom()) scrollToBottom();
+    else setShowScrollDown(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [turns, draft, streaming, busy]);
 
   const call = useCallback(async (payload: Record<string, unknown>) => {
     const r = await fetch("/api/use-cases/quiz", {
@@ -239,16 +262,43 @@ export function QuizDialog(
             {labels.modelBanner}
           </p>
 
-          <div className="max-h-64 space-y-2 overflow-y-auto">
-            {turns.map((t, i) => (
-              <div key={i} className={t.role === "assistant" ? "" : "pl-6"}>
-                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                  {t.role === "assistant" ? labels.designer : ""}
-                </p>
-                <p className="whitespace-pre-wrap text-[12px] leading-relaxed text-foreground">{t.content}</p>
-              </div>
-            ))}
-            {busy && <Loader2 size={12} className="animate-spin text-muted-foreground" />}
+          {/* Обёртка относительная: стрелка стоит НАД лентой и не уезжает вместе
+              с ней. */}
+          <div className="relative">
+            <div
+              ref={scrollRef}
+              onScroll={() => setShowScrollDown(!nearBottom())}
+              className="max-h-72 space-y-2 overflow-y-auto pr-1"
+            >
+              {turns.map((t, i) => (
+                <div
+                  key={i}
+                  className={`rounded-lg p-2.5 text-[12px] leading-relaxed ${
+                    t.role === "user" ? "ml-8 bg-primary/10 text-foreground" : "mr-8 bg-muted text-foreground"
+                  }`}
+                >
+                  {t.role !== "user" && (
+                    <p className="mb-1 flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+                      <Sparkles size={10} />{labels.designer}
+                    </p>
+                  )}
+                  <p className="whitespace-pre-wrap">{t.content}</p>
+                </div>
+              ))}
+              {busy && <Loader2 size={12} className="animate-spin text-muted-foreground" />}
+            </div>
+
+            {showScrollDown && (
+              <button
+                type="button"
+                onClick={scrollToBottom}
+                aria-label={labels.scrollDown}
+                title={labels.scrollDown}
+                className="absolute bottom-2 left-1/2 flex size-8 -translate-x-1/2 animate-bounce items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-md backdrop-blur transition-colors hover:bg-muted"
+              >
+                <ChevronDown size={16} />
+              </button>
+            )}
           </div>
 
           {ready && (
