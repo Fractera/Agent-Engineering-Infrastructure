@@ -314,6 +314,8 @@ export type AdminStrings = {
   };
   env: {
     warning: string; unavailable: string;
+    // Выгрузка окружения для локальной разработки — перенесена из старой панели.
+    exportHint: string; exportAction: string; exportTitle: string; exportWarning: string;
     keyHeader: string; valueHeader: string;
     lockedHint: string; secretHint: string; emptyValue: string; unchanged: string;
     add: string; newKey: string; newValue: string;

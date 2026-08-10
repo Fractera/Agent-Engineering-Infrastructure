@@ -699,7 +699,11 @@
       "helpMaskTitle": "Why secrets show as a mask.",
       "helpMask": "A value whose name contains KEY, SECRET, TOKEN or PASSWORD is masked on the server and never sent to your browser. You can replace it; you cannot read it back. There is nothing to gain from looking at a key you already own, and plenty to lose from having it sit in a page.",
       "helpLockedTitle": "Why some names cannot be edited.",
-      "helpLocked": "Their values follow from decisions made elsewhere — the mode the server runs in, the domain, the language set. A hand-edit here would rewrite one half of a pair and leave the other, and the failure would show up as “I cannot sign in” rather than “I mistyped a variable”."
+      "helpLocked": "Their values follow from decisions made elsewhere — the mode the server runs in, the domain, the language set. A hand-edit here would rewrite one half of a pair and leave the other, and the failure would show up as “I cannot sign in” rather than “I mistyped a variable”.",
+      "exportHint": "Working on this project from your own machine? Download the environment file: your local copy then reads and writes the SERVER's rows, files and vector memory through it. Nothing is copied to your laptop, so there are no two versions of the data drifting apart.",
+      "exportAction": ".env.local",
+      "exportTitle": "Download .env.local for local development",
+      "exportWarning": "The file carries the data-layer key. Put it in the project root, never into git — the starter's .gitignore already excludes it."
     },
     "appFeatures": {
       "intro": "These switches apply without a rebuild — the app reads them on the next page load. Some of them also open and close a settings section of their own; each such switch says below it which section, and where in the menu to find it.",
@@ -2178,7 +2182,11 @@
       "helpMaskTitle": "Почему секреты показаны маской.",
       "helpMask": "Значение, в имени которого есть KEY, SECRET, TOKEN или PASSWORD, маскируется на сервере и в браузер не отправляется вовсе. Заменить его можно, прочитать обратно — нет. Смотреть на ключ, которым вы и так владеете, нечего, а держать его в странице — есть что терять.",
       "helpLockedTitle": "Почему некоторые имена нельзя править.",
-      "helpLocked": "Их значения следуют из решений, принятых в других местах: режим работы сервера, домен, набор языков. Правка руками перепишет одну половину пары и оставит другую, а проявится это как «не могу войти», а не как «я опечатался в переменной»."
+      "helpLocked": "Их значения следуют из решений, принятых в других местах: режим работы сервера, домен, набор языков. Правка руками перепишет одну половину пары и оставит другую, а проявится это как «не могу войти», а не как «я опечатался в переменной».",
+      "exportHint": "Работаете над проектом со своей машины? Скачайте файл окружения: локальная копия будет читать и писать строки, файлы и векторную память ЖИВОГО сервера через него. На ноутбук ничего не копируется, поэтому двух расходящихся версий данных не возникает.",
+      "exportAction": ".env.local",
+      "exportTitle": "Скачать .env.local для локальной разработки",
+      "exportWarning": "В файле лежит ключ слоя данных. Положите его в корень проекта и никогда не отправляйте в git — в .gitignore стартера он уже исключён."
     },
     "appFeatures": {
       "intro": "Эти переключатели применяются без пересборки — приложение читает их на следующей загрузке страницы. Часть из них вдобавок открывает и закрывает собственный раздел настроек: у такого переключателя ниже написано, какой это раздел и в какой группе меню его искать.",

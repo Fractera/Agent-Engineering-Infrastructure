@@ -7,7 +7,7 @@
 //
 // Динамическая: значения живые.
 
-import { AlertCircle, Lock } from "lucide-react";
+import { AlertCircle, Lock, Download } from "lucide-react";
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
@@ -29,6 +29,27 @@ export default async function EnvPage({ params }: { params: Promise<{ lang: stri
         <AlertCircle size={12} className="mt-0.5 shrink-0" />
         <span>{e.warning}</span>
       </p>
+
+      {/* ВЫГРУЗКА ДЛЯ ЛОКАЛЬНОЙ РАЗРАБОТКИ. Перенесена из старой панели вместе с
+          её сутью: этот файл — единственный способ, которым клон на машине
+          разработчика ходит в ЖИВОЙ слой данных сервера. Ничего не копируется на
+          ноутбук, поэтому двух расходящихся версий данных не возникает.
+
+          Обычная ссылка с `download`, а не островок: браузер сохраняет ответ сам,
+          и работает это без JS. */}
+      <div className="mt-3 rounded-lg border border-blue-500/30 bg-blue-500/5 p-3">
+        <p className="text-[11px] leading-relaxed text-blue-700 dark:text-blue-300">{e.exportHint}</p>
+        <a
+          href="/api/config/env-export"
+          download=".env.local"
+          title={e.exportTitle}
+          className="mt-2 inline-flex h-7 items-center gap-1.5 rounded-md border border-blue-500/40 bg-blue-500/10 px-2.5 text-[11px] font-medium text-blue-700 transition-colors hover:bg-blue-500/20 dark:text-blue-300"
+        >
+          <Download size={11} />
+          <span className="font-mono">{e.exportAction}</span>
+        </a>
+        <p className="mt-1.5 text-[10px] leading-relaxed text-muted-foreground">{e.exportWarning}</p>
+      </div>
 
       {!result.ok ? (
         <div className="mt-3 rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3">
