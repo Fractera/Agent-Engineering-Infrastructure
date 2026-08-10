@@ -161,14 +161,21 @@ export function renderSection(enabled: Record<string, boolean>): string {
   const lines: string[] = [
     `**Managed by the control panel — do not edit this block by hand.**`,
     ``,
-    `It is the authority on WHICH project documents you read at session entry. Where it disagrees with the`,
-    `reading list in stage 6.0, **this block wins**.`,
+    `It is the authority on WHICH of this project's documents exist for you at all. A document listed as`,
+    `switched off is not read even when another part of this instruction asks for it — **this block wins**.`,
     ``,
-    `**Read at session entry:** ${on.length ? on.map((f) => `\`${f}\``).join(", ") : "— (only this instruction)"}`,
+    `**Active:** ${on.length ? on.map((f) => `\`${f}\``).join(", ") : "— (only this instruction)"}`,
     ``,
     `**Switched OFF — do not read, do not demand, do not report as missing:** ${
       off.length ? off.map((f) => `\`${f}\``).join(", ") : "—"
     }`,
+    ``,
+    // Плоский список «читать на входе» врал: часть документов активна, но
+    // читается ПО ТРЕБОВАНИЮ, и инструкция рядом это прямо запрещает. Блок
+    // отвечает «можно ли пользоваться», стадия 6.0 — «когда».
+    `Active does NOT mean "load at session entry". Each document keeps the reading rule this instruction`,
+    `gives it: most are read on entry, \`TROUBLESHOOTING.md\` only on demand, \`CODE-SAMPLES/\` only when the`,
+    `owner names a sample. This block answers "may I use it at all", stage 6.0 answers "when".`,
     ``,
     `A switched-off document is a deliberate choice of the owner, usually to keep a small task cheap. It is`,
     `not a missing document: never offer to recreate it and never work around its absence.`,
