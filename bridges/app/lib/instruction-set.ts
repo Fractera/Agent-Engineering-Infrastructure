@@ -110,6 +110,20 @@ working here. Details: \`SINGLE-AGENT.md\`.`,
 a command. This is a lifted guard, not a forgotten rule — use several agents where they genuinely help,
 say what each one is given, and prefer running them one after another so they can still be corrected.`,
   },
+  "doc-dialogue-format": {
+    on: `**Dialogue format — ON.** Open every answer by restating the request **in your own words**: the
+subject, what will actually be done, what should come out — stated so it can be checked — and an
+invitation to correct you. Say back the MEANING, never a paraphrase of the wording: the same
+misunderstanding survives a paraphrase intact. **Size the block to the request** — a one-line ask gets a
+one-line restatement, a step gets the full form — but never skip it silently. Anything you decided for
+yourself goes in it, marked as your assumption; when two readings are possible, show both, say which you
+take and keep working. You do NOT wait for permission — the owner reads the block first and stops you if
+it is wrong; stop and ask only when the readings would produce materially different work. Most requests
+here are spoken, and dictation drops words: this block is where what he meant and what the microphone
+produced are compared. Details: \`DIALOGUE-FORMAT.md\`.`,
+    off: `**Dialogue format — OFF.** Do not open answers with a restatement and do not apologise for its
+absence. Answer directly. The command above still asks for one when the owner wants it.`,
+  },
   "doc-context-state": {
     on: `**Context handoff — ON.** \`CONTEXT-STATE.md\` is the handoff between two context windows:
 1. **Read it at session entry, before any other document.** Empty means there is nothing to resume.
@@ -169,6 +183,14 @@ export type CommandVerb = (typeof COMMAND_VERBS)[number];
 export const COMMAND_DEFAULTS: Record<string, Partial<Record<CommandVerb, Record<string, string>>>> = {
   "doc-single-agent": {
     activate: { en: "also", ru: "кстати говоря" },
+  },
+  // Просьба пересказать понимание ПРЯМО СЕЙЧАС и в полной форме. Владелец
+  // продиктовал две фразы — «скажи как ты меня понял» и «правильно ли мы друг
+  // друга понимаем»; каноном стоит первая, вторая принимается как её вариант
+  // (сказано в самом документе). Хранить обе здесь нельзя: у глагола одна фраза
+  // на язык, а плодить глаголы ради синонима — ломать модель команд.
+  "doc-dialogue-format": {
+    activate: { en: "tell me how you understood me", ru: "скажи как ты меня понял" },
   },
   "doc-passport": {
     add: { en: "add to the project passport", ru: "добавь в паспорт проекта" },
@@ -431,6 +453,7 @@ const TEMPLATES: Record<string, string> = {
   "doc-context-state": "CONTEXT-STATE.template.md",
   "doc-testing": "TESTING.template.md",
   "doc-single-agent": "SINGLE-AGENT.template.md",
+  "doc-dialogue-format": "DIALOGUE-FORMAT.template.md",
   "doc-passport": "PASSPORT.template.md",
   "doc-architecture": "ARCHITECTURE.template.md",
   "doc-antipatterns": "ANTI-PATTERNS.template.md",

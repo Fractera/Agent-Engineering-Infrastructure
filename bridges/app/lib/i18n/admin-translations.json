@@ -910,6 +910,7 @@
         "doc-code-samples": "Finished pieces of code and styles from your earlier projects. The agent does not look here on its own: ask it to use the samples and name the document — that is how your accumulated work becomes a starting point rather than a forgotten folder.",
         "doc-testing": "How a step is proven finished. Two independent proofs from two different planes, in a fixed shape — because the rule existed for a long time as a goal and kept losing to the cheapest available answer: a build log. Switched off, nobody is asked for proofs.",
         "doc-single-agent": "Multi-agent development is forbidden unless you activate it by voice or in writing with the command. A sub-agent starts cold: it does not have this conversation, your corrections or the reason the previous approach was dropped, so it re-derives them wrongly and you pay twice — for the tokens and for the review that finds the divergence.",
+        "doc-dialogue-format": "Every answer opens by restating your request in the agent's own words — the subject, what will be done, what should come out, and an invitation to correct it. The cheapest instrument here: a misread request is found in one sentence, or after a day of building the wrong thing. It matters most because you speak your requests, and dictation drops words.",
         "doc-passport": "What the product consists of, and the state of each part. One row per entity: what it is for, which cases it serves, which platform tools it needs, whether it is empty, in progress or working. It is the join between the cases and the steps — coverage runs case → entity → step, which is more honest than counting closed steps."
       },
       "switchOn": "Instruction switched on",
@@ -1372,6 +1373,10 @@
         "title": "Single agent",
         "hint": "One context window by default; a second agent needs the owner's command."
       },
+      "doc-dialogue-format": {
+        "title": "Dialogue format",
+        "hint": "Every answer opens by saying back what was understood — and inviting a correction."
+      },
       "doc-passport": {
         "title": "Project passport",
         "hint": "The entities this product consists of, and how far each one has come."
@@ -1412,6 +1417,21 @@
       "creating": "Creating…",
       "createdDoc": "Document created — it is now a file in your repository",
       "createHint": "This project has no SINGLE-AGENT.md yet. Create it from the template.",
+      "failed": "Could not save"
+    },
+    "dialogueFormat": {
+      "whyTitle": "Why it exists.",
+      "why": "You dictate most of your requests, and dictation drops words, merges sentences and mangles names. You see what you meant; the agent sees what the microphone produced. The restatement is where those two texts are compared — and the only place where comparing them is cheap. A misread request otherwise yields working code, a green build and a confident report about the wrong task.",
+      "shapeTitle": "The shape of the block.",
+      "shape": "Four moves: the subject in the agent's own words · what will actually be done · what should come out, stated so it can be checked · an invitation to correct it. Said back as MEANING, never as a paraphrase of your wording — the same misunderstanding survives a paraphrase intact.",
+      "sizeTitle": "It does not become noise.",
+      "size": "The block is sized to the request: a one-line ask gets a one-line restatement, a step gets the full form. The agent does not wait for your permission — it states and keeps working — and stops to ask only when two readings would produce materially different work.",
+      "switchTitle": "The switch and the command.",
+      "switchWhere": "On by default. Switched off, answers start directly and the agent does not apologise for it. The command asks for the restatement once, in full, even when the document is off — it means \"stop and tell me how you understood me\".",
+      "createDoc": "Create the document",
+      "creating": "Creating…",
+      "createdDoc": "Document created — it is now a file in your repository",
+      "createHint": "This project has no DIALOGUE-FORMAT.md yet. Create it from the template.",
       "failed": "Could not save"
     },
     "useCases": {
@@ -2421,6 +2441,7 @@
         "doc-code-samples": "Готовые куски кода и стилей из ваших прошлых проектов. Агент сюда не заглядывает сам: попросите использовать образцы и назовите документ — так накопленное вами становится отправной точкой, а не забытой папкой.",
         "doc-testing": "Как шаг доказывается законченным. Два независимых доказательства из разных плоскостей, в жёсткой форме — потому что требование давно существовало как цель и раз за разом проигрывало самому дешёвому ответу: отчёту о сборке. Выключено — доказательств никто не спрашивает.",
         "doc-single-agent": "Мультиагентная разработка запрещена, пока вы не активируете её голосом или письменно командой. Суб-агент стартует холодным: у него нет этого разговора, ваших поправок и причины, по которой прошлый подход бросили, — он выводит их заново и неверно, а платите вы дважды: за токены и за разбор расхождения.",
+        "doc-dialogue-format": "Ответ всегда открывается пересказом вашей просьбы словами агента: о чём речь, что он будет делать, что должно получиться, и приглашение поправить его. Самый дешёвый инструмент проекта: неверно понятая просьба обнаруживается либо одной фразой здесь, либо через день построенного не того. Особенно важно потому, что просьбы вы диктуете, а распознавание теряет слова.",
         "doc-passport": "Из чего состоит продукт и в каком состоянии каждая часть. Строка на сущность: чем занята, какие кейсы обслуживает, какие платформенные инструменты ей нужны, пусто в ней, работа идёт или уже работает. Это стык кейсов и шагов: покрытие считается по цепочке кейс → сущность → шаг, а не по числу закрытых шагов."
       },
       "switchOn": "Инструкция включена",
@@ -2883,6 +2904,10 @@
         "title": "Единственный агент",
         "hint": "По умолчанию одно контекстное окно; второй агент — только по команде владельца."
       },
+      "doc-dialogue-format": {
+        "title": "Формат диалога",
+        "hint": "Ответ открывается пересказом понятого — и приглашением поправить."
+      },
       "doc-passport": {
         "title": "Паспорт проекта",
         "hint": "Из каких сущностей состоит продукт и насколько готова каждая."
@@ -2923,6 +2948,21 @@
       "creating": "Создаю…",
       "createdDoc": "Документ создан — теперь это файл в вашем репозитории",
       "createHint": "В этом проекте ещё нет файла SINGLE-AGENT.md. Создайте его из шаблона.",
+      "failed": "Сохранить не удалось"
+    },
+    "dialogueFormat": {
+      "whyTitle": "Зачем это нужно.",
+      "why": "Просьбы вы в основном диктуете, а распознавание теряет слова, склеивает предложения и коверкает имена. Вы видите то, что имели в виду; агент видит то, что выдал микрофон. Пересказ — место, где эти два текста сравниваются, и единственное, где сравнение стоит дёшево. Иначе неверно понятая просьба даёт работающий код, зелёную сборку и уверенный отчёт — о не той задаче.",
+      "shapeTitle": "Форма блока.",
+      "shape": "Четыре хода: предмет словами агента · что именно будет сделано · что должно получиться, сказанное так, что это можно проверить · приглашение поправить. Пересказывается СМЫСЛ, а не формулировка: то же самое непонимание переживает пересказ другими словами целиком.",
+      "sizeTitle": "Он не превращается в шум.",
+      "size": "Блок соразмерен просьбе: на однострочную — одна строка, на шаг — полная форма. Агент не ждёт вашего разрешения: он говорит и продолжает работать, а останавливается и спрашивает только тогда, когда два прочтения дали бы существенно разную работу.",
+      "switchTitle": "Выключатель и команда.",
+      "switchWhere": "По умолчанию включено. Выключено — ответы начинаются сразу, и агент не извиняется за отсутствие блока. Команда просит пересказ один раз и в полной форме даже при выключенном документе: она значит «остановись и скажи, как ты меня понял».",
+      "createDoc": "Создать документ",
+      "creating": "Создаю…",
+      "createdDoc": "Документ создан — теперь это файл в вашем репозитории",
+      "createHint": "В этом проекте ещё нет файла DIALOGUE-FORMAT.md. Создайте его из шаблона.",
       "failed": "Сохранить не удалось"
     },
     "useCases": {

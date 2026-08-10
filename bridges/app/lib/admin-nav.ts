@@ -87,6 +87,7 @@ export const NAV = [
   { slug: "doc-context-state",    group: "documents" },
   { slug: "doc-testing",          group: "documents" },
   { slug: "doc-single-agent",     group: "documents" },
+  { slug: "doc-dialogue-format",  group: "documents" },
   { slug: "doc-passport",         group: "documents" },
 
   { slug: "map-help",         group: "help" },

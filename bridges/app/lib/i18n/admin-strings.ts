@@ -399,6 +399,16 @@ export type AdminStrings = {
     switchTitle: string; switchWhere: string;
     createDoc: string; creating: string; createdDoc: string; createHint: string; failed: string;
   };
+  // Формат диалога: ответ открывается пересказом просьбы своими словами. Отдельной
+  // секцией по той же причине, что и «единственный агент», — страница объясняет
+  // ОДНУ вещь, и объяснение обязано стоять выше редактора файла.
+  dialogueFormat: {
+    whyTitle: string; why: string;
+    shapeTitle: string; shape: string;
+    sizeTitle: string; size: string;
+    switchTitle: string; switchWhere: string;
+    createDoc: string; creating: string; createdDoc: string; createHint: string; failed: string;
+  };
   // Файл передачи между контекстными окнами. Отдельной секцией, потому что вся
   // страница объясняет ОДНУ вещь: запись здесь — не поломка, а след прерванной
   // сессии, и устаревшую можно просто стереть.
