@@ -20,7 +20,7 @@ import fs from "fs";
 import path from "path";
 import Database from "better-sqlite3";
 import { useCasesMissing, contextStateHandoff } from "@/lib/product-docs";
-import { readFeatures } from "@/lib/platform-features";
+import { readContextHandoff } from "@/lib/context-handoff";
 import type { AdminPageSlug } from "@/lib/admin-nav";
 
 const APP_DIR = process.env.APP_DIR ?? "/opt/fractera/app";
@@ -86,7 +86,7 @@ export function collectWarnings(): AdminWarning[] {
   // сессия либо повторит сделанное, либо продолжит с шага, который уже закрыт.
   // Возможность экспериментальная и по умолчанию выключена: выключенный
   // механизм не имеет права ни о чём предупреждать.
-  if (readFeatures().features.contextHandoff && contextStateHandoff()) {
+  if (readContextHandoff().enabled && contextStateHandoff()) {
     out.push({ id: "context-state", level: "advised", slug: "doc-context-state" });
   }
 

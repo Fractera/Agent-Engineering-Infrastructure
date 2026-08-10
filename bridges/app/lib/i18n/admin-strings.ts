@@ -331,11 +331,9 @@ export type AdminStrings = {
     intro: string; unavailable: string;
     save: string; saving: string; saved: string; failed: string; nothingToSave: string;
     opensSection: string; parallelOff: string;
-    experimentalTitle: string; experimentalHint: string;
-    instructionAdded: string; instructionMissing: string;
     items: Record<
       "auth" | "breadcrumbs" | "faq" | "themeToggle" | "widthToggle" | "languageSwitcher"
-      | "topMenu" | "footerPages" | "cookieBanner" | "contextHandoff",
+      | "topMenu" | "footerPages" | "cookieBanner",
       { label: string; description: string }
     >;
     helpLabel: string;
@@ -355,6 +353,13 @@ export type AdminStrings = {
   // страница объясняет ОДНУ вещь: запись здесь — не поломка, а след прерванной
   // сессии, и устаревшую можно просто стереть.
   contextState: {
+    // Выключатель стоит на этой же странице: возможность экспериментальная, и её
+    // место рядом с документом, которым она управляет, а не среди возможностей
+    // приложения — те про посетителя, а эта про работу агента.
+    experimentalTitle: string; experimentalHint: string;
+    switchLabel: string; switchDescription: string;
+    switchSaving: string; switchOn: string; switchOff: string; switchFailed: string;
+    instructionAdded: string; instructionMissing: string;
     noticeTitle: string; notice: string;
     howTitle: string; how: string;
     staleTitle: string; stale: string;

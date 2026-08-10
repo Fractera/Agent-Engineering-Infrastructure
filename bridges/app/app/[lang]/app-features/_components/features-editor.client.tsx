@@ -6,22 +6,21 @@ import { Loader2, Save, ArrowDownRight } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { FEATURE_ORDER, OFF_WHEN_PARALLEL, EXPERIMENTAL, type FeatureKey } from "@/lib/platform-features.shared";
+import { FEATURE_ORDER, OFF_WHEN_PARALLEL, type FeatureKey } from "@/lib/platform-features.shared";
 
 // Возможности приложения (шаг 501, партия 20).
 //
 // Островок: переключатели и сохранение. Слова и начальное состояние приезжают с
 // сервера — страница читается и без JS.
 //
-// Три возможности УПРАВЛЯЮТ разделами панели: включил верхнее меню — раздел его
-// кнопок появился в меню, выключил — исчез. Поэтому после сохранения зовём
+// Часть возможностей УПРАВЛЯЕТ разделами панели: включил верхнее меню — раздел
+// его кнопок появился в меню, выключил — исчез. Поэтому после сохранения зовём
 // `router.refresh()`: шапку рисует сервер, и без обновления меню осталось бы
 // прежним, пока человек не перезагрузит страницу сам.
 
 export type FeatureLabels = {
   save: string; saving: string; saved: string; failed: string; nothingToSave: string;
   opensSection: string; parallelOff: string;
-  experimentalTitle: string; experimentalHint: string;
   instructionAdded: string; instructionMissing: string;
   items: Record<FeatureKey, { label: string; description: string }>;
 };
@@ -46,7 +45,11 @@ export function FeaturesEditor(
     if (!dirty) { toast.error(labels.nothingToSave); return; }
     setSaving(true);
     try {
-      const features: Record<string, boolean> = {};
+      // Чужие флаги ветки `features` СОХРАНЯЮТСЯ: там живёт «Передача сессии»,
+      // выключатель которой стоит в другом разделе. Сборка объекта с нуля стёрла
+      // бы её при первом же сохранении отсюда.
+      const existing = (config.features ?? {}) as Record<string, boolean>;
+      const features: Record<string, boolean> = { ...existing };
       for (const k of FEATURE_ORDER) features[k] = state[k] === true;
 
       const res = await fetch("/api/config/platform", {
@@ -92,18 +95,8 @@ export function FeaturesEditor(
           const section = sections[key];
           const lockedByParallel = parallel && OFF_WHEN_PARALLEL.includes(key);
           const on = state[key] && !lockedByParallel;
-          // Экспериментальные отделены заголовком, а не значком в строке: у них
-          // другая природа обещания — такая возможность может измениться или
-          // исчезнуть, и включают её сознательно.
-          const startsExperimental = EXPERIMENTAL[0] === key;
           return (
             <li key={key} className="flex flex-col gap-2.5 px-3 py-2.5">
-              {startsExperimental && (
-                <div className="-mx-3 -mt-2.5 mb-0.5 border-b border-border bg-muted/40 px-3 py-1.5">
-                  <p className="text-[11px] font-medium text-foreground">{labels.experimentalTitle}</p>
-                  <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">{labels.experimentalHint}</p>
-                </div>
-              )}
               <div className="flex gap-3">
               <Switch
                 checked={on}

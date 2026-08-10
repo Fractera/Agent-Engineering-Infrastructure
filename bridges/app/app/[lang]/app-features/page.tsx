@@ -1,6 +1,6 @@
 // Возможности приложения (шаг 501, Ф2, партия 20).
 //
-// Раздел стал ГЛАВНЫМ ВЫКЛЮЧАТЕЛЕМ: три возможности открывают и закрывают свои
+// Раздел стал ГЛАВНЫМ ВЫКЛЮЧАТЕЛЕМ: часть возможностей открывает и закрывает свои
 // разделы в меню панели. Выключено — раздела ниже нет, потому что настраивать
 // то, чего в приложении не будет, значит тратить время владельца впустую.
 //
@@ -63,7 +63,6 @@ export default async function AppFeaturesPage({ params }: { params: Promise<{ la
             save: f.save, saving: f.saving, saved: f.saved,
             failed: f.failed, nothingToSave: f.nothingToSave,
             opensSection: f.opensSection, parallelOff: f.parallelOff,
-            experimentalTitle: f.experimentalTitle, experimentalHint: f.experimentalHint,
             instructionAdded: f.instructionAdded, instructionMissing: f.instructionMissing,
             items: f.items,
           }}

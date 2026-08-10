@@ -702,7 +702,7 @@
       "helpLocked": "Their values follow from decisions made elsewhere — the mode the server runs in, the domain, the language set. A hand-edit here would rewrite one half of a pair and leave the other, and the failure would show up as “I cannot sign in” rather than “I mistyped a variable”."
     },
     "appFeatures": {
-      "intro": "These switches apply without a rebuild — the app reads them on the next page load. The three at the top also open and close their own sections in this menu.",
+      "intro": "These switches apply without a rebuild — the app reads them on the next page load. Some of them also open and close a settings section of their own; each such switch says below it which section, and where in the menu to find it.",
       "unavailable": "The platform settings could not be read.",
       "save": "Save changes",
       "saving": "Saving…",
@@ -711,10 +711,6 @@
       "nothingToSave": "Nothing was changed",
       "opensSection": "Opens the “{section}” section, under “{group}” in the menu",
       "parallelOff": "Unavailable while parallel routing is on — there the layout decides the width.",
-      "experimentalTitle": "Experimental",
-      "experimentalHint": "Off by default and worth switching on deliberately: these capabilities are still finding their shape and may change or go away. Everything above is settled.",
-      "instructionAdded": "The rule was added to CLAUDE.md as a new section — the markers were not there. Review it in Documents → Main instruction.",
-      "instructionMissing": "Saved, but CLAUDE.md could not be updated — the agent will not learn about this switch until it is.",
       "items": {
         "topMenu": {
           "label": "Top menu",
@@ -723,10 +719,6 @@
         "footerPages": {
           "label": "Footer navigation links",
           "description": "Links to your project's pages in the footer. Turn it off for a one-page site."
-        },
-        "contextHandoff": {
-          "label": "Context handoff",
-          "description": "When the coding agent's context window fills up it writes down what it was doing, where it stopped and what comes next — so a lost session is resumed instead of restarted. Switching it on also switches the rule on in the project's main instruction; switching it off disables the rule there."
         },
         "cookieBanner": {
           "label": "Cookie notice",
@@ -765,7 +757,7 @@
       "helpWhyTitle": "But it is not what we would advise.",
       "helpWhy": "These settings are built so that the public layer stays static: pages are generated ahead of time, a search engine receives finished markup, and the server answers the minimum number of requests. A hand-written version of the same capability usually pulls the page into dynamic rendering — and that is exactly the advantage it costs you.",
       "helpSectionsTitle": "Why sections appear and disappear.",
-      "helpSections": "The first three switches own their own settings pages. Turned off, that page leaves the menu: configuring a banner the app will never show is time spent on nothing."
+      "helpSections": "Some switches own a settings page of their own, and each of them names it right below the switch. Turned off, that page leaves the menu: configuring a banner the app will never show is time spent on nothing."
     },
     "warnings": {
       "title": "Before you start",
@@ -778,6 +770,16 @@
       }
     },
     "contextState": {
+      "experimentalTitle": "Experimental capability",
+      "experimentalHint": "Off by default and worth switching on deliberately: it is still finding its shape and may change. Switching it on also switches the rule on in the project's main instruction; switching it off disables the rule there.",
+      "switchLabel": "Context handoff",
+      "switchDescription": "When the coding agent's context window fills up it writes down what it was doing, where it stopped and what comes next — so a lost session is resumed instead of restarted.",
+      "switchSaving": "Saving…",
+      "switchOn": "Switched on — the rule is now in the main instruction",
+      "switchOff": "Switched off — the rule is disabled in the main instruction",
+      "switchFailed": "Could not save",
+      "instructionAdded": "The rule was added to CLAUDE.md as a new section — the markers were not there. Review it in Documents → Main instruction.",
+      "instructionMissing": "Saved, but CLAUDE.md could not be updated — the agent will not learn about this switch until it is.",
       "noticeTitle": "This is a notice, not a fault.",
       "notice": "A record here means the previous session ran out of room mid-work and left a note for the next one. That is often completely normal — it is how work survives a window ending.",
       "howTitle": "Where it comes from.",
@@ -2038,7 +2040,7 @@
       "helpLocked": "Их значения следуют из решений, принятых в других местах: режим работы сервера, домен, набор языков. Правка руками перепишет одну половину пары и оставит другую, а проявится это как «не могу войти», а не как «я опечатался в переменной»."
     },
     "appFeatures": {
-      "intro": "Эти переключатели применяются без пересборки — приложение читает их на следующей загрузке страницы. Три верхних вдобавок открывают и закрывают свои разделы в этом меню.",
+      "intro": "Эти переключатели применяются без пересборки — приложение читает их на следующей загрузке страницы. Часть из них вдобавок открывает и закрывает собственный раздел настроек: у такого переключателя ниже написано, какой это раздел и в какой группе меню его искать.",
       "unavailable": "Платформенные настройки прочитать не удалось.",
       "save": "Сохранить изменения",
       "saving": "Сохраняю…",
@@ -2047,10 +2049,6 @@
       "nothingToSave": "Ничего не изменено",
       "opensSection": "Открывает раздел «{section}» в группе «{group}»",
       "parallelOff": "Недоступно при включённой параллельной маршрутизации — там ширину решает раскладка.",
-      "experimentalTitle": "Экспериментальные",
-      "experimentalHint": "Выключены по умолчанию, включать стоит осознанно: эти возможности ещё ищут форму и могут измениться или исчезнуть. Всё, что выше, — устоявшееся.",
-      "instructionAdded": "Правило добавлено в CLAUDE.md новым разделом — маркеров в файле не было. Посмотрите его в «Документы → Главная инструкция».",
-      "instructionMissing": "Сохранено, но обновить CLAUDE.md не удалось — пока это не исправлено, агент о переключателе не узнает.",
       "items": {
         "topMenu": {
           "label": "Верхнее меню",
@@ -2059,10 +2057,6 @@
         "footerPages": {
           "label": "Ссылки на страницы в подвале",
           "description": "Ссылки на страницы вашего проекта внизу. Выключите для одностраничного сайта."
-        },
-        "contextHandoff": {
-          "label": "Передача сессии",
-          "description": "Когда контекстное окно агента заполняется, он записывает, что делал, где остановился и что дальше, — потерянная сессия продолжается, а не начинается заново. Включение ставит это правило и в главную инструкцию проекта, выключение — отключает его там же."
         },
         "cookieBanner": {
           "label": "Уведомление о cookie",
@@ -2101,7 +2095,7 @@
       "helpWhyTitle": "Но мы бы не советовали.",
       "helpWhy": "Эти настройки устроены так, чтобы публичный слой оставался статическим: страницы создаются заранее, поисковик получает готовую разметку, а сервер отвечает на минимум запросов. Своя реализация той же возможности обычно уводит страницу в динамику — и отнимает ровно то преимущество, ради которого всё это сделано.",
       "helpSectionsTitle": "Почему разделы появляются и исчезают.",
-      "helpSections": "У первых трёх переключателей есть собственные страницы настроек. Выключенный убирает свою страницу из меню: настраивать баннер, который приложение никогда не покажет, — время, потраченное впустую."
+      "helpSections": "У части переключателей есть собственная страница настроек, и каждый такой называет её прямо под собой. Выключенный убирает свою страницу из меню: настраивать баннер, который приложение никогда не покажет, — время, потраченное впустую."
     },
     "warnings": {
       "title": "Прежде чем начинать",
@@ -2114,6 +2108,16 @@
       }
     },
     "contextState": {
+      "experimentalTitle": "Экспериментальная возможность",
+      "experimentalHint": "Выключена по умолчанию, включать стоит осознанно: она ещё ищет форму и может измениться. Включение ставит это правило и в главную инструкцию проекта, выключение — отключает его там же.",
+      "switchLabel": "Передача сессии",
+      "switchDescription": "Когда контекстное окно агента заполняется, он записывает, что делал, где остановился и что дальше, — потерянная сессия продолжается, а не начинается заново.",
+      "switchSaving": "Сохраняю…",
+      "switchOn": "Включено — правило встало в главную инструкцию",
+      "switchOff": "Выключено — правило в главной инструкции отключено",
+      "switchFailed": "Сохранить не удалось",
+      "instructionAdded": "Правило добавлено в CLAUDE.md новым разделом — маркеров в файле не было. Посмотрите его в «Документы → Главная инструкция».",
+      "instructionMissing": "Сохранено, но обновить CLAUDE.md не удалось — пока это не исправлено, агент о переключателе не узнает.",
       "noticeTitle": "Это предупреждение, а не ошибка.",
       "notice": "Запись здесь означает, что предыдущей сессии не хватило места посреди работы и она оставила заметку следующей. Часто это совершенно нормальная ситуация — именно так работа переживает конец окна.",
       "howTitle": "Откуда она берётся.",
