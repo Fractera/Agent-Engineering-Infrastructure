@@ -44,9 +44,13 @@ export function AdminFooter({ s, lang }: { s: AdminStrings; lang: string }) {
         {/* Ссылка на руководство стоит между состоянием и действиями — как в
             старом подвале. Передаётся островку СОДЕРЖИМЫМ: сама она серверная и
             в браузер как код не уезжает. */}
+        {/* Голубой — тот же акцент, что у врезки первого экрана (владелец
+            2026-08-10): это две точки одного маршрута для новичка — «с чего
+            начать» вверху и «как это строится» внизу, и выглядеть они обязаны
+            родственно, а не как случайные ссылки. */}
         <Link
           href={adminHref(lang, "how-to-build")}
-          className="inline-flex h-5 items-center gap-1 rounded border border-border px-2 text-[10px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="inline-flex h-5 items-center gap-1 rounded border border-sky-500/40 bg-sky-500/10 px-2 text-[10px] font-medium text-sky-700 transition-colors hover:bg-sky-500/20 dark:text-sky-300"
         >
           <BookOpen size={10} />
           <span className="hidden lg:inline">{f.howToBuild}</span>
