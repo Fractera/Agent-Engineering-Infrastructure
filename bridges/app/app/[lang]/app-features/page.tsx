@@ -11,6 +11,7 @@ import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
 import { readFeatures } from "@/lib/platform-features";
 import { FEATURE_SECTION, type FeatureKey } from "@/lib/platform-features.shared";
+import { NAV, type AdminPageSlug } from "@/lib/admin-nav";
 import { FeaturesEditor } from "./_components/features-editor.client";
 
 export const dynamic = "force-dynamic";
@@ -34,10 +35,16 @@ export default async function AppFeaturesPage({ params }: { params: Promise<{ la
   }
 
   // Название раздела берётся из словаря страниц — одно имя и в меню, и здесь,
-  // поэтому они не могут разойтись.
-  const sections: Partial<Record<FeatureKey, string>> = {};
-  for (const [key, slug] of Object.entries(FEATURE_SECTION) as [FeatureKey, keyof typeof s.pages][]) {
-    sections[key] = s.pages[slug].title;
+  // поэтому они не могут разойтись. Вместе с ним едет ГРУППА меню: «в этом меню»
+  // ничего не говорит человеку, которому раздел ещё предстоит найти, а групп в
+  // меню восемь.
+  const sections: Partial<Record<FeatureKey, { title: string; group: string }>> = {};
+  for (const [key, slug] of Object.entries(FEATURE_SECTION) as [FeatureKey, AdminPageSlug][]) {
+    const entry = NAV.find((n) => n.slug === slug);
+    sections[key] = {
+      title: s.pages[slug].title,
+      group: entry ? s.navGroups[entry.group] : "",
+    };
   }
 
   return (

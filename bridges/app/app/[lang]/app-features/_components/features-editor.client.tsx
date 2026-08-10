@@ -31,8 +31,8 @@ export function FeaturesEditor(
     config: Record<string, unknown>;
     initial: Record<FeatureKey, boolean>;
     parallel: boolean;
-    /** Возможность → название раздела, который она открывает. */
-    sections: Partial<Record<FeatureKey, string>>;
+    /** Возможность → раздел, который она открывает, и группа меню, где он живёт. */
+    sections: Partial<Record<FeatureKey, { title: string; group: string }>>;
     labels: FeatureLabels;
   },
 ) {
@@ -121,7 +121,7 @@ export function FeaturesEditor(
                 {section && (
                   <p className={`mt-1 flex items-center gap-1 text-[10px] ${on ? "text-emerald-700 dark:text-emerald-400" : "text-muted-foreground"}`}>
                     <ArrowDownRight size={10} className="shrink-0" />
-                    {labels.opensSection.replace("{section}", section)}
+                    {labels.opensSection.replace("{section}", section.title).replace("{group}", section.group)}
                   </p>
                 )}
 
