@@ -895,6 +895,7 @@
       "notCreatedYet": "not created yet",
       "closing": "A document that does not exist yet is not a mistake — it is simply work that has not been needed so far. Open one and it will tell you what belongs in it.",
       "purposes": {
+        "doc-context-state": "What the previous session was doing when its context window ran out: where it stopped and what the next action is. The model writes it by itself and the next session reads it, so interrupted work resumes instead of restarting. Empty is its normal state — it holds something only between an interruption and a resumption.",
         "doc-instruction": "The rules of the work itself: how the agent talks to you, what it must read before building, what it may never touch. Everything else is read through this one.",
         "doc-use-cases": "What the product is for, in your words — who uses it, what they came to do, what has to be true when they are done. Development does not start before this exists: an agent that knows how to build but not what for will build carefully and build the wrong thing.",
         "doc-platform-tools": "What the platform already gives you: stores, vector search, the knowledge graph, the map, channels. The agent has no external tools, so this file is the only way it learns these exist — and not knowing is how a second database gets built next to the first.",
@@ -2238,6 +2239,7 @@
       "notCreatedYet": "ещё не создан",
       "closing": "Отсутствующий документ — не ошибка, а работа, которая пока не понадобилась. Откройте его, и он сам скажет, что в нём должно быть.",
       "purposes": {
+        "doc-context-state": "Что предыдущая сессия делала в момент, когда её контекстное окно закончилось: на чём остановилась и какое действие следующее. Пишет его модель сама, читает следующая сессия — поэтому оборванная работа продолжается, а не начинается заново. Пустой он и должен быть: непустым он бывает ровно между обрывом и продолжением.",
         "doc-instruction": "Правила самой работы: как агент разговаривает с вами, что обязан прочитать до стройки, чего не имеет права касаться. Всё остальное читается уже через неё.",
         "doc-use-cases": "Зачем нужен продукт, вашими словами: кто им пользуется, зачем пришёл, что должно быть верно, когда он закончил. До появления этого документа разработка не начинается: агент, который знает чем строить, но не знает зачем, построит аккуратно и не то.",
         "doc-platform-tools": "Что платформа уже даёт: склады, векторный поиск, граф знаний, карту, каналы. Внешних инструментов у агента нет, и это единственный способ узнать об их существовании — а не зная, он строит вторую базу рядом с первой.",
