@@ -461,6 +461,7 @@ export type AdminStrings = {
     masterLabel: string; masterAllOff: string; masterRestored: string;
     // Команда активации: якорь общий, фраза настраивается владельцем.
     commandCaption: string; commandHelp: string;
+    verbActivate: string; verbAdd: string; verbFind: string; verbEdit: string;
     commandEdit: string; commandSave: string; commandSaving: string; commandCancel: string;
     commandSaved: string; commandPlaceholder: string; commandAnchorNote: string;
     masterHelpLabel: string; masterHelpWhy: string; masterHelpRestore: string; masterHelpMain: string; closing: string;

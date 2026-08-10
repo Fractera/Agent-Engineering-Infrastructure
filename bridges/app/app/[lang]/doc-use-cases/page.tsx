@@ -19,6 +19,8 @@ import { adminHref } from "@/lib/admin-nav";
 import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
 import { listCases, useCasesGate, readSeed, USE_CASES_DIR, CASES_SUBDIR, RAW_SUBDIR } from "@/lib/use-cases-store";
+import { readInstructionSet } from "@/lib/instruction-set";
+import { DocCommands } from "../_components/doc-commands";
 import { IntroQuestions } from "./_components/intro-questions.client";
 import { QuizLauncher } from "./_components/quiz-launcher.client";
 import { CasesBoard } from "./_components/cases-board.client";
@@ -37,6 +39,8 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
   const { cases, legacy } = listCases();
   const gate = useCasesGate();
   const seed = readSeed();
+  const set = readInstructionSet();
+  const o = s.docsOverview;
 
   const quizLabels = {
     title: u.quizTitle, close: u.close, modelBanner: u.modelBanner,
@@ -118,6 +122,23 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
           )}
         </>
       )}
+
+      {/* Команды кейсов: добавить, найти, изменить — прямо здесь, чтобы их не
+          искали на карте. */}
+      <div className="mt-3 rounded-lg border border-border p-3">
+        <DocCommands
+          docKey="doc-use-cases"
+          lang={lang}
+          commands={set.commands}
+          labels={{
+            caption: o.commandCaption, helpTitle: o.commandHelp,
+            edit: o.commandEdit, save: o.commandSave, saving: o.commandSaving,
+            cancel: o.commandCancel, saved: o.commandSaved, failed: s.docs.failed,
+            phrasePlaceholder: o.commandPlaceholder, anchorNote: o.commandAnchorNote,
+            verbs: { activate: o.verbActivate, add: o.verbAdd, find: o.verbFind, edit: o.verbEdit },
+          }}
+        />
+      </div>
 
       <p className="mt-3 flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground">
         <FolderOpen size={11} />

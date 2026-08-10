@@ -26,8 +26,8 @@ export type CommandLabels = {
 };
 
 export function CommandEditor(
-  { docKey, lang, anchor, phrase, labels }:
-  { docKey: string; lang: string; anchor: string; phrase: string; labels: CommandLabels },
+  { docKey, verb, lang, anchor, phrase, labels }:
+  { docKey: string; verb: string; lang: string; anchor: string; phrase: string; labels: CommandLabels },
 ) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -41,7 +41,7 @@ export function CommandEditor(
       const res = await fetch("/api/config/instructions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ command: { doc: docKey, lang, phrase: value } }),
+        body: JSON.stringify({ command: { doc: docKey, verb, lang, phrase: value } }),
         credentials: "include",
       });
       const data = await res.json().catch(() => ({}));

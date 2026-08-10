@@ -926,14 +926,18 @@
       "masterHelpRestore": "Switching back restores exactly the set that was active before, not \"everything on\": documents you had switched off earlier stay off. The set is remembered on the server, so it survives another browser and another machine.",
       "masterHelpMain": "The main instruction itself can never be switched off — it carries the mechanism, including this switch.",
       "commandCaption": "activation command",
-      "commandHelp": "Say or type this in the conversation to invoke this instruction for ONE task. The anchor word is fixed; the phrase after it is yours — click to change it. It is deliberately a spoken phrase, not a slash command: most requests here are dictated, and a slash cannot be dictated.",
+      "commandHelp": "Say or type this in the conversation. «Activation» lifts a restriction for ONE task; «add», «find» and «change» are actions on this document — the agent performs them and reports what changed. The anchor word is fixed; the phrase after it is yours — click to change it. It is deliberately a spoken phrase, not a slash command: most requests here are dictated, and a slash cannot be dictated.",
       "commandEdit": "change the phrase",
       "commandSave": "Save",
       "commandSaving": "Saving…",
       "commandCancel": "cancel",
       "commandSaved": "Command saved — it is in the main instruction now",
       "commandPlaceholder": "also",
-      "commandAnchorNote": "The anchor word is not editable: it is what keeps the command from firing by accident in ordinary speech."
+      "commandAnchorNote": "The anchor word is not editable: it is what keeps the command from firing by accident in ordinary speech.",
+      "verbActivate": "activation command",
+      "verbAdd": "command — add",
+      "verbFind": "command — find",
+      "verbEdit": "command — change"
     },
     "docs": {
       "intro": "This document is a file in your project, edited here or in your editor. It travels with a push and a pull like any other file:",
@@ -1105,7 +1109,7 @@
     "home": {
       "title": "Workspace",
       "hint": "Pick a section from the menu. Every section is its own page now, so it has its own address you can bookmark.",
-      "calmLead": "It may look like a lot from here. It is not: almost nothing on this page has to be touched before you start.",
+      "calmLead": "It may look like a lot from here. In truth almost nothing in this control panel has to be set up before you start.",
       "calmOnly": "There is exactly one thing you really need to do — connect your GitHub repository and sync it with your own machine, where a coding agent is installed (we recommend Claude Code).",
       "calmRest": "Nothing else is required at the start. Authorization, the database, storage and everything else behind these sections is already set up and running.",
       "calmOptional": "The rest — dictating your instructions by voice with an OpenAI key, the knowledge graph, the map, the channels — are tools. In our experience they get you to a result faster, but nothing here obliges you to use them.",
@@ -2432,14 +2436,18 @@
       "masterHelpRestore": "Возврат восстанавливает ровно тот набор, который действовал раньше, а не «включает всё»: документы, выключенные вами прежде, останутся выключенными. Набор помнит сервер, поэтому он переживает другой браузер и другую машину.",
       "masterHelpMain": "Саму главную инструкцию выключить нельзя никогда — она несёт механизм, включая этот переключатель.",
       "commandCaption": "команда активации",
-      "commandHelp": "Скажите или напишите это в разговоре, чтобы вызвать эту инструкцию на ОДНУ задачу. Слово-якорь неизменно, фраза после него ваша — нажмите, чтобы поменять. Это намеренно произносимая фраза, а не слэш-команда: большая часть просьб здесь диктуется голосом, а слэш голосом не произносится.",
+      "commandHelp": "Скажите или напишите это в разговоре. «Активация» снимает запрет на ОДНУ задачу; «добавить», «найти» и «изменить» — действия над этим документом: агент выполняет их и говорит, что изменилось. Слово-якорь неизменно, фраза после него ваша — нажмите, чтобы поменять. Это намеренно произносимая фраза, а не слэш-команда: большая часть просьб здесь диктуется голосом, а слэш голосом не произносится.",
       "commandEdit": "изменить фразу",
       "commandSave": "Сохранить",
       "commandSaving": "Сохраняю…",
       "commandCancel": "отмена",
       "commandSaved": "Команда сохранена — она уже в главной инструкции",
       "commandPlaceholder": "кстати говоря",
-      "commandAnchorNote": "Слово-якорь не редактируется: именно оно не даёт команде сработать случайно в обычной речи."
+      "commandAnchorNote": "Слово-якорь не редактируется: именно оно не даёт команде сработать случайно в обычной речи.",
+      "verbActivate": "команда активации",
+      "verbAdd": "команда — добавить",
+      "verbFind": "команда — найти",
+      "verbEdit": "команда — изменить"
     },
     "docs": {
       "intro": "Этот документ — файл вашего проекта; его правят здесь или в редакторе. Он едет с отправкой и получением, как любой другой файл:",
@@ -2611,7 +2619,7 @@
     "home": {
       "title": "Рабочее место",
       "hint": "Выберите раздел в меню. Каждый раздел теперь отдельная страница со своим адресом, который можно сохранить в закладки.",
-      "calmLead": "Отсюда это может выглядеть внушительно. На самом деле почти ничего на этой странице трогать перед стартом не нужно.",
+      "calmLead": "Отсюда это может выглядеть внушительно. На самом деле почти ничего в этой административной панели настраивать перед стартом не нужно.",
       "calmOnly": "По-настоящему нужно сделать ровно одно — подключить ваш репозиторий GitHub и синхронизировать его со своей машиной, на которой установлен агент-программист (рекомендуем Claude Code).",
       "calmRest": "Больше никаких критически важных настроек на старте нет. Авторизация, база данных, хранилище и всё остальное за этими разделами уже настроено и работает.",
       "calmOptional": "Всё прочее — голосовой набор ваших инструкций с ключом OpenAI, граф знаний, карта, каналы — это инструменты. По нашему опыту с ними результат приходит быстрее, но пользоваться ими вас никто не обязывает.",

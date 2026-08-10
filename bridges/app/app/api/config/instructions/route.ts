@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/require-auth";
 import {
   readInstructionSet, writeInstructionSet, syncInstructionSection, ensureDoc,
-  TOGGLEABLE, defaultEnabled, readCommands, type CommandMap,
+  TOGGLEABLE, defaultEnabled, readCommands, COMMAND_VERBS,
+  type CommandMap, type CommandVerb,
 } from "@/lib/instruction-set";
 
 // Выключатели инструкций проекта.
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = (await req.json().catch(() => null)) as
-    | { doc?: string; enabled?: boolean; allOff?: boolean; command?: { doc: string; lang: string; phrase: string } }
+    | { doc?: string; enabled?: boolean; allOff?: boolean; command?: { doc: string; verb: string; lang: string; phrase: string } }
     | null;
   if (!body) return NextResponse.json({ error: "bad_payload" }, { status: 400 });
 
@@ -32,13 +33,18 @@ export async function POST(req: NextRequest) {
   // умолчанию — стереть команду насовсем нельзя: документ-запрет без способа
   // его снять превращается в стену.
   if (body.command) {
-    const { doc, lang, phrase } = body.command;
+    const { doc, verb, lang, phrase } = body.command;
     if (!TOGGLEABLE.includes(doc)) return NextResponse.json({ error: "not_toggleable" }, { status: 400 });
+    if (!(COMMAND_VERBS as readonly string[]).includes(verb)) {
+      return NextResponse.json({ error: "unknown_verb" }, { status: 400 });
+    }
     const next = readCommands(state.config);
-    const own = { ...(next[doc] ?? {}) };
-    if (phrase.trim()) own[lang] = phrase.trim();
-    else delete own[lang];
-    next[doc] = own;
+    const doc0 = { ...(next[doc] ?? {}) };
+    const phrases = { ...(doc0[verb as CommandVerb] ?? {}) };
+    if (phrase.trim()) phrases[lang] = phrase.trim();
+    else delete phrases[lang];
+    doc0[verb as CommandVerb] = phrases;
+    next[doc] = doc0;
     commands = next;
   }
 

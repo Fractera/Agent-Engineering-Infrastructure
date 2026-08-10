@@ -151,35 +151,94 @@ export const COMMAND_ANCHOR = "Fractera";
 export const ANCHOR_SPELLINGS = ["fractera", "фрактера", "фракттера", "fracttera", "fracture", "фрактура"];
 
 /**
- * Фразы по умолчанию: язык → слова, которые идут за якорем.
+ * У ДОКУМЕНТА МОЖЕТ БЫТЬ НЕСКОЛЬКО КОМАНД (владелец 2026-08-10).
  *
- * Готовые команды даются на ВСЕХ языках, которые продукт поддерживает сегодня
- * (`en`, `ru`); при расширении списка сюда добавляется язык, а не документ.
+ * Первая команда снимала запрет — одна на документ, и этого хватало. Но у
+ * документов-складов (паспорт, кейсы) команда означает не «сними запрет», а
+ * ДЕЙСТВИЕ над содержимым: добавить, найти, изменить. Одной фразой это не
+ * выражается, а заставлять человека объяснять словами, что он хочет сделать с
+ * паспортом, значит вернуть его к обычному разговору — тогда команда не нужна
+ * вовсе.
+ *
+ * Поэтому: документ → глагол → язык → фраза.
  */
-export const COMMAND_DEFAULTS: Record<string, Record<string, string>> = {
-  "doc-single-agent": { en: "also", ru: "кстати говоря" },
+export const COMMAND_VERBS = ["activate", "add", "find", "edit"] as const;
+export type CommandVerb = (typeof COMMAND_VERBS)[number];
+
+/** Фразы по умолчанию на всех языках, которые продукт поддерживает сегодня. */
+export const COMMAND_DEFAULTS: Record<string, Partial<Record<CommandVerb, Record<string, string>>>> = {
+  "doc-single-agent": {
+    activate: { en: "also", ru: "кстати говоря" },
+  },
+  "doc-passport": {
+    add: { en: "add to the project passport", ru: "добавь в паспорт проекта" },
+    find: { en: "find in the project passport", ru: "найди в паспорте проекта" },
+    edit: { en: "change in the project passport", ru: "измени в паспорте проекта" },
+  },
+  "doc-use-cases": {
+    add: { en: "add to the user cases", ru: "добавь в пользовательские кейсы" },
+    find: { en: "find in the user cases", ru: "найди в пользовательских кейсах" },
+    edit: { en: "change in the user cases", ru: "измени в пользовательских кейсах" },
+  },
 };
 
-export type CommandMap = Record<string, Record<string, string>>;
+export type CommandMap = Record<string, Partial<Record<CommandVerb, Record<string, string>>>>;
 
+/**
+ * Прочитать команды, приняв и СТАРУЮ форму записи.
+ *
+ * До 2026-08-10 у документа была одна команда, и в конфиге лежало
+ * `{ "doc-single-agent": { "ru": "…" } }` — язык прямо под документом. Такой
+ * конфиг уже существует на живых серверах; читать его как «глагол `ru`» значило
+ * бы молча потерять настроенную владельцем фразу.
+ */
 export function readCommands(config: Record<string, unknown>): CommandMap {
-  const saved = ((config.instructions ?? {}) as Record<string, unknown>).commands;
+  const saved = ((config.instructions ?? {}) as Record<string, unknown>).commands as
+    | Record<string, Record<string, unknown>>
+    | undefined;
+
   const out: CommandMap = {};
   for (const key of TOGGLEABLE) {
     const def = COMMAND_DEFAULTS[key];
-    const own = (saved as CommandMap | undefined)?.[key];
-    if (!def && !own) continue;
-    out[key] = { ...(def ?? {}), ...(own ?? {}) };
+    const raw = saved?.[key];
+
+    let own: Partial<Record<CommandVerb, Record<string, string>>> = {};
+    if (raw && typeof raw === "object") {
+      const values = Object.values(raw);
+      const legacy = values.length > 0 && values.every((v) => typeof v === "string");
+      own = legacy
+        ? { activate: raw as Record<string, string> }
+        : (raw as Partial<Record<CommandVerb, Record<string, string>>>);
+    }
+
+    if (!def && !Object.keys(own).length) continue;
+
+    const merged: Partial<Record<CommandVerb, Record<string, string>>> = {};
+    for (const verb of COMMAND_VERBS) {
+      const d = def?.[verb];
+      const o = own[verb];
+      if (!d && !o) continue;
+      merged[verb] = { ...(d ?? {}), ...(o ?? {}) };
+    }
+    if (Object.keys(merged).length) out[key] = merged;
   }
   return out;
 }
 
-/** Готовая к показу команда на одном языке: «Fractera, also». */
-export function commandFor(commands: CommandMap, key: string, lang: string): string | null {
-  const phrases = commands[key];
+/** Готовая к показу команда на одном языке: «Fractera, добавь в паспорт проекта». */
+export function commandFor(
+  commands: CommandMap, key: string, verb: CommandVerb, lang: string,
+): string | null {
+  const phrases = commands[key]?.[verb];
   if (!phrases) return null;
   const phrase = phrases[lang] ?? phrases.en ?? Object.values(phrases)[0];
   return phrase ? `${COMMAND_ANCHOR}, ${phrase}` : null;
+}
+
+/** Глаголы, которые есть у документа, в фиксированном порядке. */
+export function verbsOf(commands: CommandMap, key: string): CommandVerb[] {
+  const own = commands[key];
+  return own ? COMMAND_VERBS.filter((v) => own[v]) : [];
 }
 
 export type InstructionState = {
@@ -273,17 +332,21 @@ export function renderSection(
   if (withCommands.length) {
     lines.push(
       ``,
-      `### Activation commands`,
+      `### Commands`,
       ``,
-      `Some documents describe a restriction the owner may lift for ONE task by saying so in the`,
-      `conversation. Every command starts with the anchor **${COMMAND_ANCHOR}**, followed by a phrase:`,
+      `The owner may say one of these in the conversation. Every command starts with the anchor`,
+      `**${COMMAND_ANCHOR}**, followed by a phrase. \`activate\` lifts a restriction for ONE task;`,
+      `\`add\` / \`find\` / \`edit\` are actions on the document that owns them — perform them on THAT`,
+      `document and report what changed.`,
       ``,
     );
     for (const key of withCommands) {
-      const phrases = Object.entries(commands[key])
-        .map(([lang, phrase]) => "`" + COMMAND_ANCHOR + ", " + phrase + "` (" + lang + ")")
-        .join(" · ");
-      lines.push(`- **${docLabel(key)}** — ${phrases}`);
+      for (const verb of verbsOf(commands, key)) {
+        const phrases = Object.entries(commands[key][verb] ?? {})
+          .map(([lang, phrase]) => "`" + COMMAND_ANCHOR + ", " + phrase + "` (" + lang + ")")
+          .join(" · ");
+        lines.push(`- **${docLabel(key)}** · ${verb} — ${phrases}`);
+      }
     }
     lines.push(
       ``,

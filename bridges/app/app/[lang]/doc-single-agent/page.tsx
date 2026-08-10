@@ -12,7 +12,8 @@ import { PageShell } from "../_components/page-shell";
 import { DocEditor } from "../_components/doc-editor.client";
 import { DocKindBadge } from "../_components/doc-kind-badge";
 import { readDoc, DOC_KIND } from "@/lib/product-docs";
-import { readTemplate } from "@/lib/instruction-set";
+import { readTemplate, readInstructionSet } from "@/lib/instruction-set";
+import { DocCommands } from "../_components/doc-commands";
 import { CreateDoc } from "../doc-context-state/_components/create-doc.client";
 
 export const dynamic = "force-dynamic";
@@ -26,9 +27,14 @@ export default async function DocPage({ params }: { params: Promise<{ lang: stri
   const t = s.singleAgent;
   const page = s.pages["doc-single-agent"];
   const state = readDoc(DOC_KEY);
+  const set = readInstructionSet();
+  const o = s.docsOverview;
 
   return (
     <PageShell lang={lang} slug="doc-single-agent" s={s} title={page.title} hint={page.hint}>
+      {/* Команды документа стоят ЗДЕСЬ, а не только на карте (владелец
+          2026-08-10): человек приходит на вкладку разбираться с документом и
+          вправе увидеть его команду, не возвращаясь к общему списку. */}
       <div className="mb-2">
         <DocKindBadge
           kind={DOC_KIND[DOC_KEY]}
@@ -61,6 +67,21 @@ export default async function DocPage({ params }: { params: Promise<{ lang: stri
           />
         </div>
       )}
+
+      <div className="mt-3 rounded-lg border border-border p-3">
+        <DocCommands
+          docKey={DOC_KEY}
+          lang={lang}
+          commands={set.commands}
+          labels={{
+            caption: o.commandCaption, helpTitle: o.commandHelp,
+            edit: o.commandEdit, save: o.commandSave, saving: o.commandSaving,
+            cancel: o.commandCancel, saved: o.commandSaved, failed: s.docs.failed,
+            phrasePlaceholder: o.commandPlaceholder, anchorNote: o.commandAnchorNote,
+            verbs: { activate: o.verbActivate, add: o.verbAdd, find: o.verbFind, edit: o.verbEdit },
+          }}
+        />
+      </div>
 
       <div className="mt-3">
         <DocEditor
