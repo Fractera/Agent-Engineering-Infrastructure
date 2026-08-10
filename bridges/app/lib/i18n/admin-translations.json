@@ -711,6 +711,8 @@
       "nothingToSave": "Nothing was changed",
       "opensSection": "Opens the “{section}” section in this menu",
       "parallelOff": "Unavailable while parallel routing is on — there the layout decides the width.",
+      "experimentalTitle": "Experimental",
+      "experimentalHint": "Off by default and worth switching on deliberately: these capabilities are still finding their shape and may change or go away. Everything above is settled.",
       "items": {
         "topMenu": {
           "label": "Top menu",
@@ -719,6 +721,10 @@
         "footerPages": {
           "label": "Footer navigation links",
           "description": "Links to your project's pages in the footer. Turn it off for a one-page site."
+        },
+        "contextHandoff": {
+          "label": "Context handoff",
+          "description": "When the coding agent's context window fills up it writes down what it was doing, where it stopped and what comes next — so a lost session is resumed instead of restarted. Switching it on also switches the rule on in the project's main instruction; switching it off disables the rule there."
         },
         "cookieBanner": {
           "label": "Cookie notice",
@@ -2039,6 +2045,8 @@
       "nothingToSave": "Ничего не изменено",
       "opensSection": "Открывает раздел «{section}» в этом меню",
       "parallelOff": "Недоступно при включённой параллельной маршрутизации — там ширину решает раскладка.",
+      "experimentalTitle": "Экспериментальные",
+      "experimentalHint": "Выключены по умолчанию, включать стоит осознанно: эти возможности ещё ищут форму и могут измениться или исчезнуть. Всё, что выше, — устоявшееся.",
       "items": {
         "topMenu": {
           "label": "Верхнее меню",
@@ -2047,6 +2055,10 @@
         "footerPages": {
           "label": "Ссылки на страницы в подвале",
           "description": "Ссылки на страницы вашего проекта внизу. Выключите для одностраничного сайта."
+        },
+        "contextHandoff": {
+          "label": "Передача сессии",
+          "description": "Когда контекстное окно агента заполняется, он записывает, что делал, где остановился и что дальше, — потерянная сессия продолжается, а не начинается заново. Включение ставит это правило и в главную инструкцию проекта, выключение — отключает его там же."
         },
         "cookieBanner": {
           "label": "Уведомление о cookie",

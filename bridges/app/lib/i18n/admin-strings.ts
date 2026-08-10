@@ -331,9 +331,10 @@ export type AdminStrings = {
     intro: string; unavailable: string;
     save: string; saving: string; saved: string; failed: string; nothingToSave: string;
     opensSection: string; parallelOff: string;
+    experimentalTitle: string; experimentalHint: string;
     items: Record<
       "auth" | "breadcrumbs" | "faq" | "themeToggle" | "widthToggle" | "languageSwitcher"
-      | "topMenu" | "footerPages" | "cookieBanner",
+      | "topMenu" | "footerPages" | "cookieBanner" | "contextHandoff",
       { label: string; description: string }
     >;
     helpLabel: string;

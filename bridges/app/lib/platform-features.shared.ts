@@ -18,12 +18,24 @@ export type FeatureKey =
   | "languageSwitcher"
   | "topMenu"
   | "footerPages"
-  | "cookieBanner";
+  | "cookieBanner"
+  | "contextHandoff";
+
+/**
+ * Экспериментальные возможности (владелец 2026-08-10).
+ *
+ * Отдельная группа на странице, а не строка среди прочих: у неё другая природа
+ * обещания. Обычная возможность работает; экспериментальная может измениться или
+ * исчезнуть, и включать её — осознанный выбор, а не настройка по умолчанию.
+ * Поэтому все они выключены в `FEATURE_DEFAULTS`.
+ */
+export const EXPERIMENTAL: FeatureKey[] = ["contextHandoff"];
 
 /** Порядок = порядок на странице. Управляющие возможности идут первыми. */
 export const FEATURE_ORDER: FeatureKey[] = [
   "topMenu", "footerPages", "cookieBanner",
   "auth", "breadcrumbs", "faq", "themeToggle", "widthToggle", "languageSwitcher",
+  "contextHandoff",
 ];
 
 /** Состояние проекта, который ещё ни разу не настраивали. */
@@ -37,6 +49,7 @@ export const FEATURE_DEFAULTS: Record<FeatureKey, boolean> = {
   themeToggle: true,
   widthToggle: true,
   languageSwitcher: true,
+  contextHandoff: false,
 };
 
 /**
@@ -47,6 +60,7 @@ export const FEATURE_SECTION: Partial<Record<FeatureKey, string>> = {
   topMenu: "top-menu",
   footerPages: "footer-pages",
   cookieBanner: "cookie-banner",
+  contextHandoff: "doc-context-state",
 };
 
 /** Ширину экрана решает раскладка, когда она включена, — переключатель тогда лишний. */

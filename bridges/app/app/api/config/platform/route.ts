@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { requireAuth } from "@/lib/require-auth";
+import { syncContextStateBlock } from "@/lib/context-state-block";
 
 // Read/write the Shell's live PLATFORM config (parallel routing / languages / theme). The
 // config is a JSON file on disk in the Shell's working dir
@@ -39,7 +40,16 @@ export async function POST(req: NextRequest) {
     }
     fs.mkdirSync(path.dirname(CONFIG_PATH), { recursive: true });
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), "utf-8");
-    return NextResponse.json({ ok: true });
+
+    // Выключатель обязан менять ПОВЕДЕНИЕ агента, а оно задаётся инструкцией в
+    // корне слота, а не этим JSON: агент читает CLAUDE.md, а не наш конфиг.
+    // Поэтому сохранение сразу приводит блок в инструкции в соответствие с
+    // флагом. Побочное действие — best-effort: его отказ не имеет права уронить
+    // сохранение настроек, поэтому результат уезжает в ответ, а не в исключение.
+    const features = (config as { features?: Record<string, unknown> }).features ?? {};
+    const block = syncContextStateBlock(features.contextHandoff === true);
+
+    return NextResponse.json({ ok: true, instruction: block });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }

@@ -20,6 +20,7 @@ import fs from "fs";
 import path from "path";
 import Database from "better-sqlite3";
 import { useCasesMissing, contextStateHandoff } from "@/lib/product-docs";
+import { readFeatures } from "@/lib/platform-features";
 import type { AdminPageSlug } from "@/lib/admin-nav";
 
 const APP_DIR = process.env.APP_DIR ?? "/opt/fractera/app";
@@ -83,7 +84,9 @@ export function collectWarnings(): AdminWarning[] {
   // нормальный след прерванной сессии. Область называется «Прежде чем начинать»
   // ровно поэтому — знать о ней надо ДО того, как начнут строить, иначе новая
   // сессия либо повторит сделанное, либо продолжит с шага, который уже закрыт.
-  if (contextStateHandoff()) {
+  // Возможность экспериментальная и по умолчанию выключена: выключенный
+  // механизм не имеет права ни о чём предупреждать.
+  if (readFeatures().features.contextHandoff && contextStateHandoff()) {
     out.push({ id: "context-state", level: "advised", slug: "doc-context-state" });
   }
 
