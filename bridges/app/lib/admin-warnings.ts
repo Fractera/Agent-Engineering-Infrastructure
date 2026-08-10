@@ -19,7 +19,7 @@
 import fs from "fs";
 import path from "path";
 import Database from "better-sqlite3";
-import { useCasesMissing } from "@/lib/product-docs";
+import { useCasesMissing, contextStateHandoff } from "@/lib/product-docs";
 import type { AdminPageSlug } from "@/lib/admin-nav";
 
 const APP_DIR = process.env.APP_DIR ?? "/opt/fractera/app";
@@ -30,7 +30,7 @@ const RAG_ENV = process.env.RAG_ENV_PATH ?? "/opt/fractera/services/rag/.env";
 export type WarningLevel = "blocking" | "advised";
 
 export type AdminWarning = {
-  id: "github" | "use-cases" | "openai" | "domain";
+  id: "github" | "use-cases" | "openai" | "domain" | "context-state";
   level: WarningLevel;
   /** Куда ведёт запись — то самое «основное место» настройки. */
   slug: AdminPageSlug;
@@ -77,6 +77,14 @@ export function collectWarnings(): AdminWarning[] {
   }
   if (!domainActive()) {
     out.push({ id: "domain", level: "advised", slug: "domain" });
+  }
+
+  // Незакрытая передача между контекстными окнами. НЕ поломка: чаще всего это
+  // нормальный след прерванной сессии. Область называется «Прежде чем начинать»
+  // ровно поэтому — знать о ней надо ДО того, как начнут строить, иначе новая
+  // сессия либо повторит сделанное, либо продолжит с шага, который уже закрыт.
+  if (contextStateHandoff()) {
+    out.push({ id: "context-state", level: "advised", slug: "doc-context-state" });
   }
 
   return out;

@@ -344,7 +344,18 @@ export type AdminStrings = {
   };
   warnings: {
     title: string;
-    items: { github: string; "use-cases": string; openai: string; domain: string };
+    items: {
+      github: string; "use-cases": string; openai: string; domain: string;
+      "context-state": string;
+    };
+  };
+  // Файл передачи между контекстными окнами. Отдельной секцией, потому что вся
+  // страница объясняет ОДНУ вещь: запись здесь — не поломка, а след прерванной
+  // сессии, и устаревшую можно просто стереть.
+  contextState: {
+    noticeTitle: string; notice: string;
+    howTitle: string; how: string;
+    staleTitle: string; stale: string;
   };
   // Карта документов: единственная описательная страница группы. Отвечает не
   // «что в файле», а «зачем документов столько».

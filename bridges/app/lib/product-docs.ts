@@ -31,7 +31,8 @@ export type DocKey =
   | "doc-design"
   | "doc-parallel-routing"
   | "doc-coding-standards"
-  | "doc-troubleshooting";
+  | "doc-troubleshooting"
+  | "doc-context-state";
 
 /** Ключ страницы → файл в корне слота. Единственное место этого соответствия. */
 export const DOC_FILES: Record<DocKey, string> = {
@@ -58,6 +59,12 @@ export const DOC_FILES: Record<DocKey, string> = {
   // Читается ПО ТРЕБОВАНИЮ, а не на старте: держать его в контексте каждой
   // сессии — платить за диагностику, которая может не понадобиться.
   "doc-troubleshooting": "TROUBLESHOOTING.md",
+  // Передача между двумя контекстными окнами. Пишет её МОДЕЛЬ на подходе к
+  // пределу окна, читает следующая сессия. Здесь она нужна затем, чтобы у
+  // владельца был способ её ПРОЧИТАТЬ и ОЧИСТИТЬ: устаревшая передача вреднее
+  // отсутствующей, а очистка — единственное действие, которое человек обязан
+  // мочь выполнить сам.
+  "doc-context-state": "CONTEXT-STATE.md",
 };
 
 /**
@@ -106,7 +113,34 @@ export const DOC_KIND: Record<string, "evolving" | "static"> = {
   "doc-steps": "evolving",
   "doc-antipatterns": "evolving",
   "doc-troubleshooting": "evolving",
+  "doc-context-state": "evolving",
 };
+
+/**
+ * Есть ли в файле передачи НЕПУСТАЯ запись (2026-08-10).
+ *
+ * Проверка идёт в верхнюю область предупреждений, а её делает шапка на КАЖДОЙ
+ * странице панели — поэтому читается только начало файла, где стоит машинная
+ * шапка, а не весь документ.
+ *
+ * Пустой файл — норма и молчит. Чужой формат считается записью намеренно: если
+ * там лежит что-то, чего мы не понимаем, честнее сказать о нём человеку, чем
+ * промолчать и дать следующей сессии наткнуться на это первой.
+ */
+export function contextStateHandoff(): boolean {
+  try {
+    const fd = fs.openSync(path.join(APP_DIR, DOC_FILES["doc-context-state"]), "r");
+    const buf = Buffer.alloc(512);
+    const read = fs.readSync(fd, buf, 0, 512, 0);
+    fs.closeSync(fd);
+    const head = buf.subarray(0, read).toString("utf-8");
+    if (!head.includes("fractera:context-state")) return true;
+    return !/\*\*state:\*\*\s*empty/i.test(head);
+  } catch {
+    // Файла нет — механизм не установлен или передавать нечего. Молчим.
+    return false;
+  }
+}
 
 /**
  * 🔴 ГЕЙТ РАЗРАБОТКИ (решение владельца 2026-08-09).

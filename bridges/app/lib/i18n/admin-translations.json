@@ -765,8 +765,17 @@
         "github": "GitHub is not connected — the project has nowhere to live",
         "use-cases": "User cases are not described — development has nothing to build towards",
         "openai": "No OpenAI key — the knowledge graph and embeddings stay off",
-        "domain": "No custom domain — HTTPS-only features stay unavailable"
+        "domain": "No custom domain — HTTPS-only features stay unavailable",
+        "context-state": "An unfinished session is recorded — read it before building, or clear it"
       }
+    },
+    "contextState": {
+      "noticeTitle": "This is a notice, not a fault.",
+      "notice": "A record here means the previous session ran out of room mid-work and left a note for the next one. That is often completely normal — it is how work survives a window ending.",
+      "howTitle": "Where it comes from.",
+      "how": "When the context window reaches 75%, the model writes this handoff by itself: what it was doing, where it stopped and what the next action is. If the session is then lost, the next one starts from this page instead of from nothing.",
+      "staleTitle": "If it no longer matches reality, clear it.",
+      "stale": "The record says where the work was INTERRUPTED, not where it is now — the project may well have moved past it. A stale handoff is worse than none, because it sends the next session back to work that is already done. Delete the text and save; nothing breaks."
     },
     "tools": {
       "intro": "Small reusable pieces the panel uses for itself and hands to your project. Installing copies the files into your project — after that they are your code: edit them, rename them, throw them away.",
@@ -1248,6 +1257,10 @@
       "doc-troubleshooting": {
         "title": "Troubleshooting",
         "hint": "Problems users hit in production, and what actually causes them."
+      },
+      "doc-context-state": {
+        "title": "Context handoff",
+        "hint": "What the previous session was in the middle of, written by the model as its window filled up."
       },
       "doc-overview": {
         "title": "Map of the documents",
@@ -2080,8 +2093,17 @@
         "github": "GitHub не подключён — проекту негде жить",
         "use-cases": "Пользовательские кейсы не описаны — разработке не к чему стремиться",
         "openai": "Нет ключа OpenAI — граф знаний и векторы останутся выключенными",
-        "domain": "Нет своего домена — возможности, требующие HTTPS, недоступны"
+        "domain": "Нет своего домена — возможности, требующие HTTPS, недоступны",
+        "context-state": "Записана незавершённая сессия — прочитайте её перед работой или очистите"
       }
+    },
+    "contextState": {
+      "noticeTitle": "Это предупреждение, а не ошибка.",
+      "notice": "Запись здесь означает, что предыдущей сессии не хватило места посреди работы и она оставила заметку следующей. Часто это совершенно нормальная ситуация — именно так работа переживает конец окна.",
+      "howTitle": "Откуда она берётся.",
+      "how": "Когда контекстное окно заполняется на 75%, модель сама формирует эту передачу: что делала, где остановилась и какое действие следующее. Если сессия после этого потеряется, новая начнёт с этой страницы, а не с чистого листа.",
+      "staleTitle": "Видите, что данные устарели — просто очистите.",
+      "stale": "Запись говорит, где работа ПРЕРВАЛАСЬ, а не где она находится сейчас: проект вполне мог уйти дальше. Устаревшая передача хуже отсутствующей — она возвращает следующую сессию к тому, что уже сделано. Сотрите текст и сохраните; ничего не сломается."
     },
     "tools": {
       "intro": "Маленькие переиспользуемые куски, которые панель применяет для себя и отдаёт вашему проекту. Установка копирует файлы к вам — дальше это ваш код: правьте, переименовывайте, выбрасывайте.",
@@ -2563,6 +2585,10 @@
       "doc-troubleshooting": {
         "title": "Разбор затруднений",
         "hint": "Проблемы, с которыми пользователи сталкиваются на продакшне, и их настоящие причины."
+      },
+      "doc-context-state": {
+        "title": "Передача сессии",
+        "hint": "Что предыдущая сессия делала в момент обрыва — записано моделью, пока её окно заполнялось."
       },
       "doc-overview": {
         "title": "Карта документов",

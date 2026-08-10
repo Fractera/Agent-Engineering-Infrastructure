@@ -84,6 +84,7 @@ export const NAV = [
   { slug: "doc-parallel-routing", group: "documents" },
   { slug: "doc-coding-standards", group: "documents" },
   { slug: "doc-troubleshooting",  group: "documents" },
+  { slug: "doc-context-state",    group: "documents" },
 
   { slug: "map-help",         group: "help" },
   { slug: "how-to-build",    group: "help" },
