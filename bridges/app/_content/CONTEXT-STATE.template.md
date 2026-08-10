@@ -108,3 +108,19 @@ beginning of the project; that is what commits are.
 
 *(Empty. Nothing has been handed over — this is a fresh window, and there is no interrupted work to
 resume. If you are reading this section and it says "Empty", start from the ordinary session entry.)*
+
+## The command: write the handoff now
+
+The owner may ask for the handoff at any moment, with the command listed in the instruction-set block of
+`CLAUDE.md`. It overrides the thresholds: write the record **now**, whatever the window is at.
+
+He has information the mechanism does not — he is about to close the laptop, switch chats, or hand the
+work to a different session. Answer by writing the file and saying, in one line, what you recorded and
+where the work actually stands.
+
+**Near-variants count as the same command.** It is spoken: *"remember where we are"*, *"запомни текущее
+состояние"*, *"запиши состояние"* are one request.
+
+**While this document is switched off, the command does not exist** — the instruction lists commands only
+for documents that are on, because a command for a switched-off mechanism would be a lie. Turning the
+handoff on in the control panel brings the command with it.
