@@ -359,6 +359,8 @@ export type AdminStrings = {
     experimentalTitle: string; experimentalHint: string;
     switchLabel: string; switchDescription: string;
     switchSaving: string; switchOn: string; switchOff: string; switchFailed: string;
+    createDoc: string; creating: string; createdDoc: string; createHint: string;
+    docCreated: string;
     instructionAdded: string; instructionMissing: string;
     noticeTitle: string; notice: string;
     howTitle: string; how: string;

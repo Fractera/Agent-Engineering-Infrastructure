@@ -18,6 +18,8 @@ import { DocEditor } from "../_components/doc-editor.client";
 import { DocKindBadge } from "../_components/doc-kind-badge";
 import { readDoc, DOC_KIND } from "@/lib/product-docs";
 import { readContextHandoff } from "@/lib/context-handoff";
+import { readHandoffTemplate } from "@/lib/context-state-block";
+import { CreateDoc } from "./_components/create-doc.client";
 import { HandoffSwitch } from "./_components/handoff-switch.client";
 
 export const dynamic = "force-dynamic";
@@ -60,6 +62,7 @@ export default async function DocPage({ params }: { params: Promise<{ lang: stri
             label: c.switchLabel, description: c.switchDescription,
             saving: c.switchSaving, savedOn: c.switchOn, savedOff: c.switchOff, failed: c.switchFailed,
             instructionAdded: c.instructionAdded, instructionMissing: c.instructionMissing,
+            docCreated: c.docCreated,
           }}
         />
         <p className="mt-1.5 text-[10px] leading-relaxed text-muted-foreground">{c.experimentalHint}</p>
@@ -76,6 +79,18 @@ export default async function DocPage({ params }: { params: Promise<{ lang: stri
       <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
         {d.intro} <span className="font-mono text-foreground">{state.file}</span>
       </p>
+
+      {/* Проект мог родиться раньше этой возможности — тогда файла в нём нет, и
+          страница без этой кнопки была бы пустой. Создание — явное действие
+          человека, а не тихая запись в его репозиторий при открытии страницы. */}
+      {!state.exists && (
+        <div className="mt-2">
+          <CreateDoc
+            template={readHandoffTemplate()}
+            labels={{ create: c.createDoc, creating: c.creating, created: c.createdDoc, failed: c.switchFailed, hint: c.createHint }}
+          />
+        </div>
+      )}
 
       <div className="mt-3">
         <DocEditor

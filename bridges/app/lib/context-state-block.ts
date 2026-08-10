@@ -26,7 +26,7 @@ const END = "<!-- fractera:context-state end -->";
 
 /** Выключено: агент обязан вести себя так, будто механизма нет вовсе. */
 const OFF_BODY = `**Switched OFF.** The context handoff is an experimental capability and it is currently disabled in the
-control panel (App features → Experimental). Do not read \`CONTEXT-STATE.md\`, do not write it, and never
+control panel (Development documents → Context handoff). Do not read \`CONTEXT-STATE.md\`, do not write it, and never
 demand that a step be closed on account of it. This block is rewritten automatically when the switch
 changes — do not edit it by hand.`;
 
@@ -53,6 +53,41 @@ mandatory. This block is rewritten automatically when the switch changes — do 
    must be empty again — the session entry hook does that for you; if it did not run, do it yourself.`;
 
 export type BlockSync = { ok: boolean; changed: boolean; added: boolean; reason?: string };
+
+const HANDOFF_FILE = "CONTEXT-STATE.md";
+const TEMPLATE = path.join(process.cwd(), "_content", "CONTEXT-STATE.template.md");
+
+/**
+ * Создать сам документ передачи, если его в проекте нет.
+ *
+ * ЗАЧЕМ ЭТО ЗДЕСЬ. Файл едет со свежим стартером, но проект мог родиться раньше —
+ * и тогда включённая возможность открывала ПУСТУЮ страницу: правило в инструкции
+ * стоит, хуки работают, а писать им некуда и человеку читать нечего. Пустая
+ * страница вместо документа — это не «пока не заполнено», это поломка обещания.
+ *
+ * Пишем ТОЛЬКО когда файла нет: существующий документ — работа модели и владельца,
+ * и перезаписать его шаблоном значило бы стереть эстафету вместе с ним.
+ */
+/** Шаблон документа — чтобы страница могла предложить создать его одной кнопкой. */
+export function readHandoffTemplate(): string {
+  try {
+    return fs.readFileSync(TEMPLATE, "utf-8");
+  } catch {
+    return "";
+  }
+}
+
+export function ensureHandoffDoc(): { ok: boolean; created: boolean; reason?: string } {
+  const target = path.join(APP_DIR, HANDOFF_FILE);
+  try {
+    if (fs.existsSync(target)) return { ok: true, created: false };
+    const text = fs.readFileSync(TEMPLATE, "utf-8");
+    fs.writeFileSync(target, text, "utf-8");
+    return { ok: true, created: true };
+  } catch (e) {
+    return { ok: false, created: false, reason: String(e) };
+  }
+}
 
 /**
  * Привести блок в инструкции слота в соответствие с выключателем.

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { requireAuth } from "@/lib/require-auth";
-import { syncContextStateBlock } from "@/lib/context-state-block";
+import { syncContextStateBlock, ensureHandoffDoc } from "@/lib/context-state-block";
 
 // Read/write the Shell's live PLATFORM config (parallel routing / languages / theme). The
 // config is a JSON file on disk in the Shell's working dir
@@ -47,9 +47,13 @@ export async function POST(req: NextRequest) {
     // флагом. Побочное действие — best-effort: его отказ не имеет права уронить
     // сохранение настроек, поэтому результат уезжает в ответ, а не в исключение.
     const features = (config as { features?: Record<string, unknown> }).features ?? {};
-    const block = syncContextStateBlock(features.contextHandoff === true);
+    const enabled = features.contextHandoff === true;
+    const block = syncContextStateBlock(enabled);
+    // Включение обязано оставить рабочую пару: правило в инструкции И документ,
+    // в который его исполнять. Одно без другого — пустая страница.
+    const doc = enabled ? ensureHandoffDoc() : { ok: true, created: false };
 
-    return NextResponse.json({ ok: true, instruction: block });
+    return NextResponse.json({ ok: true, instruction: block, document: doc });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }

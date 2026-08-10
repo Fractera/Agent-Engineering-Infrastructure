@@ -21,6 +21,7 @@ export type SwitchLabels = {
   label: string; description: string;
   saving: string; savedOn: string; savedOff: string; failed: string;
   instructionAdded: string; instructionMissing: string;
+  docCreated: string;
 };
 
 export function HandoffSwitch(
@@ -49,6 +50,9 @@ export function HandoffSwitch(
       if (!res.ok || !data.ok) throw new Error(String(data?.error ?? labels.failed));
 
       toast.success(next ? labels.savedOn : labels.savedOff);
+
+      const doc = data.document as { ok: boolean; created: boolean } | undefined;
+      if (doc?.created) toast.info(labels.docCreated, { duration: 10000 });
 
       const ins = data.instruction as { ok: boolean; added: boolean } | undefined;
       if (ins && !ins.ok) toast.error(labels.instructionMissing, { duration: 10000 });
