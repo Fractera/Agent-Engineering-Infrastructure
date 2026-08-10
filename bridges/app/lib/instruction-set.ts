@@ -19,7 +19,8 @@
 
 import fs from "fs";
 import path from "path";
-import { DOC_FILES, type DocKey } from "@/lib/product-docs";
+import { DOC_FILES, STEPS_DIR, type DocKey } from "@/lib/product-docs";
+import { SAMPLES_DIR } from "@/lib/code-samples";
 
 const APP_DIR = process.env.APP_DIR ?? "/opt/fractera/app";
 const CONFIG_PATH =
@@ -40,8 +41,27 @@ const LEGACY_HEADING = /\n*#{2,4} [^\n]*CONTEXT-STATE\.md[^\n]*\n/;
 /** Документ, которым нельзя управлять: он несёт сам механизм. */
 export const ALWAYS_ON: DocKey = "doc-instruction";
 
+/**
+ * Два документа группы — ПАПКИ, а не файлы: шаги пишет агент по одному на работу,
+ * образцы складывает владелец. Выключателя они заслуживают наравне с остальными:
+ * история проекта и библиотека прошлых работ — самое объёмное, что можно не
+ * читать ради мелкой задачи.
+ */
+export const FOLDER_DOCS: Record<string, string> = {
+  "doc-steps": `${STEPS_DIR}/`,
+  "doc-code-samples": `${SAMPLES_DIR}/`,
+};
+
+/** Что показывать в списках инструкции: файл или папку. */
+export function docLabel(key: string): string {
+  return FOLDER_DOCS[key] ?? DOC_FILES[key as DocKey] ?? key;
+}
+
 /** Порядок здесь не важен — он берётся из навигации. Важен состав. */
-export const TOGGLEABLE: DocKey[] = (Object.keys(DOC_FILES) as DocKey[]).filter((k) => k !== ALWAYS_ON);
+export const TOGGLEABLE: string[] = [
+  ...(Object.keys(DOC_FILES) as DocKey[]).filter((k) => k !== ALWAYS_ON),
+  ...Object.keys(FOLDER_DOCS),
+];
 
 /**
  * Состояние корпуса у проекта, который ещё ни разу не настраивали.
@@ -50,11 +70,11 @@ export const TOGGLEABLE: DocKey[] = (Object.keys(DOC_FILES) as DocKey[]).filter(
  * 2026-08-10), а «Тестирование» включено намеренно — это требование к качеству
  * работы, а не удобство.
  */
-export const INSTRUCTION_DEFAULTS: Partial<Record<DocKey, boolean>> = {
+export const INSTRUCTION_DEFAULTS: Record<string, boolean> = {
   "doc-context-state": false,
 };
 
-export function defaultEnabled(key: DocKey): boolean {
+export function defaultEnabled(key: string): boolean {
   return INSTRUCTION_DEFAULTS[key] ?? true;
 }
 
@@ -63,7 +83,7 @@ export function defaultEnabled(key: DocKey): boolean {
 // Способность меняет ПОВЕДЕНИЕ, поэтому её закон стоит в инструкции целиком —
 // и когда она выключена, об этом говорится прямо, а не молчанием.
 
-const LAWS: Partial<Record<DocKey, { on: string; off: string }>> = {
+const LAWS: Record<string, { on: string; off: string }> = {
   "doc-testing": {
     on: `**Testing — ON.** Every step AND every sub-step ends with **two independent proofs from two
 different planes**, written out in the four-field shape defined in \`TESTING.md\` (what was run, the
@@ -135,8 +155,8 @@ export function writeInstructionSet(
 
 /** Текст управляемой области целиком. */
 export function renderSection(enabled: Record<string, boolean>): string {
-  const on = TOGGLEABLE.filter((k) => enabled[k]).map((k) => DOC_FILES[k]);
-  const off = TOGGLEABLE.filter((k) => !enabled[k]).map((k) => DOC_FILES[k]);
+  const on = TOGGLEABLE.filter((k) => enabled[k]).map(docLabel);
+  const off = TOGGLEABLE.filter((k) => !enabled[k]).map(docLabel);
 
   const lines: string[] = [
     `**Managed by the control panel — do not edit this block by hand.**`,
@@ -209,12 +229,12 @@ export function syncInstructionSection(enabled: Record<string, boolean>): Sectio
 // файл, которого нет, и страница раздела открывается пустой. Шаблоны лежат
 // файлами в панели, поэтому их можно править как обычные документы.
 
-const TEMPLATES: Partial<Record<DocKey, string>> = {
+const TEMPLATES: Record<string, string> = {
   "doc-context-state": "CONTEXT-STATE.template.md",
   "doc-testing": "TESTING.template.md",
 };
 
-export function readTemplate(key: DocKey): string {
+export function readTemplate(key: string): string {
   const name = TEMPLATES[key];
   if (!name) return "";
   try {
@@ -225,8 +245,9 @@ export function readTemplate(key: DocKey): string {
 }
 
 /** Создать документ из шаблона, если его нет. Существующий НИКОГДА не трогаем. */
-export function ensureDoc(key: DocKey): { ok: boolean; created: boolean; reason?: string } {
-  const file = DOC_FILES[key];
+export function ensureDoc(key: string): { ok: boolean; created: boolean; reason?: string } {
+  const file = DOC_FILES[key as DocKey];
+  if (!file) return { ok: true, created: false };
   const template = readTemplate(key);
   if (!template) return { ok: true, created: false };
   const target = path.join(APP_DIR, file);

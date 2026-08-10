@@ -4,7 +4,6 @@ import {
   readInstructionSet, writeInstructionSet, syncInstructionSection, ensureDoc,
   TOGGLEABLE, defaultEnabled,
 } from "@/lib/instruction-set";
-import { isDocKey, type DocKey } from "@/lib/product-docs";
 
 // Выключатели инструкций проекта.
 //
@@ -41,7 +40,7 @@ export async function POST(req: NextRequest) {
       snapshot = null;
     }
   } else if (typeof body.doc === "string" && typeof body.enabled === "boolean") {
-    if (!isDocKey(body.doc) || !TOGGLEABLE.includes(body.doc as DocKey)) {
+    if (!TOGGLEABLE.includes(body.doc)) {
       return NextResponse.json({ error: "not_toggleable" }, { status: 400 });
     }
     enabled[body.doc] = body.enabled;
@@ -60,7 +59,7 @@ export async function POST(req: NextRequest) {
 
   for (const key of TOGGLEABLE) {
     if (!enabled[key]) continue;
-    const r = ensureDoc(key as DocKey);
+    const r = ensureDoc(key);
     if (r.created) created.push(key);
   }
 

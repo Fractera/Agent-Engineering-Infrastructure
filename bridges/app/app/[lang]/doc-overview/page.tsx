@@ -140,6 +140,20 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
             }
           >
             <div className="flex items-start gap-3 px-3 py-2.5">
+            {/* Тумблер — ПЕРВЫМ, до заголовка: состояние читается раньше имени,
+                и колонка выключателей выстраивается по левому краю списка.
+                Стоит ВНЕ ссылки, иначе щелчок по нему открывал бы страницу. */}
+            <span className="mt-0.5 flex w-8 shrink-0 justify-start">
+              {managed && (
+                <InstructionSwitch
+                  docKey={r.slug}
+                  enabled={Boolean(set.enabled[r.slug])}
+                  labels={switchLabels}
+                  srLabel={s.pages[r.slug].title}
+                />
+              )}
+            </span>
+
             <Link href={adminHref(lang, r.slug)} className="flex min-w-0 flex-1 gap-3 hover:bg-muted">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
@@ -178,17 +192,7 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
               <ChevronRight size={13} className="mt-1 shrink-0 text-muted-foreground" />
             </Link>
 
-            {/* Тумблер стоит ВНЕ ссылки: иначе щелчок по нему открывал бы
-                страницу вместо переключения. */}
             <span className="mt-0.5 flex shrink-0 flex-col items-end gap-1">
-              {managed && (
-                <InstructionSwitch
-                  docKey={r.slug}
-                  enabled={Boolean(set.enabled[r.slug])}
-                  labels={switchLabels}
-                  srLabel={s.pages[r.slug].title}
-                />
-              )}
               {r.slug === ALWAYS_ON && (
                 <MasterSwitch
                   allOff={allOff}
