@@ -28,6 +28,16 @@ export const dynamic = "force-dynamic";
 
 const fill = (t: string, v: Record<string, string>) => t.replace(/\{(\w+)\}/g, (m, k) => v[k] ?? m);
 
+// Незнакомый код языка не имеет права уронить самую опасную страницу панели:
+// падаем на ISO-запись, она однозначна в любой стране.
+function formatDate(iso: string, lang: string): string {
+  try {
+    return new Date(iso).toLocaleDateString(lang, { year: "numeric", month: "long", day: "numeric" });
+  } catch {
+    return iso.slice(0, 10);
+  }
+}
+
 export default async function DomainPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
   const s = getAdminStrings(lang);
@@ -48,9 +58,13 @@ export default async function DomainPage({ params }: { params: Promise<{ lang: s
 
   const state = result.state;
   const secure = state.step4.complete;
-  const certExpires = state.step2.certExpiresAt
-    ? new Date(state.step2.certExpiresAt).toLocaleDateString()
-    : null;
+  // Дата — ЯЗЫКОМ СТРАНИЦЫ и месяцем СЛОВОМ (исправлено 2026-08-11).
+  // Было `toLocaleDateString()` без языка: формат брался у сервера, то есть
+  // американский, и «5 ноября 2026» показывалось как `11/5/2026`. По-русски это
+  // читается как 11 мая — то есть как уже просроченный сертификат. Цифровой
+  // формат даты нельзя показывать на панели, которая живёт на 82 языках: одна и
+  // та же строка означает в них разные дни.
+  const certExpires = state.step2.certExpiresAt ? formatDate(state.step2.certExpiresAt, lang) : null;
 
   return (
     <PageShell lang={lang} slug="domain" s={s} title={s.pages.domain.title} hint={s.pages.domain.hint}>
@@ -78,7 +92,12 @@ export default async function DomainPage({ params }: { params: Promise<{ lang: s
             </span>
             {certExpires && (
               <span className="text-muted-foreground">
-                {t.certLabel}: <span className="font-mono text-foreground">{certExpires}</span>
+                {t.certLabel}: <span className="text-foreground">{certExpires}</span>
+                {/* Сертификат уже есть, а режим ещё «обычный HTTP» — это ПРАВДА,
+                    но рядом она читается как противоречие, и владелец на ней
+                    споткнулся. Говорим прямо, почему одно не отменяет другого:
+                    сертификат выпускается на шаге 2, а включается на шаге 4. */}
+                {!secure && <span className="ml-1.5 text-muted-foreground/70">({t.certNotLive})</span>}
               </span>
             )}
             {state.serverIp && (

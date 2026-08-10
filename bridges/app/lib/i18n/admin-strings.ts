@@ -195,6 +195,8 @@ export type AdminStrings = {
     entryIntro: string; entryLabel: string; entryInvalid: string; cloudflareWarning: string;
     entrySave: string; entrySaving: string; entrySaved: string;
     modeLabel: string; modeSecure: string; modeIp: string; certLabel: string;
+    /** Почему сертификат уже есть, а режим ещё «обычный HTTP». */
+    certNotLive: string;
     dnsIntro: string; dnsType: string; dnsName: string; dnsValue: string;
     dnsNotes: Record<string, string>;
     step: string; done: string; s1: string; s2: string; s3: string; s4: string; s5: string;

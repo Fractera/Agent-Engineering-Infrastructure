@@ -1,11 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hardenSecretFile } from "@/lib/env-file";
 import { execSync, exec } from "child_process";
+import { promisify } from "util";
 import { writeFileSync, mkdirSync, existsSync, rmSync } from "fs";
 import Database from "better-sqlite3";
 import { requireAuth } from "@/lib/require-auth";
 
 const APP_DB = process.env.APP_DB_PATH ?? "/opt/fractera/app/data/app.db";
+
+// 🔒 ПРАВИЛО, КУПЛЕННОЕ ОШИБКОЙ (2026-08-11). Всё, что идёт ДОЛГО, запускается
+// через `run`, а не через `execSync`.
+//
+// Node у панели один и однопоточный. `execSync("certbot …")` останавливает не
+// одну эту фоновую работу, а ВЕСЬ процесс `fractera-admin`: 30–90 секунд (потолок
+// 180) панель не отвечает ни на один запрос — ни на страницу, ни на API.
+//
+// Как это выглядело для владельца: он вводил домен, получал тост «сохранено»
+// (ответ ушёл ДО блокировки, поэтому тост честный), а страница не менялась —
+// её обновление стояло в очереди к замершему процессу. Со второго нажатия всё
+// появлялось, потому что certbot к тому моменту уже отработал. Дефект читался
+// как «кнопка срабатывает через раз», хотя кнопка была ни при чём.
+//
+// `execSync` остаётся допустимым только для КОРОТКИХ и ограниченных вызовов
+// (openssl на готовом файле — десятки миллисекунд). Всё, что ходит в сеть или
+// перезагружает nginx, — только `await run(...)`.
+const run = promisify(exec);
 
 // The set of hostnames Fractera serves over HTTPS once a custom domain is
 // attached. Apex + www → public site, the other five → internal services
@@ -254,6 +273,39 @@ export async function GET(req: NextRequest) {
 
 const DOMAIN_RE = /^[a-zA-Z0-9][a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,}$/;
 
+// PATCH — ЗАПОМНИТЬ ДОМЕН, И БОЛЬШЕ НИЧЕГО (2026-08-11).
+//
+// Зачем понадобился отдельный маршрут. Ввод домена бил в `POST`, а `POST` — это
+// ВЫПУСК СЕРТИФИКАТА. Для владельца, у которого DNS уже смотрел на сервер, это
+// проходило незаметно; для нового клиента первый же ввод домена запускал
+// certbot ДО того, как человек завёл записи у регистратора, — то есть заведомо
+// обречённый выпуск, который к тому же писал в базу `domain_status = 'error'` и
+// встречал человека красной строкой «прошлая попытка не удалась» на шаге, где он
+// ещё ничего не сделал неправильно.
+//
+// Порядок в визарде обратный и единственно верный: сначала записать домен, потом
+// показать пять записей DNS, и только когда человек сам нажмёт «Выпустить
+// сертификат» — идти в certbot. Маршрут `POST` за этой кнопкой не тронут: он
+// оттестирован в бою, и трогать его ради удобства ввода нельзя.
+//
+// Статус пишем `idle`, а не `pending`: ничего не запущено, и визард не имеет
+// права показывать выпуск, которого нет.
+export async function PATCH(req: NextRequest) {
+  const ok = await requireAuth(req.headers.get("cookie") ?? "");
+  if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { domain } = await req.json().catch(() => ({})) as { domain?: string };
+  if (!domain || !DOMAIN_RE.test(domain)) {
+    return NextResponse.json({ error: "Invalid domain" }, { status: 400 });
+  }
+
+  const db = getDb();
+  upsert(db, domain, "idle", null, { certSource: "auto" });
+  db.close();
+
+  return NextResponse.json({ ok: true, status: "idle" });
+}
+
 // POST — auto mode: certbot issues a single multi-SAN cert for all 8 hostnames.
 // Body: { domain: string }
 export async function POST(req: NextRequest) {
@@ -270,7 +322,9 @@ export async function POST(req: NextRequest) {
   db.close();
 
   // Detached so the HTTP request doesn't time out (certbot can take 60-90s).
-  setTimeout(() => {
+  // `async` + `await run(...)` — НЕ косметика: см. закон у `run` выше. Синхронный
+  // вариант замораживал всю панель на время выпуска сертификата.
+  setTimeout(async () => {
     const db2 = getDb();
     try {
       // 1. HTTP-only stub config so certbot --nginx can find the server_name
@@ -286,7 +340,7 @@ export async function POST(req: NextRequest) {
 }`;
       }).join("\n");
       writeFileSync("/etc/nginx/sites-enabled/fractera-custom", httpStub);
-      execSync("mkdir -p /var/www/html && nginx -t && nginx -s reload", { timeout: 10000 });
+      await run("mkdir -p /var/www/html && nginx -t && nginx -s reload", { timeout: 10000 });
 
       // 2. Issue / renew one multi-SAN cert. The same `-d <host>` flag set
       //    keeps the same lineage (no new dir each run) so subsequent
@@ -298,14 +352,14 @@ export async function POST(req: NextRequest) {
       // "expand & replace?" prompt — which otherwise aborts under
       // --non-interactive. --keep-until-expiring still short-circuits when the
       // cert already covers everything and isn't near expiry (idempotent).
-      execSync(
+      await run(
         `certbot certonly --nginx ${dFlags} --cert-name ${domain} --expand --non-interactive --agree-tos --keep-until-expiring -m admin@fractera.ai`,
         { timeout: 180000 }
       );
 
       // 3. Write final HTTPS config and reload.
       writeFileSync("/etc/nginx/sites-enabled/fractera-custom", buildNginxConfig(domain, "auto"));
-      execSync("nginx -t && nginx -s reload", { timeout: 10000 });
+      await run("nginx -t && nginx -s reload", { timeout: 10000 });
 
       const expires = readCertExpiry(`/etc/letsencrypt/live/${domain}/fullchain.pem`);
       upsert(db2, domain, "active", null, { certSource: "auto", certExpiresAt: expires });
@@ -397,7 +451,7 @@ export async function PUT(req: NextRequest) {
   upsert(db, domain, "pending", null, { certSource: "upload" });
   db.close();
 
-  setTimeout(() => {
+  setTimeout(async () => {
     const db2 = getDb();
     try {
       const dir = `${CUSTOM_CERT_DIR}/${domain}`;
@@ -413,7 +467,7 @@ export async function PUT(req: NextRequest) {
       execSync(`openssl rsa -in ${dir}/privkey.pem -check -noout`,      { timeout: 3000 });
 
       writeFileSync("/etc/nginx/sites-enabled/fractera-custom", buildNginxConfig(domain, "upload"));
-      execSync("nginx -t && nginx -s reload", { timeout: 10000 });
+      await run("nginx -t && nginx -s reload", { timeout: 10000 });
 
       const expires = readCertExpiry(`${dir}/fullchain.pem`);
       upsert(db2, domain, "active", null, { certSource: "upload", certExpiresAt: expires });

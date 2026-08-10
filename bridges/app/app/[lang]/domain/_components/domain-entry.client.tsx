@@ -37,10 +37,13 @@ export function DomainEntry({ labels }: { labels: EntryLabels }) {
     if (!valid) return;
     setSaving(true);
     try {
-      // Только ЗАПИСЬ домена: certbot здесь не запускается — это отдельный шаг,
-      // который человек нажимает сам, увидев записи DNS.
+      // Только ЗАПИСЬ домена. `PATCH`, а НЕ `POST`: за `POST` стоит выпуск
+      // сертификата, и до 2026-08-11 ввод домена запускал его немедленно —
+      // certbot до настройки DNS, замороженная на минуту панель и красная
+      // строка «прошлая попытка не удалась» на пустом месте. Выпуск — отдельный
+      // шаг, который человек нажимает сам, увидев записи DNS.
       const r = await fetch("/api/config/domain", {
-        method: "POST",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ domain: normalized }),
       });
