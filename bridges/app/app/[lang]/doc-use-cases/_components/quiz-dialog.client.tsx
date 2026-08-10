@@ -22,6 +22,7 @@ import { Loader2, Send, Sparkles, Pause, Check, X, ChevronDown } from "lucide-re
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import VoiceInput from "@/_tools/voice-input/client/voice-input.client";
+import { parseRound } from "@/lib/quiz-brain.shared";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -29,7 +30,8 @@ export type QuizLabels = {
   title: string; close: string;
   modelBanner: string;
   designer: string; placeholder: string; answer: string;
-  auto: string; autoWriting: string; autoPaused: string; pause: string; keepText: string;
+  auto: string; autoAgain: string; autoWriting: string; autoPaused: string; pause: string; keepText: string;
+  autoAssumption: string; autoAccepted: string;
   create: string; creating: string; or: string;
   ready: string; hint: string;
   added: string; failed: string; noKey: string; noSeed: string;
@@ -210,13 +212,28 @@ export function QuizDialog(
     setStreaming(false);
   }
 
-  /** Черновик автоквиза становится репликой владельца — он его прочитал и принял. */
+  /**
+   * Принять круг автоквиза.
+   *
+   * Круг разбирается на ПАРЫ и ложится в ленту как настоящие вопросы и ответы —
+   * иначе следующий круг не увидит, о чём уже спрашивали, и пойдёт по второму
+   * разу. Ответ становится репликой владельца потому, что он его прочитал и
+   * принял; непрочитанным он в ленту не попадает никогда.
+   */
   function keepDraft() {
     if (!draft.trim()) return;
-    const kept: Turn = { role: "user", content: draft.trim() };
-    setTurns((prev) => [...prev, kept]);
-    void persist([kept], "принятый черновик автоквиза");
+    const pairs = parseRound(draft);
+    const added: Turn[] = pairs.length
+      ? pairs.flatMap((x) => ([
+          { role: "assistant" as const, content: x.question },
+          { role: "user" as const, content: x.answer },
+        ]))
+      // Формат не распознан — не теряем текст: он уходит одной репликой.
+      : [{ role: "user" as const, content: draft.trim() }];
+    setTurns((prev) => [...prev, ...added]);
+    void persist(added, "автоквиз: принятый круг");
     setDraft("");
+    toast.success(labels.autoAccepted.replace("{n}", String(pairs.length || 1)));
   }
 
   async function create() {
@@ -313,6 +330,14 @@ export function QuizDialog(
               <p className="mb-1 text-[10px] text-muted-foreground">
                 {streaming ? labels.autoWriting : labels.autoPaused}
               </p>
+              {/* Модель отвечает ЗА владельца, значит неизбежно предполагает.
+                  Помеченную догадку он поправит; непомеченная станет фактом,
+                  которого никто не выбирал. */}
+              {!streaming && draft && (
+                <p className="mb-1 text-[10px] leading-relaxed text-amber-700 dark:text-amber-300">
+                  {labels.autoAssumption}
+                </p>
+              )}
               <textarea
                 ref={draftField}
                 value={draft}
@@ -372,7 +397,7 @@ export function QuizDialog(
               onClick={autoQuiz}
               disabled={streaming}
             >
-              <Sparkles size={11} />{labels.auto}
+              <Sparkles size={11} />{turns.length > 1 ? labels.autoAgain : labels.auto}
             </Button>
           </div>
 

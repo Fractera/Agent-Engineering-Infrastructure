@@ -365,7 +365,8 @@ export type AdminStrings = {
     quizStart: string; quizStartHint: string; quizMore: string; quizMoreHint: string;
     quizTitle: string; quizPlaceholder: string; quizHint: string; close: string;
     modelBanner: string; designer: string; answer: string;
-    auto: string; autoWriting: string; autoPaused: string; pause: string; keepText: string;
+    auto: string; autoAgain: string; autoWriting: string; autoPaused: string; pause: string; keepText: string;
+    autoAssumption: string; autoAccepted: string;
     create: string; creating: string; or: string; ready: string; added: string; scrollDown: string;
     draft: string; confirmed: string; confirm: string; unconfirm: string;
     confirmAll: string; confirmedAll: string;

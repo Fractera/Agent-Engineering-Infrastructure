@@ -1429,11 +1429,11 @@
       "modelBanner": "Planning is where the model's strength shows most. The Quiz uses the model configured in the OpenAI section — a stronger one gives noticeably better cases.",
       "designer": "Designer",
       "answer": "Answer",
-      "auto": "Auto-quiz",
-      "autoWriting": "The model is writing…",
-      "autoPaused": "Paused — edit the text, then keep it.",
+      "auto": "Auto-quiz: 5 questions with answers",
+      "autoWriting": "The model is interviewing itself…",
+      "autoPaused": "Read the round, correct anything that is wrong, then keep it.",
       "pause": "Pause",
-      "keepText": "Keep this text",
+      "keepText": "Keep this round",
       "create": "Finish the survey and generate the cases",
       "creating": "Generating the cases…",
       "ready": "The model has enough — press «Create the cases».",
@@ -1458,7 +1458,7 @@
       "rewriting": "Rewriting…",
       "failed": "Could not do that",
       "noKey": "The Quiz needs an OpenAI key — add it in the OpenAI section, then come back.",
-      "noSeed": "Describe your scenarios in your own words first. Auto-quiz EXPANDS your description into cases — from a blank start it would invent a product you never asked for.",
+      "noSeed": "Answer at least one question in your own words first. The auto-quiz DEEPENS what you said — from a blank start it would invent a product you never asked for.",
       "legacyHint": "This project has an older single USE-CASES.md. Move it into the folder — it becomes the first case, and the original file stays where it is.",
       "legacyAction": "Move it into the folder",
       "legacyDone": "Moved — check it among the cases",
@@ -1472,7 +1472,10 @@
       "helpModelTitle": "The model.",
       "helpModel": "The Quiz uses the model configured for this server:",
       "scrollDown": "To the newest message",
-      "or": "or"
+      "or": "or",
+      "autoAgain": "Extend the auto-quiz: 5 more",
+      "autoAssumption": "Answers beginning with «Assumption» are the model's guesses, not your words — correct them here, before they turn into cases.",
+      "autoAccepted": "{n} question-answer pairs added to the conversation"
     }
   },
   "ru": {
@@ -2905,11 +2908,11 @@
       "modelBanner": "Планирование — там, где сила модели видна сильнее всего. Quiz работает моделью, выбранной в разделе OpenAI: более мощная даёт заметно лучшие кейсы.",
       "designer": "Проектировщик",
       "answer": "Ответить",
-      "auto": "Автоквиз",
-      "autoWriting": "Модель пишет…",
-      "autoPaused": "Пауза — поправьте текст и сохраните.",
+      "auto": "Автоквиз: 5 вопросов с ответами",
+      "autoWriting": "Модель опрашивает саму себя…",
+      "autoPaused": "Прочитайте круг, поправьте неверное и сохраните.",
       "pause": "Пауза",
-      "keepText": "Сохранить этот текст",
+      "keepText": "Сохранить этот круг",
       "create": "Закончить опрос и сгенерировать кейсы",
       "creating": "Генерирую кейсы…",
       "ready": "Модели достаточно — нажмите «Создать кейсы».",
@@ -2934,7 +2937,7 @@
       "rewriting": "Переписываю…",
       "failed": "Не удалось",
       "noKey": "Quiz нужен ключ OpenAI — добавьте его в разделе OpenAI и вернитесь.",
-      "noSeed": "Сначала опишите сценарии своими словами. Автоквиз РАЗВОРАЧИВАЕТ ваше описание в кейсы — с пустого места он выдумает продукт, которого вы не просили.",
+      "noSeed": "Сначала ответьте хотя бы на один вопрос своими словами. Автоквиз УГЛУБЛЯЕТ сказанное вами — с пустого места он выдумает продукт, которого вы не просили.",
       "legacyHint": "В проекте остался одиночный USE-CASES.md прежнего формата. Перенесите его в папку — он станет первым кейсом, а исходный файл останется на месте.",
       "legacyAction": "Перенести в папку",
       "legacyDone": "Перенесено — проверьте среди кейсов",
@@ -2948,7 +2951,10 @@
       "helpModelTitle": "Модель.",
       "helpModel": "Quiz работает моделью, выбранной для этого сервера:",
       "scrollDown": "К последнему сообщению",
-      "or": "или"
+      "or": "или",
+      "autoAgain": "Дополнить автоквиз: ещё 5",
+      "autoAssumption": "Ответы, начинающиеся со слова «Предположение», — догадки модели, а не ваши слова. Поправьте их здесь, пока они не превратились в кейсы.",
+      "autoAccepted": "Добавлено пар «вопрос — ответ»: {n}"
     }
   }
 }

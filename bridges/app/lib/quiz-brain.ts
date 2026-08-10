@@ -17,6 +17,7 @@
 // сюда одной строкой.
 
 import fs from "fs";
+export { parseRound, type QuizPair } from "@/lib/quiz-brain.shared";
 
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 const RAG_ENV = process.env.RAG_ENV_PATH ?? "/opt/fractera/services/rag/.env";
@@ -120,28 +121,55 @@ export async function nextQuestion(lang: string, seed: string, turns: Turn[]): P
 
 // ── 2. Автоквиз (стрим) ──────────────────────────────────────────────────────
 
+/**
+ * АВТОКВИЗ — модель ведёт опрос САМА С СОБОЙ (правка владельца 2026-08-10).
+ *
+ * ЧТО БЫЛО НЕ ТАК. Перенесённый из v1 автоквиз писал прозой описание сценариев.
+ * Владелец назвал это глупым, и он прав: кнопка называется «автоквиз», значит она
+ * обязана делать КВИЗ — задавать вопросы и отвечать на них, — а не пересказывать
+ * уже сказанное своими словами. Повторное нажатие давало почти тот же текст.
+ *
+ * ТЕПЕРЬ: пять НОВЫХ вопросов за нажатие, каждый со своим ответом, и каждый
+ * следующий круг видит все предыдущие — так описание продукта углубляется само.
+ *
+ * 🔒 ДОГАДКА ПОМЕЧАЕТСЯ СЛОВОМ. Отвечая за владельца, модель неизбежно выходит за
+ * пределы сказанного. Непомеченное предположение становится фактом, которого
+ * никто не выбирал, и всплывает уже в кейсах. Поэтому такой ответ обязан
+ * начинаться с «Предположение:» — владелец читает круг целиком и правит.
+ */
 export function autoMessages(lang: string, seed: string, turns: Turn[]) {
-  const transcript = tail(turns).map((x) => `${x.role === "user" ? "OWNER" : "DESIGNER"}: ${x.content}`).join("\n");
-  const system = `You are describing the USER CASES of a product ALONE, thinking out loud, IN THE SAME
-LANGUAGE THE OWNER USES in the text below — mirror their language exactly (if there is no owner text yet, use
-${languageName(lang)}).
+  const transcript = tail(turns).map((x) => `${x.role === "user" ? "OWNER" : "INTERVIEWER"}: ${x.content}`).join("\n");
+  const system = `You are interviewing YOURSELF about the owner's product, to deepen its description before
+any user case is written. Write in the SAME LANGUAGE the owner uses below (if they have written nothing yet,
+use ${languageName(lang)}).
 
 What the owner told you (the seed):
 """
 ${seed || "(not stated)"}
 """
 
-ENUMERATE the DISTINCT scenarios the product must handle — the main flow, its meaningful variations, the
-different people who use it, the different outcomes, and what happens when something goes wrong — EACH AS ITS
-OWN SHORT PARAGRAPH. Do NOT merge them into one blob: the more clearly separated the scenarios are here, the
-better they become real, separate user cases. Be concrete and short (aim under 300 words total). The owner
-reads you live and may edit your text — write it as the final description of the scenarios, not as a chat.
-Write ONLY in the owner's language.`;
+Ask the FIVE most valuable questions that are still UNANSWERED — the ones whose answers would change how the
+product gets built — and answer each one yourself, in the owner's place, using what they have already said
+plus the obvious consequences of it.
+
+RULES
+- NEVER ask something already asked or answered above. Each round goes DEEPER, not sideways.
+- Each answer is 1-3 sentences and concrete: a person, an action, an outcome — not a principle.
+- Where you must assume something the owner never said, begin that answer with "Assumption:" (translated
+  into the owner's language). An unmarked guess becomes a fact nobody chose.
+- No preamble, no closing remarks, no numbering.
+
+FORMAT — exactly this and nothing else, five times:
+Q: <question>
+A: <answer>`;
   return [
     { role: "system", content: system },
     { role: "user", content: transcript
-        ? `What has been said so far:\n${transcript}\n\nContinue describing the user cases.`
-        : "Describe the user cases." },
+        ? `Already asked and answered:
+${transcript}
+
+Ask five NEW questions and answer them.`
+        : "Ask your first five questions and answer them." },
   ];
 }
 
@@ -153,7 +181,7 @@ export async function autoStream(lang: string, seed: string, turns: Turn[]): Pro
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
     body: JSON.stringify({
-      model: quizModel(), messages: autoMessages(lang, seed, turns), temperature: 0.4, stream: true,
+      model: quizModel(), messages: autoMessages(lang, seed, turns), temperature: 0.5, stream: true,
     }),
   });
 }
