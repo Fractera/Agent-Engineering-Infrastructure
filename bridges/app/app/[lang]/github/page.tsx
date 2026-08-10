@@ -73,6 +73,14 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
         )}
       </div>
 
+      {/* Цена невыполненной настройки, названная прямо: без git код с сервера не
+          уезжает никуда, а выгрузка данных его не несёт. Серверная — видна и без JS. */}
+      {st.state === "unconfigured" && (
+        <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2.5 text-[10px] leading-relaxed text-destructive">
+          {g.notConnected}
+        </p>
+      )}
+
       {/* «Данные введены, но GitHub их не подтвердил» — то состояние, которое
           выглядит как рабочее и им не является. Названо отдельно. */}
       {st.state === "unverified" && (
@@ -97,7 +105,8 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
         </div>
       )}
 
-      <div className="mt-3">
+      <div className="mt-4">
+        <h2 className="mb-2 text-[12px] font-medium text-foreground">{g.setupTitle}</h2>
         <ConnectForm
           repoUrl={st.repoUrl}
           hasToken={st.hasToken}
@@ -108,6 +117,14 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
             connect: g.connect, connecting: g.connecting, connected: g.connected,
             push: g.push, pushing: g.pushing, pushed: g.pushed,
             failed: g.failed, outputLabel: g.outputLabel,
+          }}
+          guide={{
+            step1Title: g.step1Title, step1Link: g.step1Link, step1Body: g.step1Body,
+            step2Title: g.step2Title, step2Link: g.step2Link, step2Steps: g.step2Steps,
+            step2Note: g.step2Note, step2Saved: g.step2Saved,
+            step3Title: g.step3Title, step3Body: g.step3Body,
+            step4Title: g.step4Title, step4Body: g.step4Body,
+            step4Check: g.step4Check, step4Open: g.step4Open,
           }}
         />
       </div>

@@ -270,6 +270,15 @@ export type AdminStrings = {
     unavailable: string; noRepo: string;
     stateWorking: string; stateUnverified: string; stateUnconfigured: string;
     verifiedAt: string; unverifiedHint: string; pending: string;
+    // Инструкция подключения: каждый шаг стоит рядом со своим полем, а ссылка
+    // ведёт ровно на ту страницу GitHub, где шаг выполняется. Без неё раздел
+    // требует знать наизусть, где живут токены и какую область у них ставить.
+    notConnected: string; setupTitle: string;
+    step1Title: string; step1Link: string; step1Body: string;
+    step2Title: string; step2Link: string; step2Steps: string[];
+    step2Note: string; step2Saved: string;
+    step3Title: string; step3Body: string;
+    step4Title: string; step4Body: string; step4Check: string; step4Open: string;
     repoLabel: string; tokenLabel: string; tokenReplace: string;
     connect: string; connecting: string; connected: string;
     push: string; pushing: string; pushed: string;

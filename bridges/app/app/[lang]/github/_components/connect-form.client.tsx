@@ -12,7 +12,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, GitBranch, UploadCloud } from "lucide-react";
+import { Loader2, GitBranch, UploadCloud, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,9 +25,37 @@ export type ConnectLabels = {
   failed: string; outputLabel: string;
 };
 
+// Инструкция подключения. Живёт ВНУТРИ островка намеренно: каждый шаг обязан
+// стоять рядом со своим полем. Старая панель описывала шаги в одном месте, а
+// выполнять их отправляла в другое — именно там настройку и бросали. Слова
+// приходят пропсами с сервера, поэтому 82 языка в браузер не уезжают.
+export type GuideLabels = {
+  step1Title: string; step1Link: string; step1Body: string;
+  step2Title: string; step2Link: string; step2Steps: string[];
+  step2Note: string; step2Saved: string;
+  step3Title: string; step3Body: string;
+  step4Title: string; step4Body: string; step4Check: string; step4Open: string;
+};
+
+const NEW_REPO_URL = "https://github.com/new";
+const TOKENS_URL = "https://github.com/settings/tokens";
+
+function StepLink({ href, label }: { href: string; label: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1 text-[10px] text-primary underline underline-offset-2"
+    >
+      {label} <ExternalLink size={9} />
+    </a>
+  );
+}
+
 export function ConnectForm(
-  { repoUrl, hasToken, canPush, labels }:
-  { repoUrl: string; hasToken: boolean; canPush: boolean; labels: ConnectLabels },
+  { repoUrl, hasToken, canPush, labels, guide }:
+  { repoUrl: string; hasToken: boolean; canPush: boolean; labels: ConnectLabels; guide: GuideLabels },
 ) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -88,10 +116,18 @@ export function ConnectForm(
     }
   }
 
+  const repoWebUrl = (repoUrl || "").trim().replace(/\.git$/, "");
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      {/* Шаг 1 — со своим полем. */}
       <div className="space-y-1.5">
-        <span className="text-[10px] text-muted-foreground">{labels.repoLabel}</span>
+        <div className="flex flex-wrap items-baseline gap-2">
+          <span className="text-[11px] font-semibold text-foreground">{guide.step1Title}</span>
+          <StepLink href={NEW_REPO_URL} label={guide.step1Link} />
+        </div>
+        <p className="text-[10px] leading-relaxed text-muted-foreground">{guide.step1Body}</p>
+        <span className="block text-[10px] text-muted-foreground">{labels.repoLabel}</span>
         <Input
           value={repo}
           onChange={(e) => setRepo(e.target.value)}
@@ -100,8 +136,21 @@ export function ConnectForm(
         />
       </div>
 
+      {/* Шаг 2 — со своим полем. Страница токенов GitHub показывает полсотни
+          галочек и ни одной подсказки: названные по порядку органы управления —
+          это разница между двумя минутами и брошенной настройкой. */}
       <div className="space-y-1.5">
-        <span className="text-[10px] text-muted-foreground">{labels.tokenLabel}</span>
+        <div className="flex flex-wrap items-baseline gap-2">
+          <span className="text-[11px] font-semibold text-foreground">{guide.step2Title}</span>
+          <StepLink href={TOKENS_URL} label={guide.step2Link} />
+        </div>
+        <ol className="ml-4 list-decimal space-y-1.5 text-[10px] leading-relaxed text-muted-foreground marker:text-muted-foreground/70">
+          {guide.step2Steps.map((line) => <li key={line}>{line}</li>)}
+        </ol>
+        <p className="text-[10px] leading-relaxed text-muted-foreground">
+          {guide.step2Note}{hasToken && <> {guide.step2Saved}</>}
+        </p>
+        <span className="block text-[10px] text-muted-foreground">{labels.tokenLabel}</span>
         <Input
           type="password"
           value={token}
@@ -112,24 +161,35 @@ export function ConnectForm(
         />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Шаг 3 — не «сохранить», а «спросить GitHub». */}
+      <div className="space-y-1.5">
+        <span className="block text-[11px] font-semibold text-foreground">{guide.step3Title}</span>
+        <p className="text-[10px] leading-relaxed text-muted-foreground">{guide.step3Body}</p>
         <Button size="sm" onClick={connect} disabled={busy !== null || !repo.trim()} className="text-[11px]">
           {busy === "connect" ? <Loader2 size={11} className="animate-spin" /> : <GitBranch size={11} />}
           {busy === "connect" ? labels.connecting : labels.connect}
         </Button>
+      </div>
 
-        {/* Отправка — отдельное действие: подключение само по себе ничего не
-            отправляет, и репозиторий остаётся пустым, пока это не нажато. */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={push}
-          disabled={busy !== null || !canPush}
-          className="text-[11px]"
-        >
-          {busy === "push" ? <Loader2 size={11} className="animate-spin" /> : <UploadCloud size={11} />}
-          {busy === "push" ? labels.pushing : labels.push}
-        </Button>
+      {/* Шаг 4 — отдельное действие: подключение само по себе ничего не
+          отправляет, и репозиторий остаётся пустым, пока это не нажато. */}
+      <div className="space-y-1.5 rounded-md border border-border p-3">
+        <span className="block text-[11px] font-semibold text-foreground">{guide.step4Title}</span>
+        <p className="text-[10px] leading-relaxed text-muted-foreground">{guide.step4Body}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={push}
+            disabled={busy !== null || !canPush}
+            className="text-[11px]"
+          >
+            {busy === "push" ? <Loader2 size={11} className="animate-spin" /> : <UploadCloud size={11} />}
+            {busy === "push" ? labels.pushing : labels.push}
+          </Button>
+          {repoWebUrl && <StepLink href={repoWebUrl} label={guide.step4Open} />}
+        </div>
+        <p className="text-[10px] leading-relaxed text-muted-foreground">{guide.step4Check}</p>
       </div>
 
       {output && (
