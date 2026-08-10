@@ -52,6 +52,18 @@ export type AdminStrings = {
     push: string;
     howToBuild: string;
     stateUnknown: string;
+    // Действия подвала (2026-08-10). Отказ обязан быть КОПИРУЕМЫМ: его уносят
+    // агенту-программисту дословно, поэтому у ошибки есть и полный текст, и
+    // кнопка копирования, и подпись, объясняющая, куда этот текст нести.
+    deploying: string; pulling: string; pushing: string;
+    deployStarted: string; deployOk: string; deployFailed: string;
+    pullOk: string; pullFailed: string;
+    pushOk: string; pushFailed: string;
+    notConnected: string;
+    copy: string; copied: string; copyFailed: string;
+    agentHint: string;
+    stateBranch: string; stateCommit: string; stateUncommitted: string;
+    stateAheadBehind: string; stateCompareUnavailable: string; statePlatform: string;
   };
   // width switch in the footer — the label names what the click WILL do
   width: { wide: string; normal: string };
