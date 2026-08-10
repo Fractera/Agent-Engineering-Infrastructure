@@ -17,7 +17,6 @@
 // Словарь остаётся серверным: подписи приезжают пропсами из `admin-footer.tsx`.
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
 import { GitBranch, Rocket, ArrowDownToLine, ArrowUpFromLine, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -55,7 +54,6 @@ async function copyText(text: string): Promise<boolean> {
 }
 
 export function FooterActions({ labels, children }: { labels: FooterActionLabels; children?: ReactNode }) {
-  const router = useRouter();
   const [state, setState] = useState<ProjectState | null>(null);
   const [busy, setBusy] = useState<null | "deploy" | "pull" | "push">(null);
 
@@ -88,7 +86,10 @@ export function FooterActions({ labels, children }: { labels: FooterActionLabels
           </pre>
         </div>
       ),
-      duration: ok ? 8000 : Infinity,
+      // 🔒 УСПЕХ ТОЖЕ НЕ ГАСНЕТ САМ. В нём вывод git — что забрано, что отправлено,
+      // что уже было актуально. Это ровно тот текст, ради которого кнопку и
+      // нажимают; восьми секунд на него не хватает, а второй раз он не появится.
+      duration: Infinity,
       closeButton: true,
       action: {
         label: labels.copy,
@@ -148,8 +149,12 @@ export function FooterActions({ labels, children }: { labels: FooterActionLabels
           } else {
             report(false, labels.deployFailed, log || String(s.error ?? s.status));
           }
+          // 🔒 НИКАКОГО router.refresh() ПОСЛЕ ТОСТА (2026-08-10). `<Toaster />`
+          // живёт в КОРНЕВОМ макете, и обновление пересобирает его вместе со
+          // всеми уведомлениями: тост вспыхивал меньше чем на секунду и гас,
+          // унося с собой вывод git. Полоса состояния обновляется сама —
+          // `loadState()` это обычный запрос, дерево страницы он не трогает.
           loadState();
-          router.refresh();
         } catch {
           /* сеть моргнула — опрос продолжается */
         }
@@ -169,7 +174,6 @@ export function FooterActions({ labels, children }: { labels: FooterActionLabels
       const failTitle = kind === "pull" ? labels.pullFailed : labels.pushFailed;
       if (d.success) {
         report(true, okTitle, String(d.output ?? ""));
-        router.refresh();
       } else {
         report(false, failTitle, String(d.error ?? d.output ?? `HTTP ${r.status}`));
       }
