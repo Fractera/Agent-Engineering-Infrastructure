@@ -357,10 +357,22 @@ export function syncInstructionSection(
 // файл, которого нет, и страница раздела открывается пустой. Шаблоны лежат
 // файлами в панели, поэтому их можно править как обычные документы.
 
+// 🔒 ШАБЛОН ОБЯЗАН БЫТЬ У КАЖДОГО ДОКУМЕНТА, КОТОРЫЙ ВЕЗЁТ СТАРТЕР (2026-08-10).
+//
+// Иначе выходит ложь в отчёте: документ «создан» — в стартере, а проект, рождённый
+// раньше, открывает пустую страницу и взять текст ему неоткуда. Ровно это и
+// случилось с SINGLE-AGENT.md: файл был в стартере, у владельца — пусто.
+//
+// Правило: добавил документ в стартер — положи шаблон сюда той же партией.
 const TEMPLATES: Record<string, string> = {
   "doc-context-state": "CONTEXT-STATE.template.md",
   "doc-testing": "TESTING.template.md",
   "doc-single-agent": "SINGLE-AGENT.template.md",
+  "doc-passport": "PASSPORT.template.md",
+  "doc-architecture": "ARCHITECTURE.template.md",
+  "doc-antipatterns": "ANTI-PATTERNS.template.md",
+  "doc-design": "DESIGN.template.md",
+  "doc-parallel-routing": "PARALLEL-ROUTING.template.md",
 };
 
 export function readTemplate(key: string): string {

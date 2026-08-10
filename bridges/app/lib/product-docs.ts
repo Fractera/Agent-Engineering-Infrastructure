@@ -33,7 +33,8 @@ export type DocKey =
   | "doc-troubleshooting"
   | "doc-context-state"
   | "doc-testing"
-  | "doc-single-agent";
+  | "doc-single-agent"
+  | "doc-passport";
 
 /** Ключ страницы → файл в корне слота. Единственное место этого соответствия. */
 export const DOC_FILES: Record<DocKey, string> = {
@@ -67,6 +68,9 @@ export const DOC_FILES: Record<DocKey, string> = {
   // Запрет мультиагентной разработки и команда, которая его снимает. ЗАДАННЫЙ:
   // это закон работы, а не наблюдение о ней.
   "doc-single-agent": "SINGLE-AGENT.md",
+  // Сущности проекта и состояние каждой. ЕДИНСТВЕННЫЙ документ, который несёт
+  // ПРОГРЕСС: кейсы не знают состояния экранов, архитектура не знает, что готово.
+  "doc-passport": "PASSPORT.md",
 };
 
 /**
@@ -118,6 +122,7 @@ export const DOC_KIND: Record<string, "evolving" | "static"> = {
   "doc-context-state": "evolving",
   "doc-testing": "static",
   "doc-single-agent": "static",
+  "doc-passport": "evolving",
 };
 
 /**

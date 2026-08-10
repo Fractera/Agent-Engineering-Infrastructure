@@ -383,6 +383,13 @@ export type AdminStrings = {
     helpConfirmTitle: string; helpConfirm: string;
     helpModelTitle: string; helpModel: string;
   };
+  // Паспорт проекта: сущности и состояние каждой.
+  passport: {
+    whyTitle: string; why: string;
+    planesTitle: string; planes: string;
+    switchTitle: string; switchWhere: string;
+    createDoc: string; creating: string; createdDoc: string; createHint: string; failed: string;
+  };
   // Документ-запрет: почему мультиагентность закрыта и где её команда.
   singleAgent: {
     whyTitle: string; why: string;

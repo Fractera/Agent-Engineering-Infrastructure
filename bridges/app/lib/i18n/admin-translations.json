@@ -908,7 +908,8 @@
         "doc-troubleshooting": "Problems that appear only in production and their real causes. Loaded on demand rather than at session start: a diagnostic manual held in every session is paid for in every session, including the ones where nothing is broken.",
         "doc-code-samples": "Finished pieces of code and styles from your earlier projects. The agent does not look here on its own: ask it to use the samples and name the document — that is how your accumulated work becomes a starting point rather than a forgotten folder.",
         "doc-testing": "How a step is proven finished. Two independent proofs from two different planes, in a fixed shape — because the rule existed for a long time as a goal and kept losing to the cheapest available answer: a build log. Switched off, nobody is asked for proofs.",
-        "doc-single-agent": "Multi-agent development is forbidden unless you activate it by voice or in writing with the command. A sub-agent starts cold: it does not have this conversation, your corrections or the reason the previous approach was dropped, so it re-derives them wrongly and you pay twice — for the tokens and for the review that finds the divergence."
+        "doc-single-agent": "Multi-agent development is forbidden unless you activate it by voice or in writing with the command. A sub-agent starts cold: it does not have this conversation, your corrections or the reason the previous approach was dropped, so it re-derives them wrongly and you pay twice — for the tokens and for the review that finds the divergence.",
+        "doc-passport": "What the product consists of, and the state of each part. One row per entity: what it is for, which cases it serves, which platform tools it needs, whether it is empty, in progress or working. It is the join between the cases and the steps — coverage runs case → entity → step, which is more honest than counting closed steps."
       },
       "switchOn": "Instruction switched on",
       "switchOff": "Instruction switched off",
@@ -1360,6 +1361,10 @@
       "doc-single-agent": {
         "title": "Single agent",
         "hint": "One context window by default; a second agent needs the owner's command."
+      },
+      "doc-passport": {
+        "title": "Project passport",
+        "hint": "The entities this product consists of, and how far each one has come."
       }
     },
     "breadcrumbHome": "Panel",
@@ -1480,6 +1485,19 @@
       "autoAgain": "Extend the auto-quiz: 5 more",
       "autoAssumption": "Answers beginning with «Assumption» are the model's guesses, not your words — correct them here, before they turn into cases.",
       "autoAccepted": "{n} question-answer pairs added to the conversation"
+    },
+    "passport": {
+      "whyTitle": "Why it exists separately.",
+      "why": "It is the only document that carries PROGRESS. The cases do not know the state of a screen, and the architecture does not know what is finished. Fold it into either and one of them starts being rewritten after every step.",
+      "planesTitle": "Entity is what the product is ABOUT, not a screen.",
+      "planes": "«Orders» is one entity even with a list, a card and a form. Splitting by screen inflates the table until it stops being a map. Sign-in, settings and legal pages do not belong here — they come with the platform.",
+      "switchTitle": "Where it comes from.",
+      "switchWhere": "The first development step decides the type of the application and lays out the whole skeleton at once — every entity as an empty page, connected by navigation, at most ten of them. Each step after that moves one row.",
+      "createDoc": "Create the document",
+      "creating": "Creating…",
+      "createdDoc": "Document created — it is now a file in your repository",
+      "createHint": "This project has no PASSPORT.md yet. Create it from the template.",
+      "failed": "Could not save"
     }
   },
   "ru": {
@@ -2391,7 +2409,8 @@
         "doc-troubleshooting": "Проблемы, которые появляются только на продакшне, и их настоящие причины. Читается по требованию, а не на старте: диагностический справочник, который держат в каждой сессии, в каждой же и оплачивается — включая те, где ничего не сломано.",
         "doc-code-samples": "Готовые куски кода и стилей из ваших прошлых проектов. Агент сюда не заглядывает сам: попросите использовать образцы и назовите документ — так накопленное вами становится отправной точкой, а не забытой папкой.",
         "doc-testing": "Как шаг доказывается законченным. Два независимых доказательства из разных плоскостей, в жёсткой форме — потому что требование давно существовало как цель и раз за разом проигрывало самому дешёвому ответу: отчёту о сборке. Выключено — доказательств никто не спрашивает.",
-        "doc-single-agent": "Мультиагентная разработка запрещена, пока вы не активируете её голосом или письменно командой. Суб-агент стартует холодным: у него нет этого разговора, ваших поправок и причины, по которой прошлый подход бросили, — он выводит их заново и неверно, а платите вы дважды: за токены и за разбор расхождения."
+        "doc-single-agent": "Мультиагентная разработка запрещена, пока вы не активируете её голосом или письменно командой. Суб-агент стартует холодным: у него нет этого разговора, ваших поправок и причины, по которой прошлый подход бросили, — он выводит их заново и неверно, а платите вы дважды: за токены и за разбор расхождения.",
+        "doc-passport": "Из чего состоит продукт и в каком состоянии каждая часть. Строка на сущность: чем занята, какие кейсы обслуживает, какие платформенные инструменты ей нужны, пусто в ней, работа идёт или уже работает. Это стык кейсов и шагов: покрытие считается по цепочке кейс → сущность → шаг, а не по числу закрытых шагов."
       },
       "switchOn": "Инструкция включена",
       "switchOff": "Инструкция отключена",
@@ -2843,6 +2862,10 @@
       "doc-single-agent": {
         "title": "Единственный агент",
         "hint": "По умолчанию одно контекстное окно; второй агент — только по команде владельца."
+      },
+      "doc-passport": {
+        "title": "Паспорт проекта",
+        "hint": "Из каких сущностей состоит продукт и насколько готова каждая."
       }
     },
     "breadcrumbHome": "Панель",
@@ -2963,6 +2986,19 @@
       "autoAgain": "Дополнить автоквиз: ещё 5",
       "autoAssumption": "Ответы, начинающиеся со слова «Предположение», — догадки модели, а не ваши слова. Поправьте их здесь, пока они не превратились в кейсы.",
       "autoAccepted": "Добавлено пар «вопрос — ответ»: {n}"
+    },
+    "passport": {
+      "whyTitle": "Зачем он отдельно.",
+      "why": "Это единственный документ, который несёт ПРОГРЕСС. Кейсы не знают состояния экрана, архитектура не знает, что готово. Сложите его в любого из соседей — и тот начнёт переписываться после каждого шага.",
+      "planesTitle": "Сущность — это то, О ЧЁМ продукт, а не экран.",
+      "planes": "«Заказы» — одна сущность, даже если у неё список, карточка и форма. Деление по экранам раздувает таблицу, пока она не перестаёт быть картой. Вход, настройки и правовые страницы сюда не входят — они приезжают с платформой.",
+      "switchTitle": "Откуда он берётся.",
+      "switchWhere": "Первый шаг разработки определяет тип приложения и раскладывает весь скелет разом — каждая сущность пустой страницей, связанной навигацией, и не больше десяти. Каждый следующий шаг двигает одну строку.",
+      "createDoc": "Создать документ",
+      "creating": "Создаю…",
+      "createdDoc": "Документ создан — теперь это файл в вашем репозитории",
+      "createHint": "В этом проекте ещё нет файла PASSPORT.md. Создайте его из шаблона.",
+      "failed": "Сохранить не удалось"
     }
   }
 }
