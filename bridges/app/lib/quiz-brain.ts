@@ -58,6 +58,17 @@ export function languageName(code: string): string {
 
 export type Turn = { role: "user" | "assistant"; content: string };
 
+/**
+ * Сколько последних реплик уходит в модель.
+ *
+ * Разговор копится месяцами и дорастает до сотен реплик; отправлять его целиком
+ * значит платить за всю историю на каждый вопрос и однажды упереться в предел
+ * окна. Затравка идёт ВСЕГДА и отдельно — она и держит общую картину, поэтому
+ * хвоста разговора достаточно.
+ */
+const TAIL = 40;
+export const tail = (turns: Turn[]): Turn[] => turns.slice(-TAIL);
+
 async function chat(messages: { role: string; content: string }[], opts?: { json?: boolean }): Promise<string> {
   const key = openAiKey();
   if (!key) throw new Error("no-key");
@@ -100,7 +111,7 @@ write the scenarios, reply with exactly: READY`;
 export async function nextQuestion(lang: string, seed: string, turns: Turn[]): Promise<string> {
   return chat([
     { role: "system", content: usecasesSystem(lang, seed) },
-    ...turns,
+    ...tail(turns),
     { role: "user", content: turns.length === 0
         ? "Start: ask me your first question."
         : "Ask your next question, or if you have what you need, reply with exactly: READY" },
@@ -110,7 +121,7 @@ export async function nextQuestion(lang: string, seed: string, turns: Turn[]): P
 // ── 2. Автоквиз (стрим) ──────────────────────────────────────────────────────
 
 export function autoMessages(lang: string, seed: string, turns: Turn[]) {
-  const transcript = turns.map((x) => `${x.role === "user" ? "OWNER" : "DESIGNER"}: ${x.content}`).join("\n");
+  const transcript = tail(turns).map((x) => `${x.role === "user" ? "OWNER" : "DESIGNER"}: ${x.content}`).join("\n");
   const system = `You are describing the USER CASES of a product ALONE, thinking out loud, IN THE SAME
 LANGUAGE THE OWNER USES in the text below — mirror their language exactly (if there is no owner text yet, use
 ${languageName(lang)}).
@@ -150,7 +161,7 @@ export async function autoStream(lang: string, seed: string, turns: Turn[]): Pro
 // ── 3. Синтез разговора в кейсы ──────────────────────────────────────────────
 
 export async function synthesize(seed: string, turns: Turn[]): Promise<{ title: string; summary: string }[]> {
-  const transcript = turns.map((t) => `${t.role === "user" ? "OWNER" : "YOU"}: ${t.content}`).join("\n");
+  const transcript = tail(turns).map((t) => `${t.role === "user" ? "OWNER" : "YOU"}: ${t.content}`).join("\n");
   const out = await chat([
     { role: "system", content: `You turn a conversation about a product into its USER CASES. Reply with STRICT JSON only:
 {"cases":[{"title":"<a short case title, max 8 words>","summary":"<the scenario in 1-4 sentences: who does what, what they came for, the expected result, the edge case>"}]}

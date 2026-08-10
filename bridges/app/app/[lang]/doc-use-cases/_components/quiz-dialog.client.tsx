@@ -75,21 +75,58 @@ export function QuizDialog(
     if (typeof d.question === "string") setTurns((prev) => [...prev, { role: "assistant", content: d.question as string }]);
   }, [call]);
 
-  // Открыли впервые — модель задаёт первый вопрос.
+  // 🔒 QUIZ ПРОДОЛЖАЕТСЯ, А НЕ НАЧИНАЕТСЯ ЗАНОВО (правка 2026-08-10). Владелец
+  // описал свой сценарий прямо: отвечать «сколько выдержу», устать, нажать
+  // автоквиз — и получить кейсы ЛУЧШЕ, чем если бы остановился на пятом вопросе.
+  // Значит накопленное обязано пережить закрытие окна: при открытии поднимаем
+  // ленту с сервера, и автоквиз с синтезом видят её целиком.
   useEffect(() => {
     if (!open) { booted.current = false; return; }
     if (booted.current) return;
     booted.current = true;
-    setTurns([]); setAnswer(""); setDraft(""); setReady(false);
+    setAnswer(""); setDraft(""); setReady(false);
     setBusy(true);
-    void ask([]).finally(() => setBusy(false));
+    (async () => {
+      let prior: Turn[] = [];
+      try {
+        const r = await fetch("/api/use-cases", { cache: "no-store", credentials: "include" });
+        const d = await r.json().catch(() => ({}));
+        if (Array.isArray(d?.turns)) prior = d.turns as Turn[];
+      } catch { /* не подняли — начнём с чистого, это хуже, но не поломка */ }
+      setTurns(prior);
+      await ask(prior);
+    })().finally(() => setBusy(false));
   }, [open, ask]);
+
+  /** Дописать реплики в ленту проекта. Тихо: это сохранение, а не действие. */
+  async function persist(items: Turn[], note?: string) {
+    if (!items.length) return;
+    try {
+      await fetch("/api/use-cases", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ op: "raw", turns: items, note }),
+        credentials: "include",
+      });
+    } catch { /* не сохранили — разговор в окне продолжается */ }
+  }
 
   async function send() {
     if (!answer.trim() || busy) return;
-    const next: Turn[] = [...turns, { role: "user", content: answer.trim() }];
+    const mine: Turn = { role: "user", content: answer.trim() };
+    const next: Turn[] = [...turns, mine];
     setAnswer(""); setTurns(next); setBusy(true);
-    try { await ask(next); } finally { setBusy(false); }
+    // Сохраняем ПОСЛЕ КАЖДОГО ответа: окно вправе закрыться на середине.
+    void persist([mine]);
+    try {
+      const before = next.length;
+      await ask(next);
+      setTurns((cur) => {
+        const asked = cur[before];
+        if (asked?.role === "assistant") void persist([asked]);
+        return cur;
+      });
+    } finally { setBusy(false); }
   }
 
   async function autoQuiz() {
@@ -153,7 +190,9 @@ export function QuizDialog(
   /** Черновик автоквиза становится репликой владельца — он его прочитал и принял. */
   function keepDraft() {
     if (!draft.trim()) return;
-    setTurns((prev) => [...prev, { role: "user", content: draft.trim() }]);
+    const kept: Turn = { role: "user", content: draft.trim() };
+    setTurns((prev) => [...prev, kept]);
+    void persist([kept], "принятый черновик автоквиза");
     setDraft("");
   }
 

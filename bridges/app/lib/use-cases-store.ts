@@ -222,6 +222,34 @@ export function readSeed(): string {
   }
 }
 
+/**
+ * Лента разговора в машинном виде — чтобы Quiz ПРОДОЛЖАЛСЯ, а не начинался заново.
+ *
+ * ЗАЧЕМ ОТДЕЛЬНО ОТ `quiz-log.md`. Тот лог человеческий: его читают глазами в
+ * день, когда ищут потерянный замысел. А продолжить разговор можно только по
+ * структуре — разбирать прозу обратно в реплики значит терять их на первой же
+ * необычной формулировке.
+ *
+ * Владелец описал это прямо: отвечать «сколько выдержит», устать, нажать автоквиз.
+ * Между заходами лента обязана пережить закрытие окна.
+ */
+export function appendTurns(turns: RawTurn[]): void {
+  if (!turns.length) return;
+  ensureDirs();
+  const file = path.join(rawDir(), "turns.json");
+  const all = [...readTurns(), ...turns];
+  fs.writeFileSync(file, JSON.stringify(all, null, 1), "utf-8");
+}
+
+export function readTurns(): RawTurn[] {
+  try {
+    const raw = JSON.parse(fs.readFileSync(path.join(rawDir(), "turns.json"), "utf-8")) as RawTurn[];
+    return Array.isArray(raw) ? raw : [];
+  } catch {
+    return [];
+  }
+}
+
 export function readRaw(): string {
   try {
     return fs.readFileSync(path.join(rawDir(), RAW_LOG), "utf-8");

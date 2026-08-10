@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/require-auth";
 import {
   listCases, useCasesGate, appendCases, writeCase, setStatus, confirmAll, deleteCase,
-  migrateLegacy, appendRaw, writeSeed, readSeed,
+  migrateLegacy, appendRaw, writeSeed, readSeed, appendTurns, readTurns,
 } from "@/lib/use-cases-store";
 
 // Кейсы: чтение папки и действия над ней.
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const state = listCases();
-  return NextResponse.json({ ...state, gate: useCasesGate(), seed: readSeed() });
+  return NextResponse.json({ ...state, gate: useCasesGate(), seed: readSeed(), turns: readTurns() });
 }
 
 export async function POST(req: NextRequest) {
@@ -43,7 +43,10 @@ export async function POST(req: NextRequest) {
     case "seed": {
       if (!body.seed?.trim()) return NextResponse.json({ error: "seed_required" }, { status: 400 });
       writeSeed(body.seed);
-      if (body.turns?.length) appendRaw(body.turns, body.note ?? "вводные вопросы");
+      if (body.turns?.length) {
+        appendRaw(body.turns, body.note ?? "вводные вопросы");
+        appendTurns(body.turns);
+      }
       return NextResponse.json({ ok: true });
     }
     case "append": {
@@ -81,8 +84,13 @@ export async function POST(req: NextRequest) {
     }
     // Стенограмма из клиента: ручной диалог держится на клиенте (сервер сессию
     // не хранит), поэтому сохранить его может только он.
+    // Разговор дописывается ПОСЛЕ КАЖДОЙ реплики, а не в конце: владелец вправе
+    // закрыть окно на середине, и накопленное обязано пережить это.
     case "raw": {
-      if (body.turns?.length) appendRaw(body.turns, body.note);
+      if (body.turns?.length) {
+        appendRaw(body.turns, body.note);
+        appendTurns(body.turns);
+      }
       return NextResponse.json({ ok: true });
     }
     default:
