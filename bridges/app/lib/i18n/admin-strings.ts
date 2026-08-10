@@ -403,7 +403,9 @@ export type AdminStrings = {
     whyTitle: string;
     whyLead: string; whyOneEdit: string; whyWhole: string; whyModels: string; whyExperience: string;
     evolvingExplained: string; staticExplained: string;
-    notCreatedYet: string; closing: string;
+    notCreatedYet: string;
+    /** Метки документа, у которого есть собственный выключатель. */
+    inUse: string; switchedOff: string; closing: string;
     purposes: Record<string, string>;
   };
   docs: {

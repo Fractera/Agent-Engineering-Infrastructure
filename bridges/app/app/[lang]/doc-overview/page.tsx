@@ -17,6 +17,7 @@ import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
 import { DocKindBadge } from "../_components/doc-kind-badge";
 import { DOC_FILES, DOC_KIND, readDoc, listSteps, isDocKey } from "@/lib/product-docs";
+import { readContextHandoff } from "@/lib/context-handoff";
 import { listSamples } from "@/lib/code-samples";
 import { NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 
@@ -31,6 +32,10 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
   // Порядок берётся из навигации, а не переписывается здесь: два списка одних и
   // тех же документов разошлись бы при первой же правке.
   const slugs = NAV_BY_GROUP.documents.filter((x) => x !== "doc-overview") as AdminPageSlug[];
+
+  // Положение выключателя «Передачи сессии»: единственный документ группы, у
+  // которого он есть.
+  const handoffOn = readContextHandoff().enabled;
 
   const rows = slugs.map((slug) => {
     // Два документа группы — ПАПКИ, а не файлы: шаги заводит агент по одному на
@@ -104,8 +109,21 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
 
       {/* Сами документы: зачем каждый, в каком он состоянии, и ссылка открыть. */}
       <ul className="mt-3 divide-y divide-border rounded-lg border border-border">
-        {rows.map((r) => (
-          <li key={r.slug}>
+        {rows.map((r) => {
+          // Документ, у которого есть выключатель, обязан показывать его положение
+          // ЗДЕСЬ. Иначе выключенная возможность выглядит как работающая: файл в
+          // списке есть, а хуки молчат и правило в инструкции отключено — и понять
+          // это можно только зайдя внутрь.
+          const switched = r.slug === "doc-context-state" ? handoffOn : null;
+          return (
+          <li
+            key={r.slug}
+            className={
+              switched === true ? "border-l-4 border-l-emerald-500"
+              : switched === false ? "border-l-4 border-l-destructive"
+              : ""
+            }
+          >
             <Link href={adminHref(lang, r.slug)} className="flex gap-3 px-3 py-2.5 hover:bg-muted">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
@@ -125,6 +143,17 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
                       {o.notCreatedYet}
                     </span>
                   )}
+                  {switched !== null && (
+                    <span
+                      className={`rounded-full border px-1.5 py-0.5 text-[9px] ${
+                        switched
+                          ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
+                          : "border-destructive/40 text-destructive"
+                      }`}
+                    >
+                      {switched ? o.inUse : o.switchedOff}
+                    </span>
+                  )}
                 </div>
                 <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">
                   {o.purposes[r.slug]}
@@ -133,7 +162,8 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
               <ChevronRight size={13} className="mt-1 shrink-0 text-muted-foreground" />
             </Link>
           </li>
-        ))}
+          );
+        })}
       </ul>
 
       <p className="mt-3 text-[10px] leading-relaxed text-muted-foreground">{o.closing}</p>

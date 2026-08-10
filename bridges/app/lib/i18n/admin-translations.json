@@ -893,6 +893,8 @@
       "evolvingExplained": "The agent adds to these as the work goes on: a term that caused confusion, a lesson from a mistake, a step that was completed, a dead end not to repeat. You are not expected to maintain them — their growth is the record of the project thinking about itself.",
       "staticExplained": "These you or the platform write, and the agent obeys them. It edits them only when asked — otherwise it would be rewriting the rules it works by, which is exactly how an agent talks itself into the wrong build.",
       "notCreatedYet": "not created yet",
+      "inUse": "in use",
+      "switchedOff": "switched off",
       "closing": "A document that does not exist yet is not a mistake — it is simply work that has not been needed so far. Open one and it will tell you what belongs in it.",
       "purposes": {
         "doc-context-state": "What the previous session was doing when its context window ran out: where it stopped and what the next action is. The model writes it by itself and the next session reads it, so interrupted work resumes instead of restarting. Empty is its normal state — it holds something only between an interruption and a resumption.",
@@ -2237,6 +2239,8 @@
       "evolvingExplained": "Их агент дополняет по ходу работы: термин, вызвавший разночтение, урок из ошибки, завершённый шаг, тупик, который не стоит повторять. Вести их вручную от вас не требуется — их рост и есть след того, как проект думает о себе.",
       "staticExplained": "Их пишете вы или платформа, а агент им подчиняется. Правит только по просьбе — иначе он переписывал бы правила, по которым сам работает, а это ровно тот способ, которым агент уговаривает себя строить не то.",
       "notCreatedYet": "ещё не создан",
+      "inUse": "используется",
+      "switchedOff": "отключён",
       "closing": "Отсутствующий документ — не ошибка, а работа, которая пока не понадобилась. Откройте его, и он сам скажет, что в нём должно быть.",
       "purposes": {
         "doc-context-state": "Что предыдущая сессия делала в момент, когда её контекстное окно закончилось: на чём остановилась и какое действие следующее. Пишет его модель сама, читает следующая сессия — поэтому оборванная работа продолжается, а не начинается заново. Пустой он и должен быть: непустым он бывает ровно между обрывом и продолжением.",
