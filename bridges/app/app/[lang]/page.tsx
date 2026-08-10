@@ -42,8 +42,14 @@ export default async function AdminHomePage({ params }: { params: Promise<{ lang
       </div>
 
       {/* Тот же список, что в гамбургере, — чтобы карту слоя было видно целиком
-          с первого экрана, пока разделы наполняются. */}
-      <div className="grid gap-4 sm:grid-cols-2">
+          с первого экрана.
+
+          ЧЕТЫРЕ СТУПЕНИ ШИРИНЫ (владелец 2026-08-10): телефон — одна колонка,
+          планшет — две, 1024 — три, широкий экран — четыре. Две колонки на любой
+          ширине растягивали карту в длинный столбец, и нижние группы уходили за
+          край экрана — а вся ценность этого экрана в том, чтобы увидеть карту
+          целиком, не прокручивая. */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {NAV_GROUPS.map((group) => (
           <section key={group}>
             <h2 className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70">
