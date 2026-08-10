@@ -130,3 +130,15 @@ DELIVERY (not a proof)
 NOT VERIFIED BY ME
   <what needs the architect, and why I could not reach it>
 ```
+
+## The command: proofs on demand
+
+The owner may ask for the proofs at any moment, with the command listed in the instruction-set block of
+`CLAUDE.md`. It does not switch anything on — this document is already on. It means: **stop and produce
+the two proofs for what you have done so far**, in the shape above, without waiting for the step to close.
+
+Answer it with the form, not with a summary. If one of the two planes is out of reach at that moment, say
+which and why — that sentence is part of the answer, never a reason to send one proof as if it were two.
+
+**Near-variants count as the same command.** It is spoken, so *"show me the proof"*, *"докажи"*,
+*"предоставь доказательства"* are one request. Refusing because the words were rearranged is a defect.
