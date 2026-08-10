@@ -713,6 +713,8 @@
       "parallelOff": "Unavailable while parallel routing is on — there the layout decides the width.",
       "experimentalTitle": "Experimental",
       "experimentalHint": "Off by default and worth switching on deliberately: these capabilities are still finding their shape and may change or go away. Everything above is settled.",
+      "instructionAdded": "The rule was added to CLAUDE.md as a new section — the markers were not there. Review it in Documents → Main instruction.",
+      "instructionMissing": "Saved, but CLAUDE.md could not be updated — the agent will not learn about this switch until it is.",
       "items": {
         "topMenu": {
           "label": "Top menu",
@@ -2047,6 +2049,8 @@
       "parallelOff": "Недоступно при включённой параллельной маршрутизации — там ширину решает раскладка.",
       "experimentalTitle": "Экспериментальные",
       "experimentalHint": "Выключены по умолчанию, включать стоит осознанно: эти возможности ещё ищут форму и могут измениться или исчезнуть. Всё, что выше, — устоявшееся.",
+      "instructionAdded": "Правило добавлено в CLAUDE.md новым разделом — маркеров в файле не было. Посмотрите его в «Документы → Главная инструкция».",
+      "instructionMissing": "Сохранено, но обновить CLAUDE.md не удалось — пока это не исправлено, агент о переключателе не узнает.",
       "items": {
         "topMenu": {
           "label": "Верхнее меню",

@@ -57,6 +57,7 @@ export default async function AppFeaturesPage({ params }: { params: Promise<{ la
             failed: f.failed, nothingToSave: f.nothingToSave,
             opensSection: f.opensSection, parallelOff: f.parallelOff,
             experimentalTitle: f.experimentalTitle, experimentalHint: f.experimentalHint,
+            instructionAdded: f.instructionAdded, instructionMissing: f.instructionMissing,
             items: f.items,
           }}
         />

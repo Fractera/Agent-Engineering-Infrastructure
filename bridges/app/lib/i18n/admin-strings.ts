@@ -332,6 +332,7 @@ export type AdminStrings = {
     save: string; saving: string; saved: string; failed: string; nothingToSave: string;
     opensSection: string; parallelOff: string;
     experimentalTitle: string; experimentalHint: string;
+    instructionAdded: string; instructionMissing: string;
     items: Record<
       "auth" | "breadcrumbs" | "faq" | "themeToggle" | "widthToggle" | "languageSwitcher"
       | "topMenu" | "footerPages" | "cookieBanner" | "contextHandoff",
