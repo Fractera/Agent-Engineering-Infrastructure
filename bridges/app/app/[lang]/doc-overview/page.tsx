@@ -17,7 +17,7 @@ import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
 import { DocKindBadge } from "../_components/doc-kind-badge";
 import { DOC_FILES, DOC_KIND, readDoc, listSteps, isDocKey } from "@/lib/product-docs";
-import { readInstructionSet, TOGGLEABLE, ALWAYS_ON } from "@/lib/instruction-set";
+import { readInstructionSet, TOGGLEABLE, ALWAYS_ON, isInDevelopment } from "@/lib/instruction-set";
 import { DocCommands } from "../_components/doc-commands";
 import { InstructionSwitch } from "../_components/instruction-switch.client";
 import { MasterSwitch } from "../_components/master-switch.client";
@@ -60,6 +60,7 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
     failed: s.docs.failed,
     instructionAdded: o.instructionAdded, instructionMissing: o.instructionMissing,
     docCreated: o.docCreated,
+    inDevelopment: o.inDevelopmentNotice,
   };
 
   const rows = slugs.map((slug) => {
@@ -152,6 +153,7 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
           // Главная инструкция несёт сам механизм — выключить её нельзя ни
           // строкой, ни мастер-выключателем. Она всегда зелёная и без тумблера.
           const managed = (TOGGLEABLE as string[]).includes(r.slug);
+          const inDev = isInDevelopment(r.slug);
           const hasCommands = Boolean(set.commands[r.slug]);
           const switched = managed ? Boolean(set.enabled[r.slug]) : r.slug === ALWAYS_ON ? true : null;
           return (
@@ -197,16 +199,27 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
                       {o.notCreatedYet}
                     </span>
                   )}
+                  {/* Незавершённая возможность НЕ помечается как «отключено»
+                      (владелец 2026-08-11): «отключено» читается как выбор
+                      владельца, который он может отменить, — а он не может.
+                      Метка называет настоящую причину, и цвет у неё нейтральный:
+                      это не поломка и не запрет, а срок. */}
                   {switched !== null && (
-                    <span
-                      className={`rounded-full border px-1.5 py-0.5 text-[9px] ${
-                        switched
-                          ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
-                          : "border-destructive/40 text-destructive"
-                      }`}
-                    >
-                      {switched ? o.inUse : o.switchedOff}
-                    </span>
+                    inDev ? (
+                      <span className="rounded-full border border-amber-500/40 px-1.5 py-0.5 text-[9px] text-amber-700 dark:text-amber-300">
+                        {o.inDevelopment}
+                      </span>
+                    ) : (
+                      <span
+                        className={`rounded-full border px-1.5 py-0.5 text-[9px] ${
+                          switched
+                            ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
+                            : "border-destructive/40 text-destructive"
+                        }`}
+                      >
+                        {switched ? o.inUse : o.switchedOff}
+                      </span>
+                    )
                   )}
                 </div>
                 {/* Команда активации — ВТОРОЙ строкой под заголовком (владелец

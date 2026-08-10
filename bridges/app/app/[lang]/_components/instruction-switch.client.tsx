@@ -25,6 +25,8 @@ export type InstructionSwitchLabels = {
   failed: string;
   instructionAdded: string; instructionMissing: string;
   docCreated: string;
+  /** Возможность ещё не открыта — сообщение вместо включения. */
+  inDevelopment: string;
 };
 
 export function InstructionSwitch(
@@ -47,6 +49,16 @@ export function InstructionSwitch(
         credentials: "include",
       });
       const data = await res.json().catch(() => ({}));
+
+      // Отказ «возможность ещё не открыта» — НЕ ошибка, и красным его показывать
+      // нельзя: владелец не сделал ничего неправильного, он спросил, работает ли
+      // это. Отвечаем сообщением и возвращаем тумблер на место.
+      if (res.status === 409 && data?.error === "in_development") {
+        setOn(!next);
+        toast.info(labels.inDevelopment, { duration: 10000, closeButton: true });
+        return;
+      }
+
       if (!res.ok || !data.ok) throw new Error(String(data?.error ?? labels.failed));
 
       // Одно уведомление с двумя фразами, которые владелец обязан прочитать:

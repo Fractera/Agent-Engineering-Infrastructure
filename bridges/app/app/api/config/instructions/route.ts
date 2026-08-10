@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/require-auth";
 import {
   readInstructionSet, writeInstructionSet, syncInstructionSection, ensureDoc,
-  TOGGLEABLE, defaultEnabled, readCommands, COMMAND_VERBS,
+  TOGGLEABLE, defaultEnabled, readCommands, COMMAND_VERBS, isInDevelopment,
   type CommandMap, type CommandVerb,
 } from "@/lib/instruction-set";
 
@@ -63,6 +63,14 @@ export async function POST(req: NextRequest) {
   } else if (typeof body.doc === "string" && typeof body.enabled === "boolean") {
     if (!TOGGLEABLE.includes(body.doc)) {
       return NextResponse.json({ error: "not_toggleable" }, { status: 400 });
+    }
+    // Возможность ещё не открыта: включить нельзя, и отказ идёт С СЕРВЕРА —
+    // интерфейсный запрет обходится одним `curl`, и тогда в инструкции агента
+    // оказался бы закон о механизме, которого в продукте нет. Выключить
+    // разрешаем всегда: запирать владельца в состоянии, которого он не выбирал,
+    // мы права не имеем.
+    if (body.enabled && isInDevelopment(body.doc)) {
+      return NextResponse.json({ error: "in_development" }, { status: 409 });
     }
     enabled[body.doc] = body.enabled;
     // Ручное переключение отменяет мастер-снимок: набор снова живёт сам по себе,

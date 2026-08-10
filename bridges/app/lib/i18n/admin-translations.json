@@ -913,6 +913,8 @@
         "doc-dialogue-format": "Every answer opens by restating your request in the agent's own words — the subject, what will be done, what should come out, and an invitation to correct it. The cheapest instrument here: a misread request is found in one sentence, or after a day of building the wrong thing. It matters most because you speak your requests, and dictation drops words.",
         "doc-passport": "What the product consists of, and the state of each part. One row per entity: what it is for, which cases it serves, which platform tools it needs, whether it is empty, in progress or working. It is the join between the cases and the steps — coverage runs case → entity → step, which is more honest than counting closed steps."
       },
+      "inDevelopment": "option in development",
+      "inDevelopmentNotice": "This capability is not open yet — it arrives in one of the next updates. Until then the section stays visible, but it cannot be switched on and its document is empty.",
       "switchOn": "Instruction switched on",
       "switchOff": "Instruction switched off",
       "effectNextSession": "It takes full effect in a NEW session: an agent already working has this instruction in its context and may keep following it.",
@@ -2444,6 +2446,8 @@
         "doc-dialogue-format": "Ответ всегда открывается пересказом вашей просьбы словами агента: о чём речь, что он будет делать, что должно получиться, и приглашение поправить его. Самый дешёвый инструмент проекта: неверно понятая просьба обнаруживается либо одной фразой здесь, либо через день построенного не того. Особенно важно потому, что просьбы вы диктуете, а распознавание теряет слова.",
         "doc-passport": "Из чего состоит продукт и в каком состоянии каждая часть. Строка на сущность: чем занята, какие кейсы обслуживает, какие платформенные инструменты ей нужны, пусто в ней, работа идёт или уже работает. Это стык кейсов и шагов: покрытие считается по цепочке кейс → сущность → шаг, а не по числу закрытых шагов."
       },
+      "inDevelopment": "опция в разработке",
+      "inDevelopmentNotice": "Возможность ещё не открыта — она появится в одном из ближайших обновлений. До тех пор раздел остаётся на виду, но включить его нельзя, и документ у него пустой.",
       "switchOn": "Инструкция включена",
       "switchOff": "Инструкция отключена",
       "effectNextSession": "В полной мере это подействует с НОВОЙ сессии: у агента, который уже работает, эта инструкция лежит в контексте, и он может продолжать ей следовать.",

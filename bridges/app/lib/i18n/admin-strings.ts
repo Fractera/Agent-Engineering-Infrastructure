@@ -477,6 +477,10 @@ export type AdminStrings = {
     commandEdit: string; commandSave: string; commandSaving: string; commandCancel: string;
     commandSaved: string; commandPlaceholder: string; commandAnchorNote: string;
     masterHelpLabel: string; masterHelpWhy: string; masterHelpRestore: string; masterHelpMain: string; closing: string;
+    /** Метка вместо «отключено» у возможности, которая ещё не открыта. */
+    inDevelopment: string;
+    /** Что говорится в ответ на попытку включить такую возможность. */
+    inDevelopmentNotice: string;
     purposes: Record<string, string>;
   };
   docs: {
