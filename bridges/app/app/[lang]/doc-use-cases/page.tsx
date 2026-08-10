@@ -43,7 +43,7 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
     designer: u.designer, placeholder: u.quizPlaceholder, answer: u.answer,
     auto: u.auto, autoWriting: u.autoWriting, autoPaused: u.autoPaused,
     pause: u.pause, keepText: u.keepText,
-    create: u.create, creating: u.creating,
+    create: u.create, creating: u.creating, or: u.or,
     ready: u.ready, hint: u.quizHint,
     added: u.added, failed: u.failed, noKey: u.noKey, noSeed: u.noSeed,
     scrollDown: u.scrollDown,

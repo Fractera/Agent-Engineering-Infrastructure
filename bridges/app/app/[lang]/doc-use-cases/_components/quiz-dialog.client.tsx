@@ -30,7 +30,7 @@ export type QuizLabels = {
   modelBanner: string;
   designer: string; placeholder: string; answer: string;
   auto: string; autoWriting: string; autoPaused: string; pause: string; keepText: string;
-  create: string; creating: string;
+  create: string; creating: string; or: string;
   ready: string; hint: string;
   added: string; failed: string; noKey: string; noSeed: string;
   scrollDown: string;
@@ -343,20 +343,45 @@ export function QuizDialog(
             className="w-full rounded-md border border-border bg-background p-2.5 text-[12px] leading-relaxed text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
           />
 
-          <div className="flex flex-wrap items-center gap-2">
+          {/* Голос — рядом с полем, а не среди действий: он ПИШЕТ в поле, а не
+              решает, что делать дальше. */}
+          <div className="flex items-center">
             <VoiceInput targetRef={field} value={answer} onChange={setAnswer} lang={lang} apiUrl="/api/transcribe" />
-            <Button size="sm" className="text-[11px]" onClick={send} disabled={busy || !answer.trim()}>
+          </div>
+
+          {/* РАЗВИЛКА, а не набор кнопок (владелец 2026-08-10): две равные
+              половины со словом «или» между ними. Человек в этот момент делает
+              ровно один выбор — ответить самому или дать модели развернуть уже
+              сказанное, — и раскладка обязана этот выбор показывать. */}
+          <div className="flex items-stretch gap-2">
+            <Button
+              size="sm"
+              className="h-9 flex-1 text-[11px]"
+              onClick={send}
+              disabled={busy || !answer.trim()}
+            >
               <Send size={11} />{labels.answer}
             </Button>
-            <Button size="sm" variant="outline" className="text-[11px]" onClick={autoQuiz} disabled={streaming}>
+            <span className="self-center text-[10px] uppercase tracking-wide text-muted-foreground">
+              {labels.or}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9 flex-1 text-[11px]"
+              onClick={autoQuiz}
+              disabled={streaming}
+            >
               <Sparkles size={11} />{labels.auto}
             </Button>
-            <span className="flex-1" />
-            <Button size="sm" className="text-[11px]" onClick={create} disabled={busy}>
-              {busy ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
-              {busy ? labels.creating : labels.create}
-            </Button>
           </div>
+
+          {/* Завершение опроса — ОТДЕЛЬНОЙ строкой во всю ширину: это выход из
+              разговора, а не третий равный вариант ответа. */}
+          <Button size="sm" className="h-9 w-full text-[11px]" onClick={create} disabled={busy}>
+            {busy ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
+            {busy ? labels.creating : labels.create}
+          </Button>
 
           <p className="text-[10px] leading-relaxed text-muted-foreground">{labels.hint}</p>
         </div>
