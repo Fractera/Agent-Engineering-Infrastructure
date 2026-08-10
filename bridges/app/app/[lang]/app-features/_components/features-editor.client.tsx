@@ -21,7 +21,6 @@ import { FEATURE_ORDER, OFF_WHEN_PARALLEL, type FeatureKey } from "@/lib/platfor
 export type FeatureLabels = {
   save: string; saving: string; saved: string; failed: string; nothingToSave: string;
   opensSection: string; parallelOff: string;
-  instructionAdded: string; instructionMissing: string;
   items: Record<FeatureKey, { label: string; description: string }>;
 };
 
@@ -63,14 +62,6 @@ export function FeaturesEditor(
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error(String(data?.error ?? labels.failed));
       toast.success(labels.saved);
-
-      // Правка чужой инструкции НИКОГДА не происходит молча. Обычная перезапись
-      // блока — рутина и молчит; появление нового раздела в `CLAUDE.md` и
-      // отсутствие самого файла человек обязан увидеть.
-      const ins = data.instruction as { ok: boolean; added: boolean } | undefined;
-      if (ins && !ins.ok) toast.error(labels.instructionMissing, { duration: 10000 });
-      else if (ins?.added) toast.info(labels.instructionAdded, { duration: 10000 });
-
       router.refresh();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : labels.failed);
