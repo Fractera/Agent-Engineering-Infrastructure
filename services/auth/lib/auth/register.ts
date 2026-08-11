@@ -45,8 +45,19 @@ export async function register(email: string, password: string): Promise<Registe
     }
   }
 
+  // Первый зарегистрировавшийся — владелец развёртывания.
+  //
+  // 🔒 ПОЧЕМУ РЯДОМ С `architect` СТОИТ `finance`. Не ради прав: `architect`
+  // входит во все четыре слоя приложения и так. Ради ЧЕСТНОСТИ СПИСКА — роли
+  // человека показаны ему самому (ящик аккаунта разбит по слоям прав), и владелец
+  // должен видеть, что он в том числе финансовое лицо своего проекта, а не
+  // догадываться об этом из того, что ему всё открыто.
+  //
+  // Роли пишутся в базу ОДИН РАЗ, при регистрации: правка этой строки меняет
+  // только будущие развёртывания, уже созданным пользователям роль выдаётся
+  // отдельно — панелью или запросом к `/api/admin/users/<id>`.
   const isFirst = !db.prepare("SELECT id FROM users LIMIT 1").get();
-  const roles = isFirst ? ["architect"] : ["user"];
+  const roles = isFirst ? ["architect", "finance"] : ["user"];
 
   db.prepare(
     "INSERT INTO users (id, email, nickname, password, roles, provider) VALUES (?, ?, ?, ?, ?, ?)"
