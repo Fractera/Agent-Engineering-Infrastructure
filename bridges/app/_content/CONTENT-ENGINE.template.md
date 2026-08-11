@@ -202,7 +202,35 @@ shared "god" types file every author edits. Here engine types are *imported*, ne
 4. Never run `npm run build` on Windows (the project builds on Ubuntu); never introduce a dynamic
    `[slug]`; never hand-edit `_list.generated.ts`, whose first line says so.
 
-## 10. The command
+## 10. The seven requirements — and what proves each one
+
+A content surface is finished when all seven hold. **Five of them are checked by
+`npm run check:content`;** the remaining two need a build and a live page, and their exact commands are
+below. Run this after adding a tab, and after any change that touches the shape of one.
+
+| # | Requirement | Proof | Who proves it |
+|---|---|---|---|
+| 1 | No dynamic participation | `force-dynamic`, `export const dynamic =`, `cookies()`, `headers()`, `auth()` — zero occurrences in the tab | `check:content` → `surface-dynamic` |
+| 2 | Zero client components | no `"use client"` under the tab | `check:content` → `surface-client` |
+| 3 | Thin route | `page.tsx` re-exports `./_components` and nothing else (≤ 12 lines) | `check:content` → `route-not-thin` |
+| 4 | The engine is reused, not copied | no `resolve` / `registry` / `post-body` / `create-content-*` inside the tab's `_lib` | `check:content` → `engine-duplicated` |
+| 5 | Deleting a post leaves no tails | the slug appears nowhere outside its own folder, except the generated list | `check:content` → `post-tail` |
+| 6 | Static / ISR in the real build | the build's route table shows `●` for the index and every post, with a revalidate value | `npm run build` on the server: `grep -E "/\[lang\]/<tab>" ` in the build log |
+| 7 | Readable with JavaScript off | the article's text survives stripping every `<script>` from the response | `curl -s <url> \| sed 's/<script[^>]*>.*<\/script>//g' \| grep "<a phrase from the article>"` |
+
+**Why five of them are code and not a checklist.** A checklist is followed while someone remembers it.
+One edit "just for a minute" puts `force-dynamic` back into a tab, and the loss shows up a month later as
+a drop in search results that nobody connects to that minute. Each of the five is a real failure this
+project already had: a section that was silently dynamic, a client island in a route, a page file that
+grew logic, an engine module copied into a tab, and a post that could not be deleted without leaving a
+dangling import.
+
+**Two are not automatable, and the document says so rather than pretending.** Requirement 6 needs an
+actual build (only the build knows what it prerendered) and requirement 7 needs a served response. Do not
+substitute a cheaper proof for either: "the code looks static" is not requirement 6, and "the page opens
+in my browser" is not requirement 7 — a browser runs the JavaScript you are trying to prove unnecessary.
+
+## 11. The command
 
 The owner may ask for a post in the conversation, using the command listed in the instruction-set
 block of `CLAUDE.md`. It means: **create the post folder by this document** — all four files, both
