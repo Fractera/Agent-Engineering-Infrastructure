@@ -180,6 +180,16 @@ export const SECTIONS: Section[] = [
     ],
   },
   {
+    title: "Commerce",
+    description:
+      "The currency every price on the site is shown and published in. A price without a currency " +
+      "means nothing to a visitor, and product markup without it is rejected outright by search " +
+      "engines — the price card simply never appears.",
+    fields: [
+      { path: "commerce.currency", label: "Currency", type: "text", placeholder: "USD · EUR · PLN · RUB" },
+    ],
+  },
+  {
     title: "Local business / address",
     description: "Only used when the LocalBusiness schema above is on.",
     fields: [
