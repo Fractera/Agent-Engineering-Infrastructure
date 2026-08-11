@@ -35,6 +35,7 @@ export type DocKey =
   | "doc-testing"
   | "doc-single-agent"
   | "doc-dialogue-format"
+  | "doc-content-engine"
   | "doc-passport";
 
 /** Ключ страницы → файл в корне слота. Единственное место этого соответствия. */
@@ -74,6 +75,9 @@ export const DOC_FILES: Record<DocKey, string> = {
   // выключателя, ни команды; здесь он становится документом, а в инструкции
   // остаётся указатель — две копии закона расходятся молча.
   "doc-dialogue-format": "DIALOGUE-FORMAT.md",
+  // Как строится пост: ко-локация, два типа ссылок, гейт check:content.
+  // ЗАДАННЫЙ: это инструкция авторинга, а не наблюдение о проекте.
+  "doc-content-engine": "CONTENT-ENGINE.md",
   // Сущности проекта и состояние каждой. ЕДИНСТВЕННЫЙ документ, который несёт
   // ПРОГРЕСС: кейсы не знают состояния экранов, архитектура не знает, что готово.
   "doc-passport": "PASSPORT.md",
@@ -131,6 +135,7 @@ export const DOC_KIND: Record<string, "evolving" | "static"> = {
   // Обыкновенный, не саморазвивающийся (решение владельца 2026-08-11): это форма
   // ответа, заданная владельцем, а не наблюдение агента о ходе проекта.
   "doc-dialogue-format": "static",
+  "doc-content-engine": "static",
   "doc-passport": "evolving",
 };
 

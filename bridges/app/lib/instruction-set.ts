@@ -244,6 +244,13 @@ export const COMMAND_DEFAULTS: Record<string, Partial<Record<CommandVerb, Record
     activate: { en: "use the coding standards", ru: "используй стандарты кода" },
     add: { en: "add to the coding standards", ru: "добавь к стандарту кода" },
   },
+  // Создать пост по документу целиком: папка, обе языковые ячейки, внутренняя
+  // ссылка на корень в каждой, зелёный `check:content`. Владелец продиктовал две
+  // фразы — «создай пост для блога» и «добавь публикацию»; каноном стоит первая,
+  // вторая принимается как её вариант (сказано в самом документе).
+  "doc-content-engine": {
+    add: { en: "create a blog post", ru: "создай пост для блога" },
+  },
   // Просьба пересказать понимание ПРЯМО СЕЙЧАС и в полной форме. Владелец
   // продиктовал две фразы — «скажи как ты меня понял» и «правильно ли мы друг
   // друга понимаем»; каноном стоит первая, вторая принимается как её вариант
@@ -514,6 +521,7 @@ const TEMPLATES: Record<string, string> = {
   "doc-testing": "TESTING.template.md",
   "doc-single-agent": "SINGLE-AGENT.template.md",
   "doc-dialogue-format": "DIALOGUE-FORMAT.template.md",
+  "doc-content-engine": "CONTENT-ENGINE.template.md",
   "doc-passport": "PASSPORT.template.md",
   "doc-architecture": "ARCHITECTURE.template.md",
   "doc-antipatterns": "ANTI-PATTERNS.template.md",

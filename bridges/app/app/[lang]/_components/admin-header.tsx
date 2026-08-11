@@ -88,6 +88,7 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   "doc-testing": FlaskConical,
   "doc-single-agent": UserRound,
   "doc-dialogue-format": MessagesSquare,
+  "doc-content-engine": FileText,
   "doc-passport": IdCard,
 };
 

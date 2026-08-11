@@ -911,7 +911,8 @@
         "doc-testing": "How a step is proven finished. Two independent proofs from two different planes, in a fixed shape — because the rule existed for a long time as a goal and kept losing to the cheapest available answer: a build log. Switched off, nobody is asked for proofs.",
         "doc-single-agent": "Multi-agent development is forbidden unless you activate it by voice or in writing with the command. A sub-agent starts cold: it does not have this conversation, your corrections or the reason the previous approach was dropped, so it re-derives them wrongly and you pay twice — for the tokens and for the review that finds the divergence.",
         "doc-dialogue-format": "Every answer opens by restating your request in the agent's own words — the subject, what will be done, what should come out, and an invitation to correct it. The cheapest instrument here: a misread request is found in one sentence, or after a day of building the wrong thing. It matters most because you speak your requests, and dictation drops words.",
-        "doc-passport": "What the product consists of, and the state of each part. One row per entity: what it is for, which cases it serves, which platform tools it needs, whether it is empty, in progress or working. It is the join between the cases and the steps — coverage runs case → entity → step, which is more honest than counting closed steps."
+        "doc-passport": "What the product consists of, and the state of each part. One row per entity: what it is for, which cases it serves, which platform tools it needs, whether it is empty, in progress or working. It is the join between the cases and the steps — coverage runs case → entity → step, which is more honest than counting closed steps.",
+        "doc-content-engine": "The authoring instruction for content: one post = one folder, deleting it leaves nothing behind, the list rebuilds itself. It also carries the law of the two links — external ones always absolute, and one internal link home per language, signed with your site name. Every rule here is enforced by npm run check:content, so a new post cannot repeat a mistake an old one made."
       },
       "inDevelopment": "option in development",
       "inDevelopmentNotice": "This capability is not open yet — it arrives in one of the next updates. Until then the section stays visible, but it cannot be switched on and its document is empty.",
@@ -1382,6 +1383,10 @@
       "doc-passport": {
         "title": "Project passport",
         "hint": "The entities this product consists of, and how far each one has come."
+      },
+      "doc-content-engine": {
+        "title": "Content engine",
+        "hint": "How a post is built: co-location, two kinds of link, the content gate."
       }
     },
     "breadcrumbHome": "Panel",
@@ -1529,6 +1534,21 @@
       "creating": "Creating…",
       "createdDoc": "Document created — it is now a file in your repository",
       "createHint": "This project has no PASSPORT.md yet. Create it from the template.",
+      "failed": "Could not save"
+    },
+    "contentEngine": {
+      "whyTitle": "Why it exists.",
+      "why": "A post is three jobs at once: hold the data, render as a fully static page, and appear in the list. Done naively they are wired through a central registry that every author edits and every agent must load. Here there is none: one post is one folder, and the list is generated from the file system at build time.",
+      "shapeTitle": "The shape of a post.",
+      "shape": "page.tsx — three lines of re-export · _components/index.tsx — the view · _data/{meta,en,ru,index}.ts — the data. Delete the folder and the post is gone everywhere; drop a folder in and it appears.",
+      "sizeTitle": "Two kinds of link.",
+      "size": "External links are always absolute, and third-party domains get nofollow. The only relative form allowed is the internal link home — [%SITE%](/ru) — whose label is replaced by your site name in that language. Every language cell of every post carries one, so an article gives weight away and receives some back.",
+      "switchTitle": "The gate.",
+      "switchWhere": "npm run check:content rejects a relative link, a missing media file, a site name written into data, a declared language cell with no file, and a post with no translation. Each rule is a defect that already shipped once.",
+      "createDoc": "Create the document",
+      "creating": "Creating…",
+      "createdDoc": "Document created — it is now a file in your repository",
+      "createHint": "This project has no CONTENT-ENGINE.md yet. Create it from the template.",
       "failed": "Could not save"
     }
   },
@@ -2444,7 +2464,8 @@
         "doc-testing": "Как шаг доказывается законченным. Два независимых доказательства из разных плоскостей, в жёсткой форме — потому что требование давно существовало как цель и раз за разом проигрывало самому дешёвому ответу: отчёту о сборке. Выключено — доказательств никто не спрашивает.",
         "doc-single-agent": "Мультиагентная разработка запрещена, пока вы не активируете её голосом или письменно командой. Суб-агент стартует холодным: у него нет этого разговора, ваших поправок и причины, по которой прошлый подход бросили, — он выводит их заново и неверно, а платите вы дважды: за токены и за разбор расхождения.",
         "doc-dialogue-format": "Ответ всегда открывается пересказом вашей просьбы словами агента: о чём речь, что он будет делать, что должно получиться, и приглашение поправить его. Самый дешёвый инструмент проекта: неверно понятая просьба обнаруживается либо одной фразой здесь, либо через день построенного не того. Особенно важно потому, что просьбы вы диктуете, а распознавание теряет слова.",
-        "doc-passport": "Из чего состоит продукт и в каком состоянии каждая часть. Строка на сущность: чем занята, какие кейсы обслуживает, какие платформенные инструменты ей нужны, пусто в ней, работа идёт или уже работает. Это стык кейсов и шагов: покрытие считается по цепочке кейс → сущность → шаг, а не по числу закрытых шагов."
+        "doc-passport": "Из чего состоит продукт и в каком состоянии каждая часть. Строка на сущность: чем занята, какие кейсы обслуживает, какие платформенные инструменты ей нужны, пусто в ней, работа идёт или уже работает. Это стык кейсов и шагов: покрытие считается по цепочке кейс → сущность → шаг, а не по числу закрытых шагов.",
+        "doc-content-engine": "Инструкция авторинга: один пост — одна папка, удаление не оставляет следов, список пересобирается сам. Здесь же закон двух типов ссылок: внешние всегда абсолютные, а одна внутренняя на главную в каждом языке, подписанная названием вашего сайта. Каждое правило проверяется командой npm run check:content, поэтому новый пост не может повторить ошибку старого."
       },
       "inDevelopment": "опция в разработке",
       "inDevelopmentNotice": "Возможность ещё не открыта — она появится в одном из ближайших обновлений. До тех пор раздел остаётся на виду, но включить его нельзя, и документ у него пустой.",
@@ -2915,6 +2936,10 @@
       "doc-passport": {
         "title": "Паспорт проекта",
         "hint": "Из каких сущностей состоит продукт и насколько готова каждая."
+      },
+      "doc-content-engine": {
+        "title": "Как строится пост",
+        "hint": "Ко-локация, два типа ссылок и проверка, которая отклоняет неверный пост."
       }
     },
     "breadcrumbHome": "Панель",
@@ -3062,6 +3087,21 @@
       "creating": "Создаю…",
       "createdDoc": "Документ создан — теперь это файл в вашем репозитории",
       "createHint": "В этом проекте ещё нет файла PASSPORT.md. Создайте его из шаблона.",
+      "failed": "Сохранить не удалось"
+    },
+    "contentEngine": {
+      "whyTitle": "Зачем это нужно.",
+      "why": "Пост решает сразу три задачи: хранить данные, отрисоваться полностью статической страницей и попасть в список. Наивно они связываются центральным реестром, который правит каждый автор и обязан прочитать каждый агент. Здесь его нет: один пост — одна папка, а список генерируется из файловой системы на сборке.",
+      "shapeTitle": "Форма поста.",
+      "shape": "page.tsx — три строки реэкспорта · _components/index.tsx — вид · _data/{meta,en,ru,index}.ts — данные. Удалили папку — пост исчез везде; положили папку — появился.",
+      "sizeTitle": "Два типа ссылок.",
+      "size": "Внешние всегда абсолютные, чужим доменам ставится nofollow. Единственная разрешённая относительная — внутренняя на главную: [%SITE%](/ru), где подпись заменяется названием вашего сайта на этом языке. Такая ссылка есть в каждой языковой ячейке каждого поста, поэтому статья не только отдаёт вес, но и возвращает его себе.",
+      "switchTitle": "Гейт.",
+      "switchWhere": "npm run check:content отклоняет относительную ссылку, отсутствующий медиафайл, имя сайта, вписанное в данные, объявленную языковую ячейку без файла и пост без единого перевода. Каждое правило куплено уже случившимся дефектом.",
+      "createDoc": "Создать документ",
+      "creating": "Создаю…",
+      "createdDoc": "Документ создан — теперь это файл в вашем репозитории",
+      "createHint": "В этом проекте ещё нет файла CONTENT-ENGINE.md. Создайте его из шаблона.",
       "failed": "Сохранить не удалось"
     }
   }

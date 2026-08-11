@@ -402,6 +402,14 @@ export type AdminStrings = {
   // Формат диалога: ответ открывается пересказом просьбы своими словами. Отдельной
   // секцией по той же причине, что и «единственный агент», — страница объясняет
   // ОДНУ вещь, и объяснение обязано стоять выше редактора файла.
+  // Как строится пост: ко-локация, два типа ссылок, гейт содержимого.
+  contentEngine: {
+    whyTitle: string; why: string;
+    shapeTitle: string; shape: string;
+    sizeTitle: string; size: string;
+    switchTitle: string; switchWhere: string;
+    createDoc: string; creating: string; createdDoc: string; createHint: string; failed: string;
+  };
   dialogueFormat: {
     whyTitle: string; why: string;
     shapeTitle: string; shape: string;
