@@ -226,6 +226,17 @@ export const COMMAND_DEFAULTS: Record<string, Partial<Record<CommandVerb, Record
   "doc-context-state": {
     activate: { en: "remember the current state", ru: "запомни текущее состояние" },
   },
+  // ДВА РАЗНЫХ ДЕЙСТВИЯ, а не два названия одного (владелец 2026-08-11).
+  // «Почему» — ЧИТАТЬ: владелец смотрит на неверное поведение живого сервера и
+  // хочет настоящую причину, а не догадку по памяти о похожем проекте.
+  // «Здесь могут возникнуть трудности» — ПИСАТЬ: он показывает место, где ждёт
+  // поломки, и это ложится в документ как ОЖИДАНИЕ, отличённое от наблюдения.
+  // Документ саморазвивающийся, поэтому глаголы `find`/`add`, а не `activate`:
+  // включать нечего, им пользуются.
+  "doc-troubleshooting": {
+    find: { en: "why", ru: "почему" },
+    add: { en: "difficulties may arise here", ru: "здесь могут возникнуть трудности" },
+  },
   // Просьба пересказать понимание ПРЯМО СЕЙЧАС и в полной форме. Владелец
   // продиктовал две фразы — «скажи как ты меня понял» и «правильно ли мы друг
   // друга понимаем»; каноном стоит первая, вторая принимается как её вариант
@@ -501,6 +512,13 @@ const TEMPLATES: Record<string, string> = {
   "doc-antipatterns": "ANTI-PATTERNS.template.md",
   "doc-design": "DESIGN.template.md",
   "doc-parallel-routing": "PARALLEL-ROUTING.template.md",
+  // Четыре документа стартера жили БЕЗ шаблона — то самое нарушение, ради
+  // которого правило выше и записано (2026-08-11). Проект, рождённый раньше
+  // любого из них, открывал пустую страницу и взять текст ему было неоткуда.
+  "doc-troubleshooting": "TROUBLESHOOTING.template.md",
+  "doc-glossary": "GLOSSARY.template.md",
+  "doc-lessons": "LESSONS.template.md",
+  "doc-coding-standards": "CODING-STANDARDS.template.md",
 };
 
 export function readTemplate(key: string): string {
