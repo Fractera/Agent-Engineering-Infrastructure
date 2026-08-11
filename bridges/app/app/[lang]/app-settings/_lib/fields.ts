@@ -196,17 +196,12 @@ export const SECTIONS: Section[] = [
 ];
 
 // ---- addresses that follow the server, not the typist --------------------------------
-// The address of the app is a FACT of this deployment, not an opinion: it is whatever the
-// domain panel has set up (or the IP, before a domain exists). Every field below is computed
-// from that one base, so they cannot disagree with each other or go stale after a domain
-// change. The panel writes them on save, which is also how the starter's inherited
-// www.fractera.ai finally leaves the config of a deployed server.
-
-export const DOMAIN_DERIVED: Record<string, (base: string) => string> = {
-  url: (base) => base,
-  "seo.canonicalBase": (base) => base,
-  "seo.sitemapUrl": (base) => `${base}/sitemap.xml`,
-};
+//
+// `DOMAIN_DERIVED` moved to `lib/public-app-url.ts` and is now APPLIED, which it never was
+// while it lived here: this file is route-private, the only importer was the form, and the
+// form never called it — so Site URL, Canonical base and Sitemap URL stayed empty on every
+// deployment and the app's sitemap came out with zero urls. It is now written server-side in
+// `api/config/site`, so every writer of the config gets the same addresses.
 
 // ---- nested get/set on a plain config object (immutable set) -------------------------
 

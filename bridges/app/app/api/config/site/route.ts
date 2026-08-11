@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { requireAuth } from "@/lib/require-auth";
+import { applyDerivedAddresses } from "@/lib/public-app-url";
 
 // Read/write the Shell's live site config (branding / SEO / PWA / images). The config is a
 // JSON file on disk in the Shell's working dir (/opt/fractera/app/APP-CONFIG/app-config.json),
@@ -36,9 +37,13 @@ export async function GET(req: NextRequest) {
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    if (!fs.existsSync(CONFIG_PATH)) return NextResponse.json({ config: {} });
+    // The locked addresses are shown as this server RESOLVES them, not as the file last
+    // recorded them: a fresh server has no file at all, and after a domain change the stored
+    // value is a day out of date. Deriving on read means the panel never displays an address
+    // the deployment does not answer on.
+    if (!fs.existsSync(CONFIG_PATH)) return NextResponse.json({ config: applyDerivedAddresses({}) });
     const raw = fs.readFileSync(CONFIG_PATH, "utf-8");
-    return NextResponse.json({ config: JSON.parse(raw) });
+    return NextResponse.json({ config: applyDerivedAddresses(JSON.parse(raw)) });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }
@@ -53,8 +58,13 @@ export async function POST(req: NextRequest) {
     if (!config || typeof config !== "object" || Array.isArray(config)) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
+    // Site URL / canonical base / sitemap URL are overwritten with what this server actually
+    // answers on. Enforced HERE and not in the form: the form is one writer among several
+    // (the settings MCP writes the same file), and a rule that lives in a form is a rule the
+    // next writer skips — which is precisely how these three stayed empty until now.
+    const withAddresses = applyDerivedAddresses(config as Record<string, unknown>);
     fs.mkdirSync(path.dirname(CONFIG_PATH), { recursive: true });
-    fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), "utf-8");
+    fs.writeFileSync(CONFIG_PATH, JSON.stringify(withAddresses, null, 2), "utf-8");
     revalidateShell(); // purge the Shell's ISR cache → change shows on next load
     return NextResponse.json({ ok: true });
   } catch (e) {

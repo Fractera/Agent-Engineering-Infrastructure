@@ -7,6 +7,7 @@ import { requireAuth } from "@/lib/require-auth";
 import { readEnvFile, writeEnvFile } from "@/lib/env-file";
 import { writeNginxForDomain, readStoredCertExpiry } from "../route";
 import { lockdownFirewall } from "@/lib/firewall";
+import { rewriteAppAddresses } from "@/lib/public-app-url";
 
 const SECRETS_FILE = "/etc/fractera/secrets.env";
 // Stable custom host (not *.vercel.app): lets L1 migrate off Vercel by
@@ -224,6 +225,18 @@ export async function POST(req: NextRequest) {
     if (!fw.ok) console.error("[activate] firewall lockdown skipped:", fw.detail);
   } catch (e) {
     console.error("[activate] firewall lockdown failed (continuing):", e);
+  }
+
+  // The app's own config still records the address from BEFORE this domain (an IP, or
+  // nothing on a fresh server), and the app reads that FILE — not this panel. Left alone, the
+  // site would keep publishing canonical tags and a sitemap pointing at the old address while
+  // serving on the new one, which search engines read as two sites, neither authoritative.
+  // Best-effort: a config that could not be rewritten must not abort an activation that has
+  // already moved nginx and the firewall.
+  try {
+    rewriteAppAddresses();
+  } catch (e) {
+    console.error("[activate] app-config address rewrite failed (continuing):", e);
   }
 
   // Notify Easy Starter: update subdomain in DB + send activation email.
