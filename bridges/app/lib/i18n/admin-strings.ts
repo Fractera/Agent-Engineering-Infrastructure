@@ -258,7 +258,9 @@ export type AdminStrings = {
   openai: {
     intro: string; keyLabel: string; replace: string;
     save: string; saving: string; restarting: string; saved: string; invalid: string; failed: string;
-    consumersLabel: string; set: string; notSet: string; mismatch: string; storedLocally: string;
+    consumersLabel: string;
+    /** Третий потребитель ключа — само приложение. */
+    appConsumer: string; appConsumerHint: string; set: string; notSet: string; mismatch: string; storedLocally: string;
     helpLabel: string;
     helpWhatTitle: string; helpWhat: string;
     helpSpendsTitle: string; helpSpends: string;

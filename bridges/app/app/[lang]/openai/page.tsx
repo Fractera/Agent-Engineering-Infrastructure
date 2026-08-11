@@ -8,7 +8,7 @@
 // Динамическая: настроенность и живость служб — живые.
 
 import Link from "next/link";
-import { KeyRound, BrainCircuit, Brain, CheckCircle, AlertCircle, XCircle } from "lucide-react";
+import { KeyRound, BrainCircuit, Brain, Mic, CheckCircle, AlertCircle, XCircle } from "lucide-react";
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { adminHref } from "@/lib/admin-nav";
 import { PageShell } from "../_components/page-shell";
@@ -83,11 +83,27 @@ export default async function OpenAiPage({ params }: { params: Promise<{ lang: s
             )}
           </span>
         </div>
+
+        {/* ТРЕТИЙ ПОТРЕБИТЕЛЬ — само приложение (2026-08-11): голосовой ввод и
+            перевод полей записей платят из этого же ключа. Ссылки на страницу у
+            него нет: это не раздел панели, а слой проекта. */}
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-border px-3 py-2">
+          <Mic size={12} className="text-muted-foreground" />
+          <span className="text-[11px] text-foreground">{o.appConsumer}</span>
+          <span className="text-[10px] text-muted-foreground">{o.appConsumerHint}</span>
+          <span className="ml-auto">
+            {state.app.configured ? (
+              <span className="flex items-center gap-1 text-[10px] text-green-500"><CheckCircle size={10} />{o.set}</span>
+            ) : (
+              <span className="text-[10px] text-orange-500">{o.notSet}</span>
+            )}
+          </span>
+        </div>
       </div>
 
       {/* Ключ доехал до одного потребителя, но не до другого — состояние, о котором
           старая панель молчала, а именно оно и есть тот молчаливый отказ. */}
-      {state.vectors.configured !== state.graph.configured && (
+      {new Set([state.vectors.configured, state.graph.configured, state.app.configured]).size > 1 && (
         <p className="mt-2 flex items-start gap-1.5 rounded-md border border-destructive/40 bg-destructive/5 p-2.5 text-[10px] leading-relaxed text-destructive">
           <XCircle size={11} className="mt-0.5 shrink-0" />
           <span>{o.mismatch}</span>

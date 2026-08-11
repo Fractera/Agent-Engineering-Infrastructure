@@ -11,12 +11,16 @@ import { headers } from "next/headers";
 
 const ADMIN = process.env.ADMIN_INTERNAL_URL ?? "http://127.0.0.1:3002";
 const RAG_ENV = process.env.RAG_ENV_PATH ?? "/opt/fractera/services/rag/.env";
+const APP_ENV = process.env.APP_ENV_PATH ?? "/opt/fractera/app/.env.local";
 
 export type OpenAiState = {
   // Слой данных: он же отвечает, работает ли векторный поиск.
   vectors: { configured: boolean; model: string | null; reachable: boolean };
   // Служба графа знаний: ключ в её СОБСТВЕННОМ окружении.
   graph: { configured: boolean };
+  // Гостевое приложение: из этого же ключа платят голосовой ввод и перевод
+  // полей записей. Ключ живёт в окружении слота — своё состояние, своя правда.
+  app: { configured: boolean };
 };
 
 export async function readOpenAiState(): Promise<OpenAiState> {
@@ -50,5 +54,16 @@ export async function readOpenAiState(): Promise<OpenAiState> {
     }
   } catch { /* нет файла — служба не установлена */ }
 
-  return { vectors, graph: { configured: graph } };
+  // Приложение читает ключ из своего `.env.local`: проверяем ИМЕННО его, а не
+  // наличие ключа вообще. Ключ, доехавший до графа и не доехавший до слота, —
+  // ровно тот случай, когда «задан» было бы ложью.
+  let app = false;
+  try {
+    const fs = await import("node:fs");
+    if (fs.existsSync(APP_ENV)) {
+      app = /^OPENAI_API_KEY=.+$/m.test(fs.readFileSync(APP_ENV, "utf-8"));
+    }
+  } catch { /* нет файла — слот пуст */ }
+
+  return { vectors, graph: { configured: graph }, app: { configured: app } };
 }

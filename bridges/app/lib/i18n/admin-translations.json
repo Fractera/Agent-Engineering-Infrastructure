@@ -554,7 +554,7 @@
       "consumersLabel": "What draws on this key",
       "set": "set",
       "notSet": "not set",
-      "mismatch": "The key reached one service but not the other. This is the failure worth catching: the knowledge graph fails SILENTLY — it accepts a document with a success answer and embeds nothing. Save the key again; it is written to both.",
+      "mismatch": "The key reached one consumer but not another. This is the failure worth catching: the knowledge graph fails SILENTLY — it accepts a document with a success answer and embeds nothing, and the application answers \"no key\" to voice input. Save the key again; it is written to all three.",
       "storedLocally": "The key is stored only on your own server, in the services' own environment files. It is never sent anywhere else and never shown back to this page — what you see is a state, not the value.",
       "helpLabel": "One key — what spends it, and why this is not a subscription",
       "helpWhatTitle": "What you get.",
@@ -568,7 +568,9 @@
       "helpWatchTitle": "Where to watch it.",
       "helpWatch": "Loading a large corpus into the knowledge base is the one operation that costs real money in a single go. Load what you will actually ask about, and remember that re-loading a document pays for that pass again.",
       "helpProviderTitle": "Changing the provider.",
-      "helpProvider": "OpenAI is the default chosen for the balance of price, quality and availability. If your project needs a different provider or model, write to"
+      "helpProvider": "OpenAI is the default chosen for the balance of price, quality and availability. If your project needs a different provider or model, write to",
+      "appConsumer": "The application",
+      "appConsumerHint": "voice input, field translation"
     },
     "deployments": {
       "unavailable": "The history could not be read — the data layer did not answer.",
@@ -2107,7 +2109,7 @@
       "consumersLabel": "Кто черпает из этого ключа",
       "set": "задан",
       "notSet": "не задан",
-      "mismatch": "Ключ доехал до одной службы и не доехал до другой. Это тот отказ, который важно поймать: граф знаний отказывает МОЛЧА — он принимает документ с успешным ответом и не встраивает ничего. Сохраните ключ ещё раз, он пишется в обе службы.",
+      "mismatch": "Ключ доехал до одного потребителя, но не до другого. Это тот самый отказ, который стоит ловить: граф знаний ломается МОЛЧА — принимает документ с успешным ответом и не записывает ничего, а приложение отвечает «ключа нет» голосовому вводу. Сохраните ключ ещё раз, он пишется во все три места.",
       "storedLocally": "Ключ хранится только на вашем сервере, в собственных файлах окружения служб. Он никуда не отправляется и никогда не показывается обратно этой странице — вы видите состояние, а не значение.",
       "helpLabel": "Один ключ — кто его тратит и почему это не подписка",
       "helpWhatTitle": "Что вы получаете.",
@@ -2121,7 +2123,9 @@
       "helpWatchTitle": "За чем стоит следить.",
       "helpWatch": "Загрузка большого корпуса в базу знаний — единственная операция, которая стоит настоящих денег сразу. Загружайте то, о чём действительно будете спрашивать, и помните: повторная загрузка документа оплачивает этот проход снова.",
       "helpProviderTitle": "Смена поставщика.",
-      "helpProvider": "OpenAI — значение по умолчанию, выбранное за равновесие цены, качества и доступности. Если вашему проекту нужен другой поставщик или модель, напишите на"
+      "helpProvider": "OpenAI — значение по умолчанию, выбранное за равновесие цены, качества и доступности. Если вашему проекту нужен другой поставщик или модель, напишите на",
+      "appConsumer": "Приложение",
+      "appConsumerHint": "голосовой ввод, перевод полей"
     },
     "deployments": {
       "unavailable": "Историю прочитать не удалось — слой данных не ответил.",

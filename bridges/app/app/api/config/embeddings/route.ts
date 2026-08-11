@@ -14,6 +14,7 @@ import { requireAuth } from "@/lib/require-auth";
 
 const DATA_ENV = process.env.DATA_ENV_PATH ?? "/opt/fractera/services/data/.env";
 const RAG_ENV  = process.env.RAG_ENV_PATH  ?? "/opt/fractera/services/rag/.env";
+const APP_ENV  = process.env.APP_ENV_PATH  ?? "/opt/fractera/app/.env.local";
 const DATA_URL = process.env.DATA_INTERNAL_URL ?? "http://127.0.0.1:3300";
 
 function parseEnv(content: string): Record<string, string> {
@@ -95,6 +96,27 @@ export async function POST(req: NextRequest) {
     ragUpdated = false; // reported, never fatal — the key is already saved
   }
 
+  // ГОСТЕВОЕ ПРИЛОЖЕНИЕ — ТРЕТИЙ ПОТРЕБИТЕЛЬ (2026-08-11). Голосовой ввод и
+  // перевод полей живут в слоте и читают ключ из ЕГО окружения: до этой правки
+  // ключ доезжал до слоя данных и до графа, а приложение честно отвечало
+  // «ключа нет» — и человек, только что сохранивший ключ, видел отказ.
+  //
+  // Файл в .gitignore слота, поэтому ключ не уедет в репозиторий пользователя.
+  // Перезапуск не нужен: маршруты слота читают файл на каждый вызов.
+  let appUpdated = false;
+  try {
+    if (fs.existsSync(APP_ENV)) {
+      const app = parseEnv(fs.readFileSync(APP_ENV, "utf-8"));
+      app.OPENAI_API_KEY = apiKey;
+      const appBody = Object.entries(app).map(([k, v]) => `${k}=${v}`).join("\n") + "\n";
+      fs.writeFileSync(APP_ENV, appBody, { mode: 0o600 });
+      hardenSecretFile(APP_ENV);
+      appUpdated = true;
+    }
+  } catch {
+    appUpdated = false; // сообщается, но не фатально — ключ уже сохранён
+  }
+
   // Best-effort: a failed restart must not lose the key that is already saved.
   let restarted = true;
   try {
@@ -108,5 +130,5 @@ export async function POST(req: NextRequest) {
     try { execSync("pm2 restart fractera-rag", { timeout: 20_000, stdio: "ignore" }); } catch { /* stopped or absent */ }
   }
 
-  return NextResponse.json({ ok: true, restarted, ragUpdated });
+  return NextResponse.json({ ok: true, restarted, ragUpdated, appUpdated });
 }
