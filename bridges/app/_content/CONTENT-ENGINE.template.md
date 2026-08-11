@@ -32,7 +32,63 @@ Four properties follow:
 - **Static-first** — no dynamic `[slug]`, no client routing, no `force-dynamic`. Every page is
   SSG/ISR and works with JavaScript switched off.
 
-## 2. Three layers
+**Read the next section before you apply any of this.** Everything above is true of ONE kind of page,
+and applying it to the other kind produces an impossible project.
+
+## 2. 🔒 Which of the two models is this page? Decide before you write a file
+
+This project builds pages under **two different models**, and they are not a matter of taste. Choosing
+wrongly is not a style mistake — one direction produces a million folders, the other produces a site
+that search engines cannot read.
+
+**The test is one question: does what the page shows depend on WHO is looking?**
+
+| | **Public content** (this document) | **User-scoped surface** (dashboard, admin, account) |
+|---|---|---|
+| Who sees what | everyone sees the same thing | every visitor sees their own |
+| Audience | `guest`, or no role at all | a named role; never anonymous |
+| How many pages exist | a finite set someone authored — five posts, forty | as many as there are users: a thousand, a million, unknown at build time |
+| Known at build time | yes — the folders are on disk | no — the rows do not exist yet |
+| Routing | **a folder per item**, prerendered | **a dynamic segment**: `/[slug]`, `/[id]`, `/[userId]` |
+| Rendering | SSG / ISR | static shell + data fetched behind an authenticated `/api/*` |
+| Indexed by search engines | yes — that is the point | never; it must not be |
+| This document applies | ✅ | ❌ — see `CODING-STANDARDS.md` |
+
+### Why a folder per item is right here
+
+A blog post is **authored**. Somebody wrote it, it is the same for every reader, and its whole value is
+that a search engine can find it. Because the set is finite and known before the build, the build can
+render every page ahead of time — so the visitor gets HTML with no query behind it, and the crawler gets
+a complete document. The folder is what makes that possible: the file system IS the list of what exists.
+
+### Why a folder per item is impossible there
+
+A dashboard shows **rows that belong to somebody**. There is no author and no finite set: a site with a
+million users has a million versions of `/dashboard`, and none of them exists until that person signs
+up. You cannot prerender them, you must not index them, and generating a folder per user is not a heavy
+solution — it is not a solution at all, because the folders would have to be written after the build,
+by the running site, for people who registered a minute ago.
+
+So the user-scoped surface inverts three things and keeps one:
+
+1. **The route becomes a dynamic segment** — `/[id]`, `/[slug]` — resolved at request time.
+2. **The data arrives behind authentication**, through `/api/*`, never baked into the page.
+3. **The page is gated by role** and redirects to sign-in when the role is missing.
+4. **What it keeps: the shell is still static.** The frame, headings and empty states are prerendered;
+   only the rows are dynamic, and they load into a container the visitor opens. A dynamic route does not
+   license a dynamic page.
+
+That is the subject of `CODING-STANDARDS.md`, not of this file. **Do not carry the rules below into a
+dashboard**, and do not "fix" a dashboard route because this document says a route may not be dynamic:
+that sentence is scoped to public content, where the alternative exists.
+
+### Where the boundary is checked
+
+`npm run check:content` audits **content tabs only** — a folder that contains post folders. It never
+looks at `/dashboard` or any user-scoped route, so a legitimate dynamic segment there is not a
+violation and will not be reported as one.
+
+## 3. Three layers
 
 ```
 ┌─ ROUTE SHELL ─────────────────────────────────────────────────────────────┐
@@ -72,7 +128,7 @@ Localized UI strings are **data**, so they live in `_data` — never in `_lib`. 
 **code**, so they live in `_lib/types.ts`. The shared engine is **not** a tab library: every tab
 reuses it and no tab copies it into its own `_lib`.
 
-## 3. The recipe: add a post
+## 4. The recipe: add a post
 
 Create **one folder** and nothing else:
 
@@ -94,7 +150,7 @@ slug remains anywhere in the tree.
 **Copy an existing post folder as the starting point.** The two shipped posts differ in exactly the
 ways a new post may differ: one has a video hero, the other a YouTube poster; both carry `en` + `ru`.
 
-## 4. 🔒 The law of the two links
+## 5. 🔒 The law of the two links
 
 A post links in **exactly two ways**. This is enforced, not advised — `npm run check:content` rejects
 anything else, and each rule below is a defect that already shipped once.
@@ -131,7 +187,7 @@ page the sentence was about.
 Why a token instead of typing the name: a name typed into an article freezes one project's identity
 into content that is copied into every other project. The site names itself; the article only points.
 
-## 5. Identity comes from settings, never from data
+## 6. Identity comes from settings, never from data
 
 The engine reads who this project is at render time:
 
@@ -149,7 +205,7 @@ The engine reads who this project is at render time:
 `metadataBase`. A missing canonical is harmless — a search engine treats the page as its own original.
 A canonical pointing at another domain hands the whole site away. Never substitute a fallback host.
 
-## 6. Translation cells
+## 7. Translation cells
 
 `lib/content/resolve.ts` merges **per key** with an English fallback: a cell may translate the title
 and leave the blocks, and only the translated keys change. Consequences to know:
@@ -161,7 +217,7 @@ and leave the blocks, and only the translated keys change. Consequences to know:
 - Diagrams and code blocks are content too. An ASCII diagram left in English inside a Russian article
   reads as an unfinished translation — translate the labels with the prose.
 
-## 7. What the gate checks
+## 8. What the gate checks
 
 `npm run check:content` — run it after touching any post:
 
@@ -178,7 +234,7 @@ and leave the blocks, and only the translated keys change. Consequences to know:
 A rule that is not mechanically enforced is a suggestion, and suggestions lose to deadlines. That is
 why these live in a script that fails, not in a paragraph nobody re-reads.
 
-## 8. Scaling — and what it costs
+## 9. Scaling — and what it costs
 
 **A new post** creates exactly one folder. **Zero existing files are edited.** The index learns about
 it because the file system is the registry.
@@ -193,7 +249,7 @@ conflict point and lock-step coupling), a dynamic `[slug]/page.tsx` doing a runt
 shared "god" types file every author edits. Here engine types are *imported*, never extended —
 `blocks/types.ts` has **zero imports** on purpose, a deliberate leaf of the graph.
 
-## 9. Before you say a post is done
+## 10. Before you say a post is done
 
 1. `npm run check:content` — green.
 2. The route is still static: no `force-dynamic`, no `cookies()` / `headers()` / `auth()`, no
@@ -202,11 +258,15 @@ shared "god" types file every author edits. Here engine types are *imported*, ne
 4. Never run `npm run build` on Windows (the project builds on Ubuntu); never introduce a dynamic
    `[slug]`; never hand-edit `_list.generated.ts`, whose first line says so.
 
-## 10. The seven requirements — and what proves each one
+## 11. The seven requirements — and what proves each one
 
 A content surface is finished when all seven hold. **Five of them are checked by
 `npm run check:content`;** the remaining two need a build and a live page, and their exact commands are
 below. Run this after adding a tab, and after any change that touches the shape of one.
+
+**These seven describe a PUBLIC CONTENT surface.** A user-scoped surface (§2) is measured differently —
+it is allowed a dynamic segment and an authenticated fetch, and it is required to be un-indexed. Running
+this list against a dashboard and "fixing" what it reports would break the dashboard.
 
 | # | Requirement | Proof | Who proves it |
 |---|---|---|---|
@@ -230,7 +290,7 @@ actual build (only the build knows what it prerendered) and requirement 7 needs 
 substitute a cheaper proof for either: "the code looks static" is not requirement 6, and "the page opens
 in my browser" is not requirement 7 — a browser runs the JavaScript you are trying to prove unnecessary.
 
-## 11. The command
+## 12. The command
 
 The owner may ask for a post in the conversation, using the command listed in the instruction-set
 block of `CLAUDE.md`. It means: **create the post folder by this document** — all four files, both
