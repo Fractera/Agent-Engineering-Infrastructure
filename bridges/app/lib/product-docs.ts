@@ -22,6 +22,7 @@ const APP_DIR = process.env.APP_DIR ?? "/opt/fractera/app";
 
 export type DocKey =
   | "doc-instruction"
+  | "doc-dynamic-workflows"
   | "doc-platform-tools"
   | "doc-architecture"
   | "doc-glossary"
@@ -41,6 +42,12 @@ export type DocKey =
 /** Ключ страницы → файл в корне слота. Единственное место этого соответствия. */
 export const DOC_FILES: Record<DocKey, string> = {
   "doc-instruction": "CLAUDE.md",
+  // Динамические рабочие процессы — волны агентов вместо одного. Прямая пара к
+  // `SINGLE-AGENT.md`: тот запрещает многоагентность, этот описывает единственную
+  // санкционированную дверь и два замка на ней. Выключен по умолчанию и включается
+  // только после подтверждённых кейсов: усилитель, наведённый на догадку, даёт
+  // большой, аккуратный и дорогой неверный результат.
+  "doc-dynamic-workflows": "DYNAMIC-WORKFLOWS.md",
   // Перечень того, что платформа УЖЕ даёт: склады, движки, службы. Без этого
   // файла агент не знает о них ничего — у него нет доступа к внешним
   // инструментам, и единственный способ узнать про векторный склад, граф знаний,
@@ -116,6 +123,9 @@ export function isDocKey(v: string): v is DocKey {
  */
 export const DOC_KIND: Record<string, "evolving" | "static"> = {
   "doc-instruction": "static",
+  // ЗАДАННЫЙ: это закон о том, когда многоагентная работа допустима, а не
+  // наблюдение агента о ходе проекта.
+  "doc-dynamic-workflows": "static",
   "doc-use-cases": "static",
   "doc-platform-tools": "evolving",
   "doc-coding-standards": "static",

@@ -79,6 +79,12 @@ export const INSTRUCTION_DEFAULTS: Record<string, boolean> = {
   // Параллельная маршрутизация ещё не открыта (решение владельца 2026-08-11):
   // выключена по умолчанию и включиться не может, см. `IN_DEVELOPMENT`.
   "doc-parallel-routing": false,
+  // Динамические рабочие процессы (решение владельца 2026-08-12). Выключены по
+  // умолчанию не из осторожности, а по цене: волна агентов стоит кратно обычной
+  // сессии, и проект, включивший её по невнимательности, узнаёт об этом по
+  // исчерпанному лимиту посреди работы. Открывается только после кейсов —
+  // `REQUIRES_USE_CASES`.
+  "doc-dynamic-workflows": false,
 };
 
 export function defaultEnabled(key: string): boolean {
@@ -104,6 +110,30 @@ export const IN_DEVELOPMENT = new Set<string>(["doc-parallel-routing"]);
 
 export function isInDevelopment(key: string): boolean {
   return IN_DEVELOPMENT.has(key);
+}
+
+/**
+ * 🔒 ДОКУМЕНТЫ, КОТОРЫЕ ОТКРЫВАЮТСЯ ТОЛЬКО ПОСЛЕ КЕЙСОВ (владелец 2026-08-12).
+ *
+ * Отличие от `IN_DEVELOPMENT` существенное: там возможности нет вовсе, здесь она
+ * есть, но включать её раньше времени — дороже, чем не включать.
+ *
+ * ЗАЧЕМ ИМЕННО КЕЙСЫ. Волна агентов — усилитель. Усилитель, наведённый на
+ * догадку, даёт большой, аккуратный и дорогой неверный результат: сто агентов,
+ * старательно строящих не то. Подтверждённые кейсы — единственное, что задаёт
+ * направление, и единственное, чего нельзя вывести из кода.
+ *
+ * 🔒 ЗАПРЕТ ЖИВЁТ НА СЕРВЕРЕ, как и `IN_DEVELOPMENT`: интерфейсный обходится
+ * одним `curl`, и тогда в инструкции агента окажется разрешение, которого
+ * владелец не давал.
+ *
+ * Выключить можно всегда — запирать владельца в состоянии, которого он не
+ * выбирал, мы права не имеем.
+ */
+export const REQUIRES_USE_CASES = new Set<string>(["doc-dynamic-workflows"]);
+
+export function requiresUseCases(key: string): boolean {
+  return REQUIRES_USE_CASES.has(key);
 }
 
 // ── Законы документов-способностей ────────────────────────────────────────────
@@ -147,6 +177,21 @@ here are spoken, and dictation drops words: this block is where what he meant an
 produced are compared. Details: \`DIALOGUE-FORMAT.md\`.`,
     off: `**Dialogue format — OFF.** Do not open answers with a restatement and do not apologise for its
 absence. Answer directly. The command above still asks for one when the owner wants it.`,
+  },
+  "doc-dynamic-workflows": {
+    on: `**Dynamic workflows — ON.** The owner has opened staged multi-agent orchestration for this
+project: on a task where it fits, you may run waves of agents — a first pass, then a verification or
+summarisation pass chosen from what came back — instead of doing everything in this window. **This does
+NOT cancel \`SINGLE-AGENT.md\`'s default:** nothing about a task authorises a wave by itself, not its
+size, not "independent parts", not "faster in parallel". Two conditions are hard. **First, name the guard
+before the wave** — the command that judges each unit's output without the owner (\`check:i18n\`,
+\`check:content\`, \`check:encoding\`, a test). Cannot name one ⇒ it is not a workflow, it is a fan-out
+with a hope attached, and you keep working here. **Second, say the cost out loud before starting**: a
+wave costs several ordinary sessions, and an agent that dies mid-write leaves a file that looks finished
+and cannot build. Announce that the chat goes quiet while waves run. Details: \`DYNAMIC-WORKFLOWS.md\`.`,
+    off: `**Dynamic workflows — OFF.** Staged multi-agent orchestration is not available in this project.
+Do not propose it, do not describe a task as "a good fit for a workflow", and do not treat a large request
+as a reason to ask for it. \`SINGLE-AGENT.md\` governs; work in this window.`,
   },
   "doc-context-state": {
     on: `**Context handoff — ON.** \`CONTEXT-STATE.md\` is the handoff between two context windows:
@@ -207,6 +252,12 @@ export type CommandVerb = (typeof COMMAND_VERBS)[number];
 export const COMMAND_DEFAULTS: Record<string, Partial<Record<CommandVerb, Record<string, string>>>> = {
   "doc-single-agent": {
     activate: { en: "also", ru: "кстати говоря" },
+  },
+  // Фраза Черни дословно — «use a workflow». Своей выдумывать нечего: она уже
+  // звучит в интервью, её произносят вслух, и она не срабатывает случайно в
+  // потоке речи. Пока документ выключен, команды в инструкции нет.
+  "doc-dynamic-workflows": {
+    activate: { en: "use a workflow", ru: "используй рабочий процесс" },
   },
   // «Покажи доказательства ПРЯМО СЕЙЧАС» (владелец 2026-08-11). У «Тестирования»
   // команда значит не «сними запрет», а «исполни закон на этой работе»: документ
@@ -517,6 +568,7 @@ export function syncInstructionSection(
 //
 // Правило: добавил документ в стартер — положи шаблон сюда той же партией.
 const TEMPLATES: Record<string, string> = {
+  "doc-dynamic-workflows": "DYNAMIC-WORKFLOWS.template.md",
   "doc-context-state": "CONTEXT-STATE.template.md",
   "doc-testing": "TESTING.template.md",
   "doc-single-agent": "SINGLE-AGENT.template.md",

@@ -3,8 +3,10 @@ import { requireAuth } from "@/lib/require-auth";
 import {
   readInstructionSet, writeInstructionSet, syncInstructionSection, ensureDoc,
   TOGGLEABLE, defaultEnabled, readCommands, COMMAND_VERBS, isInDevelopment,
+  requiresUseCases,
   type CommandMap, type CommandVerb,
 } from "@/lib/instruction-set";
+import { useCasesGate } from "@/lib/use-cases-store";
 
 // Выключатели инструкций проекта.
 //
@@ -58,6 +60,13 @@ export async function POST(req: NextRequest) {
     } else {
       const restore = snapshot ?? TOGGLEABLE.filter((k) => defaultEnabled(k));
       for (const k of TOGGLEABLE) enabled[k] = restore.includes(k);
+      // Возврат мастер-выключателя не имеет права открыть дверь, запертую
+      // условием: снимок сделан раньше, а кейсы могли быть удалены после него.
+      // Без этой строки мастер стал бы обходом замка — самым тихим из возможных,
+      // потому что владелец нажимал «вернуть как было», а не «включить».
+      for (const k of TOGGLEABLE) {
+        if (enabled[k] && requiresUseCases(k) && useCasesGate().kind !== "ready") enabled[k] = false;
+      }
       snapshot = null;
     }
   } else if (typeof body.doc === "string" && typeof body.enabled === "boolean") {
@@ -71,6 +80,16 @@ export async function POST(req: NextRequest) {
     // мы права не имеем.
     if (body.enabled && isInDevelopment(body.doc)) {
       return NextResponse.json({ error: "in_development" }, { status: 409 });
+    }
+    // Дверь, запертая условием: возможность есть, но включать её раньше кейсов
+    // дороже, чем не включать. Отказ несёт СОСТОЯНИЕ гейта, а не голое «нельзя»:
+    // владелец должен увидеть, сколько кейсов написано и сколько подтверждено,
+    // иначе отказ читается как поломка.
+    if (body.enabled && requiresUseCases(body.doc)) {
+      const gate = useCasesGate();
+      if (gate.kind !== "ready") {
+        return NextResponse.json({ error: "needs_use_cases", gate }, { status: 409 });
+      }
     }
     enabled[body.doc] = body.enabled;
     // Ручное переключение отменяет мастер-снимок: набор снова живёт сам по себе,

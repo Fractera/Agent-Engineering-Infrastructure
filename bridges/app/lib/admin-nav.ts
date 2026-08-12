@@ -72,6 +72,10 @@ export const NAV = [
   // двенадцать одинаковых на вид пунктов.
   { slug: "doc-overview",         group: "documents" },
   { slug: "doc-instruction",      group: "documents" },
+  // Сразу за главной инструкцией (решение владельца 2026-08-12): самая
+  // последствная опция корпуса стоит там, где её увидят, а не там, где на неё
+  // наткнутся случайно. Выключена по умолчанию и заперта до кейсов.
+  { slug: "doc-dynamic-workflows", group: "documents" },
   { slug: "doc-use-cases",        group: "documents" },
   { slug: "doc-platform-tools",   group: "documents" },
   { slug: "doc-architecture",     group: "documents" },

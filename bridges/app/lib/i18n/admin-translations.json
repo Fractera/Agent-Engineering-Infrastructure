@@ -1389,6 +1389,10 @@
       "doc-content-engine": {
         "title": "Content engine",
         "hint": "How a post is built: co-location, two kinds of link, the content gate."
+      },
+      "doc-dynamic-workflows": {
+        "title": "Dynamic workflows",
+        "hint": "Waves of agents instead of one. The most powerful option here — and the most expensive."
       }
     },
     "breadcrumbHome": "Panel",
@@ -1551,6 +1555,27 @@
       "creating": "Creating…",
       "createdDoc": "Document created — it is now a file in your repository",
       "createHint": "This project has no CONTENT-ENGINE.md yet. Create it from the template.",
+      "failed": "Could not save"
+    },
+    "dynamicWorkflows": {
+      "whyTitle": "What this actually is.",
+      "why": "Not \"many agents at once\" — that is a fan-out. A dynamic workflow is staged orchestration: a first wave runs, and what comes back decides what the second wave is — verification, summary, another fan-out, or nothing. Boris Cherny, who built Claude Code, calls it \"an algebra for agents\". It is triggered by saying \"use a workflow\"; there is no button.",
+      "costTitle": "What it costs.",
+      "cost": "Every agent carries its own context and pays for it separately, so one campaign costs several ordinary sessions. The honest test is not the name of your plan but your own last week: if an ordinary session already reaches your limit before the work is done, a workflow will not fit — it will stop in the middle, and half a workflow is not half a result. In practice this means one of the Max tiers rather than the entry plan.",
+      "gateTitle": "Why confirmed cases come first.",
+      "gate": "A workflow is an amplifier, and an amplifier pointed at a guess produces a large, tidy, expensive wrong thing. A hundred agents building carefully in the wrong direction is the most costly outcome available in this product. Cases are what point it, and the panel keeps this document locked until they exist and you have confirmed them.",
+      "guardTitle": "The guard rule.",
+      "guard": "A wave is justified only where each unit's result is checked by a machine without you — translations, content sweeps, mechanical migrations, all of which already have guards here. Architecture, the client/server boundary, debugging a build: no. There, proving the answer costs more than producing it.",
+      "switchTitle": "Switching it back off.",
+      "switchWhere": "Do it after the campaign that justified it. Left on, every large request carries the question \"should this fan out?\", and for most work here the answer is no.",
+      "lockedTitle": "Locked until your cases are ready.",
+      "lockedMissing": "No user cases exist yet. Open the Use cases section — its Quiz turns a conversation into them.",
+      "lockedUnconfirmed": "Cases exist but some are still unconfirmed. A case the owner has not confirmed is a guess the model wrote.",
+      "lockedReady": "Cases are confirmed — this document can be switched on.",
+      "createDoc": "Create the document",
+      "creating": "Creating…",
+      "createdDoc": "Document created — it is now a file in your repository",
+      "createHint": "This project has no DYNAMIC-WORKFLOWS.md yet. Create it from the template.",
       "failed": "Could not save"
     }
   },
@@ -2944,6 +2969,10 @@
       "doc-content-engine": {
         "title": "Как строится пост",
         "hint": "Ко-локация, два типа ссылок и проверка, которая отклоняет неверный пост."
+      },
+      "doc-dynamic-workflows": {
+        "title": "Динамические рабочие процессы",
+        "hint": "Волны агентов вместо одного. Самая сильная опция корпуса — и самая дорогая."
       }
     },
     "breadcrumbHome": "Панель",
@@ -3107,6 +3136,27 @@
       "createdDoc": "Документ создан — теперь это файл в вашем репозитории",
       "createHint": "В этом проекте ещё нет файла CONTENT-ENGINE.md. Создайте его из шаблона.",
       "failed": "Сохранить не удалось"
+    },
+    "dynamicWorkflows": {
+      "whyTitle": "Что это на самом деле.",
+      "why": "Не «много агентов сразу» — это веер. Динамический рабочий процесс — поэтапная оркестровка: проходит первая волна, и уже её результат решает, какой будет вторая — проверка, сведение итогов, ещё один веер или ничего. Борис Черни, создатель Claude Code, называет это «алгеброй для агентов». Запускается словами «используй рабочий процесс», отдельной кнопки нет.",
+      "costTitle": "Чего это стоит.",
+      "cost": "Каждый агент несёт своё контекстное окно и платит за него отдельно, поэтому одна кампания стоит нескольких обычных сессий. Честная проверка — не название тарифа, а ваша прошлая неделя: если обычная сессия уже упирается в лимит до конца работы, рабочий процесс не поместится — он остановится посередине, а половина рабочего процесса не даёт половины результата. На практике это значит тариф уровня Max, а не начальный.",
+      "gateTitle": "Почему сначала кейсы.",
+      "gate": "Рабочий процесс — усилитель, а усилитель, наведённый на догадку, даёт большой, аккуратный и дорогой неверный результат. Сто агентов, старательно строящих не то, — самый дорогой исход, доступный в этом продукте. Направление задают кейсы, поэтому панель держит документ запертым, пока они не написаны и не подтверждены вами.",
+      "guardTitle": "Правило сторожа.",
+      "guard": "Волна оправдана только там, где результат каждой единицы проверяется машиной без вас: переводы, прогоны по содержимому, механические миграции — у них сторожа уже есть. Архитектура, граница клиент/сервер, разбор упавшей сборки — нет: там доказательство стоит дороже работы.",
+      "switchTitle": "Когда выключить обратно.",
+      "switchWhere": "После кампании, ради которой включали. Оставленный включённым, он подмешивает к каждой крупной просьбе вопрос «а не развернуть ли это веером?», и для большинства работы здесь ответ — нет.",
+      "lockedTitle": "Заперто до готовности кейсов.",
+      "lockedMissing": "Пользовательских кейсов ещё нет. Откройте раздел «Пользовательские кейсы» — его Quiz превращает разговор в них.",
+      "lockedUnconfirmed": "Кейсы есть, но часть не подтверждена. Кейс, который владелец не подтвердил, — это догадка, написанная моделью.",
+      "lockedReady": "Кейсы подтверждены — документ можно включать.",
+      "createDoc": "Создать документ",
+      "creating": "Создаём…",
+      "createdDoc": "Документ создан — теперь это файл в вашем репозитории",
+      "createHint": "В этом проекте ещё нет DYNAMIC-WORKFLOWS.md. Создайте его из шаблона.",
+      "failed": "Не удалось сохранить"
     }
   }
 }

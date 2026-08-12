@@ -401,6 +401,20 @@ export type AdminStrings = {
     switchTitle: string; switchWhere: string;
     createDoc: string; creating: string; createdDoc: string; createHint: string; failed: string;
   };
+  // Динамические рабочие процессы — волны агентов вместо одного. Своя секция по
+  // той же причине, что у «единственного агента»: страница объясняет ОДНУ вещь, и
+  // объяснение обязано стоять выше редактора файла. Здесь оно ещё и дороже
+  // обычного — человек принимает решение о деньгах, а не о настройке.
+  dynamicWorkflows: {
+    whyTitle: string; why: string;
+    costTitle: string; cost: string;
+    gateTitle: string; gate: string;
+    guardTitle: string; guard: string;
+    switchTitle: string; switchWhere: string;
+    /** Отказ включения, когда кейсы ещё не готовы. */
+    lockedTitle: string; lockedMissing: string; lockedUnconfirmed: string; lockedReady: string;
+    createDoc: string; creating: string; createdDoc: string; createHint: string; failed: string;
+  };
   // Формат диалога: ответ открывается пересказом просьбы своими словами. Отдельной
   // секцией по той же причине, что и «единственный агент», — страница объясняет
   // ОДНУ вещь, и объяснение обязано стоять выше редактора файла.
