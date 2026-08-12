@@ -187,8 +187,10 @@ size, not "independent parts", not "faster in parallel". Two conditions are hard
 before the wave** — the command that judges each unit's output without the owner (\`check:i18n\`,
 \`check:content\`, \`check:encoding\`, a test). Cannot name one ⇒ it is not a workflow, it is a fan-out
 with a hope attached, and you keep working here. **Second, say the cost out loud before starting**: a
-wave costs several ordinary sessions, and an agent that dies mid-write leaves a file that looks finished
-and cannot build. Announce that the chat goes quiet while waves run. Details: \`DYNAMIC-WORKFLOWS.md\`.`,
+wave costs several ordinary sessions, it cannot be steered once running, and an agent that dies mid-write
+leaves a file that looks finished and cannot build. The agents run in THIS session on THIS machine, with
+its permissions — nothing is created on the production server — and they edit files in \`acceptEdits\`
+whatever mode you are in. Details: \`DYNAMIC-WORKFLOWS.md\`.`,
     off: `**Dynamic workflows — OFF.** Staged multi-agent orchestration is not available in this project.
 Do not propose it, do not describe a task as "a good fit for a workflow", and do not treat a large request
 as a reason to ask for it. \`SINGLE-AGENT.md\` governs; work in this window.`,

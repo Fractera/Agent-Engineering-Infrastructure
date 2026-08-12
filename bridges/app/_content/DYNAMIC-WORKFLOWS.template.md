@@ -11,11 +11,34 @@ one is the only sanctioned door out, and the door has two locks on it for good r
 Not "many agents at once". That is a fan-out, and a fan-out is what people build by hand when they are
 guessing.
 
-A dynamic workflow is **staged orchestration**. Claude runs a first wave, reads what came back, and only
-then decides what the second wave is — a verification pass, a summarisation pass, another fan-out, or
-nothing at all. Boris Cherny, who built Claude Code, calls this *"an algebra for agents"*: sequential and
-parallel become operations you compose, not a setting you choose in advance. It runs inside a sandboxed
-virtual machine, and it is triggered by saying, in plain words, **"use a workflow"** — there is no button.
+A dynamic workflow is **a script that Claude writes and a runtime executes**. The script holds the loop,
+the branching and the intermediate results, so a first wave runs, its results decide what the second wave
+is — verification, summary, another fan-out — and only the final answer reaches the conversation. Boris
+Cherny, who built Claude Code, calls this *"an algebra for agents"*.
+
+Trigger it by saying **"use a workflow"**, or with the keyword `ultracode` in your prompt. `/workflows`
+shows a live view of every phase, its agent count and its token total, and lets you pause or stop.
+
+## 🔒 Where it actually runs — read this before anything else
+
+**Nothing is created on your production server, and no virtual machine is started anywhere.**
+
+The runtime executes the *script* in an isolated environment, separate from the conversation — isolated
+means it has **no filesystem or shell access of its own**. The script only coordinates. The agents it
+spawns run **inside your existing Claude Code session, on the machine where that session is running**,
+with the same permission mode, the same tool allowlist and the same sandboxing as any other tool call you
+already make. Your operating system does not matter to this; no separate runtime is installed.
+
+So the practical answer to "what will it touch?" is: **exactly what your session can already touch, only
+by up to sixteen agents at once instead of one.** If your session can reach a production server, so can
+they — not because a workflow is special, but because your session already could.
+
+Two consequences worth knowing before the first run:
+
+- **Subagents always run in `acceptEdits` mode**, whatever your session's mode is. File edits are
+  auto-approved. Shell commands, web fetches and MCP tools outside your allowlist still prompt you.
+- **There is no mid-run input.** Only a permission prompt can pause a run. If you want sign-off between
+  stages, make each stage its own workflow.
 
 The example he gives is the honest measure of the ceiling. The Bun team rewrote their JavaScript runtime
 from Zig to Rust as a single task:
@@ -43,18 +66,31 @@ only as safe as the guard that judges its output.**
 ## Why it can cost more than everything you have done so far
 
 An agent that runs for eleven days is not free, and neither is one that runs for eleven minutes across
-forty parallel branches. Every agent carries its own context and pays for it separately.
+forty parallel branches. Every agent carries its own context and pays for it separately, and runs count
+against your plan's limits like any other session.
 
-**The test is not the name of your plan — it is your own last week.** Plans and their limits change often
-enough that writing a number here would make this document wrong within months. Use this instead:
+**Availability is not the question — affordability is.** Workflows are available on every paid plan (on
+Pro you switch them on in the `Dynamic workflows` row of `/config`), so nothing stops you from starting
+one. What stops you is the limit you hit halfway through. **The honest test is your own last week:**
 
 - If an **ordinary single-agent session** already reaches your limit before the work is done, a workflow
-  will not fit. It will stop in the middle, and a workflow stopped in the middle is worse than one never
-  started — see the failure mode below.
-- If you comfortably finish ordinary sessions and the limit is something you rarely think about, a
-  workflow is affordable. In practice that means one of the **Max** tiers rather than the entry plan.
+  will not fit. It will stop in the middle — and see the resume rule below for why that is expensive.
+- If you comfortably finish ordinary sessions without thinking about the limit, a workflow is affordable.
 
-There is no partial credit here. Half a workflow is not half a result.
+Plans and their numbers change often enough that a figure written here would be wrong within months; the
+test above stays true. What the product gives you instead of a promise:
+
+- **`/workflows` shows each agent's token use while the run goes**, and lets you stop it there.
+- **A `Large workflow` warning** appears when a run schedules more than 25 agents or its projected total
+  passes 1.5 million tokens. It is advisory — it does not pause anything.
+- **A size guideline** in `/config` tells Claude how many agents to aim for: `small` under 5, `medium`
+  under 15 (the default), `large` under 50. Hard caps sit behind it: 16 agents at once, 1,000 per run.
+- **Price a big job by running a small slice first** — one directory instead of the whole repository.
+
+**Stopping mid-run costs more than it looks.** On resume, cached results stop at the first agent that
+had not finished, and every agent that started after it runs again — even the ones that completed. And a
+run does not survive leaving Claude Code: the next session starts it fresh. This is why a workflow made of
+many small agents preserves far more progress than one made of a few long ones.
 
 ## The failure mode you must understand before switching this on
 
@@ -93,8 +129,14 @@ you can.
   size, not "independent parts", not "faster in parallel". That sentence stays true from `SINGLE-AGENT.md`.
 - **Name the guard before the wave.** If you cannot say which command judges the output, you do not have
   a workflow — you have a fan-out with a hope attached.
-- **Expect quiet.** The chat goes silent while waves run. That is the mode working, not a failure.
-- Steering mid-run is normal and expected. The Bun rewrite was steered throughout.
+- **You approve the plan before it runs.** The prompt lists the planned phases; `View raw script` shows
+  the script itself. Read the phases. This is the last cheap moment to notice the wrong direction.
+- **Your session stays free while it runs** — the work is in the background, and `/workflows` is where you
+  watch it. But you cannot steer mid-run: there is no input into a running workflow. If a stage needs your
+  sign-off, make it its own workflow.
+- **Save what worked.** In `/workflows`, `s` saves the run's script as a command, in the project or for
+  yourself. A review you run on every branch then runs the same orchestration each time — that, not the
+  size of one run, is where workflows repay the setup.
 
 ## When to switch it back off
 

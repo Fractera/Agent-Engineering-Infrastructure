@@ -407,6 +407,8 @@ export type AdminStrings = {
   // обычного — человек принимает решение о деньгах, а не о настройке.
   dynamicWorkflows: {
     whyTitle: string; why: string;
+    /** Где физически выполняются агенты — первый вопрос владельца о безопасности. */
+    whereTitle: string; where: string;
     costTitle: string; cost: string;
     gateTitle: string; gate: string;
     guardTitle: string; guard: string;

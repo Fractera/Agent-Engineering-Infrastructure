@@ -1559,9 +1559,9 @@
     },
     "dynamicWorkflows": {
       "whyTitle": "What this actually is.",
-      "why": "Not \"many agents at once\" — that is a fan-out. A dynamic workflow is staged orchestration: a first wave runs, and what comes back decides what the second wave is — verification, summary, another fan-out, or nothing. Boris Cherny, who built Claude Code, calls it \"an algebra for agents\". It is triggered by saying \"use a workflow\"; there is no button.",
+      "why": "Not \"many agents at once\" — that is a fan-out. A dynamic workflow is a script Claude writes and a runtime executes: the script holds the loop, the branching and the intermediate results, so only the final answer reaches the conversation. Boris Cherny, who built Claude Code, calls it \"an algebra for agents\". Trigger it by saying \"use a workflow\"; /workflows shows every phase, its agent count and its token total while it runs.",
       "costTitle": "What it costs.",
-      "cost": "Every agent carries its own context and pays for it separately, so one campaign costs several ordinary sessions. The honest test is not the name of your plan but your own last week: if an ordinary session already reaches your limit before the work is done, a workflow will not fit — it will stop in the middle, and half a workflow is not half a result. In practice this means one of the Max tiers rather than the entry plan.",
+      "cost": "Every agent carries its own context and pays for it separately, and runs count against your plan's limits like any other session. Availability is not the question — workflows work on every paid plan, and on Pro you switch them on in the Dynamic workflows row of /config. Affordability is: if an ordinary session already reaches your limit before the work is done, a workflow will not fit. Price a big job by running one directory first; /workflows shows token use live and stops the run; a Large workflow warning appears past 25 agents or 1.5M projected tokens; the size guideline in /config aims Claude at fewer. Stopping mid-run is expensive — on resume every agent that started after the first unfinished one runs again.",
       "gateTitle": "Why confirmed cases come first.",
       "gate": "A workflow is an amplifier, and an amplifier pointed at a guess produces a large, tidy, expensive wrong thing. A hundred agents building carefully in the wrong direction is the most costly outcome available in this product. Cases are what point it, and the panel keeps this document locked until they exist and you have confirmed them.",
       "guardTitle": "The guard rule.",
@@ -1576,7 +1576,9 @@
       "creating": "Creating…",
       "createdDoc": "Document created — it is now a file in your repository",
       "createHint": "This project has no DYNAMIC-WORKFLOWS.md yet. Create it from the template.",
-      "failed": "Could not save"
+      "failed": "Could not save",
+      "whereTitle": "Where it runs — nothing touches your production server.",
+      "where": "No virtual machine is created anywhere. The runtime executes the script in isolation, and that isolation means the script itself has no filesystem or shell access — it only coordinates. The agents run inside your existing Claude Code session, on the machine running it, with the same permission mode, allowlist and sandboxing as any tool call you already make. Your operating system is irrelevant; nothing extra is installed. So they touch exactly what your session already touches — only up to sixteen at a time. Two consequences: subagents always edit files in acceptEdits mode whatever your mode is, and a running workflow takes no input, so stage sign-off means separate workflows."
     }
   },
   "ru": {
@@ -3139,9 +3141,9 @@
     },
     "dynamicWorkflows": {
       "whyTitle": "Что это на самом деле.",
-      "why": "Не «много агентов сразу» — это веер. Динамический рабочий процесс — поэтапная оркестровка: проходит первая волна, и уже её результат решает, какой будет вторая — проверка, сведение итогов, ещё один веер или ничего. Борис Черни, создатель Claude Code, называет это «алгеброй для агентов». Запускается словами «используй рабочий процесс», отдельной кнопки нет.",
+      "why": "Не «много агентов сразу» — это веер. Динамический рабочий процесс — сценарий, который пишет Claude, а исполняет отдельная среда: сценарий держит цикл, ветвление и промежуточные результаты, поэтому в разговор попадает только итог. Борис Черни, создатель Claude Code, называет это «алгеброй для агентов». Запускается словами «используй рабочий процесс»; `/workflows` показывает каждую фазу, число агентов и потраченные токены прямо по ходу.",
       "costTitle": "Чего это стоит.",
-      "cost": "Каждый агент несёт своё контекстное окно и платит за него отдельно, поэтому одна кампания стоит нескольких обычных сессий. Честная проверка — не название тарифа, а ваша прошлая неделя: если обычная сессия уже упирается в лимит до конца работы, рабочий процесс не поместится — он остановится посередине, а половина рабочего процесса не даёт половины результата. На практике это значит тариф уровня Max, а не начальный.",
+      "cost": "Каждый агент несёт своё контекстное окно и платит за него отдельно, а прогоны идут в счёт лимитов тарифа наравне с обычной сессией. Вопрос не в доступности: рабочие процессы работают на любом платном тарифе, а на Pro включаются строкой «Dynamic workflows» в `/config`. Вопрос в том, по карману ли: если обычная сессия уже упирается в лимит до конца работы, рабочий процесс не поместится. Оцените большую работу, прогнав сначала одну папку; `/workflows` показывает расход по ходу и позволяет остановить; предупреждение «Large workflow» появляется после 25 агентов или 1,5 млн предполагаемых токенов; настройка размера в `/config` нацеливает Claude на меньшее число. Остановка посреди прогона дорога — при возобновлении заново пойдут все агенты, начавшиеся после первого незавершённого.",
       "gateTitle": "Почему сначала кейсы.",
       "gate": "Рабочий процесс — усилитель, а усилитель, наведённый на догадку, даёт большой, аккуратный и дорогой неверный результат. Сто агентов, старательно строящих не то, — самый дорогой исход, доступный в этом продукте. Направление задают кейсы, поэтому панель держит документ запертым, пока они не написаны и не подтверждены вами.",
       "guardTitle": "Правило сторожа.",
@@ -3156,7 +3158,9 @@
       "creating": "Создаём…",
       "createdDoc": "Документ создан — теперь это файл в вашем репозитории",
       "createHint": "В этом проекте ещё нет DYNAMIC-WORKFLOWS.md. Создайте его из шаблона.",
-      "failed": "Не удалось сохранить"
+      "failed": "Не удалось сохранить",
+      "whereTitle": "Где это выполняется — продакшн-сервер не затрагивается.",
+      "where": "Никакая виртуальная машина нигде не создаётся. Среда исполняет сценарий изолированно, и эта изоляция означает, что у самого сценария нет ни файловой системы, ни оболочки — он только распоряжается. Агенты работают внутри вашей же сессии Claude Code, на той машине, где она запущена, с тем же режимом разрешений, тем же списком разрешённых команд и той же песочницей, что и любой обычный вызов. Операционная система значения не имеет, ничего дополнительно не ставится. То есть они трогают ровно то, что уже трогает ваша сессия, — только до шестнадцати сразу. Два следствия: подагенты всегда правят файлы в режиме автоприёма правок, каким бы ни был ваш режим, и запущенный процесс не принимает ввод — согласование между этапами значит отдельные процессы."
     }
   }
 }

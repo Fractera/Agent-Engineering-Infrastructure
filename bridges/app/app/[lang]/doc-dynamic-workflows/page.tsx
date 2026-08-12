@@ -73,6 +73,10 @@ export default async function DocPage({ params }: { params: Promise<{ lang: stri
 
       <div className="mt-2 rounded-lg border border-blue-500/30 bg-blue-500/5 p-3 text-[11px] leading-relaxed text-blue-700 dark:text-blue-300">
         <p><strong>{t.whyTitle}</strong> {t.why}</p>
+        {/* «Где это выполняется» стоит вторым, сразу за определением: это первый
+            вопрос, который задаёт владелец продакшн-сервера, и до ответа на него
+            остальное читать незачем. */}
+        <p className="mt-2"><strong>{t.whereTitle}</strong> {t.where}</p>
         <p className="mt-2"><strong>{t.costTitle}</strong> {t.cost}</p>
         <p className="mt-2"><strong>{t.gateTitle}</strong> {t.gate}</p>
         <p className="mt-2"><strong>{t.guardTitle}</strong> {t.guard}</p>
