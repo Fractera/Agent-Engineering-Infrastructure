@@ -400,6 +400,14 @@ export type AdminStrings = {
   // не уезжают.
   // Страницы подвала. Раздел переиспользует редактор верхнего меню, поэтому
   // своих слов у него ровно четыре — остальные берутся из .
+  // Баннер cookie: единственная настройка — показывать или нет.
+  cookieBanner: {
+    whyTitle: string; why: string;
+    wordsTitle: string; words: string;
+    pageTitle: string; page: string;
+    toggle: string; on: string; off: string;
+    saved: string; nothingToSave: string;
+  };
   footerPages: {
     whyTitle: string; why: string;
     contentTitle: string; content: string;

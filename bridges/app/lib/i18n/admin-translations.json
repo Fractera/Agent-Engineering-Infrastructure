@@ -1620,6 +1620,19 @@
       "content": "In the project itself, beside the page — the same way a blog post works. Three pages ship as a working pattern with placeholder text; a fourth is made by copying one of them. The pages are fully static and indexable, so they carry a title, a description and structured data exactly as an article does.",
       "candidates": "Pages available for the footer",
       "empty": "No links yet. The footer still renders — this is a valid state, not an error."
+    },
+    "cookieBanner": {
+      "whyTitle": "What this switch does.",
+      "why": "It decides whether visitors of your application see the consent strip at the bottom of the page. A private tool that stores no analytics has no use for consent — switch it off and the strip disappears, along with the Cookie settings button in the footer that re-opens it.",
+      "wordsTitle": "Its wording is already translated.",
+      "words": "The banner ships in all 82 languages, so it speaks whichever language a visitor arrives in. Consent written in a language somebody cannot read is not consent at all, which is why this is not left to be filled in later.",
+      "pageTitle": "The policy page.",
+      "page": "The banner links to /<language>/cookies — an ordinary static page of your project. Its text is edited in the code beside the page, like a blog post; ask your agent for the manage-cookie-banner skill.",
+      "toggle": "Show the cookie banner",
+      "on": "Visitors are asked for consent, and can change their answer from the footer.",
+      "off": "No consent strip and no footer button. Choose this for a private tool with no analytics.",
+      "saved": "Saved — applies on the next page load, no rebuild",
+      "nothingToSave": "Nothing changed"
     }
   },
   "ru": {
@@ -3243,6 +3256,19 @@
       "content": "В самом проекте, рядом со страницей, — так же, как у поста блога. Три страницы поставляются готовым образцом с текстом-заглушкой; четвёртая создаётся копированием любой из них. Страницы полностью статические и индексируются: у них есть заголовок, описание и структурированные данные — как у статьи.",
       "candidates": "Страницы, доступные для подвала",
       "empty": "Ссылок пока нет. Подвал всё равно отображается — это законное состояние, а не ошибка."
+    },
+    "cookieBanner": {
+      "whyTitle": "Что решает этот переключатель.",
+      "why": "Видят ли посетители вашего приложения полосу согласия внизу страницы. Частному инструменту без аналитики согласие не нужно — выключите, и полоса исчезнет вместе с кнопкой «Настройки cookie» в подвале, которая её открывает.",
+      "wordsTitle": "Слова баннера уже переведены.",
+      "words": "Баннер поставляется на всех 82 языках и говорит на том, с каким пришёл посетитель. Согласие, написанное на языке, которого человек не читает, — это не согласие вовсе, поэтому его не оставляют «на потом».",
+      "pageTitle": "Страница политики.",
+      "page": "Баннер ведёт на /<язык>/cookies — обычную статическую страницу вашего проекта. Её текст правится в коде рядом со страницей, как у поста блога; попросите агента открыть навык manage-cookie-banner.",
+      "toggle": "Показывать баннер cookie",
+      "on": "У посетителей спрашивают согласие, и они могут изменить ответ из подвала.",
+      "off": "Ни полосы согласия, ни кнопки в подвале. Подходит частному инструменту без аналитики.",
+      "saved": "Сохранено — применится на следующей загрузке, без пересборки",
+      "nothingToSave": "Ничего не изменилось"
     }
   }
 }
