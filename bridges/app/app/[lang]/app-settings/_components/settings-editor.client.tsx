@@ -21,7 +21,7 @@ import { Loader2, Save, Languages } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SECTIONS, getAt, setAt, dropRemovedFields, type Field } from "../_lib/fields";
-import { valueForLang, hasTranslation, setTranslation, type I18nMap } from "../_lib/per-lang";
+import { valueForLang, hasTranslation, setTranslation, type I18nMap } from "@/lib/per-lang";
 import { FieldRow } from "./field-row.client";
 import type { AppConfig } from "../_lib/settings";
 

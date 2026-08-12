@@ -1600,7 +1600,11 @@
       "failed": "Could not save",
       "authSide": "Account drawer opens from",
       "authLeft": "Left",
-      "authRight": "Right"
+      "authRight": "Right",
+      "baseLang": "Base language — the value itself, not a translation",
+      "translated": "Translated",
+      "notTranslated": "Not translated yet",
+      "langHint": "You are editing translations. The base value stays as it is; an empty field means no translation, and the site falls back to the base."
     }
   },
   "ru": {
@@ -3204,7 +3208,11 @@
       "failed": "Не удалось сохранить",
       "authSide": "Ящик аккаунта открывается",
       "authLeft": "Слева",
-      "authRight": "Справа"
+      "authRight": "Справа",
+      "baseLang": "Язык-основа — само значение, а не перевод",
+      "translated": "Переведено",
+      "notTranslated": "Перевода ещё нет",
+      "langHint": "Вы правите переводы. Базовое значение остаётся как есть; пустое поле значит «перевода нет», и сайт покажет основное."
     }
   }
 }

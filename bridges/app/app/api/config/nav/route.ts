@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/require-auth";
 import { readNav, writeNav } from "@/app/[lang]/top-menu/_lib/server";
 import type { NavState } from "@/app/[lang]/top-menu/_lib/types";
+import type { I18nMap } from "@/lib/per-lang";
 
 // Сохранение верхнего меню гостевого приложения.
 //
@@ -34,17 +35,19 @@ export async function POST(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = (await req.json().catch(() => null)) as { nav?: NavState } | null;
+  const body = (await req.json().catch(() => null)) as
+    | { nav?: NavState; i18n?: I18nMap }
+    | null;
   const nav = body?.nav;
   if (!nav || !Array.isArray(nav.top)) {
     return NextResponse.json({ error: "bad_payload" }, { status: 400 });
   }
 
   try {
-    writeNav({
-      top: nav.top,
-      authSide: nav.authSide === "left" ? "left" : "right",
-    });
+    writeNav(
+      { top: nav.top, authSide: nav.authSide === "left" ? "left" : "right" },
+      body?.i18n,
+    );
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }

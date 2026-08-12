@@ -53,6 +53,8 @@ per service — one address, one key, and a route per capability. Ready clients 
 |---|---|---|
 | **Accounts, sessions, roles** | auth service on \`:3001\` | Never write a second login. Adding a sign-in provider is a platform setting, not app code. |
 | **Settings of this app** | control panel on \`:3002\` | Name, description, branding, SEO, analytics. Read them with \`npm run read:app-config\`; change them in the panel. |
+| **Translating a field into every language** | \`components/i18n/translations-dialog.client.tsx\` | Ships with the app, not installed. Opens on any entity with translatable fields, fills every enabled language in one action, and takes dictation. **Never build a second translation UI** — a field that gets its own translator drifts out of step with the rest, and the drift shows up first in the languages nobody proofreads. |
+| **Navigation buttons** | control panel on \`:3002\` → Top menu | Which pages the top menu links to, their order, and which collapse into a dropdown group. The app reads them from its config at render, so a change appears without a rebuild. Do not hard-code a nav array in the layout. |
 
 ### Choosing between the vector store and the knowledge graph
 

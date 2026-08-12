@@ -9,7 +9,7 @@
 // САЙТА владельца, которые он выбрал в разделе языков.
 
 import { headers } from "next/headers";
-import type { I18nMap } from "./per-lang";
+import type { I18nMap } from "@/lib/per-lang";
 
 const ADMIN = process.env.ADMIN_INTERNAL_URL ?? "http://127.0.0.1:3002";
 

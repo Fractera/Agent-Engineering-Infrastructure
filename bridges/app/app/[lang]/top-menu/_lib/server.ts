@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import type { I18nMap } from "@/lib/per-lang";
 import type { NavState, NavItem, RouteCandidate } from "./types";
 
 // Серверная половина раздела «Верхнее меню».
@@ -34,14 +35,39 @@ export function readNav(): NavState {
 }
 
 /**
+ * Переводы подписей — та же ветка `i18n`, что и у пяти полей настроек.
+ *
+ * 🔒 ХРАНИЛИЩЕ ОБЩЕЕ НАМЕРЕННО. Подпись кнопки — такое же поле на язык, как имя
+ * приложения, и заводить ей отдельный склад значило бы иметь два механизма
+ * перевода в одном файле. Ключ — `nav.top.<id>.label`, ровно его читает
+ * приложение (`lib/menu/nav-config.ts`).
+ */
+export function readNavI18n(): I18nMap {
+  const i18n = readConfig().i18n;
+  return (i18n && typeof i18n === "object" ? i18n : {}) as I18nMap;
+}
+
+/**
  * Записать ветку `nav`, НЕ ПОТЕРЯВ остальной конфиг.
  *
  * 🔒 Читаем-правим-пишем целиком: файл общий с разделом настроек приложения, и
  * запись одной ветки поверх всего файла стёрла бы имя сайта, SEO и переводы.
  */
-export function writeNav(next: NavState): void {
+export function writeNav(next: NavState, i18n?: I18nMap): void {
   const config = readConfig();
   config.nav = { ...(config.nav as object ?? {}), top: next.top, authSide: next.authSide };
+
+  // 🔒 ПЕРЕВОДЫ ЧУЖИХ ПОЛЕЙ НЕ ТРОГАЕМ. В ветке `i18n` живут ещё и переводы имени
+  // приложения, описания и SEO. Записать сюда только свои ключи значило бы стереть
+  // их — и владелец обнаружил бы пропажу на другой странице, не связав с этой.
+  if (i18n) {
+    const prev = (config.i18n ?? {}) as I18nMap;
+    const merged: I18nMap = { ...prev };
+    for (const key of Object.keys(prev)) if (key.startsWith("nav.top.")) delete merged[key];
+    for (const [key, value] of Object.entries(i18n)) if (key.startsWith("nav.top.")) merged[key] = value;
+    config.i18n = merged;
+  }
+
   fs.mkdirSync(path.dirname(CONFIG_PATH), { recursive: true });
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), "utf-8");
 }

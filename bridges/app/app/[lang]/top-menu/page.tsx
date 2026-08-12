@@ -15,7 +15,8 @@
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
 import { TopMenuPanel } from "./_components/top-menu-panel.client";
-import { readNav, listPublicRoutes } from "./_lib/server";
+import { readNav, readNavI18n, listPublicRoutes } from "./_lib/server";
+import { slotLanguages } from "@/lib/slot-languages";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,7 @@ export default async function TopMenuPage({ params }: { params: Promise<{ lang: 
   const s = getAdminStrings(lang);
   const page = s.pages["top-menu"];
   const t = s.topMenu;
+  const slot = slotLanguages();
 
   return (
     <PageShell lang={lang} slug="top-menu" s={s} title={page.title} hint={page.hint}>
@@ -35,12 +37,17 @@ export default async function TopMenuPage({ params }: { params: Promise<{ lang: 
       <TopMenuPanel
         initial={readNav()}
         candidates={listPublicRoutes()}
+        langs={slot.langs}
+        base={slot.base}
+        initialI18n={readNavI18n()}
         labels={{
           candidates: t.candidates, add: t.add, empty: t.empty, dragHint: t.dragHint,
           labelPlaceholder: t.labelPlaceholder, makeChild: t.makeChild, makeTop: t.makeTop,
           remove: t.remove, save: t.save, saving: t.saving, savedNow: t.savedNow,
           savedLater: t.savedLater, failed: t.failed,
           authSide: t.authSide, authLeft: t.authLeft, authRight: t.authRight,
+          baseLang: t.baseLang, translated: t.translated, notTranslated: t.notTranslated,
+          langHint: t.langHint,
         }}
       />
     </PageShell>
