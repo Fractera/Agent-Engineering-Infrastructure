@@ -395,6 +395,17 @@ export type AdminStrings = {
     createDoc: string; creating: string; createdDoc: string; createHint: string; failed: string;
   };
   // Документ-запрет: почему мультиагентность закрыта и где её команда.
+  // Верхнее меню гостевого приложения: кнопки навигации, их порядок и группы.
+  // Слова живут здесь, а не в островке: словарь серверный, 82 языка в браузер
+  // не уезжают.
+  topMenu: {
+    whyTitle: string; why: string;
+    liveTitle: string; live: string;
+    candidates: string; add: string; empty: string; dragHint: string;
+    labelPlaceholder: string; makeChild: string; makeTop: string; remove: string;
+    save: string; saving: string; savedNow: string; savedLater: string; failed: string;
+    authSide: string; authLeft: string; authRight: string;
+  };
   singleAgent: {
     whyTitle: string; why: string;
     planesTitle: string; planes: string;

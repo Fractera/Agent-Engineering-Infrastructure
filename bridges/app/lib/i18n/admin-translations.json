@@ -1579,6 +1579,28 @@
       "failed": "Could not save",
       "whereTitle": "Where it runs — nothing touches your production server.",
       "where": "No virtual machine is created anywhere. The runtime executes the script in isolation, and that isolation means the script itself has no filesystem or shell access — it only coordinates. The agents run inside your existing Claude Code session, on the machine running it, with the same permission mode, allowlist and sandboxing as any tool call you already make. Your operating system is irrelevant; nothing extra is installed. So they touch exactly what your session already touches — only up to sixteen at a time. Two consequences: subagents always edit files in acceptEdits mode whatever your mode is, and a running workflow takes no input, so stage sign-off means separate workflows."
+    },
+    "topMenu": {
+      "whyTitle": "What this section controls.",
+      "why": "The navigation buttons of your application on :3000 — which pages they point at, in what order, and which of them collapse into a dropdown group. A button here is a page of your site, and only public pages are offered: a button leading somewhere the visitor cannot enter is a promise the interface will not keep.",
+      "liveTitle": "It applies without a rebuild.",
+      "live": "Saving writes the setting to the app's config on the server and immediately clears the cache of the page shell that holds the menu. The next page load shows it. Your pages stay static — nothing here makes them dynamic, and no deployment happens.",
+      "candidates": "Public pages you can add",
+      "add": "Add",
+      "empty": "No buttons yet. The menu bar will still appear, with your logo and nothing else — that is a valid state, not an error.",
+      "dragHint": "Drag a button to reorder. The arrow makes it a child of the button above, turning that one into a dropdown group.",
+      "labelPlaceholder": "Button label",
+      "makeChild": "Move into the group above",
+      "makeTop": "Lift out of the group",
+      "remove": "Remove",
+      "save": "Save",
+      "saving": "Saving…",
+      "savedNow": "Saved — already live on the site",
+      "savedLater": "Saved. The site could not be refreshed just now, so it will appear within ten minutes.",
+      "failed": "Could not save",
+      "authSide": "Account drawer opens from",
+      "authLeft": "Left",
+      "authRight": "Right"
     }
   },
   "ru": {
@@ -3161,6 +3183,28 @@
       "failed": "Не удалось сохранить",
       "whereTitle": "Где это выполняется — продакшн-сервер не затрагивается.",
       "where": "Никакая виртуальная машина нигде не создаётся. Среда исполняет сценарий изолированно, и эта изоляция означает, что у самого сценария нет ни файловой системы, ни оболочки — он только распоряжается. Агенты работают внутри вашей же сессии Claude Code, на той машине, где она запущена, с тем же режимом разрешений, тем же списком разрешённых команд и той же песочницей, что и любой обычный вызов. Операционная система значения не имеет, ничего дополнительно не ставится. То есть они трогают ровно то, что уже трогает ваша сессия, — только до шестнадцати сразу. Два следствия: подагенты всегда правят файлы в режиме автоприёма правок, каким бы ни был ваш режим, и запущенный процесс не принимает ввод — согласование между этапами значит отдельные процессы."
+    },
+    "topMenu": {
+      "whyTitle": "Чем управляет этот раздел.",
+      "why": "Кнопки навигации вашего приложения на :3000 — на какие страницы они ведут, в каком порядке стоят и какие из них сворачиваются в группу-выпадашку. Кнопка здесь — это страница вашего сайта, и предлагаются только публичные: кнопка, ведущая туда, куда посетителя не пустят, — обещание, которого интерфейс не сдержит.",
+      "liveTitle": "Применяется без пересборки.",
+      "live": "Сохранение записывает настройку в конфиг приложения на сервере и сразу сбрасывает кэш той оболочки страницы, где живёт меню. Следующая загрузка уже с ним. Страницы остаются статическими — ничто здесь не делает их динамическими, и развёртывание не запускается.",
+      "candidates": "Публичные страницы, которые можно добавить",
+      "add": "Добавить",
+      "empty": "Кнопок пока нет. Полоса меню всё равно появится — с логотипом и без пунктов; это законное состояние, а не ошибка.",
+      "dragHint": "Перетащите кнопку, чтобы изменить порядок. Стрелка делает её дочерней к кнопке выше, превращая ту в группу-выпадашку.",
+      "labelPlaceholder": "Подпись кнопки",
+      "makeChild": "Убрать в группу выше",
+      "makeTop": "Вынести из группы",
+      "remove": "Удалить",
+      "save": "Сохранить",
+      "saving": "Сохраняем…",
+      "savedNow": "Сохранено — уже на сайте",
+      "savedLater": "Сохранено. Обновить сайт сейчас не удалось, поэтому изменение появится в течение десяти минут.",
+      "failed": "Не удалось сохранить",
+      "authSide": "Ящик аккаунта открывается",
+      "authLeft": "Слева",
+      "authRight": "Справа"
     }
   }
 }
