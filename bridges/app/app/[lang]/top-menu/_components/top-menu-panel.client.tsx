@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { GripVertical, Trash2, CornerDownRight, ArrowUpLeft, Loader2 } from "lucide-react";
+import { GripVertical, Trash2, CornerDownRight, ArrowUpLeft, Loader2, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { valueForLang, hasTranslation, setTranslation, type I18nMap } from "@/lib/per-lang";
 import type { NavItem, NavState, RouteNode } from "../_lib/types";
@@ -24,12 +24,19 @@ export type Labels = {
   labelPlaceholder: string; makeChild: string; makeTop: string; remove: string;
   save: string; saving: string; savedNow: string; savedLater: string; failed: string;
   already: string; folderOnly: string;
+  labelLimit: string; translateOne: string; trDone: string; trFailed: string; trNoKey: string;
   authSide: string; authLeft: string; authRight: string;
   baseLang: string; translated: string; notTranslated: string; langHint: string;
 };
 
 const rid = () => Math.random().toString(36).slice(2, 8);
 const key = (id: string) => `nav.top.${id}.label`;
+
+// 🔒 ПРЕДЕЛ ПОДПИСИ — 12 ЗНАКОВ (владелец, 2026-08-12). Полоса меню одна, и один
+// длинный пункт разносит её на телефоне. Здесь предел ПОДСКАЗЫВАЕТ, а гарантирует
+// его приложение при рендере (lib/menu/nav-config.ts): подпись может приехать и
+// мимо этого поля — из перевода или из конфига, набранного руками.
+const LABEL_MAX = 12;
 
 export function TopMenuPanel(
   { initial, tree, labels, langs, base, initialI18n }:
@@ -45,6 +52,8 @@ export function TopMenuPanel(
   const [note, setNote] = useState<string | null>(null);
   const [editLang, setEditLang] = useState(base);
   const [i18n, setI18n] = useState<I18nMap>(initialI18n);
+  /** Какой пункт сейчас переводится — вращается только его значок. */
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   // Языки, у которых записан хоть один перевод подписи, — для отметки в полосе.
   const done = new Set(
@@ -131,6 +140,44 @@ export function TopMenuPanel(
     setItems(next);
   }
 
+  /**
+   * Перевести подпись ОДНОГО пункта на все языки приложения.
+   *
+   * 🔒 ПЕРЕВОД — ПОМОЩНИК, А НЕ ЗАМЕНА РУКАМ. Результат ложится в те же ячейки,
+   * которые владелец правит сам: не понравилось — переписал, и его слово
+   * побеждает. Поэтому кнопка не блокирует поле и ничего не «запирает».
+   */
+  async function translate(id: string, sourceLabel: string) {
+    const targets = langs.filter((l) => l !== base);
+    if (!targets.length || !sourceLabel.trim()) return;
+    setBusyId(id); setNote(null);
+    try {
+      const r = await fetch("/api/config/nav/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ texts: { [id]: sourceLabel }, from: base, to: targets }),
+      });
+      const j = (await r.json()) as { translations?: Record<string, Record<string, string>>; error?: string };
+      if (!r.ok || !j.translations) {
+        // Причина названа, а не спрятана за «не удалось»: без ключа человеку
+        // нужно идти в настройки, а при перегрузке — просто повторить.
+        setNote(j.error === "no-key" || j.error === "bad-key" ? labels.trNoKey : labels.trFailed);
+        return;
+      }
+      let next = i18n;
+      for (const [lang, fields] of Object.entries(j.translations)) {
+        const v = fields[id];
+        if (typeof v === "string" && v.trim()) next = setTranslation(next, key(id), lang, v.trim());
+      }
+      setI18n(next);
+      setNote(labels.trDone);
+    } catch {
+      setNote(labels.trFailed);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   async function save() {
     setBusy(true); setNote(null);
     try {
@@ -199,13 +246,34 @@ export function TopMenuPanel(
             >
               {child ? <CornerDownRight className="size-3.5 text-muted-foreground shrink-0" />
                      : <GripVertical className="size-3.5 text-muted-foreground shrink-0 cursor-grab" />}
+              {/* Предел длины виден и в поле: `maxLength` не даёт набрать
+                  лишнего, а счётчик у предела объясняет, почему перестало
+                  печататься. Молча упирающееся поле читается как поломка. */}
               <input
                 value={shown(item)}
                 onChange={(e) => rename(index, item.id, child, e.target.value)}
                 placeholder={labels.labelPlaceholder}
+                maxLength={LABEL_MAX}
+                title={labels.labelLimit}
                 className="flex-1 min-w-0 bg-transparent text-xs outline-none"
               />
-              <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[30%]">{item.href}</span>
+              {shown(item).length >= LABEL_MAX && (
+                <span className="shrink-0 font-mono text-[9px] text-amber-600 dark:text-amber-400">
+                  {LABEL_MAX}
+                </span>
+              )}
+              <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[24%]">{item.href}</span>
+              {/* Перевод стоит СЛЕВА ОТ КОРЗИНЫ (владелец, 2026-08-12): рядом с
+                  подписью, которую переводит, и подальше от удаления. */}
+              <Button
+                size="sm" variant="ghost" className="h-6 px-1" title={labels.translateOne}
+                disabled={busyId === item.id || langs.length < 2}
+                onClick={() => translate(item.id, child ? item.label : items[index].label)}
+              >
+                {busyId === item.id
+                  ? <Loader2 className="size-3.5 animate-spin" />
+                  : <Languages className="size-3.5" />}
+              </Button>
               {child ? (
                 <Button size="sm" variant="ghost" className="h-6 px-1" title={labels.makeTop}
                   onClick={() => unnest(index, item.id)}><ArrowUpLeft className="size-3.5" /></Button>

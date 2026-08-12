@@ -1598,7 +1598,7 @@
       "savedNow": "Saved — already live on the site",
       "savedLater": "Saved. The site could not be refreshed just now, so it will appear within ten minutes.",
       "failed": "Could not save",
-      "authSide": "Account button and its drawer sit on the",
+      "authSide": "Account drawer slides in from the",
       "authLeft": "Left",
       "authRight": "Right",
       "baseLang": "Base language — the value itself, not a translation",
@@ -1606,7 +1606,12 @@
       "notTranslated": "Not translated yet",
       "langHint": "You are editing translations. The base value stays as it is; an empty field means no translation, and the site falls back to the base.",
       "already": "Already in the menu",
-      "folderOnly": "A folder — it groups pages but has none of its own, so it cannot become a button"
+      "folderOnly": "A folder — it groups pages but has none of its own, so it cannot become a button",
+      "labelLimit": "A menu label is at most 12 characters — longer ones are cut with an ellipsis on the site",
+      "translateOne": "Translate this label into every language of the app",
+      "trDone": "Translated — check the language tabs, then save",
+      "trFailed": "Translation failed. Try again in a moment.",
+      "trNoKey": "No OpenAI key on this server, so translation is unavailable. Add one in the OpenAI section."
     }
   },
   "ru": {
@@ -3208,7 +3213,7 @@
       "savedNow": "Сохранено — уже на сайте",
       "savedLater": "Сохранено. Обновить сайт сейчас не удалось, поэтому изменение появится в течение десяти минут.",
       "failed": "Не удалось сохранить",
-      "authSide": "Кнопка аккаунта и её ящик — с какой стороны",
+      "authSide": "Ящик аккаунта выезжает",
       "authLeft": "Слева",
       "authRight": "Справа",
       "baseLang": "Язык-основа — само значение, а не перевод",
@@ -3216,7 +3221,12 @@
       "notTranslated": "Перевода ещё нет",
       "langHint": "Вы правите переводы. Базовое значение остаётся как есть; пустое поле значит «перевода нет», и сайт покажет основное.",
       "already": "Уже в меню",
-      "folderOnly": "Папка — она объединяет страницы, но своей не имеет, поэтому кнопкой стать не может"
+      "folderOnly": "Папка — она объединяет страницы, но своей не имеет, поэтому кнопкой стать не может",
+      "labelLimit": "Подпись кнопки — не длиннее 12 знаков; более длинная обрезается на сайте многоточием",
+      "translateOne": "Перевести эту подпись на все языки приложения",
+      "trDone": "Переведено — проверьте по вкладкам языков и сохраните",
+      "trFailed": "Перевести не удалось. Попробуйте ещё раз.",
+      "trNoKey": "На сервере нет ключа OpenAI, поэтому перевод недоступен. Добавьте его в разделе OpenAI."
     }
   }
 }

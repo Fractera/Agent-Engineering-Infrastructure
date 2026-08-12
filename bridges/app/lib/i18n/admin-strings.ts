@@ -405,6 +405,7 @@ export type AdminStrings = {
     labelPlaceholder: string; makeChild: string; makeTop: string; remove: string;
     save: string; saving: string; savedNow: string; savedLater: string; failed: string;
     already: string; folderOnly: string;
+    labelLimit: string; translateOne: string; trDone: string; trFailed: string; trNoKey: string;
     authSide: string; authLeft: string; authRight: string;
     baseLang: string; translated: string; notTranslated: string; langHint: string;
   };

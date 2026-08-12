@@ -45,6 +45,8 @@ export default async function TopMenuPage({ params }: { params: Promise<{ lang: 
           labelPlaceholder: t.labelPlaceholder, makeChild: t.makeChild, makeTop: t.makeTop,
           remove: t.remove, save: t.save, saving: t.saving, savedNow: t.savedNow,
           savedLater: t.savedLater, failed: t.failed, already: t.already, folderOnly: t.folderOnly,
+          labelLimit: t.labelLimit, translateOne: t.translateOne,
+          trDone: t.trDone, trFailed: t.trFailed, trNoKey: t.trNoKey,
           authSide: t.authSide, authLeft: t.authLeft, authRight: t.authRight,
           baseLang: t.baseLang, translated: t.translated, notTranslated: t.notTranslated,
           langHint: t.langHint,
