@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import type { I18nMap } from "@/lib/per-lang";
-import type { NavState, NavItem, RouteCandidate, RouteNode } from "./types";
+import type { NavState, NavItem, NavSlot, RouteCandidate, RouteNode } from "./types";
 
 // Серверная половина раздела «Верхнее меню».
 //
@@ -25,11 +25,11 @@ function readConfig(): Record<string, unknown> {
   }
 }
 
-export function readNav(): NavState {
+export function readNav(slot: NavSlot): NavState {
   const nav = (readConfig().nav ?? {}) as Record<string, unknown>;
   const side = nav.authSide;
   return {
-    top: Array.isArray(nav.top) ? (nav.top as NavItem[]) : [],
+    items: Array.isArray(nav[slot]) ? (nav[slot] as NavItem[]) : [],
     authSide: side === "left" || side === "right" ? side : "right",
   };
 }
@@ -53,9 +53,9 @@ export function readNavI18n(): I18nMap {
  * 🔒 Читаем-правим-пишем целиком: файл общий с разделом настроек приложения, и
  * запись одной ветки поверх всего файла стёрла бы имя сайта, SEO и переводы.
  */
-export function writeNav(next: NavState, i18n?: I18nMap): void {
+export function writeNav(slot: NavSlot, next: NavState, i18n?: I18nMap): void {
   const config = readConfig();
-  config.nav = { ...(config.nav as object ?? {}), top: next.top, authSide: next.authSide };
+  config.nav = { ...(config.nav as object ?? {}), [slot]: next.items, authSide: next.authSide };
 
   // 🔒 ПЕРЕВОДЫ ЧУЖИХ ПОЛЕЙ НЕ ТРОГАЕМ. В ветке `i18n` живут ещё и переводы имени
   // приложения, описания и SEO. Записать сюда только свои ключи значило бы стереть
@@ -63,8 +63,9 @@ export function writeNav(next: NavState, i18n?: I18nMap): void {
   if (i18n) {
     const prev = (config.i18n ?? {}) as I18nMap;
     const merged: I18nMap = { ...prev };
-    for (const key of Object.keys(prev)) if (key.startsWith("nav.top.")) delete merged[key];
-    for (const [key, value] of Object.entries(i18n)) if (key.startsWith("nav.top.")) merged[key] = value;
+    const mine = `nav.${slot}.`;
+    for (const key of Object.keys(prev)) if (key.startsWith(mine)) delete merged[key];
+    for (const [key, value] of Object.entries(i18n)) if (key.startsWith(mine)) merged[key] = value;
     config.i18n = merged;
   }
 
@@ -161,6 +162,22 @@ function walk(dir: string, prefix: string, depth: number): RouteNode[] {
 export function publicRouteTree(): RouteNode[] {
   // Главная страница языка папкой не представлена, но пунктом меню быть вправе.
   return [{ segment: "/", href: "/", title: "Home", children: [] }, ...walk(LANG_ROOT, "", 0)];
+}
+
+/**
+ * Дерево страниц ОДНОЙ группы маршрутов — для раздела подвала.
+ *
+ * 🔒 ЗАЧЕМ СУЖЕНИЕ (владелец, 2026-08-12). В подвал идут страницы подвала, а не
+ * весь сайт: показывать там каталог товаров и посты блога значит заставить
+ * человека искать три нужные строки среди десятков посторонних. Верхнее меню,
+ * наоборот, вправе вести куда угодно — там дерево остаётся полным.
+ *
+ * Папка группы читается напрямую, поэтому в дереве оказываются ровно её
+ * страницы; скобки в адрес не входят, и адреса получаются короткими
+ * (`/privacy`), как и на сайте.
+ */
+export function groupRouteTree(group: string): RouteNode[] {
+  return walk(path.join(LANG_ROOT, `(${group})`), "", 0);
 }
 
 /** Плоский перечень — нужен, чтобы отличить уже добавленные адреса от новых. */

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/require-auth";
-import { readNav, writeNav } from "@/app/[lang]/top-menu/_lib/server";
-import type { NavState } from "@/app/[lang]/top-menu/_lib/types";
+import { readNav, writeNav } from "@/lib/nav-editor/server";
+import type { NavState, NavSlot } from "@/lib/nav-editor/types";
 import type { I18nMap } from "@/lib/per-lang";
 
 // Сохранение верхнего меню гостевого приложения.
@@ -28,7 +28,8 @@ const APP_ORIGIN = process.env.APP_ORIGIN ?? "http://localhost:3000";
 export async function GET(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  return NextResponse.json({ nav: readNav() });
+  const slot = (new URL(req.url).searchParams.get("slot") ?? "top") as NavSlot;
+  return NextResponse.json({ nav: readNav(slot) });
 }
 
 export async function POST(req: NextRequest) {
@@ -36,16 +37,21 @@ export async function POST(req: NextRequest) {
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = (await req.json().catch(() => null)) as
-    | { nav?: NavState; i18n?: I18nMap }
+    | { slot?: NavSlot; nav?: NavState; i18n?: I18nMap }
     | null;
   const nav = body?.nav;
-  if (!nav || !Array.isArray(nav.top)) {
+  // Слот приходит от интерфейса; неизвестное имя не пишем — иначе в конфиге
+  // появилась бы ветка, которую приложение не читает, и владелец решил бы, что
+  // сохранение работает.
+  const slot: NavSlot = body?.slot === "footer" ? "footer" : "top";
+  if (!nav || !Array.isArray(nav.items)) {
     return NextResponse.json({ error: "bad_payload" }, { status: 400 });
   }
 
   try {
     writeNav(
-      { top: nav.top, authSide: nav.authSide === "left" ? "left" : "right" },
+      slot,
+      { items: nav.items, authSide: nav.authSide === "left" ? "left" : "right" },
       body?.i18n,
     );
   } catch (e) {

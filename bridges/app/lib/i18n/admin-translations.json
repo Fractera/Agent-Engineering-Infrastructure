@@ -1612,6 +1612,14 @@
       "trDone": "Translated — check the language tabs, then save",
       "trFailed": "Translation failed. Try again in a moment.",
       "trNoKey": "No OpenAI key on this server, so translation is unavailable. Add one in the OpenAI section."
+    },
+    "footerPages": {
+      "whyTitle": "What this section controls.",
+      "why": "The links at the bottom of your application on :3000 — which pages they point at, in what order, and what each is called. Only pages inside the footer-pages group are offered: the footer carries site pages, not the whole catalogue.",
+      "contentTitle": "Where the text of a page lives.",
+      "content": "In the project itself, beside the page — the same way a blog post works. Three pages ship as a working pattern with placeholder text; a fourth is made by copying one of them. The pages are fully static and indexable, so they carry a title, a description and structured data exactly as an article does.",
+      "candidates": "Pages available for the footer",
+      "empty": "No links yet. The footer still renders — this is a valid state, not an error."
     }
   },
   "ru": {
@@ -3227,6 +3235,14 @@
       "trDone": "Переведено — проверьте по вкладкам языков и сохраните",
       "trFailed": "Перевести не удалось. Попробуйте ещё раз.",
       "trNoKey": "На сервере нет ключа OpenAI, поэтому перевод недоступен. Добавьте его в разделе OpenAI."
+    },
+    "footerPages": {
+      "whyTitle": "Чем управляет этот раздел.",
+      "why": "Ссылки внизу вашего приложения на :3000 — на какие страницы они ведут, в каком порядке стоят и как называются. Предлагаются только страницы из группы подвала: внизу сайта живут страницы сайта, а не весь каталог.",
+      "contentTitle": "Где лежит текст страницы.",
+      "content": "В самом проекте, рядом со страницей, — так же, как у поста блога. Три страницы поставляются готовым образцом с текстом-заглушкой; четвёртая создаётся копированием любой из них. Страницы полностью статические и индексируются: у них есть заголовок, описание и структурированные данные — как у статьи.",
+      "candidates": "Страницы, доступные для подвала",
+      "empty": "Ссылок пока нет. Подвал всё равно отображается — это законное состояние, а не ошибка."
     }
   }
 }

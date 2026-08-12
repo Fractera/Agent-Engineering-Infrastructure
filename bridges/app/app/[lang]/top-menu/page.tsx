@@ -14,8 +14,8 @@
 
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
-import { TopMenuPanel } from "./_components/top-menu-panel.client";
-import { readNav, readNavI18n, publicRouteTree } from "./_lib/server";
+import { NavEditor } from "../_components/nav/nav-editor.client";
+import { readNav, readNavI18n, publicRouteTree } from "@/lib/nav-editor/server";
 import { slotLanguages } from "@/lib/slot-languages";
 
 export const dynamic = "force-dynamic";
@@ -34,8 +34,10 @@ export default async function TopMenuPage({ params }: { params: Promise<{ lang: 
         <p className="mt-2"><strong>{t.liveTitle}</strong> {t.live}</p>
       </div>
 
-      <TopMenuPanel
-        initial={readNav()}
+      <NavEditor
+        slot="top"
+        showAuthSide
+        initial={readNav("top")}
         tree={publicRouteTree()}
         langs={slot.langs}
         base={slot.base}

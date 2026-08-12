@@ -4,11 +4,15 @@ import { useState } from "react";
 import { GripVertical, Trash2, CornerDownRight, ArrowUpLeft, Loader2, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { valueForLang, hasTranslation, setTranslation, type I18nMap } from "@/lib/per-lang";
-import type { NavItem, NavState, RouteNode } from "../_lib/types";
+import type { NavItem, NavState, NavSlot, RouteNode } from "@/lib/nav-editor/types";
 import { LangStrip } from "./lang-strip.client";
 import { RouteTree } from "./route-tree.client";
 
-// Островок настройки верхнего меню. Слова приезжают пропсами — словарь
+// Островок настройки МЕНЮ — общий для верхней полосы и подвала (2026-08-12).
+//
+// 🔒 ОДИН РЕДАКТОР НА ДВА РАЗДЕЛА. Копия разошлась бы с оригиналом на первой
+// правке, и разошлась бы незаметно: два экрана, которые ДОЛЖНЫ вести себя
+// одинаково, — самое дорогое место для дублирования. Слова приезжают пропсами — словарь
 // серверный (закон шага 501: 82 языка в браузер не уезжают).
 //
 // 🔒 ПЕРЕТАСКИВАНИЕ — НА РОДНЫХ СОБЫТИЯХ БРАУЗЕРА, без библиотеки. Список здесь
@@ -30,7 +34,7 @@ export type Labels = {
 };
 
 const rid = () => Math.random().toString(36).slice(2, 8);
-const key = (id: string) => `nav.top.${id}.label`;
+const key = (slot: NavSlot, id: string) => `nav.${slot}.${id}.label`;
 
 // 🔒 ПРЕДЕЛ ПОДПИСИ — 12 ЗНАКОВ (владелец, 2026-08-12). Полоса меню одна, и один
 // длинный пункт разносит её на телефоне. Здесь предел ПОДСКАЗЫВАЕТ, а гарантирует
@@ -38,14 +42,17 @@ const key = (id: string) => `nav.top.${id}.label`;
 // мимо этого поля — из перевода или из конфига, набранного руками.
 const LABEL_MAX = 12;
 
-export function TopMenuPanel(
-  { initial, tree, labels, langs, base, initialI18n }:
+export function NavEditor(
+  { slot, initial, tree, labels, langs, base, initialI18n, showAuthSide = false }:
   {
+    slot: NavSlot;
     initial: NavState; tree: RouteNode[]; labels: Labels;
     langs: string[]; base: string; initialI18n: I18nMap;
+    /** Сторона ящика — общая настройка, показывается только у верхнего меню. */
+    showAuthSide?: boolean;
   },
 ) {
-  const [items, setItems] = useState<NavItem[]>(initial.top);
+  const [items, setItems] = useState<NavItem[]>(initial.items);
   const [authSide, setAuthSide] = useState<"left" | "right">(initial.authSide);
   const [drag, setDrag] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
@@ -57,7 +64,7 @@ export function TopMenuPanel(
 
   // Языки, у которых записан хоть один перевод подписи, — для отметки в полосе.
   const done = new Set(
-    langs.filter((l) => items.some((it) => hasTranslation(i18n, key(it.id), l))),
+    langs.filter((l) => items.some((it) => hasTranslation(i18n, key(slot, it.id), l))),
   );
 
   // Адреса, уже стоящие в меню (включая вложенные): дерево помечает их галочкой
@@ -70,7 +77,7 @@ export function TopMenuPanel(
 
   /** Что показать в поле подписи: на языке-основе — само значение, иначе перевод. */
   function shown(item: NavItem): string {
-    return editLang === base ? item.label : valueForLang("", i18n, key(item.id), editLang);
+    return editLang === base ? item.label : valueForLang("", i18n, key(slot, item.id), editLang);
   }
 
   const flat = items.flatMap((it, i) => [
@@ -131,7 +138,7 @@ export function TopMenuPanel(
   // значение остаётся значением, переводы живут в ветке `i18n`.
   function rename(parentIndex: number, id: string, child: boolean, label: string) {
     if (editLang !== base) {
-      setI18n(setTranslation(i18n, key(id), editLang, label));
+      setI18n(setTranslation(i18n, key(slot, id), editLang, label));
       return;
     }
     const next = [...items];
@@ -167,7 +174,7 @@ export function TopMenuPanel(
       let next = i18n;
       for (const [lang, fields] of Object.entries(j.translations)) {
         const v = fields[id];
-        if (typeof v === "string" && v.trim()) next = setTranslation(next, key(id), lang, v.trim());
+        if (typeof v === "string" && v.trim()) next = setTranslation(next, key(slot, id), lang, v.trim());
       }
       setI18n(next);
       setNote(labels.trDone);
@@ -184,7 +191,7 @@ export function TopMenuPanel(
       const r = await fetch("/api/config/nav", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nav: { top: items, authSide }, i18n }),
+        body: JSON.stringify({ slot, nav: { items, authSide }, i18n }),
       });
       const j = (await r.json()) as { ok?: boolean; revalidated?: boolean };
       // Честное различие: записано и уже видно / записано и появится в течение
@@ -290,6 +297,7 @@ export function TopMenuPanel(
         </section>
       </div>
 
+      {showAuthSide && (
       <div className="flex items-center gap-3">
         <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{labels.authSide}</span>
         {(["left", "right"] as const).map((s) => (
@@ -297,6 +305,7 @@ export function TopMenuPanel(
             onClick={() => setAuthSide(s)}>{s === "left" ? labels.authLeft : labels.authRight}</Button>
         ))}
       </div>
+      )}
 
       <div className="flex items-center gap-3">
         <Button size="sm" onClick={save} disabled={busy}>

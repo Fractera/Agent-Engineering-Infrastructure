@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronRight, Plus, Check, FileText, Folder } from "lucide-react";
-import type { RouteNode } from "../_lib/types";
+import type { RouteNode } from "@/lib/nav-editor/types";
 
 // Дерево публичных маршрутов — карта сайта, по которой собирают меню.
 //

@@ -398,6 +398,13 @@ export type AdminStrings = {
   // Верхнее меню гостевого приложения: кнопки навигации, их порядок и группы.
   // Слова живут здесь, а не в островке: словарь серверный, 82 языка в браузер
   // не уезжают.
+  // Страницы подвала. Раздел переиспользует редактор верхнего меню, поэтому
+  // своих слов у него ровно четыре — остальные берутся из .
+  footerPages: {
+    whyTitle: string; why: string;
+    contentTitle: string; content: string;
+    candidates: string; empty: string;
+  };
   topMenu: {
     whyTitle: string; why: string;
     liveTitle: string; live: string;
