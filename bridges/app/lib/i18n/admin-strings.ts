@@ -404,6 +404,7 @@ export type AdminStrings = {
     candidates: string; add: string; empty: string; dragHint: string;
     labelPlaceholder: string; makeChild: string; makeTop: string; remove: string;
     save: string; saving: string; savedNow: string; savedLater: string; failed: string;
+    already: string; folderOnly: string;
     authSide: string; authLeft: string; authRight: string;
     baseLang: string; translated: string; notTranslated: string; langHint: string;
   };

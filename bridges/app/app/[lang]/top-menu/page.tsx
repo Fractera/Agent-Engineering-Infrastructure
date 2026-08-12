@@ -15,7 +15,7 @@
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
 import { TopMenuPanel } from "./_components/top-menu-panel.client";
-import { readNav, readNavI18n, listPublicRoutes } from "./_lib/server";
+import { readNav, readNavI18n, publicRouteTree } from "./_lib/server";
 import { slotLanguages } from "@/lib/slot-languages";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +36,7 @@ export default async function TopMenuPage({ params }: { params: Promise<{ lang: 
 
       <TopMenuPanel
         initial={readNav()}
-        candidates={listPublicRoutes()}
+        tree={publicRouteTree()}
         langs={slot.langs}
         base={slot.base}
         initialI18n={readNavI18n()}
@@ -44,7 +44,7 @@ export default async function TopMenuPage({ params }: { params: Promise<{ lang: 
           candidates: t.candidates, add: t.add, empty: t.empty, dragHint: t.dragHint,
           labelPlaceholder: t.labelPlaceholder, makeChild: t.makeChild, makeTop: t.makeTop,
           remove: t.remove, save: t.save, saving: t.saving, savedNow: t.savedNow,
-          savedLater: t.savedLater, failed: t.failed,
+          savedLater: t.savedLater, failed: t.failed, already: t.already, folderOnly: t.folderOnly,
           authSide: t.authSide, authLeft: t.authLeft, authRight: t.authRight,
           baseLang: t.baseLang, translated: t.translated, notTranslated: t.notTranslated,
           langHint: t.langHint,

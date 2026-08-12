@@ -1585,7 +1585,7 @@
       "why": "The navigation buttons of your application on :3000 — which pages they point at, in what order, and which of them collapse into a dropdown group. A button here is a page of your site, and only public pages are offered: a button leading somewhere the visitor cannot enter is a promise the interface will not keep.",
       "liveTitle": "It applies without a rebuild.",
       "live": "Saving writes the setting to the app's config on the server and immediately clears the cache of the page shell that holds the menu. The next page load shows it. Your pages stay static — nothing here makes them dynamic, and no deployment happens.",
-      "candidates": "Public pages you can add",
+      "candidates": "Public pages of your site",
       "add": "Add",
       "empty": "No buttons yet. The menu bar will still appear, with your logo and nothing else — that is a valid state, not an error.",
       "dragHint": "Drag a button to reorder. The arrow makes it a child of the button above, turning that one into a dropdown group.",
@@ -1598,13 +1598,15 @@
       "savedNow": "Saved — already live on the site",
       "savedLater": "Saved. The site could not be refreshed just now, so it will appear within ten minutes.",
       "failed": "Could not save",
-      "authSide": "Account drawer opens from",
+      "authSide": "Account button and its drawer sit on the",
       "authLeft": "Left",
       "authRight": "Right",
       "baseLang": "Base language — the value itself, not a translation",
       "translated": "Translated",
       "notTranslated": "Not translated yet",
-      "langHint": "You are editing translations. The base value stays as it is; an empty field means no translation, and the site falls back to the base."
+      "langHint": "You are editing translations. The base value stays as it is; an empty field means no translation, and the site falls back to the base.",
+      "already": "Already in the menu",
+      "folderOnly": "A folder — it groups pages but has none of its own, so it cannot become a button"
     }
   },
   "ru": {
@@ -3193,7 +3195,7 @@
       "why": "Кнопки навигации вашего приложения на :3000 — на какие страницы они ведут, в каком порядке стоят и какие из них сворачиваются в группу-выпадашку. Кнопка здесь — это страница вашего сайта, и предлагаются только публичные: кнопка, ведущая туда, куда посетителя не пустят, — обещание, которого интерфейс не сдержит.",
       "liveTitle": "Применяется без пересборки.",
       "live": "Сохранение записывает настройку в конфиг приложения на сервере и сразу сбрасывает кэш той оболочки страницы, где живёт меню. Следующая загрузка уже с ним. Страницы остаются статическими — ничто здесь не делает их динамическими, и развёртывание не запускается.",
-      "candidates": "Публичные страницы, которые можно добавить",
+      "candidates": "Публичные страницы вашего сайта",
       "add": "Добавить",
       "empty": "Кнопок пока нет. Полоса меню всё равно появится — с логотипом и без пунктов; это законное состояние, а не ошибка.",
       "dragHint": "Перетащите кнопку, чтобы изменить порядок. Стрелка делает её дочерней к кнопке выше, превращая ту в группу-выпадашку.",
@@ -3206,13 +3208,15 @@
       "savedNow": "Сохранено — уже на сайте",
       "savedLater": "Сохранено. Обновить сайт сейчас не удалось, поэтому изменение появится в течение десяти минут.",
       "failed": "Не удалось сохранить",
-      "authSide": "Ящик аккаунта открывается",
+      "authSide": "Кнопка аккаунта и её ящик — с какой стороны",
       "authLeft": "Слева",
       "authRight": "Справа",
       "baseLang": "Язык-основа — само значение, а не перевод",
       "translated": "Переведено",
       "notTranslated": "Перевода ещё нет",
-      "langHint": "Вы правите переводы. Базовое значение остаётся как есть; пустое поле значит «перевода нет», и сайт покажет основное."
+      "langHint": "Вы правите переводы. Базовое значение остаётся как есть; пустое поле значит «перевода нет», и сайт покажет основное.",
+      "already": "Уже в меню",
+      "folderOnly": "Папка — она объединяет страницы, но своей не имеет, поэтому кнопкой стать не может"
     }
   }
 }

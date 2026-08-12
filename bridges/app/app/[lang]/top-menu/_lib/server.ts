@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import type { I18nMap } from "@/lib/per-lang";
-import type { NavState, NavItem, RouteCandidate } from "./types";
+import type { NavState, NavItem, RouteCandidate, RouteNode } from "./types";
 
 // Серверная половина раздела «Верхнее меню».
 //
@@ -102,42 +102,72 @@ function titleFrom(dirPath: string, segment: string): string {
   return segment.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function walk(dir: string, prefix: string, out: RouteCandidate[], depth: number): void {
-  if (depth > 3) return; // глубже меню всё равно не показывает
+/**
+ * Собрать ДЕРЕВО маршрутов, повторяющее структуру папок.
+ *
+ * 🔒 ДЕРЕВО, А НЕ ПЛОСКИЙ СПИСОК (решение владельца 2026-08-12). Плоский
+ * перечень десятков адресов заставляет читать каждую строку, чтобы понять, где
+ * что лежит; структура сайта в нём не видна, хотя именно она и есть та карта, по
+ * которой человек выбирает пункты меню.
+ *
+ * 🔒 ПАПКИ-ГРУППЫ В СКОБКАХ ПРОЗРАЧНЫ ДЛЯ АДРЕСА, поэтому и в дереве их нет:
+ * `(marketing)/blog` — это `/blog`, и показывать посреди карты сегмент, которого
+ * нет в адресе, значит учить человека неверной структуре. `(protectedLayer)`
+ * отбрасывается целиком: его страницы посетителю недоступны.
+ *
+ * Узел без собственной страницы остаётся в дереве папкой без кнопки «плюс» —
+ * по нему нельзя перейти, но внутри могут лежать те, по которым можно.
+ */
+function walk(dir: string, prefix: string, depth: number): RouteNode[] {
+  if (depth > 4) return [];
   let entries: fs.Dirent[];
   try {
     entries = fs.readdirSync(dir, { withFileTypes: true });
   } catch {
-    return;
+    return [];
   }
 
+  const nodes: RouteNode[] = [];
   for (const e of entries) {
     if (!e.isDirectory()) continue;
     const name = e.name;
 
-    // Группы прав в скобках: `(protectedLayer)` отбрасывается целиком вместе с
-    // потомками, остальные скобочные группы прозрачны для адреса.
     if (name.startsWith("(") && name.endsWith(")")) {
       if (name.includes("protected")) continue;
-      walk(path.join(dir, name), prefix, out, depth);
+      // Прозрачная группа: её дети поднимаются на место самой группы.
+      nodes.push(...walk(path.join(dir, name), prefix, depth));
       continue;
     }
     if (SKIP_SEGMENT(name)) continue;
 
     const child = path.join(dir, name);
     const href = `${prefix}/${name}`;
-    if (fs.existsSync(path.join(child, "page.tsx"))) {
-      out.push({ href, title: titleFrom(child, name) });
-    }
-    walk(child, href, out, depth + 1);
+    const hasPage = fs.existsSync(path.join(child, "page.tsx"));
+    const children = walk(child, href, depth + 1);
+    if (!hasPage && children.length === 0) continue; // пустая папка ни о чём не говорит
+
+    nodes.push({
+      segment: name,
+      href: hasPage ? href : null,
+      title: titleFrom(child, name),
+      children,
+    });
   }
+
+  return nodes.sort((a, b) => a.segment.localeCompare(b.segment));
 }
 
-/** Публичные маршруты слота, пригодные в кнопки меню. */
-export function listPublicRoutes(): RouteCandidate[] {
-  const out: RouteCandidate[] = [];
-  walk(LANG_ROOT, "", out, 0);
-  // Главная страница языка — законный пункт меню и папкой не представлена.
-  out.unshift({ href: "/", title: "Home" });
-  return out.sort((a, b) => a.href.localeCompare(b.href));
+/** Дерево публичных маршрутов слота — карта, по которой собирают меню. */
+export function publicRouteTree(): RouteNode[] {
+  // Главная страница языка папкой не представлена, но пунктом меню быть вправе.
+  return [{ segment: "/", href: "/", title: "Home", children: [] }, ...walk(LANG_ROOT, "", 0)];
+}
+
+/** Плоский перечень — нужен, чтобы отличить уже добавленные адреса от новых. */
+export function flattenRoutes(nodes: RouteNode[], out: RouteCandidate[] = []): RouteCandidate[] {
+  for (const n of nodes) {
+    if (n.href) out.push({ href: n.href, title: n.title });
+    flattenRoutes(n.children, out);
+  }
+  return out;
 }

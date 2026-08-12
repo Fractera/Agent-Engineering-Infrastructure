@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { GripVertical, Trash2, CornerDownRight, ArrowUpLeft, Plus, Loader2 } from "lucide-react";
+import { GripVertical, Trash2, CornerDownRight, ArrowUpLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { valueForLang, hasTranslation, setTranslation, type I18nMap } from "@/lib/per-lang";
-import type { NavItem, NavState, RouteCandidate } from "../_lib/types";
+import type { NavItem, NavState, RouteNode } from "../_lib/types";
 import { LangStrip } from "./lang-strip.client";
+import { RouteTree } from "./route-tree.client";
 
 // Островок настройки верхнего меню. Слова приезжают пропсами — словарь
 // серверный (закон шага 501: 82 языка в браузер не уезжают).
@@ -22,6 +23,7 @@ export type Labels = {
   candidates: string; add: string; empty: string; dragHint: string;
   labelPlaceholder: string; makeChild: string; makeTop: string; remove: string;
   save: string; saving: string; savedNow: string; savedLater: string; failed: string;
+  already: string; folderOnly: string;
   authSide: string; authLeft: string; authRight: string;
   baseLang: string; translated: string; notTranslated: string; langHint: string;
 };
@@ -30,9 +32,9 @@ const rid = () => Math.random().toString(36).slice(2, 8);
 const key = (id: string) => `nav.top.${id}.label`;
 
 export function TopMenuPanel(
-  { initial, candidates, labels, langs, base, initialI18n }:
+  { initial, tree, labels, langs, base, initialI18n }:
   {
-    initial: NavState; candidates: RouteCandidate[]; labels: Labels;
+    initial: NavState; tree: RouteNode[]; labels: Labels;
     langs: string[]; base: string; initialI18n: I18nMap;
   },
 ) {
@@ -48,6 +50,14 @@ export function TopMenuPanel(
   const done = new Set(
     langs.filter((l) => items.some((it) => hasTranslation(i18n, key(it.id), l))),
   );
+
+  // Адреса, уже стоящие в меню (включая вложенные): дерево помечает их галочкой
+  // вместо «плюса», чтобы одна страница не попала в меню дважды.
+  const used = new Set<string>();
+  for (const it of items) {
+    if (it.href) used.add(it.href);
+    for (const c of it.children ?? []) used.add(c.href);
+  }
 
   /** Что показать в поле подписи: на языке-основе — само значение, иначе перевод. */
   function shown(item: NavItem): string {
@@ -142,17 +152,24 @@ export function TopMenuPanel(
 
   return (
     <div className="space-y-4">
-      <div>
-        <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">{labels.candidates}</p>
-        <div className="flex flex-wrap gap-1.5">
-          {candidates.map((c) => (
-            <Button key={c.href} size="sm" variant="outline" className="h-7 text-[11px] gap-1"
-              onClick={() => add(c.href, c.title)}>
-              <Plus className="size-3" />{c.title}
-            </Button>
-          ))}
-        </div>
-      </div>
+      {/* Две колонки: слева карта сайта, справа собранное из неё меню. Порядок
+          чтения совпадает с порядком действия — выбрал слева, увидел справа.
+          На узком экране колонки становятся одна под другой: дерево первым,
+          потому что с него работа и начинается. */}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <section className="rounded-lg border border-border p-2">
+          <p className="mb-1 px-1 text-[10px] uppercase tracking-wide text-muted-foreground">{labels.candidates}</p>
+          <div className="max-h-[26rem] overflow-y-auto">
+            <RouteTree
+              nodes={tree}
+              used={used}
+              onAdd={add}
+              labels={{ add: labels.add, already: labels.already, folderOnly: labels.folderOnly }}
+            />
+          </div>
+        </section>
+
+        <section className="space-y-2">
 
       <div className="space-y-1">
         <LangStrip
@@ -201,6 +218,8 @@ export function TopMenuPanel(
             </li>
           ))}
         </ul>
+      </div>
+        </section>
       </div>
 
       <div className="flex items-center gap-3">
