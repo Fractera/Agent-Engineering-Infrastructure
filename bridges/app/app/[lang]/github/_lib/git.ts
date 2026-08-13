@@ -19,10 +19,6 @@ export type GitStatus = {
   repoUrl: string;
   hasToken: boolean;
   verifiedAt: string | null;
-  // Сколько файлов на сервере ещё не уехало в репозиторий, и несколько имён для
-  // примера: число без примеров не даёт понять, о чём речь.
-  pendingFiles: number;
-  sample: string[];
 };
 
 export type GitResult = { ok: true; status: GitStatus } | { ok: false; reason: string };
@@ -44,8 +40,6 @@ export async function readGitStatus(): Promise<GitResult> {
         repoUrl: String(d.repoUrl ?? ""),
         hasToken: Boolean(d.hasToken),
         verifiedAt: (d.verifiedAt as string) ?? null,
-        pendingFiles: Number(d.pendingFiles ?? 0),
-        sample: Array.isArray(d.sample) ? (d.sample as string[]) : [],
       },
     };
   } catch (e) {

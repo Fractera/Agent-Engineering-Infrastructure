@@ -90,20 +90,15 @@ export default async function GitHubPage({ params }: { params: Promise<{ lang: s
         </p>
       )}
 
-      {/* Сколько работы существует ТОЛЬКО здесь. Число с примерами: одно число не
-          даёт понять, о чём речь, и потерять эти файлы легче всего. */}
-      {st.pendingFiles > 0 && (
-        <div className="mt-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-2.5">
-          <p className="text-[10px] font-medium text-amber-700 dark:text-amber-300">
-            {fill(g.pending, { count: String(st.pendingFiles) })}
-          </p>
-          {st.sample.length > 0 && (
-            <ul className="mt-1 space-y-0.5 font-mono text-[10px] text-amber-700/80 dark:text-amber-300/80">
-              {st.sample.slice(0, 5).map((f) => <li key={f} className="truncate">{f}</li>)}
-            </ul>
-          )}
-        </div>
-      )}
+      {/* 🪦 СЧЁТЧИК «файлов только на этом сервере» УДАЛЁН (владелец 2026-08-13).
+          Он стоял здесь янтарной тревогой с примерами имён, и на первом
+          подключении — единственном месте, где эту страницу читают внимательно, —
+          сообщал бессмыслицу: до первой отправки «только здесь» лежит ВЕСЬ
+          проект, так что число говорило лишь «файлов в проекте 41», а выглядело
+          как список потерь. Когда связь уже работает, то же число живёт в подвале
+          строкой состояния, и второй его источник расходился бы с первым.
+          Не воскрешать: страница отвечает на «как подключить», а не «что у меня
+          не сохранено». */}
 
       <div className="mt-4">
         <h2 className="mb-2 text-[12px] font-medium text-foreground">{g.setupTitle}</h2>

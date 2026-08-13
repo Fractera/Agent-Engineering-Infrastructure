@@ -83,23 +83,16 @@ export async function GET(req: NextRequest) {
   // Three states, because the middle one is where the failures live.
   const state = !repoUrl ? "unconfigured" : verifiedAt ? "working" : "unverified";
 
-  // What a first push would carry. Sending blind is the reason people hesitate.
-  let pendingFiles = 0;
-  let sample: string[] = [];
-  try {
-    const { stdout } = await execAsync(
-      `git -C ${PROJECT_DIR} rev-parse --is-inside-work-tree >/dev/null 2>&1 && git -C ${PROJECT_DIR} status --porcelain || git -C ${PROJECT_DIR} ls-files --others --exclude-standard`,
-      { timeout: 15000, maxBuffer: 4 * 1024 * 1024 },
-    );
-    const rows = stdout.split("\n").map((l) => l.slice(3).trim() || l.trim()).filter(Boolean);
-    pendingFiles = rows.length;
-    sample = rows.slice(0, 10);
-  } catch {
-    // A slot that is not a repository yet simply has nothing to report.
-  }
-
+  // 🪦 The "files that exist only on this server" count was computed here and shown on the
+  // GitHub page. Removed by the owner (2026-08-13): before the first push everything is
+  // only here, so the number said "your project has 41 files" while looking like a list of
+  // losses — on the one screen people actually read closely. Once the connection works, the
+  // same count already lives in the footer's project state, and a second source of it would
+  // drift from the first. The git status exec went with it: this route answers "is the
+  // connection real", and running a repository scan on every render of that answer is work
+  // nobody asked for.
   return NextResponse.json(
-    { state, repoUrl, hasToken, verifiedAt, pendingFiles, sample },
+    { state, repoUrl, hasToken, verifiedAt },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

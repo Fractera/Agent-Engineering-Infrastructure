@@ -306,7 +306,7 @@ export type AdminStrings = {
   github: {
     unavailable: string; noRepo: string;
     stateWorking: string; stateUnverified: string; stateUnconfigured: string;
-    verifiedAt: string; unverifiedHint: string; pending: string;
+    verifiedAt: string; unverifiedHint: string;
     // Инструкция подключения: каждый шаг стоит рядом со своим полем, а ссылка
     // ведёт ровно на ту страницу GitHub, где шаг выполняется. Без неё раздел
     // требует знать наизусть, где живут токены и какую область у них ставить.

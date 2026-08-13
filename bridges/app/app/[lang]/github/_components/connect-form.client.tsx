@@ -172,8 +172,11 @@ export function ConnectForm(
       </div>
 
       {/* Шаг 4 — отдельное действие: подключение само по себе ничего не
-          отправляет, и репозиторий остаётся пустым, пока это не нажато. */}
-      <div className="space-y-1.5 rounded-md border border-border p-3">
+          отправляет, и репозиторий остаётся пустым, пока это не нажато.
+          Рамки у шага НЕТ (владелец 2026-08-13): соседние шаги идут без неё, и
+          обведённый выглядел не «важнее», а иначе устроенным — будто это блок
+          другого рода. Отдельность шага держит его заголовок, а не рамка. */}
+      <div className="space-y-1.5">
         <span className="block text-[11px] font-semibold text-foreground">{guide.step4Title}</span>
         <p className="text-[10px] leading-relaxed text-muted-foreground">{guide.step4Body}</p>
         <div className="flex flex-wrap items-center gap-2">
