@@ -1051,6 +1051,7 @@
       "tierHint": "Machine translation quality is lower for this language — check the result.",
       "readyTitle": "The expensive part is already built and tested",
       "readyBody": "Multilingualism with modern search optimisation and an installable app is normally a long development cycle — and the one AI-written projects lose quietly: pages drift from prepared to recomputed, translations start reading as copies of each other, and half the languages never reach search results.",
+      "readySignals": "The language signals are in place on every public page: each one declares itself the original, names its translations for every language you enable, and adds x-default for visitors you do not cover. Without them a search engine reads translations as copies of one another and whole languages never reach results — the site meanwhile looks perfectly fine.",
       "readyCost": "Here it is built, tested many times over, and it holds under load at no extra server cost: a prepared page costs the same at a hundred visits and at a hundred thousand.",
       "readyChoice": "So the choice below is only yours to make: one language or twelve. Whichever you pick, nothing else is left for you to build.",
       "readySeo": "Search optimisation",
@@ -1305,6 +1306,10 @@
       "doc-architecture": {
         "title": "Architecture",
         "hint": "How the app is put together and which layer owns what."
+      },
+      "doc-seo": {
+        "title": "Search optimisation",
+        "hint": "The laws every public page obeys: its own canonical, its translations named, addresses built one way."
       },
       "doc-glossary": {
         "title": "Glossary",
@@ -2709,6 +2714,7 @@
       "tierHint": "Качество машинного перевода на этот язык ниже — проверьте результат.",
       "readyTitle": "Самое дорогое здесь уже построено и проверено",
       "readyBody": "Многоязычность с современной поисковой оптимизацией и устанавливаемым приложением — это обычно долгий цикл разработки. И это ровно та часть, которую проекты, написанные с помощью ИИ, теряют незаметно: страницы из заранее собранных превращаются в пересчитываемые на каждый заход, переводы начинают читаться как копии друг друга, и половина языков до поиска не доходит.",
+      "readySignals": "Языковые сигналы стоят на каждой публичной странице: она объявляет оригиналом себя, называет свои переводы на всех включённых языках и добавляет x-default для тех, кого вы не покрываете. Без этого поисковик читает переводы как копии друг друга, и целые языки до выдачи не доходят — при том что сайт выглядит совершенно исправным.",
       "readyCost": "Здесь это построено, многократно проверено и держит нагрузку без роста расходов на сервер: заранее собранная страница стоит одинаково и на сотне визитов, и на сотне тысяч.",
       "readyChoice": "Поэтому выбор ниже — единственное, что остаётся вам: один язык или двенадцать. Что бы вы ни выбрали, строить больше нечего.",
       "readySeo": "Поисковая оптимизация",
@@ -2963,6 +2969,10 @@
       "doc-architecture": {
         "title": "Архитектура",
         "hint": "Как устроено приложение и какой слой чем владеет."
+      },
+      "doc-seo": {
+        "title": "Поисковая оптимизация",
+        "hint": "Законы, которым подчиняется каждая публичная страница: свой канонический адрес, названные переводы, единый способ строить адреса."
       },
       "doc-glossary": {
         "title": "Глоссарий",

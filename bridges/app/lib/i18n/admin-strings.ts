@@ -607,7 +607,7 @@ export type AdminStrings = {
     // полными документами (владелец 2026-08-13). Сами документы — не здесь, а в
     // `_content/seo-inside*.md` и `_content/pwa-inside*.md`: длинный текст правят
     // как текст, а не как ключи словаря.
-    readyTitle: string; readyBody: string; readyCost: string; readyChoice: string;
+    readyTitle: string; readyBody: string; readySignals: string; readyCost: string; readyChoice: string;
     readySeo: string; readySeoTitle: string; readyPwa: string; readyPwaTitle: string;
     // Как языки работают в самом проекте: один язык против нескольких.
     howTitle: string;

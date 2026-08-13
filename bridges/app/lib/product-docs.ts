@@ -37,7 +37,8 @@ export type DocKey =
   | "doc-single-agent"
   | "doc-dialogue-format"
   | "doc-content-engine"
-  | "doc-passport";
+  | "doc-passport"
+  | "doc-seo";
 
 /** Ключ страницы → файл в корне слота. Единственное место этого соответствия. */
 export const DOC_FILES: Record<DocKey, string> = {
@@ -54,6 +55,12 @@ export const DOC_FILES: Record<DocKey, string> = {
   // базу, карту и каналы — прочитать этот документ. Не зная, он строит второе.
   "doc-platform-tools": "PLATFORM-TOOLS.md",
   "doc-architecture": "ARCHITECTURE.md",
+  // Как устроена поисковая оптимизация ИМЕННО в этом проекте (шаг 503): статика
+  // вместо динамики, один сборщик меты, языковые сигналы, структурированные
+  // данные, карты сайта. Задан платформой, а не растёт по ходу проекта — это
+  // описание построенного, и агент ему подчиняется. Написан в форме
+  // «правило → проверка → пример», потому что позже станет навыком.
+  "doc-seo": "SEO.md",
   "doc-glossary": "GLOSSARY.md",
   "doc-lessons": "LESSONS.md",
   "doc-antipatterns": "ANTI-PATTERNS.md",
@@ -123,6 +130,7 @@ export function isDocKey(v: string): v is DocKey {
  */
 export const DOC_KIND: Record<string, "evolving" | "static"> = {
   "doc-instruction": "static",
+  "doc-seo": "static",
   // ЗАДАННЫЙ: это закон о том, когда многоагентная работа допустима, а не
   // наблюдение агента о ходе проекта.
   "doc-dynamic-workflows": "static",
