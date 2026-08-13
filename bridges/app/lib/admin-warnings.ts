@@ -32,7 +32,7 @@ const RAG_ENV = process.env.RAG_ENV_PATH ?? "/opt/fractera/services/rag/.env";
 export type WarningLevel = "blocking" | "advised";
 
 export type AdminWarning = {
-  id: "languages" | "github" | "use-cases" | "openai" | "domain" | "context-state";
+  id: "languages" | "github" | "use-cases" | "openai" | "domain" | "context-state" | "dev-browser";
   level: WarningLevel;
   /** Куда ведёт запись — то самое «основное место» настройки. */
   slug: AdminPageSlug;
@@ -128,6 +128,26 @@ export function collectWarnings(): AdminWarning[] {
   }
   if (!domainActive()) {
     out.push({ id: "domain", level: "advised", slug: "domain" });
+  }
+
+  // 🔒 БРАУЗЕР У АГЕНТА — ОРАНЖЕВЫЙ И ПОСЛЕДНИЙ (владелец 2026-08-13).
+  //
+  // Оранжевый, потому что без него всё строится — просто вслепую: агент
+  // рассуждает о причине дефекта вместо того, чтобы открыть страницу. Целый
+  // класс поломок (ошибки в консоли, поведение без JS, сервис-воркер, страница
+  // после выполнения кода) в исходниках не виден вовсе.
+  //
+  // 🔒 ПРОВЕРЯЕТСЯ ОТМЕТКА, А НЕ НАЛИЧИЕ. Панель работает на сервере, расширение
+  // — в браузере разработчика; канала между ними нет, и «проверить» отсюда
+  // физически нечего. Отметку присылает сам агент (`/api/dev-tools/browser`),
+  // и она ПЕРЕСТАВЛЯЕТСЯ каждую сессию: нашёл — дата обновилась, не нашёл —
+  // строка снята. Поэтому запись гаснет честно и так же честно возвращается,
+  // если расширение убрали.
+  //
+  // Тот же приём, что у языков: отметка о поступке вместо проверки значения,
+  // которую сделать невозможно.
+  if (!envHas(APP_ENV, "AGENT_BROWSER_SEEN_AT")) {
+    out.push({ id: "dev-browser", level: "advised", slug: "dev-tools" });
   }
 
   // Незакрытая передача между контекстными окнами. НЕ поломка: чаще всего это

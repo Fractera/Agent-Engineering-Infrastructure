@@ -68,7 +68,7 @@ export type AdminStrings = {
      */
     warnCta: {
       languages: string; github: string; "use-cases": string; openai: string; domain: string;
-      "context-state": string;
+      "context-state": string; "dev-browser": string;
     };
     howToBuild: string;
     stateUnknown: string;
@@ -379,7 +379,7 @@ export type AdminStrings = {
     title: string;
     items: {
       languages: string; github: string; "use-cases": string; openai: string; domain: string;
-      "context-state": string;
+      "context-state": string; "dev-browser": string;
     };
   };
   // Документ «Тестирование»: почему он существует и где его выключатель.

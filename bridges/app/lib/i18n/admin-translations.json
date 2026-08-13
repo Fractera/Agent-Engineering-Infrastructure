@@ -780,7 +780,8 @@
         "use-cases": "User cases are not described — development has nothing to build towards",
         "openai": "No OpenAI key — the knowledge graph and embeddings stay off",
         "domain": "No custom domain — HTTPS-only features stay unavailable",
-        "context-state": "An unfinished session is recorded — read it before building, or clear it"
+        "context-state": "An unfinished session is recorded — read it before building, or clear it",
+        "dev-browser": "The agent cannot see the result of its work: console errors, behaviour without JS and the service worker are invisible in source."
       }
     },
     "contextState": {
@@ -1160,7 +1161,8 @@
         "use-cases": "Describe your user cases",
         "openai": "Connect an OpenAI key",
         "domain": "Connect your own domain",
-        "context-state": "Read the unfinished session"
+        "context-state": "Read the unfinished session",
+        "dev-browser": "Give the agent eyes in the browser"
       },
       "howToBuild": "How to build this project",
       "stateUnknown": "project state",
@@ -2529,7 +2531,8 @@
         "use-cases": "Пользовательские кейсы не описаны — разработке не к чему стремиться",
         "openai": "Нет ключа OpenAI — граф знаний и векторы останутся выключенными",
         "domain": "Нет своего домена — возможности, требующие HTTPS, недоступны",
-        "context-state": "Записана незавершённая сессия — прочитайте её перед работой или очистите"
+        "context-state": "Записана незавершённая сессия — прочитайте её перед работой или очистите",
+        "dev-browser": "Агент не видит результат своей работы: ошибки в консоли, поведение без JS и сервис-воркер в исходниках не видны."
       }
     },
     "contextState": {
@@ -2909,7 +2912,8 @@
         "use-cases": "Опишите пользовательские кейсы",
         "openai": "Подключите ключ OpenAI",
         "domain": "Подключите свой домен",
-        "context-state": "Прочитайте незавершённую сессию"
+        "context-state": "Прочитайте незавершённую сессию",
+        "dev-browser": "Дайте агенту глаза в браузере"
       },
       "howToBuild": "Как построить этот проект",
       "stateUnknown": "состояние проекта",
