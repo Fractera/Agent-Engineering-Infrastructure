@@ -26,8 +26,10 @@ export function AdminFooter({ s, lang }: { s: AdminStrings; lang: string }) {
       {/* Подписи приезжают пропсами: словарь остаётся серверным, 82 языка в
           браузер не уезжают. */}
       <FooterActions
+        githubHref={adminHref(lang, "github")}
         labels={{
           deploy: f.deploy, pull: f.pull, push: f.push,
+          connectGithub: f.connectGithub, connectGithubHint: f.connectGithubHint,
           deploying: f.deploying, pulling: f.pulling, pushing: f.pushing,
           deployStarted: f.deployStarted, deployOk: f.deployOk,
           deployFailed: f.deployFailed, deployTimeout: f.deployTimeout,

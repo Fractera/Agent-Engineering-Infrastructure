@@ -50,6 +50,10 @@ export type AdminStrings = {
     deploy: string;
     pull: string;
     push: string;
+    // Подвал без подтверждённой связи с GitHub: вместо «Забрать» и «Отправить»
+    // одна кнопка, ведущая в раздел связи (владелец 2026-08-13).
+    connectGithub: string;
+    connectGithubHint: string;
     howToBuild: string;
     stateUnknown: string;
     // Действия подвала (2026-08-10). Отказ обязан быть КОПИРУЕМЫМ: его уносят

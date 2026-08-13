@@ -7,6 +7,29 @@ import fs from "fs";
 const execAsync = promisify(exec);
 const PROJECT_DIR = "/opt/fractera/app";
 const PLATFORM_COMMIT_FILE = "/opt/fractera/DEPLOYED_COMMIT";
+const APP_ENV = process.env.APP_ENV_PATH ?? `${PROJECT_DIR}/.env.local`;
+
+// The GitHub connection, in the exact three states the GitHub page already uses
+// (`app/[lang]/github/_lib/git.ts`). The footer needs them for one decision: may
+// the pull and push buttons be offered at all?
+//
+// Measured live on a fresh server (2026-08-13): the footer showed both buttons,
+// they answered "USER_GITHUB_REPO_URL not set", and the menu warning about GitHub
+// stayed lit at the same time. Two surfaces, two different truths. There is one
+// rule now, and it lives here: only a connection GitHub itself confirmed counts.
+type GitHubState = "unconfigured" | "unverified" | "working";
+
+function githubState(): GitHubState {
+  try {
+    const body = fs.readFileSync(APP_ENV, "utf-8");
+    const value = (key: string) => body.match(new RegExp(`^${key}=(.+)$`, "m"))?.[1].trim() ?? "";
+    if (!value("USER_GITHUB_REPO_URL")) return "unconfigured";
+    return value("USER_GITHUB_VERIFIED_AT") ? "working" : "unverified";
+  } catch {
+    // No env file at all is the honest "nothing is configured", not an error.
+    return "unconfigured";
+  }
+}
 
 // What the footer indicator needs in order to answer one question: what should I press next?
 //
@@ -18,6 +41,7 @@ export async function GET(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const github = githubState();
   const opts = { timeout: 15000, cwd: PROJECT_DIR };
   const git = async (cmd: string): Promise<string | null> =>
     execAsync(`git -C ${PROJECT_DIR} ${cmd}`, opts).then(r => r.stdout.trim()).catch(() => null);
@@ -39,7 +63,7 @@ export async function GET(req: NextRequest) {
         .then(r => r.stdout.trim()).catch(() => "")
     : "";
   if (!hasGit || !remoteUrl) {
-    return NextResponse.json({ connected: false, platform });
+    return NextResponse.json({ connected: false, github, platform });
   }
 
   const [commit, subject, branch, status, remote] = await Promise.all([
@@ -80,6 +104,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     connected: true,
+    github,
     repo,
     branch,
     commit,

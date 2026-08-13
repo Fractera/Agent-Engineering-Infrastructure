@@ -17,11 +17,13 @@
 // Словарь остаётся серверным: подписи приезжают пропсами из `admin-footer.tsx`.
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { GitBranch, Rocket, ArrowDownToLine, ArrowUpFromLine, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { GitBranch, Github, Rocket, ArrowDownToLine, ArrowUpFromLine, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export type FooterActionLabels = {
   deploy: string; pull: string; push: string;
+  connectGithub: string; connectGithubHint: string;
   deploying: string; pulling: string; pushing: string;
   deployStarted: string; deployOk: string; deployFailed: string; deployTimeout: string;
   pullOk: string; pullFailed: string;
@@ -35,6 +37,8 @@ export type FooterActionLabels = {
 
 type ProjectState = {
   connected: boolean;
+  /** Связь с GitHub: только `working` означает, что её подтвердил сам GitHub. */
+  github?: "unconfigured" | "unverified" | "working";
   repo?: string | null; branch?: string | null; commit?: string | null; subject?: string | null;
   uncommitted?: number; ahead?: number | null; behind?: number | null; platform?: string | null;
 };
@@ -53,7 +57,16 @@ async function copyText(text: string): Promise<boolean> {
   }
 }
 
-export function FooterActions({ labels, children }: { labels: FooterActionLabels; children?: ReactNode }) {
+export function FooterActions({
+  labels,
+  githubHref,
+  children,
+}: {
+  labels: FooterActionLabels;
+  /** Адрес раздела связи с GitHub — считает сервер, у островка языка нет. */
+  githubHref: string;
+  children?: ReactNode;
+}) {
   const [state, setState] = useState<ProjectState | null>(null);
   const [busy, setBusy] = useState<null | "deploy" | "pull" | "push">(null);
 
@@ -207,31 +220,60 @@ export function FooterActions({ labels, children }: { labels: FooterActionLabels
         ? "bg-sky-500"
         : "bg-emerald-500";
 
+  // 🔒 ДВЕ КНОПКИ GIT СУЩЕСТВУЮТ ТОЛЬКО ПРИ ПОДТВЕРЖДЁННОЙ СВЯЗИ (владелец
+  // 2026-08-13). До этого «Забрать» и «Отправить» выглядели рабочими и отвечали
+  // отказом про переменную окружения — панель предлагала действие, которого у
+  // неё нет. Вместо двух обманчивых кнопок стоит одна честная: она называет
+  // единственное, что сейчас можно сделать, и ведёт туда, где это делают.
+  //
+  // Правда одна и приходит с сервера (`/api/config/project-state`): та же, по
+  // которой горит предупреждение в меню. `unverified` — тоже не связь: данные
+  // введены, а GitHub их не подтвердил, и первая же отправка отказала бы.
+  const githubReady = state?.github === "working";
+
   const actions = [
     { key: "deploy" as const, Icon: Rocket, label: labels.deploy, busyLabel: labels.deploying, run: deploy },
-    { key: "pull" as const, Icon: ArrowDownToLine, label: labels.pull, busyLabel: labels.pulling, run: () => git("pull") },
-    { key: "push" as const, Icon: ArrowUpFromLine, label: labels.push, busyLabel: labels.pushing, run: () => git("push") },
+    ...(githubReady
+      ? [
+          { key: "pull" as const, Icon: ArrowDownToLine, label: labels.pull, busyLabel: labels.pulling, run: () => git("pull") },
+          { key: "push" as const, Icon: ArrowUpFromLine, label: labels.push, busyLabel: labels.pushing, run: () => git("push") },
+        ]
+      : []),
   ];
 
   return (
     <>
       {/* Полоса состояния. Нажатие обновляет её, спросив у GitHub, — сравнение
-          «впереди / позади» живёт кэшем и без этого стареет молча. */}
-      <button
-        type="button"
-        onClick={() => loadState(true)}
-        title={stateTitle}
-        className="flex min-w-0 flex-1 items-center gap-1 font-mono text-[10px] text-muted-foreground/70 transition-colors hover:text-foreground"
-      >
-        <GitBranch size={9} className="shrink-0" />
-        <span className="truncate">
-          {state?.connected
-            ? <span className="hidden sm:inline">{state.repo ?? ""}</span>
-            : (state ? labels.notConnected : labels.stateUnknown)}
-        </span>
-        {state?.connected && state.commit && <span className="text-muted-foreground/50">{state.commit}</span>}
-        <span className={`size-1.5 shrink-0 rounded-full ${dot}`} />
-      </button>
+          «впереди / позади» живёт кэшем и без этого стареет молча.
+          Пока связи нет, полоса уступает место призыву её создать: сообщать
+          «репозиторий не подключён» рядом с кнопкой, которая говорит то же
+          самое, — значит занимать место повтором. */}
+      {githubReady || !state ? (
+        <button
+          type="button"
+          onClick={() => loadState(true)}
+          title={stateTitle}
+          className="flex min-w-0 flex-1 items-center gap-1 font-mono text-[10px] text-muted-foreground/70 transition-colors hover:text-foreground"
+        >
+          <GitBranch size={9} className="shrink-0" />
+          <span className="truncate">
+            {state?.connected
+              ? <span className="hidden sm:inline">{state.repo ?? ""}</span>
+              : (state ? labels.notConnected : labels.stateUnknown)}
+          </span>
+          {state?.connected && state.commit && <span className="text-muted-foreground/50">{state.commit}</span>}
+          <span className={`size-1.5 shrink-0 rounded-full ${dot}`} />
+        </button>
+      ) : (
+        <Link
+          href={githubHref}
+          title={labels.connectGithubHint}
+          className="inline-flex h-5 min-w-0 flex-1 items-center justify-center gap-1.5 rounded border border-amber-500/50 bg-amber-500/10 px-2 text-[10px] font-medium text-amber-700 transition-colors hover:bg-amber-500/20 dark:text-amber-300"
+        >
+          <Github size={10} className="shrink-0" />
+          <span className="truncate">{labels.connectGithub}</span>
+        </Link>
+      )}
 
       {children}
 
