@@ -1435,6 +1435,10 @@
       "visibility": {
         "title": "Done for you",
         "hint": "Search, models, the app on the phone, robots and the sitemap, images — what the project already does without you."
+      },
+      "dev-tools": {
+        "title": "Development tools",
+        "hint": "What the project is built with: tools on the developer's machine. They never ship inside the product."
       }
     },
     "breadcrumbHome": "Panel",
@@ -1730,6 +1734,18 @@
       "authRoles": "The most valuable part here is the least visible: roles are already attached to routes. To make a page available only to the right people you do not protect it — you build it on an existing route, and access lands with the holders of that role by itself. Four layers: personal account, staff, finance, administration; the first person to register receives every role at once. None of this costs speed: public pages are prepared ahead and never ask about sign-in.",
       "docAuth": "Authorization",
       "docAuthTitle": "Authorization: what is already built"
+    },
+    "devTools": {
+      "intro": "These are the tools the project is BUILT with, not the ones that ship inside the product. They live on the developer's machine and never reach your visitor. The Tools section is about something else: ready-made pieces you can take into the application.",
+      "growing": "The list will grow. Only what genuinely solves a task and has been proven in real work belongs here — not everything that can be installed.",
+      "browserTitle": "A browser for the agent",
+      "browserBody": "The Claude extension for Chrome gives the coding agent eyes: it opens a page in your browser and looks at the result of its own work. A whole class of defects cannot be found any other way — console errors, behaviour with scripts disabled, the service worker and offline, the page AFTER the code has run. In this project that is how nine errors on every page were found, and somebody else's error message standing in place of a video.",
+      "browserLimits": "The boundaries are stated plainly: the agent never enters keys, passwords or payment details, never creates accounts or signs in to yours, never pays or accepts terms. So «make me an OAuth client in the Google console» or «set up Stripe» will not be done — that is your hand. It will walk you to the right screen, explain the fields, and verify the result after you enter it.",
+      "browserInstall": "Install the extension",
+      "browserDoc": "What it gives and what it does not",
+      "browserDocTitle": "A browser for the agent: what it gives and what it does not",
+      "plannedLabel": "What is being considered next",
+      "plannedNote": "Candidates are discussed, but they enter this list only after solving a real task in a real project. Promising a tool that is not here yet means selling something that does not exist."
     }
   },
   "ru": {
@@ -3168,6 +3184,10 @@
       "visibility": {
         "title": "Сделано за вас",
         "hint": "Поиск, модели, приложение на телефоне, роботы и карта сайта, изображения — что проект уже делает без вас."
+      },
+      "dev-tools": {
+        "title": "Инструменты разработки",
+        "hint": "Чем строят проект: инструменты на машине разработчика. В продукт они не попадают."
       }
     },
     "breadcrumbHome": "Панель",
@@ -3463,6 +3483,18 @@
       "authRoles": "Самое ценное здесь незаметно: роли уже прикреплены к маршрутам. Чтобы страница была доступна только нужным людям, её не надо защищать — достаточно построить её на существующем маршруте, и доступ окажется у владельцев роли сам. Слоёв четыре: личный кабинет, сотрудники, финансы, администрирование; первый зарегистрировавшийся получает все роли сразу. На скорость это не влияет: публичные страницы собраны заранее и о входе не спрашивают вовсе.",
       "docAuth": "Авторизация",
       "docAuthTitle": "Авторизация: что уже построено"
+    },
+    "devTools": {
+      "intro": "Здесь то, чем проект СТРОЯТ, а не то, что едет внутрь продукта. Эти инструменты живут на машине разработчика и вашему посетителю не достаются. Раздел «Инструменты» — про другое: там готовые куски, которые можно взять в приложение.",
+      "growing": "Список будет расти. Сюда попадает только то, что реально решает задачу и проверено в работе, — а не всё, что можно установить.",
+      "browserTitle": "Браузер у агента",
+      "browserBody": "Расширение Claude для Chrome даёт агенту-программисту глаза: он открывает страницу в вашем браузере и смотрит на результат своей работы. Целый класс дефектов иначе не найти — ошибки в консоли, поведение с выключенными скриптами, сервис-воркер и офлайн, страница ПОСЛЕ выполнения кода. В этом проекте так были найдены девять ошибок на каждой странице и чужое сообщение об ошибке вместо видео.",
+      "browserLimits": "Границы названы прямо: агент никогда не вводит ключи, пароли и платёжные данные, не создаёт учётные записи и не входит в чужие, не оплачивает и не подтверждает условия. Поэтому «заведи мне OAuth-клиент в консоли Google» или «настрой Stripe» он не выполнит — это ваша рука. Он доведёт вас до нужного экрана, объяснит поля и проверит результат после ввода.",
+      "browserInstall": "Установить расширение",
+      "browserDoc": "Что даёт и чего не даёт",
+      "browserDocTitle": "Браузер у агента: что это даёт и чего не даёт",
+      "plannedLabel": "Что рассматривается дальше",
+      "plannedNote": "Кандидаты обсуждаются, но в этот список попадают только после того, как решат настоящую задачу в настоящем проекте. Обещать инструмент, которого здесь ещё нет, значит продавать несуществующее."
     }
   }
 }

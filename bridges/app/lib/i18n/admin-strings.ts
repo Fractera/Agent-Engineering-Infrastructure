@@ -656,6 +656,14 @@ export type AdminStrings = {
     offlineLabel: string; offlineHint: string;
     save: string; saving: string; saved: string; failed: string; nothingToSave: string;
   };
+  // Инструменты разработки — то, чем проект СТРОЯТ (владелец 2026-08-13).
+  // Список будет расти; первый жилец — браузер у агента.
+  devTools: {
+    intro: string; growing: string;
+    browserTitle: string; browserBody: string; browserLimits: string;
+    browserInstall: string; browserDoc: string; browserDocTitle: string;
+    plannedLabel: string; plannedNote: string;
+  };
   languages: {
     intro: string; unavailable: string;
     save: string; saving: string; rebuilding: string; saved: string;

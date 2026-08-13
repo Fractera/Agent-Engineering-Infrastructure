@@ -21,7 +21,7 @@ import {
   Cookie, Users, ImagePlus, Database, BrainCircuit, Brain, Map as MapIcon, Download, Upload,
   Link2, KeyRound, MessagesSquare, Sparkles, GitBranch, Info, History, Settings, BookOpen,
   HelpCircle, PackagePlus, FileText, Target, Wrench, Network, BookMarked, GraduationCap,
-  ListChecks, AlertTriangle, Search, Bot, Smartphone, Paintbrush, LayoutTemplate, Ruler, LifeBuoy, Compass, Code2, ChevronRight, Crop, Scissors, Mic, Hourglass, FlaskConical, UserRound, IdCard, Workflow, Radar, type LucideIcon,
+  ListChecks, AlertTriangle, Search, Bot, Smartphone, Paintbrush, LayoutTemplate, Ruler, LifeBuoy, Compass, Code2, ChevronRight, Crop, Scissors, Mic, Hourglass, FlaskConical, UserRound, IdCard, Workflow, Radar, MonitorSmartphone, type LucideIcon,
 } from "lucide-react";
 import { NAV_GROUPS, NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 import { useCasesGate } from "@/lib/use-cases-store";
@@ -70,6 +70,9 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   github: GitBranch,
   "github-about": Info,
   deployments: History,
+  // Инструменты разработки: экран с телефоном — то, на чём агент СМОТРИТ
+  // результат. Не гаечный ключ: тот занят группой продуктовых инструментов.
+  "dev-tools": MonitorSmartphone,
   env: Settings,
   "how-to-build": BookOpen,
   help: HelpCircle,
