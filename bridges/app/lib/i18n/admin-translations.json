@@ -1701,7 +1701,10 @@
       "failed": "Could not save",
       "nothingToSave": "Nothing to save",
       "imagesTitle": "Images",
-      "imagesBody": "Pictures are served at the size the visitor's screen actually needs, not at their original size — a phone does not download a file made for a large monitor. Until a picture arrives, its place is held by a tiny blurred copy of itself: a few hundred bytes, delivered with the page, needing no request of its own, so the text below does not jump when the picture appears. Anything below the first screen loads only when the visitor reaches it. Sizes and blurred copies are computed at build time, so pages stay prepared rather than recomputed per visit."
+      "imagesBody": "The page arrives with the picture already INSIDE it: a tiny blurred copy of the image, about 150 bytes, is written into the markup — no separate request for it, so the visitor sees the shape and colours of the coming image in the same millisecond as the heading. Its space is reserved in advance, from its real dimensions, so the text does not jump when the file lands. The real image follows and replaces the blurred one by itself.",
+      "imagesSpeed": "This is not decoration but two of the three figures a search engine measures your page by: the layout jump as things load, and how fast the largest element on screen appears — most often that element is an image. Meanwhile a phone does not download a file made for a large monitor: the needed sizes are produced from one original on demand, the format is matched to the browser, and everything below the first screen loads only when the visitor reaches it. Works with JavaScript disabled.",
+      "docImages": "Images",
+      "docImagesTitle": "Images: what is already built"
     }
   },
   "ru": {
@@ -3406,7 +3409,10 @@
       "failed": "Не удалось сохранить",
       "nothingToSave": "Нечего сохранять",
       "imagesTitle": "Изображения",
-      "imagesBody": "Картинки отдаются в том размере, который нужен экрану посетителя, а не в исходном: телефон не качает файл, рассчитанный на большой монитор. Пока картинка идёт, её место занимает крошечная размытая копия её самой — сотни байт, приезжает вместе со страницей, отдельного запроса не требует, поэтому текст под картинкой не подпрыгивает в момент появления. Всё, что ниже первого экрана, грузится только когда посетитель до него дойдёт. Размеры и размытые копии считаются на сборке, поэтому страницы остаются заранее собранными, а не пересчитываются на каждый заход."
+      "imagesBody": "Страница приходит с картинкой ВНУТРИ себя: в разметку вписана крошечная размытая копия изображения, около 150 байт, — отдельного запроса за ней нет, и посетитель видит форму и цвета будущей картинки в ту же миллисекунду, что и заголовок. Место под неё занято заранее, по её настоящим размерам, поэтому текст не прыгает, когда файл доезжает. Настоящая картинка приходит следом и заменяет размытую сама.",
+      "imagesSpeed": "Это не украшение, а две из трёх величин, которыми поисковик измеряет вашу страницу: прыжок вёрстки при загрузке и время появления самого крупного элемента экрана — им чаще всего и оказывается картинка. Телефон при этом не качает файл, рассчитанный на большой монитор: нужные размеры делаются из одного оригинала по требованию, формат подбирается под браузер, а всё, что ниже первого экрана, грузится только когда посетитель до него дойдёт. Работает и с выключенным JavaScript.",
+      "docImages": "Изображения",
+      "docImagesTitle": "Изображения: что уже построено"
     }
   }
 }

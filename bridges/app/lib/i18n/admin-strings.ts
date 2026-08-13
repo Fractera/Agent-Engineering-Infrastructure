@@ -624,7 +624,8 @@ export type AdminStrings = {
     // в размере под экран, ниже сгиба — лениво. Про подмену для КАРТИНОК,
     // ЗАГРУЖЕННЫХ ВЛАДЕЛЬЦЕМ, здесь не сказано ни слова: это шаг 506.3, и он ещё
     // не написан. Закон раздела ровно об этом.
-    imagesTitle: string; imagesBody: string;
+    imagesTitle: string; imagesBody: string; imagesSpeed: string;
+    docImages: string; docImagesTitle: string;
     noJsTitle: string; noJsBody: string;
     costTitle: string; cost: string; choice: string;
     // Подписи вопросиков и заголовки их окон. Документы — не здесь, а в

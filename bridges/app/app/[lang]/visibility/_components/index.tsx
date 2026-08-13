@@ -117,8 +117,12 @@ export function VisibilityContent(
             применена, подложек ноль — негативный контроль той же проверки.
             Про картинки, которые владелец загрузит САМ, здесь пока ни слова:
             это 506.3, и он не написан. */}
-        <Block title={v.imagesTitle}>
+        <Block
+          title={v.imagesTitle}
+          docs={<Doc name="images-inside" lang={lang} label={v.docImages} title={v.docImagesTitle} />}
+        >
           <p>{v.imagesBody}</p>
+          <p>{v.imagesSpeed}</p>
         </Block>
 
         <Block title={v.noJsTitle}>
