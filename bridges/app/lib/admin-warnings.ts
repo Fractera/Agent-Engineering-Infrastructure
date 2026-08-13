@@ -90,15 +90,40 @@ export function collectWarnings(): AdminWarning[] {
   if (!envHas(APP_ENV, "USER_GITHUB_REPO_URL") || !envHas(APP_ENV, "USER_GITHUB_VERIFIED_AT")) {
     out.push({ id: "github", level: "blocking", slug: "github" });
   }
+  // 🔒 КЛЮЧ OPENAI ИДЁТ ПЕРЕД КЕЙСАМИ, КОГДА КЕЙСОВ ЕЩЁ НЕТ (владелец на свежем
+  // сервере 2026-08-13).
+  //
+  // Кейсы рождаются в Quiz, а Quiz задаёт вопросы моделью — без ключа он
+  // отвечает `no-key` и не делает ничего. Пока эта запись стояла после кейсов,
+  // подвал звал «опишите пользовательские кейсы» человека, который физически не
+  // мог их описать: он шёл по указанной ссылке и упирался в тупик.
+  //
+  // Поэтому здесь ключ объявляется КРАСНЫМ и встаёт ПЕРЕД кейсами — но ровно
+  // тогда, когда кейсы ещё не готовы. Если кейсы уже подтверждены, ключ снова
+  // становится оранжевым советом (он остаётся нужен векторной памяти и графу, но
+  // ничего уже не блокирует), и эта запись добавляется ниже, среди оранжевых.
+  //
+  // Требование не удваивается: обе ветки взаимоисключающие.
+  const casesReady = useCasesGate().kind === "ready";
+  const hasOpenAiKey = envHas(APP_ENV, "OPENAI_API_KEY") || envHas(RAG_ENV, "OPENAI_API_KEY");
+
+  if (!casesReady && !hasOpenAiKey) {
+    out.push({ id: "openai", level: "blocking", slug: "openai" });
+  }
+
   // Тревога держится, ПОКА НЕ ПОДТВЕРЖДЕНЫ ВСЕ кейсы (владелец 2026-08-10):
   // написанный моделью кейс — догадка, и строить по непрочитанной догадке хуже,
   // чем не строить вовсе. Половина подтверждённых лучше нуля, но гейт не снимает.
-  if (useCasesGate().kind !== "ready") {
+  if (!casesReady) {
     out.push({ id: "use-cases", level: "blocking", slug: "doc-use-cases" });
   }
 
   // Оранжевые — начинать можно, но лучше не.
-  if (!envHas(APP_ENV, "OPENAI_API_KEY") && !envHas(RAG_ENV, "OPENAI_API_KEY")) {
+  //
+  // Ключ попадает сюда, ТОЛЬКО если кейсы уже подтверждены: пока их нет, он выше
+  // и красный (см. развилку про Quiz). Условие `casesReady` и есть то, что
+  // разводит две ветки и не даёт записи задвоиться.
+  if (casesReady && !hasOpenAiKey) {
     out.push({ id: "openai", level: "advised", slug: "openai" });
   }
   if (!domainActive()) {
