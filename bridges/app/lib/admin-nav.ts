@@ -120,7 +120,7 @@ export const NAV_BY_GROUP: Record<NavGroup, readonly AdminPageSlug[]> = NAV_GROU
  * документов», у инструментов — витрина. Переименовывать их ради единообразия
  * значило бы сломать адреса, которые уже существуют.
  */
-export const GROUP_INDEX: Record<NavGroup, AdminPageSlug> = {
+export const GROUP_INDEX = {
   application: "map-application",
   data: "map-data",
   tools: "tools",
@@ -129,7 +129,20 @@ export const GROUP_INDEX: Record<NavGroup, AdminPageSlug> = {
   project: "map-project",
   documents: "doc-overview",
   help: "map-help",
-};
+} as const satisfies Record<NavGroup, AdminPageSlug>;
+
+/**
+ * Группы, чья карта — ОБЩАЯ страница `map-…` (компонент `GroupMap`). Только у
+ * них есть вводная фраза в словаре: своя страница пишет своё вступление сама.
+ *
+ * Выводится из `GROUP_INDEX`, а не перечисляется руками. Появится новая карта
+ * `map-…` — ключ станет обязательным сам, и сборка потребует слова; исчезнет
+ * карта — требование снимется. Список, который надо помнить обновлять, здесь
+ * прожил бы ровно до первой правки навигации.
+ */
+export type MappedGroup = {
+  [G in NavGroup]: (typeof GROUP_INDEX)[G] extends `map-${string}` ? G : never;
+}[NavGroup];
 
 export function adminHref(lang: string, slug?: AdminPageSlug): string {
   return slug ? `/${lang}/${slug}` : `/${lang}`;

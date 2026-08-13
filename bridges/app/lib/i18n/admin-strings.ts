@@ -24,7 +24,7 @@
 
 import translations from "./admin-translations.json";
 import { ADMIN_LANGUAGES } from "@/config/translations/admin-languages";
-import type { AdminPageSlug, NavGroup } from "@/lib/admin-nav";
+import type { AdminPageSlug, NavGroup, MappedGroup } from "@/lib/admin-nav";
 
 export type AdminStrings = {
   // header
@@ -40,8 +40,17 @@ export type AdminStrings = {
   registerAccount: string;
   // navigation (step 501)
   navGroups: Record<NavGroup, string>;
-  /** Пояснение к карте группы — почему эти разделы стоят вместе. */
-  groupMaps: Record<NavGroup, string>;
+  /**
+   * Пояснение к карте группы — почему эти разделы стоят вместе.
+   *
+   * Ключи — только группы с ОБЩЕЙ картой `map-…`. У «Инструментов» и
+   * «Документов разработки» карты свои, под своими именами (`tools`,
+   * `doc-overview`), и вступление они пишут сами — эти два ключа стояли здесь
+   * пустыми, никем не читались и держали машинную приёмку языков красной
+   * навсегда. Красный сигнал, который горит всегда, перестают читать, а партию
+   * перевода на 82 языка они бы нагрузили двумя невидимыми фразами.
+   */
+  groupMaps: Record<MappedGroup, string>;
   // one entry per page of the panel — keys come from lib/admin-nav.ts, so a new
   // page without words does not compile
   pages: Record<AdminPageSlug, { title: string; hint: string }>;

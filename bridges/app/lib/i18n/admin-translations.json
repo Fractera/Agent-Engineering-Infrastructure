@@ -1401,11 +1401,9 @@
     "groupMaps": {
       "application": "These settings shape the application itself — what it is called, which languages it speaks, how its pages are laid out and which capabilities are switched on. They apply without a rebuild unless a section says otherwise.",
       "data": "Everything the project knows lives here: accounts, uploaded files, rows, meaning-based search and the map. One store, shared with the running app — never a second copy beside it.",
-      "tools": "",
       "backup": "Taking the whole project out and bringing it back. Not a store but an operation over all of them at once, which is why it stands apart from the data sections.",
       "access": "How people and services reach the project, and how it reaches out: your own domain, sign-in methods, communication channels and the OpenAI key.",
       "project": "The repository behind the app, the history of its deployments and the environment they run with.",
-      "documents": "",
       "help": "How to build with this panel and where to ask when something is unclear."
     },
     "testing": {
@@ -3039,11 +3037,9 @@
     "groupMaps": {
       "application": "Эти настройки определяют само приложение: как оно называется, на каких языках говорит, как разложены его страницы и какие возможности включены. Применяются без пересборки, если раздел не сказал обратного.",
       "data": "Здесь живёт всё, что проект знает: учётные записи, загруженные файлы, строки, поиск по смыслу и карта. Один склад, общий с работающим приложением, — второй копии рядом с ним быть не должно.",
-      "tools": "",
       "backup": "Забрать проект целиком и вернуть обратно. Это не склад, а операция над всеми складами сразу, поэтому она стоит отдельно от разделов данных.",
       "access": "Как люди и службы добираются до проекта и как он выходит наружу: свой домен, способы входа, каналы связи и ключ OpenAI.",
       "project": "Репозиторий, из которого живёт приложение, история его развёртываний и окружение, с которым они идут.",
-      "documents": "",
       "help": "Как строить в этой панели и куда спросить, если что-то непонятно."
     },
     "testing": {
