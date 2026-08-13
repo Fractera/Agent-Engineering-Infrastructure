@@ -165,6 +165,14 @@ export async function POST(req: NextRequest) {
 
     // 1) Line-preserving upsert into the Shell's .env.local (authoritative for the build).
     const existing = fs.existsSync(APP_ENV) ? fs.readFileSync(APP_ENV, "utf-8") : "";
+
+    // 🔒 ЧТО БЫЛО ДО ЗАПИСИ — чтобы решить, нужна ли пересборка (владелец на
+    // свежем сервере 2026-08-13). Сравниваем ЗДЕСЬ, до перезаписи файла: после
+    // неё старого значения уже не существует.
+    const prevLangs = parseList(readEnvValue(existing, SUPPORTED_KEY)).join(",");
+    const prevDefault = (readEnvValue(existing, DEFAULT_KEY) ?? "").toLowerCase();
+    const setChanged = prevLangs !== languages.join(",") || prevDefault !== defaultLanguage;
+
     let nextEnv = upsertEnvLine(existing, SUPPORTED_KEY, languages.join(","));
     nextEnv = upsertEnvLine(nextEnv, DEFAULT_KEY, defaultLanguage);
     // The act is recorded on EVERY save, not only the first: re-saving is the owner confirming the
