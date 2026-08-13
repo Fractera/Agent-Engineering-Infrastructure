@@ -80,6 +80,8 @@ export const NAV = [
   { slug: "doc-platform-tools",   group: "documents" },
   { slug: "doc-architecture",     group: "documents" },
   { slug: "doc-seo",              group: "documents" },
+  { slug: "doc-aio",              group: "documents" },
+  { slug: "doc-pwa",              group: "documents" },
   { slug: "doc-glossary",         group: "documents" },
   { slug: "doc-lessons",          group: "documents" },
   { slug: "doc-steps",            group: "documents" },

@@ -609,6 +609,7 @@ export type AdminStrings = {
     // как текст, а не как ключи словаря.
     readyTitle: string; readyBody: string; readySignals: string; readyCost: string; readyChoice: string;
     readySeo: string; readySeoTitle: string; readyPwa: string; readyPwaTitle: string;
+    readyAio: string; readyAioLabel: string; readyAioTitle: string;
     // Как языки работают в самом проекте: один язык против нескольких.
     howTitle: string;
     howOneTitle: string; howOne: string;

@@ -21,7 +21,7 @@ import {
   Cookie, Users, ImagePlus, Database, BrainCircuit, Brain, Map as MapIcon, Download, Upload,
   Link2, KeyRound, MessagesSquare, Sparkles, GitBranch, Info, History, Settings, BookOpen,
   HelpCircle, PackagePlus, FileText, Target, Wrench, Network, BookMarked, GraduationCap,
-  ListChecks, AlertTriangle, Search, Paintbrush, LayoutTemplate, Ruler, LifeBuoy, Compass, Code2, ChevronRight, Crop, Scissors, Mic, Hourglass, FlaskConical, UserRound, IdCard, Workflow, type LucideIcon,
+  ListChecks, AlertTriangle, Search, Bot, Smartphone, Paintbrush, LayoutTemplate, Ruler, LifeBuoy, Compass, Code2, ChevronRight, Crop, Scissors, Mic, Hourglass, FlaskConical, UserRound, IdCard, Workflow, type LucideIcon,
 } from "lucide-react";
 import { NAV_GROUPS, NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 import { useCasesGate } from "@/lib/use-cases-store";
@@ -77,6 +77,8 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   "doc-platform-tools": Wrench,
   "doc-architecture": Network,
   "doc-seo": Search,
+  "doc-aio": Bot,
+  "doc-pwa": Smartphone,
   "doc-glossary": BookMarked,
   "doc-lessons": GraduationCap,
   "doc-steps": ListChecks,

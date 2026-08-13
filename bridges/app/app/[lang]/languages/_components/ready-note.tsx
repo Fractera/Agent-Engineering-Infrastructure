@@ -48,6 +48,11 @@ export function ReadyNote({ s, lang }: { s: AdminStrings; lang: string }) {
             быть правдой в минуту, когда он его читает, — поэтому у каждого
             утверждения этой врезки есть машинный гейт: здесь `check:seo`. */}
         <p>{t.readySignals}</p>
+        {/* Читатель, о котором вспоминают последним, а приходит он уже сегодня.
+            Абзац появился вместе с шагом 505 — и по тому же правилу: сначала
+            машина держит утверждение (`check:aio` в слоте), потом оно
+            публикуется. */}
+        <p>{t.readyAio}</p>
         <p>{t.readyCost}</p>
         <p>{t.readyChoice}</p>
       </div>
@@ -57,6 +62,7 @@ export function ReadyNote({ s, lang }: { s: AdminStrings; lang: string }) {
           абзац дочитают. */}
       <div className="mt-2.5 flex flex-wrap items-center gap-2">
         <Doc name="seo-inside" lang={lang} label={t.readySeo} title={t.readySeoTitle} />
+        <Doc name="aio-inside" lang={lang} label={t.readyAioLabel} title={t.readyAioTitle} />
         <Doc name="pwa-inside" lang={lang} label={t.readyPwa} title={t.readyPwaTitle} />
       </div>
     </div>
