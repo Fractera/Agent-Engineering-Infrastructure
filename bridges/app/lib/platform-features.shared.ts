@@ -18,7 +18,8 @@ export type FeatureKey =
   | "languageSwitcher"
   | "topMenu"
   | "footerPages"
-  | "cookieBanner";
+  | "cookieBanner"
+  | "offlineCache";
 
 // 🔒 «Передача сессии» ЗДЕСЬ НЕ ЖИВЁТ (владелец, 2026-08-10). Эта страница — про
 // то, что приложение предлагает ПОСЕТИТЕЛЮ; передача контекста к посетителю
@@ -29,7 +30,7 @@ export type FeatureKey =
 
 /** Порядок = порядок на странице. Управляющие возможности идут первыми. */
 export const FEATURE_ORDER: FeatureKey[] = [
-  "topMenu", "footerPages", "cookieBanner",
+  "topMenu", "footerPages", "cookieBanner", "offlineCache",
   "auth", "breadcrumbs", "faq", "themeToggle", "widthToggle", "languageSwitcher",
 ];
 
@@ -38,6 +39,7 @@ export const FEATURE_DEFAULTS: Record<FeatureKey, boolean> = {
   topMenu: true,
   footerPages: true,
   cookieBanner: false,
+  offlineCache: true,
   auth: false,
   breadcrumbs: false,
   faq: false,

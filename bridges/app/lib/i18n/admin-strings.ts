@@ -359,7 +359,7 @@ export type AdminStrings = {
     opensSection: string; parallelOff: string;
     items: Record<
       "auth" | "breadcrumbs" | "faq" | "themeToggle" | "widthToggle" | "languageSwitcher"
-      | "topMenu" | "footerPages" | "cookieBanner",
+      | "topMenu" | "footerPages" | "cookieBanner" | "offlineCache",
       { label: string; description: string }
     >;
     helpLabel: string;

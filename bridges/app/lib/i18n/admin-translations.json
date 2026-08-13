@@ -753,6 +753,10 @@
         "languageSwitcher": {
           "label": "Language switcher in the footer",
           "description": "Lets a visitor pick the language themselves instead of taking the browser's guess — and keeps it on every page that follows."
+        },
+        "offlineCache": {
+          "label": "Offline copy on the device",
+          "description": "Keeps a copy of the site on the visitor's device: repeat visits open instantly, and pages they have already seen still open with no network. Pages themselves always come from the network first — the copy is used only when there is none, so an outdated page can appear in exactly one case: the visitor is offline and revisits a page. Leave it on for a blog or a catalogue; turn it off if your prices change during the day and a yesterday's figure shown offline would be worse than an error screen. Turning it off also REMOVES the copy from devices that already have one."
         }
       },
       "helpLabel": "Why configure from here at all",
@@ -2427,6 +2431,10 @@
         "languageSwitcher": {
           "label": "Переключатель языка в подвале",
           "description": "Позволяет посетителю выбрать язык самому, а не принимать догадку браузера, и сохраняет выбор на всех следующих страницах."
+        },
+        "offlineCache": {
+          "label": "Офлайн-копия на устройстве",
+          "description": "Хранит копию сайта на устройстве посетителя: повторные открытия мгновенные, а уже виденные страницы открываются без сети. Сами страницы всегда берутся из сети первой — копия идёт в ход, только когда сети нет, поэтому устаревшая страница возможна ровно в одном случае: посетитель офлайн и открывает то, что уже видел. Оставьте включённым для блога или каталога; выключите, если цены меняются в течение дня и вчерашняя цифра в офлайне хуже, чем экран ошибки. Выключение ещё и СНИМАЕТ копию с устройств, где она уже есть."
         }
       },
       "helpLabel": "Зачем вообще настраивать отсюда",
