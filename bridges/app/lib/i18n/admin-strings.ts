@@ -619,6 +619,12 @@ export type AdminStrings = {
     modelsTitle: string; modelsBody: string;
     appTitle: string; appBody: string;
     mapsTitle: string; mapsBody: string;
+    // Изображения (шаг 506.2). Абзац говорит РОВНО про то, что уже держится
+    // проверкой: размеры и размытая подложка считаются на сборке, картинка едет
+    // в размере под экран, ниже сгиба — лениво. Про подмену для КАРТИНОК,
+    // ЗАГРУЖЕННЫХ ВЛАДЕЛЬЦЕМ, здесь не сказано ни слова: это шаг 506.3, и он ещё
+    // не написан. Закон раздела ровно об этом.
+    imagesTitle: string; imagesBody: string;
     noJsTitle: string; noJsBody: string;
     costTitle: string; cost: string; choice: string;
     // Подписи вопросиков и заголовки их окон. Документы — не здесь, а в

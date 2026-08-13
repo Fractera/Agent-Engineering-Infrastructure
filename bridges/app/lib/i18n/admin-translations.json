@@ -1140,7 +1140,7 @@
       "documents": "Development documents",
       "backup": "Backup & restore",
       "tools": "Tools",
-      "visibility": "How you are found"
+      "visibility": "Done for you"
     },
     "footer": {
       "deploy": "Deploy",
@@ -1425,8 +1425,8 @@
         "hint": "Waves of agents instead of one. The most powerful option here — and the most expensive."
       },
       "visibility": {
-        "title": "How you are found",
-        "hint": "Search, models, the app on the phone, robots and the sitemap — what the project already does without you."
+        "title": "Done for you",
+        "hint": "Search, models, the app on the phone, robots and the sitemap, images — what the project already does without you."
       }
     },
     "breadcrumbHome": "Panel",
@@ -1698,7 +1698,9 @@
       "saving": "Saving…",
       "saved": "Saved",
       "failed": "Could not save",
-      "nothingToSave": "Nothing to save"
+      "nothingToSave": "Nothing to save",
+      "imagesTitle": "Images",
+      "imagesBody": "Pictures are served at the size the visitor's screen actually needs, not at their original size — a phone does not download a file made for a large monitor. Until a picture arrives, its place is held by a tiny blurred copy of itself: a few hundred bytes, delivered with the page, needing no request of its own, so the text below does not jump when the picture appears. Anything below the first screen loads only when the visitor reaches it. Sizes and blurred copies are computed at build time, so pages stay prepared rather than recomputed per visit."
     }
   },
   "ru": {
@@ -2842,7 +2844,7 @@
       "documents": "Документы разработки",
       "backup": "Резервное копирование",
       "tools": "Инструменты",
-      "visibility": "Как вас находят"
+      "visibility": "Сделано за вас"
     },
     "footer": {
       "deploy": "Развернуть",
@@ -3127,8 +3129,8 @@
         "hint": "Волны агентов вместо одного. Самая сильная опция корпуса — и самая дорогая."
       },
       "visibility": {
-        "title": "Как вас находят",
-        "hint": "Поиск, модели, приложение на телефоне, роботы и карта сайта — что проект уже делает без вас."
+        "title": "Сделано за вас",
+        "hint": "Поиск, модели, приложение на телефоне, роботы и карта сайта, изображения — что проект уже делает без вас."
       }
     },
     "breadcrumbHome": "Панель",
@@ -3400,7 +3402,9 @@
       "saving": "Сохраняю…",
       "saved": "Сохранено",
       "failed": "Не удалось сохранить",
-      "nothingToSave": "Нечего сохранять"
+      "nothingToSave": "Нечего сохранять",
+      "imagesTitle": "Изображения",
+      "imagesBody": "Картинки отдаются в том размере, который нужен экрану посетителя, а не в исходном: телефон не качает файл, рассчитанный на большой монитор. Пока картинка идёт, её место занимает крошечная размытая копия её самой — сотни байт, приезжает вместе со страницей, отдельного запроса не требует, поэтому текст под картинкой не подпрыгивает в момент появления. Всё, что ниже первого экрана, грузится только когда посетитель до него дойдёт. Размеры и размытые копии считаются на сборке, поэтому страницы остаются заранее собранными, а не пересчитываются на каждый заход."
     }
   }
 }
