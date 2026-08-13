@@ -4,6 +4,7 @@ import { hash } from "bcrypt-ts";
 import { getDb } from "@/lib/db";
 import { nanoid } from "nanoid";
 import { auth } from "./auth";
+import { ALL_ROLES } from "./roles";
 
 type RegisterResult =
   | { success: true; roles: string[] }
@@ -65,8 +66,20 @@ export async function register(email: string, password: string): Promise<Registe
   // отдельно — и НЕ им самим: `/api/admin/users/<id>` намеренно отказывает в
   // правке собственной учётной записи (единственный владелец не может изменить
   // свои роли вообще — известное ограничение, ждёт отдельного решения).
+  // 🔒 ВСЕ РОЛИ, А НЕ ЧЕТЫРЕ (владелец 2026-08-13, по итогам аудита).
+  //
+  // Четырёх ролей хватало, чтобы ОТКРЫТЬ страницы: `architect` входит в каждую
+  // группу прав. Но не хватало, чтобы ПРОВЕРИТЬ продукт: владелец не мог увидеть
+  // сайт глазами покупателя с подпиской, менеджера доставки или редактора —
+  // ровно тех, ради кого роли и заведены. Свой сервер он поднимает, чтобы
+  // попробовать всё, и обязан иметь всё.
+  //
+  // Список НЕ дублируется здесь строкой: он читается из словаря ролей, поэтому
+  // новая роль появляется у владельца сама, а не после того, как кто-то вспомнит
+  // про этот файл. `guest` исключён намеренно — это состояние «не вошёл», а не
+  // право, и в учётной записи ему делать нечего.
   const isFirst = !db.prepare("SELECT id FROM users LIMIT 1").get();
-  const roles = isFirst ? ["architect", "finance", "user", "admin"] : ["user"];
+  const roles: string[] = isFirst ? ALL_ROLES.filter((r) => r !== "guest") : ["user"];
 
   db.prepare(
     "INSERT INTO users (id, email, nickname, password, roles, provider) VALUES (?, ?, ?, ?, ?, ?)"
