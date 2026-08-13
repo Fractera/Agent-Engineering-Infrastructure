@@ -16,7 +16,8 @@ import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
 import { readLanguages } from "./_lib/langs";
 import { LangPicker } from "./_components/lang-picker.client";
-import { ReadyNote } from "./_components/ready-note";
+import Link from "next/link";
+import { BadgeCheck } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -44,11 +45,21 @@ export default async function LanguagesPage({ params }: { params: Promise<{ lang
         {t.intro}
       </p>
 
-      {/* Что означает выбор, сделанный ниже, и почему он стоит первым в очереди
-          требований. Врезка идёт ПЕРЕД списком: человек, который сначала увидел
-          84 отметки, выбирает языки, а не решает, нужна ли ему многоязычность. */}
+      {/* 🔒 ОДНА СТРОКА ВМЕСТО ВРЕЗКИ (владелец 2026-08-13).
+          Здесь стояла зелёная врезка «самое дорогое уже построено». Она выросла
+          до пяти абзацев и пяти документов и переехала в свою вкладку — но её
+          сила была НЕ в тексте, а в том, что она стояла на пути: человек приходил
+          выбирать языки и наталкивался на неё, не ища. Ссылка сохраняет встречу;
+          стоит ПЕРЕД списком по той же причине, что и врезка — увидевший сначала
+          84 отметки выбирает языки, а не решает, нужна ли ему многоязычность. */}
       <div className="mt-3">
-        <ReadyNote s={s} lang={lang} />
+        <Link
+          href={`/${lang}/visibility`}
+          className="inline-flex items-center gap-1.5 text-[11px] font-medium text-primary hover:underline"
+        >
+          <BadgeCheck size={13} className="shrink-0" />
+          {t.readyLink}
+        </Link>
       </div>
 
       {/* Как работают языки в самом проекте — механизм, а не обещание. Стоит

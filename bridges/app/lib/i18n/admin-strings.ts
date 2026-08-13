@@ -357,9 +357,12 @@ export type AdminStrings = {
     intro: string; unavailable: string;
     save: string; saving: string; saved: string; failed: string; nothingToSave: string;
     opensSection: string; parallelOff: string;
+    // `offlineCache` здесь больше нет: его выключатель и его слова переехали на
+    // вкладку «Как вас находят» (2026-08-13). Ключ, оставленный в типе после
+    // переезда, пережил бы сам переезд и позвал бы следующего вернуть пункт.
     items: Record<
       "auth" | "breadcrumbs" | "faq" | "themeToggle" | "widthToggle" | "languageSwitcher"
-      | "topMenu" | "footerPages" | "cookieBanner" | "offlineCache",
+      | "topMenu" | "footerPages" | "cookieBanner",
       { label: string; description: string }
     >;
     helpLabel: string;
@@ -597,19 +600,58 @@ export type AdminStrings = {
     helpStaticTitle: string; helpStatic: string;
     helpFamiliarTitle: string; helpFamiliar: string;
   };
+  // Вкладка «Как вас находят» — дом материала, начинавшегося зелёной врезкой на
+  // странице языков (владелец 2026-08-13).
+  //
+  // 🔒 ПРАВИЛО ЭТОГО РАЗДЕЛА, ПЕРЕЕХАВШЕЕ ВМЕСТЕ С ТЕКСТОМ: утверждение
+  // появляется здесь ТОЛЬКО после того, как его держит машинная проверка. Оно
+  // про содержание, а не про место: покупатель проверяет такие обещания одной
+  // командой `curl`, и обещание, ложное в минуту чтения, дороже отсутствующего.
+  // Так абзац про языковые сигналы ждал шага 503 (`check:seo`), про модели —
+  // 505 (`check:aio`), про приложение — 504 (`check:pwa`).
+  //
+  // Зелёного фона здесь нет намеренно. Зелёное — интонация восклицания, уместная
+  // для врезки, на которую наткнулись; постоянный раздел, оформленный
+  // восклицанием, читается как реклама. Сюда пришли читать.
+  visibility: {
+    intro: string;
+    searchTitle: string; searchBody: string; searchSignals: string;
+    modelsTitle: string; modelsBody: string;
+    appTitle: string; appBody: string;
+    mapsTitle: string; mapsBody: string;
+    noJsTitle: string; noJsBody: string;
+    costTitle: string; cost: string; choice: string;
+    // Подписи вопросиков и заголовки их окон. Документы — не здесь, а в
+    // `_content/*-inside*.md`: длинный текст правят как текст, а не как ключи.
+    docSeo: string; docSeoTitle: string;
+    docAio: string; docAioTitle: string;
+    docPwa: string; docPwaTitle: string;
+    docRobots: string; docRobotsTitle: string;
+    docSitemap: string; docSitemapTitle: string;
+    // Выключатель офлайн-копии переехал сюда со страницы возможностей: место в
+    // интерфейсе — рядом с текстом, который объясняет, ЗАЧЕМ это. Хранилище
+    // осталось общим (ветка `features` конфига) — как у «Передачи сессии».
+    offlineLabel: string; offlineHint: string;
+    save: string; saving: string; saved: string; failed: string; nothingToSave: string;
+  };
   languages: {
     intro: string; unavailable: string;
     save: string; saving: string; rebuilding: string; saved: string;
     rebuildStarted: string; rebuildDone: string; rebuildFailed: string;
     busyBuild: string; failed: string; nothingToSave: string; atLeastOne: string;
     defaultLabel: string; makeDefault: string; selectedCount: string; tierHint: string;
-    // Зелёная врезка: что за этим выбором уже построено, и два вопросика с
-    // полными документами (владелец 2026-08-13). Сами документы — не здесь, а в
-    // `_content/seo-inside*.md` и `_content/pwa-inside*.md`: длинный текст правят
-    // как текст, а не как ключи словаря.
-    readyTitle: string; readyBody: string; readySignals: string; readyCost: string; readyChoice: string;
-    readySeo: string; readySeoTitle: string; readyPwa: string; readyPwaTitle: string;
-    readyAio: string; readyAioLabel: string; readyAioTitle: string;
+    // 🔒 ЗДЕСЬ ОСТАЛАСЬ ОДНА СТРОКА ВМЕСТО ВРЕЗКИ (владелец 2026-08-13).
+    //
+    // Врезка «самое дорогое уже построено» переехала в свою вкладку «Как вас
+    // находят»: она выросла до пяти абзацев и пяти документов, и странице языков
+    // стала мала. Но её сила была НЕ в тексте, а в том, что она стояла на пути —
+    // человек приходил выбирать языки и наталкивался на неё, не ища. Вкладка,
+    // куда надо зайти самому, эту силу теряет: зайдёт тот, кто и так знает, что
+    // такое поисковая оптимизация, а адресат — тот, кто не знает.
+    //
+    // Поэтому одна строка со ссылкой, а не абзац: встреча на пути сохранена,
+    // текст живёт там, где ему место.
+    readyLink: string;
     // Как языки работают в самом проекте: один язык против нескольких.
     howTitle: string;
     howOneTitle: string; howOne: string;

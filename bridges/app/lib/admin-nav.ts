@@ -8,7 +8,7 @@
 // `slug` — машинная строка, НЕ переводится (правило 4г). Человеческие слова
 // живут в словаре под тем же slug: `s.pages[slug].title` / `.hint`.
 
-export const NAV_GROUPS = ["application", "data", "tools", "backup", "access", "project", "documents", "help"] as const;
+export const NAV_GROUPS = ["application", "visibility", "data", "tools", "backup", "access", "project", "documents", "help"] as const;
 export type NavGroup = (typeof NAV_GROUPS)[number];
 
 // Порядок внутри группы = порядок в меню. Он повторяет порядок сегодняшнего
@@ -26,6 +26,21 @@ export const NAV = [
   { slug: "top-menu",        group: "application" },
   { slug: "footer-pages",    group: "application" },
   { slug: "cookie-banner",   group: "application" },
+
+  // ОДНА ВКЛАДКА В СВОЕЙ ГРУППЕ — так и задумано (владелец 2026-08-13).
+  //
+  // Материал начинался зелёной врезкой на странице языков: человек приходил
+  // выбирать языки и наталкивался на «самое дорогое уже построено». Врезка
+  // выросла до пяти абзацев и пяти документов, и страница языков стала ей мала.
+  //
+  // Группа названа вопросом ПОКУПАТЕЛЯ, а не аббревиатурой: «SEO» через месяц
+  // начнёт врать, потому что сюда лягут изображения и скорость загрузки — а они
+  // не поисковая оптимизация, хотя решают ту же задачу.
+  //
+  // Цена переезда названа честно: врезка работала тем, что стояла НА ПУТИ, и её
+  // не искали. Поэтому на странице языков осталась одна строка со ссылкой сюда —
+  // встреча сохранена, а весь текст живёт там, где ему место.
+  { slug: "visibility",      group: "visibility" },
 
   { slug: "map-data",         group: "data" },
   { slug: "users",           group: "data" },
@@ -125,6 +140,9 @@ export const NAV_BY_GROUP: Record<NavGroup, readonly AdminPageSlug[]> = NAV_GROU
  */
 export const GROUP_INDEX = {
   application: "map-application",
+  // Своей карты у группы нет и не нужно: в ней одна вкладка, и карта вела бы на
+  // оглавление из одного пункта. Индекс группы — сама вкладка, как у инструментов.
+  visibility: "visibility",
   data: "map-data",
   tools: "tools",
   backup: "map-backup",

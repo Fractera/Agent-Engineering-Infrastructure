@@ -753,10 +753,6 @@
         "languageSwitcher": {
           "label": "Language switcher in the footer",
           "description": "Lets a visitor pick the language themselves instead of taking the browser's guess — and keeps it on every page that follows."
-        },
-        "offlineCache": {
-          "label": "Offline copy on the device",
-          "description": "Keeps a copy of the site on the visitor's device: repeat visits open instantly, and pages they have already seen still open with no network. Pages themselves always come from the network first — the copy is used only when there is none, so an outdated page can appear in exactly one case: the visitor is offline and revisits a page. Leave it on for a blog or a catalogue; turn it off if your prices change during the day and a yesterday's figure shown offline would be worse than an error screen. Turning it off also REMOVES the copy from devices that already have one."
         }
       },
       "helpLabel": "Why configure from here at all",
@@ -1053,18 +1049,6 @@
       "makeDefault": "Make this the default language",
       "selectedCount": "{count} selected",
       "tierHint": "Machine translation quality is lower for this language — check the result.",
-      "readyTitle": "The expensive part is already built and tested",
-      "readyBody": "Multilingualism with modern search optimisation and an installable app is normally a long development cycle — and the one AI-written projects lose quietly: pages drift from prepared to recomputed, translations start reading as copies of each other, and half the languages never reach search results.",
-      "readySignals": "The language signals are in place on every public page: each one declares itself the original, names its translations for every language you enable, and adds x-default for visitors you do not cover. Without them a search engine reads translations as copies of one another and whole languages never reach results — the site meanwhile looks perfectly fine.",
-      "readyCost": "Here it is built, tested many times over, and it holds under load at no extra server cost: a prepared page costs the same at a hundred visits and at a hundred thousand.",
-      "readyChoice": "So the choice below is only yours to make: one language or twelve. Whichever you pick, nothing else is left for you to build.",
-      "readyAio": "The same is true for the reader people remember last and who is already arriving: the model. It comes itself, reads, and retells your site in its own words — so the project publishes a machine map of itself and a clean markdown twin of every page, built from the same text, so the two can never drift.",
-      "readyAioLabel": "AI optimisation",
-      "readyAioTitle": "AI optimisation: what is already built",
-      "readySeo": "Search optimisation",
-      "readySeoTitle": "Search optimisation: what is already built",
-      "readyPwa": "App on the phone",
-      "readyPwaTitle": "Progressive web app: what is already built",
       "howTitle": "How languages work in your project",
       "howOneTitle": "One language.",
       "howOne": "Addresses carry no language at all: the home page is /, the rest are /about, /blog. The language switcher disappears on its own — there is nothing to switch between. This is the ordinary shape of a single-language site, and it is what most projects stay as.",
@@ -1081,7 +1065,8 @@
       "helpEnglishTitle": "English cannot be switched off.",
       "helpEnglish": "It is the last fallback for everything else, and an application with no language does not build at all.",
       "helpCostTitle": "What each language costs.",
-      "helpCost": "Build time and disk, not money: every language multiplies the number of generated pages. Ten languages are ten copies of your site. Adding a language you do not serve pays that cost for nothing."
+      "helpCost": "Build time and disk, not money: every language multiplies the number of generated pages. Ten languages are ten copies of your site. Adding a language you do not serve pays that cost for nothing.",
+      "readyLink": "The expensive part is already built and tested — see what exactly"
     },
     "appSettings": {
       "intro": "These settings live in a file on your server, outside the repository. The application reads it on each request, so a save shows up on the next page load — no deploy needed.",
@@ -1154,7 +1139,8 @@
       "help": "Help",
       "documents": "Development documents",
       "backup": "Backup & restore",
-      "tools": "Tools"
+      "tools": "Tools",
+      "visibility": "How you are found"
     },
     "footer": {
       "deploy": "Deploy",
@@ -1437,6 +1423,10 @@
       "doc-dynamic-workflows": {
         "title": "Dynamic workflows",
         "hint": "Waves of agents instead of one. The most powerful option here — and the most expensive."
+      },
+      "visibility": {
+        "title": "How you are found",
+        "hint": "Search, models, the app on the phone, robots and the sitemap — what the project already does without you."
       }
     },
     "breadcrumbHome": "Panel",
@@ -1675,6 +1665,40 @@
       "off": "No consent strip and no footer button. Choose this for a private tool with no analytics.",
       "saved": "Saved — applies on the next page load, no rebuild",
       "nothingToSave": "Nothing changed"
+    },
+    "visibility": {
+      "intro": "Everything on this page is already built and holding. It is here so you can see what your project does without you — and check any of it yourself.",
+      "searchTitle": "Search",
+      "searchBody": "Multilingualism with modern search optimisation and an installable app is normally a long development cycle — and the one AI-written projects lose quietly: pages drift from prepared to recomputed, translations start reading as copies of each other, and half the languages never reach search results.",
+      "searchSignals": "The language signals are in place on every public page: each one declares itself the original, names its translations for every language you enable, and adds x-default for visitors you do not cover. Without them a search engine reads translations as copies of one another and whole languages never reach results — the site meanwhile looks perfectly fine.",
+      "modelsTitle": "Models",
+      "modelsBody": "The same is true for the reader people remember last and who is already arriving: the model. It comes itself, reads, and retells your site in its own words — so the project publishes a machine map of itself and a clean markdown twin of every page, built from the same text, so the two can never drift.",
+      "appTitle": "App on the phone",
+      "appBody": "Your site installs like an app: its own icon on the home screen, a launch without browser chrome, and pages already seen opening without a network. The offline copy never replaces the live site — pages always come from the network while it is there, so a text you change in the panel appears immediately.",
+      "mapsTitle": "Robots and the sitemap",
+      "mapsBody": "Robots are answered by name — search crawlers and models separately — and every map is declared to them in the first file they open. The map lists your home page, catalogue, blog and each article in every enabled language; it never lists pages behind a login, which exist per visitor and would return a sign-in form to a crawler.",
+      "noJsTitle": "Works with JavaScript off",
+      "noJsBody": "Pages arrive as finished HTML from the server, and links are ordinary links — so the site reads and navigates with scripts disabled. This is not an advantage over a dynamic application, and interactive parts do degrade; but if yours is an informational site, visitors can use it safely in any environment, including ones where scripts are blocked for them.",
+      "costTitle": "What it costs to run",
+      "cost": "Here it is built, tested many times over, and it holds under load at no extra server cost: a prepared page costs the same at a hundred visits and at a hundred thousand.",
+      "choice": "So the only thing left for you is the choice of languages. Whichever you pick, nothing else here is left to build.",
+      "docSeo": "Search optimisation",
+      "docSeoTitle": "Search optimisation: what is already built",
+      "docAio": "AI optimisation",
+      "docAioTitle": "AI optimisation: what is already built",
+      "docPwa": "App on the phone",
+      "docPwaTitle": "Progressive web app: what is already built",
+      "docRobots": "Rules for robots",
+      "docRobotsTitle": "Rules for robots: what is already built",
+      "docSitemap": "Sitemap",
+      "docSitemapTitle": "Sitemap: what is already built",
+      "offlineLabel": "Offline copy on the device",
+      "offlineHint": "Pages the visitor has already opened work without a network. Turning this off does not merely stop installing it — it removes the worker from devices that already have it and clears its caches.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "failed": "Could not save",
+      "nothingToSave": "Nothing to save"
     }
   },
   "ru": {
@@ -2431,10 +2455,6 @@
         "languageSwitcher": {
           "label": "Переключатель языка в подвале",
           "description": "Позволяет посетителю выбрать язык самому, а не принимать догадку браузера, и сохраняет выбор на всех следующих страницах."
-        },
-        "offlineCache": {
-          "label": "Офлайн-копия на устройстве",
-          "description": "Хранит копию сайта на устройстве посетителя: повторные открытия мгновенные, а уже виденные страницы открываются без сети. Сами страницы всегда берутся из сети первой — копия идёт в ход, только когда сети нет, поэтому устаревшая страница возможна ровно в одном случае: посетитель офлайн и открывает то, что уже видел. Оставьте включённым для блога или каталога; выключите, если цены меняются в течение дня и вчерашняя цифра в офлайне хуже, чем экран ошибки. Выключение ещё и СНИМАЕТ копию с устройств, где она уже есть."
         }
       },
       "helpLabel": "Зачем вообще настраивать отсюда",
@@ -2731,18 +2751,6 @@
       "makeDefault": "Сделать языком по умолчанию",
       "selectedCount": "выбрано: {count}",
       "tierHint": "Качество машинного перевода на этот язык ниже — проверьте результат.",
-      "readyTitle": "Самое дорогое здесь уже построено и проверено",
-      "readyBody": "Многоязычность с современной поисковой оптимизацией и устанавливаемым приложением — это обычно долгий цикл разработки. И это ровно та часть, которую проекты, написанные с помощью ИИ, теряют незаметно: страницы из заранее собранных превращаются в пересчитываемые на каждый заход, переводы начинают читаться как копии друг друга, и половина языков до поиска не доходит.",
-      "readySignals": "Языковые сигналы стоят на каждой публичной странице: она объявляет оригиналом себя, называет свои переводы на всех включённых языках и добавляет x-default для тех, кого вы не покрываете. Без этого поисковик читает переводы как копии друг друга, и целые языки до выдачи не доходят — при том что сайт выглядит совершенно исправным.",
-      "readyCost": "Здесь это построено, многократно проверено и держит нагрузку без роста расходов на сервер: заранее собранная страница стоит одинаково и на сотне визитов, и на сотне тысяч.",
-      "readyChoice": "Поэтому выбор ниже — единственное, что остаётся вам: один язык или двенадцать. Что бы вы ни выбрали, строить больше нечего.",
-      "readyAio": "То же сделано для читателя, о котором вспоминают последним, а приходит он уже сегодня, — для модели. Она приходит сама, читает и пересказывает ваш сайт своими словами, поэтому проект публикует машинную карту себя и чистую markdown-версию каждой страницы, собранную из того же текста: разойтись они не могут.",
-      "readyAioLabel": "Оптимизация под ИИ",
-      "readyAioTitle": "Оптимизация под ИИ: что уже построено",
-      "readySeo": "Поисковая оптимизация",
-      "readySeoTitle": "Поисковая оптимизация: что уже построено",
-      "readyPwa": "Приложение на телефоне",
-      "readyPwaTitle": "Прогрессивное приложение: что уже построено",
       "howTitle": "Как языки работают в вашем проекте",
       "howOneTitle": "Один язык.",
       "howOne": "В адресах языка нет вовсе: главная — это /, остальные страницы — /about, /blog. Переключатель языка исчезает сам, переключать нечего. Это обычное устройство одноязычного сайта, и большинство проектов такими и остаются.",
@@ -2759,7 +2767,8 @@
       "helpEnglishTitle": "Английский отключить нельзя.",
       "helpEnglish": "Он последний рубеж, к которому падает всё остальное, а приложение без языка не собирается вовсе.",
       "helpCostTitle": "Чем платится каждый язык.",
-      "helpCost": "Временем сборки и диском, а не деньгами: каждый язык умножает число создаваемых страниц. Десять языков — десять копий вашего сайта. Язык, на котором вы не обслуживаете, платит эту цену впустую."
+      "helpCost": "Временем сборки и диском, а не деньгами: каждый язык умножает число создаваемых страниц. Десять языков — десять копий вашего сайта. Язык, на котором вы не обслуживаете, платит эту цену впустую.",
+      "readyLink": "Самое дорогое здесь уже построено и проверено — посмотреть, что именно"
     },
     "appSettings": {
       "intro": "Эти настройки лежат в файле на вашем сервере, вне репозитория. Приложение читает его на каждом запросе, поэтому сохранение видно на следующей загрузке страницы — развёртывание не нужно.",
@@ -2832,7 +2841,8 @@
       "help": "Справка",
       "documents": "Документы разработки",
       "backup": "Резервное копирование",
-      "tools": "Инструменты"
+      "tools": "Инструменты",
+      "visibility": "Как вас находят"
     },
     "footer": {
       "deploy": "Развернуть",
@@ -3115,6 +3125,10 @@
       "doc-dynamic-workflows": {
         "title": "Динамические рабочие процессы",
         "hint": "Волны агентов вместо одного. Самая сильная опция корпуса — и самая дорогая."
+      },
+      "visibility": {
+        "title": "Как вас находят",
+        "hint": "Поиск, модели, приложение на телефоне, роботы и карта сайта — что проект уже делает без вас."
       }
     },
     "breadcrumbHome": "Панель",
@@ -3353,6 +3367,40 @@
       "off": "Ни полосы согласия, ни кнопки в подвале. Подходит частному инструменту без аналитики.",
       "saved": "Сохранено — применится на следующей загрузке, без пересборки",
       "nothingToSave": "Ничего не изменилось"
+    },
+    "visibility": {
+      "intro": "Всё на этой странице уже построено и работает. Она существует, чтобы вы видели, что ваш проект делает без вашего участия, — и могли проверить любое из этого сами.",
+      "searchTitle": "Поиск",
+      "searchBody": "Многоязычность с современной поисковой оптимизацией и устанавливаемым приложением — это обычно долгий цикл разработки. И это ровно та часть, которую проекты, написанные с помощью ИИ, теряют незаметно: страницы из заранее собранных превращаются в пересчитываемые на каждый заход, переводы начинают читаться как копии друг друга, и половина языков до поиска не доходит.",
+      "searchSignals": "Языковые сигналы стоят на каждой публичной странице: она объявляет оригиналом себя, называет свои переводы на всех включённых языках и добавляет x-default для тех, кого вы не покрываете. Без этого поисковик читает переводы как копии друг друга, и целые языки до выдачи не доходят — при том что сайт выглядит совершенно исправным.",
+      "modelsTitle": "Модели",
+      "modelsBody": "То же сделано для читателя, о котором вспоминают последним, а приходит он уже сегодня, — для модели. Она приходит сама, читает и пересказывает ваш сайт своими словами, поэтому проект публикует машинную карту себя и чистую markdown-версию каждой страницы, собранную из того же текста: разойтись они не могут.",
+      "appTitle": "Приложение на телефоне",
+      "appBody": "Ваш сайт ставится как приложение: свой значок на экране, запуск без браузерной обвязки, уже виденные страницы открываются без сети. Офлайн-копия никогда не подменяет живой сайт — пока сеть есть, страница всегда приходит из сети, поэтому текст, изменённый в панели, виден сразу.",
+      "mapsTitle": "Роботы и карта сайта",
+      "mapsBody": "Роботам отвечают поимённо — отдельно поисковым, отдельно моделям, — и каждая карта объявлена им в первом же файле, который они открывают. В карте главная, каталог, блог и каждая статья на всех включённых языках; страниц за входом в ней нет никогда: у каждого посетителя они свои, и поисковик получил бы форму входа.",
+      "noJsTitle": "Работает с выключенным JavaScript",
+      "noJsBody": "Страницы приходят с сервера готовым HTML, а ссылки — обычные ссылки, поэтому сайт читается и листается при отключённых скриптах. Это не преимущество перед динамическим приложением, и интерактивные части при этом деградируют; но если у вас информационный сайт, посетители могут спокойно им пользоваться в любых условиях, включая те, где скрипты им запрещены.",
+      "costTitle": "Во что это обходится",
+      "cost": "Здесь это построено, многократно проверено и держит нагрузку без роста расходов на сервер: заранее собранная страница стоит одинаково и на сотне визитов, и на сотне тысяч.",
+      "choice": "Поэтому единственное, что остаётся вам, — выбор языков. Что бы вы ни выбрали, строить здесь больше нечего.",
+      "docSeo": "Поисковая оптимизация",
+      "docSeoTitle": "Поисковая оптимизация: что уже построено",
+      "docAio": "Оптимизация под ИИ",
+      "docAioTitle": "Оптимизация под ИИ: что уже построено",
+      "docPwa": "Приложение на телефоне",
+      "docPwaTitle": "Прогрессивное приложение: что уже построено",
+      "docRobots": "Правила для роботов",
+      "docRobotsTitle": "Правила для роботов: что уже построено",
+      "docSitemap": "Карта сайта",
+      "docSitemapTitle": "Карта сайта: что уже построено",
+      "offlineLabel": "Офлайн-копия на устройстве",
+      "offlineHint": "Страницы, которые посетитель уже открывал, работают без сети. Выключение не просто перестаёт её ставить — оно снимает воркер с устройств, где он уже есть, и стирает его кеши.",
+      "save": "Сохранить",
+      "saving": "Сохраняю…",
+      "saved": "Сохранено",
+      "failed": "Не удалось сохранить",
+      "nothingToSave": "Нечего сохранять"
     }
   }
 }
