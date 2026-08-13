@@ -137,10 +137,47 @@ export async function POST(req: NextRequest) {
     // user's own repository anyway, so detach from it once: a single root commit holding
     // the current tree. Order matters — .git/shallow must go before gc, otherwise gc
     // trips over entries whose commits it is about to prune.
+    // 🔒 НО ТОЛЬКО ЕСЛИ РЕПОЗИТОРИЙ ПОЛЬЗОВАТЕЛЯ ЕЩЁ ПУСТ (владелец 2026-08-13,
+    // по реальной поломке).
+    //
+    // ЧТО СЛУЧИЛОСЬ. Лечение ниже рассчитано на слот, который отправляют ВПЕРВЫЕ:
+    // оно отрезает усечённую историю стартера и делает один корневой коммит. Но
+    // мелкий клон остаётся мелким и ПОСЛЕ первой отправки, поэтому вторая
+    // отправка отрезала историю снова — уже ту, что лежала в репозитории
+    // пользователя. Два дерева оказывались без общего предка, и git отказывал:
+    // «Updates were rejected… the remote contains work that you do not have».
+    //
+    // Владельцу это стоило пяти коммитов: единственным выходом оставалась
+    // отправка с перезаписью. Сама отправка при этом ничего не ломала — ломало
+    // молчаливое обрезание истории до неё.
+    //
+    // Поэтому спрашиваем УДАЛЁННЫЙ репозиторий. Есть там ветка — историю не
+    // трогаем вовсе: связь уже установлена, и рвать её второй раз нельзя. Пуст —
+    // лечим, как и раньше.
+    //
+    // `ls-remote` спрашивает только ссылки, ничего не качая, и отвечает за
+    // секунды. Отказ сети трактуем как «репозиторий не пуст»: не отрезать лишний
+    // раз безопаснее, чем отрезать по ошибке связи — в худшем случае отправка
+    // честно скажет о мелком клоне, и это чинится, а стёртая история — нет.
+    const remoteHasWork = await execAsync(`git -C ${PROJECT_DIR} ls-remote --heads origin`, { ...opts, timeout: 30000 })
+      .then(r => r.stdout.trim().length > 0)
+      .catch(() => true);
+
     const isShallow = await execAsync(`git -C ${PROJECT_DIR} rev-parse --is-shallow-repository`, opts)
       .then(r => r.stdout.trim() === "true")
       .catch(() => false);
-    if (isShallow) {
+
+    if (isShallow && remoteHasWork) {
+      // Мелкий клон, но репозиторий уже не пуст: историю НЕ режем. Отправка
+      // может отказать по усечённому дереву — тогда человек увидит настоящую
+      // причину и решение примет он, а не мы за него молча.
+      lines.push(
+        "Репозиторий уже содержит историю — отсечение истории пропущено намеренно. " +
+        "Если отправка откажет из-за усечённого клона, историю нужно объединить осознанно, а не переписать.",
+      );
+    }
+
+    if (isShallow && !remoteHasWork) {
       const ident = `-c user.email="admin@fractera.ai" -c user.name="Fractera Admin"`;
       const heal = await execAsync(
         `git -C ${PROJECT_DIR} checkout --orphan fractera-detached && ` +
