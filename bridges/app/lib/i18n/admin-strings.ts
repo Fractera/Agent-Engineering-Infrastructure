@@ -67,7 +67,7 @@ export type AdminStrings = {
      * OpenAI» против «Нет ключа OpenAI — граф знаний останется выключенным».
      */
     warnCta: {
-      github: string; "use-cases": string; openai: string; domain: string;
+      languages: string; github: string; "use-cases": string; openai: string; domain: string;
       "context-state": string;
     };
     howToBuild: string;
@@ -371,7 +371,7 @@ export type AdminStrings = {
   warnings: {
     title: string;
     items: {
-      github: string; "use-cases": string; openai: string; domain: string;
+      languages: string; github: string; "use-cases": string; openai: string; domain: string;
       "context-state": string;
     };
   };
@@ -603,6 +603,18 @@ export type AdminStrings = {
     rebuildStarted: string; rebuildDone: string; rebuildFailed: string;
     busyBuild: string; failed: string; nothingToSave: string; atLeastOne: string;
     defaultLabel: string; makeDefault: string; selectedCount: string; tierHint: string;
+    // Зелёная врезка: что за этим выбором уже построено, и два вопросика с
+    // полными документами (владелец 2026-08-13). Сами документы — не здесь, а в
+    // `_content/seo-inside*.md` и `_content/pwa-inside*.md`: длинный текст правят
+    // как текст, а не как ключи словаря.
+    readyTitle: string; readyBody: string; readyCost: string; readyChoice: string;
+    readySeo: string; readySeoTitle: string; readyPwa: string; readyPwaTitle: string;
+    // Как языки работают в самом проекте: один язык против нескольких.
+    howTitle: string;
+    howOneTitle: string; howOne: string;
+    howManyTitle: string; howMany: string;
+    howSwitchTitle: string; howSwitch: string;
+    howLangAttr: string;
     helpLabel: string;
     helpBuildTitle: string; helpBuild: string;
     helpDefaultTitle: string; helpDefault: string;

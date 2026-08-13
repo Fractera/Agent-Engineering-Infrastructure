@@ -16,6 +16,7 @@ import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
 import { readLanguages } from "./_lib/langs";
 import { LangPicker } from "./_components/lang-picker.client";
+import { ReadyNote } from "./_components/ready-note";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,26 @@ export default async function LanguagesPage({ params }: { params: Promise<{ lang
       <p className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
         {t.intro}
       </p>
+
+      {/* Что означает выбор, сделанный ниже, и почему он стоит первым в очереди
+          требований. Врезка идёт ПЕРЕД списком: человек, который сначала увидел
+          84 отметки, выбирает языки, а не решает, нужна ли ему многоязычность. */}
+      <div className="mt-3">
+        <ReadyNote s={s} lang={lang} />
+      </div>
+
+      {/* Как работают языки в самом проекте — механизм, а не обещание. Стоит
+          между врезкой и списком: это ответ на вопрос «а что изменится в моём
+          сайте, если я отмечу второй язык», и задают его именно здесь. */}
+      <div className="mt-3 rounded-md border border-border p-3">
+        <p className="text-[11px] font-semibold text-foreground">{t.howTitle}</p>
+        <div className="mt-1.5 space-y-2 text-[10px] leading-relaxed text-muted-foreground">
+          <p><strong className="text-foreground">{t.howOneTitle}</strong> {t.howOne}</p>
+          <p><strong className="text-foreground">{t.howManyTitle}</strong> {t.howMany}</p>
+          <p><strong className="text-foreground">{t.howSwitchTitle}</strong> {t.howSwitch}</p>
+          <p>{t.howLangAttr}</p>
+        </div>
+      </div>
 
       <div className="mt-3">
         <LangPicker

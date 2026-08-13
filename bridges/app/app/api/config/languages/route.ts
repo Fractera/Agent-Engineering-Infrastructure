@@ -26,6 +26,19 @@ const PLATFORM_CONFIG_PATH =
 const SUPPORTED_KEY = "NEXT_PUBLIC_SUPPORTED_LANGUAGES";
 const DEFAULT_KEY = "NEXT_PUBLIC_DEFAULT_LOCALE";
 
+// The owner's DELIBERATE choice of languages, marked by a timestamp (owner, 2026-08-13).
+//
+// The language set can never be empty — a fresh server ships `en` — so "not configured yet" cannot
+// be read off the value the way a missing GitHub URL can. Without a mark, a warning about languages
+// would either never appear or never leave: the person who genuinely wants one English site would
+// be told forever that something is unfinished.
+//
+// So the mark records an ACT, not a value: pressing Save on the Languages page once. Choosing a
+// single English and saving closes it just as fully as choosing twelve — the decision was made, and
+// that is the whole point. It is written here, next to the values it certifies, so the two can
+// never drift.
+const CONFIRMED_KEY = "USER_LANGUAGES_CONFIRMED_AT";
+
 function readEnvValue(content: string, key: string): string | null {
   for (const line of content.split("\n")) {
     const trimmed = line.trim();
@@ -143,6 +156,10 @@ export async function POST(req: NextRequest) {
     const existing = fs.existsSync(APP_ENV) ? fs.readFileSync(APP_ENV, "utf-8") : "";
     let nextEnv = upsertEnvLine(existing, SUPPORTED_KEY, languages.join(","));
     nextEnv = upsertEnvLine(nextEnv, DEFAULT_KEY, defaultLanguage);
+    // The act is recorded on EVERY save, not only the first: re-saving is the owner confirming the
+    // set again, and a mark that only ever gets written once would age into a claim about a decision
+    // taken months ago.
+    nextEnv = upsertEnvLine(nextEnv, CONFIRMED_KEY, new Date().toISOString());
     fs.mkdirSync(path.dirname(APP_ENV), { recursive: true });
     fs.writeFileSync(APP_ENV, nextEnv, "utf-8");
 

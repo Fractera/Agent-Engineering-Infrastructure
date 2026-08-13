@@ -32,7 +32,7 @@ const RAG_ENV = process.env.RAG_ENV_PATH ?? "/opt/fractera/services/rag/.env";
 export type WarningLevel = "blocking" | "advised";
 
 export type AdminWarning = {
-  id: "github" | "use-cases" | "openai" | "domain" | "context-state";
+  id: "languages" | "github" | "use-cases" | "openai" | "domain" | "context-state";
   level: WarningLevel;
   /** Куда ведёт запись — то самое «основное место» настройки. */
   slug: AdminPageSlug;
@@ -66,6 +66,20 @@ export function collectWarnings(): AdminWarning[] {
   const out: AdminWarning[] = [];
 
   // Красные — без них разработка не начинается.
+  //
+  // 🔒 ЯЗЫКИ СТОЯТ ПЕРВЫМИ (владелец 2026-08-13), и порядок здесь содержательный.
+  // Набор языков запекается НА СБОРКЕ: он задаёт `generateStaticParams`, включает
+  // или выключает одноязычный режим и тем самым решает, будет ли у адресов
+  // языковой сегмент. Выбрать его после того, как проект построен, — значит
+  // переписать адреса всех страниц разом.
+  //
+  // Проверяется ОТМЕТКА, а не значение: языки есть всегда (свежий сервер несёт
+  // `en`), поэтому «не настроено» по значению не читается. Отметку ставит
+  // сохранение на странице языков — и один английский, сохранённый осознанно,
+  // закрывает предупреждение так же полно, как двенадцать языков.
+  if (!envHas(APP_ENV, "USER_LANGUAGES_CONFIRMED_AT")) {
+    out.push({ id: "languages", level: "blocking", slug: "languages" });
+  }
   //
   // Связь считается настоящей ТОЛЬКО когда её подтвердил сам GitHub: адрес
   // репозитория без отметки проверки — это введённые данные, а не связь, и
