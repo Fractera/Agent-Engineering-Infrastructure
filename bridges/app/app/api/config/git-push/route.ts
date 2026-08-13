@@ -59,6 +59,37 @@ export async function POST(req: NextRequest) {
       lines.push((stdout + stderr).trim());
     }
 
+    // The project branch is ALWAYS `main` — and that has to be ENFORCED, not assumed.
+    //
+    // Measured live 2026-08-13: the slot on a running server sat on `master`, its work
+    // committed and safe, and this route answered `error: src refspec main does not match
+    // any` — a message that names a branch the owner never chose and says nothing about
+    // what to do. The cause is not exotic: `git init` follows `init.defaultBranch`, that
+    // setting is empty on a fresh Ubuntu, and git's built-in default is still `master`. So
+    // any repository born outside bootstrap.sh (which does set `main`) arrives here named
+    // differently, and pushing a branch by a name nobody created can only fail.
+    //
+    // Renaming is safe in both directions: `branch -M main` is a no-op when the branch is
+    // already `main`, and it keeps every commit — only the name moves. An unborn HEAD (a
+    // repository with no commits yet) cannot be renamed at all, so there the name is set
+    // through the symbolic ref instead.
+    //
+    // These lines are English like the rest of this route's output: they are shown next to
+    // raw git output, and a Russian sentence inside a git log would read as a broken line
+    // rather than as a translation.
+    const hasCommits = await execAsync(`git -C ${PROJECT_DIR} rev-parse --verify HEAD`, opts)
+      .then(() => true).catch(() => false);
+    if (!hasCommits) {
+      await execAsync(`git -C ${PROJECT_DIR} symbolic-ref HEAD refs/heads/main`, opts).catch(() => null);
+    } else {
+      const current = await execAsync(`git -C ${PROJECT_DIR} rev-parse --abbrev-ref HEAD`, opts)
+        .then(r => r.stdout.trim()).catch(() => "");
+      if (current && current !== "main") {
+        await execAsync(`git -C ${PROJECT_DIR} branch -M main`, opts).catch(() => null);
+        lines.push(`Project branch renamed: ${current} -> main (the repository keeps every commit).`);
+      }
+    }
+
     // Create .gitignore if missing (prevents node_modules / .next / secrets from being committed)
     const gitignorePath = `${PROJECT_DIR}/.gitignore`;
     if (!fs.existsSync(gitignorePath)) {

@@ -63,6 +63,26 @@ export async function POST(req: NextRequest) {
       opts
     ).catch(() => null);
 
+    // The project branch is ALWAYS `main` — same enforcement as in git-push, and needed for
+    // the same reason: `git init` on a fresh Ubuntu produces `master`, because
+    // `init.defaultBranch` is unset there. Pulling without this looks like it works and is
+    // worse for it: `pull origin main` happily merges the remote branch into whatever is
+    // checked out, so the server ends up with the user's work sitting on a local branch
+    // their repository has never heard of — and the next push fails on a name mismatch that
+    // by then has nothing to do with the pull that caused it.
+    const hasCommits = await execAsync(`git -C ${PROJECT_DIR} rev-parse --verify HEAD`, opts)
+      .then(() => true).catch(() => false);
+    if (!hasCommits) {
+      await execAsync(`git -C ${PROJECT_DIR} symbolic-ref HEAD refs/heads/main`, opts).catch(() => null);
+    } else {
+      const current = await execAsync(`git -C ${PROJECT_DIR} rev-parse --abbrev-ref HEAD`, opts)
+        .then(r => r.stdout.trim()).catch(() => "");
+      if (current && current !== "main") {
+        await execAsync(`git -C ${PROJECT_DIR} branch -M main`, opts).catch(() => null);
+        lines.push(`Project branch renamed: ${current} -> main (the repository keeps every commit).`);
+      }
+    }
+
     // Stash local changes so pull doesn't abort
     const stashRes = await execAsync(
       `git -C ${PROJECT_DIR} stash --include-untracked`,
