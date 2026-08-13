@@ -791,6 +791,49 @@ app.post('/db/tables/:table', (req, res) => {
   res.json({ ok: true })
 })
 
+// ── PATCH /db/tables/:table/rows/:id — правка одной строки ───────────────────
+//
+// 🔒 ЗАЧЕМ ОН ПОНАДОБИЛСЯ (2026-08-13). Слой данных умел СОЗДАВАТЬ строку и
+// УРОНИТЬ таблицу целиком, а изменить одну строку — нет. Пробел вскрылся на
+// простой задаче: привязать посевные товары к картинкам, уже лежащим в
+// хранилище. Хранилище правильное, строка товара правильная, а соединить их
+// нечем — оставалось либо пересоздавать товары, теряя всё, что владелец о них
+// написал, либо лезть в базу мимо службы.
+//
+// Правила ровно те же, что у вставки рядом, и это не совпадение: разойдись они —
+// и через месяц одна дверь пускала бы туда, куда другая не пускает. Таблица
+// сверяется со списком существующих, колонки — с настоящей схемой таблицы, всё
+// прочее из тела молча отбрасывается.
+//
+// `id` — единственный поддерживаемый ключ. Правка по произвольному условию — это
+// уже язык запросов через HTTP, и её здесь не будет: одна опечатка в условии
+// меняет всю таблицу, а не строку.
+app.patch('/db/tables/:table/rows/:id', (req, res) => {
+  const { table, id } = req.params
+  const validTables = new Set(
+    appDb.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all().map(r => r.name)
+  )
+  if (!validTables.has(table)) return res.status(404).json({ error: 'Table not found' })
+
+  const body = req.body
+  if (!body || typeof body !== 'object' || Object.keys(body).length === 0)
+    return res.status(400).json({ error: 'Body must be a non-empty object' })
+
+  const validCols = new Set(appDb.prepare(`PRAGMA table_info("${table}")`).all().map(c => c.name))
+  // `id` не правим даже по просьбе: смена ключа — это другая строка, а не
+  // изменение этой, и все ссылки на неё осиротели бы молча.
+  const cols = Object.keys(body).filter(k => validCols.has(k) && k !== 'id')
+  if (cols.length === 0) return res.status(400).json({ error: 'No valid columns provided' })
+  if (!validCols.has('id')) return res.status(400).json({ error: 'Table has no id column' })
+
+  const info = appDb.prepare(
+    `UPDATE "${table}" SET ${cols.map(c => `"${c}" = ?`).join(', ')} WHERE "id" = ?`
+  ).run(...cols.map(c => body[c]), id)
+
+  if (info.changes === 0) return res.status(404).json({ error: 'Row not found' })
+  res.json({ ok: true, changed: info.changes })
+})
+
 // ── DELETE /db/tables/:table — drop table ────────────────────────────────────
 
 app.delete('/db/tables/:table', (req, res) => {
