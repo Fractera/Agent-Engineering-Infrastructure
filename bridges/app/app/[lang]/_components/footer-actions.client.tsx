@@ -18,12 +18,24 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { GitBranch, Github, Rocket, ArrowDownToLine, ArrowUpFromLine, Loader2 } from "lucide-react";
+import { GitBranch, AlertTriangle, Rocket, ArrowDownToLine, ArrowUpFromLine, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+
+/**
+ * Следующее незакрытое требование — то, что владелец обязан сделать раньше
+ * остального. Считает его сервер (`collectWarnings`), сюда приезжает готовым:
+ * островку нельзя ни читать диск, ни знать про 82 языка.
+ */
+export type FooterWarning = {
+  /** `blocking` — красная, без этого начинать невозможно; `advised` — оранжевая. */
+  level: "blocking" | "advised";
+  href: string;
+  label: string;
+  hint: string;
+};
 
 export type FooterActionLabels = {
   deploy: string; pull: string; push: string;
-  connectGithub: string; connectGithubHint: string;
   deploying: string; pulling: string; pushing: string;
   deployStarted: string; deployOk: string; deployFailed: string; deployTimeout: string;
   pullOk: string; pullFailed: string;
@@ -59,12 +71,12 @@ async function copyText(text: string): Promise<boolean> {
 
 export function FooterActions({
   labels,
-  githubHref,
+  warning,
   children,
 }: {
   labels: FooterActionLabels;
-  /** Адрес раздела связи с GitHub — считает сервер, у островка языка нет. */
-  githubHref: string;
+  /** Следующее незакрытое требование, или `null` — когда закрыты все. */
+  warning: FooterWarning | null;
   children?: ReactNode;
 }) {
   const [state, setState] = useState<ProjectState | null>(null);
@@ -223,12 +235,15 @@ export function FooterActions({
   // 🔒 ДВЕ КНОПКИ GIT СУЩЕСТВУЮТ ТОЛЬКО ПРИ ПОДТВЕРЖДЁННОЙ СВЯЗИ (владелец
   // 2026-08-13). До этого «Забрать» и «Отправить» выглядели рабочими и отвечали
   // отказом про переменную окружения — панель предлагала действие, которого у
-  // неё нет. Вместо двух обманчивых кнопок стоит одна честная: она называет
-  // единственное, что сейчас можно сделать, и ведёт туда, где это делают.
+  // неё нет.
   //
-  // Правда одна и приходит с сервера (`/api/config/project-state`): та же, по
-  // которой горит предупреждение в меню. `unverified` — тоже не связь: данные
-  // введены, а GitHub их не подтвердил, и первая же отправка отказала бы.
+  // Проверяется ИМЕННО связь, а не «все ли требования закрыты»: забрать и
+  // отправить можно, пока кейсы не описаны и ключ не введён, — это разные вещи,
+  // и связывать их значило бы запереть работу с репозиторием за настройкой,
+  // которая к нему не относится. Правда приходит с сервера
+  // (`/api/config/project-state`), та же, по которой горит первое
+  // предупреждение. `unverified` — тоже не связь: данные введены, а GitHub их не
+  // подтвердил, и первая же отправка отказала бы.
   const githubReady = state?.github === "working";
 
   const actions = [
@@ -243,12 +258,29 @@ export function FooterActions({
 
   return (
     <>
-      {/* Полоса состояния. Нажатие обновляет её, спросив у GitHub, — сравнение
-          «впереди / позади» живёт кэшем и без этого стареет молча.
-          Пока связи нет, полоса уступает место призыву её создать: сообщать
-          «репозиторий не подключён» рядом с кнопкой, которая говорит то же
-          самое, — значит занимать место повтором. */}
-      {githubReady || !state ? (
+      {/* Левый край подвала — ОДНО из двух: пока есть незакрытые требования, там
+          стоит следующее по очереди; закрыты все — возвращается состояние
+          проекта. Держать их рядом нельзя: подвал высотой в строку, и требование
+          рядом с веткой и коммитом читается как ещё одна техническая подпись.
+
+          Цвет — тот же язык, что в меню: красный «без этого начинать
+          невозможно», оранжевый «можно, но нежелательно». */}
+      {warning ? (
+        <Link
+          href={warning.href}
+          title={warning.hint}
+          className={`inline-flex h-5 min-w-0 flex-1 items-center justify-center gap-1.5 rounded border px-2 text-[10px] font-medium transition-colors ${
+            warning.level === "blocking"
+              ? "border-destructive/50 bg-destructive/10 text-destructive hover:bg-destructive/20"
+              : "border-amber-500/50 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 dark:text-amber-300"
+          }`}
+        >
+          <AlertTriangle size={10} className="shrink-0" />
+          <span className="truncate">{warning.label}</span>
+        </Link>
+      ) : (
+        /* Полоса состояния. Нажатие обновляет её, спросив у GitHub, — сравнение
+           «впереди / позади» живёт кэшем и без этого стареет молча. */
         <button
           type="button"
           onClick={() => loadState(true)}
@@ -264,15 +296,6 @@ export function FooterActions({
           {state?.connected && state.commit && <span className="text-muted-foreground/50">{state.commit}</span>}
           <span className={`size-1.5 shrink-0 rounded-full ${dot}`} />
         </button>
-      ) : (
-        <Link
-          href={githubHref}
-          title={labels.connectGithubHint}
-          className="inline-flex h-5 min-w-0 flex-1 items-center justify-center gap-1.5 rounded border border-amber-500/50 bg-amber-500/10 px-2 text-[10px] font-medium text-amber-700 transition-colors hover:bg-amber-500/20 dark:text-amber-300"
-        >
-          <Github size={10} className="shrink-0" />
-          <span className="truncate">{labels.connectGithub}</span>
-        </Link>
       )}
 
       {children}

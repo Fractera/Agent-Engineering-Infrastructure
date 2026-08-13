@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { NAV_GROUPS, NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 import { useCasesGate } from "@/lib/use-cases-store";
-import { collectWarnings } from "@/lib/admin-warnings";
+import type { AdminWarning } from "@/lib/admin-warnings";
 import { hiddenSlugs } from "@/lib/platform-features";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
 
@@ -95,7 +95,9 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
 
 const MENU_ID = "admin-menu-toggle";
 
-export function AdminHeader({ lang, s }: { lang: string; s: AdminStrings }) {
+export function AdminHeader(
+  { lang, s, warnings }: { lang: string; s: AdminStrings; warnings: AdminWarning[] },
+) {
   // 🔴 Пока пользовательские кейсы не описаны, разработка бессмысленна: агент
   // построит аккуратно и не то. Пункт горит красным, а на гамбургере появляется
   // точка — иначе предупреждение живёт внутри закрытого ящика и его никто не
@@ -106,7 +108,10 @@ export function AdminHeader({ lang, s }: { lang: string; s: AdminStrings }) {
   // Верхняя область меню: всё красное и оранжевое, собранное в одном месте.
   // Список сам укорачивается по мере заполнения и исчезает целиком, когда
   // заполнено всё — предупреждение, которое висит вечно, перестают читать.
-  const warnings = collectWarnings();
+  //
+  // Считает их макет и отдаёт сюда пропсом: ту же правду показывает подвал
+  // большой кнопкой, а два независимых вызова разошлись бы — и меню говорило бы
+  // одно, подвал другое.
   const blocking = warnings.some((w) => w.level === "blocking");
 
   // Разделы, чья возможность выключена в «Возможностях приложения», из меню

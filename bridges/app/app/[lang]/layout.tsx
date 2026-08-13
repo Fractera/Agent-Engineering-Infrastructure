@@ -19,6 +19,7 @@
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { getAdminStrings, isAdminLanguage, adminLanguages } from "@/lib/i18n/admin-strings";
+import { collectWarnings } from "@/lib/admin-warnings";
 import { AdminHeader } from "./_components/admin-header";
 import { AdminFooter } from "./_components/admin-footer";
 
@@ -71,6 +72,14 @@ export default async function AdminLangLayout(
 
   const s = getAdminStrings(lang);
 
+  // Предупреждения считаются ОДИН РАЗ на страницу и раздаются обоим краям
+  // (владелец 2026-08-13). Шапка собирает их списком в верхней области меню,
+  // подвал показывает ПЕРВОЕ из них большой кнопкой — это два вида одной правды,
+  // и считать её дважды (диск + sqlite на каждый рендер) незачем. Два вызова
+  // разошлись бы и по времени: список в меню и кнопка в подвале обязаны гаснуть
+  // одновременно, иначе одно из них врёт.
+  const warnings = collectWarnings();
+
   return (
     <div className="flex h-full flex-col bg-background text-foreground">
       {/* Тема ставится ДО первой отрисовки, иначе тёмная панель мигнёт белым на
@@ -108,11 +117,11 @@ export default async function AdminLangLayout(
             "sbw();window.addEventListener('resize',sbw);window.addEventListener('load',sbw);})();",
         }}
       />
-      <AdminHeader lang={lang} s={s} />
+      <AdminHeader lang={lang} s={s} warnings={warnings} />
       {/* Прокручивается содержимое, а не страница: тело документа держит
           h-screen overflow-hidden, поэтому подвал остаётся на месте. */}
       <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
-      <AdminFooter s={s} lang={lang} />
+      <AdminFooter s={s} lang={lang} warnings={warnings} />
     </div>
   );
 }

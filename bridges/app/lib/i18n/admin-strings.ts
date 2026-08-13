@@ -59,10 +59,17 @@ export type AdminStrings = {
     deploy: string;
     pull: string;
     push: string;
-    // Подвал без подтверждённой связи с GitHub: вместо «Забрать» и «Отправить»
-    // одна кнопка, ведущая в раздел связи (владелец 2026-08-13).
-    connectGithub: string;
-    connectGithubHint: string;
+    /**
+     * Призыв на большой кнопке подвала — по одному на предупреждение (владелец
+     * 2026-08-13). Кнопки сменяют друг друга в порядке обязательности, пока не
+     * закрыто последнее требование; ключи те же, что у списка в меню
+     * (`warnings.items`), но здесь — ДЕЙСТВИЕ, а не причина: «Подключите ключ
+     * OpenAI» против «Нет ключа OpenAI — граф знаний останется выключенным».
+     */
+    warnCta: {
+      github: string; "use-cases": string; openai: string; domain: string;
+      "context-state": string;
+    };
     howToBuild: string;
     stateUnknown: string;
     // Действия подвала (2026-08-10). Отказ обязан быть КОПИРУЕМЫМ: его уносят

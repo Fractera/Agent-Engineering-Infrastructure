@@ -1136,8 +1136,13 @@
       "deploy": "Deploy",
       "pull": "Pull",
       "push": "Push",
-      "connectGithub": "GitHub connection required",
-      "connectGithubHint": "Without a connected repository the code cannot leave this server: there is nothing to pull from and nothing to push to. Press to set the connection up.",
+      "warnCta": {
+        "github": "GitHub connection required",
+        "use-cases": "Describe your user cases",
+        "openai": "Connect an OpenAI key",
+        "domain": "Connect your own domain",
+        "context-state": "Read the unfinished session"
+      },
       "howToBuild": "How to build this project",
       "stateUnknown": "project state",
       "deploying": "Deploying…",
@@ -2772,8 +2777,13 @@
       "deploy": "Развернуть",
       "pull": "Забрать",
       "push": "Отправить",
-      "connectGithub": "Требуется соединить с GitHub",
-      "connectGithubHint": "Без подключённого репозитория код с этого сервера никуда не уезжает: забирать неоткуда и отправлять некуда. Нажмите, чтобы настроить связь.",
+      "warnCta": {
+        "github": "Требуется соединить с GitHub",
+        "use-cases": "Опишите пользовательские кейсы",
+        "openai": "Подключите ключ OpenAI",
+        "domain": "Подключите свой домен",
+        "context-state": "Прочитайте незавершённую сессию"
+      },
       "howToBuild": "Как построить этот проект",
       "stateUnknown": "состояние проекта",
       "deploying": "Разворачиваю…",

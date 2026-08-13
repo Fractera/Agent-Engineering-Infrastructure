@@ -12,24 +12,52 @@
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
 import { adminHref } from "@/lib/admin-nav";
+import type { AdminWarning } from "@/lib/admin-warnings";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
 import { LanguageSwitch } from "./language-switch";
 import { ThemeSwitch } from "./theme-switch.client";
 import { WidthSwitch } from "./width-switch.client";
 import { FooterActions } from "./footer-actions.client";
 
-export function AdminFooter({ s, lang }: { s: AdminStrings; lang: string }) {
+export function AdminFooter(
+  { s, lang, warnings }: { s: AdminStrings; lang: string; warnings: AdminWarning[] },
+) {
   const f = s.footer;
+
+  // 🔒 ОДНО ТРЕБОВАНИЕ ЗА РАЗ, В ПОРЯДКЕ ОБЯЗАТЕЛЬНОСТИ (владелец 2026-08-13).
+  // Подвал показывает ПЕРВОЕ незакрытое предупреждение большой кнопкой, и они
+  // сменяют друг друга: соединить GitHub → описать кейсы → ключ OpenAI → домен.
+  // Список уже отсортирован в `collectWarnings()` — сначала красные («без этого
+  // начинать невозможно»), потом оранжевые («можно, но нежелательно»), — и
+  // второго порядка здесь заводить нельзя: разошлись бы цвет кнопки и её место в
+  // очереди.
+  //
+  // Почему одна, а не все сразу: подвал высотой в одну строку, и четыре
+  // требования в нём превратились бы в ленту, которую перестают читать. Полный
+  // список всегда открыт в верхней области меню — здесь стоит ровно следующий
+  // шаг. Закрыты все — на этом месте возвращается состояние проекта.
+  const next = warnings[0] ?? null;
 
   return (
     <div className="flex h-8 shrink-0 items-center gap-2 border-t border-border bg-background px-3">
       {/* Подписи приезжают пропсами: словарь остаётся серверным, 82 языка в
           браузер не уезжают. */}
       <FooterActions
-        githubHref={adminHref(lang, "github")}
+        warning={
+          next
+            ? {
+                level: next.level,
+                href: adminHref(lang, next.slug),
+                label: f.warnCta[next.id],
+                // Подсказка при наведении — та же фраза, что в меню: кнопка
+                // называет действие, а причину («проекту негде жить») незачем
+                // писать второй раз другими словами.
+                hint: s.warnings.items[next.id],
+              }
+            : null
+        }
         labels={{
           deploy: f.deploy, pull: f.pull, push: f.push,
-          connectGithub: f.connectGithub, connectGithubHint: f.connectGithubHint,
           deploying: f.deploying, pulling: f.pulling, pushing: f.pushing,
           deployStarted: f.deployStarted, deployOk: f.deployOk,
           deployFailed: f.deployFailed, deployTimeout: f.deployTimeout,
