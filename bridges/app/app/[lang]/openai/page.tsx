@@ -8,7 +8,7 @@
 // Динамическая: настроенность и живость служб — живые.
 
 import Link from "next/link";
-import { KeyRound, BrainCircuit, Brain, Mic, CheckCircle, AlertCircle, XCircle } from "lucide-react";
+import { KeyRound, BrainCircuit, Brain, Mic, CheckCircle, AlertCircle, XCircle, AlertTriangle } from "lucide-react";
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { adminHref } from "@/lib/admin-nav";
 import { PageShell } from "../_components/page-shell";
@@ -33,6 +33,33 @@ export default async function OpenAiPage({ params }: { params: Promise<{ lang: s
         <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="underline">
           platform.openai.com
         </a>
+      </div>
+
+      {/* 🔒 ВОПРОС, КОТОРЫЙ ВОЗНИКАЕТ У КАЖДОГО (владелец 2026-08-13).
+          «Проект строят моделями Claude — почему ключ просят от OpenAI?»
+          Молчание здесь читается как несогласованность продукта, а
+          несогласованность подрывает доверие быстрее любой недоделки. Врезка
+          стоит ДО поля ключа: человек читает объяснение прежде, чем решает, дать
+          ли ключ.
+
+          🔒 УТВЕРЖДЕНИЕ ОБ ANTHROPIC — ИЗ ПЕРВОИСТОЧНИКА (правило 16). В тексте
+          дословная цитата из документации Anthropic: «Anthropic does not offer
+          its own embedding model». Формулировка про «подписка начинает гореть
+          из-за ключа API» в текст НЕ вошла: документация Claude Code её не
+          подтверждает — там сказано, что разработчик тарифицируется по способу
+          входа, которым он воспользовался. Публиковать непроверенный механизм
+          чужого продукта нельзя, тем более покупателю. */}
+      <div className="mt-3 rounded-md border border-amber-500/40 bg-amber-500/[0.06] p-3">
+        <p className="flex items-center gap-1.5 text-[12px] font-semibold text-amber-800 dark:text-amber-300">
+          <AlertTriangle size={13} className="shrink-0" />
+          {o.whyTitle}
+        </p>
+        <div className="mt-2 space-y-2 text-[11px] leading-relaxed text-amber-900/90 dark:text-amber-100/80">
+          <p>{o.whyDev}</p>
+          <p>{o.whyEmbeddings}</p>
+          <p>{o.whyBudget}</p>
+          <p>{o.whySwap}</p>
+        </div>
       </div>
 
       <div className="mt-3">

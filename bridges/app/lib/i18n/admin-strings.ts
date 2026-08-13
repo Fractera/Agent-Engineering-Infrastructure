@@ -278,6 +278,9 @@ export type AdminStrings = {
   openai: {
     intro: string; keyLabel: string; replace: string;
     save: string; saving: string; restarting: string; saved: string; invalid: string; failed: string;
+    // Оранжевая врезка «почему OpenAI, если проект про Claude» — вопрос, который
+    // возникает у КАЖДОГО, и молчание о нём читается как несогласованность.
+    whyTitle: string; whyDev: string; whyEmbeddings: string; whyBudget: string; whySwap: string;
     consumersLabel: string;
     /** Третий потребитель ключа — само приложение. */
     appConsumer: string; appConsumerHint: string; set: string; notSet: string; mismatch: string; storedLocally: string;
