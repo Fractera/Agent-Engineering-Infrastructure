@@ -646,6 +646,8 @@ export type AdminStrings = {
     rebuildStarted: string; rebuildDone: string; rebuildFailed: string;
     busyBuild: string; failed: string; nothingToSave: string; atLeastOne: string;
     defaultLabel: string; makeDefault: string; selectedCount: string; tierHint: string;
+    /** Кнопка «оставить эти языки» — видна, пока владелец не высказался о наборе. */
+    keepThese: string;
     // 🔒 ЗДЕСЬ ОСТАЛАСЬ ОДНА СТРОКА ВМЕСТО ВРЕЗКИ (владелец 2026-08-13).
     //
     // Врезка «самое дорогое уже построено» переехала в свою вкладку «Как вас

@@ -29,6 +29,8 @@ export type LangState = {
   byRegion: { region: LanguageRegion; rows: LangRow[] }[];
   selected: string[];
   defaultLanguage: string;
+  /** Высказывался ли владелец об этом наборе. Отметку ставит сохранение. */
+  confirmed: boolean;
 };
 
 export async function readLanguages(): Promise<LangState> {
@@ -36,6 +38,9 @@ export async function readLanguages(): Promise<LangState> {
   let selected: string[] = [];
   let defaultLanguage = "en";
   let ok = false;
+  // Пока не доказано обратное, считаем набор НЕподтверждённым: показать лишнюю
+  // кнопку безопаснее, чем спрятать единственный способ закрыть требование.
+  let confirmed = false;
 
   try {
     const r = await fetch(`${ADMIN}/api/config/languages`, {
@@ -47,6 +52,7 @@ export async function readLanguages(): Promise<LangState> {
       const d = await r.json();
       selected = Array.isArray(d.languages) ? (d.languages as string[]) : [];
       defaultLanguage = typeof d.defaultLanguage === "string" ? d.defaultLanguage : (selected[0] ?? "en");
+      confirmed = d.confirmed === true;
       ok = true;
     }
   } catch { /* остаётся ok: false — страница скажет об этом */ }
@@ -68,5 +74,5 @@ export async function readLanguages(): Promise<LangState> {
       .sort((a, b) => a.nativeName.localeCompare(b.nativeName)),
   })).filter((g) => g.rows.length > 0);
 
-  return { ok, byRegion, selected, defaultLanguage };
+  return { ok, byRegion, selected, defaultLanguage, confirmed };
 }

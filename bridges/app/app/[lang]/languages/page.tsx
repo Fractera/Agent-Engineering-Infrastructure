@@ -80,11 +80,13 @@ export default async function LanguagesPage({ params }: { params: Promise<{ lang
           byRegion={state.byRegion}
           selected={state.selected}
           defaultLanguage={state.defaultLanguage}
+          confirmed={state.confirmed}
           labels={{
             save: t.save, saving: t.saving, rebuilding: t.rebuilding, saved: t.saved,
             rebuildStarted: t.rebuildStarted, rebuildDone: t.rebuildDone,
             rebuildFailed: t.rebuildFailed, busyBuild: t.busyBuild,
             failed: t.failed, nothingToSave: t.nothingToSave, atLeastOne: t.atLeastOne,
+            keepThese: t.keepThese,
             defaultLabel: t.defaultLabel, makeDefault: t.makeDefault,
             selectedCount: t.selectedCount, tierHint: t.tierHint,
           }}

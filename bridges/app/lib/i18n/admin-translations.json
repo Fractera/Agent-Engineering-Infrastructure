@@ -1066,7 +1066,8 @@
       "helpEnglish": "It is the last fallback for everything else, and an application with no language does not build at all.",
       "helpCostTitle": "What each language costs.",
       "helpCost": "Build time and disk, not money: every language multiplies the number of generated pages. Ten languages are ten copies of your site. Adding a language you do not serve pays that cost for nothing.",
-      "readyLink": "The expensive part is already built and tested — see what exactly"
+      "readyLink": "The expensive part is already built and tested — see what exactly",
+      "keepThese": "Keep these languages"
     },
     "appSettings": {
       "intro": "These settings live in a file on your server, outside the repository. The application reads it on each request, so a save shows up on the next page load — no deploy needed.",
@@ -2770,7 +2771,8 @@
       "helpEnglish": "Он последний рубеж, к которому падает всё остальное, а приложение без языка не собирается вовсе.",
       "helpCostTitle": "Чем платится каждый язык.",
       "helpCost": "Временем сборки и диском, а не деньгами: каждый язык умножает число создаваемых страниц. Десять языков — десять копий вашего сайта. Язык, на котором вы не обслуживаете, платит эту цену впустую.",
-      "readyLink": "Самое дорогое здесь уже построено и проверено — посмотреть, что именно"
+      "readyLink": "Самое дорогое здесь уже построено и проверено — посмотреть, что именно",
+      "keepThese": "Оставить эти языки"
     },
     "appSettings": {
       "intro": "Эти настройки лежат в файле на вашем сервере, вне репозитория. Приложение читает его на каждом запросе, поэтому сохранение видно на следующей загрузке страницы — развёртывание не нужно.",

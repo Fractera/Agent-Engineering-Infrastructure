@@ -16,7 +16,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Save, Star } from "lucide-react";
+import { Check, Loader2, Save, Star } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { LangRow } from "../_lib/langs";
@@ -27,16 +27,19 @@ export type PickerLabels = {
   rebuildStarted: string; rebuildDone: string; rebuildFailed: string;
   busyBuild: string; failed: string; nothingToSave: string;
   atLeastOne: string; defaultLabel: string; makeDefault: string;
+  /** Подпись кнопки «оставить эти языки»: показывается, пока выбор не подтверждён. */
+  keepThese: string;
   selectedCount: string; tierHint: string;
 };
 
 const LOCKED = "en";
 
 export function LangPicker(
-  { byRegion, selected, defaultLanguage, labels }: {
+  { byRegion, selected, defaultLanguage, confirmed, labels }: {
     byRegion: { region: LanguageRegion; rows: LangRow[] }[];
     selected: string[];
     defaultLanguage: string;
+    confirmed: boolean;
     labels: PickerLabels;
   },
 ) {
@@ -67,7 +70,10 @@ export function LangPicker(
   }
 
   async function save() {
-    if (!dirty) { toast.error(labels.nothingToSave); return; }
+    // «Нечего сохранять» — правда ТОЛЬКО когда выбор уже подтверждён. Пока
+    // отметки нет, сохранение неизменённого набора и есть содержательное
+    // действие: оно записывает решение владельца оставить эти языки.
+    if (!dirty && confirmed) { toast.error(labels.nothingToSave); return; }
     if (chosen.size === 0) { toast.error(labels.atLeastOne); return; }
 
     setPhase("saving");
@@ -134,7 +140,33 @@ export function LangPicker(
         <span className="font-mono text-[10px] text-muted-foreground">
           {labels.defaultLabel} <span className="uppercase text-foreground">{base}</span>
         </span>
-        <Button size="sm" className="ml-auto text-[11px]" onClick={save} disabled={phase !== null || !dirty}>
+        {/* 🔒 «ОСТАВИТЬ ЭТИ ЯЗЫКИ» — ВЫХОД ИЗ ЛОВУШКИ (владелец 2026-08-13).
+            Требование о языках закрывается СОХРАНЕНИЕМ — оно отмечает не значение,
+            а поступок. Но сохранение заблокировано, когда менять нечего, и
+            владельцу, которого набор устраивает, нажать было НЕЧЕГО: требование
+            горело вечно, а страница предлагала только менять то, что менять не
+            хочется.
+            Кнопка делает ровно то же, что сохранение — записывает набор, ставит
+            отметку и пересобирает, — и исчезает, как только выбор сделан: постоянная
+            кнопка «оставить как есть» рядом с обычным сохранением дублировала бы его. */}
+        {!confirmed && !dirty && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="ml-auto text-[11px]"
+            onClick={save}
+            disabled={phase !== null}
+          >
+            {phase !== null ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
+            {phase === "saving" ? labels.saving : phase === "rebuilding" ? labels.rebuilding : labels.keepThese}
+          </Button>
+        )}
+        <Button
+          size="sm"
+          className={(!confirmed && !dirty) ? "text-[11px]" : "ml-auto text-[11px]"}
+          onClick={save}
+          disabled={phase !== null || !dirty}
+        >
           {phase !== null ? <Loader2 size={11} className="animate-spin" /> : <Save size={11} />}
           {phase === "saving" ? labels.saving : phase === "rebuilding" ? labels.rebuilding : labels.save}
         </Button>
