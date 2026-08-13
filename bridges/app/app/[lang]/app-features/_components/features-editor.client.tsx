@@ -6,7 +6,7 @@ import { Loader2, Save, ArrowDownRight } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { FEATURE_ORDER, OFF_WHEN_PARALLEL, type FeatureKey } from "@/lib/platform-features.shared";
+import { FEATURE_ORDER, OFF_WHEN_PARALLEL, type FeatureKey, type EditableFeatureKey } from "@/lib/platform-features.shared";
 
 // Возможности приложения (шаг 501, партия 20).
 //
@@ -21,7 +21,9 @@ import { FEATURE_ORDER, OFF_WHEN_PARALLEL, type FeatureKey } from "@/lib/platfor
 export type FeatureLabels = {
   save: string; saving: string; saved: string; failed: string; nothingToSave: string;
   opensSection: string; parallelOff: string;
-  items: Record<FeatureKey, { label: string; description: string }>;
+  // Только редактируемые списком: `offlineCache` живёт на вкладке «Как вас
+  // находят» и слов здесь не имеет.
+  items: Record<EditableFeatureKey, { label: string; description: string }>;
 };
 
 export function FeaturesEditor(
