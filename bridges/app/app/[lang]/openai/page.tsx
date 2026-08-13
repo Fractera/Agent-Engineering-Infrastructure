@@ -15,6 +15,9 @@ import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
 import { readOpenAiState } from "./_lib/openai";
 import { KeyForm } from "./_components/key-form.client";
+import { DocPopup } from "../_components/doc-popup.client";
+import { GuideProse } from "../how-to-build/_components/guide-prose";
+import { readLocalizedContent } from "@/lib/content/localized-content";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +27,7 @@ export default async function OpenAiPage({ params }: { params: Promise<{ lang: s
   const o = s.openai;
 
   const state = await readOpenAiState();
+  const whyDoc = readLocalizedContent("openai-why-inside", lang);
   const bothSet = state.vectors.configured && state.graph.configured;
 
   return (
@@ -42,13 +46,23 @@ export default async function OpenAiPage({ params }: { params: Promise<{ lang: s
           стоит ДО поля ключа: человек читает объяснение прежде, чем решает, дать
           ли ключ.
 
-          🔒 УТВЕРЖДЕНИЕ ОБ ANTHROPIC — ИЗ ПЕРВОИСТОЧНИКА (правило 16). В тексте
-          дословная цитата из документации Anthropic: «Anthropic does not offer
-          its own embedding model». Формулировка про «подписка начинает гореть
-          из-за ключа API» в текст НЕ вошла: документация Claude Code её не
-          подтверждает — там сказано, что разработчик тарифицируется по способу
-          входа, которым он воспользовался. Публиковать непроверенный механизм
-          чужого продукта нельзя, тем более покупателю. */}
+          🔒 КАЖДОЕ УТВЕРЖДЕНИЕ ОБ ANTHROPIC — ИЗ ПЕРВОИСТОЧНИКА (правило 16).
+          В документе за вопросиком две дословные цитаты из документации
+          Anthropic: «Anthropic does not offer its own embedding model» и «If you
+          have an active Claude subscription but also have ANTHROPIC_API_KEY set
+          in your environment, the API key takes precedence once approved».
+
+          Первая формулировка владельца — «ключ API заставляет подписку гореть в
+          десять раз быстрее» — в текст НЕ вошла и не войдёт: документация
+          говорит ОБРАТНОЕ по направлению. Ключ уводит расход С подписки НА
+          баланс API; подписка не горит быстрее, она просто не используется, хотя
+          и оплачивается. Разница принципиальная, и покупатель проверит её за
+          минуту.
+
+          Так же не утверждается, что OpenAI дешевле за токен: это зависит от
+          модели, меняется и устареет раньше, чем текст прочтут. Утверждается
+          проверяемое — разделение бюджетов и то, что мы не создаём повода
+          заводить ключ Anthropic. */}
       <div className="mt-3 rounded-md border border-amber-500/40 bg-amber-500/[0.06] p-3">
         <p className="flex items-center gap-1.5 text-[12px] font-semibold text-amber-800 dark:text-amber-300">
           <AlertTriangle size={13} className="shrink-0" />
@@ -60,6 +74,19 @@ export default async function OpenAiPage({ params }: { params: Promise<{ lang: s
           <p>{o.whyBudget}</p>
           <p>{o.whySwap}</p>
         </div>
+
+        {/* Полный разбор за вопросиком — как у остальных обещаний панели: врезка
+            остаётся короткой, а тот, кто хочет проверить, получает документ с
+            цитатами из первоисточника. Там же описана ЛОВУШКА, которая стоит
+            людям денег: при заданном `ANTHROPIC_API_KEY` инструмент выбирает
+            ключ, а не подписку, и она продолжает списываться неиспользованной. */}
+        {whyDoc.ok && (
+          <div className="mt-2.5">
+            <DocPopup label={o.whyDoc} title={o.whyDocTitle}>
+              <GuideProse markdown={whyDoc.text} />
+            </DocPopup>
+          </div>
+        )}
       </div>
 
       <div className="mt-3">

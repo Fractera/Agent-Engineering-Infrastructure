@@ -575,7 +575,9 @@
       "whyDev": "These are two different things, and they do not contradict each other. Your project's code is written by a developer on their own machine, in Claude Code, with Claude models — Sonnet, Opus, Fable. The key on this page is not for development: it powers the services that run ON YOUR SERVER and answer your visitors — the Quiz, vector search, the knowledge graph.",
       "whyEmbeddings": "The decisive reason is technical, not a matter of taste. Vector search and the knowledge graph rest on text embeddings. Anthropic does not make them: its documentation states verbatim, «Anthropic does not offer its own embedding model», and points to a third-party provider. A product that needs search by meaning must take embeddings where they exist.",
       "whyBudget": "The second reason is about money, and it is about keeping two budgets apart. A Claude subscription is issued to a PERSON: it is an allowance for their own work, shared with chat and running on rolling windows. A server answering visitors is a different kind of load — continuous, and growing with traffic. That belongs on a metered API key, not on a developer's working allowance: otherwise the first surge of visitors eats the very thing the project is built with.",
-      "whySwap": "The key is yours, the cost goes straight to your provider, and we never see it. The list of providers is not carved in stone: the moment the services we use gain another suitable option, it will appear here too."
+      "whySwap": "The key is yours, the cost goes straight to your provider, and we never see it. The list of providers is not carved in stone: the moment the services we use gain another suitable option, it will appear here too.",
+      "whyDoc": "Three budgets and a trap",
+      "whyDocTitle": "Why the key here is OpenAI: three budgets and one trap"
     },
     "deployments": {
       "unavailable": "The history could not be read — the data layer did not answer.",
@@ -2306,7 +2308,9 @@
       "whyDev": "Это две разные вещи, и они не спорят. Код вашего проекта пишет разработчик у себя на машине, в Claude Code, моделями Claude — Sonnet, Opus, Fable. Ключ на этой странице нужен не для разработки, а для служб, которые работают НА ВАШЕМ СЕРВЕРЕ и отвечают вашим посетителям: Quiz, векторный поиск, граф знаний.",
       "whyEmbeddings": "Решающая причина техническая, а не вкусовая. Векторный поиск и граф знаний стоят на представлениях текста — эмбеддингах. Anthropic их не делает: в её документации сказано дословно «Anthropic does not offer its own embedding model», и рекомендуется сторонний поставщик. Продукт, которому нужен поиск по смыслу, обязан взять эмбеддинги там, где они есть.",
       "whyBudget": "Вторая причина — про деньги, и она про разделение бюджетов. Подписка на Claude выдаётся ЧЕЛОВЕКУ: это лимит на его собственную работу, общий с чатом и живущий скользящими окнами. Сервер, отвечающий посетителям, — совсем другая нагрузка: она непрерывна и растёт вместе с посещаемостью. Такому расходу место на ключе с поштучной оплатой, а не на рабочем лимите разработчика: иначе первый же наплыв посетителей съедает то, чем этот проект строят.",
-      "whySwap": "Ключ ваш, расход идёт напрямую вашему поставщику, и мы его не видим. Список поставщиков не высечен в камне: как только у используемых нами служб появится другой пригодный вариант, он появится и здесь."
+      "whySwap": "Ключ ваш, расход идёт напрямую вашему поставщику, и мы его не видим. Список поставщиков не высечен в камне: как только у используемых нами служб появится другой пригодный вариант, он появится и здесь.",
+      "whyDoc": "Три бюджета и ловушка",
+      "whyDocTitle": "Почему ключ здесь от OpenAI: три бюджета и одна ловушка"
     },
     "deployments": {
       "unavailable": "Историю прочитать не удалось — слой данных не ответил.",
