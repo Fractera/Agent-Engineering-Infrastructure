@@ -1704,7 +1704,9 @@
       "imagesBody": "The page arrives with the picture already INSIDE it: a tiny blurred copy of the image, about 150 bytes, is written into the markup — no separate request for it, so the visitor sees the shape and colours of the coming image in the same millisecond as the heading. Its space is reserved in advance, from its real dimensions, so the text does not jump when the file lands. The real image follows and replaces the blurred one by itself.",
       "imagesSpeed": "This is not decoration but two of the three figures a search engine measures your page by: the layout jump as things load, and how fast the largest element on screen appears — most often that element is an image. Meanwhile a phone does not download a file made for a large monitor: the needed sizes are produced from one original on demand, the format is matched to the browser, and everything below the first screen loads only when the visitor reaches it. Works with JavaScript disabled.",
       "docImages": "Images",
-      "docImagesTitle": "Images: what is already built"
+      "docImagesTitle": "Images: what is already built",
+      "coverAlt": "Lighthouse report: one hundred out of one hundred for performance, accessibility, best practices and SEO — beside this project catalogue",
+      "coverCaption": "A real measurement of this project, not a marketing picture: 100 out of 100 across all four sections. On the left, the catalogue whose images came from the store."
     }
   },
   "ru": {
@@ -3412,7 +3414,9 @@
       "imagesBody": "Страница приходит с картинкой ВНУТРИ себя: в разметку вписана крошечная размытая копия изображения, около 150 байт, — отдельного запроса за ней нет, и посетитель видит форму и цвета будущей картинки в ту же миллисекунду, что и заголовок. Место под неё занято заранее, по её настоящим размерам, поэтому текст не прыгает, когда файл доезжает. Настоящая картинка приходит следом и заменяет размытую сама.",
       "imagesSpeed": "Это не украшение, а две из трёх величин, которыми поисковик измеряет вашу страницу: прыжок вёрстки при загрузке и время появления самого крупного элемента экрана — им чаще всего и оказывается картинка. Телефон при этом не качает файл, рассчитанный на большой монитор: нужные размеры делаются из одного оригинала по требованию, формат подбирается под браузер, а всё, что ниже первого экрана, грузится только когда посетитель до него дойдёт. Работает и с выключенным JavaScript.",
       "docImages": "Изображения",
-      "docImagesTitle": "Изображения: что уже построено"
+      "docImagesTitle": "Изображения: что уже построено",
+      "coverAlt": "Отчёт проверки Lighthouse: сто баллов из ста по скорости, доступности, лучшим практикам и поиску — рядом каталог товаров этого проекта",
+      "coverCaption": "Реальный замер этого проекта, а не картинка из рекламы: 100 из 100 по всем четырём разделам. Слева — каталог, чьи изображения приехали из хранилища."
     }
   }
 }

@@ -615,6 +615,8 @@ export type AdminStrings = {
   // восклицанием, читается как реклама. Сюда пришли читать.
   visibility: {
     intro: string;
+    /** Подпись под обложкой — снимком проверки со стопроцентными оценками. */
+    coverAlt: string; coverCaption: string;
     searchTitle: string; searchBody: string; searchSignals: string;
     modelsTitle: string; modelsBody: string;
     appTitle: string; appBody: string;

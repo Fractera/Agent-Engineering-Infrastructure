@@ -62,6 +62,29 @@ export function VisibilityContent(
 
   return (
     <div className="space-y-4">
+      {/* 🔒 ОБЛОЖКА — НАСТОЯЩИЙ ЗАМЕР, А НЕ РИСУНОК (владелец 2026-08-13).
+          Раздел утверждает вещи, которые покупатель проверяет одной командой:
+          скорость, доступность, поиск. Снимок собственной проверки этого же
+          проекта — самое короткое доказательство из возможных, и он подчиняется
+          тому же закону, что и текст: попал сюда ПОСЛЕ того, как стал правдой.
+          Слева на снимке виден каталог, чьи картинки приехали из хранилища, —
+          то есть один кадр показывает и результат, и механизм.
+          Размеры проставлены явно: без них страница подпрыгнет, когда снимок
+          догрузится, — ровно тот дефект, о котором рассказывает блок ниже. */}
+      <figure className="overflow-hidden rounded-lg border border-border">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/lighthouse-100.jpg"
+          alt={v.coverAlt}
+          width={1197}
+          height={577}
+          className="h-auto w-full"
+        />
+        <figcaption className="border-t border-border bg-muted/40 px-3 py-2 text-[10px] leading-relaxed text-muted-foreground">
+          {v.coverCaption}
+        </figcaption>
+      </figure>
+
       <p className="text-[11px] leading-relaxed text-muted-foreground">{v.intro}</p>
 
       <div className="space-y-4 rounded-lg border border-border p-3.5">
