@@ -27,6 +27,7 @@ import { NAV_GROUPS, NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/a
 import { useCasesGate } from "@/lib/use-cases-store";
 import type { AdminWarning } from "@/lib/admin-warnings";
 import { hiddenSlugs } from "@/lib/platform-features";
+import { publicAppUrl } from "@/lib/public-app-url";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
 
 // Иконки живут ЗДЕСЬ, а не в `lib/admin-nav.ts`: список маршрутов должен
@@ -126,6 +127,11 @@ export function AdminHeader(
   // Разделы, чья возможность выключена в «Возможностях приложения», из меню
   // убираются: настраивать баннер, которого в приложении не будет, незачем.
   const hidden = hiddenSlugs();
+
+  // Адрес гостевого приложения для кнопки «Просмотр». Отказ не имеет права
+  // уронить шапку: она рисуется на каждой странице панели.
+  let appUrl = "";
+  try { appUrl = publicAppUrl().url; } catch { appUrl = ""; }
 
   return (
     <>
@@ -254,14 +260,37 @@ export function AdminHeader(
         </Link>
 
         <div className="flex items-center gap-2">
-          {/* Заготовка: предпросмотр появится вместе со своей логикой (фаза Ф2). */}
-          <span
-            title={s.skeletonNotice}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-3 text-xs text-muted-foreground/60"
-          >
-            <Globe className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{s.preview}</span>
-          </span>
+          {/* 🔒 ПРОСМОТР ОТКРЫВАЕТ САЙТ ВЛАДЕЛЬЦА (владелец 2026-08-13).
+              Здесь два месяца стояла заготовка: серая надпись, которая ничего не
+              делала. Кнопка, которая не работает, хуже отсутствующей — она
+              обещает и заставляет человека решить, что продукт сломан.
+
+              Адрес берёт серверная `publicAppUrl()` — та же, что отвечает на
+              вопрос «какой у этого сайта адрес» для карты сайта и канонических
+              ссылок. Она сама различает домен и режим по IP, поэтому кнопка
+              работает в обоих, и ни одной строки JS в браузер не уезжает.
+
+              Нет адреса вовсе — остаётся прежняя серая надпись: ссылка в никуда
+              хуже честной заглушки. */}
+          {appUrl ? (
+            <a
+              href={appUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-3 text-xs text-foreground transition-colors hover:bg-muted"
+            >
+              <Globe className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{s.preview}</span>
+            </a>
+          ) : (
+            <span
+              title={s.skeletonNotice}
+              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-3 text-xs text-muted-foreground/60"
+            >
+              <Globe className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{s.preview}</span>
+            </span>
+          )}
 
           <label
             htmlFor={MENU_ID}
