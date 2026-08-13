@@ -629,6 +629,15 @@ export type AdminStrings = {
     imagesTitle: string; imagesBody: string; imagesSpeed: string;
     docImages: string; docImagesTitle: string;
     noJsTitle: string; noJsBody: string;
+    // Данные: один блок и четыре доказательства под ним (владелец 2026-08-13).
+    dataTitle: string; dataBody: string; dataCost: string;
+    docDb: string; docDbTitle: string;
+    docStorage: string; docStorageTitle: string;
+    docVectors: string; docVectorsTitle: string;
+    docRag: string; docRagTitle: string;
+    // Авторизация — отдельным блоком: она не про данные и не про поиск.
+    authTitle: string; authBody: string; authRoles: string;
+    docAuth: string; docAuthTitle: string;
     costTitle: string; cost: string; choice: string;
     // Подписи вопросиков и заголовки их окон. Документы — не здесь, а в
     // `_content/*-inside*.md`: длинный текст правят как текст, а не как ключи.

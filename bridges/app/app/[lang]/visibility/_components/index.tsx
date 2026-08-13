@@ -148,6 +148,38 @@ export function VisibilityContent(
           <p>{v.imagesSpeed}</p>
         </Block>
 
+        {/* 🔒 ЧЕТЫРЕ ХРАНИЛИЩА — ОДНИМ БЛОКОМ, А НЕ ЧЕТЫРЬМЯ (владелец 2026-08-13).
+            Порознь они читаются как перечень технологий, и покупатель считает их
+            четырьмя вещами, которые ему предстоит освоить. Вместе — как ОДНО
+            свойство продукта: данные уже есть и уже стоят ноль сверх сервера.
+            Подробности каждого — за своим вопросиком; кто хочет проверить,
+            откроет, кто не хочет — прочитает два абзаца и пойдёт дальше. */}
+        <Block
+          title={v.dataTitle}
+          docs={
+            <>
+              <Doc name="data-db-inside" lang={lang} label={v.docDb} title={v.docDbTitle} />
+              <Doc name="data-storage-inside" lang={lang} label={v.docStorage} title={v.docStorageTitle} />
+              <Doc name="data-vectors-inside" lang={lang} label={v.docVectors} title={v.docVectorsTitle} />
+              <Doc name="data-rag-inside" lang={lang} label={v.docRag} title={v.docRagTitle} />
+            </>
+          }
+        >
+          <p>{v.dataBody}</p>
+          <p>{v.dataCost}</p>
+        </Block>
+
+        {/* Авторизация отдельно: она не про данные и не про то, как находят сайт.
+            Её ценность в другом — она сделана, проверена и не стоит ничего, тогда
+            как обычно за неё платят помесячно и всю жизнь проекта. */}
+        <Block
+          title={v.authTitle}
+          docs={<Doc name="auth-inside" lang={lang} label={v.docAuth} title={v.docAuthTitle} />}
+        >
+          <p>{v.authBody}</p>
+          <p>{v.authRoles}</p>
+        </Block>
+
         <Block title={v.noJsTitle}>
           <p>{v.noJsBody}</p>
         </Block>
