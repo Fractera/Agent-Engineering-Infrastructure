@@ -52,12 +52,31 @@ mediaDb.exec(`
     width       INTEGER,
     height      INTEGER,
     duration    REAL,
+    -- Размытая копия изображения в виде строки data: — подробности у ALTER ниже.
+    blur        TEXT DEFAULT '',
     storage_key TEXT NOT NULL UNIQUE,
     created_at  TEXT NOT NULL DEFAULT (datetime('now'))
   )
 `)
 
 const existingCols = mediaDb.prepare('PRAGMA table_info(media)').all().map(c => c.name)
+// Крошечная размытая копия изображения (шаг 506.3, 2026-08-13).
+//
+// 🔒 ПОЧЕМУ КОЛОНКА, А НЕ ФАЙЛ И НЕ РАСЧЁТ НА ЛЕТУ. Первоисточник (документация
+// Next, `next/image`): `blurDataURL` подставляется сам ТОЛЬКО при статическом
+// импорте файла; для динамического источника — «you must provide blurDataURL
+// yourself». Картинка, загруженная владельцем, динамическая по определению: на
+// сборке её ещё не существует.
+//
+// Считать её при каждом показе нельзя — это чтение файла с диска и декодирование
+// на каждый заход. Класть отдельным файлом тоже неверно: строка нужна ВНУТРИ
+// HTML, иначе она превращается в ещё один запрос и теряет весь смысл. Поэтому она
+// живёт рядом с шириной и высотой — в записи о самом изображении, и приезжает
+// вместе с ней одним ответом.
+//
+// Пустая строка у старых записей — норма, а не поломка: приложение показывает
+// такую картинку без подложки, ровно как раньше.
+if (!existingCols.includes('blur'))        mediaDb.exec(`ALTER TABLE media ADD COLUMN blur TEXT DEFAULT ''`)
 if (!existingCols.includes('title'))       mediaDb.exec(`ALTER TABLE media ADD COLUMN title TEXT DEFAULT ''`)
 if (!existingCols.includes('description')) mediaDb.exec(`ALTER TABLE media ADD COLUMN description TEXT DEFAULT ''`)
 if (!existingCols.includes('url'))         mediaDb.exec(`ALTER TABLE media ADD COLUMN url TEXT NOT NULL DEFAULT ''`)
@@ -370,7 +389,7 @@ app.post('/media/upload', upload.single('file'), async (req, res) => {
     const destPath   = resolve(STORAGE_DIR, storageKey)
     const isImage    = file.mimetype.startsWith('image/')
 
-    let width = null, height = null, duration = null, buffer = file.buffer
+    let width = null, height = null, duration = null, buffer = file.buffer, blur = ''
 
     // The TRUE duration of a video is measured HERE, by ffprobe, and never taken from
     // the browser. A screen recording often carries no usable duration in its
@@ -390,6 +409,31 @@ app.post('/media/upload', upload.single('file'), async (req, res) => {
           .toBuffer()
         width  = crop.w
         height = crop.h
+      }
+
+      // Размытая копия — ПОСЛЕ обрезки, из того буфера, который ляжет на диск.
+      // Порядок здесь содержательный: сними её раньше — и подложка показывала бы
+      // кадр, которого в файле уже нет, то есть картинка «дёргалась» бы при
+      // загрузке сильнее, чем без подложки вовсе.
+      //
+      // 12 пикселей и webp: документация Next советует «10px or less» и
+      // предупреждает, что большая строка вредит — она едет в HTML каждой
+      // страницы, где стоит эта картинка. Замер на статике проекта: ~140 байт.
+      //
+      // Анимированные пропускаем: у них подложка смысла не имеет, а `sharp`
+      // сводил бы их к первому кадру.
+      try {
+        const probe = await sharp(buffer).metadata()
+        if ((probe.pages ?? 1) === 1) {
+          const tiny = await sharp(buffer)
+            .resize({ width: 12, withoutEnlargement: true })
+            .webp({ quality: 40 })
+            .toBuffer()
+          blur = `data:image/webp;base64,${tiny.toString('base64')}`
+        }
+      } catch {
+        // Не вышло — загрузка обязана состояться. Картинка без подложки работает;
+        // загрузка, упавшая из-за подложки, не работает вовсе.
       }
     }
 
@@ -413,12 +457,13 @@ app.post('/media/upload', upload.single('file'), async (req, res) => {
       width,
       height,
       duration,
+      blur,
       storage_key: storageKey,
     }
 
     mediaDb.prepare(`
-      INSERT INTO media (id, name, title, description, url, mime_type, extension, crop_mode, size, width, height, duration, storage_key)
-      VALUES (@id, @name, @title, @description, @url, @mime_type, @extension, @crop_mode, @size, @width, @height, @duration, @storage_key)
+      INSERT INTO media (id, name, title, description, url, mime_type, extension, crop_mode, size, width, height, duration, blur, storage_key)
+      VALUES (@id, @name, @title, @description, @url, @mime_type, @extension, @crop_mode, @size, @width, @height, @duration, @blur, @storage_key)
     `).run(row)
 
     res.json({ ok: true, item: mediaDb.prepare('SELECT * FROM media WHERE id = ?').get(id) })
