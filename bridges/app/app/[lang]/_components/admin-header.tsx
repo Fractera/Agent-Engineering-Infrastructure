@@ -21,7 +21,7 @@ import {
   Cookie, Users, ImagePlus, Database, BrainCircuit, Brain, Map as MapIcon, Download, Upload,
   Link2, KeyRound, MessagesSquare, Sparkles, GitBranch, Info, History, Settings, BookOpen,
   HelpCircle, PackagePlus, FileText, Target, Wrench, Network, BookMarked, GraduationCap,
-  ListChecks, AlertTriangle, Search, Bot, Smartphone, Paintbrush, LayoutTemplate, Ruler, LifeBuoy, Compass, Code2, ChevronRight, Crop, Scissors, Mic, Hourglass, FlaskConical, UserRound, IdCard, Workflow, type LucideIcon,
+  ListChecks, AlertTriangle, Search, Bot, Smartphone, Paintbrush, LayoutTemplate, Ruler, LifeBuoy, Compass, Code2, ChevronRight, Crop, Scissors, Mic, Hourglass, FlaskConical, UserRound, IdCard, Workflow, Radar, type LucideIcon,
 } from "lucide-react";
 import { NAV_GROUPS, NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 import { useCasesGate } from "@/lib/use-cases-store";
@@ -41,6 +41,9 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   "map-help": Compass,
   "app-settings": Palette,
   languages: Languages,
+  // Радар, а не лупа: раздел не про поиск ПО сайту, а про то, чем сайт виден
+  // снаружи — поисковикам, моделям, устройствам.
+  visibility: Radar,
   "parallel-routing": Columns3,
   "app-features": SlidersHorizontal,
   "top-menu": PanelTop,
