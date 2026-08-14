@@ -20,7 +20,7 @@ import path from "path";
 
 const APP_DIR = process.env.APP_DIR ?? "/opt/fractera/app";
 
-export const USE_CASES_DIR = "USE-CASES";
+export const USE_CASES_DIR = "development-docs/USE-CASES";
 export const CASES_SUBDIR = "CASES";
 export const RAW_SUBDIR = "RAW";
 export const RAW_LOG = "quiz-log.md";

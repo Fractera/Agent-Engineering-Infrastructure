@@ -10,6 +10,7 @@
 import fs from "fs";
 import path from "path";
 import { toolById, type ToolId } from "@/lib/tools-registry";
+import { DOC_FILES } from "@/lib/product-docs";
 
 const APP_DIR = process.env.APP_DIR ?? "/opt/fractera/app";
 /** Корень панели: отсюда берутся исходники инструментов. */
@@ -128,8 +129,15 @@ export function writePlatformToolsDoc(): boolean {
     const { renderPlatformToolsDoc } = require("@/lib/platform-tools-doc") as {
       renderPlatformToolsDoc: () => string;
     };
-    fs.mkdirSync(APP_DIR, { recursive: true });
-    fs.writeFileSync(path.join(APP_DIR, "PLATFORM-TOOLS.md"), renderPlatformToolsDoc(), "utf-8");
+    // 🔒 ПУТЬ БЕРЁТСЯ ИЗ РЕЕСТРА, А НЕ НАБИРАЕТСЯ ЗДЕСЬ (2026-08-14). Он был
+    // написан строкой, и переезд документов в `development-docs/` развёл два
+    // места: панель ЧИТАЛА бы файл по новому пути, а установка инструмента
+    // ПИСАЛА бы по старому. Ни одна из сторон при этом не ошибается заметно —
+    // просто документ перестаёт обновляться, и агент строит второй инструмент
+    // рядом с существующим, потому что о существующем не узнал.
+    const target = path.join(APP_DIR, DOC_FILES["doc-platform-tools"]);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, renderPlatformToolsDoc(), "utf-8");
     return true;
   } catch {
     return false;

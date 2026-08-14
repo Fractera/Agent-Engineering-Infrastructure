@@ -51,59 +51,59 @@ export const DOC_FILES: Record<DocKey, string> = {
   // санкционированную дверь и два замка на ней. Выключен по умолчанию и включается
   // только после подтверждённых кейсов: усилитель, наведённый на догадку, даёт
   // большой, аккуратный и дорогой неверный результат.
-  "doc-dynamic-workflows": "DYNAMIC-WORKFLOWS.md",
+  "doc-dynamic-workflows": "development-docs/DYNAMIC-WORKFLOWS.md",
   // Перечень того, что платформа УЖЕ даёт: склады, движки, службы. Без этого
   // файла агент не знает о них ничего — у него нет доступа к внешним
   // инструментам, и единственный способ узнать про векторный склад, граф знаний,
   // базу, карту и каналы — прочитать этот документ. Не зная, он строит второе.
-  "doc-platform-tools": "PLATFORM-TOOLS.md",
-  "doc-architecture": "ARCHITECTURE.md",
+  "doc-platform-tools": "development-docs/PLATFORM-TOOLS.md",
+  "doc-architecture": "development-docs/ARCHITECTURE.md",
   // Как устроена поисковая оптимизация ИМЕННО в этом проекте (шаг 503): статика
   // вместо динамики, один сборщик меты, языковые сигналы, структурированные
   // данные, карты сайта. Задан платформой, а не растёт по ходу проекта — это
   // описание построенного, и агент ему подчиняется. Написан в форме
   // «правило → проверка → пример», потому что позже станет навыком.
-  "doc-seo": "SEO.md",
-  "doc-aio": "AIO.md",
-  "doc-pwa": "PWA.md",
-  "doc-glossary": "GLOSSARY.md",
-  "doc-lessons": "LESSONS.md",
-  "doc-antipatterns": "ANTI-PATTERNS.md",
-  "doc-design": "DESIGN.md",
+  "doc-seo": "development-docs/SEO.md",
+  "doc-aio": "development-docs/AIO.md",
+  "doc-pwa": "development-docs/PWA.md",
+  "doc-glossary": "development-docs/GLOSSARY.md",
+  "doc-lessons": "development-docs/LESSONS.md",
+  "doc-antipatterns": "development-docs/ANTI-PATTERNS.md",
+  "doc-design": "development-docs/DESIGN.md",
   // Секции, дизайны и проекты на одном сервере (шаг 508). Документ ведётся ПО
   // ХОДУ работы: архитектура складывается партиями, и знание о ней обязано
   // копиться в файле проекта, а не в памяти сессии, которая закончится.
-  "doc-sections": "SECTIONS.md",
-  "doc-parallel-routing": "PARALLEL-ROUTING.md",
-  "doc-coding-standards": "CODING-STANDARDS.md",
+  "doc-sections": "development-docs/SECTIONS.md",
+  "doc-parallel-routing": "development-docs/PARALLEL-ROUTING.md",
+  "doc-coding-standards": "development-docs/CODING-STANDARDS.md",
   // Разбор затруднений, с которыми пользователи сталкиваются НА ПРОДАКШНЕ.
   // Читается ПО ТРЕБОВАНИЮ, а не на старте: держать его в контексте каждой
   // сессии — платить за диагностику, которая может не понадобиться.
-  "doc-troubleshooting": "TROUBLESHOOTING.md",
+  "doc-troubleshooting": "development-docs/TROUBLESHOOTING.md",
   // Передача между двумя контекстными окнами. Пишет её МОДЕЛЬ на подходе к
   // пределу окна, читает следующая сессия. Здесь она нужна затем, чтобы у
   // владельца был способ её ПРОЧИТАТЬ и ОЧИСТИТЬ: устаревшая передача вреднее
   // отсутствующей, а очистка — единственное действие, которое человек обязан
   // мочь выполнить сам.
-  "doc-context-state": "CONTEXT-STATE.md",
+  "doc-context-state": "development-docs/CONTEXT-STATE.md",
   // Как шаг доказывается законченным: два независимых доказательства из разных
   // плоскостей. Документ ЗАДАННЫЙ — это требование к работе, а не наблюдение о
   // ней, и агент правит его только по прямой просьбе.
-  "doc-testing": "TESTING.md",
+  "doc-testing": "development-docs/TESTING.md",
   // Запрет мультиагентной разработки и команда, которая его снимает. ЗАДАННЫЙ:
   // это закон работы, а не наблюдение о ней.
-  "doc-single-agent": "SINGLE-AGENT.md",
+  "doc-single-agent": "development-docs/SINGLE-AGENT.md",
   // Формат диалога: ответ открывается пересказом просьбы своими словами. ЗАДАННЫЙ
   // документ. Закон жил внутри главной инструкции (раздел 2) и потому не имел ни
   // выключателя, ни команды; здесь он становится документом, а в инструкции
   // остаётся указатель — две копии закона расходятся молча.
-  "doc-dialogue-format": "DIALOGUE-FORMAT.md",
+  "doc-dialogue-format": "development-docs/DIALOGUE-FORMAT.md",
   // Как строится пост: ко-локация, два типа ссылок, гейт check:content.
   // ЗАДАННЫЙ: это инструкция авторинга, а не наблюдение о проекте.
-  "doc-content-engine": "CONTENT-ENGINE.md",
+  "doc-content-engine": "development-docs/CONTENT-ENGINE.md",
   // Сущности проекта и состояние каждой. ЕДИНСТВЕННЫЙ документ, который несёт
   // ПРОГРЕСС: кейсы не знают состояния экранов, архитектура не знает, что готово.
-  "doc-passport": "PASSPORT.md",
+  "doc-passport": "development-docs/PASSPORT.md",
 };
 
 /**
@@ -248,7 +248,7 @@ export function writeDoc(key: DocKey, text: string): void {
 }
 
 /** Шаги разработки — не файл, а ПАПКА: их материализует агент по одному на шаг. */
-export const STEPS_DIR = "DEVELOPMENT-STEPS";
+export const STEPS_DIR = "development-docs/DEVELOPMENT-STEPS";
 
 export type StepFile = { name: string; bytes: number; modified: string | null };
 
