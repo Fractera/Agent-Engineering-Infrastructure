@@ -12,7 +12,8 @@
 // читать — и вместе с ним перестают читать соседние, где стоят настоящие
 // блокировки. Одна незакрываемая строка обесценивает всю область.
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,6 +21,8 @@ export function InstalledCheck(
   { tool, initial, labels }:
   { tool: string; initial: boolean; labels: { label: string; done: string; undone: string; failed: string } },
 ) {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
   const [on, setOn] = useState(initial);
   const [busy, setBusy] = useState(false);
 
@@ -38,6 +41,18 @@ export function InstalledCheck(
       const d = await r.json().catch(() => ({}));
       if (!r.ok || !d.ok) throw new Error(String(d?.error ?? labels.failed));
       toast.success(next ? labels.done : labels.undone);
+      // 🔒 ПРЕДУПРЕЖДЕНИЕ ОБЯЗАНО ИСЧЕЗНУТЬ СРАЗУ (владелец 2026-08-14).
+      //
+      // Отметка пишется на сервере, а предупреждение рисует ШАПКА — тоже на
+      // сервере, при отрисовке страницы. Без этой строки галочка вставала, а
+      // «Дайте агенту глаза в браузере» продолжало висеть до перезагрузки: со
+      // стороны это читается как «галочка не работает», и человек перестаёт
+      // верить обеим — и галочке, и предупреждению.
+      //
+      // Обновляем ВСЮ страницу, а не одну карточку: гаснет ровно то
+      // предупреждение, чей ключ изменился, остальные пересчитываются из того
+      // же файла и остаются на месте.
+      startTransition(() => router.refresh());
     } catch (e) {
       setOn(!next);
       toast.error(e instanceof Error ? e.message : labels.failed);

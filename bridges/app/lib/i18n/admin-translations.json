@@ -1822,7 +1822,21 @@
       "checkLabel": "I have installed this — do not warn me about it",
       "checkDone": "Marked as installed — the warning is gone",
       "checkUndone": "Mark removed — the warning is back",
-      "checkFailed": "Could not save the mark"
+      "checkFailed": "Could not save the mark",
+      "helpAction": "I need help with these tools",
+      "helpHint": "Names not telling you much? Ask the developer — a short call is usually faster than an evening of reading.",
+      "helpTitle": "Request a consultation",
+      "helpBody": "Your request goes to the developer at admin@fractera.ai. They will reply with times for a call and walk you through installing and using these tools in your own project.",
+      "helpFree": "A free consultation is among the options — asking costs you nothing.",
+      "helpWhatWeSend": "What will be sent",
+      "helpCancel": "Cancel",
+      "helpSend": "Send the request",
+      "helpSending": "Opening your mail…",
+      "helpSent": "Your mail app is opening with the letter ready — press send there. Nothing leaves your machine until you do.",
+      "helpCopy": "Copy the letter",
+      "helpCopied": "Copied",
+      "helpMailSubject": "Consultation request — development tools",
+      "helpMailBody": "The user requests a consultation on activating and using the development tools in their project.\n\nPage: {page}"
     }
   },
   "ru": {
@@ -3648,7 +3662,21 @@
       "checkLabel": "Я это установил — больше не предупреждать",
       "checkDone": "Отмечено как установленное — предупреждение снято",
       "checkUndone": "Отметка снята — предупреждение вернулось",
-      "checkFailed": "Сохранить отметку не удалось"
+      "checkFailed": "Сохранить отметку не удалось",
+      "helpAction": "Мне нужна помощь с этими инструментами",
+      "helpHint": "Названия ничего не говорят? Спросите разработчика — короткий разговор обычно быстрее вечера чтения.",
+      "helpTitle": "Запрос консультации",
+      "helpBody": "Запрос уйдёт разработчику на admin@fractera.ai. Он ответит и предложит время для разговора, а на нём проведёт вас через установку и применение этих инструментов в вашем проекте.",
+      "helpFree": "Среди вариантов есть и бесплатная консультация — спросить ничего не стоит.",
+      "helpWhatWeSend": "Что будет отправлено",
+      "helpCancel": "Отменить",
+      "helpSend": "Отправить запрос",
+      "helpSending": "Открываю вашу почту…",
+      "helpSent": "Открывается ваша почта с готовым письмом — отправьте его там. До этого от вас ничего не уходит.",
+      "helpCopy": "Скопировать письмо",
+      "helpCopied": "Скопировано",
+      "helpMailSubject": "Запрос консультации — инструменты разработки",
+      "helpMailBody": "Пользователь запросил консультацию по активации и использованию инструментов разработки в своём проекте.\n\nСтраница: {page}"
     }
   }
 }

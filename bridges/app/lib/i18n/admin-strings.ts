@@ -723,6 +723,15 @@ export type AdminStrings = {
     // Галочка «поставил». Она не «прячет уведомление», а записывает факт:
     // снятая галочка честно возвращает предупреждение.
     checkLabel: string; checkDone: string; checkUndone: string; checkFailed: string;
+    // 🔒 «МНЕ НУЖНА ПОМОЩЬ» — ЗАМЕР СПРОСА (владелец 2026-08-14). Названия
+    // инструментов человеку ничего не говорят: не поняв их, он уходит молча, и
+    // мы не узнаём, что потеряли его именно здесь. Письмо отправляет он сам
+    // своей почтой (обратный адрес получается настоящим), а нажатие считает
+    // сервер — иначе передумавшие в почтовом клиенте исчезали бы из счёта.
+    helpAction: string; helpHint: string; helpTitle: string; helpBody: string; helpFree: string;
+    helpWhatWeSend: string; helpCancel: string; helpSend: string; helpSending: string;
+    helpSent: string; helpCopy: string; helpCopied: string;
+    helpMailSubject: string; helpMailBody: string;
   };
   languages: {
     intro: string; unavailable: string;

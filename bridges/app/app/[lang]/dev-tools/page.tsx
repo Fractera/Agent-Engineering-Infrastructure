@@ -31,6 +31,7 @@ import { GuideProse } from "../how-to-build/_components/guide-prose";
 import { readLocalizedContent } from "@/lib/content/localized-content";
 import { installedMap } from "@/lib/dev-tools-marks";
 import { InstalledCheck } from "./_components/installed-check.client";
+import { ConsultHelp } from "./_components/consult-help.client";
 
 export const dynamic = "force-dynamic";
 
@@ -153,6 +154,25 @@ export default async function DevToolsPage({ params }: { params: Promise<{ lang:
         </div>
 
         <InstalledCheck tool="editor" initial={installed.editor} labels={checkLabels} />
+      </div>
+
+      {/* 🔒 «МНЕ НУЖНА ПОМОЩЬ» — ЗАМЕР СПРОСА, А НЕ УКРАШЕНИЕ (владелец
+          2026-08-14). Названия инструментов человеку ничего не говорят; не
+          поняв их, он уходит молча, и мы не узнаём, что потеряли его именно
+          здесь. Кнопка стоит ПОСЛЕ всех трёх карточек: до них она перебивала бы
+          сами инструменты, а после — попадается ровно тому, кто дочитал и не
+          понял. */}
+      <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-border p-3">
+        <ConsultHelp
+          topic="dev-tools"
+          labels={{
+            action: t.helpAction, title: t.helpTitle, body: t.helpBody, free: t.helpFree,
+            whatWeSend: t.helpWhatWeSend, cancel: t.helpCancel, send: t.helpSend,
+            sending: t.helpSending, sent: t.helpSent, copy: t.helpCopy, copied: t.helpCopied,
+            mailSubject: t.helpMailSubject, mailBody: t.helpMailBody,
+          }}
+        />
+        <span className="text-[10px] leading-relaxed text-muted-foreground">{t.helpHint}</span>
       </div>
 
       <p className="mt-3 text-[10px] leading-relaxed text-muted-foreground">{t.growing}</p>
