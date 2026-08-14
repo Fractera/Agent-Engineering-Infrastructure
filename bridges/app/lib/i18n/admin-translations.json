@@ -1448,6 +1448,10 @@
       "dev-tools": {
         "title": "Development tools",
         "hint": "What the project is built with: tools on the developer's machine. They never ship inside the product."
+      },
+      "doc-sections": {
+        "title": "Sections and designs",
+        "hint": "How a section, a design and a project relate: one data contract, a set of renderers per design, one design per project."
       }
     },
     "breadcrumbHome": "Panel",
@@ -1838,7 +1842,6 @@
       "helpEmailAsk": "Enter the address to reply to",
       "helpEmailPlaceholder": "you@example.com",
       "helpClose": "Close",
-      "helpSent": "Request sent to the developer",
       "helpCopy": "Copy the letter",
       "helpCopied": "Copied",
       "helpMailSubject": "Consultation request — development tools",
@@ -3294,6 +3297,10 @@
       "dev-tools": {
         "title": "Инструменты разработки",
         "hint": "Чем строят проект: инструменты на машине разработчика. В продукт они не попадают."
+      },
+      "doc-sections": {
+        "title": "Секции и дизайны",
+        "hint": "Как связаны секция, дизайн и проект: один контракт данных, свой набор рендереров у каждого дизайна, один дизайн на проект."
       }
     },
     "breadcrumbHome": "Панель",
@@ -3684,7 +3691,6 @@
       "helpEmailAsk": "Укажите адрес для ответа",
       "helpEmailPlaceholder": "you@example.com",
       "helpClose": "Закрыть",
-      "helpSent": "Запрос отправлен разработчику",
       "helpCopy": "Скопировать письмо",
       "helpCopied": "Скопировано",
       "helpMailSubject": "Запрос консультации — инструменты разработки",

@@ -37,6 +37,7 @@ export type DocKey =
   | "doc-single-agent"
   | "doc-dialogue-format"
   | "doc-content-engine"
+  | "doc-sections"
   | "doc-passport"
   | "doc-seo"
   | "doc-aio"
@@ -69,6 +70,10 @@ export const DOC_FILES: Record<DocKey, string> = {
   "doc-lessons": "LESSONS.md",
   "doc-antipatterns": "ANTI-PATTERNS.md",
   "doc-design": "DESIGN.md",
+  // Секции, дизайны и проекты на одном сервере (шаг 508). Документ ведётся ПО
+  // ХОДУ работы: архитектура складывается партиями, и знание о ней обязано
+  // копиться в файле проекта, а не в памяти сессии, которая закончится.
+  "doc-sections": "SECTIONS.md",
   "doc-parallel-routing": "PARALLEL-ROUTING.md",
   "doc-coding-standards": "CODING-STANDARDS.md",
   // Разбор затруднений, с которыми пользователи сталкиваются НА ПРОДАКШНЕ.
@@ -144,6 +149,10 @@ export const DOC_KIND: Record<string, "evolving" | "static"> = {
   "doc-platform-tools": "evolving",
   "doc-coding-standards": "static",
   "doc-design": "static",
+  // САМОРАЗВИВАЮЩИЙСЯ намеренно: архитектура секций описывается по ходу шага, и
+  // каждая закрытая партия дописывает в него то, что теперь построено. Владелец
+  // проводит окончательную ревизию, когда слой готов.
+  "doc-sections": "evolving",
   "doc-code-samples": "static",
   "doc-parallel-routing": "static",
 

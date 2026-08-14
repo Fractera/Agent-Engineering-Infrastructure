@@ -91,6 +91,7 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   "doc-steps": ListChecks,
   "doc-antipatterns": AlertTriangle,
   "doc-design": Paintbrush,
+  "doc-sections": LayoutTemplate,
   "doc-code-samples": Code2,
   "doc-parallel-routing": LayoutTemplate,
   "doc-coding-standards": Ruler,
