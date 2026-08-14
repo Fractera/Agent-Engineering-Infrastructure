@@ -69,6 +69,7 @@ export type AdminStrings = {
     warnCta: {
       languages: string; github: string; "use-cases": string; openai: string; domain: string;
       "context-state": string; "dev-browser": string;
+      "dev-claude-code": string; "dev-editor": string;
     };
     howToBuild: string;
     stateUnknown: string;
@@ -380,6 +381,7 @@ export type AdminStrings = {
     items: {
       languages: string; github: string; "use-cases": string; openai: string; domain: string;
       "context-state": string; "dev-browser": string;
+      "dev-claude-code": string; "dev-editor": string;
     };
   };
   // Документ «Тестирование»: почему он существует и где его выключатель.
@@ -711,6 +713,16 @@ export type AdminStrings = {
     browserTitle: string; browserBody: string; browserLimits: string;
     browserInstall: string; browserDoc: string; browserDocTitle: string;
     plannedLabel: string; plannedNote: string;
+    // 🔒 ПОРЯДОК ТРЁХ ИНСТРУМЕНТОВ ВЫБРАН ВЛАДЕЛЬЦЕМ (2026-08-14) и он
+    // содержательный: браузер (без него можно) → Claude Code → редактор (без
+    // него нельзя). Тому, кому первым делом велят поставить три программы, не
+    // ставит ни одной.
+    orderNote: string;
+    codeTitle: string; codeBody: string; codeLimits: string; codeInstall: string;
+    editorTitle: string; editorBody: string; editorLimits: string; editorInstall: string;
+    // Галочка «поставил». Она не «прячет уведомление», а записывает факт:
+    // снятая галочка честно возвращает предупреждение.
+    checkLabel: string; checkDone: string; checkUndone: string; checkFailed: string;
   };
   languages: {
     intro: string; unavailable: string;

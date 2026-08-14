@@ -22,6 +22,7 @@ import Database from "better-sqlite3";
 import { contextStateHandoff } from "@/lib/product-docs";
 import { useCasesGate } from "@/lib/use-cases-store";
 import { readInstructionSet } from "@/lib/instruction-set";
+import { markKey } from "@/lib/dev-tools-marks";
 import type { AdminPageSlug } from "@/lib/admin-nav";
 
 const APP_DIR = process.env.APP_DIR ?? "/opt/fractera/app";
@@ -32,7 +33,12 @@ const RAG_ENV = process.env.RAG_ENV_PATH ?? "/opt/fractera/services/rag/.env";
 export type WarningLevel = "blocking" | "advised";
 
 export type AdminWarning = {
-  id: "languages" | "github" | "use-cases" | "openai" | "domain" | "context-state" | "dev-browser";
+  id:
+    | "languages" | "github" | "use-cases" | "openai" | "domain" | "context-state"
+    // Инструменты разработки — по одному на каждый, в порядке владельца
+    // (2026-08-14): сначала то, без чего обойтись можно, последним — то, без
+    // чего нельзя.
+    | "dev-browser" | "dev-claude-code" | "dev-editor";
   level: WarningLevel;
   /** Куда ведёт запись — то самое «основное место» настройки. */
   slug: AdminPageSlug;
@@ -146,8 +152,27 @@ export function collectWarnings(): AdminWarning[] {
   //
   // Тот же приём, что у языков: отметка о поступке вместо проверки значения,
   // которую сделать невозможно.
-  if (!envHas(APP_ENV, "AGENT_BROWSER_SEEN_AT")) {
+  //
+  // 🔒 ТРИ ИНСТРУМЕНТА ИДУТ ПО ОЧЕРЕДИ И В ЭТОМ ПОРЯДКЕ (владелец 2026-08-14).
+  //
+  // Сначала браузер — без него всё строится, просто вслепую. Потом Claude Code —
+  // тот, кто пишет код. Последним редактор — то, без чего нельзя. Порядок
+  // выбран владельцем сознательно и против интуиции «сначала главное»: человек,
+  // которому первым делом велят поставить три программы, не ставит ни одной, а
+  // начавший с необязательного расширения доходит до конца.
+  //
+  // 🔒 ПРОВЕРЯЕТСЯ ОТМЕТКА, А НЕ НАЛИЧИЕ. Панель работает на сервере, инструменты
+  // — на машине разработчика; канала между ними нет, и «проверить» отсюда
+  // физически нечего. Отметку ставит либо человек галочкой на странице, либо
+  // агент своим вызовом. Снял галочку — предупреждение честно вернулось.
+  if (!envHas(APP_ENV, markKey("browser"))) {
     out.push({ id: "dev-browser", level: "advised", slug: "dev-tools" });
+  }
+  if (!envHas(APP_ENV, markKey("claude-code"))) {
+    out.push({ id: "dev-claude-code", level: "advised", slug: "dev-tools" });
+  }
+  if (!envHas(APP_ENV, markKey("editor"))) {
+    out.push({ id: "dev-editor", level: "advised", slug: "dev-tools" });
   }
 
   // Незакрытая передача между контекстными окнами. НЕ поломка: чаще всего это

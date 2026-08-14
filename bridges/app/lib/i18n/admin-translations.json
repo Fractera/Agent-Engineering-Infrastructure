@@ -781,7 +781,9 @@
         "openai": "No OpenAI key — the knowledge graph and embeddings stay off",
         "domain": "No custom domain — HTTPS-only features stay unavailable",
         "context-state": "An unfinished session is recorded — read it before building, or clear it",
-        "dev-browser": "The agent cannot see the result of its work: console errors, behaviour without JS and the service worker are invisible in source."
+        "dev-browser": "The agent cannot see the result of its work: console errors, behaviour without JS and the service worker are invisible in source.",
+        "dev-claude-code": "Claude Code is not marked as installed — there is nobody to write the code this panel configures.",
+        "dev-editor": "No editor is marked as installed — you have nowhere to see your project as a whole."
       }
     },
     "contextState": {
@@ -1165,7 +1167,9 @@
         "openai": "Connect an OpenAI key",
         "domain": "Connect your own domain",
         "context-state": "Read the unfinished session",
-        "dev-browser": "Give the agent eyes in the browser"
+        "dev-browser": "Give the agent eyes in the browser",
+        "dev-claude-code": "Install Claude Code on your machine",
+        "dev-editor": "Install Visual Studio Code on your machine"
       },
       "howToBuild": "How to build this project",
       "stateUnknown": "project state",
@@ -1805,7 +1809,20 @@
       "browserDoc": "What it gives and what it does not",
       "browserDocTitle": "A browser for the agent: what it gives and what it does not",
       "plannedLabel": "What is being considered next",
-      "plannedNote": "Candidates are discussed, but they enter this list only after solving a real task in a real project. Promising a tool that is not here yet means selling something that does not exist."
+      "plannedNote": "Candidates are discussed, but they enter this list only after solving a real task in a real project. Promising a tool that is not here yet means selling something that does not exist.",
+      "orderNote": "The order is deliberate: first the tool you can do without, last the one you cannot. Install them in this order and mark each one when it is done.",
+      "codeTitle": "Claude Code — the agent that writes the code",
+      "codeBody": "This panel configures the project; Claude Code is what actually builds it. It runs in the terminal on your machine, reads your repository, writes and changes files, and can work inside your editor as an extension. Without it you have settings and nobody to act on them.",
+      "codeLimits": "It runs on YOUR machine, not on this server. It works with the copy of the project you pull to your computer, and its usage is billed to your Anthropic account — this panel neither pays for it nor sees it.",
+      "codeInstall": "Open the Claude Code page",
+      "editorTitle": "Visual Studio Code — where you see the project",
+      "editorBody": "A free editor for your machine. It is where you see the project as a whole — every file, every change, the difference before and after — and where Claude Code can live as an extension instead of a separate terminal window. This is the tool you cannot do without: without it the project stays a black box you can only ask about.",
+      "editorLimits": "Any editor you already use will do — the panel does not check which one. The mark below says “I have an editor”, not “I have this exact program”.",
+      "editorInstall": "Open the Visual Studio Code page",
+      "checkLabel": "I have installed this — do not warn me about it",
+      "checkDone": "Marked as installed — the warning is gone",
+      "checkUndone": "Mark removed — the warning is back",
+      "checkFailed": "Could not save the mark"
     }
   },
   "ru": {
@@ -2590,7 +2607,9 @@
         "openai": "Нет ключа OpenAI — граф знаний и векторы останутся выключенными",
         "domain": "Нет своего домена — возможности, требующие HTTPS, недоступны",
         "context-state": "Записана незавершённая сессия — прочитайте её перед работой или очистите",
-        "dev-browser": "Агент не видит результат своей работы: ошибки в консоли, поведение без JS и сервис-воркер в исходниках не видны."
+        "dev-browser": "Агент не видит результат своей работы: ошибки в консоли, поведение без JS и сервис-воркер в исходниках не видны.",
+        "dev-claude-code": "Claude Code не отмечен как установленный — писать код, который настраивает эта панель, некому.",
+        "dev-editor": "Редактор не отмечен как установленный — вам негде увидеть проект целиком."
       }
     },
     "contextState": {
@@ -2974,7 +2993,9 @@
         "openai": "Подключите ключ OpenAI",
         "domain": "Подключите свой домен",
         "context-state": "Прочитайте незавершённую сессию",
-        "dev-browser": "Дайте агенту глаза в браузере"
+        "dev-browser": "Дайте агенту глаза в браузере",
+        "dev-claude-code": "Поставьте Claude Code на свою машину",
+        "dev-editor": "Поставьте Visual Studio Code на свою машину"
       },
       "howToBuild": "Как построить этот проект",
       "stateUnknown": "состояние проекта",
@@ -3614,7 +3635,20 @@
       "browserDoc": "Что даёт и чего не даёт",
       "browserDocTitle": "Браузер у агента: что это даёт и чего не даёт",
       "plannedLabel": "Что рассматривается дальше",
-      "plannedNote": "Кандидаты обсуждаются, но в этот список попадают только после того, как решат настоящую задачу в настоящем проекте. Обещать инструмент, которого здесь ещё нет, значит продавать несуществующее."
+      "plannedNote": "Кандидаты обсуждаются, но в этот список попадают только после того, как решат настоящую задачу в настоящем проекте. Обещать инструмент, которого здесь ещё нет, значит продавать несуществующее.",
+      "orderNote": "Порядок выбран намеренно: сначала то, без чего обойтись можно, последним — то, без чего нельзя. Ставьте в этом порядке и отмечайте каждый, когда сделано.",
+      "codeTitle": "Claude Code — агент, который пишет код",
+      "codeBody": "Эта панель настраивает проект; строит его Claude Code. Он работает в терминале на вашей машине, читает ваш репозиторий, пишет и меняет файлы и умеет жить внутри редактора расширением. Без него у вас есть настройки и некому по ним действовать.",
+      "codeLimits": "Он работает на ВАШЕЙ машине, а не на этом сервере. Он имеет дело с копией проекта, которую вы забрали к себе на компьютер, а его расход оплачивается вашим счётом Anthropic — эта панель за него не платит и его не видит.",
+      "codeInstall": "Открыть страницу Claude Code",
+      "editorTitle": "Visual Studio Code — где вы видите проект",
+      "editorBody": "Бесплатный редактор для вашей машины. Это место, где проект виден целиком — все файлы, все изменения, разница до и после, — и где Claude Code может жить расширением вместо отдельного окна терминала. Это тот инструмент, без которого нельзя: без него проект остаётся чёрным ящиком, о котором можно только спрашивать.",
+      "editorLimits": "Подойдёт любой редактор, которым вы уже пользуетесь, — панель не проверяет, какой именно. Отметка ниже означает «редактор у меня есть», а не «у меня именно эта программа».",
+      "editorInstall": "Открыть страницу Visual Studio Code",
+      "checkLabel": "Я это установил — больше не предупреждать",
+      "checkDone": "Отмечено как установленное — предупреждение снято",
+      "checkUndone": "Отметка снята — предупреждение вернулось",
+      "checkFailed": "Сохранить отметку не удалось"
     }
   }
 }
