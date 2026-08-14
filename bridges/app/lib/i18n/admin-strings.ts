@@ -415,6 +415,13 @@ export type AdminStrings = {
     flowAfterTitle: string; flowAfter: string;
     flowWhereTitle: string; flowWhere: string;
     flowOutLabel: string;
+    // 🔒 ОКНО ПОКАЗЫВАЕТ, ГДЕ ЧЕЛОВЕК СЕЙЧАС (владелец 2026-08-14).
+    //
+    // Инструкция, одинаковая для всех, читается один раз и забывается. Та же
+    // инструкция с отметкой «вы здесь» работает каждый раз: она отвечает не на
+    // вопрос «как всё устроено», а на вопрос «что делать мне прямо сейчас», —
+    // а именно его и задают, открывая справку посреди работы.
+    flowYouAreHere: string; flowAllDone: string;
     // «Начать сначала»: без этого выхода проскочивший опрос наспех оставался в
     // своём мусоре навсегда — затравка писалась один раз и не удалялась ничем.
     resetAction: string; resetTitle: string; resetBody: string; resetCounts: string;

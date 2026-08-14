@@ -67,6 +67,16 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
   const counts = resetPreview();
   const somethingToReset = Boolean(questions) || counts.seedAnswers > 0 || counts.turns > 0 || counts.cases > 0;
 
+  // На каком этапе человек СЕЙЧАС — окно «как рождаются кейсы» подсвечивает его.
+  // Считается по состоянию файлов проекта, а не по виду страницы: второй
+  // источник истины о том же разошёлся бы с первым в первый же необычный случай.
+  // Ноль означает «все четыре пройдены».
+  const stage = !questions && !seed ? 1
+    : !seed ? 2
+    : cases.length === 0 ? 3
+    : gate.kind !== "ready" ? 4
+    : 0;
+
   const resetLabels = {
     action: u.resetAction, title: u.resetTitle, body: u.resetBody, counts: u.resetCounts,
     safeDev: u.resetSafeDev, archive: u.resetArchive, cancel: u.resetCancel,
@@ -226,18 +236,47 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
                 { t: u.flowStep2Title, b: u.flowStep2, o: u.flowStep2Out },
                 { t: u.flowStep3Title, b: u.flowStep3, o: u.flowStep3Out },
                 { t: u.flowStep4Title, b: u.flowStep4, o: u.flowStep4Out },
-              ].map((x) => (
-                <li key={x.t} className="rounded-md border border-border p-2.5">
-                  <p className="font-semibold">{x.t}</p>
-                  <p className="mt-1 text-muted-foreground">{x.b}</p>
-                  {/* «На выходе» отделено намеренно: этап без названного плода
-                      читается как обязанность, а не как шаг к чему-то. */}
-                  <p className="mt-1.5 text-[10px] text-emerald-700 dark:text-emerald-300">
-                    <span className="uppercase tracking-wide">{u.flowOutLabel}:</span> {x.o}
-                  </p>
-                </li>
-              ))}
+              ].map((x, i) => {
+                // 🔒 «ВЫ ЗДЕСЬ» — вот что превращает инструкцию в карту. Общий
+                // текст читают один раз; текст с отметкой текущего этапа отвечает
+                // на вопрос, который и заставил открыть окно: что делать мне
+                // сейчас. Этап считает СЕРВЕР по состоянию файлов проекта —
+                // гадать по виду страницы значило бы завести второй источник
+                // истины о том же.
+                const here = stage === i + 1;
+                return (
+                  <li
+                    key={x.t}
+                    className={`rounded-md border p-2.5 ${
+                      here ? "border-primary bg-primary/5" : "border-border"
+                    }`}
+                  >
+                    <p className="flex flex-wrap items-center gap-2 font-semibold">
+                      {x.t}
+                      {here && (
+                        <span className="rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-primary-foreground">
+                          {u.flowYouAreHere}
+                        </span>
+                      )}
+                    </p>
+                    <p className="mt-1 text-muted-foreground">{x.b}</p>
+                    {/* «На выходе» отделено намеренно: этап без названного плода
+                        читается как обязанность, а не как шаг к чему-то. */}
+                    <p className="mt-1.5 text-[10px] text-emerald-700 dark:text-emerald-300">
+                      <span className="uppercase tracking-wide">{u.flowOutLabel}:</span> {x.o}
+                    </p>
+                  </li>
+                );
+              })}
             </ol>
+
+            {/* Пройдены все четыре — окно говорит об этом вместо того, чтобы
+                молча не подсветить ничего: пустая карта читается как ошибка. */}
+            {stage === 0 && (
+              <p className="rounded-md border border-emerald-500/40 bg-emerald-500/5 p-2.5 text-emerald-700 dark:text-emerald-300">
+                {u.flowAllDone}
+              </p>
+            )}
 
             <p className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2.5 text-amber-800 dark:text-amber-200">
               <strong>{u.flowQualityTitle}</strong> {u.flowQuality}
