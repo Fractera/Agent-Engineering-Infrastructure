@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/require-auth";
 import {
   listCases, useCasesGate, appendCases, writeCase, setStatus, confirmAll, deleteCase,
   migrateLegacy, appendRaw, writeSeed, readSeed, appendTurns, readTurns,
+  readQuestions, writeQuestions, resetUseCases, resetPreview,
 } from "@/lib/use-cases-store";
 
 // Кейсы: чтение папки и действия над ней.
@@ -18,7 +19,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const state = listCases();
-  return NextResponse.json({ ...state, gate: useCasesGate(), seed: readSeed(), turns: readTurns() });
+  return NextResponse.json({
+    ...state, gate: useCasesGate(), seed: readSeed(), turns: readTurns(),
+    questions: readQuestions(),
+    // Что исчезнет при «начать сначала» — окно подтверждения обязано называть
+    // числа, а не «всё»: «удалить всё» без счёта либо не нажимают, либо
+    // нажимают вслепую.
+    resetPreview: resetPreview(),
+  });
 }
 
 export async function POST(req: NextRequest) {
@@ -31,6 +39,7 @@ export async function POST(req: NextRequest) {
     title?: string;
     summary?: string;
     seed?: string;
+    questions?: string[];
     cases?: { title: string; summary: string }[];
     turns?: { role: "user" | "assistant"; content: string }[];
     note?: string;
@@ -48,6 +57,20 @@ export async function POST(req: NextRequest) {
         appendTurns(body.turns);
       }
       return NextResponse.json({ ok: true });
+    }
+    // Вводные вопросы, утверждённые владельцем. Ложатся файлом в папку проекта:
+    // вопрос — половина ответа, и агент должен видеть, о чём спрашивали.
+    case "questions": {
+      const list = (body.questions ?? []).map((q) => String(q).trim()).filter(Boolean);
+      if (!list.length) return NextResponse.json({ error: "questions_required" }, { status: 400 });
+      writeQuestions(list);
+      return NextResponse.json({ ok: true, questions: list });
+    }
+    // Начать сначала: вопросы, затравка, лента, стенограмма и кейсы уезжают в
+    // архив папки проекта. Кода приложения это не касается вообще.
+    case "reset": {
+      const stat = resetUseCases();
+      return NextResponse.json({ ok: true, ...stat, gate: useCasesGate() });
     }
     case "append": {
       if (!body.cases?.length) return NextResponse.json({ error: "cases_required" }, { status: 400 });

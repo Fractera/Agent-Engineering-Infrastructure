@@ -392,6 +392,34 @@ export type AdminStrings = {
   // Пользовательские кейсы: гейт, вводные вопросы и Quiz.
   useCases: {
     gateMissing: string; gateUnconfirmed: string; gateReady: string;
+    // Экран 0 — правка САМИХ вопросов до опроса (владелец 2026-08-14). Вопрос
+    // это половина ответа: зашитый вопрос уводит человека описывать не тот
+    // продукт, который у него в голове, и выясняется это уже на кейсах.
+    setupLead: string; setupHint: string; setupAdd: string; setupRemove: string;
+    setupRestore: string; setupRestored: string; setupStart: string; setupAtLeastOne: string;
+    setupPlaceholder: string; setupVoice: string; setupVoiceClose: string; setupCount: string;
+    // Окно «как это устроено» — четыре этапа целиком (владелец 2026-08-14).
+    //
+    // ЗАЧЕМ ОКНО, А НЕ ТЕКСТ НА СТРАНИЦЕ. Человек попадает сюда, чтобы отвечать
+    // на вопросы, а не читать про устройство. Но не понимая, ЗАЧЕМ отвечать, он
+    // отвечает наспех — и получает кейсы, из которых нечего строить. Окно решает
+    // обе задачи: страница остаётся короткой, а объяснение доступно в одно
+    // нажатие и целиком.
+    flowDocLabel: string; flowDocTitle: string; flowLead: string;
+    flowStep1Title: string; flowStep1: string; flowStep1Out: string;
+    flowStep2Title: string; flowStep2: string; flowStep2Out: string;
+    flowStep3Title: string; flowStep3: string; flowStep3Out: string;
+    flowStep4Title: string; flowStep4: string; flowStep4Out: string;
+    flowQualityTitle: string; flowQuality: string;
+    flowBoundaryTitle: string; flowBoundary: string;
+    flowAfterTitle: string; flowAfter: string;
+    flowWhereTitle: string; flowWhere: string;
+    flowOutLabel: string;
+    // «Начать сначала»: без этого выхода проскочивший опрос наспех оставался в
+    // своём мусоре навсегда — затравка писалась один раз и не удалялась ничем.
+    resetAction: string; resetTitle: string; resetBody: string; resetCounts: string;
+    resetSafeDev: string; resetArchive: string; resetCancel: string; resetConfirm: string;
+    resetWorking: string; resetDone: string;
     introLead: string; introQuestions: string[]; introProgress: string; introPlaceholder: string;
     introFinish: string; introSaved: string; introTooShort: string;
     next: string; back: string; saving: string; voiceHint: string;

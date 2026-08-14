@@ -250,6 +250,122 @@ export function readTurns(): RawTurn[] {
   }
 }
 
+// ── Вводные вопросы проекта ──────────────────────────────────────────────────
+//
+// 🔒 ВОПРОСЫ ПРИНАДЛЕЖАТ ПРОЕКТУ, А НЕ ПАНЕЛИ (владелец 2026-08-14).
+//
+// Семь вопросов были зашиты в словарь панели и задавались одинаково интернет-
+// магазину и клинике. Но вопрос — это половина ответа: неверный заставляет
+// человека описывать не тот продукт, который у него в голове, и весь Quiz потом
+// идёт по чужой колее.
+//
+// Поэтому владелец правит их ДО опроса, а правленый список ложится файлом в
+// папку проекта: он едет в репозиторий вместе с кейсами, и агент видит, о чём
+// спрашивали. Файла нет — значит владелец ещё не смотрел вопросы, и панель
+// показывает ему предложенные.
+const QUESTIONS_FILE = "questions.json";
+
+export function readQuestions(): string[] | null {
+  try {
+    const raw = JSON.parse(fs.readFileSync(path.join(rawDir(), QUESTIONS_FILE), "utf-8")) as unknown;
+    if (!Array.isArray(raw)) return null;
+    const list = raw.filter((q): q is string => typeof q === "string" && q.trim().length > 0);
+    return list.length ? list : null;
+  } catch {
+    return null;
+  }
+}
+
+export function writeQuestions(list: string[]): void {
+  ensureDirs();
+  const clean = list.map((q) => q.trim()).filter(Boolean);
+  fs.writeFileSync(path.join(rawDir(), QUESTIONS_FILE), JSON.stringify(clean, null, 1), "utf-8");
+}
+
+// ── Начать сначала ───────────────────────────────────────────────────────────
+//
+// 🔒 БЕЗ ЭТОГО КАЧЕСТВЕННЫЙ ОПРОС БЫЛ НЕДОСТИЖИМ (владелец 2026-08-14).
+//
+// Затравка писалась один раз и не удалялась ничем: человек, проскочивший первый
+// опрос наспех, оставался в нём навсегда. Хуже — лента разговора копится и
+// уходит в модель на КАЖДЫЙ вызов, поэтому даже отличные новые ответы тонули в
+// старом мусоре. Кнопка «начать сначала» — не удобство, а единственный способ
+// получить чистый опрос.
+//
+// 🔒 УДАЛЯЕМ ПЕРЕЕЗДОМ, А НЕ СТИРАНИЕМ. Экраны становятся чистыми, но файлы
+// уезжают в `RAW/ARCHIVE/<дата>/`. Стереть описание продукта одним нажатием —
+// слишком дорогая ошибка, чтобы полагаться на твёрдость руки; а лежащая в папке
+// проекта копия ничего не стоит и никому не мешает.
+
+export const ARCHIVE_SUBDIR = "ARCHIVE";
+
+export type ResetStat = {
+  /** Сколько ответов было в затравке (по числу непустых абзацев). */
+  seedAnswers: number;
+  turns: number;
+  cases: number;
+  confirmed: number;
+  /** Куда всё уехало — путь показывается владельцу, чтобы он мог туда сходить. */
+  archive: string | null;
+};
+
+/** Что именно исчезнет — считается ДО удаления, чтобы окно подтверждения называло числа. */
+export function resetPreview(): Omit<ResetStat, "archive"> {
+  const { cases } = listCases();
+  const seed = readSeed();
+  return {
+    seedAnswers: seed ? seed.split(/\n\s*\n/).filter((p) => p.trim()).length : 0,
+    turns: readTurns().length,
+    cases: cases.length,
+    confirmed: cases.filter((c) => c.status === "confirmed").length,
+  };
+}
+
+/**
+ * Убрать всё, что относится к опросу и его плодам: вопросы, затравку, ленту,
+ * стенограмму и кейсы. Разработка приложения этим не задевается — кейсы это
+ * описание замысла, а не код.
+ */
+export function resetUseCases(): ResetStat {
+  const before = resetPreview();
+  ensureDirs();
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const dest = path.join(rawDir(), ARCHIVE_SUBDIR, stamp);
+  let archive: string | null = null;
+
+  try {
+    fs.mkdirSync(dest, { recursive: true });
+    archive = `${USE_CASES_DIR}/${RAW_SUBDIR}/${ARCHIVE_SUBDIR}/${stamp}/`;
+
+    for (const name of ["seed.md", "turns.json", RAW_LOG, QUESTIONS_FILE]) {
+      const from = path.join(rawDir(), name);
+      if (fs.existsSync(from)) fs.renameSync(from, path.join(dest, name));
+    }
+
+    const casesTo = path.join(dest, CASES_SUBDIR);
+    const files = fs.existsSync(casesDir()) ? fs.readdirSync(casesDir()).filter((f) => f.endsWith(".md")) : [];
+    if (files.length) {
+      fs.mkdirSync(casesTo, { recursive: true });
+      for (const f of files) fs.renameSync(path.join(casesDir(), f), path.join(casesTo, f));
+    }
+  } catch {
+    // Переезд не удался — не оставляем человека в грязном состоянии: убираем то,
+    // что мешает начать заново. Молча вернуть «готово», не убрав ничего, хуже:
+    // он нажмёт ещё раз и увидит тот же мусор.
+    archive = null;
+    for (const name of ["seed.md", "turns.json", RAW_LOG, QUESTIONS_FILE]) {
+      try { fs.unlinkSync(path.join(rawDir(), name)); } catch { /* нечего убирать */ }
+    }
+    try {
+      for (const f of fs.readdirSync(casesDir())) {
+        if (f.endsWith(".md")) fs.unlinkSync(path.join(casesDir(), f));
+      }
+    } catch { /* папки нет — и хорошо */ }
+  }
+
+  return { ...before, archive };
+}
+
 export function readRaw(): string {
   try {
     return fs.readFileSync(path.join(rawDir(), RAW_LOG), "utf-8");

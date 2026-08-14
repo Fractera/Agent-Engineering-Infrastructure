@@ -5,10 +5,21 @@
 // первый экран из возможных: он требует работы до того, как дал ценность. Поэтому
 // вместо пустого поля стоит разговор: семь вводных вопросов, затем Quiz.
 //
-// ТРИ СОСТОЯНИЯ, и страница показывает ровно одно:
-//   1. затравки нет  → вводные вопросы, дальше пройти нельзя;
+// ЧЕТЫРЕ СОСТОЯНИЯ, и страница показывает ровно одно:
+//   0. вопросы не утверждены → экран правки САМИХ вопросов (владелец 2026-08-14);
+//   1. вопросы есть, затравки нет → вводный опрос по ним, дальше пройти нельзя;
 //   2. затравка есть, кейсов нет → приглашение в Quiz;
 //   3. кейсы есть → доска: оранжевые ждут подтверждения, зелёные подтверждены.
+//
+// 🔒 ЭКРАН 0 ПОЯВИЛСЯ ПОТОМУ, ЧТО ВОПРОС — ПОЛОВИНА ОТВЕТА. Семь вводных вопросов
+// были зашиты в словарь и задавались одинаково интернет-магазину и клинике;
+// неверный вопрос уводит человека описывать не тот продукт, который у него в
+// голове, и это выясняется только на кейсах, когда переписывать надо всё.
+//
+// 🔒 «НАЧАТЬ СНАЧАЛА» ВИДНА НА ВСЕХ ЭКРАНАХ, где уже есть что сбрасывать. Без неё
+// проскочивший опрос наспех оставался в своём мусоре навсегда: затравка писалась
+// один раз и не удалялась ничем, а лента разговора уходит в модель на каждый
+// вызов — новые хорошие ответы тонули в старых плохих.
 //
 // Динамическая: и кейсы, и состояние гейта — живые.
 
@@ -18,9 +29,15 @@ import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { adminHref } from "@/lib/admin-nav";
 import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
-import { listCases, useCasesGate, readSeed, USE_CASES_DIR, CASES_SUBDIR, RAW_SUBDIR } from "@/lib/use-cases-store";
+import {
+  listCases, useCasesGate, readSeed, readQuestions, resetPreview,
+  USE_CASES_DIR, CASES_SUBDIR, RAW_SUBDIR,
+} from "@/lib/use-cases-store";
 import { readInstructionSet } from "@/lib/instruction-set";
 import { DocCommands } from "../_components/doc-commands";
+import { DocPopup } from "../_components/doc-popup.client";
+import { IntroSetup } from "./_components/intro-setup.client";
+import { ResetQuiz } from "./_components/reset-quiz.client";
 import { IntroQuestions } from "./_components/intro-questions.client";
 import { QuizLauncher } from "./_components/quiz-launcher.client";
 import { CasesBoard } from "./_components/cases-board.client";
@@ -39,8 +56,22 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
   const { cases, legacy } = listCases();
   const gate = useCasesGate();
   const seed = readSeed();
+  // Утверждённые вопросы проекта. Их нет — владелец ещё не смотрел список, и
+  // первым экраном идёт правка вопросов, а не ответы на чужие.
+  const questions = readQuestions();
   const set = readInstructionSet();
   const o = s.docsOverview;
+
+  // Есть ли вообще что сбрасывать. Кнопка «начать сначала» без единого ответа —
+  // это предложение отменить то, чего нет.
+  const counts = resetPreview();
+  const somethingToReset = Boolean(questions) || counts.seedAnswers > 0 || counts.turns > 0 || counts.cases > 0;
+
+  const resetLabels = {
+    action: u.resetAction, title: u.resetTitle, body: u.resetBody, counts: u.resetCounts,
+    safeDev: u.resetSafeDev, archive: u.resetArchive, cancel: u.resetCancel,
+    confirm: u.resetConfirm, working: u.resetWorking, done: u.resetDone, failed: u.failed,
+  };
 
   const quizLabels = {
     title: u.quizTitle, close: u.close, modelBanner: u.modelBanner,
@@ -85,11 +116,35 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
         </div>
       )}
 
-      {!seed ? (
+      {/* «Начать сначала» стоит НАД экраном, а не под ним: человек, попавший в
+          плохой опрос, ищет выход сразу, а не после того, как пролистает всё, что
+          его не устраивает. Показывается на любом экране, где есть что убирать. */}
+      {somethingToReset && (
+        <div className="mt-3 flex justify-end">
+          <ResetQuiz labels={resetLabels} counts={counts} />
+        </div>
+      )}
+
+      {!questions ? (
+        // Экран 0 — правка самих вопросов, до единого ответа.
+        <div className="mt-2">
+          <IntroSetup
+            suggested={u.introQuestions}
+            lang={lang}
+            labels={{
+              lead: u.setupLead, hint: u.setupHint, add: u.setupAdd, removeOne: u.setupRemove,
+              restore: u.setupRestore, restored: u.setupRestored, start: u.setupStart,
+              saving: u.saving, failed: u.failed, atLeastOne: u.setupAtLeastOne,
+              placeholder: u.setupPlaceholder, voiceFor: u.setupVoice, voiceClose: u.setupVoiceClose,
+              count: u.setupCount,
+            }}
+          />
+        </div>
+      ) : !seed ? (
         <div className="mt-3">
           <p className="mb-2 text-[11px] leading-relaxed text-muted-foreground">{u.introLead}</p>
           <IntroQuestions
-            questions={u.introQuestions}
+            questions={questions}
             lang={lang}
             labels={{
               progress: u.introProgress, placeholder: u.introPlaceholder,
@@ -148,10 +203,51 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
         />
       </div>
 
-      <p className="mt-3 flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground">
-        <FolderOpen size={11} />
-        {USE_CASES_DIR}/{CASES_SUBDIR}/ · {USE_CASES_DIR}/{RAW_SUBDIR}/
-      </p>
+      {/* 🔒 УСТРОЙСТВО — В ОКНЕ, А НЕ НА СТРАНИЦЕ (владелец 2026-08-14).
+          Человек приходит сюда отвечать на вопросы, а не читать про этапы. Но,
+          не понимая ЗАЧЕМ отвечать, он отвечает наспех — и получает кейсы, из
+          которых нечего строить. Окно держит страницу короткой, а объяснение
+          даёт целиком и в одно нажатие. Разметку строит СЕРВЕР и передаёт
+          готовым деревом: словарь в браузер не уезжает. */}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <DocPopup label={u.flowDocLabel} title={u.flowDocTitle}>
+          <div className="space-y-3 text-[11px] leading-relaxed text-foreground">
+            <p className="text-muted-foreground">{u.flowLead}</p>
+
+            <ol className="space-y-2.5">
+              {[
+                { t: u.flowStep1Title, b: u.flowStep1, o: u.flowStep1Out },
+                { t: u.flowStep2Title, b: u.flowStep2, o: u.flowStep2Out },
+                { t: u.flowStep3Title, b: u.flowStep3, o: u.flowStep3Out },
+                { t: u.flowStep4Title, b: u.flowStep4, o: u.flowStep4Out },
+              ].map((x) => (
+                <li key={x.t} className="rounded-md border border-border p-2.5">
+                  <p className="font-semibold">{x.t}</p>
+                  <p className="mt-1 text-muted-foreground">{x.b}</p>
+                  {/* «На выходе» отделено намеренно: этап без названного плода
+                      читается как обязанность, а не как шаг к чему-то. */}
+                  <p className="mt-1.5 text-[10px] text-emerald-700 dark:text-emerald-300">
+                    <span className="uppercase tracking-wide">{u.flowOutLabel}:</span> {x.o}
+                  </p>
+                </li>
+              ))}
+            </ol>
+
+            <p className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2.5 text-amber-800 dark:text-amber-200">
+              <strong>{u.flowQualityTitle}</strong> {u.flowQuality}
+            </p>
+
+            <p><strong>{u.flowBoundaryTitle}</strong> {u.flowBoundary}</p>
+            <p><strong>{u.flowAfterTitle}</strong> {u.flowAfter}</p>
+            <p className="text-muted-foreground"><strong className="text-foreground">{u.flowWhereTitle}</strong> {u.flowWhere}</p>
+          </div>
+        </DocPopup>
+
+        <p className="flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground">
+          <FolderOpen size={11} />
+          {USE_CASES_DIR}/{CASES_SUBDIR}/ · {USE_CASES_DIR}/{RAW_SUBDIR}/
+        </p>
+      </div>
 
       <HelpDetails label={u.helpLabel}>
         <p><strong>{u.helpWhyTitle}</strong> {u.helpWhy}</p>
