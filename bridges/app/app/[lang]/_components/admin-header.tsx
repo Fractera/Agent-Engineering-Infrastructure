@@ -233,18 +233,36 @@ export function AdminHeader(
                 {NAV_BY_GROUP[group].filter((slug) => !hidden.has(slug)).map((slug) => {
                   const Icon = ICONS[slug];
                   const alarm = slug === "doc-use-cases" && needsUseCases;
+                  // 🔒 «СДЕЛАНО ЗА ВАС» ВЫДЕЛЕНА СРЕДИ СТРАНИЦ (владелец 2026-08-14).
+                  //
+                  // Метка стоит у САМОЙ СТРАНИЦЫ, а не у категории: категория —
+                  // это ящик, и зелёная точка на нём говорила бы «здесь что-то
+                  // есть», не говоря что. У страницы она означает «загляни
+                  // сюда», и это единственное место в меню, которое зовёт к
+                  // готовому, а не к недоделанному.
+                  //
+                  // Зелёный, а не красный: тревога в этой панели уже занята —
+                  // красным помечено то, что МЕШАЕТ начать (пользовательские
+                  // кейсы). Второй цвет тревоги обесценил бы первый.
+                  const highlight = slug === "visibility";
                   return (
                     <Link
                       key={slug}
                       href={adminHref(lang, slug)}
                       title={alarm ? s.docs.useCasesRequired : undefined}
-                      className={`flex items-center gap-2 rounded px-2 py-1.5 pl-6 text-[12px] hover:bg-muted ${
-                        alarm ? "font-medium text-red-600 dark:text-red-400" : "text-foreground"
-                      }`}
+                      className={`flex items-center gap-2 rounded px-2 py-1.5 pl-6 hover:bg-muted ${
+                        highlight ? "text-[13px] font-semibold" : "text-[12px]"
+                      } ${alarm ? "font-medium text-red-600 dark:text-red-400" : "text-foreground"}`}
                     >
                       <Icon size={11} className={`shrink-0 ${alarm ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`} />
                       {s.pages[slug].title}
                       {alarm && <span className="ml-auto size-1.5 rounded-full bg-red-600 dark:bg-red-400" />}
+                      {/* Восемь пикселей — размер владельца. `size-2` в этой
+                          системе как раз 8px, поэтому число не зашито стилем
+                          вручную и переживёт смену шкалы. */}
+                      {highlight && !alarm && (
+                        <span className="ml-auto size-2 shrink-0 rounded-full bg-emerald-500" aria-hidden />
+                      )}
                     </Link>
                   );
                 })}
