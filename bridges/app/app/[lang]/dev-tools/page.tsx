@@ -168,7 +168,9 @@ export default async function DevToolsPage({ params }: { params: Promise<{ lang:
           labels={{
             action: t.helpAction, title: t.helpTitle, body: t.helpBody, free: t.helpFree,
             whatWeSend: t.helpWhatWeSend, cancel: t.helpCancel, send: t.helpSend,
-            sending: t.helpSending, sent: t.helpSent, copy: t.helpCopy, copied: t.helpCopied,
+            sending: t.helpSending, sent: t.helpSent, sentTo: t.helpSentTo,
+            notSent: t.helpNotSent, emailAsk: t.helpEmailAsk, emailPlaceholder: t.helpEmailPlaceholder,
+            close: t.helpClose, copy: t.helpCopy, copied: t.helpCopied,
             mailSubject: t.helpMailSubject, mailBody: t.helpMailBody,
           }}
         />

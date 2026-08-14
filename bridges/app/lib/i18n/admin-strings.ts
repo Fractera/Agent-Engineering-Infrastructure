@@ -732,6 +732,11 @@ export type AdminStrings = {
     helpWhatWeSend: string; helpCancel: string; helpSend: string; helpSending: string;
     helpSent: string; helpCopy: string; helpCopied: string;
     helpMailSubject: string; helpMailBody: string;
+    // Итог отправки. «Отправлено» без адреса, на который придёт ответ, —
+    // непроверяемое обещание; «не ушло» обязано называться своим именем, иначе
+    // человек ждёт ответа, которого никто не получал.
+    helpSentTo: string; helpNotSent: string; helpEmailAsk: string;
+    helpEmailPlaceholder: string; helpClose: string;
   };
   languages: {
     intro: string; unavailable: string;
