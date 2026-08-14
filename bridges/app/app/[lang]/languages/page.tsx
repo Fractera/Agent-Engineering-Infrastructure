@@ -17,7 +17,7 @@ import { HelpDetails } from "../_components/help-details";
 import { readLanguages } from "./_lib/langs";
 import { LangPicker } from "./_components/lang-picker.client";
 import Link from "next/link";
-import { BadgeCheck } from "lucide-react";
+import { BadgeCheck, AlertTriangle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +41,22 @@ export default async function LanguagesPage({ params }: { params: Promise<{ lang
 
   return (
     <PageShell lang={lang} slug="languages" s={s} title={page.title} hint={page.hint}>
-      <p className="rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
+      {/* 🔒 ОРАНЖЕВАЯ ВРЕЗКА СТОИТ ПЕРВОЙ (владелец 2026-08-14).
+          Свежий сервер приходит с готовым набором языков, и страницу проскакивают
+          с мыслью «потом разберусь» — набор выглядит как отметки, а стоит как
+          переводы всех страниц навсегда и умноженное время каждой сборки. Поэтому
+          предупреждение попадается ДО списка из 84 отметок: увидевший список
+          выбирает языки, а не решает, сколько их ему нужно. */}
+      <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-2.5">
+        <AlertTriangle size={14} className="mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
+        <div className="space-y-1 text-[10px] leading-relaxed text-amber-800 dark:text-amber-200">
+          <p className="text-[11px] font-semibold">{t.fewerTitle}</p>
+          <p>{t.fewerBody}</p>
+          <p>{t.fewerBuild}</p>
+        </div>
+      </div>
+
+      <p className="mt-3 rounded-md border border-blue-500/30 bg-blue-500/5 p-2.5 text-[10px] leading-relaxed text-blue-700 dark:text-blue-300">
         {t.intro}
       </p>
 

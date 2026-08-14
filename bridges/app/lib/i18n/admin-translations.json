@@ -1075,6 +1075,9 @@
       "helpCostTitle": "What each language costs.",
       "helpCost": "Build time and disk, not money: every language multiplies the number of generated pages. Ten languages are ten copies of your site. Adding a language you do not serve pays that cost for nothing.",
       "readyLink": "The expensive part is already built and tested — see what exactly",
+      "fewerTitle": "Take only as many languages as you really need",
+      "fewerBody": "Every language is a translation of every page — and of every page you add later. The more languages, the more time and money the texts cost you to keep.",
+      "fewerBuild": "Each page is also generated in as many versions as you have languages, so the build time of the project grows with the same multiplier.",
       "keepThese": "Keep these languages"
     },
     "appSettings": {
@@ -2826,6 +2829,9 @@
       "helpCostTitle": "Чем платится каждый язык.",
       "helpCost": "Временем сборки и диском, а не деньгами: каждый язык умножает число создаваемых страниц. Десять языков — десять копий вашего сайта. Язык, на котором вы не обслуживаете, платит эту цену впустую.",
       "readyLink": "Самое дорогое здесь уже построено и проверено — посмотреть, что именно",
+      "fewerTitle": "Берите столько языков, сколько действительно нужно",
+      "fewerBody": "Каждый язык — это перевод всех страниц и всех страниц, которые вы добавите позже. Чем больше языков, тем больше времени и денег уходит на содержание текстов.",
+      "fewerBuild": "Каждая страница вдобавок создаётся в стольких версиях, сколько у вас языков, — время сборки проекта растёт с тем же множителем.",
       "keepThese": "Оставить эти языки"
     },
     "appSettings": {
