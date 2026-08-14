@@ -125,7 +125,11 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
         </div>
       )}
 
-      {!questions ? (
+      {/* 🔒 ЭКРАН 0 ТОЛЬКО ДО ПЕРВОГО ОТВЕТА. Проект, где затравка уже написана,
+          на правку вопросов не откатывается: спрашивать «какие вопросы задать»
+          у того, кто на них ответил, — значит отменять его работу видом экрана.
+          Захочет переспросить заново — для этого есть «Начать сначала». */}
+      {!questions && !seed ? (
         // Экран 0 — правка самих вопросов, до единого ответа.
         <div className="mt-2">
           <IntroSetup
@@ -144,7 +148,9 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
         <div className="mt-3">
           <p className="mb-2 text-[11px] leading-relaxed text-muted-foreground">{u.introLead}</p>
           <IntroQuestions
-            questions={questions}
+            // Список владельца, если он его утвердил; иначе предложенный — так
+            // проект, начатый до появления экрана вопросов, не остаётся без них.
+            questions={questions ?? u.introQuestions}
             lang={lang}
             labels={{
               progress: u.introProgress, placeholder: u.introPlaceholder,
