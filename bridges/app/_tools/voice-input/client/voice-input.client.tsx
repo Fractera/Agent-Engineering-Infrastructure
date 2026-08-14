@@ -67,6 +67,7 @@ export default function VoiceInput({
   lang,
   disabled,
   apiUrl,
+  domainHref,
 }: {
   /** Поле, которое принимает речь (его курсор решает КУДА). */
   targetRef: TargetRef;
@@ -86,6 +87,24 @@ export default function VoiceInput({
    * так же.
    */
   apiUrl?: string;
+  /**
+   * 🔒 КУДА ВЕДЁТ ВЫХОД ИЗ ТУПИКА (владелец 2026-08-14).
+   *
+   * Отказ микрофона на незащищённом адресе — единственная причина, у которой
+   * есть ОДНО конкретное лечение: подключить домен. Объяснить причину и не дать
+   * дороги — значит оставить человека там же, где он стоял: он прочитал, что
+   * нужен HTTPS, и не знает, что HTTPS настраивается в этой же панели двумя
+   * экранами правее.
+   *
+   * Ссылка, а не совет словами: путь в один клик из того самого места, где
+   * человек упёрся. Цепочка тут длинная и обрывается на каждом шаге —
+   * пользовательские кейсы требуют Quiz, Quiz удобнее голосом, голос требует
+   * HTTPS, HTTPS требует домена; звено без ссылки рвёт всю цепь.
+   *
+   * Пропс, а не зашитый адрес: инструмент обязан оставаться переносимым (закон
+   * 0). Не задан — берётся адрес раздела домена этой панели.
+   */
+  domainHref?: string;
 }) {
   const L = voiceStrings(lang);
   const [recording, setRecording] = useState(false);
@@ -331,10 +350,26 @@ export default function VoiceInput({
           не как ответ на вопрос «почему не работает». Выключает микрофон БРАУЗЕР,
           а не наш код, и человек обязан узнать это, не наводя курсор на кнопку. */}
       {!supported ? (
-        <p className="flex items-start gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs leading-relaxed text-amber-800 dark:text-amber-200">
-          <AlertIcon />
-          <span>{L.tipInsecure}</span>
-        </p>
+        <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs leading-relaxed text-amber-800 dark:text-amber-200">
+          <p className="flex items-start gap-1.5">
+            <AlertIcon />
+            <span>{L.tipInsecure}</span>
+          </p>
+          {/* 🔒 ВЫХОД ИЗ ТУПИКА В ОДИН КЛИК (владелец 2026-08-14).
+              У этого отказа ровно одно лечение — подключить домен, — и оно
+              настраивается в этой же панели. Объяснение без дороги оставляет
+              человека там же, где он стоял. Кнопка своя, без shadcn: папка
+              инструмента обязана работать распакованной где угодно (закон 0). */}
+          <a
+            href={domainHref ?? `/${lang}/domain`}
+            className="mt-2 ml-5 inline-flex items-center gap-1.5 rounded-md border border-amber-600/50 bg-amber-500/20 px-2.5 py-1 text-xs font-medium text-amber-900 transition-colors hover:bg-amber-500/30 dark:text-amber-100"
+          >
+            {L.connectDomain}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-3">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </a>
+        </div>
       ) : null}
       {note ? (
         <p className="flex items-start gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs leading-relaxed text-amber-800 dark:text-amber-200">
