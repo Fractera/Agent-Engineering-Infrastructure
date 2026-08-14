@@ -21,7 +21,6 @@ import fs from "fs";
 import path from "path";
 import { DOC_FILES, STEPS_DIR, type DocKey } from "@/lib/product-docs";
 import { USE_CASES_DIR } from "@/lib/use-cases-store";
-import { SAMPLES_DIR } from "@/lib/code-samples";
 
 const APP_DIR = process.env.APP_DIR ?? "/opt/fractera/app";
 const CONFIG_PATH =
@@ -53,7 +52,6 @@ export const FOLDER_DOCS: Record<string, string> = {
   // в `RAW/` сырьё Quiz, которое агент в обычной работе не читает.
   "doc-use-cases": `${USE_CASES_DIR}/`,
   "doc-steps": `${STEPS_DIR}/`,
-  "doc-code-samples": `${SAMPLES_DIR}/`,
 };
 
 /** Что показывать в списках инструкции: файл или папку. */
@@ -459,8 +457,8 @@ export function renderSection(
     // читается ПО ТРЕБОВАНИЮ, и инструкция рядом это прямо запрещает. Блок
     // отвечает «можно ли пользоваться», стадия 6.0 — «когда».
     `Active does NOT mean "load at session entry". Each document keeps the reading rule this instruction`,
-    `gives it: most are read on entry, \`TROUBLESHOOTING.md\` only on demand, \`CODE-SAMPLES/\` only when the`,
-    `owner names a sample. This block answers "may I use it at all", stage 6.0 answers "when".`,
+    `gives it: most are read on entry, \`development-docs/TROUBLESHOOTING.md\` only on demand. This block`,
+    `answers "may I use it at all", stage 6.0 answers "when".`,
     ``,
     `A switched-off document is a deliberate choice of the owner, usually to keep a small task cheap. It is`,
     `not a missing document: never offer to recreate it and never work around its absence.`,

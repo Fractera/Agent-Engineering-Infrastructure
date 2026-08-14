@@ -153,7 +153,6 @@ export const DOC_KIND: Record<string, "evolving" | "static"> = {
   // каждая закрытая партия дописывает в него то, что теперь построено. Владелец
   // проводит окончательную ревизию, когда слой готов.
   "doc-sections": "evolving",
-  "doc-code-samples": "static",
   "doc-parallel-routing": "static",
 
   "doc-architecture": "evolving",

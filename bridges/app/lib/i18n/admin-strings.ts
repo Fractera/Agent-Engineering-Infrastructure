@@ -578,19 +578,6 @@ export type AdminStrings = {
     helpDepsTitle: string; helpDeps: string;
     helpUpdateTitle: string; helpUpdate: string;
   };
-  codeSamples: {
-    intro: string; askExplicitly: string; empty: string; pickSample: string; backToList: string;
-    newTitle: string; namePlaceholder: string; create: string; creating: string; created: string;
-    badName: string; failed: string;
-    save: string; saving: string; saved: string; nothingToSave: string;
-    remove: string; removeConfirm: string; removed: string;
-    editMode: string; viewMode: string;
-    helpLabel: string;
-    helpWhatTitle: string; helpWhat: string;
-    helpHowTitle: string; helpHow: string;
-    helpSilentTitle: string; helpSilent: string;
-    helpFormatsTitle: string; helpFormats: string;
-  };
   docsOverview: {
     whyTitle: string;
     whyLead: string; whyOneEdit: string; whyWhole: string; whyModels: string; whyExperience: string;

@@ -860,38 +860,6 @@
       "docNo": "no",
       "docReturns": "Returns."
     },
-    "codeSamples": {
-      "intro": "Your own earlier work, kept where the project can reach it. Files live in the project folder:",
-      "askExplicitly": "The agent does not read this on its own. When you want it to build from something here, say so and name the sample — otherwise it would carry a library it may not need through the whole session.",
-      "empty": "No samples yet. Name one on the left and paste the code into it.",
-      "pickSample": "Pick a sample on the left to read or edit it.",
-      "backToList": "All samples",
-      "newTitle": "New sample",
-      "namePlaceholder": "name, e.g. landing-hero",
-      "create": "Create",
-      "creating": "Creating…",
-      "created": "Sample created",
-      "badName": "Letters, digits, dot, dash and underscore only",
-      "failed": "Failed",
-      "save": "Save",
-      "saving": "Saving…",
-      "saved": "Saved",
-      "nothingToSave": "Nothing was changed",
-      "remove": "Delete",
-      "removeConfirm": "Delete this sample?",
-      "removed": "Deleted",
-      "helpLabel": "What this is for and how to use it",
-      "helpWhatTitle": "Work you have already done.",
-      "helpWhat": "You rarely start a project empty-handed: a home page from a previous project, a set of styles, a component you are happy with. Put it here instead of describing it from memory or building it a second time.",
-      "helpHowTitle": "Ask for it by name.",
-      "helpHow": "During development, tell the agent to use the patterns from a named sample. That sentence is the whole mechanism — it turns your accumulated work into the starting point instead of a folder nobody opens.",
-      "helpSilentTitle": "Why the agent stays out of here.",
-      "helpSilent": "A library of past work can be any size, and reading it just in case means paying context for material the current task may not need at all. Silence by default, use on request — that is what keeps it cheap.",
-      "helpFormatsTitle": "What you can put here.",
-      "helpFormats": "The formats a front end actually lives in: html, css, scss, js, jsx, ts, tsx, json, md, txt, svg. Nothing here is executed — these are samples to read and copy from.",
-      "editMode": "Edit",
-      "viewMode": "View"
-    },
     "docsOverview": {
       "whyTitle": "Why a project needs this many documents",
       "whyLead": "At first glance it looks like a lot of reading for a starter, and loading it into a model's context looks like a cost. That impression is worth taking seriously — and it holds in exactly one case.",
@@ -1368,10 +1336,6 @@
       "doc-overview": {
         "title": "Map of the documents",
         "hint": "Why there are this many, how they differ, and which one to open first."
-      },
-      "doc-code-samples": {
-        "title": "Code samples",
-        "hint": "Work you have already done, so it does not have to be built a second time."
       },
       "tools": {
         "title": "Tools",
@@ -2709,38 +2673,6 @@
       "docNo": "нет",
       "docReturns": "Возвращает."
     },
-    "codeSamples": {
-      "intro": "Ваши прежние наработки, сложенные там, где проект до них дотянется. Файлы лежат в папке проекта:",
-      "askExplicitly": "Агент не читает это по своей воле. Когда хотите, чтобы он строил по чему-то отсюда, скажите об этом и назовите образец — иначе он тащил бы через всю сессию библиотеку, которая может не понадобиться.",
-      "empty": "Образцов пока нет. Назовите первый слева и вставьте в него код.",
-      "pickSample": "Выберите образец слева, чтобы прочитать или изменить его.",
-      "backToList": "Все образцы",
-      "newTitle": "Новый образец",
-      "namePlaceholder": "имя, например landing-hero",
-      "create": "Создать",
-      "creating": "Создаю…",
-      "created": "Образец создан",
-      "badName": "Только буквы, цифры, точка, дефис и подчёркивание",
-      "failed": "Не удалось",
-      "save": "Сохранить",
-      "saving": "Сохраняю…",
-      "saved": "Сохранено",
-      "nothingToSave": "Ничего не изменено",
-      "remove": "Удалить",
-      "removeConfirm": "Удалить этот образец?",
-      "removed": "Удалён",
-      "helpLabel": "Зачем это и как этим пользоваться",
-      "helpWhatTitle": "Работа, которую вы уже сделали.",
-      "helpWhat": "В новый проект редко приходят с пустыми руками: главная страница из прошлого проекта, набор стилей, компонент, которым вы довольны. Положите это сюда, вместо того чтобы описывать по памяти или делать второй раз.",
-      "helpHowTitle": "Просите по имени.",
-      "helpHow": "В работе скажите агенту использовать образцы из названного документа. Эта фраза и есть весь механизм — она превращает накопленное вами в отправную точку, а не в папку, которую никто не открывает.",
-      "helpSilentTitle": "Почему агент сюда не заглядывает.",
-      "helpSilent": "Библиотека прежних работ может весить сколько угодно, и читать её на всякий случай значит платить контекстом за материал, который текущей задаче может быть не нужен вовсе. Молчание по умолчанию, использование по просьбе — именно это держит цену низкой.",
-      "helpFormatsTitle": "Что сюда можно класть.",
-      "helpFormats": "Форматы, в которых живёт настоящий фронтенд: html, css, scss, js, jsx, ts, tsx, json, md, txt, svg. Ничего отсюда не исполняется — это образцы, их читают и копируют.",
-      "editMode": "Править",
-      "viewMode": "Смотреть"
-    },
     "docsOverview": {
       "whyTitle": "Зачем проекту столько документов",
       "whyLead": "На первый взгляд это много чтения для стартера, а загрузка всего этого в контекст модели выглядит как расход. Возражение справедливое — и верно оно ровно в одном случае.",
@@ -3217,10 +3149,6 @@
       "doc-overview": {
         "title": "Карта документов",
         "hint": "Зачем документов столько, чем они друг от друга отличаются и что открывать первым."
-      },
-      "doc-code-samples": {
-        "title": "Образцы кода",
-        "hint": "Ваши прежние наработки, чтобы не разрабатывать заново то, что уже сделано."
       },
       "tools": {
         "title": "Инструменты",

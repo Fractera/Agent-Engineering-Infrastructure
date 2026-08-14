@@ -21,7 +21,6 @@ import { readInstructionSet, TOGGLEABLE, ALWAYS_ON, isInDevelopment } from "@/li
 import { DocCommands } from "../_components/doc-commands";
 import { InstructionSwitch } from "../_components/instruction-switch.client";
 import { MasterSwitch } from "../_components/master-switch.client";
-import { listSamples } from "@/lib/code-samples";
 import { listCases, USE_CASES_DIR } from "@/lib/use-cases-store";
 import { NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 
@@ -83,15 +82,6 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
         slug,
         file: `${steps.dir}/`,
         exists: steps.exists && steps.files.length > 0,
-        kind: DOC_KIND[slug] ?? "static",
-      };
-    }
-    if (slug === "doc-code-samples") {
-      const samples = listSamples();
-      return {
-        slug,
-        file: `${samples.dir}/`,
-        exists: samples.files.length > 0,
         kind: DOC_KIND[slug] ?? "static",
       };
     }

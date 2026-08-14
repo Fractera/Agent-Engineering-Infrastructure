@@ -83,7 +83,7 @@ export const TOOLS: Tool[] = [
     dir: "_tools/code-view",
     files: ["client/code-view.client.tsx", "types/code-view.ts"],
     needs: ["browser"],
-    usedBy: ["doc-code-samples", "media"],
+    usedBy: ["media"],
     // ЕДИНСТВЕННЫЙ инструмент, которому нужен пакет: Shiki несёт грамматики
     // языков, и подсветку без них не сделать. В панели он уже стоит; в проекте
     // владельца его придётся поставить, и страница говорит об этом до установки.

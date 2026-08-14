@@ -120,7 +120,6 @@ export const NAV = [
   // Рядом с дизайном намеренно: секции — это то, ЧЕМ дизайн выражается, и
   // читать их порознь бессмысленно.
   { slug: "doc-sections",         group: "documents" },
-  { slug: "doc-code-samples",     group: "documents" },
   { slug: "doc-parallel-routing", group: "documents" },
   { slug: "doc-coding-standards", group: "documents" },
   { slug: "doc-troubleshooting",  group: "documents" },
