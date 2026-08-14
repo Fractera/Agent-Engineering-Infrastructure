@@ -88,6 +88,18 @@ export function LangPicker(
       if (!r.ok || !d.ok) throw new Error(String(d?.error ?? labels.failed));
       toast.success(labels.saved);
 
+      // 🔒 СБОРКУ ЗАПУСКАЕТ СОХРАНЕНИЕ, А НЕ ЭТОТ ОСТРОВОК (владелец 2026-08-14:
+      // «сборка уже идёт — кто что-то собирает?»).
+      //
+      // Здесь стоял второй `POST /api/deploy`. Первый уже ушёл — его делал сам
+      // обработчик сохранения на сервере, — и наш приходил вторым, к занятой
+      // очереди: 409 «сборка уже идёт». Собирала панель, на его же нажатие, и
+      // сказать об этом человеку было нечем.
+      //
+      // Теперь номер сборки приходит в ответе сохранения, и следить остаётся за
+      // ним. Серверный запуск сохранён намеренно: закрытая вкладка не отменяет
+      // пересборку.
+
       // 🔒 НАБОР НЕ МЕНЯЛСЯ — ПЕРЕСОБИРАТЬ НЕЧЕГО (владелец на свежем сервере
       // 2026-08-13).
       //
@@ -107,48 +119,38 @@ export function LangPicker(
         return;
       }
 
-      // Набор действительно изменился: без пересборки запись в окружение не даёт
-      // ничего, потому что языки запекаются на сборке.
-      setPhase("rebuilding");
-      toast.message(labels.rebuildStarted);
-      const dep = await fetch("/api/deploy", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description: `languages: ${languages.join(",")} (default ${base})` }),
-      });
-      // 🔒 ВЫХОД БЕЗ СБРОСА СОСТОЯНИЯ — ВОТ ПОЧЕМУ КРУТИЛКА НЕ ОСТАНАВЛИВАЛАСЬ
-      // (владелец на свежем сервере 2026-08-13: «вращается больше пяти минут»).
-      //
-      // Здесь стояло `return` без `setPhase(null)`. Кнопка оставалась в состоянии
-      // «пересобираю» НАВСЕГДА — до перезагрузки страницы, — хотя на сервере всё
-      // давно закончилось.
-      //
-      // И попадала сюда она закономерно, а не случайно: сохранение запускало ДВЕ
-      // сборки — одну этот островок, вторую сам обработчик сохранения. Первая
-      // занимала очередь, вторая получала 409 «сборка уже идёт», и островок
-      // застревал. Две другие правки убирают само столкновение, но сброс
-      // состояния обязан быть здесь в любом случае: любой ранний выход из
-      // асинхронного действия ОБЯЗАН вернуть кнопку в рабочее состояние, иначе
-      // человек видит вечную работу там, где её нет.
-      if (dep.status === 409) { toast.error(labels.busyBuild); setPhase(null); return; }
-      const depData = await dep.json().catch(() => ({}));
-      if (!dep.ok || !depData.jobId) throw new Error(String(depData?.error ?? labels.rebuildFailed));
+      // Набор действительно изменился — сохранение уже запустило сборку. Если
+      // номера нет, сервер решил, что пересобирать нечего: молча вернуться в
+      // рабочее состояние честнее, чем показывать работу, которой не будет.
+      if (!d.rebuildRequired) { setPhase(null); startTransition(() => router.refresh()); return; }
 
-      // Следим до конца: языки применяются только после успешной сборки.
-      const jobId = depData.jobId as string;
+      setPhase("rebuilding");
+      // Наша правка встала за чужой сборкой — это НЕ отказ: очередь на сервере
+      // заставит текущую сборку повториться на нашем наборе. Говорим об этом и
+      // продолжаем следить, а не бросаем человека.
+      toast.message(d.queued ? labels.busyBuild : labels.rebuildStarted);
+
+      // 🔒 ЛЮБОЙ ВЫХОД ОТСЮДА ОБЯЗАН ВЕРНУТЬ КНОПКУ В РАБОЧЕЕ СОСТОЯНИЕ (владелец
+      // на свежем сервере 2026-08-13: «вращается больше пяти минут»). Раньше одна
+      // из веток уходила `return` без `setPhase(null)`, и кнопка оставалась
+      // «пересобираю» до перезагрузки страницы, хотя на сервере всё давно
+      // закончилось. Правило держится и в новом виде: ниже нет ни одного выхода
+      // без сброса.
+      //
+      // Ждём не «свой» номер, а КОНЕЦ РАБОТЫ: сборка, начавшаяся после нашего
+      // запроса (`wal.jobId >= requestedAt`, обе величины — серверные часы),
+      // содержит наш набор — своя ли это сборка или повтор чужой.
+      const requestedAt = Number(d.requestedAt ?? 0);
       const deadline = Date.now() + 12 * 60_000;
       const tick = async () => {
         if (Date.now() > deadline) { toast.warning(labels.rebuildFailed); setPhase(null); return; }
-        const s = await fetch(`/api/deploy/status?jobId=${encodeURIComponent(jobId)}`, { cache: "no-store" })
+        const s = await fetch("/api/deploy/status", { cache: "no-store" })
           .then((x) => x.json()).catch(() => ({}));
-        if (s.status === "COMPLETED") {
-          toast.success(labels.rebuildDone);
-          setPhase(null);
-          startTransition(() => router.refresh());
-          return;
-        }
-        if (s.status === "FAILED" || s.status === "HEALTH_FAILED") {
-          toast.error(labels.rebuildFailed);
+        const wal = (s?.wal ?? {}) as { status?: string; jobId?: string };
+        const ours = Number(wal.jobId ?? 0) >= requestedAt;
+        if (!s?.running && ours) {
+          if (wal.status === "COMPLETED") toast.success(labels.rebuildDone);
+          else toast.error(labels.rebuildFailed);
           setPhase(null);
           startTransition(() => router.refresh());
           return;

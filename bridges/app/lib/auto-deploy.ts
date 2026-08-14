@@ -13,7 +13,6 @@ import { existsSync } from "fs";
 const execAsync = promisify(exec);
 
 const PROJECT_DIR = "/opt/fractera/app";
-const LOCK_FILE   = "/tmp/fractera-deploy.lock";
 const DATA_URL    = process.env.NEXT_PUBLIC_MEDIA_URL ?? "http://localhost:3300";
 const DATA_SECRET = process.env.DATA_SECRET ?? "";
 const SETTINGS_KEY = "autoDeploy";
@@ -141,7 +140,12 @@ async function tick() {
     return;
   }
 
-  if (existsSync(LOCK_FILE)) {
+  // Занятость спрашивается у той же двери, что и у всех (владелец 2026-08-14):
+  // замок без живого процесса — это не сборка, а след прерванной панели, и
+  // пропускать из-за него ход означало бы не развернуть ничего до конца жизни
+  // сервера.
+  const { buildIsRunning } = await import("@/app/api/deploy/route");
+  if (buildIsRunning().running) {
     await skip("busy", "A build is already running; this turn is skipped.", stamp);
     return;
   }

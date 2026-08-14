@@ -3,6 +3,11 @@ import fs from "fs";
 import path from "path";
 import { requireAuth } from "@/lib/require-auth";
 import { ALL_LANGUAGE_METADATA } from "@/config/translations/language-metadata";
+// Единственная дверь к запуску сборки — та же, что у кнопки развёртывания в
+// подвале и у автоматического наблюдения за репозиторием. Второй реализации у
+// сборки быть не должно: замок, очередь, журнал и откат к рабочей сборке живут
+// в ней одной.
+import { requestBuild } from "@/app/api/deploy/route";
 
 // The catalog of valid language codes. The UI picks from a checklist of these, so
 // a real save is always valid — but we validate server-side too, so a direct API
@@ -80,28 +85,25 @@ function parseList(value: string | null): string[] {
 }
 
 // Languages are BUILD-TIME (NEXT_PUBLIC_SUPPORTED_LANGUAGES feeds generateStaticParams and
-// SINGLE_LANG_MODE), so a change only takes effect after the app is REBUILT. Fire the existing
-// deploy pipeline (POST :3002/api/deploy → `npm run build --prefix app` + `pm2 reload fractera-app`)
-// so adding/removing a language actually applies — otherwise the switcher reflects a stale set, or
-// the build collapses to single-language and the button hides. → step 138.
+// SINGLE_LANG_MODE), so a change only takes effect after the app is REBUILT. Saving therefore runs
+// the ordinary deploy pipeline (`npm run build --prefix app` + `pm2 reload fractera-app`) — otherwise
+// the switcher reflects a stale set, or the build collapses to single-language and the button hides.
+// → step 138.
 //
-// CRITICAL (step 138): the deploy endpoint serialises builds. A change made WHILE a build is in
-// flight must still get built — otherwise the trailing language change is lost and the switcher
-// collapses. A single POST is now enough: the deploy route COALESCES — if a build is running it
-// records this request and reruns for the latest state on finish, so the final env always bakes
-// (no caller retry, no dependence on this process staying alive). Fire-and-forget; never blocks
-// the save (env is already written). → step 138 (deploy/route.ts runBuild + DIRTY_FILE).
-function ensureRebuild(): void {
-  const url = process.env.DEPLOY_TRIGGER_URL ?? "http://127.0.0.1:3002/api/deploy";
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  const secret = process.env.DEPLOY_SECRET;
-  if (secret) headers["x-deploy-secret"] = secret;
-  void fetch(url, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ description: "Language set changed → rebuild" }),
-  }).catch(() => { /* coalescing in the deploy route guarantees the rebuild regardless */ });
-}
+// 🔒 ЗАПУСК ЗДЕСЬ — ЕДИНСТВЕННЫЙ, И ЕГО НОМЕР УЕЗЖАЕТ СТРАНИЦЕ (владелец 2026-08-14).
+//
+// Здесь стоял слепой `fetch` на собственный `/api/deploy` без ожидания ответа, а
+// островок страницы дёргал тот же `/api/deploy` следом. Две сборки на одно
+// нажатие: первая занимала очередь, вторая получала 409 «сборка уже идёт», и
+// владельцу показывали отказ вместо хода работы. Собирала при этом сама панель —
+// на его же нажатие.
+//
+// Теперь дверь одна и вызывается напрямую (`requestBuild`), а её номер
+// возвращается в ответе: страница следит за той самой сборкой, которую вызвало
+// её сохранение. Запуск остаётся СЕРВЕРНЫМ — закрытая вкладка не отменяет
+// пересборку, ради этого он тут и появился. Гарантия шага 138 не тронута:
+// пришедший во время чужой сборки получает `queued`, и `DIRTY_FILE` заставит
+// текущую сборку повториться на последнем состоянии.
 
 export async function GET(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");
@@ -196,10 +198,25 @@ export async function POST(req: NextRequest) {
       /* best-effort mirror; env is the source of truth */
     }
 
-    // Build-time languages → schedule a rebuild that retries past any in-flight build, so the
-    // final set is guaranteed to bake (last write wins). Background; never blocks the save.
-    ensureRebuild();
-    return NextResponse.json({ ok: true, languages, defaultLanguage, rebuildRequired: true, rebuildScheduled: true });
+    // 🔒 ПЕРЕСБОРКА ТОЛЬКО КОГДА НАБОР ДЕЙСТВИТЕЛЬНО ИЗМЕНИЛСЯ (владелец 2026-08-14).
+    //
+    // Языки запекаются в сборку — значит новая сборка нужна ровно тогда, когда в
+    // ней окажется другое. Подтверждение прежнего набора («оставить эти языки»)
+    // меняет только отметку в окружении, которая читается на каждый запрос:
+    // собирать байт в байт то же самое — это несколько минут ожидания за
+    // ничто. Страница это уже знала и не запускала сборку; теперь то же знает и
+    // сервер, поэтому правило держится независимо от того, кто пришёл — браузер,
+    // другая страница или прямой запрос к API.
+    if (!setChanged) {
+      return NextResponse.json({ ok: true, languages, defaultLanguage, rebuildRequired: false });
+    }
+
+    const build = requestBuild(`languages: ${languages.join(",")} (default ${defaultLanguage})`);
+    return NextResponse.json({
+      ok: true, languages, defaultLanguage,
+      rebuildRequired: true, rebuildScheduled: true,
+      jobId: build.jobId, queued: build.queued, requestedAt: build.requestedAt,
+    });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }

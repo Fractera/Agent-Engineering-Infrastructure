@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { spawn } from "child_process";
 import { resolve } from "path";
-import { existsSync, writeFileSync, openSync, readFileSync, unlinkSync } from "fs";
+import { existsSync, writeFileSync, openSync, readFileSync, unlinkSync, statSync } from "fs";
 import { requireAuth } from "@/lib/require-auth";
 
 // bridges/app cwd = /opt/fractera/bridges/app
@@ -15,6 +15,21 @@ const LOCK_FILE = "/tmp/fractera-deploy.lock";
 // (the language change raced an in-flight build, its trigger got 409'd and was dropped). → step 138.
 const DIRTY_FILE = "/tmp/fractera-deploy.dirty";
 const WAL_FILE  = resolve(APP_DIR, "DEPLOY_STATE.json");
+
+// 🔒 КТО ИМЕННО СОБИРАЕТ — ПРОВЕРЯЕМАЯ ВЕЛИЧИНА, А НЕ НАЛИЧИЕ ФАЙЛА (владелец
+// 2026-08-14: «сборка уже идёт — кто что-то собирает?»).
+//
+// Замок — это файл, а снимает его обработчик `exit` дочернего процесса, живущий
+// ВНУТРИ панели. Значит любой конец панели в середине сборки (`pm2 reload
+// fractera-admin` при выкатке шага, падение, перезагрузка сервера) оставляет
+// файл лежать вечно: собирать давно некому, а каждая следующая попытка получает
+// «идёт сборка» и отказ. Отличить это от настоящей сборки по самому файлу
+// невозможно — поэтому рядом кладётся pid того, кто собирает, и живость
+// проверяется у операционной системы.
+const LOCK_PID_FILE = LOCK_FILE + ".pid";
+// Замок без pid остался от прежней версии кода — судим по возрасту. Сборка идёт
+// две-четыре минуты; получас — запас, за которым «идёт» означает «не идёт».
+const STALE_LOCK_MS = 30 * 60_000;
 
 function writeWAL(data: object) {
   try { writeFileSync(WAL_FILE, JSON.stringify(data, null, 2)); } catch {}
@@ -149,6 +164,9 @@ export function runBuild(description: string): string {
     stdio: ["ignore", logFd, logFd],
     env: slotBuildEnv(),
   });
+  // Кто собирает — рядом с замком, чтобы следующий запрос мог это ПРОВЕРИТЬ, а не
+  // поверить файлу (см. `buildIsRunning`).
+  try { writeFileSync(LOCK_PID_FILE, String(proc.pid ?? "")); } catch {}
 
   proc.on("exit", (code) => {
     try {
@@ -214,6 +232,7 @@ export function runBuild(description: string): string {
       }
 
       try { unlinkSync(LOCK_FILE); } catch {}
+      try { unlinkSync(LOCK_PID_FILE); } catch {}
 
       // Coalesced rerun: a request arrived during this build → build the latest state once.
       if (existsSync(DIRTY_FILE)) {
@@ -228,6 +247,56 @@ export function runBuild(description: string): string {
   return jobId;
 }
 
+// Идёт ли сборка ПРЯМО СЕЙЧАС. Отвечает операционная система, а не файл: замок,
+// за которым нет живого процесса, снимается здесь же — иначе один прерванный
+// `pm2 reload` запирает сборку навсегда, и панель до конца жизни сервера
+// отвечает «сборка уже идёт» на пустом месте.
+export function buildIsRunning(): { running: boolean; jobId: string | null } {
+  if (!existsSync(LOCK_FILE)) return { running: false, jobId: null };
+  const jobId = (() => { try { return readFileSync(LOCK_FILE, "utf8").trim(); } catch { return ""; } })();
+
+  let alive = false;
+  try {
+    const pid = Number(readFileSync(LOCK_PID_FILE, "utf8").trim());
+    // `kill(pid, 0)` ничего не убивает — это вопрос «этот процесс существует?».
+    if (Number.isFinite(pid) && pid > 0) { process.kill(pid, 0); alive = true; }
+  } catch {
+    // Нет pid-файла — замок от прежней версии кода: судим по возрасту.
+    try {
+      alive = Date.now() - statSync(LOCK_FILE).mtimeMs < STALE_LOCK_MS;
+    } catch { alive = false; }
+  }
+
+  if (alive) return { running: true, jobId: jobId || null };
+
+  try { unlinkSync(LOCK_FILE); } catch {}
+  try { unlinkSync(LOCK_PID_FILE); } catch {}
+  return { running: false, jobId: null };
+}
+
+// 🔒 ЕДИНСТВЕННАЯ ДВЕРЬ К ЗАПУСКУ СБОРКИ (владелец 2026-08-14).
+//
+// Здесь стояла эта логика внутри `POST`, и попасть к сборке можно было только
+// HTTP-запросом. Из-за этого страница языков имела ДВА пути: обработчик
+// сохранения дёргал `/api/deploy` сам, а островок в браузере — ещё раз. Первый
+// занимал очередь, второму честно отвечали «идёт сборка», и владелец читал это
+// как поломку: собирала панель, у которой он только что нажал «Сохранить».
+//
+// Дверь одна и вызывается напрямую. Кто пришёл вторым, тот не отказ получает, а
+// место в очереди: `DIRTY_FILE` заставит текущую сборку повториться на последнем
+// состоянии — гарантия шага 138 остаётся ровно та же.
+export function requestBuild(description: string): { jobId: string; queued: boolean; requestedAt: number } {
+  const requestedAt = Date.now();
+  const lock = buildIsRunning();
+  if (lock.running) {
+    try { writeFileSync(DIRTY_FILE, description); } catch {}
+    return { jobId: lock.jobId ?? "", queued: true, requestedAt };
+  }
+  // Fresh build start — clear any stale dirty marker; this build covers the current state.
+  try { if (existsSync(DIRTY_FILE)) unlinkSync(DIRTY_FILE); } catch {}
+  return { jobId: runBuild(description), queued: false, requestedAt };
+}
+
 export async function POST(req: NextRequest) {
   if (!(await isAuthorized(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -237,14 +306,9 @@ export async function POST(req: NextRequest) {
 
   // Concurrent deploy guard + coalescing: if a build is running, record this request as the
   // pending latest state (so the running build reruns for it on finish) and report in_progress.
-  if (existsSync(LOCK_FILE)) {
-    const lockedJobId = readFileSync(LOCK_FILE, "utf8").trim();
-    try { writeFileSync(DIRTY_FILE, description); } catch {}
-    return NextResponse.json({ error: "in_progress", jobId: lockedJobId, queued: true }, { status: 409 });
+  const { jobId, queued, requestedAt } = requestBuild(description);
+  if (queued) {
+    return NextResponse.json({ error: "in_progress", jobId, queued: true, requestedAt }, { status: 409 });
   }
-
-  // Fresh build start — clear any stale dirty marker; this build covers the current state.
-  try { if (existsSync(DIRTY_FILE)) unlinkSync(DIRTY_FILE); } catch {}
-  const jobId = runBuild(description);
-  return NextResponse.json({ ok: true, jobId, status: "started", logFile: `/tmp/fractera-deploy-${jobId}.log` });
+  return NextResponse.json({ ok: true, jobId, requestedAt, status: "started", logFile: `/tmp/fractera-deploy-${jobId}.log` });
 }
