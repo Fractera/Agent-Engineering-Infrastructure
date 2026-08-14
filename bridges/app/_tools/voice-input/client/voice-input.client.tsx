@@ -40,6 +40,16 @@ function inFrame(): boolean {
   }
 }
 
+/** Восклицательный знак в круге — свой, потому что в папке нет lucide (закон 0). */
+function AlertIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="size-3.5 shrink-0">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v6M12 16.5v.01" />
+    </svg>
+  );
+}
+
 function MicIcon({ off }: { off?: boolean }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="size-3.5">
@@ -314,9 +324,24 @@ export default function VoiceInput({
         </div>
       ) : null}
 
-      {/* Причина отказа — строкой рядом с кнопкой: тостов у автоматизации нет, а тупика быть не должно. */}
-      {!supported ? <p className="text-xs text-muted-foreground">{L.tipInsecure}</p> : null}
-      {note ? <p className="text-xs text-amber-700 dark:text-amber-400">{note}</p> : null}
+      {/* 🔒 ОТКАЗ БРАУЗЕРА ЗАМЕТЕН ГЛАЗУ (владелец 2026-08-14: «кнопка не
+          работает, изменения непонятно почему»).
+          Причина стояла здесь и раньше — но серой строкой того же размера, что и
+          подписи вокруг: рядом с выключенной кнопкой она читалась как подпись, а
+          не как ответ на вопрос «почему не работает». Выключает микрофон БРАУЗЕР,
+          а не наш код, и человек обязан узнать это, не наводя курсор на кнопку. */}
+      {!supported ? (
+        <p className="flex items-start gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs leading-relaxed text-amber-800 dark:text-amber-200">
+          <AlertIcon />
+          <span>{L.tipInsecure}</span>
+        </p>
+      ) : null}
+      {note ? (
+        <p className="flex items-start gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs leading-relaxed text-amber-800 dark:text-amber-200">
+          <AlertIcon />
+          <span>{note}</span>
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/require-auth";
-import { nextQuestion, synthesize, rewriteCase, autoStream, openAiKey, quizModel } from "@/lib/quiz-brain";
+import {
+  nextQuestion, synthesize, rewriteCase, autoStream, openAiKey, quizModel,
+  classifyOpenAi, OpenAiError,
+} from "@/lib/quiz-brain";
 import { readSeed, appendRaw } from "@/lib/use-cases-store";
 
 // Разговор Quiz: вопрос, автоквиз (стрим), синтез, переписывание одного кейса.
@@ -54,7 +57,10 @@ export async function POST(req: NextRequest) {
       }
       const upstream = await autoStream(lang, seed, turns);
       if (!upstream.ok || !upstream.body) {
-        return NextResponse.json({ error: `OpenAI ${upstream.status}` }, { status: 502 });
+        // Причина отказа приходит В ТЕЛЕ ответа OpenAI, и раньше она молча
+        // выбрасывалась вместе с ним: наружу уезжал голый код состояния.
+        const failure = classifyOpenAi(upstream.status, await upstream.text().catch(() => ""));
+        return NextResponse.json({ error: failure.code, detail: failure.detail }, { status: 502 });
       }
       return new Response(upstream.body, {
         headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache" },
@@ -78,8 +84,16 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: "unknown_mode" }, { status: 400 });
   } catch (e) {
+    // Отказ OpenAI уезжает СВОИМ кодом и со своей подробностью: между «ключ
+    // отклонён», «деньги кончились» и «модели нет» стоят разные действия
+    // владельца, и одно слово «не удалось» не подсказывает ни одного.
+    if (e instanceof OpenAiError) {
+      return NextResponse.json({ error: e.code, detail: e.detail, model: quizModel() }, { status: 502 });
+    }
     const msg = String((e as Error).message ?? e);
     if (msg === "no-key") return NextResponse.json({ error: "no-key" }, { status: 400 });
-    return NextResponse.json({ error: msg }, { status: 500 });
+    // Сеть до OpenAI не дошла вовсе (нет доступа наружу, таймаут) — это тоже не
+    // «не удалось», а называемая причина.
+    return NextResponse.json({ error: "upstream", detail: msg.slice(0, 300) }, { status: 500 });
   }
 }

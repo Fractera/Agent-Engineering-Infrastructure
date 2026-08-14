@@ -70,6 +70,55 @@ export type Turn = { role: "user" | "assistant"; content: string };
 const TAIL = 40;
 export const tail = (turns: Turn[]): Turn[] => turns.slice(-TAIL);
 
+// 🔒 ОТКАЗ OpenAI НАЗЫВАЕТСЯ СВОИМ ИМЕНЕМ (владелец 2026-08-14: «ключ устарел?
+// ключа нет? я не понимаю проблему»).
+//
+// Раньше любой отказ выше по течению превращался в строку `OpenAI 401: …` или, в
+// половине путей, просто в «Не удалось». Между «ключ отклонён», «деньги
+// кончились», «слишком часто» и «модели нет у этого ключа» — четыре РАЗНЫХ
+// действия владельца, и общее слово не подсказывает ни одного.
+//
+// Код разбирается здесь один раз, а поверхность переводит его на язык человека.
+// Подробность от OpenAI едет рядом и показывается как есть: чужую формулировку
+// пересказывать нельзя — в ней и стоит настоящая причина.
+export type OpenAiCode = "key-rejected" | "quota" | "rate-limit" | "model-missing" | "upstream";
+
+export class OpenAiError extends Error {
+  readonly code: OpenAiCode;
+  readonly status: number;
+  readonly detail: string;
+  constructor(code: OpenAiCode, status: number, detail: string) {
+    super(`${code} (${status})`);
+    this.name = "OpenAiError";
+    this.code = code;
+    this.status = status;
+    this.detail = detail;
+  }
+}
+
+export function classifyOpenAi(status: number, body: string): OpenAiError {
+  let message = "";
+  let errCode = "";
+  try {
+    const j = JSON.parse(body) as { error?: { message?: string; code?: string; type?: string } };
+    message = j.error?.message ?? "";
+    errCode = j.error?.code ?? j.error?.type ?? "";
+  } catch { /* не JSON — покажем сырой текст */ }
+  const detail = (message || body).trim().slice(0, 300);
+
+  if (status === 401 || status === 403 || errCode === "invalid_api_key") {
+    return new OpenAiError("key-rejected", status, detail);
+  }
+  if (errCode === "insufficient_quota" || /quota|billing/i.test(message)) {
+    return new OpenAiError("quota", status, detail);
+  }
+  if (status === 429) return new OpenAiError("rate-limit", status, detail);
+  if (status === 404 || errCode === "model_not_found") {
+    return new OpenAiError("model-missing", status, detail);
+  }
+  return new OpenAiError("upstream", status, detail);
+}
+
 async function chat(messages: { role: string; content: string }[], opts?: { json?: boolean }): Promise<string> {
   const key = openAiKey();
   if (!key) throw new Error("no-key");
@@ -81,7 +130,7 @@ async function chat(messages: { role: string; content: string }[], opts?: { json
       ...(opts?.json ? { response_format: { type: "json_object" } } : {}),
     }),
   });
-  if (!r.ok) throw new Error(`OpenAI ${r.status}: ${(await r.text()).slice(0, 200)}`);
+  if (!r.ok) throw classifyOpenAi(r.status, await r.text().catch(() => ""));
   const d = (await r.json()) as { choices?: { message?: { content?: string } }[] };
   return d.choices?.[0]?.message?.content?.trim() ?? "";
 }

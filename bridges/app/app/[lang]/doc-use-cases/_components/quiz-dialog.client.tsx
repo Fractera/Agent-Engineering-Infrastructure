@@ -22,7 +22,7 @@ import { Loader2, Send, Sparkles, Pause, Check, X, ChevronDown } from "lucide-re
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import VoiceInput from "@/_tools/voice-input/client/voice-input.client";
-import { parseRound } from "@/lib/quiz-brain.shared";
+import { parseRound, explainQuizError } from "@/lib/quiz-brain.shared";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -36,6 +36,12 @@ export type QuizLabels = {
   ready: string; hint: string;
   added: string; failed: string; noKey: string; noSeed: string;
   scrollDown: string;
+  // 🔒 ПРИЧИНА ОТКАЗА НАЗЫВАЕТСЯ (владелец 2026-08-14: «ключ устарел? ключа нет?
+  // я не понимаю проблему»). Одно слово «Не удалось» стояло на четырёх разных
+  // бедах, за каждой из которых своё действие владельца.
+  errKeyRejected: string; errQuota: string; errRateLimit: string;
+  errModelMissing: string; errUpstream: string;
+  errNoCases: string; errSaveFailed: string;
 };
 
 export function QuizDialog(
@@ -76,6 +82,12 @@ export function QuizDialog(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [turns, draft, streaming, busy]);
 
+  // Одна формулировка отказа на все поверхности — она же у правки кейса на доске.
+  const explain = useCallback(
+    (code: string, detail?: unknown) => explainQuizError(code, detail, labels),
+    [labels],
+  );
+
   const call = useCallback(async (payload: Record<string, unknown>) => {
     const r = await fetch("/api/use-cases/quiz", {
       method: "POST",
@@ -87,11 +99,12 @@ export function QuizDialog(
     if (!r.ok) {
       if (d?.error === "no-key") { toast.error(labels.noKey, { duration: 10000 }); return null; }
       if (d?.error === "no-seed") { toast.info(labels.noSeed, { duration: 8000 }); return null; }
-      toast.error(String(d?.error ?? labels.failed));
+      // Отказ живёт на экране дольше обычного: его читают, а не замечают.
+      toast.error(explain(String(d?.error ?? ""), d?.detail), { duration: 15000 });
       return null;
     }
     return d as Record<string, unknown>;
-  }, [lang, labels]);
+  }, [lang, labels, explain]);
 
   const ask = useCallback(async (t: Turn[]) => {
     const d = await call({ mode: "ask", turns: t });
@@ -175,7 +188,7 @@ export function QuizDialog(
         const d = await r.json().catch(() => ({}));
         if (d?.error === "no-seed") toast.info(labels.noSeed, { duration: 8000 });
         else if (d?.error === "no-key") toast.error(labels.noKey, { duration: 10000 });
-        else toast.error(labels.failed);
+        else toast.error(explain(String(d?.error ?? ""), d?.detail), { duration: 15000 });
         return;
       }
       const reader = r.body.getReader();
@@ -243,14 +256,27 @@ export function QuizDialog(
       const d = await call({ mode: "synthesize", turns: all });
       if (!d) return;
       const cases = (d.cases ?? []) as { title: string; summary: string }[];
-      if (!cases.length) { toast.error(labels.failed); return; }
+      // 🔒 ПУСТОЙ РЕЗУЛЬТАТ — НЕ ПОЛОМКА, А ПУСТОЙ РАЗГОВОР (владелец 2026-08-14).
+      //
+      // Модель ответила и ответила честно: из разговора, в котором ничего не
+      // сказано, кейсов не выводится. Раньше это показывалось тем же «Не
+      // удалось», что и отказ ключа, — и владелец шёл проверять ключ, который
+      // работает. Здесь называется настоящая причина и следующий шаг.
+      if (!cases.length) { toast.error(labels.errNoCases, { duration: 12000 }); return; }
       const r = await fetch("/api/use-cases", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ op: "append", cases }),
         credentials: "include",
       });
-      if (!r.ok) { toast.error(labels.failed); return; }
+      if (!r.ok) {
+        // Модель отработала, кейсы есть, а записать их не вышло — это отдельная
+        // беда с отдельным лечением, и путать её с отказом модели нельзя.
+        const err = await r.json().catch(() => ({}));
+        const why = typeof err?.error === "string" ? ` — ${err.error}` : "";
+        toast.error(`${labels.errSaveFailed}${why}`, { duration: 12000 });
+        return;
+      }
       toast.success(labels.added.replace("{n}", String(cases.length)));
       onClose();
       router.refresh();

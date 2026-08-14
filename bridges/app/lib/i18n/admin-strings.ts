@@ -407,6 +407,19 @@ export type AdminStrings = {
     titleLabel: string; summaryLabel: string; savedCase: string;
     remarkTitle: string; remarkPlaceholder: string; rewrite: string; rewriting: string;
     failed: string; noKey: string; noSeed: string;
+    // 🔒 ПРИЧИНА ОТКАЗА МОДЕЛИ НАЗЫВАЕТСЯ СВОИМ ИМЕНЕМ (владелец 2026-08-14:
+    // «ключ устарел? ключа нет? я не понимаю проблему»).
+    //
+    // «Не удалось» стояло на четырёх разных бедах, и за каждой — своё действие:
+    // ключ отклонён (заменить), деньги кончились (пополнить), слишком часто
+    // (подождать), модели нет у ключа (сменить модель). Общее слово не
+    // подсказывает ни одного и отправляет проверять то, что работает.
+    errKeyRejected: string; errQuota: string; errRateLimit: string;
+    errModelMissing: string; errUpstream: string;
+    /** Разговор пуст — модель ответила честно, кейсов из ничего не выводится. */
+    errNoCases: string;
+    /** Кейсы получены, а записать их не вышло: отдельная беда, отдельное лечение. */
+    errSaveFailed: string;
     legacyHint: string; legacyAction: string; legacyDone: string;
     helpLabel: string;
     helpWhyTitle: string; helpWhy: string;

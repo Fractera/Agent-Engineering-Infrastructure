@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import VoiceInput from "@/_tools/voice-input/client/voice-input.client";
+import { explainQuizError } from "@/lib/quiz-brain.shared";
 
 export type UseCaseRow = {
   id: string;
@@ -34,6 +35,10 @@ export type BoardLabels = {
   remarkTitle: string; remarkPlaceholder: string; rewrite: string; rewriting: string;
   failed: string; savedCase: string; noKey: string;
   titleLabel: string; summaryLabel: string;
+  // Отказ модели при переписывании кейса называется теми же словами, что и в
+  // Quiz: беда одна и та же, а два текста о ней разъехались бы молча.
+  errKeyRejected: string; errQuota: string; errRateLimit: string;
+  errModelMissing: string; errUpstream: string;
 };
 
 export function CasesBoard(
@@ -119,7 +124,10 @@ function CaseCard(
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) {
-        toast.error(d?.error === "no-key" ? labels.noKey : String(d?.error ?? labels.failed));
+        toast.error(
+          d?.error === "no-key" ? labels.noKey : explainQuizError(String(d?.error ?? ""), d?.detail, labels),
+          { duration: 15000 },
+        );
         return;
       }
       const next = d.case as { title: string; summary: string } | null;

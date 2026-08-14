@@ -52,6 +52,11 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
     ready: u.ready, hint: u.quizHint,
     added: u.added, failed: u.failed, noKey: u.noKey, noSeed: u.noSeed,
     scrollDown: u.scrollDown,
+    // Причины отказа — по одной на беду: ключ, деньги, частота, модель, связь,
+    // пустой разговор, неудачное сохранение.
+    errKeyRejected: u.errKeyRejected, errQuota: u.errQuota, errRateLimit: u.errRateLimit,
+    errModelMissing: u.errModelMissing, errUpstream: u.errUpstream,
+    errNoCases: u.errNoCases, errSaveFailed: u.errSaveFailed,
   };
 
   return (
@@ -116,6 +121,9 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
                   rewrite: u.rewrite, rewriting: u.rewriting,
                   failed: u.failed, savedCase: u.savedCase, noKey: u.noKey,
                   titleLabel: u.titleLabel, summaryLabel: u.summaryLabel,
+                  errKeyRejected: u.errKeyRejected, errQuota: u.errQuota,
+                  errRateLimit: u.errRateLimit, errModelMissing: u.errModelMissing,
+                  errUpstream: u.errUpstream,
                 }}
               />
             </div>
