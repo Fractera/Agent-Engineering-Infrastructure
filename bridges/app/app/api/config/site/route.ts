@@ -49,6 +49,53 @@ export async function GET(req: NextRequest) {
   }
 }
 
+// 🔒 «ВЕРХНЕЕ МЕНЮ» — ЧУЖАЯ ВЕТКА, И ЭТО СОХРАНЕНИЕ ЕЁ НЕ ТРОГАЕТ (владелец
+// 2026-08-14, после разбора пропавшего меню на живом проекте).
+//
+// Эта страница отправляет весь `config`, который держит в памяти браузера, —
+// включая то, что сама никогда не редактировала (`nav`, переводы подписей
+// меню `i18n["nav.*"]`). Обычно это безобидно: React-состояние стартует с
+// полного снимка файла и просто везёт его туда-обратно.
+//
+// НО: снимок сделан в момент открытия вкладки. Если в СОСЕДНЕЙ вкладке за это
+// время правят «Верхнее меню» — их сохранение уходит первым и пишет файл на
+// диске, — а потом отправляется это, устаревшее, оно ЗАТИРАЕТ то сохранение
+// своим более старым состоянием. Разбор не нашёл прямых следов этой гонки на
+// сервере (файл создался пустым при активации домена, до какого-либо
+// сохранения меню), но раз она возможна — владелец просил её закрыть, а не
+// дожидаться повторной пропажи.
+//
+// Лечение: ветки чужих владельцев берутся С ДИСКА в момент записи, а не из
+// присланного снимка. Что бы ни лежало в памяти вкладки настроек — на диске
+// остаётся последнее, что реально сохранило «Верхнее меню».
+const FOREIGN_TOP_KEYS = ["nav"] as const;
+
+function preserveForeignBranches(
+  incoming: Record<string, unknown>,
+): Record<string, unknown> {
+  let onDisk: Record<string, unknown> = {};
+  try {
+    onDisk = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf-8")) as Record<string, unknown>;
+  } catch {
+    return incoming; // файла ещё нет — сохранять поверх нечего
+  }
+
+  const out: Record<string, unknown> = { ...incoming };
+  for (const key of FOREIGN_TOP_KEYS) if (key in onDisk) out[key] = onDisk[key];
+
+  // Переводы подписей меню живут ВНУТРИ общей ветки `i18n`, ключами вида
+  // `nav.<slot>.<id>.label` — тот же приём, что использует `writeNav()`:
+  // сохраняем эти ключи с диска, остальной `i18n` (свои поля формы) берём из
+  // присланного.
+  const diskI18n = (onDisk.i18n ?? {}) as Record<string, unknown>;
+  const incomingI18n = (out.i18n ?? {}) as Record<string, unknown>;
+  const mergedI18n: Record<string, unknown> = { ...incomingI18n };
+  for (const k of Object.keys(diskI18n)) if (k.startsWith("nav.")) mergedI18n[k] = diskI18n[k];
+  out.i18n = mergedI18n;
+
+  return out;
+}
+
 export async function POST(req: NextRequest) {
   const ok = await requireAuth(req.headers.get("cookie") ?? "");
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -58,11 +105,12 @@ export async function POST(req: NextRequest) {
     if (!config || typeof config !== "object" || Array.isArray(config)) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
+    const preserved = preserveForeignBranches(config as Record<string, unknown>);
     // Site URL / canonical base / sitemap URL are overwritten with what this server actually
     // answers on. Enforced HERE and not in the form: the form is one writer among several
     // (the settings MCP writes the same file), and a rule that lives in a form is a rule the
     // next writer skips — which is precisely how these three stayed empty until now.
-    const withAddresses = applyDerivedAddresses(config as Record<string, unknown>);
+    const withAddresses = applyDerivedAddresses(preserved);
     fs.mkdirSync(path.dirname(CONFIG_PATH), { recursive: true });
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(withAddresses, null, 2), "utf-8");
     revalidateShell(); // purge the Shell's ISR cache → change shows on next load
