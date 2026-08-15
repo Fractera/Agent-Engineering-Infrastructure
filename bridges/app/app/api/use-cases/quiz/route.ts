@@ -5,6 +5,7 @@ import {
   classifyOpenAi, OpenAiError,
 } from "@/lib/quiz-brain";
 import { readSeed, appendRaw } from "@/lib/use-cases-store";
+import { activeProduct } from "@/lib/products-config";
 
 // Разговор Quiz: вопрос, автоквиз (стрим), синтез, переписывание одного кейса.
 //
@@ -30,6 +31,8 @@ export async function POST(req: NextRequest) {
 
   const body = (await req.json().catch(() => null)) as {
     mode?: "ask" | "auto" | "synthesize" | "rewrite";
+    /** Чей это разговор — продукт называется явно, как и везде. */
+    productId?: string;
     lang?: string;
     turns?: Turn[];
     title?: string;
@@ -40,7 +43,11 @@ export async function POST(req: NextRequest) {
 
   const lang = body.lang ?? "en";
   const turns = body.turns ?? [];
-  const seed = readSeed();
+  // Разговор идёт про КОНКРЕТНЫЙ продукт: его затравка, его стенограмма. Без
+  // этого модель обсуждала бы первый продукт, пока владелец описывает второй.
+  const pid = activeProduct(body.productId)?.id ?? "";
+  if (!pid) return NextResponse.json({ error: "no_product" }, { status: 400 });
+  const seed = readSeed(pid);
 
   try {
     if (body.mode === "ask") {
@@ -69,7 +76,7 @@ export async function POST(req: NextRequest) {
 
     if (body.mode === "synthesize") {
       const cases = await synthesize(seed, turns);
-      if (turns.length) appendRaw(turns, "разговор перед синтезом");
+      if (turns.length) appendRaw(pid, turns, "разговор перед синтезом");
       return NextResponse.json({ cases });
     }
 
@@ -78,7 +85,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "title_and_remark_required" }, { status: 400 });
       }
       const next = await rewriteCase(body.title, body.summary ?? "", body.remark);
-      appendRaw([{ role: "user", content: body.remark }], `правка кейса «${body.title}»`);
+      appendRaw(pid, [{ role: "user", content: body.remark }], `правка кейса «${body.title}»`);
       return NextResponse.json({ case: next });
     }
 

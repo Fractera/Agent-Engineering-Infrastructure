@@ -13,6 +13,7 @@
 // переписывает кейс), голос (то же самое, надиктованное) и прямая правка руками.
 
 import { useRef, useState } from "react";
+import { productParam } from "./product-param";
 import { useRouter } from "next/navigation";
 import { Loader2, Check, Pencil, Trash2, Sparkles, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -53,7 +54,7 @@ export function CasesBoard(
       const r = await fetch("/api/use-cases", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ op, ...payload }),
+        body: JSON.stringify({ productId: productParam(), op, ...payload }),
         credentials: "include",
       });
       const d = await r.json().catch(() => ({}));
@@ -119,7 +120,7 @@ function CaseCard(
       const r = await fetch("/api/use-cases/quiz", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: "rewrite", lang, title, summary, remark: remark.trim() }),
+        body: JSON.stringify({ productId: productParam(), mode: "rewrite", lang, title, summary, remark: remark.trim() }),
         credentials: "include",
       });
       const d = await r.json().catch(() => ({}));

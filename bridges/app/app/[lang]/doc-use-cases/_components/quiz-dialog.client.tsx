@@ -17,6 +17,7 @@
 // Стенограмма уходит в `USE-CASES/RAW/` при синтезе: сырьё пишется всегда.
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { productParam } from "./product-param";
 import { useRouter } from "next/navigation";
 import { Loader2, Send, Sparkles, Pause, Check, X, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
@@ -92,7 +93,7 @@ export function QuizDialog(
     const r = await fetch("/api/use-cases/quiz", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lang, ...payload }),
+      body: JSON.stringify({ productId: productParam(), lang, ...payload }),
       credentials: "include",
     });
     const d = await r.json().catch(() => ({}));
@@ -127,7 +128,7 @@ export function QuizDialog(
     (async () => {
       let prior: Turn[] = [];
       try {
-        const r = await fetch("/api/use-cases", { cache: "no-store", credentials: "include" });
+        const r = await fetch(`/api/use-cases${productParam() ? `?product=${productParam()}` : ""}`, { cache: "no-store", credentials: "include" });
         const d = await r.json().catch(() => ({}));
         if (Array.isArray(d?.turns)) prior = d.turns as Turn[];
       } catch { /* не подняли — начнём с чистого, это хуже, но не поломка */ }
@@ -143,7 +144,7 @@ export function QuizDialog(
       await fetch("/api/use-cases", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ op: "raw", turns: items, note }),
+        body: JSON.stringify({ productId: productParam(), op: "raw", turns: items, note }),
         credentials: "include",
       });
     } catch { /* не сохранили — разговор в окне продолжается */ }
@@ -180,7 +181,7 @@ export function QuizDialog(
       const r = await fetch("/api/use-cases/quiz", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: "auto", lang, turns: seeded }),
+        body: JSON.stringify({ productId: productParam(), mode: "auto", lang, turns: seeded }),
         credentials: "include",
         signal: ctrl.signal,
       });
@@ -267,7 +268,7 @@ export function QuizDialog(
       const r = await fetch("/api/use-cases", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ op: "append", cases }),
+        body: JSON.stringify({ productId: productParam(), op: "append", cases }),
         credentials: "include",
       });
       if (!r.ok) {

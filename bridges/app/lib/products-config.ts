@@ -189,6 +189,31 @@ function routeFor(surface: ProductSurface, id: string, others: Product[]): strin
   return others.some((p) => p.route === "/") ? `/${id}` : "/";
 }
 
+/**
+ * Отдать корень `/` другому продукту (партия 5).
+ *
+ * 🔒 ЭТО РАЗРЕШЕНО, НО ЯВНО. Человек начинает с посадочной страницы, а через
+ * месяц решает, что главным будет магазин, — запретить ему это значило бы
+ * загнать в тупик на ровном месте. Но операция не бесплатна: адреса всех страниц
+ * прежнего владельца корня меняются, поэтому она делается отдельным действием, а
+ * не побочным эффектом другой правки.
+ *
+ * Прежний владелец корня не остаётся без адреса: он получает свой сегмент. Иначе
+ * публичный продукт стал бы недоступен ни по какому пути — ровно тот дефект,
+ * который уже был пойман на смене поверхности.
+ */
+export function giveRootTo(id: string): { ok: boolean; movedFrom?: string; movedTo?: string } {
+  const config = readProductsConfig();
+  const target = config.products.find((p) => p.id === id);
+  if (!target || target.surface !== "public") return { ok: false };
+
+  const previous = config.products.find((p) => p.route === "/" && p.id !== id);
+  if (previous) previous.route = `/${previous.id}`;
+  target.route = "/";
+  writeProductsConfig(config);
+  return { ok: true, movedFrom: previous?.id, movedTo: previous?.route };
+}
+
 export function addProduct(
   input: {
     title: string; type: ProjectTypeId; surface?: ProductSurface; route?: string;
@@ -227,6 +252,27 @@ export function addProduct(
  */
 export function currentProduct(): Product | null {
   return listProducts()[0] ?? null;
+}
+
+/**
+ * Продукт, с которым владелец работает СЕЙЧАС (партия 5).
+ *
+ * 🔒 ВЫБОР ЖИВЁТ В АДРЕСЕ, А НЕ В ФАЙЛЕ. `?product=p2` — и всё: ссылка делится,
+ * страница переживает перезагрузку, кнопка «назад» работает, и ничего не
+ * ломается без JavaScript. Поле «текущий» в конфиге было бы состоянием ОДНОГО
+ * человека, записанным в файл проекта, который едет в репозиторий и общий для
+ * всех — два окна панели начали бы перебивать выбор друг у друга.
+ *
+ * Неизвестный или пустой идентификатор молча уступает первому продукту: адрес
+ * приходит снаружи, и опечатка в нём не повод показать пустой экран.
+ */
+export function activeProduct(requested?: string | null): Product | null {
+  const all = listProducts();
+  if (requested) {
+    const found = all.find((p) => p.id === requested);
+    if (found) return found;
+  }
+  return all[0] ?? null;
 }
 
 /**

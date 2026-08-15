@@ -17,6 +17,7 @@
 // самом окне, а не в справке, которую в этот момент никто не откроет.
 
 import { useState } from "react";
+import { productParam } from "./product-param";
 import { useRouter } from "next/navigation";
 import { Loader2, RotateCcw, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
@@ -50,7 +51,7 @@ export function ResetQuiz({ labels, counts }: { labels: ResetLabels; counts: Res
       const r = await fetch("/api/use-cases", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ op: "reset" }),
+        body: JSON.stringify({ productId: productParam(), op: "reset" }),
         credentials: "include",
       });
       const d = await r.json().catch(() => ({}));

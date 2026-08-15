@@ -8,6 +8,7 @@
 // принимает владелец.
 
 import { useState } from "react";
+import { productParam } from "./product-param";
 import { useRouter } from "next/navigation";
 import { Loader2, FileInput } from "lucide-react";
 import { toast } from "sonner";
@@ -25,7 +26,7 @@ export function MigrateLegacy(
       const r = await fetch("/api/use-cases", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ op: "migrate" }),
+        body: JSON.stringify({ productId: productParam(), op: "migrate" }),
         credentials: "include",
       });
       const d = await r.json().catch(() => ({}));

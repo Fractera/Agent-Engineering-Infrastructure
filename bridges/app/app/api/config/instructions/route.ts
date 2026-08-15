@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { activeProduct } from "@/lib/products-config";
 import { requireAuth } from "@/lib/require-auth";
 import {
   readInstructionSet, writeInstructionSet, syncInstructionSection, ensureDoc,
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest) {
       // Без этой строки мастер стал бы обходом замка — самым тихим из возможных,
       // потому что владелец нажимал «вернуть как было», а не «включить».
       for (const k of TOGGLEABLE) {
-        if (enabled[k] && requiresUseCases(k) && useCasesGate().kind !== "ready") enabled[k] = false;
+        if (enabled[k] && requiresUseCases(k) && useCasesGate(activeProduct()?.id ?? "").kind !== "ready") enabled[k] = false;
       }
       snapshot = null;
     }
@@ -86,7 +87,7 @@ export async function POST(req: NextRequest) {
     // владелец должен увидеть, сколько кейсов написано и сколько подтверждено,
     // иначе отказ читается как поломка.
     if (body.enabled && requiresUseCases(body.doc)) {
-      const gate = useCasesGate();
+      const gate = useCasesGate(activeProduct()?.id ?? "");
       if (gate.kind !== "ready") {
         return NextResponse.json({ error: "needs_use_cases", gate }, { status: 409 });
       }

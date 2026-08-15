@@ -16,6 +16,7 @@
 // владельца спрашивали.
 
 import { useRef, useState } from "react";
+import { productParam } from "./product-param";
 import { useRouter } from "next/navigation";
 import { Loader2, Plus, Trash2, ArrowRight, RotateCcw, Mic } from "lucide-react";
 import { toast } from "sonner";
@@ -65,7 +66,7 @@ export function IntroSetup(
       const r = await fetch("/api/use-cases", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ op: "questions", questions: clean }),
+        body: JSON.stringify({ productId: productParam(), op: "questions", questions: clean }),
         credentials: "include",
       });
       const d = await r.json().catch(() => ({}));

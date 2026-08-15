@@ -15,17 +15,22 @@
 // спасает не подсветка, которую перестают замечать, а прямой ответ «вы работаете
 // с таким-то».
 
-import { Boxes, Plus, Check } from "lucide-react";
+import Link from "next/link";
+import { Boxes, Check } from "lucide-react";
 import type { Product } from "@/lib/products-config";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
+import { AddProductCard } from "./add-product.client";
 
 export function ProductsSection(
-  { products, current, casesCount, p }:
+  { products, current, casesCount, lang, typeCards, pickerLabels, p }:
   {
     products: Product[];
     current: Product | null;
     /** Сколько кейсов у ТЕКУЩЕГО продукта: чужие папки ради счётчика не читаем. */
     casesCount: number;
+    lang: string;
+    typeCards: React.ComponentProps<typeof AddProductCard>["types"];
+    pickerLabels: React.ComponentProps<typeof AddProductCard>["labels"];
     p: AdminStrings["projectPicker"];
   },
 ) {
@@ -51,10 +56,14 @@ export function ProductsSection(
         {products.map((product) => {
           const active = product.id === current?.id;
           return (
-            <div
+            // 🔒 КАРТОЧКА — ССЫЛКА, А НЕ КНОПКА С ОБРАБОТЧИКОМ. Выбор живёт в
+            // адресе (`?product=p2`), поэтому переключение работает без единой
+            // строки JavaScript, делится ссылкой и переживает «назад».
+            <Link
               key={product.id}
-              className={`flex min-w-[11rem] flex-1 flex-col gap-1 rounded-lg border p-2.5 ${
-                active ? "border-primary bg-primary/5" : "border-border"
+              href={`/${lang}/doc-use-cases?product=${product.id}`}
+              className={`flex min-w-[11rem] flex-1 flex-col gap-1 rounded-lg border p-2.5 transition-colors ${
+                active ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-muted"
               }`}
             >
               <div className="flex items-center gap-1.5">
@@ -78,25 +87,13 @@ export function ProductsSection(
                   ? (casesCount ? p.casesCount.replace("{n}", String(casesCount)) : p.noCases)
                   : " "}
               </span>
-            </div>
+            </Link>
           );
         })}
 
         {/* Карточка «добавить» стоит В ТОМ ЖЕ ряду, а не кнопкой в стороне: она
             обещает, что продуктов может быть много, самим своим видом. */}
-        <div className="flex min-w-[11rem] flex-1 flex-col justify-center gap-1 rounded-lg border border-dashed border-border p-2.5 text-muted-foreground">
-          <span className="flex items-center gap-1.5 text-[12px] font-medium">
-            <Plus size={11} className="shrink-0" />{p.addProduct}
-          </span>
-          <span className="text-[10px] leading-snug">{p.addHint}</span>
-          {/* 🔒 ЧЕСТНАЯ ЗАГЛУШКА ВМЕСТО КНОПКИ, КОТОРАЯ НЕ РАБОТАЕТ. Кнопка,
-              которая ничего не делает, хуже отсутствующей: она обещает и
-              заставляет решить, что продукт сломан. Здесь сказано прямо, чего
-              ещё нет и когда оно будет. */}
-          <span className="mt-0.5 text-[10px] leading-snug text-muted-foreground/70">
-            {p.soonTitle}
-          </span>
-        </div>
+        <AddProductCard types={typeCards} labels={pickerLabels} lang={lang} />
       </div>
 
       <p className="mt-2.5 border-t border-border pt-2 text-[11px] text-foreground">

@@ -21,6 +21,7 @@ import path from "path";
 import Database from "better-sqlite3";
 import { contextStateHandoff } from "@/lib/product-docs";
 import { useCasesGate } from "@/lib/use-cases-store";
+import { listProducts } from "@/lib/products-config";
 import { readInstructionSet } from "@/lib/instruction-set";
 import { markKey } from "@/lib/dev-tools-marks";
 import type { AdminPageSlug } from "@/lib/admin-nav";
@@ -144,7 +145,14 @@ export function collectWarnings(): AdminWarning[] {
   // ничего уже не блокирует), и эта запись добавляется ниже, среди оранжевых.
   //
   // Требование не удваивается: обе ветки взаимоисключающие.
-  const casesReady = useCasesGate().kind === "ready";
+  // 🔒 ГЕЙТ СЧИТАЕТСЯ ПО ВСЕМ ПРОДУКТАМ, НО НЕ МЕШАЕТ РАБОТЕ ПО ГОТОВОМУ
+  // (партия 5). Тревога горит, пока НИ ОДИН продукт не описан целиком: начатый
+  // второй продукт не имеет права остановить разработку первого — иначе владелец
+  // перестанет заводить новые. Продуктов нет вовсе — описывать нечего, и это
+  // тоже «не готово».
+  const products = listProducts();
+  const casesReady = products.length > 0
+    && products.some((p) => useCasesGate(p.id).kind === "ready");
   const hasOpenAiKey = envHas(APP_ENV, "OPENAI_API_KEY") || envHas(RAG_ENV, "OPENAI_API_KEY");
 
   if (!casesReady && !hasOpenAiKey) {

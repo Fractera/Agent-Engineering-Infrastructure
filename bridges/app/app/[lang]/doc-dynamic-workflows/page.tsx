@@ -7,10 +7,11 @@
 // 🔒 СОСТОЯНИЕ ЗАМКА ПОКАЗЫВАЕТСЯ ЗДЕСЬ, А НЕ ТОЛЬКО В ОТКАЗЕ. Владелец,
 // нажавший выключатель и получивший «нельзя», читает это как поломку панели.
 // Поэтому условие видно ДО попытки, вместе с числами: сколько кейсов написано и
-// сколько подтверждено. Гейт один и тот же — `useCasesGate()`, тот же, что
+// сколько подтверждено. Гейт один и тот же — `useCasesGate(activeProduct()?.id ?? "")`, тот же, что
 // отвечает маршруту сохранения, поэтому страница и сервер не могут разойтись.
 
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
+import { activeProduct } from "@/lib/products-config";
 import { PageShell } from "../_components/page-shell";
 import { DocEditor } from "../_components/doc-editor.client";
 import { DocKindBadge } from "../_components/doc-kind-badge";
@@ -34,7 +35,7 @@ export default async function DocPage({ params }: { params: Promise<{ lang: stri
   const set = readInstructionSet();
   const o = s.docsOverview;
 
-  const gate = useCasesGate();
+  const gate = useCasesGate(activeProduct()?.id ?? "");
   const gateText =
     gate.kind === "missing" ? t.lockedMissing
     : gate.kind === "unconfirmed" ? t.lockedUnconfirmed

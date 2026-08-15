@@ -17,7 +17,10 @@
 
 import fs from "fs";
 import path from "path";
-import { currentProduct } from "@/lib/products-config";
+// Только чтение записи по идентификатору: продукт приходит сюда АРГУМЕНТОМ, а
+// не выводится складом самостоятельно. Выводить его здесь значило бы иметь два
+// мнения о том, с чьими кейсами идёт работа.
+import { findProduct } from "@/lib/products-config";
 
 const APP_DIR = process.env.APP_DIR ?? "/opt/fractera/app";
 
@@ -55,18 +58,14 @@ export type UseCase = {
 // первого вопроса. Плоский путь остаётся только для проектов, начатых раньше, —
 // и живёт до первого открытия страницы, где `migrateLegacyLayout()` переносит их
 // в папку продукта.
-const productDir = () => {
-  const id = currentProduct()?.id;
-  return id ? path.join(APP_DIR, USE_CASES_DIR, id) : path.join(APP_DIR, USE_CASES_DIR);
-};
+const productDir = (pid: string) => path.join(APP_DIR, USE_CASES_DIR, pid);
 
-const casesDir = () => path.join(productDir(), CASES_SUBDIR);
-const rawDir = () => path.join(productDir(), RAW_SUBDIR);
+const casesDir = (pid: string) => path.join(productDir(pid), CASES_SUBDIR);
+const rawDir = (pid: string) => path.join(productDir(pid), RAW_SUBDIR);
 
 /** Пути для показа человеку — с продуктом внутри, как они лежат на диске. */
-export function useCasesPaths(): { cases: string; raw: string } {
-  const id = currentProduct()?.id;
-  const base = id ? `${USE_CASES_DIR}/${id}` : USE_CASES_DIR;
+export function useCasesPaths(pid: string): { cases: string; raw: string } {
+  const base = `${USE_CASES_DIR}/${pid}`;
   return { cases: `${base}/${CASES_SUBDIR}/`, raw: `${base}/${RAW_SUBDIR}/` };
 }
 
@@ -77,11 +76,9 @@ export function useCasesPaths(): { cases: string; raw: string } {
  * успели поработать в первые сутки. Файлы ПЕРЕЕЗЖАЮТ, а не копируются: две копии
  * кейсов в двух местах — это два ответа на вопрос, что строить.
  */
-export function migrateLegacyLayout(): boolean {
-  const id = currentProduct()?.id;
-  if (!id) return false;
+export function migrateLegacyLayout(pid: string): boolean {
   const oldBase = path.join(APP_DIR, USE_CASES_DIR);
-  const newBase = path.join(oldBase, id);
+  const newBase = path.join(oldBase, pid);
   let moved = false;
 
   // 🔒 ПЕРЕНОС ПОФАЙЛОВО, А НЕ ПАПКОЙ ЦЕЛИКОМ (найдено проверкой 2026-08-16).
@@ -116,9 +113,9 @@ export function migrateLegacyLayout(): boolean {
   return moved;
 }
 
-function ensureDirs(): void {
-  fs.mkdirSync(casesDir(), { recursive: true });
-  fs.mkdirSync(rawDir(), { recursive: true });
+function ensureDirs(pid: string): void {
+  fs.mkdirSync(casesDir(pid), { recursive: true });
+  fs.mkdirSync(rawDir(pid), { recursive: true });
 }
 
 function parseCase(id: string, text: string): UseCase {
@@ -150,19 +147,19 @@ export type CasesState = {
   legacy: boolean;
 };
 
-export function listCases(): CasesState {
+export function listCases(pid: string): CasesState {
   // Путь называется НАСТОЯЩИЙ — тот, из которого читаем. Здесь стояла плоская
   // строка: панель читала из папки продукта, а владельцу показывала
   // `USE-CASES/CASES/`, где лежит пустота. Проверено живьём 2026-08-16.
-  const dir = useCasesPaths().cases;
+  const dir = useCasesPaths(pid).cases;
   const legacy = fs.existsSync(path.join(APP_DIR, LEGACY_FILE));
   try {
-    const files = fs.readdirSync(casesDir())
+    const files = fs.readdirSync(casesDir(pid))
       .filter((f) => f.endsWith(".md"))
       .sort();
     const cases = files.map((f) => {
       const id = f.replace(/\.md$/, "");
-      return parseCase(id, fs.readFileSync(path.join(casesDir(), f), "utf-8"));
+      return parseCase(id, fs.readFileSync(path.join(casesDir(pid), f), "utf-8"));
     });
     return { dir, exists: true, cases, legacy };
   } catch {
@@ -171,8 +168,8 @@ export function listCases(): CasesState {
 }
 
 /** Следующий свободный номер — кейсы нумеруются, как шаги. */
-function nextIndex(): number {
-  const { cases } = listCases();
+function nextIndex(pid: string): number {
+  const { cases } = listCases(pid);
   const nums = cases.map((c) => Number(c.id.slice(0, 2))).filter((n) => Number.isFinite(n));
   return (nums.length ? Math.max(...nums) : 0) + 1;
 }
@@ -204,16 +201,16 @@ function slugify(slug: string): string {
 }
 
 /** Добавить кейсы, рождённые синтезом. Все — черновиками: подтверждает человек. */
-export function appendCases(items: { title: string; summary: string; slug?: string }[]): string[] {
-  ensureDirs();
+export function appendCases(pid: string, items: { title: string; summary: string; slug?: string }[]): string[] {
+  ensureDirs(pid);
   const ids: string[] = [];
-  let n = nextIndex();
+  let n = nextIndex(pid);
   for (const item of items) {
     // Слаг приходит от модели по-английски. Заголовок в него больше НЕ идёт: он
     // на языке владельца, и именно так на диске появлялись кириллические имена.
     const id = `${String(n).padStart(2, "0")}-${slugify(item.slug ?? "")}`;
     fs.writeFileSync(
-      path.join(casesDir(), `${id}.md`),
+      path.join(casesDir(pid), `${id}.md`),
       renderCase({ title: item.title, summary: item.summary, status: "draft", confirmedAt: null }),
       "utf-8",
     );
@@ -230,8 +227,8 @@ export function appendCases(items: { title: string; summary: string; slug?: stri
  * смотрел», а не «согласен вот с этим текстом» — и владелец подтвердил бы одно, а
  * агент строил бы по другому.
  */
-export function writeCase(id: string, patch: { title?: string; summary?: string }): boolean {
-  const file = path.join(casesDir(), `${id}.md`);
+export function writeCase(pid: string, id: string, patch: { title?: string; summary?: string }): boolean {
+  const file = path.join(casesDir(pid), `${id}.md`);
   try {
     const current = parseCase(id, fs.readFileSync(file, "utf-8"));
     const next: Omit<UseCase, "id"> = {
@@ -247,8 +244,8 @@ export function writeCase(id: string, patch: { title?: string; summary?: string 
   }
 }
 
-export function setStatus(id: string, status: CaseStatus): boolean {
-  const file = path.join(casesDir(), `${id}.md`);
+export function setStatus(pid: string, id: string, status: CaseStatus): boolean {
+  const file = path.join(casesDir(pid), `${id}.md`);
   try {
     const c = parseCase(id, fs.readFileSync(file, "utf-8"));
     fs.writeFileSync(
@@ -267,16 +264,16 @@ export function setStatus(id: string, status: CaseStatus): boolean {
   }
 }
 
-export function confirmAll(): number {
-  const { cases } = listCases();
+export function confirmAll(pid: string): number {
+  const { cases } = listCases(pid);
   let n = 0;
-  for (const c of cases) if (c.status !== "confirmed" && setStatus(c.id, "confirmed")) n += 1;
+  for (const c of cases) if (c.status !== "confirmed" && setStatus(pid, c.id, "confirmed")) n += 1;
   return n;
 }
 
-export function deleteCase(id: string): boolean {
+export function deleteCase(pid: string, id: string): boolean {
   try {
-    fs.unlinkSync(path.join(casesDir(), `${id}.md`));
+    fs.unlinkSync(path.join(casesDir(pid), `${id}.md`));
     return true;
   } catch {
     return false;
@@ -289,15 +286,15 @@ export function deleteCase(id: string): boolean {
 
 export type RawTurn = { role: "user" | "assistant"; content: string };
 
-export function appendRaw(turns: RawTurn[], note?: string): void {
+export function appendRaw(pid: string, turns: RawTurn[], note?: string): void {
   if (!turns.length) return;
-  ensureDirs();
+  ensureDirs(pid);
   const stamp = new Date().toISOString();
   const head = note ? `\n\n## ${stamp} — ${note}\n` : `\n\n## ${stamp}\n`;
   const body = turns
     .map((t) => (t.role === "user" ? `\n**Владелец:** ${t.content}\n` : `\n**Quiz:** ${t.content}\n`))
     .join("");
-  fs.appendFileSync(path.join(rawDir(), RAW_LOG), head + body, "utf-8");
+  fs.appendFileSync(path.join(rawDir(pid), RAW_LOG), head + body, "utf-8");
 }
 
 /**
@@ -307,8 +304,8 @@ export function appendRaw(turns: RawTurn[], note?: string): void {
  * автоквиз, и синтез начинаются с неё. Искать её каждый раз в растущей
  * стенограмме значило бы перечитывать сотни реплик ради семи ответов.
  */
-export function writeSeed(text: string): void {
-  ensureDirs();
+export function writeSeed(pid: string, text: string): void {
+  ensureDirs(pid);
   // 🔒 СТРУКТУРА ПРОЕКТА ВСТАЁТ ПЕРВОЙ СТРОКОЙ ЗАТРАВКИ (владелец 2026-08-15).
   //
   // Затравку читает КАЖДЫЙ вызов модели — и вопрос, и автоквиз, и синтез кейсов.
@@ -325,16 +322,16 @@ export function writeSeed(text: string): void {
   // Источник истины о структуре — реестр продуктов, а не файл рядом. Пока их
   // было два, они успели бы разойтись: выбор структуры пишется в реестр, а
   // затравка читала бы вчерашний файл.
-  const chosen = currentProduct();
+  const chosen = findProduct(pid);
   const head = chosen
     ? `Product: ${chosen.title} (id ${chosen.id}, type ${chosen.type}, ${chosen.surface}${chosen.route ? `, route ${chosen.route}` : ""})\n\n`
     : "";
-  fs.writeFileSync(path.join(rawDir(), "seed.md"), head + text.trim() + "\n", "utf-8");
+  fs.writeFileSync(path.join(rawDir(pid), "seed.md"), head + text.trim() + "\n", "utf-8");
 }
 
-export function readSeed(): string {
+export function readSeed(pid: string): string {
   try {
-    return fs.readFileSync(path.join(rawDir(), "seed.md"), "utf-8").trim();
+    return fs.readFileSync(path.join(rawDir(pid), "seed.md"), "utf-8").trim();
   } catch {
     return "";
   }
@@ -351,17 +348,17 @@ export function readSeed(): string {
  * Владелец описал это прямо: отвечать «сколько выдержит», устать, нажать автоквиз.
  * Между заходами лента обязана пережить закрытие окна.
  */
-export function appendTurns(turns: RawTurn[]): void {
+export function appendTurns(pid: string, turns: RawTurn[]): void {
   if (!turns.length) return;
-  ensureDirs();
-  const file = path.join(rawDir(), "turns.json");
+  ensureDirs(pid);
+  const file = path.join(rawDir(pid), "turns.json");
   const all = [...readTurns(), ...turns];
   fs.writeFileSync(file, JSON.stringify(all, null, 1), "utf-8");
 }
 
-export function readTurns(): RawTurn[] {
+export function readTurns(pid: string): RawTurn[] {
   try {
-    const raw = JSON.parse(fs.readFileSync(path.join(rawDir(), "turns.json"), "utf-8")) as RawTurn[];
+    const raw = JSON.parse(fs.readFileSync(path.join(rawDir(pid), "turns.json"), "utf-8")) as RawTurn[];
     return Array.isArray(raw) ? raw : [];
   } catch {
     return [];
@@ -399,9 +396,9 @@ const QUESTIONS_FILE = "questions.json";
 // (`adoptLegacyProjectType`) и увезти файл в архив при «начать сначала».
 const PROJECT_TYPE_FILE = "project-type.json";
 
-export function readQuestions(): string[] | null {
+export function readQuestions(pid: string): string[] | null {
   try {
-    const raw = JSON.parse(fs.readFileSync(path.join(rawDir(), QUESTIONS_FILE), "utf-8")) as unknown;
+    const raw = JSON.parse(fs.readFileSync(path.join(rawDir(pid), QUESTIONS_FILE), "utf-8")) as unknown;
     if (!Array.isArray(raw)) return null;
     const list = raw.filter((q): q is string => typeof q === "string" && q.trim().length > 0);
     return list.length ? list : null;
@@ -410,10 +407,10 @@ export function readQuestions(): string[] | null {
   }
 }
 
-export function writeQuestions(list: string[]): void {
-  ensureDirs();
+export function writeQuestions(pid: string, list: string[]): void {
+  ensureDirs(pid);
   const clean = list.map((q) => q.trim()).filter(Boolean);
-  fs.writeFileSync(path.join(rawDir(), QUESTIONS_FILE), JSON.stringify(clean, null, 1), "utf-8");
+  fs.writeFileSync(path.join(rawDir(pid), QUESTIONS_FILE), JSON.stringify(clean, null, 1), "utf-8");
 }
 
 // ── План страниц продукта ────────────────────────────────────────────────────
@@ -437,9 +434,9 @@ const PAGES_FILE = "PAGES.md";
 
 export type PlannedPage = { path: string; purpose: string };
 
-export function writePagesPlan(pages: PlannedPage[], productTitle: string): void {
+export function writePagesPlan(pid: string, pages: PlannedPage[], productTitle: string): void {
   if (!pages.length) return;
-  fs.mkdirSync(productDir(), { recursive: true });
+  fs.mkdirSync(productDir(pid), { recursive: true });
   const rows = pages
     .map((p) => `| \`${p.path}\` | ${p.purpose.replace(/\|/g, "\\|")} |`)
     .join("\n");
@@ -456,12 +453,12 @@ is always visible in the product's folders.
 |---|---|
 ${rows}
 `;
-  fs.writeFileSync(path.join(productDir(), PAGES_FILE), body, "utf-8");
+  fs.writeFileSync(path.join(productDir(pid), PAGES_FILE), body, "utf-8");
 }
 
-export function readPagesPlan(): string {
+export function readPagesPlan(pid: string): string {
   try {
-    return fs.readFileSync(path.join(productDir(), PAGES_FILE), "utf-8");
+    return fs.readFileSync(path.join(productDir(pid), PAGES_FILE), "utf-8");
   } catch {
     return "";
   }
@@ -495,9 +492,9 @@ export type ResetStat = {
 };
 
 /** Что именно исчезнет — считается ДО удаления, чтобы окно подтверждения называло числа. */
-export function resetPreview(): Omit<ResetStat, "archive"> {
-  const { cases } = listCases();
-  const seed = readSeed();
+export function resetPreview(pid: string): Omit<ResetStat, "archive"> {
+  const { cases } = listCases(pid);
+  const seed = readSeed(pid);
   return {
     seedAnswers: seed ? seed.split(/\n\s*\n/).filter((p) => p.trim()).length : 0,
     turns: readTurns().length,
@@ -511,27 +508,27 @@ export function resetPreview(): Omit<ResetStat, "archive"> {
  * стенограмму и кейсы. Разработка приложения этим не задевается — кейсы это
  * описание замысла, а не код.
  */
-export function resetUseCases(): ResetStat {
-  const before = resetPreview();
-  ensureDirs();
+export function resetUseCases(pid: string): ResetStat {
+  const before = resetPreview(pid);
+  ensureDirs(pid);
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const dest = path.join(rawDir(), ARCHIVE_SUBDIR, stamp);
+  const dest = path.join(rawDir(pid), ARCHIVE_SUBDIR, stamp);
   let archive: string | null = null;
 
   try {
     fs.mkdirSync(dest, { recursive: true });
-    archive = `${useCasesPaths().raw}${ARCHIVE_SUBDIR}/${stamp}/`;
+    archive = `${useCasesPaths(pid).raw}${ARCHIVE_SUBDIR}/${stamp}/`;
 
     for (const name of ["seed.md", "turns.json", RAW_LOG, QUESTIONS_FILE, PROJECT_TYPE_FILE]) {
-      const from = path.join(rawDir(), name);
+      const from = path.join(rawDir(pid), name);
       if (fs.existsSync(from)) fs.renameSync(from, path.join(dest, name));
     }
 
     const casesTo = path.join(dest, CASES_SUBDIR);
-    const files = fs.existsSync(casesDir()) ? fs.readdirSync(casesDir()).filter((f) => f.endsWith(".md")) : [];
+    const files = fs.existsSync(casesDir(pid)) ? fs.readdirSync(casesDir(pid)).filter((f) => f.endsWith(".md")) : [];
     if (files.length) {
       fs.mkdirSync(casesTo, { recursive: true });
-      for (const f of files) fs.renameSync(path.join(casesDir(), f), path.join(casesTo, f));
+      for (const f of files) fs.renameSync(path.join(casesDir(pid), f), path.join(casesTo, f));
     }
   } catch {
     // Переезд не удался — не оставляем человека в грязном состоянии: убираем то,
@@ -539,11 +536,11 @@ export function resetUseCases(): ResetStat {
     // он нажмёт ещё раз и увидит тот же мусор.
     archive = null;
     for (const name of ["seed.md", "turns.json", RAW_LOG, QUESTIONS_FILE, PROJECT_TYPE_FILE]) {
-      try { fs.unlinkSync(path.join(rawDir(), name)); } catch { /* нечего убирать */ }
+      try { fs.unlinkSync(path.join(rawDir(pid), name)); } catch { /* нечего убирать */ }
     }
     try {
-      for (const f of fs.readdirSync(casesDir())) {
-        if (f.endsWith(".md")) fs.unlinkSync(path.join(casesDir(), f));
+      for (const f of fs.readdirSync(casesDir(pid))) {
+        if (f.endsWith(".md")) fs.unlinkSync(path.join(casesDir(pid), f));
       }
     } catch { /* папки нет — и хорошо */ }
   }
@@ -551,9 +548,9 @@ export function resetUseCases(): ResetStat {
   return { ...before, archive };
 }
 
-export function readRaw(): string {
+export function readRaw(pid: string): string {
   try {
-    return fs.readFileSync(path.join(rawDir(), RAW_LOG), "utf-8");
+    return fs.readFileSync(path.join(rawDir(pid), RAW_LOG), "utf-8");
   } catch {
     return "";
   }
@@ -568,8 +565,8 @@ export type GateState =
   | { kind: "unconfirmed"; total: number; confirmed: number }
   | { kind: "ready"; total: number; confirmed: number };
 
-export function useCasesGate(): GateState {
-  const { cases } = listCases();
+export function useCasesGate(pid: string): GateState {
+  const { cases } = listCases(pid);
   const confirmed = cases.filter((c) => c.status === "confirmed").length;
   if (cases.length === 0) return { kind: "missing", total: 0, confirmed: 0 };
   if (confirmed < cases.length) return { kind: "unconfirmed", total: cases.length, confirmed };
@@ -583,13 +580,13 @@ export function useCasesGate(): GateState {
  * судьбе принимает он. Кладём его содержимое одним кейсом-черновиком, а исходник
  * оставляем на месте до тех пор, пока владелец не удалит его сам.
  */
-export function migrateLegacy(): { ok: boolean; id?: string } {
+export function migrateLegacy(pid: string): { ok: boolean; id?: string } {
   const file = path.join(APP_DIR, LEGACY_FILE);
   try {
     const text = fs.readFileSync(file, "utf-8").trim();
     if (!text) return { ok: false };
     const title = /^#\s+(.+)$/m.exec(text)?.[1]?.trim() || "Imported from USE-CASES.md";
-    const [id] = appendCases([{ title, summary: text }]);
+    const [id] = appendCases(pid, [{ title, summary: text }]);
     return { ok: true, id };
   } catch {
     return { ok: false };

@@ -34,7 +34,7 @@ import {
   useCasesPaths, migrateLegacyLayout,
 } from "@/lib/use-cases-store";
 import { PROJECT_TYPES, isProjectTypeId } from "@/lib/project-types";
-import { currentProduct, adoptLegacyProjectType, listProducts } from "@/lib/products-config";
+import { activeProduct, adoptLegacyProjectType, listProducts } from "@/lib/products-config";
 import { ProductsSection } from "./_components/products-section";
 import { readInstructionSet } from "@/lib/instruction-set";
 import { DocCommands } from "../_components/doc-commands";
@@ -51,22 +51,45 @@ export const dynamic = "force-dynamic";
 
 const fill = (t: string, v: Record<string, string>) => t.replace(/\{(\w+)\}/g, (m, k) => v[k] ?? m);
 
-export default async function UseCasesPage({ params }: { params: Promise<{ lang: string }> }) {
+export default async function UseCasesPage(
+  { params, searchParams }:
+  { params: Promise<{ lang: string }>; searchParams: Promise<{ product?: string }> },
+) {
   const { lang } = await params;
+  // 🔒 ВЫБРАННЫЙ ПРОДУКТ ЖИВЁТ В АДРЕСЕ (партия 5). `?product=p2` — ссылка
+  // делится, страница переживает перезагрузку, «назад» работает, и всё это без
+  // единой строки JavaScript. Поле «текущий» в файле проекта было бы состоянием
+  // одного человека, записанным в общий репозиторий: два окна панели начали бы
+  // перебивать выбор друг у друга.
+  const { product: requestedProduct } = await searchParams;
   const s = getAdminStrings(lang);
   const u = s.useCases;
   const page = s.pages["doc-use-cases"];
 
-  const { cases, legacy } = listCases();
-  const gate = useCasesGate();
-  const seed = readSeed();
-  // Утверждённые вопросы проекта. Их нет — владелец ещё не смотрел список, и
+  // Проект, начатый до реестра продуктов, принимается в него здесь: страница
+  // динамическая, и это первое место, куда владелец приходит после обновления.
+  // Ничего не делает, если реестр уже не пуст.
+  adoptLegacyProjectType();
+  const product = activeProduct(requestedProduct);
+  const products = listProducts();
+  // Кейсы, написанные до появления продуктов, переезжают в папку продукта.
+  // Порядок обязателен: сначала продукт появляется, потом ему отдают файлы.
+  if (product) migrateLegacyLayout(product.id);
+  const pid = product?.id ?? "";
+  const paths = product ? useCasesPaths(pid) : { cases: "", raw: "" };
+
+  // 🔒 ВСЁ, ЧТО НИЖЕ, ЧИТАЕТСЯ У НАЗВАННОГО ПРОДУКТА. Порядок здесь не
+  // косметика: пока продукт не выбран, читать нечего и не у кого.
+  const { cases, legacy } = product ? listCases(pid) : { cases: [], legacy: false };
+  const gate = product ? useCasesGate(pid) : ({ kind: "missing", total: 0, confirmed: 0 } as const);
+  const seed = product ? readSeed(pid) : "";
+  // Утверждённые вопросы продукта. Их нет — владелец ещё не смотрел список, и
   // первым экраном идёт правка вопросов, а не ответы на чужие.
-  const questions = readQuestions();
+  const questions = product ? readQuestions(pid) : null;
   const set = readInstructionSet();
   const o = s.docsOverview;
 
-  // 🔒 СТРУКТУРА ПРОЕКТА РЕШАЕТ, КАКИЕ СЕМЬ ВОПРОСОВ ПОКАЗАТЬ (владелец 2026-08-15).
+  // 🔒 СТРУКТУРА ПРОДУКТА РЕШАЕТ, КАКИЕ СЕМЬ ВОПРОСОВ ПОКАЗАТЬ (владелец 2026-08-15).
   //
   // Прежде вопросы приходили из словаря одним списком на всех — и интернет-магазин,
   // и клиника, и мозг компании получали одинаковые семь. Теперь список берётся у
@@ -75,16 +98,6 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
   //
   // Карточки собираются ЗДЕСЬ, на сервере, и уезжают в островок пропсами: словарь
   // панели — 82 языка, ему в браузере не место.
-  // Проект, начатый до реестра продуктов, принимается в него здесь: страница
-  // динамическая, и это первое место, куда владелец приходит после обновления.
-  // Ничего не делает, если реестр уже не пуст.
-  adoptLegacyProjectType();
-  // Кейсы, написанные до появления продуктов, переезжают в его папку. Порядок
-  // обязателен: сначала продукт появляется, потом ему отдают файлы.
-  migrateLegacyLayout();
-  const product = currentProduct();
-  const products = listProducts();
-  const paths = useCasesPaths();
   const chosenCard = product && isProjectTypeId(product.type)
     ? s.projectTypes[product.type]
     : null;
@@ -100,7 +113,7 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
 
   // Есть ли вообще что сбрасывать. Кнопка «начать сначала» без единого ответа —
   // это предложение отменить то, чего нет.
-  const counts = resetPreview();
+  const counts = product ? resetPreview(pid) : { seedAnswers: 0, turns: 0, cases: 0, confirmed: 0 };
   const somethingToReset = Boolean(questions) || counts.seedAnswers > 0 || counts.turns > 0 || counts.cases > 0;
 
   // На каком этапе человек СЕЙЧАС — окно «как рождаются кейсы» подсвечивает его.
@@ -180,7 +193,15 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
           появились, на его месте встаёт то, что оно обещало. Держать оба значило
           бы рекламировать человеку то, что у него уже есть. */}
       {gate.kind !== "missing" && (
-        <ProductsSection products={products} current={product} casesCount={cases.length} p={p} />
+        <ProductsSection
+          products={products}
+          current={product}
+          casesCount={cases.length}
+          lang={lang}
+          typeCards={typeCards}
+          pickerLabels={{ ...pickerLabels, addProduct: p.addProduct, addHint: p.addHint }}
+          p={p}
+        />
       )}
 
       {gate.kind === "missing" && (

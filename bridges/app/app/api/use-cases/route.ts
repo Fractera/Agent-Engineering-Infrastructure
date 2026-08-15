@@ -8,7 +8,8 @@ import {
 import { describeProduct } from "@/lib/quiz-brain";
 import { isProjectTypeId } from "@/lib/project-types";
 import {
-  addProduct, updateProduct, currentProduct, adoptLegacyProjectType, defaultSurface,
+  addProduct, updateProduct, adoptLegacyProjectType, defaultSurface,
+  activeProduct, listProducts, findProduct, giveRootTo,
 } from "@/lib/products-config";
 
 // Кейсы: чтение папки и действия над ней.
@@ -23,14 +24,27 @@ export async function GET(req: NextRequest) {
   if (!(await requireAuth(req.headers.get("cookie") ?? ""))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const state = listCases();
+  // 🔒 ПРОДУКТ НАЗЫВАЕТСЯ ЯВНО (партия 5). `?product=p2` решает, чьи кейсы
+  // читаются; неизвестный идентификатор уступает первому продукту, а не отдаёт
+  // пустой экран. Без продукта в реестре читать нечего — это честное «пусто».
+  const product = activeProduct(req.nextUrl.searchParams.get("product"));
+  if (!product) {
+    return NextResponse.json({
+      dir: "", exists: false, cases: [], legacy: false,
+      gate: { kind: "missing", total: 0, confirmed: 0 },
+      seed: "", turns: [], questions: null, product: null, products: [],
+      resetPreview: { seedAnswers: 0, turns: 0, cases: 0, confirmed: 0 },
+    });
+  }
+  const pid = product.id;
+  const state = listCases(pid);
   return NextResponse.json({
-    ...state, gate: useCasesGate(), seed: readSeed(), turns: readTurns(),
-    questions: readQuestions(), product: currentProduct(),
+    ...state, gate: useCasesGate(pid), seed: readSeed(pid), turns: readTurns(pid),
+    questions: readQuestions(pid), product, products: listProducts(),
     // Что исчезнет при «начать сначала» — окно подтверждения обязано называть
     // числа, а не «всё»: «удалить всё» без счёта либо не нажимают, либо
     // нажимают вслепую.
-    resetPreview: resetPreview(),
+    resetPreview: resetPreview(pid),
   });
 }
 
@@ -47,6 +61,16 @@ export async function POST(req: NextRequest) {
     questions?: string[];
     typeId?: string;
     typeTitle?: string;
+    /**
+     * С каким продуктом работает этот вызов.
+     *
+     * 🔒 НАЗЫВАЕТСЯ ЯВНО, А НЕ ВЫВОДИТСЯ. Пока продукт был один, «первый в
+     * реестре» работал; со вторым то же умолчание молча правит чужие кейсы, и
+     * заметит это владелец не сегодня, а когда сломается соседний продукт.
+     */
+    productId?: string;
+    /** Завести НОВЫЙ продукт, а не менять структуру существующего. */
+    newProduct?: boolean;
     // `slug` — машинное имя файла кейса, всегда английское (см. `slugify`).
     cases?: { title: string; summary: string; slug?: string }[];
     turns?: { role: "user" | "assistant"; content: string }[];
@@ -54,15 +78,24 @@ export async function POST(req: NextRequest) {
   } | null;
   if (!body?.op) return NextResponse.json({ error: "op_required" }, { status: 400 });
 
+  // Продукт этого вызова. Операции, создающие продукт, обходятся без него —
+  // им его ещё нет; всем остальным он обязателен.
+  const product = activeProduct(body.productId);
+  const pid = product?.id ?? "";
+  const NEEDS_PRODUCT = ["seed", "questions", "reset", "append", "edit", "confirm", "unconfirm", "confirm-all", "delete", "migrate"];
+  if (NEEDS_PRODUCT.includes(body.op) && !pid) {
+    return NextResponse.json({ error: "no_product" }, { status: 400 });
+  }
+
   switch (body.op) {
     // Ответы на вводные вопросы. Ложатся и затравкой, и в стенограмму: сырьё
     // пишется ВСЕГДА, иначе первые семь ответов — единственное, что исчезает.
     case "seed": {
       if (!body.seed?.trim()) return NextResponse.json({ error: "seed_required" }, { status: 400 });
-      writeSeed(body.seed);
+      writeSeed(pid, body.seed);
       if (body.turns?.length) {
-        appendRaw(body.turns, body.note ?? "вводные вопросы");
-        appendTurns(body.turns);
+        appendRaw(pid, body.turns, body.note ?? "вводные вопросы");
+        appendTurns(pid, body.turns);
       }
       return NextResponse.json({ ok: true });
     }
@@ -85,7 +118,11 @@ export async function POST(req: NextRequest) {
       // даст модель в тот же миг, когда родятся первые кейсы (партия 3): назвать
       // его сейчас можно только словом, которое человек ещё не произносил.
       adoptLegacyProjectType();
-      const existing = currentProduct();
+      // 🔒 «ЗАВЕСТИ ВТОРОЙ» И «ПЕРЕДУМАТЬ ПРО ПЕРВЫЙ» — РАЗНЫЕ ДЕЙСТВИЯ, И
+      // РАЗЛИЧАЕТ ИХ ФЛАГ, А НЕ ДОГАДКА. Без него второй продукт был бы неотличим
+      // от смены структуры первого: тот же вызов, тот же ответ, а результат —
+      // либо новый продукт, либо переписанный старый.
+      const existing = body.newProduct ? null : activeProduct(body.productId);
       const saved = existing
         ? updateProduct(existing.id, {
             type: body.typeId,
@@ -98,23 +135,39 @@ export async function POST(req: NextRequest) {
         : addProduct({ title, type: body.typeId, titleAuto: true });
       return NextResponse.json({ ok: true, product: saved });
     }
-    // Вводные вопросы, утверждённые владельцем. Ложатся файлом в папку проекта:
+    // Владелец переименовывает продукт. С этого мгновения имя человеческое:
+    // машина его больше не трогает никогда (`titleAuto` снимается).
+    case "rename-product": {
+      if (!pid) return NextResponse.json({ error: "no_product" }, { status: 400 });
+      const title = body.title?.trim();
+      if (!title) return NextResponse.json({ error: "title_required" }, { status: 400 });
+      return NextResponse.json({ ok: true, product: updateProduct(pid, { title, titleAuto: false }) });
+    }
+    // Отдать корень другому продукту: адреса страниц прежнего владельца
+    // изменятся, поэтому это отдельное осознанное действие.
+    case "give-root": {
+      if (!pid) return NextResponse.json({ error: "no_product" }, { status: 400 });
+      const result = giveRootTo(pid);
+      if (!result.ok) return NextResponse.json({ error: "not_public" }, { status: 400 });
+      return NextResponse.json({ ok: true, ...result, products: listProducts() });
+    }
+    // Вводные вопросы, утверждённые владельцем. Ложатся файлом в папку продукта:
     // вопрос — половина ответа, и агент должен видеть, о чём спрашивали.
     case "questions": {
       const list = (body.questions ?? []).map((q) => String(q).trim()).filter(Boolean);
       if (!list.length) return NextResponse.json({ error: "questions_required" }, { status: 400 });
-      writeQuestions(list);
+      writeQuestions(pid, list);
       return NextResponse.json({ ok: true, questions: list });
     }
     // Начать сначала: вопросы, затравка, лента, стенограмма и кейсы уезжают в
     // архив папки проекта. Кода приложения это не касается вообще.
     case "reset": {
-      const stat = resetUseCases();
-      return NextResponse.json({ ok: true, ...stat, gate: useCasesGate() });
+      const stat = resetUseCases(pid);
+      return NextResponse.json({ ok: true, ...stat, gate: useCasesGate(pid) });
     }
     case "append": {
       if (!body.cases?.length) return NextResponse.json({ error: "cases_required" }, { status: 400 });
-      const ids = appendCases(body.cases);
+      const ids = appendCases(pid, body.cases);
 
       // 🔒 ПРОДУКТ ПОЛУЧАЕТ ИМЯ РОВНО ЗДЕСЬ (владелец 2026-08-15).
       //
@@ -130,10 +183,9 @@ export async function POST(req: NextRequest) {
       // 🔒 ЛУЧШЕЕ УСИЛИЕ, НЕ УСЛОВИЕ. Отказ модели — не повод потерять кейсы:
       // они уже записаны, а продукт останется с прежним именем и получит своё
       // при следующем разборе. Обратный порядок стоил бы владельцу работы.
-      const product = currentProduct();
       if (product?.titleAuto) {
         try {
-          const described = await describeProduct(readSeed(), body.cases);
+          const described = await describeProduct(readSeed(pid), body.cases);
           // 🔒 КАТЕГОРИЯ — НЕ ИМЯ (найдено проверкой живьём 2026-08-15).
           //
           // Первый же настоящий вызов вернул «Интернет-магазин» — то самое слово,
@@ -153,40 +205,40 @@ export async function POST(req: NextRequest) {
             updateProduct(product.id, { title: described.title, titleAuto: false });
           }
           if (described?.pages.length) {
-            writePagesPlan(described.pages, named ? described.title : product.title);
+            writePagesPlan(pid, described.pages, named ? described.title : product.title);
           }
         } catch { /* модель не ответила — имя подождёт, кейсы важнее */ }
       }
 
-      return NextResponse.json({ ok: true, ids, gate: useCasesGate(), product: currentProduct() });
+      return NextResponse.json({ ok: true, ids, gate: useCasesGate(pid), product: findProduct(pid) });
     }
     case "edit": {
       if (!body.id) return NextResponse.json({ error: "id_required" }, { status: 400 });
-      const ok = writeCase(body.id, { title: body.title, summary: body.summary });
-      return NextResponse.json({ ok, gate: useCasesGate() });
+      const ok = writeCase(pid, body.id, { title: body.title, summary: body.summary });
+      return NextResponse.json({ ok, gate: useCasesGate(pid) });
     }
     case "confirm": {
       if (!body.id) return NextResponse.json({ error: "id_required" }, { status: 400 });
-      const ok = setStatus(body.id, "confirmed");
-      return NextResponse.json({ ok, gate: useCasesGate() });
+      const ok = setStatus(pid, body.id, "confirmed");
+      return NextResponse.json({ ok, gate: useCasesGate(pid) });
     }
     case "unconfirm": {
       if (!body.id) return NextResponse.json({ error: "id_required" }, { status: 400 });
-      const ok = setStatus(body.id, "draft");
-      return NextResponse.json({ ok, gate: useCasesGate() });
+      const ok = setStatus(pid, body.id, "draft");
+      return NextResponse.json({ ok, gate: useCasesGate(pid) });
     }
     case "confirmAll": {
-      const n = confirmAll();
-      return NextResponse.json({ ok: true, confirmed: n, gate: useCasesGate() });
+      const n = confirmAll(pid);
+      return NextResponse.json({ ok: true, confirmed: n, gate: useCasesGate(pid) });
     }
     case "delete": {
       if (!body.id) return NextResponse.json({ error: "id_required" }, { status: 400 });
-      const ok = deleteCase(body.id);
-      return NextResponse.json({ ok, gate: useCasesGate() });
+      const ok = deleteCase(pid, body.id);
+      return NextResponse.json({ ok, gate: useCasesGate(pid) });
     }
     case "migrate": {
-      const r = migrateLegacy();
-      return NextResponse.json({ ...r, gate: useCasesGate() });
+      const r = migrateLegacy(pid);
+      return NextResponse.json({ ...r, gate: useCasesGate(pid) });
     }
     // Стенограмма из клиента: ручной диалог держится на клиенте (сервер сессию
     // не хранит), поэтому сохранить его может только он.
@@ -195,7 +247,7 @@ export async function POST(req: NextRequest) {
     case "raw": {
       if (body.turns?.length) {
         appendRaw(body.turns, body.note);
-        appendTurns(body.turns);
+        appendTurns(pid, body.turns);
       }
       return NextResponse.json({ ok: true });
     }

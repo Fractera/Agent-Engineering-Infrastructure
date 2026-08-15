@@ -12,6 +12,7 @@
 // Динамическая: состояние живое.
 
 import Link from "next/link";
+import { activeProduct } from "@/lib/products-config";
 import { ChevronRight } from "lucide-react";
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
 import { PageShell } from "../_components/page-shell";
@@ -68,7 +69,7 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
     // бы одна запись».
     // Кейсы — тоже папка, и «заведён» для них значит «есть хотя бы один кейс».
     if (slug === "doc-use-cases") {
-      const cs = listCases();
+      const cs = listCases(activeProduct()?.id ?? "");
       return {
         slug,
         // Настоящая папка — с продуктом внутри. Плоский путь вёл владельца в

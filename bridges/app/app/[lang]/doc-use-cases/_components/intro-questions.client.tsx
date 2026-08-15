@@ -14,6 +14,7 @@
 // развёрнуто, а голосом — тем более.
 
 import { useRef, useState } from "react";
+import { productParam } from "./product-param";
 import { useRouter } from "next/navigation";
 import { Loader2, ArrowRight, Check } from "lucide-react";
 import { toast } from "sonner";
@@ -61,7 +62,7 @@ export function IntroQuestions(
       const r = await fetch("/api/use-cases", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ op: "seed", seed, turns }),
+        body: JSON.stringify({ productId: productParam(), op: "seed", seed, turns }),
         credentials: "include",
       });
       const d = await r.json().catch(() => ({}));
