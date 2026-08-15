@@ -23,8 +23,7 @@ import {
   HelpCircle, PackagePlus, FileText, Target, Wrench, Network, BookMarked, GraduationCap,
   ListChecks, AlertTriangle, Search, Bot, Smartphone, Paintbrush, LayoutTemplate, Ruler, LifeBuoy, Compass, Code2, ChevronRight, Crop, Scissors, Mic, Hourglass, FlaskConical, UserRound, IdCard, Workflow, Radar, MonitorSmartphone, Type, ALargeSmall, Frame, type LucideIcon } from "lucide-react";
 import { NAV_GROUPS, NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
-import { useCasesGate } from "@/lib/use-cases-store";
-import type { AdminWarning } from "@/lib/admin-warnings";
+import { warningsBySlug, type AdminWarning } from "@/lib/admin-warnings";
 import { hiddenSlugs } from "@/lib/platform-features";
 import { publicAppUrl } from "@/lib/public-app-url";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
@@ -112,12 +111,16 @@ const MENU_ID = "admin-menu-toggle";
 export function AdminHeader(
   { lang, s, warnings }: { lang: string; s: AdminStrings; warnings: AdminWarning[] },
 ) {
-  // 🔴 Пока пользовательские кейсы не описаны, разработка бессмысленна: агент
-  // построит аккуратно и не то. Пункт горит красным, а на гамбургере появляется
-  // точка — иначе предупреждение живёт внутри закрытого ящика и его никто не
-  // видит. Проверка дешёвая (`statSync`), поэтому её можно делать на каждой
-  // странице панели.
-  const needsUseCases = useCasesGate().kind !== "ready";
+  // 🔴 ЦВЕТ ДОХОДИТ ДО САМОГО ПУНКТА (владелец 2026-08-15).
+  //
+  // Раньше здесь стояла одна зашитая проверка: красным горели пользовательские
+  // кейсы, и горели по СВОЕЙ проверке гейта — второй правде о том же. Остальные
+  // требования цвет теряли: человек прочитал область наверху и шёл искать
+  // «Языки» среди сорока одинаковых строк.
+  //
+  // Теперь метка страницы выводится из того же списка, что и область: гаснет
+  // запись — гаснет подсветка, и разойтись им негде.
+  const alarms = warningsBySlug(warnings);
 
   // Верхняя область меню: всё красное и оранжевое, собранное в одном месте.
   // Список сам укорачивается по мере заполнения и исчезает целиком, когда
@@ -236,7 +239,16 @@ export function AdminHeader(
               <div className="hidden peer-checked:block">
                 {NAV_BY_GROUP[group].filter((slug) => !hidden.has(slug)).map((slug) => {
                   const Icon = ICONS[slug];
-                  const alarm = slug === "doc-use-cases" && needsUseCases;
+                  // Тревога страницы: красная — без неё начинать невозможно,
+                  // оранжевая — можно, но нежелательно. Цвета ровно те же, что у
+                  // записей в области выше по файлу: одно требование не имеет
+                  // права выглядеть в двух местах по-разному.
+                  const alarm = alarms.get(slug);
+                  const red = alarm?.level === "blocking";
+                  const alarmText = alarm
+                    ? red ? "text-red-600 dark:text-red-400" : "text-amber-600 dark:text-amber-400"
+                    : "";
+                  const alarmDot = red ? "bg-red-600 dark:bg-red-400" : "bg-amber-600 dark:bg-amber-400";
                   // 🔒 «СДЕЛАНО ЗА ВАС» ВЫДЕЛЕНА СРЕДИ СТРАНИЦ (владелец 2026-08-14).
                   //
                   // Метка стоит у САМОЙ СТРАНИЦЫ, а не у категории: категория —
@@ -246,21 +258,26 @@ export function AdminHeader(
                   // готовому, а не к недоделанному.
                   //
                   // Зелёный, а не красный: тревога в этой панели уже занята —
-                  // красным помечено то, что МЕШАЕТ начать (пользовательские
-                  // кейсы). Второй цвет тревоги обесценил бы первый.
+                  // красным помечено то, что МЕШАЕТ начать, оранжевым то, без
+                  // чего можно, но нежелательно. Третий цвет тревоги обесценил
+                  // бы первые два. Поэтому и точка ниже уступает тревоге: у
+                  // страницы с предупреждением приглашение не рисуется.
                   const highlight = slug === "visibility";
                   return (
                     <Link
                       key={slug}
                       href={adminHref(lang, slug)}
-                      title={alarm ? s.docs.useCasesRequired : undefined}
+                      // Подсказка — фразы СВОИХ записей, а не выдуманные заново:
+                      // у страницы их может быть несколько (три инструмента
+                      // разработки ведут в один раздел).
+                      title={alarm ? alarm.ids.map((id) => s.warnings.items[id]).join("\n") : undefined}
                       className={`flex items-center gap-2 rounded px-2 py-1.5 pl-6 hover:bg-muted ${
                         highlight ? "text-[13px] font-semibold" : "text-[12px]"
-                      } ${alarm ? "font-medium text-red-600 dark:text-red-400" : "text-foreground"}`}
+                      } ${alarm ? `font-medium ${alarmText}` : "text-foreground"}`}
                     >
-                      <Icon size={11} className={`shrink-0 ${alarm ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`} />
+                      <Icon size={11} className={`shrink-0 ${alarm ? alarmText : "text-muted-foreground"}`} />
                       {s.pages[slug].title}
-                      {alarm && <span className="ml-auto size-1.5 rounded-full bg-red-600 dark:bg-red-400" />}
+                      {alarm && <span className={`ml-auto size-1.5 shrink-0 rounded-full ${alarmDot}`} />}
                       {/* Восемь пикселей — размер владельца. `size-2` в этой
                           системе как раз 8px, поэтому число не зашито стилем
                           вручную и переживёт смену шкалы. */}

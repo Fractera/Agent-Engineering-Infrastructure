@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
-import { NAV_GROUPS, NAV_BY_GROUP, GROUP_INDEX, adminHref } from "@/lib/admin-nav";
+import { NAV_GROUPS, NAV_BY_GROUP, GROUP_INDEX, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
+import { collectWarnings, warningsBySlug } from "@/lib/admin-warnings";
 import { PageShell } from "./_components/page-shell";
 
 // 🔒 ДИНАМИЧЕСКАЯ НЕ РАДИ САМОЙ СТРАНИЦЫ, А РАДИ ШАПКИ (2026-08-11).
@@ -19,6 +20,29 @@ export const dynamic = "force-dynamic";
 export default async function AdminHomePage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
   const s = getAdminStrings(lang);
+
+  // 🔴 ТА ЖЕ ТРЕВОГА, ЧТО В МЕНЮ (владелец 2026-08-15). Дерево на этой странице —
+  // тот же список разделов, и человек, прочитавший область «Прежде чем начинать»,
+  // ищет нужный раздел именно здесь. Пока цвет обрывался на области, дерево
+  // показывало сорок одинаковых строк и заставляло вспоминать названия.
+  //
+  // Считается своим вызовом, а не пропсом из макета, и это не второй источник
+  // правды: функция читает те же файлы на диске, что и шапка, и страница уже
+  // динамическая — снимка сборки здесь не бывает.
+  const alarms = warningsBySlug(collectWarnings());
+
+  // Цвет тревоги. Один и тот же набор классов на карту группы и на её дочерние —
+  // иначе одно требование выглядело бы в дереве двумя разными оттенками.
+  const alarmClass = (slug: AdminPageSlug) => {
+    const a = alarms.get(slug);
+    if (!a) return null;
+    return {
+      title: a.ids.map((id) => s.warnings.items[id]).join("\n"),
+      className: a.level === "blocking"
+        ? "font-medium text-red-600 hover:text-red-700 dark:text-red-400"
+        : "font-medium text-amber-600 hover:text-amber-700 dark:text-amber-400",
+    };
+  };
 
   return (
     <PageShell title={s.home.title} hint={s.home.hint}>
@@ -82,6 +106,10 @@ export default async function AdminHomePage({ params }: { params: Promise<{ lang
         {NAV_GROUPS.map((group) => {
           const index = GROUP_INDEX[group];
           const children = NAV_BY_GROUP[group].filter((slug) => slug !== index);
+          // Заголовок категории НЕ красится: это имя раздела, а не страница, и
+          // настроить в нём нечего. Тот же довод, по которому в меню метка стоит
+          // у страницы, а не у категории.
+          const indexAlarm = alarmClass(index);
           return (
             <section key={group} className="mb-5 break-inside-avoid">
               <h2 className="mb-1.5 text-[13px] font-semibold tracking-tight text-foreground">
@@ -90,23 +118,32 @@ export default async function AdminHomePage({ params }: { params: Promise<{ lang
 
               <Link
                 href={adminHref(lang, index)}
-                className="block rounded-md px-2 py-1 text-[12px] font-semibold text-foreground hover:bg-muted"
+                title={indexAlarm?.title}
+                className={`block rounded-md px-2 py-1 text-[12px] font-semibold hover:bg-muted ${
+                  indexAlarm ? indexAlarm.className : "text-foreground"
+                }`}
               >
                 {s.pages[index].title}
               </Link>
 
               {children.length > 0 && (
                 <ul className="mt-0.5 space-y-0.5 border-l border-border pl-2.5 ml-2">
-                  {children.map((slug) => (
-                    <li key={slug}>
-                      <Link
-                        href={adminHref(lang, slug)}
-                        className="block rounded-md px-2 py-1 text-[12px] text-muted-foreground hover:bg-muted hover:text-foreground"
-                      >
-                        {s.pages[slug].title}
-                      </Link>
-                    </li>
-                  ))}
+                  {children.map((slug) => {
+                    const alarm = alarmClass(slug);
+                    return (
+                      <li key={slug}>
+                        <Link
+                          href={adminHref(lang, slug)}
+                          title={alarm?.title}
+                          className={`block rounded-md px-2 py-1 text-[12px] hover:bg-muted ${
+                            alarm ? alarm.className : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          {s.pages[slug].title}
+                        </Link>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </section>

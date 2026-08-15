@@ -68,6 +68,40 @@ function domainActive(): boolean {
   }
 }
 
+/** Что известно про страницу: уровень тревоги и записи, её породившие. */
+export type SlugAlarm = { level: WarningLevel; ids: AdminWarning["id"][] };
+
+/**
+ * Свод предупреждений ПО СТРАНИЦАМ (владелец 2026-08-15).
+ *
+ * ЗАЧЕМ. Область «Прежде чем начинать» отвечает на вопрос «с чего начать», но
+ * она живёт вверху меню и на главной странице её нет вовсе. Человек, который уже
+ * прочитал её и пошёл искать раздел глазами, снова не видит, какой из сорока
+ * пунктов ему нужен. Поэтому цвет обязан дойти до САМОГО пункта — и в меню, и в
+ * дереве страниц на главной.
+ *
+ * Считается ИЗ ТОГО ЖЕ списка, а не второй проверкой. Пока метка у страницы
+ * вычислялась своим условием (в меню так было зашито `doc-use-cases`), два места
+ * могли разойтись: область говорила одно, пункт — другое.
+ *
+ * Красный ПОБЕЖДАЕТ оранжевый: на одну страницу указывают несколько записей
+ * (три инструмента разработки ведут в `dev-tools`), и пункт обязан носить цвет
+ * самого строгого из них — иначе блокирующее требование спрячется за советом.
+ */
+export function warningsBySlug(warnings: AdminWarning[]): Map<AdminPageSlug, SlugAlarm> {
+  const out = new Map<AdminPageSlug, SlugAlarm>();
+  for (const w of warnings) {
+    const prev = out.get(w.slug);
+    if (!prev) {
+      out.set(w.slug, { level: w.level, ids: [w.id] });
+      continue;
+    }
+    prev.ids.push(w.id);
+    if (w.level === "blocking") prev.level = "blocking";
+  }
+  return out;
+}
+
 export function collectWarnings(): AdminWarning[] {
   const out: AdminWarning[] = [];
 
