@@ -20,13 +20,13 @@ const VALID_CODES = new Set(Object.keys(ALL_LANGUAGE_METADATA));
 // Shell's .env.local, NOT a runtime file. This route reads/writes ONLY the two NEXT_PUBLIC_*
 // language keys with a line-preserving upsert, so it never clobbers the rest of .env.local the way
 // the general /api/config/env route does (that one re-serialises the whole file from the payload).
-// It also mirrors the choice into platform-config.json (languages/defaultLanguage) so the Platform
-// panel stays consistent, but env remains authoritative. Changing the set requires a rebuild.
+// `.env.local` — ЕДИНСТВЕННОЕ хранилище набора языков (2026-08-15). Прежде выбор дублировался
+// в `platform-config.json`, и это был второй источник истины, который никто не читал: и этот
+// маршрут, и гостевое приложение берут набор из переменных окружения. Смена набора требует
+// пересборки — именно потому, что значение запекается в сборку, и хранить его нужно там, откуда
+// сборка его берёт.
 
 const APP_ENV = process.env.APP_ENV_PATH ?? "/opt/fractera/app/.env.local";
-const PLATFORM_CONFIG_PATH =
-  process.env.PLATFORM_CONFIG_PATH ??
-  "/opt/fractera/app/PLATFORM-CONFIG/platform-config.json";
 
 const SUPPORTED_KEY = "NEXT_PUBLIC_SUPPORTED_LANGUAGES";
 const DEFAULT_KEY = "NEXT_PUBLIC_DEFAULT_LOCALE";
@@ -184,19 +184,27 @@ export async function POST(req: NextRequest) {
     fs.mkdirSync(path.dirname(APP_ENV), { recursive: true });
     fs.writeFileSync(APP_ENV, nextEnv, "utf-8");
 
-    // 2) Mirror into platform-config.json so the Platform panel reflects the choice (env wins).
-    try {
-      let cfg: Record<string, unknown> = {};
-      if (fs.existsSync(PLATFORM_CONFIG_PATH)) {
-        cfg = JSON.parse(fs.readFileSync(PLATFORM_CONFIG_PATH, "utf-8")) as Record<string, unknown>;
-      }
-      cfg.languages = languages;
-      cfg.defaultLanguage = defaultLanguage;
-      fs.mkdirSync(path.dirname(PLATFORM_CONFIG_PATH), { recursive: true });
-      fs.writeFileSync(PLATFORM_CONFIG_PATH, JSON.stringify(cfg, null, 2), "utf-8");
-    } catch {
-      /* best-effort mirror; env is the source of truth */
-    }
+    // 🪦 ЗЕРКАЛО В `platform-config.json` УДАЛЕНО 2026-08-15 — ВТОРОЙ ИСТОЧНИК
+    // ИСТИНЫ, КОТОРЫЙ НИКТО НЕ ЧИТАЛ.
+    //
+    // Здесь набор языков дублировался в `PLATFORM-CONFIG/platform-config.json`
+    // «чтобы панель отражала выбор». Проверка показала, что отражать оттуда
+    // некому: GET этого же маршрута читает `.env.local` (см. выше), гостевое
+    // приложение читает ту же переменную через
+    // `config/translations/translations.config.ts`, а `config/platform-config.ts`
+    // берёт из файла только выключатели возможностей и режим маршрутизации —
+    // ветку `languages` он не открывает вовсе.
+    //
+    // То есть значение писалось в два места и читалось из одного. Такая пара не
+    // ошибается ровно до первого сбоя записи: стоит второму файлу отстать — и
+    // сервер начинает утверждать про языки две разные вещи, причём ложную
+    // показывает панель, то есть человек. Для образцового шаблона это
+    // недопустимо, а пользы у зеркала не было никакой.
+    //
+    // Единственный источник — `NEXT_PUBLIC_SUPPORTED_LANGUAGES` и
+    // `NEXT_PUBLIC_DEFAULT_LOCALE` в `app/.env.local`: набор запекается в сборку,
+    // поэтому хранить его там же, откуда его берёт сборка, — единственный способ
+    // не разойтись.
 
     // 🔒 ПЕРЕСБОРКА ТОЛЬКО КОГДА НАБОР ДЕЙСТВИТЕЛЬНО ИЗМЕНИЛСЯ (владелец 2026-08-14).
     //
