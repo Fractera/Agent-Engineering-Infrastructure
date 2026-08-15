@@ -255,7 +255,8 @@ export function QuizDialog(
       const all: Turn[] = draft.trim() ? [...turns, { role: "user", content: draft.trim() }] : turns;
       const d = await call({ mode: "synthesize", turns: all });
       if (!d) return;
-      const cases = (d.cases ?? []) as { title: string; summary: string }[];
+      // `slug` едет вместе с кейсом: это его будущее имя файла, английское.
+      const cases = (d.cases ?? []) as { title: string; summary: string; slug?: string }[];
       // 🔒 ПУСТОЙ РЕЗУЛЬТАТ — НЕ ПОЛОМКА, А ПУСТОЙ РАЗГОВОР (владелец 2026-08-14).
       //
       // Модель ответила и ответила честно: из разговора, в котором ничего не
@@ -266,9 +267,7 @@ export function QuizDialog(
       const r = await fetch("/api/use-cases", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // Язык едет с кейсами: на нём модель назовёт продукт и опишет его
-        // страницы. Панель знает язык из адреса, сервер — нет.
-        body: JSON.stringify({ op: "append", cases, lang }),
+        body: JSON.stringify({ op: "append", cases }),
         credentials: "include",
       });
       if (!r.ok) {

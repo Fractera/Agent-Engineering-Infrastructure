@@ -154,19 +154,41 @@ function nextIndex(): number {
   return (nums.length ? Math.max(...nums) : 0) + 1;
 }
 
-function slugify(title: string): string {
-  return title.toLowerCase()
-    .replace(/[^a-z0-9а-яё\s-]/gi, "")
-    .trim().replace(/\s+/g, "-").slice(0, 48) || "case";
+/**
+ * 🔒 ИМЯ ФАЙЛА КЕЙСА — ТОЛЬКО ЛАТИНИЦА (владелец 2026-08-15, прямой запрет).
+ *
+ * Здесь стояло `[^a-z0-9а-яё\s-]` — кириллица допускалась, и кейсы легли на диск
+ * как `01-покупка-пачки-кофе.md`. Это ошибка двух родов сразу.
+ *
+ * Первый: имена файлов, идентификаторы и пути — машинный слой, у него один язык,
+ * английский (правило 4г). Кириллица в пути — это ещё и разное поведение
+ * файловых систем, кодировок и git на разной технике.
+ *
+ * Второй и главный: этот слой читает АГЕНТ на старте каждой сессии. Всё, что
+ * лежит здесь на языке владельца, оплачивается токенами вечно и на каждом
+ * запуске. Слова человека живут ВНУТРИ файла — заголовок и сценарий он читает и
+ * подтверждает сам; имя файла ему читать незачем.
+ *
+ * Слаг даёт модель на английском (`slug` в ответе синтеза). Здесь остаётся
+ * последний рубеж: всё, что не латиница, отбрасывается, и пустой результат
+ * честно становится `case` — лучше безымянный номер, чем имя на трёх алфавитах.
+ */
+function slugify(slug: string): string {
+  return slug.toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim().replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "")
+    .slice(0, 48) || "case";
 }
 
 /** Добавить кейсы, рождённые синтезом. Все — черновиками: подтверждает человек. */
-export function appendCases(items: { title: string; summary: string }[]): string[] {
+export function appendCases(items: { title: string; summary: string; slug?: string }[]): string[] {
   ensureDirs();
   const ids: string[] = [];
   let n = nextIndex();
   for (const item of items) {
-    const id = `${String(n).padStart(2, "0")}-${slugify(item.title)}`;
+    // Слаг приходит от модели по-английски. Заголовок в него больше НЕ идёт: он
+    // на языке владельца, и именно так на диске появлялись кириллические имена.
+    const id = `${String(n).padStart(2, "0")}-${slugify(item.slug ?? "")}`;
     fs.writeFileSync(
       path.join(casesDir(), `${id}.md`),
       renderCase({ title: item.title, summary: item.summary, status: "draft", confirmedAt: null }),
@@ -398,13 +420,16 @@ export function writePagesPlan(pages: PlannedPage[], productTitle: string): void
   const rows = pages
     .map((p) => `| \`${p.path}\` | ${p.purpose.replace(/\|/g, "\\|")} |`)
     .join("\n");
-  const body = `# Страницы продукта «${productTitle}»
+  // 🔒 ФАЙЛ АНГЛИЙСКИЙ ЦЕЛИКОМ (владелец 2026-08-15). Его читает агент на старте
+  // сессии, а не человек: человек видит те же страницы в панели, на своём языке.
+  // Второй язык здесь оплачивался бы токенами на каждом запуске.
+  const body = `# Pages of "${productTitle}"
 
-Первая версия предложена по вашим кейсам. Это ПЛАН — что продукт должен получить,
-а не опись того, что уже построено: правьте свободно, добавляйте и убирайте строки.
-Что построено на самом деле, всегда видно в папках продукта.
+Proposed from your use cases. This is a PLAN — what this product should have, not an
+inventory of what exists: edit it freely, add and remove rows. What is actually built
+is always visible in the product's folders.
 
-| Адрес | Зачем она |
+| Path | Why it exists |
 |---|---|
 ${rows}
 `;

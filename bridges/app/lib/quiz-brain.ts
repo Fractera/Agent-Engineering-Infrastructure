@@ -237,11 +237,17 @@ export async function autoStream(lang: string, seed: string, turns: Turn[]): Pro
 
 // ── 3. Синтез разговора в кейсы ──────────────────────────────────────────────
 
-export async function synthesize(seed: string, turns: Turn[]): Promise<{ title: string; summary: string }[]> {
+export async function synthesize(
+  seed: string, turns: Turn[],
+): Promise<{ title: string; summary: string; slug: string }[]> {
   const transcript = tail(turns).map((t) => `${t.role === "user" ? "OWNER" : "YOU"}: ${t.content}`).join("\n");
   const out = await chat([
     { role: "system", content: `You turn a conversation about a product into its USER CASES. Reply with STRICT JSON only:
-{"cases":[{"title":"<a short case title, max 8 words>","summary":"<the scenario in 1-4 sentences: who does what, what they came for, the expected result, the edge case>"}]}
+{"cases":[{"slug":"<english-kebab-case-file-name, 2-4 words, latin letters and hyphens only>","title":"<a short case title, max 8 words>","summary":"<the scenario in 1-4 sentences: who does what, what they came for, the expected result, the edge case>"}]}
+
+The SLUG is a machine name — the file this case is stored in. It is ALWAYS English, whatever language the
+owner speaks, and contains nothing but lowercase latin letters and hyphens: "buy-coffee-pack",
+"subscribe-monthly-delivery". It names the actor's action, so two cases can never collide.
 
 DECOMPOSE the owner's description into its DISTINCT user cases: the main path, each meaningful variation, each
 different person or trigger, and the important failure / edge cases — EACH AS A SEPARATE CASE. Aim for SEVERAL
@@ -253,9 +259,20 @@ Write the title and summary in the SAME LANGUAGE the owner used in the conversat
     { role: "user", content: `What the owner told you:\n${seed || "(not stated)"}\n\nThe conversation:\n${transcript || "(the owner said nothing beyond the seed — derive the cases from it alone)"}` },
   ], { json: true });
   try {
-    const j = JSON.parse(out.replace(/^```json\s*|\s*```$/g, "")) as { cases?: { title?: string; summary?: string }[] };
+    const j = JSON.parse(out.replace(/^```json\s*|\s*```$/g, "")) as {
+      cases?: { title?: string; summary?: string; slug?: string }[];
+    };
     return (j.cases ?? [])
-      .map((c) => ({ title: (c.title ?? "").trim().slice(0, 200), summary: (c.summary ?? "").trim() }))
+      .map((c) => ({
+        title: (c.title ?? "").trim().slice(0, 200),
+        summary: (c.summary ?? "").trim(),
+        // Слаг обязан быть латиницей. Модель просили — но просьба в промпте не
+        // обязательна к исполнению, поэтому здесь стоит проверка: всё, что не
+        // латиница, отбрасывается, и склад кейсов подставит запасное имя.
+        slug: /^[a-z0-9-]+$/.test((c.slug ?? "").trim().toLowerCase())
+          ? (c.slug ?? "").trim().toLowerCase()
+          : "",
+      }))
       .filter((c) => c.title);
   } catch {
     return [];
@@ -300,7 +317,6 @@ text, the remark wins. NEVER add a scenario they did not mention. Answer in the 
  * Что построено на самом деле, всегда считается обходом папок.
  */
 export async function describeProduct(
-  lang: string,
   seed: string,
   cases: { title: string; summary: string }[],
 ): Promise<{ title: string; pages: { path: string; purpose: string }[] } | null> {
@@ -309,20 +325,24 @@ export async function describeProduct(
     { role: "system", content: `You name a product and sketch the pages it needs. Reply with STRICT JSON only:
 {"title":"<the product's name, 1-3 words>","pages":[{"path":"/example","purpose":"<why this page exists, one short sentence>"}]}
 
-The TITLE names THIS product as its owner would say it aloud, and it must be IMPOSSIBLE to reuse for
-anyone else's product. Take the words from what they sell or do: coffee they roast themselves → "Своя
-обжарка"; legal help for landlords → "Юристы для арендодателей".
+🔒 EVERYTHING YOU RETURN IS IN ENGLISH, whatever language the owner speaks. This answer is written into
+the project's machine layer — a config file and a plan the coding agent loads at the start of every
+session. One language there is a hard rule, not a preference: a second one is paid for in tokens on
+every run, forever.
+
+The TITLE names THIS product and must be IMPOSSIBLE to reuse for anyone else's product. Take the words
+from what they sell or do: coffee they roast themselves → "Own Roast"; legal help for landlords →
+"Landlord Legal". 1-3 words.
 FORBIDDEN as a title — these describe a category, not a product, and fit thousands of owners:
-"Интернет-магазин", "Online store", "Landing page", "Посадочная страница", "Веб-приложение",
-"Web application", "SaaS", "Сервис", "Platform", "Маркетплейс". Never mention the technology.
+"Online store", "Landing page", "Web application", "SaaS", "Service", "Platform", "Marketplace",
+"Shop", "Website". Never mention the technology.
 If the owner said too little to name the product specifically, return an empty title rather than a
 category — a category name is worse than no name.
 
 The PAGES are the ones these use cases require and nothing more: typically 2 to 8. Use real URL paths
 (/, /catalog, /catalog/[slug], /cart, /checkout, /account). A product with no public pages at all —
 an internal tool, a channel-only automation — returns an empty pages list rather than invented ones.
-
-Write the title and the purposes in ${languageName(lang)}, the language of the owner.` },
+Each purpose is one short English sentence.` },
     { role: "user", content: `What the owner told you:\n${seed || "(not stated)"}\n\nTheir use cases:\n${list}` },
   ], { json: true });
   try {

@@ -47,9 +47,8 @@ export async function POST(req: NextRequest) {
     questions?: string[];
     typeId?: string;
     typeTitle?: string;
-    /** Язык владельца — на нём модель назовёт продукт и опишет его страницы. */
-    lang?: string;
-    cases?: { title: string; summary: string }[];
+    // `slug` — машинное имя файла кейса, всегда английское (см. `slugify`).
+    cases?: { title: string; summary: string; slug?: string }[];
     turns?: { role: "user" | "assistant"; content: string }[];
     note?: string;
   } | null;
@@ -134,7 +133,7 @@ export async function POST(req: NextRequest) {
       const product = currentProduct();
       if (product?.titleAuto) {
         try {
-          const described = await describeProduct(body.lang ?? "en", readSeed(), body.cases);
+          const described = await describeProduct(readSeed(), body.cases);
           // 🔒 КАТЕГОРИЯ — НЕ ИМЯ (найдено проверкой живьём 2026-08-15).
           //
           // Первый же настоящий вызов вернул «Интернет-магазин» — то самое слово,
