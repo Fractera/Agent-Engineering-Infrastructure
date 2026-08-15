@@ -1,18 +1,18 @@
-// Карта группы «design» — страница-маршрутизатор (2026-08-15).
+// Карта группы «Дизайн» — рубрикатор с текущим состоянием (2026-08-15).
 //
-// Вся разметка в общем `GroupMap`: список разделов берётся из навигации, так что
-// второго списка, который можно забыть обновить, не существует. Здесь остаётся
-// только пояснение — почему эти разделы стоят вместе.
+// 🔒 НЕ ОБЩИЙ `GroupMap`, И ЭТО ОСОЗНАННО. Тот перечисляет разделы — для восьми
+// других групп этого хватает: там вопрос «куда идти». У дизайна вопрос другой —
+// «как сейчас выглядит мой сайт», и ответ разбросан по четырём страницам. Список
+// ссылок заставил бы обойти все четыре ради того, что помещается в один экран.
 //
-// Динамическая: заголовки разделов приходят из словаря по языку адреса.
+// Динамическая: состояние читается из живого файла настроек.
 
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
-import { GroupMap } from "../_components/group-map";
+import { DesignMap } from "./_components";
 
 export const dynamic = "force-dynamic";
 
 export default async function Page({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
-  const s = getAdminStrings(lang);
-  return <GroupMap group="design" lang={lang} s={s} intro={s.groupMaps["design"]} />;
+  return <DesignMap lang={lang} s={getAdminStrings(lang)} />;
 }

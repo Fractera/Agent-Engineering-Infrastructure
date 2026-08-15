@@ -442,6 +442,12 @@ export type AdminStrings = {
     helpContrastTitle: string; helpContrast: string;
   };
 
+  // Карта дизайна: рубрикатор с текущим состоянием четырёх разделов.
+  mapDesign: {
+    intro: string; allDefault: string; notSet: string; liveNote: string;
+    systemFont: string; scaleValue: string; schemeNamed: string; colorsCustom: string;
+  };
+
   warnings: {
     title: string;
     items: {

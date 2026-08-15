@@ -2017,6 +2017,16 @@
         "teal": "Teal",
         "amber": "Amber"
       }
+    },
+    "mapDesign": {
+      "intro": "Four decisions in the order they matter: the fonts first, then how big the text is, then the shape of surfaces, then colour. Each applies to the whole site at once.",
+      "allDefault": "Nothing has been changed yet — the site looks the way the project theme decided, and that is a legitimate state, not an unfinished one.",
+      "notSet": "Not set — the theme decides",
+      "liveNote": "Every value on this page is read from the same file the site applies, so what you see here is what visitors see. Changes take effect on the next page load, without a rebuild.",
+      "systemFont": "System font",
+      "scaleValue": "Text at {value}",
+      "schemeNamed": "Scheme: {name}",
+      "colorsCustom": "Own combination · {count} colours"
     }
   },
   "ru": {
@@ -4037,6 +4047,16 @@
         "teal": "Бирюзовый",
         "amber": "Янтарный"
       }
+    },
+    "mapDesign": {
+      "intro": "Четыре решения в том порядке, в котором они важны: сначала шрифты, потом размер текста, потом форма поверхностей, потом цвет. Каждое действует сразу на весь сайт.",
+      "allDefault": "Пока ничего не менялось — сайт выглядит так, как решила тема проекта, и это законное состояние, а не незавершённое.",
+      "notSet": "Не задано — решает тема",
+      "liveNote": "Все значения на этой странице прочитаны из того же файла, который применяет сайт: здесь видно ровно то, что видят посетители. Изменения вступают в силу на следующей загрузке, без пересборки.",
+      "systemFont": "Системный шрифт",
+      "scaleValue": "Текст на {value}",
+      "schemeNamed": "Схема: {name}",
+      "colorsCustom": "Своё сочетание · цветов: {count}"
     }
   }
 }
