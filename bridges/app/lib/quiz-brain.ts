@@ -282,3 +282,54 @@ text, the remark wins. NEVER add a scenario they did not mention. Answer in the 
     return null;
   }
 }
+
+/**
+ * Имя продукту и первый план его страниц (партия 3, владелец 2026-08-15).
+ *
+ * 🔒 ЗАЧЕМ ИМЯ ДАЁТ МОДЕЛЬ. Спросить «как назвать продукт» у человека, который
+ * только что описал его семью ответами, — значит потребовать работу, ответ на
+ * которую уже прозвучал. Имя рождается из кейсов, а владелец правит его одним
+ * нажатием, если не угадали.
+ *
+ * 🔒 ПОЧЕМУ ЭТО ОТДЕЛЬНЫЙ ВЫЗОВ, А НЕ ДОБАВКА К СИНТЕЗУ. Промпт синтеза оплачен
+ * разбором конкретных провалов и не переписывается ради удобства: попросив его
+ * заодно назвать продукт, мы сместили бы его внимание с разбора сценариев, ради
+ * которого он и написан.
+ *
+ * Страницы — ПЛАН, а не опись: модель предлагает, что продукт должен получить.
+ * Что построено на самом деле, всегда считается обходом папок.
+ */
+export async function describeProduct(
+  lang: string,
+  seed: string,
+  cases: { title: string; summary: string }[],
+): Promise<{ title: string; pages: { path: string; purpose: string }[] } | null> {
+  const list = cases.map((c, i) => `${i + 1}. ${c.title} — ${c.summary}`).join("\n");
+  const out = await chat([
+    { role: "system", content: `You name a product and sketch the pages it needs. Reply with STRICT JSON only:
+{"title":"<the product's name, 1-3 words>","pages":[{"path":"/example","purpose":"<why this page exists, one short sentence>"}]}
+
+The TITLE names THIS product as its owner would say it aloud — concrete, not a category. "Юристы" or
+"Coffee subscriptions", never "Landing page" or "Web application". Never mention the technology.
+
+The PAGES are the ones these use cases require and nothing more: typically 2 to 8. Use real URL paths
+(/, /catalog, /catalog/[slug], /cart, /checkout, /account). A product with no public pages at all —
+an internal tool, a channel-only automation — returns an empty pages list rather than invented ones.
+
+Write the title and the purposes in ${languageName(lang)}, the language of the owner.` },
+    { role: "user", content: `What the owner told you:\n${seed || "(not stated)"}\n\nTheir use cases:\n${list}` },
+  ], { json: true });
+  try {
+    const j = JSON.parse(out.replace(/^```json\s*|\s*```$/g, "")) as {
+      title?: string; pages?: { path?: string; purpose?: string }[];
+    };
+    const title = (j.title ?? "").trim().slice(0, 80);
+    if (!title) return null;
+    const pages = (j.pages ?? [])
+      .map((p) => ({ path: (p.path ?? "").trim(), purpose: (p.purpose ?? "").trim() }))
+      .filter((p) => p.path);
+    return { title, pages };
+  } catch {
+    return null;
+  }
+}

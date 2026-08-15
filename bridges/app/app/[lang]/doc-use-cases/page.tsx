@@ -31,7 +31,7 @@ import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
 import {
   listCases, useCasesGate, readSeed, readQuestions, resetPreview,
-  USE_CASES_DIR, CASES_SUBDIR, RAW_SUBDIR,
+  useCasesPaths, migrateLegacyLayout,
 } from "@/lib/use-cases-store";
 import { PROJECT_TYPES, isProjectTypeId } from "@/lib/project-types";
 import { currentProduct, adoptLegacyProjectType } from "@/lib/products-config";
@@ -78,7 +78,11 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
   // динамическая, и это первое место, куда владелец приходит после обновления.
   // Ничего не делает, если реестр уже не пуст.
   adoptLegacyProjectType();
+  // Кейсы, написанные до появления продуктов, переезжают в его папку. Порядок
+  // обязателен: сначала продукт появляется, потом ему отдают файлы.
+  migrateLegacyLayout();
   const product = currentProduct();
+  const paths = useCasesPaths();
   const chosenCard = product && isProjectTypeId(product.type)
     ? s.projectTypes[product.type]
     : null;
@@ -367,7 +371,7 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
 
         <p className="flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground">
           <FolderOpen size={11} />
-          {USE_CASES_DIR}/{CASES_SUBDIR}/ · {USE_CASES_DIR}/{RAW_SUBDIR}/
+          {paths.cases} · {paths.raw}
         </p>
       </div>
 

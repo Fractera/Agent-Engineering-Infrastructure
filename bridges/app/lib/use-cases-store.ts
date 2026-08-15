@@ -41,8 +41,60 @@ export type UseCase = {
   confirmedAt: string | null;
 };
 
-const casesDir = () => path.join(APP_DIR, USE_CASES_DIR, CASES_SUBDIR);
-const rawDir = () => path.join(APP_DIR, USE_CASES_DIR, RAW_SUBDIR);
+// 🔒 КЕЙСЫ ЖИВУТ В ПАПКЕ СВОЕГО ПРОДУКТА (владелец 2026-08-15).
+//
+// Плоская папка отвечала на вопрос «чьи это кейсы» словом «проекта». Пока проект
+// один, это сходит; на втором продукте вопрос становится главным, а ответа нет:
+// у «проекта» нет ни адреса, ни папки, ни таблиц, и построить по нему нельзя.
+//
+// Место файла и есть ответ. Никакой метки `product:` в шапке кейса не нужно —
+// метка описывает, а папка принуждает: два кейса с разными метками всё равно
+// лежали бы рядом и правили один и тот же код.
+//
+// Продукт существует с момента выбора структуры (`PRODUCTS-CONFIG`), то есть до
+// первого вопроса. Плоский путь остаётся только для проектов, начатых раньше, —
+// и живёт до первого открытия страницы, где `migrateLegacyLayout()` переносит их
+// в папку продукта.
+const productDir = () => {
+  const id = currentProduct()?.id;
+  return id ? path.join(APP_DIR, USE_CASES_DIR, id) : path.join(APP_DIR, USE_CASES_DIR);
+};
+
+const casesDir = () => path.join(productDir(), CASES_SUBDIR);
+const rawDir = () => path.join(productDir(), RAW_SUBDIR);
+
+/** Пути для показа человеку — с продуктом внутри, как они лежат на диске. */
+export function useCasesPaths(): { cases: string; raw: string } {
+  const id = currentProduct()?.id;
+  const base = id ? `${USE_CASES_DIR}/${id}` : USE_CASES_DIR;
+  return { cases: `${base}/${CASES_SUBDIR}/`, raw: `${base}/${RAW_SUBDIR}/` };
+}
+
+/**
+ * Перенос кейсов, написанных до появления продуктов.
+ *
+ * Ничего не делает, когда переносить нечего, — а это все сервера, кроме тех, где
+ * успели поработать в первые сутки. Файлы ПЕРЕЕЗЖАЮТ, а не копируются: две копии
+ * кейсов в двух местах — это два ответа на вопрос, что строить.
+ */
+export function migrateLegacyLayout(): boolean {
+  const id = currentProduct()?.id;
+  if (!id) return false;
+  const oldBase = path.join(APP_DIR, USE_CASES_DIR);
+  const newBase = path.join(oldBase, id);
+  let moved = false;
+  for (const sub of [CASES_SUBDIR, RAW_SUBDIR]) {
+    const from = path.join(oldBase, sub);
+    const to = path.join(newBase, sub);
+    if (!fs.existsSync(from) || fs.existsSync(to)) continue;
+    try {
+      fs.mkdirSync(newBase, { recursive: true });
+      fs.renameSync(from, to);
+      moved = true;
+    } catch { /* не удалось — оставляем на месте, читаться будет пустая папка продукта */ }
+  }
+  return moved;
+}
 
 function ensureDirs(): void {
   fs.mkdirSync(casesDir(), { recursive: true });
@@ -317,6 +369,54 @@ export function writeQuestions(list: string[]): void {
   ensureDirs();
   const clean = list.map((q) => q.trim()).filter(Boolean);
   fs.writeFileSync(path.join(rawDir(), QUESTIONS_FILE), JSON.stringify(clean, null, 1), "utf-8");
+}
+
+// ── План страниц продукта ────────────────────────────────────────────────────
+//
+// 🔒 ПЛАН — ЭТО НАМЕРЕНИЕ, А НЕ ОПИСЬ (владелец 2026-08-15).
+//
+// Владелец просил, чтобы агент знал, с какими страницами продукта работать.
+// Соблазн — держать список страниц в конфиге; но список файлов есть ПРОИЗВОДНОЕ
+// от файловой системы, и записанный руками он разойдётся с ней в первую неделю:
+// агент создал страницу, конфиг не тронул, следующий агент работает по вчерашней
+// карте. Ровно этот класс ошибки уже стоил трёх дефектов в реестре продуктов.
+//
+// Поэтому здесь лежит другое знание — то, которое вывести НЕЛЬЗЯ: какие страницы
+// продукт ДОЛЖЕН получить, судя по кейсам. Что построено на самом деле, всегда
+// считается обходом папок; расхождение плана и факта и есть ответ на вопрос «что
+// ещё не сделано».
+//
+// Файл человеческий и правится свободно: это план владельца, а не машинная
+// запись. Модель лишь предлагает первую версию.
+const PAGES_FILE = "PAGES.md";
+
+export type PlannedPage = { path: string; purpose: string };
+
+export function writePagesPlan(pages: PlannedPage[], productTitle: string): void {
+  if (!pages.length) return;
+  fs.mkdirSync(productDir(), { recursive: true });
+  const rows = pages
+    .map((p) => `| \`${p.path}\` | ${p.purpose.replace(/\|/g, "\\|")} |`)
+    .join("\n");
+  const body = `# Страницы продукта «${productTitle}»
+
+Первая версия предложена по вашим кейсам. Это ПЛАН — что продукт должен получить,
+а не опись того, что уже построено: правьте свободно, добавляйте и убирайте строки.
+Что построено на самом деле, всегда видно в папках продукта.
+
+| Адрес | Зачем она |
+|---|---|
+${rows}
+`;
+  fs.writeFileSync(path.join(productDir(), PAGES_FILE), body, "utf-8");
+}
+
+export function readPagesPlan(): string {
+  try {
+    return fs.readFileSync(path.join(productDir(), PAGES_FILE), "utf-8");
+  } catch {
+    return "";
+  }
 }
 
 // ── Начать сначала ───────────────────────────────────────────────────────────

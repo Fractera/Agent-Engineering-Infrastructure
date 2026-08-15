@@ -3,8 +3,9 @@ import { requireAuth } from "@/lib/require-auth";
 import {
   listCases, useCasesGate, appendCases, writeCase, setStatus, confirmAll, deleteCase,
   migrateLegacy, appendRaw, writeSeed, readSeed, appendTurns, readTurns,
-  readQuestions, writeQuestions, resetUseCases, resetPreview,
+  readQuestions, writeQuestions, resetUseCases, resetPreview, writePagesPlan,
 } from "@/lib/use-cases-store";
+import { describeProduct } from "@/lib/quiz-brain";
 import { isProjectTypeId } from "@/lib/project-types";
 import {
   addProduct, updateProduct, currentProduct, adoptLegacyProjectType, defaultSurface,
@@ -46,6 +47,8 @@ export async function POST(req: NextRequest) {
     questions?: string[];
     typeId?: string;
     typeTitle?: string;
+    /** Язык владельца — на нём модель назовёт продукт и опишет его страницы. */
+    lang?: string;
     cases?: { title: string; summary: string }[];
     turns?: { role: "user" | "assistant"; content: string }[];
     note?: string;
@@ -113,7 +116,33 @@ export async function POST(req: NextRequest) {
     case "append": {
       if (!body.cases?.length) return NextResponse.json({ error: "cases_required" }, { status: 400 });
       const ids = appendCases(body.cases);
-      return NextResponse.json({ ok: true, ids, gate: useCasesGate() });
+
+      // 🔒 ПРОДУКТ ПОЛУЧАЕТ ИМЯ РОВНО ЗДЕСЬ (владелец 2026-08-15).
+      //
+      // Не при выборе структуры — там он ещё безымянный, и звать его можно только
+      // названием структуры («Посадочная страница»), которое человек не
+      // произносил. И не отдельной кнопкой: спрашивать «как назвать?» у того, кто
+      // только что описал продукт семью ответами, — требовать работу, ответ на
+      // которую уже прозвучал.
+      //
+      // Момент выбран самый поздний из возможных: кейсы уже на диске, значит имя
+      // рождается из того, что владелец подтвердил делом.
+      //
+      // 🔒 ЛУЧШЕЕ УСИЛИЕ, НЕ УСЛОВИЕ. Отказ модели — не повод потерять кейсы:
+      // они уже записаны, а продукт останется с прежним именем и получит своё
+      // при следующем разборе. Обратный порядок стоил бы владельцу работы.
+      const product = currentProduct();
+      if (product?.titleAuto) {
+        try {
+          const described = await describeProduct(body.lang ?? "en", readSeed(), body.cases);
+          if (described) {
+            updateProduct(product.id, { title: described.title, titleAuto: false });
+            writePagesPlan(described.pages, described.title);
+          }
+        } catch { /* модель не ответила — имя подождёт, кейсы важнее */ }
+      }
+
+      return NextResponse.json({ ok: true, ids, gate: useCasesGate(), product: currentProduct() });
     }
     case "edit": {
       if (!body.id) return NextResponse.json({ error: "id_required" }, { status: 400 });

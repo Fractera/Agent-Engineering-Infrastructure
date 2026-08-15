@@ -266,7 +266,9 @@ export function QuizDialog(
       const r = await fetch("/api/use-cases", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ op: "append", cases }),
+        // Язык едет с кейсами: на нём модель назовёт продукт и опишет его
+        // страницы. Панель знает язык из адреса, сервер — нет.
+        body: JSON.stringify({ op: "append", cases, lang }),
         credentials: "include",
       });
       if (!r.ok) {
