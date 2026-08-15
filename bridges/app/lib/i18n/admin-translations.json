@@ -2001,7 +2001,22 @@
       "helpThemesTitle": "Light and dark are separate values.",
       "helpThemes": "A colour set once is almost always wrong on the other theme: dark text on a dark background disappears entirely. Set only the theme you care about — the other keeps the project's.",
       "helpContrastTitle": "The contrast figure is a measurement, not an opinion.",
-      "helpContrast": "It is the ratio between text and background as the accessibility standard defines it. 4.5 is the threshold for normal text, 3.0 for large. Below that the page is not 'a matter of taste' — part of your visitors cannot read it."
+      "helpContrast": "It is the ratio between text and background as the accessibility standard defines it. 4.5 is the threshold for normal text, 3.0 for large. Below that the page is not 'a matter of taste' — part of your visitors cannot read it.",
+      "schemesLabel": "Ready-made schemes",
+      "schemesHint": "One press sets all seven roles in both themes. Adjust anything afterwards — the change stays; press the same scheme again and its values come back.",
+      "schemeCustom": "Your own combination — no ready-made scheme matches it exactly.",
+      "schemes": {
+        "zinc": "Zinc",
+        "slate": "Slate",
+        "stone": "Stone",
+        "blue": "Blue",
+        "violet": "Violet",
+        "green": "Green",
+        "orange": "Orange",
+        "rose": "Rose",
+        "teal": "Teal",
+        "amber": "Amber"
+      }
     }
   },
   "ru": {
@@ -4006,7 +4021,22 @@
       "helpThemesTitle": "Светлая и тёмная — разные значения.",
       "helpThemes": "Цвет, заданный один раз, на второй теме почти всегда неверен: тёмный текст на тёмном фоне исчезает целиком. Задайте только ту тему, которая вам важна, — вторая сохранит цвета проекта.",
       "helpContrastTitle": "Число контраста — это измерение, а не мнение.",
-      "helpContrast": "Это отношение яркостей текста и фона в том виде, в каком его определяет стандарт доступности. 4,5 — порог для обычного текста, 3,0 — для крупного. Ниже него страница не «дело вкуса»: часть ваших посетителей её не прочитает."
+      "helpContrast": "Это отношение яркостей текста и фона в том виде, в каком его определяет стандарт доступности. 4,5 — порог для обычного текста, 3,0 — для крупного. Ниже него страница не «дело вкуса»: часть ваших посетителей её не прочитает.",
+      "schemesLabel": "Готовые решения",
+      "schemesHint": "Одно нажатие задаёт все семь ролей в обеих темах. Дальше можно поправить что угодно — правка сохранится; нажмёте ту же схему снова — вернутся её значения.",
+      "schemeCustom": "Своё сочетание — ни одно готовое решение с ним точно не совпадает.",
+      "schemes": {
+        "zinc": "Графит",
+        "slate": "Сланец",
+        "stone": "Камень",
+        "blue": "Синий",
+        "violet": "Фиолетовый",
+        "green": "Зелёный",
+        "orange": "Оранжевый",
+        "rose": "Розовый",
+        "teal": "Бирюзовый",
+        "amber": "Янтарный"
+      }
     }
   }
 }

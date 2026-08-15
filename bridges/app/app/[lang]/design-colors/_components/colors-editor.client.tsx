@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
 import { DesignWorkbench, DesignPreview } from "../../_components/design-workbench";
+import { COLOR_SCHEMES, activeScheme } from "@/lib/design/color-schemes";
 
 // Редактор цветов: семь ролей, две темы, живая проверка контраста.
 //
@@ -76,6 +77,17 @@ export function ColorsEditor({ initial, labels }: { initial: State; labels: Admi
     setState(s => ({ ...s, [theme]: { ...s[theme], [role]: value } }));
   }
 
+  // 🔒 СХЕМА ЗАМЕНЯЕТ ОБЕ ТЕМЫ ЦЕЛИКОМ, А НЕ ДОПОЛНЯЕТ ТЕКУЩЕЕ. Иначе прежние
+  // правки остались бы поверх нового решения, и «Изумруд» вышел бы наполовину
+  // синим. Отсюда же поведение, которое владелец описал словами: поправил цвет —
+  // правка живёт; нажал ту же схему снова — вернулись её значения.
+  function applyScheme(id: string) {
+    const scheme = COLOR_SCHEMES.find(x => x.id === id);
+    if (!scheme) return;
+    setStatus("idle");
+    setState({ light: { ...scheme.light }, dark: { ...scheme.dark } });
+  }
+
   function clear(role: Role) {
     setStatus("idle");
     setState(s => {
@@ -104,8 +116,52 @@ export function ColorsEditor({ initial, labels }: { initial: State; labels: Admi
   const verdict =
     contrast === null ? null : contrast >= 4.5 ? "ok" : contrast >= 3 ? "low" : "bad";
 
+  const active = activeScheme(state.light, state.dark);
+
   const controls = (
     <div className="flex flex-col gap-4">
+      {/* Готовые решения — ПЕРВЫМИ: семь полей выбора цвета честны и плохи как
+          начало. Человек, открывший их впервые, не знает, какой серый поставить
+          в рамки, чтобы он не спорил с фоном; схема отвечает на это целиком. */}
+      <section className="rounded-lg border border-border p-3">
+        <p className="text-[13px] font-medium text-foreground">{labels.schemesLabel}</p>
+        <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{labels.schemesHint}</p>
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
+          {COLOR_SCHEMES.map(scheme => {
+            const on = active === scheme.id;
+            const face = scheme[theme];
+            return (
+              <button
+                key={scheme.id}
+                type="button"
+                onClick={() => applyScheme(scheme.id)}
+                aria-pressed={on}
+                title={labels.schemes[scheme.id as keyof typeof labels.schemes]}
+                className={`flex items-center gap-1.5 rounded-md border px-2 py-1.5 transition-colors ${
+                  on ? "border-primary/50 bg-primary/5" : "border-border hover:bg-muted/50"
+                }`}
+              >
+                <span className="flex gap-0.5">
+                  {([face.background, face.primary, face.accent] as const).map((c, i) => (
+                    <span
+                      key={i}
+                      className="size-3 rounded-full border border-black/10"
+                      style={{ background: c }}
+                    />
+                  ))}
+                </span>
+                <span className="text-[11px] text-foreground">
+                  {labels.schemes[scheme.id as keyof typeof labels.schemes]}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        {!active && (
+          <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">{labels.schemeCustom}</p>
+        )}
+      </section>
+
       <div className="flex gap-2">
         {(["light", "dark"] as Theme[]).map(t => (
           <Button

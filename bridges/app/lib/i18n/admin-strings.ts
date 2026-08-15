@@ -429,6 +429,8 @@ export type AdminStrings = {
   // Цвета (слой «Дизайн», шаг 5): роли, две темы, живая проверка контраста.
   designColors: {
     intro: string;
+    schemesLabel: string; schemesHint: string; schemeCustom: string;
+    schemes: Record<"zinc"|"slate"|"stone"|"blue"|"violet"|"green"|"orange"|"rose"|"teal"|"amber", string>;
     themeLight: string; themeDark: string;
     roles: Record<"primary" | "accent" | "background" | "foreground" | "muted" | "border" | "destructive", { label: string; description: string }>;
     contrastOk: string; contrastLow: string; contrastBad: string; contrastHint: string;
