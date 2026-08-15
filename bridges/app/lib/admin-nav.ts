@@ -30,6 +30,7 @@ export const NAV = [
   // владелец захочет изменить, увидев полученный сайт. Страницы идут от опоры
   // к вершине: шрифты выбираются раньше шкалы, шкала раньше форм и цвета.
   { slug: "design-fonts",     group: "design" },
+  { slug: "design-type",      group: "design" },
 
   { slug: "map-application",  group: "application" },
   { slug: "app-settings",    group: "application" },

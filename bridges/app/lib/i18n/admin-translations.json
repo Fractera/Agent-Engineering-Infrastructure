@@ -1421,6 +1421,10 @@
       "design-fonts": {
         "title": "Fonts",
         "hint": "Headings, body text and monospace — where the families come from and how they are connected."
+      },
+      "design-type": {
+        "title": "Typography",
+        "hint": "The type scale and line height — one number for the whole set."
       }
     },
     "breadcrumbHome": "Panel",
@@ -1863,6 +1867,34 @@
       "helpAlphabet": "A font without Cyrillic turns a Russian page into a row of rectangles, and the build will not warn you — the page renders perfectly, it is simply unreadable. Every entry states which alphabets it covers; check it against the languages you switched on.",
       "helpSystemTitle": "Why the system font is first.",
       "helpSystem": "It is the fastest possible answer: nothing to download, nothing to wait for, no third party involved. For most projects it is also the right one — a custom font earns its cost only when the brand actually depends on it."
+    },
+    "designType": {
+      "intro": "One number changes the whole set: headings, body text, captions — all of it, proportions intact.",
+      "scaleLabel": "Type scale",
+      "scaleHint": "A multiplier over the project scale. 1.0 is the size the project ships with.",
+      "leadingLabel": "Line height",
+      "leadingHint": "The space between lines of body text. Lower is denser, higher is airier.",
+      "presets": {
+        "compact": "Compact",
+        "normal": "Default",
+        "relaxed": "Relaxed"
+      },
+      "preview": "Preview",
+      "previewH1": "This is a page heading",
+      "previewBody": "And this is body text underneath it — the size most of your visitors will actually read.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "failed": "Could not save",
+      "nothingToSave": "Nothing changed",
+      "reset": "Back to the project scale",
+      "helpLabel": "Why one multiplier and not nine separate sizes",
+      "helpWhyTitle": "Nine fields are nine ways to break the scale.",
+      "helpWhy": "A subtitle larger than its heading, body text smaller than a caption — that is exactly the disarray this project spent a day removing from its code. A multiplier moves everything at once and keeps the proportions: the set is either bigger or smaller, never inconsistent.",
+      "helpRangeTitle": "Why the range is limited.",
+      "helpRange": "Between 0.75 and 1.5. Outside it text is either unreadable or breaks the layout, and you would only discover that by opening every page. The limit lives in the application, not in this form — a value has to be checked where it arrives, not where it is typed.",
+      "helpLiveTitle": "It applies without a rebuild.",
+      "helpLive": "The value is written into DESIGN-CONFIG on your server; the application reads it on every render as a CSS variable, and each step of the scale is calculated from it. The change shows on the next page load."
     }
   },
   "ru": {
@@ -3287,6 +3319,10 @@
       "design-fonts": {
         "title": "Шрифты",
         "hint": "Заголовки, основной текст и моноширинный — откуда берутся семейства и как подключаются."
+      },
+      "design-type": {
+        "title": "Типографика",
+        "hint": "Масштаб текста и межстрочный интервал — одно число на весь набор."
       }
     },
     "breadcrumbHome": "Панель",
@@ -3729,6 +3765,34 @@
       "helpAlphabet": "Шрифт без кириллицы превращает русскую страницу в ряд прямоугольников, и сборка об этом не предупредит: страница отрисуется прекрасно, просто её нельзя будет прочитать. У каждой записи указано, какие алфавиты она покрывает, — сверьте с языками, которые вы включили.",
       "helpSystemTitle": "Почему системный шрифт первый.",
       "helpSystem": "Это самый быстрый из возможных ответов: нечего скачивать, нечего ждать, никаких третьих сторон. Для большинства проектов он же и правильный — свой шрифт оправдывает свою цену только тогда, когда от него действительно зависит бренд."
+    },
+    "designType": {
+      "intro": "Одно число меняет весь набор: заголовки, основной текст, подписи — всё сразу, с сохранением пропорций.",
+      "scaleLabel": "Масштаб текста",
+      "scaleHint": "Множитель к шкале проекта. 1,0 — тот размер, с которым проект приехал.",
+      "leadingLabel": "Межстрочный интервал",
+      "leadingHint": "Расстояние между строками основного текста. Меньше — плотнее, больше — свободнее.",
+      "presets": {
+        "compact": "Плотно",
+        "normal": "Как в проекте",
+        "relaxed": "Свободно"
+      },
+      "preview": "Как выглядит",
+      "previewH1": "Так выглядит заголовок страницы",
+      "previewBody": "А так — основной текст под ним: тот самый размер, который и будут читать ваши посетители.",
+      "save": "Сохранить",
+      "saving": "Сохраняю…",
+      "saved": "Сохранено",
+      "failed": "Не удалось сохранить",
+      "nothingToSave": "Ничего не изменилось",
+      "reset": "Вернуть шкалу проекта",
+      "helpLabel": "Почему один множитель, а не девять отдельных размеров",
+      "helpWhyTitle": "Девять полей — это девять способов развалить шкалу.",
+      "helpWhy": "Подзаголовок крупнее своего заголовка, основной текст мельче подписи — ровно тот разнобой, на вычистку которого из кода ушёл день. Множитель двигает всё сразу и сохраняет пропорции: набор становится либо крупнее, либо мельче, но никогда не рассогласованным.",
+      "helpRangeTitle": "Почему предел ограничен.",
+      "helpRange": "От 0,75 до 1,5. За этими границами текст либо нечитаем, либо ломает раскладку, а узнать об этом можно, только открыв каждую страницу. Предел стоит в приложении, а не в этой форме: значение проверяют там, куда оно приходит, а не там, где его набирают.",
+      "helpLiveTitle": "Применяется без пересборки.",
+      "helpLive": "Значение записывается в DESIGN-CONFIG на вашем сервере; приложение читает его на каждом рендере как переменную CSS, и каждая ступень шкалы считается от неё. Изменение видно на следующей загрузке страницы."
     }
   }
 }

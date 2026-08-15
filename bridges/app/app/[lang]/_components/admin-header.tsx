@@ -21,7 +21,7 @@ import {
   Cookie, Users, ImagePlus, Database, BrainCircuit, Brain, Map as MapIcon, Download, Upload,
   Link2, KeyRound, MessagesSquare, Sparkles, GitBranch, Info, History, Settings, BookOpen,
   HelpCircle, PackagePlus, FileText, Target, Wrench, Network, BookMarked, GraduationCap,
-  ListChecks, AlertTriangle, Search, Bot, Smartphone, Paintbrush, LayoutTemplate, Ruler, LifeBuoy, Compass, Code2, ChevronRight, Crop, Scissors, Mic, Hourglass, FlaskConical, UserRound, IdCard, Workflow, Radar, MonitorSmartphone, Type, type LucideIcon } from "lucide-react";
+  ListChecks, AlertTriangle, Search, Bot, Smartphone, Paintbrush, LayoutTemplate, Ruler, LifeBuoy, Compass, Code2, ChevronRight, Crop, Scissors, Mic, Hourglass, FlaskConical, UserRound, IdCard, Workflow, Radar, MonitorSmartphone, Type, ALargeSmall, type LucideIcon } from "lucide-react";
 import { NAV_GROUPS, NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 import { useCasesGate } from "@/lib/use-cases-store";
 import type { AdminWarning } from "@/lib/admin-warnings";
@@ -34,6 +34,7 @@ import type { AdminStrings } from "@/lib/i18n/admin-strings";
 // ключей, не втягивая за собой библиотеку иконок.
 const ICONS: Record<AdminPageSlug, LucideIcon> = {
   "design-fonts": Type,
+  "design-type": ALargeSmall,
   "map-application": Compass,
   "map-data": Compass,
   "map-backup": Compass,

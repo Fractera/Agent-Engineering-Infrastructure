@@ -395,6 +395,20 @@ export type AdminStrings = {
     helpSystemTitle: string; helpSystem: string;
   };
 
+  // Типографика (слой «Дизайн», шаг 3): множитель шкалы и межстрочный интервал.
+  designType: {
+    intro: string;
+    scaleLabel: string; scaleHint: string;
+    leadingLabel: string; leadingHint: string;
+    presets: Record<"compact" | "normal" | "relaxed", string>;
+    preview: string; previewH1: string; previewBody: string;
+    save: string; saving: string; saved: string; failed: string; nothingToSave: string; reset: string;
+    helpLabel: string;
+    helpWhyTitle: string; helpWhy: string;
+    helpRangeTitle: string; helpRange: string;
+    helpLiveTitle: string; helpLive: string;
+  };
+
   warnings: {
     title: string;
     items: {
