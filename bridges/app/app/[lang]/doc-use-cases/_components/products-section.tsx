@@ -17,7 +17,7 @@
 
 import Link from "next/link";
 import { Boxes, Check } from "lucide-react";
-import type { Product } from "@/lib/products-config";
+import { productPaths, type Product } from "@/lib/products-config";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
 import { AddProductCard } from "./add-product.client";
 
@@ -40,6 +40,10 @@ export function ProductsSection(
     s === "public" ? p.surfacePublic : s === "private" ? p.surfacePrivate : p.surfaceHeadless;
   const statusLabel = (s: Product["status"]) =>
     s === "live" ? p.statusLive : s === "building" ? p.statusBuilding : p.statusDraft;
+
+  // Те же четыре пути, что получает агент: одна функция на обоих потребителей,
+  // иначе панель однажды покажет одно, а агент пойдёт в другое.
+  const roots = current ? productPaths(current) : null;
 
   return (
     <section className="mt-3 rounded-lg border border-border p-3">
@@ -99,6 +103,36 @@ export function ProductsSection(
       <p className="mt-2.5 border-t border-border pt-2 text-[11px] text-foreground">
         {p.current}: <strong className="font-semibold">{current?.title ?? "—"}</strong>
       </p>
+
+      {/* 🔒 ЧЕТЫРЕ КОРНЯ — ТА ЖЕ ГРАНИЦА, ЧТО ЧИТАЕТ АГЕНТ (партия 6). Правило
+          «пиши внутри своих корней» живёт в инструкции слота, и владелец о нём
+          не знает. Увидев те же четыре пути здесь, он способен проверить работу
+          глазами: правка вне этих мест читается как выход за границу без единого
+          инструмента.
+
+          Пути выводятся из записи продукта той же функцией, что отдаёт их
+          агенту, — списка «на глаз» здесь быть не может по построению. */}
+      {current && roots && (
+        <div className="mt-2 rounded-md border border-border/70 bg-muted/30 p-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            {p.rootsTitle}
+          </p>
+          <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">{p.rootsHint}</p>
+          <ul className="mt-1.5 space-y-0.5">
+            {([
+              [p.rootPages, roots.pages],
+              [p.rootLogic, roots.lib],
+              [p.rootTables, `${roots.tablePrefix}*`],
+              [p.rootCases, roots.useCases],
+            ] as const).map(([label, value]) => (
+              <li key={label} className="flex flex-wrap items-baseline gap-x-2">
+                <span className="w-16 shrink-0 text-[10px] text-muted-foreground">{label}</span>
+                <code className="font-mono text-[10px] text-foreground">{value}</code>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </section>
   );
 }

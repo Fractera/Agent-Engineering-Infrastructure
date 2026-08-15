@@ -532,6 +532,16 @@ export type AdminStrings = {
     casesCount: string; noCases: string; surfacePublic: string; surfacePrivate: string;
     surfaceHeadless: string; statusDraft: string; statusBuilding: string; statusLive: string;
     open: string; soonTitle: string; soonBody: string;
+    /**
+     * Четыре корня продукта — те же, что читает агент (партия 6).
+     *
+     * 🔒 ВЛАДЕЛЕЦ ВИДИТ ГРАНИЦУ, А НЕ ТОЛЬКО АГЕНТ. Правило «пиши внутри своих
+     * корней» живёт в инструкции слота, и владелец о нём не знает; увидев те же
+     * четыре пути в панели, он может проверить чужую работу глазами — правка
+     * вне этих мест сразу читается как выход за границу.
+     */
+    rootsTitle: string; rootsHint: string;
+    rootPages: string; rootLogic: string; rootTables: string; rootCases: string;
     lead: string; hint: string;
     dialogExamples: string; dialogSignals: string; dialogQuestions: string;
     choose: string; cancel: string; saving: string;

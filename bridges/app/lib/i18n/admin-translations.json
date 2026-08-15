@@ -1826,7 +1826,13 @@
       "statusLive": "live",
       "open": "Work on this one",
       "soonTitle": "A second product is not ready yet",
-      "soonBody": "The register already holds products and the agent already reads them, but creating a second one from this page arrives in the next batch. Until then this page belongs to your first product."
+      "soonBody": "The register already holds products and the agent already reads them, but creating a second one from this page arrives in the next batch. Until then this page belongs to your first product.",
+      "rootsTitle": "What belongs to this product",
+      "rootsHint": "Derived from the record, never invented. The coding agent writes inside these and nowhere else — shared code goes to components/ and lib/.",
+      "rootPages": "pages",
+      "rootLogic": "logic",
+      "rootTables": "tables",
+      "rootCases": "use cases"
     },
     "useCases": {
       "gateMissing": "No user cases yet — development does not start without them. Answer the questions below; the Quiz turns your answers into cases.",
@@ -4258,7 +4264,13 @@
       "statusLive": "работает",
       "open": "Работать с ним",
       "soonTitle": "Второй продукт пока не заводится",
-      "soonBody": "Реестр уже хранит продукты, и агент уже читает их, но создание второго с этой страницы придёт следующей партией. До тех пор страница принадлежит вашему первому продукту."
+      "soonBody": "Реестр уже хранит продукты, и агент уже читает их, но создание второго с этой страницы придёт следующей партией. До тех пор страница принадлежит вашему первому продукту.",
+      "rootsTitle": "Что принадлежит этому продукту",
+      "rootsHint": "Выводится из записи, а не выдумывается. Агент пишет внутри этих мест и нигде больше — общий код уезжает в components/ и lib/.",
+      "rootPages": "страницы",
+      "rootLogic": "логика",
+      "rootTables": "таблицы",
+      "rootCases": "кейсы"
     },
     "useCases": {
       "gateMissing": "Кейсов ещё нет — без них разработка не начинается. Ответьте на вопросы ниже, а Quiz превратит ваши ответы в кейсы.",
