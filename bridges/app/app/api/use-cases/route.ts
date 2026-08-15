@@ -251,7 +251,7 @@ export async function POST(req: NextRequest) {
     // закрыть окно на середине, и накопленное обязано пережить это.
     case "raw": {
       if (body.turns?.length) {
-        appendRaw(body.turns, body.note);
+        appendRaw(pid, body.turns, body.note);
         appendTurns(pid, body.turns);
       }
       return NextResponse.json({ ok: true });
