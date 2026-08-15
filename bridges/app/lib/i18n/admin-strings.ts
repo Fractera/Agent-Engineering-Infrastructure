@@ -448,6 +448,12 @@ export type AdminStrings = {
     systemFont: string; scaleValue: string; schemeNamed: string; colorsCustom: string;
     // Разбор каждого раздела: как устроен, зачем нужен, что даёт.
     blocks: Record<"fonts" | "type" | "shape" | "colors" | "sections", { title: string; body: string[] }>;
+    // Подписи зелёных кнопок и заголовки окон с полным разбором.
+    docs: Record<
+      "fonts" | "fontsTitle" | "type" | "typeTitle" | "shape" | "shapeTitle"
+      | "colors" | "colorsTitle" | "sections" | "sectionsTitle",
+      string
+    >;
     soon: string;
   };
 

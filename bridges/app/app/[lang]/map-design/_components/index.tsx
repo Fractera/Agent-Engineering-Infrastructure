@@ -6,6 +6,25 @@ import { adminHref } from "@/lib/admin-nav";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
 import { activeScheme } from "@/lib/design/color-schemes";
 import { isSystemFont } from "@/lib/design/font-catalogue";
+import { readLocalizedContent } from "@/lib/content/localized-content";
+import { GuideProse } from "../../how-to-build/_components/guide-prose";
+import { DocPopup } from "../../_components/doc-popup.client";
+
+// Документ за зелёной кнопкой. Нет файла — нет и кнопки: пустое окно хуже, чем
+// отсутствующая кнопка, потому что обещает и не даёт.
+//
+// 🔒 РАЗМЕТКУ ДЕЛАЕТ СЕРВЕР. Текст читается с диска здесь и уезжает в островок
+// готовым деревом: клиент не разбирает markdown и не тянет библиотеку разбора в
+// браузер — он открывает и закрывает окно, и это всё, что ему поручено.
+function Doc({ name, lang, label, title }: { name: string; lang: string; label: string; title: string }) {
+  const found = readLocalizedContent(name, lang);
+  if (!found.ok) return null;
+  return (
+    <DocPopup label={label} title={title}>
+      <GuideProse markdown={found.text} />
+    </DocPopup>
+  );
+}
 
 // КАРТА ДИЗАЙНА — рубрикатор, показывающий ТЕКУЩЕЕ состояние.
 //
@@ -147,15 +166,12 @@ export function DesignMap({ lang, s }: { lang: string; s: AdminStrings }) {
           глазах; про применение без пересборки — потому что это проверено
           запросом к живому сайту. Обещание, ложное в минуту чтения, дороже
           отсутствующего. */}
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="mt-4 space-y-4 rounded-lg border border-border p-3.5">
         {(["fonts", "type", "shape", "colors", "sections"] as const).map(key => {
           const block = m.blocks[key];
           const future = key === "sections";
           return (
-            <section
-              key={key}
-              className={`border-t border-border pt-3 ${future ? "rounded-lg border border-dashed p-3" : ""}`}
-            >
+            <section key={key} className="border-t border-border pt-3 first:border-t-0 first:pt-0">
               <h2 className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-foreground">
                 {block.title}
                 {future && (
@@ -164,10 +180,22 @@ export function DesignMap({ lang, s }: { lang: string; s: AdminStrings }) {
                   </span>
                 )}
               </h2>
+
               <div className="mt-1.5 space-y-1.5 text-[11px] leading-relaxed text-muted-foreground">
                 {block.body.map((paragraph, i) => (
                   <p key={i}>{paragraph}</p>
                 ))}
+              </div>
+
+              {/* Кнопка ПОД текстом, а не внутри него: ссылка посреди абзаца
+                  уводит из чтения, а здесь она ждёт, пока абзац дочитают. */}
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <Doc
+                  name={`design-${key}-inside`}
+                  lang={lang}
+                  label={m.docs[key]}
+                  title={m.docs[`${key}Title` as keyof typeof m.docs]}
+                />
               </div>
             </section>
           );
