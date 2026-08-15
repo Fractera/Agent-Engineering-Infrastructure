@@ -21,7 +21,7 @@ import { readInstructionSet, TOGGLEABLE, ALWAYS_ON, isInDevelopment } from "@/li
 import { DocCommands } from "../_components/doc-commands";
 import { InstructionSwitch } from "../_components/instruction-switch.client";
 import { MasterSwitch } from "../_components/master-switch.client";
-import { listCases, USE_CASES_DIR } from "@/lib/use-cases-store";
+import { listCases } from "@/lib/use-cases-store";
 import { NAV_BY_GROUP, adminHref, type AdminPageSlug } from "@/lib/admin-nav";
 
 export const dynamic = "force-dynamic";
@@ -71,7 +71,9 @@ export default async function DocOverviewPage({ params }: { params: Promise<{ la
       const cs = listCases();
       return {
         slug,
-        file: `${USE_CASES_DIR}/`,
+        // Настоящая папка — с продуктом внутри. Плоский путь вёл владельца в
+        // пустоту: кейсы лежат у продукта, а не в корне USE-CASES.
+        file: cs.dir,
         exists: cs.cases.length > 0,
         kind: DOC_KIND[slug] ?? "static",
       };

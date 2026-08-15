@@ -83,15 +83,35 @@ export function migrateLegacyLayout(): boolean {
   const oldBase = path.join(APP_DIR, USE_CASES_DIR);
   const newBase = path.join(oldBase, id);
   let moved = false;
+
+  // 🔒 ПЕРЕНОС ПОФАЙЛОВО, А НЕ ПАПКОЙ ЦЕЛИКОМ (найдено проверкой 2026-08-16).
+  //
+  // Сначала здесь стояло «переименовать папку, если целевой ещё нет». Это
+  // срабатывало ровно один раз в жизни сервера, и дальше плоская папка
+  // становилась ЛОВУШКОЙ: файл, попавший в неё позже — из старого клона, из
+  // слияния веток, руками, — панель уже не видела, а агент по своей инструкции
+  // видел. Два ответа на вопрос «что строить» хуже, чем ни одного.
+  //
+  // Поэтому переносим каждый файл и повторяем это на каждом открытии страницы;
+  // опустевшая плоская папка удаляется, чтобы ловушке негде было завестись.
   for (const sub of [CASES_SUBDIR, RAW_SUBDIR]) {
     const from = path.join(oldBase, sub);
     const to = path.join(newBase, sub);
-    if (!fs.existsSync(from) || fs.existsSync(to)) continue;
+    if (!fs.existsSync(from)) continue;
     try {
-      fs.mkdirSync(newBase, { recursive: true });
-      fs.renameSync(from, to);
-      moved = true;
-    } catch { /* не удалось — оставляем на месте, читаться будет пустая папка продукта */ }
+      fs.mkdirSync(to, { recursive: true });
+      for (const name of fs.readdirSync(from)) {
+        // `.gitkeep` — след пустой папки из шаблона, а не работа владельца.
+        if (name === ".gitkeep") { fs.unlinkSync(path.join(from, name)); continue; }
+        const target = path.join(to, name);
+        // Имя занято — файл продукта старше и авторитетнее; пришедший кладём
+        // рядом с пометкой, а не затираем чужую работу молча.
+        const dest = fs.existsSync(target) ? path.join(to, `legacy-${name}`) : target;
+        fs.renameSync(path.join(from, name), dest);
+        moved = true;
+      }
+      if (!fs.readdirSync(from).length) fs.rmdirSync(from);
+    } catch { /* не удалось — файлы остаются на месте, повторим при следующем открытии */ }
   }
   return moved;
 }
@@ -131,7 +151,10 @@ export type CasesState = {
 };
 
 export function listCases(): CasesState {
-  const dir = `${USE_CASES_DIR}/${CASES_SUBDIR}/`;
+  // Путь называется НАСТОЯЩИЙ — тот, из которого читаем. Здесь стояла плоская
+  // строка: панель читала из папки продукта, а владельцу показывала
+  // `USE-CASES/CASES/`, где лежит пустота. Проверено живьём 2026-08-16.
+  const dir = useCasesPaths().cases;
   const legacy = fs.existsSync(path.join(APP_DIR, LEGACY_FILE));
   try {
     const files = fs.readdirSync(casesDir())
@@ -497,7 +520,7 @@ export function resetUseCases(): ResetStat {
 
   try {
     fs.mkdirSync(dest, { recursive: true });
-    archive = `${USE_CASES_DIR}/${RAW_SUBDIR}/${ARCHIVE_SUBDIR}/${stamp}/`;
+    archive = `${useCasesPaths().raw}${ARCHIVE_SUBDIR}/${stamp}/`;
 
     for (const name of ["seed.md", "turns.json", RAW_LOG, QUESTIONS_FILE, PROJECT_TYPE_FILE]) {
       const from = path.join(rawDir(), name);

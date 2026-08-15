@@ -518,6 +518,20 @@ export type AdminStrings = {
      * Выбирать здесь нечего: первый продукт родится сам вместе с кейсами.
      */
     manyTitle: string; manyBody: string[]; manyHint: string;
+    /**
+     * Секция продуктов — появляется, когда первый продукт уже описан
+     * (владелец 2026-08-15). До этого момента слова «продукт» на экране нет
+     * вовсе: понятие вводится в тот день, когда за него заплачено ценностью.
+     *
+     * `current` держится в шапке страницы постоянно, а не только в карточке:
+     * самая вероятная тихая ошибка при нескольких продуктах — правка кейсов не
+     * того, и от неё спасает только видимый всё время ответ «где я».
+     */
+    productsTitle: string; productsHint: string;
+    current: string; addProduct: string; addHint: string;
+    casesCount: string; noCases: string; surfacePublic: string; surfacePrivate: string;
+    surfaceHeadless: string; statusDraft: string; statusBuilding: string; statusLive: string;
+    open: string; soonTitle: string; soonBody: string;
     lead: string; hint: string;
     dialogExamples: string; dialogSignals: string; dialogQuestions: string;
     choose: string; cancel: string; saving: string;

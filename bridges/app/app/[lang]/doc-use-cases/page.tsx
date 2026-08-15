@@ -34,7 +34,8 @@ import {
   useCasesPaths, migrateLegacyLayout,
 } from "@/lib/use-cases-store";
 import { PROJECT_TYPES, isProjectTypeId } from "@/lib/project-types";
-import { currentProduct, adoptLegacyProjectType } from "@/lib/products-config";
+import { currentProduct, adoptLegacyProjectType, listProducts } from "@/lib/products-config";
+import { ProductsSection } from "./_components/products-section";
 import { readInstructionSet } from "@/lib/instruction-set";
 import { DocCommands } from "../_components/doc-commands";
 import { DocPopup } from "../_components/doc-popup.client";
@@ -82,6 +83,7 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
   // обязателен: сначала продукт появляется, потом ему отдают файлы.
   migrateLegacyLayout();
   const product = currentProduct();
+  const products = listProducts();
   const paths = useCasesPaths();
   const chosenCard = product && isProjectTypeId(product.type)
     ? s.projectTypes[product.type]
@@ -135,7 +137,16 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
   };
 
   return (
-    <PageShell lang={lang} slug="doc-use-cases" s={s} title={page.title} hint={page.hint}>
+    <PageShell
+      lang={lang}
+      slug="doc-use-cases"
+      s={s}
+      // 🔒 ИМЯ ПРОДУКТА В ЗАГОЛОВКЕ СТРАНИЦЫ, А НЕ ТОЛЬКО В КАРТОЧКЕ. Самая
+      // вероятная тихая ошибка при нескольких продуктах — правка кейсов не того;
+      // подсветку карточки перестают замечать через день, заголовок — нет.
+      title={product ? `${page.title} — ${product.title}` : page.title}
+      hint={page.hint}
+    >
       {/* Состояние гейта — первым, потому что это ответ на вопрос «можно ли уже
           начинать»; он же снимает или оставляет тревогу в меню. */}
       {gate.kind === "ready" ? (
@@ -164,6 +175,14 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
           Пропадает, когда кейсы появились: обещание сыграло, и на его месте
           встанет секция продуктов (партия 4). Обещание, висящее вечно, читается
           как реклама. */}
+      {/* 🔒 СЕКЦИЯ ПРОДУКТОВ И ЗЕЛЁНОЕ ОБЕЩАНИЕ — ОДНО ВМЕСТО ДРУГОГО
+          (владелец 2026-08-15). Обещание живёт, пока кейсов нет; как только они
+          появились, на его месте встаёт то, что оно обещало. Держать оба значило
+          бы рекламировать человеку то, что у него уже есть. */}
+      {gate.kind !== "missing" && (
+        <ProductsSection products={products} current={product} casesCount={cases.length} p={p} />
+      )}
+
       {gate.kind === "missing" && (
         <div className="mt-2 rounded-lg border border-emerald-500/40 bg-emerald-500/5 p-4">
           <p className="text-[13px] font-semibold text-emerald-800 dark:text-emerald-200">
