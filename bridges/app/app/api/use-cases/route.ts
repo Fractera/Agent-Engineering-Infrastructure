@@ -135,9 +135,26 @@ export async function POST(req: NextRequest) {
       if (product?.titleAuto) {
         try {
           const described = await describeProduct(body.lang ?? "en", readSeed(), body.cases);
-          if (described) {
+          // 🔒 КАТЕГОРИЯ — НЕ ИМЯ (найдено проверкой живьём 2026-08-15).
+          //
+          // Первый же настоящий вызов вернул «Интернет-магазин» — то самое слово,
+          // которым продукт звался и до модели. Промпт это запрещал, но запрет в
+          // промпте не обязателен к исполнению, а сравнение здесь — обязательно.
+          //
+          // Имя, равное названию структуры, отвергается целиком: продукт остаётся
+          // помеченным `titleAuto`, и следующий разбор попробует снова. Принять
+          // такое имя значило бы снять пометку и запереть «Интернет-магазин»
+          // навсегда — хуже, чем остаться пока безымянным.
+          //
+          // План страниц при этом СОХРАНЯЕМ: он оказался точным и в том же
+          // ответе. Отказ в одном поле не повод выбрасывать другое.
+          const named = described?.title
+            && described.title.trim().toLowerCase() !== product.title.trim().toLowerCase();
+          if (described && named) {
             updateProduct(product.id, { title: described.title, titleAuto: false });
-            writePagesPlan(described.pages, described.title);
+          }
+          if (described?.pages.length) {
+            writePagesPlan(described.pages, named ? described.title : product.title);
           }
         } catch { /* модель не ответила — имя подождёт, кейсы важнее */ }
       }

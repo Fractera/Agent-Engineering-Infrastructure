@@ -309,8 +309,14 @@ export async function describeProduct(
     { role: "system", content: `You name a product and sketch the pages it needs. Reply with STRICT JSON only:
 {"title":"<the product's name, 1-3 words>","pages":[{"path":"/example","purpose":"<why this page exists, one short sentence>"}]}
 
-The TITLE names THIS product as its owner would say it aloud — concrete, not a category. "Юристы" or
-"Coffee subscriptions", never "Landing page" or "Web application". Never mention the technology.
+The TITLE names THIS product as its owner would say it aloud, and it must be IMPOSSIBLE to reuse for
+anyone else's product. Take the words from what they sell or do: coffee they roast themselves → "Своя
+обжарка"; legal help for landlords → "Юристы для арендодателей".
+FORBIDDEN as a title — these describe a category, not a product, and fit thousands of owners:
+"Интернет-магазин", "Online store", "Landing page", "Посадочная страница", "Веб-приложение",
+"Web application", "SaaS", "Сервис", "Platform", "Маркетплейс". Never mention the technology.
+If the owner said too little to name the product specifically, return an empty title rather than a
+category — a category name is worse than no name.
 
 The PAGES are the ones these use cases require and nothing more: typically 2 to 8. Use real URL paths
 (/, /catalog, /catalog/[slug], /cart, /checkout, /account). A product with no public pages at all —
