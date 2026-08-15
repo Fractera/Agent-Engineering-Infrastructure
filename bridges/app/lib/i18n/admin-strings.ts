@@ -446,6 +446,9 @@ export type AdminStrings = {
   mapDesign: {
     intro: string; allDefault: string; notSet: string; liveNote: string;
     systemFont: string; scaleValue: string; schemeNamed: string; colorsCustom: string;
+    // Разбор каждого раздела: как устроен, зачем нужен, что даёт.
+    blocks: Record<"fonts" | "type" | "shape" | "colors" | "sections", { title: string; body: string[] }>;
+    soon: string;
   };
 
   warnings: {

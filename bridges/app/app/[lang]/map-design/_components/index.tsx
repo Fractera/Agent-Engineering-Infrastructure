@@ -134,6 +134,45 @@ export function DesignMap({ lang, s }: { lang: string; s: AdminStrings }) {
       <p className="mt-3 rounded-md border border-border bg-muted/40 p-2.5 text-[10px] leading-relaxed text-muted-foreground">
         {m.liveNote}
       </p>
+
+      {/* РАЗБОР КАЖДОГО РАЗДЕЛА — тот же приём, что во вкладке «Как вас находят»:
+          заголовок, проза, никаких списков возможностей. Список говорит, ЧТО
+          есть; проза — почему оно устроено так и что это даёт, а покупатель
+          платит за второе.
+
+          🔒 ЗАКОН РАЗДЕЛА ТОТ ЖЕ: утверждение появляется здесь только после
+          того, как его держит машинная проверка. Про двадцать один вид секций
+          написано потому, что `npm run check:sections` не даёт добавить вид без
+          образца; про контраст — потому что число считается в редакторе на
+          глазах; про применение без пересборки — потому что это проверено
+          запросом к живому сайту. Обещание, ложное в минуту чтения, дороже
+          отсутствующего. */}
+      <div className="mt-4 flex flex-col gap-3">
+        {(["fonts", "type", "shape", "colors", "sections"] as const).map(key => {
+          const block = m.blocks[key];
+          const future = key === "sections";
+          return (
+            <section
+              key={key}
+              className={`border-t border-border pt-3 ${future ? "rounded-lg border border-dashed p-3" : ""}`}
+            >
+              <h2 className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-foreground">
+                {block.title}
+                {future && (
+                  <span className="rounded-full border border-primary/30 bg-primary/[0.06] px-2 py-0.5 text-[10px] font-medium text-primary">
+                    {m.soon}
+                  </span>
+                )}
+              </h2>
+              <div className="mt-1.5 space-y-1.5 text-[11px] leading-relaxed text-muted-foreground">
+                {block.body.map((paragraph, i) => (
+                  <p key={i}>{paragraph}</p>
+                ))}
+              </div>
+            </section>
+          );
+        })}
+      </div>
     </PageShell>
   );
 }

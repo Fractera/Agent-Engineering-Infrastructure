@@ -2026,7 +2026,55 @@
       "systemFont": "System font",
       "scaleValue": "Text at {value}",
       "schemeNamed": "Scheme: {name}",
-      "colorsCustom": "Own combination · {count} colours"
+      "colorsCustom": "Own combination · {count} colours",
+      "soon": "Soon",
+      "blocks": {
+        "fonts": {
+          "title": "Fonts — the voice of the product, and the first cost of loading",
+          "body": [
+            "Three roles, not one font: headings, body text and monospace solve different problems, and folding them into a single field robs a product of its voice. A serif heading over sans body is the most reliable pairing there is; it works even where nobody thought about design.",
+            "The set opens on the SYSTEM option, and that is not a placeholder. It takes the font already on the device: nothing is downloaded, nothing leaves the page, and text is visible in the very first frame rather than after a network round-trip spent looking at an empty page.",
+            "A catalogue instead of a text field removes three silent failures at once: a typo quietly falls back to the system font; a font without Cyrillic turns Russian text into a row of rectangles and the build will not warn you; a forgotten stylesheet URL leaves the name without the file.",
+            "An external font is attached as a link in the page head, not as a rule inside the stylesheet. The difference is a whole network round-trip: the browser sees a link immediately and fetches in parallel, while a rule inside styles is discovered only after all styles are parsed."
+          ]
+        },
+        "type": {
+          "title": "Typography — one multiplier instead of nine ways to break the scale",
+          "body": [
+            "Text size is one number for the whole set. Headings, subheadings, body and captions move together and keep their proportions: the set becomes larger or smaller, never inconsistent.",
+            "Nine separate fields would look more generous and would be a trap: a subtitle larger than its heading, body text smaller than a caption. That exact disarray already existed here — nine descriptions of a first-level heading, forty-five variants of a paragraph — and removing it took a full working day.",
+            "The 75 to 150 percent limit lives in the application, not in this form: a value is checked where it arrives, not where it is typed. Outside it text is either unreadable or breaks the layout, and you would only find out by opening every page.",
+            "Line height is separate because it answers a different question: size decides whether a person can make out the letters, line height decides whether they finish the paragraph."
+          ]
+        },
+        "shape": {
+          "title": "Shapes and spacing — what reads as considered, or as rushed",
+          "body": [
+            "One radius produces five: small, medium, large and extra-large are derived from it, so a card, a button and an input cannot disagree. Interfaces end up with three different corners on one screen exactly when each element decides for itself.",
+            "Ready steps instead of a pixel field: 17px differs from 16px in nothing except failing to match the rest of the interface. The steps answer the real question — how soft the product should look.",
+            "Density is a multiplier, not a number. Content pages are airier than work screens on purpose: one is read, the other is worked in. The multiplier moves both and keeps the difference; separate fields would let a work screen become airier than an article, which is a defect rather than a setting.",
+            "Width governs the middle of the page only. The header, the first screen, the closing section and the footer are always full width — that is the frame. What is limited is the column the eye travels along, where an over-long line gets lost on the way back."
+          ]
+        },
+        "colors": {
+          "title": "Colours — ten ready schemes and a guard against the unreadable",
+          "body": [
+            "Ten schemes set all seven roles at once, in both themes. Seven colour fields are an honest tool and a poor start: someone opening them for the first time does not know which grey belongs in the borders so it will not fight the background.",
+            "Every scheme carries a light AND a dark half. The visitor switches themes, so a decision describing only the light half would leave the dark one from the previous choice: you pick a green scheme and at night the site is still blue.",
+            "The label colour on a button is computed, not asked for. Every coloured role has a paired text colour on top of it; change the brand colour and leave the pair alone, and a light brand colour keeps white text — a button whose label cannot be seen.",
+            "Contrast is shown as a number at the moment of choosing. It is a measurement from the accessibility standard, not an opinion: 4.5 is the threshold for normal text, 3.0 for large. Below it the page is not a matter of taste — part of your visitors cannot read it."
+          ]
+        },
+        "sections": {
+          "title": "Sections — reusable blocks of design",
+          "body": [
+            "A page here is assembled from SECTIONS — ready block kinds: heading, paragraph, list, table, panel, quote, first screen, marquee. A page material is data, not markup: the text lives separately, and how it looks is the section decision. So a rule added to one kind reaches every page where that kind appears.",
+            "There are twenty-one kinds today, and each has a working specimen on its own panel page — drawn by the real renderer, not a picture. A machine check refuses to let a kind enter the catalogue without a specimen: a kind with no specimen renders nowhere and is therefore verified by nothing.",
+            "From this follows what matters for the future: a section is the unit of reuse. A ready-made design is a set of sections plus the token values you configure on the neighbouring pages. Nothing else takes part in how the project looks.",
+            "SOON. Importing ready section sets into a project, and a builder that composes a page from them without touching code. The foundation is already standing: the kind catalogue, the machine check for specimens, and design tokens that apply without a rebuild. No date is given on purpose — a capability is announced once a check holds it, not before."
+          ]
+        }
+      }
     }
   },
   "ru": {
@@ -4056,7 +4104,55 @@
       "systemFont": "Системный шрифт",
       "scaleValue": "Текст на {value}",
       "schemeNamed": "Схема: {name}",
-      "colorsCustom": "Своё сочетание · цветов: {count}"
+      "colorsCustom": "Своё сочетание · цветов: {count}",
+      "soon": "Скоро",
+      "blocks": {
+        "fonts": {
+          "title": "Шрифты — характер продукта и первая цена загрузки",
+          "body": [
+            "Три роли, а не один шрифт: заголовки, основной текст и моноширинный решают разные задачи, и складывать их в одно поле значит лишить продукт голоса. Заголовок с засечками над текстом без них — самая надёжная пара из существующих; она работает даже там, где о дизайне никто не думал.",
+            "Набор открывается СИСТЕМНЫМ вариантом, и это не заглушка. Он берёт шрифт, уже стоящий на устройстве: ничего не скачивается, ничего не уходит наружу, текст виден в первый же кадр — а не через оборот сети, в течение которого человек смотрит на пустую страницу. Для большинства проектов это и есть правильный выбор.",
+            "Каталог вместо поля ввода снимает три тихие ошибки разом: опечатка в имени молча откатывает страницу на системный шрифт; шрифт без кириллицы превращает русский текст в ряд прямоугольников, и сборка об этом не предупредит; забытый адрес подключения оставляет имя без самого файла. У каждой записи проверенный адрес и честно указанные алфавиты.",
+            "Внешний шрифт подключается ссылкой в шапке страницы, а не правилом внутри стилей. Разница — целый оборот сети: ссылку браузер видит сразу и грузит параллельно, а правило обнаруживает только после разбора всех стилей."
+          ]
+        },
+        "type": {
+          "title": "Типографика — один множитель вместо девяти способов всё сломать",
+          "body": [
+            "Размер текста задаётся одним числом на весь набор. Заголовки, подзаголовки, основной текст и подписи меняются вместе и сохраняют пропорции: набор становится крупнее или мельче, но никогда не рассогласованным.",
+            "Девять отдельных полей выглядели бы щедрее и были бы ловушкой: подзаголовок крупнее своего заголовка, основной текст мельче подписи. Ровно этот разнобой в проекте уже был — девять разных описаний заголовка первого уровня и сорок пять вариантов абзаца, — и на его вычистку ушёл целый рабочий день.",
+            "Предел от 75 до 150 процентов стоит в приложении, а не в форме: значение проверяют там, куда оно приходит, а не там, где его набирают. За этими границами текст либо нечитаем, либо ломает раскладку, и узнать об этом можно, только открыв каждую страницу.",
+            "Межстрочный интервал вынесен отдельно, потому что решает другую задачу: размер отвечает за то, разглядит ли человек буквы, интервал — за то, дочитает ли он абзац до конца."
+          ]
+        },
+        "shape": {
+          "title": "Формы и отступы — то, что читается как «дорого» или «наспех»",
+          "body": [
+            "Одно скругление порождает пять: малое, среднее, большое и увеличенное считаются из него, поэтому карточка, кнопка и поле ввода физически не могут разойтись. Интерфейсы с тремя разными углами на одном экране появляются ровно тогда, когда каждый элемент решает сам.",
+            "Готовые ступени вместо ввода в пикселях: «17px» отличается от «16px» ничем, кроме несовпадения с остальным интерфейсом. Ступени отвечают на настоящий вопрос — насколько мягким должен выглядеть продукт.",
+            "Плотность — множитель, а не число. Контентные страницы свободнее рабочих намеренно: одни читают, в других работают. Множитель двигает обе меры и сохраняет разницу; отдельные поля позволили бы сделать рабочий экран воздушнее статьи, а это не настройка, а дефект.",
+            "Ширина управляет только серединой страницы. Шапка, первый экран, завершающая секция и подвал всегда во всю ширину — это опора макета. Ограничивается колонка, по которой идёт взгляд: слишком длинная строка теряется на возврате к началу следующей."
+          ]
+        },
+        "colors": {
+          "title": "Цвета — десять готовых решений и защита от нечитаемого",
+          "body": [
+            "Десять схем задают все семь ролей сразу и в обеих темах. Семь полей выбора цвета — честный инструмент и плохое начало: человек, открывший их впервые, не знает, какой серый поставить в рамки, чтобы он не спорил с фоном. Схема отвечает на это целиком, одним нажатием.",
+            "Каждая схема несёт светлую И тёмную половину. Тему переключает сам посетитель, и решение, описывающее только светлую, оставило бы тёмную от прежнего: выбрали зелёную схему, а ночью сайт остался синим.",
+            "Цвет надписи на кнопке не спрашивается, а считается. У каждой цветной роли есть парный цвет текста поверх неё; смените фирменный цвет, оставив пару прежней, — и светлый фирменный цвет сохранит белый текст, то есть кнопку, надписи на которой не видно. Приложение выводит пару из яркости выбранного цвета.",
+            "Контраст показывается числом прямо при выборе. Это измерение по стандарту доступности, а не мнение: 4,5 — порог для обычного текста, 3,0 — для крупного. Ниже него страница не «дело вкуса»: часть посетителей её не прочитает, и узнать об этом от них дороже, чем увидеть здесь."
+          ]
+        },
+        "sections": {
+          "title": "Секции — переиспользуемые блоки дизайна",
+          "body": [
+            "Страница в этом проекте собирается из СЕКЦИЙ — готовых видов блоков: заголовок, абзац, список, таблица, панель, цитата, первый экран, бегущая лента. Материал страницы — это данные, а не вёрстка: текст лежит отдельно, а как он выглядит, решает секция. Поэтому правило, добавленное в один вид, доезжает до каждой страницы, где он встречается.",
+            "Видов сейчас двадцать один, и у каждого есть рабочий образец на отдельной странице панели — нарисованный настоящим кодом, а не картинкой. Машинная проверка не даёт добавить вид в каталог, не написав ему образец: вид без образца не рисуется нигде и потому не проверен ничем.",
+            "Отсюда главное для будущего: секция — единица переиспользования. Готовый дизайн есть набор секций плюс значения токенов, которые вы настраиваете на соседних страницах. Ничего, кроме этих двух вещей, во внешнем виде проекта не участвует.",
+            "СКОРО. Загрузка готовых наборов секций в проект и конструктор, собирающий страницу из них без правки кода. Опора уже стоит: каталог видов, машинная проверка образцов и токены оформления, применяющиеся без пересборки. Дата не называется намеренно — возможность объявляется после того, как её держит проверка, а не до."
+          ]
+        }
+      }
     }
   }
 }
