@@ -149,7 +149,12 @@ export async function POST(req: NextRequest) {
       if (!pid) return NextResponse.json({ error: "no_product" }, { status: 400 });
       const result = giveRootTo(pid);
       if (!result.ok) return NextResponse.json({ error: "not_public" }, { status: 400 });
-      return NextResponse.json({ ok: true, ...result, products: listProducts() });
+      // Прежний владелец корня называется в ответе: панель обязана сказать
+      // владельцу, чьи адреса только что изменились, — это не побочный эффект,
+      // о котором узнают потом.
+      return NextResponse.json({
+        ok: true, movedFrom: result.movedFrom, movedTo: result.movedTo, products: listProducts(),
+      });
     }
     // Вводные вопросы, утверждённые владельцем. Ложатся файлом в папку продукта:
     // вопрос — половина ответа, и агент должен видеть, о чём спрашивали.
