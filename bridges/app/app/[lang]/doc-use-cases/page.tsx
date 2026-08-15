@@ -30,10 +30,11 @@ import { adminHref } from "@/lib/admin-nav";
 import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
 import {
-  listCases, useCasesGate, readSeed, readQuestions, resetPreview, readProjectType,
+  listCases, useCasesGate, readSeed, readQuestions, resetPreview,
   USE_CASES_DIR, CASES_SUBDIR, RAW_SUBDIR,
 } from "@/lib/use-cases-store";
 import { PROJECT_TYPES, isProjectTypeId } from "@/lib/project-types";
+import { currentProduct, adoptLegacyProjectType } from "@/lib/products-config";
 import { readInstructionSet } from "@/lib/instruction-set";
 import { DocCommands } from "../_components/doc-commands";
 import { DocPopup } from "../_components/doc-popup.client";
@@ -73,9 +74,13 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
   //
   // Карточки собираются ЗДЕСЬ, на сервере, и уезжают в островок пропсами: словарь
   // панели — 82 языка, ему в браузере не место.
-  const chosenType = readProjectType();
-  const chosenCard = chosenType && isProjectTypeId(chosenType.id)
-    ? s.projectTypes[chosenType.id]
+  // Проект, начатый до реестра продуктов, принимается в него здесь: страница
+  // динамическая, и это первое место, куда владелец приходит после обновления.
+  // Ничего не делает, если реестр уже не пуст.
+  adoptLegacyProjectType();
+  const product = currentProduct();
+  const chosenCard = product && isProjectTypeId(product.type)
+    ? s.projectTypes[product.type]
     : null;
   const typeCards = PROJECT_TYPES.map((id) => ({ id, ...s.projectTypes[id] }));
   const p = s.projectPicker;
@@ -172,7 +177,7 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
         <div className="mt-2">
           <ProjectTypePicker
             types={typeCards}
-            chosen={chosenType && chosenCard ? { id: chosenType.id, title: chosenCard.title } : null}
+            chosen={product && chosenCard ? { id: product.type, title: chosenCard.title } : null}
             labels={pickerLabels}
           />
 

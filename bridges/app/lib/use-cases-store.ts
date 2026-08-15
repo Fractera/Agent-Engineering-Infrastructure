@@ -17,6 +17,7 @@
 
 import fs from "fs";
 import path from "path";
+import { currentProduct } from "@/lib/products-config";
 
 const APP_DIR = process.env.APP_DIR ?? "/opt/fractera/app";
 
@@ -224,8 +225,13 @@ export function writeSeed(text: string): void {
   //
   // Заголовок по-английски намеренно: файл читают агент и модель, а их язык —
   // английский, как и у промптов рядом.
-  const chosen = readProjectType();
-  const head = chosen ? `Project type: ${chosen.title} (${chosen.id})\n\n` : "";
+  // Источник истины о структуре — реестр продуктов, а не файл рядом. Пока их
+  // было два, они успели бы разойтись: выбор структуры пишется в реестр, а
+  // затравка читала бы вчерашний файл.
+  const chosen = currentProduct();
+  const head = chosen
+    ? `Product: ${chosen.title} (id ${chosen.id}, type ${chosen.type}, ${chosen.surface}${chosen.route ? `, route ${chosen.route}` : ""})\n\n`
+    : "";
   fs.writeFileSync(path.join(rawDir(), "seed.md"), head + text.trim() + "\n", "utf-8");
 }
 
@@ -282,40 +288,19 @@ const QUESTIONS_FILE = "questions.json";
 
 // ── Структура проекта ────────────────────────────────────────────────────────
 //
-// 🔒 СНАЧАЛА СТРУКТУРА, ПОТОМ ВОПРОСЫ (владелец 2026-08-15).
+// 🪦 `project-type.json` БОЛЬШЕ НЕ ПИШЕТСЯ (владелец 2026-08-15, тот же день).
 //
-// Экран правки вопросов дал владельцу возможность переписать чужой вопрос, но
-// саму работу оставил ему: чтобы понять, О ЧЁМ спрашивать маркетплейс, надо уже
-// знать, чем маркетплейс отличается от магазина. Теперь порядок обратный —
-// владелец называет структуру проекта, и семь вопросов приходят написанными под
-// неё.
+// Файл прожил несколько часов и хранил ОДНУ структуру на весь сервер. Это верно
+// ровно до второго продукта, а сервер несёт их много: сегодня посадочная
+// страница, завтра мозг компании. Структура без продукта не имеет владельца.
 //
-// Выбор ложится файлом в папку проекта, а не в базу панели: он едет в
-// репозиторий вместе с кейсами, и агент видит, какой продукт строит. Название
-// хранится рядом с идентификатором намеренно — на языке владельца, чтобы файл
-// читался человеком без обращения к словарю панели.
+// Теперь она — поле записи продукта в `PRODUCTS-CONFIG/products-config.json`
+// (`lib/products-config.ts`). Читать структуру отсюда нельзя: два источника
+// разошлись бы в первый же день.
+//
+// Имя файла остаётся здесь ровно для двух дел: перенести старый выбор в реестр
+// (`adoptLegacyProjectType`) и увезти файл в архив при «начать сначала».
 const PROJECT_TYPE_FILE = "project-type.json";
-
-export type ChosenProjectType = { id: string; title: string; chosenAt: string };
-
-export function readProjectType(): ChosenProjectType | null {
-  try {
-    const raw = JSON.parse(fs.readFileSync(path.join(rawDir(), PROJECT_TYPE_FILE), "utf-8")) as unknown;
-    if (!raw || typeof raw !== "object") return null;
-    const { id, title, chosenAt } = raw as Partial<ChosenProjectType>;
-    if (!id || typeof id !== "string") return null;
-    return { id, title: typeof title === "string" ? title : id, chosenAt: chosenAt ?? "" };
-  } catch {
-    return null;
-  }
-}
-
-export function writeProjectType(id: string, title: string): ChosenProjectType {
-  ensureDirs();
-  const value: ChosenProjectType = { id, title, chosenAt: new Date().toISOString() };
-  fs.writeFileSync(path.join(rawDir(), PROJECT_TYPE_FILE), JSON.stringify(value, null, 1), "utf-8");
-  return value;
-}
 
 export function readQuestions(): string[] | null {
   try {

@@ -60,6 +60,18 @@ export const BACKUP_PARTS: BackupPart[] = [
     paths: [
       { from: `${APP_DIR}/APP-CONFIG`, to: "APP-CONFIG", dir: true },
       { from: `${APP_DIR}/PLATFORM-CONFIG`, to: "PLATFORM-CONFIG", dir: true },
+      // 🔒 ЧЕТЫРЕ КОНФИГА СЛОТА — ЧЕТЫРЕ СТРОКИ ЗДЕСЬ (2026-08-15).
+      //
+      // `DESIGN-CONFIG` не попадал в резервную копию с самого своего появления,
+      // и заметить это можно было только при восстановлении — когда сервер
+      // возвращается с чужими цветами и шрифтами. Класс ошибки один и тот же:
+      // конфиг заводят, а список копирования обновить забывают, потому что он
+      // живёт в другом репозитории и в глаза не бросается.
+      //
+      // Правило простое: появилась папка `*-CONFIG` в корне слота — строка
+      // добавляется сюда в той же партии.
+      { from: `${APP_DIR}/DESIGN-CONFIG`, to: "DESIGN-CONFIG", dir: true },
+      { from: `${APP_DIR}/PRODUCTS-CONFIG`, to: "PRODUCTS-CONFIG", dir: true },
     ],
     defaultOn: true,
   },

@@ -4,9 +4,11 @@ import {
   listCases, useCasesGate, appendCases, writeCase, setStatus, confirmAll, deleteCase,
   migrateLegacy, appendRaw, writeSeed, readSeed, appendTurns, readTurns,
   readQuestions, writeQuestions, resetUseCases, resetPreview,
-  readProjectType, writeProjectType,
 } from "@/lib/use-cases-store";
 import { isProjectTypeId } from "@/lib/project-types";
+import {
+  addProduct, updateProduct, currentProduct, adoptLegacyProjectType, defaultSurface,
+} from "@/lib/products-config";
 
 // Кейсы: чтение папки и действия над ней.
 //
@@ -23,7 +25,7 @@ export async function GET(req: NextRequest) {
   const state = listCases();
   return NextResponse.json({
     ...state, gate: useCasesGate(), seed: readSeed(), turns: readTurns(),
-    questions: readQuestions(), projectType: readProjectType(),
+    questions: readQuestions(), product: currentProduct(),
     // Что исчезнет при «начать сначала» — окно подтверждения обязано называть
     // числа, а не «всё»: «удалить всё» без счёта либо не нажимают, либо
     // нажимают вслепую.
@@ -70,8 +72,28 @@ export async function POST(req: NextRequest) {
       if (!isProjectTypeId(body.typeId)) {
         return NextResponse.json({ error: "unknown_project_type" }, { status: 400 });
       }
-      const saved = writeProjectType(body.typeId, body.typeTitle?.trim() || body.typeId);
-      return NextResponse.json({ ok: true, projectType: saved });
+      const title = body.typeTitle?.trim() || body.typeId;
+      // 🔒 ВЫБОР СТРУКТУРЫ ТЕПЕРЬ РОЖДАЕТ ЗАПИСЬ ПРОДУКТА (владелец 2026-08-15).
+      //
+      // Вчера он ложился в `project-type.json` — один на весь сервер. Это верно
+      // ровно до второго продукта: сервер несёт их много, и «структура проекта»
+      // без продукта не имеет владельца.
+      //
+      // Название пока временное — название самой структуры. Своё имя продукту
+      // даст модель в тот же миг, когда родятся первые кейсы (партия 3): назвать
+      // его сейчас можно только словом, которое человек ещё не произносил.
+      adoptLegacyProjectType();
+      const existing = currentProduct();
+      const saved = existing
+        ? updateProduct(existing.id, {
+            type: body.typeId,
+            // Имя, уже правленное владельцем, переписывать нельзя: он назвал
+            // продукт сам, а мы бы вернули ему имя структуры.
+            ...(existing.title === existing.type || existing.title === existing.id ? { title } : {}),
+            surface: defaultSurface(body.typeId),
+          })
+        : addProduct({ title, type: body.typeId });
+      return NextResponse.json({ ok: true, product: saved });
     }
     // Вводные вопросы, утверждённые владельцем. Ложатся файлом в папку проекта:
     // вопрос — половина ответа, и агент должен видеть, о чём спрашивали.
