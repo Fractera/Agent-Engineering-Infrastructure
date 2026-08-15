@@ -180,6 +180,19 @@ export function VisibilityContent(
           <p>{v.authRoles}</p>
         </Block>
 
+        {/* Дизайн-система — сразу после авторизации (владелец 2026-08-15).
+            Порядок не случаен: до этого места раздел рассказывает, что проект
+            умеет ОТДАВАТЬ наружу — поиск, модели, приложение, картинки, данные,
+            вход. Дизайн-система отвечает на следующий вопрос покупателя: что
+            будет, когда проект начнёт расти. */}
+        <Block
+          title={v.designSystemTitle}
+          docs={<Doc name="design-system-inside" lang={lang} label={v.docDesignSystem} title={v.docDesignSystemTitle} />}
+        >
+          <p>{v.designSystemBody}</p>
+          <p>{v.designSystemDrift}</p>
+        </Block>
+
         <Block title={v.noJsTitle}>
           <p>{v.noJsBody}</p>
         </Block>

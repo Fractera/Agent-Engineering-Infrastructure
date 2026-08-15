@@ -754,6 +754,9 @@ export type AdminStrings = {
     // не написан. Закон раздела ровно об этом.
     imagesTitle: string; imagesBody: string; imagesSpeed: string;
     docImages: string; docImagesTitle: string;
+    // Дизайн-система: почему проект не расползается по мере роста.
+    designSystemTitle: string; designSystemBody: string; designSystemDrift: string;
+    docDesignSystem: string; docDesignSystemTitle: string;
     noJsTitle: string; noJsBody: string;
     // Данные: один блок и четыре доказательства под ним (владелец 2026-08-13).
     dataTitle: string; dataBody: string; dataCost: string;
