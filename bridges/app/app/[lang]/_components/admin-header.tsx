@@ -33,6 +33,7 @@ import type { AdminStrings } from "@/lib/i18n/admin-strings";
 // оставаться чистыми данными, чтобы его мог импортировать словарь ради типа
 // ключей, не втягивая за собой библиотеку иконок.
 const ICONS: Record<AdminPageSlug, LucideIcon> = {
+  "map-design": Palette,
   "design-fonts": Type,
   "design-type": ALargeSmall,
   "design-shape": Frame,

@@ -29,6 +29,7 @@ export const NAV = [
   // Группа стоит ВТОРОЙ, сразу за «Сделано за вас»: оформление — первое, что
   // владелец захочет изменить, увидев полученный сайт. Страницы идут от опоры
   // к вершине: шрифты выбираются раньше шкалы, шкала раньше форм и цвета.
+  { slug: "map-design",       group: "design" },
   { slug: "design-fonts",     group: "design" },
   { slug: "design-type",      group: "design" },
   { slug: "design-shape",     group: "design" },
@@ -169,9 +170,7 @@ export const GROUP_INDEX = {
   // оглавление из одного пункта. Индекс группы — сама вкладка, как у инструментов.
   visibility: "visibility",
   data: "map-data",
-  // У «Дизайна» карты пока нет: до неё дойдёт очередь последней, когда будет
-  // что перечислять. Пока вход в группу — первая её страница.
-  design: "design-fonts",
+  design: "map-design",
   tools: "tools",
   backup: "map-backup",
   access: "map-access",

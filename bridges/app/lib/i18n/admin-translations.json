@@ -1429,6 +1429,10 @@
       "design-shape": {
         "title": "Shapes & spacing",
         "hint": "Corner rounding, borders, density and content width."
+      },
+      "map-design": {
+        "title": "Design",
+        "hint": "Everything about how the site looks: fonts, type scale, shapes and colours."
       }
     },
     "breadcrumbHome": "Panel",
@@ -1438,7 +1442,8 @@
       "backup": "Taking the whole project out and bringing it back. Not a store but an operation over all of them at once, which is why it stands apart from the data sections.",
       "access": "How people and services reach the project, and how it reaches out: your own domain, sign-in methods, communication channels and the OpenAI key.",
       "project": "The repository behind the app, the history of its deployments and the environment they run with.",
-      "help": "How to build with this panel and where to ask when something is unclear."
+      "help": "How to build with this panel and where to ask when something is unclear.",
+      "design": "Four decisions, in the order they matter: the fonts first, then how big the text is, then the shape of surfaces, then colour. Each applies to the whole site at once and takes effect without a rebuild."
     },
     "testing": {
       "whyTitle": "Why this document exists.",
@@ -3369,6 +3374,10 @@
       "design-shape": {
         "title": "Формы и отступы",
         "hint": "Скругление углов, рамки, плотность и ширина содержимого."
+      },
+      "map-design": {
+        "title": "Дизайн",
+        "hint": "Всё о том, как выглядит сайт: шрифты, шкала текста, формы и цвета."
       }
     },
     "breadcrumbHome": "Панель",
@@ -3378,7 +3387,8 @@
       "backup": "Забрать проект целиком и вернуть обратно. Это не склад, а операция над всеми складами сразу, поэтому она стоит отдельно от разделов данных.",
       "access": "Как люди и службы добираются до проекта и как он выходит наружу: свой домен, способы входа, каналы связи и ключ OpenAI.",
       "project": "Репозиторий, из которого живёт приложение, история его развёртываний и окружение, с которым они идут.",
-      "help": "Как строить в этой панели и куда спросить, если что-то непонятно."
+      "help": "Как строить в этой панели и куда спросить, если что-то непонятно.",
+      "design": "Четыре решения в том порядке, в котором они важны: сначала шрифты, потом размер текста, потом форма поверхностей, потом цвет. Каждое действует сразу на весь сайт и применяется без пересборки."
     },
     "testing": {
       "whyTitle": "Зачем этот документ.",
