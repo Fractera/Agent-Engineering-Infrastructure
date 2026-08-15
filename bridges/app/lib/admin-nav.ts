@@ -15,7 +15,7 @@
 // панель. Раньше первыми стояли настройки приложения — список работы, которую
 // ещё предстоит сделать. Теперь первым идёт список того, что уже работает без
 // него: до того, как просить о настройке, стоит показать полученную ценность.
-export const NAV_GROUPS = ["visibility", "application", "data", "tools", "backup", "access", "project", "documents", "help"] as const;
+export const NAV_GROUPS = ["visibility", "design", "application", "data", "tools", "backup", "access", "project", "documents", "help"] as const;
 export type NavGroup = (typeof NAV_GROUPS)[number];
 
 // Порядок внутри группы = порядок в меню. Он повторяет порядок сегодняшнего
@@ -25,6 +25,12 @@ export const NAV = [
   // человек, открывший категорию впервые, должен увидеть оглавление, а не
   // случайный раздел. На них же ведёт серединный сегмент хлебных крошек — без
   // них с уровня раздела некуда было вернуться.
+  // ── ДИЗАЙН (слой оформления, 2026-08-15) ────────────────────────────────
+  // Группа стоит ВТОРОЙ, сразу за «Сделано за вас»: оформление — первое, что
+  // владелец захочет изменить, увидев полученный сайт. Страницы идут от опоры
+  // к вершине: шрифты выбираются раньше шкалы, шкала раньше форм и цвета.
+  { slug: "design-fonts",     group: "design" },
+
   { slug: "map-application",  group: "application" },
   { slug: "app-settings",    group: "application" },
   { slug: "languages",       group: "application" },
@@ -161,6 +167,9 @@ export const GROUP_INDEX = {
   // оглавление из одного пункта. Индекс группы — сама вкладка, как у инструментов.
   visibility: "visibility",
   data: "map-data",
+  // У «Дизайна» карты пока нет: до неё дойдёт очередь последней, когда будет
+  // что перечислять. Пока вход в группу — первая её страница.
+  design: "design-fonts",
   tools: "tools",
   backup: "map-backup",
   access: "map-access",

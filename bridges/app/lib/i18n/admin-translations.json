@@ -1122,7 +1122,8 @@
       "documents": "Development documents",
       "backup": "Backup & restore",
       "tools": "Tools",
-      "visibility": "Done for you"
+      "visibility": "Done for you",
+      "design": "Design"
     },
     "footer": {
       "deploy": "Deploy",
@@ -1416,6 +1417,10 @@
       "doc-sections": {
         "title": "Sections and designs",
         "hint": "How a section, a design and a project relate: one data contract, a set of renderers per design, one design per project."
+      },
+      "design-fonts": {
+        "title": "Fonts",
+        "hint": "Headings, body text and monospace — where the families come from and how they are connected."
       }
     },
     "breadcrumbHome": "Panel",
@@ -1810,6 +1815,54 @@
       "helpCopied": "Copied",
       "helpMailSubject": "Consultation request — development tools",
       "helpMailBody": "The user requests a consultation on activating and using the development tools in their project.\n\nPage: {page}"
+    },
+    "designFonts": {
+      "intro": "Three roles, one decision each: headings, body text, and monospace. The set opens on the system font — it downloads nothing and reaches no third party.",
+      "roles": {
+        "heading": {
+          "label": "Headings",
+          "description": "H1 through H4. This is where a project gets its character."
+        },
+        "body": {
+          "label": "Body text",
+          "description": "Paragraphs, lists, captions — most of what a person actually reads."
+        },
+        "mono": {
+          "label": "Monospace",
+          "description": "Code, identifiers, numbers in tables."
+        }
+      },
+      "systemOption": "System font — no download",
+      "systemNote": "Takes whatever the device already has. Nothing is downloaded, nothing leaves the page, and text is visible in the very first frame.",
+      "alphabets": {
+        "latin": "Latin",
+        "cyrillic": "Cyrillic",
+        "greek": "Greek",
+        "arabic": "Arabic",
+        "cjk": "CJK"
+      },
+      "covers": "Covers",
+      "noDownload": "no download",
+      "external": "loaded from fonts.googleapis.com",
+      "preview": "Preview",
+      "previewText": "The quick brown fox — Съешь ещё этих мягких булок 0123",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "failed": "Could not save",
+      "nothingToSave": "Nothing changed",
+      "reset": "Back to the theme font",
+      "helpLabel": "About fonts: where they come from and how they are connected",
+      "helpWhereTitle": "Where they live.",
+      "helpWhere": "The families in this list come from Google Fonts (fonts.google.com), all under a free licence — OFL or Apache. The files themselves are NOT stored on your server: a visitor receives them from fonts.googleapis.com, whose cache is already warm on nearly every device.",
+      "helpHowTitle": "How they are connected.",
+      "helpHow": "Saving writes the family name and its stylesheet URL into DESIGN-CONFIG/design-config.json on your server. The application reads that file on every render and emits two things: a <link> to the stylesheet in <head>, and a CSS variable that the type primitive uses. A <link> rather than an @import on purpose — the browser sees a link immediately, while an @import inside <style> costs an extra network round-trip before the font is even requested. No rebuild is needed; the change shows on the next page load.",
+      "helpPrivacyTitle": "What this means in Europe.",
+      "helpPrivacy": "Connecting an external font hands the visitor IP address to Google servers. A German court has ruled that this alone breaches GDPR (LG München I, 3 O 17493/20). The system option avoids the question entirely: it never reaches outside. If you need both a custom font and that guarantee, the font files have to be hosted on your own server — that is a separate step, not a setting.",
+      "helpAlphabetTitle": "Alphabets are not a detail.",
+      "helpAlphabet": "A font without Cyrillic turns a Russian page into a row of rectangles, and the build will not warn you — the page renders perfectly, it is simply unreadable. Every entry states which alphabets it covers; check it against the languages you switched on.",
+      "helpSystemTitle": "Why the system font is first.",
+      "helpSystem": "It is the fastest possible answer: nothing to download, nothing to wait for, no third party involved. For most projects it is also the right one — a custom font earns its cost only when the brand actually depends on it."
     }
   },
   "ru": {
@@ -2935,7 +2988,8 @@
       "documents": "Документы разработки",
       "backup": "Резервное копирование",
       "tools": "Инструменты",
-      "visibility": "Сделано за вас"
+      "visibility": "Сделано за вас",
+      "design": "Дизайн"
     },
     "footer": {
       "deploy": "Развернуть",
@@ -3229,6 +3283,10 @@
       "doc-sections": {
         "title": "Секции и дизайны",
         "hint": "Как связаны секция, дизайн и проект: один контракт данных, свой набор рендереров у каждого дизайна, один дизайн на проект."
+      },
+      "design-fonts": {
+        "title": "Шрифты",
+        "hint": "Заголовки, основной текст и моноширинный — откуда берутся семейства и как подключаются."
       }
     },
     "breadcrumbHome": "Панель",
@@ -3623,6 +3681,54 @@
       "helpCopied": "Скопировано",
       "helpMailSubject": "Запрос консультации — инструменты разработки",
       "helpMailBody": "Пользователь запросил консультацию по активации и использованию инструментов разработки в своём проекте.\n\nСтраница: {page}"
+    },
+    "designFonts": {
+      "intro": "Три роли, по одному решению на каждую: заголовки, основной текст, моноширинный. Набор открывается системным шрифтом — он ничего не скачивает и никуда не обращается.",
+      "roles": {
+        "heading": {
+          "label": "Заголовки",
+          "description": "От H1 до H4. Именно здесь у проекта появляется характер."
+        },
+        "body": {
+          "label": "Основной текст",
+          "description": "Абзацы, списки, подписи — большая часть того, что человек читает."
+        },
+        "mono": {
+          "label": "Моноширинный",
+          "description": "Код, идентификаторы, числа в таблицах."
+        }
+      },
+      "systemOption": "Системный шрифт — без загрузки",
+      "systemNote": "Берёт то, что уже стоит на устройстве. Ничего не скачивается, ничего не уходит наружу, текст виден в первый же кадр.",
+      "alphabets": {
+        "latin": "латиница",
+        "cyrillic": "кириллица",
+        "greek": "греческий",
+        "arabic": "арабский",
+        "cjk": "CJK"
+      },
+      "covers": "Покрывает",
+      "noDownload": "без загрузки",
+      "external": "загружается с fonts.googleapis.com",
+      "preview": "Как выглядит",
+      "previewText": "Съешь ещё этих мягких булок — The quick brown fox 0123",
+      "save": "Сохранить",
+      "saving": "Сохраняю…",
+      "saved": "Сохранено",
+      "failed": "Не удалось сохранить",
+      "nothingToSave": "Ничего не изменилось",
+      "reset": "Вернуть шрифт темы",
+      "helpLabel": "О шрифтах: откуда они берутся и как подключаются",
+      "helpWhereTitle": "Где они живут.",
+      "helpWhere": "Семейства из этого списка — с Google Fonts (fonts.google.com), все под свободной лицензией OFL или Apache. Сами файлы НЕ хранятся на вашем сервере: посетитель получает их с fonts.googleapis.com, и её кэш уже прогрет почти на каждом устройстве.",
+      "helpHowTitle": "Как подключаются.",
+      "helpHow": "Сохранение записывает имя семейства и адрес таблицы стилей в DESIGN-CONFIG/design-config.json на вашем сервере. Приложение читает этот файл на каждом рендере и выдаёт две вещи: ссылку <link> на таблицу в шапке страницы и переменную CSS, которой пользуется примитив типографики. Именно <link>, а не @import — браузер видит ссылку сразу, тогда как @import внутри <style> стоит лишнего оборота сети ещё до того, как шрифт будет запрошен. Пересборка не нужна: изменение видно на следующей загрузке страницы.",
+      "helpPrivacyTitle": "Что это значит в Европе.",
+      "helpPrivacy": "Подключение внешнего шрифта отдаёт адрес посетителя серверам Google. Немецкий суд признал, что одно это нарушает GDPR (LG München I, 3 O 17493/20). Системный вариант снимает вопрос целиком: он не ходит наружу вовсе. Если нужен и свой шрифт, и эта гарантия — файлы шрифта придётся положить на собственный сервер, и это отдельная работа, а не настройка.",
+      "helpAlphabetTitle": "Алфавиты — не мелочь.",
+      "helpAlphabet": "Шрифт без кириллицы превращает русскую страницу в ряд прямоугольников, и сборка об этом не предупредит: страница отрисуется прекрасно, просто её нельзя будет прочитать. У каждой записи указано, какие алфавиты она покрывает, — сверьте с языками, которые вы включили.",
+      "helpSystemTitle": "Почему системный шрифт первый.",
+      "helpSystem": "Это самый быстрый из возможных ответов: нечего скачивать, нечего ждать, никаких третьих сторон. Для большинства проектов он же и правильный — свой шрифт оправдывает свою цену только тогда, когда от него действительно зависит бренд."
     }
   }
 }

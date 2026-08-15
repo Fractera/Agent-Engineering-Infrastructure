@@ -376,6 +376,25 @@ export type AdminStrings = {
     helpWhyTitle: string; helpWhy: string;
     helpSectionsTitle: string; helpSections: string;
   };
+  // Шрифты проекта (слой «Дизайн», шаг 2). Три роли, каталог, предупреждение
+  // о внешней раздаче — слова живут здесь, механика в lib/design/font-catalogue.ts.
+  designFonts: {
+    intro: string;
+    roles: Record<"heading" | "body" | "mono", { label: string; description: string }>;
+    systemOption: string; systemNote: string;
+    alphabets: Record<"latin" | "cyrillic" | "greek" | "arabic" | "cjk", string>;
+    covers: string; noDownload: string; external: string;
+    preview: string; previewText: string;
+    save: string; saving: string; saved: string; failed: string; nothingToSave: string;
+    reset: string;
+    helpLabel: string;
+    helpWhereTitle: string; helpWhere: string;
+    helpHowTitle: string; helpHow: string;
+    helpPrivacyTitle: string; helpPrivacy: string;
+    helpAlphabetTitle: string; helpAlphabet: string;
+    helpSystemTitle: string; helpSystem: string;
+  };
+
   warnings: {
     title: string;
     items: {
