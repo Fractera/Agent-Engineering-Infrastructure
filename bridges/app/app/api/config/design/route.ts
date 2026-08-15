@@ -18,6 +18,34 @@ const CONFIG_PATH =
   process.env.DESIGN_CONFIG_PATH ??
   "/opt/fractera/app/DESIGN-CONFIG/design-config.json";
 
+/**
+ * Сбросить кэш гостевого приложения.
+ *
+ * 🔒 БЕЗ ЭТОГО ВЫЗОВА НАСТРОЙКА НЕ ВИДНА, И ВЫГЛЯДИТ ЭТО КАК ПОТЕРЯННОЕ
+ * СОХРАНЕНИЕ (найдено владельцем 2026-08-15: «выбрал оранжевую тему — на главной
+ * ничего не изменилось»). Файл записывался верно, приложение читало его верно, но
+ * страницы живут под ISR со сроком в десять минут и продолжали отдавать прежний
+ * HTML. То есть работали обе половины механизма, а между ними не было ничего.
+ *
+ * Тот же вызов делают соседние маршруты настроек — я его просто не написал.
+ * Ошибка отправки намеренно не роняет сохранение: настройка уже на диске, и
+ * худшее, что случится, — она появится в свой срок, а не сейчас.
+ */
+function revalidateShell() {
+  const url = process.env.SHELL_REVALIDATE_URL ?? "http://127.0.0.1:3000/api/revalidate";
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "x-agent-identity": "design-panel",
+  };
+  const sec = process.env.REVALIDATE_SECRET;
+  if (sec) headers.Authorization = `Bearer ${sec}`;
+  try {
+    void fetch(url, { method: "POST", headers, body: "{}" }).catch(() => {});
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Убрать пустые значения и пустые ветки — см. закон выше. */
 function prune(value: unknown): unknown {
   if (Array.isArray(value)) return value;
@@ -81,6 +109,7 @@ export async function POST(req: NextRequest) {
 
     fs.mkdirSync(path.dirname(CONFIG_PATH), { recursive: true });
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(next, null, 2) + "\n", "utf-8");
+    revalidateShell(); // сбросить кэш гостя → изменение видно на следующей загрузке
 
     return NextResponse.json({ ok: true, config: next });
   } catch (e) {
