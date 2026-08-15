@@ -92,15 +92,30 @@ export function DesignMap({ lang, s }: { lang: string; s: AdminStrings }) {
       ? m.colorsCustom.replace("{count}", String(colorCount))
       : null;
 
+  // 🔒 ОДИН СПИСОК, А НЕ ДВА (владелец 2026-08-15, дословно: «нахера ты мне
+  // продублировал весь контент на странице»).
+  //
+  // Здесь было ДВА перечисления одного и того же: сверху четыре строки с
+  // состоянием, ниже — те же четыре темы прозой с кнопками. Человек читал про
+  // шрифты дважды, а пятая тема — секции — жила только во втором списке, то есть
+  // выглядела чужеродной.
+  //
+  // Правильно так: строка раздела НЕСЁТ всё сразу — название, состояние и
+  // зелёную кнопку с полным разбором. Секции стоят пятой строкой наравне с
+  // остальными; у них нет страницы, поэтому строка не ссылка, а метка «Скоро»
+  // говорит, чего ждать.
   const rows = [
-    { slug: "design-fonts" as const, state: fontNames.length ? fontNames.join(" · ") : null, swatch: null },
-    { slug: "design-type" as const, state: typeState, swatch: null },
-    { slug: "design-shape" as const, state: shapeParts.length ? shapeParts.join(" · ") : null, swatch: null },
+    { key: "fonts" as const, slug: "design-fonts" as const, state: fontNames.length ? fontNames.join(" · ") : null, swatch: null },
+    { key: "type" as const, slug: "design-type" as const, state: typeState, swatch: null },
+    { key: "shape" as const, slug: "design-shape" as const, state: shapeParts.length ? shapeParts.join(" · ") : null, swatch: null },
     {
+      key: "colors" as const,
       slug: "design-colors" as const,
       state: colorState,
       swatch: light.primary ? [light.background ?? "#ffffff", light.primary, light.accent ?? light.primary] : null,
     },
+    // Пятая — без страницы: механизма ещё нет, и ссылка вела бы в никуда.
+    { key: "sections" as const, slug: null, state: null, swatch: null },
   ];
 
   const untouched = rows.every(r => !r.state);
@@ -118,15 +133,27 @@ export function DesignMap({ lang, s }: { lang: string; s: AdminStrings }) {
       )}
 
       <ul className="mt-3 divide-y divide-border rounded-lg border border-border">
-        {rows.map(row => (
-          <li key={row.slug}>
-            <Link href={adminHref(lang, row.slug)} className="flex items-start gap-3 px-3 py-2.5 hover:bg-muted">
-              <div className="min-w-0 flex-1">
-                <span className="text-[12px] font-medium text-foreground">{s.pages[row.slug].title}</span>
-                <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">
-                  {s.pages[row.slug].hint}
-                </p>
+        {rows.map(row => {
+          const title = row.slug ? s.pages[row.slug].title : m.blocks.sections.shortTitle;
+          const hint = row.slug ? s.pages[row.slug].hint : m.blocks.sections.hint;
 
+          // Название и подсказка — ссылка целиком, если страница есть. Кнопка
+          // разбора стоит РЯДОМ, а не внутри ссылки: вложенная кнопка внутри
+          // ссылки перехватывает нажатие непредсказуемо, и человек то открывает
+          // окно, то уходит на страницу.
+          const head = (
+            <div className="min-w-0 flex-1">
+              <span className="flex flex-wrap items-center gap-2 text-[12px] font-medium text-foreground">
+                {title}
+                {!row.slug && (
+                  <span className="rounded-full border border-primary/30 bg-primary/[0.06] px-2 py-0.5 text-[10px] font-medium text-primary">
+                    {m.soon}
+                  </span>
+                )}
+              </span>
+              <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">{hint}</p>
+
+              {row.slug && (
                 <p className="mt-1 flex items-center gap-1.5 text-[11px]">
                   {row.swatch && (
                     <span className="flex gap-0.5">
@@ -143,64 +170,42 @@ export function DesignMap({ lang, s }: { lang: string; s: AdminStrings }) {
                     {row.state ?? m.notSet}
                   </span>
                 </p>
+              )}
+            </div>
+          );
+
+          return (
+            <li key={row.key} className="px-3 py-2.5">
+              <div className="flex items-start gap-3">
+                {row.slug ? (
+                  <Link href={adminHref(lang, row.slug)} className="flex min-w-0 flex-1 items-start gap-3 hover:opacity-80">
+                    {head}
+                    <ChevronRight size={13} className="mt-1 shrink-0 text-muted-foreground" />
+                  </Link>
+                ) : (
+                  head
+                )}
               </div>
-              <ChevronRight size={13} className="mt-1 shrink-0 text-muted-foreground" />
-            </Link>
-          </li>
-        ))}
+
+              {/* Зелёная кнопка — под строкой раздела: короткое описание уже
+                  прочитано, а полный разбор ждёт того, кому он нужен. */}
+              <div className="mt-1.5">
+                <Doc
+                  name={`design-${row.key}-inside`}
+                  lang={lang}
+                  label={m.docs[row.key]}
+                  title={m.docs[`${row.key}Title` as keyof typeof m.docs]}
+                />
+              </div>
+            </li>
+          );
+        })}
       </ul>
 
       <p className="mt-3 rounded-md border border-border bg-muted/40 p-2.5 text-[10px] leading-relaxed text-muted-foreground">
         {m.liveNote}
       </p>
 
-      {/* РАЗБОР КАЖДОГО РАЗДЕЛА — тот же приём, что во вкладке «Как вас находят»:
-          заголовок, проза, никаких списков возможностей. Список говорит, ЧТО
-          есть; проза — почему оно устроено так и что это даёт, а покупатель
-          платит за второе.
-
-          🔒 ЗАКОН РАЗДЕЛА ТОТ ЖЕ: утверждение появляется здесь только после
-          того, как его держит машинная проверка. Про двадцать один вид секций
-          написано потому, что `npm run check:sections` не даёт добавить вид без
-          образца; про контраст — потому что число считается в редакторе на
-          глазах; про применение без пересборки — потому что это проверено
-          запросом к живому сайту. Обещание, ложное в минуту чтения, дороже
-          отсутствующего. */}
-      <div className="mt-4 space-y-4 rounded-lg border border-border p-3.5">
-        {(["fonts", "type", "shape", "colors", "sections"] as const).map(key => {
-          const block = m.blocks[key];
-          const future = key === "sections";
-          return (
-            <section key={key} className="border-t border-border pt-3 first:border-t-0 first:pt-0">
-              <h2 className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-foreground">
-                {block.title}
-                {future && (
-                  <span className="rounded-full border border-primary/30 bg-primary/[0.06] px-2 py-0.5 text-[10px] font-medium text-primary">
-                    {m.soon}
-                  </span>
-                )}
-              </h2>
-
-              <div className="mt-1.5 space-y-1.5 text-[11px] leading-relaxed text-muted-foreground">
-                {block.body.map((paragraph, i) => (
-                  <p key={i}>{paragraph}</p>
-                ))}
-              </div>
-
-              {/* Кнопка ПОД текстом, а не внутри него: ссылка посреди абзаца
-                  уводит из чтения, а здесь она ждёт, пока абзац дочитают. */}
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <Doc
-                  name={`design-${key}-inside`}
-                  lang={lang}
-                  label={m.docs[key]}
-                  title={m.docs[`${key}Title` as keyof typeof m.docs]}
-                />
-              </div>
-            </section>
-          );
-        })}
-      </div>
     </PageShell>
   );
 }

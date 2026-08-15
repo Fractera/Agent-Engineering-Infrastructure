@@ -2063,7 +2063,9 @@
             "A page is assembled from sections — ready block kinds. A page material is data, not markup: the text lives separately and how it looks is the section decision. So a rule added to one kind reaches every page where that kind appears.",
             "From this follows the point: the look of a project consists of exactly two things — the set of sections and the token values from the neighbouring pages. That is what makes a design portable.",
             "SOON: importing ready section sets, and a page builder. The foundation already stands — a catalogue of twenty-one kinds, a machine check for specimens, and tokens that apply without a rebuild. No dates: a capability is announced once a check holds it."
-          ]
+          ],
+          "shortTitle": "Sections",
+          "hint": "What pages are assembled from, and how a ready design is reused."
         }
       },
       "docs": {
@@ -4144,7 +4146,9 @@
             "Страница собирается из секций — готовых видов блоков. Материал страницы это данные, а не вёрстка: текст лежит отдельно, а как он выглядит, решает секция. Поэтому правило, добавленное в один вид, доезжает до каждой страницы, где он встречается.",
             "Отсюда главное: внешний вид проекта состоит ровно из двух вещей — набора секций и значений токенов с соседних страниц. Это и делает дизайн переносимым.",
             "СКОРО: загрузка готовых наборов секций и конструктор страниц. Опора уже стоит — каталог из двадцати одного вида, машинная проверка образцов и токены, применяющиеся без пересборки. Даты не называем: возможность объявляется после того, как её держит проверка."
-          ]
+          ],
+          "shortTitle": "Секции",
+          "hint": "Из чего собираются страницы и как переиспользовать готовый дизайн."
         }
       },
       "docs": {

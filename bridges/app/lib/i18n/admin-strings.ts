@@ -447,7 +447,11 @@ export type AdminStrings = {
     intro: string; allDefault: string; notSet: string; liveNote: string;
     systemFont: string; scaleValue: string; schemeNamed: string; colorsCustom: string;
     // Разбор каждого раздела: как устроен, зачем нужен, что даёт.
-    blocks: Record<"fonts" | "type" | "shape" | "colors" | "sections", { title: string; body: string[] }>;
+    // Только у секций есть короткие поля: они стоят строкой в списке разделов,
+    // где остальные берут название и подсказку из словаря своих страниц.
+    blocks: Record<"fonts" | "type" | "shape" | "colors", { title: string; body: string[] }> & {
+      sections: { title: string; body: string[]; shortTitle: string; hint: string };
+    };
     // Подписи зелёных кнопок и заголовки окон с полным разбором.
     docs: Record<
       "fonts" | "fontsTitle" | "type" | "typeTitle" | "shape" | "shapeTitle"
