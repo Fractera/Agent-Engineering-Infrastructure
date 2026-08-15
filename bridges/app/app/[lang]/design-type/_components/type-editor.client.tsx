@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { AdminStrings } from "@/lib/i18n/admin-strings";
+import { DesignWorkbench, DesignPreview } from "../../_components/design-workbench";
 
 // Редактор шкалы текста: множитель и межстрочный интервал.
 //
@@ -46,7 +47,7 @@ export function TypeEditor({ initial, labels }: { initial: State; labels: AdminS
 
   const px = (base: number) => Math.round(base * state.scale);
 
-  return (
+  const controls = (
     <div className="flex flex-col gap-4">
       <section className="rounded-lg border border-border p-3">
         <label htmlFor="type-scale" className="text-[13px] font-medium text-foreground">
@@ -90,11 +91,15 @@ export function TypeEditor({ initial, labels }: { initial: State; labels: AdminS
         </div>
       </section>
 
-      {/* Предпросмотр: те же формулы, что у сайта. */}
-      <section className="rounded-lg border border-border bg-muted/30 p-3">
-        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{labels.preview}</p>
+    </div>
+  );
+
+  // Предпросмотр считается теми же формулами, что и сайт.
+  const preview = (
+    <>
+      <DesignPreview label={labels.preview}>
         <p
-          className="mt-2 font-serif font-bold tracking-tight text-foreground"
+          className="font-serif font-bold tracking-tight text-foreground"
           style={{ fontSize: `${px(30)}px`, lineHeight: 1.15 }}
         >
           {labels.previewH1}
@@ -108,9 +113,9 @@ export function TypeEditor({ initial, labels }: { initial: State; labels: AdminS
         <p className="mt-2 font-mono text-[10px] text-muted-foreground">
           {px(30)}px / {px(16)}px · {state.leading}
         </p>
-      </section>
+      </DesignPreview>
 
-      <div className="flex items-center gap-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         <Button size="sm" onClick={save} disabled={status === "saving"}>
           {status === "saving" ? labels.saving : labels.save}
         </Button>
@@ -127,6 +132,8 @@ export function TypeEditor({ initial, labels }: { initial: State; labels: AdminS
         {status === "failed" && <span className="text-[11px] text-destructive">{labels.failed}</span>}
         {status === "same" && <span className="text-[11px] text-muted-foreground">{labels.nothingToSave}</span>}
       </div>
-    </div>
+    </>
   );
+
+  return <DesignWorkbench controls={controls} preview={preview} />;
 }
