@@ -1793,6 +1793,13 @@
       }
     },
     "projectPicker": {
+      "manyTitle": "One server, many products",
+      "manyBody": [
+        "This server does not carry one site. Today you describe your first product — a landing page, say; tomorrow a store appears on the same server, and next month a company brain that automates your internal work. Nothing new has to be bought or deployed for that.",
+        "Each product gets its own place: a public one lives at its own address, an internal one becomes a tab in your control panel, and an automation needs no screen at all — it works through channels and on a schedule.",
+        "That is why questions and use cases belong to a product rather than to the server. When the agent picks up a task, it knows which pages and which data are that product's — and does not touch the one next door."
+      ],
+      "manyHint": "Nothing to choose here yet: your first product is created for you as soon as your use cases are written. You will add the second one from this page, on the day you need it.",
       "lead": "Choose the structure of your project",
       "hint": "Tap a direction — a description with examples and telling signs opens. Once you choose, you get seven questions written for that direction alone.",
       "dialogExamples": "Examples",
@@ -4202,6 +4209,13 @@
       }
     },
     "projectPicker": {
+      "manyTitle": "Один сервер — много продуктов",
+      "manyBody": [
+        "Этот сервер несёт не один сайт. Сегодня вы описываете первый продукт — скажем, посадочную страницу; завтра на том же сервере появится интернет-магазин, а через месяц мозг компании, автоматизирующий внутреннюю работу. Ничего докупать и разворачивать для этого не нужно.",
+        "У каждого продукта своё место: публичный живёт на своём адресе, внутренний становится вкладкой в вашей панели управления, а автоматизации экран не нужен вовсе — она работает в каналах и по расписанию.",
+        "Поэтому и вопросы, и кейсы принадлежат продукту, а не серверу. Взявшись за задачу, агент знает, какие страницы и какие данные принадлежат этому продукту, — и не заденет соседний."
+      ],
+      "manyHint": "Выбирать сейчас нечего: первый продукт создастся сам, как только вы опишете кейсы. Второй вы добавите на этой же странице в тот день, когда он понадобится.",
       "lead": "Выберите структуру вашего проекта",
       "hint": "Нажмите на направление — откроется описание с примерами и признаками. После выбора вы получите семь вопросов, написанных именно под него.",
       "dialogExamples": "Примеры",
