@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getAdminStrings } from "@/lib/i18n/admin-strings";
-import { NAV_GROUPS, NAV_BY_GROUP, adminHref } from "@/lib/admin-nav";
+import { NAV_GROUPS, NAV_BY_GROUP, GROUP_INDEX, adminHref } from "@/lib/admin-nav";
 import { PageShell } from "./_components/page-shell";
 
 // 🔒 ДИНАМИЧЕСКАЯ НЕ РАДИ САМОЙ СТРАНИЦЫ, А РАДИ ШАПКИ (2026-08-11).
@@ -67,26 +67,51 @@ export default async function AdminHomePage({ params }: { params: Promise<{ lang
           Запрет разрыва внутри группы обязателен: без него группа рвётся между
           колонками, заголовок остаётся в одной, а половина ссылок уезжает в
           другую. */}
+      {/* 🔒 ТРИ УРОВНЯ ВИДНЫ ГЛАЗАМИ, А НЕ ВЫВОДЯТСЯ ИЗ ЧТЕНИЯ (владелец 2026-08-15).
+          Раньше все страницы группы шли ПЛОСКИМ списком, и карта группы стояла в
+          нём первой строкой наравне с дочерними — то есть «Дизайн» выглядел
+          соседом «Шрифтов», хотя открывает их. Иерархия существовала в
+          навигации и не существовала на экране.
+
+          Теперь: КАТЕГОРИЯ крупнее всех и не является ссылкой (это имя раздела,
+          а не страница), под ней ЖИРНАЯ карта группы — родительская страница, и
+          с отступом вправо — её дочерние. Отступ подкреплён вертикальной чертой:
+          на списке из трёх пунктов сдвиг ещё читается сам, на списке из
+          шестнадцати — уже нет. */}
       <div className="columns-1 gap-6 sm:columns-2 lg:columns-3 xl:columns-4">
-        {NAV_GROUPS.map((group) => (
-          <section key={group} className="mb-4 break-inside-avoid">
-            <h2 className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70">
-              {s.navGroups[group]}
-            </h2>
-            <ul className="space-y-0.5">
-              {NAV_BY_GROUP[group].map((slug) => (
-                <li key={slug}>
-                  <Link
-                    href={adminHref(lang, slug)}
-                    className="block rounded-md px-2 py-1 text-[12px] text-foreground hover:bg-muted"
-                  >
-                    {s.pages[slug].title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
+        {NAV_GROUPS.map((group) => {
+          const index = GROUP_INDEX[group];
+          const children = NAV_BY_GROUP[group].filter((slug) => slug !== index);
+          return (
+            <section key={group} className="mb-5 break-inside-avoid">
+              <h2 className="mb-1.5 text-[13px] font-semibold tracking-tight text-foreground">
+                {s.navGroups[group]}
+              </h2>
+
+              <Link
+                href={adminHref(lang, index)}
+                className="block rounded-md px-2 py-1 text-[12px] font-semibold text-foreground hover:bg-muted"
+              >
+                {s.pages[index].title}
+              </Link>
+
+              {children.length > 0 && (
+                <ul className="mt-0.5 space-y-0.5 border-l border-border pl-2.5 ml-2">
+                  {children.map((slug) => (
+                    <li key={slug}>
+                      <Link
+                        href={adminHref(lang, slug)}
+                        className="block rounded-md px-2 py-1 text-[12px] text-muted-foreground hover:bg-muted hover:text-foreground"
+                      >
+                        {s.pages[slug].title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          );
+        })}
       </div>
     </PageShell>
   );
