@@ -755,6 +755,9 @@ export type AdminStrings = {
     imagesTitle: string; imagesBody: string; imagesSpeed: string;
     docImages: string; docImagesTitle: string;
     // Дизайн-система: почему проект не расползается по мере роста.
+    // Статическая генерация — первый блок раздела: на ней держится стоимость сервера.
+    staticTitle: string; staticBody: string; staticDrift: string; staticGuard: string;
+    docStatic: string; docStaticTitle: string;
     designSystemTitle: string; designSystemBody: string; designSystemDrift: string;
     docDesignSystem: string; docDesignSystemTitle: string;
     noJsTitle: string; noJsBody: string;

@@ -88,6 +88,20 @@ export function VisibilityContent(
       <p className="text-[11px] leading-relaxed text-muted-foreground">{v.intro}</p>
 
       <div className="space-y-4 rounded-lg border border-border p-3.5">
+        {/* 🔒 СТАТИКА — ПЕРВЫЙ БЛОК РАЗДЕЛА (владелец 2026-08-15: «самый важный
+            раздел проекта»). Остальное здесь рассказывает, что проект умеет
+            отдавать наружу; это — про то, во что обходится его работа. Поиск,
+            модели и приложение стоят на статике: страница, считаемая на лету,
+            отвечает медленнее и стоит дороже, а на медленную выдача не ставит. */}
+        <Block
+          title={v.staticTitle}
+          docs={<Doc name="static-first-inside" lang={lang} label={v.docStatic} title={v.docStaticTitle} />}
+        >
+          <p>{v.staticBody}</p>
+          <p>{v.staticDrift}</p>
+          <p>{v.staticGuard}</p>
+        </Block>
+
         <Block
           title={v.searchTitle}
           docs={<Doc name="seo-inside" lang={lang} label={v.docSeo} title={v.docSeoTitle} />}

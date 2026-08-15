@@ -1792,7 +1792,13 @@
       "designSystemBody": "Nobody decides to make a site inconsistent — the drift accumulates one harmless edit at a time. A heading slightly larger here, a margin slightly tighter there, a card with a rounder corner on the third page. Each decision is reasonable on its own, and none of them looks like a mistake.",
       "designSystemDrift": "Then comes the part that matters for AI-assisted work: an agent reads the existing code as its example. While there is one way to describe a heading, it repeats that way. Once there are three, the agent draws a conclusion that is flawless from where it stands — there is no single rule here, so anything goes — and every new page adds a fourth. The more you build, the faster the drift. Here it is closed by primitives, tokens and four machine-checked laws that run inside the build: a violation does not reach the product, it stops the release.",
       "docDesignSystem": "How it works",
-      "docDesignSystemTitle": "Design system: why the project does not drift apart"
+      "docDesignSystemTitle": "Design system: why the project does not drift apart",
+      "staticTitle": "Static generation",
+      "staticBody": "Public pages are built ahead of time and served as files — with practically no load on the server. A dynamic page is recomputed on every visit: a multilingual site with a hundred pages and ten languages recalculates a thousand variants for every visitor, and growth in traffic turns into growth in the bill.",
+      "staticDrift": "Static is much harder to build than dynamic, and the difficulty runs one way: any shortcut leads from static to dynamic, never back. Reading a cookie, a request header or a session check inside a layout turns the whole subtree dynamic — silently, without an error. A particular trap waits when private pages are added: since a dynamic layer now exists anyway, it feels simpler to make everything dynamic. Bills in the tens of thousands of dollars have grown from exactly a few such lines.",
+      "staticGuard": "So the rule is held by a machine, not by an agreement. Public and private pages live in physically separate layers, and a check walks the entire public layer looking for signs of dynamics — on a match the build stops. Not a warning, not a log entry: the release does not happen until the violation is gone. A checklist is followed for as long as it is remembered; the first shortcut would bring dynamics back, and you would learn about it from the bill.",
+      "docStatic": "How it works",
+      "docStaticTitle": "Static generation: the decision that costs the most"
     },
     "devTools": {
       "intro": "These are the tools the project is BUILT with, not the ones that ship inside the product. They live on the developer's machine and never reach your visitor. The Tools section is about something else: ready-made pieces you can take into the application.",
@@ -3880,7 +3886,13 @@
       "designSystemBody": "Никто не решает сделать сайт разнородным — расхождение накапливается по одной безобидной правке. Здесь заголовок чуть крупнее, там отступ чуть меньше, на третьей странице скругление побольше. Каждое решение по отдельности разумно, и ни одно не выглядит ошибкой.",
       "designSystemDrift": "Дальше начинается главное, и оно касается именно разработки с ИИ: агент читает существующий код как образец. Пока способ описать заголовок один, он его повторяет. Как только способов стало три, агент делает безупречный с его точки зрения вывод — единого правила здесь нет, значит можно как удобно, — и каждая новая страница добавляет четвёртый. Чем больше вы разрабатываете, тем быстрее идёт расхождение. В этом проекте оно закрыто примитивами, токенами и четырьмя машинными законами, которые стоят в сборке: нарушение не попадает в продукт, а останавливает выпуск.",
       "docDesignSystem": "Как это работает",
-      "docDesignSystemTitle": "Дизайн-система: почему проект не расползается"
+      "docDesignSystemTitle": "Дизайн-система: почему проект не расползается",
+      "staticTitle": "Статическая генерация",
+      "staticBody": "Публичные страницы собраны заранее и отдаются как файлы — практически с нулевой нагрузкой на сервер. Динамическая страница считается заново на каждый заход: мультиязычный сайт со ста страницами и десятью языками пересчитывает тысячу вариантов для каждого посетителя, и рост посещаемости превращается в рост счёта.",
+      "staticDrift": "Сделать статику намного труднее, чем динамику, и трудность односторонняя: любой шаг «на минуту» ведёт от статики к динамике, обратно — никогда. Достаточно чтения куки, заголовка запроса или проверки сессии в макете, и весь слой под ним становится динамическим — молча, без ошибки. Отдельная ловушка ждёт в момент, когда в проект добавляют приватные страницы: раз динамический слой всё равно появился, кажется проще держать динамическими и остальные. Известны счета в десятки тысяч долларов, выросшие ровно из нескольких таких строк.",
+      "staticGuard": "Поэтому правило закреплено машиной, а не договорённостью. Публичные и приватные страницы лежат в физически разных слоях, а проверка обходит весь публичный слой и ищет признаки динамики — при находке сборка останавливается. Не предупреждение и не запись в журнал: выпуск не состоится, пока нарушение не убрано. Чек-лист исполняется, пока о нём помнят; первая же правка «на минуту» вернула бы динамику, и узнали бы об этом по счёту.",
+      "docStatic": "Как это работает",
+      "docStaticTitle": "Статическая генерация: почему это дороже всего стоит"
     },
     "devTools": {
       "intro": "Здесь то, чем проект СТРОЯТ, а не то, что едет внутрь продукта. Эти инструменты живут на машине разработчика и вашему посетителю не достаются. Раздел «Инструменты» — про другое: там готовые куски, которые можно взять в приложение.",
