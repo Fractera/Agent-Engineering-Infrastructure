@@ -409,6 +409,23 @@ export type AdminStrings = {
     helpLiveTitle: string; helpLive: string;
   };
 
+  // Формы и отступы (слой «Дизайн», шаг 4).
+  designShape: {
+    intro: string;
+    radiusLabel: string; radiusHint: string;
+    radiusPresets: Record<"square" | "soft" | "round" | "pill", string>;
+    borderLabel: string; borderHint: string;
+    spaceLabel: string; spaceHint: string;
+    spacePresets: Record<"dense" | "normal" | "airy", string>;
+    widthLabel: string; widthHint: string;
+    preview: string; previewCard: string; previewBody: string;
+    save: string; saving: string; saved: string; failed: string; nothingToSave: string; reset: string;
+    helpLabel: string;
+    helpRadiusTitle: string; helpRadius: string;
+    helpSpaceTitle: string; helpSpace: string;
+    helpWidthTitle: string; helpWidth: string;
+  };
+
   warnings: {
     title: string;
     items: {

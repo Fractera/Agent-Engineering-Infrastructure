@@ -31,6 +31,7 @@ export const NAV = [
   // к вершине: шрифты выбираются раньше шкалы, шкала раньше форм и цвета.
   { slug: "design-fonts",     group: "design" },
   { slug: "design-type",      group: "design" },
+  { slug: "design-shape",     group: "design" },
 
   { slug: "map-application",  group: "application" },
   { slug: "app-settings",    group: "application" },

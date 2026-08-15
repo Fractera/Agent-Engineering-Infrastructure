@@ -1425,6 +1425,10 @@
       "design-type": {
         "title": "Typography",
         "hint": "The type scale and line height — one number for the whole set."
+      },
+      "design-shape": {
+        "title": "Shapes & spacing",
+        "hint": "Corner rounding, borders, density and content width."
       }
     },
     "breadcrumbHome": "Panel",
@@ -1895,6 +1899,44 @@
       "helpRange": "Between 0.75 and 1.5. Outside it text is either unreadable or breaks the layout, and you would only discover that by opening every page. The limit lives in the application, not in this form — a value has to be checked where it arrives, not where it is typed.",
       "helpLiveTitle": "It applies without a rebuild.",
       "helpLive": "The value is written into DESIGN-CONFIG on your server; the application reads it on every render as a CSS variable, and each step of the scale is calculated from it. The change shows on the next page load."
+    },
+    "designShape": {
+      "intro": "Corners, borders and breathing room — the shape of every surface on the site.",
+      "radiusLabel": "Corner rounding",
+      "radiusHint": "Applies to cards, panels, buttons and inputs at once — each derives its own radius from this one value.",
+      "radiusPresets": {
+        "square": "Square",
+        "soft": "Soft",
+        "round": "Rounded",
+        "pill": "Very round"
+      },
+      "borderLabel": "Border width",
+      "borderHint": "A two-pixel border changes the character of an interface more than a colour does.",
+      "spaceLabel": "Density",
+      "spaceHint": "Vertical breathing room on every page. Content pages and work screens keep their difference — this moves both together.",
+      "spacePresets": {
+        "dense": "Dense",
+        "normal": "Default",
+        "airy": "Airy"
+      },
+      "widthLabel": "Content width",
+      "widthHint": "How wide the middle column of a page may grow. The header, the first screen and the footer are always full width.",
+      "preview": "Preview",
+      "previewCard": "A card on the page",
+      "previewBody": "Its text sits inside the border, at the distance the density sets.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "failed": "Could not save",
+      "nothingToSave": "Nothing changed",
+      "reset": "Back to the project shapes",
+      "helpLabel": "How these four values reach the pages",
+      "helpRadiusTitle": "One radius, five derivatives.",
+      "helpRadius": "The project computes small, medium, large and extra-large corners from this single number, so a card, a button and an input never disagree. Setting them separately is how interfaces end up with three different corners on one screen.",
+      "helpSpaceTitle": "Density is a multiplier, not a number of pixels.",
+      "helpSpace": "Content pages are airier than work screens on purpose: one is read, the other is worked in. The multiplier moves both and keeps that difference — separate fields would let a work screen become airier than a content page, which is not a setting but a defect.",
+      "helpWidthTitle": "Width governs the middle only.",
+      "helpWidth": "The page header, the first screen, the closing section and the footer are always full width. This value limits the column between them — the one the reader's eye travels along, where an over-long line becomes hard to follow."
     }
   },
   "ru": {
@@ -3323,6 +3365,10 @@
       "design-type": {
         "title": "Типографика",
         "hint": "Масштаб текста и межстрочный интервал — одно число на весь набор."
+      },
+      "design-shape": {
+        "title": "Формы и отступы",
+        "hint": "Скругление углов, рамки, плотность и ширина содержимого."
       }
     },
     "breadcrumbHome": "Панель",
@@ -3793,6 +3839,44 @@
       "helpRange": "От 0,75 до 1,5. За этими границами текст либо нечитаем, либо ломает раскладку, а узнать об этом можно, только открыв каждую страницу. Предел стоит в приложении, а не в этой форме: значение проверяют там, куда оно приходит, а не там, где его набирают.",
       "helpLiveTitle": "Применяется без пересборки.",
       "helpLive": "Значение записывается в DESIGN-CONFIG на вашем сервере; приложение читает его на каждом рендере как переменную CSS, и каждая ступень шкалы считается от неё. Изменение видно на следующей загрузке страницы."
+    },
+    "designShape": {
+      "intro": "Углы, рамки и воздух — форма каждой поверхности на сайте.",
+      "radiusLabel": "Скругление углов",
+      "radiusHint": "Действует сразу на карточки, панели, кнопки и поля ввода — каждый элемент выводит свой радиус из этого одного значения.",
+      "radiusPresets": {
+        "square": "Прямые",
+        "soft": "Мягкие",
+        "round": "Скруглённые",
+        "pill": "Очень круглые"
+      },
+      "borderLabel": "Толщина рамки",
+      "borderHint": "Рамка в два пикселя меняет характер интерфейса сильнее, чем цвет.",
+      "spaceLabel": "Плотность",
+      "spaceHint": "Вертикальный воздух на всех страницах. Разница между контентными и рабочими экранами сохраняется — это число двигает обе меры вместе.",
+      "spacePresets": {
+        "dense": "Плотно",
+        "normal": "Как в проекте",
+        "airy": "Свободно"
+      },
+      "widthLabel": "Ширина содержимого",
+      "widthHint": "Насколько широкой может стать средняя колонка страницы. Шапка, первый экран и подвал всегда во всю ширину.",
+      "preview": "Как выглядит",
+      "previewCard": "Карточка на странице",
+      "previewBody": "Её текст стоит внутри рамки, на том расстоянии, которое задаёт плотность.",
+      "save": "Сохранить",
+      "saving": "Сохраняю…",
+      "saved": "Сохранено",
+      "failed": "Не удалось сохранить",
+      "nothingToSave": "Ничего не изменилось",
+      "reset": "Вернуть формы проекта",
+      "helpLabel": "Как эти четыре значения доходят до страниц",
+      "helpRadiusTitle": "Один радиус, пять производных.",
+      "helpRadius": "Проект считает из этого числа малый, средний, большой и увеличенный углы, поэтому карточка, кнопка и поле ввода не могут разойтись. Задавать их по отдельности — так и появляются интерфейсы с тремя разными углами на одном экране.",
+      "helpSpaceTitle": "Плотность — множитель, а не число пикселей.",
+      "helpSpace": "Контентные страницы свободнее рабочих намеренно: одни читают, в других работают. Множитель двигает обе меры и сохраняет эту разницу — отдельные поля позволили бы сделать рабочий экран воздушнее контентного, а это не настройка, а дефект.",
+      "helpWidthTitle": "Ширина управляет только серединой.",
+      "helpWidth": "Шапка страницы, первый экран, завершающая секция и подвал всегда во всю ширину. Это значение ограничивает колонку между ними — ту, по которой идёт взгляд читателя и где слишком длинная строка становится трудной."
     }
   }
 }
