@@ -30,13 +30,15 @@ import { adminHref } from "@/lib/admin-nav";
 import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
 import {
-  listCases, useCasesGate, readSeed, readQuestions, resetPreview,
+  listCases, useCasesGate, readSeed, readQuestions, resetPreview, readProjectType,
   USE_CASES_DIR, CASES_SUBDIR, RAW_SUBDIR,
 } from "@/lib/use-cases-store";
+import { PROJECT_TYPES, isProjectTypeId } from "@/lib/project-types";
 import { readInstructionSet } from "@/lib/instruction-set";
 import { DocCommands } from "../_components/doc-commands";
 import { DocPopup } from "../_components/doc-popup.client";
 import { IntroSetup } from "./_components/intro-setup.client";
+import { ProjectTypePicker } from "./_components/project-type-picker.client";
 import { ResetQuiz } from "./_components/reset-quiz.client";
 import { IntroQuestions } from "./_components/intro-questions.client";
 import { QuizLauncher } from "./_components/quiz-launcher.client";
@@ -61,6 +63,29 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
   const questions = readQuestions();
   const set = readInstructionSet();
   const o = s.docsOverview;
+
+  // 🔒 СТРУКТУРА ПРОЕКТА РЕШАЕТ, КАКИЕ СЕМЬ ВОПРОСОВ ПОКАЗАТЬ (владелец 2026-08-15).
+  //
+  // Прежде вопросы приходили из словаря одним списком на всех — и интернет-магазин,
+  // и клиника, и мозг компании получали одинаковые семь. Теперь список берётся у
+  // выбранного направления, и он у каждого свой: ни один вопрос не повторяется
+  // между двенадцатью направлениями (`lib/project-types.ts`).
+  //
+  // Карточки собираются ЗДЕСЬ, на сервере, и уезжают в островок пропсами: словарь
+  // панели — 82 языка, ему в браузере не место.
+  const chosenType = readProjectType();
+  const chosenCard = chosenType && isProjectTypeId(chosenType.id)
+    ? s.projectTypes[chosenType.id]
+    : null;
+  const typeCards = PROJECT_TYPES.map((id) => ({ id, ...s.projectTypes[id] }));
+  const p = s.projectPicker;
+  const pickerLabels = {
+    lead: p.lead, hint: p.hint,
+    dialogExamples: p.dialogExamples, dialogSignals: p.dialogSignals, dialogQuestions: p.dialogQuestions,
+    choose: p.choose, cancel: p.cancel, saving: p.saving,
+    chosen: p.chosen, change: p.change, chosenHint: p.chosenHint,
+    failed: u.failed,
+  };
 
   // Есть ли вообще что сбрасывать. Кнопка «начать сначала» без единого ответа —
   // это предложение отменить то, чего нет.
@@ -140,10 +165,23 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
           у того, кто на них ответил, — значит отменять его работу видом экрана.
           Захочет переспросить заново — для этого есть «Начать сначала». */}
       {!questions && !seed ? (
-        // Экран 0 — правка самих вопросов, до единого ответа.
+        // Экран 0 — теперь два шага: сначала структура проекта, затем правка её
+        // собственных семи вопросов. Пока структура не выбрана, вопросов на
+        // странице нет вовсе: показывать общий список значило бы вернуть ровно ту
+        // беду, ради которой выбор и появился.
         <div className="mt-2">
+          <ProjectTypePicker
+            types={typeCards}
+            chosen={chosenType && chosenCard ? { id: chosenType.id, title: chosenCard.title } : null}
+            labels={pickerLabels}
+          />
+
+          {chosenCard && (
+          <div className="mt-3">
           <IntroSetup
-            suggested={u.introQuestions}
+            // Вопросы выбранного направления. Общего списка больше нет: он
+            // существовал только потому, что структуру спросить было негде.
+            suggested={chosenCard.questions}
             lang={lang}
             labels={{
               lead: u.setupLead, hint: u.setupHint, add: u.setupAdd, removeOne: u.setupRemove,
@@ -153,14 +191,17 @@ export default async function UseCasesPage({ params }: { params: Promise<{ lang:
               count: u.setupCount,
             }}
           />
+          </div>
+          )}
         </div>
       ) : !seed ? (
         <div className="mt-3">
           <p className="mb-2 text-[11px] leading-relaxed text-muted-foreground">{u.introLead}</p>
           <IntroQuestions
-            // Список владельца, если он его утвердил; иначе предложенный — так
-            // проект, начатый до появления экрана вопросов, не остаётся без них.
-            questions={questions ?? u.introQuestions}
+            // Список владельца, если он его утвердил; иначе вопросы выбранной
+            // структуры; и лишь потом общий — им остаются проекты, начатые до
+            // того, как структуру стало где называть.
+            questions={questions ?? chosenCard?.questions ?? u.introQuestions}
             lang={lang}
             labels={{
               progress: u.introProgress, placeholder: u.introPlaceholder,

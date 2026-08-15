@@ -1490,6 +1490,321 @@
       "createHint": "This project has no DIALOGUE-FORMAT.md yet. Create it from the template.",
       "failed": "Could not save"
     },
+    "projectTypes": {
+      "landing": {
+        "title": "Landing page",
+        "tagline": "One page, one action",
+        "definition": "A single page with exactly one goal: to get a request or a contact. Everything on it serves that goal — the offer, the proof, the form. It never has a second goal, because two goals mean the visitor completes neither.",
+        "examples": [
+          "A product launch behind paid advertising",
+          "A service page for a lawyer, doctor or tutor",
+          "Registration for a webinar or an event",
+          "Collecting pre-orders before production"
+        ],
+        "signals": [
+          "You pay for traffic and count the cost of one request",
+          "The sale happens in a conversation, not on the site",
+          "There is one product or one service — nothing to choose between"
+        ],
+        "questions": [
+          "What exactly does a person receive after leaving a request, and what happens in the first 24 hours?",
+          "Where does the traffic come from: paid ads, social media, a mailing list, offline?",
+          "Which single objection stops people most often, and how do you remove it?",
+          "What proof do you already have: reviews, numbers, cases, licences, client names?",
+          "What do you give in exchange for a contact — a quote, a consultation, a trial, a file, a place in the queue?",
+          "Which fields must the form have, and which ones would scare people away and should go?",
+          "Where does the request land and who answers it: email, Telegram, CRM, a phone call?"
+        ]
+      },
+      "store": {
+        "title": "Online store",
+        "tagline": "Goods, cart, payment, delivery",
+        "definition": "A shop window for goods that belong to you, with a cart, payment and delivery. There is one seller — you; the buyer picks from your stock and pays on the site.",
+        "examples": [
+          "Your own clothing or cosmetics brand",
+          "A shop attached to a production line",
+          "Digital goods: files, keys, access codes",
+          "A grocery shop with city delivery"
+        ],
+        "signals": [
+          "Items repeat: the same product is sold many times",
+          "You have stock levels and they change",
+          "The order is placed on the site, even when payment happens on delivery"
+        ],
+        "questions": [
+          "What do you sell by the piece: how many items today, and how fast does the list change?",
+          "What makes one item differ from another inside a product card: size, colour, volume, bundle?",
+          "Where do prices and stock levels come from — typed by hand, an accounting system, a supplier feed?",
+          "How does the buyer pay: card, cash on delivery, invoice for a company, instalments?",
+          "How do the goods reach the buyer: courier, pickup, post, digital delivery — and who calculates the cost?",
+          "What happens after payment: who packs the order, where do you see it, what does the buyer receive?",
+          "Returns and exchanges: in which cases, at whose expense, and who decides?"
+        ]
+      },
+      "saas": {
+        "title": "SaaS",
+        "tagline": "A product on subscription",
+        "definition": "Software people pay for again and again. The value is the work it does instead of the user; every user has an account, a plan and their own data.",
+        "examples": [
+          "A bookkeeping or planning service",
+          "A tool for marketers, doctors or lawyers",
+          "A personal dashboard with calculations and reports",
+          "A team service with roles and permissions"
+        ],
+        "signals": [
+          "Money arrives repeatedly, not once",
+          "The user has an account and data of their own inside it",
+          "Your main risk is people not renewing, not people not buying"
+        ],
+        "questions": [
+          "Which job does your product do for the user instead of the user?",
+          "What does a person get for free, and where exactly does the paid part begin?",
+          "What do you charge for: per person, per usage, per stored item, per period?",
+          "What has to happen in the first ten minutes after sign-up for the person to stay?",
+          "Does one account serve a team — who invites whom, and who can see what?",
+          "Which of the user's data do you store, and what do they lose if they leave?",
+          "Why do people stop renewing, and what do you already know about it?"
+        ]
+      },
+      "agents": {
+        "title": "Agentic automation",
+        "tagline": "A worker instead of a form",
+        "definition": "A product where an agent does the work: it reads the request, decides, reaches into your data and answers or acts. The site here is not a shop window — it is the agent's workplace.",
+        "examples": [
+          "Taking and processing requests in chat around the clock",
+          "Reading incoming mail and turning it into tasks",
+          "Quoting and matching on a customer request",
+          "An on-duty answerer for company rules and policies"
+        ],
+        "signals": [
+          "There is a routine a person performs today along one repeated path",
+          "Requests arrive in a stream and look alike",
+          "A correct answer needs your data, not general knowledge"
+        ],
+        "questions": [
+          "Which routine are you handing to the agent — describe it the way it happens by hand today?",
+          "What starts the work: a message from a person, a schedule, an event in a system, an incoming order?",
+          "In which channels does the agent speak: the site, Telegram, email, phone, an internal chat?",
+          "Which decisions may the agent make alone, and where must it ask a human?",
+          "Which of your data and services does it need access to so the answer is not invented?",
+          "How will you learn that the agent did badly, and what must happen at that moment?",
+          "How many such requests arrive per day, and at which hours?"
+        ]
+      },
+      "corporate": {
+        "title": "Corporate website",
+        "tagline": "Company, services, trust",
+        "definition": "A multi-page site of an organisation: directions, services, people, proof. It has no single call to action — it answers dozens of questions from different visitors.",
+        "examples": [
+          "A manufacturer or a construction company",
+          "A clinic, a law firm, an engineering bureau",
+          "A B2B supplier with a long sales cycle",
+          "The site of an institution or a foundation"
+        ],
+        "signals": [
+          "The decision is made by several people and not in one visit",
+          "You are being checked: licences, track record, cases, the team",
+          "There are several directions, and each needs its own story"
+        ],
+        "questions": [
+          "What does the company do — the way an employee would explain it to a stranger in one minute?",
+          "Which services or directions each deserve a page of their own?",
+          "Who makes the buying decision on the other side, and what do they look for first?",
+          "Which confirmations must you show: licences, certificates, memberships, years in business?",
+          "Do you need sections for people who are not buying: careers, press, investors, partners?",
+          "Which employees should be visible by name, and what do people come to them with?",
+          "Who will update the content after launch, and how often?"
+        ]
+      },
+      "media": {
+        "title": "Media and blog",
+        "tagline": "A stream of publications",
+        "definition": "A project whose value is regular material. It grows by pages and by search traffic; its machinery is sections, authors, a feed and search.",
+        "examples": [
+          "An industry outlet or a news portal",
+          "An expert blog of a company",
+          "A personal blog with a paid subscription",
+          "A knowledge base of reference articles"
+        ],
+        "signals": [
+          "Material comes out regularly, not once",
+          "Traffic arrives from search and recommendations",
+          "The reader has to be held until the next piece"
+        ],
+        "questions": [
+          "What do you write about and for whom — say it as a subject, not as a section name?",
+          "Who writes: you, an editorial team, invited authors, a model?",
+          "How often does material come out, and how long is one piece?",
+          "By which sections and tags does a reader search, and which of them matter most for search engines?",
+          "How does the audience earn you money: advertising, subscription, your own product, affiliate links?",
+          "What should the reader do after the text: subscribe, buy, share, read the next one?",
+          "Is any material closed to some readers, and what opens the access?"
+        ]
+      },
+      "marketplace": {
+        "title": "Marketplace",
+        "tagline": "Two sides, your platform",
+        "definition": "A platform where other people sell. You have two kinds of users — seller and buyer — and you earn on the deal between them, not on goods of your own.",
+        "examples": [
+          "A classifieds board for a city or a niche",
+          "A platform of craftsmen and customers",
+          "A shop window shared by several stores",
+          "An exchange for services or rentals"
+        ],
+        "signals": [
+          "The goods or services are not yours",
+          "Sellers must be attracted separately from buyers",
+          "There is a commission, moderation and disputes"
+        ],
+        "questions": [
+          "Who sells on the platform and who buys — describe both sides separately?",
+          "What must a seller provide to appear on the shop window, and who checks it?",
+          "What do you earn on: commission, seller subscription, paid promotion, payment per lead?",
+          "Do the payments pass through you, or directly between the two sides?",
+          "What happens in a dispute: who judges it, and what proves who is right?",
+          "Which sellers do you already have, so the window does not look empty on launch day?",
+          "How does a buyer find what they need: search, filters, categories, a map, matching?"
+        ]
+      },
+      "booking": {
+        "title": "Booking and appointments",
+        "tagline": "Time is the product",
+        "definition": "A project that sells an occupied interval: an appointment, a table, a room, a car, a hall. The core entity is not a product but the schedule of a resource.",
+        "examples": [
+          "A salon, a clinic, a barbershop",
+          "Renting flats, cars or equipment",
+          "A restaurant and its table reservations",
+          "A coach, a tutor, a consultant"
+        ],
+        "signals": [
+          "Two people cannot take the same slot",
+          "Cancellations and no-shows cost you money",
+          "The schedule today lives in a notebook, a chat or a spreadsheet"
+        ],
+        "questions": [
+          "What exactly gets booked: a person, a room, a table, a car, equipment, a suite?",
+          "How many such resources are there, and how do they differ from one another?",
+          "How is working time arranged: hours, breaks, days off, seasons, a minimum booking length?",
+          "How long does one service take, and is a gap needed between bookings?",
+          "Does the client pay upfront or leave a deposit — and what happens on cancellation?",
+          "Who keeps the schedule today, and what must it stay in sync with?",
+          "How do you remind people about a booking, and how long before it?"
+        ]
+      },
+      "learning": {
+        "title": "Courses and learning",
+        "tagline": "From lesson to result",
+        "definition": "A project where a person walks a path: lessons, assignments, progress, access. What is sold is not a file but being carried to a result.",
+        "examples": [
+          "An online school or an expert's course",
+          "Corporate training for employees",
+          "A membership club with materials",
+          "Preparation for an exam"
+        ],
+        "signals": [
+          "The material has an order, and the order matters",
+          "You can see where each person stopped",
+          "Access opens and closes rather than being granted forever"
+        ],
+        "questions": [
+          "What will a person be able to do afterwards — name the result as an action?",
+          "What is the course made of: modules, lessons, length, and is the order compulsory?",
+          "In what form is the material: video, text, assignments, live sessions, reviews of student work?",
+          "Are assignments checked, and by whom: automation, a mentor, the student themselves?",
+          "How does access open: one payment, a subscription, a cohort with dates, an invitation?",
+          "What marks completion: a certificate, entry to a community, a record in the profile?",
+          "What do you do with those who quit halfway, and how will you notice?"
+        ]
+      },
+      "directory": {
+        "title": "Catalogue and directory",
+        "tagline": "Many objects, filters, a map",
+        "definition": "A collection of objects of one kind with filters, search and often a map. Its value is completeness and accuracy; every object gives a page of its own.",
+        "examples": [
+          "A directory of a city's organisations",
+          "A catalogue of specialists or craftsmen",
+          "A database of properties",
+          "A listing of venues and events"
+        ],
+        "signals": [
+          "There are hundreds or thousands of objects and they are alike",
+          "People arrive asking «what is near me» or «who fits»",
+          "The data goes stale and has to be refreshed"
+        ],
+        "questions": [
+          "What kind of objects fill the catalogue — organisations, places, specialists, things, vacancies?",
+          "Where do the records come from: you enter them, objects register themselves, an import, a crawler?",
+          "Which fields does every record have, and which of them will people search and filter by?",
+          "Do you need a map, and what does «nearby» mean in your case — metres, a district, a city, a delivery zone?",
+          "Who is responsible for accuracy, and how does a record get updated when the data ages?",
+          "Are there paid places: promotion, highlighting, an extended card?",
+          "How many records do you expect — hundreds, thousands, hundreds of thousands?"
+        ]
+      },
+      "competitors": {
+        "title": "Competitor intelligence",
+        "tagline": "Their moves, your decisions",
+        "definition": "A project that reads competitors' pages, social accounts and marketplaces by itself, stores what it finds and shows the movement: what changed, when and by how much. The platform's own browser does this without you walking the sites by hand.",
+        "examples": [
+          "Watching prices and assortment",
+          "Monitoring a competitor's vacancies and hiring",
+          "Tracking their publications and advertising",
+          "Collecting and digesting reviews across the market"
+        ],
+        "signals": [
+          "You already check other people's sites by hand, just irregularly",
+          "Your decision — price, assortment, wording — depends on someone else's move",
+          "You need the history of changes, not a single snapshot"
+        ],
+        "questions": [
+          "Whom exactly do you count as a competitor — name five and say what they have in common?",
+          "What has to be watched at their side: prices, assortment, wording, vacancies, posts, reviews, releases?",
+          "Where does it live: their site, a marketplace, a social network, an app store, a review site?",
+          "How often should it be checked, and what counts as a change worth telling you about?",
+          "What will you do once you see a change — which decision of yours should it speed up?",
+          "In what shape do you need the result: a feed of events, a comparison table, a chart over time, a periodic report?",
+          "Which of the collected material must never leave the company?"
+        ]
+      },
+      "company-brain": {
+        "title": "Company brain",
+        "tagline": "All the company's knowledge in one place",
+        "definition": "A project that gathers what the company knows — documents, correspondence, tasks, the code base, people and their roles — puts it into structure, keeps it in your own database and gives it back as reports and as answers that cite their source.",
+        "examples": [
+          "A knowledge base that answers from your documents",
+          "A map of employees, roles and areas of responsibility",
+          "A digest of the code base and its changes",
+          "Regular reports for the head of the company"
+        ],
+        "signals": [
+          "Key knowledge lives in people's heads and in chats",
+          "A new employee takes weeks to get up to speed",
+          "The same question gets asked again and again"
+        ],
+        "questions": [
+          "What is known only «in someone's head», and whose absence stops the work?",
+          "Which sources should be collected: correspondence, documents, the code base, tasks, calls, spreadsheets?",
+          "Who is who: which roles exist, what is each responsible for, and should that be linked together?",
+          "Which questions do you want to ask this base and get an answer with a link to the source?",
+          "Who may see what: every employee, a department, the head, the owner alone?",
+          "Which reports do you need regularly, and to whom do they go?",
+          "What must land in the base automatically, and what does a person put there by hand?"
+        ]
+      }
+    },
+    "projectPicker": {
+      "lead": "Choose the structure of your project",
+      "hint": "Tap a direction — a description with examples and telling signs opens. Once you choose, you get seven questions written for that direction alone.",
+      "dialogExamples": "Examples",
+      "dialogSignals": "This is you if",
+      "dialogQuestions": "What you will be asked",
+      "choose": "Choose this type of application",
+      "cancel": "Cancel",
+      "saving": "Saving…",
+      "chosen": "Project structure: {title}",
+      "change": "Choose another",
+      "chosenHint": "Below are the seven questions for this structure. Rewrite them, dictate them, delete them or add your own — then start the interview."
+    },
     "useCases": {
       "gateMissing": "No user cases yet — development does not start without them. Answer the questions below; the Quiz turns your answers into cases.",
       "gateUnconfirmed": "{confirmed} of {total} cases confirmed. The rest are still the model's guesses — read them and confirm, or correct them first.",
@@ -3583,6 +3898,321 @@
       "createdDoc": "Документ создан — теперь это файл в вашем репозитории",
       "createHint": "В этом проекте ещё нет файла DIALOGUE-FORMAT.md. Создайте его из шаблона.",
       "failed": "Сохранить не удалось"
+    },
+    "projectTypes": {
+      "landing": {
+        "title": "Посадочная страница",
+        "tagline": "Одна страница, одно действие",
+        "definition": "Одна страница, у которой ровно одна цель — получить заявку или контакт. Всё на ней подчинено этой цели: оффер, доказательства, форма. Второй цели у неё не бывает: две цели означают, что посетитель не выполнит ни одной.",
+        "examples": [
+          "Запуск продукта под платную рекламу",
+          "Страница услуги эксперта: юрист, врач, репетитор",
+          "Регистрация на вебинар или мероприятие",
+          "Сбор предзаказов до начала производства"
+        ],
+        "signals": [
+          "Вы платите за трафик и считаете стоимость одной заявки",
+          "Продажа происходит в разговоре, а не на сайте",
+          "Товар один или услуга одна — выбирать не из чего"
+        ],
+        "questions": [
+          "Что именно человек получит, оставив заявку, и что произойдёт в первые сутки?",
+          "Откуда придёт трафик: платная реклама, соцсети, рассылка, офлайн?",
+          "Какое одно возражение чаще всего останавливает людей и чем вы его снимаете?",
+          "Какие доказательства у вас уже есть: отзывы, цифры, кейсы, лицензии, имена клиентов?",
+          "Что вы отдаёте в обмен на контакт — расчёт, консультацию, пробу, файл, место в очереди?",
+          "Какие поля в форме обязательны, а какие отпугнут и должны исчезнуть?",
+          "Куда попадает заявка и кто на неё отвечает: почта, Telegram, CRM, звонок?"
+        ]
+      },
+      "store": {
+        "title": "Интернет-магазин",
+        "tagline": "Товар, корзина, оплата, доставка",
+        "definition": "Витрина ваших собственных товаров с корзиной, оплатой и доставкой. Продавец один — вы; покупатель выбирает из вашего склада и оформляет заказ на сайте.",
+        "examples": [
+          "Свой бренд одежды или косметики",
+          "Магазин при производстве",
+          "Цифровые товары: файлы, ключи, доступы",
+          "Продуктовая лавка с доставкой по городу"
+        ],
+        "signals": [
+          "Позиции повторяются: один товар продаётся много раз",
+          "Есть остатки, и они меняются",
+          "Заказ оформляется на сайте, даже если оплата при получении"
+        ],
+        "questions": [
+          "Что вы продаёте штучно: сколько позиций сейчас и как быстро список меняется?",
+          "Чем один товар отличается от другого внутри карточки: размер, цвет, объём, комплект?",
+          "Откуда берутся цены и остатки — вводятся руками, приходят из учётной системы, от поставщика?",
+          "Как покупатель платит: карта, при получении, счёт юрлицу, рассрочка?",
+          "Как товар доезжает: курьер, самовывоз, почта, цифровая доставка — и кто считает стоимость?",
+          "Что происходит после оплаты: кто собирает заказ, где вы его видите, что получает покупатель?",
+          "Возврат и обмен: в каких случаях, за чей счёт и кто это решает?"
+        ]
+      },
+      "saas": {
+        "title": "SaaS-сервис",
+        "tagline": "Продукт по подписке",
+        "definition": "Программа, за пользование которой платят регулярно. Ценность — в работе, которую она делает вместо пользователя; у каждого свой аккаунт, тариф и свои данные.",
+        "examples": [
+          "Сервис учёта или планирования",
+          "Инструмент для маркетологов, врачей, юристов",
+          "Личный кабинет с расчётами и отчётами",
+          "Сервис для команд с ролями и правами"
+        ],
+        "signals": [
+          "Деньги приходят повторно, а не один раз",
+          "У пользователя есть аккаунт и собственные данные внутри него",
+          "Главный риск — что не продлят, а не что не купят"
+        ],
+        "questions": [
+          "Какую работу ваш продукт делает вместо пользователя?",
+          "Что человек получает бесплатно и где именно начинается платное?",
+          "За что вы берёте деньги: за человека, за использование, за хранимый объём, за срок?",
+          "Что должно случиться в первые десять минут после регистрации, чтобы человек остался?",
+          "Работает ли один аккаунт на команду — кто кого приглашает и кто что видит?",
+          "Какие данные пользователя вы храните и что он теряет, если уйдёт?",
+          "Из-за чего люди перестают продлевать и что вы об этом уже знаете?"
+        ]
+      },
+      "agents": {
+        "title": "Агентная автоматизация",
+        "tagline": "Работник вместо формы",
+        "definition": "Продукт, где работу делает агент: читает обращение, принимает решение, обращается к вашим данным и отвечает или совершает действие. Сайт здесь не витрина, а рабочее место агента.",
+        "examples": [
+          "Приём и обработка обращений в чате круглосуточно",
+          "Разбор входящей почты и постановка задач",
+          "Подбор и расчёт по запросу клиента",
+          "Дежурный по регламентам компании"
+        ],
+        "signals": [
+          "Есть рутина, которую человек делает сегодня по одному повторяющемуся пути",
+          "Обращения идут потоком и похожи друг на друга",
+          "Правильный ответ требует ваших данных, а не общих знаний"
+        ],
+        "questions": [
+          "Какую рутину вы отдаёте агенту — опишите её так, как она происходит руками сегодня?",
+          "Что запускает работу: сообщение человека, расписание, событие в системе, входящий заказ?",
+          "В каких каналах агент разговаривает: сайт, Telegram, почта, телефон, внутренний чат?",
+          "Какие решения агент принимает сам, а где обязан спросить человека?",
+          "К каким вашим данным и сервисам ему нужен доступ, чтобы ответ не был выдуманным?",
+          "Как вы узнаете, что агент сработал плохо, и что должно произойти в этот момент?",
+          "Сколько таких обращений приходит в день и в какие часы?"
+        ]
+      },
+      "corporate": {
+        "title": "Корпоративный сайт",
+        "tagline": "Компания, услуги, доверие",
+        "definition": "Многостраничный сайт организации: направления, услуги, люди, доказательства. Одной кнопки-цели у него нет — он отвечает на десятки вопросов разных посетителей.",
+        "examples": [
+          "Производственная или строительная компания",
+          "Клиника, юридическая фирма, проектное бюро",
+          "Поставщик B2B с длинным циклом сделки",
+          "Сайт учреждения или фонда"
+        ],
+        "signals": [
+          "Решение принимают несколько человек и не за один визит",
+          "Вас проверяют: лицензии, опыт, кейсы, команда",
+          "Направлений несколько, и каждому нужен свой рассказ"
+        ],
+        "questions": [
+          "Чем занимается компания — так, как объяснил бы сотрудник постороннему за минуту?",
+          "Какие услуги или направления заслуживают каждое своей страницы?",
+          "Кто принимает решение о сделке на той стороне и что он ищет в первую очередь?",
+          "Какие подтверждения вы обязаны показать: лицензии, сертификаты, членства, годы работы?",
+          "Нужны ли разделы для тех, кто не покупает: вакансии, пресса, инвесторы, партнёры?",
+          "Кто из сотрудников должен быть виден по имени и с чем к нему обращаются?",
+          "Кто и как часто будет обновлять содержимое после запуска?"
+        ]
+      },
+      "media": {
+        "title": "Медиа и блог",
+        "tagline": "Поток публикаций",
+        "definition": "Проект, ценность которого — регулярные материалы. Он растёт числом страниц и поисковым трафиком; его механика — рубрики, авторы, лента и поиск.",
+        "examples": [
+          "Отраслевое издание или новостной портал",
+          "Экспертный блог компании",
+          "Личный блог с платной подпиской",
+          "База знаний из справочных статей"
+        ],
+        "signals": [
+          "Материалы выходят регулярно, а не один раз",
+          "Трафик приходит из поиска и рекомендаций",
+          "Читателя нужно удержать до следующего текста"
+        ],
+        "questions": [
+          "О чём вы пишете и для кого — назовите темой, а не именем рубрики?",
+          "Кто пишет: вы, редакция, приглашённые авторы, модель?",
+          "Как часто выходит материал и какого он объёма?",
+          "По каким рубрикам и меткам ищет читатель и что из этого важнее для поиска?",
+          "Чем аудитория зарабатывает вам деньги: реклама, подписка, свой продукт, партнёрские ссылки?",
+          "Что читатель должен сделать после текста: подписаться, купить, поделиться, прочесть следующий?",
+          "Есть ли материалы, закрытые не для всех, и что открывает доступ?"
+        ]
+      },
+      "marketplace": {
+        "title": "Маркетплейс",
+        "tagline": "Две стороны, ваша площадка",
+        "definition": "Площадка, где продают другие. У вас два типа пользователей — продавец и покупатель, — и зарабатываете вы на сделке между ними, а не на своём товаре.",
+        "examples": [
+          "Доска объявлений города или ниши",
+          "Площадка мастеров и заказчиков",
+          "Общая витрина нескольких магазинов",
+          "Биржа услуг или аренды"
+        ],
+        "signals": [
+          "Товар или услуга принадлежат не вам",
+          "Продавцов нужно привлекать отдельно от покупателей",
+          "Есть комиссия, модерация и споры"
+        ],
+        "questions": [
+          "Кто продаёт на площадке и кто покупает — опишите обе стороны отдельно?",
+          "Что продавец обязан предоставить, чтобы попасть на витрину, и кто это проверяет?",
+          "На чём вы зарабатываете: комиссия, подписка продавца, платное продвижение, оплата за отклик?",
+          "Деньги идут через вас или напрямую между сторонами?",
+          "Что происходит при споре: кто рассудит и чем подтверждается правота?",
+          "Каких продавцов у вас уже достаточно, чтобы витрина не выглядела пустой в день запуска?",
+          "Как покупатель находит нужное: поиск, фильтры, категории, карта, подбор?"
+        ]
+      },
+      "booking": {
+        "title": "Запись и бронирование",
+        "tagline": "Товар — это время",
+        "definition": "Проект, где продаётся занятый интервал: приём, стол, номер, машина, зал. Главная сущность — не товар, а расписание ресурса.",
+        "examples": [
+          "Салон, клиника, барбершоп",
+          "Аренда жилья, автомобилей, оборудования",
+          "Ресторан и бронь столов",
+          "Тренер, репетитор, консультант"
+        ],
+        "signals": [
+          "Двое не могут занять одно и то же время",
+          "Отмены и неявки стоят вам денег",
+          "Расписание сегодня живёт в тетради, чате или таблице"
+        ],
+        "questions": [
+          "Что именно бронируется: человек, кабинет, стол, машина, оборудование, номер?",
+          "Сколько таких ресурсов и чем они отличаются друг от друга?",
+          "Как устроено рабочее время: часы, перерывы, выходные, сезон, минимальный срок брони?",
+          "Сколько длится одна услуга и нужен ли зазор между записями?",
+          "Платит ли клиент заранее или вносит предоплату — и что происходит при отмене?",
+          "Кто ведёт расписание сегодня и с чем оно должно оставаться в согласии?",
+          "Как вы напоминаете о записи и за сколько времени?"
+        ]
+      },
+      "learning": {
+        "title": "Обучение и курсы",
+        "tagline": "От урока к результату",
+        "definition": "Проект, где человек проходит путь: уроки, задания, прогресс, доступ. Продаётся не файл, а доведение до результата.",
+        "examples": [
+          "Онлайн-школа или курс эксперта",
+          "Корпоративное обучение сотрудников",
+          "Клуб с материалами по подписке",
+          "Подготовка к экзамену"
+        ],
+        "signals": [
+          "У материала есть порядок, и порядок важен",
+          "Видно, кто где остановился",
+          "Доступ открывается и закрывается, а не выдаётся навсегда"
+        ],
+        "questions": [
+          "Что человек сможет делать после обучения — назовите результат действием?",
+          "Из чего состоит курс: модули, уроки, длительность, обязателен ли порядок?",
+          "В каком виде материал: видео, текст, задания, эфиры, разбор работ?",
+          "Проверяются ли задания и кем: автоматикой, куратором, самим учеником?",
+          "Как открывается доступ: разовая оплата, подписка, поток с датами, приглашение?",
+          "Что подтверждает завершение: сертификат, вход в сообщество, отметка в профиле?",
+          "Что делать с теми, кто бросил на середине, и как вы это заметите?"
+        ]
+      },
+      "directory": {
+        "title": "Каталог и справочник",
+        "tagline": "Много объектов, фильтры, карта",
+        "definition": "Собрание однотипных объектов с фильтрами, поиском и часто картой. Ценность — в полноте и точности собрания; каждый объект даёт свою страницу.",
+        "examples": [
+          "Справочник организаций города",
+          "Каталог специалистов или мастеров",
+          "База объектов недвижимости",
+          "Афиша мест и событий"
+        ],
+        "signals": [
+          "Объектов сотни или тысячи, и они однотипны",
+          "Люди приходят с вопросом «что рядом» или «кто подойдёт»",
+          "Данные устаревают и требуют обновления"
+        ],
+        "questions": [
+          "Что за объекты наполняют каталог — организации, места, специалисты, вещи, вакансии?",
+          "Откуда берутся записи: вы вносите, объекты регистрируются сами, импорт, обход страниц?",
+          "Какие поля есть у каждой записи и по каким из них люди будут искать и фильтровать?",
+          "Нужна ли карта и что значит «рядом» в вашем случае — метры, район, город, зона доставки?",
+          "Кто отвечает за достоверность и как запись обновляется, когда данные устарели?",
+          "Есть ли платные места: продвижение, выделение, расширенная карточка?",
+          "Сколько записей вы ожидаете — сотни, тысячи, сотни тысяч?"
+        ]
+      },
+      "competitors": {
+        "title": "Анализ конкурентов",
+        "tagline": "Их шаги — ваши решения",
+        "definition": "Проект, который сам читает страницы конкурентов, их соцсети и площадки, складывает найденное и показывает движение: что изменилось, когда и насколько. Собственный браузер платформы делает это без ручного обхода сайтов.",
+        "examples": [
+          "Слежение за ценами и ассортиментом",
+          "Наблюдение за вакансиями и наймом конкурента",
+          "Отслеживание их публикаций и рекламы",
+          "Сбор и разбор отзывов по всему рынку"
+        ],
+        "signals": [
+          "Вы уже проверяете чужие сайты руками, просто нерегулярно",
+          "Ваше решение — цена, ассортимент, формулировка — зависит от чужого шага",
+          "Нужна история изменений, а не разовый снимок"
+        ],
+        "questions": [
+          "Кого именно вы считаете конкурентом — назовите пятерых и скажите, что их объединяет?",
+          "Что нужно отслеживать на их стороне: цены, ассортимент, формулировки, вакансии, посты, отзывы, релизы?",
+          "Где это лежит: их сайт, маркетплейс, соцсеть, магазин приложений, отзовик?",
+          "Как часто проверять и что считать изменением, о котором стоит сообщить?",
+          "Что вы сделаете, увидев изменение, — какое ваше решение оно должно ускорить?",
+          "В каком виде нужен результат: лента событий, таблица сравнения, график динамики, отчёт за период?",
+          "Что из собранного не должно выходить за пределы компании?"
+        ]
+      },
+      "company-brain": {
+        "title": "Мозг компании",
+        "tagline": "Всё знание компании в одном месте",
+        "definition": "Проект, который собирает знание компании — документы, переписки, задачи, кодовую базу, людей и их роли, — приводит его в структуру, хранит в вашей базе и отдаёт отчётами и ответами со ссылкой на источник.",
+        "examples": [
+          "База знаний, отвечающая по вашим документам",
+          "Карта сотрудников, ролей и зон ответственности",
+          "Сводка по кодовой базе и её изменениям",
+          "Регулярные отчёты руководителю"
+        ],
+        "signals": [
+          "Ключевое знание держится в головах и переписках",
+          "Новый сотрудник входит в курс дела неделями",
+          "Один и тот же вопрос задают снова и снова"
+        ],
+        "questions": [
+          "Что известно только «в чьей-то голове» и чьё отсутствие останавливает работу?",
+          "Какие источники собирать: переписки, документы, кодовую базу, задачи, звонки, таблицы?",
+          "Кто есть кто: какие роли существуют, за что отвечает каждая и нужно ли связывать их между собой?",
+          "Какие вопросы вы хотите задавать этой базе и получать ответ со ссылкой на источник?",
+          "Кому что видно: каждому сотруднику, отделу, руководителю, только владельцу?",
+          "Какие отчёты нужны регулярно и кому они уходят?",
+          "Что должно попадать в базу автоматически, а что человек кладёт руками?"
+        ]
+      }
+    },
+    "projectPicker": {
+      "lead": "Выберите структуру вашего проекта",
+      "hint": "Нажмите на направление — откроется описание с примерами и признаками. После выбора вы получите семь вопросов, написанных именно под него.",
+      "dialogExamples": "Примеры",
+      "dialogSignals": "Это про вас, если",
+      "dialogQuestions": "О чём вас спросят",
+      "choose": "Выбрать этот тип приложения",
+      "cancel": "Отменить",
+      "saving": "Сохраняем…",
+      "chosen": "Структура проекта: {title}",
+      "change": "Выбрать другую",
+      "chosenHint": "Ниже — семь вопросов под эту структуру. Их можно переписать, продиктовать, удалить или добавить свои, а затем начать опрос."
     },
     "useCases": {
       "gateMissing": "Кейсов ещё нет — без них разработка не начинается. Ответьте на вопросы ниже, а Quiz превратит ваши ответы в кейсы.",

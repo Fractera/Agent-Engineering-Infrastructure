@@ -25,6 +25,7 @@
 import translations from "./admin-translations.json";
 import { ADMIN_LANGUAGES } from "@/config/translations/admin-languages";
 import type { AdminPageSlug, NavGroup, MappedGroup } from "@/lib/admin-nav";
+import type { ProjectTypeId } from "@/lib/project-types";
 
 export type AdminStrings = {
   // header
@@ -475,6 +476,37 @@ export type AdminStrings = {
     planesTitle: string; planes: string;
     switchTitle: string; switchWhere: string;
     createDoc: string; creating: string; createdDoc: string; createHint: string; failed: string;
+  };
+  /**
+   * Структура проекта — двенадцать направлений (владелец 2026-08-15).
+   *
+   * Ключи приходят из `lib/project-types.ts`, поэтому новое направление без слов
+   * не соберётся — тот же приём, что у страниц панели.
+   *
+   * 🔒 СЕМЬ ВОПРОСОВ У КАЖДОГО НАПРАВЛЕНИЯ СВОИ, И НИ ОДИН НЕ ПОВТОРЯЕТСЯ. Общий
+   * вопрос дал бы общий ответ, общий ответ — общий кейс, и выбор структуры
+   * перестал бы что-либо решать. Проверять это глазами при правке: совпал вопрос
+   * у двух направлений — значит одно из двух описано не своими словами.
+   *
+   * `examples` — узнаваемые примеры, `signals` — определяющие признаки в форме
+   * «это про вас, если…». Оба списка нужны ради одного: человек выбирает не по
+   * названию, а по узнаванию себя.
+   */
+  projectTypes: Record<ProjectTypeId, {
+    title: string;
+    /** Одна фраза в кнопке под названием — чтобы выбрать, не открывая окна. */
+    tagline: string;
+    definition: string;
+    examples: string[];
+    signals: string[];
+    questions: string[];
+  }>;
+  /** Подписи вокруг выбора структуры: заголовок, окно, две кнопки внизу окна. */
+  projectPicker: {
+    lead: string; hint: string;
+    dialogExamples: string; dialogSignals: string; dialogQuestions: string;
+    choose: string; cancel: string; saving: string;
+    chosen: string; change: string; chosenHint: string;
   };
   // Пользовательские кейсы: гейт, вводные вопросы и Quiz.
   useCases: {

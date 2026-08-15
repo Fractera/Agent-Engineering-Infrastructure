@@ -4,7 +4,9 @@ import {
   listCases, useCasesGate, appendCases, writeCase, setStatus, confirmAll, deleteCase,
   migrateLegacy, appendRaw, writeSeed, readSeed, appendTurns, readTurns,
   readQuestions, writeQuestions, resetUseCases, resetPreview,
+  readProjectType, writeProjectType,
 } from "@/lib/use-cases-store";
+import { isProjectTypeId } from "@/lib/project-types";
 
 // Кейсы: чтение папки и действия над ней.
 //
@@ -21,7 +23,7 @@ export async function GET(req: NextRequest) {
   const state = listCases();
   return NextResponse.json({
     ...state, gate: useCasesGate(), seed: readSeed(), turns: readTurns(),
-    questions: readQuestions(),
+    questions: readQuestions(), projectType: readProjectType(),
     // Что исчезнет при «начать сначала» — окно подтверждения обязано называть
     // числа, а не «всё»: «удалить всё» без счёта либо не нажимают, либо
     // нажимают вслепую.
@@ -40,6 +42,8 @@ export async function POST(req: NextRequest) {
     summary?: string;
     seed?: string;
     questions?: string[];
+    typeId?: string;
+    typeTitle?: string;
     cases?: { title: string; summary: string }[];
     turns?: { role: "user" | "assistant"; content: string }[];
     note?: string;
@@ -57,6 +61,17 @@ export async function POST(req: NextRequest) {
         appendTurns(body.turns);
       }
       return NextResponse.json({ ok: true });
+    }
+    // Выбранная структура проекта. Название приходит с клиента, потому что оно
+    // на языке владельца, а словарь панели серверный и в браузер не уезжает;
+    // идентификатор при этом проверяется по каталогу — принимать на веру машинную
+    // строку значило бы записать в файл проекта «структуру», которой нет.
+    case "project-type": {
+      if (!isProjectTypeId(body.typeId)) {
+        return NextResponse.json({ error: "unknown_project_type" }, { status: 400 });
+      }
+      const saved = writeProjectType(body.typeId, body.typeTitle?.trim() || body.typeId);
+      return NextResponse.json({ ok: true, projectType: saved });
     }
     // Вводные вопросы, утверждённые владельцем. Ложатся файлом в папку проекта:
     // вопрос — половина ответа, и агент должен видеть, о чём спрашивали.

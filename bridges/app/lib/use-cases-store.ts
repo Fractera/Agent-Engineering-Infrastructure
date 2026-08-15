@@ -211,7 +211,22 @@ export function appendRaw(turns: RawTurn[], note?: string): void {
  */
 export function writeSeed(text: string): void {
   ensureDirs();
-  fs.writeFileSync(path.join(rawDir(), "seed.md"), text.trim() + "\n", "utf-8");
+  // 🔒 СТРУКТУРА ПРОЕКТА ВСТАЁТ ПЕРВОЙ СТРОКОЙ ЗАТРАВКИ (владелец 2026-08-15).
+  //
+  // Затравку читает КАЖДЫЙ вызов модели — и вопрос, и автоквиз, и синтез кейсов.
+  // Значит это единственное место, куда достаточно положить выбранное
+  // направление, чтобы оно дошло до всех трёх, не трогая промпты (а трогать их
+  // нельзя: каждая формулировка в них оплачена разбором конкретного провала).
+  //
+  // Без этой строки выбор влиял бы только на текст семи вопросов и терялся бы
+  // ровно там, где он ценнее всего: при синтезе, когда модель решает, что вообще
+  // считать кейсом. Для маркетплейса и для лендинга это разные вещи.
+  //
+  // Заголовок по-английски намеренно: файл читают агент и модель, а их язык —
+  // английский, как и у промптов рядом.
+  const chosen = readProjectType();
+  const head = chosen ? `Project type: ${chosen.title} (${chosen.id})\n\n` : "";
+  fs.writeFileSync(path.join(rawDir(), "seed.md"), head + text.trim() + "\n", "utf-8");
 }
 
 export function readSeed(): string {
@@ -264,6 +279,43 @@ export function readTurns(): RawTurn[] {
 // спрашивали. Файла нет — значит владелец ещё не смотрел вопросы, и панель
 // показывает ему предложенные.
 const QUESTIONS_FILE = "questions.json";
+
+// ── Структура проекта ────────────────────────────────────────────────────────
+//
+// 🔒 СНАЧАЛА СТРУКТУРА, ПОТОМ ВОПРОСЫ (владелец 2026-08-15).
+//
+// Экран правки вопросов дал владельцу возможность переписать чужой вопрос, но
+// саму работу оставил ему: чтобы понять, О ЧЁМ спрашивать маркетплейс, надо уже
+// знать, чем маркетплейс отличается от магазина. Теперь порядок обратный —
+// владелец называет структуру проекта, и семь вопросов приходят написанными под
+// неё.
+//
+// Выбор ложится файлом в папку проекта, а не в базу панели: он едет в
+// репозиторий вместе с кейсами, и агент видит, какой продукт строит. Название
+// хранится рядом с идентификатором намеренно — на языке владельца, чтобы файл
+// читался человеком без обращения к словарю панели.
+const PROJECT_TYPE_FILE = "project-type.json";
+
+export type ChosenProjectType = { id: string; title: string; chosenAt: string };
+
+export function readProjectType(): ChosenProjectType | null {
+  try {
+    const raw = JSON.parse(fs.readFileSync(path.join(rawDir(), PROJECT_TYPE_FILE), "utf-8")) as unknown;
+    if (!raw || typeof raw !== "object") return null;
+    const { id, title, chosenAt } = raw as Partial<ChosenProjectType>;
+    if (!id || typeof id !== "string") return null;
+    return { id, title: typeof title === "string" ? title : id, chosenAt: chosenAt ?? "" };
+  } catch {
+    return null;
+  }
+}
+
+export function writeProjectType(id: string, title: string): ChosenProjectType {
+  ensureDirs();
+  const value: ChosenProjectType = { id, title, chosenAt: new Date().toISOString() };
+  fs.writeFileSync(path.join(rawDir(), PROJECT_TYPE_FILE), JSON.stringify(value, null, 1), "utf-8");
+  return value;
+}
 
 export function readQuestions(): string[] | null {
   try {
@@ -337,7 +389,7 @@ export function resetUseCases(): ResetStat {
     fs.mkdirSync(dest, { recursive: true });
     archive = `${USE_CASES_DIR}/${RAW_SUBDIR}/${ARCHIVE_SUBDIR}/${stamp}/`;
 
-    for (const name of ["seed.md", "turns.json", RAW_LOG, QUESTIONS_FILE]) {
+    for (const name of ["seed.md", "turns.json", RAW_LOG, QUESTIONS_FILE, PROJECT_TYPE_FILE]) {
       const from = path.join(rawDir(), name);
       if (fs.existsSync(from)) fs.renameSync(from, path.join(dest, name));
     }
@@ -353,7 +405,7 @@ export function resetUseCases(): ResetStat {
     // что мешает начать заново. Молча вернуть «готово», не убрав ничего, хуже:
     // он нажмёт ещё раз и увидит тот же мусор.
     archive = null;
-    for (const name of ["seed.md", "turns.json", RAW_LOG, QUESTIONS_FILE]) {
+    for (const name of ["seed.md", "turns.json", RAW_LOG, QUESTIONS_FILE, PROJECT_TYPE_FILE]) {
       try { fs.unlinkSync(path.join(rawDir(), name)); } catch { /* нечего убирать */ }
     }
     try {
