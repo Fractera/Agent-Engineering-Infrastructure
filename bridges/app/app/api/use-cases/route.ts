@@ -87,12 +87,13 @@ export async function POST(req: NextRequest) {
       const saved = existing
         ? updateProduct(existing.id, {
             type: body.typeId,
-            // Имя, уже правленное владельцем, переписывать нельзя: он назвал
-            // продукт сам, а мы бы вернули ему имя структуры.
-            ...(existing.title === existing.type || existing.title === existing.id ? { title } : {}),
+            // Имя переписывается, только пока его ставила машина. Человеческое
+            // имя не трогается никогда: владелец назвал продукт сам, и вернуть
+            // ему вместо этого название структуры — отменить его работу.
+            ...(existing.titleAuto === true ? { title, titleAuto: true } : {}),
             surface: defaultSurface(body.typeId),
           })
-        : addProduct({ title, type: body.typeId });
+        : addProduct({ title, type: body.typeId, titleAuto: true });
       return NextResponse.json({ ok: true, product: saved });
     }
     // Вводные вопросы, утверждённые владельцем. Ложатся файлом в папку проекта:

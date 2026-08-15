@@ -44,6 +44,20 @@ export type Product = {
   route: string;
   status: ProductStatus;
   createdAt: string;
+  /**
+   * Имя поставлено машиной, а не человеком.
+   *
+   * 🔒 БЕЗ ЭТОГО ФЛАГА ИМЯ ВРЁТ (найдено проверкой живьём 2026-08-15). До того,
+   * как продукту даст имя модель, панель зовёт его названием структуры —
+   * «Мозг компании». Владелец передумывает и берёт посадочную страницу; имя
+   * менять нельзя, если его выбрал человек, — и лендинг остаётся «Мозгом
+   * компании» навсегда.
+   *
+   * Отличить одно от другого сравнением строк невозможно: «Мозг компании» —
+   * законное имя и для владельца тоже. Поэтому машина помечает СВОИ имена и
+   * вправе их переписывать; человеческое имя не трогается никогда.
+   */
+  titleAuto?: boolean;
 };
 
 export type ProductsConfig = { version: number; products: Product[] };
@@ -176,7 +190,11 @@ function routeFor(surface: ProductSurface, id: string, others: Product[]): strin
 }
 
 export function addProduct(
-  input: { title: string; type: ProjectTypeId; surface?: ProductSurface; route?: string },
+  input: {
+    title: string; type: ProjectTypeId; surface?: ProductSurface; route?: string;
+    /** Имя поставила машина (название структуры) — его можно будет переписать. */
+    titleAuto?: boolean;
+  },
 ): Product {
   const config = readProductsConfig();
   const taken = new Set(config.products.map((p) => p.id));
@@ -192,6 +210,7 @@ export function addProduct(
     route,
     status: "draft",
     createdAt: new Date().toISOString(),
+    ...(input.titleAuto ? { titleAuto: true } : {}),
   };
   config.products.push(product);
   writeProductsConfig(config);
@@ -227,7 +246,10 @@ export function adoptLegacyProjectType(): Product | null {
     const legacy = path.join(APP_DIR, "development-docs/USE-CASES/RAW/project-type.json");
     const raw = JSON.parse(fs.readFileSync(legacy, "utf-8")) as { id?: string; title?: string };
     if (!raw?.id) return null;
-    const product = addProduct({ title: raw.title || raw.id, type: raw.id as ProjectTypeId });
+    // Имя тоже машинное — это было название структуры, а не выбор владельца.
+    const product = addProduct({
+      title: raw.title || raw.id, type: raw.id as ProjectTypeId, titleAuto: true,
+    });
     // Файл не удаляем: он лежит в папке проекта владельца и ничему не мешает, а
     // стереть чужой файл ради чистоты — не наше право. Источником истины он быть
     // перестал в ту секунду, когда появилась запись продукта.
@@ -240,7 +262,7 @@ export function adoptLegacyProjectType(): Product | null {
 /** Правка записи. `id` и `createdAt` неизменны — на них держатся все пути продукта. */
 export function updateProduct(
   id: string,
-  patch: Partial<Pick<Product, "title" | "type" | "surface" | "route" | "status">>,
+  patch: Partial<Pick<Product, "title" | "type" | "surface" | "route" | "status" | "titleAuto">>,
 ): Product | null {
   const config = readProductsConfig();
   const i = config.products.findIndex((p) => p.id === id);
