@@ -352,7 +352,7 @@ export function appendTurns(pid: string, turns: RawTurn[]): void {
   if (!turns.length) return;
   ensureDirs(pid);
   const file = path.join(rawDir(pid), "turns.json");
-  const all = [...readTurns(), ...turns];
+  const all = [...readTurns(pid), ...turns];
   fs.writeFileSync(file, JSON.stringify(all, null, 1), "utf-8");
 }
 
@@ -497,7 +497,7 @@ export function resetPreview(pid: string): Omit<ResetStat, "archive"> {
   const seed = readSeed(pid);
   return {
     seedAnswers: seed ? seed.split(/\n\s*\n/).filter((p) => p.trim()).length : 0,
-    turns: readTurns().length,
+    turns: readTurns(pid).length,
     cases: cases.length,
     confirmed: cases.filter((c) => c.status === "confirmed").length,
   };
