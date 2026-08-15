@@ -105,15 +105,25 @@ export function findProduct(id: string): Product | null {
 }
 
 /**
- * Машинный идентификатор: структура + порядковый номер (`store-1`, `landing-2`).
+ * Машинный идентификатор: `p1`, `p2`, … — и ничего больше.
  *
- * 🔒 НИКОГДА НЕ ИЗ НАЗВАНИЯ. Название придумывает модель, а правит владелец —
+ * 🔒 НИКОГДА НЕ ИЗ НАЗВАНИЯ. Название придумывает модель, а правит владелец:
  * «Юристы» станет «Юридическими услугами» в первую же неделю. Выводить из него
  * пути значит ломать папку кейсов при каждом переименовании.
+ *
+ * 🔒 И НИКОГДА НЕ ИЗ СТРУКТУРЫ — это выяснилось проверкой живьём (2026-08-15).
+ * Сначала здесь стояло `<тип>-<номер>`: `store-1`, `landing-2`. Читается лучше,
+ * но структуру владелец МЕНЯЕТ — передумал на втором экране, и продукт типа
+ * «мозг компании» навсегда остался с идентификатором `store-1`, а за ним и
+ * `lib/products/store-1/` с таблицами `store_1_*` у продукта, который магазином
+ * не является.
+ *
+ * Идентификатор обязан пережить смену всего остального, поэтому он не значит
+ * ничего. Читаемость даёт название, а адрес — `route`.
  */
-function nextId(type: ProjectTypeId, taken: Set<string>): string {
+function nextId(taken: Set<string>): string {
   for (let n = 1; ; n += 1) {
-    const id = `${type}-${n}`;
+    const id = `p${n}`;
     if (!taken.has(id)) return id;
   }
 }
@@ -131,9 +141,16 @@ function nextId(type: ProjectTypeId, taken: Set<string>): string {
  */
 export function productPaths(product: Pick<Product, "id" | "route">) {
   const root = product.route === "/";
+  // 🔒 СТРАНИЦЫ — ЕДИНСТВЕННОЕ ИСКЛЮЧЕНИЕ: они идут от АДРЕСА, а не от `id`.
+  // В Next имя папки маршрута и есть сегмент адреса, поэтому продукт на `/shop`
+  // обязан лежать в `app/[lang]/shop/` — иначе адрес будет другим. Плата за это
+  // названа честно: переезд продукта на другой адрес переименовывает папку
+  // страниц. Всё остальное (логика, таблицы, кейсы) держится за вечный `id` и
+  // при переезде не двигается вовсе.
+  const segment = product.route.replace(/^\//, "") || product.id;
   return {
     // Корневой продукт живёт в группе маршрутов: она не добавляет сегмент в адрес.
-    pages: root ? "app/[lang]/(root)/" : `app/[lang]/${product.id}/`,
+    pages: root ? "app/[lang]/(root)/" : `app/[lang]/${segment}/`,
     lib: `lib/products/${product.id}/`,
     tablePrefix: `${product.id.replace(/-/g, "_")}_`,
     useCases: `development-docs/USE-CASES/${product.id}/`,
@@ -145,19 +162,27 @@ export function routeTaken(route: string, exceptId?: string): boolean {
   return listProducts().some((p) => p.route === route && p.id !== exceptId && route !== "");
 }
 
+/**
+ * Адрес, положенный продукту с такой поверхностью.
+ *
+ * Первый публичный занимает корень — самый частый случай, когда сайт на сервере
+ * один. Следующие встают на свой сегмент; передача корня — отдельное осознанное
+ * действие владельца (партия 5). У `private` и `headless` адреса нет: вкладка
+ * кабинета и телеграм-агент публичной страницей не владеют.
+ */
+function routeFor(surface: ProductSurface, id: string, others: Product[]): string {
+  if (surface !== "public") return "";
+  return others.some((p) => p.route === "/") ? `/${id}` : "/";
+}
+
 export function addProduct(
   input: { title: string; type: ProjectTypeId; surface?: ProductSurface; route?: string },
 ): Product {
   const config = readProductsConfig();
   const taken = new Set(config.products.map((p) => p.id));
   const surface = input.surface ?? defaultSurface(input.type);
-  const id = nextId(input.type, taken);
-
-  // Адрес по умолчанию: первый публичный продукт занимает корень — самый частый
-  // случай, когда сайт на сервере один. Следующие встают на свой сегмент;
-  // передача корня — отдельное осознанное действие владельца (партия 5).
-  const rootHeld = config.products.some((p) => p.route === "/");
-  const route = input.route ?? (surface === "public" ? (rootHeld ? `/${id}` : "/") : "");
+  const id = nextId(taken);
+  const route = input.route ?? routeFor(surface, id, config.products);
 
   const product: Product = {
     id,
@@ -220,7 +245,29 @@ export function updateProduct(
   const config = readProductsConfig();
   const i = config.products.findIndex((p) => p.id === id);
   if (i < 0) return null;
-  config.products[i] = { ...config.products[i], ...patch };
+
+  const next = { ...config.products[i], ...patch };
+
+  // 🔒 ПОВЕРХНОСТЬ И АДРЕС МЕНЯЮТСЯ ПАРОЙ (найдено проверкой живьём 2026-08-15).
+  //
+  // Владелец выбрал «мозг компании» — продукт стал `private`, адреса не получил,
+  // и это верно. Затем передумал на «посадочную страницу»: поверхность стала
+  // `public`, а адрес остался пустым — публичный продукт, которого нет ни по
+  // какому пути. Отказа при этом никто не увидел бы: и панель, и конфиг
+  // выглядели исправными.
+  //
+  // Поэтому адрес пересчитывается всякий раз, когда меняется поверхность и адрес
+  // не назван явно: стал публичным без адреса — получает его; перестал быть
+  // публичным — теряет, чтобы за ним не осталось занятого корня, которого он уже
+  // не показывает.
+  if (patch.surface && patch.route === undefined && patch.surface !== config.products[i].surface) {
+    const others = config.products.filter((p) => p.id !== id);
+    next.route = patch.surface === "public"
+      ? (next.route || routeFor("public", id, others))
+      : "";
+  }
+
+  config.products[i] = next;
   writeProductsConfig(config);
-  return config.products[i];
+  return next;
 }
