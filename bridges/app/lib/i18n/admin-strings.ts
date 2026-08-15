@@ -426,6 +426,20 @@ export type AdminStrings = {
     helpWidthTitle: string; helpWidth: string;
   };
 
+  // Цвета (слой «Дизайн», шаг 5): роли, две темы, живая проверка контраста.
+  designColors: {
+    intro: string;
+    themeLight: string; themeDark: string;
+    roles: Record<"primary" | "accent" | "background" | "foreground" | "muted" | "border" | "destructive", { label: string; description: string }>;
+    contrastOk: string; contrastLow: string; contrastBad: string; contrastHint: string;
+    preview: string; previewHeading: string; previewBody: string; previewButton: string;
+    save: string; saving: string; saved: string; failed: string; nothingToSave: string; reset: string;
+    helpLabel: string;
+    helpPairTitle: string; helpPair: string;
+    helpThemesTitle: string; helpThemes: string;
+    helpContrastTitle: string; helpContrast: string;
+  };
+
   warnings: {
     title: string;
     items: {

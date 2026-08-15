@@ -1433,6 +1433,10 @@
       "map-design": {
         "title": "Design",
         "hint": "Everything about how the site looks: fonts, type scale, shapes and colours."
+      },
+      "design-colors": {
+        "title": "Colours",
+        "hint": "Seven roles in two themes, with a live contrast check."
       }
     },
     "breadcrumbHome": "Panel",
@@ -1942,6 +1946,62 @@
       "helpSpace": "Content pages are airier than work screens on purpose: one is read, the other is worked in. The multiplier moves both and keeps that difference — separate fields would let a work screen become airier than a content page, which is not a setting but a defect.",
       "helpWidthTitle": "Width governs the middle only.",
       "helpWidth": "The page header, the first screen, the closing section and the footer are always full width. This value limits the column between them — the one the reader's eye travels along, where an over-long line becomes hard to follow."
+    },
+    "designColors": {
+      "intro": "Seven roles, two themes. Each colour is an override: leave it untouched and the project theme decides.",
+      "themeLight": "Light theme",
+      "themeDark": "Dark theme",
+      "roles": {
+        "primary": {
+          "label": "Brand colour",
+          "description": "Buttons, links, active states. The one colour a visitor will remember."
+        },
+        "accent": {
+          "label": "Accent",
+          "description": "Highlights and hovers — a quieter relative of the brand colour."
+        },
+        "background": {
+          "label": "Page background",
+          "description": "What everything else sits on."
+        },
+        "foreground": {
+          "label": "Text",
+          "description": "The main reading colour."
+        },
+        "muted": {
+          "label": "Muted surface",
+          "description": "Cards, panels, the background of secondary blocks."
+        },
+        "border": {
+          "label": "Borders",
+          "description": "Lines between elements — the quietest colour on the page."
+        },
+        "destructive": {
+          "label": "Danger",
+          "description": "Deletion, errors, anything irreversible."
+        }
+      },
+      "contrastOk": "Readable",
+      "contrastLow": "Hard to read",
+      "contrastBad": "Unreadable",
+      "contrastHint": "Text against the page background. Below 4.5 the text fails the accessibility threshold for normal sizes.",
+      "preview": "Preview",
+      "previewHeading": "A heading on the page",
+      "previewBody": "And the body text under it, in the colour people will actually read.",
+      "previewButton": "A button",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "failed": "Could not save",
+      "nothingToSave": "Nothing changed",
+      "reset": "Back to the theme colours",
+      "helpLabel": "How colours reach the site, and what is computed for you",
+      "helpPairTitle": "The text on a button is computed, not asked for.",
+      "helpPair": "Every coloured role has a paired text colour on top of it. Change the brand colour and leave the pair alone, and a light brand colour keeps white text — a button whose label cannot be seen. The application derives that pair from the brightness of your colour, so the label stays readable whatever you pick.",
+      "helpThemesTitle": "Light and dark are separate values.",
+      "helpThemes": "A colour set once is almost always wrong on the other theme: dark text on a dark background disappears entirely. Set only the theme you care about — the other keeps the project's.",
+      "helpContrastTitle": "The contrast figure is a measurement, not an opinion.",
+      "helpContrast": "It is the ratio between text and background as the accessibility standard defines it. 4.5 is the threshold for normal text, 3.0 for large. Below that the page is not 'a matter of taste' — part of your visitors cannot read it."
     }
   },
   "ru": {
@@ -3378,6 +3438,10 @@
       "map-design": {
         "title": "Дизайн",
         "hint": "Всё о том, как выглядит сайт: шрифты, шкала текста, формы и цвета."
+      },
+      "design-colors": {
+        "title": "Цвета",
+        "hint": "Семь ролей в двух темах и живая проверка контраста."
       }
     },
     "breadcrumbHome": "Панель",
@@ -3887,6 +3951,62 @@
       "helpSpace": "Контентные страницы свободнее рабочих намеренно: одни читают, в других работают. Множитель двигает обе меры и сохраняет эту разницу — отдельные поля позволили бы сделать рабочий экран воздушнее контентного, а это не настройка, а дефект.",
       "helpWidthTitle": "Ширина управляет только серединой.",
       "helpWidth": "Шапка страницы, первый экран, завершающая секция и подвал всегда во всю ширину. Это значение ограничивает колонку между ними — ту, по которой идёт взгляд читателя и где слишком длинная строка становится трудной."
+    },
+    "designColors": {
+      "intro": "Семь ролей, две темы. Каждый цвет — перекрытие: не тронули — решает тема проекта.",
+      "themeLight": "Светлая тема",
+      "themeDark": "Тёмная тема",
+      "roles": {
+        "primary": {
+          "label": "Фирменный цвет",
+          "description": "Кнопки, ссылки, активные состояния. Тот единственный цвет, который посетитель запомнит."
+        },
+        "accent": {
+          "label": "Акцент",
+          "description": "Выделения и наведение — более тихий родственник фирменного цвета."
+        },
+        "background": {
+          "label": "Фон страницы",
+          "description": "То, на чём стоит всё остальное."
+        },
+        "foreground": {
+          "label": "Текст",
+          "description": "Основной цвет чтения."
+        },
+        "muted": {
+          "label": "Приглушённая поверхность",
+          "description": "Карточки, панели, фон вспомогательных блоков."
+        },
+        "border": {
+          "label": "Рамки",
+          "description": "Линии между элементами — самый тихий цвет на странице."
+        },
+        "destructive": {
+          "label": "Опасность",
+          "description": "Удаление, ошибки, всё необратимое."
+        }
+      },
+      "contrastOk": "Читаемо",
+      "contrastLow": "Читается трудно",
+      "contrastBad": "Нечитаемо",
+      "contrastHint": "Текст на фоне страницы. Ниже 4,5 текст не проходит порог доступности для обычного размера.",
+      "preview": "Как выглядит",
+      "previewHeading": "Заголовок на странице",
+      "previewBody": "И основной текст под ним — тем цветом, которым его и будут читать.",
+      "previewButton": "Кнопка",
+      "save": "Сохранить",
+      "saving": "Сохраняю…",
+      "saved": "Сохранено",
+      "failed": "Не удалось сохранить",
+      "nothingToSave": "Ничего не изменилось",
+      "reset": "Вернуть цвета темы",
+      "helpLabel": "Как цвета доходят до сайта и что считается за вас",
+      "helpPairTitle": "Цвет надписи на кнопке считается, а не спрашивается.",
+      "helpPair": "У каждой цветной роли есть парный цвет текста поверх неё. Смените фирменный цвет, оставив пару прежней, — и светлый фирменный цвет сохранит белый текст, то есть кнопку, надписи на которой не видно. Приложение выводит эту пару из яркости выбранного цвета, поэтому надпись остаётся читаемой при любом выборе.",
+      "helpThemesTitle": "Светлая и тёмная — разные значения.",
+      "helpThemes": "Цвет, заданный один раз, на второй теме почти всегда неверен: тёмный текст на тёмном фоне исчезает целиком. Задайте только ту тему, которая вам важна, — вторая сохранит цвета проекта.",
+      "helpContrastTitle": "Число контраста — это измерение, а не мнение.",
+      "helpContrast": "Это отношение яркостей текста и фона в том виде, в каком его определяет стандарт доступности. 4,5 — порог для обычного текста, 3,0 — для крупного. Ниже него страница не «дело вкуса»: часть ваших посетителей её не прочитает."
     }
   }
 }

@@ -37,6 +37,7 @@ const ICONS: Record<AdminPageSlug, LucideIcon> = {
   "design-fonts": Type,
   "design-type": ALargeSmall,
   "design-shape": Frame,
+  "design-colors": Paintbrush,
   "map-application": Compass,
   "map-data": Compass,
   "map-backup": Compass,
