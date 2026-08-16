@@ -1618,27 +1618,38 @@
       },
       "agents": {
         "title": "Agentic automation",
-        "tagline": "A worker instead of a form",
-        "definition": "A product where an agent does the work: it reads the request, decides, reaches into your data and answers or acts. The site here is not a shop window — it is the agent's workplace.",
+        "tagline": "The route is built as it goes",
+        "definition": "A system given one goal, which then decides for itself which steps will reach it: it walks through sources, reads what it finds, discards what contradicts, and assembles the rest into a document. What separates it from a schedule is that each step depends on the last — only the result is known in advance.",
         "examples": [
-          "Taking and processing requests in chat around the clock",
-          "Reading incoming mail and turning it into tasks",
-          "Quoting and matching on a customer request",
-          "An on-duty answerer for company rules and policies"
+          "A market study across dozens of sources, delivered as a report",
+          "A dossier on a company or a candidate before a meeting",
+          "An industry digest with the primary sources checked",
+          "A recurring study repeated month after month"
         ],
         "signals": [
-          "There is a routine a person performs today along one repeated path",
-          "Requests arrive in a stream and look alike",
-          "A correct answer needs your data, not general knowledge"
+          "The task does not fit one query — it takes a dozen steps",
+          "What to look for next only becomes clear from what was already found",
+          "The output is a document with conclusions, not a row of data"
         ],
         "questions": [
-          "Which routine are you handing to the agent — describe it the way it happens by hand today?",
-          "What starts the work: a message from a person, a schedule, an event in a system, an incoming order?",
-          "In which channels does the agent speak: the site, Telegram, email, phone, an internal chat?",
-          "Which decisions may the agent make alone, and where must it ask a human?",
-          "Which of your data and services does it need access to so the answer is not invented?",
-          "How will you learn that the agent did badly, and what must happen at that moment?",
-          "How many such requests arrive per day, and at which hours?"
+          "Tasks for the agent: which complex multi-step jobs must it handle (a market study, a dossier on a company or candidate, a legal check, gathering analytics, content research, running a process with branches)? Name the two or three you will start with.",
+          "Your audience: who sets the task and who reads the result? Describe every type — analysts, researchers, marketers, operations managers, business owners, developers — and how willing each is to check the agent's work.",
+          "The problem and the pain: what exactly do ordinary scripts and timed automations fail to cover? What eats a person's time today — walking through a dozen sources by hand, shallow analysis, missing what matters, the difficulty of pulling scattered findings into one document?",
+          "Alternatives: how is this kind of research done today (searching and assembling a report by hand, hiring a freelancer or a consultant, buying a ready report, not at all)?",
+          "The ideal result and its form: what is the gold standard of an answer (a structured document with links to primary sources and charts, an interactive summary, filled-in tables with reasoning)? In what form should it arrive?",
+          "Competitors and peers: what are you taking your bearings from (AutoGPT, CrewAI, Devin, deep research in Perplexity, your own agent setups)? What attracts you in how they work, and what looks unnecessary?",
+          "What sets you apart — both from scheduled automation and from existing agent platforms (depth of reasoning, gathering step by step, adaptability, transparency of actions, human control)?",
+          "Stating the task and the plan: in what form does a person express the goal (a free sentence, a structured brief, a ready research template, a goal builder)? Does the agent draw up the plan itself, may it change the plan along the way, and does the person see that plan before it starts?",
+          "How the agents are arranged: one agent with a set of tools, or several with roles — planner, searcher, critic, writer? Can the owner change their roles and instructions?",
+          "Tools and sources: what may the agent use (web search, reading pages, parsing PDFs, documents and spreadsheets, calling other APIs, running code, the company's internal databases and systems, email)?",
+          "How much it decides alone: what does the agent do unasked, and where must it stop and ask (collects data only · collects and recommends · acts with confirmation · acts on its own within set bounds)? What always needs confirmation — a paid call, sending something outward, writing into another system?",
+          "Contradictions and gaps: what does the agent do when sources disagree (look for more, weigh how trustworthy each is, show the fork honestly in the report, refuse to conclude)? And what does it do when there simply is not enough data?",
+          "Depth and limits of one run: what bounds it (number of steps, number of pages read, spend on the model, total time)? What happens at the limit — does it stop dead or hand over what it managed?",
+          "Citing primary sources: how is every claim in the final document backed (a footnote with the address, a saved quote or a snapshot of the page, the date it was collected)? What should be done with a claim that has no source?",
+          "Transparency of the run: does the person watch the steps live — what the agent is searching for now, what it is reading, what it is verifying? Is a full record of the run needed for review afterwards?",
+          "Memory between runs: should the results of past studies accumulate into a shared store of knowledge, so the agent does not search twice for the same thing? How is stale knowledge told apart from current?",
+          "Templates, failures and notifications: do you need ready scenarios for frequent studies? What happens when a step fails — retry, go around, stop? How does the person learn that the work is finished or broken?",
+          "Constraints and safety: is there anything to be known upfront (hosting it yourself or in a cloud, working with confidential data, what the agent must never do at all, mandatory human oversight, a launch deadline)?"
         ]
       },
       "scheduler": {
@@ -4281,27 +4292,38 @@
       },
       "agents": {
         "title": "Агентная автоматизация",
-        "tagline": "Работник вместо формы",
-        "definition": "Продукт, где работу делает агент: читает обращение, принимает решение, обращается к вашим данным и отвечает или совершает действие. Сайт здесь не витрина, а рабочее место агента.",
+        "tagline": "Маршрут строится по ходу дела",
+        "definition": "Система, которой ставят одну цель, а она сама решает, из каких шагов её достичь: обходит источники, читает найденное, отбрасывает противоречивое и сводит остальное в документ. Отличие от расписания в том, что следующий шаг здесь зависит от предыдущего — заранее известен только результат, которого нужно добиться.",
         "examples": [
-          "Приём и обработка обращений в чате круглосуточно",
-          "Разбор входящей почты и постановка задач",
-          "Подбор и расчёт по запросу клиента",
-          "Дежурный по регламентам компании"
+          "Разбор рынка по десяткам источников с готовым отчётом",
+          "Досье на компанию или кандидата перед встречей",
+          "Свод отраслевых новостей с проверкой первоисточников",
+          "Регулярное исследование, повторяемое из месяца в месяц"
         ],
         "signals": [
-          "Есть рутина, которую человек делает сегодня по одному повторяющемуся пути",
-          "Обращения идут потоком и похожи друг на друга",
-          "Правильный ответ требует ваших данных, а не общих знаний"
+          "Задача не раскладывается в один запрос — нужен десяток шагов",
+          "Что искать дальше, становится ясно только из уже найденного",
+          "Итог — документ с выводами, а не строка данных"
         ],
         "questions": [
-          "Какую рутину вы отдаёте агенту — опишите её так, как она происходит руками сегодня?",
-          "Что запускает работу: сообщение человека, расписание, событие в системе, входящий заказ?",
-          "В каких каналах агент разговаривает: сайт, Telegram, почта, телефон, внутренний чат?",
-          "Какие решения агент принимает сам, а где обязан спросить человека?",
-          "К каким вашим данным и сервисам ему нужен доступ, чтобы ответ не был выдуманным?",
-          "Как вы узнаете, что агент сработал плохо, и что должно произойти в этот момент?",
-          "Сколько таких обращений приходит в день и в какие часы?"
+          "Задачи для агента: какие сложные многошаговые задачи он должен решать (разбор рынка, досье на компанию или кандидата, правовая проверка, сбор аналитики, исследование содержания, ведение процесса с ветвлениями)? Назовите две-три, с которых начнёте.",
+          "Целевая аудитория: кто ставит задачи агенту и читает результат? Опишите все типы — аналитики, исследователи, маркетологи, операционные менеджеры, владельцы дела, разработчики — и насколько каждый готов проверять работу агента.",
+          "Проблема и боль: чего именно НЕ закрывают обычные скрипты и автоматизация по таймеру? Что сейчас отнимает время у человека — ручной обход десятка источников, поверхностность, пропуски важного, сложность свести разрозненное в один документ?",
+          "Альтернативные решения: как такие исследования делаются сейчас (ручной поиск и сборка отчёта в редакторе, наём фрилансера или консультанта, покупка готового отчёта, никак)?",
+          "Идеальный результат и его формат: что для человека «золотой стандарт» ответа (структурированный документ со ссылками на первоисточники и графиками, интерактивная сводка, заполненные таблицы с обоснованием)? В каком виде он должен приходить?",
+          "Конкуренты и аналоги: на что вы ориентируетесь (AutoGPT, CrewAI, Devin, глубокий поиск в Perplexity, свои агентные сборки)? Что в их работе привлекает, а что кажется лишним?",
+          "Чем вы принципиально отличаетесь — и от автоматизации по расписанию, и от существующих агентных площадок (глубина рассуждения, последовательный сбор, приспособляемость, прозрачность действий, контроль человека)?",
+          "Постановка задачи и план: в каком виде человек формулирует цель (свободная фраза, структурированное задание, готовый шаблон исследования, сборщик целей)? Строит ли агент план сам, вправе ли менять его по ходу и видит ли человек этот план до запуска?",
+          "Устройство агентов: работает один агент с набором инструментов или несколько с ролями — планировщик, поисковик, критик, составитель? Можно ли менять их роли и указания владельцу?",
+          "Инструменты и источники: чем агент вправе пользоваться (поиск в сети, чтение страниц, разбор файлов PDF, документов и таблиц, вызов чужих API, выполнение кода, внутренние базы и системы компании, почта)?",
+          "Уровень самостоятельности: что агент делает без спроса, а где обязан остановиться и подтвердить (только собирает данные · собирает и рекомендует · действует с подтверждением · действует сам в заданных рамках)? Перед чем подтверждение обязательно — платный вызов, отправка наружу, запись в чужую систему?",
+          "Противоречия и неполнота: как агент поступает, когда источники расходятся (ищет дополнительные, взвешивает надёжность, честно показывает развилку в отчёте, отказывается от вывода)? Что он делает, когда данных не хватает вовсе?",
+          "Глубина и пределы одного исследования: чем ограничен прогон (число шагов, число прочитанных страниц, расход на модель, общее время)? Что происходит при достижении предела — обрывается или отдаёт то, что успел?",
+          "Ссылки на первоисточники: как в итоговом документе доказывается каждое утверждение (сноска с адресом, сохранённая цитата или снимок страницы, дата сбора)? Что делать с утверждением, у которого источника нет?",
+          "Прозрачность хода работы: видит ли человек шаги в реальном времени — что агент ищет сейчас, что читает, что проверяет? Нужна ли полная запись хода для последующего разбора?",
+          "Память между запусками: должны ли результаты прошлых исследований складываться в общий склад знаний, чтобы агент не искал дважды одно и то же? Как отличать устаревшее от актуального?",
+          "Шаблоны, отказы и уведомления: нужны ли готовые сценарии частых исследований? Что происходит, когда шаг не удался — повтор, обход, остановка? Как человек узнаёт, что работа закончена или сломалась?",
+          "Ограничения и безопасность: есть ли требования, о которых нужно знать заранее (своё размещение или облако, работа с закрытыми данными, что агенту запрещено делать в принципе, обязательный контроль человека, сроки запуска)?"
         ]
       },
       "scheduler": {
