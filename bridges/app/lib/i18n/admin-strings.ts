@@ -567,6 +567,12 @@ export type AdminStrings = {
     setupLead: string; setupHint: string; setupAdd: string; setupRemove: string;
     setupRestore: string; setupRestored: string; setupStart: string; setupAtLeastOne: string;
     setupPlaceholder: string; setupVoice: string; setupVoiceClose: string; setupCount: string;
+    // 🔒 «Править вопросы НЕОБЯЗАТЕЛЬНО» — отдельная строка, и она нужна
+    // (владелец 2026-08-16). Экран показывает список вопросов и предлагает их
+    // переписать; человек читает это как задание, которое надо выполнить, и
+    // застревает на редактировании там, где мог сразу отвечать. Одна фраза
+    // снимает это: список — предложение, а не форма к заполнению.
+    setupSkip: string;
     // Окно «как это устроено» — четыре этапа целиком (владелец 2026-08-14).
     //
     // ЗАЧЕМ ОКНО, А НЕ ТЕКСТ НА СТРАНИЦЕ. Человек попадает сюда, чтобы отвечать

@@ -281,7 +281,7 @@ export default async function UseCasesPage(
             suggested={chosenCard.questions}
             lang={lang}
             labels={{
-              lead: u.setupLead, hint: u.setupHint, add: u.setupAdd, removeOne: u.setupRemove,
+              lead: u.setupLead, hint: u.setupHint, skip: u.setupSkip, add: u.setupAdd, removeOne: u.setupRemove,
               restore: u.setupRestore, restored: u.setupRestored, start: u.setupStart,
               saving: u.saving, failed: u.failed, atLeastOne: u.setupAtLeastOne,
               placeholder: u.setupPlaceholder, voiceFor: u.setupVoice, voiceClose: u.setupVoiceClose,

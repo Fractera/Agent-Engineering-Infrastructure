@@ -26,6 +26,8 @@ import VoiceInput from "@/_tools/voice-input/client/voice-input.client";
 export type SetupLabels = {
   lead: string;
   hint: string;
+  /** «Править необязательно — можно начинать сразу». */
+  skip: string;
   add: string;
   removeOne: string;
   restore: string;
@@ -78,10 +80,40 @@ export function IntroSetup(
     }
   }
 
+  // 🔒 КНОПКА «НАЧАТЬ ОПРОС» СТОИТ ДВАЖДЫ, СВЕРХУ И СНИЗУ (владелец 2026-08-16).
+  //
+  // Вопросов может быть сколько угодно — их добавляет сам владелец, — и при
+  // семи-восьми единственная кнопка внизу уезжает за край экрана. Человек видит
+  // список, не видит выхода из него и не понимает, что делать дальше. Дефект тем
+  // и коварен, что на списке из одного вопроса его нет вовсе: он появляется
+  // ровно у тех, кто дал себе труд вопросы дописать.
+  //
+  // 🔒 ОДНА И ТА ЖЕ КНОПКА, А НЕ ДВЕ ПОХОЖИХ. Обе зовут `start`, обе гаснут на
+  // время сохранения, обе носят одну подпись из словаря. Скопируй разметку — и
+  // однажды верхняя останется активной, пока нижняя уже работает, то есть
+  // отправит вторую заявку по второму нажатию.
+  const startButton = (
+    <Button size="sm" className="text-[11px]" onClick={start} disabled={busy}>
+      {busy ? <Loader2 size={11} className="animate-spin" /> : <ArrowRight size={11} />}
+      {busy ? labels.saving : labels.start}
+    </Button>
+  );
+
   return (
     <div className="rounded-lg border border-border p-4">
-      <p className="text-[11px] leading-relaxed text-foreground">{labels.lead}</p>
-      <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">{labels.hint}</p>
+      {/* Заголовочная строка: слово слева, выход справа. На узком экране кнопка
+          переносится под текст (`flex-wrap`) — прижимать её к правому краю там,
+          где ширины нет, значит рвать строку пополам. */}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] leading-relaxed text-foreground">{labels.lead}</p>
+          <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">{labels.hint}</p>
+          {/* Отдельным абзацем и тем же тоном, что подсказка: это не
+              предупреждение, а разрешение не делать лишнего. */}
+          <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">{labels.skip}</p>
+        </div>
+        <div className="shrink-0">{startButton}</div>
+      </div>
 
       <ul className="mt-3 space-y-2">
         {items.map((q, i) => (
@@ -160,10 +192,7 @@ export function IntroSetup(
           {labels.count.replace("{n}", String(items.filter((q) => q.trim()).length))}
         </span>
         <span className="flex-1" />
-        <Button size="sm" className="text-[11px]" onClick={start} disabled={busy}>
-          {busy ? <Loader2 size={11} className="animate-spin" /> : <ArrowRight size={11} />}
-          {busy ? labels.saving : labels.start}
-        </Button>
+        {startButton}
       </div>
     </div>
   );
