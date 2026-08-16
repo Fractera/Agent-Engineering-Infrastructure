@@ -72,26 +72,34 @@ export default async function AdminHomePage({ params }: { params: Promise<{ lang
           самым крупным блоком на странице, перестаёт означать срочность и
           начинает означать «тут всегда так».
 
-          🔒 КАРТОЧКА НЕ ИСЧЕЗАЕТ НИКОГДА. Прежняя знала ровно один шаг —
-          «подключить GitHub» — и была зашита намертво: подключив репозиторий,
-          владелец продолжал бы читать требование подключить репозиторий. Совет,
-          ставший ложью, но выглядящий как совет. Теперь на месте шага либо
-          следующий из очереди, либо `calmDone`: исчезнувшая карточка не
-          отвечает на вопрос «а теперь что?». */}
-      <div className="mb-5 rounded-lg border border-sky-500/25 bg-sky-500/5 p-4">
-        <p className="text-[14px] font-medium leading-relaxed text-sky-800 dark:text-sky-200">
-          {s.home.calmLead}
-        </p>
-        <p className="mt-2 text-[13px] leading-relaxed text-sky-800/90 dark:text-sky-200/90">
-          {s.home.calmOnly}
-        </p>
+          🔒 КАРТОЧКА ИСЧЕЗАЕТ ЦЕЛИКОМ, КОГДА ОБЯЗАТЕЛЬНЫХ ШАГОВ НЕ ОСТАЛОСЬ
+          (владелец 2026-08-16, ОТМЕНЯЕТ моё решение того же дня).
 
-        {next ? (
-          /* Слова берутся из УЖЕ СУЩЕСТВУЮЩИХ словарей: причина — та же, что в
-             меню (`warnings.items`), надпись на кнопке — та же, что в подвале
-             (`footer.warnCta`). Своего перевода на каждый шаг здесь не
-             заводится: два места, говорящие об одном разными словами, однажды
-             разойдутся, и разойдутся молча. */
+          Я оставлял на её месте строку «обязательных шагов не осталось»,
+          рассуждая так: исчезнувшая карточка не отвечает на вопрос «а теперь
+          что?». Владелец возразил делом — он прошёл все шаги, и текст, который
+          объясняет, чего НЕ надо бояться, стал занимать первый экран у человека,
+          который уже ничего не боится. Успокаивающий абзац нужен ровно до тех
+          пор, пока есть чего пугаться; дальше это просто крупный блок, который
+          каждый раз приходится проматывать.
+
+          Мой довод был не то чтобы ложным — он отвечал на вопрос, которого у
+          прошедшего онбординг человека уже нет. Карта разделов ниже сама
+          отвечает «а теперь что?»: она и есть рабочее место. */}
+      {next && (
+        <div className="mb-5 rounded-lg border border-sky-500/25 bg-sky-500/5 p-4">
+          <p className="text-[14px] font-medium leading-relaxed text-sky-800 dark:text-sky-200">
+            {s.home.calmLead}
+          </p>
+          <p className="mt-2 text-[13px] leading-relaxed text-sky-800/90 dark:text-sky-200/90">
+            {s.home.calmOnly}
+          </p>
+
+          {/* Слова берутся из УЖЕ СУЩЕСТВУЮЩИХ словарей: причина — та же, что в
+              меню (`warnings.items`), надпись на кнопке — та же, что в подвале
+              (`footer.warnCta`). Своего перевода на каждый шаг здесь не
+              заводится: два места, говорящие об одном разными словами, однажды
+              разойдутся, и разойдутся молча. */}
           <div className="mt-3 rounded-md border border-sky-500/30 bg-sky-500/10 p-3">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300">
               {s.home.calmNext}
@@ -106,19 +114,15 @@ export default async function AdminHomePage({ params }: { params: Promise<{ lang
               {s.footer.warnCta[next.id]}<ArrowRight size={12} />
             </Link>
           </div>
-        ) : (
-          <p className="mt-3 rounded-md border border-sky-500/30 bg-sky-500/10 p-3 text-[13px] font-medium leading-relaxed text-sky-900 dark:text-sky-100">
-            {s.home.calmDone}
-          </p>
-        )}
 
-        <p className="mt-2 text-[13px] leading-relaxed text-sky-800/80 dark:text-sky-200/80">
-          {s.home.calmRest}
-        </p>
-        <p className="mt-2 text-[13px] leading-relaxed text-sky-800/80 dark:text-sky-200/80">
-          {s.home.calmOptional}
-        </p>
-      </div>
+          <p className="mt-2 text-[13px] leading-relaxed text-sky-800/80 dark:text-sky-200/80">
+            {s.home.calmRest}
+          </p>
+          <p className="mt-2 text-[13px] leading-relaxed text-sky-800/80 dark:text-sky-200/80">
+            {s.home.calmOptional}
+          </p>
+        </div>
+      )}
 
       {/* Тот же список, что в гамбургере, — чтобы карту слоя было видно целиком
           с первого экрана.

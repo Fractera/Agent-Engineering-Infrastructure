@@ -1111,8 +1111,7 @@
       "calmOnly": "The way of working is simple: your GitHub repository is synced with your own machine, where a coding agent is installed (we recommend Claude Code). You write there, you push, and the server rebuilds itself.",
       "calmRest": "Nothing else is required at the start. Authorization, the database, storage and everything else behind these sections is already set up and running.",
       "calmOptional": "The rest — dictating your instructions by voice with an OpenAI key, the knowledge graph, the map, the channels — are tools. In our experience they get you to a result faster, but nothing here obliges you to use them.",
-      "calmNext": "Next step",
-      "calmDone": "Nothing required is left. Everything below is a tool you may pick up when you need it."
+      "calmNext": "Next step"
     },
     "navGroups": {
       "application": "Application",
@@ -3560,8 +3559,7 @@
       "calmOnly": "Способ работы простой: ваш репозиторий GitHub синхронизирован со своей машиной, на которой установлен агент-программист (рекомендуем Claude Code). Вы пишете там, отправляете — сервер пересобирается сам.",
       "calmRest": "Больше никаких критически важных настроек на старте нет. Авторизация, база данных, хранилище и всё остальное за этими разделами уже настроено и работает.",
       "calmOptional": "Всё прочее — голосовой набор ваших инструкций с ключом OpenAI, граф знаний, карта, каналы — это инструменты. По нашему опыту с ними результат приходит быстрее, но пользоваться ими вас никто не обязывает.",
-      "calmNext": "Следующий шаг",
-      "calmDone": "Обязательных шагов не осталось. Всё, что ниже, — инструменты: берите, когда понадобятся."
+      "calmNext": "Следующий шаг"
     },
     "navGroups": {
       "application": "Приложение",
