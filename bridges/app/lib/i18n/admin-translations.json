@@ -1832,7 +1832,16 @@
       "rootPages": "pages",
       "rootLogic": "logic",
       "rootTables": "tables",
-      "rootCases": "use cases"
+      "rootCases": "use cases",
+      "pagesTitle": "Planned pages against what is built",
+      "pagesHint": "The plan comes from your use cases and you may edit it freely; what is built is counted from the folders every time this page opens, never stored.",
+      "pagesBuilt": "built",
+      "pagesMissing": "not built yet",
+      "pagesProgress": "{built} of {planned} built",
+      "pagesNoPlan": "No plan yet — it appears together with your first use cases.",
+      "pagesExtra": "Built but not in the plan",
+      "pagesExtraHint": "Not a mistake: either the plan is behind, or these pages belong to something you have not described yet.",
+      "pagesFile": "Plan lives in"
     },
     "useCases": {
       "gateMissing": "No user cases yet — development does not start without them. Answer the questions below; the Quiz turns your answers into cases.",
@@ -4270,7 +4279,16 @@
       "rootPages": "страницы",
       "rootLogic": "логика",
       "rootTables": "таблицы",
-      "rootCases": "кейсы"
+      "rootCases": "кейсы",
+      "pagesTitle": "План страниц против построенного",
+      "pagesHint": "План рождён из ваших кейсов, и править его можно свободно; построенное считается по папкам при каждом открытии страницы и нигде не хранится.",
+      "pagesBuilt": "построена",
+      "pagesMissing": "ещё нет",
+      "pagesProgress": "построено {built} из {planned}",
+      "pagesNoPlan": "Плана пока нет — он появится вместе с первыми кейсами.",
+      "pagesExtra": "Построено, но в плане не значится",
+      "pagesExtraHint": "Не ошибка: либо план отстал, либо эти страницы относятся к тому, что вы ещё не описывали.",
+      "pagesFile": "План лежит в"
     },
     "useCases": {
       "gateMissing": "Кейсов ещё нет — без них разработка не начинается. Ответьте на вопросы ниже, а Quiz превратит ваши ответы в кейсы.",

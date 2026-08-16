@@ -31,11 +31,13 @@ import { PageShell } from "../_components/page-shell";
 import { HelpDetails } from "../_components/help-details";
 import {
   listCases, useCasesGate, readSeed, readQuestions, resetPreview,
-  useCasesPaths, migrateLegacyLayout,
+  useCasesPaths, migrateLegacyLayout, readPagesPlan,
 } from "@/lib/use-cases-store";
 import { PROJECT_TYPES, isProjectTypeId } from "@/lib/project-types";
 import { activeProduct, adoptLegacyProjectType, listProducts } from "@/lib/products-config";
+import { pagesReport } from "@/lib/product-pages";
 import { ProductsSection } from "./_components/products-section";
+import { PagesReportBlock } from "./_components/pages-report";
 import { readInstructionSet } from "@/lib/instruction-set";
 import { DocCommands } from "../_components/doc-commands";
 import { DocPopup } from "../_components/doc-popup.client";
@@ -77,6 +79,12 @@ export default async function UseCasesPage(
   if (product) migrateLegacyLayout(product.id);
   const pid = product?.id ?? "";
   const paths = product ? useCasesPaths(pid) : { cases: "", raw: "" };
+
+  // 🔒 ФАКТ СЧИТАЕТСЯ ЗДЕСЬ И СЕЙЧАС, а не хранится: список построенных страниц —
+  // производное от файловой системы, и записанный однажды он разойдётся с ней в
+  // первую неделю. План живёт файлом, потому что он намерение, а намерение
+  // вывести неоткуда.
+  const pages = product ? pagesReport(product, readPagesPlan(pid)) : null;
 
   // 🔒 ВСЁ, ЧТО НИЖЕ, ЧИТАЕТСЯ У НАЗВАННОГО ПРОДУКТА. Порядок здесь не
   // косметика: пока продукт не выбран, читать нечего и не у кого.
@@ -329,6 +337,11 @@ export default async function UseCasesPage(
               />
             </div>
           )}
+
+          {/* План страниц против факта — сразу под кейсами, потому что он из них
+              и рождён: увидев «страницы нет», владелец либо просит агента её
+              построить, либо понимает, что кейс описан не так. */}
+          {pages && <PagesReportBlock report={pages} planFile={`${paths.cases.replace(/CASES\/$/, "")}PAGES.md`} p={p} />}
         </>
       )}
 

@@ -542,6 +542,17 @@ export type AdminStrings = {
      */
     rootsTitle: string; rootsHint: string;
     rootPages: string; rootLogic: string; rootTables: string; rootCases: string;
+    /**
+     * План страниц против факта (владелец 2026-08-16).
+     *
+     * 🔒 ДВА РАЗНЫХ ЗНАНИЯ. План — намерение из кейсов, он хранится и правится.
+     * Факт — что построено, и он НЕ хранится: список файлов есть производное от
+     * файловой системы, и записанный однажды разойдётся с ней в первую неделю.
+     * Расхождение между ними и есть ответ «что ещё не сделано».
+     */
+    pagesTitle: string; pagesHint: string; pagesBuilt: string; pagesMissing: string;
+    pagesProgress: string; pagesNoPlan: string;
+    pagesExtra: string; pagesExtraHint: string; pagesFile: string;
     lead: string; hint: string;
     dialogExamples: string; dialogSignals: string; dialogQuestions: string;
     choose: string; cancel: string; saving: string;
