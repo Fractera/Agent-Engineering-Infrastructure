@@ -1524,6 +1524,36 @@
           "Technical and organisational constraints: Is there anything that has to be known upfront (A/B tests, required form fields, particular demands for the mobile version, a launch deadline, legal or industry restrictions)?"
         ]
       },
+      "portfolio": {
+        "title": "Portfolio",
+        "tagline": "You are what is being chosen",
+        "definition": "A site where the thing being chosen is you: a specialist, a studio, a personal brand. What convinces is not a list of services but the work you show and the way you talk about it. So what matters most here is which projects you pick and the order in which they are seen.",
+        "examples": [
+          "A designer, photographer or film editor",
+          "A small studio: development, architecture, interiors",
+          "An expert going after larger projects than the current ones",
+          "A specialist putting together an application for a dream job"
+        ],
+        "signals": [
+          "Clients choose you by looking at past work, not by reading a price list",
+          "You want projects of a particular kind, not just any",
+          "The price is agreed in conversation, and it depends on the impression you make"
+        ],
+        "questions": [
+          "Who you are and what you do: briefly — your profession, your specialisation, your experience, and how you work (freelance, a studio, an agency, a personal brand).",
+          "Your audience: who should be looking at this portfolio? Describe every type of person and company — prospective clients, employers, partners, investors — and what each of them needs you for.",
+          "What the portfolio is for: what should it bring you (enquiries, a higher rate, a particular kind of project, a personal brand, a job)?",
+          "The work you will show: which projects do you want to display, how many, and in what form (case studies with the process explained, plain images or video, live links, before-and-after)?",
+          "How people find you today: how do prospective clients or employers search for and judge specialists in your field, when they are not looking at your portfolio?",
+          "The ideal outcome: from the visitor's point of view, what is the perfect result of looking through it? What impression should they leave with, and what should they do next?",
+          "Who you look up to: whose portfolios do you take your bearings from — names, links? What do you like about them, and what is missing?",
+          "What sets you apart: what is the fundamental difference between you and other specialists or studios in your niche — the approach, the style, the results?",
+          "Sections and structure: which blocks must be there (home, about, projects and case studies, services, reviews, how you work, contacts, a blog)? Say which come first and in what order.",
+          "Style and mood: what visual character should the portfolio carry (minimal, premium, experimental, warm, technical, bold)? Do you have references you particularly like?",
+          "Proof: what do you want to show as evidence (client reviews, numbers you achieved, awards, publications, well-known clients, certificates)?",
+          "Technical and practical wishes: are there requirements or constraints (filtering projects by category, dark and light themes, several languages, a contact form, links to Behance/Dribbble/GitHub, animation, the mobile version, updating the work yourself)?"
+        ]
+      },
       "store": {
         "title": "Online store",
         "tagline": "Goods, cart, payment, delivery",
@@ -4000,6 +4030,36 @@
           "Интеграции и аналитика: Куда должны отправляться собранные данные пользователей (CRM, Telegram, email, Google Таблицы) и какие счётчики аналитики нужно подключить (Яндекс.Метрика, Google Analytics, рекламные пиксели)?",
           "Мультиязычность и гео-привязка: Нужна ли поддержка нескольких языков, автоматическое определение города/валюты или адаптация контента под регион?",
           "Технические и организационные ограничения: Есть ли требования, о которых нужно знать заранее (A/B-тесты, обязательные поля формы, особые требования к мобильной версии, сроки запуска, юридические или отраслевые ограничения)?"
+        ]
+      },
+      "portfolio": {
+        "title": "Портфолио",
+        "tagline": "Продаёте себя, а не товар",
+        "definition": "Сайт, где предмет выбора — вы сами: специалист, студия или личный бренд. Убеждают не описания услуг, а показанные работы и то, как вы о них рассказываете. Поэтому здесь важнее всего отбор проектов и порядок, в котором их видят.",
+        "examples": [
+          "Дизайнер, фотограф, режиссёр монтажа",
+          "Небольшая студия: разработка, архитектура, интерьеры",
+          "Эксперт, который ищет проекты крупнее нынешних",
+          "Специалист, собирающий отклик на вакансию мечты"
+        ],
+        "signals": [
+          "Клиент выбирает вас, глядя на прошлые работы, а не читая прайс",
+          "Вам нужны проекты определённого рода, а не любые",
+          "Договариваетесь о цене в разговоре, и её размер зависит от впечатления"
+        ],
+        "questions": [
+          "Кто вы и чем занимаетесь: кратко о себе — профессия, специализация, опыт и в каком формате работаете (фриланс, студия, агентство, личный бренд)?",
+          "Целевая аудитория: кто должен смотреть ваше портфолио? Расскажите подробно обо всех типах людей и компаний — потенциальные клиенты, работодатели, партнёры, инвесторы — и зачем каждому из них вы.",
+          "Главная задача портфолио: что оно должно приносить (заявки, более высокий чек, определённый тип проектов, личный бренд, работу)?",
+          "Какие работы показываем: какие проекты вы хотите выставить, сколько их и в каком виде (кейсы с описанием процесса, просто изображения или видео, живые ссылки, «до и после»)?",
+          "Как вас находят сейчас: каким образом потенциальные клиенты или работодатели ищут и оценивают специалистов вашего профиля, если не через ваше портфолио?",
+          "Идеальный результат: что с точки зрения посетителя является идеальным итогом просмотра? Какое впечатление он должен унести и какое действие совершить?",
+          "Ориентиры и конкуренты: на чьи портфолио вы смотрите — имена, ссылки? Что вам в них нравится, а чего не хватает?",
+          "Чем вы отличаетесь: в чём ваше принципиальное отличие от других специалистов или студий в нише — подход, стиль, результаты?",
+          "Структура и разделы: какие блоки обязательно должны быть (главная, обо мне, проекты и кейсы, услуги, отзывы, процесс работы, контакты, блог)? Укажите приоритет и желаемый порядок.",
+          "Стиль и атмосфера: какой визуальный характер должно передавать портфолио (минимализм, премиум, экспериментальный, тёплый, технологичный, дерзкий)? Есть ли референсы, которые вам особенно нравятся?",
+          "Доказательства: что вы хотите показать в подтверждение (отзывы клиентов, цифры результатов, награды, публикации, известные клиенты, сертификаты)?",
+          "Технические и организационные пожелания: есть ли требования и ограничения (фильтры проектов по категориям, тёмная и светлая тема, мультиязычность, форма связи, связь с Behance/Dribbble/GitHub, анимации, мобильная версия, самостоятельное обновление работ)?"
         ]
       },
       "store": {
