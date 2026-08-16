@@ -1802,6 +1802,41 @@
           "What do you do with those who quit halfway, and how will you notice?"
         ]
       },
+      "ai-coach": {
+        "title": "AI coach and mentor",
+        "tagline": "It leads a person, it does not hand out lessons",
+        "definition": "A companion that remembers you between conversations: it sets goals, asks about them unprompted, and notices what you promised a week ago. What separates it from a course is that nothing is recorded in advance — the whole product is its character, its memory, and the point at which it stops and hands the person to real specialists.",
+        "examples": [
+          "A habit tracker that asks first",
+          "A career mentor for those priced out of a human coach",
+          "A weekly goal review for a founder",
+          "A trainer guiding someone to an athletic target"
+        ],
+        "signals": [
+          "The value is in the conversation, not in pre-recorded material",
+          "Past sessions must be remembered, or everything starts from zero",
+          "People drop off without reminders, and the product must do the reminding"
+        ],
+        "questions": [
+          "Field and method: what area and what tasks does your coach work on (career, business, sport, habits, learning a skill, money, personal growth)? By what method does it lead — asking questions and never advising, giving direct recommendations, strictly tracking habits, playing a specific kind of expert?",
+          "Your audience: who will use the service? Describe every type of person in detail — age, occupation, level of experience, what hurts, what drives them — and how ready they are to work with an AI rather than a human.",
+          "The problem and the pain: what is the main thing the coach solves (a human mentor costs too much, discipline runs out, fear of looking foolish, decisions made alone, everything done in fits and starts)? What is stopping them most right now?",
+          "Alternatives: how do people try to solve this today, when your service is not there (working with a human specialist, a journal, videos and books, talking to friends, nothing at all)?",
+          "The ideal outcome: what change must a person reach to call this their best helper? Describe where they are after a month and after a year.",
+          "Competitors and peers: what will you be compared with? Name the services, apps, bots and human-coaching platforms, with links. What do you like about them and what do you think is weak?",
+          "What sets you apart: depth of personalisation, the way it talks, the method, having a structure, combining with a real person, techniques of your own?",
+          "Character and voice: what should the coach be like — warm and supportive, strict and demanding, analytical, provoking, funny? What does it never do? Are there examples of speech worth taking as a model?",
+          "Memory and personalisation: what does the service remember about a person, and for how long (only the current conversation, past sessions, goals and failures, habits and preferences, key facts about their life or business)? Do you need entry tests, an assessment, a programme that adapts to the answers?",
+          "How the work runs: how is the interaction arranged (free conversation at any hour, scheduled sessions, short daily check-ins, a long programme with stages, homework and checking it)? How long is one session and the whole programme?",
+          "The form of conversation: in what form does it happen (text, voice messages, a call with a synthesised voice, going through documents and screenshots the person sends)?",
+          "Goals and progress: does the person need a screen with goals and achievements (a list of goals, a habit tracker, charts of mood and productivity, a weekly summary)?",
+          "Reaching out first: how does the coach start a conversation on its own (a reminder about a goal, a message saying \"you promised to do this by Friday\", a week in review, a reaction to several days of silence)? How often is it allowed to write first?",
+          "Key features: what else must be there (a library of materials, a community, handing over to a human specialist, a link to the calendar, data from wearables, exporting one's own records)?",
+          "Money and limits: how is it paid for (a subscription, per session or per programme, free access capped at so many messages a day, a trial, corporate plans)? What exactly is limited in the free version?",
+          "Limits of competence and handover: how must the system behave with topics outside its field — a person in crisis, health, legal and financial decisions? Where and how does it direct them, and at what point does it refuse to continue on its own?",
+          "Technical and practical constraints: is there anything to be known upfront (how personal data is handled and stored, an installable app, languages, tuning to a specific user, the load you expect, a launch deadline)?"
+        ]
+      },
       "directory": {
         "title": "Catalogue and directory",
         "tagline": "Many objects, filters, a map",
@@ -4393,6 +4428,41 @@
           "Как открывается доступ: разовая оплата, подписка, поток с датами, приглашение?",
           "Что подтверждает завершение: сертификат, вход в сообщество, отметка в профиле?",
           "Что делать с теми, кто бросил на середине, и как вы это заметите?"
+        ]
+      },
+      "ai-coach": {
+        "title": "AI-коуч и ментор",
+        "tagline": "Ведёт человека, а не выдаёт уроки",
+        "definition": "Собеседник, который помнит вас между разговорами: ставит цели, спрашивает о них сам и замечает, что вы обещали неделю назад. Отличается от курса тем, что ничего не отдаёт заранее записанным, — весь смысл в характере, памяти и в том, где он останавливается и передаёт человека живым специалистам.",
+        "examples": [
+          "Трекер привычек, который спрашивает первым",
+          "Карьерный ментор для тех, кому дорог живой коуч",
+          "Разбор целей недели для предпринимателя",
+          "Тренер, ведущий к спортивной цели по плану"
+        ],
+        "signals": [
+          "Ценность в разговоре, а не в записанном заранее материале",
+          "Нужно помнить прошлые сессии, иначе всё начинается с нуля",
+          "Человек бросает без напоминаний, и напоминать должен продукт"
+        ],
+        "questions": [
+          "Сфера и методика: в какой области и для каких задач работает ваш коуч (карьера, бизнес, спорт, привычки, обучение навыку, финансы, личностный рост)? По какой методике он ведёт — задаёт вопросы и не советует, даёт прямые рекомендации, строго трекает привычки, играет роль конкретного эксперта?",
+          "Целевая аудитория: кто будет пользоваться сервисом? Опишите подробно все типы людей — возраст, занятие, уровень опыта, что у них болит, что движет, — и насколько они вообще готовы работать с ИИ вместо живого человека.",
+          "Проблема и боль: какую главную задачу решает коуч (живой ментор слишком дорог, не хватает дисциплины, страшно показаться глупым, решения принимаются в одиночку, всё делается урывками)? Что сильнее всего мешает им двигаться прямо сейчас?",
+          "Альтернативные решения: как люди пытаются решить это сейчас, если вашего сервиса нет (работа с живым специалистом, дневник, ролики и книги, разговоры с друзьями, ничего)?",
+          "Идеальный результат: какого изменения должен достичь человек, чтобы считать сервис своим лучшим помощником? Опишите его состояние через месяц и через год.",
+          "Конкуренты и аналоги: с чем вас будут сравнивать? Назовите сервисы, приложения, ботов и площадки живых коучей, укажите ссылки. Что вам в них нравится и что считаете слабым?",
+          "Чем вы принципиально отличаетесь: глубина персонализации, стиль общения, методика, наличие структуры, сочетание с живым человеком, свои техники?",
+          "Характер и стиль общения: каким должен быть коуч — тёплым и поддерживающим, строгим и требовательным, аналитическим, провоцирующим, с юмором? Чего он не делает никогда? Есть ли образцы речи, на которые стоит равняться?",
+          "Память и персонализация: что и как надолго сервис помнит о человеке (только текущий разговор, прошлые сессии, цели и провалы, привычки и предпочтения, ключевые факты о жизни или деле)? Нужны ли входные тесты, диагностика и подстройка программы под ответы?",
+          "Сценарий работы: как устроено взаимодействие (свободный разговор в любое время, сессии по расписанию, короткие ежедневные отметки, длинная программа с этапами, домашние задания и их проверка)? Сколько длится одна сессия и вся программа?",
+          "Формат общения: в каком виде идёт разговор (текст, голосовые сообщения, звонок с синтезированной речью, разбор присланных документов и снимков экрана)?",
+          "Цели и прогресс: нужен ли человеку экран с целями и достижениями (список целей, трекер привычек, графики настроения и продуктивности, сводка за неделю)?",
+          "Проактивность: как коуч начинает разговор сам (напоминание о цели, сообщение «вы обещали сделать это к пятнице», итоги недели, реакция на молчание несколько дней)? Как часто он вправе писать первым?",
+          "Ключевые возможности: что ещё обязательно должно быть (библиотека материалов, сообщество, переход к живому специалисту, связь с календарём, данные с носимых устройств, экспорт своих записей)?",
+          "Монетизация и пределы: как устроена оплата (подписка, оплата за сессию или программу, бесплатный доступ с ограничением числа сообщений в день, пробный период, корпоративные тарифы)? Что именно ограничено в бесплатной версии?",
+          "Границы компетенции и передача человеку: как система должна вести себя с темами вне своей области — кризисные состояния, здоровье, юридические и денежные решения? Куда и как она направляет человека и в какой момент отказывается продолжать сама?",
+          "Технические и организационные ограничения: есть ли требования, о которых нужно знать заранее (обращение с персональными данными и их хранение, устанавливаемое приложение, языки, возможность подстройки под конкретного пользователя, ожидаемая нагрузка, сроки запуска)?"
         ]
       },
       "directory": {
