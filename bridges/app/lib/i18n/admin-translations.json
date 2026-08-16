@@ -1543,15 +1543,22 @@
           "Who you are and what you do: briefly — your profession, your specialisation, your experience, and how you work (freelance, a studio, an agency, a personal brand).",
           "Your audience: who should be looking at this portfolio? Describe every type of person and company — prospective clients, employers, partners, investors — and what each of them needs you for.",
           "What the portfolio is for: what should it bring you (enquiries, a higher rate, a particular kind of project, a personal brand, a job)?",
-          "The work you will show: which projects do you want to display, how many, and in what form (case studies with the process explained, plain images or video, live links, before-and-after)?",
           "How people find you today: how do prospective clients or employers search for and judge specialists in your field, when they are not looking at your portfolio?",
           "The ideal outcome: from the visitor's point of view, what is the perfect result of looking through it? What impression should they leave with, and what should they do next?",
           "Who you look up to: whose portfolios do you take your bearings from — names, links? What do you like about them, and what is missing?",
           "What sets you apart: what is the fundamental difference between you and other specialists or studios in your niche — the approach, the style, the results?",
-          "Sections and structure: which blocks must be there (home, about, projects and case studies, services, reviews, how you work, contacts, a blog)? Say which come first and in what order.",
+          "Which work you show and how you choose it: which projects go up, how many, and in what form (case studies with the process explained, images or video, live links, before-and-after)? By what rule does a piece make it in, and what stays out? Remember: three strong pieces sell better than twenty assorted ones.",
+          "How a project is told: what must every case study contain (the client's task, the constraints, what exactly you did, the result in numbers, the client's words, the timeline and the team)? How much of the process do you reveal — or do you show only the outcome?",
+          "Your share of the work: in team projects, what did you do and what did your colleagues? How will that be stated, so that \"I made this\" does not come apart in the first conversation with a client?",
+          "Other people's rights and closed work: are there projects under a non-disclosure agreement or made under someone else's brand? May you name clients and show their logos? Do you need a closed part of the portfolio, opened by a link or a password?",
+          "What you do not show: is there work you can do but no longer want to? Niches and kinds of task you want the portfolio itself to filter out?",
+          "Sections and structure: which blocks must be there (home, about, projects and case studies, services, reviews, how you work, contacts, a blog)? Do you need a downloadable CV? Say which come first and in what order.",
           "Style and mood: what visual character should the portfolio carry (minimal, premium, experimental, warm, technical, bold)? Do you have references you particularly like?",
           "Proof: what do you want to show as evidence (client reviews, numbers you achieved, awards, publications, well-known clients, certificates)?",
-          "Technical and practical wishes: are there requirements or constraints (filtering projects by category, dark and light themes, several languages, a contact form, links to Behance/Dribbble/GitHub, animation, the mobile version, updating the work yourself)?"
+          "How people reach you and what follows: which ways of getting in touch are needed (a form, email, a messenger, booking a call in your calendar)? What happens after an enquiry — how quickly do you reply, what do you ask them to send, how does the first conversation end?",
+          "Money: do you state your price range or terms on the site — \"from this amount\", ranges for typical work, or only \"let us discuss\"? This decision filters out half the enquiries, and it should be made deliberately.",
+          "Being found and kept current: should people find you in search for your niche, or is the portfolio a card you send by link? Who will add new work after launch, and how often?",
+          "Technical and practical wishes: are there requirements or constraints (filtering projects by category, dark and light themes, several languages, links to outside work platforms, animation, the mobile version, updating the work yourself, a launch deadline)?"
         ]
       },
       "corporate": {
@@ -4475,15 +4482,22 @@
           "Кто вы и чем занимаетесь: кратко о себе — профессия, специализация, опыт и в каком формате работаете (фриланс, студия, агентство, личный бренд)?",
           "Целевая аудитория: кто должен смотреть ваше портфолио? Расскажите подробно обо всех типах людей и компаний — потенциальные клиенты, работодатели, партнёры, инвесторы — и зачем каждому из них вы.",
           "Главная задача портфолио: что оно должно приносить (заявки, более высокий чек, определённый тип проектов, личный бренд, работу)?",
-          "Какие работы показываем: какие проекты вы хотите выставить, сколько их и в каком виде (кейсы с описанием процесса, просто изображения или видео, живые ссылки, «до и после»)?",
           "Как вас находят сейчас: каким образом потенциальные клиенты или работодатели ищут и оценивают специалистов вашего профиля, если не через ваше портфолио?",
           "Идеальный результат: что с точки зрения посетителя является идеальным итогом просмотра? Какое впечатление он должен унести и какое действие совершить?",
           "Ориентиры и конкуренты: на чьи портфолио вы смотрите — имена, ссылки? Что вам в них нравится, а чего не хватает?",
           "Чем вы отличаетесь: в чём ваше принципиальное отличие от других специалистов или студий в нише — подход, стиль, результаты?",
-          "Структура и разделы: какие блоки обязательно должны быть (главная, обо мне, проекты и кейсы, услуги, отзывы, процесс работы, контакты, блог)? Укажите приоритет и желаемый порядок.",
+          "Какие работы показываем и как отбираем: какие проекты выставляем, сколько их и в каком виде (кейсы с описанием процесса, изображения или видео, живые ссылки, «до и после»)? По какому правилу работа попадает в портфолио, а какая остаётся за бортом? Помните: три сильные работы продают лучше двадцати разных.",
+          "Как устроен рассказ о проекте: что должно быть в каждом кейсе (задача клиента, ограничения, что именно вы сделали, результат в цифрах, отзыв заказчика, срок и состав команды)? Насколько подробно раскрываете процесс — или показываете только итог?",
+          "Ваша доля в работе: в командных проектах что именно делали вы, а что коллеги? Как это будет обозначено, чтобы «я сделал» не вскрылось на первом же разговоре с заказчиком?",
+          "Чужие права и закрытые работы: есть ли проекты под запретом на разглашение или сделанные под чужим брендом? Можно ли называть имена заказчиков и показывать их логотипы? Нужна ли закрытая часть портфолио, которая открывается по ссылке или паролю?",
+          "Чего не показываем: есть ли работы, которые вы делать умеете, но больше не хотите? Ниши и типы задач, от которых вы хотите отсечь обращения самим содержанием портфолио?",
+          "Структура и разделы: какие блоки обязательно должны быть (главная, обо мне, проекты и кейсы, услуги, отзывы, процесс работы, контакты, блог)? Нужен ли скачиваемый файл с резюме? Укажите приоритет и желаемый порядок.",
           "Стиль и атмосфера: какой визуальный характер должно передавать портфолио (минимализм, премиум, экспериментальный, тёплый, технологичный, дерзкий)? Есть ли референсы, которые вам особенно нравятся?",
           "Доказательства: что вы хотите показать в подтверждение (отзывы клиентов, цифры результатов, награды, публикации, известные клиенты, сертификаты)?",
-          "Технические и организационные пожелания: есть ли требования и ограничения (фильтры проектов по категориям, тёмная и светлая тема, мультиязычность, форма связи, связь с Behance/Dribbble/GitHub, анимации, мобильная версия, самостоятельное обновление работ)?"
+          "Как с вами связываются и что дальше: какие способы связи нужны (форма, почта, мессенджер, запись на разговор в календаре)? Что происходит после обращения — за какой срок вы отвечаете, что просите прислать, чем заканчивается первый разговор?",
+          "Деньги: называете ли вы порядок цен или условия работы прямо на сайте — «от такой-то суммы», диапазоны за типовую работу, только «обсуждаем»? Это решение отсекает половину обращений, и принять его нужно осознанно.",
+          "Находимость и обновление: должны ли вас находить в поиске по запросам вашей ниши, или портфолио — визитка, которую вы отправляете ссылкой? Кто и как часто будет добавлять новые работы после запуска?",
+          "Технические и организационные пожелания: есть ли требования и ограничения (отбор проектов по категориям, тёмная и светлая тема, несколько языков, связь с внешними площадками работ, анимация, мобильная версия, самостоятельное обновление, сроки запуска)?"
         ]
       },
       "corporate": {
