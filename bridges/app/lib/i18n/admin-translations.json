@@ -1716,6 +1716,42 @@
           "How does a buyer find what they need: search, filters, categories, a map, matching?"
         ]
       },
+      "delivery": {
+        "title": "Delivery service",
+        "tagline": "Customer, courier and venue — three to an order",
+        "definition": "A platform where every order has three sides: the one who ordered, the one who carries it, and the one who hands it over. Everything rests on the map and the clock — where the courier is now, how long they will take, what it costs. A mistake in how orders are handed out costs more than any mistake in layout.",
+        "examples": [
+          "Hot food delivered from several venues",
+          "Groceries and goods from shops nearby",
+          "Courier delivery of documents and parcels across the city",
+          "A chain's own delivery arm, tired of somebody else's commission"
+        ],
+        "signals": [
+          "An order has someone who carries it, and that someone has to be assigned",
+          "The customer wants to watch their order move on a map",
+          "The price depends on distance, weight or the time of day"
+        ],
+        "questions": [
+          "The kind of service: what exactly do you deliver and in what form (hot food, groceries and goods from shops, documents and parcels, consolidated freight, door-to-door courier work, a logistics platform for business)? Within one city, between cities, or both?",
+          "The three sides and what each can do: who uses the system — customers, couriers (on foot, by bike, by car), venues and shops, dispatchers, support? Describe every side and exactly what it is allowed to do.",
+          "The problem and the pain: what is the main problem the service solves (slow delivery, high price, no oversight of couriers, poor routes, lost orders)? What irritates people most today — the customer, the courier, or the venue?",
+          "Alternatives: how do people and companies send and receive orders today, when your service is not there (other delivery firms, their own couriers, collection in person, the post, an arrangement over a messenger)?",
+          "The ideal outcome: what delivery scenario do you consider perfect — one where all three come out ahead: the customer, the courier and the business?",
+          "Competitors and peers: who are you taking your bearings from? Name the services and links, say which of their features you must have, and what you consider their weak spot.",
+          "What sets you apart: what is your main difference from the competition (speed, price, unusual delivery zones, how you work with couriers, features nobody else has)?",
+          "The life of an order: what stages does an order pass from creation to completion (created, confirmed, being prepared, courier assigned, on the way, delivered)? Who creates it, how is delivery confirmed, and what happens on a cancellation, a delay, or a refusal at the door?",
+          "Assigning the courier: how does a courier get an order — automatically to the nearest free one, an open board where the first to take it wins, or by hand through a dispatcher? What happens when nobody takes it?",
+          "Maps and location: what map work is needed (the courier live on the map, resolving the address from the device's location, building a route, delivery zones and their borders, travel time allowing for traffic)?",
+          "Working out the delivery price: how is the price to the customer formed (a flat rate, distance, weight and size, time of day, surge demand, free delivery above a certain order value)?",
+          "How the service earns: where does your own revenue come from (commission on the order, commission from the venue or the courier, a subscription, a placement fee, advertising, paid priority delivery)?",
+          "Payments and settlements: how does money move (paid on the site or in the app, cash to the courier, tips, invoicing for companies, payouts to couriers and venues — how often and to where)?",
+          "Interfaces and devices: in what form does each side work (a site for the customer, an installable app, a separate courier app with notifications, a tablet or panel for the venue, a dispatcher's workstation)?",
+          "Key features: what must be there (live tracking on the map, choosing a delivery time, chat with the courier, ratings and reviews, repeating a past order, a loyalty programme, notifications at every stage)?",
+          "Integrations: what must the service connect to (mapping services, the venues' till and accounting systems, payment services, SMS and Telegram, a CRM)?",
+          "Style and mood: what impression should the site and the app leave (fast and technical, friendly and simple, premium, young)? Do you have references you like?",
+          "Technical, geographic and practical constraints: is there anything to be known upfront (which cities and zones you launch in, installable apps, how couriers are engaged, the load you expect at peak hour, a launch deadline, who will staff the dispatch desk)?"
+        ]
+      },
       "booking": {
         "title": "Booking and appointments",
         "tagline": "Time is the product",
@@ -4271,6 +4307,42 @@
           "Что происходит при споре: кто рассудит и чем подтверждается правота?",
           "Каких продавцов у вас уже достаточно, чтобы витрина не выглядела пустой в день запуска?",
           "Как покупатель находит нужное: поиск, фильтры, категории, карта, подбор?"
+        ]
+      },
+      "delivery": {
+        "title": "Сервис доставки",
+        "tagline": "Клиент, курьер и заведение — трое в одном заказе",
+        "definition": "Площадка, где у каждого заказа три стороны: тот, кто заказал, тот, кто везёт, и тот, кто отдаёт. Всё держится на карте и времени — где сейчас курьер, за сколько доедет, сколько это стоит. Ошибка в распределении заказов дороже любой ошибки в вёрстке.",
+        "examples": [
+          "Доставка готовой еды из нескольких заведений",
+          "Продукты и товары из магазинов у дома",
+          "Курьерская доставка документов и посылок по городу",
+          "Своя служба доставки сети, уставшей от чужих комиссий"
+        ],
+        "signals": [
+          "У заказа есть исполнитель, и его надо кому-то назначить",
+          "Клиент хочет видеть на карте, где едет его заказ",
+          "Стоимость зависит от расстояния, веса или времени суток"
+        ],
+        "questions": [
+          "Тип сервиса: что именно вы доставляете и в каком виде (готовая еда, продукты и товары из магазинов, документы и посылки, сборные грузы, доставка от двери до двери, логистическая площадка для бизнеса)? Внутри города, между городами или и то и другое?",
+          "Три стороны и их возможности: кто пользуется системой — заказчики, курьеры (пешие, на велосипеде, на машине), заведения и магазины, диспетчеры, поддержка? Опишите каждую сторону и что именно она может делать.",
+          "Проблема и боль: какую главную проблему решает сервис (долгая доставка, высокая цена, нет контроля за курьером, неудачные маршруты, потерянные заказы)? Что сейчас сильнее всего раздражает — клиента, курьера, заведение?",
+          "Альтернативные решения: как люди и компании отправляют и получают заказы сейчас, если вашего сервиса нет (чужие службы, собственные курьеры, самовывоз, почта, договорённость в мессенджере)?",
+          "Идеальный результат: какой сценарий доставки вы считаете идеальным — таким, где в плюсе остаются все трое: клиент, курьер и бизнес?",
+          "Конкуренты и аналоги: на кого вы ориентируетесь? Назовите сервисы и ссылки, скажите, какие их возможности обязательно нужны, а что считаете слабым местом.",
+          "Чем вы принципиально отличаетесь: в чём главное отличие от конкурентов (скорость, цена, особые зоны доставки, отношения с курьерами, свои возможности)?",
+          "Жизненный цикл заказа: из каких этапов состоит заказ от создания до завершения (создан, подтверждён, готовится, курьер назначен, в пути, доставлен)? Кто его создаёт, как подтверждается доставка и что происходит при отмене, опоздании или отказе клиента?",
+          "Назначение курьера: как курьер получает заказ — автоматически ближайшему свободному, биржей «кто первый взял» или через диспетчера вручную? Что делать, если никто не берёт заказ?",
+          "Карты и геолокация: какая работа с картой нужна (курьер на карте в реальном времени, определение адреса по местоположению, построение маршрута, зоны доставки и их границы, время в пути с учётом пробок)?",
+          "Расчёт стоимости доставки: как складывается цена для клиента (фиксированная ставка, расстояние, вес и габариты, время суток, повышенный спрос, бесплатная доставка от суммы заказа)?",
+          "Модель заработка: на чём зарабатывает сам сервис (комиссия с заказа, комиссия с заведения или с курьера, подписка, плата за размещение, реклама, платная приоритетная доставка)?",
+          "Оплата и взаиморасчёты: как движутся деньги (оплата на сайте или в приложении, наличными курьеру, чаевые, безналичный расчёт для компаний, выплаты курьерам и заведениям — как часто и куда)?",
+          "Интерфейсы и устройства: в каком виде работает каждая сторона (сайт для клиента, устанавливаемое приложение, отдельное приложение курьера с уведомлениями, планшет или панель для заведения, рабочее место диспетчера)?",
+          "Ключевые возможности: что обязательно должно быть (отслеживание на карте, выбор времени доставки, чат с курьером, оценки и отзывы, повтор прошлого заказа, программа лояльности, уведомления о каждом этапе)?",
+          "Интеграции: с чем сервис должен связываться (картографические службы, кассовые и учётные системы заведений, платёжные сервисы, SMS и Telegram, CRM)?",
+          "Стиль и атмосфера: какое впечатление должны оставлять сайт и приложение (быстрый и технологичный, дружелюбный и простой, премиальный, молодёжный)? Есть ли референсы, которые вам нравятся?",
+          "Технические, географические и организационные ограничения: есть ли требования, о которых нужно знать заранее (города и зоны запуска, устанавливаемые приложения, оформление курьеров, ожидаемая нагрузка в час пик, сроки запуска, кто будет держать диспетчерскую)?"
         ]
       },
       "booking": {
