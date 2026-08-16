@@ -1607,13 +1607,24 @@
           "Your main risk is people not renewing, not people not buying"
         ],
         "questions": [
-          "Which job does your product do for the user instead of the user?",
-          "What does a person get for free, and where exactly does the paid part begin?",
-          "What do you charge for: per person, per usage, per stored item, per period?",
-          "What has to happen in the first ten minutes after sign-up for the person to stay?",
-          "Does one account serve a team — who invites whom, and who can see what?",
-          "Which of the user's data do you store, and what do they lose if they leave?",
-          "Why do people stop renewing, and what do you already know about it?"
+          "What the product does and its main path: what exactly does a person or a company get from your service? Describe the main route — from the first sign-in to the moment the user gets the result they came for.",
+          "Audience and roles: who are your customers (private people, solo founders, small business, large companies) and who inside them uses the product — owners, managers, specialists? Describe each type: industry, size, job.",
+          "The problem and the pain: what key working task or pain do you close for this audience?",
+          "Alternatives: how is this solved today, when neither your service nor a competitor's is there (spreadsheets, somebody else's product that does not quite fit, manual work, hiring a person, not at all)?",
+          "The ideal outcome: what is the perfect result for a customer — the one that makes them renew every month? At what moment do they realise the money is well spent?",
+          "Competitors: who are your direct and indirect competitors? Name the products and links, say what you like about them and what you find weak.",
+          "What sets you apart: the approach, the features, simplicity, price, speed of adoption, being built narrowly for one industry?",
+          "The core at launch: which capabilities must be in the first version, and which can wait? Describe what the product is meaningless without.",
+          "Pricing and monetisation: how is it paid for (a free tier, a flat subscription, per user, by usage, one-off purchases, enterprise terms)? Name the plans and what each includes.",
+          "Limits and overdue payment: what happens when a user exceeds their plan or has not paid for the new period — access closes at once, the product drops to the free tier, a grace period with a warning? And what happens to their data meanwhile?",
+          "Teams and organisations: how are accounts arranged (a personal account, a shared workspace with roles, several organisations under one person)? Who invites whom, who sees what, and what happens when an employee leaves?",
+          "Taking money: which payment services and features are needed (recurring charges, invoices for companies, several currencies, taxes, refunds, changing plan mid-period)?",
+          "Sign-in and security: how do people get in (email and password, signing in through other services, single sign-on for large customers, two-step confirmation)? Do your customers impose requirements on how data is protected?",
+          "First experience and activation: how does a new user reach their first benefit (a step-by-step setup wizard, hints over the interface, ready templates and sample data, an empty screen with one button)? Within how many minutes should they see a result?",
+          "Open access and integrations: do customers need access to your API and outgoing event notifications? Which third-party systems must the product connect to first?",
+          "Metrics and the owner's workplace: what do you need to see about your own service (revenue and its growth, churn, customer lifetime, active users), and do you need a support console — find a customer, extend a subscription, sign in as them to investigate?",
+          "Interface style and complexity: what product do you want — as simple and fast as possible, or powerful and flexible with many settings? Are there interfaces worth taking as a model?",
+          "Technical and practical constraints: is there anything to be known upfront (a mobile version or app, where data is stored and what is required of it, the load you expect, a launch deadline, who will support the product after launch)?"
         ]
       },
       "agents": {
@@ -4281,13 +4292,24 @@
           "Главный риск — что не продлят, а не что не купят"
         ],
         "questions": [
-          "Какую работу ваш продукт делает вместо пользователя?",
-          "Что человек получает бесплатно и где именно начинается платное?",
-          "За что вы берёте деньги: за человека, за использование, за хранимый объём, за срок?",
-          "Что должно случиться в первые десять минут после регистрации, чтобы человек остался?",
-          "Работает ли один аккаунт на команду — кто кого приглашает и кто что видит?",
-          "Какие данные пользователя вы храните и что он теряет, если уйдёт?",
-          "Из-за чего люди перестают продлевать и что вы об этом уже знаете?"
+          "Задача продукта и главный сценарий: что именно человек или компания получает от вашего сервиса? Опишите основной путь — от первого входа до момента, когда пользователь получил результат, ради которого пришёл.",
+          "Целевая аудитория и роли: кто ваши клиенты (частные лица, соло-предприниматели, малый бизнес, крупные компании) и кто внутри них работает с продуктом — владельцы, руководители, рядовые специалисты? Опишите каждый тип: отрасль, размер, должность.",
+          "Проблема и боль: какую ключевую рабочую задачу или боль вы закрываете для этой аудитории?",
+          "Альтернативные решения: как эту задачу решают сейчас, если вашего сервиса и сервисов конкурентов нет (таблицы, чужой продукт «не про то», ручная работа, наёмный человек, никак)?",
+          "Идеальный результат: что для клиента идеальный итог — такой, ради которого он продлевает подписку каждый месяц? В какой момент он понимает, что платит не зря?",
+          "Конкуренты: кто ваши прямые и косвенные конкуренты? Назовите продукты и ссылки, скажите, что вам в них нравится и что считаете слабым.",
+          "Чем вы принципиально отличаетесь: подход, возможности, простота, цена, скорость внедрения, узкая специализация под отрасль?",
+          "Ядро продукта на старте: какие возможности обязаны быть в первой версии, а какие подождут? Опишите то, без чего продукт не имеет смысла.",
+          "Тарифы и монетизация: как устроена оплата (бесплатный уровень, фиксированная подписка, оплата за каждого пользователя, оплата за объём использования, разовые покупки, корпоративные условия)? Назовите уровни тарифов и что входит в каждый.",
+          "Пределы и просрочка: что происходит, когда пользователь превысил лимит тарифа или не оплатил новый период — доступ закрывается сразу, продукт переходит на бесплатный уровень, даётся льготный срок с предупреждением? Что при этом происходит с его данными?",
+          "Команды и организации: как устроены учётные записи (личный аккаунт, общее рабочее пространство с ролями, несколько организаций у одного человека)? Кто кого приглашает, кто что видит и что бывает при уходе сотрудника?",
+          "Приём денег: какие платёжные службы и возможности нужны (регулярные списания, счета для юридических лиц, несколько валют, налоги, возвраты, смена тарифа в середине периода)?",
+          "Вход и безопасность: какими способами входят (почта и пароль, вход через сторонние сервисы, единый вход для крупных клиентов, двухшаговое подтверждение)? Есть ли требования к защите данных со стороны ваших клиентов?",
+          "Первый опыт и активация: как новый пользователь доходит до первой пользы (пошаговый мастер настройки, подсказки по интерфейсу, готовые шаблоны и учебные данные, пустой экран с одной кнопкой)? Через сколько минут он должен увидеть результат?",
+          "Открытый доступ и интеграции: нужен ли клиентам свой доступ к вашему API и исходящие уведомления о событиях? С какими сторонними системами продукт должен связываться в первую очередь?",
+          "Метрики и рабочее место владельца: что вам нужно видеть о собственном сервисе (выручка и её рост, отток, срок жизни клиента, активные пользователи) и нужна ли служебная панель для поддержки — найти клиента, продлить подписку, войти под ним для разбора?",
+          "Стиль интерфейса и уровень сложности: какой продукт вы хотите — предельно простой и быстрый или мощный и гибкий с множеством настроек? Есть ли интерфейсы, на которые стоит равняться?",
+          "Технические и организационные ограничения: есть ли требования, о которых нужно знать заранее (мобильная версия или приложение, где хранятся данные и требования к ним, ожидаемая нагрузка, сроки запуска, кто будет поддерживать продукт после запуска)?"
         ]
       },
       "agents": {
