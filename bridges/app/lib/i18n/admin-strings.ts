@@ -573,6 +573,15 @@ export type AdminStrings = {
     dialogExamples: string; dialogSignals: string; dialogQuestions: string;
     choose: string; cancel: string; saving: string;
     chosen: string; change: string; chosenHint: string;
+    /**
+     * Подтверждение выбора направления (владелец 2026-08-16).
+     *
+     * 🔒 БЕЗ НЕГО ВЫБОР ВЫГЛЯДЕЛ КАК НЕСРАБОТАВШИЙ. Окно закрывалось, страница
+     * тихо перерисовывалась — и человек, только что нажавший «выбрать этот тип
+     * приложения», не получал ни одного признака, что его услышали. Действие,
+     * не ответившее ничем, читается как поломка, и нажимают его второй раз.
+     */
+    started: string;
   };
   // Пользовательские кейсы: гейт, вводные вопросы и Quiz.
   useCases: {

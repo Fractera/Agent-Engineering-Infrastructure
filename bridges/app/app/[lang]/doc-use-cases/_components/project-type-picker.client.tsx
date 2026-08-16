@@ -2,11 +2,11 @@
 
 // Выбор структуры проекта — первый экран пользовательских кейсов (владелец 2026-08-15).
 //
-// 🔒 ЗАЧЕМ ОН ВСТАЛ ПЕРЕД ВОПРОСАМИ. Семь вводных вопросов были одни на всех, и
-// экран их правки (2026-08-14) лечил это наполовину: переписать чужой вопрос
-// можно, но чтобы понять, О ЧЁМ спрашивать маркетплейс, надо уже знать, чем
-// маркетплейс отличается от магазина. Мы просили работы у человека, который
-// пришёл за ценностью и ещё ничего не получил.
+// 🔒 ЗАЧЕМ ОН ВСТАЛ ПЕРЕД ВОПРОСАМИ. Вводные вопросы были одни на всех, и экран
+// их правки (2026-08-14) лечил это наполовину: переписать чужой вопрос можно, но
+// чтобы понять, О ЧЁМ спрашивать маркетплейс, надо уже знать, чем маркетплейс
+// отличается от магазина. Мы просили работы у человека, который пришёл за
+// ценностью и ещё ничего не получил.
 //
 // Теперь порядок обратный: он называет структуру, и вопросы приходят написанными
 // под неё. Правка вопросов никуда не делась — она стоит следующим шагом и уже
@@ -18,18 +18,22 @@
 // кнопка открывает описание, а выбор происходит внутри окна, где кнопка выбора
 // крупная и одна.
 //
-// 🔒 СЛОВАРЬ ОСТАЁТСЯ СЕРВЕРНЫМ. Сюда приезжают двенадцать записей ОДНОГО языка
-// пропсом. Импортировать словарь панели отсюда нельзя: 82 языка × ~600 ключей
-// уехали бы в браузер на каждой загрузке страницы.
+// 🔒 СЛОВАРЬ ОСТАЁТСЯ СЕРВЕРНЫМ. Сюда приезжают записи ОДНОГО языка пропсом.
+// Импортировать словарь панели отсюда нельзя: 82 языка × ~600 ключей уехали бы в
+// браузер на каждой загрузке страницы.
+//
+// 🪦 РАЗМЕТКА ОКНА ПЕРЕЕХАЛА В `type-dialog.client.tsx` (2026-08-16). Она стояла
+// здесь и ещё раз в «добавить продукт» — двумя копиями одного и того же, и
+// правка в одной не доезжала до второй. Там же вылечено главное: список и
+// описание были ДВУМЯ окнами, открытыми одновременно, из-за чего кнопки внутри
+// не работали вовсе.
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Check, Pencil } from "lucide-react";
+import { Check, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
+import { SingleTypeDialog, TypeChooserDialog } from "./type-dialog.client";
 
 export type ProjectTypeCard = {
   id: string;
@@ -53,6 +57,8 @@ export type PickerLabels = {
   chosen: string;
   change: string;
   chosenHint: string;
+  /** «Вы начинаете работать над приложением …» — ответ на нажатие. */
+  started: string;
   failed: string;
 };
 
@@ -80,6 +86,12 @@ export function ProjectTypePicker(
       const d = await r.json().catch(() => ({}));
       if (!r.ok || !d.ok) throw new Error(String(d?.error ?? labels.failed));
       setOpen(null);
+      // 🔒 ОТВЕТ НА ДЕЙСТВИЕ ОБЯЗАТЕЛЕН (владелец 2026-08-16). Окно закрывалось,
+      // страница тихо перерисовывалась — и человек, только что нажавший «выбрать
+      // этот тип приложения», не получал ни одного признака, что его услышали.
+      // Действие, не ответившее ничем, читается как поломка, и его нажимают
+      // второй раз.
+      toast.success(labels.started.replace("{title}", type.title));
       // Вопросы под эту структуру подставляет СЕРВЕР при следующем рендере: они
       // лежат в словаре, который в браузер не уезжает.
       router.refresh();
@@ -90,9 +102,9 @@ export function ProjectTypePicker(
     }
   }
 
-  // Структура уже выбрана — двенадцать кнопок больше не нужны, нужна одна строка
-  // «вот что вы выбрали» и возможность передумать. Список, который остаётся
-  // висеть после выбора, заставляет каждый раз перечитывать его заново.
+  // Структура уже выбрана — весь список больше не нужен, нужна одна строка «вот
+  // что вы выбрали» и возможность передумать. Список, который остаётся висеть
+  // после выбора, заставляет каждый раз перечитывать его заново.
   if (chosen) {
     return (
       <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/5 p-3">
@@ -130,129 +142,35 @@ export function ProjectTypePicker(
         ))}
       </div>
 
-      <TypeDialog card={open} onClose={() => setOpen(null)} onChoose={choose} busy={busy} labels={labels} />
+      {/* Здесь окно БЕЗ списка: перечень направлений уже лежит на странице выше,
+          и повторять его внутри окна незачем. */}
+      <SingleTypeDialog card={open} onClose={() => setOpen(null)} onChoose={choose} busy={busy} labels={labels} />
     </div>
   );
 }
 
-/** Передумать: тот же список в окне, чтобы не возвращать двенадцать кнопок на страницу. */
+/** Передумать: тот же список в окне, чтобы не возвращать весь перечень на страницу. */
 function ChangeButton(
   { types, labels, onPick, busy }:
   { types: ProjectTypeCard[]; labels: PickerLabels; onPick: (t: ProjectTypeCard) => void; busy: boolean },
 ) {
-  const [listOpen, setListOpen] = useState(false);
-  const [card, setCard] = useState<ProjectTypeCard | null>(null);
+  const [open, setOpen] = useState(false);
 
   return (
     <>
-      <Button size="sm" variant="outline" className="text-[11px]" onClick={() => setListOpen(true)}>
+      <Button size="sm" variant="outline" className="text-[11px]" onClick={() => setOpen(true)}>
         <Pencil size={11} />{labels.change}
       </Button>
 
-      <Dialog open={listOpen} onOpenChange={(v) => { setListOpen(v); if (!v) setCard(null); }}>
-        <DialogContent className="max-h-[85vh] max-w-3xl overflow-hidden p-0">
-          <DialogHeader className="border-b border-border px-4 py-2.5 pr-10">
-            <DialogTitle className="text-[13px] font-semibold">{labels.lead}</DialogTitle>
-          </DialogHeader>
-          <div className="max-h-[calc(85vh-3rem)] overflow-auto px-4 py-3">
-            <div className="flex flex-wrap gap-2">
-              {types.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setCard(t)}
-                  className="flex min-w-[9rem] flex-1 flex-col items-start gap-0.5 rounded-lg border border-border px-3 py-2 text-left transition-colors hover:border-primary hover:bg-muted"
-                >
-                  <span className="text-[12px] font-medium text-foreground">{t.title}</span>
-                  <span className="text-[10px] leading-snug text-muted-foreground">{t.tagline}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <TypeDialog
-        card={card}
-        onClose={() => setCard(null)}
-        onChoose={(t) => { setListOpen(false); onPick(t); }}
-        busy={busy}
+      <TypeChooserDialog
+        open={open}
+        onOpenChange={setOpen}
+        types={types}
         labels={labels}
+        busy={busy}
+        onChoose={(t) => { setOpen(false); onPick(t); }}
+        listTitle={labels.lead}
       />
     </>
-  );
-}
-
-/**
- * Описание одного направления. Геометрия окна — та же, что у документов панели
- * (`doc-popup.client.tsx`): один стандарт окна на всю панель, чтобы человек не
- * изучал заново, где здесь закрыть.
- *
- * Семь вопросов показаны ЗДЕСЬ, до выбора, намеренно: по ним видно, о чём
- * придётся думать, — и это самый честный признак «моё это направление или нет».
- */
-function TypeDialog(
-  { card, onClose, onChoose, busy, labels }:
-  {
-    card: ProjectTypeCard | null;
-    onClose: () => void;
-    onChoose: (t: ProjectTypeCard) => void;
-    busy: boolean;
-    labels: PickerLabels;
-  },
-) {
-  return (
-    <Dialog open={Boolean(card)} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-h-[85vh] max-w-3xl overflow-hidden p-0">
-        <DialogHeader className="border-b border-border px-4 py-2.5 pr-10">
-          <DialogTitle className="text-[13px] font-semibold">{card?.title}</DialogTitle>
-        </DialogHeader>
-
-        {card && (
-          <div className="max-h-[calc(85vh-7rem)] space-y-3 overflow-auto px-4 py-3 text-[11px] leading-relaxed">
-            <p className="text-foreground">{card.definition}</p>
-
-            <div>
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                {labels.dialogExamples}
-              </p>
-              <ul className="list-disc space-y-0.5 pl-4 text-muted-foreground">
-                {card.examples.map((x) => <li key={x}>{x}</li>)}
-              </ul>
-            </div>
-
-            {/* Признаки — то, по чему человек узнаёт СЕБЯ, а не отрасль. Поэтому
-                они выделены рамкой: из трёх блоков окна именно этот решает. */}
-            <div className="rounded-md border border-primary/30 bg-primary/5 p-2.5">
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
-                {labels.dialogSignals}
-              </p>
-              <ul className="list-disc space-y-0.5 pl-4 text-foreground">
-                {card.signals.map((x) => <li key={x}>{x}</li>)}
-              </ul>
-            </div>
-
-            <div>
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                {labels.dialogQuestions}
-              </p>
-              <ol className="list-decimal space-y-0.5 pl-4 text-muted-foreground">
-                {card.questions.map((q) => <li key={q}>{q}</li>)}
-              </ol>
-            </div>
-          </div>
-        )}
-
-        <DialogFooter className="border-t border-border px-4 py-2.5">
-          <Button size="sm" variant="outline" className="text-[11px]" onClick={onClose} disabled={busy}>
-            {labels.cancel}
-          </Button>
-          <Button size="sm" className="text-[11px]" onClick={() => card && onChoose(card)} disabled={busy}>
-            {busy ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
-            {busy ? labels.saving : labels.choose}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }

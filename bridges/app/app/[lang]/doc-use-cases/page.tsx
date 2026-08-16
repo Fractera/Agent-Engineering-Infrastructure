@@ -119,6 +119,7 @@ export default async function UseCasesPage(
     dialogExamples: p.dialogExamples, dialogSignals: p.dialogSignals, dialogQuestions: p.dialogQuestions,
     choose: p.choose, cancel: p.cancel, saving: p.saving,
     chosen: p.chosen, change: p.change, chosenHint: p.chosenHint,
+    started: p.started,
     failed: u.failed,
   };
 
