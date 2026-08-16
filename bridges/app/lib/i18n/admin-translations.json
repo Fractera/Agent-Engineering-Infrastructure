@@ -2035,13 +2035,24 @@
           "The data goes stale and has to be refreshed"
         ],
         "questions": [
-          "What kind of objects fill the catalogue — organisations, places, specialists, things, vacancies?",
-          "Where do the records come from: you enter them, objects register themselves, an import, a crawler?",
-          "Which fields does every record have, and which of them will people search and filter by?",
-          "Do you need a map, and what does «nearby» mean in your case — metres, a district, a city, a delivery zone?",
-          "Who is responsible for accuracy, and how does a record get updated when the data ages?",
-          "Are there paid places: promotion, highlighting, an extended card?",
-          "How many records do you expect — hundreds, thousands, hundreds of thousands?"
+          "What is catalogued: what exactly goes into the directory (companies and venues, suppliers, specialists and doctors, places, products, digital tools, people, objects of a particular industry)? How many entries do you expect in the first year?",
+          "The audience on both sides: who searches and who wants to be listed? Describe those who use the search and those whose cards live here — business owners, specialists, representatives.",
+          "What the directory is for: what should a person get (find the right thing fast, compare options, trust the data, choose a provider)? What shortage do you close — no single base in the niche, information scattered, nowhere to find honest reviews?",
+          "How they search today: where do people find and compare such things without your directory (search engines, topic chats, friends, their own spreadsheets, other directories)?",
+          "The ideal outcome: what does the flawless case look like — a person found the right entry with exact contacts and prices in ten seconds and made an informed choice? What has to be on screen for that?",
+          "Competitors and models: which directories and catalogues do you take your bearings from? Name them with links, say what you like and what is missing.",
+          "What sets you apart: depth of data, ease of search, freshness, a narrow specialisation, extra capabilities?",
+          "The structure: how is navigation arranged (sections and subsections, tags, links between entries, neighbouring categories)? By what property does a person usually start searching?",
+          "The entry card: which fields are compulsory (name, images, contacts, address) and which are particular to your niche (opening hours, price band, payment methods, licences and certificates, languages served, capacity)? These same fields become the filters.",
+          "Search and filtering: how does a person find what they need (live search by name and synonyms, filtering by dozens of properties at once, sorting by rating, popularity or newness, comparing several entries, favourites)?",
+          "Map and geography: is there a tie to location (entries on a map, searching near me, filtering by district, city or station)? Or is geography irrelevant here?",
+          "Where the data comes from: what fills the base at launch and afterwards (entered by an administrator, collected automatically from open sources, companies submit themselves, imported as a ready list)? Who checks a new entry, and by what rules?",
+          "Keeping data current: how does the directory avoid becoming a graveyard of dead phone numbers? Who updates entries and how often, what happens to those nobody has confirmed in a year, and can a visitor report an error?",
+          "Claiming a card: do you need a \"this is my company\" flow — confirming the right, editing contacts, replying to reviews, buying promotion? How do you verify the person really owns it?",
+          "Reviews and credibility: how are ratings arranged (an overall star score, detailed reviews with photos, scoring on separate criteria)? How are paid-for and vengeful reviews filtered out — pre-moderation, proof that the person was actually a customer, a right of reply?",
+          "Monetisation: how does the directory earn (paid listing or a subscription for companies, lifting an entry in the results and highlighting the card, advertising, selling the enquiries a card generates, paid access to extended data)? What stays free forever?",
+          "Pages built for search queries: should pages be generated automatically at the intersection of properties — of the kind \"this thing in that city with that condition\"? For directories this is the main source of visitors and also the main source of empty pages: how do you avoid creating the ones with nothing behind them?",
+          "Technical and practical requirements: is there anything to be known upfront (the size of the base, languages, a mobile version, links to outside data sources, who will moderate after launch, deadlines)?"
         ]
       },
       "crm": {
@@ -4845,13 +4856,24 @@
           "Данные устаревают и требуют обновления"
         ],
         "questions": [
-          "Что за объекты наполняют каталог — организации, места, специалисты, вещи, вакансии?",
-          "Откуда берутся записи: вы вносите, объекты регистрируются сами, импорт, обход страниц?",
-          "Какие поля есть у каждой записи и по каким из них люди будут искать и фильтровать?",
-          "Нужна ли карта и что значит «рядом» в вашем случае — метры, район, город, зона доставки?",
-          "Кто отвечает за достоверность и как запись обновляется, когда данные устарели?",
-          "Есть ли платные места: продвижение, выделение, расширенная карточка?",
-          "Сколько записей вы ожидаете — сотни, тысячи, сотни тысяч?"
+          "Предмет справочника: что именно каталогизируется (компании и заведения, поставщики, специалисты и врачи, места, товары, цифровые инструменты, персоны, объекты определённой отрасли)? Сколько записей ожидаете в первый год?",
+          "Аудитория обеих сторон: кто ищет и кто хочет попасть в каталог? Опишите тех, кто пользуется поиском, и тех, чьи карточки здесь лежат — владельцы бизнеса, специалисты, представители.",
+          "Задача каталога: что человек должен получить (быстро найти нужное, сравнить варианты, довериться проверенным данным, выбрать исполнителя)? Какую нехватку вы закрываете — нет единой базы в нише, сведения разбросаны, негде взять честные отзывы?",
+          "Как ищут сейчас: где люди находят и сравнивают такие объекты без вашего каталога (поисковики, тематические чаты, знакомые, собственные таблицы, чужие справочники)?",
+          "Идеальный результат: как выглядит безупречный случай — человек нашёл нужное с точными контактами и ценой за десять секунд и сделал осознанный выбор? Что для этого должно быть на экране?",
+          "Конкуренты и образцы: на какие справочники и каталоги вы ориентируетесь? Назовите их и ссылки, скажите, что нравится и чего в них не хватает.",
+          "Чем принципиально отличаетесь: глубина сведений, удобство поиска, свежесть данных, узкая специализация, дополнительные возможности?",
+          "Структура каталога: как устроена навигация (разделы и подразделы, метки, связи между записями, соседние категории)? По какому признаку человек чаще всего начинает поиск?",
+          "Карточка объекта: какие поля обязательны (название, изображения, контакты, адрес) и какие особенные для вашей ниши (часы работы, ценовая категория, способы оплаты, лицензии и сертификаты, языки обслуживания, вместимость)? Эти же поля станут фильтрами.",
+          "Поиск и отбор: как человек находит нужное (живой поиск по названию и синонимам, отбор по десяткам признаков сразу, сортировка по оценке, популярности или новизне, сравнение нескольких записей, избранное)?",
+          "Карта и география: нужна ли привязка к местности (объекты на карте, поиск рядом со мной, отбор по району, городу или станции)? Или география здесь не при чём?",
+          "Откуда берутся данные: чем наполняется база на старте и дальше (заносит администратор, собирается автоматически из открытых источников, компании подают заявки сами, ввозится готовым списком)? Кто и по каким правилам проверяет новую запись?",
+          "Актуальность сведений: как каталог не превращается в кладбище мёртвых телефонов? Кто и как часто обновляет записи, что происходит с теми, кого никто не подтверждал год, и может ли посетитель сообщить об ошибке?",
+          "Право на свою карточку: нужна ли возможность заявить «это моя компания» — подтвердить право, править контакты, отвечать на отзывы, покупать продвижение? Как вы проверяете, что человек и правда владелец?",
+          "Отзывы и достоверность: как устроены оценки (общая звёздность, подробные отзывы с фотографиями, оценка по отдельным признакам)? Как отсеиваются заказные и мстительные — предварительная проверка, подтверждение факта обращения, ответ владельца?",
+          "Монетизация: как каталог зарабатывает (платное размещение или подписка для компаний, поднятие в выдаче и выделение карточки, реклама, продажа обращений из карточки, платный доступ к расширенным сведениям)? Что остаётся бесплатным всегда?",
+          "Страницы под запросы: нужно ли автоматически создавать страницы на пересечении признаков — вида «нужное в таком-то городе с таким-то условием»? Для справочников это главный источник посетителей, но и главный источник пустых страниц: как не создавать те, за которыми ничего нет?",
+          "Технические и организационные требования: есть ли то, о чём нужно знать заранее (объём базы, языки, мобильная версия, связи с внешними источниками данных, кто будет вести модерацию после запуска, сроки)?"
         ]
       },
       "crm": {
