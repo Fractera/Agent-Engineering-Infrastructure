@@ -1641,6 +1641,41 @@
           "How many such requests arrive per day, and at which hours?"
         ]
       },
+      "scheduler": {
+        "title": "Scheduled automation",
+        "tagline": "A rule and a timer instead of judgement",
+        "definition": "A service that wakes itself at the appointed hour, goes where it was told, compares what it found against a condition and sends the result. There is nothing for it to decide: where judgement is needed you want an agent, here you want a rule. The product rests on three things invisible from outside — the schedule, the behaviour on failure, and the run log.",
+        "examples": [
+          "Watching a price and reporting the moment it drops",
+          "Going through incoming mail and sending one digest a day",
+          "Collecting data from sites that offer no open access",
+          "A recurring report that assembles and sends itself"
+        ],
+        "signals": [
+          "Somebody checks the same thing by hand many times a day",
+          "The rule fits into one sentence: if this, then that",
+          "What matters is not missing the moment, not having a conversation"
+        ],
+        "questions": [
+          "Scenarios first: which recurring tasks are you covering (checking mail, watching prices and discounts, collecting data from sites, recurring reports, publishing, syncing data, calling someone else's API)? List the most important — those are where it starts.",
+          "Your audience: who creates and uses these automations? Describe every type — ordinary people, freelancers, marketers, analysts, small business owners, developers — and how willing each is to work out the settings.",
+          "The problem and the pain: what is the main thing the service solves (time lost to routine, the fear of missing a deal or an important email, the need to see how a price moves)? What is most irritating about doing it by hand?",
+          "Alternatives: how do people cope today, when your service is not there (checking manually every half hour, setting alarms, hiring an assistant, writing their own scripts, not at all)?",
+          "The ideal outcome: what result would leave a person fully satisfied (a message the very minute the price drops; one digest a day instead of a stream)?",
+          "Competitors and peers: what are you taking your bearings from (Zapier, Make, n8n, IFTTT, browser extensions, narrow price trackers, hand-written scripts)? What should be borrowed from how they work, and what do you find weak?",
+          "What sets you apart: simplicity, reliability, price, how deep the automations go, ready-made templates, working without code, speed, a narrow set of scenarios instead of everything at once?",
+          "How a person builds an automation: from ready templates, a visual builder, describing the task in plain language, code, or a combination? How manageable must it be for a newcomer on the very first evening?",
+          "Schedule and triggers: which ways of starting are needed (a fixed interval such as every 15 minutes, a cron expression, particular days and hours, a one-off delayed run, a manual run, an external event, a chain of several automations)?",
+          "Firing conditions: how is the rule \"if this, then that\" described (a price below a threshold, a word found in an email, a new entry appearing, a value changed since last time)? Do you need a condition builder by mouse, or is a simple form enough?",
+          "Actions and where the result goes: what does the system do when it fires and where does the outcome land (a message in a messenger, an email, a row in a spreadsheet, a task in a tracker, a call to someone else's address, filling in a form)? Report every run, or only when there is news?",
+          "Data sources and integrations: what must the tool work with (email, sites with no open access, other people's APIs and incoming calls, news feeds, spreadsheets, databases, calendars, messengers, a CRM)? Which comes first?",
+          "Reading sites and their defences: do you need to get past obstacles when collecting data (going through intermediate servers, a full browser instead of a plain request, dealing with \"prove you are human\" checks, signing in on the target site)? How lawful is that in your case?",
+          "Failures and retries: how does the system behave when something breaks — the target site is down, the network is gone, the answer came back empty? How many times to retry, at what interval, and when and whom to tell that a task is broken?",
+          "The run log: does a person need a detailed history of every task (success or failure, response time, what exactly came back, the saved response for debugging)? How long should it be kept?",
+          "Limits and payment: how are restrictions and money arranged (how many tasks may stay switched on, the minimum check interval on a free plan, paying per run or by subscription, what happens when a limit runs out)?",
+          "Technical and practical constraints: is there anything to be known upfront (hosting it yourself or in a cloud, running around the clock, the volume of data processed, languages, a launch deadline)?"
+        ]
+      },
       "corporate": {
         "title": "Corporate website",
         "tagline": "Company, services, trust",
@@ -4267,6 +4302,41 @@
           "К каким вашим данным и сервисам ему нужен доступ, чтобы ответ не был выдуманным?",
           "Как вы узнаете, что агент сработал плохо, и что должно произойти в этот момент?",
           "Сколько таких обращений приходит в день и в какие часы?"
+        ]
+      },
+      "scheduler": {
+        "title": "Автоматизация по расписанию",
+        "tagline": "Правило и таймер вместо суждения",
+        "definition": "Служба, которая сама просыпается в назначенный час, ходит куда велено, сравнивает найденное с условием и присылает результат. Решать ей нечего: где нужно суждение — там агент, а здесь правило. Продукт держится на трёх вещах, невидимых снаружи: расписании, поведении при отказе и журнале выполнения.",
+        "examples": [
+          "Слежение за ценой и сообщение, когда она упала",
+          "Разбор входящей почты и сводка раз в день",
+          "Сбор данных с сайтов, у которых нет открытого доступа",
+          "Регулярный отчёт, который собирается и уходит сам"
+        ],
+        "signals": [
+          "Человек сегодня проверяет что-то руками по многу раз в день",
+          "Правило можно записать одной фразой «если… то…»",
+          "Важно не пропустить момент, а не поговорить"
+        ],
+        "questions": [
+          "Сценарии в первую очередь: какие регулярные задачи вы покрываете (проверка почты, слежение за ценами и скидками, сбор данных с сайтов, регулярные отчёты, публикация, синхронизация данных, обращение к чужому API)? Перечислите самые важные — с них всё и начнётся.",
+          "Целевая аудитория: кто создаёт и использует эти автоматизации? Опишите все типы — обычные люди, фрилансеры, маркетологи, аналитики, владельцы небольшого дела, разработчики — и насколько каждый готов разбираться в настройке.",
+          "Проблема и боль: какую главную задачу решает сервис (время на рутину, страх упустить выгоду или важное письмо, потребность видеть динамику цен)? Что раздражает сильнее всего при ручном повторении?",
+          "Альтернативные решения: как люди справляются сейчас, если вашего сервиса нет (проверяют вручную каждые полчаса, ставят будильники, нанимают помощника, пишут свои скрипты, никак)?",
+          "Идеальный результат: какой итог сделает человека полностью довольным (сообщение в мессенджер в ту же минуту, когда цена упала; одно письмо в день с выжимкой вместо потока)?",
+          "Конкуренты и аналоги: на что вы ориентируетесь (Zapier, Make, n8n, IFTTT, расширения браузера, узкие трекеры цен, самописные скрипты)? Что из их устройства нужно заимствовать, а что считаете слабым?",
+          "Чем вы принципиально отличаетесь: простота, надёжность, цена, глубина автоматизаций, готовые шаблоны, работа без кода, скорость, узкий круг сценариев вместо всего сразу?",
+          "Как человек создаёт автоматизацию: готовыми шаблонами, визуальным сборщиком, описанием задачи обычным языком, кодом или сочетанием? Насколько это должно быть посильно новичку в первый же вечер?",
+          "Расписание и запуск: какие способы запуска нужны (фиксированный интервал вроде «каждые 15 минут», выражение cron, определённые дни и часы, одноразовый отложенный запуск, ручной запуск, событие извне, цепочка из нескольких автоматизаций)?",
+          "Условия срабатывания: как описывается правило «если… то…» (цена ниже порога, в письме встретилось слово, появилась новая запись, значение изменилось с прошлого раза)? Нужен ли сборщик условий мышью или достаточно простой формы?",
+          "Действия и куда уходит результат: что система делает при срабатывании и куда шлёт итог (сообщение в мессенджер, письмо, строка в таблицу, задача в трекер, вызов чужого адреса, заполнение формы)? Сообщать о каждом запуске или только когда есть новость?",
+          "Источники данных и интеграции: с чем инструмент обязан работать (почта, сайты без открытого доступа, чужие API и входящие вызовы, ленты новостей, таблицы, базы данных, календарь, мессенджеры, CRM)? С чего начинаем?",
+          "Чтение сайтов и их защиты: нужно ли обходить помехи при сборе данных (работа через промежуточные серверы, полноценный браузер вместо простого запроса, распознавание проверок «вы не робот», вход в личный кабинет на целевом сайте)? Насколько это законно в вашем случае?",
+          "Отказы и повторные попытки: как система ведёт себя при сбое — целевой сайт лёг, сеть пропала, ответ пришёл пустым? Сколько раз повторять, с какой паузой, когда и кому сообщать о поломке задачи?",
+          "Журнал выполнения: нужна ли человеку подробная история каждой задачи (успех или отказ, время ответа, что именно вернулось, сохранённый ответ для разбора)? Как долго хранить?",
+          "Пределы и оплата: как устроены ограничения и деньги (сколько задач можно держать включёнными, минимальный интервал проверки на бесплатном тарифе, оплата за число запусков или подписка, что происходит при исчерпании лимита)?",
+          "Технические и организационные ограничения: есть ли требования, о которых нужно знать заранее (своё размещение или облако, работа круглосуточно, объём обрабатываемых данных, языки, сроки запуска)?"
         ]
       },
       "corporate": {
