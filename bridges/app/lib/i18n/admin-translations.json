@@ -1993,6 +1993,54 @@
           "Technical, practical and legal constraints: is there anything to be known upfront (your own server or a cloud, how many users, requirements for protecting personal data, mobile apps, working offline, a launch deadline, who will administer the system)?"
         ]
       },
+      "attestation": {
+        "title": "Certification and knowledge checks",
+        "tagline": "Not knowledge, but a record an inspector will read",
+        "definition": "A safety officer publishes the instructions, employees are examined on them, and the company gets a history: who, when, with what result. What separates it from an ordinary course is the cost of error — this record admits a person to dangerous work and defends the company at an inspection, so it must be neither lost nor rewritten after the fact.",
+        "examples": [
+          "Occupational and fire safety on a production site",
+          "Clearance for equipment and work at height",
+          "Induction on hiring and after an incident",
+          "Checking contractors before they enter the site"
+        ],
+        "signals": [
+          "The result is needed not by the person but by an inspector",
+          "The certification expires, and the expiry matters",
+          "Failed means not admitted to work, and that must happen by itself"
+        ],
+        "questions": [
+          "A safety officer publishes instructions, employees sit an exam on them, and the company keeps a record of who has been trained. What main problem should this solve for you — and which of today's troubles do you want closed first (lost paper logs, no way to find quickly who passed, nobody watching the deadlines, preparing for an inspection takes weeks)?",
+          "Which knowledge checks come first (occupational safety, fire safety, electrical safety, clearance for equipment, professional standards, information security)? And which kinds of briefing do you need — induction on hiring, initial at the workplace, repeat on schedule, unscheduled after an incident or a new order, targeted for a one-off job?",
+          "Who is on each side: who creates the material and the questions (safety officers, department heads, HR, outside experts) and who sits the exam (everyone, particular roles, new hires, contractors and visitors)? How many people and how many departments?",
+          "In what form does the source material arrive (documents and scans of regulations, editor files, training videos, slides, ready learning packages, plain instruction text)? How much of it is there and how often does it change?",
+          "A model can read an instruction and compose the questions itself — multiple choice, situational tasks such as \"what do you do when a cable catches fire\", checks on what is forbidden. Do you want that generation, and by what rule does it decide what in the instruction is important and what is secondary?",
+          "A question invented by a machine ends up in an official exam that admits a person to dangerous work. Should every generated question be reviewed by an engineer before it becomes active? Who answers for a wrong question — the one who approved it?",
+          "Which kinds of task are needed (one correct answer, several correct, putting actions in the right order, spotting a violation in a photo or diagram, an answer in the person's own words, a practical task marked by a human)?",
+          "The rules of sitting: how many questions in a paper, what score counts as a pass, is there a time limit, how many attempts? After how long is a retake allowed, and what happens after the last failed one — an in-person board, training again, suspension?",
+          "Papers are drawn at random from a common bank — say twenty questions out of two hundred — so that people cannot pass answers to each other. Do you need that, and do you have enough questions for it to mean anything?",
+          "How is the matrix built — \"role, workshop or department → the certifications they must hold\"? Who maintains it, and what happens when someone moves to another role: which certifications are assigned automatically, which lapse?",
+          "Each certification has its own shelf life: one yearly, another every three years, a third only on hiring. How are those periods set, and how does the system know a particular person's is running out?",
+          "How many days ahead and through which channels should the employee and their manager be warned of expiry (email, a message, a notice in their account, a call to the manager)? How many reminders before the date, and what happens on the day it expires?",
+          "The date has passed and the person has not been certified. What should the system do: tell the manager, produce a suspension order, close access to equipment, disable the pass at the gate? How far may the system go on its own, and where must it only warn a human?",
+          "An unscheduled case: a new order comes out and everyone in one workshop must take a short check today. How is that assigned, and how quickly do people learn of it?",
+          "An instruction has been updated — the question that decides everything else. Do previous certifications become invalid and everyone is sent again, or only on a substantial change? Who decides what counts as substantial? Must the record hold which VERSION of the instruction the person was examined on?",
+          "On what do people sit the exam (a personal computer, a phone, a shared terminal at the gate or in the workshop)? Are there places with no connection at all — a building site, a remote facility — and do you need sitting offline with the answers sent later?",
+          "The legal weight of the record rests on it having been this person. How is identity confirmed at the start of an exam (an account, an access badge, a one-time code to the phone, face recognition)? Which of these will your inspectors accept?",
+          "Watching during the exam: should the system notice switching to another tab, forbid copying, photograph the person through the camera, spot a second person in frame? This is surveillance of living people at their workplace — where do you draw the line, and do employees know they are being watched?",
+          "Who marks written answers and practical tasks — an engineer by hand, or a model against a key? If a model, may it record a fail on its own, or is its opinion only advice to a human?",
+          "Do you need several languages and questions read aloud? For shop-floor staff and workers from abroad this decides whether they understood the question or guessed.",
+          "What exactly is saved for each sitting (who, when, which version of the instruction, which questions came up, what answers were given, how many attempts, who marked it, the board's membership)? Which of that is required by regulation and which is for your own peace of mind?",
+          "What confirms the result: is a mark in the system with a code sent to the phone enough, or do you need a qualified electronic signature from the employee? What will your inspectors accept?",
+          "What document comes out (a knowledge-check protocol on the prescribed form with a number, the board's membership and a verification code, a certificate, a statement)? Who signs it and where is it kept?",
+          "The record must survive an inspection three years from now, which means it cannot be altered after the fact — including by someone with access to the database. How is that ensured, and who must not be able to change a result at all?",
+          "How many years are results kept, and can they be exported for past periods? What happens to the records of someone who has left — deleted, anonymised, kept for the required term?",
+          "Do you need an inspector's mode — temporary access for an official to the history of one site over a given period, with no right to change anything? How is such access granted and how is it withdrawn?",
+          "Which roles are needed (author of the material, the one who assigns, the person examined, the department head, a board member, an administrator, an auditor) and what does each see? May a manager look at their subordinate's answers?",
+          "Which systems must be connected (HR records, single sign-on to the corporate network, document management, the permits system, the turnstiles at the gate)? Which way does the data flow — in, out, or both?",
+          "Which reports do management and inspections need (who passed and who did not, overdue by department, one person's history, the share trained per site, the most-failed questions, month-by-month movement)?",
+          "An employee does this once a year and does not remember how any of it works. What are your requirements for simplicity: in how many steps must they get from the notice to the exam, do they need feedback on their mistakes afterwards, and the ability to attach a scan of a signed paper acknowledgement?"
+        ]
+      },
       "scheduler": {
         "title": "Scheduled automation",
         "tagline": "A rule and a timer instead of judgement",
@@ -4931,6 +4979,54 @@
           "Импорт, экспорт и переезд: нужно ли переносить существующую базу и в каком виде (таблицы, выгрузка из прежней CRM)? Нужна ли выгрузка отчётов и данных наружу?",
           "Интерфейс и уровень сложности: какой системы вы хотите — предельно простой и быстрой или гибкой и мощной с множеством настроек? Есть ли интерфейсы, которые вам нравятся?",
           "Технические, организационные и юридические ограничения: есть ли требования, о которых нужно знать заранее (свой сервер или облако, сколько пользователей, требования к защите персональных данных, мобильные приложения, работа без сети, сроки запуска, кто будет администрировать систему)?"
+        ]
+      },
+      "attestation": {
+        "title": "Аттестация и проверка знаний",
+        "tagline": "Не знание, а запись, которую предъявят инспектору",
+        "definition": "Инженер по безопасности выкладывает инструкции, сотрудники сдают по ним экзамен, а предприятие получает историю: кто, когда и с каким результатом. От обычного курса отличается ценой ошибки — эта запись допускает человека к опасной работе и защищает компанию на проверке, поэтому её нельзя ни потерять, ни переписать задним числом.",
+        "examples": [
+          "Охрана труда и пожарный минимум на производстве",
+          "Допуск к оборудованию и высотным работам",
+          "Вводный инструктаж при приёме и после инцидента",
+          "Проверка знаний подрядчиков перед выходом на объект"
+        ],
+        "signals": [
+          "Результат нужен не человеку, а проверяющему",
+          "У аттестации есть срок годности, и он истекает",
+          "Не сдал — не допущен к работе, и это должно сработать само"
+        ],
+        "questions": [
+          "Инженер по охране труда или пожарной безопасности выкладывает инструкции, сотрудники сдают по ним экзамен, а предприятие хранит запись о том, кто обучен. Какую главную задачу это должно решить у вас — и какие сегодняшние беды вы хотите закрыть первыми (потерянные бумажные журналы, невозможность быстро найти, кто прошёл, никто не следит за сроками, подготовка к проверке занимает недели)?",
+          "Какие проверки знаний проводите в первую очередь (охрана труда, пожарная безопасность, электробезопасность, допуск к оборудованию, профессиональные стандарты, информационная безопасность)? И какие виды инструктажей нужны — вводный при приёме, первичный на рабочем месте, повторный по расписанию, внеплановый после происшествия или нового указания, целевой под разовую работу?",
+          "Кто по обе стороны: кто создаёт материалы и билеты (инженеры по безопасности, руководители подразделений, кадры, внешние эксперты) и кто сдаёт (все сотрудники, отдельные должности, новички, подрядчики и посетители)? Сколько человек и сколько подразделений?",
+          "В каком виде приходят исходные материалы (документы и сканы нормативов, файлы редактора, обучающие ролики, презентации, готовые учебные пакеты, просто текст инструкции)? Сколько их и как часто они меняются?",
+          "Модель может прочитать инструкцию и сама составить по ней билеты — вопросы с выбором ответа, ситуационные задачи «как поступить при возгорании кабеля», проверку знания запретов. Нужна ли такая генерация, и по какому правилу она решает, что в инструкции важно, а что второстепенно?",
+          "Вопрос, придуманный машиной, попадает в официальный экзамен, по которому человека допускают к опасной работе. Нужна ли обязательная проверка каждого сгенерированного билета инженером перед тем, как он станет действующим? Кто отвечает за неверный вопрос — тот, кто его утвердил?",
+          "Какие типы заданий нужны (один правильный ответ, несколько правильных, расстановка действий в верном порядке, поиск нарушения на фотографии или схеме, развёрнутый ответ словами, практическое задание с проверкой человеком)?",
+          "Правила сдачи: сколько вопросов в билете, какой балл считается сданным, ограничено ли время, сколько попыток даётся? Через какой срок разрешена пересдача и что происходит после последней неудачной — очная комиссия, обучение заново, отстранение?",
+          "Билеты выдаются случайной выборкой из общей базы — например, двадцать вопросов из двухсот, — чтобы сдающие не передавали ответы друг другу. Нужна ли такая выборка и достаточно ли у вас вопросов, чтобы она имела смысл?",
+          "Как строится матрица «должность, цех или подразделение → обязательные для них аттестации»? Кто её ведёт и что происходит при переводе человека на другую должность — какие аттестации назначаются автоматически, какие сгорают?",
+          "У каждой аттестации свой срок годности: одна раз в год, другая раз в три года, третья только при приёме. Как задаются эти сроки и как система понимает, что срок конкретного человека подходит к концу?",
+          "За сколько дней и по каким каналам предупреждать сотрудника и его руководителя об истечении срока (письмо, сообщение в мессенджер, уведомление в кабинете, звонок руководителю)? Сколько напоминаний до срока и что происходит в день истечения?",
+          "Срок вышел, человек не сдал. Что должна сделать система: сообщить руководителю, сформировать приказ об отстранении, закрыть доступ к оборудованию, снять пропуск на проходной? Насколько далеко система вправе зайти сама, а где обязана только предупредить человека?",
+          "Внеплановая ситуация: вышло новое указание, и всем в конкретном цехе нужно за сегодня пройти короткую проверку. Как это назначается и как быстро люди об этом узнают?",
+          "Инструкция обновилась — вопрос, который решает всё остальное. Считать ли прежние аттестации недействительными и слать всех заново, или только при существенном изменении? Кто определяет, что изменение существенное? Должно ли в записи храниться, по какой РЕДАКЦИИ инструкции человек сдавал?",
+          "На чём сдают (личный компьютер, телефон, общий терминал на проходной или в цехе)? Есть ли места, где интернета нет вовсе, — стройка, удалённый объект, — и нужна ли сдача без сети с последующей отправкой ответов?",
+          "Юридическая сила записи держится на том, что сдавал именно этот человек. Как подтверждается личность при входе на экзамен (учётная запись, пропускной бейдж, разовый код на телефон, распознавание лица)? Какой способ приемлем для ваших проверяющих?",
+          "Наблюдение во время сдачи: нужно ли замечать уход на другую вкладку, запрещать копирование, снимать сдающего камерой, замечать второго человека в кадре? Это наблюдение за живыми людьми на их рабочем месте — где вы проводите черту и знают ли сотрудники, что за ними смотрят?",
+          "Кто и как проверяет развёрнутые ответы и практические задания — инженер вручную или модель по образцу? Если модель, вправе ли она поставить «не сдал» сама, или её мнение только подсказка человеку?",
+          "Нужны ли несколько языков и озвучка вопросов голосом? Для линейного персонала и приезжих работников это решает, поняли ли они вопрос или угадывали.",
+          "Что именно сохраняется по каждой сдаче (кто, когда, какая редакция инструкции, какие вопросы достались, какие ответы дал, сколько попыток, кто проверял, состав комиссии)? Что из этого обязательно по требованиям, а что для вашего спокойствия?",
+          "Чем подтверждается результат: достаточно ли отметки в системе с подтверждением по коду из сообщения, или нужна квалифицированная электронная подпись сотрудника? Что примут ваши проверяющие?",
+          "Какой документ выходит на руки (протокол проверки знаний по установленной форме с номером, составом комиссии и кодом для проверки, удостоверение, справка)? Кто его подписывает и где он хранится?",
+          "Запись обязана выдержать проверку через три года, а значит её нельзя изменить задним числом — в том числе тому, у кого есть доступ к базе. Как это обеспечивается и кто в принципе не должен иметь возможности править результат?",
+          "Сколько лет хранятся результаты и можно ли их выгрузить за прошлые периоды? Что происходит с записями уволившегося сотрудника — удаляются, обезличиваются, хранятся положенный срок?",
+          "Нужен ли режим для проверяющего — временный доступ инспектору к истории по конкретному объекту за определённый период, без права что-либо менять? Как выдаётся и как отзывается такой доступ?",
+          "Какие роли нужны в системе (создатель материалов, назначающий аттестацию, сдающий, руководитель подразделения, член комиссии, администратор, аудитор) и что каждая видит? Может ли руководитель посмотреть ответы своего подчинённого?",
+          "С какими системами нужна связь (кадровый учёт, единый вход в корпоративную сеть, документооборот, система допусков, турникеты на проходной)? В какую сторону идут данные — оттуда к вам, от вас туда, в обе?",
+          "Какие отчёты нужны руководству и для проверок (кто прошёл и кто нет, просроченные по подразделениям, история конкретного человека, доля обученных по филиалам, самые проваливаемые вопросы, динамика по месяцам)?",
+          "Сотрудник проходит это раз в год и не помнит, как всё устроено. Какие требования к простоте: за сколько шагов он должен дойти от уведомления до экзамена, нужны ли обратная связь по ошибкам после сдачи и возможность приложить скан подписанного бумажного листа ознакомления?"
         ]
       },
       "scheduler": {
